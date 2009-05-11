@@ -198,10 +198,11 @@
 # 90327-1348 - Changed Vtiger status populate to use status name
 # 90408-0021 - Added API vtiger specific callback activity record ability
 # 90508-0726 - Changed to PHP long tags
+# 90511-0923 - Added agentonly_callback_campaign_lock option
 #
 
-$version = '2.2.0-109';
-$build = '90508-0726';
+$version = '2.2.0-110';
+$build = '90511-0923';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=212;
 $one_mysql_log=0;
@@ -388,7 +389,7 @@ $agents='@agents';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,timeclock_end_of_day FROM system_settings;";
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -397,8 +398,9 @@ $i=0;
 while ($i < $qm_conf_ct)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =				$row[0];
-	$timeclock_end_of_day =		$row[1];
+	$non_latin =							$row[0];
+	$timeclock_end_of_day =					$row[1];
+	$agentonly_callback_campaign_lock =		$row[2];
 	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
@@ -4318,7 +4320,11 @@ echo " Pause Code has been updated to $status for $agent_log_id\n";
 ################################################################################
 if ($ACTION == 'CalLBacKLisT')
 {
-$stmt = "select callback_id,lead_id,campaign_id,status,entry_time,callback_time,comments from vicidial_callbacks where recipient='USERONLY' and user='$user' and campaign_id='$campaign' and status NOT IN('INACTIVE','DEAD') order by callback_time;";
+if ($agentonly_callback_campaign_lock > 0)
+	{$campaignCBsql = "and campaign_id='$campaign'";}
+else
+	{$campaignCBsql = '';}
+$stmt = "select callback_id,lead_id,campaign_id,status,entry_time,callback_time,comments from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql and status NOT IN('INACTIVE','DEAD') order by callback_time;";
 if ($DB) {echo "$stmt\n";}
 $rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00178',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4358,7 +4364,11 @@ $loop_count=0;
 ################################################################################
 if ($ACTION == 'CalLBacKCounT')
 {
-$stmt = "select count(*) from vicidial_callbacks where recipient='USERONLY' and user='$user' and campaign_id='$campaign' and status NOT IN('INACTIVE','DEAD');";
+if ($agentonly_callback_campaign_lock > 0)
+	{$campaignCBsql = "and campaign_id='$campaign'";}
+else
+	{$campaignCBsql = '';}
+$stmt = "select count(*) from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql and status NOT IN('INACTIVE','DEAD');";
 if ($DB) {echo "$stmt\n";}
 $rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00180',$user,$server_ip,$session_name,$one_mysql_log);}

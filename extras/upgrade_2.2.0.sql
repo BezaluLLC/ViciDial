@@ -80,3 +80,10 @@ ALTER TABLE vicidial_inbound_dids ADD menu_id VARCHAR(50) default '';
 
 UPDATE system_settings SET db_schema_version='1140';
 
+
+
+
+
+ALTER TABLE system_settings ADD agentonly_callback_campaign_lock ENUM('0','1') default '1';
+
+UPDATE system_settings SET db_schema_version='1141';
