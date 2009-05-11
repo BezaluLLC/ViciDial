@@ -227,10 +227,11 @@
 # 90323-1555 - Initial call to agent phone now has campaign callerIDnumber
 # 90408-0104 - Added Vtiger callback record ability
 # 90508-0727 - Changed to PHP long tags
+# 90511-1018 - Added restriction not allowing dialing into agent sessions from manual dial
 #
 
-$version = '2.2.0-205';
-$build = '90508-0727';
+$version = '2.2.0-206';
+$build = '90511-1018';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=60;
 $one_mysql_log=0;
@@ -2818,6 +2819,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					{
 				//	alert(VMCoriginate_query);
 				//	alert(xmlhttp.responseText);
+
+					var regBOerr = new RegExp("ERROR","g");
+					var BOresponse = xmlhttp.responseText;
+					if (BOresponse.match(regBOerr))
+						{
+						alert(BOresponse);
+						}
 
 					if ((taskdialvalue.length > 0) && (tasknowait != 'YES'))
 						{

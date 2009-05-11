@@ -108,6 +108,7 @@ This option defines whether AGENTONLY callbacks are locked to the campaign that 
 
 ############################################################ CLIENT
 
+You are not allowed to dial into other agent sessions||
 
 
 ############################################################  MANAGER Manual

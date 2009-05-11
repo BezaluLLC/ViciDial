@@ -86,10 +86,11 @@
 # 90304-1334 - Added account and usegroupalias and user campaign/in-group specific variables
 # 90305-1040 - Added agent_dialed_number and type for user_call_log feature
 # 90508-0727 - Changed to PHP long tags
+# 90511-1019 - Added restriction not allowing dialing into agent sessions from manual dial
 #
 
-$version = '2.2.0-39';
-$build = '90508-0727';
+$version = '2.2.0-40';
+$build = '90511-1019';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=83;
 $one_mysql_log=0;
@@ -199,11 +200,11 @@ while ($i < $qm_conf_ct)
 ###########################################
 
 if ($non_latin < 1)
-{
-$user=ereg_replace("[^0-9a-zA-Z]","",$user);
-$pass=ereg_replace("[^0-9a-zA-Z]","",$pass);
-$secondS = ereg_replace("[^0-9]","",$secondS);
-}
+	{
+	$user=ereg_replace("[^0-9a-zA-Z]","",$user);
+	$pass=ereg_replace("[^0-9a-zA-Z]","",$pass);
+	$secondS = ereg_replace("[^0-9]","",$secondS);
+	}
 
 # default optional vars if not set
 if (!isset($ACTION))   {$ACTION="Originate";}
@@ -224,14 +225,13 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
-  if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
+if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
     echo "Invalid Username/Password: |$user|$pass|\n";
     exit;
 	}
-  else
+else
 	{
-
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
 		echo "Invalid server_ip: |$server_ip|  or  Invalid session_name: |$session_name|\n";
@@ -258,21 +258,21 @@ $auth=$row[0];
 	}
 
 if ($format=='debug')
-{
-echo "<html>\n";
-echo "<head>\n";
-echo "<!-- VERSION: $version     BUILD: $build    ACTION: $ACTION   server_ip: $server_ip-->\n";
-echo "<title>Manager Send: ";
-if ($ACTION=="Originate")		{echo "Originate";}
-if ($ACTION=="Redirect")		{echo "Redirect";}
-if ($ACTION=="RedirectName")	{echo "RedirectName";}
-if ($ACTION=="Hangup")			{echo "Hangup";}
-if ($ACTION=="Command")			{echo "Command";}
-if ($ACTION==99999)	{echo "HELP";}
-echo "</title>\n";
-echo "</head>\n";
-echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
-}
+	{
+	echo "<html>\n";
+	echo "<head>\n";
+	echo "<!-- VERSION: $version     BUILD: $build    ACTION: $ACTION   server_ip: $server_ip-->\n";
+	echo "<title>Manager Send: ";
+	if ($ACTION=="Originate")		{echo "Originate";}
+	if ($ACTION=="Redirect")		{echo "Redirect";}
+	if ($ACTION=="RedirectName")	{echo "RedirectName";}
+	if ($ACTION=="Hangup")			{echo "Hangup";}
+	if ($ACTION=="Command")			{echo "Command";}
+	if ($ACTION==99999)	{echo "HELP";}
+	echo "</title>\n";
+	echo "</head>\n";
+	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	}
 
 
 
@@ -282,20 +282,20 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 # ACTION=SysCIDOriginate  - insert Originate Manager statement allowing small CIDs for system calls
 ######################
 if ($ACTION=="SysCIDOriginate")
-{
+	{
 	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($ext_context)<1) or (strlen($queryCID)<1) )
-	{
+		{
 		echo "Exten $exten is not valid or queryCID $queryCID is not valid, Originate command not inserted\n";
-	}
+		}
 	else
-	{
-	$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$queryCID','Channel: $channel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','Callerid: $queryCID','','','','','');";
-		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02004',$user,$server_ip,$session_name,$one_mysql_log);}
-	echo "Originate command sent for Exten $exten Channel $channel on $server_ip\n";
+		{
+		$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$queryCID','Channel: $channel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','Callerid: $queryCID','','','','','');";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02004',$user,$server_ip,$session_name,$one_mysql_log);}
+		echo "Originate command sent for Exten $exten Channel $channel on $server_ip\n";
+		}
 	}
-}
 
 
 
@@ -303,9 +303,9 @@ if ($ACTION=="SysCIDOriginate")
 # ACTION=Originate, OriginateName, OriginateNameVmail  - insert Originate Manager statement
 ######################
 if ($ACTION=="OriginateName")
-{
-	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($extenName)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 	{
+	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($extenName)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
+		{
 		$channel_live=0;
 		echo "One of these variables is not valid:\n";
 		echo "Channel $channel must be greater than 2 characters\n";
@@ -314,27 +314,27 @@ if ($ACTION=="OriginateName")
 		echo "ext_context $ext_context must be set\n";
 		echo "ext_priority $ext_priority must be set\n";
 		echo "\nOriginateName Action not sent\n";
-	}
+		}
 	else
-	{
+		{
 		$stmt="SELECT dialplan_number FROM phones where server_ip = '$server_ip' and extension='$extenName';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02005',$user,$server_ip,$session_name,$one_mysql_log);}
 		$name_count = mysql_num_rows($rslt);
 		if ($name_count>0)
-		{
-		$row=mysql_fetch_row($rslt);
-		$exten = $row[0];
-		$ACTION="Originate";
+			{
+			$row=mysql_fetch_row($rslt);
+			$exten = $row[0];
+			$ACTION="Originate";
+			}
 		}
 	}
-}
 
 if ($ACTION=="OriginateNameVmail")
-{
-	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($extenName)<1)  or (strlen($exten)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 	{
+	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($extenName)<1)  or (strlen($exten)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
+		{
 		$channel_live=0;
 		echo "One of these variables is not valid:\n";
 		echo "Channel $channel must be greater than 2 characters\n";
@@ -344,73 +344,79 @@ if ($ACTION=="OriginateNameVmail")
 		echo "ext_context $ext_context must be set\n";
 		echo "ext_priority $ext_priority must be set\n";
 		echo "\nOriginateNameVmail Action not sent\n";
-	}
+		}
 	else
-	{
+		{
 		$stmt="SELECT voicemail_id FROM phones where server_ip = '$server_ip' and extension='$extenName';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02006',$user,$server_ip,$session_name,$one_mysql_log);}
 		$name_count = mysql_num_rows($rslt);
 		if ($name_count>0)
-		{
-		$row=mysql_fetch_row($rslt);
-		$exten = "$exten$row[0]";
-		$ACTION="Originate";
+			{
+			$row=mysql_fetch_row($rslt);
+			$exten = "$exten$row[0]";
+			$ACTION="Originate";
+			}
 		}
 	}
-}
 
 if ($ACTION=="OriginateVDRelogin")
-{
-	if ( ($enable_sipsak_messages > 0) and ($allow_sipsak_messages > 0) and (eregi("SIP",$protocol)) )
 	{
-	$CIDdate = date("ymdHis");
-	$DS='-';
-	$SIPSAK_prefix = 'LIN-';
-	print "<!-- sending login sipsak message: $SIPSAK_prefix$VD_campaign -->\n";
-	passthru("/usr/local/bin/sipsak -M -O desktop -B \"$SIPSAK_prefix$campaign\" -r 5060 -s sip:$extension@$phone_ip > /dev/null");
-	$queryCID = "$SIPSAK_prefix$campaign$DS$CIDdate";
+	if ( ($enable_sipsak_messages > 0) and ($allow_sipsak_messages > 0) and (eregi("SIP",$protocol)) )
+		{
+		$CIDdate = date("ymdHis");
+		$DS='-';
+		$SIPSAK_prefix = 'LIN-';
+		print "<!-- sending login sipsak message: $SIPSAK_prefix$VD_campaign -->\n";
+		passthru("/usr/local/bin/sipsak -M -O desktop -B \"$SIPSAK_prefix$campaign\" -r 5060 -s sip:$extension@$phone_ip > /dev/null");
+		$queryCID = "$SIPSAK_prefix$campaign$DS$CIDdate";
 
-	}
+		}
 	$ACTION="Originate";
-}
+	}
 
 if ($ACTION=="Originate")
-{
+	{
 	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($ext_context)<1) or (strlen($queryCID)<10) )
-	{
-		echo "Exten $exten is not valid or queryCID $queryCID is not valid, Originate command not inserted\n";
-	}
-	else
-	{
-	if (strlen($outbound_cid)>1)
-		{$outCID = "\"$queryCID\" <$outbound_cid>";}
-	else
-		{$outCID = "$queryCID";}
-	if ( ($usegroupalias > 0) and (strlen($account)>1) )
 		{
-		$RAWaccount = $account;
-		$account = "Account: $account";
-		$variable = "Variable: usegroupalias=1";
+		echo "ERROR Exten $exten is not valid or queryCID $queryCID is not valid, Originate command not inserted\n";
 		}
 	else
-		{$account='';   $variable='';}
-	$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$queryCID','Channel: $channel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','Callerid: $outCID','$account','$variable','','','');";
-		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02007',$user,$server_ip,$session_name,$one_mysql_log);}
-	echo "Originate command sent for Exten $exten Channel $channel on $server_ip |$account|$variable|\n";
+		{
+		if ( (eregi('MANUAL',$agent_dialed_type)) and ( (preg_match("/^\d860\d\d\d\d$/i",$exten)) or (preg_match("/^860\d\d\d\d$/i",$exten)) ) )
+			{
+			echo "ERROR You are not allowed to dial into other agent sessions $exten\n";
+			exit;
+			}
 
-	if ($agent_dialed_number > 0)
-		{
-		$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id) values('$user','$NOW_TIME','$agent_dialed_type','$server_ip','$exten','$channel','0','$outbound_cid','$RAWaccount')";
-		if ($DB) {echo "$stmt\n";}
+		if (strlen($outbound_cid)>1)
+			{$outCID = "\"$queryCID\" <$outbound_cid>";}
+		else
+			{$outCID = "$queryCID";}
+		if ( ($usegroupalias > 0) and (strlen($account)>1) )
+			{
+			$RAWaccount = $account;
+			$account = "Account: $account";
+			$variable = "Variable: usegroupalias=1";
+			}
+		else
+			{$account='';   $variable='';}
+		$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$queryCID','Channel: $channel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','Callerid: $outCID','$account','$variable','','','');";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
-	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00192',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02007',$user,$server_ip,$session_name,$one_mysql_log);}
+		echo "Originate command sent for Exten $exten Channel $channel on $server_ip |$account|$variable|\n";
+
+		if ($agent_dialed_number > 0)
+			{
+			$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id) values('$user','$NOW_TIME','$agent_dialed_type','$server_ip','$exten','$channel','0','$outbound_cid','$RAWaccount')";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00192',$user,$server_ip,$session_name,$one_mysql_log);}
+			}
 		}
 	}
-}
 
 
 
