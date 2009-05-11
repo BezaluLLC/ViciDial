@@ -1094,7 +1094,8 @@ vtiger_url VARCHAR(255),
 qc_features_active ENUM('1','0') default '0',
 outbound_autodial_active ENUM('1','0') default '1',
 outbound_calls_per_second SMALLINT(3) UNSIGNED default '40',
-enable_tts_integration ENUM('0','1') default '0'
+enable_tts_integration ENUM('0','1') default '0',
+agentonly_callback_campaign_lock ENUM('0','1') default '1'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -1592,7 +1593,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1140';
+UPDATE system_settings SET db_schema_version='1141';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
