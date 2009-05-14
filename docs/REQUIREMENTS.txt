@@ -3,7 +3,8 @@ recommended that you read the SCRATCH_INSTALL doc for more information on
 installing the package properly.
 
 Requirements for installing astGUIclient/VICIDIAL on an Asterisk server:
-- Asterisk 1.2.24 recommended but will work with most older Asterisk versions
+- Asterisk 1.2.27 and 1.4.21.2 recommended but will work with most older Asterisk versions
+- ViciDial does NOT support Asterisk 1.6.X at this time due to stability issues
 - Zap trunks(T1/E1 or PSTN lines), IAX2 trunks or SIP trunks required
 - If using VOIP trunks and VICIDIAL auto-dial, you must have trunks registered
 - It is strongly suggested that you have a zaptel timer like a PSTN/T1/E1 card or ztdummy

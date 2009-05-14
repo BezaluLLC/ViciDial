@@ -36,6 +36,11 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 
 8. Changed all PHP scripts to use long tags, short tags are depricated in PHP6
 
+9. Added audio upload ability from web interface, choose audio prompts from a
+	list in the call menu and in-group admin screens, and back-end audio 
+	synchronization utilities have been added for multi-server setups.
+
+
 
 
 

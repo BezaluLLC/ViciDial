@@ -104,7 +104,20 @@ Copy Call Menu||
 To delete an Option, just set the Route to REMOVE and the option will be deleted when you click the SUBMIT button||
 Agent Only Callback Campaign Lock||
 This option defines whether AGENTONLY callbacks are locked to the campaign that the agent originally created them under. Setting this to 1 means that the agent can only dial them from the campaign they were set under, 0 means that the agent can access them no matter what campaign they are logged into. Default is 1||
+Central Sound Control Active||
+This option defines whether the sound synchronization system is active across all servers. Default is 0 for inactive||
+Sounds Web Server IP||
+This is the IP address of the web server that will be handling the sound files on this system, this must match the server IP of the machine you are trying to access the audio_store.php webpage on or it will not work. Default is 127.0.0.1||
+Sounds Web Directory||
+This auto-generated directory name is created at random by the system as the place that the audio store will be kept. All audio files will reside in this directory||
+Audio Store||
+Audio File to Upload||
+This utility allows you to upload audio files to the web server so that they can be distributed to all of the ViciDial servers in a multi-server cluster. An important note, only two audio file types will work, .wav files that are PCM 16bit 8k and .gsm files that are 8bit 8k. Please verify that your files are properly formatted before uploading them here||
+Sounds Update||
+If you want to force a check of the sound files on this server, and the central audio store is enabled as a system setting, then this field will allow the sounds updater to run at the next top of the minute. Any time an audio file is uploaded from the web interface this is automatically set to Y for all servers that have Asterisk active. Default is N||
 
+
+add-file: audio_store.php
 
 ############################################################ CLIENT
 

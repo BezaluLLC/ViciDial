@@ -104,7 +104,8 @@ outbound_calls_per_second SMALLINT(3) UNSIGNED default '20',
 sysload INT(6) NOT NULL default '0',
 channels_total SMALLINT(4) UNSIGNED NOT NULL default '0',
 cpu_idle_percent SMALLINT(3) UNSIGNED NOT NULL default '0',
-disk_usage VARCHAR(255) default '1'
+disk_usage VARCHAR(255) default '1',
+sounds_update ENUM('Y','N') default 'N'
 );
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -1095,7 +1096,10 @@ qc_features_active ENUM('1','0') default '0',
 outbound_autodial_active ENUM('1','0') default '1',
 outbound_calls_per_second SMALLINT(3) UNSIGNED default '40',
 enable_tts_integration ENUM('0','1') default '0',
-agentonly_callback_campaign_lock ENUM('0','1') default '1'
+agentonly_callback_campaign_lock ENUM('0','1') default '1',
+sounds_central_control_active ENUM('0','1') default '0',
+sounds_web_server VARCHAR(15) default '127.0.0.1',
+sounds_web_directory VARCHAR(255) default ''
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -1497,6 +1501,13 @@ index (menu_id),
 unique index menuoption (menu_id, option_value)
 );
 
+CREATE TABLE vicidial_user_territories (
+user VARCHAR(20) NOT NULL,
+territory VARCHAR(100) default '',
+index (user),
+unique index userterritory (user, territory)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
@@ -1593,7 +1604,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1141';
+UPDATE system_settings SET db_schema_version='1142';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

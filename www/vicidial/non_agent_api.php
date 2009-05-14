@@ -21,10 +21,11 @@
 # 90118-1056 - Added logging of API functions
 # 90428-0209 - Added blind_monitor function
 # 90508-0642 - Changed to PHP long tags
+# 90514-0602 - Added sounds_list function 
 #
 
-$version = '2.2.0-7';
-$build = '90508-0642';
+$version = '2.2.0-8';
+$build = '90514-0602';
 
 require("dbconnect.php");
 
@@ -109,6 +110,8 @@ if (isset($_GET["server_ip"]))					{$server_ip=$_GET["server_ip"];}
 	elseif (isset($_POST["server_ip"]))			{$server_ip=$_POST["server_ip"];}
 if (isset($_GET["stage"]))						{$stage=$_GET["stage"];}
 	elseif (isset($_POST["stage"]))				{$stage=$_POST["stage"];}
+if (isset($_GET["DB"]))							{$DB=$_GET["DB"];}
+	elseif (isset($_POST["DB"]))				{$DB=$_POST["DB"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -132,6 +135,7 @@ while ($i < $qm_conf_ct)
 
 if ($non_latin < 1)
 	{
+	$DB=ereg_replace("[^0-9]","",$DB);
 	$user=ereg_replace("[^0-9a-zA-Z]","",$user);
 	$pass=ereg_replace("[^0-9a-zA-Z]","",$pass);
 	$function = ereg_replace("[^-\_0-9a-zA-Z]","",$function);
@@ -186,7 +190,7 @@ if ($non_latin < 1)
 	$phone_login = ereg_replace("[^0-9a-zA-Z]","",$phone_login);
 	$session_id = ereg_replace("[^0-9]","",$session_id);
 	$server_ip = ereg_replace("[^\.0-9]","",$server_ip);
-	$stage = ereg_replace("[^A-Z]","",$stage);
+	$stage = ereg_replace("[^a-zA-Z]","",$stage);
 	}
 
 if (strlen($list_id)<1) {$list_id='999';}
@@ -261,6 +265,164 @@ if ($function == 'version')
 	echo "$data\n";
 	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 	exit;
+	}
+
+
+
+
+################################################################################
+### sounds_list - sends a list of the sounds in the audio store
+################################################################################
+if ($function == 'sounds_list')
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 6;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$allowed_user=$row[0];
+	if ($allowed_user < 1)
+		{
+		$result = 'ERROR';
+		$result_reason = "sounds_list USER DOES NOT HAVE PERMISSION TO VIEW SOUNDS LIST";
+		echo "$result: $result_reason: |$user|$allowed_user|\n";
+		$data = "$allowed_user";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		#############################################
+		##### START SYSTEM_SETTINGS LOOKUP #####
+		$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory FROM system_settings;";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$ss_conf_ct = mysql_num_rows($rslt);
+		if ($ss_conf_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$non_latin =						$row[0];
+			$sounds_central_control_active =	$row[1];
+			$sounds_web_server =				$row[2];
+			$sounds_web_directory =				$row[3];
+			}
+		##### END SETTINGS LOOKUP #####
+		###########################################
+
+		if ($sounds_central_control_active < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "sounds_list CENTRAL SOUND CONTROL IS NOT ACTIVE";
+			echo "$result: $result_reason: |$user|$sounds_central_control_active|\n";
+			$data = "$sounds_central_control_active";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$i=0;
+			$filename_sort=$MT;
+			$dirpath = "$WeBServeRRooT/$sounds_web_directory";
+			$dh = opendir($dirpath);
+			if ($DB) {echo "$dirpath|$stage|$format\n";}
+			while (false !== ($file = readdir($dh))) 
+				{
+				# Do not list subdirectories
+				if ( (!is_dir("$dirpath/$file")) and (preg_match('/\.wav$|\.gsm$/', $file)) )
+					{
+					if (file_exists("$dirpath/$file")) 
+						{
+						$file_names[$i] = $file;
+						$file_namesPROMPT[$i] = preg_replace("/\.wav$|\.gsm$/","",$file);
+						$file_epoch[$i] = filemtime("$dirpath/$file");
+						$file_dates[$i] = date ("Y-m-d H:i:s.", filemtime("$dirpath/$file"));
+						$file_sizes[$i] = filesize("$dirpath/$file");
+						$file_sizesPAD[$i] = sprintf("[%020s]\n",filesize("$dirpath/$file"));
+						if (eregi('date',$stage)) {$file_sort[$i] = $file_epoch[$i] . "----------" . $i;}
+						if (eregi('name',$stage)) {$file_sort[$i] = $file_names[$i] . "----------" . $i;}
+						if (eregi('size',$stage)) {$file_sort[$i] = $file_sizesPAD[$i] . "----------" . $i;}
+
+						$i++;
+						}
+					}
+				}
+			closedir($dh);
+
+			if (eregi('date',$stage)) {rsort($file_sort);}
+			if (eregi('name',$stage)) {sort($file_sort);}
+			if (eregi('size',$stage)) {rsort($file_sort);}
+
+			sleep(1);
+
+			$k=0;
+			$sf=0;
+			while($k < $i)
+				{
+				$file_split = explode('----------',$file_sort[$k]);
+				$m = $file_split[1];
+				$NOWsize = filesize("$dirpath/$file_names[$m]");
+				if ($DB) {echo "$file_sort[$k]|$size|$NOWsize|\n";}
+				if ($file_sizes[$m] == $NOWsize)
+					{
+					if (eregi('tab',$format))
+						{echo "$k\t$file_names[$m]\t$file_dates[$m]\t$file_sizes[$m]\t$file_epoch[$m]\n";}
+					if (eregi('link',$format))
+						{echo "<a href=\"http://$sounds_web_server/$sounds_web_directory/$file_names[$m]\">$file_names[$m]</a><br>\n";}
+					if (eregi('selectframe',$format))
+						{
+						if ($sf < 1)
+							{
+							echo "\n";
+							echo "<HTML><head><title>NON-AGENT API</title>\n";
+							echo "<script language=\"Javascript\">\n";
+							echo "function choose_file(filename,fieldname)\n";
+							echo "	{\n";
+							echo "	if (filename.length > 0)\n";
+							echo "		{\n";
+							echo "		parent.document.getElementById(fieldname).value = filename;\n";
+							echo "		document.getElementById(\"selectframe\").innerHTML = '';\n";
+							echo "		document.getElementById(\"selectframe\").style.visibility = 'hidden';\n";
+							echo "		parent.close_chooser();\n";
+							echo "		}\n";
+							echo "	}\n";
+							echo "function close_file()\n";
+							echo "	{\n";
+							echo "	document.getElementById(\"selectframe\").innerHTML = '';\n";
+							echo "	document.getElementById(\"selectframe\").style.visibility = 'hidden';\n";
+							echo "	parent.close_chooser();\n";
+							echo "	}\n";
+							echo "</script>\n";
+							echo "</head>\n\n";
+
+							echo "<body>\n";
+							echo "<a href=\"javascript:close_file();\"><font size=1 face=\"Arial,Helvetica\">close frame</font></a>\n";
+							echo "<div id='selectframe' style=\"height:400px;width:520px;overflow:scroll;\">\n";
+							echo "<table border=0 cellpadding=1 cellspacing=2 width=500 bgcolor=white><tr>\n";
+							echo "<td>#</td>\n";
+							echo "<td><a href=\"$PHP_SELF?source=admin&function=sounds_list&user=$user&pass=$pass&format=selectframe&comments=$comments&stage=name\"><font color=black>FILENAME</td>\n";
+							echo "<td><a href=\"$PHP_SELF?source=admin&function=sounds_list&user=$user&pass=$pass&format=selectframe&comments=$comments&stage=date\"><font color=black>DATE</td>\n";
+							echo "<td><a href=\"$PHP_SELF?source=admin&function=sounds_list&user=$user&pass=$pass&format=selectframe&comments=$comments&stage=size\"><font color=black>SIZE</td>\n";
+							echo "<td>PLAY</td>\n";
+							echo "</tr>\n";
+							}
+						$sf++;
+						echo "<tr><td><font size=1 face=\"Arial,Helvetica\">$sf</td>\n";
+						echo "<td><a href=\"javascript:choose_file('$file_namesPROMPT[$m]','$comments');\"><font size=1 face=\"Arial,Helvetica\">$file_names[$m]</a></td>\n";
+						echo "<td><font size=1 face=\"Arial,Helvetica\">$file_dates[$m]</td>\n";
+						echo "<td><font size=1 face=\"Arial,Helvetica\">$file_sizes[$m]</td>\n";
+						echo "<td><a href=\"http://$sounds_web_server/$sounds_web_directory/$file_names[$m]\" target=\"_blank\"><font size=1 face=\"Arial,Helvetica\">PLAY</a></td></tr>\n";
+						}
+					}
+				$k++;
+				}
+			if ($sf > 0)
+				{
+				echo "</table></div></body></HTML>\n";
+				}
+
+			exit;
+
+			}
+		}
 	}
 
 

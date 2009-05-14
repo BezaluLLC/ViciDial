@@ -1012,6 +1012,14 @@ if (isset($_GET["source_menu"]))			{$source_menu=$_GET["source_menu"];}
 	elseif (isset($_POST["source_menu"]))	{$source_menu=$_POST["source_menu"];}
 if (isset($_GET["agentonly_callback_campaign_lock"]))			{$agentonly_callback_campaign_lock=$_GET["agentonly_callback_campaign_lock"];}
 	elseif (isset($_POST["agentonly_callback_campaign_lock"]))	{$agentonly_callback_campaign_lock=$_POST["agentonly_callback_campaign_lock"];}
+if (isset($_GET["sounds_central_control_active"]))			{$sounds_central_control_active=$_GET["sounds_central_control_active"];}
+	elseif (isset($_POST["sounds_central_control_active"]))	{$sounds_central_control_active=$_POST["sounds_central_control_active"];}
+if (isset($_GET["sounds_web_server"]))				{$sounds_web_server=$_GET["sounds_web_server"];}
+	elseif (isset($_POST["sounds_web_server"]))		{$sounds_web_server=$_POST["sounds_web_server"];}
+if (isset($_GET["sounds_web_directory"]))			{$sounds_web_directory=$_GET["sounds_web_directory"];}
+	elseif (isset($_POST["sounds_web_directory"]))	{$sounds_web_directory=$_POST["sounds_web_directory"];}
+if (isset($_GET["sounds_update"]))			{$sounds_update=$_GET["sounds_update"];}
+	elseif (isset($_POST["sounds_update"]))	{$sounds_update=$_POST["sounds_update"];}
 
 	if (isset($script_id)) {$script_id= strtoupper($script_id);}
 	if (isset($lead_filter_id)) {$lead_filter_id = strtoupper($lead_filter_id);}
@@ -1024,7 +1032,7 @@ if (strlen($dial_status) > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -1037,6 +1045,7 @@ while ($i < $qm_conf_ct)
 	$SSenable_vtiger_integration =		$row[2];
 	$SSqc_features_active =				$row[3];
 	$SSoutbound_autodial_active =		$row[4];
+	$SSsounds_central_control_active =	$row[5];
 	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
@@ -1201,6 +1210,7 @@ $menu_time_check = ereg_replace("[^0-9]","",$menu_time_check);
 $track_in_vdac = ereg_replace("[^0-9]","",$track_in_vdac);
 $menu_repeat = ereg_replace("[^0-9]","",$menu_repeat);
 $agentonly_callback_campaign_lock = ereg_replace("[^0-9]","",$agentonly_callback_campaign_lock);
+$sounds_central_control_active = ereg_replace("[^0-9]","",$sounds_central_control_active);
 
 ### DIGITS and COLONS
 $shift_length = ereg_replace("[^\:0-9]","",$shift_length);
@@ -1259,6 +1269,7 @@ $dnc = ereg_replace("[^NY]","",$dnc);
 $customer_contact = ereg_replace("[^NY]","",$customer_contact);
 $not_interested = ereg_replace("[^NY]","",$not_interested);
 $unworkable = ereg_replace("[^NY]","",$unworkable);
+$sounds_update = ereg_replace("[^NY]","",$sounds_update);
 
 $qc_enabled = ereg_replace("[^0-9NY]","",$qc_enabled);
 
@@ -1294,6 +1305,7 @@ $shift_enforcement = ereg_replace("[^0-9a-zA-Z]","",$shift_enforcement);
 $agent_shift_enforcement_override = ereg_replace("[^0-9a-zA-Z]","",$agent_shift_enforcement_override);
 $survey_third_status = ereg_replace("[^0-9a-zA-Z]","",$survey_third_status);
 $survey_fourth_status = ereg_replace("[^0-9a-zA-Z]","",$survey_fourth_status);
+$sounds_web_directory = ereg_replace("[^0-9a-zA-Z]","",$sounds_web_directory);
 
 ### DIGITS and Dots
 $server_ip = ereg_replace("[^\.0-9]","",$server_ip);
@@ -1304,6 +1316,7 @@ $old_server_ip = ereg_replace("[^\.0-9]","",$old_server_ip);
 $computer_ip = ereg_replace("[^\.0-9]","",$computer_ip);
 $queuemetrics_server_ip = ereg_replace("[^\.0-9]","",$queuemetrics_server_ip);
 $vtiger_server_ip = ereg_replace("[^\.0-9]","",$vtiger_server_ip);
+$sounds_web_server = ereg_replace("[^\.0-9]","",$sounds_web_server);
 
 ### ALPHA-NUMERIC and spaces and hash and star and comma
 $xferconf_a_dtmf = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$xferconf_a_dtmf);
@@ -1743,11 +1756,13 @@ $dialplan_entry = ereg_replace(";","",$dialplan_entry);
 # 90430-0154 - Added RANDOM and LAST CALL TIME options to lead order for campaigns
 # 90504-0901 - Added Call Menu feature, changed script to use long PHP tags
 # 90511-0910 - Added agentonly_callback_campaign_lock to system_settings
+# 90512-0440 - Added sounds settings to system_settings table
+# 90514-0607 - Added select prompts from list in call menu and in-group screens
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-183';
-$build = '90511-0910';
+$admin_version = '2.2.0-185';
+$build = '90514-0607';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4368,6 +4383,14 @@ if ($SSoutbound_autodial_active > 0)
 
 
 
+
+
+<BR>
+<A NAME="audio_store">
+<B>Audio Store -</B> This utility allows you to upload audio files to the web server so that they can be distributed to all of the ViciDial servers in a multi-server cluster. An important note, only two audio file types will work, .wav files that are PCM 16bit 8k and .gsm files that are 8bit 8k. Please verify that your files are properly formatted before uploading them here.
+
+
+
 <?php
 if ($SSoutbound_autodial_active > 0)
 	{
@@ -4964,6 +4987,11 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <B>Rebuild conf files -</B> If you want to force a rebuilding of the Asterisk conf files or if any of the phones or carrier entries have changed then this should be set to Y. After the conf files have been generated and Asterisk has been reloaded then this will be changed to N. Default is Y.
 
+<BR>
+<A NAME="servers-sounds_update">
+<BR>
+<B>Sounds Update -</B> If you want to force a check of the sound files on this server, and the central audio store is enabled as a system setting, then this field will allow the sounds updater to run at the next top of the minute. Any time an audio file is uploaded from the web interface this is automatically set to Y for all servers that have Asterisk active. Default is N.
+
 
 
 
@@ -5171,6 +5199,21 @@ FR_SPAC 00 00 00 00 00 - France space separated phone number<BR>
 <A NAME="settings-agentonly_callback_campaign_lock">
 <BR>
 <B>Agent Only Callback Campaign Lock -</B> This option defines whether AGENTONLY callbacks are locked to the campaign that the agent originally created them under. Setting this to 1 means that the agent can only dial them from the campaign they were set under, 0 means that the agent can access them no matter what campaign they are logged into. Default is 1.
+
+<BR>
+<A NAME="settings-sounds_central_control_active">
+<BR>
+<B>Central Sound Control Active -</B> This option defines whether the sound synchronization system is active across all servers. Default is 0 for inactive.
+
+<BR>
+<A NAME="settings-sounds_web_server">
+<BR>
+<B>Sounds Web Server IP -</B> This is the IP address of the web server that will be handling the sound files on this system, this must match the server IP of the machine you are trying to access the audio_store.php webpage on or it will not work. Default is 127.0.0.1.
+
+<BR>
+<A NAME="settings-sounds_web_directory">
+<BR>
+<B>Sounds Web Directory -</B> This auto-generated directory name is created at random by the system as the place that the audio store will be kept. All audio files will reside in this directory.
 
 <BR>
 <A NAME="settings-qc_features_active">
@@ -11267,7 +11310,7 @@ if ($ADD==411111111111)
 				{
 				echo "<br>SERVER MODIFIED: $server_ip\n";
 
-				$stmt="UPDATE servers set server_id='$server_id',server_description='$server_description',server_ip='$server_ip',active='$active',asterisk_version='$asterisk_version', max_vicidial_trunks='$max_vicidial_trunks', telnet_host='$telnet_host', telnet_port='$telnet_port', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', ASTmgrUSERNAMEupdate='$ASTmgrUSERNAMEupdate', ASTmgrUSERNAMElisten='$ASTmgrUSERNAMElisten', ASTmgrUSERNAMEsend='$ASTmgrUSERNAMEsend', local_gmt='$local_gmt', voicemail_dump_exten='$voicemail_dump_exten', answer_transfer_agent='$answer_transfer_agent', ext_context='$ext_context', sys_perf_log='$sys_perf_log', vd_server_logs='$vd_server_logs', agi_output='$agi_output', vicidial_balance_active='$vicidial_balance_active',balance_trunks_offlimits='$balance_trunks_offlimits',recording_web_link='$recording_web_link',alt_server_ip='$alt_server_ip',active_asterisk_server='$active_asterisk_server',generate_vicidial_conf='$generate_vicidial_conf',rebuild_conf_files='$rebuild_conf_files',outbound_calls_per_second='$outbound_calls_per_second' where server_id='$old_server_id';";
+				$stmt="UPDATE servers set server_id='$server_id',server_description='$server_description',server_ip='$server_ip',active='$active',asterisk_version='$asterisk_version', max_vicidial_trunks='$max_vicidial_trunks', telnet_host='$telnet_host', telnet_port='$telnet_port', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', ASTmgrUSERNAMEupdate='$ASTmgrUSERNAMEupdate', ASTmgrUSERNAMElisten='$ASTmgrUSERNAMElisten', ASTmgrUSERNAMEsend='$ASTmgrUSERNAMEsend', local_gmt='$local_gmt', voicemail_dump_exten='$voicemail_dump_exten', answer_transfer_agent='$answer_transfer_agent', ext_context='$ext_context', sys_perf_log='$sys_perf_log', vd_server_logs='$vd_server_logs', agi_output='$agi_output', vicidial_balance_active='$vicidial_balance_active',balance_trunks_offlimits='$balance_trunks_offlimits',recording_web_link='$recording_web_link',alt_server_ip='$alt_server_ip',active_asterisk_server='$active_asterisk_server',generate_vicidial_conf='$generate_vicidial_conf',rebuild_conf_files='$rebuild_conf_files',outbound_calls_per_second='$outbound_calls_per_second',sounds_update='$sounds_update' where server_id='$old_server_id';";
 				$rslt=mysql_query($stmt, $link);
 
 				$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";
@@ -11519,7 +11562,7 @@ if ($ADD==411111111111111)
 
 		echo "<br>VICIDIAL SYSTEM SETTINGS MODIFIED\n";
 
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock';";
+		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory';";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -16614,7 +16657,7 @@ if ($ADD==3111)
 		{$Hgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
 
 
-	echo "<br>MODIFY A GROUPS RECORD: $row[0]<form action=$PHP_SELF method=POST>\n";
+	echo "<br>MODIFY A GROUPS RECORD: $row[0]<form action=$PHP_SELF method=POST name=admin_form id=admin_form>\n";
 	echo "<input type=hidden name=ADD value=4111>\n";
 	echo "<input type=hidden name=group_id value=\"$row[0]\">\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
@@ -16675,7 +16718,7 @@ if ($ADD==3111)
 
 	echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Action: </td><td align=left><select size=1 name=after_hours_action><option>HANGUP</option><option>MESSAGE</option><option>EXTENSION</option><option>VOICEMAIL</option><option>IN_GROUP</option><option SELECTED>$after_hours_action</option></select>$NWB#vicidial_inbound_groups-after_hours_action$NWE</td></tr>\n";
 
-	echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Message Filename: </td><td align=left><input type=text name=after_hours_message_filename size=20 maxlength=50 value=\"$after_hours_message_filename\">$NWB#vicidial_inbound_groups-after_hours_message_filename$NWE</td></tr>\n";
+	echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Message Filename: </td><td align=left><input type=text name=after_hours_message_filename id=after_hours_message_filename size=20 maxlength=50 value=\"$after_hours_message_filename\"> <a href=\"javascript:launch_chooser('after_hours_message_filename','date',400);\">audio chooser</a> $NWB#vicidial_inbound_groups-after_hours_message_filename$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Extension: </td><td align=left><input type=text name=after_hours_exten size=10 maxlength=20 value=\"$after_hours_exten\">$NWB#vicidial_inbound_groups-after_hours_exten$NWE</td></tr>\n";
 
@@ -16685,13 +16728,13 @@ if ($ADD==3111)
 	echo "$Agroups_menu";
 	echo "</select>$NWB#vicidial_inbound_groups-afterhours_xfer_group$NWE</td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right>Welcome Message Filename: </td><td align=left><input type=text name=welcome_message_filename size=20 maxlength=50 value=\"$welcome_message_filename\">$NWB#vicidial_inbound_groups-welcome_message_filename$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Welcome Message Filename: </td><td align=left><input type=text name=welcome_message_filename id=welcome_message_filename size=20 maxlength=50 value=\"$welcome_message_filename\"> <a href=\"javascript:launch_chooser('welcome_message_filename','date',500);\">audio chooser</a> $NWB#vicidial_inbound_groups-welcome_message_filename$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right>Play Welcome Message: </td><td align=left><select size=1 name=play_welcome_message><option>ALWAYS</option><option>NEVER</option><option>IF_WAIT_ONLY</option><option>YES_UNLESS_NODELAY</option><option SELECTED>$play_welcome_message</option></select>$NWB#vicidial_inbound_groups-play_welcome_message$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right>Music On Hold Context: </td><td align=left><input type=text name=moh_context size=10 maxlength=20 value=\"$moh_context\">$NWB#vicidial_inbound_groups-moh_context$NWE</td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right>On Hold Prompt Filename: </td><td align=left><input type=text name=onhold_prompt_filename size=20 maxlength=50 value=\"$onhold_prompt_filename\">$NWB#vicidial_inbound_groups-onhold_prompt_filename$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>On Hold Prompt Filename: </td><td align=left><input type=text name=onhold_prompt_filename id=onhold_prompt_filename size=20 maxlength=50 value=\"$onhold_prompt_filename\"> <a href=\"javascript:launch_chooser('onhold_prompt_filename','date',600);\">audio chooser</a> $NWB#vicidial_inbound_groups-onhold_prompt_filename$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right>On Hold Prompt Interval: </td><td align=left><input type=text name=prompt_interval size=5 maxlength=5 value=\"$prompt_interval\">$NWB#vicidial_inbound_groups-prompt_interval$NWE</td></tr>\n";
 
@@ -16711,7 +16754,7 @@ if ($ADD==3111)
 	echo "$Tgroups_menu";
 	echo "</select>$NWB#vicidial_inbound_groups-hold_time_option_xfer_group$NWE</td></tr>\n";
 
-	echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Callback Filename: </td><td align=left><input type=text name=hold_time_option_callback_filename size=20 maxlength=20 value=\"$hold_time_option_callback_filename\">$NWB#vicidial_inbound_groups-hold_time_option_callback_filename$NWE</td></tr>\n";
+	echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Callback Filename: </td><td align=left><input type=text name=hold_time_option_callback_filename id=hold_time_option_callback_filename size=20 maxlength=20 value=\"$hold_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_callback_filename','date',900);\">audio chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_callback_filename$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Callback List ID: </td><td align=left><input type=text name=hold_time_option_callback_list_id size=14 maxlength=14 value=\"$hold_time_option_callback_list_id\">$NWB#vicidial_inbound_groups-hold_time_option_callback_list_id$NWE</td></tr>\n";
 
@@ -17103,16 +17146,16 @@ if ($ADD==3511)
 	$track_in_vdac =		$row[8];
 
 
-	echo "<br>MODIFY A CALL MENU RECORD: $menu_id<form action=$PHP_SELF method=POST>\n";
+	echo "<br>MODIFY A CALL MENU RECORD: $menu_id<form action=$PHP_SELF method=POST name=admin_form id=admin_form>\n";
 	echo "<input type=hidden name=ADD value=4511>\n";
 	echo "<input type=hidden name=menu_id value=\"$menu_id\">\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Menu ID: </td><td align=left>$menu_id $NWB#vicidial_call_menu-menu_id$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Name: </td><td align=left><input type=text name=menu_name size=40 maxlength=50 value=\"$menu_name\">$NWB#vicidial_call_menu-menu_name$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Prompt: </td><td align=left><input type=text name=menu_prompt size=50 maxlength=100 value=\"$menu_prompt\">$NWB#vicidial_call_menu-menu_prompt$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Prompt: </td><td align=left><input type=text name=menu_prompt id=menu_prompt size=50 maxlength=100 value=\"$menu_prompt\"> <a href=\"javascript:launch_chooser('menu_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_prompt$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Timeout: </td><td align=left><input type=text name=menu_timeout size=10 maxlength=5 value=\"$menu_timeout\">$NWB#vicidial_call_menu-menu_timeout$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Timeout Prompt: </td><td align=left><input type=text name=menu_timeout_prompt size=50 maxlength=100 value=\"$menu_timeout_prompt\">$NWB#vicidial_call_menu-menu_timeout_prompt$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Invalid Prompt: </td><td align=left><input type=text name=menu_invalid_prompt size=50 maxlength=100 value=\"$menu_invalid_prompt\">$NWB#vicidial_call_menu-menu_invalid_prompt$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Timeout Prompt: </td><td align=left><input type=text name=menu_timeout_prompt id=menu_timeout_prompt size=50 maxlength=100 value=\"$menu_timeout_prompt\"> <a href=\"javascript:launch_chooser('menu_timeout_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_timeout_prompt$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Invalid Prompt: </td><td align=left><input type=text name=menu_invalid_prompt id=menu_invalid_prompt size=50 maxlength=100 value=\"$menu_invalid_prompt\"> <a href=\"javascript:launch_chooser('menu_invalid_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_invalid_prompt$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Repeat: </td><td align=left><input type=text name=menu_repeat size=4 maxlength=3 value=\"$menu_repeat\">$NWB#vicidial_call_menu-menu_repeat$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Time Check: </td><td align=left><select size=1 name=menu_time_check>\n";
 	if ($menu_time_check > 0)
@@ -18239,7 +18282,7 @@ if ($ADD==311111111111)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,local_gmt,voicemail_dump_exten,answer_transfer_agent,ext_context,sys_perf_log,vd_server_logs,agi_output,vicidial_balance_active,balance_trunks_offlimits,recording_web_link,alt_server_ip,active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,outbound_calls_per_second,sysload,channels_total,cpu_idle_percent,disk_usage from servers where server_id='$server_id' or server_ip='$server_ip';";
+	$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,local_gmt,voicemail_dump_exten,answer_transfer_agent,ext_context,sys_perf_log,vd_server_logs,agi_output,vicidial_balance_active,balance_trunks_offlimits,recording_web_link,alt_server_ip,active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,outbound_calls_per_second,sysload,channels_total,cpu_idle_percent,disk_usage,sounds_update from servers where server_id='$server_id' or server_ip='$server_ip';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$server_id =					$row[0];
@@ -18274,6 +18317,7 @@ if ($ADD==311111111111)
 	$channels_total =				$row[29];
 	$cpu_idle_percent =				$row[30];
 	$disk_usage =					$row[31];
+	$sounds_update =				$row[32];
 
 	$cpu = (100 - $cpu_idle_percent);
 	$disk_usage = preg_replace("/ /"," - ",$disk_usage);
@@ -18317,6 +18361,7 @@ if ($ADD==311111111111)
 	echo "<tr bgcolor=#B6D3FC><td align=right>Active Asterisk Server: </td><td align=left><select size=1 name=active_asterisk_server><option>Y</option><option>N</option><option selected>$active_asterisk_server</option></select>$NWB#servers-active_asterisk_server$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Generate conf files: </td><td align=left><select size=1 name=generate_vicidial_conf><option>Y</option><option>N</option><option selected>$generate_vicidial_conf</option></select>$NWB#servers-generate_vicidial_conf$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Rebuild conf files: </td><td align=left><select size=1 name=rebuild_conf_files><option>Y</option><option>N</option><option selected>$rebuild_conf_files</option></select>$NWB#servers-rebuild_conf_files$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Sounds Update: </td><td align=left><select size=1 name=sounds_update><option>Y</option><option>N</option><option selected>$sounds_update</option></select>$NWB#servers-sounds_update$NWE</td></tr>\n";
 
 
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE=SUBMIT></td></tr>\n";
@@ -18827,7 +18872,7 @@ if ($ADD==311111111111111)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,agentonly_callback_campaign_lock from system_settings;";
+	$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory from system_settings;";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$version =						$row[0];
@@ -18865,9 +18910,13 @@ if ($ADD==311111111111111)
 	$outbound_autodial_active =		$row[32];
 	$outbound_calls_per_second =	$row[33];
 	$agentonly_callback_campaign_lock = $row[34];
+	$sounds_central_control_active = $row[35];
+	$sounds_web_server =			$row[36];
+	$sounds_web_directory =			$row[37];
 
 	echo "<br>MODIFY VICIDIAL SYSTEM SETTINGS<form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=ADD value=411111111111111>\n";
+	echo "<input type=hidden name=sounds_web_directory value=\"$sounds_web_directory\">\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Version: </td><td align=left> $version</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>DB Schema Version: </td><td align=left> $db_schema_version</td></tr>\n";
@@ -18922,6 +18971,11 @@ if ($ADD==311111111111111)
 	echo "</select>$NWB#settings-vdc_header_phone_format$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Agent API Active: </td><td align=left><select size=1 name=vdc_agent_api_active><option>1</option><option>0</option><option selected>$vdc_agent_api_active</option></select>$NWB#settings-vdc_agent_api_active$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Agent Only Callback Campaign Lock: </td><td align=left><select size=1 name=agentonly_callback_campaign_lock><option>1</option><option>0</option><option selected>$agentonly_callback_campaign_lock</option></select>$NWB#settings-agentonly_callback_campaign_lock$NWE</td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=right>Central Sound Control Active: </td><td align=left><select size=1 name=sounds_central_control_active><option>1</option><option>0</option><option selected>$sounds_central_control_active</option></select>$NWB#settings-sounds_central_control_active$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Sounds Web Server IP: </td><td align=left><input type=text name=sounds_web_server size=18 maxlength=15 value=\"$sounds_web_server\">$NWB#settings-sounds_web_server$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Sounds Web Directory: </td><td align=left><a href=\"http://$sounds_web_server/$sounds_web_directory\">$sounds_web_directory</a> $NWB#settings-sounds_web_directory$NWE</td></tr>\n";
+
 	echo "<tr bgcolor=#B6D3FC><td align=right>QC Features Active: </td><td align=left><select size=1 name=qc_features_active><option>1</option><option>0</option><option selected>$qc_features_active</option></select>$NWB#settings-qc_features_active$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Outbound Auto-Dial Active: </td><td align=left><select size=1 name=outbound_autodial_active><option>1</option><option>0</option><option selected>$outbound_autodial_active</option></select>$NWB#settings-outbound_autodial_active$NWE</td></tr>\n";
 

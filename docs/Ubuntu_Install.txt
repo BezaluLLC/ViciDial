@@ -1,4 +1,4 @@
-Ubuntu VICIDIAL Install:					2009-04-23
+Ubuntu VICIDIAL Install:					2009-05-12
 
 ### NOTE ###
 If you just want a quick setup of ViciDial on Ubuntu, take a look at our 
@@ -42,6 +42,8 @@ sox  (command line encoding and decoding tool)
 subversion  (code versioning tool)
 subversion-tools
 unzip
+libcurl3
+curl 
 
 
 Go to terminal:
@@ -121,9 +123,9 @@ mkdir /usr/src/asterisk
 cd /usr/src/asterisk
 
 ****FOR 1.2 asterisk run the following
-wget http://ftp.digium.com/pub/asterisk/releases/asterisk-1.2.30.2.tar.gz
-wget http://ftp.digium.com/pub/zaptel/releases/zaptel-1.2.27.tar.gz 
-wget http://ftp.digium.com/pub/libpri/releases/libpri-1.2.8.tar.gz
+wget http://downloads.digium.com/pub/asterisk/releases/asterisk-1.2.30.2.tar.gz
+wget http://downloads.digium.com/pub/zaptel/releases/zaptel-1.2.27.tar.gz 
+wget http://downloads.digium.com/pub/libpri/releases/libpri-1.2.8.tar.gz
 tar xzf asterisk-1.2.30.2.tar.gz
 tar xzf zaptel-1.2.27.tar.gz 
 tar xzf libpri-1.2.8.tar.gz

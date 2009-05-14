@@ -705,7 +705,7 @@ while ($sthBrowsC > $i)
 		if (length($territory)>0)
 			{
 			$VL_exists=0;
-			$stmtA = "SELECT count(*) FROM vicidial_users where user_code='$territory';";
+			$stmtA = "SELECT count(*) FROM vicidial_user_territories where territory='$territory';";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -719,7 +719,7 @@ while ($sthBrowsC > $i)
 			if ($VL_exists > 0)
 				{
 				$user='';
-				$stmtA = "SELECT user FROM vicidial_users where user_code='$territory';";
+				$stmtA = "SELECT user FROM vicidial_user_territories where territory='$territory';";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -747,7 +747,7 @@ while ($sthBrowsC > $i)
 
 					if (length($user_id)>0)
 						{
-						$stmtB = "UPDATE vtiger_crmentity SET smownerid='$user_id' where accountid='$crmid[$i]';";
+						$stmtB = "UPDATE vtiger_crmentity SET smownerid='$user_id' where crmid='$crmid[$i]';";
 							if ($T < 1) {$affected_rowsB = $dbhB->do($stmtB)    or die  "Couldn't execute query: |$stmtB|\n";}
 							if($DB){print "|$affected_rowsB|$stmtB|\n";}
 						$n++;

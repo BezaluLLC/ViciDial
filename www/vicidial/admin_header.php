@@ -7,6 +7,7 @@
 # CHANGES
 # 90310-0709 - First Build
 # 90508-0542 - Added Call Menu option, changed script to use long PHP tags
+# 90514-0605 - Added audio prompt selection functions
 #
 
 
@@ -75,6 +76,10 @@ if ($hh=='reports')
 
 echo "</title>\n";
 echo "<script language=\"Javascript\">\n";
+echo "var field_name = '';\n";
+echo "var user = '$PHP_AUTH_USER';\n";
+echo "var pass = '$PHP_AUTH_PW';\n";
+echo "var epoch = '" . date("U") . "';\n";
 
 if ($TCedit_javascript > 0)
 	{
@@ -316,6 +321,40 @@ function user_auto()
 		user_toggle.value = 0;
 		}
 	}
+
+function user_submit()
+	{
+	var user_field = document.getElementById("user");
+	user_field.disabled = false;
+	document.userform.submit();
+	}
+
+<?php
+}
+
+#### Javascript for auto-generate of user ID Button
+else
+{
+?>
+function launch_chooser(fieldname,stage,vposition)
+	{
+	var audiolistURL = "./non_agent_api.php";
+	var audiolistQuery = "source=admin&function=sounds_list&user=" + user + "&pass=" + pass + "&format=selectframe&stage=" + stage + "&comments=" + fieldname;
+	var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:560;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="560" height="460" STYLE="z-index:2"> </iframe>';
+
+	document.getElementById("audio_chooser_span").style.position = "absolute";
+	document.getElementById("audio_chooser_span").style.left = "300px";
+	document.getElementById("audio_chooser_span").style.top = vposition + "px";
+	document.getElementById("audio_chooser_span").style.visibility = 'visible';
+	document.getElementById("audio_chooser_span").innerHTML = Iframe_content;
+	}
+
+function close_chooser()
+	{
+	document.getElementById("audio_chooser_span").style.visibility = 'hidden';
+	document.getElementById("audio_chooser_span").innerHTML = '';
+	}
+
 
 function user_submit()
 	{
@@ -661,7 +700,14 @@ $admin_home_url_LU =	$row[0];
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $status_sh ?>> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=321111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $status_fc ?> SIZE=<?php echo $header_font_size ?>> System Statuses </a></TD>
 		</TR>
+		<?php if ( ($sounds_central_control_active > 0) or ($SSsounds_central_control_active > 0) )
+			{ ?>
+			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $status_sh ?>> &nbsp; 
+			<a href="audio_store.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $status_fc ?> SIZE=<?php echo $header_font_size ?>> Audio Store </a></TD>
+		</TR>
+
 		<?php }
+			}
 	?>
 	<!-- REPORTS NAVIGATION -->
 	<TR><TD <?php echo $reports_hh ?>>
@@ -670,6 +716,10 @@ $admin_home_url_LU =	$row[0];
 	</TABLE>
 </TD><TD VALIGN=TOP WIDTH=<?php echo $page_width ?> BGCOLOR=#D9E6FE>
 <!-- END SIDEBAR NAVIGATION -->
+
+<span style="position:absolute;left:300px;top:30px;z-index:1;visibility:hidden;" id="audio_chooser_span">
+
+</span>
 
 <TABLE BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0 WIDTH=<?php echo $page_width ?> HEIGHT=15>
 <TR BGCOLOR=#015B91><TD ALIGN=LEFT BGCOLOR=#015B91><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><a href="<?php echo $admin_home_url_LU ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1>HOME</a> | <A HREF="../agc/timeclock.php?referrer=admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1> Timeclock</A> | <a href="<?php echo $ADMIN ?>?force_logout=1"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1>Logout</a></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo date("l F j, Y G:i:s A") ?> &nbsp; </B></TD></TR>

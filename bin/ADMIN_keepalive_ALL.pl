@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# ADMIN_keepalive_ALL.pl   version  2.0.5
+# ADMIN_keepalive_ALL.pl   version  2.2.0
 #
 # Designed to keep the astGUIclient processes alive and check every minute
 # Replaces all other ADMIN_keepalive scripts
@@ -9,7 +9,7 @@
 #
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
-#
+# CHANGES
 # 61011-1348 - First build
 # 61120-2011 - Added option 7 for AST_VDauto_dial_FILL.pl
 # 80227-1526 - Added option 8 for ip_relay
@@ -20,6 +20,7 @@
 # 90327-1421 - Removed [globals] tag from auto-generated extensions file
 # 90409-1251 - Fixed voicemail conf file issue
 # 90506-1155 - Added Call Menu functionality
+# 90513-0449 - Added audio store sync functionality
 #
 
 $DB=0; # Debug flag
@@ -493,7 +494,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
  or die "Couldn't connect to database: " . DBI->errstr;
 
 ##### Get the settings for this server's server_ip #####
-$stmtA = "SELECT active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,asterisk_version FROM servers where server_ip='$server_ip';";
+$stmtA = "SELECT active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,asterisk_version,sounds_update FROM servers where server_ip='$server_ip';";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -501,11 +502,11 @@ $sthArows=$sthA->rows;
 if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$active_asterisk_server	=	"$aryA[0]";
-	$generate_vicidial_conf	=	"$aryA[1]";
-	$rebuild_conf_files	=		"$aryA[2]";
-	$asterisk_version	=		"$aryA[3]";
-	$i++;
+	$active_asterisk_server	=	$aryA[0];
+	$generate_vicidial_conf	=	$aryA[1];
+	$rebuild_conf_files	=		$aryA[2];
+	$asterisk_version =			$aryA[3];
+	$sounds_update =			$aryA[4];
 	}
 $sthA->finish();
 
@@ -1100,14 +1101,47 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		}
 
 	}
-
-
-
-
-
 ################################################################################
 #####  END Creation of auto-generated conf files
 ################################################################################
+
+
+
+
+
+
+
+
+################################################################################
+#####  BEGIN  Audio Store sync
+################################################################################
+if ( ($active_asterisk_server =~ /Y/) && ($sounds_update =~ /Y/) )
+	{
+	##### Get the settings from system_settings #####
+	$stmtA = "SELECT sounds_central_control_active FROM system_settings;";
+	#	print "$stmtA\n";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$sounds_central_control_active	=	"$aryA[0]";
+		}
+	$sthA->finish();
+
+	if ($sounds_central_control_active > 0)
+		{
+		if ($DB) {print "running audio store sync process...\n";}
+		`/usr/bin/screen -d -m -S AudioStore $PATHhome/ADMIN_audio_store_sync.pl 2>/dev/null 1>&2`;
+		}
+	}
+
+
+################################################################################
+#####  END  Audio Store sync
+################################################################################
+
 
 
 

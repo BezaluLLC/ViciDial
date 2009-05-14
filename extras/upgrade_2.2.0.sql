@@ -83,3 +83,19 @@ UPDATE system_settings SET db_schema_version='1140';
 ALTER TABLE system_settings ADD agentonly_callback_campaign_lock ENUM('0','1') default '1';
 
 UPDATE system_settings SET db_schema_version='1141';
+
+ALTER TABLE system_settings ADD sounds_central_control_active ENUM('0','1') default '0';
+ALTER TABLE system_settings ADD sounds_web_server VARCHAR(15) default '127.0.0.1';
+ALTER TABLE system_settings ADD sounds_web_directory VARCHAR(255) default '';
+
+ALTER TABLE servers ADD sounds_update ENUM('Y','N') default 'N';
+
+CREATE TABLE vicidial_user_territories (
+user VARCHAR(20) NOT NULL,
+territory VARCHAR(100) default '',
+index (user),
+unique index userterritory (user, territory)
+);
+
+UPDATE system_settings SET db_schema_version='1142';
+
