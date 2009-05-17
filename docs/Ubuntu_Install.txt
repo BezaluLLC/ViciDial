@@ -10,7 +10,13 @@ From a full default install of Ubuntu Server 8.0.4.2:
 Open a terminal on the system
 $ sudo su
 $ passwd (set the root user's password)
-“apt-get install” the following packages:
+
+$ apt-get update (retrieves the latest repository information)
+$ apt-get upgrade (upgrades any out of date packages
+$ apt-get install linux-server (install the latest version of the linux kernel)
+$ reboot (reboot to use the new kernel)
+
+apt-get install the following packages:
 apache2 (web server)
 apache2-mpm-prefork (multi threaded portion to apache2)
 build-essential  (this is the build tool chain for gcc)
@@ -21,7 +27,7 @@ libncurses5-dev
 libploticus0-dev
 libsox-fmt-all (encoding and decoding libraries for sox)
 linux-source (needed if you are going to recompile the linux kernel)
-linux-headers (needed for compiling zaptel)
+linux-headers-KERNELVERSION-server (where KERNELVERSION is your current kernel version IE 2.6.24-24. Used for zaptel compile)
 mpg123 (mp3 playback utility for the commandline)
 mtop  (utility for monitoring mysql)
 mysql-client-5.0 (command for connecting to mysql)
@@ -74,35 +80,35 @@ $ cpan   (enter through questions until you get to the cpan prompt)
 > install Mail::Sendmail
 > quit
 
-cd /usr/src
-wget http://asterisk.gnuinter.net/files/asterisk-perl-0.08.tar.gz
-tar xzf asterisk-perl-0.08.tar.gz
-cd asterisk-perl-0.08
-perl Makefile.PL
-make all
-make install
+$ cd /usr/src
+$ wget http://asterisk.gnuinter.net/files/asterisk-perl-0.08.tar.gz
+$ tar xzf asterisk-perl-0.08.tar.gz
+$ cd asterisk-perl-0.08
+$ perl Makefile.PL
+$ make all
+$ make install
 
-cd /usr/src
-wget http://www.daveltd.com/src/util/ttyload/ttyload-0.5.tar.gz
-tar xzf ttyload-0.5.tar.gz
-cd ttyload-0.5
-make
-make install
+$ cd /usr/src
+$ wget http://www.daveltd.com/src/util/ttyload/ttyload-0.5.tar.gz
+$ tar xzf ttyload-0.5.tar.gz
+$ cd ttyload-0.5
+$ make
+$ make install
 
-cd /usr/src
-wget http://bart.eaccelerator.net/source/0.9.5.3/eaccelerator-0.9.5.3.zip
-unzip eaccelerator-0.9.5.3.zip
-cd eaccelerator-0.9.5.3
-phpize
-./configure
-make
-make install
-cd /etc/php5/conf.d/
+$ cd /usr/src
+$ wget http://bart.eaccelerator.net/source/0.9.5.3/eaccelerator-0.9.5.3.zip
+$ unzip eaccelerator-0.9.5.3.zip
+$ cd eaccelerator-0.9.5.3
+$ phpize
+$ ./configure
+$ make
+$ make install
+$ cd /etc/php5/conf.d/
 $ vim eaccelerator.ini
 > add the following to the eaccelerator.:
-           extension="eaccelerator.so"
+          extension="eaccelerator.so"
           eaccelerator.shm_size="48"
-          eaccelerator.cache_dir="/tmp/eaccelerator"
+          eaccelerator.cache_dir="/var/lib/eaccelerator"
           eaccelerator.enable="1"
           eaccelerator.optimizer="1"
           eaccelerator.check_mtime="1"
@@ -114,46 +120,47 @@ $ vim eaccelerator.ini
           eaccelerator.shm_only="0"
           eaccelerator.compress="1"
           eaccelerator.compress_level="9"
-mkdir /tmp/eaccelerator
-chmod 0777 /tmp/eaccelerator
-php -v
+$ mkdir /var/lib/eaccelerator
+$ chmod 0777 /var/lib/eaccelerator
+$ php -v
 
+NOTE: You should see a line mentioning eaccelerator. If you do not or you get an error you have done something wrong
 
-mkdir /usr/src/asterisk
-cd /usr/src/asterisk
+$ mkdir /usr/src/asterisk
+$ cd /usr/src/asterisk
 
 ****FOR 1.2 asterisk run the following
-wget http://downloads.digium.com/pub/asterisk/releases/asterisk-1.2.30.2.tar.gz
-wget http://downloads.digium.com/pub/zaptel/releases/zaptel-1.2.27.tar.gz 
-wget http://downloads.digium.com/pub/libpri/releases/libpri-1.2.8.tar.gz
-tar xzf asterisk-1.2.30.2.tar.gz
-tar xzf zaptel-1.2.27.tar.gz 
-tar xzf libpri-1.2.8.tar.gz
-cd libpri-1.2.8
-make clean; make; make install
-cd ../zaptel-1.2.27
-make clean; make; make install
-cd ../asterisk-1.2.30.2
-cd apps
-wget http://www.eflo.net/files/app_amd2.c
-mv app_amd2.c app_amd.c
+$ wget http://downloads.digium.com/pub/asterisk/releases/asterisk-1.2.30.2.tar.gz
+$ wget http://downloads.digium.com/pub/zaptel/releases/zaptel-1.2.27.tar.gz 
+$ wget http://downloads.digium.com/pub/libpri/releases/libpri-1.2.8.tar.gz
+$ tar xzf asterisk-1.2.30.2.tar.gz
+$ tar xzf zaptel-1.2.27.tar.gz 
+$ tar xzf libpri-1.2.8.tar.gz
+$ cd libpri-1.2.8
+$ make clean && make && make install
+$ cd ../zaptel-1.2.27
+$ make clean&& make && make install
+$ cd ../asterisk-1.2.30.2
+$ cd apps
+$ wget http://www.eflo.net/files/app_amd2.c
+$ mv app_amd2.c app_amd.c
 $ vi Makefile
  replace this line(line 32):
- app_mixmonitor.so app_stack.so
+   app_mixmonitor.so app_stack.so
  with this line:
- app_mixmonitor.so app_stack.so app_amd.so
-wget http://www.eflo.net/files/amd2.conf
-mkdir /etc/asterisk
-mv amd2.conf /etc/asterisk/amd.conf
-wget http://www.eflo.net/files/meetme_DTMF_passthru-1.2.23.patch
-patch -p1 < ./meetme_DTMF_passthru-1.2.23.patch
- File to patch: app_meetme.c
-wget http://www.eflo.net/files/meetme_volume_control_1.2.16.patch
-patch -p1 < ./meetme_volume_control_1.2.16.patch
- File to patch: app_meetme.c
-cd ../
-wget http://www.eflo.net/files/cli_chan_concise_delimiter.patch
-patch -p1 < ./cli_chan_concise_delimiter.patch
+   app_mixmonitor.so app_stack.so app_amd.so
+$ wget http://www.eflo.net/files/amd2.conf
+$ mkdir /etc/asterisk
+$ mv amd2.conf /etc/asterisk/amd.conf
+$ wget http://www.eflo.net/files/meetme_DTMF_passthru-1.2.23.patch
+$ patch -p1 < ./meetme_DTMF_passthru-1.2.23.patch
+   File to patch: app_meetme.c
+$ wget http://www.eflo.net/files/meetme_volume_control_1.2.16.patch
+$ patch -p1 < ./meetme_volume_control_1.2.16.patch
+   File to patch: app_meetme.c
+$ cd ../
+$ wget http://www.eflo.net/files/cli_chan_concise_delimiter.patch
+$ patch -p1 < ./cli_chan_concise_delimiter.patch
    File to patch: cli.c
 $ wget http://www.eflo.net/files/app_waitforsilence.c
 $ mv app_waitforsilence.c apps/app_waitforsilence.c
@@ -162,34 +169,43 @@ $ wget http://www.eflo.net/files/leave.h
 $ mv -f enter.h apps/enter.h
 $ mv -f leave.h apps/leave.h
 $ vi codecs/gsm/Makefile
-   add “OPTIMIZE=-O2” to the file  before the ifneq section, to fix GSM audio problems
+   add OPTIMIZE=-O2 to the file  before the ifneq section, to fix GSM audio problems
 $ make clean; make; make installation
 $ make samples
 $ modprobe zaptel
 $ modprobe ztdummy
 
 ****FOR 1.4 asterisk do the following:
-wget http://downloads.digium.com/pub/asterisk/old-releases/asterisk-1.4.21.2.tar.gz
-wget http://downloads.digium.com/pub/zaptel/zaptel-1.4.12.1.tar.gz
-wget http://downloads.digium.com/pub/libpri/libpri-1.4.9.tar.gz
-tar xzf asterisk-1.4.21.2.tar.gz
-tar xzf zaptel-1.4.12.1.tar.gz 
-tar xzf libpri-1.4.9.tar.gz
-cd libpri-1.4.9
-make clean; make; make install
-cd ../zaptel-1.4.12.1
-./configure; make clean; make; make install
-cd ../asterisk-1.4.21.2
+$ wget http://downloads.digium.com/pub/asterisk/old-releases/asterisk-1.4.21.2.tar.gz
+$ wget http://downloads.digium.com/pub/zaptel/zaptel-1.4.12.1.tar.gz
+$ wget http://downloads.digium.com/pub/libpri/libpri-1.4.9.tar.gz
+$ tar xzf asterisk-1.4.21.2.tar.gz
+$ tar xzf zaptel-1.4.12.1.tar.gz 
+$ tar xzf libpri-1.4.9.tar.gz
+$ cd libpri-1.4.9
+$ make clean; make; make install
+$ cd ../zaptel-1.4.12.1
+$ ./configure; make clean; make; make install
+$ cd ../asterisk-1.4.21.2
 $ wget http://www.eflo.net/files/enter.h
 $ wget http://www.eflo.net/files/leave.h
 $ mv -f enter.h apps/enter.h
 $ mv -f leave.h apps/leave.h
 $ vi codecs/gsm/Makefile
-   add “OPTIMIZE=-O2” to the file  before the ifneq section, to fix GSM audio problems
-./configure; make clean; make; make install
-make samples
-modprobe zaptel
-modprobe ztdummy
+   add OPTIMIZE=-O2 to the file  before the ifneq section, to fix GSM audio problems
+$ wget http://download.vicidial.com/conf/res_agi_defunct.patch
+$ patch -p1 < res_agi_defunct.patch
+   File to patch: res/res_agi.c
+$ cd apps/
+$ rm app_waitforsilence.c
+$ wget http://download.vicidial.com/conf/app_waitforsilence.c
+$ cd ../channels/
+$ rm chan_sip.c
+$ wget http://download.vicidial.com/conf/chan_sip.c
+$ ./configure; make clean; make; make install
+$ make samples
+$ modprobe zaptel
+$ modprobe ztdummy
 
 $ asterisk -vvvvvvvvvvvvvvvvvvvvvvvvvvvvgc      (to see if Asterisk runs)
 > show version
@@ -199,56 +215,56 @@ $ asterisk -vvvvvvvvvvvvvvvvvvvvvvvvvvvvgc      (to see if Asterisk runs)
 
 
 *** for asterisk 1.2
-cd /var/lib/asterisk/mohmp3/
-mpg123 -s --rate 44100 --mono /var/lib/asterisk/mohmp3/fpm-sunshine.mp3 > /var/lib/asterisk/mohmp3/fpm-sunshine.raw
-sox -r 44100 -w -s -c 1 fpm-sunshine.raw -r 8000 -c 1 fpm-sunshine.wav
-sox fpm-sunshine.wav -t gsm -r 8000 -b -c 1 fpm-sunshine.gsm
-sox fpm-sunshine.wav -t ul -r 8000 -b -c 1 fpm-sunshine.pcm
-mpg123 -s --rate 44100 --mono /var/lib/asterisk/mohmp3/fpm-calm-river.mp3 > /var/lib/asterisk/mohmp3/fpm-calm-river.raw
-sox -r 44100 -w -s -c 1 fpm-calm-river.raw -r 8000 -c 1 fpm-calm-river.wav
-sox fpm-calm-river.wav -t gsm -r 8000 -b -c 1 fpm-calm-river.gsm
-sox fpm-calm-river.wav -t ul -r 8000 -b -c 1 fpm-calm-river.pcm
-mpg123 -s --rate 44100 --mono /var/lib/asterisk/mohmp3/fpm-world-mix.mp3 > /var/lib/asterisk/mohmp3/fpm-world-mix.raw
-sox -r 44100 -w -s -c 1 fpm-world-mix.raw -r 8000 -c 1 fpm-world-mix.wav
-sox fpm-world-mix.wav -t gsm -r 8000 -b -c 1 fpm-world-mix.gsm
-sox fpm-world-mix.wav -t ul -r 8000 -b -c 1 fpm-world-mix.pcm
-mkdir ../orig-mp3
-mv -f *.mp3 ../orig-mp3/
-mkdir ../quiet-mp3
-cd ../quiet-mp3
-sox -r 44100 -w -s -c 1 ../mohmp3/fpm-sunshine.raw -r 8000 -c 1 fpm-sunshine.wav vol 0.25
-sox fpm-sunshine.wav -t gsm -r 8000 -b -c 1 fpm-sunshine.gsm
-sox fpm-sunshine.wav -t ul -r 8000 -b -c 1 fpm-sunshine.pcm
-sox -r 44100 -w -s -c 1 ../mohmp3/fpm-calm-river.raw -r 8000 -c 1 fpm-calm-river.wav vol 0.25
-sox fpm-calm-river.wav -t gsm -r 8000 -b -c 1 fpm-calm-river.gsm
-sox fpm-calm-river.wav -t ul -r 8000 -b -c 1 fpm-calm-river.pcm
-sox -r 44100 -w -s -c 1 ../mohmp3/fpm-world-mix.raw -r 8000 -c 1 fpm-world-mix.wav vol 0.25
-sox fpm-world-mix.wav -t gsm -r 8000 -b -c 1 fpm-world-mix.gsm
-sox fpm-world-mix.wav -t ul -r 8000 -b -c 1 fpm-world-mix.pcm
-rm -f ../mohmp3/*.raw
+$ cd /var/lib/asterisk/mohmp3/
+$ mpg123 -s --rate 44100 --mono /var/lib/asterisk/mohmp3/fpm-sunshine.mp3 > /var/lib/asterisk/mohmp3/fpm-sunshine.raw
+$ sox -r 44100 -w -s -c 1 fpm-sunshine.raw -r 8000 -c 1 fpm-sunshine.wav
+$ sox fpm-sunshine.wav -t gsm -r 8000 -b -c 1 fpm-sunshine.gsm
+$ sox fpm-sunshine.wav -t ul -r 8000 -b -c 1 fpm-sunshine.pcm
+$ mpg123 -s --rate 44100 --mono /var/lib/asterisk/mohmp3/fpm-calm-river.mp3 > /var/lib/asterisk/mohmp3/fpm-calm-river.raw
+$ sox -r 44100 -w -s -c 1 fpm-calm-river.raw -r 8000 -c 1 fpm-calm-river.wav
+$ sox fpm-calm-river.wav -t gsm -r 8000 -b -c 1 fpm-calm-river.gsm
+$ sox fpm-calm-river.wav -t ul -r 8000 -b -c 1 fpm-calm-river.pcm
+$ mpg123 -s --rate 44100 --mono /var/lib/asterisk/mohmp3/fpm-world-mix.mp3 > /var/lib/asterisk/mohmp3/fpm-world-mix.raw
+$ sox -r 44100 -w -s -c 1 fpm-world-mix.raw -r 8000 -c 1 fpm-world-mix.wav
+$ sox fpm-world-mix.wav -t gsm -r 8000 -b -c 1 fpm-world-mix.gsm
+$ sox fpm-world-mix.wav -t ul -r 8000 -b -c 1 fpm-world-mix.pcm
+$ mkdir ../orig-mp3
+$ mv -f *.mp3 ../orig-mp3/
+$ mkdir ../quiet-mp3
+$ cd ../quiet-mp3
+$ sox -r 44100 -w -s -c 1 ../mohmp3/fpm-sunshine.raw -r 8000 -c 1 fpm-sunshine.wav vol 0.25
+$ sox fpm-sunshine.wav -t gsm -r 8000 -b -c 1 fpm-sunshine.gsm
+$ sox fpm-sunshine.wav -t ul -r 8000 -b -c 1 fpm-sunshine.pcm
+$ sox -r 44100 -w -s -c 1 ../mohmp3/fpm-calm-river.raw -r 8000 -c 1 fpm-calm-river.wav vol 0.25
+$ sox fpm-calm-river.wav -t gsm -r 8000 -b -c 1 fpm-calm-river.gsm
+$ sox fpm-calm-river.wav -t ul -r 8000 -b -c 1 fpm-calm-river.pcm
+$ sox -r 44100 -w -s -c 1 ../mohmp3/fpm-world-mix.raw -r 8000 -c 1 fpm-world-mix.wav vol 0.25
+$ sox fpm-world-mix.wav -t gsm -r 8000 -b -c 1 fpm-world-mix.gsm
+$ sox fpm-world-mix.wav -t ul -r 8000 -b -c 1 fpm-world-mix.pcm
+$ rm -f ../mohmp3/*.raw
 
 
 **** for asterisk 1.4
-cp -a /var/lib/asterisk/moh /var/lib/asterisk/mohmp3/
-cd /var/lib/asterisk/mohmp3/
-sox fpm-sunshine.wav -t gsm -r 8000 -b -c 1 fpm-sunshine.gsm
-sox fpm-sunshine.wav -t ul -r 8000 -b -c 1 fpm-sunshine.pcm
-sox fpm-calm-river.wav -t gsm -r 8000 -b -c 1 fpm-calm-river.gsm
-sox fpm-calm-river.wav -t ul -r 8000 -b -c 1 fpm-calm-river.pcm
-sox -r 44100 -w -s -c 1 fpm-world-mix.raw -r 8000 -c 1 fpm-world-mix.wav
-sox fpm-world-mix.wav -t gsm -r 8000 -b -c 1 fpm-world-mix.gsm
-sox fpm-world-mix.wav -t ul -r 8000 -b -c 1 fpm-world-mix.pcm
-mkdir ../quiet-mp3
-cd ../quiet-mp3
-sox ../mohmp3/fpm-sunshine.wav -r 8000 -c 1 fpm-sunshine.wav vol 0.25
-sox fpm-sunshine.wav -t gsm -r 8000 -b -c 1 fpm-sunshine.gsm
-sox fpm-sunshine.wav -t ul -r 8000 -b -c 1 fpm-sunshine.pcm
-sox ../mohmp3/fpm-calm-river.wav -r 8000 -c 1 fpm-calm-river.wav vol 0.25
-sox fpm-calm-river.wav -t gsm -r 8000 -b -c 1 fpm-calm-river.gsm
-sox fpm-calm-river.wav -t ul -r 8000 -b -c 1 fpm-calm-river.pcm
-sox ../mohmp3/fpm-world-mix.wav -r 8000 -c 1 fpm-world-mix.wav vol 0.25
-sox fpm-world-mix.wav -t gsm -r 8000 -b -c 1 fpm-world-mix.gsm
-sox fpm-world-mix.wav -t ul -r 8000 -b -c 1 fpm-world-mix.pcm
+$ cp -a /var/lib/asterisk/moh /var/lib/asterisk/mohmp3/
+$ cd /var/lib/asterisk/mohmp3/
+$ sox fpm-sunshine.wav -t gsm -r 8000 -b -c 1 fpm-sunshine.gsm
+$ sox fpm-sunshine.wav -t ul -r 8000 -b -c 1 fpm-sunshine.pcm
+$ sox fpm-calm-river.wav -t gsm -r 8000 -b -c 1 fpm-calm-river.gsm
+$ sox fpm-calm-river.wav -t ul -r 8000 -b -c 1 fpm-calm-river.pcm
+$ sox -r 44100 -w -s -c 1 fpm-world-mix.raw -r 8000 -c 1 fpm-world-mix.wav
+$ sox fpm-world-mix.wav -t gsm -r 8000 -b -c 1 fpm-world-mix.gsm
+$ sox fpm-world-mix.wav -t ul -r 8000 -b -c 1 fpm-world-mix.pcm
+$ mkdir ../quiet-mp3
+$ cd ../quiet-mp3
+$ sox ../mohmp3/fpm-sunshine.wav -r 8000 -c 1 fpm-sunshine.wav vol 0.25
+$ sox fpm-sunshine.wav -t gsm -r 8000 -b -c 1 fpm-sunshine.gsm
+$ sox fpm-sunshine.wav -t ul -r 8000 -b -c 1 fpm-sunshine.pcm
+$ sox ../mohmp3/fpm-calm-river.wav -r 8000 -c 1 fpm-calm-river.wav vol 0.25
+$ sox fpm-calm-river.wav -t gsm -r 8000 -b -c 1 fpm-calm-river.gsm
+$ sox fpm-calm-river.wav -t ul -r 8000 -b -c 1 fpm-calm-river.pcm
+$ sox ../mohmp3/fpm-world-mix.wav -r 8000 -c 1 fpm-world-mix.wav vol 0.25
+$ sox fpm-world-mix.wav -t gsm -r 8000 -b -c 1 fpm-world-mix.gsm
+$ sox fpm-world-mix.wav -t ul -r 8000 -b -c 1 fpm-world-mix.pcm
 
 **** for SVN 2.0.5 branch:
 $ mkdir /usr/src/astguiclient
@@ -257,7 +273,7 @@ $ svn checkout svn://svn.eflo.net:43690/agc_2-X/branches/agc_2.0.5
 $ cd agc_2.0.5
 $ perl install.pl
 
-**** for SVN 2.0 trunk:
+**** for SVN 2.2.0 trunk:
 $ mkdir /usr/src/astguiclient
 $ cd /usr/src/astguiclient
 $ svn checkout svn://svn.eflo.net:43690/agc_2-X/trunk
@@ -266,7 +282,7 @@ $ perl install.pl
 
  : manual configuration [y]
  : press enter until you get to webroot and set that to the following: /var/www
- : press enter through to the “Sample configuration files” and set that to 'y'
+ : press enter through to the Sample configuration files and set that to 'y'
  : press enter through to the end of the script
  : add the highlighted lines to the top of your [default] context:
 $ vi /etc/asterisk/extensions.conf
@@ -283,17 +299,17 @@ $ mysql
 > \. /usr/src/astguiclient/trunk/extras/first_server_install.sql
 > \. /usr/src/astguiclient/trunk/extras/sip-iax_phones.sql
 > quit
-$ /usr/share/astguiclient/ADMIN_update_server_ip.pl –old-server_ip=10.10.10.15
+$ /usr/share/astguiclient/ADMIN_update_server_ip.pl --old-server_ip=10.10.10.15
 $ /usr/share/astguiclient/ADMIN_area_code_populate.pl
 $ cp /usr/src/astguiclient/trunk/extras/performance_test_leads.txt /usr/share/astguiclient/LEADS_IN/
-$ /usr/share/astguiclient/VICIDIAL_IN_new_leads_file.pl --forcelistid=107 –forcephonecode=1
+$ /usr/share/astguiclient/VICIDIAL_IN_new_leads_file.pl --forcelistid=107 --forcephonecode=1
 
 $ crontab -e
   Add the following lines:
 ### recording mixing/compressing/ftping scripts
 0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,51,54,57 * * * * /usr/share/astguiclient/AST_CRON_audio_1_move_mix.pl
 #0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,51,54,57 * * * * /usr/share/astguiclient/AST_CRON_audio_1_move_VDonly.pl
-1,4,7,10,13,16,19,22,25,28,31,34,37,40,43,46,49,52,55,58 * * * * /usr/share/astguiclient/AST_CRON_audio_2_compress.pl –MP3
+1,4,7,10,13,16,19,22,25,28,31,34,37,40,43,46,49,52,55,58 * * * * /usr/share/astguiclient/AST_CRON_audio_2_compress.pl --MP3
 #2,5,8,11,14,17,20,23,26,29,32,35,38,41,44,47,50,53,56,59 * * * * /usr/share/astguiclient/AST_CRON_audio_3_ftp.pl --MP3
 ### keepalive script for astguiclient processes
 * * * * * /usr/share/astguiclient/ADMIN_keepalive_ALL.pl
@@ -327,13 +343,10 @@ $ crontab -e
 29 0 * * * /usr/bin/find /var/log/asterisk -maxdepth 3 -type f -mtime +2 -print | xargs rm -f
 
 
-cd /etc/init.d/
-cp /usr/src/astguiclient/trunk/extras/init.d/vicidial ./
-chmod 0755 vicidial
-cd /usr/bin
-ln -s /bin/grep grep
-cd ../rc2.d
-ln -s ../init.d/vicidial S35vicidial
+$ cd /etc/init.d/
+$ wget http://download.vicidial.com/ubuntu/vicidial
+$ chmod +x vicidial
+$ update-rc.d -f vicidial defaults
 
 $ vim /etc/apache2/sites-available/default                  (add the following lines)
  Alias /RECORDINGS/ "/var/spool/asterisk/monitorDONE/"
