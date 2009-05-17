@@ -1542,8 +1542,10 @@ $conf_override = ereg_replace(";","",$conf_override);
 $template_contents = ereg_replace(";","",$template_contents);
 $registration_string = ereg_replace(";","",$registration_string);
 $account_entry = ereg_replace(";","",$account_entry);
+$account_entry = ereg_replace("\r","",$account_entry);
 $globals_string = ereg_replace(";","",$globals_string);
 $dialplan_entry = ereg_replace(";","",$dialplan_entry);
+$dialplan_entry = ereg_replace("\r","",$dialplan_entry);
 
 ### VARIABLES TO BE mysql_real_escape_string ###
 # $web_form_address

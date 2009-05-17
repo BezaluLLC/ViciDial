@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Vtiger_OUT_sync2VICIDIAL_file.pl version 2.0.5   *DBI-version*
+# Vtiger_OUT_sync2VICIDIAL_file.pl version 2.2.0
 #
 # DESCRIPTION:
 # script exports all accounts from the vtiger system table from a PIPE-formatted
@@ -15,6 +15,7 @@
 # 90417-0519 - Added custom field updates for timezone and last/largest sale amounts
 # 90423-0453 - Added calls file and hours file reports
 # 90424-1157 - Added orders file report
+# 90517-1404 - Added date override and fixed order file report
 #
 
 $secX = time();
@@ -128,6 +129,7 @@ if (length($ARGV[0])>1)
 		print "  [--report-call-file] = generates a spec call file from vicidial records\n";
 		print "  [--report-hours-file] = generates a spec agent hours file from vicidial records\n";
 		print "  [--report-orders-file] = generates a spec orders file from vtiger records\n";
+		print "  [--date-override=YYYY-MM-DD] = run the report for a single day, must be formatted YYYY-MM-DD\n";
 		print "  [--all-records] = outputs all records, not restricted by date\n";
 		print " email options:\n";
 		print "  [--email-list=test@test.com:test2@test.com] = send email results for each file to these addresses\n";
@@ -234,10 +236,23 @@ if (length($ARGV[0])>1)
 			$report_orders_file=1;
 			if ($q < 1) {print "\n----- VTIGER REPORT ORDERS FILE -----\n\n";}
 			}
+		if ($args =~ /--date-override=/i)
+			{
+			@data_in = split(/--date-override=/,$args);
+				$TODAY = $data_in[1];
+				$TODAY =~ s/ .*//gi;
+			if ($q < 1) {print "\n----- DATE OVERRIDE: $TODAY -----\n\n";}
+			}
 		if ($args =~ /--all-records/i)
 			{
-			$TODAY = "1999-12-31 23:59:59";
+			$TODAY = "1999-12-31";
+			$ENDDAY = "2099-12-31";
 			if ($q < 1) {print "\n----- REPORT ALL RECORDS -----\n\n";}
+			}
+		else
+			{
+			$ENDDAY = $TODAY;
+			if ($q < 1) {print "\n----- DATE END DAY: $ENDDAY -----\n\n";}
 			}
 		if ($args =~ /-skip-vicidial-update/i)
 			{
@@ -366,17 +381,19 @@ $n=0;	### number of territory updates
 open(out, ">$dir2/$VDLfile")
 		|| die "Can't open $VDLfile: $!\n";
 
+$TODAYfile = $TODAY;
+$TODAYfile =~ s/-//gi;
 
 if ($report_call_file > 0) 
 	{
-	$VTcfWEBfile = "$PATHweb/vicidial/server_reports/$year$mon$mday" . "_IMM_Call_File.txt";
+	$VTcfWEBfile = "$PATHweb/vicidial/server_reports/$TODAYfile" . "_IMM_Call_File.txt";
 	### open the output file for writing ###
 	open(CFout, ">$VTcfWEBfile")
 			|| die "Can't open $VTcfWEBfile: $!\n";
 	}
 if ($report_orders_file > 0) 
 	{
-	$VTofWEBfile = "$PATHweb/vicidial/server_reports/$year$mon$mday" . "_IMM_Orders_File.txt";
+	$VTofWEBfile = "$PATHweb/vicidial/server_reports/$TODAYfile" . "_IMM_Orders_File.txt";
 	### open the output file for writing ###
 	open(OFout, ">$VTofWEBfile")
 			|| die "Can't open $VTofWEBfile: $!\n";
@@ -387,13 +404,13 @@ if ($report_orders_file > 0)
 ##### BEGIN REPORT HOURS FILE #####
 if ($report_hours_file > 0) 
 	{
-	$VThfWEBfile = "$PATHweb/vicidial/server_reports/$year$mon$mday" . "_IMM_Hours_File.txt";
+	$VThfWEBfile = "$PATHweb/vicidial/server_reports/$TODAYfile" . "_IMM_Hours_File.txt";
 	### open the output file for writing ###
 	open(HFout, ">$VThfWEBfile")
 			|| die "Can't open $VThfWEBfile: $!\n";
 
 	$VAL_exists=0;
-	$stmtA = "SELECT count(*) FROM vicidial_agent_log where event_time > \"$TODAY 00:00:00\";";
+	$stmtA = "SELECT count(*) FROM vicidial_agent_log where event_time >= \"$TODAY 00:00:00\" and event_time <= \"$ENDDAY 23:59:59\";";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -407,7 +424,7 @@ if ($report_hours_file > 0)
 
 	if ($VAL_exists > 0)
 		{
-		$stmtA = "SELECT pause_sec,wait_sec,talk_sec,dispo_sec,sub_status,vu.user,user_code,campaign_id,comments FROM vicidial_agent_log val,vicidial_users vu where event_time > \"$TODAY 00:00:00\" and val.user=vu.user and vu.user_code LIKE \"IMM%\" order by val.user;";
+		$stmtA = "SELECT pause_sec,wait_sec,talk_sec,dispo_sec,sub_status,vu.user,user_code,campaign_id,comments FROM vicidial_agent_log val,vicidial_users vu where event_time >= \"$TODAY 00:00:00\" and event_time <= \"$ENDDAY 23:59:59\" and val.user=vu.user and vu.user_code LIKE \"IMM%\" order by val.user;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -747,7 +764,11 @@ while ($sthBrowsC > $i)
 
 					if (length($user_id)>0)
 						{
-						$stmtB = "UPDATE vtiger_crmentity SET smownerid='$user_id' where crmid='$crmid[$i]';";
+						$stmtB = "UPDATE vtiger_crmentity SET smownerid='$user_id',smcreatorid='$user_id',modifiedby='$user_id' where crmid='$crmid[$i]';";
+							if ($T < 1) {$affected_rowsB = $dbhB->do($stmtB)    or die  "Couldn't execute query: |$stmtB|\n";}
+							if($DB){print "|$affected_rowsB|$stmtB|\n";}
+
+						$stmtB = "UPDATE vtiger_tracker SET user_id='$user_id' where item_id='$crmid[$i]';";
 							if ($T < 1) {$affected_rowsB = $dbhB->do($stmtB)    or die  "Couldn't execute query: |$stmtB|\n";}
 							if($DB){print "|$affected_rowsB|$stmtB|\n";}
 						$n++;
@@ -814,7 +835,7 @@ while ($sthBrowsC > $i)
 	if ($report_call_file > 0)
 		{
 		$VC_count=0;
-		$stmtA = "SELECT count(*) FROM vicidial_list where vendor_lead_code='$crmid[$i]' and last_local_call_time > \"$TODAY 00:00:00\";";
+		$stmtA = "SELECT count(*) FROM vicidial_list where vendor_lead_code='$crmid[$i]' and last_local_call_time >= \"$TODAY 00:00:00\" and last_local_call_time <= \"$ENDDAY 23:59:59\";";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -845,7 +866,7 @@ while ($sthBrowsC > $i)
 			$sthB->finish();
 
 			$lead_id='';
-			$stmtA = "SELECT lead_id FROM vicidial_list where vendor_lead_code='$crmid[$i]' and last_local_call_time > \"$TODAY 00:00:00\" order by lead_id desc limit 1;";
+			$stmtA = "SELECT lead_id FROM vicidial_list where vendor_lead_code='$crmid[$i]' and last_local_call_time >= \"$TODAY 00:00:00\" and last_local_call_time <= \"$ENDDAY 23:59:59\" order by lead_id desc limit 1;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -857,7 +878,7 @@ while ($sthBrowsC > $i)
 			$sthA->finish();
 
 			$VL_count=0;
-			$stmtA = "SELECT count(*) FROM vicidial_log where lead_id='$lead_id' and call_date > \"$TODAY 00:00:00\";";
+			$stmtA = "SELECT count(*) FROM vicidial_log where lead_id='$lead_id' and call_date >= \"$TODAY 00:00:00\" and call_date <= \"$ENDDAY 23:59:59\";";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -869,7 +890,7 @@ while ($sthBrowsC > $i)
 			$sthA->finish();
 
 			$VCL_count=0;
-			$stmtA = "SELECT count(*) FROM vicidial_closer_log where lead_id='$lead_id' and call_date > \"$TODAY 00:00:00\";";
+			$stmtA = "SELECT count(*) FROM vicidial_closer_log where lead_id='$lead_id' and call_date >= \"$TODAY 00:00:00\" and call_date <= \"$ENDDAY 23:59:59\";";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -895,7 +916,7 @@ while ($sthBrowsC > $i)
 
 			if ($VL_count > 0)
 				{
-				$stmtA = "SELECT uniqueid,vl.user,user_code,phone_number,vl.status,length_in_sec,call_date,comments FROM vicidial_log vl,vicidial_users vu where lead_id='$lead_id' and call_date > \"$TODAY 00:00:00\" and vl.user=vu.user order by call_date;";
+				$stmtA = "SELECT uniqueid,vl.user,user_code,phone_number,vl.status,length_in_sec,call_date,comments FROM vicidial_log vl,vicidial_users vu where lead_id='$lead_id' and call_date >= \"$TODAY 00:00:00\" and call_date <= \"$ENDDAY 23:59:59\" and vl.user=vu.user order by call_date;";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -923,7 +944,7 @@ while ($sthBrowsC > $i)
 
 			if ($VCL_count > 0)
 				{
-				$stmtA = "SELECT closecallid,vcl.user,user_code,phone_number,vcl.status,length_in_sec,call_date,comments FROM vicidial_closer_log vcl,vicidial_users vu where lead_id='$lead_id' and call_date > \"$TODAY 00:00:00\" and vcl.user=vu.user order by call_date;";
+				$stmtA = "SELECT closecallid,vcl.user,user_code,phone_number,vcl.status,length_in_sec,call_date,comments FROM vicidial_closer_log vcl,vicidial_users vu where lead_id='$lead_id' and call_date >= \"$TODAY 00:00:00\" and call_date <= \"$ENDDAY 23:59:59\" and vcl.user=vu.user order by call_date;";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -957,7 +978,7 @@ while ($sthBrowsC > $i)
 	if ($report_orders_file > 0)
 		{
 		$VS_exists=0;
-		$stmtB="SELECT count(*) from vtiger_salesorder where accountid='$crmid[$i]' and duedate > \"$TODAY 00:00:00\" order by duedate;";
+		$stmtB="SELECT count(*) from vtiger_crmentity vc,vtiger_salesorder vs where setype='SalesOrder' and accountid='$crmid[$i]' and createdtime >= \"$TODAY 00:00:00\" and createdtime <= \"$ENDDAY 23:59:59\" and vc.crmid=vs.salesorderid;";
 			if($DBX){print STDERR "\n|$stmtB|\n";}
 		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 		$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
@@ -1020,7 +1041,7 @@ while ($sthBrowsC > $i)
 			$sthA->finish();
 
 			$k=0;
-			$stmtB="SELECT salesorderid,total,duedate,smownerid,user_name from vtiger_salesorder vso, vtiger_crmentity vce, vtiger_users vu where accountid='$crmid[$i]' and duedate > \"$TODAY 00:00:00\" and vso.salesorderid=vce.crmid and vu.id=vce.smownerid order by duedate;";
+			$stmtB="SELECT salesorderid,total,duedate,smownerid,user_name from vtiger_salesorder vso, vtiger_crmentity vce, vtiger_users vu where accountid='$crmid[$i]' and createdtime >= \"$TODAY 00:00:00\" and createdtime <= \"$ENDDAY 23:59:59\" and vso.salesorderid=vce.crmid and vu.id=vce.smownerid order by duedate;";
 				if($DBX){print STDERR "\n|$stmtB|\n";}
 			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
@@ -1041,7 +1062,6 @@ while ($sthBrowsC > $i)
 				}
 			$sthB->finish();
 			}
-
 
 		}
 	##### END REPORT ORDERS FILE #####

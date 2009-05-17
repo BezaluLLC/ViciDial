@@ -109,15 +109,15 @@
  	global $seclog;
 +	if (!file_exists('user_privileges/user_privileges_'.$current_user->id.'.php'))
 +        {
-+                $up = fopen('user_privileges/user_privileges_'.$current_user->id.'.php',"a");
-+                fwrite($up, '<? $placeholder=0; ?>');
-+                fclose($up);
++               # create User Priviledges file
++               require('modules/Users/CreateUserPrivilegeFile.php');
++               createUserPrivilegesfile($current_user->id);
 +        }
 +	if (!file_exists('user_privileges/sharing_privileges_'.$current_user->id.'.php'))
 +	{
-+		$sp = fopen('user_privileges/sharing_privileges_'.$current_user->id.'.php',"a");
-+		fwrite($sp, '<? $placeholder=0; ?>');
-+		fclose($sp);
++		# create Sharing Priviledges file
++		require('modules/Users/CreateUserPrivilegeFile.php');
++		createUserSharingPrivilegesfile($current_user->id);
 +	}
  	require('user_privileges/user_privileges_'.$current_user->id.'.php');
  	require('user_privileges/sharing_privileges_'.$current_user->id.'.php');
