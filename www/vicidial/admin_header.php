@@ -678,6 +678,8 @@ $admin_home_url_LU =	$row[0];
 			else {$settings_sh=''; $settings_fc='BLACK';}
 		if ($sh=='status') {$status_sh="bgcolor=\"$status_color\""; $status_fc="$status_font";} # pink
 			else {$status_sh=''; $status_fc='BLACK';}
+		if ($sh=='audio') {$audio_sh="bgcolor=\"$audio_color\""; $audio_fc="$audio_font";} # pink
+			else {$audio_sh=''; $audio_fc='BLACK';}
 
 		?>
 		<TR BGCOLOR=<?php echo $admin_color ?>>
@@ -702,8 +704,8 @@ $admin_home_url_LU =	$row[0];
 		</TR>
 		<?php if ( ($sounds_central_control_active > 0) or ($SSsounds_central_control_active > 0) )
 			{ ?>
-			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $status_sh ?>> &nbsp; 
-			<a href="audio_store.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $status_fc ?> SIZE=<?php echo $header_font_size ?>> Audio Store </a></TD>
+			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $audio_sh ?>> &nbsp; 
+			<a href="audio_store.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $audio_fc ?> SIZE=<?php echo $header_font_size ?>> Audio Store </a></TD>
 		</TR>
 
 		<?php }

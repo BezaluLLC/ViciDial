@@ -10,6 +10,7 @@
 #
 # CHANGELOG
 # 90513-0458 - First Build
+# 90518-2107 - Added force-upload option
 #
 
 # constants
@@ -47,7 +48,15 @@ if (length($ARGV[0])>1)
 
 	if ($args =~ /--help/i)
 		{
-		print "allowed run time options(must stay in this order):\n  [--debug] = debug\n  [--debugX] = super debug\n  [-t] = test\n  [--upload] = upload audio not found on audio store\n  [--force-download] = force download of everything from audio store\n  [--settings-override] = ignore database settings and run sync anyway\n\n";
+		print "allowed run time options(must stay in this order):\n";
+		print "  [--debug] = debug\n";
+		print "  [--debugX] = super debug\n";
+		print "  [-t] = test\n";
+		print "  [--upload] = upload audio not found on audio store\n";
+		print "  [--force-download] = force download of everything from audio store\n";
+		print "  [--force-upload] = force upload of all local audio files to the audio store\n";
+		print "  [--settings-override] = ignore database settings and run sync anyway\n";
+		print "\n";
 		exit;
 		}
 	else
@@ -57,7 +66,7 @@ if (length($ARGV[0])>1)
 			$DB=1;
 			print "\n----- DEBUG -----\n\n";
 			}
-		if ($args =~ /--upload/i)
+		if ($args =~ /-upload/i)
 			{
 			$upload=1;
 			if ($DB) {print "\n----- UPLOAD -----\n\n";}
@@ -66,6 +75,11 @@ if (length($ARGV[0])>1)
 			{
 			$force_download=1;
 			if ($DB) {print "\n----- FORCE DOWNLOAD -----\n\n";}
+			}
+		if ($args =~ /--force-upload/i)
+			{
+			$force_upload=1;
+			if ($DB) {print "\n----- FORCE UPLOAD -----\n\n";}
 			}
 		if ($args =~ /--settings-override/i)
 			{
@@ -258,7 +272,7 @@ while ($i <= $#list)
 		$k++;
 		}
 
-	if ($found_file < 1)
+	if ( ($found_file < 1) || ($force_download > 0) )
 		{
 		`$wgetbin -q --output-document=$PATHsounds/$filename http://$sounds_web_server/$sounds_web_directory/$filename`;
 		$event_string = "DOWNLOADING: $filename     $filesize";
@@ -331,7 +345,7 @@ if ($upload > 0)
 				$i++;
 				}
 
-			if ($found_file < 1)
+			if ( ($found_file < 1) || ($force_upload > 0) )
 				{
 				$curloptions = "-s 'http://$sounds_web_server/vicidial/audio_store.php?action=AUTOUPLOAD' -F \"audiofile=\@$PATHsounds/$soundname\"";
 				`$curlbin $curloptions`;

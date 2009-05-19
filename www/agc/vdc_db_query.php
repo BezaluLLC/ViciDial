@@ -199,12 +199,13 @@
 # 90408-0021 - Added API vtiger specific callback activity record ability
 # 90508-0726 - Changed to PHP long tags
 # 90511-0923 - Added agentonly_callback_campaign_lock option
+# 90519-0634 - Fixed manual dial status and logging bug
 #
 
-$version = '2.2.0-110';
-$build = '90511-0923';
+$version = '2.2.0-111';
+$build = '90519-0634';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=212;
+$mysql_log_count=217;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -3305,7 +3306,7 @@ if ($ACTION == 'updateDISPO')
 	}
 	else
 	{
-	### update the comments in vicidial_live_agents record
+	### reset the API fields in vicidial_live_agents record
 	$stmt = "UPDATE vicidial_live_agents set lead_id=0,external_hangup=0,external_status='' where user='$user' and server_ip='$server_ip';";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_query($stmt, $link);
@@ -3320,12 +3321,20 @@ if ($ACTION == 'updateDISPO')
 				$retry_count++;
 				}
 
+	if ($auto_dial_level < 1)
+		{
+		$stmt = "UPDATE vicidial_live_agents set status='PAUSED',callerid='' where user='$user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00214',$user,$server_ip,$session_name,$one_mysql_log);}
+		}
+
 	$stmt="UPDATE vicidial_list set status='$dispo_choice', user='$user' where lead_id='$lead_id';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00142',$user,$server_ip,$session_name,$one_mysql_log);}
 
-	$stmt = "select count(*) from vicidial_inbound_groups where group_id='$stage';";
+	$stmt = "SELECT count(*) from vicidial_inbound_groups where group_id='$stage';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00143',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3339,10 +3348,80 @@ if ($ACTION == 'updateDISPO')
 		}
 	else
 		{
-		$stmt="UPDATE vicidial_log set status='$dispo_choice' where lead_id='$lead_id' and user='$user' order by uniqueid desc limit 1;";
-			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00145',$user,$server_ip,$session_name,$one_mysql_log);}
+		$four_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-4,date("i"),date("s"),date("m"),date("d"),date("Y")));
+
+		if ($auto_dial_level < 1)
+			{
+			$stmt = "SELECT count(*) from vicidial_log where lead_id='$lead_id' and user='$user' and call_date > \"$four_hours_ago\";";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00213',$user,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt="UPDATE vicidial_log set status='$dispo_choice' where lead_id='$lead_id' and user='$user' and call_date > \"$four_hours_ago\" order by uniqueid desc limit 1;";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00145',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
+			else
+				{
+				$VLlist_id = '';   $VLphone_number = '';   $VLphone_code = '';   $user_group='';
+				$stmt = "SELECT user_group FROM vicidial_users where user='$user';";
+				$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00217',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$VUinfo_ct = mysql_num_rows($rslt);
+				if ($VUinfo_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$user_group =		"$row[0]";
+					}
+
+				$stmt = "SELECT list_id,phone_number,phone_code FROM vicidial_list where lead_id='$lead_id';";
+				$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00216',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$VLinfo_ct = mysql_num_rows($rslt);
+				if ($VLinfo_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$VLlist_id =		"$row[0]";
+					if (strlen($phone_number)<6)
+						{
+						$VLphone_number =	"$row[1]";
+						$VLalt =			'MAIN';
+						}
+					else
+						{
+						$VLphone_number =	"$phone_number";
+						if ($phone_number == "$row[1]")
+							{$VLalt =			'MAIN';}
+						else
+							{$VLalt =			'ALT';}
+						}
+					if (strlen($phone_code)<1)
+						{$VLphone_code =	"$row[2]";}
+					else
+						{$VLphone_code =	"$phone_code";}
+					}
+
+				$PADlead_id = sprintf("%09s", $lead_id);
+					while (strlen($PADlead_id) > 9) {$PADlead_id = substr("$PADlead_id", 0, -1);}
+				$FAKEcall_id = "$StarTtime.$PADlead_id";
+				$stmt = "INSERT INTO vicidial_log set uniqueid='$FAKEcall_id',lead_id='$lead_id',list_id='$VLlist_id',campaign_id='$campaign',call_date='$NOW_TIME',start_epoch='$StarTtime',end_epoch='$StarTtime',length_in_sec='0',status='$dispo_choice',phone_code='$VLphone_code',phone_number='$VLphone_number',user='$user',comments='MANUAL',processed='N',user_group='$user_group',term_reason='AGENT',alt_dial='$VLalt';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00215',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
+			}
+		else
+			{
+			$stmt="UPDATE vicidial_log set status='$dispo_choice' where lead_id='$lead_id' and user='$user' and call_date > \"$four_hours_ago\" order by uniqueid desc limit 1;";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00145',$user,$server_ip,$session_name,$one_mysql_log);}
+			}
 		}
 
 	### find all DNC-type statuses in the system
@@ -3410,7 +3489,7 @@ if ($ACTION == 'updateDISPO')
 	$dispo_sec=0;
 	$dispo_epochSQL='';
 	$StarTtime = date("U");
-	$stmt = "select dispo_epoch,dispo_sec,talk_epoch from vicidial_agent_log where agent_log_id='$agent_log_id';";
+	$stmt = "select dispo_epoch,dispo_sec,talk_epoch,wait_epoch from vicidial_agent_log where agent_log_id='$agent_log_id';";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00150',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3418,9 +3497,15 @@ if ($ACTION == 'updateDISPO')
 	if ($VDpr_ct > 0)
 		{
 		$row=mysql_fetch_row($rslt);
+		if ( (eregi("NULL",$row[2])) or ($row[2] < 1000) )
+			{
+			$row[2]=$StarTtime;
+			$wait_sec=($row[2] - $row[3]);
+			$dispo_epochSQL = ",talk_epoch='$row[2]',wait_sec='$wait_sec'";
+			}
 		if ( (eregi("NULL",$row[0])) or ($row[0] < 1000) )
 			{
-			$dispo_epochSQL=",dispo_epoch='$StarTtime'";
+			$dispo_epochSQL .= ",dispo_epoch='$StarTtime'";
 			$row[0]=$row[2];
 			}
 		$dispo_sec = (($StarTtime - $row[0]) + $row[1]);

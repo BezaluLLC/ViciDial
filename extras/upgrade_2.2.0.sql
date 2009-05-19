@@ -99,3 +99,7 @@ unique index userterritory (user, territory)
 
 UPDATE system_settings SET db_schema_version='1142';
 
+ALTER TABLE system_settings ADD active_voicemail_server VARCHAR(15) default '';
+ALTER TABLE system_settings ADD auto_dial_limit VARCHAR(5) default '4';
+
+UPDATE system_settings SET db_schema_version='1143';

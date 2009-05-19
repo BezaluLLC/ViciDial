@@ -1099,7 +1099,9 @@ enable_tts_integration ENUM('0','1') default '0',
 agentonly_callback_campaign_lock ENUM('0','1') default '1',
 sounds_central_control_active ENUM('0','1') default '0',
 sounds_web_server VARCHAR(15) default '127.0.0.1',
-sounds_web_directory VARCHAR(255) default ''
+sounds_web_directory VARCHAR(255) default '',
+active_voicemail_server VARCHAR(15) default '',
+auto_dial_limit VARCHAR(5) default '4'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -1604,7 +1606,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1142';
+UPDATE system_settings SET db_schema_version='1143';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

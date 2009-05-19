@@ -1020,6 +1020,10 @@ if (isset($_GET["sounds_web_directory"]))			{$sounds_web_directory=$_GET["sounds
 	elseif (isset($_POST["sounds_web_directory"]))	{$sounds_web_directory=$_POST["sounds_web_directory"];}
 if (isset($_GET["sounds_update"]))			{$sounds_update=$_GET["sounds_update"];}
 	elseif (isset($_POST["sounds_update"]))	{$sounds_update=$_POST["sounds_update"];}
+if (isset($_GET["active_voicemail_server"]))			{$active_voicemail_server=$_GET["active_voicemail_server"];}
+	elseif (isset($_POST["active_voicemail_server"]))	{$active_voicemail_server=$_POST["active_voicemail_server"];}
+if (isset($_GET["auto_dial_limit"]))			{$auto_dial_limit=$_GET["auto_dial_limit"];}
+	elseif (isset($_POST["auto_dial_limit"]))	{$auto_dial_limit=$_POST["auto_dial_limit"];}
 
 	if (isset($script_id)) {$script_id= strtoupper($script_id);}
 	if (isset($lead_filter_id)) {$lead_filter_id = strtoupper($lead_filter_id);}
@@ -1317,6 +1321,8 @@ $computer_ip = ereg_replace("[^\.0-9]","",$computer_ip);
 $queuemetrics_server_ip = ereg_replace("[^\.0-9]","",$queuemetrics_server_ip);
 $vtiger_server_ip = ereg_replace("[^\.0-9]","",$vtiger_server_ip);
 $sounds_web_server = ereg_replace("[^\.0-9]","",$sounds_web_server);
+$active_voicemail_server = ereg_replace("[^\.0-9]","",$active_voicemail_server);
+$auto_dial_limit = ereg_replace("[^\.0-9]","",$auto_dial_limit);
 
 ### ALPHA-NUMERIC and spaces and hash and star and comma
 $xferconf_a_dtmf = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$xferconf_a_dtmf);
@@ -1810,7 +1816,7 @@ if ($force_logout)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,auto_dial_limit FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -1818,7 +1824,8 @@ $i=0;
 while ($i < $qm_conf_ct)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =					$row[0];
+	$non_latin =			$row[0];
+	$SSauto_dial_limit =	$row[1];
 	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
@@ -5218,9 +5225,9 @@ FR_SPAC 00 00 00 00 00 - France space separated phone number<BR>
 <B>Sounds Web Directory -</B> This auto-generated directory name is created at random by the system as the place that the audio store will be kept. All audio files will reside in this directory.
 
 <BR>
-<A NAME="settings-qc_features_active">
+<A NAME="settings-active_voicemail_server">
 <BR>
-<B>QC Features Active -</B> This option allows you to enable or disable the QC or Quality Control features. Default is 0 for inactive.
+<B>Active Voicemail Server -</B> In multi-server systems, this is the server that will handle all voicemail boxes. This server is also where the dial-in generated prompts will be uploaded from, the 8168 recordings.
 
 <BR>
 <A NAME="settings-outbound_autodial_active">
@@ -5228,9 +5235,19 @@ FR_SPAC 00 00 00 00 00 - France space separated phone number<BR>
 <B>Outbound Auto-Dial Active -</B> This option allows you to enable or disable outbound auto-dialing within VICIDIAL, setting this field to 0 will remove the LISTS and FILTERS sections and many fields from the Campaign Modification screens. Manual entry dialing will still be allowable from within the agent screen, but no list dialing will be possible. Default is 1 for active.
 
 <BR>
+<A NAME="settings-auto_dial_limit">
+<BR>
+<B>Ratio Dial Limit -</B> This is the maximum limit of the auto dial level in the campaign screen.
+
+<BR>
 <A NAME="settings-outbound_calls_per_second">
 <BR>
 <B>Max FILL Calls per Second -</B> This setting determines the maximum number of calls that can be placed by the auto-FILL outbound auto-dialing script on for all servers, per second. Must be from 1 to 200. Default is 40.
+
+<BR>
+<A NAME="settings-qc_features_active">
+<BR>
+<B>QC Features Active -</B> This option allows you to enable or disable the QC or Quality Control features. Default is 0 for inactive.
 
 <BR>
 <A NAME="settings-enable_queuemetrics_logging">
@@ -5724,7 +5741,62 @@ if ($ADD==11)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>Allow Closers: </td><td align=left><select size=1 name=allow_closers><option>Y</option><option>N</option></select>$NWB#vicidial_campaigns-allow_closers$NWE</td></tr>\n";
 			echo "<tr bgcolor=#B6D3FC><td align=right>Hopper Level: </td><td align=left><select size=1 name=hopper_level><option>1</option><option>5</option><option>10</option><option>20</option><option>50</option><option>100</option><option>200</option><option>500</option><option>1000</option><option>2000</option></select>$NWB#vicidial_campaigns-hopper_level$NWE</td></tr>\n";
-			echo "<tr bgcolor=#B6D3FC><td align=right>Auto Dial Level: </td><td align=left><select size=1 name=auto_dial_level><option selected>0</option><option>1</option><option>1.1</option><option>1.2</option><option>1.3</option><option>1.4</option><option>1.5</option><option>1.6</option><option>1.7</option><option>1.8</option><option>1.9</option><option>2.0</option><option>2.2</option><option>2.5</option><option>2.7</option><option>3.0</option><option>3.5</option><option>4.0</option></select>(0 = off)$NWB#vicidial_campaigns-auto_dial_level$NWE</td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right>Auto Dial Level: </td><td align=left><select size=1 name=auto_dial_level><option selected>$auto_dial_level</option>\n";
+			$adl=0;
+			while($adl <= $SSauto_dial_limit)
+				{
+				echo "<option>$adl</option>\n";
+				if ($adl < 1)
+					{$adl = ($adl + 1);}
+				else
+					{
+					if ($adl < 3)
+						{$adl = ($adl + 0.1);}
+					else
+						{
+						if ($adl < 4)
+							{$adl = ($adl + 0.25);}
+						else
+							{
+							if ($adl < 5)
+								{$adl = ($adl + 0.5);}
+							else
+								{
+								if ($adl < 10)
+									{$adl = ($adl + 1);}
+								else
+									{
+									if ($adl < 20)
+										{$adl = ($adl + 2);}
+									else
+										{
+										if ($adl < 40)
+											{$adl = ($adl + 5);}
+										else
+											{
+											if ($adl < 200)
+												{$adl = ($adl + 10);}
+											else
+												{
+												if ($adl < 400)
+													{$adl = ($adl + 50);}
+												else
+													{
+													if ($adl < 1000)
+														{$adl = ($adl + 100);}
+													else
+														{$adl = ($adl + 1);}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			echo "<option>$adl</option></select>(0 = off)$NWB#vicidial_campaigns-auto_dial_level$NWE</td></tr>\n";
 			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Next Agent Call: </td><td align=left><select size=1 name=next_agent_call><option >random</option><option>oldest_call_start</option><option>oldest_call_finish</option><option>overall_user_level</option><option>campaign_rank</option><option>fewest_calls</option></select>$NWB#vicidial_campaigns-next_agent_call$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Local Call Time: </td><td align=left><select size=1 name=local_call_time>";
@@ -11564,7 +11636,7 @@ if ($ADD==411111111111111)
 
 		echo "<br>VICIDIAL SYSTEM SETTINGS MODIFIED\n";
 
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory';";
+		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit';";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -14218,7 +14290,62 @@ if ($ADD==31)
 
 			echo "<tr bgcolor=#BDFFBD><td align=right>Dial Method: </td><td align=left><select size=1 name=dial_method><option >MANUAL</option><option>RATIO</option><option>ADAPT_HARD_LIMIT</option><option>ADAPT_TAPERED</option><option>ADAPT_AVERAGE</option><option>INBOUND_MAN</option><option SELECTED>$dial_method</option></select>$NWB#vicidial_campaigns-dial_method$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#BDFFBD><td align=right>Auto Dial Level: </td><td align=left><select size=1 name=auto_dial_level><option >0</option><option>1</option><option>1.1</option><option>1.2</option><option>1.3</option><option>1.4</option><option>1.5</option><option>1.6</option><option>1.7</option><option>1.8</option><option>1.9</option><option>2.0</option><option>2.2</option><option>2.5</option><option>2.7</option><option>3.0</option><option>3.5</option><option>4.0</option><option SELECTED>$auto_dial_level</option></select>(0 = off)$NWB#vicidial_campaigns-auto_dial_level$NWE &nbsp; &nbsp; &nbsp; <input type=checkbox name=dial_level_override value=\"1\">ADAPT OVERRIDE</td></tr>\n";
+			echo "<tr bgcolor=#BDFFBD><td align=right>Auto Dial Level: </td><td align=left><select size=1 name=auto_dial_level><option selected>$auto_dial_level</option>\n";
+			$adl=0;
+			while($adl <= $SSauto_dial_limit)
+				{
+				echo "<option>$adl</option>\n";
+				if ($adl < 1)
+					{$adl = ($adl + 1);}
+				else
+					{
+					if ($adl < 3)
+						{$adl = ($adl + 0.1);}
+					else
+						{
+						if ($adl < 4)
+							{$adl = ($adl + 0.25);}
+						else
+							{
+							if ($adl < 5)
+								{$adl = ($adl + 0.5);}
+							else
+								{
+								if ($adl < 10)
+									{$adl = ($adl + 1);}
+								else
+									{
+									if ($adl < 20)
+										{$adl = ($adl + 2);}
+									else
+										{
+										if ($adl < 40)
+											{$adl = ($adl + 5);}
+										else
+											{
+											if ($adl < 200)
+												{$adl = ($adl + 10);}
+											else
+												{
+												if ($adl < 400)
+													{$adl = ($adl + 50);}
+												else
+													{
+													if ($adl < 1000)
+														{$adl = ($adl + 100);}
+													else
+														{$adl = ($adl + 1);}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			echo "<option>$adl</option></select>(0 = off)$NWB#vicidial_campaigns-auto_dial_level$NWE &nbsp; &nbsp; &nbsp; <input type=checkbox name=dial_level_override value=\"1\">ADAPT OVERRIDE</td></tr>\n";
 
 			echo "<tr bgcolor=#BDFFBD><td align=right>Available Only Tally: </td><td align=left><select size=1 name=available_only_ratio_tally><option >Y</option><option>N</option><option SELECTED>$available_only_ratio_tally</option></select>$NWB#vicidial_campaigns-available_only_ratio_tally$NWE</td></tr>\n";
 
@@ -15355,7 +15482,62 @@ if ($ADD==34)
 
 			echo "<tr bgcolor=#BDFFBD><td align=right>Dial Method: </td><td align=left><select size=1 name=dial_method><option >MANUAL</option><option>RATIO</option><option>ADAPT_HARD_LIMIT</option><option>ADAPT_TAPERED</option><option>ADAPT_AVERAGE</option><option>INBOUND_MAN</option><option SELECTED>$dial_method</option></select>$NWB#vicidial_campaigns-dial_method$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#BDFFBD><td align=right>Auto Dial Level: </td><td align=left><select size=1 name=auto_dial_level><option >0</option><option>1</option><option>1.1</option><option>1.2</option><option>1.3</option><option>1.4</option><option>1.5</option><option>1.6</option><option>1.7</option><option>1.8</option><option>1.9</option><option>2.0</option><option>2.2</option><option>2.5</option><option>2.7</option><option>3.0</option><option>3.5</option><option>4.0</option><option SELECTED>$auto_dial_level</option></select>(0 = off)$NWB#vicidial_campaigns-auto_dial_level$NWE</td></tr>\n";
+			echo "<tr bgcolor=#BDFFBD><td align=right>Auto Dial Level: </td><td align=left><select size=1 name=auto_dial_level><option selected>$auto_dial_level</option>\n";
+			$adl=0;
+			while($adl <= $SSauto_dial_limit)
+				{
+				echo "<option>$adl</option>\n";
+				if ($adl < 1)
+					{$adl = ($adl + 1);}
+				else
+					{
+					if ($adl < 3)
+						{$adl = ($adl + 0.1);}
+					else
+						{
+						if ($adl < 4)
+							{$adl = ($adl + 0.25);}
+						else
+							{
+							if ($adl < 5)
+								{$adl = ($adl + 0.5);}
+							else
+								{
+								if ($adl < 10)
+									{$adl = ($adl + 1);}
+								else
+									{
+									if ($adl < 20)
+										{$adl = ($adl + 2);}
+									else
+										{
+										if ($adl < 40)
+											{$adl = ($adl + 5);}
+										else
+											{
+											if ($adl < 200)
+												{$adl = ($adl + 10);}
+											else
+												{
+												if ($adl < 400)
+													{$adl = ($adl + 50);}
+												else
+													{
+													if ($adl < 1000)
+														{$adl = ($adl + 100);}
+													else
+													{$adl = ($adl + 1);}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			echo "<option>$adl</option></select>(0 = off)$NWB#vicidial_campaigns-auto_dial_level$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#BDFFBD><td align=right>Adapt Intensity Modifier: </td><td align=left><select size=1 name=adaptive_intensity>\n";
 			$n=40;
@@ -18874,7 +19056,7 @@ if ($ADD==311111111111111)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory from system_settings;";
+	$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit from system_settings;";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$version =						$row[0];
@@ -18915,6 +19097,8 @@ if ($ADD==311111111111111)
 	$sounds_central_control_active = $row[35];
 	$sounds_web_server =			$row[36];
 	$sounds_web_directory =			$row[37];
+	$active_voicemail_server =		$row[38];
+	$auto_dial_limit =				$row[39];
 
 	echo "<br>MODIFY VICIDIAL SYSTEM SETTINGS<form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=ADD value=411111111111111>\n";
@@ -18938,7 +19122,6 @@ if ($ADD==311111111111111)
 	echo "<tr bgcolor=#B6D3FC><td align=right>Enable Agent Transfer Logfile: </td><td align=left><select size=1 name=enable_agc_xfer_log><option>1</option><option>0</option><option selected>$enable_agc_xfer_log</option></select>$NWB#settings-enable_agc_xfer_log$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Timeclock End Of Day: </td><td align=left><input type=text name=timeclock_end_of_day size=5 maxlength=4 value=\"$timeclock_end_of_day\">$NWB#settings-timeclock_end_of_day$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Timeclock Last Auto Logout: </td><td align=left> $timeclock_last_reset_date</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>QC Last Pull Time: </td><td align=left> $qc_last_pull_time</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Agent Screen Header Date Format: </td><td align=left><select size=1 name=vdc_header_date_format>\n";
 	echo "<option>MS_DASH_24HR  2008-06-24 23:59:59</option>\n";
 	echo "<option>US_SLASH_24HR 06/24/2008 23:59:59</option>\n";
@@ -18978,10 +19161,83 @@ if ($ADD==311111111111111)
 	echo "<tr bgcolor=#B6D3FC><td align=right>Sounds Web Server IP: </td><td align=left><input type=text name=sounds_web_server size=18 maxlength=15 value=\"$sounds_web_server\">$NWB#settings-sounds_web_server$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Sounds Web Directory: </td><td align=left><a href=\"http://$sounds_web_server/$sounds_web_directory\">$sounds_web_directory</a> $NWB#settings-sounds_web_directory$NWE</td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right>QC Features Active: </td><td align=left><select size=1 name=qc_features_active><option>1</option><option>0</option><option selected>$qc_features_active</option></select>$NWB#settings-qc_features_active$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Active Voicemail Server: </td><td align=left><select size=1 name=active_voicemail_server>\n";
+	##### get server listing for dynamic pulldown
+	$stmt="SELECT server_ip,server_description from servers order by server_ip";
+	$rsltx=mysql_query($stmt, $link);
+	$servers_to_print = mysql_num_rows($rsltx);
+	$servers_list='';
+
+	$o=0;
+	while ($servers_to_print > $o)
+		{
+		$rowx=mysql_fetch_row($rsltx);
+		$servers_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+		$o++;
+		}
+
+	echo "$servers_list";
+	echo "<option SELECTED>$active_voicemail_server</option>\n";
+	echo "</select>$NWB#settings-active_voicemail_server$NWE</td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=right>Auto Dial Limit: </td><td align=left><select size=1 name=auto_dial_limit><option selected>$auto_dial_limit</option>\n";
+	$adl=1;
+	while($adl < 1000)
+		{
+		echo "<option>$adl</option>\n";
+		if ($adl < 3)
+			{$adl = ($adl + 0.1);}
+		else
+			{
+			if ($adl < 4)
+				{$adl = ($adl + 0.25);}
+			else
+				{
+				if ($adl < 5)
+					{$adl = ($adl + 0.5);}
+				else
+					{
+					if ($adl < 10)
+						{$adl = ($adl + 1);}
+					else
+						{
+						if ($adl < 20)
+							{$adl = ($adl + 2);}
+						else
+							{
+							if ($adl < 40)
+								{$adl = ($adl + 5);}
+							else
+								{
+								if ($adl < 200)
+									{$adl = ($adl + 10);}
+								else
+									{
+									if ($adl < 400)
+										{$adl = ($adl + 50);}
+									else
+										{
+										if ($adl < 1000)
+											{$adl = ($adl + 100);}
+										else
+											{$adl = ($adl + 1);}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	echo "<option>$adl</option></select>$NWB#settings-auto_dial_limit$NWE</td></tr>\n";
+
 	echo "<tr bgcolor=#B6D3FC><td align=right>Outbound Auto-Dial Active: </td><td align=left><select size=1 name=outbound_autodial_active><option>1</option><option>0</option><option selected>$outbound_autodial_active</option></select>$NWB#settings-outbound_autodial_active$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right>Max FILL Calls per Second: </td><td align=left><input type=text name=outbound_calls_per_second size=4 maxlength=3 value=\"$outbound_calls_per_second\">$NWB#settings-outbound_calls_per_second$NWE</td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=right>QC Features Active: </td><td align=left><select size=1 name=qc_features_active><option>1</option><option>0</option><option selected>$qc_features_active</option></select>$NWB#settings-qc_features_active$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>QC Last Pull Time: </td><td align=left> $qc_last_pull_time</td></tr>\n";
 
 	echo "<tr bgcolor=#99FFCC><td align=right>Enable QueueMetrics Logging: </td><td align=left><select size=1 name=enable_queuemetrics_logging><option>1</option><option>0</option><option selected>$enable_queuemetrics_logging</option></select>$NWB#settings-enable_queuemetrics_logging$NWE</td></tr>\n";
 	echo "<tr bgcolor=#99FFCC><td align=right>QueueMetrics Server IP: </td><td align=left><input type=text name=queuemetrics_server_ip size=18 maxlength=15 value=\"$queuemetrics_server_ip\">$NWB#settings-queuemetrics_server_ip$NWE</td></tr>\n";

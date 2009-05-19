@@ -192,7 +192,7 @@ $ wget http://www.eflo.net/files/leave.h
 $ mv -f enter.h apps/enter.h
 $ mv -f leave.h apps/leave.h
 $ vi codecs/gsm/Makefile
-   add OPTIMIZE=-O2 to the file  before the ifneq section, to fix GSM audio problems
+   add OPTIMIZE=-O2 to the file  before the ifeq section, to fix GSM audio problems
 $ wget http://download.vicidial.com/conf/res_agi_defunct.patch
 $ patch -p1 < res_agi_defunct.patch
    File to patch: res/res_agi.c
@@ -202,6 +202,7 @@ $ wget http://download.vicidial.com/conf/app_waitforsilence.c
 $ cd ../channels/
 $ rm chan_sip.c
 $ wget http://download.vicidial.com/conf/chan_sip.c
+$ cd ../
 $ ./configure; make clean; make; make install
 $ make samples
 $ modprobe zaptel

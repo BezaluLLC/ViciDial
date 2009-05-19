@@ -42,32 +42,6 @@ exten => _78600XXX*.,1,AGI(agi-VDADfixCXFER.agi)
 exten => _08600XXX,1,Dial(${TRUNKblind}/6${EXTEN:1},55,To)
 
 
-;;;;;;;;;; BEGIN Voicemail and Prompts Section ;;;;;;;;;;;;;;;;;;;;;;;
-; Give voicemail at extension 8500
-exten => 8500,1,VoicemailMain
-exten => 8500,2,Goto(s,6)
-
-; this is used to allow the GUI to send you directly into voicemail
-;     don't forget to set GUI variable $voicemail_exten to this extension
-exten => 8501,1,VoicemailMain(s${CALLERIDNUM})
-exten => 8501,2,Hangup
-
-; this is used to allow the GUI to send live calls directly into voicemail
-;     don't forget to set GUI variable $voicemail_dump_exten to this extension
-exten => _85026666666666.,1,Wait(1)
-exten => _85026666666666.,2,Voicemail(${EXTEN:14}|u)
-exten => _85026666666666.,3,Hangup
-
-; prompts for recording AGI script, ID is 4321
-; first variable is format (gsm/wav)
-; second variable is timeout in milliseconds (default is 720000 [12 minutes])
-exten => 8167,1,Answer
-exten => 8167,2,AGI(agi-record_prompts.agi,wav-----720000)
-exten => 8167,3,Hangup
-exten => 8168,1,Answer
-exten => 8168,2,AGI(agi-record_prompts.agi,gsm-----720000)
-exten => 8168,3,Hangup
-
 ; playback of recorded prompts
 exten => _851XXXXX,1,Answer
 exten => _851XXXXX,2,Playback(${EXTEN})
@@ -78,9 +52,6 @@ exten => _7851XXXXX,1,WaitForSilence(2000,2) ; AMD got machine.  leave message a
 exten => _7851XXXXX,2,Playback(${EXTEN:1})
 exten => _7851XXXXX,3,AGI(VD_amd_post.agi,${EXTEN:1})
 exten => _7851XXXXX,4,Hangup
-
-
-;;;;;;;;;; END Voicemail and Prompts Section ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ; FastAGI for VICIDIAL/astGUIclient call logging

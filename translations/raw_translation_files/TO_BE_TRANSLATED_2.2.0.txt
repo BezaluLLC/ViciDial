@@ -115,6 +115,10 @@ Audio File to Upload||
 This utility allows you to upload audio files to the web server so that they can be distributed to all of the ViciDial servers in a multi-server cluster. An important note, only two audio file types will work, .wav files that are PCM 16bit 8k and .gsm files that are 8bit 8k. Please verify that your files are properly formatted before uploading them here||
 Sounds Update||
 If you want to force a check of the sound files on this server, and the central audio store is enabled as a system setting, then this field will allow the sounds updater to run at the next top of the minute. Any time an audio file is uploaded from the web interface this is automatically set to Y for all servers that have Asterisk active. Default is N||
+Active Voicemail Server||
+In multi-server systems, this is the server that will handle all voicemail boxes. This server is also where the dial-in generated prompts will be uploaded from, the 8168 recordings||
+Auto Dial Limit||
+This is the maximum limit of the auto dial level in the campaign screen||
 
 
 add-file: audio_store.php

@@ -20,6 +20,11 @@ NOTE: In a multi-server setup you may want to have your database and web server 
 
 NOTE: at the bottom of this document are conf examples for a 3 server load balancing setup.
 
+NOTE: as of 2.0.5 most of these settings are already done for you if you are using auto-conf file generation
+
+NOTE: as of SVN trunk 2009-05-19 the voicemail and prompt recording extensions are also auto-generated
+
+
 
 1. The VICIDIAL/Asterisk servers need to have all of the perl scripts and cron jobs installed on them, except these which only need to be on one of the servers: 
 	- AST_VDhopper.pl  (crontab)

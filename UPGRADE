@@ -40,6 +40,15 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	list in the call menu and in-group admin screens, and back-end audio 
 	synchronization utilities have been added for multi-server setups.
 
+10. Added Active Voicemail Server setting to System Settings. Now the voicemail
+	and prompt recording extensions are auto-generated so that they all
+	direct to the same server and they should be removed from the 
+	extensions.conf file:
+	8168, 8167, 85026666666666, 8500, 8501
+
+11. Added auto dial limit setting to System Settings to allow setting of the 
+	top limit for Campaign Auto Dial Level pull-down menu in the Modify
+	Campaign screens
 
 
 
