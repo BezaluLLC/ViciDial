@@ -103,3 +103,16 @@ ALTER TABLE system_settings ADD active_voicemail_server VARCHAR(15) default '';
 ALTER TABLE system_settings ADD auto_dial_limit VARCHAR(5) default '4';
 
 UPDATE system_settings SET db_schema_version='1143';
+
+CREATE TABLE vicidial_territories (
+territory_id MEDIUMINT(8) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+territory VARCHAR(100) default '',
+territory_description VARCHAR(255) default '',
+unique index uniqueterritory (territory)
+);
+
+ALTER TABLE vicidial_user_territories ADD level ENUM('TOP_AGENT','STANDARD_AGENT','BOTTOM_AGENT') default 'STANDARD_AGENT';
+
+ALTER TABLE system_settings ADD user_territories_active ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1144';

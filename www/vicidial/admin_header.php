@@ -480,7 +480,15 @@ $admin_home_url_LU =	$row[0];
 	 &nbsp; <a href="./user_status.php?user=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>User Status </a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
 	 &nbsp; <a href="./AST_agent_time_sheet.php?agent=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Time Sheet </a> </TD></TR>
+	 <?php
+	if ( ($SSuser_territories_active > 0) or ($user_territories_active > 0) )
+		{ ?>
+
+	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
+	 &nbsp; <a href="./user_territories.php?agent=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>User Territories </a> </TD></TR>
+
 	<?php } 
+	  } 
 	?>
 	<!-- CAMPAIGNS NAVIGATION -->
 	<TR><TD <?php echo $campaigns_hh ?>>

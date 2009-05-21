@@ -119,8 +119,42 @@ Active Voicemail Server||
 In multi-server systems, this is the server that will handle all voicemail boxes. This server is also where the dial-in generated prompts will be uploaded from, the 8168 recordings||
 Auto Dial Limit||
 This is the maximum limit of the auto dial level in the campaign screen||
+User Territories are not active on this system||
+User Territories||
+List All Territories:||
+User Territories Active||
+This setting allows you to enable the User Territories setttings from the user modification screen. This feature was added to allow for more integration with a customized Vtiger installation but can have applications in a pure ViciDial system as well. Default is 0 for disabled||
+List Territories||
+Add Territory||
+Add User Territory||
+Territory||
+Territory Description||
+Territory and Territory Description must be filled in||
+there is already a territory in the system with this name||
+Territory Added||
+Modify Territory||
+Territory not found||
+This territory is not in the system with this name||
+Territory Modified||
+Territory must be filled in||
+Territory Deleted||
+Delete This Territory||
+Vtiger Accounts||
+Agents||
+Territory, User and Level must be filled in||
+this territory user is already in the system||
+User Territory Added||
+this territory user is not in the system||
+User Territory Modified||
+Territory and User must be filled in||
+User Territory Deleted||
+Vtiger Change Territory Owner||
+Had to add user territory||
+Vtiger Territory Owner Changed||
+Records Changed||
 
 
+add-file: user_territories.php
 add-file: audio_store.php
 
 ############################################################ CLIENT

@@ -12,7 +12,7 @@ vicidial.php agent screen and vdc_db_query.php scripts have been changed to allo
 
 AST_VDauto_dial.pl, AST_VDauto_dial_FILL.pl and the VDhangup process in FastAGI_log.pl have all been modified to work with the new alt number data structure.
 
-non_agent_api.php needs to be changed to accept new multiple-al-numbers per inserted lead.
+non_agent_api.php needs to be changed to accept new multiple-alt-numbers per inserted lead.
 
 
 File structure for CLI lead loader goes here:

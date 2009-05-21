@@ -43,7 +43,7 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory FROM system_settings;";
+$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory,outbound_autodial_active FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $ss_conf_ct = mysql_num_rows($rslt);
@@ -54,6 +54,7 @@ if ($ss_conf_ct > 0)
 	$sounds_central_control_active =	$row[1];
 	$sounds_web_server =				$row[2];
 	$sounds_web_directory =				$row[3];
+	$SSoutbound_autodial_active =		$row[4];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################

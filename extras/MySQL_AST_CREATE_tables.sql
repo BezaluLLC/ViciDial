@@ -1101,7 +1101,8 @@ sounds_central_control_active ENUM('0','1') default '0',
 sounds_web_server VARCHAR(15) default '127.0.0.1',
 sounds_web_directory VARCHAR(255) default '',
 active_voicemail_server VARCHAR(15) default '',
-auto_dial_limit VARCHAR(5) default '4'
+auto_dial_limit VARCHAR(5) default '4',
+user_territories_active ENUM('0','1') default '0'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -1506,8 +1507,16 @@ unique index menuoption (menu_id, option_value)
 CREATE TABLE vicidial_user_territories (
 user VARCHAR(20) NOT NULL,
 territory VARCHAR(100) default '',
+level ENUM('TOP_AGENT','STANDARD_AGENT','BOTTOM_AGENT') default 'STANDARD_AGENT',
 index (user),
 unique index userterritory (user, territory)
+);
+
+CREATE TABLE vicidial_territories (
+territory_id MEDIUMINT(8) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+territory VARCHAR(100) default '',
+territory_description VARCHAR(255) default '',
+unique index uniqueterritory (territory)
 );
 
 
@@ -1606,7 +1615,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1143';
+UPDATE system_settings SET db_schema_version='1144';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

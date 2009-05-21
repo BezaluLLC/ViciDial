@@ -736,7 +736,7 @@ while ($sthBrowsC > $i)
 			if ($VL_exists > 0)
 				{
 				$user='';
-				$stmtA = "SELECT user FROM vicidial_user_territories where territory='$territory';";
+				$stmtA = "SELECT user FROM vicidial_user_territories where territory='$territory' order by level desc,user;";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
