@@ -22,10 +22,11 @@
 # 90428-0209 - Added blind_monitor function
 # 90508-0642 - Changed to PHP long tags
 # 90514-0602 - Added sounds_list function 
+# 90522-0506 - Security fix
 #
 
-$version = '2.2.0-8';
-$build = '90514-0602';
+$version = '2.2.0-9';
+$build = '90522-0506';
 
 require("dbconnect.php");
 
@@ -191,6 +192,12 @@ if ($non_latin < 1)
 	$session_id = ereg_replace("[^0-9]","",$session_id);
 	$server_ip = ereg_replace("[^\.0-9]","",$server_ip);
 	$stage = ereg_replace("[^a-zA-Z]","",$stage);
+	}
+else
+	{
+	$user = ereg_replace("'|\"|\\\\|;","",$user);
+	$pass = ereg_replace("'|\"|\\\\|;","",$pass);
+	$source = ereg_replace("'|\"|\\\\|;","",$source);
 	}
 
 if (strlen($list_id)<1) {$list_id='999';}

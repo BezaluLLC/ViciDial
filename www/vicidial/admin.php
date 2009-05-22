@@ -1064,509 +1064,513 @@ while ($i < $qm_conf_ct)
 ######################################################################################################
 
 if ($non_latin < 1)
-{
-### DIGITS ONLY ###
-$adaptive_dropped_percentage = ereg_replace("[^0-9]","",$adaptive_dropped_percentage);
-$adaptive_latest_server_time = ereg_replace("[^0-9]","",$adaptive_latest_server_time);
-$admin_hangup_enabled = ereg_replace("[^0-9]","",$admin_hangup_enabled);
-$admin_hijack_enabled = ereg_replace("[^0-9]","",$admin_hijack_enabled);
-$admin_monitor_enabled = ereg_replace("[^0-9]","",$admin_monitor_enabled);
-$AFLogging_enabled = ereg_replace("[^0-9]","",$AFLogging_enabled);
-$agent_choose_ingroups = ereg_replace("[^0-9]","",$agent_choose_ingroups);
-$agentcall_manual = ereg_replace("[^0-9]","",$agentcall_manual);
-$agentonly_callbacks = ereg_replace("[^0-9]","",$agentonly_callbacks);
-$AGI_call_logging_enabled = ereg_replace("[^0-9]","",$AGI_call_logging_enabled);
-$allcalls_delay = ereg_replace("[^0-9]","",$allcalls_delay);
-$alter_agent_interface_options = ereg_replace("[^0-9]","",$alter_agent_interface_options);
-$am_message_exten = ereg_replace("[^0-9]","",$am_message_exten);
-$answer_transfer_agent = ereg_replace("[^0-9]","",$answer_transfer_agent);
-$ast_admin_access = ereg_replace("[^0-9]","",$ast_admin_access);
-$ast_delete_phones = ereg_replace("[^0-9]","",$ast_delete_phones);
-$attempt_delay = ereg_replace("[^0-9]","",$attempt_delay);
-$attempt_maximum = ereg_replace("[^0-9]","",$attempt_maximum);
-$auto_dial_next_number = ereg_replace("[^0-9]","",$auto_dial_next_number);
-$balance_trunks_offlimits = ereg_replace("[^0-9]","",$balance_trunks_offlimits);
-$call_parking_enabled = ereg_replace("[^0-9]","",$call_parking_enabled);
-$CallerID_popup_enabled = ereg_replace("[^0-9]","",$CallerID_popup_enabled);
-$campaign_detail = ereg_replace("[^0-9]","",$campaign_detail);
-$campaign_rec_exten = ereg_replace("[^0-9]","",$campaign_rec_exten);
-$campaign_vdad_exten = ereg_replace("[^0-9]","",$campaign_vdad_exten);
-$change_agent_campaign = ereg_replace("[^0-9]","",$change_agent_campaign);
-$closer_default_blended = ereg_replace("[^0-9]","",$closer_default_blended);
-$conf_exten = ereg_replace("[^0-9]","",$conf_exten);
-$conf_on_extension = ereg_replace("[^0-9]","",$conf_on_extension);
-$conferencing_enabled = ereg_replace("[^0-9]","",$conferencing_enabled);
-$ct_default_start = ereg_replace("[^0-9]","",$ct_default_start);
-$ct_default_stop = ereg_replace("[^0-9]","",$ct_default_stop);
-$ct_friday_start = ereg_replace("[^0-9]","",$ct_friday_start);
-$ct_friday_stop = ereg_replace("[^0-9]","",$ct_friday_stop);
-$ct_monday_start = ereg_replace("[^0-9]","",$ct_monday_start);
-$ct_monday_stop = ereg_replace("[^0-9]","",$ct_monday_stop);
-$ct_saturday_start = ereg_replace("[^0-9]","",$ct_saturday_start);
-$ct_saturday_stop = ereg_replace("[^0-9]","",$ct_saturday_stop);
-$ct_sunday_start = ereg_replace("[^0-9]","",$ct_sunday_start);
-$ct_sunday_stop = ereg_replace("[^0-9]","",$ct_sunday_stop);
-$ct_thursday_start = ereg_replace("[^0-9]","",$ct_thursday_start);
-$ct_thursday_stop = ereg_replace("[^0-9]","",$ct_thursday_stop);
-$ct_tuesday_start = ereg_replace("[^0-9]","",$ct_tuesday_start);
-$ct_tuesday_stop = ereg_replace("[^0-9]","",$ct_tuesday_stop);
-$ct_wednesday_start = ereg_replace("[^0-9]","",$ct_wednesday_start);
-$ct_wednesday_stop = ereg_replace("[^0-9]","",$ct_wednesday_stop);
-$DBX_port = ereg_replace("[^0-9]","",$DBX_port);
-$DBY_port = ereg_replace("[^0-9]","",$DBY_port);
-$dedicated_trunks = ereg_replace("[^0-9]","",$dedicated_trunks);
-$delete_call_times = ereg_replace("[^0-9]","",$delete_call_times);
-$delete_campaigns = ereg_replace("[^0-9]","",$delete_campaigns);
-$delete_filters = ereg_replace("[^0-9]","",$delete_filters);
-$delete_ingroups = ereg_replace("[^0-9]","",$delete_ingroups);
-$delete_lists = ereg_replace("[^0-9]","",$delete_lists);
-$delete_remote_agents = ereg_replace("[^0-9]","",$delete_remote_agents);
-$delete_scripts = ereg_replace("[^0-9]","",$delete_scripts);
-$delete_user_groups = ereg_replace("[^0-9]","",$delete_user_groups);
-$delete_users = ereg_replace("[^0-9]","",$delete_users);
-$dial_timeout = ereg_replace("[^0-9]","",$dial_timeout);
-$dialplan_number = ereg_replace("[^0-9]","",$dialplan_number);
-$drop_call_seconds = ereg_replace("[^0-9]","",$drop_call_seconds);
-$enable_fast_refresh = ereg_replace("[^0-9]","",$enable_fast_refresh);
-$enable_persistant_mysql = ereg_replace("[^0-9]","",$enable_persistant_mysql);
-$fast_refresh_rate = ereg_replace("[^0-9]","",$fast_refresh_rate);
-$hopper_level = ereg_replace("[^0-9]","",$hopper_level);
-$hotkey = ereg_replace("[^0-9]","",$hotkey);
-$hotkeys_active = ereg_replace("[^0-9]","",$hotkeys_active);
-$list_id = ereg_replace("[^0-9]","",$list_id);
-$load_leads = ereg_replace("[^0-9]","",$load_leads);
-$max_vicidial_trunks = ereg_replace("[^0-9]","",$max_vicidial_trunks);
-$modify_call_times = ereg_replace("[^0-9]","",$modify_call_times);
-$modify_users = ereg_replace("[^0-9]","",$modify_users);
-$modify_campaigns = ereg_replace("[^0-9]","",$modify_campaigns);
-$modify_lists = ereg_replace("[^0-9]","",$modify_lists);
-$modify_scripts = ereg_replace("[^0-9]","",$modify_scripts);
-$modify_filters = ereg_replace("[^0-9]","",$modify_filters);
-$modify_ingroups = ereg_replace("[^0-9]","",$modify_ingroups);
-$modify_usergroups = ereg_replace("[^0-9]","",$modify_usergroups);
-$modify_remoteagents = ereg_replace("[^0-9]","",$modify_remoteagents);
-$modify_servers = ereg_replace("[^0-9]","",$modify_servers);
-$view_reports = ereg_replace("[^0-9]","",$view_reports);
-$modify_leads = ereg_replace("[^0-9]","",$modify_leads);
-$monitor_prefix = ereg_replace("[^0-9]","",$monitor_prefix);
-$number_of_lines = ereg_replace("[^0-9]","",$number_of_lines);
-$old_conf_exten = ereg_replace("[^0-9]","",$old_conf_exten);
-$outbound_cid = ereg_replace("[^0-9]","",$outbound_cid);
-$park_ext = ereg_replace("[^0-9]","",$park_ext);
-$park_on_extension = ereg_replace("[^0-9]","",$park_on_extension);
-$phone_number = ereg_replace("[^0-9]","",$phone_number);
-$QUEUE_ACTION_enabled = ereg_replace("[^0-9]","",$QUEUE_ACTION_enabled);
-$recording_exten = ereg_replace("[^0-9]","",$recording_exten);
-$remote_agent_id = ereg_replace("[^0-9]","",$remote_agent_id);
-$telnet_port = ereg_replace("[^0-9]","",$telnet_port);
-$updater_check_enabled = ereg_replace("[^0-9]","",$updater_check_enabled);
-$user_level = ereg_replace("[^0-9]","",$user_level);
-$user_start = ereg_replace("[^0-9]","",$user_start);
-$user_switching_enabled = ereg_replace("[^0-9]","",$user_switching_enabled);
-$VDstop_rec_after_each_call = ereg_replace("[^0-9]","",$VDstop_rec_after_each_call);
-$VICIDIAL_park_on_extension = ereg_replace("[^0-9]","",$VICIDIAL_park_on_extension);
-$vicidial_recording = ereg_replace("[^0-9]","",$vicidial_recording);
-$vicidial_transfers = ereg_replace("[^0-9]","",$vicidial_transfers);
-$voicemail_button_enabled = ereg_replace("[^0-9]","",$voicemail_button_enabled);
-$voicemail_dump_exten = ereg_replace("[^0-9]","",$voicemail_dump_exten);
-$voicemail_ext = ereg_replace("[^0-9]","",$voicemail_ext);
-$voicemail_exten = ereg_replace("[^0-9]","",$voicemail_exten);
-$voicemail_id = ereg_replace("[^0-9]","",$voicemail_id);
-$wrapup_seconds = ereg_replace("[^0-9]","",$wrapup_seconds);
-$use_non_latin = ereg_replace("[^0-9]","",$use_non_latin);
-$webroot_writable = ereg_replace("[^0-9]","",$webroot_writable);
-$enable_queuemetrics_logging = ereg_replace("[^0-9]","",$enable_queuemetrics_logging);
-$enable_sipsak_messages = ereg_replace("[^0-9]","",$enable_sipsak_messages);
-$allow_sipsak_messages = ereg_replace("[^0-9]","",$allow_sipsak_messages);
-$mix_container_item = ereg_replace("[^0-9]","",$mix_container_item);
-$prompt_interval = ereg_replace("[^0-9]","",$prompt_interval);
-$agent_alert_delay = ereg_replace("[^0-9]","",$agent_alert_delay);
-$manual_dial_list_id = ereg_replace("[^0-9]","",$manual_dial_list_id);
-$qc_user_level = ereg_replace("[^0-9]","",$qc_user_level);
-$qc_pass = ereg_replace("[^0-9]","",$qc_pass);
-$qc_finish = ereg_replace("[^0-9]","",$qc_finish);
-$qc_commit = ereg_replace("[^0-9]","",$qc_commit);
-$shift_start_time = ereg_replace("[^0-9]","",$shift_start_time);
-$timeclock_end_of_day = ereg_replace("[^0-9]","",$timeclock_end_of_day);
-$survey_xfer_exten = ereg_replace("[^0-9]","",$survey_xfer_exten);
-$add_timeclock_log = ereg_replace("[^0-9]","",$add_timeclock_log);
-$modify_timeclock_log = ereg_replace("[^0-9]","",$modify_timeclock_log);
-$delete_timeclock_log = ereg_replace("[^0-9]","",$delete_timeclock_log);
-$vdc_agent_api_access = ereg_replace("[^0-9]","",$vdc_agent_api_access);
-$vdc_agent_api_active = ereg_replace("[^0-9]","",$vdc_agent_api_active);
-$hold_time_option_seconds = ereg_replace("[^0-9]","",$hold_time_option_seconds);
-$hold_time_option_callback_list_id = ereg_replace("[^0-9]","",$hold_time_option_callback_list_id);
-$did_id = ereg_replace("[^0-9]","",$did_id);
-$source_did = ereg_replace("[^0-9]","",$source_did);
-$modify_inbound_dids = ereg_replace("[^0-9]","",$modify_inbound_dids);
-$delete_inbound_dids = ereg_replace("[^0-9]","",$delete_inbound_dids);
-$answer_sec_pct_rt_stat_one = ereg_replace("[^0-9]","",$answer_sec_pct_rt_stat_one);
-$answer_sec_pct_rt_stat_two = ereg_replace("[^0-9]","",$answer_sec_pct_rt_stat_two);
-$enable_vtiger_integration = ereg_replace("[^0-9]","",$enable_vtiger_integration);
-$qc_features_active = ereg_replace("[^0-9]","",$qc_features_active);
-$outbound_autodial_active = ereg_replace("[^0-9]","",$outbound_autodial_active);
-$download_lists = ereg_replace("[^0-9]","",$download_lists);
-$caller_id_number = ereg_replace("[^0-9]","",$caller_id_number);
-$outbound_calls_per_second = ereg_replace("[^0-9]","",$outbound_calls_per_second);
-$manager_shift_enforcement_override = ereg_replace("[^0-9]","",$manager_shift_enforcement_override);
-$export_reports = ereg_replace("[^0-9]","",$export_reports);
-$delete_from_dnc = ereg_replace("[^0-9]","",$delete_from_dnc);
-$menu_timeout = ereg_replace("[^0-9]","",$menu_timeout);
-$menu_time_check = ereg_replace("[^0-9]","",$menu_time_check);
-$track_in_vdac = ereg_replace("[^0-9]","",$track_in_vdac);
-$menu_repeat = ereg_replace("[^0-9]","",$menu_repeat);
-$agentonly_callback_campaign_lock = ereg_replace("[^0-9]","",$agentonly_callback_campaign_lock);
-$sounds_central_control_active = ereg_replace("[^0-9]","",$sounds_central_control_active);
-$user_territories_active = ereg_replace("[^0-9]","",$user_territories_active);
+	{
+	### DIGITS ONLY ###
+	$adaptive_dropped_percentage = ereg_replace("[^0-9]","",$adaptive_dropped_percentage);
+	$adaptive_latest_server_time = ereg_replace("[^0-9]","",$adaptive_latest_server_time);
+	$admin_hangup_enabled = ereg_replace("[^0-9]","",$admin_hangup_enabled);
+	$admin_hijack_enabled = ereg_replace("[^0-9]","",$admin_hijack_enabled);
+	$admin_monitor_enabled = ereg_replace("[^0-9]","",$admin_monitor_enabled);
+	$AFLogging_enabled = ereg_replace("[^0-9]","",$AFLogging_enabled);
+	$agent_choose_ingroups = ereg_replace("[^0-9]","",$agent_choose_ingroups);
+	$agentcall_manual = ereg_replace("[^0-9]","",$agentcall_manual);
+	$agentonly_callbacks = ereg_replace("[^0-9]","",$agentonly_callbacks);
+	$AGI_call_logging_enabled = ereg_replace("[^0-9]","",$AGI_call_logging_enabled);
+	$allcalls_delay = ereg_replace("[^0-9]","",$allcalls_delay);
+	$alter_agent_interface_options = ereg_replace("[^0-9]","",$alter_agent_interface_options);
+	$am_message_exten = ereg_replace("[^0-9]","",$am_message_exten);
+	$answer_transfer_agent = ereg_replace("[^0-9]","",$answer_transfer_agent);
+	$ast_admin_access = ereg_replace("[^0-9]","",$ast_admin_access);
+	$ast_delete_phones = ereg_replace("[^0-9]","",$ast_delete_phones);
+	$attempt_delay = ereg_replace("[^0-9]","",$attempt_delay);
+	$attempt_maximum = ereg_replace("[^0-9]","",$attempt_maximum);
+	$auto_dial_next_number = ereg_replace("[^0-9]","",$auto_dial_next_number);
+	$balance_trunks_offlimits = ereg_replace("[^0-9]","",$balance_trunks_offlimits);
+	$call_parking_enabled = ereg_replace("[^0-9]","",$call_parking_enabled);
+	$CallerID_popup_enabled = ereg_replace("[^0-9]","",$CallerID_popup_enabled);
+	$campaign_detail = ereg_replace("[^0-9]","",$campaign_detail);
+	$campaign_rec_exten = ereg_replace("[^0-9]","",$campaign_rec_exten);
+	$campaign_vdad_exten = ereg_replace("[^0-9]","",$campaign_vdad_exten);
+	$change_agent_campaign = ereg_replace("[^0-9]","",$change_agent_campaign);
+	$closer_default_blended = ereg_replace("[^0-9]","",$closer_default_blended);
+	$conf_exten = ereg_replace("[^0-9]","",$conf_exten);
+	$conf_on_extension = ereg_replace("[^0-9]","",$conf_on_extension);
+	$conferencing_enabled = ereg_replace("[^0-9]","",$conferencing_enabled);
+	$ct_default_start = ereg_replace("[^0-9]","",$ct_default_start);
+	$ct_default_stop = ereg_replace("[^0-9]","",$ct_default_stop);
+	$ct_friday_start = ereg_replace("[^0-9]","",$ct_friday_start);
+	$ct_friday_stop = ereg_replace("[^0-9]","",$ct_friday_stop);
+	$ct_monday_start = ereg_replace("[^0-9]","",$ct_monday_start);
+	$ct_monday_stop = ereg_replace("[^0-9]","",$ct_monday_stop);
+	$ct_saturday_start = ereg_replace("[^0-9]","",$ct_saturday_start);
+	$ct_saturday_stop = ereg_replace("[^0-9]","",$ct_saturday_stop);
+	$ct_sunday_start = ereg_replace("[^0-9]","",$ct_sunday_start);
+	$ct_sunday_stop = ereg_replace("[^0-9]","",$ct_sunday_stop);
+	$ct_thursday_start = ereg_replace("[^0-9]","",$ct_thursday_start);
+	$ct_thursday_stop = ereg_replace("[^0-9]","",$ct_thursday_stop);
+	$ct_tuesday_start = ereg_replace("[^0-9]","",$ct_tuesday_start);
+	$ct_tuesday_stop = ereg_replace("[^0-9]","",$ct_tuesday_stop);
+	$ct_wednesday_start = ereg_replace("[^0-9]","",$ct_wednesday_start);
+	$ct_wednesday_stop = ereg_replace("[^0-9]","",$ct_wednesday_stop);
+	$DBX_port = ereg_replace("[^0-9]","",$DBX_port);
+	$DBY_port = ereg_replace("[^0-9]","",$DBY_port);
+	$dedicated_trunks = ereg_replace("[^0-9]","",$dedicated_trunks);
+	$delete_call_times = ereg_replace("[^0-9]","",$delete_call_times);
+	$delete_campaigns = ereg_replace("[^0-9]","",$delete_campaigns);
+	$delete_filters = ereg_replace("[^0-9]","",$delete_filters);
+	$delete_ingroups = ereg_replace("[^0-9]","",$delete_ingroups);
+	$delete_lists = ereg_replace("[^0-9]","",$delete_lists);
+	$delete_remote_agents = ereg_replace("[^0-9]","",$delete_remote_agents);
+	$delete_scripts = ereg_replace("[^0-9]","",$delete_scripts);
+	$delete_user_groups = ereg_replace("[^0-9]","",$delete_user_groups);
+	$delete_users = ereg_replace("[^0-9]","",$delete_users);
+	$dial_timeout = ereg_replace("[^0-9]","",$dial_timeout);
+	$dialplan_number = ereg_replace("[^0-9]","",$dialplan_number);
+	$drop_call_seconds = ereg_replace("[^0-9]","",$drop_call_seconds);
+	$enable_fast_refresh = ereg_replace("[^0-9]","",$enable_fast_refresh);
+	$enable_persistant_mysql = ereg_replace("[^0-9]","",$enable_persistant_mysql);
+	$fast_refresh_rate = ereg_replace("[^0-9]","",$fast_refresh_rate);
+	$hopper_level = ereg_replace("[^0-9]","",$hopper_level);
+	$hotkey = ereg_replace("[^0-9]","",$hotkey);
+	$hotkeys_active = ereg_replace("[^0-9]","",$hotkeys_active);
+	$list_id = ereg_replace("[^0-9]","",$list_id);
+	$load_leads = ereg_replace("[^0-9]","",$load_leads);
+	$max_vicidial_trunks = ereg_replace("[^0-9]","",$max_vicidial_trunks);
+	$modify_call_times = ereg_replace("[^0-9]","",$modify_call_times);
+	$modify_users = ereg_replace("[^0-9]","",$modify_users);
+	$modify_campaigns = ereg_replace("[^0-9]","",$modify_campaigns);
+	$modify_lists = ereg_replace("[^0-9]","",$modify_lists);
+	$modify_scripts = ereg_replace("[^0-9]","",$modify_scripts);
+	$modify_filters = ereg_replace("[^0-9]","",$modify_filters);
+	$modify_ingroups = ereg_replace("[^0-9]","",$modify_ingroups);
+	$modify_usergroups = ereg_replace("[^0-9]","",$modify_usergroups);
+	$modify_remoteagents = ereg_replace("[^0-9]","",$modify_remoteagents);
+	$modify_servers = ereg_replace("[^0-9]","",$modify_servers);
+	$view_reports = ereg_replace("[^0-9]","",$view_reports);
+	$modify_leads = ereg_replace("[^0-9]","",$modify_leads);
+	$monitor_prefix = ereg_replace("[^0-9]","",$monitor_prefix);
+	$number_of_lines = ereg_replace("[^0-9]","",$number_of_lines);
+	$old_conf_exten = ereg_replace("[^0-9]","",$old_conf_exten);
+	$outbound_cid = ereg_replace("[^0-9]","",$outbound_cid);
+	$park_ext = ereg_replace("[^0-9]","",$park_ext);
+	$park_on_extension = ereg_replace("[^0-9]","",$park_on_extension);
+	$phone_number = ereg_replace("[^0-9]","",$phone_number);
+	$QUEUE_ACTION_enabled = ereg_replace("[^0-9]","",$QUEUE_ACTION_enabled);
+	$recording_exten = ereg_replace("[^0-9]","",$recording_exten);
+	$remote_agent_id = ereg_replace("[^0-9]","",$remote_agent_id);
+	$telnet_port = ereg_replace("[^0-9]","",$telnet_port);
+	$updater_check_enabled = ereg_replace("[^0-9]","",$updater_check_enabled);
+	$user_level = ereg_replace("[^0-9]","",$user_level);
+	$user_start = ereg_replace("[^0-9]","",$user_start);
+	$user_switching_enabled = ereg_replace("[^0-9]","",$user_switching_enabled);
+	$VDstop_rec_after_each_call = ereg_replace("[^0-9]","",$VDstop_rec_after_each_call);
+	$VICIDIAL_park_on_extension = ereg_replace("[^0-9]","",$VICIDIAL_park_on_extension);
+	$vicidial_recording = ereg_replace("[^0-9]","",$vicidial_recording);
+	$vicidial_transfers = ereg_replace("[^0-9]","",$vicidial_transfers);
+	$voicemail_button_enabled = ereg_replace("[^0-9]","",$voicemail_button_enabled);
+	$voicemail_dump_exten = ereg_replace("[^0-9]","",$voicemail_dump_exten);
+	$voicemail_ext = ereg_replace("[^0-9]","",$voicemail_ext);
+	$voicemail_exten = ereg_replace("[^0-9]","",$voicemail_exten);
+	$voicemail_id = ereg_replace("[^0-9]","",$voicemail_id);
+	$wrapup_seconds = ereg_replace("[^0-9]","",$wrapup_seconds);
+	$use_non_latin = ereg_replace("[^0-9]","",$use_non_latin);
+	$webroot_writable = ereg_replace("[^0-9]","",$webroot_writable);
+	$enable_queuemetrics_logging = ereg_replace("[^0-9]","",$enable_queuemetrics_logging);
+	$enable_sipsak_messages = ereg_replace("[^0-9]","",$enable_sipsak_messages);
+	$allow_sipsak_messages = ereg_replace("[^0-9]","",$allow_sipsak_messages);
+	$mix_container_item = ereg_replace("[^0-9]","",$mix_container_item);
+	$prompt_interval = ereg_replace("[^0-9]","",$prompt_interval);
+	$agent_alert_delay = ereg_replace("[^0-9]","",$agent_alert_delay);
+	$manual_dial_list_id = ereg_replace("[^0-9]","",$manual_dial_list_id);
+	$qc_user_level = ereg_replace("[^0-9]","",$qc_user_level);
+	$qc_pass = ereg_replace("[^0-9]","",$qc_pass);
+	$qc_finish = ereg_replace("[^0-9]","",$qc_finish);
+	$qc_commit = ereg_replace("[^0-9]","",$qc_commit);
+	$shift_start_time = ereg_replace("[^0-9]","",$shift_start_time);
+	$timeclock_end_of_day = ereg_replace("[^0-9]","",$timeclock_end_of_day);
+	$survey_xfer_exten = ereg_replace("[^0-9]","",$survey_xfer_exten);
+	$add_timeclock_log = ereg_replace("[^0-9]","",$add_timeclock_log);
+	$modify_timeclock_log = ereg_replace("[^0-9]","",$modify_timeclock_log);
+	$delete_timeclock_log = ereg_replace("[^0-9]","",$delete_timeclock_log);
+	$vdc_agent_api_access = ereg_replace("[^0-9]","",$vdc_agent_api_access);
+	$vdc_agent_api_active = ereg_replace("[^0-9]","",$vdc_agent_api_active);
+	$hold_time_option_seconds = ereg_replace("[^0-9]","",$hold_time_option_seconds);
+	$hold_time_option_callback_list_id = ereg_replace("[^0-9]","",$hold_time_option_callback_list_id);
+	$did_id = ereg_replace("[^0-9]","",$did_id);
+	$source_did = ereg_replace("[^0-9]","",$source_did);
+	$modify_inbound_dids = ereg_replace("[^0-9]","",$modify_inbound_dids);
+	$delete_inbound_dids = ereg_replace("[^0-9]","",$delete_inbound_dids);
+	$answer_sec_pct_rt_stat_one = ereg_replace("[^0-9]","",$answer_sec_pct_rt_stat_one);
+	$answer_sec_pct_rt_stat_two = ereg_replace("[^0-9]","",$answer_sec_pct_rt_stat_two);
+	$enable_vtiger_integration = ereg_replace("[^0-9]","",$enable_vtiger_integration);
+	$qc_features_active = ereg_replace("[^0-9]","",$qc_features_active);
+	$outbound_autodial_active = ereg_replace("[^0-9]","",$outbound_autodial_active);
+	$download_lists = ereg_replace("[^0-9]","",$download_lists);
+	$caller_id_number = ereg_replace("[^0-9]","",$caller_id_number);
+	$outbound_calls_per_second = ereg_replace("[^0-9]","",$outbound_calls_per_second);
+	$manager_shift_enforcement_override = ereg_replace("[^0-9]","",$manager_shift_enforcement_override);
+	$export_reports = ereg_replace("[^0-9]","",$export_reports);
+	$delete_from_dnc = ereg_replace("[^0-9]","",$delete_from_dnc);
+	$menu_timeout = ereg_replace("[^0-9]","",$menu_timeout);
+	$menu_time_check = ereg_replace("[^0-9]","",$menu_time_check);
+	$track_in_vdac = ereg_replace("[^0-9]","",$track_in_vdac);
+	$menu_repeat = ereg_replace("[^0-9]","",$menu_repeat);
+	$agentonly_callback_campaign_lock = ereg_replace("[^0-9]","",$agentonly_callback_campaign_lock);
+	$sounds_central_control_active = ereg_replace("[^0-9]","",$sounds_central_control_active);
+	$user_territories_active = ereg_replace("[^0-9]","",$user_territories_active);
 
-### DIGITS and COLONS
-$shift_length = ereg_replace("[^\:0-9]","",$shift_length);
+	### DIGITS and COLONS
+	$shift_length = ereg_replace("[^\:0-9]","",$shift_length);
 
-### DIGITS and HASHES and STARS
-$survey_dtmf_digits = ereg_replace("[^\#\*0-9]","",$survey_dtmf_digits);
-$survey_ni_digit = ereg_replace("[^\#\*0-9]","",$survey_ni_digit);
+	### DIGITS and HASHES and STARS
+	$survey_dtmf_digits = ereg_replace("[^\#\*0-9]","",$survey_dtmf_digits);
+	$survey_ni_digit = ereg_replace("[^\#\*0-9]","",$survey_ni_digit);
 
-### DIGITS and DASHES
-$group_rank = ereg_replace("[^-0-9]","",$group_rank);
-$campaign_rank = ereg_replace("[^-0-9]","",$campaign_rank);
-$queue_priority = ereg_replace("[^-0-9]","",$queue_priority);
+	### DIGITS and DASHES
+	$group_rank = ereg_replace("[^-0-9]","",$group_rank);
+	$campaign_rank = ereg_replace("[^-0-9]","",$campaign_rank);
+	$queue_priority = ereg_replace("[^-0-9]","",$queue_priority);
 
-### DIGITS and NEWLINES
-$phone_numbers = ereg_replace("[^\n0-9]","",$phone_numbers);
+	### DIGITS and NEWLINES
+	$phone_numbers = ereg_replace("[^\n0-9]","",$phone_numbers);
 
-### Y or N ONLY ###
-$active = ereg_replace("[^NY]","",$active);
-$allow_closers = ereg_replace("[^NY]","",$allow_closers);
-$reset_hopper = ereg_replace("[^NY]","",$reset_hopper);
-$amd_send_to_vmx = ereg_replace("[^NY]","",$amd_send_to_vmx);
-$alt_number_dialing = ereg_replace("[^NY]","",$alt_number_dialing);
-$selectable = ereg_replace("[^NY]","",$selectable);
-$reset_list = ereg_replace("[^NY]","",$reset_list);
-$fronter_display = ereg_replace("[^NY]","",$fronter_display);
-$use_internal_dnc = ereg_replace("[^NY]","",$use_internal_dnc);
-$use_campaign_dnc = ereg_replace("[^NY]","",$use_campaign_dnc);
-$omit_phone_code = ereg_replace("[^NY]","",$omit_phone_code);
-$available_only_ratio_tally = ereg_replace("[^NY]","",$available_only_ratio_tally);
-$sys_perf_log = ereg_replace("[^NY]","",$sys_perf_log);
-$vicidial_balance_active = ereg_replace("[^NY]","",$vicidial_balance_active);
-$vd_server_logs = ereg_replace("[^NY]","",$vd_server_logs);
-$campaign_stats_refresh = ereg_replace("[^NY]","",$campaign_stats_refresh);
-$disable_alter_custdata = ereg_replace("[^NY]","",$disable_alter_custdata);
-$no_hopper_leads_logins = ereg_replace("[^NY]","",$no_hopper_leads_logins);
-$human_answered = ereg_replace("[^NY]","",$human_answered);
-$tovdad_display = ereg_replace("[^NY]","",$tovdad_display);
-$campaign_allow_inbound = ereg_replace("[^NY]","",$campaign_allow_inbound);
-$disable_alter_custphone = ereg_replace("[^NY]","",$disable_alter_custphone);
-$display_queue_count = ereg_replace("[^NY]","",$display_queue_count);
-$qc_show_recording = ereg_replace("[^NY]","",$qc_show_recording);
-$sale_category = ereg_replace("[^NY]","",$sale_category);
-$dead_lead_category = ereg_replace("[^NY]","",$dead_lead_category);
-$agent_extended_alt_dial  = ereg_replace("[^NY]","",$agent_extended_alt_dial);
-$play_place_in_line  = ereg_replace("[^NY]","",$play_place_in_line);
-$play_estimate_hold_time  = ereg_replace("[^NY]","",$play_estimate_hold_time);
-$no_delay_call_route  = ereg_replace("[^NY]","",$no_delay_call_route);
-$did_active  = ereg_replace("[^NY]","",$did_active);
-$active_asterisk_server = ereg_replace("[^NY]","",$active_asterisk_server);
-$generate_vicidial_conf = ereg_replace("[^NY]","",$generate_vicidial_conf);
-$rebuild_conf_files = ereg_replace("[^NY]","",$rebuild_conf_files);
-$agent_allow_group_alias = ereg_replace("[^NY]","",$agent_allow_group_alias);
-$vtiger_status_call = ereg_replace("[^NY]","",$vtiger_status_call);
-$sale = ereg_replace("[^NY]","",$sale);
-$dnc = ereg_replace("[^NY]","",$dnc);
-$customer_contact = ereg_replace("[^NY]","",$customer_contact);
-$not_interested = ereg_replace("[^NY]","",$not_interested);
-$unworkable = ereg_replace("[^NY]","",$unworkable);
-$sounds_update = ereg_replace("[^NY]","",$sounds_update);
+	### Y or N ONLY ###
+	$active = ereg_replace("[^NY]","",$active);
+	$allow_closers = ereg_replace("[^NY]","",$allow_closers);
+	$reset_hopper = ereg_replace("[^NY]","",$reset_hopper);
+	$amd_send_to_vmx = ereg_replace("[^NY]","",$amd_send_to_vmx);
+	$alt_number_dialing = ereg_replace("[^NY]","",$alt_number_dialing);
+	$selectable = ereg_replace("[^NY]","",$selectable);
+	$reset_list = ereg_replace("[^NY]","",$reset_list);
+	$fronter_display = ereg_replace("[^NY]","",$fronter_display);
+	$use_internal_dnc = ereg_replace("[^NY]","",$use_internal_dnc);
+	$use_campaign_dnc = ereg_replace("[^NY]","",$use_campaign_dnc);
+	$omit_phone_code = ereg_replace("[^NY]","",$omit_phone_code);
+	$available_only_ratio_tally = ereg_replace("[^NY]","",$available_only_ratio_tally);
+	$sys_perf_log = ereg_replace("[^NY]","",$sys_perf_log);
+	$vicidial_balance_active = ereg_replace("[^NY]","",$vicidial_balance_active);
+	$vd_server_logs = ereg_replace("[^NY]","",$vd_server_logs);
+	$campaign_stats_refresh = ereg_replace("[^NY]","",$campaign_stats_refresh);
+	$disable_alter_custdata = ereg_replace("[^NY]","",$disable_alter_custdata);
+	$no_hopper_leads_logins = ereg_replace("[^NY]","",$no_hopper_leads_logins);
+	$human_answered = ereg_replace("[^NY]","",$human_answered);
+	$tovdad_display = ereg_replace("[^NY]","",$tovdad_display);
+	$campaign_allow_inbound = ereg_replace("[^NY]","",$campaign_allow_inbound);
+	$disable_alter_custphone = ereg_replace("[^NY]","",$disable_alter_custphone);
+	$display_queue_count = ereg_replace("[^NY]","",$display_queue_count);
+	$qc_show_recording = ereg_replace("[^NY]","",$qc_show_recording);
+	$sale_category = ereg_replace("[^NY]","",$sale_category);
+	$dead_lead_category = ereg_replace("[^NY]","",$dead_lead_category);
+	$agent_extended_alt_dial  = ereg_replace("[^NY]","",$agent_extended_alt_dial);
+	$play_place_in_line  = ereg_replace("[^NY]","",$play_place_in_line);
+	$play_estimate_hold_time  = ereg_replace("[^NY]","",$play_estimate_hold_time);
+	$no_delay_call_route  = ereg_replace("[^NY]","",$no_delay_call_route);
+	$did_active  = ereg_replace("[^NY]","",$did_active);
+	$active_asterisk_server = ereg_replace("[^NY]","",$active_asterisk_server);
+	$generate_vicidial_conf = ereg_replace("[^NY]","",$generate_vicidial_conf);
+	$rebuild_conf_files = ereg_replace("[^NY]","",$rebuild_conf_files);
+	$agent_allow_group_alias = ereg_replace("[^NY]","",$agent_allow_group_alias);
+	$vtiger_status_call = ereg_replace("[^NY]","",$vtiger_status_call);
+	$sale = ereg_replace("[^NY]","",$sale);
+	$dnc = ereg_replace("[^NY]","",$dnc);
+	$customer_contact = ereg_replace("[^NY]","",$customer_contact);
+	$not_interested = ereg_replace("[^NY]","",$not_interested);
+	$unworkable = ereg_replace("[^NY]","",$unworkable);
+	$sounds_update = ereg_replace("[^NY]","",$sounds_update);
 
-$qc_enabled = ereg_replace("[^0-9NY]","",$qc_enabled);
+	$qc_enabled = ereg_replace("[^0-9NY]","",$qc_enabled);
 
 
-### ALPHA-NUMERIC ONLY ###
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
-$script_id = ereg_replace("[^0-9a-zA-Z]","",$script_id);
-$submit = ereg_replace("[^0-9a-zA-Z]","",$submit);
-$campaign_cid = ereg_replace("[^0-9a-zA-Z]","",$campaign_cid);
-$get_call_launch = ereg_replace("[^0-9a-zA-Z]","",$get_call_launch);
-$campaign_recording = ereg_replace("[^0-9a-zA-Z]","",$campaign_recording);
-$ADD = ereg_replace("[^0-9a-zA-Z]","",$ADD);
-$dial_prefix = ereg_replace("[^0-9a-zA-Z]","",$dial_prefix);
-$state_call_time_state = ereg_replace("[^0-9a-zA-Z]","",$state_call_time_state);
-$scheduled_callbacks = ereg_replace("[^0-9a-zA-Z]","",$scheduled_callbacks);
-$concurrent_transfers = ereg_replace("[^0-9a-zA-Z]","",$concurrent_transfers);
-$billable = ereg_replace("[^0-9a-zA-Z]","",$billable);
-$pause_code = ereg_replace("[^0-9a-zA-Z]","",$pause_code);
-$vicidial_recording_override = ereg_replace("[^0-9a-zA-Z]","",$vicidial_recording_override);
-$ingroup_recording_override = ereg_replace("[^0-9a-zA-Z]","",$ingroup_recording_override);
-$queuemetrics_log_id = ereg_replace("[^0-9a-zA-Z]","",$queuemetrics_log_id);
-$after_hours_exten = ereg_replace("[^0-9a-zA-Z]","",$after_hours_exten);
-$after_hours_voicemail = ereg_replace("[^0-9a-zA-Z]","",$after_hours_voicemail);
-$qc_script = ereg_replace("[^0-9a-zA-Z]","",$qc_script);
-$code = ereg_replace("[^0-9a-zA-Z]","",$code);
-$survey_no_response_action = ereg_replace("[^0-9a-zA-Z]","",$survey_no_response_action);
-$survey_ni_status = ereg_replace("[^0-9a-zA-Z]","",$survey_ni_status);
-$qc_get_record_launch = ereg_replace("[^0-9a-zA-Z]","",$qc_get_record_launch);
-$agent_pause_codes_active = ereg_replace("[^0-9a-zA-Z]","",$agent_pause_codes_active);
-$three_way_dial_prefix = ereg_replace("[^0-9a-zA-Z]","",$three_way_dial_prefix);
-$shift_enforcement = ereg_replace("[^0-9a-zA-Z]","",$shift_enforcement);
-$agent_shift_enforcement_override = ereg_replace("[^0-9a-zA-Z]","",$agent_shift_enforcement_override);
-$survey_third_status = ereg_replace("[^0-9a-zA-Z]","",$survey_third_status);
-$survey_fourth_status = ereg_replace("[^0-9a-zA-Z]","",$survey_fourth_status);
-$sounds_web_directory = ereg_replace("[^0-9a-zA-Z]","",$sounds_web_directory);
+	### ALPHA-NUMERIC ONLY ###
+	$script_id = ereg_replace("[^0-9a-zA-Z]","",$script_id);
+	$submit = ereg_replace("[^0-9a-zA-Z]","",$submit);
+	$campaign_cid = ereg_replace("[^0-9a-zA-Z]","",$campaign_cid);
+	$get_call_launch = ereg_replace("[^0-9a-zA-Z]","",$get_call_launch);
+	$campaign_recording = ereg_replace("[^0-9a-zA-Z]","",$campaign_recording);
+	$ADD = ereg_replace("[^0-9a-zA-Z]","",$ADD);
+	$dial_prefix = ereg_replace("[^0-9a-zA-Z]","",$dial_prefix);
+	$state_call_time_state = ereg_replace("[^0-9a-zA-Z]","",$state_call_time_state);
+	$scheduled_callbacks = ereg_replace("[^0-9a-zA-Z]","",$scheduled_callbacks);
+	$concurrent_transfers = ereg_replace("[^0-9a-zA-Z]","",$concurrent_transfers);
+	$billable = ereg_replace("[^0-9a-zA-Z]","",$billable);
+	$pause_code = ereg_replace("[^0-9a-zA-Z]","",$pause_code);
+	$vicidial_recording_override = ereg_replace("[^0-9a-zA-Z]","",$vicidial_recording_override);
+	$ingroup_recording_override = ereg_replace("[^0-9a-zA-Z]","",$ingroup_recording_override);
+	$queuemetrics_log_id = ereg_replace("[^0-9a-zA-Z]","",$queuemetrics_log_id);
+	$after_hours_exten = ereg_replace("[^0-9a-zA-Z]","",$after_hours_exten);
+	$after_hours_voicemail = ereg_replace("[^0-9a-zA-Z]","",$after_hours_voicemail);
+	$qc_script = ereg_replace("[^0-9a-zA-Z]","",$qc_script);
+	$code = ereg_replace("[^0-9a-zA-Z]","",$code);
+	$survey_no_response_action = ereg_replace("[^0-9a-zA-Z]","",$survey_no_response_action);
+	$survey_ni_status = ereg_replace("[^0-9a-zA-Z]","",$survey_ni_status);
+	$qc_get_record_launch = ereg_replace("[^0-9a-zA-Z]","",$qc_get_record_launch);
+	$agent_pause_codes_active = ereg_replace("[^0-9a-zA-Z]","",$agent_pause_codes_active);
+	$three_way_dial_prefix = ereg_replace("[^0-9a-zA-Z]","",$three_way_dial_prefix);
+	$shift_enforcement = ereg_replace("[^0-9a-zA-Z]","",$shift_enforcement);
+	$agent_shift_enforcement_override = ereg_replace("[^0-9a-zA-Z]","",$agent_shift_enforcement_override);
+	$survey_third_status = ereg_replace("[^0-9a-zA-Z]","",$survey_third_status);
+	$survey_fourth_status = ereg_replace("[^0-9a-zA-Z]","",$survey_fourth_status);
+	$sounds_web_directory = ereg_replace("[^0-9a-zA-Z]","",$sounds_web_directory);
 
-### DIGITS and Dots
-$server_ip = ereg_replace("[^\.0-9]","",$server_ip);
-$auto_dial_level = ereg_replace("[^\.0-9]","",$auto_dial_level);
-$adaptive_maximum_level = ereg_replace("[^\.0-9]","",$adaptive_maximum_level);
-$phone_ip = ereg_replace("[^\.0-9]","",$phone_ip);
-$old_server_ip = ereg_replace("[^\.0-9]","",$old_server_ip);
-$computer_ip = ereg_replace("[^\.0-9]","",$computer_ip);
-$queuemetrics_server_ip = ereg_replace("[^\.0-9]","",$queuemetrics_server_ip);
-$vtiger_server_ip = ereg_replace("[^\.0-9]","",$vtiger_server_ip);
-$sounds_web_server = ereg_replace("[^\.0-9]","",$sounds_web_server);
-$active_voicemail_server = ereg_replace("[^\.0-9]","",$active_voicemail_server);
-$auto_dial_limit = ereg_replace("[^\.0-9]","",$auto_dial_limit);
+	### DIGITS and Dots
+	$server_ip = ereg_replace("[^\.0-9]","",$server_ip);
+	$auto_dial_level = ereg_replace("[^\.0-9]","",$auto_dial_level);
+	$adaptive_maximum_level = ereg_replace("[^\.0-9]","",$adaptive_maximum_level);
+	$phone_ip = ereg_replace("[^\.0-9]","",$phone_ip);
+	$old_server_ip = ereg_replace("[^\.0-9]","",$old_server_ip);
+	$computer_ip = ereg_replace("[^\.0-9]","",$computer_ip);
+	$queuemetrics_server_ip = ereg_replace("[^\.0-9]","",$queuemetrics_server_ip);
+	$vtiger_server_ip = ereg_replace("[^\.0-9]","",$vtiger_server_ip);
+	$sounds_web_server = ereg_replace("[^\.0-9]","",$sounds_web_server);
+	$active_voicemail_server = ereg_replace("[^\.0-9]","",$active_voicemail_server);
+	$auto_dial_limit = ereg_replace("[^\.0-9]","",$auto_dial_limit);
 
-### ALPHA-NUMERIC and spaces and hash and star and comma
-$xferconf_a_dtmf = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$xferconf_a_dtmf);
-$xferconf_b_dtmf = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$xferconf_b_dtmf);
-$survey_third_digit = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$survey_third_digit);
-$survey_fourth_digit = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$survey_fourth_digit);
-$survey_third_exten = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$survey_third_exten);
-$survey_fourth_exten = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$survey_fourth_exten);
+	### ALPHA-NUMERIC and spaces and hash and star and comma
+	$xferconf_a_dtmf = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$xferconf_a_dtmf);
+	$xferconf_b_dtmf = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$xferconf_b_dtmf);
+	$survey_third_digit = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$survey_third_digit);
+	$survey_fourth_digit = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$survey_fourth_digit);
+	$survey_third_exten = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$survey_third_exten);
+	$survey_fourth_exten = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$survey_fourth_exten);
 
-### ALPHACAPS-NUMERIC
-$xferconf_a_number = ereg_replace("[^0-9A-Z]","",$xferconf_a_number);
-$xferconf_b_number = ereg_replace("[^0-9A-Z]","",$xferconf_b_number);
+	### ALPHACAPS-NUMERIC
+	$xferconf_a_number = ereg_replace("[^0-9A-Z]","",$xferconf_a_number);
+	$xferconf_b_number = ereg_replace("[^0-9A-Z]","",$xferconf_b_number);
 
-### ALPHA-NUMERIC and underscore and dash
-$agi_output = ereg_replace("[^-\_0-9a-zA-Z]","",$agi_output);
-$ASTmgrSECRET = ereg_replace("[^-\_0-9a-zA-Z]","",$ASTmgrSECRET);
-$ASTmgrUSERNAME = ereg_replace("[^-\_0-9a-zA-Z]","",$ASTmgrUSERNAME);
-$ASTmgrUSERNAMElisten = ereg_replace("[^-\_0-9a-zA-Z]","",$ASTmgrUSERNAMElisten);
-$ASTmgrUSERNAMEsend = ereg_replace("[^-\_0-9a-zA-Z]","",$ASTmgrUSERNAMEsend);
-$ASTmgrUSERNAMEupdate = ereg_replace("[^-\_0-9a-zA-Z]","",$ASTmgrUSERNAMEupdate);
-$call_time_id = ereg_replace("[^-\_0-9a-zA-Z]","",$call_time_id);
-$campaign_id = ereg_replace("[^-\_0-9a-zA-Z]","",$campaign_id);
-$CoNfIrM = ereg_replace("[^-\_0-9a-zA-Z]","",$CoNfIrM);
-$DBX_database = ereg_replace("[^-\_0-9a-zA-Z]","",$DBX_database);
-$DBX_pass = ereg_replace("[^-\_0-9a-zA-Z]","",$DBX_pass);
-$DBX_user = ereg_replace("[^-\_0-9a-zA-Z]","",$DBX_user);
-$DBY_database = ereg_replace("[^-\_0-9a-zA-Z]","",$DBY_database);
-$DBY_pass = ereg_replace("[^-\_0-9a-zA-Z]","",$DBY_pass);
-$DBY_user = ereg_replace("[^-\_0-9a-zA-Z]","",$DBY_user);
-$dial_method = ereg_replace("[^-\_0-9a-zA-Z]","",$dial_method);
-$dial_status_a = ereg_replace("[^-\_0-9a-zA-Z]","",$dial_status_a);
-$dial_status_b = ereg_replace("[^-\_0-9a-zA-Z]","",$dial_status_b);
-$dial_status_c = ereg_replace("[^-\_0-9a-zA-Z]","",$dial_status_c);
-$dial_status_d = ereg_replace("[^-\_0-9a-zA-Z]","",$dial_status_d);
-$dial_status_e = ereg_replace("[^-\_0-9a-zA-Z]","",$dial_status_e);
-$ext_context = ereg_replace("[^-\_0-9a-zA-Z]","",$ext_context);
-$group_id = ereg_replace("[^-\_0-9a-zA-Z]","",$group_id);
-$lead_filter_id = ereg_replace("[^-\_0-9a-zA-Z]","",$lead_filter_id);
-$local_call_time = ereg_replace("[^-\_0-9a-zA-Z]","",$local_call_time);
-$login = ereg_replace("[^-\_0-9a-zA-Z]","",$login);
-$login_campaign = ereg_replace("[^-\_0-9a-zA-Z]","",$login_campaign);
-$login_pass = ereg_replace("[^-\_0-9a-zA-Z]","",$login_pass);
-$login_user = ereg_replace("[^-\_0-9a-zA-Z]","",$login_user);
-$next_agent_call = ereg_replace("[^-\_0-9a-zA-Z]","",$next_agent_call);
-$old_campaign_id = ereg_replace("[^-\_0-9a-zA-Z]","",$old_campaign_id);
-$old_server_id = ereg_replace("[^-\_0-9a-zA-Z]","",$old_server_id);
-$OLDuser_group = ereg_replace("[^-\_0-9a-zA-Z]","",$OLDuser_group);
-$park_file_name = ereg_replace("[^-\_0-9a-zA-Z]","",$park_file_name);
-$pass = ereg_replace("[^-\_0-9a-zA-Z]","",$pass);
-$phone_login = ereg_replace("[^-\_0-9a-zA-Z]","",$phone_login);
-$phone_pass = ereg_replace("[^-\_0-9a-zA-Z]","",$phone_pass);
-$PHP_AUTH_PW = ereg_replace("[^-\_0-9a-zA-Z]","",$PHP_AUTH_PW);
-$PHP_AUTH_USER = ereg_replace("[^-\_0-9a-zA-Z]","",$PHP_AUTH_USER);
-$protocol = ereg_replace("[^-\_0-9a-zA-Z]","",$protocol);
-$server_id = ereg_replace("[^-\_0-9a-zA-Z]","",$server_id);
-$stage = ereg_replace("[^-\_0-9a-zA-Z]","",$stage);
-$state_rule = ereg_replace("[^-\_0-9a-zA-Z]","",$state_rule);
-$status = ereg_replace("[^-\_0-9a-zA-Z]","",$status);
-$trunk_restriction = ereg_replace("[^-\_0-9a-zA-Z]","",$trunk_restriction);
-$user = ereg_replace("[^-\_0-9a-zA-Z]","",$user);
-$user_group = ereg_replace("[^-\_0-9a-zA-Z]","",$user_group);
-$VICIDIAL_park_on_filename = ereg_replace("[^-\_0-9a-zA-Z]","",$VICIDIAL_park_on_filename);
-$auto_alt_dial = ereg_replace("[^-\_0-9a-zA-Z]","",$auto_alt_dial);
-$dial_status = ereg_replace("[^-\_0-9a-zA-Z]","",$dial_status);
-$queuemetrics_eq_prepend = ereg_replace("[^-\_0-9a-zA-Z]","",$queuemetrics_eq_prepend);
-$vicidial_agent_disable = ereg_replace("[^-\_0-9a-zA-Z]","",$vicidial_agent_disable);
-$alter_custdata_override = ereg_replace("[^-\_0-9a-zA-Z]","",$alter_custdata_override);
-$list_order_mix = ereg_replace("[^-\_0-9a-zA-Z]","",$list_order_mix);
-$vcl_id = ereg_replace("[^-\_0-9a-zA-Z]","",$vcl_id);
-$mix_method = ereg_replace("[^-\_0-9a-zA-Z]","",$mix_method);
-$category = ereg_replace("[^-\_0-9a-zA-Z]","",$category);
-$vsc_id = ereg_replace("[^-\_0-9a-zA-Z]","",$vsc_id);
-$moh_context = ereg_replace("[^-\_0-9a-zA-Z]","",$moh_context);
-$agent_alert_exten = ereg_replace("[^-\_0-9a-zA-Z]","",$agent_alert_exten);
-$source_campaign_id = ereg_replace("[^-\_0-9a-zA-Z]","",$source_campaign_id);
-$source_user_id = ereg_replace("[^-\_0-9a-zA-Z]","",$source_user_id);
-$source_group_id = ereg_replace("[^-\_0-9a-zA-Z]","",$source_group_id);
-$default_xfer_group = ereg_replace("[^-\_0-9a-zA-Z]","",$default_xfer_group);
-$drop_exten = ereg_replace("[^-\_0-9a-zA-Z]","",$drop_exten);
-$safe_harbor_exten = ereg_replace("[^-\_0-9a-zA-Z]","",$safe_harbor_exten);
-$drop_action = ereg_replace("[^-\_0-9a-zA-Z]","",$drop_action);
-$drop_inbound_group = ereg_replace("[^-\_0-9a-zA-Z]","",$drop_inbound_group);
-$afterhours_xfer_group = ereg_replace("[^-\_0-9a-zA-Z]","",$afterhours_xfer_group);
-$after_hours_action = ereg_replace("[^-\_0-9a-zA-Z]","",$after_hours_action);
-$alias_id = ereg_replace("[^-\_0-9a-zA-Z]","",$alias_id);
-$shift_id = ereg_replace("[^-\_0-9a-zA-Z]","",$shift_id);
-$qc_shift_id = ereg_replace("[^-\_0-9a-zA-Z]","",$qc_shift_id);
-$survey_first_audio_file = ereg_replace("[^-\_0-9a-zA-Z]","",$survey_first_audio_file);
-$survey_opt_in_audio_file = ereg_replace("[^-\_0-9a-zA-Z]","",$survey_opt_in_audio_file);
-$survey_ni_audio_file = ereg_replace("[^-\_0-9a-zA-Z]","",$survey_ni_audio_file);
-$survey_method = ereg_replace("[^-\_0-9a-zA-Z]","",$survey_method);
-$alter_custphone_override = ereg_replace("[^-\_0-9a-zA-Z]","",$alter_custphone_override);
-$manual_dial_filter = ereg_replace("[^-\_0-9a-zA-Z]","",$manual_dial_filter);
-$agent_clipboard_copy = ereg_replace("[^-\_0-9a-zA-Z]","",$agent_clipboard_copy);
-$hold_time_option = ereg_replace("[^-\_0-9a-zA-Z]","",$hold_time_option);
-$hold_time_option_xfer_group = ereg_replace("[^-\_0-9a-zA-Z]","",$hold_time_option_xfer_group);
-$hold_recall_xfer_group = ereg_replace("[^-\_0-9a-zA-Z]","",$hold_recall_xfer_group);
-$play_welcome_message = ereg_replace("[^-\_0-9a-zA-Z]","",$play_welcome_message);
-$did_route = ereg_replace("[^-\_0-9a-zA-Z]","",$did_route);
-$user_unavailable_action = ereg_replace("[^-\_0-9a-zA-Z]","",$user_unavailable_action);
-$user_route_settings_ingroup = ereg_replace("[^-\_0-9a-zA-Z]","",$user_route_settings_ingroup);
-$call_handle_method = ereg_replace("[^-\_0-9a-zA-Z]","",$call_handle_method);
-$agent_search_method = ereg_replace("[^-\_0-9a-zA-Z]","",$agent_search_method);
-$hold_time_option_voicemail = ereg_replace("[^-\_0-9a-zA-Z]","",$hold_time_option_voicemail);
-$hold_time_option_callback_filename = ereg_replace("[^-\_0-9a-zA-Z]","",$hold_time_option_callback_filename);
-$exten_context = ereg_replace("[^-\_0-9a-zA-Z]","",$exten_context);
-$three_way_call_cid = ereg_replace("[^-\_0-9a-zA-Z]","",$three_way_call_cid);
-$web_form_target = ereg_replace("[^-\_0-9a-zA-Z]","",$web_form_target);
-$recording_web_link = ereg_replace("[^-\_0-9a-zA-Z]","",$recording_web_link);
-$vtiger_search_category = ereg_replace("[^-\_0-9a-zA-Z]","",$vtiger_search_category);
-$vtiger_create_call_record = ereg_replace("[^-\_0-9a-zA-Z]","",$vtiger_create_call_record);
-$vtiger_create_lead_record = ereg_replace("[^-\_0-9a-zA-Z]","",$vtiger_create_lead_record);
-$vtiger_screen_login = ereg_replace("[^-\_0-9a-zA-Z]","",$vtiger_screen_login);
-$cpd_amd_action = ereg_replace("[^-\_0-9a-zA-Z]","",$cpd_amd_action);
-$template_id = ereg_replace("[^-\_0-9a-zA-Z]","",$template_id);
-$carrier_id = ereg_replace("[^-\_0-9a-zA-Z]","",$carrier_id);
-$group_alias_id = ereg_replace("[^-\_0-9a-zA-Z]","",$group_alias_id);
-$default_group_alias = ereg_replace("[^-\_0-9a-zA-Z]","",$default_group_alias);
-$vtiger_search_dead = ereg_replace("[^-\_0-9a-zA-Z]","",$vtiger_search_dead);
-$survey_third_audio_file = ereg_replace("[^-\_0-9a-zA-Z]","",$survey_third_audio_file);
-$survey_fourth_audio_file = ereg_replace("[^-\_0-9a-zA-Z]","",$survey_fourth_audio_file);
-$menu_id = ereg_replace("[^-\_0-9a-zA-Z]","",$menu_id);
-$source_menu = ereg_replace("[^-\_0-9a-zA-Z]","",$source_menu);
-$call_time_id = ereg_replace("[^-\_0-9a-zA-Z]","",$call_time_id);
-$menu_prompt = ereg_replace("[^-\_0-9a-zA-Z]","",$menu_prompt);
-$menu_timeout_prompt = ereg_replace("[^-\_0-9a-zA-Z]","",$menu_timeout_prompt);
-$menu_invalid_prompt = ereg_replace("[^-\_0-9a-zA-Z]","",$menu_invalid_prompt);
+	### ALPHA-NUMERIC and underscore and dash
+	$agi_output = ereg_replace("[^-_0-9a-zA-Z]","",$agi_output);
+	$ASTmgrSECRET = ereg_replace("[^-_0-9a-zA-Z]","",$ASTmgrSECRET);
+	$ASTmgrUSERNAME = ereg_replace("[^-_0-9a-zA-Z]","",$ASTmgrUSERNAME);
+	$ASTmgrUSERNAMElisten = ereg_replace("[^-_0-9a-zA-Z]","",$ASTmgrUSERNAMElisten);
+	$ASTmgrUSERNAMEsend = ereg_replace("[^-_0-9a-zA-Z]","",$ASTmgrUSERNAMEsend);
+	$ASTmgrUSERNAMEupdate = ereg_replace("[^-_0-9a-zA-Z]","",$ASTmgrUSERNAMEupdate);
+	$call_time_id = ereg_replace("[^-_0-9a-zA-Z]","",$call_time_id);
+	$campaign_id = ereg_replace("[^-_0-9a-zA-Z]","",$campaign_id);
+	$CoNfIrM = ereg_replace("[^-_0-9a-zA-Z]","",$CoNfIrM);
+	$DBX_database = ereg_replace("[^-_0-9a-zA-Z]","",$DBX_database);
+	$DBX_pass = ereg_replace("[^-_0-9a-zA-Z]","",$DBX_pass);
+	$DBX_user = ereg_replace("[^-_0-9a-zA-Z]","",$DBX_user);
+	$DBY_database = ereg_replace("[^-_0-9a-zA-Z]","",$DBY_database);
+	$DBY_pass = ereg_replace("[^-_0-9a-zA-Z]","",$DBY_pass);
+	$DBY_user = ereg_replace("[^-_0-9a-zA-Z]","",$DBY_user);
+	$dial_method = ereg_replace("[^-_0-9a-zA-Z]","",$dial_method);
+	$dial_status_a = ereg_replace("[^-_0-9a-zA-Z]","",$dial_status_a);
+	$dial_status_b = ereg_replace("[^-_0-9a-zA-Z]","",$dial_status_b);
+	$dial_status_c = ereg_replace("[^-_0-9a-zA-Z]","",$dial_status_c);
+	$dial_status_d = ereg_replace("[^-_0-9a-zA-Z]","",$dial_status_d);
+	$dial_status_e = ereg_replace("[^-_0-9a-zA-Z]","",$dial_status_e);
+	$ext_context = ereg_replace("[^-_0-9a-zA-Z]","",$ext_context);
+	$group_id = ereg_replace("[^-_0-9a-zA-Z]","",$group_id);
+	$lead_filter_id = ereg_replace("[^-_0-9a-zA-Z]","",$lead_filter_id);
+	$local_call_time = ereg_replace("[^-_0-9a-zA-Z]","",$local_call_time);
+	$login = ereg_replace("[^-_0-9a-zA-Z]","",$login);
+	$login_campaign = ereg_replace("[^-_0-9a-zA-Z]","",$login_campaign);
+	$login_pass = ereg_replace("[^-_0-9a-zA-Z]","",$login_pass);
+	$login_user = ereg_replace("[^-_0-9a-zA-Z]","",$login_user);
+	$next_agent_call = ereg_replace("[^-_0-9a-zA-Z]","",$next_agent_call);
+	$old_campaign_id = ereg_replace("[^-_0-9a-zA-Z]","",$old_campaign_id);
+	$old_server_id = ereg_replace("[^-_0-9a-zA-Z]","",$old_server_id);
+	$OLDuser_group = ereg_replace("[^-_0-9a-zA-Z]","",$OLDuser_group);
+	$park_file_name = ereg_replace("[^-_0-9a-zA-Z]","",$park_file_name);
+	$pass = ereg_replace("[^-_0-9a-zA-Z]","",$pass);
+	$phone_login = ereg_replace("[^-_0-9a-zA-Z]","",$phone_login);
+	$phone_pass = ereg_replace("[^-_0-9a-zA-Z]","",$phone_pass);
+	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
+	$protocol = ereg_replace("[^-_0-9a-zA-Z]","",$protocol);
+	$server_id = ereg_replace("[^-_0-9a-zA-Z]","",$server_id);
+	$stage = ereg_replace("[^-_0-9a-zA-Z]","",$stage);
+	$state_rule = ereg_replace("[^-_0-9a-zA-Z]","",$state_rule);
+	$status = ereg_replace("[^-_0-9a-zA-Z]","",$status);
+	$trunk_restriction = ereg_replace("[^-_0-9a-zA-Z]","",$trunk_restriction);
+	$user = ereg_replace("[^-_0-9a-zA-Z]","",$user);
+	$user_group = ereg_replace("[^-_0-9a-zA-Z]","",$user_group);
+	$VICIDIAL_park_on_filename = ereg_replace("[^-_0-9a-zA-Z]","",$VICIDIAL_park_on_filename);
+	$auto_alt_dial = ereg_replace("[^-_0-9a-zA-Z]","",$auto_alt_dial);
+	$dial_status = ereg_replace("[^-_0-9a-zA-Z]","",$dial_status);
+	$queuemetrics_eq_prepend = ereg_replace("[^-_0-9a-zA-Z]","",$queuemetrics_eq_prepend);
+	$vicidial_agent_disable = ereg_replace("[^-_0-9a-zA-Z]","",$vicidial_agent_disable);
+	$alter_custdata_override = ereg_replace("[^-_0-9a-zA-Z]","",$alter_custdata_override);
+	$list_order_mix = ereg_replace("[^-_0-9a-zA-Z]","",$list_order_mix);
+	$vcl_id = ereg_replace("[^-_0-9a-zA-Z]","",$vcl_id);
+	$mix_method = ereg_replace("[^-_0-9a-zA-Z]","",$mix_method);
+	$category = ereg_replace("[^-_0-9a-zA-Z]","",$category);
+	$vsc_id = ereg_replace("[^-_0-9a-zA-Z]","",$vsc_id);
+	$moh_context = ereg_replace("[^-_0-9a-zA-Z]","",$moh_context);
+	$agent_alert_exten = ereg_replace("[^-_0-9a-zA-Z]","",$agent_alert_exten);
+	$source_campaign_id = ereg_replace("[^-_0-9a-zA-Z]","",$source_campaign_id);
+	$source_user_id = ereg_replace("[^-_0-9a-zA-Z]","",$source_user_id);
+	$source_group_id = ereg_replace("[^-_0-9a-zA-Z]","",$source_group_id);
+	$default_xfer_group = ereg_replace("[^-_0-9a-zA-Z]","",$default_xfer_group);
+	$drop_exten = ereg_replace("[^-_0-9a-zA-Z]","",$drop_exten);
+	$safe_harbor_exten = ereg_replace("[^-_0-9a-zA-Z]","",$safe_harbor_exten);
+	$drop_action = ereg_replace("[^-_0-9a-zA-Z]","",$drop_action);
+	$drop_inbound_group = ereg_replace("[^-_0-9a-zA-Z]","",$drop_inbound_group);
+	$afterhours_xfer_group = ereg_replace("[^-_0-9a-zA-Z]","",$afterhours_xfer_group);
+	$after_hours_action = ereg_replace("[^-_0-9a-zA-Z]","",$after_hours_action);
+	$alias_id = ereg_replace("[^-_0-9a-zA-Z]","",$alias_id);
+	$shift_id = ereg_replace("[^-_0-9a-zA-Z]","",$shift_id);
+	$qc_shift_id = ereg_replace("[^-_0-9a-zA-Z]","",$qc_shift_id);
+	$survey_first_audio_file = ereg_replace("[^-_0-9a-zA-Z]","",$survey_first_audio_file);
+	$survey_opt_in_audio_file = ereg_replace("[^-_0-9a-zA-Z]","",$survey_opt_in_audio_file);
+	$survey_ni_audio_file = ereg_replace("[^-_0-9a-zA-Z]","",$survey_ni_audio_file);
+	$survey_method = ereg_replace("[^-_0-9a-zA-Z]","",$survey_method);
+	$alter_custphone_override = ereg_replace("[^-_0-9a-zA-Z]","",$alter_custphone_override);
+	$manual_dial_filter = ereg_replace("[^-_0-9a-zA-Z]","",$manual_dial_filter);
+	$agent_clipboard_copy = ereg_replace("[^-_0-9a-zA-Z]","",$agent_clipboard_copy);
+	$hold_time_option = ereg_replace("[^-_0-9a-zA-Z]","",$hold_time_option);
+	$hold_time_option_xfer_group = ereg_replace("[^-_0-9a-zA-Z]","",$hold_time_option_xfer_group);
+	$hold_recall_xfer_group = ereg_replace("[^-_0-9a-zA-Z]","",$hold_recall_xfer_group);
+	$play_welcome_message = ereg_replace("[^-_0-9a-zA-Z]","",$play_welcome_message);
+	$did_route = ereg_replace("[^-_0-9a-zA-Z]","",$did_route);
+	$user_unavailable_action = ereg_replace("[^-_0-9a-zA-Z]","",$user_unavailable_action);
+	$user_route_settings_ingroup = ereg_replace("[^-_0-9a-zA-Z]","",$user_route_settings_ingroup);
+	$call_handle_method = ereg_replace("[^-_0-9a-zA-Z]","",$call_handle_method);
+	$agent_search_method = ereg_replace("[^-_0-9a-zA-Z]","",$agent_search_method);
+	$hold_time_option_voicemail = ereg_replace("[^-_0-9a-zA-Z]","",$hold_time_option_voicemail);
+	$hold_time_option_callback_filename = ereg_replace("[^-_0-9a-zA-Z]","",$hold_time_option_callback_filename);
+	$exten_context = ereg_replace("[^-_0-9a-zA-Z]","",$exten_context);
+	$three_way_call_cid = ereg_replace("[^-_0-9a-zA-Z]","",$three_way_call_cid);
+	$web_form_target = ereg_replace("[^-_0-9a-zA-Z]","",$web_form_target);
+	$recording_web_link = ereg_replace("[^-_0-9a-zA-Z]","",$recording_web_link);
+	$vtiger_search_category = ereg_replace("[^-_0-9a-zA-Z]","",$vtiger_search_category);
+	$vtiger_create_call_record = ereg_replace("[^-_0-9a-zA-Z]","",$vtiger_create_call_record);
+	$vtiger_create_lead_record = ereg_replace("[^-_0-9a-zA-Z]","",$vtiger_create_lead_record);
+	$vtiger_screen_login = ereg_replace("[^-_0-9a-zA-Z]","",$vtiger_screen_login);
+	$cpd_amd_action = ereg_replace("[^-_0-9a-zA-Z]","",$cpd_amd_action);
+	$template_id = ereg_replace("[^-_0-9a-zA-Z]","",$template_id);
+	$carrier_id = ereg_replace("[^-_0-9a-zA-Z]","",$carrier_id);
+	$group_alias_id = ereg_replace("[^-_0-9a-zA-Z]","",$group_alias_id);
+	$default_group_alias = ereg_replace("[^-_0-9a-zA-Z]","",$default_group_alias);
+	$vtiger_search_dead = ereg_replace("[^-_0-9a-zA-Z]","",$vtiger_search_dead);
+	$survey_third_audio_file = ereg_replace("[^-_0-9a-zA-Z]","",$survey_third_audio_file);
+	$survey_fourth_audio_file = ereg_replace("[^-_0-9a-zA-Z]","",$survey_fourth_audio_file);
+	$menu_id = ereg_replace("[^-_0-9a-zA-Z]","",$menu_id);
+	$source_menu = ereg_replace("[^-_0-9a-zA-Z]","",$source_menu);
+	$call_time_id = ereg_replace("[^-_0-9a-zA-Z]","",$call_time_id);
+	$menu_prompt = ereg_replace("[^-_0-9a-zA-Z]","",$menu_prompt);
+	$menu_timeout_prompt = ereg_replace("[^-_0-9a-zA-Z]","",$menu_timeout_prompt);
+	$menu_invalid_prompt = ereg_replace("[^-_0-9a-zA-Z]","",$menu_invalid_prompt);
 
-### ALPHA-NUMERIC and underscore and dash and comma
-$logins_list = ereg_replace("[^-\,\_0-9a-zA-Z]","",$logins_list);
-$forced_timeclock_login = ereg_replace("[^-\,\_0-9a-zA-Z]","",$forced_timeclock_login);
+	### ALPHA-NUMERIC and underscore and dash and comma
+	$logins_list = ereg_replace("[^-\,\_0-9a-zA-Z]","",$logins_list);
+	$forced_timeclock_login = ereg_replace("[^-\,\_0-9a-zA-Z]","",$forced_timeclock_login);
 
-### ALPHA-NUMERIC and spaces
-$lead_order = ereg_replace("[^ 0-9a-zA-Z]","",$lead_order);
-### ALPHA-NUMERIC and hash
-$group_color = ereg_replace("[^\#0-9a-zA-Z]","",$group_color);
-### ALPHA-NUMERIC and hash and star and dot and underscore
-$hold_time_option_exten = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$hold_time_option_exten);
-$did_pattern = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$did_pattern);
-$voicemail_ext = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$voicemail_ext);
-$phone = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$phone);
-$phone_code = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$phone_code);
+	### ALPHA-NUMERIC and spaces
+	$lead_order = ereg_replace("[^ 0-9a-zA-Z]","",$lead_order);
+	### ALPHA-NUMERIC and hash
+	$group_color = ereg_replace("[^\#0-9a-zA-Z]","",$group_color);
+	### ALPHA-NUMERIC and hash and star and dot and underscore
+	$hold_time_option_exten = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$hold_time_option_exten);
+	$did_pattern = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$did_pattern);
+	$voicemail_ext = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$voicemail_ext);
+	$phone = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$phone);
+	$phone_code = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$phone_code);
 
-### ALPHA-NUMERIC and spaces dots, commas, dashes, underscores
-$adaptive_dl_diff_target = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$adaptive_dl_diff_target);
-$adaptive_intensity = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$adaptive_intensity);
-$asterisk_version = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$asterisk_version);
-$call_time_comments = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$call_time_comments);
-$call_time_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$call_time_name);
-$campaign_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$campaign_name);
-$campaign_rec_filename = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$campaign_rec_filename);
-$ingroup_rec_filename = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$ingroup_rec_filename);
-$company = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$company);
-$full_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$full_name);
-$fullname = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$fullname);
-$group_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$group_name);
-$HKstatus = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$HKstatus);
-$lead_filter_comments = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$lead_filter_comments);
-$lead_filter_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$lead_filter_name);
-$list_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$list_name);
-$local_gmt = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$local_gmt);
-$phone_type = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$phone_type);
-$picture = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$picture);
-$script_comments = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$script_comments);
-$script_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$script_name);
-$server_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$server_description);
-$status = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$status);
-$status_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$status_name);
-$wrapup_message = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$wrapup_message);
-$pause_code_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$pause_code_name);
-$campaign_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$campaign_description);
-$list_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$list_description);
-$vcl_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$vcl_name);
-$vsc_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$vsc_name);
-$vsc_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$vsc_description);
-$code_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$code_name);
-$alias_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$alias_name);
-$shift_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$shift_name);
-$did_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$did_description);
-$alt_server_ip = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$alt_server_ip);
-$template_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$template_name);
-$carrier_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$carrier_name);
-$group_alias_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$group_alias_name);
-$caller_id_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$caller_id_name);
-$user_code = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$user_code);
-$territory = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$territory);
+	### ALPHA-NUMERIC and spaces dots, commas, dashes, underscores
+	$adaptive_dl_diff_target = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$adaptive_dl_diff_target);
+	$adaptive_intensity = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$adaptive_intensity);
+	$asterisk_version = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$asterisk_version);
+	$call_time_comments = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$call_time_comments);
+	$call_time_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$call_time_name);
+	$campaign_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$campaign_name);
+	$campaign_rec_filename = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$campaign_rec_filename);
+	$ingroup_rec_filename = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$ingroup_rec_filename);
+	$company = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$company);
+	$full_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$full_name);
+	$fullname = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$fullname);
+	$group_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$group_name);
+	$HKstatus = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$HKstatus);
+	$lead_filter_comments = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$lead_filter_comments);
+	$lead_filter_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$lead_filter_name);
+	$list_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$list_name);
+	$local_gmt = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$local_gmt);
+	$phone_type = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$phone_type);
+	$picture = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$picture);
+	$script_comments = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$script_comments);
+	$script_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$script_name);
+	$server_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$server_description);
+	$status = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$status);
+	$status_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$status_name);
+	$wrapup_message = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$wrapup_message);
+	$pause_code_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$pause_code_name);
+	$campaign_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$campaign_description);
+	$list_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$list_description);
+	$vcl_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$vcl_name);
+	$vsc_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$vsc_name);
+	$vsc_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$vsc_description);
+	$code_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$code_name);
+	$alias_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$alias_name);
+	$shift_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$shift_name);
+	$did_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$did_description);
+	$alt_server_ip = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$alt_server_ip);
+	$template_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$template_name);
+	$carrier_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$carrier_name);
+	$group_alias_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$group_alias_name);
+	$caller_id_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$caller_id_name);
+	$user_code = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$user_code);
+	$territory = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$territory);
 
-### ALPHA-NUMERIC and underscore and dash and slash and at and dot
-$call_out_number_group = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$call_out_number_group);
-$client_browser = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$client_browser);
-$DBX_server = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$DBX_server);
-$DBY_server = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$DBY_server);
-$dtmf_send_extension = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$dtmf_send_extension);
-$extension = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$extension);
-$install_directory = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$install_directory);
-$old_extension = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$old_extension);
-$telnet_host = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$telnet_host);
-$queuemetrics_dbname = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$queuemetrics_dbname);
-$queuemetrics_login = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$queuemetrics_login);
-$queuemetrics_pass = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$queuemetrics_pass);
-$after_hours_message_filename = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$after_hours_message_filename);
-$welcome_message_filename = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$welcome_message_filename);
-$onhold_prompt_filename = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$onhold_prompt_filename);
-$email = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$email);
-$vtiger_dbname = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$vtiger_dbname);
-$vtiger_login = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$vtiger_login);
-$vtiger_pass = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$vtiger_pass);
+	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
+	$call_out_number_group = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$call_out_number_group);
+	$client_browser = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$client_browser);
+	$DBX_server = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$DBX_server);
+	$DBY_server = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$DBY_server);
+	$dtmf_send_extension = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$dtmf_send_extension);
+	$extension = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$extension);
+	$install_directory = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$install_directory);
+	$old_extension = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$old_extension);
+	$telnet_host = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$telnet_host);
+	$queuemetrics_dbname = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$queuemetrics_dbname);
+	$queuemetrics_login = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$queuemetrics_login);
+	$queuemetrics_pass = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$queuemetrics_pass);
+	$after_hours_message_filename = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$after_hours_message_filename);
+	$welcome_message_filename = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$welcome_message_filename);
+	$onhold_prompt_filename = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$onhold_prompt_filename);
+	$email = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$email);
+	$vtiger_dbname = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$vtiger_dbname);
+	$vtiger_login = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$vtiger_login);
+	$vtiger_pass = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$vtiger_pass);
 
-### ALPHA-NUMERIC and underscore and dash and slash and at and space and colon
-$vdc_header_date_format = ereg_replace("[^- \:\/\_0-9a-zA-Z]","",$vdc_header_date_format);
-$vdc_customer_date_format = ereg_replace("[^- \:\/\_0-9a-zA-Z]","",$vdc_customer_date_format);
-$menu_name = ereg_replace("[^- \:\/\_0-9a-zA-Z]","",$menu_name);
+	### ALPHA-NUMERIC and underscore and dash and slash and at and space and colon
+	$vdc_header_date_format = ereg_replace("[^- \:\/\_0-9a-zA-Z]","",$vdc_header_date_format);
+	$vdc_customer_date_format = ereg_replace("[^- \:\/\_0-9a-zA-Z]","",$vdc_customer_date_format);
+	$menu_name = ereg_replace("[^- \:\/\_0-9a-zA-Z]","",$menu_name);
 
-### ALPHA-NUMERIC and underscore and dash and at and space and parantheses
-$vdc_header_phone_format = ereg_replace("[^- \(\)\_0-9a-zA-Z]","",$vdc_header_phone_format);
+	### ALPHA-NUMERIC and underscore and dash and at and space and parantheses
+	$vdc_header_phone_format = ereg_replace("[^- \(\)\_0-9a-zA-Z]","",$vdc_header_phone_format);
 
-### remove semi-colons ###
-$lead_filter_sql = ereg_replace(";","",$lead_filter_sql);
-$list_mix_container = ereg_replace(";","",$list_mix_container);
-$survey_response_digit_map = ereg_replace(";","",$survey_response_digit_map);
-$survey_camp_record_dir = ereg_replace(";","",$survey_camp_record_dir);
-$conf_override = ereg_replace(";","",$conf_override);
-$template_contents = ereg_replace(";","",$template_contents);
-$registration_string = ereg_replace(";","",$registration_string);
-$account_entry = ereg_replace(";","",$account_entry);
-$account_entry = ereg_replace("\r","",$account_entry);
-$globals_string = ereg_replace(";","",$globals_string);
-$dialplan_entry = ereg_replace(";","",$dialplan_entry);
-$dialplan_entry = ereg_replace("\r","",$dialplan_entry);
+	### remove semi-colons ###
+	$lead_filter_sql = ereg_replace(";","",$lead_filter_sql);
+	$list_mix_container = ereg_replace(";","",$list_mix_container);
+	$survey_response_digit_map = ereg_replace(";","",$survey_response_digit_map);
+	$survey_camp_record_dir = ereg_replace(";","",$survey_camp_record_dir);
+	$conf_override = ereg_replace(";","",$conf_override);
+	$template_contents = ereg_replace(";","",$template_contents);
+	$registration_string = ereg_replace(";","",$registration_string);
+	$account_entry = ereg_replace(";","",$account_entry);
+	$account_entry = ereg_replace("\r","",$account_entry);
+	$globals_string = ereg_replace(";","",$globals_string);
+	$dialplan_entry = ereg_replace(";","",$dialplan_entry);
+	$dialplan_entry = ereg_replace("\r","",$dialplan_entry);
 
-### VARIABLES TO BE mysql_real_escape_string ###
-# $web_form_address
-# $queuemetrics_url
-# $admin_home_url
-# $qc_web_form_address
-# $vtiger_url
+	### VARIABLES TO BE mysql_real_escape_string ###
+	# $web_form_address
+	# $queuemetrics_url
+	# $admin_home_url
+	# $qc_web_form_address
+	# $vtiger_url
 
-### VARIABLES not filtered at all ###
-# $script_text
+	### VARIABLES not filtered at all ###
+	# $script_text
 
-}	# end of non_latin
+	}	# end of non_latin
+else
+	{
+	$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
+	}
+
 
 
 ##### END VARIABLE FILTERING FOR SECURITY #####
@@ -1769,12 +1773,13 @@ $dialplan_entry = ereg_replace("\r","",$dialplan_entry);
 # 90511-0910 - Added agentonly_callback_campaign_lock to system_settings
 # 90512-0440 - Added sounds settings to system_settings table
 # 90514-0607 - Added select prompts from list in call menu and in-group screens
-# 90521-0029 - Added select prompts from list in call menu and in-group screens
+# 90521-0029 - Added user territories enable option
+# 90522-0506 - Security fix
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-186';
-$build = '90521-0029';
+$admin_version = '2.2.0-187';
+$build = '90522-0506';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -10736,9 +10741,9 @@ if ($ADD==4511)
 				{
 				$option_value = ereg_replace("[^-\_0-9A-Z]","",$option_value);
 				$option_description = ereg_replace("[^- \:\/\_0-9a-zA-Z]","",$option_description);
-				$option_route = ereg_replace("[^-\_0-9a-zA-Z]","",$option_route);
+				$option_route = ereg_replace("[^-_0-9a-zA-Z]","",$option_route);
 				$option_route_value = ereg_replace("[^-\_\#\*\,\_0-9a-zA-Z]","",$option_route_value);
-				$option_route_value_context = ereg_replace("[^-\_0-9a-zA-Z]","",$option_route_value_context);
+				$option_route_value_context = ereg_replace("[^-_0-9a-zA-Z]","",$option_route_value_context);
 				}
 
 			if (strlen($option_route) > 0)

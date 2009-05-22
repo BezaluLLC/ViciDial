@@ -280,9 +280,9 @@ if (isset($_GET["MGR_override"]))				{$MGR_override=$_GET["MGR_override"];}
 	$DB=ereg_replace("[^0-9a-z]","",$DB);
 	$phone_login=ereg_replace("[^\,0-9a-zA-Z]","",$phone_login);
 	$phone_pass=ereg_replace("[^0-9a-zA-Z]","",$phone_pass);
-	$VD_login=ereg_replace("[^0-9a-zA-Z]","",$VD_login);
-	$VD_pass=ereg_replace("[^0-9a-zA-Z]","",$VD_pass);
-	$VD_campaign = ereg_replace("[^-\_0-9a-zA-Z]","",$VD_campaign);
+	$VD_login=ereg_replace("[^-_0-9a-zA-Z]","",$VD_login);
+	$VD_pass=ereg_replace("[^-_0-9a-zA-Z]","",$VD_pass);
+	$VD_campaign = ereg_replace("[^-_0-9a-zA-Z]","",$VD_campaign);
 
 
 $forever_stop=0;

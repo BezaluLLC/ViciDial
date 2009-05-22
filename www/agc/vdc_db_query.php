@@ -408,13 +408,19 @@ while ($i < $qm_conf_ct)
 ###########################################
 
 if ($non_latin < 1)
-{
-$user=ereg_replace("[^0-9a-zA-Z]","",$user);
-$pass=ereg_replace("[^0-9a-zA-Z]","",$pass);
-$length_in_sec = ereg_replace("[^0-9]","",$length_in_sec);
-$phone_code = ereg_replace("[^0-9]","",$phone_code);
-$phone_number = ereg_replace("[^0-9]","",$phone_number);
-}
+	{
+	$user=ereg_replace("[^-_0-9a-zA-Z]","",$user);
+	$pass=ereg_replace("[^-_0-9a-zA-Z]","",$pass);
+	$length_in_sec = ereg_replace("[^0-9]","",$length_in_sec);
+	$phone_code = ereg_replace("[^0-9]","",$phone_code);
+	$phone_number = ereg_replace("[^0-9]","",$phone_number);
+	}
+else
+	{
+	$user = ereg_replace("'|\"|\\\\|;","",$user);
+	$pass = ereg_replace("'|\"|\\\\|;","",$pass);
+	}
+
 
 # default optional vars if not set
 if (!isset($format))   {$format="text";}

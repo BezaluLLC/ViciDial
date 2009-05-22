@@ -32,10 +32,11 @@
 # 90303-0723 - Added group alias and dial prefix
 # 90407-1920 - Added vtiger_callback option for external_dial function
 # 90508-0727 - Changed to PHP long tags
+# 90522-0506 - Security fix
 #
 
-$version = '2.2.0-7';
-$build = '90508-0727';
+$version = '2.2.0-8';
+$build = '90522-0506';
 
 require("dbconnect.php");
 
@@ -94,25 +95,32 @@ while ($i < $qm_conf_ct)
 ###########################################
 
 if ($non_latin < 1)
-{
-$user=ereg_replace("[^0-9a-zA-Z]","",$user);
-$pass=ereg_replace("[^0-9a-zA-Z]","",$pass);
-$agent_user=ereg_replace("[^0-9a-zA-Z]","",$agent_user);
-$function = ereg_replace("[^-\_0-9a-zA-Z]","",$function);
-$value = ereg_replace("[^-\_0-9a-zA-Z]","",$value);
-$vendor_id = ereg_replace("[^-\_0-9a-zA-Z]","",$vendor_id);
-$focus = ereg_replace("[^-\_0-9a-zA-Z]","",$focus);
-$preview = ereg_replace("[^-\_0-9a-zA-Z]","",$preview);
-	$notes = ereg_replace("\+"," ",$notes);
-$notes = ereg_replace("[^ -\_0-9a-zA-Z]","",$notes);
-$phone_code = ereg_replace("[^0-9X]","",$phone_code);
-$search = ereg_replace("[^-\_0-9a-zA-Z]","",$search);
-$group_alias = ereg_replace("[^0-9a-zA-Z]","",$group_alias);
-$dial_prefix = ereg_replace("[^0-9a-zA-Z]","",$dial_prefix);
-$source = ereg_replace("[^0-9a-zA-Z]","",$source);
-$format = ereg_replace("[^0-9a-zA-Z]","",$format);
-$vtiger_callback = ereg_replace("[^A-Z]","",$vtiger_callback);
-}
+	{
+	$user=ereg_replace("[^0-9a-zA-Z]","",$user);
+	$pass=ereg_replace("[^0-9a-zA-Z]","",$pass);
+	$agent_user=ereg_replace("[^0-9a-zA-Z]","",$agent_user);
+	$function = ereg_replace("[^-\_0-9a-zA-Z]","",$function);
+	$value = ereg_replace("[^-\_0-9a-zA-Z]","",$value);
+	$vendor_id = ereg_replace("[^-\_0-9a-zA-Z]","",$vendor_id);
+	$focus = ereg_replace("[^-\_0-9a-zA-Z]","",$focus);
+	$preview = ereg_replace("[^-\_0-9a-zA-Z]","",$preview);
+		$notes = ereg_replace("\+"," ",$notes);
+	$notes = ereg_replace("[^ -\_0-9a-zA-Z]","",$notes);
+	$phone_code = ereg_replace("[^0-9X]","",$phone_code);
+	$search = ereg_replace("[^-\_0-9a-zA-Z]","",$search);
+	$group_alias = ereg_replace("[^0-9a-zA-Z]","",$group_alias);
+	$dial_prefix = ereg_replace("[^0-9a-zA-Z]","",$dial_prefix);
+	$source = ereg_replace("[^0-9a-zA-Z]","",$source);
+	$format = ereg_replace("[^0-9a-zA-Z]","",$format);
+	$vtiger_callback = ereg_replace("[^A-Z]","",$vtiger_callback);
+	}
+else
+	{
+	$user = ereg_replace("'|\"|\\\\|;","",$user);
+	$pass = ereg_replace("'|\"|\\\\|;","",$pass);
+	$source = ereg_replace("'|\"|\\\\|;","",$source);
+	$agent_user = ereg_replace("'|\"|\\\\|;","",$agent_user);
+	}
 
 ### date and fixed variables
 $epoch = date("U");

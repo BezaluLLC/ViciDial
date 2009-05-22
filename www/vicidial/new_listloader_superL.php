@@ -26,11 +26,12 @@
 # 90309-1831 - Added admin_log logging
 # 90310-2128 - Added admin header
 # 90508-0644 - Changed to PHP long tags
+# 90522-0506 - Security fix
 #
 # make sure vicidial_list exists and that your file follows the formatting correctly. This page does not dedupe or do any other lead filtering actions yet at this time.
 
-$version = '2.0.5-30';
-$build = '90508-0644';
+$version = '2.2.0-31';
+$build = '90522-0506';
 
 
 require("dbconnect.php");
@@ -138,11 +139,16 @@ while ($i < $qm_conf_ct)
 ###########################################
 
 if ($non_latin < 1)
-{
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
-$list_id_override = ereg_replace("[^0-9]","",$list_id_override);
-}
+	{
+	$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+	$list_id_override = ereg_replace("[^0-9]","",$list_id_override);
+	}
+else
+	{
+	$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
+	}
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");

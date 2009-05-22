@@ -24,6 +24,27 @@ if (isset($_GET["sales_time_frame"]))			{$sales_time_frame=$_GET["sales_time_fra
 if (isset($_GET["forc"]))						{$forc=$_GET["forc"];}
 	elseif (isset($_POST["forc"]))				{$forc=$_POST["forc"];}
 
+$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
+$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
+
+$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
+
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
+
+  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+	{
+#	Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+#	Header("HTTP/1.0 401 Unauthorized");
+    echo "Invalid Username/Password or no export report permission: |$PHP_AUTH_USER|\n";
+    exit;
+	}
+
+
 ?>
 <html>
 <head>
