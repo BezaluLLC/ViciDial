@@ -18,11 +18,29 @@
 # 90305-1226 - Added user_call_log manual dial logs
 # 90310-0734 - Added admin header
 # 90508-0644 - Changed to PHP long tags
+# 90524-2009 - Changed time display to use functions.php
 #
 
 header ("Content-type: text/html; charset=utf-8");
 
 require("dbconnect.php");
+require("functions.php");
+
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin,outbound_autodial_active,user_territories_active FROM system_settings;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$ss_conf_ct = mysql_num_rows($rslt);
+if ($ss_conf_ct > 0)
+	{
+	$row=mysql_fetch_row($rslt);
+	$non_latin =						$row[0];
+	$SSoutbound_autodial_active =		$row[1];
+	$user_territories_active =			$row[2];
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -51,10 +69,11 @@ $TODAY = date("Y-m-d");
 if (!isset($begin_date)) {$begin_date = $TODAY;}
 if (!isset($end_date)) {$end_date = $TODAY;}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
+if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
 $fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
@@ -73,10 +92,10 @@ $browser = getenv("HTTP_USER_AGENT");
 
 	if($auth>0)
 		{
-			$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname=$row[0];
+		$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$LOGfullname=$row[0];
 
 		fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
 		fclose($fp);
@@ -93,7 +112,6 @@ $browser = getenv("HTTP_USER_AGENT");
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$full_name = $row[0];
-
 	}
 
 
@@ -170,7 +188,7 @@ echo "<br><center>\n";
 echo "<B>VICIDIAL TALK TIME AND STATUS:</B>\n";
 
 echo "<center><TABLE width=300 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=2>STATUS</td><td align=right><font size=2>COUNT</td><td align=right><font size=2>HOURS:MINUTES</td></tr>\n";
+echo "<tr><td><font size=2>STATUS</td><td align=right><font size=2>COUNT</td><td align=right><font size=2>HOURS:MM:SS</td></tr>\n";
 
 $stmt="SELECT count(*),status, sum(length_in_sec) from vicidial_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' group by status order by status";
 $rslt=mysql_query($stmt, $link);
@@ -226,34 +244,20 @@ while ($o < $p)
 	else
 		{$bgcolor='bgcolor="#9BB9FB"';}
 
-	$call_seconds = $call_sec[$o];
-	$call_hours = ($call_seconds / 3600);
-	$call_hours_int = round($call_hours, 2);
-	$call_hours_int = intval("$call_hours_int");
-	$call_minutes = ($call_hours - $call_hours_int);
-	$call_minutes = ($call_minutes * 60);
-	$call_minutes_int = round($call_minutes, 0);
-	if ($call_minutes_int < 10) {$call_minutes_int = "0$call_minutes_int";}
+	$call_hours_minutes =		sec_convert($call_sec[$o],'H'); 
 
 	echo "<tr $bgcolor><td><font size=2>$status[$o]</td>";
 	echo "<td align=right><font size=2> $counts[$o]</td>\n";
-	echo "<td align=right><font size=2> $call_hours_int:$call_minutes_int</td></tr>\n";
+	echo "<td align=right><font size=2> $call_hours_minutes</td></tr>\n";
 	$total_calls = ($total_calls + $counts[$o]);
 	$total_sec = ($total_sec + $call_sec[$o]);
 	$call_seconds=0;
 	$o++;
 	}
 
-$call_seconds = $total_sec;
-$call_hours = ($call_seconds / 3600);
-$call_hours_int = round($call_hours, 2);
-$call_hours_int = intval("$call_hours_int");
-$call_minutes = ($call_hours - $call_hours_int);
-$call_minutes = ($call_minutes * 60);
-$call_minutes_int = round($call_minutes, 0);
-if ($call_minutes_int < 10) {$call_minutes_int = "0$call_minutes_int";}
+$call_hours_minutes =		sec_convert($total_sec,'H'); 
 
-echo "<tr><td><font size=2>TOTAL CALLS </td><td align=right><font size=2> $total_calls</td><td align=right><font size=2> $call_hours_int:$call_minutes_int</td></tr>\n";
+echo "<tr><td><font size=2>TOTAL CALLS </td><td align=right><font size=2> $total_calls</td><td align=right><font size=2> $call_hours_minutes</td></tr>\n";
 echo "</TABLE></center>\n";
 
 
@@ -265,7 +269,7 @@ echo "<center>\n";
 
 echo "<B>VICIDIAL AGENT LOGIN/LOGOUT TIME:</B>\n";
 echo "<TABLE width=500 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=2>EVENT </td><td align=right><font size=2> DATE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MINUTES</td></tr>\n";
+echo "<tr><td><font size=2>EVENT </td><td align=right><font size=2> DATE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MM:SS</td></tr>\n";
 
 	$stmt="SELECT event,event_epoch,event_date,campaign_id,user_group from vicidial_user_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59'";
 	$rslt=mysql_query($stmt, $link);
@@ -295,21 +299,17 @@ echo "<tr><td><font size=2>EVENT </td><td align=right><font size=2> DATE</td><td
 			{
 			if ($event_start_seconds)
 				{
+
 				$event_stop_seconds = $row[1];
 				$event_seconds = ($event_stop_seconds - $event_start_seconds);
 				$total_login_time = ($total_login_time + $event_seconds);
-				$event_hours = ($event_seconds / 3600);
-				$event_hours_int = round($event_hours, 2);
-				$event_hours_int = intval("$event_hours_int");
-				$event_minutes = ($event_hours - $event_hours_int);
-				$event_minutes = ($event_minutes * 60);
-				$event_minutes_int = round($event_minutes, 0);
-				if ($event_minutes_int < 10) {$event_minutes_int = "0$event_minutes_int";}
+				$event_hours_minutes =		sec_convert($event_seconds,'H'); 
+
 				echo "<tr $bgcolor><td><font size=2>$row[0]</td>";
 				echo "<td align=right><font size=2> $row[2]</td>\n";
 				echo "<td align=right><font size=2> $row[3]</td>\n";
 				echo "<td align=right><font size=2> $row[4]</td>\n";
-				echo "<td align=right><font size=2> $event_hours_int:$event_minutes_int</td></tr>\n";
+				echo "<td align=right><font size=2> $event_hours_minutes</td></tr>\n";
 				$event_start_seconds='';
 				$event_stop_seconds='';
 				}
@@ -328,19 +328,13 @@ echo "<tr><td><font size=2>EVENT </td><td align=right><font size=2> DATE</td><td
 		$o++;
 	}
 
-$total_login_hours = ($total_login_time / 3600);
-$total_login_hours_int = round($total_login_hours, 2);
-$total_login_hours_int = intval("$total_login_hours_int");
-$total_login_minutes = ($total_login_hours - $total_login_hours_int);
-$total_login_minutes = ($total_login_minutes * 60);
-$total_login_minutes_int = round($total_login_minutes, 0);
-if ($total_login_minutes_int < 10) {$total_login_minutes_int = "0$total_login_minutes_int";}
+$total_login_hours_minutes =		sec_convert($total_login_time,'H'); 
 
 echo "<tr><td><font size=2>TOTAL</td>";
 echo "<td align=right><font size=2> </td>\n";
 echo "<td align=right><font size=2> </td>\n";
 echo "<td align=right><font size=2> </td>\n";
-echo "<td align=right><font size=2> $total_login_hours_int:$total_login_minutes_int</td></tr>\n";
+echo "<td align=right><font size=2> $total_login_hours_minutes</td></tr>\n";
 
 echo "</TABLE></center>\n";
 
@@ -362,7 +356,7 @@ echo "<center>\n";
 
 echo "<B>TIMECLOCK LOGIN/LOGOUT TIME:</B>\n";
 echo "<TABLE width=550 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right><font size=2>EVENT </td><td align=right><font size=2> DATE</td><td align=right><font size=2> IP ADDRESS</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MINUTES</td></tr>\n";
+echo "<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right><font size=2>EVENT </td><td align=right><font size=2> DATE</td><td align=right><font size=2> IP ADDRESS</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MM:SS</td></tr>\n";
 
 	$stmt="SELECT event,event_epoch,user_group,login_sec,ip_address,timeclock_id,manager_user from vicidial_timeclock_log where user='" . mysql_real_escape_string($user) . "' and event_epoch >= '$SQepoch'  and event_epoch <= '$EQepoch';";
 	if ($DB>0) {echo "|$stmt|";}
@@ -398,20 +392,15 @@ echo "<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right><f
 			{
 			$login_sec = $row[3];
 			$total_login_time = ($total_login_time + $login_sec);
-			$event_hours = ($login_sec / 3600);
-			$event_hours_int = round($event_hours, 2);
-			$event_hours_int = intval("$event_hours_int");
-			$event_minutes = ($event_hours - $event_hours_int);
-			$event_minutes = ($event_minutes * 60);
-			$event_minutes_int = round($event_minutes, 0);
-			if ($event_minutes_int < 10) {$event_minutes_int = "0$event_minutes_int";}
+			$event_hours_minutes =		sec_convert($login_sec,'H'); 
+
 			echo "<tr $bgcolor><td><font size=2><A HREF=\"./timeclock_edit.php?timeclock_id=$row[5]\">$row[5]</A></td>";
 			echo "<td align=right><font size=2>$manager_edit</td>";
 			echo "<td align=right><font size=2>$row[0]</td>";
 			echo "<td align=right><font size=2> $TC_log_date</td>\n";
 			echo "<td align=right><font size=2> $row[4]</td>\n";
 			echo "<td align=right><font size=2> $row[2]</td>\n";
-			echo "<td align=right><font size=2> $event_hours_int:$event_minutes_int";
+			echo "<td align=right><font size=2> $event_hours_minutes";
 			if ($DB) {echo " - $total_login_time - $login_sec";}
 			echo "</td></tr>\n";
 			}
@@ -423,24 +412,19 @@ if (strlen($login_sec)<1)
 	$total_login_time = ($total_login_time + $login_sec);
 		if ($DB) {echo "LOGIN ONLY - $total_login_time - $login_sec";}
 	}
-$total_login_hours = ($total_login_time / 3600);
-$total_login_hours_int = round($total_login_hours, 2);
-$total_login_hours_int = intval("$total_login_hours_int");
-$total_login_minutes = ($total_login_hours - $total_login_hours_int);
-$total_login_minutes = ($total_login_minutes * 60);
-$total_login_minutes_int = round($total_login_minutes, 0);
-if ($total_login_minutes_int < 10) {$total_login_minutes_int = "0$total_login_minutes_int";}
+$total_login_hours_minutes =		sec_convert($total_login_time,'H'); 
 
-	if ($DB) {echo " - $total_login_time - $login_sec";}
+if ($DB) {echo " - $total_login_time - $login_sec";}
 
 echo "<tr><td align=right><font size=2> </td>";
 echo "<td align=right><font size=2> </td>\n";
 echo "<td align=right><font size=2> </td>\n";
 echo "<td align=right><font size=2> </td>\n";
 echo "<td align=right><font size=2><font size=2>TOTAL </td>\n";
-echo "<td align=right><font size=2> $total_login_hours_int:$total_login_minutes_int  </td></tr>\n";
+echo "<td align=right><font size=2> $total_login_hours_minutes  </td></tr>\n";
 
 echo "</TABLE></center>\n";
+
 
 
 ##### closer in-group selection logs #####

@@ -50,6 +50,11 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	top limit for Campaign Auto Dial Level pull-down menu in the Modify
 	Campaign screens
 
+12. Added Agent Time Detail report showing the timeclock time, agent activity
+	time and pause codes time by agent across selected campaigns and/or 
+	user groups. Also reformatted Reports screen in Administration
+
+
 
 
 

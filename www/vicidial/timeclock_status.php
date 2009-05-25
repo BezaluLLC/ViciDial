@@ -36,7 +36,7 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,timeclock_end_of_day FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,timeclock_end_of_day,outbound_autodial_active FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -44,9 +44,11 @@ $i=0;
 while ($i < $qm_conf_ct)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =			$row[0];
-	$webroot_writable =		$row[1];
-	$timeclock_end_of_day = $row[2];
+	$non_latin =					$row[0];
+	$webroot_writable =				$row[1];
+	$timeclock_end_of_day =			$row[2];
+	$SSoutbound_autodial_active =	$row[3];
+
 	$i++;
 	}
 ##### END SETTINGS LOOKUP #####

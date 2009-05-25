@@ -723,6 +723,7 @@ $admin_home_url_LU =	$row[0];
 	<TR><TD <?php echo $reports_hh ?>>
 	<a href="<?php echo $ADMIN ?>?ADD=999999"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $reports_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $reports_bold ?> Reports </a>
 	</TD></TR>
+	<TR><TD> &nbsp; </TD></TR>
 	</TABLE>
 </TD><TD VALIGN=TOP WIDTH=<?php echo $page_width ?> BGCOLOR=#D9E6FE>
 <!-- END SIDEBAR NAVIGATION -->

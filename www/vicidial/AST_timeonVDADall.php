@@ -48,14 +48,16 @@
 # 90428-0727 - Changed listen and barge to use the API and manager must enter phone
 # 90508-0623 - Changed to PHP long tags
 # 90518-0930 - Fixed $CALLSdisplay static assignment bug for some links(bug #210)
+# 90524-2231 - Changed to use functions.php for seconds to HH:MM:SS conversion
 #
 
-$version = '2.0.5-39';
-$build = '90518-0930';
+$version = '2.0.5-40';
+$build = '90524-2231';
 
 header ("Content-type: text/html; charset=utf-8");
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -1197,14 +1199,7 @@ while($p<$k)
 	$Cqueue_priority =	sprintf("%8s", $CDqueue_priority[$p]);
 
 	$Ccall_time_S = ($STARTtime - $CDcall_time[$p]);
-	$Ccall_time_M = ($Ccall_time_S / 60);
-	$Ccall_time_M = round($Ccall_time_M, 2);
-	$Ccall_time_M_int = intval("$Ccall_time_M");
-	$Ccall_time_SEC = ($Ccall_time_M - $Ccall_time_M_int);
-	$Ccall_time_SEC = ($Ccall_time_SEC * 60);
-	$Ccall_time_SEC = round($Ccall_time_SEC, 0);
-	if ($Ccall_time_SEC < 10) {$Ccall_time_SEC = "0$Ccall_time_SEC";}
-	$Ccall_time_MS = "$Ccall_time_M_int:$Ccall_time_SEC";
+	$Ccall_time_MS =		sec_convert($Ccall_time_S,'M'); 
 	$Ccall_time_MS =		sprintf("%7s", $Ccall_time_MS);
 
 	$G = '';		$EG = '';
@@ -1583,14 +1578,7 @@ $calls_to_list = mysql_num_rows($rslt);
 		else
 			{$call_time_S = ($STARTtime - $Acall_time[$i]);}
 
-		$call_time_M = ($call_time_S / 60);
-		$call_time_M = round($call_time_M, 2);
-		$call_time_M_int = intval("$call_time_M");
-		$call_time_SEC = ($call_time_M - $call_time_M_int);
-		$call_time_SEC = ($call_time_SEC * 60);
-		$call_time_SEC = round($call_time_SEC, 0);
-		if ($call_time_SEC < 10) {$call_time_SEC = "0$call_time_SEC";}
-		$call_time_MS = "$call_time_M_int:$call_time_SEC";
+		$call_time_MS =		sec_convert($call_time_S,'M'); 
 		$call_time_MS =		sprintf("%7s", $call_time_MS);
 		$G = '';		$EG = '';
 		if ($Lstatus=='INCALL')

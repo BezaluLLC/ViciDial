@@ -166,9 +166,10 @@ wget http://www.openssl.org/source/openssl-0.9.8k.tar.gz
 gunzip openssl-0.9.8k.tar.gz
 tar xvf openssl-0.9.8k.tar
 cd openssl-0.9.8k
-./config
+./config --prefix=/usr
 make
 make install
+
 
 
 cd /usr/local
@@ -200,7 +201,7 @@ gunzip httpd-2.2.11.tar.gz
 tar xvf httpd-2.2.11.tar
 cd httpd-2.2.11
 make clean
-./configure --prefix=/usr/local/apache2 --enable-ssl --enable-setenvif --enable-so --with-apxs2 --enable-dav --enable-maintainer-mode
+./configure --prefix=/usr/local/apache2 --enable-ssl --enable-setenvif --enable-so --with-apxs2 --enable-dav --enable-maintainer-mode --with-ssl=/usr/local/ssl
 make
 make install
 mkdir /usr/local/apache2/conf/ssl.key
@@ -214,7 +215,7 @@ openssl rsa -in /usr/local/apache2/conf/ssl.key/server.key.cpy -out /usr/local/a
 
 cd ../php-5.2.9
 make clean
-./configure --with-mysql=/usr/local/mysql --enable-inline-optimization --enable-memory-limit --enable-track-vars --enable-libgcc --enable-sysvsem --with-openssl --with-apxs2=/usr/local/apache2/bin/apxs --with-zlib
+./configure --with-mysql=/usr/local/mysql --enable-inline-optimization --enable-memory-limit --enable-track-vars --enable-libgcc --enable-sysvsem --with-openssl=/usr/local/ssl --with-apxs2=/usr/local/apache2/bin/apxs --with-zlib
 make
 make install
 cp php.ini-dist /usr/local/lib/php.ini
