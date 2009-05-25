@@ -819,7 +819,7 @@ echo "<font size=1 color=white>$RUNtime</font>\n";
 ##### BEGIN horizontal yellow transparent bar graph overlay on top of agent stats
 echo "</span>\n";
 echo "<span style=\"position:absolute;left:3px;top:3px;z-index:18;\"  id=agent_status_bars>\n";
-echo "<PRE><FONT SIZE=2>\n\n\n\n\n\n\n\n\n\n";
+echo "<PRE><FONT SIZE=2>\n\n\n\n\n\n\n\n";
 
 if ($stage == 'NAME') {$k=0;}
 $m=0;
