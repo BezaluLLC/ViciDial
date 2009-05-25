@@ -424,7 +424,8 @@ if ($report_hours_file > 0)
 
 	if ($VAL_exists > 0)
 		{
-		$stmtA = "SELECT pause_sec,wait_sec,talk_sec,dispo_sec,sub_status,vu.user,user_code,campaign_id,comments FROM vicidial_agent_log val,vicidial_users vu where event_time >= \"$TODAY 00:00:00\" and event_time <= \"$ENDDAY 23:59:59\" and val.user=vu.user and vu.user_code LIKE \"IMM%\" order by val.user;";
+		#  and vu.user_code LIKE \"IMM%\"
+		$stmtA = "SELECT pause_sec,wait_sec,talk_sec,dispo_sec,sub_status,vu.user,user_code,campaign_id,comments FROM vicidial_agent_log val,vicidial_users vu where event_time >= \"$TODAY 00:00:00\" and event_time <= \"$ENDDAY 23:59:59\" and val.user=vu.user order by val.user;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;

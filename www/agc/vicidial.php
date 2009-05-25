@@ -229,10 +229,11 @@
 # 90508-0727 - Changed to PHP long tags
 # 90511-1018 - Added restriction not allowing dialing into agent sessions from manual dial
 # 90519-0635 - Fixed manual dial status and logging bug
+# 90525-1012 - Fixed transfer issue of auto-received call after manual dial call
 #
 
-$version = '2.2.0-207';
-$build = '90519-0635';
+$version = '2.2.0-208';
+$build = '90525-1012';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=60;
 $one_mysql_log=0;
@@ -5677,6 +5678,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			document.vicidial_form.callserverip.value = '';
 			lastcustchannel='';
 			lastcustserverip='';
+			MDchannel='';
 
 			if( document.images ) { document.images['livecall'].src = image_livecall_OFF.src;}
 			document.getElementById("WebFormSpan").innerHTML = "<IMG SRC=\"./images/vdc_LB_webform_OFF.gif\" border=0 alt=\"Web Form\">";
