@@ -1158,8 +1158,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00037',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$qm_conf_ct = mysql_num_rows($rslt);
-				$i=0;
-				while ($i < $qm_conf_ct)
+				if ($qm_conf_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
 					$enable_queuemetrics_logging =	$row[0];
@@ -1168,7 +1167,6 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$queuemetrics_login	=			$row[3];
 					$queuemetrics_pass =			$row[4];
 					$queuemetrics_log_id =			$row[5];
-					$i++;
 					}
 				##### END QUEUEMETRICS LOGGING LOOKUP #####
 				###########################################
