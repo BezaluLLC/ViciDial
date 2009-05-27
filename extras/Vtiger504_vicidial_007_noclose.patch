@@ -138,7 +138,7 @@
 
 --- ./include/js/general.js	2008-03-10 08:54:31.000000000 -0400
 +++ ./include/js/general.js	2009-04-07 19:31:16.000000000 -0400
-@@ -1768,6 +1768,77 @@
+@@ -1768,6 +1768,73 @@
          openPopUp('xComposeEmail',this,url,'createemailWin',830,662,opts);
  }
  
@@ -203,10 +203,6 @@
 +			if (Xoutput.match(regXFerr))
 +				{
 +				alert(xmlhttp.responseText);
-+				}
-+			else
-+				{
-+				self.close();
 +				}
 +			}
 +		}
@@ -304,3 +300,25 @@
  								</td>{/strip}
  					             	</tr>
  						     </table>
+--- ./modules/Users/Authenticate.php	2008-03-10 08:54:31.000000000 -0400
++++ ./modules/Users/Authenticate.php	2009-05-27 08:12:39.000000000 -0400
+@@ -64,7 +64,19 @@
+ 	//Security related entries start
+ 	require_once('include/utils/UserInfoUtil.php');
+ 
++	if (file_exists('user_privileges/user_privileges_'.$focus->id.'.php'))
++        {
++               # delete User Priviledges file
++		unlink('user_privileges/user_privileges_'.$focus->id.'.php');
++        }
++	if (file_exists('user_privileges/sharing_privileges_'.$focus->id.'.php'))
++	{
++		# delete Sharing Priviledges file
++		unlink('user_privileges/sharing_privileges_'.$focus->id.'.php');
++	}
++	# create User Sharing Priviledges files
+ 	createUserPrivilegesfile($focus->id);
++	createUserSharingPrivilegesfile($focus->id);
+ 	
+ 	//Security related entries end
+ 	session_unregister('login_password');
