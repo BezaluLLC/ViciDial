@@ -230,10 +230,11 @@
 # 90511-1018 - Added restriction not allowing dialing into agent sessions from manual dial
 # 90519-0635 - Fixed manual dial status and logging bug
 # 90525-1012 - Fixed transfer issue of auto-received call after manual dial call
+# 90529-0741 - Added nophone agent phone login that will not show any empty session alerts
 #
 
-$version = '2.2.0-208';
-$build = '90525-1012';
+$version = '2.2.0-209';
+$build = '90529-0741';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=60;
 $one_mysql_log=0;
@@ -1517,6 +1518,11 @@ else
 	$outbound_cid=$row[65];
 	$enable_sipsak_messages=$row[66];
 
+	$no_empty_session_warnings=0;
+	if ($phone_login == 'nophone')
+		{
+		$no_empty_session_warnings=1;
+		}
 	if ($PhoneSComPIP == '1')
 		{
 		if (strlen($computer_ip) < 4)
@@ -2390,9 +2396,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var VtigeRLogiNScripT = '<?php echo $vtiger_screen_login ?>';
 	var VtigeRurl = '<?php echo $vtiger_url ?>';
 	var VtigeREnableD = '<?php echo $enable_vtiger_integration ?>';
-	var alert_enabled = '<?php echo $VU_alert_enabled ?>'
+	var alert_enabled = '<?php echo $VU_alert_enabled ?>';
 	var shift_logout_flag = 0;
 	var vtiger_callback_id = 0;
+	var no_empty_session_warnings = '<?php echo $no_empty_session_warnings ?>';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -7446,9 +7453,9 @@ else
 				check_for_conf_calls(session_id, '0');
 				}
 			if (logout_stop_timeouts==1)	{WaitingForNextStep=1;}
-			if ( (custchannellive < -30) && (lastcustchannel.length > 3) ) {CustomerChanneLGone();}
+			if ( (custchannellive < -30) && (lastcustchannel.length > 3) && (no_empty_session_warnings < 1) ) {CustomerChanneLGone();}
 			if ( (custchannellive < -10) && (lastcustchannel.length > 3) ) {ReChecKCustoMerChaN();}
-			if ( (nochannelinsession > 16) && (check_n > 15) ) {NoneInSession();}
+			if ( (nochannelinsession > 16) && (check_n > 15) && (no_empty_session_warnings < 1) ) {NoneInSession();}
 			if (WaitingForNextStep==0)
 				{
 				// check for live channels in conference room and get current datetime

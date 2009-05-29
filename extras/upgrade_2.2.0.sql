@@ -122,3 +122,7 @@ ALTER TABLE servers ADD vicidial_recording_limit MEDIUMINT(8) default '60';
 ALTER TABLE phones ADD phone_context VARCHAR(20) default 'default';
 
 UPDATE system_settings SET db_schema_version='1145';
+
+CREATE UNIQUE INDEX extenserver ON phones (extension, server_ip);
+
+UPDATE system_settings SET db_schema_version='1146';

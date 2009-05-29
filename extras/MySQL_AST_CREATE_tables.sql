@@ -70,7 +70,8 @@ email VARCHAR(100),
 template_id VARCHAR(15) NOT NULL,
 conf_override TEXT,
 phone_context VARCHAR(20) default 'default',
-index (server_ip)
+index (server_ip),
+unique index extenserver (extension, server_ip)
 );
 
 CREATE TABLE servers (

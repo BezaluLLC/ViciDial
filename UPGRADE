@@ -59,6 +59,8 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	file(8309 and 8310). Also, phone dial-out contexts are definable now 
 	allowing you to lock out agent phone in a call center from dialing out.
 
+14. Added option to login as an agent with no phone. Must create a phones entry
+	called nophone with dialplan number of 8300.
 
 
 
