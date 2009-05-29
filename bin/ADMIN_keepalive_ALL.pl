@@ -675,7 +675,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		{$Vext .= "exten => 8309,2,Monitor(wav,\${CALLERIDNAME})\n";}
 	else
 		{$Vext .= "exten => 8309,2,Monitor(wav,\${CALLERID(name)})\n";}
-	$Vext .= "exten => 8309,3,Wait,3600\n";
+	$Vext .= "exten => 8309,3,Wait,$vicidial_recording_limit\n";
 	$Vext .= "exten => 8309,4,Hangup\n";
 	$Vext .= ";     this is the GSM verison\n";
 	$Vext .= "exten => 8310,1,Answer\n";
@@ -683,7 +683,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		{$Vext .= "exten => 8310,2,Monitor(gsm,\${CALLERIDNAME})\n";}
 	else
 		{$Vext .= "exten => 8310,2,Monitor(gsm,\${CALLERID(name)})\n";}
-	$Vext .= "exten => 8310,3,Wait,3600\n";
+	$Vext .= "exten => 8310,3,Wait,$vicidial_recording_limit\n";
 	$Vext .= "exten => 8310,4,Hangup\n";
 
 
