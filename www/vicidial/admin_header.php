@@ -256,11 +256,11 @@ function submit_mix(vcl_id,entries)
 			if (mod_priority_field.value==h)
 				{
 				list_mix_container = list_mix_container + mod_list_id_field.value + "|" + j + "|" + mod_percent_field.value + "|" + mod_statuses_field.value + "|:";
-				j++
+				j++;
 				}
 			i++;
 			}
-		h++
+		h++;
 		}
 	mod_list_mix_container_field.value = list_mix_container;
 	var form_to_submit = document.getElementById("" + vcl_id);

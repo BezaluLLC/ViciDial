@@ -116,3 +116,9 @@ ALTER TABLE vicidial_user_territories ADD level ENUM('TOP_AGENT','STANDARD_AGENT
 ALTER TABLE system_settings ADD user_territories_active ENUM('0','1') default '0';
 
 UPDATE system_settings SET db_schema_version='1144';
+
+ALTER TABLE servers ADD vicidial_recording_limit MEDIUMINT(8) default '60';
+
+ALTER TABLE phones ADD phone_context VARCHAR(20) default 'default';
+
+UPDATE system_settings SET db_schema_version='1145';

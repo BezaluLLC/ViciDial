@@ -54,6 +54,11 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	time and pause codes time by agent across selected campaigns and/or 
 	user groups. Also reformatted Reports screen in Administration
 
+13. Removed the ViciDial recording extensions from the general dialplan since
+	they are now auto-generated and placed in the extensions-vicidial.conf
+	file(8309 and 8310). Also, phone dial-out contexts are definable now 
+	allowing you to lock out agent phone in a call center from dialing out.
+
 
 
 

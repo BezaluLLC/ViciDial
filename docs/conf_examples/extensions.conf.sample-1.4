@@ -341,22 +341,6 @@ exten => 8307,1,Answer
 exten => 8307,2,Playback(vm-goodbye)
 exten => 8307,3,Hangup
 
-; this is used for recording conference calls, the client app sends the filename
-;    value as a callerID recordings go to /var/spool/asterisk/monitor (WAV)
-;    Recording is limited to 1 hour, to make longer, just change the Wait,3600
-exten => 8309,1,Answer
-exten => 8309,2,Monitor(wav,${CALLERID(name)})
-exten => 8309,3,Wait,3600
-exten => 8309,4,Hangup
-
-; this is used for recording conference calls, the client app sends the filename
-;    value as a callerID recordings go to /var/spool/asterisk/monitor (GSM)
-;    Recording is limited to 1 hour, to make longer, just change the Wait,3600
-exten => 8310,1,Answer
-exten => 8310,2,Monitor(gsm,${CALLERID(name)})
-exten => 8310,3,Wait,3600
-exten => 8310,4,Hangup
-
 ; this is used for playing a message to an answering machine forwarded from AMD in VICIDIAL
 ;    replace conf with the message file you want to leave
 exten => 8320,1,WaitForSilence(2000,2) ; AMD got machine.  leave message after recording

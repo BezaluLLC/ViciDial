@@ -152,6 +152,11 @@ Vtiger Change Territory Owner||
 Had to add user territory||
 Vtiger Territory Owner Changed||
 Records Changed||
+ViciDial Recording Limit||
+This field is where you set the maximum number of minutes that a call recording initiated by ViciDial can be. Default is 60 minutes||
+This is the dial plan context that the agent applications, like ViciDial, primarily use. It is assumed that all numbers dialed by the client apps are using this context so it is a good idea to make sure this is the most wide context possible. verify with extensions.conf file before changing. default is default||
+Phone Context||
+This is the dial plan context that this phone will use to dial out. If you are running a call center and you do not want your agents to be able to dial out outside of the ViciDial applicaiton for example, then you would set this field to a dialplan context that does not exist, something like agent-nodial. default is default||
 
 
 add-file: user_territories.php

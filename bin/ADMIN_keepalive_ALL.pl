@@ -22,6 +22,7 @@
 # 90506-1155 - Added Call Menu functionality
 # 90513-0449 - Added audio store sync functionality
 # 90519-1018 - Added upload file trigger for prompt recording if defined as voicemail server and voicemail/prompt recording extensions auto-generated
+# 90529-0652 - Added phone_context and fixed calledid and voicemail for phones entries
 #
 
 $DB=0; # Debug flag
@@ -569,7 +570,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	$Lext .= "exten => _$VARremDIALstr*.,1,Goto(default,\${EXTEN:16},1)\n";
 
 	##### Get the server_id for this server's server_ip #####
-	$stmtA = "SELECT server_id FROM servers where server_ip='$server_ip';";
+	$stmtA = "SELECT server_id,vicidial_recording_limit FROM servers where server_ip='$server_ip';";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -577,7 +578,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	if ($sthArows > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$server_id	=	"$aryA[0]";
+		$server_id	=					"$aryA[0]";
+		$vicidial_recording_limit =		(60 * $aryA[1]);
 		$i++;
 		}
 	$sthA->finish();
@@ -661,6 +663,28 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Vext .= "exten => 8167,1,Dial(\${TRUNK$voicemail_server_id}/\${EXTEN},99,oT)\n";
 		$Vext .= "exten => 8168,1,Dial(\${TRUNK$voicemail_server_id}/\${EXTEN},99,oT)\n";
 		}
+
+	$Vext .= "\n";
+	$Vext .= "; this is used for recording conference calls, the client app sends the filename\n";
+	$Vext .= ";    value as a callerID recordings go to /var/spool/asterisk/monitor (WAV)\n";
+	$Vext .= ";    Recording is limited to 1 hour, to make longer, just change the server\n";
+	$Vext .= ";    setting ViciDial Recording Limit\n";
+	$Vext .= ";     this is the WAV verison, default\n";
+	$Vext .= "exten => 8309,1,Answer\n";
+	if ($asterisk_version =~ /^1.2/)
+		{$Vext .= "exten => 8309,2,Monitor(wav,\${CALLERIDNAME})\n";}
+	else
+		{$Vext .= "exten => 8309,2,Monitor(wav,\${CALLERID(name)})\n";}
+	$Vext .= "exten => 8309,3,Wait,3600\n";
+	$Vext .= "exten => 8309,4,Hangup\n";
+	$Vext .= ";     this is the GSM verison\n";
+	$Vext .= "exten => 8310,1,Answer\n";
+	if ($asterisk_version =~ /^1.2/)
+		{$Vext .= "exten => 8310,2,Monitor(gsm,\${CALLERIDNAME})\n";}
+	else
+		{$Vext .= "exten => 8310,2,Monitor(gsm,\${CALLERID(name)})\n";}
+	$Vext .= "exten => 8310,3,Wait,3600\n";
+	$Vext .= "exten => 8310,4,Hangup\n";
 
 
 	##### Get the IAX carriers for this server_ip #####
@@ -767,10 +791,12 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$i++;
 		}
 
+	$Pext .= "\n";
+	$Pext .= "; Phones direct dial extensions:\n";
 
 
 	##### Get the IAX phone entries #####
-	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
+	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -788,6 +814,9 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$email[$i] =		"$aryA[6]";
 		$template_id[$i] =	"$aryA[7]";
 		$conf_override[$i] ="$aryA[8]";
+		$outbound_cid[$i] =	"$aryA[9]";
+		$fullname[$i] =		"$aryA[10]";
+		$phone_context[$i] ="$aryA[11]";
 		$i++;
 		}
 	$sthA->finish();
@@ -811,6 +840,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				$Piax .= "\n\[$extension[$i]\]\n";
 				$Piax .= "username=$extension[$i]\n";
 				$Piax .= "secret=$pass[$i]\n";
+				$Piax .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 				$Piax .= "mailbox=$voicemail[$i]\n";
 				$Piax .= "$template_contents[$i]\n";
 				
@@ -829,14 +859,16 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Piax .= "\n\[$extension[$i]\]\n";
 			$Piax .= "username=$extension[$i]\n";
 			$Piax .= "secret=$pass[$i]\n";
+			$Piax .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 			$Piax .= "mailbox=$voicemail[$i]\n";
-			$Piax .= "context=default\n";
+			$Piax .= "context=$phone_context[$i]\n";
 			$Piax .= "type=friend\n";
 			$Piax .= "auth=md5\n";
 			$Piax .= "host=dynamic\n";
 			}
 		$Pext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i])\n";
-		$Pext .= "exten => $dialplan[$i],2,Voicemail,u$voicemail[$i]\n";
+		$Pext .= "exten => $dialplan[$i],2,Voicemail($voicemail[$i]|u)\n";
+		$Pext .= "exten => $dialplan[$i],3,Hangup\n";
 
 		$vm  .= "$voicemail[$i] => $voicemail[$i],$extension[$i] Mailbox,$email[$i]\n";
 
@@ -845,7 +877,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### Get the SIP phone entries #####
-	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override FROM phones where server_ip='$server_ip' and protocol='SIP' and active='Y' order by extension;";
+	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context FROM phones where server_ip='$server_ip' and protocol='SIP' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -863,6 +895,9 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$email[$i] =		"$aryA[6]";
 		$template_id[$i] =	"$aryA[7]";
 		$conf_override[$i] ="$aryA[8]";
+		$outbound_cid[$i] =	"$aryA[9]";
+		$fullname[$i] =		"$aryA[10]";
+		$phone_context[$i] ="$aryA[11]";
 		$i++;
 		}
 	$sthA->finish();
@@ -886,6 +921,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				$Psip .= "\n\[$extension[$i]\]\n";
 				$Psip .= "username=$extension[$i]\n";
 				$Psip .= "secret=$pass[$i]\n";
+				$Psip .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 				$Psip .= "mailbox=$voicemail[$i]\n";
 				$Psip .= "$template_contents[$i]\n";
 				
@@ -904,13 +940,15 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Psip .= "\n\[$extension[$i]\]\n";
 			$Psip .= "username=$extension[$i]\n";
 			$Psip .= "secret=$pass[$i]\n";
+			$Psip .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 			$Psip .= "mailbox=$voicemail[$i]\n";
-			$Psip .= "context=default\n";
+			$Psip .= "context=$phone_context[$i]\n";
 			$Psip .= "type=friend\n";
 			$Psip .= "host=dynamic\n";
 			}
 		$Pext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i])\n";
-		$Pext .= "exten => $dialplan[$i],2,Voicemail,u$voicemail[$i]\n";
+		$Pext .= "exten => $dialplan[$i],2,Voicemail($voicemail[$i]|u)\n";
+		$Pext .= "exten => $dialplan[$i],3,Hangup\n";
 
 		$vm  .= "$voicemail[$i] => $voicemail[$i],$extension[$i] Mailbox,$email[$i]\n";
 
