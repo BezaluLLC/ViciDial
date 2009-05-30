@@ -8,6 +8,7 @@
 # 
 # CHANGES
 # 90525-1141 - First build
+# 90529-2041 - Added Realtime monitoring
 #
 
 // $Id: xmlrpc_audio_server.php,v 1.3 2007/11/12 17:53:09 lenz Exp $
@@ -157,7 +158,6 @@ function find_file( $ServerID, $AsteriskID, $QMUserID, $QMUserName )
 				$FILE_ENCODING   = "wav";	
 				$FILE_DURATION   = "0:00"; 	
 				}
-			
 			}
 		else
 			{
@@ -177,17 +177,83 @@ function find_file( $ServerID, $AsteriskID, $QMUserID, $QMUserName )
 #	$FILE_DURATION   = "1:12"; 	
 	}
 
-function listen_call( $ServerID, $AsteriskID, $Agent, $QMUserID, $QMUserName, $Direction ) 
+function listen_call( $ServerID, $AsteriskID, $Agent, $QMUserID, $QMUserName ) 
 	{
 	global $CALL_FOUND;
 	global $CALL_LISTEN_URL;
 	global $CALL_POPUP_WIDTH;
 	global $CALL_POPUP_HEIGHT;
 
-	$CALL_FOUND      = false;
-	$CALL_LISTEN_URL = "http://listennow.server/$ServerID/$AsteriskID/$QMUserID/$QMUserName/$Agent/$Direction";
-	$CALL_POPUP_WIDTH = "200";
+	require("dbconnect.php");
+	require("functions.php");
+
+	$CALL_POPUP_WIDTH = "250";
 	$CALL_POPUP_HEIGHT = "250";
+
+	#############################################
+	##### START QUEUEMETRICS LOGGING LOOKUP #####
+	$stmt = "SELECT enable_queuemetrics_logging FROM system_settings;";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$qm_conf_ct = mysql_num_rows($rslt);
+	if ($qm_conf_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$enable_queuemetrics_logging =	$row[0];
+		}
+	##### END QUEUEMETRICS LOGGING LOOKUP #####
+	###########################################
+	if ($enable_queuemetrics_logging > 0)
+		{
+		$stmt = "SELECT user,server_ip,conf_exten,comments FROM vicidial_live_agents where callerid='$AsteriskID';";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$vla_conf_ct = mysql_num_rows($rslt);
+		if ($vla_conf_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$VLAuser =			$row[0];
+			$VLAserver_ip =		$row[1];
+			$VLAconf_exten =	$row[2];
+
+			$stmt = "SELECT campaign_id,phone_number,call_type FROM vicidial_auto_calls where callerid='$AsteriskID';";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$vla_conf_ct = mysql_num_rows($rslt);
+			if ($vla_conf_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$VACcampaign =	$row[0];
+				$VACphone =		$row[1];
+				$VACtype =		$row[2];
+
+				$script_name = getenv("SCRIPT_NAME");
+				$server_name = getenv("SERVER_NAME");
+				$server_port = getenv("SERVER_PORT");
+				if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+				  else {$HTTPprotocol = 'http://';}
+				$admDIR = "$HTTPprotocol$server_name$script_name";
+				$admDIR = eregi_replace('xml_rpc_audio_server_vicidial.php','',$admDIR);
+				$monitor_script = 'QM_live_monitor.php';
+
+				$CALL_FOUND      = true;
+				$CALL_LISTEN_URL = "$admDIR$monitor_script?campaign=$VACcampaign&user=$VLAuser&server_ip=$VLAserver_ip&session=$VLAconf_exten&phone=$VACphone&type=$VACtype&call=$AsteriskID&QMuser=$QMUserID";
+				}
+			else
+				{
+				$CALL_FOUND      = false;
+				$CALL_LISTEN_URL = "";
+				}
+			}
+		else
+			{
+			$CALL_FOUND      = false;
+			$CALL_LISTEN_URL = "";
+			}
+		}
+
+#	$CALL_FOUND      = true;
+#	$CALL_LISTEN_URL = "http://listennow.server/$ServerID/$AsteriskID/$QMUserID/$QMUserName/$Agent";
 	}
 
 
@@ -220,16 +286,20 @@ function xmlrpc_find_file( $params ) {
 	return new XML_RPC_Response($response);
 }
 
-function xmlrpc_listen_call_inbound( $params ) {
-	xmlrpc_listen_call( $params, "INBOUND" );
-}
-
-function xmlrpc_listen_call_outbound( $params ) {
-	xmlrpc_listen_call( $params, "OUTBOUND" );
-}
 
 
-function xmlrpc_listen_call( $params, $direction ) {
+
+
+
+
+
+
+
+
+
+
+
+function xmlrpc_listen_call( $params ) {
 	global $CALL_FOUND;
 	global $CALL_LISTEN_URL;
 	global $CALL_POPUP_WIDTH;
@@ -241,7 +311,7 @@ function xmlrpc_listen_call( $params, $direction ) {
 	$p3 = $params->getParam(3)->scalarval(); // QM user ID
 	$p4 = $params->getParam(3)->scalarval(); // QM user name
 	
-	listen_call( $p0, $p1, $p2, $p3, $p4, $direction ); 		
+	listen_call( $p0, $p1, $p2, $p3, $p4 ); 		
 	
 	$response = new XML_RPC_Value(array(
         new XML_RPC_Value( $CALL_FOUND, 'boolean' ),
@@ -264,10 +334,10 @@ $server = new XML_RPC_Server(
             'function' => 'xmlrpc_find_file'
         ),    
         'QMAudio.listenOngoingCall' => array(
-            'function' => 'xmlrpc_listen_call_inbound'
+            'function' => 'xmlrpc_listen_call'
         ),
         'QMAudio.listenOngoingCallOutbound' => array(
-            'function' => 'xmlrpc_listen_call_outbound'
+            'function' => 'xmlrpc_listen_call'
         ),
         
     ),

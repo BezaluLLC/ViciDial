@@ -23,10 +23,11 @@
 # 90508-0642 - Changed to PHP long tags
 # 90514-0602 - Added sounds_list function 
 # 90522-0506 - Security fix
+# 90530-0946 - Added QueueMetrics blind monitoring option
 #
 
-$version = '2.2.0-9';
-$build = '90522-0506';
+$version = '2.2.0-10';
+$build = '90530-0946';
 
 require("dbconnect.php");
 
@@ -456,7 +457,7 @@ if ($function == 'blind_monitor')
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
-		if ($allowed_user < 1)
+		if ( ($allowed_user < 1) and ($source != 'queuemetrics') )
 			{
 			$result = 'ERROR';
 			$result_reason = "blind_monitor USER DOES NOT HAVE PERMISSION TO BLIND MONITOR";
@@ -490,7 +491,7 @@ if ($function == 'blind_monitor')
 				$row=mysql_fetch_row($rslt);
 				$phone_exists=$row[0];
 
-				if ($phone_exists < 1)
+				if ( ($phone_exists < 1) and ($source != 'queuemetrics') )
 					{
 					$result = 'ERROR';
 					$result_reason = "blind_monitor INVALID PHONE LOGIN";
@@ -501,13 +502,28 @@ if ($function == 'blind_monitor')
 					}
 				else
 					{
-					$stmt="SELECT dialplan_number,server_ip,outbound_cid from phones where login='$phone_login';";
-					if ($DB) {echo "|$stmt|\n";}
-					$rslt=mysql_query($stmt, $link);
-					$row=mysql_fetch_row($rslt);
-					$dialplan_number =	$row[0];
-					$monitor_server_ip =$row[1];
-					$outbound_cid =		$row[2];
+					if ($source == 'queuemetrics')
+						{
+						$stmt="SELECT active_voicemail_server from system_settings;";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$monitor_server_ip =	$row[0];
+						$dialplan_number =		$phone_login;
+						$outbound_cid =			'';
+						if (strlen($monitor_server_ip)<7)
+							{$monitor_server_ip = $server_ip;}
+						}
+					else
+						{
+						$stmt="SELECT dialplan_number,server_ip,outbound_cid from phones where login='$phone_login';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$dialplan_number =	$row[0];
+						$monitor_server_ip =$row[1];
+						$outbound_cid =		$row[2];
+						}
 
 					$S='*';
 					$D_s_ip = explode('.', $server_ip);

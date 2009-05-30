@@ -62,6 +62,11 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 14. Added option to login as an agent with no phone. Must create a phones entry
 	called nophone with dialplan number of 8300.
 
+15. Added live monitoring of calls and retrieval of recorded calls through the
+	QueueMetrics interface
+
+
+
 
 
 
