@@ -1261,7 +1261,6 @@ if ($non_latin < 1)
 	$human_answered = ereg_replace("[^NY]","",$human_answered);
 	$tovdad_display = ereg_replace("[^NY]","",$tovdad_display);
 	$campaign_allow_inbound = ereg_replace("[^NY]","",$campaign_allow_inbound);
-	$disable_alter_custphone = ereg_replace("[^NY]","",$disable_alter_custphone);
 	$display_queue_count = ereg_replace("[^NY]","",$display_queue_count);
 	$qc_show_recording = ereg_replace("[^NY]","",$qc_show_recording);
 	$sale_category = ereg_replace("[^NY]","",$sale_category);
@@ -1316,6 +1315,7 @@ if ($non_latin < 1)
 	$survey_third_status = ereg_replace("[^0-9a-zA-Z]","",$survey_third_status);
 	$survey_fourth_status = ereg_replace("[^0-9a-zA-Z]","",$survey_fourth_status);
 	$sounds_web_directory = ereg_replace("[^0-9a-zA-Z]","",$sounds_web_directory);
+	$disable_alter_custphone = ereg_replace("[^0-9a-zA-Z]","",$disable_alter_custphone);
 
 	### DIGITS and Dots
 	$server_ip = ereg_replace("[^\.0-9]","",$server_ip);
@@ -1783,11 +1783,13 @@ else
 # 90522-0506 - Security fix for logins when using non-latin setting
 # 90524-2307 - Chaned Reports screen layout
 # 90528-2055 - Added ViciDial recording limit field in servers and phone_context to phones
+# 90530-1206 - Changed List Mix to allow for 40 mixes
+# 90531-1802 - Added auto-generated options for users, campaigns, in-groups, etc..., added option to HIDE custphone
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-188';
-$build = '90528-2055';
+$admin_version = '2.2.0-190';
+$build = '90531-1802';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3502,7 +3504,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="vicidial_campaigns-disable_alter_custphone">
 <BR>
-<B>Disable Alter Customer Phone -</B> If set to Y, does not change the customer phone number when an agent dispositions the call. Default is Y.
+<B>Disable Alter Customer Phone -</B> If set to Y, does not change the customer phone number when an agent dispositions the call. Default is Y. Use the HIDE option to completely remove the customer phone number from the agent display.
 
 <BR>
 <A NAME="vicidial_campaigns-display_queue_count">
@@ -5651,6 +5653,17 @@ if ($ADD=="1")
 	{
 	if ($LOGmodify_users==1)
 		{
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT count(*) FROM vicidial_override_ids where id_table='vicidial_users' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$voi_count = "$row[0]";
+			}
+		##### END ID override optional section #####
+
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -5658,7 +5671,14 @@ if ($ADD=="1")
 		echo "<input type=hidden name=ADD value=2>\n";
 		echo "<input type=hidden name=user_toggle id=user_toggle value=0>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>User Number: </td><td align=left><input type=text name=user id=user size=20 maxlength=10> <input type=button name=auto_user value=\"AUTO-GENERATE\" onClick=\"user_auto()\"> $NWB#vicidial_users-user$NWE</td></tr>\n";
+		if ($voi_count > 0)
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>User Number: </td><td align=left>Auto-Generated <input type=hidden name=user id=user value=\"99999\">$NWB#vicidial_users-user$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>User Number: </td><td align=left><input type=text name=user id=user size=20 maxlength=10> <input type=button name=auto_user value=\"AUTO-GENERATE\" onClick=\"user_auto()\"> $NWB#vicidial_users-user$NWE</td></tr>\n";
+			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Password: </td><td align=left><input type=text name=pass size=20 maxlength=10>$NWB#vicidial_users-pass$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Full Name: </td><td align=left><input type=text name=full_name size=20 maxlength=100>$NWB#vicidial_users-full_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>User Level: </td><td align=left><select size=1 name=user_level>";
@@ -5707,6 +5727,17 @@ if ($ADD=="1A")
 	{
 	if ($LOGmodify_users==1)
 		{
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT count(*) FROM vicidial_override_ids where id_table='vicidial_users' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$voi_count = "$row[0]";
+			}
+		##### END ID override optional section #####
+
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -5714,7 +5745,14 @@ if ($ADD=="1A")
 		echo "<input type=hidden name=ADD value=2A>\n";
 		echo "<input type=hidden name=user_toggle id=user_toggle value=0>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>User Number: </td><td align=left><input type=text name=user id=user size=20 maxlength=10> <input type=button name=auto_user value=\"AUTO-GENERATE\" onClick=\"user_auto()\"> $NWB#vicidial_users-user$NWE</td></tr>\n";
+		if ($voi_count > 0)
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>User Number: </td><td align=left>Auto-Generated <input type=hidden name=user id=user value=\"99999\">$NWB#vicidial_users-user$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>User Number: </td><td align=left><input type=text name=user id=user size=20 maxlength=10> <input type=button name=auto_user value=\"AUTO-GENERATE\" onClick=\"user_auto()\"> $NWB#vicidial_users-user$NWE</td></tr>\n";
+			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Password: </td><td align=left><input type=text name=pass size=20 maxlength=10>$NWB#vicidial_users-pass$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Full Name: </td><td align=left><input type=text name=full_name size=20 maxlength=100>$NWB#vicidial_users-full_name$NWE</td></tr>\n";
 
@@ -5756,13 +5794,31 @@ if ($ADD==11)
 	{
 	if ($LOGmodify_campaigns==1)
 		{
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT count(*) FROM vicidial_override_ids where id_table='vicidial_campaigns' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$voi_count = "$row[0]";
+			}
+		##### END ID override optional section #####
+
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>ADD A NEW CAMPAIGN<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=21>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign ID: </td><td align=left><input type=text name=campaign_id size=10 maxlength=8>$NWB#vicidial_campaigns-campaign_id$NWE</td></tr>\n";
+		if ($voi_count > 0)
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Campaign ID: </td><td align=left>Auto-Generated $NWB#vicidial_campaigns-campaign_id$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Campaign ID: </td><td align=left><input type=text name=campaign_id size=10 maxlength=8>$NWB#vicidial_campaigns-campaign_id$NWE</td></tr>\n";
+			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Name: </td><td align=left><input type=text name=campaign_name size=30 maxlength=30>$NWB#vicidial_campaigns-campaign_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Description: </td><td align=left><input type=text name=campaign_description size=30 maxlength=255>$NWB#vicidial_campaigns-campaign_description$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option></select>$NWB#vicidial_campaigns-active$NWE</td></tr>\n";
@@ -5861,13 +5917,31 @@ if ($ADD==12)
 	{
 	if ($LOGmodify_campaigns==1)
 		{
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT count(*) FROM vicidial_override_ids where id_table='vicidial_campaigns' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$voi_count = "$row[0]";
+			}
+		##### END ID override optional section #####
+
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>COPY A CAMPAIGN<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=20>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign ID: </td><td align=left><input type=text name=campaign_id size=10 maxlength=8>$NWB#vicidial_campaigns-campaign_id$NWE</td></tr>\n";
+		if ($voi_count > 0)
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Campaign ID: </td><td align=left>Auto-Generated $NWB#vicidial_campaigns-campaign_id$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Campaign ID: </td><td align=left><input type=text name=campaign_id size=10 maxlength=8>$NWB#vicidial_campaigns-campaign_id$NWE</td></tr>\n";
+			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Name: </td><td align=left><input type=text name=campaign_name size=30 maxlength=30>$NWB#vicidial_campaigns-campaign_name$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Source Campaign: </td><td align=left><select size=1 name=source_campaign_id>\n";
@@ -5907,13 +5981,31 @@ if ($ADD==111)
 	{
 	if ($LOGmodify_lists==1)
 		{
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT count(*) FROM vicidial_override_ids where id_table='vicidial_lists' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$voi_count = "$row[0]";
+			}
+		##### END ID override optional section #####
+
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>ADD A NEW LIST<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=211>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>List ID: </td><td align=left><input type=text name=list_id size=8 maxlength=8> (digits only)$NWB#vicidial_lists-list_id$NWE</td></tr>\n";
+		if ($voi_count > 0)
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>List ID: </td><td align=left>Auto-Generated $NWB#vicidial_lists-list_id$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>List ID: </td><td align=left><input type=text name=list_id size=8 maxlength=8> (digits only)$NWB#vicidial_lists-list_id$NWE</td></tr>\n";
+			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>List Name: </td><td align=left><input type=text name=list_name size=20 maxlength=20>$NWB#vicidial_lists-list_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>List Description: </td><td align=left><input type=text name=list_description size=30 maxlength=255>$NWB#vicidial_lists-list_description$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign: </td><td align=left><select size=1 name=campaign_id>\n";
@@ -6108,13 +6200,31 @@ if ($ADD==1111)
 	{
 	if ($LOGmodify_ingroups==1)
 		{
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT count(*) FROM vicidial_override_ids where id_table='vicidial_inbound_groups' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$voi_count = "$row[0]";
+			}
+		##### END ID override optional section #####
+
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>ADD A NEW INBOUND GROUP<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=2111>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Group ID: </td><td align=left><input type=text name=group_id size=20 maxlength=20> (no spaces)$NWB#vicidial_inbound_groups-group_id$NWE</td></tr>\n";
+		if ($voi_count > 0)
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Group ID: </td><td align=left>Auto-Generated $NWB#vicidial_inbound_groups-group_id$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Group ID: </td><td align=left><input type=text name=group_id size=20 maxlength=20> (no spaces)$NWB#vicidial_inbound_groups-group_id$NWE</td></tr>\n";
+			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Group Name: </td><td align=left><input type=text name=group_name size=30 maxlength=30>$NWB#vicidial_inbound_groups-group_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Group Color: </td><td align=left id=\"group_color_td\"><input type=text name=group_color size=7 maxlength=7>$NWB#vicidial_inbound_groups-group_color$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option SELECTED>Y</option><option>N</option></select>$NWB#vicidial_inbound_groups-active$NWE</td></tr>\n";
@@ -6145,13 +6255,31 @@ if ($ADD==1211)
 	{
 	if ($LOGmodify_ingroups==1)
 		{
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT count(*) FROM vicidial_override_ids where id_table='vicidial_inbound_groups' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$voi_count = "$row[0]";
+			}
+		##### END ID override optional section #####
+
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>COPY INBOUND GROUP<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=2011>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Group ID: </td><td align=left><input type=text name=group_id size=20 maxlength=20> (no spaces)$NWB#vicidial_inbound_groups-group_id$NWE</td></tr>\n";
+		if ($voi_count > 0)
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Group ID: </td><td align=left>Auto-Generated $NWB#vicidial_inbound_groups-group_id$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Group ID: </td><td align=left><input type=text name=group_id size=20 maxlength=20> (no spaces)$NWB#vicidial_inbound_groups-group_id$NWE</td></tr>\n";
+			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Group Name: </td><td align=left><input type=text name=group_name size=30 maxlength=30>$NWB#vicidial_inbound_groups-group_name$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Source Group ID: </td><td align=left><select size=1 name=source_group_id>\n";
@@ -6262,13 +6390,31 @@ if ($ADD==1511)
 	{
 	if ($LOGmodify_dids==1)
 		{
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT count(*) FROM vicidial_override_ids where id_table='vicidial_call_menu' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$voi_count = "$row[0]";
+			}
+		##### END ID override optional section #####
+
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>ADD A NEW CALL MENU<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=2511>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Menu ID: </td><td align=left><input type=text name=menu_id size=40 maxlength=50> (no spaces or special characters)$NWB#vicidial_call_menu-menu_id$NWE</td></tr>\n";
+		if ($voi_count > 0)
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Menu ID: </td><td align=left>Auto-Generated $NWB#vicidial_call_menu-menu_id$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Menu ID: </td><td align=left><input type=text name=menu_id size=40 maxlength=50> (no spaces or special characters)$NWB#vicidial_call_menu-menu_id$NWE</td></tr>\n";
+			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Menu Name: </td><td align=left><input type=text name=menu_name size=50 maxlength=100>$NWB#vicidial_call_menu-menu_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 		echo "</TABLE></center>\n";
@@ -6289,13 +6435,31 @@ if ($ADD==1611)
 	{
 	if ($LOGmodify_dids==1)
 		{
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT count(*) FROM vicidial_override_ids where id_table='vicidial_call_menu' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$voi_count = "$row[0]";
+			}
+		##### END ID override optional section #####
+
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>COPY CALL MENU<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=2611>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Menu ID: </td><td align=left><input type=text name=menu_id size=40 maxlength=50> (no spaces or special characters)$NWB#vicidial_call_menu-menu_id$NWE</td></tr>\n";
+		if ($voi_count > 0)
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Menu ID: </td><td align=left>Auto-Generated $NWB#vicidial_call_menu-menu_id$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Menu ID: </td><td align=left><input type=text name=menu_id size=40 maxlength=50> (no spaces or special characters)$NWB#vicidial_call_menu-menu_id$NWE</td></tr>\n";
+			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Menu Name: </td><td align=left><input type=text name=menu_name size=50 maxlength=100>$NWB#vicidial_call_menu-menu_name$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Source Menu: </td><td align=left><select size=1 name=source_menu>\n";
@@ -6373,13 +6537,31 @@ if ($ADD==111111)
 	{
 	if ($LOGmodify_usergroups==1)
 		{
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT count(*) FROM vicidial_override_ids where id_table='vicidial_user_groups' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$voi_count = "$row[0]";
+			}
+		##### END ID override optional section #####
+
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>ADD NEW USERS GROUP<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=211111>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Group: </td><td align=left><input type=text name=user_group size=15 maxlength=20> (no spaces or punctuation)$NWB#vicidial_user_groups-user_group$NWE</td></tr>\n";
+		if ($voi_count > 0)
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Group: </td><td align=left>Auto-Generated $NWB#vicidial_user_groups-user_group$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Group: </td><td align=left><input type=text name=user_group size=15 maxlength=20> (no spaces or punctuation)$NWB#vicidial_user_groups-user_group$NWE</td></tr>\n";
+			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Description: </td><td align=left><input type=text name=group_name size=40 maxlength=40> (description of group)$NWB#vicidial_user_groups-group_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 		echo "</TABLE></center>\n";
@@ -6400,6 +6582,17 @@ if ($ADD==1111111)
 	{
 	if ($LOGmodify_scripts==1)
 		{
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT count(*) FROM vicidial_override_ids where id_table='vicidial_scripts' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$voi_count = "$row[0]";
+			}
+		##### END ID override optional section #####
+
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -6407,7 +6600,14 @@ if ($ADD==1111111)
 		echo "<input type=hidden name=ADD value=2111111>\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Script ID: </td><td align=left><input type=text name=script_id size=12 maxlength=10> (no spaces or punctuation)$NWB#vicidial_scripts-script_id$NWE</td></tr>\n";
+		if ($voi_count > 0)
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Script ID: </td><td align=left>Auto-Generated $NWB#vicidial_scripts-script_id$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Script ID: </td><td align=left><input type=text name=script_id size=12 maxlength=10> (no spaces or punctuation)$NWB#vicidial_scripts-script_id$NWE</td></tr>\n";
+			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Script Name: </td><td align=left><input type=text name=script_name size=40 maxlength=50> (title of the script)$NWB#vicidial_scripts-script_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Script Comments: </td><td align=left><input type=text name=script_comments size=50 maxlength=255> $NWB#vicidial_scripts-script_comments$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option SELECTED>Y</option><option>N</option></select>$NWB#vicidial_scripts-active$NWE</td></tr>\n";
@@ -6474,13 +6674,31 @@ if ($ADD==11111111)
 	{
 	if ($LOGmodify_filters==1)
 		{
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT count(*) FROM vicidial_override_ids where id_table='vicidial_lead_filters' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$voi_count = "$row[0]";
+			}
+		##### END ID override optional section #####
+
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>ADD NEW FILTER<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=21111111>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Filter ID: </td><td align=left><input type=text name=lead_filter_id size=12 maxlength=10> (no spaces or punctuation)$NWB#vicidial_lead_filters-lead_filter_id$NWE</td></tr>\n";
+		if ($voi_count > 0)
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Filter ID: </td><td align=left>Auto-Generated $NWB#vicidial_lead_filters-lead_filter_id$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Filter ID: </td><td align=left><input type=text name=lead_filter_id size=12 maxlength=10> (no spaces or punctuation)$NWB#vicidial_lead_filters-lead_filter_id$NWE</td></tr>\n";
+			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Filter Name: </td><td align=left><input type=text name=lead_filter_name size=30 maxlength=30> (short description of the filter)$NWB#vicidial_lead_filters-lead_filter_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Filter Comments: </td><td align=left><input type=text name=lead_filter_comments size=50 maxlength=255> $NWB#vicidial_lead_filters-lead_filter_comments$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Filter SQL: </td><td align=left><TEXTAREA NAME=lead_filter_sql ROWS=20 COLS=50 value=\"\"></TEXTAREA> $NWB#vicidial_lead_filters-lead_filter_sql$NWE</td></tr>\n";
@@ -6604,6 +6822,17 @@ if ($ADD==11111111111)
 	{
 	if ($LOGast_admin_access==1)
 		{
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT count(*) FROM vicidial_override_ids where id_table='phones' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$voi_count = "$row[0]";
+			}
+		##### END ID override optional section #####
+
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -6612,7 +6841,14 @@ if ($ADD==11111111111)
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Phone extension: </td><td align=left><input type=text name=extension size=20 maxlength=100 value=\"\">$NWB#phones-extension$NWE</td></tr>\n";
+		if ($voi_count > 0)
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Phone extension: </td><td align=left>Auto-Generated $NWB#phones-extension$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Phone extension: </td><td align=left><input type=text name=extension size=20 maxlength=100 value=\"\">$NWB#phones-extension$NWE</td></tr>\n";
+			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Dial Plan Number: </td><td align=left><input type=text name=dialplan_number size=15 maxlength=20> (digits only)$NWB#phones-dialplan_number$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail Box: </td><td align=left><input type=text name=voicemail_id size=10 maxlength=10> (digits only)$NWB#phones-voicemail_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Outbound CallerID: </td><td align=left><input type=text name=outbound_cid size=10 maxlength=20> (digits only)$NWB#phones-outbound_cid$NWE</td></tr>\n";
@@ -6912,6 +7148,20 @@ if ($ADD==11111111111111)
 
 if ($ADD=="2")
 	{
+	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_users' and active='1';";
+	$rslt=mysql_query($stmt, $link);
+	$voi_ct = mysql_num_rows($rslt);
+	if ($voi_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$user = ($row[0] + 1);
+
+		$stmt="UPDATE vicidial_override_ids SET value='$user' where id_table='vicidial_users' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		}
+	##### END ID override optional section #####
+
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_users where user='$user';";
 	$rslt=mysql_query($stmt, $link);
@@ -7179,6 +7429,20 @@ if ($ADD=="2")
 
 if ($ADD=="2A")
 	{
+	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_users' and active='1';";
+	$rslt=mysql_query($stmt, $link);
+	$voi_ct = mysql_num_rows($rslt);
+	if ($voi_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$user = ($row[0] + 1);
+
+		$stmt="UPDATE vicidial_override_ids SET value='$user' where id_table='vicidial_users' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		}
+	##### END ID override optional section #####
+
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_users where user='$user';";
 	$rslt=mysql_query($stmt, $link);
@@ -7452,6 +7716,20 @@ if ($ADD=="2A")
 
 if ($ADD==21)
 	{
+	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_campaigns' and active='1';";
+	$rslt=mysql_query($stmt, $link);
+	$voi_ct = mysql_num_rows($rslt);
+	if ($voi_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$campaign_id = ($row[0] + 1);
+
+		$stmt="UPDATE vicidial_override_ids SET value='$campaign_id' where id_table='vicidial_campaigns' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		}
+	##### END ID override optional section #####
+
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
 	$rslt=mysql_query($stmt, $link);
@@ -7502,6 +7780,20 @@ if ($ADD==21)
 
 if ($ADD==20)
 	{
+	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_campaigns' and active='1';";
+	$rslt=mysql_query($stmt, $link);
+	$voi_ct = mysql_num_rows($rslt);
+	if ($voi_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$campaign_id = ($row[0] + 1);
+
+		$stmt="UPDATE vicidial_override_ids SET value='$campaign_id' where id_table='vicidial_campaigns' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		}
+	##### END ID override optional section #####
+
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
 	$rslt=mysql_query($stmt, $link);
@@ -7828,6 +8120,20 @@ if ($ADD==28)
 
 if ($ADD==211)
 	{
+	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_lists' and active='1';";
+	$rslt=mysql_query($stmt, $link);
+	$voi_ct = mysql_num_rows($rslt);
+	if ($voi_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$list_id = ($row[0] + 1);
+
+		$stmt="UPDATE vicidial_override_ids SET value='$list_id' where id_table='vicidial_lists' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		}
+	##### END ID override optional section #####
+
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_lists where list_id='$list_id';";
 	$rslt=mysql_query($stmt, $link);
@@ -7870,6 +8176,20 @@ if ($ADD==211)
 
 if ($ADD==2111)
 	{
+	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_inbound_groups' and active='1';";
+	$rslt=mysql_query($stmt, $link);
+	$voi_ct = mysql_num_rows($rslt);
+	if ($voi_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$group_id = ($row[0] + 1);
+
+		$stmt="UPDATE vicidial_override_ids SET value='$group_id' where id_table='vicidial_inbound_groups' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		}
+	##### END ID override optional section #####
+
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$group_id';";
 	$rslt=mysql_query($stmt, $link);
@@ -7921,6 +8241,20 @@ if ($ADD==2111)
 
 if ($ADD==2011)
 	{
+	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_inbound_groups' and active='1';";
+	$rslt=mysql_query($stmt, $link);
+	$voi_ct = mysql_num_rows($rslt);
+	if ($voi_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$group_id = ($row[0] + 1);
+
+		$stmt="UPDATE vicidial_override_ids SET value='$group_id' where id_table='vicidial_inbound_groups' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		}
+	##### END ID override optional section #####
+
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$group_id';";
 	$rslt=mysql_query($stmt, $link);
@@ -8057,6 +8391,20 @@ if ($ADD==2411)
 
 if ($ADD==2511)
 	{
+	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_call_menu' and active='1';";
+	$rslt=mysql_query($stmt, $link);
+	$voi_ct = mysql_num_rows($rslt);
+	if ($voi_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$menu_id = ($row[0] + 1);
+
+		$stmt="UPDATE vicidial_override_ids SET value='$menu_id' where id_table='vicidial_call_menu' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		}
+	##### END ID override optional section #####
+
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_call_menu where menu_id='$menu_id';";
 	$rslt=mysql_query($stmt, $link);
@@ -8096,6 +8444,20 @@ if ($ADD==2511)
 
 if ($ADD==2611)
 	{
+	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_call_menu' and active='1';";
+	$rslt=mysql_query($stmt, $link);
+	$voi_ct = mysql_num_rows($rslt);
+	if ($voi_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$menu_id = ($row[0] + 1);
+
+		$stmt="UPDATE vicidial_override_ids SET value='$menu_id' where id_table='vicidial_call_menu' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		}
+	##### END ID override optional section #####
+
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_call_menu where menu_id='$menu_id';";
 	$rslt=mysql_query($stmt, $link);
@@ -8176,6 +8538,20 @@ if ($ADD==21111)
 
 if ($ADD==211111)
 	{
+	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_user_groups' and active='1';";
+	$rslt=mysql_query($stmt, $link);
+	$voi_ct = mysql_num_rows($rslt);
+	if ($voi_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$user_group = ($row[0] + 1);
+
+		$stmt="UPDATE vicidial_override_ids SET value='$user_group' where id_table='vicidial_user_groups' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		}
+	##### END ID override optional section #####
+
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_user_groups where user_group='$user_group';";
 	$rslt=mysql_query($stmt, $link);
@@ -8290,6 +8666,20 @@ if ($ADD==211111)
 
 if ($ADD==2111111)
 	{
+	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_scripts' and active='1';";
+	$rslt=mysql_query($stmt, $link);
+	$voi_ct = mysql_num_rows($rslt);
+	if ($voi_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$script_id = ($row[0] + 1);
+
+		$stmt="UPDATE vicidial_override_ids SET value='$script_id' where id_table='vicidial_scripts' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		}
+	##### END ID override optional section #####
+
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_scripts where script_id='$script_id';";
 	$rslt=mysql_query($stmt, $link);
@@ -8329,6 +8719,20 @@ if ($ADD==2111111)
 
 if ($ADD==21111111)
 	{
+	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_lead_filters' and active='1';";
+	$rslt=mysql_query($stmt, $link);
+	$voi_ct = mysql_num_rows($rslt);
+	if ($voi_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$lead_filter_id = ($row[0] + 1);
+
+		$stmt="UPDATE vicidial_override_ids SET value='$lead_filter_id' where id_table='vicidial_lead_filters' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		}
+	##### END ID override optional section #####
+
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_lead_filters where lead_filter_id='$lead_filter_id';";
 	$rslt=mysql_query($stmt, $link);
@@ -8449,6 +8853,20 @@ if ($ADD==2111111111)
 
 if ($ADD==231111111)
 	{
+	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_shifts' and active='1';";
+	$rslt=mysql_query($stmt, $link);
+	$voi_ct = mysql_num_rows($rslt);
+	if ($voi_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$shift_id = ($row[0] + 1);
+
+		$stmt="UPDATE vicidial_override_ids SET value='$shift_id' where id_table='vicidial_shifts' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		}
+	##### END ID override optional section #####
+
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_shifts where shift_id='$shift_id';";
 	$rslt=mysql_query($stmt, $link);
@@ -8499,6 +8917,20 @@ if ($ADD==231111111)
 
 if ($ADD==21111111111)
 	{
+	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+	$stmt = "SELECT value FROM vicidial_override_ids where id_table='phones' and active='1';";
+	$rslt=mysql_query($stmt, $link);
+	$voi_ct = mysql_num_rows($rslt);
+	if ($voi_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$extension = ($row[0] + 1);
+
+		$stmt="UPDATE vicidial_override_ids SET value='$extension' where id_table='phones' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		}
+	##### END ID override optional section #####
+
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from phones where extension='$extension' and server_ip='$server_ip';";
 	$rslt=mysql_query($stmt, $link);
@@ -14532,7 +14964,7 @@ if ($ADD==31)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Stats Refresh: </td><td align=left><select size=1 name=campaign_stats_refresh><option>Y</option><option>N</option><option SELECTED>$campaign_stats_refresh</option></select>$NWB#vicidial_campaigns-campaign_stats_refresh$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Disable Alter Customer Data: </td><td align=left><select size=1 name=disable_alter_custdata><option>Y</option><option>N</option><option SELECTED>$disable_alter_custdata</option></select>$NWB#vicidial_campaigns-disable_alter_custdata$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Disable Alter Customer Phone: </td><td align=left><select size=1 name=disable_alter_custphone><option>Y</option><option>N</option><option SELECTED>$disable_alter_custphone</option></select>$NWB#vicidial_campaigns-disable_alter_custphone$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Disable Alter Customer Phone: </td><td align=left><select size=1 name=disable_alter_custphone><option>Y</option><option>N</option><option>HIDE</option><option SELECTED>$disable_alter_custphone</option></select>$NWB#vicidial_campaigns-disable_alter_custphone$NWE</td></tr>\n";
 
 		if ($SSoutbound_autodial_active > 0)
 			{
@@ -15798,6 +16230,14 @@ if ( ($ADD==34) or ($ADD==31) )
 
 		echo "<br><b>WARNING, we only recommend List Mix for advanced users, Please read the ViciDial Manager Manual</b><br>\n";
 
+		$stmt="SELECT dial_statuses from vicidial_campaigns where campaign_id='$campaign_id'";
+		$rslt=mysql_query($stmt, $link);
+		$statuses = mysql_num_rows($rslt);
+		if ($statuses > 0) 
+			{
+			$rowy=mysql_fetch_row($rslt);
+			$LMdial_statuses=$rowy[0];
+			}
 
 		$stmt="SELECT * from vicidial_campaigns_list_mix where campaign_id='$campaign_id' order by status, vcl_id";
 		$rslt=mysql_query($stmt, $link);
@@ -15818,11 +16258,11 @@ if ( ($ADD==34) or ($ADD==31) )
 				else
 					{$tablecolor='bgcolor="#9BB9FB"';   $bgcolor='bgcolor="#B9CBFD"';}
 				}
-			echo "<a name=\"$vcl_id\"><BR>\n";
+			echo "<a name=\"LINK_$vcl_id\"><BR>\n";
 			echo "<span id=\"LISTMIX$US$vcl_id$US$o\">";
 			echo "<TABLE width=740 cellspacing=3 $tablecolor>\n";
 			echo "<tr><td colspan=6>\n";
-			echo "<form action=\"$PHP_SELF#$vcl_id\" method=POST name=$vcl_id id=$vcl_id>\n";
+			echo "<form action=\"$PHP_SELF#LINK_$vcl_id\" method=POST name=$vcl_id id=$vcl_id>\n";
 			echo "<input type=hidden name=ADD value=49>\n";
 			echo "<input type=hidden name=SUB value=29>\n";
 			echo "<input type=hidden name=stage value=\"MODIFY\">\n";
@@ -15873,10 +16313,10 @@ if ( ($ADD==34) or ($ADD==31) )
 
 				echo "<tr $bgcolor><td NOWRAP><font size=3>\n";
 				echo "<input type=hidden name=list_id$US$q$US$vcl_id id=list_id$US$q$US$vcl_id value=$MIXdetailsLIST>\n";
-				echo "<a href=\"$PHP_SELF?ADD=311&list_id=$MIXdetailsLIST\">List</a>: $MIXdetailsLIST &nbsp; <font size=1><a href=\"$PHP_SELF?ADD=49&SUB=29&stage=REMOVE&campaign_id=$campaign_id&vcl_id=$vcl_id&mix_container_item=$q&list_id=$MIXdetailsLIST#$vcl_id\">REMOVE</a></font></td>\n";
+				echo "<a href=\"$PHP_SELF?ADD=311&list_id=$MIXdetailsLIST\">List</a>: $MIXdetailsLIST &nbsp; <font size=1><a href=\"$PHP_SELF?ADD=49&SUB=29&stage=REMOVE&campaign_id=$campaign_id&vcl_id=$vcl_id&mix_container_item=$q&list_id=$MIXdetailsLIST#LINK_$vcl_id\">REMOVE</a></font></td>\n";
 
 				echo "<td><select size=1 name=priority$US$q$US$vcl_id id=priority$US$q$US$vcl_id>\n";
-				$n=10;
+				$n=40;
 				while ($n>=1)
 					{
 					echo "<option value=\"$n\">$n</option>\n";
@@ -15889,7 +16329,7 @@ if ( ($ADD==34) or ($ADD==31) )
 				while ($n>=0)
 					{
 					echo "<option value=\"$n\">$n</option>\n";
-					$n = ($n-5);
+					$n = ($n-1);
 					}
 				echo "<option SELECTED value=\"$MIXdetails[2]\">$MIXdetails[2]</option></select></td>\n";
 
@@ -15928,8 +16368,8 @@ if ( ($ADD==34) or ($ADD==31) )
 			echo "</form></td></tr>\n";
 
 
-			echo "<tr $bgcolor><td colspan=4 align=right><font size=2>\n";
-			echo "<form action=\"$PHP_SELF#$vcl_id\" method=POST name=$vcl_id id=$vcl_id>\n";
+			echo "<tr $bgcolor><td colspan=3 align=center VALIGN=BOTTOM><font size=2>\n";
+			echo "<form action=\"$PHP_SELF#LINK_$vcl_id\" method=POST name=ADD_$vcl_id id=ADD_$vcl_id>\n";
 			echo "<input type=hidden name=ADD value=49>\n";
 			echo "<input type=hidden name=SUB value=29>\n";
 			echo "<input type=hidden name=stage value=\"ADD\">\n";
@@ -15938,11 +16378,27 @@ if ( ($ADD==34) or ($ADD==31) )
 			echo "List: <select size=1 name=list_id>\n";
 			echo "$mixlists_list";
 			echo "<option selected value=\"\">ADD ANOTHER ENTRY</option>\n";
-			echo "</select></td>\n";
+			echo "</select>\n";
 			
-			if ($q > 9) {$AE_disabled = 'DISABLED';}
+			if ($q > 39) {$AE_disabled = 'DISABLED';}
 			else {$AE_disabled = '';}
-			echo "<td><input type=submit name=submit value=\"ADD ENTRY\" $AE_disabled>\n";
+			echo "<input type=submit name=submit value=\"ADD ENTRY\" $AE_disabled>\n";
+			echo "</form></td>\n";
+
+			$X='X';
+			echo "<td NOWRAP VALIGN=BOTTOM>\n";
+			echo "<form action=\"$PHP_SELF#LINK_$vcl_id\" method=POST name=DEFAULT_$vcl_id id=DEFAULT_$vcl_id>\n";
+			echo "<input type=hidden name=status$US$X$US$vcl_id id=status$US$X$US$vcl_id value=\"\"><input type=text size=20 maxlength=255 name=ROstatus$US$X$US$vcl_id id=ROstatus$US$X$US$vcl_id value=\"$LMdial_statuses\" READONLY>\n";
+			echo "<BR><font size=2><B>CHANGE: \n";
+			echo "<a href=\"#\" onclick=\"mod_mix_status('ALL','$vcl_id','$q');return false;\">ALL</a> &nbsp; \n";
+			echo "<a href=\"#\" onclick=\"mod_mix_status('EMPTY','$vcl_id','$q');return false;\">EMPTY</a>\n";
+			echo "</td><td NOWRAP VALIGN=MIDDLE>\n";
+			echo "<select size=1 name=dial_status$US$X$US$vcl_id id=dial_status$US$X$US$vcl_id>\n";
+			echo "<option value=\"\"> - Select A Status - </option>\n";
+			echo "$dial_statuses_list";
+			echo "</select> <font size=2><B>\n";
+			echo "<a href=\"#\" onclick=\"mod_mix_status('ADD','$vcl_id','X');return false;\">ADD</a> &nbsp; \n";
+			echo "<a href=\"#\" onclick=\"mod_mix_status('REMOVE','$vcl_id','X');return false;\">REMOVE</a>\n";
 			echo "</form></td></tr>\n";
 			echo "</table></span>\n";
 			}
@@ -15950,7 +16406,7 @@ if ( ($ADD==34) or ($ADD==31) )
 
 		echo "<br><br><B>ADD NEW LIST MIX</B><BR><form action=$PHP_SELF method=POST>\n";
 		echo "<table border=0>\n";
-		echo "<tr $bgcolor><td><form action=\"$PHP_SELF#$vcl_id\" method=POST>\n";
+		echo "<tr $bgcolor><td><form action=\"$PHP_SELF#LINK_$vcl_id\" method=POST>\n";
 		echo "<input type=hidden name=ADD value=49>\n";
 		echo "<input type=hidden name=SUB value=29>\n";
 		echo "<input type=hidden name=stage value=\"NEWMIX\">\n";

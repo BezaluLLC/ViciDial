@@ -231,10 +231,11 @@
 # 90519-0635 - Fixed manual dial status and logging bug
 # 90525-1012 - Fixed transfer issue of auto-received call after manual dial call
 # 90529-0741 - Added nophone agent phone login that will not show any empty session alerts
+# 90531-0635 - Added option to hide customer phone number
 #
 
-$version = '2.2.0-209';
-$build = '90529-0741';
+$version = '2.2.0-210';
+$build = '90531-0635';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=60;
 $one_mysql_log=0;
@@ -4327,10 +4328,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						document.vicidial_form.list_id.value			= MDnextResponse_array[5];
 						document.vicidial_form.gmt_offset_now.value		= MDnextResponse_array[6];
 						document.vicidial_form.phone_code.value			= MDnextResponse_array[7];
-						if (disable_alter_custphone=='Y')
+						if ( (disable_alter_custphone=='Y') || (disable_alter_custphone=='HIDE') )
 							{
 							var tmp_pn = document.getElementById("phone_numberDISP");
-							tmp_pn.innerHTML							= MDnextResponse_array[8];
+							if (disable_alter_custphone=='Y')
+								{
+								tmp_pn.innerHTML						= MDnextResponse_array[8];
+								}
 							}
 						document.vicidial_form.phone_number.value		= MDnextResponse_array[8];
 						document.vicidial_form.title.value				= MDnextResponse_array[9];
@@ -4592,7 +4596,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							document.vicidial_form.list_id.value		='';
 							document.vicidial_form.gmt_offset_now.value	='';
 							document.vicidial_form.phone_code.value		='';
-							if (disable_alter_custphone=='Y')
+							if ( (disable_alter_custphone=='Y') || (disable_alter_custphone=='HIDE') )
 								{
 								var tmp_pn = document.getElementById("phone_numberDISP");
 								tmp_pn.innerHTML			= ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';
@@ -5144,10 +5148,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							document.vicidial_form.list_id.value			= check_VDIC_array[9];
 							document.vicidial_form.gmt_offset_now.value		= check_VDIC_array[10];
 							document.vicidial_form.phone_code.value			= check_VDIC_array[11];
-							if (disable_alter_custphone=='Y')
+							if ( (disable_alter_custphone=='Y') || (disable_alter_custphone=='HIDE') )
 								{
 								var tmp_pn = document.getElementById("phone_numberDISP");
-								tmp_pn.innerHTML							= check_VDIC_array[12];
+								if (disable_alter_custphone=='Y')
+									{
+									tmp_pn.innerHTML						= check_VDIC_array[12];
+									}
 								}
 							document.vicidial_form.phone_number.value		= check_VDIC_array[12];
 							document.vicidial_form.title.value				= check_VDIC_array[13];
@@ -6207,7 +6214,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				document.vicidial_form.list_id.value		='';
 				document.vicidial_form.gmt_offset_now.value	='';
 				document.vicidial_form.phone_code.value		='';
-				if (disable_alter_custphone=='Y')
+				if ( (disable_alter_custphone=='Y') || (disable_alter_custphone=='HIDE') )
 					{
 					var tmp_pn = document.getElementById("phone_numberDISP");
 					tmp_pn.innerHTML			= ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';
@@ -7090,6 +7097,11 @@ function phone_number_format(formatphone) {
 	var regFR_SPACphone = new RegExp("FR_SPAC","g");
 	var status_display_number = formatphone;
 	var dispnum = formatphone;
+	if (disable_alter_custphone == 'HIDE')
+		{
+		var status_display_number = 'XXXXXXXXXX';
+		var dispnum = 'XXXXXXXXXX';
+		}
 	if (vdc_header_phone_format.match(regUS_DASHphone))
 		{
 		var status_display_number = dispnum.substring(0,3) + '-' + dispnum.substring(3,6) + '-' + dispnum.substring(6,10);
@@ -8547,7 +8559,7 @@ RECORD ID: <font class="body_small"><span id="RecorDID"></span></font><BR>
 <td align=right><font class="body_text"> Phone: </td>
 <td align=left><font class="body_text">
 <?php 
-if ($disable_alter_custphone=='Y') 
+if ( (ereg('Y',$disable_alter_custphone)) or (ereg('HIDE',$disable_alter_custphone)) )
 	{
 	echo "<font class=\"body_text\"><span id=phone_numberDISP> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></font>";
 	echo "<input type=hidden name=phone_number value=\"\">";

@@ -8,6 +8,7 @@
 # 90310-0709 - First Build
 # 90508-0542 - Added Call Menu option, changed script to use long PHP tags
 # 90514-0605 - Added audio prompt selection functions
+# 90530-1206 - Changed List Mix to allow for 40 mixes and a default populate option
 #
 
 
@@ -170,35 +171,75 @@ if ( ( ($ADD==34) or ($ADD==31) or ($ADD==49) ) and ($SUB==29) and ($LOGmodify_c
 // List Mix status add and remove
 function mod_mix_status(stage,vcl_id,entry) 
 	{
-	var mod_status = document.getElementById("dial_status_" + entry + "_" + vcl_id);
-	if (mod_status.value.length < 1)
+	if (stage=="ALL")
 		{
-		alert("You must select a status first");
+		var count=0;
+		var ROnew_statuses = document.getElementById("ROstatus_X_" + vcl_id);
+
+		while (count < entry)
+			{
+			var old_statuses = document.getElementById("status_" + count + "_" + vcl_id);
+			var ROold_statuses = document.getElementById("ROstatus_" + count + "_" + vcl_id);
+
+			old_statuses.value = ROnew_statuses.value;
+			ROold_statuses.value = ROnew_statuses.value;
+			count++;
+			}
 		}
 	else
 		{
-		var old_statuses = document.getElementById("status_" + entry + "_" + vcl_id);
-		var ROold_statuses = document.getElementById("ROstatus_" + entry + "_" + vcl_id);
-		var MODstatus = new RegExp(" " + mod_status.value + " ","g");
-		if (stage=="ADD")
+		if (stage=="EMPTY")
 			{
-			if (old_statuses.value.match(MODstatus))
+			var count=0;
+			var ROnew_statuses = document.getElementById("ROstatus_X_" + vcl_id);
+
+			while (count < entry)
 				{
-				alert("The status " + mod_status.value + " is already present");
+				var old_statuses = document.getElementById("status_" + count + "_" + vcl_id);
+				var ROold_statuses = document.getElementById("ROstatus_" + count + "_" + vcl_id);
+				
+				if (ROold_statuses.value.length < 3)
+					{
+					old_statuses.value = ROnew_statuses.value;
+					ROold_statuses.value = ROnew_statuses.value;
+					}
+				count++;
+				}
+			}
+
+		else
+			{
+			var mod_status = document.getElementById("dial_status_" + entry + "_" + vcl_id);
+			if (mod_status.value.length < 1)
+				{
+				alert("You must select a status first");
 				}
 			else
 				{
-				var new_statuses = " " + mod_status.value + "" + old_statuses.value;
-				old_statuses.value = new_statuses;
-				ROold_statuses.value = new_statuses;
-				mod_status.value = "";
+				var old_statuses = document.getElementById("status_" + entry + "_" + vcl_id);
+				var ROold_statuses = document.getElementById("ROstatus_" + entry + "_" + vcl_id);
+				var MODstatus = new RegExp(" " + mod_status.value + " ","g");
+				if (stage=="ADD")
+					{
+					if (old_statuses.value.match(MODstatus))
+						{
+						alert("The status " + mod_status.value + " is already present");
+						}
+					else
+						{
+						var new_statuses = " " + mod_status.value + "" + old_statuses.value;
+						old_statuses.value = new_statuses;
+						ROold_statuses.value = new_statuses;
+						mod_status.value = "";
+						}
+					}
+				if (stage=="REMOVE")
+					{
+					var MODstatus = new RegExp(" " + mod_status.value + " ","g");
+					old_statuses.value = old_statuses.value.replace(MODstatus, " ");
+					ROold_statuses.value = ROold_statuses.value.replace(MODstatus, " ");
+					}
 				}
-			}
-		if (stage=="REMOVE")
-			{
-			var MODstatus = new RegExp(" " + mod_status.value + " ","g");
-			old_statuses.value = old_statuses.value.replace(MODstatus, " ");
-			ROold_statuses.value = ROold_statuses.value.replace(MODstatus, " ");
 			}
 		}
 	}
@@ -244,7 +285,7 @@ function submit_mix(vcl_id,entries)
 	var j=1;
 	var list_mix_container='';
 	var mod_list_mix_container_field = document.getElementById("list_mix_container_" + vcl_id);
-	while(h < 11)
+	while(h < 41)
 		{
 		var i=0;
 		while(i < entries)

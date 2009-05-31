@@ -126,3 +126,23 @@ UPDATE system_settings SET db_schema_version='1145';
 CREATE UNIQUE INDEX extenserver ON phones (extension, server_ip);
 
 UPDATE system_settings SET db_schema_version='1146';
+
+CREATE TABLE vicidial_override_ids (
+id_table VARCHAR(50) PRIMARY KEY NOT NULL,
+active ENUM('0','1') default '0',
+value INT(9) default '0'
+);
+
+INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_users','0','1000');
+INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_campaigns','0','20000');
+INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_inbound_groups','0','30000');
+INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_lists','0','40000');
+INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_call_menu','0','50000');
+INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_user_groups','0','60000');
+INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_lead_filters','0','70000');
+INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_scripts','0','80000');
+INSERT INTO vicidial_override_ids(id_table,active,value) values('phones','0','100');
+
+ALTER TABLE vicidial_campaigns MODIFY disable_alter_custphone ENUM('Y','N','HIDE') default 'Y';
+
+UPDATE system_settings SET db_schema_version='1147';

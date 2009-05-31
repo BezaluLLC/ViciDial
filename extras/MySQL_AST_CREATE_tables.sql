@@ -621,7 +621,7 @@ survey_ni_status VARCHAR(6) default 'NI',
 survey_response_digit_map VARCHAR(255) default '1-DEMOCRAT|2-REPUBLICAN|3-INDEPENDANT|8-OPTOUT|X-NO RESPONSE|',
 survey_xfer_exten VARCHAR(20) default '8300',
 survey_camp_record_dir VARCHAR(255) default '/home/survey',
-disable_alter_custphone ENUM('Y','N') default 'Y',
+disable_alter_custphone ENUM('Y','N','HIDE') default 'Y',
 display_queue_count ENUM('Y','N') default 'Y',
 manual_dial_filter VARCHAR(50) default 'NONE',
 agent_clipboard_copy VARCHAR(50) default 'NONE',
@@ -1522,6 +1522,11 @@ territory_description VARCHAR(255) default '',
 unique index uniqueterritory (territory)
 );
 
+CREATE TABLE vicidial_override_ids (
+id_table VARCHAR(50) PRIMARY KEY NOT NULL,
+active ENUM('0','1') default '1',
+value INT(9) default '0'
+);
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
@@ -1598,6 +1603,16 @@ INSERT INTO vicidial_server_carriers SET carrier_id='IAXEXAMPLE', carrier_name='
 
 INSERT INTO vicidial_inbound_dids SET did_pattern='default', did_description='Default DID', did_active='Y', did_route='EXTEN', extension='9998811112', exten_context='default';
 
+INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_users','0','1000');
+INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_campaigns','0','20000');
+INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_inbound_groups','0','30000');
+INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_lists','0','40000');
+INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_call_menu','0','50000');
+INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_user_groups','0','60000');
+INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_lead_filters','0','70000');
+INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_scripts','0','80000');
+INSERT INTO vicidial_override_ids(id_table,active,value) values('phones','0','100');
+
 UPDATE system_settings SET qc_last_pull_time=NOW();
 
 CREATE INDEX country_postal_code on vicidial_postal_codes (country_code,postal_code);
@@ -1618,7 +1633,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1145';
+UPDATE system_settings SET db_schema_version='1147';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
