@@ -121,7 +121,7 @@ $browser = getenv("HTTP_USER_AGENT");
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>VICIDIAL ADMIN: User Stats
+<title>ADMINISTRATION: User Stats
 <?php
 
 
@@ -171,7 +171,7 @@ echo "<input type=submit name=submit value=submit>\n";
 echo " &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $user - $full_name<BR><BR>\n";
 
 echo "<center>\n";
-echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">VICIDIAL Time Sheet</a>\n";
+echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">Agent Time Sheet</a>\n";
 echo " | <a href=\"./user_status.php?user=$user\">User Status</a>\n";
 echo " | <a href=\"./admin.php?ADD=3&user=$user\">Modify User</a>\n";
 echo " | <a href=\"./AST_agent_days_detail.php?user=$user&query_date=$begin_date&end_date=$end_date&group[]=--ALL--&shift=ALL\">User multiple day status detail report</a>";
@@ -185,7 +185,7 @@ echo "<br><center>\n";
 
 ##### vicidial agent talk time and status #####
 
-echo "<B>VICIDIAL TALK TIME AND STATUS:</B>\n";
+echo "<B>AGENT TALK TIME AND STATUS:</B>\n";
 
 echo "<center><TABLE width=300 cellspacing=0 cellpadding=1>\n";
 echo "<tr><td><font size=2>STATUS</td><td align=right><font size=2>COUNT</td><td align=right><font size=2>HOURS:MM:SS</td></tr>\n";
@@ -267,7 +267,7 @@ echo "<br><br>\n";
 
 echo "<center>\n";
 
-echo "<B>VICIDIAL AGENT LOGIN/LOGOUT TIME:</B>\n";
+echo "<B>AGENT LOGIN/LOGOUT TIME:</B>\n";
 echo "<TABLE width=500 cellspacing=0 cellpadding=1>\n";
 echo "<tr><td><font size=2>EVENT </td><td align=right><font size=2> DATE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MM:SS</td></tr>\n";
 

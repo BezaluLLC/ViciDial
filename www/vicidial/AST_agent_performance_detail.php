@@ -129,7 +129,7 @@ while ($i < $user_groups_to_print)
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>VICIDIAL: Agent Performance</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>Agent Performance Detail</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
@@ -208,7 +208,7 @@ $query_date_END = "$end_date $time_END";
 if (strlen($user_group)>0) {$ugSQL="and vicidial_agent_log.user_group='$user_group'";}
 else {$ugSQL='';}
 
-echo "VICIDIAL: Agent Performance Detail                        $NOW_TIME\n";
+echo "Agent Performance Detail                        $NOW_TIME\n";
 
 echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
 echo "---------- AGENTS Details -------------\n\n";

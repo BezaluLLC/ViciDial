@@ -100,7 +100,7 @@ while ($i < $groups_to_print)
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>VICIDIAL: VDAD Closer Service Level Stats</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>Inbound Service Level Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
@@ -227,7 +227,7 @@ $DURATIONday = intval( ($DURATIONsec / 86400) + 1 );
 		$DURATIONday++;
 		}
 
-echo "VICIDIAL: Closer Service-Level Stats                      $NOW_TIME\n";
+echo "Inbound Service Level Report                      $NOW_TIME\n";
 echo "\n";
 echo "Time range $DURATIONday days: $query_date_BEGIN to $query_date_END\n\n";
 #echo "Time range day sec: $SQsec - $EQsec   Day range in epoch: $SQepoch - $EQepoch   Start: $SQepochDAY\n";

@@ -1785,11 +1785,12 @@ else
 # 90528-2055 - Added ViciDial recording limit field in servers and phone_context to phones
 # 90530-1206 - Changed List Mix to allow for 40 mixes
 # 90531-1802 - Added auto-generated options for users, campaigns, in-groups, etc..., added option to HIDE custphone
+# 90531-2339 - Added Dynamic options for Call Menu
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-190';
-$build = '90531-1802';
+$admin_version = '2.2.0-191';
+$build = '90531-2339';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -1821,6 +1822,8 @@ $dtmf[13]='B';			$dtmf_key[13]='B';
 $dtmf[14]='C';			$dtmf_key[14]='C';
 $dtmf[15]='D';			$dtmf_key[15]='D';
 $dtmf[16]='TIMECHECK';	$dtmf_key[16]='TIMECHECK';
+$dtmf[17]='TIMEOUT';	$dtmf_key[17]='TIMEOUT';
+$dtmf[18]='INVALID';	$dtmf_key[18]='INVALID';
 
 if ($force_logout)
 {
@@ -1948,7 +1951,7 @@ header ("Content-type: text/html; charset=utf-8");
 echo "<html>\n";
 echo "<head>\n";
 echo "<!-- VERSION: $admin_version   BUILD: $build   ADD: $ADD   PHP_SELF: $PHP_SELF-->\n";
-echo "<title>VICIDIAL ADMIN: ";
+echo "<title>ADMINISTRATION: ";
 
 if (!isset($ADD))   {$ADD=0;}
 
@@ -2715,7 +2718,7 @@ echo "</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 echo "<CENTER>\n";
-echo "<TABLE WIDTH=98% BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR><TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=4><B>VICIDIAL ADMIN: HELP<BR></B></FONT><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><BR><BR>\n";
+echo "<TABLE WIDTH=98% BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR><TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=4><B>ADMINISTRATION: HELP<BR></B></FONT><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><BR><BR>\n";
 
 ?>
 <B><FONT SIZE=3>VICIDIAL_USERS TABLE</FONT></B><BR><BR>
@@ -11171,7 +11174,7 @@ if ($ADD==4511)
 
 		$h=0;
 		$option_value_list='|';
-		while ($h <= 16)
+		while ($h <= 18)
 			{
 			$option_value=''; $option_description=''; $option_route=''; $option_route_value=''; $option_route_value_context='';
 
@@ -11191,7 +11194,7 @@ if ($ADD==4511)
 				$option_value = ereg_replace("[^-\_0-9A-Z]","",$option_value);
 				$option_description = ereg_replace("[^- \:\/\_0-9a-zA-Z]","",$option_description);
 				$option_route = ereg_replace("[^-_0-9a-zA-Z]","",$option_route);
-				$option_route_value = ereg_replace("[^-\_\#\*\,\_0-9a-zA-Z]","",$option_route_value);
+				$option_route_value = ereg_replace("[^-\_\#\*\,\.\_0-9a-zA-Z]","",$option_route_value);
 				$option_route_value_context = ereg_replace("[^-_0-9a-zA-Z]","",$option_route_value_context);
 				}
 
@@ -11233,7 +11236,7 @@ if ($ADD==4511)
 			$h++;
 			}
 		## delete existing database records that were not in the submit
-		while ($h <= 16)
+		while ($h <= 18)
 			{
 			if (!preg_match("/\|$dtmf[$h]\|/i",$option_value_list))
 				{
@@ -17648,7 +17651,10 @@ if ($ADD==3311)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT * from vicidial_inbound_dids where did_id='$did_id';";
+	$didSQL = "did_id='$did_id'";
+	if ( (strlen($did_id)<1) and (strlen($did_pattern)>0) )
+		{$didSQL = "did_pattern='$did_pattern'";}
+	$stmt="SELECT * from vicidial_inbound_dids where $didSQL;";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$did_id = 				$row[0];
@@ -17865,15 +17871,27 @@ if ($ADD==3511)
 	while ($menus_to_print > $j)
 		{
 		$row=mysql_fetch_row($rslt);
-		$option_value =					$row[0];
-		$option_description =			$row[1];
-		$option_route =					$row[2];
-		$option_route_value =			$row[3];
-		$option_route_value_context =	$row[4];
+		$Aoption_value[$j] =				$row[0];
+		$Aoption_description[$j] =			$row[1];
+		$Aoption_route[$j] =				$row[2];
+		$Aoption_route_value[$j] =			$row[3];
+		$Aoption_route_value_context[$j] =	$row[4];
+		$j++;
+		}
+
+	$j=0;
+	while ($menus_to_print > $j)
+		{
+		$choose_height = (($j * 40) + 400);
+		$option_value =					$Aoption_value[$j];
+		$option_description =			$Aoption_description[$j];
+		$option_route =					$Aoption_route[$j];
+		$option_route_value =			$Aoption_route_value[$j];
+		$option_route_value_context =	$Aoption_route_value_context[$j];
 
 		$dtmf_list = "<select size=1 name=option_value_$j>";
 		$h=0;
-		while ($h <= 16)
+		while ($h <= 18)
 			{
 			$dtmf_list .= "<option";
 			if ( (preg_match("/$dtmf[$h]/",$option_value) and (strlen($option_value) == strlen($dtmf[$h])) ) )
@@ -17883,34 +17901,107 @@ if ($ADD==3511)
 			}
 		$dtmf_list .= "</select>";
 
-		echo "<tr bgcolor=#B6D3FC><td align=CENTER colspan=2> 
+		if (eregi("1$|3$|5$|7$|9$", $j))
+			{$bgcolor='bgcolor="#CCFFFF"';} 
+		else
+			{$bgcolor='bgcolor="#99FFCC"';}
+
+		echo "<tr $bgcolor><td align=CENTER colspan=2> 
 		Option: $dtmf_list &nbsp; 
 		Description: <input type=text name=option_description_$j size=40 maxlength=255 value=\"$option_description\"> 
-		Route: <select size=1 name=option_route_$j><option>CALLMENU</option><option>HANGUP</option><option>DID</option><option>EXTENSION</option><option>PHONE</option><option>VOICEMAIL</option><option>AGI</option><option value=\"\">* REMOVE *</option><option selected value=\"$option_route\">$option_route</option></select>		$NWB#vicidial_call_menu-option_value$NWE <BR>
-		Value: <input type=text name=option_route_value_$j size=40 maxlength=255 value=\"$option_route_value\"> &nbsp; 
-		Context: <input type=text name=option_route_value_context_$j size=40 maxlength=255 value=\"$option_route_value_context\"> 
+		Route: <select size=1 name=option_route_$j id=option_route_$j onChange=\"call_menu_option('$j','$option_route','$option_route_value','$option_route_value_context','$choose_height');\">
+			<option>CALLMENU</option>
+			<option>HANGUP</option>
+			<option>DID</option>
+			<option>EXTENSION</option>
+			<option>PHONE</option>
+			<option>VOICEMAIL</option>
+			<option>AGI</option>
+			<option value=\"\">* REMOVE *</option>
+			<option selected value=\"$option_route\">$option_route</option>
+		</select>		$NWB#vicidial_call_menu-option_value$NWE <BR>
+
+		<span id=\"option_value_value_context_$j\" name=\"option_value_value_context_$j\">\n";
+
+		if ($option_route=='CALLMENU')
+			{
+			echo "<span name=option_route_link_$j id=option_route_link_$j>";
+			echo "<a href=\"$PHP_SELF?ADD=3511&menu_id=$option_route_value\">Call Menu:</a>";
+			echo "</span>";
+			echo " <select size=1 name=option_route_value_$j id=option_route_value_$j onChange=\"call_menu_link('$j','CALLMENU');\">$call_menu_list<option SELECTED>$option_route_value</option></select>\n";
+			}
+		if ($option_route=='HANGUP')
+			{
+			echo "Audio File: <input type=text name=option_route_value_$j id=option_route_value_$j size=40 maxlength=255 value=\"$option_route_value\"> <a href=\"javascript:launch_chooser('option_route_value_$j','date',$choose_height);\">audio chooser</a>\n";
+			}
+		if ($option_route=='DID')
+			{
+			$stmt="SELECT did_id from vicidial_inbound_dids where did_pattern='$option_route_value';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$did_id =			$row[0];
+
+			echo "<span name=option_route_link_$j id=option_route_link_$j>";
+			echo "<a href=\"$PHP_SELF?ADD=3311&did_id=$did_id\">DID:</a>";
+			echo "</span>";
+			echo " <select size=1 name=option_route_value_$j id=option_route_value_$j onChange=\"call_menu_link('$j','DID');\">$did_list<option SELECTED>$option_route_value</option></select>\n";
+			}
+		if ($option_route=='EXTENSION')
+			{
+			echo "Extension: <input type=text name=option_route_value_$j id=option_route_value_$j size=20 maxlength=255 value=\"$option_route_value\"> &nbsp; Context: <input type=text name=option_route_value_context_$j id=option_route_value_context_$j size=20 maxlength=255 value=\"$option_route_value_context\">\n";
+			}
+		if ($option_route=='PHONE')
+			{
+			echo "Phone: <select size=1 name=option_route_value_$j id=option_route_value_$j>$phone_list<option SELECTED>$option_route_value</option></select>\n";
+			}
+		if ($option_route=='VOICEMAIL')
+			{
+			echo "Voicemail Box: <input type=text name=option_route_value_$j id=option_route_value_$j size=20 maxlength=255 value=\"$option_route_value\">\n";
+			}
+		if ($option_route=='AGI')
+			{
+			echo "AGI: <input type=text name=option_route_value_$j id=option_route_value_$j size=80 maxlength=255 value=\"$option_route_value\">\n";
+			}
+
+		echo "</span>
 		<BR> &nbsp; </td></tr>\n";
 		$j++;
 		}
 
-	while ($j <= 16)
+	while ($j <= 18)
 		{
+		$choose_height = (($j * 40) + 400);
 		$dtmf_list = "<select size=1 name=option_value_$j><option value=\"\"></option>";
 		$h=0;
-		while ($h <= 16)
+		while ($h <= 18)
 			{
 			$dtmf_list .= "<option value=\"$dtmf[$h]\"> $dtmf_key[$h]</option>";
 			$h++;
 			}
 		$dtmf_list .= "</select>";
 
-		echo "<tr bgcolor=#B6D3FC><td align=CENTER colspan=2> 
+		if (eregi("1$|3$|5$|7$|9$", $j))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+
+		echo "<tr $bgcolor><td align=CENTER colspan=2> 
 		Option: $dtmf_list &nbsp; 
 		Description: <input type=text name=option_description_$j size=40 maxlength=255 value=\"\">  
-		Route: <select size=1 name=option_route_$j><option>CALLMENU</option><option>HANGUP</option><option>DID</option><option>EXTENSION</option><option>PHONE</option><option>VOICEMAIL</option><option>AGI</option><option SELECTED value=\"\"> </option></select> 
+		Route: <select size=1 name=option_route_$j id=option_route_$j onChange=\"call_menu_option('$j','','','','$choose_height');\">
+			<option>CALLMENU</option>
+			<option>HANGUP</option>
+			<option>DID</option>
+			<option>EXTENSION</option>
+			<option>PHONE</option>
+			<option>VOICEMAIL</option>
+			<option>AGI</option>
+			<option SELECTED value=\"\"> </option>
+		</select> 
 		$NWB#vicidial_call_menu-option_value$NWE <BR>
-		Value: <input type=text name=option_route_value_$j size=40 maxlength=255 value=\"\"> &nbsp; 
-		Context: <input type=text name=option_route_value_context_$j size=40 maxlength=255 value=\"\"> 
+
+		<span id=\"option_value_value_context_$j\" name=\"option_value_value_context_$j\">\n";
+		echo "</span>
 		<BR> &nbsp; </td></tr>\n";
 		$j++;
 		}
@@ -21686,9 +21777,11 @@ if ($ADD==999999)
 		<HEAD>
 
 		<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-		<TITLE>VICIDIAL: Server Stats and Reports</TITLE></HEAD><BODY BGCOLOR=WHITE>
-		<FONT SIZE=4><B>VICIDIAL: Server Stats and Reports</B></FONT><BR><BR>
+		<TITLE>Server Stats and Reports</TITLE></HEAD><BODY BGCOLOR=WHITE>
+		<FONT SIZE=4><B>Server Stats and Reports</B></FONT><BR><BR>
 		<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=0><TR><TD VALIGN=TOP>
+		 &nbsp; &nbsp; &nbsp;
+		</TD><TD VALIGN=TOP>
 		<B>Real-Time Reports</B><BR>
 		<UL>
 		<LI><a href="AST_timeonVDADall.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Real-Time Main Report</a></FONT>

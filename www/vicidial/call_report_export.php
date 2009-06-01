@@ -399,7 +399,7 @@ else
 
 
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-	echo "<TITLE>VICIDIAL: Export Calls Report";
+	echo "<TITLE>ADMINISTRATION: Export Calls Report";
 
 	##### BEGIN Set variables to make header show properly #####
 	$ADD =					'100';

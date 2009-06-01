@@ -324,7 +324,7 @@ function ParseFileName() {
 	}
 }
 </script>
-<title>VICIDIAL ADMIN: Lead Loader</title>
+<title>ADMINISTRATION: Lead Loader</title>
 </head>
 <BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 
@@ -355,7 +355,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
   </tr>
   <tr>
 	<td align=right><B><font face="arial, helvetica" size=2>File layout to use:</font></B></td>
-	<td align=left><font face="arial, helvetica" size=2><input type=radio name="file_layout" value="standard" checked>Standard VICIDIAL&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="custom">Custom layout</td>
+	<td align=left><font face="arial, helvetica" size=2><input type=radio name="file_layout" value="standard" checked>Standard Format&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="custom">Custom layout</td>
   </tr>
     <tr>
 	<td align=right width="25%"><font face="arial, helvetica" size=2>Lead Duplicate Check: </font></td>

@@ -201,7 +201,7 @@ if ($action == "AUTOUPLOAD")
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <!-- VERSION: <?php echo $version ?>     BUILD: <?php echo $build ?> -->
-<title>VICIDIAL ADMINISTRATION: Audio Store
+<title>ADMINISTRATION: Audio Store
 <?php
 
 

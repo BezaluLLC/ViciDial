@@ -76,7 +76,7 @@ while ($i < $campaigns_to_print)
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>VICIDIAL: Hopper List</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
+echo "<TITLE>Hopper List Report</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
 #echo "<INPUT TYPE=HIDDEN NAME=server_ip VALUE=\"$server_ip\">\n";
 #echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
@@ -106,7 +106,7 @@ else
 {
 
 
-echo "VICIDIAL: Live Current Hopper List                      $NOW_TIME\n";
+echo "Live Current Hopper List                      $NOW_TIME\n";
 
 echo "\n";
 echo "---------- TOTALS\n";

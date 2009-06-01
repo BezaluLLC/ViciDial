@@ -83,7 +83,7 @@ while ($i < $groups_to_print)
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>VICIDIAL: In-Group Fronter-Closer Stats</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>In-Group Fronter-Closer Stats Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
@@ -148,7 +148,7 @@ if ($shift == 'ALL')
 	$query_date_END = date("Y-m-d H:i:s", mktime(24, 59, 59, $Cqdate[1], $Cqdate[2], $Cqdate[0]));
 	}
 
-echo "VICIDIAL: In-Group Fronter-Closer Stats                      $NOW_TIME\n";
+echo "In-Group Fronter-Closer Stats Report                      $NOW_TIME\n";
 
 echo "\n";
 echo "---------- TOTALS FOR $query_date_BEGIN to $query_date_END\n";

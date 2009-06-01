@@ -36,7 +36,7 @@ if (!isset($phone_pass))
 
 $URL = "http://192.168.1.60/agc/vicidial.php?phone_login=$phone_login&phone_pass=$phone_pass&DB=$DB&VD_login=$VD_login&VD_pass=$VD_pass&VD_campaign=$VD_campaign&relogin=$relogin";
 
-echo"<TITLE>VICIDIAL</TITLE>\n";
+echo"<TITLE>Agent Redirect</TITLE>\n";
 echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=iso-8859-1\">\n";
 echo"<META HTTP-EQUIV=Refresh CONTENT=\"0; URL=$URL\">\n";
 echo"</HEAD>\n";

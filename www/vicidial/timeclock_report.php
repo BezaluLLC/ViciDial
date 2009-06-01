@@ -136,7 +136,7 @@ while ($i < $user_groups_to_print)
 </style>
 
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<TITLE>VICIDIAL: User Timeclock Report
+<TITLE>User Timeclock Report
 
 <?php
 
@@ -242,7 +242,7 @@ echo "</FORM>\n\n";
 echo "<PRE><FONT SIZE=3>\n";
 
 
-echo "VICIDIAL: User Timeclock Report                        $NOW_TIME\n";
+echo "User Timeclock Report                        $NOW_TIME\n";
 
 echo "Time range: $query_date to $end_date\n\n";
 echo "---------- USER TIMECLOCK DETAILS -------------\n";

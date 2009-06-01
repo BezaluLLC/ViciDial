@@ -144,7 +144,7 @@ if (strlen($user_group) > 0)
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>VICIDIAL ADMIN: Timeclock Status
+<title>ADMINISTRATION: Timeclock Status
 <?php
 
 ##### BEGIN Set variables to make header show properly #####

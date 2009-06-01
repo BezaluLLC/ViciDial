@@ -123,7 +123,7 @@ if (strlen($action) < 1)
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <!-- VERSION: <?php echo $version ?>     BUILD: <?php echo $build ?> -->
-<title>VICIDIAL ADMINISTRATION: User Territories
+<title>ADMINISTRATION: User Territories
 <?php
 
 

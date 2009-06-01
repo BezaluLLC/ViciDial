@@ -48,7 +48,7 @@ $auth=$row[0];
 ?>
 <html>
 <head>
-<title>VICIDIAL recent sales lookup</title>
+<title>Recent Sales Lookup</title>
 </head>
 <?php
 include("dbconnect.php");
@@ -94,7 +94,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 <tr bgcolor='#CCCCCC'>
 	<td colspan=3>
 		<table width=100%>
-			<td align=right width=200 nowrap><font class='standard_bold'>Select a VICIDIAL campaign:</td>
+			<td align=right width=200 nowrap><font class='standard_bold'>Select a campaign:</td>
 			<td align=left><select name="dcampaign" onChange="this.form.submit();">
 			<?php 
 			if ($dcampaign) {

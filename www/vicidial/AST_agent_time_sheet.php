@@ -86,7 +86,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>VICIDIAL: Agent Time Sheet";
+echo "<TITLE>Agent Time Sheet";
 
 
 ##### BEGIN Set variables to make header show properly #####
@@ -142,7 +142,7 @@ if ($DB) {echo "$stmt\n";}
 $row=mysql_fetch_row($rslt);
 $full_name = $row[0];
 
-echo "VICIDIAL: Agent Time Sheet                             $NOW_TIME\n";
+echo "Agent Time Sheet                             $NOW_TIME\n";
 
 echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
 echo "---------- AGENT TIME SHEET: $agent - $full_name -------------\n\n";

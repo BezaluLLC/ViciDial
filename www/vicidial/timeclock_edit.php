@@ -218,7 +218,7 @@ $browser = getenv("HTTP_USER_AGENT");
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>VICIDIAL ADMIN: Timeclock Record Edit
+<title>ADMINISTRATION: Timeclock Record Edit
 <?php
 
 ##### BEGIN Set variables to make header show properly #####
@@ -439,7 +439,7 @@ if ($modify_timeclock_log > 0)
 	}
 
 
-echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">VICIDIAL Time Sheet</a>\n";
+echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">Agent Time Sheet</a>\n";
 echo " - <a href=\"./user_stats.php?user=$user\">User Stats</a>\n";
 echo " - <a href=\"./admin.php?ADD=3&user=$user\">Modify User</a>\n";
 

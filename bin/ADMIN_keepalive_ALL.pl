@@ -989,10 +989,6 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 	$i=0;
 	$call_menu_ext = '';
-	$time_check_scheme = '';
-	$time_check_route = '';
-	$time_check_route_value = '';
-	$time_check_route_context = '';
 	while ($sthArows > $i)
 		{
 		$stmtA = "SELECT option_value,option_description,option_route,option_route_value,option_route_value_context FROM vicidial_call_menu_options where menu_id='$menu_id[$i]' order by option_value;";
@@ -1001,6 +997,12 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArowsJ=$sthA->rows;
 		$j=0;
+		$time_check_scheme = '';
+		$time_check_route = '';
+		$time_check_route_value = '';
+		$time_check_route_context = '';
+		$call_menu_timeout_ext = '';
+		$call_menu_invalid_ext = '';
 		$call_menu_options_ext = '';
 		if ($DBX>0) {print "$sthArowsJ|$stmtA\n";}
 		while ($sthArowsJ > $j)
@@ -1019,6 +1021,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$j=0;
 		while ($sthArowsJ > $j)
 			{
+			$PRI=1;
+			$call_menu_line='';
 			if ( ($option_value[$j] =~ /TIMECHECK/) && ($menu_time_check[$i] > 0) && (length($call_time_id[$i])>0) )
 				{
 				$time_check_scheme =			$call_time_id[$i];
@@ -1030,39 +1034,57 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				{
 				if (length($option_description[$j])>0)
 					{
-					$call_menu_options_ext .= "; $option_description[$j]\n";
+					$call_menu_line .= "; $option_description[$j]\n";
+					}
+				if ($option_value[$j] =~ /TIMEOUT/)
+					{
+					$option_value[$j] = 't';
+					if ( (length($menu_timeout_prompt[$i])>0)  && ($menu_timeout_prompt[$i] !~ /NONE/) )
+						{
+						$call_menu_line .= "exten => t,1,Playback($menu_timeout_prompt[$i])\n";
+						$PRI++;
+						}
+					}
+				if ($option_value[$j] =~ /INVALID/)
+					{
+					if ( (length($menu_invalid_prompt[$i])>0) && ($menu_invalid_prompt[$i] !~ /NONE/) )
+						{
+						$call_menu_line .= "exten => i,1,Playback($menu_invalid_prompt[$i])\n";
+						$PRI++;
+						}
+					$option_value[$j] = 'i';
 					}
 				if ($option_route[$j] =~ /AGI/)
 					{
-					$call_menu_options_ext .= "exten => $option_value[$j],1,AGI($option_route_value[$j])\n";
+					$call_menu_line .= "exten => $option_value[$j],$PRI,AGI($option_route_value[$j])\n";
 					}
 				if ($option_route[$j] =~ /CALLMENU/)
 					{
-					$call_menu_options_ext .= "exten => $option_value[$j],1,Goto($option_route_value[$j],s,1)\n";
+					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto($option_route_value[$j],s,1)\n";
 					}
 				if ($option_route[$j] =~ /DID/)
 					{
-					$call_menu_options_ext .= "exten => $option_value[$j],1,Goto(trunkinbound,$option_route_value[$j],1)\n";
+					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(trunkinbound,$option_route_value[$j],1)\n";
 					}
 				if ($option_route[$j] =~ /EXTENSION/)
 					{
 					if (length($option_route_value_context[$j])>0) {$option_route_value_context[$j] = "$option_route_value_context[$j],";}
-					$call_menu_options_ext .= "exten => $option_value[$j],1,Goto($option_route_value_context[$j]$option_route_value[$j],1)\n";
+					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto($option_route_value_context[$j]$option_route_value[$j],1)\n";
 					}
 				if ($option_route[$j] =~ /VOICEMAIL/)
 					{
-					$call_menu_options_ext .= "exten => $option_value[$j],1,Goto(default,85026666666666$option_route_value[$j],1)\n";
+					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(default,85026666666666$option_route_value[$j],1)\n";
 					}
 				if ($option_route[$j] =~ /HANGUP/)
 					{
 					if ( (length($option_route_value[$j])>0) && ($option_route_value[$j] !~ /NONE/) )
 						{
-						$call_menu_options_ext .= "exten => $option_value[$j],1,Playback($option_route_value[$j])\n";
-						$call_menu_options_ext .= "exten => $option_value[$j],n,Hangup\n";
+						$call_menu_line .= "exten => $option_value[$j],$PRI,Playback($option_route_value[$j])\n";
+						$call_menu_line .= "exten => $option_value[$j],n,Hangup\n";
 						}
 					else
 						{
-						$call_menu_options_ext .= "exten => $option_value[$j],1,Hangup\n";
+						$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup\n";
 						}
 					}
 				if ($option_route[$j] =~ /PHONE/)
@@ -1088,9 +1110,22 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 							$d = leading_zero($4);
 							$DIALstring = "$a$S$b$S$c$S$d$S";
 							}
-						$call_menu_options_ext .= "exten => $option_value[$j],1,Goto(default,$DIALstring$Pdialplan,1)\n";
+						$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(default,$DIALstring$Pdialplan,1)\n";
 						}
 					$sthA->finish();
+					}
+
+				if ($option_value[$j] =~ /t/)
+					{
+					$call_menu_timeout_ext = "$call_menu_line";
+					}
+				if ($option_value[$j] =~ /i/)
+					{
+					$call_menu_invalid_ext = "$call_menu_line";
+					}
+				if ($option_value[$j] !~ /i|t/)
+					{
+					$call_menu_options_ext .= "$call_menu_line";
 					}
 				}
 			if ($DBX>0) {print "$i|$j|     $menu_id[$i]|$option_value[$j]\n";}
@@ -1112,30 +1147,45 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$call_menu_ext .= "exten => s,n,WaitExten($menu_timeout[$i])\n";
 			$k++;
 			}
-		$call_menu_ext .= "exten => s,n,Hangup\n";
+	#	$call_menu_ext .= "exten => s,n,Hangup\n";
 		$call_menu_ext .= "\n";
 		$call_menu_ext .= "$call_menu_options_ext";
 		$call_menu_ext .= "\n";
 
-		if ( (length($menu_timeout_prompt[$i])>0)  && ($menu_timeout_prompt[$i] !~ /NONE/) )
+		if (length($call_menu_timeout_ext) < 1)
 			{
-			$call_menu_ext .= "exten => t,1,Playback($menu_timeout_prompt[$i])\n";
-			$call_menu_ext .= "exten => t,n,Goto(s,2)\n";
+			if ( (length($menu_timeout_prompt[$i])>0)  && ($menu_timeout_prompt[$i] !~ /NONE/) )
+				{
+				$call_menu_ext .= "exten => t,1,Playback($menu_timeout_prompt[$i])\n";
+				$call_menu_ext .= "exten => t,n,Goto(s,2)\n";
+				}
+			else
+				{
+				$call_menu_ext .= "exten => t,1,Goto(s,2)\n";
+				}
 			}
 		else
 			{
-			$call_menu_ext .= "exten => t,1,Goto(s,2)\n";
+			$call_menu_ext .= "$call_menu_timeout_ext";
 			}
-		if ( (length($menu_invalid_prompt[$i])>0) && ($menu_invalid_prompt[$i] !~ /NONE/) )
+		if (length($call_menu_invalid_ext) < 1)
 			{
-			$call_menu_ext .= "exten => i,1,Playback($menu_invalid_prompt[$i])\n";
-			$call_menu_ext .= "exten => i,n,Goto(s,2)\n";
+			if ( (length($menu_invalid_prompt[$i])>0) && ($menu_invalid_prompt[$i] !~ /NONE/) )
+				{
+				$call_menu_ext .= "exten => i,1,Playback($menu_invalid_prompt[$i])\n";
+				$call_menu_ext .= "exten => i,n,Goto(s,2)\n";
+				}
+			else
+				{
+				$call_menu_ext .= "exten => i,1,Goto(s,2)\n";
+				}
 			}
 		else
 			{
-			$call_menu_ext .= "exten => i,1,Goto(s,2)\n";
+			$call_menu_ext .= "$call_menu_invalid_ext";
 			}
 
+		$call_menu_ext .= "; hangup\n";
 		$call_menu_ext .= 'exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
 		$call_menu_ext .= "\n\n";
 

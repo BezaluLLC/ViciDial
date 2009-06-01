@@ -207,12 +207,12 @@ $browser = getenv("HTTP_USER_AGENT");
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>VICIDIAL ADMIN: Lead record modification</title>
+<title>ADMINISTRATION: Lead record modification</title>
 </head>
 <BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 <CENTER><FONT FACE="Courier" COLOR=BLACK SIZE=3>
 <?php 
-echo "<a href=\"./admin.php?ADD=100\">VICIDIAL ADMIN</a>: Lead record modification<BR>\n";
+echo "<a href=\"./admin.php?ADD=100\">ADMINISTRATION</a>: Lead record modification<BR>\n";
 
 if ($end_call > 0)
 {

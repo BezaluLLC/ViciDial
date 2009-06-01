@@ -299,6 +299,12 @@ if ($function == 'sounds_list')
 		}
 	else
 		{
+		$server_name = getenv("SERVER_NAME");
+		$server_port = getenv("SERVER_PORT");
+		if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+		  else {$HTTPprotocol = 'http://';}
+		$admDIR = "$HTTPprotocol$server_name:$server_port";
+
 		#############################################
 		##### START SYSTEM_SETTINGS LOOKUP #####
 		$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory FROM system_settings;";
@@ -417,7 +423,7 @@ if ($function == 'sounds_list')
 						echo "<td><a href=\"javascript:choose_file('$file_namesPROMPT[$m]','$comments');\"><font size=1 face=\"Arial,Helvetica\">$file_names[$m]</a></td>\n";
 						echo "<td><font size=1 face=\"Arial,Helvetica\">$file_dates[$m]</td>\n";
 						echo "<td><font size=1 face=\"Arial,Helvetica\">$file_sizes[$m]</td>\n";
-						echo "<td><a href=\"http://$sounds_web_server/$sounds_web_directory/$file_names[$m]\" target=\"_blank\"><font size=1 face=\"Arial,Helvetica\">PLAY</a></td></tr>\n";
+						echo "<td><a href=\"$admDIR/$sounds_web_directory/$file_names[$m]\" target=\"_blank\"><font size=1 face=\"Arial,Helvetica\">PLAY</a></td></tr>\n";
 						}
 					}
 				$k++;

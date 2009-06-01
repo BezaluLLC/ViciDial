@@ -592,7 +592,7 @@ if ($LogiNAJAX > 0)
 
 if ($relogin == 'YES')
 {
-echo "<title>VICIDIAL web client: Re-Login</title>\n";
+echo "<title>Agent web client: Re-Login</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
@@ -630,7 +630,7 @@ if ($user_login_first == 1)
 {
 	if ( (strlen($VD_login)<1) or (strlen($VD_pass)<1) or (strlen($VD_campaign)<1) )
 	{
-	echo "<title>VICIDIAL web client: Campaign Login</title>\n";
+	echo "<title>Agent web client: Campaign Login</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
@@ -674,7 +674,7 @@ if ($user_login_first == 1)
 		$phone_login=$row[0];
 		$phone_pass=$row[1];
 
-		echo "<title>VICIDIAL web client: Login</title>\n";
+		echo "<title>Agent web client: Login</title>\n";
 		echo "</head>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
@@ -713,7 +713,7 @@ if ($user_login_first == 1)
 
 if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
 {
-echo "<title>VICIDIAL web client:  Phone Login</title>\n";
+echo "<title>Agent web client:  Phone Login</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
@@ -937,7 +937,7 @@ $VDloginDISPLAY=0;
 
 		if ( (!eregi(" $VD_campaign ",$LOGallowed_campaigns)) and (!eregi("ALL-CAMPAIGNS",$LOGallowed_campaigns)) )
 			{
-			echo "<title>VICIDIAL web client: VICIDIAL Campaign Login</title>\n";
+			echo "<title>Agent web client: Campaign Login</title>\n";
 			echo "</head>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 			echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
@@ -1276,7 +1276,7 @@ $VDloginDISPLAY=0;
 	}
 	if ($VDloginDISPLAY)
 	{
-	echo "<title>VICIDIAL web client: Campaign Login</title>\n";
+	echo "<title>Agent web client: Campaign Login</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
@@ -1364,7 +1364,7 @@ $row=mysql_fetch_row($rslt);
 $authphone=$row[0];
 if (!$authphone)
 	{
-	echo "<title>VICIDIAL web client: Phone Login Error</title>\n";
+	echo "<title>Agent web client: Phone Login Error</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
@@ -1450,7 +1450,7 @@ else
 			}
 		echo "<!-- Phones balance selection: $phone_login|$pb_server_ip|$past_minutes_date|     |$pb_log -->\n";
 		}
-	echo "<title>VICIDIAL web client</title>\n";
+	echo "<title>Agent web client</title>\n";
 	$stmt="SELECT * from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_query($stmt, $link);
@@ -1844,7 +1844,7 @@ else
 		}
 	else
 		{
-		echo "<title>VICIDIAL web client: VICIDIAL Campaign Login</title>\n";
+		echo "<title>Agent web client: Campaign Login</title>\n";
 		echo "</head>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
@@ -1868,7 +1868,7 @@ else
 		}
 	if (strlen($session_id) < 1)
 		{
-		echo "<title>VICIDIAL web client: VICIDIAL Campaign Login</title>\n";
+		echo "<title>Agent web client: Campaign Login</title>\n";
 		echo "</head>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
@@ -8059,7 +8059,7 @@ echo "</head>\n";
 <span style="position:absolute;left:0px;top:13px;z-index:1;" id="Tabs">
     <table border=0 bgcolor="#FFFFFF" width=<?php echo $MNwidth ?> height=30>
 <TR VALIGN=TOP ALIGN=LEFT>
-<TD ALIGN=LEFT WIDTH=115><A HREF="#" onclick="MainPanelToFront('NO');"><IMG SRC="./images/vdc_tab_vicidial.gif" ALT="VICIDIAL" WIDTH=115 HEIGHT=30 BORDER=0></A></TD>
+<TD ALIGN=LEFT WIDTH=115><A HREF="#" onclick="MainPanelToFront('NO');"><IMG SRC="./images/vdc_tab_vicidial.gif" ALT="MAIN" WIDTH=115 HEIGHT=30 BORDER=0></A></TD>
 <TD ALIGN=LEFT WIDTH=105><A HREF="#" onclick="ScriptPanelToFront();"><IMG SRC="./images/vdc_tab_script.gif" ALT="SCRIPT" WIDTH=105 HEIGHT=30 BORDER=0></A></TD>
 <TD WIDTH=<?php echo $HSwidth ?> VALIGN=MIDDLE ALIGN=CENTER><font class="body_text"> &nbsp; <span id=status>LIVE</span> &nbsp; &nbsp; session ID: <span id=sessionIDspan></span> &nbsp; &nbsp; <span id=AgentStatusCalls></span></TD>
 <TD WIDTH=109><IMG SRC="./images/agc_live_call_OFF.gif" NAME=livecall ALT="Live Call" WIDTH=109 HEIGHT=30 BORDER=0></TD>
@@ -8069,7 +8069,7 @@ echo "</head>\n";
 
 
 <span style="position:absolute;left:0px;top:0px;z-index:3;" id="WelcomeBoxA">
-    <table border=0 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $HKwidth ?>><TR><TD align=center><BR><span id="WelcomeBoxAt">VICIDIAL</span></TD></TR></TABLE>
+    <table border=0 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $HKwidth ?>><TR><TD align=center><BR><span id="WelcomeBoxAt">Agent Screen</span></TD></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:300px;top:<?php echo $MBheight ?>px;z-index:12;" id="ManuaLDiaLButtons"><font class="body_text">
@@ -8438,7 +8438,7 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 
 
 <span style="position:absolute;left:154px;top:65px;z-index:17;" id="ScriptPanel">
-    <table border=0 bgcolor="<?php echo $SCRIPT_COLOR ?>" width=<?php echo $SSwidth ?> height=<?php echo $SSheight ?>><TR><TD align=left valign=top><font class="sb_text"><div class="scroll_script" id="ScriptContents">VICIDIAL SCRIPT</div></font></TD></TR></TABLE>
+    <table border=0 bgcolor="<?php echo $SCRIPT_COLOR ?>" width=<?php echo $SSwidth ?> height=<?php echo $SSheight ?>><TR><TD align=left valign=top><font class="sb_text"><div class="scroll_script" id="ScriptContents">AGENT SCRIPT</div></font></TD></TR></TABLE>
 </span>
 
 
@@ -8448,7 +8448,7 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 
 
 <span style="position:absolute;left:0px;top:<?php echo $HKheight ?>px;z-index:15;" id="MaiNfooterspan">
-<table BGCOLOR="<?php echo $MAIN_COLOR ?>" id="MaiNfooter" width=<?php echo $MNwidth ?>><tr height=32><td height=32><font face="Arial,Helvetica" size=1>VICIDIAL web-client version: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Server: <?php echo $server_ip ?>  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</font><BR>
+<table BGCOLOR="<?php echo $MAIN_COLOR ?>" id="MaiNfooter" width=<?php echo $MNwidth ?>><tr height=32><td height=32><font face="Arial,Helvetica" size=1>Agent web-client version: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Server: <?php echo $server_ip ?>  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</font><BR>
 <font class="body_small"><span id="busycallsdisplay"><a href="#"  onclick="conf_channels_detail('SHOW');">Show conference call channel information</a><BR><BR>&nbsp;</span></font></td><td align=right height=32>
 </td></tr>
 <tr><td colspan=3><span id="outboundcallsspan"></span></td></tr>

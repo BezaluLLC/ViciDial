@@ -87,7 +87,7 @@ while ($i < $servers_to_print)
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>VICIDIAL: Server Performance</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>Server Performance Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
@@ -128,7 +128,7 @@ $query_date_BEGIN = $begin_query_time;
 $query_date_END = $end_query_time;
 
 
-echo "VICIDIAL: Server Performance                             $NOW_TIME\n";
+echo "Server Performance Report                            $NOW_TIME\n";
 
 echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
 echo "---------- TOTALS, PEAKS and AVERAGES\n";

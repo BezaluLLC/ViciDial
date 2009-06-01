@@ -123,7 +123,7 @@ while ($i < $groups_to_print)
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>VICIDIAL ADMIN: User Group Bulk Change
+<title>ADMINISTRATION: User Group Bulk Change
 <?php
 
 ##### BEGIN Set variables to make header show properly #####

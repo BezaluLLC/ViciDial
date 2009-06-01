@@ -177,7 +177,7 @@ else
 	}
 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>VICIDIAL: IVR Stats</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>IVR Stats Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
@@ -258,7 +258,7 @@ else
 {
 
 
-echo "VICIDIAL: IVR Stats: $group_string          $NOW_TIME\n";
+echo "IVR Stats Report: $group_string          $NOW_TIME\n";
 
 
 

@@ -4,7 +4,7 @@
 # Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 
-echo "<title>VICIDIAL Welcome</title>\n";
+echo "<title>ViciDial Welcome</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 echo "<BR><BR><BR><BR><BR><CENTER><TABLE WIDTH=300 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCCCCC\"><TR BGCOLOR=WHITE>";

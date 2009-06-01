@@ -205,7 +205,7 @@ if ($file_download < 1)
 
 	<?php
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-	echo "<TITLE>VICIDIAL: Agent Days Status</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	echo "<TITLE>Agent Status Detail Report</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 	echo "<span style=\"position:absolute;left:0px;top:0px;z-index:20;\" id=admin_header>";
 
 	$short_header=1;
@@ -253,14 +253,14 @@ else
 
 	if ($file_download < 1)
 		{
-		echo "VICIDIAL: Agent Status Detail                     $NOW_TIME\n";
+		echo "Agent Status Detail Report                     $NOW_TIME\n";
 
 		echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
 		echo "---------- AGENT Details -------------\n\n";
 		}
 	else
 		{
-		$file_output .= "VICIDIAL: Agent Status Detail                     $NOW_TIME\n";
+		$file_output .= "Agent Status Detail Report                     $NOW_TIME\n";
 		$file_output .= "Time range: $query_date_BEGIN to $query_date_END\n\n";
 		}
 

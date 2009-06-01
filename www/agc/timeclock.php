@@ -123,7 +123,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		$VDdisplayMESSAGE = "The user and password you entered are not active in the system<BR>Please try again:";
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>VICIDIAL: Timeclock</TITLE>\n";
+		echo"<TITLE>Agent Timeclock</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -228,7 +228,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			$VDdisplayMESSAGE = "You cannot log in or out within 30 seconds of your last login or logout";
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>VICIDIAL: Timeclock</TITLE>\n";
+			echo"<TITLE>Agent Timeclock</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -343,7 +343,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				{$BACKlink = "<A HREF=\"$welcomeURL\"><font color=\"#003333\">BACK to Welcome Screen</font></A>";}
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>VICIDIAL: Timeclock</TITLE>\n";
+			echo"<TITLE>Agent Timeclock</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -382,7 +382,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			}
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>VICIDIAL: Timeclock</TITLE>\n";
+		echo"<TITLE>Agent Timeclock</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -421,7 +421,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 else
 	{
 	echo"<HTML><HEAD>\n";
-	echo"<TITLE>VICIDIAL: Timeclock</TITLE>\n";
+	echo"<TITLE>Agent Timeclock</TITLE>\n";
 	echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo"</HEAD>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";

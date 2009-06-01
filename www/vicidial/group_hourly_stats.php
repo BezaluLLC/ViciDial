@@ -127,7 +127,7 @@ $browser = getenv("HTTP_USER_AGENT");
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>VICIDIAL ADMIN: Group Hourly Stats
+<title>ADMINISTRATION: Group Hourly Stats
 <?php
 
 ##### BEGIN Set variables to make header show properly #####

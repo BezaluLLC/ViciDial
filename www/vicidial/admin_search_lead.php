@@ -107,7 +107,7 @@ $browser = getenv("HTTP_USER_AGENT");
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>VICIDIAL ADMIN: Lead Search
+<title>ADMINISTRATION: Lead Search
 <?php 
 
 ##### BEGIN Set variables to make header show properly #####

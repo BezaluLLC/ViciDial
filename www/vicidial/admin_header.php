@@ -9,6 +9,7 @@
 # 90508-0542 - Added Call Menu option, changed script to use long PHP tags
 # 90514-0605 - Added audio prompt selection functions
 # 90530-1206 - Changed List Mix to allow for 40 mixes and a default populate option
+# 90531-2339 - Added Dynamic options for Call Menu
 #
 
 
@@ -84,111 +85,94 @@ echo "var epoch = '" . date("U") . "';\n";
 
 if ($TCedit_javascript > 0)
 	{
- ?>
+	 ?>
 
-function run_submit()
-	{
-	calculate_hours();
-	var go_submit = document.getElementById("go_submit");
-	if (go_submit.disabled == false)
+	function run_submit()
 		{
-		document.edit_log.submit();
+		calculate_hours();
+		var go_submit = document.getElementById("go_submit");
+		if (go_submit.disabled == false)
+			{
+			document.edit_log.submit();
+			}
 		}
-	}
 
-// Calculate login time
-function calculate_hours() 
-	{
-	var now_epoch = '<?php echo $StarTtimE ?>';
-	var i=0;
-	var total_percent=0;
-	var SPANlogin_time = document.getElementById("LOGINlogin_time");
-	var LI_date = document.getElementById("LOGINbegin_date");
-	var LO_date = document.getElementById("LOGOUTbegin_date");
-	var LI_datetime = LI_date.value;
-	var LO_datetime = LO_date.value;
-	var LI_datetime_array=LI_datetime.split(" ");
-	var LI_date_array=LI_datetime_array[0].split("-");
-	var LI_time_array=LI_datetime_array[1].split(":");
-	var LO_datetime_array=LO_datetime.split(" ");
-	var LO_date_array=LO_datetime_array[0].split("-");
-	var LO_time_array=LO_datetime_array[1].split(":");
-
-	// Calculate milliseconds since 1970 for each date string and find diff
-	var LI_sec = ( ( (LI_time_array[2] * 1) * 1000) );
-	var LI_min = ( ( ( (LI_time_array[1] * 1) * 1000) * 60 ) );
-	var LI_hour = ( ( ( (LI_time_array[0] * 1) * 1000) * 3600 ) );
-	var LI_date_epoch = Date.parse(LI_date_array[0] + '/' + LI_date_array[1] + '/' + LI_date_array[2]);
-	var LI_epoch = (LI_date_epoch + LI_sec + LI_min + LI_hour);
-	var LO_sec = ( ( (LO_time_array[2] * 1) * 1000) );
-	var LO_min = ( ( ( (LO_time_array[1] * 1) * 1000) * 60 ) );
-	var LO_hour = ( ( ( (LO_time_array[0] * 1) * 1000) * 3600 ) );
-	var LO_date_epoch = Date.parse(LO_date_array[0] + '/' + LO_date_array[1] + '/' + LO_date_array[2]);
-	var LO_epoch = (LO_date_epoch + LO_sec + LO_min + LO_hour);
-	var temp_LI_epoch = (LI_epoch / 1000 );
-	var temp_LO_epoch = (LO_epoch / 1000 );
-	var epoch_diff = ( (LO_epoch - LI_epoch) / 1000 );
-	var temp_diff = epoch_diff;
-
-	document.getElementById("login_time").innerHTML = "ERROR, Please check date fields";
-
-	var go_submit = document.getElementById("go_submit");
-	go_submit.disabled = true;
-	// length is a positive number and no more than 24 hours, datetime is earlier than right now
-	if ( (epoch_diff < 86401) && (epoch_diff > 0) && (temp_LI_epoch < now_epoch) && (temp_LO_epoch < now_epoch) )
+	// Calculate login time
+	function calculate_hours() 
 		{
-		go_submit.disabled = false;
+		var now_epoch = '<?php echo $StarTtimE ?>';
+		var i=0;
+		var total_percent=0;
+		var SPANlogin_time = document.getElementById("LOGINlogin_time");
+		var LI_date = document.getElementById("LOGINbegin_date");
+		var LO_date = document.getElementById("LOGOUTbegin_date");
+		var LI_datetime = LI_date.value;
+		var LO_datetime = LO_date.value;
+		var LI_datetime_array=LI_datetime.split(" ");
+		var LI_date_array=LI_datetime_array[0].split("-");
+		var LI_time_array=LI_datetime_array[1].split(":");
+		var LO_datetime_array=LO_datetime.split(" ");
+		var LO_date_array=LO_datetime_array[0].split("-");
+		var LO_time_array=LO_datetime_array[1].split(":");
 
-		hours = Math.floor(temp_diff / (60 * 60)); 
-		temp_diff -= hours * (60 * 60);
+		// Calculate milliseconds since 1970 for each date string and find diff
+		var LI_sec = ( ( (LI_time_array[2] * 1) * 1000) );
+		var LI_min = ( ( ( (LI_time_array[1] * 1) * 1000) * 60 ) );
+		var LI_hour = ( ( ( (LI_time_array[0] * 1) * 1000) * 3600 ) );
+		var LI_date_epoch = Date.parse(LI_date_array[0] + '/' + LI_date_array[1] + '/' + LI_date_array[2]);
+		var LI_epoch = (LI_date_epoch + LI_sec + LI_min + LI_hour);
+		var LO_sec = ( ( (LO_time_array[2] * 1) * 1000) );
+		var LO_min = ( ( ( (LO_time_array[1] * 1) * 1000) * 60 ) );
+		var LO_hour = ( ( ( (LO_time_array[0] * 1) * 1000) * 3600 ) );
+		var LO_date_epoch = Date.parse(LO_date_array[0] + '/' + LO_date_array[1] + '/' + LO_date_array[2]);
+		var LO_epoch = (LO_date_epoch + LO_sec + LO_min + LO_hour);
+		var temp_LI_epoch = (LI_epoch / 1000 );
+		var temp_LO_epoch = (LO_epoch / 1000 );
+		var epoch_diff = ( (LO_epoch - LI_epoch) / 1000 );
+		var temp_diff = epoch_diff;
 
-		mins = Math.floor(temp_diff / 60); 
-		temp_diff -= mins * 60;
+		document.getElementById("login_time").innerHTML = "ERROR, Please check date fields";
 
-		secs = Math.floor(temp_diff); 
-		temp_diff -= secs;
+		var go_submit = document.getElementById("go_submit");
+		go_submit.disabled = true;
+		// length is a positive number and no more than 24 hours, datetime is earlier than right now
+		if ( (epoch_diff < 86401) && (epoch_diff > 0) && (temp_LI_epoch < now_epoch) && (temp_LO_epoch < now_epoch) )
+			{
+			go_submit.disabled = false;
 
-		document.getElementById("login_time").innerHTML = hours + ":" + mins;
+			hours = Math.floor(temp_diff / (60 * 60)); 
+			temp_diff -= hours * (60 * 60);
 
-		var form_LI_epoch = document.getElementById("LOGINepoch");
-		var form_LO_epoch = document.getElementById("LOGOUTepoch");
-		form_LI_epoch.value = (LI_epoch / 1000);
-		form_LO_epoch.value = (LO_epoch / 1000);
+			mins = Math.floor(temp_diff / 60); 
+			temp_diff -= mins * 60;
+
+			secs = Math.floor(temp_diff); 
+			temp_diff -= secs;
+
+			document.getElementById("login_time").innerHTML = hours + ":" + mins;
+
+			var form_LI_epoch = document.getElementById("LOGINepoch");
+			var form_LO_epoch = document.getElementById("LOGOUTepoch");
+			form_LI_epoch.value = (LI_epoch / 1000);
+			form_LO_epoch.value = (LO_epoch / 1000);
+			}
 		}
-	}
 
 
 
-<?php
+	<?php
 	}
 ######################
 # ADD=31 or 34 and SUB=29 for list mixes
 ######################
 if ( ( ($ADD==34) or ($ADD==31) or ($ADD==49) ) and ($SUB==29) and ($LOGmodify_campaigns==1) and ( (eregi("$campaign_id",$LOGallowed_campaigns)) or (eregi("ALL-CAMPAIGNS",$LOGallowed_campaigns)) ) ) 
-{
-
-?>
-// List Mix status add and remove
-function mod_mix_status(stage,vcl_id,entry) 
 	{
-	if (stage=="ALL")
-		{
-		var count=0;
-		var ROnew_statuses = document.getElementById("ROstatus_X_" + vcl_id);
 
-		while (count < entry)
-			{
-			var old_statuses = document.getElementById("status_" + count + "_" + vcl_id);
-			var ROold_statuses = document.getElementById("ROstatus_" + count + "_" + vcl_id);
-
-			old_statuses.value = ROnew_statuses.value;
-			ROold_statuses.value = ROnew_statuses.value;
-			count++;
-			}
-		}
-	else
+	?>
+	// List Mix status add and remove
+	function mod_mix_status(stage,vcl_id,entry) 
 		{
-		if (stage=="EMPTY")
+		if (stage=="ALL")
 			{
 			var count=0;
 			var ROnew_statuses = document.getElementById("ROstatus_X_" + vcl_id);
@@ -197,291 +181,461 @@ function mod_mix_status(stage,vcl_id,entry)
 				{
 				var old_statuses = document.getElementById("status_" + count + "_" + vcl_id);
 				var ROold_statuses = document.getElementById("ROstatus_" + count + "_" + vcl_id);
-				
-				if (ROold_statuses.value.length < 3)
-					{
-					old_statuses.value = ROnew_statuses.value;
-					ROold_statuses.value = ROnew_statuses.value;
-					}
+
+				old_statuses.value = ROnew_statuses.value;
+				ROold_statuses.value = ROnew_statuses.value;
 				count++;
 				}
 			}
-
 		else
 			{
-			var mod_status = document.getElementById("dial_status_" + entry + "_" + vcl_id);
-			if (mod_status.value.length < 1)
+			if (stage=="EMPTY")
 				{
-				alert("You must select a status first");
+				var count=0;
+				var ROnew_statuses = document.getElementById("ROstatus_X_" + vcl_id);
+
+				while (count < entry)
+					{
+					var old_statuses = document.getElementById("status_" + count + "_" + vcl_id);
+					var ROold_statuses = document.getElementById("ROstatus_" + count + "_" + vcl_id);
+					
+					if (ROold_statuses.value.length < 3)
+						{
+						old_statuses.value = ROnew_statuses.value;
+						ROold_statuses.value = ROnew_statuses.value;
+						}
+					count++;
+					}
 				}
+
 			else
 				{
-				var old_statuses = document.getElementById("status_" + entry + "_" + vcl_id);
-				var ROold_statuses = document.getElementById("ROstatus_" + entry + "_" + vcl_id);
-				var MODstatus = new RegExp(" " + mod_status.value + " ","g");
-				if (stage=="ADD")
+				var mod_status = document.getElementById("dial_status_" + entry + "_" + vcl_id);
+				if (mod_status.value.length < 1)
 					{
-					if (old_statuses.value.match(MODstatus))
-						{
-						alert("The status " + mod_status.value + " is already present");
-						}
-					else
-						{
-						var new_statuses = " " + mod_status.value + "" + old_statuses.value;
-						old_statuses.value = new_statuses;
-						ROold_statuses.value = new_statuses;
-						mod_status.value = "";
-						}
+					alert("You must select a status first");
 					}
-				if (stage=="REMOVE")
+				else
 					{
+					var old_statuses = document.getElementById("status_" + entry + "_" + vcl_id);
+					var ROold_statuses = document.getElementById("ROstatus_" + entry + "_" + vcl_id);
 					var MODstatus = new RegExp(" " + mod_status.value + " ","g");
-					old_statuses.value = old_statuses.value.replace(MODstatus, " ");
-					ROold_statuses.value = ROold_statuses.value.replace(MODstatus, " ");
+					if (stage=="ADD")
+						{
+						if (old_statuses.value.match(MODstatus))
+							{
+							alert("The status " + mod_status.value + " is already present");
+							}
+						else
+							{
+							var new_statuses = " " + mod_status.value + "" + old_statuses.value;
+							old_statuses.value = new_statuses;
+							ROold_statuses.value = new_statuses;
+							mod_status.value = "";
+							}
+						}
+					if (stage=="REMOVE")
+						{
+						var MODstatus = new RegExp(" " + mod_status.value + " ","g");
+						old_statuses.value = old_statuses.value.replace(MODstatus, " ");
+						ROold_statuses.value = ROold_statuses.value.replace(MODstatus, " ");
+						}
 					}
 				}
 			}
 		}
-	}
 
-// List Mix percent difference calculation and warning message
-function mod_mix_percent(vcl_id,entries) 
-	{
-	var i=0;
-	var total_percent=0;
-	var percent_diff='';
-	while(i < entries)
-		{
-		var mod_percent_field = document.getElementById("percentage_" + i + "_" + vcl_id);
-		temp_percent = mod_percent_field.value * 1;
-		total_percent = (total_percent + temp_percent);
-		i++;
-		}
-
-	var mod_diff_percent = document.getElementById("PCT_DIFF_" + vcl_id);
-	percent_diff = (total_percent - 100);
-	if (percent_diff > 0)
-		{
-		percent_diff = '+' + percent_diff;
-		}
-	var mix_list_submit = document.getElementById("submit_" + vcl_id);
-	if ( (percent_diff > 0) || (percent_diff < 0) )
-		{
-		mix_list_submit.disabled = true;
-		document.getElementById("ERROR_" + vcl_id).innerHTML = "<font color=red><B>The Difference % must be 0</B></font>";
-		}
-	else
-		{
-		mix_list_submit.disabled = false;
-		document.getElementById("ERROR_" + vcl_id).innerHTML = "";
-		}
-
-	mod_diff_percent.value = percent_diff;
-	}
-
-function submit_mix(vcl_id,entries) 
-	{
-	var h=1;
-	var j=1;
-	var list_mix_container='';
-	var mod_list_mix_container_field = document.getElementById("list_mix_container_" + vcl_id);
-	while(h < 41)
+	// List Mix percent difference calculation and warning message
+	function mod_mix_percent(vcl_id,entries) 
 		{
 		var i=0;
+		var total_percent=0;
+		var percent_diff='';
 		while(i < entries)
 			{
-			var mod_list_id_field = document.getElementById("list_id_" + i + "_" + vcl_id);
-			var mod_priority_field = document.getElementById("priority_" + i + "_" + vcl_id);
 			var mod_percent_field = document.getElementById("percentage_" + i + "_" + vcl_id);
-			var mod_statuses_field = document.getElementById("status_" + i + "_" + vcl_id);
-			if (mod_priority_field.value==h)
-				{
-				list_mix_container = list_mix_container + mod_list_id_field.value + "|" + j + "|" + mod_percent_field.value + "|" + mod_statuses_field.value + "|:";
-				j++;
-				}
+			temp_percent = mod_percent_field.value * 1;
+			total_percent = (total_percent + temp_percent);
 			i++;
 			}
-		h++;
+
+		var mod_diff_percent = document.getElementById("PCT_DIFF_" + vcl_id);
+		percent_diff = (total_percent - 100);
+		if (percent_diff > 0)
+			{
+			percent_diff = '+' + percent_diff;
+			}
+		var mix_list_submit = document.getElementById("submit_" + vcl_id);
+		if ( (percent_diff > 0) || (percent_diff < 0) )
+			{
+			mix_list_submit.disabled = true;
+			document.getElementById("ERROR_" + vcl_id).innerHTML = "<font color=red><B>The Difference % must be 0</B></font>";
+			}
+		else
+			{
+			mix_list_submit.disabled = false;
+			document.getElementById("ERROR_" + vcl_id).innerHTML = "";
+			}
+
+		mod_diff_percent.value = percent_diff;
 		}
-	mod_list_mix_container_field.value = list_mix_container;
-	var form_to_submit = document.getElementById("" + vcl_id);
-	form_to_submit.submit();
+
+	function submit_mix(vcl_id,entries) 
+		{
+		var h=1;
+		var j=1;
+		var list_mix_container='';
+		var mod_list_mix_container_field = document.getElementById("list_mix_container_" + vcl_id);
+		while(h < 41)
+			{
+			var i=0;
+			while(i < entries)
+				{
+				var mod_list_id_field = document.getElementById("list_id_" + i + "_" + vcl_id);
+				var mod_priority_field = document.getElementById("priority_" + i + "_" + vcl_id);
+				var mod_percent_field = document.getElementById("percentage_" + i + "_" + vcl_id);
+				var mod_statuses_field = document.getElementById("status_" + i + "_" + vcl_id);
+				if (mod_priority_field.value==h)
+					{
+					list_mix_container = list_mix_container + mod_list_id_field.value + "|" + j + "|" + mod_percent_field.value + "|" + mod_statuses_field.value + "|:";
+					j++;
+					}
+				i++;
+				}
+			h++;
+			}
+		mod_list_mix_container_field.value = list_mix_container;
+		var form_to_submit = document.getElementById("" + vcl_id);
+		form_to_submit.submit();
+		}
+	<?php
 	}
-<?php
-}
-?>
+	?>
 
-function openNewWindow(url) {
-  window.open (url,"",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');
-}
-function scriptInsertField() {
-	openField = '--A--';
-	closeField = '--B--';
-	var textBox = document.scriptForm.script_text;
-	var scriptIndex = document.getElementById("selectedField").selectedIndex;
-	var insValue =  document.getElementById('selectedField').options[scriptIndex].value;
-  if (document.selection) {
-	//IE
-	textBox = document.scriptForm.script_text;
-	insValue = document.scriptForm.selectedField.options[document.scriptForm.selectedField.selectedIndex].text;
-	textBox.focus();
-	sel = document.selection.createRange();
-	sel.text = openField + insValue + closeField;
-  } else if (textBox.selectionStart || textBox.selectionStart == 0) {
-	//Mozilla
-	var startPos = textBox.selectionStart;
-	var endPos = textBox.selectionEnd;
-	textBox.value = textBox.value.substring(0, startPos)
-	+ openField + insValue + closeField
-	+ textBox.value.substring(endPos, textBox.value.length);
-  } else {
-	textBox.value += openField + insValue + closeField;
-  }
-}
+	function openNewWindow(url) {
+	  window.open (url,"",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');
+	}
+	function scriptInsertField() {
+		openField = '--A--';
+		closeField = '--B--';
+		var textBox = document.scriptForm.script_text;
+		var scriptIndex = document.getElementById("selectedField").selectedIndex;
+		var insValue =  document.getElementById('selectedField').options[scriptIndex].value;
+	  if (document.selection) {
+		//IE
+		textBox = document.scriptForm.script_text;
+		insValue = document.scriptForm.selectedField.options[document.scriptForm.selectedField.selectedIndex].text;
+		textBox.focus();
+		sel = document.selection.createRange();
+		sel.text = openField + insValue + closeField;
+	  } else if (textBox.selectionStart || textBox.selectionStart == 0) {
+		//Mozilla
+		var startPos = textBox.selectionStart;
+		var endPos = textBox.selectionEnd;
+		textBox.value = textBox.value.substring(0, startPos)
+		+ openField + insValue + closeField
+		+ textBox.value.substring(endPos, textBox.value.length);
+	  } else {
+		textBox.value += openField + insValue + closeField;
+	  }
+	}
 
-<?php
+	<?php
 
 #### Javascript for auto-generate of user ID Button
 if ( ($ADD==1) or ($ADD=="1A") )
-{
-?>
-function user_auto()
 	{
-	var user_toggle = document.getElementById("user_toggle");
-	var user_field = document.getElementById("user");
-	if (user_toggle.value < 1)
+	?>
+	function user_auto()
 		{
-		user_field.value = 'AUTOGENERATEZZZ';
-		user_field.disabled = true;
-		user_toggle.value = 1;
-		}
-	else
-		{
-		user_field.value = '';
-		user_field.disabled = false;
-		user_toggle.value = 0;
-		}
-	}
-
-function user_submit()
-	{
-	var user_field = document.getElementById("user");
-	user_field.disabled = false;
-	document.userform.submit();
-	}
-
-<?php
-}
-
-#### Javascript for auto-generate of user ID Button
-else
-{
-?>
-function launch_chooser(fieldname,stage,vposition)
-	{
-	var audiolistURL = "./non_agent_api.php";
-	var audiolistQuery = "source=admin&function=sounds_list&user=" + user + "&pass=" + pass + "&format=selectframe&stage=" + stage + "&comments=" + fieldname;
-	var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:560;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="560" height="460" STYLE="z-index:2"> </iframe>';
-
-	document.getElementById("audio_chooser_span").style.position = "absolute";
-	document.getElementById("audio_chooser_span").style.left = "300px";
-	document.getElementById("audio_chooser_span").style.top = vposition + "px";
-	document.getElementById("audio_chooser_span").style.visibility = 'visible';
-	document.getElementById("audio_chooser_span").innerHTML = Iframe_content;
-	}
-
-function close_chooser()
-	{
-	document.getElementById("audio_chooser_span").style.visibility = 'hidden';
-	document.getElementById("audio_chooser_span").innerHTML = '';
-	}
-
-
-function user_submit()
-	{
-	var user_field = document.getElementById("user");
-	user_field.disabled = false;
-	document.userform.submit();
-	}
-
-<?php
-}
-
-### Javascript for shift end-time calculation and display
-if ( ($ADD==131111111) or ($ADD==331111111) or ($ADD==431111111) )
-{
-?>
-function shift_time()
-	{
-	var start_time = document.getElementById("shift_start_time");
-	var end_time = document.getElementById("shift_end_time");
-	var length = document.getElementById("shift_length");
-
-	var st_value = start_time.value;
-	var et_value = end_time.value;
-	while (st_value.length < 4) {st_value = "0" + st_value;}
-	while (et_value.length < 4) {et_value = "0" + et_value;}
-	var st_hour=st_value.substring(0,2);
-	var st_min=st_value.substring(2,4);
-	var et_hour=et_value.substring(0,2);
-	var et_min=et_value.substring(2,4);
-	if (st_hour > 23) {st_hour = 23;}
-	if (et_hour > 23) {et_hour = 23;}
-	if (st_min > 59) {st_min = 59;}
-	if (et_min > 59) {et_min = 59;}
-	start_time.value = st_hour + "" + st_min;
-	end_time.value = et_hour + "" + et_min;
-
-	var start_time_hour=start_time.value.substring(0,2);
-	var start_time_min=start_time.value.substring(2,4);
-	var end_time_hour=end_time.value.substring(0,2);
-	var end_time_min=end_time.value.substring(2,4);
-	start_time_hour=(start_time_hour * 1);
-	start_time_min=(start_time_min * 1);
-	end_time_hour=(end_time_hour * 1);
-	end_time_min=(end_time_min * 1);
-
-	if (start_time.value == end_time.value)
-		{
-		var shift_length = '24:00';
-		}
-	else
-		{
-		if ( (start_time_hour > end_time_hour) || ( (start_time_hour == end_time_hour) && (start_time_min > end_time_min) ) )
+		var user_toggle = document.getElementById("user_toggle");
+		var user_field = document.getElementById("user");
+		if (user_toggle.value < 1)
 			{
-			var shift_hour = ( (24 - start_time_hour) + end_time_hour);
-			var shift_minute = ( (60 - start_time_min) + end_time_min);
-			if (shift_minute >= 60) 
-				{
-				shift_minute = (shift_minute - 60);
-				}
-			else
-				{
-				shift_hour = (shift_hour - 1);
-				}
+			user_field.value = 'AUTOGENERATEZZZ';
+			user_field.disabled = true;
+			user_toggle.value = 1;
 			}
 		else
 			{
-			var shift_hour = (end_time_hour - start_time_hour);
-			var shift_minute = (end_time_min - start_time_min);
+			user_field.value = '';
+			user_field.disabled = false;
+			user_toggle.value = 0;
 			}
-		if (shift_minute < 0) 
-			{
-			shift_minute = (shift_minute + 60);
-			shift_hour = (shift_hour - 1);
-			}
-
-		if (shift_hour < 10) {shift_hour = '0' + shift_hour}
-		if (shift_minute < 10) {shift_minute = '0' + shift_minute}
-		var shift_length = shift_hour + ':' + shift_minute;
 		}
-//	alert(start_time_hour + '|' + start_time_min + '|' + end_time_hour + '|' + end_time_min + '|--|' + shift_hour + ':' + shift_minute + '|' + shift_length + '|');
 
-	length.value = shift_length;
+	function user_submit()
+		{
+		var user_field = document.getElementById("user");
+		user_field.disabled = false;
+		document.userform.submit();
+		}
+
+	<?php
 	}
 
-<?php
-}
+#### Javascript for auto-generate of user ID Button
+else
+	{
+	?>
+	function launch_chooser(fieldname,stage,vposition)
+		{
+		var audiolistURL = "./non_agent_api.php";
+		var audiolistQuery = "source=admin&function=sounds_list&user=" + user + "&pass=" + pass + "&format=selectframe&stage=" + stage + "&comments=" + fieldname;
+		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:560;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="560" height="460" STYLE="z-index:2"> </iframe>';
+
+		document.getElementById("audio_chooser_span").style.position = "absolute";
+		document.getElementById("audio_chooser_span").style.left = "300px";
+		document.getElementById("audio_chooser_span").style.top = vposition + "px";
+		document.getElementById("audio_chooser_span").style.visibility = 'visible';
+		document.getElementById("audio_chooser_span").innerHTML = Iframe_content;
+		}
+
+	function close_chooser()
+		{
+		document.getElementById("audio_chooser_span").style.visibility = 'hidden';
+		document.getElementById("audio_chooser_span").innerHTML = '';
+		}
+
+
+	function user_submit()
+		{
+		var user_field = document.getElementById("user");
+		user_field.disabled = false;
+		document.userform.submit();
+		}
+
+	<?php
+	}
+
+### Javascript for shift end-time calculation and display
+if ( ($ADD==131111111) or ($ADD==331111111) or ($ADD==431111111) )
+	{
+	?>
+	function shift_time()
+		{
+		var start_time = document.getElementById("shift_start_time");
+		var end_time = document.getElementById("shift_end_time");
+		var length = document.getElementById("shift_length");
+
+		var st_value = start_time.value;
+		var et_value = end_time.value;
+		while (st_value.length < 4) {st_value = "0" + st_value;}
+		while (et_value.length < 4) {et_value = "0" + et_value;}
+		var st_hour=st_value.substring(0,2);
+		var st_min=st_value.substring(2,4);
+		var et_hour=et_value.substring(0,2);
+		var et_min=et_value.substring(2,4);
+		if (st_hour > 23) {st_hour = 23;}
+		if (et_hour > 23) {et_hour = 23;}
+		if (st_min > 59) {st_min = 59;}
+		if (et_min > 59) {et_min = 59;}
+		start_time.value = st_hour + "" + st_min;
+		end_time.value = et_hour + "" + et_min;
+
+		var start_time_hour=start_time.value.substring(0,2);
+		var start_time_min=start_time.value.substring(2,4);
+		var end_time_hour=end_time.value.substring(0,2);
+		var end_time_min=end_time.value.substring(2,4);
+		start_time_hour=(start_time_hour * 1);
+		start_time_min=(start_time_min * 1);
+		end_time_hour=(end_time_hour * 1);
+		end_time_min=(end_time_min * 1);
+
+		if (start_time.value == end_time.value)
+			{
+			var shift_length = '24:00';
+			}
+		else
+			{
+			if ( (start_time_hour > end_time_hour) || ( (start_time_hour == end_time_hour) && (start_time_min > end_time_min) ) )
+				{
+				var shift_hour = ( (24 - start_time_hour) + end_time_hour);
+				var shift_minute = ( (60 - start_time_min) + end_time_min);
+				if (shift_minute >= 60) 
+					{
+					shift_minute = (shift_minute - 60);
+					}
+				else
+					{
+					shift_hour = (shift_hour - 1);
+					}
+				}
+			else
+				{
+				var shift_hour = (end_time_hour - start_time_hour);
+				var shift_minute = (end_time_min - start_time_min);
+				}
+			if (shift_minute < 0) 
+				{
+				shift_minute = (shift_minute + 60);
+				shift_hour = (shift_hour - 1);
+				}
+
+			if (shift_hour < 10) {shift_hour = '0' + shift_hour}
+			if (shift_minute < 10) {shift_minute = '0' + shift_minute}
+			var shift_length = shift_hour + ':' + shift_minute;
+			}
+	//	alert(start_time_hour + '|' + start_time_min + '|' + end_time_hour + '|' + end_time_min + '|--|' + shift_hour + ':' + shift_minute + '|' + shift_length + '|');
+
+		length.value = shift_length;
+		}
+
+	<?php
+	}
+
+
+### Javascript for dynamic call menu option value/context entries
+if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511) )
+	{
+	$stmt="select menu_id,menu_name from vicidial_call_menu;";
+	$rslt=mysql_query($stmt, $link);
+	$menus_to_print = mysql_num_rows($rslt);
+	$call_menu_list='';
+	$i=0;
+	while ($i < $menus_to_print)
+		{
+		$row=mysql_fetch_row($rslt);
+		$call_menu_list .= "<option value=\"$row[0]\">$row[0] - $row[1]</option>";
+		$i++;
+		}
+
+	$stmt="select did_pattern,did_description,did_route from vicidial_inbound_dids where did_active='Y';";
+	$rslt=mysql_query($stmt, $link);
+	$dids_to_print = mysql_num_rows($rslt);
+	$did_list='';
+	$i=0;
+	while ($i < $dids_to_print)
+		{
+		$row=mysql_fetch_row($rslt);
+		$did_list .= "<option value=\"$row[0]\">$row[0] - $row[1] - $row[2]</option>";
+		$i++;
+		}
+
+	$stmt="select login,server_ip,extension,dialplan_number from phones where active='Y';";
+	$rslt=mysql_query($stmt, $link);
+	$phones_to_print = mysql_num_rows($rslt);
+	$phone_list='';
+	$i=0;
+	while ($i < $phones_to_print)
+		{
+		$row=mysql_fetch_row($rslt);
+		$phone_list .= "<option value=\"$row[0]\">$row[0] - $row[1] - $row[2] - $row[3]</option>";
+		$i++;
+		}
+
+	?>
+	function call_menu_option(option,route,value,value_context,chooser_height)
+		{
+		var call_menu_list = '<?php echo $call_menu_list ?>';
+		var did_list = '<?php echo $did_list ?>';
+		var phone_list = '<?php echo $phone_list ?>';
+		var selected_value = '';
+		var selected_context = '';
+		var new_content = '';
+
+		var select_list = document.getElementById("option_route_" + option);
+		var selected_route = select_list.value;
+		var span_to_update = document.getElementById("option_value_value_context_" + option);
+
+		if (selected_route=='CALLMENU')
+			{
+			if (route == selected_route)
+				{
+				selected_value = '<option SELECTED value="' + value + '">' + value + "</option>\n";
+				}
+			new_content = 'Call Menu: <select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + '>' + call_menu_list + "\n" + selected_value + '</select>';
+			}
+		if (selected_route=='HANGUP')
+			{
+			if (route == selected_route)
+				{
+				selected_value = value;
+				}
+			new_content = "Audio File: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=40 maxlength=255 value=\"" + selected_value + "\"> <a href=\"javascript:launch_chooser('option_route_value_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+			}
+		if (selected_route=='DID')
+			{
+			if (route == selected_route)
+				{
+				selected_value = '<option SELECTED value="' + value + '">' + value + "</option>\n";
+				}
+			new_content = 'DID: <select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + '>' + did_list + "\n" + selected_value + '</select>';
+			}
+		if (selected_route=='EXTENSION')
+			{
+			if (route == selected_route)
+				{
+				selected_value = value;
+				selected_context = value_context;
+				}
+			new_content = "Extension: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=20 maxlength=255 value=\"" + selected_value + "\"> &nbsp; Context: <input type=text name=option_route_value_context_" + option + " id=option_route_value_context_" + option + " size=20 maxlength=255 value=\"" + selected_context + "\"> ";
+			}
+		if (selected_route=='PHONE')
+			{
+			if (route == selected_route)
+				{
+				selected_value = '<option SELECTED value="' + value + '">' + value + "</option>\n";
+				}
+			new_content = 'Phone: <select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + '>' + phone_list + "\n" + selected_value + '</select>';
+			}
+		if (selected_route=='VOICEMAIL')
+			{
+			if (route == selected_route)
+				{
+				selected_value = value;
+				}
+			new_content = "Voicemail Box: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=20 maxlength=255 value=\"" + selected_value + "\"> ";
+			}
+		if (selected_route=='AGI')
+			{
+			if (route == selected_route)
+				{
+				selected_value = value;
+				}
+			new_content = "AGI: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=80 maxlength=255 value=\"" + selected_value + "\"> ";
+			}
+
+		if (new_content.length < 1)
+			{new_content = selected_route}
+
+		span_to_update.innerHTML = new_content;
+		}
+
+	<?php
+	}
+
+### Javascript for dynamic call menu option value/context entries
+if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511) )
+	{
+
+	?>
+	function call_menu_link(option,route)
+		{
+		var selected_value = '';
+		var new_content = '';
+
+		var select_list = document.getElementById("option_route_value_" + option);
+		var selected_value = select_list.value;
+		var span_to_update = document.getElementById("option_route_link_" + option);
+
+		if (route=='CALLMENU')
+			{
+			new_content = "<a href=\"admin.php?ADD=3511&menu_id=" + selected_value + "\">Call Menu:</a>";
+			}
+		if (route=='DID')
+			{
+			new_content = "<a href=\"admin.php?ADD=3311&did_pattern=" + selected_value + "\">DID:</a>";
+			}
+
+		if (new_content.length < 1)
+			{new_content = selected_route}
+
+		span_to_update.innerHTML = new_content;
+		}
+
+	<?php
+	}
 echo "</script>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -649,21 +803,21 @@ $admin_home_url_LU =	$row[0];
 		?>
 		<TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show In-Groups </a>
-		</TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New In-Group </a>
-		</TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1211"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy In-Group </a>
-		</TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=1211"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy In-Group </a><HR>
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1300"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show DIDs </a>
-		</TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1311"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New DID </a>
-		</TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1411"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy DID </a>
-		</TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=1411"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy DID </a><HR>
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1500"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Call Menus </a>
-		</TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1511"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Call Menu </a>
-		</TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1611"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy Call Menu </a>
 		</TD></TR>
 		<?php } 

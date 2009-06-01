@@ -170,7 +170,7 @@ while ($i < $groups_to_print)
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>VICIDIAL ADMIN: User Status
+<title>ADMINISTRATION: User Status
 <?php
 
 
@@ -440,7 +440,7 @@ if ($agents_to_print > 0)
 
 else
 	{
-	echo "Agent is not logged in to VICIDIAL\n<BR>";
+	echo "Agent is not logged in\n<BR>";
 	}
 
 echo "\n<BR>";
@@ -472,7 +472,7 @@ if ($modify_timeclock_log > 0)
 
 $REPORTdate = date("Y-m-d");
 echo "<center>\n";
-echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">VICIDIAL Time Sheet</a>\n";
+echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">Agent Time Sheet</a>\n";
 echo " | <a href=\"./user_stats.php?user=$user\">User Stats</a>\n";
 echo " | <a href=\"./admin.php?ADD=3&user=$user\">Modify User</a>\n";
 echo " | <a href=\"./AST_agent_days_detail.php?user=$user&query_date=$REPORTdate&end_date=$REPORTdate&group[]=--ALL--&shift=ALL\">User multiple day status detail report</a>";

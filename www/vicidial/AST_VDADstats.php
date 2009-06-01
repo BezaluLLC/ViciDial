@@ -149,7 +149,7 @@ while ($i < $statcats_to_print)
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>VICIDIAL: VDAD Stats</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>Outbound Stats</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
@@ -236,7 +236,7 @@ $query_date_END = "$end_date $time_END";
 
 
 
-echo "VICIDIAL: Auto-dial Stats                             $NOW_TIME\n";
+echo "Outbound Calling Stats                             $NOW_TIME\n";
 
 echo "\n";
 echo "Time range: $query_date_BEGIN to $query_date_END\n\n";

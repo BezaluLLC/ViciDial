@@ -161,7 +161,7 @@ echo "<!-- VERSION: $version     BUILD: $build -->\n";
 -->
  </STYLE>
 <?php
-echo "<title>VICIDIAL REMOTE AGENTS: $LOGfullname - $PHP_AUTH_USER   ";
+echo "<title>REMOTE AGENTS: $LOGfullname - $PHP_AUTH_USER   ";
 
 if (!$ADD)			{$ADD="31111";}
 if ($ADD==31111)	{echo "Modify Remote Agents";}
@@ -245,7 +245,7 @@ if (strlen($ADD)>4)
 </head>
 <BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 <CENTER>
-<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; VICIDIAL REMOTE AGENTS: <?php echo "$PHP_AUTH_USER " ?> &nbsp; <a href="<?php echo $PHP_SELF ?>?force_logout=1"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1>Logout</a></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo date("l F j, Y G:i:s A") ?> &nbsp; </TD></TR>
+<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; REMOTE AGENTS: <?php echo "$PHP_AUTH_USER " ?> &nbsp; <a href="<?php echo $PHP_SELF ?>?force_logout=1"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1>Logout</a></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo date("l F j, Y G:i:s A") ?> &nbsp; </TD></TR>
 <TR BGCOLOR=#F0F5FE><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1> &nbsp; <a href="./vdremote.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>MODIFY</a> | <a href="./vdremote.php?ADD=61111&user=<?php echo "$PHP_AUTH_USER" ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>STATUS</a> | <a href="./vdremote.php?ADD=71111&user=<?php echo "$PHP_AUTH_USER" ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>INBOUND STATS</a></TD></TR>
 
 
@@ -376,7 +376,7 @@ if ($ADD==61111)
 			}
 		$users_list = preg_replace("/.$/","",$users_list);
 
-		echo "VICIDIAL: Remote Agent Time On Calls                                        $NOW_TIME\n\n";
+		echo "Remote Agent Time On Calls                                        $NOW_TIME\n\n";
 		echo "+------------|--------+--------------+------------+--------+---------------------+---------+\n";
 		echo "| STATION    | USER   | LEADID       | CHANNEL    | STATUS | START TIME          | MINUTES |\n";
 		echo "+------------|--------+--------------+------------+--------+---------------------+---------+\n";
@@ -503,7 +503,7 @@ if ($ADD==71111)
 			$in_time_MS = "$in_time_M_int:$in_time_SEC";
 			$in_time_MS =		sprintf("%7s", $in_time_MS);
 
-		echo "VICIDIAL: Remote Agent inbound stats                                        $NOW_TIME\n\n";
+		echo "Remote Agent inbound stats                                        $NOW_TIME\n\n";
 		echo "\n";
 		echo "Total calls taken $query_date:    $in_calls\n";
 		echo "Total talk time on $query_date:   $in_time_MS (minutes:seconds)\n";
