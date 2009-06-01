@@ -17779,7 +17779,7 @@ if ($ADD==3311)
 	echo "</table>\n";
 	echo "<BR></center></FORM><br>\n";
 
-
+	echo "<br><a href=\"./AST_DIDstats.php?group[0]=$did_id\">Click here to see a traffic report for this DID</FONT><br>\n";
 
 	if ($LOGdelete_dids > 0)
 		{
@@ -21793,6 +21793,7 @@ if ($ADD==999999)
 		<UL>
 		<LI><a href="AST_CLOSERstats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Inbound Report</a></FONT>
 		<LI><a href="AST_CLOSER_service_level.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Inbound Service Level Report</a></FONT>
+		<LI><a href="AST_DIDstats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Inbound DID Report</a></FONT>
 		<LI><a href="AST_IVRstats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Inbound IVR Report</a></FONT>
 		<LI><a href="AST_VDADstats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Outbound Calling Report</a></FONT>
 		<LI><a href="fcstats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Fronter - Closer Report</a></FONT>

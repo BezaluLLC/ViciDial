@@ -276,6 +276,7 @@ if ($action == "MANUALUPLOAD")
 
 <form action=<?php echo $PHP_SELF ?> method=post enctype="multipart/form-data">
 <input type=hidden name=action value="MANUALUPLOAD">
+<input type=hidden name=sample_prompt id=sample_prompt value="">
 
 <table align=center width="700" border=0 cellpadding=5 cellspacing=0 bgcolor=#D9E6FE>
   <tr>
@@ -287,5 +288,7 @@ if ($action == "MANUALUPLOAD")
   </tr>
   <tr><td align=left><font size=1> &nbsp; </font></td><td align=right><font size=1>Audio Store- &nbsp; &nbsp; VERSION: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
 </table>
+<BR><BR>
+<CENTER><a href="javascript:launch_chooser('sample_prompt','date',30);">audio file list</a></CENTER>
 
 </TD></TR></TABLE>

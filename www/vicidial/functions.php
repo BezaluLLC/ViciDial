@@ -58,4 +58,34 @@ function sec_convert($sec,$precision)
 		return "$Ftime";
 		}
 	}
+
+
+##### counts like elements in an array, optional sort asc desc #####
+function array_group_count($array, $sort = false) 
+	{
+	$tally_array = array();
+
+	$i=0;
+	foreach (array_unique($array) as $value) 
+		{
+		$count = 0;
+		foreach ($array as $element) 
+			{
+		    if ($element == "$value")
+		        {$count++;}
+			}
+
+		$count =		sprintf("%010s", $count);
+		$tally_array[$i] = "$count $value";
+		$i++;
+		}
+	
+	if ( $sort == 'desc' )
+		{rsort($tally_array);}
+	elseif ( $sort == 'asc' )
+		{sort($tally_array);}
+
+	return $tally_array;
+	}
+
 ?>
