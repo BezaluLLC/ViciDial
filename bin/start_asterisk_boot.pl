@@ -47,6 +47,10 @@ use DBI;
 $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
  or die "Couldn't connect to database: " . DBI->errstr;
 
+### Set the conf files to automatically update
+	$stmtA = "UPDATE servers SET rebuild_conf_files='Y' where server_ip = '$VARserver_ip';";
+	$affected_rows = $dbhA->do($stmtA);
+
 ### Grab Server values from the database
 	$stmtA = "SELECT vd_server_logs FROM servers where server_ip = '$VARserver_ip';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
