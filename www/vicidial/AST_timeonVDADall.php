@@ -49,10 +49,11 @@
 # 90508-0623 - Changed to PHP long tags
 # 90518-0930 - Fixed $CALLSdisplay static assignment bug for some links(bug #210)
 # 90524-2231 - Changed to use functions.php for seconds to HH:MM:SS conversion
+# 90602-0405 - Added list mix display in statuses and order if active
 #
 
-$version = '2.0.5-40';
-$build = '90524-2231';
+$version = '2.0.5-41';
+$build = '90602-0405';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -787,7 +788,7 @@ else
 	if (eregi('ALL-ACTIVE',$group_string))
 		{
 		$multi_drop++;
-		$stmt="select avg(auto_dial_level),min(dial_status_a),min(dial_status_b),min(dial_status_c),min(dial_status_d),min(dial_status_e),min(lead_order),min(lead_filter_id),sum(hopper_level),min(dial_method),avg(adaptive_maximum_level),avg(adaptive_dropped_percentage),avg(adaptive_dl_diff_target),avg(adaptive_intensity),min(available_only_ratio_tally),min(adaptive_latest_server_time),min(local_call_time),avg(dial_timeout),min(dial_statuses),max(agent_pause_codes_active) from vicidial_campaigns;";
+		$stmt="select avg(auto_dial_level),min(dial_status_a),min(dial_status_b),min(dial_status_c),min(dial_status_d),min(dial_status_e),min(lead_order),min(lead_filter_id),sum(hopper_level),min(dial_method),avg(adaptive_maximum_level),avg(adaptive_dropped_percentage),avg(adaptive_dl_diff_target),avg(adaptive_intensity),min(available_only_ratio_tally),min(adaptive_latest_server_time),min(local_call_time),avg(dial_timeout),min(dial_statuses),max(agent_pause_codes_active),max(list_order_mix) from vicidial_campaigns;";
 
 		$stmtB="select sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4) from vicidial_campaign_stats;";
 		}
@@ -815,13 +816,13 @@ else
 			$closer_campaignsSQL = preg_replace("/,$/","",$closer_campaignsSQL);
 			if ($DB > 0) {echo "\n|$closer_campaigns|$closer_campaignsSQL|$stmt|\n";}
 
-			$stmt="select auto_dial_level,dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,lead_filter_id,hopper_level,dial_method,adaptive_maximum_level,adaptive_dropped_percentage,adaptive_dl_diff_target,adaptive_intensity,available_only_ratio_tally,adaptive_latest_server_time,local_call_time,dial_timeout,dial_statuses,agent_pause_codes_active from vicidial_campaigns where campaign_id IN ($group_SQL,$closer_campaignsSQL);";
+			$stmt="select auto_dial_level,dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,lead_filter_id,hopper_level,dial_method,adaptive_maximum_level,adaptive_dropped_percentage,adaptive_dl_diff_target,adaptive_intensity,available_only_ratio_tally,adaptive_latest_server_time,local_call_time,dial_timeout,dial_statuses,agent_pause_codes_active,list_order_mix from vicidial_campaigns where campaign_id IN ($group_SQL,$closer_campaignsSQL);";
 
 			$stmtB="select sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4) from vicidial_campaign_stats where campaign_id IN ($group_SQL,$closer_campaignsSQL);";
 			}
 		else
 			{
-			$stmt="select avg(auto_dial_level),max(dial_status_a),max(dial_status_b),max(dial_status_c),max(dial_status_d),max(dial_status_e),max(lead_order),max(lead_filter_id),max(hopper_level),max(dial_method),max(adaptive_maximum_level),avg(adaptive_dropped_percentage),avg(adaptive_dl_diff_target),avg(adaptive_intensity),max(available_only_ratio_tally),max(adaptive_latest_server_time),max(local_call_time),max(dial_timeout),max(dial_statuses),max(agent_pause_codes_active) from vicidial_campaigns where campaign_id IN($group_SQL);";
+			$stmt="select avg(auto_dial_level),max(dial_status_a),max(dial_status_b),max(dial_status_c),max(dial_status_d),max(dial_status_e),max(lead_order),max(lead_filter_id),max(hopper_level),max(dial_method),max(adaptive_maximum_level),avg(adaptive_dropped_percentage),avg(adaptive_dl_diff_target),avg(adaptive_intensity),max(available_only_ratio_tally),max(adaptive_latest_server_time),max(local_call_time),max(dial_timeout),max(dial_statuses),max(agent_pause_codes_active),max(list_order_mix) from vicidial_campaigns where campaign_id IN($group_SQL);";
 
 			$stmtB="select sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4) from vicidial_campaign_stats where campaign_id IN($group_SQL);";
 			}
@@ -849,9 +850,8 @@ else
 	$CALLtime =		$row[16];
 	$DIALtimeout =	$row[17];
 	$DIALstatuses =	$row[18];
-		$DIALstatuses = (preg_replace("/ -$|^ /","",$DIALstatuses));
-		$DIALstatuses = (ereg_replace(' ',', ',$DIALstatuses));
 	$agent_pause_codes_active = $row[19];
+	$DIALmix =		$row[20];
 
 
 	$stmt="select count(*) from vicidial_hopper where campaign_id IN($group_SQL);";
@@ -908,6 +908,24 @@ else
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$balanceSHORT = $row[0];
+
+	if (ereg('DISABLED',$DIALmix))
+		{
+		$DIALstatuses = (preg_replace("/ -$|^ /","",$DIALstatuses));
+		$DIALstatuses = (ereg_replace(' ',', ',$DIALstatuses));
+		}
+	else
+		{
+		$stmt="select vcl_id from vicidial_campaigns_list_mix where campaign_id IN($group_SQL) and status='ACTIVE' limit 1;";
+		$rslt=mysql_query($stmt, $link);
+		$Lmix_to_print = mysql_num_rows($rslt);
+		if ($Lmix_to_print > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$DIALstatuses = "List Mix: $row[0]";
+			$DIALorder =	"List Mix: $row[0]";
+			}
+		}
 
 	echo "<BR><table cellpadding=0 cellspacing=0><TR>";
 	echo "<TD ALIGN=RIGHT><font size=2><B>DIAL LEVEL:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALlev&nbsp; &nbsp; </TD>";

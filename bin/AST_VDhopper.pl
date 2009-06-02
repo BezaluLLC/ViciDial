@@ -52,6 +52,7 @@
 # 80909-1901 - Added support for campaign-specific DNC lists
 # 90430-0117 - Added last call time and random sorting options
 # 90430-1022 - Changed this script to allow for List Mix ability
+# 90601-2111 - Added allow_inactive_list_leads to allow for inactive lists while in List Mix mode
 #
 
 # constants
@@ -120,6 +121,7 @@ $VDL_one = "$Vyear-$Vmon-$Vmday $Vhour:$Vmin:$Vsec";
 if (length($ARGV[0])>1)
 {
 	$i=0;
+	$allow_inactive_list_leads=0;
 	while ($#ARGV >= $i)
 	{
 	$args = "$args $ARGV[$i]";
@@ -128,7 +130,16 @@ if (length($ARGV[0])>1)
 
 	if ($args =~ /--help/i)
 	{
-	print "allowed run time options(must stay in this order):\n  [--debug] = debug\n  [--debugX] = super debug\n  [--dbgmt] = show GMT offset of records as they are inserted into hopper\n  [--dbdetail] = additional level of logging the leads that are inserted into the hopper\n  [-t] = test\n  [--level=XXX] = force a hopper_level of XXX\n  [--campaign=XXX] = run for campaign XXX only\n\n";
+	print "allowed run time options(must stay in this order):\n";
+	print "  [--debug] = debug\n";
+	print "  [--debugX] = super debug\n";
+	print "  [--dbgmt] = show GMT offset of records as they are inserted into hopper\n";
+	print "  [--dbdetail] = additional level of logging the leads that are inserted into the hopper\n";
+	print "  [--allow-inactive-list-leads] = do not delete inactive list leads\n";
+	print "  [-t] = test\n";
+	print "  [--level=XXX] = force a hopper_level of XXX\n";
+	print "  [--campaign=XXX] = run for campaign XXX only\n";
+	print "\n";
 	exit;
 	}
 	else
@@ -170,6 +181,11 @@ if (length($ARGV[0])>1)
 		if ($args =~ /--dbdetail/i)
 		{
 		$DB_detail=1;
+#		print "\n-----DEBUG DETAIL -----\n\n";
+		}
+		if ($args =~ /--allow-inactive-list-leads/i)
+		{
+		$allow_inactive_list_leads=1;
 #		print "\n-----DEBUG DETAIL -----\n\n";
 		}
 		if ($args =~ /-t/i)
@@ -304,11 +320,14 @@ if ($DB) {print "Inactive Lists:  $inactive_lists_count\n";}
 if ($inactive_lists_count > 0)
 	{
 	chop($inactive_lists);
-	$stmtA = "DELETE from $vicidial_hopper where list_id IN($inactive_lists);";
-	$affected_rows = $dbhA->do($stmtA);
-	if ($DB) {print "Inactive List Leads Deleted:  $affected_rows |$stmtA|\n";}
-		$event_string = "|INACTIVE LIST DEL|$affected_rows|";
-		&event_logger;
+	if ($allow_inactive_list_leads < 1)
+		{
+		$stmtA = "DELETE from $vicidial_hopper where list_id IN($inactive_lists);";
+		$affected_rows = $dbhA->do($stmtA);
+		if ($DB) {print "Inactive List Leads Deleted:  $affected_rows |$stmtA|\n";}
+			$event_string = "|INACTIVE LIST DEL|$affected_rows|";
+			&event_logger;
+		}
 	}
 
 ### BEGIN Change CBHOLD status leads to CALLBK if their vicidial_callbacks time has passed
@@ -1099,8 +1118,12 @@ foreach(@campaign_id)
 		{
 		if ($DB) {print "     hopper too low ($hopper_ready_count|$hopper_level[$i]) starting hopper dump\n";}
 
+		$active_listSQL = "and active='Y'";
+		if ( ($list_order_mix[$i] !~ /DISABLED/) && ($allow_inactive_list_leads > 0) )
+			{$active_listSQL = '';}
+	
 		### Get list of the lists in the campaign ###
-		$stmtA = "SELECT list_id FROM vicidial_lists where campaign_id='$campaign_id[$i]' and active='Y';";
+		$stmtA = "SELECT list_id FROM vicidial_lists where campaign_id='$campaign_id[$i]' $active_listSQL;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -1480,7 +1503,7 @@ foreach(@campaign_id)
 						if ($DBX) {print "  LM $x |$list_mix_stepARY[0]|$list_mix_stepARY[2]|$LM_step_goal[$x]|$list_mix_stepARY[3]|\n";}
 						$list_mix_dialableSQL = "(list_id='$list_mix_stepARY[0]' and status IN($list_mix_stepARY[3]))";
 
-						$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status FROM vicidial_list where called_since_last_reset='N' and $list_mix_dialableSQL and lead_id NOT IN($lead_id_lists) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $order_stmt limit $LM_step_goal[$x];";
+						$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user FROM vicidial_list where called_since_last_reset='N' and $list_mix_dialableSQL and lead_id NOT IN($lead_id_lists) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $order_stmt limit $LM_step_goal[$x];";
 						if ($DBX) {print "     |$stmtA|\n";}
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1503,7 +1526,7 @@ foreach(@campaign_id)
 									$order = ( ($x * 1000000) + $rec_count);
 									}
 								}
-							$LM_results[$z] = "$order$USX$aryA[0]$USX$aryA[1]$USX$aryA[2]$USX$aryA[3]$USX$aryA[4]$USX$aryA[5]";
+							$LM_results[$z] = "$order$USX$aryA[0]$USX$aryA[1]$USX$aryA[2]$USX$aryA[3]$USX$aryA[4]$USX$aryA[5]$USX$aryA[6]$USX$aryA[7]";
 						#	if ($DBX) {print "     $z|$LM_results[$z]\n";}
 
 							$rec_count++;
@@ -1536,11 +1559,11 @@ foreach(@campaign_id)
 						$leads_to_hopper[$rec_countLEADS] = "$aryA[1]";
 						$lists_to_hopper[$rec_countLEADS] = "$aryA[2]";
 						$gmt_to_hopper[$rec_countLEADS] = "$aryA[3]";
-						$state_to_hopper[$rec_countLEADS] = "$aryA[4]";
-						$phone_to_hopper[$rec_countLEADS] = "$aryA[5]";
+						$phone_to_hopper[$rec_countLEADS] = "$aryA[4]";
+						$state_to_hopper[$rec_countLEADS] = "$aryA[5]";
 						$status_to_hopper[$rec_countLEADS] = "$aryA[6]";
-						$modify_to_hopper[$rec_countLEADS] = "$aryA[6]";
-						$user_to_hopper[$rec_countLEADS] = "$aryA[7]";
+						$modify_to_hopper[$rec_countLEADS] = "$aryA[7]";
+						$user_to_hopper[$rec_countLEADS] = "$aryA[8]";
 						if ($DB_show_offset) {print "LEAD_ADD: $aryA[3] $aryA[4] $aryA[5]\n";}
 						if ($DBX) {print "     $w|$LM_results[$w]\n";}
 						$rec_countLEADS++;
