@@ -2257,13 +2257,13 @@ if ( ($PROMPTcopy_conf_files =~ /y/i) || ($CLIcopy_conf_files =~ /y/i) )
 	`cp -f ./docs/conf_examples/logger.conf.sample /etc/asterisk/logger.conf`;
 	`cp -f ./docs/conf_examples/dnsmgr.conf.sample /etc/asterisk/dnsmgr.conf`;
 	`cp -f ./docs/conf_examples/features.conf.sample /etc/asterisk/features.conf`;
-	}
 
-print "Creating auto-generated placeholder conf files in /etc/asterisk/...\n";
-`echo "[vicidial-auto] ;placeholder for auto-generated extensions conf" > /etc/asterisk/extensions-vicidial.conf`;
-`echo "[vicidial-auto] ;placeholder for auto-generated iax conf" > /etc/asterisk/iax-vicidial.conf`;
-`echo "[vicidial-auto] ;placeholder for auto-generated sip conf" > /etc/asterisk/sip-vicidial.conf`;
-`echo "[vicidial-auto] ;placeholder for auto-generated voicemail conf" > /etc/asterisk/voicemail-vicidial.conf`;
+	print "Creating auto-generated placeholder conf files in /etc/asterisk/...\n";
+	`echo "[vicidial-auto] ;placeholder for auto-generated extensions conf" > /etc/asterisk/extensions-vicidial.conf`;
+	`echo "[vicidial-auto] ;placeholder for auto-generated iax conf" > /etc/asterisk/iax-vicidial.conf`;
+	`echo "[vicidial-auto] ;placeholder for auto-generated sip conf" > /etc/asterisk/sip-vicidial.conf`;
+	`echo "[vicidial-auto] ;placeholder for auto-generated voicemail conf" > /etc/asterisk/voicemail-vicidial.conf`;
+	}
 
 
 ### format the new server_ip dialstring for example to use with extensions.conf

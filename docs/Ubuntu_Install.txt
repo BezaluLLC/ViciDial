@@ -1,4 +1,4 @@
-Ubuntu VICIDIAL Install:					2009-05-12
+Ubuntu VICIDIAL Install:					2009-05-19
 
 ### NOTE ###
 If you just want a quick setup of ViciDial on Ubuntu, take a look at our 
