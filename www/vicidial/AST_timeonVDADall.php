@@ -50,10 +50,11 @@
 # 90518-0930 - Fixed $CALLSdisplay static assignment bug for some links(bug #210)
 # 90524-2231 - Changed to use functions.php for seconds to HH:MM:SS conversion
 # 90602-0405 - Added list mix display in statuses and order if active
+# 90603-1845 - Fixed color coding bug
 #
 
-$version = '2.0.5-41';
-$build = '90602-0405';
+$version = '2.0.5-42';
+$build = '90603-1845';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -1602,13 +1603,13 @@ $calls_to_list = mysql_num_rows($rslt);
 		if ($Lstatus=='INCALL')
 			{
 			if ($call_time_S >= 10) {$G='<SPAN class="thistle"><B>'; $EG='</B></SPAN>';}
-			if ($call_time_M_int >= 1) {$G='<SPAN class="violet"><B>'; $EG='</B></SPAN>';}
-			if ($call_time_M_int >= 5) {$G='<SPAN class="purple"><B>'; $EG='</B></SPAN>';}
-	#		if ($call_time_M_int >= 10) {$G='<SPAN class="purple"><B>'; $EG='</B></SPAN>';}
+			if ($call_time_S >= 60) {$G='<SPAN class="violet"><B>'; $EG='</B></SPAN>';}
+			if ($call_time_S >= 300) {$G='<SPAN class="purple"><B>'; $EG='</B></SPAN>';}
+	#		if ($call_time_S >= 600) {$G='<SPAN class="purple"><B>'; $EG='</B></SPAN>';}
 			}
 		if ($Lstatus=='DEAD')
 			{
-			if ($call_time_M_int >= 360) 
+			if ($call_time_S >= 21600) 
 				{$j++; continue;} 
 			else
 				{
@@ -1619,15 +1620,15 @@ $calls_to_list = mysql_num_rows($rslt);
 			}
 		if ($Lstatus=='DISPO')
 			{
-			if ($call_time_M_int >= 360) 
+			if ($call_time_S >= 21600) 
 				{$j++; continue;} 
 			else
 				{
 				$agent_paused++;  $agent_total++;
 				$G=''; $EG='';
 				if ($call_time_S >= 10) {$G='<SPAN class="khaki"><B>'; $EG='</B></SPAN>';}
-				if ($call_time_M_int >= 1) {$G='<SPAN class="yellow"><B>'; $EG='</B></SPAN>';}
-				if ($call_time_M_int >= 5) {$G='<SPAN class="olive"><B>'; $EG='</B></SPAN>';}
+				if ($call_time_S >= 60) {$G='<SPAN class="yellow"><B>'; $EG='</B></SPAN>';}
+				if ($call_time_S >= 300) {$G='<SPAN class="olive"><B>'; $EG='</B></SPAN>';}
 				}
 			}
 		if ($Lstatus=='PAUSED') 
@@ -1643,15 +1644,15 @@ $calls_to_list = mysql_num_rows($rslt);
 			else
 				{$pausecode='';}
 
-			if ($call_time_M_int >= 360) 
+			if ($call_time_S >= 21600) 
 				{$j++; continue;} 
 			else
 				{
 				$agent_paused++;  $agent_total++;
 				$G=''; $EG='';
 				if ($call_time_S >= 10) {$G='<SPAN class="khaki"><B>'; $EG='</B></SPAN>';}
-				if ($call_time_M_int >= 1) {$G='<SPAN class="yellow"><B>'; $EG='</B></SPAN>';}
-				if ($call_time_M_int >= 5) {$G='<SPAN class="olive"><B>'; $EG='</B></SPAN>';}
+				if ($call_time_S >= 60) {$G='<SPAN class="yellow"><B>'; $EG='</B></SPAN>';}
+				if ($call_time_S >= 300) {$G='<SPAN class="olive"><B>'; $EG='</B></SPAN>';}
 				}
 			}
 #		if ( (strlen($Acall_server_ip[$i])> 4) and ($Acall_server_ip[$i] != "$Aserver_ip[$i]") )
@@ -1662,8 +1663,8 @@ $calls_to_list = mysql_num_rows($rslt);
 		if ( (eregi("READY",$status)) or (eregi("CLOSER",$status)) ) 
 			{
 			$G='<SPAN class="lightblue"><B>'; $EG='</B></SPAN>';
-			if ($call_time_M_int >= 1) {$G='<SPAN class="blue"><B>'; $EG='</B></SPAN>';}
-			if ($call_time_M_int >= 5) {$G='<SPAN class="midnightblue"><B>'; $EG='</B></SPAN>';}
+			if ($call_time_S >= 60) {$G='<SPAN class="blue"><B>'; $EG='</B></SPAN>';}
+			if ($call_time_S >= 300) {$G='<SPAN class="midnightblue"><B>'; $EG='</B></SPAN>';}
 			}
 
 		$L='';
