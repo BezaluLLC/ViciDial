@@ -21820,6 +21820,7 @@ if ($ADD==999999)
 		<UL>
 		<LI><a href="timeclock_report.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>User Timeclock Report</a></FONT> 
 		<LI><a href="timeclock_status.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>User Group Timeclock Status Report</a></FONT>
+		<LI><a href="AST_agent_timeclock_detail.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>User Timeclock Detail Report</a></FONT>
 		</UL><BR>
 		<B>Other Reports and Links</B><BR>
 		<UL>

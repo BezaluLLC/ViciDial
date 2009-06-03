@@ -1,13 +1,12 @@
 <?php 
-# AST_agent_time_detail.php
+# AST_agent_timeclock_detail.php
 # 
-# Pulls time stats per agent selectable by campaign or user group
-# should be most accurate agent stats of all of the reports
+# Pulls all timeclock records for an agent
 #
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
-# 90522-0723 - First build
+# 90602-2244 - First build
 #
 
 
@@ -39,7 +38,7 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
-if (strlen($stage)<2) {$stage='NAME';}
+if (strlen($stage)<2) {$stage='ID';}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -80,8 +79,10 @@ $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
 if (!isset($group)) {$group = '';}
-if (!isset($query_date)) {$query_date = $NOW_DATE;}
-if (!isset($end_date)) {$end_date = $NOW_DATE;}
+if (!isset($query_date)) {$query_date = "$NOW_DATE 00:00:00";}
+if (!isset($end_date)) {$end_date = "$NOW_DATE 23:59:59";}
+$query_dateURL = ereg_replace(' ','+',$query_date);
+$end_dateURL = ereg_replace(' ','+',$end_date);
 
 $stmt="select campaign_id from vicidial_campaigns;";
 $rslt=mysql_query($stmt, $link);
@@ -159,7 +160,7 @@ while ($i < $statha_to_print)
 	$i++;
 	}
 
-$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&DB=$DB";
+$LINKbase = "$PHP_SELF?query_date=$query_dateURL&end_date=$end_dateURL$groupQS$user_groupQS&shift=$shift&DB=$DB";
 
 if ($file_download < 1)
 	{
@@ -178,7 +179,7 @@ if ($file_download < 1)
 
 	<?php
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-	echo "<TITLE>Agent Time Detail</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	echo "<TITLE>User Time-Clock Detail</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 	echo "<span style=\"position:absolute;left:0px;top:0px;z-index:20;\" id=admin_header>";
 
 	$short_header=1;
@@ -190,7 +191,7 @@ if ($file_download < 1)
 	echo "<PRE><FONT SIZE=2>\n";
 	}
 
-if ( (strlen($group[0]) < 1) or (strlen($user_group[0]) < 1) )
+if (strlen($user_group[0]) < 1)
 	{
 	echo "\n";
 	echo "PLEASE SELECT A CAMPAIGN OR USER GROUP AND DATE-TIME ABOVE AND CLICK SUBMIT\n";
@@ -223,21 +224,21 @@ else
 		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "00:00:00";}
 		if (strlen($time_END) < 6) {$time_END = "23:59:59";}
 		}
-	$query_date_BEGIN = "$query_date $time_BEGIN";   
-	$query_date_END = "$end_date $time_END";
+	$query_date_BEGIN = "$query_date";   
+	$query_date_END = "$end_date";
 
 	if (strlen($user_group)>0) {$ugSQL="and vicidial_agent_log.user_group='$user_group'";}
 	else {$ugSQL='';}
 
 	if ($file_download < 1)
 		{
-		echo "Agent Time Detail                     $NOW_TIME\n";
+		echo "User Time-Clock Detail                     $NOW_TIME\n";
 
 		echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
 		}
 	else
 		{
-		$file_output .= "Agent Time Detail                     $NOW_TIME\n";
+		$file_output .= "User Time-Clock Detail                     $NOW_TIME\n";
 		$file_output .= "Time range: $query_date_BEGIN to $query_date_END\n\n";
 		}
 
@@ -248,7 +249,7 @@ else
 	############################################################################
 
 	### BEGIN gather user IDs and names for matching up later
-	$stmt="select full_name,user from vicidial_users order by user limit 100000;";
+	$stmt="select full_name,user,user_group from vicidial_users order by user limit 100000;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$users_to_print = mysql_num_rows($rslt);
@@ -258,12 +259,13 @@ else
 		$row=mysql_fetch_row($rslt);
 		$ULname[$i] =	$row[0];
 		$ULuser[$i] =	$row[1];
+		$ULgroup[$i] =	$row[2];
 		$i++;
 		}
 	### END gather user IDs and names for matching up later
 
 
-	### BEGIN gather timeclock records per agent
+	### BEGIN gather timeclock time totals per agent
 	$stmt="select user,sum(login_sec) from vicidial_timeclock_log where event IN('LOGIN','START') and event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END' $TCuser_group_SQL group by user limit 10000000;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
@@ -274,124 +276,10 @@ else
 		$row=mysql_fetch_row($rslt);
 		$TCuser[$i] =	$row[0];
 		$TCtime[$i] =	$row[1];
+		$uc++;
 		$i++;
 		}
 	### END gather timeclock records per agent
-
-
-	### BEGIN gather pause code information by user IDs
-	$sub_statuses='-';
-	$sub_statusesTXT='';
-	$sub_statusesHEAD='';
-	$sub_statusesHTML='';
-	$sub_statusesFILE='';
-	$sub_statusesARY=$MT;
-	$sub_status_count=0;
-	$PCusers='-';
-	$PCusersARY=$MT;
-	$PCuser_namesARY=$MT;
-	$user_count=0;
-	$stmt="select user,sum(pause_sec),sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 30000 $group_SQL $user_group_SQL group by user,sub_status order by user,sub_status desc limit 10000000;";
-	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$subs_to_print = mysql_num_rows($rslt);
-	$i=0;
-	while ($i < $subs_to_print)
-		{
-		$row=mysql_fetch_row($rslt);
-		$PCuser[$i] =		$row[0];
-		$PCpause_sec[$i] =	$row[1];
-		$sub_status[$i] =	$row[2];
-
-		if (!eregi("-$sub_status[$i]-", $sub_statuses))
-			{
-			$sub_statusesTXT = sprintf("%10s", $sub_status[$i]);
-			$sub_statusesHEAD .= "------------+";
-			$sub_statusesHTML .= " $sub_statusesTXT |";
-			$sub_statusesFILE .= ",$sub_status[$i]";
-			$sub_statuses .= "$sub_status[$i]-";
-			$sub_statusesARY[$sub_status_count] = $sub_status[$i];
-			$sub_status_count++;
-			}
-		if (!eregi("-$PCuser[$i]-", $PCusers))
-			{
-			$PCusers .= "$PCuser[$i]-";
-			$PCusersARY[$user_count] = $PCuser[$i];
-			$user_count++;
-			}
-
-		$i++;
-		}
-	### END gather pause code information by user IDs
-
-
-	##### BEGIN Gather all agent time records and parse through them in PHP to save on DB load
-	$stmt="select user,wait_sec,talk_sec,dispo_sec,pause_sec,lead_id from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $group_SQL $user_group_SQL limit 10000000;";
-	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$rows_to_print = mysql_num_rows($rslt);
-	$i=0;
-	$j=0;
-	$k=0;
-	$uc=0;
-	while ($i < $rows_to_print)
-		{
-		$row=mysql_fetch_row($rslt);
-		$user =			$row[0];
-		$wait =			$row[1];
-		$talk =			$row[2];
-		$dispo =		$row[3];
-		$pause =		$row[4];
-		$lead =			$row[5];
-
-		if ($wait > 30000) {$wait=0;}
-		if ($talk > 30000) {$talk=0;}
-		if ($dispo > 30000) {$dispo=0;}
-		if ($pause > 30000) {$pause=0;}
-		$TOTwait =	($TOTwait + $wait);
-		$TOTtalk =	($TOTtalk + $talk);
-		$TOTdispo =	($TOTdispo + $dispo);
-		$TOTpause =	($TOTpause + $pause);
-		$TOTALtime = ($TOTALtime + $pause + $dispo + $talk + $wait);
-		if ($lead > 0) {$TOTcalls++;}
-		
-		$user_found=0;
-		if ($uc < 1) 
-			{
-			$Suser[$uc] = $user;
-			$uc++;
-			}
-		$m=0;
-		while ( ($m < $uc) and ($m < 50000) )
-			{
-			if ($user == "$Suser[$m]")
-				{
-				$user_found++;
-
-				$Swait[$m] =	($Swait[$m] + $wait);
-				$Stalk[$m] =	($Stalk[$m] + $talk);
-				$Sdispo[$m] =	($Sdispo[$m] + $dispo);
-				$Spause[$m] =	($Spause[$m] + $pause);
-				if ($lead > 0) {$Scalls[$m]++;}
-				}
-			$m++;
-			}
-		if ($user_found < 1)
-			{
-			$Scalls[$uc] =	0;
-			$Suser[$uc] =	$user;
-			$Swait[$uc] =	$wait;
-			$Stalk[$uc] =	$talk;
-			$Sdispo[$uc] =	$dispo;
-			$Spause[$uc] =	$pause;
-			if ($lead > 0) {$Scalls[$uc]++;}
-			$uc++;
-			}
-
-		$i++;
-		}
-	if ($DB) {echo "Done gathering $i records, analyzing...<BR>\n";}
-	##### END Gather all agent time records and parse through them in PHP to save on DB load
 
 	############################################################################
 	##### END gathering information from the database section
@@ -403,14 +291,14 @@ else
 	##### BEGIN print the output to screen or put into file output variable
 	if ($file_download < 1)
 		{
-		echo "AGENT TIME BREAKDOWN:\n";
-		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-		echo "| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=CALLS\">CALLS</a>    | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | <a href=\"$LINKbase&stage=TIME\">AGENT TIME</a> | WAIT       | TALK       | DISPO      | PAUSE      |   |$sub_statusesHTML\n";
-		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		echo "AGENT TIME-CLOCK DETAIL:\n";
+		echo "+-----------------+----------+----------------------+------------+--------------------\n";
+		echo "| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=GROUP\">USER GROUP</a>           | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | TIME CLOCK PUNCHES\n";
+		echo "+-----------------+----------+----------------------+------------+--------------------\n";
 		}
 	else
 		{
-		$file_output .= "USER,ID,CALLS,TIME CLOCK,AGENT TIME,WAIT,TALK,DISPO,PAUSE$sub_statusesFILE\n";
+		$file_output .= "USER,ID,GROUP,TIME CLOCK,TIME CLOCK PUNCHES\n";
 		}
 	##### END print the output to screen or put into file output variable
 
@@ -427,40 +315,27 @@ else
 	$m=0;
 	while ( ($m < $uc) and ($m < 50000) )
 		{
-		$SstatusesHTML='';
-		$SstatusesFILE='';
-		$Stime[$m] = ($Swait[$m] + $Stalk[$m] + $Sdispo[$m] + $Spause[$m]);
-		$RAWuser = $Suser[$m];
-		$RAWcalls = $Scalls[$m];
-		$RAWtimeSEC = $Stime[$m];
-
-		$Swait[$m]=		sec_convert($Swait[$m],'H'); 
-		$Stalk[$m]=		sec_convert($Stalk[$m],'H'); 
-		$Sdispo[$m]=	sec_convert($Sdispo[$m],'H'); 
-		$Spause[$m]=	sec_convert($Spause[$m],'H'); 
-		$Stime[$m]=		sec_convert($Stime[$m],'H'); 
-
-		$RAWtime = $Stime[$m];
-		$RAWwait = $Swait[$m];
-		$RAWtalk = $Stalk[$m];
-		$RAWdispo = $Sdispo[$m];
-		$RAWpause = $Spause[$m];
-
+		$TCdetail='';
+		$rawTCdetail='';
 		$n=0;
 		$user_name_found=0;
+		$RAWuser=$TCuser[$m];
 		while ($n < $users_to_print)
 			{
-			if ($Suser[$m] == "$ULuser[$n]")
+			if ($TCuser[$m] == "$ULuser[$n]")
 				{
 				$user_name_found++;
 				$RAWname = $ULname[$n];
+				$RAWgroup = $ULgroup[$n];
 				$Sname[$m] = $ULname[$n];
+				$Sgroup[$m] = $ULgroup[$n];
 				}
 			$n++;
 			}
 		if ($user_name_found < 1)
 			{
 			$RAWname =		"NOT IN SYSTEM";
+			$RAWgroup =		"GROUP NOT IN SYSTEM";
 			$Sname[$m] =	$RAWname;
 			}
 
@@ -468,7 +343,7 @@ else
 		$punches_found=0;
 		while ($n < $punches_to_print)
 			{
-			if ($Suser[$m] == "$TCuser[$n]")
+			if ($RAWuser == "$TCuser[$n]")
 				{
 				$punches_found++;
 				$RAWtimeTCsec =		$TCtime[$n];
@@ -489,81 +364,66 @@ else
 
 		### Check if the user had an AUTOLOGOUT timeclock event during the time period
 		$TCuserAUTOLOGOUT = ' ';
-		$stmt="select count(*) from vicidial_timeclock_log where event='AUTOLOGOUT' and user='$Suser[$m]' and event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END';";
+		$stmt="select event_epoch,event_date,login_sec,event,user_group from vicidial_timeclock_log where event_date <= '$query_date_END' and event_date >= '$query_date_BEGIN' and user='$TCuser[$m]' $TCuser_group_SQL order by event_date limit 10000000;";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$autologout_results = mysql_num_rows($rslt);
-		if ($autologout_results > 0)
+		$TC_results = mysql_num_rows($rslt);
+		$k=0;
+		while ($TC_results > $k)
 			{
+			$TCentryAUTOLOGOUT = ' ';
 			$row=mysql_fetch_row($rslt);
-			if ($row[0] > 0)
+			$event_epoch =	$row[0];
+			$event_date =	$row[1];
+			$login_sec =	$row[2];
+			$event =		$row[3];
+			$user_group =	$row[4];
+			$date_detail = explode(' ',$event_date);
+
+			if ($event == 'AUTOLOGOUT')
 				{
+				$TCentryAUTOLOGOUT = '*';
 				$TCuserAUTOLOGOUT =	'*';
 				$AUTOLOGOUTflag++;
 				}
+			$TCdetail .= "$date_detail[1]$TCentryAUTOLOGOUT ";
+			$rawTCdetail .= "$date_detail[1],";
+			$k++;
 			}
 
-		### BEGIN loop through each status ###
-		$n=0;
-		while ($n < $sub_status_count)
-			{
-			$Sstatus=$sub_statusesARY[$n];
-			$SstatusTXT='';
-			### BEGIN loop through each stat line ###
-			$i=0; $status_found=0;
-			while ( ($i < $subs_to_print) and ($status_found < 1) )
-				{
-				if ( ($Suser[$m]=="$PCuser[$i]") and ($Sstatus=="$sub_status[$i]") )
-					{
-					$USERcodePAUSE_MS =		sec_convert($PCpause_sec[$i],'H'); 
-					$pfUSERcodePAUSE_MS =	sprintf("%10s", $USERcodePAUSE_MS);
+		if ($TC_results > 0)
+			{$rawTCdetail = ereg_replace(",$",'',$rawTCdetail);}
 
-					$SstatusTXT = sprintf("%10s", $pfUSERcodePAUSE_MS);
-					$SstatusesHTML .= " $SstatusTXT |";
-					$SstatusesFILE .= ",$pfUSERcodePAUSE_MS";
-					$status_found++;
-					}
-				$i++;
-				}
-			if ($status_found < 1)
-				{
-				$SstatusesHTML .= "       0:00 |";
-				}
-			### END loop through each stat line ###
-			$n++;
-			}
-		### END loop through each status ###
-
-		$Swait[$m]=		sprintf("%10s", $Swait[$m]); 
-		$Stalk[$m]=		sprintf("%10s", $Stalk[$m]); 
-		$Sdispo[$m]=	sprintf("%10s", $Sdispo[$m]); 
-		$Spause[$m]=	sprintf("%10s", $Spause[$m]); 
-		$Scalls[$m]=	sprintf("%8s", $Scalls[$m]); 
-		$Stime[$m]=		sprintf("%10s", $Stime[$m]); 
+		$Stime[$m] =	sprintf("%10s", $Stime[$m]); 
+		$SORTname =	sprintf("%-20s", $Sname[$m]);
+		$SORTgroup =	sprintf("%-20s", $Sgroup[$m]);
+		$Sgroup[$m] =	sprintf("%-20s", $Sgroup[$m]); 
+		$SORTgroup = ereg_replace(" ",'0',$SORTgroup);
+		$SORTname = ereg_replace(" ",'0',$SORTname);
 
 		if ($non_latin < 1)
 			{
 			$Sname[$m]=	sprintf("%-15s", $Sname[$m]); 
 			while(strlen($Sname[$m])>15) {$Sname[$m] = substr("$Sname[$m]", 0, -1);}
-			$Suser[$m] =		sprintf("%-8s", $Suser[$m]);
+			$Suser[$m] =		sprintf("%-8s", $TCuser[$m]);
 			while(strlen($Suser[$m])>8) {$Suser[$m] = substr("$Suser[$m]", 0, -1);}
 			}
 		else
 			{	
 			$Sname[$m]=	sprintf("%-45s", $Sname[$m]); 
 			while(mb_strlen($Sname[$m],'utf-8')>15) {$Sname[$m] = mb_substr("$Sname[$m]", 0, -1,'utf-8');}
-			$Suser[$m] =	sprintf("%-24s", $Suser[$m]);
+			$Suser[$m] =	sprintf("%-24s", $TCuser[$m]);
 			while(mb_strlen($Suser[$m],'utf-8')>8) {$Suser[$m] = mb_substr("$Suser[$m]", 0, -1,'utf-8');}
 			}
 
 
 		if ($file_download < 1)
 			{
-			$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser\">$Suser[$m]</a> | $Scalls[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $Stime[$m] | $Swait[$m] | $Stalk[$m] | $Sdispo[$m] | $Spause[$m] |   |$SstatusesHTML\n";
+			$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser\">$Suser[$m]</a> | $Sgroup[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $TCdetail\n";
 			}
 		else
 			{
-			$fileToutput = "$RAWname,$RAWuser,$RAWcalls,$RAWtimeTC,$RAWtime,$RAWwait,$RAWtalk,$RAWdispo,$RAWpause$SstatusesFILE\n";
+			$fileToutput = "$RAWname,$RAWuser,$RAWgroup,$RAWtimeTC,$rawTCdetail\n";
 			}
 
 		$TOPsorted_output[$m] = $Toutput;
@@ -571,7 +431,7 @@ else
 
 		if ($stage == 'NAME')
 			{
-			$TOPsort[$m] =	'' . sprintf("%020s", $RAWname) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);
+			$TOPsort[$m] =	'' . sprintf("%020s", $SORTname) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);
 			$TOPsortTALLY[$m]=$RAWcalls;
 			}
 		if ($stage == 'ID')
@@ -579,22 +439,17 @@ else
 			$TOPsort[$m] =	'' . sprintf("%08s", $RAWuser) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);
 			$TOPsortTALLY[$m]=$RAWcalls;
 			}
-		if ($stage == 'CALLS')
-			{
-			$TOPsort[$m] =	'' . sprintf("%08s", $RAWcalls) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);
-			$TOPsortTALLY[$m]=$RAWcalls;
-			}
-		if ($stage == 'TIME')
-			{
-			$TOPsort[$m] =	'' . sprintf("%010s", $RAWtimeSEC) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);
-			$TOPsortTALLY[$m]=$RAWtimeSEC;
-			}
 		if ($stage == 'TCLOCK')
 			{
 			$TOPsort[$m] =	'' . sprintf("%010s", $RAWtimeTCsec) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);
 			$TOPsortTALLY[$m]=$RAWtimeTCsec;
 			}
-		if (!ereg("NAME|ID|TIME|CALLS|TCLOCK",$stage))
+		if ($stage == 'GROUP')
+			{
+			$TOPsort[$m] =	'' . sprintf("%020s", $SORTgroup) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);
+			$TOPsortTALLY[$m]=$SORTgroup;
+			}
+		if (!ereg("NAME|ID|TCLOCK|GROUP",$stage))
 			if ($file_download < 1)
 				{echo "$Toutput";}
 			else
@@ -615,14 +470,16 @@ else
 
 
 	### BEGIN sort through output to display properly ###
-	if (ereg("NAME|ID|TIME|CALLS|TCLOCK",$stage))
+	if (ereg("NAME|ID|TCLOCK|GROUP",$stage))
 		{
 		if (ereg("ID",$stage))
 			{sort($TOPsort, SORT_NUMERIC);}
-		if (ereg("TIME|CALLS|TCLOCK",$stage))
+		if (ereg("TCLOCK",$stage))
 			{rsort($TOPsort, SORT_NUMERIC);}
+		if (ereg("GROUP",$stage))
+			{sort($TOPsort, SORT_REGULAR);}
 		if (ereg("NAME",$stage))
-			{rsort($TOPsort, SORT_STRING);}
+			{sort($TOPsort, SORT_STRING);}
 
 		$m=0;
 		while ($m < $k)
@@ -649,60 +506,10 @@ else
 	############################################################################
 	##### BEGIN last line totals output section
 	############################################################################
-	$SUMstatusesHTML='';
-	$SUMstatusesFILE='';
-	$TOTtotPAUSE=0;
-	$n=0;
-	while ($n < $sub_status_count)
-		{
-		$Scalls=0;
-		$Sstatus=$sub_statusesARY[$n];
-		$SUMstatusTXT='';
-		### BEGIN loop through each stat line ###
-		$i=0; $status_found=0;
-		while ($i < $subs_to_print)
-			{
-			if ($Sstatus=="$sub_status[$i]")
-				{
-				$Scalls =		($Scalls + $PCpause_sec[$i]);
-				$status_found++;
-				}
-			$i++;
-			}
-		### END loop through each stat line ###
-		if ($status_found < 1)
-			{
-			$SUMstatusesHTML .= "          0 |";
-			}
-		else
-			{
-			$TOTtotPAUSE = ($TOTtotPAUSE + $Scalls);
-
-			$USERsumstatPAUSE_MS =		sec_convert($Scalls,'H'); 
-			$pfUSERsumstatPAUSE_MS =	sprintf("%11s", $USERsumstatPAUSE_MS);
-
-			$SUMstatusTXT = sprintf("%10s", $pfUSERsumstatPAUSE_MS);
-			$SUMstatusesHTML .= "$SUMstatusTXT |";
-			$SUMstatusesFILE .= ",$pfUSERsumstatPAUSE_MS";
-			}
-		$n++;
-		}
-	### END loop through each status ###
 
 	### call function to calculate and print dialable leads
-	$TOTwait = sec_convert($TOTwait,'H');
-	$TOTtalk = sec_convert($TOTtalk,'H');
-	$TOTdispo = sec_convert($TOTdispo,'H');
-	$TOTpause = sec_convert($TOTpause,'H');
-	$TOTALtime = sec_convert($TOTALtime,'H');
 	$TOTtimeTC = sec_convert($TOTtimeTC,'H');
 
-	$TOTcalls = sprintf("%8s", $TOTcalls);
-	$TOTwait =	sprintf("%11s", $TOTwait);
-	$TOTtalk =	sprintf("%11s", $TOTtalk);
-	$TOTdispo =	sprintf("%11s", $TOTdispo);
-	$TOTpause =	sprintf("%11s", $TOTpause);
-	$TOTALtime = sprintf("%11s", $TOTALtime);
 	$TOTtimeTC = sprintf("%11s", $TOTtimeTC);
 	###### END LAST LINE TOTALS FORMATTING ##########
 
@@ -710,16 +517,16 @@ else
 
 	if ($file_download < 1)
 		{
-		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-		echo "|  TOTALS        AGENTS:$TOT_AGENTS | $TOTcalls |$TOTtimeTC |$TOTALtime |$TOTwait |$TOTtalk |$TOTdispo |$TOTpause |   |$SUMstatusesHTML\n";
-		echo "+----------------------------+----------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		echo "+-----------------+----------+----------------------+------------+--------------------\n";
+		echo "|  TOTALS        AGENTS:$TOT_AGENTS |                      |$TOTtimeTC |\n";
+		echo "+----------------------------+                      +------------+\n";
 		if ($AUTOLOGOUTflag > 0)
 			{echo "     * denotes AUTOLOGOUT from timeclock\n";}
 		echo "\n\n</PRE>";
 		}
 	else
 		{
-		$file_output .= "TOTALS,$TOT_AGENTS,$TOTcalls,$TOTtimeTC,$TOTALtime,$TOTwait,$TOTtalk,$TOTdispo,$TOTpause$SUMstatusesFILE\n";
+		$file_output .= "TOTALS,$TOT_AGENTS,,$TOTtimeTC\n";
 		}
 	}
 
@@ -759,22 +566,24 @@ if ($file_download > 0)
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
 echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Dates:<BR>";
 echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
-echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
-echo "<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
-echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
-echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
-if  (eregi("--ALL--",$group_string))
-	{echo "<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
-else
-	{echo "<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
-$o=0;
-while ($campaigns_to_print > $o)
-{
-	if (eregi("$groups[$o]\|",$group_string)) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
-	  else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
-	$o++;
-}
-echo "</SELECT>\n";
+echo "<INPUT TYPE=TEXT NAME=query_date SIZE=20 MAXLENGTH=20 VALUE=\"$query_date\">\n";
+echo "<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=20 MAXLENGTH=20 VALUE=\"$end_date\">\n";
+
+#	echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
+#	echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
+#	if  (eregi("--ALL--",$group_string))
+#		{echo "<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+#	else
+#		{echo "<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+#	$o=0;
+#	while ($campaigns_to_print > $o)
+#	{
+#		if (eregi("$groups[$o]\|",$group_string)) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
+#		  else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
+#		$o++;
+#	}
+#	echo "</SELECT>\n";
+
 echo "</TD><TD VALIGN=TOP>User Groups:<BR>";
 echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 
@@ -816,40 +625,6 @@ echo "</FORM>\n\n";
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
 echo "<font size=1 color=white>$RUNtime</font>\n";
-
-
-##### BEGIN horizontal yellow transparent bar graph overlay on top of agent stats
-echo "</span>\n";
-echo "<span style=\"position:absolute;left:3px;top:3px;z-index:18;\"  id=agent_status_bars>\n";
-echo "<PRE><FONT SIZE=2>\n\n\n\n\n\n\n\n";
-
-if ($stage == 'NAME') {$k=0;}
-$m=0;
-while ($m < $k)
-	{
-	$sort_split = explode("-----",$TOPsort[$m]);
-	$i = $sort_split[1];
-	$sort_order[$m] = "$i";
-
-	if ( ($TOPsortTALLY[$i] < 1) or ($TOPsortMAX < 1) )
-		{echo "                              \n";}
-	else
-		{
-		echo "                              <SPAN class=\"yellow\">";
-		$TOPsortPLOT = ( ($TOPsortTALLY[$i] / $TOPsortMAX) * 110 );
-		$h=0;
-		while ($h <= $TOPsortPLOT)
-			{
-			echo " ";
-			$h++;
-			}
-		echo "</SPAN>\n";
-		}
-	$m++;
-	}
-
-echo "</span>\n";
-##### END horizontal yellow transparent bar graph overlay on top of agent stats
 
 ?>
 

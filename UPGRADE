@@ -78,6 +78,9 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 
 20. Added DID traffic stats report: AST_DIDstats.php
 
+21. Added User Time-Clock Detail report to show agent login and logout times
+	along with totals, sortable and downloadable
+
 
 
 

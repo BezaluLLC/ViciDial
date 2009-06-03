@@ -159,10 +159,14 @@ Phone Context||
 This is the dial plan context that this phone will use to dial out. If you are running a call center and you do not want your agents to be able to dial out outside of the ViciDial applicaiton for example, then you would set this field to a dialplan context that does not exist, something like agent-nodial. default is default||
 Use the HIDE option to completely remove the customer phone number from the agent display||
 Click here to see a traffic report for this DID||
+Agent Time Detail||
+User Timeclock Detail Report||
 
 
 add-file: user_territories.php
 add-file: audio_store.php
+add-file: AST_agent_time_detail.php
+add-file: AST_agent_timeclock_detail.php
 
 ############################################################ CLIENT
 
