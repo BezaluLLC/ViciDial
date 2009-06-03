@@ -53,6 +53,7 @@
 # 90430-0117 - Added last call time and random sorting options
 # 90430-1022 - Changed this script to allow for List Mix ability
 # 90601-2111 - Added allow_inactive_list_leads to allow for inactive lists while in List Mix mode
+# 90603-1157 - Fixed rare bug in list mix where statuses field do not end with -
 #
 
 # constants
@@ -1170,6 +1171,8 @@ foreach(@campaign_id)
 				@list_mix_stepARY = split(/\|/,$list_mixARY[$x]);
 				$list_mix_stepARY[3] =~ s/ /\',\'/gi;
 				$list_mix_stepARY[3] =~ s/^\',|,\'-//gi;
+				if ($list_mix_stepARY[3] !~ /\'$/)
+					{$list_mix_stepARY[3] = "$list_mix_stepARY[3]'";}
 				if ($DBX) {print "     LM $x ++$list_mixARY[$x]++ |$list_mix_stepARY[0]|$list_mix_stepARY[2]|$list_mix_stepARY[3]|\n";}
 				$list_mix_dialableSQL .= "(list_id='$list_mix_stepARY[0]' and status IN($list_mix_stepARY[3]))";
 
@@ -1500,6 +1503,8 @@ foreach(@campaign_id)
 						$LM_step_even[$x] = ( (100 / $list_mix_stepARY[2]) * 100000);
 						$list_mix_stepARY[3] =~ s/ /','/gi;
 						$list_mix_stepARY[3] =~ s/^',|,'-//gi;
+						if ($list_mix_stepARY[3] !~ /\'$/)
+							{$list_mix_stepARY[3] = "$list_mix_stepARY[3]'";}
 						if ($DBX) {print "  LM $x |$list_mix_stepARY[0]|$list_mix_stepARY[2]|$LM_step_goal[$x]|$list_mix_stepARY[3]|\n";}
 						$list_mix_dialableSQL = "(list_id='$list_mix_stepARY[0]' and status IN($list_mix_stepARY[3]))";
 
