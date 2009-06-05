@@ -40,10 +40,11 @@
 # 80510-2058 - Fixed status override bug
 # 80525-1040 - Added IVR vac status compatibility for inbound calls
 # 80830-0035 - Added auto alt dialing for EXTERNAL leads for each lead
-# 80909-0843 - Added support for campaign-speccific DNC lists
+# 80909-0843 - Added support for campaign-specific DNC lists
 # 81021-0306 - Added Local channel logging support and while-to-if changes
 # 81026-1247 - Changed to allow for better remote agent calling
 # 81029-0522 - Changed to disallow queue_log logging of IVR calls
+# 90604-1044 - Fixed formatting, added DAHDI support, added carrier hangup code logging
 #
 
 
@@ -124,9 +125,9 @@ $sthBrows=$sthB->rows;
 $rec_count=0;
 while ($sthBrows > $rec_count)
 	{
-	 @aryB = $sthB->fetchrow_array;
-		$SERVERLOG =	"$aryB[0]";
-	 $rec_count++;
+	@aryB = $sthB->fetchrow_array;
+	$SERVERLOG =	"$aryB[0]";
+	$rec_count++;
 	}
 $sthB->finish();
 $dbhB->disconnect();
@@ -149,7 +150,9 @@ use Net::Server::PreFork; # any personality will do
 
 
 
-sub process_request {
+sub process_request 
+	{
+	$carrier_logging_active=0;
 	$process = 'begin';
 	$script = 'VDfastAGI';
 	########## Get current time, parse configs, get logging preferences ##########
@@ -219,16 +222,14 @@ sub process_request {
 	while ($sthArows > $rec_count)
 		{
 		$AGILOG = '0';
-		 @aryA = $sthA->fetchrow_array;
-			$DBagi_output =			"$aryA[0]";
-			if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
-			if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
-			if ($DBagi_output =~ /BOTH/)	{$AGILOG = '3';}
-		 $rec_count++;
+		@aryA = $sthA->fetchrow_array;
+		$DBagi_output =			"$aryA[0]";
+		if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
+		if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
+		if ($DBagi_output =~ /BOTH/)	{$AGILOG = '3';}
+		$rec_count++;
 		}
 	$sthA->finish();
-
-
 
 
 	if ($AGILOG) 
@@ -241,7 +242,7 @@ sub process_request {
 
 	### begin parsing run-time options ###
 	if (length($ARGV[0])>1)
-	{
+		{
 		if ($AGILOG) 
 			{
 			$agi_string = "Perl Environment Dump:"; 
@@ -249,7 +250,7 @@ sub process_request {
 			}
 		$i=0;
 		while ($#ARGV >= $i)
-		{
+			{
 			$args = "$args $ARGV[$i]";
 			if ($AGILOG) 
 				{
@@ -257,23 +258,25 @@ sub process_request {
 				&agi_output;
 				}
 			$i++;
+			}
 		}
-	}
+
 	$HVcauses=0;
 	$fullCID=0;
 	$callerid='';
 	$calleridname='';
 	$|=1;
-	while(<STDIN>) {
+	while(<STDIN>) 
+		{
 		chomp;
 		last unless length($_);
 		if ($AGILOG)
-		{
-			if (/^agi_(\w+)\:\s+(.*)$/)
 			{
-				$AGI{$1} = $2;
+			if (/^agi_(\w+)\:\s+(.*)$/)
+				{
+					$AGI{$1} = $2;
+				}
 			}
-		}
 
 		if (/^agi_uniqueid\:\s+(.*)$/)		{$unique_id = $1; $uniqueid = $unique_id;}
 		if (/^agi_priority\:\s+(.*)$/)		{$priority = $1;}
@@ -326,7 +329,7 @@ sub process_request {
 				}
 			$calleridname = $callerid;
 			}
-	}
+		}
 
 	if ($AGILOG) 
 		{
@@ -335,13 +338,13 @@ sub process_request {
 		}
 
 	foreach $i (sort keys %AGI) 
-	{
+		{
 		if ($AGILOG) 
 			{
 			$agi_string = " -- $i = $AGI{$i}";   
 			&agi_output;
 			}
-	}
+		}
 
 
 	if ($AGILOG) 
@@ -377,10 +380,10 @@ sub process_request {
 
 			if ($channel =~ /^SIP/) {$channel =~ s/-.*//gi;}
 			if ($channel =~ /^IAX2/) {$channel =~ s/\/\d+$//gi;}
-			if ($channel =~ /^Zap\//)
+			if ($channel =~ /^Zap\/|^DAHDI\//)
 				{
 				$channel_line = $channel;
-				$channel_line =~ s/^Zap\///gi;
+				$channel_line =~ s/^Zap\/|^DAHDI\///gi;
 
 				$stmtA = "SELECT count(*) FROM phones where server_ip='$VARserver_ip' and extension='$channel_line' and protocol='Zap';";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -443,7 +446,7 @@ sub process_request {
 				if ($is_client_phone > 0)
 					{$channel_group = 'Client Phone';}
 				
-				$SIP_ext = $channel;	$SIP_ext =~ s/SIP\/|IAX2\/|Zap\/|Local\///gi;
+				$SIP_ext = $channel;	$SIP_ext =~ s/SIP\/|IAX2\/|Zap\/|DAHDI\/|Local\///gi;
 
 				$number_dialed = $extension;
 				$extension = $SIP_ext;
@@ -461,8 +464,8 @@ sub process_request {
 					@aryA = $sthA->fetchrow_array;
 					$cmd_line_b	=	"$aryA[0]";
 					$cmd_line_d	=	"$aryA[1]";
-						$cmd_line_b =~ s/Exten: //gi;
-						$cmd_line_d =~ s/Channel: Local\/|@.*//gi;
+					$cmd_line_b =~ s/Exten: //gi;
+					$cmd_line_d =~ s/Channel: Local\/|@.*//gi;
 					$rec_count++;
 					}
 				$sthA->finish();
@@ -484,6 +487,12 @@ sub process_request {
 		else		 
 			{
 			if ($AGILOG) {$agi_string = "|CALL HUNG UP|";   &agi_output;}
+
+			$callerid =~ s/\"//gi;
+			$CIDlead_id = $callerid;
+			$CIDlead_id = substr($CIDlead_id, 11, 9);
+			$CIDlead_id = ($CIDlead_id + 0);
+
 			if ($request =~ /--HVcauses--/i)
 				{
 				$HVcauses=1;
@@ -497,6 +506,32 @@ sub process_request {
 				$ring_time = $ARGV_vars[5];
 				$agi_string = "URL HVcauses: |$PRI|$DEBUG|$hangup_cause|$dialstatus|$dial_time|$ring_time|";   
 				&agi_output;
+
+				if ( (length($dialstatus) > 0) && ($callerid =~ /^V|^M/) )
+					{
+					### Grab Server values from the database
+					$stmtA = "SELECT carrier_logging_active FROM servers where server_ip = '$VARserver_ip';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						if ($aryA[0] =~ /Y/)
+							{$carrier_logging_active = 1;}
+						else
+							{$carrier_logging_active = 0;}
+						}
+					$sthA->finish();
+
+					if ($carrier_logging_active > 0)
+						{
+						$stmtA = "INSERT IGNORE INTO vicidial_carrier_log set uniqueid='$uniqueid',call_date='$now_date',server_ip='$VARserver_ip',lead_id='$CIDlead_id',hangup_cause='$hangup_cause',dialstatus='$dialstatus',channel='$channel',dial_time='$dial_time';";
+							if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+						$VCARaffected_rows = $dbhA->do($stmtA);
+						if ($AGILOG) {$agi_string = "--    CARRIER LOG insert: |$VCARaffected_rows|$CIDlead_id|$hangup_cause";   &agi_output;}
+						}
+					}
 				}
 
 			### get uniqueid and start_epoch from the call_log table
@@ -548,23 +583,23 @@ sub process_request {
 				}
 			$sthA->finish();
 
-			  if ($rec_count)
-			  {
-			if ($AGILOG) {$agi_string = "*****Entry found for $unique_id-$VARserver_ip in park_log: $parked_time|$grab_time";   &agi_output;}
-				 if ($parked_time > $grab_time)
-				 {
-				$parked_sec=($now_date_epoch - $parked_time);
-				$talked_sec=0;
-				 }
-				 else
-				 {
-				$talked_sec=($now_date_epoch - $parked_time);
-				$parked_sec=($grab_time - $parked_time);
-				 }
+			if ($rec_count)
+				{
+				if ($AGILOG) {$agi_string = "*****Entry found for $unique_id-$VARserver_ip in park_log: $parked_time|$grab_time";   &agi_output;}
+				if ($parked_time > $grab_time)
+					{
+					$parked_sec=($now_date_epoch - $parked_time);
+					$talked_sec=0;
+					}
+				else
+					{
+					$talked_sec=($now_date_epoch - $parked_time);
+					$parked_sec=($grab_time - $parked_time);
+					}
 
 				$stmtA = "UPDATE park_log set status='HUNGUP',hangup_time='$now_date',parked_sec='$parked_sec',talked_sec='$talked_sec' where uniqueid='$unique_id' and server_ip='$VARserver_ip'";
 				$affected_rows = $dbhA->do($stmtA);
-			   }
+				}
 		##### END Park Log entry check and update #####
 
 		#	$dbhA->disconnect();
@@ -579,7 +614,7 @@ sub process_request {
 			$VDADphone_code='';
 
 			if ($DEBUG =~ /^DEBUG$/)
-			{
+				{
 				### open the hangup cause out file for writing ###
 				open(out, ">>$PATHlogs/HANGUP_cause-output.txt")
 						|| die "Can't open $PATHlogs/HANGUP_cause-output.txt: $!\n";
@@ -587,24 +622,18 @@ sub process_request {
 				print out "$now_date|$hangup_cause|$dialstatus|$dial_time|$ring_time|$unique_id|$channel|$extension|$type|$callerid|$calleridname|$priority|\n";
 
 				close(out);
-			}
+				}
 			else 
-			{
-			if ($AGILOG) {$agi_string = "DEBUG: $DEBUG";   &agi_output;}
-			}
-
-
-			$callerid =~ s/\"//gi;
-			$CIDlead_id = $callerid;
-			$CIDlead_id = substr($CIDlead_id, 11, 9);
-			$CIDlead_id = ($CIDlead_id + 0);
+				{
+				if ($AGILOG) {$agi_string = "DEBUG: $DEBUG";   &agi_output;}
+				}
 
 			if ($AGILOG) {$agi_string = "VD_hangup : $callerid $channel $priority $CIDlead_id";   &agi_output;}
 
 			if ($channel =~ /^Local/)
-			{
-				if ( ($PRI =~ /^PRI$/) && ($callerid =~ /\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/) && ( ($dialstatus =~ /BUSY/) || ( ($dialstatus =~ /CHANUNAVAIL/) && ($hangup_cause =~ /^1$|^28$/) ) ) )
 				{
+				if ( ($PRI =~ /^PRI$/) && ($callerid =~ /\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/) && ( ($dialstatus =~ /BUSY/) || ( ($dialstatus =~ /CHANUNAVAIL/) && ($hangup_cause =~ /^1$|^28$/) ) ) )
+					{
 					if ($dialstatus =~ /BUSY/) {$VDL_status = 'B'; $VDAC_status = 'BUSY';}
 					if ($dialstatus =~ /CHANUNAVAIL/) {$VDL_status = 'DC'; $VDAC_status = 'DISCONNECT';}
 
@@ -628,18 +657,17 @@ sub process_request {
 					sleep(1);
 
 					$dbhA->disconnect();
-				}
+					}
 				else
-				{
+					{
 					if ($AGILOG) {$agi_string = "--    VD_hangup Local DEBUG: |$PRI|$callerid|$dialstatus|$hangup_cause|";   &agi_output;}
-				}
+					}
 
 				if ($AGILOG) {$agi_string = "+++++ VDAD START LOCAL CHANNEL: EXITING- $priority";   &agi_output;}
 				if ($priority > 2) {sleep(1);}
-			}
+				}
 			else
-			{
-
+				{
 				########## FIND AND DELETE vicidial_auto_calls ##########
 				$VD_alt_dial = 'NONE';
 				$stmtA = "SELECT lead_id,callerid,campaign_id,alt_dial,stage,UNIX_TIMESTAMP(call_time),uniqueid,status FROM vicidial_auto_calls where uniqueid = '$uniqueid' or callerid = '$callerid' limit 1;";
@@ -647,7 +675,7 @@ sub process_request {
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
-				 $rec_countCUSTDATA=0;
+				$rec_countCUSTDATA=0;
 				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
@@ -659,7 +687,7 @@ sub process_request {
 					$VD_start_epoch =	"$aryA[5]";
 					$VD_uniqueid =		"$aryA[6]";
 					$VD_status =		"$aryA[7]";
-					 $rec_countCUSTDATA++;
+					$rec_countCUSTDATA++;
 					}
 				$sthA->finish();
 
@@ -682,14 +710,14 @@ sub process_request {
 					$rec_count=0;
 					while ($sthArows > $rec_count)
 						{
-						 @aryA = $sthA->fetchrow_array;
-							$enable_queuemetrics_logging =	"$aryA[0]";
-							$queuemetrics_server_ip	=		"$aryA[1]";
-							$queuemetrics_dbname =			"$aryA[2]";
-							$queuemetrics_login=			"$aryA[3]";
-							$queuemetrics_pass =			"$aryA[4]";
-							$queuemetrics_log_id =			"$aryA[5]";
-						 $rec_count++;
+						@aryA = $sthA->fetchrow_array;
+						$enable_queuemetrics_logging =	"$aryA[0]";
+						$queuemetrics_server_ip	=		"$aryA[1]";
+						$queuemetrics_dbname =			"$aryA[2]";
+						$queuemetrics_login=			"$aryA[3]";
+						$queuemetrics_pass =			"$aryA[4]";
+						$queuemetrics_log_id =			"$aryA[5]";
+						$rec_count++;
 						}
 					$sthA->finish();
 					##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -904,7 +932,7 @@ sub process_request {
 						$VD_auto_alt_dial_statuses	=	"$aryA[1]";
 						$VD_use_internal_dnc =			"$aryA[2]";
 						$VD_use_campaign_dnc =			"$aryA[3]";
-						 $epc_countCAMPDATA++;
+						$epc_countCAMPDATA++;
 						}
 					$sthA->finish();
 					if ($VD_auto_alt_dial_statuses =~ / $VD_status | $VDL_status /)
@@ -918,7 +946,7 @@ sub process_request {
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
-							 $epc_countCAMPDATA=0;
+							$epc_countCAMPDATA=0;
 							while ($sthArows > $epc_countCAMPDATA)
 								{
 								@aryA = $sthA->fetchrow_array;
@@ -927,7 +955,7 @@ sub process_request {
 								$VD_gmt_offset_now =	"$aryA[1]";
 								$VD_state =				"$aryA[2]";
 								$VD_list_id =			"$aryA[3]";
-								 $epc_countCAMPDATA++;
+								$epc_countCAMPDATA++;
 								}
 							$sthA->finish();
 							if (length($VD_alt_phone)>5)
@@ -993,7 +1021,7 @@ sub process_request {
 								$VD_gmt_offset_now =	"$aryA[1]";
 								$VD_state =				"$aryA[2]";
 								$VD_list_id =			"$aryA[3]";
-								 $epc_countCAMPDATA++;
+								$epc_countCAMPDATA++;
 								}
 							$sthA->finish();
 							if (length($VD_address3)>5)
@@ -1055,14 +1083,14 @@ sub process_request {
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
-							 $epc_countCAMPDATA=0;
+							$epc_countCAMPDATA=0;
 							while ($sthArows > $epc_countCAMPDATA)
 								{
 								@aryA = $sthA->fetchrow_array;
 								$VD_gmt_offset_now =	"$aryA[1]";
 								$VD_state =				"$aryA[2]";
 								$VD_list_id =			"$aryA[3]";
-								 $epc_countCAMPDATA++;
+								$epc_countCAMPDATA++;
 								}
 							$sthA->finish();
 							$alt_dial_phones_count=0;
@@ -1172,43 +1200,42 @@ sub process_request {
 	###################################################################
 
 
-}
+	}
 
 
 VDfastAGI->run(
-					port=>4577,
-					user=>'root',
-					group=>'root',
-					min_servers=>$VARfastagi_log_min_servers,
-					max_servers=>$VARfastagi_log_max_servers,
-					min_spare_servers=>$VARfastagi_log_min_spare_servers,
-					max_spare_servers=>$VARfastagi_log_max_spare_servers,
-					max_requests=>$VARfastagi_log_max_requests,
-					check_for_dead=>$VARfastagi_log_checkfordead,
-					check_for_waiting=>$VARfastagi_log_checkforwait,
-					log_file=>$childLOGfile,
-					log_level=>$log_level
-					);
+				port=>4577,
+				user=>'root',
+				group=>'root',
+				min_servers=>$VARfastagi_log_min_servers,
+				max_servers=>$VARfastagi_log_max_servers,
+				min_spare_servers=>$VARfastagi_log_min_spare_servers,
+				max_spare_servers=>$VARfastagi_log_max_spare_servers,
+				max_requests=>$VARfastagi_log_max_requests,
+				check_for_dead=>$VARfastagi_log_checkfordead,
+				check_for_waiting=>$VARfastagi_log_checkforwait,
+				log_file=>$childLOGfile,
+				log_level=>$log_level
+				);
 exit;
 
 
 
 
-
 sub agi_output
-{
-if ($AGILOG >=2)
 	{
-	### open the log file for writing ###
-	open(Lout, ">>$AGILOGfile")
-			|| die "Can't open $AGILOGfile: $!\n";
-	print Lout "$now_date|$script|$process|$agi_string\n";
-	close(Lout);
+	if ($AGILOG >=2)
+		{
+		### open the log file for writing ###
+		open(Lout, ">>$AGILOGfile")
+				|| die "Can't open $AGILOGfile: $!\n";
+		print Lout "$now_date|$script|$process|$agi_string\n";
+		close(Lout);
+		}
+		### send to STDERR writing ###
+	if ( ($AGILOG == '1') || ($AGILOG == '3') )
+		{
+		print STDERR "$now_date|$script|$process|$agi_string\n";
+		}
+	$agi_string='';
 	}
-	### send to STDERR writing ###
-if ( ($AGILOG == '1') || ($AGILOG == '3') )
-	{
-	print STDERR "$now_date|$script|$process|$agi_string\n";
-	}
-$agi_string='';
-}

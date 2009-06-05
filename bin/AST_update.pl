@@ -5,13 +5,13 @@
 # DESCRIPTION:
 # uses the Asterisk Manager interface and Net::MySQL to update the live_channels
 # tables and verify the parked_channels table in the asterisk MySQL database 
-# This "near-live-status of Zap/SIP/Local/IAX channels" list is used by clients
+# This near-live-status of Zap/SIP/Local/IAX/DAHDI channels list is used by clients
 #
 # SUMMARY:
 # This program was designed for people using the Asterisk PBX with Digium
 # Zaptel telco cards and SIP VOIP hardphones or softphones as extensions, it
 # could be adapted to other functions, but I designed it specifically for 
-# Zap/IAX2/SIP users. The program will run on UNIX or Win32 command line 
+# Zap/IAX2/SIP/DAHDI users. The program will run on UNIX or Win32 command line 
 # providing the following criteria are met:
 # 
 # Win32 - ActiveState Perl 5.8.0
@@ -57,9 +57,10 @@
 # 61227-1659 - added "core show channels concise" for Asterisk 1.4 compatibility
 # 80111-1850 - fixed server_updater record missing bug
 # 90307-1932 - Added servers table stats updating, reformatted code to match standard
+# 90604-1127 - Added support for DAHDI channels
 #
 
-$build = '90307-1932';
+$build = '90604-1127';
 
 # constants
 $SYSPERF=0;	# system performance logging to MySQL server_performance table every 5 seconds
@@ -309,8 +310,8 @@ if ($SUrec < 1)
 	}
 
 
-##### LOOK FOR ZAP CLIENTS AS DEFINED IN THE phones TABLE SO THEY ARE NOT MISLABELED AS TRUNKS
-print STDERR "LOOKING FOR Zap clients assigned to this server:\n";
+##### LOOK FOR ZAP/DAHDI CLIENTS AS DEFINED IN THE phones TABLE SO THEY ARE NOT MISLABELED AS TRUNKS
+print STDERR "LOOKING FOR Zap/DAHDI clients assigned to this server:\n";
 $Zap_client_count=0;
 $Zap_client_list='|';
 $stmtA = "SELECT extension FROM phones where protocol = 'Zap' and server_ip='$server_ip'";
@@ -476,7 +477,7 @@ while($one_day_interval > 0)
 				if (length($test_chan_12[6])<2) {$test_chan_12[6] = 'SIP/ring';}
 				$test_channels[$s] = "$test_chan_12[0]     $test_chan_12[6]";
 				}
-			if ($test_channels[$s] =~ /^Zap|^IAX2|^SIP|^Local/)
+			if ($test_channels[$s] =~ /^Zap|^IAX2|^SIP|^Local|^DAHDI/)
 				{
 				if ($test_channels[$s] =~ /^(\S+)\s+.+\s+(\S+)$/)
 					{
@@ -499,7 +500,7 @@ while($one_day_interval > 0)
 					if ($Zap_client_count) 
 						{
 						$channel_match=$channel;
-						$channel_match =~ s/^Zap\///gi;
+						$channel_match =~ s/^Zap\/|^DAHDI\///gi;
 						$channel_match =~ s/\*/\\\*/gi;
 						if ($Zap_client_list =~ /\|$channel_match\|/i) {$test_zap_count++;}
 						}
@@ -818,7 +819,7 @@ while($one_day_interval > 0)
 				if( ($DB) or ($UD_bad_grab) ){print "+|$c|$list_channels[$c]|\n\n";}
 
 				########## PARSE EACH LINE TO DETERMINE WHETHER IT IS TRUNK OR CLIENT AND PUT IN APPROPRIATE TABLE
-				if ($list_channels[$c] =~ /^Zap|^IAX2|^SIP|^Local/)
+				if ($list_channels[$c] =~ /^Zap|^IAX2|^SIP|^Local|^DAHDI/)
 					{
 					if ($list_channels[$c] =~ /^(\S+)\s+.+\s+(\S+)$/)
 						{
@@ -852,7 +853,7 @@ while($one_day_interval > 0)
 						if( ($DB) or ($UD_bad_grab) ){print "extension: |$extension|\n";}
 						if( ($DB) or ($UD_bad_grab) ){print "QRYchannel:|$QRYchannel|\n";}
 
-						if ($channel =~ /^SIP|^Zap|^IAX2/) {$line_type = 'TRUNK';}
+						if ($channel =~ /^SIP|^Zap|^IAX2|^DAHDI/) {$line_type = 'TRUNK';}
 						if ($channel =~ /^Local/) {$line_type = 'CLIENT';}
 						if ($IAX2_client_count) 
 							{
@@ -866,7 +867,7 @@ while($one_day_interval > 0)
 						if ($Zap_client_count) 
 							{
 							$channel_match=$channel;
-							$channel_match =~ s/^Zap\///gi;
+							$channel_match =~ s/^Zap\/|^DAHDI\///gi;
 							$channel_match =~ s/\*/\\\*/gi;
 		#					print "checking for Zap client:   |$channel_match|\n";
 							if ($Zap_client_list =~ /\|$channel_match\|/i) {$line_type = 'CLIENT';}
@@ -1107,7 +1108,7 @@ sub get_current_channels
 		if($DB){print STDERR $aryA[0],"|", $aryA[1],"\n";}
 		$DBsips[$sip_counter] = "$aryA[0]$US$aryA[1]";
 
-		if ($aryA[0] =~ /^Zap/) {$zap_client_counter++;}
+		if ($aryA[0] =~ /^Zap|^DAHDI/) {$zap_client_counter++;}
 		if ($aryA[0] =~ /^IAX/) {$iax_client_counter++;}
 		if ($aryA[0] =~ /^Local/) {$local_client_counter++;}
 		if ($aryA[0] =~ /^SIP/) {$sip_client_counter++;}

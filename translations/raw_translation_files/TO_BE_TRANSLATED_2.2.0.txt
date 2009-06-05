@@ -161,6 +161,8 @@ Use the HIDE option to completely remove the customer phone number from the agen
 Click here to see a traffic report for this DID||
 Agent Time Detail||
 User Timeclock Detail Report||
+Carrier Logging Active||
+This setting allows you to log all hangup return codes for any outbound list dialing calls that you are placing. Default is N.||
 
 
 add-file: user_territories.php

@@ -146,3 +146,19 @@ INSERT INTO vicidial_override_ids(id_table,active,value) values('phones','0','10
 ALTER TABLE vicidial_campaigns MODIFY disable_alter_custphone ENUM('Y','N','HIDE') default 'Y';
 
 UPDATE system_settings SET db_schema_version='1147';
+
+CREATE TABLE vicidial_carrier_log (
+uniqueid VARCHAR(20) PRIMARY KEY NOT NULL,
+call_date DATETIME,
+server_ip VARCHAR(15) NOT NULL,
+lead_id INT(9) UNSIGNED,
+hangup_cause TINYINT(1) UNSIGNED default '0',
+dialstatus VARCHAR(16),
+channel VARCHAR(100),
+dial_time SMALLINT(2) UNSIGNED default '0',
+index (call_date)
+);
+
+ALTER TABLE servers ADD carrier_logging_active ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1148';

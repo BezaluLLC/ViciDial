@@ -108,7 +108,8 @@ channels_total SMALLINT(4) UNSIGNED NOT NULL default '0',
 cpu_idle_percent SMALLINT(3) UNSIGNED NOT NULL default '0',
 disk_usage VARCHAR(255) default '1',
 sounds_update ENUM('Y','N') default 'N',
-vicidial_recording_limit MEDIUMINT(8) default '60'
+vicidial_recording_limit MEDIUMINT(8) default '60',
+carrier_logging_active ENUM('Y','N') default 'N'
 );
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -1528,6 +1529,19 @@ active ENUM('0','1') default '1',
 value INT(9) default '0'
 );
 
+CREATE TABLE vicidial_carrier_log (
+uniqueid VARCHAR(20) PRIMARY KEY NOT NULL,
+call_date DATETIME,
+server_ip VARCHAR(15) NOT NULL,
+lead_id INT(9) UNSIGNED,
+hangup_cause TINYINT(1) UNSIGNED default '0',
+dialstatus VARCHAR(16),
+channel VARCHAR(100),
+dial_time SMALLINT(2) UNSIGNED default '0',
+index (call_date)
+);
+
+
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
 ALTER TABLE live_channels ENGINE=HEAP;
@@ -1633,7 +1647,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1147';
+UPDATE system_settings SET db_schema_version='1148';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

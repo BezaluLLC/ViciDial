@@ -1030,6 +1030,10 @@ if (isset($_GET["vicidial_recording_limit"]))			{$vicidial_recording_limit=$_GET
 	elseif (isset($_POST["vicidial_recording_limit"]))	{$vicidial_recording_limit=$_POST["vicidial_recording_limit"];}
 if (isset($_GET["phone_context"]))				{$phone_context=$_GET["phone_context"];}
 	elseif (isset($_POST["phone_context"]))		{$phone_context=$_POST["phone_context"];}
+if (isset($_GET["carrier_logging_active"]))				{$carrier_logging_active=$_GET["carrier_logging_active"];}
+	elseif (isset($_POST["carrier_logging_active"]))	{$carrier_logging_active=$_POST["carrier_logging_active"];}
+
+
 
 	if (isset($script_id)) {$script_id= strtoupper($script_id);}
 	if (isset($lead_filter_id)) {$lead_filter_id = strtoupper($lead_filter_id);}
@@ -1281,6 +1285,7 @@ if ($non_latin < 1)
 	$not_interested = ereg_replace("[^NY]","",$not_interested);
 	$unworkable = ereg_replace("[^NY]","",$unworkable);
 	$sounds_update = ereg_replace("[^NY]","",$sounds_update);
+	$carrier_logging_active = ereg_replace("[^NY]","",$carrier_logging_active);
 
 	$qc_enabled = ereg_replace("[^0-9NY]","",$qc_enabled);
 
@@ -1786,11 +1791,12 @@ else
 # 90530-1206 - Changed List Mix to allow for 40 mixes
 # 90531-1802 - Added auto-generated options for users, campaigns, in-groups, etc..., added option to HIDE custphone
 # 90531-2339 - Added Dynamic options for Call Menu
+# 90605-0248 - Added carrier_logging_active servers option
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-191';
-$build = '90531-2339';
+$admin_version = '2.2.0-192';
+$build = '90605-0248';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5033,6 +5039,13 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="servers-vicidial_recording_limit">
 <BR>
 <B>ViciDial Recording Limit -</B> This field is where you set the maximum number of minutes that a call recording initiated by ViciDial can be. Default is 60 minutes.
+
+<BR>
+<A NAME="servers-carrier_logging_active">
+<BR>
+<B>Carrier Logging Active -</B> This setting allows you to log all hangup return codes for any outbound list dialing calls that you are placing. Default is N.
+
+
 
 
 
@@ -11851,7 +11864,7 @@ if ($ADD==411111111111)
 				{
 				echo "<br>SERVER MODIFIED: $server_ip\n";
 
-				$stmt="UPDATE servers set server_id='$server_id',server_description='$server_description',server_ip='$server_ip',active='$active',asterisk_version='$asterisk_version', max_vicidial_trunks='$max_vicidial_trunks', telnet_host='$telnet_host', telnet_port='$telnet_port', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', ASTmgrUSERNAMEupdate='$ASTmgrUSERNAMEupdate', ASTmgrUSERNAMElisten='$ASTmgrUSERNAMElisten', ASTmgrUSERNAMEsend='$ASTmgrUSERNAMEsend', local_gmt='$local_gmt', voicemail_dump_exten='$voicemail_dump_exten', answer_transfer_agent='$answer_transfer_agent', ext_context='$ext_context', sys_perf_log='$sys_perf_log', vd_server_logs='$vd_server_logs', agi_output='$agi_output', vicidial_balance_active='$vicidial_balance_active',balance_trunks_offlimits='$balance_trunks_offlimits',recording_web_link='$recording_web_link',alt_server_ip='$alt_server_ip',active_asterisk_server='$active_asterisk_server',generate_vicidial_conf='$generate_vicidial_conf',rebuild_conf_files='$rebuild_conf_files',outbound_calls_per_second='$outbound_calls_per_second',sounds_update='$sounds_update',vicidial_recording_limit='$vicidial_recording_limit' where server_id='$old_server_id';";
+				$stmt="UPDATE servers set server_id='$server_id',server_description='$server_description',server_ip='$server_ip',active='$active',asterisk_version='$asterisk_version', max_vicidial_trunks='$max_vicidial_trunks', telnet_host='$telnet_host', telnet_port='$telnet_port', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', ASTmgrUSERNAMEupdate='$ASTmgrUSERNAMEupdate', ASTmgrUSERNAMElisten='$ASTmgrUSERNAMElisten', ASTmgrUSERNAMEsend='$ASTmgrUSERNAMEsend', local_gmt='$local_gmt', voicemail_dump_exten='$voicemail_dump_exten', answer_transfer_agent='$answer_transfer_agent', ext_context='$ext_context', sys_perf_log='$sys_perf_log', vd_server_logs='$vd_server_logs', agi_output='$agi_output', vicidial_balance_active='$vicidial_balance_active',balance_trunks_offlimits='$balance_trunks_offlimits',recording_web_link='$recording_web_link',alt_server_ip='$alt_server_ip',active_asterisk_server='$active_asterisk_server',generate_vicidial_conf='$generate_vicidial_conf',rebuild_conf_files='$rebuild_conf_files',outbound_calls_per_second='$outbound_calls_per_second',sounds_update='$sounds_update',vicidial_recording_limit='$vicidial_recording_limit',carrier_logging_active='$carrier_logging_active' where server_id='$old_server_id';";
 				$rslt=mysql_query($stmt, $link);
 
 				$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";
@@ -19046,7 +19059,7 @@ if ($ADD==311111111111)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,local_gmt,voicemail_dump_exten,answer_transfer_agent,ext_context,sys_perf_log,vd_server_logs,agi_output,vicidial_balance_active,balance_trunks_offlimits,recording_web_link,alt_server_ip,active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,outbound_calls_per_second,sysload,channels_total,cpu_idle_percent,disk_usage,sounds_update,vicidial_recording_limit from servers where server_id='$server_id' or server_ip='$server_ip';";
+	$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,local_gmt,voicemail_dump_exten,answer_transfer_agent,ext_context,sys_perf_log,vd_server_logs,agi_output,vicidial_balance_active,balance_trunks_offlimits,recording_web_link,alt_server_ip,active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,outbound_calls_per_second,sysload,channels_total,cpu_idle_percent,disk_usage,sounds_update,vicidial_recording_limit,carrier_logging_active from servers where server_id='$server_id' or server_ip='$server_ip';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$server_id =					$row[0];
@@ -19083,6 +19096,7 @@ if ($ADD==311111111111)
 	$disk_usage =					$row[31];
 	$sounds_update =				$row[32];
 	$vicidial_recording_limit =		$row[33];
+	$carrier_logging_active =		$row[34];
 
 	$cpu = (100 - $cpu_idle_percent);
 	$disk_usage = preg_replace("/ /"," - ",$disk_usage);
@@ -19121,6 +19135,7 @@ if ($ADD==311111111111)
 	echo "<tr bgcolor=#B6D3FC><td align=right>System Performance: </td><td align=left><select size=1 name=sys_perf_log><option>Y</option><option>N</option><option selected>$sys_perf_log</option></select>$NWB#servers-sys_perf_log$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Server Logs: </td><td align=left><select size=1 name=vd_server_logs><option>Y</option><option>N</option><option selected>$vd_server_logs</option></select>$NWB#servers-vd_server_logs$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>AGI Output: </td><td align=left><select size=1 name=agi_output><option>NONE</option><option>STDERR</option><option>FILE</option><option>BOTH</option><option selected>$agi_output</option></select>$NWB#servers-agi_output$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Carrier Logging Active: </td><td align=left><select size=1 name=carrier_logging_active><option>Y</option><option>N</option><option selected>$carrier_logging_active</option></select>$NWB#servers-carrier_logging_active$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Recording Web Link: </td><td align=left><select size=1 name=recording_web_link><option>SERVER_IP</option><option>ALT_IP</option><option selected>$recording_web_link</option></select>$NWB#servers-recording_web_link$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Alternate Recording Server IP: </td><td align=left><input type=text name=alt_server_ip size=30 maxlength=100 value=\"$alt_server_ip\">$NWB#servers-alt_server_ip$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Active Asterisk Server: </td><td align=left><select size=1 name=active_asterisk_server><option>Y</option><option>N</option><option selected>$active_asterisk_server</option></select>$NWB#servers-active_asterisk_server$NWE</td></tr>\n";
