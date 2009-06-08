@@ -647,7 +647,8 @@ survey_third_exten VARCHAR(20) default '8300',
 survey_fourth_digit VARCHAR(1) default '',
 survey_fourth_audio_file VARCHAR(50) default 'US_thanks_no_contact',
 survey_fourth_status VARCHAR(6) default 'NI',
-survey_fourth_exten VARCHAR(20) default '8300'
+survey_fourth_exten VARCHAR(20) default '8300',
+drop_lockout_time VARCHAR(6) default '0'
 );
 
 CREATE TABLE vicidial_lists (
@@ -1649,7 +1650,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1149';
+UPDATE system_settings SET db_schema_version='1150';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

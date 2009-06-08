@@ -169,3 +169,7 @@ INSERT INTO vicidial_statuses values('AB','Busy Auto','N','N','UNDEFINED','N','N
 INSERT INTO vicidial_statuses values('ADC','Disconnected Number Auto','N','N','UNDEFINED','N','N','N','N','Y');
 
 UPDATE system_settings SET db_schema_version='1149';
+
+ALTER TABLE vicidial_campaigns ADD drop_lockout_time VARCHAR(6) default '0';
+
+UPDATE system_settings SET db_schema_version='1150';

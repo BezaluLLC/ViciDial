@@ -163,6 +163,8 @@ Agent Time Detail||
 User Timeclock Detail Report||
 Carrier Logging Active||
 This setting allows you to log all hangup return codes for any outbound list dialing calls that you are placing. Default is N.||
+Drop Lockout Time||
+This is a number of hours that DROP abandon calls will be prevented from being dialed, to disable set to 0. This setting is very useful in countries like the UK where there are regulations preventing the attempted calling of customers within 72 hours of an Abandon, or DROP. Default is 0||
 
 
 add-file: user_territories.php
