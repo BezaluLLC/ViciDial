@@ -19,6 +19,7 @@
 # 90310-2034 - Admin header
 # 90508-0644 - Changed to PHP long tags
 # 90524-2231 - Changed to use functions.php for seconds to HH:MM:SS conversion
+# 90608-0251 - Added optional carrier codes stats, made graph at bottom optional
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -29,8 +30,12 @@ require("functions.php");
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
-if (isset($_GET["agent_hours"]))				{$agent_hours=$_GET["agent_hours"];}
-	elseif (isset($_POST["agent_hours"]))		{$agent_hours=$_POST["agent_hours"];}
+if (isset($_GET["carrier_stats"]))			{$carrier_stats=$_GET["carrier_stats"];}
+	elseif (isset($_POST["carrier_stats"]))	{$carrier_stats=$_POST["carrier_stats"];}
+if (isset($_GET["bottom_graph"]))			{$bottom_graph=$_GET["bottom_graph"];}
+	elseif (isset($_POST["bottom_graph"]))	{$bottom_graph=$_POST["bottom_graph"];}
+if (isset($_GET["agent_hours"]))			{$agent_hours=$_GET["agent_hours"];}
+	elseif (isset($_POST["agent_hours"]))	{$agent_hours=$_POST["agent_hours"];}
 if (isset($_GET["group"]))				{$group=$_GET["group"];}
 	elseif (isset($_POST["group"]))		{$group=$_POST["group"];}
 if (isset($_GET["query_date"]))				{$query_date=$_GET["query_date"];}
@@ -50,6 +55,8 @@ $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
 if (strlen($shift)<2) {$shift='ALL';}
+if (strlen($bottom_graph)<2) {$bottom_graph='NO';}
+if (strlen($carrier_stats)<2) {$carrier_stats='NO';}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -57,15 +64,24 @@ $stmt = "SELECT use_non_latin FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+##### SERVER CARRIER LOGGING LOOKUP #####
+$stmt = "SELECT count(*) FROM servers where carrier_logging_active='Y' and max_vicidial_trunks > 0;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$srv_conf_ct = mysql_num_rows($rslt);
+if ($srv_conf_ct > 0)
+	{
+	$row=mysql_fetch_row($rslt);
+	$carrier_logging_active =		$row[0];
+	}
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1';";
 if ($DB) {echo "|$stmt|\n";}
@@ -177,6 +193,22 @@ while ($campaigns_to_print > $o)
 	$o++;
 }
 echo "</SELECT>\n";
+echo "</TD><TD VALIGN=TOP>";
+if ($carrier_logging_active > 0)
+	{
+	echo "Carrier Stats:<BR>";
+	echo "<SELECT SIZE=1 NAME=carrier_stats>\n";
+	echo "<option selected value=\"$carrier_stats\">$carrier_stats</option>\n";
+	echo "<option value=\"YES\">YES</option>\n";
+	echo "<option value=\"NO\">NO</option>\n";
+	echo "</SELECT>\n";
+	}
+echo "<BR>Bottom Graph:<BR>\n";
+echo "<SELECT SIZE=1 NAME=bottom_graph>\n";
+echo "<option selected value=\"$bottom_graph\">$bottom_graph</option>\n";
+echo "<option value=\"YES\">YES</option>\n";
+echo "<option value=\"NO\">NO</option>\n";
+echo "</SELECT><BR>\n";
 echo "</TD><TD VALIGN=TOP>Shift:<BR>";
 echo "<SELECT SIZE=1 NAME=shift>\n";
 echo "<option selected value=\"$shift\">$shift</option>\n";
@@ -584,6 +616,47 @@ echo "+------------------------------------------------------+------------+-----
 
 
 
+
+
+
+if ( ($carrier_logging_active > 0) and ($carrier_stats == 'YES') )
+	{
+	##############################
+	#########  STATUS CATEGORY STATS
+
+	echo "\n";
+	echo "---------- CARRIER CALL STATUSES\n";
+	echo "+----------------------+------------+\n";
+	echo "| STATUS               | CALLS      |\n";
+	echo "+----------------------+------------+\n";
+
+	## get counts and time totals for all statuses in this campaign
+	$stmt="select dialstatus,count(*) from vicidial_carrier_log vcl,vicidial_log vl where vcl.uniqueid=vl.uniqueid and vcl.call_date > \"$query_date_BEGIN\" and vcl.call_date < \"$query_date_END\" and vl.call_date > \"$query_date_BEGIN\" and vl.call_date < \"$query_date_END\" $group_SQLand group by dialstatus order by dialstatus;";
+	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$carrierstatuses_to_print = mysql_num_rows($rslt);
+	$i=0;
+	while ($i < $carrierstatuses_to_print)
+		{
+		$row=mysql_fetch_row($rslt);
+		$TOTCARcalls = ($TOTCARcalls + $row[1]);
+		$CARstatus =	sprintf("%-20s", $row[0]); while(strlen($CARstatus)>20) {$CARstatus = substr("$CARstatus", 0, -1);}
+		$CARcount =		sprintf("%10s", $row[1]); while(strlen($CARcount)>10) {$CARcount = substr("$CARcount", 0, -1);}
+
+		echo "| $CARstatus | $CARcount |\n";
+
+		$i++;
+		}
+
+	$TOTCARcalls =	sprintf("%10s", $TOTCARcalls); while(strlen($TOTCARcalls)>10) {$TOTCARcalls = substr("$TOTCARcalls", 0, -1);}
+
+	echo "+----------------------+------------+\n";
+	echo "| TOTAL                | $TOTCARcalls |\n";
+	echo "+----------------------+------------+\n";
+	}
+
+
 ##############################
 #########  STATUS CATEGORY STATS
 
@@ -698,207 +771,216 @@ echo "+--------------------------+------------+------------+--------+\n";
 echo "| Average Wait time between calls                      $AVGwait |\n";
 echo "+-------------------------------------------------------------+\n";
 
-##############################
-#########  TIME STATS
 
-echo "\n";
-echo "---------- TIME STATS\n";
 
-echo "<FONT SIZE=0>\n";
 
-$hi_hour_count=0;
-$last_full_record=0;
-$i=0;
-$h=0;
-while ($i <= 96)
+
+
+
+if ($bottom_graph == 'YES')
 	{
-	$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:00:00' and call_date <= '$query_date $h:14:59' $group_SQLand;";
-	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
-	$hour_count[$i] = $row[0];
-	if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
-	if ($hour_count[$i] > 0) {$last_full_record = $i;}
-	$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:00:00' and call_date <= '$query_date $h:14:59' $group_SQLand and status='DROP';";
-	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
-	$drop_count[$i] = $row[0];
-	$i++;
+	##############################
+	#########  TIME STATS
 
+	echo "\n";
+	echo "---------- TIME STATS\n";
 
-	$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:15:00' and call_date <= '$query_date $h:29:59' $group_SQLand;";
-	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
-	$hour_count[$i] = $row[0];
-	if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
-	if ($hour_count[$i] > 0) {$last_full_record = $i;}
-	$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:15:00' and call_date <= '$query_date $h:29:59' $group_SQLand and status='DROP';";
-	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
-	$drop_count[$i] = $row[0];
-	$i++;
+	echo "<FONT SIZE=0>\n";
 
-	$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:30:00' and call_date <= '$query_date $h:44:59' $group_SQLand;";
-	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
-	$hour_count[$i] = $row[0];
-	if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
-	if ($hour_count[$i] > 0) {$last_full_record = $i;}
-	$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:30:00' and call_date <= '$query_date $h:44:59' $group_SQLand and status='DROP';";
-	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
-	$drop_count[$i] = $row[0];
-	$i++;
-
-	$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:45:00' and call_date <= '$query_date $h:59:59' $group_SQLand;";
-	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
-	$hour_count[$i] = $row[0];
-	if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
-	if ($hour_count[$i] > 0) {$last_full_record = $i;}
-	$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:45:00' and call_date <= '$query_date $h:59:59' $group_SQLand and status='DROP';";
-	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
-	$drop_count[$i] = $row[0];
-	$i++;
-	$h++;
-	}
-
-if ($hi_hour_count < 1)
-	{$hour_multiplier = 0;}
-else
-	{
-	$hour_multiplier = (100 / $hi_hour_count);
-	#$hour_multiplier = round($hour_multiplier, 0);
-	}
-
-echo "<!-- HICOUNT: $hi_hour_count|$hour_multiplier -->\n";
-echo "GRAPH IN 15 MINUTE INCREMENTS OF TOTAL CALLS PLACED FROM THIS CAMPAIGN\n";
-
-$k=1;
-$Mk=0;
-$call_scale = '0';
-while ($k <= 102) 
-	{
-	if ($Mk >= 5) 
+	$hi_hour_count=0;
+	$last_full_record=0;
+	$i=0;
+	$h=0;
+	while ($i <= 96)
 		{
-		$Mk=0;
-		if ( ($k < 1) or ($hour_multiplier <= 0) )
-			{$scale_num = 100;}
-		else
-			{
-			$scale_num=($k / $hour_multiplier);
-			$scale_num = round($scale_num, 0);
-			}
-		$LENscale_num = (strlen($scale_num));
-		$k = ($k + $LENscale_num);
-		$call_scale .= "$scale_num";
+		$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:00:00' and call_date <= '$query_date $h:14:59' $group_SQLand;";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$row=mysql_fetch_row($rslt);
+		$hour_count[$i] = $row[0];
+		if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
+		if ($hour_count[$i] > 0) {$last_full_record = $i;}
+		$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:00:00' and call_date <= '$query_date $h:14:59' $group_SQLand and status='DROP';";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$row=mysql_fetch_row($rslt);
+		$drop_count[$i] = $row[0];
+		$i++;
+
+
+		$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:15:00' and call_date <= '$query_date $h:29:59' $group_SQLand;";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$row=mysql_fetch_row($rslt);
+		$hour_count[$i] = $row[0];
+		if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
+		if ($hour_count[$i] > 0) {$last_full_record = $i;}
+		$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:15:00' and call_date <= '$query_date $h:29:59' $group_SQLand and status='DROP';";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$row=mysql_fetch_row($rslt);
+		$drop_count[$i] = $row[0];
+		$i++;
+
+		$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:30:00' and call_date <= '$query_date $h:44:59' $group_SQLand;";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$row=mysql_fetch_row($rslt);
+		$hour_count[$i] = $row[0];
+		if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
+		if ($hour_count[$i] > 0) {$last_full_record = $i;}
+		$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:30:00' and call_date <= '$query_date $h:44:59' $group_SQLand and status='DROP';";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$row=mysql_fetch_row($rslt);
+		$drop_count[$i] = $row[0];
+		$i++;
+
+		$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:45:00' and call_date <= '$query_date $h:59:59' $group_SQLand;";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$row=mysql_fetch_row($rslt);
+		$hour_count[$i] = $row[0];
+		if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
+		if ($hour_count[$i] > 0) {$last_full_record = $i;}
+		$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:45:00' and call_date <= '$query_date $h:59:59' $group_SQLand and status='DROP';";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$row=mysql_fetch_row($rslt);
+		$drop_count[$i] = $row[0];
+		$i++;
+		$h++;
 		}
+
+	if ($hi_hour_count < 1)
+		{$hour_multiplier = 0;}
 	else
 		{
-		$call_scale .= " ";
-		$k++;   $Mk++;
+		$hour_multiplier = (100 / $hi_hour_count);
+		#$hour_multiplier = round($hour_multiplier, 0);
 		}
-	}
 
+	echo "<!-- HICOUNT: $hi_hour_count|$hour_multiplier -->\n";
+	echo "GRAPH IN 15 MINUTE INCREMENTS OF TOTAL CALLS PLACED FROM THIS CAMPAIGN\n";
 
-echo "+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
-#echo "| HOUR | GRAPH IN 15 MINUTE INCREMENTS OF TOTAL INCOMING CALLS FOR THIS GROUP                                  | DROPS | TOTAL |\n";
-echo "| HOUR |$call_scale| DROPS | TOTAL |\n";
-echo "+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
-
-$ZZ = '00';
-$i=0;
-$h=4;
-$hour= -1;
-$no_lines_yet=1;
-
-while ($i <= 96)
-	{
-	$char_counter=0;
-	$time = '      ';
-	if ($h >= 4) 
+	$k=1;
+	$Mk=0;
+	$call_scale = '0';
+	while ($k <= 102) 
 		{
-		$hour++;
-		$h=0;
-		if ($hour < 10) {$hour = "0$hour";}
-		$time = "+$hour$ZZ+";
-		}
-	if ($h == 1) {$time = "   15 ";}
-	if ($h == 2) {$time = "   30 ";}
-	if ($h == 3) {$time = "   45 ";}
-	$Ghour_count = $hour_count[$i];
-	if ($Ghour_count < 1) 
-		{
-		if ( ($no_lines_yet) or ($i > $last_full_record) )
+		if ($Mk >= 5) 
 			{
-			$do_nothing=1;
+			$Mk=0;
+			if ( ($k < 1) or ($hour_multiplier <= 0) )
+				{$scale_num = 100;}
+			else
+				{
+				$scale_num=($k / $hour_multiplier);
+				$scale_num = round($scale_num, 0);
+				}
+			$LENscale_num = (strlen($scale_num));
+			$k = ($k + $LENscale_num);
+			$call_scale .= "$scale_num";
 			}
 		else
 			{
-			$hour_count[$i] =	sprintf("%-5s", $hour_count[$i]);
-			echo "|$time|";
-			$k=0;   while ($k <= 102) {echo " ";   $k++;}
-			echo "| $hour_count[$i] |\n";
+			$call_scale .= " ";
+			$k++;   $Mk++;
 			}
 		}
-	else
+
+
+	echo "+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
+	#echo "| HOUR | GRAPH IN 15 MINUTE INCREMENTS OF TOTAL INCOMING CALLS FOR THIS GROUP                                  | DROPS | TOTAL |\n";
+	echo "| HOUR |$call_scale| DROPS | TOTAL |\n";
+	echo "+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
+
+	$ZZ = '00';
+	$i=0;
+	$h=4;
+	$hour= -1;
+	$no_lines_yet=1;
+
+	while ($i <= 96)
 		{
-		$no_lines_yet=0;
-		$Xhour_count = ($Ghour_count * $hour_multiplier);
-		$Yhour_count = (99 - $Xhour_count);
-
-		$Gdrop_count = $drop_count[$i];
-		if ($Gdrop_count < 1) 
+		$char_counter=0;
+		$time = '      ';
+		if ($h >= 4) 
 			{
-			$hour_count[$i] =	sprintf("%-5s", $hour_count[$i]);
-
-			echo "|$time|<SPAN class=\"green\">";
-			$k=0;   while ($k <= $Xhour_count) {echo "*";   $k++;   $char_counter++;}
-			echo "*X</SPAN>";   $char_counter++;
-			$k=0;   while ($k <= $Yhour_count) {echo " ";   $k++;   $char_counter++;}
-				while ($char_counter <= 101) {echo " ";   $char_counter++;}
-			echo "| 0     | $hour_count[$i] |\n";
-
+			$hour++;
+			$h=0;
+			if ($hour < 10) {$hour = "0$hour";}
+			$time = "+$hour$ZZ+";
+			}
+		if ($h == 1) {$time = "   15 ";}
+		if ($h == 2) {$time = "   30 ";}
+		if ($h == 3) {$time = "   45 ";}
+		$Ghour_count = $hour_count[$i];
+		if ($Ghour_count < 1) 
+			{
+			if ( ($no_lines_yet) or ($i > $last_full_record) )
+				{
+				$do_nothing=1;
+				}
+			else
+				{
+				$hour_count[$i] =	sprintf("%-5s", $hour_count[$i]);
+				echo "|$time|";
+				$k=0;   while ($k <= 102) {echo " ";   $k++;}
+				echo "| $hour_count[$i] |\n";
+				}
 			}
 		else
 			{
-			$Xdrop_count = ($Gdrop_count * $hour_multiplier);
+			$no_lines_yet=0;
+			$Xhour_count = ($Ghour_count * $hour_multiplier);
+			$Yhour_count = (99 - $Xhour_count);
 
-		#	if ($Xdrop_count >= $Xhour_count) {$Xdrop_count = ($Xdrop_count - 1);}
+			$Gdrop_count = $drop_count[$i];
+			if ($Gdrop_count < 1) 
+				{
+				$hour_count[$i] =	sprintf("%-5s", $hour_count[$i]);
 
-			$XXhour_count = ( ($Xhour_count - $Xdrop_count) - 1 );
+				echo "|$time|<SPAN class=\"green\">";
+				$k=0;   while ($k <= $Xhour_count) {echo "*";   $k++;   $char_counter++;}
+				echo "*X</SPAN>";   $char_counter++;
+				$k=0;   while ($k <= $Yhour_count) {echo " ";   $k++;   $char_counter++;}
+					while ($char_counter <= 101) {echo " ";   $char_counter++;}
+				echo "| 0     | $hour_count[$i] |\n";
 
-			$hour_count[$i] =	sprintf("%-5s", $hour_count[$i]);
-			$drop_count[$i] =	sprintf("%-5s", $drop_count[$i]);
+				}
+			else
+				{
+				$Xdrop_count = ($Gdrop_count * $hour_multiplier);
 
-			echo "|$time|<SPAN class=\"red\">";
-			$k=0;   while ($k <= $Xdrop_count) {echo ">";   $k++;   $char_counter++;}
-			echo "D</SPAN><SPAN class=\"green\">";   $char_counter++;
-			$k=0;   while ($k <= $XXhour_count) {echo "*";   $k++;   $char_counter++;}
-			echo "X</SPAN>";   $char_counter++;
-			$k=0;   while ($k <= $Yhour_count) {echo " ";   $k++;   $char_counter++;}
-				while ($char_counter <= 102) {echo " ";   $char_counter++;}
-			echo "| $drop_count[$i] | $hour_count[$i] |\n";
+			#	if ($Xdrop_count >= $Xhour_count) {$Xdrop_count = ($Xdrop_count - 1);}
+
+				$XXhour_count = ( ($Xhour_count - $Xdrop_count) - 1 );
+
+				$hour_count[$i] =	sprintf("%-5s", $hour_count[$i]);
+				$drop_count[$i] =	sprintf("%-5s", $drop_count[$i]);
+
+				echo "|$time|<SPAN class=\"red\">";
+				$k=0;   while ($k <= $Xdrop_count) {echo ">";   $k++;   $char_counter++;}
+				echo "D</SPAN><SPAN class=\"green\">";   $char_counter++;
+				$k=0;   while ($k <= $XXhour_count) {echo "*";   $k++;   $char_counter++;}
+				echo "X</SPAN>";   $char_counter++;
+				$k=0;   while ($k <= $Yhour_count) {echo " ";   $k++;   $char_counter++;}
+					while ($char_counter <= 102) {echo " ";   $char_counter++;}
+				echo "| $drop_count[$i] | $hour_count[$i] |\n";
+				}
 			}
+		
+		
+		$i++;
+		$h++;
 		}
-	
-	
-	$i++;
-	$h++;
+
+
+	echo "+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
+
+	### END bottom graph
 	}
-
-
-echo "+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
-
-
 
 
 

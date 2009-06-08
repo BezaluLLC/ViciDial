@@ -580,7 +580,7 @@ allcalls_delay SMALLINT(3) UNSIGNED default '0',
 omit_phone_code ENUM('Y','N') default 'N',
 dial_method ENUM('MANUAL','RATIO','ADAPT_HARD_LIMIT','ADAPT_TAPERED','ADAPT_AVERAGE','INBOUND_MAN') default 'MANUAL',
 available_only_ratio_tally ENUM('Y','N') default 'N',
-adaptive_dropped_percentage SMALLINT(3) default '3',
+adaptive_dropped_percentage VARCHAR(4) default '3',
 adaptive_maximum_level VARCHAR(6) default '3.0',
 adaptive_latest_server_time VARCHAR(4) default '2100',
 adaptive_intensity VARCHAR(6) default '0',
@@ -1627,6 +1627,8 @@ INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_lead_f
 INSERT INTO vicidial_override_ids(id_table,active,value) values('vicidial_scripts','0','80000');
 INSERT INTO vicidial_override_ids(id_table,active,value) values('phones','0','100');
 
+INSERT INTO vicidial_lead_filters(lead_filter_id,lead_filter_name,lead_filter_comments,lead_filter_sql) values('DROP72HOUR','UK 72 hour Drop No Call','Prevents dropped calls from being called within 72 hours of the last attempt',"( ( (status='DROP') and (last_local_call_time < CONCAT(DATE_ADD(CURDATE(), INTERVAL -3 DAY),' ',CURTIME()) ) ) or (status != 'DROP') )");
+
 UPDATE system_settings SET qc_last_pull_time=NOW();
 
 CREATE INDEX country_postal_code on vicidial_postal_codes (country_code,postal_code);
@@ -1647,7 +1649,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1148';
+UPDATE system_settings SET db_schema_version='1149';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

@@ -329,8 +329,10 @@ INSERT INTO vicidial_statuses values('AA','Answering Machine Auto','N','N','UNDE
 INSERT INTO vicidial_statuses values('AM','Answering Machine Sent to Mesg','N','N','UNDEFINED','N','N','N','N','N');
 INSERT INTO vicidial_statuses values('AL','Answering Machine Msg Played','N','N','UNDEFINED','N','N','N','N','N');
 INSERT INTO vicidial_statuses values('AFAX','Fax Machine Auto','N','N','UNDEFINED','N','N','N','N','Y');
+INSERT INTO vicidial_statuses values('AB','Busy Auto','N','N','UNDEFINED','N','N','N','N','N');
 INSERT INTO vicidial_statuses values('B','Busy','Y','N','UNDEFINED','N','N','N','N','N');
 INSERT INTO vicidial_statuses values('DC','Disconnected Number','Y','N','UNDEFINED','N','N','N','N','Y');
+INSERT INTO vicidial_statuses values('ADC','Disconnected Number Auto','N','N','UNDEFINED','N','N','N','N','Y');
 INSERT INTO vicidial_statuses values('DEC','Declined Sale','Y','Y','UNDEFINED','N','N','Y','N','N');
 INSERT INTO vicidial_statuses values('DNC','DO NOT CALL','Y','Y','UNDEFINED','N','Y','N','N','N');
 INSERT INTO vicidial_statuses values('DNCL','DO NOT CALL Hopper Match','N','N','UNDEFINED','N','Y','N','N','N');

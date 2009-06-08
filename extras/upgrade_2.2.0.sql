@@ -162,3 +162,10 @@ index (call_date)
 ALTER TABLE servers ADD carrier_logging_active ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1148';
+
+ALTER TABLE vicidial_campaigns MODIFY adaptive_dropped_percentage VARCHAR(4) default '3';
+
+INSERT INTO vicidial_statuses values('AB','Busy Auto','N','N','UNDEFINED','N','N','N','N','N');
+INSERT INTO vicidial_statuses values('ADC','Disconnected Number Auto','N','N','UNDEFINED','N','N','N','N','Y');
+
+UPDATE system_settings SET db_schema_version='1149';

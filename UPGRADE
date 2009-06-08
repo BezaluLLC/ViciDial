@@ -83,6 +83,8 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 
 22. Added DAHDI channel compatibility and carrier logging for outbound list calls
 
+23. Changed Auto-Detected Busy and Disconnected statuses to AB and ADC to better
+	separate them from agent-defined statuses
 
 
 

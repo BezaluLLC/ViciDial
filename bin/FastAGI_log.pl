@@ -45,6 +45,7 @@
 # 81026-1247 - Changed to allow for better remote agent calling
 # 81029-0522 - Changed to disallow queue_log logging of IVR calls
 # 90604-1044 - Fixed formatting, added DAHDI support, added carrier hangup code logging
+# 90608-0316 - Changed hangup code dispos B and DC to AB and ADC to separate Agent dispos from Auto
 #
 
 
@@ -634,8 +635,8 @@ sub process_request
 				{
 				if ( ($PRI =~ /^PRI$/) && ($callerid =~ /\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/) && ( ($dialstatus =~ /BUSY/) || ( ($dialstatus =~ /CHANUNAVAIL/) && ($hangup_cause =~ /^1$|^28$/) ) ) )
 					{
-					if ($dialstatus =~ /BUSY/) {$VDL_status = 'B'; $VDAC_status = 'BUSY';}
-					if ($dialstatus =~ /CHANUNAVAIL/) {$VDL_status = 'DC'; $VDAC_status = 'DISCONNECT';}
+					if ($dialstatus =~ /BUSY/) {$VDL_status = 'AB'; $VDAC_status = 'BUSY';}
+					if ($dialstatus =~ /CHANUNAVAIL/) {$VDL_status = 'ADC'; $VDAC_status = 'DISCONNECT';}
 
 					$stmtA = "UPDATE vicidial_list set status='$VDL_status' where lead_id = '$CIDlead_id';";
 						if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}

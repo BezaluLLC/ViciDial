@@ -92,6 +92,7 @@
 # 81105-0248 - Added MySQL error logging
 # 90103-0311 - Added sip-silences before transfers to fix rare MoH issues
 # 90115-0601 - Added AGENTDIRECT functionality
+# 90607-1717 - Fix for AGENTDIRECT bug under certain configurations
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -987,7 +988,10 @@ if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) )
 	$ADfindSQL = "and agent_only='$agent_only'";
 	$ADUfindSQL = "and vicidial_live_agents.user='$agent_only'";
 	}
-
+else
+	{
+	$ADfindSQL = "and agent_only=''";
+	}
 
 
 ############################################

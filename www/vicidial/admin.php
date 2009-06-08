@@ -1074,7 +1074,6 @@ while ($i < $qm_conf_ct)
 if ($non_latin < 1)
 	{
 	### DIGITS ONLY ###
-	$adaptive_dropped_percentage = ereg_replace("[^0-9]","",$adaptive_dropped_percentage);
 	$adaptive_latest_server_time = ereg_replace("[^0-9]","",$adaptive_latest_server_time);
 	$admin_hangup_enabled = ereg_replace("[^0-9]","",$admin_hangup_enabled);
 	$admin_hijack_enabled = ereg_replace("[^0-9]","",$admin_hijack_enabled);
@@ -1334,6 +1333,7 @@ if ($non_latin < 1)
 	$sounds_web_server = ereg_replace("[^\.0-9]","",$sounds_web_server);
 	$active_voicemail_server = ereg_replace("[^\.0-9]","",$active_voicemail_server);
 	$auto_dial_limit = ereg_replace("[^\.0-9]","",$auto_dial_limit);
+	$adaptive_dropped_percentage = ereg_replace("[^\.0-9]","",$adaptive_dropped_percentage);
 
 	### ALPHA-NUMERIC and spaces and hash and star and comma
 	$xferconf_a_dtmf = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$xferconf_a_dtmf);
@@ -1792,11 +1792,12 @@ else
 # 90531-1802 - Added auto-generated options for users, campaigns, in-groups, etc..., added option to HIDE custphone
 # 90531-2339 - Added Dynamic options for Call Menu
 # 90605-0248 - Added carrier_logging_active servers option
+# 90607-1716 - Changed drop percent limit to allow for 0.1 steps under 3%
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-192';
-$build = '90605-0248';
+$admin_version = '2.2.0-193';
+$build = '90607-1716';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -14830,11 +14831,14 @@ if ($ADD==31)
 			echo "<tr bgcolor=#BDFFBD><td align=right>Available Only Tally: </td><td align=left><select size=1 name=available_only_ratio_tally><option >Y</option><option>N</option><option SELECTED>$available_only_ratio_tally</option></select>$NWB#vicidial_campaigns-available_only_ratio_tally$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#BDFFBD><td align=right>Drop Percentage Limit: </td><td align=left><select size=1 name=adaptive_dropped_percentage>\n";
-			$n=100;
-			while ($n>=1)
+			$n=101;
+			while ($n>=0.1)
 				{
+				if ($n <= 3)
+					{$n = ($n - 0.1);}
+				else
+					{$n--;}
 				echo "<option>$n</option>\n";
-				$n--;
 				}
 			echo "<option SELECTED>$adaptive_dropped_percentage</option></select>% $NWB#vicidial_campaigns-adaptive_dropped_percentage$NWE</td></tr>\n";
 
