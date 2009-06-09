@@ -108,7 +108,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
         or die "Couldn't connect to database: " . DBI->errstr;
 
 # get all the recordings with the old_url
-$stmtA = "SELECT recording_id, location, filename from recording_log where location LIKE '$old_url%';";
+$stmtA = "SELECT recording_id, location from recording_log where location LIKE '$old_url%';";
 if ( $DB ) {
         print $stmtA . "\n";
 }
@@ -124,7 +124,6 @@ while ($sthArows > $rec_count) {
         # get the parameters from the DB
         $rec_id   = "$aryA[0]";
         $location = "$aryA[1]";
-        $filename = "$aryA[2]";
 
         # change the url
         $new_loc = $location;
