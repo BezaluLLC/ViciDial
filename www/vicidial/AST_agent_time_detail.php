@@ -326,7 +326,7 @@ else
 
 
 	##### BEGIN Gather all agent time records and parse through them in PHP to save on DB load
-	$stmt="select user,wait_sec,talk_sec,dispo_sec,pause_sec,lead_id from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $group_SQL $user_group_SQL limit 10000000;";
+	$stmt="select user,wait_sec,talk_sec,dispo_sec,pause_sec,lead_id,status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $group_SQL $user_group_SQL limit 10000000;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$rows_to_print = mysql_num_rows($rslt);
@@ -343,6 +343,7 @@ else
 		$dispo =		$row[3];
 		$pause =		$row[4];
 		$lead =			$row[5];
+		$status =		$row[6];
 
 		if ($wait > 30000) {$wait=0;}
 		if ($talk > 30000) {$talk=0;}
@@ -353,7 +354,7 @@ else
 		$TOTdispo =	($TOTdispo + $dispo);
 		$TOTpause =	($TOTpause + $pause);
 		$TOTALtime = ($TOTALtime + $pause + $dispo + $talk + $wait);
-		if ($lead > 0) {$TOTcalls++;}
+		if ( ($lead > 0) and ((!eregi("NULL",$status)) and (strlen($status) > 0)) ) {$TOTcalls++;}
 		
 		$user_found=0;
 		if ($uc < 1) 
@@ -372,7 +373,7 @@ else
 				$Stalk[$m] =	($Stalk[$m] + $talk);
 				$Sdispo[$m] =	($Sdispo[$m] + $dispo);
 				$Spause[$m] =	($Spause[$m] + $pause);
-				if ($lead > 0) {$Scalls[$m]++;}
+				if ( ($lead > 0) and ((!eregi("NULL",$status)) and (strlen($status) > 0)) ) {$Scalls[$m]++;}
 				}
 			$m++;
 			}

@@ -285,7 +285,7 @@ else
 		{
 		$row=mysql_fetch_row($rslt);
 
-		if ( ($row[0] > 0) and (strlen($row[3]) > 0) )
+		if ( ($row[0] > 0) and (strlen($row[3]) > 0) and (!eregi("NULL",$row[3])))
 			{
 			$calls[$i] =		$row[0];
 			$full_name[$i] =	$row[1];

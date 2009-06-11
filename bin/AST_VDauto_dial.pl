@@ -75,6 +75,7 @@
 # 90124-0721 - Added parameter to ensure no auto-dial calls are placed for MANUAL campaigns
 # 90202-0203 - Added outbound_autodial_active option to halt all dialing
 # 90306-1845 - Added configurable calls-per-second option
+# 90611-0554 - Bug fix for Manual dial calls and logging
 #
 
 
@@ -1064,6 +1065,22 @@ while($one_day_interval > 0)
 					$rec_count++;
 					}
 				$sthA->finish();
+				$stmtA = "SELECT user FROM vicidial_live_agents where callerid='$KLcallerid[$kill_vac]'";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$CLuser	= "$aryA[0]";
+					}
+				$sthA->finish();
+				if ( (length($CLlead_id) < 1) || ($CLlead_id < 1) )
+					{
+					$CLlead_id = $KLcallerid[$kill_vac];
+					$CLlead_id = substr($CLlead_id, 11, 9);
+					$CLlead_id = ($CLlead_id + 0);
+					}
 
 				if ($CLcall_type =~ /IN/)
 					{
@@ -1088,6 +1105,7 @@ while($one_day_interval > 0)
 
 				$dialtime_log = ($end_epoch - $start_epoch);
 				$dialtime_catch = ($now_date_epoch - ($start_epoch + $timeout_leeway));
+				$hanguptime_manual = ($end_epoch + 60);
 				if ($dialtime_catch > 100000) {$dialtime_catch=0;}
 				$call_timeout = ($CLdial_timeout + $CLdrop_call_seconds);
 				if ($CLstage =~ /SURVEY|REMIND/) {$call_timeout = ($call_timeout + 120);}
@@ -1116,14 +1134,45 @@ while($one_day_interval > 0)
 							if ($CLstatus =~ /LIVE/) {$CLnew_status = 'DROP';}
 							else 
 								{
+								$insertVLuser = 'VDAD';
+								$insertVLcount=0;
+								if ($KLcallerid[$kill_vac] =~ /^M\d\d\d\d\d\d\d\d\d\d/) 
+									{
+									$beginUNIQUEID = $CLuniqueid;
+									$beginUNIQUEID =~ s/\..*//gi;
+									$insertVLuser = $CLuser;
+									$stmtA="SELECT count(*) from vicidial_log where lead_id='$CLlead_id' and user='$CLuser' and phone_number='$CLphone_number' and uniqueid LIKE \"$beginUNIQUEID%\";";
+										if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+									$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+									$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+									$sthArowsVL=$sthA->rows;
+									if ($sthArowsVL > 0)
+										{
+										@aryA = $sthA->fetchrow_array;
+										$insertVLcount = 	"$aryA[0]";
+										}
+									$sthA->finish();
+									}
+
 								$end_epoch = ($now_date_epoch + 1);
-								$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,length_in_sec,end_epoch,alt_dial) values('$CLuniqueid','$CLlead_id','$CLcampaign_id','$SQLdate','$now_date_epoch','$CLnew_status','$CLphone_code','$CLphone_number','VDAD','N','$CLstage','$end_epoch','$CLalt_dial')";
-									if($M){print STDERR "\n|$stmtA|\n";}
-								$affected_rows = $dbhA->do($stmtA);
+								if ($insertVLcount < 1)
+									{
+									$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,length_in_sec,end_epoch,alt_dial) values('$CLuniqueid','$CLlead_id','$CLcampaign_id','$SQLdate','$now_date_epoch','$CLnew_status','$CLphone_code','$CLphone_number','$insertVLuser','N','$CLstage','$end_epoch','$CLalt_dial')";
+										if($M){print STDERR "\n|$stmtA|\n";}
+									$affected_rows = $dbhA->do($stmtA);
 
-								$event_string = "|     dead NA call added to log $CLuniqueid|$CLlead_id|$CLphone_number|$CLstatus|$CLnew_status|$affected_rows|";
-								 &event_logger;
+									$event_string = "|     dead NA call added to log $CLuniqueid|$CLlead_id|$CLphone_number|$CLstatus|$CLnew_status|$affected_rows|$insertVLcount";
+									 &event_logger;
+									}
+								else
+									{
+									$stmtA = "UPDATE vicidial_log SET status='$CLnew_status',length_in_sec='$CLstage',end_epoch='$end_epoch',alt_dial='$CLalt_dial' where lead_id='$CLlead_id' and user='$CLuser' and phone_number='$CLphone_number' and uniqueid LIKE \"$beginUNIQUEID%\";";
+										if($M){print STDERR "\n|$stmtA|\n";}
+									$affected_rows = $dbhA->do($stmtA);
 
+									$event_string = "|     dead NA call updated in log $CLuniqueid|$CLlead_id|$CLphone_number|$CLstatus|$CLnew_status|$affected_rows|$insertVLcount|$beginUNIQUEID";
+									 &event_logger;
+									}
 								}
 
 							if ($CLlead_id > 0)
@@ -1135,11 +1184,14 @@ while($one_day_interval > 0)
 								 &event_logger;
 								}
 
-							$stmtA = "UPDATE vicidial_live_agents set status='PAUSED',random_id='10' where callerid='$KLcallerid[$kill_vac]';";
-							$affected_rows = $dbhA->do($stmtA);
+							if ($KLcallerid[$kill_vac] !~ /^M\d\d\d\d\d\d\d\d\d\d/)
+								{
+								$stmtA = "UPDATE vicidial_live_agents set status='PAUSED',random_id='10' where callerid='$KLcallerid[$kill_vac]';";
+								$affected_rows = $dbhA->do($stmtA);
 
-							$event_string = "|     dead call vla agent PAUSED $affected_rows|$CLlead_id|$CLphone_number|$CLstatus|";
-							 &event_logger;
+								$event_string = "|     dead call vla agent PAUSED $affected_rows|$CLlead_id|$CLphone_number|$CLstatus|";
+								 &event_logger;
+								}
 
 							if ( ($enable_queuemetrics_logging > 0) && ($CLstatus =~ /LIVE/) )
 								{
@@ -1163,7 +1215,7 @@ while($one_day_interval > 0)
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
-							 $epc_countCAMPDATA=0;
+							$epc_countCAMPDATA=0;
 							while ($sthArows > $epc_countCAMPDATA)
 								{
 								@aryA = $sthA->fetchrow_array;
@@ -1171,7 +1223,7 @@ while($one_day_interval > 0)
 								$VD_auto_alt_dial_statuses	=	"$aryA[1]";
 								$VD_use_internal_dnc =			"$aryA[2]";
 								$VD_use_campaign_dnc =			"$aryA[3]";
-								 $epc_countCAMPDATA++;
+								$epc_countCAMPDATA++;
 								}
 							$sthA->finish();
 							if ( ($VD_auto_alt_dial_statuses =~ / $CLnew_status /) && ($CLlead_id > 0) )

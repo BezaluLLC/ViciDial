@@ -173,3 +173,7 @@ UPDATE system_settings SET db_schema_version='1149';
 ALTER TABLE vicidial_campaigns ADD drop_lockout_time VARCHAR(6) default '0';
 
 UPDATE system_settings SET db_schema_version='1150';
+
+ALTER TABLE vicidial_live_agents ADD agent_log_id INT(9) UNSIGNED default '0';
+
+UPDATE system_settings SET db_schema_version='1151';
