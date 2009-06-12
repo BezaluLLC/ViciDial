@@ -10,6 +10,7 @@
 # 90514-0605 - Added audio prompt selection functions
 # 90530-1206 - Changed List Mix to allow for 40 mixes and a default populate option
 # 90531-2339 - Added Dynamic options for Call Menu
+# 90612-0852 - Changed relative links
 #
 
 
@@ -652,7 +653,7 @@ $admin_home_url_LU =	$row[0];
 <TABLE BGCOLOR=white cellpadding=0 cellspacing=0>
 <!-- BEGIN SIDEBAR NAVIGATION -->
 <TR><TD VALIGN=TOP WIDTH=170 BGCOLOR=#015B91 ALIGN=CENTER>
-<IMG SRC="../vicidial/vicidial_admin_web_logo.gif" WIDTH=170 HEIGHT=45 ALT="VICIDIAL logo">
+<IMG SRC="./vicidial_admin_web_logo.gif" WIDTH=170 HEIGHT=45 ALT="VICIDIAL logo">
 <B><FONT FACE="ARIAL,HELVETICA" COLOR=white>ADMINISTRATION</FONT></B><BR>
 	<TABLE CELLPADDING=2 CELLSPACING=0 BGCOLOR=#015B91 WIDTH=160>
 	<!-- USERS NAVIGATION -->

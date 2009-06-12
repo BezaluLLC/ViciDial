@@ -1795,11 +1795,12 @@ else
 # 90605-0248 - Added carrier_logging_active servers option
 # 90607-1716 - Changed drop percent limit to allow for 0.1 steps under 3%
 # 90608-0944 - Added Drop Lockout Time feature to Campaign Detail Modification screen
+# 90612-0909 - Added audio prompt selection feature to survey screen
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-194';
-$build = '90608-0944';
+$admin_version = '2.2.0-195';
+$build = '90612-0909';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -15630,26 +15631,26 @@ if ($ADD==31)
 		{
 
 		echo "<center><br><b>SURVEY SETTINGS FOR THIS CAMPAIGN:</b><br>\n";
-		echo "<form action=$PHP_SELF method=POST><center><TABLE width=750 cellspacing=3>\n";
+		echo "<form action=$PHP_SELF method=POST name=admin_form id=admin_form><center><TABLE width=750 cellspacing=3>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right><input type=hidden name=ADD value=40A>\n";
 		echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
 
-		echo "<tr bgcolor=#B9CBFD><td align=right>Survey First Audio File: </td><td><input type=text size=50 maxlength=50 name=survey_first_audio_file value=\"$survey_first_audio_file\"> $NWB#vicidial_campaigns-survey_first_audio_file$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B9CBFD><td align=right>Survey First Audio File: </td><td><input type=text size=50 maxlength=50 name=survey_first_audio_file id=survey_first_audio_file value=\"$survey_first_audio_file\"> <a href=\"javascript:launch_chooser('survey_first_audio_file','date',30);\">audio chooser</a>  $NWB#vicidial_campaigns-survey_first_audio_file$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey DTMF Digits: </td><td><input type=text size=16 maxlength=16 name=survey_dtmf_digits value=\"$survey_dtmf_digits\"> $NWB#vicidial_campaigns-survey_dtmf_digits$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Not Interested Digit: </td><td><input type=text size=5 maxlength=1 name=survey_ni_digit value=\"$survey_ni_digit\"> $NWB#vicidial_campaigns-survey_ni_digit$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Opt-in Audio File: </td><td><input type=text size=50 maxlength=50 name=survey_opt_in_audio_file value=\"$survey_opt_in_audio_file\"> $NWB#vicidial_campaigns-survey_opt_in_audio_file$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Not Interested Audio File: </td><td><input type=text size=50 maxlength=50 name=survey_ni_audio_file value=\"$survey_ni_audio_file\"> $NWB#vicidial_campaigns-survey_ni_audio_file$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Opt-in Audio File: </td><td><input type=text size=50 maxlength=50 name=survey_opt_in_audio_file id=survey_opt_in_audio_file value=\"$survey_opt_in_audio_file\"> <a href=\"javascript:launch_chooser('survey_opt_in_audio_file','date',30);\">audio chooser</a> $NWB#vicidial_campaigns-survey_opt_in_audio_file$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Not Interested Audio File: </td><td><input type=text size=50 maxlength=50 name=survey_ni_audio_file id=survey_ni_audio_file value=\"$survey_ni_audio_file\"> <a href=\"javascript:launch_chooser('survey_ni_audio_file','date',30);\">audio chooser</a> $NWB#vicidial_campaigns-survey_ni_audio_file$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Method: </td><td><select size=1 name=survey_method><option>AGENT_XFER</option><option>VOICEMAIL</option><option>EXTENSION</option><option>HANGUP</option><option>CAMPREC_60_WAV</option><option SELECTED>$survey_method</option></select> $NWB#vicidial_campaigns-survey_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey No-Response Action: </td><td><select size=1 name=survey_no_response_action><option>OPTIN</option><option>OPTOUT</option><option SELECTED>$survey_no_response_action</option></select> $NWB#vicidial_campaigns-survey_no_response_action$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Not Interested Status: </td><td><select name=survey_ni_status>$survey_ni_status_list</select> $NWB#vicidial_campaigns-survey_ni_status$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Third Digit: </td><td><input type=text size=5 maxlength=1 name=survey_third_digit value=\"$survey_third_digit\"> $NWB#vicidial_campaigns-survey_third_digit$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Third Audio File: </td><td><input type=text size=50 maxlength=50 name=survey_third_audio_file value=\"$survey_third_audio_file\"> $NWB#vicidial_campaigns-survey_third_audio_file$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Third Digit: </td><td><input type=text size=5 maxlength=1 name=survey_third_digit id=survey_third_digit value=\"$survey_third_digit\"> $NWB#vicidial_campaigns-survey_third_digit$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Third Audio File: </td><td><input type=text size=50 maxlength=50 name=survey_third_audio_file id=survey_third_audio_file value=\"$survey_third_audio_file\"> <a href=\"javascript:launch_chooser('survey_third_audio_file','date',30);\">audio chooser</a> $NWB#vicidial_campaigns-survey_third_audio_file$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Third Status: </td><td><input type=text size=10 maxlength=6 name=survey_third_status value=\"$survey_third_status\"> $NWB#vicidial_campaigns-survey_third_status$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Third Extension: </td><td><input type=text size=20 maxlength=20 name=survey_third_exten value=\"$survey_third_exten\"> $NWB#vicidial_campaigns-survey_third_exten$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Fourth Digit: </td><td><input type=text size=5 maxlength=1 name=survey_fourth_digit value=\"$survey_fourth_digit\"> $NWB#vicidial_campaigns-survey_fourth_digit$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Fourth Audio File: </td><td><input type=text size=50 maxlength=50 name=survey_fourth_audio_file value=\"$survey_fourth_audio_file\"> $NWB#vicidial_campaigns-survey_fourth_audio_file$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Fourth Audio File: </td><td><input type=text size=50 maxlength=50 name=survey_fourth_audio_file id=survey_fourth_audio_file value=\"$survey_fourth_audio_file\"> <a href=\"javascript:launch_chooser('survey_fourth_audio_file','date',30);\">audio chooser</a> $NWB#vicidial_campaigns-survey_fourth_audio_file$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Fourth Status: </td><td><input type=text size=10 maxlength=6 name=survey_fourth_status value=\"$survey_fourth_status\"> $NWB#vicidial_campaigns-survey_fourth_status$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Fourth Extension: </td><td><input type=text size=20 maxlength=20 name=survey_fourth_exten value=\"$survey_fourth_exten\"> $NWB#vicidial_campaigns-survey_fourth_exten$NWE</td></tr>\n";
 
