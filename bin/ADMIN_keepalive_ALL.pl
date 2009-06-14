@@ -23,6 +23,7 @@
 # 90513-0449 - Added audio store sync functionality
 # 90519-1018 - Added upload file trigger for prompt recording if defined as voicemail server and voicemail/prompt recording extensions auto-generated
 # 90529-0652 - Added phone_context and fixed calledid and voicemail for phones entries
+# 90614-0753 - Added in-group routing to call menu feature
 #
 
 $DB=0; # Debug flag
@@ -1065,6 +1066,17 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				if ($option_route[$j] =~ /DID/)
 					{
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(trunkinbound,$option_route_value[$j],1)\n";
+					}
+				if ($option_route[$j] =~ /INGROUP/)
+					{
+					@IGoption_route_value_context = split(/,/,$option_route_value_context[$j]);
+					$IGhandle_method =	$IGoption_route_value_context[0];
+					$IGsearch_method =	$IGoption_route_value_context[1];
+					$IGlist_id =		$IGoption_route_value_context[2];
+					$IGcampaign_id =	$IGoption_route_value_context[3];
+					$IGphone_code =		$IGoption_route_value_context[4];
+
+					$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(agi-VDAD_ALL_inbound.agi,$IGhandle_method-----$IGsearch_method-----$option_route_value[$j]-----$menu_id[$i]--------------------$IGlist_id-----$IGphone_code-----$IGcampaign_id)\n";
 					}
 				if ($option_route[$j] =~ /EXTENSION/)
 					{

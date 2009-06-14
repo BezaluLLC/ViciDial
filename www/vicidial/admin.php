@@ -1796,11 +1796,12 @@ else
 # 90607-1716 - Changed drop percent limit to allow for 0.1 steps under 3%
 # 90608-0944 - Added Drop Lockout Time feature to Campaign Detail Modification screen
 # 90612-0909 - Added audio prompt selection feature to survey screen
+# 90614-0827 - Added In-Group routing to Call Menu screen, Added pull-down Call Menu option to DID screen
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-195';
-$build = '90612-0909';
+$admin_version = '2.2.0-196';
+$build = '90614-0827';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4136,7 +4137,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="vicidial_call_menu-option_route">
 <BR>
-<B>Option Route -</B> This menu contains the options for where to send the call if this option is selected: CALLMENU,HANGUP,DID,EXTENSION,PHONE. For CALLMENU, the Route Value should be the Menu ID of the Call Menu that you want the call sent to. For HANGUP, the Route Value can be the name of an audio file to play before hanging up the call. For DID, the Route Value needs to be the DID pattern that you want to send the call to. For EXTENSION, the Route Value needs to be the dialplan extension you want to send the call to, and the Route Value Context is the context that extension is located in, if left blank the context will default to default. For PHONE, the Route Value needs to be the phone login value for the phones entry that you want to send the call to. For VOICEMAIL, the Route Value needs to be the voicemail box number, the unavailable mesage will be played. For AGI, the Route Value needs to be the agi script and any values taht need to be passed to it.
+<B>Option Route -</B> This menu contains the options for where to send the call if this option is selected: CALLMENU,INGROUP,DID,HANGUP,EXTENSION,PHONE. For CALLMENU, the Route Value should be the Menu ID of the Call Menu that you want the call sent to. For INGROUP, the In-Group that you want the call to be sent to needs to be selected as well as the other 5 options that need to be set to properly route a call to an Inbound Group. For DID, the Route Value needs to be the DID pattern that you want to send the call to. For HANGUP, the Route Value can be the name of an audio file to play before hanging up the call. For EXTENSION, the Route Value needs to be the dialplan extension you want to send the call to, and the Route Value Context is the context that extension is located in, if left blank the context will default to default. For PHONE, the Route Value needs to be the phone login value for the phones entry that you want to send the call to. For VOICEMAIL, the Route Value needs to be the voicemail box number, the unavailable mesage will be played. For AGI, the Route Value needs to be the agi script and any values taht need to be passed to it.
 
 <BR>
 <A NAME="vicidial_call_menu-option_route_value">
@@ -11203,15 +11204,31 @@ if ($ADD==4511)
 			$option_value=''; $option_description=''; $option_route=''; $option_route_value=''; $option_route_value_context='';
 
 			if (isset($_GET["option_value_$h"]))				{$option_value=$_GET["option_value_$h"];}
-				elseif (isset($_POST["option_value_$h"]))	{$option_value=$_POST["option_value_$h"];}
+				elseif (isset($_POST["option_value_$h"]))		{$option_value=$_POST["option_value_$h"];}
 			if (isset($_GET["option_description_$h"]))			{$option_description=$_GET["option_description_$h"];}
 				elseif (isset($_POST["option_description_$h"]))	{$option_description=$_POST["option_description_$h"];}
 			if (isset($_GET["option_route_$h"]))				{$option_route=$_GET["option_route_$h"];}
-				elseif (isset($_POST["option_route_$h"]))	{$option_route=$_POST["option_route_$h"];}
+				elseif (isset($_POST["option_route_$h"]))		{$option_route=$_POST["option_route_$h"];}
 			if (isset($_GET["option_route_value_$h"]))			{$option_route_value=$_GET["option_route_value_$h"];}
 				elseif (isset($_POST["option_route_value_$h"]))	{$option_route_value=$_POST["option_route_value_$h"];}
 			if (isset($_GET["option_route_value_context_$h"]))	{$option_route_value_context=$_GET["option_route_value_context_$h"];}
 				elseif (isset($_POST["option_route_value_context_$h"]))	{$option_route_value_context=$_POST["option_route_value_context_$h"];}
+
+			if ($option_route == "INGROUP")
+				{
+				if (isset($_GET["IGhandle_method_$h"]))				{$IGhandle_method=$_GET["IGhandle_method_$h"];}
+					elseif (isset($_POST["IGhandle_method_$h"]))	{$IGhandle_method=$_POST["IGhandle_method_$h"];}
+				if (isset($_GET["IGsearch_method_$h"]))				{$IGsearch_method=$_GET["IGsearch_method_$h"];}
+					elseif (isset($_POST["IGsearch_method_$h"]))	{$IGsearch_method=$_POST["IGsearch_method_$h"];}
+				if (isset($_GET["IGlist_id_$h"]))					{$IGlist_id=$_GET["IGlist_id_$h"];}
+					elseif (isset($_POST["IGlist_id_$h"]))			{$IGlist_id=$_POST["IGlist_id_$h"];}
+				if (isset($_GET["IGcampaign_id_$h"]))				{$IGcampaign_id=$_GET["IGcampaign_id_$h"];}
+					elseif (isset($_POST["IGcampaign_id_$h"]))		{$IGcampaign_id=$_POST["IGcampaign_id_$h"];}
+				if (isset($_GET["IGphone_code_$h"]))				{$IGphone_code=$_GET["IGphone_code_$h"];}
+					elseif (isset($_POST["IGphone_code_$h"]))		{$IGphone_code=$_POST["IGphone_code_$h"];}
+
+				$option_route_value_context = "$IGhandle_method,$IGsearch_method,$IGlist_id,$IGcampaign_id,$IGphone_code";
+				}
 
 			if ($non_latin < 1)
 				{
@@ -11219,7 +11236,7 @@ if ($ADD==4511)
 				$option_description = ereg_replace("[^- \:\/\_0-9a-zA-Z]","",$option_description);
 				$option_route = ereg_replace("[^-_0-9a-zA-Z]","",$option_route);
 				$option_route_value = ereg_replace("[^-\_\#\*\,\.\_0-9a-zA-Z]","",$option_route_value);
-				$option_route_value_context = ereg_replace("[^-_0-9a-zA-Z]","",$option_route_value_context);
+				$option_route_value_context = ereg_replace("[^,-_0-9a-zA-Z]","",$option_route_value_context);
 				}
 
 			if (strlen($option_route) > 0)
@@ -17788,7 +17805,21 @@ if ($ADD==3311)
 	echo "$servers_list";
 	echo "<option SELECTED>$server_ip</option>\n";
 	echo "</select>$NWB#vicidial_inbound_dids-server_ip$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Call Menu: </td><td align=left><input type=text name=menu_id size=40 maxlength=50 value=\"$menu_id\">$NWB#vicidial_inbound_dids-menu_id$NWE</td></tr>\n";
+
+	$stmt="select menu_id,menu_name,menu_prompt from vicidial_call_menu;";
+	$rslt=mysql_query($stmt, $link);
+	$menus_to_print = mysql_num_rows($rslt);
+	$menu_list='';
+	$i=0;
+	while ($i < $menus_to_print)
+		{
+		$row=mysql_fetch_row($rslt);
+		$menu_list .= "<option value=\"$row[0]\">$row[0] - $row[1] - $row[2]</option>";
+		$i++;
+		}
+
+	echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=3511&menu_id=$menu_id\">Call Menu:</a> </td><td align=left><select size=1 name=menu_id>$menu_list<option SELECTED>$menu_id</option></select>$NWB#vicidial_inbound_dids-menu_id$NWE</td></tr>\n";
+
 	echo "<tr bgcolor=#B6D3FC><td align=right>User Agent: </td><td align=left><input type=text name=user size=20 maxlength=20 value=\"$user\">$NWB#vicidial_inbound_dids-user$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>User Unavailable Action: </td><td align=left><select size=1 name=user_unavailable_action><option>EXTEN</option><option>VOICEMAIL</option><option>PHONE</option><option>IN_GROUP</option><option SELECTED>$user_unavailable_action</option></select>$NWB#vicidial_inbound_dids-user_unavailable_action$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>User Route Settings In-Group: </td><td align=left><select size=1 name=user_route_settings_ingroup>";
@@ -17942,8 +17973,9 @@ if ($ADD==3511)
 		Description: <input type=text name=option_description_$j size=40 maxlength=255 value=\"$option_description\"> 
 		Route: <select size=1 name=option_route_$j id=option_route_$j onChange=\"call_menu_option('$j','$option_route','$option_route_value','$option_route_value_context','$choose_height');\">
 			<option>CALLMENU</option>
-			<option>HANGUP</option>
+			<option>INGROUP</option>
 			<option>DID</option>
+			<option>HANGUP</option>
 			<option>EXTENSION</option>
 			<option>PHONE</option>
 			<option>VOICEMAIL</option>
@@ -17961,9 +17993,30 @@ if ($ADD==3511)
 			echo "</span>";
 			echo " <select size=1 name=option_route_value_$j id=option_route_value_$j onChange=\"call_menu_link('$j','CALLMENU');\">$call_menu_list<option SELECTED>$option_route_value</option></select>\n";
 			}
-		if ($option_route=='HANGUP')
+		if ($option_route=='INGROUP')
 			{
-			echo "Audio File: <input type=text name=option_route_value_$j id=option_route_value_$j size=40 maxlength=255 value=\"$option_route_value\"> <a href=\"javascript:launch_chooser('option_route_value_$j','date',$choose_height);\">audio chooser</a>\n";
+			if (strlen($option_route_value_context) < 10)
+				{$option_route_value_context = 'CID,LB,998,TESTCAMP,1';}
+			$IGoption_route_value_context = explode(",",$option_route_value_context);
+			$IGhandle_method =	$IGoption_route_value_context[0];
+			$IGsearch_method =	$IGoption_route_value_context[1];
+			$IGlist_id =		$IGoption_route_value_context[2];
+			$IGcampaign_id =	$IGoption_route_value_context[3];
+			$IGphone_code =		$IGoption_route_value_context[4];
+			echo "<span name=option_route_link_$j id=option_route_link_$j>";
+			echo "<a href=\"$PHP_SELF?ADD=3111&group_id=$option_route_value\">In-Group:</a>";
+			echo "</span>";
+			echo " <input type=hidden name=option_route_value_context_$j id=option_route_value_context_$j value=\"$option_route_value_context\">";
+			echo " <select size=1 name=option_route_value_$j id=option_route_value_$j onChange=\"call_menu_link('$j','INGROUP');\">";
+			echo "$ingroup_list<option SELECTED>$option_route_value</option></select>";
+			echo " &nbsp; Handle Method: <select size=1 name=IGhandle_method_$j id=IGhandle_method_$j>";
+			echo "$IGhandle_method_list<option SELECTED>$IGhandle_method</option></select>\n";
+			echo "<BR>Search Method: <select size=1 name=IGsearch_method_$j id=IGsearch_method_$j>";
+			echo "$IGsearch_method_list<option SELECTED>$IGsearch_method</option></select>\n";
+			echo " &nbsp; List ID: <input type=text size=5 maxlength=14 name=IGlist_id_$j id=IGlist_id_$j value=\"$IGlist_id\">";
+			echo "<BR>Campaign ID: <select size=1 name=IGcampaign_id_$j id=IGcampaign_id_$j>";
+			echo "$IGcampaign_id_list<option SELECTED>$IGcampaign_id</option></select>\n";
+			echo " &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_$j id=IGphone_code_$j value=\"$IGphone_code\">";
 			}
 		if ($option_route=='DID')
 			{
@@ -17976,6 +18029,10 @@ if ($ADD==3511)
 			echo "<a href=\"$PHP_SELF?ADD=3311&did_id=$did_id\">DID:</a>";
 			echo "</span>";
 			echo " <select size=1 name=option_route_value_$j id=option_route_value_$j onChange=\"call_menu_link('$j','DID');\">$did_list<option SELECTED>$option_route_value</option></select>\n";
+			}
+		if ($option_route=='HANGUP')
+			{
+			echo "Audio File: <input type=text name=option_route_value_$j id=option_route_value_$j size=40 maxlength=255 value=\"$option_route_value\"> <a href=\"javascript:launch_chooser('option_route_value_$j','date',$choose_height);\">audio chooser</a>\n";
 			}
 		if ($option_route=='EXTENSION')
 			{
@@ -18021,8 +18078,9 @@ if ($ADD==3511)
 		Description: <input type=text name=option_description_$j size=40 maxlength=255 value=\"\">  
 		Route: <select size=1 name=option_route_$j id=option_route_$j onChange=\"call_menu_option('$j','','','','$choose_height');\">
 			<option>CALLMENU</option>
-			<option>HANGUP</option>
+			<option>INGROUP</option>
 			<option>DID</option>
+			<option>HANGUP</option>
 			<option>EXTENSION</option>
 			<option>PHONE</option>
 			<option>VOICEMAIL</option>

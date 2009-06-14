@@ -513,6 +513,34 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 		$i++;
 		}
 
+	$stmt="select group_id,group_name from vicidial_inbound_groups where active='Y' and group_id NOT LIKE \"AGENTDIRECT%\";";
+	$rslt=mysql_query($stmt, $link);
+	$ingroups_to_print = mysql_num_rows($rslt);
+	$ingroup_list='';
+	$i=0;
+	while ($i < $ingroups_to_print)
+		{
+		$row=mysql_fetch_row($rslt);
+		$ingroup_list .= "<option value=\"$row[0]\">$row[0] - $row[1]</option>";
+		$i++;
+		}
+
+	$stmt="select campaign_id,campaign_name from vicidial_campaigns where active='Y';";
+	$rslt=mysql_query($stmt, $link);
+	$IGcampaigns_to_print = mysql_num_rows($rslt);
+	$IGcampaign_id_list='';
+	$i=0;
+	while ($i < $IGcampaigns_to_print)
+		{
+		$row=mysql_fetch_row($rslt);
+		$IGcampaign_id_list .= "<option value=\"$row[0]\">$row[0] - $row[1]</option>";
+		$i++;
+		}
+
+	$IGhandle_method_list = '<option>CID</option><option>CIDLOOKUP</option><option>CIDLOOKUPRL</option><option>CIDLOOKUPRC</option><option>ANI</option><option>ANILOOKUP</option><option>ANILOOKUPRL</option><option>CLOSER</option><option>3DIGITID</option><option>4DIGITID</option><option>5DIGITID</option><option>10DIGITID</option>';
+
+	$IGsearch_method_list = '<option value="LB">LB - Load Balanced</option><option value="LO">LO - Load Balanced Overflow</option><option value="SO">SO - Server Only</option>';
+
 	$stmt="select login,server_ip,extension,dialplan_number from phones where active='Y';";
 	$rslt=mysql_query($stmt, $link);
 	$phones_to_print = mysql_num_rows($rslt);
@@ -529,6 +557,10 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 	function call_menu_option(option,route,value,value_context,chooser_height)
 		{
 		var call_menu_list = '<?php echo $call_menu_list ?>';
+		var ingroup_list = '<?php echo $ingroup_list ?>';
+		var IGcampaign_id_list = '<?php echo $IGcampaign_id_list ?>';
+		var IGhandle_method_list = '<?php echo $IGhandle_method_list ?>';
+		var IGsearch_method_list = '<?php echo $IGsearch_method_list ?>';
 		var did_list = '<?php echo $did_list ?>';
 		var phone_list = '<?php echo $phone_list ?>';
 		var selected_value = '';
@@ -547,13 +579,34 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				}
 			new_content = 'Call Menu: <select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + '>' + call_menu_list + "\n" + selected_value + '</select>';
 			}
-		if (selected_route=='HANGUP')
+		if (selected_route=='INGROUP')
 			{
+			if (value_context.length < 10)
+				{value_context = 'CID,LB,998,TESTCAMP,1';}
+			var value_context_split = value_context.split(",");
+			var IGhandle_method =	value_context_split[0];
+			var IGsearch_method =	value_context_split[1];
+			var IGlist_id =			value_context_split[2];
+			var IGcampaign_id =		value_context_split[3];
+			var IGphone_code =		value_context_split[4];
+
 			if (route == selected_route)
 				{
-				selected_value = value;
+				selected_value = '<option SELECTED>' + value + '</option>';
 				}
-			new_content = "Audio File: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=40 maxlength=255 value=\"" + selected_value + "\"> <a href=\"javascript:launch_chooser('option_route_value_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+
+			new_content = '<input type=hidden name=option_route_value_context_' + option + ' id=option_route_value_context_' + option + ' value="' + selected_value + '">';
+			new_content = new_content + '<a href="admin.php?ADD=3111&group_id=' + value + '">In-Group:</a> ';
+			new_content = new_content + '<select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + ' onChange="call_menu_link("' + option + '","INGROUP");">';
+			new_content = new_content + '' + ingroup_list + "\n" + selected_value + '</select>';
+			new_content = new_content + ' &nbsp; Handle Method: <select size=1 name=IGhandle_method_' + option + ' id=IGhandle_method_' + option + '>';
+			new_content = new_content + '' + IGhandle_method_list + "\n" + '<option SELECTED>' + IGhandle_method + '</select>';
+			new_content = new_content + '<BR>Search Method: <select size=1 name=IGsearch_method_' + option + ' id=IGsearch_method_' + option + '>';
+			new_content = new_content + '' + IGsearch_method_list + "\n" + '<option SELECTED>' + IGsearch_method + '</select>';
+			new_content = new_content + ' &nbsp; List ID: <input type=text size=5 maxlength=14 name=IGlist_id_' + option + ' id=IGlist_id_' + option + ' value="' + IGlist_id + '">';
+			new_content = new_content + '<BR>Campaign ID: <select size=1 name=IGcampaign_id_' + option + ' id=IGcampaign_id_' + option + '>';
+			new_content = new_content + '' + IGcampaign_id_list + "\n" + '<option SELECTED>' + IGcampaign_id + '</select>';
+			new_content = new_content + ' &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_' + option + ' id=IGphone_code_' + option + ' value="' + IGphone_code + '">';
 			}
 		if (selected_route=='DID')
 			{
@@ -562,6 +615,14 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				selected_value = '<option SELECTED value="' + value + '">' + value + "</option>\n";
 				}
 			new_content = 'DID: <select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + '>' + did_list + "\n" + selected_value + '</select>';
+			}
+		if (selected_route=='HANGUP')
+			{
+			if (route == selected_route)
+				{
+				selected_value = value;
+				}
+			new_content = "Audio File: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=40 maxlength=255 value=\"" + selected_value + "\"> <a href=\"javascript:launch_chooser('option_route_value_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
 			}
 		if (selected_route=='EXTENSION')
 			{
@@ -622,11 +683,15 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 
 		if (route=='CALLMENU')
 			{
-			new_content = "<a href=\"admin.php?ADD=3511&menu_id=" + selected_value + "\">Call Menu:</a>";
+			new_content = '<a href="admin.php?ADD=3511&menu_id=' + selected_value + '">Call Menu:</a>';
+			}
+		if (route=='INGROUP')
+			{
+			new_content = '<a href="admin.php?ADD=3111&group_id=' + selected_value + '">In-Group:</a>';
 			}
 		if (route=='DID')
 			{
-			new_content = "<a href=\"admin.php?ADD=3311&did_pattern=" + selected_value + "\">DID:</a>";
+			new_content = '<a href="admin.php?ADD=3311&did_pattern=' + selected_value + '">DID:</a>';
 			}
 
 		if (new_content.length < 1)
