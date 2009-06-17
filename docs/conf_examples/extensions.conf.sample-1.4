@@ -81,12 +81,12 @@ exten => 401,2,Hangup
 ;exten => _3[0-5]X,1,Dial(IAX2/cc${EXTEN},20,to)
 
 ; extensions if using a T1 channelbank
-exten => _19XX,1,Dial(Zap/${EXTEN:2},30,o)
-exten => _19XX,2,Hangup
+;exten => _19XX,1,Dial(Zap/${EXTEN:2},30,o)
+;exten => _19XX,2,Hangup
 
 ; Extension 4001 rings Zap phone (this example for FXS on Zap port 1)
-exten => 4001,1,Dial(Zap/1,30,o)	; ring Zap device 1
-exten => 4001,2,Voicemail,u4001         ; Send to voicemail...
+;exten => 4001,1,Dial(Zap/1,30,o)	; ring Zap device 1
+;exten => 4001,2,Voicemail,u4001         ; Send to voicemail...
 
 
 ; # timeout invalid rules
@@ -96,31 +96,6 @@ exten => t,1,Goto(#,1)                  ; If they take too long, give up
 exten => i,1,Playback(invalid)          ; "That's not valid, try again"
 
 
-; Inbound call from BINFONE
-; exten => 1112223333,1,AGI(agi://127.0.0.1:4577/call_log)
-; exten => 1112223333,2,Dial(sip/gs102,55,o)
-; exten => 1112223333,3,Hangup
-
-; Extension 7275551212 - Inbound local number from PRI with 10 digit delivery
-exten => 7275551212,1,Ringing
-exten => 7275551212,2,Wait(1)
-exten => 7275551212,3,AGI(agi://127.0.0.1:4577/call_log--fullCID--${EXTEN}-----${CALLERID(all)}-----${CALLERID(num)}-----${CALLERID(name)})
-exten => 7275551212,4,Answer
-exten => 7275551212,5,Dial(sip/spa2000&sip/spa2001,30,To)
-exten => 7275551212,6,Voicemail,u2000
-
-; dial a long distance outbound number to the UK
-; This 'o' Dial flag is VERY important for VICIDIAL on outbound calls, 
-exten => _901144XXXXXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-exten => _901144XXXXXXXXXX,2,Dial(${TRUNKX}/${EXTEN:1},55,To)
-exten => _901144XXXXXXXXXX,3,Hangup
-
-; dial a long distance outbound number to Australia
-; This 'o' Dial flag is VERY important for VICIDIAL on outbound calls, 
-exten => _901161XXXXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-exten => _901161XXXXXXXXX,2,Dial(${TRUNKX}/${EXTEN:1},,To)
-exten => _901161XXXXXXXXX,3,Hangup
-
 ; Extensions for performance testing 
 exten => _91999NXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
 exten => _91999NXXXXXX,2,Dial(${TRUNKloop}/${EXTEN:2},,tTo)
@@ -128,36 +103,6 @@ exten => _91999NXXXXXX,3,Hangup
 exten => 999999999999,1,AGI(agi://127.0.0.1:4577/call_log)
 exten => 999999999999,2,Dial(${TRUNKloop}/${EXTEN:1},,tTo)
 exten => 999999999999,3,Hangup
-
-; dial an 800 outbound number
-exten => _91800NXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-exten => _91800NXXXXXX,2,Dial(${TRUNK}/${EXTEN:1},,To)
-exten => _91800NXXXXXX,3,Hangup
-exten => _91888NXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-exten => _91888NXXXXXX,2,Dial(${TRUNK}/${EXTEN:1},,To)
-exten => _91888NXXXXXX,3,Hangup
-exten => _91877NXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-exten => _91877NXXXXXX,2,Dial(${TRUNK}/${EXTEN:1},,To)
-exten => _91877NXXXXXX,3,Hangup
-exten => _91866NXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-exten => _91866NXXXXXX,2,Dial(${TRUNK}/${EXTEN:1},,To)
-exten => _91866NXXXXXX,3,Hangup
-
-; dial a local outbound number (modified because of only LD T1)
-exten => _9NXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-exten => _9NXXXXXX,2,Dial(${TRUNK}/1727${EXTEN:1},,To)
-exten => _9NXXXXXX,3,Hangup
-
-; dial a local 727 outbound number with area code
-exten => _9727NXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-exten => _9727NXXXXXX,2,Dial(${TRUNK}/1${EXTEN:1},,To)
-exten => _9727NXXXXXX,3,Hangup
-
-; dial a long distance outbound number
-; This 'o' Dial flag is VERY important for VICIDIAL on outbound calls
-exten => _91NXXNXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-exten => _91NXXNXXXXXX,2,Dial(${TRUNKX}/${EXTEN:1},,To)
-exten => _91NXXNXXXXXX,3,Hangup
 
 ; This is a loopback dialaround to allow for hearing of ringing for 3way calls
 exten => _881NXXNXXXXXX,1,Answer
@@ -167,6 +112,50 @@ exten => _881NXXNXXXXXX,3,Hangup
 ; Vtiger fax and email log extensions
 exten => _9118XXXXXXXX,1,Dial(${TRUNKblind}/9998818112,55,to)
 exten => _9119XXXXXXXX,1,Dial(${TRUNKblind}/9998819112,55,to)
+
+
+; CARRIER DIALING EXTENSIONS, USE THE ADMIN INTERFACE TO PROGRAM THESE
+; dial an 800 outbound number
+;exten => _91800NXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
+;exten => _91800NXXXXXX,2,Dial(${TRUNK}/${EXTEN:1},,To)
+;exten => _91800NXXXXXX,3,Hangup
+;exten => _91888NXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
+;exten => _91888NXXXXXX,2,Dial(${TRUNK}/${EXTEN:1},,To)
+;exten => _91888NXXXXXX,3,Hangup
+;exten => _91877NXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
+;exten => _91877NXXXXXX,2,Dial(${TRUNK}/${EXTEN:1},,To)
+;exten => _91877NXXXXXX,3,Hangup
+;exten => _91866NXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
+;exten => _91866NXXXXXX,2,Dial(${TRUNK}/${EXTEN:1},,To)
+;exten => _91866NXXXXXX,3,Hangup
+
+; dial a long distance outbound number
+; This 'o' Dial flag is VERY important for VICIDIAL on outbound calls
+;exten => _91NXXNXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
+;exten => _91NXXNXXXXXX,2,Dial(${TRUNKX}/${EXTEN:1},,To)
+;exten => _91NXXNXXXXXX,3,Hangup
+
+; dial a local outbound number (modified because of only LD T1)
+;exten => _9NXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
+;exten => _9NXXXXXX,2,Dial(${TRUNK}/1727${EXTEN:1},,To)
+;exten => _9NXXXXXX,3,Hangup
+
+; dial a local 727 outbound number with area code
+;exten => _9727NXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
+;exten => _9727NXXXXXX,2,Dial(${TRUNK}/1${EXTEN:1},,To)
+;exten => _9727NXXXXXX,3,Hangup
+
+; dial a long distance outbound number to the UK
+; This 'o' Dial flag is VERY important for VICIDIAL on outbound calls, 
+;exten => _901144XXXXXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
+;exten => _901144XXXXXXXXXX,2,Dial(${TRUNKX}/${EXTEN:1},55,To)
+;exten => _901144XXXXXXXXXX,3,Hangup
+
+; dial a long distance outbound number to Australia
+; This 'o' Dial flag is VERY important for VICIDIAL on outbound calls, 
+;exten => _901161XXXXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
+;exten => _901161XXXXXXXXX,2,Dial(${TRUNKX}/${EXTEN:1},,To)
+;exten => _901161XXXXXXXXX,3,Hangup
 
 ; dial a long distance outbound number through BINFONE
 ; exten => _91NXXNXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
@@ -199,6 +188,19 @@ exten => _9119XXXXXXXX,1,Dial(${TRUNKblind}/9998819112,55,to)
 ; exten => _91XXXXXXXXXXXXX,2,Dial(${TRUNKloop}/9990011112,,to)
 ; exten => _91XXXXXXXXXXXXX,3,Hangup
 
+; Inbound call from BINFONE
+; exten => 1112223333,1,AGI(agi://127.0.0.1:4577/call_log)
+; exten => 1112223333,2,Dial(sip/gs102,55,o)
+; exten => 1112223333,3,Hangup
+
+; Extension 7275551212 - Inbound local number from PRI with 10 digit delivery
+;exten => 7275551212,1,Ringing
+;exten => 7275551212,2,Wait(1)
+;exten => 7275551212,3,AGI(agi://127.0.0.1:4577/call_log--fullCID--${EXTEN}-----${CALLERID(all)}-----${CALLERID(num)}-----${CALLERID(name)})
+;exten => 7275551212,4,Answer
+;exten => 7275551212,5,Dial(sip/spa2000&sip/spa2001,30,To)
+;exten => 7275551212,6,Voicemail,u2000
+
 ; parameters for call_inbound.agi (7 fields separated by five dashes "-----"):
 ; 1. the extension of the phone to ring as defined in the asterisk.phones table
 ; 2. the phone number that was called, for the live_inbound/_log entry
@@ -208,19 +210,19 @@ exten => _9119XXXXXXXX,1,Dial(${TRUNKblind}/9998819112,55,to)
 
 ; Extension 3429 - Inbound 800 number (1-800-555-3429) example of RBS T1
 ;    with 10 digit ANI and 4 digit DNIS star separated
-exten => _**3429,1,Ringing
-exten => _**3429,2,AGI(agi://127.0.0.1:4577/call_log)
-exten => _**3429,3,AGI(call_inbound.agi,spa2000-----8005553429-----Inbound 800-----x-----y-----z-----w)
-exten => _**3429,4,Answer
-exten => _**3429,5,Dial(sip/spa2000&sip/spa2001,30,to)
-exten => _**3429,6,Voicemail,u2000
+;exten => _**3429,1,Ringing
+;exten => _**3429,2,AGI(agi://127.0.0.1:4577/call_log)
+;exten => _**3429,3,AGI(call_inbound.agi,spa2000-----8005553429-----Inbound 800-----x-----y-----z-----w)
+;exten => _**3429,4,Answer
+;exten => _**3429,5,Dial(sip/spa2000&sip/spa2001,30,to)
+;exten => _**3429,6,Voicemail,u2000
 ; Extension 3429 - with ANI [callerID]
-exten => _*NXXNXXXXXX*3429,1,Ringing
-exten => _*NXXNXXXXXX*3429,2,AGI(agi://127.0.0.1:4577/call_log)
-exten => _*NXXNXXXXXX*3429,3,AGI(call_inbound.agi,spa2000-----8005553429-----Inbound 800-----x-----y-----z-----w)
-exten => _*NXXNXXXXXX*3429,4,Answer
-exten => _*NXXNXXXXXX*3429,5,Dial(sip/spa2000&sip/spa2001,30,to)
-exten => _*NXXNXXXXXX*3429,6,Voicemail,u2000
+;exten => _*NXXNXXXXXX*3429,1,Ringing
+;exten => _*NXXNXXXXXX*3429,2,AGI(agi://127.0.0.1:4577/call_log)
+;exten => _*NXXNXXXXXX*3429,3,AGI(call_inbound.agi,spa2000-----8005553429-----Inbound 800-----x-----y-----z-----w)
+;exten => _*NXXNXXXXXX*3429,4,Answer
+;exten => _*NXXNXXXXXX*3429,5,Dial(sip/spa2000&sip/spa2001,30,to)
+;exten => _*NXXNXXXXXX*3429,6,Voicemail,u2000
 
 
 ; parameters for agi-VDAD_ALL_inbound.agi (9 fields separated by five dashes "-----"):
@@ -251,9 +253,9 @@ exten => _*NXXNXXXXXX*3429,6,Voicemail,u2000
 ; 10. the campaign_id to search within lists if CIDLOOKUPRC
 ; 11. the user to queue the call to for AGENTDIRECT in-group calls
 ; inbound VICIDIAL call with CID delivery through T1 PRI
-exten => 1234,1,Answer                  ; Answer the line
-exten => 1234,2,AGI(agi-VDAD_ALL_inbound.agi,CID-----LB-----CL_GALLERIA-----7274515134-----Closer-----park----------999-----1)
-exten => 1234,3,Hangup
+;exten => 1234,1,Answer                  ; Answer the line
+;exten => 1234,2,AGI(agi-VDAD_ALL_inbound.agi,CID-----LB-----CL_GALLERIA-----7274515134-----Closer-----park----------999-----1)
+;exten => 1234,3,Hangup
 
 ; inbound VICIDIAL transfer calls [can arrive through PRI T1 crossover, IAX or SIP channel]
 exten => _90009.,1,Answer                  ; Answer the line

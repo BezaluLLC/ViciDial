@@ -177,3 +177,15 @@ UPDATE system_settings SET db_schema_version='1150';
 ALTER TABLE vicidial_live_agents ADD agent_log_id INT(9) UNSIGNED default '0';
 
 UPDATE system_settings SET db_schema_version='1151';
+
+
+
+
+
+ALTER TABLE system_settings ADD allow_custom_dialplan ENUM('0','1') default '0';
+
+ALTER TABLE vicidial_call_menu ADD custom_dialplan_entry TEXT;
+
+ALTER TABLE phones ADD phone_ring_timeout SMALLINT(3) default '60';
+
+UPDATE system_settings SET db_schema_version='1152';

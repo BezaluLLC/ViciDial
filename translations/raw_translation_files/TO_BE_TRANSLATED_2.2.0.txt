@@ -165,6 +165,12 @@ Carrier Logging Active||
 This setting allows you to log all hangup return codes for any outbound list dialing calls that you are placing. Default is N.||
 Drop Lockout Time||
 This is a number of hours that DROP abandon calls will be prevented from being dialed, to disable set to 0. This setting is very useful in countries like the UK where there are regulations preventing the attempted calling of customers within 72 hours of an Abandon, or DROP. Default is 0||
+Phone Ring Timeout||
+This is the amount of time, in seconds, that the phone will ring in the dialplan before sending the call to voicemail. Default is 60 seconds||
+Allow Custom Dialplan Entries||
+This option allows you to enter custom dialplan lines into Call Menus. Default is 0 for inactive||
+Custom Dilplan Entry||
+This field allows you to enter in any dialplan elements that you want for the Call Menu||
 
 
 add-file: user_territories.php

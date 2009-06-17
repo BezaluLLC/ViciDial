@@ -24,6 +24,7 @@
 # 90519-1018 - Added upload file trigger for prompt recording if defined as voicemail server and voicemail/prompt recording extensions auto-generated
 # 90529-0652 - Added phone_context and fixed calledid and voicemail for phones entries
 # 90614-0753 - Added in-group routing to call menu feature
+# 90617-0821 - Added phone ring timeout and call menu custom dialplan entry
 #
 
 $DB=0; # Debug flag
@@ -797,7 +798,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### Get the IAX phone entries #####
-	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
+	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -806,18 +807,19 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	while ($sthArows > $i)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$extension[$i] =	"$aryA[0]";
-		$dialplan[$i] =		"$aryA[1]";
-		$voicemail[$i] =	"$aryA[2]";
-		$pass[$i] =			"$aryA[3]";
-		$template_id[$i] =	"$aryA[4]";
-		$conf_override[$i] ="$aryA[5]";
-		$email[$i] =		"$aryA[6]";
-		$template_id[$i] =	"$aryA[7]";
-		$conf_override[$i] ="$aryA[8]";
-		$outbound_cid[$i] =	"$aryA[9]";
-		$fullname[$i] =		"$aryA[10]";
-		$phone_context[$i] ="$aryA[11]";
+		$extension[$i] =			"$aryA[0]";
+		$dialplan[$i] =				"$aryA[1]";
+		$voicemail[$i] =			"$aryA[2]";
+		$pass[$i] =					"$aryA[3]";
+		$template_id[$i] =			"$aryA[4]";
+		$conf_override[$i] =		"$aryA[5]";
+		$email[$i] =				"$aryA[6]";
+		$template_id[$i] =			"$aryA[7]";
+		$conf_override[$i] =		"$aryA[8]";
+		$outbound_cid[$i] =			"$aryA[9]";
+		$fullname[$i] =				"$aryA[10]";
+		$phone_context[$i] =		"$aryA[11]";
+		$phone_ring_timeout[$i] =	"$aryA[12]";
 		$i++;
 		}
 	$sthA->finish();
@@ -867,7 +869,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Piax .= "auth=md5\n";
 			$Piax .= "host=dynamic\n";
 			}
-		$Pext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i])\n";
+		$Pext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i]|$phone_ring_timeout[$i]|)\n";
 		$Pext .= "exten => $dialplan[$i],2,Voicemail($voicemail[$i]|u)\n";
 		$Pext .= "exten => $dialplan[$i],3,Hangup\n";
 
@@ -878,7 +880,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### Get the SIP phone entries #####
-	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context FROM phones where server_ip='$server_ip' and protocol='SIP' and active='Y' order by extension;";
+	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout FROM phones where server_ip='$server_ip' and protocol='SIP' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -887,18 +889,19 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	while ($sthArows > $i)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$extension[$i] =	"$aryA[0]";
-		$dialplan[$i] =		"$aryA[1]";
-		$voicemail[$i] =	"$aryA[2]";
-		$pass[$i] =			"$aryA[3]";
-		$template_id[$i] =	"$aryA[4]";
-		$conf_override[$i] ="$aryA[5]";
-		$email[$i] =		"$aryA[6]";
-		$template_id[$i] =	"$aryA[7]";
-		$conf_override[$i] ="$aryA[8]";
-		$outbound_cid[$i] =	"$aryA[9]";
-		$fullname[$i] =		"$aryA[10]";
-		$phone_context[$i] ="$aryA[11]";
+		$extension[$i] =			"$aryA[0]";
+		$dialplan[$i] =				"$aryA[1]";
+		$voicemail[$i] =			"$aryA[2]";
+		$pass[$i] =					"$aryA[3]";
+		$template_id[$i] =			"$aryA[4]";
+		$conf_override[$i] =		"$aryA[5]";
+		$email[$i] =				"$aryA[6]";
+		$template_id[$i] =			"$aryA[7]";
+		$conf_override[$i] =		"$aryA[8]";
+		$outbound_cid[$i] =			"$aryA[9]";
+		$fullname[$i] =				"$aryA[10]";
+		$phone_context[$i] =		"$aryA[11]";
+		$phone_ring_timeout[$i] =	"$aryA[12]";
 		$i++;
 		}
 	$sthA->finish();
@@ -947,7 +950,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Psip .= "type=friend\n";
 			$Psip .= "host=dynamic\n";
 			}
-		$Pext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i])\n";
+		$Pext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i]|$phone_ring_timeout[$i]|)\n";
 		$Pext .= "exten => $dialplan[$i],2,Voicemail($voicemail[$i]|u)\n";
 		$Pext .= "exten => $dialplan[$i],3,Hangup\n";
 
@@ -961,7 +964,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### Get the Call Menu entries #####
-	$stmtA = "SELECT menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac FROM vicidial_call_menu order by menu_id;";
+	$stmtA = "SELECT menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry FROM vicidial_call_menu order by menu_id;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -980,6 +983,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$menu_time_check[$i] =		"$aryA[7]";
 		$call_time_id[$i] =			"$aryA[8]";
 		$track_in_vdac[$i] =		"$aryA[9]";
+		$custom_dialplan_entry[$i]= "$aryA[10]";
+
 		if ($track_in_vdac[$i] > 0)
 			{$track_in_vdac[$i] = 'YES'}
 		else
@@ -1163,6 +1168,12 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$call_menu_ext .= "\n";
 		$call_menu_ext .= "$call_menu_options_ext";
 		$call_menu_ext .= "\n";
+		if (length($custom_dialplan_entry[$i]) > 4) 
+			{
+			$call_menu_ext .= "; custom dialplan entries\n";
+			$call_menu_ext .= "$custom_dialplan_entry[$i]\n";
+			$call_menu_ext .= "\n";
+			}
 
 		if (length($call_menu_timeout_ext) < 1)
 			{
