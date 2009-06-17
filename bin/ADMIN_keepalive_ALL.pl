@@ -1047,16 +1047,56 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 					$option_value[$j] = 't';
 					if ( (length($menu_timeout_prompt[$i])>0)  && ($menu_timeout_prompt[$i] !~ /NONE/) )
 						{
-						$call_menu_line .= "exten => t,1,Playback($menu_timeout_prompt[$i])\n";
-						$PRI++;
+						$menu_timeout_prompt_ext='';
+						if ($menu_timeout_prompt[$i] =~ /\|/)
+							{
+							@menu_timeout_prompts_array = split(/\|/,$menu_timeout_prompt[$i]);
+							$w=0;
+							foreach(@menu_timeout_prompts_array)
+								{
+								if (length($menu_timeout_prompts_array[$w])>0)
+									{
+									$menu_timeout_prompt_ext .= "exten => t,$PRI,Playback($menu_timeout_prompts_array[$w])\n";
+									$PRI++;
+									}
+								$w++;
+								}
+							}
+						else
+							{
+							$menu_timeout_prompt_ext .= "exten => t,1,Playback($menu_timeout_prompt[$i])\n";
+							$PRI++;
+							}
+
+						$call_menu_line .= "$menu_timeout_prompt_ext";
 						}
 					}
 				if ($option_value[$j] =~ /INVALID/)
 					{
 					if ( (length($menu_invalid_prompt[$i])>0) && ($menu_invalid_prompt[$i] !~ /NONE/) )
 						{
-						$call_menu_line .= "exten => i,1,Playback($menu_invalid_prompt[$i])\n";
-						$PRI++;
+						$menu_invalid_prompt_ext='';
+						if ($menu_invalid_prompt[$i] =~ /\|/)
+							{
+							@menu_invalid_prompts_array = split(/\|/,$menu_invalid_prompt[$i]);
+							$w=0;
+							foreach(@menu_invalid_prompts_array)
+								{
+								if (length($menu_invalid_prompts_array[$w])>0)
+									{
+									$menu_invalid_prompt_ext .= "exten => i,$PRI,Playback($menu_invalid_prompts_array[$w])\n";
+									$PRI++;
+									}
+								$w++;
+								}
+							}
+						else
+							{
+							$menu_invalid_prompt_ext .= "exten => i,1,Playback($menu_invalid_prompt[$i])\n";
+							$PRI++;
+							}
+
+						$call_menu_line .= "$menu_invalid_prompt_ext";
 						}
 					$option_value[$j] = 'i';
 					}
@@ -1096,7 +1136,28 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 					{
 					if ( (length($option_route_value[$j])>0) && ($option_route_value[$j] !~ /NONE/) )
 						{
-						$call_menu_line .= "exten => $option_value[$j],$PRI,Playback($option_route_value[$j])\n";
+						$hangup_prompt_ext='';
+						if ($option_route_value[$j] =~ /\|/)
+							{
+							@hangup_prompts_array = split(/\|/,$option_route_value[$j]);
+							$w=0;
+							foreach(@hangup_prompts_array)
+								{
+								if (length($hangup_prompts_array[$w])>0)
+									{
+									$hangup_prompt_ext .= "exten => $option_value[$j],$PRI,Playback($hangup_prompts_array[$w])\n";
+									$PRI++;
+									}
+								$w++;
+								}
+							}
+						else
+							{
+							$hangup_prompt_ext .= "exten => $option_value[$j],1,Playback($option_route_value[$j])\n";
+							$PRI++;
+							}
+
+						$call_menu_line .= "$hangup_prompt_ext";
 						$call_menu_line .= "exten => $option_value[$j],n,Hangup\n";
 						}
 					else
@@ -1150,18 +1211,34 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			}
 		$sthA->finish();
 
+		$menu_prompt_ext='';
+		if ($menu_prompt[$i] =~ /\|/)
+			{
+			@menu_prompts_array = split(/\|/,$menu_prompt[$i]);
+			$w=0;
+			foreach(@menu_prompts_array)
+				{
+				if (length($menu_prompts_array[$w])>0)
+					{$menu_prompt_ext .= "exten => s,n,Background($menu_prompts_array[$w])\n";}
+				$w++;
+				}
+			}
+		else
+			{$menu_prompt_ext .= "exten => s,n,Background($menu_prompt[$i])\n";}
 
 		$call_menu_ext .= "\n";
 		$call_menu_ext .= "; $menu_name[$i]\n";
 		$call_menu_ext .= "[$menu_id[$i]]\n";
 		$call_menu_ext .= "exten => s,1,AGI(agi-VDAD_inbound_calltime_check.agi,-----$track_in_vdac[$i]-----$menu_id[$i]-----$time_check_scheme-----$time_check_route-----$time_check_route_value-----$time_check_route_context)\n";
-		$call_menu_ext .= "exten => s,n,Background($menu_prompt[$i])\n";
-		$call_menu_ext .= "exten => s,n,WaitExten($menu_timeout[$i])\n";
+		$call_menu_ext .= "$menu_prompt_ext";
+		if ($menu_timeout[$i] > 0)
+			{$call_menu_ext .= "exten => s,n,WaitExten($menu_timeout[$i])\n";}
 		$k=0;
 		while ($k < $menu_repeat[$i]) 
 			{
-			$call_menu_ext .= "exten => s,n,Background($menu_prompt[$i])\n";
-			$call_menu_ext .= "exten => s,n,WaitExten($menu_timeout[$i])\n";
+			$call_menu_ext .= "$menu_prompt_ext";
+			if ($menu_timeout[$i] > 0)
+				{$call_menu_ext .= "exten => s,n,WaitExten($menu_timeout[$i])\n";}
 			$k++;
 			}
 	#	$call_menu_ext .= "exten => s,n,Hangup\n";

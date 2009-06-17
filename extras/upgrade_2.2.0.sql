@@ -189,3 +189,12 @@ ALTER TABLE vicidial_call_menu ADD custom_dialplan_entry TEXT;
 ALTER TABLE phones ADD phone_ring_timeout SMALLINT(3) default '60';
 
 UPDATE system_settings SET db_schema_version='1152';
+
+
+ALTER TABLE vicidial_call_menu MODIFY menu_prompt VARCHAR(255);
+ALTER TABLE vicidial_call_menu MODIFY menu_timeout_prompt VARCHAR(255) default 'NONE';
+ALTER TABLE vicidial_call_menu MODIFY menu_invalid_prompt VARCHAR(255) default 'NONE';
+
+ALTER TABLE vicidial_call_menu_options MODIFY option_route_value VARCHAR(255);
+
+UPDATE system_settings SET db_schema_version='1153';

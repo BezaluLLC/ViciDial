@@ -1470,9 +1470,9 @@ if ($non_latin < 1)
 	$phone_context = ereg_replace("[^-_0-9a-zA-Z]","",$phone_context);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
-	$menu_prompt = ereg_replace("[^-\/\._0-9a-zA-Z]","",$menu_prompt);
-	$menu_timeout_prompt = ereg_replace("[^-\/\._0-9a-zA-Z]","",$menu_timeout_prompt);
-	$menu_invalid_prompt = ereg_replace("[^-\/\._0-9a-zA-Z]","",$menu_invalid_prompt);
+	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
+	$menu_timeout_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_timeout_prompt);
+	$menu_invalid_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_invalid_prompt);
 
 	### ALPHA-NUMERIC and underscore and dash and comma
 	$logins_list = ereg_replace("[^-\,\_0-9a-zA-Z]","",$logins_list);
@@ -4102,12 +4102,12 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="vicidial_call_menu-menu_prompt">
 <BR>
-<B>Menu Prompt -</B> This field contains the file name of the audio prompt to play at the beginning of this menu.
+<B>Menu Prompt -</B> This field contains the file name of the audio prompt to play at the beginning of this menu. You can enter multiple propmts in this field and the other prompt fields by separating them with a pipe character.
 
 <BR>
 <A NAME="vicidial_call_menu-menu_timeout">
 <BR>
-<B>Menu Timeout -</B> This field is where you set the timeout in seconds that the menu will wait for the caller to enter in a DTMF choice.
+<B>Menu Timeout -</B> This field is where you set the timeout in seconds that the menu will wait for the caller to enter in a DTMF choice. Setting this field to zero 0 will mean that there will be no wait time after the prompt is played.
 
 <BR>
 <A NAME="vicidial_call_menu-menu_timeout_prompt">
@@ -11265,7 +11265,7 @@ if ($ADD==4511)
 				$option_value = ereg_replace("[^-\_0-9A-Z]","",$option_value);
 				$option_description = ereg_replace("[^- \:\/\_0-9a-zA-Z]","",$option_description);
 				$option_route = ereg_replace("[^-_0-9a-zA-Z]","",$option_route);
-				$option_route_value = ereg_replace("[^-\/\_\#\*\,\.\_0-9a-zA-Z]","",$option_route_value);
+				$option_route_value = ereg_replace("[^-\/\|\_\#\*\,\.\_0-9a-zA-Z]","",$option_route_value);
 				$option_route_value_context = ereg_replace("[^,-_0-9a-zA-Z]","",$option_route_value_context);
 				}
 
@@ -17923,10 +17923,10 @@ if ($ADD==3511)
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Menu ID: </td><td align=left>$menu_id $NWB#vicidial_call_menu-menu_id$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Name: </td><td align=left><input type=text name=menu_name size=40 maxlength=50 value=\"$menu_name\">$NWB#vicidial_call_menu-menu_name$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Prompt: </td><td align=left><input type=text name=menu_prompt id=menu_prompt size=50 maxlength=100 value=\"$menu_prompt\"> <a href=\"javascript:launch_chooser('menu_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_prompt$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Prompt: </td><td align=left><input type=text name=menu_prompt id=menu_prompt size=70 maxlength=255 value=\"$menu_prompt\"> <a href=\"javascript:launch_chooser('menu_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_prompt$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Timeout: </td><td align=left><input type=text name=menu_timeout size=10 maxlength=5 value=\"$menu_timeout\">$NWB#vicidial_call_menu-menu_timeout$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Timeout Prompt: </td><td align=left><input type=text name=menu_timeout_prompt id=menu_timeout_prompt size=50 maxlength=100 value=\"$menu_timeout_prompt\"> <a href=\"javascript:launch_chooser('menu_timeout_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_timeout_prompt$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Invalid Prompt: </td><td align=left><input type=text name=menu_invalid_prompt id=menu_invalid_prompt size=50 maxlength=100 value=\"$menu_invalid_prompt\"> <a href=\"javascript:launch_chooser('menu_invalid_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_invalid_prompt$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Timeout Prompt: </td><td align=left><input type=text name=menu_timeout_prompt id=menu_timeout_prompt size=70 maxlength=255 value=\"$menu_timeout_prompt\"> <a href=\"javascript:launch_chooser('menu_timeout_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_timeout_prompt$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Invalid Prompt: </td><td align=left><input type=text name=menu_invalid_prompt id=menu_invalid_prompt size=70 maxlength=255 value=\"$menu_invalid_prompt\"> <a href=\"javascript:launch_chooser('menu_invalid_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_invalid_prompt$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Repeat: </td><td align=left><input type=text name=menu_repeat size=4 maxlength=3 value=\"$menu_repeat\">$NWB#vicidial_call_menu-menu_repeat$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Time Check: </td><td align=left><select size=1 name=menu_time_check>\n";
 	if ($menu_time_check > 0)
@@ -18063,7 +18063,7 @@ if ($ADD==3511)
 			}
 		if ($option_route=='HANGUP')
 			{
-			echo "Audio File: <input type=text name=option_route_value_$j id=option_route_value_$j size=40 maxlength=255 value=\"$option_route_value\"> <a href=\"javascript:launch_chooser('option_route_value_$j','date',$choose_height);\">audio chooser</a>\n";
+			echo "Audio File: <input type=text name=option_route_value_$j id=option_route_value_$j size=50 maxlength=255 value=\"$option_route_value\"> <a href=\"javascript:launch_chooser('option_route_value_$j','date',$choose_height);\">audio chooser</a>\n";
 			}
 		if ($option_route=='EXTENSION')
 			{
