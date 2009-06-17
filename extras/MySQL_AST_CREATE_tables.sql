@@ -70,6 +70,7 @@ email VARCHAR(100),
 template_id VARCHAR(15) NOT NULL,
 conf_override TEXT,
 phone_context VARCHAR(20) default 'default',
+phone_ring_timeout SMALLINT(3) default '60',
 index (server_ip),
 unique index extenserver (extension, server_ip)
 );
@@ -1108,7 +1109,8 @@ sounds_web_server VARCHAR(15) default '127.0.0.1',
 sounds_web_directory VARCHAR(255) default '',
 active_voicemail_server VARCHAR(15) default '',
 auto_dial_limit VARCHAR(5) default '4',
-user_territories_active ENUM('0','1') default '0'
+user_territories_active ENUM('0','1') default '0',
+allow_custom_dialplan ENUM('0','1') default '0'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -1489,14 +1491,15 @@ tts_text TEXT
 CREATE TABLE vicidial_call_menu (
 menu_id VARCHAR(50) PRIMARY KEY NOT NULL,
 menu_name VARCHAR(100),
-menu_prompt VARCHAR(100),
+menu_prompt VARCHAR(255),
 menu_timeout SMALLINT(2) UNSIGNED default '10',
-menu_timeout_prompt VARCHAR(100) default 'NONE',
-menu_invalid_prompt VARCHAR(100) default 'NONE',
+menu_timeout_prompt VARCHAR(255) default 'NONE',
+menu_invalid_prompt VARCHAR(255) default 'NONE',
 menu_repeat TINYINT(1) UNSIGNED default '0',
 menu_time_check ENUM('0','1') default '0',
 call_time_id VARCHAR(20) default '',
-track_in_vdac ENUM('0','1') default '1'
+track_in_vdac ENUM('0','1') default '1',
+custom_dialplan_entry TEXT
 );
 
 CREATE TABLE vicidial_call_menu_options (
@@ -1504,7 +1507,7 @@ menu_id VARCHAR(50) NOT NULL,
 option_value VARCHAR(20) NOT NULL default '',
 option_description VARCHAR(255) default '',
 option_route VARCHAR(20),
-option_route_value VARCHAR(100),
+option_route_value VARCHAR(255),
 option_route_value_context VARCHAR(100),
 index (menu_id),
 unique index menuoption (menu_id, option_value)
@@ -1651,7 +1654,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1151';
+UPDATE system_settings SET db_schema_version='1153';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
