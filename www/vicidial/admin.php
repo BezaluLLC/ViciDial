@@ -1469,10 +1469,10 @@ if ($non_latin < 1)
 	$call_time_id = ereg_replace("[^-_0-9a-zA-Z]","",$call_time_id);
 	$phone_context = ereg_replace("[^-_0-9a-zA-Z]","",$phone_context);
 
-	### ALPHA-NUMERIC and underscore and dash and slash
-	$menu_prompt = ereg_replace("[^-\/_0-9a-zA-Z]","",$menu_prompt);
-	$menu_timeout_prompt = ereg_replace("[^-\/_0-9a-zA-Z]","",$menu_timeout_prompt);
-	$menu_invalid_prompt = ereg_replace("[^-\/_0-9a-zA-Z]","",$menu_invalid_prompt);
+	### ALPHA-NUMERIC and underscore and dash and slash and dot
+	$menu_prompt = ereg_replace("[^-\/\._0-9a-zA-Z]","",$menu_prompt);
+	$menu_timeout_prompt = ereg_replace("[^-\/\._0-9a-zA-Z]","",$menu_timeout_prompt);
+	$menu_invalid_prompt = ereg_replace("[^-\/\._0-9a-zA-Z]","",$menu_invalid_prompt);
 
 	### ALPHA-NUMERIC and underscore and dash and comma
 	$logins_list = ereg_replace("[^-\,\_0-9a-zA-Z]","",$logins_list);
