@@ -1245,12 +1245,6 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$call_menu_ext .= "\n";
 		$call_menu_ext .= "$call_menu_options_ext";
 		$call_menu_ext .= "\n";
-		if (length($custom_dialplan_entry[$i]) > 4) 
-			{
-			$call_menu_ext .= "; custom dialplan entries\n";
-			$call_menu_ext .= "$custom_dialplan_entry[$i]\n";
-			$call_menu_ext .= "\n";
-			}
 
 		if (length($call_menu_timeout_ext) < 1)
 			{
@@ -1287,6 +1281,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 		$call_menu_ext .= "; hangup\n";
 		$call_menu_ext .= 'exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
+
+		if (length($custom_dialplan_entry[$i]) > 4) 
+			{
+			$call_menu_ext .= "\n\n";
+			$call_menu_ext .= "; custom dialplan entries\n";
+			$call_menu_ext .= "$custom_dialplan_entry[$i]\n";
+			}
+
 		$call_menu_ext .= "\n\n";
 
 		$i++;
