@@ -6,11 +6,12 @@
 # Central Audio Storage script
 # 
 # CHANGES
-# 90511-1325 - first build
+# 90511-1325 - First build
+# 90618-0640 - Fix for users going through proxy or tunnel
 #
 
-$version = '2.2.0-1';
-$build = '90511-1325';
+$version = '2.2.0-2';
+$build = '90618-0640';
 
 $MT[0]='';
 
@@ -104,13 +105,16 @@ while ($sv_conf_ct > $i)
 	$server_ips .=	"$row[0]|";
 	$i++;
 	}
+
+$user_set=0;
 $ip = getenv("REMOTE_ADDR");
 if (!preg_match("/\|$ip\|/", $server_ips))
 	{
+	$user_set=1;
 	$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 	$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
-	$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and modify_campaigns='1'";
 	if ($DB) {echo "|$stmt|\n";}
@@ -205,6 +209,13 @@ if ($action == "AUTOUPLOAD")
 <?php
 
 
+if ($user_set < 1)
+	{
+	$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
+	$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
+	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+	}
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'311111111111111';
 $hh =					'admin';
