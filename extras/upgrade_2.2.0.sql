@@ -197,3 +197,7 @@ UPDATE system_settings SET db_schema_version='1153';
 ALTER TABLE phones ADD conf_secret VARCHAR(20) default 'test';
 
 UPDATE system_settings SET db_schema_version='1154';
+
+ALTER TABLE vicidial_call_menu ADD tracking_group VARCHAR(20) default 'CALLMENU';
+
+UPDATE system_settings SET db_schema_version='1155';

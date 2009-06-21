@@ -175,6 +175,8 @@ You can enter multiple propmts in this field and the other prompt fields by sepa
 Setting this field to zero 0 will mean that there will be no wait time after the prompt is played||
 Conf File Secret||
 This is the secret, or password, for the phone in the iax or sip auto-generated conf file for this phone. Limit is 20 characters alphanumeric dash and underscore accepted. Default is test||
+Tracking Group||
+This is the ID that you can use to track calls to this Call Menu when looking at the IVR Report. The list includes CALLMENU as the default as well as all of the In-Groups||
 
 
 add-file: user_territories.php

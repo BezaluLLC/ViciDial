@@ -1042,6 +1042,8 @@ if (isset($_GET["phone_ring_timeout"]))					{$phone_ring_timeout=$_GET["phone_ri
 	elseif (isset($_POST["phone_ring_timeout"]))		{$phone_ring_timeout=$_POST["phone_ring_timeout"];}
 if (isset($_GET["conf_secret"]))					{$conf_secret=$_GET["conf_secret"];}
 	elseif (isset($_POST["conf_secret"]))			{$conf_secret=$_POST["conf_secret"];}
+if (isset($_GET["tracking_group"]))					{$tracking_group=$_GET["tracking_group"];}
+	elseif (isset($_POST["tracking_group"]))		{$tracking_group=$_POST["tracking_group"];}
 
 	if (isset($script_id)) {$script_id= strtoupper($script_id);}
 	if (isset($lead_filter_id)) {$lead_filter_id = strtoupper($lead_filter_id);}
@@ -1471,6 +1473,7 @@ if ($non_latin < 1)
 	$call_time_id = ereg_replace("[^-_0-9a-zA-Z]","",$call_time_id);
 	$phone_context = ereg_replace("[^-_0-9a-zA-Z]","",$phone_context);
 	$conf_secret = ereg_replace("[^-_0-9a-zA-Z]","",$conf_secret);
+	$tracking_group = ereg_replace("[^-_0-9a-zA-Z]","",$tracking_group);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
@@ -1815,11 +1818,12 @@ else
 # 90614-0827 - Added In-Group routing to Call Menu screen, Added pull-down Call Menu option to DID screen
 # 90617-0733 - Added phone ring timeout and call menu custom dialplan entries
 # 90621-0821 - Added phon Conf File Secret field to use a separate password from the user interface for a phone
+# 90621-1220 - Added Call Menu logging tracking_group
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-198';
-$build = '90621-0821';
+$admin_version = '2.2.0-199';
+$build = '90621-1220';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4142,6 +4146,11 @@ if ($SSqc_features_active > 0)
 <A NAME="vicidial_call_menu-track_in_vdac">
 <BR>
 <B>Track Calls in Real-Time Report -</B> This field is where you can select whether you want the call to be tracked in the Real-time screen as an incoming IVR type call. Default is 1 for active.
+
+<BR>
+<A NAME="vicidial_call_menu-tracking_group">
+<BR>
+<B>Tracking Group -</B> This is the ID that you can use to track calls to this Call Menu when looking at the IVR Report. The list includes CALLMENU as the default as well as all of the In-Groups.
 
 <BR>
 <A NAME="vicidial_call_menu-option_value">
@@ -8539,7 +8548,7 @@ if ($ADD==2611)
 			}
 		 else
 			{
-			$stmt="INSERT INTO vicidial_call_menu (menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry) SELECT \"$menu_id\",\"$menu_name\",menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry from vicidial_call_menu where menu_id=\"$source_menu\";";
+			$stmt="INSERT INTO vicidial_call_menu (menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group) SELECT \"$menu_id\",\"$menu_name\",menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group from vicidial_call_menu where menu_id=\"$source_menu\";";
 			$rslt=mysql_query($stmt, $link);
 
 			$stmtA="INSERT INTO vicidial_call_menu_options (menu_id,option_value,option_description,option_route,option_route_value,option_route_value_context) SELECT \"$menu_id\",option_value,option_description,option_route,option_route_value,option_route_value_context from vicidial_call_menu_options where menu_id='$source_menu';";
@@ -11233,7 +11242,7 @@ if ($ADD==4511)
 		{
 		echo "<br><B>CALL MENU MODIFIED: $menu_id</B>\n";
 
-		$stmt="UPDATE vicidial_call_menu set menu_name='$menu_name',menu_prompt='$menu_prompt',menu_timeout='$menu_timeout',menu_timeout_prompt='$menu_timeout_prompt',menu_invalid_prompt='$menu_invalid_prompt',menu_repeat='$menu_repeat',menu_time_check='$menu_time_check',call_time_id='$call_time_id',track_in_vdac='$track_in_vdac',custom_dialplan_entry='$custom_dialplan_entry' where menu_id='$menu_id';";
+		$stmt="UPDATE vicidial_call_menu set menu_name='$menu_name',menu_prompt='$menu_prompt',menu_timeout='$menu_timeout',menu_timeout_prompt='$menu_timeout_prompt',menu_invalid_prompt='$menu_invalid_prompt',menu_repeat='$menu_repeat',menu_time_check='$menu_time_check',call_time_id='$call_time_id',track_in_vdac='$track_in_vdac',custom_dialplan_entry='$custom_dialplan_entry',tracking_group='$tracking_group' where menu_id='$menu_id';";
 		$rslt=mysql_query($stmt, $link);
 
 		$h=0;
@@ -17911,7 +17920,7 @@ if ($ADD==3511)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry from vicidial_call_menu where menu_id='$menu_id';";
+	$stmt="SELECT menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group from vicidial_call_menu where menu_id='$menu_id';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$menu_name =			$row[0];
@@ -17924,6 +17933,7 @@ if ($ADD==3511)
 	$call_time_id =			$row[7];
 	$track_in_vdac =		$row[8];
 	$custom_dialplan_entry= $row[9];
+	$tracking_group =		$row[10];
 
 
 	echo "<br>MODIFY A CALL MENU RECORD: $menu_id<form action=$PHP_SELF method=POST name=admin_form id=admin_form>\n";
@@ -17932,10 +17942,10 @@ if ($ADD==3511)
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Menu ID: </td><td align=left>$menu_id $NWB#vicidial_call_menu-menu_id$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Name: </td><td align=left><input type=text name=menu_name size=40 maxlength=50 value=\"$menu_name\">$NWB#vicidial_call_menu-menu_name$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Prompt: </td><td align=left><input type=text name=menu_prompt id=menu_prompt size=70 maxlength=255 value=\"$menu_prompt\"> <a href=\"javascript:launch_chooser('menu_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_prompt$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Prompt: </td><td align=left><input type=text name=menu_prompt id=menu_prompt size=60 maxlength=255 value=\"$menu_prompt\"> <a href=\"javascript:launch_chooser('menu_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_prompt$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Timeout: </td><td align=left><input type=text name=menu_timeout size=10 maxlength=5 value=\"$menu_timeout\">$NWB#vicidial_call_menu-menu_timeout$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Timeout Prompt: </td><td align=left><input type=text name=menu_timeout_prompt id=menu_timeout_prompt size=70 maxlength=255 value=\"$menu_timeout_prompt\"> <a href=\"javascript:launch_chooser('menu_timeout_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_timeout_prompt$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Invalid Prompt: </td><td align=left><input type=text name=menu_invalid_prompt id=menu_invalid_prompt size=70 maxlength=255 value=\"$menu_invalid_prompt\"> <a href=\"javascript:launch_chooser('menu_invalid_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_invalid_prompt$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Timeout Prompt: </td><td align=left><input type=text name=menu_timeout_prompt id=menu_timeout_prompt size=60 maxlength=255 value=\"$menu_timeout_prompt\"> <a href=\"javascript:launch_chooser('menu_timeout_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_timeout_prompt$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Invalid Prompt: </td><td align=left><input type=text name=menu_invalid_prompt id=menu_invalid_prompt size=60 maxlength=255 value=\"$menu_invalid_prompt\"> <a href=\"javascript:launch_chooser('menu_invalid_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_invalid_prompt$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Repeat: </td><td align=left><input type=text name=menu_repeat size=4 maxlength=3 value=\"$menu_repeat\">$NWB#vicidial_call_menu-menu_repeat$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Menu Time Check: </td><td align=left><select size=1 name=menu_time_check>\n";
 	if ($menu_time_check > 0)
@@ -17961,6 +17971,12 @@ if ($ADD==3511)
 		echo "<option selected value=\"0\">0 - No Realtime Tracking</option><option value=\"1\">1 - Realtime Tracking</option>\n";
 		}
 	echo "</select>$NWB#vicidial_call_menu-track_in_vdac$NWE</td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=right>Tracking Group: </td><td align=left><select size=1 name=tracking_group>\n";
+	echo "<option value=\"CALLMENU\">CALLMENU - Default</option>\n";
+	echo "$ingroup_list";
+	echo "<option selected value=\"$tracking_group\">$tracking_group</option>\n";
+	echo "</select>$NWB#vicidial_call_menu-tracking_group$NWE</td></tr>\n";
 
 	echo "<tr><td align=center colspan=2> <input type=submit name=SUBMIT value=SUBMIT> </td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=CENTER colspan=2> Call Menu Options: </td></tr>\n";

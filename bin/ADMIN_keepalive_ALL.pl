@@ -26,6 +26,7 @@
 # 90614-0753 - Added in-group routing to call menu feature
 # 90617-0821 - Added phone ring timeout and call menu custom dialplan entry
 # 90621-0823 - Added phones conf file secret field use
+# 90621-1425 - Added tracking group for call menus
 #
 
 $DB=0; # Debug flag
@@ -967,7 +968,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### Get the Call Menu entries #####
-	$stmtA = "SELECT menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry FROM vicidial_call_menu order by menu_id;";
+	$stmtA = "SELECT menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group FROM vicidial_call_menu order by menu_id;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -987,6 +988,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$call_time_id[$i] =			"$aryA[8]";
 		$track_in_vdac[$i] =		"$aryA[9]";
 		$custom_dialplan_entry[$i]= "$aryA[10]";
+		$tracking_group[$i] =		"$aryA[11]";
 
 		if ($track_in_vdac[$i] > 0)
 			{$track_in_vdac[$i] = 'YES'}
@@ -1232,7 +1234,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$call_menu_ext .= "\n";
 		$call_menu_ext .= "; $menu_name[$i]\n";
 		$call_menu_ext .= "[$menu_id[$i]]\n";
-		$call_menu_ext .= "exten => s,1,AGI(agi-VDAD_inbound_calltime_check.agi,-----$track_in_vdac[$i]-----$menu_id[$i]-----$time_check_scheme-----$time_check_route-----$time_check_route_value-----$time_check_route_context)\n";
+		$call_menu_ext .= "exten => s,1,AGI(agi-VDAD_inbound_calltime_check.agi,$tracking_group[$i]-----$track_in_vdac[$i]-----$menu_id[$i]-----$time_check_scheme-----$time_check_route-----$time_check_route_value-----$time_check_route_context)\n";
 		$call_menu_ext .= "$menu_prompt_ext";
 		if ($menu_timeout[$i] > 0)
 			{$call_menu_ext .= "exten => s,n,WaitExten($menu_timeout[$i])\n";}

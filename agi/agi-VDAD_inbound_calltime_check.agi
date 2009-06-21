@@ -34,6 +34,7 @@
 # 81015-2009 - Added more logging and NOTE option
 # 81017-0238 - Fixed duplication bug for vac in multi-entry dialplans
 # 90504-1555 - Added call time scheme override
+# 90621-1130 - Fixed issue when no call time is specified
 #
 
 $script = 'agi-VDAD_inbound_calltime_check.agi';
@@ -171,12 +172,12 @@ while(<STDIN>)
 	chomp;
 	last unless length($_);
 	if ($AGILOG)
-	{
-		if (/^agi_(\w+)\:\s+(.*)$/)
 		{
-		$AGI{$1} = $2;
+		if (/^agi_(\w+)\:\s+(.*)$/)
+			{
+			$AGI{$1} = $2;
+			}
 		}
-	}
 
 	if (/^agi_context\:\s+(.*)$/)		{$context = $1;}
 	if (/^agi_priority\:\s+(.*)$/)		{$priority = $1;}
@@ -196,8 +197,8 @@ if ( ($callerid =~ /\".*\"/) && ( (!$calleridname) or ($calleridname =~ /unknown
 	$calleridname =~ s/\"|\" //gi;
 	}
 
-	$callerid =~ s/\D//gi;
-	$calleridname =~ s/unknown//gi;
+$callerid =~ s/\D//gi;
+$calleridname =~ s/unknown//gi;
 if ( (!$callerid) or ($callerid =~ /unknown/) )
 	{$callerid = $calleridname;}
 
@@ -323,22 +324,28 @@ if ($wday==4) {$daySQL=',ct_thursday_start,ct_thursday_stop';}
 if ($wday==5) {$daySQL=',ct_friday_start,ct_friday_stop';}
 if ($wday==6) {$daySQL=',ct_saturday_start,ct_saturday_stop';}
 
+$ct_default_start = '0';
+$ct_default_stop = '9999';
+
 ### Grab call_times values from the database
 $stmtA = "SELECT ct_default_start,ct_default_stop $daySQL FROM vicidial_call_times where call_time_id = '$call_time_id';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
-@aryA = $sthA->fetchrow_array;
-$ct_default_start	=		"$aryA[0]";
-$ct_default_stop	=		"$aryA[1]";
-$ct_day_start	=			"$aryA[2]";
-$ct_day_stop	=			"$aryA[3]";
-$sthA->finish();
-
-if ( ($ct_day_start > 0) || ($ct_day_stop > 0) )  
+if ($sthArows > 0)
 	{
-	$ct_default_start	=	$ct_day_start;
-	$ct_default_stop	=	$ct_day_stop;
+	@aryA = $sthA->fetchrow_array;
+	$ct_default_start	=		"$aryA[0]";
+	$ct_default_stop	=		"$aryA[1]";
+	$ct_day_start	=			"$aryA[2]";
+	$ct_day_stop	=			"$aryA[3]";
+	$sthA->finish();
+
+	if ( ($ct_day_start > 0) || ($ct_day_stop > 0) )  
+		{
+		$ct_default_start	=	$ct_day_start;
+		$ct_default_stop	=	$ct_day_stop;
+		}
 	}
 
 $AGI->stream_file('sip-silence');
@@ -384,14 +391,14 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 				checkresult($result);
 			}
 		}
-		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and uniqueid='$uniqueid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
-		$affected_rows = $dbhA->do($stmtA);
-		if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $uniqueid|$callerid|";   &agi_output;}
+	$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and uniqueid='$uniqueid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
+	$affected_rows = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "--    AH VDCL vac record deleted: |$affected_rows| $uniqueid|$callerid|";   &agi_output;}
 
-		$stmtA = "INSERT INTO live_inbound_log (uniqueid,channel,server_ip,caller_id,extension,phone_ext,start_time,comment_a,comment_b,comment_c,comment_d,comment_e) values('$uniqueid','$channel','$VARserver_ip','$callerid','$extension','$phone_number','$SQLdate','$channel_group','$note','AFTERHOURSDROP','$context','$priority')";
-			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-		$affected_rowsL = $dbhA->do($stmtA);
-		if ($AGILOG) {$agi_string = "--    LIL : |$affected_rowsL|$uniqueid|$callerid|$extension|";   &agi_output;}
+	$stmtA = "INSERT INTO live_inbound_log (uniqueid,channel,server_ip,caller_id,extension,phone_ext,start_time,comment_a,comment_b,comment_c,comment_d,comment_e) values('$uniqueid','$channel','$VARserver_ip','$callerid','$extension','$phone_number','$SQLdate','$channel_group','$note','AFTERHOURSDROP','$context','$priority')";
+		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+	$affected_rowsL = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "--    AH LIL : |$affected_rowsL|$uniqueid|$callerid|$extension|";   &agi_output;}
 
 	if ($after_hours_action =~ /HANGUP/)
 		{
@@ -422,7 +429,7 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 
 
 ### insert an IVR record to the vicidial_auto_calls table
-if ($log_to_vac == 'YES')
+if ($log_to_vac =~ /YES/)
 	{
 	$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and uniqueid='$uniqueid' and server_ip='$VARserver_ip';";
 	$affected_rows = $dbhA->do($stmtA);
@@ -450,39 +457,46 @@ exit;
 
 
 
-sub checkresult {
+sub checkresult 
+	{
 	my ($res) = @_;
 	my $retval;
 	$tests++;
 	chomp $res;
-	if ($res =~ /^200/) {
+	if ($res =~ /^200/) 
+		{
 		$res =~ /result=(-?\d+)/;
-		if (!length($1)) {
+		if (!length($1)) 
+			{
 		#	print STDERR "FAIL ($res)\n";
 			$fail++;
-		} else {
+			} 
+		else 
+			{
 		#	print STDERR "PASS ($1)\n";
 			$pass++;
-		}
-	} else {
+			}
+		} 
+	else 
+		{
 	#	print STDERR "FAIL (unexpected result '$res')\n";
 		$fail++;
+		}
 	}
-}
 
 
 sub agi_output
-{
-if ($AGILOG >=2)
 	{
-	### open the log file for writing ###
-	open(Lout, ">>$AGILOGfile")
-			|| die "Can't open $AGILOGfile: $!\n";
-	print Lout "$now_date|$script|$agi_string\n";
-	close(Lout);
+	if ($AGILOG >=2)
+		{
+		### open the log file for writing ###
+		open(Lout, ">>$AGILOGfile")
+				|| die "Can't open $AGILOGfile: $!\n";
+		print Lout "$now_date|$script|$agi_string\n";
+		close(Lout);
+		}
+		### send to STDERR writing ###
+	if ( ($AGILOG == '1') || ($AGILOG == '3') )
+		{print STDERR "$now_date|$script|$agi_string\n";}
+	$agi_string='';
 	}
-	### send to STDERR writing ###
-if ( ($AGILOG == '1') || ($AGILOG == '3') )
-	{print STDERR "$now_date|$script|$agi_string\n";}
-$agi_string='';
-}

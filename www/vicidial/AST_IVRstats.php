@@ -4,7 +4,6 @@
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
-#
 # 81026-2026 - First build
 # 81107-0341 - Added time range and option and 15-minute increment graph
 # 81107-1148 - Added average times and totals
@@ -82,7 +81,7 @@ $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
 $i=0;
-	$LISTgroups[$i]='---NONE---';
+	$LISTgroups[$i]='CALLMENU';
 	$i++;
 	$groups_to_print++;
 while ($i < $groups_to_print)

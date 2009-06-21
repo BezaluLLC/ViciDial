@@ -1500,7 +1500,8 @@ menu_repeat TINYINT(1) UNSIGNED default '0',
 menu_time_check ENUM('0','1') default '0',
 call_time_id VARCHAR(20) default '',
 track_in_vdac ENUM('0','1') default '1',
-custom_dialplan_entry TEXT
+custom_dialplan_entry TEXT,
+tracking_group VARCHAR(20) default 'CALLMENU'
 );
 
 CREATE TABLE vicidial_call_menu_options (
@@ -1655,7 +1656,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1154';
+UPDATE system_settings SET db_schema_version='1155';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
