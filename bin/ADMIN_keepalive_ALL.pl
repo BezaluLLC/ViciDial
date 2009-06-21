@@ -25,6 +25,7 @@
 # 90529-0652 - Added phone_context and fixed calledid and voicemail for phones entries
 # 90614-0753 - Added in-group routing to call menu feature
 # 90617-0821 - Added phone ring timeout and call menu custom dialplan entry
+# 90621-0823 - Added phones conf file secret field use
 #
 
 $DB=0; # Debug flag
@@ -798,7 +799,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### Get the IAX phone entries #####
-	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
+	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -820,6 +821,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$fullname[$i] =				"$aryA[10]";
 		$phone_context[$i] =		"$aryA[11]";
 		$phone_ring_timeout[$i] =	"$aryA[12]";
+		$conf_secret[$i] =			"$aryA[13]";
 		$i++;
 		}
 	$sthA->finish();
@@ -842,7 +844,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 				$Piax .= "\n\[$extension[$i]\]\n";
 				$Piax .= "username=$extension[$i]\n";
-				$Piax .= "secret=$pass[$i]\n";
+				$Piax .= "secret=$conf_secret[$i]\n";
 				$Piax .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 				$Piax .= "mailbox=$voicemail[$i]\n";
 				$Piax .= "$template_contents[$i]\n";
@@ -861,7 +863,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			{
 			$Piax .= "\n\[$extension[$i]\]\n";
 			$Piax .= "username=$extension[$i]\n";
-			$Piax .= "secret=$pass[$i]\n";
+			$Piax .= "secret=$conf_secret[$i]\n";
 			$Piax .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 			$Piax .= "mailbox=$voicemail[$i]\n";
 			$Piax .= "context=$phone_context[$i]\n";
@@ -880,7 +882,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### Get the SIP phone entries #####
-	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout FROM phones where server_ip='$server_ip' and protocol='SIP' and active='Y' order by extension;";
+	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret FROM phones where server_ip='$server_ip' and protocol='SIP' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -902,6 +904,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$fullname[$i] =				"$aryA[10]";
 		$phone_context[$i] =		"$aryA[11]";
 		$phone_ring_timeout[$i] =	"$aryA[12]";
+		$conf_secret[$i] =			"$aryA[13]";
 		$i++;
 		}
 	$sthA->finish();
@@ -924,7 +927,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 				$Psip .= "\n\[$extension[$i]\]\n";
 				$Psip .= "username=$extension[$i]\n";
-				$Psip .= "secret=$pass[$i]\n";
+				$Psip .= "secret=$conf_secret[$i]\n";
 				$Psip .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 				$Psip .= "mailbox=$voicemail[$i]\n";
 				$Psip .= "$template_contents[$i]\n";
@@ -943,7 +946,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			{
 			$Psip .= "\n\[$extension[$i]\]\n";
 			$Psip .= "username=$extension[$i]\n";
-			$Psip .= "secret=$pass[$i]\n";
+			$Psip .= "secret=$conf_secret[$i]\n";
 			$Psip .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 			$Psip .= "mailbox=$voicemail[$i]\n";
 			$Psip .= "context=$phone_context[$i]\n";

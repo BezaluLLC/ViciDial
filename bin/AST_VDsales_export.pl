@@ -155,7 +155,7 @@ if (length($ARGV[0])>1)
 					$time = timelocal(0,0,2,$cli_date[2],$cli_date[1],$cli_date[0]);
 					}
 				}
-			print "\n----- DATE OVERRIDE: $shipdate -----\n\n";
+			if (!$Q) {print "\n----- DATE OVERRIDE: $shipdate -----\n\n";}
 			}
 		else
 			{
@@ -735,7 +735,7 @@ sub select_format_loop
 			{
 			@ivr_path = split(/\//,$ivr_location);
 			$path_file = $ivr_path[$#ivr_path];
-			`$wgetbin --output-document=$tempdir/$path_file $ivr_location `;
+			`$wgetbin -q --output-document=$tempdir/$path_file $ivr_location `;
 			}
 		}
 	##### END standard audio lookup #####
@@ -768,7 +768,7 @@ sub select_format_loop
 			$rec_countB++;
 			if ($ftp_audio_transfer > 0)
 				{
-				`$wgetbin --output-document=$tempdir/$path_file $aryB[2] `;
+				`$wgetbin -q --output-document=$tempdir/$path_file $aryB[2] `;
 				}
 			}
 		$sthB->finish();
@@ -815,7 +815,7 @@ sub select_format_loop
 				$rec_countB++;
 				if ($ftp_audio_transfer > 0)
 					{
-					`$wgetbin --output-document=$tempdir/$path_file $aryB[2] `;
+					`$wgetbin -q --output-document=$tempdir/$path_file $aryB[2] `;
 					}
 				}
 			$sthB->finish();

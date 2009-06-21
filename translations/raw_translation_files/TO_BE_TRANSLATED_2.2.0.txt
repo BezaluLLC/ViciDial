@@ -173,6 +173,8 @@ Custom Dilplan Entry||
 This field allows you to enter in any dialplan elements that you want for the Call Menu||
 You can enter multiple propmts in this field and the other prompt fields by separating them with a pipe character||
 Setting this field to zero 0 will mean that there will be no wait time after the prompt is played||
+Conf File Secret||
+This is the secret, or password, for the phone in the iax or sip auto-generated conf file for this phone. Limit is 20 characters alphanumeric dash and underscore accepted. Default is test||
 
 
 add-file: user_territories.php
