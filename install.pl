@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 
-# install.pl version 2.0.5
+# install.pl version 2.2.0
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 
 # CHANGES
@@ -17,6 +17,7 @@
 # 80526-1345 - Added Timeclock auto-logout option 9
 # 90210-0319 - Added option to prompt for Asterisk version
 # 90312-1256 - Added CLI flag for automatic configuration
+# 90620-1910 - Added check before creating directories and formatting changes
 #
 
 ############################################
@@ -125,78 +126,78 @@ $MT[0]='';
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
 
 	if ($args =~ /--help/i)
-	{
-	print "install.pl - installs astGUIclient server files in the proper places, this\n";
-	print "script will look for an /etc/astguiclient.conf file for existing settings, and\n";
-	print "if not present will prompt for proper information then copy files.\n";
-	print "\n";
-	print "installation options:\n";
-	print "  [--help] = this help screen\n";
-	print "  [--test] = test (will not copy files)\n";
-	print "  [--debug] = verbose debug messages\n";
-	print "  [--no-prompt] = do not ask questions, just install\n";
-	print "  [--web-only] = only copy files/directories for web server install\n";
-	print "  [--without-web] = do not copy web files/directories\n\n";
-	print "configuration options:\n";
-	print "  [--home=/path/from/root] = define home path from root at runtime\n";
-	print "  [--logs=/path/from/root] = define logs path from root at runtime\n";
-	print "  [--agi=/path/from/root] = define agi-bin path from root at runtime\n";
-	print "  [--web=/path/from/root] = define webroot path from root at runtime\n";
-	print "  [--sounds=/path/from/root] = define sounds path from root at runtime\n";
-	print "  [--monitor=/path/from/root] = define monitor path from root at runtime\n";
-	print "  [--DONEmonitor=/path/from/root] = define monitor DONE path from root at runtime\n";
-	print "  [--server_ip=192.168.0.1] = define server IP address at runtime\n";
-	print "  [--DB_server=localhost] = define database server IP address at runtime\n";
-	print "  [--DB_database=asterisk] = define database name at runtime\n";
-	print "  [--DB_user=cron] = define database user login at runtime\n";
-	print "  [--DB_pass=1234] = define database user password at runtime\n";
-	print "  [--DB_port=3306] = define database connection port at runtime\n";
-	print "  [--active_keepalives=123456] = define processes to keepalive\n";
-	print "     X - NO KEEPALIVE PROCESSES (use only if you want none to be keepalive)\n";
-	print "     1 - AST_update\n";
-	print "     2 - AST_send_listen\n";
-	print "     3 - AST_VDauto_dial\n";
-	print "     4 - AST_VDremote_agents\n";
-	print "     5 - AST_VDadapt (If multi-server system, this must only be on one server)\n";
-	print "     6 - FastAGI_log\n";
-	print "     7 - AST_VDauto_dial_FILL (only for multi-server, this must only be on one server)\n";
-	print "     8 - ip_relay (used for blind agent monitoring)\n";
-	print "     9 - Timeclock auto-logout\n";
-	print "  [--asterisk_version] = set the asterisk version you want to install for\n";
-	print "  [--copy_sample_conf_files] = copies the sample conf files to /etc/asterisk/\n";
-	print "  [--FTP_host=192.168.0.2] = define recording archive server IP address at runtime\n";
-	print "  [--FTP_user=cron] = define archive server name at runtime\n";
-	print "  [--FTP_pass=test] = define archive server user login at runtime\n";
-	print "  [--FTP_port=21] = define archive server user password at runtime\n";
-	print "  [--FTP_dir=RECORDINGS] = define archive server connection port at runtime\n";
-	print "  [--HTTP_path=http://192.168.0.2] = define archive web root at runtime\n";
-	print "  [--REPORT_host=192.168.0.2] = define report server IP address at runtime\n";
-	print "  [--REPORT_user=cron] = define report server name at runtime\n";
-	print "  [--REPORT_pass=test] = define report server user login at runtime\n";
-	print "  [--REPORT_port=21] = define report server user password at runtime\n";
-	print "  [--REPORT_dir=REPORTS] = define report server connection port at runtime\n";
-	print "  [--fastagi_log_min_servers=3] = define FastAGI log min servers\n";
-	print "  [--fastagi_log_max_servers=16] = define FastAGI log max servers\n";
-	print "  [--fastagi_log_min_spare_servers=2] = define FastAGI log min spare servers\n";
-	print "  [--fastagi_log_max_spare_servers=8] = define FastAGI log max spare servers\n";
-	print "  [--fastagi_log_max_requests=1000] = define FastAGI log max requests\n";
-	print "  [--fastagi_log_checkfordead=30] = define FastAGI log check-for-dead seconds\n";
-	print "  [--fastagi_log_checkforwait=60] = define FastAGI log check-for-wait seconds\n";
-	print "  [--build_multiserver_conf] = generates conf file examples for extensions.conf and iax.conf\n";
-	print "  [--build_phones_conf] = generates conf file examples for extensions.conf, sip.conf and iax.conf\n";
-	print "\n";
+		{
+		print "install.pl - installs astGUIclient server files in the proper places, this\n";
+		print "script will look for an /etc/astguiclient.conf file for existing settings, and\n";
+		print "if not present will prompt for proper information then copy files.\n";
+		print "\n";
+		print "installation options:\n";
+		print "  [--help] = this help screen\n";
+		print "  [--test] = test (will not copy files)\n";
+		print "  [--debug] = verbose debug messages\n";
+		print "  [--no-prompt] = do not ask questions, just install\n";
+		print "  [--web-only] = only copy files/directories for web server install\n";
+		print "  [--without-web] = do not copy web files/directories\n\n";
+		print "configuration options:\n";
+		print "  [--home=/path/from/root] = define home path from root at runtime\n";
+		print "  [--logs=/path/from/root] = define logs path from root at runtime\n";
+		print "  [--agi=/path/from/root] = define agi-bin path from root at runtime\n";
+		print "  [--web=/path/from/root] = define webroot path from root at runtime\n";
+		print "  [--sounds=/path/from/root] = define sounds path from root at runtime\n";
+		print "  [--monitor=/path/from/root] = define monitor path from root at runtime\n";
+		print "  [--DONEmonitor=/path/from/root] = define monitor DONE path from root at runtime\n";
+		print "  [--server_ip=192.168.0.1] = define server IP address at runtime\n";
+		print "  [--DB_server=localhost] = define database server IP address at runtime\n";
+		print "  [--DB_database=asterisk] = define database name at runtime\n";
+		print "  [--DB_user=cron] = define database user login at runtime\n";
+		print "  [--DB_pass=1234] = define database user password at runtime\n";
+		print "  [--DB_port=3306] = define database connection port at runtime\n";
+		print "  [--active_keepalives=123456] = define processes to keepalive\n";
+		print "     X - NO KEEPALIVE PROCESSES (use only if you want none to be keepalive)\n";
+		print "     1 - AST_update\n";
+		print "     2 - AST_send_listen\n";
+		print "     3 - AST_VDauto_dial\n";
+		print "     4 - AST_VDremote_agents\n";
+		print "     5 - AST_VDadapt (If multi-server system, this must only be on one server)\n";
+		print "     6 - FastAGI_log\n";
+		print "     7 - AST_VDauto_dial_FILL (only for multi-server, this must only be on one server)\n";
+		print "     8 - ip_relay (used for blind agent monitoring)\n";
+		print "     9 - Timeclock auto-logout\n";
+		print "  [--asterisk_version] = set the asterisk version you want to install for\n";
+		print "  [--copy_sample_conf_files] = copies the sample conf files to /etc/asterisk/\n";
+		print "  [--FTP_host=192.168.0.2] = define recording archive server IP address at runtime\n";
+		print "  [--FTP_user=cron] = define archive server name at runtime\n";
+		print "  [--FTP_pass=test] = define archive server user login at runtime\n";
+		print "  [--FTP_port=21] = define archive server user password at runtime\n";
+		print "  [--FTP_dir=RECORDINGS] = define archive server connection port at runtime\n";
+		print "  [--HTTP_path=http://192.168.0.2] = define archive web root at runtime\n";
+		print "  [--REPORT_host=192.168.0.2] = define report server IP address at runtime\n";
+		print "  [--REPORT_user=cron] = define report server name at runtime\n";
+		print "  [--REPORT_pass=test] = define report server user login at runtime\n";
+		print "  [--REPORT_port=21] = define report server user password at runtime\n";
+		print "  [--REPORT_dir=REPORTS] = define report server connection port at runtime\n";
+		print "  [--fastagi_log_min_servers=3] = define FastAGI log min servers\n";
+		print "  [--fastagi_log_max_servers=16] = define FastAGI log max servers\n";
+		print "  [--fastagi_log_min_spare_servers=2] = define FastAGI log min spare servers\n";
+		print "  [--fastagi_log_max_spare_servers=8] = define FastAGI log max spare servers\n";
+		print "  [--fastagi_log_max_requests=1000] = define FastAGI log max requests\n";
+		print "  [--fastagi_log_checkfordead=30] = define FastAGI log check-for-dead seconds\n";
+		print "  [--fastagi_log_checkforwait=60] = define FastAGI log check-for-wait seconds\n";
+		print "  [--build_multiserver_conf] = generates conf file examples for extensions.conf and iax.conf\n";
+		print "  [--build_phones_conf] = generates conf file examples for extensions.conf, sip.conf and iax.conf\n";
+		print "\n";
 
-	exit;
-	}
+		exit;
+		}
 	else
 		{
 		if ($args =~ /--debug/i) # Debug flag
@@ -212,536 +213,458 @@ if (length($ARGV[0])>1)
 		if ($args =~ /--no-prompt/i) # do not ask questions
 			{$NOPROMPT=1;}
 		if ($args =~ /--home=/i) # CLI defined home path
-		{
-		@CLIhomeARY = split(/--home=/,$args);
-		@CLIhomeARX = split(/ /,$CLIhomeARY[1]);
-		if (length($CLIhomeARX[0])>2)
 			{
-			$PATHhome = $CLIhomeARX[0];
-			$PATHhome =~ s/\/$| |\r|\n|\t//gi;
-			$CLIhome=1;
-			print "  CLI defined home path:      $PATHhome\n";
+			@CLIhomeARY = split(/--home=/,$args);
+			@CLIhomeARX = split(/ /,$CLIhomeARY[1]);
+			if (length($CLIhomeARX[0])>2)
+				{
+				$PATHhome = $CLIhomeARX[0];
+				$PATHhome =~ s/\/$| |\r|\n|\t//gi;
+				$CLIhome=1;
+				print "  CLI defined home path:      $PATHhome\n";
+				}
 			}
-		}
 		if ($args =~ /--logs=/i) # CLI defined logs path
-		{
-		@CLIlogsARY = split(/--logs=/,$args);
-		@CLIlogsARX = split(/ /,$CLIlogsARY[1]);
-		if (length($CLIlogsARX[0])>2)
 			{
-			$PATHlogs = $CLIlogsARX[0];
-			$PATHlogs =~ s/\/$| |\r|\n|\t//gi;
-			$CLIlogs=1;
-			print "  CLI defined logs path:      $PATHlogs\n";
+			@CLIlogsARY = split(/--logs=/,$args);
+			@CLIlogsARX = split(/ /,$CLIlogsARY[1]);
+			if (length($CLIlogsARX[0])>2)
+				{
+				$PATHlogs = $CLIlogsARX[0];
+				$PATHlogs =~ s/\/$| |\r|\n|\t//gi;
+				$CLIlogs=1;
+				print "  CLI defined logs path:      $PATHlogs\n";
+				}
 			}
-		}
 		if ($args =~ /--agi=/i) # CLI defined agi-bin path
-		{
-		@CLIagiARY = split(/--agi=/,$args);
-		@CLIagiARX = split(/ /,$CLIagiARY[1]);
-		if (length($CLIagiARX[0])>2)
 			{
-			$PATHagi = $CLIagiARX[0];
-			$PATHagi =~ s/\/$| |\r|\n|\t//gi;
-			$CLIagi=1;
-			print "  CLI defined agi-bin path:   $PATHagi\n";
+			@CLIagiARY = split(/--agi=/,$args);
+			@CLIagiARX = split(/ /,$CLIagiARY[1]);
+			if (length($CLIagiARX[0])>2)
+				{
+				$PATHagi = $CLIagiARX[0];
+				$PATHagi =~ s/\/$| |\r|\n|\t//gi;
+				$CLIagi=1;
+				print "  CLI defined agi-bin path:   $PATHagi\n";
+				}
 			}
-		}
 		if ($args =~ /--web=/i) # CLI defined webroot path
-		{
-		@CLIwebARY = split(/--web=/,$args);
-		@CLIwebARX = split(/ /,$CLIwebARY[1]);
-		if (length($CLIwebARX[0])>2)
 			{
-			$PATHweb = $CLIwebARX[0];
-			$PATHweb =~ s/\/$| |\r|\n|\t//gi;
-			$CLIweb=1;
-			print "  CLI defined webroot path:   $PATHweb\n";
+			@CLIwebARY = split(/--web=/,$args);
+			@CLIwebARX = split(/ /,$CLIwebARY[1]);
+			if (length($CLIwebARX[0])>2)
+				{
+				$PATHweb = $CLIwebARX[0];
+				$PATHweb =~ s/\/$| |\r|\n|\t//gi;
+				$CLIweb=1;
+				print "  CLI defined webroot path:   $PATHweb\n";
+				}
 			}
-		}
 		if ($args =~ /--sounds=/i) # CLI defined sounds path
-		{
-		@CLIsoundsARY = split(/--sounds=/,$args);
-		@CLIsoundsARX = split(/ /,$CLIsoundsARY[1]);
-		if (length($CLIsoundsARX[0])>2)
 			{
-			$PATHsounds = $CLIsoundsARX[0];
-			$PATHsounds =~ s/\/$| |\r|\n|\t//gi;
-			$CLIsounds=1;
-			print "  CLI defined sounds path:    $PATHsounds\n";
+			@CLIsoundsARY = split(/--sounds=/,$args);
+			@CLIsoundsARX = split(/ /,$CLIsoundsARY[1]);
+			if (length($CLIsoundsARX[0])>2)
+				{
+				$PATHsounds = $CLIsoundsARX[0];
+				$PATHsounds =~ s/\/$| |\r|\n|\t//gi;
+				$CLIsounds=1;
+				print "  CLI defined sounds path:    $PATHsounds\n";
+				}
 			}
-		}
 		if ($args =~ /--monitor=/i) # CLI defined monitor path
-		{
-		@CLImonitorARY = split(/--monitor=/,$args);
-		@CLImonitorARX = split(/ /,$CLImonitorARY[1]);
-		if (length($CLImonitorARX[0])>2)
 			{
-			$PATHmonitor = $CLImonitorARX[0];
-			$PATHmonitor =~ s/\/$| |\r|\n|\t//gi;
-			$CLImonitor=1;
-			print "  CLI defined monitor path:   $PATHmonitor\n";
+			@CLImonitorARY = split(/--monitor=/,$args);
+			@CLImonitorARX = split(/ /,$CLImonitorARY[1]);
+			if (length($CLImonitorARX[0])>2)
+				{
+				$PATHmonitor = $CLImonitorARX[0];
+				$PATHmonitor =~ s/\/$| |\r|\n|\t//gi;
+				$CLImonitor=1;
+				print "  CLI defined monitor path:   $PATHmonitor\n";
+				}
 			}
-		}
 		if ($args =~ /--DONEmonitor=/i) # CLI defined DONEmonitor path
-		{
-		@CLIDONEmonitorARY = split(/--DONEmonitor=/,$args);
-		@CLIDONEmonitorARX = split(/ /,$CLIDONEmonitorARY[1]);
-		if (length($CLIDONEmonitorARX[0])>2)
 			{
-			$PATHDONEmonitor = $CLIDONEmonitorARX[0];
-			$PATHDONEmonitor =~ s/\/$| |\r|\n|\t//gi;
-			$CLIDONEmonitor=1;
-			print "  CLI defined DONEmonitor:    $PATHDONEmonitor\n";
+			@CLIDONEmonitorARY = split(/--DONEmonitor=/,$args);
+			@CLIDONEmonitorARX = split(/ /,$CLIDONEmonitorARY[1]);
+			if (length($CLIDONEmonitorARX[0])>2)
+				{
+				$PATHDONEmonitor = $CLIDONEmonitorARX[0];
+				$PATHDONEmonitor =~ s/\/$| |\r|\n|\t//gi;
+				$CLIDONEmonitor=1;
+				print "  CLI defined DONEmonitor:    $PATHDONEmonitor\n";
+				}
 			}
-		}
 		if ($args =~ /--server_ip=/i) # CLI defined server IP address
-		{
-		@CLIserver_ipARY = split(/--server_ip=/,$args);
-		@CLIserver_ipARX = split(/ /,$CLIserver_ipARY[1]);
-		if (length($CLIserver_ipARX[0])>2)
 			{
-			$VARserver_ip = $CLIserver_ipARX[0];
-			$VARserver_ip =~ s/\/$| |\r|\n|\t//gi;
-			$CLIserver_ip=1;
-			print "  CLI defined server IP:      $VARserver_ip\n";
+			@CLIserver_ipARY = split(/--server_ip=/,$args);
+			@CLIserver_ipARX = split(/ /,$CLIserver_ipARY[1]);
+			if (length($CLIserver_ipARX[0])>2)
+				{
+				$VARserver_ip = $CLIserver_ipARX[0];
+				$VARserver_ip =~ s/\/$| |\r|\n|\t//gi;
+				$CLIserver_ip=1;
+				print "  CLI defined server IP:      $VARserver_ip\n";
+				}
 			}
-		}
 		if ($args =~ /--DB_server=/i) # CLI defined Database server address
-		{
-		@CLIDB_serverARY = split(/--DB_server=/,$args);
-		@CLIDB_serverARX = split(/ /,$CLIDB_serverARY[1]);
-		if (length($CLIDB_serverARX[0])>2)
 			{
-			$VARDB_server = $CLIDB_serverARX[0];
-			$VARDB_server =~ s/\/$| |\r|\n|\t//gi;
-			$CLIDB_server=1;
-			print "  CLI defined DB server:      $VARDB_server\n";
+			@CLIDB_serverARY = split(/--DB_server=/,$args);
+			@CLIDB_serverARX = split(/ /,$CLIDB_serverARY[1]);
+			if (length($CLIDB_serverARX[0])>2)
+				{
+				$VARDB_server = $CLIDB_serverARX[0];
+				$VARDB_server =~ s/\/$| |\r|\n|\t//gi;
+				$CLIDB_server=1;
+				print "  CLI defined DB server:      $VARDB_server\n";
+				}
 			}
-		}
 		if ($args =~ /--DB_database=/i) # CLI defined Database name
-		{
-		@CLIDB_databaseARY = split(/--DB_database=/,$args);
-		@CLIDB_databaseARX = split(/ /,$CLIDB_databaseARY[1]);
-		if (length($CLIDB_databaseARX[0])>1)
 			{
-			$VARDB_database = $CLIDB_databaseARX[0];
-			$VARDB_database =~ s/ |\r|\n|\t//gi;
-			$CLIDB_database=1;
-			print "  CLI defined DB database:    $VARDB_database\n";
+			@CLIDB_databaseARY = split(/--DB_database=/,$args);
+			@CLIDB_databaseARX = split(/ /,$CLIDB_databaseARY[1]);
+			if (length($CLIDB_databaseARX[0])>1)
+				{
+				$VARDB_database = $CLIDB_databaseARX[0];
+				$VARDB_database =~ s/ |\r|\n|\t//gi;
+				$CLIDB_database=1;
+				print "  CLI defined DB database:    $VARDB_database\n";
+				}
 			}
-		}
 		if ($args =~ /--DB_user=/i) # CLI defined Database user login
-		{
-		@CLIDB_userARY = split(/--DB_user=/,$args);
-		@CLIDB_userARX = split(/ /,$CLIDB_userARY[1]);
-		if (length($CLIDB_userARX[0])>1)
 			{
-			$VARDB_user = $CLIDB_userARX[0];
-			$VARDB_user =~ s/ |\r|\n|\t//gi;
-			$CLIDB_user=1;
-			print "  CLI defined DB user:        $VARDB_user\n";
+			@CLIDB_userARY = split(/--DB_user=/,$args);
+			@CLIDB_userARX = split(/ /,$CLIDB_userARY[1]);
+			if (length($CLIDB_userARX[0])>1)
+				{
+				$VARDB_user = $CLIDB_userARX[0];
+				$VARDB_user =~ s/ |\r|\n|\t//gi;
+				$CLIDB_user=1;
+				print "  CLI defined DB user:        $VARDB_user\n";
+				}
 			}
-		}
 		if ($args =~ /--DB_pass=/i) # CLI defined Database user password
-		{
-		@CLIDB_passARY = split(/--DB_pass=/,$args);
-		@CLIDB_passARX = split(/ /,$CLIDB_passARY[1]);
-		if (length($CLIDB_passARX[0])>1)
 			{
-			$VARDB_pass = $CLIDB_passARX[0];
-			$VARDB_pass =~ s/ |\r|\n|\t//gi;
-			$CLIDB_pass=1;
-			print "  CLI defined DB password:    $VARDB_pass\n";
+			@CLIDB_passARY = split(/--DB_pass=/,$args);
+			@CLIDB_passARX = split(/ /,$CLIDB_passARY[1]);
+			if (length($CLIDB_passARX[0])>1)
+				{
+				$VARDB_pass = $CLIDB_passARX[0];
+				$VARDB_pass =~ s/ |\r|\n|\t//gi;
+				$CLIDB_pass=1;
+				print "  CLI defined DB password:    $VARDB_pass\n";
+				}
 			}
-		}
 		if ($args =~ /--DB_port=/i) # CLI defined Database connection port
-		{
-		@CLIDB_portARY = split(/--DB_port=/,$args);
-		@CLIDB_portARX = split(/ /,$CLIDB_portARY[1]);
-		if (length($CLIDB_portARX[0])>1)
 			{
-			$VARDB_port = $CLIDB_portARX[0];
-			$VARDB_port =~ s/ |\r|\n|\t//gi;
-			$CLIDB_port=1;
-			print "  CLI defined DB port:        $VARDB_port\n";
+			@CLIDB_portARY = split(/--DB_port=/,$args);
+			@CLIDB_portARX = split(/ /,$CLIDB_portARY[1]);
+			if (length($CLIDB_portARX[0])>1)
+				{
+				$VARDB_port = $CLIDB_portARX[0];
+				$VARDB_port =~ s/ |\r|\n|\t//gi;
+				$CLIDB_port=1;
+				print "  CLI defined DB port:        $VARDB_port\n";
+				}
 			}
-		}
 		if ($args =~ /--active_keepalives=/i) # CLI defined keepalive processes
-		{
-		@CLIkeepaliveARY = split(/--active_keepalives=/,$args);
-		@CLIkeepaliveARX = split(/ /,$CLIkeepaliveARY[1]);
-		if (length($CLIkeepaliveARX[0])>1)
 			{
-			$VARactive_keepalives = $CLIkeepaliveARX[0];
-			$VARactive_keepalives =~ s/ |\r|\n|\t//gi;
-			$CLIactive_keepalives=1;
-			print "  CLI active keepalive procs: $VARactive_keepalives\n";
+			@CLIkeepaliveARY = split(/--active_keepalives=/,$args);
+			@CLIkeepaliveARX = split(/ /,$CLIkeepaliveARY[1]);
+			if (length($CLIkeepaliveARX[0])>1)
+				{
+				$VARactive_keepalives = $CLIkeepaliveARX[0];
+				$VARactive_keepalives =~ s/ |\r|\n|\t//gi;
+				$CLIactive_keepalives=1;
+				print "  CLI active keepalive procs: $VARactive_keepalives\n";
+				}
 			}
-		}
 		if ($args =~ /--asterisk_version=/i) # CLI defined asterisk version
-		{
-		@CLIastversionARY = split(/--asterisk_version=/,$args);
-		@CLIastversionARX = split(/ /,$CLIastversionARY[1]);
-		if (length($CLIastversionARX[0])>1)
 			{
-			$VARasterisk_version = $CLIastversionARX[0];
-			$VARasterisk_version =~ s/ |\r|\n|\t//gi;
-			$CLIasterisk_version=1;
-			print "  CLI asterisk version: $VARasterisk_version\n";
+			@CLIastversionARY = split(/--asterisk_version=/,$args);
+			@CLIastversionARX = split(/ /,$CLIastversionARY[1]);
+			if (length($CLIastversionARX[0])>1)
+				{
+				$VARasterisk_version = $CLIastversionARX[0];
+				$VARasterisk_version =~ s/ |\r|\n|\t//gi;
+				$CLIasterisk_version=1;
+				print "  CLI asterisk version: $VARasterisk_version\n";
+				}
 			}
-		}
 		if ($args =~ /--FTP_host=/i) # CLI defined archive server address
-		{
-		@CLIFTP_hostARY = split(/--FTP_host=/,$args);
-		@CLIFTP_hostARX = split(/ /,$CLIFTP_hostARY[1]);
-		if (length($CLIFTP_hostARX[0])>2)
 			{
-			$VARFTP_host = $CLIFTP_hostARX[0];
-			$VARFTP_host =~ s/\/$| |\r|\n|\t//gi;
-			$CLIFTP_host=1;
-			print "  CLI defined FTP host:       $VARFTP_host\n";
+			@CLIFTP_hostARY = split(/--FTP_host=/,$args);
+			@CLIFTP_hostARX = split(/ /,$CLIFTP_hostARY[1]);
+			if (length($CLIFTP_hostARX[0])>2)
+				{
+				$VARFTP_host = $CLIFTP_hostARX[0];
+				$VARFTP_host =~ s/\/$| |\r|\n|\t//gi;
+				$CLIFTP_host=1;
+				print "  CLI defined FTP host:       $VARFTP_host\n";
+				}
 			}
-		}
 		if ($args =~ /--FTP_user=/i) # CLI defined archive FTP user
-		{
-		@CLIFTP_userARY = split(/--FTP_user=/,$args);
-		@CLIFTP_userARX = split(/ /,$CLIFTP_userARY[1]);
-		if (length($CLIFTP_userARX[0])>2)
 			{
-			$VARFTP_user = $CLIFTP_userARX[0];
-			$VARFTP_user =~ s/\/$| |\r|\n|\t//gi;
-			$CLIFTP_user=1;
-			print "  CLI defined FTP user:       $VARFTP_user\n";
+			@CLIFTP_userARY = split(/--FTP_user=/,$args);
+			@CLIFTP_userARX = split(/ /,$CLIFTP_userARY[1]);
+			if (length($CLIFTP_userARX[0])>2)
+				{
+				$VARFTP_user = $CLIFTP_userARX[0];
+				$VARFTP_user =~ s/\/$| |\r|\n|\t//gi;
+				$CLIFTP_user=1;
+				print "  CLI defined FTP user:       $VARFTP_user\n";
+				}
 			}
-		}
 		if ($args =~ /--FTP_pass=/i) # CLI defined archive FTP pass
-		{
-		@CLIFTP_passARY = split(/--FTP_pass=/,$args);
-		@CLIFTP_passARX = split(/ /,$CLIFTP_passARY[1]);
-		if (length($CLIFTP_passARX[0])>2)
 			{
-			$VARFTP_pass = $CLIFTP_passARX[0];
-			$VARFTP_pass =~ s/\/$| |\r|\n|\t//gi;
-			$CLIFTP_pass=1;
-			print "  CLI defined FTP pass:       $VARFTP_pass\n";
+			@CLIFTP_passARY = split(/--FTP_pass=/,$args);
+			@CLIFTP_passARX = split(/ /,$CLIFTP_passARY[1]);
+			if (length($CLIFTP_passARX[0])>2)
+				{
+				$VARFTP_pass = $CLIFTP_passARX[0];
+				$VARFTP_pass =~ s/\/$| |\r|\n|\t//gi;
+				$CLIFTP_pass=1;
+				print "  CLI defined FTP pass:       $VARFTP_pass\n";
+				}
 			}
-		}
 		if ($args =~ /--FTP_port=/i) # CLI defined archive FTP port
-		{
-		@CLIFTP_portARY = split(/--FTP_port=/,$args);
-		@CLIFTP_portARX = split(/ /,$CLIFTP_portARY[1]);
-		if (length($CLIFTP_portARX[0])>2)
 			{
-			$VARFTP_port = $CLIFTP_portARX[0];
-			$VARFTP_port =~ s/\/$| |\r|\n|\t//gi;
-			$CLIFTP_port=1;
-			print "  CLI defined FTP port:       $VARFTP_port\n";
+			@CLIFTP_portARY = split(/--FTP_port=/,$args);
+			@CLIFTP_portARX = split(/ /,$CLIFTP_portARY[1]);
+			if (length($CLIFTP_portARX[0])>2)
+				{
+				$VARFTP_port = $CLIFTP_portARX[0];
+				$VARFTP_port =~ s/\/$| |\r|\n|\t//gi;
+				$CLIFTP_port=1;
+				print "  CLI defined FTP port:       $VARFTP_port\n";
+				}
 			}
-		}
 		if ($args =~ /--FTP_dir=/i) # CLI defined archive FTP directory
-		{
-		@CLIFTP_dirARY = split(/--FTP_dir=/,$args);
-		@CLIFTP_dirARX = split(/ /,$CLIFTP_dirARY[1]);
-		if (length($CLIFTP_dirARX[0])>2)
 			{
-			$VARFTP_dir = $CLIFTP_dirARX[0];
-			$VARFTP_dir =~ s/\/$| |\r|\n|\t//gi;
-			$CLIFTP_dir=1;
-			print "  CLI defined FTP dir:        $VARFTP_dir\n";
+			@CLIFTP_dirARY = split(/--FTP_dir=/,$args);
+			@CLIFTP_dirARX = split(/ /,$CLIFTP_dirARY[1]);
+			if (length($CLIFTP_dirARX[0])>2)
+				{
+				$VARFTP_dir = $CLIFTP_dirARX[0];
+				$VARFTP_dir =~ s/\/$| |\r|\n|\t//gi;
+				$CLIFTP_dir=1;
+				print "  CLI defined FTP dir:        $VARFTP_dir\n";
+				}
 			}
-		}
 		if ($args =~ /--HTTP_path=/i) # CLI defined archive HTTP path
-		{
-		@CLIHTTP_pathARY = split(/--HTTP_path=/,$args);
-		@CLIHTTP_pathARX = split(/ /,$CLIHTTP_pathARY[1]);
-		if (length($CLIHTTP_pathARX[0])>2)
 			{
-			$VARHTTP_path = $CLIHTTP_pathARX[0];
-			$VARHTTP_path =~ s/\/$| |\r|\n|\t//gi;
-			$CLIHTTP_path=1;
-			print "  CLI defined HTTP path:      $VARHTTP_path\n";
+			@CLIHTTP_pathARY = split(/--HTTP_path=/,$args);
+			@CLIHTTP_pathARX = split(/ /,$CLIHTTP_pathARY[1]);
+			if (length($CLIHTTP_pathARX[0])>2)
+				{
+				$VARHTTP_path = $CLIHTTP_pathARX[0];
+				$VARHTTP_path =~ s/\/$| |\r|\n|\t//gi;
+				$CLIHTTP_path=1;
+				print "  CLI defined HTTP path:      $VARHTTP_path\n";
+				}
 			}
-		}
 		if ($args =~ /--REPORT_host=/i) # CLI defined archive server address
-		{
-		@CLIREPORT_hostARY = split(/--REPORT_host=/,$args);
-		@CLIREPORT_hostARX = split(/ /,$CLIREPORT_hostARY[1]);
-		if (length($CLIREPORT_hostARX[0])>2)
 			{
-			$VARREPORT_host = $CLIREPORT_hostARX[0];
-			$VARREPORT_host =~ s/\/$| |\r|\n|\t//gi;
-			$CLIREPORT_host=1;
-			print "  CLI defined REPORT host:    $VARREPORT_host\n";
+			@CLIREPORT_hostARY = split(/--REPORT_host=/,$args);
+			@CLIREPORT_hostARX = split(/ /,$CLIREPORT_hostARY[1]);
+			if (length($CLIREPORT_hostARX[0])>2)
+				{
+				$VARREPORT_host = $CLIREPORT_hostARX[0];
+				$VARREPORT_host =~ s/\/$| |\r|\n|\t//gi;
+				$CLIREPORT_host=1;
+				print "  CLI defined REPORT host:    $VARREPORT_host\n";
+				}
 			}
-		}
 		if ($args =~ /--REPORT_user=/i) # CLI defined archive REPORT user
-		{
-		@CLIREPORT_userARY = split(/--REPORT_user=/,$args);
-		@CLIREPORT_userARX = split(/ /,$CLIREPORT_userARY[1]);
-		if (length($CLIREPORT_userARX[0])>2)
 			{
-			$VARREPORT_user = $CLIREPORT_userARX[0];
-			$VARREPORT_user =~ s/\/$| |\r|\n|\t//gi;
-			$CLIREPORT_user=1;
-			print "  CLI defined REPORT user:    $VARREPORT_user\n";
+			@CLIREPORT_userARY = split(/--REPORT_user=/,$args);
+			@CLIREPORT_userARX = split(/ /,$CLIREPORT_userARY[1]);
+			if (length($CLIREPORT_userARX[0])>2)
+				{
+				$VARREPORT_user = $CLIREPORT_userARX[0];
+				$VARREPORT_user =~ s/\/$| |\r|\n|\t//gi;
+				$CLIREPORT_user=1;
+				print "  CLI defined REPORT user:    $VARREPORT_user\n";
+				}
 			}
-		}
 		if ($args =~ /--REPORT_pass=/i) # CLI defined archive REPORT pass
-		{
-		@CLIREPORT_passARY = split(/--REPORT_pass=/,$args);
-		@CLIREPORT_passARX = split(/ /,$CLIREPORT_passARY[1]);
-		if (length($CLIREPORT_passARX[0])>2)
 			{
-			$VARREPORT_pass = $CLIREPORT_passARX[0];
-			$VARREPORT_pass =~ s/\/$| |\r|\n|\t//gi;
-			$CLIREPORT_pass=1;
-			print "  CLI defined REPORT pass:    $VARREPORT_pass\n";
+			@CLIREPORT_passARY = split(/--REPORT_pass=/,$args);
+			@CLIREPORT_passARX = split(/ /,$CLIREPORT_passARY[1]);
+			if (length($CLIREPORT_passARX[0])>2)
+				{
+				$VARREPORT_pass = $CLIREPORT_passARX[0];
+				$VARREPORT_pass =~ s/\/$| |\r|\n|\t//gi;
+				$CLIREPORT_pass=1;
+				print "  CLI defined REPORT pass:    $VARREPORT_pass\n";
+				}
 			}
-		}
 		if ($args =~ /--REPORT_port=/i) # CLI defined archive REPORT port
-		{
-		@CLIREPORT_portARY = split(/--REPORT_port=/,$args);
-		@CLIREPORT_portARX = split(/ /,$CLIREPORT_portARY[1]);
-		if (length($CLIREPORT_portARX[0])>2)
 			{
-			$VARREPORT_port = $CLIREPORT_portARX[0];
-			$VARREPORT_port =~ s/\/$| |\r|\n|\t//gi;
-			$CLIREPORT_port=1;
-			print "  CLI defined REPORT port:    $VARREPORT_port\n";
+			@CLIREPORT_portARY = split(/--REPORT_port=/,$args);
+			@CLIREPORT_portARX = split(/ /,$CLIREPORT_portARY[1]);
+			if (length($CLIREPORT_portARX[0])>2)
+				{
+				$VARREPORT_port = $CLIREPORT_portARX[0];
+				$VARREPORT_port =~ s/\/$| |\r|\n|\t//gi;
+				$CLIREPORT_port=1;
+				print "  CLI defined REPORT port:    $VARREPORT_port\n";
+				}
 			}
-		}
 		if ($args =~ /--REPORT_dir=/i) # CLI defined archive REPORT directory
-		{
-		@CLIREPORT_dirARY = split(/--REPORT_dir=/,$args);
-		@CLIREPORT_dirARX = split(/ /,$CLIREPORT_dirARY[1]);
-		if (length($CLIREPORT_dirARX[0])>2)
 			{
-			$VARREPORT_dir = $CLIREPORT_dirARX[0];
-			$VARREPORT_dir =~ s/\/$| |\r|\n|\t//gi;
-			$CLIREPORT_dir=1;
-			print "  CLI defined REPORT dir:     $VARREPORT_dir\n";
+			@CLIREPORT_dirARY = split(/--REPORT_dir=/,$args);
+			@CLIREPORT_dirARX = split(/ /,$CLIREPORT_dirARY[1]);
+			if (length($CLIREPORT_dirARX[0])>2)
+				{
+				$VARREPORT_dir = $CLIREPORT_dirARX[0];
+				$VARREPORT_dir =~ s/\/$| |\r|\n|\t//gi;
+				$CLIREPORT_dir=1;
+				print "  CLI defined REPORT dir:     $VARREPORT_dir\n";
+				}
 			}
-		}
 
 		if ($args =~ /--copy_sample_conf_files/i) # CLI defined conf files
-		{
-		$CLIcopy_conf_files='y';
-		print "  CLI copy conf files:        YES\n";
-		}
+			{
+			$CLIcopy_conf_files='y';
+			print "  CLI copy conf files:        YES\n";
+			}
 		else
-		{
-		$CLIcopy_conf_files='n';
-		}
+			{
+			$CLIcopy_conf_files='n';
+			}
 
 		if ($args =~ /--fastagi_log_min_servers=/i) # CLI defined fastagi min servers
-		{
-		@CLIDB_minserARY = split(/--fastagi_log_min_servers=/,$args);
-		@CLIDB_minserARX = split(/ /,$CLIDB_minserARY[1]);
-		if (length($CLIDB_minserARX[0])>1)
 			{
-			$VARfastagi_log_min_servers = $CLIDB_minserARX[0];
-			$VARfastagi_log_min_servers =~ s/ |\r|\n|\t//gi;
-			$CLIfastagi_log_min_servers=1;
-			print "  CLI defined log min server: $VARfastagi_log_min_servers\n";
+			@CLIDB_minserARY = split(/--fastagi_log_min_servers=/,$args);
+			@CLIDB_minserARX = split(/ /,$CLIDB_minserARY[1]);
+			if (length($CLIDB_minserARX[0])>1)
+				{
+				$VARfastagi_log_min_servers = $CLIDB_minserARX[0];
+				$VARfastagi_log_min_servers =~ s/ |\r|\n|\t//gi;
+				$CLIfastagi_log_min_servers=1;
+				print "  CLI defined log min server: $VARfastagi_log_min_servers\n";
+				}
 			}
-		}
 		if ($args =~ /--fastagi_log_max_servers=/i) # CLI defined fastagi max servers
-		{
-		@CLIDB_maxserARY = split(/--fastagi_log_max_servers=/,$args);
-		@CLIDB_maxserARX = split(/ /,$CLIDB_maxserARY[1]);
-		if (length($CLIDB_maxserARX[0])>1)
 			{
-			$VARfastagi_log_max_servers = $CLIDB_maxserARX[0];
-			$VARfastagi_log_max_servers =~ s/ |\r|\n|\t//gi;
-			$CLIfastagi_log_max_servers=1;
-			print "  CLI defined log max server: $VARfastagi_log_max_servers\n";
+			@CLIDB_maxserARY = split(/--fastagi_log_max_servers=/,$args);
+			@CLIDB_maxserARX = split(/ /,$CLIDB_maxserARY[1]);
+			if (length($CLIDB_maxserARX[0])>1)
+				{
+				$VARfastagi_log_max_servers = $CLIDB_maxserARX[0];
+				$VARfastagi_log_max_servers =~ s/ |\r|\n|\t//gi;
+				$CLIfastagi_log_max_servers=1;
+				print "  CLI defined log max server: $VARfastagi_log_max_servers\n";
+				}
 			}
-		}
 		if ($args =~ /--fastagi_log_min_spare_servers=/i) # CLI defined fastagi min spare servers
-		{
-		@CLIDB_minspaARY = split(/--fastagi_log_min_spare_servers=/,$args);
-		@CLIDB_minspaARX = split(/ /,$CLIDB_minspaARY[1]);
-		if (length($CLIDB_minspaARX[0])>1)
 			{
-			$VARfastagi_log_min_spare_servers = $CLIDB_minspaARX[0];
-			$VARfastagi_log_min_spare_servers =~ s/ |\r|\n|\t//gi;
-			$CLIfastagi_log_min_spare_servers=1;
-			print "  CLI defined log min spare:  $VARfastagi_log_min_spare_servers\n";
+			@CLIDB_minspaARY = split(/--fastagi_log_min_spare_servers=/,$args);
+			@CLIDB_minspaARX = split(/ /,$CLIDB_minspaARY[1]);
+			if (length($CLIDB_minspaARX[0])>1)
+				{
+				$VARfastagi_log_min_spare_servers = $CLIDB_minspaARX[0];
+				$VARfastagi_log_min_spare_servers =~ s/ |\r|\n|\t//gi;
+				$CLIfastagi_log_min_spare_servers=1;
+				print "  CLI defined log min spare:  $VARfastagi_log_min_spare_servers\n";
+				}
 			}
-		}
 		if ($args =~ /--fastagi_log_max_spare_servers=/i) # CLI defined fastagi max spare servers
-		{
-		@CLIDB_maxspaARY = split(/--fastagi_log_max_spare_servers=/,$args);
-		@CLIDB_maxspaARX = split(/ /,$CLIDB_maxspaARY[1]);
-		if (length($CLIDB_maxspaARX[0])>1)
 			{
-			$VARfastagi_log_max_spare_servers = $CLIDB_maxspaARX[0];
-			$VARfastagi_log_max_spare_servers =~ s/ |\r|\n|\t//gi;
-			$CLIfastagi_log_max_spare_servers=1;
-			print "  CLI defined log max spare:  $VARfastagi_log_max_spare_servers\n";
+			@CLIDB_maxspaARY = split(/--fastagi_log_max_spare_servers=/,$args);
+			@CLIDB_maxspaARX = split(/ /,$CLIDB_maxspaARY[1]);
+			if (length($CLIDB_maxspaARX[0])>1)
+				{
+				$VARfastagi_log_max_spare_servers = $CLIDB_maxspaARX[0];
+				$VARfastagi_log_max_spare_servers =~ s/ |\r|\n|\t//gi;
+				$CLIfastagi_log_max_spare_servers=1;
+				print "  CLI defined log max spare:  $VARfastagi_log_max_spare_servers\n";
+				}
 			}
-		}
 		if ($args =~ /--fastagi_log_max_requests=/i) # CLI defined fastagi max requests
-		{
-		@CLIDB_maxreqARY = split(/--fastagi_log_max_requests=/,$args);
-		@CLIDB_maxreqARX = split(/ /,$CLIDB_maxreqARY[1]);
-		if (length($CLIDB_maxreqARX[0])>1)
 			{
-			$VARfastagi_log_max_requests = $CLIDB_maxreqARX[0];
-			$VARfastagi_log_max_requests =~ s/ |\r|\n|\t//gi;
-			$CLIfastagi_log_max_requests=1;
-			print "  CLI defined log max request:$VARfastagi_log_max_requests\n";
+			@CLIDB_maxreqARY = split(/--fastagi_log_max_requests=/,$args);
+			@CLIDB_maxreqARX = split(/ /,$CLIDB_maxreqARY[1]);
+			if (length($CLIDB_maxreqARX[0])>1)
+				{
+				$VARfastagi_log_max_requests = $CLIDB_maxreqARX[0];
+				$VARfastagi_log_max_requests =~ s/ |\r|\n|\t//gi;
+				$CLIfastagi_log_max_requests=1;
+				print "  CLI defined log max request:$VARfastagi_log_max_requests\n";
+				}
 			}
-		}
 		if ($args =~ /--fastagi_log_checkfordead=/i) # CLI defined fastagi check-for-dead seconds
-		{
-		@CLIDB_ckdeadARY = split(/--fastagi_log_checkfordead=/,$args);
-		@CLIDB_ckdeadARX = split(/ /,$CLIDB_ckdeadARY[1]);
-		if (length($CLIDB_ckdeadARX[0])>1)
 			{
-			$VARfastagi_log_checkfordead = $CLIDB_ckdeadARX[0];
-			$VARfastagi_log_checkfordead =~ s/ |\r|\n|\t//gi;
-			$CLIfastagi_log_checkfordead=1;
-			print "  CLI defined log ckdead sec: $VARfastagi_log_checkfordead\n";
+			@CLIDB_ckdeadARY = split(/--fastagi_log_checkfordead=/,$args);
+			@CLIDB_ckdeadARX = split(/ /,$CLIDB_ckdeadARY[1]);
+			if (length($CLIDB_ckdeadARX[0])>1)
+				{
+				$VARfastagi_log_checkfordead = $CLIDB_ckdeadARX[0];
+				$VARfastagi_log_checkfordead =~ s/ |\r|\n|\t//gi;
+				$CLIfastagi_log_checkfordead=1;
+				print "  CLI defined log ckdead sec: $VARfastagi_log_checkfordead\n";
+				}
 			}
-		}
 		if ($args =~ /--fastagi_log_checkforwait=/i) # CLI defined fastagi check-for-wait seconds
-		{
-		@CLIDB_ckwaitARY = split(/--fastagi_log_checkforwait=/,$args);
-		@CLIDB_ckwaitARX = split(/ /,$CLIDB_ckwaitARY[1]);
-		if (length($CLIDB_ckwaitARX[0])>1)
 			{
-			$VARfastagi_log_checkforwait = $CLIDB_ckwaitARX[0];
-			$VARfastagi_log_checkforwait =~ s/ |\r|\n|\t//gi;
-			$CLIfastagi_log_checkforwait=1;
-			print "  CLI defined log ckwait sec: $VARfastagi_log_checkforwait\n";
+			@CLIDB_ckwaitARY = split(/--fastagi_log_checkforwait=/,$args);
+			@CLIDB_ckwaitARX = split(/ /,$CLIDB_ckwaitARY[1]);
+			if (length($CLIDB_ckwaitARX[0])>1)
+				{
+				$VARfastagi_log_checkforwait = $CLIDB_ckwaitARX[0];
+				$VARfastagi_log_checkforwait =~ s/ |\r|\n|\t//gi;
+				$CLIfastagi_log_checkforwait=1;
+				print "  CLI defined log ckwait sec: $VARfastagi_log_checkforwait\n";
+				}
 			}
-		}
 
 		if ($args =~ /--build_multiserver_conf/i) # CLI defined conf files
-		{
-		$build_multiserver_conf='y';
-		print "  CLI multiserver conf gen:   YES\n";
-
-		# default path to astguiclient configuration file:
-		$PATHconf =		'/etc/astguiclient.conf';
-
-		open(conf, "$PATHconf") || die "can't open $PATHconf: $!\n";
-		@conf = <conf>;
-		close(conf);
-		$i=0;
-		foreach(@conf)
 			{
-			$line = $conf[$i];
-			$line =~ s/ |>|\n|\r|\t|\#.*|;.*//gi;
-			if ( ($line =~ /^PATHlogs/) && ($CLIlogs < 1) )
-				{$PATHlogs = $line;   $PATHlogs =~ s/.*=//gi;}
-			if ( ($line =~ /^VARserver_ip/) && ($CLIserver_ip < 1) )
-				{$VARserver_ip = $line;   $VARserver_ip =~ s/.*=//gi;}
-			if ( ($line =~ /^VARDB_server/) && ($CLIDB_server < 1) )
-				{$VARDB_server = $line;   $VARDB_server =~ s/.*=//gi;}
-			if ( ($line =~ /^VARDB_database/) && ($CLIDB_database < 1) )
-				{$VARDB_database = $line;   $VARDB_database =~ s/.*=//gi;}
-			if ( ($line =~ /^VARDB_user/) && ($CLIDB_user < 1) )
-				{$VARDB_user = $line;   $VARDB_user =~ s/.*=//gi;}
-			if ( ($line =~ /^VARDB_pass/) && ($CLIDB_pass < 1) )
-				{$VARDB_pass = $line;   $VARDB_pass =~ s/.*=//gi;}
-			if ( ($line =~ /^VARDB_port/) && ($CLIDB_port < 1) )
-				{$VARDB_port = $line;   $VARDB_port =~ s/.*=//gi;}
-			$i++;
-			}
+			$build_multiserver_conf='y';
+			print "  CLI multiserver conf gen:   YES\n";
 
-		# Customized Variables
-		$server_ip = $VARserver_ip;		# Asterisk server IP
-		if (!$VARDB_port) {$VARDB_port='3306';}
+			# default path to astguiclient configuration file:
+			$PATHconf =		'/etc/astguiclient.conf';
 
-		use DBI;	  
+			open(conf, "$PATHconf") || die "can't open $PATHconf: $!\n";
+			@conf = <conf>;
+			close(conf);
+			$i=0;
+			foreach(@conf)
+				{
+				$line = $conf[$i];
+				$line =~ s/ |>|\n|\r|\t|\#.*|;.*//gi;
+				if ( ($line =~ /^PATHlogs/) && ($CLIlogs < 1) )
+					{$PATHlogs = $line;   $PATHlogs =~ s/.*=//gi;}
+				if ( ($line =~ /^VARserver_ip/) && ($CLIserver_ip < 1) )
+					{$VARserver_ip = $line;   $VARserver_ip =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_server/) && ($CLIDB_server < 1) )
+					{$VARDB_server = $line;   $VARDB_server =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_database/) && ($CLIDB_database < 1) )
+					{$VARDB_database = $line;   $VARDB_database =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_user/) && ($CLIDB_user < 1) )
+					{$VARDB_user = $line;   $VARDB_user =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_pass/) && ($CLIDB_pass < 1) )
+					{$VARDB_pass = $line;   $VARDB_pass =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_port/) && ($CLIDB_port < 1) )
+					{$VARDB_port = $line;   $VARDB_port =~ s/.*=//gi;}
+				$i++;
+				}
 
-		$dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
-		 or die "Couldn't connect to database: " . DBI->errstr;
+			# Customized Variables
+			$server_ip = $VARserver_ip;		# Asterisk server IP
+			if (!$VARDB_port) {$VARDB_port='3306';}
 
-		### format the new server_ip dialstring for example to use with extensions.conf
-		$S='*';
-		if( $VARserver_ip =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
-			{
-			$a = leading_zero($1); 
-			$b = leading_zero($2); 
-			$c = leading_zero($3); 
-			$d = leading_zero($4);
-			$VARremDIALstr = "$a$S$b$S$c$S$d";
-			}
+			use DBI;	  
 
-		$ext  = "\nAdd the following lines to your extensions.conf file:\n";
-		$ext  .= "TRUNKloop = IAX2/ASTloop:test\@127.0.0.1:40569\n";
-		$ext  .= "TRUNKblind = IAX2/ASTblind:test\@127.0.0.1:41569\n";
+			$dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
+			 or die "Couldn't connect to database: " . DBI->errstr;
 
-		$iax  = "\nAdd the following lines to your iax.conf file:\n";
-		$iax  .= "register => ASTloop:test\@127.0.0.1:40569\n";
-		$iax  .= "register => ASTblind:test\@127.0.0.1:41569\n";
-
-		$Lext  = "\n";
-		$Lext .= "; Local Server: $server_ip\n";
-		$Lext .= "exten => _$VARremDIALstr*.,1,Goto(default,\${EXTEN:16},1)\n";
-		$Lext .= "exten => _8600XXX*.,1,AGI(agi-VDADfixCXFER.agi)\n";
-		$Lext .= "exten => _78600XXX*.,1,AGI(agi-VDADfixCXFER.agi)\n";
-		$Lext .= "; Local blind monitoring\n";
-		$Lext .= "exten => _08600XXX,1,Dial(\${TRUNKblind}/6\${EXTEN:1},55,o)\n";
-
-		$Liax .= "\n";
-		$Liax .= "[ASTloop]\n";
-		$Liax .= "type=friend\n";
-		$Liax .= "accountcode=IAXASTloop\n";
-		$Liax .= "context=default\n";
-		$Liax .= "auth=plaintext\n";
-		$Liax .= "host=dynamic\n";
-		$Liax .= "permit=0.0.0.0/0.0.0.0\n";
-		$Liax .= "secret=test\n";
-		$Liax .= "disallow=all\n";
-		$Liax .= "allow=ulaw\n";
-		$Liax .= "qualify=yes\n";
-
-		$Liax .= "\n";
-		$Liax .= "[ASTblind]\n";
-		$Liax .= "type=friend\n";
-		$Liax .= "accountcode=IAXASTblind\n";
-		$Liax .= "context=default\n";
-		$Liax .= "auth=plaintext\n";
-		$Liax .= "host=dynamic\n";
-		$Liax .= "permit=0.0.0.0/0.0.0.0\n";
-		$Liax .= "secret=test\n";
-		$Liax .= "disallow=all\n";
-		$Liax .= "allow=ulaw\n";
-		$Liax .= "qualify=yes\n";
-
-		##### Get the server_id for this server's server_ip #####
-		$stmtA = "SELECT server_id FROM servers where server_ip='$server_ip';";
-			print "$stmtA\n";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		if ($sthArows > 0)
-			{
-			 @aryA = $sthA->fetchrow_array;
-				$server_id	=	"$aryA[0]";
-			 $i++;
-			}
-		$sthA->finish();
-
-		##### Get the server_ips and server_ids of all VICIDIAL servers on the network #####
-		$stmtA = "SELECT server_ip,server_id FROM servers where server_ip!='$server_ip';";
-			print "$stmtA\n";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		$i=0;
-		while ($sthArows > $i)
-			{
-			 @aryA = $sthA->fetchrow_array;
-				$server_ip[$i]	=	"$aryA[0]";
-				$server_id[$i]	=	"$aryA[1]";
-
-			if( $server_ip[$i] =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
+			### format the new server_ip dialstring for example to use with extensions.conf
+			$S='*';
+			if( $VARserver_ip =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
 				{
 				$a = leading_zero($1); 
 				$b = leading_zero($2); 
@@ -749,17 +672,27 @@ if (length($ARGV[0])>1)
 				$d = leading_zero($4);
 				$VARremDIALstr = "$a$S$b$S$c$S$d";
 				}
-			$ext  .= "TRUNK$server_id[$i] = IAX2/$server_id:test\@$server_ip[$i]:4569\n";
 
-			$iax  .= "register => $server_id:test\@$server_ip[$i]:4569\n";
+			$ext  = "\nAdd the following lines to your extensions.conf file:\n";
+			$ext  .= "TRUNKloop = IAX2/ASTloop:test\@127.0.0.1:40569\n";
+			$ext  .= "TRUNKblind = IAX2/ASTblind:test\@127.0.0.1:41569\n";
 
-			$Lext .= "; Remote Server VDAD extens: $server_id[$i] $server_ip[$i]\n";
-			$Lext .= "exten => _$VARremDIALstr*.,1,Dial(\${TRUNK$server_id[$i]}/\${EXTEN:16},55,o)\n";
+			$iax  = "\nAdd the following lines to your iax.conf file:\n";
+			$iax  .= "register => ASTloop:test\@127.0.0.1:40569\n";
+			$iax  .= "register => ASTblind:test\@127.0.0.1:41569\n";
+
+			$Lext  = "\n";
+			$Lext .= "; Local Server: $server_ip\n";
+			$Lext .= "exten => _$VARremDIALstr*.,1,Goto(default,\${EXTEN:16},1)\n";
+			$Lext .= "exten => _8600XXX*.,1,AGI(agi-VDADfixCXFER.agi)\n";
+			$Lext .= "exten => _78600XXX*.,1,AGI(agi-VDADfixCXFER.agi)\n";
+			$Lext .= "; Local blind monitoring\n";
+			$Lext .= "exten => _08600XXX,1,Dial(\${TRUNKblind}/6\${EXTEN:1},55,o)\n";
 
 			$Liax .= "\n";
-			$Liax .= "[$server_id[$i]]\n";
+			$Liax .= "[ASTloop]\n";
 			$Liax .= "type=friend\n";
-			$Liax .= "accountcode=IAX$server_id[$i]\n";
+			$Liax .= "accountcode=IAXASTloop\n";
 			$Liax .= "context=default\n";
 			$Liax .= "auth=plaintext\n";
 			$Liax .= "host=dynamic\n";
@@ -769,149 +702,216 @@ if (length($ARGV[0])>1)
 			$Liax .= "allow=ulaw\n";
 			$Liax .= "qualify=yes\n";
 
-			$i++;
+			$Liax .= "\n";
+			$Liax .= "[ASTblind]\n";
+			$Liax .= "type=friend\n";
+			$Liax .= "accountcode=IAXASTblind\n";
+			$Liax .= "context=default\n";
+			$Liax .= "auth=plaintext\n";
+			$Liax .= "host=dynamic\n";
+			$Liax .= "permit=0.0.0.0/0.0.0.0\n";
+			$Liax .= "secret=test\n";
+			$Liax .= "disallow=all\n";
+			$Liax .= "allow=ulaw\n";
+			$Liax .= "qualify=yes\n";
+
+			##### Get the server_id for this server's server_ip #####
+			$stmtA = "SELECT server_id FROM servers where server_ip='$server_ip';";
+			print "$stmtA\n";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$server_id	=	"$aryA[0]";
+				$i++;
+				}
+			$sthA->finish();
+
+			##### Get the server_ips and server_ids of all VICIDIAL servers on the network #####
+			$stmtA = "SELECT server_ip,server_id FROM servers where server_ip!='$server_ip';";
+			print "$stmtA\n";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			$i=0;
+			while ($sthArows > $i)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$server_ip[$i]	=	"$aryA[0]";
+				$server_id[$i]	=	"$aryA[1]";
+
+				if( $server_ip[$i] =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
+					{
+					$a = leading_zero($1); 
+					$b = leading_zero($2); 
+					$c = leading_zero($3); 
+					$d = leading_zero($4);
+					$VARremDIALstr = "$a$S$b$S$c$S$d";
+					}
+				$ext  .= "TRUNK$server_id[$i] = IAX2/$server_id:test\@$server_ip[$i]:4569\n";
+
+				$iax  .= "register => $server_id:test\@$server_ip[$i]:4569\n";
+
+				$Lext .= "; Remote Server VDAD extens: $server_id[$i] $server_ip[$i]\n";
+				$Lext .= "exten => _$VARremDIALstr*.,1,Dial(\${TRUNK$server_id[$i]}/\${EXTEN:16},55,o)\n";
+
+				$Liax .= "\n";
+				$Liax .= "[$server_id[$i]]\n";
+				$Liax .= "type=friend\n";
+				$Liax .= "accountcode=IAX$server_id[$i]\n";
+				$Liax .= "context=default\n";
+				$Liax .= "auth=plaintext\n";
+				$Liax .= "host=dynamic\n";
+				$Liax .= "permit=0.0.0.0/0.0.0.0\n";
+				$Liax .= "secret=test\n";
+				$Liax .= "disallow=all\n";
+				$Liax .= "allow=ulaw\n";
+				$Liax .= "qualify=yes\n";
+
+				$i++;
+				}
+			$sthA->finish();
+
+
+			print "$ext$Lext\n$iax$Liax\n";
+			exit;
 			}
-		$sthA->finish();
-
-
-		print "$ext$Lext\n$iax$Liax\n";
-		exit;
-		}
 
 
 		if ($args =~ /--build_phones_conf/i) # CLI defined conf files
-		{
-		$build_phones_conf='y';
-		print "  CLI phones conf gen:        YES\n";
-
-		# default path to astguiclient configuration file:
-		$PATHconf =		'/etc/astguiclient.conf';
-
-		open(conf, "$PATHconf") || die "can't open $PATHconf: $!\n";
-		@conf = <conf>;
-		close(conf);
-		$i=0;
-		foreach(@conf)
 			{
-			$line = $conf[$i];
-			$line =~ s/ |>|\n|\r|\t|\#.*|;.*//gi;
-			if ( ($line =~ /^PATHlogs/) && ($CLIlogs < 1) )
-				{$PATHlogs = $line;   $PATHlogs =~ s/.*=//gi;}
-			if ( ($line =~ /^VARserver_ip/) && ($CLIserver_ip < 1) )
-				{$VARserver_ip = $line;   $VARserver_ip =~ s/.*=//gi;}
-			if ( ($line =~ /^VARDB_server/) && ($CLIDB_server < 1) )
-				{$VARDB_server = $line;   $VARDB_server =~ s/.*=//gi;}
-			if ( ($line =~ /^VARDB_database/) && ($CLIDB_database < 1) )
-				{$VARDB_database = $line;   $VARDB_database =~ s/.*=//gi;}
-			if ( ($line =~ /^VARDB_user/) && ($CLIDB_user < 1) )
-				{$VARDB_user = $line;   $VARDB_user =~ s/.*=//gi;}
-			if ( ($line =~ /^VARDB_pass/) && ($CLIDB_pass < 1) )
-				{$VARDB_pass = $line;   $VARDB_pass =~ s/.*=//gi;}
-			if ( ($line =~ /^VARDB_port/) && ($CLIDB_port < 1) )
-				{$VARDB_port = $line;   $VARDB_port =~ s/.*=//gi;}
-			$i++;
-			}
+			$build_phones_conf='y';
+			print "  CLI phones conf gen:        YES\n";
 
-		# Customized Variables
-		$server_ip = $VARserver_ip;		# Asterisk server IP
-		if (!$VARDB_port) {$VARDB_port='3306';}
+			# default path to astguiclient configuration file:
+			$PATHconf =		'/etc/astguiclient.conf';
 
-		use DBI;	  
+			open(conf, "$PATHconf") || die "can't open $PATHconf: $!\n";
+			@conf = <conf>;
+			close(conf);
+			$i=0;
+			foreach(@conf)
+				{
+				$line = $conf[$i];
+				$line =~ s/ |>|\n|\r|\t|\#.*|;.*//gi;
+				if ( ($line =~ /^PATHlogs/) && ($CLIlogs < 1) )
+					{$PATHlogs = $line;   $PATHlogs =~ s/.*=//gi;}
+				if ( ($line =~ /^VARserver_ip/) && ($CLIserver_ip < 1) )
+					{$VARserver_ip = $line;   $VARserver_ip =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_server/) && ($CLIDB_server < 1) )
+					{$VARDB_server = $line;   $VARDB_server =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_database/) && ($CLIDB_database < 1) )
+					{$VARDB_database = $line;   $VARDB_database =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_user/) && ($CLIDB_user < 1) )
+					{$VARDB_user = $line;   $VARDB_user =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_pass/) && ($CLIDB_pass < 1) )
+					{$VARDB_pass = $line;   $VARDB_pass =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_port/) && ($CLIDB_port < 1) )
+					{$VARDB_port = $line;   $VARDB_port =~ s/.*=//gi;}
+				$i++;
+				}
 
-		$dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
-		 or die "Couldn't connect to database: " . DBI->errstr;
+			# Customized Variables
+			$server_ip = $VARserver_ip;		# Asterisk server IP
+			if (!$VARDB_port) {$VARDB_port='3306';}
 
-		$ext  = "\nAdd the following lines to your extensions.conf file:\n";
+			use DBI;	  
 
-		$sip  = "\nAdd the following lines to your sip.conf file:\n";
+			$dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
+			 or die "Couldn't connect to database: " . DBI->errstr;
 
-		$iax  = "\nAdd the following lines to your iax.conf file:\n";
+			$ext  = "\nAdd the following lines to your extensions.conf file:\n";
 
-		$vm  = "\nAdd the following lines to your voicemail.conf file:\n";
+			$sip  = "\nAdd the following lines to your sip.conf file:\n";
 
-		##### Get the SIP phone entries #####
-		$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass FROM phones where server_ip='$server_ip' and protocol='SIP';";
-			print "$stmtA\n";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		$i=0;
-		while ($sthArows > $i)
-			{
-			 @aryA = $sthA->fetchrow_array;
+			$iax  = "\nAdd the following lines to your iax.conf file:\n";
+
+			$vm  = "\nAdd the following lines to your voicemail.conf file:\n";
+
+			##### Get the SIP phone entries #####
+			$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass FROM phones where server_ip='$server_ip' and protocol='SIP';";
+				print "$stmtA\n";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			$i=0;
+			while ($sthArows > $i)
+				{
+				@aryA = $sthA->fetchrow_array;
 				$extension[$i] =	"$aryA[0]";
 				$dialplan[$i] =		"$aryA[1]";
 				$voicemail[$i] =	"$aryA[2]";
 				$pass[$i] =			"$aryA[3]";
 
-			$ext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i])\n";
-			$ext .= "exten => $dialplan[$i],2,Voicemail,u$voicemail[$i]\n";
+				$ext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i])\n";
+				$ext .= "exten => $dialplan[$i],2,Voicemail,u$voicemail[$i]\n";
 
-			$sip .= "\[$extension[$i]\]\n";
-			$sip .= "disallow=all\n";
-			$sip .= "allow=ulaw\n";
-			$sip .= "type=friend\n";
-			$sip .= "username=$extension[$i]\n";
-			$sip .= "secret=$pass[$i]\n";
-			$sip .= "host=dynamic\n";
-			$sip .= "dtmfmode=rfc2833\n";
-			$sip .= "qualify=1000\n";
-			$sip .= "mailbox=$voicemail[$i]\n\n";
+				$sip .= "\[$extension[$i]\]\n";
+				$sip .= "disallow=all\n";
+				$sip .= "allow=ulaw\n";
+				$sip .= "type=friend\n";
+				$sip .= "username=$extension[$i]\n";
+				$sip .= "secret=$pass[$i]\n";
+				$sip .= "host=dynamic\n";
+				$sip .= "dtmfmode=rfc2833\n";
+				$sip .= "qualify=1000\n";
+				$sip .= "mailbox=$voicemail[$i]\n\n";
 
-			$vm  .= "$voicemail[$i] => $voicemail[$i],$extension[$i] Mailbox\n";
+				$vm  .= "$voicemail[$i] => $voicemail[$i],$extension[$i] Mailbox\n";
 
-			$i++;
-			}
-		$sthA->finish();
+				$i++;
+				}
+			$sthA->finish();
 
-		##### Get the IAX phone entries #####
-		$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass FROM phones where server_ip='$server_ip' and protocol='IAX2';";
-			print "$stmtA\n";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		$i=0;
-		while ($sthArows > $i)
-			{
-			 @aryA = $sthA->fetchrow_array;
+			##### Get the IAX phone entries #####
+			$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass FROM phones where server_ip='$server_ip' and protocol='IAX2';";
+				print "$stmtA\n";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			$i=0;
+			while ($sthArows > $i)
+				{
+				@aryA = $sthA->fetchrow_array;
 				$extension[$i] =	"$aryA[0]";
 				$dialplan[$i] =		"$aryA[1]";
 				$voicemail[$i] =	"$aryA[2]";
 				$pass[$i] =			"$aryA[3]";
 
-			$ext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i])\n";
-			$ext .= "exten => $dialplan[$i],2,Voicemail,u$voicemail[$i]\n";
+				$ext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i])\n";
+				$ext .= "exten => $dialplan[$i],2,Voicemail,u$voicemail[$i]\n";
 
-			$iax .= "\[$extension[$i]\]\n";
-			$iax .= "disallow=all\n";
-			$iax .= "allow=ulaw\n";
-			$iax .= "context=default\n";
-			$iax .= "type=friend\n";
-			$iax .= "accountcode=$extension[$i]\n";
-			$iax .= "secret=$pass[$i]\n";
-			$iax .= "auth=md5\n";
-			$iax .= "host=dynamic\n";
-			$iax .= "permit=0.0.0.0/0.0.0.0\n";
-			$iax .= "qualify=1000\n";
-			$iax .= "mailbox=$voicemail[$i]\n\n";
+				$iax .= "\[$extension[$i]\]\n";
+				$iax .= "disallow=all\n";
+				$iax .= "allow=ulaw\n";
+				$iax .= "context=default\n";
+				$iax .= "type=friend\n";
+				$iax .= "accountcode=$extension[$i]\n";
+				$iax .= "secret=$pass[$i]\n";
+				$iax .= "auth=md5\n";
+				$iax .= "host=dynamic\n";
+				$iax .= "permit=0.0.0.0/0.0.0.0\n";
+				$iax .= "qualify=1000\n";
+				$iax .= "mailbox=$voicemail[$i]\n\n";
 
-			$vm  .= "$voicemail[$i] => $voicemail[$i],$extension[$i] Mailbox\n";
+				$vm  .= "$voicemail[$i] => $voicemail[$i],$extension[$i] Mailbox\n";
 
-			$i++;
+				$i++;
+				}
+			$sthA->finish();
+
+			print "$ext\n$sip\n$iax\n$vm\n";
+			exit;
 			}
-		$sthA->finish();
-
-
-		print "$ext\n$sip\n$iax\n$vm\n";
-		exit;
 		}
 	}
-}
 else
-{
-#	print "no command line options set\n";
-$CLIcopy_conf_files='n';
-}
+	{
+	#	print "no command line options set\n";
+	$CLIcopy_conf_files='n';
+	}
 ### end parsing run-time options ###
 
 if (-e "$PATHconf") 
@@ -1033,7 +1033,7 @@ else
 					else
 						{
 						`mkdir -p $PROMPThome`;
-							print "     $PROMPThome directory created\n";
+						print "     $PROMPThome directory created\n";
 						$PATHhome=$PROMPThome;
 						$continue='YES';
 						}
@@ -1058,7 +1058,7 @@ else
 					else
 						{
 						`mkdir -p $PATHhome`;
-							print "     $PATHhome directory created\n";
+						print "     $PATHhome directory created\n";
 						$continue='YES';
 						}
 					}
@@ -1092,7 +1092,7 @@ else
 					else
 						{
 						`mkdir -p $PROMPTlogs`;
-							print "     $PROMPTlogs directory created\n";
+						print "     $PROMPTlogs directory created\n";
 						$PATHlogs=$PROMPTlogs;
 						$continue='YES';
 						}
@@ -1151,7 +1151,7 @@ else
 					else
 						{
 						`mkdir -p $PROMPTagi`;
-							print "     $PROMPTagi directory created\n";
+						print "     $PROMPTagi directory created\n";
 						$PATHagi=$PROMPTagi;
 						$continue='YES';
 						}
@@ -1210,7 +1210,7 @@ else
 					else
 						{
 						`mkdir -p $PROMPTweb`;
-							print "     $PROMPTweb directory created\n";
+						print "     $PROMPTweb directory created\n";
 						$PATHweb=$PROMPTweb;
 						$continue='YES';
 						}
@@ -1269,7 +1269,7 @@ else
 					else
 						{
 						`mkdir -p $PROMPTsounds`;
-							print "     $PROMPTsounds directory created\n";
+						print "     $PROMPTsounds directory created\n";
 						$PATHsounds=$PROMPTsounds;
 						$continue='YES';
 						}
@@ -1328,7 +1328,7 @@ else
 					else
 						{
 						`mkdir -p $PROMPTmonitor`;
-							print "     $PROMPTmonitor directory created\n";
+						print "     $PROMPTmonitor directory created\n";
 						$PATHmonitor=$PROMPTmonitor;
 						$continue='YES';
 						}
@@ -1387,7 +1387,7 @@ else
 					else
 						{
 						`mkdir -p $PROMPTDONEmonitor`;
-							print "     $PROMPTDONEmonitor directory created\n";
+						print "     $PROMPTDONEmonitor directory created\n";
 						$PATHDONEmonitor=$PROMPTDONEmonitor;
 						$continue='YES';
 						}
@@ -1642,7 +1642,7 @@ else
 					else
 						{
 						`mkdir -p /etc/asterisk`;
-							print "     /etc/asterisk directory created\n";
+						print "     /etc/asterisk directory created\n";
 						$continue='YES';
 						}
 					}
@@ -2147,29 +2147,38 @@ print "\nSTARTING ASTGUICLIENT INSTALLATION PHASE...\n";
 
 if ($WEBONLY < 1)
 	{
-	print "Creating $PATHhome/LEADS_IN/DONE directories...\n";
-	`mkdir -p $PATHhome/libs`;
-	`mkdir -p $PATHhome/libs/Asterisk`;
-	`mkdir -p $PATHhome/LEADS_IN`;
-	`mkdir -p $PATHhome/LEADS_IN/DONE`;
-	`chmod -R 0766 $PATHhome/LEADS_IN`;
-	`mkdir -p $PATHhome/VTIGER_IN`;
-	`mkdir -p $PATHhome/VTIGER_IN/DONE`;
-	`chmod -R 0766 $PATHhome/VTIGER_IN`;
+	print "Creating $PATHhome/LEADS_IN directories...\n";
+	if (!-e "$PATHhome/libs/Asterisk")	{`mkdir -p $PATHhome/libs/Asterisk`;}
+	if (!-e "$PATHhome/LEADS_IN/DONE")	
+		{
+		`mkdir -p $PATHhome/LEADS_IN/DONE`;
+		`chmod -R 0766 $PATHhome/LEADS_IN`;
+		}
+	if (!-e "$PATHhome/VTIGER_IN/DONE")	
+		{
+		`mkdir -p $PATHhome/VTIGER_IN/DONE`;
+		`chmod -R 0766 $PATHhome/VTIGER_IN`;
+		}
 
 	print "Creating $PATHmonitor directories...\n";
-	`mkdir -p $PATHmonitor`;
-	`mkdir -p $PATHDONEmonitor`;
-	`mkdir -p $PATHDONEmonitor/ORIG`;
-	`mkdir -p $PATHDONEmonitor/GSM`;
-	`mkdir -p $PATHDONEmonitor/MP3`;
-	`mkdir -p $PATHDONEmonitor/OGG`;
-	`mkdir -p $PATHDONEmonitor/FTP`;
-	`chmod -R 0766 $PATHmonitor`;
-	`chmod -R 0766 $PATHDONEmonitor`;
+	if (!-e "$PATHmonitor")					
+		{
+		`mkdir -p $PATHmonitor`;
+		`chmod -R 0766 $PATHmonitor`;
+		}
+	if (!-e "$PATHDONEmonitor")					
+		{
+		`mkdir -p $PATHDONEmonitor`;
+		`chmod -R 0766 $PATHDONEmonitor`;
+		}
+	if (!-e "$PATHDONEmonitor/ORIG")	{`mkdir -p $PATHDONEmonitor/ORIG`;}
+	if (!-e "$PATHDONEmonitor/GSM")		{`mkdir -p $PATHDONEmonitor/GSM`;}
+	if (!-e "$PATHDONEmonitor/MP3")		{`mkdir -p $PATHDONEmonitor/MP3`;}
+	if (!-e "$PATHDONEmonitor/OGG")		{`mkdir -p $PATHDONEmonitor/OGG`;}
+	if (!-e "$PATHDONEmonitor/FTP")		{`mkdir -p $PATHDONEmonitor/FTP`;}
 
 	print "Creating $PATHlogs/archive directory for backups...\n";
-	`mkdir -p $PATHlogs/archive`;
+	if (!-e "$PATHlogs/archive")	{`mkdir -p $PATHlogs/archive`;}
 
 	print "Copying bin scripts to $PATHhome ...\n";
 	`cp -f ./bin/* $PATHhome/`;
@@ -2212,12 +2221,13 @@ if ($WEBONLY < 1)
 if ($NOWEB < 1)
 	{
 	print "Creating $PATHweb web directories...\n";
-	`mkdir -p $PATHweb/agc/`;
-	`mkdir -p $PATHweb/astguiclient/`;
-	`mkdir -p $PATHweb/vicidial/`;
-	`mkdir -p $PATHweb/vicidial/ploticus/`;
-	`mkdir -p $PATHweb/vicidial/agent_reports/`;
-	`mkdir -p $PATHweb/vicidial/server_reports/`;
+
+	if (!-e "$PATHweb/agc/")						{`mkdir -p $PATHweb/agc/`;}
+	if (!-e "$PATHweb/astguiclient/")				{`mkdir -p $PATHweb/astguiclient/`;}
+	if (!-e "$PATHweb/vicidial/")					{`mkdir -p $PATHweb/vicidial/`;}
+	if (!-e "$PATHweb/vicidial/ploticus/")			{`mkdir -p $PATHweb/vicidial/ploticus/`;}
+	if (!-e "$PATHweb/vicidial/agent_reports/")		{`mkdir -p $PATHweb/vicidial/agent_reports/`;}
+	if (!-e "$PATHweb/vicidial/server_reports/")	{`mkdir -p $PATHweb/vicidial/server_reports/`;}
 
 	print "Copying web files...\n";
 	`cp -f -R ./www/* $PATHweb/`;
@@ -2294,9 +2304,9 @@ exit;
 
 
 sub leading_zero($) 
-{
-    $_ = $_[0];
-    s/^(\d)$/0$1/;
-    s/^(\d\d)$/0$1/;
-    return $_;
-} # End of the leading_zero() routine.
+	{
+	$_ = $_[0];
+	s/^(\d)$/0$1/;
+	s/^(\d\d)$/0$1/;
+	return $_;
+	} # End of the leading_zero() routine.

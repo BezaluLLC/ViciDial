@@ -421,15 +421,7 @@ while ($master_loop<$CLIloops)
 			$differential_onemin[$i]=0;
 			$agents_average_onemin[$i]=0;
 
-		#	### Grab the count of agents and lines
-		#	if ($campaign_id[$i] !~ /(CLOSER|BLEND|INBND|_C$|_B$|_I$)/)
-		#		{
-				&count_agents_lines;
-		#		}
-		#	else
-		#		{
-		#		if ($DB) {print "     CLOSER CAMPAIGN\n";}
-		#		}
+			&count_agents_lines;
 
 			if ($total_agents_avg[$i] > 0)
 				{
@@ -595,7 +587,7 @@ sub get_time_now
 	$current_hourmin = "$hour$min";
 
 	### get date-time of one hour ago ###
-		$VDL_hour = ($secX - (60 * 60));
+	$VDL_hour = ($secX - (60 * 60));
 	($Vsec,$Vmin,$Vhour,$Vmday,$Vmon,$Vyear,$Vwday,$Vyday,$Visdst) = localtime($VDL_hour);
 	$Vyear = ($Vyear + 1900);
 	$Vmon++;
@@ -604,7 +596,7 @@ sub get_time_now
 	$VDL_hour = "$Vyear-$Vmon-$Vmday $Vhour:$Vmin:$Vsec";
 
 	### get date-time of half hour ago ###
-		$VDL_halfhour = ($secX - (30 * 60));
+	$VDL_halfhour = ($secX - (30 * 60));
 	($Vsec,$Vmin,$Vhour,$Vmday,$Vmon,$Vyear,$Vwday,$Vyday,$Visdst) = localtime($VDL_halfhour);
 	$Vyear = ($Vyear + 1900);
 	$Vmon++;
@@ -613,7 +605,7 @@ sub get_time_now
 	$VDL_halfhour = "$Vyear-$Vmon-$Vmday $Vhour:$Vmin:$Vsec";
 
 	### get date-time of five minutes ago ###
-		$VDL_five = ($secX - (5 * 60));
+	$VDL_five = ($secX - (5 * 60));
 	($Vsec,$Vmin,$Vhour,$Vmday,$Vmon,$Vyear,$Vwday,$Vyday,$Visdst) = localtime($VDL_five);
 	$Vyear = ($Vyear + 1900);
 	$Vmon++;
@@ -622,10 +614,10 @@ sub get_time_now
 	$VDL_five = "$Vyear-$Vmon-$Vmday $Vhour:$Vmin:$Vsec";
 
 	### get epoch of ninty seconds ago ###
-		$VDL_ninty = ($secX - (1 * 90));
+	$VDL_ninty = ($secX - (1 * 90));
 
 	### get date-time of one minute ago ###
-		$VDL_one = ($secX - (1 * 60));
+	$VDL_one = ($secX - (1 * 60));
 	($Vsec,$Vmin,$Vhour,$Vmday,$Vmon,$Vyear,$Vwday,$Vyday,$Visdst) = localtime($VDL_one);
 	$Vyear = ($Vyear + 1900);
 	$Vmon++;

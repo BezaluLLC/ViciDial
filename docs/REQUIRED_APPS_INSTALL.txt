@@ -122,7 +122,7 @@ cd ntp-4.2.2p3
 ./configure
 make
 make install
-/usr/local/bin/ntpdate -u ntp.myfloridacity.us
+/usr/local/bin/ntpdate -u pool.ntp.org
 
 
 cd /usr/local

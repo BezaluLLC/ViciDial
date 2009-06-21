@@ -1,16 +1,17 @@
 #!/usr/bin/perl
 #
-# AST_sourceID_summary_export.pl               version: 2.0.5
+# AST_sourceID_summary_export.pl               version: 2.2.0
 #
 # This script is designed to gather stats for all leads by source_id and
 # post them to a directory
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 70905-1409 - First version
 # 71005-0054 - Altered script to use astguiclient.conf for settings
-# 
+# 90620-0856 - Formatting fixes
+#
 
 $txt = '.txt';
 $US = '_';
@@ -30,70 +31,70 @@ $np_statuses = 'NP';
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
 
 	if ($args =~ /--help/i)
-	{
-	print "allowed run time options:\n";
-	print "  [--sale-statuses=XXX-XXY] = Statuses that are deemed to be \"Sales\". Default SALE\n";
-	print "  [--NI-statuses=XXX-XXY] = Statuses that are deemed to be \"Not Interested\". Default NI\n";
-	print "  [--NP-statuses=XXX-XXY] = Statuses that are deemed to be \"No Pitch\". Default NP\n";
-	print "  [--ignore-lists=XXX-XXY] = lists that should be ignored in summary\n";
-	print "  [--ftp-transfer] = Send results file by FTP to another server\n";
-	print "  [-q] = quiet\n";
-	print "  [-t] = test\n";
-	print "  [--debug] = debugging messages\n";
-	print "  [--debugX] = Super debugging messages\n";
-	print "\n";
+		{
+		print "allowed run time options:\n";
+		print "  [--sale-statuses=XXX-XXY] = Statuses that are deemed to be \"Sales\". Default SALE\n";
+		print "  [--NI-statuses=XXX-XXY] = Statuses that are deemed to be \"Not Interested\". Default NI\n";
+		print "  [--NP-statuses=XXX-XXY] = Statuses that are deemed to be \"No Pitch\". Default NP\n";
+		print "  [--ignore-lists=XXX-XXY] = lists that should be ignored in summary\n";
+		print "  [--ftp-transfer] = Send results file by FTP to another server\n";
+		print "  [-q] = quiet\n";
+		print "  [-t] = test\n";
+		print "  [--debug] = debugging messages\n";
+		print "  [--debugX] = Super debugging messages\n";
+		print "\n";
 
-	exit;
-	}
+		exit;
+		}
 	else
-	{
+		{
 		if ($args =~ /--debug/i)
-		{
-		$DB=1;
-		print "\n----- DEBUG MODE -----\n\n";
-		}
+			{
+			$DB=1;
+			print "\n----- DEBUG MODE -----\n\n";
+			}
 		if ($args =~ /--debugX/i)
-		{
-		$DBX=1;
-		print "\n----- SUPER DEBUG MODE -----\n\n";
-		}
+			{
+			$DBX=1;
+			print "\n----- SUPER DEBUG MODE -----\n\n";
+			}
 		if ($args =~ /-q/i)
-		{
-		$q=1;   $Q=1;
-		}
+			{
+			$q=1;   $Q=1;
+			}
 		if ($args =~ /--sale-statuses=/i)
-		{
-		@data_in = split(/--sale-statuses=/,$args);
+			{
+			@data_in = split(/--sale-statuses=/,$args);
 			$sale_statuses = $data_in[1];
 			$sale_statuses =~ s/ .*$//gi;
-		}
+			}
 		if ($args =~ /--NI-statuses=/)
-		{
-		@data_in = split(/--NI-statuses=/,$args);
+			{
+			@data_in = split(/--NI-statuses=/,$args);
 			$ni_statuses = $data_in[1];
 			$ni_statuses =~ s/ .*$//gi;
-		}
+			}
 		if ($args =~ /--NP-statuses=/)
-		{
-		@data_in = split(/--NP-statuses=/,$args);
+			{
+			@data_in = split(/--NP-statuses=/,$args);
 			$np_statuses = $data_in[1];
 			$np_statuses =~ s/ .*$//gi;
-		}
+			}
 		if ($args =~ /--ignore-lists=/)
-		{
-		@data_in = split(/--ignore-lists=/,$args);
+			{
+			@data_in = split(/--ignore-lists=/,$args);
 			$ignore_lists = $data_in[1];
 			$ignore_lists =~ s/ .*$//gi;
-		}
+			}
 		if ($args =~ /-ftp-transfer/i)
 			{
 			if (!$Q)
@@ -101,39 +102,39 @@ if (length($ARGV[0])>1)
 			$ftp_transfer=1;
 			}
 		if ($args =~ /--test/i)
-		{
-		$T=1;   $TEST=1;
-		print "\n----- TESTING -----\n\n";
+			{
+			$T=1;   $TEST=1;
+			print "\n----- TESTING -----\n\n";
+			}
 		}
 	}
-}
 else
-{
-print "no command line options set, using defaults.\n";
-}
+	{
+	print "no command line options set, using defaults.\n";
+	}
 ### end parsing run-time options ###
 
 
 $secX = time();
-	($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-	$year = ($year + 1900);
-	$mon++;
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+$year = ($year + 1900);
+$mon++;
 
 #	# rerun override - Use this to override the day manually
 #	$year='2007';
 #	$mon='5';
 #	$mday='18';
 
-	if ($mon < 10) {$mon = "0$mon";}
-	if ($mday < 10) {$mday = "0$mday";}
-	if ($hour < 10) {$hour = "0$hour";}
-	if ($min < 10) {$min = "0$min";}
-	if ($sec < 10) {$sec = "0$sec";}
-	$timestamp = "$year-$mon-$mday $hour:$min:$sec";
-	$filedate = "$year$mon$mday";
-	$ABIfiledate = "$mon-$mday-$year$us$hour$min$sec";
-	$shipdate = "$year-$mon-$mday";
-	$datestamp = "$year/$mon/$mday $hour:$min";
+if ($mon < 10) {$mon = "0$mon";}
+if ($mday < 10) {$mday = "0$mday";}
+if ($hour < 10) {$hour = "0$hour";}
+if ($min < 10) {$min = "0$min";}
+if ($sec < 10) {$sec = "0$sec";}
+$timestamp = "$year-$mon-$mday $hour:$min:$sec";
+$filedate = "$year$mon$mday";
+$ABIfiledate = "$mon-$mday-$year$us$hour$min$sec";
+$shipdate = "$year-$mon-$mday";
+$datestamp = "$year/$mon/$mday $hour:$min";
 
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
@@ -323,7 +324,7 @@ close(out);
 
 
 if ($ftp_transfer > 0)
-{
+	{
 	use Net::FTP;
 
 	if (!$Q) {print "Sending File Over FTP: $outfile\n";}
@@ -332,7 +333,7 @@ if ($ftp_transfer > 0)
 	$ftp->cwd("$VARREPORT_dir");
 	$ftp->put("$PATHweb/vicidial/server_reports/$outfile", "$outfile");
 	$ftp->quit;
-}
+	}
 
 ### calculate time to run script ###
 $secY = time();

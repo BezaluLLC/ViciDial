@@ -1,11 +1,11 @@
 #!/usr/bin/perl
 #
-# ADMIN_backup.pl    version 2.0.5
+# ADMIN_backup.pl    version 2.2.0
 #
 # DESCRIPTION:
 # Backs-up the asterisk database, conf/agi/sounds/bin files 
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 #
@@ -13,8 +13,8 @@
 # 80317-1609 - Added Sangoma conf file backup and changed FTP settings
 # 80328-0135 - Do not attempt to archive /etc/my.cnf is --without-db flag is set
 # 80611-0549 - Added DB option to backup all tables except for log tables
+# 90620-1851 - Moved mysqldump bin lookup to database backup section
 #
-
 
 $secT = time();
 $secX = time();
@@ -32,93 +32,93 @@ $VDL_date = "$year-$mon-$mday 00:00:01";
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
 
 	if ($args =~ /--help/i)
-	{
-	print "allowed run time options:\n";
-	print "  [--db-only] = only backup the database\n";
-	print "  [--db-without-logs] = do not backup the log tables in the database\n";
-	print "  [--conf-only] = only backup the asterisk conf files\n";
-	print "  [--without-db] = do not backup the database\n";
-	print "  [--without-conf] = do not backup the conf files\n";
-	print "  [--without-web] = do not backup web files\n";
-	print "  [--without-sounds] = do not backup asterisk sounds\n";
-	print "  [--ftp-transfer] = Transfer backup to FTP server\n";
-	print "  [--debugX] = super debug\n";
-	print "  [--debug] = debug\n";
-	print "  [-t] = test\n";
-	exit;
-	}
+		{
+		print "allowed run time options:\n";
+		print "  [--db-only] = only backup the database\n";
+		print "  [--db-without-logs] = do not backup the log tables in the database\n";
+		print "  [--conf-only] = only backup the asterisk conf files\n";
+		print "  [--without-db] = do not backup the database\n";
+		print "  [--without-conf] = do not backup the conf files\n";
+		print "  [--without-web] = do not backup web files\n";
+		print "  [--without-sounds] = do not backup asterisk sounds\n";
+		print "  [--ftp-transfer] = Transfer backup to FTP server\n";
+		print "  [--debugX] = super debug\n";
+		print "  [--debug] = debug\n";
+		print "  [-t] = test\n";
+		exit;
+		}
 	else
-	{
-	if ($args =~ /--debug/i)
 		{
-		$DB=1; $FTPdebug=1;
-		print "\n----- DEBUG -----\n\n";
-		}
-	if ($args =~ /--debugX/i)
-		{
-		$DBX=1;
-		print "\n----- SUPER DEBUG -----\n\n";
-		}
-	if ($args =~ /-t/i)
-		{
-		$T=1;   $TEST=1;
-		print "\n-----TESTING -----\n\n";
-		}
-	if ($args =~ /--db-only/i)
-		{
-		$db_only=1;
-		print "\n----- Backup Database Only -----\n\n";
-		}
-	if ($args =~ /--db-without-logs/i)
-		{
-		$db_without_logs=1;
-		print "\n----- Backup Database Without Logs -----\n\n";
-		}
-	if ($args =~ /--conf-only/i)
-		{
-		$conf_only=1;
-		print "\n----- Conf Files Backup Only -----\n\n";
-		}
-	if ($args =~ /--without-db/i)
-		{
-		$without_db=1;
-		print "\n----- No Database Backup -----\n\n";
-		}
-	if ($args =~ /--without-conf/i)
-		{
-		$without_conf=1;
-		print "\n----- No Conf Files Backup -----\n\n";
-		}
-	if ($args =~ /--without-sounds/i)
-		{
-		$without_sounds=1;
-		print "\n----- No Sounds Backup -----\n\n";
-		}
-	if ($args =~ /--without-web/i)
-		{
-		$without_web=1;
-		print "\n----- No web files Backup -----\n\n";
-		}
-	if ($args =~ /--ftp-transfer/i)
-		{
-		$ftp_transfer=1;
-		print "\n----- FTP transfer -----\n\n";
+		if ($args =~ /--debug/i)
+			{
+			$DB=1; $FTPdebug=1;
+			print "\n----- DEBUG -----\n\n";
+			}
+		if ($args =~ /--debugX/i)
+			{
+			$DBX=1;
+			print "\n----- SUPER DEBUG -----\n\n";
+			}
+		if ($args =~ /-t/i)
+			{
+			$T=1;   $TEST=1;
+			print "\n-----TESTING -----\n\n";
+			}
+		if ($args =~ /--db-only/i)
+			{
+			$db_only=1;
+			print "\n----- Backup Database Only -----\n\n";
+			}
+		if ($args =~ /--db-without-logs/i)
+			{
+			$db_without_logs=1;
+			print "\n----- Backup Database Without Logs -----\n\n";
+			}
+		if ($args =~ /--conf-only/i)
+			{
+			$conf_only=1;
+			print "\n----- Conf Files Backup Only -----\n\n";
+			}
+		if ($args =~ /--without-db/i)
+			{
+			$without_db=1;
+			print "\n----- No Database Backup -----\n\n";
+			}
+		if ($args =~ /--without-conf/i)
+			{
+			$without_conf=1;
+			print "\n----- No Conf Files Backup -----\n\n";
+			}
+		if ($args =~ /--without-sounds/i)
+			{
+			$without_sounds=1;
+			print "\n----- No Sounds Backup -----\n\n";
+			}
+		if ($args =~ /--without-web/i)
+			{
+			$without_web=1;
+			print "\n----- No web files Backup -----\n\n";
+			}
+		if ($args =~ /--ftp-transfer/i)
+			{
+			$ftp_transfer=1;
+			print "\n----- FTP transfer -----\n\n";
+			}
 		}
 	}
-}
 else
-{
-print "no command line options set\n";
-}
+	{
+	print "no command line options set\n";
+	}
 
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
@@ -207,22 +207,6 @@ else
 		}
 	}
 
-### find mysqldump binary to do the database dump
-$mysqldumpbin = '';
-if ( -e ('/usr/bin/mysqldump')) {$mysqldumpbin = '/usr/bin/mysqldump';}
-else 
-	{
-	if ( -e ('/usr/local/mysql/bin/mysqldump')) {$mysqldumpbin = '/usr/local/mysql/bin/mysqldump';}
-	else
-		{
-		if ( -e ('/bin/mysqldump')) {$mysqldumpbin = '/bin/mysqldump';}
-		else
-			{
-			print "Can't find mysqldump binary! MySQL backups will not work...\n";
-			}
-		}
-	}
-
 $conf='_CONF_';
 $sangoma='_SANGOMA_';
 $linux='_LINUX_';
@@ -239,6 +223,22 @@ $sgSTRING='';
 
 if ( ($without_db < 1) && ($conf_only < 1) )
 	{
+	### find mysqldump binary to do the database dump
+	$mysqldumpbin = '';
+	if ( -e ('/usr/bin/mysqldump')) {$mysqldumpbin = '/usr/bin/mysqldump';}
+	else 
+		{
+		if ( -e ('/usr/local/mysql/bin/mysqldump')) {$mysqldumpbin = '/usr/local/mysql/bin/mysqldump';}
+		else
+			{
+			if ( -e ('/bin/mysqldump')) {$mysqldumpbin = '/bin/mysqldump';}
+			else
+				{
+				print "Can't find mysqldump binary! MySQL backups will not work...\n";
+				}
+			}
+		}
+
 	### BACKUP THE MYSQL FILES ON THE DB SERVER ###
 	if ($db_without_logs)
 		{
@@ -257,16 +257,16 @@ if ( ($without_db < 1) && ($conf_only < 1) )
 		$archive_tables='';
 		while ($sthArows > $rec_count)
 			{
-			 @aryA = $sthA->fetchrow_array;
-			 if ($aryA[0] =~ /_log|server_performance|vicidial_ivr|vicidial_hopper|vicidial_manager|web_client_sessions|imm_outcomes/) 
+			@aryA = $sthA->fetchrow_array;
+			if ($aryA[0] =~ /_log|server_performance|vicidial_ivr|vicidial_hopper|vicidial_manager|web_client_sessions|imm_outcomes/) 
 				{
 				$log_tables .= " $aryA[0]";
 				}
-			 else 
+			else 
 				{
 				$archive_tables .= " $aryA[0]";
 				}
-			 $rec_count++;
+			$rec_count++;
 			}
 		$sthA->finish();
 

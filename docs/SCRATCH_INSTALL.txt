@@ -589,7 +589,7 @@ the time is the same on our client computers and our servers.
 	- make install
 	- vi /etc/ntp.conf	(change to just 1 line: "server ntp.myfloridacity.us")
 	- cp /etc/ntp.conf /etc/ntpd.conf	# just to be sure
-	- /usr/local/bin/ntpdate -u ntp.myfloridacity.us # initial sync
+	- /usr/local/bin/ntpdate -u pool.ntp.org # initial sync
 	- /usr/sbin/ntpd			# run it
    - you are done
 
@@ -2604,7 +2604,7 @@ SUBPHASE 6.4: setting up asterisk and helper applications for startup
 /usr/bin/setterm -powerdown
 
 ### start time server
-/usr/local/bin/ntpdate -u ntp.myfloridacity.us
+/usr/local/bin/ntpdate -u pool.ntp.org
 /usr/sbin/ntpd
 
 ### start up the MySQL server
@@ -2686,7 +2686,7 @@ SUBPHASE 6.5: setting up astguiclient scripts for continuous running
 3 1 * * * /usr/share/astguiclient/AST_DB_optimize.pl
 
 ## adjust time on the server with ntp
-30 * * * * /usr/local/bin/ntpdate -u ntp.myfloridacity.us 2>/dev/null 1>&2
+30 * * * * /usr/local/bin/ntpdate -u pool.ntp.org 2>/dev/null 1>&2
 
 ### VICIDIAL agent time log weekly and daily summary report generation
 2 0 * * 0 /usr/share/astguiclient/AST_agent_week.pl

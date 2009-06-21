@@ -218,7 +218,7 @@ sleep(5);
 ### Loop through files a second time to gather filesizes again 5 seconds later
 $i=0;
 foreach(@FILES)
-   {
+	{
 	$FILEsize2[$i] = 0;
 
 	if ( (length($FILES[$i]) > 4) && (!-d "$dir1/$FILES[$i]") )
@@ -282,6 +282,10 @@ foreach(@FILES)
 					{
 					`mv -f "$dir2/$ALLfile" "$PATHDONEmonitor/FTP/$ALLfile"`;
 					}
+				}
+			else
+				{
+				print "ERROR: Could not ping server $VARFTP_host\n";
 				}
 	### END Remote file transfer
 
