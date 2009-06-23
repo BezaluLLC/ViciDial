@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Vtiger_IN_notes_activities_file.pl version 2.2.0   *DBI-version*
+# Vtiger_IN_notes_activities_file.pl version 2.2.0
 #
 # DESCRIPTION:
 # script lets you insert notes and activities into the vtiger system from a 
@@ -14,6 +14,7 @@
 #
 # CHANGES
 # 90327-1148 - First build
+# 90623-0605 - Added duplicate check
 #
 
 $secX = time();
@@ -104,6 +105,7 @@ if (length($ARGV[0])>1)
 		print "  [-q] = quiet\n";
 		print "  [-t] = test\n";
 		print "  [--debug] = debug output\n";
+		print "  [--duplicate-check] = check whether the record exists before attempting to insert it\n";
 		print "  [--format=notes] = select whether you are importing notes or activities\n";
 		print "  [--ftp-pull] = grabs lead files from a remote FTP server, uses REPORTS FTP login information\n";
 		print "  [--ftp-dir=leads_in] = remote FTP server directory to grab files from, should have a DONE sub-directory\n";
@@ -193,6 +195,11 @@ if (length($ARGV[0])>1)
 		else
 			{$email_sender = 'vicidial@localhost';}
 
+		if ($args =~ /--duplicate-check/i)
+			{
+			$dup_check=1;
+			print "\n----- DUPLICATE CHECK -----\n\n";
+			}
 		}
 	}
 else
@@ -454,78 +461,153 @@ foreach(@FILES)
 
 					$user='6666';
 
-					#Get logged in user ID
-					$stmtB="SELECT id from vtiger_users where user_name='$user';";
-						if($DBX){print STDERR "\n|$stmtA|\n";}
-					$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
-					$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
-					$sthBrows=$sthB->rows;
-					if ($sthBrows > 0)
+					##### BEGIN Duplicate Check #####
+					$duplicate=0;
+					if ($dup_check)
 						{
-						@aryB = $sthB->fetchrow_array;
-						$user_id = $aryB[0];
+						if ($format =~ /activities/)
+							{
+							$first_duplicate=0;
+							# Check for duplicate activities entry
+							$stmtB="SELECT count(*) from vtiger_activity where subject='Old Call: $status' and activitytype='Call' and date_start='$date' and time_start='$time' and time_end='$end_time';";
+								if($DBX){print STDERR "\n|$stmtA|\n";}
+							$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+							$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+							$sthBrows=$sthB->rows;
+							if ($sthBrows > 0)
+								{
+								@aryB = $sthB->fetchrow_array;
+								$first_duplicate = $aryB[0];
+								}
+							$sthB->finish();
+
+							if ($first_duplicate > 0)
+								{
+								$stmtB="SELECT count(*) from vtiger_seactivityrel vs, vtiger_activity va where vs.crmid='$vendor_id' and vs.activityid=va.activityid and subject='Old Call: $status' and activitytype='Call' and date_start='$date' and time_start='$time' and time_end='$end_time';";
+									if($DBX){print STDERR "\n|$stmtA|\n";}
+								$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+								$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+								$sthBrows=$sthB->rows;
+								if ($sthBrows > 0)
+									{
+									@aryB = $sthB->fetchrow_array;
+									$duplicate = $aryB[0];
+									}
+								$sthB->finish();
+								}
+							}
+						else  # notes dup check
+							{
+							$first_duplicate=0;
+							# Check for duplicate activities entry
+							$stmtB="SELECT count(*) from vtiger_crmentity where setype='Notes' and description='Old Notes: $status' and createdtime='$date $time';";
+								if($DBX){print STDERR "\n|$stmtA|\n";}
+							$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+							$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+							$sthBrows=$sthB->rows;
+							if ($sthBrows > 0)
+								{
+								@aryB = $sthB->fetchrow_array;
+								$first_duplicate = $aryB[0];
+								}
+							$sthB->finish();
+
+							if ($first_duplicate > 0)
+								{
+								$stmtB="SELECT count(*) from vtiger_senotesrel vn, vtiger_crmentity vc where vn.crmid='$vendor_id' and vn.notesid=vc.crmid and subject='Old Call: $status' and activitytype='Call' and date_start='$date' and time_start='$time' and time_end='$end_time';";
+									if($DBX){print STDERR "\n|$stmtA|\n";}
+								$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+								$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+								$sthBrows=$sthB->rows;
+								if ($sthBrows > 0)
+									{
+									@aryB = $sthB->fetchrow_array;
+									$duplicate = $aryB[0];
+									}
+								$sthB->finish();
+								}
+							}
 						}
-					$sthB->finish();
-					
-					# Get current ID from vtiger_crmentity_seq
-					$stmtB="SELECT id from vtiger_crmentity_seq;";
-						if($DBX){print STDERR "\n|$stmtB|\n";}
-					$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
-					$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
-					$sthBrows=$sthB->rows;
-					if ($sthBrows > 0)
+					##### END Duplicate Check #####
+
+					if ($duplicate < 1)
 						{
-						@aryB = $sthB->fetchrow_array;
-						$crm_id = ($aryB[0] + 1);
-						}
-					$sthB->finish();
+						#Get logged in user ID
+						$stmtB="SELECT id from vtiger_users where user_name='$user';";
+							if($DBX){print STDERR "\n|$stmtA|\n";}
+						$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+						$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+						$sthBrows=$sthB->rows;
+						if ($sthBrows > 0)
+							{
+							@aryB = $sthB->fetchrow_array;
+							$user_id = $aryB[0];
+							}
+						$sthB->finish();
+						
+						# Get current ID from vtiger_crmentity_seq
+						$stmtB="SELECT id from vtiger_crmentity_seq;";
+							if($DBX){print STDERR "\n|$stmtB|\n";}
+						$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+						$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+						$sthBrows=$sthB->rows;
+						if ($sthBrows > 0)
+							{
+							@aryB = $sthB->fetchrow_array;
+							$crm_id = ($aryB[0] + 1);
+							}
+						$sthB->finish();
 
-					### update the crm ID ###
-					$stmtB = "UPDATE vtiger_crmentity_seq SET id = '$crm_id';";
-						if (!$T) {$affected_rows = $dbhB->do($stmtB); } #  or die  "Couldn't execute query: |$stmtB|\n";
-						if($DB){print STDERR "\n|$affected_rows|$stmtB|\n";}
-
-					if ($format =~ /activities/)
-						{
-						### insert record into vtiger_salesmanactivityrel table ###
-						$stmtB = "INSERT INTO vtiger_salesmanactivityrel SET smid='$user_id',activityid='$crm_id';";
+						### update the crm ID ###
+						$stmtB = "UPDATE vtiger_crmentity_seq SET id = '$crm_id';";
 							if (!$T) {$affected_rows = $dbhB->do($stmtB); } #  or die  "Couldn't execute query: |$stmtB|\n";
 							if($DB){print STDERR "\n|$affected_rows|$stmtB|\n";}
 
-						### insert record into vtiger_seactivityrel table ###
-						$stmtB = "INSERT INTO vtiger_seactivityrel SET crmid='$vendor_id',activityid='$crm_id';";
-							if (!$T) {$affected_rows = $dbhB->do($stmtB); } #  or die  "Couldn't execute query: |$stmtB|\n";
-							if($DB){print STDERR "\n|$affected_rows|$stmtB|\n";}					
+						if ($format =~ /activities/)
+							{
+							### insert record into vtiger_salesmanactivityrel table ###
+							$stmtB = "INSERT INTO vtiger_salesmanactivityrel SET smid='$user_id',activityid='$crm_id';";
+								if (!$T) {$affected_rows = $dbhB->do($stmtB); } #  or die  "Couldn't execute query: |$stmtB|\n";
+								if($DB){print STDERR "\n|$affected_rows|$stmtB|\n";}
 
-						### insert record into crmentity table ###
-						$stmtB = "INSERT INTO vtiger_crmentity SET crmid='$crm_id',smcreatorid='$user_id',smownerid='$user_id',modifiedby='$user_id',setype='Calendar',description='Old Call: $status',createdtime='$date $time',modifiedtime='$date $time', viewedtime='$date $time';";
-							if (!$T) {$affected_rows = $dbhB->do($stmtB); } #  or die  "Couldn't execute query: |$stmtB|\n";
-							if($DB){print STDERR "\n|$affected_rows|$stmtB|\n";}
+							### insert record into vtiger_seactivityrel table ###
+							$stmtB = "INSERT INTO vtiger_seactivityrel SET crmid='$vendor_id',activityid='$crm_id';";
+								if (!$T) {$affected_rows = $dbhB->do($stmtB); } #  or die  "Couldn't execute query: |$stmtB|\n";
+								if($DB){print STDERR "\n|$affected_rows|$stmtB|\n";}					
 
-						### insert record into vtiger_activity table ###
-						$stmtB = "INSERT INTO vtiger_activity SET activityid='$crm_id',subject='Old Call: $status',activitytype='Call',date_start='$date',due_date='$date',time_start='$time',time_end='$end_time',sendnotification='0',duration_hours='0',duration_minutes='$session_length',status='',eventstatus='Held',priority='Medium',location='VICIDIAL User $user',notime='0',visibility='Public',recurringtype='--None--';";
-							if (!$T) {$affected_rows = $dbhB->do($stmtB); } #  or die  "Couldn't execute query: |$stmtB|\n";
-							if($DB){print STDERR "\n|$affected_rows|$stmtB|\n";}
+							### insert record into crmentity table ###
+							$stmtB = "INSERT INTO vtiger_crmentity SET crmid='$crm_id',smcreatorid='$user_id',smownerid='$user_id',modifiedby='$user_id',setype='Calendar',description='Old Call: $status',createdtime='$date $time',modifiedtime='$date $time', viewedtime='$date $time';";
+								if (!$T) {$affected_rows = $dbhB->do($stmtB); } #  or die  "Couldn't execute query: |$stmtB|\n";
+								if($DB){print STDERR "\n|$affected_rows|$stmtB|\n";}
+
+							### insert record into vtiger_activity table ###
+							$stmtB = "INSERT INTO vtiger_activity SET activityid='$crm_id',subject='Old Call: $status',activitytype='Call',date_start='$date',due_date='$date',time_start='$time',time_end='$end_time',sendnotification='0',duration_hours='0',duration_minutes='$session_length',status='',eventstatus='Held',priority='Medium',location='VICIDIAL User $user',notime='0',visibility='Public',recurringtype='--None--';";
+								if (!$T) {$affected_rows = $dbhB->do($stmtB); } #  or die  "Couldn't execute query: |$stmtB|\n";
+								if($DB){print STDERR "\n|$affected_rows|$stmtB|\n";}
+							}
+						else
+							{
+							### insert record into crmentity table ###
+							$stmtB = "INSERT INTO vtiger_crmentity SET crmid='$crm_id',smcreatorid='$user_id',smownerid='$user_id',modifiedby='$user_id',setype='Notes',description='Old Notes: $status',createdtime='$date $time',modifiedtime='$date $time', viewedtime='$date $time';";
+								if (!$T) {$affected_rows = $dbhB->do($stmtB); } #  or die  "Couldn't execute query: |$stmtB|\n";
+								if($DB){print STDERR "\n|$affected_rows|$stmtB|\n";}
+
+							### insert record into vtiger_notes table ###
+							$stmtB = "INSERT INTO vtiger_notes SET notesid='$crm_id',title='Old Notes: $status',notecontent='$notes';";
+								if (!$T) {$affected_rows = $dbhB->do($stmtB); } #  or die  "Couldn't execute query: |$stmtB|\n";
+								if($DB){print STDERR "\n|$affected_rows|$stmtB|\n";}
+
+							### insert record into vtiger_senotesrel table ###
+							$stmtB = "INSERT INTO vtiger_senotesrel SET crmid='$vendor_id',notesid='$crm_id';";
+								if (!$T) {$affected_rows = $dbhB->do($stmtB); } #  or die  "Couldn't execute query: |$stmtB|\n";
+								if($DB){print STDERR "\n|$affected_rows|$stmtB|\n";}
+							}
+						$b++;
 						}
 					else
 						{
-						### insert record into crmentity table ###
-						$stmtB = "INSERT INTO vtiger_crmentity SET crmid='$crm_id',smcreatorid='$user_id',smownerid='$user_id',modifiedby='$user_id',setype='Notes',description='Old Notes: $status',createdtime='$date $time',modifiedtime='$date $time', viewedtime='$date $time';";
-							if (!$T) {$affected_rows = $dbhB->do($stmtB); } #  or die  "Couldn't execute query: |$stmtB|\n";
-							if($DB){print STDERR "\n|$affected_rows|$stmtB|\n";}
-
-						### insert record into vtiger_notes table ###
-						$stmtB = "INSERT INTO vtiger_notes SET notesid='$crm_id',title='Old Notes: $status',notecontent='$notes';";
-							if (!$T) {$affected_rows = $dbhB->do($stmtB); } #  or die  "Couldn't execute query: |$stmtB|\n";
-							if($DB){print STDERR "\n|$affected_rows|$stmtB|\n";}
-
-						### insert record into vtiger_senotesrel table ###
-						$stmtB = "INSERT INTO vtiger_senotesrel SET crmid='$vendor_id',notesid='$crm_id';";
-							if (!$T) {$affected_rows = $dbhB->do($stmtB); } #  or die  "Couldn't execute query: |$stmtB|\n";
-							if($DB){print STDERR "\n|$affected_rows|$stmtB|\n";}
+						print "BAD duplicate: $web1|$revenue|$status|$date $time|$a\n";   $h++;
 						}
-
-					$b++;
 					}
 				}
 			else
@@ -544,7 +626,7 @@ foreach(@FILES)
 			if ($a =~ /700$/i) {print STDERR "|     $a\r";}
 			if ($a =~ /800$/i) {print STDERR "+     $a\r";}
 			if ($a =~ /900$/i) {print STDERR "0     $a\r";}
-			if ($a =~ /000$/i) {print "$a|$b|$c|$d|$e|$f|$g|$phone_number|\n";}
+			if ($a =~ /000$/i) {print "$a|$b|$c|$d|$e|$f|$g|$h|$phone_number|\n";}
 			}
 
 
@@ -562,6 +644,7 @@ foreach(@FILES)
 			$Falert .= "ERROR:              $e\n";
 			$Falert .= "NOT FOUND:          $f\n";
 			$Falert .= "MULTI-ALT-PHONE:    $g\n";
+			$Falert .= "DUPLICATE:          $h\n";
 
 			print "$Falert";
 			print Sout "$Falert";

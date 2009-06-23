@@ -177,6 +177,9 @@ Conf File Secret||
 This is the secret, or password, for the phone in the iax or sip auto-generated conf file for this phone. Limit is 20 characters alphanumeric dash and underscore accepted. Default is test||
 Tracking Group||
 This is the ID that you can use to track calls to this Call Menu when looking at the IVR Report. The list includes CALLMENU as the default as well as all of the In-Groups||
+Agent Alert Filename||
+The audio file to play to an agent to announce that a call is coming to the agent. To not use this function set this to X. Default is ding||
+This field as with the other audio fields in In-Groups, with the exception of the Agent Alert Filename, can have multiple audio files played if you put a pipe-separated list of audio files into the field||
 
 
 add-file: user_territories.php

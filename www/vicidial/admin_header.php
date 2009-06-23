@@ -383,10 +383,10 @@ else
 		{
 		var audiolistURL = "./non_agent_api.php";
 		var audiolistQuery = "source=admin&function=sounds_list&user=" + user + "&pass=" + pass + "&format=selectframe&stage=" + stage + "&comments=" + fieldname;
-		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:560;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="560" height="460" STYLE="z-index:2"> </iframe>';
+		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:660;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="660" height="460" STYLE="z-index:2"> </iframe>';
 
 		document.getElementById("audio_chooser_span").style.position = "absolute";
-		document.getElementById("audio_chooser_span").style.left = "300px";
+		document.getElementById("audio_chooser_span").style.left = "250px";
 		document.getElementById("audio_chooser_span").style.top = vposition + "px";
 		document.getElementById("audio_chooser_span").style.visibility = 'visible';
 		document.getElementById("audio_chooser_span").innerHTML = Iframe_content;

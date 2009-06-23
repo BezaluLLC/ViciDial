@@ -409,8 +409,8 @@ if ($function == 'sounds_list')
 
 							echo "<body>\n";
 							echo "<a href=\"javascript:close_file();\"><font size=1 face=\"Arial,Helvetica\">close frame</font></a>\n";
-							echo "<div id='selectframe' style=\"height:400px;width:520px;overflow:scroll;\">\n";
-							echo "<table border=0 cellpadding=1 cellspacing=2 width=500 bgcolor=white><tr>\n";
+							echo "<div id='selectframe' style=\"height:400px;width:620px;overflow:scroll;\">\n";
+							echo "<table border=0 cellpadding=1 cellspacing=2 width=600 bgcolor=white><tr>\n";
 							echo "<td>#</td>\n";
 							echo "<td><a href=\"$PHP_SELF?source=admin&function=sounds_list&user=$user&pass=$pass&format=selectframe&comments=$comments&stage=name\"><font color=black>FILENAME</td>\n";
 							echo "<td><a href=\"$PHP_SELF?source=admin&function=sounds_list&user=$user&pass=$pass&format=selectframe&comments=$comments&stage=date\"><font color=black>DATE</td>\n";

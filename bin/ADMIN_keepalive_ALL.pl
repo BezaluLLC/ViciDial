@@ -27,6 +27,7 @@
 # 90617-0821 - Added phone ring timeout and call menu custom dialplan entry
 # 90621-0823 - Added phones conf file secret field use
 # 90621-1425 - Added tracking group for call menus
+# 90622-2146 - Added 83047777777777 for dynamic agent alert extension
 #
 
 $DB=0; # Debug flag
@@ -689,6 +690,15 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		{$Vext .= "exten => 8310,2,Monitor(gsm,\${CALLERID(name)})\n";}
 	$Vext .= "exten => 8310,3,Wait,$vicidial_recording_limit\n";
 	$Vext .= "exten => 8310,4,Hangup\n";
+
+
+	$Vext .= "\n;     agent alert extension\n";
+	$Vext .= "exten => 83047777777777,1,Answer\n";
+	if ($asterisk_version =~ /^1.2/)
+		{$Vext .= "exten => 83047777777777,2,Playback(\${CALLERIDNAME})\n";}
+	else
+		{$Vext .= "exten => 83047777777777,2,Playback(\${CALLERID(name)})\n";}
+	$Vext .= "exten => 83047777777777,3,Hangup\n";
 
 
 	##### Get the IAX carriers for this server_ip #####

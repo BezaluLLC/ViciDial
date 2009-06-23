@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_ALL_inbound.agi version 2.0.5   *DBI-version*
+# agi-VDAD_ALL_inbound.agi version 2.2.0   *DBI-version*
 # 
 # runs when a call comes in from an inbound call. This script will 
 # send the calls out to the closers that are logged in.
@@ -93,6 +93,7 @@
 # 90103-0311 - Added sip-silences before transfers to fix rare MoH issues
 # 90115-0601 - Added AGENTDIRECT functionality
 # 90607-1717 - Fix for AGENTDIRECT bug under certain configurations
+# 90623-0724 - Changed prompts to multi-file prompts, changed agent alert exten to a prompt
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -769,7 +770,21 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 		{
 		$AGI->stream_file('sip-silence');
 		$AGI->stream_file('sip-silence');
-		$AGI->stream_file("$after_hours_message_filename");
+		if ($after_hours_message_filename =~ /\|/)
+			{
+			@after_hours_message_filename_array = split(/\|/,$after_hours_message_filename);
+			$w=0;
+			foreach(@after_hours_message_filename_array)
+				{
+				if (length($after_hours_message_filename_array[$w])>0)
+					{
+					$AGI->stream_file("$after_hours_message_filename_array[$w]");
+					}
+				$w++;
+				}
+			}
+		else
+			{$AGI->stream_file("$after_hours_message_filename");}
 		sleep(1);
 
 		### insert a NEW record to the vicidial_manager table to hangup the channel
@@ -792,7 +807,21 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 ##### PLAY WELCOME MESSAGE #####
 if ( ($welcome_message_filename !~ /---NONE---/) && ( ($play_welcome_message =~ /ALWAYS/) || ( ($no_delay_call_route =~ /N/) && ($play_welcome_message =~ /YES_UNLESS_NODELAY/) ) ) )
 	{
-	$AGI->stream_file("$welcome_message_filename");
+	if ($welcome_message_filename =~ /\|/)
+		{
+		@welcome_message_filename_array = split(/\|/,$welcome_message_filename);
+		$w=0;
+		foreach(@welcome_message_filename_array)
+			{
+			if (length($welcome_message_filename_array[$w])>0)
+				{
+				$AGI->stream_file("$welcome_message_filename_array[$w]");
+				}
+			$w++;
+			}
+		}
+	else
+		{$AGI->stream_file("$welcome_message_filename");}
 	}
 if ($play_welcome_message =~ /IF_WAIT_ONLY/)
 	{$if_wait_play_welcome=1;}
@@ -1234,10 +1263,12 @@ if ( ($agent_search_method =~ /^SO|^LO/) && ($skipLOSO < 1) )
 			### if agent alert exten is not disabled, then trigger the alert and wait
 			if ( ($agent_alert_exten !~ /X/i) && ($no_delay_call_route !~ /Y/i) )
 				{
+				if ($agent_alert_exten =~ /^8304$/)
+					{$agent_alert_exten = 'ding';}
 				$VHqueryCID = "VH$CIDdate$VDADconf_exten";
 
 				### insert a NEW record to the vicidial_manager table to play the alert message to the agent
-				$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$VARserver_ip','','Originate','$VHqueryCID','Exten: $agent_alert_exten','Context: $ext_context','Channel: Local/$dtmf_silent_prefix$VDADconf_exten$at$ext_context','Priority: 1','Callerid: $CIDstring','Timeout: 10','','','','')";
+				$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$VARserver_ip','','Originate','$VHqueryCID','Exten: 83047777777777','Context: vicidial-auto','Channel: Local/$dtmf_silent_prefix$VDADconf_exten$at$ext_context','Priority: 1','Callerid: $agent_alert_exten','Timeout: 10','','','','')";
 				$affected_rows = $dbhA->do($stmtA);  
 					$dbhP=$dbhA;   $mysql_count='02048';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				if ($AGILOG) {$agi_string = "--    VDCL agent alert: |$VHqueryCID|7$VDADconf_exten|$channel|insert to vicidial_manager";   &agi_output;}
@@ -1566,10 +1597,12 @@ if ($agent_search_method =~ /^LO|^LB/)
 			### if agent alert exten is not disabled, then trigger the alert and wait
 			if ( ($agent_alert_exten !~ /X/i) && ($no_delay_call_route !~ /Y/i) )
 				{
+				if ($agent_alert_exten =~ /^8304$/)
+					{$agent_alert_exten = 'ding';}
 				$VHqueryCID = "VH$CIDdate$VDADconf_exten";
 
 				### insert a NEW record to the vicidial_manager table to play the alert message to the agent
-				$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$VARserver_ip','','Originate','$VHqueryCID','Exten: $agent_alert_exten','Context: $ext_context','Channel: Local/$alertVDADremDIALstr$at$ext_context','Priority: 1','Callerid: $CIDstring','Timeout: 10','','','','')";
+				$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$VARserver_ip','','Originate','$VHqueryCID','Exten: 83047777777777','Context: vicidial-auto','Channel: Local/$alertVDADremDIALstr$at$ext_context','Priority: 1','Callerid: $agent_alert_exten','Timeout: 10','','','','')";
 				$affected_rows = $dbhA->do($stmtA);  
 					$dbhP=$dbhA;   $mysql_count='02068';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				if ($AGILOG) {$agi_string = "--    VDCL agent alert: |$VHqueryCID|$alertVDADremDIALstr|$channel|insert to vicidial_manager";   &agi_output;}
@@ -1812,7 +1845,21 @@ if ($if_wait_play_welcome > 0)
 
 	$AGI->stream_file('sip-silence'); # stop music-on-hold process
 	$AGI->stream_file('sip-silence'); # stop music-on-hold process
-	$AGI->stream_file("$welcome_message_filename");
+	if ($welcome_message_filename =~ /\|/)
+		{
+		@welcome_message_filename_array = split(/\|/,$welcome_message_filename);
+		$w=0;
+		foreach(@welcome_message_filename_array)
+			{
+			if (length($welcome_message_filename_array[$w])>0)
+				{
+				$AGI->stream_file("$welcome_message_filename_array[$w]");
+				}
+			$w++;
+			}
+		}
+	else
+		{$AGI->stream_file("$welcome_message_filename");}
 	}
 
 
@@ -1837,7 +1884,21 @@ if ( ($hold_message_counter > $prompt_interval) && ($prompt_interval > 0) )
 
 	$AGI->stream_file('sip-silence'); # stop music-on-hold process
 	$AGI->stream_file('sip-silence'); # stop music-on-hold process
-	$AGI->stream_file("$onhold_prompt_filename"); # this prompt must be less than 10 seconds long
+	if ($onhold_prompt_filename =~ /\|/)
+		{
+		@onhold_prompt_filename_array = split(/\|/,$onhold_prompt_filename);
+		$w=0;
+		foreach(@onhold_prompt_filename_array)
+			{
+			if (length($onhold_prompt_filename_array[$w])>0)
+				{
+				$AGI->stream_file("$onhold_prompt_filename_array[$w]");
+				}
+			$w++;
+			}
+		}
+	else
+		{$AGI->stream_file("$onhold_prompt_filename");} # this prompt must be less than 10 seconds long
 	$hold_message_counter = 0;
 	$start_moh=1;
 	$moh_delay=1;
@@ -2117,7 +2178,21 @@ if ($hold_time_option =~ /CALLERID_CALLBACK/)
 
 		$AGI->stream_file('sip-silence'); # stop music-on-hold process
 		$AGI->stream_file('sip-silence'); # stop music-on-hold process
-		$AGI->stream_file("$hold_time_option_callback_filename");
+		if ($hold_time_option_callback_filename =~ /\|/)
+			{
+			@hold_time_option_callback_filename_array = split(/\|/,$hold_time_option_callback_filename);
+			$w=0;
+			foreach(@hold_time_option_callback_filename_array)
+				{
+				if (length($hold_time_option_callback_filename_array[$w])>0)
+					{
+					$AGI->stream_file("$hold_time_option_callback_filename_array[$w]");
+					}
+				$w++;
+				}
+			}
+		else
+			{$AGI->stream_file("$hold_time_option_callback_filename");} # this prompt must be less than 10 seconds long
 		}
 	else
 		{

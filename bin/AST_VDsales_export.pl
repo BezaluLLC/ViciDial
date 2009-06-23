@@ -610,10 +610,10 @@ if ($ftp_transfer > 0)
 if ($ftp_audio_transfer > 0)
 	{
 	use Net::FTP;
-	if (!$Q) {print "Sending File Over FTP: $outfile\n";}
-
 	opendir(FILE, "$tempdir/");
 	@FILES = readdir(FILE);
+
+	if (!$Q) {print "Sending Audio Over FTP: $$#FILES\n";}
 
 	$i=0;
 	foreach(@FILES)

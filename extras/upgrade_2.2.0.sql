@@ -201,3 +201,15 @@ UPDATE system_settings SET db_schema_version='1154';
 ALTER TABLE vicidial_call_menu ADD tracking_group VARCHAR(20) default 'CALLMENU';
 
 UPDATE system_settings SET db_schema_version='1155';
+
+
+
+
+
+ALTER TABLE vicidial_inbound_groups MODIFY after_hours_message_filename VARCHAR(255) default 'vm-goodbye';
+ALTER TABLE vicidial_inbound_groups MODIFY welcome_message_filename VARCHAR(255) default '---NONE---';
+ALTER TABLE vicidial_inbound_groups MODIFY onhold_prompt_filename VARCHAR(255) default 'generic_hold';
+ALTER TABLE vicidial_inbound_groups MODIFY hold_time_option_callback_filename VARCHAR(255) default 'vm-hangup';
+ALTER TABLE vicidial_inbound_groups MODIFY agent_alert_exten VARCHAR(100) default 'ding';
+
+UPDATE system_settings SET db_schema_version='1155';

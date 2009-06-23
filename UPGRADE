@@ -91,6 +91,11 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	UK telemarketing regulations that state you may not auto-dial a customer
 	back within 72 hours of an abandon.
 
+25. Changed In-Group and Call Menu prompts to allow for multiple audio files per
+	prompt by separating them by pipes |. Also, changed the Agent Alert 
+	Extention to a Filename in In-Groups
+
+
 
 
 

@@ -1420,7 +1420,6 @@ if ($non_latin < 1)
 	$category = ereg_replace("[^-_0-9a-zA-Z]","",$category);
 	$vsc_id = ereg_replace("[^-_0-9a-zA-Z]","",$vsc_id);
 	$moh_context = ereg_replace("[^-_0-9a-zA-Z]","",$moh_context);
-	$agent_alert_exten = ereg_replace("[^-_0-9a-zA-Z]","",$agent_alert_exten);
 	$source_campaign_id = ereg_replace("[^-_0-9a-zA-Z]","",$source_campaign_id);
 	$source_user_id = ereg_replace("[^-_0-9a-zA-Z]","",$source_user_id);
 	$source_group_id = ereg_replace("[^-_0-9a-zA-Z]","",$source_group_id);
@@ -1451,7 +1450,6 @@ if ($non_latin < 1)
 	$call_handle_method = ereg_replace("[^-_0-9a-zA-Z]","",$call_handle_method);
 	$agent_search_method = ereg_replace("[^-_0-9a-zA-Z]","",$agent_search_method);
 	$hold_time_option_voicemail = ereg_replace("[^-_0-9a-zA-Z]","",$hold_time_option_voicemail);
-	$hold_time_option_callback_filename = ereg_replace("[^-_0-9a-zA-Z]","",$hold_time_option_callback_filename);
 	$exten_context = ereg_replace("[^-_0-9a-zA-Z]","",$exten_context);
 	$three_way_call_cid = ereg_replace("[^-_0-9a-zA-Z]","",$three_way_call_cid);
 	$web_form_target = ereg_replace("[^-_0-9a-zA-Z]","",$web_form_target);
@@ -1479,6 +1477,11 @@ if ($non_latin < 1)
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
 	$menu_timeout_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_timeout_prompt);
 	$menu_invalid_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_invalid_prompt);
+	$after_hours_message_filename = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$after_hours_message_filename);
+	$welcome_message_filename = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$welcome_message_filename);
+	$onhold_prompt_filename = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$onhold_prompt_filename);
+	$hold_time_option_callback_filename = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$hold_time_option_callback_filename);
+	$agent_alert_exten = ereg_replace("[^-\/\._0-9a-zA-Z]","",$agent_alert_exten);
 
 	### ALPHA-NUMERIC and underscore and dash and comma
 	$logins_list = ereg_replace("[^-\,\_0-9a-zA-Z]","",$logins_list);
@@ -1552,9 +1555,6 @@ if ($non_latin < 1)
 	$queuemetrics_dbname = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$queuemetrics_dbname);
 	$queuemetrics_login = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$queuemetrics_login);
 	$queuemetrics_pass = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$queuemetrics_pass);
-	$after_hours_message_filename = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$after_hours_message_filename);
-	$welcome_message_filename = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$welcome_message_filename);
-	$onhold_prompt_filename = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$onhold_prompt_filename);
 	$email = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$email);
 	$vtiger_dbname = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$vtiger_dbname);
 	$vtiger_login = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$vtiger_login);
@@ -3836,7 +3836,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="vicidial_inbound_groups-welcome_message_filename">
 <BR>
-<B>Welcome Message Filename -</B> The audio file located on the server to be played when the call comes in. If set to ---NONE--- then no message will be played. Default is ---NONE---
+<B>Welcome Message Filename -</B> The audio file located on the server to be played when the call comes in. If set to ---NONE--- then no message will be played. Default is ---NONE---. This field as with the other audio fields in In-Groups, with the exception of the Agent Alert Filename, can have multiple audio files played if you put a pipe-separated list of audio files into the field.
 
 <BR>
 <A NAME="vicidial_inbound_groups-play_welcome_message">
@@ -3906,7 +3906,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="vicidial_inbound_groups-agent_alert_exten">
 <BR>
-<B>Agent Alert Extension -</B> The extension to send into the agent session to announce that a call is coming to the agent. This extension should have a Playback of an audio file. To not use this function set this to X. Default is X.
+<B>Agent Alert Filename -</B> The audio file to play to an agent to announce that a call is coming to the agent. To not use this function set this to X. Default is ding.
 
 <BR>
 <A NAME="vicidial_inbound_groups-agent_alert_delay">
@@ -17489,7 +17489,7 @@ if ($ADD==3111)
 
 	echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Action: </td><td align=left><select size=1 name=after_hours_action><option>HANGUP</option><option>MESSAGE</option><option>EXTENSION</option><option>VOICEMAIL</option><option>IN_GROUP</option><option SELECTED>$after_hours_action</option></select>$NWB#vicidial_inbound_groups-after_hours_action$NWE</td></tr>\n";
 
-	echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Message Filename: </td><td align=left><input type=text name=after_hours_message_filename id=after_hours_message_filename size=20 maxlength=50 value=\"$after_hours_message_filename\"> <a href=\"javascript:launch_chooser('after_hours_message_filename','date',400);\">audio chooser</a> $NWB#vicidial_inbound_groups-after_hours_message_filename$NWE</td></tr>\n";
+	echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Message Filename: </td><td align=left><input type=text name=after_hours_message_filename id=after_hours_message_filename size=50 maxlength=255 value=\"$after_hours_message_filename\"> <a href=\"javascript:launch_chooser('after_hours_message_filename','date',400);\">audio chooser</a> $NWB#vicidial_inbound_groups-after_hours_message_filename$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Extension: </td><td align=left><input type=text name=after_hours_exten size=10 maxlength=20 value=\"$after_hours_exten\">$NWB#vicidial_inbound_groups-after_hours_exten$NWE</td></tr>\n";
 
@@ -17499,13 +17499,13 @@ if ($ADD==3111)
 	echo "$Agroups_menu";
 	echo "</select>$NWB#vicidial_inbound_groups-afterhours_xfer_group$NWE</td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right>Welcome Message Filename: </td><td align=left><input type=text name=welcome_message_filename id=welcome_message_filename size=20 maxlength=50 value=\"$welcome_message_filename\"> <a href=\"javascript:launch_chooser('welcome_message_filename','date',500);\">audio chooser</a> $NWB#vicidial_inbound_groups-welcome_message_filename$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Welcome Message Filename: </td><td align=left><input type=text name=welcome_message_filename id=welcome_message_filename size=50 maxlength=255 value=\"$welcome_message_filename\"> <a href=\"javascript:launch_chooser('welcome_message_filename','date',500);\">audio chooser</a> $NWB#vicidial_inbound_groups-welcome_message_filename$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right>Play Welcome Message: </td><td align=left><select size=1 name=play_welcome_message><option>ALWAYS</option><option>NEVER</option><option>IF_WAIT_ONLY</option><option>YES_UNLESS_NODELAY</option><option SELECTED>$play_welcome_message</option></select>$NWB#vicidial_inbound_groups-play_welcome_message$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right>Music On Hold Context: </td><td align=left><input type=text name=moh_context size=10 maxlength=20 value=\"$moh_context\">$NWB#vicidial_inbound_groups-moh_context$NWE</td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right>On Hold Prompt Filename: </td><td align=left><input type=text name=onhold_prompt_filename id=onhold_prompt_filename size=20 maxlength=50 value=\"$onhold_prompt_filename\"> <a href=\"javascript:launch_chooser('onhold_prompt_filename','date',600);\">audio chooser</a> $NWB#vicidial_inbound_groups-onhold_prompt_filename$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>On Hold Prompt Filename: </td><td align=left><input type=text name=onhold_prompt_filename id=onhold_prompt_filename size=50 maxlength=255 value=\"$onhold_prompt_filename\"> <a href=\"javascript:launch_chooser('onhold_prompt_filename','date',600);\">audio chooser</a> $NWB#vicidial_inbound_groups-onhold_prompt_filename$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right>On Hold Prompt Interval: </td><td align=left><input type=text name=prompt_interval size=5 maxlength=5 value=\"$prompt_interval\">$NWB#vicidial_inbound_groups-prompt_interval$NWE</td></tr>\n";
 
@@ -17525,11 +17525,11 @@ if ($ADD==3111)
 	echo "$Tgroups_menu";
 	echo "</select>$NWB#vicidial_inbound_groups-hold_time_option_xfer_group$NWE</td></tr>\n";
 
-	echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Callback Filename: </td><td align=left><input type=text name=hold_time_option_callback_filename id=hold_time_option_callback_filename size=20 maxlength=20 value=\"$hold_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_callback_filename','date',900);\">audio chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_callback_filename$NWE</td></tr>\n";
+	echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Callback Filename: </td><td align=left><input type=text name=hold_time_option_callback_filename id=hold_time_option_callback_filename size=50 maxlength=255 value=\"$hold_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_callback_filename','date',900);\">audio chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_callback_filename$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Callback List ID: </td><td align=left><input type=text name=hold_time_option_callback_list_id size=14 maxlength=14 value=\"$hold_time_option_callback_list_id\">$NWB#vicidial_inbound_groups-hold_time_option_callback_list_id$NWE</td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right>Agent Alert Extension: </td><td align=left><input type=text name=agent_alert_exten size=10 maxlength=20 value=\"$agent_alert_exten\">$NWB#vicidial_inbound_groups-agent_alert_exten$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Agent Alert Extension: </td><td align=left><input type=text name=agent_alert_exten id=agent_alert_exten size=40 maxlength=100 value=\"$agent_alert_exten\"> <a href=\"javascript:launch_chooser('agent_alert_exten','date',1000);\">audio chooser</a> $NWB#vicidial_inbound_groups-agent_alert_exten$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right>Agent Alert Delay: </td><td align=left><input type=text name=agent_alert_delay size=6 maxlength=6 value=\"$agent_alert_delay\">$NWB#vicidial_inbound_groups-agent_alert_delay$NWE</td></tr>\n";
 
