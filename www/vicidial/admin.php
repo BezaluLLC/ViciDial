@@ -17529,7 +17529,7 @@ if ($ADD==3111)
 
 	echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Callback List ID: </td><td align=left><input type=text name=hold_time_option_callback_list_id size=14 maxlength=14 value=\"$hold_time_option_callback_list_id\">$NWB#vicidial_inbound_groups-hold_time_option_callback_list_id$NWE</td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right>Agent Alert Extension: </td><td align=left><input type=text name=agent_alert_exten id=agent_alert_exten size=40 maxlength=100 value=\"$agent_alert_exten\"> <a href=\"javascript:launch_chooser('agent_alert_exten','date',1000);\">audio chooser</a> $NWB#vicidial_inbound_groups-agent_alert_exten$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Agent Alert Filename: </td><td align=left><input type=text name=agent_alert_exten id=agent_alert_exten size=40 maxlength=100 value=\"$agent_alert_exten\"> <a href=\"javascript:launch_chooser('agent_alert_exten','date',1000);\">audio chooser</a> $NWB#vicidial_inbound_groups-agent_alert_exten$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right>Agent Alert Delay: </td><td align=left><input type=text name=agent_alert_delay size=6 maxlength=6 value=\"$agent_alert_delay\">$NWB#vicidial_inbound_groups-agent_alert_delay$NWE</td></tr>\n";
 
