@@ -1044,6 +1044,12 @@ if (isset($_GET["conf_secret"]))					{$conf_secret=$_GET["conf_secret"];}
 	elseif (isset($_POST["conf_secret"]))			{$conf_secret=$_POST["conf_secret"];}
 if (isset($_GET["tracking_group"]))					{$tracking_group=$_GET["tracking_group"];}
 	elseif (isset($_POST["tracking_group"]))		{$tracking_group=$_POST["tracking_group"];}
+if (isset($_GET["no_agent_no_queue"]))				{$no_agent_no_queue=$_GET["no_agent_no_queue"];}
+	elseif (isset($_POST["no_agent_no_queue"]))		{$no_agent_no_queue=$_POST["no_agent_no_queue"];}
+if (isset($_GET["no_agent_action"]))				{$no_agent_action=$_GET["no_agent_action"];}
+	elseif (isset($_POST["no_agent_action"]))		{$no_agent_action=$_POST["no_agent_action"];}
+if (isset($_GET["no_agent_action_value"]))			{$no_agent_action_value=$_GET["no_agent_action_value"];}
+	elseif (isset($_POST["no_agent_action_value"]))	{$no_agent_action_value=$_POST["no_agent_action_value"];}
 
 	if (isset($script_id)) {$script_id= strtoupper($script_id);}
 	if (isset($lead_filter_id)) {$lead_filter_id = strtoupper($lead_filter_id);}
@@ -1472,6 +1478,9 @@ if ($non_latin < 1)
 	$phone_context = ereg_replace("[^-_0-9a-zA-Z]","",$phone_context);
 	$conf_secret = ereg_replace("[^-_0-9a-zA-Z]","",$conf_secret);
 	$tracking_group = ereg_replace("[^-_0-9a-zA-Z]","",$tracking_group);
+	$no_agent_no_queue = ereg_replace("[^-_0-9a-zA-Z]","",$no_agent_no_queue);
+	$no_agent_action = ereg_replace("[^-_0-9a-zA-Z]","",$no_agent_action);
+
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
@@ -1559,6 +1568,9 @@ if ($non_latin < 1)
 	$vtiger_dbname = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$vtiger_dbname);
 	$vtiger_login = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$vtiger_login);
 	$vtiger_pass = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$vtiger_pass);
+
+	### value cleaning
+	$no_agent_action_value = ereg_replace("[^-\/\|\_\#\*\,\.\_0-9a-zA-Z]","",$no_agent_action_value);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and space and colon
 	$vdc_header_date_format = ereg_replace("[^- \:\/\_0-9a-zA-Z]","",$vdc_header_date_format);
@@ -1819,11 +1831,12 @@ else
 # 90617-0733 - Added phone ring timeout and call menu custom dialplan entries
 # 90621-0821 - Added phon Conf File Secret field to use a separate password from the user interface for a phone
 # 90621-1220 - Added Call Menu logging tracking_group
+# 90627-0547 - Added no-agent-no-queue options
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-199';
-$build = '90621-1220';
+$admin_version = '2.2.0-200';
+$build = '90627-0547';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3832,6 +3845,21 @@ if ($SSqc_features_active > 0)
 <A NAME="vicidial_inbound_groups-afterhours_xfer_group">
 <BR>
 <B>After Hours Transfer Group -</B> If After Hours Action is set to IN_GROUP, the call will be sent to this inbound group if it enters the in-group outside of the call time scheme defined for the in-group.
+
+<BR>
+<A NAME="vicidial_inbound_groups-no_agent_no_queue">
+<BR>
+<B>No Agents No Queueing -</B> If this field is set to Y or NO_PAUSED then no calls will be put into the queue for this in-group if there are no agents logged in and the calls will go to the No Agent No Queue Action. The NO_PAUSED option will also not send the callers into the queue if there are only paused agents in the in-group. Default is N.
+
+<BR>
+<A NAME="vicidial_inbound_groups-no_agent_action">
+<BR>
+<B>No Agent No Queue Action -</B> If No Agent No Queue is enabled, then this field defines where the call will go if there are no agents in the In-Group. Default is MESSAGE, this plays the sound files in the Action Value field and then hangs up.
+
+<BR>
+<A NAME="vicidial_inbound_groups-no_agent_action_value">
+<BR>
+<B>No Agent No Queue Action Value -</B> This is the value for the Action above. Default is nbdy-avail-to-take-call|vm-goodbye.
 
 <BR>
 <A NAME="vicidial_inbound_groups-welcome_message_filename">
@@ -8346,7 +8374,7 @@ if ($ADD==2011)
 			}
 		 else
 			{
-			$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias) SELECT \"$group_id\",\"$group_name\",group_color,\"N\",web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias from vicidial_inbound_groups where group_id=\"$source_group_id\";";
+			$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value) SELECT \"$group_id\",\"$group_name\",group_color,\"N\",web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value from vicidial_inbound_groups where group_id=\"$source_group_id\";";
 			$rslt=mysql_query($stmt, $link);
 
 			echo "<br><B>GROUP ADDED: $group_id</B>\n";
@@ -11159,9 +11187,40 @@ if ($ADD==4111)
 		if (strlen($QC_statuses)>0) {$QC_statuses .= " -";}
 		if (strlen($QC_lists)>0) {$QC_lists .= " -";}
 
+
+		if ($no_agent_action == "INGROUP")
+			{
+			if (isset($_GET["IGgroup_id_no_agent_action"]))					{$IGgroup_id=$_GET["IGgroup_id_no_agent_action"];}
+				elseif (isset($_POST["IGgroup_id_no_agent_action"]))		{$IGgroup_id=$_POST["IGgroup_id_no_agent_action"];}
+			if (isset($_GET["IGhandle_method_no_agent_action"]))			{$IGhandle_method=$_GET["IGhandle_method_no_agent_action"];}
+				elseif (isset($_POST["IGhandle_method_no_agent_action"]))	{$IGhandle_method=$_POST["IGhandle_method_no_agent_action"];}
+			if (isset($_GET["IGsearch_method_no_agent_action"]))			{$IGsearch_method=$_GET["IGsearch_method_no_agent_action"];}
+				elseif (isset($_POST["IGsearch_method_no_agent_action"]))	{$IGsearch_method=$_POST["IGsearch_method_no_agent_action"];}
+			if (isset($_GET["IGlist_id_no_agent_action"]))					{$IGlist_id=$_GET["IGlist_id_no_agent_action"];}
+				elseif (isset($_POST["IGlist_id_no_agent_action"]))			{$IGlist_id=$_POST["IGlist_id_no_agent_action"];}
+			if (isset($_GET["IGcampaign_id_no_agent_action"]))				{$IGcampaign_id=$_GET["IGcampaign_id_no_agent_action"];}
+				elseif (isset($_POST["IGcampaign_id_no_agent_action"]))		{$IGcampaign_id=$_POST["IGcampaign_id_no_agent_action"];}
+			if (isset($_GET["IGphone_code_no_agent_action"]))				{$IGphone_code=$_GET["IGphone_code_no_agent_action"];}
+				elseif (isset($_POST["IGphone_code_no_agent_action"]))		{$IGphone_code=$_POST["IGphone_code_no_agent_action"];}
+
+			$no_agent_action_value = "$IGgroup_id,$IGhandle_method,$IGsearch_method,$IGlist_id,$IGcampaign_id,$IGphone_code";
+			}
+
+		if ($no_agent_action == "EXTENSION")
+			{
+			if (isset($_GET["EXextension_no_agent_action"]))			{$EXextension=$_GET["EXextension_no_agent_action"];}
+				elseif (isset($_POST["EXextension_no_agent_action"]))	{$EXextension=$_POST["EXextension_no_agent_action"];}
+			if (isset($_GET["EXcontext_no_agent_action"]))				{$EXcontext=$_GET["EXcontext_no_agent_action"];}
+				elseif (isset($_POST["EXcontext_no_agent_action"]))		{$EXcontext=$_POST["EXcontext_no_agent_action"];}
+
+			$no_agent_action_value = "$EXextension,$EXcontext";
+			}
+
+		$no_agent_action_value = ereg_replace("[^-\/\|\_\#\*\,\.\_0-9a-zA-Z]","",$no_agent_action_value);
+
 		echo "<br><B>GROUP MODIFIED: $group_id</B>\n";
 
-		$stmt="UPDATE vicidial_inbound_groups set group_name='$group_name', group_color='$group_color', active='$active', web_form_address='" . mysql_real_escape_string($web_form_address) . "', voicemail_ext='$voicemail_ext', next_agent_call='$next_agent_call', fronter_display='$fronter_display', ingroup_script='$script_id', get_call_launch='$get_call_launch', xferconf_a_dtmf='$xferconf_a_dtmf',xferconf_a_number='$xferconf_a_number', xferconf_b_dtmf='$xferconf_b_dtmf',xferconf_b_number='$xferconf_b_number',drop_action='$drop_action',drop_call_seconds='$drop_call_seconds',drop_exten='$drop_exten',call_time_id='$call_time_id',after_hours_action='$after_hours_action',after_hours_message_filename='$after_hours_message_filename',after_hours_exten='$after_hours_exten',after_hours_voicemail='$after_hours_voicemail',welcome_message_filename='$welcome_message_filename',moh_context='$moh_context',onhold_prompt_filename='$onhold_prompt_filename',prompt_interval='$prompt_interval',agent_alert_exten='$agent_alert_exten',agent_alert_delay='$agent_alert_delay',default_xfer_group='$default_xfer_group',queue_priority='$queue_priority',drop_inbound_group='$drop_inbound_group',ingroup_recording_override='$ingroup_recording_override',ingroup_rec_filename='$ingroup_rec_filename',afterhours_xfer_group='$afterhours_xfer_group',qc_enabled='$qc_enabled',qc_statuses='$QC_statuses',qc_shift_id='$qc_shift_id',qc_get_record_launch='$qc_get_record_launch',qc_show_recording='$qc_show_recording',qc_web_form_address='$qc_web_form_address',qc_script='$qc_script',play_place_in_line='$play_place_in_line',play_estimate_hold_time='$play_estimate_hold_time',hold_time_option='$hold_time_option',hold_time_option_seconds='$hold_time_option_seconds',hold_time_option_exten='$hold_time_option_exten',hold_time_option_voicemail='$hold_time_option_voicemail',hold_time_option_xfer_group='$hold_time_option_xfer_group',hold_time_option_callback_filename='$hold_time_option_callback_filename',hold_time_option_callback_list_id='$hold_time_option_callback_list_id',hold_recall_xfer_group='$hold_recall_xfer_group',no_delay_call_route='$no_delay_call_route',play_welcome_message='$play_welcome_message',answer_sec_pct_rt_stat_one='$answer_sec_pct_rt_stat_one',answer_sec_pct_rt_stat_two='$answer_sec_pct_rt_stat_two',default_group_alias='$default_group_alias' where group_id='$group_id';";
+		$stmt="UPDATE vicidial_inbound_groups set group_name='$group_name', group_color='$group_color', active='$active', web_form_address='" . mysql_real_escape_string($web_form_address) . "', voicemail_ext='$voicemail_ext', next_agent_call='$next_agent_call', fronter_display='$fronter_display', ingroup_script='$script_id', get_call_launch='$get_call_launch', xferconf_a_dtmf='$xferconf_a_dtmf',xferconf_a_number='$xferconf_a_number', xferconf_b_dtmf='$xferconf_b_dtmf',xferconf_b_number='$xferconf_b_number',drop_action='$drop_action',drop_call_seconds='$drop_call_seconds',drop_exten='$drop_exten',call_time_id='$call_time_id',after_hours_action='$after_hours_action',after_hours_message_filename='$after_hours_message_filename',after_hours_exten='$after_hours_exten',after_hours_voicemail='$after_hours_voicemail',welcome_message_filename='$welcome_message_filename',moh_context='$moh_context',onhold_prompt_filename='$onhold_prompt_filename',prompt_interval='$prompt_interval',agent_alert_exten='$agent_alert_exten',agent_alert_delay='$agent_alert_delay',default_xfer_group='$default_xfer_group',queue_priority='$queue_priority',drop_inbound_group='$drop_inbound_group',ingroup_recording_override='$ingroup_recording_override',ingroup_rec_filename='$ingroup_rec_filename',afterhours_xfer_group='$afterhours_xfer_group',qc_enabled='$qc_enabled',qc_statuses='$QC_statuses',qc_shift_id='$qc_shift_id',qc_get_record_launch='$qc_get_record_launch',qc_show_recording='$qc_show_recording',qc_web_form_address='$qc_web_form_address',qc_script='$qc_script',play_place_in_line='$play_place_in_line',play_estimate_hold_time='$play_estimate_hold_time',hold_time_option='$hold_time_option',hold_time_option_seconds='$hold_time_option_seconds',hold_time_option_exten='$hold_time_option_exten',hold_time_option_voicemail='$hold_time_option_voicemail',hold_time_option_xfer_group='$hold_time_option_xfer_group',hold_time_option_callback_filename='$hold_time_option_callback_filename',hold_time_option_callback_list_id='$hold_time_option_callback_list_id',hold_recall_xfer_group='$hold_recall_xfer_group',no_delay_call_route='$no_delay_call_route',play_welcome_message='$play_welcome_message',answer_sec_pct_rt_stat_one='$answer_sec_pct_rt_stat_one',answer_sec_pct_rt_stat_two='$answer_sec_pct_rt_stat_two',default_group_alias='$default_group_alias',no_agent_no_queue='$no_agent_no_queue',no_agent_action='$no_agent_action',no_agent_action_value='$no_agent_action_value' where group_id='$group_id';";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -17346,7 +17405,9 @@ if ($ADD==3111)
 	$answer_sec_pct_rt_stat_one =	$row[53];
 	$answer_sec_pct_rt_stat_two =	$row[54];
 	$default_group_alias =		$row[55];
-
+	$no_agent_no_queue =		$row[56];
+	$no_agent_action =			$row[57];
+	$no_agent_action_value =	$row[58];
 
 	##### get in-groups listings for dynamic pulldown
 	$stmt="SELECT group_id,group_name from vicidial_inbound_groups where group_id NOT IN('AGENTDIRECT') order by group_id";
@@ -17498,6 +17559,80 @@ if ($ADD==3111)
 	echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Transfer Group: </td><td align=left><select size=1 name=afterhours_xfer_group>";
 	echo "$Agroups_menu";
 	echo "</select>$NWB#vicidial_inbound_groups-afterhours_xfer_group$NWE</td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=right>No Agents No Queueing: </td><td align=left><select size=1 name=no_agent_no_queue><option>Y</option><option>N</option><option>NO_PAUSED</option><option SELECTED>$no_agent_no_queue</option></select>$NWB#vicidial_inbound_groups-no_agent_no_queue$NWE</td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=right>No Agent No Queue Action: </td><td align=left><select size=1 name=no_agent_action id=no_agent_action onChange=\"dynamic_call_action('no_agent_action','$no_agent_action','$no_agent_action_value','600');\"><option>CALLMENU</option><option>INGROUP</option><option>DID</option><option>MESSAGE</option><option>EXTENSION</option><option>VOICEMAIL</option><option SELECTED>$no_agent_action</option></select>$NWB#vicidial_inbound_groups-no_agent_no_queue$NWE\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>";
+	echo "<span id=\"no_agent_action_value_span\" name=\"no_agent_action_value_span\">\n";
+
+	if ($no_agent_action=='CALLMENU')
+		{
+		echo "<span name=no_agent_action_value_link id=no_agent_action_value_link>";
+		echo "<a href=\"$PHP_SELF?ADD=3511&menu_id=$no_agent_action_value\">Call Menu:</a>";
+		echo "</span>";
+		echo " <select size=1 name=no_agent_action_value id=no_agent_action_value onChange=\"dynamic_call_action_link('no_agent_action','CALLMENU');\">$call_menu_list<option SELECTED>$no_agent_action_value</option></select>\n";
+		}
+	if ($no_agent_action=='INGROUP')
+		{
+		if (strlen($no_agent_action_value) < 10)
+			{$no_agent_action_value = 'SALESLINE,CID,LB,998,TESTCAMP,1';}
+		$IGno_agent_action_value = explode(",",$no_agent_action_value);
+		$IGgroup_id =		$IGno_agent_action_value[0];
+		$IGhandle_method =	$IGno_agent_action_value[1];
+		$IGsearch_method =	$IGno_agent_action_value[2];
+		$IGlist_id =		$IGno_agent_action_value[3];
+		$IGcampaign_id =	$IGno_agent_action_value[4];
+		$IGphone_code =		$IGno_agent_action_value[5];
+		echo "<span name=no_agent_action_value_link id=no_agent_action_value_link>";
+		echo "<a href=\"$PHP_SELF?ADD=3111&group_id=$IGgroup_id\">In-Group:</a>";
+		echo "</span>";
+		echo " <select size=1 name=IGgroup_id_no_agent_action id=IGgroup_id_no_agent_action onChange=\"dynamic_call_action_link('IGgroup_id_no_agent_action','INGROUP');\">";
+		echo "$ingroup_list<option SELECTED>$IGgroup_id</option></select>";
+		echo " &nbsp; Handle Method: <select size=1 name=IGhandle_method_$j id=IGhandle_method_$j>";
+		echo "$IGhandle_method_list<option SELECTED>$IGhandle_method</option></select>\n";
+		echo "<BR>Search Method: <select size=1 name=IGsearch_method_$j id=IGsearch_method_$j>";
+		echo "$IGsearch_method_list<option SELECTED>$IGsearch_method</option></select>\n";
+		echo " &nbsp; List ID: <input type=text size=5 maxlength=14 name=IGlist_id_$j id=IGlist_id_$j value=\"$IGlist_id\">";
+		echo "<BR>Campaign ID: <select size=1 name=IGcampaign_id_$j id=IGcampaign_id_$j>";
+		echo "$IGcampaign_id_list<option SELECTED>$IGcampaign_id</option></select>\n";
+		echo " &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_$j id=IGphone_code_$j value=\"$IGphone_code\">";
+		}
+	if ($no_agent_action=='DID')
+		{
+		$stmt="SELECT did_id from vicidial_inbound_dids where did_pattern='$no_agent_action_value';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$did_id =			$row[0];
+
+		echo "<span name=no_agent_action_value_link id=no_agent_action_value_link>";
+		echo "<a href=\"$PHP_SELF?ADD=3311&did_id=$did_id\">DID:</a>";
+		echo "</span>";
+		echo " <select size=1 name=no_agent_action_value id=no_agent_action_value onChange=\"dynamic_call_action_link('no_agent_action','DID');\">$did_list<option SELECTED>$no_agent_action_value</option></select>\n";
+		}
+	if ($no_agent_action=='MESSAGE')
+		{
+		if (strlen($no_agent_action_value) < 3)
+			{$no_agent_action_value = 'nbdy-avail-to-take-call|vm-goodbye';}
+		echo "Audio File: <input type=text name=no_agent_action_value id=no_agent_action_value size=50 maxlength=255 value=\"$no_agent_action_value\"> <a href=\"javascript:launch_chooser('no_agent_action_value','date',$choose_height);\">audio chooser</a>\n";
+		}
+	if ($no_agent_action=='EXTENSION')
+		{
+		if (strlen($no_agent_action_value) < 3)
+			{$no_agent_action_value = '8304,default';}
+		$EXno_agent_action_value = explode(",",$no_agent_action_value);
+		$EXextension =	$EXno_agent_action_value[0];
+		$EXcontext =	$EXno_agent_action_value[1];
+		echo "Extension: <input type=text name=EXextension_no_agent_action id=EXextension_no_agent_action size=20 maxlength=255 value=\"$EXextension\"> &nbsp; Context: <input type=text name=EXcontext_no_agent_action id=EXcontext_no_agent_action size=20 maxlength=255 value=\"$EXcontext\">\n";
+		}
+	if ($no_agent_action=='VOICEMAIL')
+		{
+		echo "Voicemail Box: <input type=text name=no_agent_action_value id=no_agent_action_value size=20 maxlength=255 value=\"$no_agent_action_value\">\n";
+		}
+
+	echo "</span>
+	<BR> &nbsp; </td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right>Welcome Message Filename: </td><td align=left><input type=text name=welcome_message_filename id=welcome_message_filename size=50 maxlength=255 value=\"$welcome_message_filename\"> <a href=\"javascript:launch_chooser('welcome_message_filename','date',500);\">audio chooser</a> $NWB#vicidial_inbound_groups-welcome_message_filename$NWE</td></tr>\n";
 

@@ -402,15 +402,66 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integrati
 			$row=mysql_fetch_row($rsltV);
 			$user_id =		$row[0];
 
+			$stmtV="SELECT accountid from vtiger_account where tickersymbol='$territory';";
+			$rsltV=mysql_query($stmtV, $linkV);
+			if ($DB) {echo "$stmtV\n";}
+			$vat_ct = mysql_num_rows($rsltV);
+			$account_ids[0]='';
+			$p=0;
+			while ($vat_ct > $p)
+				{
+				$row=mysql_fetch_row($rsltV);
+				$account_ids[$p] =		$row[0];
+				$p++;
+				}
+
+			$p=0;
+			while ($vat_ct > $p)
+				{
+				$stmt="UPDATE vtiger_crmentity SET smownerid='$user_id',smcreatorid='$user_id',modifiedby='$user_id' where crmid='$account_ids[$p]';";
+				$rsltV=mysql_query($stmt, $linkV);
+				$changedX = mysql_affected_rows($linkV);
+				if ($DB) {echo "$stmt|$changedX\n";}
+				$changed = ($changed + $changedX);
+
+				$stmtV="select activityid from vtiger_seactivityrel where crmid='$account_ids[$p]';";
+				$rsltV=mysql_query($stmtV, $linkV);
+				if ($DB) {echo "$stmtV\n";}
+				$vact_ct = mysql_num_rows($rsltV);
+				$activity_ids[0]='';
+				$r=0;
+				while ($vact_ct > $r)
+					{
+					$row=mysql_fetch_row($rsltV);
+					$activity_ids[$r] =		$row[0];
+					$r++;
+					}
+
+				$r=0;
+				while ($vact_ct > $r)
+					{
+					$stmt="UPDATE vtiger_crmentity SET smownerid='$user_id' where crmid='$activity_ids[$r]';";
+					$rsltV=mysql_query($stmt, $linkV);
+					$AchangedX = mysql_affected_rows($linkV);
+					if ($DB) {echo "$stmt|$AchangedX\n";}
+					$Achanged = ($Achanged + $AchangedX);
+					$r++;
+					}
+
+				$p++;
+				}
+
+
 			$stmt="UPDATE vtiger_crmentity SET smownerid='$user_id',smcreatorid='$user_id',modifiedby='$user_id' where crmid IN(SELECT accountid from vtiger_account where tickersymbol='$territory');";
 			$rsltV=mysql_query($stmt, $linkV);
-			$changed = mysql_affected_rows($linkV);
+			$Cchanged = mysql_affected_rows($linkV);
+			if ($DB) {echo "$stmt|$Cchanged\n";}
 
 			$stmtB="UPDATE vtiger_tracker vt, vtiger_account va SET user_id='$user_id' where vt.item_id=va.accountid and va.tickersymbol='$territory';";
 			$rsltV=mysql_query($stmtB, $linkV);
 
 
-			echo "Vtiger Territory Owner Changed: $user $territory &nbsp; &nbsp; &nbsp; Records Changed: $changed<BR>\n";
+			echo "Vtiger Territory Owner Changed: $user $territory &nbsp; &nbsp; &nbsp; Records Changed: $changed - $Achanged - $Cchanged<BR>\n";
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$stmtB|";

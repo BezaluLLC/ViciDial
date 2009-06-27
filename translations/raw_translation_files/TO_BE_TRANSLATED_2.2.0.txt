@@ -180,6 +180,12 @@ This is the ID that you can use to track calls to this Call Menu when looking at
 Agent Alert Filename||
 The audio file to play to an agent to announce that a call is coming to the agent. To not use this function set this to X. Default is ding||
 This field as with the other audio fields in In-Groups, with the exception of the Agent Alert Filename, can have multiple audio files played if you put a pipe-separated list of audio files into the field||
+No Agents No Queueing||
+If this field is set to Y or NO_PAUSED then no calls will be put into the queue for this in-group if there are no agents logged in and the calls will go to the No Agent No Queue Action. The NO_PAUSED option will also not send the callers into the queue if there are only paused agents in the in-group. Default is N||
+No Agent No Queue Action||
+If No Agent No Queue is enabled, then this field defines where the call will go if there are no agents in the In-Group. Default is MESSAGE, this plays the sound files in the Action Value field and then hangs up||
+No Agent No Queue Action Value||
+This is the value for the Action above. Default is||
 
 
 add-file: user_territories.php

@@ -94,6 +94,7 @@
 # 90115-0601 - Added AGENTDIRECT functionality
 # 90607-1717 - Fix for AGENTDIRECT bug under certain configurations
 # 90623-0724 - Changed prompts to multi-file prompts, changed agent alert exten to a prompt
+# 90627-0546 - Added no-agent-no-queue options
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -460,7 +461,7 @@ $sthA->finish();
 
 ### Grab inbound groups values from the database
 $cbc=0;
-$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message FROM vicidial_inbound_groups where group_id = '$channel_group';";
+$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value FROM vicidial_inbound_groups where group_id = '$channel_group';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -504,6 +505,9 @@ while ($sthArows > $cbc)
 	if ($hold_time_option =~ /DROP_ACTION/)
 		{$hold_time_option = $drop_action;}
 	$play_welcome_message =			"$aryA[30]";
+	$no_agent_no_queue =			"$aryA[31]";
+	$no_agent_action =				"$aryA[32]";
+	$no_agent_action_value =		"$aryA[33]";
 
 	$cbc++;
 	}
@@ -712,17 +716,17 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 		$cbc++; 
 		}
 	$sthA->finish();
-	if ($AGILOG) {$agi_string = "--    VDCL vcl insert: |$affected_rows|$insert_lead_id|$insert_close_id|\n|$stmtA|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "--  AH VDCL vcl insert: |$affected_rows|$insert_lead_id|$insert_close_id|\n|$stmtA|";   &agi_output;}
 
 	$stmtA = "UPDATE vicidial_list set status='DROP' where lead_id = '$insert_lead_id';";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02018';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-	if ($AGILOG) {$agi_string = "--    VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "--  AH VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
 
 	$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02019';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-	if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "--  AH VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
 
 	if ($after_hours_action =~ /EXTENSION|VOICEMAIL|IN_GROUP/)
 		{
@@ -743,7 +747,8 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 			{	### if DROP extension is defined then send the dropped call there instead of hangup
 			if ($no_delay_call_route =~ /N/)
 				{
-				$AGI->stream_file('ding'); # stop music-on-hold process
+				$AGI->stream_file('sip-silence'); # stop music-on-hold process
+				$AGI->stream_file('sip-silence');
 
 				sleep(1);
 				}
@@ -791,7 +796,7 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 		$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$VARserver_ip','','Hangup','$VHqueryCID','Channel: $channel','','','','','','','','','')";
 		$affected_rows = $dbhA->do($stmtA);  
 			$dbhP=$dbhA;   $mysql_count='02021';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-		if ($AGILOG) {$agi_string = "--    VDCL call_hungup after hours: |$VHqueryCID|$VDADconf_exten|$channel|insert to vicidial_manager";   &agi_output;}
+		if ($AGILOG) {$agi_string = "--  AH VDCL call_hungup after hours: |$VHqueryCID|$VDADconf_exten|$channel|insert to vicidial_manager";   &agi_output;}
 		}
 
 	$dbhA->disconnect();
@@ -801,6 +806,152 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 	}
 ##### END AFTER HOURS CHECK #####
 
+
+
+##### BEGIN NO AGENT NO QUEUE CHECK #####
+if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
+	{
+	$NPsql='';
+	if ($no_agent_no_queue =~ /NO_PAUSED/) 
+		{$NPsql = "and status NOT IN('PAUSED')";}
+	$stmtA = "SELECT count(*) FROM vicidial_live_agents where closer_campaigns LIKE \"% $channel_group %\" $NPsql;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+		$dbhP=$dbhA;   $mysql_count='02104';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;	
+		$group_agents_count	= "$aryA[0]";
+		}
+	$sthA->finish();
+
+	if ($group_agents_count < 1)
+		{
+		$VHqueryCID = "VA$CIDdate$hour$min$sec$sec";
+
+		$stmtA = "INSERT INTO vicidial_closer_log set status='DROP',start_epoch='$now_date_epoch',end_epoch='$now_date_epoch',length_in_sec='1',queue_seconds='0',lead_id = '$insert_lead_id',campaign_id='$channel_group',user='VDCL',list_id='$list_id',call_date='$now_date',phone_code='$phone_code',phone_number='$phone_number',comments='NO AGENT DROP',term_reason='NOAGENT',uniqueid='$uniqueid';";
+		$affected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='02105';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+		$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+		$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtB ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+			$dbhP=$dbhA;   $stmtA=$stmtB;   $mysql_count='02017';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$insert_close_id = "$aryA[0]";
+			$cbc++; 
+			}
+		$sthA->finish();
+		if ($AGILOG) {$agi_string = "--  NA VDCL vcl insert: |$affected_rows|$insert_lead_id|$insert_close_id|\n|$stmtA|";   &agi_output;}
+
+		$stmtA = "UPDATE vicidial_list set status='DROP' where lead_id = '$insert_lead_id';";
+		$affected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='02106';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "--  NA VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
+
+		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
+		$affected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='02107';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "--  NA VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
+
+		if ($no_agent_action =~ /CALLMENU|INGROUP|DID|EXTENSION|VOICEMAIL/)
+			{
+			if ($no_agent_action =~ /EXTENSION/)
+				{
+				if (length($no_agent_action_value) < 3)
+					{$no_agent_action_value = '8304,default';}
+				@EXno_agent_action_value = split(/,/,$no_agent_action_value);
+				$DROPexten =	$EXno_agent_action_value[0];
+				$ext_context =	$EXno_agent_action_value[1];
+				}
+			if ($no_agent_action =~ /DID/)
+				{
+				if (length($no_agent_action_value) < 1)
+					{$no_agent_action_value = '6666';}
+				$DROPexten =	$no_agent_action_value;
+				$ext_context =	'trunkinbound';
+				}
+			if ($no_agent_action =~ /CALLMENU/)
+				{
+				$DROPexten =	's';
+				$ext_context =	$no_agent_action_value;
+				}
+			if ($no_agent_action =~ /VOICEMAIL/)
+				{
+				$DROPexten = "$voicemail_dump_exten$no_agent_action_value";
+				}
+			if ($no_agent_action =~ /INGROUP/)
+				{ # 90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*"
+				if (length($no_agent_action_value) < 10)
+					{$no_agent_action_value = 'SALESLINE,CID,LB,998,TESTCAMP,1';}
+				@IGno_agent_action_value = split(/,/,$no_agent_action_value);
+				$IGgroup_id =		$IGno_agent_action_value[0];
+				$IGhandle_method =	$IGno_agent_action_value[1];
+				$IGsearch_method =	$IGno_agent_action_value[2];
+				$IGlist_id =		$IGno_agent_action_value[3];
+				$IGcampaign_id =	$IGno_agent_action_value[4];
+				$IGphone_code =		$IGno_agent_action_value[5];
+
+				$S='*';
+				$DROPexten = "90009*$IGgroup_id$S$S$insert_lead_id$S$S$phone_number$S$fronter$S";
+				}
+			if (length($DROPexten)>0)
+				{	### if DROP extension is defined then send the dropped call there instead of hangup
+				if ($no_delay_call_route =~ /N/)
+					{
+					$AGI->stream_file('sip-silence'); # stop music-on-hold process
+					$AGI->stream_file('sip-silence');
+
+					sleep(1);
+					}
+
+				if ($AGILOG) {$agi_string = "exiting the VDAD app after hours, transferring call to $DROPexten";   &agi_output;}
+				print "SET CONTEXT $ext_context\n";
+					checkresult($result);
+				print "SET EXTENSION $DROPexten\n";
+					checkresult($result);
+				print "SET PRIORITY 1\n";
+					checkresult($result);
+				}
+			}
+
+		if ($no_agent_action =~ /MESSAGE/)
+			{
+			$AGI->stream_file('sip-silence');
+			$AGI->stream_file('sip-silence');
+			if ($no_agent_action_value =~ /\|/)
+				{
+				@no_agent_action_value_array = split(/\|/,$no_agent_action_value);
+				$w=0;
+				foreach(@no_agent_action_value_array)
+					{
+					if (length($no_agent_action_value_array[$w])>0)
+						{
+						$AGI->stream_file("$no_agent_action_value_array[$w]");
+						}
+					$w++;
+					}
+				}
+			else
+				{$AGI->stream_file("$no_agent_action_value");}
+			sleep(1);
+
+			### insert a NEW record to the vicidial_manager table to hangup the channel
+			$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$VARserver_ip','','Hangup','$VHqueryCID','Channel: $channel','','','','','','','','','')";
+			$affected_rows = $dbhA->do($stmtA);  
+				$dbhP=$dbhA;   $mysql_count='02021';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+			if ($AGILOG) {$agi_string = "--  NA VDCL call_hungup after hours: |$VHqueryCID|$VDADconf_exten|$channel|insert to vicidial_manager";   &agi_output;}
+			}
+
+		$dbhA->disconnect();
+
+		exit;
+		}
+	}
+##### END NO AGENT NO QUEUE CHECK #####
 
 
 
@@ -1280,7 +1431,8 @@ if ( ($agent_search_method =~ /^SO|^LO/) && ($skipLOSO < 1) )
 
 			if ($no_delay_call_route =~ /N/)
 				{
-				$AGI->stream_file('ding'); # stop music-on-hold process
+				$AGI->stream_file('sip-silence'); # stop music-on-hold process
+				$AGI->stream_file('sip-silence');
 				}
 
 			### update calls_today for vicidial_live_inbound_agents ###
@@ -1614,7 +1766,8 @@ if ($agent_search_method =~ /^LO|^LB/)
 
 			if ($no_delay_call_route =~ /N/)
 				{
-				$AGI->stream_file('ding'); # stop music-on-hold process
+				$AGI->stream_file('sip-silence'); # stop music-on-hold process
+				$AGI->stream_file('sip-silence');
 				}
 
 			### update calls_today for vicidial_live_inbound_agents ###
@@ -1761,7 +1914,8 @@ if ($hold_recall_xfer_group !~ /NONE/)
 
 		if ($no_delay_call_route =~ /N/)
 			{
-			$AGI->stream_file('ding'); # stop music-on-hold process
+			$AGI->stream_file('sip-silence'); # stop music-on-hold process
+			$AGI->stream_file('sip-silence');
 			sleep(1);
 			}
 
@@ -2213,7 +2367,8 @@ if ($wait_in_queue < 1)
 
 		if ($no_delay_call_route =~ /N/)
 			{
-			$AGI->stream_file('ding'); # stop music-on-hold process
+			$AGI->stream_file('sip-silence'); # stop music-on-hold process
+			$AGI->stream_file('sip-silence');
 			sleep(1);
 			}
 
@@ -2457,7 +2612,8 @@ if ($AGILOG) {$agi_string = "--    VDCL DROP: |$drop_action|$DROPexten|";   &agi
 
 		if ($no_delay_call_route =~ /N/)
 			{
-			$AGI->stream_file('ding'); # stop music-on-hold process
+			$AGI->stream_file('sip-silence'); # stop music-on-hold process
+			$AGI->stream_file('sip-silence');
 			sleep(1);
 			}
 

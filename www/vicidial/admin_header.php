@@ -11,6 +11,8 @@
 # 90530-1206 - Changed List Mix to allow for 40 mixes and a default populate option
 # 90531-2339 - Added Dynamic options for Call Menu
 # 90612-0852 - Changed relative links
+# 90635-0943 - Added javascript for dynamic menus in In-Groups
+# 90627-0548 - Added no-agent-no-queue options
 #
 
 
@@ -383,10 +385,10 @@ else
 		{
 		var audiolistURL = "./non_agent_api.php";
 		var audiolistQuery = "source=admin&function=sounds_list&user=" + user + "&pass=" + pass + "&format=selectframe&stage=" + stage + "&comments=" + fieldname;
-		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:660;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="660" height="460" STYLE="z-index:2"> </iframe>';
+		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:740;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="740" height="460" STYLE="z-index:2"> </iframe>';
 
 		document.getElementById("audio_chooser_span").style.position = "absolute";
-		document.getElementById("audio_chooser_span").style.left = "250px";
+		document.getElementById("audio_chooser_span").style.left = "220px";
 		document.getElementById("audio_chooser_span").style.top = vposition + "px";
 		document.getElementById("audio_chooser_span").style.visibility = 'visible';
 		document.getElementById("audio_chooser_span").innerHTML = Iframe_content;
@@ -486,8 +488,8 @@ if ( ($ADD==131111111) or ($ADD==331111111) or ($ADD==431111111) )
 	}
 
 
-### Javascript for dynamic call menu option value/context entries
-if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511) )
+### select list contents generation for dynamic route displays in call menu and in-group screens
+if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111) )
 	{
 	$stmt="select menu_id,menu_name from vicidial_call_menu;";
 	$rslt=mysql_query($stmt, $link);
@@ -552,6 +554,11 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 		$phone_list .= "<option value=\"$row[0]\">$row[0] - $row[1] - $row[2] - $row[3]</option>";
 		$i++;
 		}
+	}
+
+# dynamic options for options in call_menu screen
+if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511) )
+	{
 
 	?>
 	function call_menu_option(option,route,value,value_context,chooser_height)
@@ -577,7 +584,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				{
 				selected_value = '<option SELECTED value="' + value + '">' + value + "</option>\n";
 				}
-			new_content = 'Call Menu: <select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + '>' + call_menu_list + "\n" + selected_value + '</select>';
+			new_content = '<span name=option_route_value_' + option + 'id=option_route_value_' + option + '><a href="./admin.php?ADD=3511&menu_id=' + value + ">Call Menu: </a></span><select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option +  + " onChange=\"call_menu_link('" + option + "','CALLMENU');\">" + call_menu_list + "\n" + selected_value + '</select>';
 			}
 		if (selected_route=='INGROUP')
 			{
@@ -664,14 +671,6 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 		span_to_update.innerHTML = new_content;
 		}
 
-	<?php
-	}
-
-### Javascript for dynamic call menu option value/context entries
-if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511) )
-	{
-
-	?>
 	function call_menu_link(option,route)
 		{
 		var selected_value = '';
@@ -680,6 +679,150 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 		var select_list = document.getElementById("option_route_value_" + option);
 		var selected_value = select_list.value;
 		var span_to_update = document.getElementById("option_route_link_" + option);
+
+		if (route=='CALLMENU')
+			{
+			new_content = '<a href="admin.php?ADD=3511&menu_id=' + selected_value + '">Call Menu:</a>';
+			}
+		if (route=='INGROUP')
+			{
+			new_content = '<a href="admin.php?ADD=3111&group_id=' + selected_value + '">In-Group:</a>';
+			}
+		if (route=='DID')
+			{
+			new_content = '<a href="admin.php?ADD=3311&did_pattern=' + selected_value + '">DID:</a>';
+			}
+
+		if (new_content.length < 1)
+			{new_content = selected_route}
+
+		span_to_update.innerHTML = new_content;
+		}
+
+	<?php
+	}
+
+### Javascript for dynamic in-group option value entries
+if ( ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111) )
+	{
+
+	?>
+	function dynamic_call_action(option,route,value,chooser_height)
+		{
+		var call_menu_list = '<?php echo $call_menu_list ?>';
+		var ingroup_list = '<?php echo $ingroup_list ?>';
+		var IGcampaign_id_list = '<?php echo $IGcampaign_id_list ?>';
+		var IGhandle_method_list = '<?php echo $IGhandle_method_list ?>';
+		var IGsearch_method_list = '<?php echo $IGsearch_method_list ?>';
+		var did_list = '<?php echo $did_list ?>';
+		var selected_value = '';
+		var selected_context = '';
+		var new_content = '';
+
+		var select_list = document.getElementById(option + "");
+		var selected_route = select_list.value;
+		var span_to_update = document.getElementById(option + "_value_span");
+
+		if (selected_route=='CALLMENU')
+			{
+			if (route == selected_route)
+				{
+				selected_value = '<option SELECTED value="' + value + '">' + value + "</option>\n";
+				}
+			else
+				{value = '';}
+			new_content = '<span name=' + option + '_value_link id=' + option + '_value_link><a href="./admin.php?ADD=3511&menu_id=' + value + '">Call Menu: </a></span><select size=1 name=' + option + '_value id=' + option + "_value onChange=\"dynamic_call_action_link('" + option + "','CALLMENU');\">" + call_menu_list + "\n" + selected_value + '</select>';
+			}
+		if (selected_route=='INGROUP')
+			{
+			if ( (route != selected_route) || (value.length < 10) )
+				{value = 'SALESLINE,CID,LB,998,TESTCAMP,1';}
+			var value_split = value.split(",");
+			var IGgroup_id =		value_split[0];
+			var IGhandle_method =	value_split[1];
+			var IGsearch_method =	value_split[2];
+			var IGlist_id =			value_split[3];
+			var IGcampaign_id =		value_split[4];
+			var IGphone_code =		value_split[5];
+
+			if (route == selected_route)
+				{
+				selected_value = '<option SELECTED>' + IGgroup_id + '</option>';
+				}
+
+			new_content = new_content + '<span name=' + option + '_value_link id=' + option + '_value_link><a href="admin.php?ADD=3111&group_id=' + IGgroup_id + '">In-Group:</a> </span> ';
+			new_content = new_content + '<select size=1 name=IGgroup_id_' + option + ' id=IGgroup_id_' + option + " onChange=\"dynamic_call_action_link('IGgroup_id_" + option + "','INGROUP');\">";
+			new_content = new_content + '' + ingroup_list + "\n" + selected_value + '</select>';
+			new_content = new_content + ' &nbsp; Handle Method: <select size=1 name=IGhandle_method_' + option + ' id=IGhandle_method_' + option + '>';
+			new_content = new_content + '' + IGhandle_method_list + "\n" + '<option SELECTED>' + IGhandle_method + '</select>';
+			new_content = new_content + '<BR>Search Method: <select size=1 name=IGsearch_method_' + option + ' id=IGsearch_method_' + option + '>';
+			new_content = new_content + '' + IGsearch_method_list + "\n" + '<option SELECTED>' + IGsearch_method + '</select>';
+			new_content = new_content + ' &nbsp; List ID: <input type=text size=5 maxlength=14 name=IGlist_id_' + option + ' id=IGlist_id_' + option + ' value="' + IGlist_id + '">';
+			new_content = new_content + '<BR>Campaign ID: <select size=1 name=IGcampaign_id_' + option + ' id=IGcampaign_id_' + option + '>';
+			new_content = new_content + '' + IGcampaign_id_list + "\n" + '<option SELECTED>' + IGcampaign_id + '</select>';
+			new_content = new_content + ' &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_' + option + ' id=IGphone_code_' + option + ' value="' + IGphone_code + '">';
+			}
+		if (selected_route=='DID')
+			{
+			if (route == selected_route)
+				{
+				selected_value = '<option SELECTED value="' + value + '">' + value + "</option>\n";
+				}
+			else
+				{value = '';}
+			new_content = '<span name=' + option + '_value_link id=' + option + '_value_link><a href="admin.php?ADD=3311&did_pattern=' + value + '">DID:</a> </span><select size=1 name=' + option + '_value id=' + option + "_value onChange=\"dynamic_call_action_link('" + option + "','DID');\">" + did_list + "\n" + selected_value + '</select>';
+			}
+		if (selected_route=='MESSAGE')
+			{
+			if (route == selected_route)
+				{
+				selected_value = value;
+				}
+			else
+				{value = 'nbdy-avail-to-take-call|vm-goodbye';}
+			new_content = "Audio File: <input type=text name=" + option + "_value id=" + option + "_value size=40 maxlength=255 value=\"" + value + "\"> <a href=\"javascript:launch_chooser('" + option + "_value','date'," + chooser_height + ");\">audio chooser</a>";
+			}
+		if (selected_route=='EXTENSION')
+			{
+			if ( (route != selected_route) || (value.length < 3) )
+				{value = '8304,default';}
+			var value_split = value.split(",");
+			var EXextension =	value_split[0];
+			var EXcontext =		value_split[1];
+
+			new_content = "Extension: <input type=text name=EXextension_" + option + " id=EXextension_" + option + " size=20 maxlength=255 value=\"" + EXextension + "\"> &nbsp; Context: <input type=text name=EXcontext_" + option + " id=EXcontext_" + option + " size=20 maxlength=255 value=\"" + EXcontext + "\"> ";
+			}
+		if (selected_route=='VOICEMAIL')
+			{
+			if (route == selected_route)
+				{
+				selected_value = value;
+				}
+			else
+				{value = '101';}
+			new_content = "Voicemail Box: <input type=text name=" + option + "_value id=" + option + "_value size=20 maxlength=255 value=\"" + value + "\"> ";
+			}
+
+		if (new_content.length < 1)
+			{new_content = selected_route}
+
+		span_to_update.innerHTML = new_content;
+		}
+
+	function dynamic_call_action_link(field,route)
+		{
+		var selected_value = '';
+		var new_content = '';
+
+		if ( (route=='CALLMENU') || (route=='DID') )
+			{var select_list = document.getElementById(field + "_value");}
+		if (route=='INGROUP')
+			{
+			var select_list = document.getElementById(field + "");
+			field = field.replace(/IGgroup_id_/, "");
+			}
+		var selected_value = select_list.value;
+		var span_to_update = document.getElementById(field + "_value_link");
 
 		if (route=='CALLMENU')
 			{

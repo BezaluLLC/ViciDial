@@ -95,6 +95,12 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	prompt by separating them by pipes |. Also, changed the Agent Alert 
 	Extention to a Filename in In-Groups
 
+26. Added a conf_secret field to phones table to be used as sip.conf/iax.conf
+	password instead of the pass field. Please check that this is set 
+	properly if you are having phone registration issues
+
+27. Added no-agent-no-queueing options to In-Groups to send a call somewhere 
+	else when there is no agent logged in(or active) to the in-group
 
 
 

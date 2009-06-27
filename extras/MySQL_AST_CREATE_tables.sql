@@ -414,7 +414,7 @@ processed ENUM('Y','N'),
 queue_seconds DECIMAL(7,2) default '0',
 user_group VARCHAR(20),
 xfercallid INT(9) UNSIGNED,
-term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','NONE') default 'NONE',
+term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','HOLDRECALLXFER','HOLDTIME','NOAGENT','NONE') default 'NONE',
 uniqueid VARCHAR(20) NOT NULL default '',
 agent_only VARCHAR(20) default '',
 index (lead_id),
@@ -778,7 +778,10 @@ no_delay_call_route ENUM('Y','N') default 'N',
 play_welcome_message ENUM('ALWAYS','NEVER','IF_WAIT_ONLY','YES_UNLESS_NODELAY') default 'ALWAYS',
 answer_sec_pct_rt_stat_one SMALLINT(5) UNSIGNED default '20',
 answer_sec_pct_rt_stat_two SMALLINT(5) UNSIGNED default '30',
-default_group_alias VARCHAR(30) default ''
+default_group_alias VARCHAR(30) default '',
+no_agent_no_queue ENUM('N','Y','NO_PAUSED') default 'N',
+no_agent_action ENUM('CALLMENU','INGROUP','DID','MESSAGE','EXTENSION','VOICEMAIL') default 'MESSAGE',
+no_agent_action_value VARCHAR(255) default 'nbdy-avail-to-take-call|vm-goodbye'
 );
 
 CREATE TABLE vicidial_stations (
@@ -1656,7 +1659,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1155';
+UPDATE system_settings SET db_schema_version='1157';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

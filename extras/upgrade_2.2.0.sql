@@ -195,6 +195,7 @@ ALTER TABLE vicidial_call_menu_options MODIFY option_route_value VARCHAR(255);
 UPDATE system_settings SET db_schema_version='1153';
 
 ALTER TABLE phones ADD conf_secret VARCHAR(20) default 'test';
+UPDATE phones set conf_secret=pass;
 
 UPDATE system_settings SET db_schema_version='1154';
 
@@ -209,3 +210,11 @@ ALTER TABLE vicidial_inbound_groups MODIFY hold_time_option_callback_filename VA
 ALTER TABLE vicidial_inbound_groups MODIFY agent_alert_exten VARCHAR(100) default 'ding';
 
 UPDATE system_settings SET db_schema_version='1156';
+
+ALTER TABLE vicidial_inbound_groups ADD no_agent_no_queue ENUM('N','Y','NO_PAUSED') default 'N';
+ALTER TABLE vicidial_inbound_groups ADD no_agent_action ENUM('CALLMENU','INGROUP','DID','MESSAGE','EXTENSION','VOICEMAIL') default 'MESSAGE';
+ALTER TABLE vicidial_inbound_groups ADD no_agent_action_value VARCHAR(255) default 'nbdy-avail-to-take-call|vm-goodbye';
+
+ALTER TABLE vicidial_closer_log MODIFY term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','HOLDRECALLXFER','HOLDTIME','NOAGENT','NONE') default 'NONE';
+
+UPDATE system_settings SET db_schema_version='1157';

@@ -51,10 +51,11 @@
 # 90524-2231 - Changed to use functions.php for seconds to HH:MM:SS conversion
 # 90602-0405 - Added list mix display in statuses and order if active
 # 90603-1845 - Fixed color coding bug
+# 90627-0608 - Some Formatting changes, added in-group name display
 #
 
-$version = '2.0.5-42';
-$build = '90603-1845';
+$version = '2.0.5-43';
+$build = '90627-0608';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -132,9 +133,9 @@ if (!isset($RR))			{$RR=40;}
 if (!isset($group))			{$group='';}
 if (!isset($usergroup))		{$usergroup='';}
 if (!isset($UGdisplay))		{$UGdisplay=0;}	# 0=no, 1=yes
-if (!isset($UidORname))		{$UidORname=0;}	# 0=id, 1=name
+if (!isset($UidORname))		{$UidORname=1;}	# 0=id, 1=name
 if (!isset($orderby))		{$orderby='timeup';}
-if (!isset($SERVdisplay))	{$SERVdisplay=1;}	# 0=no, 1=yes
+if (!isset($SERVdisplay))	{$SERVdisplay=0;}	# 0=no, 1=yes
 if (!isset($CALLSdisplay))	{$CALLSdisplay=1;}	# 0=no, 1=yes
 if (!isset($PHONEdisplay))	{$PHONEdisplay=0;}	# 0=no, 1=yes
 if (!isset($CUSTPHONEdisplay))	{$CUSTPHONEdisplay=0;}	# 0=no, 1=yes
@@ -151,42 +152,51 @@ $ingroup_detail='';
 if (strlen($group)>1) {$groups[0] = $group;  $RR=40;}
 else {$group = $groups[0];}
 
-function get_server_load($windows = false) {
-$os = strtolower(PHP_OS);
-if(strpos($os, "win") === false) {
-if(file_exists("/proc/loadavg")) {
-$load = file_get_contents("/proc/loadavg");
-$load = explode(' ', $load);
-return $load[0];
-}
-elseif(function_exists("shell_exec")) {
-$load = explode(' ', `uptime`);
-return $load[count($load)-1];
-}
-else {
-return false;
-}
-}
-elseif($windows) {
-if(class_exists("COM")) {
-$wmi = new COM("WinMgmts:\\\\.");
-$cpus = $wmi->InstancesOf("Win32_Processor");
+function get_server_load($windows = false) 
+	{
+	$os = strtolower(PHP_OS);
+	if(strpos($os, "win") === false) 
+		{
+		if(file_exists("/proc/loadavg")) 
+			{
+			$load = file_get_contents("/proc/loadavg");
+			$load = explode(' ', $load);
+			return $load[0];
+			}
+		elseif(function_exists("shell_exec")) 
+			{
+			$load = explode(' ', `uptime`);
+			return $load[count($load)-1];
+			}
+		else 
+			{
+		return false;
+			}
+		}
+	elseif($windows) 
+		{
+		if(class_exists("COM")) 
+			{
+			$wmi = new COM("WinMgmts:\\\\.");
+			$cpus = $wmi->InstancesOf("Win32_Processor");
 
-$cpuload = 0;
-$i = 0;
-while ($cpu = $cpus->Next()) {
-$cpuload += $cpu->LoadPercentage;
-$i++;
-}
+			$cpuload = 0;
+			$i = 0;
+			while ($cpu = $cpus->Next()) 
+				{
+				$cpuload += $cpu->LoadPercentage;
+				$i++;
+				}
 
-$cpuload = round($cpuload / $i, 2);
-return "$cpuload%";
-}
-else {
-return false;
-}
-}
-}
+			$cpuload = round($cpuload / $i, 2);
+			return "$cpuload%";
+			}
+		else 
+			{
+			return false;
+			}
+		}
+	}
 
 $load_ave = get_server_load(true);
 
@@ -1296,6 +1306,8 @@ $HDcalls =			"-------+";
 $HTcalls =			" CALLS |";
 $HDpause =	'';
 $HTpause =	'';
+$HDigcall =			"------+------------------";
+$HTigcall =			" HOLD | IN-GROUP ";
 
 if (!ereg("N",$agent_pause_codes_active))
 	{
@@ -1339,8 +1351,8 @@ if ($SERVdisplay < 1)
 
 
 
-$Aline  = "$HDbegin$HDstation$HDphone$HDuser$HDusergroup$HDsessionid$HDbarge$HDstatus$HDpause$HDcustphone$HDserver_ip$HDcall_server_ip$HDtime$HDcampaign$HDcalls\n";
-$Bline  = "$HTbegin$HTstation$HTphone$HTuser$HTusergroup$HTsessionid$HTbarge$HTstatus$HTpause$HTcustphone$HTserver_ip$HTcall_server_ip$HTtime$HTcampaign$HTcalls\n";
+$Aline  = "$HDbegin$HDstation$HDphone$HDuser$HDusergroup$HDsessionid$HDbarge$HDstatus$HDpause$HDcustphone$HDserver_ip$HDcall_server_ip$HDtime$HDcampaign$HDcalls$HDigcall\n";
+$Bline  = "$HTbegin$HTstation$HTphone$HTuser$HTusergroup$HTsessionid$HTbarge$HTstatus$HTpause$HTcustphone$HTserver_ip$HTcall_server_ip$HTtime$HTcampaign$HTcalls$HTigcall\n";
 $Aecho .= "$Aline";
 $Aecho .= "$Bline";
 $Aecho .= "$Aline";
@@ -1695,19 +1707,19 @@ $calls_to_list = mysql_num_rows($rslt);
 		$INGRP='';
 		if ($CM == 'I') 
 			{
-			$stmt="select campaign_id,stage from vicidial_auto_calls where callerid='$Acallerid[$i]' LIMIT 1;";
+			$stmt="select vac.campaign_id,vac.stage,vig.group_name from vicidial_auto_calls vac,vicidial_inbound_groups vig where vac.callerid='$Acallerid[$i]' and vac.campaign_id=vig.group_id LIMIT 1;";
 			$rslt=mysql_query($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
 			$ingrp_to_print = mysql_num_rows($rslt);
 				if ($ingrp_to_print > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$vac_campaign =	sprintf("%-20s", $row[0]);
+				$vac_campaign =	sprintf("%-20s", "$row[0] - $row[2]");
 				$row[1] = eregi_replace(".*-",'',$row[1]);
 				$vac_stage =	sprintf("%-4s", $row[1]);
 				}
 
-			$INGRP = " $G$vac_stage$EG  $G$vac_campaign$EG ";
+			$INGRP = " $G$vac_stage$EG | $G$vac_campaign$EG ";
 			}
 
 		$agentcount++;
