@@ -102,6 +102,9 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 27. Added no-agent-no-queueing options to In-Groups to send a call somewhere 
 	else when there is no agent logged in(or active) to the in-group
 
+28. Changed the agent alert extension to a filename in in-groups
+
+
 
 
 

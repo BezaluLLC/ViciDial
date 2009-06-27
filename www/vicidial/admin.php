@@ -17615,7 +17615,7 @@ if ($ADD==3111)
 		{
 		if (strlen($no_agent_action_value) < 3)
 			{$no_agent_action_value = 'nbdy-avail-to-take-call|vm-goodbye';}
-		echo "Audio File: <input type=text name=no_agent_action_value id=no_agent_action_value size=50 maxlength=255 value=\"$no_agent_action_value\"> <a href=\"javascript:launch_chooser('no_agent_action_value','date',$choose_height);\">audio chooser</a>\n";
+		echo "Audio File: <input type=text name=no_agent_action_value id=no_agent_action_value size=50 maxlength=255 value=\"$no_agent_action_value\"> <a href=\"javascript:launch_chooser('no_agent_action_value','date',600);\">audio chooser</a>\n";
 		}
 	if ($no_agent_action=='EXTENSION')
 		{

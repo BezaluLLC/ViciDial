@@ -18,6 +18,7 @@
 # 90105-1155 - Added AS400 export formats and changed around date override
 # 90106-2309 - Added email sending
 # 90620-0900 - Formatting fixes
+# 90627-0757 - Added time addition when transfer recordings is enabled
 # 
 
 $txt = '.txt';
@@ -775,7 +776,7 @@ sub select_format_loop
 
 		### Look for other closer calls after this call
 		$more_calls[0]='';
-		$stmtB = "select closecallid from vicidial_closer_log where lead_id='$lead_id' and call_date > '$call_date' and call_date < '$shipdate 23:59:59' order by call_date limit 10;";
+		$stmtB = "select closecallid,length_in_sec,queue_seconds from vicidial_closer_log where lead_id='$lead_id' and call_date > '$call_date' and call_date < '$shipdate 23:59:59' order by call_date limit 10;";
 		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 		$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 		$sthBrows=$sthB->rows;
@@ -784,6 +785,8 @@ sub select_format_loop
 			{
 			@aryB = $sthB->fetchrow_array;
 			$more_calls[$rec_countB] =	"$aryB[0]";
+			$length_in_sec = ($length_in_sec + $aryB[1]);
+			$queue_seconds = ($queue_seconds + $aryB[2]);
 			$rec_countB++;
 			}
 		$sthB->finish();
