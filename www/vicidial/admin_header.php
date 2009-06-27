@@ -584,7 +584,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				{
 				selected_value = '<option SELECTED value="' + value + '">' + value + "</option>\n";
 				}
-			new_content = '<span name=option_route_value_' + option + 'id=option_route_value_' + option + '><a href="./admin.php?ADD=3511&menu_id=' + value + ">Call Menu: </a></span><select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option +  + " onChange=\"call_menu_link('" + option + "','CALLMENU');\">" + call_menu_list + "\n" + selected_value + '</select>';
+			new_content = '<span name=option_route_value_' + option + 'id=option_route_value_' + option + "><a href=\"./admin.php?ADD=3511&menu_id=" + value + "\">Call Menu: </a></span><select size=1 name=option_route_value_" + option + ' id=option_route_value_' + option + " onChange=\"call_menu_link('" + option + "','CALLMENU');\">" + call_menu_list + "\n" + selected_value + '</select>';
 			}
 		if (selected_route=='INGROUP')
 			{
@@ -682,15 +682,15 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 
 		if (route=='CALLMENU')
 			{
-			new_content = '<a href="admin.php?ADD=3511&menu_id=' + selected_value + '">Call Menu:</a>';
+			new_content = "<a href=\"admin.php?ADD=3511&menu_id=" + selected_value + "\">Call Menu:</a>";
 			}
 		if (route=='INGROUP')
 			{
-			new_content = '<a href="admin.php?ADD=3111&group_id=' + selected_value + '">In-Group:</a>';
+			new_content = "<a href=\"admin.php?ADD=3111&group_id=" + selected_value + "\">In-Group:</a>";
 			}
 		if (route=='DID')
 			{
-			new_content = '<a href="admin.php?ADD=3311&did_pattern=' + selected_value + '">DID:</a>';
+			new_content = "<a href=\"admin.php?ADD=3311&did_pattern=" + selected_value + "\">DID:</a>";
 			}
 
 		if (new_content.length < 1)
