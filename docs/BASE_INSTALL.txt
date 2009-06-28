@@ -1,4 +1,4 @@
-Asterisk/astguiclient install from existing server.    v.2.2.0        2009-04-03
+Asterisk/astguiclient install from existing server.    v.2.2.0        2009-06-28
    By the VICIDIAL group                                      info@vicidial.com
 
 
@@ -6,7 +6,15 @@ This document is meant to be more of an overview of a VICIDIAL/astGUIclient
 installation. If you are looking for more detail or are having problems with 
 installation please read the SCRATCH_INSTALL.txt document.
 
+
 End-user Manuals for Agents and Managers are available from http://www.eflo.net
+
+There is also an easier Ubuntu install doc: Ubuntu_Install.txt
+
+If you want to skip the experience of installing step-by-step completely, take
+a look at our ISO installer: http://www.vicibox.com
+
+
 
 REQUIREMENTS:
 - root access on the server you want to install asGUIclient/VICIDIAL on to.
@@ -18,10 +26,10 @@ REQUIREMENTS:
 - GNU screen 3.9.15 or greater must be installed
 - ntp must be installed and syncd to same time source as any other servers
 - Perl5 with several CPAN modules(Time::HiRes, DBI, DBD::mysql, Net::Telnet, Net::Server etc)
-- asterisk-perl 0.08, do NOT use the 0.09 version, it does not work with VICIDIAL
-- MySQL server or mysqlclientlibs, must be version 4.0.X or higher
+- asterisk-perl 0.08, do NOT use newer versions, they do not work with VICIDIAL
+- MySQL server or mysqlclientlibs, must be version 5.0.X or higher
 - If you will be installing Asterisk 1.4 releases you need Gnu Make 3.81
-- Apache/PHP server with php.ini memory_limit set to 48M
+- Apache/PHP server with php.ini memory_limit set to 48M or higher
 
 
 
@@ -29,86 +37,42 @@ REQUIREMENTS:
 PHASE 1: INSTALLING ASTERISK
 
 1. follow these command line steps:
-mkdir /usr/src/asterisk
-cd /usr/src/asterisk
-wget http://downloads.digium.com/pub/asterisk/releases/asterisk-1.2.30.2.tar.gz
-wget http://downloads.digium.com/pub/zaptel/releases/zaptel-1.2.27.tar.gz
-wget http://downloads.digium.com/pub/libpri/releases/libpri-1.2.8.tar.gz
-gunzip asterisk-1.2.30.2.tar.gz
-tar xvf asterisk-1.2.30.2.tar
-gunzip zaptel-1.2.27.tar.gz
-tar xvf zaptel-1.2.27.tar
-gunzip libpri-1.2.8.tar.gz
-tar xvf libpri-1.2.8.tar
-cd ./zaptel-1.2.27
-wget http://download.vicidial.com/packages/newt-0.51.6.tar.gz
-gunzip newt-0.51.6.tar.gz
-tar xvf newt-0.51.6.tar
-cd newt-0.51.6
-./configure
-make
-make install
-cd ../
-ln -s /usr/lib/libnewt.so.0.51.6 /usr/lib/libnewt.so.0.51
-make clean
-make zttool
-make
-make install
-cd ../libpri-1.2.8
-make clean
-make
-make install
-cd ../asterisk-1.2.30.2
-	(1.2 tree) If you want to include Answering Machine Detection ability
-	  you will need to download app_amd.c and amd.conf and alter the 
-	  apps/Makefile to compile it properly
-	cd apps
-	wget http://www.eflo.net/files/app_amd2.c
-	mv app_amd2.c app_amd.c
-	vi Makefile
-	  replace this line(line 32):
-	       app_mixmonitor.so app_stack.so
-	  with this line:
-	       app_mixmonitor.so app_stack.so app_amd.so
-	wget http://www.eflo.net/files/amd2.conf
-	mkdir /etc/asterisk
-	mv amd2.conf /etc/asterisk/amd.conf
-	*OPTIONAL*(1.2.23 thru 1.2.30.2) apply the meetme DTMF passthru patch
-	wget http://www.eflo.net/files/meetme_DTMF_passthru-1.2.23.patch
-	patch -p1 < ./meetme_DTMF_passthru-1.2.23.patch
-		- File to patch: app_meetme.c
-	*OPTIONAL*(1.2.12.1 thru 1.2.30.2) apply the meetme volume control patch
-		*Different patches available for 1.2.7.1 through 1.2.14
-	wget http://www.eflo.net/files/meetme_volume_control_1.2.16.patch
-	patch -p1 < ./meetme_volume_control_1.2.16.patch
-		- File to patch: app_meetme.c
-	cd ../
 
-	(1.2 tree) apply the cli delimiter patch
-	wget http://www.eflo.net/files/cli_chan_concise_delimiter.patch
-	patch -p1 < ./cli_chan_concise_delimiter.patch
-		- File to patch: cli.c
-
-	*OPTIONAL*(1.2.14 thru 1.2.30.2) rewrite of waitforsilence
-	wget http://download.vicidial.com/asterisk-patches/app_waitforsilence.c
-	mv -f app_waitforsilence.c apps/app_waitforsilence.c
-
-	* REQUIRED for gcc 4.2 systems*
-	wget http://download.vicidial.com/asterisk-patches/1.2-gsm-gcc4.2.patch
-	patch -p1 ./codecs/gsm/Makefile 1.2-gsm-gcc4.2.patch
-
-	*OPTIONAL* shorter enter and leave sounds for meetme
+	mkdir /usr/src/asterisk-1.4
+	cd /usr/src/asterisk-1.4
+	wget http://downloads.digium.com/pub/asterisk/old-releases/asterisk-1.4.21.2.tar.gz
+	wget http://downloads.digium.com/pub/zaptel/zaptel-1.4.12.1.tar.gz
+	wget http://downloads.digium.com/pub/libpri/libpri-1.4.9.tar.gz
+	tar xzf asterisk-1.4.21.2.tar.gz
+	tar xzf zaptel-1.4.12.1.tar.gz 
+	tar xzf libpri-1.4.9.tar.gz
+	cd libpri-1.4.9
+	make clean; make; make install
+	cd ../zaptel-1.4.12.1
+	./configure; make clean; make; make install
+	cd ../asterisk-1.4.21.2
 	wget http://www.eflo.net/files/enter.h
 	wget http://www.eflo.net/files/leave.h
 	mv -f enter.h apps/enter.h
 	mv -f leave.h apps/leave.h
+	wget http://download.vicidial.com/asterisk-patches/1.4-gsm-gcc4.2.patch
+	patch -p1 ./codecs/gsm/Makefile 1.4-gsm-gcc4.2.patch
+	wget http://download.vicidial.com/conf/res_agi_defunct.patch
+	patch -p1 < res_agi_defunct.patch
+		 File to patch: res/res_agi.c
+	cd apps/
+	rm -f app_waitforsilence.c
+	wget http://download.vicidial.com/conf/app_waitforsilence.c
+	cd ../channels/
+	rm chan_sip.c
+	wget http://download.vicidial.com/conf/chan_sip.c
+	cd ../
+	./configure; make clean; make; make install
+	   # this makes sample conf files (only use for new installs)
+	make samples
+	modprobe zaptel
+	modprobe ztdummy (if you have no timer)
 
-make clean
-make
-make install
-make samples		# this makes sample conf files (only use for new installs)
-
-modprobe zaptel	# this loads the zaptel module
 	- install the module for the digium device that you are using, we are 
 	using the T100P single span T1 card so we use:
 modprobe wct1xxp
@@ -157,6 +121,10 @@ Digium/Clone T100P EXAMPLE, also works for TE4xxp cards
 
 
 PHASE 2: CONFIGURING ASTERISK
+
+### Mostly depricated, ViciDial now allows you to configure phones in the admin
+web interface
+
 
 Sample conf files for a system with:
 - astGUIclient and VICIDIAL
@@ -560,13 +528,11 @@ NEW and submit. Now your system is ready to dial.
 PHASE 8: astGUIclient and VICIDIAL WEB CLIENTS
 
 The browser requirements for the web-client interfaces are:
-- Firefox 0.9 or greater (Firefox 1.0.7 is the recommended browser)
+- Firefox 1.0 or greater   *** RECOMMENDED***
 - Mozilla 1.7 or greater
 - Netscape 8 or greater
 - Opera 8.5 or greater
-- Microsoft Internet Explorer 5.0 or greater (we have noticed some serious
-  memory leaks in IE5 and IE6 when using this program, they do not occur in
-  Firefox which is why we recommend it overall.)
+- Microsoft Internet Explorer 6.0 or greater 
 
 To log into this app you will need a login setup in the vicidial_users table 
 as well as an entry for the phone you are using in the phones table. You will 

@@ -336,7 +336,8 @@ make install
 
 
 
-#### OPTIONAL NEWEST VERSIONS OF ASTERISK ####
+#### OPTIONAL 1.2.X VERSIONS OF ASTERISK ####
+(1.4.X instructions are further down)
 
 mkdir /usr/src/asterisk
 cd /usr/src/asterisk
@@ -511,34 +512,37 @@ rm -f /usr/lib/asterisk/modules/res_speech.so
 
 mkdir /usr/src/asterisk-1.4
 cd /usr/src/asterisk-1.4
-wget http://downloads.digium.com/pub/asterisk/releases/asterisk-1.4.21.2.tar.gz
-wget http://downloads.digium.com/pub/zaptel/releases/zaptel-1.4.12.1.tar.gz
-wget http://downloads.digium.com/pub/libpri/releases/libpri-1.4.7.tar.gz
-gunzip asterisk-1.4.21.2.tar.gz
-tar xvf asterisk-1.4.21.2.tar
-gunzip zaptel-1.4.12.1.tar.gz
-tar xvf zaptel-1.4.12.1.tar
-gunzip libpri-1.4.7.tar.gz
-tar xvf libpri-1.4.7.tar
-cd ./zaptel-1.4.12.1
-./configure
-make
-make install
-cd ../libpri-1.4.7
-make clean
-make
-make install
+wget http://downloads.digium.com/pub/asterisk/old-releases/asterisk-1.4.21.2.tar.gz
+wget http://downloads.digium.com/pub/zaptel/zaptel-1.4.12.1.tar.gz
+wget http://downloads.digium.com/pub/libpri/libpri-1.4.9.tar.gz
+tar xzf asterisk-1.4.21.2.tar.gz
+tar xzf zaptel-1.4.12.1.tar.gz 
+tar xzf libpri-1.4.9.tar.gz
+cd libpri-1.4.9
+make clean; make; make install
+cd ../zaptel-1.4.12.1
+./configure; make clean; make; make install
 cd ../asterisk-1.4.21.2
-wget http://download.vicidial.com/asterisk-patches/1.4-gsm-gcc4.2.patch
-patch -p1 ./codecs/gsm/Makefile 1.4-gsm-gcc4.2.patch
 wget http://www.eflo.net/files/enter.h
 wget http://www.eflo.net/files/leave.h
 mv -f enter.h apps/enter.h
 mv -f leave.h apps/leave.h
-./configure
-make
-make install
-
+wget http://download.vicidial.com/asterisk-patches/1.4-gsm-gcc4.2.patch
+patch -p1 ./codecs/gsm/Makefile 1.4-gsm-gcc4.2.patch
+wget http://download.vicidial.com/conf/res_agi_defunct.patch
+patch -p1 < res_agi_defunct.patch
+         File to patch: res/res_agi.c
+cd apps/
+rm -f app_waitforsilence.c
+wget http://download.vicidial.com/conf/app_waitforsilence.c
+cd ../channels/
+rm chan_sip.c
+wget http://download.vicidial.com/conf/chan_sip.c
+cd ../
+./configure; make clean; make; make install
+make samples
+modprobe zaptel
+modprobe ztdummy
 
 
 

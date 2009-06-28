@@ -1,10 +1,15 @@
-Asterisk/astguiclient install from scratch.    v.2.2.0               2009-04-03
+Asterisk/astguiclient install from scratch.    v.2.2.0               2009-06-28
    By the VICIDIAL group                                      info@vicidial.com
 
 **** IMPORTANT - In order for vicidial/astguiclient to function correctly please
 read the REQUIREMENTS.txt for a minimum requirements list. ***
 
 End-user Manuals for Agents and Managers are available from http://www.eflo.net
+
+There is also an easier Ubuntu install doc: Ubuntu_Install.txt
+
+If you want to skip the experience of installing step-by-step completely, take
+a look at our ISO installer: http://www.vicibox.com
 
 
 This document is meant to be a very in-depth step-by-step explanation of 
@@ -15,46 +20,40 @@ in choices of hardware and software.
 
 The actual installation that I am doing as I write these instructions will be on 
 the following hardware:
+ (Changed to more realistic modern hardware)
+ - Intel Core 2 Quad CPU
+ - SuperMicro Motherboard
+ - 4GB RAM
+ - 160GB Western Digital SATA ES drive
+ - Sangoma VoiceTime USB hardware timer
+ - 2U rackmount case with 450W power supply
+ - VOIP Phone will be a Zoiper softphone because it's free and does both IAX/SIP
 
- - Pentium 3 500MHz
- - Intel motherboard D815BN
- - 256MB PC133 RAM
- - 80GB IBM deskstar 7200RPM Hard Drive
- - Digium Wildcard Single Span T1 Card T100P
- - 2U rackmount case with 250W power supply
- - Phone hardware will be a Grandstream BT102 and a Sipura SPA-2000 because they 
-are so cheap and readily available
+All of these parts cost less than $1500 together.
 
-All of these parts, aside from the Digium card and the two SIP VOIP devices, 
-were purchased from ebay and the entire package(with the two VOIP devices and 
-all server hardware included) cost me about $1100 to put together including the 
-phones and Digium adapter.
-
-We have many other Asterisk servers at our main office, but this one can be 
-experimented with easily because it was so cheap to make and has a relatively 
-small capacity when compared with a multi-processor server with a quad span T1 
-card.
-
-This is our test Asterisk server and functions well for a dozen or so extensions 
+This is our test Asterisk server and functions well for 100 or so extensions 
 in use if it were to be used in production. A size that is optimal for many 
-small offices operating with a fractional data/voice T1 for instance.
+small offices operating with a fractional data/voice T1 for instance. This 
+hardware would also be good for a stand-alone ViciDial system with about 50 
+agents handling inbound calls with full recording, or 25 agents doing heavy
+predictive outbound dialing.
 
-For hardware you can use almost any Pentium-class processor(PII, PIII, Athlon, 
-Xeon, etc), and you can use any digium telco interface card. Both of these 
-choices will determine what the capacity of your Asterisk server will be. If you
-want to do simple IVR or conference calling and a few extensions, then a PIII 
-with a single Digium T1 card will work just fine for you. If you want to use the
-VICIDIAL application, you will want to get as high-powered of a machine as you 
-can afford and get a digium quad-span T1 card.
+For hardware you can use almost any modern CPU processor(Intel core2, Xeon, etc)
+, and you can use any Digium or Sangoma telco interface card or USB timer. Both 
+of these choices will determine what the capacity of your Asterisk/ViciDial 
+server will be. If you want to do simple IVR or conference calling and a few 
+extensions, then an Intel Celeron 2GHz with a single Sangoma USB VoiceTime 
+dongle will work just fine for you. If you want to use the ViciDial applications
+, you will usually want to get as high-powered of a machine as you can afford.
 
 The following is assumed for these installation procedures:
-- You have access to a CD burner and 3 blank CDs
+- You have access to a CD burner and 3 blank CDs(or 1 CD and 1 DVD)
 - You have some sort of broadband internet connection
 - You understand basic linux commands and can use a file editor like vi
 - You have all of the necessary hardware:
 	- a pentium-class computer
 	- a digium telco interface card with appropriate telco lines
-	- at least 1 SIP VOIP device
+	- at least 1 SIP/IAX VOIP device(this can be a softphone too)
 	- a Local Area Network(LAN) with extra ports enough for the new server 
 and the number of phones you want
 
@@ -65,7 +64,7 @@ and the number of phones you want
 PHASE 1: INSTALLING AN OPERATING SYSTEM
 
 
-This installation will be using Slackware 11 for the linux distribution, 
+This installation will be using Slackware 12 for the linux distribution, 
 Slackware 12.X will also work with these instructions. There are several easier 
 linux distributions and there are others that are more popular, but Slackware is 
 a nice non-commercial distro that has been around for a long time and proven 
@@ -83,7 +82,7 @@ to it. You will select "filesystem utilities" and then "XFDISK"
 
 3.	Select any old partitions and delete them and then create 2 new 
 partitions:
-   - 70000 MB, select yes to validate, change partition type to "Linux Native"
+   - 150000 MB, select yes to validate, change partition type to "Linux Native"
    - 3332 MB, select yes to validate, change partition type to "Linux Swap"
    - press F3 to exit and let it do it's thing, this will take an hour or so.
 
@@ -172,10 +171,9 @@ If you are using a newer Digium Octasic-based echo-cancellation quad T1/E1 card
 then you need to use a 2.6 Linux kernel in order to use the echo-cancellation
 functionality of the card.
 
-If you want to compile a 2.6 kernel then start with OPTION 1, otherwise to 
-compile the 2.4 kernel that comes with Slackware(2.4.33) start with OPTION 2:
+If you want to compile a 2.6 kernel then start with OPTION 1:
 
-OPTION 1: compile Linux kernel 2.6.17 *RECOMMENDED*
+OPTION 1: compile Linux kernel 2.6.17 *NOT REQUIRED*
 
 1. cd /usr/src
 2. wget http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.17.11.tar.gz
@@ -273,44 +271,6 @@ OPTION 1: compile Linux kernel 2.6.17 *RECOMMENDED*
 	tmpfs                /var/spool/asterisk/monitor  tmpfs  rw                    0 0
 21. shutdown -r 0			# reboot machine and hope it worked
 
-OPTION 2: compile Linux kernel 2.4.33.3 (not recommended, very old)
-
-1.  cd /usr/src/linux			# move to your linux source directory
-2.  cp .config config.save		# copy old config to a save file
-3.  make mrproper			# prep for kernel assembly
-4.  make menuconfig			# launch configuration menu app
-    (this part is very dependant upon your own hardware)
-	enable processor version	# select the processor that you have
-	enable SMP			# if more than 1 processor or Intel HT
-	enable high memory ()		# if more than 1GB of RAM
-	enable SCSI Multiple		# if SCSI drives
-	enable SCSI devices AMI Megaraid	# if SCSI Megaraid adapter
-	enable 3com network devices	# if 3com network card
-	enable ext3 file system		# for ext3 to work
-	enable all ACPI options		# for SMP to work
-	enable Enhanced Real Time Clock Support in Character devices section
-					# for SMP to work
-	enable any other hardware specific options
-	exit and save configuration
-5.  make dep				# build the kernel dependancies
-6.  make clean				# clean up the kernel build areas
-7.  make bzImage			# create a kernel bzImage
-8.  make modules			# build the modules into the image
-9.  make modules_install		# install kernel modules
-10. # nothing# mkinitrd /boot/initrd-XXXXXX.img XXXXXX *not needed on Slackware*
-11. cp arch/i386/boot/bzImage /boot/bzImage-XXXXXX	# copy image
-	(put whatever you want in XXXXXX, that is your new kernel name)
-12. cp System.map /boot/System.map-XXXXXXN	# copy system map
-13. mv -f /boot/System.map /boot/System.map-orig
-14. ln -s /boot/System.map-XXXXXX /boot/System.map	# symlink map
-15. vi /etc/lilo.conf			# edit the lilo boot config file
-	image=/boot/bzImage-XXXXXX	# add the new image in above-
-	label=test-XXXXXX		#    the previous one
-	root=/dev/hda1			# device of root partition
-	read-only
-16. /sbin/lilo				# run the lilo reload script
-17. shutdown -r 0			# reboot machine and hope it worked
-
 
 After compiling your kernel you can run a few commands to verify that you are 
 running your new kernel and that devices are running as they are supposed to:
@@ -397,6 +357,7 @@ a more loaded system.
 	 	skip-name-resolve
 	 	# comment out the line 'log-bin=mysql-bin'
 	 	max_connections = 200
+		connect_timeout=60
 
 	   **** For some systems you may need to add the mysql/bin directory to your PATH:
 		- PATH=$PATH:$HOME/bin:/usr/local/mysql/bin/
@@ -423,12 +384,10 @@ a more loaded system.
 
 SUBPHASE 3.2: Installing Perl Modules
 
-NOTE - you can install ActiveState http://www.activestate.com perl which may 
-improve performance, but it is not required. Here's the source for ActiveState
+NOTE - you can install ActiveState http://www.activestate.com perl, but it is 
+not required. Here's the source for ActiveState
 Perl 5.8: (it's free)
 	http://downloads.activestate.com/ActivePerl/src/5.8/AP817_source.tgz
-I hope to add the lengthy steps for installing it as your default perl on your
-server but I need some time and a free machine to do that.
 
 cpan is the "Comprehensive Perl Archive Network". It's a mirrored archive of 
 most of the perl modules out there complete with a installation and management 
@@ -475,7 +434,7 @@ following modules first:   (say YES if asked to install prerequisites)
 - then quit cpan, you are done
 5. Go to http://asterisk.gnuinter.net/ and download the asterisk-perl module
 (backup link: http://download.vicidial.com/packages/asterisk-perl-0.08.tar.gz)
-NOTE: Do NOT use the 0.09 version, it does not work with VICIDIAL
+NOTE: Do NOT use the 0.09 or any newer version, they do not work with VICIDIAL
    - to install this directly on the command line type:
 	- cd /usr/local
 	- wget http://asterisk.gnuinter.net/files/asterisk-perl-0.08.tar.gz
@@ -886,121 +845,54 @@ PHASE 4: INSTALLING ASTERISK
 
 OK, all the prep work is done, now it's time to start having fun with Asterisk. 
 There are two basic ways to install Asterisk, an official release(at the time of 
-this writing the official release is 1.2.30.2) and the SVN_DEV version(development
-branch). We recommend using Asterisk 1.2.30.2. These instructions are how we get 
-our Asterisk system with it's T1 line installed with our 2 SIP VOIP devices and 
-one IAX2 softphone. 
+this writing the recommended release is 1.4.21.2). These instructions are how we
+get our Asterisk system with it's T1 line installed with our Zoiper softphone. 
 
-NOTE: If you want to use Asterisk 1.4, you will need to make sure that you set
+NOTE: If you want to use Asterisk 1.2, you will need to make sure that you set
 the servers table "asterisk_version" field to the proper version number and you
-can use the docs/conf_examples/extensions.conf.sample-1.4 file for your default
+can use the docs/conf_examples/extensions.conf.sample file for your default
 dialplan
 
-NOTE: If you want to use release 1.0.8 or 9 we would recommend either using the 
-CVS_v1-0 branch where the issues are fixed, or patching your 1.0.8/1.0.9 code
-with the following patch: 
-(http://astguiclient.sourceforge.net/experimental_code/localmasq.patch)
-- If you do patch your system make sure you put the asterisk version 
-  field for the server on the admin pages as '1.0.11.1'
-
 1. follow these command line steps:
-	- mkdir /usr/src/asterisk
-	- cd /usr/src/asterisk
-   A. if you want 1.2 release (reliable with new features):
-	- wget http://downloads.digium.com/pub/asterisk/releases/asterisk-1.2.30.2.tar.gz
-	- wget http://downloads.digium.com/pub/zaptel/releases/zaptel-1.2.27.tar.gz
-	- wget http://downloads.digium.com/pub/libpri/releases/libpri-1.2.5.tar.gz
-	- gunzip asterisk-1.2.30.2.tar.gz
-	- tar xvf asterisk-1.2.30.2.tar
-	- gunzip zaptel-1.2.27.tar.gz
-	- tar xvf zaptel-1.2.27.tar
-	- gunzip libpri-1.2.5.tar.gz
-	- tar xvf libpri-1.2.5.tar
-   B. if you want latest SVN_1.2 version (release tree with new patches)
-	- svn checkout http://svn.digium.com/svn/asterisk/branches/1.2 asterisk-1.2
-	- svn checkout http://svn.digium.com/svn/zaptel/branches/1.2 zaptel-1.2
-	- svn checkout http://svn.digium.com/svn/libpri/branches/1.2 libpri-1.2
-   C. if you want latest SVN_DEV version (not recommended) [1.6 tree]
-	- svn checkout http://svn.digium.com/svn/asterisk/trunk asterisk
-	- svn checkout http://svn.digium.com/svn/zaptel/trunk zaptel
-	- svn checkout http://svn.digium.com/svn/libpri/trunk libpri
-  - ALL ->
-	- (1.0 tree)if you want to allow for more than 100 voicemail messages in a 
-          mailbox(warning this will slightly increase memory usage when a call
-	  is in voicemail) edit the voicemail source code file:
-	   -  vi /usr/src/asterisk/asterisk/apps/app_voicemail.c
-		edit this line and change 100 to 999:
-		#define MAXMSG 100
-	- (1.0 tree)if you have no X server installed on your Asterisk machine, then you 
-	  will need to comment out the gtk console lib(only affects 1.0 releases)
-	  edit the voicemail source code file:
-	   -  vi /usr/src/asterisk/asterisk/pbx/Makefile
-		edit this line at the top and just add a hash # in front of it as shown:
-		#PBX_LIBS+=$(shell $(CROSS_COMPILE_BIN)gtk-config --cflags >/dev/null 2>/dev/null && echo "pbx_gtkconsole.so")
-
-	- cd ./zaptel-1.2.27
-	- make clean
-	- make
-	- make install
-	- cd ../libpri-1.2.5
-	- make clean
-	- make
-	- make install
-	- cd ../asterisk-1.2.30.2
-		- (1.2 tree) If you want to include Answering Machine Detection ability
-		  you will need to download app_amd.c and amd.conf and alter the 
-		  apps/Makefile to compile it properly
-		- cd apps
-		- wget http://www.eflo.net/files/app_amd2.c
-		- mv app_amd2.c app_amd.c
-		- vi Makefile
-		  replace this line(line 32):
-		       app_mixmonitor.so app_stack.so
-		  with this line:
-		       app_mixmonitor.so app_stack.so app_amd.so
-		- wget http://www.eflo.net/files/amd2.conf
-		- mkdir /etc/asterisk
-		- mv amd2.conf /etc/asterisk/amd.conf
-		*OPTIONAL*(1.2.23 thru 1.2.30.2) apply the meetme DTMF passthru patch
-		- wget http://www.eflo.net/files/meetme_DTMF_passthru-1.2.23.patch
-		- patch -p1 < ./meetme_DTMF_passthru-1.2.23.patch
-		- File to patch: app_meetme.c
-		*OPTIONAL*(1.2.12.1 thru 1.2.30.2) apply the meetme volume control patch
-			*Different patches available for 1.2.7.1 through 1.2.14
-		- wget http://www.eflo.net/files/meetme_volume_control_1.2.16.patch
-		- patch -p1 < ./meetme_volume_control_1.2.16.patch
-			- File to patch: app_meetme.c
-		- cd ../
-
-		-(1.2 tree) apply the cli delimiter patch
-		- wget http://www.eflo.net/files/cli_chan_concise_delimiter.patch
-		- patch -p1 < ./cli_chan_concise_delimiter.patch
-			- File to patch: cli.c
-		
-		-(gcc version 4.2) apply the gsm audio codec patch to fix gsm
-		- wget http://download.vicidial.com/asterisk-patches/1.2-gsm-gcc4.2.patch
-		- patch -p1 ./codecs/gsm/Makefile 1.2-gsm-gcc4.2.patch
-
-		*OPTIONAL*(1.2.14 thru 1.2.30.2) rewrite of waitforsilence
-		- wget http://download.vicidial.com/asterisk-patches/app_waitforsilence.c
-		- mv -f app_waitforsilence.c apps/app_waitforsilence.c
-
-		*OPTIONAL* shorter enter and leave sounds for meetme
-		- wget http://www.eflo.net/files/enter.h
-		- wget http://www.eflo.net/files/leave.h
-		- mv -f enter.h apps/enter.h
-		- mv -f leave.h apps/leave.h
-
-
-	- make clean
-	- make
-	- make install
-	- make samples		# this makes sample conf files (only use for new installs)
+	mkdir /usr/src/asterisk-1.4
+	cd /usr/src/asterisk-1.4
+	wget http://downloads.digium.com/pub/asterisk/old-releases/asterisk-1.4.21.2.tar.gz
+	wget http://downloads.digium.com/pub/zaptel/zaptel-1.4.12.1.tar.gz
+	wget http://downloads.digium.com/pub/libpri/libpri-1.4.9.tar.gz
+	tar xzf asterisk-1.4.21.2.tar.gz
+	tar xzf zaptel-1.4.12.1.tar.gz 
+	tar xzf libpri-1.4.9.tar.gz
+	cd libpri-1.4.9
+	make clean; make; make install
+	cd ../zaptel-1.4.12.1
+	./configure; make clean; make; make install
+	cd ../asterisk-1.4.21.2
+	wget http://www.eflo.net/files/enter.h
+	wget http://www.eflo.net/files/leave.h
+	mv -f enter.h apps/enter.h
+	mv -f leave.h apps/leave.h
+	wget http://download.vicidial.com/asterisk-patches/1.4-gsm-gcc4.2.patch
+	patch -p1 ./codecs/gsm/Makefile 1.4-gsm-gcc4.2.patch
+	wget http://download.vicidial.com/conf/res_agi_defunct.patch
+	patch -p1 < res_agi_defunct.patch
+		 File to patch: res/res_agi.c
+	cd apps/
+	rm -f app_waitforsilence.c
+	wget http://download.vicidial.com/conf/app_waitforsilence.c
+	cd ../channels/
+	rm chan_sip.c
+	wget http://download.vicidial.com/conf/chan_sip.c
+	cd ../
+	./configure; make clean; make; make install
+	   # this makes sample conf files (only use for new installs)
+	make samples
+	modprobe zaptel
 
 	- modprobe zaptel	# this loads the zaptel module
 	- install the module for the digium device that you are using, we are 
 using the T100P single span T1 card so we use:
 	- modprobe wct1xxp
+	or if you have no timer, just "modprobe ztdummy"
 	   Here's the list of all digium cards and the modules you use with 
 them:
 		Card      Module
@@ -1429,141 +1321,8 @@ files, so be warned:
 	- vi /etc/asterisk/extensions.conf
 
 You should be using the sample extensions.conf that is included with the
-release of VICIDIAL that you installed, below is just an explanation of what
-most of those entries do and why they are there.
-
-	   This is known as the dialplan. Since we are installing a 
-Long-Distance T1 with one 800 number on it, we will need to put that 
-800 number in the plan, as well as how to dial out through the T1 
-lines and we will need to add an entry for each of the phones that we 
-have just set up in the sip.conf file. There are many examples both 
-in the sample file and online for what to put in your dialplan, here 
-is the simplified dialplan that we are using:
-######------ START extensions.conf example ------######
-[general]
-static=yes
-writeprotect=no
-
-[globals]
-CONSOLE=Console/dsp                             ; Console interface for demo
-TRUNK=Zap/g1                                    ; Trunk interface
-TRUNKX=Zap/g2					; 2nd trunk interface
-TRUNKIAX=IAX2/ASTtest1:test@10.10.10.16:4569	; IAX trunk interface
-TRUNKloop = IAX2/ASTloop:test@127.0.0.1:40569	; used for blind monitoring
-TRUNKblind = IAX2/ASTblind:test@127.0.0.1:41569	; used for testing
-
-[default]
-; Extension 8600 + 8601 conference rooms
-exten => 8600,1,Meetme,8600
-exten => 8601,1,Meetme,8601
-
-; Extension 102 - Grandstream hardphone
-exten => 102,1,Playback,transfer|skip     ; "Please hold while..."
-exten => 102,2,Dial,sip/gs102|20|to       ; Ring, 20 secs max
-exten => 102,3,Voicemail,u102             ; Send to voicemail...
-; Extension 2000 Sipura line 1
-exten => 2000,1,Dial,sip/spa2000|30|to    ; Ring, 30 secs max
-exten => 2000,2,Voicemail,u2000           ; Send to voicemail...
-; Extension 2001 Sipura line 2
-exten => 2001,1,Dial,sip/spa2001|30|to    ; Ring, 30 secs max
-exten => 2001,2,Voicemail,u2001           ; Send to voicemail...
-; Extension 2020 rings both sipura lines
-exten => 2001,1,Dial,sip/spa2000&sip/spa2001|30|to    ; Ring, 30 secs max
-exten => 2001,2,Voicemail,u2000           ; Send to voicemail...
-; Extension 301 rings the firefly softphone
-exten => 301,1,Dial,(IAX2/firefly01@firefly01/s)
-exten => 301,2,Hangup
-
-; Extension 3429 - Inbound 800 number (1-800-555-3429)
-exten => _**3429,1,Ringing
-exten => _**3429,2,Answer
-exten => _**3429,3,Dial,sip/spa2000&sip/spa2001|30|to    ; Ring, 30 secs max
-exten => _**3429,4,Voicemail,u2000           ; Send to voicemail...
-; Extension 3429 - with ANI [callerID]
-exten => _*NXXNXXXXXX*3429,1,Ringing
-exten => _*NXXNXXXXXX*3429,2,Answer
-exten => _*NXXNXXXXXX*3429,3,Dial,sip/spa2000&sip/spa2001|30|to    ; Ring, 30 
-secs max
-exten => _*NXXNXXXXXX*3429,4,Voicemail,u2000           ; Send to voicemail...
-
-; dial a long distance outbound number to the UK
-exten => _901144XXXXXXXXXX,1,Dial(${TRUNKX}/${EXTEN:1},55,tTo)
-exten => _901144XXXXXXXXXX,2,Hangup
-
-; dial a long distance outbound number to Australia
-exten => _901161XXXXXXXXX,1,Dial(${TRUNKX}/${EXTEN:1},,tTo)
-exten => _901161XXXXXXXXX,2,Hangup
-
-; dial an 800 outbound number
-exten => _91800NXXXXXX,1,Dial(${TRUNK}/${EXTEN:1},,tTo)
-exten => _91800NXXXXXX,2,Hangup
-exten => _91888NXXXXXX,1,Dial(${TRUNK}/${EXTEN:1},,tTo)
-exten => _91888NXXXXXX,2,Hangup
-exten => _91877NXXXXXX,1,Dial(${TRUNK}/${EXTEN:1},,tTo)
-exten => _91877NXXXXXX,2,Hangup
-exten => _91866NXXXXXX,1,Dial(${TRUNK}/${EXTEN:1},,tTo)
-exten => _91866NXXXXXX,2,Hangup
-
-; dial a local 727 outbound number with area code
-exten => _9727NXXXXXX,1,Dial(${TRUNK}/1${EXTEN:1},,tTo)
-exten => _9727NXXXXXX,2,Hangup
-
-; dial a local 813 outbound number with area code
-exten => _9813NXXXXXX,1,Dial(${TRUNK}/${EXTEN:1},,tTo)
-exten => _9813NXXXXXX,2,Hangup
-
-; dial a long distance outbound number
-exten => _91NXXNXXXXXX,1,Dial(${TRUNKX}/${EXTEN:1},,tTo)
-exten => _91NXXNXXXXXX,2,Hangup
-
-; dial a local outbound number (modified because of only LD T1)
-exten => _9NXXXXXX,1,Dial(${TRUNK}/1727${EXTEN:1},,tTo)
-exten => _9NXXXXXX,2,Hangup
-
-; barge monitoring extension
-exten => 8159,1,ZapBarge
-exten => 8159,2,Hangup
-
-; # timeout invalid rules
-exten => #,1,Playback(invalid)              ; "Thanks for trying the demo"
-exten => #,2,Hangup                     ; Hang them up.
-exten => t,1,Goto(#,1)                  ; If they take too long, give up
-exten => i,1,Playback(invalid)          ; "That's not valid, try again"
-
-; Give voicemail at extension 8500
-exten => 8500,1,VoicemailMain
-exten => 8500,2,Goto(s,6)
-
-; ASTERISK AGENTS LOGINS FOR QUEUES (NOT part of VICIDIAL)
-; the following assumes phone agent login and exten are 3 digits and the same
-; also assumes that 3-digit login is present in agents.conf and queueus.conf
-;Agent Logout then stay onhook, DIAL 54 + 3-digit ID
-exten => _54XXX,1,AgentCallbackLogin(||)
-; the following are used to login and logout of Asterisk Queues from phone
-;Agent Login then stay offhook on the phone, DIAL 55 + 3-digit ID
-exten => _55XXX,1,AgentLogin(${EXTEN:1})
-;Agent Login then stay onhook, phones will ring, DIAL 56 + 3-digit ID
-exten => _56XXX,1,AgentCallbackLogin(||${EXTEN:1}@default)
-
-######------ END extensions.conf example ------######
-
-### OPTIONAL IAX trunk extensions entries for long distance dialing over IAX
-	exten => _91NXXNXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-	exten => _91NXXNXXXXXX,2,Dial(${TRUNKIAX}/${EXTEN:1},55,o)
-	exten => _91NXXNXXXXXX,3,Hangup
-
-### OPTIONAL SIP trunk extensions entries for long distance dialing over SIP
-	exten => _91NXXNXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-	exten => _91NXXNXXXXXX,2,Dial(sip/${EXTEN:1}@SIPtrunk,55,o)
-	exten => _91NXXNXXXXXX,3,Hangup
-
-### OPTIONAL IAX Load Balance extens to allow for Overflow and Balanced VDAD
-### In this setup, the serverIP is the prefix followed by agent conf_exten
-### FOR MORE INFORMATION, READ THE LOAD_BALANCING.txt DOCUMENT
-### server 1 extens:
-	exten => _010*010*010*016*.,1,Dial(${TRUNKIAX2}/${EXTEN:16},55,o)
-### server 2 extens:
-	exten => _010*010*010*015*.,1,Dial(${TRUNKIAX1}/${EXTEN:16},55,o)
+release of VICIDIAL that you installed. There is also an auto-generated 
+extensions-vicidial.conf file that contains dynamic dialplan entries.
 
 10. edit dnsmgr.conf:   # It is very helpful to enable dnsmgr
 	[general]
@@ -1781,7 +1540,7 @@ create database asterisk;
 
 NOTE: if you will be using lead files with a language that does not use the 
 standard latin character set then you will want to use UTF8 for your default 
-characterset in the MySQL database. This requires at least MySQL 4.1.11 and you 
+characterset in the MySQL database. This requires at least MySQL 5.0.X and you 
 can use the following query to create the database:
 	CREATE DATABASE `asterisk` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
@@ -1793,9 +1552,6 @@ GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
 
 flush privileges;
-
-# NOTE: if using MySQL 4.1.X or higher(not 5.X) you may need to run this query too:
-UPDATE mysql.user set password=OLD_PASSWORD('1234') where user='cron';
 
 # To make sure that new processes can connect to the Database under load we should 
 # increase the global connect_timeout
@@ -1909,7 +1665,9 @@ to work with it.
 
 Again, if you have selected to use the sample conf files during installation 
 then you do not have to add any of these lines to your conf files, they should 
-already be included.
+already be included. There is also an auto-generated 
+extensions-vicidial.conf file that contains dynamic dialplan entries.
+
 
 1. Add the call_log entries to all incoming/outgoing extensions entries:
    - here is how our sample dialplan changes for adding call_log entries(only 
@@ -2009,7 +1767,9 @@ exten => _9NXXXXXX,3,Hangup
 
 
 2. Add the call_inbound entries to all incoming extensions entries that you want 
-CallerID popups on:
+CallerID popups on(ONLY WORKS IN astguiclient.php APPLICATION):
+(Using the DID configuration is the preferred method of call routing in ViciDial)
+
    - here is how our sample dialplan changes for adding call_inbound 
 entries(only effected extension groups are show):
 ######------ START extensions.conf changes for call_inbound ------######
@@ -2033,61 +1793,6 @@ exten => _*NXXNXXXXXX*3429,3,AGI(call_inbound.agi,spa2000-----8005553429-----Inb
 exten => _*NXXNXXXXXX*3429,3,Answer
 exten => _*NXXNXXXXXX*3429,4,Dial,sip/spa2000&sip/spa2001|30|to
 exten => _*NXXNXXXXXX*3429,5,Voicemail,u2000
-
-; parameters for agi-VDAD_ALL_inbound.agi (9 fields separated by five dashes "-----"):
-;  1. the method of call handling for the script:
-; 	- CID - 	CID received, add record with phone number
-; 	- CIDLOOKUP - 	Lookup CID to find record in whole system
-; 	- CIDLOOKUPRL -	Restrict lookup to one list
-; 	- CIDLOOKUPRC -	Restrict lookup to one campaign's lists
-;	- CLOSER -      Closer calls from VICIDIAL fronters
-; 	- ANI - 	ANI received, add record with phone number
-; 	- ANILOOKUP - 	Lookup ANI to find record in whole system
-; 	- ANILOOKUPRL -	Restrict lookup to one list
-; 	- 3DIGITID - 	Enter 3 digit code to go to agent
-; 	- 4DIGITID - 	Enter 4 digit code to go to agent
-; 	- 5DIGITID - 	Enter 5 digit code to go to agent
-; 	- 10DIGITID - 	Enter 10 digit code to go to agent
-; 2. the method of searching for an available agent:
-; 	- LO - Load Balance Overflow only (priority to home server)
-; 	- LB - <default> Load Balance total system
-; 	- SO - Home server only
-; 3. the full name of the IN GROUP to be used in vicidial for the inbound call
-; 4. the phone number that was called, for the log entry
-; 5. the callerID or lead_id of the person that called(usually overridden)
-; 6. the park extension audio file name if used
-; 7. the status of the call initially(usually not used)
-; 8. the list_id to insert the new lead under if it is new (and CID/ANI available)
-; 9. the phone dialing code to insert with the new lead if new (and CID/ANI available)
-; 10. the campaign_id to search within lists if CIDLOOKUPRC
-; inbound VICIDIAL call with CID delivery through T1 PRI
-exten => 1234,1,Answer                  ; Answer the line
-exten => 1234,2,AGI(agi-VDAD_ALL_inbound.agi,CID-----LB-----CL_GALLERIA-----7274515134-----Closer-----park----------999-----1)
-exten => 1234,3,Hangup
-
-; inbound VICIDIAL transfer calls [can arrive through PRI T1 crossover, IAX or SIP channel]
-exten => _90009.,1,Answer                  ; Answer the line
-exten => _90009.,2,AGI(agi-VDAD_ALL_inbound.agi,CLOSER-----LB-----CL_TESTCAMP-----7275551212-----Closer-----park----------999-----1)
-exten => _90009.,3,Hangup
-exten => _990009.,1,Answer                  ; Answer the line
-exten => _990009.,2,AGI(agi-VDAD_ALL_inbound.agi,CLOSER-----LB-----CL_TESTCAMP-----7275551212-----Closer-----park----------999-----1)
-exten => _990009.,3,Hangup
-
-
-### follow these instructions if you plan to have VICIDIAL agents take inbound or closer calls:
-	1. in VICIDIAL web admin "add a new in-group" (the above examples would be "CL_GALLERIA")
-		- group IDs cannot contain spaces ' ' or dashes '-' or plusses '+'
-		- if you are using a HEX color value make sure to include the hash '#' at the beginning
-	2. create a new campaign in VICIDIAL  called "CLOSER" and set "allow inbound blended" to Y
-	3. check the CL_GALLERIA checknox in the "Allowed In-Groups" section
-	4. have agents log in to the CLOSER campaign and select the CL_GALLERIA in-group
-	5. they will now start receiving inbound calls
-	6. as calls come in, each call is inserted into the vicidial_list table under the 
-	   list specified int the AGI string, In the above example that would be list 999
-	7. if you want to take closer calls from the campaign "TEST" you will need to create
-	   an in-group called "CL_TEST_" for internal closing(on the same system) or "CL_TEST_L"
-	   for local closing(closer on different system from fronter) and then the fronter will
-	   click on the "internal closer" button to send the call to a closer
 
 * NOTE, you need to set the dial_level of the CLOSER campaign to 1 or higher for inbound/closers to work
 
@@ -2320,7 +2025,7 @@ exten => _86000[0-4]X,1,Meetme,${EXTEN}|q
 
 6. Add the conference entries for VICIDIAL conferences:
    - here is how our sample dialplan changes for adding VICIDIAL conference 
-entries(this is a pure addition, nothing is being modified):
+entries(this is already in the sample extensions.conf file):
 NOTE: see below these entries for app_conference instructions is used
 ######------ START extensions.conf changes for VD conf ------######
 exten => _X48600XXX,1,MeetMeAdmin(${EXTEN:2},T,${EXTEN:0:1})
@@ -2364,6 +2069,7 @@ NOTE: If you want to do DTMF passthru with app_conference bee sure to add the
 7. Add the more entries for astGUIclient specific uses:
    - here are some more dialplan additions needed to use astGUIclient(this is a 
 pure addition, nothing is being modified):
+(this is already in the sample extensions.conf file)
 ######------ START extensions.conf other additions ------######
 ; park channel for client GUI parking, hangup after 30 minutes
 ;    create a GSM formatted audio file named "park.gsm" that is 30 minutes long
@@ -2808,7 +2514,7 @@ SUBPHASE 6.8: astGUIclient web-only client:
 With 1.1.1 release of astguiclient we have completely rewritten the astGUIclient
 client app in AJAX(PHP/Javascript/XMLHTTPRequest) to enable a full, real-time 
 GUI interface using only a web browser. The browser requirements for this are:
-- Firefox 0.9 or greater (Firefox 1.0.7 is the recommended browser)
+- Firefox 1.0 or greater    *** RECOMMENDED ***
 - Mozilla 1.7 or greater
 - Netscape 8 or greater
 - Opera 8.5 or greater
@@ -2856,7 +2562,7 @@ With 1.1.6 release of astguiclient we have finished the rewrite of the VICIDIAL
 client app in AJAX(PHP/Javascript/XMLHTTPRequest) to enable a full, real-time
 GUI interface using only a web browser like we have done with astGUIclient.
 The browser requirements for this are:
-- Firefox 0.9 or greater (Firefox 1.0.7 is the recommended browser)
+- Firefox 1.0 or greater  *** RECOMMENDED ***
 - Mozilla 1.7 or greater
 - Netscape 8 or greater
 - Opera 8.5 or greater
