@@ -38,6 +38,7 @@ $reports_color =	'#99FF33';
 	$carriers_color =	'#FF33FF';
 	$settings_color = 	'#FF33FF';
 	$status_color = 	'#FF33FF';
+	$tts_color = 		'#FF33FF';
 $subcamp_color =	'#FF9933';
 $users_font =		'BLACK';
 $campaigns_font =	'BLACK';
@@ -55,6 +56,7 @@ $reports_font =		'BLACK';
 	$server_font =		'BLACK';
 	$settings_font = 	'BLACK';
 	$status_font = 	'BLACK';
+	$tts_font = 	'BLACK';
 $subcamp_font =		'BLACK';
 
 ### comment this section out for colorful section headings
@@ -77,6 +79,7 @@ $reports_color =	'#E6E6E6';
 	$carriers_color =	'#C6C6C6';
 	$settings_color = 	'#C6C6C6';
 	$status_color = 	'#C6C6C6';
+	$tts_color = 		'#C6C6C6';
 $subcamp_color =	'#C6C6C6';
 ###
 
@@ -1054,6 +1057,14 @@ if (isset($_GET["quick_transfer_button"]))			{$quick_transfer_button=$_GET["quic
 	elseif (isset($_POST["quick_transfer_button"]))	{$quick_transfer_button=$_POST["quick_transfer_button"];}
 if (isset($_GET["prepopulate_transfer_preset"]))			{$prepopulate_transfer_preset=$_GET["prepopulate_transfer_preset"];}
 	elseif (isset($_POST["prepopulate_transfer_preset"]))	{$prepopulate_transfer_preset=$_POST["prepopulate_transfer_preset"];}
+if (isset($_GET["enable_tts_integration"]))				{$enable_tts_integration=$_GET["enable_tts_integration"];}
+	elseif (isset($_POST["enable_tts_integration"]))	{$enable_tts_integration=$_POST["enable_tts_integration"];}
+if (isset($_GET["tts_id"]))							{$tts_id=$_GET["tts_id"];}
+	elseif (isset($_POST["tts_id"]))				{$tts_id=$_POST["tts_id"];}
+if (isset($_GET["tts_name"]))						{$tts_name=$_GET["tts_name"];}
+	elseif (isset($_POST["tts_name"]))				{$tts_name=$_POST["tts_name"];}
+if (isset($_GET["tts_text"]))						{$tts_text=$_GET["tts_text"];}
+	elseif (isset($_POST["tts_text"]))				{$tts_text=$_POST["tts_text"];}
 
 	if (isset($script_id)) {$script_id= strtoupper($script_id);}
 	if (isset($lead_filter_id)) {$lead_filter_id = strtoupper($lead_filter_id);}
@@ -1248,6 +1259,7 @@ if ($non_latin < 1)
 	$vicidial_recording_limit = ereg_replace("[^0-9]","",$vicidial_recording_limit);
 	$allow_custom_dialplan = ereg_replace("[^0-9]","",$allow_custom_dialplan);
 	$phone_ring_timeout = ereg_replace("[^0-9]","",$phone_ring_timeout);
+	$enable_tts_integration = ereg_replace("[^0-9]","",$enable_tts_integration);
 
 	### DIGITS and COLONS
 	$shift_length = ereg_replace("[^\:0-9]","",$shift_length);
@@ -1265,7 +1277,6 @@ if ($non_latin < 1)
 	$phone_numbers = ereg_replace("[^\n0-9]","",$phone_numbers);
 
 	### Y or N ONLY ###
-	$active = ereg_replace("[^NY]","",$active);
 	$allow_closers = ereg_replace("[^NY]","",$allow_closers);
 	$reset_hopper = ereg_replace("[^NY]","",$reset_hopper);
 	$amd_send_to_vmx = ereg_replace("[^NY]","",$amd_send_to_vmx);
@@ -1309,6 +1320,7 @@ if ($non_latin < 1)
 	$carrier_logging_active = ereg_replace("[^NY]","",$carrier_logging_active);
 
 	$qc_enabled = ereg_replace("[^0-9NY]","",$qc_enabled);
+	$active = ereg_replace("[^0-9NY]","",$active);
 
 
 	### ALPHA-NUMERIC ONLY ###
@@ -1486,6 +1498,7 @@ if ($non_latin < 1)
 	$no_agent_action = ereg_replace("[^-_0-9a-zA-Z]","",$no_agent_action);
 	$quick_transfer_button = ereg_replace("[^-_0-9a-zA-Z]","",$quick_transfer_button);
 	$prepopulate_transfer_preset = ereg_replace("[^-_0-9a-zA-Z]","",$prepopulate_transfer_preset);
+	$tts_id = ereg_replace("[^-_0-9a-zA-Z]","",$tts_id);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
@@ -1555,6 +1568,7 @@ if ($non_latin < 1)
 	$caller_id_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$caller_id_name);
 	$user_code = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$user_code);
 	$territory = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$territory);
+	$tts_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$tts_name);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
 	$call_out_number_group = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$call_out_number_group);
@@ -1601,6 +1615,10 @@ if ($non_latin < 1)
 	$custom_dialplan_entry = ereg_replace("\\\\","",$custom_dialplan_entry);
 	$custom_dialplan_entry = ereg_replace(";","",$custom_dialplan_entry);
 	$custom_dialplan_entry = ereg_replace("\r","",$custom_dialplan_entry);
+	$tts_text = ereg_replace("\\\\","",$tts_text);
+	$tts_text = ereg_replace(";","",$tts_text);
+	$tts_text = ereg_replace("\r","",$tts_text);
+	$tts_text = ereg_replace("\"","",$tts_text);
 
 	### VARIABLES TO BE mysql_real_escape_string ###
 	# $web_form_address
@@ -1624,7 +1642,7 @@ else
 ##### END VARIABLE FILTERING FOR SECURITY #####
 
 
-# AST GUI database administration
+# ViciDial database administration
 # admin.php
 # 
 # CHANGELOG:
@@ -1834,15 +1852,16 @@ else
 # 90612-0909 - Added audio prompt selection feature to survey screen
 # 90614-0827 - Added In-Group routing to Call Menu screen, Added pull-down Call Menu option to DID screen
 # 90617-0733 - Added phone ring timeout and call menu custom dialplan entries
-# 90621-0821 - Added phon Conf File Secret field to use a separate password from the user interface for a phone
+# 90621-0821 - Added phone Conf File Secret field to use a separate password from the user interface for a phone
 # 90621-1220 - Added Call Menu logging tracking_group
 # 90627-0547 - Added no-agent-no-queue options
 # 90627-2333 - Added default transfer button and prepopulate preset options
+# 90628-0924 - Added Text To Speech(TTS) fields
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-201';
-$build = '90627-2333';
+$admin_version = '2.2.0-202';
+$build = '90628-0924';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -2033,6 +2052,7 @@ if ($ADD==13111111111)	{$hh='admin';	$sh='phones';	echo "ADD NEW GROUP ALIAS";}
 if ($ADD==111111111111)	{$hh='admin';	$sh='server';	echo "ADD NEW SERVER";}
 if ($ADD==131111111111)	{$hh='admin';	$sh='templates';	echo "ADD NEW CONF TEMPLATE";}
 if ($ADD==141111111111)	{$hh='admin';	$sh='carriers';	echo "ADD NEW CARRIER";}
+if ($ADD==151111111111)	{$hh='admin';	$sh='tts';	echo "ADD NEW TTS ENTRY";}
 if ($ADD==1111111111111)	{$hh='admin';	$sh='conference';	echo "ADD NEW CONFERENCE";}
 if ($ADD==11111111111111)	{$hh='admin';	$sh='conference';	echo "ADD NEW VICIDIAL CONFERENCE";}
 if ($ADD=='2')			{$hh='users';		echo "New User Addition";}
@@ -2067,6 +2087,7 @@ if ($ADD==211111111111)	{$hh='admin';	$sh='server';	echo "ADDING NEW SERVER";}
 if ($ADD==221111111111)	{$hh='admin';	$sh='server';	echo "ADDING NEW SERVER VICIDIAL TRUNK RECORD";}
 if ($ADD==231111111111)	{$hh='admin';	$sh='templates';	echo "ADDING NEW CONF TEMPLATE";}
 if ($ADD==241111111111)	{$hh='admin';	$sh='carriers';	echo "ADDING NEW CARRIER";}
+if ($ADD==251111111111)	{$hh='admin';	$sh='tts';	echo "ADDING NEW TTS ENTRY";}
 if ($ADD==2111111111111)	{$hh='admin';	$sh='conference';	echo "ADDING NEW CONFERENCE";}
 if ($ADD==21111111111111)	{$hh='admin';	$sh='conference';	echo "ADDING NEW VICIDIAL CONFERENCE";}
 if ($ADD==221111111111111)	{$hh='admin';	$sh='status';	echo "ADDING VICIDIAL SYSTEM STATUSES";}
@@ -2123,6 +2144,7 @@ if ($ADD==33111111111)	{$hh='admin';	$sh='phones';	echo "MODIFY GROUP ALIAS";}
 if ($ADD==311111111111)	{$hh='admin';	$sh='server';	echo "MODIFY SERVER";}
 if ($ADD==331111111111)	{$hh='admin';	$sh='templates';	echo "MODIFY CONF TEMPLATE";}
 if ($ADD==341111111111)	{$hh='admin';	$sh='carriers';	echo "MODIFY CARRIER";}
+if ($ADD==351111111111)	{$hh='admin';	$sh='tts';	echo "MODIFY TTS ENTRY";}
 if ($ADD==3111111111111)	{$hh='admin';	$sh='conference';	echo "MODIFY CONFERENCE";}
 if ($ADD==31111111111111)	{$hh='admin';	$sh='conference';	echo "MODIFY VICIDIAL CONFERENCE";}
 if ($ADD==311111111111111)	{$hh='admin';	$sh='settings';	echo "MODIFY VICIDIAL SYSTEM SETTINGS";}
@@ -2159,6 +2181,7 @@ if ($ADD==411111111111)	{$hh='admin';	$sh='server';	echo "MODIFY SERVER";}
 if ($ADD==421111111111)	{$hh='admin';	$sh='server';	echo "MODIFY SERVER VICIDIAL TRUNK RECORD";}
 if ($ADD==431111111111)	{$hh='admin';	$sh='templates';	echo "MODIFY CONF TEMPLATE";}
 if ($ADD==441111111111)	{$hh='admin';	$sh='carriers';	echo "MODIFY CARRIER";}
+if ($ADD==451111111111)	{$hh='admin';	$sh='tts';	echo "MODIFY TTS ENTRY";}
 if ($ADD==4111111111111)	{$hh='admin';	$sh='conference';	echo "MODIFY CONFERENCE";}
 if ($ADD==41111111111111)	{$hh='admin';	$sh='conference';	echo "MODIFY VICIDIAL CONFERENCE";}
 if ($ADD==411111111111111)	{$hh='admin';	$sh='settings';	echo "MODIFY VICIDIAL SYSTEM SETTINGS";}
@@ -2186,6 +2209,7 @@ if ($ADD==53111111111)	{$hh='admin';	$sh='phones';	echo "DELETE GROUP ALIAS";}
 if ($ADD==511111111111)	{$hh='admin';	$sh='server';	echo "DELETE SERVER";}
 if ($ADD==531111111111)	{$hh='admin';	$sh='templates';	echo "DELETE CONF TEMPLATE";}
 if ($ADD==541111111111)	{$hh='admin';	$sh='carriers';	echo "DELETE CARRIER";}
+if ($ADD==551111111111)	{$hh='admin';	$sh='tts';	echo "DELETE TTS ENTRY";}
 if ($ADD==5111111111111)	{$hh='admin';	$sh='conference';	echo "DELETE CONFERENCE";}
 if ($ADD==51111111111111)	{$hh='admin';	$sh='conference';	echo "DELETE VICIDIAL CONFERENCE";}
 if ($ADD==6)			{$hh='users';		echo "Delete User";}
@@ -2213,8 +2237,9 @@ if ($ADD==62111111111)	{$hh='admin';	$sh='phones';	echo "DELETE PHONE ALIAS";}
 if ($ADD==63111111111)	{$hh='admin';	$sh='phones';	echo "DELETE GROUP ALIAS";}
 if ($ADD==611111111111)	{$hh='admin';	$sh='server';	echo "DELETE SERVER";}
 if ($ADD==621111111111)	{$hh='admin';	$sh='server';	echo "DELETE SERVER VICIDIAL TRUNK RECORD";}
-if ($ADD==621111111111)	{$hh='admin';	$sh='templates';	echo "DELETE CONF TEMPLATE";}
-if ($ADD==621111111111)	{$hh='admin';	$sh='carriers';	echo "DELETE CARRIER";}
+if ($ADD==631111111111)	{$hh='admin';	$sh='templates';	echo "DELETE CONF TEMPLATE";}
+if ($ADD==641111111111)	{$hh='admin';	$sh='carriers';	echo "DELETE CARRIER";}
+if ($ADD==651111111111)	{$hh='admin';	$sh='tts';	echo "DELETE TTS ENTRY";}
 if ($ADD==6111111111111)	{$hh='admin';	$sh='conference';	echo "DELETE CONFERENCE";}
 if ($ADD==61111111111111)	{$hh='admin';	$sh='conference';	echo "DELETE VICIDIAL CONFERENCE";}
 if ($ADD==73)			{$hh='campaigns';	echo "Dialable Lead Count";}
@@ -2246,6 +2271,7 @@ if ($ADD==13000000000)	{$hh='admin';	$sh='phones';	echo "GROUP ALIAS LIST";}
 if ($ADD==100000000000)	{$hh='admin';	$sh='server';	echo "SERVER LIST";}
 if ($ADD==130000000000)	{$hh='admin';	$sh='templates';	echo "CONF TEMPLATE LIST";}
 if ($ADD==140000000000)	{$hh='admin';	$sh='carriers';	echo "CARRIER LIST";}
+if ($ADD==150000000000)	{$hh='admin';	$sh='tts';	echo "TTS ENTRY LIST";}
 if ($ADD==1000000000000)	{$hh='admin';	$sh='conference';	echo "CONFERENCE LIST";}
 if ($ADD==10000000000000)	{$hh='admin';	$sh='conference';	echo "VICIDIAL CONFERENCE LIST";}
 if ($ADD==550)			{$hh='users';		echo "Search Form";}
@@ -4510,9 +4536,31 @@ if ($SSoutbound_autodial_active > 0)
 
 
 
-<BR>
+<BR><BR><BR><BR>
 <A NAME="audio_store">
 <B>Audio Store -</B> This utility allows you to upload audio files to the web server so that they can be distributed to all of the ViciDial servers in a multi-server cluster. An important note, only two audio file types will work, .wav files that are PCM 16bit 8k and .gsm files that are 8bit 8k. Please verify that your files are properly formatted before uploading them here.
+
+
+
+<BR><BR><BR><BR>
+
+<B><FONT SIZE=3>VICIDIAL_TTS_PROMPTS TABLE</FONT></B><BR><BR>
+<A NAME="vicidial_tts_prompts-tts_id">
+<BR>
+<B>TTS ID -</B> This is the short name of a TTS entry. This needs to be a unique identifier. Do not use any spaces or punctuation for this field. max 50 characters, minimum of 2 characters.
+
+<BR>
+<A NAME="vicidial_tts_prompts-tts_name">
+<B>TTS Name -</B> This is a more descriptive name of the TTS entry. This is a short summary of the TTS definition. max 100 characters, minimum of 2 characters.
+
+<BR>
+<A NAME="vicidial_tts_prompts-active">
+<B>Active -</B> This option allows you to set the TTS entry to active or inactive.
+
+<BR>
+<A NAME="vicidial_tts_prompts-tts_text">
+<B>TTS Text -</B> This is the actual Text To Speech data field that is sent to Cepstral for creation of the audio file to be played to the customer. you can use Speech Synthesis Markup Language -SSML- in this field, for example, &lt;break time='1000ms'/&gt; for a 1 second break. You can also use several variables such as first name, last name and title as ViciDial variables just like you do in a Script: --A--first_name--B--. Here is a list of the available variables: lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time
+
 
 
 
@@ -5395,6 +5443,11 @@ FR_SPAC 00 00 00 00 00 - France space separated phone number<BR>
 <A NAME="settings-user_territories_active">
 <BR>
 <B>User Territories Active -</B> This setting allows you to enable the User Territories setttings from the user modification screen. This feature was added to allow for more integration with a customized Vtiger installation but can have applications in a pure ViciDial system as well. Default is 0 for disabled.
+
+<BR>
+<A NAME="settings-enable_tts_integration">
+<BR>
+<B>Enable TTS Integration -</B> This setting allows you to enable Text To Speech integration with Cepstral. This is currently only available for outbound Survey type campaigns. Default is 0 for disabled.
 
 <BR>
 <A NAME="settings-qc_features_active">
@@ -7179,6 +7232,36 @@ if ($ADD==141111111111)
 
 		echo "$servers_list";
 		echo "</select>$NWB#vicidial_server_carriers-server_ip$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE=SUBMIT></td></tr>\n";
+		echo "</TABLE></center>\n";
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	}
+
+
+######################
+# ADD=151111111111 display the ADD NEW TTS ENTRY SCREEN
+######################
+
+if ($ADD==151111111111)
+	{
+	if ($LOGmodify_servers==1)
+		{
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		echo "<br>ADD NEW TTS ENTRY<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=251111111111>\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>TTS ID: </td><td align=left><input type=text name=tts_id size=30 maxlength=50>$NWB#vicidial_tts_prompts-tts_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>TTS Name: </td><td align=left><input type=text name=tts_name size=50 maxlength=100>$NWB#vicidial_tts_prompts-tts_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>N</option><option>Y</option>$NWB#vicidial_tts_prompts-active$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE=SUBMIT></td></tr>\n";
 		echo "</TABLE></center>\n";
@@ -9353,6 +9436,42 @@ if ($ADD==241111111111)
 			}
 		}
 	$ADD=341111111111;
+	}
+
+
+######################
+# ADD=251111111111 adds new tts entry to the system
+######################
+
+if ($ADD==251111111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	$stmt="SELECT count(*) from vicidial_tts_prompts where tts_id='$tts_id';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	if ($row[0] > 0)
+		{echo "<br>TTS ENTRY NOT ADDED - there is already a tts entry in the system with this ID\n";}
+	else
+		{
+		 if ( (strlen($tts_id) < 2) or (strlen($tts_name) < 3) )
+			{echo "<br>TTS ENTRY NOT ADDED - Please go back and look at the data you entered\n";}
+		 else
+			{
+			echo "<br>TTS ENTRY ADDED\n";
+
+			$stmt="INSERT INTO vicidial_tts_prompts SET tts_id='$tts_id',tts_name='$tts_name',active='$active';";
+			$rslt=mysql_query($stmt, $link);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TTS', event_type='ADD', record_id='$carrier_id', event_code='ADMIN ADD TTS', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
+		}
+	$ADD=351111111111;
 	}
 
 
@@ -12179,6 +12298,44 @@ $ADD=341111111111;	# go to carrier modification form below
 }
 
 
+
+######################
+# ADD=451111111111 modify tts record in the system
+######################
+
+if ($ADD==451111111111)
+{
+	if ($LOGmodify_servers==1)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	 if ( (strlen($tts_id) < 2) or (strlen($tts_name) < 5) )
+		{echo "<br>TTS ENTRY NOT MODIFIED - Please go back and look at the data you entered\n";}
+	 else
+		{
+		echo "<br>TTS ENTRY MODIFIED: $tts_id\n";
+
+		$stmt="UPDATE vicidial_tts_prompts set tts_name='$tts_name',active='$active',tts_text=\"$tts_text\" where tts_id='$tts_id';";
+		$rslt=mysql_query($stmt, $link);
+
+		### LOG INSERTION Admin Log Table ###
+		$SQL_log = "$stmt|";
+		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = addslashes($SQL_log);
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TTS', event_type='MODIFY', record_id='$tts_id', event_code='ADMIN MODIFY TTS', event_sql=\"$SQL_log\", event_notes='';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+		}
+	}
+	else
+	{
+	echo "You do not have permission to view this page\n";
+	exit;
+	}
+$ADD=351111111111;	# go to tts entry modification form below
+}
+
+
 ######################
 # ADD=4111111111111 modify conference record in the system
 ######################
@@ -12267,7 +12424,7 @@ if ($ADD==411111111111111)
 
 		echo "<br>VICIDIAL SYSTEM SETTINGS MODIFIED\n";
 
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan';";
+		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan';";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -12970,6 +13127,28 @@ if ($ADD==541111111111)
 		echo "<br><br><a href=\"$PHP_SELF?ADD=641111111111&carrier_id=$carrier_id&CoNfIrM=YES\">Click here to delete carrier $carrier_id - $carrier_name</a><br><br><br>\n";
 		}
 	$ADD='341111111111';		# go to carrier modification below
+	}
+
+
+######################
+# ADD=551111111111 confirmation before deletion of tts record
+######################
+
+if ($ADD==551111111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	 if (strlen($tts_id) < 2)
+		{
+		 echo "<br>TTS ENTRY NOT DELETED - Please go back and look at the data you entered\n";
+		 echo "<br>TTS ID be at least 2 characters in length\n";
+		}
+	 else
+		{
+		echo "<br><B>TTS ENTRY DELETION CONFIRMATION: $tts_id - $tts_name</B>\n";
+		echo "<br><br><a href=\"$PHP_SELF?ADD=651111111111&tts_id=$tts_id&CoNfIrM=YES\">Click here to delete tts entry $tts_id - $tts_name</a><br><br><br>\n";
+		}
+	$ADD='351111111111';		# go to tts entry modification below
 	}
 
 
@@ -14082,6 +14261,39 @@ if ($ADD==641111111111)
 		echo "<br><br>\n";
 		}
 	$ADD='140000000000';		# go to carrier list
+	}
+
+
+######################
+# ADD=651111111111 delete tts record
+######################
+
+if ($ADD==651111111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( (strlen($tts_id) < 2) or ($CoNfIrM != 'YES') )
+		{
+		echo "<br>TTS ENTRY NOT DELETED - Please go back and look at the data you entered\n";
+		echo "<br>TTS ID be at least 2 characters in length\n";
+		}
+	else
+		{
+		$stmt="DELETE from vicidial_tts_prompts where tts_id='$tts_id';";
+		$rslt=mysql_query($stmt, $link);
+
+		### LOG INSERTION Admin Log Table ###
+		$SQL_log = "$stmt|";
+		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = addslashes($SQL_log);
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TTS', event_type='DELETE', record_id='$tts_id', event_code='ADMIN DELETE TTS', event_sql=\"$SQL_log\", event_notes='';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+
+		echo "<br><B>CARRIER DELETION COMPLETED: $carrier_id</B>\n";
+		echo "<br><br>\n";
+		}
+	$ADD='150000000000';		# go to tts entry list
 	}
 
 
@@ -19850,6 +20062,57 @@ if ($ADD==341111111111)
 
 
 ######################
+# ADD=351111111111 modify tts record in the system
+######################
+
+if ($ADD==351111111111)
+{
+	if ($LOGast_admin_access==1)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	$stmt="SELECT tts_id,tts_name,active,tts_text from vicidial_tts_prompts where tts_id='$tts_id';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$tts_id =		$row[0];
+	$tts_name =		$row[1];
+	$active =		$row[2];
+	$tts_text =		$row[3];
+
+	echo "<br>MODIFY A TTS RECORD: $row[0]<form action=$PHP_SELF method=POST>\n";
+	echo "<input type=hidden name=ADD value=451111111111>\n";
+	echo "<input type=hidden name=tts_id value=\"$tts_id\">\n";
+
+	echo "<center><TABLE width=$section_width cellspacing=3>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>TTS ID: </td><td align=left><B>$tts_id</B></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>TTS Name: </td><td align=left><input type=text name=tts_name size=50 maxlength=100 value=\"$tts_name\">$NWB#vicidial_tts_prompts-tts_name$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>N</option><option>Y</option><option SELECTED>$active</option>$NWB#vicidial_tts_prompts-active$NWE</td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=right>TTS Text: </td><td align=left><TEXTAREA NAME=tts_text ROWS=20 COLS=70>$tts_text</TEXTAREA> $NWB#vicidial_tts_prompts-tts_text$NWE</td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE=SUBMIT></td></tr>\n";
+	echo "</TABLE></center>\n";
+
+	echo "<center><b>\n";
+	if ($LOGast_delete_phones > 0)
+		{
+		echo "<br><br><a href=\"$PHP_SELF?ADD=551111111111&tts_id=$tts_id&tts_name=$tts_name\">DELETE THIS TTS ENTRY</a>\n";
+		}
+	if ($LOGuser_level >= 9)
+		{
+		echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=TTS&stage=$tts_id\">Click here to see Admin chages to this TTS entry</FONT>\n";
+		}
+	}
+	else
+	{
+	echo "You do not have permission to view this page\n";
+	exit;
+	}
+}
+
+
+######################
 # ADD=3111111111111 modify conference record in the system
 ######################
 
@@ -19953,7 +20216,7 @@ if ($ADD==311111111111111)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan from system_settings;";
+	$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan from system_settings;";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$version =						$row[0];
@@ -19990,14 +20253,15 @@ if ($ADD==311111111111111)
 	$qc_features_active =			$row[31];
 	$outbound_autodial_active =		$row[32];
 	$outbound_calls_per_second =	$row[33];
-	$agentonly_callback_campaign_lock = $row[34];
-	$sounds_central_control_active = $row[35];
-	$sounds_web_server =			$row[36];
-	$sounds_web_directory =			$row[37];
-	$active_voicemail_server =		$row[38];
-	$auto_dial_limit =				$row[39];
-	$user_territories_active =		$row[40];
-	$allow_custom_dialplan =		$row[41];
+	$enable_tts_integration =		$row[34];
+	$agentonly_callback_campaign_lock = $row[35];
+	$sounds_central_control_active = $row[36];
+	$sounds_web_server =			$row[37];
+	$sounds_web_directory =			$row[38];
+	$active_voicemail_server =		$row[39];
+	$auto_dial_limit =				$row[40];
+	$user_territories_active =		$row[41];
+	$allow_custom_dialplan =		$row[42];
 
 	echo "<br>MODIFY VICIDIAL SYSTEM SETTINGS<form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=ADD value=411111111111111>\n";
@@ -20138,6 +20402,8 @@ if ($ADD==311111111111111)
 	echo "<tr bgcolor=#B6D3FC><td align=right>Allow Custom Dialplan Entries: </td><td align=left><select size=1 name=allow_custom_dialplan><option>1</option><option>0</option><option selected>$allow_custom_dialplan</option></select>$NWB#settings-allow_custom_dialplan$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right>User Territories Active: </td><td align=left><select size=1 name=user_territories_active><option>1</option><option>0</option><option selected>$user_territories_active</option></select>$NWB#settings-user_territories_active$NWE</td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=right>Enable TTS Integration: </td><td align=left><select size=1 name=enable_tts_integration><option>1</option><option>0</option><option selected>$enable_tts_integration</option></select>$NWB#settings-enable_tts_integration$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right>QC Features Active: </td><td align=left><select size=1 name=qc_features_active><option>1</option><option>0</option><option selected>$qc_features_active</option></select>$NWB#settings-qc_features_active$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>QC Last Pull Time: </td><td align=left> $qc_last_pull_time</td></tr>\n";
@@ -21664,6 +21930,50 @@ if ($ADD==140000000000)
 		echo "<td><font size=1>$row[4]</td>";
 		echo "<td><font size=1>$row[5]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=341111111111&carrier_id=$row[0]\">MODIFY</a></td></tr>\n";
+		$o++;
+		}
+
+	echo "</TABLE></center>\n";
+	}
+
+######################
+# ADD=150000000000 display all tts entries
+######################
+if ($ADD==150000000000)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	$stmt="SELECT tts_id,tts_name,active,tts_text from vicidial_tts_prompts order by tts_id";
+	$rslt=mysql_query($stmt, $link);
+	$tts_to_print = mysql_num_rows($rslt);
+
+	echo "<br>TEXT-TO-SPEECH(TTS) LISTINGS:\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<tr bgcolor=black>";
+	echo "<td><font size=1 color=white align=left><B>TTS ID</B></td>";
+	echo "<td><font size=1 color=white><B>TTS Name</B></td>";
+	echo "<td><font size=1 color=white><B>Active</B></td>";
+	echo "<td><font size=1 color=white><B>TTS Text</B></td>";
+	echo "<td align=center><font size=1 color=white><B>MODIFY</B></td></tr>\n";
+
+	$o=0;
+	while ($tts_to_print > $o) 
+		{
+		$row=mysql_fetch_row($rslt);
+		$row[3]=ereg_replace(";|<|>","",$row[3]);
+		while(strlen($row[3]) > 50) {$row[3] = substr("$row[3]", 0, -1);}
+		if(strlen($row[3]) > 47) {$row[3] = "$row[3]...";}
+
+		if (eregi("1$|3$|5$|7$|9$", $o))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=351111111111&tts_id=$row[0]\">$row[0]</a></td>";
+		echo "<td><font size=1>$row[1]</td>";
+		echo "<td><font size=1>$row[2]</td>";
+		echo "<td><font size=1>$row[3]</td>";
+		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=351111111111&tts_id=$row[0]\">MODIFY</a></td></tr>\n";
 		$o++;
 		}
 

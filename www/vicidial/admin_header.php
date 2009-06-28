@@ -13,6 +13,7 @@
 # 90612-0852 - Changed relative links
 # 90635-0943 - Added javascript for dynamic menus in In-Groups
 # 90627-0548 - Added no-agent-no-queue options
+# 90628-1016 - Added Text-to-speech options
 #
 
 
@@ -865,10 +866,11 @@ echo "</head>\n";
 echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 
-$stmt="SELECT admin_home_url from system_settings;";
+$stmt="SELECT admin_home_url,enable_tts_integration from system_settings;";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $admin_home_url_LU =	$row[0];
+$SSenable_tts_integration = $row[1];
 
 ?>
 <CENTER>
@@ -1107,6 +1109,8 @@ $admin_home_url_LU =	$row[0];
 			else {$status_sh=''; $status_fc='BLACK';}
 		if ($sh=='audio') {$audio_sh="bgcolor=\"$audio_color\""; $audio_fc="$audio_font";} # pink
 			else {$audio_sh=''; $audio_fc='BLACK';}
+		if ($sh=='tts') {$tts_sh="bgcolor=\"$tts_color\""; $tts_fc="$tts_font";} # pink
+			else {$tts_sh=''; $tts_fc='BLACK';}
 
 		?>
 		<TR BGCOLOR=<?php echo $admin_color ?>>
@@ -1133,6 +1137,13 @@ $admin_home_url_LU =	$row[0];
 			{ ?>
 			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $audio_sh ?>> &nbsp; 
 			<a href="audio_store.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $audio_fc ?> SIZE=<?php echo $header_font_size ?>> Audio Store </a></TD>
+		</TR>
+
+		<?php }
+		if ($SSenable_tts_integration > 0)
+			{ ?>
+			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $tts_sh ?>> &nbsp; 
+			<a href="<?php echo $ADMIN ?>?ADD=150000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $tts_fc ?> SIZE=<?php echo $header_font_size ?>> Text To Speech </a></TD>
 		</TR>
 
 		<?php }
@@ -1196,6 +1207,10 @@ $admin_home_url_LU =	$row[0];
 	if ( (strlen($carriers_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
 	<TR BGCOLOR=<?php echo $carriers_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Carriers </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=141111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Carrier </a></TD></TR>
+	<?php }
+	if ( (strlen($tts_sh) > 1) and (strlen($admin_hh) > 1) ) { 
+		?>
+	<TR BGCOLOR=<?php echo $tts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=150000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show TTS Entries </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=151111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New TTS Entry </a></TD></TR>
 	<?php }
 	if (strlen($settings_sh) > 1) { 
 		?>

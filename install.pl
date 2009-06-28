@@ -2238,6 +2238,7 @@ if ($NOWEB < 1)
 	`cp -f -R ./www/* $PATHweb/`;
 
 	print "setting web scripts to executable...\n";
+	`chmod 0666 $PATHweb`;
 	`chmod -R 0755 $PATHweb/agc/`;
 	`chmod -R 0755 $PATHweb/astguiclient/`;
 	`chmod -R 0755 $PATHweb/vicidial/`;

@@ -62,6 +62,7 @@
 # 90202-0505 - Added CPD AMD detection and routing options
 # 90214-0831 - Added CPD Fax detection option
 # 90410-1645 - Added SURVEYCAMPCEP call handling method and cleaned up formatting
+# 90628-1138 - Added more variable options for Cepstral TTS generation
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -457,7 +458,7 @@ if ($affected_rows > 0)
 		### if there are TTS audio files run this
 		if ($t > 0)
 			{
-			$stmtA = "SELECT first_name,last_name,title FROM vicidial_list where lead_id='$CIDlead_id';";
+			$stmtA = "SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time FROM vicidial_list where lead_id='$CIDlead_id';";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -465,9 +466,35 @@ if ($affected_rows > 0)
 			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$TTS_first_name =	$aryA[0];
-				$TTS_last_name =	$aryA[1];
-				$TTS_title =		$aryA[2];
+				$TTS_lead_id =			$aryA[0];
+				$TTS_entry_date =		$aryA[1];
+				$TTS_modify_date =		$aryA[2];
+				$TTS_status =			$aryA[3];
+				$TTS_user =				$aryA[4];
+				$TTS_vendor_lead_code =	$aryA[5];
+				$TTS_source_id =		$aryA[6];
+				$TTS_list_id =			$aryA[7];
+				$TTS_phone_number =		$aryA[8];
+				$TTS_title =			$aryA[9];
+				$TTS_first_name =		$aryA[10];
+				$TTS_middle_initial =	$aryA[11];
+				$TTS_last_name =		$aryA[12];
+				$TTS_address1 =			$aryA[13];
+				$TTS_address2 =			$aryA[14];
+				$TTS_address3 =			$aryA[15];
+				$TTS_city =				$aryA[16];
+				$TTS_state =			$aryA[17];
+				$TTS_province =			$aryA[18];
+				$TTS_postal_code =		$aryA[19];
+				$TTS_country_code =		$aryA[20];
+				$TTS_gender =			$aryA[21];
+				$TTS_date_of_birth =	$aryA[22];
+				$TTS_alt_phone =		$aryA[23];
+				$TTS_email =			$aryA[24];
+				$TTS_security_phrase =	$aryA[25];
+				$TTS_comments =			$aryA[26];
+				$TTS_called_count =		$aryA[27];
+				$TTS_last_local_call_time = $aryA[28];
 				}
 			$sthA->finish();
 
@@ -485,9 +512,35 @@ if ($affected_rows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
 					$TTS_text[$s] =	$aryA[0];
-					$TTS_text[$s] =~ s/--A--first_name--B--/$TTS_first_name/gi;
-					$TTS_text[$s] =~ s/--A--last_name--B--/$TTS_last_name/gi;
+					$TTS_text[$s] =~ s/--A--lead_id--B--/$TTS_lead_id/gi;
+					$TTS_text[$s] =~ s/--A--entry_date--B--/$TTS_entry_date/gi;
+					$TTS_text[$s] =~ s/--A--modify_date--B--/$TTS_modify_date/gi;
+					$TTS_text[$s] =~ s/--A--status--B--/$TTS_status/gi;
+					$TTS_text[$s] =~ s/--A--user--B--/$TTS_user/gi;
+					$TTS_text[$s] =~ s/--A--vendor_lead_code--B--/$TTS_vendor_lead_code/gi;
+					$TTS_text[$s] =~ s/--A--source_id--B--/$TTS_source_id/gi;
+					$TTS_text[$s] =~ s/--A--list_id--B--/$TTS_list_id/gi;
+					$TTS_text[$s] =~ s/--A--phone_number--B--/$TTS_phone_number/gi;
 					$TTS_text[$s] =~ s/--A--title--B--/$TTS_title/gi;
+					$TTS_text[$s] =~ s/--A--first_name--B--/$TTS_first_name/gi;
+					$TTS_text[$s] =~ s/--A--middle_initial--B--/$TTS_middle_initial/gi;
+					$TTS_text[$s] =~ s/--A--last_name--B--/$TTS_last_name/gi;
+					$TTS_text[$s] =~ s/--A--address1--B--/$TTS_address1/gi;
+					$TTS_text[$s] =~ s/--A--address2--B--/$TTS_address2/gi;
+					$TTS_text[$s] =~ s/--A--address3--B--/$TTS_address3/gi;
+					$TTS_text[$s] =~ s/--A--city--B--/$TTS_city/gi;
+					$TTS_text[$s] =~ s/--A--state--B--/$TTS_state/gi;
+					$TTS_text[$s] =~ s/--A--province--B--/$TTS_province/gi;
+					$TTS_text[$s] =~ s/--A--postal_code--B--/$TTS_postal_code/gi;
+					$TTS_text[$s] =~ s/--A--country_code--B--/$TTS_country_code/gi;
+					$TTS_text[$s] =~ s/--A--gender--B--/$TTS_gender/gi;
+					$TTS_text[$s] =~ s/--A--date_of_birth--B--/$TTS_date_of_birth/gi;
+					$TTS_text[$s] =~ s/--A--alt_phone--B--/$TTS_alt_phone/gi;
+					$TTS_text[$s] =~ s/--A--email--B--/$TTS_email/gi;
+					$TTS_text[$s] =~ s/--A--security_phrase--B--/$TTS_security_phrase/gi;
+					$TTS_text[$s] =~ s/--A--comments--B--/$TTS_comments/gi;
+					$TTS_text[$s] =~ s/--A--called_count--B--/$TTS_called_count/gi;
+					$TTS_text[$s] =~ s/--A--last_local_call_time--B--/$TTS_last_local_call_time/gi;
 					$TTS_text[$s] =~ s/[^,\.\<\>\'\/\=\_ 0-9a-zA-Z]//gi;
 					$TTS_textRAW[$s] =	$TTS_text[$s];
 					$TTS_text[$s] =~ s/ /\\ /gi;

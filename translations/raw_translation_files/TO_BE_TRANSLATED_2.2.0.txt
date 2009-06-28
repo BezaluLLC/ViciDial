@@ -190,6 +190,36 @@ Quick Transfer Button||
 This option will add a Quick Transfer button to the agent screen below the Transfer-Conf button that will allow one click blind transferring of calls to the selected In-Group or number. IN_GROUP will send calls to the Default Xfer Group for this Campaign, or In-Group if there was an inbound call. The PRESET options will send the calls to the preset selected. Default is N for disabled||
 PrePopulate Transfer Preset||
 This option will fill in the Number to Dial field in the Transfer Conference frame of the agent screen if defined. Default is N for disabled||
+Enable TTS Integration||
+This setting allows you to enable Text To Speech integration with Cepstral. This is currently only available for outbound Survey type campaigns. Default is 0 for disabled||
+ADD NEW TTS ENTRY||
+ADDING NEW TTS ENTRY||
+MODIFY TTS ENTRY||
+DELETE TTS ENTRY||
+TTS ENTRY LIST||
+TEXT-TO-SPEECH(TTS) LISTINGS||
+Text To Speech||
+Show TTS Entries||
+Add A New TTS Entry||
+TTS ID||
+TTS Name||
+TTS Text||
+TTS ENTRY NOT ADDED||
+there is already a tts entry in the system with this ID||
+TTS ENTRY ADDED||
+MODIFY A TTS RECORD||
+Click here to see Admin chages to this TTS entry||
+DELETE THIS TTS ENTRY||
+TTS ENTRY NOT MODIFIED||
+TTS ENTRY MODIFIED||
+TTS ENTRY NOT DELETED||
+TTS ENTRY DELETION CONFIRMATION||
+Click here to delete tts entry||
+This is the short name of a TTS entry. This needs to be a unique identifier. Do not use any spaces or punctuation for this field. max 50 characters, minimum of 2 characters||
+This is a more descriptive name of the TTS entry. This is a short summary of the TTS definition. max 100 characters, minimum of 2 characters||
+This option allows you to set the TTS entry to active or inactive||
+This is the actual Text To Speech data field that is sent to Cepstral for creation of the audio file to be played to the customer. you can use Speech Synthesis Markup Language -SSML- in this field, for example||
+for a 1 second break. You can also use several variables such as first name, last name and title as ViciDial variables just like you do in a Script: --A--first_name--B--. Here is a list of the available variables: ||
 
 
 add-file: user_territories.php

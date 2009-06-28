@@ -22,8 +22,10 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 
 3. Added new method for monitoring from the Real-time screen using a phone entry
 
-4. Outbound Survey option for using Cepstral Text-to-speech. Requires some
-	manual configuration and tweaking of TTS scripts.
+4. Outbound Survey option for using Cepstral Text-to-speech. Requires Cepstral 
+	to be installed and configured with proper licenses in place to use.
+	You must enable TTS in the System Settings screen, then you can access 
+	the TTS section of the web administration.
 
 5. Added RANDOM and LAST CALL TIME lead order options to campaigns
 
