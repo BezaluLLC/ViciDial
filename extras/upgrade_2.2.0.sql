@@ -218,3 +218,21 @@ ALTER TABLE vicidial_inbound_groups ADD no_agent_action_value VARCHAR(255) defau
 ALTER TABLE vicidial_closer_log MODIFY term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','HOLDRECALLXFER','HOLDTIME','NOAGENT','NONE') default 'NONE';
 
 UPDATE system_settings SET db_schema_version='1157';
+
+CREATE TABLE vicidial_list_update_log (
+event_date DATETIME,
+lead_id INT(9) UNSIGNED,
+vendor_id VARCHAR(20),
+phone_number VARCHAR(20),
+status VARCHAR(6),
+old_status VARCHAR(6),
+filename VARCHAR(255) default '',
+result VARCHAR(20),
+result_rows SMALLINT(3) UNSIGNED default '0',
+index (event_date)
+);
+
+ALTER TABLE vicidial_campaigns ADD quick_transfer_button ENUM('N','IN_GROUP','PRESET_1','PRESET_2') default 'N';
+ALTER TABLE vicidial_campaigns ADD prepopulate_transfer_preset ENUM('N','PRESET_1','PRESET_2') default 'N';
+
+UPDATE system_settings SET db_schema_version='1158';

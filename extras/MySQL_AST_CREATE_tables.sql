@@ -651,7 +651,9 @@ survey_fourth_digit VARCHAR(1) default '',
 survey_fourth_audio_file VARCHAR(50) default 'US_thanks_no_contact',
 survey_fourth_status VARCHAR(6) default 'NI',
 survey_fourth_exten VARCHAR(20) default '8300',
-drop_lockout_time VARCHAR(6) default '0'
+drop_lockout_time VARCHAR(6) default '0',
+quick_transfer_button ENUM('N','IN_GROUP','PRESET_1','PRESET_2') default 'N',
+prepopulate_transfer_preset ENUM('N','PRESET_1','PRESET_2') default 'N'
 );
 
 CREATE TABLE vicidial_lists (
@@ -1551,6 +1553,19 @@ dial_time SMALLINT(2) UNSIGNED default '0',
 index (call_date)
 );
 
+CREATE TABLE vicidial_list_update_log (
+event_date DATETIME,
+lead_id INT(9) UNSIGNED,
+vendor_id VARCHAR(20),
+phone_number VARCHAR(20),
+status VARCHAR(6),
+old_status VARCHAR(6),
+filename VARCHAR(255) default '',
+result VARCHAR(20),
+result_rows SMALLINT(3) UNSIGNED default '0',
+index (event_date)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
@@ -1659,7 +1674,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1157';
+UPDATE system_settings SET db_schema_version='1158';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

@@ -584,7 +584,9 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				{
 				selected_value = '<option SELECTED value="' + value + '">' + value + "</option>\n";
 				}
-			new_content = '<span name=option_route_value_' + option + 'id=option_route_value_' + option + "><a href=\"./admin.php?ADD=3511&menu_id=" + value + "\">Call Menu: </a></span><select size=1 name=option_route_value_" + option + ' id=option_route_value_' + option + " onChange=\"call_menu_link('" + option + "','CALLMENU');\">" + call_menu_list + "\n" + selected_value + '</select>';
+			else
+				{value='';}
+			new_content = '<span name=option_route_link_' + option + ' id=option_route_link_' + option + "><a href=\"./admin.php?ADD=3511&menu_id=" + value + "\">Call Menu: </a></span><select size=1 name=option_route_value_" + option + " id=option_route_value_" + option + " onChange=\"call_menu_link('" + option + "','CALLMENU');\">" + call_menu_list + "\n" + selected_value + '</select>';
 			}
 		if (selected_route=='INGROUP')
 			{
@@ -603,7 +605,8 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				}
 
 			new_content = '<input type=hidden name=option_route_value_context_' + option + ' id=option_route_value_context_' + option + ' value="' + selected_value + '">';
-			new_content = new_content + '<a href="admin.php?ADD=3111&group_id=' + value + '">In-Group:</a> ';
+			new_content = new_content + '<span name=option_route_link_' + option + 'id=option_route_link_' + option + '>';
+			new_content = new_content + '<a href="admin.php?ADD=3111&group_id=' + value + '">In-Group:</a> </span>';
 			new_content = new_content + '<select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + ' onChange="call_menu_link("' + option + '","INGROUP");">';
 			new_content = new_content + '' + ingroup_list + "\n" + selected_value + '</select>';
 			new_content = new_content + ' &nbsp; Handle Method: <select size=1 name=IGhandle_method_' + option + ' id=IGhandle_method_' + option + '>';
@@ -621,7 +624,9 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				{
 				selected_value = '<option SELECTED value="' + value + '">' + value + "</option>\n";
 				}
-			new_content = 'DID: <select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + '>' + did_list + "\n" + selected_value + '</select>';
+			else
+				{value='';}
+			new_content = '<span name=option_route_link_' + option + ' id=option_route_link_' + option + '><a href="admin.php?ADD=3311&did_pattern=' + value + '">DID:</a> </span><select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + " onChange=\"call_menu_link('" + option + "','DID');\">" + did_list + "\n" + selected_value + '</select>';
 			}
 		if (selected_route=='HANGUP')
 			{
@@ -629,6 +634,8 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				{
 				selected_value = value;
 				}
+			else
+				{value='vm-goodbye';}
 			new_content = "Audio File: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=40 maxlength=255 value=\"" + selected_value + "\"> <a href=\"javascript:launch_chooser('option_route_value_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
 			}
 		if (selected_route=='EXTENSION')
@@ -638,6 +645,8 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				selected_value = value;
 				selected_context = value_context;
 				}
+			else
+				{value='8304';}
 			new_content = "Extension: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=20 maxlength=255 value=\"" + selected_value + "\"> &nbsp; Context: <input type=text name=option_route_value_context_" + option + " id=option_route_value_context_" + option + " size=20 maxlength=255 value=\"" + selected_context + "\"> ";
 			}
 		if (selected_route=='PHONE')
@@ -646,6 +655,8 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				{
 				selected_value = '<option SELECTED value="' + value + '">' + value + "</option>\n";
 				}
+			else
+				{value='';}
 			new_content = 'Phone: <select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + '>' + phone_list + "\n" + selected_value + '</select>';
 			}
 		if (selected_route=='VOICEMAIL')
@@ -654,6 +665,8 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				{
 				selected_value = value;
 				}
+			else
+				{value='';}
 			new_content = "Voicemail Box: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=20 maxlength=255 value=\"" + selected_value + "\"> ";
 			}
 		if (selected_route=='AGI')
@@ -662,6 +675,8 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				{
 				selected_value = value;
 				}
+			else
+				{value='';}
 			new_content = "AGI: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=80 maxlength=255 value=\"" + selected_value + "\"> ";
 			}
 

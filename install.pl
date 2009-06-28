@@ -2159,6 +2159,11 @@ if ($WEBONLY < 1)
 		`mkdir -p $PATHhome/VTIGER_IN/DONE`;
 		`chmod -R 0766 $PATHhome/VTIGER_IN`;
 		}
+	if (!-e "$PATHhome/UPDATE_IN/DONE")	
+		{
+		`mkdir -p $PATHhome/UPDATE_IN/DONE`;
+		`chmod -R 0766 $PATHhome/UPDATE_IN`;
+		}
 
 	print "Creating $PATHmonitor directories...\n";
 	if (!-e "$PATHmonitor")					

@@ -233,10 +233,11 @@
 # 90529-0741 - Added nophone agent phone login that will not show any empty session alerts
 # 90531-0635 - Added option to hide customer phone number
 # 90611-1422 - Fixed multiple logging bugs
+# 90628-0655 - Added Quick Transfer button and Preset Prepopulate option
 #
 
-$version = '2.2.0-211';
-$build = '90611-1422';
+$version = '2.2.0-212';
+$build = '90628-0655';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -1044,56 +1045,73 @@ $VDloginDISPLAY=0;
 			$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 			##### grab the campaign settings
-			$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+			$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
 			$row=mysql_fetch_row($rslt);
-				$park_ext =					$row[0];
-				$park_file_name =			$row[1];
-				$web_form_address =			stripslashes($row[2]);
-				$allow_closers =			$row[3];
-				$auto_dial_level =			$row[4];
-				$dial_timeout =				$row[5];
-				$dial_prefix =				$row[6];
-				$campaign_cid =				$row[7];
-				$campaign_vdad_exten =		$row[8];
-				$campaign_rec_exten =		$row[9];
-				$campaign_recording =		$row[10];
-				$campaign_rec_filename =	$row[11];
-				$campaign_script =			$row[12];
-				$get_call_launch =			$row[13];
-				$campaign_am_message_exten = $row[14];
-				$xferconf_a_dtmf =			$row[15];
-				$xferconf_a_number =		$row[16];
-				$xferconf_b_dtmf =			$row[17];
-				$xferconf_b_number =		$row[18];
-				$alt_number_dialing =		$row[19];
-				$VC_scheduled_callbacks =	$row[20];
-				$wrapup_seconds =			$row[21];
-				$wrapup_message =			$row[22];
-				$closer_campaigns =			$row[23];
-				$use_internal_dnc =			$row[24];
-				$allcalls_delay =			$row[25];
-				$omit_phone_code =			$row[26];
-				$agent_pause_codes_active =	$row[27];
-				$no_hopper_leads_logins =	$row[28];
-				$campaign_allow_inbound =	$row[29];
-				$manual_dial_list_id =		$row[30];
-				$default_xfer_group =		$row[31];
-				$xfer_groups =				$row[32];
-				$disable_alter_custphone =	$row[33];
-				$display_queue_count =		$row[34];
-				$manual_dial_filter =		$row[35];
-				$CopY_tO_ClipboarD =		$row[36];
-				$use_campaign_dnc =			$row[37];
-				$three_way_call_cid =		$row[38];
-				$dial_method =				$row[39];
-				$three_way_dial_prefix =	$row[40];
-				$web_form_target =			$row[41];
-				$vtiger_screen_login =		$row[42];
-				$agent_allow_group_alias =	$row[43];
-				$default_group_alias =		$row[44];
+			$park_ext =					$row[0];
+			$park_file_name =			$row[1];
+			$web_form_address =			stripslashes($row[2]);
+			$allow_closers =			$row[3];
+			$auto_dial_level =			$row[4];
+			$dial_timeout =				$row[5];
+			$dial_prefix =				$row[6];
+			$campaign_cid =				$row[7];
+			$campaign_vdad_exten =		$row[8];
+			$campaign_rec_exten =		$row[9];
+			$campaign_recording =		$row[10];
+			$campaign_rec_filename =	$row[11];
+			$campaign_script =			$row[12];
+			$get_call_launch =			$row[13];
+			$campaign_am_message_exten = $row[14];
+			$xferconf_a_dtmf =			$row[15];
+			$xferconf_a_number =		$row[16];
+			$xferconf_b_dtmf =			$row[17];
+			$xferconf_b_number =		$row[18];
+			$alt_number_dialing =		$row[19];
+			$VC_scheduled_callbacks =	$row[20];
+			$wrapup_seconds =			$row[21];
+			$wrapup_message =			$row[22];
+			$closer_campaigns =			$row[23];
+			$use_internal_dnc =			$row[24];
+			$allcalls_delay =			$row[25];
+			$omit_phone_code =			$row[26];
+			$agent_pause_codes_active =	$row[27];
+			$no_hopper_leads_logins =	$row[28];
+			$campaign_allow_inbound =	$row[29];
+			$manual_dial_list_id =		$row[30];
+			$default_xfer_group =		$row[31];
+			$xfer_groups =				$row[32];
+			$disable_alter_custphone =	$row[33];
+			$display_queue_count =		$row[34];
+			$manual_dial_filter =		$row[35];
+			$CopY_tO_ClipboarD =		$row[36];
+			$use_campaign_dnc =			$row[37];
+			$three_way_call_cid =		$row[38];
+			$dial_method =				$row[39];
+			$three_way_dial_prefix =	$row[40];
+			$web_form_target =			$row[41];
+			$vtiger_screen_login =		$row[42];
+			$agent_allow_group_alias =	$row[43];
+			$default_group_alias =		$row[44];
+			$quick_transfer_button =	$row[45];
+			$prepopulate_transfer_preset = $row[46];
+
+			$quick_transfer_button_enabled=0;
+			if (preg_match("/IN_GROUP|PRESET_1|PRESET_2/",$quick_transfer_button))
+				{$quick_transfer_button_enabled=1;}
+
+			$preset_populate='';
+			$prepopulate_transfer_preset_enabled=0;
+			if (preg_match("/PRESET_1|PRESET_2/",$prepopulate_transfer_preset))
+				{
+				$prepopulate_transfer_preset_enabled=1;
+				if (preg_match("/PRESET_1/",$prepopulate_transfer_preset))
+					{$preset_populate = $xferconf_a_number;}
+				if (preg_match("/PRESET_2/",$prepopulate_transfer_preset))
+					{$preset_populate = $xferconf_b_number;}
+				}
 
 			$default_group_alias_cid='';
 			if (strlen($default_group_alias)>1)
@@ -2409,6 +2427,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var alert_enabled = '<?php echo $VU_alert_enabled ?>';
 	var shift_logout_flag = 0;
 	var vtiger_callback_id = 0;
+	var quick_transfer_button = '<?php echo $quick_transfer_button ?>';
+	var quick_transfer_button_enabled = '<?php echo $quick_transfer_button_enabled ?>';
+	var prepopulate_transfer_preset = '<?php echo $prepopulate_transfer_preset ?>';
+	var prepopulate_transfer_preset_enabled = '<?php echo $prepopulate_transfer_preset_enabled ?>';
 	var no_empty_session_warnings = '<?php echo $no_empty_session_warnings ?>';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -4187,6 +4209,33 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								document.getElementById("VolumeUpSpan").innerHTML = "<a href=\"#\" onclick=\"volume_control('UP','" + MDchannel + "','');return false;\"><IMG SRC=\"./images/vdc_volume_up.gif\" BORDER=0></a>";
 								document.getElementById("VolumeDownSpan").innerHTML = "<a href=\"#\" onclick=\"volume_control('DOWN','" + MDchannel + "','');return false;\"><IMG SRC=\"./images/vdc_volume_down.gif\" BORDER=0></a>";
 
+								if (quick_transfer_button == 'IN_GROUP')
+									{
+									document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
+									}
+								if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') )
+									{
+									document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
+
+									if (quick_transfer_button == 'PRESET_1')
+										{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
+									if (quick_transfer_button == 'PRESET_2')
+										{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
+									}
+
+								// Build transfer pull-down list
+								var loop_ct = 0;
+								var live_XfeR_HTML = '';
+								var XfeR_SelecT = '';
+								while (loop_ct < XFgroupCOUNT)
+									{
+									if (VARxfergroups[loop_ct] == LIVE_default_xfer_group)
+										{XfeR_SelecT = 'SELECTED ';}
+									else {XfeR_SelecT = '';}
+									live_XfeR_HTML = live_XfeR_HTML + "<option " + XfeR_SelecT + "value=\"" + VARxfergroups[loop_ct] + "\">" + VARxfergroups[loop_ct] + " - " + VARxfergroupsnames[loop_ct] + "</option>\n";
+									loop_ct++;
+									}
+								document.getElementById("XfeRGrouPLisT").innerHTML = "<select size=1 name=XfeRGrouP class=\"cust_form\" id=XfeRGrouP>" + live_XfeR_HTML + "</select>";
 
 								// INSERT VICIDIAL_LOG ENTRY FOR THIS CALL PROCESS
 								DialLog("start");
@@ -5271,11 +5320,39 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 							document.getElementById("DialBlindVMail").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRVMAIL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_XB_ammessage.gif\" border=0 alt=\"Blind Transfer VMail Message\"></a>";
 		
+							if (quick_transfer_button == 'IN_GROUP')
+								{
+								document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
+								}
+							if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') )
+								{
+								document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
+
+								if (quick_transfer_button == 'PRESET_1')
+									{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
+								if (quick_transfer_button == 'PRESET_2')
+									{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
+								}
+
+							// Build transfer pull-down list
+							var loop_ct = 0;
+							var live_XfeR_HTML = '';
+							var XfeR_SelecT = '';
+							while (loop_ct < XFgroupCOUNT)
+								{
+								if (VARxfergroups[loop_ct] == LIVE_default_xfer_group)
+									{XfeR_SelecT = 'SELECTED ';}
+								else {XfeR_SelecT = '';}
+								live_XfeR_HTML = live_XfeR_HTML + "<option " + XfeR_SelecT + "value=\"" + VARxfergroups[loop_ct] + "\">" + VARxfergroups[loop_ct] + " - " + VARxfergroupsnames[loop_ct] + "</option>\n";
+								loop_ct++;
+								}
+							document.getElementById("XfeRGrouPLisT").innerHTML = "<select size=1 name=XfeRGrouP class=\"cust_form\" id=XfeRGrouP>" + live_XfeR_HTML + "</select>";
+
 							if (lastcustserverip == server_ip)
-							{
+								{
 								document.getElementById("VolumeUpSpan").innerHTML = "<a href=\"#\" onclick=\"volume_control('UP','" + lastcustchannel + "','');return false;\"><IMG SRC=\"./images/vdc_volume_up.gif\" BORDER=0></a>";
 								document.getElementById("VolumeDownSpan").innerHTML = "<a href=\"#\" onclick=\"volume_control('DOWN','" + lastcustchannel + "','');return false;\"><IMG SRC=\"./images/vdc_volume_down.gif\" BORDER=0></a>";
-							}
+								}
 
 							if (dial_method == "INBOUND_MAN")
 								{
@@ -5714,6 +5791,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			document.getElementById("DialBlindVMail").innerHTML = "<IMG SRC=\"./images/vdc_XB_ammessage_OFF.gif\" border=0 alt=\"Blind Transfer VMail Message\">";
 			document.getElementById("VolumeUpSpan").innerHTML = "<IMG SRC=\"./images/vdc_volume_up_off.gif\" BORDER=0>";
 			document.getElementById("VolumeDownSpan").innerHTML = "<IMG SRC=\"./images/vdc_volume_down_off.gif\" BORDER=0>";
+
+			if (quick_transfer_button_enabled > 0)
+				{document.getElementById("QuickXfer").innerHTML = "<IMG SRC=\"./images/vdc_LB_quickxfer_OFF.gif\" border=0 alt=\"QUICK TRANSFER\">";}
 
 			document.vicidial_form.custdatetime.value		= '';
 
@@ -7916,19 +7996,8 @@ else
 				HKbutton_allowed = 0;
 				showDiv('TransferMain');
 				document.getElementById("XferControl").innerHTML = "<a href=\"#\" onclick=\"ShoWTransferMain('OFF','YES');\"><IMG SRC=\"./images/vdc_LB_transferconf.gif\" border=0 alt=\"Transfer - Conference\"></a>";
-				var loop_ct = 0;
-				var live_XfeR_HTML = '';
-				var XfeR_SelecT = '';
-				while (loop_ct < XFgroupCOUNT)
-					{
-					if (VARxfergroups[loop_ct] == LIVE_default_xfer_group)
-						{XfeR_SelecT = 'SELECTED ';}
-					else {XfeR_SelecT = '';}
-					live_XfeR_HTML = live_XfeR_HTML + "<option " + XfeR_SelecT + "value=\"" + VARxfergroups[loop_ct] + "\">" + VARxfergroups[loop_ct] + " - " + VARxfergroupsnames[loop_ct] + "</option>\n";
-					loop_ct++;
-					}
-
-				document.getElementById("XfeRGrouPLisT").innerHTML = "<select size=1 name=XfeRGrouP class=\"cust_form\" id=XfeRGrouP>" + live_XfeR_HTML + "</select>";
+				if (quick_transfer_button_enabled > 0)
+					{document.getElementById("QuickXfer").innerHTML = "<IMG SRC=\"./images/vdc_LB_quickxfer_OFF.gif\" border=0 alt=\"QUICK TRANSFER\">";}
 				}
 			else
 				{
@@ -7937,6 +8006,15 @@ else
 				if (showoffvar == 'YES')
 					{
 					document.getElementById("XferControl").innerHTML = "<a href=\"#\" onclick=\"ShoWTransferMain('ON');\"><IMG SRC=\"./images/vdc_LB_transferconf.gif\" border=0 alt=\"Transfer - Conference\"></a>";
+
+					if (quick_transfer_button == 'IN_GROUP')
+						{
+						document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
+						}
+					if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') )
+						{
+						document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
+						}
 					}
 				}
 			if (three_way_call_cid == 'AGENT_CHOOSE')
@@ -8195,7 +8273,7 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 
 	<BR>
 
-	<IMG SRC="./images/vdc_XB_number.gif" border=0 alt="Number to call"> <input type=text size=15 name=xfernumber maxlength=25 class="cust_form"> &nbsp; 
+	<IMG SRC="./images/vdc_XB_number.gif" border=0 alt="Number to call"> <input type=text size=15 name=xfernumber maxlength=25 class="cust_form" value="<?php echo $preset_populate ?>"> &nbsp; 
 	<input type=hidden name=xferuniqueid>
 	<input type=checkbox name=xferoverride size=1 value="0"><font class="body_tiny"> DIAL OVERRIDE</font> &nbsp;
 	<span STYLE="background-color: #CCCCCC" id="Leave3WayCall"><a href="#" onclick="leave_3way_call('FIRST');return false;"><IMG SRC="./images/vdc_XB_leave3waycall.gif" border=0 alt="LEAVE 3-WAY CALL"></a></span> 
@@ -8515,6 +8593,12 @@ RECORD ID: <font class="body_small"><span id="RecorDID"></span></font><BR>
 <span id="SpacerSpanB"><IMG SRC="./images/blank.gif" width=145 height=16 border=0></span><BR>
 <span STYLE="background-color: #CCCCCC" id="ParkControl"><IMG SRC="./images/vdc_LB_parkcall_OFF.gif" border=0 alt="Park Call"></span><BR>
 <span STYLE="background-color: #CCCCCC" id="XferControl"><IMG SRC="./images/vdc_LB_transferconf_OFF.gif" border=0 alt="Transfer - Conference"></span><BR>
+
+<?php
+if ($quick_transfer_button_enabled > 0)
+	{echo "<span STYLE=\"background-color: #CCCCCC\" id=\"QuickXfer\"><IMG SRC=\"./images/vdc_LB_quickxfer_OFF.gif\" border=0 alt=\"Quick Transfer\"></span><BR>\n";}
+?>
+
 <span id="SpacerSpanC"><IMG SRC="./images/blank.gif" width=145 height=16 border=0></span><BR>
 <span STYLE="background-color: #FFCCFF" id="HangupControl"><IMG SRC="./images/vdc_LB_hangupcustomer_OFF.gif" border=0 alt="Hangup Customer"></span><BR>
 <span id="SpacerSpanD"><IMG SRC="./images/blank.gif" width=145 height=16 border=0></span><BR>

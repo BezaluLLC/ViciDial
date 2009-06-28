@@ -186,6 +186,10 @@ No Agent No Queue Action||
 If No Agent No Queue is enabled, then this field defines where the call will go if there are no agents in the In-Group. Default is MESSAGE, this plays the sound files in the Action Value field and then hangs up||
 No Agent No Queue Action Value||
 This is the value for the Action above. Default is||
+Quick Transfer Button||
+This option will add a Quick Transfer button to the agent screen below the Transfer-Conf button that will allow one click blind transferring of calls to the selected In-Group or number. IN_GROUP will send calls to the Default Xfer Group for this Campaign, or In-Group if there was an inbound call. The PRESET options will send the calls to the preset selected. Default is N for disabled||
+PrePopulate Transfer Preset||
+This option will fill in the Number to Dial field in the Transfer Conference frame of the agent screen if defined. Default is N for disabled||
 
 
 add-file: user_territories.php
@@ -196,6 +200,7 @@ add-file: AST_agent_timeclock_detail.php
 ############################################################ CLIENT
 
 You are not allowed to dial into other agent sessions||
+QUICK TRANSFER||
 
 
 ############################################################  MANAGER Manual

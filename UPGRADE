@@ -104,6 +104,15 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 
 28. Changed the agent alert extension to a filename in in-groups
 
+29. Added process for updating statuses on leads in the vicidial_list table
+	through a batch process(VICIDIAL_UPDATE_leads_status_file.pl) as well
+	as a web-based report to show the stats for these transactions
+
+30. Added the option for a Quick Transfer from the agent screen. This option
+	allows the blind transfer of a call to the default transfer group or one
+	of the presets with a single button click. Also added a preset populate
+	feature to pre-populate the Number to Call field with one of the presets
+	for the campaign.
 
 
 
