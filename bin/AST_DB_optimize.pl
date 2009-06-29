@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_DB_optimize.pl version 2.0.5   *DBI-version*
+# AST_DB_optimize.pl version 2.2.0   *DBI-version*
 #
 # DESCRIPTION:
 # optimizes the tables used in the asterisk MySQL database
@@ -18,6 +18,7 @@
 # 80909-0555 - added vicidial_campaign_dnc table
 # 90307-2025 - Added several new queries and rearranged update/deletes
 # 90401-1335 - Added quiet and test flag functions
+# 90628-2354 - Added vicidial_drop_rate_groups optimizations
 #
 
 # default path to astguiclient configuration file:
@@ -122,6 +123,25 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 			}
 
 	$stmtA = "optimize table vicidial_campaign_stats;";
+		if($DB){print STDERR "\n|$stmtA|\n";}
+		if (!$T) {
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+   					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+   					$sthArows=$sthA->rows;
+					 @aryA = $sthA->fetchrow_array;
+   					 if (!$q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+					$sthA->finish();
+				 }
+
+	$stmtA = "UPDATE vicidial_drop_rate_groups SET calls_today='0', answers_today='0', drops_today='0', drops_today_pct='0', drops_answers_today_pct='0';";
+		if($DB){print STDERR "\n|$stmtA|\n";}
+		if (!$T) 
+			{
+			$affected_rows = $dbhA->do($stmtA);
+			if(!$q){print STDERR "\n|$affected_rows vicidial_campaign_stats records reset|\n";}
+			}
+
+	$stmtA = "optimize table vicidial_drop_rate_groups;";
 		if($DB){print STDERR "\n|$stmtA|\n";}
 		if (!$T) {
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;

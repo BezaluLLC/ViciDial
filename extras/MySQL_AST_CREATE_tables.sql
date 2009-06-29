@@ -653,7 +653,8 @@ survey_fourth_status VARCHAR(6) default 'NI',
 survey_fourth_exten VARCHAR(20) default '8300',
 drop_lockout_time VARCHAR(6) default '0',
 quick_transfer_button ENUM('N','IN_GROUP','PRESET_1','PRESET_2') default 'N',
-prepopulate_transfer_preset ENUM('N','PRESET_1','PRESET_2') default 'N'
+prepopulate_transfer_preset ENUM('N','PRESET_1','PRESET_2') default 'N',
+drop_rate_group VARCHAR(20) default 'DISABLED'
 );
 
 CREATE TABLE vicidial_lists (
@@ -1566,6 +1567,16 @@ result_rows SMALLINT(3) UNSIGNED default '0',
 index (event_date)
 );
 
+CREATE TABLE vicidial_drop_rate_groups (
+group_id VARCHAR(20) PRIMARY KEY NOT NULL,
+update_time TIMESTAMP,
+calls_today INT(9) UNSIGNED default '0',
+answers_today INT(9) UNSIGNED default '0',
+drops_today INT(9) UNSIGNED default '0',
+drops_today_pct VARCHAR(6) default '0',
+drops_answers_today_pct VARCHAR(6) default '0'
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
@@ -1654,6 +1665,17 @@ INSERT INTO vicidial_override_ids(id_table,active,value) values('phones','0','10
 
 INSERT INTO vicidial_lead_filters(lead_filter_id,lead_filter_name,lead_filter_comments,lead_filter_sql) values('DROP72HOUR','UK 72 hour Drop No Call','Prevents dropped calls from being called within 72 hours of the last attempt',"( ( (status='DROP') and (last_local_call_time < CONCAT(DATE_ADD(CURDATE(), INTERVAL -3 DAY),' ',CURTIME()) ) ) or (status != 'DROP') )");
 
+INSERT INTO vicidial_drop_rate_groups SET group_id='101';
+INSERT INTO vicidial_drop_rate_groups SET group_id='102';
+INSERT INTO vicidial_drop_rate_groups SET group_id='103';
+INSERT INTO vicidial_drop_rate_groups SET group_id='104';
+INSERT INTO vicidial_drop_rate_groups SET group_id='105';
+INSERT INTO vicidial_drop_rate_groups SET group_id='106';
+INSERT INTO vicidial_drop_rate_groups SET group_id='107';
+INSERT INTO vicidial_drop_rate_groups SET group_id='108';
+INSERT INTO vicidial_drop_rate_groups SET group_id='109';
+INSERT INTO vicidial_drop_rate_groups SET group_id='110';
+
 UPDATE system_settings SET qc_last_pull_time=NOW();
 
 CREATE INDEX country_postal_code on vicidial_postal_codes (country_code,postal_code);
@@ -1674,7 +1696,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1158';
+UPDATE system_settings SET db_schema_version='1159';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

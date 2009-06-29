@@ -236,3 +236,28 @@ ALTER TABLE vicidial_campaigns ADD quick_transfer_button ENUM('N','IN_GROUP','PR
 ALTER TABLE vicidial_campaigns ADD prepopulate_transfer_preset ENUM('N','PRESET_1','PRESET_2') default 'N';
 
 UPDATE system_settings SET db_schema_version='1158';
+
+CREATE TABLE vicidial_drop_rate_groups (
+group_id VARCHAR(20) PRIMARY KEY NOT NULL,
+update_time TIMESTAMP,
+calls_today INT(9) UNSIGNED default '0',
+answers_today INT(9) UNSIGNED default '0',
+drops_today INT(9) UNSIGNED default '0',
+drops_today_pct VARCHAR(6) default '0',
+drops_answers_today_pct VARCHAR(6) default '0'
+);
+
+INSERT INTO vicidial_drop_rate_groups SET group_id='101';
+INSERT INTO vicidial_drop_rate_groups SET group_id='102';
+INSERT INTO vicidial_drop_rate_groups SET group_id='103';
+INSERT INTO vicidial_drop_rate_groups SET group_id='104';
+INSERT INTO vicidial_drop_rate_groups SET group_id='105';
+INSERT INTO vicidial_drop_rate_groups SET group_id='106';
+INSERT INTO vicidial_drop_rate_groups SET group_id='107';
+INSERT INTO vicidial_drop_rate_groups SET group_id='108';
+INSERT INTO vicidial_drop_rate_groups SET group_id='109';
+INSERT INTO vicidial_drop_rate_groups SET group_id='110';
+
+ALTER TABLE vicidial_campaigns ADD drop_rate_group VARCHAR(20) default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1159';

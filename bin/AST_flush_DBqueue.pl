@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_flush_DBqueue.pl    version 2.0.5
+# AST_flush_DBqueue.pl    version 2.2.0
 #
 # DESCRIPTION:
 # - clears out mysql records for this server for the ACQS vicidial_manager table
@@ -8,12 +8,13 @@
 #
 # It is recommended that you run this program on the local Asterisk machine
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60717-1214 - changed to DBI by Marin Blu
 # 60717-1536 - changed to use /etc/astguiclient.conf for configs
 # 60910-0238 - removed park_log query
+# 90628-2358 - Added vicidial_drop_rate_groups optimization
 #
 
 $secX = time();
@@ -220,6 +221,18 @@ else
 				 }
         if (!$Q) {print " - optimize vicidial_hopper          \n";}
 
+
+        $stmtA = "optimize table vicidial_drop_rate_groups;";
+                if($DB){print STDERR "\n|$stmtA|\n";}
+                if (!$T) {
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+   					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+   					$sthArows=$sthA->rows;
+					 @aryA = $sthA->fetchrow_array;
+   					 if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+					$sthA->finish();
+				 }
+        if (!$Q) {print " - optimize vicidial_drop_rate_groups          \n";}
 
 
 
