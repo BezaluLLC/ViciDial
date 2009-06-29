@@ -747,6 +747,7 @@ while($one_day_interval > 0)
 												else
 													{$Ndialstring = "$Local_out_prefix$phone_code$phone_number";}
 
+												if (length($ext_context) < 1) {$ext_context='default';}
 												### use manager middleware-app to connect the next call to the meetme room
 												# VmmddhhmmssLLLLLLLLL
 													$VqueryCID = "V$CIDdate$PADlead_id";

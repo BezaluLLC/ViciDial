@@ -4667,7 +4667,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="phones-pass">
 <BR>
-<B>Password -</B>  The password used for the phone user to login to the client applications.
+<B>Password -</B>  The password used for the phone user to login to the client applications. IMPORTANT, this is the password only for the agent web interface phone login, to change the sip.conf or iax.conf password, or secret, for this phone device you need to modify the Conf File Secret field further down on this page.
 
 <BR>
 <A NAME="phones-status">
