@@ -52,10 +52,11 @@
 # 90602-0405 - Added list mix display in statuses and order if active
 # 90603-1845 - Fixed color coding bug
 # 90627-0608 - Some Formatting changes, added in-group name display
+# 90701-0657 - Fixed inbound=No calculation issues
 #
 
-$version = '2.0.5-43';
-$build = '90627-0608';
+$version = '2.0.5-44';
+$build = '90701-0657';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -538,11 +539,27 @@ if (!$group) {echo "<BR><BR>please select a campaign from the pulldown above</FO
 else
 {
 $multi_drop=0;
+### Gather list of all Closer group ids for exclusion from stats
+$stmt = "select group_id from vicidial_inbound_groups;";
+$rslt=mysql_query($stmt, $link);
+$ingroups_to_print = mysql_num_rows($rslt);
+while ($ingroups_to_print > $c)
+	{
+	$row=mysql_fetch_row($rslt);
+	$ALLcloser_campaignsSQL .= "'$row[0]',";
+	$c++;
+	}
+$ALLcloser_campaignsSQL = preg_replace("/,$/","",$ALLcloser_campaignsSQL);
+if (strlen($ALLcloser_campaignsSQL)<2)
+	{$ALLcloser_campaignsSQL="''";}
+if ($DB > 0) {echo "\n|$ALLcloser_campaignsSQL|$stmt|\n";}
+
 
 ##### INBOUND ONLY ###
 if (ereg('O',$with_inbound))
 	{
 	$multi_drop++;
+	### Gather list of Closer group ids
 	$stmt = "select closer_campaigns from vicidial_campaigns where campaign_id IN($group_SQL);";
 	$rslt=mysql_query($stmt, $link);
 	$ccamps_to_print = mysql_num_rows($rslt);
@@ -677,7 +694,10 @@ if (ereg('O',$with_inbound))
 
 	if (eregi('ALL-ACTIVE',$group_string))
 		{
-		$stmtB="select sum(calls_today),sum(drops_today),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(hold_sec_stat_one),sum(hold_sec_stat_two),sum(hold_sec_answer_calls),sum(hold_sec_drop_calls),sum(hold_sec_queue_calls) from vicidial_campaign_stats;";
+		$non_inboundSQL='';
+		if (ereg('N',$with_inbound))
+			{$non_inboundSQL = "where campaign_id NOT IN ($ALLcloser_campaignsSQL)";}
+		$stmtB="select sum(calls_today),sum(drops_today),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(hold_sec_stat_one),sum(hold_sec_stat_two),sum(hold_sec_answer_calls),sum(hold_sec_drop_calls),sum(hold_sec_queue_calls) from vicidial_campaign_stats $non_inboundSQL;";
 		}
 
 	$stmtC="select agent_non_pause_sec from vicidial_campaign_stats where campaign_id IN($group_SQL);";
@@ -798,10 +818,13 @@ else
 	{
 	if (eregi('ALL-ACTIVE',$group_string))
 		{
+		$non_inboundSQL='';
+		if (ereg('N',$with_inbound))
+			{$non_inboundSQL = "where campaign_id NOT IN ($ALLcloser_campaignsSQL)";}
 		$multi_drop++;
 		$stmt="select avg(auto_dial_level),min(dial_status_a),min(dial_status_b),min(dial_status_c),min(dial_status_d),min(dial_status_e),min(lead_order),min(lead_filter_id),sum(hopper_level),min(dial_method),avg(adaptive_maximum_level),avg(adaptive_dropped_percentage),avg(adaptive_dl_diff_target),avg(adaptive_intensity),min(available_only_ratio_tally),min(adaptive_latest_server_time),min(local_call_time),avg(dial_timeout),min(dial_statuses),max(agent_pause_codes_active),max(list_order_mix) from vicidial_campaigns;";
 
-		$stmtB="select sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4) from vicidial_campaign_stats;";
+		$stmtB="select sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4) from vicidial_campaign_stats $non_inboundSQL;";
 		}
 	else
 		{

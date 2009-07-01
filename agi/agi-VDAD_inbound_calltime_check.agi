@@ -447,6 +447,7 @@ $affected_rowsL = $dbhA->do($stmtA);
 if ($AGILOG) {$agi_string = "--    LIL : |$affected_rowsL|$uniqueid|$callerid|$extension|";   &agi_output;}
 
 
+$sthA->finish();
 $dbhA->disconnect();
 
 exit;

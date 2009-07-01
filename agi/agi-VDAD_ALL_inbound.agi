@@ -1754,7 +1754,7 @@ if ($agent_search_method =~ /^LO|^LB/)
 				$VHqueryCID = "VH$CIDdate$VDADconf_exten";
 
 				### insert a NEW record to the vicidial_manager table to play the alert message to the agent
-				$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$VARserver_ip','','Originate','$VHqueryCID','Exten: 83047777777777','Context: vicidial-auto','Channel: Local/$alertVDADremDIALstr$at$ext_context','Priority: 1','Callerid: $agent_alert_exten','Timeout: 10','','','','')";
+				$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$VDADserver_ip','','Originate','$VHqueryCID','Exten: 83047777777777','Context: vicidial-auto','Channel: Local/$alertVDADremDIALstr$at$ext_context','Priority: 1','Callerid: $agent_alert_exten','Timeout: 10','','','','')";
 				$affected_rows = $dbhA->do($stmtA);  
 					$dbhP=$dbhA;   $mysql_count='02068';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				if ($AGILOG) {$agi_string = "--    VDCL agent alert: |$VHqueryCID|$alertVDADremDIALstr|$channel|insert to vicidial_manager";   &agi_output;}
