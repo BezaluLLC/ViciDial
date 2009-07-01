@@ -63,6 +63,7 @@
 # 90214-0831 - Added CPD Fax detection option
 # 90410-1645 - Added SURVEYCAMPCEP call handling method and cleaned up formatting
 # 90628-1138 - Added more variable options for Cepstral TTS generation
+# 90630-2250 - Added more Sangoma CDP statuses
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -672,7 +673,7 @@ if ($call_handle_method =~ /REMIND/)
 	############# BEGIN CPD AMD SECTION ############################
 	if ($cpd_amd_action =~ /DISPO|MESSAGE/)
 		{
-		$stmtA = "SELECT count(*) FROM vicidial_cpd_log where callerid='$callerid' and result IN('Answering-Machine','Fax') and status='NEW';";
+		$stmtA = "SELECT count(*) FROM vicidial_cpd_log where callerid='$callerid' and result NOT IN('Voice','Unknown','???','') and status='NEW';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -713,7 +714,7 @@ if ($call_handle_method =~ /SURVEY/)
 	############# BEGIN CPD AMD SECTION ############################
 	if ($cpd_amd_action =~ /DISPO|MESSAGE/)
 		{
-		$stmtA = "SELECT count(*) FROM vicidial_cpd_log where callerid='$callerid' and result IN('Answering-Machine','Fax') and status='NEW';";
+		$stmtA = "SELECT count(*) FROM vicidial_cpd_log where callerid='$callerid' and result NOT IN('Voice','Unknown','???','') and status='NEW';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1287,7 +1288,7 @@ while ($drop_timer <= $DROP_TIME)
 	############# BEGIN CPD AMD SECTION ############################
 	if ($cpd_amd_action =~ /DISPO|MESSAGE/)
 		{
-		$stmtA = "SELECT count(*) FROM vicidial_cpd_log where callerid='$callerid' and result IN('Answering-Machine','Fax') and status='NEW';";
+		$stmtA = "SELECT count(*) FROM vicidial_cpd_log where callerid='$callerid' and result NOT IN('Voice','Unknown','???','') and status='NEW';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1980,10 +1981,20 @@ sub cpd_end_call
 		$cpd_result		= "$aryA[0]";
 		}
 	$sthA->finish();
-	if ($cpd_result =~ /Fax/i)
-		{$vdad_result='AFAX';}
-	else
-		{$vdad_result='AA';}
+	$CPDfound=0;
+	if ($cpd_result =~ /Busy/i)					{$vdad_result='CPDB';   $CPDfound++;}
+	if ($cpd_result =~ /All-Trunks-Busy/i)		{$vdad_result='CPDATB';   $CPDfound++;}
+	if ($cpd_result =~ /No-Answer/i)			{$vdad_result='CPDNA';   $CPDfound++;}
+	if ($cpd_result =~ /Reject/i)				{$vdad_result='CPDREJ';   $CPDfound++;}
+	if ($cpd_result =~ /Invalid-Number/i)		{$vdad_result='CPDINV';   $CPDfound++;}
+	if ($cpd_result =~ /Service-Unavailable/i)	{$vdad_result='CPDSUA';   $CPDfound++;}
+	if ($cpd_result =~ /Sit-Intercept/i)		{$vdad_result='CPDSI';   $CPDfound++;}
+	if ($cpd_result =~ /Sit-No-Circuit/i)		{$vdad_result='CPDSNC';   $CPDfound++;}
+	if ($cpd_result =~ /Sit-Reorder/i)			{$vdad_result='CPDSR';   $CPDfound++;}
+	if ($cpd_result =~ /Sit-Unknown/i)			{$vdad_result='CPDSUK';   $CPDfound++;}
+	if ($cpd_result =~ /Sit-Vacant/i)			{$vdad_result='CPDSV';   $CPDfound++;}
+	if ($cpd_result =~ /Fax|Modem/i)			{$vdad_result='AFAX';   $CPDfound++;}
+	if ($CPDfound < 1)							{$vdad_result='AA';}
 
 	if ($AGILOG) {$agi_string = "CALL CPD AMD Detected $channel $callerid|$drop_timer|$cpd_result";   &agi_output;}
 

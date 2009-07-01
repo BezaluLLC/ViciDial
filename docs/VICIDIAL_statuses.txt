@@ -27,6 +27,7 @@ PU - Call Picked Up - Status that a call is changed to as soon as the carrier ha
 PM - Played Message - outbound broadcast or SURVEY campaign status for when a message has been played to the customer
 XFER - Call Transferred - Call has been sent from an agent to a Closer agent
 ERI - Agent Error - An agent has closed their browser before dispositioning a lead
+DONEM - Agent placed a manual dial phone call and then closed their browser before dispositioning a lead
 SVYEXT - Survey sent to Extension - Survey outbound campaign status only
 SVYVM - Survey sent to Voicemail - Survey outbound campaign status only
 SVYHU - Survey Hungup - Survey outbound campaign status only
@@ -34,3 +35,16 @@ SVYREC - Survey sent to Record - Survey outbound campaign status only
 HXFER - Hold Recall Transfer to another in-group
 HOLDTO - Hold time option call termination on inbound call
 QVMAIL - Queue Abandon Voicemail Left
+CPDATB - Sangoma Call Progress Detection CPD All-Trunks-Busy
+CPDB - Sangoma Call Progress Detection CPD Busy
+CPDNA - Sangoma Call Progress Detection CPD No-Answer
+CPDREJ - Sangoma Call Progress Detection CPD Reject
+CPDINV - Sangoma Call Progress Detection CPD Invalid-Number
+CPDSUA - Sangoma Call Progress Detection CPD Service-Unavailable
+CPDSI - Sangoma Call Progress Detection CPD Sit-Intercept
+CPDSNC - Sangoma Call Progress Detection CPD Sit-No-Circuit
+CPDSR - Sangoma Call Progress Detection CPD Sit-Reorder
+CPDSUK - Sangoma Call Progress Detection CPD Sit-Unknown
+CPDSV - Sangoma Call Progress Detection CPD Sit-Vacant
+CPDUK - Sangoma Call Progress Detection CPD Unknown
+CPDERR - Sangoma Call Progress Detection CPD Error

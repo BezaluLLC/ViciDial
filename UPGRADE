@@ -62,7 +62,7 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	allowing you to lock out agent phone in a call center from dialing out.
 
 14. Added option to login as an agent with no phone. Must create a phones entry
-	called nophone with dialplan number of 8300.
+	called 'nophone' with dialplan number of 8300.
 
 15. Added live monitoring of calls and retrieval of recorded calls through the
 	QueueMetrics interface
@@ -117,8 +117,13 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	for the campaign.
 
 31. Added Multiple Campaign Drop Rate Groups to allow campaigns to share a drop
-	percentage. This allows you to to run multiple smaller campaigns at once
-	and more easily control your drop rate.
+	percentage. This allows you to to run multiple smaller campaigns at one
+	time and more easily control your drop rate.
+
+32. Added pre-Answer statuses and processing for the Sangoma CPD(Call Progress
+	Detection) proxy as well as a new netborder sip patch:
+	netborder-cpd-1.4.patch
+
 
 
 

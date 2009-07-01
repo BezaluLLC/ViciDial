@@ -21404,6 +21404,8 @@ if ($ADD==1500)
 	echo "</TR>\n";
 
 	$o=0;
+	$menu_id = $MT;
+
 	while ($menus_to_print > $o) 
 		{
 		$row=mysql_fetch_row($rslt);

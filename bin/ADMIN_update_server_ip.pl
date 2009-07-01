@@ -12,6 +12,7 @@
 # 71205-2144 - Added display of extensions.conf example for call routing
 # 80321-0220 - Updated for new settings
 # 90211-1247 - Added asterisk version
+# 90630-2256 - vicidial_process_triggers
 #
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
@@ -435,6 +436,11 @@ if ($DB) {print "     |$affected_rows|$stmtA|\n";}
 
 print "  Updating vicidial_inbound_dids table...\n";
 $stmtA = "UPDATE vicidial_inbound_dids SET server_ip='$VARserver_ip' where server_ip='$VARold_server_ip';";
+$affected_rows = $dbhA->do($stmtA);
+if ($DB) {print "     |$affected_rows|$stmtA|\n";}
+
+print "  Updating vicidial_process_triggers table...\n";
+$stmtA = "UPDATE vicidial_process_triggers SET server_ip='$VARserver_ip' where server_ip='$VARold_server_ip';";
 $affected_rows = $dbhA->do($stmtA);
 if ($DB) {print "     |$affected_rows|$stmtA|\n";}
 

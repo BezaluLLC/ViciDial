@@ -28,6 +28,7 @@
 # 90621-0823 - Added phones conf file secret field use
 # 90621-1425 - Added tracking group for call menus
 # 90622-2146 - Added 83047777777777 for dynamic agent alert extension
+# 90630-2259 - Added vicidial_process_triggers functionality
 #
 
 $DB=0; # Debug flag
@@ -1435,12 +1436,69 @@ if ( ($active_asterisk_server =~ /Y/) && ( ($sounds_update =~ /Y/) || ($upload_a
 		`/usr/bin/screen -d -m -S AudioStore $PATHhome/ADMIN_audio_store_sync.pl $upload_flag 2>/dev/null 1>&2`;
 		}
 	}
-
-
 ################################################################################
 #####  END  Audio Store sync
 ################################################################################
 
+
+
+
+
+
+################################################################################
+#####  BEGIN  process triggers
+################################################################################
+$stmtA = "SELECT trigger_id,user,trigger_lines FROM vicidial_process_triggers where server_ip='$server_ip' and trigger_run='1' and trigger_time < NOW() order by trigger_time limit 1;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthBrows=$sthA->rows;
+if ($sthBrows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$trigger_id	=		"$aryA[0]";
+	$user	=			"$aryA[1]";
+	$trigger_lines	=	"$aryA[2]";
+	}
+$sthA->finish();
+
+if ($sthBrows > 0)
+	{
+	$stmtA="UPDATE vicidial_process_triggers SET trigger_run='0' where trigger_id='$trigger_id';";
+	$affected_rows = $dbhA->do($stmtA);
+
+	$MT[0]='';
+	$trigger_results='';
+	if ($DB) {print "running process trigger: $trigger_id\n";}
+	@triggers = split(/\|/,$trigger_lines);
+	$i=0;
+	foreach(@triggers)
+		{
+		$trigger_results .= "$triggers[$i]\n";
+		@output=@MT;
+		@output = `$triggers[$i]`;
+		$m=0;
+		foreach(@output) 
+			{
+			$trigger_results .= "$output[$m]";
+			$m++;
+			}
+
+		$i++;
+		}
+	if ($DB) {print "DONE\n";}
+	if ($DB) {print "$trigger_results\n";}
+
+	$trigger_lines =~ s/;|\\|\"//gi;
+	$trigger_results =~ s/;|\\|\"//gi;
+
+	$stmtA="INSERT INTO vicidial_process_trigger_log SET trigger_id='$trigger_id',user='$user',trigger_time=NOW(),server_ip='$server_ip',trigger_lines='$trigger_lines',trigger_results='$trigger_results';";
+	$Iaffected_rows = $dbhA->do($stmtA);
+	if ($DB) {print "FINISHED:   $affected_rows|$Iaffected_rows";}
+
+	}
+################################################################################
+#####  END  process triggers
+################################################################################
 
 
 

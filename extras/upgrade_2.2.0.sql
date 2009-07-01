@@ -261,3 +261,28 @@ INSERT INTO vicidial_drop_rate_groups SET group_id='110';
 ALTER TABLE vicidial_campaigns ADD drop_rate_group VARCHAR(20) default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1159';
+
+CREATE TABLE vicidial_process_triggers (
+trigger_id VARCHAR(20) PRIMARY KEY NOT NULL,
+trigger_name VARCHAR(100),
+server_ip VARCHAR(15) NOT NULL,
+trigger_time DATETIME,
+trigger_run ENUM('0','1') default '0',
+user VARCHAR(20),
+trigger_lines TEXT
+);
+
+CREATE TABLE vicidial_process_trigger_log (
+trigger_id VARCHAR(20) NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+trigger_time DATETIME,
+user VARCHAR(20),
+trigger_lines TEXT,
+trigger_results TEXT,
+index (trigger_id),
+index (trigger_time)
+);
+
+INSERT INTO vicidial_process_triggers SET trigger_id='LOAD_LEADS',server_ip='10.10.10.15',trigger_name='Load Leads',trigger_time='2009-01-01 00:00:00',trigger_run='0',trigger_lines='/usr/share/astguiclient/VICIDIAL_IN_new_leads_file.pl';
+
+UPDATE system_settings SET db_schema_version='1160';

@@ -76,7 +76,8 @@
 # 90202-0203 - Added outbound_autodial_active option to halt all dialing
 # 90306-1845 - Added configurable calls-per-second option
 # 90611-0554 - Bug fix for Manual dial calls and logging
-# 90619-1948 - format fixing
+# 90619-1948 - Format fixing
+# 90630-2252 - Added Sangoma CDP pre-Answer call processing
 #
 
 
@@ -1051,16 +1052,16 @@ while($one_day_interval > 0)
 				while ($sthArows > $rec_count)
 					{
 					@aryA = $sthA->fetchrow_array;
-						$auto_call_id	= "$aryA[0]";
-						$CLlead_id		= "$aryA[1]";
-						$CLphone_number	= "$aryA[2]";
-						$CLstatus		= "$aryA[3]";
-						$CLcampaign_id	= "$aryA[4]";
-						$CLphone_code	= "$aryA[5]";
-						$CLalt_dial		= "$aryA[6]";
-						$CLstage		= "$aryA[7]";
-						$CLcall_type	= "$aryA[8]";
-						$CLlast_update_time = "$aryA[9]";
+					$auto_call_id	= "$aryA[0]";
+					$CLlead_id		= "$aryA[1]";
+					$CLphone_number	= "$aryA[2]";
+					$CLstatus		= "$aryA[3]";
+					$CLcampaign_id	= "$aryA[4]";
+					$CLphone_code	= "$aryA[5]";
+					$CLalt_dial		= "$aryA[6]";
+					$CLstage		= "$aryA[7]";
+					$CLcall_type	= "$aryA[8]";
+					$CLlast_update_time = "$aryA[9]";
 					$rec_count++;
 					}
 				$sthA->finish();
@@ -1152,6 +1153,41 @@ while($one_day_interval > 0)
 										}
 									$sthA->finish();
 									}
+
+								##############################################################
+								### BEGIN - CPD Look for result for NA/B/DC calls
+								##############################################################
+								$stmtA = "SELECT result FROM vicidial_cpd_log where callerid='$KLcallerid[$kill_vac]' order by cpd_id desc limit 1;";
+									if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+								$sthArows=$sthA->rows;
+								if ($sthArows > 0)
+									{
+									@aryA = $sthA->fetchrow_array;
+									$cpd_result		= "$aryA[0]";
+									$sthA->finish();
+									$CPDfound=0;
+									if ($cpd_result =~ /Busy/i)					{$CLnew_status='CPDB';   $CPDfound++;}
+									if ($cpd_result =~ /Unknown/i)				{$CLnew_status='CPDUK';   $CPDfound++;}
+									if ($cpd_result =~ /All-Trunks-Busy/i)		{$CLnew_status='CPDATB';   $CPDfound++;}
+									if ($cpd_result =~ /No-Answer/i)			{$CLnew_status='CPDNA';   $CPDfound++;}
+									if ($cpd_result =~ /Reject/i)				{$CLnew_status='CPDREJ';   $CPDfound++;}
+									if ($cpd_result =~ /Invalid-Number/i)		{$CLnew_status='CPDINV';   $CPDfound++;}
+									if ($cpd_result =~ /Service-Unavailable/i)	{$CLnew_status='CPDSUA';   $CPDfound++;}
+									if ($cpd_result =~ /Sit-Intercept/i)		{$CLnew_status='CPDSI';   $CPDfound++;}
+									if ($cpd_result =~ /Sit-No-Circuit/i)		{$CLnew_status='CPDSNC';   $CPDfound++;}
+									if ($cpd_result =~ /Sit-Reorder/i)			{$CLnew_status='CPDSR';   $CPDfound++;}
+									if ($cpd_result =~ /Sit-Unknown/i)			{$CLnew_status='CPDSUK';   $CPDfound++;}
+									if ($cpd_result =~ /Sit-Vacant/i)			{$CLnew_status='CPDSV';   $CPDfound++;}
+									if ($cpd_result =~ /\?\?\?/i)				{$CLnew_status='CPDERR';   $CPDfound++;}
+									if ($cpd_result =~ /Fax|Modem/i)			{$CLnew_status='AFAX';   $CPDfound++;}
+									if ($cpd_result =~ /Answering-Machine/i)	{$CLnew_status='AA';   $CPDfound++;}
+									}
+
+								##############################################################
+								### END - CPD Look for result for NA/B/DC calls
+								##############################################################
 
 								$end_epoch = ($now_date_epoch + 1);
 								if ($insertVLcount < 1)

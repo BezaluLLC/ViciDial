@@ -46,6 +46,7 @@
 # 81029-0522 - Changed to disallow queue_log logging of IVR calls
 # 90604-1044 - Fixed formatting, added DAHDI support, added carrier hangup code logging
 # 90608-0316 - Changed hangup code dispos B and DC to AB and ADC to separate Agent dispos from Auto
+# 90630-2253 - Added Sangoma CDP pre-Answer call processing
 #
 
 
@@ -633,10 +634,47 @@ sub process_request
 
 			if ($channel =~ /^Local/)
 				{
-				if ( ($PRI =~ /^PRI$/) && ($callerid =~ /\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/) && ( ($dialstatus =~ /BUSY/) || ( ($dialstatus =~ /CHANUNAVAIL/) && ($hangup_cause =~ /^1$|^28$/) ) ) )
+				$CPDfound=0;
+				##############################################################
+				### BEGIN - CPD Look for result for B/DC calls
+				##############################################################
+				$stmtA = "SELECT result FROM vicidial_cpd_log where callerid='$callerid' and result NOT IN('Voice','Unknown','???','') order by cpd_id desc limit 1;";
+					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
 					{
-					if ($dialstatus =~ /BUSY/) {$VDL_status = 'AB'; $VDAC_status = 'BUSY';}
-					if ($dialstatus =~ /CHANUNAVAIL/) {$VDL_status = 'ADC'; $VDAC_status = 'DISCONNECT';}
+					@aryA = $sthA->fetchrow_array;
+					$cpd_result		= "$aryA[0]";
+					$sthA->finish();
+					if ($cpd_result =~ /Busy/i)					{$VDL_status='CPDB';	$VDAC_status='BUSY';   $CPDfound++;}
+					if ($cpd_result =~ /Unknown/i)				{$VDL_status='CPDUK';	$VDAC_status='NA';   $CPDfound++;}
+					if ($cpd_result =~ /All-Trunks-Busy/i)		{$VDL_status='CPDATB';	$VDAC_status='CONGESTION';   $CPDfound++;}
+					if ($cpd_result =~ /No-Answer/i)			{$VDL_status='CPDNA';	$VDAC_status='NA';   $CPDfound++;}
+					if ($cpd_result =~ /Reject/i)				{$VDL_status='CPDREJ';	$VDAC_status='DISCONNECT';   $CPDfound++;}
+					if ($cpd_result =~ /Invalid-Number/i)		{$VDL_status='CPDINV';	$VDAC_status='DISCONNECT';   $CPDfound++;}
+					if ($cpd_result =~ /Service-Unavailable/i)	{$VDL_status='CPDSUA';	$VDAC_status='CONGESTION';   $CPDfound++;}
+					if ($cpd_result =~ /Sit-Intercept/i)		{$VDL_status='CPDSI';	$VDAC_status='DISCONNECT';   $CPDfound++;}
+					if ($cpd_result =~ /Sit-No-Circuit/i)		{$VDL_status='CPDSNC';	$VDAC_status='CONGESTION';   $CPDfound++;}
+					if ($cpd_result =~ /Sit-Reorder/i)			{$VDL_status='CPDSR';	$VDAC_status='CONGESTION';   $CPDfound++;}
+					if ($cpd_result =~ /Sit-Unknown/i)			{$VDL_status='CPDSUK';	$VDAC_status='CONGESTION';   $CPDfound++;}
+					if ($cpd_result =~ /Sit-Vacant/i)			{$VDL_status='CPDSV';	$VDAC_status='CONGESTION';   $CPDfound++;}
+					if ($cpd_result =~ /\?\?\?/i)				{$VDL_status='CPDERR';	$VDAC_status='NA';   $CPDfound++;}
+					if ($cpd_result =~ /Fax|Modem/i)			{$VDL_status='AFAX';	$VDAC_status='FAX';   $CPDfound++;}
+					if ($cpd_result =~ /Answering-Machine/i)	{$VDL_status='AA';		$VDAC_status='AMD';   $CPDfound++;}
+					}
+				##############################################################
+				### END - CPD Look for result for B/DC calls
+				##############################################################
+
+				if ( ($PRI =~ /^PRI$/) && ($callerid =~ /\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/) && ( ( ($dialstatus =~ /BUSY/) || ( ($dialstatus =~ /CHANUNAVAIL/) && ($hangup_cause =~ /^1$|^28$/) ) ) || ($CPDfound > 0) ))
+					{
+					if ($CPDfound < 1) 
+						{
+						if ($dialstatus =~ /BUSY/) {$VDL_status = 'AB'; $VDAC_status = 'BUSY';}
+						if ($dialstatus =~ /CHANUNAVAIL/) {$VDL_status = 'ADC'; $VDAC_status = 'DISCONNECT';}
+						}
 
 					$stmtA = "UPDATE vicidial_list set status='$VDL_status' where lead_id = '$CIDlead_id';";
 						if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
@@ -656,8 +694,6 @@ sub process_request
 					if ($AGILOG) {$agi_string = "--    VDAD vicidial_log update: |$VDLaffected_rows|$uniqueid|$VDACuniqueid|";   &agi_output;}
 
 					sleep(1);
-
-					$dbhA->disconnect();
 					}
 				else
 					{

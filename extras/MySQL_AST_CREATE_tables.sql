@@ -1577,6 +1577,27 @@ drops_today_pct VARCHAR(6) default '0',
 drops_answers_today_pct VARCHAR(6) default '0'
 );
 
+CREATE TABLE vicidial_process_triggers (
+trigger_id VARCHAR(20) PRIMARY KEY NOT NULL,
+trigger_name VARCHAR(100),
+server_ip VARCHAR(15) NOT NULL,
+trigger_time DATETIME,
+trigger_run ENUM('0','1') default '0',
+user VARCHAR(20),
+trigger_lines TEXT
+);
+
+CREATE TABLE vicidial_process_trigger_log (
+trigger_id VARCHAR(20) NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+trigger_time DATETIME,
+user VARCHAR(20),
+trigger_lines TEXT,
+trigger_results TEXT,
+index (trigger_id),
+index (trigger_time)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
@@ -1676,6 +1697,8 @@ INSERT INTO vicidial_drop_rate_groups SET group_id='108';
 INSERT INTO vicidial_drop_rate_groups SET group_id='109';
 INSERT INTO vicidial_drop_rate_groups SET group_id='110';
 
+INSERT INTO vicidial_process_triggers SET trigger_id='LOAD_LEADS',server_ip='10.10.10.15',trigger_name='Load Leads',trigger_time='2009-01-01 00:00:00',trigger_run='0',trigger_lines='/usr/share/astguiclient/VICIDIAL_IN_new_leads_file.pl';
+
 UPDATE system_settings SET qc_last_pull_time=NOW();
 
 CREATE INDEX country_postal_code on vicidial_postal_codes (country_code,postal_code);
@@ -1696,7 +1719,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1159';
+UPDATE system_settings SET db_schema_version='1160';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

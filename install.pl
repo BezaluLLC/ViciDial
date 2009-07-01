@@ -52,7 +52,7 @@ $VARDB_port =	'3306';
 # default keepalive processes: 
 $VARactive_keepalives =		'1234568';
 # default Asterisk version: 
-$VARasterisk_version =		'1.2';
+$VARasterisk_version =		'1.4';
 # default recording FTP archive variables:
 $VARFTP_host = '10.0.0.4';
 $VARFTP_user = 'cron';
@@ -1606,7 +1606,7 @@ else
 			print "Enter asterisk version or press enter for default: [$VARasterisk_version] ";
 			$PROMPTasterisk_version = <STDIN>;
 			chomp($PROMPTasterisk_version);
-			if (length($PROMPTasterisk_version)>0)
+			if (length($PROMPTasterisk_version)>2)
 				{
 				$PROMPTasterisk_version =~ s/ |\n|\r|\t|\/$//gi;
 				$VARasterisk_version=$PROMPTasterisk_version;
