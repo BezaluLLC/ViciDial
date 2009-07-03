@@ -64,6 +64,7 @@
 # 90410-1645 - Added SURVEYCAMPCEP call handling method and cleaned up formatting
 # 90628-1138 - Added more variable options for Cepstral TTS generation
 # 90630-2250 - Added more Sangoma CDP statuses
+# 90702-2240 - Added option to send to remote agent as phone*vendor_id
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -369,7 +370,7 @@ if ($affected_rows > 0)
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
 		$dbhP=$dbhA;   $mysql_count='01006';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-	 $rec_count=0;
+	$rec_count=0;
 	while ($sthArows > $rec_count)
 		{
 		@aryA = $sthA->fetchrow_array;
@@ -379,7 +380,7 @@ if ($affected_rows > 0)
 		$VDADlead_id =		"$aryA[3]";
 		$VDADcall_time =	"$aryA[4]";
 		$VDADalt_dial =		"$aryA[5]";
-		 $rec_count++;
+		$rec_count++;
 		}
 	$sthA->finish();
 
@@ -1434,6 +1435,22 @@ while ($drop_timer <= $DROP_TIME)
 					## use these two lines for Asterisk 1.0 tree
 				#	print "SET CALLERID \"$calleridname\" <0000000000>\n";
 				#	print "SET CALLERIDNAME \"$calleridname\"\n";
+					### custom change to allow exten to be sent as phone*vendor_id
+					if ($VDADconf_exten =~ /888888888888/)
+						{
+						$stmtA = "SELECT vendor_lead_code FROM vicidial_list where lead_id='$CIDlead_id';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='01057';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$vendor_id =	$aryA[0];
+							}
+						$sthA->finish();
+						$VDADconf_exten = "$VDADphone$S$vendor_id";
+						}
 
 					print STDERR "Setting CID \"$newcallerid\"\n";
 					checkresult($result);
@@ -1607,6 +1624,18 @@ while ($drop_timer <= $DROP_TIME)
 					$dbhP=$dbhA;   $mysql_count='01045';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				if ($AGILOG) {$agi_string = "--    VDAD XFER REMOTE: |$affected_rows|update of vac table: $callerid\n|$stmtA|";   &agi_output;}
 
+				### format the remote server dialstring to get the call to the overflow agent meetme room
+				$S='*';
+				if( $VDADserver_ip =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
+					{
+					$a = leading_zero($1); 
+					$b = leading_zero($2); 
+					$c = leading_zero($3); 
+					$d = leading_zero($4);
+					$VDADremDIALstr = "$a$S$b$S$c$S$d$S";
+					}
+				$VDADremDIALstr .= "$VDADconf_exten";
+
 				if ($VDADextension =~ /^R\//)
 					{
 					### set the callerid to the ACQS value(calleridname)
@@ -1616,6 +1645,21 @@ while ($drop_timer <= $DROP_TIME)
 					## use these two lines for Asterisk 1.0 tree
 				#	print "SET CALLERID \"$calleridname\" <0000000000>\n";
 				#	print "SET CALLERIDNAME \"$calleridname\"\n";
+					if ($VDADremDIALstr =~ /888888888888/)
+						{
+						$stmtA = "SELECT vendor_lead_code FROM vicidial_list where lead_id='$CIDlead_id';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='01057';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$vendor_id =	$aryA[0];
+							}
+						$sthA->finish();
+						$VDADremDIALstr = "$a$S$b$S$c$S$d$S$VDADphone$S$vendor_id";
+						}
 
 					print STDERR "Setting CID \"$newcallerid\"\n";
 					checkresult($result);
@@ -1637,18 +1681,6 @@ while ($drop_timer <= $DROP_TIME)
 
 					$dbhB->disconnect();
 					}
-
-				### format the remote server dialstring to get the call to the overflow agent meetme room
-				$S='*';
-				if( $VDADserver_ip =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
-					{
-					$a = leading_zero($1); 
-					$b = leading_zero($2); 
-					$c = leading_zero($3); 
-					$d = leading_zero($4);
-					$VDADremDIALstr = "$a$S$b$S$c$S$d$S";
-					}
-				$VDADremDIALstr .= "$VDADconf_exten";
 
 				if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $VDADremDIALstr";   &agi_output;}
 				print "SET CONTEXT $ext_context\n";

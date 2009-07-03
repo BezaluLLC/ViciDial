@@ -95,6 +95,7 @@
 # 90607-1717 - Fix for AGENTDIRECT bug under certain configurations
 # 90623-0724 - Changed prompts to multi-file prompts, changed agent alert exten to a prompt
 # 90627-0546 - Added no-agent-no-queue options
+# 90702-2129 - Fixed rare agent alert bug, added option to send to remote agent as phone*vendor_id
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -103,6 +104,7 @@ $dtmf_silent_prefix = '7';
 $DROP_TIME = 720;	### default number of seconds to wait until you drop a waiting call
 $start_moh=1;
 $at='@';
+$S='*';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
 $one_mysql_log=0;
@@ -654,7 +656,7 @@ else
 		{
 		### Grab call lead parameters from vicidial_list table
 		$cbc=0;
-		$stmtA = "SELECT phone_number,phone_code,user FROM vicidial_list where lead_id='$CIDlead_id' limit 1;";
+		$stmtA = "SELECT phone_number,phone_code,user,vendor_lead_code FROM vicidial_list where lead_id='$CIDlead_id' limit 1;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -662,11 +664,12 @@ else
 		while ($sthArows > $cbc)
 			{
 			@aryA = $sthA->fetchrow_array;	
-			$campaign	= "$channel_group";
-			$phone_number	= "$aryA[0]";
-			$phone_code	= "$aryA[1]";
-			$insert_lead_id	= "$CIDlead_id";
-			$fronter	= "$aryA[2]";
+			$campaign	=		"$channel_group";
+			$phone_number =		"$aryA[0]";
+			$phone_code	=		"$aryA[1]";
+			$insert_lead_id	=	"$CIDlead_id";
+			$fronter =			"$aryA[2]";
+			$vendor_id =		"$aryA[3]";
 			$cbc++;
 			}
 		$sthA->finish();
@@ -740,7 +743,6 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 			}
 		if ($after_hours_action =~ /IN_GROUP/)
 			{ # 90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*"
-			$S='*';
 			$DROPexten = "90009*$afterhours_xfer_group$S$S$insert_lead_id$S$S$phone_number$S$fronter$S";
 			}
 		if (length($DROPexten)>0)
@@ -895,7 +897,6 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 				$IGcampaign_id =	$IGno_agent_action_value[4];
 				$IGphone_code =		$IGno_agent_action_value[5];
 
-				$S='*';
 				$DROPexten = "90009*$IGgroup_id$S$S$insert_lead_id$S$S$phone_number$S$fronter$S";
 				}
 			if (length($DROPexten)>0)
@@ -1412,7 +1413,7 @@ if ( ($agent_search_method =~ /^SO|^LO/) && ($skipLOSO < 1) )
 			if ($AGILOG) {$agi_string = "--    closer log : |$affected_rows|$insert_lead_id|$insert_close_id|\n|$stmtA|";   &agi_output;}
 
 			### if agent alert exten is not disabled, then trigger the alert and wait
-			if ( ($agent_alert_exten !~ /X/i) && ($no_delay_call_route !~ /Y/i) )
+			if ( ($agent_alert_exten !~ /^X$/i) && (length($agent_alert_exten)>0) && ($no_delay_call_route !~ /Y/i) )
 				{
 				if ($agent_alert_exten =~ /^8304$/)
 					{$agent_alert_exten = 'ding';}
@@ -1484,6 +1485,11 @@ if ( ($agent_search_method =~ /^SO|^LO/) && ($skipLOSO < 1) )
 				## use these two lines for Asterisk 1.0 tree
 			#	print "SET CALLERID \"$calleridname\" <0000000000>\n";
 			#	print "SET CALLERIDNAME \"$calleridname\"\n";
+				### custom change to allow exten to be sent as phone*vendor_id
+				if ($VDADconf_exten =~ /888888888888/)
+					{
+					$VDADconf_exten = "$phone_number$S$vendor_id";
+					}
 
 				print STDERR "Setting CID \"$newcallerid\"\n";
 				checkresult($result);
@@ -1733,7 +1739,6 @@ if ($agent_search_method =~ /^LO|^LB/)
 			if ($AGILOG) {$agi_string = "--    closer log : |$affected_rows|update of vcl table: $insert_lead_id\n|$stmtA|";   &agi_output;}
 
 			### format the remote server dialstring to get the call to the overflow agent meetme room
-			$S='*';
 			if( $VDADserver_ip =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
 				{
 				$a = leading_zero($1); 
@@ -1747,7 +1752,7 @@ if ($agent_search_method =~ /^LO|^LB/)
 			$VDADremDIALstr .= "$VDADconf_exten";
 
 			### if agent alert exten is not disabled, then trigger the alert and wait
-			if ( ($agent_alert_exten !~ /X/i) && ($no_delay_call_route !~ /Y/i) )
+			if ( ($agent_alert_exten !~ /^X$/i) && (length($agent_alert_exten)>0) && ($no_delay_call_route !~ /Y/i) )
 				{
 				if ($agent_alert_exten =~ /^8304$/)
 					{$agent_alert_exten = 'ding';}
@@ -1819,6 +1824,11 @@ if ($agent_search_method =~ /^LO|^LB/)
 				## use these two lines for Asterisk 1.0 tree
 			#	print "SET CALLERID \"$calleridname\" <0000000000>\n";
 			#	print "SET CALLERIDNAME \"$calleridname\"\n";
+				### custom change to allow exten to be sent as phone*vendor_id
+				if ($VDADremDIALstr =~ /888888888888/)
+					{
+					$VDADremDIALstr = "$a$S$b$S$c$S$d$S$phone_number$S$vendor_id";
+					}
 
 				print STDERR "Setting CID \"$newcallerid\"\n";
 				checkresult($result);
@@ -1909,7 +1919,6 @@ if ($hold_recall_xfer_group !~ /NONE/)
 
 	if ($hrxg_count > 1)
 		{
-		$S='*';
 		$DROPexten = "90009*$hold_recall_xfer_group$S$S$insert_lead_id$S$S$phone_number$S$fronter$S";
 
 		if ($no_delay_call_route =~ /N/)
@@ -2298,7 +2307,6 @@ if ($hold_time_option =~ /VOICEMAIL/)
 	}
 if ($hold_time_option =~ /IN_GROUP/)
 	{ # 90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*"
-	$S='*';
 	$DROPexten = "90009*$hold_time_option_xfer_group$S$S$insert_lead_id$S$S$phone_number$S$fronter$S";
 	}
 if ($hold_time_option =~ /CALLERID_CALLBACK/)
@@ -2556,7 +2564,6 @@ if ($drop_action =~ /VOICEMAIL/)
 	}
 if ($drop_action =~ /IN_GROUP/)
 	{ # 90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*"
-	$S='*';
 	$DROPexten = "90009*$drop_inbound_group$S$S$insert_lead_id$S$S$phone_number$S$fronter$S";
 	}
 if ($drop_action =~ /PHONE/)
@@ -2575,7 +2582,6 @@ if ($drop_action =~ /PHONE/)
 	$sthA->finish();
 
 	### format the remote server dialstring to get the call to the overflow agent meetme room
-	$S='*';
 	if( $did_phone_server_ip =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
 		{
 		$a = leading_zero($1); 
