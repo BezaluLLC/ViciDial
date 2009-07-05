@@ -71,11 +71,12 @@ $stmt = "SELECT local_gmt FROM servers where active='Y' limit 1;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $gmt_conf_ct = mysql_num_rows($rslt);
+$dst = date("I");
 if ($gmt_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$local_gmt =		$row[0];
-	$epoch_offset =		($local_gmt * 3600);
+	$epoch_offset =		(($local_gmt + $dst) * 3600);
 	}
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1';";
