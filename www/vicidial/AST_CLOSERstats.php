@@ -194,14 +194,14 @@ echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 echo "Inbound Groups: \n";
 echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
-	$o=0;
-	while ($groups_to_print > $o)
+$o=0;
+while ($groups_to_print > $o)
 	{
-		if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
-			{echo "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o]</option>\n";}
-		else
-			{echo "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o]</option>\n";}
-		$o++;
+	if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
+		{echo "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o]</option>\n";}
+	else
+		{echo "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o]</option>\n";}
+	$o++;
 	}
 echo "</SELECT>\n";
 echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";

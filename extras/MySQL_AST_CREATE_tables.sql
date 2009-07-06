@@ -531,7 +531,9 @@ qc_allowed_campaigns TEXT,
 qc_allowed_inbound_groups TEXT,
 group_shifts TEXT,
 forced_timeclock_login ENUM('Y','N','ADMIN_EXEMPT') default 'N',
-shift_enforcement ENUM('OFF','START','ALL') default 'OFF'
+shift_enforcement ENUM('OFF','START','ALL') default 'OFF',
+agent_status_viewable_groups TEXT,
+agent_status_view_time ENUM('Y','N') default 'N'
 );
 
 CREATE TABLE vicidial_campaigns (
@@ -1623,7 +1625,7 @@ INSERT INTO system_settings (version,install_date) values('2.2.0b0.5', CURDATE()
 
 INSERT INTO vicidial_status_categories (vsc_id,vsc_name) values('UNDEFINED','Default Category');
 
-INSERT INTO vicidial_user_groups SET user_group='ADMIN',group_name='VICIDIAL ADMINISTRATORS',allowed_campaigns=' -ALL-CAMPAIGNS- - -';
+INSERT INTO vicidial_user_groups SET user_group='ADMIN',group_name='VICIDIAL ADMINISTRATORS',allowed_campaigns=' -ALL-CAMPAIGNS- - -',agent_status_viewable_groups=' --ALL-GROUPS-- ';
 
 INSERT INTO vicidial_call_times SET call_time_id='24hours',call_time_name='default 24 hours calling',ct_default_start='0',ct_default_stop='2400';
 INSERT INTO vicidial_call_times SET call_time_id='9am-9pm',call_time_name='default 9am to 9pm calling',ct_default_start='900',ct_default_stop='2100';
@@ -1719,7 +1721,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1160';
+UPDATE system_settings SET db_schema_version='1161';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

@@ -234,10 +234,12 @@
 # 90531-0635 - Added option to hide customer phone number
 # 90611-1422 - Fixed multiple logging bugs
 # 90628-0655 - Added Quick Transfer button and Preset Prepopulate option
+# 90705-1400 - Added Agent view sidebar option
+# 90706-1432 - Added Agent view transfer selection
 #
 
-$version = '2.2.0-212';
-$build = '90628-0655';
+$version = '2.2.0-214';
+$build = '90706-1432';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -376,6 +378,7 @@ $BROWSER_HEIGHT			= 500;	# set to the minimum browser height, default=500
 $BROWSER_WIDTH			= 770;	# set to the minimum browser width, default=770
 $MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
 $SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
+$SIDEBAR_COLOR			= '#F6F6F6';
 
 # options now set in DB:
 #$alt_phone_dialing		= '1';	# allow agents to call alt phone numbers
@@ -391,23 +394,25 @@ if ($MASTERwidth < 430) {$MASTERwidth = '430';}
 if ($MASTERheight < 300) {$MASTERheight = '300';} 
 
 $CAwidth =  ($MASTERwidth + 340);	# 770 - cover all (none-in-session, customer hunngup, etc...)
+$SBwidth =	($MASTERwidth + 331);	# 761 - SideBar starting point
 $MNwidth =  ($MASTERwidth + 330);	# 760 - main frame
 $XFwidth =  ($MASTERwidth + 320);	# 750 - transfer/conference
 $HCwidth =  ($MASTERwidth + 310);	# 740 - hotkeys and callbacks
 $AMwidth =  ($MASTERwidth + 270);	# 700 - agent mute and preset-dial links
-$SCwidth =  ($MASTERwidth + 230);	# 670 - live call seconds counter
+$SCwidth =  ($MASTERwidth + 230);	# 670 - live call seconds counter, sidebar link
 $SSwidth =  ($MASTERwidth + 176);	# 606 - scroll script
 $SDwidth =  ($MASTERwidth + 170);	# 600 - scroll script, customer data and calls-in-session
 $HKwidth =  ($MASTERwidth + 70);	# 500 - Hotkeys button
 $HSwidth =  ($MASTERwidth + 1);		# 431 - Header spacer
 
+$SLheight =  ($MASTERheight + 125);	# 425 - SideBar link
 $HKheight =  ($MASTERheight + 105);	# 405 - HotKey active Button
 $AMheight =  ($MASTERheight + 100);	# 400 - Agent mute and preset dial links
 $MBheight =  ($MASTERheight + 65);	# 365 - Manual Dial Buttons
 $CBheight =  ($MASTERheight + 50);	# 350 - Agent Callback, pause code, volume control Buttons and agent status
 $SSheight =  ($MASTERheight + 31);	# 331 - script content
 $HTheight =  ($MASTERheight + 10);	# 310 - transfer frame, callback comments and hotkey
-$BPheight =  ($MASTERheight - 250);	# 50 - bottom buffer
+$BPheight =  ($MASTERheight - 250);	# 50 - bottom buffer, Agent Xfer Span
 
 
 $US='_';
@@ -791,7 +796,7 @@ $VDloginDISPLAY=0;
 		else {$VU_alert_enabled = 'OFF';}
 
 		### Gather timeclock and shift enforcement restriction settings
-		$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts from vicidial_user_groups where user_group='$VU_user_group';";
+		$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts,agent_status_viewable_groups,agent_status_view_time from vicidial_user_groups where user_group='$VU_user_group';";
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01052',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$row=mysql_fetch_row($rslt);
@@ -800,6 +805,16 @@ $VDloginDISPLAY=0;
 		$LOGgroup_shiftsSQL = eregi_replace('  ','',$row[2]);
 		$LOGgroup_shiftsSQL = eregi_replace(' ',"','",$LOGgroup_shiftsSQL);
 		$LOGgroup_shiftsSQL = "shift_id IN('$LOGgroup_shiftsSQL')";
+		$agent_status_viewable_groups = $row[3];
+		$agent_status_viewable_groupsSQL = eregi_replace('  ','',$agent_status_viewable_groups);
+		$agent_status_viewable_groupsSQL = eregi_replace(' ',"','",$agent_status_viewable_groupsSQL);
+		$agent_status_viewable_groupsSQL = "user_group IN('$agent_status_viewable_groupsSQL')";
+		$agent_status_view = 0;
+		if (strlen($agent_status_viewable_groups) > 2)
+			{$agent_status_view = 1;}
+		$agent_status_view_time=0;
+		if ($row[4] == 'Y')
+			{$agent_status_view_time=1;}
 
 		### BEGIN - CHECK TO SEE IF AGENT IS LOGGED IN TO TIMECLOCK, IF NOT, OUTPUT ERROR
 		if ( (ereg('Y',$forced_timeclock_login)) or ( (ereg('ADMIN_EXEMPT',$forced_timeclock_login)) and ($VU_user_level < 8) ) )
@@ -2075,7 +2090,7 @@ for( $Ccount=0;$Ccount<(6*7);$Ccount++)
 	$CDCLR="#ffffff";
 	if ( ($Cdayarray['mday'] < $CTODAYmday) and ($CPRNTDAY == $CTODAY) )
 		{
-		$CDCLR="#CCCCCC";
+		$CDCLR="$MAIN_COLOR";
 		$CBL = '';
 		$CEL = '';
 		}
@@ -2427,6 +2442,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var alert_enabled = '<?php echo $VU_alert_enabled ?>';
 	var shift_logout_flag = 0;
 	var vtiger_callback_id = 0;
+	var agent_status_view = '<?php echo $agent_status_view ?>';
+	var agent_status_view_time = '<?php echo $agent_status_view_time ?>';
+	var agent_status_view_active = 0;
+	var xfer_select_agents_active = 0;
+	var even=0;
+	var VU_user_group = '<?php echo $VU_user_group ?>';
 	var quick_transfer_button = '<?php echo $quick_transfer_button ?>';
 	var quick_transfer_button_enabled = '<?php echo $quick_transfer_button_enabled ?>';
 	var prepopulate_transfer_preset = '<?php echo $prepopulate_transfer_preset ?>';
@@ -3159,7 +3180,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								var LMAcontent_match=0;
 								agentphonelive=0;
 								var conv_start=-1;
-								var live_conf_HTML = "<font face=\"Arial,Helvetica\"><B>LIVE CALLS IN YOUR SESSION:</B></font><BR><TABLE WIDTH=<?php echo $SDwidth ?>><TR BGCOLOR=#E6E6E6><TD><font class=\"log_title\">#</TD><TD><font class=\"log_title\">REMOTE CHANNEL</TD><TD><font class=\"log_title\">HANGUP</TD><TD><font class=\"log_title\">VOLUME</TD></TR>";
+								var live_conf_HTML = "<font face=\"Arial,Helvetica\"><B>LIVE CALLS IN YOUR SESSION:</B></font><BR><TABLE WIDTH=<?php echo $SDwidth ?>><TR BGCOLOR=<?php echo $SCRIPT_COLOR ?>><TD><font class=\"log_title\">#</TD><TD><font class=\"log_title\">REMOTE CHANNEL</TD><TD><font class=\"log_title\">HANGUP</TD><TD><font class=\"log_title\">VOLUME</TD></TR>";
 								if ( (LMAcount > live_conf_calls)  || (LMAcount < live_conf_calls) || (LMAforce > 0))
 									{
 									LMAe[0]=''; LMAe[1]=''; LMAe[2]=''; LMAe[3]=''; LMAe[4]=''; LMAe[5]=''; 
@@ -3888,7 +3909,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var CB_calls = all_CBs_array[0];
 						var loop_ct=0;
 						var conv_start=0;
-						var CB_HTML = "<table width=610><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> CALLBACK DATE/TIME</td><td><font class=\"log_title\">NUMBER</td><td><font class=\"log_title\">NAME</td><td><font class=\"log_title\">  STATUS</td><td align=right><font class=\"log_title\">CAMPAIGN</td><td><font class=\"log_title\">LAST CALL DATE/TIME</td><td align=left><font class=\"log_title\"> COMMENTS</td></tr>"
+						var CB_HTML = "<table width=610><tr bgcolor=<?php echo $SCRIPT_COLOR ?>><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> CALLBACK DATE/TIME</td><td><font class=\"log_title\">NUMBER</td><td><font class=\"log_title\">NAME</td><td><font class=\"log_title\">  STATUS</td><td align=right><font class=\"log_title\">CAMPAIGN</td><td><font class=\"log_title\">LAST CALL DATE/TIME</td><td align=left><font class=\"log_title\"> COMMENTS</td></tr>"
 						while (loop_ct < CB_calls)
 							{
 							loop_ct++;
@@ -7225,12 +7246,113 @@ function phone_number_format(formatphone) {
 
 
 // ################################################################################
+// Refresh the agents view sidebar or xfer frame
+	function refresh_agents_view(RAlocation,RAcount)
+		{
+		if (RAcount > 0)
+			{
+			if (even > 0)
+				{
+				var xmlhttp=false;
+				/*@cc_on @*/
+				/*@if (@_jscript_version >= 5)
+				// JScript gives us Conditional compilation, we can cope with old IE versions.
+				// and security blocked creation of the objects.
+				 try {
+				  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+				 } catch (e) {
+				  try {
+				   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				  } catch (E) {
+				   xmlhttp = false;
+				  }
+				 }
+				@end @*/
+				if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+					{
+					xmlhttp = new XMLHttpRequest();
+					}
+				if (xmlhttp) 
+					{ 
+					RAview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=AGENTSview&format=text&user=" + user + "&pass=" + pass + "&user_group=" + VU_user_group + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&stage=" + agent_status_view_time + "&campaign=" + campaign + "&comments=" + RAlocation;
+					xmlhttp.open('POST', 'vdc_db_query.php'); 
+					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+					xmlhttp.send(RAview_query); 
+					xmlhttp.onreadystatechange = function() 
+						{ 
+						if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+							{
+						//	alert(xmlhttp.responseText);
+							document.getElementById(RAlocation).innerHTML = xmlhttp.responseText + "\n";
+							}
+						}
+					delete xmlhttp;
+					}
+
+				}
+			}
+		}
+
+
+// ################################################################################
+// Open or close the agents view sidebar or xfer frame
+	function AgentsViewOpen(AVlocation,AVoperation)
+		{
+		if (AVoperation=='open')
+			{
+			if (AVlocation=='AgentViewSpan')
+				{
+				document.getElementById("AgentViewLink").innerHTML = "<font class=\"body_text\"><a href=\"#\" onclick=\"AgentsViewOpen('AgentViewSpan','close');return false;\">Agents View -</a></font>";
+				agent_status_view_active=1;
+				}
+			showDiv(AVlocation);
+			}
+		else
+			{
+			if (AVlocation=='AgentViewSpan')
+				{
+				document.getElementById("AgentViewLink").innerHTML = "<font class=\"body_text\"><a href=\"#\" onclick=\"AgentsViewOpen('AgentViewSpan','open');return false;\">Agents View +</a></font>";
+				agent_status_view_active=0;
+				}
+			hideDiv(AVlocation);
+			}
+		}
+
+
+// ################################################################################
+// Populate the number to dial field with the selected user ID
+	function AgentsXferSelect(AXuser,AXlocation)
+		{
+		xfer_select_agents_active=0;
+		hideDiv('AgentXferViewSpan');
+		hideDiv(AXlocation);
+		document.vicidial_form.xfernumber.value = AXuser;
+		}
+
+
+// ################################################################################
+// OnFocus function for number to dial
+	function XferAgentSelectLaunch()
+		{
+		var XfeRSelecT = document.getElementById("XfeRGrouP");
+		var XScheck = XfeRSelecT.value
+		if (XScheck.match(/AGENTDIRECT/))
+			{
+			showDiv('AgentXferViewSpan');
+			AgentsViewOpen('AgentXferViewSelect','open');
+			refresh_agents_view('AgentXferViewSelect',agent_status_view)
+			xfer_select_agents_active=1;
+			}
+		}
+
+
+// ################################################################################
 // Move the Dispo frame out of the way and change the link to maximize
 	function DispoMinimize()
 		{
-			showDiv('DispoButtonHideA');
-			showDiv('DispoButtonHideB');
-			showDiv('DispoButtonHideC');
+		showDiv('DispoButtonHideA');
+		showDiv('DispoButtonHideB');
+		showDiv('DispoButtonHideC');
 		document.getElementById("DispoSelectBox").style.top = 340;
 		document.getElementById("DispoSelectMaxMin").innerHTML = "<a href=\"#\" onclick=\"DispoMaximize()\"> maximize </a>";
 		}
@@ -7242,9 +7364,9 @@ function phone_number_format(formatphone) {
 		{
 		document.getElementById("DispoSelectBox").style.top = 1;
 		document.getElementById("DispoSelectMaxMin").innerHTML = "<a href=\"#\" onclick=\"DispoMinimize()\"> minimize </a>";
-			hideDiv('DispoButtonHideA');
-			hideDiv('DispoButtonHideB');
-			hideDiv('DispoButtonHideC');
+		hideDiv('DispoButtonHideA');
+		hideDiv('DispoButtonHideB');
+		hideDiv('DispoButtonHideC');
 		}
 
 
@@ -7443,6 +7565,8 @@ else
 			hideDiv('NeWManuaLDiaLBox');
 			hideDiv('PauseCodeSelectBox');
 			hideDiv('GroupAliasSelectBox');
+			hideDiv('AgentViewSpan');
+			hideDiv('AgentXferViewSpan');
 			if (agentonly_callbacks != '1')
 				{hideDiv('CallbacksButtons');}
 		//	if ( (agentcall_manual != '1') && (starting_dial_level > 0) )
@@ -7460,6 +7584,8 @@ else
 				{hideDiv('VolumeControlSpan');}
 			if (DefaulTAlTDiaL == '1')
 				{document.vicidial_form.DiaLAltPhonE.checked=true;}
+			if (agent_status_view != '1')
+				{document.getElementById("AgentViewLink").innerHTML = "";}
 
 			document.vicidial_form.LeadLookuP.checked=true;
 
@@ -7565,6 +7691,15 @@ else
 				{
 				// check for live channels in conference room and get current datetime
 				check_for_conf_calls(session_id, '0');
+				// refresh agent status view
+				if (agent_status_view_active > 0)
+					{
+					refresh_agents_view('AgentViewStatus',agent_status_view);
+					}
+				if (xfer_select_agents_active > 0)
+					{
+					refresh_agents_view('AgentXferViewSelect',agent_status_view);
+					}
 				if (agentonly_callbacks == '1')
 					{CB_count_check++;}
 
@@ -7683,6 +7818,9 @@ else
 		{
 		epoch_sec++;
 		check_n++;
+		even++;
+		if (even > 1)
+			{even=0;}
 		var year= t.getYear()
 		var month= t.getMonth()
 			month++;
@@ -8193,7 +8331,7 @@ echo "</head>\n";
 <span id="AgentMuteSpan"></span> <BR>
 </font></span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:39;" id="CallBacKsLisTBox">
+<span style="position:absolute;left:0px;top:0px;z-index:49;" id="CallBacKsLisTBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> CALLBACKS FOR AGENT <?php echo $VD_login ?>:<BR>Click on a callback below to call the customer back now. If you click on a record below to call it, it will be removed from the list.
 	<BR>
 	<div class="scroll_callback" id="CallBacKsLisT"></div>
@@ -8204,7 +8342,7 @@ echo "</head>\n";
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:40;" id="NeWManuaLDiaLBox">
+<span style="position:absolute;left:0px;top:0px;z-index:50;" id="NeWManuaLDiaLBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> NEW MANUAL DIAL LEAD FOR <?php echo "$VD_login in campaign $VD_campaign" ?>:<BR><BR>Enter information below for the new lead you wish to call.
 	<BR>
 	<?php 
@@ -8267,17 +8405,17 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 	 <IMG SRC="./images/vdc_XB_header.gif" border=0 alt="Transfer - Conference"> &nbsp; &nbsp; &nbsp; &nbsp; <span id="XfeRDiaLGrouPSelecteD"></span> &nbsp; &nbsp; <span id="XfeRCID"></span><BR>
 	<span id="XfeRGrouPLisT"><select size=1 name=XfeRGrouP class="cust_form"><option>-- SELECT A GROUP TO SEND YOUR CALL TO --</option></select></span>
 
-	<span STYLE="background-color: #CCCCCC" id="LocalCloser"><IMG SRC="./images/vdc_XB_localcloser_OFF.gif" border=0 alt="LOCAL CLOSER"></span> 
-	<span STYLE="background-color: #CCCCCC" id="HangupXferLine"><IMG SRC="./images/vdc_XB_hangupxferline_OFF.gif" border=0 alt="Hangup Xfer Line"></span>
-	<span STYLE="background-color: #CCCCCC" id="HangupBothLines"><a href="#" onclick="bothcall_send_hangup();return false;"><IMG SRC="./images/vdc_XB_hangupbothlines.gif" border=0 alt="Hangup Both Lines"></a></span>
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="LocalCloser"><IMG SRC="./images/vdc_XB_localcloser_OFF.gif" border=0 alt="LOCAL CLOSER"></span> 
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="HangupXferLine"><IMG SRC="./images/vdc_XB_hangupxferline_OFF.gif" border=0 alt="Hangup Xfer Line"></span>
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="HangupBothLines"><a href="#" onclick="bothcall_send_hangup();return false;"><IMG SRC="./images/vdc_XB_hangupbothlines.gif" border=0 alt="Hangup Both Lines"></a></span>
 
 	<BR>
 
-	<IMG SRC="./images/vdc_XB_number.gif" border=0 alt="Number to call"> <input type=text size=15 name=xfernumber maxlength=25 class="cust_form" value="<?php echo $preset_populate ?>"> &nbsp; 
+	<IMG SRC="./images/vdc_XB_number.gif" border=0 alt="Number to call"> <input type=text size=15 name=xfernumber maxlength=25 class="cust_form" value="<?php echo $preset_populate ?>" onFocus="XferAgentSelectLaunch();return false;"> &nbsp; 
 	<input type=hidden name=xferuniqueid>
 	<input type=checkbox name=xferoverride size=1 value="0"><font class="body_tiny"> DIAL OVERRIDE</font> &nbsp;
-	<span STYLE="background-color: #CCCCCC" id="Leave3WayCall"><a href="#" onclick="leave_3way_call('FIRST');return false;"><IMG SRC="./images/vdc_XB_leave3waycall.gif" border=0 alt="LEAVE 3-WAY CALL"></a></span> 
-	<span STYLE="background-color: #CCCCCC" id="DialBlindTransfer"><IMG SRC="./images/vdc_XB_blindtransfer_OFF.gif" border=0 alt="Dial Blind Transfer"></span>
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="Leave3WayCall"><a href="#" onclick="leave_3way_call('FIRST');return false;"><IMG SRC="./images/vdc_XB_leave3waycall.gif" border=0 alt="LEAVE 3-WAY CALL"></a></span> 
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="DialBlindTransfer"><IMG SRC="./images/vdc_XB_blindtransfer_OFF.gif" border=0 alt="Dial Blind Transfer"></span>
 	<a href="#" onclick="DtMf_PreSet_a();return false;"><font class="body_tiny">D1</font></a> 
 	<a href="#" onclick="DtMf_PreSet_b();return false;"><font class="body_tiny">D2</font></a>
 
@@ -8285,9 +8423,9 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 
 	<IMG SRC="./images/vdc_XB_seconds.gif" border=0 alt="seconds"> <input type=text size=2 name=xferlength maxlength=4 class="cust_form"> &nbsp; 
 	<IMG SRC="./images/vdc_XB_channel.gif" border=0 alt="channel"> <input type=text size=12 name=xferchannel maxlength=100 class="cust_form"> 
-	<span STYLE="background-color: #CCCCCC" id="DialWithCustomer"><a href="#" onclick="SendManualDial('YES');return false;"><IMG SRC="./images/vdc_XB_dialwithcustomer.gif" border=0 alt="Dial With Customer"></a></span> 
-	<span STYLE="background-color: #CCCCCC" id="ParkCustomerDial"><a href="#" onclick="xfer_park_dial();return false;"><IMG SRC="./images/vdc_XB_parkcustomerdial.gif" border=0 alt="Park Customer Dial"></a></span> 
-	<span STYLE="background-color: #CCCCCC" id="DialBlindVMail"><IMG SRC="./images/vdc_XB_ammessage_OFF.gif" border=0 alt="Blind Transfer VMail Message"></span>
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="DialWithCustomer"><a href="#" onclick="SendManualDial('YES');return false;"><IMG SRC="./images/vdc_XB_dialwithcustomer.gif" border=0 alt="Dial With Customer"></a></span> 
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="ParkCustomerDial"><a href="#" onclick="xfer_park_dial();return false;"><IMG SRC="./images/vdc_XB_parkcustomerdial.gif" border=0 alt="Park Customer Dial"></a></span> 
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="DialBlindVMail"><IMG SRC="./images/vdc_XB_ammessage_OFF.gif" border=0 alt="Blind Transfer VMail Message"></span>
 	</font>
 	</div>
 	</td>
@@ -8295,7 +8433,18 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 </span>
 
 
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:23;" id="HotKeyActionBox">
+
+<span style="position:absolute;left:<?php echo $SBwidth ?>px;top:0px;height:500;overflow:scroll;z-index:23;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentViewSpan"><TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">
+Other Agents Status: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="AgentViewStatus">&nbsp;</span></TD></TR></TABLE></span>
+
+<span style="position:absolute;left:60px;top:<?php echo $BPheight ?>px;width:400;height:500;overflow:scroll;z-index:24;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentXferViewSpan"><CENTER><font class="body_text">
+Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font></span>
+
+<span style="position:absolute;left:<?php echo $SCwidth ?>px;top:<?php echo $SLheight ?>px;z-index:25;" id="AgentViewLinkSpan"><TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=91><TR><TD ALIGN=RIGHT><span id="AgentViewLink"><font class="body_text"><a href="#" onclick="AgentsViewOpen('AgentViewSpan','open');return false;">Agents View +</a></font></span></TD></TR></TABLE></span>
+
+
+
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:33;" id="HotKeyActionBox">
     <table border=0 bgcolor="#FFDD99" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFEEBB"><TD height=70><font class="sh_text"> Lead Dispositioned As: </font><BR><BR><CENTER>
 	<font class="sd_text"><span id="HotKeyDispo"> - </span></font></CENTER>
@@ -8303,7 +8452,7 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 	</TR></TABLE>
 </span>
 
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:24;" id="HotKeyEntriesBox">
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:34;" id="HotKeyEntriesBox">
     <table border=0 bgcolor="#FFDD99" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFEEBB"><TD width=200><font class="sh_text"> Disposition Hot Keys: </font></td><td colspan=2>
 	<font class="body_small">When active, simply press the keyboard key for the desired disposition for this call. The call will then be hungup and dispositioned automatically:</font></td></tr><tr>
@@ -8319,7 +8468,7 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 	</TR></TABLE>
 </span>
 
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:25;" id="CBcommentsBox">
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:35;" id="CBcommentsBox">
     <table border=0 bgcolor="#FFFFCC" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFFF66">
 	<TD align=left><font class="sh_text"> Previous Callback Information: </font></td>
@@ -8336,7 +8485,7 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 	</TR></TABLE>
 </span>
 
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:26;" id="EAcommentsBox">
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:36;" id="EAcommentsBox">
     <table border=0 bgcolor="#FFFFCC" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFFF66">
 	<TD align=left><font class="sh_text"> Extended Alt Phone Information: </font></td>
@@ -8353,14 +8502,14 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 	</TR></TABLE>
 </span>
 
-<span style="position:absolute;left:695px;top:<?php echo $HTheight ?>px;z-index:27;" id="EAcommentsMinBox">
+<span style="position:absolute;left:695px;top:<?php echo $HTheight ?>px;z-index:37;" id="EAcommentsMinBox">
     <table border=0 bgcolor="#FFFFCC" width=40 height=20>
 	<TR bgcolor="#FFFF66">
 	<TD align=left><font class="sk_text"><a href="#" onclick="EAcommentsBoxshow();return false;"> maximize </a> <BR>Alt Phone Info</font></td>
 	</tr></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:12px;z-index:28;" id="NoneInSessionBox">
+<span style="position:absolute;left:0px;top:12px;z-index:38;" id="NoneInSessionBox">
     <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center> Noone is in your session: <span id="NoneInSessionID"></span><BR>
 	<a href="#" onclick="NoneInSessionOK();return false;">Go Back</a>
 	<BR><BR>
@@ -8368,7 +8517,7 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:29;" id="CustomerGoneBox">
+<span style="position:absolute;left:0px;top:0px;z-index:39;" id="CustomerGoneBox">
     <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center> Customer has hung up: <span id="CustomerGoneChanneL"></span><BR>
 	<a href="#" onclick="CustomerGoneOK();return false;">Go Back</a>
 	<BR><BR>
@@ -8377,7 +8526,7 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:30;" id="WrapupBox">
+<span style="position:absolute;left:0px;top:0px;z-index:40;" id="WrapupBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=550><TR><TD align=center> Call Wrapup: <span id="WrapupTimer"></span> seconds remaining in wrapup<BR><BR>
 	<span id="WrapupMessage"><?php echo $wrapup_message ?></span>
 	<BR><BR>
@@ -8386,33 +8535,33 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:31;" id="AgenTDisablEBoX">
+<span style="position:absolute;left:0px;top:0px;z-index:41;" id="AgenTDisablEBoX">
     <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center>Your session has been disabled<BR><a href="#" onclick="LogouT('DISABLED');return false;">LOGOUT</a><BR><BR><a href="#" onclick="hideDiv('AgenTDisablEBoX');return false;">Go Back</a>
 </TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:32;" id="SysteMDisablEBoX">
+<span style="position:absolute;left:0px;top:0px;z-index:42;" id="SysteMDisablEBoX">
     <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center>There is a time synchronization problem with your system, please tell your system administrator<BR><BR><BR><a href="#" onclick="hideDiv('SysteMDisablEBoX');return false;">Go Back</a>
 </TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:33;" id="LogouTBox">
+<span style="position:absolute;left:0px;top:0px;z-index:43;" id="LogouTBox">
     <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center><BR><span id="LogouTBoxLink">LOGOUT</span></TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:70px;z-index:34;" id="DispoButtonHideA">
+<span style="position:absolute;left:0px;top:70px;z-index:44;" id="DispoButtonHideA">
     <table border=0 bgcolor="#CCFFCC" width=165 height=22><TR><TD align=center VALIGN=top></TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:138px;z-index:35;" id="DispoButtonHideB">
+<span style="position:absolute;left:0px;top:138px;z-index:45;" id="DispoButtonHideB">
     <table border=0 bgcolor="#CCFFCC" width=165 height=250><TR><TD align=center VALIGN=top>&nbsp;</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:36;" id="DispoButtonHideC">
+<span style="position:absolute;left:0px;top:0px;z-index:46;" id="DispoButtonHideC">
     <table border=0 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=47><TR><TD align=center VALIGN=top>Any changes made to the customer information below at this time will not be comitted, You must change customer information before you Hangup the call. </TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:37;" id="DispoSelectBox">
+<span style="position:absolute;left:0px;top:0px;z-index:47;" id="DispoSelectBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> DISPOSITION CALL :<span id="DispoSelectPhonE"></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectHAspan"><a href="#" onclick="DispoHanguPAgaiN()">Hangup Again</a></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectMaxMin"><a href="#" onclick="DispoMinimize()"> minimize </a></span><BR>
 	<span id="DispoSelectContent"> End-of-call Disposition Selection </span>
 	<input type=hidden name=DispoSelection><BR>
@@ -8425,7 +8574,7 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:43;" id="PauseCodeSelectBox">
+<span style="position:absolute;left:0px;top:0px;z-index:53;" id="PauseCodeSelectBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> SELECT A PAUSE CODE :<BR>
 	<span id="PauseCodeSelectContent"> Pause Code Selection </span>
 	<input type=hidden name=PauseCodeSelection>
@@ -8433,7 +8582,7 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:44;" id="GroupAliasSelectBox">
+<span style="position:absolute;left:0px;top:0px;z-index:54;" id="GroupAliasSelectBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> SELECT A GROUP ALIAS :<BR>
 	<span id="GroupAliasSelectContent"> Group Alias Selection </span>
 	<input type=hidden name=GroupAliasSelection>
@@ -8441,10 +8590,10 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:1000px;z-index:45;" id="GENDERhideFORieALT"></span>
+<span style="position:absolute;left:0px;top:1000px;z-index:55;" id="GENDERhideFORieALT"></span>
 
 
-<span style="position:absolute;left:0px;top:0px;z-index:38;" id="CallBackSelectBox">
+<span style="position:absolute;left:0px;top:0px;z-index:48;" id="CallBackSelectBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> Select a CallBack Date :<span id="CallBackDatE"></span><BR>
 	<input type=hidden name=CallBackDatESelectioN ID="CallBackDatESelectioN">
 	<input type=hidden name=CallBackTimESelectioN ID="CallBackTimESelectioN">
@@ -8497,7 +8646,7 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:41;" id="CloserSelectBox">
+<span style="position:absolute;left:0px;top:0px;z-index:51;" id="CloserSelectBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> CLOSER INBOUND GROUP SELECTION <BR>
 	<span id="CloserSelectContent"> Closer Inbound Group Selection </span>
 	<input type=hidden name=CloserSelectList><BR>
@@ -8515,7 +8664,7 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:42;" id="NothingBox">
+<span style="position:absolute;left:0px;top:0px;z-index:52;" id="NothingBox">
     <BUTTON Type=button name="inert_button"><img src="./images/blank.gif"></BUTTON>
 	<span id="DiaLLeaDPrevieWHide">Channel</span>
 	<span id="DiaLDiaLAltPhonEHide">Channel</span>
@@ -8587,22 +8736,22 @@ RECORDING FILE:<BR>
 RECORD ID: <font class="body_small"><span id="RecorDID"></span></font><BR>
 <center>
 <!-- <a href=\"#\" onclick=\"conf_send_recording('MonitorConf','" + head_conf + "','');return false;\">Record</a> -->
-<span STYLE="background-color: #CCCCCC" id="RecorDControl"><a href="#" onclick="conf_send_recording('MonitorConf',session_id,'');return false;"><IMG SRC="./images/vdc_LB_startrecording.gif" border=0 alt="Start Recording"></a></span><BR>
+<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="RecorDControl"><a href="#" onclick="conf_send_recording('MonitorConf',session_id,'');return false;"><IMG SRC="./images/vdc_LB_startrecording.gif" border=0 alt="Start Recording"></a></span><BR>
 <span id="SpacerSpanA"><IMG SRC="./images/blank.gif" width=145 height=16 border=0></span><BR>
 <span STYLE="background-color: #FFFFFF" id="WebFormSpan"><IMG SRC="./images/vdc_LB_webform_OFF.gif" border=0 alt="Web Form"></span><BR>
 <span id="SpacerSpanB"><IMG SRC="./images/blank.gif" width=145 height=16 border=0></span><BR>
-<span STYLE="background-color: #CCCCCC" id="ParkControl"><IMG SRC="./images/vdc_LB_parkcall_OFF.gif" border=0 alt="Park Call"></span><BR>
-<span STYLE="background-color: #CCCCCC" id="XferControl"><IMG SRC="./images/vdc_LB_transferconf_OFF.gif" border=0 alt="Transfer - Conference"></span><BR>
+<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="ParkControl"><IMG SRC="./images/vdc_LB_parkcall_OFF.gif" border=0 alt="Park Call"></span><BR>
+<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="XferControl"><IMG SRC="./images/vdc_LB_transferconf_OFF.gif" border=0 alt="Transfer - Conference"></span><BR>
 
 <?php
 if ($quick_transfer_button_enabled > 0)
-	{echo "<span STYLE=\"background-color: #CCCCCC\" id=\"QuickXfer\"><IMG SRC=\"./images/vdc_LB_quickxfer_OFF.gif\" border=0 alt=\"Quick Transfer\"></span><BR>\n";}
+	{echo "<span STYLE=\"background-color: $MAIN_COLOR\" id=\"QuickXfer\"><IMG SRC=\"./images/vdc_LB_quickxfer_OFF.gif\" border=0 alt=\"Quick Transfer\"></span><BR>\n";}
 ?>
 
 <span id="SpacerSpanC"><IMG SRC="./images/blank.gif" width=145 height=16 border=0></span><BR>
 <span STYLE="background-color: #FFCCFF" id="HangupControl"><IMG SRC="./images/vdc_LB_hangupcustomer_OFF.gif" border=0 alt="Hangup Customer"></span><BR>
 <span id="SpacerSpanD"><IMG SRC="./images/blank.gif" width=145 height=16 border=0></span><BR>
-<div class="text_input" id="SendDTMFdiv"><span STYLE="background-color: #CCCCCC" id="SendDTMF"><a href="#" onclick="SendConfDTMF(session_id);return false;"><IMG SRC="./images/vdc_LB_senddtmf.gif" border=0 alt="Send DTMF" align=bottom></a>  <input type=text size=5 name=conf_dtmf class="cust_form" value="" maxlength=50></div></span><BR>
+<div class="text_input" id="SendDTMFdiv"><span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="SendDTMF"><a href="#" onclick="SendConfDTMF(session_id);return false;"><IMG SRC="./images/vdc_LB_senddtmf.gif" border=0 alt="Send DTMF" align=bottom></a>  <input type=text size=5 name=conf_dtmf class="cust_form" value="" maxlength=50></div></span><BR>
 </center>
 </font>
 </td>

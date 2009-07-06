@@ -286,3 +286,8 @@ index (trigger_time)
 INSERT INTO vicidial_process_triggers SET trigger_id='LOAD_LEADS',server_ip='10.10.10.15',trigger_name='Load Leads',trigger_time='2009-01-01 00:00:00',trigger_run='0',trigger_lines='/usr/share/astguiclient/VICIDIAL_IN_new_leads_file.pl';
 
 UPDATE system_settings SET db_schema_version='1160';
+
+ALTER TABLE vicidial_user_groups ADD agent_status_viewable_groups TEXT;
+ALTER TABLE vicidial_user_groups ADD agent_status_view_time ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1161';

@@ -13,7 +13,7 @@
 #  - $pass
 # optional variables:
 #  - $format - ('text','debug')
-#  - $ACTION - ('regCLOSER','manDiaLnextCALL','manDiaLskip','manDiaLonly','manDiaLlookCALL','manDiaLlogCALL','userLOGout','updateDISPO','VDADpause','VDADready','VDADcheckINCOMING','UpdatEFavoritEs','CalLBacKLisT','CalLBacKCounT','PauseCodeSubmit','LogiNCamPaigns','alt_phone_change','AlertControl')
+#  - $ACTION - ('regCLOSER','manDiaLnextCALL','manDiaLskip','manDiaLonly','manDiaLlookCALL','manDiaLlogCALL','userLOGout','updateDISPO','VDADpause','VDADready','VDADcheckINCOMING','UpdatEFavoritEs','CalLBacKLisT','CalLBacKCounT','PauseCodeSubmit','LogiNCamPaigns','alt_phone_change','AlertControl','AGENTSview')
 #  - $stage - ('start','finish','lookup','new')
 #  - $closer_choice - ('CL_TESTCAMP_L CL_OUT123_L -')
 #  - $conf_exten - ('8600011',...)
@@ -201,12 +201,14 @@
 # 90511-0923 - Added agentonly_callback_campaign_lock option
 # 90519-0634 - Fixed manual dial status and logging bug
 # 90611-1423 - Fixed agent log and vicidial log bugs
+# 90705-2008 - Added AGENTSview function
+# 90706-1431 - Added Agent view transfer selection
 #
 
-$version = '2.2.0-112';
-$build = '90611-1423';
+$version = '2.2.0-114';
+$build = '90706-1431';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=224;
+$mysql_log_count=227;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -4511,6 +4513,125 @@ if ($ACTION == 'PauseCodeSubmit')
 	}
 echo " Pause Code has been updated to $status for $agent_log_id\n";
 }
+
+
+################################################################################
+### AGENTSview - List statuses of other agents in sidebar or xfer frame
+################################################################################
+if ($ACTION == 'AGENTSview')
+	{
+	$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass'";
+	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00225',$user,$server_ip,$session_name,$one_mysql_log);}
+	$row=mysql_fetch_row($rslt);
+	$VU_user_group =	$row[0];
+
+	$agent_status_viewable_groupsSQL='';
+	### Gather timeclock and shift enforcement restriction settings
+	$stmt="SELECT agent_status_viewable_groups,agent_status_view_time from vicidial_user_groups where user_group='$VU_user_group';";
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00226',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+	$row=mysql_fetch_row($rslt);
+	$agent_status_viewable_groups = $row[0];
+	$agent_status_viewable_groupsSQL = eregi_replace('  ','',$agent_status_viewable_groups);
+	$agent_status_viewable_groupsSQL = eregi_replace(' ',"','",$agent_status_viewable_groupsSQL);
+	$agent_status_viewable_groupsSQL = "user_group IN('$agent_status_viewable_groupsSQL')";
+	$agent_status_view = 0;
+	if (strlen($agent_status_viewable_groups) > 2)
+		{$agent_status_view = 1;}
+	$agent_status_view_time=0;
+	if ($row[1] == 'Y')
+		{$agent_status_view_time=1;}
+	$andSQL='';
+	if (ereg("ALL-CAMPAIGNS",$agent_status_viewable_groups))
+		{$AGENTviewSQL = "";}
+	else
+		{
+		$AGENTviewSQL = "($agent_status_viewable_groupsSQL)";
+
+		if (ereg("CAMPAIGN-AGENTS",$agent_status_viewable_groups))
+			{$AGENTviewSQL = "($AGENTviewSQL or (campaign_id='$campaign'))";}
+		$andSQL=' and';
+		}
+	if ($comments=='AgentXferViewSelect') 
+		{$AGENTviewSQL .= "$andSQL (vla.closer_campaigns LIKE \"%AGENTDIRECT%\")";}
+
+
+	echo "<TABLE CELLPADDING=0 CELLSPACING=1>";
+	### Gather agents data and statuses
+	$stmt="SELECT vla.user,vla.status,vu.full_name,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish) from vicidial_live_agents vla,vicidial_users vu where vla.user=vu.user and $AGENTviewSQL order by vu.full_name;";
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00227',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+	if ($rslt) {$agents_count = mysql_num_rows($rslt);}
+	$loop_count=0;
+		while ($agents_count > $loop_count)
+		{
+		$row=mysql_fetch_row($rslt);
+		$user =			$row[0];
+		$status =		$row[1];
+		$full_name =	$row[2];
+		$call_start =	$row[3];
+		$call_finish =	$row[4];
+
+		if ( ($status=='READY') or ($status=='CLOSER') ) 
+			{
+			$statuscolor='#ADD8E6';
+			$call_time = ($StarTtime - $call_finish);
+			}
+		if ( ($status=='QUEUE') or ($status=='INCALL') ) 
+			{
+			$statuscolor='#D8BFD8';
+			$call_time = ($StarTtime - $call_start);
+			}
+		if ($status=='PAUSED') 
+			{
+			$statuscolor='#F0E68C';
+			$call_time = ($StarTtime - $call_finish);
+			}
+
+		if ($call_time < 1)
+			{
+			$call_time = "0:00";
+			}
+		else
+			{
+			$Fminutes_M = ($call_time / 60);
+			$Fminutes_M_int = floor($Fminutes_M);
+			$Fminutes_M_int = intval("$Fminutes_M_int");
+			$Fminutes_S = ($Fminutes_M - $Fminutes_M_int);
+			$Fminutes_S = ($Fminutes_S * 60);
+			$Fminutes_S = round($Fminutes_S, 0);
+			if ($Fminutes_S < 10) {$Fminutes_S = "0$Fminutes_S";}
+			$call_time = "$Fminutes_M_int:$Fminutes_S";
+			}
+
+		if ($comments=='AgentXferViewSelect') 
+			{
+			echo "<TR BGCOLOR=\"$statuscolor\"><TD><font style=\"font-size: 12px; font-family: sans-serif;\"> &nbsp; <a href=\"#\" onclick=\"AgentsXferSelect('$row[0]','$comments');return false;\">$row[0] - $row[2]</a>&nbsp;</font></TD>";
+			if ($agent_status_view_time > 0)
+				{echo "<TD><font style=\"font-size: 12px;  font-family: sans-serif;\">&nbsp; $call_time &nbsp;</font></TD>";}
+			echo "</TR>";
+			}
+		else
+			{
+			echo "<TR BGCOLOR=\"$statuscolor\"><TD><font style=\"font-size: 12px;  font-family: sans-serif;\"> &nbsp; ";
+			echo "$row[0] - $row[2]";
+			echo "&nbsp;</font></TD>";
+			if ($agent_status_view_time > 0)
+				{echo "<TD><font style=\"font-size: 12px;  font-family: sans-serif;\">&nbsp; $call_time &nbsp;</font></TD>";}
+			echo "</TR>";
+			}
+		$loop_count++;
+		}
+	echo "</TABLE><BR>\n";
+	echo "<font style=\"font-size:10px;font-family:sans-serif;\"><font style=\"background-color:#ADD8E6;\"> &nbsp; &nbsp;</font>-READY &nbsp; <font style=\"background-color:#D8BFD8;\">&nbsp; &nbsp;</font>-INCALL &nbsp; <font style=\"background-color:#F0E68C;\"> &nbsp; &nbsp;</font>-PAUSED &nbsp;\n";
+	if ($comments=='AgentXferViewSelect') 
+		{
+		echo "<BR><BR><a href=\"#\" onclick=\"AgentsXferSelect('0','$comments');return false;\">Close Window</a>&nbsp;";
+		}
+	echo "</font>\n";
+	}
 
 
 ################################################################################

@@ -45,10 +45,11 @@
 # 90307-1855 - Added shift enforcement to send logout flag if outside of shift hours
 # 90408-0020 - Added API vtiger specific callback activity record ability
 # 90508-0727 - Changed to PHP long tags
+# 90706-1430 - Fixed AGENTDIRECT calls in queue display count
 #
 
-$version = '2.2.0-20';
-$build = '90508-0727';
+$version = '2.2.0-21';
+$build = '90706-1430';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=17;
 $one_mysql_log=0;
@@ -238,6 +239,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 
 				if ($campagentstdisp == 'YES')
 					{
+					$ADsql='';
 					### grab the status of this agent to display
 					$stmt="SELECT status,campaign_id,closer_campaigns from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
 					if ($DB) {echo "|$stmt|\n";}
@@ -249,9 +251,14 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 					$AccampSQL=$row[2];
 					$AccampSQL = ereg_replace(' -','', $AccampSQL);
 					$AccampSQL = ereg_replace(' ',"','", $AccampSQL);
+					if (eregi('AGENTDIRECT', $AccampSQL))
+						{
+						$AccampSQL = ereg_replace('AGENTDIRECT','', $AccampSQL);
+						$ADsql = "or ( (campaign_id LIKE \"%AGENTDIRECT%\") and (agent_only='$user') )";
+						}
 
 					### grab the number of calls being placed from this server and campaign
-					$stmt="SELECT count(*) from vicidial_auto_calls where status IN('LIVE') and ( (campaign_id='$Acampaign') or (campaign_id IN('$AccampSQL')) );";
+					$stmt="SELECT count(*) from vicidial_auto_calls where status IN('LIVE') and ( (campaign_id='$Acampaign') or (campaign_id IN('$AccampSQL')) $ADsql);";
 					if ($DB) {echo "|$stmt|\n";}
 					$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03007',$user,$server_ip,$session_name,$one_mysql_log);}

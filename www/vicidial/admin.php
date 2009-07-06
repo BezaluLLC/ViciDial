@@ -1067,6 +1067,10 @@ if (isset($_GET["tts_text"]))						{$tts_text=$_GET["tts_text"];}
 	elseif (isset($_POST["tts_text"]))				{$tts_text=$_POST["tts_text"];}
 if (isset($_GET["drop_rate_group"]))				{$drop_rate_group=$_GET["drop_rate_group"];}
 	elseif (isset($_POST["drop_rate_group"]))		{$drop_rate_group=$_POST["drop_rate_group"];}
+if (isset($_GET["agent_status_viewable_groups"]))			{$agent_status_viewable_groups=$_GET["agent_status_viewable_groups"];}
+	elseif (isset($_POST["agent_status_viewable_groups"]))	{$agent_status_viewable_groups=$_POST["agent_status_viewable_groups"];}
+if (isset($_GET["agent_status_view_time"]))				{$agent_status_view_time=$_GET["agent_status_view_time"];}
+	elseif (isset($_POST["agent_status_view_time"]))	{$agent_status_view_time=$_POST["agent_status_view_time"];}
 
 	if (isset($script_id)) {$script_id= strtoupper($script_id);}
 	if (isset($lead_filter_id)) {$lead_filter_id = strtoupper($lead_filter_id);}
@@ -1320,6 +1324,7 @@ if ($non_latin < 1)
 	$unworkable = ereg_replace("[^NY]","",$unworkable);
 	$sounds_update = ereg_replace("[^NY]","",$sounds_update);
 	$carrier_logging_active = ereg_replace("[^NY]","",$carrier_logging_active);
+	$agent_status_view_time = ereg_replace("[^NY]","",$agent_status_view_time);
 
 	$qc_enabled = ereg_replace("[^0-9NY]","",$qc_enabled);
 	$active = ereg_replace("[^0-9NY]","",$active);
@@ -1844,7 +1849,7 @@ else
 # 90514-0607 - Added select prompts from list in call menu and in-group screens
 # 90521-0029 - Added user territories enable option
 # 90522-0506 - Security fix for logins when using non-latin setting
-# 90524-2307 - Chaned Reports screen layout
+# 90524-2307 - Changed Reports screen layout
 # 90528-2055 - Added ViciDial recording limit field in servers and phone_context to phones
 # 90530-1206 - Changed List Mix to allow for 40 mixes
 # 90531-1802 - Added auto-generated options for users, campaigns, in-groups, etc..., added option to HIDE custphone
@@ -1861,11 +1866,12 @@ else
 # 90627-2333 - Added default transfer button and prepopulate preset options
 # 90628-0924 - Added Text To Speech(TTS) fields
 # 90628-2213 - Added Multi-campaign drop rate groups
+# 90705-0926 - Added User Group agent view options
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-203';
-$build = '90628-2213';
+$admin_version = '2.2.0-204';
+$build = '90705-0926';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -2862,7 +2868,7 @@ echo "<TABLE WIDTH=98% BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR><TD ALIGN
 <BR>
 <A NAME="vicidial_users-scheduled_callbacks">
 <BR>
-<B>Scheduled Callbacks -</B> This option allows an agent to disposition a call as CALLBK and choose the data and time at which the lead will be re-activated.
+<B>Scheduled Callbacks -</B> This option allows an agent to disposition a call as CALLBK and choose the date and time at which the lead will be re-activated.
 
 <BR>
 <A NAME="vicidial_users-agentonly_callbacks">
@@ -4401,6 +4407,16 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="vicidial_user_groups-allowed_campaigns">
 <BR>
 <B>Allowed Campaigns -</B> This is a selectable list of Campaigns to which members of this user group can log in to. The ALL-CAMPAIGNS option allows the users in this group to see and log in to any campaign on the system.
+
+<BR>
+<A NAME="vicidial_user_groups-agent_status_viewable_groups">
+<BR>
+<B>Agent Status Viewable Groups -</B> This is a selectable list of User Groups and user functions to which members of this user group can view the status of as well as transfer calls to inside of the agent screen. The ALL-GROUPS option allows the users in this group to see and transfer calls to any user on the system. The CAMPAIGN-AGENTS option allows users in this group to see and transfer calls to any user in the campaign that they are logged into.
+
+<BR>
+<A NAME="vicidial_user_groups-agent_status_view_time">
+<BR>
+<B>Agent Status View Time -</B> This option defines whether the agent will see the amount of time that users in their agent sidebar have been in their current status. Default is N for no or disabled.
 
 <?php
 if ($SSqc_features_active > 0)
@@ -11632,10 +11648,21 @@ if ($ADD==411111)
 		$group_shifts_ct = count($group_shifts);
 		while ($p <= $group_shifts_ct)
 			{
+			$group_shifts[$p] = ereg_replace("[^ -_0-9a-zA-Z]","",$group_shifts[$p]);
 			$GROUP_shifts .= "$group_shifts[$p] ";
 			$p++;
 			}
-		$stmt="UPDATE vicidial_user_groups set user_group='$user_group', group_name='$group_name',allowed_campaigns='$campaigns_value',qc_allowed_campaigns='$qc_campaigns_value',qc_allowed_inbound_groups='$qc_groups_value',group_shifts='$GROUP_shifts',forced_timeclock_login='$forced_timeclock_login',shift_enforcement='$shift_enforcement' where user_group='$OLDuser_group';";
+		$p=0;
+		$VGROUP_vgroups=' ';
+		$vgroup_vgroups_ct = count($agent_status_viewable_groups);
+		while ($p <= $vgroup_vgroups_ct)
+			{
+			$agent_status_viewable_groups[$p] = ereg_replace("[^ -_0-9a-zA-Z]","",$agent_status_viewable_groups[$p]);
+			$VGROUP_vgroups .= "$agent_status_viewable_groups[$p] ";
+			$p++;
+			}
+	
+		$stmt="UPDATE vicidial_user_groups set user_group='$user_group', group_name='$group_name',allowed_campaigns='$campaigns_value',qc_allowed_campaigns='$qc_campaigns_value',qc_allowed_inbound_groups='$qc_groups_value',group_shifts='$GROUP_shifts',forced_timeclock_login='$forced_timeclock_login',shift_enforcement='$shift_enforcement',agent_status_viewable_groups='$VGROUP_vgroups',agent_status_view_time='$agent_status_view_time' where user_group='$OLDuser_group';";
 		$rslt=mysql_query($stmt, $link);
 
 		echo "<br><B>USER GROUP MODIFIED</B>\n";
@@ -18688,6 +18715,8 @@ if ($ADD==311111)
 	$GROUP_shifts =				$row[5];
 	$forced_timeclock_login =	$row[6];
 	$shift_enforcement =		$row[7];
+	$VGROUP_vgroups =			$row[8];
+	$agent_status_view_time =	$row[9];
 
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -18731,6 +18760,43 @@ if ($ADD==311111)
 		$o++;
 		}
 	echo " <BR>&nbsp;</td></tr>\n";
+
+
+	echo "<tr bgcolor=#B6D3FC><td align=right>Agent Status Viewable Groups: <BR>$NWB#vicidial_user_groups-agent_status_viewable_groups$NWE</td><td align=left>\n";
+	echo "<input type=\"checkbox\" name=\"agent_status_viewable_groups[]\" value=\"--ALL-GROUPS--\"";
+	if (ereg(" --ALL-GROUPS-- ", $VGROUP_vgroups))
+		{echo " CHECKED";}
+	echo "><B>ALL-GROUPS</B> - All user groups in the system<BR>\n";
+	echo "<input type=\"checkbox\" name=\"agent_status_viewable_groups[]\" value=\"--CAMPAIGN-AGENTS--\"";
+	if (ereg(" --CAMPAIGN-AGENTS-- ", $VGROUP_vgroups))
+		{echo " CHECKED";}
+	echo "><B>CAMPAIGN-AGENTS</B> - All users logged into the same camapaign as the agent<BR>\n";
+
+	$stmt="SELECT user_group,group_name from vicidial_user_groups order by user_group";
+	$rslt=mysql_query($stmt, $link);
+	$view_groups_to_print = mysql_num_rows($rslt);
+	$o=0;
+	while ($view_groups_to_print > $o)
+		{
+		$rowx=mysql_fetch_row($rslt);
+		$vgroups_id_value = $rowx[0];
+		$vgroups_name_value = $rowx[1];
+		echo "<input type=\"checkbox\" name=\"agent_status_viewable_groups[]\" value=\"$vgroups_id_value\"";
+		$p=0;
+		while ($p<100)
+			{
+			if (ereg(" $vgroups_id_value ", $VGROUP_vgroups))
+				{
+				echo " CHECKED";
+				}
+			$p++;
+			}
+		echo "> <a href=\"$PHP_SELF?ADD=311111&user_group=$vgroups_id_value\">$vgroups_id_value</a> - $vgroups_name_value<BR>\n";
+		$o++;
+		}
+	echo " <BR>&nbsp;</td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=right>Agent Status View Time: </td><td align=left><select size=1 name=agent_status_view_time><option SELECTED>Y</option><option>N</option><option SELECTED>$agent_status_view_time</option></select>$NWB#vicidial_user_groups-agent_status_view_time$NWE</td></tr>\n";
 
 	if ($SSqc_features_active > 0)
 		{

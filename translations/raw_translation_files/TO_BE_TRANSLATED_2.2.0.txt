@@ -223,6 +223,11 @@ for a 1 second break. You can also use several variables such as first name, las
 Multiple Campaign Drop Rate Group||
 This feature allows you to set a campaign as a member of a Campaign Drop Rate Group, or a group of campaigns whose Human Answered calls and Drop calls for all campaigns in the group will be combined into a shared drop percentage, or abandon rate. This allows you to to run multiple campaigns at once and more easily control your drop rate. This is particularly useful in the UK where regulations permit this drop rate calculation method with campaign grouping for the same company even if there are several campaigns that company is running during the same day. To enable this for a campaign, just select a group from the list. There are 10 groups defined in the system by default, you can contact your system administrator to add more. Default is DISABLED||
 IMPORTANT, this is the password only for the agent web interface phone login, to change the sip.conf or iax.conf password, or secret, for this phone device you need to modify the Conf File Secret field further down on this page||
+Agent Status Viewable Groups||
+This is a selectable list of User Groups and user functions to which members of this user group can view the status of as well as transfer calls to inside of the agent screen. The ALL-GROUPS option allows the users in this group to see and transfer calls to any user on the system. The CAMPAIGN-AGENTS option allows users in this group to see and transfer calls to any user in the campaign that they are logged into||
+Agent Status View Time||
+This option defines whether the agent will see the amount of time that users in their agent sidebar have been in their current status. Default is N for no or disabled||
+This option allows an agent to disposition a call as CALLBK and choose the date and time at which the lead will be re-activated||
 
 
 add-file: user_territories.php
@@ -234,6 +239,8 @@ add-file: AST_agent_timeclock_detail.php
 
 You are not allowed to dial into other agent sessions||
 QUICK TRANSFER||
+Other Agents Status||
+Available Agents Transfer||
 
 
 ############################################################  MANAGER Manual
