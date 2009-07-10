@@ -96,6 +96,7 @@
 # 90623-0724 - Changed prompts to multi-file prompts, changed agent alert exten to a prompt
 # 90627-0546 - Added no-agent-no-queue options
 # 90702-2129 - Fixed rare agent alert bug, added option to send to remote agent as phone*vendor_id
+# 90709-1648 - Fixed alt-number transfers
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -665,7 +666,8 @@ else
 			{
 			@aryA = $sthA->fetchrow_array;	
 			$campaign	=		"$channel_group";
-			$phone_number =		"$aryA[0]";
+			if (length($phone_number) < 10) 
+				{$phone_number =		"$aryA[0]";}
 			$phone_code	=		"$aryA[1]";
 			$insert_lead_id	=	"$CIDlead_id";
 			$fronter =			"$aryA[2]";

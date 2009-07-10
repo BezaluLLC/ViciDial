@@ -4544,7 +4544,7 @@ if ($ACTION == 'AGENTSview')
 	if ($row[1] == 'Y')
 		{$agent_status_view_time=1;}
 	$andSQL='';
-	if (ereg("ALL-CAMPAIGNS",$agent_status_viewable_groups))
+	if (ereg("ALL-GROUPS",$agent_status_viewable_groups))
 		{$AGENTviewSQL = "";}
 	else
 		{
@@ -4553,6 +4553,7 @@ if ($ACTION == 'AGENTSview')
 		if (ereg("CAMPAIGN-AGENTS",$agent_status_viewable_groups))
 			{$AGENTviewSQL = "($AGENTviewSQL or (campaign_id='$campaign'))";}
 		$andSQL=' and';
+		$AGENTviewSQL = "and $AGENTviewSQL";
 		}
 	if ($comments=='AgentXferViewSelect') 
 		{$AGENTviewSQL .= "$andSQL (vla.closer_campaigns LIKE \"%AGENTDIRECT%\")";}
@@ -4560,7 +4561,7 @@ if ($ACTION == 'AGENTSview')
 
 	echo "<TABLE CELLPADDING=0 CELLSPACING=1>";
 	### Gather agents data and statuses
-	$stmt="SELECT vla.user,vla.status,vu.full_name,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish) from vicidial_live_agents vla,vicidial_users vu where vla.user=vu.user and $AGENTviewSQL order by vu.full_name;";
+	$stmt="SELECT vla.user,vla.status,vu.full_name,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish) from vicidial_live_agents vla,vicidial_users vu where vla.user=vu.user $AGENTviewSQL order by vu.full_name;";
 	$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00227',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 	if ($rslt) {$agents_count = mysql_num_rows($rslt);}

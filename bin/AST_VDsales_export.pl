@@ -19,6 +19,7 @@
 # 90106-2309 - Added email sending
 # 90620-0900 - Formatting fixes
 # 90627-0757 - Added time addition when transfer recordings is enabled
+# 90710-0514 - Fixes for data output formatting changes
 # 
 
 $txt = '.txt';
@@ -762,10 +763,10 @@ sub select_format_loop
 				$ivr_location .=	"|";
 				}
 			$ivr_id .=			"$aryB[0]";
-			$ivr_filename .=	"$aryB[1]";
 			$ivr_location .=	"$aryB[2]";
 			@ivr_path = split(/\//,$ivr_location);
 			$path_file = $ivr_path[$#ivr_path];
+			$ivr_filename .=	"$path_file";
 			$rec_countB++;
 			if ($ftp_audio_transfer > 0)
 				{
@@ -811,10 +812,10 @@ sub select_format_loop
 					$ivr_location .=	"|";
 					}
 				$ivr_id .=			"$aryB[0]";
-				$ivr_filename .=	"$aryB[1]";
 				$ivr_location .=	"$aryB[2]";
 				@ivr_path = split(/\//,$ivr_location);
 				$path_file = $ivr_path[$#ivr_path];
+				$ivr_filename .=	"$path_file";
 				$rec_countB++;
 				if ($ftp_audio_transfer > 0)
 					{
@@ -954,6 +955,7 @@ sub select_format_loop
 
 		$uniqueid =~ s/\D//gi;
 		@call_date_array = split(/ /,$call_date);
+		while (length($phone_number)>10) {$phone_number =~ s/^.//gi;}
 		$phone_areacode = substr($phone_number, 0, 3);
 		if (length($closer) < 1) {$closer = $user;}
 		$application = 	substr($did_name, 0, 4);

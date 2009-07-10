@@ -1,7 +1,7 @@
 <?php
 # admin_modify_lead.php
 # 
-# AST GUI database administration modify lead in vicidial_list
+# ViciDial database administration modify lead in vicidial_list
 # admin_modify_lead.php
 #
 # this is the administration lead information modifier screen, the administrator 
@@ -30,6 +30,7 @@
 # 81210-1529 - Added server recording display options
 # 90309-1829 - Added admin_log logging
 # 90508-0644 - Changed to PHP long tags
+# 90708-1549 - Added phone number dialed to outbound log
 #
 
 require("dbconnect.php");
@@ -364,7 +365,8 @@ else
 			$call_log .= "<td align=right><font size=2> $row[3] </td>\n";
 			$call_log .= "<td align=right><font size=2> $row[2] </td>\n";
 			$call_log .= "<td align=right><font size=2> $row[1] </td>\n";
-			$call_log .= "<td align=right><font size=2> $row[15] </td></tr>\n";
+			$call_log .= "<td align=right><font size=2> $row[15] </td>\n";
+			$call_log .= "<td align=right><font size=2>&nbsp; $row[10] </td></tr>\n";
 
 			$campaign_id = $row[3];
 		}
@@ -615,8 +617,8 @@ echo "<br><br>\n";
 echo "<center>\n";
 
 echo "<B>CALLS TO THIS LEAD:</B>\n";
-echo "<TABLE width=650 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> TSR</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
+echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> TSR</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td><td align=right><font size=2> PHONE</td></tr>\n";
 
 	echo "$call_log\n";
 

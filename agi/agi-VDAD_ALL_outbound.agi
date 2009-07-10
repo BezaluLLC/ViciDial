@@ -457,6 +457,8 @@ if ($affected_rows > 0)
 			$t++;
 			}
 		
+		if ($AGILOG) {$agi_string = "--    TTS : |$t|$TTS_filename[0]|$TTS_filename[1]|$TTS_filename[2]|$TTS_filename[3]|$TTS_filename[4]|";   &agi_output;}
+
 		### if there are TTS audio files run this
 		if ($t > 0)
 			{

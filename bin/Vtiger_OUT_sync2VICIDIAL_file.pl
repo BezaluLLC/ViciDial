@@ -125,6 +125,7 @@ if (length($ARGV[0])>1)
 		print "  [--vt-sales-update-alldate] = updates the Vtiger account custom sales fields based upon all sales order data\n";
 		print "  [--vt-timezone-update] = updates the Vtiger account custom timezone field based upon ViciDial timezone/state\n";
 		print "  [--vt-territory-update] = updates the Vtiger account tickersymbol field based upon ViciDial user territory\n";
+		print "  [--vt-territory-restrict=3] = if above flag is present, will only update these records owned by this user_id\n";
 		print " report generation options:\n";
 		print "  [--report-call-file] = generates a spec call file from vicidial records\n";
 		print "  [--report-hours-file] = generates a spec agent hours file from vicidial records\n";
@@ -220,6 +221,16 @@ if (length($ARGV[0])>1)
 			{
 			$vt_territory_update=1;
 			if ($q < 1) {print "\n----- VTIGER USER TERRITORY UPDATE -----\n\n";}
+			}
+
+		if ($args =~ /--vt-territory-restrict=/i)
+			{
+			@data_in = split(/--vt-territory-restrict=/,$args);
+				$vtur_user = $data_in[1];
+				$vtur_user =~ s/ .*//gi;
+			if ($q < 1) {print "\n----- TERRITORY UPDATE RESTRICTION: $vtur_user -----\n\n";}
+			$VCuser_territory_update_restrictionSQL = " and smownerid='$vtur_user'";
+			$VTuser_territory_update_restrictionSQL = " and user_id='$vtur_user'";
 			}
 		if ($args =~ /--report-call-file/i)
 			{
@@ -765,11 +776,11 @@ while ($sthBrowsC > $i)
 
 					if (length($user_id)>0)
 						{
-						$stmtB = "UPDATE vtiger_crmentity SET smownerid='$user_id',smcreatorid='$user_id',modifiedby='$user_id' where crmid='$crmid[$i]';";
+						$stmtB = "UPDATE vtiger_crmentity SET smownerid='$user_id',smcreatorid='$user_id',modifiedby='$user_id' where crmid='$crmid[$i]' $VCuser_territory_update_restrictionSQL;";
 							if ($T < 1) {$affected_rowsB = $dbhB->do($stmtB)    or die  "Couldn't execute query: |$stmtB|\n";}
 							if($DB){print "|$affected_rowsB|$stmtB|\n";}
 
-						$stmtB = "UPDATE vtiger_tracker SET user_id='$user_id' where item_id='$crmid[$i]';";
+						$stmtB = "UPDATE vtiger_tracker SET user_id='$user_id' where item_id='$crmid[$i]' $VTuser_territory_update_restrictionSQL;";
 							if ($T < 1) {$affected_rowsB = $dbhB->do($stmtB)    or die  "Couldn't execute query: |$stmtB|\n";}
 							if($DB){print "|$affected_rowsB|$stmtB|\n";}
 						$n++;
@@ -1189,7 +1200,7 @@ while ($sthBrowsC > $i)
 		if ($i =~ /70$/i) {print STDERR "|     $i\r";}
 		if ($i =~ /80$/i) {print STDERR "+     $i\r";}
 		if ($i =~ /90$/i) {print STDERR "0     $i\r";}
-		if ($i =~ /00$/i) {print "$i|$b|$c|$d|$e|$f|$g|$h|$crmid[$i]|$phone_number|\n";}
+		if ($i =~ /00$/i) {print "$i|$b|$c|$d|$e|$f|$g|$h|$n|$crmid[$i]|$phone_number|\n";}
 		}
 	}
 

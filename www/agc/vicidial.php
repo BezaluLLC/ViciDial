@@ -236,10 +236,11 @@
 # 90628-0655 - Added Quick Transfer button and Preset Prepopulate option
 # 90705-1400 - Added Agent view sidebar option
 # 90706-1432 - Added Agent view transfer selection
+# 90709-1649 - Fixed alt-number transfers and dispo variable reset for webform
 #
 
-$version = '2.2.0-214';
-$build = '90706-1432';
+$version = '2.2.0-215';
+$build = '90709-1649';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -2780,7 +2781,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			if (Ctasknum.length < 2)
 				{Ctasknum = '990009';}
 			var XfeRSelecT = document.getElementById("XfeRGrouP");
-			tasknum = Ctasknum + "*" + XfeRSelecT.value + '*CXFER*' + document.vicidial_form.lead_id.value + '**' + document.vicidial_form.phone_number.value + '*' + user + '*';
+			tasknum = Ctasknum + "*" + XfeRSelecT.value + '*CXFER*' + document.vicidial_form.lead_id.value + '**' + dialed_number + '*' + user + '*';
 
 			CustomerData_update();
 
@@ -3521,7 +3522,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				var XfeRSelecT = document.getElementById("XfeRGrouP");
 				var queryCID = "XLvdcW" + epoch_sec + user_abb;
 				// 		 "90009*$group**$lead_id**$phone_number*$user*$agent_only*";
-				var redirectdestination = closerxferinternal + '90009*' + XfeRSelecT.value + '**' + document.vicidial_form.lead_id.value + '**' + document.vicidial_form.phone_number.value + '*' + user + '*' + document.vicidial_form.xfernumber.value + '*';
+				var redirectdestination = closerxferinternal + '90009*' + XfeRSelecT.value + '**' + document.vicidial_form.lead_id.value + '**' + dialed_number + '*' + user + '*' + document.vicidial_form.xfernumber.value + '*';
 
 				xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectVD&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + redirectdestination + "&ext_context=" + ext_context + "&ext_priority=1&auto_dial_level=" + auto_dial_level + "&campaign=" + campaign + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&secondS=" + VD_live_call_secondS + "&session_id=" + session_id;
 				}
@@ -4462,6 +4463,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var genderIndex = document.getElementById("gender_list").selectedIndex;
 						var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
 						document.vicidial_form.gender.value = genderValue;
+						LeaDDispO='';
 
 						var regWFAcustom = new RegExp("^VAR","ig");
 						if (VDIC_web_form_address.match(regWFAcustom))
@@ -5393,7 +5395,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							var genderIndex = document.getElementById("gender_list").selectedIndex;
 							var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
 							document.vicidial_form.gender.value = genderValue;
-
+							LeaDDispO='';
 
 							var regWFAcustom = new RegExp("^VAR","ig");
 							if (VDIC_web_form_address.match(regWFAcustom))
