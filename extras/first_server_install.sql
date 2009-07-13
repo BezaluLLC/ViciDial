@@ -351,3 +351,4 @@ INSERT INTO vicidial_statuses values('SVYVM','Survey sent to Voicemail','N','N',
 INSERT INTO vicidial_statuses values('SVYHU','Survey Hungup','N','N','UNDEFINED','N','N','N','N','N');
 INSERT INTO vicidial_statuses values('SVYREC','Survey sent to Record','N','N','UNDEFINED','N','N','N','N','N');
 INSERT INTO vicidial_statuses values('QVMAIL','Queue Abandon Voicemail Left','N','N','UNDEFINED','N','N','N','N','N');
+INSERT INTO vicidial_statuses values('RQXFER','Re-Queue','N','Y','UNDEFINED','N','N','N','N','N');

@@ -228,6 +228,16 @@ This is a selectable list of User Groups and user functions to which members of 
 Agent Status View Time||
 This option defines whether the agent will see the amount of time that users in their agent sidebar have been in their current status. Default is N for no or disabled||
 This option allows an agent to disposition a call as CALLBK and choose the date and time at which the lead will be re-activated||
+Agent View Calls in Queue||
+If set to anything but NONE, agents will be able to see details about the calls that are waiting in queue in their agent screen. If set to a number value, the calls displayed will be limited to the number selected. Default is NONE||
+View Calls in Queue Launch||
+This setting if set to AUTO will have the Calls in Queue frame show up upon login by the agent into the agent screen. Default is MANUAL||
+Agent Grab Calls in Queue||
+This option if set to Y will allow the agent to select the call that they want to take from the Calls in Queue display by clicking on it while paused. Agents will only be able to grab inbound calls or transferred calls, not outbound calls. Default is N||
+Agent Call Re-Queue Button||
+This option if set to Y will add a Re-Queue Customer button to the agent screen, allowing the agent to send the call into an AGENTDIRECT queue that is reserved for the agent only. Default is N||
+Agent Pause After Each Call||
+This option if set to Y will pause the agent after every call automatically. Default is N||
 
 
 add-file: user_territories.php
@@ -241,6 +251,11 @@ You are not allowed to dial into other agent sessions||
 QUICK TRANSFER||
 Other Agents Status||
 Available Agents Transfer||
+Show Calls In Queue||
+Calls In Queue||
+Hide Calls In Queue||
+Calls in Queue View Disabled for this campaign||
+YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE||
 
 
 ############################################################  MANAGER Manual

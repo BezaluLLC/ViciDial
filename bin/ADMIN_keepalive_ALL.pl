@@ -29,6 +29,7 @@
 # 90621-1425 - Added tracking group for call menus
 # 90622-2146 - Added 83047777777777 for dynamic agent alert extension
 # 90630-2259 - Added vicidial_process_triggers functionality
+# 90713-0140 - Changed direct dial phone extensions to failover to voicemail forwarder
 #
 
 $DB=0; # Debug flag
@@ -884,8 +885,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Piax .= "host=dynamic\n";
 			}
 		$Pext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i]|$phone_ring_timeout[$i]|)\n";
-		$Pext .= "exten => $dialplan[$i],2,Voicemail($voicemail[$i]|u)\n";
-		$Pext .= "exten => $dialplan[$i],3,Hangup\n";
+		$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
 
 		$vm  .= "$voicemail[$i] => $voicemail[$i],$extension[$i] Mailbox,$email[$i]\n";
 
@@ -966,8 +966,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Psip .= "host=dynamic\n";
 			}
 		$Pext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i]|$phone_ring_timeout[$i]|)\n";
-		$Pext .= "exten => $dialplan[$i],2,Voicemail($voicemail[$i]|u)\n";
-		$Pext .= "exten => $dialplan[$i],3,Hangup\n";
+		$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
 
 		$vm  .= "$voicemail[$i] => $voicemail[$i],$extension[$i] Mailbox,$email[$i]\n";
 

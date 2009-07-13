@@ -13,7 +13,7 @@
 #  - $pass
 # optional variables:
 #  - $format - ('text','debug')
-#  - $ACTION - ('regCLOSER','manDiaLnextCALL','manDiaLskip','manDiaLonly','manDiaLlookCALL','manDiaLlogCALL','userLOGout','updateDISPO','VDADpause','VDADready','VDADcheckINCOMING','UpdatEFavoritEs','CalLBacKLisT','CalLBacKCounT','PauseCodeSubmit','LogiNCamPaigns','alt_phone_change','AlertControl','AGENTSview')
+#  - $ACTION - ('regCLOSER','manDiaLnextCALL','manDiaLskip','manDiaLonly','manDiaLlookCALL','manDiaLlogCALL','userLOGout','updateDISPO','VDADpause','VDADready','VDADcheckINCOMING','UpdatEFavoritEs','CalLBacKLisT','CalLBacKCounT','PauseCodeSubmit','LogiNCamPaigns','alt_phone_change','AlertControl','AGENTSview','CALLSINQUEUEview','CALLSINQUEUEgrab')
 #  - $stage - ('start','finish','lookup','new')
 #  - $closer_choice - ('CL_TESTCAMP_L CL_OUT123_L -')
 #  - $conf_exten - ('8600011',...)
@@ -203,12 +203,13 @@
 # 90611-1423 - Fixed agent log and vicidial log bugs
 # 90705-2008 - Added AGENTSview function
 # 90706-1431 - Added Agent view transfer selection
+# 90712-2303 - Added view calls in queue, grab call from queue
 #
 
-$version = '2.2.0-114';
-$build = '90706-1431';
+$version = '2.2.0-115';
+$build = '90712-2303';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=227;
+$mysql_log_count=234;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -4251,21 +4252,24 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 				$retry_count++;
 				}
 
-	$stmt="UPDATE vicidial_live_agents set status='$stage' where user='$user' and server_ip='$server_ip';";
-		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00166',$user,$server_ip,$session_name,$one_mysql_log);}
-			$retry_count=0;
-			while ( ($errno > 0) and ($retry_count < 9) )
-				{
-				$rslt=mysql_query($stmt, $link);
-				$one_mysql_log=1;
-				$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,"9166$retry_count",$user,$server_ip,$session_name,$one_mysql_log);
-				$one_mysql_log=0;
-				$retry_count++;
-				}
-	$affected_rows = mysql_affected_rows($link);
-	if ($affected_rows > 0) 
+	if ($comments != 'NO_STATUS_CHANGE')
+		{
+		$stmt="UPDATE vicidial_live_agents set status='$stage' where user='$user' and server_ip='$server_ip';";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00166',$user,$server_ip,$session_name,$one_mysql_log);}
+				$retry_count=0;
+				while ( ($errno > 0) and ($retry_count < 9) )
+					{
+					$rslt=mysql_query($stmt, $link);
+					$one_mysql_log=1;
+					$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,"9166$retry_count",$user,$server_ip,$session_name,$one_mysql_log);
+					$one_mysql_log=0;
+					$retry_count++;
+					}
+		$affected_rows = mysql_affected_rows($link);
+		}
+	if ( ($affected_rows > 0) or ($comments == 'NO_STATUS_CHANGE') )
 		{
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
@@ -4552,11 +4556,10 @@ if ($ACTION == 'AGENTSview')
 
 		if (ereg("CAMPAIGN-AGENTS",$agent_status_viewable_groups))
 			{$AGENTviewSQL = "($AGENTviewSQL or (campaign_id='$campaign'))";}
-		$andSQL=' and';
 		$AGENTviewSQL = "and $AGENTviewSQL";
 		}
 	if ($comments=='AgentXferViewSelect') 
-		{$AGENTviewSQL .= "$andSQL (vla.closer_campaigns LIKE \"%AGENTDIRECT%\")";}
+		{$AGENTviewSQL .= " and (vla.closer_campaigns LIKE \"%AGENTDIRECT%\")";}
 
 
 	echo "<TABLE CELLPADDING=0 CELLSPACING=1>";
@@ -4566,7 +4569,7 @@ if ($ACTION == 'AGENTSview')
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00227',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 	if ($rslt) {$agents_count = mysql_num_rows($rslt);}
 	$loop_count=0;
-		while ($agents_count > $loop_count)
+	while ($agents_count > $loop_count)
 		{
 		$row=mysql_fetch_row($rslt);
 		$user =			$row[0];
@@ -4632,6 +4635,237 @@ if ($ACTION == 'AGENTSview')
 		echo "<BR><BR><a href=\"#\" onclick=\"AgentsXferSelect('0','$comments');return false;\">Close Window</a>&nbsp;";
 		}
 	echo "</font>\n";
+	}
+
+
+################################################################################
+### CALLSINQUEUEview - List calls in queue for the bottombar 228
+################################################################################
+if ($ACTION == 'CALLSINQUEUEview')
+	{
+	$stmt="SELECT view_calls_in_queue,grab_calls_in_queue from vicidial_campaigns where campaign_id='$campaign'";
+	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00228',$user,$server_ip,$session_name,$one_mysql_log);}
+	$row=mysql_fetch_row($rslt);
+	$view_calls_in_queue =	$row[0];
+	$grab_calls_in_queue =	$row[1];
+
+	if (eregi('NONE',$view_calls_in_queue))
+		{
+		echo "Calls in Queue View Disabled for this campaign\n";
+		exit;
+		}
+	else
+		{
+		$view_calls_in_queue = ereg_replace('ALL','99', $view_calls_in_queue);
+	
+		### grab the status and campaign/in-group information for this agent to display
+		$ADsql='';
+		$stmt="SELECT status,campaign_id,closer_campaigns from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00229',$user,$server_ip,$session_name,$one_mysql_log);}
+		$row=mysql_fetch_row($rslt);
+		$Alogin=$row[0];
+		$Acampaign=$row[1];
+		$AccampSQL=$row[2];
+		$AccampSQL = ereg_replace(' -','', $AccampSQL);
+		$AccampSQL = ereg_replace(' ',"','", $AccampSQL);
+		if (eregi('AGENTDIRECT', $AccampSQL))
+			{
+			$AccampSQL = ereg_replace('AGENTDIRECT','', $AccampSQL);
+			$ADsql = "or ( (campaign_id LIKE \"%AGENTDIRECT%\") and (agent_only='$user') )";
+			}
+
+		### grab the basic data on calls in the queue for this agent
+		$stmt="SELECT lead_id,campaign_id,phone_number,uniqueid,UNIX_TIMESTAMP(call_time),call_type,auto_call_id from vicidial_auto_calls where status IN('LIVE') and ( (campaign_id='$Acampaign') or (campaign_id IN('$AccampSQL')) $ADsql) order by queue_priority,call_time;";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00230',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($rslt) {$calls_count = mysql_num_rows($rslt);}
+		$loop_count=0;
+		while ($calls_count > $loop_count)
+			{
+			$row=mysql_fetch_row($rslt);
+			$CQlead_id[$loop_count] =		$row[0];
+			$CQcampaign_id[$loop_count] =	$row[1];
+			$CQphone_number[$loop_count] =	$row[2];
+			$CQuniqueid[$loop_count] =		$row[3];
+			$CQcall_time[$loop_count] =		$row[4];
+			$CQcall_type[$loop_count] =		$row[5];
+			$CQauto_call_id[$loop_count] =	$row[6];
+			$loop_count++;
+			}
+
+		### re-order the calls to always make sure the AGENTDIRECT calls are first
+		$loop_count=0;
+		$o=0;
+		while ($calls_count > $loop_count)
+			{
+			if (eregi('AGENTDIRECT', $CQcampaign_id[$loop_count]))
+				{
+				$OQlead_id[$o] =		$CQlead_id[$loop_count];
+				$OQcampaign_id[$o] =	$CQcampaign_id[$loop_count];
+				$OQphone_number[$o] =	$CQphone_number[$loop_count];
+				$OQuniqueid[$o] =		$CQuniqueid[$loop_count];
+				$OQcall_time[$o] =		$CQcall_time[$loop_count];
+				$OQcall_type[$o] =		$CQcall_type[$loop_count];
+				$OQauto_call_id[$o] =	$CQauto_call_id[$loop_count];
+				$o++;
+				}
+			$loop_count++;
+			}
+		$loop_count=0;
+		while ($calls_count > $loop_count)
+			{
+			if (!eregi('AGENTDIRECT', $CQcampaign_id[$loop_count]))
+				{
+				$OQlead_id[$o] =		$CQlead_id[$loop_count];
+				$OQcampaign_id[$o] =	$CQcampaign_id[$loop_count];
+				$OQphone_number[$o] =	$CQphone_number[$loop_count];
+				$OQuniqueid[$o] =		$CQuniqueid[$loop_count];
+				$OQcall_time[$o] =		$CQcall_time[$loop_count];
+				$OQcall_type[$o] =		$CQcall_type[$loop_count];
+				$OQauto_call_id[$o] =	$CQauto_call_id[$loop_count];
+				$o++;
+				}
+			$loop_count++;
+			}
+
+		echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
+		echo "<TR>";
+		echo "<TD> &nbsp; </TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; PHONE &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; NAME &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; WAIT &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; AGENT &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"> &nbsp; &nbsp; &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; CALL GROUP &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; TYPE &nbsp; </font></TD>";
+		echo "</TR>";
+
+		### Print call information and gather more info on the calls as they are printed
+		$loop_count=0;
+		while ( ($calls_count > $loop_count) and ($view_calls_in_queue > $loop_count) )
+			{
+			$call_time = ($StarTtime - $OQcall_time[$loop_count]);
+			$Fminutes_M = ($call_time / 60);
+			$Fminutes_M_int = floor($Fminutes_M);
+			$Fminutes_M_int = intval("$Fminutes_M_int");
+			$Fminutes_S = ($Fminutes_M - $Fminutes_M_int);
+			$Fminutes_S = ($Fminutes_S * 60);
+			$Fminutes_S = round($Fminutes_S, 0);
+			if ($Fminutes_S < 10) {$Fminutes_S = "0$Fminutes_S";}
+			$call_time = "$Fminutes_M_int:$Fminutes_S";
+			$call_handle_method='';
+
+			if ($OQcall_type[$loop_count]=='IN')
+				{
+				$stmt="SELECT group_name,group_color from vicidial_inbound_groups where group_id='$OQcampaign_id[$loop_count]';";
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00231',$user,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysql_fetch_row($rslt);
+				$group_name =			$row[0];
+				$group_color =			$row[1];
+				}
+			$stmt="SELECT comments,user,first_name,last_name from vicidial_list where lead_id='$OQlead_id[$loop_count]'";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00232',$user,$server_ip,$session_name,$one_mysql_log);}
+			$row=mysql_fetch_row($rslt);
+			$comments =		$row[0];
+			$agent =		$row[1];
+			$first_last_name =	"$row[2] $row[3]";
+			$caller_name =	$first_last_name;
+
+			$stmt="SELECT full_name from vicidial_users where user='$agent'";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00232',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($rslt) {$agent_name_count = mysql_num_rows($rslt);}
+			if ($agent_name_count > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$agent_name =		$row[0];
+				}
+			else
+				{$agent_name='';}
+
+			if (strlen($caller_name)<2)
+				{$caller_name =	$comments;}
+			if (strlen($caller_name) > 30) {$caller_name = substr("$caller_name", 0, 30);}
+
+			if (eregi("0$|2$|4$|6$|8$", $loop_count)) {$Qcolor='bgcolor="#FCFCFC"';} 
+			else{$Qcolor='bgcolor="#ECECEC"';}
+
+			if ( (eregi('Y',$grab_calls_in_queue)) and ($OQcall_type[$loop_count]=='IN') )
+				{
+				echo "<TR $Qcolor>";
+				echo "<TD> <a href=\"#\" onclick=\"callinqueuegrab('$OQauto_call_id[$loop_count]');return false;\"><font style=\"font-size: 11px; font-family: sans-serif;\">TAKE CALL</a> &nbsp; </TD>";
+				echo "<TD><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; $OQphone_number[$loop_count] &nbsp; </font></TD>";
+				echo "<TD><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; $caller_name &nbsp; </font></TD>";
+				echo "<TD><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; $call_time &nbsp; </font></TD>";
+				echo "<TD><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; $agent - $agent_name &nbsp; </font></TD>";
+				echo "<TD bgcolor=\"$group_color\"><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; &nbsp; &nbsp; </font></TD>";
+				echo "<TD><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; $OQcampaign_id[$loop_count] - $group_name &nbsp; </font></TD>";
+				echo "<TD><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; $OQcall_type[$loop_count] &nbsp; </font></TD>";
+				echo "</TR>";
+				}
+			else
+				{
+				echo "<TR $Qcolor>";
+				echo "<TD> &nbsp; </TD>";
+				echo "<TD><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; $OQphone_number[$loop_count] &nbsp; </font></TD>";
+				echo "<TD><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; $caller_name &nbsp; </font></TD>";
+				echo "<TD><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; $call_time &nbsp; </font></TD>";
+				echo "<TD><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; $agent - $agent_name &nbsp; </font></TD>";
+				echo "<TD bgcolor=\"$group_color\"><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; &nbsp; &nbsp; </font></TD>";
+				echo "<TD><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; $OQcampaign_id[$loop_count] - $group_name &nbsp; </font></TD>";
+				echo "<TD><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; $OQcall_type[$loop_count] &nbsp; </font></TD>";
+				echo "</TR>";
+				}
+			$loop_count++;
+			}
+		echo "</TABLE><BR> &nbsp;\n";
+		}
+	}
+
+
+################################################################################
+### CALLSINQUEUEgrab - grab a call in queue and reserve it for that agent
+################################################################################
+if ($ACTION == 'CALLSINQUEUEgrab')
+	{
+	$stmt="SELECT view_calls_in_queue,grab_calls_in_queue from vicidial_campaigns where campaign_id='$campaign'";
+	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00233',$user,$server_ip,$session_name,$one_mysql_log);}
+	$row=mysql_fetch_row($rslt);
+	$view_calls_in_queue =	$row[0];
+	$grab_calls_in_queue =	$row[1];
+
+	if ( (eregi('NONE',$view_calls_in_queue)) or (eregi('N',$grab_calls_in_queue)) )
+		{
+		echo "ERROR: Calls in Queue View Disabled for this campaign\n";
+		exit;
+		}
+	else
+		{
+		$stmt="UPDATE vicidial_auto_calls set agent_grab=\"$user\" where auto_call_id='$stage' and agent_grab='' and status='LIVE';";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00234',$user,$server_ip,$session_name,$one_mysql_log);}
+		$affected_rows = mysql_affected_rows($link);
+		if ($affected_rows > 0) 
+			{
+			echo "SUCCESS: Call $stage grabbed for $user";
+			exit;
+			}
+		else
+			{
+			echo "ERROR: Call $stage could not be grabbed for $user\n";
+			exit;
+			}
+		}
 	}
 
 

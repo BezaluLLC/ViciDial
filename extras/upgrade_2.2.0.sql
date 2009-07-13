@@ -291,3 +291,13 @@ ALTER TABLE vicidial_user_groups ADD agent_status_viewable_groups TEXT;
 ALTER TABLE vicidial_user_groups ADD agent_status_view_time ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1161';
+
+ALTER TABLE vicidial_campaigns ADD view_calls_in_queue ENUM('NONE','ALL','1','2','3','4','5') default 'NONE';
+ALTER TABLE vicidial_campaigns ADD view_calls_in_queue_launch ENUM('AUTO','MANUAL') default 'MANUAL';
+ALTER TABLE vicidial_campaigns ADD grab_calls_in_queue ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_campaigns ADD call_requeue_button ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_campaigns ADD pause_after_each_call ENUM('Y','N') default 'N';
+
+ALTER TABLE vicidial_auto_calls ADD agent_grab VARCHAR(20) default '';
+
+UPDATE system_settings SET db_schema_version='1162';

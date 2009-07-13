@@ -368,6 +368,7 @@ last_update_time TIMESTAMP,
 alt_dial VARCHAR(6) default 'NONE',
 queue_priority TINYINT(2) default '0',
 agent_only VARCHAR(20) default '',
+agent_grab VARCHAR(20) default '',
 index (uniqueid),
 index (callerid),
 index (call_time),
@@ -656,7 +657,12 @@ survey_fourth_exten VARCHAR(20) default '8300',
 drop_lockout_time VARCHAR(6) default '0',
 quick_transfer_button ENUM('N','IN_GROUP','PRESET_1','PRESET_2') default 'N',
 prepopulate_transfer_preset ENUM('N','PRESET_1','PRESET_2') default 'N',
-drop_rate_group VARCHAR(20) default 'DISABLED'
+drop_rate_group VARCHAR(20) default 'DISABLED',
+view_calls_in_queue ENUM('NONE','ALL','1','2','3','4','5') default 'NONE',
+view_calls_in_queue_launch ENUM('AUTO','MANUAL') default 'MANUAL',
+grab_calls_in_queue ENUM('Y','N') default 'N',
+call_requeue_button ENUM('Y','N') default 'N',
+pause_after_each_call ENUM('Y','N') default 'N'
 );
 
 CREATE TABLE vicidial_lists (
@@ -1721,7 +1727,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1161';
+UPDATE system_settings SET db_schema_version='1162';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
