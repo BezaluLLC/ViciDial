@@ -35,6 +35,7 @@ SVYREC - Survey sent to Record - Survey outbound campaign status only
 HXFER - Hold Recall Transfer to another in-group
 HOLDTO - Hold time option call termination on inbound call
 QVMAIL - Queue Abandon Voicemail Left
+RQXFER - Re-Queue Transfer back to agent
 CPDATB - Sangoma Call Progress Detection CPD All-Trunks-Busy
 CPDB - Sangoma Call Progress Detection CPD Busy
 CPDNA - Sangoma Call Progress Detection CPD No-Answer

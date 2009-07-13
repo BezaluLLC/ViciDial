@@ -7805,7 +7805,7 @@ else
 			hideDiv('AgentViewSpan');
 			hideDiv('AgentXferViewSpan');
 			if (view_calls_in_queue_launch != '1')
-				{hidediv('callsinqueuedisplay');}
+				{hideDiv('callsinqueuedisplay');}
 			if (agentonly_callbacks != '1')
 				{hideDiv('CallbacksButtons');}
 		//	if ( (agentcall_manual != '1') && (starting_dial_level > 0) )
@@ -9010,10 +9010,13 @@ if ($quick_transfer_button_enabled > 0)
 	{echo "<span STYLE=\"background-color: $MAIN_COLOR\" id=\"QuickXfer\"><IMG SRC=\"./images/vdc_LB_quickxfer_OFF.gif\" border=0 alt=\"Quick Transfer\"></span><BR>\n";}
 ?>
 
+<span id="ReQueueCall"></span>
+
 <?php
 if ($call_requeue_button > 0)
-	{echo "<span STYLE=\"background-color: $MAIN_COLOR\" id=\"ReQueueCall\"><IMG SRC=\"./images/vdc_LB_requeue_call_OFF.gif\" border=0 alt=\"Re-Queue Call\"></span><BR>\n";}
+	{echo "<BR>\n";}
 ?>
+
 
 <span id="SpacerSpanC"><IMG SRC="./images/blank.gif" width=145 height=16 border=0></span><BR>
 <span STYLE="background-color: #FFCCFF" id="HangupControl"><IMG SRC="./images/vdc_LB_hangupcustomer_OFF.gif" border=0 alt="Hangup Customer"></span><BR>
