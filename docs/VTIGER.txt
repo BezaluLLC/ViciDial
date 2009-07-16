@@ -104,6 +104,10 @@ ls -l
 cp /usr/src/astguiclient/trunk/extras/Vtiger504_vicidial_005.patch ./
 patch -p1 < ./Vtiger504_vicidial_005.patch
 
+NOTE: There is also now a patch for the 5.1.0 RC version of Vtiger that is
+included with ViciDial:   Vtiger510_vicidial_001_noclose.patch
+  cp /usr/src/astguiclient/trunk/extras/Vtiger510_vicidial_001_noclose.patch ./
+  patch -p1 < ./Vtiger510_vicidial_001_noclose.patch
 
 
 
