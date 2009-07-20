@@ -238,10 +238,11 @@
 # 90706-1432 - Added Agent view transfer selection
 # 90709-1649 - Fixed alt-number transfers and dispo variable reset for webform
 # 90712-2304 - Added ADD-ALL group selection, view calls in queue, grab call from queue, requeue button
+# 90717-0640 - Added dialed_label and dialed_number to script variables
 #
 
-$version = '2.2.0-216';
-$build = '90712-2304';
+$version = '2.2.0-217';
+$build = '90717-0640';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -7081,6 +7082,8 @@ encoded=utf8_decode(xtest);
 		var SCserver_ip = server_ip;
 		var SCSIPexten = extension;
 		var SCsession_id = session_id;
+		var SCdialed_number = dialed_number;
+		var SCdialed_label = dialed_label;
 		var SCweb_vars = LIVE_web_vars;
 
 		if (encoded.match(RGiframe))
@@ -7124,6 +7127,8 @@ encoded=utf8_decode(xtest);
 			SCcustomer_zap_channel = SCcustomer_zap_channel.replace(RGplus,'+');
 			SCserver_ip = SCserver_ip.replace(RGplus,'+');
 			SCSIPexten = SCSIPexten.replace(RGplus,'+');
+			SCdialed_number = SCdialed_number.replace(RGplus,'+');
+			SCdialed_label = SCdialed_label.replace(RGplus,'+');
 			SCweb_vars = SCweb_vars.replace(RGplus,'+');
 			}
 
@@ -7168,6 +7173,8 @@ encoded=utf8_decode(xtest);
 		var RGserver_ip = new RegExp("--A--server_ip--B--","g");
 		var RGSIPexten = new RegExp("--A--SIPexten--B--","g");
 		var RGsession_id = new RegExp("--A--session_id--B--","g");
+		var RGdialed_number = new RegExp("--A--dialed_number--B--","g");
+		var RGdialed_label = new RegExp("--A--dialed_label--B--","g");
 		var RGweb_vars = new RegExp("--A--web_vars--B--","g");
 
 		encoded = encoded.replace(RGvendor_lead_code, SCvendor_lead_code);
@@ -7211,6 +7218,8 @@ encoded=utf8_decode(xtest);
 		encoded = encoded.replace(RGserver_ip, SCserver_ip);
 		encoded = encoded.replace(RGSIPexten, SCSIPexten);
 		encoded = encoded.replace(RGsession_id, SCsession_id);
+		encoded = encoded.replace(RGdialed_number, SCdialed_number);
+		encoded = encoded.replace(RGdialed_label, SCdialed_label);
 		encoded = encoded.replace(RGweb_vars, SCweb_vars);
 		}
 decoded=encoded; // simple no ?
@@ -8106,18 +8115,18 @@ else
 		if (vdc_header_date_format.match(regALdate))
 			{
 			var statusmon='';
-			if (mon == 1) {statusmon = "JAN";}
-			if (mon == 2) {statusmon = "FEB";}
-			if (mon == 3) {statusmon = "MAR";}
-			if (mon == 4) {statusmon = "APR";}
-			if (mon == 5) {statusmon = "MAY";}
-			if (mon == 6) {statusmon = "JUN";}
-			if (mon == 7) {statusmon = "JLY";}
-			if (mon == 8) {statusmon = "AUG";}
-			if (mon == 9) {statusmon = "SEP";}
-			if (mon == 10) {statusmon = "OCT";}
-			if (mon == 11) {statusmon = "NOV";}
-			if (mon == 12) {statusmon = "DEC";}
+			if (month == 1) {statusmon = "JAN";}
+			if (month == 2) {statusmon = "FEB";}
+			if (month == 3) {statusmon = "MAR";}
+			if (month == 4) {statusmon = "APR";}
+			if (month == 5) {statusmon = "MAY";}
+			if (month == 6) {statusmon = "JUN";}
+			if (month == 7) {statusmon = "JLY";}
+			if (month == 8) {statusmon = "AUG";}
+			if (month == 9) {statusmon = "SEP";}
+			if (month == 10) {statusmon = "OCT";}
+			if (month == 11) {statusmon = "NOV";}
+			if (month == 12) {statusmon = "DEC";}
 
 			status_date = statusmon + " " + daym;
 			}

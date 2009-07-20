@@ -204,12 +204,13 @@
 # 90705-2008 - Added AGENTSview function
 # 90706-1431 - Added Agent view transfer selection
 # 90712-2303 - Added view calls in queue, grab call from queue
+# 90717-0638 - Fixed alt dial on overflow in-group calls
 #
 
-$version = '2.2.0-115';
-$build = '90712-2303';
+$version = '2.2.0-116';
+$build = '90717-0638';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=234;
+$mysql_log_count=235;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -1851,6 +1852,23 @@ if ($stage == "end")
 				{
 				### check to see if lead should be alt_dialed
 				if (strlen($alt_dial)<2) {$alt_dial = 'NONE';}
+
+				### check if inbound call, if so find a recent outbound call to pull alt_dial value from
+				if ($VLA_inOUT == 'INBOUND')
+					{
+					$one_hour_ago = date("Y-m-d H:i:s", mktime(date("H")-1,date("i"),date("s"),date("m"),date("d"),date("Y")));
+					##### find a recent outbound call associated with this inbound call
+					$stmt="SELECT alt_dial FROM vicidial_log where lead_id='$lead_id' and status IN('DROP','XDROP') and call_date > \"$one_hour_ago\" order by call_date desc limit 1;";
+					$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00235',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$VL_alt_ct = mysql_num_rows($rslt);
+					if ($VL_alt_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$alt_dial =		$row[0];
+						}
+					}
 
 				if ( (eregi("(NONE|MAIN)",$alt_dial)) and (eregi("(ALT_ONLY|ALT_AND_ADDR3|ALT_AND_EXTENDED)",$auto_alt_dial)) )
 					{

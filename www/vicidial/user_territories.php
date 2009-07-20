@@ -9,9 +9,10 @@
 # 
 # CHANGES
 # 90520-1928 - first build
+# 90717-0651 - Added batch
 #
 
-$version = '2.2.0-1';
+$version = '2.2.0-2';
 $build = '90520-1928';
 
 $MT[0]='';
@@ -33,6 +34,8 @@ if (isset($_GET["level"]))					{$level=$_GET["level"];}
 	elseif (isset($_POST["level"]))			{$level=$_POST["level"];}
 if (isset($_GET["accountid"]))				{$accountid=$_GET["accountid"];}
 	elseif (isset($_POST["accountid"]))		{$accountid=$_POST["accountid"];}
+if (isset($_GET["batch"]))					{$batch=$_GET["batch"];}
+	elseif (isset($_POST["batch"]))			{$batch=$_POST["batch"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
@@ -82,26 +85,35 @@ if ($non_latin < 1)
 	$level = ereg_replace("[^\_A-Z]","",$level);
 	$old_territory = ereg_replace("[^-\_0-9a-zA-Z]","",$old_territory);
 	$old_user = ereg_replace("[^-\_0-9a-zA-Z]","",$old_user);
+	$accountid = ereg_replace("[^-\_0-9a-zA-Z]","",$accountid);
 	}
 
-$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
-$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and modify_users='1'";
-if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if (eregi("YES",$batch))
 	{
-	Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-	Header("HTTP/1.0 401 Unauthorized");
-	echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-	exit;
+	$USER='batch';
+	$PASS='batch';
+	}
+else
+	{
+	$USER=$_SERVER['PHP_AUTH_USER'];
+	$PASS=$_SERVER['PHP_AUTH_PW'];
+	$USER = ereg_replace("[^0-9a-zA-Z]","",$USER);
+	$PASS = ereg_replace("[^0-9a-zA-Z]","",$PASS);
+
+	$stmt="SELECT count(*) from vicidial_users where user='$USER' and pass='$PASS' and user_level > 7 and modify_users='1'";
+	if ($DB) {echo "|$stmt|\n";}
+	if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$auth=$row[0];
+
+	if( (strlen($USER)<2) or (strlen($PASS)<2) or (!$auth))
+		{
+		Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+		Header("HTTP/1.0 401 Unauthorized");
+		echo "Invalid Username/Password: |$USER|$PASS|\n";
+		exit;
+		}
 	}
 
 if ($enable_vtiger_integration > 0)
@@ -177,7 +189,11 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_i
 		}
 	else
 		{
-		$stmtV="SELECT tickersymbol from vtiger_account where accountid='$accountid';";
+		if (eregi("YES",$batch))
+			{$AID_lookupSQL = "website='$accountid'";}
+		else
+			{$AID_lookupSQL = "accountid='$accountid'";}
+		$stmtV="SELECT tickersymbol,accountid from vtiger_account where $AID_lookupSQL;";
 		$rsltV=mysql_query($stmtV, $linkV);
 		if ($DB) {echo "$stmtV\n";}
 		$vat_ct = mysql_num_rows($rsltV);
@@ -185,6 +201,7 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_i
 			{
 			$row=mysql_fetch_row($rsltV);
 			$territory =		$row[0];
+			$accountid =		$row[1];
 
 			$stmt="SELECT count(*) from vicidial_user_territories where territory='$territory' and user='$user';";
 			$rslt=mysql_query($stmt, $link);
@@ -200,7 +217,7 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_i
 				$SQL_log = "$stmt|$stmtB|";
 				$SQL_log = ereg_replace(';','',$SQL_log);
 				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				}
@@ -229,7 +246,7 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_i
 				$SQL_log = "$stmt|$stmtB|";
 				$SQL_log = ereg_replace(';','',$SQL_log);
 				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='VTIGER', event_type='MODIFY', record_id='$accountid', event_code='VTIGER MODIFY TERRITORY OWNER ACCOUNT', event_sql=\"$SQL_log\", event_notes='';";
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='VTIGER', event_type='MODIFY', record_id='$accountid', event_code='VTIGER MODIFY TERRITORY OWNER ACCOUNT', event_sql=\"$SQL_log\", event_notes='';";
 				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				}
@@ -388,7 +405,7 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integrati
 			$SQL_log = "$stmt|$stmtB|";
 			$SQL_log = ereg_replace(';','',$SQL_log);
 			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			}
@@ -467,7 +484,7 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integrati
 			$SQL_log = "$stmt|$stmtB|";
 			$SQL_log = ereg_replace(';','',$SQL_log);
 			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='VTIGER', event_type='MODIFY', record_id='$territory', event_code='VTIGER MODIFY TERRITORY OWNER', event_sql=\"$SQL_log\", event_notes='';";
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='VTIGER', event_type='MODIFY', record_id='$territory', event_code='VTIGER MODIFY TERRITORY OWNER', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			}
@@ -562,7 +579,7 @@ if ($action == "PROCESS_ADD_USER_TERRITORY")
 			$SQL_log = "$stmt|$stmtB|";
 			$SQL_log = ereg_replace(';','',$SQL_log);
 			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			}
@@ -605,7 +622,7 @@ if ($action == "PROCESS_MODIFY_USER_TERRITORY")
 			$SQL_log = "$stmt|$stmtB|";
 			$SQL_log = ereg_replace(';','',$SQL_log);
 			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TERRITORIES', event_type='MODIFY', record_id='$territory', event_code='ADMIN MODIFY USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='MODIFY', record_id='$territory', event_code='ADMIN MODIFY USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			}
@@ -642,7 +659,7 @@ if ($action == "DELETE_USER_TERRITORY")
 			$SQL_log = "$stmt|$stmtB|";
 			$SQL_log = ereg_replace(';','',$SQL_log);
 			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TERRITORIES', event_type='DELETE', record_id='$territory', event_code='ADMIN DELETE USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='DELETE', record_id='$territory', event_code='ADMIN DELETE USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			}
@@ -700,7 +717,7 @@ if ($action == "PROCESS_ADD_TERRITORY")
 			$SQL_log = "$stmt|";
 			$SQL_log = ereg_replace(';','',$SQL_log);
 			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			}
@@ -737,7 +754,7 @@ if ($action == "DELETE_TERRITORY")
 			$SQL_log = "$stmt|";
 			$SQL_log = ereg_replace(';','',$SQL_log);
 			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TERRITORIES', event_type='DELETE', record_id='$territory', event_code='ADMIN DELETE TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='DELETE', record_id='$territory', event_code='ADMIN DELETE TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			}
@@ -774,7 +791,7 @@ if ($action == "PROCESS_MODIFY_TERRITORY")
 			$SQL_log = "$stmt|";
 			$SQL_log = ereg_replace(';','',$SQL_log);
 			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TERRITORIES', event_type='MODIFY', record_id='$territory', event_code='ADMIN MODIFY TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='MODIFY', record_id='$territory', event_code='ADMIN MODIFY TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			}

@@ -27,6 +27,7 @@ $US = '_';
 $MT[0] = '';
 $Q=0;
 $DB=0;
+$uniqueidLIST='|';
 
 # Default FTP account variables
 $VARREPORT_host = '10.0.0.4';
@@ -427,7 +428,7 @@ $TOTAL_SALES=0;
 ###########################################################################
 ########### CURRENT DAY SALES GATHERING outbound-only: vicidial_log  ######
 ###########################################################################
-$stmtA = "select vicidial_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,call_date,vicidial_list.lead_id,vicidial_users.full_name,vicidial_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_log.list_id,title,address3,last_local_call_time,uniqueid,length_in_sec from vicidial_list,vicidial_log,vicidial_users where campaign_id IN($campaignSQL) $sale_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_log.user;";
+$stmtA = "select vicidial_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,call_date,vicidial_list.lead_id,vicidial_users.full_name,vicidial_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_log.list_id,title,address3,last_local_call_time,uniqueid,length_in_sec from vicidial_list,vicidial_log,vicidial_users where campaign_id IN($campaignSQL) $sale_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_log.user order by call_date;";
 #$stmtA = "select vicidial_users.user,first_name,last_name,address1,address2,city,state,postal_code,phone_number,email,security_phrase,comments,last_local_call_time,lead_id,vicidial_users.full_name,status,vendor_lead_code,source_id,list_id,title,address3,last_local_call_time from vicidial_list,vicidial_users where list_id NOT IN('999','998') $sale_statusesSQL and called_count > 0 and vicidial_users.user=vicidial_list.user;";
 if ($DB) {print "|$stmtA|\n";}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -477,7 +478,7 @@ if (length($with_inboundSQL)>3)
 	###########################################################################
 	########### CURRENT DAY SALES GATHERING inbound-only: vicidial_closer_log  ######
 	###########################################################################
-	$stmtA = "select vicidial_closer_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,call_date,vicidial_list.lead_id,vicidial_users.full_name,vicidial_closer_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_closer_log.list_id,campaign_id,title,address3,last_local_call_time,xfercallid,closecallid,uniqueid,length_in_sec,queue_seconds from vicidial_list,vicidial_closer_log,vicidial_users where campaign_id IN($with_inboundSQL) $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_closer_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_closer_log.user;";
+	$stmtA = "select vicidial_closer_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,call_date,vicidial_list.lead_id,vicidial_users.full_name,vicidial_closer_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_closer_log.list_id,campaign_id,title,address3,last_local_call_time,xfercallid,closecallid,uniqueid,length_in_sec,queue_seconds from vicidial_list,vicidial_closer_log,vicidial_users where campaign_id IN($with_inboundSQL) $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_closer_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_closer_log.user order by call_date;";
 	if ($DB) {print "|$stmtA|\n";}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -664,6 +665,7 @@ exit;
 ### Subroutine for formatting of the output ###
 sub select_format_loop
 	{
+	$str='';
 	if ($T)
 		{
 	#	$user =			'1234';
@@ -747,6 +749,7 @@ sub select_format_loop
 		{
 		$ivr_id = '0';
 		$ivr_filename = '';
+		$ivr_location = '';
 
 		$stmtB = "select recording_id,filename,location from recording_log where vicidial_id='$vicidial_id' and start_time > '$shipdate 00:00:01' and start_time < '$shipdate 23:59:59' order by start_time limit 10;";
 		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
@@ -760,10 +763,9 @@ sub select_format_loop
 				{
 				$ivr_id .=			"|";
 				$ivr_filename .=	"|";
-				$ivr_location .=	"|";
 				}
 			$ivr_id .=			"$aryB[0]";
-			$ivr_location .=	"$aryB[2]";
+			$ivr_location =		"$aryB[2]";
 			@ivr_path = split(/\//,$ivr_location);
 			$path_file = $ivr_path[$#ivr_path];
 			$ivr_filename .=	"$path_file";
@@ -800,23 +802,22 @@ sub select_format_loop
 			$stmtB = "select recording_id,filename,location from recording_log where vicidial_id='$closecallid' and start_time > '$shipdate 00:00:01' and start_time < '$shipdate 23:59:59' order by start_time limit 10;";
 			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
-			$sthBrows=$sthB->rows;
-			$rec_countB=0;
-			while ($sthBrows > $rec_countB)
+			$sthBrowsR=$sthB->rows;
+			$rec_countBR=0;
+			while ($sthBrowsR > $rec_countBR)
 				{
 				@aryB = $sthB->fetchrow_array;
 				if (length($ivr_id) > 1)
 					{
 					$ivr_id .=			"|";
 					$ivr_filename .=	"|";
-					$ivr_location .=	"|";
 					}
 				$ivr_id .=			"$aryB[0]";
-				$ivr_location .=	"$aryB[2]";
+				$ivr_location =		"$aryB[2]";
 				@ivr_path = split(/\//,$ivr_location);
 				$path_file = $ivr_path[$#ivr_path];
 				$ivr_filename .=	"$path_file";
-				$rec_countB++;
+				$rec_countBR++;
 				if ($ftp_audio_transfer > 0)
 					{
 					`$wgetbin -q --output-document=$tempdir/$path_file $aryB[2] `;
@@ -959,11 +960,17 @@ sub select_format_loop
 		$phone_areacode = substr($phone_number, 0, 3);
 		if (length($closer) < 1) {$closer = $user;}
 		$application = 	substr($did_name, 0, 4);
+		$queue_seconds = int($queue_seconds + .5);
 		$talk_seconds = ($length_in_sec - $queue_seconds);
-		$queue_seconds =~ s/\..*//gi;
 		$dispo_time = 0;
 
-		$str = "$uniqueid\t$call_date_array[0]\t$call_date_array[1]\t$phone_areacode\t$phone_number\t$did_pattern\t$closer\t$queue_seconds\t$talk_seconds\t$dispo_time\t$application\t-\t$ivr_filename\t\n";
+		if ($uniqueidLIST !~ /\|$uniqueid\|/)
+			{
+			$str = "$uniqueid\t$call_date_array[0]\t$call_date_array[1]\t$phone_areacode\t$phone_number\t$did_pattern\t$closer\t$queue_seconds\t$talk_seconds\t$dispo_time\t$application\t-\t$ivr_filename\t\n";
+
+			$uniqueidLIST .= "$uniqueid|";
+			if ($DB > 0) {print "UNIQUE: -----$uniqueidLIST-----$uniqueid";}
+			}
 
 		}
 

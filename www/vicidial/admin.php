@@ -1883,11 +1883,12 @@ else
 # 90628-2213 - Added Multi-campaign drop rate groups
 # 90705-0926 - Added User Group agent view options
 # 90710-1528 - Added Agent view and grab queue calls and every call pause options
+# 90717-0646 - Added dialed_label and dialed_number to script variables
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-205';
-$build = '90710-1528';
+$admin_version = '2.2.0-206';
+$build = '90717-0646';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4496,10 +4497,10 @@ if ($SSqc_features_active > 0)
 
 <BR>
 <A NAME="vicidial_scripts-script_text">
-<B>Script Text -</B> This is where you place the content of a Vicidial Script. Minimum of 2 characters. You can have customer information be auto-populated in this script using "--A--field--B--" where field is one of the following fieldnames: vendor_lead_code, source_id, list_id, gmt_offset_now, called_since_last_reset, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, lead_id, campaign, phone_login, group, channel_group, SQLdate, epoch, uniqueid, customer_zap_channel, server_ip, SIPexten, session_id. For example, this sentence would print the persons name in it----<BR><BR>  Hello, can I speak with --A--first_name--B-- --A--last_name--B-- please? Well hello --A--title--B-- --A--last_name--B-- how are you today?<BR><BR> This would read----<BR><BR>Hello, can I speak with John Doe please? Well hello Mr. Doe how are you today?<BR><BR> You can also use an iframe to load a separate window within the SCRIPT tab, here is an example with prepopulated variables:
+<B>Script Text -</B> This is where you place the content of a Vicidial Script. Minimum of 2 characters. You can have customer information be auto-populated in this script using "--A--field--B--" where field is one of the following fieldnames: vendor_lead_code, source_id, list_id, gmt_offset_now, called_since_last_reset, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, lead_id, campaign, phone_login, group, channel_group, SQLdate, epoch, uniqueid, customer_zap_channel, server_ip, SIPexten, session_id, dialed_number, dialed_label. For example, this sentence would print the persons name in it----<BR><BR>  Hello, can I speak with --A--first_name--B-- --A--last_name--B-- please? Well hello --A--title--B-- --A--last_name--B-- how are you today?<BR><BR> This would read----<BR><BR>Hello, can I speak with John Doe please? Well hello Mr. Doe how are you today?<BR><BR> You can also use an iframe to load a separate window within the SCRIPT tab, here is an example with prepopulated variables:
 
 <DIV style="height:200px;width:400px;background:white;overflow:scroll;font-size:12px;font-family:sans-serif;" id=iframe_example>
-&#60;iframe src="http://astguiclient.sf.net/test_VICIDIAL_output.php?lead_id=--A--lead_id--B--&#38;vendor_id=--A--vendor_lead_code--B--&#38;list_id=--A--list_id--B--&#38;gmt_offset_now=--A--gmt_offset_now--B--&#38;phone_code=--A--phone_code--B--&#38;phone_number=--A--phone_number--B--&#38;title=--A--title--B--&#38;first_name=--A--first_name--B--&#38;middle_initial=--A--middle_initial--B--&#38;last_name=--A--last_name--B--&#38;address1=--A--address1--B--&#38;address2=--A--address2--B--&#38;address3=--A--address3--B--&#38;city=--A--city--B--&#38;state=--A--state--B--&#38;province=--A--province--B--&#38;postal_code=--A--postal_code--B--&#38;country_code=--A--country_code--B--&#38;gender=--A--gender--B--&#38;date_of_birth=--A--date_of_birth--B--&#38;alt_phone=--A--alt_phone--B--&#38;email=--A--email--B--&#38;security_phrase=--A--security_phrase--B--&#38;comments=--A--comments--B--&#38;user=--A--user--B--&#38;campaign=--A--campaign--B--&#38;phone_login=--A--phone_login--B--&#38;fronter=--A--fronter--B--&#38;closer=--A--user--B--&#38;group=--A--group--B--&#38;channel_group=--A--group--B--&#38;SQLdate=--A--SQLdate--B--&#38;epoch=--A--epoch--B--&#38;uniqueid=--A--uniqueid--B--&#38;customer_zap_channel=--A--customer_zap_channel--B--&#38;server_ip=--A--server_ip--B--&#38;SIPexten=--A--SIPexten--B--&#38;session_id=--A--session_id--B--&#38;phone=--A--phone--B--" style="width:580;height:290;background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="popupFrame" name="popupFrame" width="460" height="290" STYLE="z-index:17"&#62;
+&#60;iframe src="http://astguiclient.sf.net/test_VICIDIAL_output.php?lead_id=--A--lead_id--B--&#38;vendor_id=--A--vendor_lead_code--B--&#38;list_id=--A--list_id--B--&#38;gmt_offset_now=--A--gmt_offset_now--B--&#38;phone_code=--A--phone_code--B--&#38;phone_number=--A--phone_number--B--&#38;title=--A--title--B--&#38;first_name=--A--first_name--B--&#38;middle_initial=--A--middle_initial--B--&#38;last_name=--A--last_name--B--&#38;address1=--A--address1--B--&#38;address2=--A--address2--B--&#38;address3=--A--address3--B--&#38;city=--A--city--B--&#38;state=--A--state--B--&#38;province=--A--province--B--&#38;postal_code=--A--postal_code--B--&#38;country_code=--A--country_code--B--&#38;gender=--A--gender--B--&#38;date_of_birth=--A--date_of_birth--B--&#38;alt_phone=--A--alt_phone--B--&#38;email=--A--email--B--&#38;security_phrase=--A--security_phrase--B--&#38;comments=--A--comments--B--&#38;user=--A--user--B--&#38;campaign=--A--campaign--B--&#38;phone_login=--A--phone_login--B--&#38;fronter=--A--fronter--B--&#38;closer=--A--user--B--&#38;group=--A--group--B--&#38;channel_group=--A--group--B--&#38;SQLdate=--A--SQLdate--B--&#38;epoch=--A--epoch--B--&#38;uniqueid=--A--uniqueid--B--&#38;customer_zap_channel=--A--customer_zap_channel--B--&#38;server_ip=--A--server_ip--B--&#38;SIPexten=--A--SIPexten--B--&#38;session_id=--A--session_id--B--&#38;dialed_number=--A--dialed_number--B--&#38;dialed_label=--A--dialed_label--B--&#38;phone=--A--phone--B--" style="width:580;height:290;background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="popupFrame" name="popupFrame" width="460" height="290" STYLE="z-index:17"&#62;
 &#60;/iframe&#62;
 </DIV>
 
@@ -5743,7 +5744,7 @@ if ($ADD==7111111)
 	$country_code = 'USA';
 	$gender = 'M';
 	$date_of_birth = '1970-01-01';
-	$alt_phone = '3125551212';
+	$alt_phone = '3125551111';
 	$email = 'test@test.com';
 	$security_phrase = 'SECUTIRY';
 	$comments = 'COMMENTS FIELD';
@@ -5761,6 +5762,8 @@ if ($ADD==7111111)
 	$RGserver_ip = '10.10.10.15';
 	$RGSIPexten = 'SIP/gs102';
 	$RGsession_id = '8600051';
+	$RGdialed_number = '3125551111';
+	$RGdialed_label = 'ALT';
 
 	echo "</title>\n";
 	echo "</head>\n";
@@ -5812,6 +5815,8 @@ if ($ADD==7111111)
 		$RGserver_ip = eregi_replace(' ','+',$RGserver_ip);
 		$RGSIPexten = eregi_replace(' ','+',$RGSIPexten);
 		$RGsession_id = eregi_replace(' ','+',$RGsession_id);
+		$RGdialed_number = eregi_replace(' ','+',$RGdialed_number);
+		$RGdialed_label = eregi_replace(' ','+',$RGdialed_label);
 		}
 
 	$script_text = eregi_replace('--A--vendor_lead_code--B--',"$vendor_lead_code",$script_text);
@@ -5852,6 +5857,8 @@ if ($ADD==7111111)
 	$script_text = eregi_replace('--A--server_ip--B--',"$RGserver_ip",$script_text);
 	$script_text = eregi_replace('--A--SIPexten--B--',"$RGSIPexten",$script_text);
 	$script_text = eregi_replace('--A--session_id--B--',"$RGsession_id",$script_text);
+	$script_text = eregi_replace('--A--dialed_number--B--',"$RGdialed_number",$script_text);
+	$script_text = eregi_replace('--A--dialed_label--B--',"$RGdialed_label",$script_text);
 	$script_text = eregi_replace("\n","<BR>",$script_text);
 
 
@@ -6889,6 +6896,8 @@ if ($ADD==1111111)
 		echo "<option>server_ip</option>";
 		echo "<option>SIPexten</option>";
 		echo "<option>session_id</option>";
+		echo "<option>dialed_number</option>";
+		echo "<option>dialed_label</option>";
 		echo "</select>";
 		echo "<input type=\"button\" name=\"insertField\" value=\"Insert\" onClick=\"scriptInsertField();\"><BR>";
 		# END Insert Field
@@ -18992,6 +19001,8 @@ if ($ADD==3111111)
 	echo "<option>server_ip</option>";
 	echo "<option>SIPexten</option>";
 	echo "<option>session_id</option>";
+	echo "<option>dialed_number</option>";
+	echo "<option>dialed_label</option>";
 	echo "</select>";
 	echo "<input type=\"button\" name=\"insertField\" value=\"Insert\" onClick=\"scriptInsertField();\"><BR>";
 	# END Insert Field

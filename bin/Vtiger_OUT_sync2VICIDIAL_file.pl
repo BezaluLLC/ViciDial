@@ -1106,6 +1106,16 @@ while ($sthBrowsC > $i)
 			$fax =				$aryB[7];
 			$email1 =			$aryB[8];
 			$website =			$aryB[9];
+				$accountname =~ s/'//gi;
+				$ownership =~ s/'//gi;
+				$siccode =~ s/'//gi;
+				$annualrevenue =~ s/'//gi;
+				$tickersymbol =~ s/'//gi;
+				$phone =~ s/'//gi;
+				$otherphone =~ s/'//gi;
+				$fax =~ s/'//gi;
+				$email1 =~ s/'//gi;
+				$website =~ s/'//gi;
 			}
 		$sthB->finish();
 
@@ -1123,6 +1133,9 @@ while ($sthBrowsC > $i)
 			$bill_state =		$aryB[3];
 			$bill_street =		$aryB[4];
 			$bill_pobox =		$aryB[5];
+				$bill_city =~ s/'//gi;
+				$bill_code =~ s/'//gi;
+				$bill_street =~ s/'//gi;
 			}
 		$sthB->finish();
 

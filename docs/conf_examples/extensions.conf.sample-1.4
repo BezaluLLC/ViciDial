@@ -459,6 +459,14 @@ exten => 8374,3,AGI(agi-VDAD_ALL_outbound.agi,SURVEYCAMPCEP-----LB)
 exten => 8374,4,AGI(agi-VDAD_ALL_outbound.agi,SURVEYCAMPCEP-----LB)
 exten => 8374,5,Hangup
 
+; VICIDIAL SURVEY transfer script AMD with Cepstral variables:
+exten => 8375,1,Playback(sip-silence)
+exten => 8375,2,AGI(agi://127.0.0.1:4577/call_log)
+exten => 8375,3,AMD(2000|2000|1000|5000|120|50|4|256)
+exten => 8375,4,AGI(VD_amd.agi,${EXTEN})
+exten => 8375,5,AGI(agi-VDAD_ALL_outbound.agi,SURVEYCAMPCEP-----LB)
+exten => 8375,6,AGI(agi-VDAD_ALL_outbound.agi,SURVEYCAMPCEP-----LB)
+exten => 8375,7,Hangup
 
 
 

@@ -18,6 +18,7 @@
 # 90310-2039 - Admin header
 # 90508-0644 - Changed to PHP long tags
 # 90523-0935 - Rewrite of seconds to minutes and hours conversion
+# 90717-1500 - Changed to be multi-campaign, multi-user-group select
 #
 
 require("dbconnect.php");
@@ -114,6 +115,44 @@ while ($i < $user_groups_to_print)
 	$user_groups[$i] =$row[0];
 	$i++;
 	}
+
+$i=0;
+$group_string='|';
+$group_ct = count($group);
+while($i < $group_ct)
+	{
+	$group_string .= "$group[$i]|";
+	$group_SQL .= "'$group[$i]',";
+	$groupQS .= "&group[]=$group[$i]";
+	$i++;
+	}
+if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) )
+	{$group_SQL = "";}
+else
+	{
+	$group_SQL = eregi_replace(",$",'',$group_SQL);
+	$group_SQL = "and campaign_id IN($group_SQL)";
+	}
+
+$i=0;
+$user_group_string='|';
+$user_group_ct = count($user_group);
+while($i < $user_group_ct)
+	{
+	$user_group_string .= "$user_group[$i]|";
+	$user_group_SQL .= "'$user_group[$i]',";
+	$user_groupQS .= "&user_group[]=$user_group[$i]";
+	$i++;
+	}
+if ( (ereg("--ALL--",$user_group_string) ) or ($user_group_ct < 1) )
+	{$user_group_SQL = "";}
+else
+	{
+	$user_group_SQL = eregi_replace(",$",'',$user_group_SQL);
+	$user_group_SQL = "and vicidial_agent_log.user_group IN($user_group_SQL)";
+	}
+
+if ($DB) {echo "$user_group_string|$user_group_ct|$user_groupQS|$i<BR>";}
 ?>
 
 <HTML>
@@ -138,38 +177,57 @@ echo "<TITLE>Agent Performance Detail</TITLE></HEAD><BODY BGCOLOR=WHITE marginhe
 echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
+echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Dates:<BR>";
 echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
-echo " to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
-echo "<SELECT SIZE=1 NAME=group>\n";
-	$o=0;
-	while ($campaigns_to_print > $o)
-	{
-	if ($groups[$o] == $group) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
+echo "<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
+echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
+echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
+if  (eregi("--ALL--",$group_string))
+	{echo "<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+else
+	{echo "<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+$o=0;
+while ($campaigns_to_print > $o)
+{
+	if (eregi("$groups[$o]\|",$group_string)) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
 	  else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
 	$o++;
-	}
+}
 echo "</SELECT>\n";
-echo "<SELECT SIZE=1 NAME=user_group>\n";
-echo "<option value=\"\">-- ALL USER GROUPS --</option>\n";
-	$o=0;
-	while ($user_groups_to_print > $o)
+echo "</TD><TD VALIGN=TOP>User Groups:<BR>";
+echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";
+
+if  (eregi("--ALL--",$user_group_string))
+	{echo "<option value=\"--ALL--\" selected>-- ALL USER GROUPS --</option>\n";}
+else
+	{echo "<option value=\"--ALL--\">-- ALL USER GROUPS --</option>\n";}
+$o=0;
+while ($user_groups_to_print > $o)
 	{
-	if ($user_groups[$o] == $user_group) {echo "<option selected value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
+	if  (eregi("$user_groups[$o]\|",$user_group_string)) {echo "<option selected value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
 	  else {echo "<option value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
 	$o++;
 	}
 echo "</SELECT>\n";
+echo "</TD><TD VALIGN=TOP>Shift:<BR>";
 echo "<SELECT SIZE=1 NAME=shift>\n";
 echo "<option selected value=\"$shift\">$shift</option>\n";
 echo "<option value=\"\">--</option>\n";
 echo "<option value=\"AM\">AM</option>\n";
 echo "<option value=\"PM\">PM</option>\n";
 echo "<option value=\"ALL\">ALL</option>\n";
-echo "</SELECT>\n";
+echo "</SELECT><BR><BR>\n";
 echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
-echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=34&campaign_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
+
+echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
+echo " <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+echo "</FONT>\n";
+echo "</TD></TR></TABLE>";
+
 echo "</FORM>\n\n";
+
 
 echo "<PRE><FONT SIZE=2>\n";
 
@@ -228,7 +286,7 @@ $usersARY[0]='';
 $user_namesARY[0]='';
 $k=0;
 
-$stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and campaign_id='" . mysql_real_escape_string($group) . "' and pause_sec<36000 and wait_sec<36000 and talk_sec<36000 and dispo_sec<36000 $ugSQL group by user,full_name,status order by full_name,user,status desc limit 500000;";
+$stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<36000 and wait_sec<36000 and talk_sec<36000 and dispo_sec<36000  $group_SQL $user_group_SQL group by user,full_name,status order by full_name,user,status desc limit 500000;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $rows_to_print = mysql_num_rows($rslt);
@@ -522,7 +580,7 @@ $PCusers='-';
 $PCusersARY=$MT;
 $PCuser_namesARY=$MT;
 $k=0;
-$stmt="select full_name,vicidial_users.user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec) from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and campaign_id='" . mysql_real_escape_string($group) . "' and pause_sec<36000 $ugSQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
+$stmt="select full_name,vicidial_users.user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec) from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<36000  $group_SQL $user_group_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $subs_to_print = mysql_num_rows($rslt);

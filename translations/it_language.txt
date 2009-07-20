@@ -449,7 +449,7 @@ F - Female|F - Femmina|
 ### BEGIN translation phrases for 2.0.5 release build 890
 Date of Birth: |Data di Nascita: |
 YOU MUST BE PAUSED TO CHANGE GROUPS|DEVI ESSERE IN PAUSA PER CAMBIARE GRUPPO|
-Calls in Queue:|Chiede, in coda:|
+Calls in Queue:|Chiamate in coda:|
  Timeclock|Orologio|
 The user and password you entered are not active in the system|Lutente e la password che hai inserito non sono attivi nel sistema|
 Please try again|Si prega di riprovare|
