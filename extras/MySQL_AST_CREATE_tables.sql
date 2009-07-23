@@ -269,7 +269,7 @@ status VARCHAR(6),
 user VARCHAR(20),
 vendor_lead_code VARCHAR(20),
 source_id VARCHAR(50),
-list_id BIGINT(14) UNSIGNED,
+list_id BIGINT(14) UNSIGNED NOT NULL DEFAULT '0',
 gmt_offset_now DECIMAL(4,2) DEFAULT '0.00',
 called_since_last_reset ENUM('Y','N','Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10') default 'N',
 phone_code VARCHAR(10),	
@@ -294,13 +294,16 @@ security_phrase VARCHAR(100),
 comments VARCHAR(255),
 called_count SMALLINT(5) UNSIGNED default '0',
 last_local_call_time DATETIME,
+rank SMALLINT(5) NOT NULL default '0',
+owner VARCHAR(20) default '',
 index (phone_number),
 index (list_id),
 index (called_since_last_reset),
 index (status),
 index (gmt_offset_now),
 index (postal_code),
-index (last_local_call_time)
+index (last_local_call_time),
+index (rank)
 );
 
 CREATE TABLE vicidial_hopper (
@@ -662,7 +665,9 @@ view_calls_in_queue ENUM('NONE','ALL','1','2','3','4','5') default 'NONE',
 view_calls_in_queue_launch ENUM('AUTO','MANUAL') default 'MANUAL',
 grab_calls_in_queue ENUM('Y','N') default 'N',
 call_requeue_button ENUM('Y','N') default 'N',
-pause_after_each_call ENUM('Y','N') default 'N'
+pause_after_each_call ENUM('Y','N') default 'N',
+no_hopper_dialing ENUM('Y','N') default 'N',
+agent_dial_owner_only ENUM('NONE','USER','TERRITORY','USER_GROUP') default 'NONE'
 );
 
 CREATE TABLE vicidial_lists (
@@ -672,7 +677,8 @@ campaign_id VARCHAR(8),
 active ENUM('Y','N'),
 list_description VARCHAR(255),
 list_changedate DATETIME,
-list_lastcalldate DATETIME
+list_lastcalldate DATETIME,
+reset_time VARCHAR(100) default ''
 );
 
 CREATE TABLE vicidial_statuses (
@@ -1727,7 +1733,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1162';
+UPDATE system_settings SET db_schema_version='1163';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

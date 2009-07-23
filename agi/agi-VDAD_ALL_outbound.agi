@@ -65,6 +65,7 @@
 # 90628-1138 - Added more variable options for Cepstral TTS generation
 # 90630-2250 - Added more Sangoma CDP statuses
 # 90702-2240 - Added option to send to remote agent as phone*vendor_id
+# 90721-1137 - Added rank and owner as vicidial_list fields
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -462,7 +463,7 @@ if ($affected_rows > 0)
 		### if there are TTS audio files run this
 		if ($t > 0)
 			{
-			$stmtA = "SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time FROM vicidial_list where lead_id='$CIDlead_id';";
+			$stmtA = "SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner FROM vicidial_list where lead_id='$CIDlead_id';";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -499,6 +500,8 @@ if ($affected_rows > 0)
 				$TTS_comments =			$aryA[26];
 				$TTS_called_count =		$aryA[27];
 				$TTS_last_local_call_time = $aryA[28];
+				$TTS_rank =				$aryA[29];
+				$TTS_owner =			$aryA[30];
 				}
 			$sthA->finish();
 
@@ -545,6 +548,8 @@ if ($affected_rows > 0)
 					$TTS_text[$s] =~ s/--A--comments--B--/$TTS_comments/gi;
 					$TTS_text[$s] =~ s/--A--called_count--B--/$TTS_called_count/gi;
 					$TTS_text[$s] =~ s/--A--last_local_call_time--B--/$TTS_last_local_call_time/gi;
+					$TTS_text[$s] =~ s/--A--rank--B--/$TTS_rank/gi;
+					$TTS_text[$s] =~ s/--A--owner--B--/$TTS_owner/gi;
 					$TTS_text[$s] =~ s/[^,\.\<\>\'\/\=\_ 0-9a-zA-Z]//gi;
 					$TTS_textRAW[$s] =	$TTS_text[$s];
 					$TTS_text[$s] =~ s/ /\\ /gi;

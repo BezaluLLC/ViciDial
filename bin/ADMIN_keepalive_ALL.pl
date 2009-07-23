@@ -5,7 +5,13 @@
 # Designed to keep the astGUIclient processes alive and check every minute
 # Replaces all other ADMIN_keepalive scripts
 # Uses /etc/astguiclient.conf file to know which processes to keepalive
-# Also, this script generates Asterisk conf files and reloads Asterisk
+#
+# Other functions of this program:
+#  - Launches the timeclock auto-logout process
+#  - Generates Asterisk conf files and reloads Asterisk
+#  - Synchronizes the audio store files
+#  - Runs trigger processes at defined times
+#  - Auto reset lists at defined times
 #
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -30,11 +36,25 @@
 # 90622-2146 - Added 83047777777777 for dynamic agent alert extension
 # 90630-2259 - Added vicidial_process_triggers functionality
 # 90713-0140 - Changed direct dial phone extensions to failover to voicemail forwarder
+# 90722-1102 - Added list reset by time option
 #
 
 $DB=0; # Debug flag
 $MT[0]='';   $MT[1]='';
 @psline=@MT;
+
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+$year = ($year + 1900);
+$mon++;
+$wtoday = $wday;
+if ($mon < 10) {$mon = "0$mon";}
+if ($mday < 10) {$mday = "0$mday";}
+if ($hour < 10) {$Fhour = "0$hour";}
+if ($min < 10) {$min = "0$min";}
+if ($sec < 10) {$sec = "0$sec";}
+$now_date = "$year-$mon-$mday $hour:$min:$sec";
+$reset_test = "$hour$min";
+
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -453,7 +473,6 @@ if ($timeclock_auto_logout > 0)
 ################################################################################
 #####  END keepalive of ViciDial-related scripts
 ################################################################################
-
 
 
 
@@ -1498,6 +1517,52 @@ if ($sthBrows > 0)
 ################################################################################
 #####  END  process triggers
 ################################################################################
+
+
+
+
+
+################################################################################
+#####  BEGIN  reset lists
+################################################################################
+$stmtA = "SELECT list_id FROM vicidial_lists where active='Y' and reset_time LIKE \"%$reset_test%\";";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthBrows=$sthA->rows;
+$i=0;
+while ($sthBrows > $i)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$list_id[$i] = "$aryA[0]";
+	$i++;
+	}
+$sthA->finish();
+
+if ($DBX) {print "RESET LIST:   $i|$reset_test";}
+
+$i=0;
+while ($sthBrows > $i)
+	{
+	$stmtA="UPDATE vicidial_list set called_since_last_reset='N' where list_id='$list_id[$i]';";
+	$affected_rows = $dbhA->do($stmtA);
+
+	$SQL_log = "$stmtA|";
+	$SQL_log =~ s/;|\\|\'|\"//gi;
+
+	if ($DB) {print "DONE\n";}
+	if ($DB) {print "$trigger_results\n";}
+
+	$stmtA="INSERT INTO vicidial_admin_log set event_date='$now_date', user='VDAD', ip_address='1.1.1.1', event_section='LISTS', event_type='RESET', record_id='$list_id[$i]', event_code='ADMIN RESET LIST', event_sql=\"$SQL_log\", event_notes='$affected_rows leads reset';";
+	$Iaffected_rows = $dbhA->do($stmtA);
+	if ($DB) {print "FINISHED:   $affected_rows|$Iaffected_rows|$stmtA";}
+
+	$i++;
+	}
+################################################################################
+#####  END  reset lists
+################################################################################
+
+
 
 
 

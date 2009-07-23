@@ -1081,6 +1081,12 @@ if (isset($_GET["call_requeue_button"]))			{$call_requeue_button=$_GET["call_req
 	elseif (isset($_POST["call_requeue_button"]))	{$call_requeue_button=$_POST["call_requeue_button"];}
 if (isset($_GET["pause_after_each_call"]))			{$pause_after_each_call=$_GET["pause_after_each_call"];}
 	elseif (isset($_POST["pause_after_each_call"]))	{$pause_after_each_call=$_POST["pause_after_each_call"];}
+if (isset($_GET["no_hopper_dialing"]))				{$no_hopper_dialing=$_GET["no_hopper_dialing"];}
+	elseif (isset($_POST["no_hopper_dialing"]))		{$no_hopper_dialing=$_POST["no_hopper_dialing"];}
+if (isset($_GET["agent_dial_owner_only"]))			{$agent_dial_owner_only=$_GET["agent_dial_owner_only"];}
+	elseif (isset($_POST["agent_dial_owner_only"]))	{$agent_dial_owner_only=$_POST["agent_dial_owner_only"];}
+if (isset($_GET["reset_time"]))						{$reset_time=$_GET["reset_time"];}
+	elseif (isset($_POST["reset_time"]))			{$reset_time=$_POST["reset_time"];}
 
 	if (isset($script_id)) {$script_id= strtoupper($script_id);}
 	if (isset($lead_filter_id)) {$lead_filter_id = strtoupper($lead_filter_id);}
@@ -1335,6 +1341,7 @@ if ($non_latin < 1)
 	$sounds_update = ereg_replace("[^NY]","",$sounds_update);
 	$carrier_logging_active = ereg_replace("[^NY]","",$carrier_logging_active);
 	$agent_status_view_time = ereg_replace("[^NY]","",$agent_status_view_time);
+	$no_hopper_dialing = ereg_replace("[^NY]","",$no_hopper_dialing);
 
 	$qc_enabled = ereg_replace("[^0-9NY]","",$qc_enabled);
 	$active = ereg_replace("[^0-9NY]","",$active);
@@ -1522,6 +1529,8 @@ if ($non_latin < 1)
 	$prepopulate_transfer_preset = ereg_replace("[^-_0-9a-zA-Z]","",$prepopulate_transfer_preset);
 	$tts_id = ereg_replace("[^-_0-9a-zA-Z]","",$tts_id);
 	$drop_rate_group = ereg_replace("[^-_0-9a-zA-Z]","",$drop_rate_group);
+	$agent_dial_owner_only = ereg_replace("[^-_0-9a-zA-Z]","",$agent_dial_owner_only);
+	$reset_time = ereg_replace("[^-_0-9a-zA-Z]","",$reset_time);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
@@ -1884,11 +1893,13 @@ else
 # 90705-0926 - Added User Group agent view options
 # 90710-1528 - Added Agent view and grab queue calls and every call pause options
 # 90717-0646 - Added dialed_label and dialed_number to script variables
+# 90721-1350 - Added RANK and OWNER as list order options and list screen display tables
+# 90722-1235 - Added list reset time and campaign no hopper dialing, agent dial owner only options
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-206';
-$build = '90717-0646';
+$admin_version = '2.2.0-208';
+$build = '90722-1235';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -1924,15 +1935,15 @@ $dtmf[17]='TIMEOUT';	$dtmf_key[17]='TIMEOUT';
 $dtmf[18]='INVALID';	$dtmf_key[18]='INVALID';
 
 if ($force_logout)
-{
-  if( (strlen($PHP_AUTH_USER)>0) or (strlen($PHP_AUTH_PW)>0) )
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
+	if( (strlen($PHP_AUTH_USER)>0) or (strlen($PHP_AUTH_PW)>0) )
+		{
+		Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+		Header("HTTP/1.0 401 Unauthorized");
+		}
+	echo "You have now logged out. Thank you\n";
+	exit;
 	}
-    echo "You have now logged out. Thank you\n";
-    exit;
-}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -3135,7 +3146,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="vicidial_users-export_reports">
 <BR>
-<B>Export Reports -</B> This setting if set to 1 will allow a manager to access the export call reports on the REPORTS screen. Default is 0. For the Export Calls Report, the following field order is used for exports: <BR>call_date, phone_number, status, user, full_name, campaign_id/in-group, vendor_lead_code, source_id, list_id, gmt_offset_now, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, length_in_sec, user_group, alt_dial/queue_seconds
+<B>Export Reports -</B> This setting if set to 1 will allow a manager to access the export call reports on the REPORTS screen. Default is 0. For the Export Calls Report, the following field order is used for exports: <BR>call_date, phone_number, status, user, full_name, campaign_id/in-group, vendor_lead_code, source_id, list_id, gmt_offset_now, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, length_in_sec, user_group, alt_dial/queue_seconds, rank, owner
 
 <BR>
 <A NAME="vicidial_users-delete_from_dnc">
@@ -3251,6 +3262,10 @@ if ($SSoutbound_autodial_active > 0)
 	 <BR> &nbsp; - RANDOM: Randomly grabs lead within the statuses and lists defined
 	 <BR> &nbsp; - UP LAST CALL TIME: Sorts by the newest local call time for the leads
 	 <BR> &nbsp; - DOWN LAST CALL TIME: Sorts by the oldest local call time for the leads
+	 <BR> &nbsp; - UP RANK: Starts with the highest rank and works its way down
+	 <BR> &nbsp; - DOWN RANK: Starts with the lowest rank and works its way up
+	 <BR> &nbsp; - UP OWNER: Starts with owners beginning with Z and works its way down
+	 <BR> &nbsp; - DOWN OWNER: Starts with owners beginning with A and works its way up
 
 	<BR>
 	<A NAME="vicidial_campaigns-hopper_level">
@@ -3398,6 +3413,16 @@ if ($SSoutbound_autodial_active > 0)
 	<A NAME="vicidial_campaigns-no_hopper_leads_logins">
 	<BR>
 	<B>Allow No-Hopper-Leads Logins -</B> If set to Y, allows agents to login to the campaign even if there are no leads loaded into the hopper for that campaign. This function is not needed in CLOSER-type campaigns. Default is N.
+
+	<BR>
+	<A NAME="vicidial_campaigns-no_hopper_dialing">
+	<BR>
+	<B>No Hopper Dialing -</B> If This is enabled, the hopper will not run for this campaign. This option is only available when the dial method is set to MANUAL or INBOUND_MAN. It is recommended that you do not enable this option if you have a very large lead database, over 100,000 leads. With No Hopper Dialing, the following features do not work: lead recycling, auto-alt-dialing, list mix, list ordering with Xth NEW. If you want to use Owner Only Dialing you must have No Hopper Dialing enabled. Default is N for disabled.
+
+	<BR>
+	<A NAME="vicidial_campaigns-agent_dial_owner_only">
+	<BR>
+	<B>Owner Only Dialing -</B> If This is enabled, the agent will only receive leads that they are within the ownership parameters for. If this is set to USER then the agent must be the user defined in the database as the owner of this lead. If this is set to TERRITORY then the owner of the lead must match the territory listed in the User Modification screen for this agent. If this is set to USER_GROUP then the owner of the lead must match the user group that the agent is a member of. For this feature to work the dial method must be set to MANUAL or INBOUND_MAN and No Hopper Dialing must be enabled. Default is NONE for disabled.
 
 	<BR>
 	<A NAME="vicidial_campaigns-list_order_mix">
@@ -3817,6 +3842,11 @@ if ($SSqc_features_active > 0)
 <A NAME="vicidial_lists-reset_list">
 <BR>
 <B>Reset Lead-Called-Status for this list -</B> This resets all leads in this list to N for "not called since last reset" and means that any lead can now be called if it is the right status as defined in the campaign screen.
+
+<BR>
+<A NAME="vicidial_lists-reset_time">
+<BR>
+<B>Reset Times -</B> This field allows you to put times in, separated by a dash-, that this list will be automatically reset by the system. The times must be in 24 hour format with no punctuation, for example 0800-1700 would reset the list at 8AM and 5PM every day. Default is empty.
 
 <BR>
 <A NAME="vicidial_list-dnc">
@@ -4497,10 +4527,10 @@ if ($SSqc_features_active > 0)
 
 <BR>
 <A NAME="vicidial_scripts-script_text">
-<B>Script Text -</B> This is where you place the content of a Vicidial Script. Minimum of 2 characters. You can have customer information be auto-populated in this script using "--A--field--B--" where field is one of the following fieldnames: vendor_lead_code, source_id, list_id, gmt_offset_now, called_since_last_reset, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, lead_id, campaign, phone_login, group, channel_group, SQLdate, epoch, uniqueid, customer_zap_channel, server_ip, SIPexten, session_id, dialed_number, dialed_label. For example, this sentence would print the persons name in it----<BR><BR>  Hello, can I speak with --A--first_name--B-- --A--last_name--B-- please? Well hello --A--title--B-- --A--last_name--B-- how are you today?<BR><BR> This would read----<BR><BR>Hello, can I speak with John Doe please? Well hello Mr. Doe how are you today?<BR><BR> You can also use an iframe to load a separate window within the SCRIPT tab, here is an example with prepopulated variables:
+<B>Script Text -</B> This is where you place the content of a Vicidial Script. Minimum of 2 characters. You can have customer information be auto-populated in this script using "--A--field--B--" where field is one of the following fieldnames: vendor_lead_code, source_id, list_id, gmt_offset_now, called_since_last_reset, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, lead_id, campaign, phone_login, group, channel_group, SQLdate, epoch, uniqueid, customer_zap_channel, server_ip, SIPexten, session_id, dialed_number, dialed_label, rank, owner. For example, this sentence would print the persons name in it----<BR><BR>  Hello, can I speak with --A--first_name--B-- --A--last_name--B-- please? Well hello --A--title--B-- --A--last_name--B-- how are you today?<BR><BR> This would read----<BR><BR>Hello, can I speak with John Doe please? Well hello Mr. Doe how are you today?<BR><BR> You can also use an iframe to load a separate window within the SCRIPT tab, here is an example with prepopulated variables:
 
 <DIV style="height:200px;width:400px;background:white;overflow:scroll;font-size:12px;font-family:sans-serif;" id=iframe_example>
-&#60;iframe src="http://astguiclient.sf.net/test_VICIDIAL_output.php?lead_id=--A--lead_id--B--&#38;vendor_id=--A--vendor_lead_code--B--&#38;list_id=--A--list_id--B--&#38;gmt_offset_now=--A--gmt_offset_now--B--&#38;phone_code=--A--phone_code--B--&#38;phone_number=--A--phone_number--B--&#38;title=--A--title--B--&#38;first_name=--A--first_name--B--&#38;middle_initial=--A--middle_initial--B--&#38;last_name=--A--last_name--B--&#38;address1=--A--address1--B--&#38;address2=--A--address2--B--&#38;address3=--A--address3--B--&#38;city=--A--city--B--&#38;state=--A--state--B--&#38;province=--A--province--B--&#38;postal_code=--A--postal_code--B--&#38;country_code=--A--country_code--B--&#38;gender=--A--gender--B--&#38;date_of_birth=--A--date_of_birth--B--&#38;alt_phone=--A--alt_phone--B--&#38;email=--A--email--B--&#38;security_phrase=--A--security_phrase--B--&#38;comments=--A--comments--B--&#38;user=--A--user--B--&#38;campaign=--A--campaign--B--&#38;phone_login=--A--phone_login--B--&#38;fronter=--A--fronter--B--&#38;closer=--A--user--B--&#38;group=--A--group--B--&#38;channel_group=--A--group--B--&#38;SQLdate=--A--SQLdate--B--&#38;epoch=--A--epoch--B--&#38;uniqueid=--A--uniqueid--B--&#38;customer_zap_channel=--A--customer_zap_channel--B--&#38;server_ip=--A--server_ip--B--&#38;SIPexten=--A--SIPexten--B--&#38;session_id=--A--session_id--B--&#38;dialed_number=--A--dialed_number--B--&#38;dialed_label=--A--dialed_label--B--&#38;phone=--A--phone--B--" style="width:580;height:290;background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="popupFrame" name="popupFrame" width="460" height="290" STYLE="z-index:17"&#62;
+&#60;iframe src="http://astguiclient.sf.net/test_VICIDIAL_output.php?lead_id=--A--lead_id--B--&#38;vendor_id=--A--vendor_lead_code--B--&#38;list_id=--A--list_id--B--&#38;gmt_offset_now=--A--gmt_offset_now--B--&#38;phone_code=--A--phone_code--B--&#38;phone_number=--A--phone_number--B--&#38;title=--A--title--B--&#38;first_name=--A--first_name--B--&#38;middle_initial=--A--middle_initial--B--&#38;last_name=--A--last_name--B--&#38;address1=--A--address1--B--&#38;address2=--A--address2--B--&#38;address3=--A--address3--B--&#38;city=--A--city--B--&#38;state=--A--state--B--&#38;province=--A--province--B--&#38;postal_code=--A--postal_code--B--&#38;country_code=--A--country_code--B--&#38;gender=--A--gender--B--&#38;date_of_birth=--A--date_of_birth--B--&#38;alt_phone=--A--alt_phone--B--&#38;email=--A--email--B--&#38;security_phrase=--A--security_phrase--B--&#38;comments=--A--comments--B--&#38;user=--A--user--B--&#38;campaign=--A--campaign--B--&#38;phone_login=--A--phone_login--B--&#38;fronter=--A--fronter--B--&#38;closer=--A--user--B--&#38;group=--A--group--B--&#38;channel_group=--A--group--B--&#38;SQLdate=--A--SQLdate--B--&#38;epoch=--A--epoch--B--&#38;uniqueid=--A--uniqueid--B--&#38;customer_zap_channel=--A--customer_zap_channel--B--&#38;server_ip=--A--server_ip--B--&#38;SIPexten=--A--SIPexten--B--&#38;session_id=--A--session_id--B--&#38;dialed_number=--A--dialed_number--B--&#38;dialed_label=--A--dialed_label--B--&#38;rank=--A--rank--B--&#38;owner=--A--owner--B--&#38;phone=--A--phone--B--" style="width:580;height:290;background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="popupFrame" name="popupFrame" width="460" height="290" STYLE="z-index:17"&#62;
 &#60;/iframe&#62;
 </DIV>
 
@@ -4626,7 +4656,7 @@ if ($SSoutbound_autodial_active > 0)
 
 <BR>
 <A NAME="vicidial_tts_prompts-tts_text">
-<B>TTS Text -</B> This is the actual Text To Speech data field that is sent to Cepstral for creation of the audio file to be played to the customer. you can use Speech Synthesis Markup Language -SSML- in this field, for example, &lt;break time='1000ms'/&gt; for a 1 second break. You can also use several variables such as first name, last name and title as ViciDial variables just like you do in a Script: --A--first_name--B--. Here is a list of the available variables: lead_id, entry_date, modify_date, status, user, vendor_lead_code, source_id, list_id, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, called_count, last_local_call_time
+<B>TTS Text -</B> This is the actual Text To Speech data field that is sent to Cepstral for creation of the audio file to be played to the customer. you can use Speech Synthesis Markup Language -SSML- in this field, for example, &lt;break time='1000ms'/&gt; for a 1 second break. You can also use several variables such as first name, last name and title as ViciDial variables just like you do in a Script: --A--first_name--B--. Here is a list of the available variables: lead_id, entry_date, modify_date, status, user, vendor_lead_code, source_id, list_id, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, called_count, last_local_call_time, rank, owner
 
 
 
@@ -5764,6 +5794,8 @@ if ($ADD==7111111)
 	$RGsession_id = '8600051';
 	$RGdialed_number = '3125551111';
 	$RGdialed_label = 'ALT';
+	$RGrank = '99';
+	$RGowner = '6666';
 
 	echo "</title>\n";
 	echo "</head>\n";
@@ -5817,6 +5849,8 @@ if ($ADD==7111111)
 		$RGsession_id = eregi_replace(' ','+',$RGsession_id);
 		$RGdialed_number = eregi_replace(' ','+',$RGdialed_number);
 		$RGdialed_label = eregi_replace(' ','+',$RGdialed_label);
+		$RGrank = eregi_replace(' ','+',$RGrank);
+		$RGowner = eregi_replace(' ','+',$RGowner);
 		}
 
 	$script_text = eregi_replace('--A--vendor_lead_code--B--',"$vendor_lead_code",$script_text);
@@ -5859,6 +5893,8 @@ if ($ADD==7111111)
 	$script_text = eregi_replace('--A--session_id--B--',"$RGsession_id",$script_text);
 	$script_text = eregi_replace('--A--dialed_number--B--',"$RGdialed_number",$script_text);
 	$script_text = eregi_replace('--A--dialed_label--B--',"$RGdialed_label",$script_text);
+	$script_text = eregi_replace('--A--rank--B--',"$RGrank",$script_text);
+	$script_text = eregi_replace('--A--owner--B--',"$RGowner",$script_text);
 	$script_text = eregi_replace("\n","<BR>",$script_text);
 
 
@@ -6898,6 +6934,8 @@ if ($ADD==1111111)
 		echo "<option>session_id</option>";
 		echo "<option>dialed_number</option>";
 		echo "<option>dialed_label</option>";
+		echo "<option>rank</option>";
+		echo "<option>owner</option>";
 		echo "</select>";
 		echo "<input type=\"button\" name=\"insertField\" value=\"Insert\" onClick=\"scriptInsertField();\"><BR>";
 		# END Insert Field
@@ -8089,7 +8127,7 @@ if ($ADD==20)
 			{
 			echo "<br><B>CAMPAIGN COPIED: $campaign_id copied from $source_campaign_id</B>\n";
 
-			$stmt="INSERT INTO vicidial_campaigns (campaign_name,campaign_id,active,dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,list_order_mix,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,qc_get_record_launch,qc_show_recording,qc_shift_id,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_fourth_digit,survey_third_audio_file,survey_fourth_audio_file,survey_third_status,survey_fourth_status,survey_third_exten,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call) SELECT \"$campaign_name\",\"$campaign_id\",\"N\",dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,\"DISABLED\",campaign_allow_inbound,manual_dial_list_id,default_xfer_group,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,qc_get_record_launch,qc_show_recording,qc_shift_id,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_fourth_digit,survey_third_audio_file,survey_fourth_audio_file,survey_third_status,survey_fourth_status,survey_third_exten,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call from vicidial_campaigns where campaign_id='$source_campaign_id';";
+			$stmt="INSERT INTO vicidial_campaigns (campaign_name,campaign_id,active,dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,list_order_mix,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,qc_get_record_launch,qc_show_recording,qc_shift_id,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_fourth_digit,survey_third_audio_file,survey_fourth_audio_file,survey_third_status,survey_fourth_status,survey_third_exten,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only) SELECT \"$campaign_name\",\"$campaign_id\",\"N\",dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,\"DISABLED\",campaign_allow_inbound,manual_dial_list_id,default_xfer_group,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,qc_get_record_launch,qc_show_recording,qc_shift_id,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_fourth_digit,survey_third_audio_file,survey_fourth_audio_file,survey_third_status,survey_fourth_status,survey_third_exten,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only from vicidial_campaigns where campaign_id='$source_campaign_id';";
 			$rslt=mysql_query($stmt, $link);
 
 			$stmtA="INSERT INTO vicidial_campaign_stats (campaign_id) values('$campaign_id');";
@@ -10540,10 +10578,21 @@ if ($ADD==41)
 				{
 				echo "<br><B>CAMPAIGN MODIFIED: $campaign_id</B>\n";
 
+				if ( ($dial_method != 'MANUAL') and ($dial_method != 'INBOUND_MAN') )
+					{
+					$no_hopper_dialing='N';
+					$agent_dial_owner_only='NONE';
+					}
+				if ($no_hopper_dialing == 'Y')
+					{
+					$auto_alt_dial='NONE';
+					$list_order_mix='DISABLED';
+					}
 				if ($dial_method == 'MANUAL') 
 					{
 					$auto_dial_level='0';
 					$adlSQL = "auto_dial_level='0',";
+					$campaign_allow_inbound='N';
 					}
 				else
 					{
@@ -10572,7 +10621,7 @@ if ($ADD==41)
 				if ( (!ereg("DISABLED",$list_order_mix)) and ($hopper_level < 100) )
 					{$hopper_level='100';}
 
-				$stmtA="UPDATE vicidial_campaigns set campaign_name='$campaign_name',active='$active',dial_status_a='$dial_status_a',dial_status_b='$dial_status_b',dial_status_c='$dial_status_c',dial_status_d='$dial_status_d',dial_status_e='$dial_status_e',lead_order='$lead_order',allow_closers='$allow_closers',hopper_level='$hopper_level', $adlSQL next_agent_call='$next_agent_call', local_call_time='$local_call_time', voicemail_ext='$voicemail_ext', dial_timeout='$dial_timeout', dial_prefix='$dial_prefix', campaign_cid='$campaign_cid', campaign_vdad_exten='$campaign_vdad_exten', web_form_address='" . mysql_real_escape_string($web_form_address) . "', park_ext='$park_ext', park_file_name='$park_file_name', campaign_rec_exten='$campaign_rec_exten', campaign_recording='$campaign_recording', campaign_rec_filename='$campaign_rec_filename', campaign_script='$script_id', get_call_launch='$get_call_launch', am_message_exten='$am_message_exten', amd_send_to_vmx='$amd_send_to_vmx', xferconf_a_dtmf='$xferconf_a_dtmf',xferconf_a_number='$xferconf_a_number',xferconf_b_dtmf='$xferconf_b_dtmf',xferconf_b_number='$xferconf_b_number',lead_filter_id='$lead_filter_id',alt_number_dialing='$alt_number_dialing',scheduled_callbacks='$scheduled_callbacks',drop_action='$drop_action',drop_call_seconds='$drop_call_seconds',safe_harbor_exten='$safe_harbor_exten',wrapup_seconds='$wrapup_seconds',wrapup_message='$wrapup_message',closer_campaigns='$groups_value',use_internal_dnc='$use_internal_dnc',allcalls_delay='$allcalls_delay',omit_phone_code='$omit_phone_code',dial_method='$dial_method',available_only_ratio_tally='$available_only_ratio_tally',adaptive_dropped_percentage='$adaptive_dropped_percentage',adaptive_maximum_level='$adaptive_maximum_level',adaptive_latest_server_time='$adaptive_latest_server_time',adaptive_intensity='$adaptive_intensity',adaptive_dl_diff_target='$adaptive_dl_diff_target',concurrent_transfers='$concurrent_transfers',auto_alt_dial='$auto_alt_dial',agent_pause_codes_active='$agent_pause_codes_active',campaign_description='$campaign_description',campaign_changedate='$SQLdate',campaign_stats_refresh='$campaign_stats_refresh',disable_alter_custdata='$disable_alter_custdata',no_hopper_leads_logins='$no_hopper_leads_logins',list_order_mix='$list_order_mix',campaign_allow_inbound='$campaign_allow_inbound',manual_dial_list_id='$manual_dial_list_id',default_xfer_group='$default_xfer_group',xfer_groups='$XFERgroups_value',queue_priority='$queue_priority',drop_inbound_group='$drop_inbound_group',disable_alter_custphone='$disable_alter_custphone',display_queue_count='$display_queue_count',manual_dial_filter='$manual_dial_filter',agent_clipboard_copy='$agent_clipboard_copy',agent_extended_alt_dial='$agent_extended_alt_dial',use_campaign_dnc='$use_campaign_dnc',three_way_call_cid='$three_way_call_cid',three_way_dial_prefix='$three_way_dial_prefix',web_form_target='$web_form_target',vtiger_search_category='$vtiger_search_category',vtiger_create_call_record='$vtiger_create_call_record',vtiger_create_lead_record='$vtiger_create_lead_record',vtiger_screen_login='$vtiger_screen_login',cpd_amd_action='$cpd_amd_action',agent_allow_group_alias='$agent_allow_group_alias',default_group_alias='$default_group_alias',vtiger_search_dead='$vtiger_search_dead',vtiger_status_call='$vtiger_status_call',drop_lockout_time='$drop_lockout_time',quick_transfer_button='$quick_transfer_button',prepopulate_transfer_preset='$prepopulate_transfer_preset',drop_rate_group='$drop_rate_group',view_calls_in_queue='$view_calls_in_queue',view_calls_in_queue_launch='$view_calls_in_queue_launch',grab_calls_in_queue='$grab_calls_in_queue',call_requeue_button='$call_requeue_button',pause_after_each_call='$pause_after_each_call' where campaign_id='$campaign_id';";
+				$stmtA="UPDATE vicidial_campaigns set campaign_name='$campaign_name',active='$active',dial_status_a='$dial_status_a',dial_status_b='$dial_status_b',dial_status_c='$dial_status_c',dial_status_d='$dial_status_d',dial_status_e='$dial_status_e',lead_order='$lead_order',allow_closers='$allow_closers',hopper_level='$hopper_level', $adlSQL next_agent_call='$next_agent_call', local_call_time='$local_call_time', voicemail_ext='$voicemail_ext', dial_timeout='$dial_timeout', dial_prefix='$dial_prefix', campaign_cid='$campaign_cid', campaign_vdad_exten='$campaign_vdad_exten', web_form_address='" . mysql_real_escape_string($web_form_address) . "', park_ext='$park_ext', park_file_name='$park_file_name', campaign_rec_exten='$campaign_rec_exten', campaign_recording='$campaign_recording', campaign_rec_filename='$campaign_rec_filename', campaign_script='$script_id', get_call_launch='$get_call_launch', am_message_exten='$am_message_exten', amd_send_to_vmx='$amd_send_to_vmx', xferconf_a_dtmf='$xferconf_a_dtmf',xferconf_a_number='$xferconf_a_number',xferconf_b_dtmf='$xferconf_b_dtmf',xferconf_b_number='$xferconf_b_number',lead_filter_id='$lead_filter_id',alt_number_dialing='$alt_number_dialing',scheduled_callbacks='$scheduled_callbacks',drop_action='$drop_action',drop_call_seconds='$drop_call_seconds',safe_harbor_exten='$safe_harbor_exten',wrapup_seconds='$wrapup_seconds',wrapup_message='$wrapup_message',closer_campaigns='$groups_value',use_internal_dnc='$use_internal_dnc',allcalls_delay='$allcalls_delay',omit_phone_code='$omit_phone_code',dial_method='$dial_method',available_only_ratio_tally='$available_only_ratio_tally',adaptive_dropped_percentage='$adaptive_dropped_percentage',adaptive_maximum_level='$adaptive_maximum_level',adaptive_latest_server_time='$adaptive_latest_server_time',adaptive_intensity='$adaptive_intensity',adaptive_dl_diff_target='$adaptive_dl_diff_target',concurrent_transfers='$concurrent_transfers',auto_alt_dial='$auto_alt_dial',agent_pause_codes_active='$agent_pause_codes_active',campaign_description='$campaign_description',campaign_changedate='$SQLdate',campaign_stats_refresh='$campaign_stats_refresh',disable_alter_custdata='$disable_alter_custdata',no_hopper_leads_logins='$no_hopper_leads_logins',list_order_mix='$list_order_mix',campaign_allow_inbound='$campaign_allow_inbound',manual_dial_list_id='$manual_dial_list_id',default_xfer_group='$default_xfer_group',xfer_groups='$XFERgroups_value',queue_priority='$queue_priority',drop_inbound_group='$drop_inbound_group',disable_alter_custphone='$disable_alter_custphone',display_queue_count='$display_queue_count',manual_dial_filter='$manual_dial_filter',agent_clipboard_copy='$agent_clipboard_copy',agent_extended_alt_dial='$agent_extended_alt_dial',use_campaign_dnc='$use_campaign_dnc',three_way_call_cid='$three_way_call_cid',three_way_dial_prefix='$three_way_dial_prefix',web_form_target='$web_form_target',vtiger_search_category='$vtiger_search_category',vtiger_create_call_record='$vtiger_create_call_record',vtiger_create_lead_record='$vtiger_create_lead_record',vtiger_screen_login='$vtiger_screen_login',cpd_amd_action='$cpd_amd_action',agent_allow_group_alias='$agent_allow_group_alias',default_group_alias='$default_group_alias',vtiger_search_dead='$vtiger_search_dead',vtiger_status_call='$vtiger_status_call',drop_lockout_time='$drop_lockout_time',quick_transfer_button='$quick_transfer_button',prepopulate_transfer_preset='$prepopulate_transfer_preset',drop_rate_group='$drop_rate_group',view_calls_in_queue='$view_calls_in_queue',view_calls_in_queue_launch='$view_calls_in_queue_launch',grab_calls_in_queue='$grab_calls_in_queue',call_requeue_button='$call_requeue_button',pause_after_each_call='$pause_after_each_call',no_hopper_dialing='$no_hopper_dialing',agent_dial_owner_only='$agent_dial_owner_only' where campaign_id='$campaign_id';";
 				$rslt=mysql_query($stmtA, $link);
 
 				if ($reset_hopper == 'Y')
@@ -11318,9 +11367,11 @@ if ($ADD==411)
 		}
 	 else
 		{
+		if (strlen($reset_time) < 4) {$reset_time='';}
+
 		echo "<br><B>LIST MODIFIED: $list_id</B>\n";
 
-		$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate' where list_id='$list_id';";
+		$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate',reset_time='$reset_time' where list_id='$list_id';";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -14748,7 +14799,7 @@ if ($ADD==31)
 		$enable_vtiger_integration_LU =		$row[0];
 		$vtiger_url_LU =					$row[1];
 
-		$stmt="SELECT * from vicidial_campaigns where campaign_id='$campaign_id';";
+		$stmt="SELECT campaign_id,campaign_name,active,dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,list_order_mix,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_third_audio_file,survey_third_status,survey_third_exten,survey_fourth_digit,survey_fourth_audio_file,survey_fourth_status,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only from vicidial_campaigns where campaign_id='$campaign_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$campaign_name = $row[1];
@@ -14872,7 +14923,8 @@ if ($ADD==31)
 		$grab_calls_in_queue = $row[122];
 		$call_requeue_button = $row[123];
 		$pause_after_each_call = $row[124];
-
+		$no_hopper_dialing = $row[125];
+		$agent_dial_owner_only = $row[126];
 
 	if (ereg("DISABLED",$list_order_mix))
 		{$DEFlistDISABLE = '';	$DEFstatusDISABLED=0;}
@@ -15142,6 +15194,7 @@ if ($ADD==31)
 			echo "<input type=submit name=submit value=ADD> &nbsp; &nbsp; $NWB#vicidial_campaigns-dial_status$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=right>List Order: </td><td align=left><select size=1 name=lead_order>
+			<option SELECTED>$lead_order</option>
 			<option>DOWN</option>
 			<option>UP</option>
 			<option>DOWN PHONE</option>
@@ -15153,6 +15206,10 @@ if ($ADD==31)
 			<option>RANDOM</option>
 			<option>DOWN LAST CALL TIME</option>
 			<option>UP LAST CALL TIME</option>
+			<option>DOWN RANK</option>
+			<option>UP RANK</option>
+			<option>DOWN OWNER</option>
+			<option>UP OWNER</option>
 			<option>DOWN 2nd NEW</option>
 			<option>DOWN 3rd NEW</option>
 			<option>DOWN 4th NEW</option>
@@ -15208,7 +15265,27 @@ if ($ADD==31)
 			<option>UP LAST CALL TIME 4th NEW</option>
 			<option>UP LAST CALL TIME 5th NEW</option>
 			<option>UP LAST CALL TIME 6th NEW</option>
-			<option SELECTED>$lead_order</option></select>$NWB#vicidial_campaigns-lead_order$NWE</td></tr>\n";
+			<option>DOWN RANK 2nd NEW</option>
+			<option>DOWN RANK 3rd NEW</option>
+			<option>DOWN RANK 4th NEW</option>
+			<option>DOWN RANK 5th NEW</option>
+			<option>DOWN RANK 6th NEW</option>
+			<option>UP RANK 2nd NEW</option>
+			<option>UP RANK 3rd NEW</option>
+			<option>UP RANK 4th NEW</option>
+			<option>UP RANK 5th NEW</option>
+			<option>UP RANK 6th NEW</option>
+			<option>DOWN OWNER 2nd NEW</option>
+			<option>DOWN OWNER 3rd NEW</option>
+			<option>DOWN OWNER 4th NEW</option>
+			<option>DOWN OWNER 5th NEW</option>
+			<option>DOWN OWNER 6th NEW</option>
+			<option>UP OWNER 2nd NEW</option>
+			<option>UP OWNER 3rd NEW</option>
+			<option>UP OWNER 4th NEW</option>
+			<option>UP OWNER 5th NEW</option>
+			<option>UP OWNER 6th NEW</option>
+			</select>$NWB#vicidial_campaigns-lead_order$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaign_id&vcl_id=$list_order_mix\">List Mix</a>: </td><td align=left><select size=1 name=list_order_mix>\n";
 			echo "$mixes_list";
@@ -15496,7 +15573,12 @@ if ($ADD==31)
 		if ($SSoutbound_autodial_active > 0)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>Allow No-Hopper-Leads Logins: </td><td align=left><select size=1 name=no_hopper_leads_logins><option>Y</option><option>N</option><option SELECTED>$no_hopper_leads_logins</option></select>$NWB#vicidial_campaigns-no_hopper_leads_logins$NWE</td></tr>\n";
+
+			echo "<tr bgcolor=#B6D3FC><td align=right>No Hopper Dialing: </td><td align=left><select size=1 name=no_hopper_dialing><option>Y</option><option>N</option><option SELECTED>$no_hopper_dialing</option></select>$NWB#vicidial_campaigns-no_hopper_dialing$NWE</td></tr>\n";
+
+			echo "<tr bgcolor=#B6D3FC><td align=right>Owner Only Dialing: </td><td align=left><select size=1 name=agent_dial_owner_only><option>NONE</option><option>USER</option><option>TERRITORY</option><option>USER_GROUP</option><option SELECTED>$agent_dial_owner_only</option></select>$NWB#vicidial_campaigns-agent_dial_owner_only$NWE</td></tr>\n";
 			}
+
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Display Queue Count: </td><td align=left><select size=1 name=display_queue_count><option>Y</option><option>N</option><option SELECTED>$display_queue_count</option></select>$NWB#vicidial_campaigns-display_queue_count$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent View Calls in Queue: </td><td align=left><select size=1 name=view_calls_in_queue><option>NONE</option><option>ALL</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option SELECTED>$view_calls_in_queue</option></select>$NWB#vicidial_campaigns-view_calls_in_queue$NWE</td></tr>\n";
@@ -16397,6 +16479,7 @@ if ($ADD==34)
 			echo "<input type=submit name=submit value=ADD> &nbsp; &nbsp; $NWB#vicidial_campaigns-dial_status$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=right>List Order: </td><td align=left><select size=1 name=lead_order>
+			<option SELECTED>$lead_order</option>
 			<option>DOWN</option>
 			<option>UP</option>
 			<option>DOWN PHONE</option>
@@ -16408,6 +16491,10 @@ if ($ADD==34)
 			<option>RANDOM</option>
 			<option>DOWN LAST CALL TIME</option>
 			<option>UP LAST CALL TIME</option>
+			<option>DOWN RANK</option>
+			<option>UP RANK</option>
+			<option>DOWN OWNER</option>
+			<option>UP OWNER</option>
 			<option>DOWN 2nd NEW</option>
 			<option>DOWN 3rd NEW</option>
 			<option>DOWN 4th NEW</option>
@@ -16463,7 +16550,27 @@ if ($ADD==34)
 			<option>UP LAST CALL TIME 4th NEW</option>
 			<option>UP LAST CALL TIME 5th NEW</option>
 			<option>UP LAST CALL TIME 6th NEW</option>
-			<option SELECTED>$lead_order</option></select>$NWB#vicidial_campaigns-lead_order$NWE</td></tr>\n";
+			<option>DOWN RANK 2nd NEW</option>
+			<option>DOWN RANK 3rd NEW</option>
+			<option>DOWN RANK 4th NEW</option>
+			<option>DOWN RANK 5th NEW</option>
+			<option>DOWN RANK 6th NEW</option>
+			<option>UP RANK 2nd NEW</option>
+			<option>UP RANK 3rd NEW</option>
+			<option>UP RANK 4th NEW</option>
+			<option>UP RANK 5th NEW</option>
+			<option>UP RANK 6th NEW</option>
+			<option>DOWN OWNER 2nd NEW</option>
+			<option>DOWN OWNER 3rd NEW</option>
+			<option>DOWN OWNER 4th NEW</option>
+			<option>DOWN OWNER 5th NEW</option>
+			<option>DOWN OWNER 6th NEW</option>
+			<option>UP OWNER 2nd NEW</option>
+			<option>UP OWNER 3rd NEW</option>
+			<option>UP OWNER 4th NEW</option>
+			<option>UP OWNER 5th NEW</option>
+			<option>UP OWNER 6th NEW</option>
+			</select>$NWB#vicidial_campaigns-lead_order$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaign_id&vcl_id=$list_order_mix\">List Mix</a>: </td><td align=left><select size=1 name=list_order_mix>\n";
 			echo "$mixes_list";
@@ -17369,7 +17476,7 @@ if ($ADD==311)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT * from vicidial_lists where list_id='$list_id';";
+	$stmt="SELECT list_id,list_name,campaign_id,active,list_description,list_changedate,list_lastcalldate,reset_time from vicidial_lists where list_id='$list_id';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$campaign_id = $row[2];
@@ -17384,22 +17491,24 @@ if ($ADD==311)
 	$statuses_to_print = mysql_num_rows($rslt);
 
 	$o=0;
-	while ($statuses_to_print > $o) {
+	while ($statuses_to_print > $o) 
+		{
 		$rowx=mysql_fetch_row($rslt);
 		$statuses_list["$rowx[0]"] = "$rowx[1]";
 		$o++;
-	}
+		}
 
 	$stmt="SELECT * from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status";
 	$rslt=mysql_query($stmt, $link);
 	$Cstatuses_to_print = mysql_num_rows($rslt);
 
 	$o=0;
-	while ($Cstatuses_to_print > $o) {
+	while ($Cstatuses_to_print > $o) 
+		{
 		$rowx=mysql_fetch_row($rslt);
 		$statuses_list["$rowx[0]"] = "$rowx[1]";
 		$o++;
-	}
+		}
 	# end grab status names
 
 
@@ -17418,16 +17527,18 @@ if ($ADD==311)
 	$campaigns_to_print = mysql_num_rows($rslt);
 	$campaigns_list='';
 	$o=0;
-	while ($campaigns_to_print > $o) {
+	while ($campaigns_to_print > $o) 
+		{
 		$rowx=mysql_fetch_row($rslt);
 		$campaigns_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 		$o++;
-	}
+		}
 	echo "$campaigns_list";
 	echo "<option SELECTED>$campaign_id</option>\n";
 	echo "</select>$NWB#vicidial_lists-campaign_id$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option SELECTED>$active</option></select>$NWB#vicidial_lists-active$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Reset Lead-Called-Status for this list: </td><td align=left><select size=1 name=reset_list><option>Y</option><option SELECTED>N</option></select>$NWB#vicidial_lists-reset_list$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Reset Times: </td><td align=left><input type=text name=reset_time size=30 maxlength=100 value=\"$row[7]\">$NWB#vicidial_lists-reset_time$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>List Change Date: </td><td align=left>$list_changedate &nbsp; $NWB#vicidial_lists-list_changedate$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>List Last Call Date: </td><td align=left>$list_lastcalldate &nbsp; $NWB#vicidial_lists-list_lastcalldate$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
@@ -17451,33 +17562,33 @@ if ($ADD==311)
 	$lead_list['Y_count'] = 0;
 	$lead_list['N_count'] = 0;
 	while ($statuses_to_print > $o) 
-	{
+		{
 	    $rowx=mysql_fetch_row($rslt);
 	    
 	    $lead_list['count'] = ($lead_list['count'] + $rowx[2]);
 	    if ($rowx[1] == 'N') 
-	    {
-		$since_reset = 'N';
-		$since_resetX = 'Y';
-	    }
+			{
+			$since_reset = 'N';
+			$since_resetX = 'Y';
+			}
 	    else 
-	    {
-		$since_reset = 'Y';
-		$since_resetX = 'N';
-	    } 
+			{
+			$since_reset = 'Y';
+			$since_resetX = 'N';
+			} 
 	    $lead_list[$since_reset][$rowx[0]] = ($lead_list[$since_reset][$rowx[0]] + $rowx[2]);
 	    $lead_list[$since_reset.'_count'] = ($lead_list[$since_reset.'_count'] + $rowx[2]);
 	    #If opposite side is not set, it may not in the future so give it a value of zero
 	    if (!isset($lead_list[$since_resetX][$rowx[0]])) 
-	    {
-		$lead_list[$since_resetX][$rowx[0]]=0;
-	    }
-	    $o++;
-	}
+			{
+			$lead_list[$since_resetX][$rowx[0]]=0;
+			}
+		$o++;
+		}
  
 	$o=0;
 	if ($lead_list['count'] > 0)
-	{
+		{
 		while (list($dispo,) = each($lead_list[$since_reset]))
 		{
 
@@ -17571,6 +17682,150 @@ if ($ADD==311)
 
 	echo "</table></center><br>\n";
 	unset($lead_list);
+
+
+
+
+
+	echo "<center>\n";
+	echo "<br><b>OWNERS WITHIN THIS LIST:</b><br>\n";
+	echo "<TABLE width=500 cellspacing=3>\n";
+	echo "<tr><td>OWNER</td><td>CALLED</td><td>NOT CALLED</td></tr>\n";
+
+	$leads_in_list = 0;
+	$leads_in_list_N = 0;
+	$leads_in_list_Y = 0;
+	$stmt="SELECT owner,called_since_last_reset,count(*) from vicidial_list where list_id='$list_id' group by owner,called_since_last_reset order by owner,called_since_last_reset";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_query($stmt, $link);
+	$owners_to_print = mysql_num_rows($rslt);
+
+	$o=0;
+	$lead_list['count'] = 0;
+	$lead_list['Y_count'] = 0;
+	$lead_list['N_count'] = 0;
+	while ($owners_to_print > $o) 
+		{
+	    $rowx=mysql_fetch_row($rslt);
+	    
+	    $lead_list['count'] = ($lead_list['count'] + $rowx[2]);
+	    if ($rowx[1] == 'N') 
+			{
+			$since_reset = 'N';
+			$since_resetX = 'Y';
+			}
+	    else 
+			{
+			$since_reset = 'Y';
+			$since_resetX = 'N';
+			} 
+	    $lead_list[$since_reset][$rowx[0]] = ($lead_list[$since_reset][$rowx[0]] + $rowx[2]);
+	    $lead_list[$since_reset.'_count'] = ($lead_list[$since_reset.'_count'] + $rowx[2]);
+	    #If opposite side is not set, it may not in the future so give it a value of zero
+	    if (!isset($lead_list[$since_resetX][$rowx[0]])) 
+			{
+			$lead_list[$since_resetX][$rowx[0]]=0;
+			}
+		$o++;
+		}
+ 
+	$o=0;
+	if ($lead_list['count'] > 0)
+		{
+		while (list($owner,) = each($lead_list[$since_reset]))
+		{
+
+		if (eregi("1$|3$|5$|7$|9$", $o))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+
+		$CLB='';
+		$CLE='';
+
+		echo "<tr $bgcolor><td><font size=1>$CLB$owner$CLE</td><td><font size=1>".$lead_list['Y'][$owner]."</td><td><font size=1>".$lead_list['N'][$owner]." </td></tr>\n";
+		$o++;
+		}
+	}
+
+	echo "<tr><td><font size=1>SUBTOTALS</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td></tr>\n";
+	echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>TOTAL</td><td colspan=3 align=center><font size=1>$lead_list[count]</td></tr>\n";
+
+	echo "</table></center><br>\n";
+	unset($lead_list);
+
+
+
+
+
+	echo "<center>\n";
+	echo "<br><b>RANKS WITHIN THIS LIST:</b><br>\n";
+	echo "<TABLE width=500 cellspacing=3>\n";
+	echo "<tr><td>RANK</td><td>CALLED</td><td>NOT CALLED</td></tr>\n";
+
+	$leads_in_list = 0;
+	$leads_in_list_N = 0;
+	$leads_in_list_Y = 0;
+	$stmt="SELECT rank,called_since_last_reset,count(*) from vicidial_list where list_id='$list_id' group by rank,called_since_last_reset order by rank,called_since_last_reset";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_query($stmt, $link);
+	$ranks_to_print = mysql_num_rows($rslt);
+
+	$o=0;
+	$lead_list['count'] = 0;
+	$lead_list['Y_count'] = 0;
+	$lead_list['N_count'] = 0;
+	while ($ranks_to_print > $o) 
+		{
+	    $rowx=mysql_fetch_row($rslt);
+	    
+	    $lead_list['count'] = ($lead_list['count'] + $rowx[2]);
+	    if ($rowx[1] == 'N') 
+			{
+			$since_reset = 'N';
+			$since_resetX = 'Y';
+			}
+	    else 
+			{
+			$since_reset = 'Y';
+			$since_resetX = 'N';
+			} 
+	    $lead_list[$since_reset][$rowx[0]] = ($lead_list[$since_reset][$rowx[0]] + $rowx[2]);
+	    $lead_list[$since_reset.'_count'] = ($lead_list[$since_reset.'_count'] + $rowx[2]);
+	    #If opposite side is not set, it may not in the future so give it a value of zero
+	    if (!isset($lead_list[$since_resetX][$rowx[0]])) 
+			{
+			$lead_list[$since_resetX][$rowx[0]]=0;
+			}
+		$o++;
+		}
+ 
+	$o=0;
+	if ($lead_list['count'] > 0)
+		{
+		while (list($rank,) = each($lead_list[$since_reset]))
+		{
+
+		if (eregi("1$|3$|5$|7$|9$", $o))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+
+		$CLB='';
+		$CLE='';
+
+		echo "<tr $bgcolor><td><font size=1>$CLB$rank$CLE</td><td><font size=1>".$lead_list['Y'][$rank]."</td><td><font size=1>".$lead_list['N'][$rank]." </td></tr>\n";
+		$o++;
+		}
+	}
+
+	echo "<tr><td><font size=1>SUBTOTALS</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td></tr>\n";
+	echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>TOTAL</td><td colspan=3 align=center><font size=1>$lead_list[count]</td></tr>\n";
+
+	echo "</table></center><br>\n";
+	unset($lead_list);
+
+
 
 
 
@@ -19003,6 +19258,8 @@ if ($ADD==3111111)
 	echo "<option>session_id</option>";
 	echo "<option>dialed_number</option>";
 	echo "<option>dialed_label</option>";
+	echo "<option>rank</option>";
+	echo "<option>owner</option>";
 	echo "</select>";
 	echo "<input type=\"button\" name=\"insertField\" value=\"Insert\" onClick=\"scriptInsertField();\"><BR>";
 	# END Insert Field
@@ -21359,7 +21616,7 @@ if ($ADD==100)
 	if (eregi("CAMPAIGNDOWN",$stage))	{$SQLorder='order by campaign_id desc';			$CAMPAIGNlink='stage=CAMPAIGNUP';}
 	if (eregi("CALLDATEUP",$stage))		{$SQLorder='order by list_lastcalldate asc';	$CALLDATElink='stage=CALLDATEDOWN';}
 	if (eregi("CALLDATEDOWN",$stage))	{$SQLorder='order by list_lastcalldate desc';	$CALLDATElink='stage=CALLDATEUP';}
-	$stmt="SELECT vls.list_id,list_name,list_description,count(*) as tally,active,list_lastcalldate,campaign_id from vicidial_lists vls,vicidial_list vl where vls.list_id=vl.list_id group by list_id $SQLorder";
+	$stmt="SELECT vls.list_id,list_name,list_description,count(*) as tally,active,list_lastcalldate,campaign_id,reset_time from vicidial_lists vls,vicidial_list vl where vls.list_id=vl.list_id group by list_id $SQLorder";
 	$rslt=mysql_query($stmt, $link);
 	$lists_to_print = mysql_num_rows($rslt);
 
@@ -21369,6 +21626,7 @@ if ($ADD==100)
 	echo "<TD><a href=\"$PHP_SELF?ADD=100&$LISTlink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST ID</B></a></TD>";
 	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST NAME</B></TD>";
 	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>DESCRIPTION</B></TD>\n";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>RTIME</B></TD>\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=100&$TALLYlink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LEADS COUNT</B></a></TD>\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=100&$ACTIVElink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>ACTIVE</B></a></TD>";
 	echo "<TD><a href=\"$PHP_SELF?ADD=100&$CALLDATElink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LAST CALL DATE</B></a></TD>";
@@ -21389,6 +21647,7 @@ if ($ADD==100)
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3]</td>";
+		echo "<td><font size=1> $row[7]</td>";
 		echo "<td><font size=1> $row[4]</td>";
 		echo "<td><font size=1> $row[5]</td>";
 		echo "<td><font size=1> $row[6]</td>";

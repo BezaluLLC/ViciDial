@@ -33,6 +33,7 @@
 # 80829-2301 - Added multi-alt-phone entry insertion capability
 # 90324-1038 - Added minicsv02 format
 # 90401-1340 - Fixed quiet flag functionality
+# 90721-1315 - Added rank and owner as vicidial_list fields, stdrankowner format
 #
 
 $secX = time();
@@ -140,6 +141,9 @@ if (length($ARGV[0])>1)
 		print "standard:\n";
 		print "vendor_lead_code|source_code|list_id|phone_code|phone_number|title|first_name|middle|last_name|address1|address2|address3|city|state|province|postal_code|country|gender|date_of_birth|alt_phone|email|security_phrase|COMMENTS|called_count|status|entry_date|multi-alt-entries\n";
 		print "3857822|31022|105|01144|1625551212|MRS|B||BURTON|249 MUNDON ROAD|MALDON|ESSEX||||CM9 6PW|UK||||||COMMENTS|2|B|2007-08-09 00:00:00|7275551212_1_work!7275551213_61_sister house!7275551214_44_neighbor\n\n";
+		print "stdrankowner:\n";
+		print "vendor_lead_code|source_code|list_id|phone_code|phone_number|title|first_name|middle|last_name|address1|address2|address3|city|state|province|postal_code|country|gender|date_of_birth|alt_phone|email|security_phrase|COMMENTS|called_count|status|entry_date|rank|owner|multi-alt-entries\n";
+		print "3857822|31022|105|01144|1625551212|MRS|B||BURTON|249 MUNDON ROAD|MALDON|ESSEX||||CM9 6PW|UK||||||COMMENTS|2|B|2007-08-09 00:00:00|99|6666|7275551212_1_work!7275551213_61_sister house!7275551214_44_neighbor\n\n";
 		print "minicsv:\n";
 		print "address1,city,name,phone_number,state,postal_code\n";
 		print "\"105 Fifth St\",\"Steinhatchee\",\"Frank Smith\",\"3525556601\",\"FL\",\"32359\"\n\n";
@@ -417,37 +421,39 @@ foreach(@FILES)
 		if ($DB) {print "SEED TIME  $secX      :   $year-$mon-$mday $hour:$min:$sec  LOCAL GMT OFFSET NOW: $LOCAL_GMT_OFF\n";}
 
 
-			$a=0;	### each line of input file counter ###
-			$b=0;	### status of 'APPROVED' counter ###
-			$c=0;	### status of 'DECLINED' counter ###
-			$d=0;	### status of 'REFERRED' counter ###
-			$e=0;	### status of 'ERROR' counter ###
-			$f=0;	### number of 'DUPLICATE' counter ###
-			$g=0;	### number of leads with multi-alt-entries
+		$a=0;	### each line of input file counter ###
+		$b=0;	### status of 'APPROVED' counter ###
+		$c=0;	### status of 'DECLINED' counter ###
+		$d=0;	### status of 'REFERRED' counter ###
+		$e=0;	### status of 'ERROR' counter ###
+		$f=0;	### number of 'DUPLICATE' counter ###
+		$g=0;	### number of leads with multi-alt-entries
 
-			$multi_insert_counter=0;
-			$multistmt='';
+		$multi_insert_counter=0;
+		$multistmt='';
+		$rank='';
+		$owner='';
 
 		#if ($DB)
-			while (<infile>)
-			{
-			@m=@MT;
-		#		print "$a| $number\n";
-				$number = $_;
-				chomp($number);
-		#		$number =~ s/,/\|/gi;
-				$number =~ s/\t/\|/gi;
-				$number =~ s/\'|\t|\r|\n|\l//gi;
-				$number =~ s/\'|\t|\r|\n|\l//gi;
-				$number =~ s/\",,,,,,,\"/\|\|\|\|\|\|\|/gi;
-				$number =~ s/\",,,,,,\"/\|\|\|\|\|\|/gi;
-				$number =~ s/\",,,,,\"/\|\|\|\|\|/gi;
-				$number =~ s/\",,,,\"/\|\|\|\|/gi;
-				$number =~ s/\",,,\"/\|\|\|/gi;
-				$number =~ s/\",,\"/\|\|/gi;
-				$number =~ s/\",\"/\|/gi;
-				$number =~ s/\"//gi;
-			@m = split(/\|/, $number);
+		while (<infile>)
+		{
+		@m=@MT;
+	#		print "$a| $number\n";
+			$number = $_;
+			chomp($number);
+	#		$number =~ s/,/\|/gi;
+			$number =~ s/\t/\|/gi;
+			$number =~ s/\'|\t|\r|\n|\l//gi;
+			$number =~ s/\'|\t|\r|\n|\l//gi;
+			$number =~ s/\",,,,,,,\"/\|\|\|\|\|\|\|/gi;
+			$number =~ s/\",,,,,,\"/\|\|\|\|\|\|/gi;
+			$number =~ s/\",,,,,\"/\|\|\|\|\|/gi;
+			$number =~ s/\",,,,\"/\|\|\|\|/gi;
+			$number =~ s/\",,,\"/\|\|\|/gi;
+			$number =~ s/\",,\"/\|\|/gi;
+			$number =~ s/\",\"/\|/gi;
+			$number =~ s/\"//gi;
+		@m = split(/\|/, $number);
 
 		$format_set=0;
 
@@ -487,6 +493,7 @@ foreach(@FILES)
 
 				$format_set++;
 				}
+
 		# This is the format for the minicsv lead files
 		#"105 Fifth St","Steinhatchee","Frank Smith","3525556601","FL","32359"
 			if ( ($format =~ /minicsv/) && ($format_set < 1) )
@@ -522,6 +529,79 @@ foreach(@FILES)
 
 				$format_set++;
 				}
+
+		# This is the format for the stdrankowner lead files (standard plus rank and owner )
+		#3857822|31022|105|01144|1625551212|MRS|B||BURTON|249 MUNDON ROAD|MALDON|ESSEX||||CM9 6PW|UK||||||COMMENTS|COUNT|STATUS|INS-DATE|RANK|OWNER
+			if ( ($format =~ /stdrankowner/) && ($format_set < 1) )
+				{
+				$vendor_lead_code =		$m[0];		chomp($vendor_lead_code);
+				$source_code =			$m[1];		chomp($source_code); $source_id = $source_code;
+				$list_id =				$m[2];		chomp($list_id);
+				$phone_code =			$m[3];		chomp($phone_code);	$phone_code =~ s/\D//gi;
+				$phone_number =			$m[4];		chomp($phone_number);	$phone_number =~ s/\D//gi;
+					$USarea = 			substr($phone_number, 0, 3);
+				$title =				$m[5];		chomp($title);
+				$first_name =			$m[6];		chomp($first_name);
+				$middle_initial =		$m[7];		chomp($middle_initial);
+				$last_name =			$m[8];		chomp($last_name);
+				$address1 =				$m[9];		chomp($address1);
+				$address2 =				$m[10];		chomp($address2);
+				$address3 =				$m[11];		chomp($address3);
+				$city =					$m[12];		chomp($city);
+				$state =				$m[13];		chomp($state);
+				$province =				$m[14];		chomp($province);
+				$postal_code =			$m[15];		chomp($postal_code);
+				$country =				$m[16];		chomp($country);
+				$gender =				$m[17];
+				$date_of_birth =		$m[18];
+				$alt_phone =			$m[19];		chomp($alt_phone);	$alt_phone =~ s/\D//gi;
+				$email =				$m[20];
+				$security_phrase =		$m[21];
+				$comments =				$m[22];
+				$called_count =			$m[23];		$called_count =~ s/\D|\r|\n|\t//gi; if (length($called_count)<1) {$called_count=0;}
+				$status =				$m[24];		$status =~ s/ |\r|\n|\t//gi;  if (length($status)<1) {$status='NEW';}
+				$insert_date =			$m[25];	$insert_date =~ s/\r|\n|\t|[a-zA-Z]//gi;  if (length($insert_date)<6) {$insert_date=$pulldate0;}
+					if ($insert_date =~ /\//) 
+						{
+						@iD = split(/\//, $insert_date);
+						$iD[0] = sprintf("%02d", $iD[0]);
+						$iD[1] = sprintf("%02d", $iD[1]);
+						$insert_date = "$iD[2]-$iD[0]-$iD[1]";
+						}
+				$rank =					$m[26];
+				$owner =				$m[27];
+				$multi_alt_phones =		$m[28];
+
+				$map_count=0;
+				if (length($multi_alt_phones)>4)
+					{
+					@map=@MT;  @ALTm_phone_code=@MT;  @ALTm_phone_number=@MT;  @ALTm_phone_note=@MT;
+					@map = split(/\!/, $multi_alt_phones);
+					$map_count = ($#map +1);
+					if ($DBX) {print "multi-al-entry: $a|$map_count|$multi_alt_phones\n";}
+					$g++;
+					$r=0;
+					while ($r < $map_count)
+						{
+						@ncn=@MT;
+						@ncn = split(/\_/, $map[$r]);
+						print "$ncn[0]|$ncn[1]|$ncn[2]";
+
+						if (length($forcephonecode) > 0)
+							{$ALTm_phone_code[$r] =	$forcephonecode;}
+						else
+							{$ALTm_phone_code[$r] =		$ncn[1];}
+						if (length($ALTm_phone_code[$r]) < 1)
+							{$ALTm_phone_code[$r]='1';}
+						$ALTm_phone_number[$r] =	$ncn[0];
+						$ALTm_phone_note[$r] =		$ncn[2];
+						$r++;
+						}
+					}
+
+				$format_set++;
+				}
+
 		# This is the format for the standard lead files
 		#3857822|31022|105|01144|1625551212|MRS|B||BURTON|249 MUNDON ROAD|MALDON|ESSEX||||CM9 6PW|UK||||||COMMENTS
 			if ($format_set < 1)
@@ -589,6 +669,8 @@ foreach(@FILES)
 						}
 					}
 				}
+
+			if (length($rank)<1) {$rank='0';}
 
 			if (length($forcelistid) > 0)
 				{
@@ -911,7 +993,7 @@ foreach(@FILES)
 
 				if ($map_count > 0)
 					{
-					$stmtZ = "INSERT INTO vicidial_list values('','$insert_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments','$called_count','2008-01-01 00:00:00');";
+					$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values('','$insert_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments','$called_count','2008-01-01 00:00:00','$rank','$owner');";
 						if (!$T) {$affected_rows = $dbhA->do($stmtZ); } #  or die  "Couldn't execute query: |$stmtZ|\n";
 						$lead_id = $dbhA->{'mysql_insertid'};
 						if($DB){print STDERR "\n|$affected_rows|$stmtZ|\n";}
@@ -933,7 +1015,7 @@ foreach(@FILES)
 					if ($multi_insert_counter > 8)
 						{
 						### insert good lead into pending_transactions table ###
-						$stmtZ = "INSERT INTO vicidial_list values$multistmt('','$insert_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments','$called_count','2008-01-01 00:00:00');";
+						$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values$multistmt('','$insert_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments','$called_count','2008-01-01 00:00:00','$rank','$owner');";
 							if (!$T) {$affected_rows = $dbhA->do($stmtZ); } #  or die  "Couldn't execute query: |$stmtZ|\n";
 							if($DB){print STDERR "\n|$affected_rows|$stmtZ|\n";}
 
@@ -943,7 +1025,7 @@ foreach(@FILES)
 						}
 					else
 						{
-						$multistmt .= "('','$insert_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments','$called_count','2008-01-01 00:00:00'),";
+						$multistmt .= "('','$insert_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments','$called_count','2008-01-01 00:00:00','$rank','$owner'),";
 						$multi_insert_counter++;
 						}
 					}
@@ -979,7 +1061,7 @@ foreach(@FILES)
 			{
 			chop($multistmt);
 			### insert good deal into pending_transactions table ###
-			$stmtZ = "INSERT INTO vicidial_list values$multistmt;";
+			$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values$multistmt;";
 					if (!$T) {$affected_rows = $dbhA->do($stmtZ); } #  or die  "Couldn't execute query: |$stmtZ|\n";
 					if($DB){print STDERR "\n|$affected_rows|$stmtZ|\n";}
 

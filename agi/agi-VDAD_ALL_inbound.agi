@@ -1334,7 +1334,13 @@ if ( ($agent_search_method =~ /^SO|^LO/) && ($skipLOSO < 1) )
 				$qp_groupWAIT .= "closer_campaigns NOT LIKE \"% $aryA[0] %\" ";
 				$dbc++;
 				}
-			chop($qp_groupWAIT_aco);
+			if (length($qp_groupWAIT_aco)>2)
+				{chop($qp_groupWAIT_aco);}
+			else
+				{
+				$qp_groupWAIT_aco="''";
+				$qp_groupWAIT = "closer_campaigns != ''";
+				}
 
 			$qp_groupWAIT_SQL = "and ($qp_groupWAIT)";
 			$qp_groupWAIT_aco_SQL = "and vicidial_live_inbound_agents.group_id NOT IN($qp_groupWAIT_aco)";
@@ -1674,7 +1680,13 @@ if ($agent_search_method =~ /^LO|^LB/)
 				$qp_groupWAIT .= "closer_campaigns NOT LIKE \"% $aryA[0] %\" ";
 				$dbc++;
 				}
-			chop($qp_groupWAIT_aco);
+			if (length($qp_groupWAIT_aco)>2)
+				{chop($qp_groupWAIT_aco);}
+			else
+				{
+				$qp_groupWAIT_aco="''";
+				$qp_groupWAIT = "closer_campaigns != ''";
+				}
 
 				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 

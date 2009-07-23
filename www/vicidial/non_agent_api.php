@@ -24,10 +24,11 @@
 # 90514-0602 - Added sounds_list function 
 # 90522-0506 - Security fix
 # 90530-0946 - Added QueueMetrics blind monitoring option
+# 90721-1428 - Added rank and owner as vicidial_list fields
 #
 
-$version = '2.2.0-10';
-$build = '90530-0946';
+$version = '2.2.0-11';
+$build = '90721-1428';
 
 require("dbconnect.php");
 
@@ -114,6 +115,10 @@ if (isset($_GET["stage"]))						{$stage=$_GET["stage"];}
 	elseif (isset($_POST["stage"]))				{$stage=$_POST["stage"];}
 if (isset($_GET["DB"]))							{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))				{$DB=$_POST["DB"];}
+if (isset($_GET["rank"]))						{$rank=$_GET["rank"];}
+	elseif (isset($_POST["rank"]))				{$rank=$_POST["rank"];}
+if (isset($_GET["owner"]))						{$owner=$_GET["owner"];}
+	elseif (isset($_POST["owner"]))				{$owner=$_POST["owner"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -193,6 +198,8 @@ if ($non_latin < 1)
 	$session_id = ereg_replace("[^0-9]","",$session_id);
 	$server_ip = ereg_replace("[^\.0-9]","",$server_ip);
 	$stage = ereg_replace("[^a-zA-Z]","",$stage);
+	$rank = ereg_replace("[^0-9]","",$rank);
+	$owner = ereg_replace("[^-_0-9a-zA-Z]","",$owner);
 	}
 else
 	{
@@ -206,6 +213,7 @@ if (strlen($phone_code)<1) {$phone_code='1';}
 $USarea = 			substr($phone_number, 0, 3);
 if (strlen($hopper_priority)<1) {$hopper_priority=0;}
 if (strlen($gender)<1) {$gender='U';}
+if (strlen($rank)<1) {$rank='0';}
 
 $StarTtime = date("U");
 $NOW_DATE = date("Y-m-d");
@@ -663,7 +671,7 @@ if ($function == 'add_lead')
 
 
 				### insert a new lead in the system with this phone number
-				$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$list_id',status='NEW',user='$user',vendor_lead_code='$vendor_lead_code',source_id='$source_id',gmt_offset_now='$gmt_offset',title='$title',first_name='$first_name',middle_initial='$middle_initial',last_name='$last_name',address1='$address1',address2='$address2',address3='$address3',city='$city',state='$state',province='$province',postal_code='$postal_code',country_code='$country_code',gender='$gender',date_of_birth='$date_of_birth',alt_phone='$alt_phone',email='$email',security_phrase='$security_phrase',comments='$comments',called_since_last_reset='N',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME';";
+				$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$list_id',status='NEW',user='$user',vendor_lead_code='$vendor_lead_code',source_id='$source_id',gmt_offset_now='$gmt_offset',title='$title',first_name='$first_name',middle_initial='$middle_initial',last_name='$last_name',address1='$address1',address2='$address2',address3='$address3',city='$city',state='$state',province='$province',postal_code='$postal_code',country_code='$country_code',gender='$gender',date_of_birth='$date_of_birth',alt_phone='$alt_phone',email='$email',security_phrase='$security_phrase',comments='$comments',called_since_last_reset='N',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME',rank='$rank',owner='$owner';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$affected_rows = mysql_affected_rows($link);

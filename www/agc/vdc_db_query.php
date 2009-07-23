@@ -205,12 +205,13 @@
 # 90706-1431 - Added Agent view transfer selection
 # 90712-2303 - Added view calls in queue, grab call from queue
 # 90717-0638 - Fixed alt dial on overflow in-group calls
+# 90722-1542 - Added no hopper dialing
 #
 
-$version = '2.2.0-116';
-$build = '90717-0638';
+$version = '2.2.0-117';
+$build = '90722-1542';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=235;
+$mysql_log_count=244;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -948,12 +949,452 @@ if ($ACTION == 'manDiaLnextCaLL')
 			}
 		else
 			{
-			### grab the next lead in the hopper for this campaign and reserve it for the user
-			$stmt = "UPDATE vicidial_hopper set status='QUEUE', user='$user' where campaign_id='$campaign' and status='READY' order by priority desc,hopper_id LIMIT 1";
-			if ($DB) {echo "$stmt\n";}
+			##### gather no hopper dialing settings from campaign
+			$stmt="SELECT no_hopper_dialing,agent_dial_owner_only,local_call_time,dial_statuses,drop_lockout_time,lead_filter_id,lead_order FROM vicidial_campaigns where campaign_id='$campaign';";
 			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00024',$user,$server_ip,$session_name,$one_mysql_log);}
-			$affected_rows = mysql_affected_rows($link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00236',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$camp_nohopper_ct = mysql_num_rows($rslt);
+			if ($camp_nohopper_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$no_hopper_dialing =		$row[0];
+				$agent_dial_owner_only =	$row[1];
+				$local_call_time =			$row[2];
+				$dial_statuses =			$row[3];
+				$drop_lockout_time =		$row[4];
+				$lead_filter_id =			$row[5];
+				$lead_order =				$row[6];
+				}
+			if (eregi("N",$no_hopper_dialing))
+				{
+				### grab the next lead in the hopper for this campaign and reserve it for the user
+				$stmt = "UPDATE vicidial_hopper set status='QUEUE', user='$user' where campaign_id='$campaign' and status='READY' order by priority desc,hopper_id LIMIT 1";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00024',$user,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rows = mysql_affected_rows($link);
+				}
+			else
+				{
+				### figure out what the next lead that should be dialed is
+
+				##########################################################
+				### BEGIN find the next lead to dial without looking in the hopper
+				##########################################################
+			#	$DB=1;
+				if (strlen($dial_statuses)>2)
+					{
+					$g=0;
+					$p='13';
+					$GMT_gmt[0] = '';
+					$GMT_hour[0] = '';
+					$GMT_day[0] = '';
+					while ($p > -13)
+						{
+						$pzone=3600 * $p;
+						$pmin=(gmdate("i", time() + $pzone));
+						$phour=( (gmdate("G", time() + $pzone)) * 100);
+						$pday=gmdate("w", time() + $pzone);
+						$tz = sprintf("%.2f", $p);	
+						$GMT_gmt[$g] = "$tz";
+						$GMT_day[$g] = "$pday";
+						$GMT_hour[$g] = ($phour + $pmin);
+						$p = ($p - 0.25);
+						$g++;
+						}
+
+					$stmt="SELECT * FROM vicidial_call_times where call_time_id='$local_call_time';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00237',$user,$server_ip,$session_name,$one_mysql_log);}
+					$rowx=mysql_fetch_row($rslt);
+					$Gct_default_start =	"$rowx[3]";
+					$Gct_default_stop =		"$rowx[4]";
+					$Gct_sunday_start =		"$rowx[5]";
+					$Gct_sunday_stop =		"$rowx[6]";
+					$Gct_monday_start =		"$rowx[7]";
+					$Gct_monday_stop =		"$rowx[8]";
+					$Gct_tuesday_start =	"$rowx[9]";
+					$Gct_tuesday_stop =		"$rowx[10]";
+					$Gct_wednesday_start =	"$rowx[11]";
+					$Gct_wednesday_stop =	"$rowx[12]";
+					$Gct_thursday_start =	"$rowx[13]";
+					$Gct_thursday_stop =	"$rowx[14]";
+					$Gct_friday_start =		"$rowx[15]";
+					$Gct_friday_stop =		"$rowx[16]";
+					$Gct_saturday_start =	"$rowx[17]";
+					$Gct_saturday_stop =	"$rowx[18]";
+					$Gct_state_call_times = "$rowx[19]";
+
+					$ct_states = '';
+					$ct_state_gmt_SQL = '';
+					$ct_srs=0;
+					$b=0;
+					if (strlen($Gct_state_call_times)>2)
+						{
+						$state_rules = explode('|',$Gct_state_call_times);
+						$ct_srs = ((count($state_rules)) - 2);
+						}
+					while($ct_srs >= $b)
+						{
+						if (strlen($state_rules[$b])>1)
+							{
+							$stmt="SELECT * from vicidial_state_call_times where state_call_time_id='$state_rules[$b]';";
+							$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00238',$user,$server_ip,$session_name,$one_mysql_log);}
+							$row=mysql_fetch_row($rslt);
+							$Gstate_call_time_id =		"$row[0]";
+							$Gstate_call_time_state =	"$row[1]";
+							$Gsct_default_start =		"$row[4]";
+							$Gsct_default_stop =		"$row[5]";
+							$Gsct_sunday_start =		"$row[6]";
+							$Gsct_sunday_stop =			"$row[7]";
+							$Gsct_monday_start =		"$row[8]";
+							$Gsct_monday_stop =			"$row[9]";
+							$Gsct_tuesday_start =		"$row[10]";
+							$Gsct_tuesday_stop =		"$row[11]";
+							$Gsct_wednesday_start =		"$row[12]";
+							$Gsct_wednesday_stop =		"$row[13]";
+							$Gsct_thursday_start =		"$row[14]";
+							$Gsct_thursday_stop =		"$row[15]";
+							$Gsct_friday_start =		"$row[16]";
+							$Gsct_friday_stop =			"$row[17]";
+							$Gsct_saturday_start =		"$row[18]";
+							$Gsct_saturday_stop =		"$row[19]";
+
+							$ct_states .="'$Gstate_call_time_state',";
+
+							$r=0;
+							$state_gmt='';
+							while($r < $g)
+								{
+								if ($GMT_day[$r]==0)	#### Sunday local time
+									{
+									if (($Gsct_sunday_start==0) and ($Gsct_sunday_stop==0))
+										{
+										if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
+											{$state_gmt.="'$GMT_gmt[$r]',";}
+										}
+									else
+										{
+										if ( ($GMT_hour[$r]>=$Gsct_sunday_start) and ($GMT_hour[$r]<$Gsct_sunday_stop) )
+											{$state_gmt.="'$GMT_gmt[$r]',";}
+										}
+									}
+								if ($GMT_day[$r]==1)	#### Monday local time
+									{
+									if (($Gsct_monday_start==0) and ($Gsct_monday_stop==0))
+										{
+										if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
+											{$state_gmt.="'$GMT_gmt[$r]',";}
+										}
+									else
+										{
+										if ( ($GMT_hour[$r]>=$Gsct_monday_start) and ($GMT_hour[$r]<$Gsct_monday_stop) )
+											{$state_gmt.="'$GMT_gmt[$r]',";}
+										}
+									}
+								if ($GMT_day[$r]==2)	#### Tuesday local time
+									{
+									if (($Gsct_tuesday_start==0) and ($Gsct_tuesday_stop==0))
+										{
+										if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
+											{$state_gmt.="'$GMT_gmt[$r]',";}
+										}
+									else
+										{
+										if ( ($GMT_hour[$r]>=$Gsct_tuesday_start) and ($GMT_hour[$r]<$Gsct_tuesday_stop) )
+											{$state_gmt.="'$GMT_gmt[$r]',";}
+										}
+									}
+								if ($GMT_day[$r]==3)	#### Wednesday local time
+									{
+									if (($Gsct_wednesday_start==0) and ($Gsct_wednesday_stop==0))
+										{
+										if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
+											{$state_gmt.="'$GMT_gmt[$r]',";}
+										}
+									else
+										{
+										if ( ($GMT_hour[$r]>=$Gsct_wednesday_start) and ($GMT_hour[$r]<$Gsct_wednesday_stop) )
+											{$state_gmt.="'$GMT_gmt[$r]',";}
+										}
+									}
+								if ($GMT_day[$r]==4)	#### Thursday local time
+									{
+									if (($Gsct_thursday_start==0) and ($Gsct_thursday_stop==0))
+										{
+										if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
+											{$state_gmt.="'$GMT_gmt[$r]',";}
+										}
+									else
+										{
+										if ( ($GMT_hour[$r]>=$Gsct_thursday_start) and ($GMT_hour[$r]<$Gsct_thursday_stop) )
+											{$state_gmt.="'$GMT_gmt[$r]',";}
+										}
+									}
+								if ($GMT_day[$r]==5)	#### Friday local time
+									{
+									if (($Gsct_friday_start==0) and ($Gsct_friday_stop==0))
+										{
+										if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
+											{$state_gmt.="'$GMT_gmt[$r]',";}
+										}
+									else
+										{
+										if ( ($GMT_hour[$r]>=$Gsct_friday_start) and ($GMT_hour[$r]<$Gsct_friday_stop) )
+											{$state_gmt.="'$GMT_gmt[$r]',";}
+										}
+									}
+								if ($GMT_day[$r]==6)	#### Saturday local time
+									{
+									if (($Gsct_saturday_start==0) and ($Gsct_saturday_stop==0))
+										{
+										if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
+											{$state_gmt.="'$GMT_gmt[$r]',";}
+										}
+									else
+										{
+										if ( ($GMT_hour[$r]>=$Gsct_saturday_start) and ($GMT_hour[$r]<$Gsct_saturday_stop) )
+											{$state_gmt.="'$GMT_gmt[$r]',";}
+										}
+									}
+								$r++;
+								}
+							$state_gmt = "$state_gmt'99'";
+							$ct_state_gmt_SQL .= "or (state='$Gstate_call_time_state' and gmt_offset_now IN($state_gmt)) ";
+							}
+
+						$b++;
+						}
+					if (strlen($ct_states)>2)
+						{
+						$ct_states = eregi_replace(",$",'',$ct_states);
+						$ct_statesSQL = "and state NOT IN($ct_states)";
+						}
+					else
+						{
+						$ct_statesSQL = "";
+						}
+
+					$r=0;
+					$default_gmt='';
+					while($r < $g)
+						{
+						if ($GMT_day[$r]==0)	#### Sunday local time
+							{
+							if (($Gct_sunday_start==0) and ($Gct_sunday_stop==0))
+								{
+								if ( ($GMT_hour[$r]>=$Gct_default_start) and ($GMT_hour[$r]<$Gct_default_stop) )
+									{$default_gmt.="'$GMT_gmt[$r]',";}
+								}
+							else
+								{
+								if ( ($GMT_hour[$r]>=$Gct_sunday_start) and ($GMT_hour[$r]<$Gct_sunday_stop) )
+									{$default_gmt.="'$GMT_gmt[$r]',";}
+								}
+							}
+						if ($GMT_day[$r]==1)	#### Monday local time
+							{
+							if (($Gct_monday_start==0) and ($Gct_monday_stop==0))
+								{
+								if ( ($GMT_hour[$r]>=$Gct_default_start) and ($GMT_hour[$r]<$Gct_default_stop) )
+									{$default_gmt.="'$GMT_gmt[$r]',";}
+								}
+							else
+								{
+								if ( ($GMT_hour[$r]>=$Gct_monday_start) and ($GMT_hour[$r]<$Gct_monday_stop) )
+									{$default_gmt.="'$GMT_gmt[$r]',";}
+								}
+							}
+						if ($GMT_day[$r]==2)	#### Tuesday local time
+							{
+							if (($Gct_tuesday_start==0) and ($Gct_tuesday_stop==0))
+								{
+								if ( ($GMT_hour[$r]>=$Gct_default_start) and ($GMT_hour[$r]<$Gct_default_stop) )
+									{$default_gmt.="'$GMT_gmt[$r]',";}
+								}
+							else
+								{
+								if ( ($GMT_hour[$r]>=$Gct_tuesday_start) and ($GMT_hour[$r]<$Gct_tuesday_stop) )
+									{$default_gmt.="'$GMT_gmt[$r]',";}
+								}
+							}
+						if ($GMT_day[$r]==3)	#### Wednesday local time
+							{
+							if (($Gct_wednesday_start==0) and ($Gct_wednesday_stop==0))
+								{
+								if ( ($GMT_hour[$r]>=$Gct_default_start) and ($GMT_hour[$r]<$Gct_default_stop) )
+									{$default_gmt.="'$GMT_gmt[$r]',";}
+								}
+							else
+								{
+								if ( ($GMT_hour[$r]>=$Gct_wednesday_start) and ($GMT_hour[$r]<$Gct_wednesday_stop) )
+									{$default_gmt.="'$GMT_gmt[$r]',";}
+								}
+							}
+						if ($GMT_day[$r]==4)	#### Thursday local time
+							{
+							if (($Gct_thursday_start==0) and ($Gct_thursday_stop==0))
+								{
+								if ( ($GMT_hour[$r]>=$Gct_default_start) and ($GMT_hour[$r]<$Gct_default_stop) )
+									{$default_gmt.="'$GMT_gmt[$r]',";}
+								}
+							else
+								{
+								if ( ($GMT_hour[$r]>=$Gct_thursday_start) and ($GMT_hour[$r]<$Gct_thursday_stop) )
+									{$default_gmt.="'$GMT_gmt[$r]',";}
+								}
+							}
+						if ($GMT_day[$r]==5)	#### Friday local time
+							{
+							if (($Gct_friday_start==0) and ($Gct_friday_stop==0))
+								{
+								if ( ($GMT_hour[$r]>=$Gct_default_start) and ($GMT_hour[$r]<$Gct_default_stop) )
+									{$default_gmt.="'$GMT_gmt[$r]',";}
+								}
+							else
+								{
+								if ( ($GMT_hour[$r]>=$Gct_friday_start) and ($GMT_hour[$r]<$Gct_friday_stop) )
+									{$default_gmt.="'$GMT_gmt[$r]',";}
+								}
+							}
+						if ($GMT_day[$r]==6)	#### Saturday local time
+							{
+							if (($Gct_saturday_start==0) and ($Gct_saturday_stop==0))
+								{
+								if ( ($GMT_hour[$r]>=$Gct_default_start) and ($GMT_hour[$r]<$Gct_default_stop) )
+									{$default_gmt.="'$GMT_gmt[$r]',";}
+								}
+							else
+								{
+								if ( ($GMT_hour[$r]>=$Gct_saturday_start) and ($GMT_hour[$r]<$Gct_saturday_stop) )
+									{$default_gmt.="'$GMT_gmt[$r]',";}
+								}
+							}
+						$r++;
+						}
+
+					$default_gmt = "$default_gmt'99'";
+					$all_gmtSQL = "(gmt_offset_now IN($default_gmt) $ct_statesSQL) $ct_state_gmt_SQL";
+
+					$dial_statuses = preg_replace("/ -$/","",$dial_statuses);
+					$Dstatuses = explode(" ", $dial_statuses);
+					$Ds_to_print = (count($Dstatuses) - 0);
+					$Dsql = '';
+					$o=0;
+					while ($Ds_to_print > $o) 
+						{
+						$o++;
+						$Dsql .= "'$Dstatuses[$o]',";
+						}
+					$Dsql = preg_replace("/,$/","",$Dsql);
+					if (strlen($Dsql) < 2) {$Dsql = "''";}
+
+					$DLTsql='';
+					if ($drop_lockout_time > 0)
+						{
+						$DLseconds = ($drop_lockout_time * 3600);
+						$DLseconds = floor($DLseconds);
+						$DLseconds = intval("$DLseconds");
+						$DLTsql = "and ( ( (status IN('DROP','XDROP')) and (last_local_call_time < CONCAT(DATE_ADD(NOW(), INTERVAL -$DLseconds SECOND),' ',CURTIME()) ) ) or (status NOT IN('DROP','XDROP')) )";
+						}
+
+					$stmt="SELECT lead_filter_sql FROM vicidial_lead_filters where lead_filter_id='$lead_filter_id';";
+					$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00239',$user,$server_ip,$session_name,$one_mysql_log);}
+					$filtersql_ct = mysql_num_rows($rslt);
+					if ($DB) {echo "$filtersql_ct|$stmt\n";}
+					if ($filtersql_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$fSQL =		$row[0];
+						}
+
+					$stmt="SELECT list_id FROM vicidial_lists where campaign_id='$campaign' and active='Y';";
+					$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00240',$user,$server_ip,$session_name,$one_mysql_log);}
+					$camplists_ct = mysql_num_rows($rslt);
+					if ($DB) {echo "$camplists_ct|$stmt\n";}
+					$k=0;
+					$camp_lists='';
+					while ($camplists_ct > $k)
+						{
+						$row=mysql_fetch_row($rslt);
+						$camp_lists .=	"'$row[0]',";
+						$k++;
+						}
+					$camp_lists = eregi_replace(".$","",$camp_lists);
+					if (strlen($camp_lists) < 4) {$camp_lists="''";}
+
+					$stmt="SELECT user_group,territory FROM vicidial_users where user='$user';";
+					$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00241',$user,$server_ip,$session_name,$one_mysql_log);}
+					$userterr_ct = mysql_num_rows($rslt);
+					if ($DB) {echo "$userterr_ct|$stmt\n";}
+					if ($userterr_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$user_group =	$row[0];
+						$territory =	$row[1];
+						}
+
+					$adooSQL = '';
+					if (eregi("USER",$agent_dial_owner_only)) {$adooSQL = "and owner='$user'";}
+					if (eregi("TERRITORY",$agent_dial_owner_only)) {$adooSQL = "and owner='$territory'";}
+					if (eregi("USER_GROUP",$agent_dial_owner_only)) {$adooSQL = "and owner='$user_group'";}
+
+					$order_stmt = '';
+					if (eregi("DOWN",$lead_order)){$order_stmt = 'order by lead_id asc';}
+					if (eregi("UP",$lead_order)){$order_stmt = 'order by lead_id desc';}
+					if (eregi("UP LAST NAME",$lead_order)){$order_stmt = 'order by last_name desc, lead_id asc';}
+					if (eregi("DOWN LAST NAME",$lead_order)){$order_stmt = 'order by last_name, lead_id asc';}
+					if (eregi("UP PHONE",$lead_order)){$order_stmt = 'order by phone_number desc, lead_id asc';}
+					if (eregi("DOWN PHONE",$lead_order)){$order_stmt = 'order by phone_number, lead_id asc';}
+					if (eregi("UP COUNT",$lead_order)){$order_stmt = 'order by called_count desc, lead_id asc';}
+					if (eregi("DOWN COUNT",$lead_order)){$order_stmt = 'order by called_count, lead_id asc';}
+					if (eregi("UP LAST CALL TIME",$lead_order)){$order_stmt = 'order by last_local_call_time desc, lead_id asc';}
+					if (eregi("DOWN LAST CALL TIME",$lead_order)){$order_stmt = 'order by last_local_call_time, lead_id asc';}
+					if (eregi("RANDOM",$lead_order)){$order_stmt = 'order by RAND()';}
+					if (eregi("UP RANK",$lead_order)){$order_stmt = 'order by rank desc, lead_id asc';}
+					if (eregi("DOWN RANK",$lead_order)){$order_stmt = 'order by rank, lead_id asc';}
+					if (eregi("UP OWNER",$lead_order)){$order_stmt = 'order by owner desc, lead_id asc';}
+					if (eregi("DOWN OWNER",$lead_order)){$order_stmt = 'order by owner, lead_id asc';}
+
+					$stmt="UPDATE vicidial_list SET status='QUEUE',user='$user' where called_since_last_reset='N' and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) $DLTsql $fSQL $adooSQL $order_stmt LIMIT 1;";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00242',$user,$server_ip,$session_name,$one_mysql_log);}
+					$affected_rows = mysql_affected_rows($link);
+
+					if ($affected_rows > 0)
+						{
+						$stmt="SELECT lead_id,list_id,gmt_offset_now,state FROM vicidial_list where status='QUEUE' and user='$user' order by modify_date desc LIMIT 1;";
+						$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00243',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($DB) {echo "$stmt\n";}
+						$leadpick_ct = mysql_num_rows($rslt);
+						if ($leadpick_ct > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$lead_id =			$row[0];
+							$list_id =			$row[1];
+							$gmt_offset_now =	$row[2];
+							$state =			$row[3];
+
+							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='QUEUE',list_id='$list_id',gmt_offset_now='$gmt_offset_now',state='$state',alt_dial='MAIN',user='$user',priority='0';";
+							if ($DB) {echo "$stmt\n";}
+							$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00244',$user,$server_ip,$session_name,$one_mysql_log);}
+							}
+						}
+					}
+				##########################################################
+				### END  find the next lead to dial without looking in the hopper
+				##########################################################
+			#	$DB=0;
+				}
 			}
 		}
 
@@ -975,7 +1416,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			}
 
 			##### grab the data from vicidial_list for the lead_id
-			$stmt="SELECT * FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
+			$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00026',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -1013,6 +1454,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$security		= trim("$row[28]");
 				$comments		= stripslashes(trim("$row[29]"));
 				$called_count	= trim("$row[30]");
+				$rank			= trim("$row[32]");
+				$owner			= trim("$row[33]");
 				}
 
 			$called_count++;
@@ -1267,6 +1710,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$LeaD_InfO .=	$phone_number . "\n";
 			$LeaD_InfO .=	"MAIN\n";
 			$LeaD_InfO .=	$source_id . "\n";
+			$LeaD_InfO .=	$rank . "\n";
+			$LeaD_InfO .=	$owner . "\n";
 
 			echo $LeaD_InfO;
 
@@ -2736,7 +3181,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00107',$user,$server_ip,$session_name,$one_mysql_log);}
 
 		##### grab the data from vicidial_list for the lead_id
-		$stmt="SELECT * FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
+		$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00108',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -2772,6 +3217,8 @@ if ($ACTION == 'VDADcheckINCOMING')
 			$security		= trim("$row[28]");
 			$comments		= stripslashes(trim("$row[29]"));
 			$called_count	= trim("$row[30]");
+			$rank			= trim("$row[32]");
+			$owner			= trim("$row[33]");
 			}
 
 		##### if lead is a callback, grab the callback comments
@@ -3134,6 +3581,8 @@ if ($ACTION == 'VDADcheckINCOMING')
 		$LeaD_InfO .=	$alt_phone_note . "\n";
 		$LeaD_InfO .=	$alt_phone_active . "\n";
 		$LeaD_InfO .=	$alt_phone_count . "\n";
+		$LeaD_InfO .=	$rank . "\n";
+		$LeaD_InfO .=	$owner . "\n";
 
 		echo $LeaD_InfO;
 

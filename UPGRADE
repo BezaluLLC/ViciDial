@@ -134,6 +134,34 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 35. Added a Re-Queue Call button to send the current call back to an AGENTDIRECT
 	in-group for the agent to take later
 
+36. Added rank and owner to the vicidial_list table. the CLI lead loader has
+	a new stdrankowner format to add these fields in lead files. Also, added
+	these fields to the web-based lead loader formats and field chooser.
+	Related to this, RANK and OWNER are now lead order options in the 
+	campaign screen.
+
+37. Added automatic list reset option to List Modification screen. You can enter
+	multiple times, and the leads in the list will be reset at those times.
+
+38. Added no-hopper dialing option for MANUAL and INBOUND_MAN campaigns. If This
+	is enabled, the hopper will not run for this campaign. This option is 
+	only available when the dial method is set to MANUAL or INBOUND_MAN. It 
+	is recommended that you do not enable this option if you have a very 
+	large lead database, over 100,000 leads. With No Hopper Dialing, the 
+	following features do not work: lead recycling, auto-alt-dialing, list 
+	mix, list ordering with Xth NEW. If you want to use Owner Only Dialing 
+	you must have No Hopper Dialing enabled. Default is N for disabled.
+
+39. Added lead owner option to restrict dialing within a list to the owner of a
+	lead only. If This is enabled, the agent will only receive leads that 
+	they are within the ownership parameters for. If this is set to USER 
+	then the agent must be the user defined in the database as the owner of 
+	this lead. If this is set to TERRITORY then the owner of the lead must 
+	match the territory listed in the User Modification screen for this 
+	agent. If this is set to USER_GROUP then the owner of the lead must 
+	match the user group that the agent is a member of. For this feature to 
+	work the dial method must be set to MANUAL or INBOUND_MAN and No Hopper 
+	Dialing must be enabled. Default is NONE for disabled.
 
 
 

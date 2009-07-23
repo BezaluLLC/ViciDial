@@ -301,3 +301,15 @@ ALTER TABLE vicidial_campaigns ADD pause_after_each_call ENUM('Y','N') default '
 ALTER TABLE vicidial_auto_calls ADD agent_grab VARCHAR(20) default '';
 
 UPDATE system_settings SET db_schema_version='1162';
+
+ALTER TABLE vicidial_list MODIFY list_id BIGINT(14) UNSIGNED NOT NULL DEFAULT '0';
+ALTER TABLE vicidial_list ADD rank SMALLINT(5) NOT NULL default '0';
+ALTER TABLE vicidial_list ADD owner VARCHAR(20) default '';
+CREATE INDEX rank ON vicidial_list (rank);
+
+ALTER TABLE vicidial_campaigns ADD no_hopper_dialing ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_campaigns ADD agent_dial_owner_only ENUM('NONE','USER','TERRITORY','USER_GROUP') default 'NONE';
+
+ALTER TABLE vicidial_lists ADD reset_time VARCHAR(100) default '';
+
+UPDATE system_settings SET db_schema_version='1163';

@@ -27,11 +27,12 @@
 # 90310-2128 - Added admin header
 # 90508-0644 - Changed to PHP long tags
 # 90522-0506 - Security fix
+# 90721-1339 - Added rank and owner as vicidial_list fields
 #
 # make sure vicidial_list exists and that your file follows the formatting correctly. This page does not dedupe or do any other lead filtering actions yet at this time.
 
-$version = '2.2.0-31';
-$build = '90522-0506';
+$version = '2.2.0-32';
+$build = '90721-1339';
 
 
 require("dbconnect.php");
@@ -47,44 +48,44 @@ $PHP_SELF=$_SERVER['PHP_SELF'];
 $leadfile=$_FILES["leadfile"];
 	$LF_orig = $_FILES['leadfile']['name'];
 	$LF_path = $_FILES['leadfile']['tmp_name'];
-if (isset($_GET["submit_file"]))				{$submit_file=$_GET["submit_file"];}
-	elseif (isset($_POST["submit_file"]))		{$submit_file=$_POST["submit_file"];}
+if (isset($_GET["submit_file"]))			{$submit_file=$_GET["submit_file"];}
+	elseif (isset($_POST["submit_file"]))	{$submit_file=$_POST["submit_file"];}
 if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
-	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
+	elseif (isset($_POST["submit"]))	{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
-	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
-if (isset($_GET["leadfile_name"]))				{$leadfile_name=$_GET["leadfile_name"];}
-	elseif (isset($_POST["leadfile_name"]))		{$leadfile_name=$_POST["leadfile_name"];}
+	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
+if (isset($_GET["leadfile_name"]))			{$leadfile_name=$_GET["leadfile_name"];}
+	elseif (isset($_POST["leadfile_name"]))	{$leadfile_name=$_POST["leadfile_name"];}
 if (isset($_FILES["leadfile"]))				{$leadfile_name=$_FILES["leadfile"]['name'];}
 if (isset($_GET["file_layout"]))				{$file_layout=$_GET["file_layout"];}
 	elseif (isset($_POST["file_layout"]))		{$file_layout=$_POST["file_layout"];}
 if (isset($_GET["OK_to_process"]))				{$OK_to_process=$_GET["OK_to_process"];}
 	elseif (isset($_POST["OK_to_process"]))		{$OK_to_process=$_POST["OK_to_process"];}
 if (isset($_GET["vendor_lead_code_field"]))				{$vendor_lead_code_field=$_GET["vendor_lead_code_field"];}
-	elseif (isset($_POST["vendor_lead_code_field"]))		{$vendor_lead_code_field=$_POST["vendor_lead_code_field"];}
-if (isset($_GET["source_id_field"]))				{$source_id_field=$_GET["source_id_field"];}
-	elseif (isset($_POST["source_id_field"]))		{$source_id_field=$_POST["source_id_field"];}
+	elseif (isset($_POST["vendor_lead_code_field"]))	{$vendor_lead_code_field=$_POST["vendor_lead_code_field"];}
+if (isset($_GET["source_id_field"]))			{$source_id_field=$_GET["source_id_field"];}
+	elseif (isset($_POST["source_id_field"]))	{$source_id_field=$_POST["source_id_field"];}
 if (isset($_GET["list_id_field"]))				{$list_id_field=$_GET["list_id_field"];}
 	elseif (isset($_POST["list_id_field"]))		{$list_id_field=$_POST["list_id_field"];}
-if (isset($_GET["phone_code_field"]))				{$phone_code_field=$_GET["phone_code_field"];}
-	elseif (isset($_POST["phone_code_field"]))		{$phone_code_field=$_POST["phone_code_field"];}
+if (isset($_GET["phone_code_field"]))			{$phone_code_field=$_GET["phone_code_field"];}
+	elseif (isset($_POST["phone_code_field"]))	{$phone_code_field=$_POST["phone_code_field"];}
 if (isset($_GET["phone_number_field"]))				{$phone_number_field=$_GET["phone_number_field"];}
-	elseif (isset($_POST["phone_number_field"]))		{$phone_number_field=$_POST["phone_number_field"];}
+	elseif (isset($_POST["phone_number_field"]))	{$phone_number_field=$_POST["phone_number_field"];}
 if (isset($_GET["title_field"]))				{$title_field=$_GET["title_field"];}
 	elseif (isset($_POST["title_field"]))		{$title_field=$_POST["title_field"];}
-if (isset($_GET["first_name_field"]))				{$first_name_field=$_GET["first_name_field"];}
-	elseif (isset($_POST["first_name_field"]))		{$first_name_field=$_POST["first_name_field"];}
-if (isset($_GET["middle_initial_field"]))				{$middle_initial_field=$_GET["middle_initial_field"];}
-	elseif (isset($_POST["middle_initial_field"]))		{$middle_initial_field=$_POST["middle_initial_field"];}
-if (isset($_GET["last_name_field"]))				{$last_name_field=$_GET["last_name_field"];}
-	elseif (isset($_POST["last_name_field"]))		{$last_name_field=$_POST["last_name_field"];}
+if (isset($_GET["first_name_field"]))			{$first_name_field=$_GET["first_name_field"];}
+	elseif (isset($_POST["first_name_field"]))	{$first_name_field=$_POST["first_name_field"];}
+if (isset($_GET["middle_initial_field"]))			{$middle_initial_field=$_GET["middle_initial_field"];}
+	elseif (isset($_POST["middle_initial_field"]))	{$middle_initial_field=$_POST["middle_initial_field"];}
+if (isset($_GET["last_name_field"]))			{$last_name_field=$_GET["last_name_field"];}
+	elseif (isset($_POST["last_name_field"]))	{$last_name_field=$_POST["last_name_field"];}
 if (isset($_GET["address1_field"]))				{$address1_field=$_GET["address1_field"];}
-	elseif (isset($_POST["address1_field"]))		{$address1_field=$_POST["address1_field"];}
+	elseif (isset($_POST["address1_field"]))	{$address1_field=$_POST["address1_field"];}
 if (isset($_GET["address2_field"]))				{$address2_field=$_GET["address2_field"];}
-	elseif (isset($_POST["address2_field"]))		{$address2_field=$_POST["address2_field"];}
+	elseif (isset($_POST["address2_field"]))	{$address2_field=$_POST["address2_field"];}
 if (isset($_GET["address3_field"]))				{$address3_field=$_GET["address3_field"];}
-	elseif (isset($_POST["address3_field"]))		{$address3_field=$_POST["address3_field"];}
-if (isset($_GET["city_field"]))				{$city_field=$_GET["city_field"];}
+	elseif (isset($_POST["address3_field"]))	{$address3_field=$_POST["address3_field"];}
+if (isset($_GET["city_field"]))					{$city_field=$_GET["city_field"];}
 	elseif (isset($_POST["city_field"]))		{$city_field=$_POST["city_field"];}
 if (isset($_GET["state_field"]))				{$state_field=$_GET["state_field"];}
 	elseif (isset($_POST["state_field"]))		{$state_field=$_POST["state_field"];}
@@ -93,21 +94,25 @@ if (isset($_GET["province_field"]))				{$province_field=$_GET["province_field"];
 if (isset($_GET["postal_code_field"]))				{$postal_code_field=$_GET["postal_code_field"];}
 	elseif (isset($_POST["postal_code_field"]))		{$postal_code_field=$_POST["postal_code_field"];}
 if (isset($_GET["country_code_field"]))				{$country_code_field=$_GET["country_code_field"];}
-	elseif (isset($_POST["country_code_field"]))		{$country_code_field=$_POST["country_code_field"];}
+	elseif (isset($_POST["country_code_field"]))	{$country_code_field=$_POST["country_code_field"];}
 if (isset($_GET["gender_field"]))				{$gender_field=$_GET["gender_field"];}
 	elseif (isset($_POST["gender_field"]))		{$gender_field=$_POST["gender_field"];}
-if (isset($_GET["date_of_birth_field"]))				{$date_of_birth_field=$_GET["date_of_birth_field"];}
-	elseif (isset($_POST["date_of_birth_field"]))		{$date_of_birth_field=$_POST["date_of_birth_field"];}
-if (isset($_GET["alt_phone_field"]))				{$alt_phone_field=$_GET["alt_phone_field"];}
-	elseif (isset($_POST["alt_phone_field"]))		{$alt_phone_field=$_POST["alt_phone_field"];}
+if (isset($_GET["date_of_birth_field"]))			{$date_of_birth_field=$_GET["date_of_birth_field"];}
+	elseif (isset($_POST["date_of_birth_field"]))	{$date_of_birth_field=$_POST["date_of_birth_field"];}
+if (isset($_GET["alt_phone_field"]))			{$alt_phone_field=$_GET["alt_phone_field"];}
+	elseif (isset($_POST["alt_phone_field"]))	{$alt_phone_field=$_POST["alt_phone_field"];}
 if (isset($_GET["email_field"]))				{$email_field=$_GET["email_field"];}
 	elseif (isset($_POST["email_field"]))		{$email_field=$_POST["email_field"];}
-if (isset($_GET["security_phrase_field"]))				{$security_phrase_field=$_GET["security_phrase_field"];}
-	elseif (isset($_POST["security_phrase_field"]))		{$security_phrase_field=$_POST["security_phrase_field"];}
+if (isset($_GET["security_phrase_field"]))			{$security_phrase_field=$_GET["security_phrase_field"];}
+	elseif (isset($_POST["security_phrase_field"]))	{$security_phrase_field=$_POST["security_phrase_field"];}
 if (isset($_GET["comments_field"]))				{$comments_field=$_GET["comments_field"];}
-	elseif (isset($_POST["comments_field"]))		{$comments_field=$_POST["comments_field"];}
-if (isset($_GET["list_id_override"]))				{$list_id_override=$_GET["list_id_override"];}
-	elseif (isset($_POST["list_id_override"]))		{$list_id_override=$_POST["list_id_override"];}
+	elseif (isset($_POST["comments_field"]))	{$comments_field=$_POST["comments_field"];}
+if (isset($_GET["rank_field"]))					{$rank_field=$_GET["rank_field"];}
+	elseif (isset($_POST["rank_field"]))		{$rank_field=$_POST["rank_field"];}
+if (isset($_GET["owner_field"]))				{$owner_field=$_GET["owner_field"];}
+	elseif (isset($_POST["owner_field"]))		{$owner_field=$_POST["owner_field"];}
+if (isset($_GET["list_id_override"]))			{$list_id_override=$_GET["list_id_override"];}
+	elseif (isset($_POST["list_id_override"]))	{$list_id_override=$_POST["list_id_override"];}
 	$list_id_override = (preg_replace("/\D/","",$list_id_override));
 if (isset($_GET["lead_file"]))					{$lead_file=$_GET["lead_file"];}
 	elseif (isset($_POST["lead_file"]))			{$lead_file=$_POST["lead_file"];}
@@ -453,6 +458,8 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 						$email =				$row[$email_field];
 						$security_phrase =		$row[$security_phrase_field];
 						$comments =				trim($row[$comments_field]);
+						$rank =					$row[$rank_field];
+						$owner =				$row[$owner_field];
 
 						if (strlen($list_id_override)>0) 
 							{
@@ -560,7 +567,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
 							if ($multi_insert_counter > 8) {
 								### insert good deal into pending_transactions table ###
-								$stmtZ = "INSERT INTO vicidial_list values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00');";
+								$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner');";
 								$rslt=mysql_query($stmtZ, $link);
 								if ($WeBRooTWritablE > 0) 
 									{fwrite($stmt_file, $stmtZ."\r\n");}
@@ -568,7 +575,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 								$multi_insert_counter=0;
 
 							} else {
-								$multistmt .= "('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00'),";
+								$multistmt .= "('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner'),";
 								$multi_insert_counter++;
 							}
 
@@ -586,7 +593,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 					}
 				}
 				if ($multi_insert_counter!=0) {
-					$stmtZ = "INSERT INTO vicidial_list values".substr($multistmt, 0, -1).";";
+					$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values".substr($multistmt, 0, -1).";";
 					mysql_query($stmtZ, $link);
 					if ($WeBRooTWritablE > 0) 
 						{fwrite($stmt_file, $stmtZ."\r\n");}
@@ -610,13 +617,13 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 			{
 			print "<BR><BR>PHONE CODE OVERRIDE FOR THIS FILE: $phone_code_override<BR><BR>\n";
 			}
-		# print "|$WeBServeRRooT/vicidial/listloader_super.pl $vendor_lead_code_field,$source_id_field,$list_id_field,$phone_code_field,$phone_number_field,$title_field,$first_name_field,$middle_initial_field,$last_name_field,$address1_field,$address2_field,$address3_field,$city_field,$state_field,$province_field,$postal_code_field,$country_code_field,$gender_field,$date_of_birth_field,$alt_phone_field,$email_field,$security_phrase_field,$comments_field, --forcelistid=$list_id_override --lead_file=$lead_file|";
+		# print "|$WeBServeRRooT/vicidial/listloader_super.pl $vendor_lead_code_field,$source_id_field,$list_id_field,$phone_code_field,$phone_number_field,$title_field,$first_name_field,$middle_initial_field,$last_name_field,$address1_field,$address2_field,$address3_field,$city_field,$state_field,$province_field,$postal_code_field,$country_code_field,$gender_field,$date_of_birth_field,$alt_phone_field,$email_field,$security_phrase_field,$comments_field,$rank_field,$owner_field, --forcelistid=$list_id_override --lead_file=$lead_file|";
 			$dupcheckCLI=''; $postalgmtCLI='';
 			if (eregi("DUPLIST",$dupcheck)) {$dupcheckCLI='--duplicate-check';}
 			if (eregi("DUPCAMP",$dupcheck)) {$dupcheckCLI='--duplicate-campaign-check';}
 			if (eregi("DUPSYS",$dupcheck)) {$dupcheckCLI='--duplicate-system-check';}
 			if (eregi("POSTAL",$postalgmt)) {$postalgmtCLI='--postal-code-gmt';}
-			passthru("$WeBServeRRooT/vicidial/listloader_super.pl $vendor_lead_code_field,$source_id_field,$list_id_field,$phone_code_field,$phone_number_field,$title_field,$first_name_field,$middle_initial_field,$last_name_field,$address1_field,$address2_field,$address3_field,$city_field,$state_field,$province_field,$postal_code_field,$country_code_field,$gender_field,$date_of_birth_field,$alt_phone_field,$email_field,$security_phrase_field,$comments_field, --forcelistid=$list_id_override --forcephonecode=$phone_code_override --lead-file=$lead_file $postalgmtCLI $dupcheckCLI");
+			passthru("$WeBServeRRooT/vicidial/listloader_super.pl $vendor_lead_code_field,$source_id_field,$list_id_field,$phone_code_field,$phone_number_field,$title_field,$first_name_field,$middle_initial_field,$last_name_field,$address1_field,$address2_field,$address3_field,$city_field,$state_field,$province_field,$postal_code_field,$country_code_field,$gender_field,$date_of_birth_field,$alt_phone_field,$email_field,$security_phrase_field,$comments_field,$rank_field,$owner_field, --forcelistid=$list_id_override --forcephonecode=$phone_code_override --lead-file=$lead_file $postalgmtCLI $dupcheckCLI");
 		} else {
 			# copy($leadfile, "./vicidial_temp_file.csv");
 			$file=fopen("$lead_file", "r");
@@ -669,6 +676,10 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 				$email =				$row[$email_field];
 				$security_phrase =		$row[$security_phrase_field];
 				$comments =				trim($row[$comments_field]);
+				$rank =					$row[$rank_field];
+				$owner =				$row[$owner_field];
+
+					if (strlen($rank)<1) {$rank='0';}
 
 					if (strlen($list_id_override)>0) 
 						{
@@ -775,7 +786,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
 					if ($multi_insert_counter > 8) {
 						### insert good deal into pending_transactions table ###
-						$stmtZ = "INSERT INTO vicidial_list values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00');";
+						$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner');";
 						$rslt=mysql_query($stmtZ, $link);
 						if ($WeBRooTWritablE > 0) 
 							{fwrite($stmt_file, $stmtZ."\r\n");}
@@ -783,7 +794,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 						$multi_insert_counter=0;
 
 					} else {
-						$multistmt .= "('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00'),";
+						$multistmt .= "('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner'),";
 						$multi_insert_counter++;
 					}
 
@@ -800,7 +811,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 				}
 			}
 			if ($multi_insert_counter!=0) {
-				$stmtZ = "INSERT INTO vicidial_list values".substr($multistmt, 0, -1).";";
+				$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values".substr($multistmt, 0, -1).";";
 				mysql_query($stmtZ, $link);
 				if ($WeBRooTWritablE > 0) 
 					{fwrite($stmt_file, $stmtZ."\r\n");}
@@ -899,6 +910,8 @@ if ($leadfile) {
 					$email =				$row[20];
 					$security_phrase =		$row[21];
 					$comments =				trim($row[22]);
+					$rank =					$row[23];
+					$owner =				$row[24];
 
 					if (strlen($list_id_override)>0) 
 						{
@@ -1005,7 +1018,7 @@ if ($leadfile) {
 
 						if ($multi_insert_counter > 8) {
 							### insert good deal into pending_transactions table ###
-							$stmtZ = "INSERT INTO vicidial_list values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00');";
+							$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner');";
 							$rslt=mysql_query($stmtZ, $link);
 							if ($WeBRooTWritablE > 0) 
 								{fwrite($stmt_file, $stmtZ."\r\n");}
@@ -1013,7 +1026,7 @@ if ($leadfile) {
 							$multi_insert_counter=0;
 
 						} else {
-							$multistmt .= "('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00'),";
+							$multistmt .= "('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner'),";
 							$multi_insert_counter++;
 						}
 
@@ -1031,7 +1044,7 @@ if ($leadfile) {
 				}
 			}
 			if ($multi_insert_counter!=0) {
-				$stmtZ = "INSERT INTO vicidial_list values".substr($multistmt, 0, -1).";";
+				$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values".substr($multistmt, 0, -1).";";
 				mysql_query($stmtZ, $link);
 				if ($WeBRooTWritablE > 0) 
 					{fwrite($stmt_file, $stmtZ."\r\n");}
@@ -1125,6 +1138,8 @@ if ($leadfile) {
 				$email =				$row[20];
 				$security_phrase =		$row[21];
 				$comments =				trim($row[22]);
+				$rank =					$row[23];
+				$owner =				$row[24];
 
 					if (strlen($list_id_override)>0) 
 						{
@@ -1231,7 +1246,7 @@ if ($leadfile) {
 
 					if ($multi_insert_counter > 8) {
 						### insert good deal into pending_transactions table ###
-						$stmtZ = "INSERT INTO vicidial_list values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00');";
+						$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner');";
 						$rslt=mysql_query($stmtZ, $link);
 						if ($WeBRooTWritablE > 0) 
 							{fwrite($stmt_file, $stmtZ."\r\n");}
@@ -1239,7 +1254,7 @@ if ($leadfile) {
 						$multi_insert_counter=0;
 
 					} else {
-						$multistmt .= "('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00'),";
+						$multistmt .= "('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner'),";
 						$multi_insert_counter++;
 					}
 
@@ -1256,7 +1271,7 @@ if ($leadfile) {
 				}
 			}
 			if ($multi_insert_counter!=0) {
-				$stmtZ = "INSERT INTO vicidial_list values".substr($multistmt, 0, -1).";";
+				$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values".substr($multistmt, 0, -1).";";
 				mysql_query($stmtZ, $link);
 				if ($WeBRooTWritablE > 0) 
 					{fwrite($stmt_file, $stmtZ."\r\n");}
@@ -1276,7 +1291,7 @@ if ($leadfile) {
 			print "    <th><font class='standard' color='white'>File data</font></th>\r\n";
 			print "  </tr>\r\n";
 
-			$rslt=mysql_query("select vendor_lead_code, source_id, list_id, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments from vicidial_list limit 1", $link);
+			$rslt=mysql_query("select vendor_lead_code, source_id, list_id, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, rank, owner from vicidial_list limit 1", $link);
 			
 
 			if (!eregi(".csv", $leadfile_name) && !eregi(".xls", $leadfile_name)) 

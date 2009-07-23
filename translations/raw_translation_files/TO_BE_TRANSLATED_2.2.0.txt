@@ -238,6 +238,19 @@ Agent Call Re-Queue Button||
 This option if set to Y will add a Re-Queue Customer button to the agent screen, allowing the agent to send the call into an AGENTDIRECT queue that is reserved for the agent only. Default is N||
 Agent Pause After Each Call||
 This option if set to Y will pause the agent after every call automatically. Default is N||
+Starts with the highest rank and works its way down||
+Starts with the lowest rank and works its way up||
+Starts with owners beginning with Z and works its way down||
+Starts with owners beginning with A and works its way up||
+No Hopper Dialing||
+If This is enabled, the hopper will not run for this campaign. This option is only available when the dial method is set to MANUAL or INBOUND_MAN. It is recommended that you do not enable this option if you have a very large lead database, over 100,000 leads. With No Hopper Dialing, the following features do not work: lead recycling, auto-alt-dialing, list mix, list ordering with Xth NEW. If you want to use Owner Only Dialing you must have No Hopper Dialing enabled. Default is N for disabled||
+Owner Only Dialing||
+If This is enabled, the agent will only receive leads that they are within the ownership parameters for. If this is set to USER then the agent must be the user defined in the database as the owner of this lead. If this is set to TERRITORY then the owner of the lead must match the territory listed in the User Modification screen for this agent. If this is set to USER_GROUP then the owner of the lead must match the user group that the agent is a member of. For this feature to work the dial method must be set to MANUAL or INBOUND_MAN and No Hopper Dialing must be enabled. Default is NONE for disabled||
+Reset Times||
+This field allows you to put times in, separated by a dash-, that this list will be automatically reset by the system. The times must be in 24 hour format with no punctuation, for example 0800-1700 would reset the list at 8AM and 5PM every day. Default is empty||
+Owner: ||
+OWNERS WITHIN THIS LIST||
+RANKS WITHIN THIS LIST||
 
 
 add-file: user_territories.php

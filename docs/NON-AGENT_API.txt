@@ -19,6 +19,7 @@ Changes:
 80724-1723 - First build
 90428-0208 - Added blind_monitor function
 90513-1720 - Added sounds_list function
+90721-1432 - Added rank and owner
 
 
 
@@ -142,6 +143,8 @@ email -			1-70 characters
 security_phrase -	1-100 characters
 comments -		1-255 characters
 multi_alt_phones -	5-1024 characters (see examples for more info)
+rank -			1-5 digits
+owner -			1-20 characters (user ID, Territory or user group)
 
 
 Multi-ALT-Phones format:
