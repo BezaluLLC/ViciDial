@@ -313,3 +313,8 @@ ALTER TABLE vicidial_campaigns ADD agent_dial_owner_only ENUM('NONE','USER','TER
 ALTER TABLE vicidial_lists ADD reset_time VARCHAR(100) default '';
 
 UPDATE system_settings SET db_schema_version='1163';
+
+ALTER TABLE vicidial_users ADD allow_alerts ENUM('0','1') default '0';
+UPDATE vicidial_users SET alert_enabled='0';
+
+UPDATE system_settings SET db_schema_version='1164';

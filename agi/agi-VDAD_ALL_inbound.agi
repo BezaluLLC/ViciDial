@@ -99,6 +99,7 @@
 # 90709-1648 - Fixed alt-number transfers
 # 90712-2307 - Added agent grab call in queue
 # 90720-0023 - Added checks for filename validity before streaming, changed initial heavy search from 3 to 2 seconds
+# 90726-0114 - Fixed bug on some calls for agent grab
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -1147,7 +1148,7 @@ if ($Uaffected_rows < 1)
 	if ($sthArows > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$insert_call_id = "$aryA[0]";
+		$auto_call_id = "$aryA[0]";
 		}
 	$sthA->finish();
 	}
@@ -1255,7 +1256,7 @@ $sthA->finish();
 ##### BEGIN Check for Agent Grab of this call
 $AGENTgrab=0;
 $AGENTuser='';
-$stmtA = "SELECT agent_grab FROM vicidial_auto_calls where auto_call_id='$insert_call_id' and agent_grab!='';";
+$stmtA = "SELECT agent_grab FROM vicidial_auto_calls where auto_call_id='$auto_call_id' and agent_grab NOT IN('');";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;

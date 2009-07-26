@@ -251,6 +251,8 @@ This field allows you to put times in, separated by a dash-, that this list will
 Owner: ||
 OWNERS WITHIN THIS LIST||
 RANKS WITHIN THIS LIST||
+Allow Alerts||
+This field gives you the ability to allow agent browser alerts to be enabled by the agent for when calls come into their vicidial.php session. Default is 0 for NO||
 
 
 add-file: user_territories.php
