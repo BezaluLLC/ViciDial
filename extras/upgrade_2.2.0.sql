@@ -318,3 +318,32 @@ ALTER TABLE vicidial_users ADD allow_alerts ENUM('0','1') default '0';
 UPDATE vicidial_users SET alert_enabled='0';
 
 UPDATE system_settings SET db_schema_version='1164';
+
+
+
+
+
+CREATE TABLE vtiger_rank_data (
+account VARCHAR(20) PRIMARY KEY NOT NULL,
+seqacct VARCHAR(20) UNIQUE NOT NULL,
+last_attempt_days SMALLINT(5) UNSIGNED NOT NULL,
+orders SMALLINT(5) NOT NULL,
+net_sales SMALLINT(5) NOT NULL,
+net_sales_ly SMALLINT(5) NOT NULL,
+percent_variance SMALLINT(5) NOT NULL,
+imu SMALLINT(5) NOT NULL,
+aov SMALLINT(5) NOT NULL,
+returns SMALLINT(5) NOT NULL,
+rank SMALLINT(5) NOT NULL
+);
+
+CREATE TABLE vtiger_rank_parameters (
+parameter_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+parameter VARCHAR(20) NOT NULL,
+lower_range VARCHAR(20) NOT NULL,
+upper_range VARCHAR(20) NOT NULL,
+points SMALLINT(5) NOT NULL,
+index (parameter)
+);
+
+UPDATE system_settings SET db_schema_version='1165';

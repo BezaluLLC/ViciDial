@@ -33,42 +33,42 @@
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
 
 	if ($args =~ /--help/i)
-	{
-	print "allowed run time options:\n  [--debug] = debug\n  [--debugX] = super debug\n  [-t] = test\n\n";
-	exit;
-	}
+		{
+		print "allowed run time options:\n  [--debug] = debug\n  [--debugX] = super debug\n  [-t] = test\n\n";
+		exit;
+		}
 	else
-	{
+		{
 		if ($args =~ /--debug/i)
-		{
-		$DB=1;
-		print "\n----- DEBUG -----\n\n";
-		}
+			{
+			$DB=1;
+			print "\n----- DEBUG -----\n\n";
+			}
 		if ($args =~ /--debugX/i)
-		{
-		$DBX=1;
-		print "\n----- SUPER DEBUG -----\n\n";
-		}
+			{
+			$DBX=1;
+			print "\n----- SUPER DEBUG -----\n\n";
+			}
 		if ($args =~ /-t/i)
-		{
-		$T=1;   $TEST=1;
-		print "\n-----TESTING -----\n\n";
+			{
+			$T=1;   $TEST=1;
+			print "\n-----TESTING -----\n\n";
+			}
 		}
 	}
-}
 else
-{
-#print "no command line options set\n";
-}
+	{
+	#print "no command line options set\n";
+	}
 
 
 # default path to astguiclient configuration file:
@@ -167,7 +167,7 @@ opendir(FILE, "$dir1/");
 ### Loop through files first to gather filesizes
 $i=0;
 foreach(@FILES)
-   {
+	{
 	$FILEsize1[$i] = 0;
 	if ( (length($FILES[$i]) > 4) && (!-d "$dir1/$FILES[$i]") )
 		{
@@ -175,7 +175,7 @@ foreach(@FILES)
 		if ($DBX) {print "$FILES[$i] $FILEsize1[$i]\n";}
 		}
 	$i++;
-   }
+	}
 
 sleep(5);
 
@@ -183,7 +183,7 @@ sleep(5);
 ### Loop through files a second time to gather filesizes again 5 seconds later
 $i=0;
 foreach(@FILES)
-   {
+	{
 	$FILEsize2[$i] = 0;
 
 	if ( (length($FILES[$i]) > 4) && (!-d "$dir1/$FILES[$i]") )

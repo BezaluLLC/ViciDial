@@ -19,6 +19,7 @@
 # --GSM = GSM 6.10 codec
 # --MP3 = MPEG Layer3 codec
 # --OGG = OGG Vorbis codec
+# --GSW = GSM 6.10 codec with RIFF headers (.wav extension)
 #
 # make sure that the following directories exist:
 # /var/spool/asterisk/monitorDONE	# where the mixed -all files are put
@@ -30,70 +31,87 @@
 # 
 # 80302-1958 - First Build
 # 80731-2253 - Changed size comparisons for more efficiency
+# 90727-1417 - Added GSW format option
 #
 
-$GSM=0;   $MP3=0;   $OGG=0;
+$GSM=0;   $MP3=0;   $OGG=0;   $GSW=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
 
 	if ($args =~ /--help/i)
-	{
-	print "allowed run time options:\n  [--debug] = debug\n  [--debugX] = super debug\n  [-t] = test\n  [--GSM] = compress into GSM codec\n  [--MP3] = compress into MPEG-Layer-3 codec\n  [--OGG] = compress into OGG Vorbis codec\n\n";
-	exit;
-	}
+		{
+		print "allowed run time options:\n";
+		print "  [--help] = this screen\n";
+		print "  [--debug] = debug\n";
+		print "  [--debugX] = super debug\n";
+		print "  [-t] = test\n";
+		print "  [--GSM] = compress into GSM codec\n";
+		print "  [--MP3] = compress into MPEG-Layer-3 codec\n";
+		print "  [--OGG] = compress into OGG Vorbis codec\n";
+		print "  [--GSW] = compress into GSM codec with RIFF headers and .wav extension\n\n";
+		exit;
+		}
 	else
-	{
+		{
 		if ($args =~ /--debug/i)
-		{
-		$DB=1;
-		print "\n----- DEBUG -----\n\n";
-		}
-		if ($args =~ /--debugX/i)
-		{
-		$DBX=1;
-		print "\n----- SUPER DEBUG -----\n\n";
-		}
-		if ($args =~ /-t/i)
-		{
-		$T=1;   $TEST=1;
-		print "\n-----TESTING -----\n\n";
-		}
-		if ($args =~ /--GSM/i)
-		{
-		$GSM=1;
-		if ($DB) {print "GSM compression\n";}
-		}
-		else
-		{
-			if ($args =~ /--MP3/i)
 			{
-			$MP3=1;
-			if ($DB) {print "MP3 compression\n";}
+			$DB=1;
+			print "\n----- DEBUG -----\n\n";
 			}
-			else
+		if ($args =~ /--debugX/i)
 			{
-				if ($args =~ /--OGG/i)
+			$DBX=1;
+			print "\n----- SUPER DEBUG -----\n\n";
+			}
+		if ($args =~ /-t/i)
+			{
+			$T=1;   $TEST=1;
+			print "\n-----TESTING -----\n\n";
+			}
+		if ($args =~ /--GSM/i)
+			{
+			$GSM=1;
+			if ($DB) {print "GSM compression\n";}
+			}
+		else
+			{
+			if ($args =~ /--MP3/i)
 				{
-				$OGG=1;
-				if ($DB) {print "OGG compression\n";}
+				$MP3=1;
+				if ($DB) {print "MP3 compression\n";}
+				}
+			else
+				{
+				if ($args =~ /--OGG/i)
+					{
+					$OGG=1;
+					if ($DB) {print "OGG compression\n";}
+					}
+				else
+					{
+					if ($args =~ /--GSW/i)
+						{
+						$GSW=1;
+						if ($DB) {print "GSW compression\n";}
+						}
+					}
 				}
 			}
 		}
 	}
-}
 else
-{
-#print "no command line options set\n";
-$GSM=1;
-}
+	{
+	#print "no command line options set\n";
+	$GSM=1;
+	}
 
 
 # default path to astguiclient configuration file:
@@ -159,7 +177,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
  or die "Couldn't connect to database: " . DBI->errstr;
 
 
-if ( ($GSM > 0) || ($OGG > 0) )
+if ( ($GSM > 0) || ($OGG > 0) || ($GSW > 0) )
 	{
 	### find sox binary to do the compression
 	$soxbin = '';
@@ -170,7 +188,7 @@ if ( ($GSM > 0) || ($OGG > 0) )
 		else
 			{
 			print "Can't find sox binary! Exiting...\n";
-			exit
+			exit;
 			}
 		}
 	}
@@ -186,12 +204,15 @@ if ($MP3 > 0)
 		else
 			{
 			print "Can't find lame binary! Exiting...\n";
-			exit
+			exit;
 			}
 		}
 	}
 
-
+if ($DBX > 0)
+	{
+	print "SOX: $soxbin    LAME: $lamebin\n";
+	}
 
 ### directory where -all recordings are
 $dir2 = "$PATHDONEmonitor";
@@ -203,7 +224,7 @@ opendir(FILE, "$dir2/");
 ### Loop through files first to gather filesizes
 $i=0;
 foreach(@FILES)
-   {
+	{
 	$FILEsize1[$i] = 0;
 	if ( (length($FILES[$i]) > 4) && (!-d "$dir1/$FILES[$i]") )
 		{
@@ -211,7 +232,7 @@ foreach(@FILES)
 		if ($DBX) {print "$FILES[$i] $FILEsize1[$i]\n";}
 		}
 	$i++;
-   }
+	}
 
 sleep(5);
 
@@ -286,6 +307,19 @@ foreach(@FILES)
 				`$lamebin -b 16 -m m --silent "$dir2/$ALLfile" "$dir2/MP3/$MP3file"`;
 
 				$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/MP3/$MP3file' where recording_id='$recording_id';";
+					if($DBX){print STDERR "\n|$stmtA|\n";}
+				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
+				}
+
+			if ($GSW > 0)
+				{
+				$GSWfile = $FILES[$i];
+
+				if ($DB) {print "|$recording_id|$ALLfile|$GSWfile|     |$SQLfile|$soxbin \"$dir2/$ALLfile\" -g -b \"$dir2/GSW/$GSWfile\"|\n";}
+
+				`$soxbin "$dir2/$ALLfile" -g -b "$dir2/GSW/$GSWfile"`;
+
+				$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/GSW/$GSWfile' where recording_id='$recording_id';";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 				}

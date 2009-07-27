@@ -10,10 +10,11 @@
 # CHANGES
 # 90520-1928 - first build
 # 90717-0651 - Added batch
+# 90726-2302 - Added vicidial_list update option
 #
 
-$version = '2.2.0-2';
-$build = '90520-1928';
+$version = '2.2.0-3';
+$build = '90726-2302';
 
 $MT[0]='';
 
@@ -36,6 +37,8 @@ if (isset($_GET["accountid"]))				{$accountid=$_GET["accountid"];}
 	elseif (isset($_POST["accountid"]))		{$accountid=$_POST["accountid"];}
 if (isset($_GET["batch"]))					{$batch=$_GET["batch"];}
 	elseif (isset($_POST["batch"]))			{$batch=$_POST["batch"];}
+if (isset($_GET["vl_owner"]))				{$vl_owner=$_GET["vl_owner"];}
+	elseif (isset($_POST["vl_owner"]))		{$vl_owner=$_POST["vl_owner"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
@@ -67,7 +70,7 @@ if ($ss_conf_ct > 0)
 ###########################################
 
 
-### check if sounds server matches this server IP, if not then exit with an error
+
 if ($user_territories_active < 1)
 	{
 	echo "ERROR: User Territories are not active on this system\n";
@@ -171,6 +174,11 @@ if ( ($action == "CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_integrati
 	echo "$users_list";
 	echo "</select></td></tr>\n";
 
+	echo "<tr bgcolor=#B6D3FC><td align=right>Update ViciDial List Owner: </td><td align=left><select size=1 name=vl_owner>\n";
+	echo "<option SELECTED>YES</option>\n";
+	echo "<option>NO</option>\n";
+	echo "</select></td></tr>\n";
+
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 	echo "</TABLE></center>\n";
 	exit;
@@ -238,6 +246,11 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_i
 				$stmtB="UPDATE vtiger_tracker SET user_id='$user_id' where item_id='$accountid';";
 				$rsltV=mysql_query($stmtB, $linkV);
 
+				if ( ($vl_owner == 'YES') and ($accountid > 0) )
+					{
+					$stmtB="UPDATE vicidial_list SET owner='$user' where vendor_lead_code='$accountid';";
+					$rsltV=mysql_query($stmtB, $link);
+					}
 
 				echo "Vtiger Territory Owner Changed: $user $territory<BR>\n";
 				echo "Records Changed: $changed<BR>\n";
@@ -373,6 +386,11 @@ if ( ($action == "CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integration > 0) 
 	echo "$users_list";
 	echo "</select></td></tr>\n";
 
+	echo "<tr bgcolor=#B6D3FC><td align=right>Update ViciDial List Owner: </td><td align=left><select size=1 name=vl_owner>\n";
+	echo "<option SELECTED>YES</option>\n";
+	echo "<option>NO</option>\n";
+	echo "</select></td></tr>\n";
+
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 	echo "</TABLE></center>\n";
 	}
@@ -465,6 +483,15 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integrati
 					$r++;
 					}
 
+				if ( ($vl_owner == 'YES') and ($account_ids[$p] > 0) )
+					{
+					$stmtB="UPDATE vicidial_list SET owner='$user' where vendor_lead_code='$account_ids[$p]';";
+					$rslt=mysql_query($stmtB, $link);
+					$VchangedX = mysql_affected_rows($link);
+					if ($DB) {echo "$stmtB|$VchangedX\n";}
+					$Vchanged = ($Vchanged + $VchangedX);
+					}
+
 				$p++;
 				}
 
@@ -477,8 +504,7 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integrati
 			$stmtB="UPDATE vtiger_tracker vt, vtiger_account va SET user_id='$user_id' where vt.item_id=va.accountid and va.tickersymbol='$territory';";
 			$rsltV=mysql_query($stmtB, $linkV);
 
-
-			echo "Vtiger Territory Owner Changed: $user $territory &nbsp; &nbsp; &nbsp; Records Changed: $changed - $Achanged - $Cchanged<BR>\n";
+			echo "Vtiger Territory Owner Changed: $user $territory &nbsp; &nbsp; &nbsp; Records Changed: $changed - $Achanged - $Cchanged - $Vchanged<BR>\n";
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$stmtB|";

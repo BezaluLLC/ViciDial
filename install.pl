@@ -18,6 +18,7 @@
 # 90210-0319 - Added option to prompt for Asterisk version
 # 90312-1256 - Added CLI flag for automatic configuration
 # 90620-1910 - Added check before creating directories and formatting changes
+# 90727-1457 - Added GSW directory creation
 #
 
 ############################################
@@ -2180,6 +2181,7 @@ if ($WEBONLY < 1)
 	if (!-e "$PATHDONEmonitor/GSM")		{`mkdir -p $PATHDONEmonitor/GSM`;}
 	if (!-e "$PATHDONEmonitor/MP3")		{`mkdir -p $PATHDONEmonitor/MP3`;}
 	if (!-e "$PATHDONEmonitor/OGG")		{`mkdir -p $PATHDONEmonitor/OGG`;}
+	if (!-e "$PATHDONEmonitor/GSW")		{`mkdir -p $PATHDONEmonitor/GSW`;}
 	if (!-e "$PATHDONEmonitor/FTP")		{`mkdir -p $PATHDONEmonitor/FTP`;}
 
 	print "Creating $PATHlogs/archive directory for backups...\n";

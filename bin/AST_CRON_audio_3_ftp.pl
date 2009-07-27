@@ -20,6 +20,7 @@
 # --MP3 = MPEG Layer3 files
 # --OGG = OGG Vorbis files
 # --WAV = WAV files
+# --GSW = GSM 6.10 codec with RIFF headers (.wav extension)
 #
 # FLAG FOR NO DATE DIRECTORY ON FTP
 # --NODATEDIR
@@ -37,9 +38,10 @@
 # 80302-1958 - First Build
 # 80317-2349 - Added FTP debug if debugX
 # 80731-2253 - Changed size comparisons for more efficiency
+# 90727-1458 - Added GSW format option
 #
 
-$GSM=0;   $MP3=0;   $OGG=0;   $WAV=0;   $NODATEDIR=0;
+$GSM=0;   $MP3=0;   $OGG=0;   $WAV=0;   $GSW=0;   $NODATEDIR=0;
 
 # Default variables for FTP
 $VARFTP_host = '10.0.0.4';
@@ -52,77 +54,95 @@ $VARHTTP_path = 'http://10.0.0.4';
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
 
 	if ($args =~ /--help/i)
-	{
-	print "allowed run time options:\n  [--debug] = debug\n  [--debugX] = super debug\n  [-t] = test\n  [--GSM] = copy GSM files\n  [--MP3] = copy MPEG-Layer-3 files\n  [--OGG] = copy OGG Vorbis files\n  [--WAV] = copy WAV files\n  [--NODATEDIR] = do not put into dated directories\n\n";
-	exit;
-	}
+		{
+		print "allowed run time options:\n";
+		print "  [--help] = this screen\n";
+		print "  [--debug] = debug\n";
+		print "  [--debugX] = super debug\n";
+		print "  [-t] = test\n";
+		print "  [--GSM] = copy GSM files\n";
+		print "  [--MP3] = copy MPEG-Layer-3 files\n";
+		print "  [--OGG] = copy OGG Vorbis files\n";
+		print "  [--WAV] = copy WAV files\n";
+		print "  [--GSW] = copy GSM with RIFF headers and .wav extension files\n";
+		print "  [--NODATEDIR] = do not put into dated directories\n\n";
+		exit;
+		}
 	else
-	{
+		{
 		if ($args =~ /--debug/i)
-		{
-		$DB=1;
-		print "\n----- DEBUG -----\n\n";
-		}
-		if ($args =~ /--debugX/i)
-		{
-		$DBX=1;
-		print "\n----- SUPER DEBUG -----\n\n";
-		}
-		if ($args =~ /-t/i)
-		{
-		$T=1;   $TEST=1;
-		print "\n----- TESTING -----\n\n";
-		}
-		if ($args =~ /-nodatedir/i)
-		{
-		$NODATEDIR=1;
-		if ($DB) {print "\n----- NO DATE DIRECTORIES -----\n\n";}
-		}
-		if ($args =~ /--GSM/i)
-		{
-		$GSM=1;
-		if ($DB) {print "GSM audio files\n";}
-		}
-		else
-		{
-			if ($args =~ /--MP3/i)
 			{
-			$MP3=1;
-			if ($DB) {print "MP3 audio files\n";}
+			$DB=1;
+			print "\n----- DEBUG -----\n\n";
 			}
-			else
+		if ($args =~ /--debugX/i)
 			{
-				if ($args =~ /--OGG/i)
+			$DBX=1;
+			print "\n----- SUPER DEBUG -----\n\n";
+			}
+		if ($args =~ /-t/i)
+			{
+			$T=1;   $TEST=1;
+			print "\n----- TESTING -----\n\n";
+			}
+		if ($args =~ /-nodatedir/i)
+			{
+			$NODATEDIR=1;
+			if ($DB) {print "\n----- NO DATE DIRECTORIES -----\n\n";}
+			}
+		if ($args =~ /--GSM/i)
+			{
+			$GSM=1;
+			if ($DB) {print "GSM audio files\n";}
+			}
+		else
+			{
+			if ($args =~ /--MP3/i)
 				{
-				$OGG=1;
-				if ($DB) {print "OGG audio files\n";}
+				$MP3=1;
+				if ($DB) {print "MP3 audio files\n";}
 				}
-				else
+			else
 				{
-					if ($args =~ /--WAV/i)
+				if ($args =~ /--OGG/i)
 					{
-					$WAV=1;
-					if ($DB) {print "WAV audio files\n";}
+					$OGG=1;
+					if ($DB) {print "OGG audio files\n";}
+					}
+				else
+					{
+					if ($args =~ /--WAV/i)
+						{
+						$WAV=1;
+						if ($DB) {print "WAV audio files\n";}
+						}
+					else
+						{
+						if ($args =~ /--GSW/i)
+							{
+							$GSW=1;
+							if ($DB) {print "GSW audio files\n";}
+							}
+						}
 					}
 				}
 			}
 		}
 	}
-}
 else
-{
-#print "no command line options set\n";
-$WAV=1;
-}
+	{
+	#print "no command line options set\n";
+	$WAV=1;
+	}
 
 
 # default path to astguiclient configuration file:
@@ -195,6 +215,7 @@ if ($WAV > 0) {$dir2 = "$PATHDONEmonitor";}
 if ($MP3 > 0) {$dir2 = "$PATHDONEmonitor/MP3";}
 if ($GSM > 0) {$dir2 = "$PATHDONEmonitor/GSM";}
 if ($OGG > 0) {$dir2 = "$PATHDONEmonitor/OGG";}
+if ($GSW > 0) {$dir2 = "$PATHDONEmonitor/GSW";}
 
 opendir(FILE, "$dir2/");
 @FILES = readdir(FILE);
@@ -202,7 +223,7 @@ opendir(FILE, "$dir2/");
 ### Loop through files first to gather filesizes
 $i=0;
 foreach(@FILES)
-   {
+	{
 	$FILEsize1[$i] = 0;
 	if ( (length($FILES[$i]) > 4) && (!-d "$dir1/$FILES[$i]") )
 		{
@@ -210,7 +231,7 @@ foreach(@FILES)
 		if ($DBX) {print "$FILES[$i] $FILEsize1[$i]\n";}
 		}
 	$i++;
-   }
+	}
 
 sleep(5);
 
