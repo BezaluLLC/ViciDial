@@ -240,10 +240,11 @@
 # 90712-2304 - Added ADD-ALL group selection, view calls in queue, grab call from queue, requeue button
 # 90717-0640 - Added dialed_label and dialed_number to script variables
 # 90721-1114 - Added rank and owner as vicidial_list fields
+# 90726-2012 - Added allow_alerts option
 #
 
-$version = '2.2.0-218';
-$build = '90721-1114';
+$version = '2.2.0-219';
+$build = '90726-2012';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -778,7 +779,7 @@ $VDloginDISPLAY=0;
 		$login=strtoupper($VD_login);
 		$password=strtoupper($VD_pass);
 		##### grab the full name of the agent
-		$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag from vicidial_users where user='$VD_login' and pass='$VD_pass'";
+		$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts from vicidial_users where user='$VD_login' and pass='$VD_pass'";
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01007',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$row=mysql_fetch_row($rslt);
@@ -798,9 +799,11 @@ $VDloginDISPLAY=0;
 		$VU_alert_enabled =						$row[13];
 		$VU_agent_shift_enforcement_override =	$row[14];
 		$VU_shift_override_flag =				$row[15];
+		$VU_allow_alerts =						$row[16];
 
-		if ($VU_alert_enabled > 0) {$VU_alert_enabled = 'ON';}
+		if ( ($VU_alert_enabled > 0) and ($VU_allow_alerts > 0) ) {$VU_alert_enabled = 'ON';}
 		else {$VU_alert_enabled = 'OFF';}
+		$AgentAlert_allowed = $VU_allow_alerts;
 
 		### Gather timeclock and shift enforcement restriction settings
 		$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts,agent_status_viewable_groups,agent_status_view_time from vicidial_user_groups where user_group='$VU_user_group';";
@@ -2476,6 +2479,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var VtigeRurl = '<?php echo $vtiger_url ?>';
 	var VtigeREnableD = '<?php echo $enable_vtiger_integration ?>';
 	var alert_enabled = '<?php echo $VU_alert_enabled ?>';
+	var allow_alerts = '<?php echo $VU_allow_alerts ?>';
 	var shift_logout_flag = 0;
 	var vtiger_callback_id = 0;
 	var agent_status_view = '<?php echo $agent_status_view ?>';
@@ -7852,6 +7856,8 @@ else
 				{hideDiv('callsinqueuedisplay');}
 			if (agentonly_callbacks != '1')
 				{hideDiv('CallbacksButtons');}
+			if (allow_alerts < 1)
+				{hideDiv('AgentAlertSpan');}
 		//	if ( (agentcall_manual != '1') && (starting_dial_level > 0) )
 			if (agentcall_manual != '1')
 				{hideDiv('ManuaLDiaLButtons');}
