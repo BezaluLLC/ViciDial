@@ -306,7 +306,7 @@ foreach(@FILES)
 				}
 			else
 				{
-				print "ERROR: Could not ping server $VARFTP_host\n";
+				if($DB){print "ERROR: Could not ping server $VARFTP_host\n";}
 				}
 	### END Remote file transfer
 
