@@ -168,6 +168,11 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 41. Added --GSW option for audio processing scripts 2 and 3 for GSM codec files
 	with an RIFF header and named with .wav file extension
 
+42. Added agent screen display dialable leads option for campaigns
+
+43. Added ViciDial Balance Rank for servers to allow prioritizing the servers
+	that will dial the FILL calls in a multi-server cluster
+
 
 
 

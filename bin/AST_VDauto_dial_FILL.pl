@@ -25,6 +25,7 @@
 # 80831-0400 - Added new alt-dial options
 # 81210-1938 - Fixed callerIDnumber bug
 # 90306-1844 - Added configurable calls-per-second option
+# 90729-0611 - Added vicidial_balance_rank option
 #
 
 
@@ -417,7 +418,7 @@ while($one_day_interval > 0)
 					@DB_camp_server_available=@MT;
 					@DB_camp_server_trunks_to_dial=@MT;
 					##### Get the trunk settings for the campaign across all servers
-					$stmtA = "SELECT server_ip,max_vicidial_trunks,balance_trunks_offlimits FROM servers where vicidial_balance_active = 'Y' and server_ip NOT IN($full_serversSQL) order by server_ip;";
+					$stmtA = "SELECT server_ip,max_vicidial_trunks,balance_trunks_offlimits,vicidial_balance_rank FROM servers where vicidial_balance_active = 'Y' and server_ip NOT IN($full_serversSQL) order by vicidial_balance_rank desc, server_ip;";
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 					$sthArows=$sthA->rows;

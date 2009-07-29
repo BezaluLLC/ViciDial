@@ -319,9 +319,8 @@ UPDATE vicidial_users SET alert_enabled='0';
 
 UPDATE system_settings SET db_schema_version='1164';
 
-
-
-
+ALTER TABLE vicidial_campaigns ADD agent_display_dialable_leads ENUM('Y','N') default 'N';
+ALTER TABLE servers ADD vicidial_balance_rank TINYINT(3) UNSIGNED default '0';
 
 CREATE TABLE vtiger_rank_data (
 account VARCHAR(20) PRIMARY KEY NOT NULL,

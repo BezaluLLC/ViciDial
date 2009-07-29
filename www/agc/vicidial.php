@@ -241,10 +241,11 @@
 # 90717-0640 - Added dialed_label and dialed_number to script variables
 # 90721-1114 - Added rank and owner as vicidial_list fields
 # 90726-2012 - Added allow_alerts option
+# 90729-0647 - Added agent_display_dialable_leads option
 #
 
-$version = '2.2.0-219';
-$build = '90726-2012';
+$version = '2.2.0-220';
+$build = '90729-0647';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -1070,7 +1071,7 @@ $VDloginDISPLAY=0;
 			$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 			##### grab the campaign settings
-			$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+			$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -1128,6 +1129,12 @@ $VDloginDISPLAY=0;
 			$pause_after_each_call =	$row[50];
 			$no_hopper_dialing =		$row[51];
 			$agent_dial_owner_only =	$row[52];
+			$agent_display_dialable_leads = $row[53];
+
+			if (preg_match("/Y/",$agent_display_dialable_leads))
+				{$agent_display_dialable_leads=1;}
+			else
+				{$agent_display_dialable_leads=0;}
 
 			if (preg_match("/Y/",$no_hopper_dialing))
 				{$no_hopper_dialing=1;}
@@ -2498,6 +2505,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var call_requeue_button = '<?php echo $call_requeue_button ?>';
 	var no_hopper_dialing = '<?php echo $no_hopper_dialing ?>';
 	var agent_dial_owner_only = '<?php echo $agent_dial_owner_only ?>';
+	var agent_display_dialable_leads = '<?php echo $agent_display_dialable_leads ?>';
 	var no_empty_session_warnings = '<?php echo $no_empty_session_warnings ?>';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -3863,6 +3871,50 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		RedirecTxFEr=0;
 		conf_dialed=0;
+		}
+
+
+// ################################################################################
+// Request number of dialable leads left in this campaign
+	function DiaLableLeaDsCounT()
+		{
+		var xmlhttp=false;
+		/*@cc_on @*/
+		/*@if (@_jscript_version >= 5)
+		// JScript gives us Conditional compilation, we can cope with old IE versions.
+		// and security blocked creation of the objects.
+		 try {
+		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+		 } catch (e) {
+		  try {
+		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		  } catch (E) {
+		   xmlhttp = false;
+		  }
+		 }
+		@end @*/
+		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+			{
+			xmlhttp = new XMLHttpRequest();
+			}
+		if (xmlhttp) 
+			{ 
+			DLcount_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=DiaLableLeaDsCounT&campaign=" + campaign + "&format=text";
+			xmlhttp.open('POST', 'vdc_db_query.php'); 
+			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+			xmlhttp.send(DLcount_query); 
+			xmlhttp.onreadystatechange = function() 
+				{ 
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+					{
+				//	alert(xmlhttp.responseText);
+					var DLcounT = xmlhttp.responseText;
+						document.getElementById("dialableleadsspan").innerHTML ="Dialable Leads:<BR> " + DLcounT;
+						
+					}
+				}
+			delete xmlhttp;
+			}
 		}
 
 
@@ -8012,6 +8064,10 @@ else
 					CalLBacKsCounTCheck();
 					CB_count_check=0;
 					}
+				if ( (even > 0) && (agent_display_dialable_leads > 0) )
+					{
+					DiaLableLeaDsCounT();
+					}
 				if (VD_live_customer_call==1)
 					{
 					VD_live_call_secondS++;
@@ -8752,6 +8808,14 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 
 <span style="position:absolute;left:<?php echo $SCwidth ?>px;top:<?php echo $SLheight ?>px;z-index:27;" id="AgentViewLinkSpan"><TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=91><TR><TD ALIGN=RIGHT><font class="body_small"><span id="AgentViewLink"><a href="#" onclick="AgentsViewOpen('AgentViewSpan','open');return false;">Agents View +</a></span></font></TD></TR></TABLE></span>
 
+<font class="body_small"><span style="position:absolute;left:200px;top:<?php echo $CBheight ?>px;z-index:28;" id="dialableleadsspan">
+<?php 
+if ($agent_display_dialable_leads > 0)
+	{ 
+	echo "Dialable Leads:<BR> &nbsp;\n";
+	}
+?>
+</span></font>
 
 
 <span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:33;" id="HotKeyActionBox">

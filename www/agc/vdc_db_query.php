@@ -13,7 +13,7 @@
 #  - $pass
 # optional variables:
 #  - $format - ('text','debug')
-#  - $ACTION - ('regCLOSER','manDiaLnextCALL','manDiaLskip','manDiaLonly','manDiaLlookCALL','manDiaLlogCALL','userLOGout','updateDISPO','VDADpause','VDADready','VDADcheckINCOMING','UpdatEFavoritEs','CalLBacKLisT','CalLBacKCounT','PauseCodeSubmit','LogiNCamPaigns','alt_phone_change','AlertControl','AGENTSview','CALLSINQUEUEview','CALLSINQUEUEgrab')
+#  - $ACTION - ('regCLOSER','manDiaLnextCALL','manDiaLskip','manDiaLonly','manDiaLlookCALL','manDiaLlogCALL','userLOGout','updateDISPO','VDADpause','VDADready','VDADcheckINCOMING','UpdatEFavoritEs','CalLBacKLisT','CalLBacKCounT','PauseCodeSubmit','LogiNCamPaigns','alt_phone_change','AlertControl','AGENTSview','CALLSINQUEUEview','CALLSINQUEUEgrab','DiaLableLeaDsCounT')
 #  - $stage - ('start','finish','lookup','new')
 #  - $closer_choice - ('CL_TESTCAMP_L CL_OUT123_L -')
 #  - $conf_exten - ('8600011',...)
@@ -206,10 +206,11 @@
 # 90712-2303 - Added view calls in queue, grab call from queue
 # 90717-0638 - Fixed alt dial on overflow in-group calls
 # 90722-1542 - Added no hopper dialing
+# 90729-0637 - Added DiaLableLeaDsCounT
 #
 
-$version = '2.2.0-117';
-$build = '90722-1542';
+$version = '2.2.0-118';
+$build = '90729-0637';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=244;
 $one_mysql_log=0;
@@ -5384,20 +5385,42 @@ $loop_count=0;
 ### CalLBacKCounT - send the count of the USERONLY callbacks for an agent
 ################################################################################
 if ($ACTION == 'CalLBacKCounT')
-{
-if ($agentonly_callback_campaign_lock > 0)
-	{$campaignCBsql = "and campaign_id='$campaign'";}
-else
-	{$campaignCBsql = '';}
-$stmt = "select count(*) from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql and status NOT IN('INACTIVE','DEAD');";
-if ($DB) {echo "$stmt\n";}
-$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00180',$user,$server_ip,$session_name,$one_mysql_log);}
-$row=mysql_fetch_row($rslt);
-$cbcount=$row[0];
+	{
+	if ($agentonly_callback_campaign_lock > 0)
+		{$campaignCBsql = "and campaign_id='$campaign'";}
+	else
+		{$campaignCBsql = '';}
+	$stmt = "select count(*) from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql and status NOT IN('INACTIVE','DEAD');";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00180',$user,$server_ip,$session_name,$one_mysql_log);}
+	$row=mysql_fetch_row($rslt);
+	$cbcount=$row[0];
 
-echo "$cbcount";
-}
+	echo "$cbcount";
+	}
+
+
+
+
+################################################################################
+### DiaLableLeaDsCounT - send the count of the dialable leads in this campaign
+################################################################################
+if ($ACTION == 'DiaLableLeaDsCounT')
+	{
+	$stmt = "select dialable_leads from vicidial_campaign_stats where campaign_id='$campaign';";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+	if ($rslt) {$dialable_count = mysql_num_rows($rslt);}
+	if ($dialable_count > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$DLcount	= $row[0];
+		}
+
+	echo "$DLcount";
+	}
 
 
 

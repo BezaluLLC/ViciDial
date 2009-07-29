@@ -111,7 +111,8 @@ cpu_idle_percent SMALLINT(3) UNSIGNED NOT NULL default '0',
 disk_usage VARCHAR(255) default '1',
 sounds_update ENUM('Y','N') default 'N',
 vicidial_recording_limit MEDIUMINT(8) default '60',
-carrier_logging_active ENUM('Y','N') default 'N'
+carrier_logging_active ENUM('Y','N') default 'N',
+vicidial_balance_rank TINYINT(3) UNSIGNED default '0'
 );
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -668,7 +669,8 @@ grab_calls_in_queue ENUM('Y','N') default 'N',
 call_requeue_button ENUM('Y','N') default 'N',
 pause_after_each_call ENUM('Y','N') default 'N',
 no_hopper_dialing ENUM('Y','N') default 'N',
-agent_dial_owner_only ENUM('NONE','USER','TERRITORY','USER_GROUP') default 'NONE'
+agent_dial_owner_only ENUM('NONE','USER','TERRITORY','USER_GROUP') default 'NONE',
+agent_display_dialable_leads ENUM('Y','N') default 'N'
 );
 
 CREATE TABLE vicidial_lists (
@@ -1613,6 +1615,29 @@ index (trigger_id),
 index (trigger_time)
 );
 
+CREATE TABLE vtiger_rank_data (
+account VARCHAR(20) PRIMARY KEY NOT NULL,
+seqacct VARCHAR(20) UNIQUE NOT NULL,
+last_attempt_days SMALLINT(5) UNSIGNED NOT NULL,
+orders SMALLINT(5) NOT NULL,
+net_sales SMALLINT(5) NOT NULL,
+net_sales_ly SMALLINT(5) NOT NULL,
+percent_variance VARCHAR(10) NOT NULL,
+imu VARCHAR(10) NOT NULL,
+aov SMALLINT(5) NOT NULL,
+returns SMALLINT(5) NOT NULL,
+rank SMALLINT(5) NOT NULL
+);
+
+CREATE TABLE vtiger_rank_parameters (
+parameter_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+parameter VARCHAR(20) NOT NULL,
+lower_range VARCHAR(20) NOT NULL,
+upper_range VARCHAR(20) NOT NULL,
+points SMALLINT(5) NOT NULL,
+index (parameter)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
@@ -1734,7 +1759,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1164';
+UPDATE system_settings SET db_schema_version='1165';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

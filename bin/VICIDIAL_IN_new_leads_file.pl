@@ -34,6 +34,7 @@
 # 90324-1038 - Added minicsv02 format
 # 90401-1340 - Fixed quiet flag functionality
 # 90721-1315 - Added rank and owner as vicidial_list fields, stdrankowner format
+# 90728-1255 - Added fixed254 file format
 #
 
 $secX = time();
@@ -150,6 +151,10 @@ if (length($ARGV[0])>1)
 		print "minicsv02:\n";
 		print "name,address1,city,state,postal_code,phone_number\n";
 		print "\"Adam Smith\",\"123 Fourth St\",\"Englishtown\",\"NS\",\"B0C1H0\",\"902-555-1212\"\n\n";
+		print "fixed254:\n";
+		print "fixed width(without the quotes)\n";
+		print "\"9185551212ROSE            SMITHS                  155 TIGER MOUNTAIN RD.                  RR 1 BOX 107                            HENRYETTA                   OK74437-941DEMG  226555                                                   0                     \"\n\n";
+
 
 		exit;
 		}
@@ -440,6 +445,7 @@ foreach(@FILES)
 		@m=@MT;
 	#		print "$a| $number\n";
 			$number = $_;
+			$raw_number = $number;
 			chomp($number);
 	#		$number =~ s/,/\|/gi;
 			$number =~ s/\t/\|/gi;
@@ -523,6 +529,38 @@ foreach(@FILES)
 				$alt_phone =			'';
 				$email =				'';
 				$security_phrase =		'';
+				$comments =				'';
+				$called_count =			0;
+				$status =				'NEW';
+
+				$format_set++;
+				}
+
+		# This is the format for the fixed254 lead files
+		#"9185551212ROSE            SMITHS                  155 TIGER MOUNTAIN RD.                  RR 1 BOX 107                            HENRYETTA                   OK74437-941DEMG  226555                                                   0                     "
+			if ( ($format =~ /fixed254/) && ($format_set < 1) )
+				{
+				$phone_number =			substr($raw_number, 0, 10);
+					$USarea = 			substr($raw_number, 0, 3);
+				$phone_code =			'1';
+				$first_name =			substr($raw_number, 10, 16);	$first_name =~ s/\s+$//gi;
+				$last_name =			substr($raw_number, 26, 24);	$last_name =~ s/\s+$//gi;
+				$address1 =				substr($raw_number, 50, 40);	$address1 =~ s/\s+$//gi;
+				$address2 =				substr($raw_number, 90, 40);	$address2 =~ s/\s+$//gi;
+				$city =					substr($raw_number, 130, 28);	$city =~ s/\s+$//gi;
+				$state =				substr($raw_number, 158, 2);
+				$postal_code =			substr($raw_number, 160, 5);	$postal_code =~ s/\s+$//gi;
+				$province =				substr($raw_number, 169, 4);
+				$vendor_lead_code =		substr($raw_number, 173, 8);	$vendor_lead_code =~ s/^\s+//gi;
+				$security_phrase =		substr($raw_number, 181, 4);
+
+				$source_code =			'';
+				$list_id =				'995';
+				$country =				'USA';
+				$gender =				'U';
+				$date_of_birth =		'0000-00-00';
+				$alt_phone =			'';
+				$email =				'';
 				$comments =				'';
 				$called_count =			0;
 				$status =				'NEW';
