@@ -242,10 +242,11 @@
 # 90721-1114 - Added rank and owner as vicidial_list fields
 # 90726-2012 - Added allow_alerts option
 # 90729-0647 - Added agent_display_dialable_leads option
+# 90730-0145 - Fixed bugs in re-queue and INBOUND_MAN with blended selected
 #
 
-$version = '2.2.0-220';
-$build = '90729-0647';
+$version = '2.2.0-221';
+$build = '90730-0145';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -780,7 +781,7 @@ $VDloginDISPLAY=0;
 		$login=strtoupper($VD_login);
 		$password=strtoupper($VD_pass);
 		##### grab the full name of the agent
-		$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts from vicidial_users where user='$VD_login' and pass='$VD_pass'";
+		$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns from vicidial_users where user='$VD_login' and pass='$VD_pass'";
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01007',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$row=mysql_fetch_row($rslt);
@@ -801,6 +802,7 @@ $VDloginDISPLAY=0;
 		$VU_agent_shift_enforcement_override =	$row[14];
 		$VU_shift_override_flag =				$row[15];
 		$VU_allow_alerts =						$row[16];
+		$VU_closer_campaigns =					$row[17];
 
 		if ( ($VU_alert_enabled > 0) and ($VU_allow_alerts > 0) ) {$VU_alert_enabled = 'ON';}
 		else {$VU_alert_enabled = 'OFF';}
@@ -2195,6 +2197,7 @@ $CCAL_OUT .= "</table>";
 	var VU_hotkeys_active = '<?php echo $VU_hotkeys_active ?>';
 	var VU_agent_choose_ingroups = '<?php echo $VU_agent_choose_ingroups ?>';
 	var VU_agent_choose_ingroups_DV = '';
+	var VU_closer_campaigns = '<?php echo $VU_closer_campaigns ?>';
 	var CallBackDatETimE = '';
 	var CallBackrecipient = '';
 	var CallBackCommenTs = '';
@@ -4351,7 +4354,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 									{
 									var CloserSelectChoices = document.vicidial_form.CloserSelectList.value;
 									var regCRB = new RegExp("AGENTDIRECT","ig");
-									if (CloserSelectChoices.match(regCRB)) 
+									if ( (CloserSelectChoices.match(regCRB)) || (VU_closer_campaigns.match(regCRB)) )
 										{
 										document.getElementById("ReQueueCall").innerHTML =  "<a href=\"#\" onclick=\"call_requeue_launch();return false;\"><IMG SRC=\"./images/vdc_LB_requeue_call.gif\" border=0 alt=\"Re-Queue Call\"></a>";
 										}
@@ -5486,7 +5489,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								{
 								var CloserSelectChoices = document.vicidial_form.CloserSelectList.value;
 								var regCRB = new RegExp("AGENTDIRECT","ig");
-								if (CloserSelectChoices.match(regCRB)) 
+								if ( (CloserSelectChoices.match(regCRB)) || (VU_closer_campaigns.match(regCRB)) )
 									{
 									document.getElementById("ReQueueCall").innerHTML =  "<a href=\"#\" onclick=\"call_requeue_launch();return false;\"><IMG SRC=\"./images/vdc_LB_requeue_call.gif\" border=0 alt=\"Re-Queue Call\"></a>";
 									}
@@ -9025,7 +9028,7 @@ if ($agent_display_dialable_leads > 0)
 	<span id="CloserSelectContent"> Closer Inbound Group Selection </span>
 	<input type=hidden name=CloserSelectList><BR>
 	<?php
-	if ( ($outbound_autodial_active > 0) and ($disable_blended_checkbox < 1) )
+	if ( ($outbound_autodial_active > 0) and ($disable_blended_checkbox < 1) and ($dial_method != 'INBOUND_MAN') )
 		{
 		?>
 		<input type=checkbox name=CloserSelectBlended size=1 value="0"> BLENDED CALLING(outbound activated) <BR>
@@ -9045,7 +9048,7 @@ if ($agent_display_dialable_leads > 0)
 	<?php
 	if (!$agentonly_callbacks)
 		{echo "<input type=checkbox name=CallBackOnlyMe size=1 value=\"0\"> MY CALLBACK ONLY <BR>";}
-	if ( ($outbound_autodial_active < 1) or ($disable_blended_checkbox > 0) )
+	if ( ($outbound_autodial_active < 1) or ($disable_blended_checkbox > 0) or ($dial_method == 'INBOUND_MAN') )
 		{echo "<input type=checkbox name=CloserSelectBlended size=1 value=\"0\"> BLENDED CALLING<BR>";}
 	?>
 </span>

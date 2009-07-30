@@ -173,6 +173,13 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 43. Added ViciDial Balance Rank for servers to allow prioritizing the servers
 	that will dial the FILL calls in a multi-server cluster
 
+44. Added optional twoday_ log tables which give you a safer place to be pulling
+	slightly less than real-time information from log tables without locking
+	the live log tables. there are 6 twoday_ log tables: recording_log, 
+	call_log, vicidial_log, vicidial_closer_log, vicidial_xfer_log and
+	vicidial_agent_log
+
+
 
 
 

@@ -1639,6 +1639,136 @@ index (parameter)
 );
 
 
+CREATE TABLE twoday_call_log (
+uniqueid VARCHAR(20) PRIMARY KEY NOT NULL,
+channel VARCHAR(100),
+channel_group VARCHAR(30),
+type VARCHAR(10),
+server_ip VARCHAR(15),
+extension VARCHAR(100),
+number_dialed VARCHAR(15),
+caller_code VARCHAR(20),
+start_time DATETIME,
+start_epoch INT(10),
+end_time DATETIME,
+end_epoch INT(10),
+length_in_sec INT(10),
+length_in_min DOUBLE(8,2),
+index (caller_code),
+index (server_ip),
+index (channel)
+);
+
+CREATE TABLE twoday_vicidial_log (
+uniqueid VARCHAR(20) PRIMARY KEY NOT NULL,
+lead_id INT(9) UNSIGNED NOT NULL,
+list_id BIGINT(14) UNSIGNED,
+campaign_id VARCHAR(8),
+call_date DATETIME,
+start_epoch INT(10) UNSIGNED,
+end_epoch INT(10) UNSIGNED,
+length_in_sec INT(10),
+status VARCHAR(6),
+phone_code VARCHAR(10),
+phone_number VARCHAR(18),
+user VARCHAR(20),
+comments VARCHAR(255),
+processed ENUM('Y','N'),
+user_group VARCHAR(20),
+term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','NONE') default 'NONE',
+alt_dial VARCHAR(6) default 'NONE',
+index (lead_id),
+index (call_date)
+);
+
+CREATE TABLE twoday_vicidial_closer_log (
+closecallid INT(9) UNSIGNED PRIMARY KEY NOT NULL,
+lead_id INT(9) UNSIGNED NOT NULL,
+list_id BIGINT(14) UNSIGNED,
+campaign_id VARCHAR(20),
+call_date DATETIME,
+start_epoch INT(10) UNSIGNED,
+end_epoch INT(10) UNSIGNED,
+length_in_sec INT(10),
+status VARCHAR(6),
+phone_code VARCHAR(10),
+phone_number VARCHAR(18),
+user VARCHAR(20),
+comments VARCHAR(255),
+processed ENUM('Y','N'),
+queue_seconds DECIMAL(7,2) default '0',
+user_group VARCHAR(20),
+xfercallid INT(9) UNSIGNED,
+term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','HOLDRECALLXFER','HOLDTIME','NOAGENT','NONE') default 'NONE',
+uniqueid VARCHAR(20) NOT NULL default '',
+agent_only VARCHAR(20) default '',
+index (lead_id),
+index (call_date),
+index (campaign_id),
+index (uniqueid)
+);
+
+CREATE TABLE twoday_vicidial_xfer_log (
+xfercallid INT(9) UNSIGNED PRIMARY KEY NOT NULL,
+lead_id INT(9) UNSIGNED NOT NULL,
+list_id BIGINT(14) UNSIGNED,
+campaign_id VARCHAR(20),
+call_date DATETIME,
+phone_code VARCHAR(10),
+phone_number VARCHAR(18),
+user VARCHAR(20),
+closer VARCHAR(20),
+index (lead_id),
+index (call_date)
+);
+
+CREATE TABLE twoday_recording_log (
+recording_id INT(10) UNSIGNED PRIMARY KEY NOT NULL,
+channel VARCHAR(100),
+server_ip VARCHAR(15),
+extension VARCHAR(100),
+start_time DATETIME,
+start_epoch INT(10) UNSIGNED,
+end_time DATETIME,
+end_epoch INT(10) UNSIGNED,
+length_in_sec MEDIUMINT(8) UNSIGNED,
+length_in_min DOUBLE(8,2),
+filename VARCHAR(50),
+location VARCHAR(255),
+lead_id INT(9) UNSIGNED,
+user VARCHAR(20),
+vicidial_id VARCHAR(20),
+index(filename),
+index(lead_id),
+index(user),
+index(vicidial_id)
+);
+
+CREATE TABLE twoday_vicidial_agent_log (
+agent_log_id INT(9) UNSIGNED PRIMARY KEY NOT NULL,
+user VARCHAR(20),
+server_ip VARCHAR(15) NOT NULL,
+event_time DATETIME,
+lead_id INT(9) UNSIGNED,
+campaign_id VARCHAR(8),	
+pause_epoch INT(10) UNSIGNED,
+pause_sec SMALLINT(5) UNSIGNED default '0',
+wait_epoch INT(10) UNSIGNED,
+wait_sec SMALLINT(5) UNSIGNED default '0',
+talk_epoch INT(10) UNSIGNED,
+talk_sec SMALLINT(5) UNSIGNED default '0',
+dispo_epoch INT(10) UNSIGNED,
+dispo_sec SMALLINT(5) UNSIGNED default '0',
+status VARCHAR(6),
+user_group VARCHAR(20),
+comments VARCHAR(20),
+sub_status VARCHAR(6),
+index (lead_id),
+index (user),
+index (event_time)
+);
+
+
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
 ALTER TABLE live_channels ENGINE=HEAP;
@@ -1759,7 +1889,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1165';
+UPDATE system_settings SET db_schema_version='1166';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
