@@ -39,7 +39,18 @@
 # 80317-2349 - Added FTP debug if debugX
 # 80731-2253 - Changed size comparisons for more efficiency
 # 90727-1458 - Added GSW format option
+# 90730-1454 - Fixed non-VicDial recordings date directory, added secondary icmp ping if standard ping fails
 #
+
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+$year = ($year + 1900);
+$mon++;
+if ($hour < 10) {$hour = "0$hour";}
+if ($min < 10) {$min = "0$min";}
+if ($sec < 10) {$sec = "0$sec";}
+if ($mon < 10) {$mon = "0$mon";}
+if ($mday < 10) {$mday = "0$mday";}
+$FTPdate = "$year-$mon-$mday";
 
 $GSM=0;   $MP3=0;   $OGG=0;   $WAV=0;   $GSW=0;   $NODATEDIR=0;
 
@@ -269,13 +280,20 @@ foreach(@FILES)
 				}
 			$sthA->finish();
 
+			if (length($start_date) < 6)
+				{$start_date = $FTPdate;}
 
 			if ($DB) {print "|$recording_id|$start_date|$ALLfile|     |$SQLfile|\n";}
 
 	### BEGIN Remote file transfer
 			$p = Net::Ping->new();
-	#		$p = Net::Ping->new("icmp");
 			$ping_good = $p->ping("$VARFTP_host");
+
+			if (!$ping_good)
+				{
+				$p = Net::Ping->new("icmp");
+				$ping_good = $p->ping("$VARFTP_host");
+				}
 
 			if ($ping_good)
 				{
