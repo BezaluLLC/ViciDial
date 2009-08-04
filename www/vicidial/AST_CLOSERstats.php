@@ -22,6 +22,7 @@
 # 90310-2037 - Admin header
 # 90508-0644 - Changed to PHP long tags
 # 90524-2231 - Changed to use functions.php for seconds to HH:MM:SS conversion
+# 90801-0921 - Added in-group name to pulldown
 #
 
 require("dbconnect.php");
@@ -102,7 +103,7 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
-$stmt="select group_id from vicidial_inbound_groups;";
+$stmt="select group_id,group_name from vicidial_inbound_groups;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
@@ -113,7 +114,8 @@ $i=0;
 while ($i < $groups_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
-	$LISTgroups[$i] =$row[0];
+	$LISTgroups[$i] =		$row[0];
+	$LISTgroup_names[$i] =	$row[1];
 	$i++;
 	}
 
@@ -198,9 +200,9 @@ $o=0;
 while ($groups_to_print > $o)
 	{
 	if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
-		{echo "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o]</option>\n";}
+		{echo "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
 	else
-		{echo "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o]</option>\n";}
+		{echo "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
 	$o++;
 	}
 echo "</SELECT>\n";

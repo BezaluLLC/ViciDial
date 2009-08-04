@@ -179,6 +179,10 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	call_log, vicidial_log, vicidial_closer_log, vicidial_xfer_log and
 	vicidial_agent_log
 
+45. Added new Inbound Summary Hourly Report to show stats by in-group and broken
+	down per in-group in hourly increments. This report also allows
+	filtering of the stats by call time scheme.
+
 
 
 

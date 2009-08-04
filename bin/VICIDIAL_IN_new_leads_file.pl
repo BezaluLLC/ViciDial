@@ -35,6 +35,7 @@
 # 90401-1340 - Fixed quiet flag functionality
 # 90721-1315 - Added rank and owner as vicidial_list fields, stdrankowner format
 # 90728-1255 - Added fixed254 file format
+# 90802-0758 - Added sctab08 file format
 #
 
 $secX = time();
@@ -154,7 +155,9 @@ if (length($ARGV[0])>1)
 		print "fixed254:\n";
 		print "fixed width(without the quotes)\n";
 		print "\"9185551212ROSE            SMITHS                  155 TIGER MOUNTAIN RD.                  RR 1 BOX 107                            HENRYETTA                   OK74437-941DEMG  226555                                                   0                     \"\n\n";
-
+		print "sctab08:\n"
+		print "STATE\tNAME\tPHONE\tFAX\tADDRESS\tADDRESS2\tCITY\tZIP\n";
+		print "AL\tTom Wilson\t205 5551212\t\t 1689 15th Ave\t\tBESSEMER\t35020\n\n";
 
 		exit;
 		}
@@ -561,6 +564,43 @@ foreach(@FILES)
 				$date_of_birth =		'0000-00-00';
 				$alt_phone =			'';
 				$email =				'';
+				$comments =				'';
+				$called_count =			0;
+				$status =				'NEW';
+
+				$format_set++;
+				}
+
+		# This is the format for the sctab08 lead files
+		# STATE\tNAME\tPHONE\tFAX\tADDRESS\tADDRESS2\tCITY\tZIP\n";
+		# AL\tTom Wilson\t205 5551212\t\t 1689 15th Ave\t\tBESSEMER\t35020
+			if ( ($format =~ /sctab08/) && ($format_set < 1) )
+				{
+				@name=@MT;
+				$vendor_lead_code =		'';
+				$source_code =			'';
+				$list_id =				'995';
+				$phone_code =			'1';
+				$phone_number =			$m[2];		chomp($phone_number);	$phone_number =~ s/\D//gi;
+					$USarea = 			substr($phone_number, 0, 3);
+				$title =				'';
+				$full_name =			$m[1];		@name = split(/ /, $full_name);
+				$first_name =			$name[1];		chomp($first_name);
+				$last_name =			"$name[0] $name[2]";		chomp($first_name);
+				$middle_initial =		'';
+				$address1 =				$m[4];		chomp($address1);
+				$address2 =				$m[5];		chomp($address1);
+				$address3 =				'';
+				$city =					$m[6];		chomp($city);
+				$state =				$m[0];		chomp($state);
+				$province =				'';
+				$postal_code =			$m[7];		chomp($postal_code);
+				$country =				'USA';
+				$gender =				'U';
+				$date_of_birth =		'0000-00-00';
+				$alt_phone =			$m[3];		chomp($alt_phone);	$alt_phone =~ s/\D//gi;
+				$email =				'';
+				$security_phrase =		'';
 				$comments =				'';
 				$called_count =			0;
 				$status =				'NEW';
