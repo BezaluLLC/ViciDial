@@ -53,10 +53,11 @@
 # 90603-1845 - Fixed color coding bug
 # 90627-0608 - Some Formatting changes, added in-group name display
 # 90701-0657 - Fixed inbound=No calculation issues
+# 90808-0212 - Fixed inbound only non-ALL bug, changed times to use agent last_state_change
 #
 
-$version = '2.0.5-44';
-$build = '90701-0657';
+$version = '2.0.5-45';
+$build = '90808-0212';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -563,6 +564,7 @@ if (ereg('O',$with_inbound))
 	$stmt = "select closer_campaigns from vicidial_campaigns where campaign_id IN($group_SQL);";
 	$rslt=mysql_query($stmt, $link);
 	$ccamps_to_print = mysql_num_rows($rslt);
+	$c=0;
 	while ($ccamps_to_print > $c)
 		{
 		$row=mysql_fetch_row($rslt);
@@ -1404,7 +1406,7 @@ else {$UgroupSQL = " and vicidial_live_agents.campaign_id IN($group_SQL)";}
 if (strlen($usergroup)<1) {$usergroupSQL = '';}
 else {$usergroupSQL = " and user_group='" . mysql_real_escape_string($usergroup) . "'";}
 
-$stmt="select extension,vicidial_live_agents.user,conf_exten,vicidial_live_agents.status,vicidial_live_agents.server_ip,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish),call_server_ip,vicidial_live_agents.campaign_id,vicidial_users.user_group,vicidial_users.full_name,vicidial_live_agents.comments,vicidial_live_agents.calls_today,vicidial_live_agents.callerid,lead_id from vicidial_live_agents,vicidial_users where vicidial_live_agents.user=vicidial_users.user $UgroupSQL $usergroupSQL order by $orderSQL;";
+$stmt="select extension,vicidial_live_agents.user,conf_exten,vicidial_live_agents.status,vicidial_live_agents.server_ip,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish),call_server_ip,vicidial_live_agents.campaign_id,vicidial_users.user_group,vicidial_users.full_name,vicidial_live_agents.comments,vicidial_live_agents.calls_today,vicidial_live_agents.callerid,lead_id,UNIX_TIMESTAMP(last_state_change) from vicidial_live_agents,vicidial_users where vicidial_live_agents.user=vicidial_users.user $UgroupSQL $usergroupSQL order by $orderSQL;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $talking_to_print = mysql_num_rows($rslt);
@@ -1430,6 +1432,7 @@ $talking_to_print = mysql_num_rows($rslt);
 		$Acalls_today[$i] =		$row[12];
 		$Acallerid[$i] =		$row[13];
 		$Alead_id[$i] =			$row[14];
+		$Astate_change[$i] =	$row[15];
 
 		$i++;
 		}
@@ -1537,7 +1540,7 @@ $calls_to_list = mysql_num_rows($rslt);
 
 			if (eregi("READY|PAUSED",$Astatus[$i]))
 			{
-			$Acall_time[$i]=$Acall_finish[$i];
+			$Acall_time[$i]=$Astate_change[$i];
 
 			if ($Alead_id[$i] > 0)
 				{
@@ -1628,7 +1631,7 @@ $calls_to_list = mysql_num_rows($rslt);
 				}
 			}
 		if (!eregi("INCALL|QUEUE",$Astatus[$i]))
-			{$call_time_S = ($STARTtime - $Acall_finish[$i]);}
+			{$call_time_S = ($STARTtime - $Astate_change[$i]);}
 		else
 			{$call_time_S = ($STARTtime - $Acall_time[$i]);}
 

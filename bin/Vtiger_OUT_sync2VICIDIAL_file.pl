@@ -16,6 +16,7 @@
 # 90423-0453 - Added calls file and hours file reports
 # 90424-1157 - Added orders file report
 # 90517-1404 - Added date override and fixed order file report
+# 90806-1654 - Added vicidial-owner-update option
 #
 
 $secX = time();
@@ -114,6 +115,7 @@ if (length($ARGV[0])>1)
 		print "  [--help] = this help screen\n";
 		print " vicidial update options:\n";
 		print "  [--skip-vicidial-update] = skips the lead file export and all ViciDial list updating functions\n";
+		print "  [--vicidial-owner-update] = updates the vicidial_list.owner field with the vtiger owner\n";
 		print "  [--format=standard] = ability to define a format, standard is default, formats allowed shown in examples\n";
 		print "  [--forcelistid=1234] = overrides the listID given in the file with the 1234\n";
 		print "  [--duplicate-system-check] = checks for the same phone number in the entire system before inserting lead\n";
@@ -269,6 +271,11 @@ if (length($ARGV[0])>1)
 			{
 			$skip_vicidial_update=1;
 			if ($q < 1) {print "\n----- SKIP VICIDIAL UPDATE -----\n\n";}
+			}
+		if ($args =~ /--vicidial-owner-update/i)
+			{
+			$vicidial_owner_update=1;
+			if ($q < 1) {print "\n----- VICIDIAL OWNER UPDATE -----\n\n";}
 			}
 		if ($args =~ /-ftp-pull/i)
 			{
@@ -634,7 +641,7 @@ if ( ($vt_sales_update > 0) || ($vt_sales_update_alldate > 0) )
 
 
 ### Gather all non-deleted Accounts in Vtiger
-$stmtB="SELECT crmid from vtiger_crmentity where setype='Accounts' and deleted='0' order by crmid limit 3000000;";
+$stmtB="SELECT crmid,smownerid from vtiger_crmentity where setype='Accounts' and deleted='0' order by crmid limit 3000000;";
 $sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 $sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 $sthBrowsC=$sthB->rows;
@@ -642,7 +649,8 @@ $i=0;
 while ($sthBrowsC > $i)
 	{
 	@aryB = $sthB->fetchrow_array;
-	$crmid[$i] =	$aryB[0];
+	$crmid[$i] =		$aryB[0];
+	$smownerid[$i] =	$aryB[1];
 	$i++;
 	}
 $sthB->finish();
@@ -1166,13 +1174,34 @@ while ($sthBrowsC > $i)
 			$sthA->finish();
 			}
 
+		$vicidial_owner_updateSQL='';
+		$vicidial_owner_updateFILE='';
+		if ($vicidial_owner_update > 0)
+			{
+			$user='';
+			$stmtB="SELECT user_name from vtiger_users where id='$smownerid[$i]';";
+				if($DBX){print STDERR "\n|$stmtB|\n";}
+			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+			$sthBrows=$sthB->rows;
+			if ($sthBrows > 0)
+				{
+				@aryB = $sthB->fetchrow_array;
+				$user =	$aryB[0];
+				}
+			$sthB->finish();
+
+			$vicidial_owner_updateSQL = ",owner='$user'";
+			$vicidial_owner_updateFILE = "|||||$user";
+			}
+
 		if ($VL_phone_dup > 0)
 			{
 			if($DB){print "DUPLICATE PHONE: $phone|$crmid[$i]\n";}
 			$f++;
 			$affected_rowsA=0;
 			### update the existing vicidial_list entry ###
-			$stmtA = "UPDATE vicidial_list SET first_name='$accountname',last_name='$ownership',address1='$bill_street',address2='$bill_pobox',city='$bill_city',state='$bill_state',postal_code='$bill_code',country='$bill_country',vendor_lead_code='$crmid[$i]',address3='$fax',alt_phone='$otherphone',email='$email1',province='$website',security_phrase='$tickersymbol',comments='$siccode|$annualrevenue' where phone_number='$phone' limit 1;";
+			$stmtA = "UPDATE vicidial_list SET first_name='$accountname',last_name='$ownership',address1='$bill_street',address2='$bill_pobox',city='$bill_city',state='$bill_state',postal_code='$bill_code',country='$bill_country',vendor_lead_code='$crmid[$i]',address3='$fax',alt_phone='$otherphone',email='$email1',province='$website',security_phrase='$tickersymbol',comments='$siccode|$annualrevenue' $vicidial_owner_updateSQL where phone_number='$phone' limit 1;";
 				if ($T < 1) {$affected_rowsA = $dbhA->do($stmtA); } #  or die  "Couldn't execute query: |$stmtB|\n";
 				if($DB){print STDERR "\n|$affected_rowsA|$stmtA|\n";}
 			$c = ($affected_rowsA + $c);
@@ -1185,7 +1214,7 @@ while ($sthBrowsC > $i)
 				$e++;
 				$affected_rowsA=0;
 				### update the existing vicidial_list entry ###
-				$stmtA = "UPDATE vicidial_list SET first_name='$accountname',last_name='$ownership',address1='$bill_street',address2='$bill_pobox',city='$bill_city',state='$bill_state',postal_code='$bill_code',country_code='$bill_country',phone_number='$phone',address3='$fax',alt_phone='$otherphone',email='$email1',province='$website',security_phrase='$tickersymbol',comments='$siccode $annualrevenue' where vendor_lead_code='$crmid[$i]' limit 1;";
+				$stmtA = "UPDATE vicidial_list SET first_name='$accountname',last_name='$ownership',address1='$bill_street',address2='$bill_pobox',city='$bill_city',state='$bill_state',postal_code='$bill_code',country_code='$bill_country',phone_number='$phone',address3='$fax',alt_phone='$otherphone',email='$email1',province='$website',security_phrase='$tickersymbol',comments='$siccode $annualrevenue' $vicidial_owner_updateSQL where vendor_lead_code='$crmid[$i]' limit 1;";
 					if ($T < 1) {$affected_rowsA = $dbhA->do($stmtA); } #  or die  "Couldn't execute query: |$stmtB|\n";
 					if($DB){print STDERR "\n|$affected_rowsA|$stmtA|\n";}
 				$c = ($affected_rowsA + $c);
@@ -1193,7 +1222,7 @@ while ($sthBrowsC > $i)
 			else
 				{
 				### print the output file in proper format
-				print out "$crmid[$i]||$list_id|$phone_code|$phone||$accountname||$ownership|$bill_street|$bill_pobox|$fax|$bill_city|$bill_state|$website|$bill_code|$bill_country|||$otherphone|$email1|$ticketsymbol|$siccode $annualrevenue\n";
+				print out "$crmid[$i]||$list_id|$phone_code|$phone||$accountname||$ownership|$bill_street|$bill_pobox|$fax|$bill_city|$bill_state|$website|$bill_code|$bill_country|||$otherphone|$email1|$ticketsymbol|$siccode $annualrevenue$vicidial_owner_updateFILE\n";
 				$b++;
 				}
 			}

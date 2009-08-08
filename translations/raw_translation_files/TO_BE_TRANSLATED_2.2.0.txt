@@ -258,6 +258,7 @@ This option if enabled will show the number of dialable leads available in the c
 VICIDIAL Balance Rank||
 This field allows you to set the order in which this server is to be used for balance dialing, if balance dialing is enabled. The server with the highest rank will be used first in placing Balance fill calls. Default is 0||
 Inbound Summary Hourly Report||
+orders by the amount of time agent has been actively waiting for a call||
 
 
 add-file: user_territories.php

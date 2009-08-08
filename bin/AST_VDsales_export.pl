@@ -22,6 +22,7 @@
 # 90710-0514 - Fixes for data output formatting changes
 # 90721-1314 - Added rank and owner as vicidial_list fields
 # 90731-0555 - Added call time scheme restriction
+# 90807-1632 - Fixed call time bug and call length bug
 # 
 
 $txt = '.txt';
@@ -466,24 +467,6 @@ if ($sthArows > 0)
 	$Gct_saturday_start =	"$aryA[17]";
 	$Gct_saturday_stop =	"$aryA[18]";
 	$sthA->finish();
-
-	$CTstart = $Gct_default_start;
-	$CTstop = $Gct_default_stop;
-
-	if ( ($Cwday == 0) && ( ($Gct_sunday_start > 0) && ($Gct_sunday_stop > 0) ) )
-		{$CTstart = $Gct_sunday_start;   $CTstop = $Gct_sunday_stop;}
-	if ( ($Cwday == 1) && ( ($Gct_monday_start > 0) && ($Gct_monday_stop > 0) ) )
-		{$CTstart = $Gct_monday_start;   $CTstop = $Gct_monday_stop;}
-	if ( ($Cwday == 2) && ( ($Gct_tuesday_start > 0) && ($Gct_tuesday_stop > 0) ) )
-		{$CTstart = $Gct_tuesday_start;   $CTstop = $Gct_tuesday_stop;}
-	if ( ($Cwday == 3) && ( ($Gct_wednesday_start > 0) && ($Gct_wednesday_stop > 0) ) )
-		{$CTstart = $Gct_wednesday_start;   $CTstop = $Gct_wednesday_stop;}
-	if ( ($Cwday == 4) && ( ($Gct_thursday_start > 0) && ($Gct_thursday_stop > 0) ) )
-		{$CTstart = $Gct_thursday_start;   $CTstop = $Gct_thursday_stop;}
-	if ( ($Cwday == 5) && ( ($Gct_friday_start > 0) && ($Gct_friday_stop > 0) ) )
-		{$CTstart = $Gct_friday_start;   $CTstop = $Gct_friday_stop;}
-	if ( ($Cwday == 6) && ( ($Gct_saturday_start > 0) && ($Gct_saturday_stop > 0) ) )
-		{$CTstart = $Gct_saturday_start;   $CTstop = $Gct_saturday_stop;}
 	}
 else
 	{
@@ -495,7 +478,7 @@ else
 ###########################################################################
 ########### CURRENT DAY SALES GATHERING outbound-only: vicidial_log  ######
 ###########################################################################
-$stmtA = "select vicidial_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,call_date,vicidial_list.lead_id,vicidial_users.full_name,vicidial_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_log.list_id,title,address3,last_local_call_time,uniqueid,length_in_sec,vicidial_list.list_id,vicidial_list.list_id,UNIX_TIMESTAMP(vicidial_log.call_date),vicidial_campaigns.campaign_name from vicidial_list,vicidial_log,vicidial_users,vicidial_campaigns where $campaignSQL $sale_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_log.user and vicidial_log.campaign_id=vicidial_campaigns.campaign_id order by call_date;";
+$stmtA = "select vicidial_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,call_date,vicidial_list.lead_id,vicidial_users.full_name,vicidial_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_log.list_id,title,address3,last_local_call_time,uniqueid,length_in_sec,vicidial_list.list_id,vicidial_list.list_id,UNIX_TIMESTAMP(vicidial_log.call_date),vicidial_campaigns.campaign_name,vicidial_campaigns.campaign_cid from vicidial_list,vicidial_log,vicidial_users,vicidial_campaigns where $campaignSQL $sale_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_log.user and vicidial_log.campaign_id=vicidial_campaigns.campaign_id order by call_date;";
 #$stmtA = "select vicidial_users.user,first_name,last_name,address1,address2,city,state,postal_code,phone_number,email,security_phrase,comments,last_local_call_time,lead_id,vicidial_users.full_name,status,vendor_lead_code,source_id,list_id,title,address3,last_local_call_time from vicidial_list,vicidial_users where list_id NOT IN('999','998') $sale_statusesSQL and called_count > 0 and vicidial_users.user=vicidial_list.user;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -534,9 +517,10 @@ while ($sthArows > $rec_count)
 	$owner =		$aryA[25];
 	$epoch =		$aryA[26];
 	$did_name =		$aryA[27];
+	$did_pattern =	$aryA[28];
 
 	$outbound = 'Y';
-	$domestic = 'N';
+	$domestic = 'Y';
 	$queue_seconds = '0';
 	$closer='';
 
@@ -551,7 +535,7 @@ if (length($with_inboundSQL)>3)
 	###########################################################################
 	########### CURRENT DAY SALES GATHERING inbound-only: vicidial_closer_log  ######
 	###########################################################################
-	$stmtA = "select vicidial_closer_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,call_date,vicidial_list.lead_id,vicidial_users.full_name,vicidial_closer_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_closer_log.list_id,campaign_id,title,address3,last_local_call_time,xfercallid,closecallid,uniqueid,length_in_sec,queue_seconds,vicidial_list.list_id,vicidial_list.list_id,UNIX_TIMESTAMP(vicidial_closer_log.call_date) from vicidial_list,vicidial_closer_log,vicidial_users where campaign_id IN($with_inboundSQL) $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_closer_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_closer_log.user order by call_date;";
+	$stmtA = "select vicidial_closer_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,call_date,vicidial_list.lead_id,vicidial_users.full_name,vicidial_closer_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_closer_log.list_id,campaign_id,title,address3,last_local_call_time,xfercallid,closecallid,uniqueid,length_in_sec,queue_seconds,vicidial_list.list_id,vicidial_list.list_id,UNIX_TIMESTAMP(vicidial_closer_log.call_date),agent_alert_delay from vicidial_list,vicidial_closer_log,vicidial_users,vicidial_inbound_groups where campaign_id IN($with_inboundSQL) $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_closer_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_closer_log.user and vicidial_inbound_groups.group_id=vicidial_closer_log.campaign_id order by call_date;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -591,9 +575,10 @@ if (length($with_inboundSQL)>3)
 		$rank =			$aryA[28];
 		$owner =		$aryA[29];
 		$epoch =		$aryA[30];
+		$agent_alert_delay = int($aryA[31] / 1000);
 
 		$outbound = 'N';
-		$domestic = 'N';
+		$domestic = 'Y';
 		$user = '';
 		$agent_name='';
 
@@ -673,11 +658,6 @@ if ( (length($Ealert)>5) && (length($email_list) > 3) )
 #	$VARREPORT_user =	'cron';
 #	$VARREPORT_pass =	'test';
 #	$VARREPORT_dir =	'';
-        $VARREPORT_host =       'ftp.aats-inc.com';
-        $VARREPORT_port =       '21';
-        $VARREPORT_user =       'aats-inc.com';
-        $VARREPORT_pass =       '_dMujnvf_';
-        $VARREPORT_dir =        '';
 $NODATEDIR = 0;	# Don't use dated directories for audio
 $YEARDIR = 1;	# put dated directories in a year directory first
 
@@ -758,6 +738,24 @@ sub select_format_loop
 		if ($Chour < 10) {$Chour = "0$Chour";}
 		if ($Cmin < 10) {$Cmin = "0$Cmin";}
 		$CThourminute = "$Chour$Cmin";
+
+		$CTstart = $Gct_default_start;
+		$CTstop = $Gct_default_stop;
+
+		if ( ($Cwday == 0) && ( ($Gct_sunday_start > 0) && ($Gct_sunday_stop > 0) ) )
+			{$CTstart = $Gct_sunday_start;   $CTstop = $Gct_sunday_stop;}
+		if ( ($Cwday == 1) && ( ($Gct_monday_start > 0) && ($Gct_monday_stop > 0) ) )
+			{$CTstart = $Gct_monday_start;   $CTstop = $Gct_monday_stop;}
+		if ( ($Cwday == 2) && ( ($Gct_tuesday_start > 0) && ($Gct_tuesday_stop > 0) ) )
+			{$CTstart = $Gct_tuesday_start;   $CTstop = $Gct_tuesday_stop;}
+		if ( ($Cwday == 3) && ( ($Gct_wednesday_start > 0) && ($Gct_wednesday_stop > 0) ) )
+			{$CTstart = $Gct_wednesday_start;   $CTstop = $Gct_wednesday_stop;}
+		if ( ($Cwday == 4) && ( ($Gct_thursday_start > 0) && ($Gct_thursday_stop > 0) ) )
+			{$CTstart = $Gct_thursday_start;   $CTstop = $Gct_thursday_stop;}
+		if ( ($Cwday == 5) && ( ($Gct_friday_start > 0) && ($Gct_friday_stop > 0) ) )
+			{$CTstart = $Gct_friday_start;   $CTstop = $Gct_friday_stop;}
+		if ( ($Cwday == 6) && ( ($Gct_saturday_start > 0) && ($Gct_saturday_stop > 0) ) )
+			{$CTstart = $Gct_saturday_start;   $CTstop = $Gct_saturday_stop;}
 
 		if ( ($CThourminute < $CTstart) || ($CThourminute > $CTstop) )
 			{
@@ -882,7 +880,7 @@ sub select_format_loop
 
 			### Look for other closer calls after this call
 			$more_calls[0]='';
-			$stmtB = "select closecallid,length_in_sec,queue_seconds from vicidial_closer_log where lead_id='$lead_id' and call_date > '$call_date' and call_date < '$shipdate 23:59:59' order by call_date limit 10;";
+			$stmtB = "select closecallid,length_in_sec,queue_seconds,agent_alert_delay from vicidial_closer_log,vicidial_inbound_groups where lead_id='$lead_id' and call_date > '$call_date' and call_date < '$shipdate 23:59:59' and campaign_id=group_id order by call_date limit 10;";
 			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 			$sthBrows=$sthB->rows;
@@ -891,7 +889,8 @@ sub select_format_loop
 				{
 				@aryB = $sthB->fetchrow_array;
 				$more_calls[$rec_countB] =	"$aryB[0]";
-				$length_in_sec = ($length_in_sec + $aryB[1]);
+				$Xagent_alert_delay = int($aryB[3] / 1000);
+				$length_in_sec = (($length_in_sec + $aryB[1]) - $Xagent_alert_delay);
 				$queue_seconds = ($queue_seconds + $aryB[2]);
 				$rec_countB++;
 				}
@@ -952,6 +951,22 @@ sub select_format_loop
 				$did_name =		"$aryB[1]";
 				$did_date =		"$aryB[2]";
 				$sthB->finish();
+				}
+			else
+				{
+				$stmtB = "select vc.campaign_cid,vc.campaign_name,call_date from vicidial_campaigns vc,vicidial_log vl where lead_id='$lead_id' and call_date > '$shipdate 00:00:01' and call_date <= '$call_date' and vc.campaign_id=vl.campaign_id order by call_date desc limit 1;";
+				if ($DBX > 0) {print "$stmtB\n";}
+				$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+				$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+				$sthBrows=$sthB->rows;
+				if ($sthBrows > 0)
+					{
+					@aryB = $sthB->fetchrow_array;
+					$did_pattern =	"$aryB[0]";
+					$did_name =		"$aryB[1]";
+					$did_date =		"$aryB[2]";
+					$sthB->finish();
+					}
 				}
 			}
 		##### BEGIN DID lookup #####
@@ -1065,12 +1080,13 @@ sub select_format_loop
 			if ($closer =~ /VDCL|VDAD/) {$closer='-';}
 			$application = 	substr($did_name, 0, 4);
 			$queue_seconds = int($queue_seconds + .5);
-			$talk_seconds = ($length_in_sec - $queue_seconds);
+			$talk_seconds = ( ($length_in_sec - $queue_seconds) - $agent_alert_delay);
+			if ($talk_seconds < 0) {$talk_seconds=0;}
 			$dispo_time = 0;
 
 			if ($uniqueidLIST !~ /\|$uniqueid\|/)
 				{
-				$str = "$uniqueid\t$call_date_array[0]\t$call_date_array[1]\t$phone_areacode\t$phone_number\t$did_pattern\t$closer\t$queue_seconds\t$talk_seconds\t$dispo_time\t$application\t-\t$ivr_filename\t$outbound\t$domestic\t\n";
+				$str = "103$uniqueid\t$call_date_array[0]\t$call_date_array[1]\t$phone_areacode\t$phone_number\t$did_pattern\t$closer\t$queue_seconds\t$talk_seconds\t$dispo_time\t$application\t-\t$ivr_filename\t$outbound\t$domestic\t\n";
 
 				$uniqueidLIST .= "$uniqueid|";
 				if ($DBX > 0) {print "UNIQUE: -----$uniqueidLIST-----$uniqueid";}

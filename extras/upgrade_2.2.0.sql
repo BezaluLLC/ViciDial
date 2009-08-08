@@ -477,3 +477,11 @@ index (event_time)
 );
 
 UPDATE system_settings SET db_schema_version='1166';
+
+ALTER TABLE vicidial_live_agents ADD last_state_change DATETIME;
+
+ALTER TABLE vicidial_campaigns MODIFY next_agent_call ENUM('random','oldest_call_start','oldest_call_finish','campaign_rank','overall_user_level','fewest_calls','longest_wait_time') default 'longest_wait_time';
+
+ALTER TABLE vicidial_inbound_groups MODIFY next_agent_call ENUM('random','oldest_call_start','oldest_call_finish','overall_user_level','inbound_group_rank','campaign_rank','fewest_calls','fewest_calls_campaign','longest_wait_time') default 'longest_wait_time';
+
+UPDATE system_settings SET db_schema_version='1167';

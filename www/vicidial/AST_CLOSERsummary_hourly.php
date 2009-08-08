@@ -307,7 +307,7 @@ else
 	$MAIN .= "Inbound Summary Hourly Report: $group_string          $NOW_TIME\n";
 
 
-	if ($group_ct > 1)
+	if ($group_ct > 0)
 		{
 		$MAIN .= "\n";
 		$MAIN .= "---------- MULTI-GROUP BREAKDOWN:\n";
@@ -330,11 +330,12 @@ else
 
 		while($i < $group_ct)
 			{
-			$stmt="select group_name from vicidial_inbound_groups where group_id='$group[$i]';";
+			$stmt="select group_name,agent_alert_delay from vicidial_inbound_groups where group_id='$group[$i]';";
 			$rslt=mysql_query($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
 			$row=mysql_fetch_row($rslt);
-			$group_name[$i] = $row[0];
+			$group_name[$i] =			$row[0];
+			$agent_alert_delay[$i] =	round($row[1] / 1000);
 
 			$out_of_call_time=0;
 			$length_in_sec[$i]=0;
@@ -406,7 +407,7 @@ else
 					$calls_count[$i]++;
 					$length_in_sec[$i] =	($length_in_sec[$i] + $row[1]);
 					$queue_seconds[$i] =	($queue_seconds[$i] + $row[2]);
-					$TEMPtalk = ($row[1] - $row[2]);
+					$TEMPtalk = ( ($row[1] - $row[2]) - $agent_alert_delay[$i]);
 					if ($TEMPtalk < 0) {$TEMPtalk = 0;}
 					$talk_sec[$i] =	($talk_sec[$i] + $TEMPtalk);
 					if ($max_queue_seconds[$i] < $row[2])
@@ -602,7 +603,7 @@ else
 		$inbound_cost = ($rawTOTtalk_min * $inbound_rate);
 		$inbound_cost =		sprintf("%8.2f", $inbound_cost);
 
-		echo "$query_date to $end_date, &nbsp; $rawTOTtalk_min minutes at \$0.60 = \$$inbound_cost\n";
+		echo "INBOUND $query_date to $end_date, &nbsp; $rawTOTtalk_min minutes at \$$inbound_rate = \$$inbound_cost\n";
 
 		exit;
 		}

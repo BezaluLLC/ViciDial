@@ -243,10 +243,11 @@
 # 90726-2012 - Added allow_alerts option
 # 90729-0647 - Added agent_display_dialable_leads option
 # 90730-0145 - Fixed bugs in re-queue and INBOUND_MAN with blended selected
+# 90808-0117 - Fixed manual dial calls today bug, added last_state_change to vicidial_live_agents
 #
 
-$version = '2.2.0-221';
-$build = '90730-0145';
+$version = '2.2.0-222';
+$build = '90808-0117';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -1143,17 +1144,17 @@ $VDloginDISPLAY=0;
 			else
 				{$no_hopper_dialing=0;}
 
-			if (preg_match("/Y/",$call_requeue_button))
+			if ( (preg_match("/Y/",$call_requeue_button)) and ($auto_dial_level > 0) )
 				{$call_requeue_button=1;}
 			else
 				{$call_requeue_button=0;}
 
-			if (preg_match("/AUTO/",$view_calls_in_queue_launch))
+			if ( (preg_match("/AUTO/",$view_calls_in_queue_launch)) and ($auto_dial_level > 0) )
 				{$view_calls_in_queue_launch=1;}
 			else
 				{$view_calls_in_queue_launch=0;}
 
-			if (!preg_match("/NONE/",$view_calls_in_queue))
+			if ( (!preg_match("/NONE/",$view_calls_in_queue)) and ($auto_dial_level > 0) )
 				{$view_calls_in_queue=1;}
 			else
 				{$view_calls_in_queue=0;}
@@ -1826,36 +1827,38 @@ else
 		$affected_rows = mysql_affected_rows($link);
 		print "<!-- call placed to session_id: $session_id from phone: $SIP_user $SIP_user_DiaL -->\n";
 
+		##### grab the campaign_weight and number of calls today on that campaign for the agent
+		$stmt="SELECT campaign_weight,calls_today FROM vicidial_campaign_agents where user='$VD_login' and campaign_id = '$VD_campaign';";
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01042',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$vca_ct = mysql_num_rows($rslt);
+		if ($vca_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$campaign_weight =	$row[0];
+			$calls_today =		$row[1];
+			$i++;
+			}
+		else
+			{
+			$campaign_weight =	'0';
+			$calls_today =		'0';
+			$stmt="INSERT INTO vicidial_campaign_agents (user,campaign_id,campaign_rank,campaign_weight,calls_today) values('$VD_login','$VD_campaign','0','0','$calls_today');";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01043',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$affected_rows = mysql_affected_rows($link);
+			print "<!-- new vicidial_campaign_agents record inserted: |$affected_rows| -->\n";
+			}
+
 		if ($auto_dial_level > 0)
 			{
 			print "<!-- campaign is set to auto_dial_level: $auto_dial_level -->\n";
 
-			##### grab the campaign_weight and number of calls today on that campaign for the agent
-			$stmt="SELECT campaign_weight,calls_today FROM vicidial_campaign_agents where user='$VD_login' and campaign_id = '$VD_campaign';";
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01042',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			if ($DB) {echo "$stmt\n";}
-			$vca_ct = mysql_num_rows($rslt);
-			if ($vca_ct > 0)
-				{
-				$row=mysql_fetch_row($rslt);
-				$campaign_weight =	$row[0];
-				$calls_today =		$row[1];
-				$i++;
-				}
-			else
-				{
-				$campaign_weight =	'0';
-				$calls_today =		'0';
-				$stmt="INSERT INTO vicidial_campaign_agents (user,campaign_id,campaign_rank,campaign_weight,calls_today) values('$VD_login','$VD_campaign','0','0','$calls_today');";
-				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01043',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$affected_rows = mysql_affected_rows($link);
-				print "<!-- new vicidial_campaign_agents record inserted: |$affected_rows| -->\n";
-				}
+
 			$closer_chooser_string='';
-			$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,user_level,campaign_weight,calls_today) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$closer_chooser_string','$user_level','$campaign_weight','$calls_today');";
+			$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,user_level,campaign_weight,calls_today,last_state_change) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$closer_chooser_string','$user_level','$campaign_weight','$calls_today','$NOW_TIME');";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01044',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -1895,7 +1898,7 @@ else
 			{
 			print "<!-- campaign is set to manual dial: $auto_dial_level -->\n";
 
-			$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,user_level) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$user_level');";
+			$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,user_level,campaign_weight,calls_today,last_state_change) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$user_level', '$campaign_weight', '$calls_today','$NOW_TIME');";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01047',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -5455,8 +5458,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 									}
 								var dispnum = document.vicidial_form.phone_number.value;
 								var status_display_number = phone_number_format(dispnum);
+								var callnum = dialed_number;
+								var dial_display_number = phone_number_format(callnum);
 
-								document.getElementById("MainStatuSSpan").innerHTML = " Incoming: " + status_display_number + " Group- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter; 
+								document.getElementById("MainStatuSSpan").innerHTML = " Incoming: " + dial_display_number + " Group- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter; 
 								}
 
 							document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_parkcall.gif\" border=0 alt=\"Park Call\"></a>";
@@ -5653,7 +5658,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 							if (alert_enabled=='ON')
 								{
-								alert(" Incoming: " + status_display_number + "\n Group- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter);
+								var callnum = dialed_number;
+								var dial_display_number = phone_number_format(callnum);
+								alert(" Incoming: " + dial_display_number + "\n Group- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter);
 								}
 							}
 						else

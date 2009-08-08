@@ -100,6 +100,7 @@
 # 90712-2307 - Added agent grab call in queue
 # 90720-0023 - Added checks for filename validity before streaming, changed initial heavy search from 3 to 2 seconds
 # 90726-0114 - Fixed bug on some calls for agent grab
+# 90808-0307 - Added longest_wait_time as agent routing option
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -1225,6 +1226,7 @@ if ($channel_status < 1)
 	$cbc=0;
 	$aco_sub=0;
 	$agent_call_order='order by last_call_finish';
+	if ($CAMP_callorder =~ /longest_wait_time/i)	{$agent_call_order = 'order by vicidial_live_agents.last_state_change';}
 	if ($CAMP_callorder =~ /overall_user_level/i)	{$agent_call_order = 'order by user_level desc,last_call_finish';}
 	if ($CAMP_callorder =~ /oldest_call_start/i)	{$agent_call_order = 'order by vicidial_live_agents.last_call_time';}
 	if ($CAMP_callorder =~ /oldest_call_finish/i)	{$agent_call_order = 'order by vicidial_live_agents.last_call_finish';}

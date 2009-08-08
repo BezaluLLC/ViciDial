@@ -348,6 +348,7 @@ external_status VARCHAR(6) default '',
 external_pause VARCHAR(20) default '',
 external_dial VARCHAR(100) default '',
 agent_log_id INT(9) UNSIGNED default '0',
+last_state_change DATETIME,
 index (random_id),
 index (last_call_time),
 index (last_update_time),
@@ -558,7 +559,7 @@ web_form_address VARCHAR(255),
 allow_closers ENUM('Y','N'),
 hopper_level INT(8) UNSIGNED default '1',
 auto_dial_level VARCHAR(6) default '0',
-next_agent_call ENUM('random','oldest_call_start','oldest_call_finish','campaign_rank','overall_user_level','fewest_calls') default 'oldest_call_finish',
+next_agent_call ENUM('random','oldest_call_start','oldest_call_finish','campaign_rank','overall_user_level','fewest_calls','longest_wait_time') default 'longest_wait_time',
 local_call_time VARCHAR(10) DEFAULT '9am-9pm',
 voicemail_ext VARCHAR(10),
 dial_timeout TINYINT UNSIGNED default '60',
@@ -749,7 +750,7 @@ group_color VARCHAR(7),
 active ENUM('Y','N'),
 web_form_address VARCHAR(255),
 voicemail_ext VARCHAR(10),
-next_agent_call ENUM('random','oldest_call_start','oldest_call_finish','overall_user_level','inbound_group_rank','campaign_rank','fewest_calls','fewest_calls_campaign') default 'oldest_call_finish',
+next_agent_call ENUM('random','oldest_call_start','oldest_call_finish','overall_user_level','inbound_group_rank','campaign_rank','fewest_calls','fewest_calls_campaign','longest_wait_time') default 'longest_wait_time',
 fronter_display ENUM('Y','N') default 'Y',
 ingroup_script VARCHAR(10),
 get_call_launch ENUM('NONE','SCRIPT','WEBFORM') default 'NONE',
@@ -1889,7 +1890,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1166';
+UPDATE system_settings SET db_schema_version='1167';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

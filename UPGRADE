@@ -183,6 +183,16 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	down per in-group in hourly increments. This report also allows
 	filtering of the stats by call time scheme.
 
+46. Added option to the Outbound(VDAD) report to calculate stats including the
+	overflow drop in-group stats with the outbound campaign stats.
+
+47. Added longest_wait_time option for Next Agent Call in Campaigns and 
+	In-Groups. 
+
+48. Changed Real-time Report screen agent time display to be based upon a change
+	in "state"(INCALL, READY, PAUSED, etc...) instead of being based upon
+	the time of the last call they handled.
+
 
 
 

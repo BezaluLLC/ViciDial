@@ -66,6 +66,7 @@
 # 90630-2250 - Added more Sangoma CDP statuses
 # 90702-2240 - Added option to send to remote agent as phone*vendor_id
 # 90721-1137 - Added rank and owner as vicidial_list fields
+# 90808-0307 - Added longest_wait_time as agent routing option
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -1322,6 +1323,7 @@ while ($drop_timer <= $DROP_TIME)
 	$cbc=0;
 	$aco_sub=0;
 	$agent_call_order='order by last_call_finish';
+	if ($CAMP_callorder =~ /longest_wait_time/i)	{$agent_call_order = 'order by last_state_change';}
 	if ($CAMP_callorder =~ /overall_user_level/i)	{$agent_call_order = 'order by user_level desc,last_call_finish';}
 	if ($CAMP_callorder =~ /oldest_call_start/i)	{$agent_call_order = 'order by last_call_time';}
 	if ($CAMP_callorder =~ /oldest_call_finish/i)	{$agent_call_order = 'order by last_call_finish';}
