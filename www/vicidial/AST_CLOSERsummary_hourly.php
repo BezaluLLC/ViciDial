@@ -6,6 +6,7 @@
 # CHANGES
 #
 # 90801-0910 - First build
+# 90809-0216 - Added Exclude Outbound Drop Group option
 #
 
 require("dbconnect.php");
@@ -15,6 +16,8 @@ $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
 
+if (isset($_GET["exclude_rollover"]))			{$exclude_rollover=$_GET["exclude_rollover"];}
+	elseif (isset($_POST["exclude_rollover"]))	{$exclude_rollover=$_POST["exclude_rollover"];}
 if (isset($_GET["inbound_rate"]))			{$inbound_rate=$_GET["inbound_rate"];}
 	elseif (isset($_POST["inbound_rate"]))	{$inbound_rate=$_POST["inbound_rate"];}
 if (isset($_GET["outbound_rate"]))			{$outbound_rate=$_GET["outbound_rate"];}
@@ -43,6 +46,7 @@ $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
 $MT[0]='0';
 if (strlen($shift)<2) {$shift='ALL';}
+if (strlen($exclude_rollover)<2) {$exclude_rollover='NO';}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -94,14 +98,17 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
-$stmt="select group_id,group_name from vicidial_inbound_groups;";
+$exclude_rolloverSQL='';
+if (eregi("YES",$exclude_rollover))
+	{$exclude_rolloverSQL = " where group_id NOT IN(SELECT drop_inbound_group from vicidial_campaigns)";}
+$stmt="select group_id,group_name from vicidial_inbound_groups $exclude_rolloverSQL;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
 $i=0;
-$LISTgroups[$i]='---NONE---';
-$i++;
-$groups_to_print++;
+#$LISTgroups[$i]='---NONE---';
+#$i++;
+#$groups_to_print++;
 while ($i < $groups_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
@@ -202,9 +209,9 @@ if ($bareformat < 1)
 	echo "Date Range:<BR>\n";
 	echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
 	echo " to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
-	echo "</TD><TD VALIGN=TOP>\n";
-	echo "Inbound Groups: \n";
+	echo "</TD><TD VALIGN=TOP> &nbsp; \n";
 	echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
+	echo "Inbound Groups: <BR>\n";
 	echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
 	$o=0;
 	while ($groups_to_print > $o)
@@ -219,14 +226,21 @@ if ($bareformat < 1)
 	echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
 	echo "<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">MODIFY</a> | ";
-	echo "<a href=\"./admin.php?ADD=999999\">REPORTS</a> | ";
-	echo "<a href=\"./AST_IVRstats.php?query_date=$query_date&end_date=$end_date&shift=$shift$groupQS\">IVR REPORT</a> \n";
-	echo "</FONT>\n";
+	echo "<a href=\"./admin.php?ADD=999999\">REPORTS</a>";
+	echo "</FONT><BR><BR>\n";
+	echo " &nbsp; Exclude Outbound Drop Groups: <BR>";
+	echo " &nbsp; <SELECT SIZE=1 NAME=exclude_rollover>\n";
+	echo "<option selected value=\"$exclude_rollover\">$exclude_rollover</option>\n";
+	echo "<option value=\"YES\">YES</option>\n";
+	echo "<option value=\"NO\">NO</option>\n";
+	echo "</SELECT>\n";
+	echo "<BR> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
+	echo "<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
 
 	echo "</TD></TR>\n";
 	echo "<TR><TD>\n";
 
-	echo "Call Time:\n";
+	echo "Call Time:<BR>\n";
 	echo "<SELECT SIZE=1 NAME=shift>\n";
 	$o=0;
 	while ($times_to_print > $o)
@@ -237,7 +251,6 @@ if ($bareformat < 1)
 		}
 	echo "</SELECT>\n";
 	echo "</TD><TD>\n";
-	echo " &nbsp; <INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
 	echo "</TD></TR></TABLE>\n";
 	echo "</FORM>\n\n";
 

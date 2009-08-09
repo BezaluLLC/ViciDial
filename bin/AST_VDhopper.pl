@@ -56,6 +56,7 @@
 # 90603-1157 - Fixed rare bug in list mix where statuses field do not end with -
 # 90608-1201 - Added Drop Lockout Time Campaign setting option
 # 90723-0842 - Added no hopper dial option to clear hopper leads
+# 90809-0347 - Quick fix for null list_id loading when no active campaign lists
 #
 
 # constants
@@ -1164,7 +1165,7 @@ foreach(@campaign_id)
 				$rec_countLISTS++;
 				}
 			$sthA->finish();
-			if (length($camp_lists[$i])<3) {$camp_lists[$i]="''";}
+			if (length($camp_lists[$i])<3) {$camp_lists[$i]="'999876543210'";}
 			   else {chop($camp_lists[$i]);}
 
 			if ($DB) {print "     campaign lists count: $rec_countLISTS | $camp_lists[$i]\n";}
@@ -1337,7 +1338,7 @@ foreach(@campaign_id)
 					$rec_countLISTS++;
 					}
 				$sthA->finish();
-				$lead_id_lists .= "'0'";			
+				$lead_id_lists .= "'0'";
 				$order_stmt='';
 				$NEW_count = 0;
 				$NEW_level = 0;
