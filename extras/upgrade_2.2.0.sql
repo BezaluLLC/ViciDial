@@ -485,3 +485,7 @@ ALTER TABLE vicidial_campaigns MODIFY next_agent_call ENUM('random','oldest_call
 ALTER TABLE vicidial_inbound_groups MODIFY next_agent_call ENUM('random','oldest_call_start','oldest_call_finish','overall_user_level','inbound_group_rank','campaign_rank','fewest_calls','fewest_calls_campaign','longest_wait_time') default 'longest_wait_time';
 
 UPDATE system_settings SET db_schema_version='1167';
+
+ALTER TABLE vicidial_campaigns MODIFY drop_call_seconds TINYINT(3) default '5';
+
+UPDATE system_settings SET db_schema_version='1168';

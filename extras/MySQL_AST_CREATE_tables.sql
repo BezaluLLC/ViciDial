@@ -580,7 +580,7 @@ xferconf_b_number VARCHAR(50),
 alt_number_dialing ENUM('Y','N') default 'N',
 scheduled_callbacks ENUM('Y','N') default 'N',
 lead_filter_id VARCHAR(10) default 'NONE',
-drop_call_seconds TINYINT(3) unsigned default '5',
+drop_call_seconds TINYINT(3) default '5',
 drop_action ENUM('HANGUP','MESSAGE','VOICEMAIL','IN_GROUP') default 'MESSAGE',
 safe_harbor_exten VARCHAR(20)  default '8307',
 display_dialable_count ENUM('Y','N') default 'Y',
@@ -1890,7 +1890,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1167';
+UPDATE system_settings SET db_schema_version='1168';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

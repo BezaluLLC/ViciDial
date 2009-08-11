@@ -36,6 +36,7 @@
 # 90721-1315 - Added rank and owner as vicidial_list fields, stdrankowner format
 # 90728-1255 - Added fixed254 file format
 # 90802-0758 - Added sctab08 file format
+# 90810-0956 - Added sccsv11 file format
 #
 
 $secX = time();
@@ -52,6 +53,7 @@ if ($sec < 10) {$sec = "0$sec";}
 if ($mon < 10) {$mon = "0$mon";}
 if ($mday < 10) {$mday = "0$mday";}
 $pulldate0 = "$year-$mon-$mday $hour:$min:$sec";
+$insert_date = "$year-$mon-$mday $hour:$min:$sec";
 $inSD = $pulldate0;
 $dsec = ( ( ($hour * 3600) + ($min * 60) ) + $sec );
 $MT[0]='';
@@ -155,9 +157,12 @@ if (length($ARGV[0])>1)
 		print "fixed254:\n";
 		print "fixed width(without the quotes)\n";
 		print "\"9185551212ROSE            SMITHS                  155 TIGER MOUNTAIN RD.                  RR 1 BOX 107                            HENRYETTA                   OK74437-941DEMG  226555                                                   0                     \"\n\n";
-		print "sctab08:\n"
+		print "sctab08:\n";
 		print "STATE\tNAME\tPHONE\tFAX\tADDRESS\tADDRESS2\tCITY\tZIP\n";
 		print "AL\tTom Wilson\t205 5551212\t\t 1689 15th Ave\t\tBESSEMER\t35020\n\n";
+		print "sccsv11:\n";
+		print "STATE,ID,NAME,ADDRESS,ADDRESS2,CITY,COUNTY,PHONE,FAX,ZIP,COMMENTS\n";
+		print "AL,16700,Fairfax Retirement Center (Crowder House),1324 25th St,,FAIRFAX,JEFFERSON,(205) 555-0508,,35733,Comments\n\n";
 
 		exit;
 		}
@@ -332,6 +337,7 @@ $dir1 = "$PATHhome/LEADS_IN";
 $dir2 = "$PATHhome/LEADS_IN/DONE";
 
 	if($DBX){print STDERR "\nLEADS_IN directory: |$dir1|\n";}
+
 
 if ($ftp_pull > 0)
 	{
@@ -602,6 +608,111 @@ foreach(@FILES)
 				$email =				'';
 				$security_phrase =		'';
 				$comments =				'';
+				$called_count =			0;
+				$status =				'NEW';
+
+				$format_set++;
+				}
+
+		# This is the format for the sccsv11 lead files
+		# STATE,ID,NAME,ADDRESS,ADDRESS2,CITY,COUNTY,PHONE,FAX,ZIP,COMMENTS
+		# AL,16700,Fairfax Retirement Center (Crowder House),1324 25th St,,FAIRFAX,JEFFERSON,(205) 555-0508,,35733,Comments
+
+			if ( ($format =~ /sccsv11/) && ($format_set < 1) )
+				{
+				$raw_number =~ s/\'|\t|\r|\n|\l//gi;
+				$raw_number =~ s/,/\|/gi;
+				@m = split(/\|/, $raw_number);
+				@name=@MT;
+				$state =				$m[0];		chomp($state);
+				$vendor_lead_code =		$m[1];		$vendor_lead_code =~ s/\D//gi;
+
+				$field = 2;
+				if ($m[$field] =~ /^\"/)
+					{
+					$full_name =		"$m[$field]";   $field++;
+					$full_name .=		"$m[$field]";   $field++;
+					}
+				else
+					{
+					$full_name =		"$m[$field]";   $field++;
+					}
+				$full_name =~ s/\"|\)|\(|;//gi;
+				@name = split(/ /, $full_name);
+					$first_name =			$name[1];		chomp($first_name);
+					$last_name =			"$name[0] $name[2]";		chomp($first_name);
+					$middle_initial =		'';
+
+				if ($m[$field] =~ /^\"/)
+					{
+					$address1 =		"$m[$field]";   $field++;
+					$address1 .=		"$m[$field]";   $field++;
+					}
+				else
+					{
+					$address1 =		"$m[$field]";   $field++;
+					}
+				$address1 =~ s/\"|\)|\(|;//gi;
+
+				if ($m[$field] =~ /^\"/)
+					{
+					$address2 =		"$m[$field]";   $field++;
+					$address2 .=		"$m[$field]";   $field++;
+					}
+				else
+					{
+					$address2 =		"$m[$field]";   $field++;
+					}
+				$address2 =~ s/\"|\)|\(|;//gi;
+
+				if ($m[$field] =~ /^\"/)
+					{
+					$city =		"$m[$field]";   $field++;
+					$city .=		"$m[$field]";   $field++;
+					}
+				else
+					{
+					$city =		"$m[$field]";   $field++;
+					}
+				$city =~ s/\"|\)|\(|;//gi;
+
+				if ($m[$field] =~ /^\"/)
+					{
+					$province =		"$m[$field]";   $field++;
+					$province .=		"$m[$field]";   $field++;
+					}
+				else
+					{
+					$province =		"$m[$field]";   $field++;
+					}
+				$province =~ s/\"|\)|\(|;//gi;
+
+				$phone_number =		"$m[$field]";   $field++;	$phone_number =~ s/\D//gi;
+					$USarea = 				substr($phone_number, 0, 3);
+				$alt_phone =		"$m[$field]";   $field++;	$alt_phone =~ s/\D//gi;
+				$postal_code =		"$m[$field]";   $field++;
+
+				if ($m[$field] =~ /^\"/)
+					{
+					$comments =		"$m[$field]";   $field++;
+					$comments .=		"$m[$field]";   $field++;
+					}
+				else
+					{
+					$comments =		"$m[$field]";   $field++;
+					}
+				$comments =~ s/\"|\)|\(|;//gi;
+
+				$source_code =			'';
+				$list_id =				'995';
+				$phone_code =			'1';
+				$title =				'';
+				$address3 =				'';
+				$country =				'USA';
+				$gender =				'U';
+				$date_of_birth =		'0000-00-00';
+				$email =				'';
+				$security_phrase =		'';
 				$called_count =			0;
 				$status =				'NEW';
 

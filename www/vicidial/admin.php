@@ -1192,7 +1192,6 @@ if ($non_latin < 1)
 	$delete_users = ereg_replace("[^0-9]","",$delete_users);
 	$dial_timeout = ereg_replace("[^0-9]","",$dial_timeout);
 	$dialplan_number = ereg_replace("[^0-9]","",$dialplan_number);
-	$drop_call_seconds = ereg_replace("[^0-9]","",$drop_call_seconds);
 	$enable_fast_refresh = ereg_replace("[^0-9]","",$enable_fast_refresh);
 	$enable_persistant_mysql = ereg_replace("[^0-9]","",$enable_persistant_mysql);
 	$fast_refresh_rate = ereg_replace("[^0-9]","",$fast_refresh_rate);
@@ -1290,6 +1289,8 @@ if ($non_latin < 1)
 	$enable_tts_integration = ereg_replace("[^0-9]","",$enable_tts_integration);
 	$allow_alerts = ereg_replace("[^0-9]","",$allow_alerts);
 	$vicidial_balance_rank = ereg_replace("[^0-9]","",$vicidial_balance_rank);
+
+	$drop_call_seconds = ereg_replace("[^-0-9]","",$drop_call_seconds);
 
 	### DIGITS and COLONS
 	$shift_length = ereg_replace("[^\:0-9]","",$shift_length);
