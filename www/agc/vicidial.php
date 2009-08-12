@@ -244,10 +244,11 @@
 # 90729-0647 - Added agent_display_dialable_leads option
 # 90730-0145 - Fixed bugs in re-queue and INBOUND_MAN with blended selected
 # 90808-0117 - Fixed manual dial calls today bug, added last_state_change to vicidial_live_agents
+# 90812-0046 - Added no-delete-sessions = 1 as default, unused sessions cleared out at timeclock end of day
 #
 
-$version = '2.2.0-222';
-$build = '90808-0117';
+$version = '2.2.0-223';
+$build = '90812-0046';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -368,7 +369,7 @@ $show_campname_pulldown	= '1';	# set to 1 to show campaign name on login pulldow
 $webform_sessionname	= '1';	# set to 1 to include the session_name in webform URL
 $local_consult_xfers	= '1';	# set to 1 to send consultative transfers from original server
 $clientDST				= '1';	# set to 1 to check for DST on server for agent time
-$no_delete_sessions		= '0';	# set to 1 to not delete sessions at logout
+$no_delete_sessions		= '1';	# set to 1 to not delete sessions at logout
 $volumecontrol_active	= '1';	# set to 1 to allow agents to alter volume of channels
 $PreseT_DiaL_LinKs		= '0';	# set to 1 to show a DIAL link for Dial Presets
 $LogiNAJAX				= '1';	# set to 1 to do lookups on campaigns for login

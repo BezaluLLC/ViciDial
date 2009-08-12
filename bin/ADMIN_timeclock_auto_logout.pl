@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# ADMIN_timeclock_auto_logout.pl version 2.0.5   *DBI-version*
+# ADMIN_timeclock_auto_logout.pl version 2.2.0   *DBI-version*
 #
 # DESCRIPTION:
 # forces logout of all users still logged into the timeclock
@@ -8,11 +8,12 @@
 # This script is launched by the ADMIN_keepalive_ALL.pl script with the '9' flag
 # defined in astguiclient.conf
 # 
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 80526-0958 - First Build
-# 80604-0733 - fixed minor bug in update
+# 80604-0733 - Fixed minor bug in update
+# 90812-0103 - Formatting fixes
 #
 
 # constants
@@ -38,47 +39,47 @@ $HHMM = "$hour$min";
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
 
 	if ($args =~ /--help/i)
-	{
-	print "allowed run time options(must stay in this order):\n  [--debug] = debug\n  [--debugX] = super debug\n  [-t] = test\n  [--force-run] = force run even if already run for the day\n\n";
-	exit;
-	}
+		{
+		print "allowed run time options(must stay in this order):\n  [--debug] = debug\n  [--debugX] = super debug\n  [-t] = test\n  [--force-run] = force run even if already run for the day\n\n";
+		exit;
+		}
 	else
-	{
+		{
 		if ($args =~ /--force-run/i)
-		{
-		$force_run=1;
-		print "\n----- FORCE RUN -----\n\n";
-		}
+			{
+			$force_run=1;
+			print "\n----- FORCE RUN -----\n\n";
+			}
 		if ($args =~ /--debug/i)
-		{
-		$DB=1;
-		print "\n----- DEBUG -----\n\n";
-		}
+			{
+			$DB=1;
+			print "\n----- DEBUG -----\n\n";
+			}
 		if ($args =~ /--debugX/i)
-		{
-		$DBX=1;
-		print "\n----- SUPER DEBUG -----\n\n";
-		}
+			{
+			$DBX=1;
+			print "\n----- SUPER DEBUG -----\n\n";
+			}
 		if ($args =~ /-t/i)
-		{
-		$T=1;   $TEST=1;
-		print "\n-----TESTING -----\n\n";
+			{
+			$T=1;   $TEST=1;
+			print "\n-----TESTING -----\n\n";
+			}
 		}
 	}
-}
 else
-{
-print "no command line options set\n";
-}
+	{
+	print "no command line options set\n";
+	}
 
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
@@ -135,13 +136,13 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 	$rec_count=0;
 	while ($sthArows > $rec_count)
 		{
-		 @aryA = $sthA->fetchrow_array;
-			$DBvd_server_logs =			"$aryA[0]";
-			$DBSERVER_GMT		=		"$aryA[1]";
-			if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
-				else {$SYSLOG = '0';}
-			if (length($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
-		 $rec_count++;
+		@aryA = $sthA->fetchrow_array;
+		$DBvd_server_logs =			"$aryA[0]";
+		$DBSERVER_GMT		=		"$aryA[1]";
+		if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
+		else {$SYSLOG = '0';}
+		if (length($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
+		$rec_count++;
 		}
 	$sthA->finish();
 
@@ -152,9 +153,9 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 	$sthArows=$sthA->rows;
 	if ($sthArows > 0)
 		{
-		 @aryA = $sthA->fetchrow_array;
-			$timeclock_end_of_day =			"$aryA[0]";
-			$timeclock_last_reset_date =	"$aryA[1]";
+		@aryA = $sthA->fetchrow_array;
+		$timeclock_end_of_day =			"$aryA[0]";
+		$timeclock_last_reset_date =	"$aryA[1]";
 		}
 	$sthA->finish();
 
@@ -165,7 +166,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 $nowtest = ($HHMM+0);
 $logtest = ($timeclock_end_of_day+0);
 if ( ($force_run > 0) || ( ($nowtest >= $logtest) && ($timeclock_last_reset_date ne "$file_date") ) )
-{
+	{
 	@user=@MT; 
 
 	### grab users that are currently logged-in to the timeclock
@@ -239,20 +240,20 @@ if ( ($force_run > 0) || ( ($nowtest >= $logtest) && ($timeclock_last_reset_date
 	$event_string = "SYSTEM SETTINGS UPDATE|$affected_rows|$stmtA|";
 		&event_logger;
 
-}
+	}
 else
-{
-print "cannot run: |$force_run|$HHMM($nowtest)|$timeclock_end_of_day($logtest)|$timeclock_last_reset_date|$file_date|\n";
-}
+	{
+	print "cannot run: |$force_run|$HHMM($nowtest)|$timeclock_end_of_day($logtest)|$timeclock_last_reset_date|$file_date|\n";
+	}
 
 if($DB)
-{
-### calculate time to run script ###
-$secY = time();
-$secZ = ($secY - $secT);
+	{
+	### calculate time to run script ###
+	$secY = time();
+	$secZ = ($secY - $secT);
 
-if (!$q) {print "DONE. Script execution time in seconds: $secZ\n";}
-}
+	if (!$q) {print "DONE. Script execution time in seconds: $secZ\n";}
+	}
 
 $dbhA->disconnect();
 
@@ -261,15 +262,15 @@ exit;
 
 
 sub event_logger
-{
-if ($SYSLOG)
 	{
-	### open the log file for writing ###
-	open(Lout, ">>$VDALOGfile")
-			|| die "Can't open $VDALOGfile: $!\n";
-	print Lout "$now_date|$event_string|\n";
-	close(Lout);
+	if ($SYSLOG)
+		{
+		### open the log file for writing ###
+		open(Lout, ">>$VDALOGfile")
+				|| die "Can't open $VDALOGfile: $!\n";
+		print Lout "$now_date|$event_string|\n";
+		close(Lout);
+		}
+	$event_string='';
 	}
-$event_string='';
-}
 

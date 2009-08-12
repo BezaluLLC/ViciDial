@@ -193,6 +193,11 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	in "state"(INCALL, READY, PAUSED, etc...) instead of being based upon
 	the time of the last call they handled.
 
+49. Changed the ViciDial agent screen to not delete session reservations by
+	default at agent logout. Instead, the ADMIN_keepalive process will clear
+	out unused session reservations once a day at the timeclock reset time 
+	as set in system_settings.
+
 
 
 

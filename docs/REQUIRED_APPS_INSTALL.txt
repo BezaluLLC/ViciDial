@@ -193,13 +193,13 @@ make install
 
 
 cd /usr/local
-wget http://us2.php.net/distributions/php-5.2.9.tar.gz
-gunzip php-5.2.9.tar.gz
-tar xvf php-5.2.9.tar
-wget http://mirror.nyi.net/apache/httpd/httpd-2.2.11.tar.gz
-gunzip httpd-2.2.11.tar.gz
-tar xvf httpd-2.2.11.tar
-cd httpd-2.2.11
+wget http://us2.php.net/distributions/php-5.2.10.tar.gz
+gunzip php-5.2.10.tar.gz
+tar xvf php-5.2.10.tar
+wget http://mirror.nyi.net/apache/httpd/httpd-2.2.13.tar.gz
+gunzip httpd-2.2.13.tar.gz
+tar xvf httpd-2.2.13.tar
+cd httpd-2.2.13
 make clean
 ./configure --prefix=/usr/local/apache2 --enable-ssl --enable-setenvif --enable-so --with-apxs2 --enable-dav --enable-maintainer-mode --with-ssl=/usr/local/ssl
 make
@@ -213,9 +213,9 @@ openssl req -new -x509 -days 1200 -keyout /usr/local/apache2/conf/ssl.key/server
 openssl rsa -in /usr/local/apache2/conf/ssl.key/server.key.cpy -out /usr/local/apache2/conf/ssl.key/server.key
 
 
-cd ../php-5.2.9
+cd ../php-5.2.10
 make clean
-./configure --with-mysql=/usr/local/mysql --enable-inline-optimization --enable-memory-limit --enable-track-vars --enable-libgcc --enable-sysvsem --with-openssl=/usr/local/ssl --with-apxs2=/usr/local/apache2/bin/apxs --with-zlib
+./configure --with-mysql=/usr/local/mysql --enable-inline-optimization --enable-memory-limit --enable-track-vars --enable-libgcc --enable-sysvsem --with-openssl=/usr/local/ssl --with-apxs2=/usr/local/apache2/bin/apxs --with-zlib --enable-mbstring
 make
 make install
 cp php.ini-dist /usr/local/lib/php.ini

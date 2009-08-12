@@ -22,36 +22,36 @@ $MT[0]='';
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
 
 	if ($args =~ /--help/i)
-	{
-	print "allowed run time options:\n  [-t] = test\n  [-debug] = verbose debug messages\n\n";
-	}
+		{
+		print "allowed run time options:\n  [-t] = test\n  [-debug] = verbose debug messages\n\n";
+		}
 	else
-	{
+		{
 		if ($args =~ /-debug/i)
-		{
-		$DB=1; # Debug flag
-		print "-- DEBUGGING ENABLED --\n\n";
-		}
+			{
+			$DB=1; # Debug flag
+			print "-- DEBUGGING ENABLED --\n\n";
+			}
 		if ($args =~ /-t/i)
-		{
-		$TEST=1;
-		$T=1;
+			{
+			$TEST=1;
+			$T=1;
+			}
 		}
 	}
-}
 else
-{
-#	print "no command line options set\n";
-}
+	{
+	#	print "no command line options set\n";
+	}
 ### end parsing run-time options ###
 
 # default path to astguiclient configuration file:
@@ -113,29 +113,29 @@ $sthArows=$sthA->rows;
 $rec_count=0;
 if ($sthArows > 0)
     {
-	   @aryA = $sthA->fetchrow_array;
-		$DBtelnet_host	=			"$aryA[0]";
-		$DBtelnet_port	=			"$aryA[1]";
-		$DBASTmgrUSERNAME	=		"$aryA[2]";
-		$DBASTmgrSECRET	=			"$aryA[3]";
-		$DBASTmgrUSERNAMEupdate	=	"$aryA[4]";
-		$DBASTmgrUSERNAMElisten	=	"$aryA[5]";
-		$DBASTmgrUSERNAMEsend	=	"$aryA[6]";
-		$DBmax_vicidial_trunks	=	"$aryA[7]";
-		$DBanswer_transfer_agent=	"$aryA[8]";
-		$DBSERVER_GMT		=		"$aryA[9]";
-		$DBext_context	=			"$aryA[10]";
-		if ($DBtelnet_host)				{$telnet_host = $DBtelnet_host;}
-		if ($DBtelnet_port)				{$telnet_port = $DBtelnet_port;}
-		if ($DBASTmgrUSERNAME)			{$ASTmgrUSERNAME = $DBASTmgrUSERNAME;}
-		if ($DBASTmgrSECRET)			{$ASTmgrSECRET = $DBASTmgrSECRET;}
-		if ($DBASTmgrUSERNAMEupdate)	{$ASTmgrUSERNAMEupdate = $DBASTmgrUSERNAMEupdate;}
-		if ($DBASTmgrUSERNAMElisten)	{$ASTmgrUSERNAMElisten = $DBASTmgrUSERNAMElisten;}
-		if ($DBASTmgrUSERNAMEsend)		{$ASTmgrUSERNAMEsend = $DBASTmgrUSERNAMEsend;}
-		if ($DBmax_vicidial_trunks)		{$max_vicidial_trunks = $DBmax_vicidial_trunks;}
-		if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
-		if ($DBSERVER_GMT)				{$SERVER_GMT = $DBSERVER_GMT;}
-		if ($DBext_context)				{$ext_context = $DBext_context;}
+	@aryA = $sthA->fetchrow_array;
+	$DBtelnet_host	=			"$aryA[0]";
+	$DBtelnet_port	=			"$aryA[1]";
+	$DBASTmgrUSERNAME	=		"$aryA[2]";
+	$DBASTmgrSECRET	=			"$aryA[3]";
+	$DBASTmgrUSERNAMEupdate	=	"$aryA[4]";
+	$DBASTmgrUSERNAMElisten	=	"$aryA[5]";
+	$DBASTmgrUSERNAMEsend	=	"$aryA[6]";
+	$DBmax_vicidial_trunks	=	"$aryA[7]";
+	$DBanswer_transfer_agent=	"$aryA[8]";
+	$DBSERVER_GMT		=		"$aryA[9]";
+	$DBext_context	=			"$aryA[10]";
+	if ($DBtelnet_host)				{$telnet_host = $DBtelnet_host;}
+	if ($DBtelnet_port)				{$telnet_port = $DBtelnet_port;}
+	if ($DBASTmgrUSERNAME)			{$ASTmgrUSERNAME = $DBASTmgrUSERNAME;}
+	if ($DBASTmgrSECRET)			{$ASTmgrSECRET = $DBASTmgrSECRET;}
+	if ($DBASTmgrUSERNAMEupdate)	{$ASTmgrUSERNAMEupdate = $DBASTmgrUSERNAMEupdate;}
+	if ($DBASTmgrUSERNAMElisten)	{$ASTmgrUSERNAMElisten = $DBASTmgrUSERNAMElisten;}
+	if ($DBASTmgrUSERNAMEsend)		{$ASTmgrUSERNAMEsend = $DBASTmgrUSERNAMEsend;}
+	if ($DBmax_vicidial_trunks)		{$max_vicidial_trunks = $DBmax_vicidial_trunks;}
+	if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
+	if ($DBSERVER_GMT)				{$SERVER_GMT = $DBSERVER_GMT;}
+	if ($DBext_context)				{$ext_context = $DBext_context;}
 	}
  $sthA->finish(); 
 
@@ -163,14 +163,14 @@ if ($Tmday < 10) {$Tmday = "0$Tmday";}
 if ($Thour < 10) {$Thour = "0$Thour";}
 if ($Tmin < 10) {$Tmin = "0$Tmin";}
 if ($Tsec < 10) {$Tsec = "0$Tsec";}
-	$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
-	$TDnum = "$Tyear$Tmon$Tmday$Thour$Tmin$Tsec";
+$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
+$TDnum = "$Tyear$Tmon$Tmday$Thour$Tmin$Tsec";
 
 ######################################################################
 ##### CLEAR vicidial_conferences ENTRIES IN LEAVE-3WAY FOR MORE THAN ONE HOUR
 ######################################################################
 @PTextensions=@MT; @PT_conf_extens=@MT; @PTmessages=@MT; @PTold_messages=@MT; @NEW_messages=@MT; @OLD_messages=@MT;
-$stmtA = "SELECT conf_exten from vicidial_conferences where server_ip='$server_ip' and leave_3way='1' and leave_3way_datetime < \"$TDSQLdate\";";
+$stmtA = "SELECT conf_exten,extension from vicidial_conferences where server_ip='$server_ip' and leave_3way='1' and leave_3way_datetime < \"$TDSQLdate\";";
 if ($DB) {print "|$stmtA|\n";}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -180,7 +180,8 @@ while ($sthArows > $rec_count)
 	{
 	@aryA = $sthA->fetchrow_array;
 	$PT_conf_extens[$rec_count] =	 "$aryA[0]";
-		if ($DB) {print "|$PT_conf_extens[$rec_count]|$PTextensions[$rec_count]|\n";}
+	$PT_extensions[$rec_count] =	 "$aryA[0]";
+		if ($DB) {print "|$PT_conf_extens[$rec_count]|$PT_extensions[$rec_count]|\n";}
 	$rec_count++;
 	}
 $sthA->finish();
@@ -217,13 +218,13 @@ $sthArows=$sthA->rows;
 $rec_count=0;
 while ($sthArows > $rec_count)
     {
-	   @aryA = $sthA->fetchrow_array;
-		$PTextensions[$rec_count] =		 "$aryA[0]";
-		$PT_conf_extens[$rec_count] =	 "$aryA[1]";
-			if ($DB) {print "|$PT_conf_extens[$rec_count]|$PTextensions[$rec_count]|\n";}
-		$rec_count++;
-   }
-   $sthA->finish(); 
+	@aryA = $sthA->fetchrow_array;
+	$PTextensions[$rec_count] =		 "$aryA[0]";
+	$PT_conf_extens[$rec_count] =	 "$aryA[1]";
+		if ($DB) {print "|$PT_conf_extens[$rec_count]|$PTextensions[$rec_count]|\n";}
+	$rec_count++;
+	}
+$sthA->finish(); 
 
 if (!$telnet_port) {$telnet_port = '5038';}
 
@@ -333,13 +334,13 @@ $sthArows=$sthA->rows;
 $rec_count=0;
 while ($sthArows > $rec_count)
     {
-	   @aryA = $sthA->fetchrow_array;
-		$PTextensions[$rec_count] =		 "$aryA[0]";
-		$PT_conf_extens[$rec_count] =	 "$aryA[1]";
-			if ($DB) {print "|$PT_conf_extens[$rec_count]|$PTextensions[$rec_count]|\n";}
-		$rec_count++;
-   }
-   $sthA->finish(); 
+	@aryA = $sthA->fetchrow_array;
+	$PTextensions[$rec_count] =		 "$aryA[0]";
+	$PT_conf_extens[$rec_count] =	 "$aryA[1]";
+		if ($DB) {print "|$PT_conf_extens[$rec_count]|$PTextensions[$rec_count]|\n";}
+	$rec_count++;
+	}
+$sthA->finish(); 
 
 if (!$telnet_port) {$telnet_port = '5038';}
 
@@ -348,8 +349,8 @@ $t = new Net::Telnet (Port => $telnet_port,
 					  Prompt => '/.*[\$%#>] $/',
 					  Output_record_separator => '',);
 #$fh = $t->dump_log("$telnetlog");  # uncomment for telnet log
-	if (length($ASTmgrUSERNAMEsend) > 3) {$telnet_login = $ASTmgrUSERNAMEsend;}
-	else {$telnet_login = $ASTmgrUSERNAME;}
+if (length($ASTmgrUSERNAMEsend) > 3) {$telnet_login = $ASTmgrUSERNAMEsend;}
+else {$telnet_login = $ASTmgrUSERNAME;}
 
 $t->open("$telnet_host"); 
 $t->waitfor('/[01]\n$/');			# print login

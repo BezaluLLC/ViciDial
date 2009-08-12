@@ -21332,13 +21332,13 @@ if ($ADD==8)
 	{
 		if ($SUB==89)
 		{
-		$stmt="UPDATE vicidial_callbacks SET status='INACTIVE' where user='$user' and status='LIVE' and callback_time < '$past_month_date';";
+		$stmt="UPDATE vicidial_callbacks SET status='INACTIVE' where user='$user' and status IN('LIVE','ACTIVE') and callback_time < '$past_month_date';";
 		$rslt=mysql_query($stmt, $link);
 		echo "<br>User($user) callback listings LIVE for more than one month have been made INACTIVE\n";
 		}
 		if ($SUB==899)
 		{
-		$stmt="UPDATE vicidial_callbacks SET status='INACTIVE' where user='$user' and status='LIVE' and callback_time < '$past_week_date';";
+		$stmt="UPDATE vicidial_callbacks SET status='INACTIVE' where user='$user' and status IN('LIVE','ACTIVE') and callback_time < '$past_week_date';";
 		$rslt=mysql_query($stmt, $link);
 		echo "<br>User($user) callback listings LIVE for more than one week have been made INACTIVE\n";
 		}
@@ -21363,13 +21363,13 @@ if ($ADD==81)
 	{
 		if ($SUB==89)
 		{
-		$stmt="UPDATE vicidial_callbacks SET status='INACTIVE' where campaign_id='$campaign_id' and status='LIVE' and callback_time < '$past_month_date';";
+		$stmt="UPDATE vicidial_callbacks SET status='INACTIVE' where campaign_id='$campaign_id' and status IN('LIVE','ACTIVE') and callback_time < '$past_month_date';";
 		$rslt=mysql_query($stmt, $link);
 		echo "<br>campaign($campaign_id) callback listings LIVE for more than one month have been made INACTIVE\n";
 		}
 		if ($SUB==899)
 		{
-		$stmt="UPDATE vicidial_callbacks SET status='INACTIVE' where campaign_id='$campaign_id' and status='LIVE' and callback_time < '$past_week_date';";
+		$stmt="UPDATE vicidial_callbacks SET status='INACTIVE' where campaign_id='$campaign_id' and status IN('LIVE','ACTIVE') and callback_time < '$past_week_date';";
 		$rslt=mysql_query($stmt, $link);
 		echo "<br>campaign($campaign_id) callback listings LIVE for more than one week have been made INACTIVE\n";
 		}
@@ -21394,13 +21394,13 @@ if ($ADD==811)
 	{
 		if ($SUB==89)
 		{
-		$stmt="UPDATE vicidial_callbacks SET status='INACTIVE' where list_id='$list_id' and status='LIVE' and callback_time < '$past_month_date';";
+		$stmt="UPDATE vicidial_callbacks SET status='INACTIVE' where list_id='$list_id' and status IN('LIVE','ACTIVE') and callback_time < '$past_month_date';";
 		$rslt=mysql_query($stmt, $link);
 		echo "<br>list($list_id) callback listings LIVE for more than one month have been made INACTIVE\n";
 		}
 		if ($SUB==899)
 		{
-		$stmt="UPDATE vicidial_callbacks SET status='INACTIVE' where list_id='$list_id' and status='LIVE' and callback_time < '$past_week_date';";
+		$stmt="UPDATE vicidial_callbacks SET status='INACTIVE' where list_id='$list_id' and status IN('LIVE','ACTIVE') and callback_time < '$past_week_date';";
 		$rslt=mysql_query($stmt, $link);
 		echo "<br>list($list_id) callback listings LIVE for more than one week have been made INACTIVE\n";
 		}
@@ -21425,13 +21425,13 @@ if ($ADD==8111)
 	{
 		if ($SUB==89)
 		{
-		$stmt="UPDATE vicidial_callbacks SET status='INACTIVE' where user_group='$user_group' and status='LIVE' and callback_time < '$past_month_date';";
+		$stmt="UPDATE vicidial_callbacks SET status='INACTIVE' where user_group='$user_group' and status IN('LIVE','ACTIVE') and callback_time < '$past_month_date';";
 		$rslt=mysql_query($stmt, $link);
 		echo "<br>user group($user_group) callback listings LIVE for more than one month have been made INACTIVE\n";
 		}
 		if ($SUB==899)
 		{
-		$stmt="UPDATE vicidial_callbacks SET status='INACTIVE' where user_group='$user_group' and status='LIVE' and callback_time < '$past_week_date';";
+		$stmt="UPDATE vicidial_callbacks SET status='INACTIVE' where user_group='$user_group' and status IN('LIVE','ACTIVE') and callback_time < '$past_week_date';";
 		$rslt=mysql_query($stmt, $link);
 		echo "<br>user group($user_group) callback listings LIVE for more than one week have been made INACTIVE\n";
 		}

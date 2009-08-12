@@ -8,6 +8,7 @@
 #
 # Other functions of this program:
 #  - Launches the timeclock auto-logout process
+#  - clear out non-used vicidial_conferences sessions
 #  - Generates Asterisk conf files and reloads Asterisk
 #  - Synchronizes the audio store files
 #  - Runs trigger processes at defined times
@@ -37,6 +38,7 @@
 # 90630-2259 - Added vicidial_process_triggers functionality
 # 90713-0140 - Changed direct dial phone extensions to failover to voicemail forwarder
 # 90722-1102 - Added list reset by time option
+# 90812-0053 - Added clear out non-used vicidial_conferences sessions
 #
 
 $DB=0; # Debug flag
@@ -49,7 +51,7 @@ $mon++;
 $wtoday = $wday;
 if ($mon < 10) {$mon = "0$mon";}
 if ($mday < 10) {$mday = "0$mday";}
-if ($hour < 10) {$Fhour = "0$hour";}
+if ($hour < 10) {$hour = "0$hour";}
 if ($min < 10) {$min = "0$min";}
 if ($sec < 10) {$sec = "0$sec";}
 $now_date = "$year-$mon-$mday $hour:$min:$sec";
@@ -478,10 +480,8 @@ if ($timeclock_auto_logout > 0)
 
 
 
-
-
 ################################################################################
-#####  START Creation of auto-generated conf files
+#####  START clear out non-used vicidial_conferences sessions
 ################################################################################
 
 # default path to astguiclient configuration file:
@@ -524,6 +524,77 @@ use DBI;
 
 $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
  or die "Couldn't connect to database: " . DBI->errstr;
+
+$timeclock_end_of_day_NOW=0;
+### Grab system_settings values from the database
+	$stmtA = "SELECT count(*) from system_settings where timeclock_end_of_day LIKE \"%$reset_test%\";";
+	if ($DB) {print "|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$timeclock_end_of_day_NOW =	"$aryA[0]";
+		}
+	$sthA->finish();
+
+if ($timeclock_end_of_day_NOW > 0)
+	{
+	if ($DB) {print "Starting clear out non-used vicidial_conferences sessions process...\n";}
+
+	$stmtA = "SELECT conf_exten,extension from vicidial_conferences where server_ip='$server_ip' and leave_3way='0';";
+	if ($DB) {print "|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$VCexten_ct=$sthA->rows;
+	$rec_count=0;
+	while ($VCexten_ct > $rec_count)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$PT_conf_extens[$rec_count] =	 $aryA[0];
+		$PT_extensions[$rec_count] =	 $aryA[1];
+			if ($DBX) {print "|$PT_conf_extens[$rec_count]|$PT_extensions[$rec_count]|\n";}
+		$rec_count++;
+		}
+	$sthA->finish();
+	$k=0;
+	while ($k < $rec_count)
+		{
+		$live_session=0;
+		$stmtA = "SELECT count(*) from vicidial_live_agents where conf_exten='$PT_conf_extens[$k]' and server_ip='$server_ip';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$live_session =	"$aryA[0]";
+			}
+		$sthA->finish();
+
+		if ($live_session < 1)
+			{
+			$stmtA = "UPDATE vicidial_conferences set extension='' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$k]';";
+				if($DBX){print STDERR "\n|$stmtA|\n";}
+			$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
+			}
+		$k++;
+		}
+
+	}
+
+################################################################################
+#####  END clear out non-used vicidial_conferences sessions
+################################################################################
+
+
+
+
+
+################################################################################
+#####  START Creation of auto-generated conf files
+################################################################################
 
 ##### Get the settings from system_settings #####
 $stmtA = "SELECT sounds_central_control_active,active_voicemail_server FROM system_settings;";

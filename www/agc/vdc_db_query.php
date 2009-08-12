@@ -383,6 +383,8 @@ if (isset($_GET["vtiger_callback_id"]))				{$vtiger_callback_id=$_GET["vtiger_ca
 	elseif (isset($_POST["vtiger_callback_id"]))	{$vtiger_callback_id=$_POST["vtiger_callback_id"];}
 if (isset($_GET["dial_method"]))				{$dial_method=$_GET["dial_method"];}
 	elseif (isset($_POST["dial_method"]))		{$dial_method=$_POST["dial_method"];}
+if (isset($_GET["no_delete_sessions"]))				{$no_delete_sessions=$_GET["no_delete_sessions"];}
+	elseif (isset($_POST["no_delete_sessions"]))	{$no_delete_sessions=$_POST["no_delete_sessions"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -3278,7 +3280,46 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$dialed_label		=$row[2];
 				$call_type			=$row[3];
 				if ( ($dialed_number != $phone_number) and (strlen($dialed_label) < 3) )
-					{$dialed_label = 'ALT';}
+					{
+					if ($dialed_number != $alt_phone)
+						{
+						if ($dialed_number != $address3)
+							{
+							$dialed_label = 'X1';
+							$stmt = "SELECT alt_phone_count from vicidial_list_alt_phones where lead_id='$lead_id' and phone_number = '$dialed_number' order by alt_phone_count limit 1;";
+							if ($DB) {echo "$stmt\n";}
+							$rslt=mysql_query($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+							$VDAP_cid_ct = mysql_num_rows($rslt);
+							if ($VDACP_cid_ct > 0)
+								{
+								$row=mysql_fetch_row($rslt);
+								$Xalt_phone_count	=$row[0];
+
+								$stmt = "SELECT count(*) from vicidial_list_alt_phones where lead_id='$lead_id';";
+								if ($DB) {echo "$stmt\n";}
+								$rslt=mysql_query($stmt, $link);
+									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+								$VDAPct_cid_ct = mysql_num_rows($rslt);
+								if ($VDACPct_cid_ct > 0)
+									{
+									$row=mysql_fetch_row($rslt);
+									$COUNTalt_phone_count	=$row[0];
+
+									if ($COUNTalt_phone_count <= $Xalt_phone_count)
+										{$dialed_label = 'XLAST';}
+									else
+										{$dialed_label = "X$Xalt_phone_count";}
+									}
+
+								}
+							}
+						else
+							{$dialed_label = 'ADDR3';}
+						}
+					else
+						{$dialed_label = 'ALT';}
+					}
 				}
 			else
 				{
@@ -3915,7 +3956,7 @@ if ($ACTION == 'updateDISPO')
 						$user_group =		"$row[0]";
 						}
 
-					$stmt = "SELECT list_id,phone_number,phone_code FROM vicidial_list where lead_id='$lead_id';";
+					$stmt = "SELECT list_id,phone_number,phone_code,alt_phone,address3 FROM vicidial_list where lead_id='$lead_id';";
 					$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00216',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
@@ -3928,6 +3969,8 @@ if ($ACTION == 'updateDISPO')
 							{
 							$VLphone_number =	"$row[1]";
 							$VLalt =			'MAIN';
+							$VLalt_phone =		"$row[3]";
+							$VLaddress3 =		"$row[4]";
 							}
 						else
 							{
@@ -3935,7 +3978,46 @@ if ($ACTION == 'updateDISPO')
 							if ($phone_number == "$row[1]")
 								{$VLalt =			'MAIN';}
 							else
-								{$VLalt =			'ALT';}
+								{
+								if ($phone_number != $VLalt_phone)
+									{
+									if ($phone_number != $VLaddress3)
+										{
+										$VLalt = 'X1';
+										$stmt = "SELECT alt_phone_count from vicidial_list_alt_phones where lead_id='$lead_id' and phone_number = '$dialed_number' order by alt_phone_count limit 1;";
+										if ($DB) {echo "$stmt\n";}
+										$rslt=mysql_query($stmt, $link);
+											if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+										$VDAP_cid_ct = mysql_num_rows($rslt);
+										if ($VDACP_cid_ct > 0)
+											{
+											$row=mysql_fetch_row($rslt);
+											$Xalt_phone_count	=$row[0];
+
+											$stmt = "SELECT count(*) from vicidial_list_alt_phones where lead_id='$lead_id';";
+											if ($DB) {echo "$stmt\n";}
+											$rslt=mysql_query($stmt, $link);
+												if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+											$VDAPct_cid_ct = mysql_num_rows($rslt);
+											if ($VDACPct_cid_ct > 0)
+												{
+												$row=mysql_fetch_row($rslt);
+												$COUNTalt_phone_count	=$row[0];
+
+												if ($COUNTalt_phone_count <= $Xalt_phone_count)
+													{$VLalt = 'XLAST';}
+												else
+													{$VLalt = "X$Xalt_phone_count";}
+												}
+
+											}
+										}
+									else
+										{$VLalt =			'ADDR3';}
+									}
+								else
+									{$VLalt =			'ALT';}
+								}
 							}
 						if (strlen($phone_code)<1)
 							{$VLphone_code =	"$row[2]";}
