@@ -47,6 +47,7 @@
 # 90604-1044 - Fixed formatting, added DAHDI support, added carrier hangup code logging
 # 90608-0316 - Changed hangup code dispos B and DC to AB and ADC to separate Agent dispos from Auto
 # 90630-2253 - Added Sangoma CDP pre-Answer call processing
+# 90814-0810 - Added extra logging for vicidial_log in some cases
 #
 
 
@@ -486,7 +487,7 @@ sub process_request
 
 
 		### call end stage
-		else		 
+		else
 			{
 			if ($AGILOG) {$agi_string = "|CALL HUNG UP|";   &agi_output;}
 
@@ -664,6 +665,7 @@ sub process_request
 					if ($cpd_result =~ /Fax|Modem/i)			{$VDL_status='AFAX';	$VDAC_status='FAX';   $CPDfound++;}
 					if ($cpd_result =~ /Answering-Machine/i)	{$VDL_status='AA';		$VDAC_status='AMD';   $CPDfound++;}
 					}
+				$sthA->finish();
 				##############################################################
 				### END - CPD Look for result for B/DC calls
 				##############################################################
@@ -707,7 +709,7 @@ sub process_request
 				{
 				########## FIND AND DELETE vicidial_auto_calls ##########
 				$VD_alt_dial = 'NONE';
-				$stmtA = "SELECT lead_id,callerid,campaign_id,alt_dial,stage,UNIX_TIMESTAMP(call_time),uniqueid,status FROM vicidial_auto_calls where uniqueid = '$uniqueid' or callerid = '$callerid' limit 1;";
+				$stmtA = "SELECT lead_id,callerid,campaign_id,alt_dial,stage,UNIX_TIMESTAMP(call_time),uniqueid,status,call_time,phone_code,phone_number FROM vicidial_auto_calls where uniqueid = '$uniqueid' or callerid = '$callerid' limit 1;";
 					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -716,14 +718,17 @@ sub process_request
 				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$VD_lead_id	=		"$aryA[0]";
-					$VD_callerid	=	"$aryA[1]";
-					$VD_campaign_id	=	"$aryA[2]";
-					$VD_alt_dial	=	"$aryA[3]";
-					$VD_stage =			"$aryA[4]";
-					$VD_start_epoch =	"$aryA[5]";
-					$VD_uniqueid =		"$aryA[6]";
-					$VD_status =		"$aryA[7]";
+					$VD_lead_id	=		$aryA[0];
+					$VD_callerid	=	$aryA[1];
+					$VD_campaign_id	=	$aryA[2];
+					$VD_alt_dial	=	$aryA[3];
+					$VD_stage =			$aryA[4];
+					$VD_start_epoch =	$aryA[5];
+					$VD_uniqueid =		$aryA[6];
+					$VD_status =		$aryA[7];
+					$VD_call_time =		$aryA[8];
+					$VD_phone_code =	$aryA[9];
+					$VD_phone_number =	$aryA[10];
 					$rec_countCUSTDATA++;
 					}
 				$sthA->finish();
@@ -735,8 +740,8 @@ sub process_request
 				else
 					{
 					$stmtA = "DELETE FROM vicidial_auto_calls where ( ( (status!='IVR') and (uniqueid='$uniqueid' or callerid = '$callerid') ) or ( (status='IVR') and (uniqueid='$uniqueid') ) ) order by call_time desc limit 1;";
-					$affected_rows = $dbhA->do($stmtA);
-					if ($AGILOG) {$agi_string = "--    VDAC record deleted: |$affected_rows|   |$VD_lead_id|$uniqueid|$VD_uniqueid|$VD_callerid|$VARserver_ip|$VD_status|";   &agi_output;}
+					$VACaffected_rows = $dbhA->do($stmtA);
+					if ($AGILOG) {$agi_string = "--    VDAC record deleted: |$VACaffected_rows|   |$VD_lead_id|$uniqueid|$VD_uniqueid|$VD_callerid|$VARserver_ip|$VD_status|";   &agi_output;}
 
 					#############################################
 					##### START QUEUEMETRICS LOGGING LOOKUP #####
@@ -868,6 +873,19 @@ sub process_request
 					if (!$epc_countCUSTDATA)
 						{
 						if ($AGILOG) {$agi_string = "no VDL or VDCL record found: $uniqueid $calleridname $VD_lead_id $uniqueid $VD_uniqueid";   &agi_output;}
+
+						$VD_status = 'NA';
+
+						if ( ($VACaffected_rows > 0) && ($VD_callerid =~ /^V/) )
+							{
+							$stmtA = "INSERT INTO vicidial_log SET uniqueid='$VD_uniqueid',lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',call_date='$VD_call_time',start_epoch='$VD_start_epoch',status='$VD_status',phone_code='$VD_phone_code',phone_number='$VD_phone_number',user='VDAD',processed='N',length_in_sec='0',end_epoch,alt_dial='$VD_alt_dial';";
+								if($M){print STDERR "\n|$stmtA|\n";}
+							$affected_rows = $dbhA->do($stmtA);
+							$sthA->finish();
+
+							$event_string = "|     NO VDL add to vicidial_log $VD_uniqueid|$VD_lead_id|$VD_phone_number|$VD_status|$affected_rows|$VACaffected_rows";
+							 &event_logger;
+							}
 						}
 					else
 						{

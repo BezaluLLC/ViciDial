@@ -245,10 +245,11 @@
 # 90730-0145 - Fixed bugs in re-queue and INBOUND_MAN with blended selected
 # 90808-0117 - Fixed manual dial calls today bug, added last_state_change to vicidial_live_agents
 # 90812-0046 - Added no-delete-sessions = 1 as default, unused sessions cleared out at timeclock end of day
+# 90814-0829 - Moved mute button next to hotkeys button
 #
 
-$version = '2.2.0-223';
-$build = '90812-0046';
+$version = '2.2.0-224';
+$build = '90814-0829';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -408,13 +409,14 @@ $MNwidth =  ($MASTERwidth + 330);	# 760 - main frame
 $XFwidth =  ($MASTERwidth + 320);	# 750 - transfer/conference
 $HCwidth =  ($MASTERwidth + 310);	# 740 - hotkeys and callbacks
 $CQwidth =  ($MASTERwidth + 300);	# 730 - calls in queue listings
-$AMwidth =  ($MASTERwidth + 270);	# 700 - agent mute and preset-dial links
+$AMwidth =  ($MASTERwidth + 270);	# 700 - preset-dial links
 $SCwidth =  ($MASTERwidth + 230);	# 670 - live call seconds counter, sidebar link
+$MUwidth =  ($MASTERwidth + 180);	# 610 - agent mute
 $SSwidth =  ($MASTERwidth + 176);	# 606 - scroll script
 $SDwidth =  ($MASTERwidth + 170);	# 600 - scroll script, customer data and calls-in-session
-$HKwidth =  ($MASTERwidth + 70);	# 500 - Hotkeys button
+$HKwidth =  ($MASTERwidth + 20);	# 450 - Hotkeys button
 $HSwidth =  ($MASTERwidth + 1);		# 431 - Header spacer
-$CLwidth =  ($MASTERwidth - 60);	# 370 - Calls in queue link
+$CLwidth =  ($MASTERwidth - 160);	# 270 - Calls in queue link
 
 $CQheight =  ($MASTERheight + 140);	# 440 - Calls in queue section
 $SLheight =  ($MASTERheight + 122);	# 422 - SideBar link, Calls in queue link
@@ -8689,8 +8691,7 @@ echo "</head>\n";
 		}
 	else {echo "<BR>\n";}
 	?>
-<BR><BR>
-<span id="AgentMuteSpan"></span> <BR>
+<BR><BR> &nbsp; <BR>
 </font></span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:49;" id="CallBacKsLisTBox">
@@ -8827,6 +8828,8 @@ if ($agent_display_dialable_leads > 0)
 	}
 ?>
 </span></font>
+
+<span style="position:absolute;left:<?php echo $MUwidth ?>px;top:<?php echo $SLheight ?>px;z-index:29;" id="AgentMuteSpan"></span>
 
 
 <span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:33;" id="HotKeyActionBox">
