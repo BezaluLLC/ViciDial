@@ -2973,6 +2973,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			prefix_choice='';
 			agent_dialed_number='';
 			agent_dialed_type='';
+			CalL_ScripT_id='';
 			}
 		}
 
@@ -4652,6 +4653,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&source_id=" + source_id + '' +
 							"&rank=" + document.vicidial_form.rank.value + '' +
 							"&owner=" + document.vicidial_form.owner.value + '' +
+							"&camp_script=" + campaign_script + '' +
+							"&in_script=" + CalL_ScripT_id + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -4734,6 +4737,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				prefix_choice='';
 				agent_dialed_number='';
 				agent_dialed_type='';
+				CalL_ScripT_id='';
 				}
 			}
 		}
@@ -4859,6 +4863,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				prefix_choice='';
 				agent_dialed_number='';
 				agent_dialed_type='';
+				CalL_ScripT_id='';
 				}
 			}
 		}
@@ -5025,6 +5030,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			prefix_choice='';
 			agent_dialed_number='';
 			agent_dialed_type='';
+			CalL_ScripT_id='';
 			}
 
 		}
@@ -5606,6 +5612,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&source_id=" + source_id + '' +
 								"&rank=" + document.vicidial_form.rank.value + '' +
 								"&owner=" + document.vicidial_form.owner.value + '' +
+								"&camp_script=" + campaign_script + '' +
+								"&in_script=" + CalL_ScripT_id + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -5754,6 +5762,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			"&source_id=" + source_id + '' +
 			"&rank=" + document.vicidial_form.rank.value + '' +
 			"&owner=" + document.vicidial_form.owner.value + '' +
+			"&camp_script=" + campaign_script + '' +
+			"&in_script=" + CalL_ScripT_id + '' +
 			webform_session;
 			
 			var regWFspace = new RegExp(" ","ig");
@@ -7182,6 +7192,8 @@ encoded=utf8_decode(xtest);
 		var SCdialed_label = dialed_label;
 		var SCrank = document.vicidial_form.rank.value;
 		var SCowner = document.vicidial_form.owner.value;
+		var SCcamp_script = campaign_script;
+		var SCin_script = CalL_ScripT_id;
 		var SCweb_vars = LIVE_web_vars;
 
 		if (encoded.match(RGiframe))
@@ -7229,6 +7241,8 @@ encoded=utf8_decode(xtest);
 			SCdialed_label = SCdialed_label.replace(RGplus,'+');
 			SCrank = SCrank.replace(RGplus,'+');
 			SCowner = SCowner.replace(RGplus,'+');
+			SCcamp_script = SCcamp_script.replace(RGplus,'+');
+			SCin_script = SCin_script.replace(RGplus,'+');
 			SCweb_vars = SCweb_vars.replace(RGplus,'+');
 			}
 
@@ -7277,6 +7291,8 @@ encoded=utf8_decode(xtest);
 		var RGdialed_label = new RegExp("--A--dialed_label--B--","g");
 		var RGrank = new RegExp("--A--rank--B--","g");
 		var RGowner = new RegExp("--A--owner--B--","g");
+		var RGcamp_script = new RegExp("--A--camp_script--B--","g");
+		var RGin_script = new RegExp("--A--in_script--B--","g");
 		var RGweb_vars = new RegExp("--A--web_vars--B--","g");
 
 		encoded = encoded.replace(RGvendor_lead_code, SCvendor_lead_code);
@@ -7324,6 +7340,8 @@ encoded=utf8_decode(xtest);
 		encoded = encoded.replace(RGdialed_label, SCdialed_label);
 		encoded = encoded.replace(RGrank, SCrank);
 		encoded = encoded.replace(RGowner, SCowner);
+		encoded = encoded.replace(RGcamp_script, SCcamp_script);
+		encoded = encoded.replace(RGin_script, SCin_script);
 		encoded = encoded.replace(RGweb_vars, SCweb_vars);
 		}
 decoded=encoded; // simple no ?

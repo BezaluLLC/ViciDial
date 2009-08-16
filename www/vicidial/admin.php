@@ -5825,6 +5825,8 @@ if ($ADD==7111111)
 	$RGdialed_label = 'ALT';
 	$RGrank = '99';
 	$RGowner = '6666';
+	$RGcamp_script = 'TESTSCRIPT';
+	$RGin_script = '';
 
 	echo "</title>\n";
 	echo "</head>\n";
@@ -5880,6 +5882,8 @@ if ($ADD==7111111)
 		$RGdialed_label = eregi_replace(' ','+',$RGdialed_label);
 		$RGrank = eregi_replace(' ','+',$RGrank);
 		$RGowner = eregi_replace(' ','+',$RGowner);
+		$RGcamp_script = eregi_replace(' ','+',$RGcamp_script);
+		$RGin_script = eregi_replace(' ','+',$RGin_script);
 		}
 
 	$script_text = eregi_replace('--A--vendor_lead_code--B--',"$vendor_lead_code",$script_text);
@@ -5924,6 +5928,8 @@ if ($ADD==7111111)
 	$script_text = eregi_replace('--A--dialed_label--B--',"$RGdialed_label",$script_text);
 	$script_text = eregi_replace('--A--rank--B--',"$RGrank",$script_text);
 	$script_text = eregi_replace('--A--owner--B--',"$RGowner",$script_text);
+	$script_text = eregi_replace('--A--camp_script--B--',"$RGcamp_script",$script_text);
+	$script_text = eregi_replace('--A--in_script--B--',"$RGin_script",$script_text);
 	$script_text = eregi_replace("\n","<BR>",$script_text);
 
 

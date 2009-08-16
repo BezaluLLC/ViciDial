@@ -48,6 +48,7 @@
 # 90608-0316 - Changed hangup code dispos B and DC to AB and ADC to separate Agent dispos from Auto
 # 90630-2253 - Added Sangoma CDP pre-Answer call processing
 # 90814-0810 - Added extra logging for vicidial_log in some cases
+# 90815-0750 - Fixed extra vicidial_log logging
 #
 
 
@@ -615,6 +616,7 @@ sub process_request
 			$VDADcampaign='';
 			$VDADphone='';
 			$VDADphone_code='';
+			$VDL_status='';
 
 			if ($DEBUG =~ /^DEBUG$/)
 				{
@@ -872,20 +874,21 @@ sub process_request
 						}
 					if (!$epc_countCUSTDATA)
 						{
-						if ($AGILOG) {$agi_string = "no VDL or VDCL record found: $uniqueid $calleridname $VD_lead_id $uniqueid $VD_uniqueid";   &agi_output;}
+						if ($AGILOG) {$agi_string = "no VDL or VDCL record found: $uniqueid $calleridname $VD_lead_id $uniqueid $VD_uniqueid |$VACaffected_rows|$VD_callerid|";   &agi_output;}
 
-						$VD_status = 'NA';
+					# uncomment for some special circumstances
+					#	$VD_status = 'NA';
+					#	if (length($VDL_status) > 0) 
+					#		{$VD_status = $VDL_status;}
 
-						if ( ($VACaffected_rows > 0) && ($VD_callerid =~ /^V/) )
-							{
-							$stmtA = "INSERT INTO vicidial_log SET uniqueid='$VD_uniqueid',lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',call_date='$VD_call_time',start_epoch='$VD_start_epoch',status='$VD_status',phone_code='$VD_phone_code',phone_number='$VD_phone_number',user='VDAD',processed='N',length_in_sec='0',end_epoch,alt_dial='$VD_alt_dial';";
-								if($M){print STDERR "\n|$stmtA|\n";}
-							$affected_rows = $dbhA->do($stmtA);
-							$sthA->finish();
+					#	if ( ($VACaffected_rows > 0) && ($VD_callerid =~ /^V/) )
+					#		{
+					#		$stmtA = "INSERT INTO vicidial_log SET uniqueid='$uniqueid',lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',call_date='$VD_call_time',start_epoch='$VD_start_epoch',status='$VD_status',phone_code='$VD_phone_code',phone_number='$VD_phone_number',user='VDAD',processed='N',length_in_sec='0',end_epoch='$VD_start_epoch',alt_dial='$VD_alt_dial';";
+					#		$affected_rows = $dbhA->do($stmtA);
 
-							$event_string = "|     NO VDL add to vicidial_log $VD_uniqueid|$VD_lead_id|$VD_phone_number|$VD_status|$affected_rows|$VACaffected_rows";
-							 &event_logger;
-							}
+					#		$agi_string = "|     NO VDL add to vicidial_log $VD_uniqueid|$VD_lead_id|$VD_phone_number|$VD_status|$affected_rows|$VACaffected_rows|$affected_rows|$stmtA|";
+					#		 &agi_output;
+					#		}
 						}
 					else
 						{

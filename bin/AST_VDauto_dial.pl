@@ -78,6 +78,7 @@
 # 90611-0554 - Bug fix for Manual dial calls and logging
 # 90619-1948 - Format fixing
 # 90630-2252 - Added Sangoma CDP pre-Answer call processing
+# 90816-0057 - Changed default vicidial_log time to 0 from 1 second
 #
 
 
@@ -1123,7 +1124,7 @@ while($one_day_interval > 0)
 							 &event_logger;
 
 							$CLstage =~ s/LIVE|-//gi;
-							if ($CLstage < 0.25) {$CLstage=1;}
+							if ($CLstage < 0.25) {$CLstage=0;}
 
 							if ($CLstatus =~ /BUSY/) {$CLnew_status = 'B';}
 							else
@@ -1189,7 +1190,7 @@ while($one_day_interval > 0)
 								### END - CPD Look for result for NA/B/DC calls
 								##############################################################
 
-								$end_epoch = ($now_date_epoch + 1);
+								$end_epoch = $now_date_epoch;
 								if ($insertVLcount < 1)
 									{
 									$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,length_in_sec,end_epoch,alt_dial) values('$CLuniqueid','$CLlead_id','$CLcampaign_id','$SQLdate','$now_date_epoch','$CLnew_status','$CLphone_code','$CLphone_number','$insertVLuser','N','$CLstage','$end_epoch','$CLalt_dial')";
@@ -1654,9 +1655,9 @@ while($one_day_interval > 0)
 				 &jam_event_logger;
 
 				$CLstage =~ s/LIVE|-//gi;
-				if ($CLstage < 0.25) {$CLstage=1;}
+				if ($CLstage < 0.25) {$CLstage=0;}
 
-				$end_epoch = ($now_date_epoch + 1);
+				$end_epoch = $now_date_epoch;
 				$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,length_in_sec,end_epoch,alt_dial) values('$CLuniqueid','$CLlead_id','$CLcampaign_id','$SQLdate','$now_date_epoch','DROP','$CLphone_code','$CLphone_number','VDAD','N','$CLstage','$end_epoch','$CLalt_dial')";
 					if($M){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA);
