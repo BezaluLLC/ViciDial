@@ -40,6 +40,8 @@
 # 80731-2253 - Changed size comparisons for more efficiency
 # 90727-1458 - Added GSW format option
 # 90730-1454 - Fixed non-VicDial recordings date directory, added secondary icmp ping if standard ping fails
+# 90818-0953 - Fixed a bug where the filesizes for all files were null
+# 90818-1017 - Added a transfer limit and list limit options. 
 #
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -62,6 +64,8 @@ $VARFTP_port = '21';
 $VARFTP_dir  = 'RECORDINGS';
 $VARHTTP_path = 'http://10.0.0.4';
 
+$file_limit = 1000;
+$list_list = 1000;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -79,13 +83,16 @@ if (length($ARGV[0])>1)
 		print "  [--help] = this screen\n";
 		print "  [--debug] = debug\n";
 		print "  [--debugX] = super debug\n";
+		print "  [--transfer-limit=XXX] = number of files to transfer before exiting\n";
+		print "  [--list-limit=XXX] = number of files to list in the directory before moving on\n";
+		print "  [--debugX] = super debug\n";
 		print "  [-t] = test\n";
 		print "  [--GSM] = copy GSM files\n";
 		print "  [--MP3] = copy MPEG-Layer-3 files\n";
 		print "  [--OGG] = copy OGG Vorbis files\n";
 		print "  [--WAV] = copy WAV files\n";
 		print "  [--GSW] = copy GSM with RIFF headers and .wav extension files\n";
-		print "  [--NODATEDIR] = do not put into dated directories\n\n";
+		print "  [--nodatedir] = do not put into dated directories\n\n";
 		exit;
 		}
 	else
@@ -105,10 +112,24 @@ if (length($ARGV[0])>1)
 			$T=1;   $TEST=1;
 			print "\n----- TESTING -----\n\n";
 			}
-		if ($args =~ /-nodatedir/i)
+		if ($args =~ /--nodatedir/i)
 			{
 			$NODATEDIR=1;
 			if ($DB) {print "\n----- NO DATE DIRECTORIES -----\n\n";}
+			}
+		if ($args =~ /--transfer-limit=/i) 
+			{
+			my @data_in = split(/--transfer-limit=/,$args);
+			$file_limit = $data_in[1];
+			$file_limit =~ s/ .*//gi;
+			print "\n----- FILE TRANSFER LIMIT: $file_limit -----\n\n";
+			}
+		if ($args =~ /--list-limit=/i) 
+			{
+			my @data_in = split(/--list-limit=/,$args);
+			$list_limit = $data_in[1];
+			$list_limit =~ s/ .*//gi;
+			print "\n----- FILE LIST LIMIT: $list_limit -----\n\n";
 			}
 		if ($args =~ /--GSM/i)
 			{
@@ -233,19 +254,26 @@ opendir(FILE, "$dir2/");
 
 ### Loop through files first to gather filesizes
 $i=0;
+$files_that_count=0;
 foreach(@FILES)
 	{
 	$FILEsize1[$i] = 0;
-	if ( (length($FILES[$i]) > 4) && (!-d "$dir1/$FILES[$i]") )
+	if ( (length($FILES[$i]) > 4) && (!-d "$dir2/$FILES[$i]") )
 		{
-		$FILEsize1[$i] = (-s "$dir1/$FILES[$i]");
-		if ($DBX) {print "$FILES[$i] $FILEsize1[$i]\n";}
+		$FILEsize1[$i] = (-s "$dir2/$FILES[$i]");
+		if ($DBX) {print "$dir2/$FILES[$i] $FILEsize1[$i]\n";}
+		$files_that_count++;
 		}
 	$i++;
+	if ($files_that_count >= $list_limit)
+		{
+			last();
+		}		
 	}
 
 sleep(5);
 
+$transfered_files = 0;
 
 ### Loop through files a second time to gather filesizes again 5 seconds later
 $i=0;
@@ -253,11 +281,15 @@ foreach(@FILES)
 	{
 	$FILEsize2[$i] = 0;
 
-	if ( (length($FILES[$i]) > 4) && (!-d "$dir1/$FILES[$i]") )
+	if ( (length($FILES[$i]) > 4) && (!-d "$dir2/$FILES[$i]") )
 		{
 
-		$FILEsize2[$i] = (-s "$dir1/$FILES[$i]");
-		if ($DBX) {print "$FILES[$i] $FILEsize2[$i]\n\n";}
+		$FILEsize2[$i] = (-s "$dir2/$FILES[$i]");
+		if ($DBX) {print "$dir2/$FILES[$i] $FILEsize2[$i]\n\n";}
+		
+		if ($FILEsize1[$i] ne $FILEsize2[$i]) {
+			if ($DBX) {print "not transfering $dir2/$FILES[$i]. File size mismatch $FILEsize2[$i] != $FILEsize1[$i]\n\n";}
+		}
 
 		if ( ($FILES[$i] !~ /out\.|in\.|lost\+found/i) && ($FILEsize1[$i] eq $FILEsize2[$i]) && (length($FILES[$i]) > 4))
 			{
@@ -296,7 +328,9 @@ foreach(@FILES)
 				}
 
 			if ($ping_good)
-				{
+				{	
+				$transfered_files++;
+				
 				$start_date_PATH='';
 				$FTPdb=0;
 				if ($DBX>0) {$FTPdb=1;}
@@ -320,6 +354,14 @@ foreach(@FILES)
 				if (!$T)
 					{
 					`mv -f "$dir2/$ALLfile" "$PATHDONEmonitor/FTP/$ALLfile"`;
+					}
+				
+				if($DBX){print STDERR "Transfered $transfered_files files\n";}
+				
+				if ( $transfered_files == $file_limit) 
+					{
+						if($DBX){print STDERR "Transfer limit of $file_limit reached breaking out of the loop\n";}
+						last();
 					}
 				}
 			else
