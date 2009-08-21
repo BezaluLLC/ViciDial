@@ -39,6 +39,7 @@
 # 90713-0140 - Changed direct dial phone extensions to failover to voicemail forwarder
 # 90722-1102 - Added list reset by time option
 # 90812-0053 - Added clear out non-used vicidial_conferences sessions
+# 90821-1246 - Fixed central voicemail server conf file, changed voicemail to use phone password
 #
 
 $DB=0; # Debug flag
@@ -977,7 +978,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Pext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i]|$phone_ring_timeout[$i]|)\n";
 		$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
 
-		$vm  .= "$voicemail[$i] => $voicemail[$i],$extension[$i] Mailbox,$email[$i]\n";
+		$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i]\n";
 
 		$i++;
 		}
@@ -1058,7 +1059,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Pext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i]|$phone_ring_timeout[$i]|)\n";
 		$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
 
-		$vm  .= "$voicemail[$i] => $voicemail[$i],$extension[$i] Mailbox,$email[$i]\n";
+		$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i]\n";
 
 		$i++;
 		}
@@ -1400,6 +1401,49 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		}
 
 
+	### generate voicemail accounts for all distinct phones on dedicated voicemail server
+	if ($THISserver_voicemail > 0)
+		{
+		$vm='';
+
+		##### Get the distinct phone entries #####
+		$stmtA = "SELECT distinct(voicemail_id) FROM phones where active='Y' order by voicemail_id;";
+		#	print "$stmtA\n";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$i=0;
+		while ($sthArows > $i)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$voicemail[$i] =			"$aryA[0]";
+			$i++;
+			}
+		$sthA->finish();
+
+		$i=0;
+		while ($sthArows > $i)
+			{
+			##### Get the distinct phone entries #####
+			$stmtA = "SELECT extension,pass,email FROM phones where active='Y' and voicemail_id='$voicemail[$i]';";
+			#	print "$stmtA\n";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArowsX=$sthA->rows;
+			if ($sthArowsX > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$extension[$i] =			"$aryA[0]";
+				$pass[$i] =					"$aryA[1]";
+				$email[$i] =				"$aryA[2]";
+				}
+			$sthA->finish();
+
+			$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i]\n";
+
+			$i++;
+			}
+		}
 
 
 

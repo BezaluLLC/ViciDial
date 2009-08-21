@@ -198,6 +198,10 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	out unused session reservations once a day at the timeclock reset time 
 	as set in system_settings.
 
+50. Changed voicemail config to use phone password as voicemail password instead
+	of just the voicemail ID as the password
+
+
 
 
 

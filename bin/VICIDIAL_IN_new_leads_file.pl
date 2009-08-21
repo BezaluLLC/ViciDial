@@ -549,8 +549,8 @@ foreach(@FILES)
 		#"9185551212ROSE            SMITHS                  155 TIGER MOUNTAIN RD.                  RR 1 BOX 107                            HENRYETTA                   OK74437-941DEMG  226555                                                   0                     "
 			if ( ($format =~ /fixed254/) && ($format_set < 1) )
 				{
-				$phone_number =			substr($raw_number, 0, 10);
-					$USarea = 			substr($raw_number, 0, 3);
+				$phone_number =			substr($raw_number, 0, 10);		$phone_number =~ s/\D//gi;
+					$USarea = 			substr($phone_number, 0, 3);
 				$phone_code =			'1';
 				$first_name =			substr($raw_number, 10, 16);	$first_name =~ s/\s+$//gi;
 				$last_name =			substr($raw_number, 26, 24);	$last_name =~ s/\s+$//gi;
