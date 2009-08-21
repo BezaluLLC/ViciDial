@@ -23,7 +23,7 @@ exten => _X.,1,AGI(agi-DID_route.agi)
 exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
 
 
- [loopback-no-log]
+[loopback-no-log]
 ; This context is to accept calls that have already been logged in another context in Vicidial 
 ; and has been sent through one of the loopbacks. This is why this context is missing the h extension.
 ; Do not put any extensions in this context unless you specifically understand what this means.

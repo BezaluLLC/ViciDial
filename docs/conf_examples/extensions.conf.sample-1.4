@@ -23,6 +23,22 @@ exten => _X.,1,AGI(agi-DID_route.agi)
 exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
 
 
+[loopback-no-log]
+; This context is to accept calls that have already been logged in another context in Vicidial 
+; and has been sent through one of the loopbacks. This is why this context is missing the h extension.
+; Do not put any extensions in this context unless you specifically understand what this means.
+
+;exten => _91NXXNXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
+;exten => _91NXXNXXXXXX,2,Dial(${TRUNKX}/${EXTEN:1},,To)
+;exten => _91NXXNXXXXXX,3,Hangup
+
+exten => _999XX11112,1,Wait(2)
+exten => _999XX11112,2,Answer
+exten => _999XX11112,3,Playback(ss-noservice)
+exten => _999XX11112,4,Playback(vm-goodbye)
+exten => _999XX11112,5,Hangup
+
+
 
 [default]
 include => vicidial-auto
@@ -162,26 +178,29 @@ exten => _9119XXXXXXXX,1,Dial(${TRUNKblind}/9998819112,55,to)
 ; exten => _91NXXNXXXXXX,3,Hangup
 ; special extensions for North America to catch invalid phone numbers
 ; exten => _91XXX[0-1]XXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-; exten => _91XXX[0-1]XXXXXX,2,Dial(${TRUNKloop}/9990011112,,to)
+; exten => _91XXX[0-1]XXXXXX,2,Dial(${TRUNKloop}/8889990011112,,to)
 ; exten => _91XXX[0-1]XXXXXX,3,Hangup
 ; exten => _91[0-1]XXXXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-; exten => _91[0-1]XXXXXXXXX,2,Dial(${TRUNKloop}/9990011112,,to)
+; exten => _91[0-1]XXXXXXXXX,2,Dial(${TRUNKloop}/8889990011112,,to)
 ; exten => _91[0-1]XXXXXXXXX,3,Hangup
 ; exten => _91XXXXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-; exten => _91XXXXXXXXX,2,Dial(${TRUNKloop}/9990011112,,to)
+; exten => _91XXXXXXXXX,2,Dial(${TRUNKloop}/8889990011112,,to)
 ; exten => _91XXXXXXXXX,3,Hangup
 ; exten => _91XXXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-; exten => _91XXXXXXXX,2,Dial(${TRUNKloop}/9990011112,,to)
+; exten => _91XXXXXXXX,2,Dial(${TRUNKloop}/8889990011112,,to)
 ; exten => _91XXXXXXXX,3,Hangup
 ; exten => _91XXXXXXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-; exten => _91XXXXXXXXXXX,2,Dial(${TRUNKloop}/9990011112,,to)
+; exten => _91XXXXXXXXXXX,2,Dial(${TRUNKloop}/8889990011112,,to)
 ; exten => _91XXXXXXXXXXX,3,Hangup
 ; exten => _91XXXXXXXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-; exten => _91XXXXXXXXXXXX,2,Dial(${TRUNKloop}/9990011112,,to)
+; exten => _91XXXXXXXXXXXX,2,Dial(${TRUNKloop}/8889990011112,,to)
 ; exten => _91XXXXXXXXXXXX,3,Hangup
 ; exten => _91XXXXXXXXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-; exten => _91XXXXXXXXXXXXX,2,Dial(${TRUNKloop}/9990011112,,to)
+; exten => _91XXXXXXXXXXXXX,2,Dial(${TRUNKloop}/8889990011112,,to)
 ; exten => _91XXXXXXXXXXXXX,3,Hangup
+
+exten => 8889990011112,1,Goto(loopback-no-log,9990011112,1)
+
 
 ; Inbound call from BINFONE
 ; exten => 1112223333,1,AGI(agi://127.0.0.1:4577/call_log)
