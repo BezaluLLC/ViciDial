@@ -23,6 +23,7 @@
 # 90721-1314 - Added rank and owner as vicidial_list fields
 # 90731-0555 - Added call time scheme restriction
 # 90807-1632 - Fixed call time bug and call length bug
+# 90825-1249 - Added without-camp and without-in options 
 # 
 
 $txt = '.txt';
@@ -96,10 +97,12 @@ if (length($ARGV[0])>1)
 		print "  [--date=YYYY-MM-DD] = date override\n";
 		print "  [--filename=XXX] = Name to be used for file\n";
 		print "  [--campaign=XXX] = Campaign that sales will be pulled from\n";
+		print "  [--without-camp=XXX] = Campaign that will be excluded from ALL\n";
 		print "  [--sale-statuses=XXX-XXY] = Statuses that are deemed to be \"Sales\". Default SALE\n";
 		print "    NOTE: To include all statuses in the export, use \"--sale-statuses=---ALL---\"\n";
 		print "  [--output-format=XXX] = Format of file. Default \"pipe-standard\"\n";
 		print "  [--with-inbound=XXX-XXY] = include the following inbound groups\n";
+		print "  [--without-in=XXX-XXY] = inbound groups that will be excluded from ALL\n";
 		print "  [--calltime=XXX] = filter results to only include those calls during this call time\n";
 		print "  [--ftp-transfer] = Send results file by FTP to another server\n";
 		print "  [--ftp-audio-transfer] = Send associated audio files to FTP server, dated directories\n";
@@ -183,6 +186,19 @@ if (length($ARGV[0])>1)
 				}
 			$campaignSQL = "'$campaignSQL'";
 			}
+		if ($args =~ /--without-camp=/i)
+			{
+			#	print "\n|$ARGS|\n\n";
+			@data_in = split(/--without-camp=/,$args);
+			$NOTcampaign = $data_in[1];
+			$NOTcampaign =~ s/ .*$//gi;
+			$NOTcampaignSQL = $NOTcampaign;
+			if ($NOTcampaignSQL =~ /-/) 
+				{
+				$NOTcampaignSQL =~ s/-/','/gi;
+				}
+			$NOTcampaignSQL = "'$NOTcampaignSQL'";
+			}
 		if ($args =~ /--filename=/i)
 			{
 			#	print "\n|$ARGS|\n\n";
@@ -213,6 +229,12 @@ if (length($ARGV[0])>1)
 			@data_in = split(/--with-inbound=/,$args);
 			$with_inbound = $data_in[1];
 			$with_inbound =~ s/ .*$//gi;
+			}
+		if ($args =~ /--without-in=/i)
+			{
+			@data_in = split(/--without-in=/,$args);
+			$NOTwith_inbound = $data_in[1];
+			$NOTwith_inbound =~ s/ .*$//gi;
 			}
 		if ($args =~ /--calltime=/i)
 			{
@@ -398,12 +420,32 @@ else
 	$close_statusesSQL = " and vicidial_closer_log.status IN($close_statusesSQL)";
 	}
 
-$with_inboundSQL = $with_inbound;
-$with_inboundSQL =~ s/-/','/gi;
-$with_inboundSQL = "'$with_inboundSQL'";
+
+if (length($with_inbound) < 2)
+	{
+	if (length($NOTwith_inbound) < 2)
+		{$with_inboundSQL = '';}
+	else
+		{
+		$with_inboundSQL = $NOTwith_inbound;
+		$with_inboundSQL =~ s/-/','/gi;
+		$with_inboundSQL = "vicidial_closer_log.campaign_id NOT IN('$with_inboundSQL')";
+		}
+	}
+else
+	{
+	$with_inboundSQL = $with_inbound;
+	$with_inboundSQL =~ s/-/','/gi;
+	$with_inboundSQL = "vicidial_closer_log.campaign_id IN('$with_inboundSQL')";
+	}
 
 if (length($campaignSQL) < 2)
-	{$campaignSQL = "vicidial_log.campaign_id NOT IN('')";}
+	{
+	if (length($NOTcampaignSQL) < 2)
+		{$campaignSQL = "vicidial_log.campaign_id NOT IN('')";}
+	else
+		{$campaignSQL = "vicidial_log.campaign_id NOT IN($NOTcampaignSQL)";}
+	}
 else
 	{$campaignSQL = "vicidial_log.campaign_id IN($campaignSQL)";}
 
@@ -535,7 +577,7 @@ if (length($with_inboundSQL)>3)
 	###########################################################################
 	########### CURRENT DAY SALES GATHERING inbound-only: vicidial_closer_log  ######
 	###########################################################################
-	$stmtA = "select vicidial_closer_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,call_date,vicidial_list.lead_id,vicidial_users.full_name,vicidial_closer_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_closer_log.list_id,campaign_id,title,address3,last_local_call_time,xfercallid,closecallid,uniqueid,length_in_sec,queue_seconds,vicidial_list.list_id,vicidial_list.list_id,UNIX_TIMESTAMP(vicidial_closer_log.call_date),agent_alert_delay from vicidial_list,vicidial_closer_log,vicidial_users,vicidial_inbound_groups where campaign_id IN($with_inboundSQL) $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_closer_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_closer_log.user and vicidial_inbound_groups.group_id=vicidial_closer_log.campaign_id order by call_date;";
+	$stmtA = "select vicidial_closer_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,call_date,vicidial_list.lead_id,vicidial_users.full_name,vicidial_closer_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_closer_log.list_id,campaign_id,title,address3,last_local_call_time,xfercallid,closecallid,uniqueid,length_in_sec,queue_seconds,vicidial_list.list_id,vicidial_list.list_id,UNIX_TIMESTAMP(vicidial_closer_log.call_date),agent_alert_delay from vicidial_list,vicidial_closer_log,vicidial_users,vicidial_inbound_groups where $with_inboundSQL $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_closer_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_closer_log.user and vicidial_inbound_groups.group_id=vicidial_closer_log.campaign_id order by call_date;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;

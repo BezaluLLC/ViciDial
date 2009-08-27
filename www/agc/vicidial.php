@@ -7,6 +7,7 @@
 # - vdc_db_query.php: Updates information in the database
 # - manager_send.php: Sends manager actions to the DB for execution
 # - conf_exten_check.php: time sync and status updater, calls in queue
+# - vdc_script_display.php: displays script with variables
 #
 # CHANGELOG
 # 50607-1426 - First Build of VICIDIAL web client basic login process finished
@@ -246,10 +247,11 @@
 # 90808-0117 - Fixed manual dial calls today bug, added last_state_change to vicidial_live_agents
 # 90812-0046 - Added no-delete-sessions = 1 as default, unused sessions cleared out at timeclock end of day
 # 90814-0829 - Moved mute button next to hotkeys button
+# 90827-0133 - Reworked Script display code
 #
 
-$version = '2.2.0-224';
-$build = '90814-0829';
+$version = '2.2.0-225';
+$build = '90827-0133';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -2028,7 +2030,7 @@ else
 	$server_ip_dialstring = "$D_s_ip[0]$S$D_s_ip[1]$S$D_s_ip[2]$S$D_s_ip[3]$S";
 
 	##### grab the datails of all active scripts in the system
-	$stmt="SELECT script_id,script_name,script_text FROM vicidial_scripts WHERE active='Y' order by script_id limit 100;";
+	$stmt="SELECT script_id,script_name FROM vicidial_scripts WHERE active='Y' order by script_id limit 1000;";
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01051',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 	if ($DB) {echo "$stmt\n";}
@@ -2039,17 +2041,12 @@ else
 		$row=mysql_fetch_row($rslt);
 		$MMscriptid[$e] =$row[0];
 		$MMscriptname[$e] = urlencode($row[1]);
-		$row[2] = stripslashes($row[2]);
-		$MMscripttext[$e] = urlencode($row[2]);
 		$MMscriptids = "$MMscriptids'$MMscriptid[$e]',";
 		$MMscriptnames = "$MMscriptnames'$MMscriptname[$e]',";
-		$MMscripttexts = "$MMscripttexts'$MMscripttext[$e]',";
 		$e++;
 		}
 	$MMscriptids = substr("$MMscriptids", 0, -1); 
 	$MMscriptnames = substr("$MMscriptnames", 0, -1); 
-	$MMscripttexts = substr("$MMscripttexts", 0, -1); 
-
 	}
 }
 
@@ -2240,10 +2237,10 @@ $CCAL_OUT .= "</table>";
 	var hotkeys = new Array();
 	<?php $h=0;
 	while ($HK_statuses_camp > $h)
-	{
-	echo "hotkeys['$HKhotkey[$h]'] = \"$HKstatus[$h] ----- $HKstatus_name[$h]\";\n";
-	$h++;
-	}
+		{
+		echo "hotkeys['$HKhotkey[$h]'] = \"$HKstatus[$h] ----- $HKstatus_name[$h]\";\n";
+		$h++;
+		}
 	?>
 	var HKdispo_display = 0;
 	var HKbutton_allowed = 1;
@@ -2251,18 +2248,10 @@ $CCAL_OUT .= "</table>";
 	var scriptnames = new Array();
 	<?php $h=0;
 	while ($MM_scripts > $h)
-	{
-	echo "scriptnames['$MMscriptid[$h]'] = \"$MMscriptname[$h]\";\n";
-	$h++;
-	}
-	?>
-	var scripttexts = new Array();
-	<?php $h=0;
-	while ($MM_scripts > $h)
-	{
-	echo "scripttexts['$MMscriptid[$h]'] = \"$MMscripttext[$h]\";\n";
-	$h++;
-	}
+		{
+		echo "scriptnames['$MMscriptid[$h]'] = \"$MMscriptname[$h]\";\n";
+		$h++;
+		}
 	?>
 	var decoded = '';
 	var view_scripts = '<?php echo $view_scripts ?>';
@@ -2516,6 +2505,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var agent_dial_owner_only = '<?php echo $agent_dial_owner_only ?>';
 	var agent_display_dialable_leads = '<?php echo $agent_display_dialable_leads ?>';
 	var no_empty_session_warnings = '<?php echo $no_empty_session_warnings ?>';
+	var script_width = '<?php echo $SDwidth ?>';
+	var script_height = '<?php echo $SSheight ?>';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -4655,6 +4646,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&owner=" + document.vicidial_form.owner.value + '' +
 							"&camp_script=" + campaign_script + '' +
 							"&in_script=" + CalL_ScripT_id + '' +
+							"&script_width=" + script_width + '' +
+							"&script_height=" + script_height + '' +
+							"&fullname=" + LOGfullname + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -4698,16 +4692,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 							if ( (view_scripts == 1) && (campaign_script.length > 0) )
 								{
-								// test code for scripts output
-								URLDecode(scriptnames[campaign_script],'NO');
-								var textname = decoded;
-								URLDecode(scripttexts[campaign_script],'YES');
-								var texttext = decoded;
-								var regWFplus = new RegExp("\\+","ig");
-								textname = textname.replace(regWFplus, ' ');
-								texttext = texttext.replace(regWFplus, ' ');
-								var testscript = "<B>" + textname + "</B>\n\n<BR><BR>\n\n" + texttext;
-								document.getElementById("ScriptContents").innerHTML = testscript;
+								load_script_contents();
 								}
 
 							if (get_call_launch == 'SCRIPT')
@@ -4999,16 +4984,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 						if ( (view_scripts == 1) && (campaign_script.length > 0) )
 							{
-							// test code for scripts output
-							URLDecode(scriptnames[campaign_script],'NO');
-							var textname = decoded;
-							URLDecode(scripttexts[campaign_script],'YES');
-							var texttext = decoded;
-							var regWFplus = new RegExp("\\+","ig");
-							textname = textname.replace(regWFplus, ' ');
-							texttext = texttext.replace(regWFplus, ' ');
-							var testscript = "<B>" + textname + "</B>\n\n<BR><BR>\n\n" + texttext;
-							document.getElementById("ScriptContents").innerHTML = testscript;
+							load_script_contents();
 							}
 
 						if (get_call_launch == 'SCRIPT')
@@ -5193,7 +5169,50 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 
 // ################################################################################
-// Check to see if there is a call being sent from the auto-dialer to agent conf
+// pull the script contents sending the webform variables to the script display script
+	function load_script_contents()
+		{
+		var new_script_content = null;
+		var xmlhttp=false;
+		/*@cc_on @*/
+		/*@if (@_jscript_version >= 5)
+		// JScript gives us Conditional compilation, we can cope with old IE versions.
+		// and security blocked creation of the objects.
+		 try {
+		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+		 } catch (e) {
+		  try {
+		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		  } catch (E) {
+		   xmlhttp = false;
+		  }
+		 }
+		@end @*/
+		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+			{
+			xmlhttp = new XMLHttpRequest();
+			}
+		if (xmlhttp) 
+			{ 
+			NeWscript_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ScrollDIV=1&" + web_form_vars;
+			xmlhttp.open('POST', 'vdc_script_display.php'); 
+			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+			xmlhttp.send(NeWscript_query); 
+			xmlhttp.onreadystatechange = function() 
+				{ 
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+					{
+					new_script_content = xmlhttp.responseText;
+					document.getElementById("ScriptContents").innerHTML = new_script_content;
+					}
+				}
+			delete xmlhttp;
+			}
+		}
+
+
+// ################################################################################
+// Alternate phone number change
 	function alt_phone_change(APCphone,APCcount,APCleadID,APCactive)
 		{
 
@@ -5614,6 +5633,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&owner=" + document.vicidial_form.owner.value + '' +
 								"&camp_script=" + campaign_script + '' +
 								"&in_script=" + CalL_ScripT_id + '' +
+								"&script_width=" + script_width + '' +
+								"&script_height=" + script_height + '' +
+								"&fullname=" + LOGfullname + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -5639,16 +5661,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 							if ( (view_scripts == 1) && (CalL_ScripT_id.length > 0) )
 								{
-								// test code for scripts output
-								URLDecode(scriptnames[CalL_ScripT_id],'NO');
-								var textname = decoded;
-								URLDecode(scripttexts[CalL_ScripT_id],'YES');
-								var texttext = decoded;
-								var regWFplus = new RegExp("\\+","ig");
-								textname = textname.replace(regWFplus, ' ');
-								texttext = texttext.replace(regWFplus, ' ');
-								var testscript = "<B>" + textname + "</B>\n\n<BR><BR>\n\n" + texttext;
-								document.getElementById("ScriptContents").innerHTML = testscript;
+								load_script_contents();
 								}
 
 							if (CalL_AutO_LauncH == 'SCRIPT')
@@ -5764,6 +5777,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			"&owner=" + document.vicidial_form.owner.value + '' +
 			"&camp_script=" + campaign_script + '' +
 			"&in_script=" + CalL_ScripT_id + '' +
+			"&script_width=" + script_width + '' +
+			"&script_height=" + script_height + '' +
+			"&fullname=" + LOGfullname + '' +
 			webform_session;
 			
 			var regWFspace = new RegExp(" ","ig");
@@ -7188,12 +7204,15 @@ encoded=utf8_decode(xtest);
 		var SCserver_ip = server_ip;
 		var SCSIPexten = extension;
 		var SCsession_id = session_id;
+		var SCdispo = LeaDDispO;
 		var SCdialed_number = dialed_number;
 		var SCdialed_label = dialed_label;
 		var SCrank = document.vicidial_form.rank.value;
 		var SCowner = document.vicidial_form.owner.value;
 		var SCcamp_script = campaign_script;
 		var SCin_script = CalL_ScripT_id;
+		var SCscript_width = script_width;
+		var SCscript_height = script_height;
 		var SCweb_vars = LIVE_web_vars;
 
 		if (encoded.match(RGiframe))
@@ -7237,12 +7256,15 @@ encoded=utf8_decode(xtest);
 			SCcustomer_zap_channel = SCcustomer_zap_channel.replace(RGplus,'+');
 			SCserver_ip = SCserver_ip.replace(RGplus,'+');
 			SCSIPexten = SCSIPexten.replace(RGplus,'+');
+			SCdispo = SCdispo.replace(RGplus,'+');
 			SCdialed_number = SCdialed_number.replace(RGplus,'+');
 			SCdialed_label = SCdialed_label.replace(RGplus,'+');
 			SCrank = SCrank.replace(RGplus,'+');
 			SCowner = SCowner.replace(RGplus,'+');
 			SCcamp_script = SCcamp_script.replace(RGplus,'+');
 			SCin_script = SCin_script.replace(RGplus,'+');
+			SCscript_width = SCscript_width.replace(RGplus,'+');
+			SCscript_height = SCscript_height.replace(RGplus,'+');
 			SCweb_vars = SCweb_vars.replace(RGplus,'+');
 			}
 
@@ -7287,12 +7309,15 @@ encoded=utf8_decode(xtest);
 		var RGserver_ip = new RegExp("--A--server_ip--B--","g");
 		var RGSIPexten = new RegExp("--A--SIPexten--B--","g");
 		var RGsession_id = new RegExp("--A--session_id--B--","g");
+		var RGdispo = new RegExp("--A--dispo--B--","g");
 		var RGdialed_number = new RegExp("--A--dialed_number--B--","g");
 		var RGdialed_label = new RegExp("--A--dialed_label--B--","g");
 		var RGrank = new RegExp("--A--rank--B--","g");
 		var RGowner = new RegExp("--A--owner--B--","g");
 		var RGcamp_script = new RegExp("--A--camp_script--B--","g");
 		var RGin_script = new RegExp("--A--in_script--B--","g");
+		var RGscript_width = new RegExp("--A--script_width--B--","g");
+		var RGscript_height = new RegExp("--A--script_height--B--","g");
 		var RGweb_vars = new RegExp("--A--web_vars--B--","g");
 
 		encoded = encoded.replace(RGvendor_lead_code, SCvendor_lead_code);
@@ -7336,12 +7361,15 @@ encoded=utf8_decode(xtest);
 		encoded = encoded.replace(RGserver_ip, SCserver_ip);
 		encoded = encoded.replace(RGSIPexten, SCSIPexten);
 		encoded = encoded.replace(RGsession_id, SCsession_id);
+		encoded = encoded.replace(RGdispo, SCdispo);
 		encoded = encoded.replace(RGdialed_number, SCdialed_number);
 		encoded = encoded.replace(RGdialed_label, SCdialed_label);
 		encoded = encoded.replace(RGrank, SCrank);
 		encoded = encoded.replace(RGowner, SCowner);
 		encoded = encoded.replace(RGcamp_script, SCcamp_script);
 		encoded = encoded.replace(RGin_script, SCin_script);
+		encoded = encoded.replace(RGscript_width, SCscript_width);
+		encoded = encoded.replace(RGscript_height, SCscript_height);
 		encoded = encoded.replace(RGweb_vars, SCweb_vars);
 		}
 decoded=encoded; // simple no ?
@@ -8623,7 +8651,8 @@ else
 <!--
 	div.scroll_callback {height: 300px; width: 620px; overflow: scroll;}
 	div.scroll_list {height: 400px; width: 140px; overflow: scroll;}
-	div.scroll_script {height: <?php echo $SSheight ?>px; width: <?php echo $SDwidth ?>px; background: #FFF5EC; overflow: scroll; font-size: 12px;  font-family: sans-serif;}
+	div.scroll_script {height: <?php echo $SSheight ?>px; width: <?php echo $SDwidth ?>px; background: #FFF5EC; overflow: auto; font-size: 12px;  font-family: sans-serif;}
+	div.noscroll_script {height: <?php echo $SSheight ?>px; width: <?php echo $SDwidth ?>px; background: #FFF5EC; overflow: hidden; font-size: 12px;  font-family: sans-serif;}
 	div.text_input {overflow: auto; font-size: 10px;  font-family: sans-serif;}
    .body_text {font-size: 13px;  font-family: sans-serif;}
    .queue_text_red {font-size: 12px;  font-family: sans-serif; font-weight: bold; color: red}
@@ -8778,7 +8807,7 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 
 
 
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:21;" id="TransferMain">
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:31;" id="TransferMain">
 	<table bgcolor="#CCCCFF" width=<?php echo $XFwidth ?>><tr>
 	<td align=left>
 	<div class="text_input" id="TransferMaindiv">
@@ -9083,8 +9112,8 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 
-<span style="position:absolute;left:154px;top:65px;z-index:17;" id="ScriptPanel">
-    <table border=0 bgcolor="<?php echo $SCRIPT_COLOR ?>" width=<?php echo $SSwidth ?> height=<?php echo $SSheight ?>><TR><TD align=left valign=top><font class="sb_text"><div class="scroll_script" id="ScriptContents">AGENT SCRIPT</div></font></TD></TR></TABLE>
+<span style="position:absolute;left:154px;top:65px;z-index:30;" id="ScriptPanel">
+    <table border=0 bgcolor="<?php echo $SCRIPT_COLOR ?>" width=<?php echo $SSwidth ?> height=<?php echo $SSheight ?>><TR><TD align=left valign=top><font class="sb_text"><div class="noscroll_script" id="ScriptContents">AGENT SCRIPT</div></font></TD></TR></TABLE>
 </span>
 
 

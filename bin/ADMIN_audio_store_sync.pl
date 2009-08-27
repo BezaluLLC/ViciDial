@@ -200,7 +200,7 @@ else
 		else
 			{
 			print "Can't find wget binary! Exiting...\n";
-			exit
+			exit;
 			}
 		}
 	}
@@ -217,7 +217,7 @@ else
 		else
 			{
 			print "Can't find curl binary! Exiting...\n";
-			exit
+			exit;
 			}
 		}
 	}

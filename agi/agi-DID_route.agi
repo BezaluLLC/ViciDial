@@ -18,6 +18,7 @@
 # 90117-0756 - Added vicidial_did_log logging to database
 # 90214-0217 - Added 'default' did option, to send all non-matching calls to, enforced did_active setting
 # 90507-1145 - Added CALLMENU option
+# 90825-2252 - Changed PHONE to route using dialplan number
 #
 
 $script = 'agi-DID_route.agi';
@@ -264,30 +265,18 @@ if ($did_route =~ /PHONE/)
 		}
 	$sthA->finish();
 
-	if ($protocol =~ /EXTERNAL/)
+	### format the remote server dialstring to get the call to the overflow agent meetme room
+	if( $did_server_ip =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
 		{
-		### format the remote server dialstring to get the call to the overflow agent meetme room
-		if( $did_server_ip =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
-			{
-			$a = leading_zero($1); 
-			$b = leading_zero($2); 
-			$c = leading_zero($3); 
-			$d = leading_zero($4);
-			$ServerString = "$a$S$b$S$c$S$d$S";
-			}
-
-		$did_extension = "$ServerString$dialplan_number";
-		$did_route = 'EXTEN';
+		$a = leading_zero($1); 
+		$b = leading_zero($2); 
+		$c = leading_zero($3); 
+		$d = leading_zero($4);
+		$ServerString = "$a$S$b$S$c$S$d$S";
 		}
-	else
-		{
-		#$AGI->exec("Dial", "$protocol/$phone|30");
-		print "EXEC Dial \"$protocol/$phone|30\"\n";
-			checkresult($result);
-		if ($AGILOG) {$agi_string = "Done dialing $protocol/$phone |$result|$pass|$fail|$stmtA|";   &agi_output;}
 
-		exit;
-		}
+	$did_extension = "$ServerString$dialplan_number";
+	$did_route = 'EXTEN';
 	}
 
 

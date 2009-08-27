@@ -83,6 +83,8 @@ $groups_to_print = mysql_num_rows($rslt);
 $i=0;
 	$LISTgroups[$i]='CALLMENU';
 	$i++;
+	$LISTgroups[$i]='XMLPULL';
+	$i++;
 	$groups_to_print++;
 while ($i < $groups_to_print)
 	{
