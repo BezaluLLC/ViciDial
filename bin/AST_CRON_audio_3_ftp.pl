@@ -42,6 +42,7 @@
 # 90730-1454 - Fixed non-VicDial recordings date directory, added secondary icmp ping if standard ping fails
 # 90818-0953 - Fixed a bug where the filesizes for all files were null
 # 90818-1017 - Added a transfer limit and list limit options. 
+# 90827-2013 - Fixed list limit option
 #
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -65,7 +66,7 @@ $VARFTP_dir  = 'RECORDINGS';
 $VARHTTP_path = 'http://10.0.0.4';
 
 $file_limit = 1000;
-$list_list = 1000;
+$list_limit = 1000;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
