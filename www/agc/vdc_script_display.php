@@ -7,10 +7,11 @@
 #
 # CHANGELOG:
 # 90824-1435 - First build of script
+# 90827-1548 - Added list override script option
 #
 
-$version = '2.2.0-1';
-$build = '90824-1435';
+$version = '2.2.0-2';
+$build = '90827-1548';
 
 require("dbconnect.php");
 
@@ -72,6 +73,8 @@ if (isset($_GET["campaign"]))	{$campaign=$_GET["campaign"];}
 	elseif (isset($_POST["campaign"]))	{$campaign=$_POST["campaign"];}
 if (isset($_GET["phone_login"]))	{$phone_login=$_GET["phone_login"];}
 	elseif (isset($_POST["phone_login"]))	{$phone_login=$_POST["phone_login"];}
+if (isset($_GET["original_phone_login"]))	{$original_phone_login=$_GET["original_phone_login"];}
+	elseif (isset($_POST["original_phone_login"]))	{$original_phone_login=$_POST["original_phone_login"];}
 if (isset($_GET["phone_pass"]))	{$phone_pass=$_GET["phone_pass"];}
 	elseif (isset($_POST["phone_pass"]))	{$phone_pass=$_POST["phone_pass"];}
 if (isset($_GET["fronter"]))	{$fronter=$_GET["fronter"];}
@@ -122,10 +125,13 @@ if (isset($_GET["script_width"]))	{$script_width=$_GET["script_width"];}
 	elseif (isset($_POST["script_width"]))	{$script_width=$_POST["script_width"];}
 if (isset($_GET["script_height"]))	{$script_height=$_GET["script_height"];}
 	elseif (isset($_POST["script_height"]))	{$script_height=$_POST["script_height"];}
-if (isset($_GET["ScrollDIV"]))	{$ScrollDIV=$_GET["ScrollDIV"];}
-	elseif (isset($_POST["ScrollDIV"]))	{$ScrollDIV=$_POST["ScrollDIV"];}
 if (isset($_GET["fullname"]))	{$fullname=$_GET["fullname"];}
 	elseif (isset($_POST["fullname"]))	{$fullname=$_POST["fullname"];}
+
+if (isset($_GET["ScrollDIV"]))	{$ScrollDIV=$_GET["ScrollDIV"];}
+	elseif (isset($_POST["ScrollDIV"]))	{$ScrollDIV=$_POST["ScrollDIV"];}
+if (isset($_GET["ignore_list_script"]))	{$ignore_list_script=$_GET["ignore_list_script"];}
+	elseif (isset($_POST["ignore_list_script"]))	{$ignore_list_script=$_POST["ignore_list_script"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -214,6 +220,16 @@ if (strlen($in_script) < 1)
 else
 	{$call_script = $in_script;}
 
+if ($ignore_list_script < 1)
+	{
+	$stmt="SELECT agent_script_override from vicidial_lists where list_id='$list_id';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$agent_script_override =		$row[0];
+	if (strlen($agent_script_override) > 0)
+		{$call_script = $agent_script_override;}
+	}
+
 $stmt="SELECT script_name,script_text from vicidial_scripts where script_id='$call_script';";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
@@ -252,6 +268,7 @@ if (eregi("iframe src",$script_text))
 	$pass = eregi_replace(' ','+',$pass);
 	$campaign = eregi_replace(' ','+',$campaign);
 	$phone_login = eregi_replace(' ','+',$phone_login);
+	$original_phone_login = eregi_replace(' ','+',$original_phone_login);
 	$phone_pass = eregi_replace(' ','+',$phone_pass);
 	$fronter = eregi_replace(' ','+',$fronter);
 	$closer = eregi_replace(' ','+',$closer);
@@ -309,6 +326,7 @@ $script_text = eregi_replace('--A--user--B--',"$user",$script_text);
 $script_text = eregi_replace('--A--pass--B--',"$pass",$script_text);
 $script_text = eregi_replace('--A--campaign--B--',"$campaign",$script_text);
 $script_text = eregi_replace('--A--phone_login--B--',"$phone_login",$script_text);
+$script_text = eregi_replace('--A--original_phone_login--B--',"$original_phone_login",$script_text);
 $script_text = eregi_replace('--A--phone_pass--B--',"$phone_pass",$script_text);
 $script_text = eregi_replace('--A--fronter--B--',"$fronter",$script_text);
 $script_text = eregi_replace('--A--closer--B--',"$closer",$script_text);

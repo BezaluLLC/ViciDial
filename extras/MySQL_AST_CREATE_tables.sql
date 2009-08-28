@@ -682,7 +682,8 @@ active ENUM('Y','N'),
 list_description VARCHAR(255),
 list_changedate DATETIME,
 list_lastcalldate DATETIME,
-reset_time VARCHAR(100) default ''
+reset_time VARCHAR(100) default '',
+agent_script_override VARCHAR(10) default ''
 );
 
 CREATE TABLE vicidial_statuses (
@@ -1890,7 +1891,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1168';
+UPDATE system_settings SET db_schema_version='1169';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

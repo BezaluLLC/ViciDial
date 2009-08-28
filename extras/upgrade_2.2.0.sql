@@ -489,3 +489,7 @@ UPDATE system_settings SET db_schema_version='1167';
 ALTER TABLE vicidial_campaigns MODIFY drop_call_seconds TINYINT(3) default '5';
 
 UPDATE system_settings SET db_schema_version='1168';
+
+ALTER TABLE vicidial_lists ADD agent_script_override VARCHAR(10) default '';
+
+UPDATE system_settings SET db_schema_version='1169';

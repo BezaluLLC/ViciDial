@@ -21,6 +21,7 @@
 # 90524-2231 - Changed to use functions.php for seconds to HH:MM:SS conversion
 # 90608-0251 - Added optional carrier codes stats, made graph at bottom optional
 # 90806-0001 - Added CI(Customer Interaction/Human Answered) stats, added option to add inbound rollover stats to these
+# 90827-1154 - Added List ID breakdown of calls
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -820,6 +821,63 @@ else
 #	$OUToutput .= "|   AGENT TIME                                                      | $aTOTALhours |                     | $aTOTALrate |\n";
 	$OUToutput .= "+------------------------------------------------------+------------+------------+---------------------+----------+\n";
 
+
+
+
+
+	##############################
+	#########  LIST ID BREAKDOWN STATS
+
+	$TOTALcalls = 0;
+
+	$OUToutput .= "\n";
+	$OUToutput .= "---------- LIST ID STATS\n";
+	$OUToutput .= "+------------------------------------------+------------+\n";
+	$OUToutput .= "| LIST                                     | CALLS      |\n";
+	$OUToutput .= "+------------------------------------------+------------+\n";
+
+	$stmt="select count(*),list_id from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand group by list_id;";
+	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {$OUToutput .= "$stmt\n";}
+	$listids_to_print = mysql_num_rows($rslt);
+	$i=0;
+	while ($i < $listids_to_print)
+		{
+		$row=mysql_fetch_row($rslt);
+		$LISTIDcalls[$i] =	$row[0];
+		$LISTIDlists[$i] =	$row[1];
+		$i++;
+		}
+
+	$i=0;
+	while ($i < $listids_to_print)
+		{
+		$stmt="select list_name from vicidial_lists where list_id='$LISTIDlists[$i]';";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {$OUToutput .= "$stmt\n";}
+		$list_name_to_print = mysql_num_rows($rslt);
+		if ($list_name_to_print > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$LISTIDlist_names[$i] =	$row[0];
+			}
+
+		$TOTALcalls = ($TOTALcalls + $LISTIDcalls[$i]);
+
+		$LISTIDcount =	sprintf("%10s", $LISTIDcalls[$i]);while(strlen($LISTIDcount)>10) {$LISTIDcount = substr("$LISTIDcount", 0, -1);}
+		$LISTIDname =	sprintf("%-40s", "$LISTIDlists[$i] - $LISTIDlist_names[$i]");while(strlen($LISTIDname)>40) {$LISTIDname = substr("$LISTIDname", 0, -1);}
+
+		$OUToutput .= "| $LISTIDname | $LISTIDcount |\n";
+
+		$i++;
+		}
+
+	$TOTALcalls =		sprintf("%10s", $TOTALcalls);
+
+	$OUToutput .= "+------------------------------------------+------------+\n";
+	$OUToutput .= "| TOTAL:                                   | $TOTALcalls |\n";
+	$OUToutput .= "+------------------------------------------+------------+\n";
 
 
 

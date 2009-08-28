@@ -79,6 +79,7 @@
 # 90619-1948 - Format fixing
 # 90630-2252 - Added Sangoma CDP pre-Answer call processing
 # 90816-0057 - Changed default vicidial_log time to 0 from 1 second
+# 90827-1227 - Added list_id logging in vicidial_log on NA calls
 #
 
 
@@ -1193,7 +1194,20 @@ while($one_day_interval > 0)
 								$end_epoch = $now_date_epoch;
 								if ($insertVLcount < 1)
 									{
-									$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,length_in_sec,end_epoch,alt_dial) values('$CLuniqueid','$CLlead_id','$CLcampaign_id','$SQLdate','$now_date_epoch','$CLnew_status','$CLphone_code','$CLphone_number','$insertVLuser','N','$CLstage','$end_epoch','$CLalt_dial')";
+									$xCLlist_id=0;
+									$stmtA="SELECT list_id from vicidial_list where lead_id='$CLlead_id' limit 1;";
+										if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+									$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+									$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+									$sthArowsVLL=$sthA->rows;
+									if ($sthArowsVLL > 0)
+										{
+										@aryA = $sthA->fetchrow_array;
+										$xCLlist_id = 	"$aryA[0]";
+										}
+									$sthA->finish();
+
+									$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,length_in_sec,end_epoch,alt_dial,list_id) values('$CLuniqueid','$CLlead_id','$CLcampaign_id','$SQLdate','$now_date_epoch','$CLnew_status','$CLphone_code','$CLphone_number','$insertVLuser','N','$CLstage','$end_epoch','$CLalt_dial','$xCLlist_id')";
 										if($M){print STDERR "\n|$stmtA|\n";}
 									$affected_rows = $dbhA->do($stmtA);
 
@@ -1651,14 +1665,27 @@ while($one_day_interval > 0)
 
 			if ( ($affected_rows > 0) && ($CLlead_id > 0) )
 				{
-				$jam_string = "|     lagged call vdac call DELETED $affected_rows|$BDtsSQLdate|$auto_call_id|$CLcallerid|$CLuniqueid|$CLphone_number|$CLstatus|";
+				$xCLlist_id=0;
+				$stmtA="SELECT list_id from vicidial_list where lead_id='$CLlead_id' limit 1;";
+					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArowsVLL=$sthA->rows;
+				if ($sthArowsVLL > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$xCLlist_id = 	"$aryA[0]";
+					}
+				$sthA->finish();
+
+				$jam_string = "|     lagged call vdac call DELETED $affected_rows|$BDtsSQLdate|$auto_call_id|$CLcallerid|$CLuniqueid|$CLphone_number|$CLstatus|$xCLlist_id|";
 				 &jam_event_logger;
 
 				$CLstage =~ s/LIVE|-//gi;
 				if ($CLstage < 0.25) {$CLstage=0;}
 
 				$end_epoch = $now_date_epoch;
-				$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,length_in_sec,end_epoch,alt_dial) values('$CLuniqueid','$CLlead_id','$CLcampaign_id','$SQLdate','$now_date_epoch','DROP','$CLphone_code','$CLphone_number','VDAD','N','$CLstage','$end_epoch','$CLalt_dial')";
+				$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,length_in_sec,end_epoch,alt_dial,list_id) values('$CLuniqueid','$CLlead_id','$CLcampaign_id','$SQLdate','$now_date_epoch','DROP','$CLphone_code','$CLphone_number','VDAD','N','$CLstage','$end_epoch','$CLalt_dial','$xCLlist_id')";
 					if($M){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA);
 

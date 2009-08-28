@@ -67,6 +67,7 @@
 # 90702-2240 - Added option to send to remote agent as phone*vendor_id
 # 90721-1137 - Added rank and owner as vicidial_list fields
 # 90808-0307 - Added longest_wait_time as agent routing option
+# 90827-1535 - Added proper logging of list_id in vicidial_log table
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -594,7 +595,20 @@ if ($affected_rows > 0)
 			}
 		}
 
-	$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,alt_dial) values('$uniqueid','$CIDlead_id','$VDADcampaign','$SQLdate','$now_date_epoch','$vdlog_status','$VDADphone_code','$VDADphone','VDAD','N','$VDADalt_dial')";
+	$xCLlist_id=0;
+	$stmtA = "SELECT list_id from vicidial_list where lead_id='$CIDlead_id' limit 1;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArowsLI=$sthA->rows;
+		$dbhP=$dbhA;   $mysql_count='010XX';   $MEL_aff_rows=$sthArowsLI;   &mysql_error_logging;
+	if ($sthArowsLI > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$xCLlist_id =	"$aryA[0]";
+		}
+	$sthA->finish();
+
+	$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,alt_dial,list_id) values('$uniqueid','$CIDlead_id','$VDADcampaign','$SQLdate','$now_date_epoch','$vdlog_status','$VDADphone_code','$VDADphone','VDAD','N','$VDADalt_dial','$xCLlist_id')";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='01008';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
@@ -634,10 +648,10 @@ if ($affected_rows > 0)
 		$rec_count=0;
 		while ($sthArows > $rec_count)
 			{
-			 @aryA = $sthA->fetchrow_array;
-			 $phone_number =	"$aryA[0]";
-			 $data2 = "$phone_number";
-			 $rec_count++;
+			@aryA = $sthA->fetchrow_array;
+			$phone_number =	"$aryA[0]";
+			$data2 = "$phone_number";
+			$rec_count++;
 			}
 		$sthA->finish();
 

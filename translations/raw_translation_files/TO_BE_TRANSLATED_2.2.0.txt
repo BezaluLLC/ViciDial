@@ -259,6 +259,8 @@ VICIDIAL Balance Rank||
 This field allows you to set the order in which this server is to be used for balance dialing, if balance dialing is enabled. The server with the highest rank will be used first in placing Balance fill calls. Default is 0||
 Inbound Summary Hourly Report||
 orders by the amount of time agent has been actively waiting for a call||
+Agent Script Override||
+If this field is set, this will be the script that the agent sees on their screen instead of the campaign script when the lead is from this list. Default is not set||
 
 
 add-file: user_territories.php

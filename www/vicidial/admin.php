@@ -1093,6 +1093,8 @@ if (isset($_GET["agent_display_dialable_leads"]))			{$agent_display_dialable_lea
 	elseif (isset($_POST["agent_display_dialable_leads"]))	{$agent_display_dialable_leads=$_POST["agent_display_dialable_leads"];}
 if (isset($_GET["vicidial_balance_rank"]))			{$vicidial_balance_rank=$_GET["vicidial_balance_rank"];}
 	elseif (isset($_POST["vicidial_balance_rank"]))	{$vicidial_balance_rank=$_POST["vicidial_balance_rank"];}
+if (isset($_GET["agent_script_override"]))			{$agent_script_override=$_GET["agent_script_override"];}
+	elseif (isset($_POST["agent_script_override"]))	{$agent_script_override=$_POST["agent_script_override"];}
 
 	if (isset($script_id)) {$script_id= strtoupper($script_id);}
 	if (isset($lead_filter_id)) {$lead_filter_id = strtoupper($lead_filter_id);}
@@ -1359,6 +1361,8 @@ if ($non_latin < 1)
 
 	### ALPHA-NUMERIC ONLY ###
 	$script_id = ereg_replace("[^0-9a-zA-Z]","",$script_id);
+	$agent_script_override = ereg_replace("[^0-9a-zA-Z]","",$agent_script_override);
+	$campaign_script = ereg_replace("[^0-9a-zA-Z]","",$campaign_script);
 	$submit = ereg_replace("[^0-9a-zA-Z]","",$submit);
 	$campaign_cid = ereg_replace("[^0-9a-zA-Z]","",$campaign_cid);
 	$get_call_launch = ereg_replace("[^0-9a-zA-Z]","",$get_call_launch);
@@ -1908,11 +1912,12 @@ else
 # 90726-0153 - Added allow_alerts for users to disable agent browser alerts
 # 90729-0555 - Added agent_display_dialable_leads and vicidial_balance_rank options
 # 90808-0300 - Added longest_wait_time option for agent call routing
+# 90827-1552 - Added agent_script_override option for lists
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-211';
-$build = '90808-0300';
+$admin_version = '2.2.0-212';
+$build = '90827-1552';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3870,6 +3875,12 @@ if ($SSqc_features_active > 0)
 <A NAME="vicidial_lists-reset_time">
 <BR>
 <B>Reset Times -</B> This field allows you to put times in, separated by a dash-, that this list will be automatically reset by the system. The times must be in 24 hour format with no punctuation, for example 0800-1700 would reset the list at 8AM and 5PM every day. Default is empty.
+
+<BR>
+<A NAME="vicidial_lists-agent_script_override">
+<BR>
+<B>Agent Script Override -</B> If this field is set, this will be the script that the agent sees on their screen instead of the campaign script when the lead is from this list. Default is not set.
+
 
 <BR>
 <A NAME="vicidial_list-dnc">
@@ -11412,7 +11423,7 @@ if ($ADD==411)
 
 		echo "<br><B>LIST MODIFIED: $list_id</B>\n";
 
-		$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate',reset_time='$reset_time' where list_id='$list_id';";
+		$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate',reset_time='$reset_time',agent_script_override='$agent_script_override' where list_id='$list_id';";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -17517,504 +17528,526 @@ echo "</TABLE></center>\n";
 ######################
 
 if ($ADD==311)
-{
+	{
 	if ($LOGmodify_lists==1)
-	{
-	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-
-	$stmt="SELECT list_id,list_name,campaign_id,active,list_description,list_changedate,list_lastcalldate,reset_time from vicidial_lists where list_id='$list_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$campaign_id = $row[2];
-	$active = $row[3];
-	$list_description = $row[4];
-	$list_changedate = $row[5];
-	$list_lastcalldate = $row[6];
-
-	# grab names of global statuses and statuses in the selected campaign
-	$stmt="SELECT * from vicidial_statuses order by status";
-	$rslt=mysql_query($stmt, $link);
-	$statuses_to_print = mysql_num_rows($rslt);
-
-	$o=0;
-	while ($statuses_to_print > $o) 
 		{
-		$rowx=mysql_fetch_row($rslt);
-		$statuses_list["$rowx[0]"] = "$rowx[1]";
-		$o++;
-		}
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT * from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status";
-	$rslt=mysql_query($stmt, $link);
-	$Cstatuses_to_print = mysql_num_rows($rslt);
+		$stmt="SELECT list_id,list_name,campaign_id,active,list_description,list_changedate,list_lastcalldate,reset_time,agent_script_override from vicidial_lists where list_id='$list_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$campaign_id =				$row[2];
+		$active =					$row[3];
+		$list_description =			$row[4];
+		$list_changedate =			$row[5];
+		$list_lastcalldate =		$row[6];
+		$reset_time =				$row[7];
+		$agent_script_override =	$row[8];
 
-	$o=0;
-	while ($Cstatuses_to_print > $o) 
-		{
-		$rowx=mysql_fetch_row($rslt);
-		$statuses_list["$rowx[0]"] = "$rowx[1]";
-		$o++;
-		}
-	# end grab status names
+		# grab names of global statuses and statuses in the selected campaign
+		$stmt="SELECT * from vicidial_statuses order by status";
+		$rslt=mysql_query($stmt, $link);
+		$statuses_to_print = mysql_num_rows($rslt);
 
-
-	echo "<br>MODIFY A LISTS RECORD: $row[0]<form action=$PHP_SELF method=POST>\n";
-	echo "<input type=hidden name=ADD value=411>\n";
-	echo "<input type=hidden name=list_id value=\"$row[0]\">\n";
-	echo "<input type=hidden name=old_campaign_id value=\"$row[2]\">\n";
-	echo "<center><TABLE width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>List ID: </td><td align=left><b>$row[0]</b>$NWB#vicidial_lists-list_id$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>List Name: </td><td align=left><input type=text name=list_name size=20 maxlength=20 value=\"$row[1]\">$NWB#vicidial_lists-list_name$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>List Description: </td><td align=left><input type=text name=list_description size=30 maxlength=255 value=\"$list_description\">$NWB#vicidial_lists-list_description$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id\">Campaign</a>: </td><td align=left><select size=1 name=campaign_id>\n";
-
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
-	$rslt=mysql_query($stmt, $link);
-	$campaigns_to_print = mysql_num_rows($rslt);
-	$campaigns_list='';
-	$o=0;
-	while ($campaigns_to_print > $o) 
-		{
-		$rowx=mysql_fetch_row($rslt);
-		$campaigns_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
-		$o++;
-		}
-	echo "$campaigns_list";
-	echo "<option SELECTED>$campaign_id</option>\n";
-	echo "</select>$NWB#vicidial_lists-campaign_id$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option SELECTED>$active</option></select>$NWB#vicidial_lists-active$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Reset Lead-Called-Status for this list: </td><td align=left><select size=1 name=reset_list><option>Y</option><option SELECTED>N</option></select>$NWB#vicidial_lists-reset_list$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Reset Times: </td><td align=left><input type=text name=reset_time size=30 maxlength=100 value=\"$row[7]\">$NWB#vicidial_lists-reset_time$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>List Change Date: </td><td align=left>$list_changedate &nbsp; $NWB#vicidial_lists-list_changedate$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>List Last Call Date: </td><td align=left>$list_lastcalldate &nbsp; $NWB#vicidial_lists-list_lastcalldate$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
-	echo "</TABLE></center>\n";
-
-	echo "<center>\n";
-	echo "<br><b>STATUSES WITHIN THIS LIST:</b><br>\n";
-	echo "<TABLE width=500 cellspacing=3>\n";
-	echo "<tr><td>STATUS</td><td>STATUS NAME</td><td>CALLED</td><td>NOT CALLED</td></tr>\n";
-
-	$leads_in_list = 0;
-	$leads_in_list_N = 0;
-	$leads_in_list_Y = 0;
-	$stmt="SELECT status,called_since_last_reset,count(*) from vicidial_list where list_id='$list_id' group by status,called_since_last_reset order by status,called_since_last_reset";
-	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$statuses_to_print = mysql_num_rows($rslt);
-
-	$o=0;
-	$lead_list['count'] = 0;
-	$lead_list['Y_count'] = 0;
-	$lead_list['N_count'] = 0;
-	while ($statuses_to_print > $o) 
-		{
-	    $rowx=mysql_fetch_row($rslt);
-	    
-	    $lead_list['count'] = ($lead_list['count'] + $rowx[2]);
-	    if ($rowx[1] == 'N') 
+		$o=0;
+		while ($statuses_to_print > $o) 
 			{
-			$since_reset = 'N';
-			$since_resetX = 'Y';
-			}
-	    else 
-			{
-			$since_reset = 'Y';
-			$since_resetX = 'N';
-			} 
-	    $lead_list[$since_reset][$rowx[0]] = ($lead_list[$since_reset][$rowx[0]] + $rowx[2]);
-	    $lead_list[$since_reset.'_count'] = ($lead_list[$since_reset.'_count'] + $rowx[2]);
-	    #If opposite side is not set, it may not in the future so give it a value of zero
-	    if (!isset($lead_list[$since_resetX][$rowx[0]])) 
-			{
-			$lead_list[$since_resetX][$rowx[0]]=0;
-			}
-		$o++;
-		}
- 
-	$o=0;
-	if ($lead_list['count'] > 0)
-		{
-		while (list($dispo,) = each($lead_list[$since_reset]))
-		{
-
-		if (eregi("1$|3$|5$|7$|9$", $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-
-		if ($dispo == 'CBHOLD')
-			{
-			$CLB="<a href=\"$PHP_SELF?ADD=811&list_id=$list_id\">";
-			$CLE="</a>";
-			}
-		else
-			{
-			$CLB='';
-			$CLE='';
+			$rowx=mysql_fetch_row($rslt);
+			$statuses_list["$rowx[0]"] = "$rowx[1]";
+			$o++;
 			}
 
-		echo "<tr $bgcolor><td><font size=1>$CLB$dispo$CLE</td><td><font size=1>$statuses_list[$dispo]</td><td><font size=1>".$lead_list['Y'][$dispo]."</td><td><font size=1>".$lead_list['N'][$dispo]." </td></tr>\n";
-		$o++;
-		}
-	}
+		$stmt="SELECT * from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status";
+		$rslt=mysql_query($stmt, $link);
+		$Cstatuses_to_print = mysql_num_rows($rslt);
 
-	echo "<tr><td colspan=2><font size=1>SUBTOTALS</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td></tr>\n";
-	echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>TOTAL</td><td colspan=3 align=center><font size=1>$lead_list[count]</td></tr>\n";
-
-	echo "</table></center><br>\n";
-	unset($lead_list);
-
-
-	echo "<center>\n";
-	echo "<br><b>TIME ZONES WITHIN THIS LIST:</b><br>\n";
-	echo "<TABLE width=500 cellspacing=3>\n";
-	echo "<tr><td>GMT OFFSET NOW (local time)</td><td>CALLED</td><td>NOT CALLED</td></tr>\n";
-
-	$stmt="SELECT gmt_offset_now,called_since_last_reset,count(*) from vicidial_list where list_id='$list_id' group by gmt_offset_now,called_since_last_reset order by gmt_offset_now,called_since_last_reset";
-	$rslt=mysql_query($stmt, $link);
-	$statuses_to_print = mysql_num_rows($rslt);
-
-	$o=0;
-	$plus='+';
-	$lead_list['count'] = 0;
-	$lead_list['Y_count'] = 0;
-	$lead_list['N_count'] = 0;
-	while ($statuses_to_print > $o) 
-	{
-	    $rowx=mysql_fetch_row($rslt);
-	    
-	    $lead_list['count'] = ($lead_list['count'] + $rowx[2]);
-	    if ($rowx[1] == 'N') 
-	    {
-		$since_reset = 'N';
-		$since_resetX = 'Y';
-	    }
-	    else 
-	    {
-		$since_reset = 'Y';
-		$since_resetX = 'N';
-	    } 
-	    $lead_list[$since_reset][$rowx[0]] = ($lead_list[$since_reset][$rowx[0]] + $rowx[2]);
-	    $lead_list[$since_reset.'_count'] = ($lead_list[$since_reset.'_count'] + $rowx[2]);
-	    #If opposite side is not set, it may not in the future so give it a value of zero
-	    if (!isset($lead_list[$since_resetX][$rowx[0]])) 
-	    {
-		$lead_list[$since_resetX][$rowx[0]]=0;
-	    }
-	    $o++;
-	}
-
-	if ($lead_list['count'] > 0)
-	{
-		while (list($tzone,) = each($lead_list[$since_reset]))
-		{
-		$LOCALzone=3600 * $tzone;
-		$LOCALdate=gmdate("D M Y H:i", time() + $LOCALzone);
-
-		if ($tzone >= 0) {$DISPtzone = "$plus$tzone";}
-		else {$DISPtzone = "$tzone";}
-		if (eregi("1$|3$|5$|7$|9$", $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-
-			echo "<tr $bgcolor><td><font size=1>".$DISPtzone." &nbsp; &nbsp; ($LOCALdate)</td><td><font size=1>".$lead_list['Y'][$tzone]."</td><td><font size=1>".$lead_list['N'][$tzone]."</td></tr>\n";
-		}
-	}
-
-	echo "<tr><td><font size=1>SUBTOTALS</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td></tr>\n";
-	echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>TOTAL</td><td colspan=2 align=center><font size=1>$lead_list[count]</td></tr>\n";
-
-	echo "</table></center><br>\n";
-	unset($lead_list);
-
-
-
-
-
-	echo "<center>\n";
-	echo "<br><b>OWNERS WITHIN THIS LIST:</b><br>\n";
-	echo "<TABLE width=500 cellspacing=3>\n";
-	echo "<tr><td>OWNER</td><td>CALLED</td><td>NOT CALLED</td></tr>\n";
-
-	$leads_in_list = 0;
-	$leads_in_list_N = 0;
-	$leads_in_list_Y = 0;
-	$stmt="SELECT owner,called_since_last_reset,count(*) from vicidial_list where list_id='$list_id' group by owner,called_since_last_reset order by owner,called_since_last_reset";
-	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$owners_to_print = mysql_num_rows($rslt);
-
-	$o=0;
-	$lead_list['count'] = 0;
-	$lead_list['Y_count'] = 0;
-	$lead_list['N_count'] = 0;
-	while ($owners_to_print > $o) 
-		{
-	    $rowx=mysql_fetch_row($rslt);
-	    
-	    $lead_list['count'] = ($lead_list['count'] + $rowx[2]);
-	    if ($rowx[1] == 'N') 
+		$o=0;
+		while ($Cstatuses_to_print > $o) 
 			{
-			$since_reset = 'N';
-			$since_resetX = 'Y';
+			$rowx=mysql_fetch_row($rslt);
+			$statuses_list["$rowx[0]"] = "$rowx[1]";
+			$o++;
 			}
-	    else 
+		# end grab status names
+
+		##### get scripts listings for pulldown
+		$Lscripts_list = "<option value=\"\">NONE - INACTIVE</option>\n";
+		$stmt="SELECT script_id,script_name from vicidial_scripts order by script_id";
+		$rslt=mysql_query($stmt, $link);
+		$scripts_to_print = mysql_num_rows($rslt);
+		$o=0;
+		while ($scripts_to_print > $o)
 			{
-			$since_reset = 'Y';
-			$since_resetX = 'N';
-			} 
-	    $lead_list[$since_reset][$rowx[0]] = ($lead_list[$since_reset][$rowx[0]] + $rowx[2]);
-	    $lead_list[$since_reset.'_count'] = ($lead_list[$since_reset.'_count'] + $rowx[2]);
-	    #If opposite side is not set, it may not in the future so give it a value of zero
-	    if (!isset($lead_list[$since_resetX][$rowx[0]])) 
-			{
-			$lead_list[$since_resetX][$rowx[0]]=0;
+			$rowx=mysql_fetch_row($rslt);
+			$Lscripts_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+			$scriptname_list["$rowx[0]"] = "$rowx[1]";
+			$o++;
 			}
-		$o++;
-		}
- 
-	$o=0;
-	if ($lead_list['count'] > 0)
-		{
-		while (list($owner,) = each($lead_list[$since_reset]))
-		{
-
-		if (eregi("1$|3$|5$|7$|9$", $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-
-		$CLB='';
-		$CLE='';
-
-		echo "<tr $bgcolor><td><font size=1>$CLB$owner$CLE</td><td><font size=1>".$lead_list['Y'][$owner]."</td><td><font size=1>".$lead_list['N'][$owner]." </td></tr>\n";
-		$o++;
-		}
-	}
-
-	echo "<tr><td><font size=1>SUBTOTALS</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td></tr>\n";
-	echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>TOTAL</td><td colspan=3 align=center><font size=1>$lead_list[count]</td></tr>\n";
-
-	echo "</table></center><br>\n";
-	unset($lead_list);
 
 
+		echo "<br>MODIFY A LISTS RECORD: $row[0]<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=411>\n";
+		echo "<input type=hidden name=list_id value=\"$row[0]\">\n";
+		echo "<input type=hidden name=old_campaign_id value=\"$row[2]\">\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>List ID: </td><td align=left><b>$row[0]</b>$NWB#vicidial_lists-list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>List Name: </td><td align=left><input type=text name=list_name size=20 maxlength=20 value=\"$row[1]\">$NWB#vicidial_lists-list_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>List Description: </td><td align=left><input type=text name=list_description size=30 maxlength=255 value=\"$list_description\">$NWB#vicidial_lists-list_description$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id\">Campaign</a>: </td><td align=left><select size=1 name=campaign_id>\n";
 
-
-
-	echo "<center>\n";
-	echo "<br><b>RANKS WITHIN THIS LIST:</b><br>\n";
-	echo "<TABLE width=500 cellspacing=3>\n";
-	echo "<tr><td>RANK</td><td>CALLED</td><td>NOT CALLED</td></tr>\n";
-
-	$leads_in_list = 0;
-	$leads_in_list_N = 0;
-	$leads_in_list_Y = 0;
-	$stmt="SELECT rank,called_since_last_reset,count(*) from vicidial_list where list_id='$list_id' group by rank,called_since_last_reset order by rank,called_since_last_reset";
-	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$ranks_to_print = mysql_num_rows($rslt);
-
-	$o=0;
-	$lead_list['count'] = 0;
-	$lead_list['Y_count'] = 0;
-	$lead_list['N_count'] = 0;
-	while ($ranks_to_print > $o) 
-		{
-	    $rowx=mysql_fetch_row($rslt);
-	    
-	    $lead_list['count'] = ($lead_list['count'] + $rowx[2]);
-	    if ($rowx[1] == 'N') 
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
+		$rslt=mysql_query($stmt, $link);
+		$campaigns_to_print = mysql_num_rows($rslt);
+		$campaigns_list='';
+		$o=0;
+		while ($campaigns_to_print > $o) 
 			{
-			$since_reset = 'N';
-			$since_resetX = 'Y';
+			$rowx=mysql_fetch_row($rslt);
+			$campaigns_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+			$o++;
 			}
-	    else 
+		echo "$campaigns_list";
+		echo "<option SELECTED>$campaign_id</option>\n";
+		echo "</select>$NWB#vicidial_lists-campaign_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option SELECTED>$active</option></select>$NWB#vicidial_lists-active$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Reset Lead-Called-Status for this list: </td><td align=left><select size=1 name=reset_list><option>Y</option><option SELECTED>N</option></select>$NWB#vicidial_lists-reset_list$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Reset Times: </td><td align=left><input type=text name=reset_time size=30 maxlength=100 value=\"$reset_time\">$NWB#vicidial_lists-reset_time$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>List Change Date: </td><td align=left>$list_changedate &nbsp; $NWB#vicidial_lists-list_changedate$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>List Last Call Date: </td><td align=left>$list_lastcalldate &nbsp; $NWB#vicidial_lists-list_lastcalldate$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=3111111&script_id=$agent_script_override\">Agent Script Override</a>: </td><td align=left><select size=1 name=agent_script_override>\n";
+		echo "$Lscripts_list";
+		echo "<option selected value=\"$agent_script_override\">$agent_script_override - $scriptname_list[$agent_script_override]</option>\n";
+		echo "</select>$NWB#vicidial_lists-agent_script_override$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+		echo "</TABLE></center>\n";
+
+		echo "<center>\n";
+		echo "<br><b>STATUSES WITHIN THIS LIST:</b><br>\n";
+		echo "<TABLE width=500 cellspacing=3>\n";
+		echo "<tr><td>STATUS</td><td>STATUS NAME</td><td>CALLED</td><td>NOT CALLED</td></tr>\n";
+
+		$leads_in_list = 0;
+		$leads_in_list_N = 0;
+		$leads_in_list_Y = 0;
+		$stmt="SELECT status,called_since_last_reset,count(*) from vicidial_list where list_id='$list_id' group by status,called_since_last_reset order by status,called_since_last_reset";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$statuses_to_print = mysql_num_rows($rslt);
+
+		$o=0;
+		$lead_list['count'] = 0;
+		$lead_list['Y_count'] = 0;
+		$lead_list['N_count'] = 0;
+		while ($statuses_to_print > $o) 
 			{
-			$since_reset = 'Y';
-			$since_resetX = 'N';
-			} 
-	    $lead_list[$since_reset][$rowx[0]] = ($lead_list[$since_reset][$rowx[0]] + $rowx[2]);
-	    $lead_list[$since_reset.'_count'] = ($lead_list[$since_reset.'_count'] + $rowx[2]);
-	    #If opposite side is not set, it may not in the future so give it a value of zero
-	    if (!isset($lead_list[$since_resetX][$rowx[0]])) 
-			{
-			$lead_list[$since_resetX][$rowx[0]]=0;
-			}
-		$o++;
-		}
- 
-	$o=0;
-	if ($lead_list['count'] > 0)
-		{
-		while (list($rank,) = each($lead_list[$since_reset]))
-		{
-
-		if (eregi("1$|3$|5$|7$|9$", $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-
-		$CLB='';
-		$CLE='';
-
-		echo "<tr $bgcolor><td><font size=1>$CLB$rank$CLE</td><td><font size=1>".$lead_list['Y'][$rank]."</td><td><font size=1>".$lead_list['N'][$rank]." </td></tr>\n";
-		$o++;
-		}
-	}
-
-	echo "<tr><td><font size=1>SUBTOTALS</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td></tr>\n";
-	echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>TOTAL</td><td colspan=3 align=center><font size=1>$lead_list[count]</td></tr>\n";
-
-	echo "</table></center><br>\n";
-	unset($lead_list);
-
-
-
-
-
-	$leads_in_list = 0;
-	$leads_in_list_N = 0;
-	$leads_in_list_Y = 0;
-	$stmt="SELECT status,called_count,count(*) from vicidial_list where list_id='$list_id' group by status,called_count order by status,called_count";
-	$rslt=mysql_query($stmt, $link);
-	$status_called_to_print = mysql_num_rows($rslt);
-
-	$o=0;
-	$sts=0;
-	$first_row=1;
-	$all_called_first=1000;
-	$all_called_last=0;
-	while ($status_called_to_print > $o) 
-	{
-	$rowx=mysql_fetch_row($rslt);
-	$leads_in_list = ($leads_in_list + $rowx[2]);
-	$count_statuses[$o]			= "$rowx[0]";
-	$count_called[$o]			= "$rowx[1]";
-	$count_count[$o]			= "$rowx[2]";
-	$all_called_count[$rowx[1]] = ($all_called_count[$rowx[1]] + $rowx[2]);
-
-	if ( (strlen($status[$sts]) < 1) or ($status[$sts] != "$rowx[0]") )
-		{
-		if ($first_row) {$first_row=0;}
-		else {$sts++;}
-		$status[$sts] = "$rowx[0]";
-		$status_called_first[$sts] = "$rowx[1]";
-		if ($status_called_first[$sts] < $all_called_first) {$all_called_first = $status_called_first[$sts];}
-		}
-	$leads_in_sts[$sts] = ($leads_in_sts[$sts] + $rowx[2]);
-	$status_called_last[$sts] = "$rowx[1]";
-	if ($status_called_last[$sts] > $all_called_last) {$all_called_last = $status_called_last[$sts];}
-
-	$o++;
-	}
-
-
-
-
-	echo "<center>\n";
-	echo "<br><b>CALLED COUNTS WITHIN THIS LIST:</b><br>\n";
-	echo "<TABLE width=500 cellspacing=1>\n";
-	echo "<tr><td align=left><font size=1>STATUS</td><td align=center><font size=1>STATUS NAME</td>";
-	$first = $all_called_first;
-	while ($first <= $all_called_last)
-		{
-		if (eregi("1$|3$|5$|7$|9$", $first)) {$AB='bgcolor="#AFEEEE"';} 
-		else{$AB='bgcolor="#E0FFFF"';}
-		echo "<td align=center $AB><font size=1>$first</td>";
-		$first++;
-		}
-	echo "<td align=center><font size=1>SUBTOTAL</td></tr>\n";
-
-		$sts=0;
-		$statuses_called_to_print = count($status);
-		while ($statuses_called_to_print > $sts) 
-		{
-		$Pstatus = $status[$sts];
-		if (eregi("1$|3$|5$|7$|9$", $sts))
-			{$bgcolor='bgcolor="#B9CBFD"';   $AB='bgcolor="#9BB9FB"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';   $AB='bgcolor="#B9CBFD"';}
-	#	echo "$status[$sts]|$status_called_first[$sts]|$status_called_last[$sts]|$leads_in_sts[$sts]|\n";
-	#	echo "$status[$sts]|";
-		echo "<tr $bgcolor><td><font size=1>$Pstatus</td><td><font size=1>$statuses_list[$Pstatus]</td>";
-
-		$first = $all_called_first;
-		while ($first <= $all_called_last)
-			{
-			if (eregi("1$|3$|5$|7$|9$", $sts))
+			$rowx=mysql_fetch_row($rslt);
+			
+			$lead_list['count'] = ($lead_list['count'] + $rowx[2]);
+			if ($rowx[1] == 'N') 
 				{
-				if (eregi("1$|3$|5$|7$|9$", $first)) {$AB='bgcolor="#9BB9FB"';} 
-				else{$AB='bgcolor="#B9CBFD"';}
+				$since_reset = 'N';
+				$since_resetX = 'Y';
+				}
+			else 
+				{
+				$since_reset = 'Y';
+				$since_resetX = 'N';
+				} 
+			$lead_list[$since_reset][$rowx[0]] = ($lead_list[$since_reset][$rowx[0]] + $rowx[2]);
+			$lead_list[$since_reset.'_count'] = ($lead_list[$since_reset.'_count'] + $rowx[2]);
+			#If opposite side is not set, it may not in the future so give it a value of zero
+			if (!isset($lead_list[$since_resetX][$rowx[0]])) 
+				{
+				$lead_list[$since_resetX][$rowx[0]]=0;
+				}
+			$o++;
+			}
+	 
+		$o=0;
+		if ($lead_list['count'] > 0)
+			{
+			while (list($dispo,) = each($lead_list[$since_reset]))
+			{
+
+			if (eregi("1$|3$|5$|7$|9$", $o))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+
+			if ($dispo == 'CBHOLD')
+				{
+				$CLB="<a href=\"$PHP_SELF?ADD=811&list_id=$list_id\">";
+				$CLE="</a>";
 				}
 			else
 				{
-				if (eregi("0$|2$|4$|6$|8$", $first)) {$AB='bgcolor="#9BB9FB"';} 
-				else{$AB='bgcolor="#B9CBFD"';}
+				$CLB='';
+				$CLE='';
 				}
 
-			$called_printed=0;
-			$o=0;
-			while ($status_called_to_print > $o) 
+			echo "<tr $bgcolor><td><font size=1>$CLB$dispo$CLE</td><td><font size=1>$statuses_list[$dispo]</td><td><font size=1>".$lead_list['Y'][$dispo]."</td><td><font size=1>".$lead_list['N'][$dispo]." </td></tr>\n";
+			$o++;
+			}
+		}
+
+		echo "<tr><td colspan=2><font size=1>SUBTOTALS</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td></tr>\n";
+		echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>TOTAL</td><td colspan=3 align=center><font size=1>$lead_list[count]</td></tr>\n";
+
+		echo "</table></center><br>\n";
+		unset($lead_list);
+
+
+		echo "<center>\n";
+		echo "<br><b>TIME ZONES WITHIN THIS LIST:</b><br>\n";
+		echo "<TABLE width=500 cellspacing=3>\n";
+		echo "<tr><td>GMT OFFSET NOW (local time)</td><td>CALLED</td><td>NOT CALLED</td></tr>\n";
+
+		$stmt="SELECT gmt_offset_now,called_since_last_reset,count(*) from vicidial_list where list_id='$list_id' group by gmt_offset_now,called_since_last_reset order by gmt_offset_now,called_since_last_reset";
+		$rslt=mysql_query($stmt, $link);
+		$statuses_to_print = mysql_num_rows($rslt);
+
+		$o=0;
+		$plus='+';
+		$lead_list['count'] = 0;
+		$lead_list['Y_count'] = 0;
+		$lead_list['N_count'] = 0;
+		while ($statuses_to_print > $o) 
+		{
+			$rowx=mysql_fetch_row($rslt);
+			
+			$lead_list['count'] = ($lead_list['count'] + $rowx[2]);
+			if ($rowx[1] == 'N') 
+			{
+			$since_reset = 'N';
+			$since_resetX = 'Y';
+			}
+			else 
+			{
+			$since_reset = 'Y';
+			$since_resetX = 'N';
+			} 
+			$lead_list[$since_reset][$rowx[0]] = ($lead_list[$since_reset][$rowx[0]] + $rowx[2]);
+			$lead_list[$since_reset.'_count'] = ($lead_list[$since_reset.'_count'] + $rowx[2]);
+			#If opposite side is not set, it may not in the future so give it a value of zero
+			if (!isset($lead_list[$since_resetX][$rowx[0]])) 
+			{
+			$lead_list[$since_resetX][$rowx[0]]=0;
+			}
+			$o++;
+		}
+
+		if ($lead_list['count'] > 0)
+		{
+			while (list($tzone,) = each($lead_list[$since_reset]))
+			{
+			$LOCALzone=3600 * $tzone;
+			$LOCALdate=gmdate("D M Y H:i", time() + $LOCALzone);
+
+			if ($tzone >= 0) {$DISPtzone = "$plus$tzone";}
+			else {$DISPtzone = "$tzone";}
+			if (eregi("1$|3$|5$|7$|9$", $o))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+
+				echo "<tr $bgcolor><td><font size=1>".$DISPtzone." &nbsp; &nbsp; ($LOCALdate)</td><td><font size=1>".$lead_list['Y'][$tzone]."</td><td><font size=1>".$lead_list['N'][$tzone]."</td></tr>\n";
+			}
+		}
+
+		echo "<tr><td><font size=1>SUBTOTALS</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td></tr>\n";
+		echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>TOTAL</td><td colspan=2 align=center><font size=1>$lead_list[count]</td></tr>\n";
+
+		echo "</table></center><br>\n";
+		unset($lead_list);
+
+
+
+
+
+		echo "<center>\n";
+		echo "<br><b>OWNERS WITHIN THIS LIST:</b><br>\n";
+		echo "<TABLE width=500 cellspacing=3>\n";
+		echo "<tr><td>OWNER</td><td>CALLED</td><td>NOT CALLED</td></tr>\n";
+
+		$leads_in_list = 0;
+		$leads_in_list_N = 0;
+		$leads_in_list_Y = 0;
+		$stmt="SELECT owner,called_since_last_reset,count(*) from vicidial_list where list_id='$list_id' group by owner,called_since_last_reset order by owner,called_since_last_reset";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$owners_to_print = mysql_num_rows($rslt);
+
+		$o=0;
+		$lead_list['count'] = 0;
+		$lead_list['Y_count'] = 0;
+		$lead_list['N_count'] = 0;
+		while ($owners_to_print > $o) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			
+			$lead_list['count'] = ($lead_list['count'] + $rowx[2]);
+			if ($rowx[1] == 'N') 
 				{
-				if ( ($count_statuses[$o] == "$Pstatus") and ($count_called[$o] == "$first") )
-					{
-					$called_printed++;
-					echo "<td $AB><font size=1> $count_count[$o]</td>";
-					}
-
-
-				$o++;
+				$since_reset = 'N';
+				$since_resetX = 'Y';
 				}
-			if (!$called_printed) 
-				{echo "<td $AB><font size=1> &nbsp;</td>";}
+			else 
+				{
+				$since_reset = 'Y';
+				$since_resetX = 'N';
+				} 
+			$lead_list[$since_reset][$rowx[0]] = ($lead_list[$since_reset][$rowx[0]] + $rowx[2]);
+			$lead_list[$since_reset.'_count'] = ($lead_list[$since_reset.'_count'] + $rowx[2]);
+			#If opposite side is not set, it may not in the future so give it a value of zero
+			if (!isset($lead_list[$since_resetX][$rowx[0]])) 
+				{
+				$lead_list[$since_resetX][$rowx[0]]=0;
+				}
+			$o++;
+			}
+	 
+		$o=0;
+		if ($lead_list['count'] > 0)
+			{
+			while (list($owner,) = each($lead_list[$since_reset]))
+			{
+
+			if (eregi("1$|3$|5$|7$|9$", $o))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+
+			$CLB='';
+			$CLE='';
+
+			echo "<tr $bgcolor><td><font size=1>$CLB$owner$CLE</td><td><font size=1>".$lead_list['Y'][$owner]."</td><td><font size=1>".$lead_list['N'][$owner]." </td></tr>\n";
+			$o++;
+			}
+		}
+
+		echo "<tr><td><font size=1>SUBTOTALS</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td></tr>\n";
+		echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>TOTAL</td><td colspan=3 align=center><font size=1>$lead_list[count]</td></tr>\n";
+
+		echo "</table></center><br>\n";
+		unset($lead_list);
+
+
+
+
+
+		echo "<center>\n";
+		echo "<br><b>RANKS WITHIN THIS LIST:</b><br>\n";
+		echo "<TABLE width=500 cellspacing=3>\n";
+		echo "<tr><td>RANK</td><td>CALLED</td><td>NOT CALLED</td></tr>\n";
+
+		$leads_in_list = 0;
+		$leads_in_list_N = 0;
+		$leads_in_list_Y = 0;
+		$stmt="SELECT rank,called_since_last_reset,count(*) from vicidial_list where list_id='$list_id' group by rank,called_since_last_reset order by rank,called_since_last_reset";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$ranks_to_print = mysql_num_rows($rslt);
+
+		$o=0;
+		$lead_list['count'] = 0;
+		$lead_list['Y_count'] = 0;
+		$lead_list['N_count'] = 0;
+		while ($ranks_to_print > $o) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			
+			$lead_list['count'] = ($lead_list['count'] + $rowx[2]);
+			if ($rowx[1] == 'N') 
+				{
+				$since_reset = 'N';
+				$since_resetX = 'Y';
+				}
+			else 
+				{
+				$since_reset = 'Y';
+				$since_resetX = 'N';
+				} 
+			$lead_list[$since_reset][$rowx[0]] = ($lead_list[$since_reset][$rowx[0]] + $rowx[2]);
+			$lead_list[$since_reset.'_count'] = ($lead_list[$since_reset.'_count'] + $rowx[2]);
+			#If opposite side is not set, it may not in the future so give it a value of zero
+			if (!isset($lead_list[$since_resetX][$rowx[0]])) 
+				{
+				$lead_list[$since_resetX][$rowx[0]]=0;
+				}
+			$o++;
+			}
+	 
+		$o=0;
+		if ($lead_list['count'] > 0)
+			{
+			while (list($rank,) = each($lead_list[$since_reset]))
+			{
+
+			if (eregi("1$|3$|5$|7$|9$", $o))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+
+			$CLB='';
+			$CLE='';
+
+			echo "<tr $bgcolor><td><font size=1>$CLB$rank$CLE</td><td><font size=1>".$lead_list['Y'][$rank]."</td><td><font size=1>".$lead_list['N'][$rank]." </td></tr>\n";
+			$o++;
+			}
+		}
+
+		echo "<tr><td><font size=1>SUBTOTALS</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td></tr>\n";
+		echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>TOTAL</td><td colspan=3 align=center><font size=1>$lead_list[count]</td></tr>\n";
+
+		echo "</table></center><br>\n";
+		unset($lead_list);
+
+
+
+
+
+		$leads_in_list = 0;
+		$leads_in_list_N = 0;
+		$leads_in_list_Y = 0;
+		$stmt="SELECT status,called_count,count(*) from vicidial_list where list_id='$list_id' group by status,called_count order by status,called_count";
+		$rslt=mysql_query($stmt, $link);
+		$status_called_to_print = mysql_num_rows($rslt);
+
+		$o=0;
+		$sts=0;
+		$first_row=1;
+		$all_called_first=1000;
+		$all_called_last=0;
+		while ($status_called_to_print > $o) 
+		{
+		$rowx=mysql_fetch_row($rslt);
+		$leads_in_list = ($leads_in_list + $rowx[2]);
+		$count_statuses[$o]			= "$rowx[0]";
+		$count_called[$o]			= "$rowx[1]";
+		$count_count[$o]			= "$rowx[2]";
+		$all_called_count[$rowx[1]] = ($all_called_count[$rowx[1]] + $rowx[2]);
+
+		if ( (strlen($status[$sts]) < 1) or ($status[$sts] != "$rowx[0]") )
+			{
+			if ($first_row) {$first_row=0;}
+			else {$sts++;}
+			$status[$sts] = "$rowx[0]";
+			$status_called_first[$sts] = "$rowx[1]";
+			if ($status_called_first[$sts] < $all_called_first) {$all_called_first = $status_called_first[$sts];}
+			}
+		$leads_in_sts[$sts] = ($leads_in_sts[$sts] + $rowx[2]);
+		$status_called_last[$sts] = "$rowx[1]";
+		if ($status_called_last[$sts] > $all_called_last) {$all_called_last = $status_called_last[$sts];}
+
+		$o++;
+		}
+
+
+
+
+		echo "<center>\n";
+		echo "<br><b>CALLED COUNTS WITHIN THIS LIST:</b><br>\n";
+		echo "<TABLE width=500 cellspacing=1>\n";
+		echo "<tr><td align=left><font size=1>STATUS</td><td align=center><font size=1>STATUS NAME</td>";
+		$first = $all_called_first;
+		while ($first <= $all_called_last)
+			{
+			if (eregi("1$|3$|5$|7$|9$", $first)) {$AB='bgcolor="#AFEEEE"';} 
+			else{$AB='bgcolor="#E0FFFF"';}
+			echo "<td align=center $AB><font size=1>$first</td>";
 			$first++;
 			}
-		echo "<td><font size=1>$leads_in_sts[$sts]</td></tr>\n\n";
+		echo "<td align=center><font size=1>SUBTOTAL</td></tr>\n";
 
-		$sts++;
+			$sts=0;
+			$statuses_called_to_print = count($status);
+			while ($statuses_called_to_print > $sts) 
+			{
+			$Pstatus = $status[$sts];
+			if (eregi("1$|3$|5$|7$|9$", $sts))
+				{$bgcolor='bgcolor="#B9CBFD"';   $AB='bgcolor="#9BB9FB"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';   $AB='bgcolor="#B9CBFD"';}
+		#	echo "$status[$sts]|$status_called_first[$sts]|$status_called_last[$sts]|$leads_in_sts[$sts]|\n";
+		#	echo "$status[$sts]|";
+			echo "<tr $bgcolor><td><font size=1>$Pstatus</td><td><font size=1>$statuses_list[$Pstatus]</td>";
+
+			$first = $all_called_first;
+			while ($first <= $all_called_last)
+				{
+				if (eregi("1$|3$|5$|7$|9$", $sts))
+					{
+					if (eregi("1$|3$|5$|7$|9$", $first)) {$AB='bgcolor="#9BB9FB"';} 
+					else{$AB='bgcolor="#B9CBFD"';}
+					}
+				else
+					{
+					if (eregi("0$|2$|4$|6$|8$", $first)) {$AB='bgcolor="#9BB9FB"';} 
+					else{$AB='bgcolor="#B9CBFD"';}
+					}
+
+				$called_printed=0;
+				$o=0;
+				while ($status_called_to_print > $o) 
+					{
+					if ( ($count_statuses[$o] == "$Pstatus") and ($count_called[$o] == "$first") )
+						{
+						$called_printed++;
+						echo "<td $AB><font size=1> $count_count[$o]</td>";
+						}
+
+
+					$o++;
+					}
+				if (!$called_printed) 
+					{echo "<td $AB><font size=1> &nbsp;</td>";}
+				$first++;
+				}
+			echo "<td><font size=1>$leads_in_sts[$sts]</td></tr>\n\n";
+
+			$sts++;
+			}
+
+		echo "<tr><td align=center colspan=2><b><font size=1>TOTAL</td>";
+		$first = $all_called_first;
+		while ($first <= $all_called_last)
+			{
+			if (eregi("1$|3$|5$|7$|9$", $first)) {$AB='bgcolor="#AFEEEE"';} 
+			else{$AB='bgcolor="#E0FFFF"';}
+			echo "<td align=center $AB><b><font size=1>$all_called_count[$first]</td>";
+			$first++;
+			}
+		echo "<td align=center><b><font size=1>$leads_in_list</td></tr>\n";
+
+		echo "</table></center><br>\n";
+
+
+
+
+
+		echo "<center><b>\n";
+
+		echo "<br><br><a href=\"$PHP_SELF?ADD=811&list_id=$list_id\">Click here to see all CallBack Holds in this list</a><BR><BR>\n";
+		echo "<br><br><a href=\"./list_download.php?list_id=$list_id\">Click here to download this list</a><BR><BR>\n";
+
+		if ($LOGdelete_lists > 0)
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=511&list_id=$list_id\">DELETE THIS LIST</a>\n";
+			}
+		if ($LOGuser_level >= 9)
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=LISTS&stage=$list_id\">Click here to see Admin chages to this list</FONT>\n";
+			}
 		}
-
-	echo "<tr><td align=center colspan=2><b><font size=1>TOTAL</td>";
-	$first = $all_called_first;
-	while ($first <= $all_called_last)
-		{
-		if (eregi("1$|3$|5$|7$|9$", $first)) {$AB='bgcolor="#AFEEEE"';} 
-		else{$AB='bgcolor="#E0FFFF"';}
-		echo "<td align=center $AB><b><font size=1>$all_called_count[$first]</td>";
-		$first++;
-		}
-	echo "<td align=center><b><font size=1>$leads_in_list</td></tr>\n";
-
-	echo "</table></center><br>\n";
-
-
-
-
-
-	echo "<center><b>\n";
-
-	echo "<br><br><a href=\"$PHP_SELF?ADD=811&list_id=$list_id\">Click here to see all CallBack Holds in this list</a><BR><BR>\n";
-	echo "<br><br><a href=\"./list_download.php?list_id=$list_id\">Click here to download this list</a><BR><BR>\n";
-
-	if ($LOGdelete_lists > 0)
-		{
-		echo "<br><br><a href=\"$PHP_SELF?ADD=511&list_id=$list_id\">DELETE THIS LIST</a>\n";
-		}
-	if ($LOGuser_level >= 9)
-		{
-		echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=LISTS&stage=$list_id\">Click here to see Admin chages to this list</FONT>\n";
-		}
-	}
 	else
-	{
-	echo "You do not have permission to view this page\n";
-	exit;
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
 	}
-}
 
 
 

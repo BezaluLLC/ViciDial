@@ -248,10 +248,11 @@
 # 90812-0046 - Added no-delete-sessions = 1 as default, unused sessions cleared out at timeclock end of day
 # 90814-0829 - Moved mute button next to hotkeys button
 # 90827-0133 - Reworked Script display code
+# 90827-1549 - Added list script override option, original_phone_login variable
 #
 
-$version = '2.2.0-225';
-$build = '90827-0133';
+$version = '2.2.0-226';
+$build = '90827-1549';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -1399,6 +1400,8 @@ $VDloginDISPLAY=0;
 	exit;
 	}
 
+$original_phone_login = $phone_login;
+
 # code for parsing load-balanced agent phone allocation where agent interface
 # will send multiple phones-table logins so that the script can determine the
 # server that has the fewest agents logged into it.
@@ -2305,6 +2308,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var VU_closer_default_blended = '<?php echo $VU_closer_default_blended ?>';
 	var VDstop_rec_after_each_call = '<?php echo $VDstop_rec_after_each_call ?>';
 	var phone_login = '<?php echo $phone_login ?>';
+	var original_phone_login = '<?php echo $original_phone_login ?>';
 	var phone_pass = '<?php echo $phone_pass ?>';
 	var user = '<?php echo $VD_login ?>';
 	var user_abb = '<?php echo $user_abb ?>';
@@ -4623,6 +4627,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&pass=" + pass + 
 							"&campaign=" + campaign + 
 							"&phone_login=" + phone_login + 
+							"&original_phone_login=" + original_phone_login +
 							"&phone_pass=" + phone_pass + 
 							"&fronter=" + fronter + 
 							"&closer=" + user + 
@@ -5610,6 +5615,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&pass=" + pass + 
 								"&campaign=" + campaign + 
 								"&phone_login=" + phone_login + 
+								"&original_phone_login=" + original_phone_login +
 								"&phone_pass=" + phone_pass + 
 								"&fronter=" + fronter + 
 								"&closer=" + user + 
@@ -5754,6 +5760,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			"&pass=" + pass + 
 			"&campaign=" + campaign + 
 			"&phone_login=" + phone_login + 
+			"&original_phone_login=" + original_phone_login +
 			"&phone_pass=" + phone_pass + 
 			"&fronter=" + fronter + 
 			"&closer=" + user + 
@@ -7020,7 +7027,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				if (tempreason=='SHIFT')
 					{logout_content='Your Shift is over or has changed, you have been logged out of your session<BR><BR>';}
 
-				document.getElementById("LogouTBoxLink").innerHTML = logout_content + "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass + "\">CLICK HERE TO LOG IN AGAIN</a>\n";
+				document.getElementById("LogouTBoxLink").innerHTML = logout_content + "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + original_phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass + "\">CLICK HERE TO LOG IN AGAIN</a>\n";
 
 				logout_stop_timeouts = 1;
 					
@@ -7195,6 +7202,7 @@ encoded=utf8_decode(xtest);
 		var SClead_id = document.vicidial_form.lead_id.value;
 		var SCcampaign = campaign;
 		var SCphone_login = phone_login;
+		var SCoriginal_phone_login = original_phone_login;
 		var SCgroup = group;
 		var SCchannel_group = group;
 		var SCSQLdate = SQLdate;
@@ -7249,6 +7257,7 @@ encoded=utf8_decode(xtest);
 			SClead_id = SClead_id.replace(RGplus,'+');
 			SCcampaign = SCcampaign.replace(RGplus,'+');
 			SCphone_login = SCphone_login.replace(RGplus,'+');
+			SCoriginal_phone_login = SCoriginal_phone_login.replace(RGplus,'+');
 			SCgroup = SCgroup.replace(RGplus,'+');
 			SCchannel_group = SCchannel_group.replace(RGplus,'+');
 			SCSQLdate = SCSQLdate.replace(RGplus,'+');
@@ -7300,6 +7309,7 @@ encoded=utf8_decode(xtest);
 		var RGlead_id = new RegExp("--A--lead_id--B--","g");
 		var RGcampaign = new RegExp("--A--campaign--B--","g");
 		var RGphone_login = new RegExp("--A--phone_login--B--","g");
+		var RGoriginal_phone_login = new RegExp("--A--original_phone_login--B--","g");
 		var RGgroup = new RegExp("--A--group--B--","g");
 		var RGchannel_group = new RegExp("--A--channel_group--B--","g");
 		var RGSQLdate = new RegExp("--A--SQLdate--B--","g");
@@ -7352,6 +7362,7 @@ encoded=utf8_decode(xtest);
 		encoded = encoded.replace(RGlead_id, SClead_id);
 		encoded = encoded.replace(RGcampaign, SCcampaign);
 		encoded = encoded.replace(RGphone_login, SCphone_login);
+		encoded = encoded.replace(RGoriginal_phone_login, SCoriginal_phone_login);
 		encoded = encoded.replace(RGgroup, SCgroup);
 		encoded = encoded.replace(RGchannel_group, SCchannel_group);
 		encoded = encoded.replace(RGSQLdate, SCSQLdate);
@@ -8862,7 +8873,7 @@ if ($view_calls_in_queue > 0)
 <span style="position:absolute;left:<?php echo $SBwidth ?>px;top:0px;height:500;overflow:scroll;z-index:25;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentViewSpan"><TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">
 Other Agents Status: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="AgentViewStatus">&nbsp;</span></TD></TR></TABLE></span>
 
-<span style="position:absolute;left:60px;top:<?php echo $BPheight ?>px;width:400;height:500;overflow:scroll;z-index:26;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentXferViewSpan"><CENTER><font class="body_text">
+<span style="position:absolute;left:60px;top:<?php echo $BPheight ?>px;width:400;height:500;overflow:scroll;z-index:32;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentXferViewSpan"><CENTER><font class="body_text">
 Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font></span>
 
 <span style="position:absolute;left:<?php echo $SCwidth ?>px;top:<?php echo $SLheight ?>px;z-index:27;" id="AgentViewLinkSpan"><TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=91><TR><TD ALIGN=RIGHT><font class="body_small"><span id="AgentViewLink"><a href="#" onclick="AgentsViewOpen('AgentViewSpan','open');return false;">Agents View +</a></span></font></TD></TR></TABLE></span>
