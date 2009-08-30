@@ -37,12 +37,14 @@
 # 90728-1255 - Added fixed254 file format
 # 90802-0758 - Added sctab08 file format
 # 90810-0956 - Added sccsv11 file format
+# 90830-0953 - Added forcelistfilename option
 #
 
 $secX = time();
 $MT[0]='';
 $Ealert='';
 $force_quiet=0;
+$forcelistfilename=0;
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 $year = ($year + 1900);
@@ -130,6 +132,7 @@ if (length($ARGV[0])>1)
 		print "  [--debug] = debug output\n";
 		print "  [--format=standard] = ability to define a format, standard is default, formats allowed shown in examples\n";
 		print "  [--forcelistid=1234] = overrides the listID given in the file with the 1234\n";
+		print "  [--forcelistfilename] = overrides the listID using last number in filename: (XYZ_1234.txt = list ID 1234)\n";
 		print "  [--forcephonecode=44] = overrides the phone_code given in the lead with the 44\n";
 		print "  [--duplicate-check] = checks for the same phone number in the same list id before inserting lead\n";
 		print "  [--duplicate-campaign-check] = checks for the same phone number in the same campaign before inserting lead\n";
@@ -207,6 +210,12 @@ if (length($ARGV[0])>1)
 			}
 		else
 			{$forcelistid = '';}
+
+		if ($args =~ /-forcelistfilename/i)
+			{
+			$forcelistfilename=1;
+			if ($q < 1) {print "\n----- FORCE LISTID FROM FILENAME -----\n\n";}
+			}
 
 		if ($args =~ /-format=/i)
 			{
@@ -339,12 +348,14 @@ $dir2 = "$PATHhome/LEADS_IN/DONE";
 	if($DBX){print STDERR "\nLEADS_IN directory: |$dir1|\n";}
 
 
+$files_copied_count=0;
+$fcc=0;
+@FTPfiles=@MT;
+
 if ($ftp_pull > 0)
 	{
 	$i=0;
 	use Net::FTP;
-
-	$files_copied_count=0;
 
 	$ftp = Net::FTP->new("$VARREPORT_host", Port => "$VARREPORT_port", Debug => "$DBX",  Passive => 1)
 					or die "Can't connect: $@\n";
@@ -373,19 +384,26 @@ if ($ftp_pull > 0)
 
 				if (!$TEST) {$ftp->rename("$ftp_dir/$FILES[$i]", "$ftp_dir/DONE/$FILES[$i]");}
 				if ($DB > 0) {print "FTP FILE COPIED: $FILES[$i]\n";}
+				$FTPfiles[$fcc] = $FILES[$i];
+				$fcc++;
 				$files_copied_count++;
 				}
 			}
 		$i++;
 		}
 	if (!$q) {print "$ftp_dir - $VARREPORT_host - $#FILES - $files_copied_count\n";}
+
+	@FILES = @FTPfiles;
+	}
+else
+	{
+	@FILES=@MT;
+	opendir(FILE, "$dir1/");
+	@FILES = readdir(FILE);
 	}
 
 
 $i=0;
-@FILES=@MT;
-opendir(FILE, "$dir1/");
-@FILES = readdir(FILE);
 
 foreach(@FILES)
    {
@@ -393,6 +411,7 @@ foreach(@FILES)
 	$size2 = 0;
 	$person_id_delete = '';
 	$transaction_id_delete = '';
+	$forcelistfilename_name = '';
 
 	if (length($FILES[$i]) > 4)
 		{
@@ -413,6 +432,17 @@ foreach(@FILES)
 			$FILEname = $FILES[$i];
 
 			`cp -f $dir1/$FILES[$i] $dir2/$source$FILES[$i]`;
+
+			if ($forcelistfilename > 0)
+				{
+				$forcelistfilename_name = $FILES[$i];
+				$forcelistfilename_name =~ s/\..*//gi;
+				@forcelistfilename_nameARY = split(/_/, $forcelistfilename_name);
+				$forcelistfilename_listid = $forcelistfilename_nameARY[$#forcelistfilename_nameARY];
+				$forcelistfilename_listid =~ s/\D//gi;
+				if ($DB > 0) {print "$forcelistfilename_listid|$#forcelistfilename_nameARY|$forcelistfilename_name|$FILES[$i]\n";}
+				}
+
 
 			### open the in file for reading ###
 			open(infile, "$dir2/$source$FILES[$i]")
@@ -861,6 +891,10 @@ foreach(@FILES)
 
 			if (length($rank)<1) {$rank='0';}
 
+			if (length($forcelistfilename_listid) > 0)
+				{
+				$list_id =	$forcelistfilename_listid;		# set list_id to filename override value
+				}
 			if (length($forcelistid) > 0)
 				{
 				$list_id =	$forcelistid;		# set list_id to override value

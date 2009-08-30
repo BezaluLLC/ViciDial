@@ -1009,6 +1009,18 @@ sub select_format_loop
 					$did_date =		"$aryB[2]";
 					$sthB->finish();
 					}
+				##### UNCOMMENT IF USING LIST ID NAME FOR DID_NAME
+			#	$stmtB = "select list_name from vicidial_lists where list_id='$list_id' limit 1;";
+			#	if ($DBX > 0) {print "$stmtB\n";}
+			#	$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+			#	$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+			#	$sthBrows=$sthB->rows;
+			#	if ($sthBrows > 0)
+			#		{
+			#		@aryB = $sthB->fetchrow_array;
+			#		$did_name =		"$aryB[0]";
+			#		$sthB->finish();
+			#		}
 				}
 			}
 		##### BEGIN DID lookup #####
