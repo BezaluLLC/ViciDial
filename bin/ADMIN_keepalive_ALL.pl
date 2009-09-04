@@ -1618,92 +1618,124 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			}
 		}
 
-	$extCMP = `$cmpbin /etc/asterisk/BUILDextensions-vicidial.conf /etc/asterisk/extensions-vicidial.conf`;
-	$iaxCMP = `$cmpbin /etc/asterisk/BUILDiax-vicidial.conf /etc/asterisk/iax-vicidial.conf`;
-	$sipCMP = `$cmpbin /etc/asterisk/BUILDsip-vicidial.conf /etc/asterisk/sip-vicidial.conf`;
-	$vmCMP =  `$cmpbin /etc/asterisk/BUILDvoicemail-vicidial.conf /etc/asterisk/voicemail-vicidial.conf`;
-	$mohCMP = `$cmpbin /etc/asterisk/BUILDmusiconhold-vicidial.conf /etc/asterisk/musiconhold-vicidial.conf`;
-	$mmCMP =  `$cmpbin /etc/asterisk/BUILDmeetme-vicidial.conf /etc/asterisk/meetme-vicidial.conf`;
+	if ( !-e ('/etc/asterisk/extensions-vicidial.conf'))
+		{`echo -e \"; END OF FILE\n\" > /etc/asterisk/extensions-vicidial.conf`;}
+
+	if ( !-e ('/etc/asterisk/iax-vicidial.conf'))
+		{`echo -e \"; END OF FILE\n\" > /etc/asterisk/iax-vicidial.conf`;}
+
+	if ( !-e ('/etc/asterisk/sip-vicidial.conf'))
+		{`echo -e \"; END OF FILE\n\" > /etc/asterisk/sip-vicidial.conf`;}
+
+	if ( !-e ('/etc/asterisk/voicemail-vicidial.conf'))
+		{`echo -e \"; END OF FILE\n\" > /etc/asterisk/voicemail-vicidial.conf`;}
+
+	if ( !-e ('/etc/asterisk/musiconhold-vicidial.conf'))
+		{`echo -e \"; END OF FILE\n\" > /etc/asterisk/musiconhold-vicidial.conf`;}
+
+	if ( !-e ('/etc/asterisk/meetme-vicidial.conf'))
+		{`echo -e \"; END OF FILE\n\" > /etc/asterisk/meetme-vicidial.conf`;}
+
+	use File::Compare;
+
+	$extCMP = compare("/etc/asterisk/BUILDextensions-vicidial.conf","/etc/asterisk/extensions-vicidial.conf");
+	$iaxCMP = compare("/etc/asterisk/BUILDiax-vicidial.conf","/etc/asterisk/iax-vicidial.conf");
+	$sipCMP = compare("/etc/asterisk/BUILDsip-vicidial.conf","/etc/asterisk/sip-vicidial.conf");
+	$vmCMP =  compare("/etc/asterisk/BUILDvoicemail-vicidial.conf","/etc/asterisk/voicemail-vicidial.conf");
+	$mohCMP = compare("/etc/asterisk/BUILDmusiconhold-vicidial.conf","/etc/asterisk/musiconhold-vicidial.conf");
+	$mmCMP =  compare("/etc/asterisk/BUILDmeetme-vicidial.conf","/etc/asterisk/meetme-vicidial.conf");
 
 	sleep(1);
 
 	### reload Asterisk
-	if ($DB) {print "reloading asterisk\n";}
+	if ($DB) {print "reloading asterisk modules:\n";}
 	if ($asterisk_version =~ /^1.2/)
 		{
-		if (length($extCMP) > 10)
+		if ($extCMP > 0)
 			{
-			`cp /etc/asterisk/BUILDextensions-vicidial.conf /etc/asterisk/extensions-vicidial.conf`;
+			`cp -f /etc/asterisk/BUILDextensions-vicidial.conf /etc/asterisk/extensions-vicidial.conf`;
 			`screen -XS asterisk eval 'stuff "extensions reload\015"'`;
+			if ($DB) {print "extensions reload\n";}
 			sleep(1);
 			}
-		if (length($sipCMP) > 10)
+		if ($sipCMP > 0)
 			{
-			`cp /etc/asterisk/BUILDsip-vicidial.conf /etc/asterisk/sip-vicidial.conf`;
+			`cp -f /etc/asterisk/BUILDsip-vicidial.conf /etc/asterisk/sip-vicidial.conf`;
 			`screen -XS asterisk eval 'stuff "sip reload\015"'`;
+			if ($DB) {print "sip reload\n";}
 			sleep(1);
 			}
-		if (length($iaxCMP) > 10)
+		if ($iaxCMP > 0)
 			{
-			`cp /etc/asterisk/BUILDiax-vicidial.conf /etc/asterisk/iax-vicidial.conf`;
+			`cp -f /etc/asterisk/BUILDiax-vicidial.conf /etc/asterisk/iax-vicidial.conf`;
 			`screen -XS asterisk eval 'stuff "iax2 reload\015"'`;
+			if ($DB) {print "iax reload\n";}
 			sleep(1);
 			}
-		if (length($vmCMP) > 10)
+		if ($vmCMP > 0)
 			{
-			`cp /etc/asterisk/BUILDvoicemail-vicidial.conf /etc/asterisk/voicemail-vicidial.conf`;
+			`cp -f /etc/asterisk/BUILDvoicemail-vicidial.conf /etc/asterisk/voicemail-vicidial.conf`;
 			`screen -XS asterisk eval 'stuff "reload app_voicemail.so\015"'`;
+			if ($DB) {print "reload app_voicemail.so\n";}
 			sleep(1);
 			}
-		if (length($mohCMP) > 10)
+		if ($mohCMP > 0)
 			{
-			`cp /etc/asterisk/BUILDmusiconhold-vicidial.conf /etc/asterisk/musiconhold-vicidial.conf`;
+			`cp -f /etc/asterisk/BUILDmusiconhold-vicidial.conf /etc/asterisk/musiconhold-vicidial.conf`;
 			`screen -XS asterisk eval 'stuff "moh reload\015"'`;
+			if ($DB) {print "moh reload\n";}
 			sleep(1);
 			}
-		if (length($mmCMP) > 10)
+		if ($mmCMP > 0)
 			{
-			`cp /etc/asterisk/BUILDmeetme-vicidial.conf /etc/asterisk/meetme-vicidial.conf`;
+			`cp -f /etc/asterisk/BUILDmeetme-vicidial.conf /etc/asterisk/meetme-vicidial.conf`;
 			`screen -XS asterisk eval 'stuff "reload app_meetme.so\015"'`;
+			if ($DB) {print "reload app_meetme.so\n";}
 			sleep(1);
 			}
 		}
 	else
 		{
-		if (length($extCMP) > 10)
+		if ($extCMP > 0)
 			{
-			`cp /etc/asterisk/BUILDextensions-vicidial.conf /etc/asterisk/extensions-vicidial.conf`;
+			`cp -f /etc/asterisk/BUILDextensions-vicidial.conf /etc/asterisk/extensions-vicidial.conf`;
 			`screen -XS asterisk eval 'stuff "dialplan reload\015"'`;
+			if ($DB) {print "dialplan reload\n";}
 			sleep(1);
 			}
-		if (length($sipCMP) > 10)
+		if ($sipCMP > 0)
 			{
-			`cp /etc/asterisk/BUILDsip-vicidial.conf /etc/asterisk/sip-vicidial.conf`;
+			`cp -f /etc/asterisk/BUILDsip-vicidial.conf /etc/asterisk/sip-vicidial.conf`;
 			`screen -XS asterisk eval 'stuff "sip reload\015"'`;
+			if ($DB) {print "sip reload\n";}
 			sleep(1);
 			}
-		if (length($iaxCMP) > 10)
+		if ($iaxCMP > 0)
 			{
-			`cp /etc/asterisk/BUILDiax-vicidial.conf /etc/asterisk/iax-vicidial.conf`;
+			`cp -f /etc/asterisk/BUILDiax-vicidial.conf /etc/asterisk/iax-vicidial.conf`;
 			`screen -XS asterisk eval 'stuff "iax2 reload\015"'`;
+			if ($DB) {print "iax2 reload\n";}
 			sleep(1);
 			}
-		if (length($vmCMP) > 10)
+		if ($vmCMP > 0)
 			{
-			`cp /etc/asterisk/BUILDvoicemail-vicidial.conf /etc/asterisk/voicemail-vicidial.conf`;
+			`cp -f /etc/asterisk/BUILDvoicemail-vicidial.conf /etc/asterisk/voicemail-vicidial.conf`;
 			`screen -XS asterisk eval 'stuff "module reload app_voicemail.so\015"'`;
+			if ($DB) {print "module reload app_voicemail.so\n";}
 			sleep(1);
 			}
-		if (length($mohCMP) > 10)
+		if ($mohCMP > 0)
 			{
-			`cp /etc/asterisk/BUILDmusiconhold-vicidial.conf /etc/asterisk/musiconhold-vicidial.conf`;
+			`cp -f /etc/asterisk/BUILDmusiconhold-vicidial.conf /etc/asterisk/musiconhold-vicidial.conf`;
 			`screen -XS asterisk eval 'stuff "moh reload\015"'`;
+			if ($DB) {print "moh reload\n";}
 			sleep(1);
 			}
-		if (length($mmCMP) > 10)
+		if ($mmCMP > 0)
 			{
-			`cp /etc/asterisk/BUILDmeetme-vicidial.conf /etc/asterisk/meetme-vicidial.conf`;
+			`cp -f /etc/asterisk/BUILDmeetme-vicidial.conf /etc/asterisk/meetme-vicidial.conf`;
 			`screen -XS asterisk eval 'stuff "module reload app_meetme.so\015"'`;
+			if ($DB) {print "module reload app_meetme.so\n";}
 			sleep(1);
 			}
 		}
