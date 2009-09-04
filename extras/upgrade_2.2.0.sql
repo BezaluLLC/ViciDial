@@ -494,10 +494,6 @@ ALTER TABLE vicidial_lists ADD agent_script_override VARCHAR(10) default '';
 
 UPDATE system_settings SET db_schema_version='1169';
 
-
-
-
-
 CREATE TABLE vicidial_music_on_hold (
 moh_id VARCHAR(100) PRIMARY KEY NOT NULL,
 moh_name VARCHAR(255),

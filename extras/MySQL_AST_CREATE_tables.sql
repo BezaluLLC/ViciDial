@@ -112,7 +112,9 @@ disk_usage VARCHAR(255) default '1',
 sounds_update ENUM('Y','N') default 'N',
 vicidial_recording_limit MEDIUMINT(8) default '60',
 carrier_logging_active ENUM('Y','N') default 'N',
-vicidial_balance_rank TINYINT(3) UNSIGNED default '0'
+vicidial_balance_rank TINYINT(3) UNSIGNED default '0',
+rebuild_music_on_hold ENUM('Y','N') default 'Y',
+active_agent_login_server ENUM('Y','N') default 'Y'
 );
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -1770,6 +1772,21 @@ index (user),
 index (event_time)
 );
 
+CREATE TABLE vicidial_music_on_hold (
+moh_id VARCHAR(100) PRIMARY KEY NOT NULL,
+moh_name VARCHAR(255),
+active ENUM('Y','N') default 'N',
+random ENUM('Y','N') default 'N',
+remove ENUM('Y','N') default 'N'
+);
+
+CREATE TABLE vicidial_music_on_hold_files (
+filename VARCHAR(255) NOT NULL,
+moh_id VARCHAR(100) NOT NULL,
+rank SMALLINT(5),
+unique index mohfile (filename, moh_id)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
@@ -1785,6 +1802,9 @@ ALTER TABLE web_client_sessions ENGINE=HEAP;
 
 
 UPDATE system_settings SET auto_user_add_value='1101';
+
+INSERT INTO vicidial_music_on_hold SET moh_id='default',moh_name='Default Music On Hold',active='Y',random='N';
+INSERT INTO vicidial_music_on_hold_files SET moh_id='default',filename='conf',rank='1';
 
 INSERT INTO vicidial_inbound_groups(group_id,group_name,group_color,active,queue_priority) values('AGENTDIRECT','Single Agent Direct Queue','white','Y','99');
 
@@ -1891,7 +1911,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1169';
+UPDATE system_settings SET db_schema_version='1170';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
