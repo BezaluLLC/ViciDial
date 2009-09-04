@@ -57,6 +57,7 @@
 # 90608-1201 - Added Drop Lockout Time Campaign setting option
 # 90723-0842 - Added no hopper dial option to clear hopper leads
 # 90809-0347 - Quick fix for null list_id loading when no active campaign lists
+# 90904-1612 - Added timezone ordering
 #
 
 # constants
@@ -1358,6 +1359,8 @@ foreach(@campaign_id)
 				if ($lead_order[$i] =~ /^DOWN RANK/) {$order_stmt = 'order by rank, lead_id asc';}
 				if ($lead_order[$i] =~ /^UP OWNER/) {$order_stmt = 'order by owner desc, lead_id asc';}
 				if ($lead_order[$i] =~ /^DOWN OWNER/) {$order_stmt = 'order by owner, lead_id asc';}
+				if ($lead_order[$i] =~ /^UP TIMEZONE/) {$order_stmt = 'order by gmt_offset_now desc, lead_id asc';}
+				if ($lead_order[$i] =~ /^DOWN TIMEZONE/) {$order_stmt = 'order gmt_offset_now, lead_id asc';}
 				if ($lead_order[$i] =~ / 2nd NEW$/) {$NEW_count = 2;}
 				if ($lead_order[$i] =~ / 3rd NEW$/) {$NEW_count = 3;}
 				if ($lead_order[$i] =~ / 4th NEW$/) {$NEW_count = 4;}

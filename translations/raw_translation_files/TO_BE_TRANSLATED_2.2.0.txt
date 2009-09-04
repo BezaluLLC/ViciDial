@@ -295,6 +295,9 @@ MUSIC ON HOLD ENTRY NOT DELETED||
 MUSIC ON HOLD ENTRY DELETION CONFIRMATION||
 Click here to delete music on hold entry||
 MUSIC ON HOLD DELETION COMPLETED||
+Starts with Eastern timezones and works West||
+Starts with Western timezones and works East||
+you must select a user group||
 
 
 add-file: user_territories.php

@@ -208,10 +208,11 @@
 # 90722-1542 - Added no hopper dialing
 # 90729-0637 - Added DiaLableLeaDsCounT
 # 90808-0221 - Added last_state_change to vicidial_live_agents
+# 90904-1622 - Added timezone sort options for no hopper dialing
 #
 
-$version = '2.2.0-119';
-$build = '90808-0221';
+$version = '2.2.0-120';
+$build = '90904-1622';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=244;
 $one_mysql_log=0;
@@ -1365,6 +1366,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 					if (eregi("DOWN RANK",$lead_order)){$order_stmt = 'order by rank, lead_id asc';}
 					if (eregi("UP OWNER",$lead_order)){$order_stmt = 'order by owner desc, lead_id asc';}
 					if (eregi("DOWN OWNER",$lead_order)){$order_stmt = 'order by owner, lead_id asc';}
+					if (eregi("UP TIMEZONE",$lead_order)){$order_stmt = 'order by gmt_offset_now desc, lead_id asc';}
+					if (eregi("DOWN TIMEZONE",$lead_order)){$order_stmt = 'order by gmt_offset_now, lead_id asc';}
 
 					$stmt="UPDATE vicidial_list SET status='QUEUE',user='$user' where called_since_last_reset='N' and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) $DLTsql $fSQL $adooSQL $order_stmt LIMIT 1;";
 					if ($DB) {echo "$stmt\n";}

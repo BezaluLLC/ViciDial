@@ -1938,7 +1938,7 @@ else
 # 90808-0300 - Added longest_wait_time option for agent call routing
 # 90827-1552 - Added agent_script_override option for lists
 # 90830-2217 - Added Music On Hold section
-# 90904-1536 - Added moh chooser option
+# 90904-1536 - Added moh chooser option, timezone list ordering
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
@@ -3322,6 +3322,8 @@ if ($SSoutbound_autodial_active > 0)
 	 <BR> &nbsp; - DOWN RANK: Starts with the lowest rank and works its way up
 	 <BR> &nbsp; - UP OWNER: Starts with owners beginning with Z and works its way down
 	 <BR> &nbsp; - DOWN OWNER: Starts with owners beginning with A and works its way up
+	 <BR> &nbsp; - UP TIMEZONE: Starts with Eastern timezones and works West
+	 <BR> &nbsp; - DOWN TIMEZONE: Starts with Western timezones and works East
 
 	<BR>
 	<A NAME="vicidial_campaigns-hopper_level">
@@ -7640,11 +7642,12 @@ if ($ADD=="2")
 			{
 			$user = 'AUTOGENERA';
 			}
-		 if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or ( (strlen($user) > 10) and (!ereg('AUTOGENERA',$user)) ) )
+		 if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (strlen($user_group) < 2) or ( (strlen($user) > 10) and (!ereg('AUTOGENERA',$user)) ) )
 			{
 			 echo "<br>USER NOT ADDED - Please go back and look at the data you entered\n";
 			 echo "<br>user id must be between 2 and 10 characters long\n";
 			 echo "<br>full name and password must be at least 2 characters long\n";
+			 echo "<br>you must select a user group\n";
 			}
 		 else
 			{
@@ -15559,6 +15562,8 @@ if ($ADD==31)
 			<option>UP RANK</option>
 			<option>DOWN OWNER</option>
 			<option>UP OWNER</option>
+			<option>DOWN TIMEZONE</option>
+			<option>UP TIMEZONE</option>
 			<option>DOWN 2nd NEW</option>
 			<option>DOWN 3rd NEW</option>
 			<option>DOWN 4th NEW</option>
@@ -15634,6 +15639,16 @@ if ($ADD==31)
 			<option>UP OWNER 4th NEW</option>
 			<option>UP OWNER 5th NEW</option>
 			<option>UP OWNER 6th NEW</option>
+			<option>DOWN TIMEZONE 2nd NEW</option>
+			<option>DOWN TIMEZONE 3rd NEW</option>
+			<option>DOWN TIMEZONE 4th NEW</option>
+			<option>DOWN TIMEZONE 5th NEW</option>
+			<option>DOWN TIMEZONE 6th NEW</option>
+			<option>UP TIMEZONE 2nd NEW</option>
+			<option>UP TIMEZONE 3rd NEW</option>
+			<option>UP TIMEZONE 4th NEW</option>
+			<option>UP TIMEZONE 5th NEW</option>
+			<option>UP TIMEZONE 6th NEW</option>
 			</select>$NWB#vicidial_campaigns-lead_order$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaign_id&vcl_id=$list_order_mix\">List Mix</a>: </td><td align=left><select size=1 name=list_order_mix>\n";
@@ -16846,6 +16861,8 @@ if ($ADD==34)
 			<option>UP RANK</option>
 			<option>DOWN OWNER</option>
 			<option>UP OWNER</option>
+			<option>DOWN TIMEZONE</option>
+			<option>UP TIMEZONE</option>
 			<option>DOWN 2nd NEW</option>
 			<option>DOWN 3rd NEW</option>
 			<option>DOWN 4th NEW</option>
@@ -16921,6 +16938,16 @@ if ($ADD==34)
 			<option>UP OWNER 4th NEW</option>
 			<option>UP OWNER 5th NEW</option>
 			<option>UP OWNER 6th NEW</option>
+			<option>DOWN TIMEZONE 2nd NEW</option>
+			<option>DOWN TIMEZONE 3rd NEW</option>
+			<option>DOWN TIMEZONE 4th NEW</option>
+			<option>DOWN TIMEZONE 5th NEW</option>
+			<option>DOWN TIMEZONE 6th NEW</option>
+			<option>UP TIMEZONE 2nd NEW</option>
+			<option>UP TIMEZONE 3rd NEW</option>
+			<option>UP TIMEZONE 4th NEW</option>
+			<option>UP TIMEZONE 5th NEW</option>
+			<option>UP TIMEZONE 6th NEW</option>
 			</select>$NWB#vicidial_campaigns-lead_order$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaign_id&vcl_id=$list_order_mix\">List Mix</a>: </td><td align=left><select size=1 name=list_order_mix>\n";

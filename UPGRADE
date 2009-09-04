@@ -218,6 +218,7 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 55. Added "Active Agent Server" option to servers to allow disabling of agent
 	phone logins through ViciDial Agent Screen to a specific server
 
+56. Added TIMEZONE UP and DOWN lead orders options for campaigns
 
 
 
