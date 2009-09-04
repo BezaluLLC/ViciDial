@@ -24,7 +24,8 @@
 # 90731-0555 - Added call time scheme restriction
 # 90807-1632 - Fixed call time bug and call length bug
 # 90825-1249 - Added without-camp and without-in options 
-# 
+# 90902-0437 - Added outbound-calltime-ignore and ftp-norun options
+#
 
 $txt = '.txt';
 $US = '_';
@@ -44,7 +45,7 @@ $VARREPORT_dir  = 'REPORTS';
 $campaign = 'TESTCAMP';
 $sale_statuses = 'SALE-UPSELL';
 $output_format = 'pipe-standard';
-
+$outbound_calltime_ignore=0;
 
 $secX = time();
 $time = $secX;
@@ -104,8 +105,10 @@ if (length($ARGV[0])>1)
 		print "  [--with-inbound=XXX-XXY] = include the following inbound groups\n";
 		print "  [--without-in=XXX-XXY] = inbound groups that will be excluded from ALL\n";
 		print "  [--calltime=XXX] = filter results to only include those calls during this call time\n";
+		print "  [--outbound-calltime-ignore] = for outbound calls ignores call time\n";
 		print "  [--ftp-transfer] = Send results file by FTP to another server\n";
 		print "  [--ftp-audio-transfer] = Send associated audio files to FTP server, dated directories\n";
+		print "  [--ftp-norun] = Stop program when you get to the FTP transfer\n";
 		print "  [--with-transfer-audio] = Different method for finding audio, also grabs transfer audio filenames\n";
 		print "  [--with-did-lookup] = Looks up the DID pattern and name the call came in on if possible\n";
 		print "  [--email-list=test@test.com:test2@test.com] = send email results to these addresses\n";
@@ -243,6 +246,12 @@ if (length($ARGV[0])>1)
 			$call_time = $data_in[1];
 			$call_time =~ s/ .*$//gi;
 			}
+		if ($args =~ /--outbound-calltime-ignore/i)
+			{
+			$outbound_calltime_ignore=1;
+			if (!$Q)
+				{print "\n----- IGNORE CALLTIME FOR OUTBOUND -----\n\n";}
+			}
 		if ($args =~ /-ftp-transfer/i)
 			{
 			if (!$Q)
@@ -292,6 +301,12 @@ if (length($ARGV[0])>1)
 				{`mkdir -p $tempdir`;}
 			## remove old audio files from directory
 			`$findbin $tempdir/ -maxdepth 1 -type f -mtime +0 -print | xargs rm -f`;
+			}
+		if ($args =~ /-ftp-norun/i)
+			{
+			if (!$Q)
+				{print "\n----- FTP NORUN MODE -----\n\n";}
+			$ftp_norun=1;
 			}
 		if ($args =~ /-with-transfer-audio/i)
 			{
@@ -521,7 +536,10 @@ else
 ########### CURRENT DAY SALES GATHERING outbound-only: vicidial_log  ######
 ###########################################################################
 $stmtA = "select vicidial_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,call_date,vicidial_list.lead_id,vicidial_users.full_name,vicidial_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_log.list_id,title,address3,last_local_call_time,uniqueid,length_in_sec,vicidial_list.list_id,vicidial_list.list_id,UNIX_TIMESTAMP(vicidial_log.call_date),vicidial_campaigns.campaign_name,vicidial_campaigns.campaign_cid from vicidial_list,vicidial_log,vicidial_users,vicidial_campaigns where $campaignSQL $sale_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_log.user and vicidial_log.campaign_id=vicidial_campaigns.campaign_id order by call_date;";
-#$stmtA = "select vicidial_users.user,first_name,last_name,address1,address2,city,state,postal_code,phone_number,email,security_phrase,comments,last_local_call_time,lead_id,vicidial_users.full_name,status,vendor_lead_code,source_id,list_id,title,address3,last_local_call_time from vicidial_list,vicidial_users where list_id NOT IN('999','998') $sale_statusesSQL and called_count > 0 and vicidial_users.user=vicidial_list.user;";
+if ($output_format =~ /^tab-QMcustomUSA$/)
+	{
+	$stmtA = "select vicidial_log.user,8,8,8,8,8,8,8,vicidial_log.phone_number,8,8,8,call_date,vicidial_log.lead_id,vicidial_users.full_name,vicidial_log.status,8,8,vicidial_log.list_id,8,8,call_date,uniqueid,length_in_sec,vicidial_log.list_id,vicidial_log.list_id,UNIX_TIMESTAMP(vicidial_log.call_date),vicidial_campaigns.campaign_name,vicidial_campaigns.campaign_cid from vicidial_log,vicidial_users,vicidial_campaigns where $campaignSQL $sale_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_users.user=vicidial_log.user and vicidial_log.campaign_id=vicidial_campaigns.campaign_id order by call_date;";
+	}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -578,6 +596,10 @@ if (length($with_inboundSQL)>3)
 	########### CURRENT DAY SALES GATHERING inbound-only: vicidial_closer_log  ######
 	###########################################################################
 	$stmtA = "select vicidial_closer_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,call_date,vicidial_list.lead_id,vicidial_users.full_name,vicidial_closer_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_closer_log.list_id,campaign_id,title,address3,last_local_call_time,xfercallid,closecallid,uniqueid,length_in_sec,queue_seconds,vicidial_list.list_id,vicidial_list.list_id,UNIX_TIMESTAMP(vicidial_closer_log.call_date),agent_alert_delay from vicidial_list,vicidial_closer_log,vicidial_users,vicidial_inbound_groups where $with_inboundSQL $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_closer_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_closer_log.user and vicidial_inbound_groups.group_id=vicidial_closer_log.campaign_id order by call_date;";
+	if ($output_format =~ /^tab-QMcustomUSA$/)
+		{
+		$stmtA = "select vicidial_closer_log.user,8,8,8,8,8,8,8,vicidial_closer_log.phone_number,8,8,8,call_date,vicidial_closer_log.lead_id,vicidial_users.full_name,vicidial_closer_log.status,8,8,vicidial_closer_log.list_id,campaign_id,8,8,call_date,xfercallid,closecallid,uniqueid,length_in_sec,queue_seconds,vicidial_closer_log.list_id,vicidial_closer_log.list_id,UNIX_TIMESTAMP(vicidial_closer_log.call_date),agent_alert_delay from vicidial_closer_log,vicidial_users,vicidial_inbound_groups where $with_inboundSQL $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_users.user=vicidial_closer_log.user and vicidial_inbound_groups.group_id=vicidial_closer_log.campaign_id order by call_date;";
+		}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -700,6 +722,7 @@ if ( (length($Ealert)>5) && (length($email_list) > 3) )
 #	$VARREPORT_user =	'cron';
 #	$VARREPORT_pass =	'test';
 #	$VARREPORT_dir =	'';
+
 $NODATEDIR = 0;	# Don't use dated directories for audio
 $YEARDIR = 1;	# put dated directories in a year directory first
 
@@ -715,13 +738,26 @@ if ($ftp_transfer > 0)
 	$ftp->quit;
 	}
 
+if ( ($DB) && ($output_format =~ /^tab-QMcustomUSA$/) )
+	{
+	$OUTtalkmin = ($OUTtalk / 60);
+	$INtalkmin = ($INtalk / 60);
+	print "OUTBOUND CALLS:   $OUTcalls\n";
+	print "OUTBOUND TIME:   $OUTtalk   $OUTtalkmin\n";
+	print "INBOUND CALLS:    $INcalls\n";
+	print "INBOUND TIME:    $INtalk   $INtalkmin\n";
+	}
+
 if ($ftp_audio_transfer > 0)
 	{
 	use Net::FTP;
 	opendir(FILE, "$tempdir/");
 	@FILES = readdir(FILE);
 
-	if (!$Q) {print "Sending Audio Over FTP: $$#FILES\n";}
+	if (!$Q) {print "Sending Audio Over FTP: $#FILES\n";}
+
+	if ($ftp_norun > 0)
+		{exit;}
 
 	$i=0;
 	foreach(@FILES)
@@ -806,7 +842,7 @@ sub select_format_loop
 			}
 		}
 	
-	if ($within_calltime > 0)
+	if ( ($within_calltime > 0) || ( ($outbound_calltime_ignore > 0) && ($outbound =~ /Y/) ) )
 		{
 		$str='';
 		if ($T)
@@ -1144,6 +1180,9 @@ sub select_format_loop
 
 				$uniqueidLIST .= "$uniqueid|";
 				if ($DBX > 0) {print "UNIQUE: -----$uniqueidLIST-----$uniqueid";}
+
+				if ($outbound =~ /Y/) {$OUTtalk = ($OUTtalk + $talk_seconds);   $OUTcalls++;}
+				else {$INtalk = ($INtalk + $talk_seconds);   $INcalls++;}
 				}
 
 			}

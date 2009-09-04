@@ -261,6 +261,40 @@ Inbound Summary Hourly Report||
 orders by the amount of time agent has been actively waiting for a call||
 Agent Script Override||
 If this field is set, this will be the script that the agent sees on their screen instead of the campaign script when the lead is from this list. Default is not set||
+Music On Hold||
+ADD NEW MUSIC ON HOLD ENTRY||
+ADDING NEW MUSIC ON HOLD ENTRY||
+MODIFY MUSIC ON HOLD ENTRY||
+DELETE MUSIC ON HOLD ENTRY||
+MUSIC ON HOLD ENTRY LIST||
+We STRONGLY recommend uploading only 16bit 8k PCM WAV audio files||
+Music On Hold ID||
+This is the short name of a Music On Hold entry. This needs to be a unique identifier. Do not use any spaces or punctuation for this field. max 100 characters, minimum of 2 characters||
+Music On Hold Name||
+This is a more descriptive name of the Music On Hold entry. This is a short summary of the Music On Hold context and will show as a comment in the musiconhold-vicidial.conf file. max 255 characters, minimum of 2 characters||
+This option allows you to set the Music On Hold entry to active or inactive. Inactive will remove the entry from the conf files||
+Random Order||
+This option allows you to define the playback of the audio files in a random order. If set to N then the defined order will be used||
+To add a new audio file to a Music On Hold entry the file must first be in the audio store, then you can select the file and click submit to add it to the file list. Music on hold is updated once per minute if there have been changes made. Any files not listed in a music on hold entry that are present in the music on hold folder will be deleted||
+MUSIC ON HOLD ENTRY NOT ADDED||
+there is already a moh entry in the system with this ID||
+MUSIC ON HOLD ENTRY ADDED||
+Click here to see Admin chages to this Music On Hold entry||
+Audio Files||
+Add An Audio File||
+Rank: ||
+MUSIC ON HOLD ENTRY NOT MODIFIED||
+MUSIC ON HOLD ENTRY MODIFIED||
+Add A New MOH Entry||
+Show MOH Entries||
+Active Agent Server||
+Setting this option to N will prevent agents from being able to login to this server through the vicidial agent screen. This is very useful when using a phone login load balanced setup. Default is Y||
+Rebuild Music On Hold||
+If you want to force a rebuilding of the music on hold files or if the music on hold entries or server entries have changed then this should be set to Y. After the music on hold files have been synchronized and reloaded then this will be changed to N. Default is Y||
+MUSIC ON HOLD ENTRY NOT DELETED||
+MUSIC ON HOLD ENTRY DELETION CONFIRMATION||
+Click here to delete music on hold entry||
+MUSIC ON HOLD DELETION COMPLETED||
 
 
 add-file: user_territories.php

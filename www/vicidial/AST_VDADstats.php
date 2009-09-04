@@ -32,6 +32,8 @@ require("functions.php");
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
+if (isset($_GET["print_calls"]))			{$print_calls=$_GET["print_calls"];}
+	elseif (isset($_POST["print_calls"]))	{$print_calls=$_POST["print_calls"];}
 if (isset($_GET["outbound_rate"]))			{$outbound_rate=$_GET["outbound_rate"];}
 	elseif (isset($_POST["outbound_rate"]))	{$outbound_rate=$_POST["outbound_rate"];}
 if (isset($_GET["costformat"]))				{$costformat=$_GET["costformat"];}
@@ -243,6 +245,7 @@ echo "<INPUT TYPE=HIDDEN NAME=agent_hours VALUE=\"$agent_hours\">\n";
 echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 echo "<INPUT TYPE=HIDDEN NAME=outbound_rate VALUE=\"$outbound_rate\">\n";
 echo "<INPUT TYPE=HIDDEN NAME=costformat VALUE=\"$costformat\">\n";
+echo "<INPUT TYPE=HIDDEN NAME=print_calls VALUE=\"$print_calls\">\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
 echo "<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
 echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
@@ -356,16 +359,32 @@ else
 	$inTOTALcallsRAW=0;
 	if (eregi("YES",$include_rollover))
 		{
-		$stmt="select count(*),sum(length_in_sec),sum(queue_seconds),sum(agent_alert_delay) from vicidial_closer_log,vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id $group_drop_SQLand;";
+		$length_in_secZ=0;
+		$queue_secondsZ=0;
+		$agent_alert_delayZ=0;
+		$stmt="select length_in_sec,queue_seconds,agent_alert_delay from vicidial_closer_log,vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id $group_drop_SQLand;";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {$OUToutput .= "$stmt\n";}
-		$row=mysql_fetch_row($rslt);
+		if ($DB) {echo "$stmt\n";}
+		$INallcalls_to_printZ = mysql_num_rows($rslt);
+		$y=0;
+		while ($y < $INallcalls_to_printZ)
+			{
+			$row=mysql_fetch_row($rslt);
 
-		$inTOTALcallsRAW =	$row[0];
-		$TOTALdelay =		round($row[3] / 1000);
-		$inTOTALsec =		(($row[1] - $row[2]) - $TOTALdelay);
-		if ($inTOTALsec < 0)
-			{$inTOTALsec = 0;}
+			$length_in_secZ = $row[0];
+			$queue_secondsZ = $row[1];
+			$agent_alert_delayZ = $row[2];
+
+			$TOTALdelay =		round($agent_alert_delayZ / 1000);
+			$thiscallsec = (($length_in_secZ - $queue_secondsZ) - $TOTALdelay);
+			if ($thiscallsec < 0)
+				{$thiscallsec = 0;}
+			$inTOTALsec =	($inTOTALsec + $thiscallsec);	
+
+			$y++;
+			}
+
+		$inTOTALcallsRAW =	$y;
 		$TOTALsec = ($TOTALsec + $inTOTALsec);
 		$inTOTALcalls =	sprintf("%10s", $inTOTALcallsRAW);
 		}
@@ -398,16 +417,32 @@ else
 
 	if (eregi("YES",$include_rollover))
 		{
-		$stmt="select count(*),sum(length_in_sec),sum(queue_seconds),sum(agent_alert_delay) from vicidial_closer_log vcl,vicidial_inbound_groups vig where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id and vcl.status IN($customer_interactive_statuses) $group_drop_SQLand;";
+		$length_in_secZ=0;
+		$queue_secondsZ=0;
+		$agent_alert_delayZ=0;
+		$stmt="select length_in_sec,queue_seconds,agent_alert_delay from vicidial_closer_log,vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id and vicidial_closer_log.status IN($customer_interactive_statuses) $group_drop_SQLand;";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {$OUToutput .= "$stmt\n";}
-		$row=mysql_fetch_row($rslt);
+		if ($DB) {echo "$stmt\n";}
+		$INallcalls_to_printZ = mysql_num_rows($rslt);
+		$y=0;
+		while ($y < $INallcalls_to_printZ)
+			{
+			$row=mysql_fetch_row($rslt);
 
-		$inCIcallsRAW =	$row[0];
-		$CIdelay =		round($row[3] / 1000);
-		$inCIsec =		(($row[1] - $row[2]) - $CIdelay);
-		if ($inCIsec < 0)
-			{$inCIsec = 0;}
+			$length_in_secZ = $row[0];
+			$queue_secondsZ = $row[1];
+			$agent_alert_delayZ = $row[2];
+
+			$CIdelay =		round($agent_alert_delayZ / 1000);
+			$thiscallsec = (($length_in_secZ - $queue_secondsZ) - $CIdelay);
+			if ($thiscallsec < 0)
+				{$thiscallsec = 0;}
+			$inCIsec =	($inCIsec + $thiscallsec);	
+
+			$y++;
+			}
+
+		$inCIcallsRAW =	$y;
 		$CIsec = ($CIsec + $inCIsec);
 		$CIcallsRAW = ($CIcallsRAW + $inCIcallsRAW);
 		}
@@ -1005,16 +1040,32 @@ else
 			}
 		if (eregi("YES",$include_rollover))
 			{
-			$stmt="select count(*),sum(length_in_sec),sum(queue_seconds),sum(agent_alert_delay) from vicidial_closer_log vcl,vicidial_inbound_groups vig where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id and vcl.user='$RAWuser[$i]' $group_drop_SQLand;";
+			$length_in_secZ=0;
+			$queue_secondsZ=0;
+			$agent_alert_delayZ=0;
+			$stmt="select length_in_sec,queue_seconds,agent_alert_delay from vicidial_closer_log,vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id and vcl.user='$RAWuser[$i]' $group_drop_SQLand;";
 			$rslt=mysql_query($stmt, $link);
-			if ($DB) {$OUToutput .= "$stmt\n";}
-			$row=mysql_fetch_row($rslt);
+			if ($DB) {echo "$stmt\n";}
+			$INallcalls_to_printZ = mysql_num_rows($rslt);
+			$y=0;
+			while ($y < $INallcalls_to_printZ)
+				{
+				$row=mysql_fetch_row($rslt);
 
-			$inCIcallsRAW =	$row[0];
-			$CIdelay =		round($row[3] / 1000);
-			$inCIsec =		(($row[1] - $row[2]) - $CIdelay);
-			if ($inCIsec < 0)
-				{$inCIsec = 0;}
+				$length_in_secZ = $row[0];
+				$queue_secondsZ = $row[1];
+				$agent_alert_delayZ = $row[2];
+
+				$CIdelay =		round($agent_alert_delayZ / 1000);
+				$thiscallsec = (($length_in_secZ - $queue_secondsZ) - $CIdelay);
+				if ($thiscallsec < 0)
+					{$thiscallsec = 0;}
+				$inCIsec =	($inCIsec + $thiscallsec);	
+
+				$y++;
+				}
+
+			$inCIcallsRAW =	$y;
 			$RAWuser_talk[$i] = ($RAWuser_talk[$i] + $inCIsec);
 			$RAWuser_calls[$i] = ($RAWuser_calls[$i] + $inCIcallsRAW);
 
@@ -1072,12 +1123,49 @@ else
 
 	if ($costformat > 0)
 		{
+		$stmt="select campaign_id,phone_number,length_in_sec from vicidial_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand and vicidial_log.user=vicidial_users.user;";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$allcalls_to_print = mysql_num_rows($rslt);
+		$w=0;
+		while ($w < $allcalls_to_print)
+			{
+			$row=mysql_fetch_row($rslt);
+
+			if ($print_calls > 0)
+				{echo "$row[0]\t$row[1]\t$row[2]\n";}
+			$tempTALK = ($tempTALK + $row[2]);
+			$w++;
+			}
+		if (eregi("YES",$include_rollover))
+			{
+			$stmt="select campaign_id,phone_number,length_in_sec,queue_seconds,agent_alert_delay from vicidial_closer_log,vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id $group_drop_SQLand;";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$INallcalls_to_print = mysql_num_rows($rslt);
+			$w=0;
+			while ($w < $INallcalls_to_print)
+				{
+				$row=mysql_fetch_row($rslt);
+
+				if ($print_calls > 0)
+				{	echo "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\n";}
+				$newTALK = ($row[2] - $row[3] - ($row[4] / 1000) );
+				if ($newTALK < 0) {$newTALK = 0;}
+				$tempTALK = ($tempTALK + $newTALK);
+				$w++;
+				}
+			}
+		$tempTALKmin = ($tempTALK  / 60);
+		if ($print_calls > 0)
+			{echo "$w\t$tempTALK\t$tempTALKmin\n";}
+
 		echo "</PRE>\n<B>";
-		$rawTOTtalk_min = round($rawTOTtime / 60);
+		$rawTOTtalk_min = round($tempTALK / 60);
 		$outbound_cost =	($rawTOTtalk_min * $outbound_rate);
 		$outbound_cost =	sprintf("%8.2f", $outbound_cost);
 
-		echo "OUTBOUND $query_date to $end_date, &nbsp; $rawTOTtalk_min minutes at \$$outbound_rate = \$$outbound_cost\n";
+		echo "OUTBOUND $query_date to $end_date, &nbsp; $rawTOTtalk_min minutes at \$$outbound_rate = \$$outbound_cost</B>\n";
 
 		exit;
 		}

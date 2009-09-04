@@ -249,10 +249,11 @@
 # 90814-0829 - Moved mute button next to hotkeys button
 # 90827-0133 - Reworked Script display code
 # 90827-1549 - Added list script override option, original_phone_login variable
+# 90831-1456 - Added active_agent_login_server option for servers
 #
 
-$version = '2.2.0-226';
-$build = '90827-1549';
+$version = '2.2.0-227';
+$build = '90831-1456';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -1449,7 +1450,8 @@ if ( (eregi(',',$phone_login)) and (strlen($phone_login) > 2) )
 else {$phoneSQL = "login='$phone_login' and pass='$phone_pass'";}
 
 $authphone=0;
-$stmt="SELECT count(*) from phones where $phoneSQL and active = 'Y';";
+#$stmt="SELECT count(*) from phones where $phoneSQL and active = 'Y';";
+$stmt="SELECT count(*) from phones,servers where $phoneSQL and phones.active = 'Y' and active_agent_login_server='Y' and phones.server_ip=servers.server_ip;";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01020',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -1515,7 +1517,7 @@ else
 			$row=mysql_fetch_row($rslt);
 			
 			### find out whether the server is set to active
-			$stmt="SELECT count(*) from servers where server_ip = '$rowx[0]' and active='Y';";
+			$stmt="SELECT count(*) from servers where server_ip = '$rowx[0]' and active='Y' and active_agent_login_server='Y';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01023',$VD_login,$server_ip,$session_name,$one_mysql_log);}

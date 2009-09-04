@@ -2,13 +2,15 @@
 ; Music on Hold -- Sample Configuration
 ;
 
-[default]
+[old-default]
 mode=files
 directory=/var/lib/asterisk/mohmp3
 
-[quiet]
+[old-quiet]
 mode=files
 directory=/var/lib/asterisk/quiet-mp3
+
+#include musiconhold-vicidial.conf
 
 ; valid mode options:
 ; quietmp3      -- default

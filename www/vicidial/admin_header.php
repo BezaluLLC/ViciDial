@@ -14,6 +14,7 @@
 # 90635-0943 - Added javascript for dynamic menus in In-Groups
 # 90627-0548 - Added no-agent-no-queue options
 # 90628-1016 - Added Text-to-speech options
+# 90830-2213 - Added Music On Hold options
 #
 
 
@@ -1089,27 +1090,29 @@ $SSenable_tts_integration = $row[1];
 	<?php
 	if (strlen($admin_hh) > 1) 
 		{ 
-		if ($sh=='times') {$times_sh="bgcolor=\"$times_color\""; $times_fc="$times_font";} # pink
+		if ($sh=='times') {$times_sh="bgcolor=\"$times_color\""; $times_fc="$times_font";}
 			else {$times_sh=''; $times_fc='BLACK';}
-		if ($sh=='shifts') {$shifts_sh="bgcolor=\"$shifts_color\""; $shifts_fc="$shifts_font";} # pink
+		if ($sh=='shifts') {$shifts_sh="bgcolor=\"$shifts_color\""; $shifts_fc="$shifts_font";}
 			else {$shifts_sh=''; $shifts_fc='BLACK';}
-		if ($sh=='templates') {$templates_sh="bgcolor=\"$templates_color\""; $templates_fc="$templates_font";} # pink
+		if ($sh=='templates') {$templates_sh="bgcolor=\"$templates_color\""; $templates_fc="$templates_font";}
 			else {$templates_sh=''; $templates_fc='BLACK';}
-		if ($sh=='carriers') {$carriers_sh="bgcolor=\"$carriers_color\""; $carriers_fc="$carriers_font";} # pink
+		if ($sh=='carriers') {$carriers_sh="bgcolor=\"$carriers_color\""; $carriers_fc="$carriers_font";}
 			else {$carriers_sh=''; $carriers_fc='BLACK';}
-		if ($sh=='phones') {$phones_sh="bgcolor=\"$server_color\""; $phones_fc="$phones_font";} # pink
+		if ($sh=='phones') {$phones_sh="bgcolor=\"$server_color\""; $phones_fc="$phones_font";}
 			else {$phones_sh=''; $phones_fc='BLACK';}
-		if ($sh=='server') {$server_sh="bgcolor=\"$server_color\""; $server_fc="$server_font";} # pink
+		if ($sh=='server') {$server_sh="bgcolor=\"$server_color\""; $server_fc="$server_font";}
 			else {$server_sh=''; $server_fc='BLACK';}
-		if ($sh=='conference') {$conference_sh="bgcolor=\"$server_color\""; $conference_fc="$server_font";} # pink
+		if ($sh=='conference') {$conference_sh="bgcolor=\"$server_color\""; $conference_fc="$server_font";}
 			else {$conference_sh=''; $conference_fc='BLACK';}
-		if ($sh=='settings') {$settings_sh="bgcolor=\"$settings_color\""; $settings_fc="$settings_font";} # pink
+		if ($sh=='settings') {$settings_sh="bgcolor=\"$settings_color\""; $settings_fc="$settings_font";}
 			else {$settings_sh=''; $settings_fc='BLACK';}
-		if ($sh=='status') {$status_sh="bgcolor=\"$status_color\""; $status_fc="$status_font";} # pink
+		if ($sh=='status') {$status_sh="bgcolor=\"$status_color\""; $status_fc="$status_font";}
 			else {$status_sh=''; $status_fc='BLACK';}
-		if ($sh=='audio') {$audio_sh="bgcolor=\"$audio_color\""; $audio_fc="$audio_font";} # pink
+		if ($sh=='audio') {$audio_sh="bgcolor=\"$audio_color\""; $audio_fc="$audio_font";}
 			else {$audio_sh=''; $audio_fc='BLACK';}
-		if ($sh=='tts') {$tts_sh="bgcolor=\"$tts_color\""; $tts_fc="$tts_font";} # pink
+		if ($sh=='moh') {$moh_sh="bgcolor=\"$moh_color\""; $moh_fc="$moh_font";}
+			else {$moh_sh=''; $moh_fc='BLACK';}
+		if ($sh=='tts') {$tts_sh="bgcolor=\"$tts_color\""; $tts_fc="$tts_font";}
 			else {$tts_sh=''; $tts_fc='BLACK';}
 
 		?>
@@ -1137,14 +1140,17 @@ $SSenable_tts_integration = $row[1];
 			{ ?>
 			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $audio_sh ?>> &nbsp; 
 			<a href="audio_store.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $audio_fc ?> SIZE=<?php echo $header_font_size ?>> Audio Store </a></TD>
-		</TR>
+			</TR>
+			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $moh_sh ?>> &nbsp; 
+			<a href="<?php echo $ADMIN ?>?ADD=160000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $moh_fc ?> SIZE=<?php echo $header_font_size ?>> Music On Hold </a></TD>
+			</TR>
 
 		<?php }
 		if ($SSenable_tts_integration > 0)
 			{ ?>
 			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $tts_sh ?>> &nbsp; 
 			<a href="<?php echo $ADMIN ?>?ADD=150000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $tts_fc ?> SIZE=<?php echo $header_font_size ?>> Text To Speech </a></TD>
-		</TR>
+			</TR>
 
 		<?php }
 			}
@@ -1211,6 +1217,10 @@ $SSenable_tts_integration = $row[1];
 	if ( (strlen($tts_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
 	<TR BGCOLOR=<?php echo $tts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=150000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show TTS Entries </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=151111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New TTS Entry </a></TD></TR>
+	<?php }
+	if ( (strlen($moh_sh) > 1) and (strlen($admin_hh) > 1) ) { 
+		?>
+	<TR BGCOLOR=<?php echo $moh_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=160000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show MOH Entries </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=161111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New MOH Entry </a></TD></TR>
 	<?php }
 	if (strlen($settings_sh) > 1) { 
 		?>

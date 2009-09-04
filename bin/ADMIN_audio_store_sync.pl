@@ -11,6 +11,7 @@
 # CHANGELOG
 # 90513-0458 - First Build
 # 90518-2107 - Added force-upload option
+# 90831-1349 - Added music-on-hold sync
 #
 
 # constants
@@ -19,6 +20,8 @@ $US='__';
 $MT[0]='';
 $uploaded=0;
 $downloaded=0;
+$force_moh_rebuild=0;
+$new_file_moh_rebuild=0;
 
 $secT = time();
 $now_date_epoch = $secT;
@@ -56,6 +59,7 @@ if (length($ARGV[0])>1)
 		print "  [--force-download] = force download of everything from audio store\n";
 		print "  [--force-upload] = force upload of all local audio files to the audio store\n";
 		print "  [--settings-override] = ignore database settings and run sync anyway\n";
+		print "  [--force-moh-rebuild] = ignore database settings and rebuild Music On Hold\n";
 		print "\n";
 		exit;
 		}
@@ -85,6 +89,11 @@ if (length($ARGV[0])>1)
 			{
 			$settings_override=1;
 			if ($DB) {print "\n----- SETTINGS OVERRIDE -----\n\n";}
+			}
+		if ($args =~ /--force-moh-rebuild/i)
+			{
+			$force_moh_rebuild=1;
+			if ($DB) {print "\n----- FORCE MUSIC ON HOLD REBUILD -----\n\n";}
 			}
 		if ($args =~ /--debugX/i)
 			{
@@ -151,30 +160,30 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 
 ### Grab Server values from the database
-	$stmtA = "SELECT active_asterisk_server FROM servers where server_ip = '$VARserver_ip';";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$active_asterisk_server = "$aryA[0]";
-		}
-	$sthA->finish();
+$stmtA = "SELECT active_asterisk_server FROM servers where server_ip = '$VARserver_ip';";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$active_asterisk_server = "$aryA[0]";
+	}
+$sthA->finish();
 
 ### Grab system_settings values from the database
-	$stmtA = "SELECT sounds_central_control_active,sounds_web_server,sounds_web_directory FROM system_settings;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$sounds_central_control_active =	"$aryA[0]";
-		$sounds_web_server =				"$aryA[1]";
-		$sounds_web_directory =				"$aryA[2]";
-		}
-	$sthA->finish();
+$stmtA = "SELECT sounds_central_control_active,sounds_web_server,sounds_web_directory FROM system_settings;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$sounds_central_control_active =	"$aryA[0]";
+	$sounds_web_server =				"$aryA[1]";
+	$sounds_web_directory =				"$aryA[2]";
+	}
+$sthA->finish();
 
 if ( ( ($sounds_central_control_active < 1) || ($active_asterisk_server !~ /Y/) ) && ($settings_override < 1) )
 	{
@@ -280,6 +289,7 @@ while ($i <= $#list)
 		&event_logger;
 
 		$downloaded++;
+		$new_file_moh_rebuild++;
 		}
 	else
 		{
@@ -374,6 +384,208 @@ if ($uploaded > 0)
 	$stmtA="UPDATE servers SET sounds_update='Y' where server_ip NOT IN('$VARserver_ip');";
 	$affected_rows = $dbhA->do($stmtA);
 	}
+
+
+
+
+
+###### BEGIN Music on hold rebuild #####
+$wav = '.wav';
+$gsm = '.gsm';
+
+$stmtA = "SELECT rebuild_music_on_hold FROM servers where server_ip = '$VARserver_ip';";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$rebuild_music_on_hold = $aryA[0];
+	}
+$sthA->finish();
+
+if ( ($force_moh_rebuild > 0) || ($new_file_moh_rebuild > 0) || ($rebuild_music_on_hold =~ /Y/i) )
+	{
+	$stmtA="UPDATE servers SET rebuild_music_on_hold='N' where server_ip = '$VARserver_ip';";
+	$affected_rows = $dbhA->do($stmtA);
+
+	### Find music on hold contexts to remove
+	$stmtA = "SELECT moh_id FROM vicidial_music_on_hold where remove='Y' and moh_id NOT IN('astdb','sounds','agi-bin','keys');";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArowsM=$sthA->rows;
+	@remove_moh_id=@MT;
+	$j=0;
+	while ($sthArowsM > $j)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$remove_moh_id[$j] =	$aryA[0];
+		$j++;
+		}
+	$sthA->finish();
+
+	### Remove flagged music on hold contexts
+	$j=0;
+	while ($sthArowsM > $j)
+		{
+		$stmtA="DELETE from vicidial_music_on_hold where moh_id='$remove_moh_id[$j]' and remove='Y' and moh_id NOT IN('astdb','sounds','agi-bin','keys');";
+		$affected_rowsX = $dbhA->do($stmtA);
+
+		$stmtB="DELETE from vicidial_music_on_hold_files where moh_id='$remove_moh_id[$j]' and moh_id NOT IN('astdb','sounds','agi-bin','keys');";
+		$affected_rowsY = $dbhA->do($stmtB);
+
+		if ($affected_rowsX > 0)
+			{`rm -fr /var/lib/asterisk/$remove_moh_id[$j]`;}
+
+		if ($DBX)
+			{
+			print "Deleting Existing MoH: $affected_rowsX|$affected_rowsY|$stmtA|$stmtB|rm -fr /var/lib/asterisk/$remove_moh_id[$j]\n";
+			}
+
+		$j++;
+		}
+
+	### Find active music on hold contexts
+	$stmtA = "SELECT moh_id,moh_name,random FROM vicidial_music_on_hold where active='Y' and moh_id NOT IN('astdb','sounds','agi-bin','keys');";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArowsC=$sthA->rows;
+	@remove_moh_id=@MT;
+	$j=0;
+	while ($sthArowsC > $j)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$moh_id[$j] =	$aryA[0];
+		$moh_name[$j] =	$aryA[1];
+		$random[$j] =	$aryA[2];
+		$j++;
+		}
+	$sthA->finish();
+
+	### Go through each context and check the files in the folders
+	$j=0;
+	while ($sthArowsC > $j)
+		{
+		$filelist_names = '|';
+		$MoH_directory = "/var/lib/asterisk/$moh_id[$j]";
+		### Check if directory exists, if not, create it
+		if ( -e ("$MoH_directory")) {$mohpath = "$MoH_directory";}
+		else
+			{
+			`mkdir $MoH_directory`;
+			$mohpath = "$MoH_directory";
+			if ($DBX)
+				{
+				print "Creating New MoH: $MoH_directory\n";
+				}
+			}
+
+		opendir(sounds, "$PATHsounds");
+		@sounds= readdir(sounds); 
+		closedir(sounds);
+
+		### copy over files that are not in place currently
+		$stmtA = "SELECT filename,rank FROM vicidial_music_on_hold_files where moh_id='$moh_id[$j]' order by rank;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArowsF=$sthA->rows;
+		@remove_moh_id=@MT;
+		$m=0;
+		while ($sthArowsF > $m)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$filename[$m] =	$aryA[0];
+			$rank[$m] =		$aryA[1];
+			$filerank[$m] = sprintf("%04d",$rank[$m]) . "_";
+			$fileexists[$m] = 0;
+			$filesize_moh[$m] = 0;
+			$filesize_original[$m] = 0;
+			$filelist_names .= "$filerank[$m]$filename[$m]|";
+
+			if ( (-e "$MoH_directory/$filerank[$m]$filename[$m]$wav") || (-e "$MoH_directory/$filerank[$m]$filename[$m]$gsm") )
+				{
+				if (-e "$MoH_directory/$filerank[$m]$filename[$m]$wav")
+					{
+					$temp_filesize_moh = (-s "$MoH_directory/$filerank[$m]$filename[$m]$wav");
+					$temp_filesize_original = (-s "$PATHsounds/$filename[$m]$wav");
+					$filesize_moh[$m] = ($filesize_moh[$m] + $temp_filesize_moh);
+					$filesize_original[$m] = ($filesize_original[$m] + $temp_filesize_original);
+					if ($DBX)
+						{
+						print "WAV check existing:\n";
+						print "$temp_filesize_moh|$filesize_moh[$m]|$MoH_directory/$filerank[$m]$filename[$m]$wav\n";
+						print "$temp_filesize_original|$filesize_original[$m]|$PATHsounds/$filename[$m]$wav\n";
+						}
+					}
+				if (-e "$MoH_directory/$filerank[$m]$filename[$m]$gsm")
+					{
+					$temp_filesize_moh = (-s "$MoH_directory/$filerank[$m]$filename[$m]$gsm");
+					$temp_filesize_original = (-s "$PATHsounds/$filename[$m]$gsm");
+					$filesize_moh[$m] = ($filesize_moh[$m] + $temp_filesize_moh);
+					$filesize_original[$m] = ($filesize_original[$m] + $temp_filesize_original);
+					if ($DBX)
+						{
+						print "GSM check existing:\n";
+						print "$temp_filesize_moh|$filesize_moh[$m]|$MoH_directory/$filerank[$m]$filename[$m]$gsm\n";
+						print "$temp_filesize_original|$filesize_original[$m]|$PATHsounds/$filename[$m]$gsm\n";
+						}
+					}
+
+				if ( ($filesize_moh[$m] == $filesize_original[$m]) && ($filesize_moh[$m] > 0) )
+					{$fileexists[$m]++;}
+				}
+			if ($fileexists[$m] < 1)
+				{
+				$d=0;
+				foreach(@sounds)
+					{
+					if ($sounds[$d] =~ /^$filename[$m]\./)
+						{
+						`cp $PATHsounds/$sounds[$d] $MoH_directory/$filerank[$m]$sounds[$d]`;
+						$fileexists[$m]++;
+						if ($DBX)
+							{print "Copy new file: $PATHsounds/$sounds[$d] $MoH_directory/$filerank[$m]$sounds[$d]\n";}
+						}
+					$d++;
+					}
+				}
+			$m++;
+			}
+		$sthA->finish();
+
+		opendir(mohdir, "$MoH_directory");
+		@MoH_files= readdir(mohdir); 
+		closedir(mohdir);
+
+		### Check for files not in MoH context and delete them
+		$d=0;
+		foreach(@MoH_files)
+			{
+			$MoH_files_check[$d] = $MoH_files[$d];
+			$MoH_files_check[$d] =~ s/\..*$//gi;
+			if ($DBX)
+				{print "Checking file: $MoH_files[$d] $MoH_files_check[$d] $filelist_names\n";}
+			if ( (length($MoH_files[$d]) > 4) && (-f "$MoH_directory/$MoH_files[$d]") && ($filelist_names !~ /\|$MoH_files_check[$d]\|/) )
+				{
+				`rm -f $MoH_directory/$MoH_files[$d]`;
+				if ($DBX)
+					{print "Deleting file: $MoH_directory/$MoH_files[$d] $filelist_names\n";}
+				}
+			$d++;
+			}
+		$j++;
+		}
+
+	### reloading moh in Asterisk
+	if ($DBX)
+		{print "reloading moh in asterisk\n";}
+	`screen -XS asterisk eval 'stuff "moh reload\015"'`;
+
+	}
+###### END Music on hold rebuild #####
+
+
+
 
 
 if($DB)

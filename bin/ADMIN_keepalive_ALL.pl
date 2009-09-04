@@ -40,6 +40,7 @@
 # 90722-1102 - Added list reset by time option
 # 90812-0053 - Added clear out non-used vicidial_conferences sessions
 # 90821-1246 - Fixed central voicemail server conf file, changed voicemail to use phone password
+# 90903-1626 - Added musiconhold and meetme conf file generation
 #
 
 $DB=0; # Debug flag
@@ -682,7 +683,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		}
 	$sthA->finish();
 
-	##### Get the server_ips and server_ids of all VICIDIAL servers on the network #####
+
+	##### BEGIN Generate the server_ips and server_ids of all VICIDIAL servers on the network for load balancing #####
 	$stmtA = "SELECT server_ip,server_id FROM servers where server_ip!='$server_ip' and active_asterisk_server='Y' order by server_ip;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -726,8 +728,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$i++;
 		}
 	$sthA->finish();
+	##### END Generate the server_ips and server_ids of all VICIDIAL servers on the network for load balancing #####
 
-	##### Create Voicemail extensions for this server_ip
+
+
+	##### BEGIN Create Voicemail extensions for this server_ip #####
 	if ( ($THISserver_voicemail > 0) || (length($voicemail_server_id) < 1) )
 		{
 		$Vext .= "; Voicemail Extensions:\n";
@@ -792,9 +797,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	else
 		{$Vext .= "exten => 83047777777777,2,Playback(\${CALLERID(name)})\n";}
 	$Vext .= "exten => 83047777777777,3,Hangup\n";
+	##### END Create Voicemail extensions for this server_ip #####
 
 
-	##### Get the IAX carriers for this server_ip #####
+
+	##### BEGIN Generate the IAX carriers for this server_ip #####
 	$stmtA = "SELECT carrier_id,carrier_name,registration_string,template_id,account_entry,globals_string,dialplan_entry FROM vicidial_server_carriers where server_ip='$server_ip' and active='Y' and protocol='IAX2' order by carrier_id;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -844,10 +851,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 		$i++;
 		}
+	##### END Generate the IAX carriers for this server_ip #####
 
 
 
-	##### Get the SIP carriers for this server_ip #####
+	##### BEGIN Generate the SIP carriers for this server_ip #####
 	$stmtA = "SELECT carrier_id,carrier_name,registration_string,template_id,account_entry,globals_string,dialplan_entry FROM vicidial_server_carriers where server_ip='$server_ip' and active='Y' and protocol='SIP' order by carrier_id;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -897,12 +905,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 		$i++;
 		}
+	##### BEGIN Generate the SIP carriers for this server_ip #####
+
 
 	$Pext .= "\n";
 	$Pext .= "; Phones direct dial extensions:\n";
 
 
-	##### Get the IAX phone entries #####
+	##### BEGIN Generate the IAX phone entries #####
 	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -982,9 +992,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 		$i++;
 		}
+	##### END Generate the IAX phone entries #####
 
 
-	##### Get the SIP phone entries #####
+
+	##### BEGIN Generate the SIP phone entries #####
 	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret FROM phones where server_ip='$server_ip' and protocol='SIP' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1063,12 +1075,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 		$i++;
 		}
+	##### END Generate the SIP phone entries #####
 
 
 
-
-
-	##### Get the Call Menu entries #####
+	##### BEGIN Generate the Call Menu entries #####
 	$stmtA = "SELECT menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group FROM vicidial_call_menu order by menu_id;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1399,9 +1410,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 		$i++;
 		}
+	##### END Generate the Call Menu entries #####
 
 
-	### generate voicemail accounts for all distinct phones on dedicated voicemail server
+
+	##### BEGIN generate voicemail accounts for all distinct phones on dedicated voicemail server
 	if ($THISserver_voicemail > 0)
 		{
 		$vm='';
@@ -1444,15 +1457,106 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$i++;
 			}
 		}
+	##### END generate voicemail accounts for all distinct phones on dedicated voicemail server
+
+
+
+	##### BEGIN generate meetme entries for this server
+	$mm = "; ViciDial Conferences:\n";
+
+	### Find vicidial_conferences on this server
+	$stmtA = "SELECT conf_exten FROM vicidial_conferences where server_ip='$server_ip';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArowsVC=$sthA->rows;
+	$j=0;
+	while ($sthArowsVC > $j)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$vc_meetme[$j] =	$aryA[0];
+		$j++;
+		}
+	$sthA->finish();
+
+	$j=0;
+	while ($sthArowsVC > $j)
+		{
+		$mm .= "conf => $vc_meetme[$j]\n";
+		$j++;
+		}
+
+	$mm .= "\n";
+	$mm .= "; Conferences:\n";
+
+	### Find conferences on this server
+	$stmtA = "SELECT conf_exten FROM conferences where server_ip='$server_ip';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArowsC=$sthA->rows;
+	$j=0;
+	while ($sthArowsC > $j)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$meetme[$j] =	$aryA[0];
+		$j++;
+		}
+	$sthA->finish();
+
+	$j=0;
+	while ($sthArowsC > $j)
+		{
+		$mm .= "conf => $meetme[$j]\n";
+		$j++;
+		}
+	##### END generate meetme entries for this server
+
+
+
+	##### BEGIN generate music on hold entries for this server
+	$moh='';
+
+	### Find music on hold contexts
+	$stmtA = "SELECT moh_id,moh_name,random FROM vicidial_music_on_hold where remove='N' and active='Y' and moh_id NOT IN('astdb','sounds','agi-bin','keys');";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArowsM=$sthA->rows;
+	$j=0;
+	while ($sthArowsM > $j)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$moh_id[$j] =	$aryA[0];
+		$moh_name[$j] =	$aryA[1];
+		$random[$j] =	$aryA[2];
+		$j++;
+		}
+	$sthA->finish();
+
+	$j=0;
+	while ($sthArowsM > $j)
+		{
+		$moh  .= "; $moh_name[$j]\n";
+		$moh  .= "[$moh_id[$j]]\n";
+		$moh  .= "mode=files\n";
+		$moh  .= "directory=/var/lib/asterisk/$moh_id[$j]\n";
+		if ($random[$j] =~ /Y/) 
+			{$moh  .= "random=yes\n";}
+		$moh  .= "\n";
+
+		$j++;
+		}
+
+	##### END generate music on hold entries for this server
 
 
 
 	if ($DB) {print "writing auto-gen conf files\n";}
 
-	open(ext, ">/etc/asterisk/extensions-vicidial.conf") || die "can't open /etc/asterisk/extensions-vicidial.conf: $!\n";
-	open(iax, ">/etc/asterisk/iax-vicidial.conf") || die "can't open /etc/asterisk/iax-vicidial.conf: $!\n";
-	open(sip, ">/etc/asterisk/sip-vicidial.conf") || die "can't open /etc/asterisk/sip-vicidial.conf: $!\n";
-	open(vm, ">/etc/asterisk/voicemail-vicidial.conf") || die "can't open /etc/asterisk/voicemail-vicidial.conf: $!\n";
+	open(ext, ">/etc/asterisk/BUILDextensions-vicidial.conf") || die "can't open /etc/asterisk/BUILDextensions-vicidial.conf: $!\n";
+	open(iax, ">/etc/asterisk/BUILDiax-vicidial.conf") || die "can't open /etc/asterisk/BUILDiax-vicidial.conf: $!\n";
+	open(sip, ">/etc/asterisk/BUILDsip-vicidial.conf") || die "can't open /etc/asterisk/BUILDsip-vicidial.conf: $!\n";
+	open(vm, ">/etc/asterisk/BUILDvoicemail-vicidial.conf") || die "can't open /etc/asterisk/BUILDvoicemail-vicidial.conf: $!\n";
+	open(moh, ">/etc/asterisk/BUILDmusiconhold-vicidial.conf") || die "can't open /etc/asterisk/BUILDmusiconhold-vicidial.conf: $!\n";
+	open(mm, ">/etc/asterisk/BUILDmeetme-vicidial.conf") || die "can't open /etc/asterisk/BUILDmeetme-vicidial.conf: $!\n";
 
 	print ext "; WARNING- THIS FILE IS AUTO-GENERATED BY VICIDIAL, ANY EDITS YOU MAKE WILL BE LOST\n";
 	print ext "$ext\n";
@@ -1463,26 +1567,63 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	print ext "$Lext\n";
 	print ext "$Vext\n";
 	print ext "$Pext\n";
+	print ext "\n; END OF FILE\n";
 
 	print iax "; WARNING- THIS FILE IS AUTO-GENERATED BY VICIDIAL, ANY EDITS YOU MAKE WILL BE LOST\n";
 	print iax "$iax\n";
 	print iax "$Liax\n";
 	print iax "$Piax\n";
+	print iax "\n; END OF FILE\n";
 
 	print sip "; WARNING- THIS FILE IS AUTO-GENERATED BY VICIDIAL, ANY EDITS YOU MAKE WILL BE LOST\n";
 	print sip "$sip\n";
 	print sip "$Lsip\n";
 	print sip "$Psip\n";
+	print sip "\n; END OF FILE\n";
 
 	print vm "; WARNING- THIS FILE IS AUTO-GENERATED BY VICIDIAL, ANY EDITS YOU MAKE WILL BE LOST\n";
 #	print vm "[vicidial-auto]\n";
 	print vm "$vm\n";
+	print vm "\n; END OF FILE\n";
+
+	print moh "; WARNING- THIS FILE IS AUTO-GENERATED BY VICIDIAL, ANY EDITS YOU MAKE WILL BE LOST\n";
+	print moh "$moh\n";
+	print moh "\n; END OF FILE\n";
+
+	print mm "; WARNING- THIS FILE IS AUTO-GENERATED BY VICIDIAL, ANY EDITS YOU MAKE WILL BE LOST\n";
+	print mm "$mm\n";
+	print mm "\n; END OF FILE\n";
 
 	close(ext);
 	close(iax);
 	close(sip);
 	close(vm);
+	close(moh);
+	close(mm);
 
+	### find cmp binary
+	$cmpbin = '';
+	if ( -e ('/bin/cmp')) {$cmpbin = '/bin/cmp';}
+	else 
+		{
+		if ( -e ('/usr/bin/cmp')) {$cmpbin = '/usr/bin/cmp';}
+		else 
+			{
+			if ( -e ('/usr/local/bin/cmp')) {$cmpbin = '/usr/local/bin/cmp';}
+			else
+				{
+				print "Can't find cmp binary! Exiting...\n";
+				exit;
+				}
+			}
+		}
+
+	$extCMP = `$cmpbin /etc/asterisk/BUILDextensions-vicidial.conf /etc/asterisk/extensions-vicidial.conf`;
+	$iaxCMP = `$cmpbin /etc/asterisk/BUILDiax-vicidial.conf /etc/asterisk/iax-vicidial.conf`;
+	$sipCMP = `$cmpbin /etc/asterisk/BUILDsip-vicidial.conf /etc/asterisk/sip-vicidial.conf`;
+	$vmCMP =  `$cmpbin /etc/asterisk/BUILDvoicemail-vicidial.conf /etc/asterisk/voicemail-vicidial.conf`;
+	$mohCMP = `$cmpbin /etc/asterisk/BUILDmusiconhold-vicidial.conf /etc/asterisk/musiconhold-vicidial.conf`;
+	$mmCMP =  `$cmpbin /etc/asterisk/BUILDmeetme-vicidial.conf /etc/asterisk/meetme-vicidial.conf`;
 
 	sleep(1);
 
@@ -1490,26 +1631,89 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	if ($DB) {print "reloading asterisk\n";}
 	if ($asterisk_version =~ /^1.2/)
 		{
-		`screen -XS asterisk eval 'stuff "sip reload\015"'`;
-		sleep(1);
-		`screen -XS asterisk eval 'stuff "iax2 reload\015"'`;
-		sleep(1);
-		`screen -XS asterisk eval 'stuff "extensions reload\015"'`;
-		sleep(1);
-		`screen -XS asterisk eval 'stuff "reload app_voicemail.so\015"'`;
-		sleep(1);
+		if (length($extCMP) > 10)
+			{
+			`cp /etc/asterisk/BUILDextensions-vicidial.conf /etc/asterisk/extensions-vicidial.conf`;
+			`screen -XS asterisk eval 'stuff "extensions reload\015"'`;
+			sleep(1);
+			}
+		if (length($sipCMP) > 10)
+			{
+			`cp /etc/asterisk/BUILDsip-vicidial.conf /etc/asterisk/sip-vicidial.conf`;
+			`screen -XS asterisk eval 'stuff "sip reload\015"'`;
+			sleep(1);
+			}
+		if (length($iaxCMP) > 10)
+			{
+			`cp /etc/asterisk/BUILDiax-vicidial.conf /etc/asterisk/iax-vicidial.conf`;
+			`screen -XS asterisk eval 'stuff "iax2 reload\015"'`;
+			sleep(1);
+			}
+		if (length($vmCMP) > 10)
+			{
+			`cp /etc/asterisk/BUILDvoicemail-vicidial.conf /etc/asterisk/voicemail-vicidial.conf`;
+			`screen -XS asterisk eval 'stuff "reload app_voicemail.so\015"'`;
+			sleep(1);
+			}
+		if (length($mohCMP) > 10)
+			{
+			`cp /etc/asterisk/BUILDmusiconhold-vicidial.conf /etc/asterisk/musiconhold-vicidial.conf`;
+			`screen -XS asterisk eval 'stuff "moh reload\015"'`;
+			sleep(1);
+			}
+		if (length($mmCMP) > 10)
+			{
+			`cp /etc/asterisk/BUILDmeetme-vicidial.conf /etc/asterisk/meetme-vicidial.conf`;
+			`screen -XS asterisk eval 'stuff "reload app_meetme.so\015"'`;
+			sleep(1);
+			}
 		}
 	else
 		{
-		`screen -XS asterisk eval 'stuff "sip reload\015"'`;
-		sleep(1);
-		`screen -XS asterisk eval 'stuff "iax2 reload\015"'`;
-		sleep(1);
-		`screen -XS asterisk eval 'stuff "dialplan reload\015"'`;
-		sleep(1);
-		`screen -XS asterisk eval 'stuff "module reload app_voicemail.so\015"'`;
-		sleep(1);
+		if (length($extCMP) > 10)
+			{
+			`cp /etc/asterisk/BUILDextensions-vicidial.conf /etc/asterisk/extensions-vicidial.conf`;
+			`screen -XS asterisk eval 'stuff "dialplan reload\015"'`;
+			sleep(1);
+			}
+		if (length($sipCMP) > 10)
+			{
+			`cp /etc/asterisk/BUILDsip-vicidial.conf /etc/asterisk/sip-vicidial.conf`;
+			`screen -XS asterisk eval 'stuff "sip reload\015"'`;
+			sleep(1);
+			}
+		if (length($iaxCMP) > 10)
+			{
+			`cp /etc/asterisk/BUILDiax-vicidial.conf /etc/asterisk/iax-vicidial.conf`;
+			`screen -XS asterisk eval 'stuff "iax2 reload\015"'`;
+			sleep(1);
+			}
+		if (length($vmCMP) > 10)
+			{
+			`cp /etc/asterisk/BUILDvoicemail-vicidial.conf /etc/asterisk/voicemail-vicidial.conf`;
+			`screen -XS asterisk eval 'stuff "module reload app_voicemail.so\015"'`;
+			sleep(1);
+			}
+		if (length($mohCMP) > 10)
+			{
+			`cp /etc/asterisk/BUILDmusiconhold-vicidial.conf /etc/asterisk/musiconhold-vicidial.conf`;
+			`screen -XS asterisk eval 'stuff "moh reload\015"'`;
+			sleep(1);
+			}
+		if (length($mmCMP) > 10)
+			{
+			`cp /etc/asterisk/BUILDmeetme-vicidial.conf /etc/asterisk/meetme-vicidial.conf`;
+			`screen -XS asterisk eval 'stuff "module reload app_meetme.so\015"'`;
+			sleep(1);
+			}
 		}
+
+	`rm -f /etc/asterisk/BUILDextensions-vicidial.conf`;
+	`rm -f /etc/asterisk/BUILDiax-vicidial.conf`;
+	`rm -f /etc/asterisk/BUILDsip-vicidial.conf`;
+	`rm -f /etc/asterisk/BUILDvoicemail-vicidial.conf`;
+	`rm -f /etc/asterisk/BUILDmusiconhold-vicidial.conf`;
+	`rm -f /etc/asterisk/BUILDmeetme-vicidial.conf`;
 
 	}
 ################################################################################

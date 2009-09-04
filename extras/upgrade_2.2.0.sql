@@ -493,3 +493,30 @@ UPDATE system_settings SET db_schema_version='1168';
 ALTER TABLE vicidial_lists ADD agent_script_override VARCHAR(10) default '';
 
 UPDATE system_settings SET db_schema_version='1169';
+
+
+
+
+
+CREATE TABLE vicidial_music_on_hold (
+moh_id VARCHAR(100) PRIMARY KEY NOT NULL,
+moh_name VARCHAR(255),
+active ENUM('Y','N') default 'N',
+random ENUM('Y','N') default 'N',
+remove ENUM('Y','N') default 'N'
+);
+
+CREATE TABLE vicidial_music_on_hold_files (
+filename VARCHAR(255) NOT NULL,
+moh_id VARCHAR(100) NOT NULL,
+rank SMALLINT(5),
+unique index mohfile (filename, moh_id)
+);
+
+INSERT INTO vicidial_music_on_hold SET moh_id='default',moh_name='Default Music On Hold',active='Y',random='N';
+INSERT INTO vicidial_music_on_hold_files SET moh_id='default',filename='conf',rank='1';
+
+ALTER TABLE servers ADD rebuild_music_on_hold ENUM('Y','N') default 'Y';
+ALTER TABLE servers ADD active_agent_login_server ENUM('Y','N') default 'Y';
+
+UPDATE system_settings SET db_schema_version='1170';

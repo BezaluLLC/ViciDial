@@ -16,6 +16,8 @@ $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
 
+if (isset($_GET["print_calls"]))			{$print_calls=$_GET["print_calls"];}
+	elseif (isset($_POST["print_calls"]))	{$print_calls=$_POST["print_calls"];}
 if (isset($_GET["exclude_rollover"]))			{$exclude_rollover=$_GET["exclude_rollover"];}
 	elseif (isset($_POST["exclude_rollover"]))	{$exclude_rollover=$_POST["exclude_rollover"];}
 if (isset($_GET["inbound_rate"]))			{$inbound_rate=$_GET["inbound_rate"];}
@@ -206,6 +208,7 @@ if ($bareformat < 1)
 	echo "<INPUT TYPE=HIDDEN NAME=inbound_rate VALUE=\"$inbound_rate\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=outbound_rate VALUE=\"$outbound_rate\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=costformat VALUE=\"$costformat\">\n";
+	echo "<INPUT TYPE=HIDDEN NAME=print_calls VALUE=\"$print_calls\">\n";
 	echo "Date Range:<BR>\n";
 	echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
 	echo " to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
@@ -383,7 +386,7 @@ else
 			$hTOTmax_queue_seconds =	0;
 			$hTOTdrop_count =			0;
 
-			$stmt = "SELECT status,length_in_sec,queue_seconds,call_date,UNIX_TIMESTAMP(call_date) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='$group[$i]';";
+			$stmt = "SELECT status,length_in_sec,queue_seconds,call_date,UNIX_TIMESTAMP(call_date),phone_number,campaign_id from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='$group[$i]';";
 			$rslt=mysql_query($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
 			$calls_to_parse = mysql_num_rows($rslt);
@@ -441,6 +444,12 @@ else
 					else
 						{$Hanswer_count[$Chour]++;}
 					$Hcalltime[$Chour]++;
+
+					if ($print_calls > 0)
+						{
+						echo "$row[5]\t$row[6]\t$TEMPtalk\n";
+						$PCtemptalk = ($PCtemptalk + $TEMPtalk);
+						}
 					$q++;
 					}
 				else
@@ -457,6 +466,12 @@ else
 				{$queue_avg[$i] = ($queue_seconds[$i] / $calls_count[$i]);}
 			else
 				{$queue_avg[$i] = 0;}
+
+			if ($print_calls > 0)
+				{
+				$PCtemptalkmin = ($PCtemptalk  / 60);
+				echo "$q\t$PCtemptalk\t$PCtemptalkmin\n";
+				}
 
 			$TOTcalls_count =			($TOTcalls_count + $calls_count[$i]);
 			$TOTanswer_count =			($TOTanswer_count + $answer_count[$i]);

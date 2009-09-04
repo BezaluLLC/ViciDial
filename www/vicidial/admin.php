@@ -38,6 +38,7 @@ $reports_color =	'#99FF33';
 	$carriers_color =	'#FF33FF';
 	$settings_color = 	'#FF33FF';
 	$status_color = 	'#FF33FF';
+	$moh_color = 		'#FF33FF';
 	$tts_color = 		'#FF33FF';
 $subcamp_color =	'#FF9933';
 $users_font =		'BLACK';
@@ -56,6 +57,7 @@ $reports_font =		'BLACK';
 	$server_font =		'BLACK';
 	$settings_font = 	'BLACK';
 	$status_font = 	'BLACK';
+	$moh_font = 	'BLACK';
 	$tts_font = 	'BLACK';
 $subcamp_font =		'BLACK';
 
@@ -79,6 +81,7 @@ $reports_color =	'#E6E6E6';
 	$carriers_color =	'#C6C6C6';
 	$settings_color = 	'#C6C6C6';
 	$status_color = 	'#C6C6C6';
+	$moh_color = 		'#C6C6C6';
 	$tts_color = 		'#C6C6C6';
 $subcamp_color =	'#C6C6C6';
 ###
@@ -1095,6 +1098,20 @@ if (isset($_GET["vicidial_balance_rank"]))			{$vicidial_balance_rank=$_GET["vici
 	elseif (isset($_POST["vicidial_balance_rank"]))	{$vicidial_balance_rank=$_POST["vicidial_balance_rank"];}
 if (isset($_GET["agent_script_override"]))			{$agent_script_override=$_GET["agent_script_override"];}
 	elseif (isset($_POST["agent_script_override"]))	{$agent_script_override=$_POST["agent_script_override"];}
+if (isset($_GET["moh_id"]))				{$moh_id=$_GET["moh_id"];}
+	elseif (isset($_POST["moh_id"]))	{$moh_id=$_POST["moh_id"];}
+if (isset($_GET["moh_name"]))			{$moh_name=$_GET["moh_name"];}
+	elseif (isset($_POST["moh_name"]))	{$moh_name=$_POST["moh_name"];}
+if (isset($_GET["random"]))				{$random=$_GET["random"];}
+	elseif (isset($_POST["random"]))	{$random=$_POST["random"];}
+if (isset($_GET["filename"]))			{$filename=$_GET["filename"];}
+	elseif (isset($_POST["filename"]))	{$filename=$_POST["filename"];}
+if (isset($_GET["rank"]))				{$rank=$_GET["rank"];}
+	elseif (isset($_POST["rank"]))		{$rank=$_POST["rank"];}
+if (isset($_GET["rebuild_music_on_hold"]))				{$rebuild_music_on_hold=$_GET["rebuild_music_on_hold"];}
+	elseif (isset($_POST["rebuild_music_on_hold"]))		{$rebuild_music_on_hold=$_POST["rebuild_music_on_hold"];}
+if (isset($_GET["active_agent_login_server"]))			{$active_agent_login_server=$_GET["active_agent_login_server"];}
+	elseif (isset($_POST["active_agent_login_server"]))	{$active_agent_login_server=$_POST["active_agent_login_server"];}
 
 	if (isset($script_id)) {$script_id= strtoupper($script_id);}
 	if (isset($lead_filter_id)) {$lead_filter_id = strtoupper($lead_filter_id);}
@@ -1291,6 +1308,7 @@ if ($non_latin < 1)
 	$enable_tts_integration = ereg_replace("[^0-9]","",$enable_tts_integration);
 	$allow_alerts = ereg_replace("[^0-9]","",$allow_alerts);
 	$vicidial_balance_rank = ereg_replace("[^0-9]","",$vicidial_balance_rank);
+	$rank = ereg_replace("[^0-9]","",$rank);
 
 	$drop_call_seconds = ereg_replace("[^-0-9]","",$drop_call_seconds);
 
@@ -1354,6 +1372,9 @@ if ($non_latin < 1)
 	$agent_status_view_time = ereg_replace("[^NY]","",$agent_status_view_time);
 	$no_hopper_dialing = ereg_replace("[^NY]","",$no_hopper_dialing);
 	$agent_display_dialable_leads = ereg_replace("[^NY]","",$agent_display_dialable_leads);
+	$random = ereg_replace("[^NY]","",$random);
+	$rebuild_music_on_hold = ereg_replace("[^NY]","",$rebuild_music_on_hold);
+	$active_agent_login_server = ereg_replace("[^NY]","",$active_agent_login_server);
 
 	$qc_enabled = ereg_replace("[^0-9NY]","",$qc_enabled);
 	$active = ereg_replace("[^0-9NY]","",$active);
@@ -1545,6 +1566,7 @@ if ($non_latin < 1)
 	$drop_rate_group = ereg_replace("[^-_0-9a-zA-Z]","",$drop_rate_group);
 	$agent_dial_owner_only = ereg_replace("[^-_0-9a-zA-Z]","",$agent_dial_owner_only);
 	$reset_time = ereg_replace("[^-_0-9a-zA-Z]","",$reset_time);
+	$moh_id = ereg_replace("[^-_0-9a-zA-Z]","",$moh_id);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
@@ -1555,6 +1577,7 @@ if ($non_latin < 1)
 	$onhold_prompt_filename = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$onhold_prompt_filename);
 	$hold_time_option_callback_filename = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$hold_time_option_callback_filename);
 	$agent_alert_exten = ereg_replace("[^-\/\._0-9a-zA-Z]","",$agent_alert_exten);
+	$filename = ereg_replace("[^-\/\._0-9a-zA-Z]","",$filename);
 
 	### ALPHA-NUMERIC and underscore and dash and comma
 	$logins_list = ereg_replace("[^-\,\_0-9a-zA-Z]","",$logins_list);
@@ -1615,6 +1638,7 @@ if ($non_latin < 1)
 	$user_code = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$user_code);
 	$territory = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$territory);
 	$tts_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$tts_name);
+	$moh_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$moh_name);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
 	$call_out_number_group = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$call_out_number_group);
@@ -1913,11 +1937,12 @@ else
 # 90729-0555 - Added agent_display_dialable_leads and vicidial_balance_rank options
 # 90808-0300 - Added longest_wait_time option for agent call routing
 # 90827-1552 - Added agent_script_override option for lists
+# 90830-2217 - Added Music On Hold section
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-212';
-$build = '90827-1552';
+$admin_version = '2.2.0-213';
+$build = '90830-2217';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -2109,6 +2134,7 @@ if ($ADD==111111111111)	{$hh='admin';	$sh='server';	echo "ADD NEW SERVER";}
 if ($ADD==131111111111)	{$hh='admin';	$sh='templates';	echo "ADD NEW CONF TEMPLATE";}
 if ($ADD==141111111111)	{$hh='admin';	$sh='carriers';	echo "ADD NEW CARRIER";}
 if ($ADD==151111111111)	{$hh='admin';	$sh='tts';	echo "ADD NEW TTS ENTRY";}
+if ($ADD==161111111111)	{$hh='admin';	$sh='moh';	echo "ADD NEW MUSIC ON HOLD ENTRY";}
 if ($ADD==1111111111111)	{$hh='admin';	$sh='conference';	echo "ADD NEW CONFERENCE";}
 if ($ADD==11111111111111)	{$hh='admin';	$sh='conference';	echo "ADD NEW VICIDIAL CONFERENCE";}
 if ($ADD=='2')			{$hh='users';		echo "New User Addition";}
@@ -2144,6 +2170,7 @@ if ($ADD==221111111111)	{$hh='admin';	$sh='server';	echo "ADDING NEW SERVER VICI
 if ($ADD==231111111111)	{$hh='admin';	$sh='templates';	echo "ADDING NEW CONF TEMPLATE";}
 if ($ADD==241111111111)	{$hh='admin';	$sh='carriers';	echo "ADDING NEW CARRIER";}
 if ($ADD==251111111111)	{$hh='admin';	$sh='tts';	echo "ADDING NEW TTS ENTRY";}
+if ($ADD==261111111111)	{$hh='admin';	$sh='moh';	echo "ADDING NEW MUSIC ON HOLD ENTRY";}
 if ($ADD==2111111111111)	{$hh='admin';	$sh='conference';	echo "ADDING NEW CONFERENCE";}
 if ($ADD==21111111111111)	{$hh='admin';	$sh='conference';	echo "ADDING NEW VICIDIAL CONFERENCE";}
 if ($ADD==221111111111111)	{$hh='admin';	$sh='status';	echo "ADDING VICIDIAL SYSTEM STATUSES";}
@@ -2201,6 +2228,7 @@ if ($ADD==311111111111)	{$hh='admin';	$sh='server';	echo "MODIFY SERVER";}
 if ($ADD==331111111111)	{$hh='admin';	$sh='templates';	echo "MODIFY CONF TEMPLATE";}
 if ($ADD==341111111111)	{$hh='admin';	$sh='carriers';	echo "MODIFY CARRIER";}
 if ($ADD==351111111111)	{$hh='admin';	$sh='tts';	echo "MODIFY TTS ENTRY";}
+if ($ADD==361111111111)	{$hh='admin';	$sh='moh';	echo "MODIFY MUSIC ON HOLD ENTRY";}
 if ($ADD==3111111111111)	{$hh='admin';	$sh='conference';	echo "MODIFY CONFERENCE";}
 if ($ADD==31111111111111)	{$hh='admin';	$sh='conference';	echo "MODIFY VICIDIAL CONFERENCE";}
 if ($ADD==311111111111111)	{$hh='admin';	$sh='settings';	echo "MODIFY VICIDIAL SYSTEM SETTINGS";}
@@ -2238,6 +2266,7 @@ if ($ADD==421111111111)	{$hh='admin';	$sh='server';	echo "MODIFY SERVER VICIDIAL
 if ($ADD==431111111111)	{$hh='admin';	$sh='templates';	echo "MODIFY CONF TEMPLATE";}
 if ($ADD==441111111111)	{$hh='admin';	$sh='carriers';	echo "MODIFY CARRIER";}
 if ($ADD==451111111111)	{$hh='admin';	$sh='tts';	echo "MODIFY TTS ENTRY";}
+if ($ADD==461111111111)	{$hh='admin';	$sh='moh';	echo "MODIFY MUSIC ON HOLD ENTRY";}
 if ($ADD==4111111111111)	{$hh='admin';	$sh='conference';	echo "MODIFY CONFERENCE";}
 if ($ADD==41111111111111)	{$hh='admin';	$sh='conference';	echo "MODIFY VICIDIAL CONFERENCE";}
 if ($ADD==411111111111111)	{$hh='admin';	$sh='settings';	echo "MODIFY VICIDIAL SYSTEM SETTINGS";}
@@ -2266,6 +2295,7 @@ if ($ADD==511111111111)	{$hh='admin';	$sh='server';	echo "DELETE SERVER";}
 if ($ADD==531111111111)	{$hh='admin';	$sh='templates';	echo "DELETE CONF TEMPLATE";}
 if ($ADD==541111111111)	{$hh='admin';	$sh='carriers';	echo "DELETE CARRIER";}
 if ($ADD==551111111111)	{$hh='admin';	$sh='tts';	echo "DELETE TTS ENTRY";}
+if ($ADD==561111111111)	{$hh='admin';	$sh='moh';	echo "DELETE MUSIC ON HOLD ENTRY";}
 if ($ADD==5111111111111)	{$hh='admin';	$sh='conference';	echo "DELETE CONFERENCE";}
 if ($ADD==51111111111111)	{$hh='admin';	$sh='conference';	echo "DELETE VICIDIAL CONFERENCE";}
 if ($ADD==6)			{$hh='users';		echo "Delete User";}
@@ -2296,6 +2326,7 @@ if ($ADD==621111111111)	{$hh='admin';	$sh='server';	echo "DELETE SERVER VICIDIAL
 if ($ADD==631111111111)	{$hh='admin';	$sh='templates';	echo "DELETE CONF TEMPLATE";}
 if ($ADD==641111111111)	{$hh='admin';	$sh='carriers';	echo "DELETE CARRIER";}
 if ($ADD==651111111111)	{$hh='admin';	$sh='tts';	echo "DELETE TTS ENTRY";}
+if ($ADD==661111111111)	{$hh='admin';	$sh='moh';	echo "DELETE MUSIC ON HOLD ENTRY";}
 if ($ADD==6111111111111)	{$hh='admin';	$sh='conference';	echo "DELETE CONFERENCE";}
 if ($ADD==61111111111111)	{$hh='admin';	$sh='conference';	echo "DELETE VICIDIAL CONFERENCE";}
 if ($ADD==73)			{$hh='campaigns';	echo "Dialable Lead Count";}
@@ -2328,6 +2359,7 @@ if ($ADD==100000000000)	{$hh='admin';	$sh='server';	echo "SERVER LIST";}
 if ($ADD==130000000000)	{$hh='admin';	$sh='templates';	echo "CONF TEMPLATE LIST";}
 if ($ADD==140000000000)	{$hh='admin';	$sh='carriers';	echo "CARRIER LIST";}
 if ($ADD==150000000000)	{$hh='admin';	$sh='tts';	echo "TTS ENTRY LIST";}
+if ($ADD==160000000000)	{$hh='admin';	$sh='moh';	echo "MUSIC ON HOLD ENTRY LIST";}
 if ($ADD==1000000000000)	{$hh='admin';	$sh='conference';	echo "CONFERENCE LIST";}
 if ($ADD==10000000000000)	{$hh='admin';	$sh='conference';	echo "VICIDIAL CONFERENCE LIST";}
 if ($ADD==550)			{$hh='users';		echo "Search Form";}
@@ -4676,6 +4708,32 @@ if ($SSoutbound_autodial_active > 0)
 
 <BR><BR><BR><BR>
 
+<B><FONT SIZE=3>VICIDIAL_MUSIC_ON_HOLD TABLE</FONT></B><BR><BR>
+<A NAME="vicidial_music_on_hold-moh_id">
+<BR>
+<B>Music On Hold ID -</B> This is the short name of a Music On Hold entry. This needs to be a unique identifier. Do not use any spaces or punctuation for this field. max 100 characters, minimum of 2 characters.
+
+<BR>
+<A NAME="vicidial_music_on_hold-moh_name">
+<B>Music On Hold Name -</B> This is a more descriptive name of the Music On Hold entry. This is a short summary of the Music On Hold context and will show as a comment in the musiconhold-vicidial.conf file. max 255 characters, minimum of 2 characters.
+
+<BR>
+<A NAME="vicidial_music_on_hold-active">
+<B>Active -</B> This option allows you to set the Music On Hold entry to active or inactive. Inactive will remove the entry from the conf files.
+
+<BR>
+<A NAME="vicidial_music_on_hold-random">
+<B>Random Order -</B> This option allows you to define the playback of the audio files in a random order. If set to N then the defined order will be used.
+
+<BR>
+<A NAME="vicidial_music_on_hold-filename">
+<B>Filename -</B> To add a new audio file to a Music On Hold entry the file must first be in the audio store, then you can select the file and click submit to add it to the file list. Music on hold is updated once per minute if there have been changes made. Any files not listed in a music on hold entry that are present in the music on hold folder will be deleted.
+
+
+
+
+<BR><BR><BR><BR>
+
 <B><FONT SIZE=3>VICIDIAL_TTS_PROMPTS TABLE</FONT></B><BR><BR>
 <A NAME="vicidial_tts_prompts-tts_id">
 <BR>
@@ -5303,6 +5361,11 @@ if ($SSoutbound_autodial_active > 0)
 <B>Active Asterisk Server -</B> If Asterisk is not running on this server, or if VICIDIAL should not be using this server, or if are only using this server for other scripts like the hopper loading script you would want to set this to N. Default is Y.
 
 <BR>
+<A NAME="servers-active_agent_login_server">
+<BR>
+<B>Active Agent Server -</B> Setting this option to N will prevent agents from being able to login to this server through the vicidial agent screen. This is very useful when using a phone login load balanced setup. Default is Y.
+
+<BR>
 <A NAME="servers-generate_vicidial_conf">
 <BR>
 <B>Generate conf files -</B> If you would like the system to auto-generate asterisk conf files based upon the phones entries, carrier entries and load balancing setup within VICIDIAL then set this to Y. Default is Y.
@@ -5311,6 +5374,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="servers-rebuild_conf_files">
 <BR>
 <B>Rebuild conf files -</B> If you want to force a rebuilding of the Asterisk conf files or if any of the phones or carrier entries have changed then this should be set to Y. After the conf files have been generated and Asterisk has been reloaded then this will be changed to N. Default is Y.
+
+<BR>
+<A NAME="servers-rebuild_music_on_hold">
+<BR>
+<B>Rebuild Music On Hold -</B> If you want to force a rebuilding of the music on hold files or if the music on hold entries or server entries have changed then this should be set to Y. After the music on hold files have been synchronized and reloaded then this will be changed to N. Default is Y.
 
 <BR>
 <A NAME="servers-sounds_update">
@@ -7440,6 +7508,36 @@ if ($ADD==151111111111)
 
 
 ######################
+# ADD=161111111111 display the ADD NEW MUSIC ON HOLD ENTRY SCREEN
+######################
+
+if ($ADD==161111111111)
+	{
+	if ($LOGmodify_servers==1)
+		{
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		echo "<br>ADD NEW MUSIC ON HOLD ENTRY<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=261111111111>\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Music On Hold ID: </td><td align=left><input type=text name=moh_id size=50 maxlength=100>$NWB#vicidial_music_on_hold-moh_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Music On Hold Name: </td><td align=left><input type=text name=moh_name size=70 maxlength=255>$NWB#vicidial_music_on_hold-moh_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Random Order: </td><td align=left><select size=1 name=random><option>N</option><option>Y</option>$NWB#vicidial_music_on_hold-random$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE=SUBMIT></td></tr>\n";
+		echo "</TABLE></center>\n";
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	}
+
+
+######################
 # ADD=1111111111111 display the ADD NEW CONFERENCE SCREEN
 ######################
 
@@ -9455,7 +9553,7 @@ if ($ADD==211111111111)
 			$stmt="INSERT INTO servers (server_id,server_description,server_ip,active,asterisk_version) values('$server_id','$server_description','$server_ip','$active','$asterisk_version');";
 			$rslt=mysql_query($stmt, $link);
 
-			$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
+			$stmtA="UPDATE servers SET rebuild_conf_files='Y',rebuild_music_on_hold='Y',sounds_update='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
 			$rslt=mysql_query($stmtA, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -9631,12 +9729,48 @@ if ($ADD==251111111111)
 			$SQL_log = "$stmt|";
 			$SQL_log = ereg_replace(';','',$SQL_log);
 			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TTS', event_type='ADD', record_id='$carrier_id', event_code='ADMIN ADD TTS', event_sql=\"$SQL_log\", event_notes='';";
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TTS', event_type='ADD', record_id='$tts_id', event_code='ADMIN ADD TTS', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			}
 		}
 	$ADD=351111111111;
+	}
+
+
+######################
+# ADD=261111111111 adds new music on hold entry to the system
+######################
+
+if ($ADD==261111111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	$stmt="SELECT count(*) from vicidial_music_on_hold where moh_id='$moh_id';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	if ($row[0] > 0)
+		{echo "<br>MUSIC ON HOLD ENTRY NOT ADDED - there is already a moh entry in the system with this ID\n";}
+	else
+		{
+		 if ( (strlen($moh_id) < 2) or (strlen($moh_name) < 3) or ($moh_id=='sounds') or ($moh_id=='agi-bin') or ($moh_id=='astdb') or ($moh_id=='keys') )
+			{echo "<br>MUSIC ON HOLD ENTRY NOT ADDED - Please go back and look at the data you entered\n";}
+		 else
+			{
+			echo "<br>MUSIC ON HOLD ENTRY ADDED\n";
+
+			$stmt="INSERT INTO vicidial_music_on_hold SET moh_id='$moh_id',moh_name='$moh_name',random='$random';";
+			$rslt=mysql_query($stmt, $link);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='MOH', event_type='ADD', record_id='$moh_id', event_code='ADMIN ADD MOH', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
+		}
+	$ADD=361111111111;
 	}
 
 
@@ -12298,55 +12432,55 @@ $ADD=33111111111;	# go to group alias modification form below
 ######################
 
 if ($ADD==411111111111)
-{
-	if ($LOGmodify_servers==1)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-
-	$stmt="SELECT count(*) from servers where server_id='$server_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ( ($row[0] > 0) && ($server_id != $old_server_id) )
-		{echo "<br>SERVER NOT MODIFIED - there is already a server in the system with this server_id\n";}
-	else
+	if ($LOGmodify_servers==1)
 		{
-		$stmt="SELECT count(*) from servers where server_ip='$server_ip';";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		$stmt="SELECT count(*) from servers where server_id='$server_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
-		if ( ($row[0] > 0) && ($server_ip != $old_server_ip) )
-			{echo "<br>SERVER NOT MODIFIED - there is already a server in the system with this server_ip\n";}
+		if ( ($row[0] > 0) && ($server_id != $old_server_id) )
+			{echo "<br>SERVER NOT MODIFIED - there is already a server in the system with this server_id\n";}
 		else
 			{
-			 if ( (strlen($server_id) < 1) or (strlen($server_ip) < 7) )
-				{echo "<br>SERVER NOT MODIFIED - Please go back and look at the data you entered\n";}
-			 else
+			$stmt="SELECT count(*) from servers where server_ip='$server_ip';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ( ($row[0] > 0) && ($server_ip != $old_server_ip) )
+				{echo "<br>SERVER NOT MODIFIED - there is already a server in the system with this server_ip\n";}
+			else
 				{
-				echo "<br>SERVER MODIFIED: $server_ip\n";
+				 if ( (strlen($server_id) < 1) or (strlen($server_ip) < 7) )
+					{echo "<br>SERVER NOT MODIFIED - Please go back and look at the data you entered\n";}
+				 else
+					{
+					$stmt="UPDATE servers set server_id='$server_id',server_description='$server_description',server_ip='$server_ip',active='$active',asterisk_version='$asterisk_version', max_vicidial_trunks='$max_vicidial_trunks', telnet_host='$telnet_host', telnet_port='$telnet_port', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', ASTmgrUSERNAMEupdate='$ASTmgrUSERNAMEupdate', ASTmgrUSERNAMElisten='$ASTmgrUSERNAMElisten', ASTmgrUSERNAMEsend='$ASTmgrUSERNAMEsend', local_gmt='$local_gmt', voicemail_dump_exten='$voicemail_dump_exten', answer_transfer_agent='$answer_transfer_agent', ext_context='$ext_context', sys_perf_log='$sys_perf_log', vd_server_logs='$vd_server_logs', agi_output='$agi_output', vicidial_balance_active='$vicidial_balance_active',balance_trunks_offlimits='$balance_trunks_offlimits',recording_web_link='$recording_web_link',alt_server_ip='$alt_server_ip',active_asterisk_server='$active_asterisk_server',generate_vicidial_conf='$generate_vicidial_conf',rebuild_conf_files='$rebuild_conf_files',outbound_calls_per_second='$outbound_calls_per_second',sounds_update='$sounds_update',vicidial_recording_limit='$vicidial_recording_limit',carrier_logging_active='$carrier_logging_active',vicidial_balance_rank='$vicidial_balance_rank',rebuild_music_on_hold='$rebuild_music_on_hold',active_agent_login_server='$active_agent_login_server' where server_id='$old_server_id';";
+					$rslt=mysql_query($stmt, $link);
 
-				$stmt="UPDATE servers set server_id='$server_id',server_description='$server_description',server_ip='$server_ip',active='$active',asterisk_version='$asterisk_version', max_vicidial_trunks='$max_vicidial_trunks', telnet_host='$telnet_host', telnet_port='$telnet_port', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', ASTmgrUSERNAMEupdate='$ASTmgrUSERNAMEupdate', ASTmgrUSERNAMElisten='$ASTmgrUSERNAMElisten', ASTmgrUSERNAMEsend='$ASTmgrUSERNAMEsend', local_gmt='$local_gmt', voicemail_dump_exten='$voicemail_dump_exten', answer_transfer_agent='$answer_transfer_agent', ext_context='$ext_context', sys_perf_log='$sys_perf_log', vd_server_logs='$vd_server_logs', agi_output='$agi_output', vicidial_balance_active='$vicidial_balance_active',balance_trunks_offlimits='$balance_trunks_offlimits',recording_web_link='$recording_web_link',alt_server_ip='$alt_server_ip',active_asterisk_server='$active_asterisk_server',generate_vicidial_conf='$generate_vicidial_conf',rebuild_conf_files='$rebuild_conf_files',outbound_calls_per_second='$outbound_calls_per_second',sounds_update='$sounds_update',vicidial_recording_limit='$vicidial_recording_limit',carrier_logging_active='$carrier_logging_active',vicidial_balance_rank='$vicidial_balance_rank' where server_id='$old_server_id';";
-				$rslt=mysql_query($stmt, $link);
+					$stmtA="UPDATE servers SET rebuild_conf_files='Y',rebuild_music_on_hold='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";
+					$rslt=mysql_query($stmtA, $link);
 
-				$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";
-				$rslt=mysql_query($stmtA, $link);
+					echo "<br>SERVER MODIFIED: $server_ip\n";
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SERVERS', event_type='MODIFY', record_id='$server_id', event_code='ADMIN MODIFY SERVER', event_sql=\"$SQL_log\", event_notes='';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SERVERS', event_type='MODIFY', record_id='$server_id', event_code='ADMIN MODIFY SERVER', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
 				}
 			}
 		}
-	}
 	else
-	{
-	echo "You do not have permission to view this page\n";
-	exit;
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	$ADD=311111111111;	# go to server modification form below
 	}
-$ADD=311111111111;	# go to server modification form below
-}
 
 
 ######################
@@ -12354,57 +12488,57 @@ $ADD=311111111111;	# go to server modification form below
 ######################
 
 if ($ADD==421111111111)
-{
+	{
 	if ($LOGmodify_servers==1)
-	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT max_vicidial_trunks from servers where server_ip='$server_ip';";
-	$rslt=mysql_query($stmt, $link);
-	$rowx=mysql_fetch_row($rslt);
-	$MAXvicidial_trunks = $rowx[0];
-	
-	$stmt="SELECT sum(dedicated_trunks) from vicidial_server_trunks where server_ip='$server_ip' and campaign_id !='$campaign_id';";
-	$rslt=mysql_query($stmt, $link);
-	$rowx=mysql_fetch_row($rslt);
-	$SUMvicidial_trunks = ($rowx[0] + $dedicated_trunks);
-	
-	if ($SUMvicidial_trunks > $MAXvicidial_trunks)
 		{
-		echo "<br>VICIDIAL SERVER TRUNK RECORD NOT ADDED - the number of vicidial trunks is too high: $SUMvicidial_trunks / $MAXvicidial_trunks\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT max_vicidial_trunks from servers where server_ip='$server_ip';";
+		$rslt=mysql_query($stmt, $link);
+		$rowx=mysql_fetch_row($rslt);
+		$MAXvicidial_trunks = $rowx[0];
+		
+		$stmt="SELECT sum(dedicated_trunks) from vicidial_server_trunks where server_ip='$server_ip' and campaign_id !='$campaign_id';";
+		$rslt=mysql_query($stmt, $link);
+		$rowx=mysql_fetch_row($rslt);
+		$SUMvicidial_trunks = ($rowx[0] + $dedicated_trunks);
+		
+		if ($SUMvicidial_trunks > $MAXvicidial_trunks)
+			{
+			echo "<br>VICIDIAL SERVER TRUNK RECORD NOT ADDED - the number of vicidial trunks is too high: $SUMvicidial_trunks / $MAXvicidial_trunks\n";
+			}
+		else
+			{
+			 if ( (strlen($campaign_id) < 2) or (strlen($server_ip) < 7) or (strlen($dedicated_trunks) < 1) or (strlen($trunk_restriction) < 1) )
+				{
+				echo "<br>VICIDIAL SERVER TRUNK RECORD NOT MODIFIED - Please go back and look at the data you entered\n";
+				echo "<br>campaign must be between 3 and 8 characters in length\n";
+				echo "<br>server_ip delay must be at least 7 characters\n";
+				echo "<br>trunks must be a digit from 0 to 9999\n";
+				}
+			 else
+				{
+				$stmt="UPDATE vicidial_server_trunks SET dedicated_trunks='$dedicated_trunks',trunk_restriction='$trunk_restriction' where campaign_id='$campaign_id' and server_ip='$server_ip';";
+				$rslt=mysql_query($stmt, $link);
+
+				echo "<br><B>VICIDIAL SERVER TRUNK RECORD MODIFIED: $campaign_id - $server_ip - $dedicated_trunks - $trunk_restriction</B>\n";
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SERVERTRUNKS', event_type='MODIFY', record_id='$server_ip', event_code='ADMIN MODIFY SERVER TRUNK', event_sql=\"$SQL_log\", event_notes='Campaign: $campaign_id';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
+			}
 		}
 	else
 		{
-		 if ( (strlen($campaign_id) < 2) or (strlen($server_ip) < 7) or (strlen($dedicated_trunks) < 1) or (strlen($trunk_restriction) < 1) )
-			{
-			 echo "<br>VICIDIAL SERVER TRUNK RECORD NOT MODIFIED - Please go back and look at the data you entered\n";
-			 echo "<br>campaign must be between 3 and 8 characters in length\n";
-			 echo "<br>server_ip delay must be at least 7 characters\n";
-			 echo "<br>trunks must be a digit from 0 to 9999\n";
-			}
-		 else
-			{
-			echo "<br><B>VICIDIAL SERVER TRUNK RECORD MODIFIED: $campaign_id - $server_ip - $dedicated_trunks - $trunk_restriction</B>\n";
-
-			$stmt="UPDATE vicidial_server_trunks SET dedicated_trunks='$dedicated_trunks',trunk_restriction='$trunk_restriction' where campaign_id='$campaign_id' and server_ip='$server_ip';";
-			$rslt=mysql_query($stmt, $link);
-
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SERVERTRUNKS', event_type='MODIFY', record_id='$server_ip', event_code='ADMIN MODIFY SERVER TRUNK', event_sql=\"$SQL_log\", event_notes='Campaign: $campaign_id';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
-			}
+		echo "You do not have permission to view this page\n";
+		exit;
 		}
+	$ADD=311111111111;	# go to server modification form below
 	}
-	else
-	{
-	echo "You do not have permission to view this page\n";
-	exit;
-	}
-$ADD=311111111111;	# go to server modification form below
-}
 
 
 ######################
@@ -12412,39 +12546,39 @@ $ADD=311111111111;	# go to server modification form below
 ###################### '$template_id','$template_name','$template_contents'
 
 if ($ADD==431111111111)
-{
+	{
 	if ($LOGmodify_servers==1)
-	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-
-	 if ( (strlen($template_id) < 1) or (strlen($template_name) < 1) )
-		{echo "<br>CONF TEMPLATE NOT MODIFIED - Please go back and look at the data you entered\n";}
-	 else
 		{
-		echo "<br>CONF TEMPLATE MODIFIED: $template_id\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="UPDATE vicidial_conf_templates set template_name='$template_name',template_contents='$template_contents' where template_id='$template_id';";
-		$rslt=mysql_query($stmt, $link);
+		if ( (strlen($template_id) < 1) or (strlen($template_name) < 1) )
+			{echo "<br>CONF TEMPLATE NOT MODIFIED - Please go back and look at the data you entered\n";}
+		else
+			{
+			$stmt="UPDATE vicidial_conf_templates set template_name='$template_name',template_contents='$template_contents' where template_id='$template_id';";
+			$rslt=mysql_query($stmt, $link);
 
-		$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";
-		$rslt=mysql_query($stmtA, $link);
+			$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";
+			$rslt=mysql_query($stmtA, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONFTEMPLATES', event_type='MODIFY', record_id='$template_id', event_code='ADMIN MODIFY CONF TEMPLATE', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+			echo "<br>CONF TEMPLATE MODIFIED: $template_id\n";
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONFTEMPLATES', event_type='MODIFY', record_id='$template_id', event_code='ADMIN MODIFY CONF TEMPLATE', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
 		}
-	}
 	else
-	{
-	echo "You do not have permission to view this page\n";
-	exit;
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	$ADD=331111111111;	# go to conf template modification form below
 	}
-$ADD=331111111111;	# go to conf template modification form below
-}
 
 
 ######################
@@ -12452,40 +12586,39 @@ $ADD=331111111111;	# go to conf template modification form below
 ######################
 
 if ($ADD==441111111111)
-{
+	{
 	if ($LOGmodify_servers==1)
-	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-
-	 if ( (strlen($carrier_id) < 1) or (strlen($server_ip) < 7) or (strlen($protocol) < 1) )
-		{echo "<br>CARRIER NOT MODIFIED - Please go back and look at the data you entered\n";}
-	 else
 		{
-		echo "<br>CARRIER MODIFIED: $carrier_id\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="UPDATE vicidial_server_carriers set carrier_name='$carrier_name',registration_string='$registration_string',template_id='$template_id',account_entry='$account_entry',protocol='$protocol',globals_string='$globals_string',dialplan_entry='$dialplan_entry',server_ip='$server_ip',active='$active' where carrier_id='$carrier_id';";
-		$rslt=mysql_query($stmt, $link);
+		if ( (strlen($carrier_id) < 1) or (strlen($server_ip) < 7) or (strlen($protocol) < 1) )
+			{echo "<br>CARRIER NOT MODIFIED - Please go back and look at the data you entered\n";}
+		else
+			{
+			$stmt="UPDATE vicidial_server_carriers set carrier_name='$carrier_name',registration_string='$registration_string',template_id='$template_id',account_entry='$account_entry',protocol='$protocol',globals_string='$globals_string',dialplan_entry='$dialplan_entry',server_ip='$server_ip',active='$active' where carrier_id='$carrier_id';";
+			$rslt=mysql_query($stmt, $link);
 
-		$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
-		$rslt=mysql_query($stmtA, $link);
+			$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
+			$rslt=mysql_query($stmtA, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CARRIERS', event_type='MODIFY', record_id='$carrier_id', event_code='ADMIN MODIFY CARRIER', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+			echo "<br>CARRIER MODIFIED: $carrier_id\n";
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CARRIERS', event_type='MODIFY', record_id='$carrier_id', event_code='ADMIN MODIFY CARRIER', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
 		}
-	}
 	else
-	{
-	echo "You do not have permission to view this page\n";
-	exit;
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	$ADD=341111111111;	# go to carrier modification form below
 	}
-$ADD=341111111111;	# go to carrier modification form below
-}
-
 
 
 ######################
@@ -12493,36 +12626,137 @@ $ADD=341111111111;	# go to carrier modification form below
 ######################
 
 if ($ADD==451111111111)
-{
+	{
 	if ($LOGmodify_servers==1)
-	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-
-	 if ( (strlen($tts_id) < 2) or (strlen($tts_name) < 5) )
-		{echo "<br>TTS ENTRY NOT MODIFIED - Please go back and look at the data you entered\n";}
-	 else
 		{
-		echo "<br>TTS ENTRY MODIFIED: $tts_id\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="UPDATE vicidial_tts_prompts set tts_name='$tts_name',active='$active',tts_text=\"$tts_text\" where tts_id='$tts_id';";
-		$rslt=mysql_query($stmt, $link);
+		if ( (strlen($tts_id) < 2) or (strlen($tts_name) < 5) )
+			{echo "<br>TTS ENTRY NOT MODIFIED - Please go back and look at the data you entered\n";}
+		else
+			{
+			$stmt="UPDATE vicidial_tts_prompts set tts_name='$tts_name',active='$active',tts_text=\"$tts_text\" where tts_id='$tts_id';";
+			$rslt=mysql_query($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TTS', event_type='MODIFY', record_id='$tts_id', event_code='ADMIN MODIFY TTS', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+			echo "<br>TTS ENTRY MODIFIED: $tts_id\n";
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TTS', event_type='MODIFY', record_id='$tts_id', event_code='ADMIN MODIFY TTS', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
 		}
-	}
 	else
-	{
-	echo "You do not have permission to view this page\n";
-	exit;
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	$ADD=351111111111;	# go to tts entry modification form below
 	}
-$ADD=351111111111;	# go to tts entry modification form below
-}
+
+
+######################
+# ADD=461111111111 modify music on hold record in the system
+######################
+
+if ($ADD==461111111111)
+	{
+	if ($LOGmodify_servers==1)
+		{
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		if ($stage == "FILEDELETE")
+			{
+			if ( (strlen($moh_id) < 2) or (strlen($filename) < 1) or ($moh_id=='sounds') or ($moh_id=='agi-bin') or ($moh_id=='astdb') or ($moh_id=='keys') )
+				{echo "<br>MUSIC ON HOLD ENTRY NOT MODIFIED - Please go back and look at the data you entered\n";}
+			else
+				{
+				$stmt="DELETE FROM vicidial_music_on_hold_files where moh_id='$moh_id' and filename='$filename';";
+				$rslt=mysql_query($stmt, $link);
+
+				$stmtA="UPDATE servers SET rebuild_conf_files='Y',rebuild_music_on_hold='Y',sounds_update='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";
+				$rslt=mysql_query($stmtA, $link);
+
+				echo "<br>MUSIC ON HOLD ENTRY MODIFIED: $moh_id - $filename\n";
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|$stmtA|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='MOH', event_type='MODIFY', record_id='$moh_id', event_code='ADMIN MODIFY MOH', event_sql=\"$SQL_log\", event_notes='FILE DELETE';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
+			}
+		else
+			{
+			if ( (strlen($moh_id) < 2) or (strlen($moh_name) < 5) or ($moh_id=='sounds') or ($moh_id=='agi-bin') or ($moh_id=='astdb') or ($moh_id=='keys') )
+				{echo "<br>MUSIC ON HOLD ENTRY NOT MODIFIED - Please go back and look at the data you entered\n";}
+			else
+				{
+				$stmt="UPDATE vicidial_music_on_hold set moh_name='$moh_name',active='$active',random='$random' where moh_id='$moh_id';";
+				$rslt=mysql_query($stmt, $link);
+				$stmtLIST = $stmt;
+
+				$stmt="SELECT filename,rank from vicidial_music_on_hold_files where moh_id='$moh_id' order by rank;";
+				$rsltx=mysql_query($stmt, $link);
+				$mohfiles_to_print = mysql_num_rows($rsltx);
+				$ranks = ($mohfiles_to_print + 1);
+				$o=0;
+				while ($mohfiles_to_print > $o)
+					{
+					$rowx=mysql_fetch_row($rsltx);
+					$mohfiles[$o] = $rowx[0];
+					$mohranks[$o] = $rowx[1];
+					$o++;
+					}
+
+				$o=0;
+				while ($mohfiles_to_print > $o)
+					{
+					$new_rank=0;
+					$Ffilename = $mohfiles[$o];
+					if (isset($_GET[$Ffilename]))			{$new_rank=$_GET[$Ffilename];}
+						elseif (isset($_POST[$Ffilename]))	{$new_rank=$_POST[$Ffilename];}
+
+					$stmt="UPDATE vicidial_music_on_hold_files set rank='$new_rank' where moh_id='$moh_id' and filename='$mohfiles[$o]';";
+					$rslt=mysql_query($stmt, $link);
+					$stmtLIST .= "|$stmt";
+					$o++;
+					}
+
+				if (strlen($filename) > 0)
+					{
+					$stmt="INSERT INTO vicidial_music_on_hold_files set filename='$filename',rank='$ranks',moh_id='$moh_id';";
+					$rslt=mysql_query($stmt, $link);
+					$stmtLIST .= "|$stmt";
+					}
+
+				$stmtA="UPDATE servers SET rebuild_conf_files='Y',rebuild_music_on_hold='Y',sounds_update='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";
+				$rslt=mysql_query($stmtA, $link);
+
+				echo "<br>MUSIC ON HOLD ENTRY MODIFIED: $moh_id\n";
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmtLIST|$stmtA|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='MOH', event_type='MODIFY', record_id='$moh_id', event_code='ADMIN MODIFY MOH', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
+			}
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	$ADD=361111111111;	# go to music on hold entry modification form below
+	}
 
 
 ######################
@@ -13338,6 +13572,28 @@ if ($ADD==551111111111)
 		echo "<br><br><a href=\"$PHP_SELF?ADD=651111111111&tts_id=$tts_id&CoNfIrM=YES\">Click here to delete tts entry $tts_id - $tts_name</a><br><br><br>\n";
 		}
 	$ADD='351111111111';		# go to tts entry modification below
+	}
+
+
+######################
+# ADD=561111111111 confirmation before deletion of music on hold record
+######################
+
+if ($ADD==561111111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	 if (strlen($moh_id) < 2)
+		{
+		 echo "<br>MUSIC ON HOLD ENTRY NOT DELETED - Please go back and look at the data you entered\n";
+		 echo "<br>MOH ID be at least 2 characters in length\n";
+		}
+	 else
+		{
+		echo "<br><B>MUSIC ON HOLD ENTRY DELETION CONFIRMATION: $moh_id - $moh_name</B>\n";
+		echo "<br><br><a href=\"$PHP_SELF?ADD=661111111111&moh_id=$moh_id&CoNfIrM=YES\">Click here to delete music on hold entry $moh_id - $moh_name</a><br><br><br>\n";
+		}
+	$ADD='361111111111';		# go to music on hold entry modification below
 	}
 
 
@@ -14479,10 +14735,46 @@ if ($ADD==651111111111)
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
 
-		echo "<br><B>CARRIER DELETION COMPLETED: $carrier_id</B>\n";
+		echo "<br><B>TTS DELETION COMPLETED: $tts_id</B>\n";
 		echo "<br><br>\n";
 		}
 	$ADD='150000000000';		# go to tts entry list
+	}
+
+
+######################
+# ADD=661111111111 delete music on hold record
+######################
+
+if ($ADD==661111111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( (strlen($moh_id) < 2) or ($CoNfIrM != 'YES') )
+		{
+		echo "<br>MUSIC ON HOLD ENTRY NOT DELETED - Please go back and look at the data you entered\n";
+		echo "<br>MOH ID be at least 2 characters in length\n";
+		}
+	else
+		{
+		$stmt="UPDATE vicidial_music_on_hold SET remove='Y' where moh_id='$moh_id';";
+		$rslt=mysql_query($stmt, $link);
+
+		$stmtA="DELETE from vicidial_music_on_hold_files where moh_id='$moh_id';";
+		$rslt=mysql_query($stmtA, $link);
+
+		### LOG INSERTION Admin Log Table ###
+		$SQL_log = "$stmt|$stmtA|";
+		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = addslashes($SQL_log);
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='MOH', event_type='DELETE', record_id='$moh_id', event_code='ADMIN DELETE MOH', event_sql=\"$SQL_log\", event_notes='';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+
+		echo "<br><B>MUSIC ON HOLD DELETION COMPLETED: $moh_id</B>\n";
+		echo "<br><br>\n";
+		}
+	$ADD='160000000000';		# go to music on hold entry list
 	}
 
 
@@ -20095,7 +20387,7 @@ if ($ADD==311111111111)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,local_gmt,voicemail_dump_exten,answer_transfer_agent,ext_context,sys_perf_log,vd_server_logs,agi_output,vicidial_balance_active,balance_trunks_offlimits,recording_web_link,alt_server_ip,active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,outbound_calls_per_second,sysload,channels_total,cpu_idle_percent,disk_usage,sounds_update,vicidial_recording_limit,carrier_logging_active,vicidial_balance_rank from servers where server_id='$server_id' or server_ip='$server_ip';";
+	$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,local_gmt,voicemail_dump_exten,answer_transfer_agent,ext_context,sys_perf_log,vd_server_logs,agi_output,vicidial_balance_active,balance_trunks_offlimits,recording_web_link,alt_server_ip,active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,outbound_calls_per_second,sysload,channels_total,cpu_idle_percent,disk_usage,sounds_update,vicidial_recording_limit,carrier_logging_active,vicidial_balance_rank,rebuild_music_on_hold,active_agent_login_server from servers where server_id='$server_id' or server_ip='$server_ip';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$server_id =					$row[0];
@@ -20134,6 +20426,8 @@ if ($ADD==311111111111)
 	$vicidial_recording_limit =		$row[33];
 	$carrier_logging_active =		$row[34];
 	$vicidial_balance_rank =		$row[35];
+	$rebuild_music_on_hold =		$row[36];
+	$active_agent_login_server =	$row[37];
 
 	$cpu = (100 - $cpu_idle_percent);
 	$disk_usage = preg_replace("/ /"," - ",$disk_usage);
@@ -20177,8 +20471,10 @@ if ($ADD==311111111111)
 	echo "<tr bgcolor=#B6D3FC><td align=right>Recording Web Link: </td><td align=left><select size=1 name=recording_web_link><option>SERVER_IP</option><option>ALT_IP</option><option selected>$recording_web_link</option></select>$NWB#servers-recording_web_link$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Alternate Recording Server IP: </td><td align=left><input type=text name=alt_server_ip size=30 maxlength=100 value=\"$alt_server_ip\">$NWB#servers-alt_server_ip$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Active Asterisk Server: </td><td align=left><select size=1 name=active_asterisk_server><option>Y</option><option>N</option><option selected>$active_asterisk_server</option></select>$NWB#servers-active_asterisk_server$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Active Agent Server: </td><td align=left><select size=1 name=active_agent_login_server><option>Y</option><option>N</option><option selected>$active_agent_login_server</option></select>$NWB#servers-active_agent_login_server$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Generate conf files: </td><td align=left><select size=1 name=generate_vicidial_conf><option>Y</option><option>N</option><option selected>$generate_vicidial_conf</option></select>$NWB#servers-generate_vicidial_conf$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Rebuild conf files: </td><td align=left><select size=1 name=rebuild_conf_files><option>Y</option><option>N</option><option selected>$rebuild_conf_files</option></select>$NWB#servers-rebuild_conf_files$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Rebuild Music On Hold: </td><td align=left><select size=1 name=rebuild_music_on_hold><option>Y</option><option>N</option><option selected>$rebuild_music_on_hold</option></select>$NWB#servers-rebuild_music_on_hold$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Sounds Update: </td><td align=left><select size=1 name=sounds_update><option>Y</option><option>N</option><option selected>$sounds_update</option></select>$NWB#servers-sounds_update$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>ViciDial Recording Limit: </td><td align=left><input type=text name=vicidial_recording_limit size=8 maxlength=6 value=\"$vicidial_recording_limit\">$NWB#servers-vicidial_recording_limit$NWE</td></tr>\n";
 
@@ -20606,14 +20902,14 @@ if ($ADD==351111111111)
 	$active =		$row[2];
 	$tts_text =		$row[3];
 
-	echo "<br>MODIFY A TTS RECORD: $row[0]<form action=$PHP_SELF method=POST>\n";
+	echo "<br>MODIFY A TTS RECORD: $tts_id<form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=ADD value=451111111111>\n";
 	echo "<input type=hidden name=tts_id value=\"$tts_id\">\n";
 
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>TTS ID: </td><td align=left><B>$tts_id</B></td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>TTS Name: </td><td align=left><input type=text name=tts_name size=50 maxlength=100 value=\"$tts_name\">$NWB#vicidial_tts_prompts-tts_name$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>N</option><option>Y</option><option SELECTED>$active</option>$NWB#vicidial_tts_prompts-active$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>N</option><option>Y</option><option SELECTED>$active</option></select>$NWB#vicidial_tts_prompts-active$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right>TTS Text: </td><td align=left><TEXTAREA NAME=tts_text ROWS=20 COLS=70>$tts_text</TEXTAREA> $NWB#vicidial_tts_prompts-tts_text$NWE</td></tr>\n";
 
@@ -20628,6 +20924,84 @@ if ($ADD==351111111111)
 	if ($LOGuser_level >= 9)
 		{
 		echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=TTS&stage=$tts_id\">Click here to see Admin chages to this TTS entry</FONT>\n";
+		}
+	}
+	else
+	{
+	echo "You do not have permission to view this page\n";
+	exit;
+	}
+}
+
+
+######################
+# ADD=361111111111 modify music on hold record in the system
+######################
+
+if ($ADD==361111111111)
+{
+	if ($LOGast_admin_access==1)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	$stmt="SELECT moh_id,moh_name,active,random from vicidial_music_on_hold where moh_id='$moh_id';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$moh_id =		$row[0];
+	$moh_name =		$row[1];
+	$active =		$row[2];
+	$random =		$row[3];
+
+	echo "<br>MODIFY A MUSIC ON HOLD RECORD: $moh_id<form action=$PHP_SELF method=POST>\n";
+	echo "<input type=hidden name=ADD value=461111111111>\n";
+	echo "<input type=hidden name=moh_id value=\"$moh_id\">\n";
+
+	echo "<center><TABLE width=$section_width cellspacing=3>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Music On Hold ID: </td><td align=left><B>$moh_id</B></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Music On Hold Name: </td><td align=left><input type=text name=moh_name size=50 maxlength=100 value=\"$moh_name\">$NWB#vicidial_music_on_hold-moh_name$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>N</option><option>Y</option><option SELECTED>$active</option></select>$NWB#vicidial_music_on_hold-active$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Random Order: </td><td align=left><select size=1 name=random><option>N</option><option>Y</option><option SELECTED>$random</option></select>$NWB#vicidial_music_on_hold-random$NWE</td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=right>Audio Files: </td><td align=left>\n";
+	##### get files listing for rank/delete options
+	$stmt="SELECT filename,rank from vicidial_music_on_hold_files where moh_id='$moh_id' order by rank;";
+	$rsltx=mysql_query($stmt, $link);
+	$mohfiles_to_print = mysql_num_rows($rsltx);
+	$ranks = ($mohfiles_to_print + 2);
+	$o=0;
+	while ($mohfiles_to_print > $o)
+		{
+		$rowx=mysql_fetch_row($rsltx);
+		echo "<font size=2>Rank: </font><select size=1 name=$rowx[0]>\n";
+		echo "<option SELECTED>$rowx[1]</option>\n";
+		$k=1;
+		while ($ranks > $k)
+			{
+			echo "<option>$k</option>\n";
+			$k++;
+			}
+		echo "</select>\n";
+
+		echo " &nbsp; <B>$rowx[0]</B> - <a href=\"$PHP_SELF?ADD=461111111111&moh_id=$moh_id&stage=FILEDELETE&filename=$rowx[0]\">DELETE</a><BR>\n";
+		$o++;
+		}
+
+	echo "</td></tr>\n";
+
+	echo "<tr bgcolor=#B9CBFD><td align=right>Add An Audio File: </td><td><input type=text size=50 maxlength=50 name=filename id=filename value=\"\"> <a href=\"javascript:launch_chooser('filename','date',30);\">audio chooser</a>  $NWB#vicidial_music_on_hold-filename$NWE</td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE=SUBMIT></td></tr>\n";
+	echo "</TABLE></center>\n";
+
+	echo "<center><b>\n";
+	if ($LOGast_delete_phones > 0)
+		{
+		echo "<br><br><a href=\"$PHP_SELF?ADD=561111111111&moh_id=$moh_id&moh_name=$moh_name\">DELETE MUSIC ON HOLD ENTRY</a>\n";
+		}
+	if ($LOGuser_level >= 9)
+		{
+		echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=MOH&stage=$moh_id\">Click here to see Admin chages to this Music On Hold entry</FONT>\n";
 		}
 	}
 	else
@@ -22466,6 +22840,7 @@ if ($ADD==140000000000)
 	echo "</TABLE></center>\n";
 	}
 
+
 ######################
 # ADD=150000000000 display all tts entries
 ######################
@@ -22509,6 +22884,52 @@ if ($ADD==150000000000)
 
 	echo "</TABLE></center>\n";
 	}
+
+
+######################
+# ADD=160000000000 display all music on hold entries
+######################
+if ($ADD==160000000000)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	$stmt="SELECT moh_id,moh_name,active,random from vicidial_music_on_hold where remove='N' order by moh_id";
+	$rslt=mysql_query($stmt, $link);
+	$moh_to_print = mysql_num_rows($rslt);
+
+	echo "<br>TEXT-TO-SPEECH(TTS) LISTINGS:\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<tr bgcolor=black>";
+	echo "<td><font size=1 color=white align=left><B>MOH ID</B></td>";
+	echo "<td><font size=1 color=white><B>MOH Name</B></td>";
+	echo "<td><font size=1 color=white><B>Active</B></td>";
+	echo "<td><font size=1 color=white><B>Random Order</B></td>";
+	echo "<td align=center><font size=1 color=white><B>MODIFY</B></td></tr>\n";
+
+	$o=0;
+	while ($moh_to_print > $o) 
+		{
+		$row=mysql_fetch_row($rslt);
+		$row[3]=ereg_replace(";|<|>","",$row[3]);
+		while(strlen($row[3]) > 50) {$row[3] = substr("$row[3]", 0, -1);}
+		if(strlen($row[3]) > 47) {$row[3] = "$row[3]...";}
+
+		if (eregi("1$|3$|5$|7$|9$", $o))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=361111111111&moh_id=$row[0]\">$row[0]</a></td>";
+		echo "<td><font size=1>$row[1]</td>";
+		echo "<td><font size=1>$row[2]</td>";
+		echo "<td><font size=1>$row[3]</td>";
+		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=361111111111&moh_id=$row[0]\">MODIFY</a></td></tr>\n";
+		$o++;
+		}
+
+	echo "</TABLE></center>\n";
+	}
+
 
 ######################
 # ADD=1000000000000 display all conferences
