@@ -20,6 +20,7 @@ Changes:
 90428-0208 - Added blind_monitor function
 90513-1720 - Added sounds_list function
 90721-1432 - Added rank and owner
+90904-1535 - Added moh_list function
 
 
 
@@ -63,6 +64,30 @@ Example responses:
 ERROR: sounds_list USER DOES NOT HAVE PERMISSION TO VIEW SOUNDS LIST
 
 ERROR: sounds_list CENTRAL SOUND CONTROL IS NOT ACTIVE
+
+
+
+
+
+--------------------------------------------------------------------------------
+moh_list - outputs a list of music on hold classes in the system
+
+NOTE: api user for this function must have user_level set to 7 or higher
+
+OPTIONAL FIELDS-
+format -		format of the output(tab, link, selectframe)
+comments -		name of the field to populate
+
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=moh_list&format=selectframe&comments=fieldname&stage=date
+
+Example responses:
+<success is inferred by output of moh classes list>
+
+ERROR: moh_list USER DOES NOT HAVE PERMISSION TO VIEW SOUNDS LIST
+
+ERROR: moh_list CENTRAL SOUND CONTROL IS NOT ACTIVE
 
 
 

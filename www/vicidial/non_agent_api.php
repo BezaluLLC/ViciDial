@@ -25,10 +25,11 @@
 # 90522-0506 - Security fix
 # 90530-0946 - Added QueueMetrics blind monitoring option
 # 90721-1428 - Added rank and owner as vicidial_list fields
+# 90904-1535 - Added moh_list
 #
 
-$version = '2.2.0-11';
-$build = '90721-1428';
+$version = '2.2.0-12';
+$build = '90904-1535';
 
 require("dbconnect.php");
 
@@ -443,6 +444,147 @@ if ($function == 'sounds_list')
 
 			exit;
 
+			}
+		}
+	}
+
+
+
+################################################################################
+### moh_list - sends a list of the moh classes in the system
+################################################################################
+if ($function == 'moh_list')
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 6;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$allowed_user=$row[0];
+	if ($allowed_user < 1)
+		{
+		$result = 'ERROR';
+		$result_reason = "sounds_list USER DOES NOT HAVE PERMISSION TO VIEW SOUNDS LIST";
+		echo "$result: $result_reason: |$user|$allowed_user|\n";
+		$data = "$allowed_user";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		$server_name = getenv("SERVER_NAME");
+		$server_port = getenv("SERVER_PORT");
+		if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+		  else {$HTTPprotocol = 'http://';}
+		$admDIR = "$HTTPprotocol$server_name:$server_port";
+
+		#############################################
+		##### START SYSTEM_SETTINGS LOOKUP #####
+		$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory FROM system_settings;";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$ss_conf_ct = mysql_num_rows($rslt);
+		if ($ss_conf_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$non_latin =						$row[0];
+			$sounds_central_control_active =	$row[1];
+			$sounds_web_server =				$row[2];
+			$sounds_web_directory =				$row[3];
+			}
+		##### END SETTINGS LOOKUP #####
+		###########################################
+
+		if ($sounds_central_control_active < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "sounds_list CENTRAL SOUND CONTROL IS NOT ACTIVE";
+			echo "$result: $result_reason: |$user|$sounds_central_control_active|\n";
+			$data = "$sounds_central_control_active";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			echo "\n";
+			echo "<HTML><head><title>NON-AGENT API</title>\n";
+			echo "<script language=\"Javascript\">\n";
+			echo "function choose_file(filename,fieldname)\n";
+			echo "	{\n";
+			echo "	if (filename.length > 0)\n";
+			echo "		{\n";
+			echo "		parent.document.getElementById(fieldname).value = filename;\n";
+			echo "		document.getElementById(\"selectframe\").innerHTML = '';\n";
+			echo "		document.getElementById(\"selectframe\").style.visibility = 'hidden';\n";
+			echo "		parent.close_chooser();\n";
+			echo "		}\n";
+			echo "	}\n";
+			echo "function close_file()\n";
+			echo "	{\n";
+			echo "	document.getElementById(\"selectframe\").innerHTML = '';\n";
+			echo "	document.getElementById(\"selectframe\").style.visibility = 'hidden';\n";
+			echo "	parent.close_chooser();\n";
+			echo "	}\n";
+			echo "</script>\n";
+			echo "</head>\n\n";
+
+			echo "<body>\n";
+			echo "<a href=\"javascript:close_file();\"><font size=1 face=\"Arial,Helvetica\">close frame</font></a>\n";
+			echo "<div id='selectframe' style=\"height:400px;width:710px;overflow:scroll;\">\n";
+			echo "<table border=0 cellpadding=1 cellspacing=2 width=690 bgcolor=white><tr>\n";
+			echo "<td width=30>#</td>\n";
+			echo "<td colspan=2>Music On Hold Class</td>\n";
+			echo "<td>Name</td>\n";
+			echo "<td>Random</td>\n";
+			echo "</tr>\n";
+
+			$stmt="SELECT moh_id,moh_name,random from vicidial_music_on_hold where active='Y' order by moh_id";
+			$rslt=mysql_query($stmt, $link);
+			$moh_to_print = mysql_num_rows($rslt);
+			$k=0;
+			$sf=0;
+			while ($moh_to_print > $k) 
+				{
+				$rowx=mysql_fetch_row($rslt);
+				$moh_id[$k] =	$rowx[0];
+				$moh_name[$k] = $rowx[1];
+				$random[$k] =	$rowx[2];
+				$k++;
+				}
+
+			$k=0;
+			$sf=0;
+			while ($moh_to_print > $k) 
+				{
+				$sf++;
+				if (eregi("1$|3$|5$|7$|9$", $sf))
+					{$bgcolor='bgcolor="#E6E6E6"';} 
+				else
+					{$bgcolor='bgcolor="#F6F6F6"';}
+				echo "<tr $bgcolor><td width=30><font size=1 face=\"Arial,Helvetica\">$sf</td>\n";
+				echo "<td colspan=2><a href=\"javascript:choose_file('$moh_id[$k]','$comments');\"><font size=2 face=\"Arial,Helvetica\">$moh_id[$k]</a></td>\n";
+				echo "<td><font size=2 face=\"Arial,Helvetica\">$moh_name[$k]</td>\n";
+				echo "<td><font size=2 face=\"Arial,Helvetica\">$random[$k]</td></tr>\n";
+
+				$stmt="SELECT filename from vicidial_music_on_hold_files where moh_id='$moh_id[$k]';";
+				$rslt=mysql_query($stmt, $link);
+				$mohfiles_to_print = mysql_num_rows($rslt);
+				$m=0;
+				while ($mohfiles_to_print > $m) 
+					{
+					$rowx=mysql_fetch_row($rslt);
+					$MOHfiles .=	"$rowx[0] &nbsp; ";
+					$m++;
+					}
+
+
+				echo "<tr $bgcolor><td colspan=2 width=100><font size=1 face=\"Arial,Helvetica\">&nbsp;</td>\n";
+				echo "<td colspan=3 width=590><font size=2 face=\"Arial,Helvetica\">Files: </font><font size=1 face=\"Arial,Helvetica\">$MOHfiles</td></tr>\n";
+
+				$k++;
+				}
+			echo "</table></div></body></HTML>\n";
+
+			exit;
 			}
 		}
 	}
