@@ -80,6 +80,7 @@
 # 90630-2252 - Added Sangoma CDP pre-Answer call processing
 # 90816-0057 - Changed default vicidial_log time to 0 from 1 second
 # 90827-1227 - Added list_id logging in vicidial_log on NA calls
+# 90907-0919 - Added LAGGED pause code update for paused agents, reduced logging if no issues
 #
 
 
@@ -1237,10 +1238,16 @@ while($one_day_interval > 0)
 							if ($KLcallerid[$kill_vac] !~ /^M\d\d\d\d\d\d\d\d\d\d/)
 								{
 								$stmtA = "UPDATE vicidial_live_agents set status='PAUSED',random_id='10' where callerid='$KLcallerid[$kill_vac]';";
-								$affected_rows = $dbhA->do($stmtA);
+								$Vaffected_rows = $dbhA->do($stmtA);
 
-								$event_string = "|     dead call vla agent PAUSED $affected_rows|$CLlead_id|$CLphone_number|$CLstatus|";
-								 &event_logger;
+								if ($Vaffected_rows > 0)
+									{
+									$stmtA = "UPDATE vicidial_agent_log set sub_status='LAGGED' where agent_log_id IN(SELECT agent_log_id from vicidial_live_agents where callerid='$KLcallerid[$kill_vac]');";
+									$VLaffected_rows = $dbhA->do($stmtA);
+
+									$event_string = "|     dead call vla agent PAUSED $Vaffected_rows|$VLaffected_rows|$CLlead_id|$CLphone_number|$CLstatus|";
+									 &event_logger;
+									}
 								}
 
 							if ( ($enable_queuemetrics_logging > 0) && ($CLstatus =~ /LIVE/) )
@@ -1549,67 +1556,89 @@ while($one_day_interval > 0)
 
 
 		### pause agents that have disconnected or closed their apps over 30 seconds ago
-		$stmtA = "UPDATE vicidial_live_agents set status='PAUSED',random_id='10' where server_ip='$server_ip' and last_update_time < '$PDtsSQLdate' and status NOT IN('PAUSED')";
-		$affected_rows = $dbhA->do($stmtA);
-
-		$event_string = "|     lagged call vla agent PAUSED $affected_rows|$PDtsSQLdate|$BDtsSQLdate|$tsSQLdate|";
-		 &event_logger;
-
-		if ($affected_rows > 0)
+		$toPAUSEcount=0;
+		$stmtA = "SELECT count(*) FROM vicidial_live_agents where server_ip='$server_ip' and last_update_time < '$PDtsSQLdate' and status NOT IN('PAUSED');";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArowsC=$sthA->rows;
+		if ($sthArowsC > 0)
 			{
-			@VALOuser=@MT; @VALOcampaign=@MT; @VALOtimelog=@MT; @VALOextension=@MT;
-			$logcount=0;
-			$stmtA = "SELECT user,campaign_id,last_update_time,extension FROM vicidial_live_agents where server_ip='$server_ip' and status = 'PAUSED' and random_id='10' order by last_update_time desc limit $affected_rows";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			$sthArows=$sthA->rows;
-			$rec_count=0;
-			$rec_countCUSTDATA=0;
-			while ($sthArows > $rec_count)
+			@aryA = $sthA->fetchrow_array;
+			$toPAUSEcount =		$aryA[0];
+			}
+		$sthA->finish();
+		$affected_rows=0;
+
+		if ($toPAUSEcount > 0)
+			{
+			$stmtA = "UPDATE vicidial_agent_log set sub_status='LAGGED' where agent_log_id IN(SELECT agent_log_id from vicidial_live_agents where server_ip='$server_ip' and last_update_time < '$PDtsSQLdate' and status NOT IN('PAUSED'));";
+			$VLaffected_rows = $dbhA->do($stmtA);
+
+			$stmtA = "UPDATE vicidial_live_agents set status='PAUSED',random_id='10' where server_ip='$server_ip' and last_update_time < '$PDtsSQLdate' and status NOT IN('PAUSED');";
+			$affected_rows = $dbhA->do($stmtA);
+
+			$event_string = "|     lagged call vla agent PAUSED $affected_rows|$VLaffected_rows|$PDtsSQLdate|$BDtsSQLdate|$tsSQLdate|";
+			 &event_logger;
+
+			if ($affected_rows > 0)
 				{
-				@aryA = $sthA->fetchrow_array;
-				$VALOuser[$logcount] =		"$aryA[0]";
-				$VALOcampaign[$logcount] =	"$aryA[1]";
-				$VALOtimelog[$logcount]	=	"$aryA[2]";
-				$VALOextension[$logcount] = "$aryA[3]";
-				$logcount++;
-				$rec_count++;
-				}
-			$sthA->finish();
-			$logrun=0;
-			foreach(@VALOuser)
-				{
-				$VALOuser_group='';
-				$stmtA = "SELECT user_group FROM vicidial_users where user='$VALOuser[$logrun]';";
+				@VALOuser=@MT; @VALOcampaign=@MT; @VALOtimelog=@MT; @VALOextension=@MT;
+				$logcount=0;
+				$stmtA = "SELECT user,campaign_id,last_update_time,extension FROM vicidial_live_agents where server_ip='$server_ip' and status = 'PAUSED' and random_id='10' order by last_update_time desc limit $affected_rows";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
-				$UGrec_count=0;
-				while ($sthArows > $UGrec_count)
+				$rec_count=0;
+				$rec_countCUSTDATA=0;
+				while ($sthArows > $rec_count)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$VALOuser_group =		"$aryA[0]";
-					$UGrec_count++;
+					$VALOuser[$logcount] =		"$aryA[0]";
+					$VALOcampaign[$logcount] =	"$aryA[1]";
+					$VALOtimelog[$logcount]	=	"$aryA[2]";
+					$VALOextension[$logcount] = "$aryA[3]";
+					$logcount++;
+					$rec_count++;
 					}
 				$sthA->finish();
-				$stmtA = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$VALOuser[$logrun]','LOGOUT','$VALOcampaign[$logrun]','$SQLdate','$now_date_epoch','$VALOuser_group');";
-				$affected_rows = $dbhA->do($stmtA);
+				$logrun=0;
+				foreach(@VALOuser)
+					{
+					$VALOuser_group='';
+					$stmtA = "SELECT user_group FROM vicidial_users where user='$VALOuser[$logrun]';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					$UGrec_count=0;
+					while ($sthArows > $UGrec_count)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$VALOuser_group =		"$aryA[0]";
+						$UGrec_count++;
+						}
+					$sthA->finish();
+					$stmtA = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$VALOuser[$logrun]','LOGOUT','$VALOcampaign[$logrun]','$SQLdate','$now_date_epoch','$VALOuser_group');";
+					$affected_rows = $dbhA->do($stmtA);
 
-				$event_string = "|          lagged agent LOGOUT entry inserted $VALOuser[$logrun]|$VALOcampaign[$logrun]|$VALOextension[$logcount]|";
-				 &event_logger;
+					$event_string = "|          lagged agent LOGOUT entry inserted $VALOuser[$logrun]|$VALOcampaign[$logrun]|$VALOextension[$logcount]|";
+					 &event_logger;
 
-				$logrun++;
+					$logrun++;
+					}
 				}
-
 			}
+
 
 
 		### delete call records that are SENT for over 2 minutes
 		$stmtA = "DELETE FROM vicidial_auto_calls where server_ip='$server_ip' and call_time < '$XDSQLdate' and status NOT IN('XFER','CLOSER','LIVE','IVR')";
-		$affected_rows = $dbhA->do($stmtA);
+		$VACaffected_rows = $dbhA->do($stmtA);
 
-		$event_string = "|     lagged call vac agent DELETED $affected_rows|$XDSQLdate|";
-		 &event_logger;
+		if ($VACaffected_rows > 0)
+			{
+			$event_string = "|     lagged call vac agent DELETED $VACaffected_rows|$XDSQLdate|";
+			 &event_logger;
+			}
 
 
 		### For debugging purposes, try to grab Jammed calls and log them to jam logfile

@@ -54,10 +54,11 @@
 # 90627-0608 - Some Formatting changes, added in-group name display
 # 90701-0657 - Fixed inbound=No calculation issues
 # 90808-0212 - Fixed inbound only non-ALL bug, changed times to use agent last_state_change
+# 90907-0915 - Added PARK status
 #
 
-$version = '2.0.5-45';
-$build = '90808-0212';
+$version = '2.0.5-46';
+$build = '90907-0915';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -1303,8 +1304,8 @@ $Aecho .= "VICIDIAL: Agents Time On Calls Campaign: $group_string            $NO
 
 $HDbegin =			"+";
 $HTbegin =			"|";
-$HDstation =		"------------+";
-$HTstation =		" STATION    |";
+$HDstation =		"--------------+";
+$HTstation =		" STATION      |";
 $HDphone =		"------------+";
 $HTphone =		" <a href=\"$PHP_SELF?$groupQS&RR=$RR&DB=$DB&adastats=$adastats&SIPmonitorLINK=$SIPmonitorLINK&IAXmonitorLINK=$IAXmonitorLINK&usergroup=$usergroup&UGdisplay=$UGdisplay&UidORname=$UidORname&orderby=$phoneord&SERVdisplay=$SERVdisplay&CALLSdisplay=$CALLSdisplay&PHONEdisplay=$PHONEdisplay&CUSTPHONEdisplay=$CUSTPHONEdisplay&with_inbound=$with_inbound&monitor_active=$monitor_active&monitor_phone=$monitor_phone\">PHONE</a>      |";
 $HDuser =			"--------------------+";
@@ -1552,14 +1553,14 @@ $calls_to_list = mysql_num_rows($rslt);
 			if ($non_latin < 1)
 			{
 			$extension = eregi_replace('Local/',"",$Aextension[$i]);
-			$extension =		sprintf("%-10s", $extension);
-			while(strlen($extension)>10) {$extension = substr("$extension", 0, -1);}
+			$extension =		sprintf("%-12s", $extension);
+			while(strlen($extension)>12) {$extension = substr("$extension", 0, -1);}
 			}
 			else
 			{
 			$extension = eregi_replace('Local/',"",$Aextension[$i]);
-			$extension =		sprintf("%-40s", $extension);
-			while(mb_strlen($extension, 'utf-8')>10) {$extension = mb_substr("$extension", 0, -1,'utf8');}
+			$extension =		sprintf("%-48s", $extension);
+			while(mb_strlen($extension, 'utf-8')>12) {$extension = mb_substr("$extension", 0, -1,'utf8');}
 			}
 
 		$phone =			sprintf("%-10s", $phone_split[0]);
@@ -1584,12 +1585,25 @@ $calls_to_list = mysql_num_rows($rslt);
 
 		if (eregi("INCALL",$Lstatus)) 
 			{
-	### temporarily deactivate DEAD calls display until bug is fixed
-			if (!ereg("$Acallerid[$i]\|",$callerids))
+			$stmtP="select count(*) from parked_channels where channel_group='$Acallerid[$i]';";
+			$rsltP=mysql_query($stmtP,$link);
+			$rowP=mysql_fetch_row($rsltP);
+			$parked_channel = $rowP[0];
+
+			if ($parked_channel > 0)
 				{
-				$Astatus[$i] =	'DEAD';
-				$Lstatus =		'DEAD';
-				$status =		' DEAD ';
+				$Astatus[$i] =	'PARK';
+				$Lstatus =		'PARK';
+				$status =		' PARK ';
+				}
+			else
+				{
+				if (!ereg("$Acallerid[$i]\|",$callerids))
+					{
+					$Astatus[$i] =	'DEAD';
+					$Lstatus =		'DEAD';
+					$status =		' DEAD ';
+					}
 				}
 
 			if ( (eregi("AUTO",$comments)) or (strlen($comments)<1) )
@@ -1630,7 +1644,7 @@ $calls_to_list = mysql_num_rows($rslt);
 				while(mb_strlen($user, 'utf-8')>18) {$user = mb_substr("$user", 0, -1,'utf8');}
 				}
 			}
-		if (!eregi("INCALL|QUEUE",$Astatus[$i]))
+		if (!eregi("INCALL|QUEUE|PARK",$Astatus[$i]))
 			{$call_time_S = ($STARTtime - $Astate_change[$i]);}
 		else
 			{$call_time_S = ($STARTtime - $Acall_time[$i]);}
@@ -1638,7 +1652,7 @@ $calls_to_list = mysql_num_rows($rslt);
 		$call_time_MS =		sec_convert($call_time_S,'M'); 
 		$call_time_MS =		sprintf("%7s", $call_time_MS);
 		$G = '';		$EG = '';
-		if ($Lstatus=='INCALL')
+		if ( ($Lstatus=='INCALL') or ($Lstatus=='PARK') )
 			{
 			if ($call_time_S >= 10) {$G='<SPAN class="thistle"><B>'; $EG='</B></SPAN>';}
 			if ($call_time_S >= 60) {$G='<SPAN class="violet"><B>'; $EG='</B></SPAN>';}
@@ -1696,7 +1710,7 @@ $calls_to_list = mysql_num_rows($rslt);
 #		if ( (strlen($Acall_server_ip[$i])> 4) and ($Acall_server_ip[$i] != "$Aserver_ip[$i]") )
 #				{$G='<SPAN class="orange"><B>'; $EG='</B></SPAN>';}
 
-		if ( (eregi("INCALL",$status)) or (eregi("QUEUE",$status)) ) {$agent_incall++;  $agent_total++;}
+		if ( (eregi("INCALL",$status)) or (eregi("QUEUE",$status)) or (eregi("PARK",$status)) ) {$agent_incall++;  $agent_total++;}
 		if ( (eregi("READY",$status)) or (eregi("CLOSER",$status)) ) {$agent_ready++;  $agent_total++;}
 		if ( (eregi("READY",$status)) or (eregi("CLOSER",$status)) ) 
 			{
