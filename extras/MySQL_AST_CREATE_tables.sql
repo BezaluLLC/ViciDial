@@ -1577,14 +1577,15 @@ index (call_date)
 
 CREATE TABLE vicidial_list_update_log (
 event_date DATETIME,
-lead_id INT(9) UNSIGNED,
-vendor_id VARCHAR(20),
-phone_number VARCHAR(20),
+lead_id VARCHAR(255),
+vendor_id VARCHAR(255),
+phone_number VARCHAR(255),
 status VARCHAR(6),
-old_status VARCHAR(6),
+old_status VARCHAR(255),
 filename VARCHAR(255) default '',
 result VARCHAR(20),
 result_rows SMALLINT(3) UNSIGNED default '0',
+list_id VARCHAR(255),
 index (event_date)
 );
 
@@ -1911,7 +1912,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1170';
+UPDATE system_settings SET db_schema_version='1171';
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

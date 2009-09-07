@@ -516,3 +516,11 @@ ALTER TABLE servers ADD rebuild_music_on_hold ENUM('Y','N') default 'Y';
 ALTER TABLE servers ADD active_agent_login_server ENUM('Y','N') default 'Y';
 
 UPDATE system_settings SET db_schema_version='1170';
+
+ALTER TABLE vicidial_list_update_log ADD list_id VARCHAR(255);
+ALTER TABLE vicidial_list_update_log MODIFY lead_id VARCHAR(255);
+ALTER TABLE vicidial_list_update_log MODIFY vendor_id VARCHAR(255);
+ALTER TABLE vicidial_list_update_log MODIFY phone_number VARCHAR(255);
+ALTER TABLE vicidial_list_update_log MODIFY old_status VARCHAR(255);
+
+UPDATE system_settings SET db_schema_version='1171';

@@ -26,7 +26,7 @@ New scripts:
 Required variables for API calls:
 # user - is the API user
 # pass - is the API user password
-# agent_user - is the user whose session that you want to affect
+# agent_user - is the vicidial agent user whose session that you want to affect
 # source - description of what originated the API call (maximum 20 characters)
 
 Example URL strings for API calls:

@@ -6,6 +6,7 @@
 # CHANGES
 #
 # 90627-2055 - First build
+# 90907-0636 - Added list id to results
 #
 
 require("dbconnect.php");
@@ -165,11 +166,11 @@ echo "\n</PRE>\n";
 ### GRAB ALL RECORDS WITHIN RANGE FROM THE DATABASE ###
 echo "List Update Detail:<BR>\n";
 echo "<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=1>\n";
-echo "<TR><TD><B>DATE/TIME</B></TD><TD><B>LEAD_ID</B></TD><TD><B>VENDOR_ID</B></TD><TD><B>PHONE</B></TD><TD><B>STATUS</B></TD><TD><B>OLD_STATUS</B></TD><TD><B>FILENAME</B></TD><TD><B>RESULT</B></TD><TD><B>UPDATED_ROWS</B></TD>\n";
+echo "<TR><TD><B>DATE/TIME</B></TD><TD><B>LEAD_ID</B></TD><TD><B>VENDOR_ID</B></TD><TD><B>PHONE</B></TD><TD><B>STATUS</B></TD><TD><B>OLD_STATUS</B></TD><TD><B>OLD_LIST</B></TD><TD><B>FILENAME</B></TD><TD><B>RESULT</B></TD><TD><B>UPDATED_ROWS</B></TD>\n";
 echo "</TR>\n";
 
 
-$stmt="SELECT event_date,lead_id,vendor_id,phone_number,status,old_status,filename,result,result_rows from vicidial_list_update_log where event_date >= '$query_date' and event_date <= '$end_date' order by event_date,filename;";
+$stmt="SELECT event_date,lead_id,vendor_id,phone_number,status,old_status,filename,result,result_rows,list_id from vicidial_list_update_log where event_date >= '$query_date' and event_date <= '$end_date' order by event_date,filename;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $records_to_grab = mysql_num_rows($rslt);
@@ -178,7 +179,7 @@ while ($i < $records_to_grab)
 	{
 	$row=mysql_fetch_row($rslt);
 	$row[6] = trim($row[6]);
-	echo "<TR><TD>$row[0]</TD><TD>$row[1]</TD><TD>$row[2]</TD><TD>$row[3]</TD><TD>$row[4]</TD><TD>$row[5]</TD><TD>$row[6]</TD><TD>$row[7]</TD><TD>$row[8]</TD></TR>\n";
+	echo "<TR><TD>$row[0]</TD><TD>$row[1]</TD><TD>$row[2]</TD><TD>$row[3]</TD><TD>$row[4]</TD><TD>$row[5]</TD><TD>$row[9]</TD><TD>$row[6]</TD><TD>$row[7]</TD><TD>$row[8]</TD></TR>\n";
 	$i++;
 	}
 

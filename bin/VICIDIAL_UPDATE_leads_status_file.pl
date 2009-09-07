@@ -15,6 +15,7 @@
 #
 # CHANGES
 # 90627-1402 - First Build
+# 90907-0635 - Added list_id to table and allowed for multiple matches in results
 #
 
 $secX = time();
@@ -394,23 +395,40 @@ foreach(@FILES)
 
 			if ($DBX) {print "$a|$vendor_lead_code|$lead_id|$status|$add_to_dnc\n";}
 
+			$lead_id =			'';
+			$vendor_lead_code =	'';
+			$old_status =		'';
+			$phone_number =		'';
+			$old_list_id =		'';
+
 			$lead_found=0;
-			$stmtA = "SELECT lead_id,vendor_lead_code,status,phone_number from vicidial_list where $lookupSQL;";
+			$stmtA = "SELECT lead_id,vendor_lead_code,status,phone_number,list_id from vicidial_list where $lookupSQL;";
 				if($DBX){print STDERR "\n|$stmtA|\n";}
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
-			if ($sthArows > 0)
+			$h=0;
+			while ($sthArows > $h)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$lead_id =			$aryA[0];
-				$vendor_lead_code =	$aryA[1];
-				$old_status =		$aryA[2];
-				$phone_number =		$aryA[3];
+				$lead_idSQL .=			"'$aryA[0]',";
+				$lead_id .=				"$aryA[0],";
+				$vendor_lead_code .=	"$aryA[1],";
+				$old_status .=			"$aryA[2],";
+				$phone_number =			"$aryA[3],";
+				$old_list_id =			"$aryA[4],";
 
 				$lead_found++;
+				$h++;
 				}
 			$sthA->finish();
+
+			chop($lead_idSQL);
+			chop($lead_id);
+			chop($vendor_lead_code);
+			chop($old_status);
+			chop($phone_number);
+			chop($old_list_id);
 
 			if ($lead_found > 0)
 				{
@@ -424,9 +442,9 @@ foreach(@FILES)
 
 				if ($delete_from_hopper > 0)
 					{
-					$stmtZ = "DELETE from vicidial_hopper where lead_id='$lead_id';";
+					$stmtZ = "DELETE from vicidial_hopper where lead_id IN($lead_id);";
 						if (!$T) {$Uaffected_rows = $dbhA->do($stmtZ); } #  or die  "Couldn't execute query: |$stmtZ|\n";
-						if($DB){print STDERR "\n|$affected_rows|$stmtZ|\n";}
+						if($DB){print STDERR "\n|$Uaffected_rows|$stmtZ|\n";}
 					}
 				}
 			else
@@ -445,7 +463,7 @@ foreach(@FILES)
 		#	index (event_date)
 		#	);
 
-			$stmtZ = "INSERT INTO vicidial_list_update_log SET event_date='$SQL_date',lead_id='$lead_id',vendor_id='$vendor_lead_code',phone_number='$phone_number',status='$status',old_status='$old_status',filename='$FILEname',result='$result',result_rows='$Uaffected_rows';";
+			$stmtZ = "INSERT INTO vicidial_list_update_log SET event_date='$SQL_date',lead_id='$lead_id',vendor_id='$vendor_lead_code',phone_number='$phone_number',status='$status',old_status='$old_status',filename='$FILEname',result='$result',result_rows='$Uaffected_rows',list_id='$list_id';";
 				if (!$T) {$affected_rows = $dbhA->do($stmtZ); } #  or die  "Couldn't execute query: |$stmtZ|\n";
 			#	$alt_phone_id = $dbhA->{'mysql_insertid'};
 				if($DB){print STDERR "\n|$affected_rows|$stmtZ|\n";}
