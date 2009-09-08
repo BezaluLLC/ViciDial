@@ -58,6 +58,7 @@
 # 90723-0842 - Added no hopper dial option to clear hopper leads
 # 90809-0347 - Quick fix for null list_id loading when no active campaign lists
 # 90904-1612 - Added timezone ordering
+# 90907-2132 - Fixed order issues
 #
 
 # constants
@@ -1360,7 +1361,7 @@ foreach(@campaign_id)
 				if ($lead_order[$i] =~ /^UP OWNER/) {$order_stmt = 'order by owner desc, lead_id asc';}
 				if ($lead_order[$i] =~ /^DOWN OWNER/) {$order_stmt = 'order by owner, lead_id asc';}
 				if ($lead_order[$i] =~ /^UP TIMEZONE/) {$order_stmt = 'order by gmt_offset_now desc, lead_id asc';}
-				if ($lead_order[$i] =~ /^DOWN TIMEZONE/) {$order_stmt = 'order gmt_offset_now, lead_id asc';}
+				if ($lead_order[$i] =~ /^DOWN TIMEZONE/) {$order_stmt = 'order by gmt_offset_now, lead_id asc';}
 				if ($lead_order[$i] =~ / 2nd NEW$/) {$NEW_count = 2;}
 				if ($lead_order[$i] =~ / 3rd NEW$/) {$NEW_count = 3;}
 				if ($lead_order[$i] =~ / 4th NEW$/) {$NEW_count = 4;}
@@ -1381,7 +1382,7 @@ foreach(@campaign_id)
 					{
 					if ($DB) {print "     looking for RECYCLE leads, maximum of $hopper_level[$i]\n";}
 
-					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user FROM vicidial_list where $recycle_SQL[$i] and list_id IN($camp_lists[$i]) and lead_id NOT IN($lead_id_lists) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i] limit $hopper_level[$i];";
+					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user FROM vicidial_list where $recycle_SQL[$i] and list_id IN($camp_lists[$i]) and lead_id NOT IN($lead_id_lists) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i] $order_stmt limit $hopper_level[$i];";
 					if ($DBX) {print "     |$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1425,7 +1426,6 @@ foreach(@campaign_id)
 					{
 					$NEW_level = int($hopper_level[$i] / $NEW_count);   
 					$OTHER_level = ($hopper_level[$i] - $NEW_level);   
-				#	$order_stmt = 'order by called_count, lead_id asc';
 					if ($DB) {print "     looking for $NEW_level NEW leads mixed in with $OTHER_level other leads\n";}
 
 					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user FROM vicidial_list where called_since_last_reset='N' and status IN('NEW') and list_id IN($camp_lists[$i]) and lead_id NOT IN($lead_id_lists) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i] $order_stmt limit $NEW_level;";

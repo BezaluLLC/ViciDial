@@ -344,6 +344,12 @@ foreach(@FILES)
 		#if ($DB)
 			while (<infile>)
 			{
+			$lead_id =			'';
+			$vendor_lead_code =	'';
+			$old_status =		'';
+			$phone_number =		'';
+			$old_list_id =		'';
+			$Uaffected_rows =	0;
 			@m=@MT;
 		#		print "$a| $number\n";
 				$number = $_;
@@ -395,11 +401,6 @@ foreach(@FILES)
 
 			if ($DBX) {print "$a|$vendor_lead_code|$lead_id|$status|$add_to_dnc\n";}
 
-			$lead_id =			'';
-			$vendor_lead_code =	'';
-			$old_status =		'';
-			$phone_number =		'';
-			$old_list_id =		'';
 
 			$lead_found=0;
 			$stmtA = "SELECT lead_id,vendor_lead_code,status,phone_number,list_id from vicidial_list where $lookupSQL;";
@@ -408,6 +409,14 @@ foreach(@FILES)
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
 			$h=0;
+			if ($sthArows > 0)
+				{
+				$lead_id =			'';
+				$vendor_lead_code =	'';
+				$old_status =		'';
+				$phone_number =		'';
+				$old_list_id =		'';
+				}
 			while ($sthArows > $h)
 				{
 				@aryA = $sthA->fetchrow_array;
@@ -415,20 +424,23 @@ foreach(@FILES)
 				$lead_id .=				"$aryA[0],";
 				$vendor_lead_code .=	"$aryA[1],";
 				$old_status .=			"$aryA[2],";
-				$phone_number =			"$aryA[3],";
-				$old_list_id =			"$aryA[4],";
+				$phone_number .=			"$aryA[3],";
+				$old_list_id .=			"$aryA[4],";
 
 				$lead_found++;
 				$h++;
 				}
 			$sthA->finish();
 
-			chop($lead_idSQL);
-			chop($lead_id);
-			chop($vendor_lead_code);
-			chop($old_status);
-			chop($phone_number);
-			chop($old_list_id);
+			if ($sthArows > 0)
+				{
+				chop($lead_idSQL);
+				chop($lead_id);
+				chop($vendor_lead_code);
+				chop($old_status);
+				chop($phone_number);
+				chop($old_list_id);
+				}
 
 			if ($lead_found > 0)
 				{
@@ -463,7 +475,7 @@ foreach(@FILES)
 		#	index (event_date)
 		#	);
 
-			$stmtZ = "INSERT INTO vicidial_list_update_log SET event_date='$SQL_date',lead_id='$lead_id',vendor_id='$vendor_lead_code',phone_number='$phone_number',status='$status',old_status='$old_status',filename='$FILEname',result='$result',result_rows='$Uaffected_rows',list_id='$list_id';";
+			$stmtZ = "INSERT INTO vicidial_list_update_log SET event_date='$SQL_date',lead_id='$lead_id',vendor_id='$vendor_lead_code',phone_number='$phone_number',status='$status',old_status='$old_status',filename='$FILEname',result='$result',result_rows='$Uaffected_rows',list_id='$old_list_id';";
 				if (!$T) {$affected_rows = $dbhA->do($stmtZ); } #  or die  "Couldn't execute query: |$stmtZ|\n";
 			#	$alt_phone_id = $dbhA->{'mysql_insertid'};
 				if($DB){print STDERR "\n|$affected_rows|$stmtZ|\n";}
