@@ -19,6 +19,7 @@
 # 90508-0644 - Changed to PHP long tags
 # 90523-0935 - Rewrite of seconds to minutes and hours conversion
 # 90717-1500 - Changed to be multi-campaign, multi-user-group select
+# 90908-1058 - Added DEAD time statistics
 #
 
 require("dbconnect.php");
@@ -286,7 +287,7 @@ $usersARY[0]='';
 $user_namesARY[0]='';
 $k=0;
 
-$stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<36000 and wait_sec<36000 and talk_sec<36000 and dispo_sec<36000  $group_SQL $user_group_SQL group by user,full_name,status order by full_name,user,status desc limit 500000;";
+$stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec) from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<36000 and wait_sec<36000 and talk_sec<36000 and dispo_sec<36000  $group_SQL $user_group_SQL group by user,full_name,status order by full_name,user,status desc limit 500000;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $rows_to_print = mysql_num_rows($rslt);
@@ -304,6 +305,7 @@ while ($i < $rows_to_print)
 	$wait_sec[$i] =		$row[5];
 	$dispo_sec[$i] =	$row[6];
 	$status[$i] =		$row[7];
+	$dead_sec[$i] =		$row[8];
 	if ( (!eregi("-$status[$i]-", $statuses)) and (strlen($status[$i])>0) )
 		{
 		$statusesTXT = sprintf("%8s", $status[$i]);
@@ -325,9 +327,9 @@ while ($i < $rows_to_print)
 	}
 
 echo "CALL STATS BREAKDOWN:\n";
-echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-echo "| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=CALLS\">CALLS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG |$statusesHTML\n";
-echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+echo "| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=CALLS\">CALLS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG | DEAD     |DEADAVG |$statusesHTML\n";
+echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
 
 
 ### BEGIN loop through each user ###
@@ -342,6 +344,7 @@ while ($m < $k)
 	$Spause_sec=0;
 	$Swait_sec=0;
 	$Sdispo_sec=0;
+	$Sdead_sec=0;
 	$SstatusesHTML='';
 
 	### BEGIN loop through each status ###
@@ -361,6 +364,7 @@ while ($m < $k)
 				$Spause_sec =	($Spause_sec + $pause_sec[$i]);
 				$Swait_sec =	($Swait_sec + $wait_sec[$i]);
 				$Sdispo_sec =	($Sdispo_sec + $dispo_sec[$i]);
+				$Sdead_sec =	($Sdead_sec + $dead_sec[$i]);
 				$SstatusTXT = sprintf("%8s", $calls[$i]);
 				$SstatusesHTML .= " $SstatusTXT |";
 				$status_found++;
@@ -382,6 +386,7 @@ while ($m < $k)
 	$TOTtotWAIT=($TOTtotWAIT + $Swait_sec);
 	$TOTtotPAUSE=($TOTtotPAUSE + $Spause_sec);
 	$TOTtotDISPO=($TOTtotDISPO + $Sdispo_sec);
+	$TOTtotDEAD=($TOTtotDEAD + $Sdead_sec);
 	$Stime = ($Stalk_sec + $Spause_sec + $Swait_sec + $Sdispo_sec);
 	if ( ($Scalls > 0) and ($Stalk_sec > 0) ) {$Stalk_avg = ($Stalk_sec/$Scalls);}
 		else {$Stalk_avg=0;}
@@ -391,6 +396,8 @@ while ($m < $k)
 		else {$Swait_avg=0;}
 	if ( ($Scalls > 0) and ($Sdispo_sec > 0) ) {$Sdispo_avg = ($Sdispo_sec/$Scalls);}
 		else {$Sdispo_avg=0;}
+	if ( ($Scalls > 0) and ($Sdead_sec > 0) ) {$Sdead_avg = ($Sdead_sec/$Scalls);}
+		else {$Sdead_avg=0;}
 
 	$RAWuser = $Suser;
 	$RAWcalls = $Scalls;
@@ -420,6 +427,8 @@ while ($m < $k)
 	$USERavgWAIT_MS =		sec_convert($Swait_avg,'M'); 
 	$USERtotDISPO_MS =		sec_convert($Sdispo_sec,'H'); 
 	$USERavgDISPO_MS =		sec_convert($Sdispo_avg,'M'); 
+	$USERtotDEAD_MS =		sec_convert($Sdead_sec,'H'); 
+	$USERavgDEAD_MS =		sec_convert($Sdead_avg,'M'); 
 
 	$pfUSERtime_MS =		sprintf("%9s", $pfUSERtime_MS);
 	$pfUSERtotTALK_MS =		sprintf("%8s", $pfUSERtotTALK_MS);
@@ -430,9 +439,11 @@ while ($m < $k)
 	$pfUSERavgWAIT_MS =		sprintf("%6s", $USERavgWAIT_MS);
 	$pfUSERtotDISPO_MS =	sprintf("%8s", $USERtotDISPO_MS);
 	$pfUSERavgDISPO_MS =	sprintf("%6s", $USERavgDISPO_MS);
+	$pfUSERtotDEAD_MS =		sprintf("%8s", $USERtotDEAD_MS);
+	$pfUSERavgDEAD_MS =		sprintf("%6s", $USERavgDEAD_MS);
 	$PAUSEtotal[$m] = $pfUSERtotPAUSE_MS;
 
-	$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERavgDISPO_MS |$SstatusesHTML\n";
+	$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERavgDEAD_MS |$SstatusesHTML\n";
 
 	$TOPsorted_output[$m] = $Toutput;
 
@@ -514,6 +525,8 @@ if ($TOTtotTALK < 1) {$TOTavgTALK = '0';}
 else {$TOTavgTALK = ($TOTtotTALK / $TOTcalls);}
 if ($TOTtotDISPO < 1) {$TOTavgDISPO = '0';}
 else {$TOTavgDISPO = ($TOTtotDISPO / $TOTcalls);}
+if ($TOTtotDEAD < 1) {$TOTavgDEAD = '0';}
+else {$TOTavgDEAD = ($TOTtotDEAD / $TOTcalls);}
 if ($TOTtotPAUSE < 1) {$TOTavgPAUSE = '0';}
 else {$TOTavgPAUSE = ($TOTtotPAUSE / $TOTcalls);}
 if ($TOTtotWAIT < 1) {$TOTavgWAIT = '0';}
@@ -522,37 +535,43 @@ else {$TOTavgWAIT = ($TOTtotWAIT / $TOTcalls);}
 $TOTtime_MS =		sec_convert($TOTtime,'H'); 
 $TOTtotTALK_MS =	sec_convert($TOTtotTALK,'H'); 
 $TOTtotDISPO_MS =	sec_convert($TOTtotDISPO,'H'); 
+$TOTtotDEAD_MS =	sec_convert($TOTtotDEAD,'H'); 
 $TOTtotPAUSE_MS =	sec_convert($TOTtotPAUSE,'H'); 
 $TOTtotWAIT_MS =	sec_convert($TOTtotWAIT,'H'); 
 $TOTavgTALK_MS =	sec_convert($TOTavgTALK,'M'); 
 $TOTavgDISPO_MS =	sec_convert($TOTavgDISPO,'H'); 
+$TOTavgDEAD_MS =	sec_convert($TOTavgDEAD,'H'); 
 $TOTavgPAUSE_MS =	sec_convert($TOTavgPAUSE,'H'); 
 $TOTavgWAIT_MS =	sec_convert($TOTavgWAIT,'H'); 
 
 $TOTtime_MS =		sprintf("%10s", $TOTtime_MS);
 $TOTtotTALK_MS =	sprintf("%10s", $TOTtotTALK_MS);
 $TOTtotDISPO_MS =	sprintf("%10s", $TOTtotDISPO_MS);
+$TOTtotDEAD_MS =	sprintf("%10s", $TOTtotDEAD_MS);
 $TOTtotPAUSE_MS =	sprintf("%10s", $TOTtotPAUSE_MS);
 $TOTtotWAIT_MS =	sprintf("%10s", $TOTtotWAIT_MS);
 $TOTavgTALK_MS =	sprintf("%6s", $TOTavgTALK_MS);
 $TOTavgDISPO_MS =	sprintf("%6s", $TOTavgDISPO_MS);
+$TOTavgDEAD_MS =	sprintf("%6s", $TOTavgDEAD_MS);
 $TOTavgPAUSE_MS =	sprintf("%6s", $TOTavgPAUSE_MS);
 $TOTavgWAIT_MS =	sprintf("%6s", $TOTavgWAIT_MS);
 
 while(strlen($TOTtime_MS)>10) {$TOTtime_MS = substr("$TOTtime_MS", 0, -1);}
 while(strlen($TOTtotTALK_MS)>10) {$TOTtotTALK_MS = substr("$TOTtotTALK_MS", 0, -1);}
 while(strlen($TOTtotDISPO_MS)>10) {$TOTtotDISPO_MS = substr("$TOTtotDISPO_MS", 0, -1);}
+while(strlen($TOTtotDEAD_MS)>10) {$TOTtotDEAD_MS = substr("$TOTtotDEAD_MS", 0, -1);}
 while(strlen($TOTtotPAUSE_MS)>10) {$TOTtotPAUSE_MS = substr("$TOTtotPAUSE_MS", 0, -1);}
 while(strlen($TOTtotWAIT_MS)>10) {$TOTtotWAIT_MS = substr("$TOTtotWAIT_MS", 0, -1);}
 while(strlen($TOTavgTALK_MS)>6) {$TOTavgTALK_MS = substr("$TOTavgTALK_MS", 0, -1);}
 while(strlen($TOTavgDISPO_MS)>6) {$TOTavgDISPO_MS = substr("$TOTavgDISPO_MS", 0, -1);}
+while(strlen($TOTavgDEAD_MS)>6) {$TOTavgDEAD_MS = substr("$TOTavgDEAD_MS", 0, -1);}
 while(strlen($TOTavgPAUSE_MS)>6) {$TOTavgPAUSE_MS = substr("$TOTavgPAUSE_MS", 0, -1);}
 while(strlen($TOTavgWAIT_MS)>6) {$TOTavgWAIT_MS = substr("$TOTavgWAIT_MS", 0, -1);}
 
 
-echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-echo "|  TOTALS        AGENTS:$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTavgDISPO_MS |$SUMstatusesHTML\n";
-echo "+----------------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+echo "|  TOTALS        AGENTS:$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTavgDEAD_MS |$SUMstatusesHTML\n";
+echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
 
 echo "\n\n";
 

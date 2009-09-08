@@ -1428,7 +1428,6 @@ if ($non_latin < 1)
 	$computer_ip = ereg_replace("[^\.0-9]","",$computer_ip);
 	$queuemetrics_server_ip = ereg_replace("[^\.0-9]","",$queuemetrics_server_ip);
 	$vtiger_server_ip = ereg_replace("[^\.0-9]","",$vtiger_server_ip);
-	$sounds_web_server = ereg_replace("[^\.0-9]","",$sounds_web_server);
 	$active_voicemail_server = ereg_replace("[^\.0-9]","",$active_voicemail_server);
 	$auto_dial_limit = ereg_replace("[^\.0-9]","",$auto_dial_limit);
 	$adaptive_dropped_percentage = ereg_replace("[^\.0-9]","",$adaptive_dropped_percentage);
@@ -1583,6 +1582,8 @@ if ($non_latin < 1)
 	$logins_list = ereg_replace("[^-\,\_0-9a-zA-Z]","",$logins_list);
 	$forced_timeclock_login = ereg_replace("[^-\,\_0-9a-zA-Z]","",$forced_timeclock_login);
 
+	### ALPHA-NUMERIC and dots
+	$sounds_web_server = ereg_replace("[^\.0-9a-zA-Z]","",$sounds_web_server);
 	### ALPHA-NUMERIC and spaces
 	$lead_order = ereg_replace("[^ 0-9a-zA-Z]","",$lead_order);
 	### ALPHA-NUMERIC and hash
@@ -1939,11 +1940,12 @@ else
 # 90827-1552 - Added agent_script_override option for lists
 # 90830-2217 - Added Music On Hold section
 # 90904-1536 - Added moh chooser option, timezone list ordering
+# 90908-1207 - Added cross-listing linking for DIDs, CallMenus and In-groups
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-214';
-$build = '90904-1536';
+$admin_version = '2.2.0-215';
+$build = '90908-1207';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5615,7 +5617,7 @@ FR_SPAC 00 00 00 00 00 - France space separated phone number<BR>
 <BR>
 <A NAME="settings-sounds_web_server">
 <BR>
-<B>Sounds Web Server IP -</B> This is the IP address of the web server that will be handling the sound files on this system, this must match the server IP of the machine you are trying to access the audio_store.php webpage on or it will not work. Default is 127.0.0.1.
+<B>Sounds Web Server -</B> This is the server name or IP address of the web server that will be handling the sound files on this system, this must match the server name or IP of the machine you are trying to access the audio_store.php webpage on or it will not work. Default is 127.0.0.1.
 
 <BR>
 <A NAME="settings-sounds_web_directory">
@@ -18887,6 +18889,36 @@ if ($ADD==3111)
 
 	echo "<center><b>\n";
 
+	echo "<B>DIDS USING THIS IN-GROUP:</B><BR>\n";
+	echo "<TABLE>\n";
+
+		$stmt="SELECT did_id,did_pattern,did_description from vicidial_inbound_dids where group_id='$group_id' and did_route='IN_GROUP';";
+		$rslt=mysql_query($stmt, $link);
+		$dids_to_print = mysql_num_rows($rslt);
+		$o=0;
+		while ($dids_to_print > $o) {
+			$row=mysql_fetch_row($rslt);
+			echo "<TR><TD><a href=\"$PHP_SELF?ADD=3311&did_id=$row[0]\">$row[1] </a></TD><TD> $row[2]<BR></TD></TR>\n";
+			$o++;
+		}
+
+	echo "</TABLE><BR>\n";
+	echo "<B>CALL MENUS USING THIS IN-GROUP:</B><BR>\n";
+	echo "<TABLE>\n";
+
+	$stmt="SELECT distinct vm.menu_id,menu_name from vicidial_call_menu vm,vicidial_call_menu_options vmo where vm.menu_id=vmo.menu_id and option_route='INGROUP' and option_route_value='$group_id';";
+	$rslt=mysql_query($stmt, $link);
+	$cms_to_print = mysql_num_rows($rslt);
+	$o=0;
+	while ($cms_to_print > $o) {
+		$row=mysql_fetch_row($rslt);
+		echo "<TR><TD><a href=\"$PHP_SELF?ADD=3511&menu_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+		$o++;
+	}
+
+	echo "</TABLE>\n";
+
+
 	if ($LOGdelete_ingroups > 0)
 		{
 		echo "<br><br><a href=\"$PHP_SELF?ADD=53&campaign_id=$group_id&stage=IN\">EMERGENCY VDAC CLEAR FOR THIS IN-GROUP</a><BR><BR>\n";
@@ -19334,6 +19366,35 @@ if ($ADD==3511)
 	echo "</table>\n";
 	echo "<BR></center></FORM><br>\n";
 
+	echo "<B>DIDS USING THIS CALL MENU:</B><BR>\n";
+	echo "<TABLE>\n";
+
+		$stmt="SELECT did_id,did_pattern,did_description from vicidial_inbound_dids where menu_id='$menu_id' and did_route='CALLMENU';";
+		$rslt=mysql_query($stmt, $link);
+		$dids_to_print = mysql_num_rows($rslt);
+		$o=0;
+		while ($dids_to_print > $o) {
+			$row=mysql_fetch_row($rslt);
+			echo "<TR><TD><a href=\"$PHP_SELF?ADD=3311&did_id=$row[0]\">$row[1] </a></TD><TD> $row[2]<BR></TD></TR>\n";
+			$o++;
+		}
+
+	echo "</TABLE><BR>\n";
+
+	echo "<B>CALL MENUS USING THIS CALL MENU:</B><BR>\n";
+	echo "<TABLE>\n";
+
+		$stmt="SELECT distinct vm.menu_id,menu_name from vicidial_call_menu vm,vicidial_call_menu_options vmo where vm.menu_id=vmo.menu_id and option_route='CALLMENU' and option_route_value='$menu_id';";
+		$rslt=mysql_query($stmt, $link);
+		$cms_to_print = mysql_num_rows($rslt);
+		$o=0;
+		while ($cms_to_print > $o) {
+			$row=mysql_fetch_row($rslt);
+			echo "<TR><TD><a href=\"$PHP_SELF?ADD=3511&menu_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			$o++;
+		}
+
+	echo "</TABLE>\n";
 
 
 	if ($LOGdelete_dids > 0)
@@ -21249,7 +21310,7 @@ if ($ADD==311111111111111)
 	echo "<tr bgcolor=#B6D3FC><td align=right>Agent Only Callback Campaign Lock: </td><td align=left><select size=1 name=agentonly_callback_campaign_lock><option>1</option><option>0</option><option selected>$agentonly_callback_campaign_lock</option></select>$NWB#settings-agentonly_callback_campaign_lock$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right>Central Sound Control Active: </td><td align=left><select size=1 name=sounds_central_control_active><option>1</option><option>0</option><option selected>$sounds_central_control_active</option></select>$NWB#settings-sounds_central_control_active$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Sounds Web Server IP: </td><td align=left><input type=text name=sounds_web_server size=18 maxlength=15 value=\"$sounds_web_server\">$NWB#settings-sounds_web_server$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Sounds Web Server: </td><td align=left><input type=text name=sounds_web_server size=30 maxlength=50 value=\"$sounds_web_server\">$NWB#settings-sounds_web_server$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Sounds Web Directory: </td><td align=left><a href=\"http://$sounds_web_server/$sounds_web_directory\">$sounds_web_directory</a> $NWB#settings-sounds_web_directory$NWE</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right>Active Voicemail Server: </td><td align=left><select size=1 name=active_voicemail_server>\n";

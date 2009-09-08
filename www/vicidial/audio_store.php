@@ -17,6 +17,7 @@ $MT[0]='';
 
 require("dbconnect.php");
 
+$server_name = getenv("SERVER_NAME");
 $PHP_SELF=$_SERVER['PHP_SELF'];
 $audiofile=$_FILES["audiofile"];
 	$AF_orig = $_FILES['audiofile']['name'];
@@ -62,9 +63,9 @@ if ($ss_conf_ct > 0)
 
 
 ### check if sounds server matches this server IP, if not then exit with an error
-if ( ( (strlen($sounds_web_server)) != (strlen($WEBserver_ip)) ) or (!eregi("$sounds_web_server",$WEBserver_ip) ) )
+if ( ( (strlen($sounds_web_server)) != (strlen($server_name)) ) or (!eregi("$sounds_web_server",$server_name) ) )
 	{
-	echo "ERROR: server_ip($WEBserver_ip) does not match sounds web server ip($sounds_web_server)\n";
+	echo "ERROR: server($server_name) does not match sounds web server ip($sounds_web_server)\n";
 	exit;
 	}
 

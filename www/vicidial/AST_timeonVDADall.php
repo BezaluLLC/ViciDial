@@ -1600,6 +1600,8 @@ $calls_to_list = mysql_num_rows($rslt);
 				{
 				if (!ereg("$Acallerid[$i]\|",$callerids))
 					{
+					$Acall_time[$i]=$Astate_change[$i];
+
 					$Astatus[$i] =	'DEAD';
 					$Lstatus =		'DEAD';
 					$status =		' DEAD ';

@@ -524,3 +524,13 @@ ALTER TABLE vicidial_list_update_log MODIFY phone_number VARCHAR(255);
 ALTER TABLE vicidial_list_update_log MODIFY old_status VARCHAR(255);
 
 UPDATE system_settings SET db_schema_version='1171';
+
+ALTER TABLE vicidial_agent_log ADD dead_epoch INT(10) UNSIGNED;
+ALTER TABLE vicidial_agent_log ADD dead_sec SMALLINT(5) UNSIGNED default '0';
+
+ALTER TABLE twoday_vicidial_agent_log ADD dead_epoch INT(10) UNSIGNED;
+ALTER TABLE twoday_vicidial_agent_log ADD dead_sec SMALLINT(5) UNSIGNED default '0';
+
+ALTER TABLE system_settings MODIFY sounds_web_server VARCHAR(50) default '127.0.0.1';
+
+UPDATE system_settings SET db_schema_version='1172';

@@ -46,10 +46,11 @@
 # 90408-0020 - Added API vtiger specific callback activity record ability
 # 90508-0727 - Changed to PHP long tags
 # 90706-1430 - Fixed AGENTDIRECT calls in queue display count
+# 90908-1037 - Added DEAD call logging
 #
 
-$version = '2.2.0-21';
-$build = '90706-1430';
+$version = '2.2.0-22';
+$build = '90908-1037';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=17;
 $one_mysql_log=0;
@@ -195,6 +196,9 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			{
 			$Acount=0;
 			$AexternalDEAD=0;
+			$Aagent_log_id='';
+			$Acallerid='';
+			$DEADcustomer=0;
 
 			### see if the agent has a record in the vicidial_live_agents table
 			$stmt="SELECT count(*) from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
@@ -206,12 +210,14 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 
 			if ($Acount > 0)
 				{
-				$stmt="SELECT status from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
+				$stmt="SELECT status,callerid,agent_log_id from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
 				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03004',$user,$server_ip,$session_name,$one_mysql_log);}
 				$row=mysql_fetch_row($rslt);
-				$Astatus=$row[0];
+				$Astatus =			$row[0];
+				$Acallerid =		$row[1];
+				$Aagent_log_id =	$row[2];
 				}
 		#	### find out if external table shows agent should be disabled
 		#	$stmt="SELECT count(*) from another_table where user='$user' and status='DEAD';";
@@ -236,6 +242,43 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 					$one_mysql_log=0;
 					$retry_count++;
 					}
+
+				##### BEGIN DEAD logging section #####
+				### find whether the call the agent is on is hung up
+				$stmt="SELECT count(*) from vicidial_auto_calls where callerid='$Acallerid';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysql_fetch_row($rslt);
+				$AcalleridCOUNT=$row[0];
+
+				if ( ($AcalleridCOUNT < 1) and (eregi("INCALL",$Astatus)) and (strlen($Aagent_log_id) > 0) )
+					{
+					$DEADcustomer++;
+					### find whether the agent log record has already logged DEAD
+					$stmt="SELECT count(*) from vicidial_agent_log where agent_log_id='$Aagent_log_id' and ( (dead_epoch IS NOT NULL) or (dead_epoch > 10000) );";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					$row=mysql_fetch_row($rslt);
+					$Aagent_log_idCOUNT=$row[0];
+					
+					if ($Aagent_log_idCOUNT < 1)
+						{
+						$NEWdead_epoch = date("U");
+						$deadNOW_TIME = date("Y-m-d H:i:s");
+						$stmt="UPDATE vicidial_agent_log set dead_epoch='$NEWdead_epoch' where agent_log_id='$Aagent_log_id';";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
+						$stmt="UPDATE vicidial_live_agents set last_state_change='$deadNOW_TIME' where callerid='$Acallerid';";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						}
+					}
+				##### END DEAD logging section #####
 
 				if ($campagentstdisp == 'YES')
 					{
@@ -318,7 +361,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			if (strlen($external_status)<1) {$external_status = '::::::::::';}
 
 			$web_epoch = date("U");
-			$stmt="select UNIX_TIMESTAMP(last_update),UNIX_TIMESTAMP(db_time) from server_updater where server_ip='$server_ip';";
+			$stmt="SELECT UNIX_TIMESTAMP(last_update),UNIX_TIMESTAMP(db_time) from server_updater where server_ip='$server_ip';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03014',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -417,7 +460,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			if ($Ashift_logout > 0)
 				{$Alogin='SHIFT_LOGOUT';}
 
-			echo 'DateTime: ' . $NOW_TIME . '|UnixTime: ' . $StarTtime . '|Logged-in: ' . $Alogin . '|CampCalls: ' . $RingCalls . '|Status: ' . $Astatus . '|DiaLCalls: ' . $DiaLCalls . '|APIHanguP: ' . $external_hangup . '|APIStatuS: ' . $external_status . '|APIPausE: ' . $external_pause . '|APIDiaL: ' . $external_dial . "|\n";
+			echo 'DateTime: ' . $NOW_TIME . '|UnixTime: ' . $StarTtime . '|Logged-in: ' . $Alogin . '|CampCalls: ' . $RingCalls . '|Status: ' . $Astatus . '|DiaLCalls: ' . $DiaLCalls . '|APIHanguP: ' . $external_hangup . '|APIStatuS: ' . $external_status . '|APIPausE: ' . $external_pause . '|APIDiaL: ' . $external_dial . '|DEADcall: ' . $DEADcustomer . "\n";
 
 			}
 		$total_conf=0;

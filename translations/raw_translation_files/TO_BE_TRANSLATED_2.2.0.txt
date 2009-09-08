@@ -106,8 +106,8 @@ Agent Only Callback Campaign Lock||
 This option defines whether AGENTONLY callbacks are locked to the campaign that the agent originally created them under. Setting this to 1 means that the agent can only dial them from the campaign they were set under, 0 means that the agent can access them no matter what campaign they are logged into. Default is 1||
 Central Sound Control Active||
 This option defines whether the sound synchronization system is active across all servers. Default is 0 for inactive||
-Sounds Web Server IP||
-This is the IP address of the web server that will be handling the sound files on this system, this must match the server IP of the machine you are trying to access the audio_store.php webpage on or it will not work. Default is 127.0.0.1||
+Sounds Web Server||
+This is the server name or IP address of the web server that will be handling the sound files on this system, this must match the server name or IP of the machine you are trying to access the audio_store.php webpage on or it will not work. Default is 127.0.0.1||
 Sounds Web Directory||
 This auto-generated directory name is created at random by the system as the place that the audio store will be kept. All audio files will reside in this directory||
 Audio Store||

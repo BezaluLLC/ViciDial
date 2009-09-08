@@ -8,8 +8,8 @@
 #
 # CHANGES
 # 90522-0723 - First build
+# 90908-1103 - Added DEAD time stats
 #
-
 
 require("dbconnect.php");
 require("functions.php");
@@ -326,7 +326,7 @@ else
 
 
 	##### BEGIN Gather all agent time records and parse through them in PHP to save on DB load
-	$stmt="select user,wait_sec,talk_sec,dispo_sec,pause_sec,lead_id,status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $group_SQL $user_group_SQL limit 10000000;";
+	$stmt="select user,wait_sec,talk_sec,dispo_sec,pause_sec,lead_id,status,dead_sec from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $group_SQL $user_group_SQL limit 10000000;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$rows_to_print = mysql_num_rows($rslt);
@@ -344,15 +344,18 @@ else
 		$pause =		$row[4];
 		$lead =			$row[5];
 		$status =		$row[6];
+		$dead =			$row[7];
 
 		if ($wait > 30000) {$wait=0;}
 		if ($talk > 30000) {$talk=0;}
 		if ($dispo > 30000) {$dispo=0;}
 		if ($pause > 30000) {$pause=0;}
+		if ($dead > 30000) {$dead=0;}
 		$TOTwait =	($TOTwait + $wait);
 		$TOTtalk =	($TOTtalk + $talk);
 		$TOTdispo =	($TOTdispo + $dispo);
 		$TOTpause =	($TOTpause + $pause);
+		$TOTdead =	($TOTdead + $dead);
 		$TOTALtime = ($TOTALtime + $pause + $dispo + $talk + $wait);
 		if ( ($lead > 0) and ((!eregi("NULL",$status)) and (strlen($status) > 0)) ) {$TOTcalls++;}
 		
@@ -373,6 +376,7 @@ else
 				$Stalk[$m] =	($Stalk[$m] + $talk);
 				$Sdispo[$m] =	($Sdispo[$m] + $dispo);
 				$Spause[$m] =	($Spause[$m] + $pause);
+				$Sdead[$m] =	($Sdead[$m] + $dead);
 				if ( ($lead > 0) and ((!eregi("NULL",$status)) and (strlen($status) > 0)) ) {$Scalls[$m]++;}
 				}
 			$m++;
@@ -385,6 +389,7 @@ else
 			$Stalk[$uc] =	$talk;
 			$Sdispo[$uc] =	$dispo;
 			$Spause[$uc] =	$pause;
+			$Sdead[$uc] =	$dead;
 			if ($lead > 0) {$Scalls[$uc]++;}
 			$uc++;
 			}
@@ -405,13 +410,13 @@ else
 	if ($file_download < 1)
 		{
 		echo "AGENT TIME BREAKDOWN:\n";
-		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-		echo "| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=CALLS\">CALLS</a>    | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | <a href=\"$LINKbase&stage=TIME\">AGENT TIME</a> | WAIT       | TALK       | DISPO      | PAUSE      |   |$sub_statusesHTML\n";
-		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		echo "| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=CALLS\">CALLS</a>    | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | <a href=\"$LINKbase&stage=TIME\">AGENT TIME</a> | WAIT       | TALK       | DISPO      | PAUSE      | DEAD       |   |$sub_statusesHTML\n";
+		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 		}
 	else
 		{
-		$file_output .= "USER,ID,CALLS,TIME CLOCK,AGENT TIME,WAIT,TALK,DISPO,PAUSE$sub_statusesFILE\n";
+		$file_output .= "USER,ID,CALLS,TIME CLOCK,AGENT TIME,WAIT,TALK,DISPO,PAUSE,DEAD$sub_statusesFILE\n";
 		}
 	##### END print the output to screen or put into file output variable
 
@@ -439,6 +444,7 @@ else
 		$Stalk[$m]=		sec_convert($Stalk[$m],'H'); 
 		$Sdispo[$m]=	sec_convert($Sdispo[$m],'H'); 
 		$Spause[$m]=	sec_convert($Spause[$m],'H'); 
+		$Sdead[$m]=	sec_convert($Sdead[$m],'H'); 
 		$Stime[$m]=		sec_convert($Stime[$m],'H'); 
 
 		$RAWtime = $Stime[$m];
@@ -446,6 +452,7 @@ else
 		$RAWtalk = $Stalk[$m];
 		$RAWdispo = $Sdispo[$m];
 		$RAWpause = $Spause[$m];
+		$RAWdead = $Sdead[$m];
 
 		$n=0;
 		$user_name_found=0;
@@ -539,6 +546,7 @@ else
 		$Stalk[$m]=		sprintf("%10s", $Stalk[$m]); 
 		$Sdispo[$m]=	sprintf("%10s", $Sdispo[$m]); 
 		$Spause[$m]=	sprintf("%10s", $Spause[$m]); 
+		$Sdead[$m]=		sprintf("%10s", $Sdead[$m]); 
 		$Scalls[$m]=	sprintf("%8s", $Scalls[$m]); 
 		$Stime[$m]=		sprintf("%10s", $Stime[$m]); 
 
@@ -560,11 +568,11 @@ else
 
 		if ($file_download < 1)
 			{
-			$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser\">$Suser[$m]</a> | $Scalls[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $Stime[$m] | $Swait[$m] | $Stalk[$m] | $Sdispo[$m] | $Spause[$m] |   |$SstatusesHTML\n";
+			$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser\">$Suser[$m]</a> | $Scalls[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $Stime[$m] | $Swait[$m] | $Stalk[$m] | $Sdispo[$m] | $Spause[$m] | $Sdead[$m] |   |$SstatusesHTML\n";
 			}
 		else
 			{
-			$fileToutput = "$RAWname,$RAWuser,$RAWcalls,$RAWtimeTC,$RAWtime,$RAWwait,$RAWtalk,$RAWdispo,$RAWpause$SstatusesFILE\n";
+			$fileToutput = "$RAWname,$RAWuser,$RAWcalls,$RAWtimeTC,$RAWtime,$RAWwait,$RAWtalk,$RAWdispo,$RAWpause,$RAWdead$SstatusesFILE\n";
 			}
 
 		$TOPsorted_output[$m] = $Toutput;
@@ -612,7 +620,7 @@ else
 	$TOT_AGENTS = sprintf("%4s", $m);
 	$k=$m;
 
-	if ($DB) {echo "Done analyzing...   $TOTwait|$TOTtalk|$TOTdispo|$TOTpause|$TOTALtime|$TOTcalls|$uc|<BR>\n";}
+	if ($DB) {echo "Done analyzing...   $TOTwait|$TOTtalk|$TOTdispo|$TOTpause|$TOTdead|$TOTALtime|$TOTcalls|$uc|<BR>\n";}
 
 
 	### BEGIN sort through output to display properly ###
@@ -695,6 +703,7 @@ else
 	$TOTtalk = sec_convert($TOTtalk,'H');
 	$TOTdispo = sec_convert($TOTdispo,'H');
 	$TOTpause = sec_convert($TOTpause,'H');
+	$TOTdead = sec_convert($TOTdead,'H');
 	$TOTALtime = sec_convert($TOTALtime,'H');
 	$TOTtimeTC = sec_convert($TOTtimeTC,'H');
 
@@ -703,6 +712,7 @@ else
 	$TOTtalk =	sprintf("%11s", $TOTtalk);
 	$TOTdispo =	sprintf("%11s", $TOTdispo);
 	$TOTpause =	sprintf("%11s", $TOTpause);
+	$TOTdead =	sprintf("%11s", $TOTdead);
 	$TOTALtime = sprintf("%11s", $TOTALtime);
 	$TOTtimeTC = sprintf("%11s", $TOTtimeTC);
 	###### END LAST LINE TOTALS FORMATTING ##########
@@ -711,16 +721,16 @@ else
 
 	if ($file_download < 1)
 		{
-		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-		echo "|  TOTALS        AGENTS:$TOT_AGENTS | $TOTcalls |$TOTtimeTC |$TOTALtime |$TOTwait |$TOTtalk |$TOTdispo |$TOTpause |   |$SUMstatusesHTML\n";
-		echo "+----------------------------+----------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		echo "|  TOTALS        AGENTS:$TOT_AGENTS | $TOTcalls |$TOTtimeTC |$TOTALtime |$TOTwait |$TOTtalk |$TOTdispo |$TOTpause |$TOTdead |   |$SUMstatusesHTML\n";
+		echo "+----------------------------+----------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 		if ($AUTOLOGOUTflag > 0)
 			{echo "     * denotes AUTOLOGOUT from timeclock\n";}
 		echo "\n\n</PRE>";
 		}
 	else
 		{
-		$file_output .= "TOTALS,$TOT_AGENTS,$TOTcalls,$TOTtimeTC,$TOTALtime,$TOTwait,$TOTtalk,$TOTdispo,$TOTpause$SUMstatusesFILE\n";
+		$file_output .= "TOTALS,$TOT_AGENTS,$TOTcalls,$TOTtimeTC,$TOTALtime,$TOTwait,$TOTtalk,$TOTdispo,$TOTpause,$TOTdead$SUMstatusesFILE\n";
 		}
 	}
 

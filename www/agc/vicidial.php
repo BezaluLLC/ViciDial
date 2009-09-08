@@ -250,10 +250,11 @@
 # 90827-0133 - Reworked Script display code
 # 90827-1549 - Added list script override option, original_phone_login variable
 # 90831-1456 - Added active_agent_login_server option for servers
+# 90908-1038 - Added DEAD call display
 #
 
-$version = '2.2.0-227';
-$build = '90831-1456';
+$version = '2.2.0-228';
+$build = '90908-1038';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -2486,6 +2487,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var TEMP_VDIC_web_form_address = '';
 	var APIPausE_ID = '99999';
 	var APIDiaL_ID = '99999';
+	var CheckDEADcall = 0;
+	var CheckDEADcallON = 0;
 	var VtigeRLogiNScripT = '<?php echo $vtiger_screen_login ?>';
 	var VtigeRurl = '<?php echo $vtiger_url ?>';
 	var VtigeREnableD = '<?php echo $enable_vtiger_integration ?>';
@@ -2523,6 +2526,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		image_livecall_OFF.src="./images/agc_live_call_OFF.gif";
 	var image_livecall_ON = new Image();
 		image_livecall_ON.src="./images/agc_live_call_ON.gif";
+	var image_livecall_DEAD = new Image();
+		image_livecall_DEAD.src="./images/agc_live_call_DEAD.gif";
 	var image_LB_dialnextnumber = new Image();
 		image_LB_dialnextnumber.src="./images/vdc_LB_dialnextnumber.gif";
 	var image_LB_hangupcustomer = new Image();
@@ -3146,6 +3151,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var APIPausE = APIPausE_array[1];
 						var APIDiaL_array = check_time_array[9].split("APIDiaL: ");
 						var APIDiaL = APIDiaL_array[1];
+						var CheckDEADcall_array = check_time_array[10].split("DEADcall: ");
+						var CheckDEADcall = CheckDEADcall_array[1];
 						if ( (APIHanguP==1) && (VD_live_customer_call==1) )
 							{
 							hideDiv('CustomerGoneBox');
@@ -3228,6 +3235,14 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 									{NeWManuaLDiaLCalLSubmiT('PREVIEW');}
 								else
 									{NeWManuaLDiaLCalLSubmiT('NOW');}
+								}
+							}
+						if ( (CheckDEADcall > 0) && (VD_live_customer_call==1) )
+							{
+							if (CheckDEADcallON < 1)
+								{
+								if( document.images ) { document.images['livecall'].src = image_livecall_DEAD.src;}
+								CheckDEADcallON=1;
 								}
 							}
 
@@ -6459,6 +6474,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			{var group = campaign;}
 		leaving_threeway=0;
 		blind_transfer=0;
+		CheckDEADcallON=0;
 		document.vicidial_form.callchannel.value = '';
 		document.vicidial_form.callserverip.value = '';
 		document.vicidial_form.xferchannel.value = '';

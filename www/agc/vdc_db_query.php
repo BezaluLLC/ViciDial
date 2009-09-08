@@ -209,10 +209,11 @@
 # 90729-0637 - Added DiaLableLeaDsCounT
 # 90808-0221 - Added last_state_change to vicidial_live_agents
 # 90904-1622 - Added timezone sort options for no hopper dialing
+# 90908-1037 - Added DEAD call logging
 #
 
-$version = '2.2.0-120';
-$build = '90904-1622';
+$version = '2.2.0-121';
+$build = '90908-1037';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=244;
 $one_mysql_log=0;
@@ -3026,9 +3027,10 @@ if ($stage == "end")
 
 	$talk_sec=0;
 	$talk_epochSQL='';
+	$dead_secSQL='';
 	$lead_id_commentsSQL='';
 	$StarTtime = date("U");
-	$stmt = "select talk_epoch,talk_sec,wait_sec,wait_epoch,lead_id,comments from vicidial_agent_log where agent_log_id='$agent_log_id';";
+	$stmt = "select talk_epoch,talk_sec,wait_sec,wait_epoch,lead_id,comments,dead_epoch from vicidial_agent_log where agent_log_id='$agent_log_id';";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00101',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3040,6 +3042,12 @@ if ($stage == "end")
 			{
 			$talk_epochSQL=",talk_epoch='$StarTtime'";
 			$row[0]=$row[3];
+			}
+		if ( (!eregi("NULL",$row[6])) and ($row[6] > 1000) )
+			{
+			$dead_sec = ($StarTtime - $row[6]);
+			if ($dead_sec < 0) {$dead_sec=0;}
+			$dead_secSQL=",dead_sec='$dead_sec'";
 			}
 		$talk_sec = (($StarTtime - $row[0]) + $row[1]);
 		if ( ( ($auto_dial_level < 1) or (preg_match('/^M/',$MDnextCID)) ) and (preg_match('/INBOUND_MAN/',$dial_method)) )
@@ -3054,7 +3062,7 @@ if ($stage == "end")
 				}
 			}
 		}
-	$stmt="UPDATE vicidial_agent_log set talk_sec='$talk_sec',dispo_epoch='$StarTtime' $talk_epochSQL $lead_id_commentsSQL where agent_log_id='$agent_log_id';";
+	$stmt="UPDATE vicidial_agent_log set talk_sec='$talk_sec',dispo_epoch='$StarTtime' $talk_epochSQL $dead_secSQL $lead_id_commentsSQL where agent_log_id='$agent_log_id';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00102',$user,$server_ip,$session_name,$one_mysql_log);}
