@@ -232,7 +232,7 @@ else
 	}
 
 
-$URL = "http://$sounds_web_server/vicidial/audio_store.php?action=LIST";
+$URL = "http://$sounds_web_server/vicidial/audio_store.php?action=LIST&audio_server_ip=$VARserver_ip";
 
 $URL =~ s/&/\\&/gi;
 if ($DB) 
@@ -357,7 +357,7 @@ if ($upload > 0)
 
 			if ( ($found_file < 1) || ($force_upload > 0) )
 				{
-				$curloptions = "-s 'http://$sounds_web_server/vicidial/audio_store.php?action=AUTOUPLOAD' -F \"audiofile=\@$PATHsounds/$soundname\"";
+				$curloptions = "-s 'http://$sounds_web_server/vicidial/audio_store.php?action=AUTOUPLOAD&audio_server_ip=$VARserver_ip' -F \"audiofile=\@$PATHsounds/$soundname\"";
 				`$curlbin $curloptions`;
 				$event_string = "UPLOADING: $soundname     $soundsize";
 				if ($DB > 0) {print "          $event_string\n|$curlbin $curloptions|\n";}

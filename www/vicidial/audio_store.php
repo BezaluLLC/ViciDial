@@ -30,6 +30,8 @@ if (isset($_GET["overwrite"]))				{$overwrite=$_GET["overwrite"];}
 	elseif (isset($_POST["overwrite"]))		{$overwrite=$_POST["overwrite"];}
 if (isset($_GET["action"]))					{$action=$_GET["action"];}
 	elseif (isset($_POST["action"]))		{$action=$_POST["action"];}
+if (isset($_GET["audio_server_ip"]))			{$audio_server_ip=$_GET["audio_server_ip"];}
+	elseif (isset($_POST["audio_server_ip"]))	{$audio_server_ip=$_POST["audio_server_ip"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["audiofile_name"]))				{$audiofile_name=$_GET["audiofile_name"];}
@@ -108,8 +110,14 @@ while ($sv_conf_ct > $i)
 	}
 
 $user_set=0;
+$formIPvalid=0;
+if (strlen($audio_server_ip) > 6)
+	{
+	if (preg_match("/\|$audio_server_ip\|/", $server_ips))
+		{$formIPvalid=1;}
+	}
 $ip = getenv("REMOTE_ADDR");
-if (!preg_match("/\|$ip\|/", $server_ips))
+if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 	{
 	$user_set=1;
 	$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -127,7 +135,7 @@ if (!preg_match("/\|$ip\|/", $server_ips))
 		{
 		Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
 		Header("HTTP/1.0 401 Unauthorized");
-		echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
+		echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|\n";
 		exit;
 		}
 	}
