@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# park_CID.agi version 2.0.5   *DBI-version*
+# park_CID.agi version 2.2.0   *DBI-version*
 # 
 # runs before the park extension to populate the parked_channels entry with the channel's callerid
 # 
@@ -12,12 +12,13 @@
 # exten => 8301,3,Playback(park)
 # exten => 8301,4,Hangup 
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 60731-1423 - changed to use DBI-DBD::mysql
 #            - changed to use /etc/astguiclient.conf for configs
 # 60815-1256 - added output options check from database
+# 90909-0922 - Fixed calleridname issue
 #
 
 $script = 'park_CID.agi';
@@ -171,7 +172,7 @@ while(<STDIN>) {
 		if (/^agi_callerid\:\s+(.*)$/)		{$callerid = $1;}
 		if (/^agi_calleridname\:\s+(.*)$/)	{$calleridname = $1;}
 		if ( $calleridname =~ /\"/)  {$calleridname =~ s/\"//gi;}
-		if ( (!$callerid) or ($callerid =~ /unknown/) )
+		if ( (!$callerid) or ($callerid =~ /unknown/) or ( ($calleridname =~ /\d\d\d\d\d\d\d\d\d/) && (length($calleridname) > 16) ) )
 			{$callerid = $calleridname;}
 
 		### allow for ANI being sent with the DNIS "*3125551212*9999*"

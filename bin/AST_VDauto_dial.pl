@@ -81,6 +81,7 @@
 # 90816-0057 - Changed default vicidial_log time to 0 from 1 second
 # 90827-1227 - Added list_id logging in vicidial_log on NA calls
 # 90907-0919 - Added LAGGED pause code update for paused agents, reduced logging if no issues
+# 90909-0640 - Parked bug fix and code optimizations
 #
 
 
@@ -393,12 +394,10 @@ while($one_day_interval > 0)
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
-		$rec_count=0;
-		while ($sthArows > $rec_count)
+		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$active_line_counter = "$aryA[0]";
-			$rec_count++;
+			$active_line_counter = $aryA[0];
 			}
 		$sthA->finish();
 
@@ -533,12 +532,10 @@ while($one_day_interval > 0)
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
-				$rec_count=0;
-				while ($sthArows > $rec_count)
+				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
 					$tally_xfer_line_counter = "$aryA[0]";
-					$rec_count++;
 					}
 				$sthA->finish();
 
@@ -571,12 +568,10 @@ while($one_day_interval > 0)
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
-			$rec_count=0;
-			while ($sthArows > $rec_count)
+			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
 				$DBIPexistcalls[$user_CIPct] = "$aryA[0]";
-				$rec_count++;
 				}
 			$sthA->finish();
 
@@ -657,12 +652,10 @@ while($one_day_interval > 0)
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
-			$rec_count=0;
-			while ($sthArows > $rec_count)
+			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
 				$waiting_calls = "$aryA[0]";
-				$rec_count++;
 				}
 			$sthA->finish();
 
@@ -1044,6 +1037,22 @@ while($one_day_interval > 0)
 					$sthA->finish();
 					}
 
+				# Find out if (the call is parked
+				$PARKchannel=0;
+				if (length($KLcallerid[$kill_vac]) > 17)
+					{
+					$stmtA = "SELECT count(*) from parked_channels where channel_group='$KLcallerid[$kill_vac]';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArowsPK=$sthA->rows;
+					if ($sthArowsPK > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$PARKchannel	= $aryA[0];
+						}
+					$sthA->finish();
+					}
+
 				$CLlead_id=''; $auto_call_id=''; $CLstatus=''; $CLcampaign_id=''; $CLphone_number=''; $CLphone_code='';
 
 				$stmtA = "SELECT auto_call_id,lead_id,phone_number,status,campaign_id,phone_code,alt_dial,stage,call_type,UNIX_TIMESTAMP(last_update_time) FROM vicidial_auto_calls where callerid='$KLcallerid[$kill_vac]'";
@@ -1113,7 +1122,7 @@ while($one_day_interval > 0)
 				$call_timeout = ($CLdial_timeout + $CLdrop_call_seconds);
 				if ($CLstage =~ /SURVEY|REMIND/) {$call_timeout = ($call_timeout + 120);}
 
-				if ( ($dialtime_log >= $call_timeout) || ($dialtime_catch >= $call_timeout) || ($CLstatus =~ /BUSY|DISCONNECT|XFER|CLOSER/) )
+				if ( ( ($dialtime_log >= $call_timeout) || ($dialtime_catch >= $call_timeout) || ($CLstatus =~ /BUSY|DISCONNECT|XFER|CLOSER/) ) && ($PARKchannel < 1) )
 					{
 					if ($CLcall_type !~ /IN/)
 						{
@@ -1830,19 +1839,17 @@ while($one_day_interval > 0)
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
-			$rec_count=0;
-			while ($sthArows > $rec_count)
+			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$DBmax_vicidial_trunks	=	"$aryA[0]";
-				$DBanswer_transfer_agent=	"$aryA[1]";
-				$DBSERVER_GMT		=		"$aryA[2]";
-				$DBext_context	=			"$aryA[3]";
+				$DBmax_vicidial_trunks = 	$aryA[0];
+				$DBanswer_transfer_agent = 	$aryA[1];
+				$DBSERVER_GMT =				$aryA[2];
+				$DBext_context = 			$aryA[3];
 					$max_vicidial_trunks = $DBmax_vicidial_trunks;
 				if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
 				if ($DBSERVER_GMT)				{$SERVER_GMT = $DBSERVER_GMT;}
 				if ($DBext_context)				{$ext_context = $DBext_context;}
-				$rec_count++;
 				}
 			$sthA->finish();
 

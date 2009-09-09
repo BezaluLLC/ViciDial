@@ -1162,6 +1162,11 @@ sub select_format_loop
 			# 12- order number (just a dash for now '-')
 			# 13- call recording filenames
 
+			$uniqueid =~ s/\.00000//gi;
+			$uniqueid =~ s/\.0000//gi;
+			$uniqueid =~ s/\.000//gi;
+			$uniqueid =~ s/\.00//gi;
+			$uniqueid =~ s/\.0//gi;
 			$uniqueid =~ s/\D//gi;
 			@call_date_array = split(/ /,$call_date);
 			while (length($phone_number)>10) {$phone_number =~ s/^.//gi;}

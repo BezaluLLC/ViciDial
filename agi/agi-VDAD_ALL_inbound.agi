@@ -2194,7 +2194,7 @@ if ( ($start_place_in_line > 0) && ($moh_delay == '1') )
 	if ($rec_countWAIT > 0) {$place = $rec_countWAIT;}
 	if ($rec_countWAITrem > 0) {$place = $rec_countWAITrem;}
 	$place++;
-	if ($AGILOG) {$agi_string = "--    PLACE IN LINE: |$campaign_id|$place|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "--    PLACE IN LINE: |$campaign|$place|";   &agi_output;}
 
 	$AGI->stream_file('sip-silence'); # stop music-on-hold process
 	$AGI->stream_file('sip-silence'); # stop music-on-hold process
@@ -2285,7 +2285,7 @@ if ( ($start_hold_estimate > 0) && ($moh_delay == '1') )
 	if ($holdtime_estimate_sec_diff < 10) {$holdtime_estimate_sec_diff=10;}
 	$holdtime_estimate = int($holdtime_estimate_sec_diff / 60);
 	$holdtime_estimate_sec_rem = ( $holdtime_estimate_sec_diff - ($holdtime_estimate * 60) );
-	if ($AGILOG) {$agi_string = "--    HOLD ESTIMATE: |$campaign_id|$holdtime_estimate|$holdtime_estimate_sec_rem|$holdtime_estimate_sec_diff|     |$holdtime_estimate_sec|$livetime_estimate_sec|$avgtime_estimate_sec|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "--    HOLD ESTIMATE: |$campaign|$holdtime_estimate|$holdtime_estimate_sec_rem|$holdtime_estimate_sec_diff|     |$holdtime_estimate_sec|$livetime_estimate_sec|$avgtime_estimate_sec|";   &agi_output;}
 
 ##### play the hold time estimate to the caller if option is set
 	if ($play_estimate_hold_time =~ /Y/i) 
@@ -2321,7 +2321,7 @@ if ( ($start_hold_estimate > 0) && ($moh_delay == '1') )
 	}
 
 ##### check if hold_time_option is set to leave Queue	
-if ( ($hold_time_option !~ /NONE/ ) && ( $holdtime_estimate_sec_diff > $hold_time_option_second ) && ($wait_in_queue < 2) )
+if ( ($hold_time_option !~ /NONE/ ) && ( $holdtime_estimate_sec_diff > $hold_time_option_seconds ) && ($wait_in_queue < 2) )
 {
 $wait_in_queue=0; # exits wait loop
 $DROPexten = ''; 

@@ -731,9 +731,9 @@ if ($ACTION=="RedirectVD")
 }
 
 if ($ACTION=="RedirectToPark")
-{
-	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($extenName)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($parkedby)<1) )
 	{
+	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($extenName)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($parkedby)<1) )
+		{
 		$channel_live=0;
 		echo "One of these variables is not valid:\n";
 		echo "Channel $channel must be greater than 2 characters\n";
@@ -744,17 +744,21 @@ if ($ACTION=="RedirectToPark")
 		echo "ext_priority $ext_priority must be set\n";
 		echo "parkedby $parkedby must be set\n";
 		echo "\nRedirectToPark Action not sent\n";
-	}
+		}
 	else
-	{
+		{
 		if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
-		$stmt = "INSERT INTO parked_channels values('$channel','$server_ip','','$extenName','$parkedby','$NOW_TIME');";
+		$stmt = "INSERT INTO parked_channels values('$channel','$server_ip','$CalLCID','$extenName','$parkedby','$NOW_TIME');";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02025',$user,$server_ip,$session_name,$one_mysql_log);}
 		$ACTION="Redirect";
+
+	#	$fp = fopen ("./vicidial_debug.txt", "a");
+	#	fwrite ($fp, "$NOW_TIME|MS_LOG_0|$queryCID|$stmt|\n");
+	#	fclose($fp);
+		}
 	}
-}
 
 if ($ACTION=="RedirectFromPark")
 {

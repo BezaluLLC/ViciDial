@@ -251,10 +251,11 @@
 # 90827-1549 - Added list script override option, original_phone_login variable
 # 90831-1456 - Added active_agent_login_server option for servers
 # 90908-1038 - Added DEAD call display
+# 90909-0921 - Fixed park issues
 #
 
-$version = '2.2.0-228';
-$build = '90908-1038';
+$version = '2.2.0-229';
+$build = '90909-0921';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -3655,12 +3656,16 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				}
 			if (taskvar == 'ParK')
 				{
+				if (CalLCID.length < 1)
+					{
+					CalLCID = MDnextCID;
+					}
 				blind_transfer=0;
 				var queryCID = "LPvdcW" + epoch_sec + user_abb;
 				var redirectdestination = taskxferconf;
 				var redirectdestserverip = taskserverip;
 				var parkedby = protocol + "/" + extension;
-				xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectToPark&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + park_on_extension + "&ext_context=" + ext_context + "&ext_priority=1&extenName=park&parkedby=" + parkedby + "&session_id=" + session_id;
+				xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectToPark&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + park_on_extension + "&ext_context=" + ext_context + "&ext_priority=1&extenName=park&parkedby=" + parkedby + "&session_id=" + session_id + "&CalLCID=" + CalLCID;
 
 				document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('FROMParK','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_grabparkedcall.gif\" border=0 alt=\"Grab Parked Call\"></a>";
 				customerparked=1;
@@ -5962,6 +5967,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			VD_live_call_secondS = 0;
 			MD_ring_secondS = 0;
 			CalLCID = '';
+			MDnextCID = '';
 
 		//	UPDATE VICIDIAL_LOG ENTRY FOR THIS CALL PROCESS
 			DialLog("end");
