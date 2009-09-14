@@ -503,7 +503,7 @@ remove ENUM('Y','N') default 'N'
 );
 
 CREATE TABLE vicidial_music_on_hold_files (
-filename VARCHAR(255) NOT NULL,
+filename VARCHAR(100) NOT NULL,
 moh_id VARCHAR(100) NOT NULL,
 rank SMALLINT(5),
 unique index mohfile (filename, moh_id)

@@ -12,6 +12,11 @@ If you want to skip the experience of installing step-by-step completely, take
 a look at our ISO installer: http://www.vicibox.com
 
 
+This document will be depricated and not supported after the 2.2.0 release.
+
+
+
+
 This document is meant to be a very in-depth step-by-step explanation of 
 installing the Asterisk open-source PBX on a Linux system and also installing 
 the astGUIclient suite. The instructions will assume starting from nothing and 

@@ -25,6 +25,7 @@
 # 90807-1632 - Fixed call time bug and call length bug
 # 90825-1249 - Added without-camp and without-in options 
 # 90902-0437 - Added outbound-calltime-ignore and ftp-norun options
+# 90909-2322 - Added totals-only option
 #
 
 $txt = '.txt';
@@ -46,6 +47,13 @@ $campaign = 'TESTCAMP';
 $sale_statuses = 'SALE-UPSELL';
 $output_format = 'pipe-standard';
 $outbound_calltime_ignore=0;
+$totals_only=0;
+$OUTcalls=0;
+$OUTtalk=0;
+$OUTtalkmin=0;
+$INcalls=0;
+$INtalk=0;
+$INtalkmin=0;
 
 $secX = time();
 $time = $secX;
@@ -106,6 +114,7 @@ if (length($ARGV[0])>1)
 		print "  [--without-in=XXX-XXY] = inbound groups that will be excluded from ALL\n";
 		print "  [--calltime=XXX] = filter results to only include those calls during this call time\n";
 		print "  [--outbound-calltime-ignore] = for outbound calls ignores call time\n";
+		print "  [--totals-only] = print totals of time and calls only\n";
 		print "  [--ftp-transfer] = Send results file by FTP to another server\n";
 		print "  [--ftp-audio-transfer] = Send associated audio files to FTP server, dated directories\n";
 		print "  [--ftp-norun] = Stop program when you get to the FTP transfer\n";
@@ -137,6 +146,8 @@ if (length($ARGV[0])>1)
 			{
 			$q=1;   $Q=1;
 			}
+		if ($args =~ /-totals-only/i)
+			{$totals_only=1;}
 
 		if ($args =~ /--date=/i)
 			{
@@ -738,14 +749,22 @@ if ($ftp_transfer > 0)
 	$ftp->quit;
 	}
 
-if ( ($DB) && ($output_format =~ /^tab-QMcustomUSA$/) )
+if ( ( ($DB) || ($totals_only > 0) ) && ($output_format =~ /^tab-QMcustomUSA$/) )
 	{
-	$OUTtalkmin = ($OUTtalk / 60);
-	$INtalkmin = ($INtalk / 60);
+	if ($OUTtalk > 0) {$OUTtalkmin = ($OUTtalk / 60);}
+	if ($INtalk > 0) {$INtalkmin = ($INtalk / 60);}
+	$OUTtalkmin = sprintf("%10.2f",$OUTtalkmin);
+	$INtalkmin = sprintf("%10.2f",$INtalkmin);
+	$OUTcalls = sprintf("%10s",$OUTcalls);
+	$INcalls = sprintf("%10s",$INcalls);
+	$OUTtalk = sprintf("%10s",$OUTtalk);
+	$INtalk = sprintf("%10s",$INtalk);
 	print "OUTBOUND CALLS:   $OUTcalls\n";
-	print "OUTBOUND TIME:   $OUTtalk   $OUTtalkmin\n";
+	print "OUTBOUND SECONDS: $OUTtalk\n";
+	print "OUTBOUND MINUTES: $OUTtalkmin\n";
 	print "INBOUND CALLS:    $INcalls\n";
-	print "INBOUND TIME:    $INtalk   $INtalkmin\n";
+	print "INBOUND SECONDS:  $INtalk\n";
+	print "INBOUND MINUTES:  $INtalkmin\n";
 	}
 
 if ($ftp_audio_transfer > 0)
@@ -962,6 +981,7 @@ sub select_format_loop
 			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 			$sthBrows=$sthB->rows;
+			if ($DBX > 0) {print "$sthBrows|$stmtB\n";}
 			$rec_countB=0;
 			while ($sthBrows > $rec_countB)
 				{
@@ -983,6 +1003,7 @@ sub select_format_loop
 				$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 				$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 				$sthBrowsR=$sthB->rows;
+				if ($DBX > 0) {print "$sthBrowsR|$stmtB\n";}
 				$rec_countBR=0;
 				while ($sthBrowsR > $rec_countBR)
 					{
@@ -1059,7 +1080,7 @@ sub select_format_loop
 			#		}
 				}
 			}
-		##### BEGIN DID lookup #####
+		##### END DID lookup #####
 
 		if ($status =~ /UPSELL/) {$UPSELL='L5';}
 		else {$UPSELL='N';}
@@ -1185,6 +1206,7 @@ sub select_format_loop
 
 				$uniqueidLIST .= "$uniqueid|";
 				if ($DBX > 0) {print "UNIQUE: -----$uniqueidLIST-----$uniqueid";}
+		#		if ($DBX > 0) {print "$uniqueid|$talk_seconds|$outbound|$INcalls|$OUTcalls\n";}
 
 				if ($outbound =~ /Y/) {$OUTtalk = ($OUTtalk + $talk_seconds);   $OUTcalls++;}
 				else {$INtalk = ($INtalk + $talk_seconds);   $INcalls++;}

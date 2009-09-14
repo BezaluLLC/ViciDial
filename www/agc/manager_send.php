@@ -87,10 +87,11 @@
 # 90305-1040 - Added agent_dialed_number and type for user_call_log feature
 # 90508-0727 - Changed to PHP long tags
 # 90511-1019 - Added restriction not allowing dialing into agent sessions from manual dial
+# 90913-1410 - Fixed minor logging bug
 #
 
-$version = '2.2.0-40';
-$build = '90511-1019';
+$version = '2.2.0-41';
+$build = '90913-1410';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=83;
 $one_mysql_log=0;
@@ -707,7 +708,8 @@ if ($ACTION=="RedirectVD")
 			$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
 			{
-			$stmt = "UPDATE vicidial_closer_log set end_epoch='$StarTtime', length_in_sec='$secondS',status='XFER' where lead_id='$lead_id' order by start_epoch desc limit 1;";
+			$four_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-4,date("i"),date("s"),date("m"),date("d"),date("Y")));
+			$stmt = "UPDATE vicidial_closer_log set end_epoch='$StarTtime', length_in_sec=(queue_seconds + $secondS),status='XFER' where lead_id='$lead_id' and call_date > \"$four_hours_ago\" order by start_epoch desc limit 1;";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02022',$user,$server_ip,$session_name,$one_mysql_log);}

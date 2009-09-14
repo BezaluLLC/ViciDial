@@ -1,11 +1,11 @@
-Ubuntu VICIDIAL Install:					2009-05-19
+Ubuntu VICIDIAL Install:					2009-09-13
 
 ### NOTE ###
 If you just want a quick setup of ViciDial on Ubuntu, take a look at our 
 downloadable ViciBox server install ISO available at: http://www.vicibox.com
 
 
-From a full default install of Ubuntu Server 8.0.4.2:
+From a full default install of Ubuntu Server 8.0.4.3:
 
 Open a terminal on the system
 $ sudo su
@@ -13,10 +13,10 @@ $ passwd (set the root user's password)
 
 $ apt-get update (retrieves the latest repository information)
 $ apt-get upgrade (upgrades any out of date packages
-$ apt-get install linux-server (install the latest version of the linux kernel)
+$ apt-get install linux-headers-server (Used for zaptel compil)
 $ reboot (reboot to use the new kernel)
 
-apt-get install the following packages:
+'apt-get install' the following packages:
 apache2 (web server)
 apache2-mpm-prefork (multi threaded portion to apache2)
 build-essential  (this is the build tool chain for gcc)
@@ -27,7 +27,6 @@ libncurses5-dev
 libploticus0-dev
 libsox-fmt-all (encoding and decoding libraries for sox)
 linux-source (needed if you are going to recompile the linux kernel)
-linux-headers-KERNELVERSION-server (where KERNELVERSION is your current kernel version IE 2.6.24-24. Used for zaptel compile)
 mpg123 (mp3 playback utility for the commandline)
 mtop  (utility for monitoring mysql)
 mysql-client-5.0 (command for connecting to mysql)
@@ -49,7 +48,8 @@ subversion  (code versioning tool)
 subversion-tools
 unzip
 libcurl3
-curl 
+curl
+vim
 
 
 Go to terminal:
@@ -176,10 +176,10 @@ $ modprobe zaptel
 $ modprobe ztdummy
 
 ****FOR 1.4 asterisk do the following:
-$ wget http://downloads.digium.com/pub/asterisk/old-releases/asterisk-1.4.21.2.tar.gz
+$ wget http://downloads.vicidial.com/required-apps/asterisk-1.4.21.2-vic.tar.gz
 $ wget http://downloads.digium.com/pub/zaptel/zaptel-1.4.12.1.tar.gz
-$ wget http://downloads.digium.com/pub/libpri/libpri-1.4.9.tar.gz
-$ tar xzf asterisk-1.4.21.2.tar.gz
+$ wget http://downloads.asterisk.org/pub/telephony/libpri/old/libpri-1.4.10.1.tar.gz
+$ tar xzf asterisk-1.4.21.2-vici.tar.gz
 $ tar xzf zaptel-1.4.12.1.tar.gz 
 $ tar xzf libpri-1.4.9.tar.gz
 $ cd libpri-1.4.9
@@ -187,22 +187,6 @@ $ make clean; make; make install
 $ cd ../zaptel-1.4.12.1
 $ ./configure; make clean; make; make install
 $ cd ../asterisk-1.4.21.2
-$ wget http://www.eflo.net/files/enter.h
-$ wget http://www.eflo.net/files/leave.h
-$ mv -f enter.h apps/enter.h
-$ mv -f leave.h apps/leave.h
-$ vi codecs/gsm/Makefile
-   add OPTIMIZE=-O2 to the file  before the ifeq section, to fix GSM audio problems
-$ wget http://download.vicidial.com/conf/res_agi_defunct.patch
-$ patch -p1 < res_agi_defunct.patch
-   File to patch: res/res_agi.c
-$ cd apps/
-$ rm app_waitforsilence.c
-$ wget http://download.vicidial.com/conf/app_waitforsilence.c
-$ cd ../channels/
-$ rm chan_sip.c
-$ wget http://download.vicidial.com/conf/chan_sip.c
-$ cd ../
 $ ./configure; make clean; make; make install
 $ make samples
 $ modprobe zaptel
@@ -213,59 +197,6 @@ $ asterisk -vvvvvvvvvvvvvvvvvvvvvvvvvvvvgc      (to see if Asterisk runs)
 > zap show status
 > show application meetme
 > stop now
-
-
-*** for asterisk 1.2
-$ cd /var/lib/asterisk/mohmp3/
-$ mpg123 -s --rate 44100 --mono /var/lib/asterisk/mohmp3/fpm-sunshine.mp3 > /var/lib/asterisk/mohmp3/fpm-sunshine.raw
-$ sox -r 44100 -w -s -c 1 fpm-sunshine.raw -r 8000 -c 1 fpm-sunshine.wav
-$ sox fpm-sunshine.wav -t gsm -r 8000 -b -c 1 fpm-sunshine.gsm
-$ sox fpm-sunshine.wav -t ul -r 8000 -b -c 1 fpm-sunshine.pcm
-$ mpg123 -s --rate 44100 --mono /var/lib/asterisk/mohmp3/fpm-calm-river.mp3 > /var/lib/asterisk/mohmp3/fpm-calm-river.raw
-$ sox -r 44100 -w -s -c 1 fpm-calm-river.raw -r 8000 -c 1 fpm-calm-river.wav
-$ sox fpm-calm-river.wav -t gsm -r 8000 -b -c 1 fpm-calm-river.gsm
-$ sox fpm-calm-river.wav -t ul -r 8000 -b -c 1 fpm-calm-river.pcm
-$ mpg123 -s --rate 44100 --mono /var/lib/asterisk/mohmp3/fpm-world-mix.mp3 > /var/lib/asterisk/mohmp3/fpm-world-mix.raw
-$ sox -r 44100 -w -s -c 1 fpm-world-mix.raw -r 8000 -c 1 fpm-world-mix.wav
-$ sox fpm-world-mix.wav -t gsm -r 8000 -b -c 1 fpm-world-mix.gsm
-$ sox fpm-world-mix.wav -t ul -r 8000 -b -c 1 fpm-world-mix.pcm
-$ mkdir ../orig-mp3
-$ mv -f *.mp3 ../orig-mp3/
-$ mkdir ../quiet-mp3
-$ cd ../quiet-mp3
-$ sox -r 44100 -w -s -c 1 ../mohmp3/fpm-sunshine.raw -r 8000 -c 1 fpm-sunshine.wav vol 0.25
-$ sox fpm-sunshine.wav -t gsm -r 8000 -b -c 1 fpm-sunshine.gsm
-$ sox fpm-sunshine.wav -t ul -r 8000 -b -c 1 fpm-sunshine.pcm
-$ sox -r 44100 -w -s -c 1 ../mohmp3/fpm-calm-river.raw -r 8000 -c 1 fpm-calm-river.wav vol 0.25
-$ sox fpm-calm-river.wav -t gsm -r 8000 -b -c 1 fpm-calm-river.gsm
-$ sox fpm-calm-river.wav -t ul -r 8000 -b -c 1 fpm-calm-river.pcm
-$ sox -r 44100 -w -s -c 1 ../mohmp3/fpm-world-mix.raw -r 8000 -c 1 fpm-world-mix.wav vol 0.25
-$ sox fpm-world-mix.wav -t gsm -r 8000 -b -c 1 fpm-world-mix.gsm
-$ sox fpm-world-mix.wav -t ul -r 8000 -b -c 1 fpm-world-mix.pcm
-$ rm -f ../mohmp3/*.raw
-
-
-**** for asterisk 1.4
-$ cp -a /var/lib/asterisk/moh /var/lib/asterisk/mohmp3/
-$ cd /var/lib/asterisk/mohmp3/
-$ sox fpm-sunshine.wav -t gsm -r 8000 -b -c 1 fpm-sunshine.gsm
-$ sox fpm-sunshine.wav -t ul -r 8000 -b -c 1 fpm-sunshine.pcm
-$ sox fpm-calm-river.wav -t gsm -r 8000 -b -c 1 fpm-calm-river.gsm
-$ sox fpm-calm-river.wav -t ul -r 8000 -b -c 1 fpm-calm-river.pcm
-$ sox -r 44100 -w -s -c 1 fpm-world-mix.raw -r 8000 -c 1 fpm-world-mix.wav
-$ sox fpm-world-mix.wav -t gsm -r 8000 -b -c 1 fpm-world-mix.gsm
-$ sox fpm-world-mix.wav -t ul -r 8000 -b -c 1 fpm-world-mix.pcm
-$ mkdir ../quiet-mp3
-$ cd ../quiet-mp3
-$ sox ../mohmp3/fpm-sunshine.wav -r 8000 -c 1 fpm-sunshine.wav vol 0.25
-$ sox fpm-sunshine.wav -t gsm -r 8000 -b -c 1 fpm-sunshine.gsm
-$ sox fpm-sunshine.wav -t ul -r 8000 -b -c 1 fpm-sunshine.pcm
-$ sox ../mohmp3/fpm-calm-river.wav -r 8000 -c 1 fpm-calm-river.wav vol 0.25
-$ sox fpm-calm-river.wav -t gsm -r 8000 -b -c 1 fpm-calm-river.gsm
-$ sox fpm-calm-river.wav -t ul -r 8000 -b -c 1 fpm-calm-river.pcm
-$ sox ../mohmp3/fpm-world-mix.wav -r 8000 -c 1 fpm-world-mix.wav vol 0.25
-$ sox fpm-world-mix.wav -t gsm -r 8000 -b -c 1 fpm-world-mix.gsm
-$ sox fpm-world-mix.wav -t ul -r 8000 -b -c 1 fpm-world-mix.pcm
 
 **** for SVN 2.0.5 branch:
 $ mkdir /usr/src/astguiclient
@@ -285,13 +216,11 @@ $ perl install.pl
  : press enter until you get to webroot and set that to the following: /var/www
  : press enter through to the Sample configuration files and set that to 'y'
  : press enter through to the end of the script
- : add the highlighted lines to the top of your [default] context:
-$ vi /etc/asterisk/extensions.conf
 $ cd /var/lib/asterisk/sounds
-$ wget http://downloads.vicidial.com/sounds/conf.gsm
+$ wget http://downloads.vicidial.com/conf/conf.gsm
 $ cp conf.gsm park.gsm
 
-$ mysql
+$ mysql -p (enter the mysql root user's password you set earlier)
 > CREATE DATABASE `asterisk` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 > GRANT SELECT,INSERT,UPDATE,DELETE,LOCK TABLES on asterisk.* TO cron@'%' IDENTIFIED BY '1234';
 > GRANT SELECT,INSERT,UPDATE,DELETE,LOCK TABLES on asterisk.* TO cron@localhost IDENTIFIED BY '1234';
@@ -328,7 +257,7 @@ $ crontab -e
 ### updater for VICIDIAL hopper
 * * * * * /usr/share/astguiclient/AST_VDhopper.pl -q
 ### adjust the GMT offset for the leads in the vicidial_list table
-1 1,7 * * * /usr/share/astguiclient/ADMIN_adjust_GMTnow_on_leads.pl --debug --postal-code-gmt
+1 1,7 * * * /usr/share/astguiclient/ADMIN_adjust_GMTnow_on_leads.pl --debug
 ### reset several temporary-info tables in the database
 2 1 * * * /usr/share/astguiclient/AST_reset_mysql_vars.pl
 ### optimize the database tables within the asterisk database
