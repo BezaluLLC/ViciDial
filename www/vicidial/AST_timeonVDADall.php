@@ -55,10 +55,11 @@
 # 90701-0657 - Fixed inbound=No calculation issues
 # 90808-0212 - Fixed inbound only non-ALL bug, changed times to use agent last_state_change
 # 90907-0915 - Added PARK status
+# 90914-1154 - Added AgentOnly display column to waiting calls section
 #
 
-$version = '2.0.5-46';
-$build = '90907-0915';
+$version = '2.0.5-47';
+$build = '90914-1154';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -1129,7 +1130,7 @@ else
 	}
 if ($CALLSdisplay > 0)
 	{
-	$stmtA = "SELECT status,campaign_id,phone_number,server_ip,UNIX_TIMESTAMP(call_time),call_type,queue_priority";
+	$stmtA = "SELECT status,campaign_id,phone_number,server_ip,UNIX_TIMESTAMP(call_time),call_type,queue_priority,agent_only";
 	}
 else
 	{
@@ -1138,6 +1139,7 @@ else
 
 
 $k=0;
+$agentonlycount=0;
 $stmt = "$stmtA $stmtB";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
@@ -1166,6 +1168,8 @@ $parked_to_print = mysql_num_rows($rslt);
 				$CDcall_time[$k] =		$row[4];
 				$CDcall_type[$k] =		$row[5];
 				$CDqueue_priority[$k] =	$row[6];
+				$CDagent_only[$k] =		$row[7];
+				if (strlen($CDagent_only[$k]) > 0) {$agentonlycount++;}
 				$k++;
 				}
 			}
@@ -1184,6 +1188,8 @@ $parked_to_print = mysql_num_rows($rslt);
 					$CDcall_time[$k] =		$row[4];
 					$CDcall_type[$k] =		$row[5];
 					$CDqueue_priority[$k] =	$row[6];
+					$CDagent_only[$k] =		$row[7];
+					if (strlen($CDagent_only[$k]) > 0) {$agentonlycount++;}
 					$k++;
 					}
 				}
@@ -1236,11 +1242,13 @@ $parked_to_print = mysql_num_rows($rslt);
 ###################################################################################
 ###### CALLS WAITING
 ###################################################################################
-
+$agentonlyheader = '';
+if ($agentonlycount > 0)
+	{$agentonlyheader = 'AGENTONLY';}
 $Cecho = '';
 $Cecho .= "VICIDIAL: Calls Waiting                      $NOW_TIME\n";
 $Cecho .= "+--------+--------------+--------------+-----------------+---------+------------+----------+\n";
-$Cecho .= "| STATUS | CAMPAIGN     | PHONE NUMBER | SERVER_IP       | DIALTIME| CALL TYPE  | PRIORITY |\n";
+$Cecho .= "| STATUS | CAMPAIGN     | PHONE NUMBER | SERVER_IP       | DIALTIME| CALL TYPE  | PRIORITY | $agentonlyheader\n";
 $Cecho .= "+--------+--------------+--------------+-----------------+---------+------------+----------+\n";
 
 $p=0;
@@ -1252,6 +1260,7 @@ while($p<$k)
 	$Cserver_ip =		sprintf("%-15s", $CDserver_ip[$p]);
 	$Ccall_type =		sprintf("%-10s", $CDcall_type[$p]);
 	$Cqueue_priority =	sprintf("%8s", $CDqueue_priority[$p]);
+	$Cagent_only =		sprintf("%8s", $CDagent_only[$p]);
 
 	$Ccall_time_S = ($STARTtime - $CDcall_time[$p]);
 	$Ccall_time_MS =		sec_convert($Ccall_time_S,'M'); 
@@ -1262,7 +1271,12 @@ while($p<$k)
 		{
 		$G="<SPAN class=\"$CDcampaign_id[$p]\"><B>"; $EG='</B></SPAN>';
 		}
-	$Cecho .= "| $G$Cstatus$EG | $G$Ccampaign_id$EG | $G$Cphone_number$EG | $G$Cserver_ip$EG | $G$Ccall_time_MS$EG | $G$Ccall_type$EG | $G$Cqueue_priority$EG |\n";
+	if (strlen($CDagent_only[$p]) > 0)
+		{$Gcalltypedisplay = "$G$Cagent_only$EG";}
+	else
+		{$Gcalltypedisplay = '';}
+
+	$Cecho .= "| $G$Cstatus$EG | $G$Ccampaign_id$EG | $G$Cphone_number$EG | $G$Cserver_ip$EG | $G$Ccall_time_MS$EG | $G$Ccall_type$EG | $G$Cqueue_priority$EG | $Gcalltypedisplay \n";
 
 	$p++;
 	}
