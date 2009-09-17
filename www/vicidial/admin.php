@@ -1316,7 +1316,7 @@ if ($non_latin < 1)
 	$allow_alerts = ereg_replace("[^0-9]","",$allow_alerts);
 	$vicidial_balance_rank = ereg_replace("[^0-9]","",$vicidial_balance_rank);
 	$rank = ereg_replace("[^0-9]","",$rank);
-	$enable_second_webform = ereg_replace("[^0-9]","",$rank);
+	$enable_second_webform = ereg_replace("[^0-9]","",$enable_second_webform);
 
 	$drop_call_seconds = ereg_replace("[^-0-9]","",$drop_call_seconds);
 
