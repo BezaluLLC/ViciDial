@@ -557,7 +557,7 @@ dial_status_e VARCHAR(6),
 lead_order VARCHAR(30),
 park_ext VARCHAR(10),
 park_file_name VARCHAR(10),
-web_form_address VARCHAR(255),
+web_form_address TEXT,
 allow_closers ENUM('Y','N'),
 hopper_level INT(8) UNSIGNED default '1',
 auto_dial_level VARCHAR(6) default '0',
@@ -573,7 +573,7 @@ campaign_recording ENUM('NEVER','ONDEMAND','ALLCALLS','ALLFORCE') default 'ONDEM
 campaign_rec_filename VARCHAR(50) default 'FULLDATE_CUSTPHONE',
 campaign_script VARCHAR(10),
 get_call_launch ENUM('NONE','SCRIPT','WEBFORM') default 'NONE',
-am_message_exten VARCHAR(20),
+am_message_exten VARCHAR(100) default 'vm-goodbye',
 amd_send_to_vmx ENUM('Y','N') default 'N',
 xferconf_a_dtmf VARCHAR(50),
 xferconf_a_number VARCHAR(50),
@@ -673,7 +673,9 @@ call_requeue_button ENUM('Y','N') default 'N',
 pause_after_each_call ENUM('Y','N') default 'N',
 no_hopper_dialing ENUM('Y','N') default 'N',
 agent_dial_owner_only ENUM('NONE','USER','TERRITORY','USER_GROUP') default 'NONE',
-agent_display_dialable_leads ENUM('Y','N') default 'N'
+agent_display_dialable_leads ENUM('Y','N') default 'N',
+web_form_address_two TEXT,
+waitforsilence_options VARCHAR(25) default ''
 );
 
 CREATE TABLE vicidial_lists (
@@ -751,7 +753,7 @@ group_id VARCHAR(20) PRIMARY KEY NOT NULL,
 group_name VARCHAR(30),
 group_color VARCHAR(7),
 active ENUM('Y','N'),
-web_form_address VARCHAR(255),
+web_form_address TEXT,
 voicemail_ext VARCHAR(10),
 next_agent_call ENUM('random','oldest_call_start','oldest_call_finish','overall_user_level','inbound_group_rank','campaign_rank','fewest_calls','fewest_calls_campaign','longest_wait_time') default 'longest_wait_time',
 fronter_display ENUM('Y','N') default 'Y',
@@ -805,7 +807,8 @@ answer_sec_pct_rt_stat_two SMALLINT(5) UNSIGNED default '30',
 default_group_alias VARCHAR(30) default '',
 no_agent_no_queue ENUM('N','Y','NO_PAUSED') default 'N',
 no_agent_action ENUM('CALLMENU','INGROUP','DID','MESSAGE','EXTENSION','VOICEMAIL') default 'MESSAGE',
-no_agent_action_value VARCHAR(255) default 'nbdy-avail-to-take-call|vm-goodbye'
+no_agent_action_value VARCHAR(255) default 'nbdy-avail-to-take-call|vm-goodbye',
+web_form_address_two TEXT
 );
 
 CREATE TABLE vicidial_stations (
@@ -1140,7 +1143,9 @@ sounds_web_directory VARCHAR(255) default '',
 active_voicemail_server VARCHAR(15) default '',
 auto_dial_limit VARCHAR(5) default '4',
 user_territories_active ENUM('0','1') default '0',
-allow_custom_dialplan ENUM('0','1') default '0'
+allow_custom_dialplan ENUM('0','1') default '0',
+db_schema_update_date DATETIME,
+enable_second_webform ENUM('0','1') default '1'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -1916,7 +1921,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1172';
+UPDATE system_settings SET db_schema_version='1173',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

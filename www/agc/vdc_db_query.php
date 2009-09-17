@@ -84,6 +84,7 @@
 #  - $agent_dialed_type - ('MANUAL_OVERRIDE','MANUAL_DIALNOW','MANUAL_PREVIEW',...)
 #  - $wrapup - ('WRAPUP','')
 #  - $vtiger_callback_id - ('16534'...)
+#  - $nodeletevdac - ('0','1')
 #
 # CHANGELOG:
 # 50629-1044 - First build of script
@@ -210,10 +211,11 @@
 # 90808-0221 - Added last_state_change to vicidial_live_agents
 # 90904-1622 - Added timezone sort options for no hopper dialing
 # 90908-1037 - Added DEAD call logging
+# 90916-1839 - Added nodeletevdac
 #
 
-$version = '2.2.0-121';
-$build = '90908-1037';
+$version = '2.2.0-122';
+$build = '90916-1839';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=244;
 $one_mysql_log=0;
@@ -387,6 +389,8 @@ if (isset($_GET["dial_method"]))				{$dial_method=$_GET["dial_method"];}
 	elseif (isset($_POST["dial_method"]))		{$dial_method=$_POST["dial_method"];}
 if (isset($_GET["no_delete_sessions"]))				{$no_delete_sessions=$_GET["no_delete_sessions"];}
 	elseif (isset($_POST["no_delete_sessions"]))	{$no_delete_sessions=$_POST["no_delete_sessions"];}
+if (isset($_GET["nodeletevdac"]))				{$nodeletevdac=$_GET["nodeletevdac"];}
+	elseif (isset($_POST["nodeletevdac"]))		{$nodeletevdac=$_POST["nodeletevdac"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -2595,11 +2599,14 @@ if ($stage == "end")
 
 				}
 
-			### delete call record from  vicidial_auto_calls
-			$stmt = "DELETE from vicidial_auto_calls where lead_id='$lead_id' and campaign_id='$VDcampaign_id' and uniqueid='$uniqueid';";
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00081',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($nodeletevdac < 1)
+				{
+				### delete call record from  vicidial_auto_calls
+				$stmt = "DELETE from vicidial_auto_calls where lead_id='$lead_id' and campaign_id='$VDcampaign_id' and uniqueid='$uniqueid';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00081',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
 
 			$stmt = "UPDATE vicidial_live_agents set status='PAUSED',uniqueid=0,callerid='',channel='',call_server_ip='',last_call_finish='$NOW_TIME',comments='',last_state_change='$NOW_TIME' where user='$user' and server_ip='$server_ip';";
 			if ($DB) {echo "$stmt\n";}
@@ -2663,11 +2670,14 @@ if ($stage == "end")
 				$affected_rows = mysql_affected_rows($linkB);
 				}
 
-		#	$stmt = "DELETE from vicidial_auto_calls where lead_id='$lead_id' and campaign_id='$campaign' and uniqueid='$uniqueid';";
-			$stmt = "DELETE from vicidial_auto_calls where lead_id='$lead_id' and campaign_id='$VDcampaign_id' and callerid LIKE \"M%\";";
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00086',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($nodeletevdac < 1)
+				{
+			#	$stmt = "DELETE from vicidial_auto_calls where lead_id='$lead_id' and campaign_id='$campaign' and uniqueid='$uniqueid';";
+				$stmt = "DELETE from vicidial_auto_calls where lead_id='$lead_id' and campaign_id='$VDcampaign_id' and callerid LIKE \"M%\";";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00086',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
 
 			$stmt = "UPDATE vicidial_live_agents set status='PAUSED',uniqueid=0,callerid='',channel='',call_server_ip='',last_call_finish='$NOW_TIME',comments='',last_state_change='$NOW_TIME' where user='$user' and server_ip='$server_ip';";
 			if ($DB) {echo "$stmt\n";}
@@ -3435,7 +3445,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 					$VDCL_front_VDlog	=$row[0];
 					}
 
-				$stmt = "select group_name,group_color,web_form_address,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_xfer_group,ingroup_recording_override,ingroup_rec_filename,default_group_alias from vicidial_inbound_groups where group_id='$VDADchannel_group';";
+				$stmt = "select group_name,group_color,web_form_address,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_xfer_group,ingroup_recording_override,ingroup_rec_filename,default_group_alias,web_form_address_two from vicidial_inbound_groups where group_id='$VDADchannel_group';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00119',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3457,6 +3467,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 					$VDCL_ingroup_recording_override =	$row[11];
 					$VDCL_ingroup_rec_filename =		$row[12];
 					$VDCL_default_group_alias =			$row[13];
+					$VDCL_group_web_two =		stripslashes($row[14]);
 
 
 					$stmt = "select campaign_script,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_group_alias from vicidial_campaigns where campaign_id='$campaign';";
@@ -3561,8 +3572,8 @@ if ($ACTION == 'VDADcheckINCOMING')
 					}
 
 				### if web form is set then send on to vicidial.php for override of WEB_FORM address
-				if ( (strlen($VDCL_group_web)>5) or (strlen($VDCL_group_name)>0) ) {echo "$VDCL_group_web|$VDCL_group_name|$VDCL_group_color|$VDCL_fronter_display|$VDADchannel_group|$VDCL_ingroup_script|$VDCL_get_call_launch|$VDCL_xferconf_a_dtmf|$VDCL_xferconf_a_number|$VDCL_xferconf_b_dtmf|$VDCL_xferconf_b_number|$VDCL_default_xfer_group|$VDCL_ingroup_recording_override|$VDCL_ingroup_rec_filename|$VDCL_default_group_alias|$VDCL_caller_id_number|$VDCL_group_web_vars|\n";}
-				else {echo "X|$VDCL_group_name|$VDCL_group_color|$VDCL_fronter_display|$VDADchannel_group|$VDCL_ingroup_script|$VDCL_get_call_launch|$VDCL_xferconf_a_dtmf|$VDCL_xferconf_a_number|$VDCL_xferconf_b_dtmf|$VDCL_xferconf_b_number|$VDCL_default_xfer_group|$VDCL_ingroup_recording_override|$VDCL_ingroup_rec_filename|$VDCL_default_group_alias|$VDCL_caller_id_number|$VDCL_group_web_vars|\n";}
+				if ( (strlen($VDCL_group_web)>5) or (strlen($VDCL_group_name)>0) ) {echo "$VDCL_group_web|$VDCL_group_name|$VDCL_group_color|$VDCL_fronter_display|$VDADchannel_group|$VDCL_ingroup_script|$VDCL_get_call_launch|$VDCL_xferconf_a_dtmf|$VDCL_xferconf_a_number|$VDCL_xferconf_b_dtmf|$VDCL_xferconf_b_number|$VDCL_default_xfer_group|$VDCL_ingroup_recording_override|$VDCL_ingroup_rec_filename|$VDCL_default_group_alias|$VDCL_caller_id_number|$VDCL_group_web_vars|$VDCL_group_web_two|\n";}
+				else {echo "X|$VDCL_group_name|$VDCL_group_color|$VDCL_fronter_display|$VDADchannel_group|$VDCL_ingroup_script|$VDCL_get_call_launch|$VDCL_xferconf_a_dtmf|$VDCL_xferconf_a_number|$VDCL_xferconf_b_dtmf|$VDCL_xferconf_b_number|$VDCL_default_xfer_group|$VDCL_ingroup_recording_override|$VDCL_ingroup_rec_filename|$VDCL_default_group_alias|$VDCL_caller_id_number|$VDCL_group_web_vars|$VDCL_group_web_two|\n";}
 
 				$stmt = "SELECT full_name from vicidial_users where user='$tsr';";
 				if ($DB) {echo "$stmt\n";}

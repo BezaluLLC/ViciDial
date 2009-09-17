@@ -298,6 +298,10 @@ MUSIC ON HOLD DELETION COMPLETED||
 Starts with Eastern timezones and works West||
 Starts with Western timezones and works East||
 you must select a user group||
+Enable Second Webform||
+WaitForSilence Options||
+If Wait For Silence is desired on calls that are detected as Answering Machines then this field has those options. There are two settings separated by a comma, the first option is how long to detect silence in milliseconds and the second option is for how many times to detect that before playing the message. Default is EMPTY for disabled. A standard value for this would be wait for 2 seconds of silence twice||
+This field is for entering the prompt to play when the agent gets an answering machine and clicks on the Answering Machine Message button in the transfer conference frame. You must set this to either an audio file in the audio store or a TTS prompt if TTS is enabled on your system||
 
 
 add-file: user_territories.php
@@ -316,6 +320,9 @@ Calls In Queue||
 Hide Calls In Queue||
 Calls in Queue View Disabled for this campaign||
 YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE||
+
+
+add-file: vdc_script_display.php
 
 
 ############################################################  MANAGER Manual

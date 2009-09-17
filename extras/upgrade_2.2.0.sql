@@ -534,3 +534,17 @@ ALTER TABLE twoday_vicidial_agent_log ADD dead_sec SMALLINT(5) UNSIGNED default 
 ALTER TABLE system_settings MODIFY sounds_web_server VARCHAR(50) default '127.0.0.1';
 
 UPDATE system_settings SET db_schema_version='1172';
+
+ALTER TABLE vicidial_inbound_groups MODIFY web_form_address TEXT;
+ALTER TABLE vicidial_inbound_groups ADD web_form_address_two TEXT;
+
+ALTER TABLE vicidial_campaigns MODIFY web_form_address TEXT;
+ALTER TABLE vicidial_campaigns ADD web_form_address_two TEXT;
+ALTER TABLE vicidial_campaigns ADD waitforsilence_options VARCHAR(25) default '';
+ALTER TABLE vicidial_campaigns MODIFY am_message_exten VARCHAR(100) default 'vm-goodbye';
+UPDATE vicidial_campaigns SET am_message_exten='vm-goodbye';
+
+ALTER TABLE system_settings ADD db_schema_update_date DATETIME;
+ALTER TABLE system_settings ADD enable_second_webform ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1173',db_schema_update_date=NOW();

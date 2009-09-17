@@ -222,6 +222,20 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 
 57. Added DEAD call time logging and agent notification of call hangup
 
+58. Added second web form button with different URLs possible per campaign and
+	in-group. Must be enabled in System Settings
+
+59. Changed Answering Machine Message campaign option to an audio select with an
+	option for TTS prompt to be used. You must change any custom values you 
+	have set in this field to an audio prompt or it will not function 
+	properly. Also added WaitForSilence Options setting to the campaign 
+	screen. If you want to use this it must be populated in each campaign.
+
+	You must change 8320 to the following in your extensions.conf:
+		exten => 8320,1,AGI(VD_amd.agi,${EXTEN}-----YES)
+		exten => 8320,2,Hangup
+	# the VD_amd_post.agi script is now depricated
+
 
 
 

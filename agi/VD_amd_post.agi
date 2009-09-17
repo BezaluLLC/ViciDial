@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 #
+# THIS SCRIPT WILL BE DEPRICATED AND REMOVED BEFORE THE 2.2.0 RELEASE
+#
 # VD_amd_post.agi version 2.0.4   *DBI-version*
 #
 # NOTE: This script is only needed with app_amd enabled systems
@@ -21,7 +23,7 @@
 # ; this is used for playing a message to an answering machine forwarded from AMD in VICIDIAL
 # ;    replace conf with the message file you want to leave
 # exten => 8320,1,WaitForSilence(2000,2) ; AMD got machine.  leave message after recording
-# exten => 8320,2,Playback(conf)
+# exten => 8320,2,Playback(ding)
 # exten => 8320,3,AGI(VD_amd_post.agi,${EXTEN})
 # exten => 8320,4,Hangup
 # 

@@ -40,6 +40,7 @@
 #  - $account - ('DEFAULT',...)
 #  - $agent_dialed_number - ('1','')
 #  - $agent_dialed_type - ('MANUAL_OVERRIDE','MANUAL_DIALNOW','MANUAL_PREVIEW',...)
+#  - $nodeletevdac - ('0','1')
 #
 # CHANGELOG:
 # 50401-1002 - First build of script, Hangup function only
@@ -88,10 +89,11 @@
 # 90508-0727 - Changed to PHP long tags
 # 90511-1019 - Added restriction not allowing dialing into agent sessions from manual dial
 # 90913-1410 - Fixed minor logging bug
+# 90916-1830 - Added nodeletevdac
 #
 
-$version = '2.2.0-41';
-$build = '90913-1410';
+$version = '2.2.0-42';
+$build = '90916-1630';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=83;
 $one_mysql_log=0;
@@ -177,7 +179,8 @@ if (isset($_GET["agent_dialed_number"]))			{$agent_dialed_number=$_GET["agent_di
 	elseif (isset($_POST["agent_dialed_number"]))	{$agent_dialed_number=$_POST["agent_dialed_number"];}
 if (isset($_GET["agent_dialed_type"]))				{$agent_dialed_type=$_GET["agent_dialed_type"];}
 	elseif (isset($_POST["agent_dialed_type"]))		{$agent_dialed_type=$_POST["agent_dialed_type"];}
-
+if (isset($_GET["nodeletevdac"]))				{$nodeletevdac=$_GET["nodeletevdac"];}
+	elseif (isset($_POST["nodeletevdac"]))		{$nodeletevdac=$_POST["nodeletevdac"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -682,9 +685,9 @@ $rslt=mysql_query($stmt, $link);
 # - insert Redirect Manager statement using extensions name
 ######################
 if ($ACTION=="RedirectVD")
-{
-	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($campaign)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($uniqueid)<2) or (strlen($lead_id)<1) )
 	{
+	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($campaign)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($uniqueid)<2) or (strlen($lead_id)<1) )
+		{
 		$channel_live=0;
 		echo "One of these variables is not valid:\n";
 		echo "Channel $channel must be greater than 2 characters\n";
@@ -697,9 +700,9 @@ if ($ACTION=="RedirectVD")
 		echo "uniqueid $uniqueid must be set\n";
 		echo "lead_id $lead_id must be set\n";
 		echo "\nRedirectVD Action not sent\n";
-	}
+		}
 	else
-	{
+		{
 		if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
 		$stmt = "select count(*) from vicidial_campaigns where campaign_id='$campaign' and campaign_allow_inbound='Y';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
@@ -714,14 +717,13 @@ if ($ACTION=="RedirectVD")
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02022',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
-		if ($auto_dial_level < 1)
-			{
-			$stmt = "UPDATE vicidial_log set end_epoch='$StarTtime', length_in_sec='$secondS',status='XFER' where uniqueid='$uniqueid';";
-				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02023',$user,$server_ip,$session_name,$one_mysql_log);}
-			}
-		else
+
+		$stmt = "UPDATE vicidial_log set end_epoch='$StarTtime', length_in_sec='$secondS',status='XFER' where uniqueid='$uniqueid';";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02023',$user,$server_ip,$session_name,$one_mysql_log);}
+
+		if ($nodeletevdac < 1)
 			{
 			$stmt = "DELETE from vicidial_auto_calls where uniqueid='$uniqueid';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
@@ -729,8 +731,8 @@ if ($ACTION=="RedirectVD")
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02024',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
 		$ACTION="Redirect";
+		}
 	}
-}
 
 if ($ACTION=="RedirectToPark")
 	{

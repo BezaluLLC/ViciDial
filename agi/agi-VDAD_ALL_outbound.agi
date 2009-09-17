@@ -2093,8 +2093,7 @@ sub cpd_end_call
 
 	if ( ($cpd_amd_action =~ /MESSAGE/) && ($cpd_result !~ /Fax/i) )
 		{
-		if (length($am_message_exten)>0)
-			{$DROPexten = "$am_message_exten";}
+		$DROPexten = "8320";
 		}
 
 	$Euniqueid=$uniqueid;
