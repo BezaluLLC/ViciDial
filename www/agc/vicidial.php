@@ -253,10 +253,11 @@
 # 90908-1038 - Added DEAD call display
 # 90909-0921 - Fixed park issues
 # 90916-1144 - Added Second web form button, Answering Machine Message change
+# 90917-1325 - Fixed script loading bug with customer webform at the same time
 #
 
-$version = '2.2.0-230';
-$build = '90916-1144';
+$version = '2.2.0-231';
+$build = '90917-1325';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -4619,6 +4620,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						source_id										= MDnextResponse_array[34];
 						document.vicidial_form.rank.value				= MDnextResponse_array[35];
 						document.vicidial_form.owner.value				= MDnextResponse_array[36];
+					//	CalL_ScripT_id									= MDnextResponse_array[37];
 			
 						lead_dial_number = document.vicidial_form.phone_number.value;
 						var dispnum = document.vicidial_form.phone_number.value;
@@ -4636,6 +4638,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
 						document.vicidial_form.gender.value = genderValue;
 						LeaDDispO='';
+
+						VDIC_web_form_address = VICIDiaL_web_form_address
+						VDIC_web_form_address_two = VICIDiaL_web_form_address_two
 
 						var regWFAcustom = new RegExp("^VAR","ig");
 						if (VDIC_web_form_address.match(regWFAcustom))
@@ -4830,6 +4835,70 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 							if ( (view_scripts == 1) && (campaign_script.length > 0) )
 								{
+								web_form_vars = 
+								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
+								"&list_id=" + document.vicidial_form.list_id.value + 
+								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
+								"&phone_code=" + document.vicidial_form.phone_code.value + 
+								"&phone_number=" + document.vicidial_form.phone_number.value + 
+								"&title=" + document.vicidial_form.title.value + 
+								"&first_name=" + document.vicidial_form.first_name.value + 
+								"&middle_initial=" + document.vicidial_form.middle_initial.value + 
+								"&last_name=" + document.vicidial_form.last_name.value + 
+								"&address1=" + document.vicidial_form.address1.value + 
+								"&address2=" + document.vicidial_form.address2.value + 
+								"&address3=" + document.vicidial_form.address3.value + 
+								"&city=" + document.vicidial_form.city.value + 
+								"&state=" + document.vicidial_form.state.value + 
+								"&province=" + document.vicidial_form.province.value + 
+								"&postal_code=" + document.vicidial_form.postal_code.value + 
+								"&country_code=" + document.vicidial_form.country_code.value + 
+								"&gender=" + document.vicidial_form.gender.value + 
+								"&date_of_birth=" + document.vicidial_form.date_of_birth.value + 
+								"&alt_phone=" + document.vicidial_form.alt_phone.value + 
+								"&email=" + document.vicidial_form.email.value + 
+								"&security_phrase=" + document.vicidial_form.security_phrase.value + 
+								"&comments=" + document.vicidial_form.comments.value + 
+								"&user=" + user + 
+								"&pass=" + pass + 
+								"&campaign=" + campaign + 
+								"&phone_login=" + phone_login + 
+								"&original_phone_login=" + original_phone_login +
+								"&phone_pass=" + phone_pass + 
+								"&fronter=" + fronter + 
+								"&closer=" + user + 
+								"&group=" + group + 
+								"&channel_group=" + group + 
+								"&SQLdate=" + SQLdate + 
+								"&epoch=" + UnixTime + 
+								"&uniqueid=" + document.vicidial_form.uniqueid.value + 
+								"&customer_zap_channel=" + lastcustchannel + 
+								"&customer_server_ip=" + lastcustserverip +
+								"&server_ip=" + server_ip + 
+								"&SIPexten=" + extension + 
+								"&session_id=" + session_id + 
+								"&phone=" + document.vicidial_form.phone_number.value + 
+								"&parked_by=" + document.vicidial_form.lead_id.value +
+								"&dispo=" + LeaDDispO + '' +
+								"&dialed_number=" + dialed_number + '' +
+								"&dialed_label=" + dialed_label + '' +
+								"&source_id=" + source_id + '' +
+								"&rank=" + document.vicidial_form.rank.value + '' +
+								"&owner=" + document.vicidial_form.owner.value + '' +
+								"&camp_script=" + campaign_script + '' +
+								"&in_script=" + CalL_ScripT_id + '' +
+								"&script_width=" + script_width + '' +
+								"&script_height=" + script_height + '' +
+								"&fullname=" + LOGfullname + '' +
+								webform_session;
+								
+								var regWFspace = new RegExp(" ","ig");
+								web_form_vars = web_form_vars.replace(regWF, '');
+								var regWF = new RegExp("\\`|\\~|\\:|\\;|\\#|\\'|\\\"|\\{|\\}|\\(|\\)|\\*|\\^|\\%|\\$|\\!|\\%|\\r|\\t|\\n","ig");
+								web_form_vars = web_form_vars.replace(regWFspace, '+');
+								web_form_vars = web_form_vars.replace(regWF, '');
+
 								load_script_contents();
 								}
 
@@ -5126,6 +5195,70 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 						if ( (view_scripts == 1) && (campaign_script.length > 0) )
 							{
+							web_form_vars = 
+							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
+							"&list_id=" + document.vicidial_form.list_id.value + 
+							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
+							"&phone_code=" + document.vicidial_form.phone_code.value + 
+							"&phone_number=" + document.vicidial_form.phone_number.value + 
+							"&title=" + document.vicidial_form.title.value + 
+							"&first_name=" + document.vicidial_form.first_name.value + 
+							"&middle_initial=" + document.vicidial_form.middle_initial.value + 
+							"&last_name=" + document.vicidial_form.last_name.value + 
+							"&address1=" + document.vicidial_form.address1.value + 
+							"&address2=" + document.vicidial_form.address2.value + 
+							"&address3=" + document.vicidial_form.address3.value + 
+							"&city=" + document.vicidial_form.city.value + 
+							"&state=" + document.vicidial_form.state.value + 
+							"&province=" + document.vicidial_form.province.value + 
+							"&postal_code=" + document.vicidial_form.postal_code.value + 
+							"&country_code=" + document.vicidial_form.country_code.value + 
+							"&gender=" + document.vicidial_form.gender.value + 
+							"&date_of_birth=" + document.vicidial_form.date_of_birth.value + 
+							"&alt_phone=" + document.vicidial_form.alt_phone.value + 
+							"&email=" + document.vicidial_form.email.value + 
+							"&security_phrase=" + document.vicidial_form.security_phrase.value + 
+							"&comments=" + document.vicidial_form.comments.value + 
+							"&user=" + user + 
+							"&pass=" + pass + 
+							"&campaign=" + campaign + 
+							"&phone_login=" + phone_login + 
+							"&original_phone_login=" + original_phone_login +
+							"&phone_pass=" + phone_pass + 
+							"&fronter=" + fronter + 
+							"&closer=" + user + 
+							"&group=" + group + 
+							"&channel_group=" + group + 
+							"&SQLdate=" + SQLdate + 
+							"&epoch=" + UnixTime + 
+							"&uniqueid=" + document.vicidial_form.uniqueid.value + 
+							"&customer_zap_channel=" + lastcustchannel + 
+							"&customer_server_ip=" + lastcustserverip +
+							"&server_ip=" + server_ip + 
+							"&SIPexten=" + extension + 
+							"&session_id=" + session_id + 
+							"&phone=" + document.vicidial_form.phone_number.value + 
+							"&parked_by=" + document.vicidial_form.lead_id.value +
+							"&dispo=" + LeaDDispO + '' +
+							"&dialed_number=" + dialed_number + '' +
+							"&dialed_label=" + dialed_label + '' +
+							"&source_id=" + source_id + '' +
+							"&rank=" + document.vicidial_form.rank.value + '' +
+							"&owner=" + document.vicidial_form.owner.value + '' +
+							"&camp_script=" + campaign_script + '' +
+							"&in_script=" + CalL_ScripT_id + '' +
+							"&script_width=" + script_width + '' +
+							"&script_height=" + script_height + '' +
+							"&fullname=" + LOGfullname + '' +
+							webform_session;
+							
+							var regWFspace = new RegExp(" ","ig");
+							web_form_vars = web_form_vars.replace(regWF, '');
+							var regWF = new RegExp("\\`|\\~|\\:|\\;|\\#|\\'|\\\"|\\{|\\}|\\(|\\)|\\*|\\^|\\%|\\$|\\!|\\%|\\r|\\t|\\n","ig");
+							web_form_vars = web_form_vars.replace(regWFspace, '+');
+							web_form_vars = web_form_vars.replace(regWF, '');
+
 							load_script_contents();
 							}
 
@@ -5896,6 +6029,70 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 							if ( (view_scripts == 1) && (CalL_ScripT_id.length > 0) )
 								{
+								web_form_vars = 
+								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
+								"&list_id=" + document.vicidial_form.list_id.value + 
+								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
+								"&phone_code=" + document.vicidial_form.phone_code.value + 
+								"&phone_number=" + document.vicidial_form.phone_number.value + 
+								"&title=" + document.vicidial_form.title.value + 
+								"&first_name=" + document.vicidial_form.first_name.value + 
+								"&middle_initial=" + document.vicidial_form.middle_initial.value + 
+								"&last_name=" + document.vicidial_form.last_name.value + 
+								"&address1=" + document.vicidial_form.address1.value + 
+								"&address2=" + document.vicidial_form.address2.value + 
+								"&address3=" + document.vicidial_form.address3.value + 
+								"&city=" + document.vicidial_form.city.value + 
+								"&state=" + document.vicidial_form.state.value + 
+								"&province=" + document.vicidial_form.province.value + 
+								"&postal_code=" + document.vicidial_form.postal_code.value + 
+								"&country_code=" + document.vicidial_form.country_code.value + 
+								"&gender=" + document.vicidial_form.gender.value + 
+								"&date_of_birth=" + document.vicidial_form.date_of_birth.value + 
+								"&alt_phone=" + document.vicidial_form.alt_phone.value + 
+								"&email=" + document.vicidial_form.email.value + 
+								"&security_phrase=" + document.vicidial_form.security_phrase.value + 
+								"&comments=" + document.vicidial_form.comments.value + 
+								"&user=" + user + 
+								"&pass=" + pass + 
+								"&campaign=" + campaign + 
+								"&phone_login=" + phone_login + 
+								"&original_phone_login=" + original_phone_login +
+								"&phone_pass=" + phone_pass + 
+								"&fronter=" + fronter + 
+								"&closer=" + user + 
+								"&group=" + group + 
+								"&channel_group=" + group + 
+								"&SQLdate=" + SQLdate + 
+								"&epoch=" + UnixTime + 
+								"&uniqueid=" + document.vicidial_form.uniqueid.value + 
+								"&customer_zap_channel=" + lastcustchannel + 
+								"&customer_server_ip=" + lastcustserverip +
+								"&server_ip=" + server_ip + 
+								"&SIPexten=" + extension + 
+								"&session_id=" + session_id + 
+								"&phone=" + document.vicidial_form.phone_number.value + 
+								"&parked_by=" + document.vicidial_form.lead_id.value +
+								"&dispo=" + LeaDDispO + '' +
+								"&dialed_number=" + dialed_number + '' +
+								"&dialed_label=" + dialed_label + '' +
+								"&source_id=" + source_id + '' +
+								"&rank=" + document.vicidial_form.rank.value + '' +
+								"&owner=" + document.vicidial_form.owner.value + '' +
+								"&camp_script=" + campaign_script + '' +
+								"&in_script=" + CalL_ScripT_id + '' +
+								"&script_width=" + script_width + '' +
+								"&script_height=" + script_height + '' +
+								"&fullname=" + LOGfullname + '' +
+								webform_session;
+								
+								var regWFspace = new RegExp(" ","ig");
+								web_form_vars = web_form_vars.replace(regWF, '');
+								var regWF = new RegExp("\\`|\\~|\\:|\\;|\\#|\\'|\\\"|\\{|\\}|\\(|\\)|\\*|\\^|\\%|\\$|\\!|\\%|\\r|\\t|\\n","ig");
+								web_form_vars = web_form_vars.replace(regWFspace, '+');
+								web_form_vars = web_form_vars.replace(regWF, '');
+
 								load_script_contents();
 								}
 
