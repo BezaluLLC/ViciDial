@@ -2340,6 +2340,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var VDIC_web_form_address = '<?php echo $VICIDiaL_web_form_address ?>';
 	var VICIDiaL_web_form_address_two_enc = '<?php echo $VICIDiaL_web_form_address_two_enc ?>';
 	var VICIDiaL_web_form_address_two = '<?php echo $VICIDiaL_web_form_address_two ?>';
+	var VDIC_web_form_address_two = '<?php echo $VICIDiaL_web_form_address_two ?>';
 	var CalL_ScripT_id = '';
 	var CalL_AutO_LauncH = '';
 	var panel_bgcolor = '<?php echo $MAIN_COLOR ?>';
@@ -4802,7 +4803,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH();\"><IMG SRC=\"./images/vdc_LB_webform.gif\" border=0 alt=\"Web Form\"></a>\n";
 						if (enable_second_webform > 0)
 							{
-							document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target_two + "\" onMouseOver=\"WebFormTwoRefresH();\"><IMG SRC=\"./images/vdc_LB_webform_two.gif\" border=0 alt=\"Web Form 2\"></a>\n";
+							document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH();\"><IMG SRC=\"./images/vdc_LB_webform_two.gif\" border=0 alt=\"Web Form 2\"></a>\n";
 							}
 
 						if (LeaDPreVDispO == 'CALLBK')
