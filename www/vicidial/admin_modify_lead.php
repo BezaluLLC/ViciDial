@@ -32,6 +32,7 @@
 # 90508-0644 - Changed to PHP long tags
 # 90708-1549 - Added phone number dialed to outbound log
 # 90721-1246 - Added rank and owner as vicidial_list fields
+# 90917-2355 - Added extended alt phone entries
 #
 
 require("dbconnect.php");
@@ -341,6 +342,30 @@ else
 
 	if ($lead_count > 0)
 		{
+		##### grab vicidial_list_alt_phones records #####
+		$stmt="select phone_code,phone_number,alt_phone_note,alt_phone_count,active from vicidial_list_alt_phones where lead_id='" . mysql_real_escape_string($lead_id) . "' order by alt_phone_count limit 500;";
+		$rslt=mysql_query($stmt, $link);
+		$alts_to_print = mysql_num_rows($rslt);
+
+		$c=0;
+		$alts_output = '';
+		while ($alts_to_print > $c) 
+			{
+			$row=mysql_fetch_row($rslt);
+			if (eregi("1$|3$|5$|7$|9$", $c))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+
+			$c++;
+			$alts_output .= "<tr $bgcolor>";
+			$alts_output .= "<td><font size=1>$c</td>";
+			$alts_output .= "<td><font size=2>$row[0] $row[1]</td>";
+			$alts_output .= "<td align=left><font size=2> $row[2]</td>\n";
+			$alts_output .= "<td align=left><font size=2> $row[3]</td>\n";
+			$alts_output .= "<td align=left><font size=2> $row[4] </td></tr>\n";
+			}
+
 		##### grab vicidial_log records #####
 		$stmt="select uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial from vicidial_log where lead_id='" . mysql_real_escape_string($lead_id) . "' order by uniqueid desc limit 500;";
 		$rslt=mysql_query($stmt, $link);
@@ -618,6 +643,18 @@ else
 	echo "<br><br>\n";
 
 	echo "<center>\n";
+
+	if ($c > 0)
+		{
+		echo "<B>EXTENDED ALTERNATE PHONE NUMBERS FOR THIS LEAD:</B>\n";
+		echo "<TABLE width=550 cellspacing=0 cellpadding=1>\n";
+		echo "<tr><td><font size=1># </td><td><font size=2>ALT PHONE </td><td align=left><font size=2>ALT NOTE</td><td align=left><font size=2> ALT COUNT</td><td align=left><font size=2> ACTIVE</td></tr>\n";
+
+		echo "$alts_output\n";
+
+		echo "</TABLE>\n";
+		echo "<BR><BR>\n";
+		}
 
 	echo "<B>CALLS TO THIS LEAD:</B>\n";
 	echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";

@@ -19,6 +19,7 @@
 # 90309-1828 - Added admin_log logging
 # 90310-2146 - Added admin header
 # 90508-0644 - Changed to PHP long tags
+# 90917-2307 - Added alternate phone number searching option
 #
 
 require("dbconnect.php");
@@ -44,21 +45,24 @@ if (isset($_GET["user"]))				{$user=$_GET["user"];}
 	elseif (isset($_POST["user"]))		{$user=$_POST["user"];}
 if (isset($_GET["list_id"]))			{$list_id=$_GET["list_id"];}
 	elseif (isset($_POST["list_id"]))	{$list_id=$_POST["list_id"];}
+if (isset($_GET["alt_phone_search"]))			{$alt_phone_search=$_GET["alt_phone_search"];}
+	elseif (isset($_POST["alt_phone_search"]))	{$alt_phone_search=$_POST["alt_phone_search"];}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 $phone = ereg_replace("[^0-9]","",$phone);
+if (strlen($alt_phone_search) < 2) {$alt_phone_search='No';}
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and modify_leads='1';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and modify_leads='1';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
 if ($WeBRooTWritablE > 0)
 	{$fp = fopen ("./project_auth_entries.txt", "a");}
@@ -67,25 +71,24 @@ $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
 	}
-  else
+else
 	{
-
-	if($auth>0)
+	if ($auth>0)
 		{
 		$office_no=strtoupper($PHP_AUTH_USER);
 		$password=strtoupper($PHP_AUTH_PW);
-			$stmt="SELECT full_name,modify_leads from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname				=$row[0];
-			$LOGmodify_leads			=$row[1];
+		$stmt="SELECT full_name,modify_leads from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$LOGfullname =		$row[0];
+		$LOGmodify_leads =	$row[1];
 
 		if ($WeBRooTWritablE > 0)
 			{
@@ -132,11 +135,7 @@ $subcamp_color =	'#C6C6C6';
 require("admin_header.php");
 
 
-
-
-
 echo " Lead search: $vendor_id $phone $lead_id $status $list_id $user<BR>\n";
-
 
 if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and ( (strlen($status)<1) and (strlen($list_id)<1) and (strlen($user)<1) )) 
 	{
@@ -145,7 +144,8 @@ if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and ( (strlen($status)<1) and 
 	echo "<form method=post name=search action=\"$PHP_SELF\">\n";
 	echo "<input type=hidden name=DB value=\"$DB\">\n";
 	echo "<b>Please enter a:<br> Vendor ID(vendor lead code): <input type=text name=vendor_id size=10 maxlength=10> or \n";
-	echo "<br><b>a Home Phone Number: <input type=text name=phone size=20 maxlength=16> or\n";
+	echo "<br><b>a Home Phone Number: <input type=text name=phone size=20 maxlength=16> Alt phone search: \n";
+	echo "<select size=1 name=alt_phone_search><option>No</option><option>Yes</option><option SELECTED>$alt_phone_search</option></select> or \n";
 	echo "<br><b>a lead ID: <input type=text name=lead_id size=10 maxlength=10> or\n";
 	echo "<br><b>status: <input type=text name=status size=7 maxlength=6> &nbsp; \n";
 	echo "<b>list ID: <input type=text name=list_id size=15 maxlength=14> &nbsp; \n";
@@ -161,19 +161,26 @@ else
 
 	if ($vendor_id)
 		{
-		$stmt="SELECT * from vicidial_list where vendor_lead_code='" . mysql_real_escape_string($vendor_id) . "' order by modify_date desc limit 1000";
+		$stmt="SELECT * from vicidial_list where vendor_lead_code='" . mysql_real_escape_string($vendor_id) . "'";
 		}
 	else
 		{
 		if ($phone)
 			{
-			$stmt="SELECT * from vicidial_list where phone_number='" . mysql_real_escape_string($phone) . "' order by modify_date desc limit 1000";
+			if ($alt_phone_search=="Yes")
+				{
+				$stmt="SELECT * from vicidial_list where phone_number='" . mysql_real_escape_string($phone) . "' or alt_phone='" . mysql_real_escape_string($phone) . "' or address3='" . mysql_real_escape_string($phone) . "'";
+				}
+			else
+				{
+				$stmt="SELECT * from vicidial_list where phone_number='" . mysql_real_escape_string($phone) . "'";
+				}
 			}
 		else
 			{
 			if ($lead_id)
 				{
-				$stmt="SELECT * from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "' order by modify_date desc limit 1000";
+				$stmt="SELECT * from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
 				}
 			else
 				{
@@ -196,7 +203,7 @@ else
 						if ( ($SQLctA > 0) or ($SQLctB > 0) ) {$andB = 'and';}
 						$userSQL = "$andB user='" . mysql_real_escape_string($user) . "'";
 						}
-					$stmt="SELECT * from vicidial_list where $statusSQL $list_idSQL $userSQL order by modify_date desc limit 1000";
+					$stmt="SELECT * from vicidial_list where $statusSQL $list_idSQL $userSQL";
 					}
 				else
 					{
@@ -206,14 +213,38 @@ else
 				}
 			}
 		}
+
+	$stmt_alt='';
+	$results_to_printX=0;
+	if ( ($alt_phone_search=="Yes") and (strlen($phone) > 4) )
+		{
+		$stmtX="SELECT lead_id from vicidial_list_alt_phones where phone_number='" . mysql_real_escape_string($phone) . "' limit 1000;";
+		$rsltX=mysql_query($stmtX, $link);
+		$results_to_printX = mysql_num_rows($rsltX);
+		if ($DB)
+			{echo "\n\n$results_to_printX|$stmtX\n\n";}
+		$o=0;
+		while ($results_to_printX > $o)
+			{
+			$row=mysql_fetch_row($rsltX);
+			if ($o > 0) {$stmt_alt .= ",";}
+			$stmt_alt .= "'$row[0]'";
+			$o++;
+			}
+		if (strlen($stmt_alt) > 2)
+			{$stmt_alt = "or lead_id IN($stmt_alt)";}
+		}
+
+	$stmt = "$stmt$stmt_alt order by modify_date desc limit 1000;";
+
 	if ($DB)
 		{
 		echo "\n\n$stmt\n\n";
 		}
-	
-	$rslt=mysql_query($stmt, $link);
+
+	$rslt=mysql_query("$stmt", $link);
 	$results_to_print = mysql_num_rows($rslt);
-	if ($results_to_print < 1)
+	if ( ($results_to_print < 1) and ($results_to_printX < 1) )
 		{
 		echo date("l F j, Y G:i:s A");
 		echo "\n<br><br><center>\n";
