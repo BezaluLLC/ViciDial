@@ -212,10 +212,11 @@
 # 90904-1622 - Added timezone sort options for no hopper dialing
 # 90908-1037 - Added DEAD call logging
 # 90916-1839 - Added nodeletevdac
+# 90917-2246 - Fixed auto-alt-dial DNC check bug
 #
 
-$version = '2.2.0-122';
-$build = '90916-1839';
+$version = '2.2.0-123';
+$build = '90917-2246';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=244;
 $one_mysql_log=0;
@@ -2294,7 +2295,7 @@ if ($stage == "end")
 		if ($auto_dial_level > 0)
 			{
 			### check to see if campaign has alt_dial enabled
-			$stmt="SELECT auto_alt_dial FROM vicidial_campaigns where campaign_id='$campaign';";
+			$stmt="SELECT auto_alt_dial,use_internal_dnc,use_campaign_dnc FROM vicidial_campaigns where campaign_id='$campaign';";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00064',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -2302,7 +2303,9 @@ if ($stage == "end")
 			if ($VAC_mancall_ct > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$auto_alt_dial =$row[0];
+				$auto_alt_dial =	$row[0];
+				$use_internal_dnc =	$row[1];
+				$use_campaign_dnc =	$row[2];
 				}
 			else {$auto_alt_dial = 'NONE';}
 			if (eregi("(ALT_ONLY|ADDR3_ONLY|ALT_AND_ADDR3|ALT_AND_EXTENDED|ALT_AND_ADDR3_AND_EXTENDED|EXTENDED_ONLY)",$auto_alt_dial))
