@@ -82,6 +82,7 @@
 # 90827-1227 - Added list_id logging in vicidial_log on NA calls
 # 90907-0919 - Added LAGGED pause code update for paused agents, reduced logging if no issues
 # 90909-0640 - Parked bug fix and code optimizations
+# 90917-1432 - Fixed issue on high-volume systems with lagged agents
 #
 
 
@@ -1251,8 +1252,25 @@ while($one_day_interval > 0)
 
 								if ($Vaffected_rows > 0)
 									{
-									$stmtA = "UPDATE vicidial_agent_log set sub_status='LAGGED' where agent_log_id IN(SELECT agent_log_id from vicidial_live_agents where callerid='$KLcallerid[$kill_vac]');";
-									$VLaffected_rows = $dbhA->do($stmtA);
+									$stmtA = "SELECT agent_log_id from vicidial_live_agents where callerid='$KLcallerid[$kill_vac]';";
+									$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+									$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+									$sthArowsML=$sthA->rows;
+									$lagged_ids=0;
+									while ($sthArowsML > $lagged_ids)
+										{
+										@aryA = $sthA->fetchrow_array;
+										$MLAGagent_log_id[$lagged_ids] =	$aryA[0];
+										$lagged_ids++;
+										}
+									$sthA->finish();
+									$lagged_ids=0;
+									while ($sthArowsML > $lagged_ids)
+										{
+										$stmtA = "UPDATE vicidial_agent_log set sub_status='LAGGED' where agent_log_id='$MLAGagent_log_id[$lagged_ids]';";
+										$VLaffected_rows = $dbhA->do($stmtA);
+										$lagged_ids++;
+										}
 
 									$event_string = "|     dead call vla agent PAUSED $Vaffected_rows|$VLaffected_rows|$CLlead_id|$CLphone_number|$CLstatus|";
 									 &event_logger;
@@ -1580,8 +1598,25 @@ while($one_day_interval > 0)
 
 		if ($toPAUSEcount > 0)
 			{
-			$stmtA = "UPDATE vicidial_agent_log set sub_status='LAGGED' where agent_log_id IN(SELECT agent_log_id from vicidial_live_agents where server_ip='$server_ip' and last_update_time < '$PDtsSQLdate' and status NOT IN('PAUSED'));";
-			$VLaffected_rows = $dbhA->do($stmtA);
+			$stmtA = "SELECT agent_log_id from vicidial_live_agents where server_ip='$server_ip' and last_update_time < '$PDtsSQLdate' and status NOT IN('PAUSED');";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArowsL=$sthA->rows;
+			$lagged_ids=0;
+			while ($sthArowsL > $lagged_ids)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$LAGagent_log_id[$lagged_ids] =	$aryA[0];
+				$lagged_ids++;
+				}
+			$sthA->finish();
+			$lagged_ids=0;
+			while ($sthArowsL > $lagged_ids)
+				{
+				$stmtA = "UPDATE vicidial_agent_log set sub_status='LAGGED' where agent_log_id='$LAGagent_log_id[$lagged_ids]';";
+				$VLaffected_rows = $dbhA->do($stmtA);
+				$lagged_ids++;
+				}
 
 			$stmtA = "UPDATE vicidial_live_agents set status='PAUSED',random_id='10' where server_ip='$server_ip' and last_update_time < '$PDtsSQLdate' and status NOT IN('PAUSED');";
 			$affected_rows = $dbhA->do($stmtA);
@@ -1998,6 +2033,7 @@ sub get_time_now	#get the current date and time and epoch for logging call lengt
 	if ($Thour < 10) {$Thour = "0$Thour";}
 	if ($Tmin < 10) {$Tmin = "0$Tmin";}
 	if ($Tsec < 10) {$Tsec = "0$Tsec";}
+	$TDtsSQLdate = "$Tyear$Tmon$Tmday$Thour$Tmin$Tsec";
 	$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
 	}
 
