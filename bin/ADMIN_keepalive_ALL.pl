@@ -41,6 +41,7 @@
 # 90812-0053 - Added clear out non-used vicidial_conferences sessions
 # 90821-1246 - Fixed central voicemail server conf file, changed voicemail to use phone password
 # 90903-1626 - Added musiconhold and meetme conf file generation
+# 90919-1516 - Added generation of standalone voicemail boxes in voicemail conf file
 #
 
 $DB=0; # Debug flag
@@ -62,40 +63,40 @@ $reset_test = "$hour$min";
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
 
 	if ($args =~ /--help/i)
-	{
-	print "allowed run time options:\n  [-t] = test\n  [-debug] = verbose debug messages\n[-debugX] = Extra-verbose debug messages\n\n";
-	}
+		{
+		print "allowed run time options:\n  [-t] = test\n  [-debug] = verbose debug messages\n[-debugX] = Extra-verbose debug messages\n\n";
+		}
 	else
-	{
+		{
 		if ($args =~ /-debug/i)
-		{
-		$DB=1; # Debug flag
-		}
+			{
+			$DB=1; # Debug flag
+			}
 		if ($args =~ /--debugX/i)
-		{
-		$DBX=1;
-		print "\n----- SUPER-DUPER DEBUGGING -----\n\n";
-		}
+			{
+			$DBX=1;
+			print "\n----- SUPER-DUPER DEBUGGING -----\n\n";
+			}
 		if ($args =~ /-t/i)
-		{
-		$TEST=1;
-		$T=1;
+			{
+			$TEST=1;
+			$T=1;
+			}
 		}
 	}
-}
 else
-{
-#	print "no command line options set\n";
-}
+	{
+	#	print "no command line options set\n";
+	}
 ### end parsing run-time options ###
 
 
@@ -128,6 +129,7 @@ foreach(@conf)
 #	7 - AST_VDauto_dial_FILL\n";
 #	8 - ip_relay for blind monitoring\n";
 #	9 - Timeclock auto logout\n";
+#     - Other setting are set by configuring them in the database
 
 if ($VARactive_keepalives =~ /X/)
 	{
@@ -1456,6 +1458,32 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 			$i++;
 			}
+
+		##### Get the other voicemail box entries #####
+		$stmtA = "SELECT voicemail_id,fullname,pass,email FROM vicidial_voicemail where active='Y';";
+		#	print "$stmtA\n";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			$vm  .= "\n";
+			$vm  .= "; Other Voicemail Entries:\n";
+			}
+		$i=0;
+		while ($sthArows > $i)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$voicemail_id[$i] =	$aryA[0];
+			$fullname[$i] =		$aryA[1];
+			$pass[$i] =			$aryA[2];
+			$email[$i] =		$aryA[3];
+
+			$vm  .= "$voicemail_id[$i] => $pass[$i],$fullname[$i],$email[$i]\n";
+
+			$i++;
+			}
+		$sthA->finish();
 		}
 	##### END generate voicemail accounts for all distinct phones on dedicated voicemail server
 

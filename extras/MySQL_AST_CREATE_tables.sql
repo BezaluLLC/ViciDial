@@ -1404,8 +1404,8 @@ agent_search_method ENUM('LO','LB','SO') default 'LB',
 list_id BIGINT(14) UNSIGNED default '999',
 campaign_id VARCHAR(8),
 phone_code VARCHAR(10) default '1',
-unique index (did_pattern),
 menu_id VARCHAR(50) default '',
+unique index (did_pattern),
 index (group_id)
 );
 
@@ -1797,6 +1797,16 @@ rank SMALLINT(5),
 unique index mohfile (filename, moh_id)
 );
 
+CREATE TABLE vicidial_voicemail (
+voicemail_id VARCHAR(10) NOT NULL UNIQUE PRIMARY KEY,
+active ENUM('Y','N') default 'Y',
+pass VARCHAR(10) NOT NULL,
+fullname VARCHAR(100) NOT NULL,
+messages INT(4) default '0',
+old_messages INT(4) default '0',
+email VARCHAR(100)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
@@ -1921,7 +1931,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1173',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1174',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

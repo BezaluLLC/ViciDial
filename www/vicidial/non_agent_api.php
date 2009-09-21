@@ -25,11 +25,12 @@
 # 90522-0506 - Security fix
 # 90530-0946 - Added QueueMetrics blind monitoring option
 # 90721-1428 - Added rank and owner as vicidial_list fields
-# 90904-1535 - Added moh_list
+# 90904-1535 - Added moh_list musiconhold list
+# 90916-2342 - Added vm_list voicemail list
 #
 
-$version = '2.2.0-12';
-$build = '90904-1535';
+$version = '2.2.0-13';
+$build = '90916-2342';
 
 require("dbconnect.php");
 
@@ -593,6 +594,122 @@ if ($function == 'moh_list')
 
 
 ################################################################################
+### vm_list - sends a list of the voicemail boxes in the system
+################################################################################
+if ($function == 'vm_list')
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 6;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$allowed_user=$row[0];
+	if ($allowed_user < 1)
+		{
+		$result = 'ERROR';
+		$result_reason = "vm_list USER DOES NOT HAVE PERMISSION TO VIEW VOICEMAIL BOXES LIST";
+		echo "$result: $result_reason: |$user|$allowed_user|\n";
+		$data = "$allowed_user";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		$server_name = getenv("SERVER_NAME");
+		$server_port = getenv("SERVER_PORT");
+		if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+		  else {$HTTPprotocol = 'http://';}
+		$admDIR = "$HTTPprotocol$server_name:$server_port";
+
+		echo "\n";
+		echo "<HTML><head><title>NON-AGENT API</title>\n";
+		echo "<script language=\"Javascript\">\n";
+		echo "function choose_file(filename,fieldname)\n";
+		echo "	{\n";
+		echo "	if (filename.length > 0)\n";
+		echo "		{\n";
+		echo "		parent.document.getElementById(fieldname).value = filename;\n";
+		echo "		document.getElementById(\"selectframe\").innerHTML = '';\n";
+		echo "		document.getElementById(\"selectframe\").style.visibility = 'hidden';\n";
+		echo "		parent.close_chooser();\n";
+		echo "		}\n";
+		echo "	}\n";
+		echo "function close_file()\n";
+		echo "	{\n";
+		echo "	document.getElementById(\"selectframe\").innerHTML = '';\n";
+		echo "	document.getElementById(\"selectframe\").style.visibility = 'hidden';\n";
+		echo "	parent.close_chooser();\n";
+		echo "	}\n";
+		echo "</script>\n";
+		echo "</head>\n\n";
+
+		echo "<body>\n";
+		echo "<a href=\"javascript:close_file();\"><font size=1 face=\"Arial,Helvetica\">close frame</font></a>\n";
+		echo "<div id='selectframe' style=\"height:400px;width:710px;overflow:scroll;\">\n";
+		echo "<table border=0 cellpadding=1 cellspacing=2 width=690 bgcolor=white><tr>\n";
+		echo "<td width=30>#</td>\n";
+		echo "<td colspan=2>Voicemail Boxes</td>\n";
+		echo "<td>Name</td>\n";
+		echo "<td>Email</td>\n";
+		echo "</tr>\n";
+
+		$stmt="SELECT voicemail_id,fullname,email from vicidial_voicemail where active='Y' order by voicemail_id";
+		$rslt=mysql_query($stmt, $link);
+		$vm_to_print = mysql_num_rows($rslt);
+		$k=0;
+		$sf=0;
+		while ($vm_to_print > $k) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$voicemail_id[$k] =	$rowx[0];
+			$fullname[$k] =		$rowx[1];
+			$email[$k] =		$rowx[2];
+			$sf++;
+			if (eregi("1$|3$|5$|7$|9$", $sf))
+				{$bgcolor='bgcolor="#E6E6E6"';} 
+			else
+				{$bgcolor='bgcolor="#F6F6F6"';}
+			echo "<tr $bgcolor><td width=30><font size=1 face=\"Arial,Helvetica\">$sf</td>\n";
+			echo "<td colspan=2><a href=\"javascript:choose_file('$voicemail_id[$k]','$comments');\"><font size=2 face=\"Arial,Helvetica\">$voicemail_id[$k]</a></td>\n";
+			echo "<td><font size=2 face=\"Arial,Helvetica\">$fullname[$k]</td>\n";
+			echo "<td><font size=2 face=\"Arial,Helvetica\">$email[$k]</td></tr>\n";
+
+			$k++;
+			}
+
+		$stmt="SELECT voicemail_id,fullname,email,extension from phones where active='Y' order by voicemail_id";
+		$rslt=mysql_query($stmt, $link);
+		$vm_to_print = mysql_num_rows($rslt);
+		$k=0;
+		$sf=0;
+		while ($vm_to_print > $k) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$voicemail_id[$k] =	$rowx[0];
+			$fullname[$k] =		$rowx[1];
+			$email[$k] =		$rowx[2];
+			$extension[$k] =	$rowx[3];
+			$sf++;
+			if (eregi("1$|3$|5$|7$|9$", $sf))
+				{$bgcolor='bgcolor="#E6E6E6"';} 
+			else
+				{$bgcolor='bgcolor="#F6F6F6"';}
+			echo "<tr $bgcolor><td width=30><font size=1 face=\"Arial,Helvetica\">$sf</td>\n";
+			echo "<td colspan=2><a href=\"javascript:choose_file('$voicemail_id[$k]','$comments');\"><font size=2 face=\"Arial,Helvetica\">$voicemail_id[$k]</a></td>\n";
+			echo "<td><font size=2 face=\"Arial,Helvetica\">$extension[$k] - $fullname[$k]</td>\n";
+			echo "<td><font size=2 face=\"Arial,Helvetica\">$email[$k]</td></tr>\n";
+
+			$k++;
+			}
+		echo "</table></div></body></HTML>\n";
+
+		exit;
+		}
+	}
+
+
+
+
+################################################################################
 ### blind_monitor - sends call to phone from session from listening
 ################################################################################
 if ($function == 'blind_monitor')
@@ -976,7 +1093,7 @@ if ( (eregi("POSTAL",$postalgmt)) && (strlen($postal_code)>4) )
 	{
 	if (preg_match('/^1$/', $phone_code))
 		{
-		$stmt="select * from vicidial_postal_codes where country_code='$phone_code' and postal_code LIKE \"$postal_code%\";";
+		$stmt="select postal_code,state,GMT_offset,DST,DST_range,country,country_code from vicidial_postal_codes where country_code='$phone_code' and postal_code LIKE \"$postal_code%\";";
 		$rslt=mysql_query($stmt, $link);
 		$pc_recs = mysql_num_rows($rslt);
 		if ($pc_recs > 0)
@@ -997,7 +1114,7 @@ if ($postalgmt_found < 1)
 	### UNITED STATES ###
 	if ($phone_code =='1')
 		{
-		$stmt="select * from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
+		$stmt="select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
 		$rslt=mysql_query($stmt, $link);
 		$pc_recs = mysql_num_rows($rslt);
 		if ($pc_recs > 0)
@@ -1012,7 +1129,7 @@ if ($postalgmt_found < 1)
 	### MEXICO ###
 	if ($phone_code =='52')
 		{
-		$stmt="select * from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
+		$stmt="select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
 		$rslt=mysql_query($stmt, $link);
 		$pc_recs = mysql_num_rows($rslt);
 		if ($pc_recs > 0)
@@ -1027,7 +1144,7 @@ if ($postalgmt_found < 1)
 	### AUSTRALIA ###
 	if ($phone_code =='61')
 		{
-		$stmt="select * from vicidial_phone_codes where country_code='$phone_code' and state='$state';";
+		$stmt="select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and state='$state';";
 		$rslt=mysql_query($stmt, $link);
 		$pc_recs = mysql_num_rows($rslt);
 		if ($pc_recs > 0)
@@ -1043,7 +1160,7 @@ if ($postalgmt_found < 1)
 	if (!$PC_processed)
 		{
 		$PC_processed++;
-		$stmt="select * from vicidial_phone_codes where country_code='$phone_code';";
+		$stmt="select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code';";
 		$rslt=mysql_query($stmt, $link);
 		$pc_recs = mysql_num_rows($rslt);
 		if ($pc_recs > 0)
@@ -1604,7 +1721,7 @@ $GMT_gmt = "$tz";
 $GMT_day = "$pday";
 $GMT_hour = ($phour + $pmin);
 
-$stmt="SELECT * FROM vicidial_call_times where call_time_id='$local_call_time';";
+$stmt="SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times FROM vicidial_call_times where call_time_id='$local_call_time';";
 if ($DB) {echo "$stmt\n";}
 $rslt=mysql_query($stmt, $link);
 $rowx=mysql_fetch_row($rslt);

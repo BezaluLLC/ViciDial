@@ -254,10 +254,11 @@
 # 90909-0921 - Fixed park issues
 # 90916-1144 - Added Second web form button, Answering Machine Message change
 # 90917-1325 - Fixed script loading bug with customer webform at the same time
+# 90920-2108 - Changed web forms to use window.open instead of traditional links(IE7 compatibility issue)
 #
 
-$version = '2.2.0-231';
-$build = '90917-1325';
+$version = '2.2.0-232';
+$build = '90920-2108';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -4805,10 +4806,14 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							TEMP_VDIC_web_form_address_two = VDIC_web_form_address_two + "" + web_form_vars_two;
 							}
 
-						document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH();\"><IMG SRC=\"./images/vdc_LB_webform.gif\" border=0 alt=\"Web Form\"></a>\n";
+						document.getElementById("WebFormSpan").innerHTML = "<a href=\"#\" onclick=\"WebFormRefresH('','','YES');\"><IMG SRC=\"./images/vdc_LB_webform.gif\" border=0 alt=\"Web Form\"></a>\n";
+
+					//	document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH();\"><IMG SRC=\"./images/vdc_LB_webform.gif\" border=0 alt=\"Web Form\"></a>\n";
 						if (enable_second_webform > 0)
 							{
-							document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH();\"><IMG SRC=\"./images/vdc_LB_webform_two.gif\" border=0 alt=\"Web Form 2\"></a>\n";
+							document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"#\" onclick=\"WebFormTwoRefresH('','','YES');\"><IMG SRC=\"./images/vdc_LB_webform_two.gif\" border=0 alt=\"Web Form 2\"></a>\n";
+
+					//		document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH();\"><IMG SRC=\"./images/vdc_LB_webform_two.gif\" border=0 alt=\"Web Form 2\"></a>\n";
 							}
 
 						if (LeaDPreVDispO == 'CALLBK')
@@ -6016,12 +6021,15 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								TEMP_VDIC_web_form_address_two = VDIC_web_form_address_two + "" + web_form_vars_two;
 								}
 
+							document.getElementById("WebFormSpan").innerHTML = "<a href=\"#\" onclick=\"WebFormRefresH('','','YES');\"><IMG SRC=\"./images/vdc_LB_webform.gif\" border=0 alt=\"Web Form\"></a>\n";
 
-							document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH();\"><IMG SRC=\"./images/vdc_LB_webform.gif\" border=0 alt=\"Web Form\"></a>\n";
+					//		document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH();\"><IMG SRC=\"./images/vdc_LB_webform.gif\" border=0 alt=\"Web Form\"></a>\n";
 
 							if (enable_second_webform > 0)
 								{
-								document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH();\"><IMG SRC=\"./images/vdc_LB_webform_two.gif\" border=0 alt=\"Web Form 2\"></a>\n";
+								document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"#\" onclick=\"WebFormTwoRefresH('','','YES');\"><IMG SRC=\"./images/vdc_LB_webform_two.gif\" border=0 alt=\"Web Form 2\"></a>\n";
+
+					//			document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH();\"><IMG SRC=\"./images/vdc_LB_webform_two.gif\" border=0 alt=\"Web Form 2\"></a>\n";
 								}
 
 							if ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') )
@@ -6137,7 +6145,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 // ################################################################################
 // refresh the content of the web form URL
-	function WebFormRefresH(taskrefresh,submittask) 
+	function WebFormRefresH(taskrefresh,submittask,taskopen) 
 		{
 		if (VDCL_group_id.length > 1)
 			{var group = VDCL_group_id;}
@@ -6234,21 +6242,19 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			TEMP_VDIC_web_form_address = VDIC_web_form_address + "" + web_form_vars;
 			}
 
+		document.getElementById("WebFormSpan").innerHTML = "<a href=\"#\" onclick=\"WebFormRefresH('','','YES');\"><IMG SRC=\"./images/vdc_LB_webform.gif\" border=0 alt=\"Web Form\"></a>\n";
 
-		if (taskrefresh == 'OUT')
+		if (taskopen == 'YES')
 			{
-			document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH('IN');\"><IMG SRC=\"./images/vdc_LB_webform.gif\" border=0 alt=\"Web Form\"></a>\n";
+			window.open(TEMP_VDIC_web_form_address, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 			}
-		else 
-			{
-			document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOut=\"WebFormRefresH('OUT');\"><IMG SRC=\"./images/vdc_LB_webform.gif\" border=0 alt=\"Web Form\"></a>\n";
-			}
+
 		}
 
 
 // ################################################################################
 // refresh the content of the second web form URL
-	function WebFormTwoRefresH(taskrefresh,submittask) 
+	function WebFormTwoRefresH(taskrefresh,submittask,taskopen) 
 		{
 		if (VDCL_group_id.length > 1)
 			{var group = VDCL_group_id;}
@@ -6348,13 +6354,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 		if (enable_second_webform > 0)
 			{
-			if (taskrefresh == 'OUT')
+			document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"#\" onclick=\"WebFormTwoRefresH('','','YES');\"><IMG SRC=\"./images/vdc_LB_webform_two.gif\" border=0 alt=\"Web Form 2\"></a>\n";
+
+			if (taskopen == 'YES')
 				{
-				document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH('IN');\"><IMG SRC=\"./images/vdc_LB_webform_two.gif\" border=0 alt=\"Web Form 2\"></a>\n";
-				}
-			else 
-				{
-				document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOut=\"WebFormTwoRefresH('OUT');\"><IMG SRC=\"./images/vdc_LB_webform_two.gif\" border=0 alt=\"Web Form 2\"></a>\n";
+				window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 				}
 			}
 		}

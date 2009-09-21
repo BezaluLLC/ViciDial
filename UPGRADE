@@ -236,6 +236,14 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 		exten => 8320,2,Hangup
 	# the VD_amd_post.agi script is now depricated
 
+60. Added additional Voicemail configuration through admin.php. Voicemail boxes
+	can now be created without being tied to a phone. These voicemail boxes
+	are added to the active voicemail server and there must be an active
+	voicemail server defined in the system settings for these to work.
+
+61. Changed WEBFORM links to work as window.open instead of traditional links
+	with 'target' tags which IE7 apparently has problems with
+
 
 
 

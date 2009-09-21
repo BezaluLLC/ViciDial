@@ -20,7 +20,8 @@ Changes:
 90428-0208 - Added blind_monitor function
 90513-1720 - Added sounds_list function
 90721-1432 - Added rank and owner
-90904-1535 - Added moh_list function
+90904-1535 - Added moh_list musiconhold function
+90916-2342 - Added vm_list voicemail list
 
 
 
@@ -88,6 +89,30 @@ Example responses:
 ERROR: moh_list USER DOES NOT HAVE PERMISSION TO VIEW SOUNDS LIST
 
 ERROR: moh_list CENTRAL SOUND CONTROL IS NOT ACTIVE
+
+
+
+
+
+--------------------------------------------------------------------------------
+vm_list - outputs a list of voicemail boxes in the system
+
+NOTE: api user for this function must have user_level set to 7 or higher
+
+OPTIONAL FIELDS-
+format -		format of the output(tab, link, selectframe)
+comments -		name of the field to populate
+
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=vm_list&format=selectframe&comments=fieldname&stage=date
+
+Example responses:
+<success is inferred by output of voicemail boxes list>
+
+ERROR: vm_list USER DOES NOT HAVE PERMISSION TO VIEW VOICEMAIL BOXES LIST
+
+ERROR: vm_list CENTRAL SOUND CONTROL IS NOT ACTIVE
 
 
 

@@ -2123,11 +2123,8 @@ exten => 8310,3,Wait,3600
 exten => 8310,4,Hangup
 
 ; this is used for playing a message to an answering machine forwarded from AMD in VICIDIAL
-;    replace conf with the message file you want to leave
-exten => 8320,1,WaitForSilence(2000,2) ; AMD got machine.  leave message after recording
-exten => 8320,2,Playback(conf)
-exten => 8320,3,AGI(VD_amd_post.agi,${EXTEN})
-exten => 8320,4,Hangup
+exten => 8320,1,AGI(VD_amd.agi,${EXTEN}-----YES)
+exten => 8320,2,Hangup
 
 ; this is used to allow the GUI to send you directly into voicemail
 ;     don't forget to set GUI variable $voicemail_exten to this extension

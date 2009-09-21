@@ -302,6 +302,34 @@ Enable Second Webform||
 WaitForSilence Options||
 If Wait For Silence is desired on calls that are detected as Answering Machines then this field has those options. There are two settings separated by a comma, the first option is how long to detect silence in milliseconds and the second option is for how many times to detect that before playing the message. Default is EMPTY for disabled. A standard value for this would be wait for 2 seconds of silence twice||
 This field is for entering the prompt to play when the agent gets an answering machine and clicks on the Answering Machine Message button in the transfer conference frame. You must set this to either an audio file in the audio store or a TTS prompt if TTS is enabled on your system||
+EXTENDED ALTERNATE PHONE NUMBERS FOR THIS LEAD||
+ADD NEW VOICEMAIL BOX||
+ADDING NEW VOICEMAIL BOX||
+MODIFY VOICEMAIL BOX||
+MODIFY A VOICEMAIL BOX||
+DELETE VOICEMAIL BOX||
+VOICEMAIL BOXES LIST||
+VOICEMAIL BOXES||
+ADD NEW VOICEMAIL BOX||
+Voicemail ID||
+This is the all numbers identifier of this mailbox. This must not be a duplicate of an existing voicemail ID or the voicemail ID of a phone on the system, minimum of 2 characters||
+This is name associated with this voicemail box. max 100 characters, minimum of 2 characters||
+This is the password that is used to gain access to the voicemail box when dialing in to check messages max 10 characters, minimum of 2 characters||
+This option allows you to set the voicemail box to active or inactive. If the box is inactive you cannot leave messages on it and you cannot check messages in it||
+This optional setting allows you to have the voicemail messages sent to an email account, if your system is set up to send out email. If this field is empty then no emails will be sent out||
+VOICEMAIL BOX NOT ADDED||
+there is already a voicemail box in the system with this ID||
+there is already a phone in the system with this voicemail ID||
+VOICEMAIL BOX ADDED||
+VOICEMAIL BOX NOT MODIFIED||
+VOICEMAIL BOX MODIFIED||
+VOICEMAIL BOX NOT DELETED||
+VOICEMAIL BOX DELETION COMPLETED||
+VOICEMAIL BOX DELETION CONFIRMATION||
+Click here to delete voicemail box||
+DELETE THIS VOICEMAIL BOX||
+Click here to see Admin chages to this voicemail box||
+The following fields must have data||
 
 
 add-file: user_territories.php

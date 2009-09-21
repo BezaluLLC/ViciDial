@@ -548,3 +548,15 @@ ALTER TABLE system_settings ADD db_schema_update_date DATETIME;
 ALTER TABLE system_settings ADD enable_second_webform ENUM('0','1') default '0';
 
 UPDATE system_settings SET db_schema_version='1173',db_schema_update_date=NOW();
+
+CREATE TABLE vicidial_voicemail (
+voicemail_id VARCHAR(10) NOT NULL UNIQUE PRIMARY KEY,
+active ENUM('Y','N') default 'Y',
+pass VARCHAR(10) NOT NULL,
+fullname VARCHAR(100) NOT NULL,
+messages INT(4) default '0',
+old_messages INT(4) default '0',
+email VARCHAR(100)
+);
+
+UPDATE system_settings SET db_schema_version='1174',db_schema_update_date=NOW();
