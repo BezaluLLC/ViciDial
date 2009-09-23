@@ -279,7 +279,7 @@ else
 #if ( (eregi('ALL-ACTIVE',$group_string)) and ($with_inbound=='O') and ($outbound_autodial_active > 0) )
 #	{$with_inbound='N';}
 
-$stmt="select * from vicidial_user_groups;";
+$stmt="select user_group from vicidial_user_groups;";
 $rslt=mysql_query($stmt, $link);
 if (!isset($DB))   {$DB=0;}
 if ($DB) {echo "$stmt\n";}

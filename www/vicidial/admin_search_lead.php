@@ -20,6 +20,7 @@
 # 90310-2146 - Added admin header
 # 90508-0644 - Changed to PHP long tags
 # 90917-2307 - Added alternate phone number searching option
+# 90921-0713 - Removed select *
 #
 
 require("dbconnect.php");
@@ -57,6 +58,7 @@ $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 
+$vicidial_list_fields = 'lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner';
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and modify_leads='1';";
 if ($DB) {echo "|$stmt|\n";}
@@ -161,7 +163,7 @@ else
 
 	if ($vendor_id)
 		{
-		$stmt="SELECT * from vicidial_list where vendor_lead_code='" . mysql_real_escape_string($vendor_id) . "'";
+		$stmt="SELECT $vicidial_list_fields from vicidial_list where vendor_lead_code='" . mysql_real_escape_string($vendor_id) . "'";
 		}
 	else
 		{
@@ -169,18 +171,18 @@ else
 			{
 			if ($alt_phone_search=="Yes")
 				{
-				$stmt="SELECT * from vicidial_list where phone_number='" . mysql_real_escape_string($phone) . "' or alt_phone='" . mysql_real_escape_string($phone) . "' or address3='" . mysql_real_escape_string($phone) . "'";
+				$stmt="SELECT $vicidial_list_fields from vicidial_list where phone_number='" . mysql_real_escape_string($phone) . "' or alt_phone='" . mysql_real_escape_string($phone) . "' or address3='" . mysql_real_escape_string($phone) . "'";
 				}
 			else
 				{
-				$stmt="SELECT * from vicidial_list where phone_number='" . mysql_real_escape_string($phone) . "'";
+				$stmt="SELECT $vicidial_list_fields from vicidial_list where phone_number='" . mysql_real_escape_string($phone) . "'";
 				}
 			}
 		else
 			{
 			if ($lead_id)
 				{
-				$stmt="SELECT * from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
+				$stmt="SELECT $vicidial_list_fields from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
 				}
 			else
 				{
@@ -203,7 +205,7 @@ else
 						if ( ($SQLctA > 0) or ($SQLctB > 0) ) {$andB = 'and';}
 						$userSQL = "$andB user='" . mysql_real_escape_string($user) . "'";
 						}
-					$stmt="SELECT * from vicidial_list where $statusSQL $list_idSQL $userSQL";
+					$stmt="SELECT $vicidial_list_fields from vicidial_list where $statusSQL $list_idSQL $userSQL";
 					}
 				else
 					{
