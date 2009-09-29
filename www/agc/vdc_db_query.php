@@ -13,7 +13,7 @@
 #  - $pass
 # optional variables:
 #  - $format - ('text','debug')
-#  - $ACTION - ('regCLOSER','manDiaLnextCALL','manDiaLskip','manDiaLonly','manDiaLlookCALL','manDiaLlogCALL','userLOGout','updateDISPO','VDADpause','VDADready','VDADcheckINCOMING','UpdatEFavoritEs','CalLBacKLisT','CalLBacKCounT','PauseCodeSubmit','LogiNCamPaigns','alt_phone_change','AlertControl','AGENTSview','CALLSINQUEUEview','CALLSINQUEUEgrab','DiaLableLeaDsCounT')
+#  - $ACTION - ('regCLOSER','manDiaLnextCALL','manDiaLskip','manDiaLonly','manDiaLlookCALL','manDiaLlogCALL','userLOGout','updateDISPO','updateLEAD','VDADpause','VDADready','VDADcheckINCOMING','UpdatEFavoritEs','CalLBacKLisT','CalLBacKCounT','PauseCodeSubmit','LogiNCamPaigns','alt_phone_change','AlertControl','AGENTSview','CALLSINQUEUEview','CALLSINQUEUEgrab','DiaLableLeaDsCounT')
 #  - $stage - ('start','finish','lookup','new')
 #  - $closer_choice - ('CL_TESTCAMP_L CL_OUT123_L -')
 #  - $conf_exten - ('8600011',...)
@@ -213,12 +213,13 @@
 # 90908-1037 - Added DEAD call logging
 # 90916-1839 - Added nodeletevdac
 # 90917-2246 - Fixed auto-alt-dial DNC check bug
+# 90924-1544 - Added List callerid override option
 #
 
-$version = '2.2.0-123';
-$build = '90917-2246';
+$version = '2.2.0-124';
+$build = '90924-1544';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=244;
+$mysql_log_count=252;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -1578,6 +1579,22 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$Local_dial_timeout = ($Local_dial_timeout * 1000);
 				if (strlen($dial_prefix) > 0) {$Local_out_prefix = "$dial_prefix";}
 				if (strlen($campaign_cid) > 6) {$CCID = "$campaign_cid";   $CCID_on++;}
+				$campaign_cid_override='';
+				### check if there is a list_id override
+				if (strlen($list_id) > 1)
+					{
+					$stmt = "SELECT campaign_cid_override FROM vicidial_lists where list_id='$list_id';";
+					$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00245',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$lio_ct = mysql_num_rows($rslt);
+					if ($lio_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$campaign_cid_override =	$row[0];
+						}
+					}
+				if (strlen($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
 				if (eregi("x",$dial_prefix)) {$Local_out_prefix = '';}
 
 				$PADlead_id = sprintf("%09s", $lead_id);
@@ -1869,6 +1886,37 @@ if ($ACTION == 'manDiaLonly')
 		if (strlen($dial_prefix) > 0) {$Local_out_prefix = "$dial_prefix";}
 		if (strlen($campaign_cid) > 6) {$CCID = "$campaign_cid";   $CCID_on++;}
 		if (eregi("x",$dial_prefix)) {$Local_out_prefix = '';}
+		$campaign_cid_override='';
+		### check if there is a list_id override
+		if (strlen($lead_id) > 1)
+			{
+			$list_id='';
+			$stmt = "SELECT list_id FROM vicidial_list where lead_id='$lead_id';";
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00246',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$lio_ct = mysql_num_rows($rslt);
+			if ($lio_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$list_id =	$row[0];
+
+				if (strlen($list_id) > 1)
+					{
+					$stmt = "SELECT campaign_cid_override FROM vicidial_lists where list_id='$list_id';";
+					$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00247',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$lio_ct = mysql_num_rows($rslt);
+					if ($lio_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$campaign_cid_override =	$row[0];
+						}
+					}
+				}
+			}
+		if (strlen($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
 
 		$PADlead_id = sprintf("%09s", $lead_id);
 			while (strlen($PADlead_id) > 9) {$PADlead_id = substr("$PADlead_id", 0, -1);}
@@ -3313,7 +3361,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 							$stmt = "SELECT alt_phone_count from vicidial_list_alt_phones where lead_id='$lead_id' and phone_number = '$dialed_number' order by alt_phone_count limit 1;";
 							if ($DB) {echo "$stmt\n";}
 							$rslt=mysql_query($stmt, $link);
-								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00248',$user,$server_ip,$session_name,$one_mysql_log);}
 							$VDAP_cid_ct = mysql_num_rows($rslt);
 							if ($VDACP_cid_ct > 0)
 								{
@@ -3323,7 +3371,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 								$stmt = "SELECT count(*) from vicidial_list_alt_phones where lead_id='$lead_id';";
 								if ($DB) {echo "$stmt\n";}
 								$rslt=mysql_query($stmt, $link);
-									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00249',$user,$server_ip,$session_name,$one_mysql_log);}
 								$VDAPct_cid_ct = mysql_num_rows($rslt);
 								if ($VDACPct_cid_ct > 0)
 									{
@@ -4012,7 +4060,7 @@ if ($ACTION == 'updateDISPO')
 										$stmt = "SELECT alt_phone_count from vicidial_list_alt_phones where lead_id='$lead_id' and phone_number = '$dialed_number' order by alt_phone_count limit 1;";
 										if ($DB) {echo "$stmt\n";}
 										$rslt=mysql_query($stmt, $link);
-											if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+											if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00250',$user,$server_ip,$session_name,$one_mysql_log);}
 										$VDAP_cid_ct = mysql_num_rows($rslt);
 										if ($VDACP_cid_ct > 0)
 											{
@@ -4022,7 +4070,7 @@ if ($ACTION == 'updateDISPO')
 											$stmt = "SELECT count(*) from vicidial_list_alt_phones where lead_id='$lead_id';";
 											if ($DB) {echo "$stmt\n";}
 											$rslt=mysql_query($stmt, $link);
-												if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+												if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00251',$user,$server_ip,$session_name,$one_mysql_log);}
 											$VDAPct_cid_ct = mysql_num_rows($rslt);
 											if ($VDACPct_cid_ct > 0)
 												{
@@ -5504,7 +5552,7 @@ if ($ACTION == 'DiaLableLeaDsCounT')
 	$stmt = "select dialable_leads from vicidial_campaign_stats where campaign_id='$campaign';";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00252',$user,$server_ip,$session_name,$one_mysql_log);}
 	if ($rslt) {$dialable_count = mysql_num_rows($rslt);}
 	if ($dialable_count > 0)
 		{

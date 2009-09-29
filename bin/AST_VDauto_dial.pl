@@ -83,6 +83,7 @@
 # 90907-0919 - Added LAGGED pause code update for paused agents, reduced logging if no issues
 # 90909-0640 - Parked bug fix and code optimizations
 # 90917-1432 - Fixed issue on high-volume systems with lagged agents
+# 90924-0914 - Added List callerid override option
 #
 
 
@@ -792,23 +793,24 @@ while($one_day_interval > 0)
 							$UQaffected_rows = $dbhA->do($stmtA);
 							print "hopper row updated to INCALL: |$UQaffected_rows|$lead_id|\n";
 
-							$stmtA = "SELECT * FROM vicidial_list where lead_id='$lead_id';";
+							### Gather lead data
+							$stmtA = "SELECT list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,address3,alt_phone,called_count FROM vicidial_list where lead_id='$lead_id';";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
 							$rec_count=0;
 							$rec_countCUSTDATA=0;
-							while ($sthArows > $rec_count)
+							if ($sthArows > 0)
 								{
 								@aryA = $sthA->fetchrow_array;
-								$list_id =					"$aryA[7]";
-								$gmt_offset_now	=			"$aryA[8]";
-								$called_since_last_reset =	"$aryA[9]";
-								$phone_code	=				"$aryA[10]";
-								$phone_number =				"$aryA[11]";
-								$address3 =					"$aryA[18]";
-								$alt_phone =				"$aryA[26]";
-								$called_count =				"$aryA[30]";
+								$list_id =					$aryA[0];
+								$gmt_offset_now	=			$aryA[1];
+								$called_since_last_reset =	$aryA[2];
+								$phone_code	=				$aryA[3];
+								$phone_number =				$aryA[4];
+								$address3 =					$aryA[5];
+								$alt_phone =				$aryA[6];
+								$called_count =				$aryA[7];
 
 								$rec_countCUSTDATA++;
 								$rec_count++;
@@ -817,6 +819,19 @@ while($one_day_interval > 0)
 
 							if ($rec_countCUSTDATA)
 								{
+								$campaign_cid_override='';
+								### gather list_id overrides
+								$stmtA = "SELECT campaign_cid_override FROM vicidial_lists where list_id='$list_id';";
+								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+								$sthArowsL=$sthA->rows;
+								if ($sthArowsL > 0)
+									{
+									@aryA = $sthA->fetchrow_array;
+									$campaign_cid_override =	$aryA[0];
+									}
+								$sthA->finish();
+
 								### update called_count
 								$called_count++;
 								if ($called_since_last_reset =~ /^Y/)
@@ -903,6 +918,7 @@ while($one_day_interval > 0)
 								else {$VDAD_dial_exten = "$answer_transfer_agent";}
 
 								if (length($DBIPcampaigncid[$user_CIPct]) > 6) {$CCID = "$DBIPcampaigncid[$user_CIPct]";   $CCID_on++;}
+								if (length($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
 								if ($DBIPdialprefix[$user_CIPct] =~ /x/i) {$Local_out_prefix = '';}
 
 								if ($RECcount)

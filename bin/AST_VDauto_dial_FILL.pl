@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDauto_dial_FILL.pl version 2.0.5   *DBI-version*
+# AST_VDauto_dial_FILL.pl version 2.2.0   *DBI-version*
 #
 # DESCRIPTION:
 # Places auto_dial calls on the VICIDIAL dialer system across all servers only 
@@ -26,54 +26,54 @@
 # 81210-1938 - Fixed callerIDnumber bug
 # 90306-1844 - Added configurable calls-per-second option
 # 90729-0611 - Added vicidial_balance_rank option
+# 90924-1519 - Added List callerid override option
 #
-
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
 
 	if ($args =~ /--help/i)
-	{
-	print "allowed run time options:\n  [-t] = test\n  [-debug] = verbose debug messages\n  [--delay=XXX] = delay of XXX seconds per loop, default 2.5 seconds\n\n";
-	}
-	else
-	{
-		if ($args =~ /--delay=/i)
 		{
-		@data_in = split(/--delay=/,$args);
+		print "allowed run time options:\n  [-t] = test\n  [-debug] = verbose debug messages\n  [--delay=XXX] = delay of XXX seconds per loop, default 2.5 seconds\n\n";
+		}
+	else
+		{
+		if ($args =~ /--delay=/i)
+			{
+			@data_in = split(/--delay=/,$args);
 			$loop_delay = $data_in[1];
 			print "     LOOP DELAY OVERRIDE!!!!! = $loop_delay seconds\n\n";
 			$loop_delay = ($loop_delay * 1000);
-		}
+			}
 		else
-		{
-		$loop_delay = '2500';
-		}
+			{
+			$loop_delay = '2500';
+			}
 		if ($args =~ /-debug/i)
-		{
-		$DB=1; # Debug flag, set to 0 for no debug messages
-		print "\n-- DEBUG --\n\n";
-		}
+			{
+			$DB=1; # Debug flag, set to 0 for no debug messages
+			print "\n-- DEBUG --\n\n";
+			}
 		if ($args =~ /-t/i)
-		{
-		$TEST=1;
-		$T=1;
+			{
+			$TEST=1;
+			$T=1;
+			}
 		}
 	}
-}
 else
-{
-print "no command line options set\n";
-	$loop_delay = '2500';
-	$DB=1;
-}
+	{
+	print "no command line options set\n";
+		$loop_delay = '2500';
+		$DB=1;
+	}
 ### end parsing run-time options ###
 
 
@@ -146,33 +146,33 @@ $sthArows=$sthA->rows;
 $rec_count=0;
 while ($sthArows > $rec_count)
 	{
-	 @aryA = $sthA->fetchrow_array;
-		$DBtelnet_host	=			"$aryA[0]";
-		$DBtelnet_port	=			"$aryA[1]";
-		$DBASTmgrUSERNAME	=		"$aryA[2]";
-		$DBASTmgrSECRET	=			"$aryA[3]";
-		$DBASTmgrUSERNAMEupdate	=	"$aryA[4]";
-		$DBASTmgrUSERNAMElisten	=	"$aryA[5]";
-		$DBASTmgrUSERNAMEsend	=	"$aryA[6]";
-		$DBmax_vicidial_trunks	=	"$aryA[7]";
-		$DBanswer_transfer_agent=	"$aryA[8]";
-		$DBSERVER_GMT		=		"$aryA[9]";
-		$DBext_context	=			"$aryA[10]";
-		$DBvd_server_logs =			"$aryA[11]";
-		if ($DBtelnet_host)				{$telnet_host = $DBtelnet_host;}
-		if ($DBtelnet_port)				{$telnet_port = $DBtelnet_port;}
-		if ($DBASTmgrUSERNAME)			{$ASTmgrUSERNAME = $DBASTmgrUSERNAME;}
-		if ($DBASTmgrSECRET)			{$ASTmgrSECRET = $DBASTmgrSECRET;}
-		if ($DBASTmgrUSERNAMEupdate)	{$ASTmgrUSERNAMEupdate = $DBASTmgrUSERNAMEupdate;}
-		if ($DBASTmgrUSERNAMElisten)	{$ASTmgrUSERNAMElisten = $DBASTmgrUSERNAMElisten;}
-		if ($DBASTmgrUSERNAMEsend)		{$ASTmgrUSERNAMEsend = $DBASTmgrUSERNAMEsend;}
-		if ($DBmax_vicidial_trunks)		{$max_vicidial_trunks = $DBmax_vicidial_trunks;}
-		if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
-		if ($DBSERVER_GMT)				{$SERVER_GMT = $DBSERVER_GMT;}
-		if ($DBext_context)				{$ext_context = $DBext_context;}
-		if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
-			else {$SYSLOG = '0';}
-	 $rec_count++;
+	@aryA = $sthA->fetchrow_array;
+	$DBtelnet_host	=			"$aryA[0]";
+	$DBtelnet_port	=			"$aryA[1]";
+	$DBASTmgrUSERNAME	=		"$aryA[2]";
+	$DBASTmgrSECRET	=			"$aryA[3]";
+	$DBASTmgrUSERNAMEupdate	=	"$aryA[4]";
+	$DBASTmgrUSERNAMElisten	=	"$aryA[5]";
+	$DBASTmgrUSERNAMEsend	=	"$aryA[6]";
+	$DBmax_vicidial_trunks	=	"$aryA[7]";
+	$DBanswer_transfer_agent=	"$aryA[8]";
+	$DBSERVER_GMT		=		"$aryA[9]";
+	$DBext_context	=			"$aryA[10]";
+	$DBvd_server_logs =			"$aryA[11]";
+	if ($DBtelnet_host)				{$telnet_host = $DBtelnet_host;}
+	if ($DBtelnet_port)				{$telnet_port = $DBtelnet_port;}
+	if ($DBASTmgrUSERNAME)			{$ASTmgrUSERNAME = $DBASTmgrUSERNAME;}
+	if ($DBASTmgrSECRET)			{$ASTmgrSECRET = $DBASTmgrSECRET;}
+	if ($DBASTmgrUSERNAMEupdate)	{$ASTmgrUSERNAMEupdate = $DBASTmgrUSERNAMEupdate;}
+	if ($DBASTmgrUSERNAMElisten)	{$ASTmgrUSERNAMElisten = $DBASTmgrUSERNAMElisten;}
+	if ($DBASTmgrUSERNAMEsend)		{$ASTmgrUSERNAMEsend = $DBASTmgrUSERNAMEsend;}
+	if ($DBmax_vicidial_trunks)		{$max_vicidial_trunks = $DBmax_vicidial_trunks;}
+	if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
+	if ($DBSERVER_GMT)				{$SERVER_GMT = $DBSERVER_GMT;}
+	if ($DBext_context)				{$ext_context = $DBext_context;}
+	if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
+		else {$SYSLOG = '0';}
+	$rec_count++;
 	}
 $sthA->finish();
 
@@ -181,13 +181,13 @@ $sthA->finish();
 
 $one_day_interval = 12;		# 1 month loops for one year 
 while($one_day_interval > 0)
-{
+	{
 
 	$endless_loop=5760000;		# 30 days minutes at XXX seconds per loop
 	$stat_count=1;
 
 	while($endless_loop > 0)
-	{
+		{
 		&get_time_now;
 
 		$VDADLOGfile = "$PATHlogs/vdautodial_FILL.$year-$mon-$mday";
@@ -316,16 +316,16 @@ while($one_day_interval > 0)
 				while ($sthArows > $rec_count)
 					{
 					@aryA = $sthA->fetchrow_array;
-						$DBIPdialtimeout[$camp_CIPct] =	"$aryA[0]";
-						$DBIPdialprefix[$camp_CIPct] =	"$aryA[1]";
-						$DBIPcampaigncid[$camp_CIPct] =	"$aryA[2]";
-						$DBIPactive[$camp_CIPct] =		"$aryA[3]";
-						$DBIPvdadexten[$camp_CIPct] =	"$aryA[4]";
-						$omit_phone_code =				"$aryA[5]";
-							if ($omit_phone_code =~ /Y/) {$DBIPomitcode[$camp_CIPct] = 1;}
-							else {$DBIPomitcode[$camp_CIPct] = 0;}
-						$DBIPautoaltdial[$camp_CIPct] =	"$aryA[6]";
-						$DBIPqueue_priority[$camp_CIPct] =	"$aryA[7]";
+					$DBIPdialtimeout[$camp_CIPct] =	"$aryA[0]";
+					$DBIPdialprefix[$camp_CIPct] =	"$aryA[1]";
+					$DBIPcampaigncid[$camp_CIPct] =	"$aryA[2]";
+					$DBIPactive[$camp_CIPct] =		"$aryA[3]";
+					$DBIPvdadexten[$camp_CIPct] =	"$aryA[4]";
+					$omit_phone_code =				"$aryA[5]";
+						if ($omit_phone_code =~ /Y/) {$DBIPomitcode[$camp_CIPct] = 1;}
+						else {$DBIPomitcode[$camp_CIPct] = 0;}
+					$DBIPautoaltdial[$camp_CIPct] =	"$aryA[6]";
+					$DBIPqueue_priority[$camp_CIPct] =	"$aryA[7]";
 
 					$rec_count++;
 					}
@@ -574,29 +574,29 @@ while($one_day_interval > 0)
 								{
 								$stmtA = "UPDATE vicidial_hopper set status='QUEUE', user='VDAD_$DB_camp_server_server_ip[$server_CIPct]' where campaign_id='$DBfill_campaign[$camp_CIPct]' and status='READY' order by priority desc,hopper_id LIMIT $DB_camp_server_trunks_to_dial[$server_CIPct]";
 								print "|$stmtA|\n";
-							   $UDaffected_rows = $dbhA->do($stmtA);
+								$UDaffected_rows = $dbhA->do($stmtA);
 								print "hopper rows updated to QUEUE: |$UDaffected_rows|\n";
 
-									if ($UDaffected_rows)
+								if ($UDaffected_rows)
 									{
 									$lead_id=''; $phone_code=''; $phone_number=''; $called_count='';
-										while ($call_CMPIPct < $UDaffected_rows)
+									while ($call_CMPIPct < $UDaffected_rows)
 										{
 										$stmtA = "SELECT lead_id,alt_dial FROM vicidial_hopper where campaign_id='$DBfill_campaign[$camp_CIPct]' and status='QUEUE' and user='VDAD_$DB_camp_server_server_ip[$server_CIPct]' order by priority desc,hopper_id LIMIT 1";
 										print "|$stmtA|\n";
-											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-											$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-											$sthArows=$sthA->rows;
-											$rec_count=0;
-											 $rec_countCUSTDATA=0;
-											while ($sthArows > $rec_count)
-												{
-												@aryA = $sthA->fetchrow_array;
-													$lead_id =		"$aryA[0]";
-													$alt_dial =		"$aryA[1]";
-												$rec_count++;
-												}
-											$sthA->finish();
+										$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+										$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+										$sthArows=$sthA->rows;
+										$rec_count=0;
+										$rec_countCUSTDATA=0;
+										while ($sthArows > $rec_count)
+											{
+											@aryA = $sthA->fetchrow_array;
+											$lead_id =		"$aryA[0]";
+											$alt_dial =		"$aryA[1]";
+											$rec_count++;
+											}
+										$sthA->finish();
 
 										if ($lead_id_call_list =~ /\|$lead_id\|/)
 											{
@@ -613,34 +613,47 @@ while($one_day_interval > 0)
 											{
 											$stmtA = "UPDATE vicidial_hopper set status='INCALL' where lead_id='$lead_id'";
 											print "|$stmtA|\n";
-										   $UQaffected_rows = $dbhA->do($stmtA);
+											$UQaffected_rows = $dbhA->do($stmtA);
 											print "hopper row updated to INCALL: |$UQaffected_rows|$lead_id|\n";
 
-											$stmtA = "SELECT * FROM vicidial_list where lead_id='$lead_id';";
+											$stmtA = "SELECT list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,address3,alt_phone,called_count FROM vicidial_list where lead_id='$lead_id';";
 											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 											$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 											$sthArows=$sthA->rows;
 											$rec_count=0;
-											 $rec_countCUSTDATA=0;
-											while ($sthArows > $rec_count)
+											$rec_countCUSTDATA=0;
+											if ($sthArows > 0)
 												{
 												@aryA = $sthA->fetchrow_array;
-													$list_id =					"$aryA[7]";
-													$gmt_offset_now	=			"$aryA[8]";
-													$called_since_last_reset =	"$aryA[9]";
-													$phone_code	=				"$aryA[10]";
-													$phone_number =				"$aryA[11]";
-													$address3 =					"$aryA[18]";
-													$alt_phone =				"$aryA[26]";
-													$called_count =				"$aryA[30]";
+												$list_id =					$aryA[0];
+												$gmt_offset_now	=			$aryA[1];
+												$called_since_last_reset =	$aryA[2];
+												$phone_code	=				$aryA[3];
+												$phone_number =				$aryA[4];
+												$address3 =					$aryA[5];
+												$alt_phone =				$aryA[6];
+												$called_count =				$aryA[7];
 
-													$rec_countCUSTDATA++;
+												$rec_countCUSTDATA++;
 												$rec_count++;
 												}
 											$sthA->finish();
 
 											if ($rec_countCUSTDATA)
 												{
+												$campaign_cid_override='';
+												### gather list_id overrides
+												$stmtA = "SELECT campaign_cid_override FROM vicidial_lists where list_id='$list_id';";
+												$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+												$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+												$sthArowsL=$sthA->rows;
+												if ($sthArowsL > 0)
+													{
+													@aryA = $sthA->fetchrow_array;
+													$campaign_cid_override =	$aryA[0];
+													}
+												$sthA->finish();
+
 												### update called_count
 												$called_count++;
 												if ($called_since_last_reset =~ /^Y/)
@@ -655,61 +668,61 @@ while($one_day_interval > 0)
 													}
 												else {$CSLR = 'Y';}
 
-											$LLCT_DATE_offset = ($LOCAL_GMT_OFF - $gmt_offset_now);
-											$LLCT_DATE_offset_epoch = ( $secX - ($LLCT_DATE_offset * 3600) );
-											($Lsec,$Lmin,$Lhour,$Lmday,$Lmon,$Lyear,$Lwday,$Lyday,$Lisdst) = localtime($LLCT_DATE_offset_epoch);
-											$Lyear = ($Lyear + 1900);
-											$Lmon++;
-											if ($Lmon < 10) {$Lmon = "0$Lmon";}
-											if ($Lmday < 10) {$Lmday = "0$Lmday";}
-											if ($Lhour < 10) {$Lhour = "0$Lhour";}
-											if ($Lmin < 10) {$Lmin = "0$Lmin";}
-											if ($Lsec < 10) {$Lsec = "0$Lsec";}
-												$LLCT_DATE = "$Lyear-$Lmon-$Lmday $Lhour:$Lmin:$Lsec";
+												$LLCT_DATE_offset = ($LOCAL_GMT_OFF - $gmt_offset_now);
+												$LLCT_DATE_offset_epoch = ( $secX - ($LLCT_DATE_offset * 3600) );
+												($Lsec,$Lmin,$Lhour,$Lmday,$Lmon,$Lyear,$Lwday,$Lyday,$Lisdst) = localtime($LLCT_DATE_offset_epoch);
+												$Lyear = ($Lyear + 1900);
+												$Lmon++;
+												if ($Lmon < 10) {$Lmon = "0$Lmon";}
+												if ($Lmday < 10) {$Lmday = "0$Lmday";}
+												if ($Lhour < 10) {$Lhour = "0$Lhour";}
+												if ($Lmin < 10) {$Lmin = "0$Lmin";}
+												if ($Lsec < 10) {$Lsec = "0$Lsec";}
+													$LLCT_DATE = "$Lyear-$Lmon-$Lmday $Lhour:$Lmin:$Lsec";
 
-											if ( ($alt_dial =~ /ALT|ADDR3|X/) && ($DBIPautoaltdial[$user_CIPct] =~ /ALT|ADDR|X/) )
-												{
-												if ( ($alt_dial =~ /ALT/) && ($DBIPautoaltdial[$user_CIPct] =~ /ALT/) )
+												if ( ($alt_dial =~ /ALT|ADDR3|X/) && ($DBIPautoaltdial[$user_CIPct] =~ /ALT|ADDR|X/) )
 													{
-													$alt_phone =~ s/\D//gi;
-													$phone_number = $alt_phone;
-													}
-												if ( ($alt_dial =~ /ADDR3/) && ($DBIPautoaltdial[$user_CIPct] =~ /ADDR3/) )
-													{
-													$address3 =~ s/\D//gi;
-													$phone_number = $address3;
-													}
-												if  ( ($alt_dial =~ /^X/) && ($DBIPautoaltdial[$user_CIPct] =~ /^X/) )
-													{
-													if ($alt_dial =~ /LAST/) 
+													if ( ($alt_dial =~ /ALT/) && ($DBIPautoaltdial[$user_CIPct] =~ /ALT/) )
 														{
-														$stmtA = "SELECT phone_code,phone_number FROM vicidial_list_alt_phones where lead_id='$lead_id' order by alt_phone_count desc limit 1;";
+														$alt_phone =~ s/\D//gi;
+														$phone_number = $alt_phone;
 														}
-													else
+													if ( ($alt_dial =~ /ADDR3/) && ($DBIPautoaltdial[$user_CIPct] =~ /ADDR3/) )
 														{
-														$Talt_dial = $alt_dial;
-														$Talt_dial =~ s/\D//gi;
-														$stmtA = "SELECT phone_code,phone_number FROM vicidial_list_alt_phones where lead_id='$lead_id' and alt_phone_count='$Talt_dial';";										
+														$address3 =~ s/\D//gi;
+														$phone_number = $address3;
 														}
-													$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-													$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-													$sthArows=$sthA->rows;
-													if ($sthArows > 0)
+													if  ( ($alt_dial =~ /^X/) && ($DBIPautoaltdial[$user_CIPct] =~ /^X/) )
 														{
-														@aryA = $sthA->fetchrow_array;
-														$phone_code	=	"$aryA[0]";
-														$phone_number =	"$aryA[1]";
-														$phone_number =~ s/\D//gi;
+														if ($alt_dial =~ /LAST/) 
+															{
+															$stmtA = "SELECT phone_code,phone_number FROM vicidial_list_alt_phones where lead_id='$lead_id' order by alt_phone_count desc limit 1;";
+															}
+														else
+															{
+															$Talt_dial = $alt_dial;
+															$Talt_dial =~ s/\D//gi;
+															$stmtA = "SELECT phone_code,phone_number FROM vicidial_list_alt_phones where lead_id='$lead_id' and alt_phone_count='$Talt_dial';";										
+															}
+														$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+														$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+														$sthArows=$sthA->rows;
+														if ($sthArows > 0)
+															{
+															@aryA = $sthA->fetchrow_array;
+															$phone_code	=	"$aryA[0]";
+															$phone_number =	"$aryA[1]";
+															$phone_number =~ s/\D//gi;
+															}
+														$sthA->finish();
 														}
-													$sthA->finish();
-													}
 
-												$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id'";
-												}
-											else
-												{
-												$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR', called_count='$called_count',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id'";
-												}
+													$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id'";
+													}
+												else
+													{
+													$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR', called_count='$called_count',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id'";
+													}
 												$affected_rows = $dbhA->do($stmtA);
 
 												$stmtA = "DELETE FROM vicidial_hopper where lead_id='$lead_id'";
@@ -720,14 +733,15 @@ while($one_day_interval > 0)
 												$local_AMP = '@';
 												$Local_out_prefix = '9';
 												$Local_dial_timeout = '60';
-											   if ($DBIPdialtimeout[$camp_CIPct] > 4) {$Local_dial_timeout = $DBIPdialtimeout[$camp_CIPct];}
+												if ($DBIPdialtimeout[$camp_CIPct] > 4) {$Local_dial_timeout = $DBIPdialtimeout[$camp_CIPct];}
 												$Local_dial_timeout = ($Local_dial_timeout * 1000);
-											   if (length($DBIPdialprefix[$camp_CIPct]) > 0) {$Local_out_prefix = "$DBIPdialprefix[$camp_CIPct]";}
-											   if (length($DBIPvdadexten[$camp_CIPct]) > 0) {$VDAD_dial_exten = "$DBIPvdadexten[$camp_CIPct]";}
-											   else {$VDAD_dial_exten = "$answer_transfer_agent";}
-											   
-											   if (length($DBIPcampaigncid[$camp_CIPct]) > 6) {$CCID = "$DBIPcampaigncid[$camp_CIPct]";   $CCID_on++;}
-											   if ($DBIPdialprefix[$camp_CIPct] =~ /x/i) {$Local_out_prefix = '';}
+												if (length($DBIPdialprefix[$camp_CIPct]) > 0) {$Local_out_prefix = "$DBIPdialprefix[$camp_CIPct]";}
+												if (length($DBIPvdadexten[$camp_CIPct]) > 0) {$VDAD_dial_exten = "$DBIPvdadexten[$camp_CIPct]";}
+												else {$VDAD_dial_exten = "$answer_transfer_agent";}
+
+												if (length($DBIPcampaigncid[$camp_CIPct]) > 6) {$CCID = "$DBIPcampaigncid[$camp_CIPct]";   $CCID_on++;}
+												if (length($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
+												if ($DBIPdialprefix[$camp_CIPct] =~ /x/i) {$Local_out_prefix = '';}
 
 												if ($RECcount)
 													{
@@ -755,15 +769,15 @@ while($one_day_interval > 0)
 												if ($CCID_on) {$CIDstring = "\"$VqueryCID\" <$CCID>";}
 												else {$CIDstring = "$VqueryCID";}
 												### insert a NEW record to the vicidial_manager table to be processed
-													$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$DB_camp_server_server_ip[$server_CIPct]','','Originate','$VqueryCID','Exten: $VDAD_dial_exten','Context: $ext_context','Channel: $local_DEF$Ndialstring$local_AMP$ext_context','Priority: 1','Callerid: $CIDstring','Timeout: $Local_dial_timeout','','','','')";
-													$affected_rows = $dbhA->do($stmtA);
+												$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$DB_camp_server_server_ip[$server_CIPct]','','Originate','$VqueryCID','Exten: $VDAD_dial_exten','Context: $ext_context','Channel: $local_DEF$Ndialstring$local_AMP$ext_context','Priority: 1','Callerid: $CIDstring','Timeout: $Local_dial_timeout','','','','')";
+												$affected_rows = $dbhA->do($stmtA);
 
-													$event_string = "|     number call dialed|$DBfill_campaign[$camp_CIPct]|$VqueryCID|$stmtA|$gmt_offset_now|$alt_dial|";
-													 &event_logger;
+												$event_string = "|     number call dialed|$DBfill_campaign[$camp_CIPct]|$VqueryCID|$stmtA|$gmt_offset_now|$alt_dial|";
+												 &event_logger;
 
-												### insert a SENT record to the vicidial_auto_calls table 
-													$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,callerid,phone_code,phone_number,call_time,call_type,alt_dial,queue_priority) values('$DB_camp_server_server_ip[$server_CIPct]','$DBfill_campaign[$camp_CIPct]','SENT','$lead_id','$VqueryCID','$phone_code','$phone_number','$SQLdate','OUTBALANCE','$alt_dial','$DBIPqueue_priority[$camp_CIPct]')";
-													$affected_rows = $dbhA->do($stmtA);
+											### insert a SENT record to the vicidial_auto_calls table 
+												$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,callerid,phone_code,phone_number,call_time,call_type,alt_dial,queue_priority) values('$DB_camp_server_server_ip[$server_CIPct]','$DBfill_campaign[$camp_CIPct]','SENT','$lead_id','$VqueryCID','$phone_code','$phone_number','$SQLdate','OUTBALANCE','$alt_dial','$DBIPqueue_priority[$camp_CIPct]')";
+												$affected_rows = $dbhA->do($stmtA);
 
 												### sleep for 2.5 hundredths of a second to not flood the server with new calls
 											#	usleep(1*25*1000);
@@ -866,11 +880,11 @@ while($one_day_interval > 0)
 				$rec_count=0;
 				while ($sthArows > $rec_count)
 					{
-					 @aryA = $sthA->fetchrow_array;
-						$DBvd_server_logs =			"$aryA[0]";
-						if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
-							else {$SYSLOG = '0';}
-					 $rec_count++;
+					@aryA = $sthA->fetchrow_array;
+					$DBvd_server_logs =			"$aryA[0]";
+					if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
+						else {$SYSLOG = '0';}
+					$rec_count++;
 					}
 				$sthA->finish();
 
@@ -883,14 +897,14 @@ while($one_day_interval > 0)
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-					$DBmax_vicidial_trunks	=	"$aryA[0]";
-					$DBanswer_transfer_agent=	"$aryA[1]";
-					$DBSERVER_GMT		=		"$aryA[2]";
-					$DBext_context	=			"$aryA[3]";
-					if ($DBmax_vicidial_trunks)		{$max_vicidial_trunks = $DBmax_vicidial_trunks;}
-					if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
-					if ($DBSERVER_GMT)				{$SERVER_GMT = $DBSERVER_GMT;}
-					if ($DBext_context)				{$ext_context = $DBext_context;}
+				$DBmax_vicidial_trunks	=	"$aryA[0]";
+				$DBanswer_transfer_agent=	"$aryA[1]";
+				$DBSERVER_GMT		=		"$aryA[2]";
+				$DBext_context	=			"$aryA[3]";
+				if ($DBmax_vicidial_trunks)		{$max_vicidial_trunks = $DBmax_vicidial_trunks;}
+				if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
+				if ($DBSERVER_GMT)				{$SERVER_GMT = $DBSERVER_GMT;}
+				if ($DBext_context)				{$ext_context = $DBext_context;}
 				$rec_count++;
 				}
 			$sthA->finish();
@@ -900,27 +914,27 @@ while($one_day_interval > 0)
 			&get_time_now;
 			}
 
-	$stat_count++;
-	}
+		$stat_count++;
+		}
 
 
-		if($DB){print "DONE... Exiting... Goodbye... See you later... Not really, initiating next loop...\n";}
+	if($DB){print "DONE... Exiting... Goodbye... See you later... Not really, initiating next loop...\n";}
 
-		$event_string='HANGING UP|';
-		&event_logger;
+	$event_string='HANGING UP|';
+	&event_logger;
 
 	$one_day_interval--;
 
-}
+	}
 
-		$event_string='CLOSING DB CONNECTION|';
-		&event_logger;
-
-
-	$dbhA->disconnect();
+$event_string='CLOSING DB CONNECTION|';
+&event_logger;
 
 
-	if($DB){print "DONE... Exiting... Goodbye... See you later... Really I mean it this time\n";}
+$dbhA->disconnect();
+
+
+if($DB){print "DONE... Exiting... Goodbye... See you later... Really I mean it this time\n";}
 
 
 exit;
@@ -938,97 +952,96 @@ exit;
 
 
 sub get_time_now	#get the current date and time and epoch for logging call lengths and datetimes
-{
-$secX = time();
-	($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($secX);
-	$LOCAL_GMT_OFF = $SERVER_GMT;
-	$LOCAL_GMT_OFF_STD = $SERVER_GMT;
-	if ($isdst) {$LOCAL_GMT_OFF++;} 
+	{
+	$secX = time();
+		($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($secX);
+		$LOCAL_GMT_OFF = $SERVER_GMT;
+		$LOCAL_GMT_OFF_STD = $SERVER_GMT;
+		if ($isdst) {$LOCAL_GMT_OFF++;} 
 
-$GMT_now = ($secX - ($LOCAL_GMT_OFF * 3600));
-	($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($GMT_now);
+	$GMT_now = ($secX - ($LOCAL_GMT_OFF * 3600));
+		($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($GMT_now);
+		if ($hour < 10) {$hour = "0$hour";}
+		if ($min < 10) {$min = "0$min";}
+
+		if ($DB) {print "TIME DEBUG: $LOCAL_GMT_OFF_STD|$LOCAL_GMT_OFF|$isdst|   GMT: $hour:$min\n";}
+
+	($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+	$year = ($year + 1900);
+	$mon++;
+	if ($mon < 10) {$mon = "0$mon";}
+	if ($mday < 10) {$mday = "0$mday";}
 	if ($hour < 10) {$hour = "0$hour";}
 	if ($min < 10) {$min = "0$min";}
+	if ($sec < 10) {$sec = "0$sec";}
 
-	if ($DB) {print "TIME DEBUG: $LOCAL_GMT_OFF_STD|$LOCAL_GMT_OFF|$isdst|   GMT: $hour:$min\n";}
+	$now_date_epoch = time();
+	$now_date = "$year-$mon-$mday $hour:$min:$sec";
+	$file_date = "$year-$mon-$mday";
+		$CIDdate = "$mon$mday$hour$min$sec";
+		$tsSQLdate = "$year$mon$mday$hour$min$sec";
+		$SQLdate = "$year-$mon-$mday $hour:$min:$sec";
 
-($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-$year = ($year + 1900);
-$mon++;
-if ($mon < 10) {$mon = "0$mon";}
-if ($mday < 10) {$mday = "0$mday";}
-if ($hour < 10) {$hour = "0$hour";}
-if ($min < 10) {$min = "0$min";}
-if ($sec < 10) {$sec = "0$sec";}
+	$BDtarget = ($secX - 10);
+	($Bsec,$Bmin,$Bhour,$Bmday,$Bmon,$Byear,$Bwday,$Byday,$Bisdst) = localtime($BDtarget);
+	$Byear = ($Byear + 1900);
+	$Bmon++;
+	if ($Bmon < 10) {$Bmon = "0$Bmon";}
+	if ($Bmday < 10) {$Bmday = "0$Bmday";}
+	if ($Bhour < 10) {$Bhour = "0$Bhour";}
+	if ($Bmin < 10) {$Bmin = "0$Bmin";}
+	if ($Bsec < 10) {$Bsec = "0$Bsec";}
+		$BDtsSQLdate = "$Byear$Bmon$Bmday$Bhour$Bmin$Bsec";
 
-$now_date_epoch = time();
-$now_date = "$year-$mon-$mday $hour:$min:$sec";
-$file_date = "$year-$mon-$mday";
-	$CIDdate = "$mon$mday$hour$min$sec";
-	$tsSQLdate = "$year$mon$mday$hour$min$sec";
-	$SQLdate = "$year-$mon-$mday $hour:$min:$sec";
+	$PDtarget = ($secX - 30);
+	($Psec,$Pmin,$Phour,$Pmday,$Pmon,$Pyear,$Pwday,$Pyday,$Pisdst) = localtime($PDtarget);
+	$Pyear = ($Pyear + 1900);
+	$Pmon++;
+	if ($Pmon < 10) {$Pmon = "0$Pmon";}
+	if ($Pmday < 10) {$Pmday = "0$Pmday";}
+	if ($Phour < 10) {$Phour = "0$Phour";}
+	if ($Pmin < 10) {$Pmin = "0$Pmin";}
+	if ($Psec < 10) {$Psec = "0$Psec";}
+		$PDtsSQLdate = "$Pyear$Pmon$Pmday$Phour$Pmin$Psec";
+		$halfminSQLdate = "$Pyear-$Pmon-$Pmday $Phour:$Pmin:$Psec";
 
-$BDtarget = ($secX - 10);
-($Bsec,$Bmin,$Bhour,$Bmday,$Bmon,$Byear,$Bwday,$Byday,$Bisdst) = localtime($BDtarget);
-$Byear = ($Byear + 1900);
-$Bmon++;
-if ($Bmon < 10) {$Bmon = "0$Bmon";}
-if ($Bmday < 10) {$Bmday = "0$Bmday";}
-if ($Bhour < 10) {$Bhour = "0$Bhour";}
-if ($Bmin < 10) {$Bmin = "0$Bmin";}
-if ($Bsec < 10) {$Bsec = "0$Bsec";}
-	$BDtsSQLdate = "$Byear$Bmon$Bmday$Bhour$Bmin$Bsec";
+	$XDtarget = ($secX - 120);
+	($Xsec,$Xmin,$Xhour,$Xmday,$Xmon,$Xyear,$Xwday,$Xyday,$Xisdst) = localtime($XDtarget);
+	$Xyear = ($Xyear + 1900);
+	$Xmon++;
+	if ($Xmon < 10) {$Xmon = "0$Xmon";}
+	if ($Xmday < 10) {$Xmday = "0$Xmday";}
+	if ($Xhour < 10) {$Xhour = "0$Xhour";}
+	if ($Xmin < 10) {$Xmin = "0$Xmin";}
+	if ($Xsec < 10) {$Xsec = "0$Xsec";}
+		$XDSQLdate = "$Xyear-$Xmon-$Xmday $Xhour:$Xmin:$Xsec";
 
-$PDtarget = ($secX - 30);
-($Psec,$Pmin,$Phour,$Pmday,$Pmon,$Pyear,$Pwday,$Pyday,$Pisdst) = localtime($PDtarget);
-$Pyear = ($Pyear + 1900);
-$Pmon++;
-if ($Pmon < 10) {$Pmon = "0$Pmon";}
-if ($Pmday < 10) {$Pmday = "0$Pmday";}
-if ($Phour < 10) {$Phour = "0$Phour";}
-if ($Pmin < 10) {$Pmin = "0$Pmin";}
-if ($Psec < 10) {$Psec = "0$Psec";}
-	$PDtsSQLdate = "$Pyear$Pmon$Pmday$Phour$Pmin$Psec";
-	$halfminSQLdate = "$Pyear-$Pmon-$Pmday $Phour:$Pmin:$Psec";
-
-$XDtarget = ($secX - 120);
-($Xsec,$Xmin,$Xhour,$Xmday,$Xmon,$Xyear,$Xwday,$Xyday,$Xisdst) = localtime($XDtarget);
-$Xyear = ($Xyear + 1900);
-$Xmon++;
-if ($Xmon < 10) {$Xmon = "0$Xmon";}
-if ($Xmday < 10) {$Xmday = "0$Xmday";}
-if ($Xhour < 10) {$Xhour = "0$Xhour";}
-if ($Xmin < 10) {$Xmin = "0$Xmin";}
-if ($Xsec < 10) {$Xsec = "0$Xsec";}
-	$XDSQLdate = "$Xyear-$Xmon-$Xmday $Xhour:$Xmin:$Xsec";
-
-$TDtarget = ($secX - 600);
-($Tsec,$Tmin,$Thour,$Tmday,$Tmon,$Tyear,$Twday,$Tyday,$Tisdst) = localtime($TDtarget);
-$Tyear = ($Tyear + 1900);
-$Tmon++;
-if ($Tmon < 10) {$Tmon = "0$Tmon";}
-if ($Tmday < 10) {$Tmday = "0$Tmday";}
-if ($Thour < 10) {$Thour = "0$Thour";}
-if ($Tmin < 10) {$Tmin = "0$Tmin";}
-if ($Tsec < 10) {$Tsec = "0$Tsec";}
-	$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
-
-}
+	$TDtarget = ($secX - 600);
+	($Tsec,$Tmin,$Thour,$Tmday,$Tmon,$Tyear,$Twday,$Tyday,$Tisdst) = localtime($TDtarget);
+	$Tyear = ($Tyear + 1900);
+	$Tmon++;
+	if ($Tmon < 10) {$Tmon = "0$Tmon";}
+	if ($Tmday < 10) {$Tmday = "0$Tmday";}
+	if ($Thour < 10) {$Thour = "0$Thour";}
+	if ($Tmin < 10) {$Tmin = "0$Tmin";}
+	if ($Tsec < 10) {$Tsec = "0$Tsec";}
+		$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
+	}
 
 
 
 
 
 sub event_logger
-{
-if ($DB) {print "$now_date|$event_string|\n";}
-if ($SYSLOG)
 	{
-	### open the log file for writing ###
-	open(Lout, ">>$VDADLOGfile")
-			|| die "Can't open $VDADLOGfile: $!\n";
-	print Lout "$now_date|$event_string|\n";
-	close(Lout);
+	if ($DB) {print "$now_date|$event_string|\n";}
+	if ($SYSLOG)
+		{
+		### open the log file for writing ###
+		open(Lout, ">>$VDADLOGfile")
+				|| die "Can't open $VDADLOGfile: $!\n";
+		print Lout "$now_date|$event_string|\n";
+		close(Lout);
+		}
+	$event_string='';
 	}
-$event_string='';
-}

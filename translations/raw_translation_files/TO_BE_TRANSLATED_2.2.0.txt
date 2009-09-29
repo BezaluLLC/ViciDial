@@ -330,6 +330,12 @@ Click here to delete voicemail box||
 DELETE THIS VOICEMAIL BOX||
 Click here to see Admin chages to this voicemail box||
 The following fields must have data||
+Campaign CID Override||
+If this field is set, this will override the campaign CallerID that is set for calls that are placed to leads in this list. Default is not set||
+Answering Machine Message Override||
+If this field is set, this will override the Answering Machine Message set in the campaign for customers in this list. Default is not set||
+Drop Inbound Group Override||
+If this field is set, this in-group will be used for outbound calls within this list that drop from the outbound campaign instead of the drop in-group set in the campaign detail screen. Default is not set||
 
 
 add-file: user_territories.php

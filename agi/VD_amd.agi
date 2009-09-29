@@ -30,7 +30,8 @@
 # 60815-1310 - added output options check from database
 # 71118-0252 - compatibility with Asterisk 1.4, added AA and AM statuses
 # 90916-1317 - Changed to audio file playback and TTS playback
-# 
+# 90924-1533 - Added answering machine message list_id override option
+#
 
 $script = 'VD_amd.agi';
 
@@ -370,6 +371,38 @@ else
 		else
 			{$sthA->finish();}
 		}
+
+	### check for list_id override
+	if ($DB_amd_send_to_vmx =~ /Y/)
+		{
+		### find list_id for this lead
+		$stmtA = "SELECT list_id from vicidial_list where lead_id = '$VD_lead_id';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArowsL=$sthA->rows;
+		if ($sthArowsL > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$VD_list_id =	$aryA[0];
+			}
+		$sthA->finish();
+
+		$am_message_exten_override='';
+		### gather list_id overrides
+		$stmtA = "SELECT am_message_exten_override FROM vicidial_lists where list_id='$VD_list_id';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArowsL=$sthA->rows;
+		if ($sthArowsL > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$am_message_exten_override =	$aryA[0];
+			if (length($am_message_exten_override) > 0)
+				{$DB_am_message_exten = $am_message_exten_override;}
+			}
+		$sthA->finish();
+		}
+
 	if ($AGILOG) {$agi_string = "--    AMD campaign values: |$VD_campaign_id|$DB_am_message_exten|$DB_amd_send_to_vmx|";   &agi_output;}
 
 	if ( ( ($DB_amd_send_to_vmx =~ /Y/) || ($force_playback =~ /YES/) ) && (length($DB_am_message_exten) > 0) )

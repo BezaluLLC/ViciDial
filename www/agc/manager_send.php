@@ -90,12 +90,13 @@
 # 90511-1019 - Added restriction not allowing dialing into agent sessions from manual dial
 # 90913-1410 - Fixed minor logging bug
 # 90916-1830 - Added nodeletevdac
+# 90924-1555 - Added am_message_exten_override  for list_id option
 #
 
-$version = '2.2.0-42';
-$build = '90916-1630';
+$version = '2.2.0-43';
+$build = '90924-1555';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=83;
+$mysql_log_count=85;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -729,6 +730,39 @@ if ($ACTION=="RedirectVD")
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02024',$user,$server_ip,$session_name,$one_mysql_log);}
+			}
+		else
+			{
+			if (strlen($lead_id) > 1)
+				{
+				$list_id='';
+				$stmt = "SELECT list_id FROM vicidial_list where lead_id='$lead_id';";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02084',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$lio_ct = mysql_num_rows($rslt);
+				if ($lio_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$list_id =	$row[0];
+
+					if (strlen($list_id) > 1)
+						{
+						$stmt = "SELECT am_message_exten_override FROM vicidial_lists where list_id='$list_id';";
+						$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02085',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($DB) {echo "$stmt\n";}
+						$lio_ct = mysql_num_rows($rslt);
+						if ($lio_ct > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$am_message_exten_override =	$row[0];
+							if (strlen($am_message_exten_override) > 0) {$exten = "$am_message_exten_override";}
+							}
+						}
+					}
+				}
+
 			}
 		$ACTION="Redirect";
 		}

@@ -68,6 +68,7 @@
 # 90721-1137 - Added rank and owner as vicidial_list fields
 # 90808-0307 - Added longest_wait_time as agent routing option
 # 90827-1535 - Added proper logging of list_id in vicidial_log table
+# 90924-1605 - Added drop_inbound_group_override list_id option
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -1821,7 +1822,25 @@ if ($drop_timer > $DROP_TIME)
 			{$DROPexten = "$voicemail_dump_exten$VDADvoicemail_ext";}
 		}
 	if ($drop_action =~ /IN_GROUP/)
-		{ # 90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*"
+		{ 
+		$drop_inbound_group_override='';
+		if (length($xCLlist_id) > 1)
+			{
+			### gather list_id overrides
+			$stmtA = "SELECT drop_inbound_group_override FROM vicidial_lists where list_id='$xCLlist_id';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArowsL=$sthA->rows;
+			if ($sthArowsL > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$drop_inbound_group_override =	$aryA[0];
+				if (length($drop_inbound_group_override) > 0)
+					{$drop_inbound_group = $drop_inbound_group_override;}
+				}
+			$sthA->finish();
+			}
+		# Example:   90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*"
 		$S='*';
 		$DROPexten = "90009*$drop_inbound_group$S$S$CIDlead_id$S$S$VDADphone$S$fronter$S";
 		}

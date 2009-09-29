@@ -256,10 +256,11 @@
 # 90917-1325 - Fixed script loading bug with customer webform at the same time
 # 90920-2108 - Changed web forms to use window.open instead of traditional links(IE7 compatibility issue)
 # 90923-1310 - Rolled back last change
+# 90928-1955 - Added lead update before closer transfer
 #
 
-$version = '2.2.0-233';
-$build = '90923-1310';
+$version = '2.2.0-234';
+$build = '90928-1955';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -282,43 +283,43 @@ if (isset($_GET["relogin"]))					{$relogin=$_GET["relogin"];}
         elseif (isset($_POST["relogin"]))       {$relogin=$_POST["relogin"];}
 if (isset($_GET["MGR_override"]))				{$MGR_override=$_GET["MGR_override"];}
         elseif (isset($_POST["MGR_override"]))  {$MGR_override=$_POST["MGR_override"];}
-	if (!isset($phone_login)) 
-		{
-		if (isset($_GET["pl"]))                {$phone_login=$_GET["pl"];}
-				elseif (isset($_POST["pl"]))   {$phone_login=$_POST["pl"];}
-		}
-	if (!isset($phone_pass))
-		{
-		if (isset($_GET["pp"]))                {$phone_pass=$_GET["pp"];}
-				elseif (isset($_POST["pp"]))   {$phone_pass=$_POST["pp"];}
-		}
-	if (isset($VD_campaign))
-		{
-		$VD_campaign = strtoupper($VD_campaign);
-		$VD_campaign = eregi_replace(" ",'',$VD_campaign);
-		}
-	if (!isset($flag_channels))
-		{
-		$flag_channels=0;
-		$flag_string='';
-		}
+if (!isset($phone_login)) 
+	{
+	if (isset($_GET["pl"]))                {$phone_login=$_GET["pl"];}
+		elseif (isset($_POST["pl"]))   {$phone_login=$_POST["pl"];}
+	}
+if (!isset($phone_pass))
+	{
+	if (isset($_GET["pp"]))                {$phone_pass=$_GET["pp"];}
+		elseif (isset($_POST["pp"]))   {$phone_pass=$_POST["pp"];}
+	}
+if (isset($VD_campaign))
+	{
+	$VD_campaign = strtoupper($VD_campaign);
+	$VD_campaign = eregi_replace(" ",'',$VD_campaign);
+	}
+if (!isset($flag_channels))
+	{
+	$flag_channels=0;
+	$flag_string='';
+	}
 
 ### security strip all non-alphanumeric characters out of the variables ###
-	$DB=ereg_replace("[^0-9a-z]","",$DB);
-	$phone_login=ereg_replace("[^\,0-9a-zA-Z]","",$phone_login);
-	$phone_pass=ereg_replace("[^0-9a-zA-Z]","",$phone_pass);
-	$VD_login=ereg_replace("[^-_0-9a-zA-Z]","",$VD_login);
-	$VD_pass=ereg_replace("[^-_0-9a-zA-Z]","",$VD_pass);
-	$VD_campaign = ereg_replace("[^-_0-9a-zA-Z]","",$VD_campaign);
+$DB=ereg_replace("[^0-9a-z]","",$DB);
+$phone_login=ereg_replace("[^\,0-9a-zA-Z]","",$phone_login);
+$phone_pass=ereg_replace("[^0-9a-zA-Z]","",$phone_pass);
+$VD_login=ereg_replace("[^-_0-9a-zA-Z]","",$VD_login);
+$VD_pass=ereg_replace("[^-_0-9a-zA-Z]","",$VD_pass);
+$VD_campaign = ereg_replace("[^-_0-9a-zA-Z]","",$VD_campaign);
 
 
 $forever_stop=0;
 
 if ($force_logout)
-{
+	{
     echo "You have now logged out. Thank you\n";
     exit;
-}
+	}
 
 $isdst = date("I");
 $StarTtimE = date("U");
@@ -327,10 +328,10 @@ $tsNOW_TIME = date("YmdHis");
 $FILE_TIME = date("Ymd-His");
 $loginDATE = date("Ymd");
 $CIDdate = date("ymdHis");
-	$month_old = mktime(11, 0, 0, date("m"), date("d")-2,  date("Y"));
-	$past_month_date = date("Y-m-d H:i:s",$month_old);
-	$minutes_old = mktime(date("H"), date("i")-2, date("s"), date("m"), date("d"),  date("Y"));
-	$past_minutes_date = date("Y-m-d H:i:s",$minutes_old);
+$month_old = mktime(11, 0, 0, date("m"), date("d")-2,  date("Y"));
+$past_month_date = date("Y-m-d H:i:s",$month_old);
+$minutes_old = mktime(date("H"), date("i")-2, date("s"), date("m"), date("d"),  date("Y"));
+$past_minutes_date = date("Y-m-d H:i:s",$minutes_old);
 
 
 $random = (rand(1000000, 9999999) + 10000000);
@@ -3629,6 +3630,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				}
 			if (taskvar == 'XfeRLOCAL')
 				{
+				CustomerData_update();
+
 				var XfeRSelecT = document.getElementById("XfeRGrouP");
 				var queryCID = "XLvdcW" + epoch_sec + user_abb;
 				// 		 "90009*$group**$lead_id**$phone_number*$user*$agent_only*";

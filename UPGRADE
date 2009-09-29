@@ -241,8 +241,10 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	are added to the active voicemail server and there must be an active
 	voicemail server defined in the system settings for these to work.
 
-61. Changed WEBFORM links to work as window.open instead of traditional links
-	with 'target' tags which IE7 apparently has problems with
+61. Added List override options for callerID, answering machine message and
+	drop inbound group to override campaign settings for leads within a
+	specific list
+
 
 
 

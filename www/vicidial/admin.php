@@ -1121,7 +1121,12 @@ if (isset($_GET["web_form_address_two"]))			{$web_form_address_two=$_GET["web_fo
 	elseif (isset($_POST["web_form_address_two"]))	{$web_form_address_two=$_POST["web_form_address_two"];}
 if (isset($_GET["waitforsilence_options"]))			{$waitforsilence_options=$_GET["waitforsilence_options"];}
 	elseif (isset($_POST["waitforsilence_options"]))	{$waitforsilence_options=$_POST["waitforsilence_options"];}
-
+if (isset($_GET["campaign_cid_override"]))			{$campaign_cid_override=$_GET["campaign_cid_override"];}
+	elseif (isset($_POST["campaign_cid_override"]))	{$campaign_cid_override=$_POST["campaign_cid_override"];}
+if (isset($_GET["am_message_exten_override"]))			{$am_message_exten_override=$_GET["am_message_exten_override"];}
+	elseif (isset($_POST["am_message_exten_override"]))	{$am_message_exten_override=$_POST["am_message_exten_override"];}
+if (isset($_GET["drop_inbound_group_override"]))			{$drop_inbound_group_override=$_GET["drop_inbound_group_override"];}
+	elseif (isset($_POST["drop_inbound_group_override"]))	{$drop_inbound_group_override=$_POST["drop_inbound_group_override"];}
 
 	if (isset($script_id)) {$script_id= strtoupper($script_id);}
 	if (isset($lead_filter_id)) {$lead_filter_id = strtoupper($lead_filter_id);}
@@ -1320,6 +1325,8 @@ if ($non_latin < 1)
 	$vicidial_balance_rank = ereg_replace("[^0-9]","",$vicidial_balance_rank);
 	$rank = ereg_replace("[^0-9]","",$rank);
 	$enable_second_webform = ereg_replace("[^0-9]","",$enable_second_webform);
+	$campaign_cid_override = ereg_replace("[^0-9]","",$campaign_cid_override);
+	$am_message_exten_override = ereg_replace("[^0-9]","",$am_message_exten_override);
 
 	$drop_call_seconds = ereg_replace("[^-0-9]","",$drop_call_seconds);
 
@@ -1577,6 +1584,7 @@ if ($non_latin < 1)
 	$agent_dial_owner_only = ereg_replace("[^-_0-9a-zA-Z]","",$agent_dial_owner_only);
 	$reset_time = ereg_replace("[^-_0-9a-zA-Z]","",$reset_time);
 	$moh_id = ereg_replace("[^-_0-9a-zA-Z]","",$moh_id);
+	$drop_inbound_group_override = ereg_replace("[^-_0-9a-zA-Z]","",$drop_inbound_group_override);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
@@ -1960,11 +1968,12 @@ else
 # 90916-1105 - Added second web form to ingroups and campaigns and added audio choose for answering machine message and waitforsilence_options
 # 90917-1108 - Added Extra Voicemail boxes config in Admin section
 # 90919-2251 - Removed all "SELECT *" instances in the code, code cleanup to conform to standard
+# 90924-1645 - Added list_id overrides for cid, am_message and drop in-group
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-218';
-$build = '90919-2251';
+$admin_version = '2.2.0-219';
+$build = '90924-1645';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3947,6 +3956,20 @@ if ($ADD==99999)
 	<A NAME="vicidial_lists-agent_script_override">
 	<BR>
 	<B>Agent Script Override -</B> If this field is set, this will be the script that the agent sees on their screen instead of the campaign script when the lead is from this list. Default is not set.
+
+	<BR>
+	<A NAME="vicidial_lists-campaign_cid_override">
+	<BR>
+	<B>Campaign CID Override -</B> If this field is set, this will override the campaign CallerID that is set for calls that are placed to leads in this list. Default is not set.
+
+	<BR>
+	<A NAME="vicidial_lists-am_message_exten_override">
+	<BR>
+	<B>Answering Machine Message Override -</B> If this field is set, this will override the Answering Machine Message set in the campaign for customers in this list. Default is not set. 
+	<BR>
+	<A NAME="vicidial_lists-drop_inbound_group_override">
+	<BR>
+	<B>Drop Inbound Group Override -</B> If this field is set, this in-group will be used for outbound calls within this list that drop from the outbound campaign instead of the drop in-group set in the campaign detail screen. Default is not set.
 
 
 	<BR>
@@ -11723,7 +11746,7 @@ if ($ADD==411)
 
 			echo "<br><B>LIST MODIFIED: $list_id</B>\n";
 
-			$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate',reset_time='$reset_time',agent_script_override='$agent_script_override' where list_id='$list_id';";
+			$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate',reset_time='$reset_time',agent_script_override='$agent_script_override',campaign_cid_override='$campaign_cid_override',am_message_exten_override='$am_message_exten_override',drop_inbound_group_override='$drop_inbound_group_override' where list_id='$list_id';";
 			$rslt=mysql_query($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -16137,7 +16160,13 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Omit Phone Code: </td><td align=left><select size=1 name=omit_phone_code><option>Y</option><option>N</option><option SELECTED>$omit_phone_code</option></select>$NWB#vicidial_campaigns-omit_phone_code$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign CallerID: </td><td align=left><input type=text name=campaign_cid size=20 maxlength=20 value=\"$campaign_cid\">$NWB#vicidial_campaigns-campaign_cid$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign CallerID: </td><td align=left><input type=text name=campaign_cid size=20 maxlength=20 value=\"$campaign_cid\">$NWB#vicidial_campaigns-campaign_cid$NWE\n";
+		$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and campaign_cid_override != '' and active='Y';";
+		$rslt=mysql_query($stmt, $link);
+		$rowx=mysql_fetch_row($rslt);
+		if ($rowx[0] > 0) 
+			{echo " <font color=red>LIST OVERRIDE ACTIVE</font>";}
+		echo "</td></tr>\n";
 
 		if ($SSoutbound_autodial_active > 0)
 			{
@@ -16154,11 +16183,23 @@ if ($ADD==31)
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=3111111&script_id=$script_id\">Script</a>: </td><td align=left><select size=1 name=script_id>\n";
 		echo "$scripts_list";
 		echo "<option selected value=\"$script_id\">$script_id - $scriptname_list[$script_id]</option>\n";
-		echo "</select>$NWB#vicidial_campaigns-campaign_script$NWE</td></tr>\n";
+		echo "</select>$NWB#vicidial_campaigns-campaign_script$NWE\n";
+		$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and agent_script_override != '' and active='Y';";
+		$rslt=mysql_query($stmt, $link);
+		$rowx=mysql_fetch_row($rslt);
+		if ($rowx[0] > 0) 
+			{echo " <font color=red>LIST OVERRIDE ACTIVE</font>";}
+		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Get Call Launch: </td><td align=left><select size=1 name=get_call_launch><option selected>NONE</option><option>SCRIPT</option><option>WEBFORM</option><option selected>$get_call_launch</option></select>$NWB#vicidial_campaigns-get_call_launch$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B9CBFD><td align=right>Answering Machine Message: </td><td><input type=text size=50 maxlength=100 name=am_message_exten id=am_message_exten value=\"$am_message_exten\"> <a href=\"javascript:launch_chooser('am_message_exten','date',1200);\">audio chooser</a>  $NWB#vicidial_campaigns-am_message_exten$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B9CBFD><td align=right>Answering Machine Message: </td><td><input type=text size=50 maxlength=100 name=am_message_exten id=am_message_exten value=\"$am_message_exten\"> <a href=\"javascript:launch_chooser('am_message_exten','date',1200);\">audio chooser</a>  $NWB#vicidial_campaigns-am_message_exten$NWE\n";
+		$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and am_message_exten_override != '' and active='Y';";
+		$rslt=mysql_query($stmt, $link);
+		$rowx=mysql_fetch_row($rslt);
+		if ($rowx[0] > 0) 
+			{echo " <font color=red>LIST OVERRIDE ACTIVE</font>";}
+		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>WaitForSilence Options: </td><td align=left><input type=text name=waitforsilence_options size=20 maxlength=25 value=\"$waitforsilence_options\">$NWB#vicidial_campaigns-waitforsilence_options$NWE</td></tr>\n";
 
@@ -16198,7 +16239,13 @@ if ($ADD==31)
 
 			echo "<tr bgcolor=#B6D3FC><td align=right>Drop Transfer Group: </td><td align=left><select size=1 name=drop_inbound_group>";
 			echo "$Dgroups_menu";
-			echo "</select>$NWB#vicidial_campaigns-drop_inbound_group$NWE</td></tr>\n";
+			echo "</select>$NWB#vicidial_campaigns-drop_inbound_group$NWE\n";
+			$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and drop_inbound_group_override != '' and active='Y';";
+			$rslt=mysql_query($stmt, $link);
+			$rowx=mysql_fetch_row($rslt);
+			if ($rowx[0] > 0) 
+				{echo " <font color=red>LIST OVERRIDE ACTIVE</font>";}
+			echo "</td></tr>\n";
 			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Wrap Up Seconds: </td><td align=left><input type=text name=wrapup_seconds size=5 maxlength=3 value=\"$wrapup_seconds\">$NWB#vicidial_campaigns-wrapup_seconds$NWE</td></tr>\n";
 
@@ -18137,9 +18184,10 @@ if ($ADD==311)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT list_id,list_name,campaign_id,active,list_description,list_changedate,list_lastcalldate,reset_time,agent_script_override from vicidial_lists where list_id='$list_id';";
+		$stmt="SELECT list_id,list_name,campaign_id,active,list_description,list_changedate,list_lastcalldate,reset_time,agent_script_override,campaign_cid_override,am_message_exten_override,drop_inbound_group_override from vicidial_lists where list_id='$list_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
+		$list_name =				$row[1];
 		$campaign_id =				$row[2];
 		$active =					$row[3];
 		$list_description =			$row[4];
@@ -18147,6 +18195,9 @@ if ($ADD==311)
 		$list_lastcalldate =		$row[6];
 		$reset_time =				$row[7];
 		$agent_script_override =	$row[8];
+		$campaign_cid_override =	$row[9];
+		$am_message_exten_override =	$row[10];
+		$drop_inbound_group_override =	$row[11];
 
 		# grab names of global statuses and statuses in the selected campaign
 		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses order by status";
@@ -18188,14 +18239,38 @@ if ($ADD==311)
 			$o++;
 			}
 
+		##### get in-groups listings for dynamic drop in-group pulldown
+		$stmt="SELECT group_id,group_name from vicidial_inbound_groups order by group_id";
+		$rslt=mysql_query($stmt, $link);
+		$Dgroups_to_print = mysql_num_rows($rslt);
+		$Dgroups_menu='';
+		$Dgroups_selected=0;
+		$o=0;
+		while ($Dgroups_to_print > $o) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$Dgroups_menu .= "<option ";
+			if ($drop_inbound_group_override == "$rowx[0]") 
+				{
+				$Dgroups_menu .= "SELECTED ";
+				$Dgroups_selected++;
+				}
+			$Dgroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+			$o++;
+			}
+		if ($Dgroups_selected < 1) 
+			{$Dgroups_menu .= "<option SELECTED value=\"\">---NONE---</option>\n";}
+		else 
+			{$Dgroups_menu .= "<option value=\"\">---NONE---</option>\n";}
 
-		echo "<br>MODIFY A LISTS RECORD: $row[0]<form action=$PHP_SELF method=POST>\n";
+
+		echo "<br>MODIFY A LISTS RECORD: $list_id<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=411>\n";
-		echo "<input type=hidden name=list_id value=\"$row[0]\">\n";
-		echo "<input type=hidden name=old_campaign_id value=\"$row[2]\">\n";
+		echo "<input type=hidden name=list_id value=\"$list_id\">\n";
+		echo "<input type=hidden name=old_campaign_id value=\"$campaign_id\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>List ID: </td><td align=left><b>$row[0]</b>$NWB#vicidial_lists-list_id$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>List Name: </td><td align=left><input type=text name=list_name size=20 maxlength=20 value=\"$row[1]\">$NWB#vicidial_lists-list_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>List ID: </td><td align=left><b>$list_id</b>$NWB#vicidial_lists-list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>List Name: </td><td align=left><input type=text name=list_name size=20 maxlength=20 value=\"$list_name\">$NWB#vicidial_lists-list_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>List Description: </td><td align=left><input type=text name=list_description size=30 maxlength=255 value=\"$list_description\">$NWB#vicidial_lists-list_description$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id\">Campaign</a>: </td><td align=left><select size=1 name=campaign_id>\n";
 
@@ -18223,6 +18298,14 @@ if ($ADD==311)
 		echo "$Lscripts_list";
 		echo "<option selected value=\"$agent_script_override\">$agent_script_override - $scriptname_list[$agent_script_override]</option>\n";
 		echo "</select>$NWB#vicidial_lists-agent_script_override$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign CID Override: </td><td align=left><input type=text name=campaign_cid_override size=20 maxlength=20 value=\"$campaign_cid_override\">$NWB#vicidial_lists-campaign_cid_override$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Answering Machine Message Override: </td><td align=left><input type=text name=am_message_exten_override id=am_message_exten_override size=50 maxlength=100 value=\"$am_message_exten_override\"> <a href=\"javascript:launch_chooser('am_message_exten_override','date',300);\">audio chooser</a> $NWB#vicidial_lists-am_message_exten_override$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Drop Inbound Group Override: </td><td align=left><select size=1 name=drop_inbound_group_override>";
+		echo "$Dgroups_menu";
+		echo "</select>$NWB#vicidial_lists-drop_inbound_group_override$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 		echo "</TABLE></center>\n";
