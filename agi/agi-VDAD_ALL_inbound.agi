@@ -101,6 +101,7 @@
 # 90720-0023 - Added checks for filename validity before streaming, changed initial heavy search from 3 to 2 seconds
 # 90726-0114 - Fixed bug on some calls for agent grab
 # 90808-0307 - Added longest_wait_time as agent routing option
+# 91004-0959 - Fix for queue_log consultative transfers
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -1463,6 +1464,26 @@ if ( ($agent_search_method =~ /^SO|^LO/) && ($skipLOSO < 1) )
 				$Baffected_rows = $dbhB->do($stmtB);
 					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02045';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
+				$QLabandon=0;
+				$stmtB="SELECT count(*) from queue_log where call_id='$YqueryCID' and verb='ABANDON';";
+					if ($AGILOG) {$agi_string = "|$stmtB|";   &agi_output;}
+				$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+				$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+				$sthBrowsQLA=$sthB->rows;
+				if ($sthBrowsQLA > 0)
+					{
+					@aryB = $sthB->fetchrow_array;
+					$QLabandon = 	"$aryB[0]";
+					}
+				$sthB->finish();
+				if ( ($QLabandon > 0) && (length($callerid) > 15) )
+					{
+					$stmtB = "DELETE FROM queue_log where call_id='$YqueryCID' and verb='ABANDON';";
+						if ($AGILOG) {$agi_string = "Removing ABANDON queue_log entries for call $QLabandon|$YqueryCID";   &agi_output;}
+					$Baffected_rows = $dbhB->do($stmtB);
+						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+					}
+
 				$dbhB->disconnect();
 				}
 
@@ -1814,6 +1835,26 @@ if ($agent_search_method =~ /^LO|^LB/)
 				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='Agent/$VDADuser',verb='CONNECT',data1='$drop_timer',serverid='$queuemetrics_log_id';";
 				$Baffected_rows = $dbhB->do($stmtB);
 					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02065';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+
+				$QLabandon=0;
+				$stmtB="SELECT count(*) from queue_log where call_id='$YqueryCID' and verb='ABANDON';";
+					if ($AGILOG) {$agi_string = "|$stmtB|";   &agi_output;}
+				$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+				$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+				$sthBrowsQLA=$sthB->rows;
+				if ($sthBrowsQLA > 0)
+					{
+					@aryB = $sthB->fetchrow_array;
+					$QLabandon = 	"$aryB[0]";
+					}
+				$sthB->finish();
+				if ( ($QLabandon > 0) && (length($callerid) > 15) )
+					{
+					$stmtB = "DELETE FROM queue_log where call_id='$YqueryCID' and verb='ABANDON';";
+						if ($AGILOG) {$agi_string = "Removing ABANDON queue_log entries for call $QLabandon|$YqueryCID";   &agi_output;}
+					$Baffected_rows = $dbhB->do($stmtB);
+						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+					}
 
 				$dbhB->disconnect();
 				}
