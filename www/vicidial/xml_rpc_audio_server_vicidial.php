@@ -9,6 +9,7 @@
 # CHANGES
 # 90525-1141 - First build
 # 90529-2041 - Added Realtime monitoring
+# 91012-0641 - Fixed to work with non-sequential time_ids in the queue_log
 #
 
 // $Id: xmlrpc_audio_server.php,v 1.3 2007/11/12 17:53:09 lenz Exp $
@@ -87,7 +88,7 @@ function find_file( $ServerID, $AsteriskID, $QMUserID, $QMUserName )
 		$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
 		mysql_select_db("$queuemetrics_dbname", $linkB);
 
-		$stmt="SELECT time_id from queue_log where call_id='$AsteriskID' limit 1;";
+		$stmt="SELECT time_id from queue_log where call_id='$AsteriskID' order by time_id limit 1;";
 		$rslt=mysql_query($stmt, $linkB);
 		if ($DB) {echo "$stmt\n";}
 		$QM_ql_ct = mysql_num_rows($rslt);
