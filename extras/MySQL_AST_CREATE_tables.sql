@@ -306,7 +306,8 @@ index (status),
 index (gmt_offset_now),
 index (postal_code),
 index (last_local_call_time),
-index (rank)
+index (rank),
+index (owner)
 );
 
 CREATE TABLE vicidial_hopper (
@@ -351,6 +352,7 @@ external_pause VARCHAR(20) default '',
 external_dial VARCHAR(100) default '',
 agent_log_id INT(9) UNSIGNED default '0',
 last_state_change DATETIME,
+agent_territories TEXT,
 index (random_id),
 index (last_call_time),
 index (last_update_time),
@@ -515,7 +517,8 @@ delete_from_dnc ENUM('0','1') default '0',
 email VARCHAR(100) default '',
 user_code VARCHAR(100) default '',
 territory VARCHAR(100) default '',
-allow_alerts ENUM('0','1') default '0'
+allow_alerts ENUM('0','1') default '0',
+agent_choose_territories ENUM('0','1') default '1'
 );
 
 
@@ -675,7 +678,8 @@ no_hopper_dialing ENUM('Y','N') default 'N',
 agent_dial_owner_only ENUM('NONE','USER','TERRITORY','USER_GROUP') default 'NONE',
 agent_display_dialable_leads ENUM('Y','N') default 'N',
 web_form_address_two TEXT,
-waitforsilence_options VARCHAR(25) default ''
+waitforsilence_options VARCHAR(25) default '',
+agent_select_territories ENUM('Y','N') default 'N'
 );
 
 CREATE TABLE vicidial_lists (
@@ -1810,6 +1814,15 @@ old_messages INT(4) default '0',
 email VARCHAR(100)
 );
 
+CREATE TABLE vicidial_user_territory_log (
+user VARCHAR(20),
+campaign_id VARCHAR(20),
+event_date DATETIME,
+agent_territories TEXT,
+index (user),
+index (event_date)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
@@ -1934,7 +1947,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1175',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1176',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

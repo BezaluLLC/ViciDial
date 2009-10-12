@@ -566,3 +566,22 @@ ALTER TABLE vicidial_lists ADD am_message_exten_override VARCHAR(100) default ''
 ALTER TABLE vicidial_lists ADD drop_inbound_group_override VARCHAR(20) default '';
 
 UPDATE system_settings SET db_schema_version='1175',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD agent_select_territories ENUM('Y','N') default 'N';
+
+ALTER TABLE vicidial_users ADD agent_choose_territories ENUM('0','1') default '1';
+
+ALTER TABLE vicidial_live_agents ADD agent_territories TEXT;
+
+CREATE INDEX owner ON vicidial_list (owner);
+
+CREATE TABLE vicidial_user_territory_log (
+user VARCHAR(20),
+campaign_id VARCHAR(20),
+event_date DATETIME,
+agent_territories TEXT,
+index (user),
+index (event_date)
+);
+
+UPDATE system_settings SET db_schema_version='1176',db_schema_update_date=NOW();

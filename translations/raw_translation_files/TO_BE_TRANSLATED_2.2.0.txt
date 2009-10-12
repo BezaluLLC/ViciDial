@@ -336,6 +336,10 @@ Answering Machine Message Override||
 If this field is set, this will override the Answering Machine Message set in the campaign for customers in this list. Default is not set||
 Drop Inbound Group Override||
 If this field is set, this in-group will be used for outbound calls within this list that drop from the outbound campaign instead of the drop in-group set in the campaign detail screen. Default is not set||
+Agent Select Territories||
+If this option is enabled and the agent belongs to at least one territory, the agent will have the option of selecting territories to dial leads from. The agent will see a list of available territories upon login and they will have the ability to go back to that territory list when paused to change their territories. For this function to work the Owner Only Dialing option must be set to TERRITORY and User Terriories must be enabled in the System Settings.
+Agent Choose Territories||
+This option if set to 1 allows the user to choose the territories that they will receive calls from when they login to a MANUAL or INBOUND_MAN campaign. Otherwise the user will be set to use all of the territories that they are set to belong to in the User Territories administrative section||
 
 
 add-file: user_territories.php

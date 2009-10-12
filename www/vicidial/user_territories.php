@@ -10,11 +10,12 @@
 # CHANGES
 # 90520-1928 - first build
 # 90717-0651 - Added batch
-# 90726-2302 - Added vicidial_list update option
+# 90726-2302 - Added vicidial_list user owner update option
+# 91012-0310 - Added vicidial_list counts for territory as owner
 #
 
-$version = '2.2.0-3';
-$build = '90726-2302';
+$version = '2.2.0-4';
+$build = '91012-0310';
 
 $MT[0]='';
 
@@ -858,6 +859,18 @@ if ($action == "MODIFY_TERRITORY")
 			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agents: </td><td align=left><B>$user_count</B></td></tr>";
 
+		$owner_count=0;
+		$stmt = "SELECT count(*) FROM vicidial_list where owner='$territory';";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$VLo_ct = mysql_num_rows($rslt);
+		if ($VLo_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$owner_count =			$row[0];
+			}
+		echo "<tr bgcolor=#B6D3FC><td align=right>Accounts: </td><td align=left><B>$owner_count</B></td></tr>";
+
 		if ($enable_vtiger_integration > 0)
 			{
 			$stmtV = "SELECT count(*) FROM vtiger_account where tickersymbol='$territory';";
@@ -884,17 +897,27 @@ if ($action == "MODIFY_TERRITORY")
 		while ($territories_to_print > $o) 
 			{
 			$rowx=mysql_fetch_row($rslt);
+			$Tuser[$o] =		$rowx[0];
+			$Tlevel[$o] =		$rowx[1];
+			$Tfull_name[$o] =	$rowx[2];
 			$o++;
-			if (eregi("1$|3$|5$|7$|9$", $o))
+			}
+		$o=0;
+		while ($territories_to_print > $o) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$p++;
+
+			if (eregi("1$|3$|5$|7$|9$", $p))
 				{$bgcolor='bgcolor="#B9CBFD"';} 
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}
-			echo "<TR $bgcolor><TD><font size=1>$o</TD>";
-			echo "<TD><a href=\"admin.php?ADD=3&user=$rowx[0]\">$rowx[0]</a></TD>";
-			echo "<TD>$rowx[2]</TD>";
+			echo "<TR $bgcolor><TD><font size=1>$p</TD>";
+			echo "<TD><a href=\"admin.php?ADD=3&user=$Tuser[$o]\">$Tuser[$o]</a></TD>";
+			echo "<TD>$Tfull_name[$o]</TD>";
 			if ($enable_vtiger_integration > 0)
 				{
-				$stmtV="SELECT id from vtiger_users where user_name='$rowx[0]';";
+				$stmtV="SELECT id from vtiger_users where user_name='$Tuser[$o]';";
 				$rsltV=mysql_query($stmtV, $linkV);
 				if ($DB) {echo "$stmtV\n";}
 				$vtu_ct = mysql_num_rows($rsltV);
@@ -910,21 +933,35 @@ if ($action == "MODIFY_TERRITORY")
 					if ($vca_ct > 0)
 						{
 						$row=mysql_fetch_row($rsltV);
-						echo "<TD>Accounts: $row[0]</TD>";
+						echo "<TD>VT Accounts: $row[0]</TD>";
 						}
 					}
 				}
+
+		#	$owner_count=0;
+		#	$stmt = "SELECT count(*) FROM vicidial_list where owner='$territory';";
+		#	$rslt=mysql_query($stmt, $link);
+		#	if ($DB) {echo "$stmt\n";}
+		#	$VLo_ct = mysql_num_rows($rslt);
+		#	if ($VLo_ct > 0)
+		#		{
+		#		$row=mysql_fetch_row($rslt);
+		#		$owner_count =			$row[0];
+		#		}
+		#	echo "<TD>Accounts: $owner_count</TD>";
+
 			echo "<TD>";
 			echo "<form action=$PHP_SELF method=POST>";
 			echo "<input type=hidden name=action value=PROCESS_MODIFY_USER_TERRITORY>";
 			echo "<input type=hidden name=territory value=\"$territory\">";
-			echo "<input type=hidden name=user value=\"$rowx[0]\">";
-			echo "<select size=1 name=level><option SELECTED>$rowx[1]</option><option>TOP_AGENT</option><option>STANDARD_AGENT</option><option>BOTTOM_AGENT</option></select> ";
+			echo "<input type=hidden name=user value=\"$Tuser[$o]\">";
+			echo "<select size=1 name=level><option SELECTED>$Tlevel[$o]</option><option>TOP_AGENT</option><option>STANDARD_AGENT</option><option>BOTTOM_AGENT</option></select> ";
 			echo "<input type=submit name=submit value=submit>";
 			echo "</form>";
 			echo "</TD>";
-			echo "<TD><a href=\"$PHP_SELF?action=DELETE_USER_TERRITORY&territory=$territory&user=$rowx[0]\">DELETE</a></TD>";
+			echo "<TD><a href=\"$PHP_SELF?action=DELETE_USER_TERRITORY&territory=$territory&user=$Tuser[$o]\">DELETE</a></TD>";
 			echo "</TR>\n";
+			$o++;
 			}
 
 		echo "</TABLE>\n";
@@ -957,6 +994,7 @@ if ($action == "LIST_ALL_TERRITORIES")
 	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>TERRITORY</B></TD>";
 	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>DESCRIPTION</B></TD>\n";
 	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>AGENTS</TD>\n";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>ACCOUNTS</TD>\n";
 	if ($enable_vtiger_integration > 0)
 		{
 		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>VT ACCOUNTS</TD>\n";
@@ -989,6 +1027,16 @@ if ($action == "LIST_ALL_TERRITORIES")
 			$Lterritory_count[$i] =			$row[0];
 			}
 
+		$stmt = "SELECT count(*) FROM vicidial_list where owner='$Lterritory[$i]';";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$VLo_ct = mysql_num_rows($rslt);
+		if ($VLo_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$Lterritory_owner_count[$i] =	$row[0];
+			}
+
 		if ($enable_vtiger_integration > 0)
 			{
 			$stmtV = "SELECT count(*) FROM vtiger_account where tickersymbol='$Lterritory[$i]';";
@@ -1011,6 +1059,7 @@ if ($action == "LIST_ALL_TERRITORIES")
 		echo "<td><font size=1> <a href=\"$PHP_SELF?action=MODIFY_TERRITORY&territory=$Lterritory[$i]\">$Lterritory[$i]</a></td>";
 		echo "<td><font size=1> $Lterritory_description[$i]</td>";
 		echo "<td><font size=1> $Lterritory_count[$i]</td>";
+		echo "<td><font size=1> $Lterritory_owner_count[$i]</td>";
 		if ($enable_vtiger_integration > 0)
 			{
 			echo "<td><font size=1> $Lvtiger_count[$i]</td>";

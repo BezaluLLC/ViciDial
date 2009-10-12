@@ -245,7 +245,15 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	drop inbound group to override campaign settings for leads within a
 	specific list
 
-
+62. Added Agent-selectable territories list upon login to select what list
+	territories they want to place calls in. 
+	REQUIREMENTS:
+	- Must have System Setting "User Territories Active" enabled
+	- Must have Campaign "No Hopper Dialing" enabled
+	- Must have Campaign "Owner Only Dialing" set to TERRITORY
+	- Must have Campaign "Agent Select Territories" enabled
+	- Must have User "Agent Choose Territories" enabled
+	- Leads must have the owner field set to desired territory
 
 
 

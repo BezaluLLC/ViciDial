@@ -36,7 +36,6 @@
 # 50817-1113 - Fixes to auto_dialing call receipt
 # 50817-1234 - Added inbound call receipt capability
 # 50817-1541 - Added customer time display
-# 50817-1541 - Added customer time display
 # 50818-1327 - Added stop-all-recordings-after-each-vicidial-call option
 # 50818-1703 - Added pretty login section
 # 50825-1200 - Modified form field lengths, added double-click dispositions
@@ -257,10 +256,11 @@
 # 90920-2108 - Changed web forms to use window.open instead of traditional links(IE7 compatibility issue)
 # 90923-1310 - Rolled back last change
 # 90928-1955 - Added lead update before closer transfer
+# 90930-2243 - Added Territory selection functions
 #
 
-$version = '2.2.0-234';
-$build = '90928-1955';
+$version = '2.2.0-235';
+$build = '90930-2243';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -338,7 +338,7 @@ $random = (rand(1000000, 9999999) + 10000000);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -357,6 +357,7 @@ while ($i < $qm_conf_ct)
 	$enable_vtiger_integration =	$row[7];
 	$outbound_autodial_active =		$row[8];
 	$enable_second_webform =		$row[9];
+	$user_territories_active =		$row[10];
 
 	$i++;
 	}
@@ -513,7 +514,7 @@ if ($MGR_override > 0)
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01059',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		print "<!-- Shift Override entered for $VD_login by $MGR_login -->\n";
+		echo "<!-- Shift Override entered for $VD_login by $MGR_login -->\n";
 
 		### Add a record to the vicidial_admin_log
 		$SQL_log = "$stmt|";
@@ -797,7 +798,7 @@ $VDloginDISPLAY=0;
 		$login=strtoupper($VD_login);
 		$password=strtoupper($VD_pass);
 		##### grab the full name of the agent
-		$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns from vicidial_users where user='$VD_login' and pass='$VD_pass'";
+		$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories from vicidial_users where user='$VD_login' and pass='$VD_pass'";
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01007',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$row=mysql_fetch_row($rslt);
@@ -819,6 +820,7 @@ $VDloginDISPLAY=0;
 		$VU_shift_override_flag =				$row[15];
 		$VU_allow_alerts =						$row[16];
 		$VU_closer_campaigns =					$row[17];
+		$VU_agent_choose_territories =			$row[18];
 
 		if ( ($VU_alert_enabled > 0) and ($VU_allow_alerts > 0) ) {$VU_alert_enabled = 'ON';}
 		else {$VU_alert_enabled = 'OFF';}
@@ -895,7 +897,7 @@ $VDloginDISPLAY=0;
 
 				$stmt="SELECT shift_id,shift_start_time,shift_length,shift_weekdays from vicidial_shifts where $LOGgroup_shiftsSQL order by shift_id";
 				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01056',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01056',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$shifts_to_print = mysql_num_rows($rslt);
 
 				$o=0;
@@ -959,10 +961,6 @@ $VDloginDISPLAY=0;
 				}
 			}
 			### END - CHECK TO SEE IF SHIFT ENFORCEMENT IS ENABLED AND AGENT IS OUTSIDE OF THEIR SHIFTS, IF SO, OUTPUT ERROR
-
-
-
-
 
 
 
@@ -1089,7 +1087,7 @@ $VDloginDISPLAY=0;
 			$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 			##### grab the campaign settings
-			$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+			$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -1149,6 +1147,14 @@ $VDloginDISPLAY=0;
 			$agent_dial_owner_only =	$row[52];
 			$agent_display_dialable_leads = $row[53];
 			$web_form_address_two =		$row[54];
+			$agent_select_territories = $row[55];
+
+			if ($user_territories_active < 1)
+				{$agent_select_territories = 0;}
+			if (preg_match("/Y/",$agent_select_territories))
+				{$agent_select_territories=1;}
+			else
+				{$agent_select_territories=0;}
 
 			if (preg_match("/Y/",$agent_display_dialable_leads))
 				{$agent_display_dialable_leads=1;}
@@ -1208,7 +1214,7 @@ $VDloginDISPLAY=0;
 					}
 				}
 
-			$stmt = "select group_web_vars from vicidial_campaign_agents where campaign_id='$VD_campaign' and user='$user';";
+			$stmt = "select group_web_vars from vicidial_campaign_agents where campaign_id='$VD_campaign' and user='$VD_login';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01056',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -1222,7 +1228,7 @@ $VDloginDISPLAY=0;
 			if ( (!ereg('DISABLED',$VU_vicidial_recording_override)) and ($VU_vicidial_recording > 0) )
 				{
 				$campaign_recording = $VU_vicidial_recording_override;
-				print "<!-- USER RECORDING OVERRIDE: |$VU_vicidial_recording_override|$campaign_recording| -->\n";
+				echo "<!-- USER RECORDING OVERRIDE: |$VU_vicidial_recording_override|$campaign_recording| -->\n";
 				}
 			if ( ($VC_scheduled_callbacks=='Y') and ($VU_scheduled_callbacks=='1') )
 				{$scheduled_callbacks='1';}
@@ -1295,6 +1301,27 @@ $VDloginDISPLAY=0;
 			else
 				{$closer_campaigns = "''";}
 
+			##### gather territory listings for this agent if select territories is enabled
+			$VARterritories='';
+			if ($agent_select_territories > 0)
+				{
+				$stmt="SELECT territory from vicidial_user_territories where user='$VD_login';";
+				$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$territory_ct = mysql_num_rows($rslt);
+				$territoryCT=0;
+				while ($territoryCT < $territory_ct)
+					{
+					$row=mysql_fetch_row($rslt);
+					$territories[$territoryCT] =$row[0];
+					$VARterritories = "$VARterritories'$territories[$territoryCT]',";
+					$territoryCT++;
+					}
+				$VARterritories = substr("$VARterritories", 0, -1); 
+				echo "<!-- $territory_ct  $territoryCT |$stmt| -->\n";
+				}
+
 			##### grab the allowable inbound groups to choose from for transfer options
 			$xfer_groups = preg_replace("/^ | -$/","",$xfer_groups);
 			$xfer_groups = preg_replace("/ /","','",$xfer_groups);
@@ -1355,7 +1382,7 @@ $VDloginDISPLAY=0;
 			if ($DB) {echo "$stmt\n";}
 			$row=mysql_fetch_row($rslt);
 			   $campaign_leads_to_call = $row[0];
-			   print "<!-- $campaign_leads_to_call - leads left to call in hopper -->\n";
+			   echo "<!-- $campaign_leads_to_call - leads left to call in hopper -->\n";
 
 			}
 		else
@@ -1673,15 +1700,15 @@ else
 		{
 		$VICIDiaL_park_on_extension = "$park_ext";
 		$VICIDiaL_park_on_filename = "$park_file_name";
-		print "<!-- CAMPAIGN CUSTOM PARKING:  |$VICIDiaL_park_on_extension|$VICIDiaL_park_on_filename| -->\n";
+		echo "<!-- CAMPAIGN CUSTOM PARKING:  |$VICIDiaL_park_on_extension|$VICIDiaL_park_on_filename| -->\n";
 		}
-		print "<!-- CAMPAIGN DEFAULT PARKING: |$VICIDiaL_park_on_extension|$VICIDiaL_park_on_filename| -->\n";
+	echo "<!-- CAMPAIGN DEFAULT PARKING: |$VICIDiaL_park_on_extension|$VICIDiaL_park_on_filename| -->\n";
 
 	# If a web form address is not set, use the default one
 	if (strlen($web_form_address)>0)
 		{
 		$VICIDiaL_web_form_address = "$web_form_address";
-		print "<!-- CAMPAIGN CUSTOM WEB FORM:   |$VICIDiaL_web_form_address| -->\n";
+		echo "<!-- CAMPAIGN CUSTOM WEB FORM:   |$VICIDiaL_web_form_address| -->\n";
 		}
 	else
 		{
@@ -1695,12 +1722,12 @@ else
 	if (strlen($web_form_address_two)>0)
 		{
 		$VICIDiaL_web_form_address_two = "$web_form_address_two";
-		print "<!-- CAMPAIGN CUSTOM WEB FORM 2:   |$VICIDiaL_web_form_address_two| -->\n";
+		echo "<!-- CAMPAIGN CUSTOM WEB FORM 2:   |$VICIDiaL_web_form_address_two| -->\n";
 		}
 	else
 		{
 		$VICIDiaL_web_form_address_two = "$VICIDiaL_web_form_address";
-		print "<!-- CAMPAIGN DEFAULT WEB FORM 2:  |$VICIDiaL_web_form_address_two| -->\n";
+		echo "<!-- CAMPAIGN DEFAULT WEB FORM 2:  |$VICIDiaL_web_form_address_two| -->\n";
 		$VICIDiaL_web_form_address_two_enc = rawurlencode($VICIDiaL_web_form_address_two);
 		}
 	$VICIDiaL_web_form_address_two_enc = rawurlencode($VICIDiaL_web_form_address_two);
@@ -1709,12 +1736,12 @@ else
 	if ($allow_closers=="Y")
 		{
 		$VICIDiaL_allow_closers = 1;
-		print "<!-- CAMPAIGN ALLOWS CLOSERS:    |$VICIDiaL_allow_closers| -->\n";
+		echo "<!-- CAMPAIGN ALLOWS CLOSERS:    |$VICIDiaL_allow_closers| -->\n";
 		}
 	else
 		{
 		$VICIDiaL_allow_closers = 0;
-		print "<!-- CAMPAIGN ALLOWS NO CLOSERS: |$VICIDiaL_allow_closers| -->\n";
+		echo "<!-- CAMPAIGN ALLOWS NO CLOSERS: |$VICIDiaL_allow_closers| -->\n";
 		}
 
 
@@ -1760,7 +1787,7 @@ else
 			$i++;
 			}
 		if ($prev_login_ct > 0)
-			{print "<!-- USING PREVIOUS MEETME ROOM - $session_id - $NOW_TIME - $SIP_user -->\n";}
+			{echo "<!-- USING PREVIOUS MEETME ROOM - $session_id - $NOW_TIME - $SIP_user -->\n";}
 		else
 			{
 			##### grab the next available vicidial_conference room and reserve it
@@ -1776,14 +1803,14 @@ else
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01034',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 
-				$stmt="SELECT conf_exten from vicidial_conferences where server_ip='$server_ip' and ( (extension='$SIP_user') or (extension='$user') );";
+				$stmt="SELECT conf_exten from vicidial_conferences where server_ip='$server_ip' and ( (extension='$SIP_user') or (extension='$VD_login') );";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01035',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$row=mysql_fetch_row($rslt);
 				$session_id = $row[0];
 				}
-			print "<!-- USING NEW MEETME ROOM - $session_id - $NOW_TIME - $SIP_user -->\n";
+			echo "<!-- USING NEW MEETME ROOM - $session_id - $NOW_TIME - $SIP_user -->\n";
 			}
 
 		### mark leads that were not dispositioned during previous calls as ERI
@@ -1792,30 +1819,30 @@ else
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01036',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$affected_rows = mysql_affected_rows($link);
-		print "<!-- old QUEUE and INCALL reverted list:   |$affected_rows| -->\n";
+		echo "<!-- old QUEUE and INCALL reverted list:   |$affected_rows| -->\n";
 
 		$stmt="DELETE from vicidial_hopper where status IN('QUEUE','INCALL','DONE') and user ='$VD_login';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01037',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$affected_rows = mysql_affected_rows($link);
-		print "<!-- old QUEUE and INCALL reverted hopper: |$affected_rows| -->\n";
+		echo "<!-- old QUEUE and INCALL reverted hopper: |$affected_rows| -->\n";
 
 		$stmt="DELETE from vicidial_live_agents where user ='$VD_login';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01038',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$affected_rows = mysql_affected_rows($link);
-		print "<!-- old vicidial_live_agents records cleared: |$affected_rows| -->\n";
+		echo "<!-- old vicidial_live_agents records cleared: |$affected_rows| -->\n";
 
 		$stmt="DELETE from vicidial_live_inbound_agents where user ='$VD_login';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01039',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$affected_rows = mysql_affected_rows($link);
-		print "<!-- old vicidial_live_inbound_agents records cleared: |$affected_rows| -->\n";
+		echo "<!-- old vicidial_live_inbound_agents records cleared: |$affected_rows| -->\n";
 
-	#	print "<B>You have logged in as user: $VD_login on phone: $SIP_user to campaign: $VD_campaign</B><BR>\n";
+	#	echo "<B>You have logged in as user: $VD_login on phone: $SIP_user to campaign: $VD_campaign</B><BR>\n";
 		$VICIDiaL_is_logged_in=1;
 
 		### set the callerID for manager middleware-app to connect the phone to the user
@@ -1846,7 +1873,7 @@ else
 		if ( ($enable_sipsak_messages > 0) and ($allow_sipsak_messages > 0) and (eregi("SIP",$protocol)) )
 			{
 			$SIPSAK_prefix = 'LIN-';
-			print "<!-- sending login sipsak message: $SIPSAK_prefix$VD_campaign -->\n";
+			echo "<!-- sending login sipsak message: $SIPSAK_prefix$VD_campaign -->\n";
 			passthru("/usr/local/bin/sipsak -M -O desktop -B \"$SIPSAK_prefix$VD_campaign\" -r 5060 -s sip:$extension@$phone_ip > /dev/null");
 			$SIqueryCID = "$SIPSAK_prefix$VD_campaign$DS$CIDdate";
 			}
@@ -1857,7 +1884,7 @@ else
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01041',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$affected_rows = mysql_affected_rows($link);
-		print "<!-- call placed to session_id: $session_id from phone: $SIP_user $SIP_user_DiaL -->\n";
+		echo "<!-- call placed to session_id: $session_id from phone: $SIP_user $SIP_user_DiaL -->\n";
 
 		##### grab the campaign_weight and number of calls today on that campaign for the agent
 		$stmt="SELECT campaign_weight,calls_today FROM vicidial_campaign_agents where user='$VD_login' and campaign_id = '$VD_campaign';";
@@ -1881,12 +1908,12 @@ else
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01043',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$affected_rows = mysql_affected_rows($link);
-			print "<!-- new vicidial_campaign_agents record inserted: |$affected_rows| -->\n";
+			echo "<!-- new vicidial_campaign_agents record inserted: |$affected_rows| -->\n";
 			}
 
 		if ($auto_dial_level > 0)
 			{
-			print "<!-- campaign is set to auto_dial_level: $auto_dial_level -->\n";
+			echo "<!-- campaign is set to auto_dial_level: $auto_dial_level -->\n";
 
 
 			$closer_chooser_string='';
@@ -1895,7 +1922,7 @@ else
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01044',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$affected_rows = mysql_affected_rows($link);
-			print "<!-- new vicidial_live_agents record inserted: |$affected_rows| -->\n";
+			echo "<!-- new vicidial_live_agents record inserted: |$affected_rows| -->\n";
 
 			if ($enable_queuemetrics_logging > 0)
 				{
@@ -1907,14 +1934,14 @@ else
 				$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01045',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$affected_rows = mysql_affected_rows($linkB);
-				print "<!-- queue_log AGENTLOGIN entry added: $VD_login|$affected_rows -->\n";
+				echo "<!-- queue_log AGENTLOGIN entry added: $VD_login|$affected_rows -->\n";
 
 				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01046',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$affected_rows = mysql_affected_rows($linkB);
-				print "<!-- queue_log PAUSE entry added: $VD_login|$affected_rows -->\n";
+				echo "<!-- queue_log PAUSE entry added: $VD_login|$affected_rows -->\n";
 
 				mysql_close($linkB);
 				mysql_select_db("$VARDB_database", $link);
@@ -1935,7 +1962,7 @@ else
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01047',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$affected_rows = mysql_affected_rows($link);
-			print "<!-- new vicidial_live_agents record inserted: |$affected_rows| -->\n";
+			echo "<!-- new vicidial_live_agents record inserted: |$affected_rows| -->\n";
 
 			if ($enable_queuemetrics_logging > 0)
 				{
@@ -1947,14 +1974,14 @@ else
 				$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01048',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$affected_rows = mysql_affected_rows($linkB);
-				print "<!-- queue_log AGENTLOGIN entry added: $VD_login|$affected_rows -->\n";
+				echo "<!-- queue_log AGENTLOGIN entry added: $VD_login|$affected_rows -->\n";
 
 				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01049',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$affected_rows = mysql_affected_rows($linkB);
-				print "<!-- queue_log PAUSE entry added: $VD_login|$affected_rows -->\n";
+				echo "<!-- queue_log PAUSE entry added: $VD_login|$affected_rows -->\n";
 
 				mysql_close($linkB);
 				mysql_select_db("$VARDB_database", $link);
@@ -2013,12 +2040,12 @@ else
 	if (ereg('MSIE',$browser)) 
 		{
 		$useIE=1;
-		print "<!-- client web browser used: MSIE |$browser|$useIE| -->\n";
+		echo "<!-- client web browser used: MSIE |$browser|$useIE| -->\n";
 		}
 	else 
 		{
 		$useIE=0;
-		print "<!-- client web browser used: W3C-Compliant |$browser|$useIE| -->\n";
+		echo "<!-- client web browser used: W3C-Compliant |$browser|$useIE| -->\n";
 		}
 
 	$StarTtimE = date("U");
@@ -2030,7 +2057,7 @@ else
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01050',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 	$affected_rows = mysql_affected_rows($link);
 	$agent_log_id = mysql_insert_id($link);
-	print "<!-- vicidial_agent_log record inserted: |$affected_rows|$agent_log_id| -->\n";
+	echo "<!-- vicidial_agent_log record inserted: |$affected_rows|$agent_log_id| -->\n";
 
 	$stmt="UPDATE vicidial_live_agents SET agent_log_id='$agent_log_id' where user='$VD_login';";
 	if ($DB) {echo "$stmt\n";}
@@ -2227,6 +2254,8 @@ $CCAL_OUT .= "</table>";
 	var VU_hotkeys_active = '<?php echo $VU_hotkeys_active ?>';
 	var VU_agent_choose_ingroups = '<?php echo $VU_agent_choose_ingroups ?>';
 	var VU_agent_choose_ingroups_DV = '';
+	var agent_choose_territories = '<?php echo $VU_agent_choose_territories ?>';
+	var agent_select_territories = '<?php echo $agent_select_territories ?>';
 	var VU_closer_campaigns = '<?php echo $VU_closer_campaigns ?>';
 	var CallBackDatETimE = '';
 	var CallBackrecipient = '';
@@ -2251,6 +2280,8 @@ $CCAL_OUT .= "</table>";
 	var VD_statuses_ct = '<?php echo $VD_statuses_ct ?>';
 	VARingroups = new Array(<?php echo $VARingroups ?>);
 	var INgroupCOUNT = '<?php echo $INgrpCT ?>';
+	VARterritories = new Array(<?php echo $VARterritories ?>);
+	var territoryCOUNT = '<?php echo $territoryCT ?>';
 	VARxfergroups = new Array(<?php echo $VARxfergroups ?>);
 	VARxfergroupsnames = new Array(<?php echo $VARxfergroupsnames ?>);
 	var XFgroupCOUNT = '<?php echo $XFgrpCT ?>';
@@ -7401,7 +7432,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		{
 		var CloserSelectListValue = document.vicidial_form.CloserSelectList.value;
 		var CSCchange = 0;
-		var regCS = new RegExp(" "+taskCSgrp+" ","ig");
+		var regCS = new RegExp(" " + taskCSgrp + " ","ig");
 		var regCSall = new RegExp("-ALL-----","ig");
 		var regCSallADD = new RegExp("-----ADD-ALL-----","ig");
 		var regCSallDELETE = new RegExp("-----DELETE-ALL-----","ig");
@@ -7427,7 +7458,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			var live_CSC_LIST_value = " ";
 			while (loop_ct < INgroupCOUNT)
 				{
-				var regCSL = new RegExp(" "+VARingroups[loop_ct]+" ","ig");
+				var regCSL = new RegExp(" " + VARingroups[loop_ct] + " ","ig");
 				if (CloserSelectListValue.match(regCSL)) {CSCcolumn = 'DELETE';}
 				else {CSCcolumn = 'ADD';}
 				if ( ( (VARingroups[loop_ct] == taskCSgrp) && (taskCSchange == 'DELETE') ) || (taskCSgrp.match(regCSallDELETE)) ) {CSCcolumn = 'ADD';}
@@ -7515,6 +7546,142 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		hideDiv('CloserSelectBox');
 		MainPanelToFront();
 		CloserSelecting = 0;
+		}
+
+
+// ################################################################################
+// Generate the Territory Chooser panel
+	function TerritorySelectContent_create()
+		{
+		if (agent_select_territories == '1')
+			{
+			if (agent_choose_territories > 0)
+				{
+				var live_TERR_HTML = "<table cellpadding=5 cellspacing=5 width=500><tr><td><B>TERRITORIES NOT SELECTED</B></td><td><B>SELECTED TERRITORIES</B></td></tr><tr><td bgcolor=\"#99FF99\" height=300 width=240 valign=top><font class=\"log_text\"><span id=TerritorySelectAdd> &nbsp; <a href=\"#\" onclick=\"TerritorySelect_change('-----ADD-ALL-----','ADD');return false;\"><B>--- ADD ALL ---</B><BR>";
+				var loop_ct = 0;
+				while (loop_ct < territoryCOUNT)
+					{
+					live_TERR_HTML = live_TERR_HTML + "<a href=\"#\" onclick=\"TerritorySelect_change('" + VARterritories[loop_ct] + "','ADD');return false;\">" + VARterritories[loop_ct] + "<BR>";
+					loop_ct++;
+					}
+				live_TERR_HTML = live_TERR_HTML + "</span></font></td><td bgcolor=\"#99FF99\" height=300 width=240 valign=top><font class=\"log_text\"><span id=TerritorySelectDelete></span></font></td></tr></table>";
+
+				document.vicidial_form.TerritorySelectList.value = '';
+				document.getElementById("TerritorySelectContent").innerHTML = live_TERR_HTML;
+				}
+			else
+				{
+				agent_select_territories = "MGRLOCK";
+				var live_TERR_HTML = "Manager has selected territories for you<BR>";
+				document.vicidial_form.TerritorySelectList.value = '';
+				document.getElementById("TerritorySelectContent").innerHTML = live_TERR_HTML;
+				}
+			}
+		}
+
+// ################################################################################
+// Move a Territory record to the selected column or reverse
+	function TerritorySelect_change(taskTERRgrp,taskTERRchange)
+		{
+		var TerritorySelectListValue = document.vicidial_form.TerritorySelectList.value;
+		var TERRchange = 0;
+		var regTERR = new RegExp(" " + taskTERRgrp + " ","ig");
+		var regTERRall = new RegExp("-ALL-----","ig");
+		var regTERRallADD = new RegExp("-----ADD-ALL-----","ig");
+		var regTERRallDELETE = new RegExp("-----DELETE-ALL-----","ig");
+		if ( (TerritorySelectListValue.match(regTERR)) && (TerritorySelectListValue.length > 3) )
+			{
+			if (taskTERRchange == 'DELETE') {TERRchange = 1;}
+			}
+		else
+			{
+			if (taskTERRchange == 'ADD') {TERRchange = 1;}
+			}
+		if (taskTERRgrp.match(regTERRall))
+			{TERRchange = 1;}
+//	alert("TERR: " + TerritorySelectListValue + "\nCHANGE: " + TERRchange + "\nACTION: " + taskTERRchange + "\nSELECTED: " + taskTERRgrp + "\nTOTAL: " + territoryCOUNT);
+		if (TERRchange==1) 
+			{
+			var loop_ct = 0;
+			var TERRcolumn = '';
+			var live_TERR_HTML_ADD = '';
+			var live_TERR_HTML_DELETE = '';
+			var live_TERR_LIST_value = " ";
+			while (loop_ct < territoryCOUNT)
+				{
+				var regTERRL = new RegExp(" " + VARterritories[loop_ct] + " ","ig");
+				if (TerritorySelectListValue.match(regTERRL)) {TERRcolumn = 'DELETE';}
+				else {TERRcolumn = 'ADD';}
+				if ( ( (VARterritories[loop_ct] == taskTERRgrp) && (taskTERRchange == 'DELETE') ) || (taskTERRgrp.match(regTERRallDELETE)) ) 
+					{TERRcolumn = 'ADD';}
+				if ( ( (VARterritories[loop_ct] == taskTERRgrp) && (taskTERRchange == 'ADD') ) || (taskTERRgrp.match(regTERRallADD)) ) 
+					{TERRcolumn = 'DELETE';}
+
+				if (TERRcolumn == 'DELETE')
+					{
+					live_TERR_HTML_DELETE = live_TERR_HTML_DELETE + "<a href=\"#\" onclick=\"TerritorySelect_change('" + VARterritories[loop_ct] + "','DELETE');return false;\">" + VARterritories[loop_ct] + "<BR>";
+					live_TERR_LIST_value = live_TERR_LIST_value + VARterritories[loop_ct] + " ";
+					}
+				else
+					{
+					live_TERR_HTML_ADD = live_TERR_HTML_ADD + "<a href=\"#\" onclick=\"TerritorySelect_change('" + VARterritories[loop_ct] + "','ADD');return false;\">" + VARterritories[loop_ct] + "<BR>";
+					}
+				loop_ct++;
+				}
+
+			document.vicidial_form.TerritorySelectList.value = live_TERR_LIST_value;
+			document.getElementById("TerritorySelectAdd").innerHTML = " &nbsp; <a href=\"#\" onclick=\"TerritorySelect_change('-----ADD-ALL-----','ADD');return false;\"><B>--- ADD ALL ---</B><BR>" + live_TERR_HTML_ADD;
+			document.getElementById("TerritorySelectDelete").innerHTML = " &nbsp; <a href=\"#\" onclick=\"TerritorySelect_change('-----DELETE-ALL-----','DELETE');return false;\"><B>--- DELETE ALL ---</B><BR>" + live_TERR_HTML_DELETE;
+			}
+		}
+
+// ################################################################################
+// Update vicidial_live_agents record with territory choices
+	function TerritorySelect_submit()
+		{
+		var TerritorySelectChoices = document.vicidial_form.TerritorySelectList.value;
+
+		if (agent_select_territories == "MGRLOCK")
+			{TerritorySelectChoices = "MGRLOCK";}
+
+		var xmlhttp=false;
+		/*@cc_on @*/
+		/*@if (@_jscript_version >= 5)
+		// JScript gives us Conditional compilation, we can cope with old IE versions.
+		// and security blocked creation of the objects.
+		 try {
+		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+		 } catch (e) {
+		  try {
+		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		  } catch (E) {
+		   xmlhttp = false;
+		  }
+		 }
+		@end @*/
+		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+			{
+			xmlhttp = new XMLHttpRequest();
+			}
+		if (xmlhttp) 
+			{ 
+			TERRupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=regTERRITORY&format=text&user=" + user + "&pass=" + pass + "&comments=" + agent_select_territories + "&campaign=" + campaign + "&agent_territories=" + TerritorySelectChoices + "-";
+			xmlhttp.open('POST', 'vdc_db_query.php'); 
+			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+			xmlhttp.send(TERRupdate_query); 
+			xmlhttp.onreadystatechange = function() 
+				{ 
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+					{
+		//			alert(xmlhttp.responseText);
+					}
+				}
+			delete xmlhttp;
+			}
+
+		hideDiv('TerritorySelectBox');
+		MainPanelToFront();
+		TerritorySelecting = 0;
 		}
 
 
@@ -8351,6 +8518,21 @@ function phone_number_format(formatphone) {
 
 
 // ################################################################################
+// Show the territories selection span
+	function OpeNTerritorYSelectioN()
+		{
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) )
+			{
+			alert("YOU MUST BE PAUSED TO CHANGE GROUPS");
+			}
+		else
+			{
+			showDiv('TerritorySelectBox')
+			}
+		}
+
+
+// ################################################################################
 // Hide the CBcommentsBox span upon click
 	function CBcommentsBoxhide()
 		{
@@ -8594,6 +8776,18 @@ else
 					document.getElementById("DiaLControl").innerHTML = DiaLControl_manual_HTML;
 					}
 				}
+			if (territoryCOUNT > 0)
+				{
+				showDiv('TerritorySelectBox');
+				var TerritorySelecting = 1;
+				TerritorySelectContent_create();
+				}
+			else
+				{
+				hideDiv('TerritorySelectBox');
+				MainPanelToFront();
+				var TerritorySelecting = 0;
+				}
 			if ( (VtigeRLogiNScripT == 'Y') && (VtigeREnableD > 0) )
 				{
 				document.getElementById("ScriptContents").innerHTML = "<iframe src=\"" + VtigeRurl + "/index.php?module=Users&action=Authenticate&return_module=Users&return_action=Login&user_name=" + user + "&user_password=" + pass + "&login_theme=softed&login_language=en_us\" style=\"width:580;height:290;background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"popupFrame\" name=\"popupFrame\" width=\"460\" height=\"290\" STYLE=\"z-index:17\"> </iframe> ";
@@ -8613,7 +8807,7 @@ else
 			{
 
 			var WaitingForNextStep=0;
-			if (CloserSelecting==1)	{WaitingForNextStep=1;}
+			if ( (CloserSelecting==1) || (TerritorySelecting==1) )	{WaitingForNextStep=1;}
 			if (open_dispo_screen==1)
 				{
 				wrapup_counter=0;
@@ -9260,6 +9454,7 @@ echo "</head>\n";
 <?php	echo "Logged in as User: $VD_login on Phone: $SIP_user to campaign: $VD_campaign&nbsp; \n"; ?>
  &nbsp; &nbsp; <span id="agentchannelSPAN"></span>
 </TD><TD COLSPAN=3 VALIGN=TOP ALIGN=RIGHT><font class="body_text">
+<?php if ($territoryCT > 0) {echo "<a href=\"#\" onclick=\"OpeNTerritorYSelectioN();return false;\">TERRITORIES</a> &nbsp; &nbsp; \n";} ?>
 <?php if ($INgrpCT > 0) {echo "<a href=\"#\" onclick=\"OpeNGrouPSelectioN();return false;\">GROUPS</a> &nbsp; &nbsp; \n";} ?>
 <?php	echo "<a href=\"#\" onclick=\"LogouT('NORMAL');return false;\">LOGOUT</a>\n"; ?>
 </TD></TR></TABLE>
@@ -9578,7 +9773,7 @@ if ($agent_display_dialable_leads > 0)
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:53;" id="PauseCodeSelectBox">
+<span style="position:absolute;left:0px;top:0px;z-index:63;" id="PauseCodeSelectBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> SELECT A PAUSE CODE :<BR>
 	<span id="PauseCodeSelectContent"> Pause Code Selection </span>
 	<input type=hidden name=PauseCodeSelection>
@@ -9586,7 +9781,7 @@ if ($agent_display_dialable_leads > 0)
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:54;" id="GroupAliasSelectBox">
+<span style="position:absolute;left:0px;top:0px;z-index:64;" id="GroupAliasSelectBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> SELECT A GROUP ALIAS :<BR>
 	<span id="GroupAliasSelectContent"> Group Alias Selection </span>
 	<input type=hidden name=GroupAliasSelection>
@@ -9594,7 +9789,7 @@ if ($agent_display_dialable_leads > 0)
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:1000px;z-index:55;" id="GENDERhideFORieALT"></span>
+<span style="position:absolute;left:0px;top:1000px;z-index:65;" id="GENDERhideFORieALT"></span>
 
 
 <span style="position:absolute;left:0px;top:0px;z-index:48;" id="CallBackSelectBox">
@@ -9668,7 +9863,17 @@ if ($agent_display_dialable_leads > 0)
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:52;" id="NothingBox">
+<span style="position:absolute;left:0px;top:0px;z-index:52;" id="TerritorySelectBox">
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> TERRITORY SELECTION <BR>
+	<span id="TerritorySelectContent"> Territory Selection </span>
+	<input type=hidden name=TerritorySelectList><BR>
+	<a href="#" onclick="TerritorySelectContent_create();return false;">RESET</a> | 
+	<a href="#" onclick="TerritorySelect_submit();return false;">SUBMIT</a>
+	<BR><BR><BR><BR> &nbsp; 
+	</TD></TR></TABLE>
+</span>
+
+<span style="position:absolute;left:0px;top:0px;z-index:53;" id="NothingBox">
     <BUTTON Type=button name="inert_button"><img src="./images/blank.gif"></BUTTON>
 	<span id="DiaLLeaDPrevieWHide">Channel</span>
 	<span id="DiaLDiaLAltPhonEHide">Channel</span>

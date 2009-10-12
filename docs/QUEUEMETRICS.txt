@@ -145,6 +145,15 @@ index(call_id)
  );
 
 
+
+# NOTE: by default QueueMetrics does not index the time_id and call_id field. We strongly recommend you add these indexes:
+
+CREATE INDEX time_id on queue_log(time_id);
+CREATE INDEX call_id on queue_log(call_id);
+
+
+
+
 partition: set to "P01" for the first partition, should match up with configuration.properties presets
 
 time_id: epoch, unixtime (seconds since 1970-01-01 00:00:00) [1170345603]
@@ -209,6 +218,7 @@ serverid: number of the server the call came from [for VICIDIAL use the database
 
 
 
+### For documentation ONLY, these fields should already exist:
 On the vicidial database side of things, we will add the following columns to the system_settings table:
 enable_queuemetrics_logging ENUM('0','1') default '0',
 queuemetrics_server_ip VARCHAR(15),
@@ -297,6 +307,12 @@ er=queuemetrics&amp;password=javadude</param-value>
 
 
 
+# NOTE: by default QueueMetrics does not index the time_id and call_id field. We strongly recommend you add these indexes:
+mysql queuemetrics
+CREATE INDEX time_id on queue_log(time_id);
+CREATE INDEX call_id on queue_log(call_id);
+
+
 
 
 
@@ -330,16 +346,18 @@ How to install Queue Metrics on OpenSuSE v.11.1 (32 or 64 bit) with a system tha
 15) mysql queuemetrics --execute="GRANT ALL PRIVILEGES ON queuemetrics.* TO queuemetrics@localhost IDENTIFIED BY 'javadude';"
 16) mysql queuemetrics --execute="GRANT ALL PRIVILEGES ON queuemetrics.* TO queuemetrics@'%' IDENTIFIED BY 'javadude';"
 17) mysql queuemetrics --user=queuemetrics --password=javadude < /srv/tomcat6/webapps/QM/WEB-INF/README/queuemetrics_sample.sql
-18) rctomcat6 start
+18) mysql queuemetrics --execute="CREATE INDEX time_id on queue_log(time_id);"
+19) mysql queuemetrics --execute="CREATE INDEX call_id on queue_log(call_id);"
+20) rctomcat6 start
 
-19) Edit /srv/tomcat6/webapps/QM/WEB-INF/configuration.properties and change the entry to the following:
+21) Edit /srv/tomcat6/webapps/QM/WEB-INF/configuration.properties and change the entry to the following:
 - # This is the default queue log file.
 - default.queue_log_file=sql:P01
 
-20) Edit /srv/tomcat6/webapps/QM/WEB-INF/web.xml and change the IP address of the following entry:
+22) Edit /srv/tomcat6/webapps/QM/WEB-INF/web.xml and change the IP address of the following entry:
 - <param-value>jdbc:mysql://10.0.0.4/queuemetrics?autoReconnect=true&amp;zeroDateTimeBehavior=convertToNull&amp;jdbcCompliantTruncation=false&amp;user=queuemetrics&amp;password=javadude</param-value>
 
-21) Go to http://<ip-addr>:8080/QM and it should tell you the schema is old, just click next or yes to everything and have fun
+23) Go to http://<ip-addr>:8080/QM and it should tell you the schema is old, just click next or yes to everything and have fun
 
 
 

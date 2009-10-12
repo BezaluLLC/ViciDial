@@ -13,7 +13,7 @@
 #  - $pass
 # optional variables:
 #  - $format - ('text','debug')
-#  - $ACTION - ('regCLOSER','manDiaLnextCALL','manDiaLskip','manDiaLonly','manDiaLlookCALL','manDiaLlogCALL','userLOGout','updateDISPO','updateLEAD','VDADpause','VDADready','VDADcheckINCOMING','UpdatEFavoritEs','CalLBacKLisT','CalLBacKCounT','PauseCodeSubmit','LogiNCamPaigns','alt_phone_change','AlertControl','AGENTSview','CALLSINQUEUEview','CALLSINQUEUEgrab','DiaLableLeaDsCounT')
+#  - $ACTION - ('regCLOSER','regTERRITORY','manDiaLnextCALL','manDiaLskip','manDiaLonly','manDiaLlookCALL','manDiaLlogCALL','userLOGout','updateDISPO','updateLEAD','VDADpause','VDADready','VDADcheckINCOMING','UpdatEFavoritEs','CalLBacKLisT','CalLBacKCounT','PauseCodeSubmit','LogiNCamPaigns','alt_phone_change','AlertControl','AGENTSview','CALLSINQUEUEview','CALLSINQUEUEgrab','DiaLableLeaDsCounT')
 #  - $stage - ('start','finish','lookup','new')
 #  - $closer_choice - ('CL_TESTCAMP_L CL_OUT123_L -')
 #  - $conf_exten - ('8600011',...)
@@ -85,6 +85,7 @@
 #  - $wrapup - ('WRAPUP','')
 #  - $vtiger_callback_id - ('16534'...)
 #  - $nodeletevdac - ('0','1')
+#  - $agent_territories - ('ABC001','ABC002'...)
 #
 # CHANGELOG:
 # 50629-1044 - First build of script
@@ -214,12 +215,13 @@
 # 90916-1839 - Added nodeletevdac
 # 90917-2246 - Fixed auto-alt-dial DNC check bug
 # 90924-1544 - Added List callerid override option
+# 90930-1638 - Added agent_territories feature
 #
 
-$version = '2.2.0-124';
-$build = '90924-1544';
+$version = '2.2.0-125';
+$build = '90930-1638';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=252;
+$mysql_log_count=256;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -393,7 +395,8 @@ if (isset($_GET["no_delete_sessions"]))				{$no_delete_sessions=$_GET["no_delete
 	elseif (isset($_POST["no_delete_sessions"]))	{$no_delete_sessions=$_POST["no_delete_sessions"];}
 if (isset($_GET["nodeletevdac"]))				{$nodeletevdac=$_GET["nodeletevdac"];}
 	elseif (isset($_POST["nodeletevdac"]))		{$nodeletevdac=$_POST["nodeletevdac"];}
-
+if (isset($_GET["agent_territories"]))			{$agent_territories=$_GET["agent_territories"];}
+	elseif (isset($_POST["agent_territories"]))	{$agent_territories=$_POST["agent_territories"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -780,6 +783,64 @@ if ($ACTION == 'regCLOSER')
 
 		}
 	echo "Closer In Group Choice $closer_choice has been registered to user $user\n";
+	}
+
+
+
+
+
+#################################################################################
+### regTERRITORY - update the vicidial_live_agents table to reflect the territory
+###                choices made upon login or while paused  (agent_territories)
+#################################################################################
+if ($ACTION == 'regTERRITORY')
+	{
+	$row='';   $rowx='';
+	$channel_live=1;
+	if ( (strlen($agent_territories)<1) || (strlen($user)<1) )
+		{
+		$channel_live=0;
+		echo "Territory Choice $agent_territories is not valid\n";
+		exit;
+		}
+	else
+		{
+		if (preg_match("/^MGRLOCK/",$agent_territories))
+			{
+			$stmt="SELECT territory FROM vicidial_user_territories where user='$user';";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00253',$user,$server_ip,$session_name,$one_mysql_log);}
+			$territories_ct = mysql_num_rows($rslt);
+			if ($DB) {echo "$territories_ct|$stmt\n";}
+			$k=0;
+			$agent_territories='';
+			while ($territories_ct > $k)
+				{
+				$row=mysql_fetch_row($rslt);
+				$agent_territories .=	" $row[0]";
+				$k++;
+				}
+			$agent_territories .= " -";
+
+			$stmt="UPDATE vicidial_live_agents set agent_territories='$agent_territories',last_state_change='$NOW_TIME' where user='$user' and server_ip='$server_ip';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00254',$user,$server_ip,$session_name,$one_mysql_log);}
+			}
+		else
+			{
+			$stmt="UPDATE vicidial_live_agents set agent_territories='$agent_territories',last_state_change='$NOW_TIME' where user='$user' and server_ip='$server_ip';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00255',$user,$server_ip,$session_name,$one_mysql_log);}
+			}
+
+		$stmt="INSERT INTO vicidial_user_territory_log set user='$user',campaign_id='$campaign',event_date='$NOW_TIME',agent_territories='$agent_territories';";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00256',$user,$server_ip,$session_name,$one_mysql_log);}
+		}
+	echo "Territory Choice $agent_territories has been registered to user $user\n";
 	}
 
 
