@@ -11,6 +11,7 @@
 # 90208-0511 - Added link to user multi-day status report
 # 90310-0741 - Added admin header
 # 90508-0644 - Changed to PHP long tags
+# 91012-0536 - Added selected territories display
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -67,35 +68,35 @@ $ip = getenv("REMOTE_ADDR");
 if (!isset($begin_date)) {$begin_date = $TODAY;}
 if (!isset($end_date)) {$end_date = $TODAY;}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
-	if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
+if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
 $fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
 	}
-  else
+else
 	{
 
 	if($auth>0)
 		{
-			$stmt="SELECT full_name,change_agent_campaign,modify_timeclock_log from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname =				$row[0];
-			$change_agent_campaign =	$row[1];
-			$modify_timeclock_log =		$row[2];
+		$stmt="SELECT full_name,change_agent_campaign,modify_timeclock_log from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$LOGfullname =				$row[0];
+		$change_agent_campaign =	$row[1];
+		$modify_timeclock_log =		$row[2];
 		if ($webroot_writable > 0)
 			{
 			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
@@ -119,7 +120,7 @@ $browser = getenv("HTTP_USER_AGENT");
 	$full_name = $row[0];
 	$user_group = $row[1];
 
-	$stmt="SELECT * from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
+	$stmt="SELECT live_agent_id,user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,call_server_ip,user_level,comments,campaign_weight,calls_today,external_hangup,external_status,external_pause,external_dial,agent_log_id,last_state_change,agent_territories from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$agents_to_print = mysql_num_rows($rslt);
@@ -134,6 +135,7 @@ $browser = getenv("HTTP_USER_AGENT");
 		$Acampaign =		$row[7];
 		$Alast_call =		$row[14];
 		$Acl_campaigns =	$row[15];
+		$agent_territories = $row[27];
 		$i++;
 		}
 
@@ -286,8 +288,8 @@ if ( ( ($stage == "tc_log_user_OUT") or ($stage == "tc_log_user_IN") ) and ($mod
 		$stmt="INSERT INTO vicidial_timeclock_status set status='START', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
-			$status='START';
-			$totTIME_HMS='0:00:00';
+		$status='START';
+		$totTIME_HMS='0:00:00';
 		$affected_rows = mysql_affected_rows($link);
 		print "<!-- NEW vicidial_timeclock_status record inserted for $user:   |$affected_rows| -->\n";
 		}
@@ -409,6 +411,10 @@ if ($agents_to_print > 0)
 	echo "<TR><TD ALIGN=RIGHT>status:</TD><TD ALIGN=LEFT> &nbsp; $Astatus</TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>hungup last call at:</TD><TD ALIGN=LEFT> &nbsp; $Alast_call</TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Closer groups:</TD><TD ALIGN=LEFT> &nbsp; $Acl_campaigns</TD></TR>\n";
+	if ($user_territories_active > 0)
+		{
+		echo "<TR><TD ALIGN=RIGHT>Selected Territories:</TD><TD ALIGN=LEFT> &nbsp; $agent_territories</TD></TR>\n";
+		}
 	echo "</TABLE>\n<BR>\n";
 
 
@@ -419,16 +425,15 @@ if ($agents_to_print > 0)
 		echo "<input type=hidden name=user value=\"$user\">\n";
 		echo "<input type=hidden name=stage value=\"live_campaign_change\">\n";
 		echo "Current Campaign: <SELECT SIZE=1 NAME=group>\n";
-			$o=0;
-			while ($groups_to_print > $o)
+		$o=0;
+		while ($groups_to_print > $o)
 			{
-				if ($groups[$o] == "$Acampaign") {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
-				  else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
-				$o++;
+			if ($groups[$o] == "$Acampaign") {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
+			else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
+			$o++;
 			}
 		echo "</SELECT>\n";
 		echo "<input type=submit name=submit value=CHANGE disabled><BR></form>\n";
-
 
 		echo "<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
@@ -507,4 +512,3 @@ exit;
 
 
 ?>
-

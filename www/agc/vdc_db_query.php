@@ -216,10 +216,11 @@
 # 90917-2246 - Fixed auto-alt-dial DNC check bug
 # 90924-1544 - Added List callerid override option
 # 90930-1638 - Added agent_territories feature
+# 91012-0535 - Fixed User territory no-hopper dial bug
 #
 
-$version = '2.2.0-125';
-$build = '90930-1638';
+$version = '2.2.0-126';
+$build = '91012-0535';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=256;
 $one_mysql_log=0;
@@ -1413,9 +1414,27 @@ if ($ACTION == 'manDiaLnextCaLL')
 						$territory =	$row[1];
 						}
 
+					$agent_territories='';
+					$stmt="SELECT agent_territories FROM vicidial_live_agents where user='$user';";
+					$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					$userterrVLA_ct = mysql_num_rows($rslt);
+					if ($DB) {echo "$userterrVLA_ct|$stmt\n";}
+					if ($userterrVLA_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$agent_territories =	$row[0];
+						}
+					if (strlen($agent_territories) > 3)
+						{
+						$agent_territoriesSQL = preg_replace('/-$/','',$agent_territories);
+						$agent_territoriesSQL = preg_replace('/ $|^ /','',$agent_territoriesSQL);
+						$territory = preg_replace('/ /',"','",$agent_territoriesSQL);
+						}
+
 					$adooSQL = '';
 					if (eregi("USER",$agent_dial_owner_only)) {$adooSQL = "and owner='$user'";}
-					if (eregi("TERRITORY",$agent_dial_owner_only)) {$adooSQL = "and owner='$territory'";}
+					if (eregi("TERRITORY",$agent_dial_owner_only)) {$adooSQL = "and owner IN('$territory')";}
 					if (eregi("USER_GROUP",$agent_dial_owner_only)) {$adooSQL = "and owner='$user_group'";}
 
 					$order_stmt = '';
