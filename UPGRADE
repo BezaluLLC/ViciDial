@@ -259,6 +259,11 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	- Must have User "Agent Choose Territories" enabled
 	- Leads must have the owner field set to desired territory
 
+63. Added ability to use Remote Agents with all inbound next-agent-call settings
+
+64. Added ability to use DNCC and DNCL as Auto-Alt-Dial statuses
+
+
 
 
 

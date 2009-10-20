@@ -314,7 +314,7 @@ CREATE TABLE vicidial_hopper (
 hopper_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
 lead_id INT(9) UNSIGNED NOT NULL,
 campaign_id VARCHAR(8),			
-status ENUM('READY','QUEUE','INCALL','DONE','HOLD') default 'READY',
+status ENUM('READY','QUEUE','INCALL','DONE','HOLD','DNC') default 'READY',
 user VARCHAR(20),			
 list_id BIGINT(14) UNSIGNED NOT NULL,
 gmt_offset_now DECIMAL(4,2) DEFAULT '0.00',
@@ -1252,7 +1252,8 @@ calls_today SMALLINT(5) UNSIGNED default '0',
 last_call_time DATETIME,
 last_call_finish DATETIME,
 index (group_id),
-index (group_weight)
+index (group_weight),
+unique index vlia_user_group_id (user, group_id)
 );
 
 CREATE TABLE vicidial_campaign_agents (
@@ -1947,7 +1948,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1176',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1177',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

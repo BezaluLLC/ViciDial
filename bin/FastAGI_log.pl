@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# FastAGI_log.pl version 2.0.5   *DBI-version*
+# FastAGI_log.pl version 2.2.0   *DBI-version*
 # 
 # Experimental Deamon using perl Net::Server that runs as FastAGI to reduce load
 # replaces the following AGI scripts:
@@ -49,6 +49,7 @@
 # 90630-2253 - Added Sangoma CDP pre-Answer call processing
 # 90814-0810 - Added extra logging for vicidial_log in some cases
 # 90815-0750 - Fixed extra vicidial_log logging
+# 91020-0055 - Fixed several bugs with auto-alt-dial, DNC and extended alt number dialing
 #
 
 
@@ -1023,10 +1024,10 @@ sub process_request
 						while ($sthArows > $epc_countCAMPDATA)
 							{
 							@aryA = $sthA->fetchrow_array;
-							$VD_auto_alt_dial	=			"$aryA[0]";
-							$VD_auto_alt_dial_statuses	=	"$aryA[1]";
-							$VD_use_internal_dnc =			"$aryA[2]";
-							$VD_use_campaign_dnc =			"$aryA[3]";
+							$VD_auto_alt_dial	=			$aryA[0];
+							$VD_auto_alt_dial_statuses	=	$aryA[1];
+							$VD_use_internal_dnc =			$aryA[2];
+							$VD_use_campaign_dnc =			$aryA[3];
 							$epc_countCAMPDATA++;
 							}
 						$sthA->finish();
@@ -1045,11 +1046,11 @@ sub process_request
 								while ($sthArows > $epc_countCAMPDATA)
 									{
 									@aryA = $sthA->fetchrow_array;
-									$VD_alt_phone =			"$aryA[0]";
+									$VD_alt_phone =			$aryA[0];
 									$VD_alt_phone =~ s/\D//gi;
-									$VD_gmt_offset_now =	"$aryA[1]";
-									$VD_state =				"$aryA[2]";
-									$VD_list_id =			"$aryA[3]";
+									$VD_gmt_offset_now =	$aryA[1];
+									$VD_state =				$aryA[2];
+									$VD_list_id =			$aryA[3];
 									$epc_countCAMPDATA++;
 									}
 								$sthA->finish();
@@ -1065,7 +1066,7 @@ sub process_request
 										if ($sthArows > 0)
 											{
 											@aryA = $sthA->fetchrow_array;
-											$VD_alt_dnc_count =	"$aryA[0]";
+											$VD_alt_dnc_count =	$aryA[0];
 											}
 										$sthA->finish();
 										}
@@ -1111,11 +1112,11 @@ sub process_request
 								while ($sthArows > $epc_countCAMPDATA)
 									{
 									@aryA = $sthA->fetchrow_array;
-									$VD_address3 =			"$aryA[0]";
+									$VD_address3 =			$aryA[0];
 									$VD_address3 =~ s/\D//gi;
-									$VD_gmt_offset_now =	"$aryA[1]";
-									$VD_state =				"$aryA[2]";
-									$VD_list_id =			"$aryA[3]";
+									$VD_gmt_offset_now =	$aryA[1];
+									$VD_state =				$aryA[2];
+									$VD_list_id =			$aryA[3];
 									$epc_countCAMPDATA++;
 									}
 								$sthA->finish();
@@ -1131,7 +1132,7 @@ sub process_request
 										if ($sthArows > 0)
 											{
 											@aryA = $sthA->fetchrow_array;
-											$VD_alt_dnc_count =	"$aryA[0]";
+											$VD_alt_dnc_count =	$aryA[0];
 											}
 										$sthA->finish();
 										}
@@ -1182,9 +1183,9 @@ sub process_request
 								while ($sthArows > $epc_countCAMPDATA)
 									{
 									@aryA = $sthA->fetchrow_array;
-									$VD_gmt_offset_now =	"$aryA[1]";
-									$VD_state =				"$aryA[2]";
-									$VD_list_id =			"$aryA[3]";
+									$VD_gmt_offset_now =	$aryA[0];
+									$VD_state =				$aryA[1];
+									$VD_list_id =			$aryA[2];
 									$epc_countCAMPDATA++;
 									}
 								$sthA->finish();
@@ -1197,7 +1198,7 @@ sub process_request
 								if ($sthArows > 0)
 									{
 									@aryA = $sthA->fetchrow_array;
-									$alt_dial_phones_count = "$aryA[0]";
+									$alt_dial_phones_count = $aryA[0];
 									}
 								$sthA->finish();
 
@@ -1261,18 +1262,24 @@ sub process_request
 											$Xlast=9999999999;
 											}
 										else
-											{if ($AGILOG) {$agi_string = "--    VDH alt dial is DNC|X$Xlast|$VD_altdial_phone|";   &agi_output;}}
+											{
+											if ($alt_dial_phones_count eq '$Xlast') 
+												{$Xlast = 'LAST';}
+											$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='DNC',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15';";
+											$affected_rows = $dbhA->do($stmtA);
+											if ($AGILOG) {$agi_string = "--    VDH record DNC inserted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &agi_output;}
+											$Xlast=9999999999;
+											if ($AGILOG) {$agi_string = "--    VDH alt dial is DNC|X$Xlast|$VD_altdial_phone|";   &agi_output;}
+											}
 										}
 									}
 								}
 							}
 						##### END AUTO ALT PHONE DIAL SECTION #####
 						}
-
 					}
 				}
 			$dbhA->disconnect();
-
 			}
 		}
 	###################################################################

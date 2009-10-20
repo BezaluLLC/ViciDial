@@ -585,3 +585,9 @@ index (event_date)
 );
 
 UPDATE system_settings SET db_schema_version='1176',db_schema_update_date=NOW();
+
+CREATE UNIQUE INDEX vlia_user_group_id ON vicidial_live_inbound_agents (user, group_id);
+
+ALTER TABLE vicidial_hopper MODIFY status ENUM('READY','QUEUE','INCALL','DONE','HOLD','DNC') default 'READY';
+
+UPDATE system_settings SET db_schema_version='1177',db_schema_update_date=NOW();

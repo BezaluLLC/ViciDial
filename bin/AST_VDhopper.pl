@@ -59,6 +59,7 @@
 # 90809-0347 - Quick fix for null list_id loading when no active campaign lists
 # 90904-1612 - Added timezone ordering
 # 90907-2132 - Fixed order issues
+# 91020-0054 - Fixed Auto-alt-dial DNC issues
 #
 
 # constants
@@ -336,6 +337,7 @@ if ($inactive_lists_count > 0)
 		}
 	}
 
+
 ### BEGIN Change CBHOLD status leads to CALLBK if their vicidial_callbacks time has passed
 $stmtA = "SELECT count(*) FROM vicidial_callbacks where callback_time <= '$now_date' and status='ACTIVE';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -362,11 +364,11 @@ if ($CBHOLD_count > 0)
 		$update_leads .= "'$lead_ids[$cbc]',";
 		if ($recipient =~ /ANYONE/)
 			{
-			$CA_lead_id[$cba] = $aryA[0];
-			$CA_campaign_id[$cba] = $aryA[2];
-			$CA_list_id[$cba] = $aryA[3];
-			$CA_gmt_offset_now[$cba] = $aryA[4];
-			$CA_state[$cba] = $aryA[5];
+			$CA_lead_id[$cba] =			$aryA[0];
+			$CA_campaign_id[$cba] =		$aryA[2];
+			$CA_list_id[$cba] =			$aryA[3];
+			$CA_gmt_offset_now[$cba] =	$aryA[4];
+			$CA_state[$cba] =			$aryA[5];
 			$cba++;
 			}
 		$cbc++;
@@ -407,15 +409,344 @@ if ($CBHOLD_count > 0)
 ### END Change CBHOLD status leads to CALLBK if their vicidial_callbacks time has passed
 
 
+### BEGIN Auto-Alt-Dial DNC check and update or delete
+### Find out how many leads in the hopper are set to DNC status
+$hopper_dnc_count=0;
+$stmtA = "SELECT count(*) from $vicidial_hopper where status='DNC';";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$hopper_dnc_count = $aryA[0];
+	if ($DB) {print "     hopper DNC count:   $hopper_dnc_count\n";}
+	if ($DBX) {print "     |$stmtA|\n";}
+	}
+$sthA->finish();
+if ($hopper_dnc_count > 0)
+	{
+	$event_string = "|hopper DNC count: $hopper_dnc_count||";
+	&event_logger;
+
+	### Gather all DNC statused vicidial_hopper entries
+	$stmtA = "SELECT hopper_id,lead_id,alt_dial,campaign_id FROM $vicidial_hopper where status='DNC';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	$aad=0;
+	while ($sthArows > $aad)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$AAD_hopper_id[$aad] =		$aryA[0];
+		$AAD_lead_id[$aad] =		$aryA[1];
+		$AAD_alt_dial[$aad] =		$aryA[2];
+		$AAD_campaign_id[$aad] =	$aryA[3];
+		$aad++;
+		}
+	$sthA->finish();
+
+	### Go through all DNC statused vicidial_hopper entries and look for next number. If found, set the next phone number, alt dial and change status to READY
+	$aad=0;
+	while ($sthArows > $aad)
+		{
+		$auto_alt_dial='';
+		$VD_alt_dial =		$AAD_alt_dial[$aad];
+		$VD_campaign_id =	$AAD_campaign_id[$aad];
+		$VD_lead_id =		$AAD_lead_id[$aad];
+		### look up auto-alt-dial settings for campaign
+		$stmtA = "SELECT auto_alt_dial FROM vicidial_campaigns where campaign_id='$AAD_campaign_id[$aad]';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$VD_auto_alt_dial =			$aryA[0];
+			}
+		$sthA->finish();
+
+		$event_string = "|DNC record: $AAD_lead_id[$aad]|$AAD_campaign_id[$aad]|$VD_auto_alt_dial|$AAD_alt_dial[$aad]";
+		&event_logger;
+
+		if ( ($VD_auto_alt_dial =~ /(ALT_ONLY|ALT_AND_ADDR3|ALT_AND_EXTENDED)/) && ($VD_alt_dial =~ /NONE|MAIN/) )
+			{
+			$alt_dial_skip=0;
+			$VD_alt_phone='';
+			$stmtA="SELECT alt_phone,gmt_offset_now,state,list_id FROM vicidial_list where lead_id='$AAD_lead_id[$aad]';";
+				if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			$epc_countCAMPDATA=0;
+			while ($sthArows > $epc_countCAMPDATA)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$VD_alt_phone =			$aryA[0];
+				$VD_alt_phone =~ s/\D//gi;
+				$VD_gmt_offset_now =	$aryA[1];
+				$VD_state =				$aryA[2];
+				$VD_list_id =			$aryA[3];
+				$epc_countCAMPDATA++;
+				}
+			$sthA->finish();
+			if (length($VD_alt_phone)>5)
+				{
+				if ($VD_use_internal_dnc =~ /Y/)
+					{
+					$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_alt_phone';";
+						if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$VD_alt_dnc_count =	$aryA[0];
+						}
+					$sthA->finish();
+					}
+				else {$VD_alt_dnc_count=0;}
+				if ($VD_use_campaign_dnc =~ /Y/)
+					{
+					$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_alt_phone' and campaign_id='$VD_campaign_id';";
+						if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$VD_alt_dnc_count =	($VD_alt_dnc_count + $aryA[0]);
+						}
+					$sthA->finish();
+					}
+				if ($VD_alt_dnc_count < 1)
+					{
+					$stmtA = "UPDATE vicidial_hopper SET status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ALT',user='',priority='25' where hopper_id='$AAD_hopper_id[$aad]';";
+					$affected_rows = $dbhA->do($stmtA);
+					if ($DB) {$event_string = "--    VDH record updated: |$affected_rows|   |$stmtA|";   &event_logger;}
+					}
+				else
+					{$alt_dial_skip=1;}
+				}
+			else
+				{$alt_dial_skip=1;}
+			if ($alt_dial_skip > 0)
+				{$VD_alt_dial='ALT';}
+			}
+		if ( ( ($VD_auto_alt_dial =~ /(ADDR3_ONLY)/) && ($VD_alt_dial =~ /NONE|MAIN/) ) || ( ($VD_auto_alt_dial =~ /(ALT_AND_ADDR3)/) && ($VD_alt_dial =~ /ALT/) ) )
+			{
+			$addr3_dial_skip=0;
+			$VD_address3='';
+			$stmtA="SELECT address3,gmt_offset_now,state,list_id FROM vicidial_list where lead_id='$AAD_lead_id[$aad]';";
+				if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			 $epc_countCAMPDATA=0;
+			while ($sthArows > $epc_countCAMPDATA)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$VD_address3 =			$aryA[0];
+				$VD_address3 =~ s/\D//gi;
+				$VD_gmt_offset_now =	$aryA[1];
+				$VD_state =				$aryA[2];
+				$VD_list_id =			$aryA[3];
+				$epc_countCAMPDATA++;
+				}
+			$sthA->finish();
+			if (length($VD_address3)>5)
+				{
+				if ($VD_use_internal_dnc =~ /Y/)
+					{
+					$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_address3';";
+						if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$VD_alt_dnc_count =	$aryA[0];
+						}
+					$sthA->finish();
+					}
+				else {$VD_alt_dnc_count=0;}
+				if ($VD_use_campaign_dnc =~ /Y/)
+					{
+					$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_address3' and campaign_id='$VD_campaign_id';";
+						if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$VD_alt_dnc_count =	($VD_alt_dnc_count + $aryA[0]);
+						}
+					$sthA->finish();
+					}
+				if ($VD_alt_dnc_count < 1)
+					{
+					$stmtA = "UPDATE vicidial_hopper SET status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ADDR3',user='',priority='25' where hopper_id='$AAD_hopper_id[$aad]';";
+					$affected_rows = $dbhA->do($stmtA);
+					if ($DB) {$event_string = "--    VDH record updated: |$affected_rows|   |$stmtA|";   &event_logger;}
+					}
+				else
+					{$addr3_dial_skip=1;}
+				}
+			else
+				{$addr3_dial_skip=1;}
+			if ($addr3_dial_skip > 0)
+				{$VD_alt_dial='ADDR3';}
+			}
+		if ( ( ($VD_auto_alt_dial =~ /(EXTENDED_ONLY)/) && ($VD_alt_dial =~ /NONE|MAIN/) ) || ( ($VD_auto_alt_dial =~ /(ALT_AND_EXTENDED)/) && ($VD_alt_dial =~ /ALT/) ) || ( ($VD_auto_alt_dial =~ /ADDR3_AND_EXTENDED|ALT_AND_ADDR3_AND_EXTENDED/) && ($VD_alt_dial =~ /ADDR3/) ) || ( ($VD_auto_alt_dial =~ /(EXTENDED)/) && ($VD_alt_dial =~ /X/) && ($VD_alt_dial !~ /XLAST/) ) )
+			{
+			if ($VD_alt_dial =~ /ADDR3/) {$Xlast=0;}
+			else
+				{$Xlast = $VD_alt_dial;}
+			$Xlast =~ s/\D//gi;
+			if (length($Xlast)<1)
+				{$Xlast=0;}
+			$VD_altdialx='';
+			$stmtA="SELECT gmt_offset_now,state,list_id FROM vicidial_list where lead_id='$VD_lead_id';";
+				if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			$epc_countCAMPDATA=0;
+			while ($sthArows > $epc_countCAMPDATA)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$VD_gmt_offset_now =	$aryA[0];
+				$VD_state =				$aryA[1];
+				$VD_list_id =			$aryA[2];
+				$epc_countCAMPDATA++;
+				}
+			$sthA->finish();
+			$alt_dial_phones_count=0;
+			$stmtA="SELECT count(*) FROM vicidial_list_alt_phones where lead_id='$AAD_lead_id[$aad]';";
+				if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$alt_dial_phones_count = $aryA[0];
+				}
+			$sthA->finish();
+
+			if ($alt_dial_phones_count <= $Xlast) 
+				{
+				$stmtA = "DELETE FROM vicidial_hopper where hopper_id='$AAD_hopper_id[$aad]';";
+				$affected_rows = $dbhA->do($stmtA);
+				if ($DB) {$event_string = "--    VDH record DNC deleted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;}
+				}
+				
+			while ( ($alt_dial_phones_count > 0) && ($alt_dial_phones_count > $Xlast) )
+				{
+				$Xlast++;
+				$stmtA="SELECT alt_phone_id,phone_number,active FROM vicidial_list_alt_phones where lead_id='$VD_lead_id' and alt_phone_count='$Xlast';";
+					if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$VD_altdial_id =		$aryA[0];
+					$VD_altdial_phone = 	$aryA[1];
+					$VD_altdial_active = 	$aryA[2];
+					}
+				else
+					{$Xlast=9999999999;}
+				$sthA->finish();
+
+				if ($VD_altdial_active =~ /Y/)
+					{
+					if ($VD_use_internal_dnc =~ /Y/)
+						{
+						$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_altdial_phone';";
+							if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$VD_alt_dnc_count =	$aryA[0];
+							}
+						$sthA->finish();
+						}
+					else {$VD_alt_dnc_count=0;}
+					if ($VD_use_campaign_dnc =~ /Y/)
+						{
+						$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_altdial_phone' and campaign_id='$VD_campaign_id';";
+							if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$VD_alt_dnc_count =	($VD_alt_dnc_count + $aryA[0]);
+							}
+						$sthA->finish();
+						}
+					if ($VD_alt_dnc_count < 1)
+						{
+						if ($alt_dial_phones_count eq '$Xlast') 
+							{$Xlast = 'LAST';}
+						$stmtA = "UPDATE vicidial_hopper SET status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='25' where hopper_id='$AAD_hopper_id[$aad]';";
+						$affected_rows = $dbhA->do($stmtA);
+						if ($DB) {$event_string = "--    VDH record updated: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;}
+						$Xlast=9999999999;
+						}
+					else
+						{
+						if ($alt_dial_phones_count eq '$Xlast') 
+							{$Xlast = 'LAST';}
+						$stmtA = "UPDATE vicidial_hopper SET status='DNC',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15' where hopper_id='$AAD_hopper_id[$aad]';";
+						$affected_rows = $dbhA->do($stmtA);
+						if ($DB) {$event_string = "--    VDH record DNC updated: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;}
+						$Xlast=9999999999;
+						if ($DB) {$event_string = "--    VDH alt dial is DNC|X$Xlast|$VD_altdial_phone|";   &event_logger;}
+						}
+					}
+				}
+			}
+		if ($VD_alt_dial =~ /XLAST/)
+			{
+			$stmtA = "DELETE FROM vicidial_hopper where hopper_id='$AAD_hopper_id[$aad]';";
+			$affected_rows = $dbhA->do($stmtA);
+			if ($DB) {$event_string = "--    VDH record DNC deleted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;}
+			}
+
+
+
+
+
+
+
+
+		$aad++;
+		}
+	}
+### END Auto-Alt-Dial DNC check and update or delete
+
+
+
 @campaign_id=@MT; 
 
 if ($CLIcampaign)
 	{
-	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing from vicidial_campaigns where campaign_id='$CLIcampaign';";
+	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses from vicidial_campaigns where campaign_id='$CLIcampaign';";
 	}
 else
 	{
-	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing from vicidial_campaigns where active='Y';";
+	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses from vicidial_campaigns where active='Y';";
 	}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -443,6 +774,7 @@ while ($sthArows > $rec_count)
 	$use_campaign_dnc[$rec_count] =				$aryA[13];
 	$drop_lockout_time[$rec_count] =			$aryA[14];
 	$no_hopper_dialing[$rec_count] = 			$aryA[15];
+	$auto_alt_dial_statuses[$rec_count] = 		$aryA[16];
 
 	$rec_count++;
 	}
@@ -708,7 +1040,7 @@ foreach(@campaign_id)
 			{
 			if (length($state_rules[$b])>1)
 				{
-				$stmtA = "SELECT * from vicidial_state_call_times where state_call_time_id='$state_rules[$b]';";
+				$stmtA = "SELECT state_call_time_id,state_call_time_state,state_call_time_name,state_call_time_comments,sct_default_start,sct_default_stop,sct_sunday_start,sct_sunday_stop,sct_monday_start,sct_monday_stop,sct_tuesday_start,sct_tuesday_stop,sct_wednesday_start,sct_wednesday_stop,sct_thursday_start,sct_thursday_stop,sct_friday_start,sct_friday_stop,sct_saturday_start,sct_saturday_stop from vicidial_state_call_times where state_call_time_id='$state_rules[$b]';";
 				if ($DBX) {print "   |$stmtA|\n";}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1022,7 +1354,7 @@ foreach(@campaign_id)
 
 		##### BEGIN lead recycling parsing and prep ###
 
-		$stmtA = "SELECT * from vicidial_lead_recycle where campaign_id='$campaign_id[$i]' and active='Y';";
+		$stmtA = "SELECT recycle_id,campaign_id,status,attempt_delay,attempt_maximum,active from vicidial_lead_recycle where campaign_id='$campaign_id[$i]' and active='Y';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -1131,14 +1463,12 @@ foreach(@campaign_id)
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
-		$rec_count=0;
-		while ($sthArows > $rec_count)
+		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
 			$hopper_ready_count = $aryA[0];
 			if ($DB) {print "     hopper READY count:   $hopper_ready_count\n";}
 			if ($DBX) {print "     |$stmtA|\n";}
-			$rec_count++;
 			}
 		$sthA->finish();
 		$event_string = "|$campaign_id[$i]|$hopper_level[$i]|$hopper_ready_count|$local_call_time[$i]||";
@@ -1262,14 +1592,12 @@ foreach(@campaign_id)
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
-			$rec_count=0;
-			while ($sthArows > $rec_count)
+			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
 				$campaign_leads_to_call[$i] = "$aryA[0]";
 				if ($DB) {print "     leads to call count:  $campaign_leads_to_call[$i]\n";}
 				if ($DBX) {print "     |$stmtA|\n";}
-				$rec_count++;
 				}
 			$sthA->finish();
 
@@ -1279,14 +1607,12 @@ foreach(@campaign_id)
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
-				$rec_count=0;
-				while ($sthArows > $rec_count)
+				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
 					$NEW_campaign_leads_to_call[$i] = "$aryA[0]";
 					if ($DB) {print "     NEW leads to call count:  $NEW_campaign_leads_to_call[$i]\n";}
 					if ($DBX) {print "     |$stmtA|\n";}
-					$rec_count++;
 					}
 				$sthA->finish();
 				}
@@ -1645,6 +1971,8 @@ foreach(@campaign_id)
 					if ($leads_to_hopper[$h] != '0')
 						{
 						$DNClead=0;
+						$DNCC=0;
+						$DNCL=0;
 						if ($use_internal_dnc[$i] =~ /Y/)
 							{
 							if ($DB) {print "     Doing DNC Check: $phone_to_hopper[$h] - $use_internal_dnc[$i]\n";}
@@ -1652,16 +1980,15 @@ foreach(@campaign_id)
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
-							$rec_count=0;
-							while ($sthArows > $rec_count)
+							if ($sthArows > 0)
 								{
 								@aryA = $sthA->fetchrow_array;
 								$DNClead =		 "$aryA[0]";
-								$rec_count++;
 								}
 							$sthA->finish();
 							if ($DNClead != '0')
 								{
+								$DNCL++;
 								$stmtA = "UPDATE vicidial_list SET status='DNCL' where lead_id='$leads_to_hopper[$h]';";
 								$affected_rows = $dbhA->do($stmtA);
 								if ($DBX) {print "Flagging DNC lead:     $affected_rows  $phone_to_hopper[$h]\n";}
@@ -1674,16 +2001,15 @@ foreach(@campaign_id)
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
-							$rec_count=0;
-							while ($sthArows > $rec_count)
+							if ($sthArows > 0)
 								{
 								@aryA = $sthA->fetchrow_array;
 								$DNClead =		 "$aryA[0]";
-								$rec_count++;
 								}
 							$sthA->finish();
 							if ($DNClead != '0')
 								{
+								$DNCC++;
 								$stmtA = "UPDATE vicidial_list SET status='DNCC' where lead_id='$leads_to_hopper[$h]';";
 								$affected_rows = $dbhA->do($stmtA);
 								if ($DBX) {print "Flagging DNC lead:     $affected_rows  $phone_to_hopper[$h] $campaign_id[$i]\n";}
@@ -1698,6 +2024,21 @@ foreach(@campaign_id)
 								{
 								$detail_string = "|$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|";
 								&detail_logger;
+								}
+							}
+						else
+							{
+							##### Auto-Alt-Dial if DNCC or DNCL are set to campaign auto-alt-dial statuses, insert lead into hopper as DNC status
+							if ( ( ($auto_alt_dial_statuses =~ / DNCC /) && ($DNCC > 0) ) || ( ($auto_alt_dial_statuses =~ / DNCC /) && ($DNCL > 0) ) )
+								{
+								$stmtA = "INSERT INTO $vicidial_hopper (lead_id,campaign_id,status,user,list_id,gmt_offset_now,state,priority) values('$leads_to_hopper[$h]','$campaign_id[$i]','DNC','','$lists_to_hopper[$h]','$gmt_to_hopper[$h]','$state_to_hopper[$h]','0');";
+								$affected_rows = $dbhA->do($stmtA);
+								if ($DBX) {print "LEAD INSERTED AS DNC: $affected_rows|$leads_to_hopper[$h]|\n";}
+								if ($DB_detail) 
+									{
+									$detail_string = "|$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|";
+									&detail_logger;
+									}
 								}
 							}
 						}

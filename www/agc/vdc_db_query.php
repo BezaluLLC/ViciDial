@@ -217,10 +217,11 @@
 # 90924-1544 - Added List callerid override option
 # 90930-1638 - Added agent_territories feature
 # 91012-0535 - Fixed User territory no-hopper dial bug
+# 91019-1224 - Fixed auto-alt-dial DNC issues
 #
 
-$version = '2.2.0-126';
-$build = '91012-0535';
+$version = '2.2.0-127';
+$build = '91019-1224';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=256;
 $one_mysql_log=0;
@@ -872,7 +873,7 @@ if ($users_to_parse > 0)
 ###                   place the call by inserting into vicidial_manager
 ################################################################################
 if ($ACTION == 'manDiaLnextCaLL')
-{
+	{
 	$MT[0]='';
 	$row='';   $rowx='';
 	$channel_live=1;
@@ -1824,14 +1825,13 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$LeaD_InfO .=	$owner . "\n";
 
 			echo $LeaD_InfO;
-
-		}
+			}
 		else
-		{
-		echo "HOPPER EMPTY\n";
+			{
+			echo "HOPPER EMPTY\n";
+			}
 		}
 	}
-}
 
 
 ################################################################################
@@ -4350,12 +4350,15 @@ if ($ACTION == 'updateDISPO')
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00154',$user,$server_ip,$session_name,$one_mysql_log);}
 		}
 
-	$stmt="SELECT auto_alt_dial_statuses from vicidial_campaigns where campaign_id='$campaign';";
+	$stmt="SELECT auto_alt_dial_statuses,use_internal_dnc,use_campaign_dnc from vicidial_campaigns where campaign_id='$campaign';";
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00155',$user,$server_ip,$session_name,$one_mysql_log);}
 	$row=mysql_fetch_row($rslt);
+	$VC_auto_alt_dial_statuses =	$row[0];
+	$use_internal_dnc =				$row[1];
+	$use_campaign_dnc =				$row[2];
 
-	if ( ($auto_dial_level > 0) and (ereg(" $dispo_choice ",$row[0])) )
+	if ( ($auto_dial_level > 0) and (ereg(" $dispo_choice ",$VC_auto_alt_dial_statuses)) )
 		{
 		$stmt = "select count(*) from vicidial_hopper where lead_id='$lead_id' and status='HOLD';";
 		if ($DB) {echo "$stmt\n";}
@@ -4365,10 +4368,66 @@ if ($ACTION == 'updateDISPO')
 
 		if ($row[0] > 0)
 			{
-			$stmt="UPDATE vicidial_hopper set status='READY' where lead_id='$lead_id' and status='HOLD' limit 1;";
-				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			##### Check for alt phone number in DNC list if applicable
+			$UD_DNC_campaign=0;
+			$UD_DNC_internal=0;
+			$vh_phone='';
+			$stmt="SELECT phone_number FROM vicidial_hopper where lead_id='$lead_id' and status='HOLD';";
 			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00157',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$ud_record_ct = mysql_num_rows($rslt);
+			if ($ud_record_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$vh_phone =		$row[0];
+				}
+
+			if (eregi('Y',$use_internal_dnc))
+				{
+				$stmt="SELECT count(*) FROM vicidial_dnc where phone_number='$vh_phone';";
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$ud_record_ct = mysql_num_rows($rslt);
+				if ($ud_record_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$UD_DNC_internal =		$row[0];
+					}
+				}
+
+			if (eregi('Y',$use_campaign_dnc))
+				{
+				$stmt="SELECT count(*) FROM vicidial_campaign_dnc where campaign_id='$campaign' and phone_number='$vh_phone';";
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$ud_record_ct = mysql_num_rows($rslt);
+				if ($ud_record_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$UD_DNC_campaign =		$row[0];
+					}
+				}
+
+			if ( ($UD_DNC_campaign > 0) or ($UD_DNC_internal > 0) ) 
+				{
+				if ( ( (ereg(" DNCC ",$VC_auto_alt_dial_statuses)) and ($UD_DNC_campaign > 0) ) or ( (ereg(" DNCL ",$VC_auto_alt_dial_statuses)) and ($UD_DNC_internal > 0) ) )
+					{
+					$stmt="UPDATE vicidial_hopper set status='DNC' where lead_id='$lead_id' and status='HOLD' limit 1;";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00157',$user,$server_ip,$session_name,$one_mysql_log);}
+					}
+				}
+			else
+				{
+				$stmt="UPDATE vicidial_hopper set status='READY' where lead_id='$lead_id' and status='HOLD' limit 1;";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00157',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
 			}
 		}
 	else

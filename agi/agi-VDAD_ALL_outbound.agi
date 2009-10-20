@@ -553,7 +553,7 @@ if ($affected_rows > 0)
 					$TTS_text[$s] =~ s/--A--last_local_call_time--B--/$TTS_last_local_call_time/gi;
 					$TTS_text[$s] =~ s/--A--rank--B--/$TTS_rank/gi;
 					$TTS_text[$s] =~ s/--A--owner--B--/$TTS_owner/gi;
-					$TTS_text[$s] =~ s/[^,\.\<\>\'\/\=\_ 0-9a-zA-Z]//gi;
+					$TTS_text[$s] =~ s/[^,\.\<\>\'\/\=\_\-\: 0-9a-zA-Z]//gi;
 					$TTS_textRAW[$s] =	$TTS_text[$s];
 					$TTS_text[$s] =~ s/ /\\ /gi;
 					$TTS_text[$s] =~ s/\./\\./gi;
