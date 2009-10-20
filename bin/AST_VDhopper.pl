@@ -433,9 +433,9 @@ if ($hopper_dnc_count > 0)
 	$stmtA = "SELECT hopper_id,lead_id,alt_dial,campaign_id FROM $vicidial_hopper where status='DNC';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
+	$sthArowsVHdnc=$sthA->rows;
 	$aad=0;
-	while ($sthArows > $aad)
+	while ($sthArowsVHdnc > $aad)
 		{
 		@aryA = $sthA->fetchrow_array;
 		$AAD_hopper_id[$aad] =		$aryA[0];
@@ -448,7 +448,7 @@ if ($hopper_dnc_count > 0)
 
 	### Go through all DNC statused vicidial_hopper entries and look for next number. If found, set the next phone number, alt dial and change status to READY
 	$aad=0;
-	while ($sthArows > $aad)
+	while ($sthArowsVHdnc > $aad)
 		{
 		$auto_alt_dial='';
 		$VD_alt_dial =		$AAD_alt_dial[$aad];
@@ -723,12 +723,6 @@ if ($hopper_dnc_count > 0)
 			$affected_rows = $dbhA->do($stmtA);
 			if ($DB) {$event_string = "--    VDH record DNC deleted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;}
 			}
-
-
-
-
-
-
 
 
 		$aad++;
@@ -1983,7 +1977,7 @@ foreach(@campaign_id)
 							if ($sthArows > 0)
 								{
 								@aryA = $sthA->fetchrow_array;
-								$DNClead =		 "$aryA[0]";
+								$DNClead =		 $aryA[0];
 								}
 							$sthA->finish();
 							if ($DNClead != '0')
@@ -2004,10 +1998,10 @@ foreach(@campaign_id)
 							if ($sthArows > 0)
 								{
 								@aryA = $sthA->fetchrow_array;
-								$DNClead =		 "$aryA[0]";
+								$DNClead =	($DNClead + $aryA[0]);
 								}
 							$sthA->finish();
-							if ($DNClead != '0')
+							if ($aryA[0] != '0')
 								{
 								$DNCC++;
 								$stmtA = "UPDATE vicidial_list SET status='DNCC' where lead_id='$leads_to_hopper[$h]';";
@@ -2029,7 +2023,7 @@ foreach(@campaign_id)
 						else
 							{
 							##### Auto-Alt-Dial if DNCC or DNCL are set to campaign auto-alt-dial statuses, insert lead into hopper as DNC status
-							if ( ( ($auto_alt_dial_statuses =~ / DNCC /) && ($DNCC > 0) ) || ( ($auto_alt_dial_statuses =~ / DNCC /) && ($DNCL > 0) ) )
+							if ( ( ($auto_alt_dial_statuses[$i] =~ / DNCC /) && ($DNCC > 0) ) || ( ($auto_alt_dial_statuses[$i] =~ / DNCL /) && ($DNCL > 0) ) )
 								{
 								$stmtA = "INSERT INTO $vicidial_hopper (lead_id,campaign_id,status,user,list_id,gmt_offset_now,state,priority) values('$leads_to_hopper[$h]','$campaign_id[$i]','DNC','','$lists_to_hopper[$h]','$gmt_to_hopper[$h]','$state_to_hopper[$h]','0');";
 								$affected_rows = $dbhA->do($stmtA);
