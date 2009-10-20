@@ -285,6 +285,7 @@ if (length($ARGV[0])>1) {
 			my @data_in = split(/--campaign_id=/,$args);
 			$campaigns = $data_in[1];
 			$campaigns =~ s/ .*//gi;
+			$campaigns = uc($campaigns);
 			$camp_check=1;
 			if ($debug) {
 				print "\n----- CAMPAIGNS: $campaigns -----\n\n";
@@ -406,19 +407,18 @@ my @files = readdir(FILE);
 my $file_loop_count=0;
 my $files_that_count=0;
 my @FILEsize1;
-my @FILES;
 foreach(@files)	{
 	$FILEsize1[$file_loop_count] = 0;
-	if ( (length($FILES[$file_loop_count]) > 4) && (!-d "$directory/$FILES[$file_loop_count]") ) {
-		$FILEsize1[$file_loop_count] = (-s "$directory/$FILES[$file_loop_count]");
+	if ( (length($files[$file_loop_count]) > 4) && (!-d "$directory/$files[$file_loop_count]") ) {
+		$FILEsize1[$file_loop_count] = (-s "$directory/$files[$file_loop_count]");
 		if ($debugX) {
-			print "$directory/$FILES[$file_loop_count] $FILEsize1[$file_loop_count]\n";
+			print "$directory/$files[$file_loop_count] $FILEsize1[$file_loop_count]\n";
 		}
 		$files_that_count++;
 	}
 	$file_loop_count++;
 	if ($files_that_count >= $list_limit) {
-			last();
+		last();
 	}		
 }
 
@@ -433,37 +433,38 @@ my $ALLfile = '';
 my $SQLFILE = '';
 my $transfer_file=0;
 
-my $ping;
+my $ping = Net::Ping->new($pingtype, $pingtimeout);
 
-if ($pingtype ne "none") {
-	my $ping = Net::Ping->new($pingtype, $pingtimeout);
+if ($pingtype eq "none") {
+	$ping = 0;
 }
 
 ### Loop through files a second time to gather filesizes again 5 seconds later
 $file_loop_count=0;
-foreach(@FILES)	{
-	$transfer_file=0;
-	
+$files_that_count=0;
+foreach(@files)	{
+	if ($debug) {print "\n\n\n--------NEW-FILE-------------------------------------------------------------------------------------------\n";}
+	$transfer_file=0;	
 	$FILEsize2[$file_loop_count] = 0;
 
-	if ( (length($FILES[$file_loop_count]) > 4) && (!-d "$directory/$FILES[$file_loop_count]") ) {
+	if ( (length($files[$file_loop_count]) > 4) && (!-d "$directory/$files[$file_loop_count]") ) {
 
-		$FILEsize2[$file_loop_count] = (-s "$directory/$FILES[$file_loop_count]");
-		if ($debugX) {
-			print "$directory/$FILES[$file_loop_count] $FILEsize2[$file_loop_count]\n\n";
+		$FILEsize2[$file_loop_count] = (-s "$directory/$files[$file_loop_count]");
+		if ($debug) {
+			print "$directory/$files[$file_loop_count] $FILEsize2[$file_loop_count]\n";
 		}
 		
 		if ($FILEsize1[$file_loop_count] ne $FILEsize2[$file_loop_count]) {
-			if ($debugX) {print "not transfering $directory/$FILES[$file_loop_count]. File size mismatch $FILEsize2[$file_loop_count] != $FILEsize1[$file_loop_count]\n\n";}
+			if ($debugX) {print "not transfering $directory/$files[$file_loop_count]. File size mismatch $FILEsize2[$file_loop_count] != $FILEsize1[$file_loop_count]\n";}
 		}
 
-		if ( ($FILES[$file_loop_count] !~ /out\.|in\.|lost\+found/i) && ($FILEsize1[$file_loop_count] eq $FILEsize2[$file_loop_count]) && (length($FILES[$file_loop_count]) > 4)) {
+		if ( ($files[$file_loop_count] !~ /out\.|in\.|lost\+found/i) && ($FILEsize1[$file_loop_count] eq $FILEsize2[$file_loop_count]) && (length($files[$file_loop_count]) > 4)) {
 			my $recording_id = '';
 			my $start_date = '';
 			my $lead_id = '';
 			my $vicidial_id = '';
-			my $ALLfile = $FILES[$file_loop_count];
-			my $SQLFILE = $FILES[$file_loop_count];
+			my $ALLfile = $files[$file_loop_count];
+			my $SQLFILE = $files[$file_loop_count];
 			$SQLFILE =~ s/-all\.wav|-all\.gsm|-all\.ogg|-all\.mp3//gi;
 
 			my $rec_log_db_stmt = "select recording_id, start_time, vicidial_id, lead_id from recording_log where filename=$SQLFILE order by recording_id desc LIMIT 1;";
@@ -480,7 +481,7 @@ foreach(@FILES)	{
 			$rec_log_sth->finish();
 
 			if ($debug) {
-				print "|$recording_id|$start_date|$ALLfile|     |$SQLFILE|\n";
+				print "|$camp_check|$recording_id|$start_date|$ALLfile|$SQLFILE|\n";
 			}
 			
 			### are we doing a campaign check
@@ -492,13 +493,17 @@ foreach(@FILES)	{
 					my @aryA = $vici_log_sth->fetchrow_array;
 					my $campaign_id = "$aryA[0]";
 					
+					if($debug){print STDERR "\n|$ALLfile is in the $campaign_id campaign.|\n";}
+
 					# loop through the campaigns they want to transfer
 					foreach( @camp_array ) {
 						# see if the campaign is in there
 						if ( $_ eq $campaign_id ) {
 							$transfer_file = 1;
+							if($debug){print STDERR "\n|$_ is in the list of campaigns.|\n";}
 						}
-					}					
+					}
+					if(($debug) && ($transfer_file == 0)) {print STDERR "\n|$campaign_id is not in the list of campaigns.|\n";}			
 				}
 				$vici_log_sth->finish();				
 			} else {
@@ -511,13 +516,17 @@ foreach(@FILES)	{
 						my @aryA = $clsr_log_sth->fetchrow_array;
 						my $ingroup_id = "$aryA[0]";	
 						
+						if($debug){print STDERR "\n|$ALLfile is in the $ingroup_id ingroup.|\n";}
+
 						# loop through the ingroups they want to transfer
 						foreach( @ingrp_array ) {
 							# see if the ingroup is in there
 							if ( $_ eq $ingroup_id ) {
 								$transfer_file = 1;
+								if($debug){print STDERR "\n|$_ is in the list of ingroups.|\n";}
 							}
-						}						
+						}
+						if(($debug) && ($transfer_file == 0)) {print STDERR "\n|$ingroup_id is not in the list of ingroups.|\n";}
 					}
 					$clsr_log_sth->finish();
 				} else {
@@ -537,11 +546,15 @@ foreach(@FILES)	{
 				
 				### if the ping came back okay or if we are not pinging the server
 				if (($ping_good) || ($pingtype eq "none")) {	
+					if($debug) {
+						print STDERR "Transfering the file\n";
+					}
 					$transfered_files++;
 					
 					my $start_date_PATH='';
 					my $ftp = Net::FTP->new("$ftp_host", Port => $ftp_port, Debug => $debugX);
 					$ftp->login("$ftp_user","$ftp_pass");
+					$ftp->mkdir("$ftp_dir");
 					$ftp->cwd("$ftp_dir");
 					if ($datedir) {
 						$ftp->mkdir("$start_date");
@@ -558,6 +571,9 @@ foreach(@FILES)	{
 						or die "executing: $rec_log_db_stmt ", $dbhA->errstr;
 	
 					if (!$test)	{
+						if($debugX) {
+							print STDERR "Moving file from $directory/$ALLfile to $PATHDONEmonitor/FTP/$ALLfile\n";
+						}
 						`mv -f "$directory/$ALLfile" "$PATHDONEmonitor/FTP/$ALLfile"`;
 					}
 					
@@ -566,7 +582,7 @@ foreach(@FILES)	{
 					}
 					
 					if ( $transfered_files == $trans_limit) {
-						if($debugX) {
+						if($debug) {
 							print STDERR "Transfer limit of $trans_limit reached breaking out of the loop\n";
 						}
 						last();
@@ -582,8 +598,18 @@ foreach(@FILES)	{
 			### sleep for twenty hundredths of a second to not flood the server with disk activity
 			usleep(200*1000);
 		}
+		# keep track of the files that we actually care about listing.
+		$files_that_count++;
+	} else {
+		if($debug) {
+			print STDERR "$files[$file_loop_count]'s file name is to short or it is a directory.\n";
+		}
 	}
 	$file_loop_count++;
+	# break out of here if we have reached the list_limit
+	if ($files_that_count >= $list_limit) {
+		last();
+	}
 }
 
 if ($debug) {print "DONE... EXITING\n\n";}
@@ -592,7 +618,3 @@ $dbhA->disconnect();
 
 
 exit;
-
-
-
-
