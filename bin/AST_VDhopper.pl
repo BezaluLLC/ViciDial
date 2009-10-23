@@ -450,19 +450,23 @@ if ($hopper_dnc_count > 0)
 	$aad=0;
 	while ($sthArowsVHdnc > $aad)
 		{
-		$auto_alt_dial='';
+		$VD_auto_alt_dial='';
+		$VD_use_internal_dnc='';
+		$VD_use_campaign_dnc='';
 		$VD_alt_dial =		$AAD_alt_dial[$aad];
 		$VD_campaign_id =	$AAD_campaign_id[$aad];
 		$VD_lead_id =		$AAD_lead_id[$aad];
 		### look up auto-alt-dial settings for campaign
-		$stmtA = "SELECT auto_alt_dial FROM vicidial_campaigns where campaign_id='$AAD_campaign_id[$aad]';";
+		$stmtA = "SELECT auto_alt_dial,use_internal_dnc,use_campaign_dnc FROM vicidial_campaigns where campaign_id='$AAD_campaign_id[$aad]';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$VD_auto_alt_dial =			$aryA[0];
+			$VD_auto_alt_dial =		$aryA[0];
+			$VD_use_internal_dnc =	$aryA[1];
+			$VD_use_campaign_dnc =	$aryA[2];
 			}
 		$sthA->finish();
 
@@ -478,8 +482,7 @@ if ($hopper_dnc_count > 0)
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
-			$epc_countCAMPDATA=0;
-			while ($sthArows > $epc_countCAMPDATA)
+			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
 				$VD_alt_phone =			$aryA[0];
@@ -487,7 +490,6 @@ if ($hopper_dnc_count > 0)
 				$VD_gmt_offset_now =	$aryA[1];
 				$VD_state =				$aryA[2];
 				$VD_list_id =			$aryA[3];
-				$epc_countCAMPDATA++;
 				}
 			$sthA->finish();
 			if (length($VD_alt_phone)>5)
@@ -544,8 +546,7 @@ if ($hopper_dnc_count > 0)
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
-			 $epc_countCAMPDATA=0;
-			while ($sthArows > $epc_countCAMPDATA)
+			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
 				$VD_address3 =			$aryA[0];
@@ -553,7 +554,6 @@ if ($hopper_dnc_count > 0)
 				$VD_gmt_offset_now =	$aryA[1];
 				$VD_state =				$aryA[2];
 				$VD_list_id =			$aryA[3];
-				$epc_countCAMPDATA++;
 				}
 			$sthA->finish();
 			if (length($VD_address3)>5)
@@ -615,14 +615,12 @@ if ($hopper_dnc_count > 0)
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
-			$epc_countCAMPDATA=0;
-			while ($sthArows > $epc_countCAMPDATA)
+			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
 				$VD_gmt_offset_now =	$aryA[0];
 				$VD_state =				$aryA[1];
 				$VD_list_id =			$aryA[2];
-				$epc_countCAMPDATA++;
 				}
 			$sthA->finish();
 			$alt_dial_phones_count=0;

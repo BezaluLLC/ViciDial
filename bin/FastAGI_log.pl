@@ -1213,9 +1213,9 @@ sub process_request
 									if ($sthArows > 0)
 										{
 										@aryA = $sthA->fetchrow_array;
-										$VD_altdial_id =		"$aryA[0]";
-										$VD_altdial_phone = 	"$aryA[1]";
-										$VD_altdial_active = 	"$aryA[2]";
+										$VD_altdial_id =		$aryA[0];
+										$VD_altdial_phone = 	$aryA[1];
+										$VD_altdial_active = 	$aryA[2];
 										}
 									else
 										{$Xlast=9999999999;}
@@ -1223,6 +1223,8 @@ sub process_request
 
 									if ($VD_altdial_active =~ /Y/)
 										{
+										$DNCC=0;
+										$DNCL=0;
 										if ($VD_use_internal_dnc =~ /Y/)
 											{
 											$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_altdial_phone';";
@@ -1233,7 +1235,8 @@ sub process_request
 											if ($sthArows > 0)
 												{
 												@aryA = $sthA->fetchrow_array;
-												$VD_alt_dnc_count =	"$aryA[0]";
+												$VD_alt_dnc_count =		$aryA[0];
+												$DNCL =					$aryA[0];
 												}
 											$sthA->finish();
 											}
@@ -1249,6 +1252,7 @@ sub process_request
 												{
 												@aryA = $sthA->fetchrow_array;
 												$VD_alt_dnc_count =	($VD_alt_dnc_count + $aryA[0]);
+												$DNCC =					$aryA[0];
 												}
 											$sthA->finish();
 											}
@@ -1263,13 +1267,20 @@ sub process_request
 											}
 										else
 											{
-											if ($alt_dial_phones_count eq '$Xlast') 
-												{$Xlast = 'LAST';}
-											$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='DNC',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15';";
-											$affected_rows = $dbhA->do($stmtA);
-											if ($AGILOG) {$agi_string = "--    VDH record DNC inserted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &agi_output;}
-											$Xlast=9999999999;
-											if ($AGILOG) {$agi_string = "--    VDH alt dial is DNC|X$Xlast|$VD_altdial_phone|";   &agi_output;}
+											if ( ( ($VD_auto_alt_dial_statuses =~ / DNCC /) && ($DNCC > 0) ) || ( ($VD_auto_alt_dial_statuses =~ / DNCL /) && ($DNCL > 0) ) )
+												{
+												if ($alt_dial_phones_count eq '$Xlast') 
+													{$Xlast = 'LAST';}
+												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='DNC',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15';";
+												$affected_rows = $dbhA->do($stmtA);
+												if ($AGILOG) {$agi_string = "--    VDH record DNC inserted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &agi_output;}
+												$Xlast=9999999999;
+												if ($AGILOG) {$agi_string = "--    VDH alt dial inserting DNC|X$Xlast|$VD_altdial_phone|";   &agi_output;}
+												}
+											else
+												{
+												if ($AGILOG) {$agi_string = "--    VDH alt dial not-inserting DNC|X$Xlast|$VD_altdial_phone|";   &agi_output;}
+												}
 											}
 										}
 									}
