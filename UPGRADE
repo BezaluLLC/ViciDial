@@ -263,6 +263,10 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 
 64. Added ability to use DNCC and DNCL as Auto-Alt-Dial statuses
 
+65. Added ability to DNC filter by North American AREACODE using 201XXXXXXX as
+	a DNC list entry. Enabled by using the AREACODE option in Campaign
+	Detail settings
+
 
 
 

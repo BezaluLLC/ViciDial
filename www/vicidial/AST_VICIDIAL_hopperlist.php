@@ -11,6 +11,7 @@
 # 71029-0852 - Added list_id to the output
 # 71030-2118 - Added priority to display
 # 90508-0644 - Changed to PHP long tags
+# 91023-1540 - Changed to only show hopper status of READY
 #
 
 require("dbconnect.php");
@@ -130,7 +131,7 @@ echo "+------+--------+-----------+------------+------------+-------+--------+--
 echo "|ORDER |PRIORITY| LEAD ID   | LIST ID    | PHONE NUM  | STATE | STATUS | COUNT | GMT    | ALT   |\n";
 echo "+------+--------+-----------+------------+------------+-------+--------+-------+--------+-------+\n";
 
-$stmt="select vicidial_hopper.lead_id,phone_number,vicidial_hopper.state,vicidial_list.status,called_count,vicidial_hopper.gmt_offset_now,hopper_id,alt_dial,vicidial_hopper.list_id,vicidial_hopper.priority from vicidial_hopper,vicidial_list where vicidial_hopper.campaign_id='" . mysql_real_escape_string($group) . "' and vicidial_hopper.lead_id=vicidial_list.lead_id order by priority desc,hopper_id limit 2000;";
+$stmt="select vicidial_hopper.lead_id,phone_number,vicidial_hopper.state,vicidial_list.status,called_count,vicidial_hopper.gmt_offset_now,hopper_id,alt_dial,vicidial_hopper.list_id,vicidial_hopper.priority from vicidial_hopper,vicidial_list where vicidial_hopper.campaign_id='" . mysql_real_escape_string($group) . "' and vicidial_hopper.status='READY' and vicidial_hopper.lead_id=vicidial_list.lead_id order by priority desc,hopper_id limit 2000;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $users_to_print = mysql_num_rows($rslt);

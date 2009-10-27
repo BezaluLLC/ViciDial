@@ -1348,7 +1348,7 @@ if ($non_latin < 1)
 	$queue_priority = ereg_replace("[^-0-9]","",$queue_priority);
 
 	### DIGITS and NEWLINES
-	$phone_numbers = ereg_replace("[^\n0-9]","",$phone_numbers);
+	$phone_numbers = ereg_replace("[^X\n0-9]","",$phone_numbers);
 
 	### Y or N ONLY ###
 	$allow_closers = ereg_replace("[^NY]","",$allow_closers);
@@ -1358,8 +1358,6 @@ if ($non_latin < 1)
 	$selectable = ereg_replace("[^NY]","",$selectable);
 	$reset_list = ereg_replace("[^NY]","",$reset_list);
 	$fronter_display = ereg_replace("[^NY]","",$fronter_display);
-	$use_internal_dnc = ereg_replace("[^NY]","",$use_internal_dnc);
-	$use_campaign_dnc = ereg_replace("[^NY]","",$use_campaign_dnc);
 	$omit_phone_code = ereg_replace("[^NY]","",$omit_phone_code);
 	$available_only_ratio_tally = ereg_replace("[^NY]","",$available_only_ratio_tally);
 	$sys_perf_log = ereg_replace("[^NY]","",$sys_perf_log);
@@ -1442,6 +1440,8 @@ if ($non_latin < 1)
 	$grab_calls_in_queue = ereg_replace("[^0-9a-zA-Z]","",$grab_calls_in_queue);
 	$call_requeue_button = ereg_replace("[^0-9a-zA-Z]","",$call_requeue_button);
 	$pause_after_each_call = ereg_replace("[^0-9a-zA-Z]","",$pause_after_each_call);
+	$use_internal_dnc = ereg_replace("[^0-9a-zA-Z]","",$use_internal_dnc);
+	$use_campaign_dnc = ereg_replace("[^0-9a-zA-Z]","",$use_campaign_dnc);
 
 	### DIGITS and Dots
 	$server_ip = ereg_replace("[^\.0-9]","",$server_ip);
@@ -1977,11 +1977,12 @@ else
 # 90919-2251 - Removed all "SELECT *" instances in the code, code cleanup to conform to standard
 # 90924-1645 - Added list_id overrides for cid, am_message and drop in-group
 # 90930-2107 - Added agent territory selection options for ViciDial agents
+# 91026-1050 - Added AREACODE DNC option for campaigns
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-220';
-$build = '90930-2107';
+$admin_version = '2.2.0-221';
+$build = '91026-1050';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3762,12 +3763,12 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_campaigns-use_internal_dnc">
 	<BR>
-	<B>Use Internal DNC List -</B> This defines whether this campaign is to filter leads against the Internal DNC list. If it is set to Y, the hopper will look for each phone number in the DNC list before placing it in the hopper. If it is in the DNC list then it will change that lead status to DNCL so it cannot be dialed. Default is N.
+	<B>Use Internal DNC List -</B> This defines whether this campaign is to filter leads against the Internal DNC list. If it is set to Y, the hopper will look for each phone number in the DNC list before placing it in the hopper. If it is in the DNC list then it will change that lead status to DNCL so it cannot be dialed. Default is N. The AREACODE option is just like the Y option, except it is used to also filter out an entire area code in North America from being dialed, in this case using the 201XXXXXXX entry in the DNC list would block all calls to the 201 areacode if enabled.
 
 	<BR>
 	<A NAME="vicidial_campaigns-use_campaign_dnc">
 	<BR>
-	<B>Use Campaign DNC List -</B> This defines whether this campaign is to filter leads against a DNC list that is specific to that campaign only. If it is set to Y, the hopper will look for each phone number in the campaign-specific DNC list before placing it in the hopper. If it is in the campaign-specific DNC list then it will change that lead status to DNCC so it cannot be dialed. Default is N.
+	<B>Use Campaign DNC List -</B> This defines whether this campaign is to filter leads against a DNC list that is specific to that campaign only. If it is set to Y, the hopper will look for each phone number in the campaign-specific DNC list before placing it in the hopper. If it is in the campaign-specific DNC list then it will change that lead status to DNCC so it cannot be dialed. Default is N. The AREACODE option is just like the Y option, except it is used to also filter out an entire area code in North America from being dialed, in this case using the 201XXXXXXX entry in the DNC list would block all calls to the 201 areacode if enabled.
 
 	<BR>
 	<A NAME="vicidial_campaigns-closer_campaigns">
@@ -4000,7 +4001,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_list-dnc">
 	<BR>
-	<B>VICIDIAL DNC List -</B> This Do Not Call list contains every lead that has been set to a status of DNC in the system. Through the LISTS - ADD NUMBER TO DNC page you are able to manually add numbers to this list so that they will not be called by campaigns that use the internal DNC list. There is also the option to add leads to the campaign-specific DNC lists for those campaigns that have them.
+	<B>VICIDIAL DNC List -</B> This Do Not Call list contains every lead that has been set to a status of DNC in the system. Through the LISTS - ADD NUMBER TO DNC page you are able to manually add numbers to this list so that they will not be called by campaigns that use the internal DNC list. There is also the option to add leads to the campaign-specific DNC lists for those campaigns that have them. If you have the active DNC option set to AREACODE then you can also use area code wildcard entries like this 201XXXXXXX to block all calls to the 201 areacode when enabled.
 
 
 
@@ -16298,9 +16299,9 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Wrap Up Message: </td><td align=left><input type=text name=wrapup_message size=40 maxlength=255 value=\"$wrapup_message\">$NWB#vicidial_campaigns-wrapup_message$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Use Internal DNC List: </td><td align=left><select size=1 name=use_internal_dnc><option>Y</option><option>N</option><option SELECTED>$use_internal_dnc</option></select>$NWB#vicidial_campaigns-use_internal_dnc$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Use Internal DNC List: </td><td align=left><select size=1 name=use_internal_dnc><option>Y</option><option>N</option><option>AREACODE</option><option SELECTED>$use_internal_dnc</option></select>$NWB#vicidial_campaigns-use_internal_dnc$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Use Campaign DNC List: </td><td align=left><select size=1 name=use_campaign_dnc><option>Y</option><option>N</option><option SELECTED>$use_campaign_dnc</option></select>$NWB#vicidial_campaigns-use_campaign_dnc$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Use Campaign DNC List: </td><td align=left><select size=1 name=use_campaign_dnc><option>Y</option><option>N</option><option>AREACODE</option><option SELECTED>$use_campaign_dnc</option></select>$NWB#vicidial_campaigns-use_campaign_dnc$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Pause Codes Active: </td><td align=left><select size=1 name=agent_pause_codes_active><option>FORCE</option><option>Y</option><option>N</option><option SELECTED>$agent_pause_codes_active</option></select>$NWB#vicidial_campaigns-agent_pause_codes_active$NWE</td></tr>\n";
 

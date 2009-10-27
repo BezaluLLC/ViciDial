@@ -592,7 +592,7 @@ display_dialable_count ENUM('Y','N') default 'Y',
 wrapup_seconds SMALLINT(3) UNSIGNED default '0',
 wrapup_message VARCHAR(255) default 'Wrapup Call',
 closer_campaigns TEXT default '',
-use_internal_dnc ENUM('Y','N') default 'N',
+use_internal_dnc ENUM('Y','N','AREACODE') default 'N',
 allcalls_delay SMALLINT(3) UNSIGNED default '0',
 omit_phone_code ENUM('Y','N') default 'N',
 dial_method ENUM('MANUAL','RATIO','ADAPT_HARD_LIMIT','ADAPT_TAPERED','ADAPT_AVERAGE','INBOUND_MAN') default 'MANUAL',
@@ -644,7 +644,7 @@ display_queue_count ENUM('Y','N') default 'Y',
 manual_dial_filter VARCHAR(50) default 'NONE',
 agent_clipboard_copy VARCHAR(50) default 'NONE',
 agent_extended_alt_dial ENUM('Y','N') default 'N',
-use_campaign_dnc ENUM('Y','N') default 'N',
+use_campaign_dnc ENUM('Y','N','AREACODE') default 'N',
 three_way_call_cid ENUM('CAMPAIGN','CUSTOMER','AGENT_PHONE','AGENT_CHOOSE') default 'CAMPAIGN',
 three_way_dial_prefix VARCHAR(20) default '',
 web_form_target VARCHAR(100) NOT NULL default 'vdcwebform',
@@ -1948,7 +1948,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1177',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1178',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

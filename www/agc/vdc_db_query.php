@@ -218,10 +218,11 @@
 # 90930-1638 - Added agent_territories feature
 # 91012-0535 - Fixed User territory no-hopper dial bug
 # 91019-1224 - Fixed auto-alt-dial DNC issues
+# 91026-1101 - Added AREACODE DNC option
 #
 
-$version = '2.2.0-127';
-$build = '91019-1224';
+$version = '2.2.0-128';
+$build = '91026-1101';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=256;
 $one_mysql_log=0;
@@ -2477,10 +2478,17 @@ if ($stage == "end")
 					else {$alt_phone = '';}
 					if (strlen($alt_phone)>5)
 						{
-						if (ereg("Y",$use_internal_dnc))
+						if ( (ereg("Y",$use_internal_dnc)) or (ereg("AREACODE",$use_internal_dnc)) )
 							{
-							$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$alt_phone';";
-							$rslt=mysql_query($stmt, $link);
+							if (ereg("AREACODE",$use_internal_dnc))
+								{
+								$alt_phone_areacode = substr($alt_phone, 0, 3);
+								$alt_phone_areacode .= "XXXXXXX";
+								$stmtA="SELECT count(*) from vicidial_dnc where phone_number IN('$alt_phone','$alt_phone_areacode');";
+								}
+							else
+								{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$alt_phone';";}
+							$rslt=mysql_query($stmtA, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtA,'00066',$user,$server_ip,$session_name,$one_mysql_log);}
 							if ($DB) {echo "$stmt\n";}
 							$VLAP_dnc_ct = mysql_num_rows($rslt);
@@ -2491,10 +2499,17 @@ if ($stage == "end")
 								}
 							}
 						else {$VD_alt_dnc_count=0;}
-						if (ereg("Y",$use_campaign_dnc))
+						if ( (ereg("Y",$use_campaign_dnc)) or (ereg("AREACODE",$use_campaign_dnc)) )
 							{
-							$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$alt_phone' and campaign_id='$campaign';";
-							$rslt=mysql_query($stmt, $link);
+							if (ereg("AREACODE",$use_campaign_dnc))
+								{
+								$alt_phone_areacode = substr($alt_phone, 0, 3);
+								$alt_phone_areacode .= "XXXXXXX";
+								$stmtA="SELECT count(*) from vicidial_campaign_dnc where phone_number IN('$alt_phone','$alt_phone_areacode') and campaign_id='$campaign';";
+								}
+							else
+								{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$alt_phone' and campaign_id='$campaign';";}
+							$rslt=mysql_query($stmtA, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtA,'00067',$user,$server_ip,$session_name,$one_mysql_log);}
 							if ($DB) {echo "$stmt\n";}
 							$VLAP_cdnc_ct = mysql_num_rows($rslt);
@@ -2540,10 +2555,17 @@ if ($stage == "end")
 					else {$address3 = '';}
 					if (strlen($address3)>5)
 						{
-						if (ereg("Y",$use_internal_dnc))
+						if ( (ereg("Y",$use_internal_dnc)) or (ereg("AREACODE",$use_internal_dnc)) )
 							{
-							$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$address3';";
-							$rslt=mysql_query($stmt, $link);
+							if (ereg("AREACODE",$use_internal_dnc))
+								{
+								$addr3_phone_areacode = substr($address3, 0, 3);
+								$addr3_phone_areacode .= "XXXXXXX";
+								$stmtA="SELECT count(*) from vicidial_dnc where phone_number IN('$address3','$addr3_phone_areacode');";
+								}
+							else
+								{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$address3';";}
+							$rslt=mysql_query($stmtA, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtA,'00070',$user,$server_ip,$session_name,$one_mysql_log);}
 							if ($DB) {echo "$stmt\n";}
 							$VLAP_dnc_ct = mysql_num_rows($rslt);
@@ -2554,10 +2576,17 @@ if ($stage == "end")
 								}
 							}
 						else {$VD_alt_dnc_count=0;}
-						if (ereg("Y",$use_campaign_dnc))
+						if ( (ereg("Y",$use_campaign_dnc)) or (ereg("AREACODE",$use_campaign_dnc)) )
 							{
-							$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$address3' and campaign_id='$campaign';";
-							$rslt=mysql_query($stmt, $link);
+							if (ereg("AREACODE",$use_campaign_dnc))
+								{
+								$addr3_phone_areacode = substr($address3, 0, 3);
+								$addr3_phone_areacode .= "XXXXXXX";
+								$stmtA="SELECT count(*) from vicidial_campaign_dnc where phone_number IN('$address3','$addr3_phone_areacode') and campaign_id='$campaign';";
+								}
+							else
+								{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$address3' and campaign_id='$campaign';";}
+							$rslt=mysql_query($stmtA, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtA,'00071',$user,$server_ip,$session_name,$one_mysql_log);}
 							if ($DB) {echo "$stmt\n";}
 							$VLAP_cdnc_ct = mysql_num_rows($rslt);
@@ -2640,10 +2669,17 @@ if ($stage == "end")
 
 						if (ereg("Y",$VD_altdial_active))
 							{
-							if (ereg("Y",$use_internal_dnc))
+							if ( (ereg("Y",$use_internal_dnc)) or (ereg("AREACODE",$use_internal_dnc)) )
 								{
-								$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_altdial_phone';";
-								$rslt=mysql_query($stmt, $link);
+								if (ereg("AREACODE",$use_internal_dnc))
+									{
+									$vdap_phone_areacode = substr($VD_altdial_phone, 0, 3);
+									$vdap_phone_areacode .= "XXXXXXX";
+									$stmtA="SELECT count(*) from vicidial_dnc where phone_number IN('$VD_altdial_phone','$vdap_phone_areacode');";
+									}
+								else
+									{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_altdial_phone';";}
+								$rslt=mysql_query($stmtA, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtA,'00076',$user,$server_ip,$session_name,$one_mysql_log);}
 								if ($DB) {echo "$stmt\n";}
 								$VLAP_dnc_ct = mysql_num_rows($rslt);
@@ -2654,10 +2690,17 @@ if ($stage == "end")
 									}
 								}
 							else {$VD_alt_dnc_count=0;}
-							if (ereg("Y",$use_campaign_dnc))
+							if ( (ereg("Y",$use_campaign_dnc)) or (ereg("AREACODE",$use_campaign_dnc)) )
 								{
-								$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_altdial_phone' and campaign_id='$campaign';";
-								$rslt=mysql_query($stmt, $link);
+								if (ereg("AREACODE",$use_campaign_dnc))
+									{
+									$vdap_phone_areacode = substr($VD_altdial_phone, 0, 3);
+									$vdap_phone_areacode .= "XXXXXXX";
+									$stmtA="SELECT count(*) from vicidial_campaign_dnc where phone_number IN('$VD_altdial_phone','$vdap_phone_areacode') and campaign_id='$campaign';";
+									}
+								else
+									{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_altdial_phone' and campaign_id='$campaign';";}
+								$rslt=mysql_query($stmtA, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtA,'00077',$user,$server_ip,$session_name,$one_mysql_log);}
 								if ($DB) {echo "$stmt\n";}
 								$VLAP_cdnc_ct = mysql_num_rows($rslt);
@@ -4383,11 +4426,18 @@ if ($ACTION == 'updateDISPO')
 				$vh_phone =		$row[0];
 				}
 
-			if (eregi('Y',$use_internal_dnc))
+			if ( (ereg("Y",$use_internal_dnc)) or (ereg("AREACODE",$use_internal_dnc)) )
 				{
-				$stmt="SELECT count(*) FROM vicidial_dnc where phone_number='$vh_phone';";
-				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if (ereg("AREACODE",$use_internal_dnc))
+					{
+					$vhp_phone_areacode = substr($vh_phone, 0, 3);
+					$vhp_phone_areacode .= "XXXXXXX";
+					$stmtA="SELECT count(*) from vicidial_dnc where phone_number IN('$vh_phone','$vhp_phone_areacode');";
+					}
+				else
+					{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$vh_phone';";}
+				$rslt=mysql_query($stmtA, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtA,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$ud_record_ct = mysql_num_rows($rslt);
 				if ($ud_record_ct > 0)
@@ -4397,11 +4447,18 @@ if ($ACTION == 'updateDISPO')
 					}
 				}
 
-			if (eregi('Y',$use_campaign_dnc))
+			if ( (ereg("Y",$use_campaign_dnc)) or (ereg("AREACODE",$use_campaign_dnc)) )
 				{
-				$stmt="SELECT count(*) FROM vicidial_campaign_dnc where campaign_id='$campaign' and phone_number='$vh_phone';";
-				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if (ereg("AREACODE",$use_campaign_dnc))
+					{
+					$vhp_phone_areacode = substr($vh_phone, 0, 3);
+					$vhp_phone_areacode .= "XXXXXXX";
+					$stmtA="SELECT count(*) from vicidial_campaign_dnc where phone_number IN('$vh_phone','$vhp_phone_areacode') and campaign_id='$campaign';";
+					}
+				else
+					{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$vh_phone' and campaign_id='$campaign';";}
+				$rslt=mysql_query($stmtA, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtA,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$ud_record_ct = mysql_num_rows($rslt);
 				if ($ud_record_ct > 0)

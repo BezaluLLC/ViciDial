@@ -84,6 +84,7 @@
 # 90909-0640 - Parked bug fix and code optimizations
 # 90917-1432 - Fixed issue on high-volume systems with lagged agents
 # 90924-0914 - Added List callerid override option
+# 91026-1218 - Added AREACODE DNC option
 #
 
 
@@ -1347,9 +1348,16 @@ while($one_day_interval > 0)
 										$event_string = "|$stmtA|$VD_alt_phone|";   &event_logger;
 									if (length($VD_alt_phone)>5)
 										{
-										if ($VD_use_internal_dnc =~ /Y/)
+										if ( ($VD_use_internal_dnc =~ /Y/) || ($VD_use_internal_dnc =~ /AREACODE/) )
 											{
-											$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_alt_phone';";
+											if ($VD_use_internal_dnc =~ /AREACODE/)
+												{
+												$alt_areacode = substr($VD_alt_phone, 0, 3);
+												$alt_areacode .= "XXXXXXX";
+												$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number IN('$VD_alt_phone','$alt_areacode');";
+												}
+											else
+												{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_alt_phone';";}
 											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 											$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 											$sthArows=$sthA->rows;
@@ -1362,9 +1370,16 @@ while($one_day_interval > 0)
 											}
 										else {$VD_alt_dnc_count=0;}
 											$event_string = "|$stmtA|$VD_alt_dnc_count|";   &event_logger;
-										if ($VD_use_campaign_dnc =~ /Y/)
+										if ( ($VD_use_campaign_dnc =~ /Y/) || ($VD_use_campaign_dnc =~ /AREACODE/) )
 											{
-											$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_alt_phone' and campaign_id='$CLcampaign_id';";
+											if ($VD_use_campaign_dnc =~ /AREACODE/)
+												{
+												$alt_areacode = substr($VD_alt_phone, 0, 3);
+												$alt_areacode .= "XXXXXXX";
+												$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_alt_phone','$alt_areacode') and campaign_id='$CLcampaign_id';";
+												}
+											else
+												{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_alt_phone' and campaign_id='$CLcampaign_id';";}
 											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 											$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 											$sthArows=$sthA->rows;
@@ -1411,9 +1426,16 @@ while($one_day_interval > 0)
 										$event_string = "|$stmtA|$VD_address3|";   &event_logger;
 									if (length($VD_address3)>5)
 										{
-										if ($VD_use_internal_dnc =~ /Y/)
+										if ( ($VD_use_internal_dnc =~ /Y/) || ($VD_use_internal_dnc =~ /AREACODE/) )
 											{
-											$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_address3';";
+											if ($VD_use_internal_dnc =~ /AREACODE/)
+												{
+												$addr3_areacode = substr($VD_address3, 0, 3);
+												$addr3_areacode .= "XXXXXXX";
+												$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number IN('$VD_address3','$addr3_areacode');";
+												}
+											else
+												{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_address3';";}
 											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 											$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 											$sthArows=$sthA->rows;
@@ -1426,9 +1448,16 @@ while($one_day_interval > 0)
 											}
 										else {$VD_alt_dnc_count=0;}
 											$event_string = "|$stmtA|$VD_alt_dnc_count|";   &event_logger;
-										if ($VD_use_campaign_dnc =~ /Y/)
+										if ( ($VD_use_campaign_dnc =~ /Y/) || ($VD_use_campaign_dnc =~ /AREACODE/) )
 											{
-											$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_address3' and campaign_id='$CLcampaign_id';";
+											if ($VD_use_campaign_dnc =~ /AREACODE/)
+												{
+												$addr3_areacode = substr($VD_address3, 0, 3);
+												$addr3_areacode .= "XXXXXXX";
+												$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_address3','$addr3_areacode') and campaign_id='$CLcampaign_id';";
+												}
+											else
+												{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_address3' and campaign_id='$CLcampaign_id';";}
 											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 											$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 											$sthArows=$sthA->rows;
@@ -1511,9 +1540,16 @@ while($one_day_interval > 0)
 										$DNCL=0;
 										if ($VD_altdial_active =~ /Y/)
 											{
-											if ($VD_use_internal_dnc =~ /Y/)
+											if ( ($VD_use_internal_dnc =~ /Y/) || ($VD_use_internal_dnc =~ /AREACODE/) )
 												{
-												$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_altdial_phone';";
+												if ($VD_use_internal_dnc =~ /AREACODE/)
+													{
+													$ad_areacode = substr($VD_altdial_phone, 0, 3);
+													$ad_areacode .= "XXXXXXX";
+													$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number IN('$VD_altdial_phone','$ad_areacode');";
+													}
+												else
+													{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_altdial_phone';";}
 												$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 												$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 												$sthArows=$sthA->rows;
@@ -1527,9 +1563,16 @@ while($one_day_interval > 0)
 													$event_string = "|$stmtA|$VD_alt_dnc_count|";   &event_logger;
 												}
 											else {$VD_alt_dnc_count=0;}
-											if ($VD_use_campaign_dnc =~ /Y/)
+											if ( ($VD_use_campaign_dnc =~ /Y/) || ($VD_use_campaign_dnc =~ /AREACODE/) )
 												{
-												$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_altdial_phone' and campaign_id='$CLcampaign_id';";
+												if ($VD_use_campaign_dnc =~ /AREACODE/)
+													{
+													$ad_areacode = substr($VD_altdial_phone, 0, 3);
+													$ad_areacode .= "XXXXXXX";
+													$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_altdial_phone','$ad_areacode') and campaign_id='$CLcampaign_id';";
+													}
+												else
+													{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_altdial_phone' and campaign_id='$CLcampaign_id';";}
 												$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 												$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 												$sthArows=$sthA->rows;

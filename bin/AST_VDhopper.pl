@@ -60,6 +60,7 @@
 # 90904-1612 - Added timezone ordering
 # 90907-2132 - Fixed order issues
 # 91020-0054 - Fixed Auto-alt-dial DNC issues
+# 91026-1207 - Added AREACODE DNC option
 #
 
 # constants
@@ -494,9 +495,16 @@ if ($hopper_dnc_count > 0)
 			$sthA->finish();
 			if (length($VD_alt_phone)>5)
 				{
-				if ($VD_use_internal_dnc =~ /Y/)
+				if ( ($VD_use_internal_dnc =~ /Y/) || ($VD_use_internal_dnc =~ /AREACODE/) )
 					{
-					$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_alt_phone';";
+					if ($VD_use_internal_dnc =~ /AREACODE/)
+						{
+						$alt_areacode = substr($VD_alt_phone, 0, 3);
+						$alt_areacode .= "XXXXXXX";
+						$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number IN('$VD_alt_phone','$alt_areacode');";
+						}
+					else
+						{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_alt_phone';";}
 						if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -509,9 +517,16 @@ if ($hopper_dnc_count > 0)
 					$sthA->finish();
 					}
 				else {$VD_alt_dnc_count=0;}
-				if ($VD_use_campaign_dnc =~ /Y/)
+				if ( ($VD_use_campaign_dnc =~ /Y/) || ($VD_use_campaign_dnc =~ /AREACODE/) )
 					{
-					$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_alt_phone' and campaign_id='$VD_campaign_id';";
+					if ($VD_use_campaign_dnc =~ /AREACODE/)
+						{
+						$alt_areacode = substr($VD_alt_phone, 0, 3);
+						$alt_areacode .= "XXXXXXX";
+						$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_alt_phone','$alt_areacode') and campaign_id='$VD_campaign_id';";
+						}
+					else
+						{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_alt_phone' and campaign_id='$VD_campaign_id';";}
 						if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -558,9 +573,16 @@ if ($hopper_dnc_count > 0)
 			$sthA->finish();
 			if (length($VD_address3)>5)
 				{
-				if ($VD_use_internal_dnc =~ /Y/)
+				if ( ($VD_use_internal_dnc =~ /Y/) || ($VD_use_internal_dnc =~ /AREACODE/) )
 					{
-					$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_address3';";
+					if ($VD_use_internal_dnc =~ /AREACODE/)
+						{
+						$addr3_areacode = substr($VD_address3, 0, 3);
+						$addr3_areacode .= "XXXXXXX";
+						$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number IN('$VD_address3','$addr3_areacode');";
+						}
+					else
+						{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_address3';";}
 						if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -573,9 +595,16 @@ if ($hopper_dnc_count > 0)
 					$sthA->finish();
 					}
 				else {$VD_alt_dnc_count=0;}
-				if ($VD_use_campaign_dnc =~ /Y/)
+				if ( ($VD_use_campaign_dnc =~ /Y/) || ($VD_use_campaign_dnc =~ /AREACODE/) )
 					{
-					$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_address3' and campaign_id='$VD_campaign_id';";
+					if ($VD_use_campaign_dnc =~ /AREACODE/)
+						{
+						$addr3_areacode = substr($VD_address3, 0, 3);
+						$addr3_areacode .= "XXXXXXX";
+						$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_address3','$addr3_areacode') and campaign_id='$VD_campaign_id';";
+						}
+					else
+						{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_address3' and campaign_id='$VD_campaign_id';";}
 						if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -664,9 +693,16 @@ if ($hopper_dnc_count > 0)
 
 				if ($VD_altdial_active =~ /Y/)
 					{
-					if ($VD_use_internal_dnc =~ /Y/)
+					if ( ($VD_use_internal_dnc =~ /Y/) || ($VD_use_internal_dnc =~ /AREACODE/) )
 						{
-						$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_altdial_phone';";
+						if ($VD_use_internal_dnc =~ /AREACODE/)
+							{
+							$ad_areacode = substr($VD_altdial_phone, 0, 3);
+							$ad_areacode .= "XXXXXXX";
+							$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number IN('$VD_altdial_phone','$ad_areacode');";
+							}
+						else
+							{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_altdial_phone';";}
 							if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -679,9 +715,16 @@ if ($hopper_dnc_count > 0)
 						$sthA->finish();
 						}
 					else {$VD_alt_dnc_count=0;}
-					if ($VD_use_campaign_dnc =~ /Y/)
+					if ( ($VD_use_campaign_dnc =~ /Y/) || ($VD_use_campaign_dnc =~ /AREACODE/) )
 						{
-						$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_altdial_phone' and campaign_id='$VD_campaign_id';";
+						if ($VD_use_campaign_dnc =~ /AREACODE/)
+							{
+							$ad_areacode = substr($VD_altdial_phone, 0, 3);
+							$ad_areacode .= "XXXXXXX";
+							$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_altdial_phone','$ad_areacode') and campaign_id='$VD_campaign_id';";
+							}
+						else
+							{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_altdial_phone' and campaign_id='$VD_campaign_id';";}
 							if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1965,10 +2008,17 @@ foreach(@campaign_id)
 						$DNClead=0;
 						$DNCC=0;
 						$DNCL=0;
-						if ($use_internal_dnc[$i] =~ /Y/)
+						if ( ($use_internal_dnc[$i] =~ /Y/) || ($use_internal_dnc[$i] =~ /AREACODE/) )
 							{
+							if ($use_internal_dnc[$i] =~ /AREACODE/)
+								{
+								$pth_areacode = substr($phone_to_hopper[$h], 0, 3);
+								$pth_areacode .= "XXXXXXX";
+								$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number IN('$phone_to_hopper[$h]','$pth_areacode');";
+								}
+							else
+								{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$phone_to_hopper[$h]';";}
 							if ($DB) {print "     Doing DNC Check: $phone_to_hopper[$h] - $use_internal_dnc[$i]\n";}
-							$stmtA = "SELECT count(*) from vicidial_dnc where phone_number='$phone_to_hopper[$h]';";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
@@ -1986,10 +2036,17 @@ foreach(@campaign_id)
 								if ($DBX) {print "Flagging DNC lead:     $affected_rows  $phone_to_hopper[$h]\n";}
 								}
 							}
-						if ( ($use_campaign_dnc[$i] =~ /Y/) && ($DNClead == '0') )
+						if ( ( ($use_campaign_dnc[$i] =~ /Y/) || ($use_campaign_dnc[$i] =~ /AREACODE/) ) && ($DNClead == '0') )
 							{
+							if ($use_campaign_dnc[$i] =~ /AREACODE/)
+								{
+								$pth_areacode = substr($phone_to_hopper[$h], 0, 3);
+								$pth_areacode .= "XXXXXXX";
+								$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$phone_to_hopper[$h]','$pth_areacode') and campaign_id='$campaign_id[$i]';";
+								}
+							else
+								{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$phone_to_hopper[$h]' and campaign_id='$campaign_id[$i]';";}
 							if ($DB) {print "Doing CAMP DNC Check: $phone_to_hopper[$h] - $use_campaign_dnc[$i]\n";}
-							$stmtA = "SELECT count(*) from vicidial_campaign_dnc where phone_number='$phone_to_hopper[$h]' and campaign_id='$campaign_id[$i]';";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;

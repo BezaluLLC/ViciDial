@@ -591,3 +591,8 @@ CREATE UNIQUE INDEX vlia_user_group_id ON vicidial_live_inbound_agents (user, gr
 ALTER TABLE vicidial_hopper MODIFY status ENUM('READY','QUEUE','INCALL','DONE','HOLD','DNC') default 'READY';
 
 UPDATE system_settings SET db_schema_version='1177',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns MODIFY use_internal_dnc ENUM('Y','N','AREACODE') default 'N';
+ALTER TABLE vicidial_campaigns MODIFY use_campaign_dnc ENUM('Y','N','AREACODE') default 'N';
+
+UPDATE system_settings SET db_schema_version='1178',db_schema_update_date=NOW();

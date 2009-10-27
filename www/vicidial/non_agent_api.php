@@ -27,10 +27,11 @@
 # 90721-1428 - Added rank and owner as vicidial_list fields
 # 90904-1535 - Added moh_list musiconhold list
 # 90916-2342 - Added vm_list voicemail list
+# 91026-1059 - Added AREACODE DNC option
 #
 
-$version = '2.2.0-13';
-$build = '90916-2342';
+$version = '2.2.0-14';
+$build = '91026-1059';
 
 require("dbconnect.php");
 
@@ -888,9 +889,16 @@ if ($function == 'add_lead')
 				}
 			else
 				{
-				if ($dnc_check == 'Y')
+				if ( ($dnc_check == 'Y') or ($dnc_check == 'AREACODE') )
 					{
-					$stmt="SELECT count(*) from vicidial_dnc where phone_number='$phone_number';";
+					if ($dnc_check == 'AREACODE')
+						{
+						$phone_areacode = substr($phone_number, 0, 3);
+						$phone_areacode .= "XXXXXXX";
+						$stmt="SELECT count(*) from vicidial_dnc where phone_number IN('$phone_number','$phone_areacode');";
+						}
+					else
+						{$stmt="SELECT count(*) from vicidial_dnc where phone_number='$phone_number';";}
 					if ($DB) {echo "|$stmt|\n";}
 					$rslt=mysql_query($stmt, $link);
 					$row=mysql_fetch_row($rslt);
@@ -906,9 +914,16 @@ if ($function == 'add_lead')
 						exit;
 						}
 					}
-				if ($campaign_dnc_check == 'Y')
+				if ( ($campaign_dnc_check == 'Y') or ($campaign_dnc_check == 'AREACODE') )
 					{
-					$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number='$phone_number' and campaign_id='$campaign_id';";
+					if ($campaign_dnc_check == 'AREACODE')
+						{
+						$phone_areacode = substr($phone_number, 0, 3);
+						$phone_areacode .= "XXXXXXX";
+						$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number IN('$phone_number','$phone_areacode') and campaign_id='$campaign_id';";
+						}
+					else
+						{$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number='$phone_number' and campaign_id='$campaign_id';";}
 					if ($DB) {echo "|$stmt|\n";}
 					$rslt=mysql_query($stmt, $link);
 					$row=mysql_fetch_row($rslt);

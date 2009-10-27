@@ -162,8 +162,8 @@ list_id -		must be all numbers, 3-12 digits, defaults to 999 if not set
 source -		description of what originated the API call (maximum 20 characters)
 
 SETTINGS FIELDS-
-dnc_check -		Y or N, default is N
-campaign_dnc_check -	Y or N, default is N
+dnc_check -		Y, N or AREACODE, default is N
+campaign_dnc_check -	Y, N or AREACODE, default is N
 campaign_id -		2-8 Character campaign ID, required if using campaign_dnc_check
 add_to_hopper -		Y or N, default is N
 hopper_priority -	99 to -99, the higher number the higher priority, default is 0

@@ -50,8 +50,8 @@
 # 90814-0810 - Added extra logging for vicidial_log in some cases
 # 90815-0750 - Fixed extra vicidial_log logging
 # 91020-0055 - Fixed several bugs with auto-alt-dial, DNC and extended alt number dialing
+# 91026-1148 - Added AREACODE DNC option
 #
-
 
 # defaults for PreFork
 $VARfastagi_log_min_servers =	'3';
@@ -1056,9 +1056,16 @@ sub process_request
 								$sthA->finish();
 								if (length($VD_alt_phone)>5)
 									{
-									if ($VD_use_internal_dnc =~ /Y/)
+									if ( ($VD_use_internal_dnc =~ /Y/) || ($VD_use_internal_dnc =~ /AREACODE/) )
 										{
-										$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_alt_phone';";
+										if ($VD_use_internal_dnc =~ /AREACODE/)
+											{
+											$alt_areacode = substr($VD_alt_phone, 0, 3);
+											$alt_areacode .= "XXXXXXX";
+											$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number IN('$VD_alt_phone','$alt_areacode');";
+											}
+										else
+											{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_alt_phone';";}
 											if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 										$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 										$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1071,9 +1078,16 @@ sub process_request
 										$sthA->finish();
 										}
 									else {$VD_alt_dnc_count=0;}
-									if ($VD_use_campaign_dnc =~ /Y/)
+									if ( ($VD_use_campaign_dnc =~ /Y/) || ($VD_use_campaign_dnc =~ /AREACODE/) )
 										{
-										$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_alt_phone' and campaign_id='$VD_campaign_id';";
+										if ($VD_use_campaign_dnc =~ /AREACODE/)
+											{
+											$alt_areacode = substr($VD_alt_phone, 0, 3);
+											$alt_areacode .= "XXXXXXX";
+											$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_alt_phone','$alt_areacode') and campaign_id='$VD_campaign_id';";
+											}
+										else
+											{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_alt_phone' and campaign_id='$VD_campaign_id';";}
 											if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 										$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 										$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1122,9 +1136,16 @@ sub process_request
 								$sthA->finish();
 								if (length($VD_address3)>5)
 									{
-									if ($VD_use_internal_dnc =~ /Y/)
+									if ( ($VD_use_internal_dnc =~ /Y/) || ($VD_use_internal_dnc =~ /AREACODE/) )
 										{
-										$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_address3';";
+										if ($VD_use_internal_dnc =~ /AREACODE/)
+											{
+											$addr3_areacode = substr($VD_address3, 0, 3);
+											$addr3_areacode .= "XXXXXXX";
+											$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number IN('$VD_address3','$addr3_areacode');";
+											}
+										else
+											{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_address3';";}
 											if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 										$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 										$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1137,9 +1158,16 @@ sub process_request
 										$sthA->finish();
 										}
 									else {$VD_alt_dnc_count=0;}
-									if ($VD_use_campaign_dnc =~ /Y/)
+									if ( ($VD_use_campaign_dnc =~ /Y/) || ($VD_use_campaign_dnc =~ /AREACODE/) )
 										{
-										$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_address3' and campaign_id='$VD_campaign_id';";
+										if ($VD_use_campaign_dnc =~ /AREACODE/)
+											{
+											$addr3_areacode = substr($VD_address3, 0, 3);
+											$addr3_areacode .= "XXXXXXX";
+											$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_address3','$alt_areacode') and campaign_id='$VD_campaign_id';";
+											}
+										else
+											{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_address3' and campaign_id='$VD_campaign_id';";}
 											if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 										$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 										$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1225,9 +1253,16 @@ sub process_request
 										{
 										$DNCC=0;
 										$DNCL=0;
-										if ($VD_use_internal_dnc =~ /Y/)
+										if ( ($VD_use_internal_dnc =~ /Y/) || ($VD_use_internal_dnc =~ /AREACODE/) )
 											{
-											$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_altdial_phone';";
+											if ($VD_use_internal_dnc =~ /AREACODE/)
+												{
+												$ad_areacode = substr($VD_altdial_phone, 0, 3);
+												$ad_areacode .= "XXXXXXX";
+												$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number IN('$VD_altdial_phone','$ad_areacode');";
+												}
+											else
+												{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_altdial_phone';";}
 												if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 											$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1241,9 +1276,16 @@ sub process_request
 											$sthA->finish();
 											}
 										else {$VD_alt_dnc_count=0;}
-										if ($VD_use_campaign_dnc =~ /Y/)
+										if ( ($VD_use_campaign_dnc =~ /Y/) || ($VD_use_campaign_dnc =~ /AREACODE/) )
 											{
-											$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_altdial_phone' and campaign_id='$VD_campaign_id';";
+											if ($VD_use_campaign_dnc =~ /AREACODE/)
+												{
+												$ap_areacode = substr($VD_altdial_phone, 0, 3);
+												$ap_areacode .= "XXXXXXX";
+												$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_altdial_phone','$ap_areacode') and campaign_id='$VD_campaign_id';";
+												}
+											else
+												{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_altdial_phone' and campaign_id='$VD_campaign_id';";}
 												if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 											$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
