@@ -6565,7 +6565,7 @@ if ($ADD==121)
 
 	$campaigns_list = "<option SELECTED value=\"SYSTEM_INTERNAL\">SYSTEM_INTERNAL - INTERNAL VICIDIAL DNC LIST</option>\n";
 
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where use_campaign_dnc='Y' order by campaign_id";
+	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where use_campaign_dnc IN('Y','AREACODE') order by campaign_id";
 	$rslt=mysql_query($stmt, $link);
 	$campaigns_to_print = mysql_num_rows($rslt);
 

@@ -1499,9 +1499,9 @@ while($one_day_interval > 0)
 									if ($sthArows > 0)
 										{
 										@aryA = $sthA->fetchrow_array;
-										$VD_gmt_offset_now =	$aryA[1];
-										$VD_state =				$aryA[2];
-										$VD_list_id =			$aryA[3];
+										$VD_gmt_offset_now =	$aryA[0];
+										$VD_state =				$aryA[1];
+										$VD_list_id =			$aryA[2];
 										}
 									$sthA->finish();
 									$alt_dial_phones_count=0;

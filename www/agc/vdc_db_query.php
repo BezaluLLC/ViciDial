@@ -4415,7 +4415,7 @@ if ($ACTION == 'updateDISPO')
 			$UD_DNC_campaign=0;
 			$UD_DNC_internal=0;
 			$vh_phone='';
-			$stmt="SELECT phone_number FROM vicidial_hopper where lead_id='$lead_id' and status='HOLD';";
+			$stmt="SELECT phone_number FROM vicidial_list where lead_id='$lead_id';";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
