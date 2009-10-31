@@ -597,10 +597,6 @@ ALTER TABLE vicidial_campaigns MODIFY use_campaign_dnc ENUM('Y','N','AREACODE') 
 
 UPDATE system_settings SET db_schema_version='1178',db_schema_update_date=NOW();
 
-
-
-
-
 ALTER TABLE vicidial_server_carriers ADD carrier_description VARCHAR(255);
 
 UPDATE system_settings SET db_schema_version='1179',db_schema_update_date=NOW();

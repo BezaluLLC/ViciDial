@@ -1497,6 +1497,7 @@ globals_string VARCHAR(255),
 dialplan_entry TEXT,
 server_ip VARCHAR(15) NOT NULL,
 active ENUM('Y','N') default 'Y',
+carrier_description VARCHAR(255),
 unique index(carrier_id),
 index (server_ip)
 );
@@ -1948,7 +1949,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1178',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1179',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
