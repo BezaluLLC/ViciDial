@@ -342,6 +342,9 @@ Agent Choose Territories||
 This option if set to 1 allows the user to choose the territories that they will receive calls from when they login to a MANUAL or INBOUND_MAN campaign. Otherwise the user will be set to use all of the territories that they are set to belong to in the User Territories administrative section||
 The AREACODE option is just like the Y option, except it is used to also filter out an entire area code in North America from being dialed, in this case using the 201XXXXXXX entry in the DNC list would block all calls to the 201 areacode if enabled||
 If you have the active DNC option set to AREACODE then you can also use area code wildcard entries like this 201XXXXXXX to block all calls to the 201 areacode when enabled||
+Carrier Description||
+This is put in the comments of the asterisk conf files above the dialplan and account entries. Maximum 255 characters||
+CAMPAIGNS ALLOWING THIS IN-GROUP||
 
 
 add-file: user_territories.php

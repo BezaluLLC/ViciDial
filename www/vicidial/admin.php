@@ -1131,6 +1131,9 @@ if (isset($_GET["agent_select_territories"]))			{$agent_select_territories=$_GET
 	elseif (isset($_POST["agent_select_territories"]))	{$agent_select_territories=$_POST["agent_select_territories"];}
 if (isset($_GET["agent_choose_territories"]))			{$agent_choose_territories=$_GET["agent_choose_territories"];}
 	elseif (isset($_POST["agent_choose_territories"]))	{$agent_choose_territories=$_POST["agent_choose_territories"];}
+if (isset($_GET["carrier_description"]))			{$carrier_description=$_GET["carrier_description"];}
+	elseif (isset($_POST["carrier_description"]))	{$carrier_description=$_POST["carrier_description"];}
+
 
 	if (isset($script_id)) {$script_id= strtoupper($script_id);}
 	if (isset($lead_filter_id)) {$lead_filter_id = strtoupper($lead_filter_id);}
@@ -1720,6 +1723,11 @@ if ($non_latin < 1)
 	$tts_text = ereg_replace(";","",$tts_text);
 	$tts_text = ereg_replace("\r","",$tts_text);
 	$tts_text = ereg_replace("\"","",$tts_text);
+	$carrier_description = ereg_replace("\\\\","",$carrier_description);
+	$carrier_description = ereg_replace(";","",$carrier_description);
+	$carrier_description = ereg_replace("\r","",$carrier_description);
+	$carrier_description = ereg_replace("\"","",$carrier_description);
+
 
 	### VARIABLES TO BE mysql_real_escape_string ###
 	# $web_form_address
@@ -1978,11 +1986,12 @@ else
 # 90924-1645 - Added list_id overrides for cid, am_message and drop in-group
 # 90930-2107 - Added agent territory selection options for ViciDial agents
 # 91026-1050 - Added AREACODE DNC option for campaigns
+# 91031-1232 - Added carrier_description field, campaigns links from in-group screen, server links on reports page, agent ranks listing active only
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-221';
-$build = '91026-1050';
+$admin_version = '2.2.0-222';
+$build = '91031-1232';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5544,6 +5553,11 @@ if ($ADD==99999)
 	<B>Carrier Name -</B> This is the descriptive name of the carrier entry.
 
 	<BR>
+	<A NAME="vicidial_server_carriers-carrier_description">
+	<BR>
+	<B>Carrier Description -</B> This is put in the comments of the asterisk conf files above the dialplan and account entries. Maximum 255 characters.
+
+	<BR>
 	<A NAME="vicidial_server_carriers-registration_string">
 	<BR>
 	<B>Registration String -</B> This field is where you can enter in the exact string needed in the IAX or SIP configuration file to register to the provider. Optional but highly recommended if your carrier allows registration.
@@ -7541,6 +7555,7 @@ if ($ADD==141111111111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Carrier ID: </td><td align=left><input type=text name=carrier_id size=15 maxlength=15>$NWB#vicidial_server_carriers-carrier_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Carrier Name: </td><td align=left><input type=text name=carrier_name size=40 maxlength=50>$NWB#vicidial_server_carriers-carrier_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Carrier Description: </td><td align=left><input type=text name=carrier_description size=70 maxlength=255>$NWB#vicidial_server_carriers-carrier_description$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Registration String: </td><td align=left><input type=text name=registration_string size=50 maxlength=255>$NWB#vicidial_server_carriers-registration_string$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Template ID: </td><td align=left><select size=1 name=template_id>\n";
@@ -9843,7 +9858,7 @@ if ($ADD==241111111111)
 			{
 			echo "<br>CARRIER ADDED\n";
 
-			$stmt="INSERT INTO vicidial_server_carriers (carrier_id,carrier_name,registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,server_ip,active) values('$carrier_id','$carrier_name','$registration_string','$template_id','$account_entry','$protocol','$globals_string','$dialplan_entry','$server_ip','N');";
+			$stmt="INSERT INTO vicidial_server_carriers (carrier_id,carrier_name,registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,server_ip,active,carrier_description) values('$carrier_id','$carrier_name','$registration_string','$template_id','$account_entry','$protocol','$globals_string','$dialplan_entry','$server_ip','N','$carrier_description');";
 			$rslt=mysql_query($stmt, $link);
 
 			$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
@@ -12809,7 +12824,7 @@ if ($ADD==441111111111)
 			{echo "<br>CARRIER NOT MODIFIED - Please go back and look at the data you entered\n";}
 		else
 			{
-			$stmt="UPDATE vicidial_server_carriers set carrier_name='$carrier_name',registration_string='$registration_string',template_id='$template_id',account_entry='$account_entry',protocol='$protocol',globals_string='$globals_string',dialplan_entry='$dialplan_entry',server_ip='$server_ip',active='$active' where carrier_id='$carrier_id';";
+			$stmt="UPDATE vicidial_server_carriers set carrier_name='$carrier_name',registration_string='$registration_string',template_id='$template_id',account_entry='$account_entry',protocol='$protocol',globals_string='$globals_string',dialplan_entry='$dialplan_entry',server_ip='$server_ip',active='$active',carrier_description='$carrier_description' where carrier_id='$carrier_id';";
 			$rslt=mysql_query($stmt, $link);
 
 			$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
@@ -16549,7 +16564,7 @@ if ($ADD==31)
 	echo "<a href=\"$PHP_SELF?ADD=81&campaign_id=$campaign_id\">Click here to see all CallBack Holds in this campaign</a><BR><BR>\n";
 	if ($LOGuser_level >= 9)
 		{
-		echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=CAMPAIGNS&stage=$campaign_id\">Click here to see Admin chages to this campaign</FONT>\n";
+		echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=CAMPAIGNS&stage=$campaign_id\">Click here to see Admin chages to this campaign</a></FONT>\n";
 		}
 	echo "</b></center>\n";
 	}
@@ -17552,7 +17567,7 @@ if ($ADD==34)
 		echo "<a href=\"$PHP_SELF?ADD=81&campaign_id=$campaign_id\">Click here to see all CallBack Holds in this campaign</a><BR><BR>\n";
 		if ($LOGuser_level >= 9)
 			{
-			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=CAMPAIGNS&stage=$campaign_id\">Click here to see Admin chages to this campaign</FONT>\n";
+			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=CAMPAIGNS&stage=$campaign_id\">Click here to see Admin chages to this campaign</a></FONT>\n";
 			}
 
 		echo "</b></center>\n";
@@ -17562,10 +17577,10 @@ if ($ADD==34)
 		### list of agent rank or skill-level for this campaign
 		echo "<center>\n";
 		echo "<br><b>AGENT RANKS FOR THIS CAMPAIGN:</b><br>\n";
-		echo "<TABLE width=400 cellspacing=3>\n";
+		echo "<TABLE width=500 cellspacing=3>\n";
 		echo "<tr><td>USER</td><td> &nbsp; &nbsp; RANK</td><td> &nbsp; &nbsp; CALLS TODAY</td></tr>\n";
 
-			$stmt="SELECT user,campaign_rank,calls_today from vicidial_campaign_agents where campaign_id='$campaign_id'";
+			$stmt="SELECT vu.user,vca.campaign_rank,vca.calls_today,full_name from vicidial_campaign_agents vca, vicidial_users vu where campaign_id='$campaign_id' and active='Y' and vu.user=vca.user;";
 			$rsltx=mysql_query($stmt, $link);
 			$users_to_print = mysql_num_rows($rsltx);
 
@@ -17579,7 +17594,7 @@ if ($ADD==34)
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}
 
-			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3&user=$rowx[0]\">$rowx[0]</a></td><td><font size=1>$rowx[1]</td><td><font size=1>$rowx[2]</td></tr>\n";
+			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3&user=$rowx[0]\">$rowx[0]</a> - $rowx[3]</td><td><font size=1>$rowx[1]</td><td><font size=1>$rowx[2]</td></tr>\n";
 			}
 
 		echo "</table></center><br>\n";
@@ -19267,10 +19282,10 @@ if ($ADD==3111)
 		### list of agent rank or skill-level for this inbound group
 		echo "<center>\n";
 		echo "<br><b>AGENT RANKS FOR THIS INBOUND GROUP:</b><br>\n";
-		echo "<TABLE width=400 cellspacing=3>\n";
+		echo "<TABLE width=500 cellspacing=3>\n";
 		echo "<tr><td>USER</td><td> &nbsp; &nbsp; RANK</td><td> &nbsp; &nbsp; CALLS TODAY</td></tr>\n";
 
-		$stmt="SELECT user,group_rank,calls_today from vicidial_inbound_group_agents where group_id='$group_id'";
+		$stmt="SELECT vu.user,viga.group_rank,calls_today,full_name from vicidial_inbound_group_agents viga, vicidial_users vu where group_id='$group_id' and active='Y' and vu.user=viga.user;";
 		$rsltx=mysql_query($stmt, $link);
 		$users_to_print = mysql_num_rows($rsltx);
 
@@ -19285,7 +19300,7 @@ if ($ADD==3111)
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}
 
-			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3&user=$rowx[0]\">$rowx[0]</a></td><td><font size=1>$rowx[1]</td><td><font size=1>$rowx[2]</td></tr>\n";
+			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3&user=$rowx[0]\">$rowx[0]</a> - $rowx[3]</td><td><font size=1>$rowx[1]</td><td><font size=1>$rowx[2]</td></tr>\n";
 			}
 
 		echo "</table></center><br>\n";
@@ -19322,6 +19337,21 @@ if ($ADD==3111)
 			{
 			$row=mysql_fetch_row($rslt);
 			echo "<TR><TD><a href=\"$PHP_SELF?ADD=3511&menu_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			$o++;
+			}
+
+		echo "</TABLE><BR>\n";
+		echo "<B>CAMPAIGNS ALLOWING THIS IN-GROUP:</B><BR>\n";
+		echo "<TABLE>\n";
+
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where closer_campaigns LIKE \"% $group_id %\";";
+		$rslt=mysql_query($stmt, $link);
+		$campin_to_print = mysql_num_rows($rslt);
+		$o=0;
+		while ($campin_to_print > $o) 
+			{
+			$row=mysql_fetch_row($rslt);
+			echo "<TR><TD><a href=\"$PHP_SELF?ADD=31&campaign_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
 			$o++;
 			}
 
@@ -21293,7 +21323,7 @@ if ($ADD==341111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT carrier_id,carrier_name,registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,server_ip,active from vicidial_server_carriers where carrier_id='$carrier_id';";
+		$stmt="SELECT carrier_id,carrier_name,registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,server_ip,active,carrier_description from vicidial_server_carriers where carrier_id='$carrier_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$carrier_id =			$row[0];
@@ -21306,6 +21336,7 @@ if ($ADD==341111111111)
 		$dialplan_entry =		$row[7];
 		$server_ip =			$row[8];
 		$active =				$row[9];
+		$carrier_description =	$row[10];
 
 		echo "<br>MODIFY A CARRIER RECORD: $row[0]<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=441111111111>\n";
@@ -21314,6 +21345,7 @@ if ($ADD==341111111111)
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Carrier ID: </td><td align=left><B>$carrier_id</B></td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Carrier Name: </td><td align=left><input type=text name=carrier_name size=40 maxlength=50 value=\"$carrier_name\">$NWB#vicidial_server_carriers-carrier_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Carrier Description: </td><td align=left><input type=text name=carrier_description size=70 maxlength=255 value=\"$carrier_description\">$NWB#vicidial_server_carriers-carrier_description$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Registration String: </td><td align=left><input type=text name=registration_string size=50 maxlength=255 value=\"$registration_string\">$NWB#vicidial_server_carriers-registration_string$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=331111111111&template_id=$template_id\">Template ID</a>: </td><td align=left><select size=1 name=template_id>\n";
@@ -24054,7 +24086,7 @@ if ($ADD==999999)
 				}
 			$disk = "$disk%";
 			echo "<TR>\n";
-			echo "<TD>$server_id[$o]</TD>\n";
+			echo "<TD><a href=\"$PHP_SELF?ADD=311111111111&server_id=$server_id[$o]\">$server_id[$o]</a></TD>\n";
 			echo "<TD>$server_description[$o]</TD>\n";
 			echo "<TD>$server_ip[$o]</TD>\n";
 			echo "<TD>$active[$o]</TD>\n";

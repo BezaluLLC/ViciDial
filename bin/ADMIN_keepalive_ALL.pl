@@ -42,6 +42,8 @@
 # 90821-1246 - Fixed central voicemail server conf file, changed voicemail to use phone password
 # 90903-1626 - Added musiconhold and meetme conf file generation
 # 90919-1516 - Added generation of standalone voicemail boxes in voicemail conf file
+# 91028-1023 - Added clearing of daily-reset tables at the timeclock reset time
+# 91031-1258 - Added carrier description comments
 #
 
 $DB=0; # Debug flag
@@ -485,7 +487,8 @@ if ($timeclock_auto_logout > 0)
 
 
 ################################################################################
-#####  START clear out non-used vicidial_conferences sessions
+#####  START clear out non-used vicidial_conferences sessions and reset daily
+#####        tally tables
 ################################################################################
 
 # default path to astguiclient configuration file:
@@ -586,10 +589,142 @@ if ($timeclock_end_of_day_NOW > 0)
 		$k++;
 		}
 
+
+	if ($DB) {print "Starting clear out daily reset tables...\n";}
+
+	$secX = time();
+	$TDtarget = ($secX - 86000);	# almost one day old
+	($Tsec,$Tmin,$Thour,$Tmday,$Tmon,$Tyear,$Twday,$Tyday,$Tisdst) = localtime($TDtarget);
+	$Tyear = ($Tyear + 1900);
+	$Tmon++;
+	if ($Tmon < 10) {$Tmon = "0$Tmon";}
+	if ($Tmday < 10) {$Tmday = "0$Tmday";}
+	if ($Thour < 10) {$Thour = "0$Thour";}
+	if ($Tmin < 10) {$Tmin = "0$Tmin";}
+	if ($Tsec < 10) {$Tsec = "0$Tsec";}
+	$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
+
+	$stmtA = "UPDATE vicidial_campaign_stats SET dialable_leads='0', calls_today='0', answers_today='0', drops_today='0', drops_today_pct='0', drops_answers_today_pct='0', calls_hour='0', answers_hour='0', drops_hour='0', drops_hour_pct='0', calls_halfhour='0', answers_halfhour='0', drops_halfhour='0', drops_halfhour_pct='0', calls_fivemin='0', answers_fivemin='0', drops_fivemin='0', drops_fivemin_pct='0', calls_onemin='0', answers_onemin='0', drops_onemin='0', drops_onemin_pct='0', differential_onemin='0', agents_average_onemin='0', balance_trunk_fill='0', status_category_count_1='0', status_category_count_2='0', status_category_count_3='0', status_category_count_4='0';";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows vicidial_campaign_stats records reset|\n";}
+
+	$stmtA = "optimize table vicidial_campaign_stats;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+
+	$stmtA = "UPDATE vicidial_drop_rate_groups SET calls_today='0', answers_today='0', drops_today='0', drops_today_pct='0', drops_answers_today_pct='0';";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows vicidial_campaign_stats records reset|\n";}
+
+	$stmtA = "optimize table vicidial_drop_rate_groups;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+
+	$stmtA = "delete from vicidial_campaign_server_stats;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows vicidial_campaign_server_stats records deleted|\n";}
+
+	$stmtA = "optimize table vicidial_campaign_server_stats;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+
+	$stmtA = "update vicidial_inbound_group_agents SET calls_today=0;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows vicidial_inbound_group_agents call counts reset|\n";}
+
+	$stmtA = "optimize table vicidial_inbound_group_agents;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+
+	$stmtA = "update vicidial_campaign_agents SET calls_today=0;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows vicidial_campaign_agents call counts reset|\n";}
+
+	$stmtA = "optimize table vicidial_campaign_agents;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+
+	$stmtA = "delete from vicidial_live_inbound_agents where last_call_finish < \"$TDSQLdate\";";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows vicidial_live_inbound_agents old records deleted|\n";}
+
+	$stmtA = "update vicidial_live_inbound_agents SET calls_today=0;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows vicidial_live_inbound_agents call counts reset|\n";}
+
+	$stmtA = "optimize table vicidial_live_inbound_agents;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+
+	$stmtA = "delete from vicidial_live_agents where last_state_change < \"$TDSQLdate\" and extension NOT LIKE \"R/%\";";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows vicidial_live_agents old records deleted|\n";}
+
+	$stmtA = "optimize table vicidial_live_agents;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+
+	$stmtA = "delete from vicidial_auto_calls where last_update_time < \"$TDSQLdate\";";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows vicidial_auto_calls old records deleted|\n";}
+
+	$stmtA = "optimize table vicidial_auto_calls;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
 	}
 
 ################################################################################
-#####  END clear out non-used vicidial_conferences sessions
+#####  END   clear out non-used vicidial_conferences sessions and reset daily
+#####        tally tables
 ################################################################################
 
 
@@ -804,7 +939,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the IAX carriers for this server_ip #####
-	$stmtA = "SELECT carrier_id,carrier_name,registration_string,template_id,account_entry,globals_string,dialplan_entry FROM vicidial_server_carriers where server_ip='$server_ip' and active='Y' and protocol='IAX2' order by carrier_id;";
+	$stmtA = "SELECT carrier_id,carrier_name,registration_string,template_id,account_entry,globals_string,dialplan_entry,carrier_description FROM vicidial_server_carriers where server_ip='$server_ip' and active='Y' and protocol='IAX2' order by carrier_id;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -812,13 +947,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	while ($sthArows > $i)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$carrier_id[$i]	=			"$aryA[0]";
-		$carrier_name[$i]	=		"$aryA[1]";
-		$registration_string[$i] =	"$aryA[2]";
-		$template_id[$i] =			"$aryA[3]";
-		$account_entry[$i] =		"$aryA[4]";
-		$globals_string[$i] =		"$aryA[5]";
-		$dialplan_entry[$i] =		"$aryA[6]";
+		$carrier_id[$i]	=			$aryA[0];
+		$carrier_name[$i]	=		$aryA[1];
+		$registration_string[$i] =	$aryA[2];
+		$template_id[$i] =			$aryA[3];
+		$account_entry[$i] =		$aryA[4];
+		$globals_string[$i] =		$aryA[5];
+		$dialplan_entry[$i] =		$aryA[6];
+		$carrier_description[$i] =	$aryA[7];
 		$i++;
 		}
 	$sthA->finish();
@@ -845,9 +981,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$iax  .= "$registration_string[$i]\n";
 
 		$Lext .= "; VICIDIAL Carrier: $carrier_id[$i] - $carrier_name[$i]\n";
+		if (length($carrier_description[$i]) > 0) {$Lext .= "; $carrier_description[$i]\n";}
 		$Lext .= "$dialplan_entry[$i]\n";
 
 		$Liax .= "; VICIDIAL Carrier: $carrier_id[$i] - $carrier_name[$i]\n";
+		if (length($carrier_description[$i]) > 0) {$Liax .= "; $carrier_description[$i]\n";}
 		$Liax .= "$account_entry[$i]\n";
 		$Liax .= "$template_contents[$i]\n";
 
@@ -858,7 +996,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the SIP carriers for this server_ip #####
-	$stmtA = "SELECT carrier_id,carrier_name,registration_string,template_id,account_entry,globals_string,dialplan_entry FROM vicidial_server_carriers where server_ip='$server_ip' and active='Y' and protocol='SIP' order by carrier_id;";
+	$stmtA = "SELECT carrier_id,carrier_name,registration_string,template_id,account_entry,globals_string,dialplan_entry,carrier_description FROM vicidial_server_carriers where server_ip='$server_ip' and active='Y' and protocol='SIP' order by carrier_id;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -866,13 +1004,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	while ($sthArows > $i)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$carrier_id[$i]	=			"$aryA[0]";
-		$carrier_name[$i]	=		"$aryA[1]";
-		$registration_string[$i] =	"$aryA[2]";
-		$template_id[$i] =			"$aryA[3]";
-		$account_entry[$i] =		"$aryA[4]";
-		$globals_string[$i] =		"$aryA[5]";
-		$dialplan_entry[$i] =		"$aryA[6]";
+		$carrier_id[$i]	=			$aryA[0];
+		$carrier_name[$i]	=		$aryA[1];
+		$registration_string[$i] =	$aryA[2];
+		$template_id[$i] =			$aryA[3];
+		$account_entry[$i] =		$aryA[4];
+		$globals_string[$i] =		$aryA[5];
+		$dialplan_entry[$i] =		$aryA[6];
+		$carrier_description[$i] =	$aryA[7];
 		$i++;
 		}
 	$sthA->finish();
@@ -899,9 +1038,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$sip  .= "$registration_string[$i]\n";
 
 		$Lext .= "; VICIDIAL Carrier: $carrier_id[$i] - $carrier_name[$i]\n";
+		if (length($carrier_description[$i]) > 0) {$Lext .= "; $carrier_description[$i]\n";}
 		$Lext .= "$dialplan_entry[$i]\n";
 
 		$Lsip .= "; VICIDIAL Carrier: $carrier_id[$i] - $carrier_name[$i]\n";
+		if (length($carrier_description[$i]) > 0) {$Lsip .= "; $carrier_description[$i]\n";}
 		$Lsip .= "$account_entry[$i]\n";
 		$Lsip .= "$template_contents[$i]\n";
 
