@@ -717,7 +717,7 @@ while($one_day_interval > 0)
 														$sthA->finish();
 														}
 
-													$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id'";
+													$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR', called_count='$called_count',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id'";
 													}
 												else
 													{

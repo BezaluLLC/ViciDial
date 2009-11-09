@@ -257,10 +257,11 @@
 # 90923-1310 - Rolled back last change
 # 90928-1955 - Added lead update before closer transfer
 # 90930-2243 - Added Territory selection functions
+# 91108-2118 - Added QM pause code entry
 #
 
-$version = '2.2.0-235';
-$build = '90930-2243';
+$version = '2.2.0-236';
+$build = '91108-2118';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -2058,6 +2059,23 @@ else
 	$affected_rows = mysql_affected_rows($link);
 	$agent_log_id = mysql_insert_id($link);
 	echo "<!-- vicidial_agent_log record inserted: |$affected_rows|$agent_log_id| -->\n";
+
+	if ($enable_queuemetrics_logging > 0)
+		{
+		$StarTtimEpause = ($StarTtimE + 1);
+		$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+		mysql_select_db("$queuemetrics_dbname", $linkB);
+
+		$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimEpause',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEREASON',data1='LOGIN',serverid='$queuemetrics_log_id';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $linkB);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		$affected_rows = mysql_affected_rows($linkB);
+		echo "<!-- queue_log PAUSEREASON LOGIN entry added: $VD_login|$affected_rows -->\n";
+
+		mysql_close($linkB);
+		mysql_select_db("$VARDB_database", $link);
+		}
 
 	$stmt="UPDATE vicidial_live_agents SET agent_log_id='$agent_log_id' where user='$VD_login';";
 	if ($DB) {echo "$stmt\n";}

@@ -19,6 +19,7 @@
 # 90312-1256 - Added CLI flag for automatic configuration
 # 90620-1910 - Added check before creating directories and formatting changes
 # 90727-1457 - Added GSW directory creation
+# 91105-1359 - Added MIX directory to /var/spool/asterisk/monitor
 #
 
 ############################################
@@ -2172,6 +2173,8 @@ if ($WEBONLY < 1)
 		`mkdir -p $PATHmonitor`;
 		`chmod -R 0766 $PATHmonitor`;
 		}
+	if (!-e "$PATHmonitor/MIX")	{`mkdir -p $PATHmonitor/MIX`;}
+
 	if (!-e "$PATHDONEmonitor")					
 		{
 		`mkdir -p $PATHDONEmonitor`;

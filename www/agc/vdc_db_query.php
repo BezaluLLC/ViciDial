@@ -219,10 +219,11 @@
 # 91012-0535 - Fixed User territory no-hopper dial bug
 # 91019-1224 - Fixed auto-alt-dial DNC issues
 # 91026-1101 - Added AREACODE DNC option
+# 91108-2120 - Fixed QM log issue with PAUSEREASON entries
 #
 
-$version = '2.2.0-128';
-$build = '91026-1101';
+$version = '2.2.0-129';
+$build = '91108-2120';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=256;
 $one_mysql_log=0;
@@ -5310,7 +5311,7 @@ if ($ACTION == 'PauseCodeSubmit')
 				$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
 				mysql_select_db("$queuemetrics_dbname", $linkB);
 
-				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='$campaign',agent='Agent/$user',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='$status';";
+				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='$status';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00177',$user,$server_ip,$session_name,$one_mysql_log);}

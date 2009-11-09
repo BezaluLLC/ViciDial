@@ -56,10 +56,11 @@
 # 90808-0212 - Fixed inbound only non-ALL bug, changed times to use agent last_state_change
 # 90907-0915 - Added PARK status
 # 90914-1154 - Added AgentOnly display column to waiting calls section
+# 91102-2013 - Changed in-group color styles for incoming calls waiting
 #
 
-$version = '2.0.5-47';
-$build = '90914-1154';
+$version = '2.0.5-48';
+$build = '91102-2013';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -479,7 +480,7 @@ $open_list = "<TABLE WIDTH=250 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#D9E6FE\"><
 			$row=mysql_fetch_row($rslt);
 			$group_id[$g] = $row[0];
 			$group_color[$g] = $row[1];
-			echo "   .$group_id[$g] {color: black; background-color: $group_color[$g]}\n";
+			echo "   .csc$group_id[$g] {color: black; background-color: $group_color[$g]}\n";
 			$g++;
 			}
 		}
@@ -1269,7 +1270,7 @@ while($p<$k)
 	$G = '';		$EG = '';
 	if ($CDcall_type[$p] == 'IN')
 		{
-		$G="<SPAN class=\"$CDcampaign_id[$p]\"><B>"; $EG='</B></SPAN>';
+		$G="<SPAN class=\"csc$CDcampaign_id[$p]\"><B>"; $EG='</B></SPAN>';
 		}
 	if (strlen($CDagent_only[$p]) > 0)
 		{$Gcalltypedisplay = "$G$Cagent_only$EG";}

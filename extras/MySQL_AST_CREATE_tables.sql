@@ -1522,7 +1522,8 @@ lead_id INT(9) UNSIGNED,
 callerid VARCHAR(20),
 group_alias_id VARCHAR(30),
 index (user),
-index (call_date)
+index (call_date),
+index (group_alias_id)
 );
 
 CREATE TABLE vicidial_tts_prompts (
@@ -1929,6 +1930,10 @@ INSERT INTO vicidial_drop_rate_groups SET group_id='110';
 
 INSERT INTO vicidial_process_triggers SET trigger_id='LOAD_LEADS',server_ip='10.10.10.15',trigger_name='Load Leads',trigger_time='2009-01-01 00:00:00',trigger_run='0',trigger_lines='/usr/share/astguiclient/VICIDIAL_IN_new_leads_file.pl';
 
+INSERT INTO vicidial_call_menu SET menu_id='defaultlog',menu_name='logging of all outbound calls from agent phones',menu_prompt='sip-silence',menu_timeout='20',menu_timeout_prompt='NONE',menu_invalid_prompt='NONE',menu_repeat='0',menu_time_check='0',call_time_id='',track_in_vdac='0',custom_dialplan_entry='exten => _.,1,AGI(agi-NVA_recording.agi,BOTH------Y---Y---Y)\nexten => _.,n,Goto(default,${EXTEN},1)',tracking_group='';
+
+INSERT INTO vicidial_call_menu_options SET menu_id='defaultlog',option_value='TIMEOUT',option_description='hangup',option_route='HANGUP',option_route_value='vm-goodbye',option_route_value_context='';
+
 UPDATE system_settings SET qc_last_pull_time=NOW();
 
 CREATE INDEX country_postal_code on vicidial_postal_codes (country_code,postal_code);
@@ -1949,7 +1954,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1179',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1180',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

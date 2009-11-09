@@ -102,6 +102,7 @@
 # 90726-0114 - Fixed bug on some calls for agent grab
 # 90808-0307 - Added longest_wait_time as agent routing option
 # 91004-0959 - Fix for queue_log consultative transfers
+# 91105-1258 - Added CallerIDnumber change on Drop when sending call out
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -121,7 +122,7 @@ $year = ($year + 1900);
 $mon++;
 if ($mon < 10) {$mon = "0$mon";}
 if ($mday < 10) {$mday = "0$mday";}
-if ($hour < 10) {$Fhour = "0$hour";}
+if ($hour < 10) {$hour = "0$hour";}
 if ($min < 10) {$min = "0$min";}
 if ($sec < 10) {$sec = "0$sec";}
 
@@ -224,15 +225,15 @@ $sthA->finish();
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	if ($AGILOG) {$agi_string = "Perl Environment Dump:";   &agi_output;}
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	if ($AGILOG) {$agi_string = "$i|$ARGV[$i]";   &agi_output;}
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		if ($AGILOG) {$agi_string = "$i|$ARGV[$i]";   &agi_output;}
+		$i++;
+		}
 	
 	### list of command-line array arguments:
 	@ARGV_vars = split(/-----/, $ARGV[0]);
@@ -248,20 +249,20 @@ if (length($ARGV[0])>1)
 	$phone_code = 		$ARGV_vars[8];
 	$Scampaign_id = 	$ARGV_vars[9];
 	$agent_only = 		$ARGV_vars[10];
-}
+	}
 
 $|=1;
 while(<STDIN>) 
-{
+	{
 	chomp;
 	last unless length($_);
 	if ($AGILOG)
-	{
-		if (/^agi_(\w+)\:\s+(.*)$/)
 		{
+		if (/^agi_(\w+)\:\s+(.*)$/)
+			{
 			$AGI{$1} = $2;
+			}
 		}
-	}
 
 	if (/^agi_uniqueid\:\s+(.*)$/)		{$unique_id = $1; $uniqueid = $unique_id;}
 	if (/^agi_channel\:\s+(.*)$/)		{$channel = $1;}
@@ -269,7 +270,7 @@ while(<STDIN>)
 	if (/^agi_type\:\s+(.*)$/)		{$type = $1;}
 	if (/^agi_callerid\:\s+(.*)$/)		{$callerid = $1;}
 	if (/^agi_calleridname\:\s+(.*)$/)	{$calleridname = $1;}
-}
+	}
 
 
 if ( ($callerid =~ /\".*\"/) && ( (!$calleridname) or ($calleridname =~ /unknown/) ) )
@@ -743,6 +744,26 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 		if ($after_hours_action =~ /EXTENSION/)
 			{
 			$DROPexten = "$after_hours_exten";
+			$CIDcampaign_cid='0000000000';
+			### Grab ID values from the database
+			$stmtA = "SELECT campaign_id,campaign_cid FROM vicidial_campaigns where closer_campaigns LIKE \"% $channel_group %\" and active='Y';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+				$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$CIDcampaign_id = 			$aryA[0];
+				$CIDcampaign_cid = 			$aryA[1];
+				}
+			$sthA->finish();
+
+			$newcallerid = "\"$callerid <$CIDcampaign_cid>\"";
+			$AGI->set_callerid($newcallerid);
+			print STDERR "Setting CID \"$newcallerid\"\n";
+			checkresult($result);
+			if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$CIDcampaign_cid\> from $CIDcampaign_id";   &agi_output;}
 			}
 		if ($after_hours_action =~ /VOICEMAIL/)
 			{
@@ -878,6 +899,27 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 				@EXno_agent_action_value = split(/,/,$no_agent_action_value);
 				$DROPexten =	$EXno_agent_action_value[0];
 				$ext_context =	$EXno_agent_action_value[1];
+
+				$CIDcampaign_cid='0000000000';
+				### Grab ID values from the database
+				$stmtA = "SELECT campaign_id,campaign_cid FROM vicidial_campaigns where closer_campaigns LIKE \"% $channel_group %\" and active='Y';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$CIDcampaign_id = 			$aryA[0];
+					$CIDcampaign_cid = 			$aryA[1];
+					}
+				$sthA->finish();
+
+				$newcallerid = "\"$callerid <$CIDcampaign_cid>\"";
+				$AGI->set_callerid($newcallerid);
+				print STDERR "Setting CID \"$newcallerid\"\n";
+				checkresult($result);
+				if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$CIDcampaign_cid\> from $CIDcampaign_id";   &agi_output;}
 				}
 			if ($no_agent_action =~ /DID/)
 				{
@@ -919,7 +961,7 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 					sleep(1);
 					}
 
-				if ($AGILOG) {$agi_string = "exiting the VDAD app after hours, transferring call to $DROPexten";   &agi_output;}
+				if ($AGILOG) {$agi_string = "exiting the VDAD app no agent no queue, transferring call to $DROPexten";   &agi_output;}
 				print "SET CONTEXT $ext_context\n";
 					checkresult($result);
 				print "SET EXTENSION $DROPexten\n";
@@ -1560,7 +1602,7 @@ if ( ($agent_search_method =~ /^SO|^LO/) && ($skipLOSO < 1) )
 				$mon++;
 				if ($mon < 10) {$mon = "0$mon";}
 				if ($mday < 10) {$mday = "0$mday";}
-				if ($hour < 10) {$Fhour = "0$hour";}
+				if ($hour < 10) {$hour = "0$hour";}
 				if ($min < 10) {$min = "0$min";}
 				if ($sec < 10) {$sec = "0$sec";}
 
@@ -1942,7 +1984,7 @@ if ($agent_search_method =~ /^LO|^LB/)
 				$mon++;
 				if ($mon < 10) {$mon = "0$mon";}
 				if ($mday < 10) {$mday = "0$mday";}
-				if ($hour < 10) {$Fhour = "0$hour";}
+				if ($hour < 10) {$hour = "0$hour";}
 				if ($min < 10) {$min = "0$min";}
 				if ($sec < 10) {$sec = "0$sec";}
 
@@ -2370,7 +2412,30 @@ $exitwithkey=0;
 if ($hold_time_option =~ /EXTENSION/)
 	{
 	if (length($hold_time_option_exten)>0)
-		{$DROPexten = "$hold_time_option_exten";}
+		{
+		$DROPexten = "$hold_time_option_exten";
+
+		$CIDcampaign_cid='0000000000';
+		### Grab ID values from the database
+		$stmtA = "SELECT campaign_id,campaign_cid FROM vicidial_campaigns where closer_campaigns LIKE \"% $channel_group %\" and active='Y';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+			$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$CIDcampaign_id = 			$aryA[0];
+			$CIDcampaign_cid = 			$aryA[1];
+			}
+		$sthA->finish();
+
+		$newcallerid = "\"$callerid <$CIDcampaign_cid>\"";
+		$AGI->set_callerid($newcallerid);
+		print STDERR "Setting CID \"$newcallerid\"\n";
+		checkresult($result);
+		if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$CIDcampaign_cid\> from $CIDcampaign_id";   &agi_output;}
+		}
 	}
 if ($hold_time_option =~ /PRESS_VMAIL/)
 	{
@@ -2637,7 +2702,7 @@ $year = ($year + 1900);
 $mon++;
 if ($mon < 10) {$mon = "0$mon";}
 if ($mday < 10) {$mday = "0$mday";}
-if ($hour < 10) {$Fhour = "0$hour";}
+if ($hour < 10) {$hour = "0$hour";}
 if ($min < 10) {$min = "0$min";}
 if ($sec < 10) {$sec = "0$sec";}
 
@@ -2690,6 +2755,29 @@ if ($drop_action =~ /MESSAGE|EXTEN/)
 		{
 		$drop_exten = $did_extension;
 		$ext_context = $did_exten_context;
+		}
+	else
+		{
+		$CIDcampaign_cid='0000000000';
+		### Grab ID values from the database
+		$stmtA = "SELECT campaign_id,campaign_cid FROM vicidial_campaigns where closer_campaigns LIKE \"% $channel_group %\" and active='Y';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+			$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$CIDcampaign_id = 			$aryA[0];
+			$CIDcampaign_cid = 			$aryA[1];
+			}
+		$sthA->finish();
+
+		$newcallerid = "\"$callerid <$CIDcampaign_cid>\"";
+		$AGI->set_callerid($newcallerid);
+		print STDERR "Setting CID \"$newcallerid\"\n";
+		checkresult($result);
+		if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$CIDcampaign_cid\> from $CIDcampaign_id";   &agi_output;}
 		}
 	if (length($drop_exten)>0)
 		{$DROPexten = "$drop_exten";}

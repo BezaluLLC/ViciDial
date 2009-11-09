@@ -510,6 +510,8 @@ rm -f /usr/lib/asterisk/modules/res_smdi.so
 rm -f /usr/lib/asterisk/modules/res_snmp.so
 rm -f /usr/lib/asterisk/modules/res_speech.so
 
+##### Asterisk 1.4.21.2 with zaptel
+
 mkdir /usr/src/asterisk-1.4
 cd /usr/src/asterisk-1.4
 wget http://downloads.digium.com/pub/asterisk/old-releases/asterisk-1.4.21.2.tar.gz
@@ -544,6 +546,53 @@ make samples
 modprobe zaptel
 modprobe ztdummy
 
+
+
+
+##### Asterisk 1.4.27 with Dahdi
+
+cd /usr/src/asterisk-1.4/
+wget http://downloads.asterisk.org/pub/telephony/asterisk/releases/asterisk-1.4.26.3.tar.gz
+wget http://downloads.asterisk.org/pub/telephony/asterisk/releases/asterisk-1.4.27-rc3.tar.gz
+wget http://downloads.asterisk.org/pub/telephony/libpri/releases/libpri-1.4.10.2.tar.gz
+wget http://downloads.asterisk.org/pub/telephony/dahdi-linux/releases/dahdi-linux-2.2.0.2.tar.gz
+wget http://downloads.asterisk.org/pub/telephony/dahdi-tools/releases/dahdi-tools-2.2.0.tar.gz
+tar xvfz dahdi-tools-2.2.0.tar.gz
+tar xfz dahdi-linux-2.2.0.2.tar.gz
+tar xfz libpri-1.4.10.2.tar.gz
+tar xfz asterisk-1.4.27-rc3.tar.gz
+tar xfz asterisk-1.4.26.3.tar.gz
+cd ../dahdi-linux-2.2.0.2
+make
+make install
+cd ../dahdi-tools-2.2.0
+./configure
+make
+make install
+make config
+dahdi_genconf modules
+dahdi_cfg
+modprobe dahdi
+cd ../libpri-1.4.10.2
+./configure
+make
+make install
+cd ../asterisk-1.4.27-rc3
+wget http://download.vicidial.com/asterisk-patches/1.4-gsm-gcc4.2.patch
+wget http://download.vicidial.com/asterisk-patches/moh-alpha-sort-1.4.26.2.patch
+wget http://download.vicidial.com/asterisk-patches/netborder-cpd-1.4.patch
+wget http://download.vicidial.com/asterisk-patches/app_waitforsilence.c-1.4
+wget http://download.vicidial.com/asterisk-patches/leave.h
+wget http://download.vicidial.com/asterisk-patches/enter.h
+mv -f enter.h apps/enter.h
+mv -f leave.h apps/leave.h
+patch -p1 ./codecs/gsm/Makefile 1.4-gsm-gcc4.2.patch
+patch -p1 < moh-alpha-sort-1.4.26.2.patch
+patch -p1 < netborder-cpd-1.4.patch
+./configure
+make
+make install
+asterisk -vvvvvvvvvvvvvvvvvvgc
 
 
 
