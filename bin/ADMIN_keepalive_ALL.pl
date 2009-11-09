@@ -44,6 +44,7 @@
 # 90919-1516 - Added generation of standalone voicemail boxes in voicemail conf file
 # 91028-1023 - Added clearing of daily-reset tables at the timeclock reset time
 # 91031-1258 - Added carrier description comments
+# 91109-1205 - Added requirecalltoken=no as IAX setting for newer Asterisk 1.4 versions
 #
 
 $DB=0; # Debug flag
@@ -854,6 +855,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Liax .= "accountcode=IAX$server_id[$i]\n";
 		$Liax .= "secret=test\n";
 		$Liax .= "type=friend\n";
+		$Liax .= "requirecalltoken=no\n";
 		$Liax .= "context=default\n";
 		$Liax .= "auth=plaintext\n";
 		$Liax .= "host=dynamic\n";
@@ -1123,6 +1125,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Piax .= "secret=$conf_secret[$i]\n";
 			$Piax .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 			$Piax .= "mailbox=$voicemail[$i]\n";
+			$Piax .= "requirecalltoken=no\n";
 			$Piax .= "context=$phone_context[$i]\n";
 			$Piax .= "type=friend\n";
 			$Piax .= "auth=md5\n";
