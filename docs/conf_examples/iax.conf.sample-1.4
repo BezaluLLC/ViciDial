@@ -48,6 +48,7 @@ register => ASTblind:test@127.0.0.1:41569
 [vicihelp]
 host=67.134.219.20 			;voip.vicidial-group.com
 type=friend
+requirecalltoken=no
 context=opengateway
 disallow=all
 allow=gsm
@@ -58,6 +59,7 @@ insecure=very
 [ASTloop]
 type=friend
 accountcode=ASTloop
+requirecalltoken=no
 context=default
 auth=plaintext
 host=dynamic
@@ -70,6 +72,7 @@ qualify=yes
 [ASTblind]
 type=friend
 accountcode=ASTblind
+requirecalltoken=no
 context=default
 auth=plaintext
 host=dynamic

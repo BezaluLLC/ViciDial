@@ -625,7 +625,7 @@ if ($call_handle_method =~ /LOOKUP/)
 			while ($sthArows > $cbc)
 				{
 				@aryA = $sthA->fetchrow_array;
-					$insert_lead_id = "$aryA[0]";
+				$insert_lead_id = "$aryA[0]";
 				$cbc++;	
 				} 
 			$sthA->finish();

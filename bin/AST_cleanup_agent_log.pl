@@ -27,7 +27,7 @@ $MT[0]='';
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
 		{
@@ -43,6 +43,7 @@ if (length($ARGV[0])>1)
 		print "  [-last-24hours] = will clean up logs for the last 24 hours only\n";
 		print "  [-more-than-24hours] = will clean up logs older than 24 hours only\n";
 		print "  [-skip-queue-log-inserts] = will skip only the queue_log missing record checks\n";
+		print "  [-only-check-agent-login-lags] = will only fix queue_log missing PAUSEREASON records\n";
 		print "  [-q] = quiet, no output\n";
 		print "  [-test] = test\n";
 		print "  [-debug] = verbose debug messages\n";
@@ -76,6 +77,11 @@ if (length($ARGV[0])>1)
 			$ALL_TIME=1;
 			if ($Q < 1) {print "\n----- NO TIME RESTRICTIONS -----\n\n";}
 			}
+		if ($args =~ /-only-check-agent-login-lags/i)
+			{
+			$login_lagged_check=1;
+			if ($Q < 1) {print "\n----- ONLY LOGIN LAGGED CHECK -----\n\n";}
+			}
 		if ($args =~ /-last-24hours/i)
 			{
 			$TWENTYFOUR_HOURS=1;
@@ -92,11 +98,11 @@ if (length($ARGV[0])>1)
 			if ($Q < 1) {print "\n----- SKIPPING QUEUE_LOG INSERTS -----\n\n";}
 			}
 		}
-}
+	}
 else
-{
-#	print "no command line options set\n";
-}
+	{
+	#	print "no command line options set\n";
+	}
 ### end parsing run-time options ###
 
 # define time restrictions for queries in script
@@ -208,158 +214,10 @@ $server_ip = $VARserver_ip;		# Asterisk server IP
 
 if (!$VARDB_port) {$VARDB_port='3306';}
 
-	use DBI;	  
+use DBI;	  
 
-    $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
-    or die "Couldn't connect to database: " . DBI->errstr;
-
-
-	if ($DB) {print " - cleaning up pause time\n";}
-	### Grab any pause time record greater than 43999
-	$stmtA = "SELECT agent_log_id,pause_epoch,wait_epoch from vicidial_agent_log where pause_sec>43999 $VDAD_SQL_time;";
-		if ($DBX) {print "$stmtA\n";}
-	#$dbhA->query("$stmtA");
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	
-	       $i=0;
-		   while ($sthArows > $i)
-			{
-			@aryA = $sthA->fetchrow_array;	
-			$DBout = '';
-			$agent_log_id[$i]	=		"$aryA[0]";
-			$pause_epoch[$i]	=		"$aryA[1]";
-			$wait_epoch[$i]	=			"$aryA[2]";
-			$pause_sec[$i] = int($wait_epoch[$i] - $pause_epoch[$i]);
-			if ( ($pause_sec[$i] < 0) || ($pause_sec[$i] > 43999) ) 
-				{
-				$DBout = "Override output: $pause_sec[$i]"; 
-				$pause_sec[$i] = 0;
-				}
-			if ($DBX) {print "$i - $agent_log_id[$i]     |$wait_epoch[$i]|$pause_epoch[$i]|$pause_sec[$i]|$DBout|\n";}
-			$i++;
-			} 
-			
-		   $sthA->finish();
-		   
-	$h=0;
-	while ($h < $i)
-		{
-		$stmtA = "UPDATE vicidial_agent_log set pause_sec='$pause_sec[$h]' where agent_log_id='$agent_log_id[$h]';";
-			if($DBX){print STDERR "\n|$stmtA|\n";}
-		if ($TEST < 1)	{$affected_rows = $dbhA->do($stmtA); }
-		$h++;
-		}
-	if ($DB) {print STDERR "     Pause times fixed: $h\n";}
-
-
-	@agent_log_id=@MT;
-	@wait_epoch=@MT;
-
-	if ($DBX) {print "\n\n";}
-	if ($DB) {print " - cleaning up wait time\n";}
-	### Grab any pause time record greater than 43999
-	$stmtA = "SELECT agent_log_id,wait_epoch,talk_epoch from vicidial_agent_log where wait_sec>43999 $VDAD_SQL_time;";
-		if ($DBX) {print "$stmtA\n";}
-	
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-		
-		   $i=0;
-		   while ( $sthArows > $i)
-			{
-		    @aryA = $sthA->fetchrow_array;		
-			$DBout = '';
-			$agent_log_id[$i]	=		"$aryA[0]";
-			$wait_epoch[$i]	=		    "$aryA[1]";
-			$talk_epoch[$i]	=			"$aryA[2]";
-			$wait_sec[$i] = int($talk_epoch[$i] - $wait_epoch[$i]);
-			if ( ($wait_sec[$i] < 0) || ($wait_sec[$i] > 43999) ) 
-				{
-				$DBout = "Override output: $wait_sec[$i]"; 
-				$wait_sec[$i] = 0;
-				}
-			if ($DBX) {print "$i - $agent_log_id[$i]     |$talk_epoch[$i]|$wait_epoch[$i]|$wait_sec[$i]|$DBout|\n";}
-			$i++;
-			} 
-    $sthA->finish();
-    
-	$h=0;
-	while ($h < $i)
-		{
-		$stmtA = "UPDATE vicidial_agent_log set wait_sec='$wait_sec[$h]' where agent_log_id='$agent_log_id[$h]';";
-			if($DBX){print STDERR "\n|$stmtA|\n";}
-		if ($TEST < 1)	{$affected_rows = $dbhA->do($stmtA); }
-		$h++;
-		}
-	if ($DB) {print STDERR "     Wait times fixed: $h\n";}
-
-
-	@agent_log_id=@MT;
-	@talk_epoch=@MT;
-
-	if ($DBX) {print "\n\n";}
-	if ($DB) {print " - cleaning up talk time\n";}
-	### Grab any pause time record greater than 43999
-	$stmtA = "SELECT agent_log_id,talk_epoch,dispo_epoch from vicidial_agent_log where talk_sec>43999 $VDAD_SQL_time;";
-		if ($DBX) {print "$stmtA\n";}
-
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	
-	       $i=0;
-		   while ( $sthArows > $i)
-			{
-		    @aryA = $sthA->fetchrow_array;		
-			$DBout = '';
-			$agent_log_id[$i]	=	"$aryA[0]";
-			$talk_epoch[$i]	=		"$aryA[1]";
-			$dispo_epoch[$i]	=	"$aryA[2]";
-			$talk_sec[$i] = int($dispo_epoch[$i] - $talk_epoch[$i]);
-			if ( ($talk_sec[$i] < 0) || ($talk_sec[$i] > 43999) ) 
-				{
-				$DBout = "Override output: $talk_sec[$i]"; 
-				$talk_sec[$i] = 0;
-				}
-			if ($DBX) {print "$i - $agent_log_id[$i]     |$dispo_epoch[$i]|$talk_epoch[$i]|$talk_sec[$i]|$DBout|\n";}
-			$i++;
-			} 
-    $sthA->finish();
-     
-	$h=0;
-	while ($h < $i)
-		{
-		$stmtA = "UPDATE vicidial_agent_log set talk_sec='$talk_sec[$h]' where agent_log_id='$agent_log_id[$h]';";
-			if($DBX){print STDERR "|$stmtA|\n";}
-		if ($TEST < 1)	{$affected_rows = $dbhA->do($stmtA);  }
-		$h++;
-		}
-	if ($DB) {print STDERR "     Talk times fixed: $h\n";}
-
-
-
-	@agent_log_id=@MT;
-	@dispo_epoch=@MT;
-
-	if ($DBX) {print "\n\n";}
-	if ($DB) {print " - cleaning up dispo time\n";}
-		$stmtA = "UPDATE vicidial_agent_log set dispo_sec='0' where dispo_sec>43999 $VDAD_SQL_time;";
-			if($DBX){print STDERR "|$stmtA|\n";}
-	if ($TEST < 1)
-		{
-		$affected_rows = $dbhA->do($stmtA); 	
-	    }
-	if ($DB) {print STDERR "     Bad Dispo times zeroed out: $affected_rows\n";}
-
-
-
-
-
-
-
+$dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
+or die "Couldn't connect to database: " . DBI->errstr;
 
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
@@ -370,19 +228,236 @@ $sthArows=$sthA->rows;
 $rec_count=0;
 while ($sthArows > $rec_count)
 	{
-	 @aryA = $sthA->fetchrow_array;
-		$enable_queuemetrics_logging =	"$aryA[0]";
-		$queuemetrics_server_ip	=	"$aryA[1]";
-		$queuemetrics_dbname =		"$aryA[2]";
-		$queuemetrics_login=		"$aryA[3]";
-		$queuemetrics_pass =		"$aryA[4]";
-		$queuemetrics_log_id =		"$aryA[5]";
-		$queuemetrics_eq_prepend =	"$aryA[6]";
-	 $rec_count++;
+	@aryA = $sthA->fetchrow_array;
+	$enable_queuemetrics_logging =	"$aryA[0]";
+	$queuemetrics_server_ip	=	"$aryA[1]";
+	$queuemetrics_dbname =		"$aryA[2]";
+	$queuemetrics_login=		"$aryA[3]";
+	$queuemetrics_pass =		"$aryA[4]";
+	$queuemetrics_log_id =		"$aryA[5]";
+	$queuemetrics_eq_prepend =	"$aryA[6]";
+	$rec_count++;
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
 ###########################################
+
+
+### BEGIN FIX LOGIN/LAGGED PAUSEREASON ENTRIES
+if ( ($enable_queuemetrics_logging > 0) && ($login_lagged_check > 0) )
+	{
+	if ($DB) {print " - Checking for LOGIN and LAGGED pausereason records in queue_log\n";}
+
+	$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+	 or die "Couldn't connect to database: " . DBI->errstr;
+
+	if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+	$PAUSEREASONinsert=0;
+	##############################################################
+	##### grab all queue_log entries for AGENTLOGIN verb to validate
+	$stmtB = "SELECT time_id,agent,verb,serverid FROM queue_log where verb='AGENTLOGIN' and serverid='$queuemetrics_log_id' $QM_SQL_time order by time_id;";
+	$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+	$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+	$EQ_records=$sthB->rows;
+	if ($DB) {print "ENTERQUEUE Records: $EQ_records|$stmtB|\n\n";}
+	$h=0;
+	while ($EQ_records > $h)
+		{
+		@aryB = $sthB->fetchrow_array;
+		$time_id[$h] =	"$aryB[0]";
+		$agent[$h] =	"$aryB[1]";
+		$verb[$h] =		"$aryB[2]";
+		$serverid[$h] =	"$aryB[3]";
+		$h++;
+		}
+	$sthB->finish();
+
+	$h=0;
+	while ($EQ_records > $h)
+		{
+		$PRtimecheck = ($time_id[$h] + 1);
+		$PRtimecheckCOUNT=0;
+		##### find the CONNECT details for calls that were sent to agents
+		$stmtB = "SELECT count(*) FROM queue_log where verb='PAUSEREASON' and time_id='$PRtimecheck' and agent='$agent[$h]';";
+		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+		$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+		$CQ_records=$sthB->rows;
+		if ($CQ_records > 0)
+			{
+			@aryB = $sthB->fetchrow_array;
+			$PRtimecheckCOUNT =		"$aryB[0]";
+			}
+		$sthB->finish();
+
+		if ($PRtimecheckCOUNT < 1)
+			{
+			##### insert a PAUSEREASON record for this call into the queue_log
+			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$PRtimecheck',call_id='NONE',queue='NONE',agent='$agent[$h]',verb='PAUSEREASON',data1='LOGIN',serverid='$serverid[$h]';";
+			if ($TEST < 1)
+				{
+				$Baffected_rows = $dbhB->do($stmtB);
+				}
+			if ($DB) {print "PRI: $Baffected_rows|$stmtB|\n";}
+			$PAUSEREASONinsert++;
+			}
+		$h++;
+		}
+
+	if ($DB) {print " - DONE Checking for LOGIN and LAGGED pausereason records in queue_log\n";}
+
+	exit;
+	}
+### END FIX LOGIN/LAGGED PAUSEREASON ENTRIES
+
+
+
+
+
+if ($DB) {print " - cleaning up pause time\n";}
+### Grab any pause time record greater than 43999
+$stmtA = "SELECT agent_log_id,pause_epoch,wait_epoch from vicidial_agent_log where pause_sec>43999 $VDAD_SQL_time;";
+if ($DBX) {print "$stmtA\n";}
+#$dbhA->query("$stmtA");
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+
+$i=0;
+while ($sthArows > $i)
+	{
+	@aryA = $sthA->fetchrow_array;	
+	$DBout = '';
+	$agent_log_id[$i]	=		"$aryA[0]";
+	$pause_epoch[$i]	=		"$aryA[1]";
+	$wait_epoch[$i]	=			"$aryA[2]";
+	$pause_sec[$i] = int($wait_epoch[$i] - $pause_epoch[$i]);
+	if ( ($pause_sec[$i] < 0) || ($pause_sec[$i] > 43999) ) 
+		{
+		$DBout = "Override output: $pause_sec[$i]"; 
+		$pause_sec[$i] = 0;
+		}
+	if ($DBX) {print "$i - $agent_log_id[$i]     |$wait_epoch[$i]|$pause_epoch[$i]|$pause_sec[$i]|$DBout|\n";}
+	$i++;
+	} 
+
+$sthA->finish();
+		   
+$h=0;
+while ($h < $i)
+	{
+	$stmtA = "UPDATE vicidial_agent_log set pause_sec='$pause_sec[$h]' where agent_log_id='$agent_log_id[$h]';";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+	if ($TEST < 1)	{$affected_rows = $dbhA->do($stmtA); }
+	$h++;
+	}
+if ($DB) {print STDERR "     Pause times fixed: $h\n";}
+
+
+@agent_log_id=@MT;
+@wait_epoch=@MT;
+
+if ($DBX) {print "\n\n";}
+if ($DB) {print " - cleaning up wait time\n";}
+### Grab any pause time record greater than 43999
+$stmtA = "SELECT agent_log_id,wait_epoch,talk_epoch from vicidial_agent_log where wait_sec>43999 $VDAD_SQL_time;";
+	if ($DBX) {print "$stmtA\n";}
+
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+		
+$i=0;
+while ( $sthArows > $i)
+	{
+	@aryA = $sthA->fetchrow_array;		
+	$DBout = '';
+	$agent_log_id[$i]	=		"$aryA[0]";
+	$wait_epoch[$i]	=		    "$aryA[1]";
+	$talk_epoch[$i]	=			"$aryA[2]";
+	$wait_sec[$i] = int($talk_epoch[$i] - $wait_epoch[$i]);
+	if ( ($wait_sec[$i] < 0) || ($wait_sec[$i] > 43999) ) 
+		{
+		$DBout = "Override output: $wait_sec[$i]"; 
+		$wait_sec[$i] = 0;
+		}
+	if ($DBX) {print "$i - $agent_log_id[$i]     |$talk_epoch[$i]|$wait_epoch[$i]|$wait_sec[$i]|$DBout|\n";}
+	$i++;
+	} 
+$sthA->finish();
+
+$h=0;
+while ($h < $i)
+	{
+	$stmtA = "UPDATE vicidial_agent_log set wait_sec='$wait_sec[$h]' where agent_log_id='$agent_log_id[$h]';";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+	if ($TEST < 1)	{$affected_rows = $dbhA->do($stmtA); }
+	$h++;
+	}
+if ($DB) {print STDERR "     Wait times fixed: $h\n";}
+
+
+@agent_log_id=@MT;
+@talk_epoch=@MT;
+
+if ($DBX) {print "\n\n";}
+if ($DB) {print " - cleaning up talk time\n";}
+### Grab any pause time record greater than 43999
+$stmtA = "SELECT agent_log_id,talk_epoch,dispo_epoch from vicidial_agent_log where talk_sec>43999 $VDAD_SQL_time;";
+	if ($DBX) {print "$stmtA\n";}
+
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+	
+$i=0;
+while ( $sthArows > $i)
+	{
+	@aryA = $sthA->fetchrow_array;		
+	$DBout = '';
+	$agent_log_id[$i]	=	"$aryA[0]";
+	$talk_epoch[$i]	=		"$aryA[1]";
+	$dispo_epoch[$i]	=	"$aryA[2]";
+	$talk_sec[$i] = int($dispo_epoch[$i] - $talk_epoch[$i]);
+	if ( ($talk_sec[$i] < 0) || ($talk_sec[$i] > 43999) ) 
+		{
+		$DBout = "Override output: $talk_sec[$i]"; 
+		$talk_sec[$i] = 0;
+		}
+	if ($DBX) {print "$i - $agent_log_id[$i]     |$dispo_epoch[$i]|$talk_epoch[$i]|$talk_sec[$i]|$DBout|\n";}
+	$i++;
+	} 
+$sthA->finish();
+ 
+$h=0;
+while ($h < $i)
+	{
+	$stmtA = "UPDATE vicidial_agent_log set talk_sec='$talk_sec[$h]' where agent_log_id='$agent_log_id[$h]';";
+		if($DBX){print STDERR "|$stmtA|\n";}
+	if ($TEST < 1)	{$affected_rows = $dbhA->do($stmtA);  }
+	$h++;
+	}
+if ($DB) {print STDERR "     Talk times fixed: $h\n";}
+
+
+
+@agent_log_id=@MT;
+@dispo_epoch=@MT;
+
+if ($DBX) {print "\n\n";}
+if ($DB) {print " - cleaning up dispo time\n";}
+	$stmtA = "UPDATE vicidial_agent_log set dispo_sec='0' where dispo_sec>43999 $VDAD_SQL_time;";
+		if($DBX){print STDERR "|$stmtA|\n";}
+if ($TEST < 1)
+	{
+	$affected_rows = $dbhA->do($stmtA); 	
+	}
+if ($DB) {print STDERR "     Bad Dispo times zeroed out: $affected_rows\n";}
+
+
+
+
+
 if ($enable_queuemetrics_logging > 0)
 	{
 	$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
@@ -390,16 +465,16 @@ if ($enable_queuemetrics_logging > 0)
 
 	if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-
-
 	if ($skip_queue_log_inserts < 1)
 		{
 		$COMPLETEinsert=0;
 		$COMPLETEupdate=0;
+		$COMPLETEqueue=0;
 		$CONNECTinsert=0;
 		$noCONNECT=0;
 		$noCALLSTATUS=0;
 		$noCOMPLETEinsert=0;
+
 		##############################################################
 		##### grab all queue_log entries for ENTERQUEUE verb to validate
 		$stmtB = "SELECT time_id,call_id,queue,agent,verb,serverid FROM queue_log where verb='ENTERQUEUE' and serverid='$queuemetrics_log_id' $QM_SQL_time order by time_id;";
@@ -641,6 +716,58 @@ if ($enable_queuemetrics_logging > 0)
 			}
 		}
 	
+
+
+	##############################################################
+	##### grab all queue_log entries for COMPLETEAGENT verb to validate queue
+	$stmtB = "SELECT time_id,call_id,queue,agent,serverid FROM queue_log where verb='COMPLETEAGENT' and serverid='$queuemetrics_log_id' $QM_SQL_time order by time_id;";
+	$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+	$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+	$EQ_records=$sthB->rows;
+	if ($DB) {print "COMPLETEAGENT Records: $EQ_records|$stmtB|\n\n";}
+	$h=0;
+	while ($EQ_records > $h)
+		{
+		@aryB = $sthB->fetchrow_array;
+		$time_id[$h] =	"$aryB[0]";
+		$call_id[$h] =	"$aryB[1]";
+		$queue[$h] =	"$aryB[2]";
+		$agent[$h] =	"$aryB[3]";
+		$serverid[$h] =	"$aryB[4]";
+		$h++;
+		}
+	$sthB->finish();
+
+	$h=0;
+	while ($EQ_records > $h)
+		{
+		if (length($queue[$h])<1)
+			{
+			$CAQqueue[$h]='';
+			##### find queue ID for this call
+			$stmtB = "SELECT queue FROM queue_log WHERE verb='CONNECT' and serverid='$queuemetrics_log_id' and call_id='$call_id[$h]' and agent='$agent[$h]';";
+			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+			$MXC_records=$sthB->rows;
+			if ($MXC_records > 0)
+				{
+				@aryB = $sthB->fetchrow_array;
+				$CAQqueue[$h] =	$aryB[0];
+				}
+			$sthB->finish();
+
+			##### update queue ID in this COMPLETEAGENT record
+			$stmtB = "UPDATE queue_log SET queue='$CAQqueue[$h]' WHERE verb='COMPLETEAGENT' and serverid='$queuemetrics_log_id' and time_id='$time_id[$h]' and call_id='$call_id[$h]';";
+			if ($TEST < 1)	
+				{
+				$Baffected_rows = $dbhB->do($stmtB);
+				$COMPLETEqueue = ($COMPLETEqueue + $Baffected_rows);
+				}
+			if ($DB) {print "COMPLETEAGENT Record Updated: $Baffected_rows|$stmtB|\n\n";}
+			}
+		$h++;
+		}
+
 
 
 	#######################################################################
