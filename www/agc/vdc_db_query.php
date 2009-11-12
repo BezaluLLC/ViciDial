@@ -220,10 +220,11 @@
 # 91019-1224 - Fixed auto-alt-dial DNC issues
 # 91026-1101 - Added AREACODE DNC option
 # 91108-2120 - Fixed QM log issue with PAUSEREASON entries
+# 91112-1107 - Changed ENTERQUEUE to CALLOUTBOUND for QM logging
 #
 
-$version = '2.2.0-129';
-$build = '91108-2120';
+$version = '2.2.0-130';
+$build = '91112-1107';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=256;
 $one_mysql_log=0;
@@ -1766,8 +1767,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00038',$user,$server_ip,$session_name,$one_mysql_log);}
 					$affected_rows = mysql_affected_rows($linkB);
 
-					# ENTERQUEUE
-					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$MqueryCID',queue='$campaign',agent='NONE',verb='ENTERQUEUE',data2='$phone_number',serverid='$queuemetrics_log_id';";
+					# CALLOUTBOUND (formerly ENTERQUEUE)
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$MqueryCID',queue='$campaign',agent='NONE',verb='CALLOUTBOUND',data2='$phone_number',serverid='$queuemetrics_log_id';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00039',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -2098,8 +2099,8 @@ if ($ACTION == 'manDiaLonly')
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00049',$user,$server_ip,$session_name,$one_mysql_log);}
 			$affected_rows = mysql_affected_rows($linkB);
 
-			# ENTERQUEUE
-			$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$MqueryCID',queue='$campaign',agent='NONE',verb='ENTERQUEUE',data2='$phone_number',serverid='$queuemetrics_log_id';";
+			# CALLOUTBOUND (formerly ENTERQUEUE)
+			$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$MqueryCID',queue='$campaign',agent='NONE',verb='CALLOUTBOUND',data2='$phone_number',serverid='$queuemetrics_log_id';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00050',$user,$server_ip,$session_name,$one_mysql_log);}

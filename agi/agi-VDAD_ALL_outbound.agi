@@ -69,6 +69,7 @@
 # 90808-0307 - Added longest_wait_time as agent routing option
 # 90827-1535 - Added proper logging of list_id in vicidial_log table
 # 90924-1605 - Added drop_inbound_group_override list_id option
+# 91112-1101 - Changed ENTERQUEUE to CALLOUTBOUND in QM logging for outbound calls
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -680,7 +681,7 @@ if ($affected_rows > 0)
 
 		if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-		$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='ENTERQUEUE',data2='$data2',serverid='$queuemetrics_log_id';";
+		$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='CALLOUTBOUND',data2='$data2',serverid='$queuemetrics_log_id';";
 		$Baffected_rows = $dbhB->do($stmtB);
 			$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01012';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 		$dbhB->disconnect();

@@ -91,10 +91,11 @@
 # 90913-1410 - Fixed minor logging bug
 # 90916-1830 - Added nodeletevdac
 # 90924-1555 - Added am_message_exten_override  for list_id option
+# 91112-1110 - Added CALLOUTBOUND value to QM entry lookup
 #
 
-$version = '2.2.0-43';
-$build = '90924-1555';
+$version = '2.2.0-44';
+$build = '91112-1110';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -645,7 +646,7 @@ $rslt=mysql_query($stmt, $link);
 							if ($caller_complete < 1)
 								{
 								$time_id=0;
-								$stmt="SELECT time_id from queue_log where call_id='$CalLCID' and verb='ENTERQUEUE' and queue='$CLcampaign_id';";
+								$stmt="SELECT time_id from queue_log where call_id='$CalLCID' and verb IN('ENTERQUEUE','CALLOUTBOUND') and queue='$CLcampaign_id';";
 								$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02018',$user,$server_ip,$session_name,$one_mysql_log);}
 								$VAC_eq_ct = mysql_num_rows($rslt);

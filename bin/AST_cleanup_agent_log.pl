@@ -18,7 +18,8 @@
 # 81029-0124 - Added portion to clean up queue_log entries if QM enabled
 # 81114-0155 - Added portion to remove queue_log COMPLETE duplicates
 # 81208-0133 - Added portion to check for more missing queue_log entries
-# 90330-2128 - minor code fixes and restricted queue_log actions to VICIDIAL-defined serverid records
+# 90330-2128 - Minor code fixes and restricted queue_log actions to VICIDIAL-defined serverid records
+# 91112-1100 - Added fixing for more QM issues, added CALLOUTBOUND checking with ENTERQUEUE
 #
 
 # constants
@@ -260,7 +261,7 @@ if ( ($enable_queuemetrics_logging > 0) && ($login_lagged_check > 0) )
 	$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 	$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 	$EQ_records=$sthB->rows;
-	if ($DB) {print "ENTERQUEUE Records: $EQ_records|$stmtB|\n\n";}
+	if ($DB) {print "AGENTLOGIN Records: $EQ_records|$stmtB|\n\n";}
 	$h=0;
 	while ($EQ_records > $h)
 		{
@@ -477,7 +478,7 @@ if ($enable_queuemetrics_logging > 0)
 
 		##############################################################
 		##### grab all queue_log entries for ENTERQUEUE verb to validate
-		$stmtB = "SELECT time_id,call_id,queue,agent,verb,serverid FROM queue_log where verb='ENTERQUEUE' and serverid='$queuemetrics_log_id' $QM_SQL_time order by time_id;";
+		$stmtB = "SELECT time_id,call_id,queue,agent,verb,serverid FROM queue_log where verb IN('ENTERQUEUE','CALLOUTBOUND') and serverid='$queuemetrics_log_id' $QM_SQL_time order by time_id;";
 		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 		$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 		$EQ_records=$sthB->rows;
