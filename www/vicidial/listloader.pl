@@ -20,65 +20,70 @@
 # 80428-0144 - UTF8 cleanup
 # 80713-0023 - added last_local_call_time field default of 2008-01-01
 # 90721-1425 - Added rank and owner as vicidial_list fields
+# 91112-0616 - Added title/alt-phone duplicate checking
 #
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
 
 	if ($args =~ /--help|-h/i)
-	{
-	print "allowed run time options:\n  [-forcelistid=1234] = overrides the listID given in the file with the 1234\n  [-h] = this help screen\n\n";
+		{
+		print "allowed run time options:\n  [-forcelistid=1234] = overrides the listID given in the file with the 1234\n  [-h] = this help screen\n\n";
 
-	exit;
-	}
+		exit;
+		}
 	else
-	{
+		{
 		if ($args =~ /-duplicate-check/i)
 			{$dupcheck=1;}
 		if ($args =~ /-duplicate-campaign-check/i)
 			{$dupcheckcamp=1;}
 		if ($args =~ /-duplicate-system-check/i)
 			{$dupchecksys=1;}
+		if ($args =~ /-duplicate-tap-list-check/i)
+			{$duptapchecklist=1;}
+		if ($args =~ /-duplicate-tap-system-check/i)
+			{$duptapchecksys=1;}
 		if ($args =~ /-postal-code-gmt/i)
 			{$postalgmt=1;}
 		if ($args =~ /--forcelistid=/i)
-		{
-		@data_in = split(/--forcelistid=/,$args);
+			{
+			@data_in = split(/--forcelistid=/,$args);
 			$forcelistid = $data_in[1];
 			$forcelistid =~ s/ .*//gi;
-		print "\n----- FORCE LISTID OVERRIDE: $forcelistid -----\n\n";
-		}
+			print "\n----- FORCE LISTID OVERRIDE: $forcelistid -----\n\n";
+			}
 		else
 			{$forcelistid = '';}
 
 		if ($args =~ /--forcephonecode=/i)
-		{
-		@data_in = split(/--forcephonecode=/,$args);
+			{
+			@data_in = split(/--forcephonecode=/,$args);
 			$forcephonecode = $data_in[1];
 			$forcephonecode =~ s/ .*//gi;
-		print "\n----- FORCE PHONECODE OVERRIDE: $forcephonecode -----\n\n";
-		}
+			print "\n----- FORCE PHONECODE OVERRIDE: $forcephonecode -----\n\n";
+			}
 		else
 			{$forcephonecode = '';}
 
 		if ($args =~ /--lead-file=/i)
-		{
-		@data_in = split(/--lead-file=/,$args);
+			{
+			@data_in = split(/--lead-file=/,$args);
 			$lead_file = $data_in[1];
 			$lead_file =~ s/ .*//gi;
-	#	print "\n----- LEAD FILE: $lead_file -----\n\n";
-		}
+		#	print "\n----- LEAD FILE: $lead_file -----\n\n";
+			}
 		else
 			{$lead_file = './vicidial_temp_file.xls';}
+		}
 	}
-}
 ### end parsing run-time options ###
 
 
@@ -375,10 +380,57 @@ foreach $oWkS (@{$oBook->{Worksheet}}) {
 					{$dup_lead++;}
 				}
 			}
+		##### Check for duplicate title/alt-phone in vicidial_list table entire database #####
+		if ($duptapchecksys > 0)
+			{
+			$dup_lead=0;
+			$stmtA = "select count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone';";
+				if($DBX){print STDERR "\n|$stmtA|\n";}
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$dup_lead = $aryA[0];
+				$dup_lead_list=$list_id;
+				}
+			$sthA->finish();
+			if ($dup_lead < 1)
+				{
+				if ($phone_list =~ /\|$alt_phone$title$US$list_id\|/)
+					{$dup_lead++;}
+				}
+			}
+		##### Check for duplicate title/alt-phone in vicidial_list table for one list_id #####
+		if ($duptapchecklist > 0)
+			{
+			$dup_lead=0;
+			$stmtA = "select list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' limit 1;";
+				if($DBX){print STDERR "\n|$stmtA|\n";}
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$dup_lead_list = $aryA[0];
+				$dup_lead++;
+				}
+			$sthA->finish();
+			if ($dup_lead < 1)
+				{
+				if ($phone_list =~ /\|$alt_phone$title$US$list_id\|/)
+					{$dup_lead++;}
+				}
+			}
 
 		if ( (length($phone_number)>6) && ($dup_lead < 1) )
 			{
-			$phone_list .= "$phone_number$US$list_id|";
+			if ( ($duptapchecklist > 0) || ($duptapchecksys > 0) )
+				{$phone_list .= "$alt_phone$title$US$list_id|";}
+			else
+				{$phone_list .= "$phone_number$US$list_id|";}
 			$postalgmt_found=0;
 			if (length($phone_code)<1) {$phone_code = '1';}
 

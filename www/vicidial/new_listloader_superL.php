@@ -28,11 +28,12 @@
 # 90508-0644 - Changed to PHP long tags
 # 90522-0506 - Security fix
 # 90721-1339 - Added rank and owner as vicidial_list fields
+# 91112-0616 - Added title/alt-phone duplicate checking
 #
 # make sure vicidial_list exists and that your file follows the formatting correctly. This page does not dedupe or do any other lead filtering actions yet at this time.
 
-$version = '2.2.0-32';
-$build = '90721-1339';
+$version = '2.2.0-33';
+$build = '91112-0616';
 
 
 require("dbconnect.php");
@@ -41,6 +42,8 @@ require("dbconnect.php");
 #$link=mysql_connect("10.10.10.15", "cron", "1234");
 #mysql_select_db("asterisk");
 #$WeBServeRRooT = '/home/www/htdocs';
+
+$US='_';
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -369,6 +372,8 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 	<option value="DUPLIST">CHECK FOR DUPLICATES BY PHONE IN LIST ID</option>
 	<option value="DUPCAMP">CHECK FOR DUPLICATES BY PHONE IN ALL CAMPAIGN LISTS</option>
 	<option value="DUPSYS">CHECK FOR DUPLICATES BY PHONE IN ENTIRE SYSTEM</option>
+	<option value="DUPTITLEALTPHONELIST">CHECK FOR DUPLICATES BY TITLE/ALT-PHONE IN LIST ID</option>
+	<option value="DUPTITLEALTPHONESYS">CHECK FOR DUPLICATES BY TITLE/ALT-PHONE IN ENTIRE SYSTEM</option>
 	</select></td>
   </tr>
   <tr>
@@ -556,12 +561,55 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 								}
 							}
 
+						##### Check for duplicate title and alt-phone in vicidial_list table for one list_id #####
+						if (eregi("DUPTITLEALTPHONELIST",$dupcheck))
+							{
+							$dup_lead=0;
+							$stmt="select count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id';";
+							$rslt=mysql_query($stmt, $link);
+							$pc_recs = mysql_num_rows($rslt);
+							if ($pc_recs > 0)
+								{
+								$row=mysql_fetch_row($rslt);
+								$dup_lead =			$row[0];
+								$dup_lead_list =	$list_id;
+								}
+							if ($dup_lead < 1)
+								{
+								if (eregi("$alt_phone$title$US$list_id",$phone_list))
+									{$dup_lead++; $dup++;}
+								}
+							}
+
+						##### Check for duplicate phone numbers in vicidial_list table entire database #####
+						if (eregi("DUPTITLEALTPHONESYS",$dupcheck))
+							{
+							$dup_lead=0;
+							$stmt="select list_id from vicidial_list where title='$title' and alt_phone='$alt_phone';";
+							$rslt=mysql_query($stmt, $link);
+							$pc_recs = mysql_num_rows($rslt);
+							if ($pc_recs > 0)
+								{
+								$dup_lead=1;
+								$row=mysql_fetch_row($rslt);
+								$dup_lead_list =	$row[0];
+								}
+							if ($dup_lead < 1)
+								{
+								if (eregi("$alt_phone$title$US$list_id",$phone_list))
+									{$dup_lead++; $dup++;}
+								}
+							}
+
+
 						if ( (strlen($phone_number)>6) and ($dup_lead<1) )
 							{
 							if (strlen($phone_code)<1) {$phone_code = '1';}
 
-							$US='_';
-							$phone_list .= "$phone_number$US$list_id|";
+							if (eregi("TITLEALTPHONE",$dupcheck))
+								{$phone_list .= "$alt_phone$title$US$list_id|";}
+							else
+								{$phone_list .= "$phone_number$US$list_id|";}
 
 							$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
 
@@ -622,6 +670,8 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 			if (eregi("DUPLIST",$dupcheck)) {$dupcheckCLI='--duplicate-check';}
 			if (eregi("DUPCAMP",$dupcheck)) {$dupcheckCLI='--duplicate-campaign-check';}
 			if (eregi("DUPSYS",$dupcheck)) {$dupcheckCLI='--duplicate-system-check';}
+			if (eregi("DUPTITLEALTPHONELIST",$dupcheck)) {$dupcheckCLI='--duplicate-tap-list-check';}
+			if (eregi("DUPTITLEALTPHONESYS",$dupcheck)) {$dupcheckCLI='--duplicate-tap-system-check';}
 			if (eregi("POSTAL",$postalgmt)) {$postalgmtCLI='--postal-code-gmt';}
 			passthru("$WeBServeRRooT/vicidial/listloader_super.pl $vendor_lead_code_field,$source_id_field,$list_id_field,$phone_code_field,$phone_number_field,$title_field,$first_name_field,$middle_initial_field,$last_name_field,$address1_field,$address2_field,$address3_field,$city_field,$state_field,$province_field,$postal_code_field,$country_code_field,$gender_field,$date_of_birth_field,$alt_phone_field,$email_field,$security_phrase_field,$comments_field,$rank_field,$owner_field, --forcelistid=$list_id_override --forcephonecode=$phone_code_override --lead-file=$lead_file $postalgmtCLI $dupcheckCLI");
 		} else {
@@ -774,12 +824,55 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 							}
 						}
 
+					##### Check for duplicate title and alt-phone in vicidial_list table for one list_id #####
+					if (eregi("DUPTITLEALTPHONELIST",$dupcheck))
+						{
+						$dup_lead=0;
+						$stmt="select count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id';";
+						$rslt=mysql_query($stmt, $link);
+						$pc_recs = mysql_num_rows($rslt);
+						if ($pc_recs > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$dup_lead =			$row[0];
+							$dup_lead_list =	$list_id;
+							}
+						if ($dup_lead < 1)
+							{
+							if (eregi("$alt_phone$title$US$list_id",$phone_list))
+								{$dup_lead++; $dup++;}
+							}
+						}
+
+					##### Check for duplicate phone numbers in vicidial_list table entire database #####
+					if (eregi("DUPTITLEALTPHONESYS",$dupcheck))
+						{
+						$dup_lead=0;
+						$stmt="select list_id from vicidial_list where title='$title' and alt_phone='$alt_phone';";
+						$rslt=mysql_query($stmt, $link);
+						$pc_recs = mysql_num_rows($rslt);
+						if ($pc_recs > 0)
+							{
+							$dup_lead=1;
+							$row=mysql_fetch_row($rslt);
+							$dup_lead_list =	$row[0];
+							}
+						if ($dup_lead < 1)
+							{
+							if (eregi("$alt_phone$title$US$list_id",$phone_list))
+								{$dup_lead++; $dup++;}
+							}
+						}
+
 					if ( (strlen($phone_number)>6) and ($dup_lead<1) )
 						{
 						if (strlen($phone_code)<1) {$phone_code = '1';}
 
-						$US='_';
-						$phone_list .= "$phone_number$US$list_id|";
+						if (eregi("TITLEALTPHONE",$dupcheck))
+							{$phone_list .= "$alt_phone$title$US$list_id|";}
+						else
+							{$phone_list .= "$phone_number$US$list_id|";}
+
 
 						$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
 
@@ -1006,14 +1099,57 @@ if ($leadfile) {
 							}
 						}
 
+					##### Check for duplicate title and alt-phone in vicidial_list table for one list_id #####
+					if (eregi("DUPTITLEALTPHONELIST",$dupcheck))
+						{
+						$dup_lead=0;
+						$stmt="select count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id';";
+						$rslt=mysql_query($stmt, $link);
+						$pc_recs = mysql_num_rows($rslt);
+						if ($pc_recs > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$dup_lead =			$row[0];
+							$dup_lead_list =	$list_id;
+							}
+						if ($dup_lead < 1)
+							{
+							if (eregi("$alt_phone$title$US$list_id",$phone_list))
+								{$dup_lead++; $dup++;}
+							}
+						}
+
+					##### Check for duplicate phone numbers in vicidial_list table entire database #####
+					if (eregi("DUPTITLEALTPHONESYS",$dupcheck))
+						{
+						$dup_lead=0;
+						$stmt="select list_id from vicidial_list where title='$title' and alt_phone='$alt_phone';";
+						$rslt=mysql_query($stmt, $link);
+						$pc_recs = mysql_num_rows($rslt);
+						if ($pc_recs > 0)
+							{
+							$dup_lead=1;
+							$row=mysql_fetch_row($rslt);
+							$dup_lead_list =	$row[0];
+							}
+						if ($dup_lead < 1)
+							{
+							if (eregi("$alt_phone$title$US$list_id",$phone_list))
+								{$dup_lead++; $dup++;}
+							}
+						}
+
 					if ( (strlen($phone_number)>6) and ($dup_lead<1) )
 						{
 						if (strlen($phone_code)<1) {$phone_code = '1';}
 
-							$US='_';
-							$phone_list .= "$phone_number$US$list_id|";
+						if (eregi("TITLEALTPHONE",$dupcheck))
+							{$phone_list .= "$alt_phone$title$US$list_id|";}
+						else
+							{$phone_list .= "$phone_number$US$list_id|";}
 
-							$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
+
+						$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
 
 
 						if ($multi_insert_counter > 8) {
@@ -1074,6 +1210,8 @@ if ($leadfile) {
 		if (eregi("DUPLIST",$dupcheck)) {$dupcheckCLI='--duplicate-check';}
 		if (eregi("DUPCAMP",$dupcheck)) {$dupcheckCLI='--duplicate-campaign-check';}
 		if (eregi("DUPSYS",$dupcheck)) {$dupcheckCLI='--duplicate-system-check';}
+		if (eregi("DUPTITLEALTPHONELIST",$dupcheck)) {$dupcheckCLI='--duplicate-tap-list-check';}
+		if (eregi("DUPTITLEALTPHONESYS",$dupcheck)) {$dupcheckCLI='--duplicate-tap-system-check';}
 		if (eregi("POSTAL",$postalgmt)) {$postalgmtCLI='--postal-code-gmt';}
 		passthru("$WeBServeRRooT/vicidial/listloader.pl --forcelistid=$list_id_override --forcephonecode=$phone_code_override --lead-file=$lead_file  $postalgmtCLI $dupcheckCLI");
 	
@@ -1234,12 +1372,54 @@ if ($leadfile) {
 							}
 						}
 
+					##### Check for duplicate title and alt-phone in vicidial_list table for one list_id #####
+					if (eregi("DUPTITLEALTPHONELIST",$dupcheck))
+						{
+						$dup_lead=0;
+						$stmt="select count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id';";
+						$rslt=mysql_query($stmt, $link);
+						$pc_recs = mysql_num_rows($rslt);
+						if ($pc_recs > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$dup_lead =			$row[0];
+							$dup_lead_list =	$list_id;
+							}
+						if ($dup_lead < 1)
+							{
+							if (eregi("$alt_phone$title$US$list_id",$phone_list))
+								{$dup_lead++; $dup++;}
+							}
+						}
+
+					##### Check for duplicate phone numbers in vicidial_list table entire database #####
+					if (eregi("DUPTITLEALTPHONESYS",$dupcheck))
+						{
+						$dup_lead=0;
+						$stmt="select list_id from vicidial_list where title='$title' and alt_phone='$alt_phone';";
+						$rslt=mysql_query($stmt, $link);
+						$pc_recs = mysql_num_rows($rslt);
+						if ($pc_recs > 0)
+							{
+							$dup_lead=1;
+							$row=mysql_fetch_row($rslt);
+							$dup_lead_list =	$row[0];
+							}
+						if ($dup_lead < 1)
+							{
+							if (eregi("$alt_phone$title$US$list_id",$phone_list))
+								{$dup_lead++; $dup++;}
+							}
+						}
+
 					if ( (strlen($phone_number)>6) and ($dup_lead<1) )
 						{
 						if (strlen($phone_code)<1) {$phone_code = '1';}
 
-						$US='_';
-						$phone_list .= "$phone_number$US$list_id|";
+						if (eregi("TITLEALTPHONE",$dupcheck))
+							{$phone_list .= "$alt_phone$title$US$list_id|";}
+						else
+							{$phone_list .= "$phone_number$US$list_id|";}
 
 						$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
 
@@ -1371,6 +1551,8 @@ if ($leadfile) {
 				if (eregi("DUPLIST",$dupcheck)) {$dupcheckCLI='--duplicate-check';}
 				if (eregi("DUPCAMP",$dupcheck)) {$dupcheckCLI='--duplicate-campaign-check';}
 				if (eregi("DUPSYS",$dupcheck)) {$dupcheckCLI='--duplicate-system-check';}
+				if (eregi("DUPTITLEALTPHONELIST",$dupcheck)) {$dupcheckCLI='--duplicate-tap-list-check';}
+				if (eregi("DUPTITLEALTPHONESYS",$dupcheck)) {$dupcheckCLI='--duplicate-tap-system-check';}
 				if (eregi("POSTAL",$postalgmt)) {$postalgmtCLI='--postal-code-gmt';}
 				passthru("$WeBServeRRooT/vicidial/listloader_rowdisplay.pl --lead-file=$lead_file $postalgmtCLI $dupcheckCLI");
 			} 

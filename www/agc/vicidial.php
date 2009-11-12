@@ -258,10 +258,11 @@
 # 90928-1955 - Added lead update before closer transfer
 # 90930-2243 - Added Territory selection functions
 # 91108-2118 - Added QM pause code entry
+# 91111-1433 - Fixed Gender pulldown list display for IE, remove links for recording channels in SHOW CHANNELS
 #
 
-$version = '2.2.0-236';
-$build = '91108-2118';
+$version = '2.2.0-237';
+$build = '91111-1433';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -3354,6 +3355,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 									var conv_ct = (loop_ct + conv_start);
 									var channelfieldA = conf_chan_array[conv_ct];
 									var regXFcred = new RegExp(flag_string,"g");
+									var regRNnolink = new RegExp('Local/5' + taskconfnum,"g")
 									if ( (channelfieldA.match(regXFcred)) && (flag_channels>0) )
 										{
 										var chan_name_color = 'log_text_red';
@@ -3368,13 +3370,21 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 										}
 									else
 										{
-										if (volumecontrol_active!=1)
+										if (channelfieldA.match(regRNnolink))
 											{
-											live_conf_HTML = live_conf_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</td><td><font class=\"" + chan_name_color + "\">" + channelfieldA + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + channelfieldA + "');return false;\">HANGUP</a></td><td></td></tr>";
+											// do not show hangup or volume control links for recording channels
+											live_conf_HTML = live_conf_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</td><td><font class=\"" + chan_name_color + "\">" + channelfieldA + "</td><td><font class=\"log_text\">recording</td><td></td></tr>";
 											}
 										else
 											{
-											live_conf_HTML = live_conf_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</td><td><font class=\"" + chan_name_color + "\">" + channelfieldA + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + channelfieldA + "');return false;\">HANGUP</a></td><td><a href=\"#\" onclick=\"volume_control('UP','" + channelfieldA + "','');return false;\"><IMG SRC=\"./images/vdc_volume_up.gif\" BORDER=0></a> &nbsp; <a href=\"#\" onclick=\"volume_control('DOWN','" + channelfieldA + "','');return false;\"><IMG SRC=\"./images/vdc_volume_down.gif\" BORDER=0></a> &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"volume_control('MUTING','" + channelfieldA + "','');return false;\"><IMG SRC=\"./images/vdc_volume_MUTE.gif\" BORDER=0></a> &nbsp; <a href=\"#\" onclick=\"volume_control('UNMUTE','" + channelfieldA + "','');return false;\"><IMG SRC=\"./images/vdc_volume_UNMUTE.gif\" BORDER=0></a></td></tr>";
+											if (volumecontrol_active!=1)
+												{
+												live_conf_HTML = live_conf_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</td><td><font class=\"" + chan_name_color + "\">" + channelfieldA + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + channelfieldA + "');return false;\">HANGUP</a></td><td></td></tr>";
+												}
+											else
+												{
+												live_conf_HTML = live_conf_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</td><td><font class=\"" + chan_name_color + "\">" + channelfieldA + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + channelfieldA + "');return false;\">HANGUP</a></td><td><a href=\"#\" onclick=\"volume_control('UP','" + channelfieldA + "','');return false;\"><IMG SRC=\"./images/vdc_volume_up.gif\" BORDER=0></a> &nbsp; <a href=\"#\" onclick=\"volume_control('DOWN','" + channelfieldA + "','');return false;\"><IMG SRC=\"./images/vdc_volume_down.gif\" BORDER=0></a> &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"volume_control('MUTING','" + channelfieldA + "','');return false;\"><IMG SRC=\"./images/vdc_volume_MUTE.gif\" BORDER=0></a> &nbsp; <a href=\"#\" onclick=\"volume_control('UNMUTE','" + channelfieldA + "','');return false;\"><IMG SRC=\"./images/vdc_volume_UNMUTE.gif\" BORDER=0></a></td></tr>";
+												}
 											}
 										}
 				//		var debugspan = document.getElementById("debugbottomspan").innerHTML;
@@ -6923,6 +6933,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // Generate the Call Disposition Chooser panel
 	function DispoSelectContent_create(taskDSgrp,taskDSstage)
 		{
+		HidEGenDerPulldown();
 		AgentDispoing = 1;
 		var VD_statuses_ct_half = parseInt(VD_statuses_ct / 2);
 		var dispo_HTML = "<table cellpadding=5 cellspacing=5 width=500><tr><td colspan=2><B> CALL DISPOSITION</B></td></tr><tr><td bgcolor=\"#99FF99\" height=300 width=240 valign=top><font class=\"log_text\"><span id=DispoSelectA>";
@@ -6959,6 +6970,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		else
 			{
+			HidEGenDerPulldown();
 			showDiv('PauseCodeSelectBox');
 			WaitingForNextStep=1;
 			PauseCode_HTML = '';
@@ -6988,6 +7000,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // Generate the Group Alias Chooser panel
 	function GroupAliasSelectContent_create(task3way)
 		{
+		HidEGenDerPulldown();
 		showDiv('GroupAliasSelectBox');
 		WaitingForNextStep=1;
 		GroupAlias_HTML = '';
@@ -7233,6 +7246,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	function PauseCodeSelect_submit(newpausecode)
 		{
 		hideDiv('PauseCodeSelectBox');
+		ShoWGenDerPulldown();
+
 		WaitingForNextStep=0;
 
 		var xmlhttp=false;
@@ -7277,6 +7292,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	function GroupAliasSelect_submit(newgroupalias,newgroupcid,newusegroup)
 		{
 		hideDiv('GroupAliasSelectBox');
+		ShoWGenDerPulldown();
 		WaitingForNextStep=0;
 		
 		if (newusegroup > 0)
@@ -7421,6 +7437,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // Generate the Closer In Group Chooser panel
 	function CloserSelectContent_create()
 		{
+		HidEGenDerPulldown();
 		if (VU_agent_choose_ingroups == '1')
 			{
 			var live_CSC_HTML = "<table cellpadding=5 cellspacing=5 width=500><tr><td><B>GROUPS NOT SELECTED</B></td><td><B>SELECTED GROUPS</B></td></tr><tr><td bgcolor=\"#99FF99\" height=300 width=240 valign=top><font class=\"log_text\"><span id=CloserSelectAdd> &nbsp; <a href=\"#\" onclick=\"CloserSelect_change('-----ADD-ALL-----','ADD');return false;\"><B>--- ADD ALL ---</B><BR>";
@@ -7573,6 +7590,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		{
 		if (agent_select_territories == '1')
 			{
+			HidEGenDerPulldown();
 			if (agent_choose_territories > 0)
 				{
 				var live_TERR_HTML = "<table cellpadding=5 cellspacing=5 width=500><tr><td><B>TERRITORIES NOT SELECTED</B></td><td><B>SELECTED TERRITORIES</B></td></tr><tr><td bgcolor=\"#99FF99\" height=300 width=240 valign=top><font class=\"log_text\"><span id=TerritorySelectAdd> &nbsp; <a href=\"#\" onclick=\"TerritorySelect_change('-----ADD-ALL-----','ADD');return false;\"><B>--- ADD ALL ---</B><BR>";
@@ -8530,6 +8548,7 @@ function phone_number_format(formatphone) {
 			}
 		else
 			{
+			HidEGenDerPulldown();
 			showDiv('CloserSelectBox')
 			}
 		}
@@ -8818,7 +8837,10 @@ else
 
 				VtigeRwin.blur();
 				}
-
+			if (INgroupCOUNT > 0)
+				{
+				HidEGenDerPulldown();
+				}
 			VICIDiaL_closer_login_checked = 1;
 			}
 		else
@@ -9377,6 +9399,8 @@ else
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $MAIN_COLOR ?>";
 		hideDiv('ScriptPanel');
 		showDiv('MainPanel');
+		ShoWGenDerPulldown();
+
 		if (resumevar != 'NO')
 			{
 			if (alt_phone_dialing == 1)
@@ -9423,6 +9447,32 @@ else
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $SCRIPT_COLOR ?>";
 		panel_bgcolor='<?php echo $SCRIPT_COLOR ?>';
 		document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
+
+		HidEGenDerPulldown();
+		}
+
+	function HidEGenDerPulldown()
+		{
+		var gIndex = 0;
+		var genderIndex = document.getElementById("gender_list").selectedIndex;
+		var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
+		if (genderValue == 'M') {var gIndex = 1;}
+		if (genderValue == 'F') {var gIndex = 2;}
+		document.getElementById("GENDERhideFORieALT").innerHTML = '<select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
+		document.getElementById("GENDERhideFORie").innerHTML = '';
+		document.getElementById("gender_list").selectedIndex = gIndex;
+		}
+
+	function ShoWGenDerPulldown()
+		{
+		var gIndex = 0;
+		var genderIndex = document.getElementById("gender_list").selectedIndex;
+		var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
+		if (genderValue == 'M') {var gIndex = 1;}
+		if (genderValue == 'F') {var gIndex = 2;}
+		document.getElementById("GENDERhideFORie").innerHTML = '<select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
+		document.getElementById("GENDERhideFORieALT").innerHTML = '';
+		document.getElementById("gender_list").selectedIndex = gIndex;
 		}
 
 	</script>
@@ -9807,7 +9857,7 @@ if ($agent_display_dialable_leads > 0)
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:1000px;z-index:65;" id="GENDERhideFORieALT"></span>
+<span style="position:absolute;left:0px;top:1500px;z-index:65;" id="GENDERhideFORieALT"></span>
 
 
 <span style="position:absolute;left:0px;top:0px;z-index:48;" id="CallBackSelectBox">

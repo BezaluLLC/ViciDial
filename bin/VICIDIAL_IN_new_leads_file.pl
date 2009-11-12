@@ -38,6 +38,7 @@
 # 90802-0758 - Added sctab08 file format
 # 90810-0956 - Added sccsv11 file format
 # 90830-0953 - Added forcelistfilename option
+# 91112-0645 - Added title/alt_phone duplicate checks
 #
 
 $secX = time();
@@ -137,6 +138,8 @@ if (length($ARGV[0])>1)
 		print "  [--duplicate-check] = checks for the same phone number in the same list id before inserting lead\n";
 		print "  [--duplicate-campaign-check] = checks for the same phone number in the same campaign before inserting lead\n";
 		print "  [--duplicate-system-check] = checks for the same phone number in the entire system before inserting lead\n";
+		print "  [--duplicate-tap-list-check] = checks for the same title/alt-number in the same list ID before inserting lead\n";
+		print "  [--duplicate-tap-system-check] = checks for the same title/alt-number in the entire system before inserting lead\n";
 		print "  [--postal-code-gmt] = checks for the time zone based on the postal code given where available\n";
 		print "  [--ftp-pull] = grabs lead files from a remote FTP server, uses REPORTS FTP login information\n";
 		print "  [--ftp-dir=leads_in] = remote FTP server directory to grab files from, should have a DONE sub-directory\n";
@@ -251,6 +254,16 @@ if (length($ARGV[0])>1)
 			{
 			$dupchecksys=1;
 			if ($q < 1) {print "\n----- DUPLICATE SYSTEM CHECK -----\n\n";}
+			}
+		if ($args =~ /-duplicate-tap-list-check/i)
+			{
+			$duptapchecklist=1;
+			if ($q < 1) {print "\n----- DUPLICATE TITLE/ALT-PHONE LIST CHECK -----\n\n";}
+			}
+		if ($args =~ /-duplicate-tap-system-check/i)
+			{
+			$duptapchecksys=1;
+			if ($q < 1) {print "\n----- DUPLICATE TITLE/ALT-PHONE SYSTEM CHECK -----\n\n";}
 			}
 		if ($args =~ /-postal-code-gmt/i)
 			{
@@ -1007,10 +1020,57 @@ foreach(@FILES)
 						{$dup_lead++;}
 					}
 				}
+			##### Check for duplicate title/alt-phone in vicidial_list table entire database #####
+			if ($duptapchecksys > 0)
+				{
+				$dup_lead=0;
+				$stmtA = "select count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone';";
+					if($DBX){print STDERR "\n|$stmtA|\n";}
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$dup_lead = $aryA[0];
+					$dup_lead_list=$list_id;
+					}
+				$sthA->finish();
+				if ($dup_lead < 1)
+					{
+					if ($phone_list =~ /\|$alt_phone$title$US$list_id\|/)
+						{$dup_lead++;}
+					}
+				}
+			##### Check for duplicate title/alt-phone in vicidial_list table for one list_id #####
+			if ($duptapchecklist > 0)
+				{
+				$dup_lead=0;
+				$stmtA = "select list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' limit 1;";
+					if($DBX){print STDERR "\n|$stmtA|\n";}
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$dup_lead_list = $aryA[0];
+					$dup_lead++;
+					}
+				$sthA->finish();
+				if ($dup_lead < 1)
+					{
+					if ($phone_list =~ /\|$alt_phone$title$US$list_id\|/)
+						{$dup_lead++;}
+					}
+				}
 
 			if ( (length($phone_number)>6) && ($dup_lead < 1) )
 				{
-				$phone_list .= "$phone_number$US$list_id|";
+				if ( ($duptapchecklist > 0) || ($duptapchecksys > 0) )
+					{$phone_list .= "$alt_phone$title$US$list_id|";}
+				else
+					{$phone_list .= "$phone_number$US$list_id|";}
 				# set default values
 				$modify_date =			"";
 				$user =					"";
@@ -1257,7 +1317,7 @@ foreach(@FILES)
 			else
 				{
 				if ($dup_lead > 0)
-					{if ($q < 1) {print "DUPLICATE: $phone_number|$list_id|$dup_lead_list|$a\n";}   $f++;}
+					{if ($q < 1) {print "DUPLICATE: $phone_number|$list_id|$dup_lead_list|$a|$title $alt_phone\n";}   $f++;}
 				else
 					{if ($q < 1) {print "BAD Home_Phone: $phone_number|$vendor_id|$a\n";}   $e++;}
 				}
