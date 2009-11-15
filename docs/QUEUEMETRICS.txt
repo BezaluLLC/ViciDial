@@ -181,6 +181,7 @@ agent actions - used by vicidial.php, vdc_db_query.php and AST_VDremote_agents.p
 
 call actions before going to agent - used by agi-VDAD_ALL_inbound/outbound scripts
 	ENTERQUEUE(url|callerid)
+	CALLOUTBOUND(url|callerid)
 	CONNECT(holdtime)
 	EXITWITHTIMEOUT(position) 
 	EXITWITHKEY(key|position)
@@ -207,7 +208,7 @@ data1: call termination codes, TBD
 data2: callerID or number called(sometimes prepended by DNIS) [3101-9015556189]
 	NOTE: the queuemetrics_eq_prepend field allows you to specify what
 	vicidial_list field you would like to prefend to the phone number on
-	ENTERQUEUE events
+	ENTERQUEUE/CALLOUTBOUND events
 
 data3: ??
 

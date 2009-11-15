@@ -267,6 +267,12 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	a DNC list entry. Enabled by using the AREACODE option in Campaign
 	Detail settings
 
+66. Added agi-NVA_recording.agi script to allow for recording of non-agent calls
+	as well as the ability to log them. If audio recording using this script
+	make sure you use the STEP 1 audio mixing script in your crontab with
+	the "--MIX" option so that these recordings are stored properly
+
+
 
 
 

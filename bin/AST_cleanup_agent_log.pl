@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_cleanup_agent_log.pl version 2.0.5
+# AST_cleanup_agent_log.pl version 2.2.0
 #
 # DESCRIPTION:
 # to be run frequently to clean up the vicidial_agent_log to fix erroneous time 
@@ -45,6 +45,7 @@ if (length($ARGV[0])>1)
 		print "  [-more-than-24hours] = will clean up logs older than 24 hours only\n";
 		print "  [-skip-queue-log-inserts] = will skip only the queue_log missing record checks\n";
 		print "  [-only-check-agent-login-lags] = will only fix queue_log missing PAUSEREASON records\n";
+		print "  [-only-qm-live-call-check] = will only check the queue_log calls that report as live, in ViciDial\n";
 		print "  [-q] = quiet, no output\n";
 		print "  [-test] = test\n";
 		print "  [-debug] = verbose debug messages\n";
@@ -83,6 +84,11 @@ if (length($ARGV[0])>1)
 			$login_lagged_check=1;
 			if ($Q < 1) {print "\n----- ONLY LOGIN LAGGED CHECK -----\n\n";}
 			}
+		if ($args =~ /-only-qm-live-call-check/i)
+			{
+			$qm_live_call_check=1;
+			if ($Q < 1) {print "\n----- QM LIVE CALL CHECK -----\n\n";}
+			}
 		if ($args =~ /-last-24hours/i)
 			{
 			$TWENTYFOUR_HOURS=1;
@@ -108,6 +114,17 @@ else
 
 # define time restrictions for queries in script
 $secX = time();
+$HDtarget = ($secX - 150); # 2.5 minutes in the past
+($Hsec,$Hmin,$Hhour,$Hmday,$Hmon,$Hyear,$Hwday,$Hyday,$Hisdst) = localtime($HDtarget);
+$Hyear = ($Hyear + 1900);
+$Hmon++;
+if ($Hmon < 10) {$Hmon = "0$Hmon";}
+if ($Hmday < 10) {$Hmday = "0$Hmday";}
+if ($Hhour < 10) {$Hhour = "0$Hhour";}
+if ($Hmin < 10) {$Hmin = "0$Hmin";}
+if ($Hsec < 10) {$Hsec = "0$Hsec";}
+	$HDSQLdate = "$Hyear-$Hmon-$Hmday $Hhour:$Hmin:$Hsec";
+
 $FDtarget = ($secX - 600); # 10 minutes in the past
 ($Fsec,$Fmin,$Fhour,$Fmday,$Fmon,$Fyear,$Fwday,$Fyday,$Fisdst) = localtime($FDtarget);
 $Fyear = ($Fyear + 1900);
@@ -132,6 +149,7 @@ if ($Tsec < 10) {$Tsec = "0$Tsec";}
 
 $VDAD_SQL_time = "and event_time > \"$TDSQLdate\" and event_time < \"$FDSQLdate\"";
 $QM_SQL_time = "and time_id > $TDtarget and time_id < $FDtarget";
+$QM_SQL_time_H = "and time_id > $TDtarget and time_id < $HDtarget";
 
 if ($ALL_TIME > 0)
 	{
@@ -153,6 +171,7 @@ if ($TWENTYFOUR_HOURS > 0)
 
 	$VDAD_SQL_time = "and event_time > \"$TDSQLdate\" and event_time < \"$FDSQLdate\"";
 	$QM_SQL_time = "and time_id > $TDtarget and time_id < $FDtarget";
+	$QM_SQL_time_H = "and time_id > $TDtarget and time_id < $HDtarget";
 	}
 if ($TWENTYFOUR_OLDER > 0)
 	{
@@ -169,6 +188,7 @@ if ($TWENTYFOUR_OLDER > 0)
 
 	$VDAD_SQL_time = "and event_time < \"$TDSQLdate\"";
 	$QM_SQL_time = "and time_id < $TDtarget";
+	$QM_SQL_time_H = "and time_id < $TDtarget";
 	}
 
 # default path to astguiclient configuration file:
@@ -212,6 +232,7 @@ foreach(@conf)
 # Customized Variables
 $server_ip = $VARserver_ip;		# Asterisk server IP
 
+if (!$CLEANLOGfile) {$CLEANLOGfile = "$PATHlogs/clean.$Hyear-$Hmon-$Hmday";}
 
 if (!$VARDB_port) {$VARDB_port='3306';}
 
@@ -226,33 +247,134 @@ $stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
-$rec_count=0;
-while ($sthArows > $rec_count)
+if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$enable_queuemetrics_logging =	"$aryA[0]";
-	$queuemetrics_server_ip	=	"$aryA[1]";
-	$queuemetrics_dbname =		"$aryA[2]";
-	$queuemetrics_login=		"$aryA[3]";
-	$queuemetrics_pass =		"$aryA[4]";
-	$queuemetrics_log_id =		"$aryA[5]";
-	$queuemetrics_eq_prepend =	"$aryA[6]";
-	$rec_count++;
+	$enable_queuemetrics_logging =	$aryA[0];
+	$queuemetrics_server_ip	=	$aryA[1];
+	$queuemetrics_dbname =		$aryA[2];
+	$queuemetrics_login=		$aryA[3];
+	$queuemetrics_pass =		$aryA[4];
+	$queuemetrics_log_id =		$aryA[5];
+	$queuemetrics_eq_prepend =	$aryA[6];
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
 ###########################################
 
 
-### BEGIN FIX LOGIN/LAGGED PAUSEREASON ENTRIES
-if ( ($enable_queuemetrics_logging > 0) && ($login_lagged_check > 0) )
+
+
+### BEGIN CHECKING ENTERQUEUE/CALLOUTBOUND ENTRIES FOR LIVE CALLS
+if ($enable_queuemetrics_logging > 0)
 	{
-	if ($DB) {print " - Checking for LOGIN and LAGGED pausereason records in queue_log\n";}
+	if ($DB) {print " - Checking queue_log in-queue calls in ViciDial\n";}
 
 	$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
 	 or die "Couldn't connect to database: " . DBI->errstr;
 
 	if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+	##############################################################
+	##### grab all queue_log entries for ENTERQUEUE verb to validate
+	$stmtB = "SELECT time_id,call_id,queue,verb,serverid FROM queue_log where verb IN('ENTERQUEUE','CALLOUTBOUND') and serverid='$queuemetrics_log_id' $QM_SQL_time_H order by time_id;";
+	$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+	$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+	$EQenter_records=$sthB->rows;
+	if ($DB) {print "ENTERQUEUE Records: $EQenter_records|$stmtB|\n\n";}
+	$h=0;
+	while ($EQenter_records > $h)
+		{
+		@aryB = $sthB->fetchrow_array;
+		$time_id[$h] =	$aryB[0];
+		$call_id[$h] =	$aryB[1];
+		$queue[$h] =	$aryB[2];
+		$verb[$h] =		$aryB[3];
+		$serverid[$h] =	$aryB[4];
+		$h++;
+		}
+	$sthB->finish();
+
+	$h=0;
+	while ($EQenter_records > $h)
+		{
+		$EQend_count=0;
+		##### find the CONNECT/ABANDON/COMPLETEAGENT/COMPLETECALLER/CALLSTATUS/EXITWITHKEY/EXITWITHTIMEOUT count for each record
+		$stmtB = "SELECT count(*) FROM queue_log where verb IN('CONNECT','ABANDON','COMPLETEAGENT','COMPLETECALLER','CALLSTATUS','EXITWITHKEY','EXITWITHTIMEOUT') and call_id='$call_id[$h]';";
+		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+		$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+		$CQ_records=$sthB->rows;
+		if ($CQ_records > 0)
+			{
+			@aryB = $sthB->fetchrow_array;
+			$EQend_count =		$aryB[0];
+			}
+		$sthB->finish();
+
+		if ($EQend_count < 1)
+			{
+			if ($DB) {print "IN-QUEUE CALL: $h|$time_id[$h]|$call_id[$h]|$verb[$h]|$serverid[$h]\n";}
+
+			$VAClive_count=0;
+			$VLAlive_count=0;
+
+			$stmtA = "SELECT count(*) FROM vicidial_auto_calls where callerid='$call_id[$h]';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$VAClive_count =	$aryA[0];
+				}
+			$sthA->finish();
+
+			$stmtA = "SELECT count(*) FROM vicidial_live_agents where callerid='$call_id[$h]';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$VLAlive_count =	$aryA[0];
+				}
+			$sthA->finish();
+
+			if ( ($VLAlive_count < 1) && ($VAClive_count < 1) )
+				{
+				$EQdead++;
+				if ($DB) {print "     DEAD IN-QUEUE queue_log CALL: $EQdead|$call_id[$h]|$VLAlive_count|$VAClive_count\n";}
+
+				$newtimeABANDON = ($time_id[$h] + 1);
+				##### insert an ABANDON record for this call into the queue_log
+				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$newtimeABANDON',call_id='$call_id[$h]',queue='$queue[$h]',agent='NONE',verb='ABANDON',data1='1',data2='1',data3='1',serverid='$serverid[$h]';";
+				if ($TEST < 1)
+					{
+					$Baffected_rows = $dbhB->do($stmtB);
+					}
+				if ($DB) {print "     ABANDON record inserted: $Baffected_rows|$stmtB|\n";}
+
+				$event_string = "DEAD IN-QUEUE CALL: $h|$EQdead|$time_id[$h]|$call_id[$h]|$queue[$h]|$verb[$h]|$serverid[$h]|$VLAlive_count|$VAClive_count|$Baffected_rows|$stmtB";
+				&event_logger;
+				}
+			}
+
+		$h++;
+		}
+
+	if ($qm_live_call_check > 0)
+		{
+		exit;
+		}
+	}
+### END CHECKING ENTERQUEUE/CALLOUTBOUND ENTRIES FOR LIVE CALLS
+
+
+
+### BEGIN FIX LOGIN/LAGGED PAUSEREASON ENTRIES (not a recurring process that needs to be run)
+if ( ($enable_queuemetrics_logging > 0) && ($login_lagged_check > 0) )
+	{
+	if ($DB) {print " - Checking for LOGIN and LAGGED pausereason records in queue_log\n";}
 
 	$PAUSEREASONinsert=0;
 	##############################################################
@@ -461,11 +583,6 @@ if ($DB) {print STDERR "     Bad Dispo times zeroed out: $affected_rows\n";}
 
 if ($enable_queuemetrics_logging > 0)
 	{
-	$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
-	 or die "Couldn't connect to database: " . DBI->errstr;
-
-	if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
-
 	if ($skip_queue_log_inserts < 1)
 		{
 		$COMPLETEinsert=0;
@@ -889,3 +1006,12 @@ exit;
 
 
 
+sub event_logger
+	{
+	### open the log file for writing ###
+	open(Lout, ">>$CLEANLOGfile")
+			|| die "Can't open $CLEANLOGfile: $!\n";
+	print Lout "$HDSQLdate|$event_string|\n";
+	close(Lout);
+	$event_string='';
+	}

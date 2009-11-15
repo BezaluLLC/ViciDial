@@ -31,6 +31,7 @@
 # 90415-0925 - Fixed rare division by zero bug
 # 90512-1549 - Formatting fixes and calculation bugs in blended
 # 90628-2001 - Added drop rate group functions
+# 91115-0929 - Added auto-kill of script at timeclock reset time of day to facilitate cleaner clearing of daily stats
 #
 
 # constants
@@ -87,7 +88,6 @@ $VCSagents_active[$i]=0;
 $drop_count_updater=61;
 
 $secT = time();
-	&get_time_now;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -252,6 +252,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 if ($DBX) {print "CONNECTED TO DATABASE:  $VARDB_server|$VARDB_database\n";}
 
+&get_time_now;
 
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
@@ -309,7 +310,7 @@ while ($master_loop<$CLIloops)
 		$DBvd_server_logs =			"$aryA[0]";
 		$DBSERVER_GMT		=		"$aryA[1]";
 		if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
-			else {$SYSLOG = '0';}
+		else {$SYSLOG = '0';}
 		if (length($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
 		$rec_count++;
 		}
@@ -587,7 +588,7 @@ sub get_time_now
 	$mon++;
 	if ($mon < 10) {$mon = "0$mon";}
 	if ($mday < 10) {$mday = "0$mday";}
-	if ($hour < 10) {$Fhour = "0$hour";}
+	if ($hour < 10) {$hour = "0$hour";}
 	if ($min < 10) {$min = "0$min";}
 	if ($sec < 10) {$sec = "0$sec";}
 	$file_date = "$year-$mon-$mday";
@@ -633,6 +634,31 @@ sub get_time_now
 	if ($Vmon < 10) {$Vmon = "0$Vmon";}
 	if ($Vmday < 10) {$Vmday = "0$Vmday";}
 	$VDL_one = "$Vyear-$Vmon-$Vmday $Vhour:$Vmin:$Vsec";
+
+	$timeclock_end_of_day_NOW=0;
+	### Grab system_settings values from the database
+	$stmtA = "SELECT count(*) from system_settings where timeclock_end_of_day LIKE \"%$current_hourmin%\";";
+	if ($DBX) {print "|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$timeclock_end_of_day_NOW =	"$aryA[0]";
+		}
+	$sthA->finish();
+
+	if ($timeclock_end_of_day_NOW > 0)
+		{
+		$event_string = "End of Day, shutting down this script in 10 seconds, script will resume in 60 seconds...";
+			if ($DB) {print "\n$event_string\n\n\n";}
+		&event_logger;	
+
+		sleep(10);
+
+		exit;
+		}
 	}
 
 
@@ -1217,6 +1243,8 @@ sub launch_inbound_gather
 
 sub calculate_drops_inbound
 	{
+	$answer_sec_pct_rt_stat_one = '20';
+	$answer_sec_pct_rt_stat_two = '30';
 	# GET inbound group hold stat seconds settings
 	$stmtA = "SELECT answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two from vicidial_inbound_groups where group_id='$group_id[$p]';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;

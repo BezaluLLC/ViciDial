@@ -1,6 +1,6 @@
 VICIDIAL and Vtiger
 
-Current VICIDIAL integration with Vtiger is for the 5.0.4 release version of Vtiger only
+Current VICIDIAL integration with Vtiger is for the 5.0.4 release version of Vtiger only (we also have beta support for Vtiger 5.1.0)
 
 Current integration features:
 - vicidial.php WEBFORM search for lead/account/vendor

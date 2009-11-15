@@ -272,7 +272,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 						$rslt=mysql_query($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 
-						$stmt="UPDATE vicidial_live_agents set last_state_change='$deadNOW_TIME' where callerid='$Acallerid';";
+						$stmt="UPDATE vicidial_live_agents set last_state_change='$deadNOW_TIME' where agent_log_id='$Aagent_log_id';";
 							if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_query($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03XXX',$user,$server_ip,$session_name,$one_mysql_log);}
