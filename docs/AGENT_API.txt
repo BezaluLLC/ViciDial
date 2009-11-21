@@ -133,7 +133,7 @@ preview -
  YES  - preview the lead in the vicidial screen without dialing
  NO  - do not preview the lead, place call immediately
 focus -
- YES  - change the focus of the screen to the vicidial.php agent interface
+ YES  - change the focus of the screen to the vicidial.php agent interface, brings up an alert in the browser window
  NO  - do not change focus
 vendor_id -
  Any valid Vendor lead code

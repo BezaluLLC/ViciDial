@@ -1987,11 +1987,12 @@ else
 # 90930-2107 - Added agent territory selection options for ViciDial agents
 # 91026-1050 - Added AREACODE DNC option for campaigns
 # 91031-1232 - Added carrier_description field, campaigns links from in-group screen, server links on reports page, agent ranks listing active only
+# 91121-0334 - Limited list called count display to 100+
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-222';
-$build = '91031-1232';
+$admin_version = '2.2.0-223';
+$build = '91121-0334';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -18653,7 +18654,7 @@ if ($ADD==311)
 		$leads_in_list = 0;
 		$leads_in_list_N = 0;
 		$leads_in_list_Y = 0;
-		$stmt="SELECT status,called_count,count(*) from vicidial_list where list_id='$list_id' group by status,called_count order by status,called_count";
+		$stmt="SELECT status, if(called_count >= 100, 100, called_count), count(*) from vicidial_list where list_id='$list_id' group by status, if(called_count >= 100, 100, called_count) order by status,called_count";
 		$rslt=mysql_query($stmt, $link);
 		$status_called_to_print = mysql_num_rows($rslt);
 
@@ -18663,28 +18664,28 @@ if ($ADD==311)
 		$all_called_first=1000;
 		$all_called_last=0;
 		while ($status_called_to_print > $o) 
-		{
-		$rowx=mysql_fetch_row($rslt);
-		$leads_in_list = ($leads_in_list + $rowx[2]);
-		$count_statuses[$o]			= "$rowx[0]";
-		$count_called[$o]			= "$rowx[1]";
-		$count_count[$o]			= "$rowx[2]";
-		$all_called_count[$rowx[1]] = ($all_called_count[$rowx[1]] + $rowx[2]);
-
-		if ( (strlen($status[$sts]) < 1) or ($status[$sts] != "$rowx[0]") )
 			{
-			if ($first_row) {$first_row=0;}
-			else {$sts++;}
-			$status[$sts] = "$rowx[0]";
-			$status_called_first[$sts] = "$rowx[1]";
-			if ($status_called_first[$sts] < $all_called_first) {$all_called_first = $status_called_first[$sts];}
-			}
-		$leads_in_sts[$sts] = ($leads_in_sts[$sts] + $rowx[2]);
-		$status_called_last[$sts] = "$rowx[1]";
-		if ($status_called_last[$sts] > $all_called_last) {$all_called_last = $status_called_last[$sts];}
+			$rowx=mysql_fetch_row($rslt);
+			$leads_in_list = ($leads_in_list + $rowx[2]);
+			$count_statuses[$o]			= $rowx[0];
+			$count_called[$o]			= $rowx[1];
+			$count_count[$o]			= $rowx[2];
+			$all_called_count[$rowx[1]] = ($all_called_count[$rowx[1]] + $rowx[2]);
 
-		$o++;
-		}
+			if ( (strlen($status[$sts]) < 1) or ($status[$sts] != "$rowx[0]") )
+				{
+				if ($first_row) {$first_row=0;}
+				else {$sts++;}
+				$status[$sts] = "$rowx[0]";
+				$status_called_first[$sts] = "$rowx[1]";
+				if ($status_called_first[$sts] < $all_called_first) {$all_called_first = $status_called_first[$sts];}
+				}
+			$leads_in_sts[$sts] = ($leads_in_sts[$sts] + $rowx[2]);
+			$status_called_last[$sts] = "$rowx[1]";
+			if ($status_called_last[$sts] > $all_called_last) {$all_called_last = $status_called_last[$sts];}
+
+			$o++;
+			}
 
 
 		echo "<center>\n";
@@ -18696,7 +18697,9 @@ if ($ADD==311)
 			{
 			if (eregi("1$|3$|5$|7$|9$", $first)) {$AB='bgcolor="#AFEEEE"';} 
 			else{$AB='bgcolor="#E0FFFF"';}
-			echo "<td align=center $AB><font size=1>$first</td>";
+			if ($first >= 100) {$Fplus='+';}
+			else {$Fplus='';}
+			echo "<td align=center $AB><font size=1>$first$Fplus</td>";
 			$first++;
 			}
 		echo "<td align=center><font size=1>SUBTOTAL</td></tr>\n";
@@ -19993,7 +19996,7 @@ if ($ADD==311111)
 		echo "<input type=\"checkbox\" name=\"agent_status_viewable_groups[]\" value=\"--CAMPAIGN-AGENTS--\"";
 		if (ereg(" --CAMPAIGN-AGENTS-- ", $VGROUP_vgroups))
 			{echo " CHECKED";}
-		echo "><B>CAMPAIGN-AGENTS</B> - All users logged into the same camapaign as the agent<BR>\n";
+		echo "><B>CAMPAIGN-AGENTS</B> - All users logged into the same campaign as the agent<BR>\n";
 
 		$stmt="SELECT user_group,group_name from vicidial_user_groups order by user_group";
 		$rslt=mysql_query($stmt, $link);

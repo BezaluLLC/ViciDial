@@ -13,6 +13,7 @@
 # 90330-1343 - Added more debug info, bug fixes
 # 90508-0644 - Changed to PHP long tags
 # 90721-1137 - Added rank and owner as vicidial_list fields
+# 91121-0253 - Added list name, list description and status name
 #
 
 require("dbconnect.php");
@@ -51,12 +52,10 @@ $stmt = "SELECT use_non_latin FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =					$row[0];
-	$i++;
+	$non_latin =	$row[0];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -212,9 +211,10 @@ if ($run_export > 0)
 		}
 
 	$outbound_calls=0;
+	$export_rows='';
+	$k=0;
 	if ($RUNcampaign > 0)
 		{
-		$export_campaign_rows='';
 		$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner from vicidial_users vu,vicidial_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
@@ -231,8 +231,11 @@ if ($run_export > 0)
 				{
 				$row=mysql_fetch_row($rslt);
 
-				$export_campaign_rows .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\r\n";
+				$export_status[$k] =	$row[2];
+				$export_list_id[$k] =	$row[8];
+				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t";
 				$i++;
+				$k++;
 				$outbound_calls++;
 				}
 			}
@@ -240,7 +243,6 @@ if ($run_export > 0)
 
 	if ($RUNgroup > 0)
 		{
-		$export_group_rows='';
 		$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner from vicidial_users vu,vicidial_closer_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 		$rslt=mysql_query($stmtA, $link);
 		if ($DB) {echo "$stmt\n";}
@@ -257,8 +259,11 @@ if ($run_export > 0)
 				{
 				$row=mysql_fetch_row($rslt);
 
-				$export_group_rows .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\r\n";
+				$export_status[$k] =	$row[2];
+				$export_list_id[$k] =	$row[8];
+				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t";
 				$i++;
+				$k++;
 				}
 			}
 		}
@@ -287,7 +292,48 @@ if ($run_export > 0)
 		ob_clean();
 		flush();
 
-		echo "$export_campaign_rows$export_group_rows";
+		$i=0;
+		while ($k > $i)
+			{
+			$ex_list_name='';
+			$ex_list_description='';
+			$stmt = "SELECT list_name,list_description FROM vicidial_lists where list_id='$export_list_id[$i]';";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$ex_list_ct = mysql_num_rows($rslt);
+			if ($ex_list_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$ex_list_name =			$row[0];
+				$ex_list_description =	$row[1];
+				}
+
+			$ex_status_name='';
+			$stmt = "SELECT status_name FROM vicidial_statuses where status='$export_status[$i]';";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$ex_list_ct = mysql_num_rows($rslt);
+			if ($ex_list_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$ex_status_name =			$row[0];
+				}
+			else
+				{
+				$stmt = "SELECT status_name FROM vicidial_campaign_statuses where status='$export_status[$i]';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$ex_list_ct = mysql_num_rows($rslt);
+				if ($ex_list_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$ex_status_name =			$row[0];
+					}
+				}
+
+			echo "$export_rows[$i]$ex_list_name\t$ex_list_description\t$ex_status_name\r\n";
+			$i++;
+			}
 		}
 	else
 		{

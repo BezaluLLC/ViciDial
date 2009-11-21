@@ -59,7 +59,7 @@
 # 91102-2013 - Changed in-group color styles for incoming calls waiting
 #
 
-$version = '2.0.5-48';
+$version = '2.2.0-48';
 $build = '91102-2013';
 
 header ("Content-type: text/html; charset=utf-8");
@@ -166,12 +166,12 @@ function get_server_load($windows = false)
 			{
 			$load = file_get_contents("/proc/loadavg");
 			$load = explode(' ', $load);
-			return $load[0];
+			return $load[0] . ' ' . $load[1] . ' ' . $load[2];
 			}
 		elseif(function_exists("shell_exec")) 
 			{
 			$load = explode(' ', `uptime`);
-			return $load[count($load)-1];
+			return $load[count($load)-3] . ' ' . $load[count($load)-2] . ' ' . $load[count($load)-1];
 			}
 		else 
 			{
