@@ -1,6 +1,6 @@
 VICIDIAL and QueueMetrics
 
-queue_log logging was added to VICIDIAL outbound auto calling as an option in the 2.0.3 release tree.
+queue_log logging was added to VICIDIAL outbound auto calling as an option in the 2.0.3 release, and for inbound in the 2.0.4 release.
 
 This document goes over the features and needed changes made to VICIDIAL to enable it to insert activity records into the queue_log and other tables in MySQL that QueueMetrics uses for it's statistical analysis and reports. This document should not be taken as a HOWTO for proper installation steps to get QueueMetrics working.
 
@@ -15,10 +15,19 @@ Another very important issue to note is that just like with VICIDIAL on multi-se
 To be able to view stats for inbound and outbound calls properly you need to add each one individually in QueueMetrics "queues" and properly set whether each one is inbound or outbound. After that you can create a combined queue-alias with all of the campaigns and in-groups in it and it will tell you correctly the number of inbound and outbound calls.
 
 As of 2008-10-30, several validation and correction functions were added to the AST_cleanup_agent_log.pl script that is supposed to run every hour. These functions should clean up any queue_log errors that appear and cause QueueMetrics to display incorrect call totals.
+	
 
 As of 2009-05-30, live montoring and playback of archived recordings through the QueueMetrics interface was added. To use this you must have the audio.server, audio.liveserver and default.audioRpcServer variables set properly in the configuration.properties file as specified toward the bottom of this document. The live monitoring asks for an extension to send the call to, this is an extension dialed on the active voicemail server as defined in the system settings. If there is no active voicemail defined then the live monitor will place the call to the extension on the server that the agent is on.
 
+As of 2009-11-23, DID and IVR logging through QueueMetrics queue_log is now part of the code. DID entries for the queue will be counted only for calls that actually enter the queue or are sent to an agent through a ViciDial in-group. For IVR entries, only the last Call Menu will be counted in the QueueMetrics reports.
 
+
+Entries you should have in your crontab on one server:
+### fix the vicidial_agent_log once every hour and the full day run at night
+33 * * * * /usr/share/astguiclient/AST_cleanup_agent_log.pl
+50 0 * * * /usr/share/astguiclient/AST_cleanup_agent_log.pl --last-24hours
+*/5 * * * * /usr/share/astguiclient/AST_cleanup_agent_log.pl --only-qm-live-call-check
+1 1 * * * /usr/share/astguiclient/Vtiger_optimize_all_tables.pl --quiet
 
 
 Here is a short summary of the needed steps to install QueueMetrics on your system:
@@ -186,6 +195,7 @@ call actions before going to agent - used by agi-VDAD_ALL_inbound/outbound scrip
 	EXITWITHTIMEOUT(position) 
 	EXITWITHKEY(key|position)
 	TRANSFER(extension|context|holdtime|calltime)
+	INFO([IVR or DID]|[context or DID])
 
 call actions before going to agent - used by AST_VDauto_dial.pl
 	ABANDON(position|origposition|waittime) 
@@ -203,7 +213,7 @@ not used in vicidial -
 
 
 
-data1: call termination codes, TBD
+data1: call termination codes, DID, IVR context
 
 data2: callerID or number called(sometimes prepended by DNIS) [3101-9015556189]
 	NOTE: the queuemetrics_eq_prepend field allows you to specify what

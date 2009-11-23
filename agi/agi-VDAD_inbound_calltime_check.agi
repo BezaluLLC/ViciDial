@@ -35,6 +35,7 @@
 # 81017-0238 - Fixed duplication bug for vac in multi-entry dialplans
 # 90504-1555 - Added call time scheme override
 # 90621-1130 - Fixed issue when no call time is specified
+# 91122-2353 - Added QueueMetrics logging as IVR INFO entries
 #
 
 $script = 'agi-VDAD_inbound_calltime_check.agi';
@@ -127,8 +128,7 @@ $stmtA = "SELECT agi_output FROM servers where server_ip = '$VARserver_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
-$rec_count=0;
-while ($sthArows > $rec_count)
+if ($sthArows > 0)
 	{
 	$AGILOG = '0';
 	@aryA = $sthA->fetchrow_array;
@@ -136,9 +136,29 @@ while ($sthArows > $rec_count)
 	if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
 	if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
 	if ($DBagi_output =~ /BOTH/)	{$AGILOG = '3';}
-	$rec_count++;
 	}
 $sthA->finish();
+
+#############################################
+##### START QUEUEMETRICS LOGGING LOOKUP #####
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend FROM system_settings;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$enable_queuemetrics_logging =	$aryA[0];
+	$queuemetrics_server_ip	=	$aryA[1];
+	$queuemetrics_dbname =		$aryA[2];
+	$queuemetrics_login=		$aryA[3];
+	$queuemetrics_pass =		$aryA[4];
+	$queuemetrics_log_id =		$aryA[5];
+	$queuemetrics_eq_prepend =	$aryA[6];
+	}
+$sthA->finish();
+##### END QUEUEMETRICS LOGGING LOOKUP #####
+###########################################
 
 
 ### begin parsing run-time options ###
@@ -243,13 +263,12 @@ $sthArows=$sthA->rows;
 while ($sthArows > $cbc)
 	{
 	@aryA = $sthA->fetchrow_array;
-	
-	$DBvoicemail_dump_exten	=		"$aryA[0]";
-	$DBext_context		=			"$aryA[1]";
-	$DBanswer_transfer_agent	=	"$aryA[2]";
-	$DBSERVER_GMT		=			"$aryA[3]";
-	$DBasterisk_version	=			"$aryA[4]";
-	$DBmax_vicidial_trunks	=		"$aryA[5]";
+	$DBvoicemail_dump_exten	=		$aryA[0];
+	$DBext_context		=			$aryA[1];
+	$DBanswer_transfer_agent	=	$aryA[2];
+	$DBSERVER_GMT		=			$aryA[3];
+	$DBasterisk_version	=			$aryA[4];
+	$DBmax_vicidial_trunks	=		$aryA[5];
 	if ($DBvoicemail_dump_exten)	{$voicemail_dump_exten = $DBvoicemail_dump_exten;}
 	if ($DBext_context)				{$ext_context = $DBext_context;}
 	if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
@@ -271,28 +290,27 @@ if (length($channel_group) > 1)
 	while ($sthArows > $cbc)
 		{
 		@aryA = $sthA->fetchrow_array;
-		
-		$call_time_id	=				"$aryA[0]";
-		$after_hours_action	=			"$aryA[1]";
-		$after_hours_message_filename	=	"$aryA[2]";
-		$after_hours_exten	=			"$aryA[3]";
-		$after_hours_voicemail	=		"$aryA[4]";
-		$welcome_message_filename	=	"$aryA[5]";
-		$moh_context	=				"$aryA[6]";
-		$onhold_prompt_filename	=		"$aryA[7]";
-		$prompt_interval	=			"$aryA[8]";
-		$agent_alert_exten	=			"$aryA[9]";
-		$agent_alert_delay	=			"$aryA[10]";
-		$drop_call_seconds	=			"$aryA[11]";
+		$call_time_id	=				$aryA[0];
+		$after_hours_action	=			$aryA[1];
+		$after_hours_message_filename	=	$aryA[2];
+		$after_hours_exten	=			$aryA[3];
+		$after_hours_voicemail	=		$aryA[4];
+		$welcome_message_filename	=	$aryA[5];
+		$moh_context	=				$aryA[6];
+		$onhold_prompt_filename	=		$aryA[7];
+		$prompt_interval	=			$aryA[8];
+		$agent_alert_exten	=			$aryA[9];
+		$agent_alert_delay	=			$aryA[10];
+		$drop_call_seconds	=			$aryA[11];
 			$DROP_TIME = $drop_call_seconds;
-		$drop_action =					"$aryA[12]";
-		$drop_exten	=					"$aryA[13]";
-		$CAMP_callorder	=				"$aryA[14]";
-		$VDADvoicemail_ext =			"$aryA[15]";
+		$drop_action =					$aryA[12];
+		$drop_exten	=					$aryA[13];
+		$CAMP_callorder	=				$aryA[14];
+		$VDADvoicemail_ext =			$aryA[15];
 			$VDADvoicemail_ext =~ s/\D//gi;
-		$queue_priority =				"$aryA[16]";
-		$drop_inbound_group =			"$aryA[17]";
-		$afterhours_xfer_group =		"$aryA[18]";
+		$queue_priority =				$aryA[16];
+		$drop_inbound_group =			$aryA[17];
+		$afterhours_xfer_group =		$aryA[18];
 		$cbc++;
 		}
 	$sthA->finish();
@@ -335,10 +353,10 @@ $sthArows=$sthA->rows;
 if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$ct_default_start	=		"$aryA[0]";
-	$ct_default_stop	=		"$aryA[1]";
-	$ct_day_start	=			"$aryA[2]";
-	$ct_day_stop	=			"$aryA[3]";
+	$ct_default_start	=		$aryA[0];
+	$ct_default_stop	=		$aryA[1];
+	$ct_day_start	=			$aryA[2];
+	$ct_day_stop	=			$aryA[3];
 	$sthA->finish();
 
 	if ( ($ct_day_start > 0) || ($ct_day_stop > 0) )  
@@ -400,6 +418,20 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 	$affected_rowsL = $dbhA->do($stmtA);
 	if ($AGILOG) {$agi_string = "--    AH LIL : |$affected_rowsL|$uniqueid|$callerid|$extension|";   &agi_output;}
 
+	### QueueMetrics logging if enabled
+	if ($enable_queuemetrics_logging > 0)
+		{
+		$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+		 or die "Couldn't connect to database: " . DBI->errstr;
+
+		if ($DBX) {print "CONNECTED TO QueueMetrics DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+		$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVR',data2='$context',serverid='$queuemetrics_log_id';";
+			if ($AGILOG) {$agi_string = "|$stmtB|";   &agi_output;}
+		$Baffected_rows = $dbhB->do($stmtB);
+		$dbhB->disconnect();
+		}
+
 	if ($after_hours_action =~ /HANGUP/)
 		{
 		### insert a NEW record to the vicidial_manager table to hangup the channel
@@ -445,6 +477,21 @@ $stmtA = "INSERT INTO live_inbound_log (uniqueid,channel,server_ip,caller_id,ext
 	if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 $affected_rowsL = $dbhA->do($stmtA);
 if ($AGILOG) {$agi_string = "--    LIL : |$affected_rowsL|$uniqueid|$callerid|$extension|";   &agi_output;}
+
+
+### QueueMetrics logging if enabled
+if ($enable_queuemetrics_logging > 0)
+	{
+	$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+	 or die "Couldn't connect to database: " . DBI->errstr;
+
+	if ($DBX) {print "CONNECTED TO QueueMetrics DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+	$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVR',data2='$context',serverid='$queuemetrics_log_id';";
+		if ($AGILOG) {$agi_string = "|$stmtB|";   &agi_output;}
+	$Baffected_rows = $dbhB->do($stmtB);
+	$dbhB->disconnect();
+	}
 
 
 $sthA->finish();

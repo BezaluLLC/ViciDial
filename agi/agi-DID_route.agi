@@ -19,6 +19,7 @@
 # 90214-0217 - Added 'default' did option, to send all non-matching calls to, enforced did_active setting
 # 90507-1145 - Added CALLMENU option
 # 90825-2252 - Changed PHONE to route using dialplan number
+# 91122-0743 - Added QueueMetrics logging as DID INFO entries
 #
 
 $script = 'agi-DID_route.agi';
@@ -103,40 +104,60 @@ $stmtA = "SELECT agi_output,local_gmt FROM servers where server_ip = '$VARserver
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
-$rec_count=0;
-while ($sthArows > $rec_count)
+if ($sthArows > 0)
 	{
 	$AGILOG = '0';
-	 @aryA = $sthA->fetchrow_array;
-		$DBagi_output =		"$aryA[0]";
-		$local_gmt =		"$aryA[1]";
-		if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
-		if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
-		if ($DBagi_output =~ /BOTH/)	{$AGILOG = '3';}
-	 $rec_count++;
+	@aryA = $sthA->fetchrow_array;
+	$DBagi_output =		"$aryA[0]";
+	$local_gmt =		"$aryA[1]";
+	if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
+	if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
+	if ($DBagi_output =~ /BOTH/)	{$AGILOG = '3';}
 	}
 $sthA->finish();
 
+#############################################
+##### START QUEUEMETRICS LOGGING LOOKUP #####
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend FROM system_settings;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$enable_queuemetrics_logging =	$aryA[0];
+	$queuemetrics_server_ip	=	$aryA[1];
+	$queuemetrics_dbname =		$aryA[2];
+	$queuemetrics_login=		$aryA[3];
+	$queuemetrics_pass =		$aryA[4];
+	$queuemetrics_log_id =		$aryA[5];
+	$queuemetrics_eq_prepend =	$aryA[6];
+	}
+$sthA->finish();
+##### END QUEUEMETRICS LOGGING LOOKUP #####
+###########################################
+
+
 $|=1;
 while(<STDIN>) 
-{
+	{
 	chomp;
 	last unless length($_);
 	if ($AGILOG)
-	{
-		if (/^agi_(\w+)\:\s+(.*)$/)
 		{
+		if (/^agi_(\w+)\:\s+(.*)$/)
+			{
 			$AGI{$1} = $2;
+			}
 		}
-	}
 
 	if (/^agi_uniqueid\:\s+(.*)$/)		{$unique_id = $1; $uniqueid = $unique_id;}
 	if (/^agi_channel\:\s+(.*)$/)		{$channel = $1;}
 	if (/^agi_extension\:\s+(.*)$/)		{$extension = $1;}
-	if (/^agi_type\:\s+(.*)$/)		{$type = $1;}
+	if (/^agi_type\:\s+(.*)$/)			{$type = $1;}
 	if (/^agi_callerid\:\s+(.*)$/)		{$callerid = $1;}
 	if (/^agi_calleridname\:\s+(.*)$/)	{$calleridname = $1;}
-}
+	}
 
 
 if ( ($callerid =~ /\".*\"/) && ( (!$calleridname) or ($calleridname =~ /unknown/) ) )
@@ -146,8 +167,8 @@ if ( ($callerid =~ /\".*\"/) && ( (!$calleridname) or ($calleridname =~ /unknown
 	$calleridname =~ s/\"|\" //gi;
 	}
 
-	$callerid =~ s/\D//gi;
-	$calleridname =~ s/unknown//gi;
+$callerid =~ s/\D//gi;
+$calleridname =~ s/unknown//gi;
 if ( (!$callerid) or ($callerid =~ /unknown/) )
 	{$callerid = $calleridname;}
 
@@ -315,6 +336,20 @@ if ($did_route =~ /AGENT/)
 	}
 
 
+### QueueMetrics logging if enabled
+if ( ($did_route =~ /EXTEN|CALLMENU/) && ($enable_queuemetrics_logging > 0) )
+	{
+	$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+	 or die "Couldn't connect to database: " . DBI->errstr;
+
+	if ($DBX) {print "CONNECTED TO QueueMetrics DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+	$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='DID',data2='$extension',serverid='$queuemetrics_log_id';";
+	$Baffected_rows = $dbhB->do($stmtB);
+	$dbhB->disconnect();
+	}
+
+
 ### Route call to an extension on the system
 if ($did_route =~ /EXTEN/)
 	{
@@ -354,60 +389,66 @@ if ($did_route =~ /CALLMENU/)
 ######### SUBROUTINES #################
 
 sub checkresult 
-{
+	{
 	$pass=0;   $fail=0;
 	my ($res) = @_;
 	my $retval;
 	$tests++;
 	chomp $res;
-	if ($res =~ /^200/) {
+	if ($res =~ /^200/) 
+		{
 		$res =~ /result=(-?\d+)/;
-		if (!length($1)) {
+		if (!length($1)) 
+			{
 		#	print STDERR "FAIL ($res)\n";
 			$fail++;
-		} else {
+			} 
+		else 
+			{
 		#	print STDERR "PASS ($1)\n";
 			$pass++;
-		}
-	} else {
+			}
+		} 
+	else 
+		{
 	#	print STDERR "FAIL (unexpected result '$res')\n";
 		$fail++;
+		}
 	}
-}
 
 sub leading_zero($) 
-{
+	{
     $_ = $_[0];
     s/^(\d)$/0$1/;
     s/^(\d\d)$/0$1/;
     return $_;
-} # End of the leading_zero() routine.
+	} # End of the leading_zero() routine.
 
 sub agi_output
-{
-if ($AGILOG >=2)
 	{
-	### open the log file for writing ###
-	open(Lout, ">>$AGILOGfile")
-			|| die "Can't open $AGILOGfile: $!\n";
-	print Lout "$now_date|$script|$agi_string\n";
-	close(Lout);
+	if ($AGILOG >=2)
+		{
+		### open the log file for writing ###
+		open(Lout, ">>$AGILOGfile")
+				|| die "Can't open $AGILOGfile: $!\n";
+		print Lout "$now_date|$script|$agi_string\n";
+		close(Lout);
+		}
+		### send to STDERR writing ###
+	if ( ($AGILOG == '1') || ($AGILOG == '3') )
+		{print STDERR "$now_date|$script|$agi_string\n";}
+	$agi_string='';
 	}
-	### send to STDERR writing ###
-if ( ($AGILOG == '1') || ($AGILOG == '3') )
-	{print STDERR "$now_date|$script|$agi_string\n";}
-$agi_string='';
-}
 
 sub did_output
-{
-if ($AGILOG >=2)
 	{
-	### open the log file for writing ###
-	open(Dout, ">>$DIDLOGfile")
-			|| die "Can't open $DIDLOGfile: $!\n";
-	print Dout "$did_string\n";
-	close(Dout);
+	if ($AGILOG >=2)
+		{
+		### open the log file for writing ###
+		open(Dout, ">>$DIDLOGfile")
+				|| die "Can't open $DIDLOGfile: $!\n";
+		print Dout "$did_string\n";
+		close(Dout);
+		}
+	$did_string='';
 	}
-$did_string='';
-}

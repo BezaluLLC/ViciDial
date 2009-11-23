@@ -103,6 +103,7 @@
 # 90808-0307 - Added longest_wait_time as agent routing option
 # 91004-0959 - Fix for queue_log consultative transfers
 # 91105-1258 - Added CallerIDnumber change on Drop when sending call out
+# 91122-2352 - Added queue_log IVR and DID entry linking
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -1101,25 +1102,23 @@ $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
 	$dbhP=$dbhA;   $mysql_count='02026';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-$rec_count=0;
-while ($sthArows > $rec_count)
+if ($sthArows > 0)
 	{
-	 @aryA = $sthA->fetchrow_array;
-		$enable_queuemetrics_logging =	"$aryA[0]";
-		$queuemetrics_server_ip	=	"$aryA[1]";
-		$queuemetrics_dbname =		"$aryA[2]";
-		$queuemetrics_login=		"$aryA[3]";
-		$queuemetrics_pass =		"$aryA[4]";
-		$queuemetrics_log_id =		"$aryA[5]";
-		$queuemetrics_eq_prepend =	"$aryA[6]";
-	 $rec_count++;
+	@aryA = $sthA->fetchrow_array;
+	$enable_queuemetrics_logging =	$aryA[0];
+	$queuemetrics_server_ip	=	$aryA[1];
+	$queuemetrics_dbname =		$aryA[2];
+	$queuemetrics_login=		$aryA[3];
+	$queuemetrics_pass =		$aryA[4];
+	$queuemetrics_log_id =		$aryA[5];
+	$queuemetrics_eq_prepend =	$aryA[6];
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
 ###########################################
 if ($enable_queuemetrics_logging > 0)
 	{
-	 $data2 = "$phone_number";
+	$data2 = "$phone_number";
 
 	if ( (length($queuemetrics_eq_prepend) > 0) && ($queuemetrics_eq_prepend !~ /NONE/) )
 		{
@@ -1131,11 +1130,11 @@ if ($enable_queuemetrics_logging > 0)
 		$rec_count=0;
 		while ($sthArows > $rec_count)
 			{
-			 $DASH='-';
-			 @aryA = $sthA->fetchrow_array;
-			 $QMprepend =	"$aryA[0]";
-			 $rec_count++;
-			 $data2 = "$QMprepend$DASH$phone_number";
+			$DASH='-';
+			@aryA = $sthA->fetchrow_array;
+			$QMprepend =	"$aryA[0]";
+			$rec_count++;
+			$data2 = "$QMprepend$DASH$phone_number";
 			}
 		$sthA->finish();
 		}
@@ -1148,7 +1147,6 @@ if ($enable_queuemetrics_logging > 0)
 	$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='ENTERQUEUE',data2='$data2',serverid='$queuemetrics_log_id';";
 	$Baffected_rows = $dbhB->do($stmtB);
 		$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02028';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
-	$dbhB->disconnect();
 	}
 
 
@@ -1163,6 +1161,7 @@ $stmtA = "select auto_call_id from vicidial_auto_calls where uniqueid='$uniqueid
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
+	if ($AGILOG) {$agi_string = "$sthArows|$stmtA|";   &agi_output;}
 	$dbhP=$dbhA;   $mysql_count='02029';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 if ($sthArows > 0)
 	{
@@ -1171,8 +1170,8 @@ if ($sthArows > 0)
 
 	### UPDATE existing record to LIVE in the vicidial_auto_calls table 
 	$stmtA = "UPDATE vicidial_auto_calls SET campaign_id='$channel_group',status='LIVE',lead_id='$insert_lead_id',callerid='$callerid',channel='$channel',phone_code='$phone_code',phone_number='$phone_number',call_time='$SQLdate',call_type='IN',stage='LIVE-0',queue_priority='$queue_priority' $adSQL WHERE auto_call_id='$auto_call_id';";
-		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$Uaffected_rows = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "$Uaffected_rows|$stmtA|";   &agi_output;}
 		$dbhP=$dbhA;   $mysql_count='02029';   $MEL_aff_rows=$Uaffected_rows;   &mysql_error_logging;
 	}
 $sthA->finish();
@@ -1195,6 +1194,16 @@ if ($Uaffected_rows < 1)
 		$auto_call_id = "$aryA[0]";
 		}
 	$sthA->finish();
+	}
+
+if ($enable_queuemetrics_logging > 0)
+	{
+	$QL_last_day = ($now_date_epoch - 86400);
+	$stmtB = "UPDATE queue_log SET call_id='$YqueryCID' where time_id > '$QL_last_day' and call_id='$uniqueid' and queue='NONE' and agent='NONE' and verb='INFO' and data1 IN('DID','IVR');";
+	$Baffected_rows = $dbhB->do($stmtB);
+	if ($AGILOG) {$agi_string = "$Baffected_rows|$stmtB|";   &agi_output;}
+		$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+	$dbhB->disconnect();
 	}
 
 $stmtA = "INSERT INTO vicidial_closer_log SET lead_id='$insert_lead_id', campaign_id='$channel_group', call_date='$SQLdate', start_epoch='$now_date_epoch', status='QUEUE', phone_code='$phone_code', phone_number='$phone_number', user='VDCL', processed='N', xfercallid='$insert_xfer_id', uniqueid='$uniqueid' $adSQL;";
