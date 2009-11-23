@@ -20,6 +20,7 @@
 # 90620-1910 - Added check before creating directories and formatting changes
 # 90727-1457 - Added GSW directory creation
 # 91105-1359 - Added MIX directory to /var/spool/asterisk/monitor
+# 91123-0001 - Added FTP2 directory to /var/spool/asterisk/monitorDONE
 #
 
 ############################################
@@ -2186,6 +2187,7 @@ if ($WEBONLY < 1)
 	if (!-e "$PATHDONEmonitor/OGG")		{`mkdir -p $PATHDONEmonitor/OGG`;}
 	if (!-e "$PATHDONEmonitor/GSW")		{`mkdir -p $PATHDONEmonitor/GSW`;}
 	if (!-e "$PATHDONEmonitor/FTP")		{`mkdir -p $PATHDONEmonitor/FTP`;}
+	if (!-e "$PATHDONEmonitor/FTP2")	{`mkdir -p $PATHDONEmonitor/FTP2`;}
 
 	print "Creating $PATHlogs/archive directory for backups...\n";
 	if (!-e "$PATHlogs/archive")	{`mkdir -p $PATHlogs/archive`;}

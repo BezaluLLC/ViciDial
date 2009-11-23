@@ -274,6 +274,9 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 
 67. Added queue_log DID and IVR logging entries for QueueMetrics
 
+68. Added secondary FTP audio recording file transfer script to send recordings
+	to a second FTP server after finishing transfer to the primary server.
+
 
 
 

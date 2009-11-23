@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 #
-# AST_CRON_audio_3_ftp.pl
+# AST_CRON_audio_4_ftp2.pl
 #
-# This is a STEP-3 program in the audio archival process
+# This is a STEP-4 program in the audio archival process
 #
 # runs every 3 minutes and copies the recording files to an FTP server
 # 
@@ -14,13 +14,7 @@
 # 0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,51,54,57 * * * * /usr/share/astguiclient/AST_CRON_audio_1_move_VDonly.pl
 # 1,4,7,10,13,16,19,22,25,28,31,34,37,40,43,46,49,52,55,58 * * * * /usr/share/astguiclient/AST_CRON_audio_2_compress.pl --GSM
 # 2,5,8,11,14,17,20,23,26,29,32,35,38,41,44,47,50,53,56,59 * * * * /usr/share/astguiclient/AST_CRON_audio_3_ftp.pl --GSM
-#
-# FLAGS FOR COMPRESSION FILES TO TRANSFER
-# --GSM = GSM 6.10 files
-# --MP3 = MPEG Layer3 files
-# --OGG = OGG Vorbis files
-# --WAV = WAV files
-# --GSW = GSM 6.10 codec with RIFF headers (.wav extension)
+# 0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,51,54,57 * * * * /usr/share/astguiclient/AST_CRON_audio_4_ftp2.pl
 #
 # FLAG FOR NO DATE DIRECTORY ON FTP
 # --NODATEDIR
@@ -35,15 +29,7 @@
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 
-# 80302-1958 - First Build
-# 80317-2349 - Added FTP debug if debugX
-# 80731-2253 - Changed size comparisons for more efficiency
-# 90727-1458 - Added GSW format option
-# 90730-1454 - Fixed non-VicDial recordings date directory, added secondary icmp ping if standard ping fails
-# 90818-0953 - Fixed a bug where the filesizes for all files were null
-# 90818-1017 - Added a transfer limit and list limit options. 
-# 90827-2013 - Fixed list limit option
-# 91123-0037 - Added FTP CLI options
+# 91123-0005 - First Build
 #
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -87,18 +73,13 @@ if (length($ARGV[0])>1)
 		print "  [--debugX] = super debug\n";
 		print "  [--transfer-limit=XXX] = number of files to transfer before exiting\n";
 		print "  [--list-limit=XXX] = number of files to list in the directory before moving on\n";
-		print "  [--debugX] = super debug\n";
-		print "  [-t] = test\n";
-		print "  [--GSM] = copy GSM files\n";
-		print "  [--MP3] = copy MPEG-Layer-3 files\n";
-		print "  [--OGG] = copy OGG Vorbis files\n";
-		print "  [--WAV] = copy WAV files\n";
-		print "  [--GSW] = copy GSM with RIFF headers and .wav extension files\n";
-		print "  [--nodatedir] = do not put into dated directories\n";
 		print "  [--ftp-server=XXX] = FTP server\n";
 		print "  [--ftp-login=XXX] = FTP server login account\n";
 		print "  [--ftp-pass=XXX] = FTP server password\n";
-		print "  [--ftp-dir=XXX] = FTP server directory\n\n";
+		print "  [--ftp-dir=XXX] = FTP server directory\n";
+		print "  [--debugX] = super debug\n";
+		print "  [-t] = test\n";
+		print "  [--nodatedir] = do not put into dated directories\n\n";
 		exit;
 		}
 	else
@@ -136,43 +117,6 @@ if (length($ARGV[0])>1)
 			$list_limit = $data_in[1];
 			$list_limit =~ s/ .*//gi;
 			print "\n----- FILE LIST LIMIT: $list_limit -----\n\n";
-			}
-		if ($args =~ /--GSM/i)
-			{
-			$GSM=1;
-			if ($DB) {print "GSM audio files\n";}
-			}
-		else
-			{
-			if ($args =~ /--MP3/i)
-				{
-				$MP3=1;
-				if ($DB) {print "MP3 audio files\n";}
-				}
-			else
-				{
-				if ($args =~ /--OGG/i)
-					{
-					$OGG=1;
-					if ($DB) {print "OGG audio files\n";}
-					}
-				else
-					{
-					if ($args =~ /--WAV/i)
-						{
-						$WAV=1;
-						if ($DB) {print "WAV audio files\n";}
-						}
-					else
-						{
-						if ($args =~ /--GSW/i)
-							{
-							$GSW=1;
-							if ($DB) {print "GSW audio files\n";}
-							}
-						}
-					}
-				}
 			}
 		if ($args =~ /--ftp-server=/i) 
 			{
@@ -285,11 +229,7 @@ use Net::Ping;
 use Net::FTP;
 
 ### directory where -all recordings are
-if ($WAV > 0) {$dir2 = "$PATHDONEmonitor";}
-if ($MP3 > 0) {$dir2 = "$PATHDONEmonitor/MP3";}
-if ($GSM > 0) {$dir2 = "$PATHDONEmonitor/GSM";}
-if ($OGG > 0) {$dir2 = "$PATHDONEmonitor/OGG";}
-if ($GSW > 0) {$dir2 = "$PATHDONEmonitor/GSW";}
+$dir2 = "$PATHDONEmonitor/FTP";
 
 opendir(FILE, "$dir2/");
 @FILES = readdir(FILE);
@@ -309,7 +249,7 @@ foreach(@FILES)
 	$i++;
 	if ($files_that_count >= $list_limit)
 		{
-			last();
+		last();
 		}		
 	}
 
@@ -389,21 +329,22 @@ foreach(@FILES)
 				$ftp->put("$dir2/$ALLfile", "$ALLfile");
 				$ftp->quit;
 
-				$stmtA = "UPDATE recording_log set location='$VARHTTP_path/$start_date_PATH$ALLfile' where recording_id='$recording_id';";
-					if($DB){print STDERR "\n|$stmtA|\n";}
-				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
+			# FTP2 scripts do not alter the URL of the recording
+			#	$stmtA = "UPDATE recording_log set location='$VARHTTP_path/$start_date_PATH$ALLfile' where recording_id='$recording_id';";
+			#		if($DB){print STDERR "\n|$stmtA|\n";}
+			#	$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 
 				if (!$T)
 					{
-					`mv -f "$dir2/$ALLfile" "$PATHDONEmonitor/FTP/$ALLfile"`;
+					`mv -f "$dir2/$ALLfile" "$PATHDONEmonitor/FTP2/$ALLfile"`;
 					}
 				
 				if($DBX){print STDERR "Transfered $transfered_files files\n";}
 				
 				if ( $transfered_files == $file_limit) 
 					{
-						if($DBX){print STDERR "Transfer limit of $file_limit reached breaking out of the loop\n";}
-						last();
+					if($DBX){print STDERR "Transfer limit of $file_limit reached breaking out of the loop\n";}
+					last();
 					}
 				}
 			else
