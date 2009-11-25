@@ -444,7 +444,7 @@ if ( ($AST_VDremote_agents > 0) && ($runningAST_VDremote_agents < 1) )
 	{ 
 	if ($DB) {print "starting AST_VDremote_agents...\n";}
 	# add a '-L' to the command below to activate logging
-	`/usr/bin/screen -d -m -S ASTVDremote $PATHhome/AST_VDremote_agents.pl`;
+	`/usr/bin/screen -d -m -S ASTVDremote $PATHhome/AST_VDremote_agents.pl --debug`;
 	}
 if ( ($AST_VDadapt > 0) && ($runningAST_VDadapt < 1) )
 	{ 

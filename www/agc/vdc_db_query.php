@@ -221,10 +221,11 @@
 # 91026-1101 - Added AREACODE DNC option
 # 91108-2120 - Fixed QM log issue with PAUSEREASON entries
 # 91112-1107 - Changed ENTERQUEUE to CALLOUTBOUND for QM logging
+# 91123-1801 - Added outbound_autodial field
 #
 
-$version = '2.2.0-130';
-$build = '91112-1107';
+$version = '2.2.0-131';
+$build = '91123-1801';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=256;
 $one_mysql_log=0;
@@ -717,6 +718,13 @@ if ($ACTION == 'regCLOSER')
 		}
 	else
 		{
+		if ($closer_blended > 0)
+			{$vla_autodial = 'Y';}
+		else
+			{$vla_autodial = 'N';}
+		if (preg_match('/INBOUND_MAN|MANUAL/',$dial_method))
+			{$vla_autodial = 'N';}
+
 		if ($closer_choice == "MGRLOCK-")
 			{
 			$stmt="SELECT closer_campaigns FROM vicidial_users where user='$user' LIMIT 1;";
@@ -726,14 +734,14 @@ if ($ACTION == 'regCLOSER')
 				$row=mysql_fetch_row($rslt);
 				$closer_choice =$row[0];
 
-			$stmt="UPDATE vicidial_live_agents set closer_campaigns='$closer_choice',last_state_change='$NOW_TIME' where user='$user' and server_ip='$server_ip';";
+			$stmt="UPDATE vicidial_live_agents set closer_campaigns='$closer_choice',last_state_change='$NOW_TIME',outbound_autodial='$vla_autodial' where user='$user' and server_ip='$server_ip';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00008',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
 		else
 			{
-			$stmt="UPDATE vicidial_live_agents set closer_campaigns='$closer_choice',last_state_change='$NOW_TIME' where user='$user' and server_ip='$server_ip';";
+			$stmt="UPDATE vicidial_live_agents set closer_campaigns='$closer_choice',last_state_change='$NOW_TIME',outbound_autodial='$vla_autodial' where user='$user' and server_ip='$server_ip';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00009',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -5044,8 +5052,11 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 		}
 	else
 		{
+		$vla_autodialSQL='';
+		if (preg_match('/INBOUND_MAN/',$dial_method))
+			{$vla_autodialSQL = ",outbound_autodial='N'";}
 		$random = (rand(1000000, 9999999) + 10000000);
-		$stmt="UPDATE vicidial_live_agents set uniqueid=0,callerid='',channel='', random_id='$random',comments='',last_state_change='$NOW_TIME' where user='$user' and server_ip='$server_ip';";
+		$stmt="UPDATE vicidial_live_agents set uniqueid=0,callerid='',channel='', random_id='$random',comments='',last_state_change='$NOW_TIME' $vla_autodialSQL where user='$user' and server_ip='$server_ip';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00165',$user,$server_ip,$session_name,$one_mysql_log);}

@@ -86,6 +86,7 @@
 # 90924-0914 - Added List callerid override option
 # 91026-1218 - Added AREACODE DNC option
 # 91108-2122 - Added LAGGED PAUSEREASON QM entry for lagged agents
+# 91123-1802 - Added outbound_autodial field, and exception for outbound-only agents on blended campaign
 #
 
 
@@ -208,18 +209,18 @@ $rec_count=0;
 while ($sthArows > $rec_count)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$DBtelnet_host	=			"$aryA[0]";
-	$DBtelnet_port	=			"$aryA[1]";
-	$DBASTmgrUSERNAME	=		"$aryA[2]";
-	$DBASTmgrSECRET	=			"$aryA[3]";
-	$DBASTmgrUSERNAMEupdate	=	"$aryA[4]";
-	$DBASTmgrUSERNAMElisten	=	"$aryA[5]";
-	$DBASTmgrUSERNAMEsend	=	"$aryA[6]";
-	$DBmax_vicidial_trunks	=	"$aryA[7]";
-	$DBanswer_transfer_agent=	"$aryA[8]";
-	$DBSERVER_GMT		=		"$aryA[9]";
-	$DBext_context	=			"$aryA[10]";
-	$DBvd_server_logs =			"$aryA[11]";
+	$DBtelnet_host	=			$aryA[0];
+	$DBtelnet_port	=			$aryA[1];
+	$DBASTmgrUSERNAME	=		$aryA[2];
+	$DBASTmgrSECRET	=			$aryA[3];
+	$DBASTmgrUSERNAMEupdate	=	$aryA[4];
+	$DBASTmgrUSERNAMElisten	=	$aryA[5];
+	$DBASTmgrUSERNAMEsend	=	$aryA[6];
+	$DBmax_vicidial_trunks	=	$aryA[7];
+	$DBanswer_transfer_agent=	$aryA[8];
+	$DBSERVER_GMT		=		$aryA[9];
+	$DBext_context	=			$aryA[10];
+	$DBvd_server_logs =			$aryA[11];
 	if ($DBtelnet_host)				{$telnet_host = $DBtelnet_host;}
 	if ($DBtelnet_port)				{$telnet_port = $DBtelnet_port;}
 	if ($DBASTmgrUSERNAME)			{$ASTmgrUSERNAME = $DBASTmgrUSERNAME;}
@@ -237,8 +238,8 @@ while ($sthArows > $rec_count)
 	}
 $sthA->finish();
 
-	$event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
-	&event_logger;
+$event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
+&event_logger;
 
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
@@ -246,18 +247,16 @@ $stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
-$rec_count=0;
-while ($sthArows > $rec_count)
+if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$enable_queuemetrics_logging =	"$aryA[0]";
-	$queuemetrics_server_ip	=		"$aryA[1]";
-	$queuemetrics_dbname =			"$aryA[2]";
-	$queuemetrics_login=			"$aryA[3]";
-	$queuemetrics_pass =			"$aryA[4]";
-	$queuemetrics_log_id =			"$aryA[5]";
-	$outbound_autodial_active =		"$aryA[6]";
-	$rec_count++;
+	$enable_queuemetrics_logging =	$aryA[0];
+	$queuemetrics_server_ip	=		$aryA[1];
+	$queuemetrics_dbname =			$aryA[2];
+	$queuemetrics_login=			$aryA[3];
+	$queuemetrics_pass =			$aryA[4];
+	$queuemetrics_log_id =			$aryA[5];
+	$outbound_autodial_active =		$aryA[6];
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -297,6 +296,8 @@ while($one_day_interval > 0)
 		@DBIPdialprefix=@MT;
 		@DBIPcampaigncid=@MT;
 		@DBIPexistcalls=@MT;
+		@DBIPexistcalls_IN=@MT;
+		@DBIPexistcalls_OUT=@MT;
 		@DBIPgoalcalls=@MT;
 		@DBIPmakecalls=@MT;
 		@DBIPlivecalls=@MT;
@@ -304,6 +305,7 @@ while($one_day_interval > 0)
 		@DBIPomitcode=@MT;
 		@DBIPautoaltdial=@MT;
 		@DBIPtrunk_shortage=@MT;
+		@DBIPcampaign_ready_agents=@MT;
 		@DBIPold_trunk_shortage=@MT;
 		@DBIPserver_trunks_limit=@MT;
 		@DBIPserver_trunks_other=@MT;
@@ -332,7 +334,7 @@ while($one_day_interval > 0)
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$outbound_calls_per_second =	"$aryA[0]";
+			$outbound_calls_per_second =	$aryA[0];
 			}
 		$sthA->finish();
 
@@ -353,13 +355,13 @@ while($one_day_interval > 0)
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$outbound_autodial_active =		"$aryA[0]";
+			$outbound_autodial_active =		$aryA[0];
 			}
 		$sthA->finish();
 
 		##### Get a listing of the users that are active and ready to take calls
 		##### Also get a listing of the campaigns and campaigns/serverIP that will be used
-		$stmtA = "SELECT user,server_ip,campaign_id,conf_exten,status FROM vicidial_live_agents where status IN($active_agents) and server_ip='$server_ip' and last_update_time > '$BDtsSQLdate' order by last_call_time";
+		$stmtA = "SELECT user,server_ip,campaign_id,conf_exten,status FROM vicidial_live_agents where status IN($active_agents) and outbound_autodial='Y' and server_ip='$server_ip' and last_update_time > '$BDtsSQLdate' order by last_call_time";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -367,11 +369,11 @@ while($one_day_interval > 0)
 		while ($sthArows > $rec_count)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$DBlive_user[$user_counter] =		"$aryA[0]";
-			$DBlive_server_ip[$user_counter] =	"$aryA[1]";
-			$DBlive_campaign[$user_counter] =	"$aryA[2]";
-			$DBlive_conf_exten[$user_counter] =	"$aryA[3]";
-			$DBlive_status[$user_counter] =		"$aryA[4]";
+			$DBlive_user[$user_counter] =		$aryA[0];
+			$DBlive_server_ip[$user_counter] =	$aryA[1];
+			$DBlive_campaign[$user_counter] =	$aryA[2];
+			$DBlive_conf_exten[$user_counter] =	$aryA[3];
+			$DBlive_status[$user_counter] =		$aryA[4];
 			
 			if ($user_campaigns !~ /\|$DBlive_campaign[$user_counter]\|/i)
 				{
@@ -438,6 +440,17 @@ while($one_day_interval > 0)
 				$user_counter++;
 				}
 
+			### get count of READY-status agents in this campaign
+			$stmtA = "SELECT count(*) FROM vicidial_live_agents where campaign_id='$DBIPcampaign[$user_CIPct]' and server_ip='$server_ip' and status='READY';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$DBIPcampaign_ready_agents[$user_CIPct] =		$aryA[0];
+				}
+
 			### check for vicidial_campaign_server_stats record, if non present then create it
 			$stmtA = "SELECT local_trunk_shortage FROM vicidial_campaign_server_stats where campaign_id='$DBIPcampaign[$user_CIPct]' and server_ip='$server_ip';";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -447,7 +460,7 @@ while($one_day_interval > 0)
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$DBIPold_trunk_shortage[$user_CIPct] =		"$aryA[0]";
+				$DBIPold_trunk_shortage[$user_CIPct] =		$aryA[0];
 				$rec_count++;
 				}
 			if ($rec_count < 1)
@@ -473,7 +486,7 @@ while($one_day_interval > 0)
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$DBIPserver_trunks_limit[$user_CIPct] =		"$aryA[0]";
+				$DBIPserver_trunks_limit[$user_CIPct] =		$aryA[0];
 				$rec_count++;
 				}
 			$stmtA = "SELECT sum(dedicated_trunks) FROM vicidial_server_trunks where campaign_id NOT IN('$DBIPcampaign[$user_CIPct]') and server_ip='$server_ip';";
@@ -484,7 +497,7 @@ while($one_day_interval > 0)
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$DBIPserver_trunks_other[$user_CIPct] =		"$aryA[0]";
+				$DBIPserver_trunks_other[$user_CIPct] =		$aryA[0];
 				$rec_count++;
 				}
 
@@ -502,27 +515,27 @@ while($one_day_interval > 0)
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$DBIPadlevel[$user_CIPct] =		"$aryA[0]";
-				$DBIPcalltime[$user_CIPct] =	"$aryA[1]";
-				$DBIPdialtimeout[$user_CIPct] =	"$aryA[2]";
-				$DBIPdialprefix[$user_CIPct] =	"$aryA[3]";
-				$DBIPcampaigncid[$user_CIPct] =	"$aryA[4]";
-				$DBIPactive[$user_CIPct] =		"$aryA[5]";
-				$DBIPvdadexten[$user_CIPct] =	"$aryA[6]";
-				$DBIPclosercamp[$user_CIPct] =	"$aryA[7]";
-				$omit_phone_code =				"$aryA[8]";
+				$DBIPadlevel[$user_CIPct] =		$aryA[0];
+				$DBIPcalltime[$user_CIPct] =	$aryA[1];
+				$DBIPdialtimeout[$user_CIPct] =	$aryA[2];
+				$DBIPdialprefix[$user_CIPct] =	$aryA[3];
+				$DBIPcampaigncid[$user_CIPct] =	$aryA[4];
+				$DBIPactive[$user_CIPct] =		$aryA[5];
+				$DBIPvdadexten[$user_CIPct] =	$aryA[6];
+				$DBIPclosercamp[$user_CIPct] =	$aryA[7];
+				$omit_phone_code =				$aryA[8];
 				if ($omit_phone_code =~ /Y/) {$DBIPomitcode[$user_CIPct] = 1;}
 				else {$DBIPomitcode[$user_CIPct] = 0;}
-				$available_only_ratio_tally =	"$aryA[9]";
+				$available_only_ratio_tally =	$aryA[9];
 				if ($available_only_ratio_tally =~ /Y/) 
 					{
 					$DBIPcount[$user_CIPct] = $DBIPACTIVEcount[$user_CIPct];
 					$active_only=1;
 					}
-				$DBIPautoaltdial[$user_CIPct] =	"$aryA[10]";
-				$DBIPcampaign_allow_inbound[$user_CIPct] =	"$aryA[11]";
-				$DBIPqueue_priority[$user_CIPct] =	"$aryA[12]";
-				$DBIPdial_method[$user_CIPct] =	"$aryA[13]";
+				$DBIPautoaltdial[$user_CIPct] =	$aryA[10];
+				$DBIPcampaign_allow_inbound[$user_CIPct] =	$aryA[11];
+				$DBIPqueue_priority[$user_CIPct] =	$aryA[12];
+				$DBIPdial_method[$user_CIPct] =	$aryA[13];
 				$rec_count++;
 				}
 			$sthA->finish();
@@ -539,7 +552,7 @@ while($one_day_interval > 0)
 				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$tally_xfer_line_counter = "$aryA[0]";
+					$tally_xfer_line_counter = $aryA[0];
 					}
 				$sthA->finish();
 
@@ -548,11 +561,11 @@ while($one_day_interval > 0)
 			if ($DBIPactive[$user_CIPct] =~ /N/) {$DBIPgoalcalls[$user_CIPct] = 0;}
 			$DBIPgoalcalls[$user_CIPct] = sprintf("%.0f", $DBIPgoalcalls[$user_CIPct]);
 
-			$event_string="$DBIPcampaign[$user_CIPct] $DBIPaddress[$user_CIPct]: agents: $DBIPcount[$user_CIPct]     dial_level: $DBIPadlevel[$user_CIPct]";
+			$event_string="$DBIPcampaign[$user_CIPct] $DBIPaddress[$user_CIPct]: agents: $DBIPcount[$user_CIPct] (READY: $DBIPcampaign_ready_agents[$user_CIPct])    dial_level: $DBIPadlevel[$user_CIPct]";
 			&event_logger;
 
 
-			### see how many calls are alrady active per campaign per server and 
+			### see how many calls are already active per campaign per server and 
 			### subtract that number from goalcalls to determine how many new 
 			### calls need to be placed in this loop
 			if ($DBIPcampaign_allow_inbound[$user_CIPct] =~ /Y/)
@@ -565,19 +578,40 @@ while($one_day_interval > 0)
 					}
 				else {$DBIPclosercamp[$user_CIPct]="''";}
 
-				$campaign_query = "( (call_type='IN' and campaign_id IN($DBIPclosercamp[$user_CIPct])) or (campaign_id='$DBIPcampaign[$user_CIPct]' and call_type IN('OUT','OUTBALANCE')) )";
+				$stmtA = "SELECT count(*) FROM vicidial_auto_calls where (call_type='IN' and campaign_id IN($DBIPclosercamp[$user_CIPct])) and server_ip='$DBIPaddress[$user_CIPct]' and status IN('SENT','RINGING','LIVE','XFER','CLOSER');";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$DBIPexistcalls_IN[$user_CIPct] = $aryA[0];
+					}
+				$sthA->finish();
 				}
-			else {$campaign_query = "(campaign_id='$DBIPcampaign[$user_CIPct]' and call_type IN('OUT','OUTBALANCE'))";}
-			$stmtA = "SELECT count(*) FROM vicidial_auto_calls where $campaign_query and server_ip='$DBIPaddress[$user_CIPct]' and status IN('SENT','RINGING','LIVE','XFER','CLOSER');";
+			else 
+				{$DBIPexistcalls_IN[$user_CIPct]=0;}
+
+			$stmtA = "SELECT count(*) FROM vicidial_auto_calls where (campaign_id='$DBIPcampaign[$user_CIPct]' and call_type IN('OUT','OUTBALANCE')) and server_ip='$DBIPaddress[$user_CIPct]' and status IN('SENT','RINGING','LIVE','XFER','CLOSER');";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
 			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$DBIPexistcalls[$user_CIPct] = "$aryA[0]";
+				$DBIPexistcalls_OUT[$user_CIPct] = $aryA[0];
 				}
 			$sthA->finish();
+
+			$DBIPexistcalls[$user_CIPct] = ($DBIPexistcalls_IN[$user_CIPct] + $DBIPexistcalls_OUT[$user_CIPct]);
+
+			if ( ($DBIPcampaign_ready_agents[$user_CIPct] > 0) && ($DBIPexistcalls_IN[$user_CIPct] > 0) )
+				{
+				$event_string="     BLENDED-OUTBOUND-AGENTS-WAITING OVERRIDE: $DBIPcampaign[$user_CIPct] $DBIPexistcalls[$user_CIPct] [$DBIPexistcalls_IN[$user_CIPct] + $DBIPexistcalls_OUT[$user_CIPct]])";
+				&event_logger;
+
+				$DBIPexistcalls[$user_CIPct] = $DBIPexistcalls_OUT[$user_CIPct];
+				}
 
 			$active_line_goal=0;
 			$DBIPmakecalls[$user_CIPct] = ($DBIPgoalcalls[$user_CIPct] - $DBIPexistcalls[$user_CIPct]);
@@ -593,13 +627,13 @@ while($one_day_interval > 0)
 				$DBIPtrunk_shortage[$user_CIPct] = ($active_line_goal - $max_vicidial_trunks);
 				if ($DBIPtrunk_shortage[$user_CIPct] > $DBIPmakecallsGOAL) 
 					{$DBIPtrunk_shortage[$user_CIPct] = $DBIPmakecallsGOAL}
-				$MVT_msg = "MVT override: $max_vicidial_trunks |$DBIPmakecalls[$user_CIPct] $DBIPtrunk_shortage[$user_CIPct]|";
+				$MVT_msg = "     MVT override: $max_vicidial_trunks |$DBIPmakecalls[$user_CIPct] $DBIPtrunk_shortage[$user_CIPct]|";
 				}
 			if (length($DBIPserver_trunks_limit[$user_CIPct])>0) 
 				{
 				if ($DBIPserver_trunks_limit[$user_CIPct] < $active_line_goal)
 					{
-					$MVT_msg .= " TRUNK LIMIT override: $DBIPserver_trunks_limit[$user_CIPct]";
+					$MVT_msg .= "     TRUNK LIMIT override: $DBIPserver_trunks_limit[$user_CIPct]";
 					$DBIPtrunk_shortage[$user_CIPct] = ($active_line_goal - $DBIPserver_trunks_limit[$user_CIPct]);
 					if ($DBIPtrunk_shortage[$user_CIPct] > $DBIPmakecallsGOAL) 
 						{$DBIPtrunk_shortage[$user_CIPct] = $DBIPmakecallsGOAL}
@@ -613,7 +647,7 @@ while($one_day_interval > 0)
 				{
 				if ($DBIPserver_trunks_allowed[$user_CIPct] < $active_line_goal)
 					{
-					$MVT_msg .= " OTHER LIMIT override: $DBIPserver_trunks_allowed[$user_CIPct]";
+					$MVT_msg .= "     OTHER LIMIT override: $DBIPserver_trunks_allowed[$user_CIPct]";
 					$DBIPtrunk_shortage[$user_CIPct] = ($active_line_goal - $DBIPserver_trunks_allowed[$user_CIPct]);
 					if ($DBIPtrunk_shortage[$user_CIPct] > $DBIPmakecallsGOAL) 
 						{$DBIPtrunk_shortage[$user_CIPct] = $DBIPmakecallsGOAL}
@@ -626,7 +660,8 @@ while($one_day_interval > 0)
 
 			if ($DBIPmakecalls[$user_CIPct] > 0) 
 				{$active_line_counter = ($DBIPmakecalls[$user_CIPct] + $active_line_counter);}
-			$event_string="$DBIPcampaign[$user_CIPct] $DBIPaddress[$user_CIPct]: Calls to place: $DBIPmakecalls[$user_CIPct] ($DBIPgoalcalls[$user_CIPct] - $DBIPexistcalls[$user_CIPct]) $active_line_counter $MVT_msg";
+
+			$event_string="$DBIPcampaign[$user_CIPct] $DBIPaddress[$user_CIPct]: Calls to place: $DBIPmakecalls[$user_CIPct] ($DBIPgoalcalls[$user_CIPct] - $DBIPexistcalls[$user_CIPct] [$DBIPexistcalls_IN[$user_CIPct] + $DBIPexistcalls_OUT[$user_CIPct]]) $active_line_counter $MVT_msg";
 			&event_logger;
 
 			### Calculate campaign-wide agent waiting and calls waiting differential
@@ -635,6 +670,8 @@ while($one_day_interval > 0)
 			$total_agents=0;
 			$ready_agents=0;
 			$waiting_calls=0;
+			$waiting_calls_IN=0;
+			$waiting_calls_OUT=0;
 
 			$stmtA = "SELECT count(*),status from vicidial_live_agents where campaign_id='$DBIPcampaign[$user_CIPct]' and last_update_time > '$halfminSQLdate' group by status;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -644,24 +681,42 @@ while($one_day_interval > 0)
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$VCSagent_count =		 "$aryA[0]";
-				$VCSagent_status =		 "$aryA[1]";
+				$VCSagent_count =		 $aryA[0];
+				$VCSagent_status =		 $aryA[1];
 				$rec_count++;
 				if ($VCSagent_status =~ /READY|DONE/) {$ready_agents = ($ready_agents + $VCSagent_count);}
 				$total_agents = ($total_agents + $VCSagent_count);
 				}
 			$sthA->finish();
 
-			$stmtA = "SELECT count(*) FROM vicidial_auto_calls where $campaign_query and status IN('LIVE');";
+			if ($DBIPcampaign_allow_inbound[$user_CIPct] =~ /Y/)
+				{
+				$stmtA = "SELECT count(*) FROM vicidial_auto_calls where (call_type='IN' and campaign_id IN($DBIPclosercamp[$user_CIPct])) and status IN('LIVE');";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$waiting_calls_IN = $aryA[0];
+					}
+				$sthA->finish();
+				}
+			else
+				{$waiting_calls_IN=0;}
+
+			$stmtA = "SELECT count(*) FROM vicidial_auto_calls where (campaign_id='$DBIPcampaign[$user_CIPct]' and call_type IN('OUT','OUTBALANCE')) and status IN('LIVE');";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
 			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$waiting_calls = "$aryA[0]";
+				$waiting_calls_OUT = $aryA[0];
 				}
 			$sthA->finish();
+
+			$waiting_calls = ($waiting_calls_IN + $waiting_calls_OUT);
 
 			$stat_ready_agents[$user_CIPct][$stat_count] = $ready_agents;
 			$stat_waiting_calls[$user_CIPct][$stat_count] = $waiting_calls;
@@ -771,8 +826,8 @@ while($one_day_interval > 0)
 							while ($sthArows > $rec_count)
 								{
 								@aryA = $sthA->fetchrow_array;
-								$lead_id =		"$aryA[0]";
-								$alt_dial =		"$aryA[1]";
+								$lead_id =		$aryA[0];
+								$alt_dial =		$aryA[1];
 								$rec_count++;
 								}
 							$sthA->finish();
@@ -890,8 +945,8 @@ while($one_day_interval > 0)
 										if ($sthArows > 0)
 											{
 											@aryA = $sthA->fetchrow_array;
-											$phone_code	=	"$aryA[0]";
-											$phone_number =	"$aryA[1]";
+											$phone_code	=	$aryA[0];
+											$phone_number =	$aryA[1];
 											$phone_number =~ s/\D//gi;
 											}
 										$sthA->finish();
@@ -1129,8 +1184,8 @@ while($one_day_interval > 0)
 				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$CLdial_timeout	=		"$aryA[0]";
-					$CLdrop_call_seconds =	"$aryA[1]";
+					$CLdial_timeout	=		$aryA[0];
+					$CLdrop_call_seconds =	$aryA[1];
 					}
 				$sthA->finish();
 
@@ -1180,7 +1235,7 @@ while($one_day_interval > 0)
 									if ($sthArowsVL > 0)
 										{
 										@aryA = $sthA->fetchrow_array;
-										$insertVLcount = 	"$aryA[0]";
+										$insertVLcount = 	$aryA[0];
 										}
 									$sthA->finish();
 									}
@@ -1196,7 +1251,7 @@ while($one_day_interval > 0)
 								if ($sthArows > 0)
 									{
 									@aryA = $sthA->fetchrow_array;
-									$cpd_result		= "$aryA[0]";
+									$cpd_result		= $aryA[0];
 									$sthA->finish();
 									$CPDfound=0;
 									if ($cpd_result =~ /Busy/i)					{$CLnew_status='CPDB';   $CPDfound++;}
@@ -1232,7 +1287,7 @@ while($one_day_interval > 0)
 									if ($sthArowsVLL > 0)
 										{
 										@aryA = $sthA->fetchrow_array;
-										$xCLlist_id = 	"$aryA[0]";
+										$xCLlist_id = 	$aryA[0];
 										}
 									$sthA->finish();
 
@@ -1738,10 +1793,10 @@ while($one_day_interval > 0)
 				while ($sthArows > $rec_count)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$VALOuser[$logcount] =		"$aryA[0]";
-					$VALOcampaign[$logcount] =	"$aryA[1]";
-					$VALOtimelog[$logcount]	=	"$aryA[2]";
-					$VALOextension[$logcount] = "$aryA[3]";
+					$VALOuser[$logcount] =		$aryA[0];
+					$VALOcampaign[$logcount] =	$aryA[1];
+					$VALOtimelog[$logcount]	=	$aryA[2];
+					$VALOextension[$logcount] = $aryA[3];
 					$logcount++;
 					$rec_count++;
 					}
@@ -1758,7 +1813,7 @@ while($one_day_interval > 0)
 					while ($sthArows > $UGrec_count)
 						{
 						@aryA = $sthA->fetchrow_array;
-						$VALOuser_group =		"$aryA[0]";
+						$VALOuser_group =		$aryA[0];
 						$UGrec_count++;
 						}
 					$sthA->finish();
@@ -1813,16 +1868,16 @@ while($one_day_interval > 0)
 		while ($sthArows > $rec_count)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$auto_call_id	= "$aryA[0]";
-			$CLlead_id		= "$aryA[1]";
-			$CLphone_number	= "$aryA[2]";
-			$CLstatus		= "$aryA[3]";
-			$CLcampaign_id	= "$aryA[4]";
-			$CLphone_code	= "$aryA[5]";
-			$CLalt_dial		= "$aryA[6]";
-			$CLstage		= "$aryA[7]";
-			$CLcallerid		= "$aryA[8]";
-			$CLuniqueid		= "$aryA[9]";
+			$auto_call_id =		$aryA[0];
+			$CLlead_id =		$aryA[1];
+			$CLphone_number =	$aryA[2];
+			$CLstatus =			$aryA[3];
+			$CLcampaign_id =	$aryA[4];
+			$CLphone_code =		$aryA[5];
+			$CLalt_dial =		$aryA[6];
+			$CLstage =			$aryA[7];
+			$CLcallerid	=		$aryA[8];
+			$CLuniqueid	=		$aryA[9];
 			$rec_count++;
 			}
 		$sthA->finish();
@@ -1848,7 +1903,7 @@ while($one_day_interval > 0)
 				if ($sthArowsVLL > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$xCLlist_id = 	"$aryA[0]";
+					$xCLlist_id = 	$aryA[0];
 					}
 				$sthA->finish();
 
@@ -1934,7 +1989,7 @@ while($one_day_interval > 0)
 				while ($sthArows > $rec_count)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$DBvd_server_logs =			"$aryA[0]";
+					$DBvd_server_logs =		$aryA[0];
 					if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
 					else {$SYSLOG = '0';}
 					$rec_count++;
@@ -1951,12 +2006,12 @@ while($one_day_interval > 0)
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$enable_queuemetrics_logging =	"$aryA[0]";
-				$queuemetrics_server_ip	=		"$aryA[1]";
-				$queuemetrics_dbname =			"$aryA[2]";
-				$queuemetrics_login=			"$aryA[3]";
-				$queuemetrics_pass =			"$aryA[4]";
-				$queuemetrics_log_id =			"$aryA[5]";
+				$enable_queuemetrics_logging =	$aryA[0];
+				$queuemetrics_server_ip	=		$aryA[1];
+				$queuemetrics_dbname =			$aryA[2];
+				$queuemetrics_login=			$aryA[3];
+				$queuemetrics_pass =			$aryA[4];
+				$queuemetrics_log_id =			$aryA[5];
 				$rec_count++;
 				}
 			$sthA->finish();
@@ -2167,4 +2222,3 @@ sub jam_event_logger
 		}
 	$jam_string='';
 	}
-

@@ -608,3 +608,8 @@ INSERT INTO vicidial_call_menu SET menu_id='defaultlog',menu_name='logging of al
 INSERT INTO vicidial_call_menu_options SET menu_id='defaultlog',option_value='TIMEOUT',option_description='hangup',option_route='HANGUP',option_route_value='vm-goodbye',option_route_value_context='';
 
 UPDATE system_settings SET db_schema_version='1180',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_live_agents ADD outbound_autodial ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_live_agents ADD manager_ingroup_set ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1181',db_schema_update_date=NOW();

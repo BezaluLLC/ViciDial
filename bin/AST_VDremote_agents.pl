@@ -35,6 +35,7 @@
 # 81026-1246 - Added better logging of calls and fixed the DROP bug
 # 90808-0247 - Added agent last_state_change field
 # 91013-1128 - Added full inbound compatibility with vicidial_live_inbound_agents table
+# 91123-1802 - Added outbound_autodial field
 #
 
 ### begin parsing run-time options ###
@@ -433,8 +434,8 @@ while($one_day_interval > 0)
 		while ($sthArows > $rec_count)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$Duser_start =				"$aryA[1]";
-			$Dnumber_of_lines =			"$aryA[2]";
+			$Duser_start =			$aryA[1];
+			$Dnumber_of_lines =		$aryA[2];
 			$w=0;
 			while ($w < $Dnumber_of_lines)
 				{
@@ -457,8 +458,9 @@ while($one_day_interval > 0)
 			{
 			if (length($DBremote_user[$h])>1) 
 				{
-				### check to see if the record exists and only needs random number update
-				$stmtA = "SELECT count(*) FROM vicidial_live_agents where user='$DBremote_user[$h]' and server_ip='$server_ip' and campaign_id='$DBremote_campaign[$h]' and conf_exten='$DBremote_conf_exten[$h]' and closer_campaigns='$DBremote_closer[$h]';";
+				$CAMPAIGN_autodial[$h] = 'Y';
+				### find the dial method of the campaign for each remote agent
+				$stmtA = "SELECT dial_method FROM vicidial_campaigns where campaign_id='$DBremote_campaign[$h]';";
 					if ($DBX) {print STDERR "|$stmtA|\n";}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -466,7 +468,23 @@ while($one_day_interval > 0)
 				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$loginexistsRANDOM[$h] =	"$aryA[0]";
+					$CAMPAIGN_dial_method[$h] =	$aryA[0];
+
+					if ($CAMPAIGN_dial_method[$h] =~ /MANUAL|INBOUND_MAN/)
+						{$CAMPAIGN_autodial[$h] = 'N';}
+					}
+				$sthA->finish();
+				
+				### check to see if the record exists and only needs random number update
+				$stmtA = "SELECT count(*) FROM vicidial_live_agents where user='$DBremote_user[$h]' and server_ip='$server_ip' and campaign_id='$DBremote_campaign[$h]' and conf_exten='$DBremote_conf_exten[$h]' and closer_campaigns='$DBremote_closer[$h]' and outbound_autodial='$CAMPAIGN_autodial[$h]';";
+					if ($DBX) {print STDERR "|$stmtA|\n";}
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$loginexistsRANDOM[$h] =	$aryA[0];
 					}
 				$sthA->finish();
 				
@@ -493,7 +511,7 @@ while($one_day_interval > 0)
 
 					if ($loginexistsALL[$h] > 0)
 						{
-						$stmtA = "UPDATE vicidial_live_agents set random_id='$DBremote_random[$h]',campaign_id='$DBremote_campaign[$h]',conf_exten='$DBremote_conf_exten[$h]',closer_campaigns='$DBremote_closer[$h]', status='READY',last_state_change='$SQLdate' where user='$DBremote_user[$h]' and server_ip='$server_ip';";
+						$stmtA = "UPDATE vicidial_live_agents set random_id='$DBremote_random[$h]',campaign_id='$DBremote_campaign[$h]',conf_exten='$DBremote_conf_exten[$h]',closer_campaigns='$DBremote_closer[$h]',status='READY',last_state_change='$SQLdate',outbound_autodial='$CAMPAIGN_autodial[$h]' where user='$DBremote_user[$h]' and server_ip='$server_ip';";
 						$affected_rows = $dbhA->do($stmtA);
 						if ($DBX) {print STDERR "$DBremote_user[$h] ALL UPDATE: $affected_rows\n";}
 			#			if ($affected_rows>0) 
@@ -531,7 +549,7 @@ while($one_day_interval > 0)
 							}
 						$sthA->finish();
 
-						$stmtA = "INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,campaign_id,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,channel,uniqueid,callerid,user_level,comments,last_state_change) values('$DBremote_user[$h]','$server_ip','$DBremote_conf_exten[$h]','R/$DBremote_user[$h]','READY','$DBremote_campaign[$h]','$DBremote_random[$h]','$SQLdate','$FDtsSQLdate','$SQLdate','$DBremote_closer[$h]','','','','$DBuser_level[$h]','REMOTE','$SQLdate');";
+						$stmtA = "INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,campaign_id,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,channel,uniqueid,callerid,user_level,comments,last_state_change,outbound_autodial) values('$DBremote_user[$h]','$server_ip','$DBremote_conf_exten[$h]','R/$DBremote_user[$h]','READY','$DBremote_campaign[$h]','$DBremote_random[$h]','$SQLdate','$FDtsSQLdate','$SQLdate','$DBremote_closer[$h]','','','','$DBuser_level[$h]','REMOTE','$SQLdate','$CAMPAIGN_autodial[$h]');";
 						$affected_rows = $dbhA->do($stmtA);
 						if ($DBX) {print STDERR "$DBremote_user[$h] NEW INSERT\n";}
 						if ($TESTrun > 0)
