@@ -613,3 +613,7 @@ ALTER TABLE vicidial_live_agents ADD outbound_autodial ENUM('Y','N') default 'N'
 ALTER TABLE vicidial_live_agents ADD manager_ingroup_set ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1181',db_schema_update_date=NOW();
+
+ALTER TABLE servers ADD conf_secret VARCHAR(20) default 'test';
+
+UPDATE system_settings SET db_schema_version='1182',db_schema_update_date=NOW();

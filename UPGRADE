@@ -277,6 +277,14 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 68. Added secondary FTP audio recording file transfer script to send recordings
 	to a second FTP server after finishing transfer to the primary server.
 
+69. Added Conf File Secret to Servers section to allow for a custom password
+	on internal ASTloop, ASTblind and server-to-server IAX connections
+	This requires some lines to be removed from the iax.conf file:
+	- remove the register entries for ASTloop and ASTblind
+	- remove the account entries for [ASTloop] and [ASTblind]
+	This requires some lines to be removed from the extensions.conf file:
+	- remove the TRUNKloop and TRUNKblind entries near the top
+
 
 
 

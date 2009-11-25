@@ -104,6 +104,7 @@
 # 91004-0959 - Fix for queue_log consultative transfers
 # 91105-1258 - Added CallerIDnumber change on Drop when sending call out
 # 91122-2352 - Added queue_log IVR and DID entry linking
+# 91125-0921 - Fixed no-agent-no-queue AGENTDIRECT bug
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -846,9 +847,12 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 	{
 	$NPsql='';
+	$ADsql='';
 	if ($no_agent_no_queue =~ /NO_PAUSED/) 
 		{$NPsql = "and status NOT IN('PAUSED')";}
-	$stmtA = "SELECT count(*) FROM vicidial_live_agents where closer_campaigns LIKE \"% $channel_group %\" $NPsql;";
+	if ( ($channel_group =~ /AGENTDIRECT/i) && (length($agent_only) > 1) )
+		{$ADsql = "and user='$agent_only'";}
+	$stmtA = "SELECT count(*) FROM vicidial_live_agents where closer_campaigns LIKE \"% $channel_group %\" $NPsql $ADsql;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;

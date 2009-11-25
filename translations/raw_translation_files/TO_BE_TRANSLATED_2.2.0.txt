@@ -345,6 +345,7 @@ If you have the active DNC option set to AREACODE then you can also use area cod
 Carrier Description||
 This is put in the comments of the asterisk conf files above the dialplan and account entries. Maximum 255 characters||
 CAMPAIGNS ALLOWING THIS IN-GROUP||
+This is the secret, or password, for the server in the iax auto-generated conf file for this server on other servers. Limit is 20 characters alphanumeric dash and underscore accepted. Default is test||
 
 
 add-file: user_territories.php

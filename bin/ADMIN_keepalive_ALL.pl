@@ -45,6 +45,7 @@
 # 91028-1023 - Added clearing of daily-reset tables at the timeclock reset time
 # 91031-1258 - Added carrier description comments
 # 91109-1205 - Added requirecalltoken=no as IAX setting for newer Asterisk 1.4 versions
+# 91125-0709 - Added conf_secret to servers conf
 #
 
 $DB=0; # Debug flag
@@ -767,7 +768,7 @@ else
 	}
 
 ##### Get the settings for this server's server_ip #####
-$stmtA = "SELECT active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,asterisk_version,sounds_update FROM servers where server_ip='$server_ip';";
+$stmtA = "SELECT active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,asterisk_version,sounds_update,conf_secret FROM servers where server_ip='$server_ip';";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -780,6 +781,7 @@ if ($sthArows > 0)
 	$rebuild_conf_files	=		$aryA[2];
 	$asterisk_version =			$aryA[3];
 	$sounds_update =			$aryA[4];
+	$self_conf_secret =			$aryA[5];
 	}
 $sthA->finish();
 
@@ -802,9 +804,44 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$VARremDIALstr = "$a$S$b$S$c$S$d";
 		}
 
+	$ext  .= "TRUNKloop = IAX2/ASTloop:$self_conf_secret\@127.0.0.1:40569\n";
+	$ext  .= "TRUNKblind = IAX2/ASTblind:$self_conf_secret\@127.0.0.1:41569\n";
+
+	$iax  .= "register => ASTloop:$self_conf_secret\@127.0.0.1:40569\n";
+	$iax  .= "register => ASTblind:$self_conf_secret\@127.0.0.1:41569\n";
+
 	$Lext  = "\n";
 	$Lext .= "; Local Server: $server_ip\n";
 	$Lext .= "exten => _$VARremDIALstr*.,1,Goto(default,\${EXTEN:16},1)\n";
+
+	$Liax .= "\n";
+	$Liax .= "[ASTloop]\n";
+	$Liax .= "accountcode=ASTloop\n";
+	$Liax .= "secret=$self_conf_secret\n";
+	$Liax .= "type=friend\n";
+	$Liax .= "requirecalltoken=no\n";
+	$Liax .= "context=default\n";
+	$Liax .= "auth=plaintext\n";
+	$Liax .= "host=dynamic\n";
+	$Liax .= "permit=0.0.0.0/0.0.0.0\n";
+	$Liax .= "disallow=all\n";
+	$Liax .= "allow=ulaw\n";
+	$Liax .= "qualify=yes\n";
+
+	$Liax .= "\n";
+	$Liax .= "[ASTblind]\n";
+	$Liax .= "accountcode=ASTblind\n";
+	$Liax .= "secret=$self_conf_secret\n";
+	$Liax .= "type=friend\n";
+	$Liax .= "requirecalltoken=no\n";
+	$Liax .= "context=default\n";
+	$Liax .= "auth=plaintext\n";
+	$Liax .= "host=dynamic\n";
+	$Liax .= "permit=0.0.0.0/0.0.0.0\n";
+	$Liax .= "disallow=all\n";
+	$Liax .= "allow=ulaw\n";
+	$Liax .= "qualify=yes\n";
+
 
 	##### Get the server_id for this server's server_ip #####
 	$stmtA = "SELECT server_id,vicidial_recording_limit FROM servers where server_ip='$server_ip';";
@@ -823,7 +860,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the server_ips and server_ids of all VICIDIAL servers on the network for load balancing #####
-	$stmtA = "SELECT server_ip,server_id FROM servers where server_ip!='$server_ip' and active_asterisk_server='Y' order by server_ip;";
+	$stmtA = "SELECT server_ip,server_id,conf_secret FROM servers where server_ip!='$server_ip' and active_asterisk_server='Y' order by server_ip;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -832,20 +869,21 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	while ($sthArows > $i)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$server_ip[$i]	=	"$aryA[0]";
-		$server_id[$i]	=	"$aryA[1]";
+		$server_ip[$i] =	$aryA[0];
+		$server_id[$i] =	$aryA[1];
+		$conf_secret[$i] =	$aryA[2];
 
 		if( $server_ip[$i] =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
 			{
-			$a = leading_zero($1); 
-			$b = leading_zero($2); 
-			$c = leading_zero($3); 
+			$a = leading_zero($1);
+			$b = leading_zero($2);
+			$c = leading_zero($3);
 			$d = leading_zero($4);
 			$VARremDIALstr = "$a$S$b$S$c$S$d";
 			}
-		$ext  .= "TRUNK$server_id[$i] = IAX2/$server_id:test\@$server_ip[$i]:4569\n";
+		$ext  .= "TRUNK$server_id[$i] = IAX2/$server_id:$conf_secret[$i]\@$server_ip[$i]:4569\n";
 
-		$iax  .= "register => $server_id:test\@$server_ip[$i]:4569\n";
+		$iax  .= "register => $server_id:$conf_secret[$i]\@$server_ip[$i]:4569\n";
 
 		$Lext .= "; Remote Server VDAD extens: $server_id[$i] $server_ip[$i]\n";
 		$Lext .= "exten => _$VARremDIALstr*.,1,Dial(\${TRUNK$server_id[$i]}/\${EXTEN:16},55,oT)\n";
@@ -853,7 +891,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Liax .= "\n";
 		$Liax .= "[$server_id[$i]]\n";
 		$Liax .= "accountcode=IAX$server_id[$i]\n";
-		$Liax .= "secret=test\n";
+		$Liax .= "secret=$self_conf_secret\n";
 		$Liax .= "type=friend\n";
 		$Liax .= "requirecalltoken=no\n";
 		$Liax .= "context=default\n";

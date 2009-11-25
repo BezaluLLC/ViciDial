@@ -114,7 +114,8 @@ vicidial_recording_limit MEDIUMINT(8) default '60',
 carrier_logging_active ENUM('Y','N') default 'N',
 vicidial_balance_rank TINYINT(3) UNSIGNED default '0',
 rebuild_music_on_hold ENUM('Y','N') default 'Y',
-active_agent_login_server ENUM('Y','N') default 'Y'
+active_agent_login_server ENUM('Y','N') default 'Y',
+conf_secret VARCHAR(20) default 'test'
 );
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -1956,7 +1957,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1181',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1182',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
