@@ -24023,6 +24023,8 @@ if ($ADD==999999)
 		<LI><a href="AST_DIDstats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Inbound DID Report</a></FONT>
 		<LI><a href="AST_IVRstats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Inbound IVR Report</a></FONT>
 		<LI><a href="AST_VDADstats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Outbound Calling Report</a></FONT>
+		<LI><a href="AST_OUTBOUNDsummary_interval.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Outbound Summary Interval Report</a></FONT>
+
 		<LI><a href="fcstats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Fronter - Closer Report</a></FONT>
 	<!-- <LI><a href="vicidial_sales_viewer.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>AGENT SPREADSHEET PERFORMANCE</a></FONT> -->
 	<?php
@@ -24073,6 +24075,12 @@ if ($ADD==999999)
 		</UL>
 		</TD></TR></TABLE>
 
+	<?
+	if (file_exists('custom_report_links.html'))
+		{
+		readfile('custom_report_links.html');
+		}
+	?>
 		<PRE><TABLE BORDER=1 CELLPADDING=2 cellspacing=0>
 		<TR><TD>SERVER</TD><TD>DESCRIPTION</TD><TD>IP</TD><TD>ACT</TD><TD>LOAD</TD><TD>CHAN</TD><TD>DISK</TD><TD>OUTBOUND</TD><TD>INBOUND</TD></TR>
 		<?php 

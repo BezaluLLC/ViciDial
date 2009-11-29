@@ -26,15 +26,19 @@ exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG---
 ; and has been sent through one of the loopbacks. This is why this context is missing the h extension.
 ; Do not put any extensions in this context unless you specifically understand what this means.
 
-;exten => _91NXXNXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
-;exten => _91NXXNXXXXXX,2,Dial(${TRUNKX}/${EXTEN:1},,To)
-;exten => _91NXXNXXXXXX,3,Hangup
+;exten => _91NXXNXXXXXX,1,Dial(${TRUNKX}/${EXTEN:1},,To)
+;exten => _91NXXNXXXXXX,n,Hangup
+; special Canadian PRI callerIDname settings FOR USE IN LOOPBACK CONTEXT ONLY
+;exten => _91NXXNXXXXXX,1,Set(CALLERID(name)="ACME Widgets")
+;exten => _91NXXNXXXXXX,n,AGI(agi-CANADA_PRI_CIDname.agi)
+;exten => _91NXXNXXXXXX,n,Dial(${TRUNKX}/${EXTEN:1},,To)
+;exten => _91NXXNXXXXXX,n,Hangup
 
 exten => _999XX11112,1,Wait(2)
-exten => _999XX11112,2,Answer
-exten => _999XX11112,3,Playback(ss-noservice)
-exten => _999XX11112,4,Playback(vm-goodbye)
-exten => _999XX11112,5,Hangup
+exten => _999XX11112,n,Answer
+exten => _999XX11112,n,Playback(ss-noservice)
+exten => _999XX11112,n,Playback(vm-goodbye)
+exten => _999XX11112,n,Hangup
 
 
 
@@ -196,6 +200,11 @@ exten => _9119XXXXXXXX,1,Dial(${TRUNKblind}/9998819112,55,to)
 ; exten => _91XXXXXXXXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
 ; exten => _91XXXXXXXXXXXXX,2,Dial(${TRUNKloop}/8889990011112,,to)
 ; exten => _91XXXXXXXXXXXXX,3,Hangup
+; dial a USA long distance outbound number through the loopback-no-log context
+; exten => _91NXXNXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
+; exten => _91NXXNXXXXXX,2,Dial(${TRUNKloop}/888${EXTEN:2},55,o)
+; exten => _91NXXNXXXXXX,3,Hangup
+;exten => 888NXXNXXXXXX,1,Goto(loopback-no-log,91${EXTEN:3},1)
 
 exten => 8889990011112,1,Goto(loopback-no-log,9990011112,1)
 

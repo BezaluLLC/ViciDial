@@ -285,6 +285,18 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	This requires some lines to be removed from the extensions.conf file:
 	- remove the TRUNKloop and TRUNKblind entries near the top
 
+70. Added Outbound Summary Interval Report which will show various statistics
+	for a range of campaigns, filtering results by call time and displaying
+	them broken down by 15/30/60 minute periods by campaign. Also has an 
+	option to included the drop overflow calls in the statistics.
+
+71. Added option for links to the reports page by including a file in vicidial
+	web directory named 'custom_report_links.html'. This allows you to 
+	maintain custom links even after upgrading your system. There is a
+	'EXAMPLEcustom_report_links.html' file included in that directory that
+	can just be copied and customized for your needs.
+
+
 
 
 
