@@ -104,7 +104,7 @@ $browser = getenv("HTTP_USER_AGENT");
 		}
 	}
 
-$stmt="select * from vicidial_user_groups order by user_group desc;";
+$stmt="select user_group,group_name from vicidial_user_groups order by user_group desc;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);

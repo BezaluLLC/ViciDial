@@ -1867,7 +1867,7 @@ return $dialable;
 		{
 		if ( (strlen($state_rules[$b])>1) and (strlen($state)>1) )
 			{
-			$stmt="SELECT * from vicidial_state_call_times where state_call_time_id='$state_rules[$b]' and state_call_time_state='$state';";
+			$stmt="SELECT STAR from vicidial_state_call_times where state_call_time_id='$state_rules[$b]' and state_call_time_state='$state';";
 			$rslt=mysql_query($stmt, $link);
 			$row=mysql_fetch_row($rslt);
 			$Gstate_call_time_id =		"$row[0]";

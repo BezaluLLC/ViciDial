@@ -154,7 +154,7 @@ else
 
 	}
 
-$stmt="select * from vicidial_campaigns;";
+$stmt="select campaign_id from vicidial_campaigns;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);

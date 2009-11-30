@@ -117,7 +117,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 	else
 	{
 	##### print parked calls from the parked_channels table
-	$stmt="SELECT * from parked_channels where server_ip = '$server_ip' order by parked_time limit $park_limit;";
+	$stmt="SELECT channel,server_ip,channel_group,extension,parked_by,parked_time from parked_channels where server_ip = '$server_ip' order by parked_time limit $park_limit;";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 	$rslt=mysql_query($stmt, $link);
 	$park_calls_count = mysql_num_rows($rslt);

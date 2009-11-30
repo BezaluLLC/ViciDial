@@ -20,7 +20,7 @@
 # 90310-2146 - Added admin header
 # 90508-0644 - Changed to PHP long tags
 # 90917-2307 - Added alternate phone number searching option
-# 90921-0713 - Removed select *
+# 90921-0713 - Removed SELECT STAR
 #
 
 require("dbconnect.php");

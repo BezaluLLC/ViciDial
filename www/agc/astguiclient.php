@@ -57,6 +57,7 @@
 # 60619-1103 - Added variable filters to close security holes for login form
 # 60829-1528 - Made compatible with WeBRooTWritablE setting in dbconnect.php
 # 90508-0727 - Changed to PHP long tags
+# 91129-2211 - Replaced SELECT STAR in SQL query
 # 
 
 require("dbconnect.php");
@@ -88,8 +89,8 @@ $user_abb = "$user$user$user$user";
 while ( (strlen($user_abb) > 4) and ($forever_stop < 200) )
 	{$user_abb = eregi_replace("^.","",$user_abb);   $forever_stop++;}
 
-$version = '2.0.1';
-$build = '60829-1528';
+$version = '2.2.0';
+$build = '91129-2211';
 
 ### security strip all non-alphanumeric characters out of the variables ###
 	$DB=ereg_replace("[^0-9a-z]","",$DB);
@@ -100,15 +101,15 @@ $build = '60829-1528';
 
 
 if ($force_logout)
-{
-  if( (strlen($_SERVER['user'])>0) or (strlen($_SERVER['pass'])>0) )
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-	}
+	if( (strlen($_SERVER['user'])>0) or (strlen($_SERVER['pass'])>0) )
+		{
+		Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+		Header("HTTP/1.0 401 Unauthorized");
+		}
     echo "You have now logged out. Thank you\n";
     exit;
-}
+	}
 
 $StarTtime = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -140,7 +141,7 @@ $agcPAGE = "$HTTPprotocol$server_name$server_port$script_name";
 $agcDIR = $agcPAGE;
 $agcDIR = eregi_replace('astguiclient.php','',$agcDIR);
 
-  if( (strlen($user)<2) or (strlen($pass)<2) or (!$auth) or ($relogin == 'YES') )
+if( (strlen($user)<2) or (strlen($pass)<2) or (!$auth) or ($relogin == 'YES') )
 	{
 	header ("Content-type: text/html; charset=utf-8");
 
@@ -173,7 +174,7 @@ $agcDIR = eregi_replace('astguiclient.php','',$agcDIR);
 	echo "</html>\n\n";
 	exit;
 	}
-  else
+else
 	{
 
 	if($auth>0)
@@ -276,7 +277,7 @@ if (!$authphone)
 else
 	{
 	echo "<title>astGUIclient web client</title>\n";
-	$stmt="SELECT * from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
+	$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);

@@ -1982,7 +1982,7 @@ else
 # 90908-1207 - Added cross-listing linking for DIDs, CallMenus and In-groups
 # 90916-1105 - Added second web form to ingroups and campaigns and added audio choose for answering machine message and waitforsilence_options
 # 90917-1108 - Added Extra Voicemail boxes config in Admin section
-# 90919-2251 - Removed all "SELECT *" instances in the code, code cleanup to conform to standard
+# 90919-2251 - Removed all SELECT STAR instances in the code, code cleanup to conform to standard
 # 90924-1645 - Added list_id overrides for cid, am_message and drop in-group
 # 90930-2107 - Added agent territory selection options for ViciDial agents
 # 91026-1050 - Added AREACODE DNC option for campaigns

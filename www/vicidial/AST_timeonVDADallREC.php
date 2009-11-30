@@ -167,7 +167,7 @@ while ($i < $groups_to_print)
 	$i++;
 	}
 
-$stmt="select * from vicidial_user_groups;";
+$stmt="select user_group,group_name,allowed_campaigns,qc_allowed_campaigns,qc_allowed_inbound_groups,group_shifts,forced_timeclock_login,shift_enforcement,agent_status_viewable_groups,agent_status_view_time from vicidial_user_groups;";
 if ($non_latin > 0)
 {
 $rslt=mysql_query("SET NAMES 'UTF8'");

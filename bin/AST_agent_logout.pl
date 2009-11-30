@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_agent_logout.pl version 2.0.5   *DBI-version*
+# AST_agent_logout.pl version 2.2.0
 #
 # DESCRIPTION:
 # forces logout of agents in a specified campaign or all campaigns
@@ -25,6 +25,7 @@
 #
 # CHANGELOG
 # 80112-0330 - First Build
+# 91129-2138 - Replace SELECT STAR in SQL statement, fixed other formatting
 #
 
 # constants
@@ -49,51 +50,51 @@ $inactive_epoch = ($secT - 60);
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
 
 	if ($args =~ /--help/i)
-	{
-	print "allowed run time options(must stay in this order):\n  [--debug] = debug\n  [--debugX] = super debug\n  [-t] = test\n  [--campaign=XXX] = run for campaign XXX only\n\n";
-	exit;
-	}
-	else
-	{
-		if ($args =~ /--campaign=/i)
 		{
-		#	print "\n|$ARGS|\n\n";
-		@data_in = split(/--campaign=/,$args);
-			$CLIcampaign = $data_in[1];
-			$CLIcampaign =~ s/ .*$//gi;
+		print "allowed run time options(must stay in this order):\n  [--debug] = debug\n  [--debugX] = super debug\n  [-t] = test\n  [--campaign=XXX] = run for campaign XXX only\n\n";
+		exit;
 		}
+	else
+		{
+		if ($args =~ /--campaign=/i)
+			{
+			#	print "\n|$ARGS|\n\n";
+			@data_in = split(/--campaign=/,$args);
+				$CLIcampaign = $data_in[1];
+				$CLIcampaign =~ s/ .*$//gi;
+			}
 		else
 			{$CLIcampaign = '';}
 		if ($args =~ /--debug/i)
-		{
-		$DB=1;
-		print "\n----- DEBUG -----\n\n";
-		}
+			{
+			$DB=1;
+			print "\n----- DEBUG -----\n\n";
+			}
 		if ($args =~ /--debugX/i)
-		{
-		$DBX=1;
-		print "\n----- SUPER DEBUG -----\n\n";
-		}
+			{
+			$DBX=1;
+			print "\n----- SUPER DEBUG -----\n\n";
+			}
 		if ($args =~ /-t/i)
-		{
-		$T=1;   $TEST=1;
-		print "\n-----TESTING -----\n\n";
+			{
+			$T=1;   $TEST=1;
+			print "\n-----TESTING -----\n\n";
+			}
 		}
 	}
-}
 else
-{
-print "no command line options set\n";
-}
+	{
+	print "no command line options set\n";
+	}
 
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
@@ -143,22 +144,22 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 
 ### Grab Server values from the database
-	$stmtA = "SELECT vd_server_logs,local_gmt FROM servers where server_ip = '$VARserver_ip';";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	$rec_count=0;
-	while ($sthArows > $rec_count)
-		{
-		 @aryA = $sthA->fetchrow_array;
-			$DBvd_server_logs =			"$aryA[0]";
-			$DBSERVER_GMT		=		"$aryA[1]";
-			if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
-				else {$SYSLOG = '0';}
-			if (length($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
-		 $rec_count++;
-		}
-	$sthA->finish();
+$stmtA = "SELECT vd_server_logs,local_gmt FROM servers where server_ip = '$VARserver_ip';";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+$rec_count=0;
+while ($sthArows > $rec_count)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$DBvd_server_logs =			"$aryA[0]";
+	$DBSERVER_GMT		=		"$aryA[1]";
+	if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
+	else {$SYSLOG = '0';}
+	if (length($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
+	$rec_count++;
+	}
+$sthA->finish();
 
 
 
@@ -202,11 +203,10 @@ if ($DB) {print "AGENTS TO LOGOUT:  $rec_count\n";}
 $i=0;
 foreach(@user)
 	{
-	
 	### attempt to gracefully update the timers in the logs before logging out the agent
 	if ($last_update_time[$i] > $inactive_epoch)
 		{
-		$stmtA = "SELECT * from vicidial_agent_log where user='$user[$i]' and campaign_id='$campaign_id[$i]' order by agent_log_id desc LIMIT 1;";
+		$stmtA = "SELECT agent_log_id,user,server_ip,event_time,lead_id,campaign_id,pause_epoch,pause_sec,wait_epoch,wait_sec,talk_epoch,talk_sec,dispo_epoch,dispo_sec,status,user_group,comments,sub_status,dead_epoch,dead_sec from vicidial_agent_log where user='$user[$i]' and campaign_id='$campaign_id[$i]' order by agent_log_id desc LIMIT 1;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -291,28 +291,28 @@ foreach(@user)
 $dbhA->disconnect();
 
 if($DB)
-{
-### calculate time to run script ###
-$secY = time();
-$secZ = ($secY - $secT);
+	{
+	### calculate time to run script ###
+	$secY = time();
+	$secZ = ($secY - $secT);
 
-if (!$q) {print "DONE. Script execution time in seconds: $secZ\n";}
-}
+	if (!$q) {print "DONE. Script execution time in seconds: $secZ\n";}
+	}
 
 exit;
 
 
 
 sub event_logger
-{
-if ($SYSLOG)
 	{
-	### open the log file for writing ###
-	open(Lout, ">>$VDALOGfile")
-			|| die "Can't open $VDALOGfile: $!\n";
-	print Lout "$now_date|$event_string|\n";
-	close(Lout);
+	if ($SYSLOG)
+		{
+		### open the log file for writing ###
+		open(Lout, ">>$VDALOGfile")
+				|| die "Can't open $VDALOGfile: $!\n";
+		print Lout "$now_date|$event_string|\n";
+		close(Lout);
+		}
+	$event_string='';
 	}
-$event_string='';
-}
 

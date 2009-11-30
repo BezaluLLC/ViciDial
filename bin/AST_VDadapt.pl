@@ -356,7 +356,7 @@ while ($master_loop<$CLIloops)
 
 	if ($CLIcampaign)
 		{
-		$stmtA = "SELECT * from vicidial_campaigns where campaign_id='$CLIcampaign'";
+		$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,UNIX_TIMESTAMP(campaign_changedate),campaign_stats_refresh,campaign_allow_inbound,drop_rate_group from vicidial_campaigns where campaign_id='$CLIcampaign'";
 		}
 	else
 		{

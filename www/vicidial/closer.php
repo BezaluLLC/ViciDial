@@ -261,7 +261,7 @@ $row=mysql_fetch_row($rslt);
 $parked_count = $row[0];
 	if ($parked_count > 0)
 	{
-	$stmt="SELECT * from parked_channels where server_ip='" . mysql_real_escape_string($server_ip) . "' and channel_group LIKE \"CL_%\" order by channel_group,parked_time";
+	$stmt="SELECT channel,server_ip,channel_group,extension,parked_by,parked_time from parked_channels where server_ip='" . mysql_real_escape_string($server_ip) . "' and channel_group LIKE \"CL_%\" order by channel_group,parked_time";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$parked_to_print = mysql_num_rows($rslt);

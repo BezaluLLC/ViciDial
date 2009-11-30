@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-LCR-Route.agi version 2.0.5
+# agi-LCR-Route.agi version 2.2.0
 #
 # This script looks up the NPANXX in the lcr table and sets 
 # the LCRTRUNK dialplan variable to the carrier string 
@@ -29,7 +29,7 @@
 #
 # A typical npanxx from this table should look like:
 #
-# mysql> select * from lcr where npanxx='734223';
+# mysql> select npanxx,rate,carrier_string from lcr where npanxx='734223';
 # +--------+--------+----------------+
 # | npanxx | rate   | carrier_string |
 # +--------+--------+----------------+
@@ -47,23 +47,24 @@
 #
 # changes:
 # 90717-1554 - First Build
+# 91129-2209 - formatting fixes
 #
 
 sub agi_output
-{
-if ($AGILOG >=2)
-        {
-        ### open the log file for writing ###
-        open(Lout, ">>$AGILOGfile")
-                        || die "Can't open $AGILOGfile: $!\n";
-        print Lout "$now_date|$script|$agi_string\n";
-        close(Lout);
-        }
-        ### send to STDERR writing ###
-if ( ($AGILOG == '1') || ($AGILOG == '3') )
-        {print STDERR "$now_date|$script|$agi_string\n";}
-$agi_string='';
-}
+	{
+	if ($AGILOG >=2)
+		{
+		### open the log file for writing ###
+		open(Lout, ">>$AGILOGfile")
+						|| die "Can't open $AGILOGfile: $!\n";
+		print Lout "$now_date|$script|$agi_string\n";
+		close(Lout);
+		}
+		### send to STDERR writing ###
+	if ( ($AGILOG == '1') || ($AGILOG == '3') )
+			{print STDERR "$now_date|$script|$agi_string\n";}
+	$agi_string='';
+	}
 
 $script = 'agi-LCR-Route.agi';
 $AGILOG = '0';
@@ -131,44 +132,43 @@ $stmtA = "SELECT agi_output FROM servers where server_ip = '$VARserver_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
-$rec_count=0;
-while ($sthArows > $rec_count)
-        {
-        @aryA = $sthA->fetchrow_array;
-        $DBagi_output = "$aryA[0]";
-        if ($DBagi_output =~ /STDERR/)  {$AGILOG = '1';}
-        if ($DBagi_output =~ /FILE/)    {$AGILOG = '2';}
-        if ($DBagi_output =~ /BOTH/)    {$AGILOG = '3';}
-         $rec_count++;
-        }
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$DBagi_output = "$aryA[0]";
+	if ($DBagi_output =~ /STDERR/)  {$AGILOG = '1';}
+	if ($DBagi_output =~ /FILE/)    {$AGILOG = '2';}
+	if ($DBagi_output =~ /BOTH/)    {$AGILOG = '3';}
+	}
 $sthA->finish();
 
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	if ($AGILOG) {$agi_string = "Perl Environment Dump:";   &agi_output;}
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	if ($AGILOG) {$agi_string = "$i|$ARGV[$i]";   &agi_output;}
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		if ($AGILOG) {$agi_string = "$i|$ARGV[$i]";   &agi_output;}
+		$i++;
+		}
 	
 	### list of command-line array arguments:
 	@ARGV_vars = split(/-----/, $ARGV[0]);
 
 	$npanxx = $ARGV_vars[0];
 	if ($AGILOG) {$agi_string = "Searching for NPANXX = $npanxx";   &agi_output;}
-}
+	}
 
 # get the cheapest carrier
 $stmtA = "SELECT carrier_string, rate FROM lcr WHERE npanxx='$npanxx' ORDER BY rate ASC";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
-if ( $sthArows > 0 ) { 
+if ( $sthArows > 0 ) 
+	{ 
 	$rec_count=0;
 	@aryA = $sthA->fetchrow_array;
 	$carrier_string = "$aryA[0]";
@@ -177,6 +177,8 @@ if ( $sthArows > 0 ) {
 	if ($AGILOG) {$agi_string = "Setting LCRTRUNK to $carrier_string";   &agi_output;}
 
 	$AGI->set_variable( "LCRTRUNK",$carrier_string );
-} else {
+	}
+else 
+	{
 	if ($AGILOG) {$agi_string = "No carrier found for NPANXX = $npanxx. Leaving the LCRTRUNK variable as the default.";   &agi_output;}
-}
+	}

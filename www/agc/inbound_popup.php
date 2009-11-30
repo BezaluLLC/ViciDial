@@ -260,22 +260,22 @@ echo "<B>$NOW_TIME</B><BR><BR>\n";
 }
 
 
-	$MT[0]='';
-	$row='';   $rowx='';
-	$channel_live=1;
-	if (strlen($uniqueid)<9)
+$MT[0]='';
+$row='';   $rowx='';
+$channel_live=1;
+if (strlen($uniqueid)<9)
 	{
 	$channel_live=0;
 	echo "Uniqueid $uniqueid is not valid\n";
 	exit;
 	}
-	else
+else
 	{
-	$stmt="SELECT * FROM live_inbound where server_ip = '$server_ip' and uniqueid = '$uniqueid';";
+	$stmt="SELECT uniqueid,channel,server_ip,caller_id,extension,phone_ext,start_time,acknowledged,inbound_number,comment_a,comment_b,comment_c,comment_d,comment_e FROM live_inbound where server_ip = '$server_ip' and uniqueid = '$uniqueid';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 	$rslt=mysql_query($stmt, $link);
 	$channels_list = mysql_num_rows($rslt);
-		if ($channels_list>0)
+	if ($channels_list>0)
 		{
 		$row=mysql_fetch_row($rslt);
 #		echo "$LIuniqueid|$LIchannel|$LIcallerid|$LIdatetime|$row[8]|$row[9]|$row[10]|$row[11]|$row[12]|$row[13]|";

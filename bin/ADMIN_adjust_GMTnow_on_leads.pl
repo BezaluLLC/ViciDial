@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# ADMIN_adjust_GMTnow_on_leads.pl    verison 2.0.5
+# ADMIN_adjust_GMTnow_on_leads.pl    verison 2.2.0
 #
 # program goes throught the vicidial_list table and adjusts the gmt_offset_now
 # field to change it to today's offset if needed because of Daylight Saving Time
@@ -24,6 +24,7 @@
 #              Added LSS-FSA for New Zealand (not active)
 # 90129-1114 - Added NANPA prefix lookup option
 # 90401-1327 - Fixed quiet flag function
+# 91129-2155 - Replaced SELECT STAR queries with field lists, formatting fixes
 #
 
 $MT[0]='';
@@ -31,75 +32,74 @@ $q=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
 
 	if ($args =~ /--help/i)
-	{
-	print "allowed run time options:\n";
-	print "  [-q] = quiet\n";
-	print "  [-t] = test\n";
-	print "  [--debug] = debugging messages\n";
-	print "  [--debugX] = Super debugging messages\n";
-	print "  [--postal-code-gmt] = Attempt postal codes lookup for timezones\n";
-	print "  [--nanpa-prefix-gmt] = Attempt nanpa prefix lookup for timezones\n";
-	print "  [--singlelistid=XXX] = Only lookup and alter leads in one list_id\n";
-	print "\n";
+		{
+		print "allowed run time options:\n";
+		print "  [-q] = quiet\n";
+		print "  [-t] = test\n";
+		print "  [--debug] = debugging messages\n";
+		print "  [--debugX] = Super debugging messages\n";
+		print "  [--postal-code-gmt] = Attempt postal codes lookup for timezones\n";
+		print "  [--nanpa-prefix-gmt] = Attempt nanpa prefix lookup for timezones\n";
+		print "  [--singlelistid=XXX] = Only lookup and alter leads in one list_id\n";
+		print "\n";
 
-	exit;
-	}
+		exit;
+		}
 	else
-	{
+		{
 		if ($args =~ /-q/i)
-		{
-		$q=1;
-		}
+			{
+			$q=1;
+			}
 		if ($args =~ /-t|--test/i)
-		{
-		$T=1; $TEST=1;
-		if ($q < 1) {print "\n-----TESTING -----\n\n";}
-		}
+			{
+			$T=1; $TEST=1;
+			if ($q < 1) {print "\n-----TESTING -----\n\n";}
+			}
 		if ($args =~ /--debug/i)
-		{
-		$DB=1;
-		print "\n-----DEBUGGING -----\n\n";
-		}
+			{
+			$DB=1;
+			print "\n-----DEBUGGING -----\n\n";
+			}
 		if ($args =~ /--debugX/i)
-		{
-		$DBX=1;
-		print "\n----- SUPER-DUPER DEBUGGING -----\n\n";
-		}
+			{
+			$DBX=1;
+			print "\n----- SUPER-DUPER DEBUGGING -----\n\n";
+			}
 		if ($args =~ /--postal-code-gmt/i)
-		{
-		$searchPOST=1;
-		if ($q < 1) {print "\n----- DO POSTAL CODE LOOKUP -----\n\n";}
-		}
+			{
+			$searchPOST=1;
+			if ($q < 1) {print "\n----- DO POSTAL CODE LOOKUP -----\n\n";}
+			}
 		if ($args =~ /--nanpa-prefix-gmt/i)
-		{
-		$searchNANPA=1;
-		if ($q < 1) {print "\n----- DO NANPA PREFIX LOOKUP -----\n\n";}
-		}
+			{
+			$searchNANPA=1;
+			if ($q < 1) {print "\n----- DO NANPA PREFIX LOOKUP -----\n\n";}
+			}
 		if ($args =~ /-singlelistid=/i)
-		{
-		@data_in = split(/-singlelistid=/,$args);
-			$singlelistid = $data_in[1];
-		if ($q < 1) {print "\n----- SINGLE LISTID OVERRIDE: $singlelistid -----\n\n";}
-		}
+			{
+			@data_in = split(/-singlelistid=/,$args);
+				$singlelistid = $data_in[1];
+			if ($q < 1) {print "\n----- SINGLE LISTID OVERRIDE: $singlelistid -----\n\n";}
+			}
 		else
 			{$singlelistid = '';}
 
-
+		}
 	}
-}
 else
-{
-print "no command line options set\n";
-}
+	{
+	print "no command line options set\n";
+	}
 
 if ($DB) {print "STARTING TIME ZONE DAYLIGHT SAVING TIME CALCULATION SCRIPT\n\n\n\n";}
 
@@ -152,15 +152,15 @@ $secX = time();
 #	$secX = '1079989363';	# epoch for March 22, 2993
 #	$secX = '1097989363';	# epoch for October 17, 2004
 	
-	($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($secX);
-	$mon++;
-	$year = ($year + 1900);
-	if ($mon < 10) {$mon = "0$mon";}
-	if ($mday < 10) {$mday = "0$mday";}
-	if ($hour < 10) {$hour = "0$hour";}
-	if ($min < 10) {$min = "0$min";}
-	if ($sec < 10) {$sec = "0$sec";}
-	$dsec = ( ( ($hour * 3600) + ($min * 60) ) + $sec );
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($secX);
+$mon++;
+$year = ($year + 1900);
+if ($mon < 10) {$mon = "0$mon";}
+if ($mday < 10) {$mday = "0$mday";}
+if ($hour < 10) {$hour = "0$hour";}
+if ($min < 10) {$min = "0$min";}
+if ($sec < 10) {$sec = "0$sec";}
+$dsec = ( ( ($hour * 3600) + ($min * 60) ) + $sec );
 
 use DBI;	  
 
@@ -216,87 +216,86 @@ if($DBX){print STDERR "\n|$stmtA|\n";}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
- $rec_countY=0;
- @phone_codes=@MT;
- $phone_codes_list='|';
+$rec_countY=0;
+@phone_codes=@MT;
+$phone_codes_list='|';
 
 while ($sthArows > $rec_countY)
 	{
-	 @aryA = $sthA->fetchrow_array;
+	@aryA = $sthA->fetchrow_array;
 	 
-		$phone_codes[$rec_countY] = $aryA[0];
-		$phone_codes_ORIG[$rec_countY] = $aryA[0];
-		$phone_codes[$rec_countY] =~ s/011|0011| |\t|\r|\n//gi;
+	$phone_codes[$rec_countY] = $aryA[0];
+	$phone_codes_ORIG[$rec_countY] = $aryA[0];
+	$phone_codes[$rec_countY] =~ s/011|0011| |\t|\r|\n//gi;
 
 	#	if ( ($phone_codes_list !~ /\|$phone_codes[$rec_countY]\|/) && (length($phone_codes[$rec_countY]) > 0) )
 	#		{
 	#		$phone_codes_list .= "$phone_codes[$rec_countY]|";
 	#		}
 
-	 if ($DBX) {print "|",$aryA[0],"|","\n";}
-	 $rec_countY++;
-		
+	if ($DBX) {print "|",$aryA[0],"|","\n";}
+	$rec_countY++;
 	}
-    $sthA->finish();
-	if ($DB) {print " - Unique Country dial codes found: $rec_countY\n";}
+$sthA->finish();
+if ($DB) {print " - Unique Country dial codes found: $rec_countY\n";}
 
 
-	##### Put all country/area code records into an array for speed
-	$stmtA = "select * from vicidial_phone_codes;";
+##### Put all country/area code records into an array for speed
+$stmtA = "select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes;";
+if($DBX){print STDERR "\n|$stmtA|\n";}
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+$rec_countZ=0;
+@codefile=@MT;
+while ($sthArows > $rec_countZ)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$codefile[$rec_countZ] = "$aryA[0]\t$aryA[1]\t$aryA[2]\t$aryA[3]\t$aryA[4]\t$aryA[5]\t$aryA[6]\t$aryA[7]\n";
+	$rec_countZ++;
+	}
+
+if ($searchPOST > 0)
+	{
+	##### Put all postal code records into an array for speed
+	$stmtA = "select postal_code,state,GMT_offset,DST,DST_range,country,country_code from vicidial_postal_codes;";
 	if($DBX){print STDERR "\n|$stmtA|\n";}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-    $sthArows=$sthA->rows;
-    $rec_countZ=0;
-    @codefile=@MT;
-    while ($sthArows > $rec_countZ)
+	$sthArows=$sthA->rows;
+	$rec_countT=0;
+	@postalfile=@MT;
+	while ($sthArows > $rec_countT)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$codefile[$rec_countZ] = "$aryA[0]\t$aryA[1]\t$aryA[2]\t$aryA[3]\t$aryA[4]\t$aryA[5]\t$aryA[6]\t$aryA[7]\n";
-		$rec_countZ++;
+		$postalfile[$rec_countT] = "$aryA[0]\t$aryA[1]\t$aryA[2]\t$aryA[3]\t$aryA[4]\t$aryA[5]\t$aryA[6]";
+		$rec_countT++;
 		}
+	$sthA->finish();
+	if ($DB) {print " - GMT postal codes records: $rec_countT\n";}
+	}
 
-	if ($searchPOST > 0)
+if ($searchNANPA > 0)
+	{
+	##### Put all nanpa prefix records into an array for speed
+	$stmtA = "select areacode,prefix,GMT_offset,DST from vicidial_nanpa_prefix_codes;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	$rec_countN=0;
+	@nanpafile=@MT;
+	while ($sthArows > $rec_countN)
 		{
-		##### Put all postal code records into an array for speed
-		$stmtA = "select * from vicidial_postal_codes;";
-		if($DBX){print STDERR "\n|$stmtA|\n";}
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		$rec_countT=0;
-		@postalfile=@MT;
-		while ($sthArows > $rec_countT)
-			{
-			@aryA = $sthA->fetchrow_array;
-			$postalfile[$rec_countT] = "$aryA[0]\t$aryA[1]\t$aryA[2]\t$aryA[3]\t$aryA[4]\t$aryA[5]\t$aryA[6]";
-			$rec_countT++;
-			}
-		$sthA->finish();
-		if ($DB) {print " - GMT postal codes records: $rec_countT\n";}
+		if ($aryA[3] =~ /Y/) {$DST_method = 'SSM-FSN';}
+		else {$DST_method = '';}
+		@aryA = $sthA->fetchrow_array;
+		$nanpafile[$rec_countN] = "$aryA[0]\t$aryA[1]\t$aryA[2]\t$DST_method";
+		$rec_countN++;
 		}
-
-	if ($searchNANPA > 0)
-		{
-		##### Put all nanpa prefix records into an array for speed
-		$stmtA = "select areacode,prefix,GMT_offset,DST from vicidial_nanpa_prefix_codes;";
-		if($DBX){print STDERR "\n|$stmtA|\n";}
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		$rec_countN=0;
-		@nanpafile=@MT;
-		while ($sthArows > $rec_countN)
-			{
-			if ($aryA[3] =~ /Y/) {$DST_method = 'SSM-FSN';}
-			else {$DST_method = '';}
-			@aryA = $sthA->fetchrow_array;
-			$nanpafile[$rec_countN] = "$aryA[0]\t$aryA[1]\t$aryA[2]\t$DST_method";
-			$rec_countN++;
-			}
-		$sthA->finish();
-		if ($DB) {print " - NANPA prefix records: $rec_countN\n";}
-		}
+	$sthA->finish();
+	if ($DB) {print " - NANPA prefix records: $rec_countN\n";}
+	}
 
 $ep=0; $ei=0; $ee=0;
 $d=0;
@@ -319,34 +318,34 @@ foreach (@phone_codes)
 		chomp($codefile[$e]);
 		if ($codefile[$e] =~ /^$match_code\t/)
 			{
-				@m = split(/\t/, $codefile[$e]);
-				$area_code = $m[2];
-				$area_state = $m[3];
-				$area_GMT = $m[4];		$area_GMT =~ s/\+//gi;	$area_GMT = ($area_GMT + 0);
-				$area_GMT_method = $m[6];
-				if ($area_code =~ /S/)	# look for state override flag in areacode field
-					{
-					$area_code =~ s/\D//gi;
-					$AC_match = " and phone_number LIKE \"$area_code%\" and state='$area_state'";
-					if ($DB) {print "  AREA CODE STATE OVERRIDE: $codefile[$e]\n";}
-					}
-				else
-					{
-					if ($area_code =~ /\*/) {$AC_match = '';}
-					else {$AC_match = " and phone_number LIKE \"$area_code%\"";}
-					}
-				if ($DBX) {print "PROCESSING THIS LINE: $codefile[$e]\n";}
-				
-				$stmtA = "select count(*) from vicidial_list where phone_code='$match_code_ORIG' $AC_match $XlistSQL;";
-				if($DBX){print STDERR "\n|$stmtA|\n";}
-				
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				$sthArows=$sthA->rows;
-    			$rec_countZ=0;
-				@aryA = $sthA->fetchrow_array;
-				$rec_countZ = $aryA[0];
-		        $sthA->finish();
+			@m = split(/\t/, $codefile[$e]);
+			$area_code = $m[2];
+			$area_state = $m[3];
+			$area_GMT = $m[4];		$area_GMT =~ s/\+//gi;	$area_GMT = ($area_GMT + 0);
+			$area_GMT_method = $m[6];
+			if ($area_code =~ /S/)	# look for state override flag in areacode field
+				{
+				$area_code =~ s/\D//gi;
+				$AC_match = " and phone_number LIKE \"$area_code%\" and state='$area_state'";
+				if ($DB) {print "  AREA CODE STATE OVERRIDE: $codefile[$e]\n";}
+				}
+			else
+				{
+				if ($area_code =~ /\*/) {$AC_match = '';}
+				else {$AC_match = " and phone_number LIKE \"$area_code%\"";}
+				}
+			if ($DBX) {print "PROCESSING THIS LINE: $codefile[$e]\n";}
+			
+			$stmtA = "select count(*) from vicidial_list where phone_code='$match_code_ORIG' $AC_match $XlistSQL;";
+			if($DBX){print STDERR "\n|$stmtA|\n";}
+			
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			$rec_countZ=0;
+			@aryA = $sthA->fetchrow_array;
+			$rec_countZ = $aryA[0];
+			$sthA->finish();
 			
 			if (!$rec_countZ)
 				{
@@ -355,8 +354,8 @@ foreach (@phone_codes)
 				}
 			else
 				{
-					$AC_GMT_diff = ($area_GMT - $LOCAL_GMT_OFF_STD);
-					$AC_localtime = ($secX + (3600 * $AC_GMT_diff));
+				$AC_GMT_diff = ($area_GMT - $LOCAL_GMT_OFF_STD);
+				$AC_localtime = ($secX + (3600 * $AC_GMT_diff));
 				($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($AC_localtime);
 				$year = ($year + 1900);
 				$mon++;
@@ -452,13 +451,13 @@ foreach (@phone_codes)
 				if ($AC_processed)
 					{
 					$stmtA = "select count(*) from vicidial_list where phone_code='$match_code_ORIG' $AC_match and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL;";
-						if($DBX){print STDERR "\n|$stmtA|\n";}
-						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-    					$sthArows=$sthA->rows;
-    					$rec_countW=0;
-						@aryA = $sthA->fetchrow_array;
-						$rec_countW = $aryA[0];
+					if($DBX){print STDERR "\n|$stmtA|\n";}
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					$rec_countW=0;
+					@aryA = $sthA->fetchrow_array;
+					$rec_countW = $aryA[0];
    	       			$sthA->finish();
 						
 					if (!$rec_countW)
@@ -537,8 +536,8 @@ foreach (@phone_codes)
 					}
 				else
 					{
-						$AC_GMT_diff = ($area_GMT - $LOCAL_GMT_OFF_STD);
-						$AC_localtime = ($secX + (3600 * $AC_GMT_diff));
+					$AC_GMT_diff = ($area_GMT - $LOCAL_GMT_OFF_STD);
+					$AC_localtime = ($secX + (3600 * $AC_GMT_diff));
 					($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($AC_localtime);
 					$year = ($year + 1900);
 					$mon++;
@@ -634,13 +633,13 @@ foreach (@phone_codes)
 					if ($AC_processed)
 						{
 						$stmtA = "select count(*) from vicidial_list where phone_code='$match_code_ORIG' $AC_match and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL;";
-							if($DBX){print STDERR "\n|$stmtA|\n";}
-							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-							$sthArows=$sthA->rows;
-							$rec_countW=0;
-							@aryA = $sthA->fetchrow_array;
-							$rec_countW = $aryA[0];
+						if($DBX){print STDERR "\n|$stmtA|\n";}
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						$rec_countW=0;
+						@aryA = $sthA->fetchrow_array;
+						$rec_countW = $aryA[0];
 						$sthA->finish();
 							
 						if (!$rec_countW)
@@ -719,8 +718,8 @@ foreach (@phone_codes)
 				}
 			else
 				{
-					$AC_GMT_diff = ($area_GMT - $LOCAL_GMT_OFF_STD);
-					$AC_localtime = ($secX + (3600 * $AC_GMT_diff));
+				$AC_GMT_diff = ($area_GMT - $LOCAL_GMT_OFF_STD);
+				$AC_localtime = ($secX + (3600 * $AC_GMT_diff));
 				($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($AC_localtime);
 				$year = ($year + 1900);
 				$mon++;
@@ -816,13 +815,13 @@ foreach (@phone_codes)
 				if ($AC_processed)
 					{
 					$stmtA = "select count(*) from vicidial_list where phone_code='$match_code_ORIG' $AC_match and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL;";
-						if($DBX){print STDERR "\n|$stmtA|\n";}
-						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-						$sthArows=$sthA->rows;
-						$rec_countW=0;
-						@aryA = $sthA->fetchrow_array;
-						$rec_countW = $aryA[0];
+					if($DBX){print STDERR "\n|$stmtA|\n";}
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					$rec_countW=0;
+					@aryA = $sthA->fetchrow_array;
+					$rec_countW = $aryA[0];
 					$sthA->finish();
 						
 					if (!$rec_countW)

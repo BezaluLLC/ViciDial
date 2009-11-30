@@ -244,7 +244,7 @@ echo "<br><br>\n";
 	echo "<input type=hidden name=DB value=$DB>\n";
 	echo "group: <select size=1 name=group>\n";
 
-		$stmt="SELECT * from vicidial_user_groups order by user_group";
+		$stmt="SELECT user_group,group_name from vicidial_user_groups order by user_group";
 		$rslt=mysql_query($stmt, $link);
 		$groups_to_print = mysql_num_rows($rslt);
 		$o=0;

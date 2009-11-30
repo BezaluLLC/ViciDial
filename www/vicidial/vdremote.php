@@ -12,10 +12,11 @@
 # 60421-1229 - check GET/POST vars lines with isset to not trigger PHP NOTICES
 # 60619-1603 - Added variable filtering to eliminate SQL injection attack threat
 # 90508-0644 - Changed to PHP long tags
+# 91129-2249 - Replaced SELECT STAR in SQL queries, formatting fixes
 #
 
-$version = '1.1.12';
-$build = '90508-0644';
+$version = '2.2.0';
+$build = '91129-2249';
 
 require("dbconnect.php");
 
@@ -56,15 +57,15 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 if (!isset($force_logout)) {$force_logout = 0;}
 
 if ($force_logout)
-{
-  if( (strlen($PHP_AUTH_USER)>0) or (strlen($PHP_AUTH_PW)>0) )
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-	}
+	if( (strlen($PHP_AUTH_USER)>0) or (strlen($PHP_AUTH_PW)>0) )
+		{
+		Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+		Header("HTTP/1.0 401 Unauthorized");
+		}
     echo "You have now logged out. Thank you\n";
     exit;
-}
+	}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -76,25 +77,25 @@ $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 3;";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 3;";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
 $fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
 	}
-  else
+else
 	{
 	header ("Content-type: text/html; charset=utf-8");
 
@@ -202,14 +203,14 @@ if (strlen($ADD)>4)
 
 	##### get inbound groups listing for checkboxes
 	if ( (($ADD==31111) or ($ADD==31111)) and (count($groups)<1) )
-	{
-	$stmt="SELECT closer_campaigns from vicidial_remote_agents where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$closer_campaigns =	$row[0];
-	$closer_campaigns = preg_replace("/ -$/","",$closer_campaigns);
-	$groups = explode(" ", $closer_campaigns);
-	}
+		{
+		$stmt="SELECT closer_campaigns from vicidial_remote_agents where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$closer_campaigns =	$row[0];
+		$closer_campaigns = preg_replace("/ -$/","",$closer_campaigns);
+		$groups = explode(" ", $closer_campaigns);
+		}
 
 	$stmt="SELECT group_id,group_name from vicidial_inbound_groups order by group_id";
 	$rslt=mysql_query($stmt, $link);
@@ -259,10 +260,10 @@ if (strlen($ADD)>4)
 ######################
 
 if ($ADD==31111)
-{
+	{
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT * from vicidial_remote_agents where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
+	$stmt="SELECT remote_agent_id,user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns from vicidial_remote_agents where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$remote_agent_id =	$row[0];
@@ -273,25 +274,23 @@ if ($ADD==31111)
 	$status =			$row[5];
 	$campaign_id =		$row[6];
 
-echo "<br>MODIFY A REMOTE AGENTS ENTRY: $row[0]<form action=$PHP_SELF method=POST>\n";
-echo "<input type=hidden name=ADD value=41111>\n";
-echo "<input type=hidden name=remote_agent_id value=\"$row[0]\">\n";
-echo "<center><TABLE width=600 cellspacing=3>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>User ID Start: </td><td align=left>$user_start</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Number of Lines: </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3 value=\"$number_of_lines\"> (numbers only)</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left>$row[3]</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>External Extension: </td><td align=left><input type=text name=conf_exten size=20 maxlength=20 value=\"$conf_exten\"> (number dialed to reach agents [i.e. 913125551212])</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Status: </td><td align=left><select size=1 name=status><option SELECTED>ACTIVE</option><option>INACTIVE</option><option SELECTED>$status</option></select></td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Campaign: </td><td align=left>$campaign_id</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Inbound Groups: </td><td align=left>\n";
-echo "$groups_list";
-echo "</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value=submit></td></tr>\n";
-echo "</TABLE></center>\n";
-echo "NOTE: It can take up to 30 seconds for changes submitted on this screen to go live\n";
-
-}
-
+	echo "<br>MODIFY A REMOTE AGENTS ENTRY: $row[0]<form action=$PHP_SELF method=POST>\n";
+	echo "<input type=hidden name=ADD value=41111>\n";
+	echo "<input type=hidden name=remote_agent_id value=\"$row[0]\">\n";
+	echo "<center><TABLE width=600 cellspacing=3>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>User ID Start: </td><td align=left>$user_start</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Number of Lines: </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3 value=\"$number_of_lines\"> (numbers only)</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left>$row[3]</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>External Extension: </td><td align=left><input type=text name=conf_exten size=20 maxlength=20 value=\"$conf_exten\"> (number dialed to reach agents [i.e. 913125551212])</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Status: </td><td align=left><select size=1 name=status><option SELECTED>ACTIVE</option><option>INACTIVE</option><option SELECTED>$status</option></select></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Campaign: </td><td align=left>$campaign_id</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Inbound Groups: </td><td align=left>\n";
+	echo "$groups_list";
+	echo "</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value=submit></td></tr>\n";
+	echo "</TABLE></center>\n";
+	echo "NOTE: It can take up to 30 seconds for changes submitted on this screen to go live\n";
+	}
 
 
 
@@ -300,12 +299,12 @@ echo "NOTE: It can take up to 30 seconds for changes submitted on this screen to
 ######################
 
 if ($ADD==41111)
-{
+	{
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	 if ( (strlen($number_of_lines) < 1) or (strlen($conf_exten) < 2) )
+	if ( (strlen($number_of_lines) < 1) or (strlen($conf_exten) < 2) )
 		{echo "<br>REMOTE AGENTS NOT MODIFIED - Please go back and look at the data you entered\n";}
-	 else
+	else
 		{
 		$stmt="UPDATE vicidial_remote_agents set number_of_lines='" . mysql_real_escape_string($number_of_lines) . "', conf_exten='" . mysql_real_escape_string($conf_exten) . "', status='" . mysql_real_escape_string($status) . "', closer_campaigns='" . mysql_real_escape_string($groups_value) . "' where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
 		$rslt=mysql_query($stmt, $link);
@@ -317,10 +316,9 @@ if ($ADD==41111)
 		$fp = fopen ("./admin_changes_log.txt", "a");
 		fwrite ($fp, "$date|MODIFY REMOTE AGENTS ENTRY     |$PHP_AUTH_USER|$ip|$stmt|\n");
 		fclose($fp);
-
 		}
 
-	$stmt="SELECT * from vicidial_remote_agents where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
+	$stmt="SELECT remote_agent_id,user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns from vicidial_remote_agents where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$remote_agent_id =	$row[0];
@@ -331,25 +329,23 @@ if ($ADD==41111)
 	$status =			$row[5];
 	$campaign_id =		$row[6];
 
-echo "<br>MODIFY A REMOTE AGENTS ENTRY: $row[0]<form action=$PHP_SELF method=POST>\n";
-echo "<input type=hidden name=ADD value=41111>\n";
-echo "<input type=hidden name=remote_agent_id value=\"$row[0]\">\n";
-echo "<center><TABLE width=600 cellspacing=3>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>User ID Start: </td><td align=left>$user_start</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Number of Lines: </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3 value=\"$number_of_lines\"> (numbers only)</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left>$row[3]</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>External Extension: </td><td align=left><input type=text name=conf_exten size=20 maxlength=20 value=\"$conf_exten\"> (number dialed to reach agents [i.e. 913125551212])</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Status: </td><td align=left><select size=1 name=status><option SELECTED>ACTIVE</option><option>INACTIVE</option><option SELECTED>$status</option></select></td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Campaign: </td><td align=left>$campaign_id</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Inbound Groups: </td><td align=left>\n";
-echo "$groups_list";
-echo "</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value=submit></td></tr>\n";
-echo "</TABLE></center>\n";
-echo "NOTE: It can take up to 30 seconds for changes submitted on this screen to go live\n";
-
-}
-
+	echo "<br>MODIFY A REMOTE AGENTS ENTRY: $row[0]<form action=$PHP_SELF method=POST>\n";
+	echo "<input type=hidden name=ADD value=41111>\n";
+	echo "<input type=hidden name=remote_agent_id value=\"$row[0]\">\n";
+	echo "<center><TABLE width=600 cellspacing=3>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>User ID Start: </td><td align=left>$user_start</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Number of Lines: </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3 value=\"$number_of_lines\"> (numbers only)</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left>$row[3]</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>External Extension: </td><td align=left><input type=text name=conf_exten size=20 maxlength=20 value=\"$conf_exten\"> (number dialed to reach agents [i.e. 913125551212])</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Status: </td><td align=left><select size=1 name=status><option SELECTED>ACTIVE</option><option>INACTIVE</option><option SELECTED>$status</option></select></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Campaign: </td><td align=left>$campaign_id</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Inbound Groups: </td><td align=left>\n";
+	echo "$groups_list";
+	echo "</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value=submit></td></tr>\n";
+	echo "</TABLE></center>\n";
+	echo "NOTE: It can take up to 30 seconds for changes submitted on this screen to go live\n";
+	}
 
 
 
@@ -358,14 +354,13 @@ echo "NOTE: It can take up to 30 seconds for changes submitted on this screen to
 ######################
 
 if ($ADD==61111)
-{
+	{
 	echo "<FONT FACE=\"Courier\" COLOR=BLACK SIZE=2><PRE>";
 
-	 if ( (strlen($server_ip) < 2) or (strlen($user) < 2) )
+	if ( (strlen($server_ip) < 2) or (strlen($user) < 2) )
 		{echo "<br>REMOTE AGENTS ERROR - Please go back and look at the data you entered\n";}
-	 else
+	else
 		{
-
 		$users_list = '';
 		$k=0;
 		while($k < $number_of_lines)
@@ -386,14 +381,14 @@ if ($ADD==61111)
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$talking_to_print = mysql_num_rows($rslt);
-			if ($talking_to_print > 0)
+		if ($talking_to_print > 0)
 			{
 			$i=0;
 			while ($i < $talking_to_print)
 				{
 				$leadlink=0;
 				$row=mysql_fetch_row($rslt);
-					if (eregi("READY|PAUSED",$row[4]))
+				if (eregi("READY|PAUSED",$row[4]))
 					{
 					$row[3]='';
 					$row[5]=' - WAITING - ';
@@ -410,7 +405,7 @@ if ($ADD==61111)
 					$leadid = "<a href=\"./remote_dispo.php?lead_id=$row[2]&call_began=$row[6]\" target=\"_blank\">$leadid</a>";
 					}
 				$channel =			sprintf("%-10s", $row[3]);
-					$cc=0;
+				$cc=0;
 				while ( (strlen($channel) > 10) and ($cc < 100) )
 					{
 					$channel = eregi_replace(".$","",$channel);   
@@ -439,14 +434,13 @@ if ($ADD==61111)
 				$i++;
 				}
 
-				echo "+------------|--------+--------------+------------+--------+---------------------+---------+\n";
-				echo "  $i agents logged in on server $server_ip\n\n";
+			echo "+------------|--------+--------------+------------+--------+---------------------+---------+\n";
+			echo "  $i agents logged in on server $server_ip\n\n";
 
-				echo "  <SPAN class=\"yellow\"><B>          </SPAN> - 5 minutes or more on call</B>\n";
-				echo "  <SPAN class=\"orange\"><B>          </SPAN> - Over 10 minutes on call</B>\n";
-
+			echo "  <SPAN class=\"yellow\"><B>          </SPAN> - 5 minutes or more on call</B>\n";
+			echo "  <SPAN class=\"orange\"><B>          </SPAN> - Over 10 minutes on call</B>\n";
 			}
-			else
+		else
 			{
 			echo "**************************************************************************************\n";
 			echo "********************************* NO AGENTS ON CALLS *********************************\n";
@@ -454,9 +448,8 @@ if ($ADD==61111)
 			}
 		}
 
-echo "</PRE>\n\n";
-
-}
+	echo "</PRE>\n\n";
+	}
 
 
 ######################
@@ -464,7 +457,7 @@ echo "</PRE>\n\n";
 ######################
 
 if ($ADD==71111)
-{
+	{
 	echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
 	echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=ADD VALUE=\"71111\">\n";
@@ -473,11 +466,10 @@ if ($ADD==71111)
 	echo "</FORM>\n\n";
 	echo "<FONT FACE=\"Courier\" COLOR=BLACK SIZE=2><PRE>";
 
-	 if ( (strlen($server_ip) < 2) or (strlen($user) < 2) )
+	if ( (strlen($server_ip) < 2) or (strlen($user) < 2) )
 		{echo "<br>REMOTE AGENTS ERROR - Please go back and look at the data you entered\n";}
-	 else
+	else
 		{
-
 		$users_list = '';
 		$k=0;
 		while($k < $number_of_lines)
@@ -493,15 +485,15 @@ if ($ADD==71111)
 		$row=mysql_fetch_row($rslt);
 		$in_calls =		$row[0];
 		$in_time =		$row[1];
-			$in_time_M = ($in_time / 60);
-			$in_time_M = round($in_time_M, 2);
-			$in_time_M_int = intval("$in_time_M");
-			$in_time_SEC = ($in_time_M - $in_time_M_int);
-			$in_time_SEC = ($in_time_SEC * 60);
-			$in_time_SEC = round($in_time_SEC, 0);
-			if ($in_time_SEC < 10) {$in_time_SEC = "0$in_time_SEC";}
-			$in_time_MS = "$in_time_M_int:$in_time_SEC";
-			$in_time_MS =		sprintf("%7s", $in_time_MS);
+		$in_time_M = ($in_time / 60);
+		$in_time_M = round($in_time_M, 2);
+		$in_time_M_int = intval("$in_time_M");
+		$in_time_SEC = ($in_time_M - $in_time_M_int);
+		$in_time_SEC = ($in_time_SEC * 60);
+		$in_time_SEC = round($in_time_SEC, 0);
+		if ($in_time_SEC < 10) {$in_time_SEC = "0$in_time_SEC";}
+		$in_time_MS = "$in_time_M_int:$in_time_SEC";
+		$in_time_MS =		sprintf("%7s", $in_time_MS);
 
 		echo "Remote Agent inbound stats                                        $NOW_TIME\n\n";
 		echo "\n";
@@ -519,7 +511,7 @@ if ($ADD==71111)
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$talking_to_print = mysql_num_rows($rslt);
-			if ($talking_to_print > 0)
+		if ($talking_to_print > 0)
 			{
 			$i=0;
 			while ($i < $talking_to_print)
@@ -551,14 +543,13 @@ if ($ADD==71111)
 				$i++;
 				}
 
-				echo "+----------+------------+----------------+------------+--------+---------------------+---------+\n";
-	#			echo "  $i agents logged in on server $server_ip\n\n";
+			echo "+----------+------------+----------------+------------+--------+---------------------+---------+\n";
+#			echo "  $i agents logged in on server $server_ip\n\n";
 
-	#			echo "  <SPAN class=\"yellow\"><B>          </SPAN> - 5 minutes or more on call</B>\n";
-	#			echo "  <SPAN class=\"orange\"><B>          </SPAN> - Over 10 minutes on call</B>\n";
-
+#			echo "  <SPAN class=\"yellow\"><B>          </SPAN> - 5 minutes or more on call</B>\n";
+#			echo "  <SPAN class=\"orange\"><B>          </SPAN> - Over 10 minutes on call</B>\n";
 			}
-			else
+		else
 			{
 			echo "**************************************************************************************\n";
 			echo "********************************* NO CALLS ON THIS DAY *******************************\n";
@@ -566,9 +557,8 @@ if ($ADD==71111)
 			}
 		}
 
-echo "</PRE>\n\n";
-
-}
+	echo "</PRE>\n\n";
+	}
 
 
 
@@ -598,8 +588,4 @@ exit;
 
 
 ?>
-
-
-
-
 

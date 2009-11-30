@@ -39,6 +39,7 @@
 # 90810-0956 - Added sccsv11 file format
 # 90830-0953 - Added forcelistfilename option
 # 91112-0645 - Added title/alt_phone duplicate checks
+# 91129-2202 - removed SELECT STAR and formatting fixes
 #
 
 $secX = time();
@@ -419,7 +420,7 @@ else
 $i=0;
 
 foreach(@FILES)
-   {
+	{
 	$size1 = 0;
 	$size2 = 0;
 	$person_id_delete = '';
@@ -428,13 +429,11 @@ foreach(@FILES)
 
 	if (length($FILES[$i]) > 4)
 		{
-
 		$size1 = (-s "$dir1/$FILES[$i]");
 		if (!$q) {print "$FILES[$i] $size1\n";}
 		sleep(2);
 		$size2 = (-s "$dir1/$FILES[$i]");
 		if (!$q) {print "$FILES[$i] $size2\n\n";}
-
 
 		if ( ($FILES[$i] !~ /^TRANSFERRED/i) && ($size1 eq $size2) && (length($FILES[$i]) > 4))
 			{
@@ -1088,7 +1087,7 @@ foreach(@FILES)
 						{
 						if ($phone_code =~ /^1$/)
 							{
-							$stmtA = "select * from vicidial_postal_codes where country_code='$phone_code' and postal_code LIKE \"$postal_code%\";";
+							$stmtA = "select postal_code,state,GMT_offset,DST,DST_range,country,country_code from vicidial_postal_codes where country_code='$phone_code' and postal_code LIKE \"$postal_code%\";";
 								if($DBX){print STDERR "\n|$stmtA|\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1114,7 +1113,7 @@ foreach(@FILES)
 						### UNITED STATES ###
 						if ($phone_code =~ /^1$/)
 							{
-							$stmtA = "select * from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
+							$stmtA = "select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
 								if($DBX){print STDERR "\n|$stmtA|\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1134,7 +1133,7 @@ foreach(@FILES)
 						### MEXICO ###
 						if ($phone_code =~ /^52$/)
 							{
-							$stmtA = "select * from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
+							$stmtA = "select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
 								if($DBX){print STDERR "\n|$stmtA|\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1154,7 +1153,7 @@ foreach(@FILES)
 						### AUSTRALIA ###
 						if ($phone_code =~ /^61$/)
 							{
-							$stmtA = "select * from vicidial_phone_codes where country_code='$phone_code' and state='$state';";
+							$stmtA = "select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and state='$state';";
 								if($DBX){print STDERR "\n|$stmtA|\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1174,7 +1173,7 @@ foreach(@FILES)
 						### ALL OTHER COUNTRY CODES ###
 						if (!$PC_processed)
 							{
-							$stmtA = "select * from vicidial_phone_codes where country_code='$phone_code';";
+							$stmtA = "select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code';";
 								if($DBX){print STDERR "\n|$stmtA|\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;

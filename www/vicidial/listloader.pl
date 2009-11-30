@@ -438,7 +438,7 @@ foreach $oWkS (@{$oBook->{Worksheet}}) {
 				{
 				if ($phone_code =~ /^1$/)
 					{
-					$stmtA = "select * from vicidial_postal_codes where country_code='$phone_code' and postal_code LIKE \"$postal_code%\";";
+					$stmtA = "select postal_code,state,GMT_offset,DST,DST_range,country,country_code from vicidial_postal_codes where country_code='$phone_code' and postal_code LIKE \"$postal_code%\";";
 						if($DBX){print STDERR "\n|$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -464,7 +464,7 @@ foreach $oWkS (@{$oBook->{Worksheet}}) {
 				### UNITED STATES ###
 				if ($phone_code =~ /^1$/)
 					{
-					$stmtA = "select * from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
+					$stmtA = "select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
 						if($DBX){print STDERR "\n|$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -484,7 +484,7 @@ foreach $oWkS (@{$oBook->{Worksheet}}) {
 				### MEXICO ###
 				if ($phone_code =~ /^52$/)
 					{
-					$stmtA = "select * from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
+					$stmtA = "select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
 						if($DBX){print STDERR "\n|$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -504,7 +504,7 @@ foreach $oWkS (@{$oBook->{Worksheet}}) {
 				### AUSTRALIA ###
 				if ($phone_code =~ /^61$/)
 					{
-					$stmtA = "select * from vicidial_phone_codes where country_code='$phone_code' and state='$state';";
+					$stmtA = "select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and state='$state';";
 						if($DBX){print STDERR "\n|$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -524,7 +524,7 @@ foreach $oWkS (@{$oBook->{Worksheet}}) {
 				### ALL OTHER COUNTRY CODES ###
 				if (!$PC_processed)
 					{
-					$stmtA = "select * from vicidial_phone_codes where country_code='$phone_code';";
+					$stmtA = "select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code';";
 						if($DBX){print STDERR "\n|$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;

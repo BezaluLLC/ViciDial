@@ -1644,7 +1644,7 @@ if ( (eregi("POSTAL",$postalgmt)) && (strlen($postal_code)>4) )
 	{
 	if (preg_match('/^1$/', $phone_code))
 		{
-		$stmt="select * from vicidial_postal_codes where country_code='$phone_code' and postal_code LIKE \"$postal_code%\";";
+		$stmt="select postal_code,state,GMT_offset,DST,DST_range,country,country_code from vicidial_postal_codes where country_code='$phone_code' and postal_code LIKE \"$postal_code%\";";
 		$rslt=mysql_query($stmt, $link);
 		$pc_recs = mysql_num_rows($rslt);
 		if ($pc_recs > 0)
@@ -1665,7 +1665,7 @@ if ($postalgmt_found < 1)
 	### UNITED STATES ###
 	if ($phone_code =='1')
 		{
-		$stmt="select * from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
+		$stmt="select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
 		$rslt=mysql_query($stmt, $link);
 		$pc_recs = mysql_num_rows($rslt);
 		if ($pc_recs > 0)
@@ -1680,7 +1680,7 @@ if ($postalgmt_found < 1)
 	### MEXICO ###
 	if ($phone_code =='52')
 		{
-		$stmt="select * from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
+		$stmt="select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
 		$rslt=mysql_query($stmt, $link);
 		$pc_recs = mysql_num_rows($rslt);
 		if ($pc_recs > 0)
@@ -1695,7 +1695,7 @@ if ($postalgmt_found < 1)
 	### AUSTRALIA ###
 	if ($phone_code =='61')
 		{
-		$stmt="select * from vicidial_phone_codes where country_code='$phone_code' and state='$state';";
+		$stmt="select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and state='$state';";
 		$rslt=mysql_query($stmt, $link);
 		$pc_recs = mysql_num_rows($rslt);
 		if ($pc_recs > 0)
@@ -1711,7 +1711,7 @@ if ($postalgmt_found < 1)
 	if (!$PC_processed)
 		{
 		$PC_processed++;
-		$stmt="select * from vicidial_phone_codes where country_code='$phone_code';";
+		$stmt="select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code';";
 		$rslt=mysql_query($stmt, $link);
 		$pc_recs = mysql_num_rows($rslt);
 		if ($pc_recs > 0)

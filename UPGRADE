@@ -296,6 +296,9 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	'EXAMPLEcustom_report_links.html' file included in that directory that
 	can just be copied and customized for your needs.
 
+72. Replaced all "SELECT *" MySQL queries with proper field lists. This makes
+	database table field order less important, allowing for more 
+	customizations by the user without causing problems.
 
 
 
