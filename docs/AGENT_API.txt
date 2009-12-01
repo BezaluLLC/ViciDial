@@ -15,7 +15,7 @@ external_hangup - sends command to hangup the current phone call for one specifi
 external_status - sends command to set the disposition for one specific agent and move on to next call
 external_pause - sends command to pause/resume an agent now if not on a call, or pause after their next call if on call
 external_dial - sends command to manually dial a number on the agent's screen
-
+change_ingroups - changes the selected in-groups for a logged-in agent
 
 
 New scripts:
@@ -146,8 +146,8 @@ vtiger_callback -
 
 RESPONSES:
 ERROR: external_dial not valid - 7275551212|1|YES|6666
-ERROR: agent_user is not allowed to place manual dial calls - 6666
 ERROR: agent_user is not logged in - 6666
+ERROR: agent_user is not allowed to place manual dial calls - 6666
 ERROR: caller_id_number from group_alias is not valid - 6666|TESTING|123
 ERROR: group_alias is not valid - 6666|TESTING
 ERROR: vtiger callback activity does not exist in vtiger system - 12345
@@ -155,7 +155,38 @@ SUCCESS: external_dial function set - 7275551212|1|YES|1232020456|6666
 
 
 
+change_ingroups - 
 
+DESCRIPTION:
+This function will change the selected in-groups for an agent that is logged into a campaign that allows for inbound calls to be handled. Allows the selected in-groups for an agent to be changed while they are logged-in to the ViciDial Agent screen only. Once changed in this way, the agent would need to log out and back in to be able to select in-groups themselves(If Agent Choose In-Groups is enabled for that user). The blended checkbox can also be changed using this function. The API user performing this function must have vicidial_users.change_agent_campaign = 1.
+
+VALUES:
+value -
+ CHANGE  - will change all in-groups to those defined in ingroup_choices
+ REMOVE  - will only remove the listed in-groups
+ ADD  - will only add the listed in-groups
+blended - 
+ YES  - set the agent to take outbound auto-dialed calls (not applicable in MANUAL and INBOUND_MAN dial method campaigns)
+ NO  - set the agent to only take inbound calls
+ingroup_choices - 
+ OPTIONAL, a space-delimited(use plusses + in the URL) list of in-groups to allow the agent to take calls from, example: " TEST_IN2 SALESLINE TRAINING_IN -"
+set_as_default - 
+ OPTIONAL, YES or NO - overwrites the settings for the agent in the user modification screen, default is NO
+
+EXAMPLE URL:
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=change_ingroups&value=CHANGE&set_as_default=YES&blended=YES&ingroup_choices=+TEST_IN+SALESLINE+FAKE_IN+-
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=change_ingroups&value=REMOVE&blended=NO&ingroup_choices=+TEST_IN2+TEST_IN4+-
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=change_ingroups&value=ADD&blended=NO&ingroup_choices=+TEST_IN2+-
+
+RESPONSES:
+ERROR: change_ingroups not valid - N| TEST_IN SALESLINE -
+ERROR: agent_user is not logged in - 6666
+ERROR: campaign does not allow inbound calls - 6666
+ERROR: user is not allowed to change agent in-groups - 6666|TESTING|123
+ERROR: campaign dial_method does not allow outbound autodial - 6666|TESTING
+ERROR: ingroup does not exist - FAKE_IN| TEST_IN FAKE_IN SALESLINE -
+ERROR: ingroup_choices are required for ADD and REMOVE values - ADD|
+SUCCESS: change_ingroups function set - YES| TEST_IN SALESLINE -|6666
 
 
 

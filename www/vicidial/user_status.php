@@ -12,6 +12,7 @@
 # 90310-0741 - Added admin header
 # 90508-0644 - Changed to PHP long tags
 # 91012-0536 - Added selected territories display
+# 91130-2039 - Added user closer log manager flag display
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -120,7 +121,7 @@ else
 	$full_name = $row[0];
 	$user_group = $row[1];
 
-	$stmt="SELECT live_agent_id,user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,call_server_ip,user_level,comments,campaign_weight,calls_today,external_hangup,external_status,external_pause,external_dial,agent_log_id,last_state_change,agent_territories from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
+	$stmt="SELECT live_agent_id,user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,call_server_ip,user_level,comments,campaign_weight,calls_today,external_hangup,external_status,external_pause,external_dial,agent_log_id,last_state_change,agent_territories,outbound_autodial,manager_ingroup_set,external_igb_set_user from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$agents_to_print = mysql_num_rows($rslt);
@@ -128,14 +129,17 @@ else
 	while ($i < $agents_to_print)
 		{
 		$row=mysql_fetch_row($rslt);
-		$Aserver_ip =		$row[2];
-		$Asession_id =		$row[3];
-		$Aextension =		$row[4];
-		$Astatus =			$row[5];
-		$Acampaign =		$row[7];
-		$Alast_call =		$row[14];
-		$Acl_campaigns =	$row[15];
-		$agent_territories = $row[27];
+		$Aserver_ip =				$row[2];
+		$Asession_id =				$row[3];
+		$Aextension =				$row[4];
+		$Astatus =					$row[5];
+		$Acampaign =				$row[7];
+		$Alast_call =				$row[14];
+		$Acl_campaigns =			$row[15];
+		$agent_territories = 		$row[27];
+		$outbound_autodial = 		$row[28];
+		$manager_ingroup_set =		$row[29];
+		$external_igb_set_user =	$row[30];
 		$i++;
 		}
 
@@ -411,12 +415,13 @@ if ($agents_to_print > 0)
 	echo "<TR><TD ALIGN=RIGHT>status:</TD><TD ALIGN=LEFT> &nbsp; $Astatus</TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>hungup last call at:</TD><TD ALIGN=LEFT> &nbsp; $Alast_call</TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Closer groups:</TD><TD ALIGN=LEFT> &nbsp; $Acl_campaigns</TD></TR>\n";
+	if ($manager_ingroup_set != 'N')
+		{echo "<TR><TD ALIGN=RIGHT>Manager InGroup Select:</TD><TD ALIGN=LEFT> &nbsp; YES, by $external_igb_set_user</TD></TR>\n";}
+	if ($outbound_autodial == 'Y')
+		{echo "<TR><TD ALIGN=RIGHT>Outbound Auto-Dial:</TD><TD ALIGN=LEFT> &nbsp; YES</TD></TR>\n";}
 	if ($user_territories_active > 0)
-		{
-		echo "<TR><TD ALIGN=RIGHT>Selected Territories:</TD><TD ALIGN=LEFT> &nbsp; $agent_territories</TD></TR>\n";
-		}
+		{echo "<TR><TD ALIGN=RIGHT>Selected Territories:</TD><TD ALIGN=LEFT> &nbsp; $agent_territories</TD></TR>\n";}
 	echo "</TABLE>\n<BR>\n";
-
 
 	if ($change_agent_campaign > 0)
 		{

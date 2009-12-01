@@ -617,3 +617,12 @@ UPDATE system_settings SET db_schema_version='1181',db_schema_update_date=NOW();
 ALTER TABLE servers ADD conf_secret VARCHAR(20) default 'test';
 
 UPDATE system_settings SET db_schema_version='1182',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_live_agents MODIFY manager_ingroup_set ENUM('Y','N','SET') default 'N';
+ALTER TABLE vicidial_live_agents ADD external_ingroups TEXT AFTER external_dial;
+ALTER TABLE vicidial_live_agents ADD external_blended ENUM('0','1') default '0' AFTER external_ingroups;
+ALTER TABLE vicidial_live_agents ADD external_igb_set_user VARCHAR(20) default '' AFTER external_blended;
+
+ALTER TABLE vicidial_user_closer_log ADD manager_change VARCHAR(20) default '';
+
+UPDATE system_settings SET db_schema_version='1183',db_schema_update_date=NOW();

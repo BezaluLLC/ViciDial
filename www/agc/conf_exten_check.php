@@ -47,10 +47,11 @@
 # 90508-0727 - Changed to PHP long tags
 # 90706-1430 - Fixed AGENTDIRECT calls in queue display count
 # 90908-1037 - Added DEAD call logging
+# 91130-2022 - Added code for manager override of in-group selection
 #
 
-$version = '2.2.0-22';
-$build = '90908-1037';
+$version = '2.2.0-23';
+$build = '91130-2022';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=17;
 $one_mysql_log=0;
@@ -210,7 +211,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 
 			if ($Acount > 0)
 				{
-				$stmt="SELECT status,callerid,agent_log_id from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
+				$stmt="SELECT status,callerid,agent_log_id,campaign_id from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
 				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03004',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -218,6 +219,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 				$Astatus =			$row[0];
 				$Acallerid =		$row[1];
 				$Aagent_log_id =	$row[2];
+				$Acampaign_id =		$row[3];
 				}
 		#	### find out if external table shows agent should be disabled
 		#	$stmt="SELECT count(*) from another_table where user='$user' and status='DEAD';";
@@ -371,6 +373,72 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			$time_diff = ($server_epoch - $db_epoch);
 			$web_diff = ($db_epoch - $web_epoch);
 
+			##### check for in-group change details
+			$InGroupChangeDetails = '0|||';
+			$manager_ingroup_set=0;
+			$stmt="SELECT count(*) FROM vicidial_live_agents where user='$user' and manager_ingroup_set='SET';";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$mis_record_ct = mysql_num_rows($rslt);
+			if ($mis_record_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$manager_ingroup_set =		$row[0];
+				}
+			if ($manager_ingroup_set > 0)
+				{
+				$stmt="UPDATE vicidial_live_agents SET closer_campaigns=external_ingroups, manager_ingroup_set='Y' where user='$user' and manager_ingroup_set='SET';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$VLAMISaffected_rows_update = mysql_affected_rows($link);
+				if ($VLAMISaffected_rows_update > 0)
+					{
+					$stmt="SELECT external_ingroups,external_blended,external_igb_set_user,outbound_autodial,dial_method FROM vicidial_live_agents vla, vicidial_campaigns vc where user='$user' and manager_ingroup_set='Y' and vla.campaign_id=vc.campaign_id;";
+					$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$migs_record_ct = mysql_num_rows($rslt);
+					if ($migs_record_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$external_ingroups =		$row[0];
+						$external_blended =			$row[1];
+						$external_igb_set_user =	$row[2];
+						$outbound_autodial =		$row[3];
+						$dial_method =				$row[4];
+
+						$stmt="SELECT full_name FROM vicidial_users where user='$external_igb_set_user';";
+						$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($DB) {echo "$stmt\n";}
+						$mign_record_ct = mysql_num_rows($rslt);
+						if ($mign_record_ct > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$external_igb_set_name =		$row[0];
+							}
+						
+						$NEWoutbound_autodial='N';
+						if ( ($external_blended > 0) and ($dial_method != "INBOUND_MAN") and ($dial_method != "MANUAL") )
+							{$NEWoutbound_autodial='Y';}
+
+						$stmt="UPDATE vicidial_live_agents SET outbound_autodial='$NEWoutbound_autodial' where user='$user';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+						$VLAMIBaffected_rows_update = mysql_affected_rows($link);
+
+						$InGroupChangeDetails = "1|$external_blended|$external_igb_set_user|$external_igb_set_name";
+
+						$stmt="INSERT INTO vicidial_user_closer_log set user='$user',campaign_id='$Acampaign_id',event_date='$NOW_TIME',blended='$external_blended',closer_campaigns='$external_ingroups',manager_change='$external_igb_set_user';";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						}
+					}
+				}
 
 			##### grab the shift information the agent
 			$stmt="SELECT user_group,agent_shift_enforcement_override from vicidial_users where user='$user';";
@@ -460,7 +528,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			if ($Ashift_logout > 0)
 				{$Alogin='SHIFT_LOGOUT';}
 
-			echo 'DateTime: ' . $NOW_TIME . '|UnixTime: ' . $StarTtime . '|Logged-in: ' . $Alogin . '|CampCalls: ' . $RingCalls . '|Status: ' . $Astatus . '|DiaLCalls: ' . $DiaLCalls . '|APIHanguP: ' . $external_hangup . '|APIStatuS: ' . $external_status . '|APIPausE: ' . $external_pause . '|APIDiaL: ' . $external_dial . '|DEADcall: ' . $DEADcustomer . "\n";
+			echo 'DateTime: ' . $NOW_TIME . '|UnixTime: ' . $StarTtime . '|Logged-in: ' . $Alogin . '|CampCalls: ' . $RingCalls . '|Status: ' . $Astatus . '|DiaLCalls: ' . $DiaLCalls . '|APIHanguP: ' . $external_hangup . '|APIStatuS: ' . $external_status . '|APIPausE: ' . $external_pause . '|APIDiaL: ' . $external_dial . '|DEADcall: ' . $DEADcustomer . '|InGroupChange: ' . $InGroupChangeDetails . "\n";
 
 			}
 		$total_conf=0;

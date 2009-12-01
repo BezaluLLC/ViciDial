@@ -260,10 +260,11 @@
 # 91108-2118 - Added QM pause code entry
 # 91111-1433 - Fixed Gender pulldown list display for IE, remove links for recording channels in SHOW CHANNELS
 # 91123-1801 - Added code for outbound_autodial field
+# 91130-2021 - Added code for manager override of in-group selection
 #
 
-$version = '2.2.0-238';
-$build = '91123-1801';
+$version = '2.2.0-239';
+$build = '91130-2021';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -1920,7 +1921,7 @@ else
 
 
 			$closer_chooser_string='';
-			$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$closer_chooser_string','$user_level','$campaign_weight','$calls_today','$NOW_TIME','Y');";
+			$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial,manager_ingroup_set) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$closer_chooser_string','$user_level','$campaign_weight','$calls_today','$NOW_TIME','Y','N');";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01044',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -1960,7 +1961,7 @@ else
 			{
 			print "<!-- campaign is set to manual dial: $auto_dial_level -->\n";
 
-			$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$user_level', '$campaign_weight', '$calls_today','$NOW_TIME','N');";
+			$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial,manager_ingroup_set) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$user_level', '$campaign_weight', '$calls_today','$NOW_TIME','N','N');";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01047',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -2594,6 +2595,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var script_height = '<?php echo $SSheight ?>';
 	var enable_second_webform = '<?php echo $enable_second_webform ?>';
 	var no_delete_VDAC=0;
+	var manager_ingroups_set=0;
+	var external_igb_set_name='';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -3231,6 +3234,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var APIDiaL = APIDiaL_array[1];
 						var CheckDEADcall_array = check_time_array[10].split("DEADcall: ");
 						var CheckDEADcall = CheckDEADcall_array[1];
+						var InGroupChange_array = check_time_array[11].split("InGroupChange: ");
+						var InGroupChange = InGroupChange_array[1];
+						var InGroupChangeBlend = check_time_array[12];
+						var InGroupChangeUser = check_time_array[13];
+						var InGroupChangeName = check_time_array[14];
 						if ( (APIHanguP==1) && (VD_live_customer_call==1) )
 							{
 							hideDiv('CustomerGoneBox');
@@ -3323,6 +3331,20 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								CheckDEADcallON=1;
 								}
 							}
+						if (InGroupChange > 0)
+							{
+							var external_blended = InGroupChangeBlend;
+							var external_igb_set_user = InGroupChangeUser;
+							external_igb_set_name = InGroupChangeName;
+							manager_ingroups_set=1;
+
+							if ( (external_blended == '1') && (dial_method != 'INBOUND_MAN') )
+								{VICIDiaL_closer_blended = '1';}
+
+							if (external_blended == '0')
+								{VICIDiaL_closer_blended = '0';}
+							}
+
 
 // ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ  above section working on API functions
 						var check_conf_array=check_ALL_array[1].split("|");
@@ -5437,9 +5459,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					var check_DS_array=check_dispo.split("\n");
 				//	alert(xmlhttp.responseText + "\n|" + check_DS_array[1] + "\n|" + check_DS_array[2] + "|");
 					if (check_DS_array[1] == 'Next agent_log_id:')
-						{
-						agent_log_id = check_DS_array[2];
-						}
+						{agent_log_id = check_DS_array[2];}
 					}
 				}
 			delete xmlhttp;
@@ -7439,7 +7459,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	function CloserSelectContent_create()
 		{
 		HidEGenDerPulldown();
-		if (VU_agent_choose_ingroups == '1')
+		if ( (VU_agent_choose_ingroups == '1') && (manager_ingroups_set < 1) )
 			{
 			var live_CSC_HTML = "<table cellpadding=5 cellspacing=5 width=500><tr><td><B>GROUPS NOT SELECTED</B></td><td><B>SELECTED GROUPS</B></td></tr><tr><td bgcolor=\"#99FF99\" height=300 width=240 valign=top><font class=\"log_text\"><span id=CloserSelectAdd> &nbsp; <a href=\"#\" onclick=\"CloserSelect_change('-----ADD-ALL-----','ADD');return false;\"><B>--- ADD ALL ---</B><BR>";
 			var loop_ct = 0;
@@ -8549,8 +8569,15 @@ function phone_number_format(formatphone) {
 			}
 		else
 			{
-			HidEGenDerPulldown();
-			showDiv('CloserSelectBox')
+			if (manager_ingroups_set > 0)
+				{
+				alert("Manager " + external_igb_set_name + " has selected your in-group choices");
+				}
+			else
+				{
+				HidEGenDerPulldown();
+				showDiv('CloserSelectBox')
+				}
 			}
 		}
 
@@ -8797,6 +8824,7 @@ else
 				{
 				if (VU_closer_default_blended == 1)
 					{document.vicidial_form.CloserSelectBlended.checked=true}
+				CloserSelectContent_create();
 				showDiv('CloserSelectBox');
 				var CloserSelecting = 1;
 				CloserSelectContent_create();

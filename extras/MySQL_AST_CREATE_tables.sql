@@ -351,11 +351,14 @@ external_hangup VARCHAR(1) default '',
 external_status VARCHAR(6) default '',
 external_pause VARCHAR(20) default '',
 external_dial VARCHAR(100) default '',
+external_ingroups TEXT,
+external_blended ENUM('0','1') default '0',
+external_igb_set_user VARCHAR(20) default '',
 agent_log_id INT(9) UNSIGNED default '0',
 last_state_change DATETIME,
 agent_territories TEXT,
 outbound_autodial ENUM('Y','N') default 'N',
-manager_ingroup_set ENUM('Y','N') default 'N',
+manager_ingroup_set ENUM('Y','N','SET') default 'N',
 index (random_id),
 index (last_call_time),
 index (last_update_time),
@@ -1276,6 +1279,7 @@ campaign_id VARCHAR(20),
 event_date DATETIME,
 blended ENUM('1','0') default '0',
 closer_campaigns TEXT,
+manager_change VARCHAR(20) default '',
 index (user),
 index (event_date)
 );
@@ -1957,7 +1961,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1182',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1183',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

@@ -19,6 +19,7 @@
 # 90310-0734 - Added admin header
 # 90508-0644 - Changed to PHP long tags
 # 90524-2009 - Changed time display to use functions.php
+# 91130-2037 - Added user closer log manager flag display
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -435,9 +436,9 @@ echo "<center>\n";
 
 echo "<B>CLOSER IN-GROUP SELECTION LOGS:</B>\n";
 echo "<TABLE width=670 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2> CAMPAIGN</td><td align=left><font size=2>BLEND</td><td align=left><font size=2> GROUPS</td></tr>\n";
+echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2> CAMPAIGN</td><td align=left><font size=2>BLEND</td><td align=left><font size=2> GROUPS</td><td align=left><font size=2> MANAGER</td></tr>\n";
 
-$stmt="select user,campaign_id,event_date,blended,closer_campaigns from vicidial_user_closer_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by event_date desc limit 1000;";
+$stmt="select user,campaign_id,event_date,blended,closer_campaigns,manager_change from vicidial_user_closer_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by event_date desc limit 1000;";
 $rslt=mysql_query($stmt, $link);
 $logs_to_print = mysql_num_rows($rslt);
 
@@ -457,6 +458,7 @@ while ($logs_to_print > $u)
 	echo "<td align=left><font size=2> $row[1]</td>\n";
 	echo "<td align=left><font size=2> $row[3]</td>\n";
 	echo "<td align=left><font size=2> $row[4] </td>\n";
+	echo "<td align=left><font size=2> $row[5]</td>\n";
 	echo "</tr>\n";
 	}
 

@@ -4930,7 +4930,6 @@ if ($ACTION == 'updateDISPO')
 
 		mysql_close($linkB);
 		}
-
 	echo 'Lead ' . $lead_id . ' has been changed to ' . $dispo_choice . " Status\nNext agent_log_id:\n" . $agent_log_id . "\n";
 	}
 
@@ -5075,16 +5074,16 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 			$stmt="UPDATE vicidial_live_agents set status='$stage' where user='$user' and server_ip='$server_ip';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00166',$user,$server_ip,$session_name,$one_mysql_log);}
-					$retry_count=0;
-					while ( ($errno > 0) and ($retry_count < 9) )
-						{
-						$rslt=mysql_query($stmt, $link);
-						$one_mysql_log=1;
-						$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,"9166$retry_count",$user,$server_ip,$session_name,$one_mysql_log);
-						$one_mysql_log=0;
-						$retry_count++;
-						}
+				if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00166',$user,$server_ip,$session_name,$one_mysql_log);}
+			$retry_count=0;
+			while ( ($errno > 0) and ($retry_count < 9) )
+				{
+				$rslt=mysql_query($stmt, $link);
+				$one_mysql_log=1;
+				$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,"9166$retry_count",$user,$server_ip,$session_name,$one_mysql_log);
+				$one_mysql_log=0;
+				$retry_count++;
+				}
 			$affected_rows = mysql_affected_rows($link);
 			}
 		if ( ($affected_rows > 0) or ($comments == 'NO_STATUS_CHANGE') )
@@ -5228,7 +5227,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 			$VLAaffected_rows_update = mysql_affected_rows($link);
 			}
 		}
-		echo 'Agent ' . $user . ' is now in status ' . $stage . "\nNext agent_log_id:\n$agent_log_id\n";
+	echo 'Agent ' . $user . ' is now in status ' . $stage . "\nNext agent_log_id:\n$agent_log_id\n";
 	}
 
 

@@ -10,7 +10,7 @@
 #  - $user
 #  - $pass
 #  - $agent_user
-#  - $function - ('external_hangup','external_status','external_pause')
+#  - $function - ('external_hangup','external_status','external_pause','external_dial','change_ingroups')
 #  - $value
 #  - $vendor_id
 #  - $focus
@@ -23,6 +23,9 @@
 #  - $source - ('vtiger','webform','adminweb')
 #  - $format - ('text','debug')
 #  - $vtiger_callback - ('YES','NO')
+#  - $blended - ('YES','NO')
+#  - $ingroup_choices - (' TEST_IN SALESLINE -')
+#  - $set_as_default - ('YES','NO')
 
 # CHANGELOG:
 # 80703-2225 - First build of script
@@ -33,10 +36,11 @@
 # 90407-1920 - Added vtiger_callback option for external_dial function
 # 90508-0727 - Changed to PHP long tags
 # 90522-0506 - Security fix
+# 91130-1307 - Added change_ingroups(Manager InGroup change feature)
 #
 
-$version = '2.2.0-8';
-$build = '90522-0506';
+$version = '2.2.0-9';
+$build = '91130-1307';
 
 require("dbconnect.php");
 
@@ -73,6 +77,12 @@ if (isset($_GET["format"]))						{$format=$_GET["format"];}
 	elseif (isset($_POST["format"]))			{$format=$_POST["format"];}
 if (isset($_GET["vtiger_callback"]))			{$vtiger_callback=$_GET["vtiger_callback"];}
 	elseif (isset($_POST["vtiger_callback"]))	{$vtiger_callback=$_POST["vtiger_callback"];}
+if (isset($_GET["blended"]))					{$blended=$_GET["blended"];}
+	elseif (isset($_POST["blended"]))			{$blended=$_POST["blended"];}
+if (isset($_GET["ingroup_choices"]))			{$ingroup_choices=$_GET["ingroup_choices"];}
+	elseif (isset($_POST["ingroup_choices"]))	{$ingroup_choices=$_POST["ingroup_choices"];}
+if (isset($_GET["set_as_default"]))				{$set_as_default=$_GET["set_as_default"];}
+	elseif (isset($_POST["set_as_default"]))	{$set_as_default=$_POST["set_as_default"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -84,15 +94,15 @@ $stmt = "SELECT use_non_latin FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+$ingroup_choices = ereg_replace("\+"," ",$ingroup_choices);
 
 if ($non_latin < 1)
 	{
@@ -113,6 +123,9 @@ if ($non_latin < 1)
 	$source = ereg_replace("[^0-9a-zA-Z]","",$source);
 	$format = ereg_replace("[^0-9a-zA-Z]","",$format);
 	$vtiger_callback = ereg_replace("[^A-Z]","",$vtiger_callback);
+	$blended = ereg_replace("[^A-Z]","",$blended);
+	$ingroup_choices = ereg_replace("[^ -\_0-9a-zA-Z]","",$ingroup_choices);
+	$set_as_default = ereg_replace("[^A-Z]","",$set_as_default);
 	}
 else
 	{
@@ -196,7 +209,7 @@ else
 			$rslt=mysql_query($stmt, $link);
 			$row=mysql_fetch_row($rslt);
 			$SNauth=$row[0];
-			  if($SNauth==0)
+			if($SNauth==0)
 				{
 				$result = 'ERROR';
 				$result_reason = "System API NOT ACTIVE";
@@ -204,7 +217,7 @@ else
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				exit;
 				}
-			  else
+			else
 				{
 				# do nothing for now
 				}
@@ -213,15 +226,15 @@ else
 	}
 
 if ($format=='debug')
-{
-echo "<html>\n";
-echo "<head>\n";
-echo "<!-- VERSION: $version     BUILD: $build    USER: $user\n";
-echo "<title>VICIDiaL Agent API";
-echo "</title>\n";
-echo "</head>\n";
-echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
-}
+	{
+	echo "<html>\n";
+	echo "<head>\n";
+	echo "<!-- VERSION: $version     BUILD: $build    USER: $user\n";
+	echo "<title>VICIDiaL Agent API";
+	echo "</title>\n";
+	echo "</head>\n";
+	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	}
 ################################################################################
 ### END - user validation section
 ################################################################################
@@ -234,40 +247,40 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 ### BEGIN - external_hangup - hang up the active agent call
 ################################################################################
 if ($function == 'external_hangup')
-{
+	{
 	if ( (strlen($value)<1) || (strlen($agent_user)<1) )
-	{
-	$result = 'ERROR';
-	$result_reason = "external_hangup not valid";
-	echo "$result: $result_reason - $value|$agent_user\n";
-	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-	exit;
-	}
-	else
-	{
-	$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
-	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{
-		$stmt="UPDATE vicidial_live_agents set external_hangup='$value' where user='$agent_user';";
-			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
-		$result = 'SUCCESS';
-		$result_reason = "external_hangup function set";
-		echo "$result: $result_reason - $value|$agent_user\n";
-		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-		}
-	else
 		{
 		$result = 'ERROR';
-		$result_reason = "agent_user is not logged in";
-		echo "$result: $result_reason - $agent_user\n";
+		$result_reason = "external_hangup not valid";
+		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt="UPDATE vicidial_live_agents set external_hangup='$value' where user='$agent_user';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+			$result = 'SUCCESS';
+			$result_reason = "external_hangup function set";
+			echo "$result: $result_reason - $value|$agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
 		}
 	}
-}
 ################################################################################
 ### END - external_hangup
 ################################################################################
@@ -280,40 +293,40 @@ if ($function == 'external_hangup')
 ### BEGIN - external_status - set the dispo code or status for a call and move on
 ################################################################################
 if ($function == 'external_status')
-{
+	{
 	if ( (strlen($value)<1) || (strlen($agent_user)<1) )
-	{
-	$result = 'ERROR';
-	$result_reason = "external_status not valid";
-	echo "$result: $result_reason - $value|$agent_user\n";
-	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-	exit;
-	}
-	else
-	{
-	$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
-	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{
-		$stmt="UPDATE vicidial_live_agents set external_status='$value' where user='$agent_user';";
-			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
-		$result = 'SUCCESS';
-		$result_reason = "external_status function set";
-		echo "$result: $result_reason - $value|$agent_user\n";
-		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-		}
-	else
 		{
 		$result = 'ERROR';
-		$result_reason = "agent_user is not logged in";
-		echo "$result: $result_reason - $agent_user\n";
+		$result_reason = "external_status not valid";
+		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt="UPDATE vicidial_live_agents set external_status='$value' where user='$agent_user';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+			$result = 'SUCCESS';
+			$result_reason = "external_status function set";
+			echo "$result: $result_reason - $value|$agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
 		}
 	}
-}
 ################################################################################
 ### END - external_status
 ################################################################################
@@ -326,56 +339,56 @@ if ($function == 'external_status')
 ### BEGIN - external_pause - pause or resume the agent
 ################################################################################
 if ($function == 'external_pause')
-{
+	{
 	if ( (strlen($value)<1) || (strlen($agent_user)<1) || (!ereg("PAUSE|RESUME",$value)) )
-	{
-	$result = 'ERROR';
-	$result_reason = "external_pause not valid";
-	echo "$result: $result_reason - $value|$agent_user\n";
-	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-	exit;
-	}
-	else
-	{
-	$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
-	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{
-		if (ereg("RESUME",$value))
-			{
-			$stmt = "select count(*) from vicidial_live_agents where user='$agent_user' and status IN('READY','QUEUE','INCALL','CLOSER');";
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			if ($row[0] > 0)
-				{
-				$result = 'ERROR';
-				$result_reason = "external_pause agent is not paused";
-				echo "$result: $result_reason - $value|$agent_user\n";
-				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-				exit;
-				}
-			}
-		$stmt="UPDATE vicidial_live_agents set external_pause='$value!$epoch' where user='$agent_user';";
-			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
-		$result = 'SUCCESS';
-		$result_reason = "external_pause function set";
-		echo "$result: $result_reason - $value|$epoch|$agent_user\n";
-		$data = "$epoch";
-		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-		}
-	else
 		{
 		$result = 'ERROR';
-		$result_reason = "agent_user is not logged in";
-		echo "$result: $result_reason - $agent_user\n";
+		$result_reason = "external_pause not valid";
+		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			if (ereg("RESUME",$value))
+				{
+				$stmt = "select count(*) from vicidial_live_agents where user='$agent_user' and status IN('READY','QUEUE','INCALL','CLOSER');";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				if ($row[0] > 0)
+					{
+					$result = 'ERROR';
+					$result_reason = "external_pause agent is not paused";
+					echo "$result: $result_reason - $value|$agent_user\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				}
+			$stmt="UPDATE vicidial_live_agents set external_pause='$value!$epoch' where user='$agent_user';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+			$result = 'SUCCESS';
+			$result_reason = "external_pause function set";
+			echo "$result: $result_reason - $value|$epoch|$agent_user\n";
+			$data = "$epoch";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
 		}
 	}
-}
 ################################################################################
 ### END - external_pause
 ################################################################################
@@ -388,179 +401,187 @@ if ($function == 'external_pause')
 ### BEGIN - external_dial - place a manual dial phone call
 ################################################################################
 if ($function == 'external_dial')
-{
+	{
 	$value = ereg_replace("[^0-9]","",$value);
 
 	if ( (strlen($value)<2) || (strlen($agent_user)<2) || (strlen($search)<2) || (strlen($preview)<2) || (strlen($focus)<2) )
-	{
-	$result = 'ERROR';
-	$result_reason = "external_dial not valid";
-	$data = "$phone_code|$search|$preview|$focus";
-	echo "$result: $result_reason - $value|$data|$agent_user\n";
-	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-	exit;
-	}
-	else
-	{
-	$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
-	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
 		{
-		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user' and status='PAUSED' and lead_id < 1;";
+		$result = 'ERROR';
+		$result_reason = "external_dial not valid";
+		$data = "$phone_code|$search|$preview|$focus";
+		echo "$result: $result_reason - $value|$data|$agent_user\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
 			{
-			$stmt = "select count(*) from vicidial_users where user='$agent_user' and agentcall_manual='1';";
+			$stmt = "select count(*) from vicidial_live_agents where user='$agent_user' and status='PAUSED' and lead_id < 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			$row=mysql_fetch_row($rslt);
 			if ($row[0] > 0)
 				{
-				if (strlen($group_alias)>1)
+				$stmt = "select count(*) from vicidial_users where user='$agent_user' and agentcall_manual='1';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				if ($row[0] > 0)
 					{
-					$stmt = "select caller_id_number from groups_alias where group_alias_id='$group_alias';";
-					if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_query($stmt, $link);
-					$VDIG_cidnum_ct = mysql_num_rows($rslt);
-					if ($VDIG_cidnum_ct > 0)
+					if (strlen($group_alias)>1)
 						{
-						$row=mysql_fetch_row($rslt);
-						$caller_id_number	= $row[0];
-						if ($caller_id_number < 4)
-							{
-							$result = 'ERROR';
-							$result_reason = "caller_id_number from group_alias is not valid";
-							$data = "$group_alias|$caller_id_number";
-							echo "$result: $result_reason - $agent_user|$data\n";
-							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-							exit;
-							}
-						}
-					else
-						{
-						$result = 'ERROR';
-						$result_reason = "group_alias is not valid";
-						$data = "$group_alias";
-						echo "$result: $result_reason - $agent_user|$data\n";
-						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-						exit;
-						}
-					}
-
-				####### Begin Vtiger CallBack Launching #######
-				$vtiger_callback_id='';
-				if ( (eregi("YES",$vtiger_callback)) and (preg_match("/^99/",$value)) )
-					{
-					$value = preg_replace("/^99/",'',$value);
-					$value = ($value + 0);
-
-					$stmt = "SELECT enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url FROM system_settings;";
-					$rslt=mysql_query($stmt, $link);
-					$ss_conf_ct = mysql_num_rows($rslt);
-					if ($ss_conf_ct > 0)
-						{
-						$row=mysql_fetch_row($rslt);
-						$enable_vtiger_integration =	$row[0];
-						$vtiger_server_ip	=			$row[1];
-						$vtiger_dbname =				$row[2];
-						$vtiger_login =					$row[3];
-						$vtiger_pass =					$row[4];
-						$vtiger_url =					$row[5];
-						}
-
-					if ($enable_vtiger_integration > 0)
-						{
-						$stmt = "SELECT campaign_id FROM vicidial_live_agents where user='$agent_user';";
-						$rslt=mysql_query($stmt, $link);
-						$vtc_camp_ct = mysql_num_rows($rslt);
-						if ($vtc_camp_ct > 0)
-							{
-							$row=mysql_fetch_row($rslt);
-							$campaign_id =		$row[0];
-							}
-						$stmt = "SELECT vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_search_dead,vtiger_status_call FROM vicidial_campaigns where campaign_id='$campaign_id';";
-						$rslt=mysql_query($stmt, $link);
-						$vtc_conf_ct = mysql_num_rows($rslt);
-						if ($vtc_conf_ct > 0)
-							{
-							$row=mysql_fetch_row($rslt);
-							$vtiger_search_category =		$row[0];
-							$vtiger_create_call_record =	$row[1];
-							$vtiger_create_lead_record =	$row[2];
-							$vtiger_search_dead =			$row[3];
-							$vtiger_status_call =			$row[4];
-							}
-
-						### connect to your vtiger database
-						$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
-						if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysql_error());}
-						mysql_select_db("$vtiger_dbname", $linkV);
-
-						# make sure the ID is present in Vtiger database as an account
-						$stmt="SELECT count(*) from vtiger_seactivityrel where activityid='$value';";
+						$stmt = "select caller_id_number from groups_alias where group_alias_id='$group_alias';";
 						if ($DB) {echo "$stmt\n";}
-						$rslt=mysql_query($stmt, $linkV);
-						$vt_act_ct = mysql_num_rows($rslt);
-						if ($vt_act_ct > 0)
+						$rslt=mysql_query($stmt, $link);
+						$VDIG_cidnum_ct = mysql_num_rows($rslt);
+						if ($VDIG_cidnum_ct > 0)
 							{
 							$row=mysql_fetch_row($rslt);
-							$activity_check = $row[0];
-							}
-						if ($activity_check > 0)
-							{
-							$stmt="SELECT crmid from vtiger_seactivityrel where activityid='$value';";
-							if ($DB) {echo "$stmt\n";}
-							$rslt=mysql_query($stmt, $linkV);
-							$vt_actsel_ct = mysql_num_rows($rslt);
-							if ($vt_actsel_ct > 0)
+							$caller_id_number	= $row[0];
+							if ($caller_id_number < 4)
 								{
-								$row=mysql_fetch_row($rslt);
-								$vendor_id = $row[0];
-								}
-							if (strlen($vendor_id) > 0)
-								{
-								$stmt="SELECT phone from vtiger_account where accountid='$vendor_id';";
-								if ($DB) {echo "$stmt\n";}
-								$rslt=mysql_query($stmt, $linkV);
-								$vt_acct_ct = mysql_num_rows($rslt);
-								if ($vt_acct_ct > 0)
-									{
-									$row=mysql_fetch_row($rslt);
-									$vtiger_callback_id="$value";
-									$value = $row[0];
-									}
+								$result = 'ERROR';
+								$result_reason = "caller_id_number from group_alias is not valid";
+								$data = "$group_alias|$caller_id_number";
+								echo "$result: $result_reason - $agent_user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
 								}
 							}
 						else
 							{
 							$result = 'ERROR';
-							$result_reason = "vtiger callback activity does not exist in vtiger system";
-							echo "$result: $result_reason - $value\n";
+							$result_reason = "group_alias is not valid";
+							$data = "$group_alias";
+							echo "$result: $result_reason - $agent_user|$data\n";
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 							exit;
 							}
 						}
-					}
-				####### End Vtiger CallBack Launching #######
 
-				### If no errors, run the update to place the call ###
-				$stmt="UPDATE vicidial_live_agents set external_dial='$value!$phone_code!$search!$preview!$focus!$vendor_id!$epoch!$dial_prefix!$group_alias!$caller_id_number!$vtiger_callback_id' where user='$agent_user';";
-					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
-				$result = 'SUCCESS';
-				$result_reason = "external_dial function set";
-				$data = "$phone_code|$search|$preview|$focus|$vendor_id|$epoch|$dial_prefix|$group_alias|$caller_id_number";
-				echo "$result: $result_reason - $value|$agent_user|$data\n";
-				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					####### Begin Vtiger CallBack Launching #######
+					$vtiger_callback_id='';
+					if ( (eregi("YES",$vtiger_callback)) and (preg_match("/^99/",$value)) )
+						{
+						$value = preg_replace("/^99/",'',$value);
+						$value = ($value + 0);
+
+						$stmt = "SELECT enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url FROM system_settings;";
+						$rslt=mysql_query($stmt, $link);
+						$ss_conf_ct = mysql_num_rows($rslt);
+						if ($ss_conf_ct > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$enable_vtiger_integration =	$row[0];
+							$vtiger_server_ip	=			$row[1];
+							$vtiger_dbname =				$row[2];
+							$vtiger_login =					$row[3];
+							$vtiger_pass =					$row[4];
+							$vtiger_url =					$row[5];
+							}
+
+						if ($enable_vtiger_integration > 0)
+							{
+							$stmt = "SELECT campaign_id FROM vicidial_live_agents where user='$agent_user';";
+							$rslt=mysql_query($stmt, $link);
+							$vtc_camp_ct = mysql_num_rows($rslt);
+							if ($vtc_camp_ct > 0)
+								{
+								$row=mysql_fetch_row($rslt);
+								$campaign_id =		$row[0];
+								}
+							$stmt = "SELECT vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_search_dead,vtiger_status_call FROM vicidial_campaigns where campaign_id='$campaign_id';";
+							$rslt=mysql_query($stmt, $link);
+							$vtc_conf_ct = mysql_num_rows($rslt);
+							if ($vtc_conf_ct > 0)
+								{
+								$row=mysql_fetch_row($rslt);
+								$vtiger_search_category =		$row[0];
+								$vtiger_create_call_record =	$row[1];
+								$vtiger_create_lead_record =	$row[2];
+								$vtiger_search_dead =			$row[3];
+								$vtiger_status_call =			$row[4];
+								}
+
+							### connect to your vtiger database
+							$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
+							if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysql_error());}
+							mysql_select_db("$vtiger_dbname", $linkV);
+
+							# make sure the ID is present in Vtiger database as an account
+							$stmt="SELECT count(*) from vtiger_seactivityrel where activityid='$value';";
+							if ($DB) {echo "$stmt\n";}
+							$rslt=mysql_query($stmt, $linkV);
+							$vt_act_ct = mysql_num_rows($rslt);
+							if ($vt_act_ct > 0)
+								{
+								$row=mysql_fetch_row($rslt);
+								$activity_check = $row[0];
+								}
+							if ($activity_check > 0)
+								{
+								$stmt="SELECT crmid from vtiger_seactivityrel where activityid='$value';";
+								if ($DB) {echo "$stmt\n";}
+								$rslt=mysql_query($stmt, $linkV);
+								$vt_actsel_ct = mysql_num_rows($rslt);
+								if ($vt_actsel_ct > 0)
+									{
+									$row=mysql_fetch_row($rslt);
+									$vendor_id = $row[0];
+									}
+								if (strlen($vendor_id) > 0)
+									{
+									$stmt="SELECT phone from vtiger_account where accountid='$vendor_id';";
+									if ($DB) {echo "$stmt\n";}
+									$rslt=mysql_query($stmt, $linkV);
+									$vt_acct_ct = mysql_num_rows($rslt);
+									if ($vt_acct_ct > 0)
+										{
+										$row=mysql_fetch_row($rslt);
+										$vtiger_callback_id="$value";
+										$value = $row[0];
+										}
+									}
+								}
+							else
+								{
+								$result = 'ERROR';
+								$result_reason = "vtiger callback activity does not exist in vtiger system";
+								echo "$result: $result_reason - $value\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							}
+						}
+					####### End Vtiger CallBack Launching #######
+
+					### If no errors, run the update to place the call ###
+					$stmt="UPDATE vicidial_live_agents set external_dial='$value!$phone_code!$search!$preview!$focus!$vendor_id!$epoch!$dial_prefix!$group_alias!$caller_id_number!$vtiger_callback_id' where user='$agent_user';";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_query($stmt, $link);
+					$result = 'SUCCESS';
+					$result_reason = "external_dial function set";
+					$data = "$phone_code|$search|$preview|$focus|$vendor_id|$epoch|$dial_prefix|$group_alias|$caller_id_number";
+					echo "$result: $result_reason - $value|$agent_user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				else
+					{
+					$result = 'ERROR';
+					$result_reason = "agent_user is not allowed to place manual dial calls";
+					echo "$result: $result_reason - $agent_user\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
 				}
 			else
 				{
 				$result = 'ERROR';
-				$result_reason = "agent_user is not allowed to place manual dial calls";
+				$result_reason = "agent_user is not paused";
 				echo "$result: $result_reason - $agent_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
@@ -568,20 +589,12 @@ if ($function == 'external_dial')
 		else
 			{
 			$result = 'ERROR';
-			$result_reason = "agent_user is not paused";
+			$result_reason = "agent_user is not logged in";
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
 		}
-	else
-		{
-		$result = 'ERROR';
-		$result_reason = "agent_user is not logged in";
-		echo "$result: $result_reason - $agent_user\n";
-		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-		}
 	}
-}
 ################################################################################
 ### END - external_dial
 ################################################################################
@@ -590,13 +603,251 @@ if ($function == 'external_dial')
 
 
 
+################################################################################
+### BEGIN - change_ingroups - change selected in-groups for logged-in agent
+################################################################################
+if ($function == 'change_ingroups')
+	{
+	$value = ereg_replace("[^A-Z]","",$value);
+
+	if ( (strlen($blended)<2) or (strlen($agent_user)<2) or (strlen($value)<3) )
+		{
+		$result = 'ERROR';
+		$result_reason = "change_ingroups not valid";
+		$data = "$value|$blended|$ingroup_choices";
+		echo "$result: $result_reason - $data|$agent_user\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt = "select count(*) from vicidial_live_agents vla, vicidial_campaigns vc where user='$agent_user' and campaign_allow_inbound='Y' and vla.campaign_id=vc.campaign_id;";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select count(*) from vicidial_users where user='$user' and change_agent_campaign='1';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				if ($row[0] > 0)
+					{
+					if ($blended == 'YES')
+						{
+						$stmt = "select count(*) from vicidial_live_agents vla, vicidial_campaigns vc where user='$agent_user' and dial_method IN('MANUAL','INBOUND_MAN') and vla.campaign_id=vc.campaign_id;";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						if ($row[0] > 0)
+							{
+							$result = 'ERROR';
+							$result_reason = "campaign dial_method does not allow outbound autodial";
+							$data = "$blended";
+							echo "$result: $result_reason - $agent_user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						}
+					if (strlen($ingroup_choices)>0)
+						{
+						$in_groups_pre = preg_replace('/-$/','',$ingroup_choices);
+						$in_groups = explode(" ",$in_groups_pre);
+						$in_groups_ct = count($in_groups);
+						$k=1;
+						while ($k < $in_groups_ct)
+							{
+							if (strlen($in_groups[$k])>1)
+								{
+								$stmt="SELECT count(*) FROM vicidial_inbound_groups where group_id='$in_groups[$k]';";
+								$rslt=mysql_query($stmt, $link);
+								if ($DB) {echo "$stmt\n";}
+								$row=mysql_fetch_row($rslt);
+								if ($row[0] < 1)
+									{
+									$result = 'ERROR';
+									$result_reason = "ingroup does not exist";
+									$data = "$in_groups[$k]|$ingroup_choices";
+									echo "$result: $result_reason - $agent_user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								}
+							$k++;
+							}
+						}
+					if ( (strlen($ingroup_choices) < 1) and ( ($value == 'ADD') or ($value == 'REMOVE') ) )
+						{
+						$result = 'ERROR';
+						$result_reason = "ingroup_choices are required for ADD and REMOVE values";
+						$data = "$value|$ingroup_choices";
+						echo "$result: $result_reason - $agent_user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+
+					if ($value == 'ADD')
+						{
+						$stmt = "select closer_campaigns from vicidial_live_agents where user='$agent_user';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$closer_groups_pre = preg_replace('/-$/','',$row[0]);
+						$closer_groups = explode(" ",$closer_groups_pre);
+						$closer_groups_ct = count($closer_groups);
+
+						$in_groups_pre = preg_replace('/-$/','',$ingroup_choices);
+						$in_groups = explode(" ",$in_groups_pre);
+						$in_groups_ct = count($in_groups);
+						$k=1;
+						while ($k < $in_groups_ct)
+							{
+							$duplicate_group=0;
+							if (strlen($in_groups[$k])>1)
+								{
+								$m=0;
+								while ($m < $closer_groups_ct)
+									{
+									if (strlen($closer_groups[$m])>1)
+										{
+										if ($closer_groups[$m] == $in_groups[$k])
+											{$duplicate_group++;}
+										}
+									$m++;
+									}
+								if ($duplicate_group < 1)
+									{
+									$closer_groups[$closer_groups_ct] = $in_groups[$k];
+									$closer_groups_ct++;
+									}
+								}
+							$k++;
+							}
+
+						$m=0;
+						$NEWcloser_groups=' ';
+						while ($m < $closer_groups_ct)
+							{
+							if (strlen($closer_groups[$m])>1)
+								{
+								$NEWcloser_groups .= "$closer_groups[$m] ";
+								}
+							$m++;
+							}
+						$NEWcloser_groups .= '-';
+						$ingroup_choices = $NEWcloser_groups;
+						}
+
+					if ($value == 'REMOVE')
+						{
+						$stmt = "select closer_campaigns from vicidial_live_agents where user='$agent_user';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$closer_groups_list = $row[0];
+						$closer_groups_pre = preg_replace('/-$/','',$row[0]);
+						$closer_groups = explode(" ",$closer_groups_pre);
+						$closer_groups_ct = count($closer_groups);
+
+						$in_groups_pre = preg_replace('/-$/','',$ingroup_choices);
+						$in_groups = explode(" ",$in_groups_pre);
+						$in_groups_ct = count($in_groups);
+						$k=1;
+						while ($k < $in_groups_ct)
+							{
+							$duplicate_group=0;
+							if (strlen($in_groups[$k])>1)
+								{
+								$m=0;
+								while ($m < $closer_groups_ct)
+									{
+									if (strlen($closer_groups[$m])>1)
+										{
+										if ($closer_groups[$m] == $in_groups[$k])
+											{$duplicate_group++;}
+										}
+									$m++;
+									}
+								if ($duplicate_group > 0)
+									{
+									$closer_groups_list = preg_replace("/ $in_groups[$k] /",' ',$closer_groups_list);
+									}
+								}
+							$k++;
+							}
+
+						$ingroup_choices = $closer_groups_list;
+						}
+
+					### If no errors, run the update to change selected ingroups ###
+					$external_blended=0;
+					if ($blended == 'YES')
+						{$external_blended=1;}
+
+					$stmt="UPDATE vicidial_live_agents set external_ingroups='$ingroup_choices',external_blended='$external_blended',external_igb_set_user='$user',manager_ingroup_set='SET' where user='$agent_user';";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_query($stmt, $link);
+
+					$default_data = "";
+					if ($set_as_default == 'YES')
+						{
+						$stmt="UPDATE vicidial_users set closer_campaigns='$ingroup_choices',closer_default_blended='$external_blended' where user='$agent_user';";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_query($stmt, $link);
+						$default_data = "User settings set as default";
+						}
+
+					$result = 'SUCCESS';
+					$result_reason = "change_ingroups function set";
+					$data = "$ingroup_choices|$blended|$default_data";
+					echo "$result: $result_reason - $user|$agent_user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				else
+					{
+					$result = 'ERROR';
+					$result_reason = "user is not allowed to change agent in-groups";
+					echo "$result: $result_reason - $user\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "campaign does not allow inbound calls";
+				echo "$result: $result_reason - $agent_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - change_ingroups
+################################################################################
+
+
+
+
 if ($format=='debug') 
-{
-$ENDtime = date("U");
-$RUNtime = ($ENDtime - $StarTtime);
-echo "\n<!-- script runtime: $RUNtime seconds -->";
-echo "\n</body>\n</html>\n";
-}
+	{
+	$ENDtime = date("U");
+	$RUNtime = ($ENDtime - $StarTtime);
+	echo "\n<!-- script runtime: $RUNtime seconds -->";
+	echo "\n</body>\n</html>\n";
+	}
 	
 exit; 
 
@@ -609,15 +860,15 @@ exit;
 
 ##### Logging #####
 function api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data)
-{
-if ($api_logging > 0)
 	{
-	$NOW_TIME = date("Y-m-d H:i:s");
-#	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-	$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$agent_user',function='$function',value='$value',result='$result',result_reason='$result_reason',source='$source',data='$data',api_date='$NOW_TIME',api_script='$api_script';";
-	$rslt=mysql_query($stmt, $link);
+	if ($api_logging > 0)
+		{
+		$NOW_TIME = date("Y-m-d H:i:s");
+	#	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$agent_user',function='$function',value='$value',result='$result',result_reason='$result_reason',source='$source',data='$data',api_date='$NOW_TIME',api_script='$api_script';";
+		$rslt=mysql_query($stmt, $link);
+		}
+	return 1;
 	}
-return 1;
-}
 
 ?>

@@ -300,6 +300,12 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	database table field order less important, allowing for more 
 	customizations by the user without causing problems.
 
+73. Added an API function(change_ingroups) which allows the selected in-groups
+	for an agent to be changed while they are active in the ViciDial Agent
+	screen. Once changed in this way, the agent would need to log out and 
+	back in to be able to select in-groups themselves. Blended can also be
+	changed using this function. For more information see the AGENT_API.txt
+	document in the docs directory.
 
 
 
