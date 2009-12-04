@@ -57,10 +57,12 @@
 # 90907-0915 - Added PARK status
 # 90914-1154 - Added AgentOnly display column to waiting calls section
 # 91102-2013 - Changed in-group color styles for incoming calls waiting
+# 91204-1548 - Added ability to change agent in-groups and blended
 #
 
-$version = '2.2.0-48';
-$build = '91102-2013';
+
+$version = '2.2.0-49';
+$build = '91204-1548';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -301,14 +303,14 @@ $F=''; $FG=''; $B=''; $BG='';
 
 $select_list = "<TABLE WIDTH=200 CELLPADDING=5 BGCOLOR=\"#D9E6FE\"><TR><TD>Select Campaigns: <BR>";
 $select_list .= "<SELECT SIZE=10 NAME=groups[] multiple>";
-	$o=0;
-	while ($groups_to_print > $o)
+$o=0;
+while ($groups_to_print > $o)
 	{
-		if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
-			{$select_list .= "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTnames[$o]</option>";}
-		else
-			{$select_list .= "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTnames[$o]</option>";}
-		$o++;
+	if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
+		{$select_list .= "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTnames[$o]</option>";}
+	else
+		{$select_list .= "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTnames[$o]</option>";}
+	$o++;
 	}
 $select_list .= "</SELECT>";
 $select_list .= "<BR><font size=1>(To select more than 1 campaign, hold down the Ctrl key and click)<font>";
@@ -320,12 +322,12 @@ if ($UGdisplay > 0)
 	$select_list .= "Select User Group:<BR>";
 	$select_list .= "<SELECT SIZE=1 NAME=usergroup>";
 	$select_list .= "<option value=\"\">ALL USER GROUPS</option>";
-		$o=0;
-		while ($usergroups_to_print > $o)
+	$o=0;
+	while ($usergroups_to_print > $o)
 		{
-			if ($usergroups[$o] == $usergroup) {$select_list .= "<option selected value=\"$usergroups[$o]\">$usergroups[$o]</option>";}
-			  else {$select_list .= "<option value=\"$usergroups[$o]\">$usergroups[$o]</option>";}
-			$o++;
+		if ($usergroups[$o] == $usergroup) {$select_list .= "<option selected value=\"$usergroups[$o]\">$usergroups[$o]</option>";}
+		  else {$select_list .= "<option value=\"$usergroups[$o]\">$usergroups[$o]</option>";}
+		$o++;
 		}
 	$select_list .= "</SELECT><BR><BR>";
 	}
@@ -379,68 +381,229 @@ $open_list = "<TABLE WIDTH=250 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#D9E6FE\"><
 <HEAD>
 
 <script language="Javascript">
-	var select_list = '<?php echo $select_list ?>';
-	var open_list = '<?php echo $open_list ?>';
-	var monitor_phone = '<?php echo $monitor_phone ?>';
-	var user = '<?php echo $PHP_AUTH_USER ?>';
-	var pass = '<?php echo $PHP_AUTH_PW ?>';
 
-	// functions to hide and show different DIVs
-	function openDiv(divvar) 
+window.onload = startup;
+
+// function to detect the XY position on the page of the mouse
+function startup() 
+	{
+	hide_ingroup_info();
+	if (window.Event) 
 		{
-		document.getElementById(divvar).innerHTML = select_list;
+		document.captureEvents(Event.MOUSEMOVE);
 		}
-	function closeDiv(divvar)
+	document.onmousemove = getCursorXY;
+	}
+
+function getCursorXY(e) 
+	{
+	document.getElementById('cursorX').value = (window.Event) ? e.pageX : event.clientX + (document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft);
+	document.getElementById('cursorY').value = (window.Event) ? e.pageY : event.clientY + (document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop);
+	}
+
+var select_list = '<?php echo $select_list ?>';
+var open_list = '<?php echo $open_list ?>';
+var monitor_phone = '<?php echo $monitor_phone ?>';
+var user = '<?php echo $PHP_AUTH_USER ?>';
+var pass = '<?php echo $PHP_AUTH_PW ?>';
+
+// functions to hide and show different DIVs
+function openDiv(divvar) 
+	{
+	document.getElementById(divvar).innerHTML = select_list;
+	}
+function closeDiv(divvar)
+	{
+	document.getElementById(divvar).innerHTML = open_list;
+	}
+// function to launch monitoring calls
+
+function send_monitor(session_id,server_ip,stage)
+	{
+	//	alert(session_id + "|" + server_ip + "|" + monitor_phone + "|" + stage + "|" + user);
+	var xmlhttp=false;
+	/*@cc_on @*/
+	/*@if (@_jscript_version >= 5)
+	// JScript gives us Conditional compilation, we can cope with old IE versions.
+	// and security blocked creation of the objects.
+	 try {
+	  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+	 } catch (e) {
+	  try {
+	   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	  } catch (E) {
+	   xmlhttp = false;
+	  }
+	 }
+	@end @*/
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined')
 		{
-		document.getElementById(divvar).innerHTML = open_list;
+		xmlhttp = new XMLHttpRequest();
 		}
-	// function to launch monitoring calls
-	function send_monitor(session_id,server_ip,stage)
+	if (xmlhttp) 
 		{
-		//	alert(session_id + "|" + server_ip + "|" + monitor_phone + "|" + stage + "|" + user);
-		var xmlhttp=false;
-		/*@cc_on @*/
-		/*@if (@_jscript_version >= 5)
-		// JScript gives us Conditional compilation, we can cope with old IE versions.
-		// and security blocked creation of the objects.
-		 try {
-		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
-		 } catch (e) {
-		  try {
-		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-		  } catch (E) {
-		   xmlhttp = false;
-		  }
-		 }
-		@end @*/
-		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
-			{
-			xmlhttp = new XMLHttpRequest();
+		var monitorQuery = "source=realtime&function=blind_monitor&user=" + user + "&pass=" + pass + "&phone_login=" + monitor_phone + "&session_id=" + session_id + '&server_ip=' + server_ip + '&stage=' + stage;
+		xmlhttp.open('POST', 'non_agent_api.php'); 
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(monitorQuery); 
+		xmlhttp.onreadystatechange = function() 
+			{ 
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+				{
+			//	alert(xmlhttp.responseText);
+				var Xoutput = null;
+				Xoutput = xmlhttp.responseText;
+				var regXFerr = new RegExp("ERROR","g");
+				var regXFscs = new RegExp("SUCCESS","g");
+				if (Xoutput.match(regXFerr))
+					{alert(xmlhttp.responseText);}
+				if (Xoutput.match(regXFscs))
+					{alert("SUCCESS: calling " + monitor_phone);}
+				}
 			}
-		if (xmlhttp) 
+		delete xmlhttp;
+		}
+	}
+
+// function to change in-groups selected for a specific agent
+function submit_ingroup_changes(temp_agent_user)
+	{
+	var temp_ingroup_add_remove_changeIndex = document.getElementById("ingroup_add_remove_change").selectedIndex;
+	var temp_ingroup_add_remove_change =  document.getElementById('ingroup_add_remove_change').options[temp_ingroup_add_remove_changeIndex].value;
+
+	var temp_set_as_defaultIndex = document.getElementById("set_as_default").selectedIndex;
+	var temp_set_as_default =  document.getElementById('set_as_default').options[temp_set_as_defaultIndex].value;
+
+	var temp_blendedIndex = document.getElementById("blended").selectedIndex;
+	var temp_blended =  document.getElementById('blended').options[temp_blendedIndex].value;
+
+	var temp_ingroup_choices = '';
+	var txtSelectedValuesObj = document.getElementById('txtSelectedValues');
+	var selectedArray = new Array();
+	var selObj = document.getElementById('ingroup_new_selections');
+	var i;
+	var count = 0;
+	for (i=0; i<selObj.options.length; i++) 
+		{
+		if (selObj.options[i].selected) 
 			{
-			var monitorQuery = "source=realtime&function=blind_monitor&user=" + user + "&pass=" + pass + "&phone_login=" + monitor_phone + "&session_id=" + session_id + '&server_ip=' + server_ip + '&stage=' + stage;
-			xmlhttp.open('POST', 'non_agent_api.php'); 
-			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-			xmlhttp.send(monitorQuery); 
-			xmlhttp.onreadystatechange = function() 
-				{ 
-				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+		//	selectedArray[count] = selObj.options[i].value;
+			temp_ingroup_choices = temp_ingroup_choices + '+' + selObj.options[i].value;
+			count++;
+			}
+		}
+
+	temp_ingroup_choices = temp_ingroup_choices + '+-';
+
+	//	alert(session_id + "|" + server_ip + "|" + monitor_phone + "|" + stage + "|" + user);
+	var xmlhttp=false;
+	/*@cc_on @*/
+	/*@if (@_jscript_version >= 5)
+	// JScript gives us Conditional compilation, we can cope with old IE versions.
+	// and security blocked creation of the objects.
+	 try {
+	  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+	 } catch (e) {
+	  try {
+	   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	  } catch (E) {
+	   xmlhttp = false;
+	  }
+	 }
+	@end @*/
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+		{
+		xmlhttp = new XMLHttpRequest();
+		}
+	if (xmlhttp) 
+		{
+		var changeQuery = "source=realtime&function=change_ingroups&user=" + user + "&pass=" + pass + "&agent_user=" + temp_agent_user + "&value=" + temp_ingroup_add_remove_change + '&set_as_default=' + temp_set_as_default + '&blended=' + temp_blended + '&ingroup_choices=' + temp_ingroup_choices;
+		xmlhttp.open('POST', '../agc/api.php'); 
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(changeQuery); 
+		xmlhttp.onreadystatechange = function() 
+			{ 
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+				{
+			//	alert(changeQuery);
+				var Xoutput = null;
+				Xoutput = xmlhttp.responseText;
+				var regXFerr = new RegExp("ERROR","g");
+				if (Xoutput.match(regXFerr))
+					{alert(xmlhttp.responseText);}
+				else
 					{
-				//	alert(xmlhttp.responseText);
-					var Xoutput = null;
-					Xoutput = xmlhttp.responseText;
-					var regXFerr = new RegExp("ERROR","g");
-					var regXFscs = new RegExp("SUCCESS","g");
-					if (Xoutput.match(regXFerr))
-						{alert(xmlhttp.responseText);}
-					if (Xoutput.match(regXFscs))
-						{alert("SUCCESS: calling " + monitor_phone);}
+					alert(xmlhttp.responseText);
+					hide_ingroup_info();
 					}
 				}
-			delete xmlhttp;
 			}
+		delete xmlhttp;
 		}
+	}
+
+// function to display in-groups selected for a specific agent
+function ingroup_info(agent_user,count)
+	{
+	var cursorheight = (document.REALTIMEform.cursorY.value - 0);
+	var newheight = (cursorheight + 10);
+	document.getElementById("agent_ingroup_display").style.top = newheight;
+	//	alert(session_id + "|" + server_ip + "|" + monitor_phone + "|" + stage + "|" + user);
+	var xmlhttp=false;
+	/*@cc_on @*/
+	/*@if (@_jscript_version >= 5)
+	// JScript gives us Conditional compilation, we can cope with old IE versions.
+	// and security blocked creation of the objects.
+	 try {
+	  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+	 } catch (e) {
+	  try {
+	   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	  } catch (E) {
+	   xmlhttp = false;
+	  }
+	 }
+	@end @*/
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+		{
+		xmlhttp = new XMLHttpRequest();
+		}
+	if (xmlhttp) 
+		{
+		var monitorQuery = "source=realtime&function=agent_ingroup_info&stage=change&user=" + user + "&pass=" + pass + "&agent_user=" + agent_user;
+		xmlhttp.open('POST', 'non_agent_api.php'); 
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(monitorQuery); 
+		xmlhttp.onreadystatechange = function() 
+			{ 
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+				{
+			//	alert(xmlhttp.responseText);
+				var Xoutput = null;
+				Xoutput = xmlhttp.responseText;
+				var regXFerr = new RegExp("ERROR","g");
+				if (Xoutput.match(regXFerr))
+					{alert(xmlhttp.responseText);}
+				else
+					{
+					document.getElementById("agent_ingroup_display").visibility = "visible";
+					document.getElementById("agent_ingroup_display").innerHTML = Xoutput;
+					}
+				}
+			}
+		delete xmlhttp;
+		}
+	}
+
+// function to display in-groups selected for a specific agent
+function hide_ingroup_info()
+	{
+	document.getElementById("agent_ingroup_display").visibility = "hidden";
+	document.getElementById("agent_ingroup_display").innerHTML = '';
+	}
+
+
+
 </script>
 
 <STYLE type="text/css">
@@ -504,9 +667,11 @@ echo "<TITLE>Real-Time Report: $group</TITLE></HEAD><BODY BGCOLOR=WHITE marginhe
 
 echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
-echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
+echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET NAME=REALTIMEform ID=REALTIMEform>\n";
 echo "<INPUT TYPE=HIDDEN NAME=RR VALUE=\"$RR\">\n";
 echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+echo "<INPUT TYPE=HIDDEN NAME=cursorX ID=cursorX>\n";
+echo "<INPUT TYPE=HIDDEN NAME=cursorY ID=cursorY>\n";
 echo "<INPUT TYPE=HIDDEN NAME=adastats VALUE=\"$adastats\">\n";
 echo "<INPUT TYPE=HIDDEN NAME=SIPmonitorLINK VALUE=\"$SIPmonitorLINK\">\n";
 echo "<INPUT TYPE=HIDDEN NAME=IAXmonitorLINK VALUE=\"$IAXmonitorLINK\">\n";
@@ -519,10 +684,13 @@ echo "<INPUT TYPE=HIDDEN NAME=CALLSdisplay VALUE=\"$CALLSdisplay\">\n";
 echo "<INPUT TYPE=HIDDEN NAME=PHONEdisplay VALUE=\"$PHONEdisplay\">\n";
 echo "<INPUT TYPE=HIDDEN NAME=CUSTPHONEdisplay VALUE=\"$CUSTPHONEdisplay\">\n";
 echo "Real-Time Report &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; \n";
-echo "<span style=\"position:absolute;left:160px;top:27px;z-index:19;\"  id=campaign_select_list>\n";
+echo "<span style=\"position:absolute;left:160px;top:27px;z-index:19;\" id=campaign_select_list>\n";
 echo "<TABLE WIDTH=250 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#D9E6FE\"><TR><TD ALIGN=CENTER>\n";
 echo "<a href=\"#\" onclick=\"openDiv('campaign_select_list');\">Choose Report Display Options</a>";
 echo "</TD></TR></TABLE>\n";
+echo "</span>\n";
+echo "<span style=\"position:absolute;left:10px;top:120px;z-index:18;\" id=agent_ingroup_display>\n";
+echo " &nbsp; ";
 echo "</span>\n";
 echo "<a href=\"$PHP_SELF?RR=4000$groupQS&DB=$DB&adastats=$adastats&SIPmonitorLINK=$SIPmonitorLINK&IAXmonitorLINK=$IAXmonitorLINK&usergroup=$usergroup&UGdisplay=$UGdisplay&UidORname=$UidORname&orderby=$orderby&SERVdisplay=$SERVdisplay&CALLSdisplay=$CALLSdisplay&PHONEdisplay=$PHONEdisplay&CUSTPHONEdisplay=$CUSTPHONEdisplay&with_inbound=$with_inbound&monitor_active=$monitor_active&monitor_phone=$monitor_phone\">STOP</a> | ";
 echo "<a href=\"$PHP_SELF?RR=40$groupQS&DB=$DB&adastats=$adastats&SIPmonitorLINK=$SIPmonitorLINK&IAXmonitorLINK=$IAXmonitorLINK&usergroup=$usergroup&UGdisplay=$UGdisplay&UidORname=$UidORname&orderby=$orderby&SERVdisplay=$SERVdisplay&CALLSdisplay=$CALLSdisplay&PHONEdisplay=$PHONEdisplay&CUSTPHONEdisplay=$CUSTPHONEdisplay&with_inbound=$with_inbound&monitor_active=$monitor_active&monitor_phone=$monitor_phone\">SLOW</a> | ";
@@ -1319,12 +1487,12 @@ $Aecho .= "VICIDIAL: Agents Time On Calls Campaign: $group_string            $NO
 
 $HDbegin =			"+";
 $HTbegin =			"|";
-$HDstation =		"--------------+";
-$HTstation =		" STATION      |";
-$HDphone =		"------------+";
-$HTphone =		" <a href=\"$PHP_SELF?$groupQS&RR=$RR&DB=$DB&adastats=$adastats&SIPmonitorLINK=$SIPmonitorLINK&IAXmonitorLINK=$IAXmonitorLINK&usergroup=$usergroup&UGdisplay=$UGdisplay&UidORname=$UidORname&orderby=$phoneord&SERVdisplay=$SERVdisplay&CALLSdisplay=$CALLSdisplay&PHONEdisplay=$PHONEdisplay&CUSTPHONEdisplay=$CUSTPHONEdisplay&with_inbound=$with_inbound&monitor_active=$monitor_active&monitor_phone=$monitor_phone\">PHONE</a>      |";
-$HDuser =			"--------------------+";
-$HTuser =			" <a href=\"$PHP_SELF?$groupQS&RR=$RR&DB=$DB&adastats=$adastats&SIPmonitorLINK=$SIPmonitorLINK&IAXmonitorLINK=$IAXmonitorLINK&usergroup=$usergroup&UGdisplay=$UGdisplay&UidORname=$UidORname&orderby=$userord&SERVdisplay=$SERVdisplay&CALLSdisplay=$CALLSdisplay&PHONEdisplay=$PHONEdisplay&CUSTPHONEdisplay=$CUSTPHONEdisplay&with_inbound=$with_inbound&monitor_active=$monitor_active&monitor_phone=$monitor_phone\">USER</a>               |";
+$HDstation =		"----------------+";
+$HTstation =		" STATION        |";
+$HDphone =		"-------------+";
+$HTphone =		" <a href=\"$PHP_SELF?$groupQS&RR=$RR&DB=$DB&adastats=$adastats&SIPmonitorLINK=$SIPmonitorLINK&IAXmonitorLINK=$IAXmonitorLINK&usergroup=$usergroup&UGdisplay=$UGdisplay&UidORname=$UidORname&orderby=$phoneord&SERVdisplay=$SERVdisplay&CALLSdisplay=$CALLSdisplay&PHONEdisplay=$PHONEdisplay&CUSTPHONEdisplay=$CUSTPHONEdisplay&with_inbound=$with_inbound&monitor_active=$monitor_active&monitor_phone=$monitor_phone\">PHONE</a>       |";
+$HDuser =			"------------------------+";
+$HTuser =			" <a href=\"$PHP_SELF?$groupQS&RR=$RR&DB=$DB&adastats=$adastats&SIPmonitorLINK=$SIPmonitorLINK&IAXmonitorLINK=$IAXmonitorLINK&usergroup=$usergroup&UGdisplay=$UGdisplay&UidORname=$UidORname&orderby=$userord&SERVdisplay=$SERVdisplay&CALLSdisplay=$CALLSdisplay&PHONEdisplay=$PHONEdisplay&CUSTPHONEdisplay=$CUSTPHONEdisplay&with_inbound=$with_inbound&monitor_active=$monitor_active&monitor_phone=$monitor_phone\">USER</a>              INFO |";
 $HDusergroup =		"--------------+";
 $HTusergroup =		" <a href=\"$PHP_SELF?$groupQS&RR=$RR&DB=$DB&adastats=$adastats&SIPmonitorLINK=$SIPmonitorLINK&IAXmonitorLINK=$IAXmonitorLINK&usergroup=$usergroup&UGdisplay=$UGdisplay&UidORname=$UidORname&orderby=$groupord&SERVdisplay=$SERVdisplay&CALLSdisplay=$CALLSdisplay&PHONEdisplay=$PHONEdisplay&CUSTPHONEdisplay=$CUSTPHONEdisplay&with_inbound=$with_inbound&monitor_active=$monitor_active&monitor_phone=$monitor_phone\">USER GROUP</a>   |";
 $HDsessionid =		"------------------+";
@@ -1333,8 +1501,8 @@ $HDbarge =			"-------+";
 $HTbarge =			" BARGE |";
 $HDstatus =			"----------+";
 $HTstatus =			" STATUS   |";
-$HDcustphone =		"------------+";
-$HTcustphone =		" CUST PHONE |";
+$HDcustphone =		"-------------+";
+$HTcustphone =		" CUST PHONE  |";
 $HDserver_ip =		"-----------------+";
 $HTserver_ip =		" SERVER IP       |";
 $HDcall_server_ip =	"-----------------+";
@@ -1510,6 +1678,12 @@ $calls_to_list = mysql_num_rows($rslt);
 			$dialplan = eregi_replace('Zap/',"",$Aextension[$i]);
 			$exten = "extension='$dialplan'";
 			}
+		if (eregi('DAHDI/',$Aextension[$i])) 
+			{
+			$protocol = 'Zap';
+			$dialplan = eregi_replace('DAHDI/',"",$Aextension[$i]);
+			$exten = "extension='$dialplan'";
+			}
 
 		$stmt="select login from phones where server_ip='$Aserver_ip[$i]' and $exten and protocol='$protocol';";
 		$rslt=mysql_query($stmt, $link);
@@ -1554,7 +1728,7 @@ $calls_to_list = mysql_num_rows($rslt);
 		$phone_split = explode("-----",$Alogin[$j]);
 		$i = $phone_split[1];
 
-			if (eregi("READY|PAUSED",$Astatus[$i]))
+		if (eregi("READY|PAUSED",$Astatus[$i]))
 			{
 			$Acall_time[$i]=$Astate_change[$i];
 
@@ -1565,23 +1739,23 @@ $calls_to_list = mysql_num_rows($rslt);
 				$status =		' DISPO';
 				}
 			}
-			if ($non_latin < 1)
+		if ($non_latin < 1)
 			{
 			$extension = eregi_replace('Local/',"",$Aextension[$i]);
-			$extension =		sprintf("%-12s", $extension);
-			while(strlen($extension)>12) {$extension = substr("$extension", 0, -1);}
+			$extension =		sprintf("%-14s", $extension);
+			while(strlen($extension)>14) {$extension = substr("$extension", 0, -1);}
 			}
-			else
+		else
 			{
 			$extension = eregi_replace('Local/',"",$Aextension[$i]);
 			$extension =		sprintf("%-48s", $extension);
-			while(mb_strlen($extension, 'utf-8')>12) {$extension = mb_substr("$extension", 0, -1,'utf8');}
+			while(mb_strlen($extension, 'utf-8')>14) {$extension = mb_substr("$extension", 0, -1,'utf8');}
 			}
 
-		$phone =			sprintf("%-10s", $phone_split[0]);
-		$custphone =		sprintf("%-10s", $custphone);
+		$phone =			sprintf("%-12s", $phone_split[0]);
+		$custphone =		sprintf("%-11s", $custphone);
 		$Luser =			$Auser[$i];
-		$user =				sprintf("%-18s", $Auser[$i]);
+		$user =				sprintf("%-20s", $Auser[$i]);
 		$Lsessionid =		$Asessionid[$i];
 		$sessionid =		sprintf("%-9s", $Asessionid[$i]);
 		$Lstatus =			$Astatus[$i];
@@ -1637,12 +1811,12 @@ $calls_to_list = mysql_num_rows($rslt);
 
 		if ($UGdisplay > 0)
 			{
-				if ($non_latin < 1)
+			if ($non_latin < 1)
 				{
 				$user_group =		sprintf("%-12s", $Auser_group[$i]);
 				while(strlen($user_group)>12) {$user_group = substr("$user_group", 0, -1);}
 				}
-				else
+			else
 				{
 				$user_group =		sprintf("%-40s", $Auser_group[$i]);
 				while(mb_strlen($user_group, 'utf-8')>12) {$user_group = mb_substr("$user_group", 0, -1,'utf8');}
@@ -1650,15 +1824,15 @@ $calls_to_list = mysql_num_rows($rslt);
 			}
 		if ($UidORname > 0)
 			{
-				if ($non_latin < 1)
+			if ($non_latin < 1)
 				{
-				$user =		sprintf("%-18s", $Afull_name[$i]);
-				while(strlen($user)>18) {$user = substr("$user", 0, -1);}
+				$user =		sprintf("%-20s", $Afull_name[$i]);
+				while(strlen($user)>20) {$user = substr("$user", 0, -1);}
 				}
-				else
+			else
 				{
-				$user =		sprintf("%-40s", $Afull_name[$i]);
-				while(mb_strlen($user, 'utf-8')>18) {$user = mb_substr("$user", 0, -1,'utf8');}
+				$user =		sprintf("%-60s", $Afull_name[$i]);
+				while(mb_strlen($user, 'utf-8')>20) {$user = mb_substr("$user", 0, -1,'utf8');}
 				}
 			}
 		if (!eregi("INCALL|QUEUE|PARK",$Astatus[$i]))
@@ -1757,7 +1931,7 @@ $calls_to_list = mysql_num_rows($rslt);
 		else	{$SVD = "";}
 
 		if ($PHONEdisplay > 0)	{$phoneD = "$G$phone$EG | ";}
-		else	{$phoneD = "";}
+		else	{$phoneD = " ";}
 
 		$vac_stage='';
 		$vac_campaign='';
@@ -1781,7 +1955,7 @@ $calls_to_list = mysql_num_rows($rslt);
 
 		$agentcount++;
 
-		$Aecho .= "| $G$extension$EG |$phoneD <a href=\"./user_status.php?user=$Luser\" target=\"_blank\">$G$user$EG</a> |$UGD $G$sessionid$EG$L$R | $G$status$EG $CM $pausecode| $CP$SVD$G$call_time_MS$EG | $G$campaign_id$EG | $G$calls_today$EG |$INGRP\n";
+		$Aecho .= "| $G$extension$EG |$phoneD<a href=\"./user_status.php?user=$Luser\" target=\"_blank\">$G$user$EG</a> <a href=\"javascript:ingroup_info('$Luser','$j');\">+</a> |$UGD $G$sessionid$EG$L$R | $G$status$EG $CM $pausecode| $CP$SVD$G$call_time_MS$EG | $G$campaign_id$EG | $G$calls_today$EG |$INGRP\n";
 
 		$j++;
 		}

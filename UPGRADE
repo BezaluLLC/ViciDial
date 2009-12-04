@@ -307,6 +307,14 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	changed using this function. For more information see the AGENT_API.txt
 	document in the docs directory.
 
+74. Added a non-agent-API function and a new feature to the Real-Time screen
+	that allows a manager to change the in-groups selected by an agent in
+	real time while an agent is logged in. Simply click on the INFO + link
+	for the agent you want to modify, select the in-groups, select blended
+	and select if you want to override the agent default settings then 
+	click submit. Manager must have the ability to Change Agent Campaign in
+	their user settings.
+
 
 
 

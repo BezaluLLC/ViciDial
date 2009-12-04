@@ -1,13 +1,24 @@
 NON-AGENT API DOCUMENT					Started: 2008-07-24
 
-This document describes the functions of an API(Application Programming Interface)
-for all functions NOT relating to the VICIDIAL Agent screen. This functionality 
-will be rather limited at first and will be built upon as critical functions are
-identified and programmed into it.
+This document describes the functions of an API(Application Programming 
+Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
+This functionality will be rather limited at first and will be built upon as 
+critical functions are identified and programmed into it.
 
 There is also a new agent API script, for more information on that, please read
 the AGENT_API.txt document.
 
+
+
+
+API functions:
+version - shows version and build of the API, along with the date/time
+sounds_list - outputs a list of audio files from the audio store
+moh_list - outputs a list of music on hold classes in the system
+vm_list - outputs a list of voicemail boxes in the system
+blind_monitor - calls user-defined phone and places them in session as blind monitor
+add_lead - adds a new lead to the vicidial_list table with several fields and options
+agent_ingroup_info - shows in-group and outbound auto-dial info for logged-in agent
 
 
 
@@ -22,10 +33,11 @@ Changes:
 90721-1432 - Added rank and owner
 90904-1535 - Added moh_list musiconhold function
 90916-2342 - Added vm_list voicemail list
+91203-1140 - Added agent_ingroup_info feature
 
 
 
-API Functions: ('function' variable)
+API Functions use the 'function' variable
 
 NOTE: Just as with the Agent API, the non-agent API requires the user and pass of a
 valid api-enabled vicidial_users account to execute actions.
@@ -145,6 +157,29 @@ ERROR: blind_monitor INVALID SESSION ID - 8602051
 ERROR: blind_monitor USER DOES NOT HAVE PERMISSION TO BLIND MONITOR - 6666|0 
 
 ERROR: NO FUNCTION SPECIFIED
+
+
+
+
+--------------------------------------------------------------------------------
+agent_ingroup_info - shows in-group and outbound auto-dial info for logged-in agent
+
+REQUIRED FIELDS-
+agent_user -		2-20 characters
+source -		description of what originated the API call (maximum 20 characters)
+
+SETTINGS FIELDS-
+stage -			info(show information only), change(show options to change), text(standard non-HTML output)
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&function=agent_ingroup_info&stage=change&user=6666&pass=1234&agent_user=1000
+
+Example responses:
+ERROR: agent_ingroup_info USER DOES NOT HAVE PERMISSION TO GET AGENT INFO - 6666|0
+ERROR: agent_ingroup_info INVALID USER ID - 1255|6666
+
+
+
 
 
 

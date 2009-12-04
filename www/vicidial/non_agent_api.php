@@ -28,10 +28,11 @@
 # 90904-1535 - Added moh_list musiconhold list
 # 90916-2342 - Added vm_list voicemail list
 # 91026-1059 - Added AREACODE DNC option
+# 91203-1140 - Added agent_ingroup_info feature
 #
 
-$version = '2.2.0-14';
-$build = '91026-1059';
+$version = '2.2.0-15';
+$build = '91203-1140';
 
 require("dbconnect.php");
 
@@ -122,6 +123,8 @@ if (isset($_GET["rank"]))						{$rank=$_GET["rank"];}
 	elseif (isset($_POST["rank"]))				{$rank=$_POST["rank"];}
 if (isset($_GET["owner"]))						{$owner=$_GET["owner"];}
 	elseif (isset($_POST["owner"]))				{$owner=$_POST["owner"];}
+if (isset($_GET["agent_user"]))					{$agent_user=$_GET["agent_user"];}
+	elseif (isset($_POST["agent_user"]))		{$agent_user=$_POST["agent_user"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -133,12 +136,10 @@ $stmt = "SELECT use_non_latin FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =					$row[0];
-	$i++;
+	$non_latin =			$row[0];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -285,6 +286,9 @@ if ($function == 'version')
 	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 	exit;
 	}
+################################################################################
+### END version
+################################################################################
 
 
 
@@ -449,6 +453,9 @@ if ($function == 'sounds_list')
 			}
 		}
 	}
+################################################################################
+### END sounds_list
+################################################################################
 
 
 
@@ -590,6 +597,9 @@ if ($function == 'moh_list')
 			}
 		}
 	}
+################################################################################
+### END moh_list
+################################################################################
 
 
 
@@ -706,6 +716,300 @@ if ($function == 'vm_list')
 		exit;
 		}
 	}
+################################################################################
+### END vm_list
+################################################################################
+
+
+
+
+################################################################################
+### agent_ingroup_info - displays agent in-group info in an HTML form allowing for changes
+################################################################################
+if ($function == 'agent_ingroup_info')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and user_level > 6;";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ( ($allowed_user < 1) and ($source != 'queuemetrics') )
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_ingroup_info USER DOES NOT HAVE PERMISSION TO GET AGENT INFO";
+			echo "$result: $result_reason: |$user|$allowed_user|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$stmt="SELECT count(*) from vicidial_live_agents where user='$agent_user';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$session_exists=$row[0];
+
+			if ($session_exists < 1)
+				{
+				$result = 'ERROR';
+				$result_reason = "agent_ingroup_info INVALID USER ID";
+				echo "$result: $result_reason - $agent_user|$user\n";
+				$data = "$session_id";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT campaign_id,closer_campaigns,outbound_autodial,manager_ingroup_set,external_igb_set_user from vicidial_live_agents where user='$agent_user';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$campaign_id =				$row[0];
+				$closer_campaigns =			$row[1];
+				$blended =					$row[2];
+				$manager_ingroup_set =		$row[3];
+				$external_igb_set_user =	$row[4];
+
+				$stmt="SELECT full_name from vicidial_users where user='$agent_user';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$full_name =				$row[0];
+
+				$stmt = "select count(*) from vicidial_campaigns where campaign_id='$campaign_id' and campaign_allow_inbound='Y' and dial_method NOT IN('MANUAL');";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$allowed_campaign_inbound=$row[0];
+
+				$stmt = "select count(*) from vicidial_campaigns where campaign_id='$campaign_id' and dial_method NOT IN('MANUAL','INBOUND_MAN');";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$allowed_campaign_autodial=$row[0];
+
+				$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and change_agent_campaign='1';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$allowed_user_change_ingroups=$row[0];
+
+				$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and modify_users='1';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$allowed_user_modify_user=$row[0];
+
+
+				$result = 'SUCCESS';
+				$result_reason = "";
+				$data = "$agent_user|$stage";
+
+				if ($stage == 'text')
+					{
+					$output .= "SELECTED INGROUPS: $closer_campaigns\n";
+					$output .= "OUTBOUND AUTODIAL: $blended\n";
+					$output .= "MANAGER OVERRIDE: $manager_ingroup_set\n";
+					$output .= "MANAGER: $external_igb_set_user\n";
+					echo "$result: $result_reason - $data\n$output\n";
+					}
+				else
+					{
+					$output  = '';
+					$output .= "<TABLE WIDTH=680 CELLPADDING=0 CELLSPACING=5 BGCOLOR=\"#D9E6FE\"><TR><TD ALIGN=LEFT>\n";
+					$output .= "Agent: $agent_user - $full_name </TD><TD>\n";
+					$output .= " &nbsp; Campaign: $campaign_id</TD><TD>\n";
+					$output .= "<a href=\"#\" onclick=\"hide_ingroup_info();\">Close</a></TD></TR><TR><TD COLSPAN=3 BGCOLOR=\"#CCCCFF\">\n";
+
+					$stmt="SELECT closer_campaigns from vicidial_campaigns where campaign_id='$campaign_id';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					if ($allowed_campaign_inbound < 1)
+						{$row[0]='';}
+					$closer_groups_pre = preg_replace('/-$/','',$row[0]);
+					$closer_groups = explode(" ",$closer_groups_pre);
+					$closer_groups_ct = count($closer_groups);
+
+					$in_groups_pre = preg_replace('/-$/','',$closer_campaigns);
+					$in_groups = explode(" ",$in_groups_pre);
+					$in_groups_ct = count($in_groups);
+					$k=1;
+					while ($k < $closer_groups_ct)
+						{
+						$closer_select[$k]=0;
+						if (strlen($closer_groups[$k])>1)
+							{
+							$m=0;
+							while ($m < $in_groups_ct)
+								{
+								if (strlen($in_groups[$m])>1)
+									{
+									if ($closer_groups[$k] == $in_groups[$m])
+										{$closer_select[$k]++;}
+									}
+								$m++;
+								}
+							}
+						$k++;
+						}
+
+					if ( ($allowed_user_change_ingroups > 0) and ($stage == 'change') )
+						{
+						$output .= "<TABLE CELLPADDING=0 CELLSPACING=3 BORDER=0>\n";
+						$output .= "<TR><TD ALIGN=RIGHT VALIGN=TOP>Selected In-Groups: </TD><TD ALIGN=LEFT>\n";
+						$output .= "<INPUT TYPE=HIDDEN NAME=agent_user ID=agent_user value=\"$agent_user\">\n";
+						$output .= "<SELECT SIZE=10 NAME=ingroup_new_selections ID=ingroup_new_selections multiple>\n";
+						
+						$m=0;
+						$m_printed=0;
+						while ($m < $closer_groups_ct)
+							{
+							if (strlen($closer_groups[$m])>1)
+								{
+								$stmt="SELECT group_name from vicidial_inbound_groups where group_id='$closer_groups[$m]';";
+								if ($DB) {echo "$stmt\n";}
+								$rslt=mysql_query($stmt, $link);
+								$row=mysql_fetch_row($rslt);
+
+								$output .= "<option value=\"$closer_groups[$m]\"";
+
+								if ($closer_select[$m] > 0)
+									{$output .= " SELECTED";}
+								$output .= ">$closer_groups[$m] - $row[0]</option>\n";
+								$m_printed++;
+								}
+							$m++;
+							}
+
+						if ($m_printed < 1)
+							{$output .= "<option value=\"\">No In-Groups Allowed</option>\n";}
+
+						$output .= "</SELECT><BR></TD></TR>\n";
+
+						$output .= "<TR><TD ALIGN=RIGHT>Change, Add, Remove:\n";
+						$output .= "</TD><TD ALIGN=LEFT>\n";
+						$output .= "<SELECT SIZE=1 NAME=ingroup_add_remove_change ID=ingroup_add_remove_change>\n";
+						$output .= "<option value=\"CHANGE\">CHANGE - Set in-groups to those selected above</option>\n";
+						$output .= "<option value=\"ADD\">ADD - Add in-groups selected above to agent selected</option>\n";
+						$output .= "<option value=\"REMOVE\">REMOVE - Remove in-groups selected above from agent selected</option>\n";
+						$output .= "</SELECT>\n";
+						$output .= "</TD></TR>\n";
+
+						$output .= "<TR><TD ALIGN=RIGHT>Blended Outbound Autodial:\n";
+						$output .= "</TD><TD ALIGN=LEFT>\n";
+						$output .= "<SELECT SIZE=1 NAME=blended ID=blended";
+						if ($allowed_campaign_autodial < 1)
+							{
+							$output .= " DISABLED";
+							$blended = 'N';
+							}
+						$output .= ">\n";
+						$output .= "<option value=\"YES\"";
+						if ($blended == 'Y')
+							{$output .= " SELECTED";}
+						$output .= ">Yes</option>\n";
+						$output .= "<option value=\"NO\"";
+						if ($blended == 'N')
+							{$output .= " SELECTED";}
+						$output .= ">No</option>\n";
+						$output .= "</SELECT>\n";
+						$output .= "</TD></TR>\n";
+
+						$output .= "<TR><TD ALIGN=RIGHT>Set As User Default:\n";
+						$output .= "</TD><TD ALIGN=LEFT>\n";
+						$output .= "<SELECT SIZE=1 NAME=set_as_default ID=set_as_default";
+						if ($allowed_user_modify_user < 1)
+							{$output .= " DISABLED";}
+						$output .= ">\n";
+						$output .= "<option value=\"YES\">Yes</option>\n";
+						$output .= "<option value=\"NO\" SELECTED>No</option>\n";
+						$output .= "</SELECT>\n";
+						$output .= "</TD></TR>\n";
+
+						if ( ($manager_ingroup_set == 'SET') or ($manager_ingroup_set == 'Y') )
+							{
+							$stmt="SELECT full_name from vicidial_users where user='$external_igb_set_user';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_query($stmt, $link);
+							$row=mysql_fetch_row($rslt);
+							$Mfull_name =				$row[0];
+
+							$output .= "<TR><TD ALIGN=RIGHT>Manager In-Group Override:\n";
+							$output .= "</TD><TD ALIGN=LEFT>\n";
+							$output .= "$manager_ingroup_set - $external_igb_set_user - $Mfull_name\n";
+							$output .= "</TD></TR>\n";
+							}
+
+						$output .= "<TR><TD ALIGN=CENTER COLSPAN=2>\n";
+						$output .= "<INPUT TYPE=BUTTON NAME=SUBMIT ID=SUBMIT VALUE=\"Submit Changes\" onclick=\"submit_ingroup_changes('$agent_user')\">\n";
+						$output .= "</TD></TR>\n";
+
+						$output .= "</TABLE>\n";
+						$output .= "</TD></TR></TABLE>\n";
+						}
+					else
+						{
+						$output .= "<TABLE CELLPADDING=0 CELLSPACING=3 BORDER=0>\n";
+						
+						$m=0;
+						$m_printed=0;
+						while ($m < $closer_groups_ct)
+							{
+							if (strlen($closer_groups[$m])>1)
+								{
+								$stmt="SELECT group_name from vicidial_inbound_groups where group_id='$closer_groups[$m]';";
+								if ($DB) {echo "$stmt\n";}
+								$rslt=mysql_query($stmt, $link);
+								$row=mysql_fetch_row($rslt);
+
+								$output .= "<TR><TD>$closer_groups[$m]";
+
+								if ($closer_select[$m] > 0)
+									{$output .= " *";}
+								$output .= "</TD><TD>$row[0]</TD></TR>\n";
+								$m_printed++;
+								}
+							$m++;
+							}
+
+						if ($m_printed < 1)
+							{$output .= "<TR><TD>No In-Groups Allowed</TD></TR>\n";}
+
+						$output .= "</TABLE><BR>\n";
+
+						$output .= "SELECTED INGROUPS: $closer_campaigns<BR>\n";
+						$output .= "OUTBOUND AUTODIAL: $blended<BR>\n";
+						$output .= "MANAGER OVERRIDE: $manager_ingroup_set<BR>\n";
+						$output .= "MANAGER: $external_igb_set_user<BR>\n";
+						$output .= "\n";
+						$output .= "</TD></TR></TABLE>\n";
+						}
+
+					echo "$output";
+					}
+
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END agent_ingroup_info
+################################################################################
 
 
 
@@ -840,6 +1144,9 @@ if ($function == 'blind_monitor')
 		}
 	exit;
 	}
+################################################################################
+### END blind_monitor
+################################################################################
 
 
 
@@ -1063,6 +1370,9 @@ if ($function == 'add_lead')
 		exit;
 		}
 	}
+################################################################################
+### END add_lead
+################################################################################
 
 
 
@@ -1080,13 +1390,13 @@ api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$resul
 
 
 if ($format=='debug') 
-{
-$ENDtime = date("U");
-$RUNtime = ($ENDtime - $StarTtime);
-echo "\n<!-- script runtime: $RUNtime seconds -->";
-echo "\n</body>\n</html>\n";
-}
-	
+	{
+	$ENDtime = date("U");
+	$RUNtime = ($ENDtime - $StarTtime);
+	echo "\n<!-- script runtime: $RUNtime seconds -->";
+	echo "\n</body>\n</html>\n";
+	}
+		
 exit; 
 
 
@@ -1724,134 +2034,134 @@ return $gmt_offset;
 
 ##### DETERMINE IF LEAD IS DIALABLE #####
 function dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state)
-{
-$dialable=0;
+	{
+	$dialable=0;
 
-$pzone=3600 * $gmt_offset;
-$pmin=(gmdate("i", time() + $pzone));
-$phour=( (gmdate("G", time() + $pzone)) * 100);
-$pday=gmdate("w", time() + $pzone);
-$tz = sprintf("%.2f", $p);	
-$GMT_gmt = "$tz";
-$GMT_day = "$pday";
-$GMT_hour = ($phour + $pmin);
+	$pzone=3600 * $gmt_offset;
+	$pmin=(gmdate("i", time() + $pzone));
+	$phour=( (gmdate("G", time() + $pzone)) * 100);
+	$pday=gmdate("w", time() + $pzone);
+	$tz = sprintf("%.2f", $p);	
+	$GMT_gmt = "$tz";
+	$GMT_day = "$pday";
+	$GMT_hour = ($phour + $pmin);
 
-$stmt="SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times FROM vicidial_call_times where call_time_id='$local_call_time';";
-if ($DB) {echo "$stmt\n";}
-$rslt=mysql_query($stmt, $link);
-$rowx=mysql_fetch_row($rslt);
-$Gct_default_start =	"$rowx[3]";
-$Gct_default_stop =		"$rowx[4]";
-$Gct_sunday_start =		"$rowx[5]";
-$Gct_sunday_stop =		"$rowx[6]";
-$Gct_monday_start =		"$rowx[7]";
-$Gct_monday_stop =		"$rowx[8]";
-$Gct_tuesday_start =	"$rowx[9]";
-$Gct_tuesday_stop =		"$rowx[10]";
-$Gct_wednesday_start =	"$rowx[11]";
-$Gct_wednesday_stop =	"$rowx[12]";
-$Gct_thursday_start =	"$rowx[13]";
-$Gct_thursday_stop =	"$rowx[14]";
-$Gct_friday_start =		"$rowx[15]";
-$Gct_friday_stop =		"$rowx[16]";
-$Gct_saturday_start =	"$rowx[17]";
-$Gct_saturday_stop =	"$rowx[18]";
-$Gct_state_call_times = "$rowx[19]";
+	$stmt="SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times FROM vicidial_call_times where call_time_id='$local_call_time';";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_query($stmt, $link);
+	$rowx=mysql_fetch_row($rslt);
+	$Gct_default_start =	"$rowx[3]";
+	$Gct_default_stop =		"$rowx[4]";
+	$Gct_sunday_start =		"$rowx[5]";
+	$Gct_sunday_stop =		"$rowx[6]";
+	$Gct_monday_start =		"$rowx[7]";
+	$Gct_monday_stop =		"$rowx[8]";
+	$Gct_tuesday_start =	"$rowx[9]";
+	$Gct_tuesday_stop =		"$rowx[10]";
+	$Gct_wednesday_start =	"$rowx[11]";
+	$Gct_wednesday_stop =	"$rowx[12]";
+	$Gct_thursday_start =	"$rowx[13]";
+	$Gct_thursday_stop =	"$rowx[14]";
+	$Gct_friday_start =		"$rowx[15]";
+	$Gct_friday_stop =		"$rowx[16]";
+	$Gct_saturday_start =	"$rowx[17]";
+	$Gct_saturday_stop =	"$rowx[18]";
+	$Gct_state_call_times = "$rowx[19]";
 
-if ($GMT_day==0)	#### Sunday local time
-	{
-	if (($Gct_sunday_start==0) and ($Gct_sunday_stop==0))
+	if ($GMT_day==0)	#### Sunday local time
 		{
-		if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-			{$dialable=1;}
+		if (($Gct_sunday_start==0) and ($Gct_sunday_stop==0))
+			{
+			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+				{$dialable=1;}
+			}
+		else
+			{
+			if ( ($GMT_hour>=$Gct_sunday_start) and ($GMT_hour<$Gct_sunday_stop) )
+				{$dialable=1;}
+			}
 		}
-	else
+	if ($GMT_day==1)	#### Monday local time
 		{
-		if ( ($GMT_hour>=$Gct_sunday_start) and ($GMT_hour<$Gct_sunday_stop) )
-			{$dialable=1;}
+		if (($Gct_monday_start==0) and ($Gct_monday_stop==0))
+			{
+			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+				{$dialable=1;}
+			}
+		else
+			{
+			if ( ($GMT_hour>=$Gct_monday_start) and ($GMT_hour<$Gct_monday_stop) )
+				{$dialable=1;}
+			}
 		}
-	}
-if ($GMT_day==1)	#### Monday local time
-	{
-	if (($Gct_monday_start==0) and ($Gct_monday_stop==0))
+	if ($GMT_day==2)	#### Tuesday local time
 		{
-		if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-			{$dialable=1;}
+		if (($Gct_tuesday_start==0) and ($Gct_tuesday_stop==0))
+			{
+			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+				{$dialable=1;}
+			}
+		else
+			{
+			if ( ($GMT_hour>=$Gct_tuesday_start) and ($GMT_hour<$Gct_tuesday_stop) )
+				{$dialable=1;}
+			}
 		}
-	else
+	if ($GMT_day==3)	#### Wednesday local time
 		{
-		if ( ($GMT_hour>=$Gct_monday_start) and ($GMT_hour<$Gct_monday_stop) )
-			{$dialable=1;}
+		if (($Gct_wednesday_start==0) and ($Gct_wednesday_stop==0))
+			{
+			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+				{$dialable=1;}
+			}
+		else
+			{
+			if ( ($GMT_hour>=$Gct_wednesday_start) and ($GMT_hour<$Gct_wednesday_stop) )
+				{$dialable=1;}
+			}
 		}
-	}
-if ($GMT_day==2)	#### Tuesday local time
-	{
-	if (($Gct_tuesday_start==0) and ($Gct_tuesday_stop==0))
+	if ($GMT_day==4)	#### Thursday local time
 		{
-		if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-			{$dialable=1;}
+		if (($Gct_thursday_start==0) and ($Gct_thursday_stop==0))
+			{
+			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+				{$dialable=1;}
+			}
+		else
+			{
+			if ( ($GMT_hour>=$Gct_thursday_start) and ($GMT_hour<$Gct_thursday_stop) )
+				{$dialable=1;}
+			}
 		}
-	else
+	if ($GMT_day==5)	#### Friday local time
 		{
-		if ( ($GMT_hour>=$Gct_tuesday_start) and ($GMT_hour<$Gct_tuesday_stop) )
-			{$dialable=1;}
+		if (($Gct_friday_start==0) and ($Gct_friday_stop==0))
+			{
+			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+				{$dialable=1;}
+			}
+		else
+			{
+			if ( ($GMT_hour>=$Gct_friday_start) and ($GMT_hour<$Gct_friday_stop) )
+				{$dialable=1;}
+			}
 		}
-	}
-if ($GMT_day==3)	#### Wednesday local time
-	{
-	if (($Gct_wednesday_start==0) and ($Gct_wednesday_stop==0))
+	if ($GMT_day==6)	#### Saturday local time
 		{
-		if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-			{$dialable=1;}
+		if (($Gct_saturday_start==0) and ($Gct_saturday_stop==0))
+			{
+			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+				{$dialable=1;}
+			}
+		else
+			{
+			if ( ($GMT_hour>=$Gct_saturday_start) and ($GMT_hour<$Gct_saturday_stop) )
+				{$dialable=1;}
+			}
 		}
-	else
-		{
-		if ( ($GMT_hour>=$Gct_wednesday_start) and ($GMT_hour<$Gct_wednesday_stop) )
-			{$dialable=1;}
-		}
-	}
-if ($GMT_day==4)	#### Thursday local time
-	{
-	if (($Gct_thursday_start==0) and ($Gct_thursday_stop==0))
-		{
-		if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-			{$dialable=1;}
-		}
-	else
-		{
-		if ( ($GMT_hour>=$Gct_thursday_start) and ($GMT_hour<$Gct_thursday_stop) )
-			{$dialable=1;}
-		}
-	}
-if ($GMT_day==5)	#### Friday local time
-	{
-	if (($Gct_friday_start==0) and ($Gct_friday_stop==0))
-		{
-		if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-			{$dialable=1;}
-		}
-	else
-		{
-		if ( ($GMT_hour>=$Gct_friday_start) and ($GMT_hour<$Gct_friday_stop) )
-			{$dialable=1;}
-		}
-	}
-if ($GMT_day==6)	#### Saturday local time
-	{
-	if (($Gct_saturday_start==0) and ($Gct_saturday_stop==0))
-		{
-		if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-			{$dialable=1;}
-		}
-	else
-		{
-		if ( ($GMT_hour>=$Gct_saturday_start) and ($GMT_hour<$Gct_saturday_stop) )
-			{$dialable=1;}
-		}
-	}
 
-return $dialable;
-}
+	return $dialable;
+	}
 
 /*
 	$ct_states = '';
@@ -2011,15 +2321,15 @@ return $dialable;
 
 ##### Logging #####
 function api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data)
-{
-if ($api_logging > 0)
 	{
-	$NOW_TIME = date("Y-m-d H:i:s");
-#	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-	$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$agent_user',function='$function',value='$value',result='$result',result_reason='$result_reason',source='$source',data='$data',api_date='$NOW_TIME',api_script='$api_script';";
-	$rslt=mysql_query($stmt, $link);
+	if ($api_logging > 0)
+		{
+		$NOW_TIME = date("Y-m-d H:i:s");
+	#	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$agent_user',function='$function',value='$value',result='$result',result_reason='$result_reason',source='$source',data='$data',api_date='$NOW_TIME',api_script='$api_script';";
+		$rslt=mysql_query($stmt, $link);
+		}
+	return 1;
 	}
-return 1;
-}
 
 ?>

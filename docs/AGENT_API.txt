@@ -54,10 +54,10 @@ ERROR: agent_user is not logged in - 6666
 
 
 DETAIL OF EACH FUNCTION:
+
+
+
 --------------------------------------------------------------------------------
-
-
-
 version -
 
 DESCRIPTION:
@@ -70,6 +70,7 @@ VERSION: 2.0.5-2|BUILD: 90116-1229|DATE: 2009-01-15 14:59:33|EPOCH: 1222020803
 
 
 
+--------------------------------------------------------------------------------
 external_hangup - 
 
 DESCRIPTION:
@@ -85,6 +86,7 @@ SUCCESS: external_hangup function set - 1|6666
 
 
 
+--------------------------------------------------------------------------------
 external_status - 
 
 DESCRIPTION:
@@ -100,6 +102,7 @@ SUCCESS: external_status function set - A|6666
 
 
 
+--------------------------------------------------------------------------------
 external_pause - 
 
 DESCRIPTION:
@@ -116,6 +119,7 @@ SUCCESS: external_pause function set - PAUSE|1232020456|6666
 
 
 
+--------------------------------------------------------------------------------
 external_dial - 
 
 DESCRIPTION:
@@ -155,6 +159,7 @@ SUCCESS: external_dial function set - 7275551212|1|YES|1232020456|6666
 
 
 
+--------------------------------------------------------------------------------
 change_ingroups - 
 
 DESCRIPTION:
@@ -173,7 +178,7 @@ ingroup_choices -
 set_as_default - 
  OPTIONAL, YES or NO - overwrites the settings for the agent in the user modification screen, default is NO
 
-EXAMPLE URL:
+EXAMPLE URLS:
 http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=change_ingroups&value=CHANGE&set_as_default=YES&blended=YES&ingroup_choices=+TEST_IN+SALESLINE+FAKE_IN+-
 http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=change_ingroups&value=REMOVE&blended=NO&ingroup_choices=+TEST_IN2+TEST_IN4+-
 http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=change_ingroups&value=ADD&blended=NO&ingroup_choices=+TEST_IN2+-
@@ -192,6 +197,13 @@ SUCCESS: change_ingroups function set - YES| TEST_IN SALESLINE -|6666
 
 
 
+
+
+
+
+
+--------------------------------------------------------------------------------
+Other information:
 
 
 Example MySQL query options for executing API functions(not available for all functions):
