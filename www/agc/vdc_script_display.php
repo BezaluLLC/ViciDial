@@ -8,10 +8,11 @@
 # CHANGELOG:
 # 90824-1435 - First build of script
 # 90827-1548 - Added list override script option
+# 91204-1913 - Added recording_filename and recording_id variables
 #
 
-$version = '2.2.0-2';
-$build = '90827-1548';
+$version = '2.2.0-3';
+$build = '91204-1913';
 
 require("dbconnect.php");
 
@@ -127,6 +128,10 @@ if (isset($_GET["script_height"]))	{$script_height=$_GET["script_height"];}
 	elseif (isset($_POST["script_height"]))	{$script_height=$_POST["script_height"];}
 if (isset($_GET["fullname"]))	{$fullname=$_GET["fullname"];}
 	elseif (isset($_POST["fullname"]))	{$fullname=$_POST["fullname"];}
+if (isset($_GET["recording_filename"]))	{$recording_filename=$_GET["recording_filename"];}
+	elseif (isset($_POST["recording_filename"]))	{$recording_filename=$_POST["recording_filename"];}
+if (isset($_GET["recording_id"]))	{$recording_id=$_GET["recording_id"];}
+	elseif (isset($_POST["recording_id"]))	{$recording_id=$_POST["recording_id"];}
 
 if (isset($_GET["ScrollDIV"]))	{$ScrollDIV=$_GET["ScrollDIV"];}
 	elseif (isset($_POST["ScrollDIV"]))	{$ScrollDIV=$_POST["ScrollDIV"];}
@@ -295,6 +300,8 @@ if (eregi("iframe src",$script_text))
 	$script_width = eregi_replace(' ','+',$script_width);
 	$script_height = eregi_replace(' ','+',$script_height);
 	$fullname = eregi_replace(' ','+',$fullname);
+	$recording_filename = eregi_replace(' ','+',$recording_filename);
+	$recording_id = eregi_replace(' ','+',$recording_id);
 	}
 
 $script_text = eregi_replace('--A--lead_id--B--',"$lead_id",$script_text);
@@ -353,6 +360,8 @@ $script_text = eregi_replace('--A--in_script--B--',"$in_script",$script_text);
 $script_text = eregi_replace('--A--script_width--B--',"$script_width",$script_text);
 $script_text = eregi_replace('--A--script_height--B--',"$script_height",$script_text);
 $script_text = eregi_replace('--A--fullname--B--',"$fullname",$script_text);
+$script_text = eregi_replace('--A--recording_filename--B--',"$recording_filename",$script_text);
+$script_text = eregi_replace('--A--recording_id--B--',"$recording_id",$script_text);
 $script_text = eregi_replace("\n","<BR>",$script_text);
 $script_text = stripslashes($script_text);
 

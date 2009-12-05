@@ -626,3 +626,22 @@ ALTER TABLE vicidial_live_agents ADD external_igb_set_user VARCHAR(20) default '
 ALTER TABLE vicidial_user_closer_log ADD manager_change VARCHAR(20) default '';
 
 UPDATE system_settings SET db_schema_version='1183',db_schema_update_date=NOW();
+
+CREATE TABLE vicidial_grab_call_log (
+auto_call_id INT(9) UNSIGNED NOT NULL,
+user VARCHAR(20),
+event_date DATETIME,
+call_time DATETIME,
+campaign_id VARCHAR(20),
+uniqueid VARCHAR(20),
+phone_number VARCHAR(20),
+lead_id INT(9) UNSIGNED,
+queue_priority TINYINT(2) default '0',
+call_type ENUM('IN','OUT','OUTBALANCE') default 'OUT',
+index (auto_call_id),
+index (event_date),
+index (user),
+index (campaign_id)
+);
+
+UPDATE system_settings SET db_schema_version='1184',db_schema_update_date=NOW();

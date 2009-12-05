@@ -261,10 +261,11 @@
 # 91111-1433 - Fixed Gender pulldown list display for IE, remove links for recording channels in SHOW CHANNELS
 # 91123-1801 - Added code for outbound_autodial field
 # 91130-2021 - Added code for manager override of in-group selection
+# 91204-1638 - Added recording_filename and recording_id script variables and script refresh link
 #
 
-$version = '2.2.0-239';
-$build = '91130-2021';
+$version = '2.2.0-240';
+$build = '91204-1638';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=61;
 $one_mysql_log=0;
@@ -2597,6 +2598,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var no_delete_VDAC=0;
 	var manager_ingroups_set=0;
 	var external_igb_set_name='';
+	var recording_filename='';
+	var recording_id='';
+	var delayed_script_load='';
+	var script_recording_delay='';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -3604,6 +3609,15 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					var RClookID_array = RClookID.split("RecorDing_ID: ");
 					if (RClookID_array.length > 0)
 						{
+						recording_filename = RClookFILE_array[1];
+						recording_id = RClookID_array[1];
+
+						if (delayed_script_load == 'YES')
+							{
+							RefreshScript();
+							delayed_script_load='NO';
+							}
+
 						var RecDispNamE = RClookFILE_array[1];
 						if (RecDispNamE.length > 25)
 							{
@@ -3995,6 +4009,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							if (window.MDlogRecorDings)
 								{
 								var MDlogRecorDings_array=MDlogRecorDings.split("|");
+						//		recording_filename = MDlogRecorDings_array[2];
+						//		recording_id = MDlogRecorDings_array[3];
+
 								var RecDispNamE = MDlogRecorDings_array[2];
 								if (RecDispNamE.length > 25)
 									{
@@ -4708,6 +4725,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						document.vicidial_form.rank.value				= MDnextResponse_array[35];
 						document.vicidial_form.owner.value				= MDnextResponse_array[36];
 					//	CalL_ScripT_id									= MDnextResponse_array[37];
+						script_recording_delay							= MDnextResponse_array[38];
+
 			
 						lead_dial_number = document.vicidial_form.phone_number.value;
 						var dispnum = document.vicidial_form.phone_number.value;
@@ -4794,6 +4813,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&script_width=" + script_width + '' +
 							"&script_height=" + script_height + '' +
 							"&fullname=" + LOGfullname + '' +
+							"&recording_filename=" + recording_filename + '' +
+							"&recording_id=" + recording_id + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -4875,6 +4896,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&script_width=" + script_width + '' +
 							"&script_height=" + script_height + '' +
 							"&fullname=" + LOGfullname + '' +
+							"&recording_filename=" + recording_filename + '' +
+							"&recording_id=" + recording_id + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -4978,6 +5001,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&script_width=" + script_width + '' +
 								"&script_height=" + script_height + '' +
 								"&fullname=" + LOGfullname + '' +
+								"&recording_filename=" + recording_filename + '' +
+								"&recording_id=" + recording_id + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -4986,11 +5011,23 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								web_form_vars = web_form_vars.replace(regWFspace, '+');
 								web_form_vars = web_form_vars.replace(regWF, '');
 
-								load_script_contents();
+								if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
+									{
+									delayed_script_load = 'YES';
+									RefreshScript('CLEAR');
+									}
+								else
+									{
+									load_script_contents();
+									}
 								}
 
 							if (get_call_launch == 'SCRIPT')
 								{
+								if (delayed_script_load == 'YES')
+									{
+									load_script_contents();
+									}
 								ScriptPanelToFront();
 								}
 
@@ -5338,6 +5375,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&script_width=" + script_width + '' +
 							"&script_height=" + script_height + '' +
 							"&fullname=" + LOGfullname + '' +
+							"&recording_filename=" + recording_filename + '' +
+							"&recording_id=" + recording_id + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -5346,11 +5385,23 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							web_form_vars = web_form_vars.replace(regWFspace, '+');
 							web_form_vars = web_form_vars.replace(regWF, '');
 
-							load_script_contents();
+							if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
+								{
+								delayed_script_load = 'YES';
+								RefreshScript('CLEAR');
+								}
+							else
+								{
+								load_script_contents();
+								}
 							}
 
 						if (get_call_launch == 'SCRIPT')
 							{
+							if (delayed_script_load == 'YES')
+								{
+								load_script_contents();
+								}
 							ScriptPanelToFront();
 							}
 						if (get_call_launch == 'WEBFORM')
@@ -5797,6 +5848,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							EAalt_phone_count								= check_VDIC_array[43];
 							document.vicidial_form.rank.value				= check_VDIC_array[44];
 							document.vicidial_form.owner.value				= check_VDIC_array[45];
+							script_recording_delay							= check_VDIC_array[46];
 
 							var gIndex = 0;
 							if (document.vicidial_form.gender.value == 'M') {var gIndex = 1;}
@@ -6003,6 +6055,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&script_width=" + script_width + '' +
 								"&script_height=" + script_height + '' +
 								"&fullname=" + LOGfullname + '' +
+								"&recording_filename=" + recording_filename + '' +
+								"&recording_id=" + recording_id + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -6084,6 +6138,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&script_width=" + script_width + '' +
 								"&script_height=" + script_height + '' +
 								"&fullname=" + LOGfullname + '' +
+								"&recording_filename=" + recording_filename + '' +
+								"&recording_id=" + recording_id + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -6170,6 +6226,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&script_width=" + script_width + '' +
 								"&script_height=" + script_height + '' +
 								"&fullname=" + LOGfullname + '' +
+								"&recording_filename=" + recording_filename + '' +
+								"&recording_id=" + recording_id + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -6178,11 +6236,23 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								web_form_vars = web_form_vars.replace(regWFspace, '+');
 								web_form_vars = web_form_vars.replace(regWF, '');
 
-								load_script_contents();
+								if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
+									{
+									delayed_script_load = 'YES';
+									RefreshScript('CLEAR');
+									}
+								else
+									{
+									load_script_contents();
+									}
 								}
 
 							if (CalL_AutO_LauncH == 'SCRIPT')
 								{
+								if (delayed_script_load == 'YES')
+									{
+									load_script_contents();
+									}
 								ScriptPanelToFront();
 								}
 
@@ -6220,10 +6290,30 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		}
 
+
+// ################################################################################
+// refresh or clear the SCRIPT frame contents
+	function RefreshScript(temp_wipe)
+		{
+		if (temp_wipe == 'CLEAR')
+			{
+			document.getElementById("ScriptContents").innerHTML = '';
+			}
+		else
+			{
+			document.getElementById("ScriptContents").innerHTML = '';
+			WebFormRefresH('','','1');
+			load_script_contents();
+			}
+		}
+
+
 // ################################################################################
 // refresh the content of the web form URL
-	function WebFormRefresH(taskrefresh,submittask) 
+	function WebFormRefresH(taskrefresh,submittask,force_webvars_refresh) 
 		{
+		var webvars_refresh=0;
+
 		if (VDCL_group_id.length > 1)
 			{var group = VDCL_group_id;}
 		else
@@ -6245,6 +6335,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAcustom, '');
 			}
 		else
+			{webvars_refresh=1;}
+
+		if ( (webvars_refresh > 0) || (force_webvars_refresh > 0) )
 			{
 			web_form_vars = 
 			"lead_id=" + document.vicidial_form.lead_id.value + 
@@ -6302,6 +6395,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			"&script_width=" + script_width + '' +
 			"&script_height=" + script_height + '' +
 			"&fullname=" + LOGfullname + '' +
+			"&recording_filename=" + recording_filename + '' +
+			"&recording_id=" + recording_id + '' +
 			webform_session;
 			
 			var regWFspace = new RegExp(" ","ig");
@@ -6413,6 +6508,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			"&script_width=" + script_width + '' +
 			"&script_height=" + script_height + '' +
 			"&fullname=" + LOGfullname + '' +
+			"&recording_filename=" + recording_filename + '' +
+			"&recording_id=" + recording_id + '' +
 			webform_session;
 			
 			var regWFspace = new RegExp(" ","ig");
@@ -7194,6 +7291,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				fronter = '';
 				inOUT = 'OUT';
 				vtiger_callback_id='0';
+				recording_filename='';
+				recording_id='';
 
 				if (manual_dial_in_progress==1)
 					{
@@ -8003,6 +8102,8 @@ encoded=utf8_decode(xtest);
 		var SCin_script = CalL_ScripT_id;
 		var SCscript_width = script_width;
 		var SCscript_height = script_height;
+		var SCrecording_filename = recording_filename;
+		var SCrecording_id = recording_id;
 		var SCweb_vars = LIVE_web_vars;
 
 		if (encoded.match(RGiframe))
@@ -8056,6 +8157,8 @@ encoded=utf8_decode(xtest);
 			SCin_script = SCin_script.replace(RGplus,'+');
 			SCscript_width = SCscript_width.replace(RGplus,'+');
 			SCscript_height = SCscript_height.replace(RGplus,'+');
+			SCrecording_filename = SCrecording_filename.replace(RGplus,'+');
+			SCrecording_id = SCrecording_id.replace(RGplus,'+');
 			SCweb_vars = SCweb_vars.replace(RGplus,'+');
 			}
 
@@ -8110,6 +8213,8 @@ encoded=utf8_decode(xtest);
 		var RGin_script = new RegExp("--A--in_script--B--","g");
 		var RGscript_width = new RegExp("--A--script_width--B--","g");
 		var RGscript_height = new RegExp("--A--script_height--B--","g");
+		var RGrecording_filename = new RegExp("--A--recording_filename--B--","g");
+		var RGrecording_id = new RegExp("--A--recording_id--B--","g");
 		var RGweb_vars = new RegExp("--A--web_vars--B--","g");
 
 		encoded = encoded.replace(RGvendor_lead_code, SCvendor_lead_code);
@@ -8163,6 +8268,8 @@ encoded=utf8_decode(xtest);
 		encoded = encoded.replace(RGin_script, SCin_script);
 		encoded = encoded.replace(RGscript_width, SCscript_width);
 		encoded = encoded.replace(RGscript_height, SCscript_height);
+		encoded = encoded.replace(RGrecording_filename, SCrecording_filename);
+		encoded = encoded.replace(RGrecording_id, SCrecording_id);
 		encoded = encoded.replace(RGweb_vars, SCweb_vars);
 		}
 decoded=encoded; // simple no ?
@@ -8760,6 +8867,7 @@ else
 			hideDiv('HotKeyEntriesBox');
 			hideDiv('MainPanel');
 			hideDiv('ScriptPanel');
+			hideDiv('ScriptRefresh');
 			hideDiv('DispoSelectBox');
 			hideDiv('LogouTBox');
 			hideDiv('AgenTDisablEBoX');
@@ -9427,6 +9535,7 @@ else
 		document.getElementById("MainTable").style.backgroundColor="<?php echo $MAIN_COLOR ?>";
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $MAIN_COLOR ?>";
 		hideDiv('ScriptPanel');
+		hideDiv('ScriptRefresh');
 		showDiv('MainPanel');
 		ShoWGenDerPulldown();
 
@@ -9472,6 +9581,7 @@ else
 	function ScriptPanelToFront()
 		{
 		showDiv('ScriptPanel');
+		showDiv('ScriptRefresh');
 		document.getElementById("MainTable").style.backgroundColor="<?php echo $SCRIPT_COLOR ?>";
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $SCRIPT_COLOR ?>";
 		panel_bgcolor='<?php echo $SCRIPT_COLOR ?>';
@@ -9602,7 +9712,7 @@ echo "</head>\n";
 <BR><BR> &nbsp; <BR>
 </font></span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:49;" id="CallBacKsLisTBox">
+<span style="position:absolute;left:0px;top:0px;z-index:50;" id="CallBacKsLisTBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> CALLBACKS FOR AGENT <?php echo $VD_login ?>:<BR>Click on a callback below to call the customer back now. If you click on a record below to call it, it will be removed from the list.
 	<BR>
 	<div class="scroll_callback" id="CallBacKsLisT"></div>
@@ -9613,7 +9723,7 @@ echo "</head>\n";
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:50;" id="NeWManuaLDiaLBox">
+<span style="position:absolute;left:0px;top:0px;z-index:51;" id="NeWManuaLDiaLBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> NEW MANUAL DIAL LEAD FOR <?php echo "$VD_login in campaign $VD_campaign" ?>:<BR><BR>Enter information below for the new lead you wish to call.
 	<BR>
 	<?php 
@@ -9668,7 +9778,7 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 
 
 
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:31;" id="TransferMain">
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:32;" id="TransferMain">
 	<table bgcolor="#CCCCFF" width=<?php echo $XFwidth ?>><tr>
 	<td align=left>
 	<div class="text_input" id="TransferMaindiv">
@@ -9723,7 +9833,7 @@ if ($view_calls_in_queue > 0)
 <span style="position:absolute;left:<?php echo $SBwidth ?>px;top:0px;height:500;overflow:scroll;z-index:25;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentViewSpan"><TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">
 Other Agents Status: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="AgentViewStatus">&nbsp;</span></TD></TR></TABLE></span>
 
-<span style="position:absolute;left:60px;top:<?php echo $BPheight ?>px;width:400;height:500;overflow:scroll;z-index:32;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentXferViewSpan"><CENTER><font class="body_text">
+<span style="position:absolute;left:60px;top:<?php echo $BPheight ?>px;width:400;height:500;overflow:scroll;z-index:33;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentXferViewSpan"><CENTER><font class="body_text">
 Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font></span>
 
 <span style="position:absolute;left:<?php echo $SCwidth ?>px;top:<?php echo $SLheight ?>px;z-index:27;" id="AgentViewLinkSpan"><TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=91><TR><TD ALIGN=RIGHT><font class="body_small"><span id="AgentViewLink"><a href="#" onclick="AgentsViewOpen('AgentViewSpan','open');return false;">Agents View +</a></span></font></TD></TR></TABLE></span>
@@ -9740,7 +9850,7 @@ if ($agent_display_dialable_leads > 0)
 <span style="position:absolute;left:<?php echo $MUwidth ?>px;top:<?php echo $SLheight ?>px;z-index:29;" id="AgentMuteSpan"></span>
 
 
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:33;" id="HotKeyActionBox">
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:34;" id="HotKeyActionBox">
     <table border=0 bgcolor="#FFDD99" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFEEBB"><TD height=70><font class="sh_text"> Lead Dispositioned As: </font><BR><BR><CENTER>
 	<font class="sd_text"><span id="HotKeyDispo"> - </span></font></CENTER>
@@ -9748,7 +9858,7 @@ if ($agent_display_dialable_leads > 0)
 	</TR></TABLE>
 </span>
 
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:34;" id="HotKeyEntriesBox">
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:35;" id="HotKeyEntriesBox">
     <table border=0 bgcolor="#FFDD99" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFEEBB"><TD width=200><font class="sh_text"> Disposition Hot Keys: </font></td><td colspan=2>
 	<font class="body_small">When active, simply press the keyboard key for the desired disposition for this call. The call will then be hungup and dispositioned automatically:</font></td></tr><tr>
@@ -9764,7 +9874,7 @@ if ($agent_display_dialable_leads > 0)
 	</TR></TABLE>
 </span>
 
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:35;" id="CBcommentsBox">
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:36;" id="CBcommentsBox">
     <table border=0 bgcolor="#FFFFCC" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFFF66">
 	<TD align=left><font class="sh_text"> Previous Callback Information: </font></td>
@@ -9781,7 +9891,7 @@ if ($agent_display_dialable_leads > 0)
 	</TR></TABLE>
 </span>
 
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:36;" id="EAcommentsBox">
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:37;" id="EAcommentsBox">
     <table border=0 bgcolor="#FFFFCC" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFFF66">
 	<TD align=left><font class="sh_text"> Extended Alt Phone Information: </font></td>
@@ -9798,14 +9908,14 @@ if ($agent_display_dialable_leads > 0)
 	</TR></TABLE>
 </span>
 
-<span style="position:absolute;left:695px;top:<?php echo $HTheight ?>px;z-index:37;" id="EAcommentsMinBox">
+<span style="position:absolute;left:695px;top:<?php echo $HTheight ?>px;z-index:38;" id="EAcommentsMinBox">
     <table border=0 bgcolor="#FFFFCC" width=40 height=20>
 	<TR bgcolor="#FFFF66">
 	<TD align=left><font class="sk_text"><a href="#" onclick="EAcommentsBoxshow();return false;"> maximize </a> <BR>Alt Phone Info</font></td>
 	</tr></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:12px;z-index:38;" id="NoneInSessionBox">
+<span style="position:absolute;left:0px;top:12px;z-index:39;" id="NoneInSessionBox">
     <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center> Noone is in your session: <span id="NoneInSessionID"></span><BR>
 	<a href="#" onclick="NoneInSessionOK();return false;">Go Back</a>
 	<BR><BR>
@@ -9813,7 +9923,7 @@ if ($agent_display_dialable_leads > 0)
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:39;" id="CustomerGoneBox">
+<span style="position:absolute;left:0px;top:0px;z-index:40;" id="CustomerGoneBox">
     <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center> Customer has hung up: <span id="CustomerGoneChanneL"></span><BR>
 	<a href="#" onclick="CustomerGoneOK();return false;">Go Back</a>
 	<BR><BR>
@@ -9822,7 +9932,7 @@ if ($agent_display_dialable_leads > 0)
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:40;" id="WrapupBox">
+<span style="position:absolute;left:0px;top:0px;z-index:41;" id="WrapupBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=550><TR><TD align=center> Call Wrapup: <span id="WrapupTimer"></span> seconds remaining in wrapup<BR><BR>
 	<span id="WrapupMessage"><?php echo $wrapup_message ?></span>
 	<BR><BR>
@@ -9831,33 +9941,33 @@ if ($agent_display_dialable_leads > 0)
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:41;" id="AgenTDisablEBoX">
+<span style="position:absolute;left:0px;top:0px;z-index:42;" id="AgenTDisablEBoX">
     <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center>Your session has been disabled<BR><a href="#" onclick="LogouT('DISABLED');return false;">LOGOUT</a><BR><BR><a href="#" onclick="hideDiv('AgenTDisablEBoX');return false;">Go Back</a>
 </TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:42;" id="SysteMDisablEBoX">
+<span style="position:absolute;left:0px;top:0px;z-index:43;" id="SysteMDisablEBoX">
     <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center>There is a time synchronization problem with your system, please tell your system administrator<BR><BR><BR><a href="#" onclick="hideDiv('SysteMDisablEBoX');return false;">Go Back</a>
 </TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:43;" id="LogouTBox">
+<span style="position:absolute;left:0px;top:0px;z-index:44;" id="LogouTBox">
     <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center><BR><span id="LogouTBoxLink">LOGOUT</span></TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:70px;z-index:44;" id="DispoButtonHideA">
+<span style="position:absolute;left:0px;top:70px;z-index:45;" id="DispoButtonHideA">
     <table border=0 bgcolor="#CCFFCC" width=165 height=22><TR><TD align=center VALIGN=top></TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:138px;z-index:45;" id="DispoButtonHideB">
+<span style="position:absolute;left:0px;top:138px;z-index:46;" id="DispoButtonHideB">
     <table border=0 bgcolor="#CCFFCC" width=165 height=250><TR><TD align=center VALIGN=top>&nbsp;</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:46;" id="DispoButtonHideC">
+<span style="position:absolute;left:0px;top:0px;z-index:47;" id="DispoButtonHideC">
     <table border=0 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=47><TR><TD align=center VALIGN=top>Any changes made to the customer information below at this time will not be comitted, You must change customer information before you Hangup the call. </TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:47;" id="DispoSelectBox">
+<span style="position:absolute;left:0px;top:0px;z-index:48;" id="DispoSelectBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> DISPOSITION CALL :<span id="DispoSelectPhonE"></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectHAspan"><a href="#" onclick="DispoHanguPAgaiN()">Hangup Again</a></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectMaxMin"><a href="#" onclick="DispoMinimize()"> minimize </a></span><BR>
 	<span id="DispoSelectContent"> End-of-call Disposition Selection </span>
 	<input type=hidden name=DispoSelection><BR>
@@ -9889,7 +9999,7 @@ if ($agent_display_dialable_leads > 0)
 <span style="position:absolute;left:0px;top:1500px;z-index:65;" id="GENDERhideFORieALT"></span>
 
 
-<span style="position:absolute;left:0px;top:0px;z-index:48;" id="CallBackSelectBox">
+<span style="position:absolute;left:0px;top:0px;z-index:49;" id="CallBackSelectBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> Select a CallBack Date :<span id="CallBackDatE"></span><BR>
 	<input type=hidden name=CallBackDatESelectioN ID="CallBackDatESelectioN">
 	<input type=hidden name=CallBackTimESelectioN ID="CallBackTimESelectioN">
@@ -9942,7 +10052,7 @@ if ($agent_display_dialable_leads > 0)
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:51;" id="CloserSelectBox">
+<span style="position:absolute;left:0px;top:0px;z-index:52;" id="CloserSelectBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> CLOSER INBOUND GROUP SELECTION <BR>
 	<span id="CloserSelectContent"> Closer Inbound Group Selection </span>
 	<input type=hidden name=CloserSelectList><BR>
@@ -9960,7 +10070,7 @@ if ($agent_display_dialable_leads > 0)
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:52;" id="TerritorySelectBox">
+<span style="position:absolute;left:0px;top:0px;z-index:53;" id="TerritorySelectBox">
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> TERRITORY SELECTION <BR>
 	<span id="TerritorySelectContent"> Territory Selection </span>
 	<input type=hidden name=TerritorySelectList><BR>
@@ -9970,7 +10080,7 @@ if ($agent_display_dialable_leads > 0)
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:53;" id="NothingBox">
+<span style="position:absolute;left:0px;top:0px;z-index:54;" id="NothingBox">
     <BUTTON Type=button name="inert_button"><img src="./images/blank.gif"></BUTTON>
 	<span id="DiaLLeaDPrevieWHide">Channel</span>
 	<span id="DiaLDiaLAltPhonEHide">Channel</span>
@@ -9985,6 +10095,10 @@ if ($agent_display_dialable_leads > 0)
 
 <span style="position:absolute;left:154px;top:65px;z-index:30;" id="ScriptPanel">
     <table border=0 bgcolor="<?php echo $SCRIPT_COLOR ?>" width=<?php echo $SSwidth ?> height=<?php echo $SSheight ?>><TR><TD align=left valign=top><font class="sb_text"><div class="noscroll_script" id="ScriptContents">AGENT SCRIPT</div></font></TD></TR></TABLE>
+</span>
+
+<span style="position:absolute;left:<?php echo $AMwidth ?>px;top:69px;z-index:31;" id="ScriptRefresh">
+<a href="#" onclick="RefreshScript()"><font class="body_small">refresh</font></a>
 </span>
 
 

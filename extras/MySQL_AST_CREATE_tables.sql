@@ -1833,6 +1833,23 @@ index (user),
 index (event_date)
 );
 
+CREATE TABLE vicidial_grab_call_log (
+auto_call_id INT(9) UNSIGNED NOT NULL,
+user VARCHAR(20),
+event_date DATETIME,
+call_time DATETIME,
+campaign_id VARCHAR(20),
+uniqueid VARCHAR(20),
+phone_number VARCHAR(20),
+lead_id INT(9) UNSIGNED,
+queue_priority TINYINT(2) default '0',
+call_type ENUM('IN','OUT','OUTBALANCE') default 'OUT',
+index (auto_call_id),
+index (event_date),
+index (user),
+index (campaign_id)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
@@ -1961,7 +1978,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1183',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1184',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

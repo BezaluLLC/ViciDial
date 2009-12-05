@@ -315,6 +315,12 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	click submit. Manager must have the ability to Change Agent Campaign in
 	their user settings.
 
+75. Added Recording Filename and Recording ID as Script variables. If you use
+	either or both of these the script content will load twice if you have
+	auto-launch set to SCRIPT. Only works with recording set to ALLCALLS or
+	ALLFORCE for script on auto-launch. Also, added a refresh link for the
+	script tab to reload content at will.
+
 
 
 
