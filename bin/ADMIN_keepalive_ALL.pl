@@ -46,6 +46,7 @@
 # 91031-1258 - Added carrier description comments
 # 91109-1205 - Added requirecalltoken=no as IAX setting for newer Asterisk 1.4 versions
 # 91125-0709 - Added conf_secret to servers conf
+# 91205-2315 - Added delete_vm_after_email option to voicemail conf generation
 #
 
 $DB=0; # Debug flag
@@ -746,8 +747,8 @@ $sthArows=$sthA->rows;
 if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$sounds_central_control_active =	"$aryA[0]";
-	$active_voicemail_server =			"$aryA[1]";
+	$sounds_central_control_active =	$aryA[0];
+	$active_voicemail_server =			$aryA[1];
 	}
 $sthA->finish();
 if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_server)) eq (length($server_ip))) )
@@ -852,7 +853,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	if ($sthArows > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$server_id	=					"$aryA[0]";
+		$server_id	=					$aryA[0];
 		$vicidial_recording_limit =		(60 * $aryA[1]);
 		$i++;
 		}
@@ -1096,7 +1097,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the IAX phone entries #####
-	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
+	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1105,20 +1106,21 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	while ($sthArows > $i)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$extension[$i] =			"$aryA[0]";
-		$dialplan[$i] =				"$aryA[1]";
-		$voicemail[$i] =			"$aryA[2]";
-		$pass[$i] =					"$aryA[3]";
-		$template_id[$i] =			"$aryA[4]";
-		$conf_override[$i] =		"$aryA[5]";
-		$email[$i] =				"$aryA[6]";
-		$template_id[$i] =			"$aryA[7]";
-		$conf_override[$i] =		"$aryA[8]";
-		$outbound_cid[$i] =			"$aryA[9]";
-		$fullname[$i] =				"$aryA[10]";
-		$phone_context[$i] =		"$aryA[11]";
-		$phone_ring_timeout[$i] =	"$aryA[12]";
-		$conf_secret[$i] =			"$aryA[13]";
+		$extension[$i] =				$aryA[0];
+		$dialplan[$i] =					$aryA[1];
+		$voicemail[$i] =				$aryA[2];
+		$pass[$i] =						$aryA[3];
+		$template_id[$i] =				$aryA[4];
+		$conf_override[$i] =			$aryA[5];
+		$email[$i] =					$aryA[6];
+		$template_id[$i] =				$aryA[7];
+		$conf_override[$i] =			$aryA[8];
+		$outbound_cid[$i] =				$aryA[9];
+		$fullname[$i] =					$aryA[10];
+		$phone_context[$i] =			$aryA[11];
+		$phone_ring_timeout[$i] =		$aryA[12];
+		$conf_secret[$i] =				$aryA[13];
+		$delete_vm_after_email[$i] =	$aryA[14];
 		$i++;
 		}
 	$sthA->finish();
@@ -1172,7 +1174,10 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Pext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i]|$phone_ring_timeout[$i]|)\n";
 		$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
 
-		$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i]\n";
+		if ($delete_vm_after_email[$i] =~ /Y/)
+			{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i],,|delete=yes\n";}
+		else
+			{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i]\n";}
 
 		$i++;
 		}
@@ -1181,7 +1186,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the SIP phone entries #####
-	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret FROM phones where server_ip='$server_ip' and protocol='SIP' and active='Y' order by extension;";
+	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email FROM phones where server_ip='$server_ip' and protocol='SIP' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1190,20 +1195,21 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	while ($sthArows > $i)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$extension[$i] =			"$aryA[0]";
-		$dialplan[$i] =				"$aryA[1]";
-		$voicemail[$i] =			"$aryA[2]";
-		$pass[$i] =					"$aryA[3]";
-		$template_id[$i] =			"$aryA[4]";
-		$conf_override[$i] =		"$aryA[5]";
-		$email[$i] =				"$aryA[6]";
-		$template_id[$i] =			"$aryA[7]";
-		$conf_override[$i] =		"$aryA[8]";
-		$outbound_cid[$i] =			"$aryA[9]";
-		$fullname[$i] =				"$aryA[10]";
-		$phone_context[$i] =		"$aryA[11]";
-		$phone_ring_timeout[$i] =	"$aryA[12]";
-		$conf_secret[$i] =			"$aryA[13]";
+		$extension[$i] =				$aryA[0];
+		$dialplan[$i] =					$aryA[1];
+		$voicemail[$i] =				$aryA[2];
+		$pass[$i] =						$aryA[3];
+		$template_id[$i] =				$aryA[4];
+		$conf_override[$i] =			$aryA[5];
+		$email[$i] =					$aryA[6];
+		$template_id[$i] =				$aryA[7];
+		$conf_override[$i] =			$aryA[8];
+		$outbound_cid[$i] =				$aryA[9];
+		$fullname[$i] =					$aryA[10];
+		$phone_context[$i] =			$aryA[11];
+		$phone_ring_timeout[$i] =		$aryA[12];
+		$conf_secret[$i] =				$aryA[13];
+		$delete_vm_after_email[$i] =	$aryA[14];
 		$i++;
 		}
 	$sthA->finish();
@@ -1255,7 +1261,10 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Pext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i]|$phone_ring_timeout[$i]|)\n";
 		$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
 
-		$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i]\n";
+		if ($delete_vm_after_email[$i] =~ /Y/)
+			{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i],,|delete=yes\n";}
+		else
+			{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i]\n";}
 
 		$i++;
 		}
@@ -1622,7 +1631,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		while ($sthArows > $i)
 			{
 			##### Get the distinct phone entries #####
-			$stmtA = "SELECT extension,pass,email FROM phones where active='Y' and voicemail_id='$voicemail[$i]';";
+			$stmtA = "SELECT extension,pass,email,delete_vm_after_email FROM phones where active='Y' and voicemail_id='$voicemail[$i]';";
 			#	print "$stmtA\n";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1630,19 +1639,23 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			if ($sthArowsX > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$extension[$i] =			"$aryA[0]";
-				$pass[$i] =					"$aryA[1]";
-				$email[$i] =				"$aryA[2]";
+				$extension[$i] =				$aryA[0];
+				$pass[$i] =						$aryA[1];
+				$email[$i] =					$aryA[2];
+				$delete_vm_after_email[$i] =	$aryA[3];
 				}
 			$sthA->finish();
 
-			$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i]\n";
+			if ($delete_vm_after_email[$i] =~ /Y/)
+				{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i],,|delete=yes\n";}
+			else
+				{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i]\n";}
 
 			$i++;
 			}
 
 		##### Get the other voicemail box entries #####
-		$stmtA = "SELECT voicemail_id,fullname,pass,email FROM vicidial_voicemail where active='Y';";
+		$stmtA = "SELECT voicemail_id,fullname,pass,email,delete_vm_after_email FROM vicidial_voicemail where active='Y';";
 		#	print "$stmtA\n";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1656,12 +1669,16 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		while ($sthArows > $i)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$voicemail_id[$i] =	$aryA[0];
-			$fullname[$i] =		$aryA[1];
-			$pass[$i] =			$aryA[2];
-			$email[$i] =		$aryA[3];
+			$voicemail_id[$i] =				$aryA[0];
+			$fullname[$i] =					$aryA[1];
+			$pass[$i] =						$aryA[2];
+			$email[$i] =					$aryA[3];
+			$delete_vm_after_email[$i] =	$aryA[4];
 
-			$vm  .= "$voicemail_id[$i] => $pass[$i],$fullname[$i],$email[$i]\n";
+			if ($delete_vm_after_email[$i] =~ /Y/)
+				{$vm  .= "$voicemail_id[$i] => $pass[$i],$fullname[$i],$email[$i],,|delete=yes\n";}
+			else
+				{$vm  .= "$voicemail_id[$i] => $pass[$i],$fullname[$i],$email[$i]\n";}
 
 			$i++;
 			}

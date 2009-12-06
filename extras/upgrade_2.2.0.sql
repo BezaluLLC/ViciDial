@@ -645,3 +645,9 @@ index (campaign_id)
 );
 
 UPDATE system_settings SET db_schema_version='1184',db_schema_update_date=NOW();
+
+ALTER TABLE phones ADD delete_vm_after_email ENUM('N','Y') default 'N';
+
+ALTER TABLE vicidial_voicemail ADD delete_vm_after_email ENUM('N','Y') default 'N';
+
+UPDATE system_settings SET db_schema_version='1185',db_schema_update_date=NOW();

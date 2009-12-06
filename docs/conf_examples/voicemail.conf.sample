@@ -6,6 +6,7 @@ skipms=3000
 maxsilence=10
 silencethreshold=128
 maxlogins=3
+maxmsg=300
 
 [zonemessages]
 eastern=America/New_York|'vm-received' Q 'digits/at' IMp

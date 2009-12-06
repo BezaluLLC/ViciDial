@@ -228,7 +228,7 @@
 $version = '2.2.0-132';
 $build = '91204-1937';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=256;
+$mysql_log_count=271;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -918,7 +918,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 	##### find if script contains recording fields
 	$stmt="SELECT count(*) FROM vicidial_scripts vs,vicidial_campaigns vc WHERE campaign_id='$campaign' and vs.script_id=vc.campaign_script and script_text LIKE \"%--A--recording_%\";";
 	$rslt=mysql_query($stmt, $link);
-		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00257',$user,$server_ip,$session_name,$one_mysql_log);}
 	if ($DB) {echo "$stmt\n";}
 	$vs_vc_ct = mysql_num_rows($rslt);
 	if ($vs_vc_ct > 0)
@@ -1443,7 +1443,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$agent_territories='';
 					$stmt="SELECT agent_territories FROM vicidial_live_agents where user='$user';";
 					$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00258',$user,$server_ip,$session_name,$one_mysql_log);}
 					$userterrVLA_ct = mysql_num_rows($rslt);
 					if ($DB) {echo "$userterrVLA_ct|$stmt\n";}
 					if ($userterrVLA_ct > 0)
@@ -1811,7 +1811,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			##### find if script contains recording fields
 			$stmt="SELECT count(*) FROM vicidial_lists WHERE list_id='$list_id' and agent_script_override!='' and agent_script_override IS NOT NULL and agent_script_override!='NONE';";
 			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00259',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
 			$vls_vc_ct = mysql_num_rows($rslt);
 			if ($vls_vc_ct > 0)
@@ -1823,7 +1823,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					##### find if script contains recording fields
 					$stmt="SELECT count(*) FROM vicidial_scripts vs,vicidial_lists vls WHERE list_id='$list_id' and vs.script_id=vls.agent_script_override and script_text LIKE \"%--A--recording_%\";";
 					$rslt=mysql_query($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00260',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
 					$vs_vc_ct = mysql_num_rows($rslt);
 					if ($vs_vc_ct > 0)
@@ -3611,7 +3611,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				##### grab number of calls today in this campaign and increment
 				$stmt="SELECT count(*) FROM vicidial_scripts vs,vicidial_campaigns vc WHERE campaign_id='$campaign' and vs.script_id=vc.campaign_script and script_text LIKE \"%--A--recording_%\";";
 				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00261',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$vs_vc_ct = mysql_num_rows($rslt);
 				if ($vs_vc_ct > 0)
@@ -3689,7 +3689,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				##### find if script contains recording fields
 				$stmt="SELECT count(*) FROM vicidial_scripts vs,vicidial_inbound_groups vig WHERE group_id='$VDADchannel_group' and vs.script_id=vig.ingroup_script and script_text LIKE \"%--A--recording_%\";";
 				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00262',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$vs_vc_ct = mysql_num_rows($rslt);
 				if ($vs_vc_ct > 0)
@@ -3748,7 +3748,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 							##### find if script contains recording fields
 							$stmt="SELECT count(*) FROM vicidial_scripts vs,vicidial_campaigns vc WHERE campaign_id='$campaign' and vs.script_id=vc.campaign_script and script_text LIKE \"%--A--recording_%\";";
 							$rslt=mysql_query($stmt, $link);
-								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00263',$user,$server_ip,$session_name,$one_mysql_log);}
 							if ($DB) {echo "$stmt\n";}
 							$vs_vc_ct = mysql_num_rows($rslt);
 							if ($vs_vc_ct > 0)
@@ -3815,7 +3815,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 					##### find if script contains recording fields
 					$stmt="SELECT count(*) FROM vicidial_scripts vs,vicidial_campaigns vc WHERE campaign_id='$VDADchannel_group' and vs.script_id=vc.campaign_script and script_text LIKE \"%--A--recording_%\";";
 					$rslt=mysql_query($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00264',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
 					$vs_vc_ct = mysql_num_rows($rslt);
 					if ($vs_vc_ct > 0)
@@ -3872,7 +3872,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 			##### find if script contains recording fields
 			$stmt="SELECT count(*) FROM vicidial_lists WHERE list_id='$list_id' and agent_script_override!='' and agent_script_override IS NOT NULL and agent_script_override!='NONE';";
 			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00265',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
 			$vls_vc_ct = mysql_num_rows($rslt);
 			if ($vls_vc_ct > 0)
@@ -3884,7 +3884,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 					##### find if script contains recording fields
 					$stmt="SELECT count(*) FROM vicidial_scripts vs,vicidial_lists vls WHERE list_id='$list_id' and vs.script_id=vls.agent_script_override and script_text LIKE \"%--A--recording_%\";";
 					$rslt=mysql_query($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00266',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
 					$vs_vc_ct = mysql_num_rows($rslt);
 					if ($vs_vc_ct > 0)
@@ -4550,7 +4550,7 @@ if ($ACTION == 'updateDISPO')
 			$vh_phone='';
 			$stmt="SELECT phone_number FROM vicidial_list where lead_id='$lead_id';";
 			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00267',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
 			$ud_record_ct = mysql_num_rows($rslt);
 			if ($ud_record_ct > 0)
@@ -4570,7 +4570,7 @@ if ($ACTION == 'updateDISPO')
 				else
 					{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$vh_phone';";}
 				$rslt=mysql_query($stmtA, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtA,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtA,'00268',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$ud_record_ct = mysql_num_rows($rslt);
 				if ($ud_record_ct > 0)
@@ -4591,7 +4591,7 @@ if ($ACTION == 'updateDISPO')
 				else
 					{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$vh_phone' and campaign_id='$campaign';";}
 				$rslt=mysql_query($stmtA, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtA,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtA,'00269',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$ud_record_ct = mysql_num_rows($rslt);
 				if ($ud_record_ct > 0)
@@ -5799,7 +5799,7 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 			{
 			$stmt="SELECT call_time,campaign_id,uniqueid,phone_number,lead_id,queue_priority,call_type from vicidial_auto_calls where auto_call_id='$stage';";
 			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00270',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($rslt) {$vac_count = mysql_num_rows($rslt);}
 			if ($vac_count > 0)
 				{
@@ -5815,7 +5815,7 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 				$stmt="INSERT INTO vicidial_grab_call_log SET auto_call_id='$stage',user='$user',event_date='$NOW_TIME',call_time='$GCcall_time',campaign_id='$GCcampaign_id',uniqueid='$GCuniqueid',phone_number='$GCphone_number',lead_id='$GClead_id',queue_priority='$GCqueue_priority',call_type='$GCcall_type';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_query($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00271',$user,$server_ip,$session_name,$one_mysql_log);}
 				$affected_rows = mysql_affected_rows($link);
 				}
 

@@ -346,6 +346,8 @@ Carrier Description||
 This is put in the comments of the asterisk conf files above the dialplan and account entries. Maximum 255 characters||
 CAMPAIGNS ALLOWING THIS IN-GROUP||
 This is the secret, or password, for the server in the iax auto-generated conf file for this server on other servers. Limit is 20 characters alphanumeric dash and underscore accepted. Default is test||
+Delete Voicemail After Email||
+This optional setting allows you to have the voicemail messages deleted from the system after they have been emailed out. Default is N||
 
 
 add-file: user_territories.php
@@ -366,6 +368,7 @@ Calls in Queue View Disabled for this campaign||
 YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE||
 Manager ||
 has selected your in-group choices||
+CONSULTATIVE||
 
 
 add-file: vdc_script_display.php

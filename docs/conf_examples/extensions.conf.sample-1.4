@@ -282,7 +282,7 @@ exten => 8889990011112,1,Goto(loopback-no-log,9990011112,1)
 exten => _90009.,1,Answer                  ; Answer the line
 exten => _90009.,2,Dial(${TRUNKloop}/9${EXTEN},,to)
 exten => _90009.,3,Hangup
-exten => _990009.,1,Answer                  ; Answer the line
+exten => _990009.,1,Answer                  ; Answer the line, Sometimes needs to be removed
 exten => _990009.,2,AGI(agi-VDAD_ALL_inbound.agi,CLOSER-----LB-----CL_TESTCAMP-----7275551212-----Closer-----park----------999-----1)
 exten => _990009.,3,Hangup
 ; DID forwarded calls

@@ -115,7 +115,7 @@ $start_moh=1;
 $at='@';
 $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=112;
+$mysql_log_count=119;
 $one_mysql_log=0;
 
 
@@ -214,13 +214,13 @@ $rec_count=0;
 while ($sthArows > $rec_count)
 	{
 	$AGILOG = '0';
-	 @aryA = $sthA->fetchrow_array;
-		$DBagi_output =		"$aryA[0]";
-		$local_gmt =		"$aryA[0]";
-		if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
-		if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
-		if ($DBagi_output =~ /BOTH/)	{$AGILOG = '3';}
-	 $rec_count++;
+	@aryA = $sthA->fetchrow_array;
+	$DBagi_output =		"$aryA[0]";
+	$local_gmt =		"$aryA[0]";
+	if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
+	if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
+	if ($DBagi_output =~ /BOTH/)	{$AGILOG = '3';}
+	$rec_count++;
 	}
 $sthA->finish();
 
@@ -331,7 +331,7 @@ if ($extension =~ /^999\d\d\*/)
 	}
 
 if ($call_handle_method =~ /^CLOSER/)
-{
+	{
 	### allow for internal PRI/IAX/SIP transfer data string "90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*"
 	if ($extension =~ /^900\d\d\*|^9900\d\d\*/)
 		{
@@ -359,15 +359,15 @@ if ($call_handle_method =~ /^CLOSER/)
 		checkresult($result);
 		if ($AGILOG) {$agi_string = "callerID changed: $JqueryCID";   &agi_output;}
 		}
-}
+	}
 
 if ($call_handle_method =~ /^CID/)
-{
+	{
 	if (length($callerid)>0) {$phone_number = $callerid;}
 	   else {$phone_number = '';}
 	if (length($calleridname)>0) {$VLcomments = $calleridname;}
 	   else {$VLcomments = '';}
-}
+	}
 
 #	if ($channel =~ /^SIP/) {$channel =~ s/-.*//gi;}
 #	if ($channel =~ /^Zap\//) {$channel =~ s/-\d$//gi;}
@@ -752,7 +752,7 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
-				$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				$dbhP=$dbhA;   $mysql_count='02113';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
@@ -911,7 +911,7 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
-					$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+					$dbhP=$dbhA;   $mysql_count='02114';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
@@ -1206,7 +1206,7 @@ if ($enable_queuemetrics_logging > 0)
 	$stmtB = "UPDATE queue_log SET call_id='$YqueryCID' where time_id > '$QL_last_day' and call_id='$uniqueid' and queue='NONE' and agent='NONE' and verb='INFO' and data1 IN('DID','IVR');";
 	$Baffected_rows = $dbhB->do($stmtB);
 	if ($AGILOG) {$agi_string = "$Baffected_rows|$stmtB|";   &agi_output;}
-		$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+		$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02115';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 	$dbhB->disconnect();
 	}
 
@@ -1536,7 +1536,7 @@ if ( ($agent_search_method =~ /^SO|^LO/) && ($skipLOSO < 1) )
 					$stmtB = "DELETE FROM queue_log where call_id='$YqueryCID' and verb='ABANDON';";
 						if ($AGILOG) {$agi_string = "Removing ABANDON queue_log entries for call $QLabandon|$YqueryCID";   &agi_output;}
 					$Baffected_rows = $dbhB->do($stmtB);
-						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02116';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 					}
 
 				$dbhB->disconnect();
@@ -1908,7 +1908,7 @@ if ($agent_search_method =~ /^LO|^LB/)
 					$stmtB = "DELETE FROM queue_log where call_id='$YqueryCID' and verb='ABANDON';";
 						if ($AGILOG) {$agi_string = "Removing ABANDON queue_log entries for call $QLabandon|$YqueryCID";   &agi_output;}
 					$Baffected_rows = $dbhB->do($stmtB);
-						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02117';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 					}
 
 				$dbhB->disconnect();
@@ -2434,7 +2434,7 @@ if ($hold_time_option =~ /EXTENSION/)
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
-			$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='02119';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
@@ -2777,7 +2777,7 @@ if ($drop_action =~ /MESSAGE|EXTEN/)
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
-			$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='02118';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;

@@ -321,6 +321,15 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	ALLFORCE for script on auto-launch. Also, added a refresh link for the
 	script tab to reload content at will.
 
+76. Redesigned the Transfer-Conference frame in the agent interface and added
+	a CONSULTATIVE checkbox to allow for easier consultative 3-way calls
+	with other ViciDial agents with customer information. This also allows
+	for AGENTDIRECT consultative transfers. CXFER is no longer needed to do
+	consultative transfers
+
+77. Added "Delete Voicemail After Email" options to delete messages on the
+	server after they have been emailed
+
 
 
 

@@ -72,6 +72,7 @@ conf_override TEXT,
 phone_context VARCHAR(20) default 'default',
 phone_ring_timeout SMALLINT(3) default '60',
 conf_secret VARCHAR(20) default 'test',
+delete_vm_after_email ENUM('N','Y') default 'N',
 index (server_ip),
 unique index extenserver (extension, server_ip)
 );
@@ -1821,7 +1822,8 @@ pass VARCHAR(10) NOT NULL,
 fullname VARCHAR(100) NOT NULL,
 messages INT(4) default '0',
 old_messages INT(4) default '0',
-email VARCHAR(100)
+email VARCHAR(100),
+delete_vm_after_email ENUM('N','Y') default 'N'
 );
 
 CREATE TABLE vicidial_user_territory_log (
@@ -1978,7 +1980,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1184',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1185',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

@@ -4,6 +4,9 @@ ALTERNATE NUMBER DIALING Redesign				2008-08-20
 *** FOR INFORMATION ON THE 2.0.3 AND 2.0.4 VERSION OF ALT NUMBER DIALING LOOK BELOW THIS SECTION ***
 
 
+As of the 2.2.0 version a lot of bugs have been fixed, and DNC statuses can now be used as auto-alt-dial triggering statuses
+
+
 In order to allow for more alt-numbers per lead to dial we built a new method of storing and dialing alt-numbers for leads.
 
 CLI lead loader will be changed to allow for the importation of upto 65,000 phone numbers per lead. The new file format is shown below.
@@ -12,7 +15,7 @@ vicidial.php agent screen and vdc_db_query.php scripts have been changed to allo
 
 AST_VDauto_dial.pl, AST_VDauto_dial_FILL.pl and the VDhangup process in FastAGI_log.pl have all been modified to work with the new alt number data structure.
 
-non_agent_api.php needs to be changed to accept new multiple-alt-numbers per inserted lead.
+non_agent_api.php has been changed in 2.2.0 to accept new multiple-alt-numbers per inserted lead(see the NON_AGENT_API.txt doc for more information)
 
 
 File structure for CLI lead loader goes here:

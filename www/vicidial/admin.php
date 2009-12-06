@@ -1133,6 +1133,8 @@ if (isset($_GET["agent_choose_territories"]))			{$agent_choose_territories=$_GET
 	elseif (isset($_POST["agent_choose_territories"]))	{$agent_choose_territories=$_POST["agent_choose_territories"];}
 if (isset($_GET["carrier_description"]))			{$carrier_description=$_GET["carrier_description"];}
 	elseif (isset($_POST["carrier_description"]))	{$carrier_description=$_POST["carrier_description"];}
+if (isset($_GET["delete_vm_after_email"]))			{$delete_vm_after_email=$_GET["delete_vm_after_email"];}
+	elseif (isset($_POST["delete_vm_after_email"]))	{$delete_vm_after_email=$_POST["delete_vm_after_email"];}
 
 
 	if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1400,6 +1402,7 @@ if ($non_latin < 1)
 	$rebuild_music_on_hold = ereg_replace("[^NY]","",$rebuild_music_on_hold);
 	$active_agent_login_server = ereg_replace("[^NY]","",$active_agent_login_server);
 	$agent_select_territories = ereg_replace("[^NY]","",$agent_select_territories);
+	$delete_vm_after_email = ereg_replace("[^NY]","",$delete_vm_after_email);
 
 	$qc_enabled = ereg_replace("[^0-9NY]","",$qc_enabled);
 	$active = ereg_replace("[^0-9NY]","",$active);
@@ -1990,11 +1993,12 @@ else
 # 91121-0334 - Limited list called count display to 100+
 # 91125-0628 - Added conf_secret for servers
 # 91204-1652 - Added recording_filename and recording_id as script variables
+# 91205-2231 - Added delete_vm_after_email voicemail option to phones and extra voicemail sections
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-225';
-$build = '91204-1652';
+$admin_version = '2.2.0-226';
+$build = '91205-2231';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -2046,15 +2050,13 @@ $stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_cust
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$SSauto_dial_limit =			$row[1];
 	$SSuser_territories_active =	$row[2];
 	$SSallow_custom_dialplan =		$row[3];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -4873,6 +4875,10 @@ if ($ADD==99999)
 	<A NAME="vicidial_voicemail-email">
 	<B>Email -</B> This optional setting allows you to have the voicemail messages sent to an email account, if your system is set up to send out email. If this field is empty then no emails will be sent out.
 
+	<BR>
+	<A NAME="vicidial_voicemail-delete_vm_after_email">
+	<B>Delete Voicemail After Email -</B> This optional setting allows you to have the voicemail messages deleted from the system after they have been emailed out. Default is N.
+
 
 
 
@@ -4996,6 +5002,15 @@ if ($ADD==99999)
 	<A NAME="phones-company">
 	<BR>
 	<B>Company -</B> Purely for administrative notes.
+
+	<BR>
+	<A NAME="phones-email">
+	<BR>
+	<B>Phones Email -</B> The email address associated with this phone entry. This is used for voicemail settings.
+
+	<BR>
+	<A NAME="phones-delete_vm_after_email">
+	<B>Delete Voicemail After Email -</B> This optional setting allows you to have the voicemail messages deleted from the system after they have been emailed out. Default is N.
 
 	<BR>
 	<A NAME="phones-picture">
@@ -5291,11 +5306,6 @@ if ($ADD==99999)
 	<A NAME="phones-logins_list">
 	<BR>
 	<B>Phones Logins List -</B> The comma separated list of phone logins used when an agent logs in using phone load balanced logins. The Agent application will find the active server with the fewest agents logged into it and place a call from that server to the agent upon login.
-
-	<BR>
-	<A NAME="phones-email">
-	<BR>
-	<B>Phones Email -</B> The email address associated with this phone entry. This is used for voicemail settings.
 
 	<BR>
 	<A NAME="phones-template_id">
@@ -12571,7 +12581,7 @@ if ($ADD==41111111111)
 				{
 				echo "<br>PHONE MODIFIED: $extension\n";
 
-				$stmt="UPDATE phones set extension='$extension', dialplan_number='$dialplan_number', voicemail_id='$voicemail_id', phone_ip='$phone_ip', computer_ip='$computer_ip', server_ip='$server_ip', login='$login', pass='$pass', status='$status', active='$active', phone_type='$phone_type', fullname='$fullname', company='$company', picture='$picture', protocol='$protocol', local_gmt='$local_gmt', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', login_user='$login_user', login_pass='$login_pass', login_campaign='$login_campaign', park_on_extension='$park_on_extension', conf_on_extension='$conf_on_extension', VICIDIAL_park_on_extension='$VICIDIAL_park_on_extension', VICIDIAL_park_on_filename='$VICIDIAL_park_on_filename', monitor_prefix='$monitor_prefix', recording_exten='$recording_exten', voicemail_exten='$voicemail_exten', voicemail_dump_exten='$voicemail_dump_exten', ext_context='$ext_context', dtmf_send_extension='$dtmf_send_extension', call_out_number_group='$call_out_number_group', client_browser='$client_browser', install_directory='$install_directory', local_web_callerID_URL='" . mysql_real_escape_string($local_web_callerID_URL) . "', VICIDIAL_web_URL='" . mysql_real_escape_string($VICIDIAL_web_URL) . "', AGI_call_logging_enabled='$AGI_call_logging_enabled', user_switching_enabled='$user_switching_enabled', conferencing_enabled='$conferencing_enabled', admin_hangup_enabled='$admin_hangup_enabled', admin_hijack_enabled='$admin_hijack_enabled', admin_monitor_enabled='$admin_monitor_enabled', call_parking_enabled='$call_parking_enabled', updater_check_enabled='$updater_check_enabled', AFLogging_enabled='$AFLogging_enabled', QUEUE_ACTION_enabled='$QUEUE_ACTION_enabled', CallerID_popup_enabled='$CallerID_popup_enabled', voicemail_button_enabled='$voicemail_button_enabled', enable_fast_refresh='$enable_fast_refresh', fast_refresh_rate='$fast_refresh_rate', enable_persistant_mysql='$enable_persistant_mysql', auto_dial_next_number='$auto_dial_next_number', VDstop_rec_after_each_call='$VDstop_rec_after_each_call', DBX_server='$DBX_server', DBX_database='$DBX_database', DBX_user='$DBX_user', DBX_pass='$DBX_pass', DBX_port='$DBX_port', DBY_server='$DBY_server', DBY_database='$DBY_database', DBY_user='$DBY_user', DBY_pass='$DBY_pass', DBY_port='$DBY_port', outbound_cid='$outbound_cid', enable_sipsak_messages='$enable_sipsak_messages', email='$email', template_id='$template_id', conf_override='$conf_override',phone_context='$phone_context',phone_ring_timeout='$phone_ring_timeout',conf_secret='$conf_secret' where extension='$old_extension' and server_ip='$old_server_ip';";
+				$stmt="UPDATE phones set extension='$extension', dialplan_number='$dialplan_number', voicemail_id='$voicemail_id', phone_ip='$phone_ip', computer_ip='$computer_ip', server_ip='$server_ip', login='$login', pass='$pass', status='$status', active='$active', phone_type='$phone_type', fullname='$fullname', company='$company', picture='$picture', protocol='$protocol', local_gmt='$local_gmt', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', login_user='$login_user', login_pass='$login_pass', login_campaign='$login_campaign', park_on_extension='$park_on_extension', conf_on_extension='$conf_on_extension', VICIDIAL_park_on_extension='$VICIDIAL_park_on_extension', VICIDIAL_park_on_filename='$VICIDIAL_park_on_filename', monitor_prefix='$monitor_prefix', recording_exten='$recording_exten', voicemail_exten='$voicemail_exten', voicemail_dump_exten='$voicemail_dump_exten', ext_context='$ext_context', dtmf_send_extension='$dtmf_send_extension', call_out_number_group='$call_out_number_group', client_browser='$client_browser', install_directory='$install_directory', local_web_callerID_URL='" . mysql_real_escape_string($local_web_callerID_URL) . "', VICIDIAL_web_URL='" . mysql_real_escape_string($VICIDIAL_web_URL) . "', AGI_call_logging_enabled='$AGI_call_logging_enabled', user_switching_enabled='$user_switching_enabled', conferencing_enabled='$conferencing_enabled', admin_hangup_enabled='$admin_hangup_enabled', admin_hijack_enabled='$admin_hijack_enabled', admin_monitor_enabled='$admin_monitor_enabled', call_parking_enabled='$call_parking_enabled', updater_check_enabled='$updater_check_enabled', AFLogging_enabled='$AFLogging_enabled', QUEUE_ACTION_enabled='$QUEUE_ACTION_enabled', CallerID_popup_enabled='$CallerID_popup_enabled', voicemail_button_enabled='$voicemail_button_enabled', enable_fast_refresh='$enable_fast_refresh', fast_refresh_rate='$fast_refresh_rate', enable_persistant_mysql='$enable_persistant_mysql', auto_dial_next_number='$auto_dial_next_number', VDstop_rec_after_each_call='$VDstop_rec_after_each_call', DBX_server='$DBX_server', DBX_database='$DBX_database', DBX_user='$DBX_user', DBX_pass='$DBX_pass', DBX_port='$DBX_port', DBY_server='$DBY_server', DBY_database='$DBY_database', DBY_user='$DBY_user', DBY_pass='$DBY_pass', DBY_port='$DBY_port', outbound_cid='$outbound_cid', enable_sipsak_messages='$enable_sipsak_messages', email='$email', template_id='$template_id', conf_override='$conf_override',phone_context='$phone_context',phone_ring_timeout='$phone_ring_timeout',conf_secret='$conf_secret', delete_vm_after_email='$delete_vm_after_email' where extension='$old_extension' and server_ip='$old_server_ip';";
 				$rslt=mysql_query($stmt, $link);
 
 				$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
@@ -13022,7 +13032,7 @@ if ($ADD==471111111111)
 			{echo "<br>VOICEMAIL BOX NOT MODIFIED - Please go back and look at the data you entered\n";}
 		else
 			{
-			$stmt="UPDATE vicidial_voicemail set fullname='$fullname',active='$active',pass='$pass',email='$email' where voicemail_id='$voicemail_id';";
+			$stmt="UPDATE vicidial_voicemail set fullname='$fullname',active='$active',pass='$pass',email='$email',delete_vm_after_email='$delete_vm_after_email' where voicemail_id='$voicemail_id';";
 			$rslt=mysql_query($stmt, $link);
 
 			$stmt="SELECT active_voicemail_server from system_settings;";
@@ -20741,7 +20751,7 @@ if ($ADD==31111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret from phones where extension='$extension' and server_ip='$server_ip';";
+		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email from phones where extension='$extension' and server_ip='$server_ip';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 
@@ -20753,6 +20763,7 @@ if ($ADD==31111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Phone extension: </td><td align=left><input type=text name=extension size=20 maxlength=100 value=\"$row[0]\">$NWB#phones-extension$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Dial Plan Number: </td><td align=left><input type=text name=dialplan_number size=15 maxlength=20 value=\"$row[1]\"> (digits only)$NWB#phones-dialplan_number$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail Box: </td><td align=left><input type=text name=voicemail_id size=10 maxlength=10 value=\"$row[2]\"> (digits only)$NWB#phones-voicemail_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail Box: </td><td align=left><input type=text name=delete_vm_after_email size=10 maxlength=10 value=\"$row[73]\">$NWB#phones-delete_vm_after_email$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Outbound CallerID: </td><td align=left><input type=text name=outbound_cid size=10 maxlength=20 value=\"$row[65]\"> (digits only)$NWB#phones-outbound_cid$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Phone IP address: </td><td align=left><input type=text name=phone_ip size=20 maxlength=15 value=\"$row[3]\"> (optional)$NWB#phones-phone_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Computer IP address: </td><td align=left><input type=text name=computer_ip size=20 maxlength=15 value=\"$row[4]\"> (optional)$NWB#phones-computer_ip$NWE</td></tr>\n";
@@ -20768,6 +20779,7 @@ if ($ADD==31111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Phone Type: </td><td align=left><input type=text name=phone_type size=20 maxlength=50 value=\"$row[10]\">$NWB#phones-phone_type$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Full Name: </td><td align=left><input type=text name=fullname size=20 maxlength=50 value=\"$row[11]\">$NWB#phones-fullname$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Email: </td><td align=left><input type=text name=email size=50 maxlength=100 value=\"$row[67]\"> $NWB#phones-email$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Delete Voicemail After Email: </td><td align=left><select size=1 name=delete_vm_after_email><option>Y</option><option>N</option><option selected>$row[73]</option></select>$NWB#phones-delete_vm_after_email$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Company: </td><td align=left><input type=text name=company size=10 maxlength=10 value=\"$row[12]\">$NWB#phones-company$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Picture: </td><td align=left><input type=text name=picture size=20 maxlength=19 value=\"$row[13]\">$NWB#phones-picture$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>New Messages: </td><td align=left><b>$row[14]</b>$NWB#phones-messages$NWE</td></tr>\n";
@@ -21630,16 +21642,17 @@ if ($ADD==371111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT voicemail_id,pass,fullname,active,email,messages,old_messages from vicidial_voicemail where voicemail_id='$voicemail_id';";
+		$stmt="SELECT voicemail_id,pass,fullname,active,email,messages,old_messages,delete_vm_after_email from vicidial_voicemail where voicemail_id='$voicemail_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
-		$voicemail_id =	$row[0];
-		$pass =			$row[1];
-		$fullname =		$row[2];
-		$active =		$row[3];
-		$email =		$row[4];
-		$messages =		$row[5];
-		$old_messages =	$row[6];
+		$voicemail_id =				$row[0];
+		$pass =						$row[1];
+		$fullname =					$row[2];
+		$active =					$row[3];
+		$email =					$row[4];
+		$messages =					$row[5];
+		$old_messages =				$row[6];
+		$delete_vm_after_email =	$row[7];
 
 		echo "<br>MODIFY A VOICEMAIL BOX: $tts_id<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=471111111111>\n";
@@ -21651,6 +21664,7 @@ if ($ADD==371111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Name: </td><td align=left><input type=text name=fullname size=50 maxlength=100 value=\"$fullname\">$NWB#vicidial_voicemail-fullname$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Email: </td><td align=left><input type=text name=email size=50 maxlength=100 value=\"$email\">$NWB#vicidial_voicemail-email$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>N</option><option>Y</option><option SELECTED>$active</option></select>$NWB#vicidial_voicemail-active$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Delete Voicemail After Email: </td><td align=left><select size=1 name=delete_vm_after_email><option>Y</option><option>N</option><option selected>$delete_vm_after_email</option></select>$NWB#vicidial_voicemail-delete_vm_after_email$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>New Messages: </td><td align=left><B>$messages</B></td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Old Messages: </td><td align=left><B>$old_messages</B></td></tr>\n";
 
@@ -23607,7 +23621,7 @@ if ($ADD==170000000000)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT voicemail_id,fullname,active,messages,old_messages from vicidial_voicemail order by voicemail_id";
+	$stmt="SELECT voicemail_id,fullname,active,messages,old_messages,delete_vm_after_email from vicidial_voicemail order by voicemail_id";
 	$rslt=mysql_query($stmt, $link);
 	$vm_to_print = mysql_num_rows($rslt);
 
@@ -23619,6 +23633,7 @@ if ($ADD==170000000000)
 	echo "<td><font size=1 color=white><B>Active</B></td>";
 	echo "<td><font size=1 color=white><B>New Messages</B></td>";
 	echo "<td><font size=1 color=white><B>Old Messages</B></td>";
+	echo "<td><font size=1 color=white><B>Delete</B></td>";
 	echo "<td align=center><font size=1 color=white><B>MODIFY</B></td></tr>\n";
 
 	$o=0;
@@ -23635,6 +23650,7 @@ if ($ADD==170000000000)
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[3]</td>";
 		echo "<td><font size=1>$row[4]</td>";
+		echo "<td><font size=1>$row[5]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=371111111111&voicemail_id=$row[0]\">MODIFY</a></td></tr>\n";
 		$o++;
 		}
