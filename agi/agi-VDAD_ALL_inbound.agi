@@ -411,7 +411,8 @@ if ($channel =~ /Local/i)
 		if ($AGILOG) {$agi_string = "+++++ VDAD START LOCAL CHANNEL: CXFER OVERRIDE- $priority";   &agi_output;}
 		if ($call_handle_method =~ /^CLOSER/) 
 			{
-			sleep(1);
+			### sleep for 99 hundredths of a second
+			usleep(1*990*1000);
 			$stmtA = "SELECT count(*) FROM vicidial_auto_calls where lead_id='$CIDlead_id' and call_type='IN' and campaign_id='$channel_group' and channel NOT LIKE \"Local%\";";
 				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -781,8 +782,8 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 				{
 				$AGI->stream_file('sip-silence'); # stop music-on-hold process
 				$AGI->stream_file('sip-silence');
-
-				sleep(1);
+				### sleep for 99 hundredths of a second
+				usleep(1*990*1000);
 				}
 
 			if ($AGILOG) {$agi_string = "exiting the VDAD app after hours, transferring call to $DROPexten";   &agi_output;}
@@ -825,7 +826,8 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 			else
 				{$AGI->stream_file("$after_hours_message_filename");}
 			}
-		sleep(1);
+		### sleep for 99 hundredths of a second
+		usleep(1*990*1000);
 
 		### insert a NEW record to the vicidial_manager table to hangup the channel
 		$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$VARserver_ip','','Hangup','$VHqueryCID','Channel: $channel','','','','','','','','','')";
@@ -962,8 +964,8 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 					{
 					$AGI->stream_file('sip-silence'); # stop music-on-hold process
 					$AGI->stream_file('sip-silence');
-
-					sleep(1);
+					### sleep for 99 hundredths of a second
+					usleep(1*990*1000);
 					}
 
 				if ($AGILOG) {$agi_string = "exiting the VDAD app no agent no queue, transferring call to $DROPexten";   &agi_output;}
@@ -998,7 +1000,8 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 				else
 					{$AGI->stream_file("$no_agent_action_value");}
 				}
-			sleep(1);
+			### sleep for 99 hundredths of a second
+			usleep(1*990*1000);
 
 			### insert a NEW record to the vicidial_manager table to hangup the channel
 			$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$VARserver_ip','','Hangup','$VHqueryCID','Channel: $channel','','','','','','','','','')";
@@ -2111,7 +2114,8 @@ if ($hold_recall_xfer_group !~ /NONE/)
 			{
 			$AGI->stream_file('sip-silence'); # stop music-on-hold process
 			$AGI->stream_file('sip-silence');
-			sleep(1);
+			### sleep for 99 hundredths of a second
+			usleep(1*990*1000);
 			}
 
 		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
@@ -2592,7 +2596,8 @@ if ($wait_in_queue < 1)
 			{
 			$AGI->stream_file('sip-silence'); # stop music-on-hold process
 			$AGI->stream_file('sip-silence');
-			sleep(1);
+			### sleep for 99 hundredths of a second
+			usleep(1*990*1000);
 			}
 
 		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
@@ -2858,7 +2863,8 @@ if ($AGILOG) {$agi_string = "--    VDCL DROP: |$drop_action|$DROPexten|";   &agi
 			{
 			$AGI->stream_file('sip-silence'); # stop music-on-hold process
 			$AGI->stream_file('sip-silence');
-			sleep(1);
+			### sleep for 99 hundredths of a second
+			usleep(1*990*1000);
 			}
 
 		$AGI->stream_file('sip-silence');

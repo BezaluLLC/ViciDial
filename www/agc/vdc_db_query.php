@@ -228,7 +228,7 @@
 $version = '2.2.0-132';
 $build = '91204-1937';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=271;
+$mysql_log_count=272;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -425,14 +425,12 @@ $rslt=mysql_query($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =							$row[0];
 	$timeclock_end_of_day =					$row[1];
 	$agentonly_callback_campaign_lock =		$row[2];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -4482,6 +4480,11 @@ if ($ACTION == 'updateDISPO')
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00151',$user,$server_ip,$session_name,$one_mysql_log);}
 
+	$stmt="UPDATE vicidial_campaigns set campaign_calldate='$NOW_TIME' where campaign_id='$campaign';";
+		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+	$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00272',$user,$server_ip,$session_name,$one_mysql_log);}
+
 		$user_group='';
 		$stmt="SELECT user_group FROM vicidial_users where user='$user' LIMIT 1;";
 		$rslt=mysql_query($stmt, $link);
@@ -5023,8 +5026,7 @@ if ($ACTION == 'updateDISPO')
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00159',$user,$server_ip,$session_name,$one_mysql_log);}
 	if ($DB) {echo "$stmt\n";}
 	$qm_conf_ct = mysql_num_rows($rslt);
-	$i=0;
-	while ($i < $qm_conf_ct)
+	if ($qm_conf_ct > 0)
 		{
 		$row=mysql_fetch_row($rslt);
 		$enable_queuemetrics_logging =	$row[0];
@@ -5033,7 +5035,6 @@ if ($ACTION == 'updateDISPO')
 		$queuemetrics_login	=			$row[3];
 		$queuemetrics_pass =			$row[4];
 		$queuemetrics_log_id =			$row[5];
-		$i++;
 		}
 	##### END QUEUEMETRICS LOGGING LOOKUP #####
 	###########################################

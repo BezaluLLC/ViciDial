@@ -15,6 +15,7 @@
 # 60717-1536 - changed to use /etc/astguiclient.conf for configs
 # 60910-0238 - removed park_log query
 # 90628-2358 - Added vicidial_drop_rate_groups optimization
+# 91206-2149 - Added vicidial_campaigns and vicidial_lists optimization
 #
 
 $secX = time();
@@ -53,40 +54,40 @@ $SQLdate_NEG_halfhour="$year-$mon-$mday $hour:$min:$sec";
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
 
 	if ($args =~ /--help/i)
-	{
-	print "allowed run time options:\n  [-q] = quiet\n  [-t] = test\n  [--debug] = debugging messages\n\n";
-	}
+		{
+		print "allowed run time options:\n  [-q] = quiet\n  [-t] = test\n  [--debug] = debugging messages\n\n";
+		}
 	else
-	{
+		{
 		if ($args =~ /-q/i)
-		{
-		$q=1;   $Q=1;
-		}
+			{
+			$q=1;   $Q=1;
+			}
 		if ($args =~ /--debug/i)
-		{
-		$DB=1;
-		print "\n-----DEBUGGING -----\n\n";
-		}
+			{
+			$DB=1;
+			print "\n-----DEBUGGING -----\n\n";
+			}
 		if ($args =~ /-t|--test/i)
-		{
-		$T=1; $TEST=1;
-		print "\n-----TESTING -----\n\n";
+			{
+			$T=1; $TEST=1;
+			print "\n-----TESTING -----\n\n";
+			}
 		}
 	}
-}
 else
-{
-print "no command line options set\n";
-}
+	{
+	print "no command line options set\n";
+	}
 ### end parsing run-time options ###
 
 
@@ -143,106 +144,134 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
  or die "Couldn't connect to database: " . DBI->errstr;
 
 ### Grab Server values from the database
-	$stmtA = "SELECT vd_server_logs FROM servers where server_ip = '$VARserver_ip';";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	$rec_count=0;
-	while ($sthArows > $rec_count)
-		{
-		 @aryA = $sthA->fetchrow_array;
-			$DBvd_server_logs =			"$aryA[0]";
-			if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
-				else {$SYSLOG = '0';}
-		 $rec_count++;
-		}
-	$sthA->finish();
+$stmtA = "SELECT vd_server_logs FROM servers where server_ip = '$VARserver_ip';";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+$rec_count=0;
+while ($sthArows > $rec_count)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$DBvd_server_logs =			"$aryA[0]";
+	if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
+	else {$SYSLOG = '0';}
+	$rec_count++;
+	}
+$sthA->finish();
 
 if ($SYSLOG) 
 	{$flush_time = $SQLdate_NEG_1hour;}
 else
 	{$flush_time = $SQLdate_NEG_halfhour;}
 
-	$stmtA = "delete from vicidial_manager where server_ip='$server_ip' and entry_date < '$flush_time';";
-		if($DB){print STDERR "\n|$stmtA|\n";}
-		if (!$T) {	$affected_rows = $dbhA->do($stmtA);}
-		if (!$Q) {print " - vicidial_manager flush\n";}
-
-        $stmtA = "optimize table vicidial_manager;";
-                if($DB){print STDERR "\n|$stmtA|\n";}
-                if (!$T) 
-				 {
-					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-   					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-   					$sthArows=$sthA->rows;
-					 @aryA = $sthA->fetchrow_array;
-   					 if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-					$sthA->finish();
-				 }
-        if (!$Q) {print " - optimize vicidial_manager          \n";}
+$stmtA = "delete from vicidial_manager where server_ip='$server_ip' and entry_date < '$flush_time';";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) {	$affected_rows = $dbhA->do($stmtA);}
+if (!$Q) {print " - vicidial_manager flush\n";}
 
 
-        $stmtA = "optimize table vicidial_live_agents;";
-                if($DB){print STDERR "\n|$stmtA|\n";}
-                if (!$T) {
-					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-   					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-   					$sthArows=$sthA->rows;
-					 @aryA = $sthA->fetchrow_array;
-   					 if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}             
-					$sthA->finish();
-				 }
-        if (!$Q) {print " - optimize vicidial_live_agents          \n";}
+$stmtA = "optimize table vicidial_manager;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) 
+	{
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+	}
+if (!$Q) {print " - optimize vicidial_manager          \n";}
 
 
-        $stmtA = "optimize table vicidial_auto_calls;";
-                if($DB){print STDERR "\n|$stmtA|\n";}
-                if (!$T) {
-					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-   					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-   					$sthArows=$sthA->rows;
-					 @aryA = $sthA->fetchrow_array;
-   					 if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-   					 $rec_countY++;
-					$sthA->finish();
-				 }
-        if (!$Q) {print " - optimize vicidial_auto_calls          \n";}
+$stmtA = "optimize table vicidial_live_agents;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) 
+	{
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}             
+	$sthA->finish();
+	}
+if (!$Q) {print " - optimize vicidial_live_agents          \n";}
 
 
-        $stmtA = "optimize table vicidial_hopper;";
-                if($DB){print STDERR "\n|$stmtA|\n";}
-                if (!$T) {
-					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-   					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-   					$sthArows=$sthA->rows;
-					 @aryA = $sthA->fetchrow_array;
-   					 if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-					$sthA->finish();
-				 }
-        if (!$Q) {print " - optimize vicidial_hopper          \n";}
+$stmtA = "optimize table vicidial_auto_calls;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) 
+	{
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$rec_countY++;
+	$sthA->finish();
+	}
+if (!$Q) {print " - optimize vicidial_auto_calls          \n";}
 
 
-        $stmtA = "optimize table vicidial_drop_rate_groups;";
-                if($DB){print STDERR "\n|$stmtA|\n";}
-                if (!$T) {
-					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-   					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-   					$sthArows=$sthA->rows;
-					 @aryA = $sthA->fetchrow_array;
-   					 if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-					$sthA->finish();
-				 }
-        if (!$Q) {print " - optimize vicidial_drop_rate_groups          \n";}
+$stmtA = "optimize table vicidial_hopper;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) 
+	{
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+	}
+if (!$Q) {print " - optimize vicidial_hopper          \n";}
+
+
+$stmtA = "optimize table vicidial_drop_rate_groups;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) 
+	{
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+	}
+if (!$Q) {print " - optimize vicidial_drop_rate_groups          \n";}
+
+
+$stmtA = "optimize table vicidial_campaigns;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) 
+	{
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+	}
+if (!$Q) {print " - optimize vicidial_campaigns          \n";}
+
+
+$stmtA = "optimize table vicidial_lists;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) 
+	{
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+	}
+if (!$Q) {print " - optimize vicidial_lists          \n";}
 
 
 
-	$dbhA->disconnect();
+$dbhA->disconnect();
 
 
 exit;
-
-
-
-
-
 

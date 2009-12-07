@@ -269,7 +269,7 @@
 $version = '2.2.0-242';
 $build = '91206-2020';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=63;
+$mysql_log_count=64;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -347,11 +347,10 @@ $random = (rand(1000000, 9999999) + 10000000);
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
@@ -365,8 +364,6 @@ while ($i < $qm_conf_ct)
 	$outbound_autodial_active =		$row[8];
 	$enable_second_webform =		$row[9];
 	$user_territories_active =		$row[10];
-
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -474,104 +471,104 @@ echo "<head>\n";
 echo "<!-- VERSION: $version     BUILD: $build -->\n";
 
 if ($campaign_login_list > 0)
-{
-$camp_form_code  = "<select size=1 name=VD_campaign id=VD_campaign onFocus=\"login_allowable_campaigns()\">\n";
-$camp_form_code .= "<option value=\"\"></option>\n";
+	{
+	$camp_form_code  = "<select size=1 name=VD_campaign id=VD_campaign onFocus=\"login_allowable_campaigns()\">\n";
+	$camp_form_code .= "<option value=\"\"></option>\n";
 
-$LOGallowed_campaignsSQL='';
-if ($relogin == 'YES')
-{
-	$stmt="SELECT user_group from vicidial_users where user='$VD_login' and pass='$VD_pass';";
+	$LOGallowed_campaignsSQL='';
+	if ($relogin == 'YES')
+		{
+		$stmt="SELECT user_group from vicidial_users where user='$VD_login' and pass='$VD_pass';";
+		if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01002',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		$row=mysql_fetch_row($rslt);
+		$VU_user_group=$row[0];
+
+		$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$VU_user_group';";
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01003',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		$row=mysql_fetch_row($rslt);
+		if ( (!eregi("ALL-CAMPAIGNS",$row[0])) )
+			{
+			$LOGallowed_campaignsSQL = eregi_replace(' -','',$row[0]);
+			$LOGallowed_campaignsSQL = eregi_replace(' ',"','",$LOGallowed_campaignsSQL);
+			$LOGallowed_campaignsSQL = "and campaign_id IN('$LOGallowed_campaignsSQL')";
+			}
+		}
+
+	### code for manager override of shift restrictions
+	if ($MGR_override > 0)
+		{
+		if (isset($_GET["MGR_login$loginDATE"]))				{$MGR_login=$_GET["MGR_login$loginDATE"];}
+				elseif (isset($_POST["MGR_login$loginDATE"]))	{$MGR_login=$_POST["MGR_login$loginDATE"];}
+		if (isset($_GET["MGR_pass$loginDATE"]))					{$MGR_pass=$_GET["MGR_pass$loginDATE"];}
+				elseif (isset($_POST["MGR_pass$loginDATE"]))	{$MGR_pass=$_POST["MGR_pass$loginDATE"];}
+
+		$stmt="SELECT count(*) from vicidial_users where user='$MGR_login' and pass='$MGR_pass' and manager_shift_enforcement_override='1' and active='Y';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01058',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		$row=mysql_fetch_row($rslt);
+		$MGR_auth=$row[0];
+
+		if($MGR_auth>0)
+			{
+			$stmt="UPDATE vicidial_users SET shift_override_flag='1' where user='$VD_login' and pass='$VD_pass';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01059',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			echo "<!-- Shift Override entered for $VD_login by $MGR_login -->\n";
+
+			### Add a record to the vicidial_admin_log
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$MGR_login', ip_address='$ip', event_section='AGENT', event_type='OVERRIDE', record_id='$VD_login', event_code='MANAGER OVERRIDE OF AGENT SHIFT ENFORCEMENT', event_sql=\"$SQL_log\", event_notes='user: $VD_login';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01060',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			}
+		}
+
+
+	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where active='Y' $LOGallowed_campaignsSQL order by campaign_id;";
 	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01002',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$row=mysql_fetch_row($rslt);
-	$VU_user_group=$row[0];
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01004',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+	$camps_to_print = mysql_num_rows($rslt);
 
-	$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$VU_user_group';";
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01003',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$row=mysql_fetch_row($rslt);
-	if ( (!eregi("ALL-CAMPAIGNS",$row[0])) )
+	$o=0;
+	while ($camps_to_print > $o) 
 		{
-		$LOGallowed_campaignsSQL = eregi_replace(' -','',$row[0]);
-		$LOGallowed_campaignsSQL = eregi_replace(' ',"','",$LOGallowed_campaignsSQL);
-		$LOGallowed_campaignsSQL = "and campaign_id IN('$LOGallowed_campaignsSQL')";
-		}
-}
-
-### code for manager override of shift restrictions
-if ($MGR_override > 0)
-	{
-	if (isset($_GET["MGR_login$loginDATE"]))				{$MGR_login=$_GET["MGR_login$loginDATE"];}
-			elseif (isset($_POST["MGR_login$loginDATE"]))	{$MGR_login=$_POST["MGR_login$loginDATE"];}
-	if (isset($_GET["MGR_pass$loginDATE"]))					{$MGR_pass=$_GET["MGR_pass$loginDATE"];}
-			elseif (isset($_POST["MGR_pass$loginDATE"]))	{$MGR_pass=$_POST["MGR_pass$loginDATE"];}
-
-	$stmt="SELECT count(*) from vicidial_users where user='$MGR_login' and pass='$MGR_pass' and manager_shift_enforcement_override='1' and active='Y';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01058',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$row=mysql_fetch_row($rslt);
-	$MGR_auth=$row[0];
-
-	if($MGR_auth>0)
-		{
-		$stmt="UPDATE vicidial_users SET shift_override_flag='1' where user='$VD_login' and pass='$VD_pass';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01059',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		echo "<!-- Shift Override entered for $VD_login by $MGR_login -->\n";
-
-		### Add a record to the vicidial_admin_log
-		$SQL_log = "$stmt|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$MGR_login', ip_address='$ip', event_section='AGENT', event_type='OVERRIDE', record_id='$VD_login', event_code='MANAGER OVERRIDE OF AGENT SHIFT ENFORCEMENT', event_sql=\"$SQL_log\", event_notes='user: $VD_login';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01060',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		}
-	}
-
-
-$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where active='Y' $LOGallowed_campaignsSQL order by campaign_id;";
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01004',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-$camps_to_print = mysql_num_rows($rslt);
-
-$o=0;
-while ($camps_to_print > $o) 
-	{
-	$rowx=mysql_fetch_row($rslt);
-	if ($show_campname_pulldown)
-		{$campname = " - $rowx[1]";}
-	else
-		{$campname = '';}
-	if ($VD_campaign)
-		{
-		if ( (eregi("$VD_campaign",$rowx[0])) and (strlen($VD_campaign) == strlen($rowx[0])) )
-			{$camp_form_code .= "<option value=\"$rowx[0]\" SELECTED>$rowx[0]$campname</option>\n";}
+		$rowx=mysql_fetch_row($rslt);
+		if ($show_campname_pulldown)
+			{$campname = " - $rowx[1]";}
+		else
+			{$campname = '';}
+		if ($VD_campaign)
+			{
+			if ( (eregi("$VD_campaign",$rowx[0])) and (strlen($VD_campaign) == strlen($rowx[0])) )
+				{$camp_form_code .= "<option value=\"$rowx[0]\" SELECTED>$rowx[0]$campname</option>\n";}
+			else
+				{
+				if (!ereg('login_allowable_campaigns',$camp_form_code))
+					{$camp_form_code .= "<option value=\"$rowx[0]\">$rowx[0]$campname</option>\n";}
+				}
+			}
 		else
 			{
 			if (!ereg('login_allowable_campaigns',$camp_form_code))
-				{$camp_form_code .= "<option value=\"$rowx[0]\">$rowx[0]$campname</option>\n";}
+					{$camp_form_code .= "<option value=\"$rowx[0]\">$rowx[0]$campname</option>\n";}
 			}
+		$o++;
 		}
-	else
-		{
-		if (!ereg('login_allowable_campaigns',$camp_form_code))
-				{$camp_form_code .= "<option value=\"$rowx[0]\">$rowx[0]$campname</option>\n";}
-		}
-	$o++;
+	$camp_form_code .= "</select>\n";
 	}
-$camp_form_code .= "</select>\n";
-}
 else
-{
-$camp_form_code = "<INPUT TYPE=TEXT NAME=VD_campaign SIZE=10 MAXLENGTH=20 VALUE=\"$VD_campaign\">\n";
-}
+	{
+	$camp_form_code = "<INPUT TYPE=TEXT NAME=VD_campaign SIZE=10 MAXLENGTH=20 VALUE=\"$VD_campaign\">\n";
+	}
 
 
 if ($LogiNAJAX > 0)
@@ -2065,6 +2062,14 @@ else
 	$affected_rows = mysql_affected_rows($link);
 	$agent_log_id = mysql_insert_id($link);
 	echo "<!-- vicidial_agent_log record inserted: |$affected_rows|$agent_log_id| -->\n";
+
+	##### update vicidial_campaigns to show agent has logged in
+	$stmt="UPDATE vicidial_campaigns set campaign_logindate='$NOW_TIME' where campaign_id='$VD_campaign';";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01064',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+	$VCaffected_rows = mysql_affected_rows($link);
+	echo "<!-- vicidial_campaigns campaign_logindate updated: |$VCaffected_rows|$NOW_TIME| -->\n";
 
 	if ($enable_queuemetrics_logging > 0)
 		{

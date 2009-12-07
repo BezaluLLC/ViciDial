@@ -32,6 +32,7 @@
 # 90512-1549 - Formatting fixes and calculation bugs in blended
 # 90628-2001 - Added drop rate group functions
 # 91115-0929 - Added auto-kill of script at timeclock reset time of day to facilitate cleaner clearing of daily stats
+# 91206-2203 - Added campaign_calldate within last 5 minute as an override to recalculate stats
 #
 
 # constants
@@ -245,6 +246,7 @@ foreach(@conf)
 
 if (!$VARDB_port) {$VARDB_port='3306';}
 
+use Time::HiRes ('gettimeofday','usleep','sleep');  # necessary to have perl sleep command of less than one second
 use DBI;	  
 
 $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
@@ -356,11 +358,11 @@ while ($master_loop<$CLIloops)
 
 	if ($CLIcampaign)
 		{
-		$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,UNIX_TIMESTAMP(campaign_changedate),campaign_stats_refresh,campaign_allow_inbound,drop_rate_group from vicidial_campaigns where campaign_id='$CLIcampaign'";
+		$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,UNIX_TIMESTAMP(campaign_changedate),campaign_stats_refresh,campaign_allow_inbound,drop_rate_group,UNIX_TIMESTAMP(campaign_calldate) from vicidial_campaigns where campaign_id='$CLIcampaign'";
 		}
 	else
 		{
-		$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,UNIX_TIMESTAMP(campaign_changedate),campaign_stats_refresh,campaign_allow_inbound,drop_rate_group from vicidial_campaigns where ( (active='Y') or (campaign_stats_refresh='Y') )";
+		$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,UNIX_TIMESTAMP(campaign_changedate),campaign_stats_refresh,campaign_allow_inbound,drop_rate_group,UNIX_TIMESTAMP(campaign_calldate) from vicidial_campaigns where ( (active='Y') or (campaign_stats_refresh='Y') )";
 		}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -390,12 +392,15 @@ while ($master_loop<$CLIloops)
 		$campaign_stats_refresh[$rec_count] =		$aryA[15];
 		$campaign_allow_inbound[$rec_count] =		$aryA[16];
 		$drop_rate_group[$rec_count] =				$aryA[17];
+		$campaign_calldate_epoch[$rec_count] =		$aryA[18];
 
 		$rec_count++;
 		}
 	$sthA->finish();
 	if ($DB) {print "$now_date CAMPAIGNS TO PROCESSES ADAPT FOR:  $rec_count|$#campaign_id       IT: $master_loop\n";}
 
+	$five_min_ago = time();
+	$five_min_ago = ($five_min_ago - 300);
 
 	##### LOOP THROUGH EACH CAMPAIGN AND PROCESS THE HOPPER #####
 	$i=0;
@@ -418,6 +423,8 @@ while ($master_loop<$CLIloops)
 		$event_string = "|$campaign_id[$i]|$hopper_level[$i]|$hopper_ready_count|$local_call_time[$i]|$diff_ratio_updater|$drop_count_updater|";
 			if ($DBX) {print "$i     $event_string\n";}
 		&event_logger;	
+
+		if ($DBX) {print "     TIME CALL CHECK: $five_min_ago/$campaign_calldate_epoch[$i]\n";}
 
 		##### IF THERE ARE NO LEADS IN THE HOPPER FOR THE CAMPAIGN WE DO NOT WANT TO ADJUST THE DIAL_LEVEL
 		if ($hopper_ready_count>0)
@@ -444,7 +451,7 @@ while ($master_loop<$CLIloops)
 				}
 			else
 				{
-				if ($campaign_stats_refresh[$i] =~ /Y/)
+				if ( ($campaign_stats_refresh[$i] =~ /Y/) || ($five_min_ago < $campaign_calldate_epoch[$i]) )
 					{
 					if ($drop_count_updater>=60)
 						{
@@ -476,7 +483,7 @@ while ($master_loop<$CLIloops)
 			}
 		else
 			{
-			if ($campaign_stats_refresh[$i] =~ /Y/)
+			if ( ($campaign_stats_refresh[$i] =~ /Y/) || ($five_min_ago < $campaign_calldate_epoch[$i]) )
 				{
 				if ($drop_count_updater>=60)
 					{
@@ -523,8 +530,7 @@ while ($master_loop<$CLIloops)
 	$diff_ratio_updater = ($diff_ratio_updater + $CLIdelay);
 	$drop_count_updater = ($drop_count_updater + $CLIdelay);
 
-
-	sleep($CLIdelay);
+	usleep($CLIdelay*1000*1000);
 
 	$stat_count++;
 	$master_loop++;
@@ -655,7 +661,7 @@ sub get_time_now
 			if ($DB) {print "\n$event_string\n\n\n";}
 		&event_logger;	
 
-		sleep(10);
+		usleep(10*1000*1000);
 
 		exit;
 		}

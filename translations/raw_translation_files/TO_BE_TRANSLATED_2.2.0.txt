@@ -348,6 +348,8 @@ CAMPAIGNS ALLOWING THIS IN-GROUP||
 This is the secret, or password, for the server in the iax auto-generated conf file for this server on other servers. Limit is 20 characters alphanumeric dash and underscore accepted. Default is test||
 Delete Voicemail After Email||
 This optional setting allows you to have the voicemail messages deleted from the system after they have been emailed out. Default is N||
+Last Campaign Call Date||
+This is the last time that a call was handled by an agent logged into this campaign||
 
 
 add-file: user_territories.php

@@ -686,7 +686,8 @@ agent_dial_owner_only ENUM('NONE','USER','TERRITORY','USER_GROUP') default 'NONE
 agent_display_dialable_leads ENUM('Y','N') default 'N',
 web_form_address_two TEXT,
 waitforsilence_options VARCHAR(25) default '',
-agent_select_territories ENUM('Y','N') default 'N'
+agent_select_territories ENUM('Y','N') default 'N',
+campaign_calldate DATETIME
 );
 
 CREATE TABLE vicidial_lists (
@@ -1980,7 +1981,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1185',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1186',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
