@@ -263,10 +263,11 @@
 # 91130-2021 - Added code for manager override of in-group selection
 # 91204-1638 - Added recording_filename and recording_id script variables and script refresh link
 # 91205-2055 - Added CONSULTATIVE checkbox in a redesigned Transfer-Conf frame
+# 91206-2020 - Fixed vicidial_agent_log logging bug on logout when not paused
 #
 
-$version = '2.2.0-241';
-$build = '91205-2055';
+$version = '2.2.0-242';
+$build = '91206-2020';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=63;
 $one_mysql_log=0;
@@ -2603,6 +2604,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var recording_id='';
 	var delayed_script_load='';
 	var script_recording_delay='';
+	var VDRP_stage='PAUSED';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -5443,11 +5445,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 // ################################################################################
 // Set the client to READY and start looking for calls (VDADready, VDADpause)
-	function AutoDial_ReSume_PauSe(taskaction,taskagentlog,taskwrapup,taskstatuschange)
+	function AutoDial_ReSume_PauSe(taskaction,taskagentlog,taskwrapup,taskstatuschange,templogout)
 		{
 		if (taskaction == 'VDADready')
 			{
-			var VDRP_stage = 'READY';
+			VDRP_stage = 'READY';
 			if (INgroupCOUNT > 0)
 				{
 				if (VICIDiaL_closer_blended == 0)
@@ -5470,7 +5472,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		else
 			{
-			var VDRP_stage = 'PAUSED';
+			VDRP_stage = 'PAUSED';
 			AutoDialReady = 0;
 			AutoDialWaiting = 0;
 			if (dial_method == "INBOUND_MAN")
@@ -5484,7 +5486,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				document.getElementById("DiaLControl").innerHTML = DiaLControl_auto_HTML;
 				}
 
-			if (agent_pause_codes_active=='FORCE')
+			if ( (agent_pause_codes_active=='FORCE') && (templogout != 'LOGOUT') )
 				{
 				PauseCodeSelectContent_create();
  				}
@@ -7861,8 +7863,27 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		{
 		if (logout_stop_timeouts < 1)
 			{
+			if (VDRP_stage != 'PAUSED')
+				{
+				AutoDial_ReSume_PauSe("VDADpause",'','','',"LOGOUT");
+				}
 			LogouT('CLOSE');
 			alert("PLEASE CLICK THE LOGOUT LINK TO LOG OUT NEXT TIME.\n");
+			}
+		}
+
+
+// ################################################################################
+// Normal logout with check for pause stage first
+	function NormalLogout()
+		{
+		if (logout_stop_timeouts < 1)
+			{
+			if (VDRP_stage != 'PAUSED')
+				{
+				AutoDial_ReSume_PauSe("VDADpause",'','','',"LOGOUT");
+				}
+			LogouT('NORMAL');
 			}
 		}
 
@@ -9677,7 +9698,7 @@ echo "</head>\n";
 </TD><TD COLSPAN=3 VALIGN=TOP ALIGN=RIGHT><font class="body_text">
 <?php if ($territoryCT > 0) {echo "<a href=\"#\" onclick=\"OpeNTerritorYSelectioN();return false;\">TERRITORIES</a> &nbsp; &nbsp; \n";} ?>
 <?php if ($INgrpCT > 0) {echo "<a href=\"#\" onclick=\"OpeNGrouPSelectioN();return false;\">GROUPS</a> &nbsp; &nbsp; \n";} ?>
-<?php	echo "<a href=\"#\" onclick=\"LogouT('NORMAL');return false;\">LOGOUT</a>\n"; ?>
+<?php	echo "<a href=\"#\" onclick=\"NormalLogout();return false;\">LOGOUT</a>\n"; ?>
 </TD></TR></TABLE>
 </SPAN>
 
