@@ -13,7 +13,7 @@ make
 make install
 
 cd /usr/local/
-wget http://mirror.trouble-free.net/mysql_mirror/Downloads/MySQL-5.0/mysql-5.0.67.tar.gz
+wget http://files.directadmin.com/services/all/mysql/mysql-5.0.67.tar.gz
 gunzip mysql-5.0.67.tar.gz
 tar xvf mysql-5.0.67.tar
 cd mysql-5.0.67

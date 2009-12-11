@@ -433,6 +433,8 @@ PHASE 6: ADDING CRONTAB ENTRIES FOR ASTGUICLIENT/VICIDIAL SCRIPTS
 50 0 * * * /usr/share/astguiclient/AST_cleanup_agent_log.pl --last-24hours
 ## uncomment below if using QueueMetrics
 #*/5 * * * * /usr/share/astguiclient/AST_cleanup_agent_log.pl --only-qm-live-call-check
+
+## uncomment below if using Vtiger
 #1 1 * * * /usr/share/astguiclient/Vtiger_optimize_all_tables.pl --quiet
 
 ### updater for VICIDIAL hopper

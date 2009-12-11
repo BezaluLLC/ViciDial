@@ -148,8 +148,7 @@ $stmtA = "SELECT vd_server_logs,local_gmt FROM servers where server_ip = '$VARse
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
-$rec_count=0;
-while ($sthArows > $rec_count)
+if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
 	$DBvd_server_logs =			"$aryA[0]";
@@ -157,7 +156,6 @@ while ($sthArows > $rec_count)
 	if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
 	else {$SYSLOG = '0';}
 	if (length($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
-	$rec_count++;
 	}
 $sthA->finish();
 

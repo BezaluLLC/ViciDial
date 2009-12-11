@@ -20,6 +20,8 @@
 # 81208-0133 - Added portion to check for more missing queue_log entries
 # 90330-2128 - Minor code fixes and restricted queue_log actions to VICIDIAL-defined serverid records
 # 91112-1100 - Added fixing for more QM issues, added CALLOUTBOUND checking with ENTERQUEUE
+# 91209-0956 - Added PAUSEREASON-LAGGED queue_log correction during live call
+# 91210-0609 - Added LOGOFF queue_log correction during live call
 #
 
 # constants
@@ -362,18 +364,148 @@ if ($enable_queuemetrics_logging > 0)
 		$h++;
 		}
 
+	@time_id=@MT;
+	@agent=@MT;
+
+	##############################################################
+	##### grab all queue_log entries with a PAUSEREASON of LAGGED to validate
+	$stmtB = "SELECT time_id,agent FROM queue_log where verb='PAUSEREASON' and data1='LAGGED' $QM_SQL_time_H order by time_id;";
+	$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+	$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+	$P_lagged_records=$sthB->rows;
+	if ($DB) {print "LAGGED Records: $P_lagged_records|$stmtB|\n\n";}
+	$h=0;
+	while ($P_lagged_records > $h)
+		{
+		@aryB = $sthB->fetchrow_array;
+		$time_id[$h] =	$aryB[0];
+		$agent[$h] =	$aryB[1];
+		$h++;
+		}
+	$sthB->finish();
+
+	$h=0;
+	while ($P_lagged_records > $h)
+		{
+		$NEXTtime=0;
+		$NEXTverb='';
+		$NEXTqueue='';
+		$NEXTcall_id='';
+		##### find the next queue_log record after the PAUSEREASON record
+		$stmtB = "SELECT time_id,verb,queue,call_id FROM queue_log where agent='$agent[$h]' and time_id > '$time_id[$h]' order by time_id limit 1;";
+		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+		$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+		$PL_records=$sthB->rows;
+		if ($PL_records > 0)
+			{
+			@aryB = $sthB->fetchrow_array;
+			$NEXTtime =		$aryB[0];
+			$NEXTverb =		$aryB[1];
+			$NEXTqueue =	$aryB[2];
+			$NEXTcall_id =	$aryB[3];
+			}
+		$sthB->finish();
+
+		if ( ($PL_records > 0) && ($NEXTverb =~ /CALLSTATUS|COMPLETECALLER|COMPLETEAGENT/) )
+			{
+			$NEXTtimePAUSE = ($NEXTtime + 1);
+			if ($DB) {print "LAGGED PAUSE DURING CALL: $h|$time_id[$h]|$agent[$h]|$NEXTtime|$NEXTverb|$NEXTqueue|$NEXTcall_id\n";}
+
+			##### update the PAUSEREASON LAGGED record in the queue_log to one second after the end of the call
+			$stmtB = "UPDATE queue_log SET time_id='$NEXTtimePAUSE' where agent='$agent[$h]' and time_id='$time_id[$h]' and verb='PAUSEREASON' and data1='LAGGED' limit 1;";
+			if ($TEST < 1)
+				{
+				$Baffected_rows = $dbhB->do($stmtB);
+				}
+			if ($DB) {print "     PAUSEREASON record updated: $Baffected_rows|$stmtB|\n";}
+
+			$event_string = "LAGGED DURING CALL: $h|$PL_records|$time_id[$h]|$agent[$h]|$NEXTtimePAUSE|$NEXTverb|$NEXTqueue|$NEXTcall_id|$Baffected_rows|$stmtB";
+			&event_logger;
+			}
+
+		$h++;
+		}
+
+
+	@time_id=@MT;
+	@agent=@MT;
+
+	##############################################################
+	##### grab all queue_log entries with a verb of AGENTLOGOFF to validate
+	$stmtB = "SELECT time_id,agent FROM queue_log where verb='AGENTLOGOFF' $QM_SQL_time_H order by time_id;";
+	$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+	$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+	$A_logoff_records=$sthB->rows;
+	if ($DB) {print "AGENTLOGOFF Records: $A_logoff_records|$stmtB|\n\n";}
+	$h=0;
+	while ($A_logoff_records > $h)
+		{
+		@aryB = $sthB->fetchrow_array;
+		$time_id[$h] =	$aryB[0];
+		$agent[$h] =	$aryB[1];
+		$h++;
+		}
+	$sthB->finish();
+
+	$h=0;
+	while ($A_logoff_records > $h)
+		{
+		$NEXTtime=0;
+		$NEXTverb='';
+		$NEXTqueue='';
+		$NEXTcall_id='';
+		##### find the next queue_log record after the PAUSEREASON record
+		$stmtB = "SELECT time_id,verb,queue,call_id FROM queue_log where agent='$agent[$h]' and time_id > '$time_id[$h]' order by time_id limit 1;";
+		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+		$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+		$AL_records=$sthB->rows;
+		if ($AL_records > 0)
+			{
+			@aryB = $sthB->fetchrow_array;
+			$NEXTtime =		$aryB[0];
+			$NEXTverb =		$aryB[1];
+			$NEXTqueue =	$aryB[2];
+			$NEXTcall_id =	$aryB[3];
+			}
+		$sthB->finish();
+
+		if ( ($AL_records > 0) && ($NEXTverb =~ /CALLSTATUS|COMPLETECALLER|COMPLETEAGENT/) )
+			{
+			$NEXTtimeLOGOFF = ($NEXTtime + 1);
+			if ($DB) {print "LOGOFF DURING CALL: $h|$time_id[$h]|$agent[$h]|$NEXTtime|$NEXTverb|$NEXTqueue|$NEXTcall_id\n";}
+
+			##### update the AGENTLOGOFF record in the queue_log to one second after the end of the call
+			$stmtB = "UPDATE queue_log SET time_id='$NEXTtimeLOGOFF' where agent='$agent[$h]' and time_id='$time_id[$h]' and verb='AGENTLOGOFF' limit 1;";
+			if ($TEST < 1)
+				{
+				$Baffected_rows = $dbhB->do($stmtB);
+				}
+			if ($DB) {print "     AGENTLOGOFF record updated: $Baffected_rows|$stmtB|\n";}
+
+			$event_string = "AGENTLOGOFF DURING CALL: $h|$AL_records|$time_id[$h]|$agent[$h]|$NEXTtimeLOGOFF|$NEXTverb|$NEXTqueue|$NEXTcall_id|$Baffected_rows|$stmtB";
+			&event_logger;
+			}
+
+		$h++;
+		}
+
 	if ($qm_live_call_check > 0)
 		{
 		exit;
 		}
 	}
-### END CHECKING ENTERQUEUE/CALLOUTBOUND ENTRIES FOR LIVE CALLS
+### END CHECKING ENTERQUEUE/CALLOUTBOUND ENTRIES FOR LIVE CALLS AND PAUSEREASON-LAGGED/LOGOFF ENTRIES FOR LIVE AGENTS
 
 
 
 ### BEGIN FIX LOGIN/LAGGED PAUSEREASON ENTRIES (not a recurring process that needs to be run)
 if ( ($enable_queuemetrics_logging > 0) && ($login_lagged_check > 0) )
 	{
+	@time_id=@MT;
+	@agent=@MT;
+	@verb=@MT;
+	@serverid=@MT;
+
 	if ($DB) {print " - Checking for LOGIN and LAGGED pausereason records in queue_log\n";}
 
 	$PAUSEREASONinsert=0;

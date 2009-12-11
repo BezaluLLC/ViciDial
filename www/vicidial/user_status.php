@@ -13,6 +13,7 @@
 # 90508-0644 - Changed to PHP long tags
 # 91012-0536 - Added selected territories display
 # 91130-2039 - Added user closer log manager flag display
+# 91212-0656 - Added more complete logging of Emergency Logout process
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -45,15 +46,13 @@ $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_ter
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =						$row[0];
 	$webroot_writable =					$row[1];
 	$SSoutbound_autodial_active =		$row[2];
 	$user_territories_active =			$row[3];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -89,7 +88,6 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	}
 else
 	{
-
 	if($auth>0)
 		{
 		$stmt="SELECT full_name,change_agent_campaign,modify_timeclock_log from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
@@ -226,10 +224,170 @@ if ($stage == "live_campaign_change")
 ##### EMERGENCY LOGOUT OF AN AGENT #####
 if ($stage == "log_agent_out")
 	{
-	$stmt="DELETE from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
+	$now_date_epoch = date('U');
+	$inactive_epoch = ($now_date_epoch - 60);
+	$stmt = "SELECT user,campaign_id,UNIX_TIMESTAMP(last_update_time) from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
 	$rslt=mysql_query($stmt, $link);
+	if ($DB) {echo "<BR>$stmt\n";}
+	$vla_ct = mysql_num_rows($rslt);
+	if ($vla_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$VLA_user =					$row[0];
+		$VLA_campaign_id =			$row[1];
+		$VLA_update_time =			$row[2];
 
-	echo "Agent $user - $full_name has been emergency logged out, make sure they close their web browser<BR>\n";
+		if ($VLA_update_time > $inactive_epoch)
+			{
+			$lead_active=0;
+			$stmt = "SELECT agent_log_id,user,server_ip,event_time,lead_id,campaign_id,pause_epoch,pause_sec,wait_epoch,wait_sec,talk_epoch,talk_sec,dispo_epoch,dispo_sec,status,user_group,comments,sub_status,dead_epoch,dead_sec from vicidial_agent_log where user='$VLA_user' order by agent_log_id desc LIMIT 1;";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "<BR>$stmt\n";}
+			$val_ct = mysql_num_rows($rslt);
+			if ($val_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$VAL_agent_log_id =		$row[0];
+				$VAL_user =				$row[1];
+				$VAL_server_ip =		$row[2];
+				$VAL_event_time =		$row[3];
+				$VAL_lead_id =			$row[4];
+				$VAL_campaign_id =		$row[5];
+				$VAL_pause_epoch =		$row[6];
+				$VAL_pause_sec =		$row[7];
+				$VAL_wait_epoch =		$row[8];
+				$VAL_wait_sec =			$row[9];
+				$VAL_talk_epoch =		$row[10];
+				$VAL_talk_sec =			$row[11];
+				$VAL_dispo_epoch =		$row[12];
+				$VAL_dispo_sec =		$row[13];
+				$VAL_status =			$row[14];
+				$VAL_user_group =		$row[15];
+				$VAL_comments =			$row[16];
+				$VAL_sub_status =		$row[17];
+				$VAL_dead_epoch =		$row[18];
+				$VAL_dead_sec =			$row[19];
+
+				if ($DB) {echo "\n<BR>VAL VALUES: $VAL_agent_log_id|$VAL_status|$VAL_lead_id\n";}
+
+				if ( ($VAL_wait_epoch < 1) || ( ($VAL_status == 'PAUSE') && ($VAL_dispo_epoch < 1) ) )
+					{
+					$VAL_pause_sec = ( ($now_date_epoch - $VAL_pause_epoch) + $VAL_pause_sec);
+					$stmt = "UPDATE vicidial_agent_log SET wait_epoch='$now_date_epoch', pause_sec='$VAL_pause_sec' where agent_log_id='$VAL_agent_log_id';";
+					}
+				else
+					{
+					if ($VAL_talk_epoch < 1)
+						{
+						$VAL_wait_sec = ( ($now_date_epoch - $VAL_wait_epoch) + $VAL_wait_sec);
+						$stmt = "UPDATE vicidial_agent_log SET talk_epoch='$now_date_epoch', wait_sec='$VAL_wait_sec' where agent_log_id='$VAL_agent_log_id';";
+						}
+					else
+						{
+						$lead_active++;
+						$status_update_SQL='';
+						if ( ( (strlen($VAL_status) < 1) or ($VAL_status == 'NULL') ) and ($VAL_lead_id > 0) )
+							{
+							$status_update_SQL = ", status='PU'";
+							$stmt="UPDATE vicidial_list SET status='PU' where lead_id='$VAL_lead_id';";
+							if ($DB) {echo "<BR>$stmt\n";}
+							$rslt=mysql_query($stmt, $link);
+							}
+						if ($VAL_dispo_epoch < 1)
+							{
+							$VAL_talk_sec = ($now_date_epoch - $VAL_talk_epoch);
+							$stmt = "UPDATE vicidial_agent_log SET dispo_epoch='$now_date_epoch', talk_sec='$VAL_talk_sec'$status_update_SQL where agent_log_id='$VAL_agent_log_id';";
+							}
+						else
+							{
+							if ($VAL_dispo_sec < 1)
+								{
+								$VAL_dispo_sec = ($now_date_epoch - $VAL_dispo_epoch);
+								$stmt = "UPDATE vicidial_agent_log SET dispo_sec='$VAL_dispo_sec' where agent_log_id='$VAL_agent_log_id';";
+								}
+							}
+						}
+					}
+
+				if ($DB) {echo "<BR>$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
+			}
+
+		$stmt="DELETE from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
+		if ($DB) {echo "<BR>$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+
+		if (strlen($VAL_user_group) < 1)
+			{
+			$stmt = "SELECT user_group FROM vicidial_users where user='$VLA_user';";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "<BR>$stmt\n";}
+			$val_ct = mysql_num_rows($rslt);
+			if ($val_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$VAL_user_group =		$row[0];
+				}
+			}
+
+		$stmt = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$VLA_user','LOGOUT','$VLA_campaign_id','$NOW_TIME','$now_date_epoch','$VAL_user_group');";
+		if ($DB) {echo "<BR>$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+
+
+		#############################################
+		##### START QUEUEMETRICS LOGGING LOOKUP #####
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "<BR>$stmt\n";}
+		$qm_conf_ct = mysql_num_rows($rslt);
+		if ($qm_conf_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$enable_queuemetrics_logging =	$row[0];
+			$queuemetrics_server_ip	=		$row[1];
+			$queuemetrics_dbname =			$row[2];
+			$queuemetrics_login	=			$row[3];
+			$queuemetrics_pass =			$row[4];
+			$queuemetrics_log_id =			$row[5];
+			}
+		##### END QUEUEMETRICS LOGGING LOOKUP #####
+		###########################################
+		if ($enable_queuemetrics_logging > 0)
+			{
+			$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+			mysql_select_db("$queuemetrics_dbname", $linkB);
+
+			$agents='@agents';
+			$agent_logged_in='';
+			$time_logged_in='';
+
+			$stmtB = "SELECT agent,time_id FROM queue_log where agent='Agent/" . mysql_real_escape_string($user) . "' and verb='AGENTLOGIN' order by time_id desc limit 1;";
+			$rsltB=mysql_query($stmtB, $linkB);
+			if ($DB) {echo "<BR>$stmtB\n";}
+			$qml_ct = mysql_num_rows($rsltB);
+			if ($qml_ct > 0)
+				{
+				$row=mysql_fetch_row($rsltB);
+				$agent_logged_in =	$row[0];
+				$time_logged_in =	$row[1];
+				}
+
+			$time_logged_in = ($now_date_epoch - $time_logged_in);
+			if ($time_logged_in > 1000000) {$time_logged_in=1;}
+
+			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='AGENTLOGOFF',serverid='$queuemetrics_log_id',data1='" . mysql_real_escape_string($user) . "$agents',data2='$time_logged_in';";
+			if ($DB) {echo "<BR>$stmtB\n";}
+			$rsltB=mysql_query($stmtB, $linkB);
+			}
+
+		echo "Agent $user - $full_name has been emergency logged out, make sure they close their web browser<BR>\n";
+		}
+	else
+		{
+		echo "Agent $user is not logged in<BR>\n";
+		}
 	
 	exit;
 	}

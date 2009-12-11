@@ -1820,6 +1820,37 @@ while($one_day_interval > 0)
 					$stmtA = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$VALOuser[$logrun]','LOGOUT','$VALOcampaign[$logrun]','$SQLdate','$now_date_epoch','$VALOuser_group');";
 					$affected_rows = $dbhA->do($stmtA);
 
+					if ($enable_queuemetrics_logging > 0)
+						{
+						$secX = time();
+						$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+						 or die "Couldn't connect to database: " . DBI->errstr;
+
+						if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+						$agents='@agents';
+						$time_logged_in='';
+						$stmtB = "SELECT time_id FROM queue_log where agent='Agent/$VALOuser[$logrun]' and verb='AGENTLOGIN' order by time_id desc limit 1;";
+						$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+						$sthB->execute or die "executing: $stmtA ", $dbhB->errstr;
+						$sthBrows=$sthB->rows;
+						if ($sthBrows > 0)
+							{
+							@aryB = $sthB->fetchrow_array;
+							$time_logged_in =		$aryB[0];
+							}
+						$sthB->finish();
+
+						$time_logged_in = ($secX - $logintime);
+						if ($time_logged_in > 1000000) {$time_logged_in=1;}
+						$LOGOFFtime = ($secX + 1);
+
+						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='NONE',agent='Agent/$VALOuser[$logrun]',verb='AGENTLOGOFF',serverid='$queuemetrics_log_id',data1='$VALOuser[$logrun]$agents',data2='$time_logged_in';";
+						$Baffected_rows = $dbhB->do($stmtB);
+
+						$dbhB->disconnect();
+						}
+
 					$event_string = "|          lagged agent LOGOUT entry inserted $VALOuser[$logrun]|$VALOcampaign[$logrun]|$VALOextension[$logcount]|";
 					 &event_logger;
 

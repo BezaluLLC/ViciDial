@@ -10,6 +10,7 @@
 # 90309-0905 - mattf - Added deleting of asterisk command files
 # 90325-2238 - mattf - Rewrote launching of Asterisk, removed command files
 # 90506-1443 - mikec - Added the T option to the asterisk command. This enables timestamping.
+# 91210-1500 - mattf - Added datetimestamp to astshell screen
 #
 
 # default path to astguiclient configuration file:
@@ -40,6 +41,17 @@ foreach(@conf)
 	$i++;
 	}
 
+$secX = time();
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($secX);
+$mon++;
+$year = ($year + 1900);
+if ($mon < 10) {$mon = "0$mon";}
+if ($mday < 10) {$mday = "0$mday";}
+if ($hour < 10) {$hour = "0$hour";}
+if ($min < 10) {$min = "0$min";}
+if ($sec < 10) {$sec = "0$sec";}
+$launch_date = "$year$mon$mday$hour$min$sec";
+
 `PERL5LIB="$PATHhome/libs"; export PERL5LIB`;
 
 use DBI;	  
@@ -48,38 +60,36 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
  or die "Couldn't connect to database: " . DBI->errstr;
 
 ### Grab Server values from the database
-	$stmtA = "SELECT vd_server_logs FROM servers where server_ip = '$VARserver_ip';";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	$rec_count=0;
-	while ($sthArows > $rec_count)
-		{
-		 @aryA = $sthA->fetchrow_array;
-			$DBvd_server_logs =			"$aryA[0]";
-			if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
-				else {$SYSLOG = '0';}
-		 $rec_count++;
-		}
-	$sthA->finish();
+$stmtA = "SELECT vd_server_logs FROM servers where server_ip = '$VARserver_ip';";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$DBvd_server_logs =			$aryA[0];
+	if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
+	else {$SYSLOG = '0';}
+	}
+$sthA->finish();
 
 `ulimit -n 65536`;
 
 if ($SYSLOG) 
 	{
-	`/usr/bin/screen -d -m -S astershell /usr/bin/screen -S astshell`;
+	`/usr/bin/screen -d -m -S astershell$launch_date /usr/bin/screen -S astshell$launch_date`;
 	print "started screen\n";
 
 	sleep(1);
-	`screen -XS astshell eval 'stuff "cd /var/log/astguiclient\015"'`;
+	`screen -XS astshell$launch_date eval 'stuff "cd /var/log/astguiclient\015"'`;
 	print "changed directory\n";
 
 	sleep(1);
-	`screen -XS astshell eval 'stuff "screen -L -S asterisk\015"'`;
+	`screen -XS astshell$launch_date eval 'stuff "screen -L -S asterisk\015"'`;
 	print "started new screen session\n";
 
 	sleep(1);
-	`screen -d astshell`;
+	`screen -d astshell$launch_date`;
 	`screen -d asterisk`;
 	print "detached screens\n";
 
@@ -93,7 +103,7 @@ if ($SYSLOG)
 	}
 else
 	{
-	`/usr/bin/screen -d -m -S astershell /usr/bin/screen -S asterisk`;
+	`/usr/bin/screen -d -m -S astershell$launch_date /usr/bin/screen -S asterisk`;
 	print "started screen\n";
 
 	sleep(1);
@@ -111,8 +121,8 @@ else
 
 
 ### Set the conf files to automatically update
-	$stmtA = "UPDATE servers SET rebuild_conf_files='Y' where server_ip = '$VARserver_ip';";
-	$affected_rows = $dbhA->do($stmtA);
+$stmtA = "UPDATE servers SET rebuild_conf_files='Y' where server_ip = '$VARserver_ip';";
+$affected_rows = $dbhA->do($stmtA);
 
 
 exit;
