@@ -26,6 +26,7 @@
 #  - $blended - ('YES','NO')
 #  - $ingroup_choices - (' TEST_IN SALESLINE -')
 #  - $set_as_default - ('YES','NO')
+#  - $alt_user
 
 # CHANGELOG:
 # 80703-2225 - First build of script
@@ -37,10 +38,11 @@
 # 90508-0727 - Changed to PHP long tags
 # 90522-0506 - Security fix
 # 91130-1307 - Added change_ingroups(Manager InGroup change feature)
+# 91211-1805 - Added st_login_log and st_get_agent_active_lead functions, added alt_user
 #
 
-$version = '2.2.0-9';
-$build = '91130-1307';
+$version = '2.2.0-10';
+$build = '91211-1805';
 
 require("dbconnect.php");
 
@@ -83,6 +85,8 @@ if (isset($_GET["ingroup_choices"]))			{$ingroup_choices=$_GET["ingroup_choices"
 	elseif (isset($_POST["ingroup_choices"]))	{$ingroup_choices=$_POST["ingroup_choices"];}
 if (isset($_GET["set_as_default"]))				{$set_as_default=$_GET["set_as_default"];}
 	elseif (isset($_POST["set_as_default"]))	{$set_as_default=$_POST["set_as_default"];}
+if (isset($_GET["alt_user"]))					{$alt_user=$_GET["alt_user"];}
+	elseif (isset($_POST["alt_user"]))			{$alt_user=$_POST["alt_user"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -133,6 +137,7 @@ else
 	$pass = ereg_replace("'|\"|\\\\|;","",$pass);
 	$source = ereg_replace("'|\"|\\\\|;","",$source);
 	$agent_user = ereg_replace("'|\"|\\\\|;","",$agent_user);
+	$alt_user = ereg_replace("'|\"|\\\\|;","",$alt_user);
 	}
 
 ### date and fixed variables
@@ -248,7 +253,7 @@ if ($format=='debug')
 ################################################################################
 if ($function == 'external_hangup')
 	{
-	if ( (strlen($value)<1) || (strlen($agent_user)<1) )
+	if ( (strlen($value)<1) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
 		{
 		$result = 'ERROR';
 		$result_reason = "external_hangup not valid";
@@ -258,6 +263,28 @@ if ($function == 'external_hangup')
 		}
 	else
 		{
+		if (strlen($alt_user)>1)
+			{
+			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$agent_user = $row[0];
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "no user found";
+				echo "$result: $result_reason - $alt_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
 		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
@@ -294,7 +321,7 @@ if ($function == 'external_hangup')
 ################################################################################
 if ($function == 'external_status')
 	{
-	if ( (strlen($value)<1) || (strlen($agent_user)<1) )
+	if ( (strlen($value)<1) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
 		{
 		$result = 'ERROR';
 		$result_reason = "external_status not valid";
@@ -304,6 +331,28 @@ if ($function == 'external_status')
 		}
 	else
 		{
+		if (strlen($alt_user)>1)
+			{
+			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$agent_user = $row[0];
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "no user found";
+				echo "$result: $result_reason - $alt_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
 		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
@@ -340,7 +389,7 @@ if ($function == 'external_status')
 ################################################################################
 if ($function == 'external_pause')
 	{
-	if ( (strlen($value)<1) || (strlen($agent_user)<1) || (!ereg("PAUSE|RESUME",$value)) )
+	if ( (strlen($value)<1) or ( (strlen($agent_user)<1) and (strlen($alt_user)<1) ) or (!ereg("PAUSE|RESUME",$value)) )
 		{
 		$result = 'ERROR';
 		$result_reason = "external_pause not valid";
@@ -350,6 +399,28 @@ if ($function == 'external_pause')
 		}
 	else
 		{
+		if (strlen($alt_user)>1)
+			{
+			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$agent_user = $row[0];
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "no user found";
+				echo "$result: $result_reason - $alt_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
 		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
@@ -404,17 +475,39 @@ if ($function == 'external_dial')
 	{
 	$value = ereg_replace("[^0-9]","",$value);
 
-	if ( (strlen($value)<2) || (strlen($agent_user)<2) || (strlen($search)<2) || (strlen($preview)<2) || (strlen($focus)<2) )
+	if ( (strlen($value)<2) or ( (strlen($agent_user)<2) and (strlen($alt_user)<2) ) or (strlen($search)<2) or (strlen($preview)<2) or (strlen($focus)<2) )
 		{
 		$result = 'ERROR';
 		$result_reason = "external_dial not valid";
 		$data = "$phone_code|$search|$preview|$focus";
-		echo "$result: $result_reason - $value|$data|$agent_user\n";
+		echo "$result: $result_reason - $value|$data|$agent_user|$alt_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		exit;
 		}
 	else
 		{
+		if (strlen($alt_user)>1)
+			{
+			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$agent_user = $row[0];
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "no user found";
+				echo "$result: $result_reason - $alt_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
 		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
@@ -841,6 +934,152 @@ if ($function == 'change_ingroups')
 
 
 
+
+################################################################################
+### BEGIN - st_login_log - looks up vicidial_users.custom_three from a CRM
+################################################################################
+if ($function == 'st_login_log')
+	{
+	if ( (strlen($value)<1) or (strlen($vendor_id)<1) )
+		{
+		$result = 'ERROR';
+		$result_reason = "st_login_log not valid";
+		$data = "$value|$vendor_id";
+		echo "$result: $result_reason - $data\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		$stmt = "select count(*) from vicidial_users where custom_three='$value';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt = "select user from vicidial_users where custom_three='$value' order by user;";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+
+			$stmt="UPDATE vicidial_users set custom_four='$vendor_id' where user='$row[0]';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+
+			$result = 'SUCCESS';
+			$result_reason = "st_login_log user found";
+			$data = "$row[0]";
+			echo "$result: $result_reason - $row[0]\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "no user found";
+			echo "$result: $result_reason - $value\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - st_login_log
+################################################################################
+
+
+
+
+################################################################################
+### BEGIN - st_get_agent_active_lead - looks up vicidial_users.custom_three and output active lead info
+################################################################################
+if ($function == 'st_get_agent_active_lead')
+	{
+	if ( (strlen($value)<1) or (strlen($vendor_id)<1) )
+		{
+		$result = 'ERROR';
+		$result_reason = "st_get_agent_active_lead not valid";
+		$data = "$value|$vendor_id";
+		echo "$result: $result_reason - $data\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		$stmt = "select count(*) from vicidial_users where custom_three='$value';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt = "select user from vicidial_users where custom_three='$value' order by user;";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$VC_user = $row[0];
+
+			$stmt = "select count(*) from vicidial_live_agents where user='$VC_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select lead_id from vicidial_live_agents where user='$VC_user';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$lead_id = $row[0];
+
+				if ($lead_id > 0)
+					{
+					$stmt = "select phone_number,vendor_lead_code,province,security_phrase,source_id from vicidial_list where lead_id='$lead_id';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$phone_number =		$row[0];
+					$vendor_lead_code = $row[1];
+					$province =			$row[2];
+					$security_phrase =	$row[3];
+					$source_id =		$row[4];
+
+					$result = 'SUCCESS';
+					$result_reason = "st_get_agent_active_lead lead found";
+					$data = "$VC_user|$phone_number|$lead_id|$vendor_lead_code|$province|$security_phrase|$source_id";
+					echo "$result: $result_reason - $data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				else
+					{
+					$result = 'ERROR';
+					$result_reason = "no active lead found";
+					echo "$result: $result_reason - $VC_user\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "user not logged in";
+				echo "$result: $result_reason - $VC_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "no user found";
+			echo "$result: $result_reason - $value\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - st_get_agent_active_lead
+################################################################################
+
+
+
+
+
 if ($format=='debug') 
 	{
 	$ENDtime = date("U");
@@ -853,9 +1092,6 @@ exit;
 
 
 
-
-
-
 ##### FUNCTIONS #####
 
 ##### Logging #####
@@ -864,7 +1100,6 @@ function api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$val
 	if ($api_logging > 0)
 		{
 		$NOW_TIME = date("Y-m-d H:i:s");
-	#	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$agent_user',function='$function',value='$value',result='$result',result_reason='$result_reason',source='$source',data='$data',api_date='$NOW_TIME',api_script='$api_script';";
 		$rslt=mysql_query($stmt, $link);
 		}

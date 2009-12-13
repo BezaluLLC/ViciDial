@@ -1,4 +1,4 @@
-AGENT API DOCUMENT			                           2008-07-03
+AGENT API DOCUMENT					Started: 2008-07-03
 
 This document describes the functions of an API(Application Programming Interface)
 for the VICIDIAL Agent screen. This functionality will be rather limited at first
@@ -16,6 +16,9 @@ external_status - sends command to set the disposition for one specific agent an
 external_pause - sends command to pause/resume an agent now if not on a call, or pause after their next call if on call
 external_dial - sends command to manually dial a number on the agent's screen
 change_ingroups - changes the selected in-groups for a logged-in agent
+st_login_log - looks up the vicidial_users.custom_three field and logs event from CRM
+st_get_agent_active_lead - looks up active lead info for an agent and outputs lead information
+
 
 
 New scripts:
@@ -29,14 +32,6 @@ Required variables for API calls:
 # agent_user - is the vicidial agent user whose session that you want to affect
 # source - description of what originated the API call (maximum 20 characters)
 
-Example URL strings for API calls:
-http://server/agc/api.php?function=version
-http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_hangup&value=1
-http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_status&value=A
-http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_pause&value=PAUSE
-http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_pause&value=RESUME
-http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_dial&value=7275551212&phone_code=1&search=YES&preview=NO&focus=YES
-http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_dial&value=7275551212&phone_code=1&search=YES&preview=NO&focus=YES&dial_prefix=88&group_alias=DEFAULT
 
 
 To hangup the call, disposition it and then pause the agent, do the following in order:
@@ -65,6 +60,9 @@ shows version and build of the API, along with the date/time
 
 VALUES: NONE
 
+EXAMPLE URL:
+http://server/agc/api.php?function=version
+
 RESPONSES:
 VERSION: 2.0.5-2|BUILD: 90116-1229|DATE: 2009-01-15 14:59:33|EPOCH: 1222020803 
 
@@ -79,8 +77,12 @@ Hangs up the current customer call on the agent screen
 VALUES: (value)
 1  - the only valid value for this function
 
+EXAMPLE URL:
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_hangup&value=1
+
 RESPONSES:
 ERROR: external_hangup not valid - 1|6666
+ERROR: no user found - 6666
 ERROR: agent_user is not logged in - 6666
 SUCCESS: external_hangup function set - 1|6666
 
@@ -95,8 +97,12 @@ Sets the status of the current customer call on the agent dispotion screen
 VALUES: (value)
 Any valid status in the VICIDIAL system will work for this function
 
+EXAMPLE URL:
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_status&value=A
+
 RESPONSES:
 ERROR: external_status not valid - A|6666
+ERROR: no user found - 6666
 ERROR: agent_user is not logged in - 6666
 SUCCESS: external_status function set - A|6666
 
@@ -112,8 +118,13 @@ VALUES: (value)
 PAUSE  - Pauses the agent session
 RESUME  - Resumes the agent session
 
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_pause&value=PAUSE
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_pause&value=RESUME
+
 RESPONSES:
 ERROR: external_pause not valid - PAUSE|6666
+ERROR: no user found - 6666
 ERROR: agent_user is not logged in - 6666
 SUCCESS: external_pause function set - PAUSE|1232020456|6666
 
@@ -147,15 +158,22 @@ group_alias -
  OPTIONAL, the outbound callerID(from an existing group-alias) that you want to use for this call
 vtiger_callback -
  OPTIONAL, YES or NO, will lookup the phone number and Vtiger account ID from the provided Event ID
+alt_user -
+ OPTIONAL, instead of agent_user, this is to lookup the agent_user using the vicidial_users.custom_three field
+
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_dial&value=7275551212&phone_code=1&search=YES&preview=NO&focus=YES
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_dial&value=7275551212&phone_code=1&search=YES&preview=NO&focus=YES&dial_prefix=88&group_alias=DEFAULT
 
 RESPONSES:
 ERROR: external_dial not valid - 7275551212|1|YES|6666
+ERROR: no user found - 6666
 ERROR: agent_user is not logged in - 6666
 ERROR: agent_user is not allowed to place manual dial calls - 6666
 ERROR: caller_id_number from group_alias is not valid - 6666|TESTING|123
 ERROR: group_alias is not valid - 6666|TESTING
 ERROR: vtiger callback activity does not exist in vtiger system - 12345
-SUCCESS: external_dial function set - 7275551212|1|YES|1232020456|6666
+SUCCESS: external_dial function set - 7275551212|6666|1|YES|NO|YES|123456|1232020456|9|TESTING|7275551211
 
 
 
@@ -192,6 +210,52 @@ ERROR: campaign dial_method does not allow outbound autodial - 6666|TESTING
 ERROR: ingroup does not exist - FAKE_IN| TEST_IN FAKE_IN SALESLINE -
 ERROR: ingroup_choices are required for ADD and REMOVE values - ADD|
 SUCCESS: change_ingroups function set - YES| TEST_IN SALESLINE -|6666
+
+
+
+--------------------------------------------------------------------------------
+st_login_log - 
+
+DESCRIPTION:
+Looks up the vicidial_users.custom_three field(as "agentId") to associate with a vicidial user ID. If found it will populate the custom_four field with a "teamId" value, then output the vicidial user ID
+
+VALUES:
+value -
+ REQUIRED alphanumeric string for CRM AgentID
+vendor_id - 
+ REQUIRED alphanumeric string for CRM TeamID
+
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&function=st_login_log&value=876543&vendor_id=207
+
+RESPONSES:
+ERROR: st_login_log not valid - 6666|207
+ERROR: no user found - 6666
+SUCCESS: st_login_log user found - 6666
+
+
+
+--------------------------------------------------------------------------------
+st_get_agent_active_lead - 
+
+DESCRIPTION:
+Looks up the vicidial_users.custom_three field(as "agentId") to associate with a vicidial user ID. If found it will output the active lead_id and phone number, vendor_lead_code, province, security_phrase and source_id fields.
+
+VALUES:
+value -
+ REQUIRED alphanumeric string for CRM AgentID
+vendor_id - 
+ REQUIRED alphanumeric string for CRM TeamID
+
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&function=st_get_agent_active_lead&value=876543&vendor_id=207
+
+RESPONSES:
+ERROR: st_get_agent_active_lead not valid - 6666|207
+ERROR: no user found - 6666
+ERROR: user not logged in - 6666
+ERROR: no active lead found - 6666
+SUCCESS: st_get_agent_active_lead lead found - 6666|7275551212|123456|9987-1234765|SK|WILLIAMS|JUH764AJJJ9
 
 
 

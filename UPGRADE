@@ -330,6 +330,11 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 77. Added "Delete Voicemail After Email" options to delete messages on the
 	server after they have been emailed
 
+78. Added CRM Login Popup to campaign settings to allow for a custom window to
+	be opened on agent login, optionally using agent and campaign variables
+
+79. Added 5 custom fields to the user settings
+
 
 
 

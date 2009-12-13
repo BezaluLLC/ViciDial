@@ -525,7 +525,12 @@ email VARCHAR(100) default '',
 user_code VARCHAR(100) default '',
 territory VARCHAR(100) default '',
 allow_alerts ENUM('0','1') default '0',
-agent_choose_territories ENUM('0','1') default '1'
+agent_choose_territories ENUM('0','1') default '1',
+custom_one VARCHAR(100) default '',
+custom_two VARCHAR(100) default '',
+custom_three VARCHAR(100) default '',
+custom_four VARCHAR(100) default '',
+custom_five VARCHAR(100) default ''
 );
 
 
@@ -687,7 +692,9 @@ agent_display_dialable_leads ENUM('Y','N') default 'N',
 web_form_address_two TEXT,
 waitforsilence_options VARCHAR(25) default '',
 agent_select_territories ENUM('Y','N') default 'N',
-campaign_calldate DATETIME
+campaign_calldate DATETIME,
+crm_popup_login ENUM('Y','N') default 'N',
+crm_login_address TEXT
 );
 
 CREATE TABLE vicidial_lists (
@@ -1981,7 +1988,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1186',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1187',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

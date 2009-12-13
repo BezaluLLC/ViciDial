@@ -9,10 +9,11 @@
 # 90824-1435 - First build of script
 # 90827-1548 - Added list override script option
 # 91204-1913 - Added recording_filename and recording_id variables
+# 91211-1103 - Added user_custom_... variables
 #
 
-$version = '2.2.0-3';
-$build = '91204-1913';
+$version = '2.2.0-4';
+$build = '91211-1103';
 
 require("dbconnect.php");
 
@@ -132,6 +133,16 @@ if (isset($_GET["recording_filename"]))	{$recording_filename=$_GET["recording_fi
 	elseif (isset($_POST["recording_filename"]))	{$recording_filename=$_POST["recording_filename"];}
 if (isset($_GET["recording_id"]))	{$recording_id=$_GET["recording_id"];}
 	elseif (isset($_POST["recording_id"]))	{$recording_id=$_POST["recording_id"];}
+if (isset($_GET["user_custom_one"]))	{$user_custom_one=$_GET["user_custom_one"];}
+	elseif (isset($_POST["user_custom_one"]))	{$user_custom_one=$_POST["user_custom_one"];}
+if (isset($_GET["user_custom_two"]))	{$user_custom_two=$_GET["user_custom_two"];}
+	elseif (isset($_POST["user_custom_two"]))	{$user_custom_two=$_POST["user_custom_two"];}
+if (isset($_GET["user_custom_three"]))	{$user_custom_three=$_GET["user_custom_three"];}
+	elseif (isset($_POST["user_custom_three"]))	{$user_custom_three=$_POST["user_custom_three"];}
+if (isset($_GET["user_custom_four"]))	{$user_custom_four=$_GET["user_custom_four"];}
+	elseif (isset($_POST["user_custom_four"]))	{$user_custom_four=$_POST["user_custom_four"];}
+if (isset($_GET["user_custom_five"]))	{$user_custom_five=$_GET["user_custom_five"];}
+	elseif (isset($_POST["user_custom_five"]))	{$user_custom_five=$_POST["user_custom_five"];}
 
 if (isset($_GET["ScrollDIV"]))	{$ScrollDIV=$_GET["ScrollDIV"];}
 	elseif (isset($_POST["ScrollDIV"]))	{$ScrollDIV=$_POST["ScrollDIV"];}
@@ -159,14 +170,12 @@ $stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_l
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =							$row[0];
 	$timeclock_end_of_day =					$row[1];
 	$agentonly_callback_campaign_lock =		$row[2];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -302,6 +311,11 @@ if (eregi("iframe src",$script_text))
 	$fullname = eregi_replace(' ','+',$fullname);
 	$recording_filename = eregi_replace(' ','+',$recording_filename);
 	$recording_id = eregi_replace(' ','+',$recording_id);
+	$user_custom_one = eregi_replace(' ','+',$user_custom_one);
+	$user_custom_two = eregi_replace(' ','+',$user_custom_two);
+	$user_custom_three = eregi_replace(' ','+',$user_custom_three);
+	$user_custom_four = eregi_replace(' ','+',$user_custom_four);
+	$user_custom_five = eregi_replace(' ','+',$user_custom_five);
 	}
 
 $script_text = eregi_replace('--A--lead_id--B--',"$lead_id",$script_text);
@@ -362,6 +376,11 @@ $script_text = eregi_replace('--A--script_height--B--',"$script_height",$script_
 $script_text = eregi_replace('--A--fullname--B--',"$fullname",$script_text);
 $script_text = eregi_replace('--A--recording_filename--B--',"$recording_filename",$script_text);
 $script_text = eregi_replace('--A--recording_id--B--',"$recording_id",$script_text);
+$script_text = eregi_replace('--A--user_custom_one--B--',"$user_custom_one",$script_text);
+$script_text = eregi_replace('--A--user_custom_two--B--',"$user_custom_two",$script_text);
+$script_text = eregi_replace('--A--user_custom_three--B--',"$user_custom_three",$script_text);
+$script_text = eregi_replace('--A--user_custom_four--B--',"$user_custom_four",$script_text);
+$script_text = eregi_replace('--A--user_custom_five--B--',"$user_custom_five",$script_text);
 $script_text = eregi_replace("\n","<BR>",$script_text);
 $script_text = stripslashes($script_text);
 

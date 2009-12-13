@@ -264,10 +264,11 @@
 # 91204-1638 - Added recording_filename and recording_id script variables and script refresh link
 # 91205-2055 - Added CONSULTATIVE checkbox in a redesigned Transfer-Conf frame
 # 91206-2020 - Fixed vicidial_agent_log logging bug on logout when not paused
+# 91211-1412 - Added User custom variables and CRM login popup
 #
 
-$version = '2.2.0-242';
-$build = '91206-2020';
+$version = '2.2.0-243';
+$build = '91211-1412';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -802,7 +803,7 @@ $VDloginDISPLAY=0;
 		$login=strtoupper($VD_login);
 		$password=strtoupper($VD_pass);
 		##### grab the full name of the agent
-		$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories from vicidial_users where user='$VD_login' and pass='$VD_pass'";
+		$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_users where user='$VD_login' and pass='$VD_pass'";
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01007',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$row=mysql_fetch_row($rslt);
@@ -825,6 +826,11 @@ $VDloginDISPLAY=0;
 		$VU_allow_alerts =						$row[16];
 		$VU_closer_campaigns =					$row[17];
 		$VU_agent_choose_territories =			$row[18];
+		$VU_custom_one =						$row[19];
+		$VU_custom_two =						$row[20];
+		$VU_custom_three =						$row[21];
+		$VU_custom_four =						$row[22];
+		$VU_custom_five =						$row[23];
 
 		if ( ($VU_alert_enabled > 0) and ($VU_allow_alerts > 0) ) {$VU_alert_enabled = 'ON';}
 		else {$VU_alert_enabled = 'OFF';}
@@ -1091,7 +1097,7 @@ $VDloginDISPLAY=0;
 			$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 			##### grab the campaign settings
-			$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+			$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -1152,6 +1158,8 @@ $VDloginDISPLAY=0;
 			$agent_display_dialable_leads = $row[53];
 			$web_form_address_two =		$row[54];
 			$agent_select_territories = $row[55];
+			$crm_popup_login =			$row[56];
+			$crm_login_address =		$row[57];
 
 			if ($user_territories_active < 1)
 				{$agent_select_territories = 0;}
@@ -2610,6 +2618,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var delayed_script_load='';
 	var script_recording_delay='';
 	var VDRP_stage='PAUSED';
+	var VU_custom_one = '<?php echo $VU_custom_one ?>';
+	var VU_custom_two = '<?php echo $VU_custom_two ?>';
+	var VU_custom_three = '<?php echo $VU_custom_three ?>';
+	var VU_custom_four = '<?php echo $VU_custom_four ?>';
+	var VU_custom_five = '<?php echo $VU_custom_five ?>';
+	var crm_popup_login = '<?php echo $crm_popup_login ?>';
+	var crm_login_address = '<?php echo $crm_login_address ?>';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -4836,6 +4851,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&fullname=" + LOGfullname + '' +
 							"&recording_filename=" + recording_filename + '' +
 							"&recording_id=" + recording_id + '' +
+							"&user_custom_one=" + VU_custom_one + '' +
+							"&user_custom_two=" + VU_custom_two + '' +
+							"&user_custom_three=" + VU_custom_three + '' +
+							"&user_custom_four=" + VU_custom_four + '' +
+							"&user_custom_five=" + VU_custom_five + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -4919,6 +4939,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&fullname=" + LOGfullname + '' +
 							"&recording_filename=" + recording_filename + '' +
 							"&recording_id=" + recording_id + '' +
+							"&user_custom_one=" + VU_custom_one + '' +
+							"&user_custom_two=" + VU_custom_two + '' +
+							"&user_custom_three=" + VU_custom_three + '' +
+							"&user_custom_four=" + VU_custom_four + '' +
+							"&user_custom_five=" + VU_custom_five + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -5024,6 +5049,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&fullname=" + LOGfullname + '' +
 								"&recording_filename=" + recording_filename + '' +
 								"&recording_id=" + recording_id + '' +
+								"&user_custom_one=" + VU_custom_one + '' +
+								"&user_custom_two=" + VU_custom_two + '' +
+								"&user_custom_three=" + VU_custom_three + '' +
+								"&user_custom_four=" + VU_custom_four + '' +
+								"&user_custom_five=" + VU_custom_five + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -5398,6 +5428,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&fullname=" + LOGfullname + '' +
 							"&recording_filename=" + recording_filename + '' +
 							"&recording_id=" + recording_id + '' +
+							"&user_custom_one=" + VU_custom_one + '' +
+							"&user_custom_two=" + VU_custom_two + '' +
+							"&user_custom_three=" + VU_custom_three + '' +
+							"&user_custom_four=" + VU_custom_four + '' +
+							"&user_custom_five=" + VU_custom_five + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -6078,6 +6113,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&fullname=" + LOGfullname + '' +
 								"&recording_filename=" + recording_filename + '' +
 								"&recording_id=" + recording_id + '' +
+								"&user_custom_one=" + VU_custom_one + '' +
+								"&user_custom_two=" + VU_custom_two + '' +
+								"&user_custom_three=" + VU_custom_three + '' +
+								"&user_custom_four=" + VU_custom_four + '' +
+								"&user_custom_five=" + VU_custom_five + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -6161,6 +6201,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&fullname=" + LOGfullname + '' +
 								"&recording_filename=" + recording_filename + '' +
 								"&recording_id=" + recording_id + '' +
+								"&user_custom_one=" + VU_custom_one + '' +
+								"&user_custom_two=" + VU_custom_two + '' +
+								"&user_custom_three=" + VU_custom_three + '' +
+								"&user_custom_four=" + VU_custom_four + '' +
+								"&user_custom_five=" + VU_custom_five + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -6249,6 +6294,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&fullname=" + LOGfullname + '' +
 								"&recording_filename=" + recording_filename + '' +
 								"&recording_id=" + recording_id + '' +
+								"&user_custom_one=" + VU_custom_one + '' +
+								"&user_custom_two=" + VU_custom_two + '' +
+								"&user_custom_three=" + VU_custom_three + '' +
+								"&user_custom_four=" + VU_custom_four + '' +
+								"&user_custom_five=" + VU_custom_five + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -6418,6 +6468,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			"&fullname=" + LOGfullname + '' +
 			"&recording_filename=" + recording_filename + '' +
 			"&recording_id=" + recording_id + '' +
+			"&user_custom_one=" + VU_custom_one + '' +
+			"&user_custom_two=" + VU_custom_two + '' +
+			"&user_custom_three=" + VU_custom_three + '' +
+			"&user_custom_four=" + VU_custom_four + '' +
+			"&user_custom_five=" + VU_custom_five + '' +
 			webform_session;
 			
 			var regWFspace = new RegExp(" ","ig");
@@ -6531,6 +6586,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			"&fullname=" + LOGfullname + '' +
 			"&recording_filename=" + recording_filename + '' +
 			"&recording_id=" + recording_id + '' +
+			"&user_custom_one=" + VU_custom_one + '' +
+			"&user_custom_two=" + VU_custom_two + '' +
+			"&user_custom_three=" + VU_custom_three + '' +
+			"&user_custom_four=" + VU_custom_four + '' +
+			"&user_custom_five=" + VU_custom_five + '' +
 			webform_session;
 			
 			var regWFspace = new RegExp(" ","ig");
@@ -8072,7 +8132,7 @@ else
 
 
 // ################################################################################
-// decode the scripttext and scriptname so that it can be didsplayed
+// decode the scripttext and scriptname so that it can be displayed
 	function URLDecode(encodedvar,scriptformat)
 	{
    // Replace %ZZ with equivalent character
@@ -8144,6 +8204,11 @@ encoded=utf8_decode(xtest);
 		var SCscript_height = script_height;
 		var SCrecording_filename = recording_filename;
 		var SCrecording_id = recording_id;
+		var SCuser_custom_one = VU_custom_one;
+		var SCuser_custom_two = VU_custom_two;
+		var SCuser_custom_three = VU_custom_three;
+		var SCuser_custom_four = VU_custom_four;
+		var SCuser_custom_five = VU_custom_five;
 		var SCweb_vars = LIVE_web_vars;
 
 		if (encoded.match(RGiframe))
@@ -8199,6 +8264,11 @@ encoded=utf8_decode(xtest);
 			SCscript_height = SCscript_height.replace(RGplus,'+');
 			SCrecording_filename = SCrecording_filename.replace(RGplus,'+');
 			SCrecording_id = SCrecording_id.replace(RGplus,'+');
+			SCuser_custom_one = SCuser_custom_one.replace(RGplus,'+');
+			SCuser_custom_two = SCuser_custom_two.replace(RGplus,'+');
+			SCuser_custom_three = SCuser_custom_three.replace(RGplus,'+');
+			SCuser_custom_four = SCuser_custom_four.replace(RGplus,'+');
+			SCuser_custom_five = SCuser_custom_five.replace(RGplus,'+');
 			SCweb_vars = SCweb_vars.replace(RGplus,'+');
 			}
 
@@ -8255,6 +8325,11 @@ encoded=utf8_decode(xtest);
 		var RGscript_height = new RegExp("--A--script_height--B--","g");
 		var RGrecording_filename = new RegExp("--A--recording_filename--B--","g");
 		var RGrecording_id = new RegExp("--A--recording_id--B--","g");
+		var RGuser_custom_one = new RegExp("--A--user_custom_one--B--","g");
+		var RGuser_custom_two = new RegExp("--A--user_custom_two--B--","g");
+		var RGuser_custom_three = new RegExp("--A--user_custom_three--B--","g");
+		var RGuser_custom_four = new RegExp("--A--user_custom_four--B--","g");
+		var RGuser_custom_five = new RegExp("--A--user_custom_five--B--","g");
 		var RGweb_vars = new RegExp("--A--web_vars--B--","g");
 
 		encoded = encoded.replace(RGvendor_lead_code, SCvendor_lead_code);
@@ -8310,6 +8385,11 @@ encoded=utf8_decode(xtest);
 		encoded = encoded.replace(RGscript_height, SCscript_height);
 		encoded = encoded.replace(RGrecording_filename, SCrecording_filename);
 		encoded = encoded.replace(RGrecording_id, SCrecording_id);
+		encoded = encoded.replace(RGuser_custom_one, SCuser_custom_one);
+		encoded = encoded.replace(RGuser_custom_two, SCuser_custom_two);
+		encoded = encoded.replace(RGuser_custom_three, SCuser_custom_three);
+		encoded = encoded.replace(RGuser_custom_four, SCuser_custom_four);
+		encoded = encoded.replace(RGuser_custom_five, SCuser_custom_five);
 		encoded = encoded.replace(RGweb_vars, SCweb_vars);
 		}
 decoded=encoded; // simple no ?
@@ -9013,6 +9093,17 @@ else
 				VtigeRwin =window.open(VtigeRall, web_form_target,'toolbar=1,location=1,directories=1,status=1,menubar=1,scrollbars=1,resizable=1,width=700,height=480');
 
 				VtigeRwin.blur();
+				}
+			if ( (crm_popup_login == 'Y') && (crm_login_address.length > 4) )
+				{
+				var regWFAcustom = new RegExp("^VAR","ig");
+				URLDecode(crm_login_address,'YES');
+				var TEMP_crm_login_address = decoded;
+				TEMP_crm_login_address = TEMP_crm_login_address.replace(regWFAcustom, '');
+
+				CRMwin = window.open(TEMP_crm_login_address, 'CRMwin,toolbar=1,location=1,directories=1,status=1,menubar=1,scrollbars=1,resizable=1,width=700,height=480');
+
+				CRMwin.blur();
 				}
 			if (INgroupCOUNT > 0)
 				{

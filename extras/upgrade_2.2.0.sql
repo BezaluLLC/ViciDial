@@ -655,3 +655,14 @@ UPDATE system_settings SET db_schema_version='1185',db_schema_update_date=NOW();
 ALTER TABLE vicidial_campaigns ADD campaign_calldate DATETIME;
 
 UPDATE system_settings SET db_schema_version='1186',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_users ADD custom_one VARCHAR(100) default '';
+ALTER TABLE vicidial_users ADD custom_two VARCHAR(100) default '';
+ALTER TABLE vicidial_users ADD custom_three VARCHAR(100) default '';
+ALTER TABLE vicidial_users ADD custom_four VARCHAR(100) default '';
+ALTER TABLE vicidial_users ADD custom_five VARCHAR(100) default '';
+
+ALTER TABLE vicidial_campaigns ADD crm_popup_login ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_campaigns ADD crm_login_address TEXT;
+
+UPDATE system_settings SET db_schema_version='1187',db_schema_update_date=NOW();

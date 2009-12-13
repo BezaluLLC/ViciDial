@@ -343,7 +343,7 @@ How to install Queue Metrics on OpenSuSE v.11.1 (32 or 64 bit) with a system tha
 - Say yes to install, and say yes to license
 
 3) cd /usr/src
-4) wget http://queuemetrics.com/download/QueueMetrics-1.5.3-trial.tar.gz
+4) wget http://queuemetrics.com/download/QueueMetrics-1.5.5-trial.tar.gz
 5) mkdir tars (incase it doesn't exist)
 6) tar -xzf QueueMetrics-1.5.5-trial.tar.gz
 7) mv QueueMetrics-1.5.5-trial.tar.gz ./tars/
@@ -370,6 +370,8 @@ How to install Queue Metrics on OpenSuSE v.11.1 (32 or 64 bit) with a system tha
 
 23) Go to http://<ip-addr>:8080/QM and it should tell you the schema is old, just click next or yes to everything and have fun
 
+24) If nothing shows up, you may need to go into 'yast' and change the firewall settings:
+      Security --> Firewall settings, go to allowed services, type "alt-d" and add 8080 as a new port, then save and exit
 
 
 
