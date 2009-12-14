@@ -93,10 +93,11 @@
 # 90924-1555 - Added am_message_exten_override  for list_id option
 # 91112-1110 - Added CALLOUTBOUND value to QM entry lookup
 # 91205-2103 - Code cleanup
+# 91213-1208 - Added queue_position to queue_log COMPLETE... records
 #
 
-$version = '2.2.0-45';
-$build = '91205-2103';
+$version = '2.2.0-46';
+$build = '91213-1208';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -607,24 +608,26 @@ if ($ACTION=="Hangup")
 						if ($format=='debug') {echo "\n<!-- $caller_connect|$stmt -->";}
 						if ($caller_connect > 0)
 							{
+							$CLqueue_position='1';
 							### grab call lead information needed for QM logging
-							$stmt="SELECT auto_call_id,lead_id,phone_number,status,campaign_id,phone_code,alt_dial,stage,callerid,uniqueid from vicidial_auto_calls where callerid='$CalLCID' order by call_time limit 1;";
+							$stmt="SELECT auto_call_id,lead_id,phone_number,status,campaign_id,phone_code,alt_dial,stage,callerid,uniqueid,queue_position from vicidial_auto_calls where callerid='$CalLCID' order by call_time limit 1;";
 							$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02016',$user,$server_ip,$session_name,$one_mysql_log);}
 							$VAC_qm_ct = mysql_num_rows($rslt);
 							if ($VAC_qm_ct > 0)
 								{
 								$row=mysql_fetch_row($rslt);
-								$auto_call_id	= $row[0];
-								$CLlead_id		= $row[1];
-								$CLphone_number	= $row[2];
-								$CLstatus		= $row[3];
-								$CLcampaign_id	= $row[4];
-								$CLphone_code	= $row[5];
-								$CLalt_dial		= $row[6];
-								$CLstage		= $row[7];
-								$CLcallerid		= $row[8];
-								$CLuniqueid		= $row[9];
+								$auto_call_id =			$row[0];
+								$CLlead_id =			$row[1];
+								$CLphone_number =		$row[2];
+								$CLstatus =				$row[3];
+								$CLcampaign_id =		$row[4];
+								$CLphone_code =			$row[5];
+								$CLalt_dial =			$row[6];
+								$CLstage =				$row[7];
+								$CLcallerid =			$row[8];
+								$CLuniqueid =			$row[9];
+								$CLqueue_position =		$row[10];
 								}
 							if ($format=='debug') {echo "\n<!-- $CLcampaign_id|$stmt -->";}
 
@@ -659,7 +662,7 @@ if ($ACTION=="Hangup")
 									{$secondS = ($StarTtime - $time_id);}
 
 								if ($format=='debug') {echo "\n<!-- $caller_complete|$stmt -->";}
-								$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$CLcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$secondS',data3='1',serverid='$queuemetrics_log_id';";
+								$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$CLcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$secondS',data3='$CLqueue_position',serverid='$queuemetrics_log_id';";
 								$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02019',$user,$server_ip,$session_name,$one_mysql_log);}
 								$affected_rows = mysql_affected_rows($linkB);

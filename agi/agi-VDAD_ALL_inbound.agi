@@ -105,6 +105,7 @@
 # 91105-1258 - Added CallerIDnumber change on Drop when sending call out
 # 91122-2352 - Added queue_log IVR and DID entry linking
 # 91125-0921 - Fixed no-agent-no-queue AGENTDIRECT bug
+# 91213-0942 - Added queue_position to queue_log COMPLETE... records
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -115,7 +116,7 @@ $start_moh=1;
 $at='@';
 $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=119;
+$mysql_log_count=121;
 $one_mysql_log=0;
 
 
@@ -1173,7 +1174,7 @@ $sthArows=$sthA->rows;
 if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$auto_call_id = "$aryA[0]";
+	$auto_call_id = $aryA[0];
 
 	### UPDATE existing record to LIVE in the vicidial_auto_calls table 
 	$stmtA = "UPDATE vicidial_auto_calls SET campaign_id='$channel_group',status='LIVE',lead_id='$insert_lead_id',callerid='$callerid',channel='$channel',phone_code='$phone_code',phone_number='$phone_number',call_time='$SQLdate',call_type='IN',stage='LIVE-0',queue_priority='$queue_priority' $adSQL WHERE auto_call_id='$auto_call_id';";
@@ -1198,7 +1199,7 @@ if ($Uaffected_rows < 1)
 	if ($sthArows > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$auto_call_id = "$aryA[0]";
+		$auto_call_id = $aryA[0];
 		}
 	$sthA->finish();
 	}
@@ -1213,7 +1214,28 @@ if ($enable_queuemetrics_logging > 0)
 	$dbhB->disconnect();
 	}
 
-$stmtA = "INSERT INTO vicidial_closer_log SET lead_id='$insert_lead_id', campaign_id='$channel_group', call_date='$SQLdate', start_epoch='$now_date_epoch', status='QUEUE', phone_code='$phone_code', phone_number='$phone_number', user='VDCL', processed='N', xfercallid='$insert_xfer_id', uniqueid='$uniqueid' $adSQL;";
+### determin original queue position of the call
+$queue_position=1;
+$stmtA = "SELECT count(*) from vicidial_auto_calls where status = 'LIVE' and campaign_id='$channel_group';";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+	if ($AGILOG) {$agi_string = "$sthArows|$stmtA|";   &agi_output;}
+	$dbhP=$dbhA;   $mysql_count='02120';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$queue_position = $aryA[0];
+	}
+
+### UPDATE vicidial_auto_calls record with starting queue_position
+$stmtA = "UPDATE vicidial_auto_calls SET queue_position='$queue_position' WHERE auto_call_id='$auto_call_id';";
+$Uaffected_rows = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "$Uaffected_rows|$stmtA|";   &agi_output;}
+	$dbhP=$dbhA;   $mysql_count='02121';   $MEL_aff_rows=$Uaffected_rows;   &mysql_error_logging;
+
+### INSERT vicidial_closer_log record, call is entering the queue
+$stmtA = "INSERT INTO vicidial_closer_log SET lead_id='$insert_lead_id', campaign_id='$channel_group', call_date='$SQLdate', start_epoch='$now_date_epoch', status='QUEUE', phone_code='$phone_code', phone_number='$phone_number', user='VDCL', processed='N', xfercallid='$insert_xfer_id', uniqueid='$uniqueid', queue_position='$queue_position' $adSQL;";
 	if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 $affected_rows = $dbhA->do($stmtA);
 	$dbhP=$dbhA;   $mysql_count='02031';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;

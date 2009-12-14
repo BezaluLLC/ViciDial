@@ -23,6 +23,7 @@
 # 90508-0644 - Changed to PHP long tags
 # 90524-2231 - Changed to use functions.php for seconds to HH:MM:SS conversion
 # 90801-0921 - Added in-group name to pulldown
+# 91214-0955 - Added INITIAL QUEUE POSITION BREAKDOWN
 #
 
 require("dbconnect.php");
@@ -1047,6 +1048,67 @@ $TOTCATcalls =	sprintf("%10s", $TOTCATcalls); while(strlen($TOTCATcalls)>10) {$T
 echo "+----------------------+------------+--------------------------------+\n";
 echo "| TOTAL                | $TOTCATcalls |\n";
 echo "+----------------------+------------+\n";
+
+
+##############################
+#########  CALL INITIAL QUEUE POSITION BREAKDOWN
+
+$TOTALcalls = 0;
+
+echo "\n";
+echo "---------- CALL INITIAL QUEUE POSITION BREAKDOWN\n";
+echo "+-------------------------------------------------------------------------------------+------------+\n";
+echo "|     1     2     3     4     5     6     7     8     9    10    15    20    25   +25 | TOTAL      |\n";
+echo "+-------------------------------------------------------------------------------------+------------+\n";
+
+$stmt="select count(*),queue_position from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) group by queue_position;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$positions_to_print = mysql_num_rows($rslt);
+$i=0;
+while ($i < $positions_to_print)
+	{
+	$row=mysql_fetch_row($rslt);
+
+	$TOTALcalls = ($TOTALcalls + $row[0]);
+
+	if ( ($row[1] > 0) and ($row[1] <= 1) ) {$qp_1 = ($qp_1 + $row[0]);}
+	if ( ($row[1] > 1) and ($row[1] <= 2) ) {$qp_2 = ($qp_2 + $row[0]);}
+	if ( ($row[1] > 2) and ($row[1] <= 3) ) {$qp_3 = ($qp_3 + $row[0]);}
+	if ( ($row[1] > 3) and ($row[1] <= 4) ) {$qp_4 = ($qp_4 + $row[0]);}
+	if ( ($row[1] > 4) and ($row[1] <= 5) ) {$qp_5 = ($qp_5 + $row[0]);}
+	if ( ($row[1] > 5) and ($row[1] <= 6) ) {$qp_6 = ($qp_6 + $row[0]);}
+	if ( ($row[1] > 6) and ($row[1] <= 7) ) {$qp_7 = ($qp_7 + $row[0]);}
+	if ( ($row[1] > 7) and ($row[1] <= 8) ) {$qp_8 = ($qp_8 + $row[0]);}
+	if ( ($row[1] > 8) and ($row[1] <= 9) ) {$qp_9 = ($qp_9 + $row[0]);}
+	if ( ($row[1] > 9) and ($row[1] <= 10) ) {$qp10 = ($qp10 + $row[0]);}
+	if ( ($row[1] > 10) and ($row[1] <= 15) ) {$qp15 = ($qp15 + $row[0]);}
+	if ( ($row[1] > 15) and ($row[1] <= 20) ) {$qp20 = ($qp20 + $row[0]);}
+	if ( ($row[1] > 20) and ($row[1] <= 25) ) {$qp25 = ($qp25 + $row[0]);}
+	if ($row[1] > 25) {$qp99 = ($qp99 + $row[0]);}
+	$i++;
+	}
+
+$qp_1 =	sprintf("%5s", $qp_1);
+$qp_2 =	sprintf("%5s", $qp_2);
+$qp_3=	sprintf("%5s", $qp_3);
+$qp_4 =	sprintf("%5s", $qp_4);
+$qp_5 =	sprintf("%5s", $qp_5);
+$qp_6 =	sprintf("%5s", $qp_6);
+$qp_7 =	sprintf("%5s", $qp_7);
+$qp_8 =	sprintf("%5s", $qp_8);
+$qp_9 =	sprintf("%5s", $qp_9);
+$qp10 =	sprintf("%5s", $qp10);
+$qp15 =	sprintf("%5s", $qp15);
+$qp20 =	sprintf("%5s", $qp20);
+$qp25 =	sprintf("%5s", $qp25);
+$qp99 =	sprintf("%5s", $qp99);
+
+$TOTALcalls =		sprintf("%10s", $TOTALcalls);
+
+echo "| $qp_1 $qp_2 $qp_3 $qp_4 $qp_5 $qp_6 $qp_7 $qp_8 $qp_9 $qp10 $qp15 $qp20 $qp25 $qp99 | $TOTALcalls |\n";
+echo "+-------------------------------------------------------------------------------------+------------+\n";
+
 
 
 ##############################

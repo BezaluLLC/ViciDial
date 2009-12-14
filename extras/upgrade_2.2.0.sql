@@ -666,3 +666,9 @@ ALTER TABLE vicidial_campaigns ADD crm_popup_login ENUM('Y','N') default 'N';
 ALTER TABLE vicidial_campaigns ADD crm_login_address TEXT;
 
 UPDATE system_settings SET db_schema_version='1187',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_closer_log ADD queue_position SMALLINT(4) UNSIGNED default '1';
+
+ALTER TABLE vicidial_auto_calls ADD queue_position SMALLINT(4) UNSIGNED default '1';
+
+UPDATE system_settings SET db_schema_version='1188',db_schema_update_date=NOW();

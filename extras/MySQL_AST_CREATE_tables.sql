@@ -385,6 +385,7 @@ alt_dial VARCHAR(6) default 'NONE',
 queue_priority TINYINT(2) default '0',
 agent_only VARCHAR(20) default '',
 agent_grab VARCHAR(20) default '',
+queue_position SMALLINT(4) UNSIGNED default '1',
 index (uniqueid),
 index (callerid),
 index (call_time),
@@ -434,6 +435,7 @@ xfercallid INT(9) UNSIGNED,
 term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','HOLDRECALLXFER','HOLDTIME','NOAGENT','NONE') default 'NONE',
 uniqueid VARCHAR(20) NOT NULL default '',
 agent_only VARCHAR(20) default '',
+queue_position SMALLINT(4) UNSIGNED default '1',
 index (lead_id),
 index (call_date),
 index (campaign_id),
@@ -1988,7 +1990,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1187',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1188',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

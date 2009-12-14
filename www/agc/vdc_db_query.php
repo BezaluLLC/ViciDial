@@ -223,12 +223,13 @@
 # 91112-1107 - Changed ENTERQUEUE to CALLOUTBOUND for QM logging
 # 91123-1801 - Added outbound_autodial field
 # 91204-1937 - Added logging of agent grab calls
+# 91213-0946 - Added queue_position to queue_log COMPLETE... records
 #
 
-$version = '2.2.0-132';
-$build = '91204-1937';
+$version = '2.2.0-133';
+$build = '91213-0946';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=272;
+$mysql_log_count=273;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -2864,8 +2865,9 @@ if ($stage == "end")
 			{
 			if ($enable_queuemetrics_logging > 0)
 				{
+				$CLqueue_position=1;
 				### check to see if lead should be alt_dialed
-				$stmt="SELECT auto_call_id,lead_id,phone_number,status,campaign_id,phone_code,alt_dial,stage,callerid,uniqueid from vicidial_auto_calls where lead_id='$lead_id' order by call_time desc limit 1;";
+				$stmt="SELECT auto_call_id,lead_id,phone_number,status,campaign_id,phone_code,alt_dial,stage,callerid,uniqueid,queue_position from vicidial_auto_calls where lead_id='$lead_id' order by call_time desc limit 1;";
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00084',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -2873,22 +2875,23 @@ if ($stage == "end")
 				if ($VAC_qm_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
-					$auto_call_id	= $row[0];
-					$CLlead_id		= $row[1];
-					$CLphone_number	= $row[2];
-					$CLstatus		= $row[3];
-					$CLcampaign_id	= $row[4];
-					$CLphone_code	= $row[5];
-					$CLalt_dial		= $row[6];
-					$CLstage		= $row[7];
-					$CLcallerid		= $row[8];
-					$CLuniqueid		= $row[9];
+					$auto_call_id = 		$row[0];
+					$CLlead_id = 			$row[1];
+					$CLphone_number =		$row[2];
+					$CLstatus = 			$row[3];
+					$CLcampaign_id = 		$row[4];
+					$CLphone_code = 		$row[5];
+					$CLalt_dial =			$row[6];
+					$CLstage =				$row[7];
+					$CLcallerid =			$row[8];
+					$CLuniqueid =			$row[9];
+					$CLqueue_position =		$row[10];
 					}
 
 				$CLstage = preg_replace("/XFER|CLOSER|-/",'',$CLstage);
 				if ($CLstage < 0.25) {$CLstage=0;}
 
-				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$MDnextCID',queue='$VDcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$length_in_sec',data3='1',serverid='$queuemetrics_log_id';";
+				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$MDnextCID',queue='$VDcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$length_in_sec',data3='$CLqueue_position',serverid='$queuemetrics_log_id';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00085',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3025,16 +3028,17 @@ if ($stage == "end")
 
 			if ( (ereg("NONE",$term_reason)) or (ereg("NONE",$VDterm_reason)) or (strlen($VDterm_reason) < 1) )
 				{
-				### check to see if lead should be alt_dialed
-				$stmt="SELECT term_reason,closecallid from vicidial_closer_log where lead_id='$lead_id' and call_date > \"$four_hours_ago\" order by call_date desc limit 1;";
+				### find out who hung up the call
+				$stmt="SELECT term_reason,closecallid,queue_position from vicidial_closer_log where lead_id='$lead_id' and call_date > \"$four_hours_ago\" order by call_date desc limit 1;";
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00091',$user,$server_ip,$session_name,$one_mysql_log);}
 				$VAC_qm_ct = mysql_num_rows($rslt);
 				if ($VAC_qm_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
-					$VDterm_reason	= $row[0];
-					$VDvicidial_id	= $row[1];
+					$VDterm_reason =		$row[0];
+					$VDvicidial_id =		$row[1];
+					$VDqueue_position =		$row[2];
 					$VDIDselect =		"VDCL_LID4HOUR $lead_id $four_hours_ago";
 					}
 				if (ereg("CALLER",$VDterm_reason))
@@ -3074,7 +3078,23 @@ if ($stage == "end")
 						}
 					if ($agent_complete < 1)
 						{
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$MDnextCID',queue='$VDcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$length_in_sec',data3='1',serverid='$queuemetrics_log_id';";
+						if (strlen($VDqueue_position) < 1)
+							{
+							### find out who hung up the call
+							$stmt="SELECT queue_position from vicidial_closer_log where lead_id='$lead_id' and call_date > \"$four_hours_ago\" order by call_date desc limit 1;";
+							$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00273',$user,$server_ip,$session_name,$one_mysql_log);}
+							$VAC_qm_ct = mysql_num_rows($rslt);
+							if ($VAC_qm_ct > 0)
+								{
+								$row=mysql_fetch_row($rslt);
+								$VDqueue_position =		$row[0];
+								}
+							}
+						if (strlen($VDqueue_position) < 1)
+							{$VDqueue_position=1;}
+
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$MDnextCID',queue='$VDcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$length_in_sec',data3='$VDqueue_position',serverid='$queuemetrics_log_id';";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_query($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00094',$user,$server_ip,$session_name,$one_mysql_log);}

@@ -51,6 +51,7 @@
 # 90815-0750 - Fixed extra vicidial_log logging
 # 91020-0055 - Fixed several bugs with auto-alt-dial, DNC and extended alt number dialing
 # 91026-1148 - Added AREACODE DNC option
+# 91213-1213 - Added queue_position to queue_log COMPLETE... and ABANDON records
 #
 
 # defaults for PreFork
@@ -749,7 +750,7 @@ sub process_request
 					{
 					########## FIND AND DELETE vicidial_auto_calls ##########
 					$VD_alt_dial = 'NONE';
-					$stmtA = "SELECT lead_id,callerid,campaign_id,alt_dial,stage,UNIX_TIMESTAMP(call_time),uniqueid,status,call_time,phone_code,phone_number FROM vicidial_auto_calls where uniqueid = '$uniqueid' or callerid = '$callerid' limit 1;";
+					$stmtA = "SELECT lead_id,callerid,campaign_id,alt_dial,stage,UNIX_TIMESTAMP(call_time),uniqueid,status,call_time,phone_code,phone_number,queue_position FROM vicidial_auto_calls where uniqueid = '$uniqueid' or callerid = '$callerid' limit 1;";
 						if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -758,17 +759,18 @@ sub process_request
 					if ($sthArows > 0)
 						{
 						@aryA = $sthA->fetchrow_array;
-						$VD_lead_id	=		$aryA[0];
-						$VD_callerid	=	$aryA[1];
-						$VD_campaign_id	=	$aryA[2];
-						$VD_alt_dial	=	$aryA[3];
-						$VD_stage =			$aryA[4];
-						$VD_start_epoch =	$aryA[5];
-						$VD_uniqueid =		$aryA[6];
-						$VD_status =		$aryA[7];
-						$VD_call_time =		$aryA[8];
-						$VD_phone_code =	$aryA[9];
-						$VD_phone_number =	$aryA[10];
+						$VD_lead_id	=			$aryA[0];
+						$VD_callerid	=		$aryA[1];
+						$VD_campaign_id	=		$aryA[2];
+						$VD_alt_dial	=		$aryA[3];
+						$VD_stage =				$aryA[4];
+						$VD_start_epoch =		$aryA[5];
+						$VD_uniqueid =			$aryA[6];
+						$VD_status =			$aryA[7];
+						$VD_call_time =			$aryA[8];
+						$VD_phone_code =		$aryA[9];
+						$VD_phone_number =		$aryA[10];
+						$VD_queue_position =	$aryA[11];
 						$rec_countCUSTDATA++;
 						}
 					$sthA->finish();
@@ -789,17 +791,15 @@ sub process_request
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
-						$rec_count=0;
-						while ($sthArows > $rec_count)
+						if ($sthArows > 0)
 							{
 							@aryA = $sthA->fetchrow_array;
-							$enable_queuemetrics_logging =	"$aryA[0]";
-							$queuemetrics_server_ip	=		"$aryA[1]";
-							$queuemetrics_dbname =			"$aryA[2]";
-							$queuemetrics_login=			"$aryA[3]";
-							$queuemetrics_pass =			"$aryA[4]";
-							$queuemetrics_log_id =			"$aryA[5]";
-							$rec_count++;
+							$enable_queuemetrics_logging =	$aryA[0];
+							$queuemetrics_server_ip	=		$aryA[1];
+							$queuemetrics_dbname =			$aryA[2];
+							$queuemetrics_login=			$aryA[3];
+							$queuemetrics_pass =			$aryA[4];
+							$queuemetrics_log_id =			$aryA[5];
 							}
 						$sthA->finish();
 						##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -830,14 +830,52 @@ sub process_request
 								}
 							$sthB->finish();
 
+							$secX = time();
+							$Rtarget = ($secX - 21600);	# look for VDCL entry within last 6 hours
+							($Rsec,$Rmin,$Rhour,$Rmday,$Rmon,$Ryear,$Rwday,$Ryday,$Risdst) = localtime($Rtarget);
+							$Ryear = ($Ryear + 1900);
+							$Rmon++;
+							if ($Rmon < 10) {$Rmon = "0$Rmon";}
+							if ($Rmday < 10) {$Rmday = "0$Rmday";}
+							if ($Rhour < 10) {$Rhour = "0$Rhour";}
+							if ($Rmin < 10) {$Rmin = "0$Rmin";}
+							if ($Rsec < 10) {$Rsec = "0$Rsec";}
+								$RSQLdate = "$Ryear-$Rmon-$Rmday $Rhour:$Rmin:$Rsec";
+
+							### find original queue position of the call
+							$queue_position=1;
+							$stmtA = "SELECT queue_position FROM vicidial_closer_log where uniqueid='$unique_id' and lead_id='$CIDlead_id' and campaign_id='$VD_campaign_id' and call_date > \"$RSQLdate\" order by closecallid desc limit 1;";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$queue_position =	$aryA[0];
+								}
+							$sthA->finish();
+
 							if ($rec_count < 1)
 								{
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$VD_callerid',queue='$VD_campaign_id',agent='$VD_agent',verb='ABANDON',data1='1',data2='1',data3='$VD_stage',serverid='$queuemetrics_log_id';";
+								### find current number of calls in this queue to find position when channel hung up
+								$current_position=1;
+								$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and campaign_id='$VD_campaign_id';";
+								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+								$sthArows=$sthA->rows;
+								if ($sthArows > 0)
+									{
+									@aryA = $sthA->fetchrow_array;
+									$current_position =	($aryA[0] + 1);
+									}
+								$sthA->finish();
+
+								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$VD_callerid',queue='$VD_campaign_id',agent='$VD_agent',verb='ABANDON',data1='$current_position',data2='$queue_position',data3='$VD_stage',serverid='$queuemetrics_log_id';";
 								$Baffected_rows = $dbhB->do($stmtB);
 								}
 							else
 								{
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$VD_callerid',queue='$VD_campaign_id',agent='$VD_agent',verb='COMPLETECALLER',data1='$VD_stage',data2='$VD_call_length',data3='1',serverid='$queuemetrics_log_id';";
+								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$VD_callerid',queue='$VD_campaign_id',agent='$VD_agent',verb='COMPLETECALLER',data1='$VD_stage',data2='$VD_call_length',data3='$queue_position',serverid='$queuemetrics_log_id';";
 								$Baffected_rows = $dbhB->do($stmtB);
 								}
 

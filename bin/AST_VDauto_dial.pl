@@ -87,6 +87,7 @@
 # 91026-1218 - Added AREACODE DNC option
 # 91108-2122 - Added LAGGED PAUSEREASON QM entry for lagged agents
 # 91123-1802 - Added outbound_autodial field, and exception for outbound-only agents on blended campaign
+# 91213-1856 - Added queue_position to queue_log ABANDON records
 #
 
 
@@ -1373,7 +1374,45 @@ while($one_day_interval > 0)
 
 								if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$KLcallerid[$kill_vac]',queue='$CLcampaign_id',agent='NONE',verb='ABANDON',data1='1',data2='1',data3='$CLstage',serverid='$queuemetrics_log_id';";
+								$secX = time();
+								$Rtarget = ($secX - 21600);	# look for VDCL entry within last 6 hours
+								($Rsec,$Rmin,$Rhour,$Rmday,$Rmon,$Ryear,$Rwday,$Ryday,$Risdst) = localtime($Rtarget);
+								$Ryear = ($Ryear + 1900);
+								$Rmon++;
+								if ($Rmon < 10) {$Rmon = "0$Rmon";}
+								if ($Rmday < 10) {$Rmday = "0$Rmday";}
+								if ($Rhour < 10) {$Rhour = "0$Rhour";}
+								if ($Rmin < 10) {$Rmin = "0$Rmin";}
+								if ($Rsec < 10) {$Rsec = "0$Rsec";}
+									$RSQLdate = "$Ryear-$Rmon-$Rmday $Rhour:$Rmin:$Rsec";
+
+								### find original queue position of the call
+								$queue_position=1;
+								$stmtA = "SELECT queue_position FROM vicidial_closer_log where lead_id='$CLlead_id' and campaign_id='$CLcampaign_id' and call_date > \"$RSQLdate\" order by closecallid desc limit 1;";
+								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+								$sthArows=$sthA->rows;
+								if ($sthArows > 0)
+									{
+									@aryA = $sthA->fetchrow_array;
+									$queue_position =	$aryA[0];
+									}
+								$sthA->finish();
+
+								### find current number of calls in this queue to find position when channel hung up
+								$current_position=1;
+								$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and campaign_id='$CLcampaign_id';";
+								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+								$sthArows=$sthA->rows;
+								if ($sthArows > 0)
+									{
+									@aryA = $sthA->fetchrow_array;
+									$current_position =	($aryA[0] + 1);
+									}
+								$sthA->finish();
+
+								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$KLcallerid[$kill_vac]',queue='$CLcampaign_id',agent='NONE',verb='ABANDON',data1='$current_position',data2='$queue_position',data3='$CLstage',serverid='$queuemetrics_log_id';";
 								$Baffected_rows = $dbhB->do($stmtB);
 
 								$dbhB->disconnect();
@@ -1959,7 +1998,45 @@ while($one_day_interval > 0)
 
 					if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$CLcallerid',queue='$CLcampaign_id',agent='NONE',verb='ABANDON',data1='1',data2='1',data3='$CLstage',serverid='$queuemetrics_log_id';";
+					$secX = time();
+					$Rtarget = ($secX - 21600);	# look for VDCL entry within last 6 hours
+					($Rsec,$Rmin,$Rhour,$Rmday,$Rmon,$Ryear,$Rwday,$Ryday,$Risdst) = localtime($Rtarget);
+					$Ryear = ($Ryear + 1900);
+					$Rmon++;
+					if ($Rmon < 10) {$Rmon = "0$Rmon";}
+					if ($Rmday < 10) {$Rmday = "0$Rmday";}
+					if ($Rhour < 10) {$Rhour = "0$Rhour";}
+					if ($Rmin < 10) {$Rmin = "0$Rmin";}
+					if ($Rsec < 10) {$Rsec = "0$Rsec";}
+						$RSQLdate = "$Ryear-$Rmon-$Rmday $Rhour:$Rmin:$Rsec";
+
+					### find original queue position of the call
+					$queue_position=1;
+					$stmtA = "SELECT queue_position FROM vicidial_closer_log where lead_id='$CLlead_id' and campaign_id='$CLcampaign_id' and call_date > \"$RSQLdate\" order by closecallid desc limit 1;";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$queue_position =	$aryA[0];
+						}
+					$sthA->finish();
+
+					### find current number of calls in this queue to find position when channel hung up
+					$current_position=1;
+					$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and campaign_id='$CLcampaign_id';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$current_position =	($aryA[0] + 1);
+						}
+					$sthA->finish();
+
+					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$CLcallerid',queue='$CLcampaign_id',agent='NONE',verb='ABANDON',data1='$current_position',data2='$queue_position',data3='$CLstage',serverid='$queuemetrics_log_id';";
 					$Baffected_rows = $dbhB->do($stmtB);
 
 					$dbhB->disconnect();

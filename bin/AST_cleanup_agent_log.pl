@@ -22,6 +22,7 @@
 # 91112-1100 - Added fixing for more QM issues, added CALLOUTBOUND checking with ENTERQUEUE
 # 91209-0956 - Added PAUSEREASON-LAGGED queue_log correction during live call
 # 91210-0609 - Added LOGOFF queue_log correction during live call
+# 91214-0933 - Added queue_position to queue_log COMPLETE... and ABANDON records
 #
 
 # constants
@@ -293,6 +294,8 @@ if ($enable_queuemetrics_logging > 0)
 		$queue[$h] =	$aryB[2];
 		$verb[$h] =		$aryB[3];
 		$serverid[$h] =	$aryB[4];
+		$lead_id[$h] = substr($call_id[$h], 11, 9);
+		$lead_id[$h] = ($lead_id[$h] + 0);
 		$h++;
 		}
 	$sthB->finish();
@@ -347,9 +350,36 @@ if ($enable_queuemetrics_logging > 0)
 				$EQdead++;
 				if ($DB) {print "     DEAD IN-QUEUE queue_log CALL: $EQdead|$call_id[$h]|$VLAlive_count|$VAClive_count\n";}
 
+				$secX = time();
+				$Rtarget = ($secX - 21600);	# look for VDCL entry within last 6 hours
+				($Rsec,$Rmin,$Rhour,$Rmday,$Rmon,$Ryear,$Rwday,$Ryday,$Risdst) = localtime($Rtarget);
+				$Ryear = ($Ryear + 1900);
+				$Rmon++;
+				if ($Rmon < 10) {$Rmon = "0$Rmon";}
+				if ($Rmday < 10) {$Rmday = "0$Rmday";}
+				if ($Rhour < 10) {$Rhour = "0$Rhour";}
+				if ($Rmin < 10) {$Rmin = "0$Rmin";}
+				if ($Rsec < 10) {$Rsec = "0$Rsec";}
+					$RSQLdate = "$Ryear-$Rmon-$Rmday $Rhour:$Rmin:$Rsec";
+
+				### find original queue position of the call
+				$queue_position=1;
+				$queue_seconds=0;
+				$stmtA = "SELECT queue_position,queue_seconds FROM vicidial_closer_log where lead_id='$lead_id[$h]' and campaign_id='$queue[$h]' and call_date > \"$RSQLdate\" order by closecallid desc limit 1;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$queue_position =	$aryA[0];
+					$queue_seconds =	floor($aryA[1] + .5);
+					}
+				$sthA->finish();
+
 				$newtimeABANDON = ($time_id[$h] + 1);
 				##### insert an ABANDON record for this call into the queue_log
-				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$newtimeABANDON',call_id='$call_id[$h]',queue='$queue[$h]',agent='NONE',verb='ABANDON',data1='1',data2='1',data3='1',serverid='$serverid[$h]';";
+				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$newtimeABANDON',call_id='$call_id[$h]',queue='$queue[$h]',agent='NONE',verb='ABANDON',data1='1',data2='$queue_position',data3='$queue_seconds',serverid='$serverid[$h]';";
 				if ($TEST < 1)
 					{
 					$Baffected_rows = $dbhB->do($stmtB);
@@ -505,6 +535,7 @@ if ( ($enable_queuemetrics_logging > 0) && ($login_lagged_check > 0) )
 	@agent=@MT;
 	@verb=@MT;
 	@serverid=@MT;
+	@lead_id=@MT;
 
 	if ($DB) {print " - Checking for LOGIN and LAGGED pausereason records in queue_log\n";}
 
@@ -783,6 +814,8 @@ if ($enable_queuemetrics_logging > 0)
 					$Sagent[$h] =		"$aryB[3]";
 					$Sverb[$h] =		"$aryB[4]";
 					$Sserverid[$h] =	"$aryB[5]";
+					$Slead_id[$h] = substr($Scall_id[$h], 11, 9);
+					$Slead_id[$h] = ($Slead_id[$h] + 0);
 					}
 				$sthB->finish();
 
@@ -825,9 +858,36 @@ if ($enable_queuemetrics_logging > 0)
 						}
 					else
 						{
+						$secX = time();
+						$Rtarget = ($secX - 21600);	# look for VDCL entry within last 6 hours
+						($Rsec,$Rmin,$Rhour,$Rmday,$Rmon,$Ryear,$Rwday,$Ryday,$Risdst) = localtime($Rtarget);
+						$Ryear = ($Ryear + 1900);
+						$Rmon++;
+						if ($Rmon < 10) {$Rmon = "0$Rmon";}
+						if ($Rmday < 10) {$Rmday = "0$Rmday";}
+						if ($Rhour < 10) {$Rhour = "0$Rhour";}
+						if ($Rmin < 10) {$Rmin = "0$Rmin";}
+						if ($Rsec < 10) {$Rsec = "0$Rsec";}
+							$RSQLdate = "$Ryear-$Rmon-$Rmday $Rhour:$Rmin:$Rsec";
+
+						### find original queue position of the call
+						$queue_position=1;
+						$queue_seconds=0;
+						$stmtA = "SELECT queue_position,queue_seconds FROM vicidial_closer_log where lead_id='$Slead_id[$h]' and campaign_id='$Squeue[$h]' and call_date > \"$RSQLdate\" order by closecallid desc limit 1;";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$queue_position =	$aryA[0];
+							$queue_seconds =	floor($aryA[1] + .5);
+							}
+						$sthA->finish();
+
 						##### insert a COMPLETEAGENT record for this call into the queue_log
 						$CALLtime[$h] = ($Stime_id[$h] - $time_id[$h]);
-						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$Stime_id[$h]',call_id='$Scall_id[$h]',queue='$Squeue[$h]',agent='$Sagent[$h]',verb='COMPLETEAGENT',data1='$Cdata1[$h]',data2='$CALLtime[$h]',data3='1',serverid='$Sserverid[$h]';";
+						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$Stime_id[$h]',call_id='$Scall_id[$h]',queue='$Squeue[$h]',agent='$Sagent[$h]',verb='COMPLETEAGENT',data1='$Cdata1[$h]',data2='$CALLtime[$h]',data3='$queue_position',serverid='$Sserverid[$h]';";
 						if ($TEST < 1)
 							{
 							$Baffected_rows = $dbhB->do($stmtB);
@@ -909,9 +969,39 @@ if ($enable_queuemetrics_logging > 0)
 								$VALstatus =~ s/ //gi;
 								if ( ($VALstatus =~ /NULL/i) || (length($VALstatus<1)) ) {$VALstatus='ERI';}
 
+								$Clead_id[$h] = substr($Ccall_id[$h], 11, 9);
+								$Clead_id[$h] = ($Clead_id[$h] + 0);
+
+								$secX = time();
+								$Rtarget = ($secX - 21600);	# look for VDCL entry within last 6 hours
+								($Rsec,$Rmin,$Rhour,$Rmday,$Rmon,$Ryear,$Rwday,$Ryday,$Risdst) = localtime($Rtarget);
+								$Ryear = ($Ryear + 1900);
+								$Rmon++;
+								if ($Rmon < 10) {$Rmon = "0$Rmon";}
+								if ($Rmday < 10) {$Rmday = "0$Rmday";}
+								if ($Rhour < 10) {$Rhour = "0$Rhour";}
+								if ($Rmin < 10) {$Rmin = "0$Rmin";}
+								if ($Rsec < 10) {$Rsec = "0$Rsec";}
+									$RSQLdate = "$Ryear-$Rmon-$Rmday $Rhour:$Rmin:$Rsec";
+
+								### find original queue position of the call
+								$queue_position=1;
+								$queue_seconds=0;
+								$stmtA = "SELECT queue_position,queue_seconds FROM vicidial_closer_log where lead_id='$Clead_id[$h]' and campaign_id='$Cqueue[$h]' and call_date > \"$RSQLdate\" order by closecallid desc limit 1;";
+								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+								$sthArows=$sthA->rows;
+								if ($sthArows > 0)
+									{
+									@aryA = $sthA->fetchrow_array;
+									$queue_position =	$aryA[0];
+									$queue_seconds =	floor($aryA[1] + .5);
+									}
+								$sthA->finish();
+
 								##### insert a COMPLETEAGENT record for this call into the queue_log
 								$CALLtime[$h] = ($Stime_id[$h] - $time_id[$h]);
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$Stime_id[$h]',call_id='$Ccall_id[$h]',queue='$Cqueue[$h]',agent='$Cagent[$h]',verb='COMPLETEAGENT',data1='$Cdata1[$h]',data2='$CALLtime[$h]',data3='1',serverid='$Cserverid[$h]';";
+								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$Stime_id[$h]',call_id='$Ccall_id[$h]',queue='$Cqueue[$h]',agent='$Cagent[$h]',verb='COMPLETEAGENT',data1='$Cdata1[$h]',data2='$CALLtime[$h]',data3='$queue_position',serverid='$Cserverid[$h]';";
 								if ($TEST < 1)
 									{
 									$Baffected_rows = $dbhB->do($stmtB) or die "ERROR: $stmtB" . DBI->errstr;
