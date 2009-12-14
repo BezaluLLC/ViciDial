@@ -844,7 +844,7 @@ sub process_request
 
 							### find original queue position of the call
 							$queue_position=1;
-							$stmtA = "SELECT queue_position FROM vicidial_closer_log where uniqueid='$unique_id' and lead_id='$CIDlead_id' and campaign_id='$VD_campaign_id' and call_date > \"$RSQLdate\" order by closecallid desc limit 1;";
+							$stmtA = "SELECT queue_position,call_date FROM vicidial_closer_log where uniqueid='$unique_id' and lead_id='$CIDlead_id' and campaign_id='$VD_campaign_id' and call_date > \"$RSQLdate\" order by closecallid desc limit 1;";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
@@ -852,6 +852,7 @@ sub process_request
 								{
 								@aryA = $sthA->fetchrow_array;
 								$queue_position =	$aryA[0];
+								$VCLcall_date =		$aryA[1];
 								}
 							$sthA->finish();
 
@@ -859,7 +860,7 @@ sub process_request
 								{
 								### find current number of calls in this queue to find position when channel hung up
 								$current_position=1;
-								$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and campaign_id='$VD_campaign_id';";
+								$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and campaign_id='$VD_campaign_id' and call_time < '$VCLcall_date';";
 								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 								$sthArows=$sthA->rows;
