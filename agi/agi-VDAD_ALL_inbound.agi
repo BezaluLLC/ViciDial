@@ -106,6 +106,7 @@
 # 91122-2352 - Added queue_log IVR and DID entry linking
 # 91125-0921 - Fixed no-agent-no-queue AGENTDIRECT bug
 # 91213-0942 - Added queue_position to queue_log COMPLETE... records
+# 91214-2034 - Fixes for rare in-group rank route bug
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -116,7 +117,7 @@ $start_moh=1;
 $at='@';
 $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=121;
+$mysql_log_count=123;
 $one_mysql_log=0;
 
 
@@ -1315,7 +1316,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		if ($CAMP_callorder =~ /campaign_rank/i)		{$agent_call_order = 'order by campaign_weight desc,last_call_finish';}
 		if ($CAMP_callorder =~ /fewest_calls_campaign/i) {$agent_call_order = 'order by vicidial_live_agents.calls_today,vicidial_live_agents.last_call_finish';}
 		if ($CAMP_callorder =~ /inbound_group_rank/i)	{$aco_sub=1;	$agent_call_order = 'order by group_weight desc';}
-		if ($CAMP_callorder =~ /fewest_calls/i)			{$aco_sub=1;	$agent_call_order = 'order by vicidial_live_inbound_agents.calls_today,vicidial_live_inbound_agents.last_call_finish';}
+		if ($CAMP_callorder =~ /fewest_calls$/i)		{$aco_sub=1;	$agent_call_order = 'order by vicidial_live_inbound_agents.calls_today,vicidial_live_inbound_agents.last_call_finish';}
 
 
 	$vci=0;
@@ -1347,7 +1348,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 	if ($sthArows > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$AGENTuser =		"$aryA[0]";
+		$AGENTuser =		$aryA[0];
 		$AGENTgrab++;
 		}
 	$sthA->finish();
@@ -1358,7 +1359,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 	################################################################
 	##### Attempt to send call to an agent on this server only #####
 	if ( ($agent_search_method =~ /^SO|^LO/) && ($skipLOSO < 1) )
-	{
+		{
 		### Get count of number of calls in this group that are ahead of this call
 		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and server_ip='$VARserver_ip' and campaign_id = '$channel_group' and call_time < \"$SQLdateBEGIN\" and lead_id != '$insert_lead_id';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
@@ -1369,7 +1370,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$rec_countWAIT = "$aryA[0]";
+			$rec_countWAIT = $aryA[0];
 			$cbc++;
 			}
 		$sthA->finish();
@@ -1387,7 +1388,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$qp_countWAIT = "$aryA[0]";
+				$qp_countWAIT = $aryA[0];
 				}
 			$sthA->finish();
 
@@ -1439,8 +1440,28 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				my $LOCKaffected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02037';   $MEL_aff_rows=$LOCKaffected_rows;   &mysql_error_logging;
 
-				$stmtA = "SELECT vicidial_live_agents.conf_exten,vicidial_live_agents.user,vicidial_live_agents.extension from vicidial_live_agents JOIN vicidial_live_inbound_agents ON vicidial_live_agents.user=vicidial_live_inbound_agents.user WHERE status IN('CLOSER','READY') and lead_id<1 and server_ip='$VARserver_ip' and vicidial_live_inbound_agents.group_id='$channel_group' and last_update_time > '$BDtsSQLdate' $qp_groupWAIT_aco_SQL $qp_groupWAIT_camp_SQL $agent_call_order limit 1;";
-					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				if (length($qp_groupWAIT_aco)<2)
+					{$qp_groupWAIT_aco="''";}
+				### Get list of users that should take higher priority inbound calls first
+				$stmtA = "SELECT distinct user from vicidial_live_inbound_agents where group_id IN($qp_groupWAIT_aco);";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					$dbhP=$dbhA;   $mysql_count='02122';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				$dbc=0;
+				$vlia_users='';
+				while ($sthArows > $dbc)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$vlia_users .= "'$aryA[0]',";
+					$dbc++;
+					}
+				if (length($vlia_users)>2)
+					{chop($vlia_users);}
+				else
+					{$vlia_users="''";}
+
+				$stmtA = "SELECT vicidial_live_agents.conf_exten,vicidial_live_agents.user,vicidial_live_agents.extension,vicidial_live_agents.server_ip,vicidial_live_inbound_agents.group_weight from vicidial_live_agents, vicidial_live_inbound_agents WHERE vicidial_live_agents.user=vicidial_live_inbound_agents.user and status IN('CLOSER','READY') and lead_id<1 and server_ip='$VARserver_ip' $ADUfindSQL and vicidial_live_inbound_agents.group_id='$channel_group' and last_update_time > '$BDtsSQLdate' and vicidial_live_agents.user NOT IN($vlia_users) $qp_groupWAIT_camp_SQL $agent_call_order limit 1;";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -1449,11 +1470,14 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$VDADconf_exten	=	"$aryA[0]";
-					$VDADuser	=		"$aryA[1]";
-					$VDADextension	=	"$aryA[2]";
+					$VDADconf_exten	=	$aryA[0];
+					$VDADuser	=		$aryA[1];
+					$VDADextension	=	$aryA[2];
+					$VDADserver_ip =	$aryA[3];
+					$VDADgroup_weight = $aryA[4];
 					}
 				$sthA->finish();
+					if ($AGILOG) {$agi_string = "$VDADuser|$VDADgroup_weight|$stmtA|";   &agi_output;}
 
 				if ($AGENTgrab > 0)
 					{
@@ -1466,8 +1490,8 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					if ($sthArows > 0)
 						{
 						@aryA = $sthA->fetchrow_array;
-						$VDADconf_exten	=	"$aryA[0]";
-						$VDADextension	=	"$aryA[1]";
+						$VDADconf_exten	=	$aryA[0];
+						$VDADextension	=	$aryA[1];
 						$VDADuser =			$AGENTuser;
 						}
 					$sthA->finish();
@@ -1477,12 +1501,13 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$stmtA = "UPDATE vicidial_live_agents set status='QUEUE',lead_id='$insert_lead_id',uniqueid='$unique_id', channel='$channel', callerid='$callerid',comments='INBOUND' where user='$VDADuser';";
 					$Faffected_rows = $dbhA->do($stmtA);
 						$dbhP=$dbhA;   $mysql_count='02039';   $MEL_aff_rows=$Faffected_rows;   &mysql_error_logging;
-					$found_agents=$Faffected_rows;
 					}
 				else
 					{
 					$Faffected_rows=0;
 					}
+				$found_agents=$Faffected_rows;
+
 				$stmtA = "UNLOCK TABLES;";
 				$LOCKaffected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02040';   $MEL_aff_rows=$LOCKaffected_rows;   &mysql_error_logging;
@@ -1494,7 +1519,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$dbhP=$dbhA;   $mysql_count='02041';   $MEL_aff_rows=$Faffected_rows;   &mysql_error_logging;
 				$found_agents=$Faffected_rows;
 				}
-			if ($AGILOG) {$agi_string = "--    VDAD get agent: |$Faffected_rows|$channel_group|$stmtA|";   &agi_output;}
+			if ($AGILOG) {$agi_string = "--    VDAD get agent: |$Faffected_rows|$channel_group|$found_agents|$stmtA|";   &agi_output;}
 			if ($found_agents > 0)
 				{
 				if ($aco_sub<1)
@@ -1507,7 +1532,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$sthArows=$sthA->rows;
 						$dbhP=$dbhA;   $mysql_count='02042';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 					$rec_countCUSTDATA=0;
-						while ($sthArows > $cbc)
+					while ($sthArows > $cbc)
 						{
 						@aryA = $sthA->fetchrow_array;
 
@@ -1567,13 +1592,13 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$dbhB->disconnect();
 					}
 
-			if ($call_handle_method =~ /CLOSER|DIGITID$/)
-				{
-				$stmtA = "UPDATE vicidial_xfer_log set closer='$VDADuser' where lead_id = '$insert_lead_id' order by call_date desc limit 1;";
-				$affected_rows = $dbhA->do($stmtA);
-					$dbhP=$dbhA;   $mysql_count='02046';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-				if ($AGILOG) {$agi_string = "--    VDXL XFER vicidial_xfer_log update: |$affected_rows|$insert_lead_id|$VDADuser\n|$stmtA|";   &agi_output;}
-				}
+				if ($call_handle_method =~ /CLOSER|DIGITID$/)
+					{
+					$stmtA = "UPDATE vicidial_xfer_log set closer='$VDADuser' where lead_id = '$insert_lead_id' order by call_date desc limit 1;";
+					$affected_rows = $dbhA->do($stmtA);
+						$dbhP=$dbhA;   $mysql_count='02046';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+					if ($AGILOG) {$agi_string = "--    VDXL XFER vicidial_xfer_log update: |$affected_rows|$insert_lead_id|$VDADuser\n|$stmtA|";   &agi_output;}
+					}
 
 				$stmtA = "UPDATE vicidial_closer_log set user='$VDADuser' where lead_id='$insert_lead_id' order by call_date desc limit 1;";
 				$affected_rows = $dbhA->do($stmtA);
@@ -1611,7 +1636,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
 					$dbhP=$dbhA;   $mysql_count='02049';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-					if ($sthArows > 0)
+				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
 					$calls_today	= "$aryA[0]";
@@ -1619,7 +1644,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					}
 				$sthA->finish();
 
-					if ($sthArows > 0)
+				if ($sthArows > 0)
 					{
 					$stmtA = "UPDATE vicidial_live_inbound_agents set calls_today='$calls_today' WHERE user='$VDADuser' and group_id='$channel_group';";
 					$affected_rows = $dbhA->do($stmtA);
@@ -1705,7 +1730,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$dbhP=$dbhA;   $mysql_count='02053';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 				$r=0;
 				$agi_string="\n";
-					while ($sthArows > $r)
+				while ($sthArows > $r)
 					{
 					@aryA = $sthA->fetchrow_array;
 					$agi_string .= "|$aryA[0]|$aryA[1]|$aryA[2]|$aryA[3]|$aryA[4]|$aryA[5]|\n";
@@ -1716,18 +1741,17 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				}
 			if ($AGILOG) {$agi_string = "WWWWW VDAD XFER LOCAL WAIT: |$rec_countWAIT|$channel_group|$channel|$callerid|$uniqueid|$drop_timer|";   &agi_output;}
 			}
-	}
+		}
+
 
 	if ($agent_search_method =~ /^LO|^LB/)
-	{
-
-	###################################################################################################
-	##### Attempt to send call to an agent on any server #####
+		{
+		###################################################################################################
+		##### Attempt to send call to an agent on any server #####
 		$cbc=0;
 		$rec_countWAITrem=0;
 		### Get count of number of calls in this group that are ahead of this call
 		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and campaign_id = '$channel_group' and call_time < \"$SQLdateBEGIN\" and lead_id != '$insert_lead_id' $ADfindSQL;";
-			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -1735,17 +1759,17 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$rec_countWAITrem = "$aryA[0]";
+			$rec_countWAITrem = $aryA[0];
 			$cbc++;
 			}
 		$sthA->finish();
+		if ($AGILOG) {$agi_string = "$rec_countWAITrem|$stmtA|";   &agi_output;}
 		
 		if ( ($rec_countWAITrem < 1) || ($AGENTgrab > 0) )
 			{
 			$qp_countWAIT=0;
 			### Get count of number of waiting calls in higher priority groups than this call or the same priority with longer wait time
 			$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and lead_id != '$insert_lead_id' $ADfindSQL and ( (queue_priority > '$queue_priority') or (queue_priority = '$queue_priority' and call_time < \"$SQLdateBEGIN\") );";
-				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -1753,9 +1777,10 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$qp_countWAIT = "$aryA[0]";
+				$qp_countWAIT = $aryA[0];
 				}
 			$sthA->finish();
+			if ($AGILOG) {$agi_string = "$qp_countWAIT|$stmtA|";   &agi_output;}
 
 			$qp_groupWAIT='';
 			$qp_groupWAIT_SQL='';
@@ -1766,7 +1791,6 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				{
 				### Get group/campaign ids of calls in higher priority groups than this call or the same priority with longer wait time
 				$stmtA = "SELECT distinct campaign_id FROM vicidial_auto_calls where status = 'LIVE' and lead_id != '$insert_lead_id' $ADfindSQL and ( (queue_priority > '$queue_priority') or (queue_priority = '$queue_priority' and call_time < \"$SQLdateBEGIN\") );";
-					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -1792,12 +1816,11 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$qp_groupWAIT = "closer_campaigns != ''";
 					}
 
-					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-
 				$qp_groupWAIT_SQL = "and ($qp_groupWAIT)";
 				$qp_groupWAIT_aco_SQL = "and vicidial_live_inbound_agents.group_id NOT IN($qp_groupWAIT_aco)";
 				$qp_groupWAIT_camp_SQL = "and campaign_id NOT IN($qp_groupWAIT_aco)";
 
+				if ($AGILOG) {$agi_string = "$qp_groupWAIT_SQL|$stmtA|";   &agi_output;}
 				$sthA->finish();
 				}
 
@@ -1807,7 +1830,28 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				my $LOCKaffected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02057';   $MEL_aff_rows=$LOCKaffected_rows;   &mysql_error_logging;
 
-				$stmtA = "SELECT vicidial_live_agents.conf_exten,vicidial_live_agents.user,vicidial_live_agents.extension,vicidial_live_agents.server_ip from vicidial_live_agents JOIN vicidial_live_inbound_agents ON vicidial_live_agents.user=vicidial_live_inbound_agents.user WHERE status IN('CLOSER','READY') and lead_id<1 $ADUfindSQL and vicidial_live_inbound_agents.group_id='$channel_group' and last_update_time > '$BDtsSQLdate' $qp_groupWAIT_aco_SQL $qp_groupWAIT_camp_SQL $agent_call_order limit 1;";
+				if (length($qp_groupWAIT_aco)<2)
+					{$qp_groupWAIT_aco="''";}
+				### Get list of users that should take higher priority inbound calls first
+				$stmtA = "SELECT distinct user from vicidial_live_inbound_agents where group_id IN($qp_groupWAIT_aco);";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					$dbhP=$dbhA;   $mysql_count='02123';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				$dbc=0;
+				$vlia_users='';
+				while ($sthArows > $dbc)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$vlia_users .= "'$aryA[0]',";
+					$dbc++;
+					}
+				if (length($vlia_users)>2)
+					{chop($vlia_users);}
+				else
+					{$vlia_users="''";}
+
+				$stmtA = "SELECT vicidial_live_agents.conf_exten,vicidial_live_agents.user,vicidial_live_agents.extension,vicidial_live_agents.server_ip,vicidial_live_inbound_agents.group_weight from vicidial_live_agents, vicidial_live_inbound_agents WHERE vicidial_live_agents.user=vicidial_live_inbound_agents.user and status IN('CLOSER','READY') and lead_id<1 $ADUfindSQL and vicidial_live_inbound_agents.group_id='$channel_group' and last_update_time > '$BDtsSQLdate' and vicidial_live_agents.user NOT IN($vlia_users) $qp_groupWAIT_camp_SQL $agent_call_order limit 1;";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -1817,14 +1861,14 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
-
-					$VDADconf_exten	=	"$aryA[0]";
-					$VDADuser	=		"$aryA[1]";
-					$VDADextension	=	"$aryA[2]";
-					$VDADserver_ip	=	"$aryA[3]";
+					$VDADconf_exten =	$aryA[0];
+					$VDADuser =			$aryA[1];
+					$VDADextension =	$aryA[2];
+					$VDADserver_ip =	$aryA[3];
+					$VDADgroup_weight = $aryA[4];
 					}
 				$sthA->finish();
-				if ($AGILOG) {$agi_string = "$VDADuser|$stmtA|";   &agi_output;}
+				if ($AGILOG) {$agi_string = "$VDADuser|$VDADgroup_weight|$stmtA|";   &agi_output;}
 
 				if ($AGENTgrab > 0)
 					{
@@ -1837,8 +1881,8 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					if ($sthArows > 0)
 						{
 						@aryA = $sthA->fetchrow_array;
-						$VDADconf_exten	=	"$aryA[0]";
-						$VDADextension	=	"$aryA[1]";
+						$VDADconf_exten	=	$aryA[0];
+						$VDADextension	=	$aryA[1];
 						$VDADuser =			$AGENTuser;
 						}
 					$sthA->finish();
@@ -1848,12 +1892,12 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$stmtA = "UPDATE vicidial_live_agents set status='QUEUE',lead_id='$insert_lead_id',uniqueid='$unique_id', channel='$channel', callerid='$callerid', call_server_ip='$VARserver_ip',comments='INBOUND' where user='$VDADuser';";
 					$Faffected_rows = $dbhA->do($stmtA);
 						$dbhP=$dbhA;   $mysql_count='02059';   $MEL_aff_rows=$Faffected_rows;   &mysql_error_logging;
-					$found_agents=$Faffected_rows;
 					}
 				else
 					{
 					$Faffected_rows=0;
 					}
+				$found_agents=$Faffected_rows;
 
 				$stmtA = "UNLOCK TABLES;";
 				my $LOCKaffected_rows = $dbhA->do($stmtA);
@@ -1882,15 +1926,15 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					if ($sthArows > 0)
 						{
 						@aryA = $sthA->fetchrow_array;
-						$VDADconf_exten	=	"$aryA[0]";
-						$VDADuser	=		"$aryA[1]";
-						$VDADextension	=	"$aryA[2]";
-						$VDADserver_ip	=	"$aryA[3]";
-						$VDADlast_call_time="$aryA[4]";
+						$VDADconf_exten =		$aryA[0];
+						$VDADuser =				$aryA[1];
+						$VDADextension =		$aryA[2];
+						$VDADserver_ip =		$aryA[3];
+						$VDADlast_call_time =	$aryA[4];
 						$cbc++;
 						}
 					$sthA->finish();
-						if ($AGILOG) {$agi_string = "$VDADuser|$VDADlast_call_time|$stmtA|";   &agi_output;}
+					if ($AGILOG) {$agi_string = "$VDADuser|$VDADlast_call_time|$stmtA|";   &agi_output;}
 					}
 				$stmtA = "UPDATE vicidial_auto_calls set status='CLOSER', stage='CLOSER-$drop_timer' where callerid='$callerid';";
 				$affected_rows = $dbhA->do($stmtA);
@@ -1925,7 +1969,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					if ($sthBrowsQLA > 0)
 						{
 						@aryB = $sthB->fetchrow_array;
-						$QLabandon = 	"$aryB[0]";
+						$QLabandon = 	$aryB[0];
 						}
 					$sthB->finish();
 					if ( ($QLabandon > 0) && (length($callerid) > 15) )
@@ -1993,15 +2037,15 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
 					$dbhP=$dbhA;   $mysql_count='02069';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-					if ($sthArows > 0)
+				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$calls_today	= "$aryA[0]";
+					$calls_today = $aryA[0];
 					$calls_today++;
 					}
 				$sthA->finish();
 
-					if ($sthArows > 0)
+				if ($sthArows > 0)
 					{
 					$stmtA = "UPDATE vicidial_live_inbound_agents set calls_today='$calls_today' WHERE user='$VDADuser' and group_id='$channel_group';";
 					$affected_rows = $dbhA->do($stmtA);
@@ -2086,7 +2130,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$dbhP=$dbhA;   $mysql_count='02073';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 				$r=0;
 				$agi_string="\n";
-					while ($sthArows > $r)
+				while ($sthArows > $r)
 					{
 					@aryA = $sthA->fetchrow_array;
 					$agi_string .= "|$aryA[0]|$aryA[1]|$aryA[2]|$aryA[3]|$aryA[4]|$aryA[5]|\n";
@@ -2098,8 +2142,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 			if ($AGILOG) {$agi_string = "WWWWW VDAD XFER BALANCE WAIT: |$rec_countWAITrem|$channel_group|$channel|$callerid|$uniqueid|$drop_timer|";   &agi_output;}
 			}
-
-	}
+		}
 
 	if ($hold_recall_xfer_group !~ /NONE/)
 		{
@@ -2285,12 +2328,12 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		if ($hold_time_option !~ /NONE/) {$start_hold_estimate=1; $moh_delay=2;};
 		if ($drop_timer >= 2) {$drop_timer = ($drop_timer + 5);} # add prompt play time to total queue time
 		}
-	  else {$hold_message_counter++;}
+	else {$hold_message_counter++;}
 	if ($hold_tone_counter > 3)
 		{
 		$hold_tone_counter = 0;
 		}
-	  else {$hold_tone_counter++;}
+	else {$hold_tone_counter++;}
 		
 	##### play the place in line of the caller if option is set
 	if ( ($start_place_in_line > 0) && ($moh_delay == '1') )
@@ -2567,7 +2610,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			while ($sthArows > $cbc)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$insert_lead_id = "$aryA[0]";
+				$insert_lead_id = $aryA[0];
 				$cbc++; 
 				}
 			$sthA->finish();
@@ -2678,8 +2721,6 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 			exit;
 			}
-
-
 		}
 	}
 
@@ -2860,54 +2901,54 @@ if ($drop_timer > $DROP_TIME)
 
 	if ($AGILOG) {$agi_string = "--    VDCL DROP: |$drop_action|$DROPexten|";   &agi_output;}
 
-		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
-		$affected_rows = $dbhA->do($stmtA);
-			$dbhP=$dbhA;   $mysql_count='02099';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-		if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
+	$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
+	$affected_rows = $dbhA->do($stmtA);
+		$dbhP=$dbhA;   $mysql_count='02099';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+	if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
 
-		$stmtA = "UPDATE vicidial_closer_log set status='DROP',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',queue_seconds='$drop_seconds',term_reason='QUEUETIMEOUT' where lead_id = '$insert_lead_id' order by start_epoch desc limit 1;";
-		$affected_rows = $dbhA->do($stmtA);
-			$dbhP=$dbhA;   $mysql_count='02100';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-		if ($AGILOG) {$agi_string = "--    VDCL vcl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
+	$stmtA = "UPDATE vicidial_closer_log set status='DROP',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',queue_seconds='$drop_seconds',term_reason='QUEUETIMEOUT' where lead_id = '$insert_lead_id' order by start_epoch desc limit 1;";
+	$affected_rows = $dbhA->do($stmtA);
+		$dbhP=$dbhA;   $mysql_count='02100';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+	if ($AGILOG) {$agi_string = "--    VDCL vcl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
 
-		$stmtA = "UPDATE vicidial_list set status='XDROP' where lead_id = '$insert_lead_id';";
-		$affected_rows = $dbhA->do($stmtA);
-			$dbhP=$dbhA;   $mysql_count='02101';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-		if ($AGILOG) {$agi_string = "--    VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
+	$stmtA = "UPDATE vicidial_list set status='XDROP' where lead_id = '$insert_lead_id';";
+	$affected_rows = $dbhA->do($stmtA);
+		$dbhP=$dbhA;   $mysql_count='02101';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+	if ($AGILOG) {$agi_string = "--    VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
 
-		### use STDOUT to send call to proper DROP location
-		$VHqueryCID = "VH$CIDdate$VDADconf_exten";
+	### use STDOUT to send call to proper DROP location
+	$VHqueryCID = "VH$CIDdate$VDADconf_exten";
 
-		if (length($DROPexten)>0)
-			{	### if DROP extension is defined then send the dropped call there instead of hangup
+	if (length($DROPexten)>0)
+		{	### if DROP extension is defined then send the dropped call there instead of hangup
 
-			if ($no_delay_call_route =~ /N/)
-				{
-				$AGI->stream_file('sip-silence'); # stop music-on-hold process
-				$AGI->stream_file('sip-silence');
-				### sleep for 99 hundredths of a second
-				usleep(1*990*1000);
-				}
-
-			$AGI->stream_file('sip-silence');
-			$AGI->stream_file('sip-silence');
-
-			if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $DROPexten";   &agi_output;}
-			print "SET CONTEXT $ext_context\n";
-				checkresult($result);
-			print "SET EXTENSION $DROPexten\n";
-				checkresult($result);
-			print "SET PRIORITY 1\n";
-				checkresult($result);
-			}
-		else
+		if ($no_delay_call_route =~ /N/)
 			{
-			### insert a NEW record to the vicidial_manager table to be processed
-			$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$VARserver_ip','','Hangup','$VHqueryCID','Channel: $channel','','','','','','','','','')";
-			$affected_rows = $dbhA->do($stmtA);  
-				$dbhP=$dbhA;   $mysql_count='02102';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-			if ($AGILOG) {$agi_string = "--    VDCL call_hungup timeout: |$VHqueryCID|$VDADconf_exten|$channel|insert to vicidial_manager";   &agi_output;}
+			$AGI->stream_file('sip-silence'); # stop music-on-hold process
+			$AGI->stream_file('sip-silence');
+			### sleep for 99 hundredths of a second
+			usleep(1*990*1000);
 			}
+
+		$AGI->stream_file('sip-silence');
+		$AGI->stream_file('sip-silence');
+
+		if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $DROPexten";   &agi_output;}
+		print "SET CONTEXT $ext_context\n";
+			checkresult($result);
+		print "SET EXTENSION $DROPexten\n";
+			checkresult($result);
+		print "SET PRIORITY 1\n";
+			checkresult($result);
+		}
+	else
+		{
+		### insert a NEW record to the vicidial_manager table to be processed
+		$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$VARserver_ip','','Hangup','$VHqueryCID','Channel: $channel','','','','','','','','','')";
+		$affected_rows = $dbhA->do($stmtA);  
+			$dbhP=$dbhA;   $mysql_count='02102';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "--    VDCL call_hungup timeout: |$VHqueryCID|$VDADconf_exten|$channel|insert to vicidial_manager";   &agi_output;}
+		}
 	}
 
 $dbhA->disconnect();

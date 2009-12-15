@@ -21002,7 +21002,7 @@ if ($ADD==31111111111)
 		echo "<input type=hidden name=old_extension value=\"$row[0]\">\n";
 		echo "<input type=hidden name=old_server_ip value=\"$row[5]\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Phone extension: </td><td align=left><input type=text name=extension size=20 maxlength=100 value=\"$row[0]\">$NWB#phones-extension$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Phone extension: </td><td align=left><input type=text name=extension size=20 maxlength=100 value=\"$row[0]\">$NWB#phones-extension$NWE <i>(Agent Screen Phone Login)</i></td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Dial Plan Number: </td><td align=left><input type=text name=dialplan_number size=15 maxlength=20 value=\"$row[1]\"> (digits only)$NWB#phones-dialplan_number$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail Box: </td><td align=left><input type=text name=voicemail_id size=10 maxlength=10 value=\"$row[2]\"> (digits only)$NWB#phones-voicemail_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail Box: </td><td align=left><input type=text name=delete_vm_after_email size=10 maxlength=10 value=\"$row[73]\">$NWB#phones-delete_vm_after_email$NWE</td></tr>\n";
