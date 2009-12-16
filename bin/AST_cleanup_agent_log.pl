@@ -373,7 +373,7 @@ if ($enable_queuemetrics_logging > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
 					$queue_position =	$aryA[0];
-					$queue_seconds =	floor($aryA[1] + .5);
+					$queue_seconds =	int($aryA[1] + .5);
 					}
 				$sthA->finish();
 
@@ -881,7 +881,7 @@ if ($enable_queuemetrics_logging > 0)
 							{
 							@aryA = $sthA->fetchrow_array;
 							$queue_position =	$aryA[0];
-							$queue_seconds =	floor($aryA[1] + .5);
+							$queue_seconds =	int($aryA[1] + .5);
 							}
 						$sthA->finish();
 
@@ -995,7 +995,7 @@ if ($enable_queuemetrics_logging > 0)
 									{
 									@aryA = $sthA->fetchrow_array;
 									$queue_position =	$aryA[0];
-									$queue_seconds =	floor($aryA[1] + .5);
+									$queue_seconds =	int($aryA[1] + .5);
 									}
 								$sthA->finish();
 
