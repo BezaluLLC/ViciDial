@@ -34,6 +34,7 @@ Changes:
 90904-1535 - Added moh_list musiconhold function
 90916-2342 - Added vm_list voicemail list
 91203-1140 - Added agent_ingroup_info feature
+91216-0331 - Added duplication check features to add_lead function
 
 
 
@@ -203,6 +204,15 @@ campaign_id -		2-8 Character campaign ID, required if using campaign_dnc_check
 add_to_hopper -		Y or N, default is N
 hopper_priority -	99 to -99, the higher number the higher priority, default is 0
 hopper_local_call_time_check - Y or N, default is N. Validate the local call time before inserting lead in the hopper
+duplicate_check -	Check for duplicate records in the system, can select more than one (duplicate_check=DUPLIST-DUPTITLEALTPHONELIST)
+			If duplicate is found, will return error, the duplicate data and lead_id and list_id of existing record
+			Here are the duplicate_check options:
+				DUPLIST - check for duplicate phone_number in same list
+				DUPCAMP - check for duplicate phone_number in all lists for this list's campaign
+				DUPSYS - check for duplicate phone_number in entire system
+				DUPTITLEALTPHONELIST - check for duplicate title and alt_phone in same list
+				DUPTITLEALTPHONECAMP - check for duplicate title and alt_phone in all lists for this list's campaign
+				DUPTITLEALTPHONESYS - check for duplicate title and alt_phone in entire system
 
 (for fields with spaces in the values, you can replace the space with a plus + sign[address, city, first_name, etc...])
 OPTIONAL FIELDS- 
@@ -248,6 +258,8 @@ http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&functio
 
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=add_lead&phone_number=7275551111&phone_code=1&list_id=999&dnc_check=N&campaign_dnc_check=Y&campaign_id=TESTCAMP&first_name=Bob&last_name=Wilson&address1=1234+Main+St.&city=Chicago+Heights&state=IL&add_to_hopper=Y&hopper_local_call_time_check=Y&multi_alt_phones=7275551212_1_work!7275551213_1_sister+house!1234567890_1_neighbor
 
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=add_lead&phone_number=7275551212&phone_code=1&list_id=999&dnc_check=N&first_name=Bob&last_name=Wilson&duplicate_check=DUPLIST-DUPTITLEALTPHONELIST
+
 
 Example responses:
 SUCCESS: add_lead LEAD HAS BEEN ADDED - 7275551111|6666|999|193715|-4
@@ -262,3 +274,10 @@ ERROR: add_lead INVALID PHONE NUMBER - 72755|6666
 ERROR: add_lead USER DOES NOT HAVE PERMISSION TO ADD LEADS TO THE SYSTEM - 6666|0 
 
 ERROR: NO FUNCTION SPECIFIED
+
+ERROR: add_lead DUPLICATE PHONE NUMBER IN LIST - 7275551111|101|8765444
+ERROR: add_lead DUPLICATE PHONE NUMBER IN CAMPAIGN LISTS - 7275551111|101|8765444|101
+ERROR: add_lead DUPLICATE PHONE NUMBER IN SYSTEM - 7275551111|101|8765444|101
+ERROR: add_lead DUPLICATE TITLE ALT_PHONE IN LIST - 1234|7275551111|101|8765444
+ERROR: add_lead DUPLICATE TITLE ALT_PHONE IN CAMPAIGN LISTS - 1234|7275551111|101|8765444|101
+ERROR: add_lead DUPLICATE TITLE ALT_PHONE IN SYSTEM - 1234|7275551111|101|8765444|101

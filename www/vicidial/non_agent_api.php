@@ -29,10 +29,11 @@
 # 90916-2342 - Added vm_list voicemail list
 # 91026-1059 - Added AREACODE DNC option
 # 91203-1140 - Added agent_ingroup_info feature
+# 91216-0331 - Added duplication check features to add_lead function
 #
 
-$version = '2.2.0-15';
-$build = '91203-1140';
+$version = '2.2.0-16';
+$build = '91216-0331';
 
 require("dbconnect.php");
 
@@ -125,6 +126,8 @@ if (isset($_GET["owner"]))						{$owner=$_GET["owner"];}
 	elseif (isset($_POST["owner"]))				{$owner=$_POST["owner"];}
 if (isset($_GET["agent_user"]))					{$agent_user=$_GET["agent_user"];}
 	elseif (isset($_POST["agent_user"]))		{$agent_user=$_POST["agent_user"];}
+if (isset($_GET["duplicate_check"]))			{$duplicate_check=$_GET["duplicate_check"];}
+	elseif (isset($_POST["duplicate_check"]))	{$duplicate_check=$_POST["duplicate_check"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -134,7 +137,6 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -204,6 +206,7 @@ if ($non_latin < 1)
 	$stage = ereg_replace("[^a-zA-Z]","",$stage);
 	$rank = ereg_replace("[^0-9]","",$rank);
 	$owner = ereg_replace("[^-_0-9a-zA-Z]","",$owner);
+	$duplicate_check = ereg_replace("[^-_0-9a-zA-Z]","",$duplicate_check);
 	}
 else
 	{
@@ -299,7 +302,7 @@ if ($function == 'version')
 if ($function == 'sounds_list')
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 6;";
-	if ($DB) {echo "|$stmt|\n";}
+	if ($DB>0) {echo "DEBUG: sounds_list query - $stmt\n";}
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$allowed_user=$row[0];
@@ -324,7 +327,6 @@ if ($function == 'sounds_list')
 		##### START SYSTEM_SETTINGS LOOKUP #####
 		$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
 		$ss_conf_ct = mysql_num_rows($rslt);
 		if ($ss_conf_ct > 0)
 			{
@@ -352,7 +354,7 @@ if ($function == 'sounds_list')
 			$filename_sort=$MT;
 			$dirpath = "$WeBServeRRooT/$sounds_web_directory";
 			$dh = opendir($dirpath);
-			if ($DB) {echo "$dirpath|$stage|$format\n";}
+			if ($DB>0) {echo "DEBUG: sounds_list variables - $dirpath|$stage|$format\n";}
 			while (false !== ($file = readdir($dh))) 
 				{
 				# Do not list subdirectories
@@ -389,7 +391,7 @@ if ($function == 'sounds_list')
 				$file_split = explode('----------',$file_sort[$k]);
 				$m = $file_split[1];
 				$NOWsize = filesize("$dirpath/$file_names[$m]");
-				if ($DB) {echo "$file_sort[$k]|$size|$NOWsize|\n";}
+				if ($DB>0) {echo "DEBUG: sounds_list variables - $file_sort[$k]|$size|$NOWsize|\n";}
 				if ($file_sizes[$m] == $NOWsize)
 					{
 					if (eregi('tab',$format))
@@ -465,7 +467,6 @@ if ($function == 'sounds_list')
 if ($function == 'moh_list')
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 6;";
-	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$allowed_user=$row[0];
@@ -490,7 +491,6 @@ if ($function == 'moh_list')
 		##### START SYSTEM_SETTINGS LOOKUP #####
 		$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
 		$ss_conf_ct = mysql_num_rows($rslt);
 		if ($ss_conf_ct > 0)
 			{
@@ -610,7 +610,6 @@ if ($function == 'moh_list')
 if ($function == 'vm_list')
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 6;";
-	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$allowed_user=$row[0];
@@ -740,7 +739,6 @@ if ($function == 'agent_ingroup_info')
 	else
 		{
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and user_level > 6;";
-		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -756,7 +754,6 @@ if ($function == 'agent_ingroup_info')
 		else
 			{
 			$stmt="SELECT count(*) from vicidial_live_agents where user='$agent_user';";
-			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			$row=mysql_fetch_row($rslt);
 			$session_exists=$row[0];
@@ -773,7 +770,6 @@ if ($function == 'agent_ingroup_info')
 			else
 				{
 				$stmt="SELECT campaign_id,closer_campaigns,outbound_autodial,manager_ingroup_set,external_igb_set_user from vicidial_live_agents where user='$agent_user';";
-				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
 				$campaign_id =				$row[0];
@@ -783,31 +779,26 @@ if ($function == 'agent_ingroup_info')
 				$external_igb_set_user =	$row[4];
 
 				$stmt="SELECT full_name from vicidial_users where user='$agent_user';";
-				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
 				$full_name =				$row[0];
 
 				$stmt = "select count(*) from vicidial_campaigns where campaign_id='$campaign_id' and campaign_allow_inbound='Y' and dial_method NOT IN('MANUAL');";
-				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
 				$allowed_campaign_inbound=$row[0];
 
 				$stmt = "select count(*) from vicidial_campaigns where campaign_id='$campaign_id' and dial_method NOT IN('MANUAL','INBOUND_MAN');";
-				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
 				$allowed_campaign_autodial=$row[0];
 
 				$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and change_agent_campaign='1';";
-				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
 				$allowed_user_change_ingroups=$row[0];
 
 				$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and modify_users='1';";
-				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
 				$allowed_user_modify_user=$row[0];
@@ -834,7 +825,6 @@ if ($function == 'agent_ingroup_info')
 					$output .= "<a href=\"#\" onclick=\"hide_ingroup_info();\">Close</a></TD></TR><TR><TD COLSPAN=3 BGCOLOR=\"#CCCCFF\">\n";
 
 					$stmt="SELECT closer_campaigns from vicidial_campaigns where campaign_id='$campaign_id';";
-					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $link);
 					$row=mysql_fetch_row($rslt);
 					if ($allowed_campaign_inbound < 1)
@@ -880,7 +870,6 @@ if ($function == 'agent_ingroup_info')
 							if (strlen($closer_groups[$m])>1)
 								{
 								$stmt="SELECT group_name from vicidial_inbound_groups where group_id='$closer_groups[$m]';";
-								if ($DB) {echo "$stmt\n";}
 								$rslt=mysql_query($stmt, $link);
 								$row=mysql_fetch_row($rslt);
 
@@ -942,7 +931,6 @@ if ($function == 'agent_ingroup_info')
 						if ( ($manager_ingroup_set == 'SET') or ($manager_ingroup_set == 'Y') )
 							{
 							$stmt="SELECT full_name from vicidial_users where user='$external_igb_set_user';";
-							if ($DB) {echo "|$stmt|\n";}
 							$rslt=mysql_query($stmt, $link);
 							$row=mysql_fetch_row($rslt);
 							$Mfull_name =				$row[0];
@@ -971,7 +959,6 @@ if ($function == 'agent_ingroup_info')
 							if (strlen($closer_groups[$m])>1)
 								{
 								$stmt="SELECT group_name from vicidial_inbound_groups where group_id='$closer_groups[$m]';";
-								if ($DB) {echo "$stmt\n";}
 								$rslt=mysql_query($stmt, $link);
 								$row=mysql_fetch_row($rslt);
 
@@ -1031,7 +1018,6 @@ if ($function == 'blind_monitor')
 	else
 		{
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and user_level > 6;";
-		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -1047,7 +1033,6 @@ if ($function == 'blind_monitor')
 		else
 			{
 			$stmt="SELECT count(*) from vicidial_conferences where conf_exten='$session_id' and server_ip='$server_ip';";
-			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			$row=mysql_fetch_row($rslt);
 			$session_exists=$row[0];
@@ -1064,7 +1049,6 @@ if ($function == 'blind_monitor')
 			else
 				{
 				$stmt="SELECT count(*) from phones where login='$phone_login';";
-				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
 				$phone_exists=$row[0];
@@ -1083,7 +1067,6 @@ if ($function == 'blind_monitor')
 					if ($source == 'queuemetrics')
 						{
 						$stmt="SELECT active_voicemail_server from system_settings;";
-						if ($DB) {echo "|$stmt|\n";}
 						$rslt=mysql_query($stmt, $link);
 						$row=mysql_fetch_row($rslt);
 						$monitor_server_ip =	$row[0];
@@ -1095,7 +1078,6 @@ if ($function == 'blind_monitor')
 					else
 						{
 						$stmt="SELECT dialplan_number,server_ip,outbound_cid from phones where login='$phone_login';";
-						if ($DB) {echo "|$stmt|\n";}
 						$rslt=mysql_query($stmt, $link);
 						$row=mysql_fetch_row($rslt);
 						$dialplan_number =	$row[0];
@@ -1125,7 +1107,7 @@ if ($function == 'blind_monitor')
 
 					### insert a new lead in the system with this phone number
 					$stmt = "INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$monitor_server_ip','','Originate','$BMquery','Channel: Local/$monitor_dialstring$stage$session_id@default','Context; default','Exten: $dialplan_number','Priority: 1','Callerid: \"VC Blind Monitor\" <$outbound_cid>','','','','','');";
-					if ($DB) {echo "$stmt\n";}
+					if ($DB>0) {echo "DEBUG: blind_monitor query - $stmt\n";}
 					$rslt=mysql_query($stmt, $link);
 					$affected_rows = mysql_affected_rows($link);
 					if ($affected_rows > 0)
@@ -1169,7 +1151,6 @@ if ($function == 'add_lead')
 	else
 		{
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7;";
-		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$modify_leads=$row[0];
@@ -1196,8 +1177,10 @@ if ($function == 'add_lead')
 				}
 			else
 				{
+				### START checking for DNC if defined ###
 				if ( ($dnc_check == 'Y') or ($dnc_check == 'AREACODE') )
 					{
+					if ($DB>0) {echo "DEBUG: Checking for system DNC\n";}
 					if ($dnc_check == 'AREACODE')
 						{
 						$phone_areacode = substr($phone_number, 0, 3);
@@ -1206,7 +1189,7 @@ if ($function == 'add_lead')
 						}
 					else
 						{$stmt="SELECT count(*) from vicidial_dnc where phone_number='$phone_number';";}
-					if ($DB) {echo "|$stmt|\n";}
+					if ($DB>0) {echo "DEBUG: add_lead query - $stmt\n";}
 					$rslt=mysql_query($stmt, $link);
 					$row=mysql_fetch_row($rslt);
 					$dnc_found=$row[0];
@@ -1223,6 +1206,7 @@ if ($function == 'add_lead')
 					}
 				if ( ($campaign_dnc_check == 'Y') or ($campaign_dnc_check == 'AREACODE') )
 					{
+					if ($DB>0) {echo "DEBUG: Checking for campaign DNC\n";}
 					if ($campaign_dnc_check == 'AREACODE')
 						{
 						$phone_areacode = substr($phone_number, 0, 3);
@@ -1231,7 +1215,7 @@ if ($function == 'add_lead')
 						}
 					else
 						{$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number='$phone_number' and campaign_id='$campaign_id';";}
-					if ($DB) {echo "|$stmt|\n";}
+					if ($DB>0) {echo "DEBUG: add_lead query - $stmt\n";}
 					$rslt=mysql_query($stmt, $link);
 					$row=mysql_fetch_row($rslt);
 					$dnc_found=$row[0];
@@ -1246,6 +1230,188 @@ if ($function == 'add_lead')
 						exit;
 						}
 					}
+				### END checking for DNC if defined ###
+
+				### START checking for duplicate if defined ###
+				if (eregi("CAMP",$duplicate_check)) # find lists within campaign
+					{
+					$stmt="SELECT campaign_id from vicidial_lists where list_id='$list_id';";
+					$rslt=mysql_query($stmt, $link);
+					$ci_recs = mysql_num_rows($rslt);
+					if ($ci_recs > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$duplicate_camp =	$row[0];
+
+						$stmt="select list_id from vicidial_lists where campaign_id='$duplicate_camp';";
+						$rslt=mysql_query($stmt, $link);
+						$li_recs = mysql_num_rows($rslt);
+						if ($li_recs > 0)
+							{
+							$L=0;
+							while ($li_recs > $L)
+								{
+								$row=mysql_fetch_row($rslt);
+								$duplicate_lists .=	"'$row[0]',";
+								$L++;
+								}
+							$duplicate_lists = eregi_replace(",$",'',$dup_lists);
+							}
+						}
+					}
+				### find list of list_ids in this campaign
+				if (eregi("DUPLIST",$duplicate_check)) # duplicate check within list
+					{
+					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPLIST\n";}
+					$duplicate_found=0;
+					$stmt="SELECT lead_id,list_id from vicidial_list where phone_number='$phone_number' and list_id='$list_id' limit 1;";
+					$rslt=mysql_query($stmt, $link);
+					$pc_recs = mysql_num_rows($rslt);
+					if ($pc_recs > 0)
+						{
+						$duplicate_found=1;
+						$row=mysql_fetch_row($rslt);
+						$duplicate_lead_id =	$row[0];
+						$duplicate_lead_list =	$row[1];
+						}
+
+					if ($duplicate_found > 0) 
+						{
+						$result = 'ERROR';
+						$result_reason = "add_lead DUPLICATE PHONE NUMBER IN LIST";
+						$data = "$phone_number|$list_id|$duplicate_lead_id";
+						echo "$result: $result_reason - $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				if (eregi("DUPCAMP",$duplicate_check)) # duplicate check within campaign lists
+					{
+					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPCAMP\n";}
+					$duplicate_found=0;
+					$stmt="SELECT lead_id,list_id from vicidial_list where phone_number='$phone_number' and list_id IN($duplicate_lists) limit 1;";
+					$rslt=mysql_query($stmt, $link);
+					$pc_recs = mysql_num_rows($rslt);
+					if ($pc_recs > 0)
+						{
+						$duplicate_found=1;
+						$row=mysql_fetch_row($rslt);
+						$duplicate_lead_id =	$row[0];
+						$duplicate_lead_list =	$row[1];
+						}
+
+					if ($duplicate_found > 0) 
+						{
+						$result = 'ERROR';
+						$result_reason = "add_lead DUPLICATE PHONE NUMBER IN CAMPAIGN LISTS";
+						$data = "$phone_number|$list_id|$duplicate_lead_id|$duplicate_lead_list";
+						echo "$result: $result_reason - $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				if (eregi("DUPSYS",$duplicate_check)) # duplicate check within entire system
+					{
+					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPSYS\n";}
+					$duplicate_found=0;
+					$stmt="SELECT lead_id,list_id from vicidial_list where phone_number='$phone_number' limit 1;";
+					$rslt=mysql_query($stmt, $link);
+					$pc_recs = mysql_num_rows($rslt);
+					if ($pc_recs > 0)
+						{
+						$duplicate_found=1;
+						$row=mysql_fetch_row($rslt);
+						$duplicate_lead_id =	$row[0];
+						$duplicate_lead_list =	$row[1];
+						}
+
+					if ($duplicate_found > 0) 
+						{
+						$result = 'ERROR';
+						$result_reason = "add_lead DUPLICATE PHONE NUMBER IN SYSTEM";
+						$data = "$phone_number|$list_id|$duplicate_lead_id|$duplicate_lead_list";
+						echo "$result: $result_reason - $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				if (eregi("DUPTITLEALTPHONELIST",$duplicate_check)) # duplicate title/alt_phone check within list
+					{
+					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPTITLEALTPHONELIST\n";}
+					$duplicate_found=0;
+					$stmt="SELECT lead_id,list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' limit 1;";
+					$rslt=mysql_query($stmt, $link);
+					$pc_recs = mysql_num_rows($rslt);
+					if ($pc_recs > 0)
+						{
+						$duplicate_found=1;
+						$row=mysql_fetch_row($rslt);
+						$duplicate_lead_id =	$row[0];
+						$duplicate_lead_list =	$row[1];
+						}
+
+					if ($duplicate_found > 0) 
+						{
+						$result = 'ERROR';
+						$result_reason = "add_lead DUPLICATE TITLE ALT_PHONE IN LIST";
+						$data = "$title|$alt_phone|$list_id|$duplicate_lead_id";
+						echo "$result: $result_reason - $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				if (eregi("DUPTITLEALTPHONECAMP",$duplicate_check)) # duplicate title/alt_phone check within campaign lists
+					{
+					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPTITLEALTPHONECAMP\n";}
+					$duplicate_found=0;
+					$stmt="SELECT lead_id,list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id IN($duplicate_lists) limit 1;";
+					$rslt=mysql_query($stmt, $link);
+					$pc_recs = mysql_num_rows($rslt);
+					if ($pc_recs > 0)
+						{
+						$duplicate_found=1;
+						$row=mysql_fetch_row($rslt);
+						$duplicate_lead_id =	$row[0];
+						$duplicate_lead_list =	$row[1];
+						}
+
+					if ($duplicate_found > 0) 
+						{
+						$result = 'ERROR';
+						$result_reason = "add_lead DUPLICATE TITLE ALT_PHONE IN CAMPAIGN LISTS";
+						$data = "$title|$alt_phone|$list_id|$duplicate_lead_id|$duplicate_lead_list";
+						echo "$result: $result_reason - $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				if (eregi("DUPTITLEALTPHONESYS",$duplicate_check)) # duplicate title/alt_phone check within entire system
+					{
+					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPTITLEALTPHONESYS\n";}
+					$duplicate_found=0;
+					$stmt="SELECT lead_id,list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' limit 1;";
+					$rslt=mysql_query($stmt, $link);
+					$pc_recs = mysql_num_rows($rslt);
+					if ($pc_recs > 0)
+						{
+						$duplicate_found=1;
+						$row=mysql_fetch_row($rslt);
+						$duplicate_lead_id =	$row[0];
+						$duplicate_lead_list =	$row[1];
+						}
+
+					if ($duplicate_found > 0) 
+						{
+						$result = 'ERROR';
+						$result_reason = "add_lead DUPLICATE TITLE ALT_PHONE IN SYSTEM";
+						$data = "$title|$alt_phone|$list_id|$duplicate_lead_id|$duplicate_lead_list";
+						echo "$result: $result_reason - $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				### END checking for duplicate if defined ###
+
 				
 				### get current gmt_offset of the phone_number
 				$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
@@ -1253,7 +1419,7 @@ if ($function == 'add_lead')
 
 				### insert a new lead in the system with this phone number
 				$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$list_id',status='NEW',user='$user',vendor_lead_code='$vendor_lead_code',source_id='$source_id',gmt_offset_now='$gmt_offset',title='$title',first_name='$first_name',middle_initial='$middle_initial',last_name='$last_name',address1='$address1',address2='$address2',address3='$address3',city='$city',state='$state',province='$province',postal_code='$postal_code',country_code='$country_code',gender='$gender',date_of_birth='$date_of_birth',alt_phone='$alt_phone',email='$email',security_phrase='$security_phrase',comments='$comments',called_since_last_reset='N',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME',rank='$rank',owner='$owner';";
-				if ($DB) {echo "$stmt\n";}
+				if ($DB>0) {echo "DEBUG: add_lead query - $stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$affected_rows = mysql_affected_rows($link);
 				if ($affected_rows > 0)
@@ -1271,7 +1437,7 @@ if ($function == 'add_lead')
 						$map=$MT;  $ALTm_phone_code=$MT;  $ALTm_phone_number=$MT;  $ALTm_phone_note=$MT;
 						$map = explode('!', $multi_alt_phones);
 						$map_count = count($map);
-						if ($DB) {echo "multi-al-entry: $a|$map_count|$multi_alt_phones\n";}
+						if ($DB>0) {echo "DEBUG: add_lead multi-al-entry - $a|$map_count|$multi_alt_phones\n";}
 						$g++;
 						$r=0;   $s=0;   $inserted_alt_phones=0;
 						while ($r < $map_count)
@@ -1290,7 +1456,7 @@ if ($function == 'add_lead')
 							$ALTm_phone_number[$r] =	$ncn[0];
 							$ALTm_phone_note[$r] =		$ncn[2];
 							$stmt = "INSERT INTO vicidial_list_alt_phones (lead_id,phone_code,phone_number,alt_phone_note,alt_phone_count) values('$lead_id','$ALTm_phone_code[$r]','$ALTm_phone_number[$r]','$ALTm_phone_note[$r]','$s');";
-							if ($DB) {echo "$stmt\n";}
+							if ($DB>0) {echo "DEBUG: add_lead query - $stmt\n";}
 							$rslt=mysql_query($stmt, $link);
 							$Zaffected_rows = mysql_affected_rows($link);
 							$inserted_alt_phones = ($inserted_alt_phones + $Zaffected_rows);
@@ -1308,7 +1474,6 @@ if ($function == 'add_lead')
 						$dialable=1;
 
 						$stmt="SELECT local_call_time,vicidial_campaigns.campaign_id from vicidial_campaigns,vicidial_lists where list_id='$list_id' and vicidial_campaigns.campaign_id=vicidial_lists.campaign_id;";
-						if ($DB) {echo "|$stmt|\n";}
 						$rslt=mysql_query($stmt, $link);
 						$row=mysql_fetch_row($rslt);
 						$local_call_time=$row[0];
@@ -1333,7 +1498,7 @@ if ($function == 'add_lead')
 
 							### insert record into vicidial_hopper for alt_phone call attempt
 							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$VD_campaign_id',status='READY',list_id='$list_id',gmt_offset_now='$gmt_offset',state='$state',user='',priority='$hopper_priority';";
-							if ($DB) {echo "$stmt\n";}
+							if ($DB>0) {echo "DEBUG: add_lead query - $stmt\n";}
 							$rslt=mysql_query($stmt, $link);
 							$Haffected_rows = mysql_affected_rows($link);
 							if ($Haffected_rows > 0)
