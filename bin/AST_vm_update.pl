@@ -168,8 +168,8 @@ $t = new Net::Telnet (Port => 5038,
 					  Prompt => '/.*[\$%#>] $/',
 					  Output_record_separator => '',);
 #$fh = $t->dump_log("$telnetlog");  # uncomment for telnet log
-	if (length($ASTmgrUSERNAMEsend) > 3) {$telnet_login = $ASTmgrUSERNAMEsend;}
-	else {$telnet_login = $ASTmgrUSERNAME;}
+if (length($ASTmgrUSERNAMEsend) > 3) {$telnet_login = $ASTmgrUSERNAMEsend;}
+else {$telnet_login = $ASTmgrUSERNAME;}
 
 $t->open("$telnet_host"); 
 $t->waitfor('/[01]\n$/');			# print login
@@ -280,7 +280,7 @@ if ($active_voicemail_server > 0)
 			}
 		else
 			{
-			$stmtA = "UPDATE vicidial_voicemail set messages='$NEW_messages[$i]',old_messages='$OLD_messages[$i]' where voicemail_id='$voicemail_id';";
+			$stmtA = "UPDATE vicidial_voicemail set messages='$NEW_messages[$i]',old_messages='$OLD_messages[$i]' where voicemail_id='$PTvoicemail_ids[$i]';";
 				if($DB){print STDERR "\n|$stmtA|\n";}
 			$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 			}
