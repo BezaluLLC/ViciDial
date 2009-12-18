@@ -1,4 +1,4 @@
-INSERT INTO servers (server_id,server_description,server_ip,active,asterisk_version)values('TESTast','Test install of Asterisk server', '10.10.10.16','Y','1.2.26.2');
+INSERT INTO servers (server_id,server_description,server_ip,active,asterisk_version)values('TESTast','Test install of Asterisk server', '10.10.10.16','Y','1.4.21.2');
 
 INSERT INTO server_updater SET server_ip='10.10.10.16', last_update='';
 

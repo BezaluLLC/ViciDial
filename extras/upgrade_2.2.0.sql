@@ -542,7 +542,7 @@ ALTER TABLE vicidial_campaigns MODIFY web_form_address TEXT;
 ALTER TABLE vicidial_campaigns ADD web_form_address_two TEXT;
 ALTER TABLE vicidial_campaigns ADD waitforsilence_options VARCHAR(25) default '';
 ALTER TABLE vicidial_campaigns MODIFY am_message_exten VARCHAR(100) default 'vm-goodbye';
-UPDATE vicidial_campaigns SET am_message_exten='vm-goodbye';
+UPDATE vicidial_campaigns SET am_message_exten='vm-goodbye' where am_message_exten='';
 
 ALTER TABLE system_settings ADD db_schema_update_date DATETIME;
 ALTER TABLE system_settings ADD enable_second_webform ENUM('0','1') default '0';

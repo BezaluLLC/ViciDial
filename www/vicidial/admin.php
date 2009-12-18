@@ -8013,8 +8013,8 @@ if ($ADD=="2")
 				else
 					{
 					#### BEGIN CREATE NEW GROUP RECORD IN VTIGER
-					# Get next available id from vtiger_groups_seq to use as groupid
-					$stmt="SELECT id from vtiger_groups_seq;";
+					# Get next available id from vtiger_users_seq to use as groupid
+					$stmt="SELECT id from vtiger_users_seq;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkV);
 					$row=mysql_fetch_row($rslt);
@@ -8022,7 +8022,7 @@ if ($ADD=="2")
 					if (!$rslt) {die('Could not execute: ' . mysql_error());}
 
 					# Increase next available groupid with 1 so next record gets proper id
-					$stmt="UPDATE vtiger_groups_seq SET id = '$groupid';";
+					$stmt="UPDATE vtiger_users_seq SET id = '$groupid';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkV);
 					if (!$rslt) {die('Could not execute: ' . mysql_error());}
@@ -8295,8 +8295,8 @@ if ($ADD=="2A")
 				else
 					{
 					#### BEGIN CREATE NEW GROUP RECORD IN VTIGER
-					# Get next available id from vtiger_groups_seq to use as groupid
-					$stmt="SELECT id from vtiger_groups_seq;";
+					# Get next available id from vtiger_users_seq to use as groupid
+					$stmt="SELECT id from vtiger_users_seq;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkV);
 					$row=mysql_fetch_row($rslt);
@@ -8304,7 +8304,7 @@ if ($ADD=="2A")
 					if (!$rslt) {die('Could not execute: ' . mysql_error());}
 
 					# Increase next available groupid with 1 so next record gets proper id
-					$stmt="UPDATE vtiger_groups_seq SET id = '$groupid';";
+					$stmt="UPDATE vtiger_users_seq SET id = '$groupid';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkV);
 					if (!$rslt) {die('Could not execute: ' . mysql_error());}
@@ -9346,8 +9346,8 @@ if ($ADD==211111)
 				else
 					{
 					#### BEGIN CREATE NEW GROUP RECORD IN VTIGER
-					# Get next available id from vtiger_groups_seq to use as groupid
-					$stmt="SELECT id from vtiger_groups_seq;";
+					# Get next available id from vtiger_users_seq to use as groupid
+					$stmt="SELECT id from vtiger_users_seq;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkV);
 					$row=mysql_fetch_row($rslt);
@@ -9355,7 +9355,7 @@ if ($ADD==211111)
 					if (!$rslt) {die('Could not execute: ' . mysql_error());}
 
 					# Increase next available groupid with 1 so next record gets proper id
-					$stmt="UPDATE vtiger_groups_seq SET id = '$groupid';";
+					$stmt="UPDATE vtiger_users_seq SET id = '$groupid';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkV);
 					if (!$rslt) {die('Could not execute: ' . mysql_error());}
@@ -10392,8 +10392,8 @@ if ($ADD=="4A")
 				else
 					{
 					#### BEGIN CREATE NEW GROUP RECORD IN VTIGER
-					# Get next available id from vtiger_groups_seq to use as groupid
-					$stmt="SELECT id from vtiger_groups_seq;";
+					# Get next available id from vtiger_users_seq to use as groupid
+					$stmt="SELECT id from vtiger_users_seq;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkV);
 					$row=mysql_fetch_row($rslt);
@@ -10401,7 +10401,7 @@ if ($ADD=="4A")
 					if (!$rslt) {die('Could not execute: ' . mysql_error());}
 
 					# Increase next available groupid with 1 so next record gets proper id
-					$stmt="UPDATE vtiger_groups_seq SET id = '$groupid';";
+					$stmt="UPDATE vtiger_users_seq SET id = '$groupid';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkV);
 					if (!$rslt) {die('Could not execute: ' . mysql_error());}
@@ -10625,8 +10625,8 @@ if ($ADD=="4B")
 				else
 					{
 					#### BEGIN CREATE NEW GROUP RECORD IN VTIGER
-					# Get next available id from vtiger_groups_seq to use as groupid
-					$stmt="SELECT id from vtiger_groups_seq;";
+					# Get next available id from vtiger_users_seq to use as groupid
+					$stmt="SELECT id from vtiger_users_seq;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkV);
 					$row=mysql_fetch_row($rslt);
@@ -10634,7 +10634,7 @@ if ($ADD=="4B")
 					if (!$rslt) {die('Could not execute: ' . mysql_error());}
 
 					# Increase next available groupid with 1 so next record gets proper id
-					$stmt="UPDATE vtiger_groups_seq SET id = '$groupid';";
+					$stmt="UPDATE vtiger_users_seq SET id = '$groupid';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkV);
 					if (!$rslt) {die('Could not execute: ' . mysql_error());}
@@ -10852,8 +10852,8 @@ if ($ADD==4)
 				else
 					{
 					#### BEGIN CREATE NEW GROUP RECORD IN VTIGER
-					# Get next available id from vtiger_groups_seq to use as groupid
-					$stmt="SELECT id from vtiger_groups_seq;";
+					# Get next available id from vtiger_users_seq to use as groupid
+					$stmt="SELECT id from vtiger_users_seq;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkV);
 					$row=mysql_fetch_row($rslt);
@@ -10861,7 +10861,7 @@ if ($ADD==4)
 					if (!$rslt) {die('Could not execute: ' . mysql_error());}
 
 					# Increase next available groupid with 1 so next record gets proper id
-					$stmt="UPDATE vtiger_groups_seq SET id = '$groupid';";
+					$stmt="UPDATE vtiger_users_seq SET id = '$groupid';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkV);
 					if (!$rslt) {die('Could not execute: ' . mysql_error());}
@@ -12332,8 +12332,8 @@ if ($ADD==411111)
 				else
 					{
 					#### BEGIN CREATE NEW GROUP RECORD IN VTIGER
-					# Get next available id from vtiger_groups_seq to use as groupid
-					$stmt="SELECT id from vtiger_groups_seq;";
+					# Get next available id from vtiger_users_seq to use as groupid
+					$stmt="SELECT id from vtiger_users_seq;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkV);
 					$row=mysql_fetch_row($rslt);
@@ -12341,7 +12341,7 @@ if ($ADD==411111)
 					if (!$rslt) {die('Could not execute: ' . mysql_error());}
 
 					# Increase next available groupid with 1 so next record gets proper id
-					$stmt="UPDATE vtiger_groups_seq SET id = '$groupid';";
+					$stmt="UPDATE vtiger_users_seq SET id = '$groupid';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkV);
 					if (!$rslt) {die('Could not execute: ' . mysql_error());}

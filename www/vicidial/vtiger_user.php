@@ -139,8 +139,8 @@ while ($i < $VD_groups_ct)
 		{
 		#### BEGIN CREATE NEW GROUP RECORD IN VTIGER
 
-		# Get next available id from vtiger_groups_seq to use as groupid
-		$stmt="SELECT id from vtiger_groups_seq;";
+		# Get next available id from vtiger_users_seq to use as groupid
+		$stmt="SELECT id from vtiger_users_seq;";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $linkV);
 		$row=mysql_fetch_row($rslt);
@@ -149,7 +149,7 @@ while ($i < $VD_groups_ct)
 		$VTugID[$i] = $groupid;
 
 		# Increase next available groupid with 1 so next record gets proper id
-		$stmt="UPDATE vtiger_groups_seq SET id = '$groupid';";
+		$stmt="UPDATE vtiger_users_seq SET id = '$groupid';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $linkV);
 		if (!$rslt) {die('Could not execute: ' . mysql_error());}
