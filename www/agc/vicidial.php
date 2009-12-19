@@ -265,10 +265,11 @@
 # 91205-2055 - Added CONSULTATIVE checkbox in a redesigned Transfer-Conf frame
 # 91206-2020 - Fixed vicidial_agent_log logging bug on logout when not paused
 # 91211-1412 - Added User custom variables and CRM login popup
+# 91219-0657 - Set pause code automatically on ReQueue and INBOUND_MAN Dial-Next-Number
 #
 
-$version = '2.2.0-243';
-$build = '91211-1412';
+$version = '2.2.0-244';
+$build = '91219-0657';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -1295,7 +1296,7 @@ $VDloginDISPLAY=0;
 			if ( ($campaign_allow_inbound == 'Y') and ($dial_method != 'MANUAL') )
 				{
 				$VARingroups='';
-				$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and group_id IN($closer_campaigns) order by group_id limit 60;";
+				$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and group_id IN($closer_campaigns) order by group_id limit 600;";
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01015',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1342,7 +1343,7 @@ $VDloginDISPLAY=0;
 			if ($allow_closers == 'Y')
 				{
 				$VARxfergroups='';
-				$stmt="select group_id,group_name from vicidial_inbound_groups where active = 'Y' and group_id IN($xfer_groups) order by group_id limit 60;";
+				$stmt="select group_id,group_name from vicidial_inbound_groups where active = 'Y' and group_id IN($xfer_groups) order by group_id limit 600;";
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01016',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -4601,7 +4602,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			{
 			auto_dial_level=0;
 
-			agent_log_id = AutoDial_ReSume_PauSe('VDADpause');
+			agent_log_id = AutoDial_ReSume_PauSe("VDADpause",'','','',"DIALNEXT");
+
+			PauseCodeSelect_submit("NXDIAL");
 
 			document.getElementById("DiaLControl").innerHTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\"><BR><IMG SRC=\"./images/vdc_LB_dialnextnumber_OFF.gif\" border=0 alt=\"Dial Next Number\">";
 			}
@@ -5485,7 +5488,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 // ################################################################################
 // Set the client to READY and start looking for calls (VDADready, VDADpause)
-	function AutoDial_ReSume_PauSe(taskaction,taskagentlog,taskwrapup,taskstatuschange,templogout)
+	function AutoDial_ReSume_PauSe(taskaction,taskagentlog,taskwrapup,taskstatuschange,temp_reason)
 		{
 		if (taskaction == 'VDADready')
 			{
@@ -5526,7 +5529,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				document.getElementById("DiaLControl").innerHTML = DiaLControl_auto_HTML;
 				}
 
-			if ( (agent_pause_codes_active=='FORCE') && (templogout != 'LOGOUT') )
+			if ( (agent_pause_codes_active=='FORCE') && (temp_reason != 'LOGOUT') && (temp_reason != 'REQUEUE') && (temp_reason != 'DIALNEXT') )
 				{
 				PauseCodeSelectContent_create();
  				}
@@ -8759,6 +8762,10 @@ function phone_number_format(formatphone) {
 
 		document.vicidial_form.DispoSelection.value = 'RQXFER';
 		DispoSelect_submit();
+
+		AutoDial_ReSume_PauSe("VDADpause",'','','',"REQUEUE");
+
+		PauseCodeSelect_submit("RQUEUE");
 		}
 
 

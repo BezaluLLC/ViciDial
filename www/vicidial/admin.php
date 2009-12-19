@@ -2015,11 +2015,12 @@ else
 # 91205-2231 - Added delete_vm_after_email voicemail option to phones and extra voicemail sections
 # 91210-2038 - Added better logging of Campaign emergency logout
 # 91211-1359 - Added custom user fields and campaign CRM login fields
+# 91219-0719 - Changed some field backgrounds in the Campaign Modification screens
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-228';
-$build = '91211-1359';
+$admin_version = '2.2.0-229';
+$build = '91219-0719';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6439,7 +6440,7 @@ if ($ADD==11)
 		if ($SSoutbound_autodial_active > 0)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>Allow Closers: </td><td align=left><select size=1 name=allow_closers><option>Y</option><option>N</option></select>$NWB#vicidial_campaigns-allow_closers$NWE</td></tr>\n";
-			echo "<tr bgcolor=#B6D3FC><td align=right>Hopper Level: </td><td align=left><select size=1 name=hopper_level><option>1</option><option>5</option><option>10</option><option>20</option><option>50</option><option>100</option><option>200</option><option>500</option><option>1000</option><option>2000</option></select>$NWB#vicidial_campaigns-hopper_level$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Hopper Level: </td><td align=left><select size=1 name=hopper_level><option>1</option><option>5</option><option>10</option><option>20</option><option>50</option><option>100</option><option>200</option><option>500</option><option>1000</option><option>2000</option></select>$NWB#vicidial_campaigns-hopper_level$NWE</td></tr>\n";
 			echo "<tr bgcolor=#B6D3FC><td align=right>Auto Dial Level: </td><td align=left><select size=1 name=auto_dial_level><option selected>$auto_dial_level</option>\n";
 			$adl=0;
 			while($adl <= $SSauto_dial_limit)
@@ -16137,7 +16138,7 @@ if ($ADD==31)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Change Date: </td><td align=left>$campaign_changedate &nbsp; $NWB#vicidial_campaigns-campaign_changedate$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Login Date: </td><td align=left>$campaign_logindate &nbsp; $NWB#vicidial_campaigns-campaign_logindate$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Call Date: </td><td align=left>$campaign_calldate &nbsp; $NWB#vicidial_campaigns-campaign_calldate$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option SELECTED>$row[2]</option></select>$NWB#vicidial_campaigns-active$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option SELECTED>$row[2]</option></select>$NWB#vicidial_campaigns-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Park Extension: </td><td align=left><input type=text name=park_ext size=10 maxlength=10 value=\"$row[9]\"> - Filename: <input type=text name=park_file_name size=10 maxlength=10 value=\"$row[10]\">$NWB#vicidial_campaigns-park_ext$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Web Form: </td><td align=left><input type=text name=web_form_address size=70 maxlength=1055 value=\"$web_form_address\">$NWB#vicidial_campaigns-web_form_address$NWE</td></tr>\n";
 		if ($SSenable_second_webform > 0)
@@ -16157,7 +16158,7 @@ if ($ADD==31)
 				$o++;
 				$Dstatus = $Dstatuses[$o];
 
-				echo "<tr bgcolor=#B6D3FC><td align=right>Dial Status $o: </td><td align=left> \n";
+				echo "<tr bgcolor=#8EBCFD><td align=right>Dial Status $o: </td><td align=left> \n";
 
 				if ($DEFstatusDISABLED > 0)
 					{
@@ -16171,7 +16172,7 @@ if ($ADD==31)
 					}
 				}
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>Add A Dial Status: </td><td align=left><select size=1 name=dial_status $DEFlistDISABLE>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Add A Dial Status: </td><td align=left><select size=1 name=dial_status $DEFlistDISABLE>\n";
 			echo "<option value=\"\"> - NONE - </option>\n";
 
 			echo "$dial_statuses_list";
@@ -16299,7 +16300,7 @@ if ($ADD==31)
 
 			echo "<tr bgcolor=#B6D3FC><td align=right>Drop Lockout Time: </td><td align=left><input type=text name=drop_lockout_time size=6 maxlength=6 value=\"$drop_lockout_time\"> $NWB#vicidial_campaigns-drop_lockout_time$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>Hopper Level: </td><td align=left><select size=1 name=hopper_level><option>1</option><option>5</option><option>10</option><option>20</option><option>50</option><option>100</option><option>200</option><option>500</option><option>700</option><option>1000</option><option>2000</option><option SELECTED>$hopper_level</option></select>$NWB#vicidial_campaigns-hopper_level$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Hopper Level: </td><td align=left><select size=1 name=hopper_level><option>1</option><option>5</option><option>10</option><option>20</option><option>50</option><option>100</option><option>200</option><option>500</option><option>700</option><option>1000</option><option>2000</option><option SELECTED>$hopper_level</option></select>$NWB#vicidial_campaigns-hopper_level$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=right>Force Reset of Hopper: </td><td align=left><select size=1 name=reset_hopper><option>Y</option><option SELECTED>N</option></select>$NWB#vicidial_campaigns-force_reset_hopper$NWE</td></tr>\n";
 
@@ -16485,13 +16486,13 @@ if ($ADD==31)
 
 		if ($SSoutbound_autodial_active > 0)
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>Dial Timeout: </td><td align=left><input type=text name=dial_timeout size=3 maxlength=3 value=\"$dial_timeout\"> <i>in seconds</i>$NWB#vicidial_campaigns-dial_timeout$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Dial Timeout: </td><td align=left><input type=text name=dial_timeout size=3 maxlength=3 value=\"$dial_timeout\"> <i>in seconds</i>$NWB#vicidial_campaigns-dial_timeout$NWE</td></tr>\n";
 			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Dial Prefix: </td><td align=left><input type=text name=dial_prefix size=20 maxlength=20 value=\"$dial_prefix\"> <font size=1>for 91NXXNXXXXXX value would be 9, for no dial prefix use X</font>$NWB#vicidial_campaigns-dial_prefix$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Omit Phone Code: </td><td align=left><select size=1 name=omit_phone_code><option>Y</option><option>N</option><option SELECTED>$omit_phone_code</option></select>$NWB#vicidial_campaigns-omit_phone_code$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign CallerID: </td><td align=left><input type=text name=campaign_cid size=20 maxlength=20 value=\"$campaign_cid\">$NWB#vicidial_campaigns-campaign_cid$NWE\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Campaign CallerID: </td><td align=left><input type=text name=campaign_cid size=20 maxlength=20 value=\"$campaign_cid\">$NWB#vicidial_campaigns-campaign_cid$NWE\n";
 		$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and campaign_cid_override != '' and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$rowx=mysql_fetch_row($rslt);
@@ -16501,7 +16502,7 @@ if ($ADD==31)
 
 		if ($SSoutbound_autodial_active > 0)
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>Campaign VDAD exten: </td><td align=left><input type=text name=campaign_vdad_exten size=10 maxlength=20 value=\"$campaign_vdad_exten\">$NWB#vicidial_campaigns-campaign_vdad_exten$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Campaign VDAD exten: </td><td align=left><input type=text name=campaign_vdad_exten size=10 maxlength=20 value=\"$campaign_vdad_exten\">$NWB#vicidial_campaigns-campaign_vdad_exten$NWE</td></tr>\n";
 			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Rec exten: </td><td align=left><input type=text name=campaign_rec_exten size=10 maxlength=10 value=\"$campaign_rec_exten\">$NWB#vicidial_campaigns-campaign_rec_exten$NWE</td></tr>\n";
 
@@ -16524,7 +16525,7 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Get Call Launch: </td><td align=left><select size=1 name=get_call_launch><option selected>NONE</option><option>SCRIPT</option><option>WEBFORM</option><option selected>$get_call_launch</option></select>$NWB#vicidial_campaigns-get_call_launch$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B9CBFD><td align=right>Answering Machine Message: </td><td><input type=text size=50 maxlength=100 name=am_message_exten id=am_message_exten value=\"$am_message_exten\"> <a href=\"javascript:launch_chooser('am_message_exten','date',1200);\">audio chooser</a>  $NWB#vicidial_campaigns-am_message_exten$NWE\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Answering Machine Message: </td><td><input type=text size=50 maxlength=100 name=am_message_exten id=am_message_exten value=\"$am_message_exten\"> <a href=\"javascript:launch_chooser('am_message_exten','date',1200);\">audio chooser</a>  $NWB#vicidial_campaigns-am_message_exten$NWE\n";
 		$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and am_message_exten_override != '' and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$rowx=mysql_fetch_row($rslt);
@@ -16532,13 +16533,13 @@ if ($ADD==31)
 			{echo " <font color=red>LIST OVERRIDE ACTIVE</font>";}
 		echo "</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>WaitForSilence Options: </td><td align=left><input type=text name=waitforsilence_options size=20 maxlength=25 value=\"$waitforsilence_options\">$NWB#vicidial_campaigns-waitforsilence_options$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>WaitForSilence Options: </td><td align=left><input type=text name=waitforsilence_options size=20 maxlength=25 value=\"$waitforsilence_options\">$NWB#vicidial_campaigns-waitforsilence_options$NWE</td></tr>\n";
 
 		if ($SSoutbound_autodial_active > 0)
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>AMD Send to VM exten: </td><td align=left><select size=1 name=amd_send_to_vmx><option>Y</option><option>N</option><option SELECTED>$amd_send_to_vmx</option></select>$NWB#vicidial_campaigns-amd_send_to_vmx$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>AMD Send to VM exten: </td><td align=left><select size=1 name=amd_send_to_vmx><option>Y</option><option>N</option><option SELECTED>$amd_send_to_vmx</option></select>$NWB#vicidial_campaigns-amd_send_to_vmx$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>CPD AMD Action: </td><td align=left><select size=1 name=cpd_amd_action><option>DISABLED</option><option>DISPO</option><option>MESSAGE</option><option SELECTED>$cpd_amd_action</option></select>$NWB#vicidial_campaigns-cpd_amd_action$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>CPD AMD Action: </td><td align=left><select size=1 name=cpd_amd_action><option>DISABLED</option><option>DISPO</option><option>MESSAGE</option><option SELECTED>$cpd_amd_action</option></select>$NWB#vicidial_campaigns-cpd_amd_action$NWE</td></tr>\n";
 			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Transfer-Conf DTMF 1: </td><td align=left><input type=text name=xferconf_a_dtmf size=20 maxlength=50 value=\"$xferconf_a_dtmf\">$NWB#vicidial_campaigns-xferconf_a_dtmf$NWE</td></tr>\n";
 
@@ -16560,15 +16561,15 @@ if ($ADD==31)
 
 		if ($SSoutbound_autodial_active > 0)
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>Drop Call Seconds: </td><td align=left><input type=text name=drop_call_seconds size=5 maxlength=2 value=\"$drop_call_seconds\">$NWB#vicidial_campaigns-drop_call_seconds$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Drop Call Seconds: </td><td align=left><input type=text name=drop_call_seconds size=5 maxlength=2 value=\"$drop_call_seconds\">$NWB#vicidial_campaigns-drop_call_seconds$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>Drop Action: </td><td align=left><select size=1 name=drop_action><option>HANGUP</option><option>MESSAGE</option><option>VOICEMAIL</option><option>IN_GROUP</option><option SELECTED>$drop_action</option></select>$NWB#vicidial_campaigns-drop_action$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Drop Action: </td><td align=left><select size=1 name=drop_action><option>HANGUP</option><option>MESSAGE</option><option>VOICEMAIL</option><option>IN_GROUP</option><option SELECTED>$drop_action</option></select>$NWB#vicidial_campaigns-drop_action$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>Safe Harbor Exten: </td><td align=left><input type=text name=safe_harbor_exten size=10 maxlength=20 value=\"$safe_harbor_exten\">$NWB#vicidial_campaigns-safe_harbor_exten$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Safe Harbor Exten: </td><td align=left><input type=text name=safe_harbor_exten size=10 maxlength=20 value=\"$safe_harbor_exten\">$NWB#vicidial_campaigns-safe_harbor_exten$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail: </td><td align=left><input type=text name=voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',1600);\">voicemail chooser</a>$NWB#vicidial_campaigns-voicemail_ext$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Voicemail: </td><td align=left><input type=text name=voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',1600);\">voicemail chooser</a>$NWB#vicidial_campaigns-voicemail_ext$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>Drop Transfer Group: </td><td align=left><select size=1 name=drop_inbound_group>";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Drop Transfer Group: </td><td align=left><select size=1 name=drop_inbound_group>";
 			echo "$Dgroups_menu";
 			echo "</select>$NWB#vicidial_campaigns-drop_inbound_group$NWE\n";
 			$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and drop_inbound_group_override != '' and active='Y';";
@@ -16582,16 +16583,16 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Wrap Up Message: </td><td align=left><input type=text name=wrapup_message size=40 maxlength=255 value=\"$wrapup_message\">$NWB#vicidial_campaigns-wrapup_message$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Use Internal DNC List: </td><td align=left><select size=1 name=use_internal_dnc><option>Y</option><option>N</option><option>AREACODE</option><option SELECTED>$use_internal_dnc</option></select>$NWB#vicidial_campaigns-use_internal_dnc$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Use Internal DNC List: </td><td align=left><select size=1 name=use_internal_dnc><option>Y</option><option>N</option><option>AREACODE</option><option SELECTED>$use_internal_dnc</option></select>$NWB#vicidial_campaigns-use_internal_dnc$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Use Campaign DNC List: </td><td align=left><select size=1 name=use_campaign_dnc><option>Y</option><option>N</option><option>AREACODE</option><option SELECTED>$use_campaign_dnc</option></select>$NWB#vicidial_campaigns-use_campaign_dnc$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Use Campaign DNC List: </td><td align=left><select size=1 name=use_campaign_dnc><option>Y</option><option>N</option><option>AREACODE</option><option SELECTED>$use_campaign_dnc</option></select>$NWB#vicidial_campaigns-use_campaign_dnc$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Pause Codes Active: </td><td align=left><select size=1 name=agent_pause_codes_active><option>FORCE</option><option>Y</option><option>N</option><option SELECTED>$agent_pause_codes_active</option></select>$NWB#vicidial_campaigns-agent_pause_codes_active$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Stats Refresh: </td><td align=left><select size=1 name=campaign_stats_refresh><option>Y</option><option>N</option><option SELECTED>$campaign_stats_refresh</option></select>$NWB#vicidial_campaigns-campaign_stats_refresh$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Disable Alter Customer Data: </td><td align=left><select size=1 name=disable_alter_custdata><option>Y</option><option>N</option><option SELECTED>$disable_alter_custdata</option></select>$NWB#vicidial_campaigns-disable_alter_custdata$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Disable Alter Customer Phone: </td><td align=left><select size=1 name=disable_alter_custphone><option>Y</option><option>N</option><option>HIDE</option><option SELECTED>$disable_alter_custphone</option></select>$NWB#vicidial_campaigns-disable_alter_custphone$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Disable Alter Customer Data: </td><td align=left><select size=1 name=disable_alter_custdata><option>Y</option><option>N</option><option SELECTED>$disable_alter_custdata</option></select>$NWB#vicidial_campaigns-disable_alter_custdata$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Disable Alter Customer Phone: </td><td align=left><select size=1 name=disable_alter_custphone><option>Y</option><option>N</option><option>HIDE</option><option SELECTED>$disable_alter_custphone</option></select>$NWB#vicidial_campaigns-disable_alter_custphone$NWE</td></tr>\n";
 
 		if ($SSoutbound_autodial_active > 0)
 			{
@@ -16605,24 +16606,24 @@ if ($ADD==31)
 				{
 				echo "<tr bgcolor=#B6D3FC><td align=right>Agent Select Territories: </td><td align=left><select size=1 name=agent_select_territories><option>Y</option><option>N</option><option SELECTED>$agent_select_territories</option></select>$NWB#vicidial_campaigns-agent_select_territories$NWE</td></tr>\n";
 				}
-			echo "<tr bgcolor=#B6D3FC><td align=right>Agent Display Dialable Leads: </td><td align=left><select size=1 name=agent_display_dialable_leads><option>Y</option><option>N</option><option SELECTED>$agent_display_dialable_leads</option></select>$NWB#vicidial_campaigns-agent_display_dialable_leads$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Agent Display Dialable Leads: </td><td align=left><select size=1 name=agent_display_dialable_leads><option>Y</option><option>N</option><option SELECTED>$agent_display_dialable_leads</option></select>$NWB#vicidial_campaigns-agent_display_dialable_leads$NWE</td></tr>\n";
 			}
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Display Queue Count: </td><td align=left><select size=1 name=display_queue_count><option>Y</option><option>N</option><option SELECTED>$display_queue_count</option></select>$NWB#vicidial_campaigns-display_queue_count$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Agent Display Queue Count: </td><td align=left><select size=1 name=display_queue_count><option>Y</option><option>N</option><option SELECTED>$display_queue_count</option></select>$NWB#vicidial_campaigns-display_queue_count$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Agent View Calls in Queue: </td><td align=left><select size=1 name=view_calls_in_queue><option>NONE</option><option>ALL</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option SELECTED>$view_calls_in_queue</option></select>$NWB#vicidial_campaigns-view_calls_in_queue$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Agent View Calls in Queue: </td><td align=left><select size=1 name=view_calls_in_queue><option>NONE</option><option>ALL</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option SELECTED>$view_calls_in_queue</option></select>$NWB#vicidial_campaigns-view_calls_in_queue$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>View Calls in Queue Launch: </td><td align=left><select size=1 name=view_calls_in_queue_launch><option>AUTO</option><option>MANUAL</option><option SELECTED>$view_calls_in_queue_launch</option></select>$NWB#vicidial_campaigns-view_calls_in_queue_launch$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>View Calls in Queue Launch: </td><td align=left><select size=1 name=view_calls_in_queue_launch><option>AUTO</option><option>MANUAL</option><option SELECTED>$view_calls_in_queue_launch</option></select>$NWB#vicidial_campaigns-view_calls_in_queue_launch$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Grab Calls in Queue: </td><td align=left><select size=1 name=grab_calls_in_queue><option>Y</option><option>N</option><option SELECTED>$grab_calls_in_queue</option></select>$NWB#vicidial_campaigns-grab_calls_in_queue$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Agent Grab Calls in Queue: </td><td align=left><select size=1 name=grab_calls_in_queue><option>Y</option><option>N</option><option SELECTED>$grab_calls_in_queue</option></select>$NWB#vicidial_campaigns-grab_calls_in_queue$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Call Re-Queue Button: </td><td align=left><select size=1 name=call_requeue_button><option>Y</option><option>N</option><option SELECTED>$call_requeue_button</option></select>$NWB#vicidial_campaigns-call_requeue_button$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Pause After Each Call: </td><td align=left><select size=1 name=pause_after_each_call><option>Y</option><option>N</option><option SELECTED>$pause_after_each_call</option></select>$NWB#vicidial_campaigns-pause_after_each_call$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Manual Dial List ID: </td><td align=left><input type=text name=manual_dial_list_id size=15 maxlength=12 value=\"$manual_dial_list_id\">$NWB#vicidial_campaigns-manual_dial_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Manual Dial List ID: </td><td align=left><input type=text name=manual_dial_list_id size=15 maxlength=12 value=\"$manual_dial_list_id\">$NWB#vicidial_campaigns-manual_dial_list_id$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Manual Dial Filter: </td><td align=left><select size=1 name=manual_dial_filter><option>NONE</option><option>DNC_ONLY</option><option>CAMPLISTS_ONLY</option><option>DNC_AND_CAMPLISTS</option><option SELECTED>$manual_dial_filter</option></select>$NWB#vicidial_campaigns-manual_dial_filter$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Manual Dial Filter: </td><td align=left><select size=1 name=manual_dial_filter><option>NONE</option><option>DNC_ONLY</option><option>CAMPLISTS_ONLY</option><option>DNC_AND_CAMPLISTS</option><option SELECTED>$manual_dial_filter</option></select>$NWB#vicidial_campaigns-manual_dial_filter$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Screen Clipboard Copy: </td><td align=left><select size=1 name=agent_clipboard_copy><option>NONE</option><option>lead_id</option><option>list_id</option><option>title</option><option>first_name</option><option>middle_initial</option><option>last_name</option><option>phone_code</option><option>phone_number</option><option>address1</option><option>address2</option><option>address3</option><option>city</option><option>state</option><option>province</option><option>postal_code</option><option>country_code</option><option>alt_phone</option><option>comments</option><option>date_of_birth</option><option>email</option><option>gender</option><option>gmt_offset_now</option><option>security_phrase</option><option>vendor_lead_code</option><option SELECTED>$agent_clipboard_copy</option></select>$NWB#vicidial_campaigns-agent_clipboard_copy$NWE</td></tr>\n";
 
@@ -16630,9 +16631,9 @@ if ($ADD==31)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>Agent Screen Extended Alt Dial: </td><td align=left><select size=1 name=agent_extended_alt_dial><option>Y</option><option>N</option><option SELECTED>$agent_extended_alt_dial</option></select>$NWB#vicidial_campaigns-agent_extended_alt_dial$NWE</td></tr>\n";
 			}
-		echo "<tr bgcolor=#B6D3FC><td align=right>3-Way Call Outbound CallerID: </td><td align=left><select size=1 name=three_way_call_cid><option>CAMPAIGN</option><option>CUSTOMER</option><option>AGENT_PHONE</option><option>AGENT_CHOOSE</option><option SELECTED>$three_way_call_cid</option></select>$NWB#vicidial_campaigns-three_way_call_cid$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>3-Way Call Outbound CallerID: </td><td align=left><select size=1 name=three_way_call_cid><option>CAMPAIGN</option><option>CUSTOMER</option><option>AGENT_PHONE</option><option>AGENT_CHOOSE</option><option SELECTED>$three_way_call_cid</option></select>$NWB#vicidial_campaigns-three_way_call_cid$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>3-Way Call Dial Prefix: </td><td align=left><input type=text name=three_way_dial_prefix size=15 maxlength=20 value=\"$three_way_dial_prefix\">$NWB#vicidial_campaigns-three_way_dial_prefix$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>3-Way Call Dial Prefix: </td><td align=left><input type=text name=three_way_dial_prefix size=15 maxlength=20 value=\"$three_way_dial_prefix\">$NWB#vicidial_campaigns-three_way_dial_prefix$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Group Alias Allowed: </td><td align=left><select size=1 name=agent_allow_group_alias><option>Y</option><option>N</option><option SELECTED>$agent_allow_group_alias</option></select>$NWB#vicidial_campaigns-agent_allow_group_alias$NWE</td></tr>\n";
 
@@ -16666,17 +16667,17 @@ if ($ADD==31)
 
 		if ($SSenable_vtiger_integration > 0)
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>Vtiger Search Category: </td><td align=left><select size=1 name=vtiger_search_category><option>LEAD</option><option>ACCOUNT</option><option>VENDOR</option><option>LEAD_ACCOUNT</option><option>LEAD_ACCOUNT_VENDOR</option><option>ACCTID</option><option>ACCTID_ACCOUNT</option><option>ACCTID_ACCOUNT_LEAD_VENDOR</option><option SELECTED>$vtiger_search_category</option></select>$NWB#vicidial_campaigns-vtiger_search_category$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Vtiger Search Category: </td><td align=left><select size=1 name=vtiger_search_category><option>LEAD</option><option>ACCOUNT</option><option>VENDOR</option><option>LEAD_ACCOUNT</option><option>LEAD_ACCOUNT_VENDOR</option><option>ACCTID</option><option>ACCTID_ACCOUNT</option><option>ACCTID_ACCOUNT_LEAD_VENDOR</option><option SELECTED>$vtiger_search_category</option></select>$NWB#vicidial_campaigns-vtiger_search_category$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>Vtiger Search Dead Accounts: </td><td align=left><select size=1 name=vtiger_search_dead><option>DISABLED</option><option>ASK</option><option>RESURRECT</option><option SELECTED>$vtiger_search_dead</option></select>$NWB#vicidial_campaigns-vtiger_search_dead$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Vtiger Search Dead Accounts: </td><td align=left><select size=1 name=vtiger_search_dead><option>DISABLED</option><option>ASK</option><option>RESURRECT</option><option SELECTED>$vtiger_search_dead</option></select>$NWB#vicidial_campaigns-vtiger_search_dead$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>Vtiger Create Call Record: </td><td align=left><select size=1 name=vtiger_create_call_record><option>Y</option><option>N</option><option>DISPO</option><option SELECTED>$vtiger_create_call_record</option></select>$NWB#vicidial_campaigns-vtiger_create_call_record$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Vtiger Create Call Record: </td><td align=left><select size=1 name=vtiger_create_call_record><option>Y</option><option>N</option><option>DISPO</option><option SELECTED>$vtiger_create_call_record</option></select>$NWB#vicidial_campaigns-vtiger_create_call_record$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>Vtiger Create Lead Record: </td><td align=left><select size=1 name=vtiger_create_lead_record><option>Y</option><option>N</option><option SELECTED>$vtiger_create_lead_record</option></select>$NWB#vicidial_campaigns-vtiger_create_lead_record$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Vtiger Create Lead Record: </td><td align=left><select size=1 name=vtiger_create_lead_record><option>Y</option><option>N</option><option SELECTED>$vtiger_create_lead_record</option></select>$NWB#vicidial_campaigns-vtiger_create_lead_record$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>Vtiger Status Call: </td><td align=left><select size=1 name=vtiger_status_call><option>Y</option><option>N</option><option SELECTED>$vtiger_status_call</option></select>$NWB#vicidial_campaigns-vtiger_status_call$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Vtiger Status Call: </td><td align=left><select size=1 name=vtiger_status_call><option>Y</option><option>N</option><option SELECTED>$vtiger_status_call</option></select>$NWB#vicidial_campaigns-vtiger_status_call$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>Vtiger Screen Login: </td><td align=left><select size=1 name=vtiger_screen_login><option>Y</option><option>N</option><option>NEW_WINDOW</option><option SELECTED>$vtiger_screen_login</option></select>$NWB#vicidial_campaigns-vtiger_screen_login$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Vtiger Screen Login: </td><td align=left><select size=1 name=vtiger_screen_login><option>Y</option><option>N</option><option>NEW_WINDOW</option><option SELECTED>$vtiger_screen_login</option></select>$NWB#vicidial_campaigns-vtiger_screen_login$NWE</td></tr>\n";
 			}
 		else
 			{
@@ -17478,7 +17479,7 @@ if ($ADD==34)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Change Date: </td><td align=left>$campaign_changedate &nbsp; $NWB#vicidial_campaigns-campaign_changedate$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Login Date: </td><td align=left>$campaign_logindate &nbsp; $NWB#vicidial_campaigns-campaign_logindate$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option SELECTED>$row[2]</option></select>$NWB#vicidial_campaigns-active$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option SELECTED>$row[2]</option></select>$NWB#vicidial_campaigns-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Park Extension: </td><td align=left>$row[9] - $row[10]$NWB#vicidial_campaigns-park_ext$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Web Form: </td><td align=left>$row[11]$NWB#vicidial_campaigns-web_form_address$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Allow Closers: </td><td align=left>$row[12] $NWB#vicidial_campaigns-allow_closers$NWE</td></tr>\n";
@@ -17493,7 +17494,7 @@ if ($ADD==34)
 				$o++;
 				$Dstatus = $Dstatuses[$o];
 
-				echo "<tr bgcolor=#B6D3FC><td align=right>Dial Status $o: </td><td align=left> \n";
+				echo "<tr bgcolor=#8EBCFD><td align=right>Dial Status $o: </td><td align=left> \n";
 				if ($DEFstatusDISABLED > 0)
 					{
 					echo "<font color=grey><DEL><b>$Dstatus</b> - $statname_list[$Dstatus] &nbsp; &nbsp; &nbsp; &nbsp; <font size=2>\n";
@@ -17506,7 +17507,7 @@ if ($ADD==34)
 					}
 				}
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>Add A Dial Status: </td><td align=left><select size=1 name=dial_status $DEFlistDISABLE>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Add A Dial Status: </td><td align=left><select size=1 name=dial_status $DEFlistDISABLE>\n";
 			echo "<option value=\"\"> - NONE - </option>\n";
 
 			echo "$dial_statuses_list";
@@ -17632,7 +17633,7 @@ if ($ADD==34)
 			echo "<option selected value=\"$lead_filter_id\">$lead_filter_id - $filtername_list[$lead_filter_id]</option>\n";
 			echo "</select>$NWB#vicidial_campaigns-lead_filter_id$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>Hopper Level: </td><td align=left><select size=1 name=hopper_level><option>1</option><option>5</option><option>10</option><option>20</option><option>50</option><option>100</option><option>200</option><option>500</option><option>700</option><option>1000</option><option>2000</option><option SELECTED>$hopper_level</option></select>$NWB#vicidial_campaigns-hopper_level$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Hopper Level: </td><td align=left><select size=1 name=hopper_level><option>1</option><option>5</option><option>10</option><option>20</option><option>50</option><option>100</option><option>200</option><option>500</option><option>700</option><option>1000</option><option>2000</option><option SELECTED>$hopper_level</option></select>$NWB#vicidial_campaigns-hopper_level$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=right>Force Reset of Hopper: </td><td align=left><select size=1 name=reset_hopper><option>Y</option><option SELECTED>N</option></select>$NWB#vicidial_campaigns-force_reset_hopper$NWE</td></tr>\n";
 

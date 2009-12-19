@@ -34,13 +34,14 @@ context => parkedcalls          ; Which context parked calls are in
 ; The follow effectively disables the built in blind transfer feature of Asterisk.
 ; This sets it to a DTMF tone that asterisk cannot even process, that is only available
 ; on certain telco style test sets. This does NOT disable the VICIDIAL blind transfer
-; abilityi as this is implemented through other means. If you are using your VICIDIAL 
+; ability as this is implemented through other means. If you are using your VICIDIAL 
 ; server as PBX you may want to comment this out. Be aware however that this can make 
 ; it so that anyone can transfer the call to anyone else that is allowed by your dialplan. 
 ; IE someone you have called could transfer the call to a their mother, the Pope, or 
 ; a 900 number if you do not have your dialplan carefully setup.
 
-blindxfer => D
+blindxfer => CC
+disconnect => B
 
 
 [applicationmap]

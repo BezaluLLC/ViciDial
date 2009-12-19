@@ -466,11 +466,11 @@ if( $VARserver_ip =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
 print "\n";
 print "SERVER IP ADDRESS CHANGE FOR VICIDIAL FINISHED!\n";
 print "\n";
-print "If you are not having VICIDIAL auto-generate your conf files, please\n";
-print "remember to change your extensions.conf entries for the new IP address:\n";
-print "exten => _$VARremDIALstr*.,1,Goto(default,${EXTEN:16},1)\n";
-print "exten => _8600XXX*.,1,AGI(agi-VDADfixCXFER.agi)\n";
-print "exten => _78600XXX*.,1,AGI(agi-VDADfixCXFER.agi)\n";
+#print "If you are not having VICIDIAL auto-generate your conf files, please\n";
+#print "remember to change your extensions.conf entries for the new IP address:\n";
+#print "exten => _$VARremDIALstr*.,1,Goto(default,\${EXTEN:16},1)\n";
+#print "exten => _8600XXX*.,1,AGI(agi-VDADfixCXFER.agi)\n";
+#print "exten => _78600XXX*.,1,AGI(agi-VDADfixCXFER.agi)\n";
 
 
 $secy = time();		$secz = ($secy - $secX);		$minz = ($secz/60);		# calculate script runtime so far
