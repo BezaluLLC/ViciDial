@@ -22,6 +22,7 @@
 # 90608-0251 - Added optional carrier codes stats, made graph at bottom optional
 # 90806-0001 - Added CI(Customer Interaction/Human Answered) stats, added option to add inbound rollover stats to these
 # 90827-1154 - Added List ID breakdown of calls
+# 91222-0843 - Fixed ALL-CAMPAIGNS inbound rollover issue(bug #262), and some other bugs
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -117,6 +118,15 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
+$i=0;
+$group_string='|';
+$group_ct = count($group);
+while($i < $group_ct)
+	{
+	$group_string .= "$group[$i]|";
+	$i++;
+	}
+
 $stmt="select campaign_id,campaign_name from vicidial_campaigns;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
@@ -127,6 +137,8 @@ while ($i < $campaigns_to_print)
 	$row=mysql_fetch_row($rslt);
 	$groups[$i] =		$row[0];
 	$group_names[$i] =	$row[1];
+	if (ereg("--ALL",$group_string) )
+		{$group[$i] = $groups[$i];}
 	$i++;
 	}
 
@@ -157,6 +169,8 @@ while($i < $group_ct)
 
 	$i++;
 	}
+if (strlen($group_drop_SQL) < 2)
+	{$group_drop_SQL = "''";}
 if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) )
 	{
 	$group_SQL = "";
@@ -1043,7 +1057,7 @@ else
 			$length_in_secZ=0;
 			$queue_secondsZ=0;
 			$agent_alert_delayZ=0;
-			$stmt="select length_in_sec,queue_seconds,agent_alert_delay from vicidial_closer_log,vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id and vcl.user='$RAWuser[$i]' $group_drop_SQLand;";
+			$stmt="select length_in_sec,queue_seconds,agent_alert_delay from vicidial_closer_log,vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id and user='$RAWuser[$i]' $group_drop_SQLand;";
 			$rslt=mysql_query($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
 			$INallcalls_to_printZ = mysql_num_rows($rslt);
@@ -1387,7 +1401,6 @@ else
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $STARTtime);
 	echo "\nRun Time: $RUNtime seconds\n";
-
 	}
 
 
