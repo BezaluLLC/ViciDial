@@ -268,19 +268,30 @@ while($i < $group_ct)
 	$groupQS .= "&groups[]=$groups[$i]";
 	$i++;
 	}
+$group_SQL = eregi_replace(",$",'',$group_SQL);
+
+
 if ( (ereg("--NONE--",$group_string) ) or ($group_ct < 1) )
 	{
+	$all_active = 0;
 	$group_SQL = "''";
-#	$group_SQL = "group_id IN('')";
+	$group_SQLand = "and FALSE";
+	$group_SQLwhere = "where FALSE";
+	}
+elseif ( eregi('ALL-ACTIVE',$group_string) )
+	{
+	$all_active = 1;
+	$group_SQL = "''";
+	$group_SQLand = "";
+	$group_SQLwhere = "";
 	}
 else
 	{
-	$group_SQL = eregi_replace(",$",'',$group_SQL);
-#	$group_SQL = "group_id IN($group_SQL)";
+	$all_active = 0;
+	$group_SQLand = "and campaign_id IN($group_SQL)";
+	$group_SQLwhere = "where campaign_id IN($group_SQL)";
 	}
 
-#if ( (eregi('ALL-ACTIVE',$group_string)) and ($with_inbound=='O') and ($outbound_autodial_active > 0) )
-#	{$with_inbound='N';}
 
 $stmt="select user_group from vicidial_user_groups;";
 $rslt=mysql_query($stmt, $link);
@@ -651,7 +662,7 @@ function hide_ingroup_info()
 echo "\n-->\n
 </STYLE>\n";
 
-$stmt = "select count(*) from vicidial_campaigns where campaign_id IN($group_SQL) and campaign_allow_inbound='Y';";
+$stmt = "select count(*) from vicidial_campaigns where active='Y' and campaign_allow_inbound='Y' $group_SQLand;";
 $rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$row=mysql_fetch_row($rslt);
@@ -727,12 +738,11 @@ if (strlen($ALLcloser_campaignsSQL)<2)
 if ($DB > 0) {echo "\n|$ALLcloser_campaignsSQL|$stmt|\n";}
 
 
-##### INBOUND ONLY ###
-if (ereg('O',$with_inbound))
+##### INBOUND #####
+if ( ( ereg('Y',$with_inbound) or ereg('O',$with_inbound) ) and ($campaign_allow_inbound > 0) )
 	{
-	$multi_drop++;
 	### Gather list of Closer group ids
-	$stmt = "select closer_campaigns from vicidial_campaigns where campaign_id IN($group_SQL);";
+	$stmt = "select closer_campaigns from vicidial_campaigns where active='Y' $group_SQLand;";
 	$rslt=mysql_query($stmt, $link);
 	$ccamps_to_print = mysql_num_rows($rslt);
 	$c=0;
@@ -746,7 +756,18 @@ if (ereg('O',$with_inbound))
 		$c++;
 		}
 	$closer_campaignsSQL = preg_replace("/,$/","",$closer_campaignsSQL);
-	if ($DB > 0) {echo "\n|$closer_campaigns|$closer_campaignsSQL|$stmt|\n";}
+	}
+else
+	{
+	$closer_campaignsSQL = "''";
+	}	
+if ($DB > 0) {echo "\n|$closer_campaigns|$closer_campaignsSQL|$stmt|\n";}
+
+
+##### INBOUND ONLY ###
+if (ereg('O',$with_inbound))
+	{
+	$multi_drop++;
 
 	if ($adastats>1)
 		{
@@ -861,7 +882,7 @@ if (ereg('O',$with_inbound))
 
 		}
 
-	$stmt="select agent_pause_codes_active from vicidial_campaigns where campaign_id IN($group_SQL);";
+	$stmt="select agent_pause_codes_active from vicidial_campaigns $group_SQLwhere;";
 
 	$stmtB="select sum(calls_today),sum(drops_today),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(hold_sec_stat_one),sum(hold_sec_stat_two),sum(hold_sec_answer_calls),sum(hold_sec_drop_calls),sum(hold_sec_queue_calls) from vicidial_campaign_stats where campaign_id IN ($closer_campaignsSQL);";
 
@@ -873,7 +894,7 @@ if (ereg('O',$with_inbound))
 		$stmtB="select sum(calls_today),sum(drops_today),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(hold_sec_stat_one),sum(hold_sec_stat_two),sum(hold_sec_answer_calls),sum(hold_sec_drop_calls),sum(hold_sec_queue_calls) from vicidial_campaign_stats $non_inboundSQL;";
 		}
 
-	$stmtC="select agent_non_pause_sec from vicidial_campaign_stats where campaign_id IN($group_SQL);";
+	$stmtC="select agent_non_pause_sec from vicidial_campaign_stats $group_SQLwhere;";
 
 
 	if ($DB > 0) {echo "\n|$stmt|$stmtB|$stmtC|\n";}
@@ -995,7 +1016,7 @@ else
 		if (ereg('N',$with_inbound))
 			{$non_inboundSQL = "where campaign_id NOT IN ($ALLcloser_campaignsSQL)";}
 		$multi_drop++;
-		$stmt="select avg(auto_dial_level),min(dial_status_a),min(dial_status_b),min(dial_status_c),min(dial_status_d),min(dial_status_e),min(lead_order),min(lead_filter_id),sum(hopper_level),min(dial_method),avg(adaptive_maximum_level),avg(adaptive_dropped_percentage),avg(adaptive_dl_diff_target),avg(adaptive_intensity),min(available_only_ratio_tally),min(adaptive_latest_server_time),min(local_call_time),avg(dial_timeout),min(dial_statuses),max(agent_pause_codes_active),max(list_order_mix) from vicidial_campaigns;";
+		$stmt="select avg(auto_dial_level),min(dial_status_a),min(dial_status_b),min(dial_status_c),min(dial_status_d),min(dial_status_e),min(lead_order),min(lead_filter_id),sum(hopper_level),min(dial_method),avg(adaptive_maximum_level),avg(adaptive_dropped_percentage),avg(adaptive_dl_diff_target),avg(adaptive_intensity),min(available_only_ratio_tally),min(adaptive_latest_server_time),min(local_call_time),avg(dial_timeout),min(dial_statuses),max(agent_pause_codes_active),max(list_order_mix) from vicidial_campaigns where active='Y';";
 
 		$stmtB="select sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4) from vicidial_campaign_stats $non_inboundSQL;";
 		}
@@ -1007,21 +1028,6 @@ else
 			{
 			$multi_drop++;
 			if ($DB) {echo "with_inbound|$with_inbound|$campaign_allow_inbound\n";}
-			$stmt = "select distinct closer_campaigns from vicidial_campaigns where campaign_id IN($group_SQL);";
-			$rslt=mysql_query($stmt, $link);
-			$ccamps_to_print = mysql_num_rows($rslt);
-			$c=0;
-			while ($ccamps_to_print > $c)
-				{
-				$row=mysql_fetch_row($rslt);
-				$closer_campaigns = $row[0];
-				$closer_campaigns = preg_replace("/^ | -$/","",$closer_campaigns);
-				$closer_campaigns = preg_replace("/ /","','",$closer_campaigns);
-				$closer_campaignsSQL .= "'$closer_campaigns',";
-				$c++;
-				}
-			$closer_campaignsSQL = preg_replace("/,$/","",$closer_campaignsSQL);
-			if ($DB > 0) {echo "\n|$closer_campaigns|$closer_campaignsSQL|$stmt|\n";}
 
 			$stmt="select auto_dial_level,dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,lead_filter_id,hopper_level,dial_method,adaptive_maximum_level,adaptive_dropped_percentage,adaptive_dl_diff_target,adaptive_intensity,available_only_ratio_tally,adaptive_latest_server_time,local_call_time,dial_timeout,dial_statuses,agent_pause_codes_active,list_order_mix from vicidial_campaigns where campaign_id IN ($group_SQL,$closer_campaignsSQL);";
 
@@ -1061,11 +1067,7 @@ else
 	$DIALmix =		$row[20];
 
 
-	$stmt="select count(*) from vicidial_hopper where campaign_id IN($group_SQL);";
-	if (eregi('ALL-ACTIVE',$group_string))
-		{
-		$stmt="select count(*) from vicidial_hopper;";
-		}
+	$stmt="select count(*) from vicidial_hopper $group_SQLwhere;";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$VDhop = $row[0];
@@ -1107,11 +1109,7 @@ else
 		}
 	else {$diffpctONEMIN = '0.00';}
 
-	$stmt="select sum(local_trunk_shortage) from vicidial_campaign_server_stats where campaign_id IN($group_SQL);";
-	if (eregi('ALL-ACTIVE',$group_string)) 
-		{
-		$stmt="select sum(local_trunk_shortage) from vicidial_campaign_server_stats;";
-		}
+	$stmt="select sum(local_trunk_shortage) from vicidial_campaign_server_stats $group_SQLwhere;";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$balanceSHORT = $row[0];
@@ -1123,7 +1121,7 @@ else
 		}
 	else
 		{
-		$stmt="select vcl_id from vicidial_campaigns_list_mix where campaign_id IN($group_SQL) and status='ACTIVE' limit 1;";
+		$stmt="select vcl_id from vicidial_campaigns_list_mix where status='ACTIVE' $groupSQLand limit 1;";
 		$rslt=mysql_query($stmt, $link);
 		$Lmix_to_print = mysql_num_rows($rslt);
 		if ($Lmix_to_print > 0)
@@ -1271,31 +1269,11 @@ echo "</FORM>\n\n";
 ###################################################################################
 if ($campaign_allow_inbound > 0)
 	{
-	$stmt="select closer_campaigns from vicidial_campaigns where campaign_id IN($group_SQL);";
-	$rslt=mysql_query($stmt, $link);
-	$ccamps_to_print = mysql_num_rows($rslt);
-		if ($DB) {echo "inbound/outbound calls|$ccamps_to_print|$stmt\n";}
-	$c=0;
-	$closer_campaignsSQL='';
-	while ($ccamps_to_print > $c)
-		{
-		$row=mysql_fetch_row($rslt);
-		$closer_campaigns = $row[0];
-		$closer_campaigns = preg_replace("/^ | -$/","",$closer_campaigns);
-		$closer_campaigns = preg_replace("/ /","','",$closer_campaigns);
-		$closer_campaignsSQL .= "'$closer_campaigns',";
-		$c++;
-		}
-	$closer_campaignsSQL = preg_replace("/,$/","",$closer_campaignsSQL);
-
-	$stmtB="from vicidial_auto_calls where status NOT IN('XFER') and ( (call_type='IN' and campaign_id IN($closer_campaignsSQL)) or (campaign_id IN($group_SQL) and call_type IN('OUT','OUTBALANCE')) ) order by queue_priority desc,campaign_id,call_time;";
+	$stmtB="from vicidial_auto_calls where status NOT IN('XFER') and ( (call_type='IN' and campaign_id IN($closer_campaignsSQL)) or (call_type IN('OUT','OUTBALANCE') $group_SQLand) ) order by queue_priority desc,campaign_id,call_time;";
 	}
 else
 	{
-	if (eregi('ALL-ACTIVE',$group_string)) {$UgroupSQL = '';}
-	else {$UgroupSQL = " and campaign_id IN($group_SQL)";}
-
-	$stmtB="from vicidial_auto_calls where status NOT IN('XFER') $UgroupSQL order by queue_priority desc,campaign_id,call_time;";
+	$stmtB="from vicidial_auto_calls where status NOT IN('XFER') $group_SQLand order by queue_priority desc,campaign_id,call_time;";
 	}
 if ($CALLSdisplay > 0)
 	{
