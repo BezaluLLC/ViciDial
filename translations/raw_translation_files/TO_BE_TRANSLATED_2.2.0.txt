@@ -356,6 +356,7 @@ CRM Popup Login||
 If set to Y, the CRM Popup Address is used to open a new window on agent login to this campaign. Default is N||
 CRM Popup Address||
 The web address of a CRM login page, it can have variables populated just like the web form address, with the VAR in the front and using --A--user_custom_one--B-- to define variables||
+VIDPROMPT will prompt the caller for their ID number and will create a new lead record with the CallerID as the phone number and the ID as the Vendor ID, VIDPROMPTLOOKUP will attempt to lookup the ID in the entire system, VIDPROMPTLOOKUPRL will attampt to lookup the vendor ID by the ID in only one specified list, VIDPROMPTLOOKUPRC will attampt to lookup the vendor ID by the ID in all of the lists that belong to the specified campaign||
 
 
 add-file: user_territories.php

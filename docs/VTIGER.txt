@@ -1,6 +1,6 @@
 VICIDIAL and Vtiger
 
-Current VICIDIAL integration with Vtiger is for the 5.0.4 release version of Vtiger only (we also have beta support for Vtiger 5.1.0)
+Current VICIDIAL integration with Vtiger is for the 5.1.0 release version of Vtiger only (we also have support for older Vtiger 5.0.4)
 
 Current integration features:
 - vicidial.php WEBFORM search for lead/account/vendor
@@ -81,15 +81,14 @@ NOTE: vtiger requires PHP5, APACHE2.2 and MySQL5,
 
 
 mysql
-GRANT ALL on vtigercrm504.* TO vtiger@'%' IDENTIFIED BY 'vtuser';
-GRANT ALL on vtigercrm504.* TO vtiger@localhost IDENTIFIED BY 'vtuser';
-create database vtigercrm504;
+GRANT ALL on vtigercrm510.* TO vtiger@'%' IDENTIFIED BY 'vtuser';
+GRANT ALL on vtigercrm510.* TO vtiger@localhost IDENTIFIED BY 'vtuser';
+create database vtigercrm510;
 quit
 
 cd /usr/local/apache2/htdocs/
-wget http://voxel.dl.sourceforge.net/sourceforge/vtigercrm/vtigercrm-5.0.4.tar.gz
-gunzip vtigercrm-5.0.4.tar.gz
-tar xvf vtigercrm-5.0.4.tar
+wget http://sourceforge.net/projects/vtigercrm/files/vtiger%20CRM%205.1.0/vtigercrm-5.1.0.tar.gz
+tar xvfz vtigercrm-5.1.0.tar.gz
 chmod -R 0777 vtigercrm
 cd vtigercrm
 ls -l
@@ -97,17 +96,12 @@ ls -l
 * enter contact info and click the START button at the bottom of the screen
 * in system configuration set the database host to: <ip-address>
 * database user/pass: vtiger/vtuser
-* database name: vtigercrm504
+* database name: vtigercrm510
 * change default admin(vtadmin) and standarduser(vtuser) passwords
 * click to install vtiger, then follow the on-screen instructions
 # patch vtiger to fix issue with user synchronization and add click-to-dial:
-cp /usr/src/astguiclient/trunk/extras/Vtiger504_vicidial_005.patch ./
-patch -p1 < ./Vtiger504_vicidial_005.patch
-
-NOTE: There is also now a patch for the 5.1.0 RC version of Vtiger that is
-included with ViciDial:   Vtiger510_vicidial_001_noclose.patch
-  cp /usr/src/astguiclient/trunk/extras/Vtiger510_vicidial_001_noclose.patch ./
-  patch -p1 < ./Vtiger510_vicidial_001_noclose.patch
+cp /usr/src/astguiclient/trunk/extras/Vtiger510_vicidial_001_noclose.patch ./
+patch -p1 < ./Vtiger510_vicidial_001_noclose.patch
 
 
 

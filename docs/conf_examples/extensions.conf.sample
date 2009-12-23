@@ -237,20 +237,29 @@ exten => 8889990011112,1,Goto(loopback-no-log,9990011112,1)
 ;exten => _*NXXNXXXXXX*3429,6,Voicemail,u2000
 
 
-; parameters for agi-VDAD_ALL_inbound.agi (9 fields separated by five dashes "-----"):
-;  1. the method of call handling for the script:
+; parameters for agi-VDAD_ALL_inbound.agi (upto 12 fields separated by five dashes "-----"):
+; Below are the parameters needed for the script to be run properly
+; 1. the method of call handling for the script:
 ; 	- CID - 	CID received, add record with phone number
 ; 	- CIDLOOKUP - 	Lookup CID to find record in whole system
 ; 	- CIDLOOKUPRL -	Restrict lookup to one list
 ; 	- CIDLOOKUPRC -	Restrict lookup to one campaign's lists
-;	- CLOSER -      Closer calls from VICIDIAL fronters
-; 	- ANI - 	ANI received, add record with phone number
+;     - CLOSER -      Closer calls from VICIDIAL fronters
+; 	- ANI - 	ANI received, add record with phone number (based on RBS T1s)
 ; 	- ANILOOKUP - 	Lookup ANI to find record in whole system
 ; 	- ANILOOKUPRL -	Restrict lookup to one list
+; 	- ANILOOKUPRC -	Restrict lookup to one campaign's lists
+; 	- VID -		Add record with Vendor Lead Code received as argument 12
+; 	- VIDLOOKUP - 	Lookup Vendor Lead Code received as argument 12 to find record in whole system
+; 	- VIDLOOKUPRL -	Restrict lookup to one list (argument 12)
+; 	- VIDLOOKUPRC -	Restrict lookup to one campaign's lists (argument 12)
+; 	- VIDPROMPT - 	Prompt Vendor Lead Code to User with IVR to add record with Vendor Lead Code
+; 	- VIDPROMPTLOOKUP - 	Prompt Vendor Lead Code to User with IVR to find record in whole system
+; 	- VIDPROMPTLOOKUPRL -	Restrict lookup to one list
+; 	- VIDPROMPTLOOKUPRC -	Restrict lookup to one campaign's lists
 ; 	- 3DIGITID - 	Enter 3 digit code to go to agent
 ; 	- 4DIGITID - 	Enter 4 digit code to go to agent
-; 	- 5DIGITID - 	Enter 5 digit code to go to agent
-; 	- 10DIGITID - 	Enter 10 digit code to go to agent
+; 	- XDIGITID - 	Enter X digit code to go to agent(variable, i.e. 9DIGITID, 12DIGITID, etc...)
 ; 2. the method of searching for an available agent:
 ; 	- LO - Load Balance Overflow only (priority to home server)
 ; 	- LB - <default> Load Balance total system
@@ -264,6 +273,8 @@ exten => 8889990011112,1,Goto(loopback-no-log,9990011112,1)
 ; 9. the phone dialing code to insert with the new lead if new (and CID/ANI available)
 ; 10. the campaign_id to search within lists if CIDLOOKUPRC
 ; 11. the user to queue the call to for AGENTDIRECT in-group calls
+; 12. vendor_lead_code if external mechanism like custom IVR is used to prompt user for ID
+;
 ; inbound VICIDIAL call with CID delivery through T1 PRI
 ;exten => 1234,1,Answer                  ; Answer the line
 ;exten => 1234,2,AGI(agi-VDAD_ALL_inbound.agi,CID-----LB-----CL_GALLERIA-----7274515134-----Closer-----park----------999-----1)

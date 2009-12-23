@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_ALL_inbound.agi version 2.2.0   *DBI-version*
+# agi-VDAD_ALL_inbound.agi version 2.2.0
 # 
 # runs when a call comes in from an inbound call. This script will 
 # send the calls out to the closers that are logged in.
@@ -15,13 +15,21 @@
 # ; 	- CIDLOOKUPRL -	Restrict lookup to one list
 # ; 	- CIDLOOKUPRC -	Restrict lookup to one campaign's lists
 # ;     - CLOSER -      Closer calls from VICIDIAL fronters
-# ; 	- ANI - 	ANI received, add record with phone number
+# ; 	- ANI - 	ANI received, add record with phone number (based on RBS T1s)
 # ; 	- ANILOOKUP - 	Lookup ANI to find record in whole system
 # ; 	- ANILOOKUPRL -	Restrict lookup to one list
+# ; 	- ANILOOKUPRC -	Restrict lookup to one campaign's lists
+# ; 	- VID -		Add record with Vendor Lead Code received as argument 12
+# ; 	- VIDLOOKUP - 	Lookup Vendor Lead Code received as argument 12 to find record in whole system
+# ; 	- VIDLOOKUPRL -	Restrict lookup to one list (argument 12)
+# ; 	- VIDLOOKUPRC -	Restrict lookup to one campaign's lists (argument 12)
+# ; 	- VIDPROMPT - 	Prompt Vendor Lead Code to User with IVR to add record with Vendor Lead Code
+# ; 	- VIDPROMPTLOOKUP - 	Prompt Vendor Lead Code to User with IVR to find record in whole system
+# ; 	- VIDPROMPTLOOKUPRL -	Restrict lookup to one list
+# ; 	- VIDPROMPTLOOKUPRC -	Restrict lookup to one campaign's lists
 # ; 	- 3DIGITID - 	Enter 3 digit code to go to agent
 # ; 	- 4DIGITID - 	Enter 4 digit code to go to agent
-# ; 	- 5DIGITID - 	Enter 5 digit code to go to agent
-# ; 	- 10DIGITID - 	Enter 10 digit code to go to agent
+# ; 	- XDIGITID - 	Enter X digit code to go to agent(variable, i.e. 9DIGITID, 12DIGITID, etc...)
 # ; 2. the method of searching for an available agent:
 # ; 	- LO - Load Balance Overflow only (priority to home server)
 # ; 	- LB - <default> Load Balance total system
@@ -35,6 +43,7 @@
 # ; 9. the phone dialing code to insert with the new lead if new (and CID/ANI available)
 # ; 10. the campaign_id to search within lists if CIDLOOKUPRC
 # ; 11. the user to queue the call to for AGENTDIRECT in-group calls
+# ; 12. vendor_lead_code if external mechanism like custom IVR is used to prompt user for ID
 #
 # ;inbound VICIDIAL calls:
 #exten => 1234,1,Answer                  ; Answer the line
@@ -107,6 +116,7 @@
 # 91125-0921 - Fixed no-agent-no-queue AGENTDIRECT bug
 # 91213-0942 - Added queue_position to queue_log COMPLETE... records
 # 91214-2034 - Fixes for rare in-group rank route bug
+# 91223-0959 - Added VID(vendor_lead_code) options
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -253,6 +263,7 @@ if (length($ARGV[0])>1)
 	$phone_code = 		$ARGV_vars[8];
 	$Scampaign_id = 	$ARGV_vars[9];
 	$agent_only = 		$ARGV_vars[10];
+	$vendor_id = 		$ARGV_vars[11];
 	}
 
 $|=1;
@@ -363,7 +374,7 @@ if ($call_handle_method =~ /^CLOSER/)
 		}
 	}
 
-if ($call_handle_method =~ /^CID/)
+if ( ($call_handle_method =~ /^CID/) || ($call_handle_method =~ /^VID/) )
 	{
 	if (length($callerid)>0) {$phone_number = $callerid;}
 	   else {$phone_number = '';}
@@ -388,6 +399,10 @@ if ($call_handle_method =~ /^ANI/)
 		if ($AGILOG) {$agi_string = "ANI found: |$phone_number|";   &agi_output;}
 		}
 	}
+
+# When VID or  VIDPROMPT, methods are not used, no Vendor Lead Code can be supplied. Fill it with inbound_number
+if ($call_handle_method !~ /^VID/) 
+	{$vendor_id = $inbound_number;}
 
 foreach $i (sort keys %AGI) 
 	{
@@ -560,14 +575,21 @@ $AGI->stream_file('sip-silence');
 if ($call_handle_method =~ /DIGITID$/)
 	{
 	&enter_pin_number;
+	if (length($pin) > 0)
+		{$fronter = $pin;}
+	}
+
+if ($call_handle_method =~ /^VIDPROMPT/)
+	{
+	&enter_id_number;
 	}
 
 if ($call_handle_method =~ /LOOKUP/)
 	{
-	if (length($phone_number) < 3)
+	if ( ( ($call_handle_method =~ /^VID/) && (length($vendor_id)) < 3) || (length($phone_number) < 3) )
 		{
 		### insert a record into the vicidial_list table 
-		$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$inbound_number','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','1','$local_gmt','$VLcomments');";
+		$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','1','$local_gmt','$VLcomments');";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02007';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		$cbc=0;
@@ -618,7 +640,14 @@ if ($call_handle_method =~ /LOOKUP/)
 			}
 
 		$cbc=0;
-		$stmtA= "SELECT lead_id from vicidial_list where phone_number='$phone_number' $listSQL order by last_local_call_time desc limit 1;";
+		if ($call_handle_method =~ /^VID/) 
+			{
+			$stmtA= "SELECT lead_id from vicidial_list where vendor_lead_code='$vendor_id' $listSQL order by last_local_call_time desc limit 1;";
+			}
+		else 
+			{
+			$stmtA= "SELECT lead_id from vicidial_list where phone_number='$phone_number' $listSQL order by last_local_call_time desc limit 1;";
+			}
 			if ($AGILOG) {$agi_string = "VDAD vicidial_list search |$phone_number|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -639,9 +668,9 @@ if ($call_handle_method =~ /LOOKUP/)
 			} 
 		else 
 			{
-			### insert a record into the vicidial_list table 
-			$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$inbound_number','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','1','$local_gmt','$VLcomments');";
-			$affected_rows = $dbhA->do($stmtA);
+ 			### insert a record into the vicidial_list table 
+			$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','1','$local_gmt','$VLcomments');";
+ 			$affected_rows = $dbhA->do($stmtA);
 				$dbhP=$dbhA;   $mysql_count='02011';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			$cbc=0;
 			$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
@@ -690,9 +719,9 @@ else
 
 	else
 		{
-		### insert a record into the vicidial_list table if no record was found above
-		$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$inbound_number','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','1','-5.00','$VLcomments');";
-		$affected_rows = $dbhA->do($stmtA);
+ 		### insert a record into the vicidial_list table if no record was found above
+		$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','1','-5.00','$VLcomments');";
+ 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02014';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		$cbc=0;
 		$stmtA = "select LAST_INSERT_ID() LIMIT 1;";
@@ -2597,9 +2626,9 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		# if callerid is not valid do not execute
 		if ( ( length($phone_number) > 6 ) && ( $phone_number > 0) )
 			{
-			### insert a record into the vicidial_list table 
-			$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$inbound_number','VDCL','$hold_time_option_callback_list_id','N','$phone_code','$phone_number','$channel_group','1','$local_gmt','$VLcomments');";
-			$affected_rows = $dbhA->do($stmtA);
+ 			### insert a record into the vicidial_list table 
+			$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$hold_time_option_callback_list_id','N','$phone_code','$phone_number','$channel_group','1','$local_gmt','$VLcomments');";
+ 			$affected_rows = $dbhA->do($stmtA);
 				$dbhP=$dbhA;   $mysql_count='02089';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			$cbc=0;
 			$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
@@ -3020,6 +3049,35 @@ sub enter_pin_number
 	}
 
 
+# PROMPTS USED:
+# please_enter_id_number - "Please enter your ID Number followed by the # key
+# id_number - "Your ID number is"
+# confirm_id_number - "Press 1 if it is correct. Press 2 to repeat entry"
+sub enter_id_number
+	{
+	for ( $i = 0; $i < 2; $i++ ) 
+		{
+		$vendor_id = 0;
+		$id_number = $AGI->get_data('please_enter_id_number',5000,16);
+	
+		if ( length $id_number == 0 ) { return; }
+		if ($AGILOG) {$agi_string = "prompt id_number: $id_number";   &agi_output;}
+
+		$AGI->stream_file('id_number');
+		$AGI->say_digits($id_number);
+	
+		$id_verify = $AGI->get_data('confirm_id_number',5000,1);
+		if( length $id_verify == 0 ) { return; }
+		if ($AGILOG) {$agi_string = "prompt verify id: $id_verify";   &agi_output;}
+		
+		if($id_verify == 1) 
+			{
+			$vendor_id = $id_number;
+			return; 
+			}
+		}
+	}
+ 
 
 sub press_one_to_leave_voicemail
 	{
