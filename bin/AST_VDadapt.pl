@@ -254,6 +254,12 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 if ($DBX) {print "CONNECTED TO DATABASE:  $VARDB_server|$VARDB_database\n";}
 
+# make sure the vicidial_campaign_stats table has all of the campaigns.  
+# They should exist, but sometimes they get accidently removed during db moves and the like.
+$stmtA = "insert ignore into vicidial_campaign_stats (campaign_id) select campaign_id from vicidial_campaigns;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+
 &get_time_now;
 
 #############################################
