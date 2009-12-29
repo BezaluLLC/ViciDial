@@ -356,7 +356,15 @@ CRM Popup Login||
 If set to Y, the CRM Popup Address is used to open a new window on agent login to this campaign. Default is N||
 CRM Popup Address||
 The web address of a CRM login page, it can have variables populated just like the web form address, with the VAR in the front and using --A--user_custom_one--B-- to define variables||
-VIDPROMPT will prompt the caller for their ID number and will create a new lead record with the CallerID as the phone number and the ID as the Vendor ID, VIDPROMPTLOOKUP will attempt to lookup the ID in the entire system, VIDPROMPTLOOKUPRL will attampt to lookup the vendor ID by the ID in only one specified list, VIDPROMPTLOOKUPRC will attampt to lookup the vendor ID by the ID in all of the lists that belong to the specified campaign||
+If IN_GROUP is selected as the DID Route, then this is the call handling method used for these calls. CID will add a new lead record with every call using the CallerID as the phone number, CIDLOOKUP will attempt to lookup the phone number by the CallerID in the entire system, CIDLOOKUPRL will attempt to lookup the phone number by the CallerID in only one specified list, CIDLOOKUPRC will attempt to lookup the phone number by the CallerID in all of the lists that belong to the specified campaign, CLOSER is specified for VICIDIAL Closer calls, ANI will add a new lead record with every call using the ANI as the phone number, ANILOOKUP will attempt to lookup the phone number by the ANI in the entire system, ANILOOKUPRL will attempt to lookup the phone number by the ANI in only one specified list, XDIGITID will prompt the caller for an X digit code before the call will be put into the queue, VIDPROMPT will prompt the caller for their ID number and will create a new lead record with the CallerID as the phone number and the ID as the Vendor ID, VIDPROMPTLOOKUP will attempt to lookup the ID in the entire system, VIDPROMPTLOOKUPRL will attempt to lookup the vendor ID by the ID in only one specified list, VIDPROMPTLOOKUPRC will attempt to lookup the vendor ID by the ID in all of the lists that belong to the specified campaign. Default is CID||
+UNIFIED_CONTACT- This option will use the beta Vtiger 5.1.0 feature to search by phone number and bring up a search page in Vtiger||
+Timer Action||
+This feature allows you to trigger actions after a certain amount of time. the D1 and D2 DIAL options will launch a call to the Transfer Conference Number presets and send them to the agent session, this is usually used for simple IVR validation AGI applications or just to play a pre-recorded message. WEBFORM will open the web form address. MESSAGE_ONLY will simply display the message that is in the field below. NONE will disable this feature and is the default||
+Timer Action Message||
+This is the message that appears on the agent screen at the time the Timer Action is triggered||
+Timer Action Seconds||
+This is the amount of time after the call is connected to the customer that the Timer Action is triggered. Default is -1 which is also inactive||
+This setting will override the Campaign settings||
 
 
 add-file: user_territories.php
@@ -378,6 +386,8 @@ YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE||
 Manager ||
 has selected your in-group choices||
 CONSULTATIVE||
+Close Message||
+TIMER NOTIFICATION||
 
 
 add-file: vdc_script_display.php

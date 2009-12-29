@@ -128,12 +128,10 @@ $stmtB = "SELECT vd_server_logs FROM servers where server_ip = '$VARserver_ip';"
 $sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 $sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 $sthBrows=$sthB->rows;
-$rec_count=0;
-while ($sthBrows > $rec_count)
+if ($sthBrows > 0)
 	{
 	@aryB = $sthB->fetchrow_array;
-	$SERVERLOG =	"$aryB[0]";
-	$rec_count++;
+	$SERVERLOG =	$aryB[0];
 	}
 $sthB->finish();
 $dbhB->disconnect();
@@ -224,16 +222,14 @@ sub process_request
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
-	$rec_count=0;
-	while ($sthArows > $rec_count)
+	if ($sthArows > 0)
 		{
 		$AGILOG = '0';
 		@aryA = $sthA->fetchrow_array;
-		$DBagi_output =			"$aryA[0]";
+		$DBagi_output =			$aryA[0];
 		if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
 		if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
 		if ($DBagi_output =~ /BOTH/)	{$AGILOG = '3';}
-		$rec_count++;
 		}
 	$sthA->finish();
 

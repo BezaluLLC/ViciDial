@@ -355,6 +355,11 @@ external_dial VARCHAR(100) default '',
 external_ingroups TEXT,
 external_blended ENUM('0','1') default '0',
 external_igb_set_user VARCHAR(20) default '',
+external_update_fields ENUM('0','1') default '0',
+external_update_fields_data VARCHAR(255) default '',
+external_timer_action VARCHAR(20) default '',
+external_timer_action_message VARCHAR(255) default '',
+external_timer_action_seconds MEDIUMINT(7) default '-1',
 agent_log_id INT(9) UNSIGNED default '0',
 last_state_change DATETIME,
 agent_territories TEXT,
@@ -696,7 +701,10 @@ waitforsilence_options VARCHAR(25) default '',
 agent_select_territories ENUM('Y','N') default 'N',
 campaign_calldate DATETIME,
 crm_popup_login ENUM('Y','N') default 'N',
-crm_login_address TEXT
+crm_login_address TEXT,
+timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','MESSAGE_ONLY') default 'NONE',
+timer_action_message VARCHAR(255) default '',
+timer_action_seconds MEDIUMINT(7) default '-1'
 );
 
 CREATE TABLE vicidial_lists (
@@ -832,7 +840,10 @@ default_group_alias VARCHAR(30) default '',
 no_agent_no_queue ENUM('N','Y','NO_PAUSED') default 'N',
 no_agent_action ENUM('CALLMENU','INGROUP','DID','MESSAGE','EXTENSION','VOICEMAIL') default 'MESSAGE',
 no_agent_action_value VARCHAR(255) default 'nbdy-avail-to-take-call|vm-goodbye',
-web_form_address_two TEXT
+web_form_address_two TEXT,
+timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','MESSAGE_ONLY') default 'NONE',
+timer_action_message VARCHAR(255) default '',
+timer_action_seconds MEDIUMINT(7) default '-1'
 );
 
 CREATE TABLE vicidial_stations (
@@ -1990,7 +2001,7 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1188',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1189',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

@@ -672,3 +672,19 @@ ALTER TABLE vicidial_closer_log ADD queue_position SMALLINT(4) UNSIGNED default 
 ALTER TABLE vicidial_auto_calls ADD queue_position SMALLINT(4) UNSIGNED default '1';
 
 UPDATE system_settings SET db_schema_version='1188',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_live_agents ADD external_update_fields ENUM('0','1') default '0' AFTER external_igb_set_user;
+ALTER TABLE vicidial_live_agents ADD external_update_fields_data VARCHAR(255) default '' AFTER external_update_fields;
+ALTER TABLE vicidial_live_agents ADD external_timer_action VARCHAR(20) default '' AFTER external_update_fields_data;
+ALTER TABLE vicidial_live_agents ADD external_timer_action_message VARCHAR(255) default '' AFTER external_timer_action;
+ALTER TABLE vicidial_live_agents ADD external_timer_action_seconds MEDIUMINT(7) default '-1' AFTER external_timer_action_message;
+
+ALTER TABLE vicidial_campaigns ADD timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','MESSAGE_ONLY') default 'NONE';
+ALTER TABLE vicidial_campaigns ADD timer_action_message VARCHAR(255) default '';
+ALTER TABLE vicidial_campaigns ADD timer_action_seconds MEDIUMINT(7) default '-1';
+
+ALTER TABLE vicidial_inbound_groups ADD timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','MESSAGE_ONLY') default 'NONE';
+ALTER TABLE vicidial_inbound_groups ADD timer_action_message VARCHAR(255) default '';
+ALTER TABLE vicidial_inbound_groups ADD timer_action_seconds MEDIUMINT(7) default '-1';
+
+UPDATE system_settings SET db_schema_version='1189',db_schema_update_date=NOW();

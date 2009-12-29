@@ -344,6 +344,13 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	ID number that will be populated in the vendor ID(vendor_lead_code) 
 	field.
 
+83. Added an agent API function to update vicidial_list fields and the field
+	values in the agent screen on-the-fly for the agent's current call
+
+84. Added timer action options to campaigns and in-groups allowing a message,
+	webform or D1/D2-dial to happen at a specified number of seconds after
+	the customer connects to the agent. Also, an API callw as added for this
+
 
 
 

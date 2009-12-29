@@ -39,12 +39,15 @@
 # 90522-0506 - Security fix
 # 91130-1307 - Added change_ingroups(Manager InGroup change feature)
 # 91211-1805 - Added st_login_log and st_get_agent_active_lead functions, added alt_user
+# 91228-1059 - Added update_fields function
 #
 
-$version = '2.2.0-10';
-$build = '91211-1805';
+$version = '2.2.0-11';
+$build = '91228-1059';
 
 require("dbconnect.php");
+
+$query_string = getenv("QUERY_STRING");
 
 ### If you have globals turned off uncomment these lines
 if (isset($_GET["user"]))						{$user=$_GET["user"];}
@@ -87,6 +90,56 @@ if (isset($_GET["set_as_default"]))				{$set_as_default=$_GET["set_as_default"];
 	elseif (isset($_POST["set_as_default"]))	{$set_as_default=$_POST["set_as_default"];}
 if (isset($_GET["alt_user"]))					{$alt_user=$_GET["alt_user"];}
 	elseif (isset($_POST["alt_user"]))			{$alt_user=$_POST["alt_user"];}
+if (isset($_GET["lead_id"]))					{$lead_id=$_GET["lead_id"];}
+	elseif (isset($_POST["lead_id"]))			{$lead_id=$_POST["lead_id"];}
+if (isset($_GET["phone_number"]))				{$phone_number=$_GET["phone_number"];}
+	elseif (isset($_POST["phone_number"]))		{$phone_number=$_POST["phone_number"];}
+if (isset($_GET["vendor_lead_code"]))			{$vendor_lead_code=$_GET["vendor_lead_code"];}
+	elseif (isset($_POST["vendor_lead_code"]))	{$vendor_lead_code=$_POST["vendor_lead_code"];}
+if (isset($_GET["source_id"]))					{$source_id=$_GET["source_id"];}
+	elseif (isset($_POST["source_id"]))			{$source_id=$_POST["source_id"];}
+if (isset($_GET["gmt_offset_now"]))				{$gmt_offset_now=$_GET["gmt_offset_now"];}
+	elseif (isset($_POST["gmt_offset_now"]))	{$gmt_offset_now=$_POST["gmt_offset_now"];}
+if (isset($_GET["title"]))						{$title=$_GET["title"];}
+	elseif (isset($_POST["title"]))				{$title=$_POST["title"];}
+if (isset($_GET["first_name"]))					{$first_name=$_GET["first_name"];}
+	elseif (isset($_POST["first_name"]))		{$first_name=$_POST["first_name"];}
+if (isset($_GET["middle_initial"]))				{$middle_initial=$_GET["middle_initial"];}
+	elseif (isset($_POST["middle_initial"]))	{$middle_initial=$_POST["middle_initial"];}
+if (isset($_GET["last_name"]))					{$last_name=$_GET["last_name"];}
+	elseif (isset($_POST["last_name"]))			{$last_name=$_POST["last_name"];}
+if (isset($_GET["address1"]))					{$address1=$_GET["address1"];}
+	elseif (isset($_POST["address1"]))			{$address1=$_POST["address1"];}
+if (isset($_GET["address2"]))					{$address2=$_GET["address2"];}
+	elseif (isset($_POST["address2"]))			{$address2=$_POST["address2"];}
+if (isset($_GET["address3"]))					{$address3=$_GET["address3"];}
+	elseif (isset($_POST["address3"]))			{$address3=$_POST["address3"];}
+if (isset($_GET["city"]))						{$city=$_GET["city"];}
+	elseif (isset($_POST["city"]))				{$city=$_POST["city"];}
+if (isset($_GET["state"]))						{$state=$_GET["state"];}
+	elseif (isset($_POST["state"]))				{$state=$_POST["state"];}
+if (isset($_GET["province"]))					{$province=$_GET["province"];}
+	elseif (isset($_POST["province"]))			{$province=$_POST["province"];}
+if (isset($_GET["postal_code"]))				{$postal_code=$_GET["postal_code"];}
+	elseif (isset($_POST["postal_code"]))		{$postal_code=$_POST["postal_code"];}
+if (isset($_GET["country_code"]))				{$country_code=$_GET["country_code"];}
+	elseif (isset($_POST["country_code"]))		{$country_code=$_POST["country_code"];}
+if (isset($_GET["gender"]))						{$gender=$_GET["gender"];}
+	elseif (isset($_POST["gender"]))			{$gender=$_POST["gender"];}
+if (isset($_GET["date_of_birth"]))				{$date_of_birth=$_GET["date_of_birth"];}
+	elseif (isset($_POST["date_of_birth"]))		{$date_of_birth=$_POST["date_of_birth"];}
+if (isset($_GET["alt_phone"]))					{$alt_phone=$_GET["alt_phone"];}
+	elseif (isset($_POST["alt_phone"]))			{$alt_phone=$_POST["alt_phone"];}
+if (isset($_GET["email"]))						{$email=$_GET["email"];}
+	elseif (isset($_POST["email"]))				{$email=$_POST["email"];}
+if (isset($_GET["security_phrase"]))			{$security_phrase=$_GET["security_phrase"];}
+	elseif (isset($_POST["security_phrase"]))	{$security_phrase=$_POST["security_phrase"];}
+if (isset($_GET["comments"]))					{$comments=$_GET["comments"];}
+	elseif (isset($_POST["comments"]))			{$comments=$_POST["comments"];}
+if (isset($_GET["rank"]))						{$rank=$_GET["rank"];}
+	elseif (isset($_POST["rank"]))				{$rank=$_POST["rank"];}
+if (isset($_GET["owner"]))						{$owner=$_GET["owner"];}
+	elseif (isset($_POST["owner"]))				{$owner=$_POST["owner"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -107,6 +160,7 @@ if ($qm_conf_ct > 0)
 ###########################################
 
 $ingroup_choices = ereg_replace("\+"," ",$ingroup_choices);
+$query_string = ereg_replace("'|\"|\\\\|;","",$query_string);
 
 if ($non_latin < 1)
 	{
@@ -119,7 +173,7 @@ if ($non_latin < 1)
 	$focus = ereg_replace("[^-\_0-9a-zA-Z]","",$focus);
 	$preview = ereg_replace("[^-\_0-9a-zA-Z]","",$preview);
 		$notes = ereg_replace("\+"," ",$notes);
-	$notes = ereg_replace("[^ -\_0-9a-zA-Z]","",$notes);
+	$notes = ereg_replace("[^ -\.\_0-9a-zA-Z]","",$notes);
 	$phone_code = ereg_replace("[^0-9X]","",$phone_code);
 	$search = ereg_replace("[^-\_0-9a-zA-Z]","",$search);
 	$group_alias = ereg_replace("[^0-9a-zA-Z]","",$group_alias);
@@ -130,6 +184,30 @@ if ($non_latin < 1)
 	$blended = ereg_replace("[^A-Z]","",$blended);
 	$ingroup_choices = ereg_replace("[^ -\_0-9a-zA-Z]","",$ingroup_choices);
 	$set_as_default = ereg_replace("[^A-Z]","",$set_as_default);
+	$phone_number = ereg_replace("[^0-9]","",$phone_number);
+	$address1 = ereg_replace("[^ -\_0-9a-zA-Z]","",$address1);
+	$address2 = ereg_replace("[^ -\_0-9a-zA-Z]","",$address2);
+	$address3 = ereg_replace("[^ -\_0-9a-zA-Z]","",$address3);
+	$alt_phone = ereg_replace("[^ -\_0-9a-zA-Z]","",$alt_phone);
+	$city = ereg_replace("[^ -\_0-9a-zA-Z]","",$city);
+	$comments = ereg_replace("[^ -\_0-9a-zA-Z]","",$comments);
+	$country_code = ereg_replace("[^A-Z]","",$country_code);
+	$date_of_birth = ereg_replace("[^ -\_0-9]","",$date_of_birth);
+	$email = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$email);
+	$first_name = ereg_replace("[^ -\_0-9a-zA-Z]","",$first_name);
+	$gender = ereg_replace("[^A-Z]","",$gender);
+	$gmt_offset_now = ereg_replace("[^ \.-\_0-9]","",$gmt_offset_now);
+	$last_name = ereg_replace("[^ -\_0-9a-zA-Z]","",$last_name);
+	$lead_id = ereg_replace("[^0-9]","",$lead_id);
+	$middle_initial = ereg_replace("[^ -\_0-9a-zA-Z]","",$middle_initial);
+	$province = ereg_replace("[^ -\.\_0-9a-zA-Z]","",$province);
+	$security_phrase = ereg_replace("[^ -\.\_0-9a-zA-Z]","",$security_phrase);
+	$source_id = ereg_replace("[^ -\.\_0-9a-zA-Z]","",$source_id);
+	$state = ereg_replace("[^ -\_0-9a-zA-Z]","",$state);
+	$title = ereg_replace("[^ -\_0-9a-zA-Z]","",$title);
+	$vendor_lead_code = ereg_replace("[^ -\.\_0-9a-zA-Z]","",$vendor_lead_code);
+	$rank = ereg_replace("[^ -0-9]","",$rank);
+	$owner = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$owner);
 	}
 else
 	{
@@ -929,6 +1007,344 @@ if ($function == 'change_ingroups')
 	}
 ################################################################################
 ### END - change_ingroups
+################################################################################
+
+
+
+
+
+################################################################################
+### BEGIN - update_fields
+################################################################################
+if ($function == 'update_fields')
+	{
+	if (strlen($agent_user)<1)
+		{
+		$result = 'ERROR';
+		$result_reason = "st_login_log not valid";
+		$data = "$agent_user";
+		echo "$result: $result_reason - $data\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt = "select count(*) from vicidial_users where user='$user' and modify_leads='1';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select lead_id from vicidial_live_agents where user='$agent_user';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$lead_id = $row[0];
+				if ($lead_id > 0)
+					{
+					$fieldsSQL='';
+					$fieldsLISTS='';
+					$field_set=0;
+					if (ereg('phone_code',$query_string))
+						{
+						if ($DB) {echo "phone_code set to $phone_code\n";}
+						$fieldsSQL .= "phone_code='$phone_code',";
+						$fieldsLIST .= "phone_code,";
+						$field_set++;
+						}
+					if (ereg('address1',$query_string))
+						{
+						if ($DB) {echo "address1 set to $address1\n";}
+						$fieldsSQL .= "address1='$address1',";
+						$fieldsLIST .= "address1,";
+						$field_set++;
+						}
+					if (ereg('address2',$query_string))
+						{
+						if ($DB) {echo "address2 set to $address2\n";}
+						$fieldsSQL .= "address2='$address2',";
+						$fieldsLIST .= "address2,";
+						$field_set++;
+						}
+					if (ereg('address3',$query_string))
+						{
+						if ($DB) {echo "address3 set to $address3\n";}
+						$fieldsSQL .= "address3='$address3',";
+						$fieldsLIST .= "address3,";
+						$field_set++;
+						}
+					if (ereg('alt_phone',$query_string))
+						{
+						if ($DB) {echo "alt_phone set to $alt_phone\n";}
+						$fieldsSQL .= "alt_phone='$alt_phone',";
+						$fieldsLIST .= "alt_phone,";
+						$field_set++;
+						}
+					if (ereg('city',$query_string))
+						{
+						if ($DB) {echo "city set to $city\n";}
+						$fieldsSQL .= "city='$city',";
+						$fieldsLIST .= "city,";
+						$field_set++;
+						}
+					if (ereg('comments',$query_string))
+						{
+						if ($DB) {echo "comments set to $comments\n";}
+						$fieldsSQL .= "comments='$comments',";
+						$fieldsLIST .= "comments,";
+						$field_set++;
+						}
+					if (ereg('country_code',$query_string))
+						{
+						if ($DB) {echo "country_code set to $country_code\n";}
+						$fieldsSQL .= "country_code='$country_code',";
+						$fieldsLIST .= "country_code,";
+						$field_set++;
+						}
+					if (ereg('date_of_birth',$query_string))
+						{
+						if ($DB) {echo "date_of_birth set to $date_of_birth\n";}
+						$fieldsSQL .= "date_of_birth='$date_of_birth',";
+						$fieldsLIST .= "date_of_birth,";
+						$field_set++;
+						}
+					if (ereg('email',$query_string))
+						{
+						if ($DB) {echo "email set to $email\n";}
+						$fieldsSQL .= "email='$email',";
+						$fieldsLIST .= "email,";
+						$field_set++;
+						}
+					if (ereg('first_name',$query_string))
+						{
+						if ($DB) {echo "first_name set to $first_name\n";}
+						$fieldsSQL .= "first_name='$first_name',";
+						$fieldsLIST .= "first_name,";
+						$field_set++;
+						}
+					if (ereg('gender',$query_string))
+						{
+						if ($DB) {echo "gender set to $gender\n";}
+						$fieldsSQL .= "gender='$gender',";
+						$fieldsLIST .= "gender,";
+						$field_set++;
+						}
+					if (ereg('gmt_offset_now',$query_string))
+						{
+						if ($DB) {echo "gmt_offset_now set to $gmt_offset_now\n";}
+						$fieldsSQL .= "gmt_offset_now='$gmt_offset_now',";
+						$fieldsLIST .= "gmt_offset_now,";
+						$field_set++;
+						}
+					if (ereg('last_name',$query_string))
+						{
+						if ($DB) {echo "last_name set to $last_name\n";}
+						$fieldsSQL .= "last_name='$last_name',";
+						$fieldsLIST .= "last_name,";
+						$field_set++;
+						}
+					if (ereg('middle_initial',$query_string))
+						{
+						if ($DB) {echo "middle_initial set to $middle_initial\n";}
+						$fieldsSQL .= "middle_initial='$middle_initial',";
+						$fieldsLIST .= "middle_initial,";
+						$field_set++;
+						}
+					if (ereg('phone_number',$query_string))
+						{
+						if ($DB) {echo "phone_number set to $phone_number\n";}
+						$fieldsSQL .= "phone_number='$phone_number',";
+						$fieldsLIST .= "phone_number,";
+						$field_set++;
+						}
+					if (ereg('postal_code',$query_string))
+						{
+						if ($DB) {echo "postal_code set to $postal_code\n";}
+						$fieldsSQL .= "postal_code='$postal_code',";
+						$fieldsLIST .= "postal_code,";
+						$field_set++;
+						}
+					if (ereg('province',$query_string))
+						{
+						if ($DB) {echo "province set to $province\n";}
+						$fieldsSQL .= "province='$province',";
+						$fieldsLIST .= "province,";
+						$field_set++;
+						}
+					if (ereg('security_phrase',$query_string))
+						{
+						if ($DB) {echo "security_phrase set to $security_phrase\n";}
+						$fieldsSQL .= "security_phrase='$security_phrase',";
+						$fieldsLIST .= "security_phrase,";
+						$field_set++;
+						}
+					if (ereg('source_id',$query_string))
+						{
+						if ($DB) {echo "source_id set to $source_id\n";}
+						$fieldsSQL .= "source_id='$source_id',";
+						$fieldsLIST .= "source_id,";
+						$field_set++;
+						}
+					if (ereg('state',$query_string))
+						{
+						if ($DB) {echo "state set to $state\n";}
+						$fieldsSQL .= "state='$state',";
+						$fieldsLIST .= "state,";
+						$field_set++;
+						}
+					if (ereg('title',$query_string))
+						{
+						if ($DB) {echo "title set to $title\n";}
+						$fieldsSQL .= "title='$title',";
+						$fieldsLIST .= "title,";
+						$field_set++;
+						}
+					if (ereg('vendor_lead_code',$query_string))
+						{
+						if ($DB) {echo "vendor_lead_code set to $vendor_lead_code\n";}
+						$fieldsSQL .= "vendor_lead_code='$vendor_lead_code',";
+						$fieldsLIST .= "vendor_lead_code,";
+						$field_set++;
+						}
+					if (ereg('rank',$query_string))
+						{
+						if ($DB) {echo "rank set to $rank\n";}
+						$fieldsSQL .= "rank='$rank',";
+						$fieldsLIST .= "rank,";
+						$field_set++;
+						}
+					if (ereg('owner',$query_string))
+						{
+						if ($DB) {echo "owner set to $owner\n";}
+						$fieldsSQL .= "owner='$owner',";
+						$fieldsLIST .= "owner,";
+						$field_set++;
+						}
+					if ($field_set > 0)
+						{
+						$fieldsSQL = preg_replace("/,$/","",$fieldsSQL);
+						$fieldsLIST = preg_replace("/,$/","",$fieldsLIST);
+
+						$stmt="UPDATE vicidial_list set $fieldsSQL where lead_id='$lead_id';";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_query($stmt, $link);
+
+						$stmt="UPDATE vicidial_live_agents set external_update_fields='1',external_update_fields_data='$fieldsLIST' where user='$agent_user';";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_query($stmt, $link);
+
+						$result = 'SUCCESS';
+						$result_reason = "update_fields lead updated";
+						$data = "$user|$agent_user|$lead_id|$fieldsSQL";
+						echo "$result: $result_reason - $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					else
+						{
+						$result = 'ERROR';
+						$result_reason = "no fields have been defined";
+						echo "$result: $result_reason - $agent_user\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				else
+					{
+					$result = 'ERROR';
+					$result_reason = "agent_user does not have a lead on their screen";
+					echo "$result: $result_reason - $agent_user\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "user is not allowed to modify lead information";
+				echo "$result: $result_reason - $agent_user|$user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - update_fields
+################################################################################
+
+
+
+
+
+################################################################################
+### BEGIN - set_timer_action
+################################################################################
+if ($function == 'set_timer_action')
+	{
+	if ( (strlen($agent_user)<1) or (strlen($value)<2) )
+		{
+		$result = 'ERROR';
+		$result_reason = "set_timer_action not valid";
+		$data = "$agent_user|$value";
+		echo "$result: $result_reason - $data\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt = "select count(*) from vicidial_users where user='$user' and modify_campaigns='1';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt="UPDATE vicidial_live_agents set external_timer_action='$value',external_timer_action_message='$notes',external_timer_action_seconds='$rank' where user='$agent_user';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+
+				$result = 'SUCCESS';
+				$result_reason = "set_timer_action lead updated";
+				$data = "$user|$agent_user|$value|$notes|$rank";
+				echo "$result: $result_reason - $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "user is not allowed to modify campaign settings";
+				echo "$result: $result_reason - $agent_user|$user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - set_timer_action
 ################################################################################
 
 

@@ -206,8 +206,7 @@ $stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERN
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
-$rec_count=0;
-while ($sthArows > $rec_count)
+if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
 	$DBtelnet_host	=			$aryA[0];
@@ -235,7 +234,6 @@ while ($sthArows > $rec_count)
 	if ($DBext_context)				{$ext_context = $DBext_context;}
 	if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
 	else {$SYSLOG = '0';}
-	$rec_count++;
 	}
 $sthA->finish();
 

@@ -19,6 +19,7 @@
 # 90111-1451 - Added logging of call as activity for account/lead
 # 90112-0336 - Added create call and create lead options
 # 90323-2104 - Added deleted account/lead check and reactivation from campaign option
+# 91228-1751 - Added UNIFIED_CONTACT search option
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -190,14 +191,37 @@ mysql_select_db("$vtiger_dbname", $linkV);
 # LEAD:
 # $stmt="SELECT count(*) from vtiger_leadaddress where phone='$phone' or mobile='$phone' or fax='$phone';";
 
-$lead_search=0; $account_search=0; $vendor_search=0; $acctid_search=0;
+$lead_search=0; $account_search=0; $vendor_search=0; $acctid_search=0; $unified_contact=0;
 
-if (ereg('ACCTID',$vtiger_search_category))		{$acctid_search=1;}
-if (ereg('ACCOUNT',$vtiger_search_category))	{$account_search=1;}
-if (ereg('VENDOR',$vtiger_search_category))		{$vendor_search=1;}
-if (ereg('LEAD',$vtiger_search_category))		{$lead_search=1;}
+if (ereg('ACCTID',$vtiger_search_category))				{$acctid_search=1;}
+if (ereg('ACCOUNT',$vtiger_search_category))			{$account_search=1;}
+if (ereg('VENDOR',$vtiger_search_category))				{$vendor_search=1;}
+if (ereg('LEAD',$vtiger_search_category))				{$lead_search=1;}
+if (ereg('UNIFIED_CONTACT',$vtiger_search_category))	{$unified_contact=1;}
 
 
+
+##########################################################################
+##### BEGIN - UNIFIED_CONTACT -  Search using beta 5.1.0 unified search feature
+##########################################################################
+if ($unified_contact > 0)
+	{
+	$unified_contact_URL = "$vtiger_url/index.php?action=UnifiedSearch&module=Home&search_module=Contacts&query_string=$phone&_service=vicidial";
+
+	echo "<META HTTP-EQUIV=Refresh CONTENT=\"0; URL=$unified_contact_URL\">\n";
+	echo "</head>\n";
+	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0\">\n";
+	echo "<CENTER><FONT FACE=\"Courier\" COLOR=BLACK SIZE=3>\n";
+
+	echo "<PRE>";
+	echo "Forwarding to Vtiger Unified Contact Search page...\n";
+	echo "phone number:   <a href=\"$unified_contact_URL\">$phone</a>\n";
+	echo "</PRE><BR>";
+	exit;
+	}
+##########################################################################
+##### END - UNIFIED_CONTACT
+##########################################################################
 
 
 

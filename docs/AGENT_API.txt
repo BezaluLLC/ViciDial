@@ -16,6 +16,8 @@ external_status - sends command to set the disposition for one specific agent an
 external_pause - sends command to pause/resume an agent now if not on a call, or pause after their next call if on call
 external_dial - sends command to manually dial a number on the agent's screen
 change_ingroups - changes the selected in-groups for a logged-in agent
+update_fields - changes values for selected data fields in the agent interface
+set_timer_action - sets timer action for the current call the agent is on
 st_login_log - looks up the vicidial_users.custom_three field and logs event from CRM
 st_get_agent_active_lead - looks up active lead info for an agent and outputs lead information
 
@@ -210,6 +212,89 @@ ERROR: campaign dial_method does not allow outbound autodial - 6666|TESTING
 ERROR: ingroup does not exist - FAKE_IN| TEST_IN FAKE_IN SALESLINE -
 ERROR: ingroup_choices are required for ADD and REMOVE values - ADD|
 SUCCESS: change_ingroups function set - YES| TEST_IN SALESLINE -|6666
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------
+update_fields -
+
+DESCRIPTION:
+Updates the fields that are specified with the values. This will update the data that is on the agent's screen in the customer information section.
+
+VALUES:
+agent_user -
+ REQUIRED alphanumeric string for agent user
+LEAD DATA (must populate at least one)
+   NOTE: Only fields that are specified in the API call will be modified
+	address1
+	address2
+	address3
+	alt_phone
+	city
+	comments
+	country_code
+	date_of_birth
+	email
+	first_name
+	gender
+	gmt_offset_now
+	last_name
+	middle_initial
+	phone_number
+	phone_code
+	postal_code
+	province
+	security_phrase
+	source_id
+	state
+	title
+	vendor_lead_code
+	rank
+	owner
+
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&function=update_fields&agent_user=6666&vendor_lead_code=1234567&address1=
+
+RESPONSES:
+ERROR: update_fields not valid - 6666
+ERROR: agent_user is not logged in - 6666
+ERROR: user is not allowed to modify lead information - 6666|1234
+ERROR: agent_user does not have a lead on their screen - 6666|1234
+ERROR: no fields have been defined - 6666
+SUCCESS: update_fields lead updated - 6666|1234|87498|vendor_lead_code='1234567',address1=''
+
+
+
+--------------------------------------------------------------------------------
+set_timer_action - 
+
+DESCRIPTION:
+Updates the fields that are specified with the values. This will update the data that is on the agent's screen in the customer information section.
+
+VALUES:
+agent_user -
+ REQUIRED, alphanumeric string for agent user
+value -
+ REQUIRED, one of these choices: 'NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','MESSAGE_ONLY','BALANCE_CHECK'
+notes -
+ Optional, the message to be displayed with the timer action
+rank - 
+ Optional, the number of seconds into the call to display
+
+
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&function=set_timer_action&agent_user=6666&value=MESSAGE_ONLY&notes=test+message&rank=15
+
+RESPONSES:
+ERROR: set_timer_action not valid - 6666
+ERROR: agent_user is not logged in - 6666
+ERROR: user is not allowed to modify campaign settings - 6666|1234
+SUCCESS: set_timer_action lead updated - 6666|1234|MESSAGE_ONLY|test message|15
 
 
 
