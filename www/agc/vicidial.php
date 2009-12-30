@@ -9569,7 +9569,10 @@ else
 				LIVE_default_xfer_group = default_xfer_group;
 				LIVE_campaign_recording = campaign_recording;
 				LIVE_campaign_rec_filename = campaign_rec_filename;
-				document.getElementById("DispoSelectPhonE").innerHTML = document.vicidial_form.phone_number.value;
+				if (disable_alter_custphone!='HIDE')
+					{document.getElementById("DispoSelectPhonE").innerHTML = document.vicidial_form.phone_number.value;}
+				else
+					{document.getElementById("DispoSelectPhonE").innerHTML = '';}
 				if (auto_dial_level == 0)
 					{
 					if (document.vicidial_form.DiaLAltPhonE.checked==true)

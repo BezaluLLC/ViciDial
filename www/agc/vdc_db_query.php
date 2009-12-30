@@ -4338,7 +4338,7 @@ if ($ACTION == 'updateDISPO')
 	else
 		{
 		### reset the API fields in vicidial_live_agents record
-		$stmt = "UPDATE vicidial_live_agents set lead_id=0,external_hangup=0,external_status='',external_update_fields='0',external_update_fields_data='',external_launch_action_timer='-1',last_state_change='$NOW_TIME' where user='$user' and server_ip='$server_ip';";
+		$stmt = "UPDATE vicidial_live_agents set lead_id=0,external_hangup=0,external_status='',external_update_fields='0',external_update_fields_data='',external_timer_action_seconds='-1',last_state_change='$NOW_TIME' where user='$user' and server_ip='$server_ip';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00141',$user,$server_ip,$session_name,$one_mysql_log);}

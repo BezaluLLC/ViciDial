@@ -117,6 +117,7 @@
 # 91213-0942 - Added queue_position to queue_log COMPLETE... records
 # 91214-2034 - Fixes for rare in-group rank route bug
 # 91223-0959 - Added VID(vendor_lead_code) options
+# 91230-0911 - Reset to original callerID when sending the call to VMAIL/CALLMENU/PHONE/etc...
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -295,11 +296,11 @@ if ( ($callerid =~ /\".*\"/) && ( (!$calleridname) or ($calleridname =~ /unknown
 	$calleridname =~ s/\"|\" //gi;
 	}
 
-	$callerid =~ s/\D//gi;
-	$calleridname =~ s/unknown//gi;
+$callerid =~ s/\D//gi;
+$calleridname =~ s/unknown//gi;
 if ( (!$callerid) or ($callerid =~ /unknown/) )
 	{$callerid = $calleridname;}
-
+$originalCID = $callerid;
 
 $user_unavailable_action='';
 ##### special processing for DID forwarded calls  "99909*1*"
@@ -365,8 +366,9 @@ if ($call_handle_method =~ /^CLOSER/)
 
 		$PADlead_id = sprintf("%09s", $parked_by);	while (length($PADlead_id) > 9) {chop($PADlead_id);}
 		# JmmddhhmmssLLLLLLLLL
-			$JqueryCID = "J$CIDdate$PADlead_id";
-			$callerid = $JqueryCID;
+		$JqueryCID = "J$CIDdate$PADlead_id";
+		$callerid = $JqueryCID;
+		$VCcallerid = $JqueryCID;
 		### set the new call callerid to track the call
 		print "SET CALLERID $JqueryCID\n";
 		checkresult($result);
@@ -420,6 +422,9 @@ if ($AGILOG) {$agi_string = "+++++ INBOUND CALL VDCL STARTED : |$channel_group|$
 
 $VDADphone='';
 $VDADphone_code='';
+$VCcallerid = $channel_group;
+if (length($VCcallerid)<2)
+	{$VCcallerid = 'ViciDial Inbound';}
 
 if ($channel =~ /Local/i)
 	{
@@ -801,6 +806,11 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 			}
 		if ($after_hours_action =~ /VOICEMAIL/)
 			{
+			$newcallerid = "\"$VCcallerid <$originalCID>\"";
+			$AGI->set_callerid($newcallerid);
+			print STDERR "Setting CID \"$newcallerid\"\n";
+			checkresult($result);
+			if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 			$DROPexten = "$voicemail_dump_exten$after_hours_voicemail";
 			}
 		if ($after_hours_action =~ /IN_GROUP/)
@@ -961,6 +971,11 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 				}
 			if ($no_agent_action =~ /DID/)
 				{
+				$newcallerid = "\"$VCcallerid <$originalCID>\"";
+				$AGI->set_callerid($newcallerid);
+				print STDERR "Setting CID \"$newcallerid\"\n";
+				checkresult($result);
+				if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 				if (length($no_agent_action_value) < 1)
 					{$no_agent_action_value = '6666';}
 				$DROPexten =	$no_agent_action_value;
@@ -968,11 +983,21 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 				}
 			if ($no_agent_action =~ /CALLMENU/)
 				{
+				$newcallerid = "\"$VCcallerid <$originalCID>\"";
+				$AGI->set_callerid($newcallerid);
+				print STDERR "Setting CID \"$newcallerid\"\n";
+				checkresult($result);
+				if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 				$DROPexten =	's';
 				$ext_context =	$no_agent_action_value;
 				}
 			if ($no_agent_action =~ /VOICEMAIL/)
 				{
+				$newcallerid = "\"$VCcallerid <$originalCID>\"";
+				$AGI->set_callerid($newcallerid);
+				print STDERR "Setting CID \"$newcallerid\"\n";
+				checkresult($result);
+				if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 				$DROPexten = "$voicemail_dump_exten$no_agent_action_value";
 				}
 			if ($no_agent_action =~ /INGROUP/)
@@ -1095,8 +1120,9 @@ if ($AGILOG) {$agi_string = "|$stmtA|$insert_lead_id|";   &agi_output;}
 
 $PADlead_id = sprintf("%09s", $insert_lead_id);	while (length($PADlead_id) > 9) {chop($PADlead_id);}
 # YmmddhhmmssLLLLLLLLL
-	$YqueryCID = "Y$CIDdate$PADlead_id";
-	$callerid = $YqueryCID;
+$YqueryCID = "Y$CIDdate$PADlead_id";
+$callerid = $YqueryCID;
+$VCcallerid = $YqueryCID;
 ### set the callerid 
 print "SET CALLERID $YqueryCID\n";
 checkresult($result);
@@ -2576,6 +2602,11 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 		if ($pin =~ /1/)
 			{
+			$newcallerid = "\"$VCcallerid <$originalCID>\"";
+			$AGI->set_callerid($newcallerid);
+			print STDERR "Setting CID \"$newcallerid\"\n";
+			checkresult($result);
+			if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 			$DROPexten = "$voicemail_dump_exten$hold_time_option_voicemail";
 			$HT_status='QVMAIL';
 
@@ -2612,6 +2643,11 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		}
 	if ($hold_time_option =~ /VOICEMAIL/)
 		{
+		$newcallerid = "\"$VCcallerid <$originalCID>\"";
+		$AGI->set_callerid($newcallerid);
+		print STDERR "Setting CID \"$newcallerid\"\n";
+		checkresult($result);
+		if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 		if (length($hold_time_option_voicemail)>0)
 			{$DROPexten = "$voicemail_dump_exten$hold_time_option_voicemail";}
 		}
@@ -2894,6 +2930,11 @@ if ($drop_timer > $DROP_TIME)
 		}
 	if ($drop_action =~ /VOICEMAIL/)
 		{
+		$newcallerid = "\"$VCcallerid <$originalCID>\"";
+		$AGI->set_callerid($newcallerid);
+		print STDERR "Setting CID \"$newcallerid\"\n";
+		checkresult($result);
+		if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 		if (length($VDADvoicemail_ext)>0)
 			{$DROPexten = "$voicemail_dump_exten$VDADvoicemail_ext";}
 		}
@@ -2903,6 +2944,11 @@ if ($drop_timer > $DROP_TIME)
 		}
 	if ($drop_action =~ /PHONE/)
 		{
+		$newcallerid = "\"$VCcallerid <$originalCID>\"";
+		$AGI->set_callerid($newcallerid);
+		print STDERR "Setting CID \"$newcallerid\"\n";
+		checkresult($result);
+		if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 		### Grab phone dialplan number value from the database
 		$stmtA = "SELECT dialplan_number FROM phones where server_ip='$did_phone_server_ip' and extension='$did_phone';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;

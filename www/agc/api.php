@@ -206,7 +206,7 @@ if ($non_latin < 1)
 	$state = ereg_replace("[^ -\_0-9a-zA-Z]","",$state);
 	$title = ereg_replace("[^ -\_0-9a-zA-Z]","",$title);
 	$vendor_lead_code = ereg_replace("[^ -\.\_0-9a-zA-Z]","",$vendor_lead_code);
-	$rank = ereg_replace("[^ -0-9]","",$rank);
+	$rank = ereg_replace("[^-0-9]","",$rank);
 	$owner = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$owner);
 	}
 else

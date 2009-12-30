@@ -70,6 +70,7 @@
 # 90827-1535 - Added proper logging of list_id in vicidial_log table
 # 90924-1605 - Added drop_inbound_group_override list_id option
 # 91112-1101 - Changed ENTERQUEUE to CALLOUTBOUND in QM logging for outbound calls
+# 91230-1159 - Change to callee callerID when sending the call to VMAIL
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -1088,6 +1089,11 @@ if ($call_handle_method =~ /SURVEY/)
 			$DROPexten='';
 			if ($survey_method =~ /VOICEMAIL/)
 				{
+				$newcallerid = "\"$callerid <$VDADphone>\"";
+				$AGI->set_callerid($newcallerid);
+				print STDERR "Setting CID \"$newcallerid\"\n";
+				checkresult($result);
+				if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 				$survey_status='SVYVM';
 				if (length($VDADvoicemail_ext)>0)
 					{$DROPexten = "$voicemail_dump_exten$VDADvoicemail_ext";}
@@ -1819,6 +1825,11 @@ if ($drop_timer > $DROP_TIME)
 		}
 	if ($drop_action =~ /VOICEMAIL/)
 		{
+		$newcallerid = "\"$callerid <$VDADphone>\"";
+		$AGI->set_callerid($newcallerid);
+		print STDERR "Setting CID \"$newcallerid\"\n";
+		checkresult($result);
+		if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 		if (length($VDADvoicemail_ext)>0)
 			{$DROPexten = "$voicemail_dump_exten$VDADvoicemail_ext";}
 		}
