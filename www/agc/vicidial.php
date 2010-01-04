@@ -1,7 +1,7 @@
 <?php
 # vicidial.php - the web-based version of the astVICIDIAL client application
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Other scripts that this application depends on:
 # - vdc_db_query.php: Updates information in the database
@@ -267,10 +267,11 @@
 # 91211-1412 - Added User custom variables and CRM login popup
 # 91219-0657 - Set pause code automatically on ReQueue and INBOUND_MAN Dial-Next-Number
 # 91228-1339 - Added API "fields update" functions and "timer action" functions
+# 100103-1250 - Added 3 more conf-presets, list ID override presets and call start/dispo URLs
 #
 
-$version = '2.2.0-245';
-$build = '91228-1339';
+$version = '2.2.0-246';
+$build = '100103-1250';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -1099,7 +1100,7 @@ $VDloginDISPLAY=0;
 			$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 			##### grab the campaign settings
-			$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+			$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -1165,6 +1166,11 @@ $VDloginDISPLAY=0;
 			$timer_action =				$row[58];
 			$timer_action_message =		$row[59];
 			$timer_action_seconds =		$row[60];
+			$start_call_url =			$row[61];
+			$dispo_call_url =			$row[62];
+			$xferconf_c_number =		$row[63];
+			$xferconf_d_number =		$row[64];
+			$xferconf_e_number =		$row[65];
 
 			if ($user_territories_active < 1)
 				{$agent_select_territories = 0;}
@@ -1202,18 +1208,24 @@ $VDloginDISPLAY=0;
 				{$dispo_check_all_pause=1;}
 
 			$quick_transfer_button_enabled=0;
-			if (preg_match("/IN_GROUP|PRESET_1|PRESET_2/",$quick_transfer_button))
+			if (preg_match("/IN_GROUP|PRESET_1|PRESET_2|PRESET_3|PRESET_4|PRESET_5/",$quick_transfer_button))
 				{$quick_transfer_button_enabled=1;}
 
 			$preset_populate='';
 			$prepopulate_transfer_preset_enabled=0;
-			if (preg_match("/PRESET_1|PRESET_2/",$prepopulate_transfer_preset))
+			if (preg_match("/PRESET_1|PRESET_2|PRESET_3|PRESET_4|PRESET_5/",$prepopulate_transfer_preset))
 				{
 				$prepopulate_transfer_preset_enabled=1;
 				if (preg_match("/PRESET_1/",$prepopulate_transfer_preset))
 					{$preset_populate = $xferconf_a_number;}
 				if (preg_match("/PRESET_2/",$prepopulate_transfer_preset))
 					{$preset_populate = $xferconf_b_number;}
+				if (preg_match("/PRESET_3/",$prepopulate_transfer_preset))
+					{$preset_populate = $xferconf_c_number;}
+				if (preg_match("/PRESET_4/",$prepopulate_transfer_preset))
+					{$preset_populate = $xferconf_d_number;}
+				if (preg_match("/PRESET_5/",$prepopulate_transfer_preset))
+					{$preset_populate = $xferconf_e_number;}
 				}
 
 			$default_group_alias_cid='';
@@ -2293,6 +2305,9 @@ $CCAL_OUT .= "</table>";
 	var CalL_XC_a_NuMber = '<?php echo $xferconf_a_number ?>';
 	var CalL_XC_b_Dtmf = '<?php echo $xferconf_b_dtmf ?>';
 	var CalL_XC_b_NuMber = '<?php echo $xferconf_b_number ?>';
+	var CalL_XC_c_NuMber = '<?php echo $xferconf_c_number ?>';
+	var CalL_XC_d_NuMber = '<?php echo $xferconf_d_number ?>';
+	var CalL_XC_e_NuMber = '<?php echo $xferconf_e_number ?>';
 	var VU_hotkeys_active = '<?php echo $VU_hotkeys_active ?>';
 	var VU_agent_choose_ingroups = '<?php echo $VU_agent_choose_ingroups ?>';
 	var VU_agent_choose_ingroups_DV = '';
@@ -4562,7 +4577,20 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 									{
 									document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
 									}
-								if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') )
+								if (prepopulate_transfer_preset_enabled > 0)
+									{
+									if (prepopulate_transfer_preset == 'PRESET_1')
+										{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
+									if (prepopulate_transfer_preset == 'PRESET_2')
+										{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
+									if (prepopulate_transfer_preset == 'PRESET_3')
+										{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;}
+									if (prepopulate_transfer_preset == 'PRESET_4')
+										{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;}
+									if (prepopulate_transfer_preset == 'PRESET_5')
+										{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;}
+									}
+								if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'PRESET_5') )
 									{
 									document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
 
@@ -4570,6 +4598,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 										{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
 									if (quick_transfer_button == 'PRESET_2')
 										{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
+									if (quick_transfer_button == 'PRESET_3')
+										{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;}
+									if (quick_transfer_button == 'PRESET_4')
+										{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;}
+									if (quick_transfer_button == 'PRESET_5')
+										{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;}
 									}
 
 								if (call_requeue_button > 0)
@@ -5135,6 +5169,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						document.vicidial_form.owner.value				= MDnextResponse_array[36];
 					//	CalL_ScripT_id									= MDnextResponse_array[37];
 						script_recording_delay							= MDnextResponse_array[38];
+						CalL_XC_a_NuMber								= MDnextResponse_array[39];
+						CalL_XC_b_NuMber								= MDnextResponse_array[40];
+						CalL_XC_c_NuMber								= MDnextResponse_array[41];
+						CalL_XC_d_NuMber								= MDnextResponse_array[42];
+						CalL_XC_e_NuMber								= MDnextResponse_array[43];
 
 						timer_action = campaign_timer_action;
 						timer_action_message = campaign_timer_action_message;
@@ -6205,6 +6244,27 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							if (VDIC_data_VDIG[17].length > 5)
 								{VDIC_web_form_address_two = VDIC_data_VDIG[17];}
 
+							var call_timer_action							= VDIC_data_VDIG[18];
+
+							if ( (call_timer_action == 'NONE') || (call_timer_action.length < 2) )
+								{
+								timer_action = campaign_timer_action;
+								timer_action_message = campaign_timer_action_message;
+								timer_action_seconds = campaign_timer_action_seconds;
+								}
+							else
+								{
+								var call_timer_action_message				= VDIC_data_VDIG[19];
+								var call_timer_action_seconds				= VDIC_data_VDIG[20];
+								timer_action = call_timer_action;
+								timer_action_message = call_timer_action_message;
+								timer_action_seconds = call_timer_action_seconds;
+								}
+
+							CalL_XC_c_NuMber			= VDIC_data_VDIG[21];
+							CalL_XC_d_NuMber			= VDIC_data_VDIG[22];
+							CalL_XC_e_NuMber			= VDIC_data_VDIG[23];
+
 							var VDIC_data_VDFR=check_VDIC_array[3].split("|");
 							if ( (VDIC_data_VDFR[1].length > 1) && (VDCL_fronter_display == 'Y') )
 								{VDIC_fronter = "  Fronter: " + VDIC_data_VDFR[0] + " - " + VDIC_data_VDFR[1];}
@@ -6281,22 +6341,6 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							document.vicidial_form.rank.value				= check_VDIC_array[44];
 							document.vicidial_form.owner.value				= check_VDIC_array[45];
 							script_recording_delay							= check_VDIC_array[46];
-							var call_timer_action							= check_VDIC_array[47];
-
-							if ( (call_timer_action == 'NONE') || (call_timer_action.length < 2) )
-								{
-								timer_action = campaign_timer_action;
-								timer_action_message = campaign_timer_action_message;
-								timer_action_seconds = campaign_timer_action_seconds;
-								}
-							else
-								{
-								var call_timer_action_message				= check_VDIC_array[48];
-								var call_timer_action_seconds				= check_VDIC_array[49];
-								timer_action = call_timer_action;
-								timer_action_message = call_timer_action_message;
-								timer_action_seconds = call_timer_action_seconds;
-								}
 
 							var gIndex = 0;
 							if (document.vicidial_form.gender.value == 'M') {var gIndex = 1;}
@@ -6374,7 +6418,20 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								{
 								document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
 								}
-							if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') )
+							if (prepopulate_transfer_preset_enabled > 0)
+								{
+								if (prepopulate_transfer_preset == 'PRESET_1')
+									{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
+								if (prepopulate_transfer_preset == 'PRESET_2')
+									{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
+								if (prepopulate_transfer_preset == 'PRESET_3')
+									{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;}
+								if (prepopulate_transfer_preset == 'PRESET_4')
+									{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;}
+								if (prepopulate_transfer_preset == 'PRESET_5')
+									{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;}
+								}
+							if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'PRESET_5') )
 								{
 								document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
 
@@ -6382,6 +6439,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 									{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
 								if (quick_transfer_button == 'PRESET_2')
 									{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
+								if (quick_transfer_button == 'PRESET_3')
+									{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;}
+								if (quick_transfer_button == 'PRESET_4')
+									{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;}
+								if (quick_transfer_button == 'PRESET_5')
+									{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;}
 								}
 
 							if (call_requeue_button > 0)
@@ -7910,6 +7973,18 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		document.vicidial_form.conf_dtmf.value = CalL_XC_b_Dtmf;
 		document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;
 		}
+	function DtMf_PreSet_c()
+		{
+		document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;
+		}
+	function DtMf_PreSet_d()
+		{
+		document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;
+		}
+	function DtMf_PreSet_e()
+		{
+		document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;
+		}
 
 	function DtMf_PreSet_a_DiaL()
 		{
@@ -7922,6 +7997,21 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		document.vicidial_form.conf_dtmf.value = CalL_XC_b_Dtmf;
 		document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;
 		basic_originate_call(CalL_XC_b_NuMber,'NO','YES',session_id,'YES','','1','0');
+		}
+	function DtMf_PreSet_c_DiaL()
+		{
+		document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;
+		basic_originate_call(CalL_XC_c_NuMber,'NO','YES',session_id,'YES','','1','0');
+		}
+	function DtMf_PreSet_d_DiaL()
+		{
+		document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;
+		basic_originate_call(CalL_XC_d_NuMber,'NO','YES',session_id,'YES','','1','0');
+		}
+	function DtMf_PreSet_e_DiaL()
+		{
+		document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;
+		basic_originate_call(CalL_XC_e_NuMber,'NO','YES',session_id,'YES','','1','0');
 		}
 
 // ################################################################################
@@ -9372,21 +9462,30 @@ else
 			WebFormRefresH('NO','YES');
 			window.open(TEMP_VDIC_web_form_address, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 			}
-		
 		if (timer_action == 'WEBFORM2')
 			{
 			WebFormTwoRefresH('NO','YES');
 			window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 			}
-		
 		if (timer_action == 'D1_DIAL')
 			{
 			DtMf_PreSet_a_DiaL();
 			}
-		
 		if (timer_action == 'D2_DIAL')
 			{
 			DtMf_PreSet_b_DiaL();
+			}
+		if (timer_action == 'D3_DIAL')
+			{
+			DtMf_PreSet_c_DiaL();
+			}
+		if (timer_action == 'D4_DIAL')
+			{
+			DtMf_PreSet_d_DiaL();
+			}
+		if (timer_action == 'D5_DIAL')
+			{
+			DtMf_PreSet_e_DiaL();
 			}
 		
 		timer_action = 'NONE';
@@ -9650,7 +9749,7 @@ else
 					{
 					UpdateFieldsData();
 					}
-				if ( (timer_action != 'NONE') && (timer_action.length > 3) && (timer_action_seconds <= VD_live_call_secondS) )
+				if ( (timer_action != 'NONE') && (timer_action.length > 3) && (timer_action_seconds <= VD_live_call_secondS) && (timer_action_seconds >= 0) )
 					{
 					TimerActionRun();
 					}
@@ -10406,14 +10505,17 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 	<TR>
 	<TD ALIGN=LEFT COLSPAN=4>
 	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="DialBlindTransfer"><IMG SRC="./images/vdc_XB_blindtransfer_OFF.gif" border=0 alt="Dial Blind Transfer" style="vertical-align:middle"></span>
-	&nbsp; 
+	&nbsp;
 	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="DialWithCustomer"><a href="#" onclick="SendManualDial('YES');return false;"><IMG SRC="./images/vdc_XB_dialwithcustomer.gif" border=0 alt="Dial With Customer" style="vertical-align:middle"></a></span> 
-	&nbsp; 
+	&nbsp;
 	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="ParkCustomerDial"><a href="#" onclick="xfer_park_dial();return false;"><IMG SRC="./images/vdc_XB_parkcustomerdial.gif" border=0 alt="Park Customer Dial" style="vertical-align:middle"></a></span> 
 	&nbsp;
 	<font class="body_tiny">
 	<a href="#" onclick="DtMf_PreSet_a();return false;">D1</a> 
 	<a href="#" onclick="DtMf_PreSet_b();return false;">D2</a>
+	<a href="#" onclick="DtMf_PreSet_c();return false;">D3</a>
+	<a href="#" onclick="DtMf_PreSet_d();return false;">D4</a>
+	<a href="#" onclick="DtMf_PreSet_e();return false;">D5</a>
 	</font>
 	&nbsp;
 	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="DialBlindVMail"><IMG SRC="./images/vdc_XB_ammessage_OFF.gif" border=0 alt="Blind Transfer VMail Message" style="vertical-align:middle"></span>

@@ -351,6 +351,20 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	webform or D1/D2-dial to happen at a specified number of seconds after
 	the customer connects to the agent. Also, an API callw as added for this
 
+85. Added three more transfer-conference number-to-dial presets as well as List
+	ID override options for all five number presets
+
+86. Added Dispo Call URL that allows a back-end call to a web page or URL, that
+	will not display to the agent, which can send information like the 
+	selected disposition, talk time, phone number or most of the other 
+	fields available in the web form into a formatted URL to post to a 
+	remote web server. Available in Campaigns and In-Groups.
+
+87. Added log rolling archive script to automatically move logs into archive 
+	tables monthly. The ADMIN_archive_log_tables.pl script needs to be added
+	to your crontab to run monthly(example: "30 1 1 * *")
+
+
 
 
 

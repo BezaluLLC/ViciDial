@@ -26,6 +26,14 @@ NOTE: as of SVN trunk 2009-05-19 the voicemail and prompt recording extensions a
 
 
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+AS OF RELEASE 2.2.0 YOU SHOULD NOT HAVE TO TAKE ANY STEPS BEYOND STEP 2 IN THIS DOCUMENT TO GET MULTI-SERVER VICIDIAL TO WORK IF YOU ARE USING THE DEFAULT VICIDIAL CONF FILES.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+
+
 1. The VICIDIAL/Asterisk servers need to have all of the perl scripts and cron jobs installed on them, except these which only need to be on one of the servers: 
 	- AST_VDhopper.pl  (crontab)
 	- AST_cleanup_agent_log.pl  (crontab)
@@ -33,6 +41,7 @@ NOTE: as of SVN trunk 2009-05-19 the voicemail and prompt recording extensions a
 	- AST_DB_optimize.pl  (crontab)
 	- AST_VDadapt.pl  (defined in /etc/astguiclient.conf)
 	- AST_VDauto_dial_FILL.pl  (defined in /etc/astguiclient.conf)
+	- ADMIN_archive_log_tables.pl  (crontab)
 
 2. The VARactive_keepalives variable in /etc/astguiclient.conf should have "5" and "7" on only ONE SERVER in your entire dialer setup, the other servers should not have 5 or 7 in that field.
 	#  1 - AST_update
@@ -169,6 +178,7 @@ If you have any questions or problems please post to the astguiclient-users list
 	- AST_DB_optimize.pl  (crontab)
 	- AST_VDadapt.pl  (defined in /etc/astguiclient.conf)
 	- AST_VDauto_dial_FILL.pl  (defined in /etc/astguiclient.conf)
+	- ADMIN_archive_log_tables.pl  (crontab)
 
 8. On all servers but one you should DELETE the following line from your extensions.conf:
 	; prompt recording AGI script, ID is 4321

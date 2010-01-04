@@ -6,7 +6,7 @@
 # This page does a search against a standard vtiger CRM system. If the record 
 # is not present, it will create a new one and send the agent's screen to that new page.
 #
-# This code is tested against vtiger 5.0.4
+# This code is tested against vtiger 5.0.4 and 5.1.0
 #
 # CHANGES
 # 60719-1615 - First version

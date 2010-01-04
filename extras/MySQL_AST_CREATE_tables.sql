@@ -685,8 +685,8 @@ survey_fourth_audio_file VARCHAR(50) default 'US_thanks_no_contact',
 survey_fourth_status VARCHAR(6) default 'NI',
 survey_fourth_exten VARCHAR(20) default '8300',
 drop_lockout_time VARCHAR(6) default '0',
-quick_transfer_button ENUM('N','IN_GROUP','PRESET_1','PRESET_2') default 'N',
-prepopulate_transfer_preset ENUM('N','PRESET_1','PRESET_2') default 'N',
+quick_transfer_button ENUM('N','IN_GROUP','PRESET_1','PRESET_2','PRESET_3','PRESET_4','PRESET_5') default 'N',
+prepopulate_transfer_preset ENUM('N','PRESET_1','PRESET_2','PRESET_3','PRESET_4','PRESET_5') default 'N',
 drop_rate_group VARCHAR(20) default 'DISABLED',
 view_calls_in_queue ENUM('NONE','ALL','1','2','3','4','5') default 'NONE',
 view_calls_in_queue_launch ENUM('AUTO','MANUAL') default 'MANUAL',
@@ -702,9 +702,14 @@ agent_select_territories ENUM('Y','N') default 'N',
 campaign_calldate DATETIME,
 crm_popup_login ENUM('Y','N') default 'N',
 crm_login_address TEXT,
-timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','MESSAGE_ONLY') default 'NONE',
+timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','D3_DIAL','D4_DIAL','D5_DIAL','MESSAGE_ONLY') default 'NONE',
 timer_action_message VARCHAR(255) default '',
-timer_action_seconds MEDIUMINT(7) default '-1'
+timer_action_seconds MEDIUMINT(7) default '-1',
+start_call_url TEXT,
+dispo_call_url TEXT,
+xferconf_c_number VARCHAR(50) default '',
+xferconf_d_number VARCHAR(50) default '',
+xferconf_e_number VARCHAR(50) default ''
 );
 
 CREATE TABLE vicidial_lists (
@@ -719,7 +724,12 @@ reset_time VARCHAR(100) default '',
 agent_script_override VARCHAR(10) default '',
 campaign_cid_override VARCHAR(20) default '',
 am_message_exten_override VARCHAR(100) default '',
-drop_inbound_group_override VARCHAR(20) default ''
+drop_inbound_group_override VARCHAR(20) default '',
+xferconf_a_number VARCHAR(50) default '',
+xferconf_b_number VARCHAR(50) default '',
+xferconf_c_number VARCHAR(50) default '',
+xferconf_d_number VARCHAR(50) default '',
+xferconf_e_number VARCHAR(50) default ''
 );
 
 CREATE TABLE vicidial_statuses (
@@ -841,9 +851,14 @@ no_agent_no_queue ENUM('N','Y','NO_PAUSED') default 'N',
 no_agent_action ENUM('CALLMENU','INGROUP','DID','MESSAGE','EXTENSION','VOICEMAIL') default 'MESSAGE',
 no_agent_action_value VARCHAR(255) default 'nbdy-avail-to-take-call|vm-goodbye',
 web_form_address_two TEXT,
-timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','MESSAGE_ONLY') default 'NONE',
+timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','D3_DIAL','D4_DIAL','D5_DIAL','MESSAGE_ONLY') default 'NONE',
 timer_action_message VARCHAR(255) default '',
-timer_action_seconds MEDIUMINT(7) default '-1'
+timer_action_seconds MEDIUMINT(7) default '-1',
+start_call_url TEXT,
+dispo_call_url TEXT,
+xferconf_c_number VARCHAR(50) default '',
+xferconf_d_number VARCHAR(50) default '',
+xferconf_e_number VARCHAR(50) default ''
 );
 
 CREATE TABLE vicidial_stations (
@@ -2001,7 +2016,14 @@ CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
 
-UPDATE system_settings SET db_schema_version='1189',db_schema_update_date=NOW();
+CREATE TABLE call_log_archive LIKE call_log; 
+
+CREATE TABLE vicidial_log_archive LIKE vicidial_log;
+
+CREATE TABLE vicidial_agent_log_archive LIKE vicidial_agent_log; 
+ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT NULL;
+
+UPDATE system_settings SET db_schema_version='1191',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

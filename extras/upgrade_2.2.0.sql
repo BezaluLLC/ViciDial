@@ -688,3 +688,36 @@ ALTER TABLE vicidial_inbound_groups ADD timer_action_message VARCHAR(255) defaul
 ALTER TABLE vicidial_inbound_groups ADD timer_action_seconds MEDIUMINT(7) default '-1';
 
 UPDATE system_settings SET db_schema_version='1189',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD start_call_url TEXT;
+ALTER TABLE vicidial_campaigns ADD dispo_call_url TEXT;
+ALTER TABLE vicidial_campaigns ADD xferconf_c_number VARCHAR(50) default '';
+ALTER TABLE vicidial_campaigns ADD xferconf_d_number VARCHAR(50) default '';
+ALTER TABLE vicidial_campaigns ADD xferconf_e_number VARCHAR(50) default '';
+ALTER TABLE vicidial_campaigns MODIFY quick_transfer_button ENUM('N','IN_GROUP','PRESET_1','PRESET_2','PRESET_3','PRESET_4','PRESET_5') default 'N';
+ALTER TABLE vicidial_campaigns MODIFY prepopulate_transfer_preset ENUM('N','PRESET_1','PRESET_2','PRESET_3','PRESET_4','PRESET_5') default 'N';
+ALTER TABLE vicidial_campaigns MODIFY timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','D3_DIAL','D4_DIAL','D5_DIAL','MESSAGE_ONLY') default 'NONE';
+
+ALTER TABLE vicidial_inbound_groups ADD start_call_url TEXT;
+ALTER TABLE vicidial_inbound_groups ADD dispo_call_url TEXT;
+ALTER TABLE vicidial_inbound_groups ADD xferconf_c_number VARCHAR(50) default '';
+ALTER TABLE vicidial_inbound_groups ADD xferconf_d_number VARCHAR(50) default '';
+ALTER TABLE vicidial_inbound_groups ADD xferconf_e_number VARCHAR(50) default '';
+ALTER TABLE vicidial_inbound_groups MODIFY timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','D3_DIAL','D4_DIAL','D5_DIAL','MESSAGE_ONLY') default 'NONE';
+
+ALTER TABLE vicidial_lists ADD xferconf_a_number VARCHAR(50) default '';
+ALTER TABLE vicidial_lists ADD xferconf_b_number VARCHAR(50) default '';
+ALTER TABLE vicidial_lists ADD xferconf_c_number VARCHAR(50) default '';
+ALTER TABLE vicidial_lists ADD xferconf_d_number VARCHAR(50) default '';
+ALTER TABLE vicidial_lists ADD xferconf_e_number VARCHAR(50) default '';
+
+UPDATE system_settings SET db_schema_version='1190',db_schema_update_date=NOW();
+
+CREATE TABLE call_log_archive LIKE call_log; 
+
+CREATE TABLE vicidial_log_archive LIKE vicidial_log;
+
+CREATE TABLE vicidial_agent_log_archive LIKE vicidial_agent_log; 
+ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT NULL;
+
+UPDATE system_settings SET db_schema_version='1191',db_schema_update_date=NOW();
