@@ -363,6 +363,7 @@ if ($call_handle_method =~ /^CLOSER/)
 			$agent_only =		$EXT_vars[7];	# optional AGENTDIRECT user to queue call for
 			}
 		$CIDlead_id = $parked_by;
+		$fronter_call_seconds =	$EXT_vars[8];	# not currently used
 
 		$PADlead_id = sprintf("%09s", $parked_by);	while (length($PADlead_id) > 9) {chop($PADlead_id);}
 		# JmmddhhmmssLLLLLLLLL

@@ -268,10 +268,11 @@
 # 91219-0657 - Set pause code automatically on ReQueue and INBOUND_MAN Dial-Next-Number
 # 91228-1339 - Added API "fields update" functions and "timer action" functions
 # 100103-1250 - Added 3 more conf-presets, list ID override presets and call start/dispo URLs
+# 100107-0108 - Added dynamic screen size based on login screen browser dimensions
 #
 
-$version = '2.2.0-246';
-$build = '100103-1250';
+$version = '2.2.0-247';
+$build = '100107-0108';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -280,6 +281,10 @@ require("dbconnect.php");
 
 if (isset($_GET["DB"]))						    {$DB=$_GET["DB"];}
         elseif (isset($_POST["DB"]))            {$DB=$_POST["DB"];}
+if (isset($_GET["JS_browser_width"]))				{$JS_browser_width=$_GET["JS_browser_width"];}
+        elseif (isset($_POST["JS_browser_width"]))  {$JS_browser_width=$_POST["JS_browser_width"];}
+if (isset($_GET["JS_browser_height"]))				{$JS_browser_height=$_GET["JS_browser_height"];}
+        elseif (isset($_POST["JS_browser_height"])) {$JS_browser_height=$_POST["JS_browser_height"];}
 if (isset($_GET["phone_login"]))                {$phone_login=$_GET["phone_login"];}
         elseif (isset($_POST["phone_login"]))   {$phone_login=$_POST["phone_login"];}
 if (isset($_GET["phone_pass"]))					{$phone_pass=$_GET["phone_pass"];}
@@ -405,6 +410,7 @@ $disable_blended_checkbox='0';	# set to 1 to disable the BLENDED checkbox from t
 
 $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
 
+$stretch_dimensions		= '1';	# sets the vicidial screen to the size of the browser window
 $BROWSER_HEIGHT			= 500;	# set to the minimum browser height, default=500
 $BROWSER_WIDTH			= 770;	# set to the minimum browser width, default=770
 $MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
@@ -416,38 +422,6 @@ $SIDEBAR_COLOR			= '#F6F6F6';
 #$scheduled_callbacks	= '1';	# set to 1 to allow agent to choose scheduled callbacks
 #   $agentonly_callbacks	= '1';	# set to 1 to allow agent to choose agent-only scheduled callbacks
 #$agentcall_manual		= '1';	# set to 1 to allow agent to make manual calls during autodial session
-
-### SCREEN WIDTH AND HEIGHT CALCULATIONS ###
-### DO NOT EDIT! ###
-$MASTERwidth=($BROWSER_WIDTH - 340);
-$MASTERheight=($BROWSER_HEIGHT - 200);
-if ($MASTERwidth < 430) {$MASTERwidth = '430';} 
-if ($MASTERheight < 300) {$MASTERheight = '300';} 
-
-$CAwidth =  ($MASTERwidth + 340);	# 770 - cover all (none-in-session, customer hunngup, etc...)
-$SBwidth =	($MASTERwidth + 331);	# 761 - SideBar starting point
-$MNwidth =  ($MASTERwidth + 330);	# 760 - main frame
-$XFwidth =  ($MASTERwidth + 320);	# 750 - transfer/conference
-$HCwidth =  ($MASTERwidth + 310);	# 740 - hotkeys and callbacks
-$CQwidth =  ($MASTERwidth + 300);	# 730 - calls in queue listings
-$AMwidth =  ($MASTERwidth + 270);	# 700 - preset-dial links
-$SCwidth =  ($MASTERwidth + 230);	# 670 - live call seconds counter, sidebar link
-$MUwidth =  ($MASTERwidth + 180);	# 610 - agent mute
-$SSwidth =  ($MASTERwidth + 176);	# 606 - scroll script
-$SDwidth =  ($MASTERwidth + 170);	# 600 - scroll script, customer data and calls-in-session
-$HKwidth =  ($MASTERwidth + 20);	# 450 - Hotkeys button
-$HSwidth =  ($MASTERwidth + 1);		# 431 - Header spacer
-$CLwidth =  ($MASTERwidth - 160);	# 270 - Calls in queue link
-
-$CQheight =  ($MASTERheight + 140);	# 440 - Calls in queue section
-$SLheight =  ($MASTERheight + 122);	# 422 - SideBar link, Calls in queue link
-$HKheight =  ($MASTERheight + 105);	# 405 - HotKey active Button
-$AMheight =  ($MASTERheight + 100);	# 400 - Agent mute and preset dial links
-$MBheight =  ($MASTERheight + 65);	# 365 - Manual Dial Buttons
-$CBheight =  ($MASTERheight + 50);	# 350 - Agent Callback, pause code, volume control Buttons and agent status
-$SSheight =  ($MASTERheight + 31);	# 331 - script content
-$HTheight =  ($MASTERheight + 10);	# 310 - transfer frame, callback comments and hotkey
-$BPheight =  ($MASTERheight - 250);	# 50 - bottom buffer, Agent Xfer Span
 
 
 $US='_';
@@ -467,12 +441,14 @@ else {$server_port = "$CL$server_port";}
 $agcPAGE = "$HTTPprotocol$server_name$server_port$script_name";
 $agcDIR = eregi_replace('vicidial.php','',$agcPAGE);
 
+
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
 header ("Pragma: no-cache");                          // HTTP/1.0
 echo "<html>\n";
 echo "<head>\n";
 echo "<!-- VERSION: $version     BUILD: $build -->\n";
+echo "<!-- BROWSER: $BROWSER_WIDTH x $BROWSER_HEIGHT     $JS_browser_width x $JS_browser_height -->\n";
 
 if ($campaign_login_list > 0)
 	{
@@ -576,73 +552,119 @@ else
 
 
 if ($LogiNAJAX > 0)
-{
-?>
+	{
+	?>
 
-<script language="Javascript">
+	<script language="Javascript">
 
-// ################################################################################
-// Send Request for allowable campaigns to populate the campaigns pull-down
-	function login_allowable_campaigns() 
+	<!-- 
+	var BrowseWidth = 0;
+	var BrowseHeight = 0;
+
+	function getInsideBrowse() 
 		{
-		var xmlhttp=false;
-		/*@cc_on @*/
-		/*@if (@_jscript_version >= 5)
-		// JScript gives us Conditional compilation, we can cope with old IE versions.
-		// and security blocked creation of the objects.
-		 try {
-		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
-		 } catch (e) {
-		  try {
-		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-		  } catch (E) {
-		   xmlhttp = false;
-		  }
-		 }
-		@end @*/
-		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+		var ns = navigator.appName == "Netscape";
+		if (ns) 
 			{
-			xmlhttp = new XMLHttpRequest();
+			BrowseWidth = window.innerWidth;
+			BrowseHeight = window.innerHeight;
 			}
-		if (xmlhttp) 
-			{ 
-			logincampaign_query = "&user=" + document.vicidial_form.VD_login.value + "&pass=" + document.vicidial_form.VD_pass.value + "&ACTION=LogiNCamPaigns&format=html";
-			xmlhttp.open('POST', 'vdc_db_query.php'); 
-			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-			xmlhttp.send(logincampaign_query); 
-			xmlhttp.onreadystatechange = function() 
-				{ 
-				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
-					{
-					Nactiveext = null;
-					Nactiveext = xmlhttp.responseText;
-				//	alert(logincampaign_query);
-				//	alert(xmlhttp.responseText);
-					document.getElementById("LogiNCamPaigns").innerHTML = Nactiveext;
-					document.getElementById("LogiNReseT").innerHTML = "<INPUT TYPE=BUTTON VALUE=\"Refresh Campaign List\" OnClick=\"login_allowable_campaigns()\">";
-					document.getElementById("VD_campaign").focus();
-					}
-				}
-			delete xmlhttp;
+		else 
+			{
+			BrowseWidth = document.body.clientWidth;
+			BrowseHeight = document.body.clientHeight;
 			}
 		}
-</script>
+	function browser_dimensions() 
+		{
+		getInsideBrowse();
 
-<?php
-}
+		document.vicidial_form.JS_browser_width.value = BrowseWidth;
+		document.vicidial_form.JS_browser_height.value = BrowseHeight;
+		}
 
+	// ################################################################################
+	// Send Request for allowable campaigns to populate the campaigns pull-down
+		function login_allowable_campaigns() 
+			{
+			var xmlhttp=false;
+			/*@cc_on @*/
+			/*@if (@_jscript_version >= 5)
+			// JScript gives us Conditional compilation, we can cope with old IE versions.
+			// and security blocked creation of the objects.
+			 try {
+			  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+			 } catch (e) {
+			  try {
+			   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+			  } catch (E) {
+			   xmlhttp = false;
+			  }
+			 }
+			@end @*/
+			if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+				{
+				xmlhttp = new XMLHttpRequest();
+				}
+			if (xmlhttp) 
+				{ 
+				logincampaign_query = "&user=" + document.vicidial_form.VD_login.value + "&pass=" + document.vicidial_form.VD_pass.value + "&ACTION=LogiNCamPaigns&format=html";
+				xmlhttp.open('POST', 'vdc_db_query.php'); 
+				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+				xmlhttp.send(logincampaign_query); 
+				xmlhttp.onreadystatechange = function() 
+					{ 
+					if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+						{
+						Nactiveext = null;
+						Nactiveext = xmlhttp.responseText;
+					//	alert(logincampaign_query);
+					//	alert(xmlhttp.responseText);
+						document.getElementById("LogiNCamPaigns").innerHTML = Nactiveext;
+						document.getElementById("LogiNReseT").innerHTML = "<INPUT TYPE=BUTTON VALUE=\"Refresh Campaign List\" OnClick=\"login_allowable_campaigns()\">";
+						document.getElementById("VD_campaign").focus();
+						}
+					}
+				delete xmlhttp;
+				}
+			}
+	// -->
+	</script>
+
+	<?php
+	}
+else
+	{
+	?>
+
+	<script language="Javascript">
+
+	<!-- 
+	function browser_dimensions() 
+		{
+		var nothing=0;
+		}
+
+	// -->
+	</script>
+
+	<?php
+
+	}
 
 if ($relogin == 'YES')
 {
 echo "<title>Agent web client: Re-Login</title>\n";
 echo "</head>\n";
-echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 echo "</TR></TABLE>\n";
 echo "<FORM NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
 echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 echo "<BR><BR><BR><CENTER><TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
 echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/vdc_tab_vicidial.gif\" BORDER=0></TD>";
 echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Re-Login </TD>";
@@ -674,13 +696,15 @@ if ($user_login_first == 1)
 	{
 	echo "<title>Agent web client: Campaign Login</title>\n";
 	echo "</head>\n";
-	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 	echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 	echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 	echo "</TR></TABLE>\n";
 	echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
 	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 	#echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
 	#echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
 	echo "<CENTER><BR><B>User Login</B><BR><BR>";
@@ -718,13 +742,15 @@ if ($user_login_first == 1)
 
 		echo "<title>Agent web client: Login</title>\n";
 		echo "</head>\n";
-		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 		echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 		echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 		echo "</TR></TABLE>\n";
 		echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
 		echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 		echo "<BR><BR><BR><CENTER><TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/vdc_tab_vicidial.gif\" BORDER=0></TD>";
 		echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Login </TD>";
@@ -757,13 +783,15 @@ if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
 {
 echo "<title>Agent web client:  Phone Login</title>\n";
 echo "</head>\n";
-echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 echo "</TR></TABLE>\n";
 echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
 echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 echo "<BR><BR><BR><CENTER><TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
 echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/vdc_tab_vicidial.gif\" BORDER=0></TD>";
 echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Phone Login </TD>";
@@ -996,7 +1024,7 @@ $VDloginDISPLAY=0;
 			{
 			echo "<title>Agent web client: Campaign Login</title>\n";
 			echo "</head>\n";
-			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 			echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 			echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 			echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
@@ -1004,6 +1032,8 @@ $VDloginDISPLAY=0;
 			echo "<B>Sorry, you are not allowed to login to this campaign: $VD_campaign</B>\n";
 			echo "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
 			echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+			echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+			echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 			echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
 			echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
 			echo "Login: <INPUT TYPE=TEXT NAME=VD_login SIZE=10 MAXLENGTH=20 VALUE=\"$VD_login\">\n<br>";
@@ -1435,13 +1465,15 @@ $VDloginDISPLAY=0;
 	{
 	echo "<title>Agent web client: Campaign Login</title>\n";
 	echo "</head>\n";
-	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 	echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 	echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 	echo "</TR></TABLE>\n";
 	echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
 	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
 	echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
@@ -1526,13 +1558,15 @@ if (!$authphone)
 	{
 	echo "<title>Agent web client: Phone Login Error</title>\n";
 	echo "</head>\n";
-	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 	echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 	echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 	echo "</TR></TABLE>\n";
 	echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
 	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=VD_login VALUE=\"$VD_login\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=VD_pass VALUE=\"$VD_pass\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=VD_campaign VALUE=\"$VD_campaign\">\n";
@@ -2021,7 +2055,7 @@ else
 		{
 		echo "<title>Agent web client: Campaign Login</title>\n";
 		echo "</head>\n";
-		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 		echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 		echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
@@ -2029,6 +2063,8 @@ else
 		echo "<B>Sorry, there are no leads in the hopper for this campaign</B>\n";
 		echo "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
 		echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 		echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
 		echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
 		echo "Login: <INPUT TYPE=TEXT NAME=VD_login SIZE=10 MAXLENGTH=20 VALUE=\"$VD_login\">\n<br>";
@@ -2045,7 +2081,7 @@ else
 		{
 		echo "<title>Agent web client: Campaign Login</title>\n";
 		echo "</head>\n";
-		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 		echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 		echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
@@ -2053,6 +2089,8 @@ else
 		echo "<B>Sorry, there are no available sessions</B>\n";
 		echo "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
 		echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 		echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
 		echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
 		echo "Login: <INPUT TYPE=TEXT NAME=VD_login SIZE=10 MAXLENGTH=20 VALUE=\"$VD_login\">\n<br>";
@@ -2157,6 +2195,55 @@ else
 	$MMscriptnames = substr("$MMscriptnames", 0, -1); 
 	}
 }
+
+
+### SCREEN WIDTH AND HEIGHT CALCULATIONS ###
+### DO NOT EDIT! ###
+if ($stretch_dimensions > 0)
+	{
+	if ($agent_status_view < 1)
+		{
+		if ($JS_browser_width >= 510)
+			{$BROWSER_WIDTH = ($JS_browser_width - 80);}
+		}
+	else
+		{
+		if ($JS_browser_width >= 730)
+			{$BROWSER_WIDTH = ($JS_browser_width - 300);}
+		}
+	if ($JS_browser_height >= 340)
+		{$BROWSER_HEIGHT = ($JS_browser_height - 40);}
+	}
+$MASTERwidth=($BROWSER_WIDTH - 340);
+$MASTERheight=($BROWSER_HEIGHT - 200);
+if ($MASTERwidth < 430) {$MASTERwidth = '430';} 
+if ($MASTERheight < 300) {$MASTERheight = '300';} 
+
+$CAwidth =  ($MASTERwidth + 340);	# 770 - cover all (none-in-session, customer hunngup, etc...)
+$SBwidth =	($MASTERwidth + 331);	# 761 - SideBar starting point
+$MNwidth =  ($MASTERwidth + 330);	# 760 - main frame
+$XFwidth =  ($MASTERwidth + 320);	# 750 - transfer/conference
+$HCwidth =  ($MASTERwidth + 310);	# 740 - hotkeys and callbacks
+$CQwidth =  ($MASTERwidth + 300);	# 730 - calls in queue listings
+$AMwidth =  ($MASTERwidth + 270);	# 700 - preset-dial links
+$SCwidth =  ($MASTERwidth + 230);	# 670 - live call seconds counter, sidebar link
+$MUwidth =  ($MASTERwidth + 180);	# 610 - agent mute
+$SSwidth =  ($MASTERwidth + 176);	# 606 - scroll script
+$SDwidth =  ($MASTERwidth + 170);	# 600 - scroll script, customer data and calls-in-session
+$HKwidth =  ($MASTERwidth + 20);	# 450 - Hotkeys button
+$HSwidth =  ($MASTERwidth + 1);		# 431 - Header spacer
+$CLwidth =  ($MASTERwidth - 160);	# 270 - Calls in queue link
+
+$CQheight =  ($MASTERheight + 140);	# 440 - Calls in queue section
+$SLheight =  ($MASTERheight + 122);	# 422 - SideBar link, Calls in queue link
+$HKheight =  ($MASTERheight + 105);	# 405 - HotKey active Button
+$AMheight =  ($MASTERheight + 100);	# 400 - Agent mute and preset dial links
+$MBheight =  ($MASTERheight + 65);	# 365 - Manual Dial Buttons
+$CBheight =  ($MASTERheight + 50);	# 350 - Agent Callback, pause code, volume control Buttons and agent status
+$SSheight =  ($MASTERheight + 31);	# 331 - script content
+$HTheight =  ($MASTERheight + 10);	# 310 - transfer frame, callback comments and hotkey
+$BPheight =  ($MASTERheight - 250);	# 50 - bottom buffer, Agent Xfer Span
+
 
 ################################################################
 ### BEGIN - build the callback calendar (12 months)          ###
@@ -2999,7 +3086,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				var agentdirect = tasknum_string;
 				}
 			var XfeRSelecT = document.getElementById("XfeRGrouP");
-			tasknum = Ctasknum + "*" + XfeRSelecT.value + '*CXFER*' + document.vicidial_form.lead_id.value + '**' + dialed_number + '*' + user + '*' + agentdirect + '*';
+			tasknum = Ctasknum + "*" + XfeRSelecT.value + '*CXFER*' + document.vicidial_form.lead_id.value + '**' + dialed_number + '*' + user + '*' + agentdirect + '*' + VD_live_call_secondS + '*';
 
 			CustomerData_update();
 			}
@@ -3012,7 +3099,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			var closerxfercamptail = '_L';
 			if (closerxfercamptail.length < 3)
 				{closerxfercamptail = 'IVR';}
-			tasknum = Ctasknum + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value + '*' + campaign + '*' + closerxfercamptail + '*' + user + '*';
+			tasknum = Ctasknum + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value + '*' + campaign + '*' + closerxfercamptail + '*' + user + '**' + VD_live_call_secondS + '*';
 
 			CustomerData_update();
 
@@ -3766,7 +3853,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var closerxfercamptail = '_L';
 						if (closerxfercamptail.length < 3)
 							{closerxfercamptail = 'IVR';}
-						blindxferdialstring = Ctasknum + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value + '*' + campaign + '*' + closerxfercamptail + '*' + user + '*';
+						blindxferdialstring = Ctasknum + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value + '*' + campaign + '*' + closerxfercamptail + '*' + user + '**' + VD_live_call_secondS + '*';
 						}
 					}
 				else
@@ -9617,7 +9704,7 @@ else
 				}
 			if ( (VtigeRLogiNScripT == 'Y') && (VtigeREnableD > 0) )
 				{
-				document.getElementById("ScriptContents").innerHTML = "<iframe src=\"" + VtigeRurl + "/index.php?module=Users&action=Authenticate&return_module=Users&return_action=Login&user_name=" + user + "&user_password=" + pass + "&login_theme=softed&login_language=en_us\" style=\"width:580;height:290;background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"popupFrame\" name=\"popupFrame\" width=\"460\" height=\"290\" STYLE=\"z-index:17\"> </iframe> ";
+				document.getElementById("ScriptContents").innerHTML = "<iframe src=\"" + VtigeRurl + "/index.php?module=Users&action=Authenticate&return_module=Users&return_action=Login&user_name=" + user + "&user_password=" + pass + "&login_theme=softed&login_language=en_us\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"popupFrame\" name=\"popupFrame\" width=\"" + script_width + "\" height=\"" + script_height + "\" STYLE=\"z-index:17\"> </iframe> ";
 				}
 			if ( (VtigeRLogiNScripT == 'NEW_WINDOW') && (VtigeREnableD > 0) )
 				{

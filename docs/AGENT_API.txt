@@ -280,7 +280,7 @@ VALUES:
 agent_user -
  REQUIRED, alphanumeric string for agent user
 value -
- REQUIRED, one of these choices: 'NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','MESSAGE_ONLY','BALANCE_CHECK'
+ REQUIRED, one of these choices: 'NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','D3_DIAL','D4_DIAL','D5_DIAL','MESSAGE_ONLY'
 notes -
  Optional, the message to be displayed with the timer action
 rank - 

@@ -2865,7 +2865,7 @@ if ( ($ADD==211111) or ($ADD==311111) or ($ADD==411111) or ($ADD==511111) or ($A
 	$qc_groups_value='';
 	$qc_groups_list='<B><input type="checkbox" name="qc_groups[]" value="-ALL-GROUPS-"';
 	$p=0;
-	while ($p<200)
+	while ($p<2000)
 		{
 		if (eregi('ALL-CAMPAIGNS',$campaigns[$p])) 
 			{
@@ -2901,7 +2901,7 @@ if ( ($ADD==211111) or ($ADD==311111) or ($ADD==411111) or ($ADD==511111) or ($A
 		$campaigns_list .= "<input type=\"checkbox\" name=\"campaigns[]\" value=\"$campaign_id_value\"";
 		$qc_campaigns_list .= "<input type=\"checkbox\" name=\"qc_campaigns[]\" value=\"$campaign_id_value\"";
 		$p=0;
-		while ($p<100)
+		while ($p<1000)
 			{
 			if ( ($campaign_id_value == $campaigns[$p]) and (strlen($campaign_id_value) > 1) )
 				{
@@ -2934,7 +2934,7 @@ if ( ($ADD==211111) or ($ADD==311111) or ($ADD==411111) or ($ADD==511111) or ($A
 		$group_name_value = $rowx[1];
 		$qc_groups_list .= "<input type=\"checkbox\" name=\"qc_groups[]\" value=\"$group_id_value\"";
 		$p=0;
-		while ($p<200)
+		while ($p<2000)
 			{
 			if ( ($group_id_value == $qc_groups[$p]) and (strlen($group_id_value) > 1) )
 				{
@@ -20422,7 +20422,7 @@ if ($ADD==311111)
 			$shift_name_value = $rowx[1];
 			echo "<input type=\"checkbox\" name=\"group_shifts[]\" value=\"$shift_id_value\"";
 			$p=0;
-			while ($p<100)
+			while ($p<1000)
 				{
 				if (ereg(" $shift_id_value ", $GROUP_shifts))
 					{
@@ -20457,7 +20457,7 @@ if ($ADD==311111)
 			$vgroups_name_value = $rowx[1];
 			echo "<input type=\"checkbox\" name=\"agent_status_viewable_groups[]\" value=\"$vgroups_id_value\"";
 			$p=0;
-			while ($p<100)
+			while ($p<1000)
 				{
 				if (ereg(" $vgroups_id_value ", $VGROUP_vgroups))
 					{

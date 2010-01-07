@@ -4269,7 +4269,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$VDCL_start_call_url = preg_replace('/^VAR/','',$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--lead_id--B--',"$lead_id",$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--vendor_id--B--',"$vendor_id",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--vendor_lead_code--B--',"$vendor_lead_code",$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--vendor_lead_code--B--',"$vendor_id",$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--list_id--B--',"$list_id",$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--gmt_offset_now--B--',"$gmt_offset_now",$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--phone_code--B--',"$phone_code",$VDCL_start_call_url);
@@ -4331,15 +4331,42 @@ if ($ACTION == 'VDADcheckINCOMING')
 				if ($DB > 0) {echo "$VDCL_start_call_url<BR>\n";}
 				$SCUfile = file("$VDCL_start_call_url");
 				if ($DB > 0) {echo "$SCUfile[0]<BR>\n";}
-				if ( (ereg('mode=callxfer',$dispo_call_url)) and (ereg('contactwsid',$dispo_call_url)) )
+
+				##### BEGIN special filtering and response for Vtiger account balance function #####
+				$stmt = "SELECT enable_vtiger_integration FROM system_settings;";
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				$ss_conf_ct = mysql_num_rows($rslt);
+				if ($ss_conf_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$enable_vtiger_integration =	$row[0];
+					}
+				if ( ($enable_vtiger_integration > 0) and (ereg('callxfer',$VDCL_start_call_url)) and (ereg('contactwsid',$VDCL_start_call_url)) )
 					{
 					$SCUoutput='';
 					foreach ($SCUfile as $SCUline) 
 						{$SCUoutput .= "$SCUline";}
-					$fp = fopen ("./call_url_log.txt", "a");
-					fwrite ($fp, "$dispo_call_url\n$SCUoutput\n");
-					fclose($fp);
+					# {"result":true,"durationLimit":3071}
+					if (strlen($SCUoutput) > 4)
+						{
+						$SCUresponse = explode('durationLimit',$SCUoutput);
+						$durationLimit = preg_replace('/\D/','',$SCUresponse[1]);
+						$durationLimitSEC = ( ( ($durationLimit + 0) - 3) * 60);  # minutes - 3 for 3-minute-warning
+						if ($durationLimitSEC < 5) {$durationLimitSEC = 5;}
+
+						$stmt="UPDATE vicidial_live_agents set external_timer_action='D1_DIAL',external_timer_action_message='3 minute warning for customer',external_timer_action_seconds='$durationLimitSEC' where user='$user';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						$vla_update_timer = mysql_affected_rows($link);
+
+						$fp = fopen ("./call_url_log.txt", "a");
+						fwrite ($fp, "$VDCL_start_call_url\n$SCUoutput\n$durationLimit|$durationLimitSEC|$vla_update_timer\n");
+						fclose($fp);
+						}
 					}
+				##### END special filtering and response for Vtiger account balance function #####
 				}
 			}
 			else
@@ -5586,7 +5613,17 @@ if ($ACTION == 'updateDISPO')
 		if ($DB > 0) {echo "$dispo_call_url<BR>\n";}
 		$SCUfile = file("$dispo_call_url");
 		if ($DB > 0) {echo "$SCUfile[0]<BR>\n";}
-		if ( (ereg('mode=callend',$dispo_call_url)) and (ereg('contactwsid',$dispo_call_url)) )
+
+		$stmt = "SELECT enable_vtiger_integration FROM system_settings;";
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		$ss_conf_ct = mysql_num_rows($rslt);
+		if ($ss_conf_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$enable_vtiger_integration =	$row[0];
+			}
+		if ( ($enable_vtiger_integration > 0) and (ereg('mode=callend',$dispo_call_url)) and (ereg('contactwsid',$dispo_call_url)) )
 			{
 			$SCUoutput='';
 			foreach ($SCUfile as $SCUline) 
