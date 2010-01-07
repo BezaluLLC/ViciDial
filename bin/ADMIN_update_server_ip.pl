@@ -54,70 +54,70 @@ $MT[0]='';
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
 
 	if ($args =~ /--help/i)
-	{
-	print "ADMIN_update_server_ip.pl - updates server_ip in the $VARDB_database\n";
-	print "database and in the local /etc/astguiclient.conf file.\n";
-	print "\n";
-	print "command-line options:\n";
-	print "  [--help] = this help screen\n";
-	print "  [--debug] = verbose debug messages\n";
-	print "  [--auto] = no prompts\n";
-	print "configuration options:\n";
-	print "  [--old-server_ip=192.168.0.1] = define old server IP address at runtime\n";
-	print "  [--server_ip=192.168.0.2] = define new server IP address at runtime\n";
-	print "\n";
+		{
+		print "ADMIN_update_server_ip.pl - updates server_ip in the $VARDB_database\n";
+		print "database and in the local /etc/astguiclient.conf file.\n";
+		print "\n";
+		print "command-line options:\n";
+		print "  [--help] = this help screen\n";
+		print "  [--debug] = verbose debug messages\n";
+		print "  [--auto] = no prompts\n";
+		print "configuration options:\n";
+		print "  [--old-server_ip=192.168.0.1] = define old server IP address at runtime\n";
+		print "  [--server_ip=192.168.0.2] = define new server IP address at runtime\n";
+		print "\n";
 
-	exit;
-	}
+		exit;
+		}
 	else
-	{
+		{
 		if ($args =~ /--debug/i) # Debug flag
-		{
-		$DB=1;
-		}
-		if ($args =~ /--auto/i) # no prompts flag
-		{
-		$AUTO=1;
-		}
-		if ($args =~ /--old-server_ip=/i) # CLI defined old server IP address
-		{
-		@CLIoldserver_ipARY = split(/--old-server_ip=/,$args);
-		@CLIoldserver_ipARX = split(/ /,$CLIoldserver_ipARY[1]);
-		if (length($CLIoldserver_ipARX[0])>2)
 			{
-			$VARold_server_ip = $CLIoldserver_ipARX[0];
-			$VARold_server_ip =~ s/\/$| |\r|\n|\t//gi;
-			$CLIold_server_ip=1;
-			print "  CLI defined old server IP:  $VARold_server_ip\n";
+			$DB=1;
 			}
-		}
-		if ($args =~ /--server_ip=/i) # CLI defined server IP address
-		{
-		@CLIserver_ipARY = split(/--server_ip=/,$args);
-		@CLIserver_ipARX = split(/ /,$CLIserver_ipARY[1]);
-		if (length($CLIserver_ipARX[0])>2)
+		if ($args =~ /--auto/i) # no prompts flag
 			{
-			$VARserver_ip = $CLIserver_ipARX[0];
-			$VARserver_ip =~ s/\/$| |\r|\n|\t//gi;
-			$CLIserver_ip=1;
-			print "  CLI defined server IP:      $VARserver_ip\n";
+			$AUTO=1;
+			}
+		if ($args =~ /--old-server_ip=/i) # CLI defined old server IP address
+			{
+			@CLIoldserver_ipARY = split(/--old-server_ip=/,$args);
+			@CLIoldserver_ipARX = split(/ /,$CLIoldserver_ipARY[1]);
+			if (length($CLIoldserver_ipARX[0])>2)
+				{
+				$VARold_server_ip = $CLIoldserver_ipARX[0];
+				$VARold_server_ip =~ s/\/$| |\r|\n|\t//gi;
+				$CLIold_server_ip=1;
+				print "  CLI defined old server IP:  $VARold_server_ip\n";
+				}
+			}
+		if ($args =~ /--server_ip=/i) # CLI defined server IP address
+			{
+			@CLIserver_ipARY = split(/--server_ip=/,$args);
+			@CLIserver_ipARX = split(/ /,$CLIserver_ipARY[1]);
+			if (length($CLIserver_ipARX[0])>2)
+				{
+				$VARserver_ip = $CLIserver_ipARX[0];
+				$VARserver_ip =~ s/\/$| |\r|\n|\t//gi;
+				$CLIserver_ip=1;
+				print "  CLI defined server IP:      $VARserver_ip\n";
+				}
 			}
 		}
 	}
-}
 else
-{
-#	print "no command line options set\n";
-}
+	{
+	#	print "no command line options set\n";
+	}
 ### end parsing run-time options ###
 
 if (-e "$PATHconf") 

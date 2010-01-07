@@ -64,6 +64,13 @@ vicidial|welcome_demo.php|1
 vicidial|welcome_languages.php|1
 vicidial|vicidial_admin_web_logo.gif|1
 vicidial|vicidial_admin_web_logo_small.gif|1
+vicidial|user_territories.php|1
+vicidial|audio_store.php|1
+vicidial|AST_agent_time_detail.php|1
+vicidial|AST_agent_timeclock_detail.php|1
+vicidial|AST_OUTBOUNDsummary_interval.php|1
+vicidial|call_report_export.php|1
+vicidial|AST_CLOSERsummary_hourly.php|1
 ***TRANSLATIONS***||||
 ### special translations that should stay at the top of the file ###
 BORDER|Border|
@@ -2093,3 +2100,377 @@ Human Answer|Human Antwort|
 STATUS CATEGORIES|STATUS KATEGORIEN|
 per campaign|pro Kampagne|
 all campaigns|Alle Kampagnen|
+### START translations for 2.2.0 release ###
+Delete From DNC Lists|Löschen von DNC-Listen|
+This setting if set to 1 will allow a manager to remove phone numbers from the DNC lists in the VICIDIAL system|Diese Einstellung, wenn auf 1 gesetzt, wird es den Manager, der Telefonnummern aus dem DNC-Listen in der VICIDIAL System zu entfernen|
+DNC NOT DELETED|DNC NICHT gelöscht|
+This phone number is not in the Do Not Call List|Diese Telefonnummer ist nicht in der Do Not Call List|
+DNC DELETED|DNC DELETED|
+ADD OR DELETE NUMBERS FROM THE DNC LIST|Hinzufügen oder Löschen von Rufnummern Von der DNC-LISTE|
+Add or Delete|Hinzufügen oder Löschen|
+Add-Delete Number From DNC|Add-Nummer löschen Von DNC|
+Vtiger Search Dead Accounts|Vtiger Suche Dead-Konten|
+If Vtiger integration is enabled in the system settings then this setting will define whether deleted accounts will be searched when the agent clicks WEB FORM to search in the Vtiger system. DISABLED- deleted leads will not be searched, ASK- deleted leads will be searched and the vtiger search web page will ask the agent if they want to make the Vtiger account active, RESURRECT- will automatically make the deleted account active again and will take the agent to the account screen without delay upon clicking on WEB FORM. Default is DISABLED|Wenn Vtiger Integration ist in den Systemeinstellungen aktivieren, dann wird diese Einstellung festlegen, ob Gelöschte Konten durchsucht werden, wenn der Agent WEB FORM Mausklicks genügen, um in der vtiger-System sucht. BEHINDERTE-deleted führt nicht durchsucht werden, ASK-führt wird gelöscht hast und der vtiger-Suche Web-Seite wird der Agent fragen, ob sie zu machen, der vtiger-Konto aktiv wollen, RESURRECT-automatisch machen das gelöschte Konto wieder aktiv und würde die Inanspruchnahme Agenten auf das Konto Bildschirm unverzüglich nach Klick auf Web Form. Option ist standardmäßig deaktiviert|
+The DISPO option will create a call record for the Vtiger account without the agent needing to go to the vtiger search page through the WEB FORM|Die DISPO Option wird eine Anrufe aufzeichnen der vtiger-Konto erstellen, ohne dass der Agent zu müssen, um der vtiger-Suchseite gehen über den Web Form|
+The NEW_WINDOW option will open a new window upon login to the VICIDIAL agent screen|Die NEW_WINDOW Option wird ein neues Fenster bei der Anmeldung an die VICIDIAL Anbieters Bildschirm zu öffnen|
+Vtiger Status Call|Vtiger Status Call|
+If Vtiger integration is enabled in the system settings then this setting will define whether the status of the Vtiger Account will be updated with the status of the VICIDIAL call after it has been dispositioned. Default is N|Wenn Vtiger Integration ist in den Systemeinstellungen aktivieren, dann wird diese Einstellung fest, ob der Status der vtiger-Konto mit dem Status der VICIDIAL Aufruf aktualisiert wird, nachdem es dispositioned worden ist. Der Standardwert ist N|
+There are also 5 additional settings that will define the kind of status: sale, dnc, customer contact, not interested, unworkable|Außerdem gibt es 5 zusätzliche Einstellungen, die die Art Status: Verkauf, DNC, Kundenkontakt, nicht daran interessiert, nicht praktikabel definieren wird|
+If the customer is on hold and hears this estimated hold time message, the minimum time that will be played is 15 seconds|Wenn der Kunde gehalten wird, und hört diese geschätzte hold time Nachricht, die Mindestzeit, die abgespielt werden soll 15 Sekunden|
+Email, User Code and Territory|E-Mail, User-Code und Territorium|
+These are optional fields|Dies sind optionale Felder|
+All options except for the Not Interested, Third and Fourth digit options will move on to the Survey Method call path|Alle Optionen mit Ausnahme der nicht interessiert, dritte und vierte Stelle Optionen werden nun zu den Umfrage-Methode nennen Weg|
+Survey Third Digit|Umfrage dritte Ziffer|
+This allows for a third call path if the Third digit as defined in this field is pressed by the customer|Dies ermöglicht einen dritten Anruf weg, wenn die dritte Stelle in diesem Bereich definiert ist, gedrückt durch den Kunden|
+Survey Fourth Digit|Umfrage vierte Stelle|
+This allows for a fourth call path if the Fourth digit as defined in this field is pressed by the customer|Dies ermöglicht ein Viertel nennen Weg, wenn die vierte Stelle in diesem Bereich definiert ist, gedrückt durch den Kunden|
+Survey Third Audio File|Umfrage Dritten Audio-Datei|
+Survey Fourth Audio File|Umfrage Vierte Audio-Datei|
+This is the third audio file to be played upon the selection by the customer of the Third Digit option|Dies ist der dritte Audiodatei auf die Auswahl des Kunden von der dritten Stelle Option gespielt werden|
+Survey Third Status|Umfrage Dritten Status|
+Survey Fourth Status|Umfrage Vierte Status|
+This is the third status used for the call upon the selection by the customer of the Third Digit option|Dies ist der dritte Status für den Anruf auf die Auswahl des Kunden von der dritten Stelle Option verwendet|
+Survey Third Extension|Umfrage dritte Erweiterung|
+Survey Fourth Extension|Umfrage Vierte Verlängerung|
+This is the third extension used for the call upon the selection by the customer of the Third Digit option. Default is 8300 which immediately hangs up the call after the Audio File message is played|Dies ist die dritte Erweiterung für den Anruf auf die Auswahl des Kunden von der dritten Stelle Option verwendet. Der Standardwert ist 8300, das hängt unmittelbar den Ruf nach der Audio-Datei Meldung abgespielt ist|
+RANDOM: Randomly grabs lead within the statuses and lists defined|RANDOM: Zufällig schnappt führen innerhalb der definierten Status und Listen|
+UP LAST CALL TIME: Sorts by the newest local call time for the leads|UP LAST CALL TIME: Sortiert nach den neuesten Ortsgespräch Zeit für die Leitungen|
+DOWN LAST CALL TIME: Sorts by the oldest local call time for the leads|DOWN LAST CALL TIME: Sortiert nach den ältesten Ortsgespräch Zeit für die Leitungen|
+WARNING, we only recommend List Mix for advanced users, Please read the ViciDial Manager Manual|WARNUNG, empfehlen wir nur Liste Mix für fortgeschrittene Anwender, Bitte lesen Sie die ViciDial Manager-Handbuch|
+Add Call Menu|Add-Ruf-Menü|
+Copy Call Menu|Copy-Ruf-Menü|
+New Call Menu|Neue Call-Menü|
+Modify Call Menu|Ändern Call-Menü|
+Delete Call Menu|Löschen-Ruf-Menü|
+Call Menus|Call-Menüs|
+Menu ID|Menü-ID|
+This is the ID for this step of the call menu. This will also show up as the context that is used in the dialplan for this call menu|Dies ist die ID für diesen Schritt der Aufforderung Menü. Dies wird auch angezeigt, wie der Kontext, die in der dialplan für diesen Aufruf ist im Menü|
+Menu Name|Menu Name|
+This field is the descriptive name for the call menu|Dieses Feld ist die Bezeichnung für den Aufruf im Menü|
+Menu Prompt|Prompt Menu|
+This field contains the file name of the audio prompt to play at the beginning of this menu|Dieses Feld enthält den Dateinamen der Audio-Eingabeaufforderung zu Beginn dieses Menüs spielen|
+Menu Timeout|Menü-Timeout|
+This field is where you set the timeout in seconds that the menu will wait for the caller to enter in a DTMF choice|Dieses Feld ist, wo Sie den Timeout in Sekunden einstellen, dass das Menü wird für den Anrufer in einer DTMF-Wahl geben, warten|
+Menu Timeout Prompt|Menü-Timeout Prompt|
+This field contains the file name of the audio prompt to play when the timeout has been reached. Default is NONE to play no audio at timeout|Dieses Feld enthält den Dateinamen der Audio-Eingabeaufforderung zu spielen, wenn das Zeitlimit erreicht ist. Default ist keiner, der nicht bei Audio-Timeout spielen|
+Menu Invalid Prompt|Prompt Menu Ungültige|
+This field contains the file name of the audio prompt to play when the caller has selected an invalid option. Default is NONE to play no audio at invalid|Dieses Feld enthält den Dateinamen der Audio-Eingabeaufforderung zu spielen, wenn der Anrufer eine ungültige Option ausgewählt hat. Default ist keiner, der keine Audio-Wiedergabe auf ungültige|
+Menu Repeat|Menü wiederholen|
+This field is where you define the number of times that the menu will play after the first time if no valid choice is made by the caller. Default is 1 to repeat the menu once|Dieses Feld ist, wo Sie die Anzahl der Male, dass das Menü nach dem ersten Mal, wenn keine gültige Wahl ist vom Anrufer aus spielen wird, zu definieren. Der Standardwert ist 1, um das Menü einmal wiederholen|
+Menu Time Check|Menü Time Check|
+This field is where you can select whether to restrict the Call Menu access to the specific hours set up in the selected Call Time. If the Call Time is blank, this setting will be ignored. Default is 0 for disabled|Dieses Feld ist, wo Sie wählen, ob der Ruf-Menü Zugriff auf die spezifischen Stunden in der ausgewählten Call Time eingerichtet eingeschränkt werden kann. Wenn der Call Time leer ist, wird diese Einstellung ignoriert. Der Standardwert ist 0 für Behinderte|
+Call Time ID|Call Time ID|
+This is the Call Time ID that will be used to restrict calling times if the Menu Time Check option is enabled|Dies ist die Call Time-ID, die verwendet werden, zu berufen, mal zu beschränken, wenn die Menü-Time Check Option aktiviert ist|
+Track Calls in Real-Time Report|Track fordert in Real-Time-Report|
+This field is where you can select whether you want the call to be tracked in the Real-time screen as an incoming IVR type call. Default is 1 for active|Dieses Feld ist, wo Sie wählen, ob Sie den Anruf wollen, in das Echtzeit-Bildschirm als einen eingehenden IVR Call verfolgt werden können. Der Standardwert ist 1 für aktive|
+Option Value|Optionswert|
+This field is where you define the menu option, possible choices are|Dieses Feld ist, wo Sie den Menüpunkt definieren, Wahlmöglichkeiten|
+Option Route|Option Route|
+This menu contains the options for where to send the call if this option is selected|Dieses Menü enthält die Optionen für die, wo der Anruf gesendet wird, falls diese Option aktiviert ist|
+The special option TIMECHECK can be used only if you have Menu Time Check enabled and there is a Call Time defined for the Menu|Die besondere TIMECHECK Option kann nur verwendet werden, wenn Sie Menü Time Check aktiviert und es gibt einen Call Time definiert für die Menü -|
+Option Route Value|Option Route Preis|
+This field is where you enter the value that defines where in the selected Option Route that the call is to be directed to|Dieses Feld ist, wo Sie den Wert, der festlegt, wo in der gewählten Route Option, dass der Anruf eingeben, um die Anweisung bekommen,|
+Option Route Value Context|Option Route Preis Kontext|
+This field is optional and only used for EXTENSION Option Routes|Dieses Feld ist optional und nur für die Extension Option Routen eingesetzt|
+ADD A NEW CALL MENU|ADD A NEW CALL MENU|
+COPY CALL MENU|COPY CALL MENU|
+This menu contains the options for where to send the call if this option is selected: CALLMENU,INGROUP,DID,HANGUP,EXTENSION,PHONE. For CALLMENU, the Route Value should be the Menu ID of the Call Menu that you want the call sent to. For INGROUP, the In-Group that you want the call to be sent to needs to be selected as well as the other 5 options that need to be set to properly route a call to an Inbound Group. For DID, the Route Value needs to be the DID pattern that you want to send the call to. For HANGUP, the Route Value can be the name of an audio file to play before hanging up the call. For EXTENSION, the Route Value needs to be the dialplan extension you want to send the call to, and the Route Value Context is the context that extension is located in, if left blank the context will default to default. For PHONE, the Route Value needs to be the phone login value for the phones entry that you want to send the call to. For VOICEMAIL, the Route Value needs to be the voicemail box number, the unavailable mesage will be played. For AGI, the Route Value needs to be the agi script and any values taht need to be passed to it.|Dieses Menü enthält die Optionen für die, wo der Anruf gesendet wird, falls diese Option ausgewählt ist: CALLMENU, Eigen-, DID, HANGUP, ERWEITERUNG, TEL. Für CALLMENU, sollte die Route Wert auf die Menü-ID des Call-Menü sein, dass Sie den Anruf an. Für die Eigen-, In-Gruppe, die Sie wollen, dass die Aufforderung an die Bedürfnisse geschickt werden, um ausgewählt werden, sowie die anderen 5 Optionen, die Notwendigkeit, ordnungsgemäß Route einen Anruf an eine Inbound-Gruppe eingestellt werden. Für DID, muss der Wert für die Route der DID-Muster, das Sie wollen, um den Anruf zu senden. Für HANGUP kann die Route Wert ist der Name einer Audio-Datei vor dem Aufhängen der Aufforderung zu spielen. DIE ERWEITERUNG, muss der Wert für die Route der dialplan Erweiterung, die Sie möchten den Anruf zu senden, und die Route Preis-Kontext ist der Kontext, dass die Verlängerung in der Lage ist, wenn leer gelassen Rahmen wird standardmäßig auf Standard. Für Telefon, muss die Route Preis zu sein Telefon anmelden Wert für die Handys Eintrag, den Sie möchten den Anruf zu senden. Für Voicemail, muss die Route Wert für die Voice-Mailbox-Nummer, die nicht verfügbar mesage wird abgespielt. Für AGI, muss die Route Wert für die AGI-Skript und alle Werte, die an sie übergeben werden.|
+Option Description|Option Beschreibung|
+This field is where you can describe the option, this description will be put into the dialplan as a comment above the option|Dieses Feld ist, wo Sie die Möglichkeit, beschreiben kann, wird diese Beschreibung in den dialplan als Kommentar über die Möglichkeit genommen werden|
+Source Menu|Quelle Menü|
+CALL MENU NOT ADDED|CALL MENU NOT ADDED|
+Call Menu ID must be between 2 and 50 characters in length and contain no|Call Menü-ID muss zwischen 2 und 50 Zeichen lang sein und enthalten keine|
+CALL MENU ADDED|CALL MENU ADDED|
+CALL MENU NOT MODIFIED|CALL MENU NICHT GEÄNDERT|
+CALL MENU MODIFIED|CALL MENU MODIFIED|
+Click here to see Admin chages to this CALL MENU|Klicken Sie hier, um Admin chages vgl. in diesem CALL MENU|
+DELETE THIS CALL MENU|DELETE THIS CALL MENU|
+MODIFY A CALL MENU RECORD|Ändern einer CALL MENU RECORD|
+Time Check|Time Check|
+No Time Check|No Time Check|
+Realtime Tracking|Echtzeit-Tracking|
+No Realtime Tracking|Nr. Realtime-Tracking|
+Call Menu Options|Call-Optionen-Menü|
+Option|Option|
+CALL MENU NOT DELETED|CALL MENU NICHT gelöscht|
+CALL MENU DELETION CONFIRMATION|CALL MENU Bestätigungsfenster|
+Click here to delete CALL MENU|Klicken Sie hier, um zu löschen CALL MENU|
+CALL MENU DELETION COMPLETED|CALL MENU LÖSCHEN BEENDET|
+CALL MENU LISTINGS|CALL MENU LISTINGS|
+CALLMENU will send the call to the defined Call Menu|CALLMENU wird der Anruf an die definierten Ruf-Menü|
+Call Menu|Call-Menü|
+If CALLMENU is selected as the DID Route, then this is the Call Menu that calls will be sent to|Wenn CALLMENU ist wie die DID-Route ausgewählt, dann ist dies der Ruf-Menü, dass Anrufe gesendet werden, werden|
+Show Call Menus|Call-Menüs anzeigen|
+Add A New Call Menu|Fügen Sie ein neues Call-Menü|
+Copy Call Menu|Copy-Ruf-Menü|
+To delete an Option, just set the Route to REMOVE and the option will be deleted when you click the SUBMIT button|Um eine Option zu löschen, einfach die Route zu entfernen und die Option wird gelöscht, wenn Sie auf den Submit-Button|
+Agent Only Callback Campaign Lock|Agent Only Rückruf-Lock-Kampagne|
+This option defines whether AGENTONLY callbacks are locked to the campaign that the agent originally created them under. Setting this to 1 means that the agent can only dial them from the campaign they were set under, 0 means that the agent can access them no matter what campaign they are logged into. Default is 1|Diese Option legt fest, ob AGENTONLY Rückrufe an der Kampagne, dass der Agent ursprünglich erstellt wurde ihnen im Rahmen gesperrt sind. Sie diesen Wert auf 1 bedeutet, dass der Agent kann nur wählen sie aus der Kampagne wurden sie unter festgelegten, 0 bedeutet, dass der Agent auf sie zugreifen, egal was sie in Aktion protokolliert werden können. Der Standardwert ist 1|
+Central Sound Control Active|Central Sound Control Active|
+This option defines whether the sound synchronization system is active across all servers. Default is 0 for inactive|Diese Option legt fest, ob der Ton-Synchronisierung System aktiv ist, auf allen Servern. Der Standardwert ist 0 für inaktive|
+Sounds Web Server|Sounds Web Server|
+This is the server name or IP address of the web server that will be handling the sound files on this system, this must match the server name or IP of the machine you are trying to access the audio_store.php webpage on or it will not work. Default is 127.0.0.1|Dies ist die Server-Namen oder die IP-Adresse des Web-Server, der die Sound-Dateien auf diesem System Handling wird, muss dieses Spiel den Server-Namen oder die IP des Rechners, den Sie versuchen, die audio_store.php Webseite über den Zugang oder es wird nicht funktionieren . Standard ist 127.0.0.1|
+Sounds Web Directory|Sounds Web-Verzeichnis|
+This auto-generated directory name is created at random by the system as the place that the audio store will be kept. All audio files will reside in this directory|Diese automatisch generierten Verzeichnis-Name wird zufällig vom System als den Ort, dass die Audio-Lager gehalten werden geschaffen. Alle Audio-Dateien befinden sich in diesem Verzeichnis|
+Audio Store|Audio-Store|
+Audio File to Upload|Audio-Datei zum hochladen|
+This utility allows you to upload audio files to the web server so that they can be distributed to all of the ViciDial servers in a multi-server cluster. An important note, only two audio file types will work, .wav files that are PCM 16bit 8k and .gsm files that are 8bit 8k. Please verify that your files are properly formatted before uploading them here|Dieses Dienstprogramm ermöglicht es Ihnen, Audio-Dateien-Upload auf den Webserver, so dass sie auf alle ViciDial Server in einer Multi-Server-Cluster verteilt werden. Ein wichtiger Hinweis, nur zwei Audio-Dateitypen funktionieren wird,. Wav-Dateien, die PCM 16bit und 8k. GSM-Dateien, die 8bit 8k sind. Bitte überprüfen Sie, dass Ihre Dateien vor dem Upload korrekt formatiert sind sie hier|
+Sounds Update|Klingt Update|
+If you want to force a check of the sound files on this server, and the central audio store is enabled as a system setting, then this field will allow the sounds updater to run at the next top of the minute. Any time an audio file is uploaded from the web interface this is automatically set to Y for all servers that have Asterisk active. Default is N|Wenn Sie einen Scheck von Sound-Dateien auf diesem Server erzwingen wollen, und die zentrale Audio-Shop ist als ein System Einstellung aktiviert ist, wird dieses Feld ermöglicht die Töne Updater auf der nächsten Spitze der Minute ausführen. Jedes Mal, wenn eine Audio-Datei wird von der Web-Oberfläche wird automatisch auf Y für alle Server, Asterisk aktive haben hochgeladen. Der Standardwert ist N|
+Active Voicemail Server|Active Voicemail-Server|
+In multi-server systems, this is the server that will handle all voicemail boxes. This server is also where the dial-in generated prompts will be uploaded from, the 8168 recordings|Im Multi-Server-Systemen, ist dies der Server, der alle Voicemailboxen behandelt. Dieser Server ist auch, wenn die Einwahl-Anweisungen generiert werden aus hochgeladen werden, die 8168 Aufnahmen|
+Auto Dial Limit|Auto Dial Limit|
+This is the maximum limit of the auto dial level in the campaign screen|Dies ist die maximale Grenze der automatische Einwahl-Ebene in die Kampagne Bildschirm|
+User Territories are not active on this system|User Gebiete sind nicht aktiv auf diesem System|
+User Territories|User Territories|
+List All Territories:|Liste alle Gebiete:|
+User Territories Active|User Gebiete Active|
+This setting allows you to enable the User Territories setttings from the user modification screen. This feature was added to allow for more integration with a customized Vtiger installation but can have applications in a pure ViciDial system as well. Default is 0 for disabled|Diese Einstellung erlaubt Ihnen, damit die User Gebiete setttings vom Benutzer Änderung Bildschirm. Diese Funktion wurde hinzugefügt, um für mehr Integration mit einem angepassten vtiger-Installation erlauben, aber können Anwendungen in einer reinen ViciDial System haben könnte. Der Standardwert ist 0 für Behinderte|
+List Territories|US-Territorien|
+Add Territory|Add Territory|
+Add User Territory|Benutzer hinzufügen Territory|
+Territory|Territory|
+Territory Description|Territory Beschreibung|
+Territory and Territory Description must be filled in|Territorium und Territory Beschreibung müssen ausgefüllt werden|
+there is already a territory in the system with this name|gibt es bereits ein Gebiet, in das System mit diesem Namen|
+Territory Added|Territory Added|
+Modify Territory|Ändern Territory|
+Territory not found|Gebiet nicht gefunden|
+This territory is not in the system with this name|Dieses Gebiet ist nicht in das System mit diesem Namen|
+Territory Modified|Geändert Territory|
+Territory must be filled in|Territory müssen ausgefüllt werden|
+Territory Deleted|Gebiet entfällt|
+Delete This Territory|Löschen Dieses Gebiet|
+Vtiger Accounts|Vtiger-Konten|
+Agents|Bevollmächtigte|
+Territory, User and Level must be filled in|Territory, Benutzer-und Level müssen ausgefüllt werden|
+this territory user is already in the system|dieses Gebiet Benutzer ist bereits im System|
+User Territory Added|User Territory Added|
+this territory user is not in the system|dieses Gebiet Benutzer ist nicht im System|
+User Territory Modified|User Territory Geändert|
+Territory and User must be filled in|Territorium und Benutzer müssen ausgefüllt werden|
+User Territory Deleted|User Territory entfällt|
+Vtiger Change Territory Owner|Vtiger ändern Territory Besitzer|
+Had to add user territory|Had to user Gebiet hinzufügen|
+Vtiger Territory Owner Changed|Vtiger Territory Besitzer gewechselt|
+Records Changed|Geändert Records|
+ViciDial Recording Limit|ViciDial Recording-Limit|
+This field is where you set the maximum number of minutes that a call recording initiated by ViciDial can be. Default is 60 minutes|Dieses Feld ist, wo Sie die maximale Anzahl der Minuten, die Aufzeichnung eines Anrufs von ViciDial eingeleitet werden kann gesetzt. Der Standardwert ist 60 Minuten|
+This is the dial plan context that the agent applications, like ViciDial, primarily use. It is assumed that all numbers dialed by the client apps are using this context so it is a good idea to make sure this is the most wide context possible. verify with extensions.conf file before changing. default is default|Dies ist die Wählplan Zusammenhang, dass der Agent-Anwendungen, wie ViciDial, in erster Linie zu verwenden. Es wird davon ausgegangen, dass alle Zahlen, die durch den Client-Anwendungen gewählt diesem Zusammenhang verwenden, so ist es eine gute Idee, um sicherzustellen, das ist die am weitesten Kontext möglich ist. extensions.conf überprüfen, ob die Datei vor dem Wechsel. Standardmäßig ist der Standard -|
+Phone Context|Telefon Kontext|
+This is the dial plan context that this phone will use to dial out. If you are running a call center and you do not want your agents to be able to dial out outside of the ViciDial applicaiton for example, then you would set this field to a dialplan context that does not exist, something like agent-nodial. default is default|Dies ist die Wählplan Zusammenhang, dass dieses Handy für die Einwahl zu verwenden. Wenn Sie ein Call-Center ausgeführt werden und Sie nicht möchten, dass Ihre Mitarbeiter in der Lage sein zu wählen, die außerhalb des ViciDial Anwendung zum Beispiel, dann würden Sie dieses Feld auf ein dialplan Zusammenhang, dass es nicht gibt, so etwas wie agent-nodial. Standardmäßig ist der Standard -|
+Use the HIDE option to completely remove the customer phone number from the agent display|Verwenden Sie die HIDE-Option zum vollständigen Entfernen der Kunde die Telefonnummer aus der Agenten-Display|
+Click here to see a traffic report for this DID|Klicken Sie hier, um ein Traffic-Bericht für das DID|
+Agent Time Detail|Agent Time Detail|
+User Timeclock Detail Report|User Timeclock Detail Report|
+Carrier Logging Active|Carrier Active Logging|
+This setting allows you to log all hangup return codes for any outbound list dialing calls that you are placing. Default is N.|Diese Einstellung erlaubt Ihnen, alle hangup Return-Codes für jede ausgehende Liste Wählen log Anrufe, die Sie platzieren. Der Standardwert ist N.|
+Drop Lockout Time|Drop Lockout Time|
+This is a number of hours that DROP abandon calls will be prevented from being dialed, to disable set to 0. This setting is very useful in countries like the UK where there are regulations preventing the attempted calling of customers within 72 hours of an Abandon, or DROP. Default is 0|Dies ist eine Zahl der Stunden, die DROP aufzugeben Anrufe verhindert werden, daß gewählt, zu deaktivieren, auf 0 gesetzt. Diese Einstellung ist sehr nützlich, in Ländern wie dem Vereinigten Königreich, wo gibt es Vorschriften, die verhindern versucht Berufung des Kunden innerhalb von 72 Stunden ein Abandon oder DROP. Der Standardwert ist 0|
+Phone Ring Timeout|Telefon Ring Timeout|
+This is the amount of time, in seconds, that the phone will ring in the dialplan before sending the call to voicemail. Default is 60 seconds|Dies ist die Zeit, in Sekunden, die das Telefon in der dialplan, bevor der Anruf an die Voicemail-Ring wird. Der Standardwert ist 60 Sekunden|
+Allow Custom Dialplan Entries|Lassen Sie Custom Dialplan Einträge|
+This option allows you to enter custom dialplan lines into Call Menus. Default is 0 for inactive|Diese Option ermöglicht es Ihnen, benutzerdefinierte dialplan Zeilen in Call-Menüs geben. Der Standardwert ist 0 für inaktive|
+Custom Dilplan Entry|Custom Dilplan Eintrag|
+This field allows you to enter in any dialplan elements that you want for the Call Menu|Dieses Feld ermöglicht es Ihnen, in jedem dialplan Elemente, die Sie für die Call-Menü eingeben wollen|
+You can enter multiple propmts in this field and the other prompt fields by separating them with a pipe character|Sie können mehrere propmts in dieses Feld eingeben und den anderen Bereichen, prompt, indem Sie diese mit einem Pipe-Zeichen|
+Setting this field to zero 0 will mean that there will be no wait time after the prompt is played|Festlegen dieses Feld auf Null 0 bedeutet, dass es keine Wartezeit nach der Eingabeaufforderung geben wird gespielt|
+Conf File Secret|Conf-Datei Secret|
+This is the secret, or password, for the phone in the iax or sip auto-generated conf file for this phone. Limit is 20 characters alphanumeric dash and underscore accepted. Default is test|Das ist das Geheimnis, oder das Passwort für das Telefon in der IAX oder SIP-auto-generated conf-Datei für dieses Telefon. Der Grenzwert beträgt 20 alphanumerischen Zeichen Bindestrich und Unterstrich akzeptiert. Default is test|
+Tracking Group|Tracking-Fraktion|
+This is the ID that you can use to track calls to this Call Menu when looking at the IVR Report. The list includes CALLMENU as the default as well as all of the In-Groups|Dies ist die ID, die Sie für Anrufe an dieser Aufforderung Menü Länge, wenn man die IVR-Bericht verwenden können. Die Liste enthält CALLMENU als Standard-sowie alle In-Gruppen|
+Agent Alert Filename|Agent Alert Dateiname|
+The audio file to play to an agent to announce that a call is coming to the agent. To not use this function set this to X. Default is ding|Die Audio-Datei zu spielen, einen Agenten zu verkünden, dass ein Anruf ankommt, um den Agenten. Um diese Funktion nicht nutzen setzen Sie ihn auf X. Der Standardwert ist ding|
+This field as with the other audio fields in In-Groups, with the exception of the Agent Alert Filename, can have multiple audio files played if you put a pipe-separated list of audio files into the field|Dieses Feld wie bei den anderen Audio-Felder im In-Gruppen, mit Ausnahme der Agent Alert Dateiname, können mehrere Audio-Dateien abgespielt, wenn Sie eine Pipe getrennte Liste von Audio-Dateien in den Bereich|
+No Agents No Queueing|Nr. Bevollmächtigte Nr. Queueing|
+If this field is set to Y or NO_PAUSED then no calls will be put into the queue for this in-group if there are no agents logged in and the calls will go to the No Agent No Queue Action. The NO_PAUSED option will also not send the callers into the queue if there are only paused agents in the in-group. Default is N|Ist dieses Feld auf Y oder NO_PAUSED dann keine Anrufe in die Warteschlange für diese in-Gruppe gesetzt werden, wenn es keine Agenten und die Forderungen angemeldet gehen an die Nr. Agent Nr. Queue Aktion sind. Die NO_PAUSED Option wird auch das Senden der Anrufer in der Warteschlange, wenn es nur angehalten Agenten in der in-group sind. Der Standardwert ist N|
+No Agent No Queue Action|Kein Agent Nr. Queue Aktion|
+If No Agent No Queue is enabled, then this field defines where the call will go if there are no agents in the In-Group. Default is MESSAGE, this plays the sound files in the Action Value field and then hangs up|Wenn kein Anwalt keine Warteschlange aktiviert ist, wird dieses Feld definiert, wo die anrufen, wenn es keine Mittel sind, gehen in die In-Group. Der Standardwert ist MESSAGE, spielt dieser die Sound-Dateien in das Action Feld Wert und legt dann auf|
+No Agent No Queue Action Value|Kein Agent Nr. Queue Preis-Aktion|
+This is the value for the Action above. Default is|Dies ist der Wert für die Aktion vor. Der Standardwert ist|
+Quick Transfer Button|Quick Transfer Button|
+This option will add a Quick Transfer button to the agent screen below the Transfer-Conf button that will allow one click blind transferring of calls to the selected In-Group or number. IN_GROUP will send calls to the Default Xfer Group for this Campaign, or In-Group if there was an inbound call. The PRESET options will send the calls to the preset selected. Default is N for disabled|Diese Option wird ein Quick Transfer-Taste, um den Agenten Bildschirm unter dem Transfer-Conf Schaltfläche -Hinzufügen- klicken, dass man blind Weiterleitung der Gespräche, damit werden die ausgewählten In-Group oder einer Nummer. IN_GROUP werden Anrufe an die Standard-Xfer für diese Kampagne, oder In-Group, wenn es einen eingehenden Anruf. Die Voreinstellungen werden die Aufrufe an die gewählte Voreinstellung. Der Standardwert ist N für Behinderte|
+PrePopulate Transfer Preset|Vorab gefüllt Transfer Preset|
+This option will fill in the Number to Dial field in the Transfer Conference frame of the agent screen if defined. Default is N for disabled|Diese Option wird in der Anzahl zu Dial-Feld füllen Sie das Transfer Conference Rahmen des Bildschirms, wenn der Agent definiert. Der Standardwert ist N für Behinderte|
+Enable TTS Integration|Aktivieren TTS Integration|
+This setting allows you to enable Text To Speech integration with Cepstral. This is currently only available for outbound Survey type campaigns. Default is 0 for disabled|Diese Einstellung ermöglicht es Ihnen zu ermöglichen, Text-to-Speech Integration mit Cepstral. Dies ist derzeit nur für Outbound-Kampagnen Art Survey. Der Standardwert ist 0 für Behinderte|
+ADD NEW TTS ENTRY|ADD NEW TTS ENTRY|
+ADDING NEW TTS ENTRY|Hinzufügen neuer TTS ENTRY|
+MODIFY TTS ENTRY|MODIFY TTS ENTRY|
+DELETE TTS ENTRY|TTS DELETE ENTRY|
+TTS ENTRY LIST|TTS TEILNEHMERLISTE|
+TEXT-TO-SPEECH(TTS) LISTINGS|TEXT-to-Speech (TTS) LISTINGS|
+Text To Speech|Text To Speech|
+Show TTS Entries|TTS Einträge anzeigen|
+Add A New TTS Entry|Add A New TTS Eintrag|
+TTS ID|TTS-ID|
+TTS Name|TTS Name|
+TTS Text|TTS Text|
+TTS ENTRY NOT ADDED|TTS Eintrag nicht ADDED|
+there is already a tts entry in the system with this ID|Es gibt bereits eine tts Eintrag in das System mit dieser ID|
+TTS ENTRY ADDED|TTS Entry Hinzugefügt|
+MODIFY A TTS RECORD|Ändern eines TTS RECORD|
+Click here to see Admin chages to this TTS entry|Klicken Sie hier, um Admin chages vgl. in diesem TTS-Eintrag|
+DELETE THIS TTS ENTRY|DELETE THIS ENTRY TTS|
+TTS ENTRY NOT MODIFIED|TTS Eintrag nicht MODIFIED|
+TTS ENTRY MODIFIED|TTS ENTRY MODIFIED|
+TTS ENTRY NOT DELETED|TTS Eintrag nicht DELETED|
+TTS ENTRY DELETION CONFIRMATION|TTS ENTRY Bestätigungsfenster|
+Click here to delete tts entry|Klicken Sie hier, um den Eintrag zu löschen tts|
+This is the short name of a TTS entry. This needs to be a unique identifier. Do not use any spaces or punctuation for this field. max 50 characters, minimum of 2 characters|Dies ist der Kurzname eines TTS-Eintrag. Dies muss eine eindeutige Kennung. Verwenden Sie keine Leerzeichen oder sonstige Zeichen für dieses Feld. max 50 Zeichen, mindestens 2 Zeichen|
+This is a more descriptive name of the TTS entry. This is a short summary of the TTS definition. max 100 characters, minimum of 2 characters|Dies ist um einen beschreibenden Namen des TTS-Eintrag. Dies ist eine kurze Zusammenfassung der TTS-Definition. max 100 Zeichen, mindestens 2 Zeichen|
+This option allows you to set the TTS entry to active or inactive|Diese Option ermöglicht es Ihnen, die TTS-Eintrag aktiv oder inaktiv gesetzt|
+This is the actual Text To Speech data field that is sent to Cepstral for creation of the audio file to be played to the customer. you can use Speech Synthesis Markup Language -SSML- in this field, for example|Dies ist der eigentliche Text To Speech Datenfeld Cepstral, die für die Erstellung der Audio-Datei gesendet wird, um dem Kunden gespielt werden. Sie können Speech Synthesis Markup Language-SSML-Einsatz in diesem Bereich, zum Beispiel|
+for a 1 second break. You can also use several variables such as first name, last name and title as ViciDial variables just like you do in a Script: --A--first_name--B--. Here is a list of the available variables: |für 1 Sekunde Pause. Sie können auch mehrere Variablen wie Vorname, Nachname und Titel wie ViciDial Variablen wie Sie in einem Skript: - A - first_name - B -. Hier ist eine Liste der verfügbaren Variablen:|
+Multiple Campaign Drop Rate Group|Mehrere Kampagne Drop Rate Group|
+This feature allows you to set a campaign as a member of a Campaign Drop Rate Group, or a group of campaigns whose Human Answered calls and Drop calls for all campaigns in the group will be combined into a shared drop percentage, or abandon rate. This allows you to to run multiple campaigns at once and more easily control your drop rate. This is particularly useful in the UK where regulations permit this drop rate calculation method with campaign grouping for the same company even if there are several campaigns that company is running during the same day. To enable this for a campaign, just select a group from the list. There are 10 groups defined in the system by default, you can contact your system administrator to add more. Default is DISABLED|Diese Funktion erlaubt Ihnen, eine Kampagne als Mitglied einer Kampagne Drop-Rate-Fraktion, oder eine Gruppe von Kampagnen Menge, deren Human Beantwortete Anrufe und Drop fordert für alle Kampagnen in der Gruppe werden in einen gemeinsamen Drop Prozentsatz, oder aufgeben und abstimmen kombiniert werden. Dies ermöglicht es Ihnen, mehrere Kampagnen gleichzeitig und leichter Ablaufsteuerung Ihre Drop-Rate. Dies ist besonders nützlich in Großbritannien, wo die Vorschriften dieser Drop-Rate Berechnungsmethode mit Kampagnen-Gruppierung in der gleichen Firma Bewilligung, auch wenn es mehrere Kampagnen, die Firma läuft am selben Tag. Um dies für eine Kampagne zu aktivieren, wählen Sie einfach eine Gruppe aus der Liste. Es gibt 10 Gruppen in das System standardmäßig definiert, können Sie Ihren Systemadministrator wenden, um mehr hinzuzufügen. Option ist standardmäßig deaktiviert|
+IMPORTANT, this is the password only for the agent web interface phone login, to change the sip.conf or iax.conf password, or secret, for this phone device you need to modify the Conf File Secret field further down on this page|Wichtig ist dies das Passwort nur für den Agenten Weboberfläche Telefon anmelden, um die sip.conf oder iax.conf vergessen, oder geheim zu ändern, für dieses Telefon-Gerät müssen Sie die Conf-Datei Secret Feld weiter unten auf dieser Seite ändern|
+Agent Status Viewable Groups|Agent Status Sichtbare Gruppen|
+This is a selectable list of User Groups and user functions to which members of this user group can view the status of as well as transfer calls to inside of the agent screen. The ALL-GROUPS option allows the users in this group to see and transfer calls to any user on the system. The CAMPAIGN-AGENTS option allows users in this group to see and transfer calls to any user in the campaign that they are logged into|Dies ist eine Liste der wählbaren User Groups und User-Funktionen, auf die Mitglieder dieser Benutzergruppe den Status sowie die Übertragung Anrufe innerhalb des Agent-Bildschirm anzeigen können. Der ALL-GRUPPEN Option ermöglicht es dem Benutzer in dieser Gruppe zu sehen und Anrufe für jeden Benutzer auf dem System. Die Kampagnen-AGENTUREN Option können Benutzer in dieser Gruppe zu sehen und Anrufe für jeden Benutzer in der Kampagne, dass sie angemeldet sind, in|
+Agent Status View Time|Agent Status View Time|
+This option defines whether the agent will see the amount of time that users in their agent sidebar have been in their current status. Default is N for no or disabled|Diese Option legt fest, ob der Agent die Höhe der Zeit, dass die Nutzer in ihrer Bevollmächtigten Seitenleiste in ihren aktuellen Status zu sehen gewesen sein wird. Der Standardwert ist N nicht oder deaktiviert|
+This option allows an agent to disposition a call as CALLBK and choose the date and time at which the lead will be re-activated|Diese Option ermöglicht es einem Agenten um einen Anruf zu Verfügung als CALLBK und wählen Sie das Datum und die Uhrzeit, zu der die Führung wieder aktiviert werden|
+Agent View Calls in Queue|Agent Profil Anrufe in der Warteschlange|
+If set to anything but NONE, agents will be able to see details about the calls that are waiting in queue in their agent screen. If set to a number value, the calls displayed will be limited to the number selected. Default is NONE|Bei anderen aber none gesetzt ist, werden Vertreter der Lage sein, Informationen über Anrufe, die in der Warteschlange in ihrer Bevollmächtigten Bildschirm zu sehen sind. Wenn auf einen Zahlenwert setzen, die Anrufe angezeigt werden, um die Anzahl begrenzt werden ausgewählt. Der Standardwert ist KEINE|
+View Calls in Queue Launch|Profil Anrufe in der Warteschlange Launch|
+This setting if set to AUTO will have the Calls in Queue frame show up upon login by the agent into the agent screen. Default is MANUAL|Diese Einstellung, wenn auf AUTO eingestellt wird die Anrufe in der Warteschlange Frame angezeigt werden bei der Anmeldung durch den Agenten in der Agent dem Bildschirm haben. Standard ist -Manuell-|
+Agent Grab Calls in Queue|Agent Grab Anrufe in der Warteschlange|
+This option if set to Y will allow the agent to select the call that they want to take from the Calls in Queue display by clicking on it while paused. Agents will only be able to grab inbound calls or transferred calls, not outbound calls. Default is N|Diese Option, wenn auf Y wird es den Agenten, um den Anruf, dass sie wählen wollen, aus der Anrufe in der Warteschlange anzeigen, indem Sie auf es, während der Pause. Bevollmächtigte werden nur in der Lage, eingehende Anrufe oder übertragen werden ersucht, nicht ausgehende Anrufe zu greifen. Der Standardwert ist N|
+Agent Call Re-Queue Button|Call Agent Re-Queue Button|
+This option if set to Y will add a Re-Queue Customer button to the agent screen, allowing the agent to send the call into an AGENTDIRECT queue that is reserved for the agent only. Default is N|Diese Option, wenn auf Y fügt ein Re-Queue Customer-Taste, um den Agenten Bildschirm, so dass der Agent, um den Anruf zu einem AGENTDIRECT Warteschlange, die für den Agenten nur reserviert ist, zu senden. Der Standardwert ist N|
+Agent Pause After Each Call|Agent Pause nach jedem Anruf|
+This option if set to Y will pause the agent after every call automatically. Default is N|Diese Option, wenn auf Y wird der Agent Pause nach jedem Anruf automatisch. Der Standardwert ist N|
+Starts with the highest rank and works its way down|Startet mit dem höchsten Rang und arbeitet sich nach unten|
+Starts with the lowest rank and works its way up|Startet mit dem niedrigsten Rang und arbeitet dem Weg nach oben|
+Starts with owners beginning with Z and works its way down|Beginnt mit den Eigentümern beginnend mit Z und arbeitet sich nach unten|
+Starts with owners beginning with A and works its way up|Beginnt mit den Eigentümern mit A beginnt und arbeitet dem Weg nach oben|
+No Hopper Dialing|Nr. Hopper Dialing|
+If This is enabled, the hopper will not run for this campaign. This option is only available when the dial method is set to MANUAL or INBOUND_MAN. It is recommended that you do not enable this option if you have a very large lead database, over 100,000 leads. With No Hopper Dialing, the following features do not work: lead recycling, auto-alt-dialing, list mix, list ordering with Xth NEW. If you want to use Owner Only Dialing you must have No Hopper Dialing enabled. Default is N for disabled|Wenn diese aktiviert ist, wird der Trichter nicht ausgeführt werden für diese Kampagne. Diese Option ist nur verfügbar, wenn die DFÜ-Methode, mit manuellen oder INBOUND_MAN gesetzt ist. Es wird empfohlen, dass Sie diese Option nicht aktivieren, wenn Sie eine sehr große Datenbank haben, führen über 100.000 führt. With No Hopper Wählen Sie die folgenden Funktionen nicht:-Recycling, Auto-alt-Dialing, Verzeichnis-Mix, Liste Bestellung mit X. NEW. Wenn Sie Besitzer verwenden Nur Wählen Sie müssen keine Hopper Dialing aktiviert. Der Standardwert ist N für Behinderte|
+Owner Only Dialing|Eigentümer nur Dialing|
+If This is enabled, the agent will only receive leads that they are within the ownership parameters for. If this is set to USER then the agent must be the user defined in the database as the owner of this lead. If this is set to TERRITORY then the owner of the lead must match the territory listed in the User Modification screen for this agent. If this is set to USER_GROUP then the owner of the lead must match the user group that the agent is a member of. For this feature to work the dial method must be set to MANUAL or INBOUND_MAN and No Hopper Dialing must be enabled. Default is NONE for disabled|Wenn diese aktiviert ist, wird der Agent führt nur zu erhalten, dass sie in das Eigentum Parameter sind. Ist dies der USER dann die Vertreter muß der Benutzer in der Datenbank als Besitzer dies dazu führen, definiert. Ist dies das Hoheitsgebiet dann die Eigentümer der führen muss das Gebiet, in dem User Änderung Bildschirm für dieses Anbieters angegeben haben. Ist dies zu USER_GROUP dann die Eigentümer der führen muss der Benutzer die Gruppe, dass der Agent ist ein Mitglied der übereinstimmen. Für diese Funktion, um die DFÜ-Methode arbeiten müssen, um MANUAL oder INBOUND_MAN und Nr. Hopper Dialing eingestellt werden muss aktiviert sein. Der Standardwert ist KEINE für Behinderte|
+Reset Times|Reset Times|
+This field allows you to put times in, separated by a dash-, that this list will be automatically reset by the system. The times must be in 24 hour format with no punctuation, for example 0800-1700 would reset the list at 8AM and 5PM every day. Default is empty|In diesem Feld können Sie zu setzen in Zeiten, durch einen Bindestrich getrennt, dass diese Liste automatisch zurückgesetzt werden durch das System. Die Zeiten im 24-Stunden-Format ohne Interpunktion werden, wäre zum Beispiel 0800-1700 die Liste 8 zurückgesetzt und 5pm jeden Tag. Der Standardwert ist leer|
+Owner: |Besitzer:|
+OWNERS WITHIN THIS LIST|PRIVAT in dieser Liste|
+RANKS WITHIN THIS LIST|RANKS in dieser Liste|
+Allow Alerts|Lassen Sie Alerts|
+This field gives you the ability to allow agent browser alerts to be enabled by the agent for when calls come into their vicidial.php session. Default is 0 for NO|Dieses Feld gibt Ihnen die Möglichkeit an den Agenten Browser erlauben Benachrichtigung durch die Agenten für die Lage versetzt werden, wenn Anrufe kommen in ihre vicidial.php Sitzung. Der Standardwert ist 0 für NO|
+Agent Display Dialable Leads|Agent Display dialable Leads|
+This option if enabled will show the number of dialable leads available in the campaign in the agent screen. This number is updated in the system once a minute and will be refreshed on the agent screen every few seconds|Diese Option aktiviert wird, wenn die Anzahl der wählbaren führt in die Kampagne in der Agenten-Bildschirm zeigen. Diese Zahl wird in das System einmal pro Minute aktualisiert und wird auf dem Bildschirm des Agenten aktualisiert werden, alle paar Sekunden|
+VICIDIAL Balance Rank|VICIDIAL Balance Rang|
+This field allows you to set the order in which this server is to be used for balance dialing, if balance dialing is enabled. The server with the highest rank will be used first in placing Balance fill calls. Default is 0|In diesem Feld können Sie die Reihenfolge, in der dieser Server ist für das Gleichgewicht Einwahl verwendet werden, wenn Gleichgewicht Einwahl aktivieren gesetzt ist. Der Server mit dem höchsten Rang wird zuerst zu platzieren Balance füllen Anrufe verwendet. Der Standardwert ist 0|
+Inbound Summary Hourly Report|Inbound Zusammenfassung Stunden-Report|
+orders by the amount of time agent has been actively waiting for a call|Bestellungen durch die Zeit, die Agenten aktiv gewartet auf einen Anruf|
+Agent Script Override|Agent Script Override|
+If this field is set, this will be the script that the agent sees on their screen instead of the campaign script when the lead is from this list. Default is not set|Ist dieses Feld gesetzt ist, wird dies das Skript, dass der Agent sieht auf dem Bildschirm statt der Kampagne führen, wenn das Skript aus dieser Liste ist. Der Standardwert ist nicht gesetzt|
+Music On Hold|Music On Hold|
+ADD NEW MUSIC ON HOLD ENTRY|ADD NEW MUSIC ON HOLD ENTRY|
+ADDING NEW MUSIC ON HOLD ENTRY|Hinzufügen neuer MUSIC ON HOLD ENTRY|
+MODIFY MUSIC ON HOLD ENTRY|MODIFY MUSIC ON HOLD ENTRY|
+DELETE MUSIC ON HOLD ENTRY|DELETE MUSIC ON HOLD ENTRY|
+MUSIC ON HOLD ENTRY LIST|MUSIC ON HOLD TEILNEHMERLISTE|
+We STRONGLY recommend uploading only 16bit 8k PCM WAV audio files|Wir empfehlen DRINGEND Hochladen nur 16bit 8k PCM WAV Audio-Dateien|
+Music On Hold ID|Music On Hold ID|
+This is the short name of a Music On Hold entry. This needs to be a unique identifier. Do not use any spaces or punctuation for this field. max 100 characters, minimum of 2 characters|Dies ist der Kurzname eines Music On Hold Eintrag. Dies muss eine eindeutige Kennung. Verwenden Sie keine Leerzeichen oder sonstige Zeichen für dieses Feld. max 100 Zeichen, mindestens 2 Zeichen|
+Music On Hold Name|Music On Hold Name|
+This is a more descriptive name of the Music On Hold entry. This is a short summary of the Music On Hold context and will show as a comment in the musiconhold-vicidial.conf file. max 255 characters, minimum of 2 characters|Dies ist ein aussagekräftiger Name des Music On Hold Eintrag. Dies ist eine kurze Zusammenfassung der Music On Hold Kontext und wird als Kommentar in der musiconhold vicidial.conf-Datei zu zeigen. max 255 Zeichen, mindestens 2 Zeichen|
+This option allows you to set the Music On Hold entry to active or inactive. Inactive will remove the entry from the conf files|Diese Option ermöglicht es Ihnen, die Wartemusik Eintrag aktiv oder inaktiv gesetzt. Inaktive wird entfernen Sie den Eintrag aus der conf-Dateien|
+Random Order|Zufälliger Reihenfolge|
+This option allows you to define the playback of the audio files in a random order. If set to N then the defined order will be used|Diese Option ermöglicht es Ihnen, die Wiedergabe der Audio-Dateien in zufälliger Reihenfolge zu definieren. Wenn auf N dann die festgelegten Reihenfolge verwendet werden|
+To add a new audio file to a Music On Hold entry the file must first be in the audio store, then you can select the file and click submit to add it to the file list. Music on hold is updated once per minute if there have been changes made. Any files not listed in a music on hold entry that are present in the music on hold folder will be deleted|Um eine neue Audiodatei auf eine Music On Hold Eintrag hinzufügen, muss die Datei zuerst in der Audio zu speichern, dann können Sie die Datei auszuwählen und klicken Sie legt ihn in die Datei-Liste aufzunehmen. Music on Hold ist einmal pro Minute aktualisiert, wenn es zu Veränderungen vorgenommen. Alle Dateien, die nicht in der Wartemusik-Eintrag, der in der Musik präsentieren zu halten Ordner aufgeführt sind, werden gelöscht|
+MUSIC ON HOLD ENTRY NOT ADDED|MUSIC ON HOLD Eintrag nicht ADDED|
+there is already a moh entry in the system with this ID|Es gibt bereits eine moh Eintrag in das System mit dieser ID|
+MUSIC ON HOLD ENTRY ADDED|MUSIC ON HOLD Entry Hinzugefügt|
+Click here to see Admin chages to this Music On Hold entry|Klicken Sie hier, um Admin chages vgl. in diesem Music On Hold-Eintrag|
+Audio Files|Audio-Dateien|
+Add An Audio File|Fügen Sie eine Audio-Datei|
+Rank: |Rang:|
+MUSIC ON HOLD ENTRY NOT MODIFIED|MUSIC ON HOLD Eintrag nicht MODIFIED|
+MUSIC ON HOLD ENTRY MODIFIED|MUSIC ON HOLD ENTRY MODIFIED|
+Add A New MOH Entry|Add A New MOH Eintrag|
+Show MOH Entries|MOH Einträge anzeigen|
+Active Agent Server|Active Agent Server|
+Setting this option to N will prevent agents from being able to login to this server through the vicidial agent screen. This is very useful when using a phone login load balanced setup. Default is Y|Das Setzen dieser Option wird die N-Agenten verhindern, dass auf diesem Server durch die vicidial Anbieters Bildschirm anmelden. Dies ist sehr nützlich, wenn Sie ein Telefon anmelden Lastenausgleich Setup. Der Standardwert ist Y|
+Rebuild Music On Hold|Rebuild Music On Hold|
+If you want to force a rebuilding of the music on hold files or if the music on hold entries or server entries have changed then this should be set to Y. After the music on hold files have been synchronized and reloaded then this will be changed to N. Default is Y|Wenn Sie ein Wiederaufbau der Wartemusik-Dateien Gewalt oder wenn die Wartemusik Einträge oder Server-Einträge geändert haben, dann sollte dies auf Y., nachdem die Wartemusik-Dateien wurden synchronisiert und geladen gesetzt dann geändert werden, um N. Standard ist Y|
+MUSIC ON HOLD ENTRY NOT DELETED|MUSIC ON HOLD Eintrag nicht DELETED|
+MUSIC ON HOLD ENTRY DELETION CONFIRMATION|MUSIC ON HOLD ENTRY Bestätigungsfenster|
+Click here to delete music on hold entry|Klicken Sie hier, um Wartemusik Eintrag löschen|
+MUSIC ON HOLD DELETION COMPLETED|MUSIC ON HOLD LÖSCHEN BEENDET|
+Starts with Eastern timezones and works West|Startet mit Ost-West Zeitzonen und arbeitet|
+Starts with Western timezones and works East|Startet mit westlichen Zeitzonen und arbeitet Osten|
+you must select a user group|Sie müssen sich für eine Benutzergruppe|
+Enable Second Webform|Aktivieren Zweiten Webform|
+WaitForSilence Options|WaitForSilence Optionen|
+If Wait For Silence is desired on calls that are detected as Answering Machines then this field has those options. There are two settings separated by a comma, the first option is how long to detect silence in milliseconds and the second option is for how many times to detect that before playing the message. Default is EMPTY for disabled. A standard value for this would be wait for 2 seconds of silence twice|Wenn Wait For Silence ist auf Anrufe, die als Anrufbeantworter dann festgestellt werden diesem Bereich hat die gewünschten Optionen. Es gibt zwei Einstellungen durch ein Komma getrennt, ist die erste Option, wie lange Schweigen in Millisekunden erkennen und die zweite Option ist, wie oft erkennen, dass vor dem Abspielen der Nachricht. Der Standardwert ist LEER für Behinderte. Ein Standard-Wert für dieses wäre für 2 Sekunden Stille warten, zweimal|
+This field is for entering the prompt to play when the agent gets an answering machine and clicks on the Answering Machine Message button in the transfer conference frame. You must set this to either an audio file in the audio store or a TTS prompt if TTS is enabled on your system|Dieses Feld ist für die Eingabe von der Eingabeaufforderung zu spielen, wenn der Agent einen Anrufbeantworter und Klicks wird auf dem Anrufbeantworter Mitteilung Button in der Übertragung Konferenz Rahmen. Sie müssen diese entweder auf eine Audio-Datei in das Audio-Speicher oder ein TTS set prompt TTS, wenn auf Ihrem System aktiviert ist|
+EXTENDED ALTERNATE PHONE NUMBERS FOR THIS LEAD|EXTENDED alternative Rufnummern FÜR DIESES LEAD|
+ADD NEW VOICEMAIL BOX|ADD NEW Voicemail-Box|
+ADDING NEW VOICEMAIL BOX|Hinzufügen neuer Voicemail-Box|
+MODIFY VOICEMAIL BOX|MODIFY Voicemail-Box|
+MODIFY A VOICEMAIL BOX|Ändern einer Voicemail-Box|
+DELETE VOICEMAIL BOX|DELETE Voicemail-Box|
+VOICEMAIL BOXES LIST|Voicemailboxen LISTE|
+VOICEMAIL BOXES|Voicemail-Boxen|
+ADD NEW VOICEMAIL BOX|ADD NEW Voicemail-Box|
+Voicemail ID|Voicemail-ID|
+This is the all numbers identifier of this mailbox. This must not be a duplicate of an existing voicemail ID or the voicemail ID of a phone on the system, minimum of 2 characters|Dies ist die Kennung der alle Zahlen dieses Postfach. Das darf nicht sein, ein Duplikat eines vorhandenen Voicemail-ID oder die Voicemail-ID eines Telefons auf dem System, mindestens 2 Zeichen|
+This is name associated with this voicemail box. max 100 characters, minimum of 2 characters|Dies ist der Name im Zusammenhang mit dieser Voicemail-Box. max 100 Zeichen, mindestens 2 Zeichen|
+This is the password that is used to gain access to the voicemail box when dialing in to check messages max 10 characters, minimum of 2 characters|Dies ist das Kennwort, das verwendet wird, um Zugriff auf die Voicemail-Box beim Wählen Nachrichten zu maximal 10 Zeichen, mindestens 2 Zeichen überprüfen zu gewinnen|
+This option allows you to set the voicemail box to active or inactive. If the box is inactive you cannot leave messages on it and you cannot check messages in it|Diese Option ermöglicht es Ihnen, die Voicemail-Box aktiv oder inaktiv gesetzt. Ist das Kontrollkästchen aktiviert kann man nicht die Nachrichten auf sie und man kann nicht kontrollieren Einträge in ihr|
+This optional setting allows you to have the voicemail messages sent to an email account, if your system is set up to send out email. If this field is empty then no emails will be sent out|Mit dieser Einstellung können Sie die Voicemail-Nachrichten geschickt haben eine E-Mail-Konto, wenn Ihr System so eingerichtet ist, senden E-Mail. Wenn dieses Feld leer ist, dann wird keine E-Mails verschickt werden|
+VOICEMAIL BOX NOT ADDED|Voicemail-Box NOT ADDED|
+there is already a voicemail box in the system with this ID|Es gibt bereits eine Voicemail-Box im System mit dieser ID|
+there is already a phone in the system with this voicemail ID|gibt es bereits eine Telefonnummer in das System mit dieser Voicemail ID|
+VOICEMAIL BOX ADDED|Voicemail-Box ADDED|
+VOICEMAIL BOX NOT MODIFIED|Voicemail-Box NICHT GEÄNDERT|
+VOICEMAIL BOX MODIFIED|Voicemail-Box MODIFIED|
+VOICEMAIL BOX NOT DELETED|Voicemail-Box NICHT gelöscht|
+VOICEMAIL BOX DELETION COMPLETED|Voicemail-Box LÖSCHEN BEENDET|
+VOICEMAIL BOX DELETION CONFIRMATION|Voicemail-Box Bestätigungsfenster|
+Click here to delete voicemail box|Klicken Sie hier, um zu löschen Voicemail-Box|
+DELETE THIS VOICEMAIL BOX|DELETE THIS Voicemail-Box|
+Click here to see Admin chages to this voicemail box|Klicken Sie hier, um Admin chages vgl. in diesem Voicemail-Box|
+The following fields must have data|Die folgenden Felder müssen Daten|
+Campaign CID Override|Kampagne CID Override|
+If this field is set, this will override the campaign CallerID that is set for calls that are placed to leads in this list. Default is not set|Ist dieses Feld gesetzt ist, wird diese die Kampagne CallerID, dass für Anrufe, die gestellt werden außer Kraft gesetzt ist, führt in dieser Liste. Der Standardwert ist nicht gesetzt|
+Answering Machine Message Override|Anrufbeantworter Nachricht Override|
+If this field is set, this will override the Answering Machine Message set in the campaign for customers in this list. Default is not set|Ist dieses Feld gesetzt ist, wird diese Vorrang vor den Anrufbeantworter Message in der Kampagne für die Kunden in dieser Liste gesetzt. Der Standardwert ist nicht gesetzt|
+Drop Inbound Group Override|Drop Inbound-Fraktion Override|
+If this field is set, this in-group will be used for outbound calls within this list that drop from the outbound campaign instead of the drop in-group set in the campaign detail screen. Default is not set|Ist dieses Feld gesetzt ist, in dieser Gruppe wird für ausgehende Anrufe, in dieser Liste verwendet werden, die Tropfen aus dem Outbound-Kampagne statt der Drop-in in der Kampagne Detailbild gesetzt. Der Standardwert ist nicht gesetzt|
+Agent Select Territories|Wählen Sie Agent Territories|
+If this option is enabled and the agent belongs to at least one territory, the agent will have the option of selecting territories to dial leads from. The agent will see a list of available territories upon login and they will have the ability to go back to that territory list when paused to change their territories. For this function to work the Owner Only Dialing option must be set to TERRITORY and User Terriories must be enabled in the System Settings.|Wenn diese Option aktiviert ist und der Agent gehört mindestens ein Gebiet, wird der Agent die Möglichkeit haben, die Auswahl Gebiete führt vom Zifferblatt. Der Agent wird eine Liste der verfügbaren Gebiete bei der Anmeldung zu sehen und sie wird die Fähigkeit, um wieder auf diesem Gebiet Liste haben, wenn angehalten, ihre Gebiete zu ändern. Für diese Funktion für die Arbeit der Eigentümer nur Dialing-Option zu GEBIET und User Gebiete gesetzt werden muss in den Einstellungen aktiviert werden.|
+Agent Choose Territories|Wählen Sie Agent Territories|
+This option if set to 1 allows the user to choose the territories that they will receive calls from when they login to a MANUAL or INBOUND_MAN campaign. Otherwise the user will be set to use all of the territories that they are set to belong to in the User Territories administrative section|Diese Option, wenn auf 1 gesetzt, kann der Anwender für die Gebiete wählen, dass sie, wenn sie Anrufe aus dem Login erhalten zu einem manuellen oder INBOUND_MAN Kampagne. Andernfalls wird der Benutzer eingestellt werden, dass alle Gebiete, die sie gesetzt sind, um in der User-Gebieten gehören Verwaltungs-Abschnitt verwenden|
+The AREACODE option is just like the Y option, except it is used to also filter out an entire area code in North America from being dialed, in this case using the 201XXXXXXX entry in the DNC list would block all calls to the 201 areacode if enabled|Die AREACODE Option ist ebenso wie die Y-Option, nur dass diese Filter auch einen ganzen Vorwahl in Nordamerika dazu verwendet werden gewählt, in diesem Fall mit dem 201XXXXXXX Eintrag in der Liste DNC würde alle Anrufe in den 201 Ortsvorwahl zu blockieren, wenn aktiviert|
+If you have the active DNC option set to AREACODE then you can also use area code wildcard entries like this 201XXXXXXX to block all calls to the 201 areacode when enabled|Wenn Sie die aktive DNC-Option auf -AREACODE dann können Sie auch die Vorwahl Wildcard-Einträge wie 201XXXXXXX, dass alle Anrufe auf die 201 Ortsvorwahl, wenn aktiviert-Block|
+Carrier Description|Carrier Beschreibung|
+This is put in the comments of the asterisk conf files above the dialplan and account entries. Maximum 255 characters|Dies ist in den Kommentaren des Sternchens conf-Dateien über den dialplan und Account-Einträge setzen. Maximal 255 Zeichen|
+CAMPAIGNS ALLOWING THIS IN-GROUP|KAMPAGNEN, diese Erlaubnis in-group|
+This is the secret, or password, for the server in the iax auto-generated conf file for this server on other servers. Limit is 20 characters alphanumeric dash and underscore accepted. Default is test|Das ist das Geheimnis, oder das Passwort für den Server in die IAX automatisch generierte conf für diesen Server auf anderen Servern benötigt. Der Grenzwert beträgt 20 alphanumerischen Zeichen Bindestrich und Unterstrich akzeptiert. Default is test|
+Delete Voicemail After Email|Löschen Voicemail Nach E-Mail|
+This optional setting allows you to have the voicemail messages deleted from the system after they have been emailed out. Default is N|Mit dieser Einstellung können Sie die Voicemail-Nachrichten aus dem System gelöscht haben, nachdem sie per E-Mail haben gewesen. Der Standardwert ist N|
+Last Campaign Call Date|Letzte Kampagne Call Date|
+This is the last time that a call was handled by an agent logged into this campaign|Dies ist das letzte Mal, dass ein Anruf wurde durch einen Vertreter in diese Kampagne angemeldet behandelt|
+Custom User Fields|Benutzerdefinierte Felder|
+These five fields can be used for various purposes, and they can be populated in the web form addresses and scripts as user_custom_one and so on|Diese fünf Felder können für verschiedene Zwecke verwendet werden, und sie können in das Web-Formular Adressen und Skripte als user_custom_one und so weiter gefüllt werden|
+CRM Popup Login|CRM Popup Login|
+If set to Y, the CRM Popup Address is used to open a new window on agent login to this campaign. Default is N|Wenn auf Y gesetzt, so wird das CRM-Popup-Adresse verwendet, um ein neues Fenster auf Anbieters anmelden, um diese Kampagne zu öffnen. Der Standardwert ist N|
+CRM Popup Address|CRM Popup-Adresse|
+The web address of a CRM login page, it can have variables populated just like the web form address, with the VAR in the front and using --A--user_custom_one--B-- to define variables|Die Internet-Adresse eines CRM-Login-Seite, kann es Variablen, wie das Web-Formular Adresse bevölkert haben, mit der VAR in der Front und mit - A - user_custom_one - B - Variablen definieren|
+If IN_GROUP is selected as the DID Route, then this is the call handling method used for these calls. CID will add a new lead record with every call using the CallerID as the phone number, CIDLOOKUP will attempt to lookup the phone number by the CallerID in the entire system, CIDLOOKUPRL will attempt to lookup the phone number by the CallerID in only one specified list, CIDLOOKUPRC will attempt to lookup the phone number by the CallerID in all of the lists that belong to the specified campaign, CLOSER is specified for VICIDIAL Closer calls, ANI will add a new lead record with every call using the ANI as the phone number, ANILOOKUP will attempt to lookup the phone number by the ANI in the entire system, ANILOOKUPRL will attempt to lookup the phone number by the ANI in only one specified list, XDIGITID will prompt the caller for an X digit code before the call will be put into the queue, VIDPROMPT will prompt the caller for their ID number and will create a new lead record with the CallerID as the phone number and the ID as the Vendor ID, VIDPROMPTLOOKUP will attempt to lookup the ID in the entire system, VIDPROMPTLOOKUPRL will attempt to lookup the vendor ID by the ID in only one specified list, VIDPROMPTLOOKUPRC will attempt to lookup the vendor ID by the ID in all of the lists that belong to the specified campaign. Default is CID|Wenn IN_GROUP ist wie die DID-Route ausgewählt, dann ist dies die Anrufannahme-Methode für diese Anrufe verwendet. CID wird eine neue Lead-Datensatz mit jedem Anruf mit der CallerID wie die Telefonnummer hinzufügen, wird CIDLOOKUP Versuch, die Telefonnummer, unter der CallerID im gesamten System-Lookup wird CIDLOOKUPRL Versuch, die Telefonnummer, unter der CallerID nur in einer speziellen Liste Lookup , wird CIDLOOKUPRC Versuch, die Telefonnummer, unter der CallerID in allen Listen, die auf die angegebene Kampagne gehören Lookup, CLOSER ist für VICIDIAL Closer fordert angegeben, wird eine neue ANI führen Datensatz hinzufügen bei jedem Anruf mit der ANI wie die Telefonnummer, ANILOOKUP wird versuchen, die Telefonnummer, unter der ANI im gesamten System-Lookup wird ANILOOKUPRL Versuch, die Telefonnummer, unter der ANI nur in einer speziellen Liste Lookup wird XDIGITID der Anrufer von einem X-stelligen Code prompt vor dem Aufruf wird gestellt werden, in der Warteschlange, wird der Anrufer VIDPROMPT prompt für ihre ID-Nummer und eine neue Lead-Satz mit dem CallerID wie die Telefonnummer und die ID als die Hersteller-ID zu erstellen, wird VIDPROMPTLOOKUP Versuch, die ID in das gesamte System-Lookup wird VIDPROMPTLOOKUPRL Versuch, Lookup die Hersteller-ID von der ID nur in einer speziellen Liste, wird VIDPROMPTLOOKUPRC Versuch, den Anbieter von der Lookup-ID ID in allen Listen, die auf die angegebene Kampagne gehören. Der Standardwert ist CID|
+UNIFIED_CONTACT- This option will use the beta Vtiger 5.1.0 feature to search by phone number and bring up a search page in Vtiger|UNIFIED_CONTACT-Diese Option wird die Beta-Vtiger 5.1.0 Funktion für die Suche nach der Telefonnummer Nutzung und bringen eine Suchseite in vtiger|
+Timer Action|Timer-Aktion|
+This feature allows you to trigger actions after a certain amount of time. the D1 and D2 DIAL options will launch a call to the Transfer Conference Number presets and send them to the agent session, this is usually used for simple IVR validation AGI applications or just to play a pre-recorded message. WEBFORM will open the web form address. MESSAGE_ONLY will simply display the message that is in the field below. NONE will disable this feature and is the default|Mit dieser Funktion können Sie die Aktionen nach einer bestimmten Zeit auslösen. D1 und D2 DIAL Optionen werden einen Aufruf der Transfer Conference Anzahl Presets starten und senden sie an die Agenten-Sitzung wird dies in der Regel für einfache IVR Validierung AGI-Anwendungen oder nur eine vorher aufgenommene Nachricht zu spielen verwendet. WebForm öffnet sich das Web-Formular-Adresse. MESSAGE_ONLY wird einfach Display die Meldung, dass unten in das Feld ist. Niemand wird diese Funktion zu deaktivieren und ist der Standard -|
+Timer Action Message|Timer Action Message|
+This is the message that appears on the agent screen at the time the Timer Action is triggered|Dies ist die Botschaft, die auf dem Bildschirm erscheint Agenten zum Zeitpunkt der Timer-Aktion ausgelöst wird|
+Timer Action Seconds|Timer-Aktion Sekunden|
+This is the amount of time after the call is connected to the customer that the Timer Action is triggered. Default is -1 which is also inactive|Dies ist die Zeit nach dem Anruf des Kunden, dass die Timer-Aktion wird ausgelöst, verbunden. Der Standardwert ist -1, die auch inaktiv|
+This setting will override the Campaign settings|Diese Einstellung überschreibt die Kampagne Einstellungen|
+Start Call URL|Start Call URL|
+This web URL address is not seen by the agent, but it is called every time a call is sent to an agent if it is populated. Uses the same variables as the web form fields and scripts. This URL can NOT be a relative path. The Start URL does not work for Manual dial calls. Default is blank|Diese Web-URL-Adresse wird nicht von den Agenten zu sehen, aber es ist, wann immer ein Anruf an einen Agenten gesendet werden, wenn es gefüllt wird. Verwendet die gleichen Variablen wie die Web-Formularfelder und Skripte. Diese URL kann nicht ein relativer Pfad. Die Start-URL funktioniert nicht für die manuelle Einwahl fordert. Der Standardwert ist leer|
+Dispo Call URL|Dispo Call URL|
+This web URL address is not seen by the agent, but it is called every time a call is dispositioned by an agent if it is populated. Uses the same variables as the web form fields and scripts. dispo and talk_time are the variables you can use to retrieve the agent-defined disposition for the call and the actual talk time in seconds of the call. This URL can NOT be a relative path. Default is blank|Diese Web-URL-Adresse wird nicht von den Agenten zu sehen, aber es ist, wann immer ein Anruf von einem Agenten dispositioned, wenn sie gefüllt wird. Verwendet die gleichen Variablen wie die Web-Formularfelder und Skripte. dispo und talk_time sind die Variablen, die Sie verwenden können, um den Agenten abrufen definierten Disposition für den Anruf und die tatsächliche Sprechzeit in Sekunden des Anrufs. Diese URL kann nicht ein relativer Pfad. Der Standardwert ist leer|
+Xfer-Conf Number Override|Xfer-Conf-Nr Override|
+These five fields allow for you to override the Transfer Conference number presets when the lead is from this list. Default is blank|Diese fünf Felder ermöglichen Sie den Transfer Conference Anzahl Presets zu überschreiben, wenn das Blei aus dieser Liste. Der Standardwert ist leer|
+These four fields allow for you to have two sets of Transfer Conference and DTMF presets. When the call or campaign is loaded, the vicidial.php script will show two buttons on the transfer-conference frame and auto-populate the number-to-dial and the send-dtmf fields when pressed. If you want to allow Consultative Transfers, a fronter to a closer, have the agent use the CONSULTATIVE checkbox, which does not work for third party non-ViciDial consultative calls. For those just have the agent click the Dial With Customer button. Then the agent can just LEAVE-3WAY-CALL and move on to their next call. If you want to allow Blind transfers of customers to a VICIDIAL AGI script for logging or an IVR, then place AXFER in the number-to-dial field. You can also specify an custom extension after the AXFER, for instance if you want to do a call to a special IVR you have set to extension 83900 you would put AXFER83900 in the number-to-dial field|Diese vier Felder können Sie zwei Arten von Transfer zum Konferenz-und DTMF-Presets. Wenn der Anruf oder die Kampagne geladen wird, wird das Skript vicidial.php zwei Tasten auf der Transfer-Konferenz Rahmen und auto show-bevölkern die Zahl-to-Dial und die Sende-DTMF-Felder, wenn gedrückt. Wenn Sie zulassen möchten Beratenden Transfers, ein Fronter, eine engere, haben die Agenten verwenden Sie die Checkbox BERATENDE, die nicht für Dritte nicht funktioniert-ViciDial beratende Anrufe. Für die nur noch der Agent auf die DFÜ mit Kunden-Taste. Dann kann der Agent nur LEAVE-3way-CALL und weiter zu ihrem nächsten Anruf. Wenn Sie möchten, Blind Transfer von Kunden zu einem VICIDIAL AGI-Skript für die Anmeldung oder einer IVR, dann setzen Sie AXFER der Zahl-to-Dial-Bereich zu ermöglichen. Sie können auch eine benutzerdefinierte Erweiterung nach dem AXFER, zum Beispiel, wenn Sie einen Anruf an einen besonderen IVR Sie auf eine Verlängerung 83900 gesetzt würden Sie AXFER83900 der Zahl in Verkehr gebracht werden-to-Dial-Feld|

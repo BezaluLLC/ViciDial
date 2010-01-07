@@ -53,6 +53,9 @@ echo "<font size=3><b> &nbsp; <a href=\"../agc_ru/vicidial.php\"><IMG SRC=\"../a
 echo "</TD></TR>\n";
 echo "<TR><TD ALIGN=LEFT >";
 echo "<font size=3><b> &nbsp; <a href=\"../agc_nl/vicidial.php\"><IMG SRC=\"../agc/images/nl.gif\" border=0> Dutch Agent Login</a>";
+echo "</TD></TR>\n";
+echo "<TR><TD ALIGN=LEFT >";
+echo "<font size=3><b> &nbsp; <a href=\"../agc_tw/vicidial.php\"><IMG SRC=\"../agc/images/tw.gif\" border=0> Chinese(T) Agent Login</a>";
 echo "</TD></TR></TABLE>\n";
 
 echo "</TD><TD VALIGN=TOP>\n";

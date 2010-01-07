@@ -21,6 +21,7 @@ agc|call_log_display.php|0
 agc|voicemail_check.php|0
 agc|dbconnect.php|1
 agc|timeclock.php|0
+agc|vdc_script_display.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"ЯНВ"|
@@ -473,3 +474,18 @@ ERROR: There are no Shifts enabled for your user group|ОШИБКА: Есть с
 ERROR: You are not allowed to log in outside of your shift|ОШИБКА: Вы не можете войти в вашу за переход|
 MANAGER OVERRIDE|МЕНЕДЖЕР Переопределить|
 Your Shift is over or has changed, you have been logged out of your session|Ваш Shift больше или изменилась, Вы вышли из Вашей сессии|
+### START translations for 2.2.0 release ###
+You are not allowed to dial into other agent sessions|Вы не можете набрать в других сессиях агент|
+QUICK TRANSFER|Быстрой передачи|
+Other Agents Status|Другие агенты Статус|
+Available Agents Transfer|Доступные Агенты передачи|
+Show Calls In Queue|Показать Звонки в очередь|
+Calls In Queue|Звонки в очередь|
+Hide Calls In Queue|Скрыть Звонки в очередь|
+Calls in Queue View Disabled for this campaign|Звонки в Очередь Открыть инвалидов для этой кампании|
+YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE|ВЫ ДОЛЖНЫ быть приостановлена схватить Звонки в ОЧЕРЕДЬ|
+Manager |Менеджер|
+has selected your in-group choices|выбрал в вашей группе выбора|
+CONSULTATIVE|КОНСУЛЬТАТИВНЫЙ|
+Close Message|Закрыть сообщение|
+TIMER NOTIFICATION|ТАЙМЕР УВЕДОМЛЕНИЯ|

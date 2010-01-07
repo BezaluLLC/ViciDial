@@ -21,6 +21,7 @@ agc|call_log_display.php|0
 agc|voicemail_check.php|0
 agc|dbconnect.php|1
 agc|timeclock.php|0
+agc|vdc_script_display.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"JAN"|
@@ -505,3 +506,18 @@ ERROR: There are no Shifts enabled for your user group|FOUT: Er zijn geen Versch
 ERROR: You are not allowed to log in outside of your shift|FOUT: U bent niet toegestaan om in te loggen buiten uw verschuiving|
 MANAGER OVERRIDE|MANAGER BOVEN|
 Your Shift is over or has changed, you have been logged out of your session|Uw Shift is of is veranderd, je bent afgemeld bij de sessie|
+### START translations for 2.2.0 release ###
+You are not allowed to dial into other agent sessions|U bent niet toegestaan te bellen naar andere agent sessies|
+QUICK TRANSFER|Snelle overdracht|
+Other Agents Status|Andere Agenten Status|
+Available Agents Transfer|Beschikbaar Transfer Agents|
+Show Calls In Queue|Toon roept in de wachtrij|
+Calls In Queue|Roept in de wachtrij|
+Hide Calls In Queue|Verberg roept in de wachtrij|
+Calls in Queue View Disabled for this campaign|Roept in wachtrij Bekijk een handicap voor deze campagne|
+YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE|JE MOET worden onderbroken te grijpen ROEPT in de wachtrij|
+Manager |Manager|
+has selected your in-group choices|heeft gekozen uw in-groep keuzes|
+CONSULTATIVE|ADVIESGROEP|
+Close Message|Close Message|
+TIMER NOTIFICATION|TIMER AANMELDING|

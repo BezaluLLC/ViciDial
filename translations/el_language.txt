@@ -21,6 +21,7 @@ agc|call_log_display.php|0
 agc|voicemail_check.php|0
 agc|dbconnect.php|1
 agc|timeclock.php|0
+agc|vdc_script_display.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"ΙΑΝ"|
@@ -467,3 +468,18 @@ SELECT A GROUP ALIAS|ΕΠΙΛΕΞΤΕ ΟΜΑΔΑ ALIAS|
 Group Alias Selection|Γνωστός Ομάδα Επιλογής|
 Click Here to Choose a Group Alias|Κάντε κλικ εδώ για να Επιλέξτε μια ομάδα Γνωστός|
 Group Alias|Ομάδα Γνωστός|
+### START translations for 2.2.0 release ###
+You are not allowed to dial into other agent sessions|Δεν επιτρέπεται να καλέσετε σε άλλες συνεδρίες πράκτορα|
+QUICK TRANSFER|Γρήγορη μεταφορά|
+Other Agents Status|Άλλα Κατάσταση Πράκτορες|
+Available Agents Transfer|Διαθέσιμο Agents Μεταφορά|
+Show Calls In Queue|Παρουσίαση καλεί Στην ουρά|
+Calls In Queue|Κλήσεις σε αναμονή|
+Hide Calls In Queue|Απόκρυψη καλεί Στην ουρά|
+Calls in Queue View Disabled for this campaign|Καλεί σε ουρά Δείτε τα άτομα με ειδικές ανάγκες για αυτή την καμπάνια|
+YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE|ΠΡΕΠΕΙ να διακοπεί για να αρπάξει ΚΛΗΣΕΙΣ σε αναμονή|
+Manager |Διευθυντής|
+has selected your in-group choices|έχει επιλέξει σε σας τις επιλογές της ομάδας|
+CONSULTATIVE|ΣΥΜΒΟΥΛΕΥΤΙΚΗ|
+Close Message|Κλείσιμο Μήνυμα|
+TIMER NOTIFICATION|TIMER ΚΟΙΝΟΠΟΙΗΣΗ|

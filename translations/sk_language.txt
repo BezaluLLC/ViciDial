@@ -21,6 +21,7 @@ agc|call_log_display.php|0
 agc|voicemail_check.php|0
 agc|dbconnect.php|1
 agc|timeclock.php|0
+agc|vdc_script_display.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"JAN"|
@@ -473,3 +474,18 @@ ERROR: There are no Shifts enabled for your user group|ERROR: Nie sú k dispozí
 ERROR: You are not allowed to log in outside of your shift|ERROR: Nemáte možnosť prihlásiť sa mimo vašej smeny|
 MANAGER OVERRIDE|MANAGER prepísať|
 Your Shift is over or has changed, you have been logged out of your session|Vaša Shift je nad alebo sa zmenilo, ste boli odhlásený vašej relácie|
+### START translations for 2.2.0 release ###
+You are not allowed to dial into other agent sessions|Nie je dovolené, aby voľby do iných agent zasadnutí|
+QUICK TRANSFER|Rýchly prenos|
+Other Agents Status|Ostatné zástupcovia Status|
+Available Agents Transfer|Dostupných prostriedkov Transfer|
+Show Calls In Queue|Zobraziť žiada, aby vo fronte|
+Calls In Queue|Hovorov vo fronte|
+Hide Calls In Queue|Skryť žiada, aby vo fronte|
+Calls in Queue View Disabled for this campaign|Hovorov v zobrazení frontu Zakázané pre túto kampaň|
+YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE|Musíte byť sa odmlčal, aby GRAB VOLANIA do fronty|
+Manager |Manažér|
+has selected your in-group choices|vybrala si v skupine-voľby|
+CONSULTATIVE|PORADNÝ|
+Close Message|Zavrieť správu|
+TIMER NOTIFICATION|TIMER OZNAM|

@@ -21,6 +21,7 @@ agc|call_log_display.php|0
 agc|voicemail_check.php|0
 agc|dbconnect.php|1
 agc|timeclock.php|0
+agc|vdc_script_display.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"JAN"|
@@ -477,3 +478,18 @@ SELECT A GROUP ALIAS|Wählen Sie eine Gruppe ALIAS|
 Group Alias Selection|Gruppe Alias Auswahl|
 Click Here to Choose a Group Alias|Klicken Sie hier, um eine Gruppe Alias|
 Group Alias|Alias-Gruppe|
+### START translations for 2.2.0 release ###
+You are not allowed to dial into other agent sessions|Sie sind nicht erlaubt, in anderen Anbieters Sitzungen DFÜ|
+QUICK TRANSFER|Quick Transfer|
+Other Agents Status|Andere Bevollmächtigte Status|
+Available Agents Transfer|Verfügbare Transfer Agents|
+Show Calls In Queue|Show Anrufe in der Warteschlange|
+Calls In Queue|Anrufe in der Warteschlange|
+Hide Calls In Queue|Hide Anrufe in der Warteschlange|
+Calls in Queue View Disabled for this campaign|Anrufe in der Warteschlange Profil behindertengerechte für diese Kampagne|
+YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE|Sie müssen mit GRAB Anrufe in der Warteschlange pausiert|
+Manager |Manager|
+has selected your in-group choices|hat Ihren in-group Entscheidungen|
+CONSULTATIVE|BERATENDE|
+Close Message|Close Message|
+TIMER NOTIFICATION|Timer-Benachrichtigung|
