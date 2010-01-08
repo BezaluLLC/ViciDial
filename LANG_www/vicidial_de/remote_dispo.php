@@ -1,7 +1,7 @@
-<?
+<?php
 # remote_dispo.php
 # 
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this is the remote agent disposition screen for calls sent to remote agents. 
 # This allows the remote agent to modify customer information and disposition 
@@ -10,6 +10,7 @@
 # CHANGES
 #
 # 60619-1626 - Added variable filtering to eliminate SQL injection attack threat
+# 90508-0644 - Changed to PHP long tags
 #
 
 
@@ -160,14 +161,14 @@ $browser = getenv("HTTP_USER_AGENT");
 <html>
 <head>
 <title>VICIDIAL DIREKTÜBERTRAGUNG: Anruf-Einteilung</title>
-<?
+<?php
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 ?>
 </head>
 <BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 <CENTER><FONT FACE="Courier" COLOR=BLACK SIZE=3>
 
-<? 
+<?php 
 
 echo "<!-- $call_began $lead_id -->";
 
@@ -202,7 +203,7 @@ else
 	if ($lead_count > 0)
 	{
 
-		$stmt="SELECT * from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
+		$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$row=mysql_fetch_row($rslt);
@@ -265,7 +266,7 @@ else
 		echo "<tr><td align=rightAnmerkungen: </td><td align=left><input type=text name=comments size=30 maxlength=255 value=\"$comments\"></td></tr>\n";
 			echo "<tr bgcolor=#B6D3FC><td align=rightEinteilung: </td><td align=left><select size=1 name=status>\n";
 
-				$stmt="SELECT * from vicidial_statuses where selectable='Y' order by status";
+				$stmt="SELECT status,status_name from vicidial_statuses where selectable='Y' order by status";
 				$rslt=mysql_query($stmt, $link);
 				$statuses_to_print = mysql_num_rows($rslt);
 				$statuses_list='';
@@ -315,7 +316,7 @@ echo "<font size=0>\n\n\n<br><br><br>\nIndexlaufzeit: $RUNtime seconds</font>";
 </body>
 </html>
 
-<?
+<?php
 	
 exit; 
 

@@ -1,4 +1,4 @@
-<?
+<?php
 # group_hourly_stats.php
 # 
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
@@ -8,6 +8,7 @@
 # 60620-1014 - Added variable filtering to eliminate SQL injection attack threat
 #            - Added required user/pass to gain access to this page
 # 90310-2138 - Added admin header
+# 90508-0644 - Changed to PHP long tags
 #
 
 require("dbconnect.php");
@@ -26,14 +27,34 @@ if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 if (isset($_GET["INVIA"]))				{$INVIA=$_GET["INVIA"];}
 	elseif (isset($_POST["INVIA"]))		{$INVIA=$_POST["INVIA"];}
 
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysql_num_rows($rslt);
+$i=0;
+while ($i < $qm_conf_ct)
+	{
+	$row=mysql_fetch_row($rslt);
+	$non_latin =					$row[0];
+	$webroot_writable =				$row[1];
+	$SSoutbound_autodial_active =	$row[2];
+	$user_territories_active =		$row[3];
+	$i++;
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
+
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
+if ($DB) {echo "|$stmt|\n";}
+if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
   if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
@@ -106,8 +127,8 @@ $browser = getenv("HTTP_USER_AGENT");
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>VICIDIAL ADMIN: Statistiche Orarie Del Gruppo
-<?
+<title>ADMINISTRATION: Statistiche Orarie Del Gruppo
+<?php
 
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'311111';
@@ -133,12 +154,12 @@ require("admin_header.php");
 
 
 <CENTER>
-<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; Statistiche Orarie Del Gruppo <? echo $group ?></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; </TD></TR>
+<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; Statistiche Orarie Del Gruppo <?php echo $group ?></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; </TD></TR>
 
 
 
 
-<? 
+<?php 
 
 if ( ($group) and ($status) and ($date_with_hour) )
 {
@@ -223,7 +244,7 @@ echo "<br><br>\n";
 	echo "<input type=hidden name=DB value=$DB>\n";
 	echo "gruppo: <select size=1 name=group>\n";
 
-		$stmt="SELECT * from vicidial_user_groups order by user_group";
+		$stmt="SELECT user_group,group_name from vicidial_user_groups order by user_group";
 		$rslt=mysql_query($stmt, $link);
 		$groups_to_print = mysql_num_rows($rslt);
 		$o=0;
@@ -260,7 +281,7 @@ echo "<font size=0>\n\n\n<br><br><br>\nTempo Esecuzione Script: $RUNtime seconds
 </body>
 </html>
 
-<?
+<?php
 	
 exit; 
 

@@ -1,4 +1,4 @@
-<?
+<?php
 # timeclock_status.php
 # 
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
@@ -8,6 +8,7 @@
 # 80602-0201 - First Build
 # 80603-1500 - formatting changes
 # 90310-2103 - Added admin header
+# 90508-0644 - Changed to PHP long tags
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -35,7 +36,7 @@ if (isset($_GET["INVIA"]))					{$INVIA=$_GET["INVIA"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,timeclock_end_of_day FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,timeclock_end_of_day,outbound_autodial_active FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -43,9 +44,11 @@ $i=0;
 while ($i < $qm_conf_ct)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =			$row[0];
-	$webroot_writable =		$row[1];
-	$timeclock_end_of_day = $row[2];
+	$non_latin =					$row[0];
+	$webroot_writable =				$row[1];
+	$timeclock_end_of_day =			$row[2];
+	$SSoutbound_autodial_active =	$row[3];
+
 	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
@@ -141,8 +144,8 @@ if (strlen($user_group) > 0)
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>VICIDIAL ADMIN:Orologio Status
-<?
+<title>ADMINISTRATION:Orologio Status
+<?php
 
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'311111';
@@ -169,8 +172,8 @@ require("admin_header.php");
 ?>
 <CENTER>
 <TABLE WIDTH=750 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT>
-<FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Orologio Status for <? echo $user_group ?></TD><TD ALIGN=RIGHT> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-<? 
+<FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Orologio Status for <?php echo $user_group ?></TD><TD ALIGN=RIGHT> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+<?php 
 echo "<a href=\"./timeclock_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2><B>TIMECLOCK REPORT</a> | ";
 echo "<a href=\"./admin.php?ADD=311111&user_group=$user_group\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2><B>Utente Group</a>\n";
 ?>
@@ -179,7 +182,7 @@ echo "<a href=\"./admin.php?ADD=311111&user_group=$user_group\"><FONT FACE=\"ARI
 
 
 
-<? 
+<?php 
 
 echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> &nbsp; \n";
 
@@ -352,6 +355,7 @@ while ($users_to_print > $o)
 				{$bgcolor[$o]='bgcolor="#66CC66"';} # green
 			}
 
+		$s++;
 		echo "<tr $bgcolor[$o]>";
 		echo "<td><font size=1>$s</td>";
 		echo "<td><font size=2><a href=\"./user_status.php?user=$users[$o]\">$users[$o]</a></td>";
@@ -365,8 +369,6 @@ while ($users_to_print > $o)
 
 		if (strlen($Tstatus[$o])>0)
 			{$TOTlogin_sec = ($TOTlogin_sec + $Tlogin_sec[$o]);}
-
-		$s++;
 		}
 	$o++;
 	}
@@ -410,7 +412,7 @@ echo "<font size=0>\n\n\n<br><br><br>\nTempo Esecuzione Script: $RUNtime seconds
 </body>
 </html>
 
-<?
+<?php
 exit;
 
 
@@ -534,7 +536,7 @@ echo "<font size=0>\n\n\n<br><br><br>\nTempo Esecuzione Script: $RUNtime seconds
 </body>
 </html>
 
-<?
+<?php
 	
 exit; 
 

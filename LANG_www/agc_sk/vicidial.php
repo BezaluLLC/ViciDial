@@ -1,12 +1,13 @@
-<?
+<?php
 # vicidial.php - the web-based version of the astVICIDIAL client application
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Other scripts that this application depends on:
 # - vdc_db_query.php: Updates information in the database
 # - manager_send.php: Sends manager actions to the DB for execution
 # - conf_exten_check.php: time sync and status updater, calls in queue
+# - vdc_script_display.php: displays script with variables
 #
 # CHANGELOG
 # 50607-1426 - First Build of VICIDIAL web client basic login process finished
@@ -34,7 +35,6 @@
 # 50816-1813 - Added basic autodial outbound call pickup functions
 # 50817-1113 - Fixes to auto_dialing call receipt
 # 50817-1234 - Added inbound call receipt capability
-# 50817-1541 - Added customer time display
 # 50817-1541 - Added customer time display
 # 50818-1327 - Added stop-all-recordings-after-each-vicidial-call option
 # 50818-1703 - Added pretty login section
@@ -222,19 +222,69 @@
 # 90304-1333 - Added user-specific web vars option
 # 90305-0917 - Added prefix-choice and group-alias options for calls coming from API
 # 90307-1736 - Added Shift enforcement and manager override features
+# 90315-1009 - Changed revision for new trunk 2.2.0
 # 90320-0309 - Fixed agent log bug when using wrapup time
+# 90323-1555 - Initial call to agent phone now has campaign callerIDnumber
+# 90408-0104 - Added Vtiger callback record ability
+# 90508-0727 - Changed to PHP long tags
+# 90511-1018 - Added restriction not allowing dialing into agent sessions from manual dial
+# 90519-0635 - Fixed manual dial status and logging bug
+# 90525-1012 - Fixed transfer issue of auto-received call after manual dial call
+# 90529-0741 - Added nophone agent phone login that will not show any empty session alerts
+# 90531-0635 - Added option to hide customer phone number
+# 90611-1422 - Fixed multiple logging bugs
+# 90628-0655 - Added Quick Transfer button and Preset Prepopulate option
+# 90705-1400 - Added Agent view sidebar option
+# 90706-1432 - Added Agent view transfer selection
+# 90709-1649 - Fixed alt-number transfers and dispo variable reset for webform
+# 90712-2304 - Added ADD-ALL group selection, view calls in queue, grab call from queue, requeue button
+# 90717-0640 - Added dialed_label and dialed_number to script variables
+# 90721-1114 - Added rank and owner as vicidial_list fields
+# 90726-2012 - Added allow_alerts option
+# 90729-0647 - Added agent_display_dialable_leads option
+# 90730-0145 - Fixed bugs in re-queue and INBOUND_MAN with blended selected
+# 90808-0117 - Fixed manual dial calls today bug, added last_state_change to vicidial_live_agents
+# 90812-0046 - Added no-delete-sessions = 1 as default, unused sessions cleared out at timeclock end of day
+# 90814-0829 - Moved mute button next to hotkeys button
+# 90827-0133 - Reworked Script display code
+# 90827-1549 - Added list script override option, original_phone_login variable
+# 90831-1456 - Added active_agent_login_server option for servers
+# 90908-1038 - Added DEAD call display
+# 90909-0921 - Fixed park issues
+# 90916-1144 - Added Second web form button, Answering Machine Message change
+# 90917-1325 - Fixed script loading bug with customer webform at the same time
+# 90920-2108 - Changed web forms to use window.open instead of traditional links(IE7 compatibility issue)
+# 90923-1310 - Rolled back last change
+# 90928-1955 - Added lead update before closer transfer
+# 90930-2243 - Added Territory selection functions
+# 91108-2118 - Added QM pause code entry
+# 91111-1433 - Fixed Gender pulldown list display for IE, remove links for recording channels in SHOW CHANNELS
+# 91123-1801 - Added code for outbound_autodial field
+# 91130-2021 - Added code for manager override of in-group selection
+# 91204-1638 - Added recording_filename and recording_id script variables and script refresh link
+# 91205-2055 - Added CONSULTATIVE checkbox in a redesigned Transfer-Conf frame
+# 91206-2020 - Fixed vicidial_agent_log logging bug on logout when not paused
+# 91211-1412 - Added User custom variables and CRM login popup
+# 91219-0657 - Set pause code automatically on ReQueue and INBOUND_MAN Dial-Next-Number
+# 91228-1339 - Added API "fields update" functions and "timer action" functions
+# 100103-1250 - Added 3 more conf-presets, list ID override presets and call start/dispo URLs
+# 100107-0108 - Added dynamic screen size based on login screen browser dimensions
 #
 
-$version = '2.0.5-202';
-$build = '90320-0309';
+$version = '2.2.0-247';
+$build = '100107-0108';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=60;
+$mysql_log_count=64;
 $one_mysql_log=0;
 
 require("dbconnect.php");
 
 if (isset($_GET["DB"]))						    {$DB=$_GET["DB"];}
         elseif (isset($_POST["DB"]))            {$DB=$_POST["DB"];}
+if (isset($_GET["JS_browser_width"]))				{$JS_browser_width=$_GET["JS_browser_width"];}
+        elseif (isset($_POST["JS_browser_width"]))  {$JS_browser_width=$_POST["JS_browser_width"];}
+if (isset($_GET["JS_browser_height"]))				{$JS_browser_height=$_GET["JS_browser_height"];}
+        elseif (isset($_POST["JS_browser_height"])) {$JS_browser_height=$_POST["JS_browser_height"];}
 if (isset($_GET["phone_login"]))                {$phone_login=$_GET["phone_login"];}
         elseif (isset($_POST["phone_login"]))   {$phone_login=$_POST["phone_login"];}
 if (isset($_GET["phone_pass"]))					{$phone_pass=$_GET["phone_pass"];}
@@ -249,43 +299,43 @@ if (isset($_GET["relogin"]))					{$relogin=$_GET["relogin"];}
         elseif (isset($_POST["relogin"]))       {$relogin=$_POST["relogin"];}
 if (isset($_GET["MGR_override"]))				{$MGR_override=$_GET["MGR_override"];}
         elseif (isset($_POST["MGR_override"]))  {$MGR_override=$_POST["MGR_override"];}
-	if (!isset($phone_login)) 
-		{
-		if (isset($_GET["pl"]))                {$phone_login=$_GET["pl"];}
-				elseif (isset($_POST["pl"]))   {$phone_login=$_POST["pl"];}
-		}
-	if (!isset($phone_pass))
-		{
-		if (isset($_GET["pp"]))                {$phone_pass=$_GET["pp"];}
-				elseif (isset($_POST["pp"]))   {$phone_pass=$_POST["pp"];}
-		}
-	if (isset($VD_campaign))
-		{
-		$VD_campaign = strtoupper($VD_campaign);
-		$VD_campaign = eregi_replace(" ",'',$VD_campaign);
-		}
-	if (!isset($flag_channels))
-		{
-		$flag_channels=0;
-		$flag_string='';
-		}
+if (!isset($phone_login)) 
+	{
+	if (isset($_GET["pl"]))                {$phone_login=$_GET["pl"];}
+		elseif (isset($_POST["pl"]))   {$phone_login=$_POST["pl"];}
+	}
+if (!isset($phone_pass))
+	{
+	if (isset($_GET["pp"]))                {$phone_pass=$_GET["pp"];}
+		elseif (isset($_POST["pp"]))   {$phone_pass=$_POST["pp"];}
+	}
+if (isset($VD_campaign))
+	{
+	$VD_campaign = strtoupper($VD_campaign);
+	$VD_campaign = eregi_replace(" ",'',$VD_campaign);
+	}
+if (!isset($flag_channels))
+	{
+	$flag_channels=0;
+	$flag_string='';
+	}
 
 ### security strip all non-alphanumeric characters out of the variables ###
-	$DB=ereg_replace("[^0-9a-z]","",$DB);
-	$phone_login=ereg_replace("[^\,0-9a-zA-Z]","",$phone_login);
-	$phone_pass=ereg_replace("[^0-9a-zA-Z]","",$phone_pass);
-	$VD_login=ereg_replace("[^0-9a-zA-Z]","",$VD_login);
-	$VD_pass=ereg_replace("[^0-9a-zA-Z]","",$VD_pass);
-	$VD_campaign = ereg_replace("[^-\_0-9a-zA-Z]","",$VD_campaign);
+$DB=ereg_replace("[^0-9a-z]","",$DB);
+$phone_login=ereg_replace("[^\,0-9a-zA-Z]","",$phone_login);
+$phone_pass=ereg_replace("[^0-9a-zA-Z]","",$phone_pass);
+$VD_login=ereg_replace("[^-_0-9a-zA-Z]","",$VD_login);
+$VD_pass=ereg_replace("[^-_0-9a-zA-Z]","",$VD_pass);
+$VD_campaign = ereg_replace("[^-_0-9a-zA-Z]","",$VD_campaign);
 
 
 $forever_stop=0;
 
 if ($force_logout)
-{
+	{
     echo "Práve ste sa odhlásili, Ďakujeme\n";
     exit;
-}
+	}
 
 $isdst = date("I");
 $StarTtimE = date("U");
@@ -294,23 +344,22 @@ $tsNOW_TIME = date("YmdHis");
 $FILE_TIME = date("Ymd-His");
 $loginDATE = date("Ymd");
 $CIDdate = date("ymdHis");
-	$month_old = mktime(11, 0, 0, date("m"), date("d")-2,  date("Y"));
-	$past_month_date = date("Y-m-d H:i:s",$month_old);
-	$minutes_old = mktime(date("H"), date("i")-2, date("s"), date("m"), date("d"),  date("Y"));
-	$past_minutes_date = date("Y-m-d H:i:s",$minutes_old);
+$month_old = mktime(11, 0, 0, date("m"), date("d")-2,  date("Y"));
+$past_month_date = date("Y-m-d H:i:s",$month_old);
+$minutes_old = mktime(date("H"), date("i")-2, date("s"), date("m"), date("d"),  date("Y"));
+$past_minutes_date = date("Y-m-d H:i:s",$minutes_old);
 
 
 $random = (rand(1000000, 9999999) + 10000000);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
@@ -322,8 +371,8 @@ while ($i < $qm_conf_ct)
 	$vtiger_url =					$row[6];
 	$enable_vtiger_integration =	$row[7];
 	$outbound_autodial_active =		$row[8];
-
-	$i++;
+	$enable_second_webform =		$row[9];
+	$user_territories_active =		$row[10];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -342,12 +391,12 @@ $view_scripts			= '1';	# set to 1 to show the SCRIPTS tab
 $dispo_check_all_pause	= '0';	# set to 1 to allow for persistent pause after dispo
 $callholdstatus			= '1';	# set to 1 to show calls na hold count
 $agentcallsstatus		= '0';	# set to 1 to show agent status and call dialed count
-   $campagentstatctmax	= '3';	# Number of sekúnd for campaign call and agent stats
+   $campagentstatctmax	= '3';	# Number ofsekúnd for campaign call and agent stats
 $show_campname_pulldown	= '1';	# set to 1 to show campaign name na login pulldown
 $webform_sessionname	= '1';	# set to 1 to include the session_name in webform URL
 $local_consult_xfers	= '1';	# set to 1 to send consultative transfers from original server
 $clientDST				= '1';	# set to 1 to check for DST na server for agent time
-$no_delete_sessions		= '0';	# set to 1 to not delete sessions at logout
+$no_delete_sessions		= '1';	# set to 1 to not delete sessions at logout
 $volumecontrol_active	= '1';	# set to 1 to allow agents to alter volume of channels
 $PreseT_DiaL_LinKs		= '0';	# set to 1 to show a VOLAŤ link for Dial Presets
 $LogiNAJAX				= '1';	# set to 1 to do lookups na campaigns for login
@@ -361,42 +410,18 @@ $disable_blended_checkbox='0';	# set to 1 to disable the BLENDED checkbox from t
 
 $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
 
+$stretch_dimensions		= '1';	# sets the vicidial screen to the size of the browser window
 $BROWSER_HEIGHT			= 500;	# set to the minimum browser height, default=500
 $BROWSER_WIDTH			= 770;	# set to the minimum browser width, default=770
 $MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
 $SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
+$SIDEBAR_COLOR			= '#F6F6F6';
 
 # options now set in DB:
 #$alt_phone_dialing		= '1';	# allow agents to call alt phone numbers
 #$scheduled_callbacks	= '1';	# set to 1 to allow agent to choose scheduled callbacks
 #   $agentonly_callbacks	= '1';	# set to 1 to allow agent to choose agent-only scheduled callbacks
 #$agentcall_manual		= '1';	# set to 1 to allow agent to make manual calls during autodial session
-
-### SCREEN WIDTH AND HEIGHT CALCULATIONS ###
-### DO NOT EDIT! ###
-$MASTERwidth=($BROWSER_WIDTH - 340);
-$MASTERheight=($BROWSER_HEIGHT - 200);
-if ($MASTERwidth < 430) {$MASTERwidth = '430';} 
-if ($MASTERheight < 300) {$MASTERheight = '300';} 
-
-$CAwidth =  ($MASTERwidth + 340);	# 770 - cover all (none-in-session, customer hunngup, etc...)
-$MNwidth =  ($MASTERwidth + 330);	# 760 - main frame
-$XFwidth =  ($MASTERwidth + 320);	# 750 - transfer/conference
-$HCwidth =  ($MASTERwidth + 310);	# 740 - hotkeys and callbacks
-$AMwidth =  ($MASTERwidth + 270);	# 700 - agent mute and preset-dial links
-$SCwidth =  ($MASTERwidth + 230);	# 670 - live call sekúnd counter
-$SSwidth =  ($MASTERwidth + 176);	# 606 - scroll script
-$SDwidth =  ($MASTERwidth + 170);	# 600 - scroll script, customer data and calls-in-session
-$HKwidth =  ($MASTERwidth + 70);	# 500 - Hotkeys button
-$HSwidth =  ($MASTERwidth + 1);		# 431 - Header spacer
-
-$HKheight =  ($MASTERheight + 105);	# 405 - HotKey active Button
-$AMheight =  ($MASTERheight + 100);	# 400 - Agent mute and preset dial links
-$MBheight =  ($MASTERheight + 65);	# 365 - Manual Dial Buttons
-$CBheight =  ($MASTERheight + 50);	# 350 - Agent Callback, pause code, volume control Buttons and agent status
-$SSheight =  ($MASTERheight + 31);	# 331 - script content
-$HTheight =  ($MASTERheight + 10);	# 310 - transfer frame, callback comments and hotkey
-$BPheight =  ($MASTERheight - 250);	# 50 - bottom buffer
 
 
 $US='_';
@@ -416,182 +441,230 @@ else {$server_port = "$CL$server_port";}
 $agcPAGE = "$HTTPprotocol$server_name$server_port$script_name";
 $agcDIR = eregi_replace('vicidial.php','',$agcPAGE);
 
+
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
 header ("Pragma: no-cache");                          // HTTP/1.0
 echo "<html>\n";
 echo "<head>\n";
 echo "<!-- VERZIA: $version     POSTAVENÉ: $build -->\n";
+echo "<!-- BROWSER: $BROWSER_WIDTH x $BROWSER_HEIGHT     $JS_browser_width x $JS_browser_height -->\n";
 
 if ($campaign_login_list > 0)
-{
-$camp_form_code  = "<select size=1 name=VD_campaign id=VD_campaign onFocus=\"login_allowable_campaigns()\">\n";
-$camp_form_code .= "<option value=\"\"></option>\n";
+	{
+	$camp_form_code  = "<select size=1 name=VD_campaign id=VD_campaign onFocus=\"login_allowable_campaigns()\">\n";
+	$camp_form_code .= "<option value=\"\"></option>\n";
 
-$LOGallowed_campaignsSQL='';
-if ($relogin == 'YES')
-{
-	$stmt="SELECT user_group from vicidial_users where user='$VD_login' and pass='$VD_pass'";
+	$LOGallowed_campaignsSQL='';
+	if ($relogin == 'YES')
+		{
+		$stmt="SELECT user_group from vicidial_users where user='$VD_login' and pass='$VD_pass';";
+		if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01002',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		$row=mysql_fetch_row($rslt);
+		$VU_user_group=$row[0];
+
+		$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$VU_user_group';";
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01003',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		$row=mysql_fetch_row($rslt);
+		if ( (!eregi("ALL-CAMPAIGNS",$row[0])) )
+			{
+			$LOGallowed_campaignsSQL = eregi_replace(' -','',$row[0]);
+			$LOGallowed_campaignsSQL = eregi_replace(' ',"','",$LOGallowed_campaignsSQL);
+			$LOGallowed_campaignsSQL = "and campaign_id IN('$LOGallowed_campaignsSQL')";
+			}
+		}
+
+	### code for manager override of shift restrictions
+	if ($MGR_override > 0)
+		{
+		if (isset($_GET["MGR_login$loginDATE"]))				{$MGR_login=$_GET["MGR_login$loginDATE"];}
+				elseif (isset($_POST["MGR_login$loginDATE"]))	{$MGR_login=$_POST["MGR_login$loginDATE"];}
+		if (isset($_GET["MGR_pass$loginDATE"]))					{$MGR_pass=$_GET["MGR_pass$loginDATE"];}
+				elseif (isset($_POST["MGR_pass$loginDATE"]))	{$MGR_pass=$_POST["MGR_pass$loginDATE"];}
+
+		$stmt="SELECT count(*) from vicidial_users where user='$MGR_login' and pass='$MGR_pass' and manager_shift_enforcement_override='1' and active='Y';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01058',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		$row=mysql_fetch_row($rslt);
+		$MGR_auth=$row[0];
+
+		if($MGR_auth>0)
+			{
+			$stmt="UPDATE vicidial_users SET shift_override_flag='1' where user='$VD_login' and pass='$VD_pass';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01059',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			echo "<!-- Shift Override entered for $VD_login by $MGR_login -->\n";
+
+			### Add a record to the vicidial_admin_log
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$MGR_login', ip_address='$ip', event_section='AGENT', event_type='OVERRIDE', record_id='$VD_login', event_code='MANAGER prepísať OF AGENT SHIFT ENFORCEMENT', event_sql=\"$SQL_log\", event_notes='user: $VD_login';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01060',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			}
+		}
+
+
+	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where active='Y' $LOGallowed_campaignsSQL order by campaign_id;";
 	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01002',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$row=mysql_fetch_row($rslt);
-	$VU_user_group=$row[0];
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01004',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+	$camps_to_print = mysql_num_rows($rslt);
 
-	$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$VU_user_group';";
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01003',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$row=mysql_fetch_row($rslt);
-	if ( (!eregi("ALL-CAMPAIGNS",$row[0])) )
+	$o=0;
+	while ($camps_to_print > $o) 
 		{
-		$LOGallowed_campaignsSQL = eregi_replace(' -','',$row[0]);
-		$LOGallowed_campaignsSQL = eregi_replace(' ',"','",$LOGallowed_campaignsSQL);
-		$LOGallowed_campaignsSQL = "and campaign_id IN('$LOGallowed_campaignsSQL')";
-		}
-}
-
-### code for manager override of shift restrictions
-if ($MGR_override > 0)
-	{
-	if (isset($_GET["MGR_login$loginDATE"]))				{$MGR_login=$_GET["MGR_login$loginDATE"];}
-			elseif (isset($_POST["MGR_login$loginDATE"]))	{$MGR_login=$_POST["MGR_login$loginDATE"];}
-	if (isset($_GET["MGR_pass$loginDATE"]))					{$MGR_pass=$_GET["MGR_pass$loginDATE"];}
-			elseif (isset($_POST["MGR_pass$loginDATE"]))	{$MGR_pass=$_POST["MGR_pass$loginDATE"];}
-
-	$stmt="SELECT count(*) from vicidial_users where user='$MGR_login' and pass='$MGR_pass' and manager_shift_enforcement_override='1' and active='Y';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01058',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$row=mysql_fetch_row($rslt);
-	$MGR_auth=$row[0];
-
-	if($MGR_auth>0)
-		{
-		$stmt="UPDATE vicidial_users SET shift_override_flag='1' where user='$VD_login' and pass='$VD_pass';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01059',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		print "<!-- Shift Override entered for $VD_login by $MGR_login -->\n";
-
-		### Add a record to the vicidial_admin_log
-		$SQL_log = "$stmt|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$MGR_login', ip_address='$ip', event_section='AGENT', event_type='OVERRIDE', record_id='$VD_login', event_code='MANAGER prepísať OF AGENT SHIFT ENFORCEMENT', event_sql=\"$SQL_log\", event_notes='user: $VD_login';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01060',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		}
-	}
-
-
-$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where active='Y' $LOGallowed_campaignsSQL order by campaign_id";
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01004',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-$camps_to_print = mysql_num_rows($rslt);
-
-$o=0;
-while ($camps_to_print > $o) 
-	{
-	$rowx=mysql_fetch_row($rslt);
-	if ($show_campname_pulldown)
-		{$campname = " - $rowx[1]";}
-	else
-		{$campname = '';}
-	if ($VD_campaign)
-		{
-		if ( (eregi("$VD_campaign",$rowx[0])) and (strlen($VD_campaign) == strlen($rowx[0])) )
-			{$camp_form_code .= "<option value=\"$rowx[0]\" SELECTED>$rowx[0]$campname</option>\n";}
+		$rowx=mysql_fetch_row($rslt);
+		if ($show_campname_pulldown)
+			{$campname = " - $rowx[1]";}
+		else
+			{$campname = '';}
+		if ($VD_campaign)
+			{
+			if ( (eregi("$VD_campaign",$rowx[0])) and (strlen($VD_campaign) == strlen($rowx[0])) )
+				{$camp_form_code .= "<option value=\"$rowx[0]\" SELECTED>$rowx[0]$campname</option>\n";}
+			else
+				{
+				if (!ereg('login_allowable_campaigns',$camp_form_code))
+					{$camp_form_code .= "<option value=\"$rowx[0]\">$rowx[0]$campname</option>\n";}
+				}
+			}
 		else
 			{
 			if (!ereg('login_allowable_campaigns',$camp_form_code))
-				{$camp_form_code .= "<option value=\"$rowx[0]\">$rowx[0]$campname</option>\n";}
+					{$camp_form_code .= "<option value=\"$rowx[0]\">$rowx[0]$campname</option>\n";}
 			}
+		$o++;
 		}
-	else
-		{
-		if (!ereg('login_allowable_campaigns',$camp_form_code))
-				{$camp_form_code .= "<option value=\"$rowx[0]\">$rowx[0]$campname</option>\n";}
-		}
-	$o++;
+	$camp_form_code .= "</select>\n";
 	}
-$camp_form_code .= "</select>\n";
-}
 else
-{
-$camp_form_code = "<INPUT TYPE=TEXT NAME=VD_campaign SIZE=10 maxlength=20 VALUE=\"$VD_campaign\">\n";
-}
+	{
+	$camp_form_code = "<INPUT TYPE=TEXT NAME=VD_campaign SIZE=10 maxlength=20 VALUE=\"$VD_campaign\">\n";
+	}
 
 
 if ($LogiNAJAX > 0)
-{
-?>
+	{
+	?>
 
-<script language="Javascript">
+	<script language="Javascript">
 
-// ################################################################################
-// Send Request for allowable campaigns to populate the campaigns pull-down
-	function login_allowable_campaigns() 
+	<!-- 
+	var BrowseWidth = 0;
+	var BrowseHeight = 0;
+
+	function getInsideBrowse() 
 		{
-		var xmlhttp=false;
-		/*@cc_on @*/
-		/*@if (@_jscript_version >= 5)
-		// JScript gives us Conditional compilation, we can cope with old IE versions.
-		// and security blocked creation of the objects.
-		 try {
-		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
-		 } catch (e) {
-		  try {
-		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-		  } catch (E) {
-		   xmlhttp = false;
-		  }
-		 }
-		@end @*/
-		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+		var ns = navigator.appName == "Netscape";
+		if (ns) 
 			{
-			xmlhttp = new XMLHttpRequest();
+			BrowseWidth = window.innerWidth;
+			BrowseHeight = window.innerHeight;
 			}
-		if (xmlhttp) 
-			{ 
-			logincampaign_query = "&user=" + document.vicidial_form.VD_login.value + "&pass=" + document.vicidial_form.VD_pass.value + "&ACTION=LogiNCamPaigns&format=html";
-			xmlhttp.open('POST', 'vdc_db_query.php'); 
-			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-			xmlhttp.send(logincampaign_query); 
-			xmlhttp.onreadystatechange = function() 
-				{ 
-				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
-					{
-					Nactiveext = null;
-					Nactiveext = xmlhttp.responseText;
-				//	alert(logincampaign_query);
-				//	alert(xmlhttp.responseText);
-					document.getElementById("LogiNCamPaigns").innerHTML = Nactiveext;
-					document.getElementById("LogiNReseT").innerHTML = "<INPUT TYPE=BUTTON VALUE=\"Osviežiť Kampaň List\" OnClick=\"login_allowable_campaigns()\">";
-					document.getElementById("VD_campaign").focus();
-					}
-				}
-			delete xmlhttp;
+		else 
+			{
+			BrowseWidth = document.body.clientWidth;
+			BrowseHeight = document.body.clientHeight;
 			}
 		}
-</script>
+	function browser_dimensions() 
+		{
+		getInsideBrowse();
 
-<?
-}
+		document.vicidial_form.JS_browser_width.value = BrowseWidth;
+		document.vicidial_form.JS_browser_height.value = BrowseHeight;
+		}
 
+	// ################################################################################
+	// Send Request for allowable campaigns to populate the campaigns pull-down
+		function login_allowable_campaigns() 
+			{
+			var xmlhttp=false;
+			/*@cc_on @*/
+			/*@if (@_jscript_version >= 5)
+			// JScript gives us Conditional compilation, we can cope with old IE versions.
+			// and security blocked creation of the objects.
+			 try {
+			  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+			 } catch (e) {
+			  try {
+			   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+			  } catch (E) {
+			   xmlhttp = false;
+			  }
+			 }
+			@end @*/
+			if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+				{
+				xmlhttp = new XMLHttpRequest();
+				}
+			if (xmlhttp) 
+				{ 
+				logincampaign_query = "&user=" + document.vicidial_form.VD_login.value + "&pass=" + document.vicidial_form.VD_pass.value + "&ACTION=LogiNCamPaigns&format=html";
+				xmlhttp.open('POST', 'vdc_db_query.php'); 
+				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+				xmlhttp.send(logincampaign_query); 
+				xmlhttp.onreadystatechange = function() 
+					{ 
+					if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+						{
+						Nactiveext = null;
+						Nactiveext = xmlhttp.responseText;
+					//	alert(logincampaign_query);
+					//	alert(xmlhttp.responseText);
+						document.getElementById("LogiNCamPaigns").innerHTML = Nactiveext;
+						document.getElementById("LogiNReseT").innerHTML = "<INPUT TYPE=BUTTON VALUE=\"Osviežiť Kampaň List\" OnClick=\"login_allowable_campaigns()\">";
+						document.getElementById("VD_campaign").focus();
+						}
+					}
+				delete xmlhttp;
+				}
+			}
+	// -->
+	</script>
+
+	<?php
+	}
+else
+	{
+	?>
+
+	<script language="Javascript">
+
+	<!-- 
+	function browser_dimensions() 
+		{
+		var nothing=0;
+		}
+
+	// -->
+	</script>
+
+	<?php
+
+	}
 
 if ($relogin == 'YES')
 {
-echo "<title>web klient VICIDIAL: Znova prihlásiť</title>\n";
+echo "<title>Agent web client: Znova prihlásiť</title>\n";
 echo "</head>\n";
-echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
 echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_sk/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Slovensky <img src=\"../agc/images/sk.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "</TR></TABLE>\n";
 echo "<FORM NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
 echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 echo "<BR><BR><BR><CENTER><TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
 echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vdc_tab_vicidial.gif\" Border=0></TD>";
 echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Znova prihlásiť </TD>";
@@ -621,15 +694,17 @@ if ($user_login_first == 1)
 {
 	if ( (strlen($VD_login)<1) or (strlen($VD_pass)<1) or (strlen($VD_campaign)<1) )
 	{
-	echo "<title>web klient VICIDIAL: Prihlásenie kampane</title>\n";
+	echo "<title>Agent web client: Prihlásenie kampane</title>\n";
 	echo "</head>\n";
-	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
 	echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 	echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_sk/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Slovensky <img src=\"../agc/images/sk.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";	echo "</TR></TABLE>\n";
 	echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
 	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 	#echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
 	#echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
 	echo "<CENTER><BR><B>Meno užívateľa</B><BR><BR>";
@@ -665,15 +740,17 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 		$phone_login=$row[0];
 		$phone_pass=$row[1];
 
-		echo "<title>web klient VICIDIAL: Prihlásiť</title>\n";
+		echo "<title>Agent web client: Prihlásiť</title>\n";
 		echo "</head>\n";
-		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
 		echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 		echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_sk/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Slovensky <img src=\"../agc/images/sk.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";		echo "</TR></TABLE>\n";
 		echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
 		echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 		echo "<BR><BR><BR><CENTER><TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vdc_tab_vicidial.gif\" Border=0></TD>";
 		echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Prihlásiť </TD>";
@@ -704,15 +781,17 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 
 if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
 {
-echo "<title>web klient VICIDIAL:  Prihlásenie telefónu</title>\n";
+echo "<title>Agent web client:  Prihlásenie telefónu</title>\n";
 echo "</head>\n";
-echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
 echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_sk/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Slovensky <img src=\"../agc/images/sk.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "</TR></TABLE>\n";
 echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
 echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 echo "<BR><BR><BR><CENTER><TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
 echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vdc_tab_vicidial.gif\" Border=0></TD>";
 echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Prihlásenie telefónu </TD>";
@@ -755,7 +834,7 @@ $VDloginDISPLAY=0;
 		$login=strtoupper($VD_login);
 		$password=strtoupper($VD_pass);
 		##### grab the full name of the agent
-		$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag from vicidial_users where user='$VD_login' and pass='$VD_pass'";
+		$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_users where user='$VD_login' and pass='$VD_pass'";
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01007',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$row=mysql_fetch_row($rslt);
@@ -775,12 +854,21 @@ $VDloginDISPLAY=0;
 		$VU_alert_enabled =						$row[13];
 		$VU_agent_shift_enforcement_override =	$row[14];
 		$VU_shift_override_flag =				$row[15];
+		$VU_allow_alerts =						$row[16];
+		$VU_closer_campaigns =					$row[17];
+		$VU_agent_choose_territories =			$row[18];
+		$VU_custom_one =						$row[19];
+		$VU_custom_two =						$row[20];
+		$VU_custom_three =						$row[21];
+		$VU_custom_four =						$row[22];
+		$VU_custom_five =						$row[23];
 
-		if ($VU_alert_enabled > 0) {$VU_alert_enabled = 'ON';}
+		if ( ($VU_alert_enabled > 0) and ($VU_allow_alerts > 0) ) {$VU_alert_enabled = 'ON';}
 		else {$VU_alert_enabled = 'OFF';}
+		$AgentAlert_allowed = $VU_allow_alerts;
 
 		### Gather timeclock and shift enforcement restriction settings
-		$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts from vicidial_user_groups where user_group='$VU_user_group';";
+		$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts,agent_status_viewable_groups,agent_status_view_time from vicidial_user_groups where user_group='$VU_user_group';";
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01052',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$row=mysql_fetch_row($rslt);
@@ -789,6 +877,16 @@ $VDloginDISPLAY=0;
 		$LOGgroup_shiftsSQL = eregi_replace('  ','',$row[2]);
 		$LOGgroup_shiftsSQL = eregi_replace(' ',"','",$LOGgroup_shiftsSQL);
 		$LOGgroup_shiftsSQL = "shift_id IN('$LOGgroup_shiftsSQL')";
+		$agent_status_viewable_groups = $row[3];
+		$agent_status_viewable_groupsSQL = eregi_replace('  ','',$agent_status_viewable_groups);
+		$agent_status_viewable_groupsSQL = eregi_replace(' ',"','",$agent_status_viewable_groupsSQL);
+		$agent_status_viewable_groupsSQL = "user_group IN('$agent_status_viewable_groupsSQL')";
+		$agent_status_view = 0;
+		if (strlen($agent_status_viewable_groups) > 2)
+			{$agent_status_view = 1;}
+		$agent_status_view_time=0;
+		if ($row[4] == 'Y')
+			{$agent_status_view_time=1;}
 
 		### BEGIN - CHECK TO SEE IF AGENT IS LOGGED IN TO TIMECLOCK, IF NOT, OUTPUT ERROR
 		if ( (ereg('Y',$forced_timeclock_login)) or ( (ereg('ADMIN_EXEMPT',$forced_timeclock_login)) and ($VU_user_level < 8) ) )
@@ -840,7 +938,7 @@ $VDloginDISPLAY=0;
 
 				$stmt="SELECT shift_id,shift_start_time,shift_length,shift_weekdays from vicidial_shifts where $LOGgroup_shiftsSQL order by shift_id";
 				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01056',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01056',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$shifts_to_print = mysql_num_rows($rslt);
 
 				$o=0;
@@ -898,16 +996,12 @@ $VDloginDISPLAY=0;
 				$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
 				$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=VD_login VALUE=\"$VD_login\">\n";
 				$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=VD_pass VALUE=\"$VD_pass\">\n";
-				$VDdisplayMESSAGE.= "Manager Prihlásiť: <INPUT TYPE=TEXT NAME=\"MGR_login$loginDATE\" SIZE=10 maxlength=20><br>\n";
-				$VDdisplayMESSAGE.= "Manager Heslo: <INPUT TYPE=PASSWORD NAME=\"MGR_pass$loginDATE\" SIZE=10 maxlength=20><br>\n";
+				$VDdisplayMESSAGE.= "ManažérPrihlásiť: <INPUT TYPE=TEXT NAME=\"MGR_login$loginDATE\" SIZE=10 maxlength=20><br>\n";
+				$VDdisplayMESSAGE.= "ManažérHeslo: <INPUT TYPE=PASSWORD NAME=\"MGR_pass$loginDATE\" SIZE=10 maxlength=20><br>\n";
 				$VDdisplayMESSAGE.= "<INPUT TYPE=Submit NAME=POTVRDIŤ VALUE=POTVRDIŤ></FORM>\n";
 				}
 			}
 			### END - CHECK TO SEE IF SHIFT ENFORCEMENT IS ENABLED AND AGENT IS OUTSIDE OF THEIR SHIFTS, IF SO, OUTPUT ERROR
-
-
-
-
 
 
 
@@ -928,9 +1022,9 @@ $VDloginDISPLAY=0;
 
 		if ( (!eregi(" $VD_campaign ",$LOGallowed_campaigns)) and (!eregi("ALL-CAMPAIGNS",$LOGallowed_campaigns)) )
 			{
-			echo "<title>web klient VICIDIAL: VICIDIAL Prihlásenie kampane</title>\n";
+			echo "<title>Agent web client: Prihlásenie kampane</title>\n";
 			echo "</head>\n";
-			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 			echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
 			echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 			echo "<!-- ILPV -->\n";
@@ -938,6 +1032,8 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 			echo "<B>Sorry, you are not allowed to login to this campaign: $VD_campaign</B>\n";
 			echo "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
 			echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+			echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+			echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 			echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
 			echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
 			echo "Prihlásiť: <INPUT TYPE=TEXT NAME=VD_login SIZE=10 maxlength=20 VALUE=\"$VD_login\">\n<br>";
@@ -1034,56 +1130,133 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 			$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 			##### grab the campaign settings
-			$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+			$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
 			$row=mysql_fetch_row($rslt);
-				$park_ext =					$row[0];
-				$park_file_name =			$row[1];
-				$web_form_address =			stripslashes($row[2]);
-				$allow_closers =			$row[3];
-				$auto_dial_level =			$row[4];
-				$dial_timeout =				$row[5];
-				$dial_prefix =				$row[6];
-				$campaign_cid =				$row[7];
-				$campaign_vdad_exten =		$row[8];
-				$campaign_rec_exten =		$row[9];
-				$campaign_recording =		$row[10];
-				$campaign_rec_filename =	$row[11];
-				$campaign_script =			$row[12];
-				$get_call_launch =			$row[13];
-				$campaign_am_message_exten = $row[14];
-				$xferconf_a_dtmf =			$row[15];
-				$xferconf_a_number =		$row[16];
-				$xferconf_b_dtmf =			$row[17];
-				$xferconf_b_number =		$row[18];
-				$alt_number_dialing =		$row[19];
-				$VC_scheduled_callbacks =	$row[20];
-				$wrapup_sekúnd =			$row[21];
-				$wrapup_message =			$row[22];
-				$closer_campaigns =			$row[23];
-				$use_internal_dnc =			$row[24];
-				$allcalls_delay =			$row[25];
-				$omit_phone_code =			$row[26];
-				$agent_pause_codes_active =	$row[27];
-				$no_hopper_leads_logins =	$row[28];
-				$campaign_allow_inbound =	$row[29];
-				$manual_dial_list_id =		$row[30];
-				$default_xfer_group =		$row[31];
-				$xfer_groups =				$row[32];
-				$disable_alter_custphone =	$row[33];
-				$display_queue_count =		$row[34];
-				$manual_dial_filter =		$row[35];
-				$CopY_tO_ClipboarD =		$row[36];
-				$use_campaign_dnc =			$row[37];
-				$three_way_call_cid =		$row[38];
-				$dial_method =				$row[39];
-				$three_way_dial_prefix =	$row[40];
-				$web_form_target =			$row[41];
-				$vtiger_screen_login =		$row[42];
-				$agent_allow_group_alias =	$row[43];
-				$default_group_alias =		$row[44];
+			$park_ext =					$row[0];
+			$park_file_name =			$row[1];
+			$web_form_address =			stripslashes($row[2]);
+			$allow_closers =			$row[3];
+			$auto_dial_level =			$row[4];
+			$dial_timeout =				$row[5];
+			$dial_prefix =				$row[6];
+			$campaign_cid =				$row[7];
+			$campaign_vdad_exten =		$row[8];
+			$campaign_rec_exten =		$row[9];
+			$campaign_recording =		$row[10];
+			$campaign_rec_filename =	$row[11];
+			$campaign_script =			$row[12];
+			$get_call_launch =			$row[13];
+			$campaign_am_message_exten = '8320';
+			$xferconf_a_dtmf =			$row[15];
+			$xferconf_a_number =		$row[16];
+			$xferconf_b_dtmf =			$row[17];
+			$xferconf_b_number =		$row[18];
+			$alt_number_dialing =		$row[19];
+			$VC_scheduled_callbacks =	$row[20];
+			$wrapup_seconds =			$row[21];
+			$wrapup_message =			$row[22];
+			$closer_campaigns =			$row[23];
+			$use_internal_dnc =			$row[24];
+			$allcalls_delay =			$row[25];
+			$omit_phone_code =			$row[26];
+			$agent_pause_codes_active =	$row[27];
+			$no_hopper_leads_logins =	$row[28];
+			$campaign_allow_inbound =	$row[29];
+			$manual_dial_list_id =		$row[30];
+			$default_xfer_group =		$row[31];
+			$xfer_groups =				$row[32];
+			$disable_alter_custphone =	$row[33];
+			$display_queue_count =		$row[34];
+			$manual_dial_filter =		$row[35];
+			$CopY_tO_ClipboarD =		$row[36];
+			$use_campaign_dnc =			$row[37];
+			$three_way_call_cid =		$row[38];
+			$dial_method =				$row[39];
+			$three_way_dial_prefix =	$row[40];
+			$web_form_target =			$row[41];
+			$vtiger_screen_login =		$row[42];
+			$agent_allow_group_alias =	$row[43];
+			$default_group_alias =		$row[44];
+			$quick_transfer_button =	$row[45];
+			$prepopulate_transfer_preset = $row[46];
+			$view_calls_in_queue =		$row[47];
+			$view_calls_in_queue_launch = $row[48];
+			$call_requeue_button =		$row[49];
+			$pause_after_each_call =	$row[50];
+			$no_hopper_dialing =		$row[51];
+			$agent_dial_owner_only =	$row[52];
+			$agent_display_dialable_leads = $row[53];
+			$web_form_address_two =		$row[54];
+			$agent_select_territories = $row[55];
+			$crm_popup_login =			$row[56];
+			$crm_login_address =		$row[57];
+			$timer_action =				$row[58];
+			$timer_action_message =		$row[59];
+			$timer_action_seconds =		$row[60];
+			$start_call_url =			$row[61];
+			$dispo_call_url =			$row[62];
+			$xferconf_c_number =		$row[63];
+			$xferconf_d_number =		$row[64];
+			$xferconf_e_number =		$row[65];
+
+			if ($user_territories_active < 1)
+				{$agent_select_territories = 0;}
+			if (preg_match("/Y/",$agent_select_territories))
+				{$agent_select_territories=1;}
+			else
+				{$agent_select_territories=0;}
+
+			if (preg_match("/Y/",$agent_display_dialable_leads))
+				{$agent_display_dialable_leads=1;}
+			else
+				{$agent_display_dialable_leads=0;}
+
+			if (preg_match("/Y/",$no_hopper_dialing))
+				{$no_hopper_dialing=1;}
+			else
+				{$no_hopper_dialing=0;}
+
+			if ( (preg_match("/Y/",$call_requeue_button)) and ($auto_dial_level > 0) )
+				{$call_requeue_button=1;}
+			else
+				{$call_requeue_button=0;}
+
+			if ( (preg_match("/AUTO/",$view_calls_in_queue_launch)) and ($auto_dial_level > 0) )
+				{$view_calls_in_queue_launch=1;}
+			else
+				{$view_calls_in_queue_launch=0;}
+
+			if ( (!preg_match("/NONE/",$view_calls_in_queue)) and ($auto_dial_level > 0) )
+				{$view_calls_in_queue=1;}
+			else
+				{$view_calls_in_queue=0;}
+
+			if (preg_match("/Y/",$pause_after_each_call))
+				{$dispo_check_all_pause=1;}
+
+			$quick_transfer_button_enabled=0;
+			if (preg_match("/IN_GROUP|PZNOVU INCIALIZOVAŤ_1|PZNOVU INCIALIZOVAŤ_2|PZNOVU INCIALIZOVAŤ_3|PZNOVU INCIALIZOVAŤ_4|PZNOVU INCIALIZOVAŤ_5/",$quick_transfer_button))
+				{$quick_transfer_button_enabled=1;}
+
+			$preset_populate='';
+			$prepopulate_transfer_preset_enabled=0;
+			if (preg_match("/PZNOVU INCIALIZOVAŤ_1|PZNOVU INCIALIZOVAŤ_2|PZNOVU INCIALIZOVAŤ_3|PZNOVU INCIALIZOVAŤ_4|PZNOVU INCIALIZOVAŤ_5/",$prepopulate_transfer_preset))
+				{
+				$prepopulate_transfer_preset_enabled=1;
+				if (preg_match("/PZNOVU INCIALIZOVAŤ_1/",$prepopulate_transfer_preset))
+					{$preset_populate = $xferconf_a_number;}
+				if (preg_match("/PZNOVU INCIALIZOVAŤ_2/",$prepopulate_transfer_preset))
+					{$preset_populate = $xferconf_b_number;}
+				if (preg_match("/PZNOVU INCIALIZOVAŤ_3/",$prepopulate_transfer_preset))
+					{$preset_populate = $xferconf_c_number;}
+				if (preg_match("/PZNOVU INCIALIZOVAŤ_4/",$prepopulate_transfer_preset))
+					{$preset_populate = $xferconf_d_number;}
+				if (preg_match("/PZNOVU INCIALIZOVAŤ_5/",$prepopulate_transfer_preset))
+					{$preset_populate = $xferconf_e_number;}
+				}
 
 			$default_group_alias_cid='';
 			if (strlen($default_group_alias)>1)
@@ -1100,7 +1273,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 					}
 				}
 
-			$stmt = "select group_web_vars from vicidial_campaign_agents where campaign_id='$VD_campaign' and user='$user';";
+			$stmt = "select group_web_vars from vicidial_campaign_agents where campaign_id='$VD_campaign' and user='$VD_login';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01056',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -1114,7 +1287,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 			if ( (!ereg('DISABLED',$VU_vicidial_recording_override)) and ($VU_vicidial_recording > 0) )
 				{
 				$campaign_recording = $VU_vicidial_recording_override;
-				print "<!-- USER ZÁZNAMING OVERRIDE: |$VU_vicidial_recording_override|$campaign_recording| -->\n";
+				echo "<!-- USER ZÁZNAMING OVERRIDE: |$VU_vicidial_recording_override|$campaign_recording| -->\n";
 				}
 			if ( ($VC_scheduled_callbacks=='Y') and ($VU_scheduled_callbacks=='1') )
 				{$scheduled_callbacks='1';}
@@ -1166,10 +1339,10 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 
 			##### grab the inbound groups to choose from if campaign contains CLOSER
 			$VARingroups="''";
-			if ($campaign_allow_inbound == 'Y')
+			if ( ($campaign_allow_inbound == 'Y') and ($dial_method != 'MANUAL') )
 				{
 				$VARingroups='';
-				$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and group_id IN($closer_campaigns) order by group_id limit 60;";
+				$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and group_id IN($closer_campaigns) order by group_id limit 600;";
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01015',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1184,6 +1357,29 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 					}
 				$VARingroups = substr("$VARingroups", 0, -1); 
 				}
+			else
+				{$closer_campaigns = "''";}
+
+			##### gather territory listings for this agent if select territories is enabled
+			$VARterritories='';
+			if ($agent_select_territories > 0)
+				{
+				$stmt="SELECT territory from vicidial_user_territories where user='$VD_login';";
+				$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01062',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$territory_ct = mysql_num_rows($rslt);
+				$territoryCT=0;
+				while ($territoryCT < $territory_ct)
+					{
+					$row=mysql_fetch_row($rslt);
+					$territories[$territoryCT] =$row[0];
+					$VARterritories = "$VARterritories'$territories[$territoryCT]',";
+					$territoryCT++;
+					}
+				$VARterritories = substr("$VARterritories", 0, -1); 
+				echo "<!-- $territory_ct  $territoryCT |$stmt| -->\n";
+				}
 
 			##### grab the allowable inbound groups to choose from for transfer options
 			$xfer_groups = preg_replace("/^ | -$/","",$xfer_groups);
@@ -1193,7 +1389,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 			if ($allow_closers == 'Y')
 				{
 				$VARxfergroups='';
-				$stmt="select group_id,group_name from vicidial_inbound_groups where active = 'Y' and group_id IN($xfer_groups) order by group_id limit 60;";
+				$stmt="select group_id,group_name from vicidial_inbound_groups where active = 'Y' and group_id IN($xfer_groups) order by group_id limit 600;";
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01016',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1245,7 +1441,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 			if ($DB) {echo "$stmt\n";}
 			$row=mysql_fetch_row($rslt);
 			   $campaign_leads_to_call = $row[0];
-			   print "<!-- $campaign_leads_to_call - Kontakty na volanie už nie sú v zásobníku -->\n";
+			   echo "<!-- $campaign_leads_to_call - Kontakty na volanie už nie sú v zásobníku -->\n";
 
 			}
 		else
@@ -1267,15 +1463,17 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 	}
 	if ($VDloginDISPLAY)
 	{
-	echo "<title>web klient VICIDIAL: Prihlásenie kampane</title>\n";
+	echo "<title>Agent web client: Prihlásenie kampane</title>\n";
 	echo "</head>\n";
-	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
 	echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 	echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_sk/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Slovensky <img src=\"../agc/images/sk.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";	echo "</TR></TABLE>\n";
 	echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
 	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
 	echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
@@ -1299,6 +1497,8 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 	echo "</html>\n\n";
 	exit;
 	}
+
+$original_phone_login = $phone_login;
 
 # code for parsing load-balanced agent phone allocation where agent interface
 # will send multiple phones-table logins so that the script can determine the
@@ -1347,7 +1547,8 @@ if ( (eregi(',',$phone_login)) and (strlen($phone_login) > 2) )
 else {$phoneSQL = "login='$phone_login' and pass='$phone_pass'";}
 
 $authphone=0;
-$stmt="SELECT count(*) from phones where $phoneSQL and active = 'Y';";
+#$stmt="SELECT count(*) from phones where $phoneSQL and active = 'Y';";
+$stmt="SELECT count(*) from phones,servers where $phoneSQL and phones.active = 'Y' and active_agent_login_server='Y' and phones.server_ip=servers.server_ip;";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01020',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -1355,15 +1556,17 @@ $row=mysql_fetch_row($rslt);
 $authphone=$row[0];
 if (!$authphone)
 	{
-	echo "<title>web klient VICIDIAL: Prihlásenie telefónu Error</title>\n";
+	echo "<title>Agent web client: Prihlásenie telefónu Error</title>\n";
 	echo "</head>\n";
-	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
 	echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 	echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_sk/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Slovensky <img src=\"../agc/images/sk.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";	echo "</TR></TABLE>\n";
 	echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
 	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=VD_login VALUE=\"$VD_login\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=VD_pass VALUE=\"$VD_pass\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=VD_campaign VALUE=\"$VD_campaign\">\n";
@@ -1413,7 +1616,7 @@ else
 			$row=mysql_fetch_row($rslt);
 			
 			### find out whether the server is set to active
-			$stmt="SELECT count(*) from servers where server_ip = '$rowx[0]' and active='Y';";
+			$stmt="SELECT count(*) from servers where server_ip = '$rowx[0]' and active='Y' and active_agent_login_server='Y';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01023',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -1441,8 +1644,8 @@ else
 			}
 		echo "<!-- Telefóns balance selection: $phone_login|$pb_server_ip|$past_minutes_date|     |$pb_log -->\n";
 		}
-	echo "<title>web klient VICIDIAL</title>\n";
-	$stmt="SELECT * from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
+	echo "<title>Agent web client</title>\n";
+	$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01025',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -1510,6 +1713,11 @@ else
 	$outbound_cid=$row[65];
 	$enable_sipsak_messages=$row[66];
 
+	$no_empty_session_warnings=0;
+	if ($phone_login == 'nophone')
+		{
+		$no_empty_session_warnings=1;
+		}
 	if ($TelefónSComPIP == '1')
 		{
 		if (strlen($computer_ip) < 4)
@@ -1555,35 +1763,48 @@ else
 		{
 		$VICIDiaL_park_on_extension = "$park_ext";
 		$VICIDiaL_park_on_filename = "$park_file_name";
-		print "<!-- ZAPARKOVAŤOVANIE UPRAVENEJ KAMPANE:  |$VICIDiaL_park_on_extension|$VICIDiaL_park_on_filename| -->\n";
+		echo "<!-- ZAPARKOVAŤOVANIE UPRAVENEJ KAMPANE:  |$VICIDiaL_park_on_extension|$VICIDiaL_park_on_filename| -->\n";
 		}
-		print "<!-- ZAPARKOVAŤOVANIE ZÁKLADNEJ KAMPANE: |$VICIDiaL_park_on_extension|$VICIDiaL_park_on_filename| -->\n";
+	echo "<!-- ZAPARKOVAŤOVANIE ZÁKLADNEJ KAMPANE: |$VICIDiaL_park_on_extension|$VICIDiaL_park_on_filename| -->\n";
 
 	# If a web form address is not set, use the default one
 	if (strlen($web_form_address)>0)
 		{
 		$VICIDiaL_web_form_address = "$web_form_address";
-		print "<!-- WEB FORMULÁR UPRAVENEJ KAMPANE:   |$VICIDiaL_web_form_address| -->\n";
+		echo "<!-- WEB FORMULÁR UPRAVENEJ KAMPANE:   |$VICIDiaL_web_form_address| -->\n";
 		}
 	else
 		{
 		$VICIDiaL_web_form_address = "$VICIDiaL_web_URL";
 		print "<!-- WEB FORMULÁR ZÁKLADNEJ KAMPANE:  |$VICIDiaL_web_form_address| -->\n";
 		$VICIDiaL_web_form_address_enc = rawurlencode($VICIDiaL_web_form_address);
-
 		}
 	$VICIDiaL_web_form_address_enc = rawurlencode($VICIDiaL_web_form_address);
+
+	# If a web form address two is not set, use the first one
+	if (strlen($web_form_address_two)>0)
+		{
+		$VICIDiaL_web_form_address_two = "$web_form_address_two";
+		echo "<!-- WEB FORMULÁR UPRAVENEJ KAMPANE 2:   |$VICIDiaL_web_form_address_two| -->\n";
+		}
+	else
+		{
+		$VICIDiaL_web_form_address_two = "$VICIDiaL_web_form_address";
+		echo "<!-- WEB FORMULÁR ZÁKLADNEJ KAMPANE 2:  |$VICIDiaL_web_form_address_two| -->\n";
+		$VICIDiaL_web_form_address_two_enc = rawurlencode($VICIDiaL_web_form_address_two);
+		}
+	$VICIDiaL_web_form_address_two_enc = rawurlencode($VICIDiaL_web_form_address_two);
 
 	# If closers are allowed na this campaign
 	if ($allow_closers=="Y")
 		{
 		$VICIDiaL_allow_closers = 1;
-		print "<!-- LA CAMPAÑA PERMITE CLOSERS:    |$VICIDiaL_allow_closers| -->\n";
+		echo "<!-- LA CAMPAÑA PERMITE CLOSERS:    |$VICIDiaL_allow_closers| -->\n";
 		}
 	else
 		{
 		$VICIDiaL_allow_closers = 0;
-		print "<!-- LA CAMPAÑA NO PERMITE CLOSERS: |$VICIDiaL_allow_closers| -->\n";
+		echo "<!-- LA CAMPAÑA NO PERMITE CLOSERS: |$VICIDiaL_allow_closers| -->\n";
 		}
 
 
@@ -1607,7 +1828,7 @@ else
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01030',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 
-	if ( ($campaign_allow_inbound == 'Y') || ($campaign_leads_to_call > 0) || (ereg('Y',$no_hopper_leads_logins)) )
+	if ( ( ($campaign_allow_inbound == 'Y') and ($dial_method != 'MANUAL') ) || ($campaign_leads_to_call > 0) || (ereg('Y',$no_hopper_leads_logins)) )
 		{
 		### insert an entry into the user log for the login event
 		$stmt = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$VD_login','LOGIN','$VD_campaign','$NOW_TIME','$StarTtimE','$VU_user_group')";
@@ -1629,7 +1850,7 @@ else
 			$i++;
 			}
 		if ($prev_login_ct > 0)
-			{print "<!-- POUŽIŤ PREDCHÁDZAJÚCU MIESTNOSŤ MEETME - $session_id - $NOW_TIME - $SIP_user -->\n";}
+			{echo "<!-- POUŽIŤ PREDCHÁDZAJÚCU MIESTNOSŤ MEETME - $session_id - $NOW_TIME - $SIP_user -->\n";}
 		else
 			{
 			##### grab the next available vicidial_conference room and reserve it
@@ -1645,14 +1866,14 @@ else
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01034',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 
-				$stmt="SELECT conf_exten from vicidial_conferences where server_ip='$server_ip' and ( (extension='$SIP_user') or (extension='$user') );";
+				$stmt="SELECT conf_exten from vicidial_conferences where server_ip='$server_ip' and ( (extension='$SIP_user') or (extension='$VD_login') );";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01035',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$row=mysql_fetch_row($rslt);
 				$session_id = $row[0];
 				}
-			print "<!-- POUŽIŤ NOVÚ MEETME MIESTNOSŤ - $session_id - $NOW_TIME - $SIP_user -->\n";
+			echo "<!-- POUŽIŤ NOVÚ MEETME MIESTNOSŤ - $session_id - $NOW_TIME - $SIP_user -->\n";
 			}
 
 		### mark leads that were not dispositioned during previous calls as ERI
@@ -1661,30 +1882,30 @@ else
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01036',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$affected_rows = mysql_affected_rows($link);
-		print "<!-- stará fronta a obnovený zoznam kontaktov na volanie:   |$affected_rows| -->\n";
+		echo "<!-- stará fronta a obnovený zoznam kontaktov na volanie:   |$affected_rows| -->\n";
 
 		$stmt="DELETE from vicidial_hopper where status IN('QUEUE','INCALL','DONE') and user ='$VD_login';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01037',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$affected_rows = mysql_affected_rows($link);
-		print "<!-- stará fronta a obnovený zásobník volania kontaktov: |$affected_rows| -->\n";
+		echo "<!-- stará fronta a obnovený zásobník volania kontaktov: |$affected_rows| -->\n";
 
 		$stmt="DELETE from vicidial_live_agents where user ='$VD_login';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01038',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$affected_rows = mysql_affected_rows($link);
-		print "<!-- záznami starých vicidial_živých_agentov vymazaní: |$affected_rows| -->\n";
+		echo "<!-- záznami starých vicidial_živých_agentov vymazaní: |$affected_rows| -->\n";
 
 		$stmt="DELETE from vicidial_live_inbound_agents where user ='$VD_login';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01039',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$affected_rows = mysql_affected_rows($link);
-		print "<!-- old vicidial_live_inbound_agents records cleared: |$affected_rows| -->\n";
+		echo "<!-- old vicidial_live_inbound_agents records cleared: |$affected_rows| -->\n";
 
-	#	print "<B>You have logged in as user: $VD_login na phone: $SIP_user do kampane: $VD_campaign</B><BR>\n";
+	#	echo "<B>You have logged in as user: $VD_login na phone: $SIP_user do kampane: $VD_campaign</B><BR>\n";
 		$VICIDiaL_is_logged_in=1;
 
 		### set the callerID for manager middleware-app to connect the phone to the user
@@ -1715,54 +1936,56 @@ else
 		if ( ($enable_sipsak_messages > 0) and ($allow_sipsak_messages > 0) and (eregi("SIP",$protocol)) )
 			{
 			$SIPSAK_prefix = 'LIN-';
-			print "<!-- sending login sipsak message: $SIPSAK_prefix$VD_campaign -->\n";
+			echo "<!-- sending login sipsak message: $SIPSAK_prefix$VD_campaign -->\n";
 			passthru("/usr/local/bin/sipsak -M -O desktop -B \"$SIPSAK_prefix$VD_campaign\" -r 5060 -s sip:$extension@$phone_ip > /dev/null");
 			$SIqueryCID = "$SIPSAK_prefix$VD_campaign$DS$CIDdate";
 			}
 
 		### insert a NOVÁ record to the vicidial_manager table to be processed
-		$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$SIqueryCID','Channel: $SIP_user_DiaL','Context: $ext_context','Exten: $session_id','Priority: 1','Callerid: $SIqueryCID','','','','','');";
+		$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$SIqueryCID','Channel: $SIP_user_DiaL','Context: $ext_context','Exten: $session_id','Priority: 1','Callerid: \"$SIqueryCID\" <$campaign_cid>','','','','','');";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01041',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$affected_rows = mysql_affected_rows($link);
-		print "<!-- call placed to session_id: $session_id from phone: $SIP_user $SIP_user_DiaL -->\n";
+		echo "<!-- call placed to session_id: $session_id from phone: $SIP_user $SIP_user_DiaL -->\n";
+
+		##### grab the campaign_weight and number of calls today na that campaign for the agent
+		$stmt="SELECT campaign_weight,calls_today FROM vicidial_campaign_agents where user='$VD_login' and campaign_id = '$VD_campaign';";
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01042',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$vca_ct = mysql_num_rows($rslt);
+		if ($vca_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$campaign_weight =	$row[0];
+			$calls_today =		$row[1];
+			$i++;
+			}
+		else
+			{
+			$campaign_weight =	'0';
+			$calls_today =		'0';
+			$stmt="INSERT INTO vicidial_campaign_agents (user,campaign_id,campaign_rank,campaign_weight,calls_today) values('$VD_login','$VD_campaign','0','0','$calls_today');";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01043',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$affected_rows = mysql_affected_rows($link);
+			echo "<!-- new vicidial_campaign_agents record inserted: |$affected_rows| -->\n";
+			}
 
 		if ($auto_dial_level > 0)
 			{
-			print "<!-- kampaň je nastavená pre auto_dial_level: $auto_dial_level -->\n";
+			echo "<!-- kampaň je nastavená pre auto_dial_level: $auto_dial_level -->\n";
 
-			##### grab the campaign_weight and number of calls today na that campaign for the agent
-			$stmt="SELECT campaign_weight,calls_today FROM vicidial_campaign_agents where user='$VD_login' and campaign_id = '$VD_campaign';";
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01042',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			if ($DB) {echo "$stmt\n";}
-			$vca_ct = mysql_num_rows($rslt);
-			if ($vca_ct > 0)
-				{
-				$row=mysql_fetch_row($rslt);
-				$campaign_weight =	$row[0];
-				$calls_today =		$row[1];
-				$i++;
-				}
-			else
-				{
-				$campaign_weight =	'0';
-				$calls_today =		'0';
-				$stmt="INSERT INTO vicidial_campaign_agents (user,campaign_id,campaign_rank,campaign_weight,calls_today) values('$VD_login','$VD_campaign','0','0','$calls_today');";
-				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01043',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$affected_rows = mysql_affected_rows($link);
-				print "<!-- new vicidial_campaign_agents record inserted: |$affected_rows| -->\n";
-				}
+
 			$closer_chooser_string='';
-			$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,user_level,campaign_weight,calls_today) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$closer_chooser_string','$user_level','$campaign_weight','$calls_today');";
+			$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial,manager_ingroup_set) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$closer_chooser_string','$user_level','$campaign_weight','$calls_today','$NOW_TIME','Y','N');";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01044',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$affected_rows = mysql_affected_rows($link);
-			print "<!-- Nový záznam o vicidial_živých_agentoch: |$affected_rows| -->\n";
+			echo "<!-- Nový záznam o vicidial_živých_agentoch: |$affected_rows| -->\n";
 
 			if ($enable_queuemetrics_logging > 0)
 				{
@@ -1774,21 +1997,21 @@ else
 				$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01045',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$affected_rows = mysql_affected_rows($linkB);
-				print "<!-- queue_log AGENTLOGIN entry added: $VD_login|$affected_rows -->\n";
+				echo "<!-- queue_log AGENTLOGIN entry added: $VD_login|$affected_rows -->\n";
 
 				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01046',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$affected_rows = mysql_affected_rows($linkB);
-				print "<!-- queue_log PAUSE entry added: $VD_login|$affected_rows -->\n";
+				echo "<!-- queue_log PAUSE entry added: $VD_login|$affected_rows -->\n";
 
 				mysql_close($linkB);
 				mysql_select_db("$VARDB_database", $link);
 				}
 
 
-			if ($campaign_allow_inbound == 'Y')
+			if ( ($campaign_allow_inbound == 'Y') and ($dial_method != 'MANUAL') )
 				{
 				print "<!-- CLOSER-type campaign -->\n";
 				}
@@ -1797,12 +2020,12 @@ else
 			{
 			print "<!-- kampaň je nastavená na ručné vytáčanie: $auto_dial_level -->\n";
 
-			$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,user_level) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$user_level');";
+			$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial,manager_ingroup_set) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$user_level', '$campaign_weight', '$calls_today','$NOW_TIME','N','N');";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01047',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$affected_rows = mysql_affected_rows($link);
-			print "<!-- Nový záznam o vicidial_živých_agentoch: |$affected_rows| -->\n";
+			echo "<!-- Nový záznam o vicidial_živých_agentoch: |$affected_rows| -->\n";
 
 			if ($enable_queuemetrics_logging > 0)
 				{
@@ -1814,14 +2037,14 @@ else
 				$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01048',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$affected_rows = mysql_affected_rows($linkB);
-				print "<!-- queue_log AGENTLOGIN entry added: $VD_login|$affected_rows -->\n";
+				echo "<!-- queue_log AGENTLOGIN entry added: $VD_login|$affected_rows -->\n";
 
 				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01049',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$affected_rows = mysql_affected_rows($linkB);
-				print "<!-- queue_log PAUSE entry added: $VD_login|$affected_rows -->\n";
+				echo "<!-- queue_log PAUSE entry added: $VD_login|$affected_rows -->\n";
 
 				mysql_close($linkB);
 				mysql_select_db("$VARDB_database", $link);
@@ -1830,9 +2053,9 @@ else
 		}
 	else
 		{
-		echo "<title>web klient VICIDIAL: VICIDIAL Prihlásenie kampane</title>\n";
+		echo "<title>Agent web client: Prihlásenie kampane</title>\n";
 		echo "</head>\n";
-		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
 		echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 		echo "<!-- ILPV -->\n";
@@ -1840,6 +2063,8 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 		echo "<B>Prepáčte, ale nie sú záznamy v zásobníku pre túto kamaň</B>\n";
 		echo "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
 		echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 		echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
 		echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
 		echo "Prihlásiť: <INPUT TYPE=TEXT NAME=VD_login SIZE=10 maxlength=20 VALUE=\"$VD_login\">\n<br>";
@@ -1854,9 +2079,9 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 		}
 	if (strlen($session_id) < 1)
 		{
-		echo "<title>web klient VICIDIAL: VICIDIAL Prihlásenie kampane</title>\n";
+		echo "<title>Agent web client: Prihlásenie kampane</title>\n";
 		echo "</head>\n";
-		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
+		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
 		echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 		echo "<!-- ILPV -->\n";
@@ -1864,6 +2089,8 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 		echo "<B>Sorry, there are no available sessions</B>\n";
 		echo "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
 		echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
 		echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
 		echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
 		echo "Prihlásiť: <INPUT TYPE=TEXT NAME=VD_login SIZE=10 maxlength=20 VALUE=\"$VD_login\">\n<br>";
@@ -1880,12 +2107,12 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 	if (ereg('MSIE',$browser)) 
 		{
 		$useIE=1;
-		print "<!-- client web browser used: MSIE |$browser|$useIE| -->\n";
+		echo "<!-- client web browser used: MSIE |$browser|$useIE| -->\n";
 		}
 	else 
 		{
 		$useIE=0;
-		print "<!-- client web browser used: W3C-Compliant |$browser|$useIE| -->\n";
+		echo "<!-- client web browser used: W3C-Compliant |$browser|$useIE| -->\n";
 		}
 
 	$StarTtimE = date("U");
@@ -1897,7 +2124,38 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01050',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 	$affected_rows = mysql_affected_rows($link);
 	$agent_log_id = mysql_insert_id($link);
-	print "<!-- vicidial_agent_log record inserted: |$affected_rows|$agent_log_id| -->\n";
+	echo "<!-- vicidial_agent_log record inserted: |$affected_rows|$agent_log_id| -->\n";
+
+	##### update vicidial_campaigns to show agent has logged in
+	$stmt="UPDATE vicidial_campaigns set campaign_logindate='$NOW_TIME' where campaign_id='$VD_campaign';";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01064',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+	$VCaffected_rows = mysql_affected_rows($link);
+	echo "<!-- vicidial_campaigns campaign_logindate updated: |$VCaffected_rows|$NOW_TIME| -->\n";
+
+	if ($enable_queuemetrics_logging > 0)
+		{
+		$StarTtimEpause = ($StarTtimE + 1);
+		$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+		mysql_select_db("$queuemetrics_dbname", $linkB);
+
+		$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimEpause',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEREASON',data1='LOGIN',serverid='$queuemetrics_log_id';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $linkB);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01063',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		$affected_rows = mysql_affected_rows($linkB);
+		echo "<!-- queue_log PAUSEREASON LOGIN entry added: $VD_login|$affected_rows -->\n";
+
+		mysql_close($linkB);
+		mysql_select_db("$VARDB_database", $link);
+		}
+
+	$stmt="UPDATE vicidial_live_agents SET agent_log_id='$agent_log_id' where user='$VD_login';";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01061',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+	$VLAaffected_rows_update = mysql_affected_rows($link);
 
 	$stmt="UPDATE vicidial_users SET shift_override_flag='0' where user='$VD_login' and shift_override_flag='1';";
 	if ($DB) {echo "$stmt\n";}
@@ -1918,7 +2176,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 	$server_ip_dialstring = "$D_s_ip[0]$S$D_s_ip[1]$S$D_s_ip[2]$S$D_s_ip[3]$S";
 
 	##### grab the datails of all active scripts in the system
-	$stmt="SELECT script_id,script_name,script_text FROM vicidial_scripts WHERE active='Y' order by script_id limit 100;";
+	$stmt="SELECT script_id,script_name FROM vicidial_scripts WHERE active='Y' order by script_id limit 1000;";
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01051',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 	if ($DB) {echo "$stmt\n";}
@@ -1929,18 +2187,63 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 		$row=mysql_fetch_row($rslt);
 		$MMscriptid[$e] =$row[0];
 		$MMscriptname[$e] = urlencode($row[1]);
-		$MMscripttext[$e] = urlencode($row[2]);
 		$MMscriptids = "$MMscriptids'$MMscriptid[$e]',";
 		$MMscriptnames = "$MMscriptnames'$MMscriptname[$e]',";
-		$MMscripttexts = "$MMscripttexts'$MMscripttext[$e]',";
 		$e++;
 		}
 	$MMscriptids = substr("$MMscriptids", 0, -1); 
 	$MMscriptnames = substr("$MMscriptnames", 0, -1); 
-	$MMscripttexts = substr("$MMscripttexts", 0, -1); 
-
 	}
 }
+
+
+### SCREEN WIDTH AND HEIGHT CALCULATIONS ###
+### DO NOT EDIT! ###
+if ($stretch_dimensions > 0)
+	{
+	if ($agent_status_view < 1)
+		{
+		if ($JS_browser_width >= 510)
+			{$BROWSER_WIDTH = ($JS_browser_width - 80);}
+		}
+	else
+		{
+		if ($JS_browser_width >= 730)
+			{$BROWSER_WIDTH = ($JS_browser_width - 300);}
+		}
+	if ($JS_browser_height >= 340)
+		{$BROWSER_HEIGHT = ($JS_browser_height - 40);}
+	}
+$MASTERwidth=($BROWSER_WIDTH - 340);
+$MASTERheight=($BROWSER_HEIGHT - 200);
+if ($MASTERwidth < 430) {$MASTERwidth = '430';} 
+if ($MASTERheight < 300) {$MASTERheight = '300';} 
+
+$CAwidth =  ($MASTERwidth + 340);	# 770 - cover all (none-in-session, customer hunngup, etc...)
+$SBwidth =	($MASTERwidth + 331);	# 761 - SideBar starting point
+$MNwidth =  ($MASTERwidth + 330);	# 760 - main frame
+$XFwidth =  ($MASTERwidth + 320);	# 750 - transfer/conference
+$HCwidth =  ($MASTERwidth + 310);	# 740 - hotkeys and callbacks
+$CQwidth =  ($MASTERwidth + 300);	# 730 - calls in queue listings
+$AMwidth =  ($MASTERwidth + 270);	# 700 - preset-dial links
+$SCwidth =  ($MASTERwidth + 230);	# 670 - live callsekúnd counter, sidebar link
+$MUwidth =  ($MASTERwidth + 180);	# 610 - agent mute
+$SSwidth =  ($MASTERwidth + 176);	# 606 - scroll script
+$SDwidth =  ($MASTERwidth + 170);	# 600 - scroll script, customer data and calls-in-session
+$HKwidth =  ($MASTERwidth + 20);	# 450 - Hotkeys button
+$HSwidth =  ($MASTERwidth + 1);		# 431 - Header spacer
+$CLwidth =  ($MASTERwidth - 160);	# 270 - Calls in queue link
+
+$CQheight =  ($MASTERheight + 140);	# 440 - Calls in queue section
+$SLheight =  ($MASTERheight + 122);	# 422 - SideBar link, Calls in queue link
+$HKheight =  ($MASTERheight + 105);	# 405 - HotKey active Button
+$AMheight =  ($MASTERheight + 100);	# 400 - Agent mute and preset dial links
+$MBheight =  ($MASTERheight + 65);	# 365 - Manual Dial Buttons
+$CBheight =  ($MASTERheight + 50);	# 350 - Agent Callback, pause code, volume control Buttons and agent status
+$SSheight =  ($MASTERheight + 31);	# 331 - script content
+$HTheight =  ($MASTERheight + 10);	# 310 - transfer frame, callback comments and hotkey
+$BPheight =  ($MASTERheight - 250);	# 50 - bottom buffer, Agent Xfer Span
+
 
 ################################################################
 ### BEGIN - build the callback calendar (12 months)          ###
@@ -2033,7 +2336,7 @@ for( $Ccount=0;$Ccount<(6*7);$Ccount++)
 	$CDCLR="#ffffff";
 	if ( ($Cdayarray['mday'] < $CTODAYmday) and ($CPRNTDAY == $CTODAY) )
 		{
-		$CDCLR="#CCCCCC";
+		$CDCLR="$MAIN_COLOR";
 		$CBL = '';
 		$CEL = '';
 		}
@@ -2074,10 +2377,10 @@ $CCAL_OUT .= "</table>";
 ?>
 	<script language="Javascript">	
 	var MTvar;
-	var NOW_TIME = '<? echo $NOW_TIME ?>';
-	var SQLdate = '<? echo $NOW_TIME ?>';
-	var StarTtimE = '<? echo $StarTtimE ?>';
-	var UnixTime = '<? echo $StarTtimE ?>';
+	var NOW_TIME = '<?php echo $NOW_TIME ?>';
+	var SQLdate = '<?php echo $NOW_TIME ?>';
+	var StarTtimE = '<?php echo $StarTtimE ?>';
+	var UnixTime = '<?php echo $StarTtimE ?>';
 	var UnixTimeMS = 0;
 	var t = new Date();
 	var c = new Date();
@@ -2085,99 +2388,99 @@ $CCAL_OUT .= "</table>";
 	LCAc = new Array('','','','','','');
 	LCAt = new Array('','','','','','');
 	LMAe = new Array('','','','','','');
-	var CalL_XC_a_Dtmf = '<? echo $xferconf_a_dtmf ?>';
-	var CalL_XC_a_NuMber = '<? echo $xferconf_a_number ?>';
-	var CalL_XC_b_Dtmf = '<? echo $xferconf_b_dtmf ?>';
-	var CalL_XC_b_NuMber = '<? echo $xferconf_b_number ?>';
-	var VU_hotkeys_active = '<? echo $VU_hotkeys_active ?>';
-	var VU_agent_choose_ingroups = '<? echo $VU_agent_choose_ingroups ?>';
+	var CalL_XC_a_Dtmf = '<?php echo $xferconf_a_dtmf ?>';
+	var CalL_XC_a_NuMber = '<?php echo $xferconf_a_number ?>';
+	var CalL_XC_b_Dtmf = '<?php echo $xferconf_b_dtmf ?>';
+	var CalL_XC_b_NuMber = '<?php echo $xferconf_b_number ?>';
+	var CalL_XC_c_NuMber = '<?php echo $xferconf_c_number ?>';
+	var CalL_XC_d_NuMber = '<?php echo $xferconf_d_number ?>';
+	var CalL_XC_e_NuMber = '<?php echo $xferconf_e_number ?>';
+	var VU_hotkeys_active = '<?php echo $VU_hotkeys_active ?>';
+	var VU_agent_choose_ingroups = '<?php echo $VU_agent_choose_ingroups ?>';
 	var VU_agent_choose_ingroups_DV = '';
+	var agent_choose_territories = '<?php echo $VU_agent_choose_territories ?>';
+	var agent_select_territories = '<?php echo $agent_select_territories ?>';
+	var VU_closer_campaigns = '<?php echo $VU_closer_campaigns ?>';
 	var CallBackDatETimE = '';
 	var CallBackrecipient = '';
 	var CallBackCommenTs = '';
-	var scheduled_callbacks = '<? echo $scheduled_callbacks ?>';
-	var dispo_check_all_pause = '<? echo $dispo_check_all_pause ?>';
-	var api_check_all_pause = '<? echo $api_check_all_pause ?>';
-	VARgroup_alias_ids = new Array(<? echo $VARgroup_alias_ids ?>);
-	VARgroup_alias_names = new Array(<? echo $VARgroup_alias_names ?>);
-	VARcaller_id_numbers = new Array(<? echo $VARcaller_id_numbers ?>);
-	var VD_group_aliases_ct = '<? echo $VD_group_aliases_ct ?>';
-	var agent_allow_group_alias = '<? echo $agent_allow_group_alias ?>';
-	var default_group_alias = '<? echo $default_group_alias ?>';
-	var default_group_alias_cid = '<? echo $default_group_alias_cid ?>';
+	var scheduled_callbacks = '<?php echo $scheduled_callbacks ?>';
+	var dispo_check_all_pause = '<?php echo $dispo_check_all_pause ?>';
+	var api_check_all_pause = '<?php echo $api_check_all_pause ?>';
+	VARgroup_alias_ids = new Array(<?php echo $VARgroup_alias_ids ?>);
+	VARgroup_alias_names = new Array(<?php echo $VARgroup_alias_names ?>);
+	VARcaller_id_numbers = new Array(<?php echo $VARcaller_id_numbers ?>);
+	var VD_group_aliases_ct = '<?php echo $VD_group_aliases_ct ?>';
+	var agent_allow_group_alias = '<?php echo $agent_allow_group_alias ?>';
+	var default_group_alias = '<?php echo $default_group_alias ?>';
+	var default_group_alias_cid = '<?php echo $default_group_alias_cid ?>';
 	var active_group_alias = '';
-	var agent_pause_codes_active = '<? echo $agent_pause_codes_active ?>';
-	VARpause_codes = new Array(<? echo $VARpause_codes ?>);
-	VARpause_code_names = new Array(<? echo $VARpause_code_names ?>);
-	var VD_pause_codes_ct = '<? echo $VD_pause_codes_ct ?>';
-	VARstatuses = new Array(<? echo $VARstatuses ?>);
-	VARstatusnames = new Array(<? echo $VARstatusnames ?>);
-	var VD_statuses_ct = '<? echo $VD_statuses_ct ?>';
-	VARingroups = new Array(<? echo $VARingroups ?>);
-	var INgroupCOUNT = '<? echo $INgrpCT ?>';
-	VARxfergroups = new Array(<? echo $VARxfergroups ?>);
-	VARxfergroupsnames = new Array(<? echo $VARxfergroupsnames ?>);
-	var XFgroupCOUNT = '<? echo $XFgrpCT ?>';
-	var default_xfer_group = '<? echo $default_xfer_group ?>';
-	var default_xfer_group_name = '<? echo $default_xfer_group_name ?>';
-	var LIVE_default_xfer_group = '<? echo $default_xfer_group ?>';
-	var HK_statuses_camp = '<? echo $HK_statuses_camp ?>';
-	HKhotkeys = new Array(<? echo $HKhotkeys ?>);
-	HKstatuses = new Array(<? echo $HKstatuses ?>);
-	HKstatusnames = new Array(<? echo $HKstatusnames ?>);
+	var agent_pause_codes_active = '<?php echo $agent_pause_codes_active ?>';
+	VARpause_codes = new Array(<?php echo $VARpause_codes ?>);
+	VARpause_code_names = new Array(<?php echo $VARpause_code_names ?>);
+	var VD_pause_codes_ct = '<?php echo $VD_pause_codes_ct ?>';
+	VARstatuses = new Array(<?php echo $VARstatuses ?>);
+	VARstatusnames = new Array(<?php echo $VARstatusnames ?>);
+	var VD_statuses_ct = '<?php echo $VD_statuses_ct ?>';
+	VARingroups = new Array(<?php echo $VARingroups ?>);
+	var INgroupCOUNT = '<?php echo $INgrpCT ?>';
+	VARterritories = new Array(<?php echo $VARterritories ?>);
+	var territoryCOUNT = '<?php echo $territoryCT ?>';
+	VARxfergroups = new Array(<?php echo $VARxfergroups ?>);
+	VARxfergroupsnames = new Array(<?php echo $VARxfergroupsnames ?>);
+	var XFgroupCOUNT = '<?php echo $XFgrpCT ?>';
+	var default_xfer_group = '<?php echo $default_xfer_group ?>';
+	var default_xfer_group_name = '<?php echo $default_xfer_group_name ?>';
+	var LIVE_default_xfer_group = '<?php echo $default_xfer_group ?>';
+	var HK_statuses_camp = '<?php echo $HK_statuses_camp ?>';
+	HKhotkeys = new Array(<?php echo $HKhotkeys ?>);
+	HKstatuses = new Array(<?php echo $HKstatuses ?>);
+	HKstatusnames = new Array(<?php echo $HKstatusnames ?>);
 	var hotkeys = new Array();
-	<? $h=0;
+	<?php $h=0;
 	while ($HK_statuses_camp > $h)
-	{
-	echo "hotkeys['$HKhotkey[$h]'] = \"$HKstatus[$h] ----- $HKstatus_name[$h]\";\n";
-	$h++;
-	}
+		{
+		echo "hotkeys['$HKhotkey[$h]'] = \"$HKstatus[$h] ----- $HKstatus_name[$h]\";\n";
+		$h++;
+		}
 	?>
 	var HKdispo_display = 0;
 	var HKbutton_allowed = 1;
 	var HKfinish = 0;
 	var scriptnames = new Array();
-	<? $h=0;
+	<?php $h=0;
 	while ($MM_scripts > $h)
-	{
-	echo "scriptnames['$MMscriptid[$h]'] = \"$MMscriptname[$h]\";\n";
-	$h++;
-	}
-	?>
-	var scripttexts = new Array();
-	<? $h=0;
-	while ($MM_scripts > $h)
-	{
-	echo "scripttexts['$MMscriptid[$h]'] = \"$MMscripttext[$h]\";\n";
-	$h++;
-	}
+		{
+		echo "scriptnames['$MMscriptid[$h]'] = \"$MMscriptname[$h]\";\n";
+		$h++;
+		}
 	?>
 	var decoded = '';
-	var view_scripts = '<? echo $view_scripts ?>';
-	var LOGfullname = '<? echo $LOGfullname ?>';
+	var view_scripts = '<?php echo $view_scripts ?>';
+	var LOGfullname = '<?php echo $LOGfullname ?>';
 	var recLIST = '';
 	var filename = '';
 	var last_filename = '';
 	var LCAcount = 0;
 	var LMAcount = 0;
-	var filedate = '<? echo $FILE_TIME ?>';
-	var agcDIR = '<? echo $agcDIR ?>';
-	var agcPAGE = '<? echo $agcPAGE ?>';
-	var extension = '<? echo $extension ?>';
-	var extension_xfer = '<? echo $extension ?>';
-	var dialplan_number = '<? echo $dialplan_number ?>';
-	var ext_context = '<? echo $ext_context ?>';
-	var protocol = '<? echo $protocol ?>';
+	var filedate = '<?php echo $FILE_TIME ?>';
+	var agcDIR = '<?php echo $agcDIR ?>';
+	var agcPAGE = '<?php echo $agcPAGE ?>';
+	var extension = '<?php echo $extension ?>';
+	var extension_xfer = '<?php echo $extension ?>';
+	var dialplan_number = '<?php echo $dialplan_number ?>';
+	var ext_context = '<?php echo $ext_context ?>';
+	var protocol = '<?php echo $protocol ?>';
 	var agentchannel = '';
-	var local_gmt ='<? echo $local_gmt ?>';
-	var server_ip = '<? echo $server_ip ?>';
-	var server_ip_dialstring = '<? echo $server_ip_dialstring ?>';
-	var asterisk_version = '<? echo $asterisk_version ?>';
-<?
+	var local_gmt ='<?php echo $local_gmt ?>';
+	var server_ip = '<?php echo $server_ip ?>';
+	var server_ip_dialstring = '<?php echo $server_ip_dialstring ?>';
+	var asterisk_version = '<?php echo $asterisk_version ?>';
+<?php
 if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	else {echo "\tvar refresh_interval = $fast_refresh_rate;\n";}
 ?>
-	var session_id = '<? echo $session_id ?>';
+	var session_id = '<?php echo $session_id ?>';
 	var VICIDiaL_closer_login_checked = 0;
 	var VICIDiaL_closer_login_selected = 0;
 	var VICIDiaL_pause_calling = 1;
@@ -2199,47 +2502,51 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var open_dispo_screen = 0;
 	var AgentDispoing = 0;
 	var logout_stop_timeouts = 0;
-	var VICIDiaL_allow_closers = '<? echo $VICIDiaL_allow_closers ?>';
+	var VICIDiaL_allow_closers = '<?php echo $VICIDiaL_allow_closers ?>';
 	var VICIDiaL_closer_blended = '0';
-	var VU_closer_default_blended = '<? echo $VU_closer_default_blended ?>';
-	var VDstop_rec_after_each_call = '<? echo $VDstop_rec_after_each_call ?>';
-	var phone_login = '<? echo $phone_login ?>';
-	var phone_pass = '<? echo $phone_pass ?>';
-	var user = '<? echo $VD_login ?>';
-	var user_abb = '<? echo $user_abb ?>';
-	var pass = '<? echo $VD_pass ?>';
-	var campaign = '<? echo $VD_campaign ?>';
-	var group = '<? echo $VD_campaign ?>';
-	var VICIDiaL_web_form_address_enc = '<? echo $VICIDiaL_web_form_address_enc ?>';
-	var VICIDiaL_web_form_address = '<? echo $VICIDiaL_web_form_address ?>';
-	var VDIC_web_form_address = '<? echo $VICIDiaL_web_form_address ?>';
+	var VU_closer_default_blended = '<?php echo $VU_closer_default_blended ?>';
+	var VDstop_rec_after_each_call = '<?php echo $VDstop_rec_after_each_call ?>';
+	var phone_login = '<?php echo $phone_login ?>';
+	var original_phone_login = '<?php echo $original_phone_login ?>';
+	var phone_pass = '<?php echo $phone_pass ?>';
+	var user = '<?php echo $VD_login ?>';
+	var user_abb = '<?php echo $user_abb ?>';
+	var pass = '<?php echo $VD_pass ?>';
+	var campaign = '<?php echo $VD_campaign ?>';
+	var group = '<?php echo $VD_campaign ?>';
+	var VICIDiaL_web_form_address_enc = '<?php echo $VICIDiaL_web_form_address_enc ?>';
+	var VICIDiaL_web_form_address = '<?php echo $VICIDiaL_web_form_address ?>';
+	var VDIC_web_form_address = '<?php echo $VICIDiaL_web_form_address ?>';
+	var VICIDiaL_web_form_address_two_enc = '<?php echo $VICIDiaL_web_form_address_two_enc ?>';
+	var VICIDiaL_web_form_address_two = '<?php echo $VICIDiaL_web_form_address_two ?>';
+	var VDIC_web_form_address_two = '<?php echo $VICIDiaL_web_form_address_two ?>';
 	var CalL_ScripT_id = '';
 	var CalL_AutO_LauncH = '';
-	var panel_bgcolor = '<? echo $MAIN_COLOR ?>';
+	var panel_bgcolor = '<?php echo $MAIN_COLOR ?>';
 	var CusTCB_bgcolor = '#FFFF66';
-	var auto_dial_level = '<? echo $auto_dial_level ?>';
-	var starting_dial_level = '<? echo $auto_dial_level ?>';
-	var dial_timeout = '<? echo $dial_timeout ?>';
-	var dial_prefix = '<? echo $dial_prefix ?>';
-	var three_way_dial_prefix = '<? echo $three_way_dial_prefix ?>';
-	var campaign_cid = '<? echo $campaign_cid ?>';
-	var campaign_vdad_exten = '<? echo $campaign_vdad_exten ?>';
-	var campaign_leads_to_call = '<? echo $campaign_leads_to_call ?>';
-	var epoch_sec = <? echo $StarTtimE ?>;
-	var dtmf_send_extension = '<? echo $dtmf_send_extension ?>';
-	var recording_exten = '<? echo $campaign_rec_exten ?>';
-	var campaign_recording = '<? echo $campaign_recording ?>';
-	var campaign_rec_filename = '<? echo $campaign_rec_filename ?>';
-	var LIVE_campaign_recording = '<? echo $campaign_recording ?>';
-	var LIVE_campaign_rec_filename = '<? echo $campaign_rec_filename ?>';
-	var LIVE_default_group_alias = '<? echo $default_group_alias ?>';
-	var LIVE_caller_id_number = '<? echo $default_group_alias_cid ?>';
-	var LIVE_web_vars = '<? echo $default_web_vars ?>';
-	var default_web_vars = '<? echo $default_web_vars ?>';
-	var campaign_script = '<? echo $campaign_script ?>';
-	var get_call_launch = '<? echo $get_call_launch ?>';
-	var campaign_am_message_exten = '<? echo $campaign_am_message_exten ?>';
-	var park_on_extension = '<? echo $VICIDiaL_park_on_extension ?>';
+	var auto_dial_level = '<?php echo $auto_dial_level ?>';
+	var starting_dial_level = '<?php echo $auto_dial_level ?>';
+	var dial_timeout = '<?php echo $dial_timeout ?>';
+	var dial_prefix = '<?php echo $dial_prefix ?>';
+	var three_way_dial_prefix = '<?php echo $three_way_dial_prefix ?>';
+	var campaign_cid = '<?php echo $campaign_cid ?>';
+	var campaign_vdad_exten = '<?php echo $campaign_vdad_exten ?>';
+	var campaign_leads_to_call = '<?php echo $campaign_leads_to_call ?>';
+	var epoch_sec = <?php echo $StarTtimE ?>;
+	var dtmf_send_extension = '<?php echo $dtmf_send_extension ?>';
+	var recording_exten = '<?php echo $campaign_rec_exten ?>';
+	var campaign_recording = '<?php echo $campaign_recording ?>';
+	var campaign_rec_filename = '<?php echo $campaign_rec_filename ?>';
+	var LIVE_campaign_recording = '<?php echo $campaign_recording ?>';
+	var LIVE_campaign_rec_filename = '<?php echo $campaign_rec_filename ?>';
+	var LIVE_default_group_alias = '<?php echo $default_group_alias ?>';
+	var LIVE_caller_id_number = '<?php echo $default_group_alias_cid ?>';
+	var LIVE_web_vars = '<?php echo $default_web_vars ?>';
+	var default_web_vars = '<?php echo $default_web_vars ?>';
+	var campaign_script = '<?php echo $campaign_script ?>';
+	var get_call_launch = '<?php echo $get_call_launch ?>';
+	var campaign_am_message_exten = '<?php echo $campaign_am_message_exten ?>';
+	var park_on_extension = '<?php echo $VICIDiaL_park_on_extension ?>';
 	var park_count=0;
 	var customerparked=0;
 	var check_n = 0;
@@ -2252,8 +2559,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var xferchannellive=0;
 	var nochannelinsession=0;
 	var agc_dial_prefix = '91';
-	var dtmf_silent_prefix = '<? echo $dtmf_silent_prefix ?>';
-	var conf_silent_prefix = '<? echo $conf_silent_prefix ?>';
+	var dtmf_silent_prefix = '<?php echo $dtmf_silent_prefix ?>';
+	var conf_silent_prefix = '<?php echo $conf_silent_prefix ?>';
 	var menuheight = 30;
 	var menuwidth = 30;
 	var menufontsize = 8;
@@ -2280,8 +2587,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var xmlhttp=false;
 	var XfeR_channel = '';
 	var XDcheck = '';
-	var agent_log_id = '<? echo $agent_log_id ?>';
-	var session_name = '<? echo $session_name ?>';
+	var agent_log_id = '<?php echo $agent_log_id ?>';
+	var session_name = '<?php echo $session_name ?>';
 	var AutoDialReady = 0;
 	var AutoDialWaiting = 0;
 	var fronter = '';
@@ -2298,9 +2605,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var AgainCalLSecondS = '';
 	var AgaiNCalLCID = '';
 	var CB_count_check = 60;
-	var callholdstatus = '<? echo $callholdstatus ?>'
-	var agentcallsstatus = '<? echo $agentcallsstatus ?>'
-	var campagentstatctmax = '<? echo $campagentstatctmax ?>'
+	var callholdstatus = '<?php echo $callholdstatus ?>'
+	var agentcallsstatus = '<?php echo $agentcallsstatus ?>'
+	var campagentstatctmax = '<?php echo $campagentstatctmax ?>'
 	var campagentstatct = '0';
 	var manual_dial_in_progress = 0;
 	var auto_dial_alt_dial = 0;
@@ -2308,38 +2615,38 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var reselect_alt_dial = 0;
 	var alt_dial_active = 0;
 	var alt_dial_status_display = 0;
-	var mdnLisT_id = '<? echo $manual_dial_list_id ?>';
-	var VU_vicidial_transfers = '<? echo $VU_vicidial_transfers ?>';
-	var agentonly_callbacks = '<? echo $agentonly_callbacks ?>';
-	var agentcall_manual = '<? echo $agentcall_manual ?>';
-	var manual_dial_preview = '<? echo $manual_dial_preview ?>';
-	var starting_alt_phone_dialing = '<? echo $alt_phone_dialing ?>';
-	var alt_phone_dialing = '<? echo $alt_phone_dialing ?>';
-	var DefaulTAlTDiaL = '<? echo $DefaulTAlTDiaL ?>';
-	var wrapup_sekúnd = '<? echo $wrapup_sekúnd ?>';
-	var wrapup_message = '<? echo $wrapup_message ?>';
+	var mdnLisT_id = '<?php echo $manual_dial_list_id ?>';
+	var VU_vicidial_transfers = '<?php echo $VU_vicidial_transfers ?>';
+	var agentonly_callbacks = '<?php echo $agentonly_callbacks ?>';
+	var agentcall_manual = '<?php echo $agentcall_manual ?>';
+	var manual_dial_preview = '<?php echo $manual_dial_preview ?>';
+	var starting_alt_phone_dialing = '<?php echo $alt_phone_dialing ?>';
+	var alt_phone_dialing = '<?php echo $alt_phone_dialing ?>';
+	var DefaulTAlTDiaL = '<?php echo $DefaulTAlTDiaL ?>';
+	var wrapup_seconds = '<?php echo $wrapup_seconds ?>';
+	var wrapup_message = '<?php echo $wrapup_message ?>';
 	var wrapup_counter = 0;
 	var wrapup_waiting = 0;
-	var use_internal_dnc = '<? echo $use_internal_dnc ?>';
-	var use_campaign_dnc = '<? echo $use_campaign_dnc ?>';
-	var three_way_call_cid = '<? echo $three_way_call_cid ?>';
-	var outbound_cid = '<? echo $outbound_cid ?>';
+	var use_internal_dnc = '<?php echo $use_internal_dnc ?>';
+	var use_campaign_dnc = '<?php echo $use_campaign_dnc ?>';
+	var three_way_call_cid = '<?php echo $three_way_call_cid ?>';
+	var outbound_cid = '<?php echo $outbound_cid ?>';
 	var threeway_cid = '';
 	var cid_choice = '';
 	var prefix_choice = '';
 	var agent_dialed_number='';
 	var agent_dialed_type='';
-	var allcalls_delay = '<? echo $allcalls_delay ?>';
-	var omit_phone_code = '<? echo $omit_phone_code ?>';
-	var no_delete_sessions = '<? echo $no_delete_sessions ?>';
-	var webform_session = '<? echo $webform_sessionname ?>';
-	var local_consult_xfers = '<? echo $local_consult_xfers ?>';
-	var vicidial_agent_disable = '<? echo $vicidial_agent_disable ?>';
+	var allcalls_delay = '<?php echo $allcalls_delay ?>';
+	var omit_phone_code = '<?php echo $omit_phone_code ?>';
+	var no_delete_sessions = '<?php echo $no_delete_sessions ?>';
+	var webform_session = '<?php echo $webform_sessionname ?>';
+	var local_consult_xfers = '<?php echo $local_consult_xfers ?>';
+	var vicidial_agent_disable = '<?php echo $vicidial_agent_disable ?>';
 	var CBentry_time = '';
 	var CBcallback_time = '';
 	var CBuser = '';
 	var CBcomments = '';
-	var volumecontrol_active = '<? echo $volumecontrol_active ?>';
+	var volumecontrol_active = '<?php echo $volumecontrol_active ?>';
 	var PauseCode_HTML = '';
 	var manual_auto_hotkey = 0;
 	var dialed_number = '';
@@ -2352,38 +2659,87 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var DispO3wayCalLcamptail = '';
 	var PausENotifYCounTer = 0;
 	var RedirecTxFEr = 0;
-	var phone_ip = '<? echo $phone_ip ?>';
-	var enable_sipsak_messages = '<? echo $enable_sipsak_messages ?>';
-	var allow_sipsak_messages = '<? echo $allow_sipsak_messages ?>';
-	var HidEMonitoRSessionS = '<? echo $HidEMonitoRSessionS ?>';
-	var LogouTKicKAlL = '<? echo $LogouTKicKAlL ?>';
-	var flag_channels = '<? echo $flag_channels ?>';
-	var flag_string = '<? echo $flag_string ?>';
-	var vdc_header_date_format = '<? echo $vdc_header_date_format ?>';
-	var vdc_customer_date_format = '<? echo $vdc_customer_date_format ?>';
-	var vdc_header_phone_format = '<? echo $vdc_header_phone_format ?>';
-	var disable_alter_custphone = '<? echo $disable_alter_custphone ?>';
-	var manual_dial_filter = '<? echo $manual_dial_filter ?>';
-	var CopY_tO_ClipboarD = '<? echo $CopY_tO_ClipboarD ?>';
+	var phone_ip = '<?php echo $phone_ip ?>';
+	var enable_sipsak_messages = '<?php echo $enable_sipsak_messages ?>';
+	var allow_sipsak_messages = '<?php echo $allow_sipsak_messages ?>';
+	var HidEMonitoRSessionS = '<?php echo $HidEMonitoRSessionS ?>';
+	var LogouTKicKAlL = '<?php echo $LogouTKicKAlL ?>';
+	var flag_channels = '<?php echo $flag_channels ?>';
+	var flag_string = '<?php echo $flag_string ?>';
+	var vdc_header_date_format = '<?php echo $vdc_header_date_format ?>';
+	var vdc_customer_date_format = '<?php echo $vdc_customer_date_format ?>';
+	var vdc_header_phone_format = '<?php echo $vdc_header_phone_format ?>';
+	var disable_alter_custphone = '<?php echo $disable_alter_custphone ?>';
+	var manual_dial_filter = '<?php echo $manual_dial_filter ?>';
+	var CopY_tO_ClipboarD = '<?php echo $CopY_tO_ClipboarD ?>';
 	var inOUT = 'OUT';
-	var useIE = '<? echo $useIE ?>';
-	var random = '<? echo $random ?>';
+	var useIE = '<?php echo $useIE ?>';
+	var random = '<?php echo $random ?>';
 	var threeway_end = 0;
 	var agentphonelive = 0;
 	var conf_dialed = 0;
 	var leaving_threeway = 0;
 	var blind_transfer = 0;
-	var hangup_all_non_reserved = '<? echo $hangup_all_non_reserved ?>';
-	var dial_method = '<? echo $dial_method ?>';
-	var web_form_target = '<? echo $web_form_target ?>';
+	var hangup_all_non_reserved = '<?php echo $hangup_all_non_reserved ?>';
+	var dial_method = '<?php echo $dial_method ?>';
+	var web_form_target = '<?php echo $web_form_target ?>';
 	var TEMP_VDIC_web_form_address = '';
+	var TEMP_VDIC_web_form_address_two = '';
 	var APIPausE_ID = '99999';
 	var APIDiaL_ID = '99999';
-	var VtigeRLogiNScripT = '<? echo $vtiger_screen_login ?>';
-	var VtigeRurl = '<? echo $vtiger_url ?>';
-	var VtigeREnableD = '<? echo $enable_vtiger_integration ?>';
-	var alert_enabled = '<? echo $VU_alert_enabled ?>'
+	var CheckDEADcall = 0;
+	var CheckDEADcallON = 0;
+	var VtigeRLogiNScripT = '<?php echo $vtiger_screen_login ?>';
+	var VtigeRurl = '<?php echo $vtiger_url ?>';
+	var VtigeREnableD = '<?php echo $enable_vtiger_integration ?>';
+	var alert_enabled = '<?php echo $VU_alert_enabled ?>';
+	var allow_alerts = '<?php echo $VU_allow_alerts ?>';
 	var shift_logout_flag = 0;
+	var vtiger_callback_id = 0;
+	var agent_status_view = '<?php echo $agent_status_view ?>';
+	var agent_status_view_time = '<?php echo $agent_status_view_time ?>';
+	var agent_status_view_active = 0;
+	var xfer_select_agents_active = 0;
+	var even=0;
+	var VU_user_group = '<?php echo $VU_user_group ?>';
+	var quick_transfer_button = '<?php echo $quick_transfer_button ?>';
+	var quick_transfer_button_enabled = '<?php echo $quick_transfer_button_enabled ?>';
+	var prepopulate_transfer_preset = '<?php echo $prepopulate_transfer_preset ?>';
+	var prepopulate_transfer_preset_enabled = '<?php echo $prepopulate_transfer_preset_enabled ?>';
+	var view_calls_in_queue = '<?php echo $view_calls_in_queue ?>';
+	var view_calls_in_queue_launch = '<?php echo $view_calls_in_queue_launch ?>';
+	var view_calls_in_queue_active = '<?php echo $view_calls_in_queue_launch ?>';
+	var call_requeue_button = '<?php echo $call_requeue_button ?>';
+	var no_hopper_dialing = '<?php echo $no_hopper_dialing ?>';
+	var agent_dial_owner_only = '<?php echo $agent_dial_owner_only ?>';
+	var agent_display_dialable_leads = '<?php echo $agent_display_dialable_leads ?>';
+	var no_empty_session_warnings = '<?php echo $no_empty_session_warnings ?>';
+	var script_width = '<?php echo $SDwidth ?>';
+	var script_height = '<?php echo $SSheight ?>';
+	var enable_second_webform = '<?php echo $enable_second_webform ?>';
+	var no_delete_VDAC=0;
+	var manager_ingroups_set=0;
+	var external_igb_set_name='';
+	var recording_filename='';
+	var recording_id='';
+	var delayed_script_load='';
+	var script_recording_delay='';
+	var VDRP_stage='PAUSED';
+	var VU_custom_one = '<?php echo $VU_custom_one ?>';
+	var VU_custom_two = '<?php echo $VU_custom_two ?>';
+	var VU_custom_three = '<?php echo $VU_custom_three ?>';
+	var VU_custom_four = '<?php echo $VU_custom_four ?>';
+	var VU_custom_five = '<?php echo $VU_custom_five ?>';
+	var crm_popup_login = '<?php echo $crm_popup_login ?>';
+	var crm_login_address = '<?php echo $crm_login_address ?>';
+	var update_fields=0;
+	var update_fields_data='';
+	var campaign_timer_action = '<?php echo $timer_action ?>';
+	var campaign_timer_action_message = '<?php echo $timer_action_message ?>';
+	var campaign_timer_action_seconds = '<?php echo $timer_action_seconds ?>';
+	var timer_action='';
+	var timer_action_message='';
+	var timer_action_seconds='';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"../agc/images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pauza \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"../agc/images/vdc_LB_resume.gif\" border=0 alt=\"Pokračovať\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"../agc/images/vdc_LB_pause.gif\" border=0 alt=\" Pauza \"></a><IMG SRC=\"../agc/images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Pokračovať\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"../agc/images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pauza \"><IMG SRC=\"../agc/images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Pokračovať\">";
@@ -2394,6 +2750,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		image_livecall_OFF.src="../agc/images/agc_live_call_OFF.gif";
 	var image_livecall_ON = new Image();
 		image_livecall_ON.src="../agc/images/agc_live_call_ON.gif";
+	var image_livecall_DEAD = new Image();
+		image_livecall_DEAD.src="../agc/images/agc_live_call_DEAD.gif";
 	var image_LB_dialnextnumber = new Image();
 		image_LB_dialnextnumber.src="../agc/images/vdc_LB_dialnextnumber.gif";
 	var image_LB_hangupcustomer = new Image();
@@ -2618,6 +2976,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		threeway_end=0;
 		leaving_threeway=1;
 
+		if (customerparked > 0)
+			{
+			mainxfer_send_redirect('FROMParK',lastcustchannel,lastcustserverip);
+			}
+
 		mainxfer_send_redirect('3WAY','','',tempvarattempt);
 
 //		if (threeway_end == '0')
@@ -2644,9 +3007,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			agent_dialed_number='1';
 			agent_dialed_type='XFER_3WAY';
 
-			document.getElementById("DialWithCustomer").innerHTML ="<IMG SRC=\"../agc/images/vdc_XB_dialwithcustomer_OFF.gif\" border=0 alt=\"Volanie so zákazníkom\"></a>";
+			document.getElementById("DialWithCustomer").innerHTML ="<IMG SRC=\"../agc/images/vdc_XB_dialwithcustomer_OFF.gif\" border=0 alt=\"Volanie so zákazníkom\" style=\"vertical-align:middle\"></a>";
 
-			document.getElementById("ParkCustomerDial").innerHTML ="<IMG SRC=\"../agc/images/vdc_XB_parkcustomerdial_OFF.gif\" border=0 alt=\"Zaparkovať hovor so zákazníkom\"></a>";
+			document.getElementById("ParkCustomerDial").innerHTML ="<IMG SRC=\"../agc/images/vdc_XB_parkcustomerdial_OFF.gif\" border=0 alt=\"Zaparkovať hovor so zákazníkom\" style=\"vertical-align:middle\"></a>";
 
 			var manual_number = document.vicidial_form.xfernumber.value;
 			var manual_string = manual_number.toString();
@@ -2703,18 +3066,29 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	function basic_originate_call(tasknum,taskprefix,taskreverse,taskdialvalue,tasknowait,taskconfxfer,taskcid,taskusegroupalias) 
 		{
 		var usegroupalias=0;
+		var consultativexfer_checked = 0;
+		if (document.vicidial_form.consultativexfer.checked==true)
+			{consultativexfer_checked = 1;}
 		var regCXFvars = new RegExp("CXFER","g");
 		var tasknum_string = tasknum.toString();
-		if (tasknum_string.match(regCXFvars))
+		if ( (tasknum_string.match(regCXFvars)) || (consultativexfer_checked > 0) )
 			{
-			var Ctasknum = tasknum_string.replace(regCXFvars, '');
-			if (Ctasknum.length < 2)
-				{Ctasknum = '990009';}
+			if (tasknum_string.match(regCXFvars))
+				{
+				var Ctasknum = tasknum_string.replace(regCXFvars, '');
+				if (Ctasknum.length < 2)
+					{Ctasknum = '990009';}
+				var agentdirect = '';
+				}
+			else
+				{
+				Ctasknum = '990009';
+				var agentdirect = tasknum_string;
+				}
 			var XfeRSelecT = document.getElementById("XfeRGrouP");
-			tasknum = Ctasknum + "*" + XfeRSelecT.value + '*CXFER*' + document.vicidial_form.lead_id.value + '**' + document.vicidial_form.phone_number.value + '*' + user + '*';
+			tasknum = Ctasknum + "*" + XfeRSelecT.value + '*CXFER*' + document.vicidial_form.lead_id.value + '**' + dialed_number + '*' + user + '*' + agentdirect + '*' + VD_live_call_secondS + '*';
 
 			CustomerData_update();
-
 			}
 		var regAXFvars = new RegExp("AXFER","g");
 		if (tasknum_string.match(regAXFvars))
@@ -2725,7 +3099,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			var closerxfercamptail = '_L';
 			if (closerxfercamptail.length < 3)
 				{closerxfercamptail = 'IVR';}
-			tasknum = Ctasknum + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value + '*' + campaign + '*' + closerxfercamptail + '*' + user + '*';
+			tasknum = Ctasknum + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value + '*' + campaign + '*' + closerxfercamptail + '*' + user + '**' + VD_live_call_secondS + '*';
 
 			CustomerData_update();
 
@@ -2813,6 +3187,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				//	alert(VMCoriginate_query);
 				//	alert(xmlhttp.responseText);
 
+					var regBOerr = new RegExp("ERROR","g");
+					var BOresponse = xmlhttp.responseText;
+					if (BOresponse.match(regBOerr))
+						{
+						alert(BOresponse);
+						}
+
 					if ((taskdialvalue.length > 0) && (tasknowait != 'YES'))
 						{
 						XDnextCID = queryCID;
@@ -2829,6 +3210,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			prefix_choice='';
 			agent_dialed_number='';
 			agent_dialed_type='';
+			CalL_ScripT_id='';
 			}
 		}
 
@@ -3004,6 +3386,31 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var APIPausE = APIPausE_array[1];
 						var APIDiaL_array = check_time_array[9].split("APIDiaL: ");
 						var APIDiaL = APIDiaL_array[1];
+						var CheckDEADcall_array = check_time_array[10].split("DEADcall: ");
+						var CheckDEADcall = CheckDEADcall_array[1];
+						var InGroupChange_array = check_time_array[11].split("InGroupChange: ");
+						var InGroupChange = InGroupChange_array[1];
+						var InGroupChangeBlend = check_time_array[12];
+						var InGroupChangeUžívateľ = check_time_array[13];
+						var InGroupChangeName = check_time_array[14];
+						var APIFields_array = check_time_array[15].split("APIFields: ");
+						update_fields = APIFields_array[1];
+						var APIFieldsData_array = check_time_array[16].split("APIFieldsData: ");
+						update_fields_data = APIFieldsData_array[1];
+						var APITimerAction_array = check_time_array[17].split("APITimerAction: ");
+						api_timer_action = APITimerAction_array[1];
+						var APITimerMessage_array = check_time_array[18].split("APITimerMessage: ");
+						api_timer_action_message = APITimerMessage_array[1];
+						var APITimerSeconds_array = check_time_array[19].split("APITimerSeconds: ");
+						api_timer_action_seconds = APITimerSeconds_array[1];
+
+						if (api_timer_action.length > 2)
+							{
+							timer_action = api_timer_action;
+							timer_action_message = api_timer_action_message;
+							timer_action_seconds = api_timer_action_seconds;
+							}
+
 						if ( (APIHanguP==1) && (VD_live_customer_call==1) )
 							{
 							hideDiv('CustomerGoneBox');
@@ -3072,6 +3479,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								prefix_choice = APIDiaL_array_detail[7];
 								active_group_alias = APIDiaL_array_detail[8];
 								cid_choice = APIDiaL_array_detail[9];
+								vtiger_callback_id = APIDiaL_array_detail[10];
 
 							//	alert(APIDiaL_array_detail[1] + "-----" + APIDiaL + "-----" + document.vicidial_form.MDDiaLCodE.value + "-----" + document.vicidial_form.phone_code.value);
 
@@ -3087,6 +3495,28 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 									{NeWManuaLDiaLCalLSubmiT('NOW');}
 								}
 							}
+						if ( (CheckDEADcall > 0) && (VD_live_customer_call==1) )
+							{
+							if (CheckDEADcallON < 1)
+								{
+								if( document.images ) { document.images['livecall'].src = image_livecall_DEAD.src;}
+								CheckDEADcallON=1;
+								}
+							}
+						if (InGroupChange > 0)
+							{
+							var external_blended = InGroupChangeBlend;
+							var external_igb_set_user = InGroupChangeUžívateľ;
+							external_igb_set_name = InGroupChangeName;
+							manager_ingroups_set=1;
+
+							if ( (external_blended == '1') && (dial_method != 'INBOUND_MAN') )
+								{VICIDiaL_closer_blended = '1';}
+
+							if (external_blended == '0')
+								{VICIDiaL_closer_blended = '0';}
+							}
+
 
 // ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ  above section working na API functions
 						var check_conf_array=check_ALL_array[1].split("|");
@@ -3103,7 +3533,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								var LMAcontent_match=0;
 								agentphonelive=0;
 								var conv_start=-1;
-								var live_conf_HTML = "<font face=\"Arial,Helvetica\"><B>ŽIVÉ HOVORY VO VAŠEJ:</B></font><BR><TABLE WIDTH=<?=$SDwidth ?>><TR BGCOLOR=#E6E6E6><TD><font class=\"log_title\">#</TD><TD><font class=\"log_title\">VZDIALENÝ KANÁL</TD><TD><font class=\"log_title\">POLOŹIŤ</TD><TD><font class=\"log_title\">HLASITOSŤ</TD></TR>";
+								var live_conf_HTML = "<font face=\"Arial,Helvetica\"><B>ŽIVÉ HOVORY VO VAŠEJ:</B></font><BR><TABLE WIDTH=<?php echo $CQwidth ?>><TR BGCOLOR=<?php echo $SCRIPT_COLOR ?>><TD><font class=\"log_title\">#</TD><TD><font class=\"log_title\">VZDIALENÝ KANÁL</TD><TD><font class=\"log_title\">POLOŹIŤ</TD><TD><font class=\"log_title\">HLASITOSŤ</TD></TR>";
 								if ( (LMAcount > live_conf_calls)  || (LMAcount < live_conf_calls) || (LMAforce > 0))
 									{
 									LMAe[0]=''; LMAe[1]=''; LMAe[2]=''; LMAe[3]=''; LMAe[4]=''; LMAe[5]=''; 
@@ -3120,6 +3550,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 									var conv_ct = (loop_ct + conv_start);
 									var channelfieldA = conf_chan_array[conv_ct];
 									var regXFcred = new RegExp(flag_string,"g");
+									var regRNnolink = new RegExp('Local/5' + taskconfnum,"g")
 									if ( (channelfieldA.match(regXFcred)) && (flag_channels>0) )
 										{
 										var chan_name_color = 'log_text_red';
@@ -3134,13 +3565,21 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 										}
 									else
 										{
-										if (volumecontrol_active!=1)
+										if (channelfieldA.match(regRNnolink))
 											{
-											live_conf_HTML = live_conf_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</td><td><font class=\"" + chan_name_color + "\">" + channelfieldA + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + channelfieldA + "');return false;\">POLOŹIŤ</a></td><td></td></tr>";
+											// do not show hangup or volume control links for recording channels
+											live_conf_HTML = live_conf_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</td><td><font class=\"" + chan_name_color + "\">" + channelfieldA + "</td><td><font class=\"log_text\">recording</td><td></td></tr>";
 											}
 										else
 											{
-											live_conf_HTML = live_conf_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</td><td><font class=\"" + chan_name_color + "\">" + channelfieldA + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + channelfieldA + "');return false;\">POLOŹIŤ</a></td><td><a href=\"#\" onclick=\"volume_control('UP','" + channelfieldA + "','');return false;\"><IMG SRC=\"../agc/images/vdc_volume_up.gif\" Border=0></a> &nbsp; <a href=\"#\" onclick=\"volume_control('DOWN','" + channelfieldA + "','');return false;\"><IMG SRC=\"../agc/images/vdc_volume_down.gif\" Border=0></a> &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"volume_control('MUTING','" + channelfieldA + "','');return false;\"><IMG SRC=\"../agc/images/vdc_volume_MUTE.gif\" Border=0></a> &nbsp; <a href=\"#\" onclick=\"volume_control('UNMUTE','" + channelfieldA + "','');return false;\"><IMG SRC=\"../agc/images/vdc_volume_UNMUTE.gif\" Border=0></a></td></tr>";
+											if (volumecontrol_active!=1)
+												{
+												live_conf_HTML = live_conf_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</td><td><font class=\"" + chan_name_color + "\">" + channelfieldA + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + channelfieldA + "');return false;\">POLOŹIŤ</a></td><td></td></tr>";
+												}
+											else
+												{
+												live_conf_HTML = live_conf_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</td><td><font class=\"" + chan_name_color + "\">" + channelfieldA + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + channelfieldA + "');return false;\">POLOŹIŤ</a></td><td><a href=\"#\" onclick=\"volume_control('UP','" + channelfieldA + "','');return false;\"><IMG SRC=\"../agc/images/vdc_volume_up.gif\" Border=0></a> &nbsp; <a href=\"#\" onclick=\"volume_control('DOWN','" + channelfieldA + "','');return false;\"><IMG SRC=\"../agc/images/vdc_volume_down.gif\" Border=0></a> &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"volume_control('MUTING','" + channelfieldA + "','');return false;\"><IMG SRC=\"../agc/images/vdc_volume_MUTE.gif\" Border=0></a> &nbsp; <a href=\"#\" onclick=\"volume_control('UNMUTE','" + channelfieldA + "','');return false;\"><IMG SRC=\"../agc/images/vdc_volume_UNMUTE.gif\" Border=0></a></td></tr>";
+												}
 											}
 										}
 				//		var debugspan = document.getElementById("debugbottomspan").innerHTML;
@@ -3273,8 +3712,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			{ 
 			if (taskconfrectype == 'MonitorConf')
 				{
-				// 	var campaign_recording = '<? echo $campaign_recording ?>';
-				//	var campaign_rec_filename = '<? echo $campaign_rec_filename ?>';
+				// 	var campaign_recording = '<?php echo $campaign_recording ?>';
+				//	var campaign_rec_filename = '<?php echo $campaign_rec_filename ?>';
 				//	CAMPAIGN CUSTPHONE FULLDATE TINYDATE EPOCH AGENT
 				var REGrecCAMPAIGN = new RegExp("CAMPAIGN","g");
 				var REGrecCUSTPHONE = new RegExp("CUSTPHONE","g");
@@ -3337,6 +3776,15 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					var RClookID_array = RClookID.split("RecorDing_ID: ");
 					if (RClookID_array.length > 0)
 						{
+						recording_filename = RClookFILE_array[1];
+						recording_id = RClookID_array[1];
+
+						if (delayed_script_load == 'YES')
+							{
+							RefresHScript();
+							delayed_script_load='NO';
+							}
+
 						var RecDispNamE = RClookFILE_array[1];
 						if (RecDispNamE.length > 25)
 							{
@@ -3353,11 +3801,15 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		}
 
 // ################################################################################
-// Send Redirect command for live call to Manager sends phone name where call is going to
+// Send Redirect command for live call to Manažérsends phone name where call is going to
 // Covers the following types: XFER, VMAIL, ENTRY, CONF, ZAPARKOVAŤ, FROMZAPARKOVAŤ, XfeRLOCAL, XfeRINTERNAL, XfeRBLIND, VfeRVMAIL
-	function mainxfer_send_redirect(taskvar,taskxferconf,taskserverip,taskdebugnote) 
+	function mainxfer_send_redirect(taskvar,taskxferconf,taskserverip,taskdebugnote,taskdispowindow) 
 		{
 		blind_transfer=1;
+		var consultativexfer_checked = 0;
+		if (document.vicidial_form.consultativexfer.checked==true)
+			{consultativexfer_checked = 1;}
+
 	//	conf_dialed=1;
 		if (auto_dial_level == 0) {RedirecTxFEr = 1;}
 		var xmlhttpXF=false;
@@ -3401,7 +3853,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var closerxfercamptail = '_L';
 						if (closerxfercamptail.length < 3)
 							{closerxfercamptail = 'IVR';}
-						blindxferdialstring = Ctasknum + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value + '*' + campaign + '*' + closerxfercamptail + '*' + user + '*';
+						blindxferdialstring = Ctasknum + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value + '*' + campaign + '*' + closerxfercamptail + '*' + user + '**' + VD_live_call_secondS + '*';
 						}
 					}
 				else
@@ -3417,8 +3869,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							{blindxferdialstring = temp_dial_prefix + "" + temp_phone_code + "" + blindxferdialstring;}
 						}
 					}
+				no_delete_VDAC=0;
 				if (taskvar == 'XfeRVMAIL')
-					{var blindxferdialstring = campaign_am_message_exten;}
+					{
+					var blindxferdialstring = campaign_am_message_exten;
+					no_delete_VDAC=1;
+					}
 				if (blindxferdialstring.length<'2')
 					{
 					xferredirect_query='';
@@ -3427,7 +3883,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					}
 				else
 					{
-					xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectVD&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + blindxferdialstring + "&ext_context=" + ext_context + "&ext_priority=1&auto_dial_level=" + auto_dial_level + "&campaign=" + campaign + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&secondS=" + VD_live_call_secondS + "&session_id=" + session_id;
+					xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectVD&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + blindxferdialstring + "&ext_context=" + ext_context + "&ext_priority=1&auto_dial_level=" + auto_dial_level + "&campaign=" + campaign + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&secondS=" + VD_live_call_secondS + "&session_id=" + session_id + "&nodeletevdac=" + no_delete_VDAC;
 					}
 				}
 			if (taskvar == 'XfeRINTERNAL') 
@@ -3441,10 +3897,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				}
 			if (taskvar == 'XfeRLOCAL')
 				{
+				CustomerData_update();
+
 				var XfeRSelecT = document.getElementById("XfeRGrouP");
 				var queryCID = "XLvdcW" + epoch_sec + user_abb;
 				// 		 "90009*$group**$lead_id**$phone_number*$user*$agent_only*";
-				var redirectdestination = closerxferinternal + '90009*' + XfeRSelecT.value + '**' + document.vicidial_form.lead_id.value + '**' + document.vicidial_form.phone_number.value + '*' + user + '*' + document.vicidial_form.xfernumber.value + '*';
+				var redirectdestination = closerxferinternal + '90009*' + XfeRSelecT.value + '**' + document.vicidial_form.lead_id.value + '**' + dialed_number + '*' + user + '*' + document.vicidial_form.xfernumber.value + '*';
 
 				xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectVD&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + redirectdestination + "&ext_context=" + ext_context + "&ext_priority=1&auto_dial_level=" + auto_dial_level + "&campaign=" + campaign + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&secondS=" + VD_live_call_secondS + "&session_id=" + session_id;
 				}
@@ -3476,11 +3934,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				var redirecttype_test = document.vicidial_form.xfernumber.value;
 				var XfeRSelecT = document.getElementById("XfeRGrouP");
 				var regRXFvars = new RegExp("CXFER","g");
-				if ( (redirecttype_test.match(regRXFvars)) && (local_consult_xfers > 0) )
-			//		{var redirecttype = 'RedirectXtraCX';}
+				if ( ( (redirecttype_test.match(regRXFvars)) || (consultativexfer_checked > 0) ) && (local_consult_xfers > 0) )
 					{var redirecttype = 'RedirectXtraCXNeW';}
 				else
-			//		{var redirecttype = 'RedirectXtra';}
 					{var redirecttype = 'RedirectXtraNeW';}
 				DispO3waychannel = redirectvalue;
 				DispO3wayXtrAchannel = redirectXTRAvalue;
@@ -3497,12 +3953,16 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				}
 			if (taskvar == 'ParK')
 				{
+				if (CalLCID.length < 1)
+					{
+					CalLCID = MDnextCID;
+					}
 				blind_transfer=0;
 				var queryCID = "LPvdcW" + epoch_sec + user_abb;
 				var redirectdestination = taskxferconf;
 				var redirectdestserverip = taskserverip;
 				var parkedby = protocol + "/" + extension;
-				xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectToPark&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + park_on_extension + "&ext_context=" + ext_context + "&ext_priority=1&extenName=park&parkedby=" + parkedby + "&session_id=" + session_id;
+				xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectToPark&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + park_on_extension + "&ext_context=" + ext_context + "&ext_priority=1&extenName=park&parkedby=" + parkedby + "&session_id=" + session_id + "&CalLCID=" + CalLCID;
 
 				document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('FROMParK','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_LB_grabparkedcall.gif\" border=0 alt=\"Prevziať zaparkovaný hovor\"></a>";
 				customerparked=1;
@@ -3612,7 +4072,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			document.vicidial_form.callserverip.value = '';
 			if( document.images ) { document.images['livecall'].src = image_livecall_OFF.src;}
 		//	alert(RedirecTxFEr + "|" + auto_dial_level);
-			dialedcall_send_hangup();
+			dialedcall_send_hangup(taskdispowindow,'','',no_delete_VDAC);
 			}
 
 		}
@@ -3629,7 +4089,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		}
 // ################################################################################
 // Insert or update the vicidial_log entry for a customer call
-	function DialLog(taskMDstage)
+	function DialLog(taskMDstage,nodeletevdac)
 		{
 		if (taskMDstage == "start") 
 			{
@@ -3682,7 +4142,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			"&list_id=" + document.vicidial_form.list_id.value + 
 			"&length_in_sec=0&phone_code=" + document.vicidial_form.phone_code.value + 
 			"&phone_number=" + lead_dial_number + 
-			"&exten=" + extension + "&channel=" + lastcustchannel + "&start_epoch=" + MDlogEPOCH + "&auto_dial_level=" + auto_dial_level + "&VDstop_rec_after_each_call=" + VDstop_rec_after_each_call + "&conf_silent_prefix=" + conf_silent_prefix + "&protocol=" + protocol + "&extension=" + extension + "&ext_context=" + ext_context + "&conf_exten=" + session_id + "&user_abb=" + user_abb + "&agent_log_id=" + agent_log_id + "&MDnextCID=" + LasTCID + "&inOUT=" + inOUT + "&alt_dial=" + dialed_label + "&DB=0" + "&agentchannel=" + agentchannel + "&conf_dialed=" + conf_dialed + "&leaving_threeway=" + leaving_threeway + "&hangup_all_non_reserved=" + hangup_all_non_reserved + "&blind_transfer=" + blind_transfer;
+			"&exten=" + extension + "&channel=" + lastcustchannel + "&start_epoch=" + MDlogEPOCH + "&auto_dial_level=" + auto_dial_level + "&VDstop_rec_after_each_call=" + VDstop_rec_after_each_call + "&conf_silent_prefix=" + conf_silent_prefix + "&protocol=" + protocol + "&extension=" + extension + "&ext_context=" + ext_context + "&conf_exten=" + session_id + "&user_abb=" + user_abb + "&agent_log_id=" + agent_log_id + "&MDnextCID=" + LasTCID + "&inOUT=" + inOUT + "&alt_dial=" + dialed_label + "&DB=0" + "&agentchannel=" + agentchannel + "&conf_dialed=" + conf_dialed + "&leaving_threeway=" + leaving_threeway + "&hangup_all_non_reserved=" + hangup_all_non_reserved + "&blind_transfer=" + blind_transfer + "&dial_method" + dial_method + "&nodeletevdac=" + nodeletevdac;
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		//		document.getElementById("busycallsdebug").innerHTML = "vdc_db_query.php?" + manDiaLlog_query;
@@ -3718,6 +4178,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							if (window.MDlogRecorDings)
 								{
 								var MDlogRecorDings_array=MDlogRecorDings.split("|");
+						//		recording_filename = MDlogRecorDings_array[2];
+						//		recording_id = MDlogRecorDings_array[3];
+
 								var RecDispNamE = MDlogRecorDings_array[2];
 								if (RecDispNamE.length > 25)
 									{
@@ -3735,6 +4198,50 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		RedirecTxFEr=0;
 		conf_dialed=0;
+		}
+
+
+// ################################################################################
+// Request number of dialable leads left in this campaign
+	function DiaLableLeaDsCounT()
+		{
+		var xmlhttp=false;
+		/*@cc_on @*/
+		/*@if (@_jscript_version >= 5)
+		// JScript gives us Conditional compilation, we can cope with old IE versions.
+		// and security blocked creation of the objects.
+		 try {
+		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+		 } catch (e) {
+		  try {
+		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		  } catch (E) {
+		   xmlhttp = false;
+		  }
+		 }
+		@end @*/
+		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+			{
+			xmlhttp = new XMLHttpRequest();
+			}
+		if (xmlhttp) 
+			{ 
+			DLcount_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=DiaLableLeaDsCounT&campaign=" + campaign + "&format=text";
+			xmlhttp.open('POST', 'vdc_db_query.php'); 
+			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+			xmlhttp.send(DLcount_query); 
+			xmlhttp.onreadystatechange = function() 
+				{ 
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+					{
+				//	alert(xmlhttp.responseText);
+					var DLcounT = xmlhttp.responseText;
+						document.getElementById("dialableleadsspan").innerHTML ="Dialable Leads:<BR> " + DLcounT;
+						
+					}
+				}
+			delete xmlhttp;
+			}
 		}
 
 
@@ -3832,7 +4339,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var CB_calls = all_CBs_array[0];
 						var loop_ct=0;
 						var conv_start=0;
-						var CB_HTML = "<table width=610><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> HOVORBACK DATE/TIME</td><td><font class=\"log_title\">ČÍSLO</td><td><font class=\"log_title\">NAME</td><td><font class=\"log_title\">  STAV</td><td align=right><font class=\"log_title\">CAMPAIGN</td><td><font class=\"log_title\">LAST DÁTUM HOVORU/ČAS</td><td align=left><font class=\"log_title\"> COMMENTS</td></tr>"
+						var CB_HTML = "<table width=610><tr bgcolor=<?php echo $SCRIPT_COLOR ?>><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> HOVORBACK DATE/TIME</td><td><font class=\"log_title\">ČÍSLO</td><td><font class=\"log_title\">NAME</td><td><font class=\"log_title\">  STAV</td><td align=right><font class=\"log_title\">CAMPAIGN</td><td><font class=\"log_title\">LAST DÁTUM HOVORU/ČAS</td><td align=left><font class=\"log_title\"> COMMENTS</td></tr>"
 						while (loop_ct < CB_calls)
 							{
 							loop_ct++;
@@ -4056,6 +4563,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					MDlookResponse = xmlhttp.responseText;
 					var MDlookResponse_array=MDlookResponse.split("\n");
 					var MDlookCID = MDlookResponse_array[0];
+					var regMDL = new RegExp("^Local","ig");
 					if (MDlookCID == "NO")
 						{
 						MD_ring_secondS++;
@@ -4066,13 +4574,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						if (alt_dial_status_display=='0')
 							{
 					//		alert(document.getElementById("MainStatuSSpan").innerHTML);
-							document.getElementById("MainStatuSSpan").innerHTML = " Volané: " + status_display_number + " UID: " + CIDcheck + " &nbsp; Čakanie na zvonenie... " + MD_ring_secondS + " sekúnd";
+							document.getElementById("MainStatuSSpan").innerHTML = " Volané: " + status_display_number + " UID: " + CIDcheck + " &nbsp; Čakanie na zvonenie... " + MD_ring_secondS + "sekúnd";
 					//		alert("channel not found yet:\n" + campaign);
 							}
 						}
 					else
 						{
-						var regMDL = new RegExp("^Local","ig");
 						if (taskCheckOR == 'YES')
 							{
 							XDuniqueid = MDlookResponse_array[0];
@@ -4095,15 +4602,15 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 								document.getElementById("MainStatuSSpan").innerHTML = " Voalať externú aplikáciu: " + document.vicidial_form.xfernumber.value + " UID: " + CIDcheck;
 
-								document.getElementById("Leave3WayCall").innerHTML ="<a href=\"#\" onclick=\"leave_3way_call('FIRST');return false;\"><IMG SRC=\"../agc/images/vdc_XB_leave3waycall.gif\" border=0 alt=\"PONECHAT 3 CESTNE VOLANIE\"></a>";
+								document.getElementById("Leave3WayCall").innerHTML ="<a href=\"#\" onclick=\"leave_3way_call('FIRST');return false;\"><IMG SRC=\"../agc/images/vdc_XB_leave3waycall.gif\" border=0 alt=\"PONECHAT 3 CESTNE VOLANIE\" style=\"vertical-align:middle\"></a>";
 
-								document.getElementById("DialWithCustomer").innerHTML ="<IMG SRC=\"../agc/images/vdc_XB_dialwithcustomer_OFF.gif\" border=0 alt=\"Volanie so zákazníkom\">";
+								document.getElementById("DialWithCustomer").innerHTML ="<IMG SRC=\"../agc/images/vdc_XB_dialwithcustomer_OFF.gif\" border=0 alt=\"Volanie so zákazníkom\" style=\"vertical-align:middle\">";
 
-								document.getElementById("ParkCustomerDial").innerHTML ="<IMG SRC=\"../agc/images/vdc_XB_parkcustomerdial_OFF.gif\" border=0 alt=\"Zaparkovať hovor so zákazníkom\">";
+								document.getElementById("ParkCustomerDial").innerHTML ="<IMG SRC=\"../agc/images/vdc_XB_parkcustomerdial_OFF.gif\" border=0 alt=\"Zaparkovať hovor so zákazníkom\" style=\"vertical-align:middle\">";
 
-								document.getElementById("HangupXferLine").innerHTML ="<a href=\"#\" onclick=\"xfercall_send_hangup();return false;\"><IMG SRC=\"../agc/images/vdc_XB_hangupxferline.gif\" border=0 alt=\"Zložiť Xfer linku\"></a>";
+								document.getElementById("HangupXferLine").innerHTML ="<a href=\"#\" onclick=\"xfercall_send_hangup();return false;\"><IMG SRC=\"../agc/images/vdc_XB_hangupxferline.gif\" border=0 alt=\"Zložiť Xfer linku\" style=\"vertical-align:middle\"></a>";
 
-								document.getElementById("HangupBothLines").innerHTML ="<a href=\"#\" onclick=\"bothcall_send_hangup();return false;\"><IMG SRC=\"../agc/images/vdc_XB_hangupbothlines.gif\" border=0 alt=\"Zložiť obe linky\"></a>";
+								document.getElementById("HangupBothLines").innerHTML ="<a href=\"#\" onclick=\"bothcall_send_hangup();return false;\"><IMG SRC=\"../agc/images/vdc_XB_hangupbothlines.gif\" border=0 alt=\"Zložiť obe linky\" style=\"vertical-align:middle\"></a>";
 
 								xferchannellive=1;
 								XDcheck = '';
@@ -4144,15 +4651,75 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 								document.getElementById("XferControl").innerHTML = "<a href=\"#\" onclick=\"ShoWTransferMain('ON');\"><IMG SRC=\"../agc/images/vdc_LB_transferconf.gif\" border=0 alt=\"Presmerovanie - Konferencia\"></a>";
 
-								document.getElementById("LocalCloser").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_XB_localcloser.gif\" border=0 alt=\"LOKALNE ROZSIRENIE\"></a>";
+								document.getElementById("LocalCloser").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_XB_localcloser.gif\" border=0 alt=\"LOKALNE ROZSIRENIE\" style=\"vertical-align:middle\"></a>";
 
-								document.getElementById("DialBlindTransfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_XB_blindtransfer.gif\" border=0 alt=\"Volať slepé presmerovanie\"></a>";
+								document.getElementById("DialBlindTransfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_XB_blindtransfer.gif\" border=0 alt=\"Volať slepé presmerovanie\" style=\"vertical-align:middle\"></a>";
 
-								document.getElementById("DialBlindVMail").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRVMAIL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_XB_ammessage.gif\" border=0 alt=\"Blind Transfer VMail Message\"></a>";
+								document.getElementById("DialBlindVMail").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRVMAIL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_XB_ammessage.gif\" border=0 alt=\"Blind Transfer VMail Message\" style=\"vertical-align:middle\"></a>";
 
 								document.getElementById("VolumeUpSpan").innerHTML = "<a href=\"#\" onclick=\"volume_control('UP','" + MDchannel + "','');return false;\"><IMG SRC=\"../agc/images/vdc_volume_up.gif\" Border=0></a>";
 								document.getElementById("VolumeDownSpan").innerHTML = "<a href=\"#\" onclick=\"volume_control('DOWN','" + MDchannel + "','');return false;\"><IMG SRC=\"../agc/images/vdc_volume_down.gif\" Border=0></a>";
 
+								if (quick_transfer_button == 'IN_GROUP')
+									{
+									document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_LB_quickxfer.gif\" border=0 alt=\"Rýchly prenos\"></a>";
+									}
+								if (prepopulate_transfer_preset_enabled > 0)
+									{
+									if (prepopulate_transfer_preset == 'PZNOVU INCIALIZOVAŤ_1')
+										{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
+									if (prepopulate_transfer_preset == 'PZNOVU INCIALIZOVAŤ_2')
+										{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
+									if (prepopulate_transfer_preset == 'PZNOVU INCIALIZOVAŤ_3')
+										{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;}
+									if (prepopulate_transfer_preset == 'PZNOVU INCIALIZOVAŤ_4')
+										{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;}
+									if (prepopulate_transfer_preset == 'PZNOVU INCIALIZOVAŤ_5')
+										{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;}
+									}
+								if ( (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_1') || (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_2') || (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_3') || (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_4') || (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_5') )
+									{
+									document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_LB_quickxfer.gif\" border=0 alt=\"Rýchly prenos\"></a>";
+
+									if (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_1')
+										{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
+									if (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_2')
+										{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
+									if (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_3')
+										{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;}
+									if (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_4')
+										{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;}
+									if (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_5')
+										{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;}
+									}
+
+								if (call_requeue_button > 0)
+									{
+									var CloserSelectChoices = document.vicidial_form.CloserSelectList.value;
+									var regCRB = new RegExp("AGENTDIRECT","ig");
+									if ( (CloserSelectChoices.match(regCRB)) || (VU_closer_campaigns.match(regCRB)) )
+										{
+										document.getElementById("ReQueueCall").innerHTML =  "<a href=\"#\" onclick=\"call_requeue_launch();return false;\"><IMG SRC=\"../agc/images/vdc_LB_requeue_call.gif\" border=0 alt=\"Re-Queue Call\"></a>";
+										}
+									else
+										{
+										document.getElementById("ReQueueCall").innerHTML =  "<IMG SRC=\"../agc/images/vdc_LB_requeue_call_OFF.gif\" border=0 alt=\"Re-Queue Call\">";
+										}
+									}
+
+								// Build transfer pull-down list
+								var loop_ct = 0;
+								var live_XfeR_HTML = '';
+								var XfeR_SelecT = '';
+								while (loop_ct < XFgroupCOUNT)
+									{
+									if (VARxfergroups[loop_ct] == LIVE_default_xfer_group)
+										{XfeR_SelecT = 'SELECTED ';}
+									else {XfeR_SelecT = '';}
+									live_XfeR_HTML = live_XfeR_HTML + "<option " + XfeR_SelecT + "value=\"" + VARxfergroups[loop_ct] + "\">" + VARxfergroups[loop_ct] + " - " + VARxfergroupsnames[loop_ct] + "</option>\n";
+									loop_ct++;
+									}
+								document.getElementById("XfeRGrouPLisT").innerHTML = "<select size=1 name=XfeRGrouP class=\"cust_form\" id=XfeRGrouP>" + live_XfeR_HTML + "</select>";
 
 								// INSERT VICIDIAL_LOG ENTRY FOR THIS HOVOR PROCESS
 								DialLog("start");
@@ -4176,6 +4743,346 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		}
 
 // ################################################################################
+// Update Agent screen with values from vicidial_list record
+	function UpdateFieldsData()
+		{
+		var fields_list = update_fields_data + ',';
+		update_fields=0;
+		update_fields_data='';
+		var xmlhttp=false;
+		/*@cc_on @*/
+		/*@if (@_jscript_version >= 5)
+		// JScript gives us Conditional compilation, we can cope with old IE versions.
+		// and security blocked creation of the objects.
+		 try {
+		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+		 } catch (e) {
+		  try {
+		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		  } catch (E) {
+		   xmlhttp = false;
+		  }
+		 }
+		@end @*/
+		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+			{
+			xmlhttp = new XMLHttpRequest();
+			}
+		if (xmlhttp) 
+			{
+			UpdateFields_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=UpdateFields&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&stage=" + update_fields_data;
+			//		alert(manual_dial_filter + "\n" +manDiaLnext_query);
+			xmlhttp.open('POST', 'vdc_db_query.php');
+			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+			xmlhttp.send(UpdateFields_query); 
+			xmlhttp.onreadystatechange = function() 
+				{ 
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+					{
+					var UDfieldsResponse = null;
+				//	alert(UpdateFields_query);
+				//	alert(xmlhttp.responseText);
+					UDfieldsResponse = xmlhttp.responseText;
+
+					var UDfieldsResponse_array=UDfieldsResponse.split("\n");
+
+					var UDresponse_status							= UDfieldsResponse_array[0];
+					if (UDresponse_status == 'GOOD')
+						{
+						var regUDvendor_lead_code = new RegExp("vendor_lead_code,","ig");
+						if (fields_list.match(regUDvendor_lead_code))
+							{document.vicidial_form.vendor_lead_code.value	= UDfieldsResponse_array[1];}
+						var regUDsource_id = new RegExp("source_id,","ig");
+						if (fields_list.match(regUDsource_id))
+							{source_id										= UDfieldsResponse_array[2];}
+						var regUDgmt_offset_now = new RegExp("gmt_offset_now,","ig");
+						if (fields_list.match(regUDgmt_offset_now))
+							{document.vicidial_form.gmt_offset_now.value	= UDfieldsResponse_array[3];}
+						var regUDphone_code = new RegExp("phone_code,","ig");
+						if (fields_list.match(regUDphone_code))
+							{document.vicidial_form.phone_code.value		= UDfieldsResponse_array[4];}
+						var regUDphone_number = new RegExp("phone_number,","ig");
+						if (fields_list.match(regUDphone_number))
+							{
+							if ( (disable_alter_custphone=='Y') || (disable_alter_custphone=='HIDE') )
+								{
+								var tmp_pn = document.getElementById("phone_numberDISP");
+								if (disable_alter_custphone=='Y')
+									{
+									tmp_pn.innerHTML						= UDfieldsResponse_array[5];
+									}
+								}
+							document.vicidial_form.phone_number.value		= UDfieldsResponse_array[5];
+							}
+						var regUDtitle = new RegExp("title,","ig");
+						if (fields_list.match(regUDtitle))
+							{document.vicidial_form.title.value				= UDfieldsResponse_array[6];}
+						var regUDfirst_name = new RegExp("first_name,","ig");
+						if (fields_list.match(regUDfirst_name))
+							{document.vicidial_form.first_name.value		= UDfieldsResponse_array[7];}
+						var regUDmiddle_initial = new RegExp("middle_initial,","ig");
+						if (fields_list.match(regUDmiddle_initial))
+							{document.vicidial_form.middle_initial.value	= UDfieldsResponse_array[8];}
+						var regUDlast_name = new RegExp("last_name,","ig");
+						if (fields_list.match(regUDlast_name))
+							{document.vicidial_form.last_name.value			= UDfieldsResponse_array[9];}
+						var regUDaddress1 = new RegExp("address1,","ig");
+						if (fields_list.match(regUDaddress1))
+							{document.vicidial_form.address1.value			= UDfieldsResponse_array[10];}
+						var regUDaddress2 = new RegExp("address2,","ig");
+						if (fields_list.match(regUDaddress2))
+							{document.vicidial_form.address2.value			= UDfieldsResponse_array[11];}
+						var regUDaddress3 = new RegExp("address3,","ig");
+						if (fields_list.match(regUDaddress3))
+							{document.vicidial_form.address3.value			= UDfieldsResponse_array[12];}
+						var regUDcity = new RegExp("city,","ig");
+						if (fields_list.match(regUDcity))
+							{document.vicidial_form.city.value				= UDfieldsResponse_array[13];}
+						var regUDstate = new RegExp("state,","ig");
+						if (fields_list.match(regUDstate))
+							{document.vicidial_form.state.value				= UDfieldsResponse_array[14];}
+						var regUDprovince = new RegExp("province,","ig");
+						if (fields_list.match(regUDprovince))
+							{document.vicidial_form.province.value			= UDfieldsResponse_array[15];}
+						var regUDpostal_code = new RegExp("postal_code,","ig");
+						if (fields_list.match(regUDpostal_code))
+							{document.vicidial_form.postal_code.value		= UDfieldsResponse_array[16];}
+						var regUDcountry_code = new RegExp("country_code,","ig");
+						if (fields_list.match(regUDcountry_code))
+							{document.vicidial_form.country_code.value		= UDfieldsResponse_array[17];}
+						var regUDgender = new RegExp("gender,","ig");
+						if (fields_list.match(regUDgender))
+							{
+							document.vicidial_form.gender.value				= UDfieldsResponse_array[18];
+							var gIndex = 0;
+							if (document.vicidial_form.gender.value == 'M') {var gIndex = 1;}
+							if (document.vicidial_form.gender.value == 'F') {var gIndex = 2;}
+							document.getElementById("gender_list").selectedIndex = gIndex;
+							var genderIndex = document.getElementById("gender_list").selectedIndex;
+							var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
+							document.vicidial_form.gender.value = genderValue;
+							}
+						var regUDdate_of_birth = new RegExp("date_of_birth,","ig");
+						if (fields_list.match(regUDdate_of_birth))
+							{document.vicidial_form.date_of_birth.value		= UDfieldsResponse_array[19];}
+						var regUDalt_phone = new RegExp("alt_phone,","ig");
+						if (fields_list.match(regUDalt_phone))
+							{document.vicidial_form.alt_phone.value			= UDfieldsResponse_array[20];}
+						var regUDemail = new RegExp("email,","ig");
+						if (fields_list.match(regUDemail))
+							{document.vicidial_form.email.value				= UDfieldsResponse_array[21];}
+						var regUDsecurity_phrase = new RegExp("security_phrase,","ig");
+						if (fields_list.match(regUDsecurity_phrase))
+							{document.vicidial_form.security_phrase.value	= UDfieldsResponse_array[22];}
+						var regUDcomments = new RegExp("comments,","ig");
+						if (fields_list.match(regUDcomments))
+							{
+							var REGcommentsNL = new RegExp("!N","g");
+							UDfieldsResponse_array[23] = UDfieldsResponse_array[23].replace(REGcommentsNL, "\n");
+							document.vicidial_form.comments.value			= UDfieldsResponse_array[23];
+							}
+						var regUDrank = new RegExp("rank,","ig");
+						if (fields_list.match(regUDrank))
+							{document.vicidial_form.rank.value				= UDfieldsResponse_array[24];}
+						var regUDowner = new RegExp("owner,","ig");
+						if (fields_list.match(regUDowner))
+							{document.vicidial_form.owner.value				= UDfieldsResponse_array[25];}
+
+
+						var regWFAcustom = new RegExp("^VAR","ig");
+						if (VDIC_web_form_address.match(regWFAcustom))
+							{
+							URLDecode(VDIC_web_form_address,'YES');
+							TEMP_VDIC_web_form_address = decoded;
+							TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAcustom, '');
+							}
+						else
+							{
+							web_form_vars = 
+							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
+							"&list_id=" + document.vicidial_form.list_id.value + 
+							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
+							"&phone_code=" + document.vicidial_form.phone_code.value + 
+							"&phone_number=" + document.vicidial_form.phone_number.value + 
+							"&title=" + document.vicidial_form.title.value + 
+							"&first_name=" + document.vicidial_form.first_name.value + 
+							"&middle_initial=" + document.vicidial_form.middle_initial.value + 
+							"&last_name=" + document.vicidial_form.last_name.value + 
+							"&address1=" + document.vicidial_form.address1.value + 
+							"&address2=" + document.vicidial_form.address2.value + 
+							"&address3=" + document.vicidial_form.address3.value + 
+							"&city=" + document.vicidial_form.city.value + 
+							"&state=" + document.vicidial_form.state.value + 
+							"&province=" + document.vicidial_form.province.value + 
+							"&postal_code=" + document.vicidial_form.postal_code.value + 
+							"&country_code=" + document.vicidial_form.country_code.value + 
+							"&gender=" + document.vicidial_form.gender.value + 
+							"&date_of_birth=" + document.vicidial_form.date_of_birth.value + 
+							"&alt_phone=" + document.vicidial_form.alt_phone.value + 
+							"&email=" + document.vicidial_form.email.value + 
+							"&security_phrase=" + document.vicidial_form.security_phrase.value + 
+							"&comments=" + document.vicidial_form.comments.value + 
+							"&user=" + user + 
+							"&pass=" + pass + 
+							"&campaign=" + campaign + 
+							"&phone_login=" + phone_login + 
+							"&original_phone_login=" + original_phone_login +
+							"&phone_pass=" + phone_pass + 
+							"&fronter=" + fronter + 
+							"&closer=" + user + 
+							"&group=" + group + 
+							"&channel_group=" + group + 
+							"&SQLdate=" + SQLdate + 
+							"&epoch=" + UnixTime + 
+							"&uniqueid=" + document.vicidial_form.uniqueid.value + 
+							"&customer_zap_channel=" + lastcustchannel + 
+							"&customer_server_ip=" + lastcustserverip +
+							"&server_ip=" + server_ip + 
+							"&SIPexten=" + extension + 
+							"&session_id=" + session_id + 
+							"&phone=" + document.vicidial_form.phone_number.value + 
+							"&parked_by=" + document.vicidial_form.lead_id.value +
+							"&dispo=" + LeaDDispO + '' +
+							"&dialed_number=" + dialed_number + '' +
+							"&dialed_label=" + dialed_label + '' +
+							"&source_id=" + source_id + '' +
+							"&rank=" + document.vicidial_form.rank.value + '' +
+							"&owner=" + document.vicidial_form.owner.value + '' +
+							"&camp_script=" + campaign_script + '' +
+							"&in_script=" + CalL_ScripT_id + '' +
+							"&script_width=" + script_width + '' +
+							"&script_height=" + script_height + '' +
+							"&fullname=" + LOGfullname + '' +
+							"&recording_filename=" + recording_filename + '' +
+							"&recording_id=" + recording_id + '' +
+							"&user_custom_one=" + VU_custom_one + '' +
+							"&user_custom_two=" + VU_custom_two + '' +
+							"&user_custom_three=" + VU_custom_three + '' +
+							"&user_custom_four=" + VU_custom_four + '' +
+							"&user_custom_five=" + VU_custom_five + '' +
+							webform_session;
+							
+							var regWFspace = new RegExp(" ","ig");
+							web_form_vars = web_form_vars.replace(regWF, '');
+							var regWF = new RegExp("\\`|\\~|\\:|\\;|\\#|\\'|\\\"|\\{|\\}|\\(|\\)|\\*|\\^|\\%|\\$|\\!|\\%|\\r|\\t|\\n","ig");
+							web_form_vars = web_form_vars.replace(regWFspace, '+');
+							web_form_vars = web_form_vars.replace(regWF, '');
+
+							var regWFAvars = new RegExp("\\?","ig");
+							if (VDIC_web_form_address.match(regWFAvars))
+								{web_form_vars = '&' + web_form_vars}
+							else
+								{web_form_vars = '?' + web_form_vars}
+
+							TEMP_VDIC_web_form_address = VDIC_web_form_address + "" + web_form_vars;
+							}
+
+						if (VDIC_web_form_address_two.match(regWFAcustom))
+							{
+							URLDecode(VDIC_web_form_address_two,'YES');
+							TEMP_VDIC_web_form_address_two = decoded;
+							TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAcustom, '');
+							}
+						else
+							{
+							web_form_vars_two = 
+							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
+							"&list_id=" + document.vicidial_form.list_id.value + 
+							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
+							"&phone_code=" + document.vicidial_form.phone_code.value + 
+							"&phone_number=" + document.vicidial_form.phone_number.value + 
+							"&title=" + document.vicidial_form.title.value + 
+							"&first_name=" + document.vicidial_form.first_name.value + 
+							"&middle_initial=" + document.vicidial_form.middle_initial.value + 
+							"&last_name=" + document.vicidial_form.last_name.value + 
+							"&address1=" + document.vicidial_form.address1.value + 
+							"&address2=" + document.vicidial_form.address2.value + 
+							"&address3=" + document.vicidial_form.address3.value + 
+							"&city=" + document.vicidial_form.city.value + 
+							"&state=" + document.vicidial_form.state.value + 
+							"&province=" + document.vicidial_form.province.value + 
+							"&postal_code=" + document.vicidial_form.postal_code.value + 
+							"&country_code=" + document.vicidial_form.country_code.value + 
+							"&gender=" + document.vicidial_form.gender.value + 
+							"&date_of_birth=" + document.vicidial_form.date_of_birth.value + 
+							"&alt_phone=" + document.vicidial_form.alt_phone.value + 
+							"&email=" + document.vicidial_form.email.value + 
+							"&security_phrase=" + document.vicidial_form.security_phrase.value + 
+							"&comments=" + document.vicidial_form.comments.value + 
+							"&user=" + user + 
+							"&pass=" + pass + 
+							"&campaign=" + campaign + 
+							"&phone_login=" + phone_login + 
+							"&original_phone_login=" + original_phone_login +
+							"&phone_pass=" + phone_pass + 
+							"&fronter=" + fronter + 
+							"&closer=" + user + 
+							"&group=" + group + 
+							"&channel_group=" + group + 
+							"&SQLdate=" + SQLdate + 
+							"&epoch=" + UnixTime + 
+							"&uniqueid=" + document.vicidial_form.uniqueid.value + 
+							"&customer_zap_channel=" + lastcustchannel + 
+							"&customer_server_ip=" + lastcustserverip +
+							"&server_ip=" + server_ip + 
+							"&SIPexten=" + extension + 
+							"&session_id=" + session_id + 
+							"&phone=" + document.vicidial_form.phone_number.value + 
+							"&parked_by=" + document.vicidial_form.lead_id.value +
+							"&dispo=" + LeaDDispO + '' +
+							"&dialed_number=" + dialed_number + '' +
+							"&dialed_label=" + dialed_label + '' +
+							"&source_id=" + source_id + '' +
+							"&rank=" + document.vicidial_form.rank.value + '' +
+							"&owner=" + document.vicidial_form.owner.value + '' +
+							"&camp_script=" + campaign_script + '' +
+							"&in_script=" + CalL_ScripT_id + '' +
+							"&script_width=" + script_width + '' +
+							"&script_height=" + script_height + '' +
+							"&fullname=" + LOGfullname + '' +
+							"&recording_filename=" + recording_filename + '' +
+							"&recording_id=" + recording_id + '' +
+							"&user_custom_one=" + VU_custom_one + '' +
+							"&user_custom_two=" + VU_custom_two + '' +
+							"&user_custom_three=" + VU_custom_three + '' +
+							"&user_custom_four=" + VU_custom_four + '' +
+							"&user_custom_five=" + VU_custom_five + '' +
+							webform_session;
+							
+							var regWFspace = new RegExp(" ","ig");
+							web_form_vars_two = web_form_vars_two.replace(regWF, '');
+							var regWF = new RegExp("\\`|\\~|\\:|\\;|\\#|\\'|\\\"|\\{|\\}|\\(|\\)|\\*|\\^|\\%|\\$|\\!|\\%|\\r|\\t|\\n","ig");
+							web_form_vars_two = web_form_vars_two.replace(regWFspace, '+');
+							web_form_vars_two = web_form_vars_two.replace(regWF, '');
+
+							var regWFAvars = new RegExp("\\?","ig");
+							if (VDIC_web_form_address_two.match(regWFAvars))
+								{web_form_vars_two = '&' + web_form_vars_two}
+							else
+								{web_form_vars_two = '?' + web_form_vars_two}
+
+							TEMP_VDIC_web_form_address_two = VDIC_web_form_address_two + "" + web_form_vars_two;
+							}
+
+						document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH();\"><IMG SRC=\"../agc/images/vdc_LB_webform.gif\" border=0 alt=\"Web formulár\"></a>\n";
+						if (enable_second_webform > 0)
+							{
+							document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH();\"><IMG SRC=\"../agc/images/vdc_LB_webform_two.gif\" border=0 alt=\"Web formulár 2\"></a>\n";
+							}
+						}
+					else
+						{
+						alert("Update Fields Error!: " + xmlhttp.responseText);
+						}
+					}
+				}
+			}
+		}
+
+
+// ################################################################################
 // Send the Manual Volať ďalšie číslo request
 	function ManualDialNext(mdnCBid,mdnBDleadid,mdnDiaLCodE,mdnPhonENumbeR,mdnStagE,mdVendorid,mdgroupalias)
 		{
@@ -4186,7 +5093,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			{
 			auto_dial_level=0;
 
-			AutoDial_ReSume_PauSe('VDADpause');
+			agent_log_id = AutoDial_ReSume_PauSe("VDADpause",'','','',"DIALNEXT");
+
+			PauseCodeSelect_submit("NXDIAL");
 
 			document.getElementById("DiaLControl").innerHTML = "<IMG SRC=\"../agc/images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pauza \"><IMG SRC=\"../agc/images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Pokračovať\"><BR><IMG SRC=\"../agc/images/vdc_LB_dialnextnumber_OFF.gif\" border=0 alt=\"Volať ďalšie číslo\">";
 			}
@@ -4237,7 +5146,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			else
 				{var call_prefix = dial_prefix;}
 
-			manDiaLnext_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLnextCaLL&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&preview=" + man_preview + "&agent_log_id=" + agent_log_id + "&callback_id=" + mdnCBid + "&lead_id=" + mdnBDleadid + "&phone_code=" + mdnDiaLCodE + "&phone_number=" + mdnPhonENumbeR + "&list_id=" + mdnLisT_id + "&stage=" + mdnStagE  + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&omit_phone_code=" + omit_phone_code + "&manual_dial_filter=" + manual_dial_filter + "&vendor_lead_code=" + mdVendorid + "&usegroupalias=" + mdgroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type;
+			manDiaLnext_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLnextCaLL&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&preview=" + man_preview + "&agent_log_id=" + agent_log_id + "&callback_id=" + mdnCBid + "&lead_id=" + mdnBDleadid + "&phone_code=" + mdnDiaLCodE + "&phone_number=" + mdnPhonENumbeR + "&list_id=" + mdnLisT_id + "&stage=" + mdnStagE  + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&omit_phone_code=" + omit_phone_code + "&manual_dial_filter=" + manual_dial_filter + "&vendor_lead_code=" + mdVendorid + "&usegroupalias=" + mdgroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&vtiger_callback_id=" + vtiger_callback_id;
 			//		alert(manual_dial_filter + "\n" +manDiaLnext_query);
 			xmlhttp.open('POST', 'vdc_db_query.php');
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -4247,6 +5156,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
 					{
 					var MDnextResponse = null;
+			//		alert(manDiaLnext_query);
 			//		alert(xmlhttp.responseText);
 					MDnextResponse = xmlhttp.responseText;
 
@@ -4303,10 +5213,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						document.vicidial_form.list_id.value			= MDnextResponse_array[5];
 						document.vicidial_form.gmt_offset_now.value		= MDnextResponse_array[6];
 						document.vicidial_form.phone_code.value			= MDnextResponse_array[7];
-						if (disable_alter_custphone=='Y')
+						if ( (disable_alter_custphone=='Y') || (disable_alter_custphone=='HIDE') )
 							{
 							var tmp_pn = document.getElementById("phone_numberDISP");
-							tmp_pn.innerHTML							= MDnextResponse_array[8];
+							if (disable_alter_custphone=='Y')
+								{
+								tmp_pn.innerHTML						= MDnextResponse_array[8];
+								}
 							}
 						document.vicidial_form.phone_number.value		= MDnextResponse_array[8];
 						document.vicidial_form.title.value				= MDnextResponse_array[9];
@@ -4339,7 +5252,20 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						dialed_number									= MDnextResponse_array[32];
 						dialed_label									= MDnextResponse_array[33];
 						source_id										= MDnextResponse_array[34];
-						
+						document.vicidial_form.rank.value				= MDnextResponse_array[35];
+						document.vicidial_form.owner.value				= MDnextResponse_array[36];
+					//	CalL_ScripT_id									= MDnextResponse_array[37];
+						script_recording_delay							= MDnextResponse_array[38];
+						CalL_XC_a_NuMber								= MDnextResponse_array[39];
+						CalL_XC_b_NuMber								= MDnextResponse_array[40];
+						CalL_XC_c_NuMber								= MDnextResponse_array[41];
+						CalL_XC_d_NuMber								= MDnextResponse_array[42];
+						CalL_XC_e_NuMber								= MDnextResponse_array[43];
+
+						timer_action = campaign_timer_action;
+						timer_action_message = campaign_timer_action_message;
+						timer_action_seconds = campaign_timer_action_seconds;
+			
 						lead_dial_number = document.vicidial_form.phone_number.value;
 						var dispnum = document.vicidial_form.phone_number.value;
 						var status_display_number = phone_number_format(dispnum);
@@ -4355,6 +5281,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var genderIndex = document.getElementById("gender_list").selectedIndex;
 						var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
 						document.vicidial_form.gender.value = genderValue;
+						LeaDDispO='';
+
+						VDIC_web_form_address = VICIDiaL_web_form_address
+						VDIC_web_form_address_two = VICIDiaL_web_form_address_two
 
 						var regWFAcustom = new RegExp("^VAR","ig");
 						if (VDIC_web_form_address.match(regWFAcustom))
@@ -4394,6 +5324,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&pass=" + pass + 
 							"&campaign=" + campaign + 
 							"&phone_login=" + phone_login + 
+							"&original_phone_login=" + original_phone_login +
 							"&phone_pass=" + phone_pass + 
 							"&fronter=" + fronter + 
 							"&closer=" + user + 
@@ -4413,6 +5344,20 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&dialed_number=" + dialed_number + '' +
 							"&dialed_label=" + dialed_label + '' +
 							"&source_id=" + source_id + '' +
+							"&rank=" + document.vicidial_form.rank.value + '' +
+							"&owner=" + document.vicidial_form.owner.value + '' +
+							"&camp_script=" + campaign_script + '' +
+							"&in_script=" + CalL_ScripT_id + '' +
+							"&script_width=" + script_width + '' +
+							"&script_height=" + script_height + '' +
+							"&fullname=" + LOGfullname + '' +
+							"&recording_filename=" + recording_filename + '' +
+							"&recording_id=" + recording_id + '' +
+							"&user_custom_one=" + VU_custom_one + '' +
+							"&user_custom_two=" + VU_custom_two + '' +
+							"&user_custom_three=" + VU_custom_three + '' +
+							"&user_custom_four=" + VU_custom_four + '' +
+							"&user_custom_five=" + VU_custom_five + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -4430,7 +5375,99 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							TEMP_VDIC_web_form_address = VDIC_web_form_address + "" + web_form_vars;
 							}
 
+						if (VDIC_web_form_address_two.match(regWFAcustom))
+							{
+							URLDecode(VDIC_web_form_address_two,'YES');
+							TEMP_VDIC_web_form_address_two = decoded;
+							TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAcustom, '');
+							}
+						else
+							{
+							web_form_vars_two = 
+							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
+							"&list_id=" + document.vicidial_form.list_id.value + 
+							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
+							"&phone_code=" + document.vicidial_form.phone_code.value + 
+							"&phone_number=" + document.vicidial_form.phone_number.value + 
+							"&title=" + document.vicidial_form.title.value + 
+							"&first_name=" + document.vicidial_form.first_name.value + 
+							"&middle_initial=" + document.vicidial_form.middle_initial.value + 
+							"&last_name=" + document.vicidial_form.last_name.value + 
+							"&address1=" + document.vicidial_form.address1.value + 
+							"&address2=" + document.vicidial_form.address2.value + 
+							"&address3=" + document.vicidial_form.address3.value + 
+							"&city=" + document.vicidial_form.city.value + 
+							"&state=" + document.vicidial_form.state.value + 
+							"&province=" + document.vicidial_form.province.value + 
+							"&postal_code=" + document.vicidial_form.postal_code.value + 
+							"&country_code=" + document.vicidial_form.country_code.value + 
+							"&gender=" + document.vicidial_form.gender.value + 
+							"&date_of_birth=" + document.vicidial_form.date_of_birth.value + 
+							"&alt_phone=" + document.vicidial_form.alt_phone.value + 
+							"&email=" + document.vicidial_form.email.value + 
+							"&security_phrase=" + document.vicidial_form.security_phrase.value + 
+							"&comments=" + document.vicidial_form.comments.value + 
+							"&user=" + user + 
+							"&pass=" + pass + 
+							"&campaign=" + campaign + 
+							"&phone_login=" + phone_login + 
+							"&original_phone_login=" + original_phone_login +
+							"&phone_pass=" + phone_pass + 
+							"&fronter=" + fronter + 
+							"&closer=" + user + 
+							"&group=" + group + 
+							"&channel_group=" + group + 
+							"&SQLdate=" + SQLdate + 
+							"&epoch=" + UnixTime + 
+							"&uniqueid=" + document.vicidial_form.uniqueid.value + 
+							"&customer_zap_channel=" + lastcustchannel + 
+							"&customer_server_ip=" + lastcustserverip +
+							"&server_ip=" + server_ip + 
+							"&SIPexten=" + extension + 
+							"&session_id=" + session_id + 
+							"&phone=" + document.vicidial_form.phone_number.value + 
+							"&parked_by=" + document.vicidial_form.lead_id.value +
+							"&dispo=" + LeaDDispO + '' +
+							"&dialed_number=" + dialed_number + '' +
+							"&dialed_label=" + dialed_label + '' +
+							"&source_id=" + source_id + '' +
+							"&rank=" + document.vicidial_form.rank.value + '' +
+							"&owner=" + document.vicidial_form.owner.value + '' +
+							"&camp_script=" + campaign_script + '' +
+							"&in_script=" + CalL_ScripT_id + '' +
+							"&script_width=" + script_width + '' +
+							"&script_height=" + script_height + '' +
+							"&fullname=" + LOGfullname + '' +
+							"&recording_filename=" + recording_filename + '' +
+							"&recording_id=" + recording_id + '' +
+							"&user_custom_one=" + VU_custom_one + '' +
+							"&user_custom_two=" + VU_custom_two + '' +
+							"&user_custom_three=" + VU_custom_three + '' +
+							"&user_custom_four=" + VU_custom_four + '' +
+							"&user_custom_five=" + VU_custom_five + '' +
+							webform_session;
+							
+							var regWFspace = new RegExp(" ","ig");
+							web_form_vars_two = web_form_vars_two.replace(regWF, '');
+							var regWF = new RegExp("\\`|\\~|\\:|\\;|\\#|\\'|\\\"|\\{|\\}|\\(|\\)|\\*|\\^|\\%|\\$|\\!|\\%|\\r|\\t|\\n","ig");
+							web_form_vars_two = web_form_vars_two.replace(regWFspace, '+');
+							web_form_vars_two = web_form_vars_two.replace(regWF, '');
+
+							var regWFAvars = new RegExp("\\?","ig");
+							if (VDIC_web_form_address_two.match(regWFAvars))
+								{web_form_vars_two = '&' + web_form_vars_two}
+							else
+								{web_form_vars_two = '?' + web_form_vars_two}
+
+							TEMP_VDIC_web_form_address_two = VDIC_web_form_address_two + "" + web_form_vars_two;
+							}
+
 						document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH();\"><IMG SRC=\"../agc/images/vdc_LB_webform.gif\" border=0 alt=\"Web formulár\"></a>\n";
+						if (enable_second_webform > 0)
+							{
+							document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH();\"><IMG SRC=\"../agc/images/vdc_LB_webform_two.gif\" border=0 alt=\"Web formulár 2\"></a>\n";
+							}
 
 						if (LeaDPreVDispO == 'CALLBK')
 							{
@@ -4456,26 +5493,104 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 							if ( (view_scripts == 1) && (campaign_script.length > 0) )
 								{
-								// test code for scripts output
-								URLDecode(scriptnames[campaign_script],'NO');
-								var textname = decoded;
-								URLDecode(scripttexts[campaign_script],'YES');
-								var texttext = decoded;
-								var regWFplus = new RegExp("\\+","ig");
-								textname = textname.replace(regWFplus, ' ');
-								texttext = texttext.replace(regWFplus, ' ');
-								var testscript = "<B>" + textname + "</B>\n\n<BR><BR>\n\n" + texttext;
-								document.getElementById("ScriptContents").innerHTML = testscript;
+								web_form_vars = 
+								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
+								"&list_id=" + document.vicidial_form.list_id.value + 
+								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
+								"&phone_code=" + document.vicidial_form.phone_code.value + 
+								"&phone_number=" + document.vicidial_form.phone_number.value + 
+								"&title=" + document.vicidial_form.title.value + 
+								"&first_name=" + document.vicidial_form.first_name.value + 
+								"&middle_initial=" + document.vicidial_form.middle_initial.value + 
+								"&last_name=" + document.vicidial_form.last_name.value + 
+								"&address1=" + document.vicidial_form.address1.value + 
+								"&address2=" + document.vicidial_form.address2.value + 
+								"&address3=" + document.vicidial_form.address3.value + 
+								"&city=" + document.vicidial_form.city.value + 
+								"&state=" + document.vicidial_form.state.value + 
+								"&province=" + document.vicidial_form.province.value + 
+								"&postal_code=" + document.vicidial_form.postal_code.value + 
+								"&country_code=" + document.vicidial_form.country_code.value + 
+								"&gender=" + document.vicidial_form.gender.value + 
+								"&date_of_birth=" + document.vicidial_form.date_of_birth.value + 
+								"&alt_phone=" + document.vicidial_form.alt_phone.value + 
+								"&email=" + document.vicidial_form.email.value + 
+								"&security_phrase=" + document.vicidial_form.security_phrase.value + 
+								"&comments=" + document.vicidial_form.comments.value + 
+								"&user=" + user + 
+								"&pass=" + pass + 
+								"&campaign=" + campaign + 
+								"&phone_login=" + phone_login + 
+								"&original_phone_login=" + original_phone_login +
+								"&phone_pass=" + phone_pass + 
+								"&fronter=" + fronter + 
+								"&closer=" + user + 
+								"&group=" + group + 
+								"&channel_group=" + group + 
+								"&SQLdate=" + SQLdate + 
+								"&epoch=" + UnixTime + 
+								"&uniqueid=" + document.vicidial_form.uniqueid.value + 
+								"&customer_zap_channel=" + lastcustchannel + 
+								"&customer_server_ip=" + lastcustserverip +
+								"&server_ip=" + server_ip + 
+								"&SIPexten=" + extension + 
+								"&session_id=" + session_id + 
+								"&phone=" + document.vicidial_form.phone_number.value + 
+								"&parked_by=" + document.vicidial_form.lead_id.value +
+								"&dispo=" + LeaDDispO + '' +
+								"&dialed_number=" + dialed_number + '' +
+								"&dialed_label=" + dialed_label + '' +
+								"&source_id=" + source_id + '' +
+								"&rank=" + document.vicidial_form.rank.value + '' +
+								"&owner=" + document.vicidial_form.owner.value + '' +
+								"&camp_script=" + campaign_script + '' +
+								"&in_script=" + CalL_ScripT_id + '' +
+								"&script_width=" + script_width + '' +
+								"&script_height=" + script_height + '' +
+								"&fullname=" + LOGfullname + '' +
+								"&recording_filename=" + recording_filename + '' +
+								"&recording_id=" + recording_id + '' +
+								"&user_custom_one=" + VU_custom_one + '' +
+								"&user_custom_two=" + VU_custom_two + '' +
+								"&user_custom_three=" + VU_custom_three + '' +
+								"&user_custom_four=" + VU_custom_four + '' +
+								"&user_custom_five=" + VU_custom_five + '' +
+								webform_session;
+								
+								var regWFspace = new RegExp(" ","ig");
+								web_form_vars = web_form_vars.replace(regWF, '');
+								var regWF = new RegExp("\\`|\\~|\\:|\\;|\\#|\\'|\\\"|\\{|\\}|\\(|\\)|\\*|\\^|\\%|\\$|\\!|\\%|\\r|\\t|\\n","ig");
+								web_form_vars = web_form_vars.replace(regWFspace, '+');
+								web_form_vars = web_form_vars.replace(regWF, '');
+
+								if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
+									{
+									delayed_script_load = 'YES';
+									RefresHScript('CLEAR');
+									}
+								else
+									{
+									load_script_contents();
+									}
 								}
 
 							if (get_call_launch == 'SCRIPT')
 								{
+								if (delayed_script_load == 'YES')
+									{
+									load_script_contents();
+									}
 								ScriptPanelToFront();
 								}
 
 							if (get_call_launch == 'WEBFORM')
 								{
 								window.open(TEMP_VDIC_web_form_address, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+								}
+							if (get_call_launch == 'WEBFORMTWO')
+								{
+								window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 								}
 
 							}
@@ -4495,6 +5610,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				prefix_choice='';
 				agent_dialed_number='';
 				agent_dialed_type='';
+				CalL_ScripT_id='';
 				}
 			}
 		}
@@ -4568,12 +5684,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							document.vicidial_form.list_id.value		='';
 							document.vicidial_form.gmt_offset_now.value	='';
 							document.vicidial_form.phone_code.value		='';
-							if (disable_alter_custphone=='Y')
+							if ( (disable_alter_custphone=='Y') || (disable_alter_custphone=='HIDE') )
 								{
 								var tmp_pn = document.getElementById("phone_numberDISP");
 								tmp_pn.innerHTML			= ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';
 								}
-							document.vicidial_form.phone_number.value	= '';
+							document.vicidial_form.phone_number.value	='';
 							document.vicidial_form.title.value			='';
 							document.vicidial_form.first_name.value		='';
 							document.vicidial_form.middle_initial.value	='';
@@ -4593,6 +5709,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							document.vicidial_form.security_phrase.value='';
 							document.vicidial_form.comments.value		='';
 							document.vicidial_form.called_count.value	='';
+							document.vicidial_form.rank.value			='';
+							document.vicidial_form.owner.value			='';
 							VDCL_group_id = '';
 							fronter = '';
 							previous_called_count = '';
@@ -4618,6 +5736,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				prefix_choice='';
 				agent_dialed_number='';
 				agent_dialed_type='';
+				CalL_ScripT_id='';
 				}
 			}
 		}
@@ -4753,28 +5872,104 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 						if ( (view_scripts == 1) && (campaign_script.length > 0) )
 							{
-							// test code for scripts output
-							URLDecode(scriptnames[campaign_script],'NO');
-							var textname = decoded;
-							URLDecode(scripttexts[campaign_script],'YES');
-							var texttext = decoded;
-							var regWFplus = new RegExp("\\+","ig");
-							textname = textname.replace(regWFplus, ' ');
-							texttext = texttext.replace(regWFplus, ' ');
-							var testscript = "<B>" + textname + "</B>\n\n<BR><BR>\n\n" + texttext;
-							document.getElementById("ScriptContents").innerHTML = testscript;
+							web_form_vars = 
+							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
+							"&list_id=" + document.vicidial_form.list_id.value + 
+							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
+							"&phone_code=" + document.vicidial_form.phone_code.value + 
+							"&phone_number=" + document.vicidial_form.phone_number.value + 
+							"&title=" + document.vicidial_form.title.value + 
+							"&first_name=" + document.vicidial_form.first_name.value + 
+							"&middle_initial=" + document.vicidial_form.middle_initial.value + 
+							"&last_name=" + document.vicidial_form.last_name.value + 
+							"&address1=" + document.vicidial_form.address1.value + 
+							"&address2=" + document.vicidial_form.address2.value + 
+							"&address3=" + document.vicidial_form.address3.value + 
+							"&city=" + document.vicidial_form.city.value + 
+							"&state=" + document.vicidial_form.state.value + 
+							"&province=" + document.vicidial_form.province.value + 
+							"&postal_code=" + document.vicidial_form.postal_code.value + 
+							"&country_code=" + document.vicidial_form.country_code.value + 
+							"&gender=" + document.vicidial_form.gender.value + 
+							"&date_of_birth=" + document.vicidial_form.date_of_birth.value + 
+							"&alt_phone=" + document.vicidial_form.alt_phone.value + 
+							"&email=" + document.vicidial_form.email.value + 
+							"&security_phrase=" + document.vicidial_form.security_phrase.value + 
+							"&comments=" + document.vicidial_form.comments.value + 
+							"&user=" + user + 
+							"&pass=" + pass + 
+							"&campaign=" + campaign + 
+							"&phone_login=" + phone_login + 
+							"&original_phone_login=" + original_phone_login +
+							"&phone_pass=" + phone_pass + 
+							"&fronter=" + fronter + 
+							"&closer=" + user + 
+							"&group=" + group + 
+							"&channel_group=" + group + 
+							"&SQLdate=" + SQLdate + 
+							"&epoch=" + UnixTime + 
+							"&uniqueid=" + document.vicidial_form.uniqueid.value + 
+							"&customer_zap_channel=" + lastcustchannel + 
+							"&customer_server_ip=" + lastcustserverip +
+							"&server_ip=" + server_ip + 
+							"&SIPexten=" + extension + 
+							"&session_id=" + session_id + 
+							"&phone=" + document.vicidial_form.phone_number.value + 
+							"&parked_by=" + document.vicidial_form.lead_id.value +
+							"&dispo=" + LeaDDispO + '' +
+							"&dialed_number=" + dialed_number + '' +
+							"&dialed_label=" + dialed_label + '' +
+							"&source_id=" + source_id + '' +
+							"&rank=" + document.vicidial_form.rank.value + '' +
+							"&owner=" + document.vicidial_form.owner.value + '' +
+							"&camp_script=" + campaign_script + '' +
+							"&in_script=" + CalL_ScripT_id + '' +
+							"&script_width=" + script_width + '' +
+							"&script_height=" + script_height + '' +
+							"&fullname=" + LOGfullname + '' +
+							"&recording_filename=" + recording_filename + '' +
+							"&recording_id=" + recording_id + '' +
+							"&user_custom_one=" + VU_custom_one + '' +
+							"&user_custom_two=" + VU_custom_two + '' +
+							"&user_custom_three=" + VU_custom_three + '' +
+							"&user_custom_four=" + VU_custom_four + '' +
+							"&user_custom_five=" + VU_custom_five + '' +
+							webform_session;
+							
+							var regWFspace = new RegExp(" ","ig");
+							web_form_vars = web_form_vars.replace(regWF, '');
+							var regWF = new RegExp("\\`|\\~|\\:|\\;|\\#|\\'|\\\"|\\{|\\}|\\(|\\)|\\*|\\^|\\%|\\$|\\!|\\%|\\r|\\t|\\n","ig");
+							web_form_vars = web_form_vars.replace(regWFspace, '+');
+							web_form_vars = web_form_vars.replace(regWF, '');
+
+							if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
+								{
+								delayed_script_load = 'YES';
+								RefresHScript('CLEAR');
+								}
+							else
+								{
+								load_script_contents();
+								}
 							}
 
 						if (get_call_launch == 'SCRIPT')
 							{
+							if (delayed_script_load == 'YES')
+								{
+								load_script_contents();
+								}
 							ScriptPanelToFront();
 							}
-
 						if (get_call_launch == 'WEBFORM')
 							{
 							window.open(TEMP_VDIC_web_form_address, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 							}
-
+						if (get_call_launch == 'WEBFORMTWO')
+							{
+							window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+							}
 						}
 					}
 				}
@@ -4784,6 +5979,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			prefix_choice='';
 			agent_dialed_number='';
 			agent_dialed_type='';
+			CalL_ScripT_id='';
 			}
 
 		}
@@ -4791,11 +5987,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 // ################################################################################
 // Set the client to READY and start looking for calls (VDADready, VDADpause)
-	function AutoDial_ReSume_PauSe(taskaction,taskagentlog,taskwrapup)
+	function AutoDial_ReSume_PauSe(taskaction,taskagentlog,taskwrapup,taskstatuschange,temp_reason)
 		{
 		if (taskaction == 'VDADready')
 			{
-			var VDRP_stage = 'READY';
+			VDRP_stage = 'READY';
 			if (INgroupCOUNT > 0)
 				{
 				if (VICIDiaL_closer_blended == 0)
@@ -4818,7 +6014,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		else
 			{
-			var VDRP_stage = 'PAUSED';
+			VDRP_stage = 'PAUSED';
 			AutoDialReady = 0;
 			AutoDialWaiting = 0;
 			if (dial_method == "INBOUND_MAN")
@@ -4832,7 +6028,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				document.getElementById("DiaLControl").innerHTML = DiaLControl_auto_HTML;
 				}
 
-			if (agent_pause_codes_active=='FORCE')
+			if ( (agent_pause_codes_active=='FORCE') && (temp_reason != 'ODHLÁSIŤ') && (temp_reason != 'REQUEUE') && (temp_reason != 'DIALNEXT') )
 				{
 				PauseCodeSelectContent_create();
  				}
@@ -4859,7 +6055,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		if (xmlhttp) 
 			{ 
-			autoDiaLready_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=" + taskaction + "&user=" + user + "&pass=" + pass + "&stage=" + VDRP_stage + "&agent_log_id=" + agent_log_id + "&agent_log=" + taskagentlog + "&wrapup=" + taskwrapup + "&campaign=" + campaign;
+			autoDiaLready_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=" + taskaction + "&user=" + user + "&pass=" + pass + "&stage=" + VDRP_stage + "&agent_log_id=" + agent_log_id + "&agent_log=" + taskagentlog + "&wrapup=" + taskwrapup + "&campaign=" + campaign + "&dial_method" + dial_method + "&comments=" + taskstatuschange;
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(autoDiaLready_query); 
@@ -4872,13 +6068,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					var check_DS_array=check_dispo.split("\n");
 				//	alert(xmlhttp.responseText + "\n|" + check_DS_array[1] + "\n|" + check_DS_array[2] + "|");
 					if (check_DS_array[1] == 'Next agent_log_id:')
-						{
-						agent_log_id = check_DS_array[2];
-						}
+						{agent_log_id = check_DS_array[2];}
 					}
 				}
 			delete xmlhttp;
 			}
+		return agent_log_id;
 		}
 
 
@@ -4945,7 +6140,50 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 
 // ################################################################################
-// Check to see if there is a call being sent from the auto-dialer to agent conf
+// pull the script contents sending the webform variables to the script display script
+	function load_script_contents()
+		{
+		var new_script_content = null;
+		var xmlhttp=false;
+		/*@cc_on @*/
+		/*@if (@_jscript_version >= 5)
+		// JScript gives us Conditional compilation, we can cope with old IE versions.
+		// and security blocked creation of the objects.
+		 try {
+		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+		 } catch (e) {
+		  try {
+		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		  } catch (E) {
+		   xmlhttp = false;
+		  }
+		 }
+		@end @*/
+		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+			{
+			xmlhttp = new XMLHttpRequest();
+			}
+		if (xmlhttp) 
+			{ 
+			NeWscript_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ScrollDIV=1&" + web_form_vars;
+			xmlhttp.open('POST', 'vdc_script_display.php'); 
+			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+			xmlhttp.send(NeWscript_query); 
+			xmlhttp.onreadystatechange = function() 
+				{ 
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+					{
+					new_script_content = xmlhttp.responseText;
+					document.getElementById("ScriptContents").innerHTML = new_script_content;
+					}
+				}
+			delete xmlhttp;
+			}
+		}
+
+
+// ################################################################################
+// Alternate phone number change
 	function alt_phone_change(APCphone,APCcount,APCleadID,APCactive)
 		{
 
@@ -5044,6 +6282,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 							var VDIC_data_VDAC=check_VDIC_array[1].split("|");
 							VDIC_web_form_address = VICIDiaL_web_form_address
+							VDIC_web_form_address_two = VICIDiaL_web_form_address_two
 							var VDIC_fronter='';
 
 							var VDIC_data_VDIG=check_VDIC_array[2].split("|");
@@ -5089,6 +6328,30 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							else
 								{LIVE_web_vars = default_web_vars;}
 
+							if (VDIC_data_VDIG[17].length > 5)
+								{VDIC_web_form_address_two = VDIC_data_VDIG[17];}
+
+							var call_timer_action							= VDIC_data_VDIG[18];
+
+							if ( (call_timer_action == 'NONE') || (call_timer_action.length < 2) )
+								{
+								timer_action = campaign_timer_action;
+								timer_action_message = campaign_timer_action_message;
+								timer_action_seconds = campaign_timer_action_seconds;
+								}
+							else
+								{
+								var call_timer_action_message				= VDIC_data_VDIG[19];
+								var call_timer_action_seconds				= VDIC_data_VDIG[20];
+								timer_action = call_timer_action;
+								timer_action_message = call_timer_action_message;
+								timer_action_seconds = call_timer_action_seconds;
+								}
+
+							CalL_XC_c_NuMber			= VDIC_data_VDIG[21];
+							CalL_XC_d_NuMber			= VDIC_data_VDIG[22];
+							CalL_XC_e_NuMber			= VDIC_data_VDIG[23];
+
 							var VDIC_data_VDFR=check_VDIC_array[3].split("|");
 							if ( (VDIC_data_VDFR[1].length > 1) && (VDCL_fronter_display == 'Y') )
 								{VDIC_fronter = "  Fronter: " + VDIC_data_VDFR[0] + " - " + VDIC_data_VDFR[1];}
@@ -5120,10 +6383,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							document.vicidial_form.list_id.value			= check_VDIC_array[9];
 							document.vicidial_form.gmt_offset_now.value		= check_VDIC_array[10];
 							document.vicidial_form.phone_code.value			= check_VDIC_array[11];
-							if (disable_alter_custphone=='Y')
+							if ( (disable_alter_custphone=='Y') || (disable_alter_custphone=='HIDE') )
 								{
 								var tmp_pn = document.getElementById("phone_numberDISP");
-								tmp_pn.innerHTML							= check_VDIC_array[12];
+								if (disable_alter_custphone=='Y')
+									{
+									tmp_pn.innerHTML						= check_VDIC_array[12];
+									}
 								}
 							document.vicidial_form.phone_number.value		= check_VDIC_array[12];
 							document.vicidial_form.title.value				= check_VDIC_array[13];
@@ -5159,7 +6425,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							EAalt_phone_notes								= check_VDIC_array[41];
 							EAalt_phone_active								= check_VDIC_array[42];
 							EAalt_phone_count								= check_VDIC_array[43];
-							
+							document.vicidial_form.rank.value				= check_VDIC_array[44];
+							document.vicidial_form.owner.value				= check_VDIC_array[45];
+							script_recording_delay							= check_VDIC_array[46];
+
 							var gIndex = 0;
 							if (document.vicidial_form.gender.value == 'M') {var gIndex = 1;}
 							if (document.vicidial_form.gender.value == 'F') {var gIndex = 2;}
@@ -5214,8 +6483,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 									}
 								var dispnum = document.vicidial_form.phone_number.value;
 								var status_display_number = phone_number_format(dispnum);
+								var callnum = dialed_number;
+								var dial_display_number = phone_number_format(callnum);
 
-								document.getElementById("MainStatuSSpan").innerHTML = " Príchodzie: " + status_display_number + " Group- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter; 
+								document.getElementById("MainStatuSSpan").innerHTML = " Príchodzie: " + dial_display_number + " Group- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter; 
 								}
 
 							document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_LB_parkcall.gif\" border=0 alt=\"Zaparkovaný hovor\"></a>";
@@ -5224,17 +6495,78 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 							document.getElementById("XferControl").innerHTML = "<a href=\"#\" onclick=\"ShoWTransferMain('ON');\"><IMG SRC=\"../agc/images/vdc_LB_transferconf.gif\" border=0 alt=\"Presmerovanie - Konferencia\"></a>";
 
-							document.getElementById("LocalCloser").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_XB_localcloser.gif\" border=0 alt=\"LOKALNE ROZSIRENIE\"></a>";
+							document.getElementById("LocalCloser").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_XB_localcloser.gif\" border=0 alt=\"LOKALNE ROZSIRENIE\" style=\"vertical-align:middle\"></a>";
 
-							document.getElementById("DialBlindTransfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_XB_blindtransfer.gif\" border=0 alt=\"Volať slepé presmerovanie\"></a>";
+							document.getElementById("DialBlindTransfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_XB_blindtransfer.gif\" border=0 alt=\"Volať slepé presmerovanie\" style=\"vertical-align:middle\"></a>";
 
-							document.getElementById("DialBlindVMail").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRVMAIL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_XB_ammessage.gif\" border=0 alt=\"Blind Transfer VMail Message\"></a>";
+							document.getElementById("DialBlindVMail").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRVMAIL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_XB_ammessage.gif\" border=0 alt=\"Blind Transfer VMail Message\" style=\"vertical-align:middle\"></a>";
 		
+							if (quick_transfer_button == 'IN_GROUP')
+								{
+								document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_LB_quickxfer.gif\" border=0 alt=\"Rýchly prenos\"></a>";
+								}
+							if (prepopulate_transfer_preset_enabled > 0)
+								{
+								if (prepopulate_transfer_preset == 'PZNOVU INCIALIZOVAŤ_1')
+									{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
+								if (prepopulate_transfer_preset == 'PZNOVU INCIALIZOVAŤ_2')
+									{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
+								if (prepopulate_transfer_preset == 'PZNOVU INCIALIZOVAŤ_3')
+									{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;}
+								if (prepopulate_transfer_preset == 'PZNOVU INCIALIZOVAŤ_4')
+									{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;}
+								if (prepopulate_transfer_preset == 'PZNOVU INCIALIZOVAŤ_5')
+									{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;}
+								}
+							if ( (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_1') || (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_2') || (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_3') || (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_4') || (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_5') )
+								{
+								document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_LB_quickxfer.gif\" border=0 alt=\"Rýchly prenos\"></a>";
+
+								if (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_1')
+									{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
+								if (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_2')
+									{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
+								if (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_3')
+									{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;}
+								if (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_4')
+									{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;}
+								if (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_5')
+									{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;}
+								}
+
+							if (call_requeue_button > 0)
+								{
+								var CloserSelectChoices = document.vicidial_form.CloserSelectList.value;
+								var regCRB = new RegExp("AGENTDIRECT","ig");
+								if ( (CloserSelectChoices.match(regCRB)) || (VU_closer_campaigns.match(regCRB)) )
+									{
+									document.getElementById("ReQueueCall").innerHTML =  "<a href=\"#\" onclick=\"call_requeue_launch();return false;\"><IMG SRC=\"../agc/images/vdc_LB_requeue_call.gif\" border=0 alt=\"Re-Queue Call\"></a>";
+									}
+								else
+									{
+									document.getElementById("ReQueueCall").innerHTML =  "<IMG SRC=\"../agc/images/vdc_LB_requeue_call_OFF.gif\" border=0 alt=\"Re-Queue Call\">";
+									}
+								}
+
+							// Build transfer pull-down list
+							var loop_ct = 0;
+							var live_XfeR_HTML = '';
+							var XfeR_SelecT = '';
+							while (loop_ct < XFgroupCOUNT)
+								{
+								if (VARxfergroups[loop_ct] == LIVE_default_xfer_group)
+									{XfeR_SelecT = 'SELECTED ';}
+								else {XfeR_SelecT = '';}
+								live_XfeR_HTML = live_XfeR_HTML + "<option " + XfeR_SelecT + "value=\"" + VARxfergroups[loop_ct] + "\">" + VARxfergroups[loop_ct] + " - " + VARxfergroupsnames[loop_ct] + "</option>\n";
+								loop_ct++;
+								}
+							document.getElementById("XfeRGrouPLisT").innerHTML = "<select size=1 name=XfeRGrouP class=\"cust_form\" id=XfeRGrouP>" + live_XfeR_HTML + "</select>";
+
 							if (lastcustserverip == server_ip)
-							{
+								{
 								document.getElementById("VolumeUpSpan").innerHTML = "<a href=\"#\" onclick=\"volume_control('UP','" + lastcustchannel + "','');return false;\"><IMG SRC=\"../agc/images/vdc_volume_up.gif\" Border=0></a>";
 								document.getElementById("VolumeDownSpan").innerHTML = "<a href=\"#\" onclick=\"volume_control('DOWN','" + lastcustchannel + "','');return false;\"><IMG SRC=\"../agc/images/vdc_volume_down.gif\" Border=0></a>";
-							}
+								}
 
 							if (dial_method == "INBOUND_MAN")
 								{
@@ -5254,7 +6586,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							var genderIndex = document.getElementById("gender_list").selectedIndex;
 							var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
 							document.vicidial_form.gender.value = genderValue;
-
+							LeaDDispO='';
 
 							var regWFAcustom = new RegExp("^VAR","ig");
 							if (VDIC_web_form_address.match(regWFAcustom))
@@ -5294,6 +6626,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&pass=" + pass + 
 								"&campaign=" + campaign + 
 								"&phone_login=" + phone_login + 
+								"&original_phone_login=" + original_phone_login +
 								"&phone_pass=" + phone_pass + 
 								"&fronter=" + fronter + 
 								"&closer=" + user + 
@@ -5313,6 +6646,20 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&dialed_number=" + dialed_number + '' +
 								"&dialed_label=" + dialed_label + '' +
 								"&source_id=" + source_id + '' +
+								"&rank=" + document.vicidial_form.rank.value + '' +
+								"&owner=" + document.vicidial_form.owner.value + '' +
+								"&camp_script=" + campaign_script + '' +
+								"&in_script=" + CalL_ScripT_id + '' +
+								"&script_width=" + script_width + '' +
+								"&script_height=" + script_height + '' +
+								"&fullname=" + LOGfullname + '' +
+								"&recording_filename=" + recording_filename + '' +
+								"&recording_id=" + recording_id + '' +
+								"&user_custom_one=" + VU_custom_one + '' +
+								"&user_custom_two=" + VU_custom_two + '' +
+								"&user_custom_three=" + VU_custom_three + '' +
+								"&user_custom_four=" + VU_custom_four + '' +
+								"&user_custom_five=" + VU_custom_five + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -5330,34 +6677,205 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								TEMP_VDIC_web_form_address = VDIC_web_form_address + "" + web_form_vars;
 								}
 
+							if (VDIC_web_form_address_two.match(regWFAcustom))
+								{
+								URLDecode(VDIC_web_form_address_two,'YES');
+								TEMP_VDIC_web_form_address_two = decoded;
+								TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAcustom, '');
+								}
+							else
+								{
+								web_form_vars_two = 
+								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
+								"&list_id=" + document.vicidial_form.list_id.value + 
+								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
+								"&phone_code=" + document.vicidial_form.phone_code.value + 
+								"&phone_number=" + document.vicidial_form.phone_number.value + 
+								"&title=" + document.vicidial_form.title.value + 
+								"&first_name=" + document.vicidial_form.first_name.value + 
+								"&middle_initial=" + document.vicidial_form.middle_initial.value + 
+								"&last_name=" + document.vicidial_form.last_name.value + 
+								"&address1=" + document.vicidial_form.address1.value + 
+								"&address2=" + document.vicidial_form.address2.value + 
+								"&address3=" + document.vicidial_form.address3.value + 
+								"&city=" + document.vicidial_form.city.value + 
+								"&state=" + document.vicidial_form.state.value + 
+								"&province=" + document.vicidial_form.province.value + 
+								"&postal_code=" + document.vicidial_form.postal_code.value + 
+								"&country_code=" + document.vicidial_form.country_code.value + 
+								"&gender=" + document.vicidial_form.gender.value + 
+								"&date_of_birth=" + document.vicidial_form.date_of_birth.value + 
+								"&alt_phone=" + document.vicidial_form.alt_phone.value + 
+								"&email=" + document.vicidial_form.email.value + 
+								"&security_phrase=" + document.vicidial_form.security_phrase.value + 
+								"&comments=" + document.vicidial_form.comments.value + 
+								"&user=" + user + 
+								"&pass=" + pass + 
+								"&campaign=" + campaign + 
+								"&phone_login=" + phone_login + 
+								"&original_phone_login=" + original_phone_login +
+								"&phone_pass=" + phone_pass + 
+								"&fronter=" + fronter + 
+								"&closer=" + user + 
+								"&group=" + group + 
+								"&channel_group=" + group + 
+								"&SQLdate=" + SQLdate + 
+								"&epoch=" + UnixTime + 
+								"&uniqueid=" + document.vicidial_form.uniqueid.value + 
+								"&customer_zap_channel=" + lastcustchannel + 
+								"&customer_server_ip=" + lastcustserverip +
+								"&server_ip=" + server_ip + 
+								"&SIPexten=" + extension + 
+								"&session_id=" + session_id + 
+								"&phone=" + document.vicidial_form.phone_number.value + 
+								"&parked_by=" + document.vicidial_form.lead_id.value +
+								"&dispo=" + LeaDDispO + '' +
+								"&dialed_number=" + dialed_number + '' +
+								"&dialed_label=" + dialed_label + '' +
+								"&source_id=" + source_id + '' +
+								"&rank=" + document.vicidial_form.rank.value + '' +
+								"&owner=" + document.vicidial_form.owner.value + '' +
+								"&camp_script=" + campaign_script + '' +
+								"&in_script=" + CalL_ScripT_id + '' +
+								"&script_width=" + script_width + '' +
+								"&script_height=" + script_height + '' +
+								"&fullname=" + LOGfullname + '' +
+								"&recording_filename=" + recording_filename + '' +
+								"&recording_id=" + recording_id + '' +
+								"&user_custom_one=" + VU_custom_one + '' +
+								"&user_custom_two=" + VU_custom_two + '' +
+								"&user_custom_three=" + VU_custom_three + '' +
+								"&user_custom_four=" + VU_custom_four + '' +
+								"&user_custom_five=" + VU_custom_five + '' +
+								webform_session;
+								
+								var regWFspace = new RegExp(" ","ig");
+								web_form_vars_two = web_form_vars_two.replace(regWF, '');
+								var regWF = new RegExp("\\`|\\~|\\:|\\;|\\#|\\'|\\\"|\\{|\\}|\\(|\\)|\\*|\\^|\\%|\\$|\\!|\\%|\\r|\\t|\\n","ig");
+								web_form_vars_two = web_form_vars_two.replace(regWFspace, '+');
+								web_form_vars_two = web_form_vars_two.replace(regWF, '');
+
+								var regWFAvars = new RegExp("\\?","ig");
+								if (VDIC_web_form_address_two.match(regWFAvars))
+									{web_form_vars_two = '&' + web_form_vars_two}
+								else
+									{web_form_vars_two = '?' + web_form_vars_two}
+
+								TEMP_VDIC_web_form_address_two = VDIC_web_form_address_two + "" + web_form_vars_two;
+								}
+
 
 							document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH();\"><IMG SRC=\"../agc/images/vdc_LB_webform.gif\" border=0 alt=\"Web formulár\"></a>\n";
+
+							if (enable_second_webform > 0)
+								{
+								document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH();\"><IMG SRC=\"../agc/images/vdc_LB_webform_two.gif\" border=0 alt=\"Web formulár 2\"></a>\n";
+								}
 
 							if ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') )
 								{all_record = 'YES';}
 
 							if ( (view_scripts == 1) && (CalL_ScripT_id.length > 0) )
 								{
-								// test code for scripts output
-								URLDecode(scriptnames[CalL_ScripT_id],'NO');
-								var textname = decoded;
-								URLDecode(scripttexts[CalL_ScripT_id],'YES');
-								var texttext = decoded;
-								var regWFplus = new RegExp("\\+","ig");
-								textname = textname.replace(regWFplus, ' ');
-								texttext = texttext.replace(regWFplus, ' ');
-								var testscript = "<B>" + textname + "</B>\n\n<BR><BR>\n\n" + texttext;
-								document.getElementById("ScriptContents").innerHTML = testscript;
+								web_form_vars = 
+								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
+								"&list_id=" + document.vicidial_form.list_id.value + 
+								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
+								"&phone_code=" + document.vicidial_form.phone_code.value + 
+								"&phone_number=" + document.vicidial_form.phone_number.value + 
+								"&title=" + document.vicidial_form.title.value + 
+								"&first_name=" + document.vicidial_form.first_name.value + 
+								"&middle_initial=" + document.vicidial_form.middle_initial.value + 
+								"&last_name=" + document.vicidial_form.last_name.value + 
+								"&address1=" + document.vicidial_form.address1.value + 
+								"&address2=" + document.vicidial_form.address2.value + 
+								"&address3=" + document.vicidial_form.address3.value + 
+								"&city=" + document.vicidial_form.city.value + 
+								"&state=" + document.vicidial_form.state.value + 
+								"&province=" + document.vicidial_form.province.value + 
+								"&postal_code=" + document.vicidial_form.postal_code.value + 
+								"&country_code=" + document.vicidial_form.country_code.value + 
+								"&gender=" + document.vicidial_form.gender.value + 
+								"&date_of_birth=" + document.vicidial_form.date_of_birth.value + 
+								"&alt_phone=" + document.vicidial_form.alt_phone.value + 
+								"&email=" + document.vicidial_form.email.value + 
+								"&security_phrase=" + document.vicidial_form.security_phrase.value + 
+								"&comments=" + document.vicidial_form.comments.value + 
+								"&user=" + user + 
+								"&pass=" + pass + 
+								"&campaign=" + campaign + 
+								"&phone_login=" + phone_login + 
+								"&original_phone_login=" + original_phone_login +
+								"&phone_pass=" + phone_pass + 
+								"&fronter=" + fronter + 
+								"&closer=" + user + 
+								"&group=" + group + 
+								"&channel_group=" + group + 
+								"&SQLdate=" + SQLdate + 
+								"&epoch=" + UnixTime + 
+								"&uniqueid=" + document.vicidial_form.uniqueid.value + 
+								"&customer_zap_channel=" + lastcustchannel + 
+								"&customer_server_ip=" + lastcustserverip +
+								"&server_ip=" + server_ip + 
+								"&SIPexten=" + extension + 
+								"&session_id=" + session_id + 
+								"&phone=" + document.vicidial_form.phone_number.value + 
+								"&parked_by=" + document.vicidial_form.lead_id.value +
+								"&dispo=" + LeaDDispO + '' +
+								"&dialed_number=" + dialed_number + '' +
+								"&dialed_label=" + dialed_label + '' +
+								"&source_id=" + source_id + '' +
+								"&rank=" + document.vicidial_form.rank.value + '' +
+								"&owner=" + document.vicidial_form.owner.value + '' +
+								"&camp_script=" + campaign_script + '' +
+								"&in_script=" + CalL_ScripT_id + '' +
+								"&script_width=" + script_width + '' +
+								"&script_height=" + script_height + '' +
+								"&fullname=" + LOGfullname + '' +
+								"&recording_filename=" + recording_filename + '' +
+								"&recording_id=" + recording_id + '' +
+								"&user_custom_one=" + VU_custom_one + '' +
+								"&user_custom_two=" + VU_custom_two + '' +
+								"&user_custom_three=" + VU_custom_three + '' +
+								"&user_custom_four=" + VU_custom_four + '' +
+								"&user_custom_five=" + VU_custom_five + '' +
+								webform_session;
+								
+								var regWFspace = new RegExp(" ","ig");
+								web_form_vars = web_form_vars.replace(regWF, '');
+								var regWF = new RegExp("\\`|\\~|\\:|\\;|\\#|\\'|\\\"|\\{|\\}|\\(|\\)|\\*|\\^|\\%|\\$|\\!|\\%|\\r|\\t|\\n","ig");
+								web_form_vars = web_form_vars.replace(regWFspace, '+');
+								web_form_vars = web_form_vars.replace(regWF, '');
+
+								if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
+									{
+									delayed_script_load = 'YES';
+									RefresHScript('CLEAR');
+									}
+								else
+									{
+									load_script_contents();
+									}
 								}
 
 							if (CalL_AutO_LauncH == 'SCRIPT')
 								{
+								if (delayed_script_load == 'YES')
+									{
+									load_script_contents();
+									}
 								ScriptPanelToFront();
 								}
 
 							if (CalL_AutO_LauncH == 'WEBFORM')
 								{
 								window.open(TEMP_VDIC_web_form_address, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+								}
+							if (CalL_AutO_LauncH == 'WEBFORMTWO')
+								{
+								window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 								}
 
 							if ( (CopY_tO_ClipboarD != 'NONE') && (useIE > 0) )
@@ -5368,7 +6886,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 							if (alert_enabled=='ON')
 								{
-								alert(" Príchodzie: " + status_display_number + "\n Group- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter);
+								var callnum = dialed_number;
+								var dial_display_number = phone_number_format(callnum);
+								alert(" Príchodzie: " + dial_display_number + "\n Group- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter);
 								}
 							}
 						else
@@ -5383,10 +6903,30 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		}
 
+
+// ################################################################################
+// refresh or clear the SCRIPT frame contents
+	function RefresHScript(temp_wipe)
+		{
+		if (temp_wipe == 'CLEAR')
+			{
+			document.getElementById("ScriptContents").innerHTML = '';
+			}
+		else
+			{
+			document.getElementById("ScriptContents").innerHTML = '';
+			WebFormRefresH('','','1');
+			load_script_contents();
+			}
+		}
+
+
 // ################################################################################
 // refresh the content of the web form URL
-	function WebFormRefresH(taskrefresh,submittask) 
+	function WebFormRefresH(taskrefresh,submittask,force_webvars_refresh) 
 		{
+		var webvars_refresh=0;
+
 		if (VDCL_group_id.length > 1)
 			{var group = VDCL_group_id;}
 		else
@@ -5408,6 +6948,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAcustom, '');
 			}
 		else
+			{webvars_refresh=1;}
+
+		if ( (webvars_refresh > 0) || (force_webvars_refresh > 0) )
 			{
 			web_form_vars = 
 			"lead_id=" + document.vicidial_form.lead_id.value + 
@@ -5438,6 +6981,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			"&pass=" + pass + 
 			"&campaign=" + campaign + 
 			"&phone_login=" + phone_login + 
+			"&original_phone_login=" + original_phone_login +
 			"&phone_pass=" + phone_pass + 
 			"&fronter=" + fronter + 
 			"&closer=" + user + 
@@ -5457,6 +7001,20 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			"&dialed_number=" + dialed_number + '' +
 			"&dialed_label=" + dialed_label + '' +
 			"&source_id=" + source_id + '' +
+			"&rank=" + document.vicidial_form.rank.value + '' +
+			"&owner=" + document.vicidial_form.owner.value + '' +
+			"&camp_script=" + campaign_script + '' +
+			"&in_script=" + CalL_ScripT_id + '' +
+			"&script_width=" + script_width + '' +
+			"&script_height=" + script_height + '' +
+			"&fullname=" + LOGfullname + '' +
+			"&recording_filename=" + recording_filename + '' +
+			"&recording_id=" + recording_id + '' +
+			"&user_custom_one=" + VU_custom_one + '' +
+			"&user_custom_two=" + VU_custom_two + '' +
+			"&user_custom_three=" + VU_custom_three + '' +
+			"&user_custom_four=" + VU_custom_four + '' +
+			"&user_custom_five=" + VU_custom_five + '' +
 			webform_session;
 			
 			var regWFspace = new RegExp(" ","ig");
@@ -5482,6 +7040,127 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		else 
 			{
 			document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOut=\"WebFormRefresH('OUT');\"><IMG SRC=\"../agc/images/vdc_LB_webform.gif\" border=0 alt=\"Web formulár\"></a>\n";
+			}
+		}
+
+
+// ################################################################################
+// refresh the content of the second web form URL
+	function WebFormTwoRefresH(taskrefresh,submittask) 
+		{
+		if (VDCL_group_id.length > 1)
+			{var group = VDCL_group_id;}
+		else
+			{var group = campaign;}
+		if ( (dialed_label.length < 2) || (dialed_label=='NONE') ) {dialed_label='MAIN';}
+
+		if (submittask != 'YES')
+			{
+			var genderIndex = document.getElementById("gender_list").selectedIndex;
+			var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
+			document.vicidial_form.gender.value = genderValue;
+			}
+
+		var regWFAcustom = new RegExp("^VAR","ig");
+		if (VDIC_web_form_address_two.match(regWFAcustom))
+			{
+			URLDecode(VDIC_web_form_address_two,'YES');
+			TEMP_VDIC_web_form_address_two = decoded;
+			TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAcustom, '');
+			}
+		else
+			{
+			web_form_vars_two = 
+			"lead_id=" + document.vicidial_form.lead_id.value + 
+			"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
+			"&list_id=" + document.vicidial_form.list_id.value + 
+			"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
+			"&phone_code=" + document.vicidial_form.phone_code.value + 
+			"&phone_number=" + document.vicidial_form.phone_number.value + 
+			"&title=" + document.vicidial_form.title.value + 
+			"&first_name=" + document.vicidial_form.first_name.value + 
+			"&middle_initial=" + document.vicidial_form.middle_initial.value + 
+			"&last_name=" + document.vicidial_form.last_name.value + 
+			"&address1=" + document.vicidial_form.address1.value + 
+			"&address2=" + document.vicidial_form.address2.value + 
+			"&address3=" + document.vicidial_form.address3.value + 
+			"&city=" + document.vicidial_form.city.value + 
+			"&state=" + document.vicidial_form.state.value + 
+			"&province=" + document.vicidial_form.province.value + 
+			"&postal_code=" + document.vicidial_form.postal_code.value + 
+			"&country_code=" + document.vicidial_form.country_code.value + 
+			"&gender=" + document.vicidial_form.gender.value + 
+			"&date_of_birth=" + document.vicidial_form.date_of_birth.value + 
+			"&alt_phone=" + document.vicidial_form.alt_phone.value + 
+			"&email=" + document.vicidial_form.email.value + 
+			"&security_phrase=" + document.vicidial_form.security_phrase.value + 
+			"&comments=" + document.vicidial_form.comments.value + 
+			"&user=" + user + 
+			"&pass=" + pass + 
+			"&campaign=" + campaign + 
+			"&phone_login=" + phone_login + 
+			"&original_phone_login=" + original_phone_login +
+			"&phone_pass=" + phone_pass + 
+			"&fronter=" + fronter + 
+			"&closer=" + user + 
+			"&group=" + group + 
+			"&channel_group=" + group + 
+			"&SQLdate=" + SQLdate + 
+			"&epoch=" + UnixTime + 
+			"&uniqueid=" + document.vicidial_form.uniqueid.value + 
+			"&customer_zap_channel=" + lastcustchannel + 
+			"&customer_server_ip=" + lastcustserverip +
+			"&server_ip=" + server_ip + 
+			"&SIPexten=" + extension + 
+			"&session_id=" + session_id + 
+			"&phone=" + document.vicidial_form.phone_number.value + 
+			"&parked_by=" + document.vicidial_form.lead_id.value +
+			"&dispo=" + LeaDDispO + '' +
+			"&dialed_number=" + dialed_number + '' +
+			"&dialed_label=" + dialed_label + '' +
+			"&source_id=" + source_id + '' +
+			"&rank=" + document.vicidial_form.rank.value + '' +
+			"&owner=" + document.vicidial_form.owner.value + '' +
+			"&camp_script=" + campaign_script + '' +
+			"&in_script=" + CalL_ScripT_id + '' +
+			"&script_width=" + script_width + '' +
+			"&script_height=" + script_height + '' +
+			"&fullname=" + LOGfullname + '' +
+			"&recording_filename=" + recording_filename + '' +
+			"&recording_id=" + recording_id + '' +
+			"&user_custom_one=" + VU_custom_one + '' +
+			"&user_custom_two=" + VU_custom_two + '' +
+			"&user_custom_three=" + VU_custom_three + '' +
+			"&user_custom_four=" + VU_custom_four + '' +
+			"&user_custom_five=" + VU_custom_five + '' +
+			webform_session;
+			
+			var regWFspace = new RegExp(" ","ig");
+			web_form_vars_two = web_form_vars_two.replace(regWF, '');
+			var regWF = new RegExp("\\`|\\~|\\:|\\;|\\#|\\'|\\\"|\\{|\\}|\\(|\\)|\\*|\\^|\\%|\\$|\\!|\\%|\\r|\\t|\\n","ig");
+			web_form_vars_two = web_form_vars_two.replace(regWFspace, '+');
+			web_form_vars_two = web_form_vars_two.replace(regWF, '');
+
+			var regWFAvars = new RegExp("\\?","ig");
+			if (VDIC_web_form_address_two.match(regWFAvars))
+				{web_form_vars_two = '&' + web_form_vars_two}
+			else
+				{web_form_vars_two = '?' + web_form_vars_two}
+
+			TEMP_VDIC_web_form_address_two = VDIC_web_form_address_two + "" + web_form_vars_two;
+			}
+
+
+		if (enable_second_webform > 0)
+			{
+			if (taskrefresh == 'OUT')
+				{
+				document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH('IN');\"><IMG SRC=\"../agc/images/vdc_LB_webform_two.gif\" border=0 alt=\"Web formulár 2\"></a>\n";
+				}
+			else 
+				{
+				document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOut=\"WebFormTwoRefresH('OUT');\"><IMG SRC=\"../agc/images/vdc_LB_webform_two.gif\" border=0 alt=\"Web formulár 2\"></a>\n";
+				}
 			}
 		}
 
@@ -5537,7 +7216,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 // ################################################################################
 // Send Hangup command for customer call connected to the conference now to Manager
-	function dialedcall_send_hangup(dispowindow,hotkeysused,altdispo) 
+	function dialedcall_send_hangup(dispowindow,hotkeysused,altdispo,nodeletevdac) 
 		{
 		if (VDCL_group_id.length > 1)
 			{var group = VDCL_group_id;}
@@ -5583,7 +7262,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				var queryCID = "HLvdcW" + epoch_sec + user_abb;
 				var hangupvalue = customer_channel;
 				//		alert(auto_dial_level + "|" + CalLCID + "|" + customer_server_ip + "|" + hangupvalue + "|" + VD_live_call_secondS);
-				custhangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=Hangup&format=text&user=" + user + "&pass=" + pass + "&channel=" + hangupvalue + "&call_server_ip=" + customer_server_ip + "&queryCID=" + queryCID + "&auto_dial_level=" + auto_dial_level + "&CalLCID=" + CalLCID + "&secondS=" + VD_live_call_secondS + "&exten=" + session_id + "&campaign=" + group + "&stage=CALLPOLOŹIŤ";
+				custhangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=Hangup&format=text&user=" + user + "&pass=" + pass + "&channel=" + hangupvalue + "&call_server_ip=" + customer_server_ip + "&queryCID=" + queryCID + "&auto_dial_level=" + auto_dial_level + "&CalLCID=" + CalLCID + "&secondS=" + VD_live_call_secondS + "&exten=" + session_id + "&campaign=" + group + "&stage=CALLPOLOŹIŤ&nodeletevdac=" + nodeletevdac;
 				xmlhttp.open('POST', 'manager_send.php'); 
 				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 				xmlhttp.send(custhangup_query); 
@@ -5615,9 +7294,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			VD_live_call_secondS = 0;
 			MD_ring_secondS = 0;
 			CalLCID = '';
+			MDnextCID = '';
 
 		//	UPDATE VICIDIAL_LOG ENTRY FOR THIS HOVOR PROCESS
-			DialLog("end");
+			DialLog("end",nodeletevdac);
 			conf_dialed=0;
 			if (dispowindow == 'NO')
 				{
@@ -5661,17 +7341,30 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			document.vicidial_form.callserverip.value = '';
 			lastcustchannel='';
 			lastcustserverip='';
+			MDchannel='';
 
 			if( document.images ) { document.images['livecall'].src = image_livecall_OFF.src;}
 			document.getElementById("WebFormSpan").innerHTML = "<IMG SRC=\"../agc/images/vdc_LB_webform_OFF.gif\" border=0 alt=\"Web formulár\">";
+			if (enable_second_webform > 0)
+				{
+				document.getElementById("WebFormSpanTwo").innerHTML = "<IMG SRC=\"../agc/images/vdc_LB_webform_two_OFF.gif\" border=0 alt=\"Web formulár 2\">";
+				}
 			document.getElementById("ParkControl").innerHTML = "<IMG SRC=\"../agc/images/vdc_LB_parkcall_OFF.gif\" border=0 alt=\"Zaparkovaný hovor\">";
 			document.getElementById("HangupControl").innerHTML = "<IMG SRC=\"../agc/images/vdc_LB_hangupcustomer_OFF.gif\" border=0 alt=\"Zložiť zákazníka\">";
 			document.getElementById("XferControl").innerHTML = "<IMG SRC=\"../agc/images/vdc_LB_transferconf_OFF.gif\" border=0 alt=\"Presmerovanie - Konferencia\">";
-			document.getElementById("LocalCloser").innerHTML = "<IMG SRC=\"../agc/images/vdc_XB_localcloser_OFF.gif\" border=0 alt=\"LOKALNE ROZSIRENIE\">";
-			document.getElementById("DialBlindTransfer").innerHTML = "<IMG SRC=\"../agc/images/vdc_XB_blindtransfer_OFF.gif\" border=0 alt=\"Volať slepé presmerovanie\">";
-			document.getElementById("DialBlindVMail").innerHTML = "<IMG SRC=\"../agc/images/vdc_XB_ammessage_OFF.gif\" border=0 alt=\"Blind Transfer VMail Message\">";
+			document.getElementById("LocalCloser").innerHTML = "<IMG SRC=\"../agc/images/vdc_XB_localcloser_OFF.gif\" border=0 alt=\"LOKALNE ROZSIRENIE\" style=\"vertical-align:middle\">";
+			document.getElementById("DialBlindTransfer").innerHTML = "<IMG SRC=\"../agc/images/vdc_XB_blindtransfer_OFF.gif\" border=0 alt=\"Volať slepé presmerovanie\" style=\"vertical-align:middle\">";
+			document.getElementById("DialBlindVMail").innerHTML = "<IMG SRC=\"../agc/images/vdc_XB_ammessage_OFF.gif\" border=0 alt=\"Blind Transfer VMail Message\" style=\"vertical-align:middle\">";
 			document.getElementById("VolumeUpSpan").innerHTML = "<IMG SRC=\"../agc/images/vdc_volume_up_off.gif\" Border=0>";
 			document.getElementById("VolumeDownSpan").innerHTML = "<IMG SRC=\"../agc/images/vdc_volume_down_off.gif\" Border=0>";
+
+			if (quick_transfer_button_enabled > 0)
+				{document.getElementById("QuickXfer").innerHTML = "<IMG SRC=\"../agc/images/vdc_LB_quickxfer_OFF.gif\" border=0 alt=\"Rýchly prenos\">";}
+
+			if (call_requeue_button > 0)
+				{
+				document.getElementById("ReQueueCall").innerHTML =  "<IMG SRC=\"../agc/images/vdc_LB_requeue_call_OFF.gif\" border=0 alt=\"Re-Queue Call\">";
+				}
 
 			document.vicidial_form.custdatetime.value		= '';
 
@@ -5732,6 +7425,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							{
 							if (hotkeysused == 'YES')
 								{
+								manual_auto_hotkey = 1;
+								alt_dial_active=0;
+
 								document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
 								document.getElementById("MainStatuSSpan").innerHTML = '';
 								if (dial_method == "INBOUND_MAN")
@@ -5840,13 +7536,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 		//	document.getElementById("Leave3WayCall").innerHTML ="<IMG SRC=\"../agc/images/vdc_XB_leave3waycall_OFF.gif\" border=0 alt=\"PONECHAT 3 CESTNE VOLANIE\">";
 
-			document.getElementById("DialWithCustomer").innerHTML ="<a href=\"#\" onclick=\"SendManualDial('YES');return false;\"><IMG SRC=\"../agc/images/vdc_XB_dialwithcustomer.gif\" border=0 alt=\"Volanie so zákazníkom\"></a>";
+			document.getElementById("DialWithCustomer").innerHTML ="<a href=\"#\" onclick=\"SendManualDial('YES');return false;\"><IMG SRC=\"../agc/images/vdc_XB_dialwithcustomer.gif\" border=0 alt=\"Volanie so zákazníkom\" style=\"vertical-align:middle\"></a>";
 
-			document.getElementById("ParkCustomerDial").innerHTML ="<a href=\"#\" onclick=\"xfer_park_dial();return false;\"><IMG SRC=\"../agc/images/vdc_XB_parkcustomerdial.gif\" border=0 alt=\"Zaparkovať hovor so zákazníkom\"></a>";
+			document.getElementById("ParkCustomerDial").innerHTML ="<a href=\"#\" onclick=\"xfer_park_dial();return false;\"><IMG SRC=\"../agc/images/vdc_XB_parkcustomerdial.gif\" border=0 alt=\"Zaparkovať hovor so zákazníkom\" style=\"vertical-align:middle\"></a>";
 
-			document.getElementById("HangupXferLine").innerHTML ="<IMG SRC=\"../agc/images/vdc_XB_hangupxferline_OFF.gif\" border=0 alt=\"Zložiť Xfer linku\">";
+			document.getElementById("HangupXferLine").innerHTML ="<IMG SRC=\"../agc/images/vdc_XB_hangupxferline_OFF.gif\" border=0 alt=\"Zložiť Xfer linku\" style=\"vertical-align:middle\">";
 
-			document.getElementById("HangupBothLines").innerHTML ="<a href=\"#\" onclick=\"bothcall_send_hangup();return false;\"><IMG SRC=\"../agc/images/vdc_XB_hangupbothlines.gif\" border=0 alt=\"Zložiť obe linky\"></a>";
+			document.getElementById("HangupBothLines").innerHTML ="<a href=\"#\" onclick=\"bothcall_send_hangup();return false;\"><IMG SRC=\"../agc/images/vdc_XB_hangupbothlines.gif\" border=0 alt=\"Zložiť obe linky\" style=\"vertical-align:middle\"></a>";
 			}
 		}
 
@@ -5978,6 +7674,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // Generate the Call Disposition Chooser panel
 	function DispoSelectContent_create(taskDSgrp,taskDSstage)
 		{
+		HidEGenDerPulldown();
 		AgentDispoing = 1;
 		var VD_statuses_ct_half = parseInt(VD_statuses_ct / 2);
 		var dispo_HTML = "<table cellpadding=5 cellspacing=5 width=500><tr><td colspan=2><B> HOVOR DISPOSITION</B></td></tr><tr><td bgcolor=\"#99FF99\" height=300 width=240 valign=top><font class=\"log_text\"><span id=DispoSelectA>";
@@ -6014,6 +7711,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		else
 			{
+			HidEGenDerPulldown();
 			showDiv('PauseCodeSelectBox');
 			WaitingForNextStep=1;
 			PauseCode_HTML = '';
@@ -6043,6 +7741,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // Generate the Skupina Alias Chooser panel
 	function GroupAliasSelectContent_create(task3way)
 		{
+		HidEGenDerPulldown();
 		showDiv('GroupAliasSelectBox');
 		WaitingForNextStep=1;
 		GroupAlias_HTML = '';
@@ -6080,9 +7779,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		document.vicidial_form.callchannel.value = '';
 		document.vicidial_form.callserverip.value = '';
 		document.vicidial_form.xferchannel.value = '';
-		document.getElementById("DialWithCustomer").innerHTML ="<a href=\"#\" onclick=\"SendManualDial('YES');return false;\"><IMG SRC=\"../agc/images/vdc_XB_dialwithcustomer.gif\" border=0 alt=\"Volanie so zákazníkom\"></a>";
-		document.getElementById("ParkCustomerDial").innerHTML ="<a href=\"#\" onclick=\"xfer_park_dial();return false;\"><IMG SRC=\"../agc/images/vdc_XB_parkcustomerdial.gif\" border=0 alt=\"Zaparkovať hovor so zákazníkom\"></a>";
-		document.getElementById("HangupBothLines").innerHTML ="<a href=\"#\" onclick=\"bothcall_send_hangup();return false;\"><IMG SRC=\"../agc/images/vdc_XB_hangupbothlines.gif\" border=0 alt=\"Zložiť obe linky\"></a>";
+		document.getElementById("DialWithCustomer").innerHTML ="<a href=\"#\" onclick=\"SendManualDial('YES');return false;\"><IMG SRC=\"../agc/images/vdc_XB_dialwithcustomer.gif\" border=0 alt=\"Volanie so zákazníkom\" style=\"vertical-align:middle\"></a>";
+		document.getElementById("ParkCustomerDial").innerHTML ="<a href=\"#\" onclick=\"xfer_park_dial();return false;\"><IMG SRC=\"../agc/images/vdc_XB_parkcustomerdial.gif\" border=0 alt=\"Zaparkovať hovor so zákazníkom\" style=\"vertical-align:middle\"></a>";
+		document.getElementById("HangupBothLines").innerHTML ="<a href=\"#\" onclick=\"bothcall_send_hangup();return false;\"><IMG SRC=\"../agc/images/vdc_XB_hangupbothlines.gif\" border=0 alt=\"Zložiť obe linky\" style=\"vertical-align:middle\"></a>";
 
 		var DispoChoice = document.vicidial_form.DispoSelection.value;
 
@@ -6097,7 +7796,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			WebFormRefresH('NO','YES');
 
 			document.getElementById("WebFormSpan").innerHTML = "<IMG SRC=\"../agc/images/vdc_LB_webform_OFF.gif\" border=0 alt=\"Web formulár\">";
-
+			if (enable_second_webform > 0)
+				{
+				document.getElementById("WebFormSpanTwo").innerHTML = "<IMG SRC=\"../agc/images/vdc_LB_webform_two_OFF.gif\" border=0 alt=\"Web formulár 2\">";
+				}
 			window.open(TEMP_VDIC_web_form_address, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 
 			DispoSelect_submit();
@@ -6115,12 +7817,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			{var group = campaign;}
 		leaving_threeway=0;
 		blind_transfer=0;
+		CheckDEADcallON=0;
 		document.vicidial_form.callchannel.value = '';
 		document.vicidial_form.callserverip.value = '';
 		document.vicidial_form.xferchannel.value = '';
-		document.getElementById("DialWithCustomer").innerHTML ="<a href=\"#\" onclick=\"SendManualDial('YES');return false;\"><IMG SRC=\"../agc/images/vdc_XB_dialwithcustomer.gif\" border=0 alt=\"Volanie so zákazníkom\"></a>";
-		document.getElementById("ParkCustomerDial").innerHTML ="<a href=\"#\" onclick=\"xfer_park_dial();return false;\"><IMG SRC=\"../agc/images/vdc_XB_parkcustomerdial.gif\" border=0 alt=\"Zaparkovať hovor so zákazníkom\"></a>";
-		document.getElementById("HangupBothLines").innerHTML ="<a href=\"#\" onclick=\"bothcall_send_hangup();return false;\"><IMG SRC=\"../agc/images/vdc_XB_hangupbothlines.gif\" border=0 alt=\"Zložiť obe linky\"></a>";
+		document.getElementById("DialWithCustomer").innerHTML ="<a href=\"#\" onclick=\"SendManualDial('YES');return false;\"><IMG SRC=\"../agc/images/vdc_XB_dialwithcustomer.gif\" border=0 alt=\"Volanie so zákazníkom\" style=\"vertical-align:middle\"></a>";
+		document.getElementById("ParkCustomerDial").innerHTML ="<a href=\"#\" onclick=\"xfer_park_dial();return false;\"><IMG SRC=\"../agc/images/vdc_XB_parkcustomerdial.gif\" border=0 alt=\"Zaparkovať hovor so zákazníkom\" style=\"vertical-align:middle\"></a>";
+		document.getElementById("HangupBothLines").innerHTML ="<a href=\"#\" onclick=\"bothcall_send_hangup();return false;\"><IMG SRC=\"../agc/images/vdc_XB_hangupbothlines.gif\" border=0 alt=\"Zložiť obe linky\" style=\"vertical-align:middle\"></a>";
  
 		var DispoChoice = document.vicidial_form.DispoSelection.value;
 
@@ -6154,12 +7857,14 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					}
 				if (xmlhttp) 
 					{ 
-					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&comments=" + CallBackCommenTs;
-					xmlhttp.open('POST', 'vdc_db_query.php'); 
+					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&comments=" + CallBackCommenTs;
+					xmlhttp.open('POST', 'vdc_db_query.php');
 					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 					xmlhttp.send(DSupdate_query); 
 					xmlhttp.onreadystatechange = function() 
 						{ 
+					//	alert(DSupdate_query + "\n" +xmlhttp.responseText);
+
 						if ( (xmlhttp.readyState == 4 && xmlhttp.status == 200) && (auto_dial_level < 1) )
 							{
 							var check_dispo = null;
@@ -6180,7 +7885,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				document.vicidial_form.list_id.value		='';
 				document.vicidial_form.gmt_offset_now.value	='';
 				document.vicidial_form.phone_code.value		='';
-				if (disable_alter_custphone=='Y')
+				if ( (disable_alter_custphone=='Y') || (disable_alter_custphone=='HIDE') )
 					{
 					var tmp_pn = document.getElementById("phone_numberDISP");
 					tmp_pn.innerHTML			= ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';
@@ -6208,6 +7913,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				VDCL_group_id = '';
 				fronter = '';
 				inOUT = 'OUT';
+				vtiger_callback_id='0';
+				recording_filename='';
+				recording_id='';
 
 				if (manual_dial_in_progress==1)
 					{
@@ -6251,7 +7959,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							if (auto_dial_level != '0')
 								{
 								AutoDialWaiting = 1;
-								AutoDial_ReSume_PauSe("VDADready","NEW_ID");
+								agent_log_id = AutoDial_ReSume_PauSe("VDADready","NEW_ID");
 						//		document.getElementById("DiaLControl").innerHTML = DiaLControl_auto_HTML_ready;
 								}
 							else
@@ -6281,6 +7989,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	function PauseCodeSelect_submit(newpausecode)
 		{
 		hideDiv('PauseCodeSelectBox');
+		ShoWGenDerPulldown();
+
 		WaitingForNextStep=0;
 
 		var xmlhttp=false;
@@ -6325,6 +8035,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	function GroupAliasSelect_submit(newgroupalias,newgroupcid,newusegroup)
 		{
 		hideDiv('GroupAliasSelectBox');
+		ShoWGenDerPulldown();
 		WaitingForNextStep=0;
 		
 		if (newusegroup > 0)
@@ -6349,6 +8060,18 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		document.vicidial_form.conf_dtmf.value = CalL_XC_b_Dtmf;
 		document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;
 		}
+	function DtMf_PreSet_c()
+		{
+		document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;
+		}
+	function DtMf_PreSet_d()
+		{
+		document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;
+		}
+	function DtMf_PreSet_e()
+		{
+		document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;
+		}
 
 	function DtMf_PreSet_a_DiaL()
 		{
@@ -6361,6 +8084,21 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		document.vicidial_form.conf_dtmf.value = CalL_XC_b_Dtmf;
 		document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;
 		basic_originate_call(CalL_XC_b_NuMber,'NO','YES',session_id,'YES','','1','0');
+		}
+	function DtMf_PreSet_c_DiaL()
+		{
+		document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;
+		basic_originate_call(CalL_XC_c_NuMber,'NO','YES',session_id,'YES','','1','0');
+		}
+	function DtMf_PreSet_d_DiaL()
+		{
+		document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;
+		basic_originate_call(CalL_XC_d_NuMber,'NO','YES',session_id,'YES','','1','0');
+		}
+	function DtMf_PreSet_e_DiaL()
+		{
+		document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;
+		basic_originate_call(CalL_XC_e_NuMber,'NO','YES',session_id,'YES','','1','0');
 		}
 
 // ################################################################################
@@ -6445,7 +8183,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		if (xmlhttp) 
 			{ 
-			VMCoriginate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass  + "&ACTION=OriginateVDRelogin&format=text&channel=" + originatevalue + "&queryCID=" + queryCID + "&exten=" + session_id + "&ext_context=" + ext_context + "&ext_priority=1" + "&extension=" + extension + "&protocol=" + protocol + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&allow_sipsak_messages=" + allow_sipsak_messages + "&campaign=" + campaign;
+			VMCoriginate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass  + "&ACTION=OriginateVDRelogin&format=text&channel=" + originatevalue + "&queryCID=" + queryCID + "&exten=" + session_id + "&ext_context=" + ext_context + "&ext_priority=1" + "&extension=" + extension + "&protocol=" + protocol + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&allow_sipsak_messages=" + allow_sipsak_messages + "&campaign=" + campaign + "&outbound_cid=" + campaign_cid;
 			xmlhttp.open('POST', 'manager_send.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(VMCoriginate_query); 
@@ -6469,9 +8207,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // Generate the Closer In Group Chooser panel
 	function CloserSelectContent_create()
 		{
-		if (VU_agent_choose_ingroups == '1')
+		HidEGenDerPulldown();
+		if ( (VU_agent_choose_ingroups == '1') && (manager_ingroups_set < 1) )
 			{
-			var live_CSC_HTML = "<table cellpadding=5 cellspacing=5 width=500><tr><td><B>SKUPINY NIE SÚ VYBRANÉ</B></td><td><B>VYBRANÉ SKUPINY</B></td></tr><tr><td bgcolor=\"#99FF99\" height=300 width=240 valign=top><font class=\"log_text\"><span id=CloserSelectAdd>";
+			var live_CSC_HTML = "<table cellpadding=5 cellspacing=5 width=500><tr><td><B>SKUPINY NIE SÚ VYBRANÉ</B></td><td><B>VYBRANÉ SKUPINY</B></td></tr><tr><td bgcolor=\"#99FF99\" height=300 width=240 valign=top><font class=\"log_text\"><span id=CloserSelectAdd> &nbsp; <a href=\"#\" onclick=\"CloserSelect_change('-----ADD-ALL-----','ADD');return false;\"><B>--- ADD ALL ---</B><BR>";
 			var loop_ct = 0;
 			while (loop_ct < INgroupCOUNT)
 				{
@@ -6486,7 +8225,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		else
 			{
 			VU_agent_choose_ingroups_DV = "MGRLOCK";
-			var live_CSC_HTML = "Manager has selected groups for you<BR>";
+			var live_CSC_HTML = "Manažérhas selected groups for you<BR>";
 			document.vicidial_form.CloserSelectList.value = '';
 			document.getElementById("CloserSelectContent").innerHTML = live_CSC_HTML;
 			}
@@ -6498,7 +8237,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		{
 		var CloserSelectListValue = document.vicidial_form.CloserSelectList.value;
 		var CSCchange = 0;
-		var regCS = new RegExp(" "+taskCSgrp+" ","ig");
+		var regCS = new RegExp(" " + taskCSgrp + " ","ig");
+		var regCSall = new RegExp("-ALL-----","ig");
+		var regCSallADD = new RegExp("-----ADD-ALL-----","ig");
+		var regCSallDELETE = new RegExp("-----DELETE-ALL-----","ig");
 		if ( (CloserSelectListValue.match(regCS)) && (CloserSelectListValue.length > 3) )
 			{
 			if (taskCSchange == 'DELETE') {CSCchange = 1;}
@@ -6507,8 +8249,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			{
 			if (taskCSchange == 'ADD') {CSCchange = 1;}
 			}
+		if (taskCSgrp.match(regCSall))
+			{CSCchange = 1;}
 
-	//	alert(taskCSgrp+"|"+taskCSchange+"|"+CloserSelectListValue.length+"|"+CSCchange+"|"+CSCcolumn)
+	//	alert(taskCSgrp+"|"+taskCSchange+"|"+CloserSelectListValue.length+"|"+CSCchange+"|"+CSCcolumn+"|"+INgroupCOUNT)
 
 		if (CSCchange==1) 
 			{
@@ -6519,11 +8263,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			var live_CSC_LIST_value = " ";
 			while (loop_ct < INgroupCOUNT)
 				{
-				var regCSL = new RegExp(" "+VARingroups[loop_ct]+" ","ig");
+				var regCSL = new RegExp(" " + VARingroups[loop_ct] + " ","ig");
 				if (CloserSelectListValue.match(regCSL)) {CSCcolumn = 'DELETE';}
 				else {CSCcolumn = 'ADD';}
-				if ( (VARingroups[loop_ct] == taskCSgrp) && (taskCSchange == 'DELETE') ) {CSCcolumn = 'ADD';}
-				if ( (VARingroups[loop_ct] == taskCSgrp) && (taskCSchange == 'ADD') ) {CSCcolumn = 'DELETE';}
+				if ( ( (VARingroups[loop_ct] == taskCSgrp) && (taskCSchange == 'DELETE') ) || (taskCSgrp.match(regCSallDELETE)) ) {CSCcolumn = 'ADD';}
+				if ( ( (VARingroups[loop_ct] == taskCSgrp) && (taskCSchange == 'ADD') ) || (taskCSgrp.match(regCSallADD)) ) {CSCcolumn = 'DELETE';}
 					
 
 				if (CSCcolumn == 'DELETE')
@@ -6539,8 +8283,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				}
 
 			document.vicidial_form.CloserSelectList.value = live_CSC_LIST_value;
-			document.getElementById("CloserSelectAdd").innerHTML = live_CSC_HTML_ADD;
-			document.getElementById("CloserSelectDelete").innerHTML = live_CSC_HTML_DELETE;
+			document.getElementById("CloserSelectAdd").innerHTML = " &nbsp; <a href=\"#\" onclick=\"CloserSelect_change('-----ADD-ALL-----','ADD');return false;\"><B>--- ADD ALL ---</B><BR>" + live_CSC_HTML_ADD;
+			document.getElementById("CloserSelectDelete").innerHTML = " &nbsp; <a href=\"#\" onclick=\"CloserSelect_change('-----DELETE-ALL-----','DELETE');return false;\"><B>--- DELETE ALL ---</B><BR>" + live_CSC_HTML_DELETE;
 			}
 		}
 
@@ -6556,6 +8300,15 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			{VICIDiaL_closer_blended = 0;}
 
 		var CloserSelectChoices = document.vicidial_form.CloserSelectList.value;
+
+		if (call_requeue_button > 0)
+			{
+			document.getElementById("ReQueueCall").innerHTML =  "<IMG SRC=\"../agc/images/vdc_LB_requeue_call_OFF.gif\" border=0 alt=\"Re-Queue Call\">";
+			}
+		else
+			{
+			document.getElementById("ReQueueCall").innerHTML =  "";
+			}
 
 		if (VU_agent_choose_ingroups_DV == "MGRLOCK")
 			{CloserSelectChoices = "MGRLOCK";}
@@ -6581,7 +8334,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		if (xmlhttp) 
 			{ 
-			CSCupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=regCLOSER&format=text&user=" + user + "&pass=" + pass + "&comments=" + VU_agent_choose_ingroups_DV + "&closer_blended=" + VICIDiaL_closer_blended + "&campaign=" + campaign + "&closer_choice=" + CloserSelectChoices + "-";
+			CSCupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=regCLOSER&format=text&user=" + user + "&pass=" + pass + "&comments=" + VU_agent_choose_ingroups_DV + "&closer_blended=" + VICIDiaL_closer_blended + "&campaign=" + campaign + "&dial_method" + dial_method + "&closer_choice=" + CloserSelectChoices + "-";
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(CSCupdate_query); 
@@ -6602,13 +8355,169 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 
 // ################################################################################
+// Generate the Territory Chooser panel
+	function TerritorySelectContent_create()
+		{
+		if (agent_select_territories == '1')
+			{
+			HidEGenDerPulldown();
+			if (agent_choose_territories > 0)
+				{
+				var live_TERR_HTML = "<table cellpadding=5 cellspacing=5 width=500><tr><td><B>TERRITORIES NOT SELECTED</B></td><td><B>SELECTED TERRITORIES</B></td></tr><tr><td bgcolor=\"#99FF99\" height=300 width=240 valign=top><font class=\"log_text\"><span id=TerritorySelectAdd> &nbsp; <a href=\"#\" onclick=\"TerritorySelect_change('-----ADD-ALL-----','ADD');return false;\"><B>--- ADD ALL ---</B><BR>";
+				var loop_ct = 0;
+				while (loop_ct < territoryCOUNT)
+					{
+					live_TERR_HTML = live_TERR_HTML + "<a href=\"#\" onclick=\"TerritorySelect_change('" + VARterritories[loop_ct] + "','ADD');return false;\">" + VARterritories[loop_ct] + "<BR>";
+					loop_ct++;
+					}
+				live_TERR_HTML = live_TERR_HTML + "</span></font></td><td bgcolor=\"#99FF99\" height=300 width=240 valign=top><font class=\"log_text\"><span id=TerritorySelectDelete></span></font></td></tr></table>";
+
+				document.vicidial_form.TerritorySelectList.value = '';
+				document.getElementById("TerritorySelectContent").innerHTML = live_TERR_HTML;
+				}
+			else
+				{
+				agent_select_territories = "MGRLOCK";
+				var live_TERR_HTML = "Manažérhas selected territories for you<BR>";
+				document.vicidial_form.TerritorySelectList.value = '';
+				document.getElementById("TerritorySelectContent").innerHTML = live_TERR_HTML;
+				}
+			}
+		}
+
+// ################################################################################
+// Move a Territory record to the selected column or reverse
+	function TerritorySelect_change(taskTERRgrp,taskTERRchange)
+		{
+		var TerritorySelectListValue = document.vicidial_form.TerritorySelectList.value;
+		var TERRchange = 0;
+		var regTERR = new RegExp(" " + taskTERRgrp + " ","ig");
+		var regTERRall = new RegExp("-ALL-----","ig");
+		var regTERRallADD = new RegExp("-----ADD-ALL-----","ig");
+		var regTERRallDELETE = new RegExp("-----DELETE-ALL-----","ig");
+		if ( (TerritorySelectListValue.match(regTERR)) && (TerritorySelectListValue.length > 3) )
+			{
+			if (taskTERRchange == 'DELETE') {TERRchange = 1;}
+			}
+		else
+			{
+			if (taskTERRchange == 'ADD') {TERRchange = 1;}
+			}
+		if (taskTERRgrp.match(regTERRall))
+			{TERRchange = 1;}
+//	alert("TERR: " + TerritorySelectListValue + "\nCHANGE: " + TERRchange + "\nACTION: " + taskTERRchange + "\nSELECTED: " + taskTERRgrp + "\nTOTAL: " + territoryCOUNT);
+		if (TERRchange==1) 
+			{
+			var loop_ct = 0;
+			var TERRcolumn = '';
+			var live_TERR_HTML_ADD = '';
+			var live_TERR_HTML_DELETE = '';
+			var live_TERR_LIST_value = " ";
+			while (loop_ct < territoryCOUNT)
+				{
+				var regTERRL = new RegExp(" " + VARterritories[loop_ct] + " ","ig");
+				if (TerritorySelectListValue.match(regTERRL)) {TERRcolumn = 'DELETE';}
+				else {TERRcolumn = 'ADD';}
+				if ( ( (VARterritories[loop_ct] == taskTERRgrp) && (taskTERRchange == 'DELETE') ) || (taskTERRgrp.match(regTERRallDELETE)) ) 
+					{TERRcolumn = 'ADD';}
+				if ( ( (VARterritories[loop_ct] == taskTERRgrp) && (taskTERRchange == 'ADD') ) || (taskTERRgrp.match(regTERRallADD)) ) 
+					{TERRcolumn = 'DELETE';}
+
+				if (TERRcolumn == 'DELETE')
+					{
+					live_TERR_HTML_DELETE = live_TERR_HTML_DELETE + "<a href=\"#\" onclick=\"TerritorySelect_change('" + VARterritories[loop_ct] + "','DELETE');return false;\">" + VARterritories[loop_ct] + "<BR>";
+					live_TERR_LIST_value = live_TERR_LIST_value + VARterritories[loop_ct] + " ";
+					}
+				else
+					{
+					live_TERR_HTML_ADD = live_TERR_HTML_ADD + "<a href=\"#\" onclick=\"TerritorySelect_change('" + VARterritories[loop_ct] + "','ADD');return false;\">" + VARterritories[loop_ct] + "<BR>";
+					}
+				loop_ct++;
+				}
+
+			document.vicidial_form.TerritorySelectList.value = live_TERR_LIST_value;
+			document.getElementById("TerritorySelectAdd").innerHTML = " &nbsp; <a href=\"#\" onclick=\"TerritorySelect_change('-----ADD-ALL-----','ADD');return false;\"><B>--- ADD ALL ---</B><BR>" + live_TERR_HTML_ADD;
+			document.getElementById("TerritorySelectDelete").innerHTML = " &nbsp; <a href=\"#\" onclick=\"TerritorySelect_change('-----DELETE-ALL-----','DELETE');return false;\"><B>--- DELETE ALL ---</B><BR>" + live_TERR_HTML_DELETE;
+			}
+		}
+
+// ################################################################################
+// Update vicidial_live_agents record with territory choices
+	function TerritorySelect_submit()
+		{
+		var TerritorySelectChoices = document.vicidial_form.TerritorySelectList.value;
+
+		if (agent_select_territories == "MGRLOCK")
+			{TerritorySelectChoices = "MGRLOCK";}
+
+		var xmlhttp=false;
+		/*@cc_on @*/
+		/*@if (@_jscript_version >= 5)
+		// JScript gives us Conditional compilation, we can cope with old IE versions.
+		// and security blocked creation of the objects.
+		 try {
+		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+		 } catch (e) {
+		  try {
+		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		  } catch (E) {
+		   xmlhttp = false;
+		  }
+		 }
+		@end @*/
+		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+			{
+			xmlhttp = new XMLHttpRequest();
+			}
+		if (xmlhttp) 
+			{ 
+			TERRupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=regTERRITORY&format=text&user=" + user + "&pass=" + pass + "&comments=" + agent_select_territories + "&campaign=" + campaign + "&agent_territories=" + TerritorySelectChoices + "-";
+			xmlhttp.open('POST', 'vdc_db_query.php'); 
+			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+			xmlhttp.send(TERRupdate_query); 
+			xmlhttp.onreadystatechange = function() 
+				{ 
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+					{
+		//			alert(xmlhttp.responseText);
+					}
+				}
+			delete xmlhttp;
+			}
+
+		hideDiv('TerritorySelectBox');
+		MainPanelToFront();
+		TerritorySelecting = 0;
+		}
+
+
+// ################################################################################
 // Log the user out of the system when they close their browser while logged in
 	function BrowserCloseLogout()
 		{
 		if (logout_stop_timeouts < 1)
 			{
+			if (VDRP_stage != 'PAUSED')
+				{
+				AutoDial_ReSume_PauSe("VDADpause",'','','',"ODHLÁSIŤ");
+				}
 			LogouT('CLOSE');
 			alert("PLEASE CLICK THE ODHLÁSIŤ LINK TO LOG OUT NEXT TIME.\n");
+			}
+		}
+
+
+// ################################################################################
+// Normal logout with check for pause stage first
+	function NormalLogout()
+		{
+		if (logout_stop_timeouts < 1)
+			{
+			if (VDRP_stage != 'PAUSED')
+				{
+				AutoDial_ReSume_PauSe("VDADpause",'','','',"ODHLÁSIŤ");
+				}
+			LogouT('NORMAL');
 			}
 		}
 
@@ -6668,7 +8577,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				if (tempreason=='SHIFT')
 					{logout_content='Vaša Shift je nad alebo sa zmenilo, ste boli odhlásený vašej relácie<BR><BR>';}
 
-				document.getElementById("LogouTBoxLink").innerHTML = logout_content + "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass + "\">KLIKNITE TU NA ZNOVU PRIHLÁSENIE</a>\n";
+				document.getElementById("LogouTBoxLink").innerHTML = logout_content + "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + original_phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass + "\">KLIKNITE TU NA ZNOVU PRIHLÁSENIE</a>\n";
 
 				logout_stop_timeouts = 1;
 					
@@ -6678,7 +8587,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 
 		}
-<?
+<?php
 if ($useIE > 0)
 {
 ?>
@@ -6687,7 +8596,7 @@ if ($useIE > 0)
 	function hotkeypress(evt)
 		{
 		enter_disable();
-		if ( (hot_keys_active==1) && (VD_live_customer_call==1) )
+		if ( (hot_keys_active==1) && ( (VD_live_customer_call==1) || (MD_ring_secondS > 4) ) )
 			{
 			var e = evt? evt : window.event;
 			if(!e) return;
@@ -6724,7 +8633,7 @@ if ($useIE > 0)
 			}
 		}
 
-<?
+<?php
 }
 else
 {
@@ -6734,7 +8643,7 @@ else
 	function hotkeypress(evt)
 		{
 		enter_disable();
-		if ( (hot_keys_active==1) && (VD_live_customer_call==1) )
+		if ( (hot_keys_active==1) && ( (VD_live_customer_call==1) || (MD_ring_secondS > 4) ) )
 			{
 			var e = evt? evt : window.event;
 			if(!e) return;
@@ -6774,7 +8683,7 @@ else
 			}
 		}
 
-<?
+<?php
 }
 ### end of onkeypress functions
 ?>
@@ -6792,7 +8701,7 @@ else
 
 
 // ################################################################################
-// decode the scripttext and scriptname so that it can be didsplayed
+// decode the scripttext and scriptname so that it can be displayed
 	function URLDecode(encodedvar,scriptformat)
 	{
    // Replace %ZZ with equivalent character
@@ -6843,6 +8752,7 @@ encoded=utf8_decode(xtest);
 		var SClead_id = document.vicidial_form.lead_id.value;
 		var SCcampaign = campaign;
 		var SCphone_login = phone_login;
+		var SCoriginal_phone_login = original_phone_login;
 		var SCgroup = group;
 		var SCchannel_group = group;
 		var SCSQLdate = SQLdate;
@@ -6852,6 +8762,22 @@ encoded=utf8_decode(xtest);
 		var SCserver_ip = server_ip;
 		var SCSIPexten = extension;
 		var SCsession_id = session_id;
+		var SCdispo = LeaDDispO;
+		var SCdialed_number = dialed_number;
+		var SCdialed_label = dialed_label;
+		var SCrank = document.vicidial_form.rank.value;
+		var SCowner = document.vicidial_form.owner.value;
+		var SCcamp_script = campaign_script;
+		var SCin_script = CalL_ScripT_id;
+		var SCscript_width = script_width;
+		var SCscript_height = script_height;
+		var SCrecording_filename = recording_filename;
+		var SCrecording_id = recording_id;
+		var SCuser_custom_one = VU_custom_one;
+		var SCuser_custom_two = VU_custom_two;
+		var SCuser_custom_three = VU_custom_three;
+		var SCuser_custom_four = VU_custom_four;
+		var SCuser_custom_five = VU_custom_five;
 		var SCweb_vars = LIVE_web_vars;
 
 		if (encoded.match(RGiframe))
@@ -6888,6 +8814,7 @@ encoded=utf8_decode(xtest);
 			SClead_id = SClead_id.replace(RGplus,'+');
 			SCcampaign = SCcampaign.replace(RGplus,'+');
 			SCphone_login = SCphone_login.replace(RGplus,'+');
+			SCoriginal_phone_login = SCoriginal_phone_login.replace(RGplus,'+');
 			SCgroup = SCgroup.replace(RGplus,'+');
 			SCchannel_group = SCchannel_group.replace(RGplus,'+');
 			SCSQLdate = SCSQLdate.replace(RGplus,'+');
@@ -6895,6 +8822,22 @@ encoded=utf8_decode(xtest);
 			SCcustomer_zap_channel = SCcustomer_zap_channel.replace(RGplus,'+');
 			SCserver_ip = SCserver_ip.replace(RGplus,'+');
 			SCSIPexten = SCSIPexten.replace(RGplus,'+');
+			SCdispo = SCdispo.replace(RGplus,'+');
+			SCdialed_number = SCdialed_number.replace(RGplus,'+');
+			SCdialed_label = SCdialed_label.replace(RGplus,'+');
+			SCrank = SCrank.replace(RGplus,'+');
+			SCowner = SCowner.replace(RGplus,'+');
+			SCcamp_script = SCcamp_script.replace(RGplus,'+');
+			SCin_script = SCin_script.replace(RGplus,'+');
+			SCscript_width = SCscript_width.replace(RGplus,'+');
+			SCscript_height = SCscript_height.replace(RGplus,'+');
+			SCrecording_filename = SCrecording_filename.replace(RGplus,'+');
+			SCrecording_id = SCrecording_id.replace(RGplus,'+');
+			SCuser_custom_one = SCuser_custom_one.replace(RGplus,'+');
+			SCuser_custom_two = SCuser_custom_two.replace(RGplus,'+');
+			SCuser_custom_three = SCuser_custom_three.replace(RGplus,'+');
+			SCuser_custom_four = SCuser_custom_four.replace(RGplus,'+');
+			SCuser_custom_five = SCuser_custom_five.replace(RGplus,'+');
 			SCweb_vars = SCweb_vars.replace(RGplus,'+');
 			}
 
@@ -6930,6 +8873,7 @@ encoded=utf8_decode(xtest);
 		var RGlead_id = new RegExp("--A--lead_id--B--","g");
 		var RGcampaign = new RegExp("--A--campaign--B--","g");
 		var RGphone_login = new RegExp("--A--phone_login--B--","g");
+		var RGoriginal_phone_login = new RegExp("--A--original_phone_login--B--","g");
 		var RGgroup = new RegExp("--A--group--B--","g");
 		var RGchannel_group = new RegExp("--A--channel_group--B--","g");
 		var RGSQLdate = new RegExp("--A--SQLdate--B--","g");
@@ -6939,6 +8883,22 @@ encoded=utf8_decode(xtest);
 		var RGserver_ip = new RegExp("--A--server_ip--B--","g");
 		var RGSIPexten = new RegExp("--A--SIPexten--B--","g");
 		var RGsession_id = new RegExp("--A--session_id--B--","g");
+		var RGdispo = new RegExp("--A--dispo--B--","g");
+		var RGdialed_number = new RegExp("--A--dialed_number--B--","g");
+		var RGdialed_label = new RegExp("--A--dialed_label--B--","g");
+		var RGrank = new RegExp("--A--rank--B--","g");
+		var RGowner = new RegExp("--A--owner--B--","g");
+		var RGcamp_script = new RegExp("--A--camp_script--B--","g");
+		var RGin_script = new RegExp("--A--in_script--B--","g");
+		var RGscript_width = new RegExp("--A--script_width--B--","g");
+		var RGscript_height = new RegExp("--A--script_height--B--","g");
+		var RGrecording_filename = new RegExp("--A--recording_filename--B--","g");
+		var RGrecording_id = new RegExp("--A--recording_id--B--","g");
+		var RGuser_custom_one = new RegExp("--A--user_custom_one--B--","g");
+		var RGuser_custom_two = new RegExp("--A--user_custom_two--B--","g");
+		var RGuser_custom_three = new RegExp("--A--user_custom_three--B--","g");
+		var RGuser_custom_four = new RegExp("--A--user_custom_four--B--","g");
+		var RGuser_custom_five = new RegExp("--A--user_custom_five--B--","g");
 		var RGweb_vars = new RegExp("--A--web_vars--B--","g");
 
 		encoded = encoded.replace(RGvendor_lead_code, SCvendor_lead_code);
@@ -6973,6 +8933,7 @@ encoded=utf8_decode(xtest);
 		encoded = encoded.replace(RGlead_id, SClead_id);
 		encoded = encoded.replace(RGcampaign, SCcampaign);
 		encoded = encoded.replace(RGphone_login, SCphone_login);
+		encoded = encoded.replace(RGoriginal_phone_login, SCoriginal_phone_login);
 		encoded = encoded.replace(RGgroup, SCgroup);
 		encoded = encoded.replace(RGchannel_group, SCchannel_group);
 		encoded = encoded.replace(RGSQLdate, SCSQLdate);
@@ -6982,6 +8943,22 @@ encoded=utf8_decode(xtest);
 		encoded = encoded.replace(RGserver_ip, SCserver_ip);
 		encoded = encoded.replace(RGSIPexten, SCSIPexten);
 		encoded = encoded.replace(RGsession_id, SCsession_id);
+		encoded = encoded.replace(RGdispo, SCdispo);
+		encoded = encoded.replace(RGdialed_number, SCdialed_number);
+		encoded = encoded.replace(RGdialed_label, SCdialed_label);
+		encoded = encoded.replace(RGrank, SCrank);
+		encoded = encoded.replace(RGowner, SCowner);
+		encoded = encoded.replace(RGcamp_script, SCcamp_script);
+		encoded = encoded.replace(RGin_script, SCin_script);
+		encoded = encoded.replace(RGscript_width, SCscript_width);
+		encoded = encoded.replace(RGscript_height, SCscript_height);
+		encoded = encoded.replace(RGrecording_filename, SCrecording_filename);
+		encoded = encoded.replace(RGrecording_id, SCrecording_id);
+		encoded = encoded.replace(RGuser_custom_one, SCuser_custom_one);
+		encoded = encoded.replace(RGuser_custom_two, SCuser_custom_two);
+		encoded = encoded.replace(RGuser_custom_three, SCuser_custom_three);
+		encoded = encoded.replace(RGuser_custom_four, SCuser_custom_four);
+		encoded = encoded.replace(RGuser_custom_five, SCuser_custom_five);
 		encoded = encoded.replace(RGweb_vars, SCweb_vars);
 		}
 decoded=encoded; // simple no ?
@@ -7062,6 +9039,11 @@ function phone_number_format(formatphone) {
 	var regFR_SPACphone = new RegExp("FR_SPAC","g");
 	var status_display_number = formatphone;
 	var dispnum = formatphone;
+	if (disable_alter_custphone == 'HIDE')
+		{
+		var status_display_number = 'XXXXXXXXXX';
+		var dispnum = 'XXXXXXXXXX';
+		}
 	if (vdc_header_phone_format.match(regUS_DASHphone))
 		{
 		var status_display_number = dispnum.substring(0,3) + '-' + dispnum.substring(3,6) + '-' + dispnum.substring(6,10);
@@ -7092,12 +9074,274 @@ function phone_number_format(formatphone) {
 
 
 // ################################################################################
+// Osviežiť the agents view sidebar or xfer frame
+	function refresh_agents_view(RAlocation,RAcount)
+		{
+		if (RAcount > 0)
+			{
+			if (even > 0)
+				{
+				var xmlhttp=false;
+				/*@cc_on @*/
+				/*@if (@_jscript_version >= 5)
+				// JScript gives us Conditional compilation, we can cope with old IE versions.
+				// and security blocked creation of the objects.
+				 try {
+				  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+				 } catch (e) {
+				  try {
+				   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				  } catch (E) {
+				   xmlhttp = false;
+				  }
+				 }
+				@end @*/
+				if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+					{
+					xmlhttp = new XMLHttpRequest();
+					}
+				if (xmlhttp) 
+					{ 
+					RAview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=AGENTSview&format=text&user=" + user + "&pass=" + pass + "&user_group=" + VU_user_group + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&stage=" + agent_status_view_time + "&campaign=" + campaign + "&comments=" + RAlocation;
+					xmlhttp.open('POST', 'vdc_db_query.php'); 
+					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+					xmlhttp.send(RAview_query); 
+					xmlhttp.onreadystatechange = function() 
+						{ 
+						if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+							{
+						//	alert(xmlhttp.responseText);
+							document.getElementById(RAlocation).innerHTML = xmlhttp.responseText + "\n";
+							}
+						}
+					delete xmlhttp;
+					}
+
+				}
+			}
+		}
+
+
+// ################################################################################
+// Grab the call in queue and bring it into the session
+	function callinqueuegrab(CQauto_call_id)
+		{
+		if (CQauto_call_id > 0)
+			{
+			if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) )
+				{
+				alert("Musíte byť sa odmlčal, aby GRAB VOLANIA do fronty");
+				}
+			else
+				{
+				var xmlhttp=false;
+				/*@cc_on @*/
+				/*@if (@_jscript_version >= 5)
+				// JScript gives us Conditional compilation, we can cope with old IE versions.
+				// and security blocked creation of the objects.
+				 try {
+				  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+				 } catch (e) {
+				  try {
+				   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				  } catch (E) {
+				   xmlhttp = false;
+				  }
+				 }
+				@end @*/
+				if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+					{
+					xmlhttp = new XMLHttpRequest();
+					}
+				if (xmlhttp) 
+					{ 
+					RAview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=CALLSINQUEUEgrab&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&campaign=" + campaign + "&stage=" + CQauto_call_id;
+					xmlhttp.open('POST', 'vdc_db_query.php'); 
+					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+					xmlhttp.send(RAview_query); 
+					xmlhttp.onreadystatechange = function() 
+						{ 
+						if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+							{
+							var CQgrabresponse = xmlhttp.responseText;
+							var regCQerror = new RegExp("ERROR","ig");
+							if (CQgrabresponse.match(regCQerror))
+								{
+								alert(CQgrabresponse);
+								}
+							else
+								{
+								AutoDial_ReSume_PauSe("VDADready",'','','NO_STATUS_CHANGE');
+								AutoDialWaiting=1;
+								}
+							}
+						}
+					delete xmlhttp;
+					}
+
+				}
+			}
+		}
+
+
+// ################################################################################
+// Osviežiť the calls in queue bottombar
+	function refresh_calls_in_queue(CQcount)
+		{
+		if (CQcount > 0)
+			{
+			if (even > 0)
+				{
+				var xmlhttp=false;
+				/*@cc_on @*/
+				/*@if (@_jscript_version >= 5)
+				// JScript gives us Conditional compilation, we can cope with old IE versions.
+				// and security blocked creation of the objects.
+				 try {
+				  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+				 } catch (e) {
+				  try {
+				   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				  } catch (E) {
+				   xmlhttp = false;
+				  }
+				 }
+				@end @*/
+				if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+					{
+					xmlhttp = new XMLHttpRequest();
+					}
+				if (xmlhttp) 
+					{ 
+					RAview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=CALLSINQUEUEview&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&campaign=" + campaign + "&stage=<?php echo $CQwidth ?>";
+					xmlhttp.open('POST', 'vdc_db_query.php'); 
+					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+					xmlhttp.send(RAview_query); 
+					xmlhttp.onreadystatechange = function() 
+						{ 
+						if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+							{
+						//	alert(xmlhttp.responseText);
+							document.getElementById('callsinqueuelist').innerHTML = xmlhttp.responseText + "\n";
+							}
+						}
+					delete xmlhttp;
+					}
+
+				}
+			}
+		}
+
+
+// ################################################################################
+// Open or close the callsinqueue view bottombar
+	function show_calls_in_queue(CQoperation)
+		{
+		if (CQoperation=='SHOW')
+			{
+			document.getElementById("callsinqueuelink").innerHTML = "<a href=\"#\"  onclick=\"show_calls_in_queue('HIDE');\">Skryť žiada, aby vo fronte</a>";
+			view_calls_in_queue_active=1;
+			showDiv('callsinqueuedisplay');
+			}
+		else
+			{
+			document.getElementById("callsinqueuelink").innerHTML = "<a href=\"#\"  onclick=\"show_calls_in_queue('SHOW');\">Zobraziť žiada, aby vo fronte</a>";
+			view_calls_in_queue_active=0;
+			hideDiv('callsinqueuedisplay');
+			}
+		}
+
+
+// ################################################################################
+// Open or close the agents view sidebar or xfer frame
+	function AgentsViewOpen(AVlocation,AVoperation)
+		{
+		if (AVoperation=='open')
+			{
+			if (AVlocation=='AgentViewSpan')
+				{
+				document.getElementById("AgentViewLink").innerHTML = "<a href=\"#\" onclick=\"AgentsViewOpen('AgentViewSpan','close');return false;\">Agents View -</a>";
+				agent_status_view_active=1;
+				}
+			showDiv(AVlocation);
+			}
+		else
+			{
+			if (AVlocation=='AgentViewSpan')
+				{
+				document.getElementById("AgentViewLink").innerHTML = "<a href=\"#\" onclick=\"AgentsViewOpen('AgentViewSpan','open');return false;\">Agents View +</a>";
+				agent_status_view_active=0;
+				}
+			hideDiv(AVlocation);
+			}
+		}
+
+
+// ################################################################################
+// Populate the number to dial field with the selected user ID
+	function AgentsXferSelect(AXuser,AXlocation)
+		{
+		xfer_select_agents_active=0;
+		hideDiv('AgentXferViewSpan');
+		hideDiv(AXlocation);
+		document.vicidial_form.xfernumber.value = AXuser;
+		}
+
+
+// ################################################################################
+// OnFocus function for number to dial
+	function XferAgentSelectLaunch()
+		{
+		var XfeRSelecT = document.getElementById("XfeRGrouP");
+		var XScheck = XfeRSelecT.value
+		if (XScheck.match(/AGENTDIRECT/))
+			{
+			showDiv('AgentXferViewSpan');
+			AgentsViewOpen('AgentXferViewSelect','open');
+			refresh_agents_view('AgentXferViewSelect',agent_status_view)
+			xfer_select_agents_active=1;
+			}
+		}
+
+
+// ################################################################################
+// Call ReQueue call back to AGENTDIRECT queue launch
+	function call_requeue_launch()
+		{
+		document.vicidial_form.xfernumber.value = user;
+
+		// Build transfer pull-down list
+		var loop_ct = 0;
+		var live_XfeR_HTML = '';
+		var XfeR_SelecT = '';
+		while (loop_ct < XFgroupCOUNT)
+			{
+			if (VARxfergroups[loop_ct] == 'AGENTDIRECT')
+				{XfeR_SelecT = 'SELECTED ';}
+			else {XfeR_SelecT = '';}
+			live_XfeR_HTML = live_XfeR_HTML + "<option " + XfeR_SelecT + "value=\"" + VARxfergroups[loop_ct] + "\">" + VARxfergroups[loop_ct] + " - " + VARxfergroupsnames[loop_ct] + "</option>\n";
+			loop_ct++;
+			}
+		document.getElementById("XfeRGrouPLisT").innerHTML = "<select size=1 name=XfeRGrouP class=\"cust_form\" id=XfeRGrouP>" + live_XfeR_HTML + "</select>";
+
+		mainxfer_send_redirect('XfeRLOCAL',lastcustchannel,lastcustserverip,'','NO');
+
+		document.vicidial_form.DispoSelection.value = 'RQXFER';
+		DispoSelect_submit();
+
+		AutoDial_ReSume_PauSe("VDADpause",'','','',"REQUEUE");
+
+		PauseCodeSelect_submit("RQUEUE");
+		}
+
+
+// ################################################################################
 // Move the Dispo frame out of the way and change the link to maximize
 	function DispoMinimize()
 		{
-			showDiv('DispoButtonHideA');
-			showDiv('DispoButtonHideB');
-			showDiv('DispoButtonHideC');
+		showDiv('DispoButtonHideA');
+		showDiv('DispoButtonHideB');
+		showDiv('DispoButtonHideC');
 		document.getElementById("DispoSelectBox").style.top = 340;
 		document.getElementById("DispoSelectMaxMin").innerHTML = "<a href=\"#\" onclick=\"DispoMaximize()\"> maximalizovať </a>";
 		}
@@ -7109,9 +9353,9 @@ function phone_number_format(formatphone) {
 		{
 		document.getElementById("DispoSelectBox").style.top = 1;
 		document.getElementById("DispoSelectMaxMin").innerHTML = "<a href=\"#\" onclick=\"DispoMinimize()\"> minimalizovať </a>";
-			hideDiv('DispoButtonHideA');
-			hideDiv('DispoButtonHideB');
-			hideDiv('DispoButtonHideC');
+		hideDiv('DispoButtonHideA');
+		hideDiv('DispoButtonHideB');
+		hideDiv('DispoButtonHideC');
 		}
 
 
@@ -7125,7 +9369,30 @@ function phone_number_format(formatphone) {
 			}
 		else
 			{
-			showDiv('CloserSelectBox')
+			if (manager_ingroups_set > 0)
+				{
+				alert("Manažér" + external_igb_set_name + " vybrala si v skupine-voľby");
+				}
+			else
+				{
+				HidEGenDerPulldown();
+				showDiv('CloserSelectBox')
+				}
+			}
+		}
+
+
+// ################################################################################
+// Prezrieť the territories selection span
+	function OpeNTerritorYSelectioN()
+		{
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) )
+			{
+			alert("Musíte byť pozastavené NA ZMENU ZOSKUPENIA");
+			}
+		else
+			{
+			showDiv('TerritorySelectBox')
 			}
 		}
 
@@ -7187,7 +9454,7 @@ function phone_number_format(formatphone) {
 		else
 			{
 
-<?
+<?php
 if ($useIE > 0)
 {
 ?>
@@ -7211,7 +9478,7 @@ if ($useIE > 0)
 			CallBackTimEHouRFORM.selectedIndex = '0';
 			CallBackTimEMinuteSFORM.selectedIndex = '0';
 			CallBackTimEAmpMFORM.selectedIndex = '1';
-<?
+<?php
 }
 else
 {
@@ -7224,7 +9491,7 @@ else
 			document.vicidial_form.CBT_minute.value = '00';
 			document.vicidial_form.CBT_ampm.value = 'PM';
 
-<?
+<?php
 }
 ?>
 			if (CallBackTimEHouR == '12')
@@ -7268,6 +9535,52 @@ else
 
 // ################################################################################
 // Finish the wrapup timer early
+	function TimerActionRun()
+		{
+		if ( (timer_action_message.length > 0) || (timer_action == 'MESSAGE_ONLY') )
+			{
+			document.getElementById("TimerContentSpan").innerHTML = "<b>TIMER OZNAM: " + timer_action_seconds + "sekúnd<BR><BR>" + timer_action_message + "</b>";
+
+			showDiv('TimerSpan');
+			}
+
+		if (timer_action == 'WEBFORM')
+			{
+			WebFormRefresH('NO','YES');
+			window.open(TEMP_VDIC_web_form_address, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+			}
+		if (timer_action == 'WEBFORM2')
+			{
+			WebFormTwoRefresH('NO','YES');
+			window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+			}
+		if (timer_action == 'D1_DIAL')
+			{
+			DtMf_PreSet_a_DiaL();
+			}
+		if (timer_action == 'D2_DIAL')
+			{
+			DtMf_PreSet_b_DiaL();
+			}
+		if (timer_action == 'D3_DIAL')
+			{
+			DtMf_PreSet_c_DiaL();
+			}
+		if (timer_action == 'D4_DIAL')
+			{
+			DtMf_PreSet_d_DiaL();
+			}
+		if (timer_action == 'D5_DIAL')
+			{
+			DtMf_PreSet_e_DiaL();
+			}
+		
+		timer_action = 'NONE';
+		}
+
+
+// ################################################################################
+// Finish the wrapup timer early
 	function WrapupFinish()
 		{
 		wrapup_counter=999;
@@ -7278,7 +9591,7 @@ else
 // GLOBAL FUNCTIONS
 	function begin_all_refresh()
 		{
-		<? if ( ($HK_statuses_camp > 0) && ( ($user_level>=$HKuser_level) or ($VU_hotkeys_active > 0) ) ) {echo "document.onkeypress = hotkeypress;\n";} ?>
+		<?php if ( ($HK_statuses_camp > 0) && ( ($user_level>=$HKuser_level) or ($VU_hotkeys_active > 0) ) ) {echo "document.onkeypress = hotkeypress;\n";} ?>
 		all_refresh();
 		}
 	function start_all_refresh()
@@ -7293,6 +9606,7 @@ else
 			hideDiv('HotKeyEntriesBox');
 			hideDiv('MainPanel');
 			hideDiv('ScriptPanel');
+			hideDiv('ScriptRefresH');
 			hideDiv('DispoSelectBox');
 			hideDiv('LogouTBox');
 			hideDiv('AgenTDisablEBoX');
@@ -7310,8 +9624,15 @@ else
 			hideDiv('NeWManuaLDiaLBox');
 			hideDiv('PauseCodeSelectBox');
 			hideDiv('GroupAliasSelectBox');
+			hideDiv('AgentViewSpan');
+			hideDiv('AgentXferViewSpan');
+			hideDiv('TimerSpan');
+			if (view_calls_in_queue_launch != '1')
+				{hideDiv('callsinqueuedisplay');}
 			if (agentonly_callbacks != '1')
 				{hideDiv('CallbacksButtons');}
+			if (allow_alerts < 1)
+				{hideDiv('AgentAlertSpan');}
 		//	if ( (agentcall_manual != '1') && (starting_dial_level > 0) )
 			if (agentcall_manual != '1')
 				{hideDiv('ManuaLDiaLButtons');}
@@ -7327,6 +9648,10 @@ else
 				{hideDiv('VolumeControlSpan');}
 			if (DefaulTAlTDiaL == '1')
 				{document.vicidial_form.DiaLAltPhonE.checked=true;}
+			if (agent_status_view != '1')
+				{document.getElementById("AgentViewLink").innerHTML = "";}
+			if (dispo_check_all_pause == '1')
+				{document.vicidial_form.DispoSelectStop.checked=true;}
 
 			document.vicidial_form.LeadLookuP.checked=true;
 
@@ -7347,6 +9672,7 @@ else
 				{
 				if (VU_closer_default_blended == 1)
 					{document.vicidial_form.CloserSelectBlended.checked=true}
+				CloserSelectContent_create();
 				showDiv('CloserSelectBox');
 				var CloserSelecting = 1;
 				CloserSelectContent_create();
@@ -7364,10 +9690,44 @@ else
 					document.getElementById("DiaLControl").innerHTML = DiaLControl_manual_HTML;
 					}
 				}
+			if (territoryCOUNT > 0)
+				{
+				showDiv('TerritorySelectBox');
+				var TerritorySelecting = 1;
+				TerritorySelectContent_create();
+				}
+			else
+				{
+				hideDiv('TerritorySelectBox');
+				MainPanelToFront();
+				var TerritorySelecting = 0;
+				}
 			if ( (VtigeRLogiNScripT == 'Y') && (VtigeREnableD > 0) )
 				{
-				document.getElementById("ScriptContents").innerHTML = "<iframe src=\"" + VtigeRurl + "/index.php?module=Užívateľs&action=Authenticate&return_module=Užívateľs&return_action=Prihlásiť&user_name=" + user + "&user_password=" + pass + "&login_theme=softed&login_language=en_us\" style=\"width:580;height:290;background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"popupFrame\" name=\"popupFrame\" width=\"460\" height=\"290\" STYLE=\"z-index:17\"> </iframe> ";
+				document.getElementById("ScriptContents").innerHTML = "<iframe src=\"" + VtigeRurl + "/index.php?module=Užívateľs&action=Authenticate&return_module=Užívateľs&return_action=Prihlásiť&user_name=" + user + "&user_password=" + pass + "&login_theme=softed&login_language=en_us\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"popupFrame\" name=\"popupFrame\" width=\"" + script_width + "\" height=\"" + script_height + "\" STYLE=\"z-index:17\"> </iframe> ";
+				}
+			if ( (VtigeRLogiNScripT == 'NEW_WINDOW') && (VtigeREnableD > 0) )
+				{
+				var VtigeRall = VtigeRurl + "/index.php?module=Užívateľs&action=Authenticate&return_module=Užívateľs&return_action=Prihlásiť&user_name=" + user + "&user_password=" + pass + "&login_theme=softed&login_language=en_us";
+				
+				VtigeRwin =window.open(VtigeRall, web_form_target,'toolbar=1,location=1,directories=1,status=1,menubar=1,scrollbars=1,resizable=1,width=700,height=480');
 
+				VtigeRwin.blur();
+				}
+			if ( (crm_popup_login == 'Y') && (crm_login_address.length > 4) )
+				{
+				var regWFAcustom = new RegExp("^VAR","ig");
+				URLDecode(crm_login_address,'YES');
+				var TEMP_crm_login_address = decoded;
+				TEMP_crm_login_address = TEMP_crm_login_address.replace(regWFAcustom, '');
+
+				CRMwin = window.open(TEMP_crm_login_address, 'CRMwin,toolbar=1,location=1,directories=1,status=1,menubar=1,scrollbars=1,resizable=1,width=700,height=480');
+
+				CRMwin.blur();
+				}
+			if (INgroupCOUNT > 0)
+				{
+				HidEGenDerPulldown();
 				}
 			VICIDiaL_closer_login_checked = 1;
 			}
@@ -7375,14 +9735,14 @@ else
 			{
 
 			var WaitingForNextStep=0;
-			if (CloserSelecting==1)	{WaitingForNextStep=1;}
+			if ( (CloserSelecting==1) || (TerritorySelecting==1) )	{WaitingForNextStep=1;}
 			if (open_dispo_screen==1)
 				{
 				wrapup_counter=0;
-				if (wrapup_sekúnd > 0)	
+				if (wrapup_seconds > 0)	
 					{
 					showDiv('WrapupBox');
-					document.getElementById("WrapupTimer").innerHTML = wrapup_sekúnd;
+					document.getElementById("WrapupTimer").innerHTML = wrapup_seconds;
 					wrapup_waiting=1;
 					}
 				CustomerData_update();
@@ -7395,7 +9755,10 @@ else
 				LIVE_default_xfer_group = default_xfer_group;
 				LIVE_campaign_recording = campaign_recording;
 				LIVE_campaign_rec_filename = campaign_rec_filename;
-				document.getElementById("DispoSelectPhonE").innerHTML = document.vicidial_form.phone_number.value;
+				if (disable_alter_custphone!='HIDE')
+					{document.getElementById("DispoSelectPhonE").innerHTML = document.vicidial_form.phone_number.value;}
+				else
+					{document.getElementById("DispoSelectPhonE").innerHTML = '';}
 				if (auto_dial_level == 0)
 					{
 					if (document.vicidial_form.DiaLAltPhonE.checked==true)
@@ -7417,13 +9780,26 @@ else
 				check_for_conf_calls(session_id, '0');
 				}
 			if (logout_stop_timeouts==1)	{WaitingForNextStep=1;}
-			if ( (custchannellive < -30) && (lastcustchannel.length > 3) ) {CustomerChanneLGone();}
+			if ( (custchannellive < -30) && (lastcustchannel.length > 3) && (no_empty_session_warnings < 1) ) {CustomerChanneLGone();}
 			if ( (custchannellive < -10) && (lastcustchannel.length > 3) ) {ReChecKCustoMerChaN();}
-			if ( (nochannelinsession > 16) && (check_n > 15) ) {NoneInSession();}
+			if ( (nochannelinsession > 16) && (check_n > 15) && (no_empty_session_warnings < 1) ) {NoneInSession();}
 			if (WaitingForNextStep==0)
 				{
 				// check for live channels in conference room and get current datetime
 				check_for_conf_calls(session_id, '0');
+				// refresh agent status view
+				if (agent_status_view_active > 0)
+					{
+					refresh_agents_view('AgentViewStav',agent_status_view);
+					}
+				if (view_calls_in_queue_active > 0)
+					{
+					refresh_calls_in_queue(view_calls_in_queue);
+					}
+				if (xfer_select_agents_active > 0)
+					{
+					refresh_agents_view('AgentXferViewSelect',agent_status_view);
+					}
 				if (agentonly_callbacks == '1')
 					{CB_count_check++;}
 
@@ -7441,6 +9817,10 @@ else
 					CalLBacKsCounTCheck();
 					CB_count_check=0;
 					}
+				if ( (even > 0) && (agent_display_dialable_leads > 0) )
+					{
+					DiaLableLeaDsCounT();
+					}
 				if (VD_live_customer_call==1)
 					{
 					VD_live_call_secondS++;
@@ -7451,6 +9831,14 @@ else
 					{
 					XD_live_call_secondS++;
 					document.vicidial_form.xferlength.value		= XD_live_call_secondS;
+					}
+				if ( (update_fields > 0) && (update_fields_data.length > 2) )
+					{
+					UpdateFieldsData();
+					}
+				if ( (timer_action != 'NONE') && (timer_action.length > 3) && (timer_action_seconds <= VD_live_call_secondS) && (timer_action_seconds >= 0) )
+					{
+					TimerActionRun();
 					}
 				if (HKdispo_display > 0)
 					{
@@ -7498,11 +9886,11 @@ else
 				//	check_for_live_calls();
 					check_s = check_n.toString();
 					}
-				if (wrapup_sekúnd > 0)	
+				if (wrapup_seconds > 0)	
 					{
-					document.getElementById("WrapupTimer").innerHTML = (wrapup_sekúnd - wrapup_counter);
+					document.getElementById("WrapupTimer").innerHTML = (wrapup_seconds - wrapup_counter);
 					wrapup_counter++;
-					if ( (wrapup_counter > wrapup_sekúnd) && (document.getElementById("WrapupBox").style.visibility == 'visible') )
+					if ( (wrapup_counter > wrapup_seconds) && (document.getElementById("WrapupBox").style.visibility == 'visible') )
 						{
 						wrapup_waiting=0;
 						hideDiv('WrapupBox');
@@ -7542,6 +9930,9 @@ else
 		{
 		epoch_sec++;
 		check_n++;
+		even++;
+		if (even > 1)
+			{even=0;}
 		var year= t.getYear()
 		var month= t.getMonth()
 			month++;
@@ -7582,18 +9973,18 @@ else
 		if (vdc_header_date_format.match(regALdate))
 			{
 			var statusmon='';
-			if (mon == 1) {statusmon = "JAN";}
-			if (mon == 2) {statusmon = "FEB";}
-			if (mon == 3) {statusmon = "MAR";}
-			if (mon == 4) {statusmon = "APR";}
-			if (mon == 5) {statusmon = "MAJ";}
-			if (mon == 6) {statusmon = "JUN";}
-			if (mon == 7) {statusmon = "JUL";}
-			if (mon == 8) {statusmon = "AUG";}
-			if (mon == 9) {statusmon = "SEP";}
-			if (mon == 10) {statusmon = "OCT";}
-			if (mon == 11) {statusmon = "NOV";}
-			if (mon == 12) {statusmon = "DEC";}
+			if (month == 1) {statusmon = "JAN";}
+			if (month == 2) {statusmon = "FEB";}
+			if (month == 3) {statusmon = "MAR";}
+			if (month == 4) {statusmon = "APR";}
+			if (month == 5) {statusmon = "MAJ";}
+			if (month == 6) {statusmon = "JUN";}
+			if (month == 7) {statusmon = "JUL";}
+			if (month == 8) {statusmon = "AUG";}
+			if (month == 9) {statusmon = "SEP";}
+			if (month == 10) {statusmon = "OCT";}
+			if (month == 11) {statusmon = "NOV";}
+			if (month == 12) {statusmon = "DEC";}
 
 			status_date = statusmon + " " + daym;
 			}
@@ -7848,26 +10239,15 @@ else
 			{
 			if (showxfervar == 'ON')
 				{
-				var xfer_height = <?=$HTheight ?>;
+				var xfer_height = <?php echo $HTheight ?>;
 				if (alt_phone_dialing>0) {xfer_height = (xfer_height + 20);}
 				if ( (auto_dial_level == 0) && (manual_dial_preview == 1) ) {xfer_height = (xfer_height + 20);}
 				document.getElementById("TransferMain").style.top = xfer_height;
 				HKbutton_allowed = 0;
 				showDiv('TransferMain');
 				document.getElementById("XferControl").innerHTML = "<a href=\"#\" onclick=\"ShoWTransferMain('OFF','YES');\"><IMG SRC=\"../agc/images/vdc_LB_transferconf.gif\" border=0 alt=\"Presmerovanie - Konferencia\"></a>";
-				var loop_ct = 0;
-				var live_XfeR_HTML = '';
-				var XfeR_SelecT = '';
-				while (loop_ct < XFgroupCOUNT)
-					{
-					if (VARxfergroups[loop_ct] == LIVE_default_xfer_group)
-						{XfeR_SelecT = 'SELECTED ';}
-					else {XfeR_SelecT = '';}
-					live_XfeR_HTML = live_XfeR_HTML + "<option " + XfeR_SelecT + "value=\"" + VARxfergroups[loop_ct] + "\">" + VARxfergroups[loop_ct] + " - " + VARxfergroupsnames[loop_ct] + "</option>\n";
-					loop_ct++;
-					}
-
-				document.getElementById("XfeRGrouPLisT").innerHTML = "<select size=1 name=XfeRGrouP class=\"cust_form\" id=XfeRGrouP>" + live_XfeR_HTML + "</select>";
+				if (quick_transfer_button_enabled > 0)
+					{document.getElementById("QuickXfer").innerHTML = "<IMG SRC=\"../agc/images/vdc_LB_quickxfer_OFF.gif\" border=0 alt=\"Rýchly prenos\">";}
 				}
 			else
 				{
@@ -7876,6 +10256,15 @@ else
 				if (showoffvar == 'YES')
 					{
 					document.getElementById("XferControl").innerHTML = "<a href=\"#\" onclick=\"ShoWTransferMain('ON');\"><IMG SRC=\"../agc/images/vdc_LB_transferconf.gif\" border=0 alt=\"Presmerovanie - Konferencia\"></a>";
+
+					if (quick_transfer_button == 'IN_GROUP')
+						{
+						document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_LB_quickxfer.gif\" border=0 alt=\"Rýchly prenos\"></a>";
+						}
+					if ( (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_1') || (quick_transfer_button == 'PZNOVU INCIALIZOVAŤ_2') )
+						{
+						document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"../agc/images/vdc_LB_quickxfer.gif\" border=0 alt=\"Rýchly prenos\"></a>";
+						}
 					}
 				}
 			if (three_way_call_cid == 'AGENT_CHOOSE')
@@ -7905,10 +10294,13 @@ else
 
 	function MainPanelToFront(resumevar)
 		{
-		document.getElementById("MainTable").style.backgroundColor="<? echo $MAIN_COLOR ?>";
-		document.getElementById("MaiNfooter").style.backgroundColor="<? echo $MAIN_COLOR ?>";
+		document.getElementById("MainTable").style.backgroundColor="<?php echo $MAIN_COLOR ?>";
+		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $MAIN_COLOR ?>";
 		hideDiv('ScriptPanel');
+		hideDiv('ScriptRefresH');
 		showDiv('MainPanel');
+		ShoWGenDerPulldown();
+
 		if (resumevar != 'NO')
 			{
 			if (alt_phone_dialing == 1)
@@ -7944,17 +10336,44 @@ else
 					}
 				}
 			}
-		panel_bgcolor='<? echo $MAIN_COLOR ?>';
+		panel_bgcolor='<?php echo $MAIN_COLOR ?>';
 		document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
 		}
 
 	function ScriptPanelToFront()
 		{
 		showDiv('ScriptPanel');
-		document.getElementById("MainTable").style.backgroundColor="<? echo $SCRIPT_COLOR ?>";
-		document.getElementById("MaiNfooter").style.backgroundColor="<? echo $SCRIPT_COLOR ?>";
-		panel_bgcolor='<? echo $SCRIPT_COLOR ?>';
+		showDiv('ScriptRefresH');
+		document.getElementById("MainTable").style.backgroundColor="<?php echo $SCRIPT_COLOR ?>";
+		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $SCRIPT_COLOR ?>";
+		panel_bgcolor='<?php echo $SCRIPT_COLOR ?>';
 		document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
+
+		HidEGenDerPulldown();
+		}
+
+	function HidEGenDerPulldown()
+		{
+		var gIndex = 0;
+		var genderIndex = document.getElementById("gender_list").selectedIndex;
+		var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
+		if (genderValue == 'M') {var gIndex = 1;}
+		if (genderValue == 'F') {var gIndex = 2;}
+		document.getElementById("GENDERhideFORieALT").innerHTML = '<select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
+		document.getElementById("GENDERhideFORie").innerHTML = '';
+		document.getElementById("gender_list").selectedIndex = gIndex;
+		}
+
+	function ShoWGenDerPulldown()
+		{
+		var gIndex = 0;
+		var genderIndex = document.getElementById("gender_list").selectedIndex;
+		var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
+		if (genderValue == 'M') {var gIndex = 1;}
+		if (genderValue == 'F') {var gIndex = 2;}
+		document.getElementById("GENDERhideFORie").innerHTML = '<select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
+		document.getElementById("GENDERhideFORieALT").innerHTML = '';
+		document.getElementById("gender_list").selectedIndex = gIndex;
 		}
 
 	</script>
@@ -7964,7 +10383,8 @@ else
 <!--
 	div.scroll_callback {height: 300px; width: 620px; overflow: scroll;}
 	div.scroll_list {height: 400px; width: 140px; overflow: scroll;}
-	div.scroll_script {height: <?=$SSheight ?>px; width: <?=$SDwidth ?>px; background: #FFF5EC; overflow: scroll; font-size: 12px;  font-family: sans-serif;}
+	div.scroll_script {height: <?php echo $SSheight ?>px; width: <?php echo $SDwidth ?>px; background: #FFF5EC; overflow: auto; font-size: 12px;  font-family: sans-serif;}
+	div.noscroll_script {height: <?php echo $SSheight ?>px; width: <?php echo $SDwidth ?>px; background: #FFF5EC; overflow: hidden; font-size: 12px;  font-family: sans-serif;}
 	div.text_input {overflow: auto; font-size: 10px;  font-family: sans-serif;}
    .body_text {font-size: 13px;  font-family: sans-serif;}
    .queue_text_red {font-size: 12px;  font-family: sans-serif; font-weight: bold; color: red}
@@ -7988,7 +10408,7 @@ else
 
 -->
 </style>
-<?
+<?php
 echo "</head>\n";
 
 
@@ -7996,24 +10416,25 @@ echo "</head>\n";
 <BODY onload="begin_all_refresh();"  onunload="BrowserCloseLogout();">
 <FORM name=vicidial_form>
 <span style="position:absolute;left:0px;top:0px;z-index:2;" id="Header">
-<TABLE Border=0 CELLPADDING=0 CELLSPACING=0 BGCOLOR=white WIDTH=<?=$MNwidth ?> MARGINWIDTH=0 MARGINHEIGHT=0 LEFTMARGIN=0 TOPMARGIN=0 VALIGN=TOP ALIGN=LEFT>
+<TABLE Border=0 CELLPADDING=0 CELLSPACING=0 BGCOLOR=white WIDTH=<?php echo $MNwidth ?> MARGINWIDTH=0 MARGINHEIGHT=0 LEFTMARGIN=0 TOPMARGIN=0 VALIGN=TOP ALIGN=LEFT>
 <TR VALIGN=TOP ALIGN=LEFT><TD COLSPAN=3 VALIGN=TOP ALIGN=LEFT>
 <INPUT TYPE=HIDDEN NAME=extension>
 <font class="queue_text">
-<?	echo "Ste prihlásený ako užívateľ: $VD_login na Telefón: $SIP_user do kampane: $VD_campaign&nbsp; \n"; ?>
+<?php	echo "Ste prihlásený ako užívateľ: $VD_login na Telefón: $SIP_user do kampane: $VD_campaign&nbsp; \n"; ?>
  &nbsp; &nbsp; <span id="agentchannelSPAN"></span>
 </TD><TD COLSPAN=3 VALIGN=TOP ALIGN=RIGHT><font class="body_text">
-<? if ($INgrpCT > 0) {echo "<a href=\"#\" onclick=\"OpeNGrouPSelectioN();return false;\">GROUPS</a> &nbsp; &nbsp; \n";} ?>
-<?	echo "<a href=\"#\" onclick=\"LogouT('NORMAL');return false;\">ODHLÁSIŤ</a>\n"; ?>
+<?php if ($territoryCT > 0) {echo "<a href=\"#\" onclick=\"OpeNTerritorYSelectioN();return false;\">TERRITORIES</a> &nbsp; &nbsp; \n";} ?>
+<?php if ($INgrpCT > 0) {echo "<a href=\"#\" onclick=\"OpeNGrouPSelectioN();return false;\">GROUPS</a> &nbsp; &nbsp; \n";} ?>
+<?php	echo "<a href=\"#\" onclick=\"NormalLogout();return false;\">ODHLÁSIŤ</a>\n"; ?>
 </TD></TR></TABLE>
 </SPAN>
 
 <span style="position:absolute;left:0px;top:13px;z-index:1;" id="Tabs">
-    <table border=0 bgcolor="#FFFFFF" width=<?=$MNwidth ?> height=30>
+    <table border=0 bgcolor="#FFFFFF" width=<?php echo $MNwidth ?> height=30>
 <TR VALIGN=TOP ALIGN=LEFT>
-<TD ALIGN=LEFT WIDTH=115><A HREF="#" onclick="MainPanelToFront('NO');"><IMG SRC="../agc/images/vdc_tab_vicidial.gif" ALT="VICIDIAL" WIDTH=115 HEIGHT=30 Border=0></A></TD>
+<TD ALIGN=LEFT WIDTH=115><A HREF="#" onclick="MainPanelToFront('NO');"><IMG SRC="../agc/images/vdc_tab_vicidial.gif" ALT="MAIN" WIDTH=115 HEIGHT=30 Border=0></A></TD>
 <TD ALIGN=LEFT WIDTH=105><A HREF="#" onclick="ScriptPanelToFront();"><IMG SRC="../agc/images/vdc_tab_script.gif" ALT="SCRIPT" WIDTH=105 HEIGHT=30 Border=0></A></TD>
-<TD WIDTH=<?=$HSwidth ?> VALIGN=MIDDLE ALIGN=CENTER><font class="body_text"> &nbsp; <span id=status>LIVE</span> &nbsp; &nbsp; ID relácie: <span id=sessionIDspan></span> &nbsp; &nbsp; <span id=AgentStavCalls></span></TD>
+<TD WIDTH=<?php echo $HSwidth ?> VALIGN=MIDDLE ALIGN=CENTER><font class="body_text">&nbsp; <span id=status>LIVE</span>&nbsp; &nbsp;session ID: <span id=sessionIDspan></span>&nbsp; &nbsp;<span id=AgentStavCalls></span></TD>
 <TD WIDTH=109><IMG SRC="../agc/images/agc_live_call_OFF.gif" NAME=livecall ALT="Živý hovor" WIDTH=109 HEIGHT=30 Border=0></TD>
 </TR></TABLE>
 </span>
@@ -8021,27 +10442,27 @@ echo "</head>\n";
 
 
 <span style="position:absolute;left:0px;top:0px;z-index:3;" id="Vítame VásBoxA">
-    <table border=0 bgcolor="#FFFFFF" width=<?=$CAwidth ?> height=<?=$HKwidth ?>><TR><TD align=center><BR><span id="Vítame VásBoxAt">VICIDIAL</span></TD></TR></TABLE>
+    <table border=0 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $HKwidth ?>><TR><TD align=center><BR><span id="Vítame VásBoxAt">Agent Screen</span></TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:300px;top:<?=$MBheight ?>px;z-index:12;" id="ManuaLDiaLButtons"><font class="body_text">
+<span style="position:absolute;left:300px;top:<?php echo $MBheight ?>px;z-index:12;" id="ManuaLDiaLButtons"><font class="body_text">
 <span id="MDstatusSpan"><a href="#" onclick="NeWManuaLDiaLCalL('NO');return false;">RUČNÉ VOLANIE</a></span> &nbsp; &nbsp; &nbsp; <a href="#" onclick="NeWManuaLDiaLCalL('FAST');return false;">RÝCHLE VOLANIE</a><BR>
 </font></span>
 
-<span style="position:absolute;left:300px;top:<?=$CBheight ?>px;z-index:13;" id="CallbacksButtons"><font class="body_text">
+<span style="position:absolute;left:300px;top:<?php echo $CBheight ?>px;z-index:13;" id="CallbacksButtons"><font class="body_text">
 <span id="CBstatusSpan">X AKTÍVNE PREPLÁNOVANÉ HOVORY</span> <BR>
 </font></span>
 
-<span style="position:absolute;left:500px;top:<?=$CBheight ?>px;z-index:14;" id="PauseCodeButtons"><font class="body_text">
+<span style="position:absolute;left:500px;top:<?php echo $CBheight ?>px;z-index:14;" id="PauseCodeButtons"><font class="body_text">
 <span id="PauseCodeLinkSpan"></span> <BR>
 </font></span>
 
-<span style="position:absolute;left:<?=$SCwidth ?>px;top:49px;z-index:18;" id="SecondSspan"><font class="body_text"> sekúnd: 
+<span style="position:absolute;left:<?php echo $SCwidth ?>px;top:49px;z-index:18;" id="SecondSspan"><font class="body_text">sekúnd: 
 <span id="SecondSDISP"> &nbsp; &nbsp; </span>
 </font></span>
 
-<span style="position:absolute;left:<?=$AMwidth ?>px;top:<?=$AMheight ?>px;z-index:22;" id="AgentMuteANDPreseTDiaL"><font class="body_text">
-	<?
+<span style="position:absolute;left:<?php echo $AMwidth ?>px;top:<?php echo $AMheight ?>px;z-index:22;" id="AgentMuteANDPreseTDiaL"><font class="body_text">
+	<?php
 	if ($PreseT_DiaL_LinKs)
 		{
 		echo "<a href=\"#\" onclick=\"DtMf_PreSet_a_DiaL();return false;\"><font class=\"body_tiny\">D1 - VOLAŤ</font></a>\n";
@@ -8050,12 +10471,11 @@ echo "</head>\n";
 		}
 	else {echo "<BR>\n";}
 	?>
-<BR><BR>
-<span id="AgentMuteSpan"></span> <BR>
+<BR><BR> &nbsp; <BR>
 </font></span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:39;" id="CallBacKsLisTBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?=$CAwidth ?> height=460><TR><TD align=center VALIGN=top> PREPLÁNOVANÉ HOVORY PRE AGENTA <? echo $VD_login ?>:<BR>Kliknite na preplánovanie hovoru na volanie zákaznikovi znova. Ak kliknete na záznam nižšie budete ho volať a bude odstránený zo zoznamu.
+<span style="position:absolute;left:0px;top:0px;z-index:51;" id="CallBacKsLisTBox">
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> PREPLÁNOVANÉ HOVORY PRE AGENTA <?php echo $VD_login ?>:<BR>Kliknite na preplánovanie hovoru na volanie zákaznikovi znova. Ak kliknete na záznam nižšie budete ho volať a bude odstránený zo zoznamu.
 	<BR>
 	<div class="scroll_callback" id="CallBacKsLisT"></div>
 	<BR> &nbsp; 
@@ -8065,16 +10485,16 @@ echo "</head>\n";
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:40;" id="NeWManuaLDiaLBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?=$CAwidth ?> height=460><TR><TD align=center VALIGN=top> NOVÉ manuálne vytáčanie pre zoznam kontaktov <? echo "$VD_login in campaign $VD_campaign" ?>:<BR><BR>Zadajte nižšie uvedené informácie pre nový zoznam kontaktov, ktorý chcete volať.
+<span style="position:absolute;left:0px;top:0px;z-index:52;" id="NeWManuaLDiaLBox">
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> NOVÉ manuálne vytáčanie pre zoznam kontaktov <?php echo "$VD_login in campaign $VD_campaign" ?>:<BR><BR>Zadajte nižšie uvedené informácie pre nový zoznam kontaktov, ktorý chcete volať.
 	<BR>
-	<? 
+	<?php 
 	if (eregi("X",dial_prefix))
 		{
 		echo "Poznámka: volajte prefix z $dial_prefix budú pridané na začiatok tohto čísla<BR>\n";
 		}
 	?>
-	Note: all new manual dial leads will go into list <? echo $manual_dial_list_id ?><BR><BR>
+	Note: all new manual dial leads will go into list <?php echo $manual_dial_list_id ?><BR><BR>
 	<table><tr>
 	<td align=right><font class="body_text"> Volať kód: </td>
 	<td align=left><font class="body_text"><input type=text size=7 maxlength=10 name=MDDiaLCodE class="cust_form" value="1">&nbsp; (To je obvykle 1 v USA-Kanada)</td>
@@ -8109,46 +10529,88 @@ echo "</head>\n";
 
 
 
-<span style="position:absolute;left:5px;top:<?=$CBheight ?>px;z-index:19;" id="VolumeControlSpan"><span id="VolumeUpSpan"><IMG SRC="../agc/images/vdc_volume_up_off.gif" Border=0></span><BR><span id="VolumeDownSpan"><IMG SRC="../agc/images/vdc_volume_down_off.gif" Border=0></span>
+<span style="position:absolute;left:5px;top:<?php echo $CBheight ?>px;z-index:19;" id="VolumeControlSpan"><span id="VolumeUpSpan"><IMG SRC="../agc/images/vdc_volume_up_off.gif" Border=0></span><BR><span id="VolumeDownSpan"><IMG SRC="../agc/images/vdc_volume_down_off.gif" Border=0></span>
 </font></span>
 
 
 
-<span style="position:absolute;left:35px;top:<?=$CBheight ?>px;z-index:20;" id="AgentStavSpan"><font class="body_text">
+<span style="position:absolute;left:35px;top:<?php echo $CBheight ?>px;z-index:20;" id="AgentStavSpan"><font class="body_text">
 Váš stav: <span id="AgentStavStav"></span> <BR>Calls Dialing: <span id="AgentStavDiaLs"></span> 
 </font></span>
 
 
 
-<span style="position:absolute;left:5px;top:<?=$HTheight ?>px;z-index:21;" id="TransferMain">
-	<table bgcolor="#CCCCFF" width=<?=$XFwidth ?>><tr>
-	<td align=left>
+<span style="position:absolute;left:157px;top:<?php echo $HTheight ?>px;z-index:32;" id="TransferMain">
+	<table bgcolor="#CCCCFF" width=<?php echo $SDwidth ?>>
+	<tr valign=top>
+	<td align=left height=30>
 	<div class="text_input" id="TransferMaindiv">
 	<font class="body_text">
-	 <IMG SRC="../agc/images/vdc_XB_header.gif" border=0 alt="Presmerovanie - Konferencia"> &nbsp; &nbsp; &nbsp; &nbsp; <span id="XfeRDiaLGrouPSelecteD"></span> &nbsp; &nbsp; <span id="XfeRCID"></span><BR>
+	<IMG SRC="../agc/images/vdc_XB_header.gif" border=0 alt="Presmerovanie - Konferencia" style="vertical-align:middle"> &nbsp; &nbsp; &nbsp; &nbsp; <span id="XfeRDiaLGrouPSelecteD"></span> &nbsp; &nbsp; <span id="XfeRCID"></span><BR>
+
+	<TABLE cellpadding=0 cellspacing=1 border=0>
+	<TR>
+	<TD ALIGN=LEFT COLSPAN=3>
 	<span id="XfeRGrouPLisT"><select size=1 name=XfeRGrouP class="cust_form"><option>-- SELECT A GROUP TO SEND YOUR HOVOR TO --</option></select></span>
+	 
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="LocalCloser"><IMG SRC="../agc/images/vdc_XB_localcloser_OFF.gif" border=0 alt="LOKALNE ROZSIRENIE" style="vertical-align:middle"></span> &nbsp; &nbsp;
+	</TD>
+	<TD ALIGN=LEFT>
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="HangupXferLine"><IMG SRC="../agc/images/vdc_XB_hangupxferline_OFF.gif" border=0 alt="Zložiť Xfer linku" style="vertical-align:middle"></span>
+	</TD>
+	</TR>
 
-	<span STYLE="background-color: #CCCCCC" id="LocalCloser"><IMG SRC="../agc/images/vdc_XB_localcloser_OFF.gif" border=0 alt="LOKALNE ROZSIRENIE"></span> 
-	<span STYLE="background-color: #CCCCCC" id="HangupXferLine"><IMG SRC="../agc/images/vdc_XB_hangupxferline_OFF.gif" border=0 alt="Zložiť Xfer linku"></span>
-	<span STYLE="background-color: #CCCCCC" id="HangupBothLines"><a href="#" onclick="bothcall_send_hangup();return false;"><IMG SRC="../agc/images/vdc_XB_hangupbothlines.gif" border=0 alt="Zložiť obe linky"></a></span>
+	<TR>
+	<TD ALIGN=LEFT COLSPAN=2>
+	<IMG SRC="../agc/images/vdc_XB_seconds.gif" border=0 alt="seconds" style="vertical-align:middle"><input type=text size=2 name=xferlength maxlength=4 class="cust_form">
+	&nbsp; 
+	<IMG SRC="../agc/images/vdc_XB_channel.gif" border=0 alt="channel" style="vertical-align:middle"><input type=text size=12 name=xferchannel maxlength=200 class="cust_form">
+	</TD>
+	<TD ALIGN=LEFT>
+	<input type=checkbox name=consultativexfer size=1 value="0"><font class="body_tiny"> PORADNÝ &nbsp;</font>
+	</TD>
+	<TD ALIGN=LEFT>
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="HangupBothLines"><a href="#" onclick="bothcall_send_hangup();return false;"><IMG SRC="../agc/images/vdc_XB_hangupbothlines.gif" border=0 alt="Zložiť obe linky" style="vertical-align:middle"></a></span>
+	</TD>
+	</TR>
 
-	<BR>
-
-	<IMG SRC="../agc/images/vdc_XB_number.gif" border=0 alt="Číslo na volanie"> <input type=text size=15 name=xfernumber maxlength=25 class="cust_form"> &nbsp; 
+	<TR>
+	<TD ALIGN=LEFT COLSPAN=2>
+	<IMG SRC="../agc/images/vdc_XB_number.gif" border=0 alt="Číslo na volanie" style="vertical-align:middle">
+	&nbsp; 
+	<input type=text size=20 name=xfernumber maxlength=25 class="cust_form" value="<?php echo $preset_populate ?>" onFocus="XferAgentSelectLaunch();return false;"> &nbsp; 
 	<input type=hidden name=xferuniqueid>
-	<input type=checkbox name=xferoverride size=1 value="0"><font class="body_tiny"> PREPISAT VOLANIE</font> &nbsp;
-	<span STYLE="background-color: #CCCCCC" id="Leave3WayCall"><a href="#" onclick="leave_3way_call('FIRST');return false;"><IMG SRC="../agc/images/vdc_XB_leave3waycall.gif" border=0 alt="PONECHAT 3 CESTNE VOLANIE"></a></span> 
-	<span STYLE="background-color: #CCCCCC" id="DialBlindTransfer"><IMG SRC="../agc/images/vdc_XB_blindtransfer_OFF.gif" border=0 alt="Volať slepé presmerovanie"></span>
-	<a href="#" onclick="DtMf_PreSet_a();return false;"><font class="body_tiny">D1</font></a> 
-	<a href="#" onclick="DtMf_PreSet_b();return false;"><font class="body_tiny">D2</font></a>
+	</TD>
+	<TD ALIGN=LEFT>
+	<input type=checkbox name=xferoverride size=1 value="0"><font class="body_tiny"> PREPISAT VOLANIE</font>
+	</TD>
+	<TD ALIGN=LEFT>
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="Leave3WayCall"><a href="#" onclick="leave_3way_call('FIRST');return false;"><IMG SRC="../agc/images/vdc_XB_leave3waycall.gif" border=0 alt="PONECHAT 3 CESTNE VOLANIE" style="vertical-align:middle"></a></span> 
+	</TD>
+	</TR>
 
-	<BR>
+	<TR>
+	<TD ALIGN=LEFT COLSPAN=4>
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="DialBlindTransfer"><IMG SRC="../agc/images/vdc_XB_blindtransfer_OFF.gif" border=0 alt="Volať slepé presmerovanie" style="vertical-align:middle"></span>
+	&nbsp;
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="DialWithCustomer"><a href="#" onclick="SendManualDial('YES');return false;"><IMG SRC="../agc/images/vdc_XB_dialwithcustomer.gif" border=0 alt="Volanie so zákazníkom" style="vertical-align:middle"></a></span> 
+	&nbsp;
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="ParkCustomerDial"><a href="#" onclick="xfer_park_dial();return false;"><IMG SRC="../agc/images/vdc_XB_parkcustomerdial.gif" border=0 alt="Zaparkovať hovor so zákazníkom" style="vertical-align:middle"></a></span> 
+	&nbsp;
+	<font class="body_tiny">
+	<a href="#" onclick="DtMf_PreSet_a();return false;">D1</a> 
+	<a href="#" onclick="DtMf_PreSet_b();return false;">D2</a>
+	<a href="#" onclick="DtMf_PreSet_c();return false;">D3</a>
+	<a href="#" onclick="DtMf_PreSet_d();return false;">D4</a>
+	<a href="#" onclick="DtMf_PreSet_e();return false;">D5</a>
+	</font>
+	&nbsp;
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="DialBlindVMail"><IMG SRC="../agc/images/vdc_XB_ammessage_OFF.gif" border=0 alt="Blind Transfer VMail Message" style="vertical-align:middle"></span>
+	</TD>
+	</TR>
 
-	<IMG SRC="../agc/images/vdc_XB_sekúnd.gif" border=0 alt="sekúnd"> <input type=text size=2 name=xferlength maxlength=4 class="cust_form"> &nbsp; 
-	<IMG SRC="../agc/images/vdc_XB_channel.gif" border=0 alt="channel"> <input type=text size=12 name=xferchannel maxlength=100 class="cust_form"> 
-	<span STYLE="background-color: #CCCCCC" id="DialWithCustomer"><a href="#" onclick="SendManualDial('YES');return false;"><IMG SRC="../agc/images/vdc_XB_dialwithcustomer.gif" border=0 alt="Volanie so zákazníkom"></a></span> 
-	<span STYLE="background-color: #CCCCCC" id="ParkCustomerDial"><a href="#" onclick="xfer_park_dial();return false;"><IMG SRC="../agc/images/vdc_XB_parkcustomerdial.gif" border=0 alt="Zaparkovať hovor so zákazníkom"></a></span> 
-	<span STYLE="background-color: #CCCCCC" id="DialBlindVMail"><IMG SRC="../agc/images/vdc_XB_ammessage_OFF.gif" border=0 alt="Blind Transfer VMail Message"></span>
+	</TABLE>
+
 	</font>
 	</div>
 	</td>
@@ -8156,32 +10618,68 @@ Váš stav: <span id="AgentStavStav"></span> <BR>Calls Dialing: <span id="AgentS
 </span>
 
 
-<span style="position:absolute;left:5px;top:<?=$HTheight ?>px;z-index:23;" id="HotKeyActionBox">
-    <table border=0 bgcolor="#FFDD99" width=<?=$HCwidth ?> height=70>
+
+<span style="position:absolute;left:0px;top:<?php echo $CQheight ?>px;width:<?php echo $MNwidth ?>;overflow:scroll;z-index:23;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="callsinqueuedisplay"><TABLE CELLPADDING=0 CELLSPACING=0 Border=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">Hovorov vo fronte: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="callsinqueuelist">&nbsp;</span></TD></TR></TABLE></span>
+
+<font class="body_small"><span style="position:absolute;left:<?php echo $CLwidth ?>px;top:<?php echo $SLheight ?>px;z-index:24;" id="callsinqueuelink">
+<?php 
+if ($view_calls_in_queue > 0)
+	{ 
+	if ($view_calls_in_queue_launch > 0) 
+		{echo "<a href=\"#\" onclick=\"show_calls_in_queue('HIDE');\">Skryť žiada, aby vo fronte</a>\n";}
+	else 
+		{echo "<a href=\"#\" onclick=\"show_calls_in_queue('SHOW');\">Zobraziť žiada, aby vo fronte</a>\n";}
+	}
+?>
+</span></font>
+
+
+<span style="position:absolute;left:<?php echo $SBwidth ?>px;top:0px;height:500;overflow:scroll;z-index:25;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentViewSpan"><TABLE CELLPADDING=0 CELLSPACING=0 Border=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">
+Ostatné zástupcovia Stav: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="AgentViewStav">&nbsp;</span></TD></TR></TABLE></span>
+
+<span style="position:absolute;left:60px;top:<?php echo $BPheight ?>px;width:400;height:500;overflow:scroll;z-index:33;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentXferViewSpan"><CENTER><font class="body_text">
+Dostupných prostriedkov Transfer: <span id="AgentXferViewSelect"></span></CENTER></font></span>
+
+<span style="position:absolute;left:<?php echo $SCwidth ?>px;top:<?php echo $SLheight ?>px;z-index:27;" id="AgentViewLinkSpan"><TABLE CELLPADDING=0 CELLSPACING=0 Border=0 WIDTH=91><TR><TD ALIGN=RIGHT><font class="body_small"><span id="AgentViewLink"><a href="#" onclick="AgentsViewOpen('AgentViewSpan','open');return false;">Agents View +</a></span></font></TD></TR></TABLE></span>
+
+<font class="body_small"><span style="position:absolute;left:200px;top:<?php echo $CBheight ?>px;z-index:28;" id="dialableleadsspan">
+<?php 
+if ($agent_display_dialable_leads > 0)
+	{ 
+	echo "Dialable Leads:<BR> &nbsp;\n";
+	}
+?>
+</span></font>
+
+<span style="position:absolute;left:<?php echo $MUwidth ?>px;top:<?php echo $SLheight ?>px;z-index:29;" id="AgentMuteSpan"></span>
+
+
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:34;" id="HotKeyActionBox">
+    <table border=0 bgcolor="#FFDD99" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFEEBB"><TD height=70><font class="sh_text"> Kontakty pripravené ako: </font><BR><BR><CENTER>
 	<font class="sd_text"><span id="HotKeyDispo"> - </span></font></CENTER>
 	</TD>
 	</TR></TABLE>
 </span>
 
-<span style="position:absolute;left:5px;top:<?=$HTheight ?>px;z-index:24;" id="HotKeyEntriesBox">
-    <table border=0 bgcolor="#FFDD99" width=<?=$HCwidth ?> height=70>
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:35;" id="HotKeyEntriesBox">
+    <table border=0 bgcolor="#FFDD99" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFEEBB"><TD width=200><font class="sh_text"> Rozloženie horúcich kláves: </font></td><td colspan=2>
 	<font class="body_small">Keď je aktívne, jednoducho stlačte na klávesnici tlačidlo pre požadovanú dispozíciu pre tento hovor. Hovor bude potom ukončený automaticky:</font></td></tr><tr>
 	<TD width=200><font class="sk_text">
-	<span id="HotKeyBoxA"><? echo $HKboxA ?></span>
+	<span id="HotKeyBoxA"><?php echo $HKboxA ?></span>
 	</font></TD>
 	<TD width=200><font class="sk_text">
-	<span id="HotKeyBoxB"><? echo $HKboxB ?></span>
+	<span id="HotKeyBoxB"><?php echo $HKboxB ?></span>
 	</font></TD>
 	<TD><font class="sk_text">
-	<span id="HotKeyBoxC"><? echo $HKboxC ?></span>
+	<span id="HotKeyBoxC"><?php echo $HKboxC ?></span>
 	</font></TD>
 	</TR></TABLE>
 </span>
 
-<span style="position:absolute;left:5px;top:<?=$HTheight ?>px;z-index:25;" id="CBcommentsBox">
-    <table border=0 bgcolor="#FFFFCC" width=<?=$HCwidth ?> height=70>
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:36;" id="CBcommentsBox">
+    <table border=0 bgcolor="#FFFFCC" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFFF66">
 	<TD align=left><font class="sh_text"> Predchádzajúca informácia o preplánovaní hovoru: </font></td>
 	<TD align=right><font class="sk_text"> <a href="#" onclick="CBcommentsBoxhide();return false;">close</a> </font></td>
@@ -8197,8 +10695,8 @@ Váš stav: <span id="AgentStavStav"></span> <BR>Calls Dialing: <span id="AgentS
 	</TR></TABLE>
 </span>
 
-<span style="position:absolute;left:5px;top:<?=$HTheight ?>px;z-index:26;" id="EAcommentsBox">
-    <table border=0 bgcolor="#FFFFCC" width=<?=$HCwidth ?> height=70>
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:37;" id="EAcommentsBox">
+    <table border=0 bgcolor="#FFFFCC" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFFF66">
 	<TD align=left><font class="sh_text"> Rozšírená Alt Telefón Informácie:</font></td>
 	<TD align=right><font class="sk_text"> <a href="#" onclick="EAcommentsBoxhide('YES');return false;"> minimalizovať </a> </font></td>
@@ -8214,67 +10712,72 @@ Váš stav: <span id="AgentStavStav"></span> <BR>Calls Dialing: <span id="AgentS
 	</TR></TABLE>
 </span>
 
-<span style="position:absolute;left:695px;top:<?=$HTheight ?>px;z-index:27;" id="EAcommentsMinBox">
+<span style="position:absolute;left:695px;top:<?php echo $HTheight ?>px;z-index:38;" id="EAcommentsMinBox">
     <table border=0 bgcolor="#FFFFCC" width=40 height=20>
 	<TR bgcolor="#FFFF66">
 	<TD align=left><font class="sk_text"><a href="#" onclick="EAcommentsBoxshow();return false;"> maximalizovať </a> <BR>Alt Telefón Info</font></td>
 	</tr></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:12px;z-index:28;" id="NoneInSessionBox">
-    <table border=1 bgcolor="#CCFFFF" width=<?=$CAwidth ?> height=500><TR><TD align=center> Nikto nie je vo Vašej relácii: <span id="NoneInSessionID"></span><BR>
+<span style="position:absolute;left:0px;top:12px;z-index:39;" id="NoneInSessionBox">
+    <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center> Nikto nie je vo Vašej relácii: <span id="NoneInSessionID"></span><BR>
 	<a href="#" onclick="NoneInSessionOK();return false;">Vrátiť späť</a>
 	<BR><BR>
 	<a href="#" onclick="NoneInSessionCalL();return false;">Volať agenta znova</a>
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:29;" id="CustomerGoneBox">
-    <table border=1 bgcolor="#CCFFFF" width=<?=$CAwidth ?> height=500><TR><TD align=center> Zákazník položil: <span id="CustomerGoneChanneL"></span><BR>
+<span style="position:absolute;left:0px;top:0px;z-index:40;" id="CustomerGoneBox">
+    <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center> Zákazník položil: <span id="CustomerGoneChanneL"></span><BR>
 	<a href="#" onclick="CustomerGoneOK();return false;">Vrátiť späť</a>
 	<BR><BR>
 	<a href="#" onclick="CustomerGoneHangup();return false;">Ukončenie a umiestnenie hovoru</a>
-
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:30;" id="WrapupBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?=$CAwidth ?> height=550><TR><TD align=center> Volanie Wrapup: <span id="WrapupTimer"></span> sekúnd zostávajúcich na wrapup<BR><BR>
-	<span id="WrapupMessage"><?=$wrapup_message ?></span>
+<span style="position:absolute;left:0px;top:0px;z-index:41;" id="WrapupBox">
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=550><TR><TD align=center> Volanie Wrapup: <span id="WrapupTimer"></span> sekúnd zostávajúcich na wrapup<BR><BR>
+	<span id="WrapupMessage"><?php echo $wrapup_message ?></span>
 	<BR><BR>
 	<a href="#" onclick="WrapupFinish();return false;">Dokončiť Wrapup a presunúť na</a>
-
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:31;" id="AgenTDisablEBoX">
-    <table border=1 bgcolor="#FFFFFF" width=<?=$CAwidth ?> height=500><TR><TD align=center>Vaša relácia bola ukončená<BR><a href="#" onclick="LogouT('DISABLED');return false;">ODHLÁSIŤ</a><BR><BR><a href="#" onclick="hideDiv('AgenTDisablEBoX');return false;">Vrátiť späť</a>
+<span style="position:absolute;left:200px;top:150px;z-index:42;" id="TimerSpan">
+    <table border=1 bgcolor="#CCFFCC" width=400 height=200><TR><TD align=center>
+	<BR><span id="TimerContentSpan"></span><BR><BR>
+	<a href="#" onclick="hideDiv('TimerSpan');return false;">Zavrieť správu</a>
+	</TD></TR></TABLE>
+</span>
+
+<span style="position:absolute;left:0px;top:0px;z-index:43;" id="AgenTDisablEBoX">
+    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center>Vaša relácia bola ukončená<BR><a href="#" onclick="LogouT('DISABLED');return false;">ODHLÁSIŤ</a><BR><BR><a href="#" onclick="hideDiv('AgenTDisablEBoX');return false;">Vrátiť späť</a>
 </TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:32;" id="SysteMDisablEBoX">
-    <table border=1 bgcolor="#FFFFFF" width=<?=$CAwidth ?> height=500><TR><TD align=center>Je synchronizácia času problém s vašim systémom, povedzte to, prosím, správcu systému<BR><BR><BR><a href="#" onclick="hideDiv('SysteMDisablEBoX');return false;">Vrátiť späť</a>
+<span style="position:absolute;left:0px;top:0px;z-index:44;" id="SysteMDisablEBoX">
+    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center>Je synchronizácia času problém s vašim systémom, povedzte to, prosím, správcu systému<BR><BR><BR><a href="#" onclick="hideDiv('SysteMDisablEBoX');return false;">Vrátiť späť</a>
 </TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:33;" id="LogouTBox">
-    <table border=1 bgcolor="#FFFFFF" width=<?=$CAwidth ?> height=500><TR><TD align=center><BR><span id="LogouTBoxLink">ODHLÁSIŤ</span></TD></TR></TABLE>
+<span style="position:absolute;left:0px;top:0px;z-index:45;" id="LogouTBox">
+    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center><BR><span id="LogouTBoxLink">ODHLÁSIŤ</span></TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:70px;z-index:34;" id="DispoButtonHideA">
+<span style="position:absolute;left:0px;top:70px;z-index:46;" id="DispoButtonHideA">
     <table border=0 bgcolor="#CCFFCC" width=165 height=22><TR><TD align=center VALIGN=top></TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:138px;z-index:35;" id="DispoButtonHideB">
+<span style="position:absolute;left:0px;top:138px;z-index:47;" id="DispoButtonHideB">
     <table border=0 bgcolor="#CCFFCC" width=165 height=250><TR><TD align=center VALIGN=top>&nbsp;</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:36;" id="DispoButtonHideC">
-    <table border=0 bgcolor="#CCFFCC" width=<?=$CAwidth ?> height=47><TR><TD align=center VALIGN=top>Všetky zmeny vykonané v informáciách o zákazníkovi teraz , budú vykonané, musíte zmeniť informácie o zákazníkovi pred ukončením hovoru. </TD></TR></TABLE>
+<span style="position:absolute;left:0px;top:0px;z-index:48;" id="DispoButtonHideC">
+    <table border=0 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=47><TR><TD align=center VALIGN=top>Všetky zmeny vykonané v informáciách o zákazníkovi teraz , budú vykonané, musíte zmeniť informácie o zákazníkovi pred ukončením hovoru. </TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:37;" id="DispoSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?=$CAwidth ?> height=460><TR><TD align=center VALIGN=top> VYKONANIE HOVORU :<span id="DispoSelectPhonE"></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectHAspan"><a href="#" onclick="DispoHanguPAgaiN()">Položte znova</a></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectMaxMin"><a href="#" onclick="DispoMinimize()"> minimalizovať </a></span><BR>
+<span style="position:absolute;left:0px;top:0px;z-index:49;" id="DispoSelectBox">
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> VYKONANIE HOVORU :<span id="DispoSelectPhonE"></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectHAspan"><a href="#" onclick="DispoHanguPAgaiN()">Položte znova</a></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectMaxMin"><a href="#" onclick="DispoMinimize()"> minimalizovať </a></span><BR>
 	<span id="DispoSelectContent"> Ukončenie hovoru vybranej dispozície </span>
 	<input type=hidden name=DispoSelection><BR>
 	<input type=checkbox name=DispoSelectStop size=1 value="0"> PAUZA VOLAJUCEHO AGENTA <BR>
@@ -8286,27 +10789,27 @@ Váš stav: <span id="AgentStavStav"></span> <BR>Calls Dialing: <span id="AgentS
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:43;" id="PauseCodeSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?=$CAwidth ?> height=460><TR><TD align=center VALIGN=top> VYBRAŤ KÓD PAUZY :<BR>
+<span style="position:absolute;left:0px;top:0px;z-index:64;" id="PauseCodeSelectBox">
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> VYBRAŤ KÓD PAUZY :<BR>
 	<span id="PauseCodeSelectContent"> Pauza Code Selection </span>
 	<input type=hidden name=PauseCodeSelection>
 	<BR><BR> &nbsp; 
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:44;" id="GroupAliasSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?=$CAwidth ?> height=460><TR><TD align=center VALIGN=top> VYBER GROUP ALIAS :<BR>
+<span style="position:absolute;left:0px;top:0px;z-index:65;" id="GroupAliasSelectBox">
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> VYBER GROUP ALIAS :<BR>
 	<span id="GroupAliasSelectContent"> Skupina Alias Výber </span>
 	<input type=hidden name=GroupAliasSelection>
 	<BR><BR> &nbsp; 
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:1000px;z-index:45;" id="GENDERhideFORieALT"></span>
+<span style="position:absolute;left:0px;top:1500px;z-index:66;" id="GENDERhideFORieALT"></span>
 
 
-<span style="position:absolute;left:0px;top:0px;z-index:38;" id="CallBackSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?=$CAwidth ?> height=460><TR><TD align=center VALIGN=top> Vyberte dátum preplánovania hovoru :<span id="CallBackDatE"></span><BR>
+<span style="position:absolute;left:0px;top:0px;z-index:50;" id="CallBackSelectBox">
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> Vyberte dátum preplánovania hovoru :<span id="CallBackDatE"></span><BR>
 	<input type=hidden name=CallBackDatESelectioN ID="CallBackDatESelectioN">
 	<input type=hidden name=CallBackTimESelectioN ID="CallBackTimESelectioN">
 	<span id="CallBackDatEPrinT">Vyberte dátum nižšie</span> &nbsp;
@@ -8346,28 +10849,28 @@ Váš stav: <span id="AgentStavStav"></span> <BR>Calls Dialing: <span id="AgentS
 	<option>AM</option>
 	<option selected>PM</option>
 	</select> &nbsp;<BR>
-	<?
+	<?php
 	if ($agentonly_callbacks)
 		{echo "<input type=checkbox name=CallBackOnlyMe id=CallBackOnlyMe size=1 value=\"0\"> LEN MOJE PREPLÁNOVANÉ HOVORY <BR>";}
 	?>
 	Poznámky CB: <input type=text name="CallBackCommenTsField" id="CallBackCommenTsField" size=50 maxlength=255><BR><BR>
 
 	<a href="#" onclick="CallBackDatE_submit();return false;">POTVRDIŤ</a><BR><BR>
-	<span id="CallBackDateContent"><?echo"$CCAL_OUT"?></span>
+	<span id="CallBackDateContent"><?php echo  "$CCAL_OUT" ?></span>
 	<BR><BR> &nbsp; 
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:41;" id="CloserSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?=$CAwidth ?> height=460><TR><TD align=center VALIGN=top> Užší výber prichádzajúce skupiny <BR>
+<span style="position:absolute;left:0px;top:0px;z-index:53;" id="CloserSelectBox">
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> Užší výber prichádzajúce skupiny <BR>
 	<span id="CloserSelectContent"> Užší výber prichádzajúce skupiny </span>
 	<input type=hidden name=CloserSelectList><BR>
-	<?
-	if ( ($outbound_autodial_active > 0) and ($disable_blended_checkbox < 1) )
+	<?php
+	if ( ($outbound_autodial_active > 0) and ($disable_blended_checkbox < 1) and ($dial_method != 'INBOUND_MAN') )
 		{
 		?>
 		<input type=checkbox name=CloserSelectBlended size=1 value="0"> ZMIESANE VOLANIE(Odchádzaúce volanie aktivované) <BR>
-		<?
+		<?php
 		}
 	?>
 	<a href="#" onclick="CloserSelectContent_create();return false;">ZNOVU INCIALIZOVAŤ</a> | 
@@ -8376,37 +10879,53 @@ Váš stav: <span id="AgentStavStav"></span> <BR>Calls Dialing: <span id="AgentS
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:42;" id="NothingBox">
+<span style="position:absolute;left:0px;top:0px;z-index:54;" id="TerritorySelectBox">
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> TERRITORY SELECTION <BR>
+	<span id="TerritorySelectContent"> Territory Selection </span>
+	<input type=hidden name=TerritorySelectList><BR>
+	<a href="#" onclick="TerritorySelectContent_create();return false;">ZNOVU INCIALIZOVAŤ</a> | 
+	<a href="#" onclick="TerritorySelect_submit();return false;">POTVRDIŤ</a>
+	<BR><BR><BR><BR> &nbsp; 
+	</TD></TR></TABLE>
+</span>
+
+<span style="position:absolute;left:0px;top:0px;z-index:55;" id="NothingBox">
     <BUTTON Type=button name="inert_button"><img src="../agc/images/blank.gif"></BUTTON>
 	<span id="DiaLLeaDPrevieWHide">Kanál</span>
 	<span id="DiaLDiaLAltPhonEHide">Kanál</span>
-	<?
+	<?php
 	if (!$agentonly_callbacks)
 		{echo "<input type=checkbox name=CallBackOnlyMe size=1 value=\"0\"> LEN MOJE PREPLÁNOVANÉ HOVORY <BR>";}
-	if ( ($outbound_autodial_active < 1) or ($disable_blended_checkbox > 0) )
+	if ( ($outbound_autodial_active < 1) or ($disable_blended_checkbox > 0) or ($dial_method == 'INBOUND_MAN') )
 		{echo "<input type=checkbox name=CloserSelectBlended size=1 value=\"0\"> ZMIESANE VOLANIE<BR>";}
 	?>
 </span>
 
 
-<span style="position:absolute;left:154px;top:65px;z-index:17;" id="ScriptPanel">
-    <table border=0 bgcolor="<? echo $SCRIPT_COLOR ?>" width=<?=$SSwidth ?> height=<?=$SSheight ?>><TR><TD align=left valign=top><font class="sb_text"><div class="scroll_script" id="ScriptContents">VICIDIAL SCRIPT</div></font></TD></TR></TABLE>
+<span style="position:absolute;left:154px;top:65px;z-index:30;" id="ScriptPanel">
+    <table border=0 bgcolor="<?php echo $SCRIPT_COLOR ?>" width=<?php echo $SSwidth ?> height=<?php echo $SSheight ?>><TR><TD align=left valign=top><font class="sb_text"><div class="noscroll_script" id="ScriptContents">AGENT SCRIPT</div></font></TD></TR></TABLE>
+</span>
+
+<span style="position:absolute;left:<?php echo $AMwidth ?>px;top:69px;z-index:31;" id="ScriptRefresH">
+<a href="#" onclick="RefresHScript()"><font class="body_small">refresh</font></a>
 </span>
 
 
-<? if ( ($HK_statuses_camp > 0) && ( ($user_level>=$HKuser_level) or ($VU_hotkeys_active > 0) ) ) { ?>
-<span style="position:absolute;left:<?=$HKwidth ?>px;top:<?=$HKheight ?>px;z-index:16;" id="hotkeysdisplay"><a href="#" onMouseOver="HotKeys('ON')"><IMG SRC="../agc/images/vdc_XB_hotkeysactive_OFF.gif" border=0 alt="NEAKTÍVNE RÝCHLE TLAČIDLÁ"></a></span>
-<? } ?>
+<?php if ( ($HK_statuses_camp > 0) && ( ($user_level>=$HKuser_level) or ($VU_hotkeys_active > 0) ) ) { ?>
+<span style="position:absolute;left:<?php echo $HKwidth ?>px;top:<?php echo $HKheight ?>px;z-index:16;" id="hotkeysdisplay"><a href="#" onMouseOver="HotKeys('ON')"><IMG SRC="../agc/images/vdc_XB_hotkeysactive_OFF.gif" border=0 alt="NEAKTÍVNE RÝCHLE TLAČIDLÁ"></a></span>
+<?php } ?>
 
 
-<span style="position:absolute;left:0px;top:<?=$HKheight ?>px;z-index:15;" id="MaiNfooterspan">
-<table BGCOLOR="<? echo $MAIN_COLOR ?>" id="MaiNfooter" width=<?=$MNwidth ?>><tr height=32><td height=32><font face="Arial,Helvetica" size=1>verzia web klient VICIDIAL: <? echo $version ?> &nbsp; &nbsp; POSTAVENÉ: <? echo $build ?> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Server: <? echo $server_ip ?>  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</font><BR>
-<font class="body_small"><span id="busycallsdisplay"><a href="#"  onclick="conf_channels_detail('SHOW');">Ukázať informáciu o konferenčnom kanále</a><BR><BR>&nbsp;</span></font></td><td align=right height=32>
+<span style="position:absolute;left:0px;top:<?php echo $HKheight ?>px;z-index:15;" id="MaiNfooterspan">
+<table BGCOLOR="<?php echo $MAIN_COLOR ?>" id="MaiNfooter" width=<?php echo $MNwidth ?>><tr height=32><td height=32><font face="Arial,Helvetica" size=1>Agent web-client version: <?php echo $version ?> &nbsp; &nbsp; POSTAVENÉ: <?php echo $build ?> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Server: <?php echo $server_ip ?>  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</font><BR>
+<font class="body_small">
+<span id="busycallsdisplay"><a href="#"  onclick="conf_channels_detail('SHOW');">Ukázať informáciu o konferenčnom kanále</a>
+<BR><BR>&nbsp;</span></font></td><td align=right height=32>
 </td></tr>
 <tr><td colspan=3><span id="outboundcallsspan"></span></td></tr>
 
 <tr><td colspan=3><font class="body_small"><span id="AgentAlertSpan">
-<?
+<?php
 if ( (ereg('ON',$VU_alert_enabled)) and ($AgentAlert_allowed > 0) )
 	{echo "<a href=\"#\" onclick=\"alert_control('OFF');return false;\">Alert is ON</a>";}
 else
@@ -8415,7 +10934,7 @@ else
 </span></td></tr>
 <tr><td colspan=3>
 <font class="body_small">
-<span style="position:absolute;left:0px;top:700px;z-index:66;" id="debugbottomspan"></span>
+<span style="position:absolute;left:0px;top:700px;z-index:67;" id="debugbottomspan"></span>
 </font>
 </td></tr>
 </TABLE>
@@ -8424,7 +10943,7 @@ else
 
 <!-- BEGIN *********   Here is the main VICIDIAL display panel -->
 <span style="position:absolute;left:0px;top:46px;z-index:10;" id="MainPanel">
-<TABLE border=0 BGCOLOR="<? echo $MAIN_COLOR ?>" width=<?=$MNwidth ?> id="MainTable">
+<TABLE border=0 BGCOLOR="<?php echo $MAIN_COLOR ?>" width=<?php echo $MNwidth ?> id="MainTable">
 <TR><TD colspan=3><font class="body_text"> STAV: <span id="MainStatuSSpan"></span></font></TD></TR>
 <tr><td colspan=3><span id="busycallsdebug"></span></td></tr>
 <tr><td width=150 align=left valign=top>
@@ -8434,7 +10953,7 @@ else
 <span id="DiaLDiaLAltPhonE"><font class="preview_text"> <input type=checkbox name=DiaLAltPhonE size=1 value="0"> ALTER. ČÍSLO TELEFÓNU<BR></font></span>
 
 <!--
-<?
+<?php
 if ( ($manual_dial_preview) and ($auto_dial_level==0) )
 	{echo "<font class=\"preview_text\"> <input type=checkbox name=LeadPreview size=1 value=\"0\"> PREZRIET ZOZNAM KONTAKTOV<BR></font>";}
 if ( ($alt_phone_dialing) and ($auto_dial_level==0) )
@@ -8448,23 +10967,43 @@ SÚBOR NAHRÁVKY:<BR>
 ID NAHRÁVKY: <font class="body_small"><span id="RecorDID"></span></font><BR>
 <center>
 <!-- <a href=\"#\" onclick=\"conf_send_recording('MonitorConf','" + head_conf + "','');return false;\">NAHRAŤ</a> -->
-<span STYLE="background-color: #CCCCCC" id="RecorDControl"><a href="#" onclick="conf_send_recording('MonitorConf',session_id,'');return false;"><IMG SRC="../agc/images/vdc_LB_startrecording.gif" border=0 alt="Spustiť nahrávanie"></a></span><BR>
+<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="RecorDControl"><a href="#" onclick="conf_send_recording('MonitorConf',session_id,'');return false;"><IMG SRC="../agc/images/vdc_LB_startrecording.gif" border=0 alt="Spustiť nahrávanie"></a></span><BR>
 <span id="SpacerSpanA"><IMG SRC="../agc/images/blank.gif" width=145 height=16 border=0></span><BR>
 <span STYLE="background-color: #FFFFFF" id="WebFormSpan"><IMG SRC="../agc/images/vdc_LB_webform_OFF.gif" border=0 alt="Web formulár"></span><BR>
+<?php
+if ($enable_second_webform > 0)
+	{echo "<span STYLE=\"background-color: #FFFFFF\" id=\"WebFormSpanTwo\"><IMG SRC=\"../agc/images/vdc_LB_webform_two_OFF.gif\" border=0 alt=\"Web formulár 2\"></span><BR>\n";}
+?>
 <span id="SpacerSpanB"><IMG SRC="../agc/images/blank.gif" width=145 height=16 border=0></span><BR>
-<span STYLE="background-color: #CCCCCC" id="ParkControl"><IMG SRC="../agc/images/vdc_LB_parkcall_OFF.gif" border=0 alt="Zaparkovaný hovor"></span><BR>
-<span STYLE="background-color: #CCCCCC" id="XferControl"><IMG SRC="../agc/images/vdc_LB_transferconf_OFF.gif" border=0 alt="Presmerovanie - Konferencia"></span><BR>
+<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="ParkControl"><IMG SRC="../agc/images/vdc_LB_parkcall_OFF.gif" border=0 alt="Zaparkovaný hovor"></span><BR>
+<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="XferControl"><IMG SRC="../agc/images/vdc_LB_transferconf_OFF.gif" border=0 alt="Presmerovanie - Konferencia"></span><BR>
+
+<?php
+if ($quick_transfer_button_enabled > 0)
+	{echo "<span STYLE=\"background-color: $MAIN_COLOR\" id=\"QuickXfer\"><IMG SRC=\"../agc/images/vdc_LB_quickxfer_OFF.gif\" border=0 alt=\"Quick Transfer\"></span><BR>\n";}
+?>
+
+<span id="ReQueueCall"></span>
+
+<?php
+if ($call_requeue_button > 0)
+	{echo "<BR>\n";}
+?>
+
+
 <span id="SpacerSpanC"><IMG SRC="../agc/images/blank.gif" width=145 height=16 border=0></span><BR>
 <span STYLE="background-color: #FFCCFF" id="HangupControl"><IMG SRC="../agc/images/vdc_LB_hangupcustomer_OFF.gif" border=0 alt="Zložiť zákazníka"></span><BR>
 <span id="SpacerSpanD"><IMG SRC="../agc/images/blank.gif" width=145 height=16 border=0></span><BR>
-<div class="text_input" id="SendDTMFdiv"><span STYLE="background-color: #CCCCCC" id="SendDTMF"><a href="#" onclick="SendConfDTMF(session_id);return false;"><IMG SRC="../agc/images/vdc_LB_senddtmf.gif" border=0 alt="Poslať DTMF" align=bottom></a>  <input type=text size=5 name=conf_dtmf class="cust_form" value="" maxlength=50></div></span><BR>
+<div class="text_input" id="SendDTMFdiv"><span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="SendDTMF"><a href="#" onclick="SendConfDTMF(session_id);return false;"><IMG SRC="../agc/images/vdc_LB_senddtmf.gif" border=0 alt="Poslať DTMF" align=bottom></a>  <input type=text size=5 name=conf_dtmf class="cust_form" value="" maxlength=50></div></span><BR>
 </center>
 </font>
 </td>
-<td width=<?=$SDwidth ?> align=left valign=top>
+<td width=<?php echo $SDwidth ?> align=left valign=top>
 <input type=hidden name=lead_id value="">
 <input type=hidden name=list_id value="">
 <input type=hidden name=called_count value="">
+<input type=hidden name=rank value="">
+<input type=hidden name=owner value="">
 <input type=hidden name=gmt_offset_now value="">
 <input type=hidden name=gender value="">
 <input type=hidden name=date_of_birth value="">
@@ -8510,8 +11049,8 @@ ID NAHRÁVKY: <font class="body_small"><span id="RecorDID"></span></font><BR>
 </tr><tr>
 <td align=right><font class="body_text"> Telefón: </td>
 <td align=left><font class="body_text">
-<? 
-if ($disable_alter_custphone=='Y') 
+<?php 
+if ( (ereg('Y',$disable_alter_custphone)) or (ereg('HIDE',$disable_alter_custphone)) )
 	{
 	echo "<font class=\"body_text\"><span id=phone_numberDISP> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></font>";
 	echo "<input type=hidden name=phone_number value=\"\">";
@@ -8536,7 +11075,7 @@ else
 <td align=right valign=top><font class="body_text"> Poznámky:</td>
 <td align=left colspan=5>
 <font class="body_text">
-<?
+<?php
 if ( ($multi_line_comments) )
 	{echo "<TEXTAREA NAME=comments ROWS=2 COLS=85 class=\"cust_form_text\" value=\"\"></TEXTAREA>\n";}
 else
@@ -8554,7 +11093,7 @@ else
 <td width=1 align=center>
 </td>
 </tr>
-<tr><td align=left colspan=3 height=<?=$BPheight ?>>
+<tr><td align=left colspan=3 height=<?php echo $BPheight ?>>
 &nbsp;</td></tr>
 <tr><td align=left colspan=3>
 &nbsp;</td></tr>
@@ -8572,7 +11111,7 @@ else
 </body>
 </html>
 
-<?
+<?php
 	
 exit; 
 
@@ -8599,8 +11138,3 @@ return $errno;
 }
 
 ?>
-
-
-
-
-

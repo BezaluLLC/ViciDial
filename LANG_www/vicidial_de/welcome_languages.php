@@ -1,4 +1,4 @@
-<?
+<?php
 # welcome_demo.php - VICIDIAL welcome Demo page
 # 
 # 
@@ -6,7 +6,7 @@
 #
 header ("Content-type: text/html; charset=utf-8");
 
-echo "<title>VICIDIAL Welcome</title>\n";
+echo "<title>ViciDial Welcome</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 echo "<BR><BR><BR><BR><CENTER><TABLE WIDTH=600 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCCCCC\"><TR BGCOLOR=WHITE>";
@@ -50,6 +50,12 @@ echo "<font size=3><b> &nbsp; <a href=\"../agc_sk/vicidial.php\"><IMG SRC=\"../a
 echo "</TD></TR>\n";
 echo "<TR><TD ALIGN=LEFT >";
 echo "<font size=3><b> &nbsp; <a href=\"../agc_ru/vicidial.php\"><IMG SRC=\"../agc/images/ru.gif\" border=0> Russian Agent Login</a>";
+echo "</TD></TR>\n";
+echo "<TR><TD ALIGN=LEFT >";
+echo "<font size=3><b> &nbsp; <a href=\"../agc_nl/vicidial.php\"><IMG SRC=\"../agc/images/nl.gif\" border=0> Dutch Agent Login</a>";
+echo "</TD></TR>\n";
+echo "<TR><TD ALIGN=LEFT >";
+echo "<font size=3><b> &nbsp; <a href=\"../agc_tw/vicidial.php\"><IMG SRC=\"../agc/images/tw.gif\" border=0> Chinese(T) Agent Login</a>";
 echo "</TD></TR></TABLE>\n";
 
 echo "</TD><TD VALIGN=TOP>\n";

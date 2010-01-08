@@ -1,4 +1,4 @@
-<? 
+<?php 
 # AST_agent_days_detail.php
 # 
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
@@ -8,6 +8,7 @@
 # 90206-2202 - First build
 # 90225-1051 - Added CSV download option
 # 90310-0752 - Added admin header
+# 90508-0644 - Changed to PHP long tags
 #
 
 
@@ -157,10 +158,10 @@ if ($file_download < 1)
 	-->
 	 </STYLE>
 
-	<?
+	<?php
 
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-	echo "<TITLE>VICIDIAL: Agent Giorni di stato</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	echo "<TITLE>Agent Giorni di stato Report</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 	echo "<span style=\"position:absolute;left:0px;top:0px;z-index:20;\"  id=admin_header>";
 
 	$short_header=1;
@@ -208,14 +209,14 @@ else
 
 	if ($file_download < 1)
 		{
-		echo "VICIDIAL: Agent Days Dettagliata: $user                     $NOW_TIME\n";
+		echo "Agent Giorni di stato Report: $user                     $NOW_TIME\n";
 
 		echo "Intervallo Di Tempo: $query_date_BEGIN to $query_date_END\n\n";
 		echo "---------- AGENT Dettagliatas -------------\n\n";
 		}
 	else
 		{
-		$file_output .= "VICIDIAL: Agent Days Dettagliata: $user                     $NOW_TIME\n";
+		$file_output .= "Agent Giorni di stato Report: $user                     $NOW_TIME\n";
 		$file_output .= "Intervallo Di Tempo: $query_date_BEGIN to $query_date_END\n\n";
 		}
 

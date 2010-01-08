@@ -1,4 +1,4 @@
-<? 
+<?php 
 # AST_CLOSERstats.php
 # 
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
@@ -20,9 +20,14 @@
 # 81109-2340 - Added custom indicators section
 # 90116-1040 - Rewrite of the 15-minute sections to speed it up and allow multi-day calculations
 # 90310-2037 - Admin header
+# 90508-0644 - Changed to PHP long tags
+# 90524-2231 - Changed to use functions.php for seconds to HH:MM:SS conversion
+# 90801-0921 - Added in-group name to pulldown
+# 91214-0955 - Added INITIAL QUEUE POSITION BREAKDOWN
 #
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -68,11 +73,12 @@ $stmt = "SELECT local_gmt FROM servers where active='Y' limit 1;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $gmt_conf_ct = mysql_num_rows($rslt);
+$dst = date("I");
 if ($gmt_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$local_gmt =		$row[0];
-	$epoch_offset =		($local_gmt * 3600);
+	$epoch_offset =		(($local_gmt + $dst) * 3600);
 	}
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1';";
@@ -98,7 +104,7 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
-$stmt="select group_id from vicidial_inbound_groups;";
+$stmt="select group_id,group_name from vicidial_inbound_groups;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
@@ -109,7 +115,8 @@ $i=0;
 while ($i < $groups_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
-	$LISTgroups[$i] =$row[0];
+	$LISTgroups[$i] =		$row[0];
+	$LISTgroup_names[$i] =	$row[1];
 	$i++;
 	}
 
@@ -161,9 +168,9 @@ while ($i < $statcats_to_print)
 -->
  </STYLE>
 
-<? 
+<?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>VICIDIAL: Estadísticas de VDAD Closer</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>Inbound Stats</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
@@ -190,14 +197,14 @@ echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 echo "Grupos De entrada: \n";
 echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
-	$o=0;
-	while ($groups_to_print > $o)
+$o=0;
+while ($groups_to_print > $o)
 	{
-		if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
-			{echo "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o]</option>\n";}
-		else
-			{echo "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o]</option>\n";}
-		$o++;
+	if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
+		{echo "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
+	else
+		{echo "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
+	$o++;
 	}
 echo "</SELECT>\n";
 echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
@@ -265,7 +272,7 @@ $query_date_END = "$end_date $time_END";
 
 
 
-echo "VICIDIAL: Estadísticas de Auto-dial en CLOSER: $group_string          $NOW_TIME\n";
+echo "Inbound Call Stats: $group_string          $NOW_TIME\n";
 
 
 
@@ -951,33 +958,9 @@ while ($i < $statuses_to_print)
 		{$STATUSrate =	($STATUScount / ($TOTALsec / 3600) );}
 	$STATUSrate =	sprintf("%.2f", $STATUSrate);
 
-	$STATUShours_H =	($row[2] / 3600);
-	$STATUShours_H_int = round($STATUShours_H, 2);
-	$STATUShours_H_int = intval("$STATUShours_H_int");
-	$STATUShours_M = ($STATUShours_H - $STATUShours_H_int);
-	$STATUShours_M = ($STATUShours_M * 60);
-	$STATUShours_M_int = round($STATUShours_M, 2);
-	$STATUShours_M_int = intval("$STATUShours_M_int");
-	$STATUShours_S = ($STATUShours_M - $STATUShours_M_int);
-	$STATUShours_S = ($STATUShours_S * 60);
-	$STATUShours_S = round($STATUShours_S, 0);
-	if ($STATUShours_S < 10) {$STATUShours_S = "0$STATUShours_S";}
-	if ($STATUShours_M_int < 10) {$STATUShours_M_int = "0$STATUShours_M_int";}
-	$STATUShours = "$STATUShours_H_int:$STATUShours_M_int:$STATUShours_S";
-
-	$STATUSavg_H =	(($row[2] / 3600) / $STATUScount);
-	$STATUSavg_H_int = round($STATUSavg_H, 2);
-	$STATUSavg_H_int = intval("$STATUSavg_H_int");
-	$STATUSavg_M = ($STATUSavg_H - $STATUSavg_H_int);
-	$STATUSavg_M = ($STATUSavg_M * 60);
-	$STATUSavg_M_int = round($STATUSavg_M, 2);
-	$STATUSavg_M_int = intval("$STATUSavg_M_int");
-	$STATUSavg_S = ($STATUSavg_M - $STATUSavg_M_int);
-	$STATUSavg_S = ($STATUSavg_S * 60);
-	$STATUSavg_S = round($STATUSavg_S, 0);
-	if ($STATUSavg_S < 10) {$STATUSavg_S = "0$STATUSavg_S";}
-	if ($STATUSavg_M_int < 10) {$STATUSavg_M_int = "0$STATUSavg_M_int";}
-	$STATUSavg = "$STATUSavg_H_int:$STATUSavg_M_int:$STATUSavg_S";
+	$STATUShours =		sec_convert($row[2],'H'); 
+	$STATUSavg_sec =	($row[2] / $STATUScount); 
+	$STATUSavg =		sec_convert($STATUSavg_sec,'H'); 
 
 	$STATUScount =	sprintf("%10s", $row[0]);while(strlen($STATUScount)>10) {$STATUScount = substr("$STATUScount", 0, -1);}
 	$status =	sprintf("%-6s", $row[1]);while(strlen($status)>6) {$status = substr("$status", 0, -1);}
@@ -1020,33 +1003,9 @@ else
 		{$TOTALrate =	($TOTALcalls / ($TOTALsec / 3600) );}
 	$TOTALrate =	sprintf("%.2f", $TOTALrate);
 
-	$TOTALhours_H =	($TOTALsec / 3600);
-	$TOTALhours_H_int = round($TOTALhours_H, 2);
-	$TOTALhours_H_int = intval("$TOTALhours_H_int");
-	$TOTALhours_M = ($TOTALhours_H - $TOTALhours_H_int);
-	$TOTALhours_M = ($TOTALhours_M * 60);
-	$TOTALhours_M_int = round($TOTALhours_M, 2);
-	$TOTALhours_M_int = intval("$TOTALhours_M_int");
-	$TOTALhours_S = ($TOTALhours_M - $TOTALhours_M_int);
-	$TOTALhours_S = ($TOTALhours_S * 60);
-	$TOTALhours_S = round($TOTALhours_S, 0);
-	if ($TOTALhours_S < 10) {$TOTALhours_S = "0$TOTALhours_S";}
-	if ($TOTALhours_M_int < 10) {$TOTALhours_M_int = "0$TOTALhours_M_int";}
-	$TOTALhours = "$TOTALhours_H_int:$TOTALhours_M_int:$TOTALhours_S";
-
-	$TOTALavg_H =	(($TOTALsec / 3600) / $TOTALcalls);
-	$TOTALavg_H_int = round($TOTALavg_H, 2);
-	$TOTALavg_H_int = intval("$TOTALavg_H_int");
-	$TOTALavg_M = ($TOTALavg_H - $TOTALavg_H_int);
-	$TOTALavg_M = ($TOTALavg_M * 60);
-	$TOTALavg_M_int = round($TOTALavg_M, 2);
-	$TOTALavg_M_int = intval("$TOTALavg_M_int");
-	$TOTALavg_S = ($TOTALavg_M - $TOTALavg_M_int);
-	$TOTALavg_S = ($TOTALavg_S * 60);
-	$TOTALavg_S = round($TOTALavg_S, 0);
-	if ($TOTALavg_S < 10) {$TOTALavg_S = "0$TOTALavg_S";}
-	if ($TOTALavg_M_int < 10) {$TOTALavg_M_int = "0$TOTALavg_M_int";}
-	$TOTALavg = "$TOTALavg_H_int:$TOTALavg_M_int:$TOTALavg_S";
+	$TOTALhours =		sec_convert($TOTALsec,'H'); 
+	$TOTALavg_sec =		($TOTALsec / $TOTALcalls);
+	$TOTALavg =			sec_convert($TOTALavg_sec,'H'); 
 	}
 $TOTALcalls =	sprintf("%10s", $TOTALcalls);
 $TOTALhours =	sprintf("%10s", $TOTALhours);while(strlen($TOTALhours)>10) {$TOTALhours = substr("$TOTALhours", 0, -1);}
@@ -1092,6 +1051,67 @@ echo "+----------------------+------------+\n";
 
 
 ##############################
+#########  CALL INITIAL QUEUE POSITION BREAKDOWN
+
+$TOTALcalls = 0;
+
+echo "\n";
+echo "---------- CALL INITIAL QUEUE POSITION BREAKDOWN\n";
+echo "+-------------------------------------------------------------------------------------+------------+\n";
+echo "|     1     2     3     4     5     6     7     8     9    10    15    20    25   +25 | TOTAL      |\n";
+echo "+-------------------------------------------------------------------------------------+------------+\n";
+
+$stmt="select count(*),queue_position from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) group by queue_position;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$positions_to_print = mysql_num_rows($rslt);
+$i=0;
+while ($i < $positions_to_print)
+	{
+	$row=mysql_fetch_row($rslt);
+
+	$TOTALcalls = ($TOTALcalls + $row[0]);
+
+	if ( ($row[1] > 0) and ($row[1] <= 1) ) {$qp_1 = ($qp_1 + $row[0]);}
+	if ( ($row[1] > 1) and ($row[1] <= 2) ) {$qp_2 = ($qp_2 + $row[0]);}
+	if ( ($row[1] > 2) and ($row[1] <= 3) ) {$qp_3 = ($qp_3 + $row[0]);}
+	if ( ($row[1] > 3) and ($row[1] <= 4) ) {$qp_4 = ($qp_4 + $row[0]);}
+	if ( ($row[1] > 4) and ($row[1] <= 5) ) {$qp_5 = ($qp_5 + $row[0]);}
+	if ( ($row[1] > 5) and ($row[1] <= 6) ) {$qp_6 = ($qp_6 + $row[0]);}
+	if ( ($row[1] > 6) and ($row[1] <= 7) ) {$qp_7 = ($qp_7 + $row[0]);}
+	if ( ($row[1] > 7) and ($row[1] <= 8) ) {$qp_8 = ($qp_8 + $row[0]);}
+	if ( ($row[1] > 8) and ($row[1] <= 9) ) {$qp_9 = ($qp_9 + $row[0]);}
+	if ( ($row[1] > 9) and ($row[1] <= 10) ) {$qp10 = ($qp10 + $row[0]);}
+	if ( ($row[1] > 10) and ($row[1] <= 15) ) {$qp15 = ($qp15 + $row[0]);}
+	if ( ($row[1] > 15) and ($row[1] <= 20) ) {$qp20 = ($qp20 + $row[0]);}
+	if ( ($row[1] > 20) and ($row[1] <= 25) ) {$qp25 = ($qp25 + $row[0]);}
+	if ($row[1] > 25) {$qp99 = ($qp99 + $row[0]);}
+	$i++;
+	}
+
+$qp_1 =	sprintf("%5s", $qp_1);
+$qp_2 =	sprintf("%5s", $qp_2);
+$qp_3=	sprintf("%5s", $qp_3);
+$qp_4 =	sprintf("%5s", $qp_4);
+$qp_5 =	sprintf("%5s", $qp_5);
+$qp_6 =	sprintf("%5s", $qp_6);
+$qp_7 =	sprintf("%5s", $qp_7);
+$qp_8 =	sprintf("%5s", $qp_8);
+$qp_9 =	sprintf("%5s", $qp_9);
+$qp10 =	sprintf("%5s", $qp10);
+$qp15 =	sprintf("%5s", $qp15);
+$qp20 =	sprintf("%5s", $qp20);
+$qp25 =	sprintf("%5s", $qp25);
+$qp99 =	sprintf("%5s", $qp99);
+
+$TOTALcalls =		sprintf("%10s", $TOTALcalls);
+
+echo "| $qp_1 $qp_2 $qp_3 $qp_4 $qp_5 $qp_6 $qp_7 $qp_8 $qp_9 $qp10 $qp15 $qp20 $qp25 $qp99 | $TOTALcalls |\n";
+echo "+-------------------------------------------------------------------------------------+------------+\n";
+
+
+
+##############################
 #########  USER STATS
 
 $TOTagents=0;
@@ -1101,9 +1121,9 @@ $TOTavg=0;
 
 echo "\n";
 echo "---------- AGENTE STATS\n";
-echo "+--------------------------+------------+----------+--------+\n";
-echo "| AGENTE                    | CALLS      | TIME M   | AVRG M |\n";
-echo "+--------------------------+------------+----------+--------+\n";
+echo "+--------------------------+------------+------------+--------+\n";
+echo "| AGENTE                    | CALLS      | TIME H:M:S |AVERAGE |\n";
+echo "+--------------------------+------------+------------+--------+\n";
 
 $stmt="select vicidial_closer_log.user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from vicidial_closer_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and vicidial_closer_log.user is not null and length_in_sec is not null and length_in_sec > 0 and vicidial_closer_log.user=vicidial_users.user group by vicidial_closer_log.user;";
 $rslt=mysql_query($stmt, $link);
@@ -1118,34 +1138,25 @@ while ($i < $users_to_print)
 	$TOTtime = ($TOTtime + $row[3]);
 
 	$user =			sprintf("%-6s", $row[0]);
-	$full_name =	sprintf("%-15s", $row[1]); while(strlen($full_name)>15) {$full_name = substr("$full_name", 0, -1);}
+	if ($non_latin < 1)
+		{
+		$full_name =	sprintf("%-15s", $row[1]); while(strlen($full_name)>15) {$full_name = substr("$full_name", 0, -1);}	
+		}
+	else
+		{
+		$full_name =	sprintf("%-45s", $row[1]); while(mb_strlen($full_name,'utf-8')>15) {$full_name = mb_substr("$full_name", 0, -1,'utf-8');}	
+		}
 	$USERcalls =	sprintf("%10s", $row[2]);
 	$USERtotTALK =	$row[3];
 	$USERavgTALK =	$row[4];
 
-	$USERtotTALK_M = ($USERtotTALK / 60);
-	$USERtotTALK_M_int = round($USERtotTALK_M, 2);
-	$USERtotTALK_M_int = intval("$USERtotTALK_M_int");
-	$USERtotTALK_S = ($USERtotTALK_M - $USERtotTALK_M_int);
-	$USERtotTALK_S = ($USERtotTALK_S * 60);
-	$USERtotTALK_S = round($USERtotTALK_S, 0);
-	if ($USERtotTALK_S < 10) {$USERtotTALK_S = "0$USERtotTALK_S";}
-	$USERtotTALK_MS = "$USERtotTALK_M_int:$USERtotTALK_S";
-	$USERtotTALK_MS = eregi_replace('-','',$USERtotTALK_MS);
-	$USERtotTALK_MS =		sprintf("%8s", $USERtotTALK_MS);
+	$USERtotTALK_MS =	sec_convert($USERtotTALK,'H'); 
+	$USERavgTALK_MS =	sec_convert($USERavgTALK,'H'); 
 
-	$USERavgTALK_M = ($USERavgTALK / 60);
-	$USERavgTALK_M_int = round($USERavgTALK_M, 2);
-	$USERavgTALK_M_int = intval("$USERavgTALK_M_int");
-	$USERavgTALK_S = ($USERavgTALK_M - $USERavgTALK_M_int);
-	$USERavgTALK_S = ($USERavgTALK_S * 60);
-	$USERavgTALK_S = round($USERavgTALK_S, 0);
-	if ($USERavgTALK_S < 10) {$USERavgTALK_S = "0$USERavgTALK_S";}
-	$USERavgTALK_MS = "$USERavgTALK_M_int:$USERavgTALK_S";
-	$USERavgTALK_MS = eregi_replace('-','',$USERavgTALK_MS);
-	$USERavgTALK_MS =		sprintf("%6s", $USERavgTALK_MS);
+	$USERtotTALK_MS =	sprintf("%9s", $USERtotTALK_MS);
+	$USERavgTALK_MS =	sprintf("%6s", $USERavgTALK_MS);
 
-	echo "| $user - $full_name | $USERcalls | $USERtotTALK_MS | $USERavgTALK_MS |\n";
+	echo "| $user - $full_name | $USERcalls |  $USERtotTALK_MS | $USERavgTALK_MS |\n";
 
 	$i++;
 	}
@@ -1154,36 +1165,21 @@ if ($TOTcalls < 1) {$TOTcalls = 0; $TOTavg=0;}
 else
 	{
 	$TOTavg = ($TOTtime / $TOTcalls);
-	$TOTavg = round($TOTavg, 0);
-	$TOTavg_M = ($TOTavg / 60);
-	$TOTavg_M_int = round($TOTavg_M, 2);
-	$TOTavg_M_int = intval("$TOTavg_M_int");
-	$TOTavg_S = ($TOTavg_M - $TOTavg_M_int);
-	$TOTavg_S = ($TOTavg_S * 60);
-	$TOTavg_S = round($TOTavg_S, 0);
-	if ($TOTavg_S < 10) {$TOTavg_S = "0$TOTavg_S";}
-	$TOTavg_MS = "$TOTavg_M_int:$TOTavg_S";
+	$TOTavg_MS =	sec_convert($TOTavg,'H'); 
 	$TOTavg =		sprintf("%6s", $TOTavg_MS);
 	}
 
-$TOTtime_M = ($TOTtime / 60);
-$TOTtime_M_int = round($TOTtime_M, 2);
-$TOTtime_M_int = intval("$TOTtime_M_int");
-$TOTtime_S = ($TOTtime_M - $TOTtime_M_int);
-$TOTtime_S = ($TOTtime_S * 60);
-$TOTtime_S = round($TOTtime_S, 0);
-if ($TOTtime_S < 10) {$TOTtime_S = "0$TOTtime_S";}
-$TOTtime_MS = "$TOTtime_M_int:$TOTtime_S";
-$TOTtime =		sprintf("%6s", $TOTtime_MS);
+$TOTtime_MS =	sec_convert($TOTtime,'H'); 
+$TOTtime =		sprintf("%10s", $TOTtime_MS);
 
 $TOTagents =		sprintf("%10s", $i);
 $TOTcalls =			sprintf("%10s", $TOTcalls);
 $TOTtime =			sprintf("%8s", $TOTtime);
 $TOTavg =			sprintf("%6s", $TOTavg);
 
-echo "+--------------------------+------------+----------+--------+\n";
-echo "| TOTAL Agents: $TOTagents | $TOTcalls | $TOTtime | $TOTavg |\n";
-echo "+--------------------------+------------+----------+--------+\n";
+echo "+--------------------------+------------+------------+--------+\n";
+echo "| TOTAL Agentes: $TOTagents | $TOTcalls | $TOTtime | $TOTavg |\n";
+echo "+--------------------------+------------+------------+--------+\n";
 
 
 ##############################

@@ -1,4 +1,4 @@
-<? 
+<?php 
 # AST_CLOSER_service_level.php
 # 
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
@@ -10,6 +10,8 @@
 # 80519-0413 - rewrote time intervals code and stats gathering code
 # 80528-2320 - fixed small calculation bugs and display bugs, added more shifts
 # 90310-2117 - Added admin header
+# 90508-0644 - Changed to PHP long tags
+# 90801-0923 - Added in-group name to pulldown
 #
 
 require("dbconnect.php");
@@ -59,7 +61,7 @@ $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
@@ -74,7 +76,7 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
-$stmt="select group_id from vicidial_inbound_groups;";
+$stmt="select group_id,group_name from vicidial_inbound_groups;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
@@ -82,7 +84,8 @@ $i=0;
 while ($i < $groups_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
-	$groups[$i] =$row[0];
+	$groups[$i] =		$row[0];
+	$group_names[$i] =	$row[1];
 	$i++;
 	}
 ?>
@@ -97,13 +100,13 @@ while ($i < $groups_to_print)
 -->
  </STYLE>
 
-<? 
+<?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>VICIDIAL: VDAD Closer Service Level Stats</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>Inbound Service Level Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
-	$short_header=1;
+$short_header=1;
 
-	require("admin_header.php");
+require("admin_header.php");
 
 echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
@@ -112,11 +115,11 @@ echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\
 echo " to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
 echo "<SELECT SIZE=1 NAME=group>\n";
 	$o=0;
-	while ($groups_to_print > $o)
+while ($groups_to_print > $o)
 	{
-		if ($groups[$o] == $group) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
-		  else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
-		$o++;
+	if ($groups[$o] == $group) {echo "<option selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
+	else {echo "<option value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
+	$o++;
 	}
 echo "</SELECT>\n";
 echo "<SELECT SIZE=1 NAME=shift>\n";
@@ -139,10 +142,10 @@ echo "<PRE><FONT SIZE=2>\n\n";
 
 
 if (!$group)
-{
-echo "\n\n";
-echo "SELEZIONA UN GRUPPO IN-E DATE SOPRA e fare clic su Invia\n";
-}
+	{
+	echo "\n\n";
+	echo "SELEZIONA UN GRUPPO IN-E DATE SOPRA e fare clic su Invia\n";
+	}
 
 else
 {
@@ -219,14 +222,14 @@ $EQsec = ( ($EQtime_ARY[0] * 3600) + ($EQtime_ARY[1] * 60) + ($EQtime_ARY[2] * 1
 $DURATIONsec = ($EQepoch - $SQepoch);
 $DURATIONday = intval( ($DURATIONsec / 86400) + 1 );
 
-	if ( ($EQsec < $SQsec) and ($DURATIONday < 1) )
-		{
-		$EQepoch = ($SQepochDAY + ($EQsec + 86400) );
-		$query_date_END = date("Y-m-d H:i:s", $EQepoch);
-		$DURATIONday++;
-		}
+if ( ($EQsec < $SQsec) and ($DURATIONday < 1) )
+	{
+	$EQepoch = ($SQepochDAY + ($EQsec + 86400) );
+	$query_date_END = date("Y-m-d H:i:s", $EQepoch);
+	$DURATIONday++;
+	}
 
-echo "VICIDIAL: Closer Service-Level Stats                      $NOW_TIME\n";
+echo "Inbound Service Level Report                      $NOW_TIME\n";
 echo "\n";
 echo "Time range $DURATIONday days: $query_date_BEGIN to $query_date_END\n\n";
 #echo "Time range day sec: $SQsec - $EQsec   Day range in epoch: $SQepoch - $EQepoch   Start: $SQepochDAY\n";

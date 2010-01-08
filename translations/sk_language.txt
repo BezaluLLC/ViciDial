@@ -322,7 +322,7 @@ Called|Volaný|
 Campaign|Kampaň|
 Status|Stav|
 Inserted|Vložiť|
-seconds|sekúnd|
+ seconds|sekúnd|
 HELP|POMOC|
 Login|Prihlásiť|
 User|Užívateľ|

@@ -71,6 +71,7 @@ vicidial|AST_agent_timeclock_detail.php|1
 vicidial|AST_OUTBOUNDsummary_interval.php|1
 vicidial|call_report_export.php|1
 vicidial|AST_CLOSERsummary_hourly.php|1
+vicidial|functions.php|1
 ***TRANSLATIONS***||||
 ### special translations that should stay at the top of the file ###
 BORDER|BORDER|
@@ -1832,7 +1833,7 @@ Outbound Auto-Dial Active -<\/B> This option allows you to enable or disable out
 QC Features Active:|QC Active Caractéristiques:|
 Outbound Auto-Dial Active:|Auto Outbound Dial-Active:|
 Close Panel|Fermer le panneau|
-Choose Report Display Options|Rapport Choisissez Options d'affichage|
+Choose Report Display Options|Rapport Choisissez Options d-affichage|
 To select more than 1 campaign, hold down the Ctrl key and click|Pour sélectionner plus de 1 campagne, maintenez la touche Ctrl enfoncée et cliquez sur|
 CPD AMD Action -<\/B> If you are using the Sangoma ParaXip Call Progress Detection software then you will want to enable this setting either setting it to DISPO which will disposition the call as AA and hang it up if the call is being processed and has not been sent to an agent yet or MESSAGE which will send the call to the defined Answering Machine Message for this campaign. Default is DISABLED|CPD AMD Action - </B> Si vous utilisez le Sangoma ParaXip Call Progress logiciel de détection, vous souhaitez activer ce paramètre, soit la mise à disposition DISPO qui l'appel comme AA et l'accrocher si l'appel est en cours de traitement et n'a pas été envoyée à un agent ou encore MESSAGE qui enverra l'appel à la définition Answering Machine Message pour cette campagne. La valeur par défaut est DISABLED|
 CPD AMD Action:|CPD AMD Action:|

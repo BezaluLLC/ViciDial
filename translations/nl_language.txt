@@ -321,7 +321,7 @@ Called|Gebeld|
 Campaign|Campagne|
 Status|Status|
 Inserted|Ingevoerd|
-seconds|seconden|
+ seconds|seconden|
 HELP|HELP|
 Login|Inloggen|
 User|Gebruiker|

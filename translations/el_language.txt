@@ -320,7 +320,7 @@ Called|Αποκαλούμενος|
 Campaign|Εκστρατεία|
 Status|Κατάσταση|
 Inserted|Εισαγωγή |
-seconds|δευτερόλεπτα|
+ seconds|δευτερόλεπτα|
 HELP|ΒΟΗΘΕΙΑ|
 Login|Σύνδεση|
 User|Χρήστης|

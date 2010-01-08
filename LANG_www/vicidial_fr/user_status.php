@@ -1,4 +1,4 @@
-<?
+<?php
 # user_status.php
 # 
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
@@ -10,6 +10,10 @@
 # 81118-1034 - Disabled change campaign because it does not work
 # 90208-0511 - Added link to user multi-day status report
 # 90310-0741 - Added admin header
+# 90508-0644 - Changed to PHP long tags
+# 91012-0536 - Added selected territories display
+# 91130-2039 - Added user closer log manager flag display
+# 91212-0656 - Added more complete logging of Emergency Logout process
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -38,17 +42,17 @@ if (isset($_GET["VALIDER"]))				{$VALIDER=$_GET["VALIDER"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =		$row[0];
-	$webroot_writable =	$row[1];
-	$i++;
+	$non_latin =						$row[0];
+	$webroot_writable =					$row[1];
+	$SSoutbound_autodial_active =		$row[2];
+	$user_territories_active =			$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -64,35 +68,34 @@ $ip = getenv("REMOTE_ADDR");
 if (!isset($begin_date)) {$begin_date = $TODAY;}
 if (!isset($end_date)) {$end_date = $TODAY;}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
-	if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
+if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
 $fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "Login ou mot de passe invalide: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
 	}
-  else
+else
 	{
-
 	if($auth>0)
 		{
-			$stmt="SELECT full_name,change_agent_campaign,modify_timeclock_log from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname =				$row[0];
-			$change_agent_campaign =	$row[1];
-			$modify_timeclock_log =		$row[2];
+		$stmt="SELECT full_name,change_agent_campaign,modify_timeclock_log from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$LOGfullname =				$row[0];
+		$change_agent_campaign =	$row[1];
+		$modify_timeclock_log =		$row[2];
 		if ($webroot_writable > 0)
 			{
 			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
@@ -116,7 +119,7 @@ $browser = getenv("HTTP_USER_AGENT");
 	$full_name = $row[0];
 	$user_group = $row[1];
 
-	$stmt="SELECT * from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
+	$stmt="SELECT live_agent_id,user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,call_server_ip,user_level,comments,campaign_weight,calls_today,external_hangup,external_status,external_pause,external_dial,agent_log_id,last_state_change,agent_territories,outbound_autodial,manager_ingroup_set,external_igb_set_user from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$agents_to_print = mysql_num_rows($rslt);
@@ -124,13 +127,17 @@ $browser = getenv("HTTP_USER_AGENT");
 	while ($i < $agents_to_print)
 		{
 		$row=mysql_fetch_row($rslt);
-		$Aserver_ip =		$row[2];
-		$Asession_id =		$row[3];
-		$Aextension =		$row[4];
-		$Astatus =			$row[5];
-		$Acampaign =		$row[7];
-		$Alast_call =		$row[14];
-		$Acl_campaigns =	$row[15];
+		$Aserver_ip =				$row[2];
+		$Asession_id =				$row[3];
+		$Aextension =				$row[4];
+		$Astatus =					$row[5];
+		$Acampaign =				$row[7];
+		$Alast_call =				$row[14];
+		$Acl_campaigns =			$row[15];
+		$agent_territories = 		$row[27];
+		$outbound_autodial = 		$row[28];
+		$manager_ingroup_set =		$row[29];
+		$external_igb_set_user =	$row[30];
 		$i++;
 		}
 
@@ -149,7 +156,7 @@ $browser = getenv("HTTP_USER_AGENT");
 
 	}
 
-$stmt="select * from vicidial_campaigns;";
+$stmt="select campaign_id from vicidial_campaigns;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
@@ -167,8 +174,8 @@ while ($i < $groups_to_print)
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>ADMINISTRATION DE VICIDIAL: Utilisateur Status
-<?
+<title>ADMINISTRATION: Utilisateur Status
+<?php
 
 
 ##### BEGIN Set variables to make header show properly #####
@@ -194,12 +201,12 @@ require("admin_header.php");
 
 
 ?>
-<TABLE WIDTH=<? echo $page_width ?> BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR BGCOLOR=#E6E6E6><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; Utilisateur Status for <? echo $user ?></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; </TD></TR>
+<TABLE WIDTH=<?php echo $page_width ?> BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR BGCOLOR=#E6E6E6><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; Utilisateur Status for <?php echo $user ?></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; </TD></TR>
 
 
 
 
-<? 
+<?php 
 
 echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3><B> &nbsp; \n";
 
@@ -217,10 +224,170 @@ if ($stage == "live_campaign_change")
 ##### EMERGENCY LOGOUT OF AN AGENT #####
 if ($stage == "log_agent_out")
 	{
-	$stmt="DELETE from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
+	$now_date_epoch = date('U');
+	$inactive_epoch = ($now_date_epoch - 60);
+	$stmt = "SELECT user,campaign_id,UNIX_TIMESTAMP(last_update_time) from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
 	$rslt=mysql_query($stmt, $link);
+	if ($DB) {echo "<BR>$stmt\n";}
+	$vla_ct = mysql_num_rows($rslt);
+	if ($vla_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$VLA_user =					$row[0];
+		$VLA_campaign_id =			$row[1];
+		$VLA_update_time =			$row[2];
 
-	echo "Agent $user - $full_name has been emergency logged out, make sure they close their web browser<BR>\n";
+		if ($VLA_update_time > $inactive_epoch)
+			{
+			$lead_active=0;
+			$stmt = "SELECT agent_log_id,user,server_ip,event_time,lead_id,campaign_id,pause_epoch,pause_sec,wait_epoch,wait_sec,talk_epoch,talk_sec,dispo_epoch,dispo_sec,status,user_group,comments,sub_status,dead_epoch,dead_sec from vicidial_agent_log where user='$VLA_user' order by agent_log_id desc LIMIT 1;";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "<BR>$stmt\n";}
+			$val_ct = mysql_num_rows($rslt);
+			if ($val_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$VAL_agent_log_id =		$row[0];
+				$VAL_user =				$row[1];
+				$VAL_server_ip =		$row[2];
+				$VAL_event_time =		$row[3];
+				$VAL_lead_id =			$row[4];
+				$VAL_campaign_id =		$row[5];
+				$VAL_pause_epoch =		$row[6];
+				$VAL_pause_sec =		$row[7];
+				$VAL_wait_epoch =		$row[8];
+				$VAL_wait_sec =			$row[9];
+				$VAL_talk_epoch =		$row[10];
+				$VAL_talk_sec =			$row[11];
+				$VAL_dispo_epoch =		$row[12];
+				$VAL_dispo_sec =		$row[13];
+				$VAL_status =			$row[14];
+				$VAL_user_group =		$row[15];
+				$VAL_comments =			$row[16];
+				$VAL_sub_status =		$row[17];
+				$VAL_dead_epoch =		$row[18];
+				$VAL_dead_sec =			$row[19];
+
+				if ($DB) {echo "\n<BR>VAL VALUES: $VAL_agent_log_id|$VAL_status|$VAL_lead_id\n";}
+
+				if ( ($VAL_wait_epoch < 1) || ( ($VAL_status == 'PAUSE') && ($VAL_dispo_epoch < 1) ) )
+					{
+					$VAL_pause_sec = ( ($now_date_epoch - $VAL_pause_epoch) + $VAL_pause_sec);
+					$stmt = "UPDATE vicidial_agent_log SET wait_epoch='$now_date_epoch', pause_sec='$VAL_pause_sec' where agent_log_id='$VAL_agent_log_id';";
+					}
+				else
+					{
+					if ($VAL_talk_epoch < 1)
+						{
+						$VAL_wait_sec = ( ($now_date_epoch - $VAL_wait_epoch) + $VAL_wait_sec);
+						$stmt = "UPDATE vicidial_agent_log SET talk_epoch='$now_date_epoch', wait_sec='$VAL_wait_sec' where agent_log_id='$VAL_agent_log_id';";
+						}
+					else
+						{
+						$lead_active++;
+						$status_update_SQL='';
+						if ( ( (strlen($VAL_status) < 1) or ($VAL_status == 'NULL') ) and ($VAL_lead_id > 0) )
+							{
+							$status_update_SQL = ", status='PU'";
+							$stmt="UPDATE vicidial_list SET status='PU' where lead_id='$VAL_lead_id';";
+							if ($DB) {echo "<BR>$stmt\n";}
+							$rslt=mysql_query($stmt, $link);
+							}
+						if ($VAL_dispo_epoch < 1)
+							{
+							$VAL_talk_sec = ($now_date_epoch - $VAL_talk_epoch);
+							$stmt = "UPDATE vicidial_agent_log SET dispo_epoch='$now_date_epoch', talk_sec='$VAL_talk_sec'$status_update_SQL where agent_log_id='$VAL_agent_log_id';";
+							}
+						else
+							{
+							if ($VAL_dispo_sec < 1)
+								{
+								$VAL_dispo_sec = ($now_date_epoch - $VAL_dispo_epoch);
+								$stmt = "UPDATE vicidial_agent_log SET dispo_sec='$VAL_dispo_sec' where agent_log_id='$VAL_agent_log_id';";
+								}
+							}
+						}
+					}
+
+				if ($DB) {echo "<BR>$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
+			}
+
+		$stmt="DELETE from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
+		if ($DB) {echo "<BR>$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+
+		if (strlen($VAL_user_group) < 1)
+			{
+			$stmt = "SELECT user_group FROM vicidial_users where user='$VLA_user';";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "<BR>$stmt\n";}
+			$val_ct = mysql_num_rows($rslt);
+			if ($val_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$VAL_user_group =		$row[0];
+				}
+			}
+
+		$stmt = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$VLA_user','LOGOUT','$VLA_campaign_id','$NOW_TIME','$now_date_epoch','$VAL_user_group');";
+		if ($DB) {echo "<BR>$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+
+
+		#############################################
+		##### START QUEUEMETRICS LOGGING LOOKUP #####
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "<BR>$stmt\n";}
+		$qm_conf_ct = mysql_num_rows($rslt);
+		if ($qm_conf_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$enable_queuemetrics_logging =	$row[0];
+			$queuemetrics_server_ip	=		$row[1];
+			$queuemetrics_dbname =			$row[2];
+			$queuemetrics_login	=			$row[3];
+			$queuemetrics_pass =			$row[4];
+			$queuemetrics_log_id =			$row[5];
+			}
+		##### END QUEUEMETRICS LOGGING LOOKUP #####
+		###########################################
+		if ($enable_queuemetrics_logging > 0)
+			{
+			$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+			mysql_select_db("$queuemetrics_dbname", $linkB);
+
+			$agents='@agents';
+			$agent_logged_in='';
+			$time_logged_in='';
+
+			$stmtB = "SELECT agent,time_id FROM queue_log where agent='Agent/" . mysql_real_escape_string($user) . "' and verb='AGENTLOGIN' order by time_id desc limit 1;";
+			$rsltB=mysql_query($stmtB, $linkB);
+			if ($DB) {echo "<BR>$stmtB\n";}
+			$qml_ct = mysql_num_rows($rsltB);
+			if ($qml_ct > 0)
+				{
+				$row=mysql_fetch_row($rsltB);
+				$agent_logged_in =	$row[0];
+				$time_logged_in =	$row[1];
+				}
+
+			$time_logged_in = ($now_date_epoch - $time_logged_in);
+			if ($time_logged_in > 1000000) {$time_logged_in=1;}
+
+			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='AGENTLOGOFF',serverid='$queuemetrics_log_id',data1='" . mysql_real_escape_string($user) . "$agents',data2='$time_logged_in';";
+			if ($DB) {echo "<BR>$stmtB\n";}
+			$rsltB=mysql_query($stmtB, $linkB);
+			}
+
+		echo "Agent $user - $full_name has been emergency logged out, make sure they close their web browser<BR>\n";
+		}
+	else
+		{
+		echo "Agent $user is not logged in<BR>\n";
+		}
 	
 	exit;
 	}
@@ -283,8 +450,8 @@ if ( ( ($stage == "tc_log_user_OUT") or ($stage == "tc_log_user_IN") ) and ($mod
 		$stmt="INSERT INTO vicidial_timeclock_status set status='START', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
-			$status='START';
-			$totTIME_HMS='0:00:00';
+		$status='START';
+		$totTIME_HMS='0:00:00';
 		$affected_rows = mysql_affected_rows($link);
 		print "<!-- NEW vicidial_timeclock_status record inserted for $user:   |$affected_rows| -->\n";
 		}
@@ -406,8 +573,13 @@ if ($agents_to_print > 0)
 	echo "<TR><TD ALIGN=RIGHT>status:</TD><TD ALIGN=LEFT> &nbsp; $Astatus</TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>hungup last call at:</TD><TD ALIGN=LEFT> &nbsp; $Alast_call</TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Closer groups:</TD><TD ALIGN=LEFT> &nbsp; $Acl_campaigns</TD></TR>\n";
+	if ($manager_ingroup_set != 'N')
+		{echo "<TR><TD ALIGN=RIGHT>Manager InGroup Select:</TD><TD ALIGN=LEFT> &nbsp; YES, by $external_igb_set_user</TD></TR>\n";}
+	if ($outbound_autodial == 'Y')
+		{echo "<TR><TD ALIGN=RIGHT>Outbound Auto-Dial:</TD><TD ALIGN=LEFT> &nbsp; YES</TD></TR>\n";}
+	if ($user_territories_active > 0)
+		{echo "<TR><TD ALIGN=RIGHT>Selected Territories:</TD><TD ALIGN=LEFT> &nbsp; $agent_territories</TD></TR>\n";}
 	echo "</TABLE>\n<BR>\n";
-
 
 	if ($change_agent_campaign > 0)
 		{
@@ -416,16 +588,15 @@ if ($agents_to_print > 0)
 		echo "<input type=hidden name=user value=\"$user\">\n";
 		echo "<input type=hidden name=stage value=\"live_campaign_change\">\n";
 		echo "Current Campagne: <SELECT SIZE=1 NAME=group>\n";
-			$o=0;
-			while ($groups_to_print > $o)
+		$o=0;
+		while ($groups_to_print > $o)
 			{
-				if ($groups[$o] == "$Acampaign") {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
-				  else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
-				$o++;
+			if ($groups[$o] == "$Acampaign") {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
+			else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
+			$o++;
 			}
 		echo "</SELECT>\n";
 		echo "<input type=submit name=submit value=CHANGE disabled><BR></form>\n";
-
 
 		echo "<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
@@ -437,7 +608,7 @@ if ($agents_to_print > 0)
 
 else
 	{
-	echo "Agent is not logged in to VICIDIAL\n<BR>";
+	echo "Agent is not logged in\n<BR>";
 	}
 
 echo "\n<BR>";
@@ -469,7 +640,7 @@ if ($modify_timeclock_log > 0)
 
 $REPORTdate = date("Y-m-d");
 echo "<center>\n";
-echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">VICIDIAL Feuille de temps</a>\n";
+echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">Agent Feuille de temps</a>\n";
 echo " | <a href=\"./user_stats.php?user=$user\">Statistiques utilisateur</a>\n";
 echo " | <a href=\"./admin.php?ADD=3&user=$user\">Modifier un utilisateur</a>\n";
 echo " | <a href=\"./AST_agent_days_detail.php?user=$user&query_date=$REPORTdate&end_date=$REPORTdate&group[]=--ALL--&shift=ALL\">Utilisateur multiple day status detail report</a>";
@@ -497,11 +668,10 @@ echo "|$stage|$group|";
 </body>
 </html>
 
-<?
+<?php
 	
 exit; 
 
 
 
 ?>
-

@@ -3781,7 +3781,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 						if (delayed_script_load == 'YES')
 							{
-							RefreshScript();
+							RefresHScript();
 							delayed_script_load='NO';
 							}
 
@@ -5567,7 +5567,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
 									{
 									delayed_script_load = 'YES';
-									RefreshScript('CLEAR');
+									RefresHScript('CLEAR');
 									}
 								else
 									{
@@ -5946,7 +5946,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
 								{
 								delayed_script_load = 'YES';
-								RefreshScript('CLEAR');
+								RefresHScript('CLEAR');
 								}
 							else
 								{
@@ -6852,7 +6852,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
 									{
 									delayed_script_load = 'YES';
-									RefreshScript('CLEAR');
+									RefresHScript('CLEAR');
 									}
 								else
 									{
@@ -6906,7 +6906,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 // ################################################################################
 // refresh or clear the SCRIPT frame contents
-	function RefreshScript(temp_wipe)
+	function RefresHScript(temp_wipe)
 		{
 		if (temp_wipe == 'CLEAR')
 			{
@@ -9074,7 +9074,7 @@ function phone_number_format(formatphone) {
 
 
 // ################################################################################
-// Refresh the agents view sidebar or xfer frame
+// RefresH the agents view sidebar or xfer frame
 	function refresh_agents_view(RAlocation,RAcount)
 		{
 		if (RAcount > 0)
@@ -9185,7 +9185,7 @@ function phone_number_format(formatphone) {
 
 
 // ################################################################################
-// Refresh the calls in queue bottombar
+// RefresH the calls in queue bottombar
 	function refresh_calls_in_queue(CQcount)
 		{
 		if (CQcount > 0)
@@ -9606,7 +9606,7 @@ else
 			hideDiv('HotKeyEntriesBox');
 			hideDiv('MainPanel');
 			hideDiv('ScriptPanel');
-			hideDiv('ScriptRefresh');
+			hideDiv('ScriptRefresH');
 			hideDiv('DispoSelectBox');
 			hideDiv('LogouTBox');
 			hideDiv('AgenTDisablEBoX');
@@ -10297,7 +10297,7 @@ else
 		document.getElementById("MainTable").style.backgroundColor="<?php echo $MAIN_COLOR ?>";
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $MAIN_COLOR ?>";
 		hideDiv('ScriptPanel');
-		hideDiv('ScriptRefresh');
+		hideDiv('ScriptRefresH');
 		showDiv('MainPanel');
 		ShoWGenDerPulldown();
 
@@ -10343,7 +10343,7 @@ else
 	function ScriptPanelToFront()
 		{
 		showDiv('ScriptPanel');
-		showDiv('ScriptRefresh');
+		showDiv('ScriptRefresH');
 		document.getElementById("MainTable").style.backgroundColor="<?php echo $SCRIPT_COLOR ?>";
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $SCRIPT_COLOR ?>";
 		panel_bgcolor='<?php echo $SCRIPT_COLOR ?>';
@@ -10906,8 +10906,8 @@ if ($agent_display_dialable_leads > 0)
     <table border=0 bgcolor="<?php echo $SCRIPT_COLOR ?>" width=<?php echo $SSwidth ?> height=<?php echo $SSheight ?>><TR><TD align=left valign=top><font class="sb_text"><div class="noscroll_script" id="ScriptContents">AGENT SCRIPT</div></font></TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:<?php echo $AMwidth ?>px;top:69px;z-index:31;" id="ScriptRefresh">
-<a href="#" onclick="RefreshScript()"><font class="body_small">refresh</font></a>
+<span style="position:absolute;left:<?php echo $AMwidth ?>px;top:69px;z-index:31;" id="ScriptRefresH">
+<a href="#" onclick="RefresHScript()"><font class="body_small">refresh</font></a>
 </span>
 
 

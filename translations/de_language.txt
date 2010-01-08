@@ -295,7 +295,7 @@ Called|Angerufen|
 Campaign|Kampagne|
 Status|Status|
 Inserted|Eingefügt|
-seconds|Sekunden|
+ seconds|Sekunden|
 HELP|HILFE|
 Login|Login|
 User|Benutzer|

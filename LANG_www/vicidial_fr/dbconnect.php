@@ -1,10 +1,10 @@
-<?
+<?php
 # 
-# dbconnect.php    version 2.0.5
+# dbconnect.php    version 2.2.0
 #
 # database connection settings and some global web settings
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 if ( file_exists("/etc/astguiclient.conf") )
 {
@@ -16,6 +16,8 @@ foreach ($DBCagc as $DBCline)
 		{$PATHlogs = $DBCline;   $PATHlogs = preg_replace("/.*=/","",$PATHlogs);}
 	if (ereg("^PATHweb", $DBCline))
 		{$WeBServeRRooT = $DBCline;   $WeBServeRRooT = preg_replace("/.*=/","",$WeBServeRRooT);}
+	if (ereg("^VARserver_ip", $DBCline))
+		{$WEBserver_ip = $DBCline;   $WEBserver_ip = preg_replace("/.*=/","",$WEBserver_ip);}
 	if (ereg("^VARDB_server", $DBCline))
 		{$VARDB_server = $DBCline;   $VARDB_server = preg_replace("/.*=/","",$VARDB_server);}
 	if (ereg("^VARDB_database", $DBCline))

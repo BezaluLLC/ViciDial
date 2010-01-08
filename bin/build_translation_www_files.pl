@@ -317,7 +317,7 @@ foreach(@lang_list)
 							$LINESct=0;
 							foreach(@file)
 								{
-								if ($file[$LINESct] !~ /^\#|^\s*function |'INCALL'|'PAUSED'|'READY'|'NEW'|xmlhttp|ILPV |ILPA |SELECT cmd_line_f|=\"SELECT/)
+								if ($file[$LINESct] !~ /^\#|^\s*function |'INCALL'|'PAUSED'|'READY'|'NEW'|xmlhttp|ILPV |ILPA |SELECT cmd_line_f|=\"SELECT|Header\(\"/)
 									{
 									$phrase_found_counter=0;
 									if ($file[$LINESct] =~ /INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL/)

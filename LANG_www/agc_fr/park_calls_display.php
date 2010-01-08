@@ -1,7 +1,7 @@
-<?
-# park_calls_display.php    version 2.0.5
+<?php
+# park_calls_display.php    version 2.2.0
 # 
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to send the details on the parked calls on the server
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -22,6 +22,7 @@
 # 50711-1208 - removed HTTP authentication in favor of user/pass vars
 # 60421-1111 - check GET/POST vars lines with isset to not trigger PHP NOTICES
 # 60619-1205 - Added variable filters to close security holes for login form
+# 90508-0727 - Changed to PHP long tags
 # 
 
 require("dbconnect.php");
@@ -116,7 +117,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 	else
 	{
 	##### print parked calls from the parked_channels table
-	$stmt="SELECT * from parked_channels where server_ip = '$server_ip' order by parked_time limit $park_limit;";
+	$stmt="SELECT channel,server_ip,channel_group,extension,parked_by,parked_time from parked_channels where server_ip = '$server_ip' order by parked_time limit $park_limit;";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 	$rslt=mysql_query($stmt, $link);
 	$park_calls_count = mysql_num_rows($rslt);
@@ -137,7 +138,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- durée d'exécution du script: $RUNtime secondes -->";
+	echo "\n<!-- durée d'exécution du script: $RUNtimesecondes -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

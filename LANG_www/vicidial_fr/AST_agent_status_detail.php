@@ -1,4 +1,4 @@
-<? 
+<?php 
 # AST_agent_status_detail.php
 # 
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
@@ -8,6 +8,7 @@
 # 90206-1554 - First build
 # 90225-2252 - Added CSV download option
 # 90310-2030 - Admin header
+# 90508-0644 - Changed to PHP long tags
 #
 
 
@@ -202,9 +203,9 @@ if ($file_download < 1)
 	-->
 	 </STYLE>
 
-	<?
+	<?php
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-	echo "<TITLE>VICIDIAL: Agent Jours Etat</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	echo "<TITLE>Agent Status Détail Report</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 	echo "<span style=\"position:absolute;left:0px;top:0px;z-index:20;\" id=admin_header>";
 
 	$short_header=1;
@@ -252,14 +253,14 @@ else
 
 	if ($file_download < 1)
 		{
-		echo "VICIDIAL: Agent Status Détail                     $NOW_TIME\n";
+		echo "Agent Status Détail Report                     $NOW_TIME\n";
 
 		echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
 		echo "---------- AGENT Détails -------------\n\n";
 		}
 	else
 		{
-		$file_output .= "VICIDIAL: Agent Status Détail                     $NOW_TIME\n";
+		$file_output .= "Agent Status Détail Report                     $NOW_TIME\n";
 		$file_output .= "Time range: $query_date_BEGIN to $query_date_END\n\n";
 		}
 
@@ -284,7 +285,7 @@ else
 		{
 		$row=mysql_fetch_row($rslt);
 
-		if ( ($row[0] > 0) and (strlen($row[3]) > 0) )
+		if ( ($row[0] > 0) and (strlen($row[3]) > 0) and (!eregi("NULL",$row[3])))
 			{
 			$calls[$i] =		$row[0];
 			$full_name[$i] =	$row[1];
@@ -585,9 +586,9 @@ echo "<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$e
 echo "</TD><TD VALIGN=TOP> Campagnes:<BR>";
 echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
 if  (eregi("--ALL--",$group_string))
-	{echo "<option value=\"--ALL--\" selected>-- ALL CAMPAGNES --</option>\n";}
+	{echo "<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
 else
-	{echo "<option value=\"--ALL--\">-- ALL CAMPAGNES --</option>\n";}
+	{echo "<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 {

@@ -1,4 +1,4 @@
-<? 
+<?php 
 # timeclock_report.php
 # 
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
@@ -9,6 +9,7 @@
 # 80617-1416 - Fixed totals tally bug
 # 80707-0754 - Fixed groups bug, changed formatting
 # 90310-2059 - Added admin header
+# 90508-0644 - Changed to PHP long tags
 #
 
 require("dbconnect.php");
@@ -41,7 +42,7 @@ if (strlen($order)<2) {$order='hours_down';}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -49,8 +50,9 @@ $i=0;
 while ($i < $qm_conf_ct)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =		$row[0];
-	$webroot_writable =	$row[1];
+	$non_latin =					$row[0];
+	$webroot_writable =				$row[1];
+	$SSoutbound_autodial_active =	$row[2];
 	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
@@ -134,9 +136,9 @@ while ($i < $user_groups_to_print)
 </style>
 
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<TITLE>VICIDIAL: ΧρήστηςΏρα ρολόι Report
+<TITLE>ΧρήστηςΏρα ρολόι Report
 
-<?
+<?php
 
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'311111';
@@ -240,7 +242,7 @@ echo "</FORM>\n\n";
 echo "<PRE><FONT SIZE=3>\n";
 
 
-echo "VICIDIAL: ΧρήστηςΏρα ρολόι Report                        $NOW_TIME\n";
+echo "ΧρήστηςΏρα ρολόι Report                        $NOW_TIME\n";
 
 echo "Time range: $query_date to $end_date\n\n";
 echo "---------- USER TIMECLOCK DETAILS -------------\n";

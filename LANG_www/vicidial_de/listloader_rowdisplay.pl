@@ -1,14 +1,15 @@
 #!/usr/bin/perl
 #
-# listloader_rowdisplay.pl    version 2.0.5
+# listloader_rowdisplay.pl    version 2.2.0
 # 
-# Copyright (C) 2008  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2009  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES
 # 
 # 60811-1232 - Changed to DBI
 # 60811-1329 - changed to use /etc/astguiclient.conf for configs
+# 90721-1340 - Added rank and owner as vicidial_list fields
 #
 
 ### begin parsing run-time options ###
@@ -116,7 +117,7 @@ foreach $oWkS (@{$oBook->{Worksheet}}) {
 @xls_row=split(/\|/, $var_str);
 
 
-$stmtA = "select vendor_lead_code, source_id, list_id, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments from vicidial_list limit 1;";
+$stmtA = "select vendor_lead_code, source_id, list_id, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, rank, owner from vicidial_list limit 1;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;

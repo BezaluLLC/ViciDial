@@ -1,4 +1,4 @@
-<?
+<?php
 # user_group_bulk_change.php
 # 
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
@@ -7,6 +7,7 @@
 # 81119-0918 - First build
 # 90309-1830 - Added admin_log logging
 # 90310-2144 - Added admin header
+# 90508-0644 - Changed to PHP long tags
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -31,7 +32,7 @@ if (isset($_GET["ΕΠΙΒΕΒΑΙΩΣΗ"]))				{$ΕΠΙΒΕΒΑΙΩΣΗ=$_GET["�
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -39,8 +40,9 @@ $i=0;
 while ($i < $qm_conf_ct)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =		$row[0];
-	$webroot_writable =	$row[1];
+	$non_latin =					$row[0];
+	$webroot_writable =				$row[1];
+	$SSoutbound_autodial_active =	$row[2];
 	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
@@ -102,7 +104,7 @@ $browser = getenv("HTTP_USER_AGENT");
 		}
 	}
 
-$stmt="select * from vicidial_user_groups order by user_group desc;";
+$stmt="select user_group,group_name from vicidial_user_groups order by user_group desc;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
@@ -121,8 +123,8 @@ while ($i < $groups_to_print)
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>ΔΙΑΧΕΙΡΙΣΗ: Ομάδα Χρήστη Μαζική Αλλαγή
-<?
+<title>ADMINISTRATION: Ομάδα Χρήστη Μαζική Αλλαγή
+<?php
 
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'311111';
@@ -155,7 +157,7 @@ require("admin_header.php");
 
 
 
-<? 
+<?php 
 
 echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3><B> &nbsp; \n";
 
@@ -259,7 +261,7 @@ echo "|$stage|$group|";
 </body>
 </html>
 
-<?
+<?php
 	
 exit; 
 

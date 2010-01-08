@@ -280,8 +280,8 @@ DISPOSITION CALL|DISPOSITION CALL|
  session ID| ID сессии|
  to campaign| в кампанию|
 Select a CallBack Date|Выберите дату для CallBack|
-maximize|максимизировать|
-minimize|минимизировать|
+ maximize| максимизировать|
+ minimize| минимизировать|
 You must choose a date|Вы должны выбрать дату|
 Select a Date Below|Выберите Дату Ниже|
 Click on a callback below to call the customer back now. If you click on a record below to call it, it will be removed from the list|Чтобы позвонить клиенту сейчас, кликните на callback ниже. Если Вы нажмете на record ниже, чтобы позвонить, то это будет удалено из списка|
@@ -312,7 +312,7 @@ Dial Now|Новый Набор номера|
 CB Comments|CB Комментарии|
 Title|Title|
 Your Status|Ваш Статус|
-STATUS|СТАТУС|
+ STATUS| СТАТУС|
 RESET|RESET|
 CLEAR FORM|ОЧИСТИТЬ ФОРМУ|
 SUBMIT|SUBMIT|
@@ -322,7 +322,7 @@ Called|Вызванный|
 Campaign|Кампания|
 Status|Статус|
 Inserted|Введенный|
-seconds|секунды|
+ seconds|секунды|
 HELP|ПОМОЩЬ|
 Login|Логин|
 User|Пользователь|
@@ -359,7 +359,7 @@ VOICEMAIL|VOICEMAIL|
  OLD| СТАРЫЙ|
 PAUSE|ПАУЗПА|
 START|СТАРТ|
-Pause|Пауза|
+ Pause | Пауза |
 Resume|Резюме|
 Faster|Быстрее|
 Slower|Медленее|
@@ -390,7 +390,7 @@ ADDRESS3|АДРЕСС 3|
 FINISH LEAD|ФИНИШ LEAD|
 Dial Alt Phone Number|Набор Альт.Номера|
 Phone|Телефон|
-DIAL|НАБОР НОМЕРА|
+ DIAL| НАБОР НОМЕРА|
 SUBMIT FAVORITES CHANGES - requires logout|ПОДТВЕРДИТЕ ИЗМЕНЕНИЕ ИЗБРАННОГО - требование для выхода из системы|
 BACK TO MAIN WINDOW - ignore changes made|ВЕРНУТЬСЯ К ГЛАВНОМУ ОКНУ - игнорирует сделанные изменения|
 AVAILABLE EXTENSIONS|ДОСТУПНЫЕ РАСШИРЕНИЯ|

@@ -1,4 +1,4 @@
-<? 
+<?php 
 # fcstats.php
 # 
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
@@ -11,6 +11,7 @@
 # 71228-1140 - added percentages, cross-day start/stop
 # 80328-1139 - adapted for basic fronter/closer stats
 # 90310-2132 - Added admin header
+# 90508-0644 - Changed to PHP long tags
 #
 
 require("dbconnect.php");
@@ -80,9 +81,9 @@ while ($i < $groups_to_print)
 -->
  </STYLE>
 
-<? 
+<?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>VICIDIAL: In-Group Fronter-Closer Stats</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>In-Group Fronter-Closer Stats Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
@@ -147,7 +148,7 @@ if ($shift == 'ALL')
 	$query_date_END = date("Y-m-d H:i:s", mktime(24, 59, 59, $Cqdate[1], $Cqdate[2], $Cqdate[0]));
 	}
 
-echo "VICIDIAL: In-Group Fronter-Closer Stats                      $NOW_TIME\n";
+echo "In-Group Fronter-Closer Stats Report                      $NOW_TIME\n";
 
 echo "\n";
 echo "---------- TOTALI FOR $query_date_BEGIN to $query_date_END\n";

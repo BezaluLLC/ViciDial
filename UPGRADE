@@ -364,6 +364,8 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 	tables monthly. The ADMIN_archive_log_tables.pl script needs to be added
 	to your crontab to run monthly(example: "30 1 1 * *")
 
+88. Added Traditional Chinese (zt_tw) language translation of the agent screen
+	which can be found in the LANG_www/agc_tw directory
 
 
 

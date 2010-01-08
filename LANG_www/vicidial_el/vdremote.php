@@ -1,20 +1,22 @@
-<?
+<?php
 # vdremote.php
 # 
 # make sure you have added a user to the vicidial_users MySQL table with at 
 # least user_level 4 to access this page the first time
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Changes
 # 50307-1721 - First version
 # 51123-1502 - removed requirement of PHP Globals=on
 # 60421-1229 - check GET/POST vars lines with isset to not trigger PHP NOTICES
 # 60619-1603 - Added variable filtering to eliminate SQL injection attack threat
+# 90508-0644 - Changed to PHP long tags
+# 91129-2249 - Replaced SELECT STAR in SQL queries, formatting fixes
 #
 
-$version = '1.1.12';
-$build = '60619-1603';
+$version = '2.2.0';
+$build = '91129-2249';
 
 require("dbconnect.php");
 
@@ -55,15 +57,15 @@ if (isset($_GET["ΕΠΙΒΕΒΑΙΩΣΗ"]))				{$ΕΠΙΒΕΒΑΙΩΣΗ=$_GET["�
 if (!isset($force_logout)) {$force_logout = 0;}
 
 if ($force_logout)
-{
-  if( (strlen($PHP_AUTH_USER)>0) or (strlen($PHP_AUTH_PW)>0) )
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-	}
+	if( (strlen($PHP_AUTH_USER)>0) or (strlen($PHP_AUTH_PW)>0) )
+		{
+		Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+		Header("HTTP/1.0 401 Unauthorized");
+		}
     echo "Έχετε αποσυνδεθεί. Σας ευχαριστούμε\n";
     exit;
-}
+	}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -75,25 +77,25 @@ $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 3;";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 3;";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
 $fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "Ακυρο Ονομα Χρήστη/Κωδικός Πρόσβασης: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
 	}
-  else
+else
 	{
 	header ("Content-type: text/html; charset=utf-8");
 
@@ -159,7 +161,7 @@ echo "<!-- ΕΚΔΟΣΗ: $version     ΔΗΜΙΟΥΡΓΙΑ: $build -->\n";
    .orange {color: black; background-color: orange}
 -->
  </STYLE>
-<?
+<?php
 echo "<title>ΑΠΟΜΑΚΡΥΣΜΕΝΟΙ ΧΕΙΡΙΣΤΕΣ: $LOGfullname - $PHP_AUTH_USER   ";
 
 if (!$ADD)			{$ADD="31111";}
@@ -201,14 +203,14 @@ if (strlen($ADD)>4)
 
 	##### get inbound groups listing for checkboxes
 	if ( (($ADD==31111) or ($ADD==31111)) and (count($groups)<1) )
-	{
-	$stmt="SELECT closer_campaigns from vicidial_remote_agents where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$closer_campaigns =	$row[0];
-	$closer_campaigns = preg_replace("/ -$/","",$closer_campaigns);
-	$groups = explode(" ", $closer_campaigns);
-	}
+		{
+		$stmt="SELECT closer_campaigns from vicidial_remote_agents where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$closer_campaigns =	$row[0];
+		$closer_campaigns = preg_replace("/ -$/","",$closer_campaigns);
+		$groups = explode(" ", $closer_campaigns);
+		}
 
 	$stmt="SELECT group_id,group_name from vicidial_inbound_groups order by group_id";
 	$rslt=mysql_query($stmt, $link);
@@ -244,12 +246,12 @@ if (strlen($ADD)>4)
 </head>
 <BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 <CENTER>
-<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; ΑΠΟΜΑΚΡΥΣΜΕΝΟΙ ΧΕΙΡΙΣΤΕΣ: <? echo "$PHP_AUTH_USER " ?> &nbsp; <a href="<? echo $PHP_SELF ?>?force_logout=1"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1>Αποσύνδεση</a></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><? echo date("l F j, Y G:i:s A") ?> &nbsp; </TD></TR>
-<TR BGCOLOR=#F0F5FE><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1> &nbsp; <a href="./vdremote.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>ΤΡΟΠΟΠΟΙΗΣΗ</a> | <a href="./vdremote.php?ADD=61111&user=<? echo "$PHP_AUTH_USER" ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>ΚΑΤΑΣΤΑΣΗ</a> | <a href="./vdremote.php?ADD=71111&user=<? echo "$PHP_AUTH_USER" ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>ΣΤΑΤΙΣΤΙΚΑ ΕΙΣΕΡΧΟΜΕΝΩΝ</a></TD></TR>
+<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; ΑΠΟΜΑΚΡΥΣΜΕΝΟΙ ΧΕΙΡΙΣΤΕΣ: <?php echo "$PHP_AUTH_USER " ?> &nbsp; <a href="<?php echo $PHP_SELF ?>?force_logout=1"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1>Αποσύνδεση</a></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo date("l F j, Y G:i:s A") ?> &nbsp; </TD></TR>
+<TR BGCOLOR=#F0F5FE><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1> &nbsp; <a href="./vdremote.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>ΤΡΟΠΟΠΟΙΗΣΗ</a> | <a href="./vdremote.php?ADD=61111&user=<?php echo "$PHP_AUTH_USER" ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>ΚΑΤΑΣΤΑΣΗ</a> | <a href="./vdremote.php?ADD=71111&user=<?php echo "$PHP_AUTH_USER" ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>ΣΤΑΤΙΣΤΙΚΑ ΕΙΣΕΡΧΟΜΕΝΩΝ</a></TD></TR>
 
 
 <TR><TD ALIGN=LEFT COLSPAN=2>
-<? 
+<?php 
 
 
 
@@ -258,10 +260,10 @@ if (strlen($ADD)>4)
 ######################
 
 if ($ADD==31111)
-{
+	{
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT * from vicidial_remote_agents where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
+	$stmt="SELECT remote_agent_id,user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns from vicidial_remote_agents where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$remote_agent_id =	$row[0];
@@ -272,25 +274,23 @@ if ($ADD==31111)
 	$status =			$row[5];
 	$campaign_id =		$row[6];
 
-echo "<br>ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΧΩΡΗΣΗΣ ΑΠΟΜΑΚΡΥΣΜΕΝΩΝ ΧΕΙΡΙΣΤΩΝ: $row[0]<form action=$PHP_SELF method=POST>\n";
-echo "<input type=hidden name=ADD value=41111>\n";
-echo "<input type=hidden name=remote_agent_id value=\"$row[0]\">\n";
-echo "<center><TABLE width=600 cellspacing=3>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>ID Χρήστη Ξεκινά: </td><td align=left>$user_start</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Αριθμός Γραμμών: </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3 value=\"$number_of_lines\"> (μόνο αριθμοί)</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>IP Διακομιστή: </td><td align=left>$row[3]</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Εξωτερική Τηλ. Σύνδεση: </td><td align=left><input type=text name=conf_exten size=20 maxlength=20 value=\"$conf_exten\"> (number dialed to reach agents [i.e. 913125551212])</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Κατάσταση:</td><td align=left><select size=1 name=status><option SELECTED>ΕΝΕΡΓΟ</option><option>INACTIVE</option><option SELECTED>$status</option></select></td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Εκστρατεία: </td><td align=left>$campaign_id</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Εισερχόμενες Ομάδες: </td><td align=left>\n";
-echo "$groups_list";
-echo "</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value=submit></td></tr>\n";
-echo "</TABLE></center>\n";
-echo "ΣΗΜΕΙΩΣΗ: Μπορεί να διαρκέσει και 30 δευτερόλεπτα για να καταχωρηθούν οι αλλαγές της οθόνης\n";
-
-}
-
+	echo "<br>ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΧΩΡΗΣΗΣ ΑΠΟΜΑΚΡΥΣΜΕΝΩΝ ΧΕΙΡΙΣΤΩΝ: $row[0]<form action=$PHP_SELF method=POST>\n";
+	echo "<input type=hidden name=ADD value=41111>\n";
+	echo "<input type=hidden name=remote_agent_id value=\"$row[0]\">\n";
+	echo "<center><TABLE width=600 cellspacing=3>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>ID Χρήστη Ξεκινά: </td><td align=left>$user_start</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Αριθμός Γραμμών: </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3 value=\"$number_of_lines\"> (μόνο αριθμοί)</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>IP Διακομιστή: </td><td align=left>$row[3]</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Εξωτερική Τηλ. Σύνδεση: </td><td align=left><input type=text name=conf_exten size=20 maxlength=20 value=\"$conf_exten\"> (number dialed to reach agents [i.e. 913125551212])</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Κατάσταση:</td><td align=left><select size=1 name=status><option SELECTED>ΕΝΕΡΓΟ</option><option>INACTIVE</option><option SELECTED>$status</option></select></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Εκστρατεία: </td><td align=left>$campaign_id</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Εισερχόμενες Ομάδες: </td><td align=left>\n";
+	echo "$groups_list";
+	echo "</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value=submit></td></tr>\n";
+	echo "</TABLE></center>\n";
+	echo "ΣΗΜΕΙΩΣΗ: Μπορεί να διαρκέσει και 30 δευτερόλεπτα για να καταχωρηθούν οι αλλαγές της οθόνης\n";
+	}
 
 
 
@@ -299,12 +299,12 @@ echo "ΣΗΜΕΙΩΣΗ: Μπορεί να διαρκέσει και 30 δευτ�
 ######################
 
 if ($ADD==41111)
-{
+	{
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	 if ( (strlen($number_of_lines) < 1) or (strlen($conf_exten) < 2) )
+	if ( (strlen($number_of_lines) < 1) or (strlen($conf_exten) < 2) )
 		{echo "<br>ΑΠΟΜΑΚΡΥΣΜΕΝΟΙ ΧΕΙΡΙΣΤΕΣ ΔΕΝ ΤΡΟΠΟΠΟΙΗΘΗΚΑΝ - Παρακαλώ ελέγξτε τα δεδομένα που καταχωρήσατε\n";}
-	 else
+	else
 		{
 		$stmt="UPDATE vicidial_remote_agents set number_of_lines='" . mysql_real_escape_string($number_of_lines) . "', conf_exten='" . mysql_real_escape_string($conf_exten) . "', status='" . mysql_real_escape_string($status) . "', closer_campaigns='" . mysql_real_escape_string($groups_value) . "' where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
 		$rslt=mysql_query($stmt, $link);
@@ -316,10 +316,9 @@ if ($ADD==41111)
 		$fp = fopen ("./admin_changes_log.txt", "a");
 		fwrite ($fp, "$date|MODIFY ΑΠΟΜΑΚΡΥΣΜΕΝΟΙ ΧΕΙΡΙΣΤΕΣ ENTRY     |$PHP_AUTH_USER|$ip|$stmt|\n");
 		fclose($fp);
-
 		}
 
-	$stmt="SELECT * from vicidial_remote_agents where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
+	$stmt="SELECT remote_agent_id,user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns from vicidial_remote_agents where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$remote_agent_id =	$row[0];
@@ -330,25 +329,23 @@ if ($ADD==41111)
 	$status =			$row[5];
 	$campaign_id =		$row[6];
 
-echo "<br>ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΧΩΡΗΣΗΣ ΑΠΟΜΑΚΡΥΣΜΕΝΩΝ ΧΕΙΡΙΣΤΩΝ: $row[0]<form action=$PHP_SELF method=POST>\n";
-echo "<input type=hidden name=ADD value=41111>\n";
-echo "<input type=hidden name=remote_agent_id value=\"$row[0]\">\n";
-echo "<center><TABLE width=600 cellspacing=3>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>ID Χρήστη Ξεκινά: </td><td align=left>$user_start</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Αριθμός Γραμμών: </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3 value=\"$number_of_lines\"> (μόνο αριθμοί)</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>IP Διακομιστή: </td><td align=left>$row[3]</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Εξωτερική Τηλ. Σύνδεση: </td><td align=left><input type=text name=conf_exten size=20 maxlength=20 value=\"$conf_exten\"> (number dialed to reach agents [i.e. 913125551212])</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Κατάσταση:</td><td align=left><select size=1 name=status><option SELECTED>ΕΝΕΡΓΟ</option><option>INACTIVE</option><option SELECTED>$status</option></select></td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Εκστρατεία: </td><td align=left>$campaign_id</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=right>Εισερχόμενες Ομάδες: </td><td align=left>\n";
-echo "$groups_list";
-echo "</td></tr>\n";
-echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value=submit></td></tr>\n";
-echo "</TABLE></center>\n";
-echo "ΣΗΜΕΙΩΣΗ: Μπορεί να διαρκέσει και 30 δευτερόλεπτα για να καταχωρηθούν οι αλλαγές της οθόνης\n";
-
-}
-
+	echo "<br>ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΧΩΡΗΣΗΣ ΑΠΟΜΑΚΡΥΣΜΕΝΩΝ ΧΕΙΡΙΣΤΩΝ: $row[0]<form action=$PHP_SELF method=POST>\n";
+	echo "<input type=hidden name=ADD value=41111>\n";
+	echo "<input type=hidden name=remote_agent_id value=\"$row[0]\">\n";
+	echo "<center><TABLE width=600 cellspacing=3>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>ID Χρήστη Ξεκινά: </td><td align=left>$user_start</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Αριθμός Γραμμών: </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3 value=\"$number_of_lines\"> (μόνο αριθμοί)</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>IP Διακομιστή: </td><td align=left>$row[3]</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Εξωτερική Τηλ. Σύνδεση: </td><td align=left><input type=text name=conf_exten size=20 maxlength=20 value=\"$conf_exten\"> (number dialed to reach agents [i.e. 913125551212])</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Κατάσταση:</td><td align=left><select size=1 name=status><option SELECTED>ΕΝΕΡΓΟ</option><option>INACTIVE</option><option SELECTED>$status</option></select></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Εκστρατεία: </td><td align=left>$campaign_id</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Εισερχόμενες Ομάδες: </td><td align=left>\n";
+	echo "$groups_list";
+	echo "</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value=submit></td></tr>\n";
+	echo "</TABLE></center>\n";
+	echo "ΣΗΜΕΙΩΣΗ: Μπορεί να διαρκέσει και 30 δευτερόλεπτα για να καταχωρηθούν οι αλλαγές της οθόνης\n";
+	}
 
 
 
@@ -357,14 +354,13 @@ echo "ΣΗΜΕΙΩΣΗ: Μπορεί να διαρκέσει και 30 δευτ�
 ######################
 
 if ($ADD==61111)
-{
+	{
 	echo "<FONT FACE=\"Courier\" COLOR=BLACK SIZE=2><PRE>";
 
-	 if ( (strlen($server_ip) < 2) or (strlen($user) < 2) )
+	if ( (strlen($server_ip) < 2) or (strlen($user) < 2) )
 		{echo "<br>ΛΑΘΟΣ ΑΠΟΜΑΚΡΥΣΜΕΝΩΝ ΧΕΙΡΙΣΤΩΝ\n";}
-	 else
+	else
 		{
-
 		$users_list = '';
 		$k=0;
 		while($k < $number_of_lines)
@@ -375,7 +371,7 @@ if ($ADD==61111)
 			}
 		$users_list = preg_replace("/.$/","",$users_list);
 
-		echo "VICIDIAL: Remote Agent Time On Calls                                        $NOW_TIME\n\n";
+		echo "Remote Agent Time On Calls                                        $NOW_TIME\n\n";
 		echo "+------------|--------+--------------+------------+--------+---------------------+---------+\n";
 		echo "| STATION    | USER   | LEADID       | CHANNEL    | STATUS | START TIME          | MINUTES |\n";
 		echo "+------------|--------+--------------+------------+--------+---------------------+---------+\n";
@@ -385,14 +381,14 @@ if ($ADD==61111)
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$talking_to_print = mysql_num_rows($rslt);
-			if ($talking_to_print > 0)
+		if ($talking_to_print > 0)
 			{
 			$i=0;
 			while ($i < $talking_to_print)
 				{
 				$leadlink=0;
 				$row=mysql_fetch_row($rslt);
-					if (eregi("READY|PAUSED",$row[4]))
+				if (eregi("READY|PAUSED",$row[4]))
 					{
 					$row[3]='';
 					$row[5]='- ΑΝΑΜΟΝΗ -';
@@ -409,7 +405,7 @@ if ($ADD==61111)
 					$leadid = "<a href=\"./remote_dispo.php?lead_id=$row[2]&call_began=$row[6]\" target=\"_blank\">$leadid</a>";
 					}
 				$channel =			sprintf("%-10s", $row[3]);
-					$cc=0;
+				$cc=0;
 				while ( (strlen($channel) > 10) and ($cc < 100) )
 					{
 					$channel = eregi_replace(".$","",$channel);   
@@ -438,14 +434,13 @@ if ($ADD==61111)
 				$i++;
 				}
 
-				echo "+------------|--------+--------------+------------+--------+---------------------+---------+\n";
-				echo "  $i Χειριστές συνδεμένοι στον διακομιστή $server_ip\n\n";
+			echo "+------------|--------+--------------+------------+--------+---------------------+---------+\n";
+			echo "  $i Χειριστές συνδεμένοι στον διακομιστή $server_ip\n\n";
 
-				echo "  <SPAN class=\"yellow\"><B>          </SPAN> - 5 λεπτά ή παραπάνω σε κλήση</B>\n";
-				echo "  <SPAN class=\"orange\"><B>          </SPAN> - Πάνω από 10 λεπτά σε κλήση</B>\n";
-
+			echo "  <SPAN class=\"yellow\"><B>          </SPAN> - 5 λεπτά ή παραπάνω σε κλήση</B>\n";
+			echo "  <SPAN class=\"orange\"><B>          </SPAN> - Πάνω από 10 λεπτά σε κλήση</B>\n";
 			}
-			else
+		else
 			{
 			echo "**************************************************************************************\n";
 			echo "********************************* ΚΑΝΕΝΑΣ ΧΕΙΡ. ΣΕ ΚΛΗΣΕΙΣ *********************************\n";
@@ -453,9 +448,8 @@ if ($ADD==61111)
 			}
 		}
 
-echo "</PRE>\n\n";
-
-}
+	echo "</PRE>\n\n";
+	}
 
 
 ######################
@@ -463,7 +457,7 @@ echo "</PRE>\n\n";
 ######################
 
 if ($ADD==71111)
-{
+	{
 	echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
 	echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=ADD VALUE=\"71111\">\n";
@@ -472,11 +466,10 @@ if ($ADD==71111)
 	echo "</FORM>\n\n";
 	echo "<FONT FACE=\"Courier\" COLOR=BLACK SIZE=2><PRE>";
 
-	 if ( (strlen($server_ip) < 2) or (strlen($user) < 2) )
+	if ( (strlen($server_ip) < 2) or (strlen($user) < 2) )
 		{echo "<br>ΛΑΘΟΣ ΑΠΟΜΑΚΡΥΣΜΕΝΩΝ ΧΕΙΡΙΣΤΩΝ\n";}
-	 else
+	else
 		{
-
 		$users_list = '';
 		$k=0;
 		while($k < $number_of_lines)
@@ -492,17 +485,17 @@ if ($ADD==71111)
 		$row=mysql_fetch_row($rslt);
 		$in_calls =		$row[0];
 		$in_time =		$row[1];
-			$in_time_M = ($in_time / 60);
-			$in_time_M = round($in_time_M, 2);
-			$in_time_M_int = intval("$in_time_M");
-			$in_time_SEC = ($in_time_M - $in_time_M_int);
-			$in_time_SEC = ($in_time_SEC * 60);
-			$in_time_SEC = round($in_time_SEC, 0);
-			if ($in_time_SEC < 10) {$in_time_SEC = "0$in_time_SEC";}
-			$in_time_MS = "$in_time_M_int:$in_time_SEC";
-			$in_time_MS =		sprintf("%7s", $in_time_MS);
+		$in_time_M = ($in_time / 60);
+		$in_time_M = round($in_time_M, 2);
+		$in_time_M_int = intval("$in_time_M");
+		$in_time_SEC = ($in_time_M - $in_time_M_int);
+		$in_time_SEC = ($in_time_SEC * 60);
+		$in_time_SEC = round($in_time_SEC, 0);
+		if ($in_time_SEC < 10) {$in_time_SEC = "0$in_time_SEC";}
+		$in_time_MS = "$in_time_M_int:$in_time_SEC";
+		$in_time_MS =		sprintf("%7s", $in_time_MS);
 
-		echo "VICIDIAL: Στατιστικά εισερχομένων απομακρυσμένου χειριστή                               $NOW_TIME\n\n";
+		echo "Στατιστικά εισερχομένων απομακρυσμένου χειριστή                               $NOW_TIME\n\n";
 		echo "\n";
 		echo "Συνολικές κλήσεις που διακομίστηκαν$query_date:    $in_calls\n";
 		echo "Συνολικός χρόνος ομιλίας σε$query_date:   $in_time_MS (minutes:seconds)\n";
@@ -518,7 +511,7 @@ if ($ADD==71111)
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$talking_to_print = mysql_num_rows($rslt);
-			if ($talking_to_print > 0)
+		if ($talking_to_print > 0)
 			{
 			$i=0;
 			while ($i < $talking_to_print)
@@ -550,14 +543,13 @@ if ($ADD==71111)
 				$i++;
 				}
 
-				echo "+----------+------------+----------------+------------+--------+---------------------+---------+\n";
-	#			echo "  $i Χειριστές συνδεμένοι στον διακομιστή $server_ip\n\n";
+			echo "+----------+------------+----------------+------------+--------+---------------------+---------+\n";
+#			echo "  $i agents logged in on server $server_ip\n\n";
 
-	#			echo "  <SPAN class=\"yellow\"><B>          </SPAN> - 5 λεπτά ή παραπάνω σε κλήση</B>\n";
-	#			echo "  <SPAN class=\"orange\"><B>          </SPAN> - Πάνω από 10 λεπτά σε κλήση</B>\n";
-
+#			echo "  <SPAN class=\"yellow\"><B>          </SPAN> - 5 minutes or more on call</B>\n";
+#			echo "  <SPAN class=\"orange\"><B>          </SPAN> - Over 10 minutes on call</B>\n";
 			}
-			else
+		else
 			{
 			echo "**************************************************************************************\n";
 			echo "*********************************ΔΕΝ ΥΠΑΡΧΟΥΝ ΚΛΗΣΕΙΣ ΓΙΑ ΑΥΤΗ ΤΗΝ ΗΜΕΡΑ*******************************\n";
@@ -565,9 +557,8 @@ if ($ADD==71111)
 			}
 		}
 
-echo "</PRE>\n\n";
-
-}
+	echo "</PRE>\n\n";
+	}
 
 
 
@@ -590,15 +581,11 @@ echo "<font size=0>\n\n\n<br><br><br>\nχρόνος εκτέλεσης διαδ�
 </body>
 </html>
 
-<?
+<?php
 	
 exit; 
 
 
 
 ?>
-
-
-
-
 

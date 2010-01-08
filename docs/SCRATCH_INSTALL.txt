@@ -1,4 +1,4 @@
-Asterisk/astguiclient install from scratch.    v.2.2.0               2009-06-28
+Asterisk/astguiclient install from scratch.    v.2.2.0               2010-01-07
    By the VICIDIAL group                                      info@vicidial.com
 
 **** IMPORTANT - In order for vicidial/astguiclient to function correctly please
@@ -995,7 +995,7 @@ musiconhold audio files to be converted to native formats like GSM, ULAW and ALA
 
 PHASE 5: CONFIGURING ASTERISK AND YOUR SIP PHONES
 
-As of release 2.0.5 it is now possible to configure SIP and IAX phones and 
+As of the 2.0.5 release it is possible to configure SIP and IAX phones and 
 carrier trunks without editing conf files, just by using the web administration
 interface. For more information on this, please read the VICIDIAL Manager
 Manual available at www.eflo.net
@@ -1090,7 +1090,8 @@ Here's what we used(you can set echocancel=no if you are using PRIs):
 
 3. edit sip.conf
 
-As of release 2.0.5 it is now possible to configure SIP and IAX phones and 
+!!!!! IMPORTANT NOTE !!!!!
+As of the 2.0.5 release it is possible to configure SIP and IAX phones and 
 carrier trunks without editing conf files, just by using the web administration
 interface. For more information on this, please read the VICIDIAL Manager
 Manual available at www.eflo.net
@@ -1166,7 +1167,8 @@ with a pin number required for entry):
 	conf => 8601,1234
 5.  edit iax.conf
 
-As of release 2.0.5 it is now possible to configure SIP and IAX phones and 
+!!!!! IMPORTANT NOTE !!!!!
+As of the 2.0.5 release it is possible to configure SIP and IAX phones and 
 carrier trunks without editing conf files, just by using the web administration
 interface. For more information on this, please read the VICIDIAL Manager
 Manual available at www.eflo.net
@@ -1265,6 +1267,13 @@ register to if you plan on using G729 as your codec: iax-g729.binfone.com
 
 
 6.  edit voicemail.conf
+
+!!!!! IMPORTANT NOTE !!!!!
+As of release 2.2.0 it is now possible to configure voicemail and musiconhold
+without editing conf files, just by using the web administration interface. 
+For more information on this, please read the VICIDIAL Manager Manual available
+at www.eflo.net
+
 	- vi /etc/asterisk/voicemail.conf
 	   This is where we set up the voicemail boxes for the extensions that 
 we have set up:
@@ -1325,6 +1334,7 @@ files, so be warned:
 9.  edit extensions.conf
 	- vi /etc/asterisk/extensions.conf
 
+!!!!! IMPORTANT NOTE !!!!!
 You should be using the sample extensions.conf that is included with the
 release of VICIDIAL that you installed. There is also an auto-generated 
 extensions-vicidial.conf file that contains dynamic dialplan entries.
@@ -1489,23 +1499,23 @@ SUBPHASE 6.0: putting the files in place
 There are two methods for downloading astGUIclient/VICIDIAL, a release and SVN
 
 1. Go to http://astguiclient.sf.net/ and download the latest astguiclient 
-package(as of this writing it is 2.0.5)
+package(as of this writing it is 2.2.0)
    - for 2.0.X release:
 	- mkdir /usr/src/astguiclient
 	- cd /usr/src/astguiclient
-	- wget http://internap.dl.sourceforge.net/sourceforge/astguiclient/astguiclient_2.0.5.zip
-	- unzip astguiclient_2.0.5.zip
+	- wget http://internap.dl.sourceforge.net/sourceforge/astguiclient/astguiclient_2.2.0.zip
+	- unzip astguiclient_2.2.0.zip
 	- perl install.pl (make sure you are in the directory with the install.pl file)
-   - for SVN 2.0.5 branch:
+   - for SVN 2.2.0 branch:
 	- mkdir /usr/src/astguiclient
 	- cd /usr/src/astguiclient
-	- svn checkout svn://svn.eflo.net:43690/agc_2-X/branches/agc_2.0.5
-	- cd agc_2.0.5
+	- svn checkout svn://svn.eflo.net:3690/agc_2-X/branches/agc_2.2.0
+	- cd agc_2.2.0
 	- perl install.pl
-   - for SVN 2.2 trunk:
+   - for SVN 2.4 trunk:
 	- mkdir /usr/src/astguiclient
 	- cd /usr/src/astguiclient
-	- svn checkout svn://svn.eflo.net:43690/agc_2-X/trunk
+	- svn checkout svn://svn.eflo.net:3690/agc_2-X/trunk
 	- cd trunk
 	- perl install.pl
 	    select to do interactive setup and customize to your server
@@ -1570,21 +1580,21 @@ use asterisk;
 
 \. /usr/src/astguiclient/trunk/extras/MySQL_AST_CREATE_tables.sql
 	or you may need to run this if you get an error:
-	\. /usr/src/astguiclient/agc_2.0.5/extras/MySQL_AST_CREATE_tables.sql
+	\. /usr/src/astguiclient/agc_2.2.0/extras/MySQL_AST_CREATE_tables.sql
 	\. /usr/src/astguiclient/astguiclient/MySQL_AST_CREATE_tables.sql
 
 ### to load in default IAX and SIP phone accounts run the following query
 
 \. /usr/src/astguiclient/trunk/extras/sip-iax_phones.sql
 	or you may need to run this if you get an error:
-	\. /usr/src/astguiclient/agc_2.0.5/extras/sip-iax_phones.sql
+	\. /usr/src/astguiclient/agc_2.2.0/extras/sip-iax_phones.sql
 	\. /usr/src/astguiclient/astguiclient/sip-iax_phones.sql
 
 ### to load the initial server values for this first system install
 
 \. /usr/src/astguiclient/trunk/extras/first_server_install.sql
 	or you may need to run this if you get an error:
-	\. /usr/src/astguiclient/agc_2.0.5/extras/first_server_install.sql
+	\. /usr/src/astguiclient/agc_2.2.0/extras/first_server_install.sql
 	\. /usr/src/astguiclient/astguiclient/first_server_install.sql
 
 quit
@@ -1595,8 +1605,8 @@ quit
   to load the performance testing leads run these commands:
    - cp /usr/src/astguiclient/trunk/extras/performance_test_leads.txt /usr/share/astguiclient/LEADS_IN/
        or
-	   - cp /usr/src/astguiclient/agc_2.0.5/extras/performance_test_leads.txt /usr/share/astguiclient/LEADS_IN/
-	   - cp /usr/src/astguiclient_2.0.5/trunk/extras/performance_test_leads.txt /usr/share/astguiclient/LEADS_IN/
+	   - cp /usr/src/astguiclient/agc_2.2.0/extras/performance_test_leads.txt /usr/share/astguiclient/LEADS_IN/
+	   - cp /usr/src/astguiclient_2.2.0/trunk/extras/performance_test_leads.txt /usr/share/astguiclient/LEADS_IN/
 
    - /usr/share/astguiclient/VICIDIAL_IN_new_leads_file.pl --forcelistid=107 --forcephonecode=1
 
@@ -1632,6 +1642,7 @@ Here's what we entered for spa2000:
 	   - Server IP: 10.10.10.15
 	   - Login: spa2000
 	   - Password: test
+	   - Conf File Secret: test
 	   - Status: ACTIVE
 	   - Active Account: Y	
 	   - Phone Type: Sipura SPA-2000 line 1
@@ -1668,6 +1679,7 @@ Now that the database is set up and our phones have entries in the system we can
 make the additions to the running Asterisk system that will allow astguiclient 
 to work with it.
 
+!!!!! IMPORTANT NOTE !!!!!
 Again, if you have selected to use the sample conf files during installation 
 then you do not have to add any of these lines to your conf files, they should 
 already be included. There is also an auto-generated 
@@ -1814,6 +1826,13 @@ exten => _86120XX,1,ZapBarge(${EXTEN:5})
 
 4. Add the meetme entries for astguiclient and VICIDIAL conferences to 
 meetme.conf:
+
+!!!!! IMPORTANT NOTE !!!!!
+Again, if you have selected to use the sample conf files during installation 
+then you do not have to add any of these lines to your conf files, they should 
+already be included. There is also an auto-generated 
+meetme-vicidial.conf file that contains dynamic conference entries.
+
    - here is how our sample meetme.conf file changes for adding conference 
 entries (this is a pure addition, nothing is being modified):
 ######------ START meetme.conf additions for conferences ------######

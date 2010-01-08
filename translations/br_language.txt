@@ -319,7 +319,7 @@ Called|Ligado|
 Campaign|Campanha|
 Status|Status|
 Inserted|Inserido|
-seconds|segundos|
+ seconds|segundos|
 HELP|AJUDA|
 Login|Login|
 User|Usuário|

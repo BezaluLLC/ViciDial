@@ -71,6 +71,7 @@ vicidial|AST_agent_timeclock_detail.php|1
 vicidial|AST_OUTBOUNDsummary_interval.php|1
 vicidial|call_report_export.php|1
 vicidial|AST_CLOSERsummary_hourly.php|1
+vicidial|functions.php|1
 ***TRANSLATIONS***||||
 ### special translations that should stay at the top of the file ###
 BORDER|Border|

@@ -1,17 +1,18 @@
-<?
+<?php
 # timeclock.php - VICIDIAL system user timeclock
 # 
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 80523-0134 - First Build 
 # 80524-0225 - Changed event_date to DATETIME, added timestamp field and tcid_link field
 # 80525-2351 - Added an audit log that is not to be editable
 # 80602-0641 - Fixed status update bug
+# 90508-0727 - Changed to PHP long tags
 #
 
-$version = '2.0.5-4';
-$build = '80602-0641';
+$version = '2.2.0-5';
+$build = '90508-0727';
 
 $StarTtimE = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -122,7 +123,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		$VDdisplayMESSAGE = "Ο χρήστη και τον κωδικό πρόσβασης που πληκτρολογήσατε δεν είναι ενεργό στο σύστημα<BR>Παρακαλώ δοκιμάστε ξανά:";
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>VICIDIAL:Timeclock</TITLE>\n";
+		echo"<TITLE>AgentTimeclock</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -223,11 +224,11 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			}
 		if ( ($last_action_sec < 30) and ($status != 'ΕΝΑΡΞΗ') )
 			{
-			### You cannot log in or out within 30 δευτερόλεπτα of your last login/logout
+			### You cannot log in or out within 30δευτερόλεπτα of your last login/logout
 			$VDdisplayMESSAGE = "Δεν μπορείτε να συνδεθείτε ή να αναφέρονται μέσα σε 30 δευτερόλεπτα από την τελευταία σας login ή logout";
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>VICIDIAL:Timeclock</TITLE>\n";
+			echo"<TITLE>AgentTimeclock</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -342,7 +343,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				{$BACKlink = "<A HREF=\"$welcomeURL\"><font color=\"#003333\">ΕΠΙΣΤΡΟΦΗ στην οθόνη υποδοχής</font></A>";}
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>VICIDIAL:Timeclock</TITLE>\n";
+			echo"<TITLE>AgentTimeclock</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -381,7 +382,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			}
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>VICIDIAL:Timeclock</TITLE>\n";
+		echo"<TITLE>AgentTimeclock</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -420,7 +421,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 else
 	{
 	echo"<HTML><HEAD>\n";
-	echo"<TITLE>VICIDIAL:Timeclock</TITLE>\n";
+	echo"<TITLE>AgentTimeclock</TITLE>\n";
 	echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo"</HEAD>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";

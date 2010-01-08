@@ -322,7 +322,7 @@ Called|Zadzwoniono|
 Campaign|Kampania|
 Status|Status|
 Inserted|Wstawiony|
-seconds|sekundy|
+ seconds|sekundy|
 HELP|POMOC|
 Login|Login|
 User|Użytkownik|

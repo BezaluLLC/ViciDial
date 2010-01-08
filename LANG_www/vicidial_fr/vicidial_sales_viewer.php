@@ -1,4 +1,4 @@
-<? header("Pragma: no-cache"); 
+<?php header("Pragma: no-cache"); 
 #
 # vicidial_sales_viewer.php - VICIDIAL administration page
 # 
@@ -8,6 +8,7 @@
 # CHANGES
 # 80310-1500 - first build
 # 90310-2135 - Added admin header
+# 90508-0644 - Changed to PHP long tags
 #
 
 if (isset($_GET["dcampaign"]))					{$dcampaign=$_GET["dcampaign"];}
@@ -23,12 +24,33 @@ if (isset($_GET["sales_time_frame"]))			{$sales_time_frame=$_GET["sales_time_fra
 if (isset($_GET["forc"]))						{$forc=$_GET["forc"];}
 	elseif (isset($_POST["forc"]))				{$forc=$_POST["forc"];}
 
+$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
+$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
+
+$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
+
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
+
+  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+	{
+#	Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+#	Header("HTTP/1.0 401 Unauthorized");
+    echo "Login ou mot de passe invalide or no export report permission: |$PHP_AUTH_USER|\n";
+    exit;
+	}
+
+
 ?>
 <html>
 <head>
-<title>VICIDIAL recent sales lookup</title>
+<title>Recent Sales Lookup</title>
 </head>
-<?
+<?php
 include("dbconnect.php");
 #include("/home/www/phpsubs/stylesheet.inc");
 ?>
@@ -54,7 +76,7 @@ function GatherListIDs() {
 </script>
 <body bgcolor=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 
-<?
+<?php
 	$short_header=1;
 
 	require("admin_header.php");
@@ -62,7 +84,7 @@ function GatherListIDs() {
 echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 ?>
 
-<form action="<?=$PHP_SELF ?>" method=post onSubmit="return GatherListIDs()">
+<form action="<?php echo $PHP_SELF ?>" method=post onSubmit="return GatherListIDs()">
 <input type="hidden" name="list_ids">
 <table border=0 cellpadding=5 cellspacing=0 align=center width=600>
 <tr>
@@ -72,9 +94,9 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 <tr bgcolor='#CCCCCC'>
 	<td colspan=3>
 		<table width=100%>
-			<td align=right width=200 nowrap><font class='standard_bold'>Select a VICIDIAL campaign:</td>
+			<td align=right width=200 nowrap><font class='standard_bold'>Select a campaign:</td>
 			<td align=left><select name="dcampaign" onChange="this.form.submit();">
-			<? 
+			<?php 
 			if ($dcampaign) {
 				$stmt="select campaign_id, campaign_name from vicidial_campaigns where campaign_id='$dcampaign'";
 				$rslt=mysql_query($stmt, $link);
@@ -84,7 +106,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 			} 
 			?>
 			<option value=''>---------------------------------</option>
-			<?
+			<?php
 				$stmt="select distinct vc.campaign_id, vc.campaign_name from vicidial_campaigns vc, vicidial_lists vl where vc.campaign_id=vl.campaign_id order by vc.campaign_name asc";
 				$rslt=mysql_query($stmt, $link);
 				while ($row=mysql_fetch_array($rslt)) {
@@ -93,13 +115,13 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 			?>
 			</select></td>
 			</tr>
-			<?
+			<?php
 			if ($dcampaign) {
 			?>
 			<tr bgcolor='#CCCCCC'>
 				<td align=right width=200 nowrap><font class='standard_bold'>Select list ID(s) # (optional):</td>
 				<td align=left><select name="list_id" multiple size="4">
-				<?
+				<?php
 					$stmt="select list_id, list_name from vicidial_lists where campaign_id='$dcampaign' order by list_id asc";
 					$rslt=mysql_query($stmt, $link);
 					while ($row=mysql_fetch_array($rslt)) {
@@ -108,7 +130,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 				?>
 				</select></td>
 			</tr>
-			<?
+			<?php
 				}
 			?>
 		</table>
@@ -140,7 +162,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 <tr><td colspan=3 align=center><font class="small_standard">** - sorted by call date</font></td></tr>
 </table>
 </form>
-<?
+<?php
 if ($submit_report && $list_ids) {
 
 	$now=date("YmdHis");

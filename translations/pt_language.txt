@@ -322,7 +322,7 @@ Called|Chamado|
 Campaign|Campanha|
 Status|Status|
 Inserted|Introduzido|
-seconds|segundos|
+ seconds|segundos|
 HELP|AJUDA|
 Login|Início de uma sessão|
 User|Usuário|

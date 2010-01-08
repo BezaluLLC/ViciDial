@@ -1,4 +1,4 @@
-<?
+<?php
 # call_report_export.php
 # 
 # displays options to select for downloading of leads and their vicidial_log 
@@ -10,6 +10,10 @@
 # CHANGES
 #
 # 90310-2247 - First build
+# 90330-1343 - Added more debug info, bug fixes
+# 90508-0644 - Changed to PHP long tags
+# 90721-1137 - Added rank and owner as vicidial_list fields
+# 91121-0253 - Added list name, list description and status name
 #
 
 require("dbconnect.php");
@@ -37,8 +41,8 @@ if (isset($_GET["run_export"]))				{$run_export=$_GET["run_export"];}
 	elseif (isset($_POST["run_export"]))	{$run_export=$_POST["run_export"];}
 if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
-if (isset($_GET["ΕΠΙΒΕΒΑΙΩΣΗ"]))					{$ΕΠΙΒΕΒΑΙΩΣΗ=$_GET["ΕΠΙΒΕΒΑΙΩΣΗ"];}
-	elseif (isset($_POST["ΕΠΙΒΕΒΑΙΩΣΗ"]))		{$ΕΠΙΒΕΒΑΙΩΣΗ=$_POST["ΕΠΙΒΕΒΑΙΩΣΗ"];}
+if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
+	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 
@@ -48,12 +52,10 @@ $stmt = "SELECT use_non_latin FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =					$row[0];
-	$i++;
+	$non_latin =	$row[0];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -72,7 +74,7 @@ $auth=$row[0];
 	{
 #	Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
 #	Header("HTTP/1.0 401 Unauthorized");
-    echo "Ακυρο Ονομα Χρήστη/Κωδικός Πρόσβασης or no export report permission: |$PHP_AUTH_USER|\n";
+    echo "Invalid Username/Password or no export report permission: |$PHP_AUTH_USER|\n";
     exit;
 	}
 
@@ -206,14 +208,14 @@ if ($run_export > 0)
 		echo "<BR>\n";
 		echo "$status_ct|$status_string|$status_SQL\n";
 		echo "<BR>\n";
-		exit;
 		}
 
-
+	$outbound_calls=0;
+	$export_rows='';
+	$k=0;
 	if ($RUNcampaign > 0)
 		{
-		$export_campaign_rows='';
-		$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial from vicidial_users vu,vicidial_log vl,vicidial_list vi where vl.call_date >= '$query_date' and vl.call_date <= '$end_date' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+		$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner from vicidial_users vu,vicidial_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$outbound_to_print = mysql_num_rows($rslt);
@@ -229,20 +231,23 @@ if ($run_export > 0)
 				{
 				$row=mysql_fetch_row($rslt);
 
-				$export_campaign_rows .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\r\n";
+				$export_status[$k] =	$row[2];
+				$export_list_id[$k] =	$row[8];
+				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t";
 				$i++;
+				$k++;
+				$outbound_calls++;
 				}
 			}
 		}
 
 	if ($RUNgroup > 0)
 		{
-		$export_group_rows='';
-		$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds from vicidial_users vu,vicidial_closer_log vl,vicidial_list vi where vl.call_date >= '$query_date' and vl.call_date <= '$end_date' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+		$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner from vicidial_users vu,vicidial_closer_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 		$rslt=mysql_query($stmtA, $link);
 		if ($DB) {echo "$stmt\n";}
 		$inbound_to_print = mysql_num_rows($rslt);
-		if ($inbound_to_print < 1)
+		if ( ($inbound_to_print < 1) and ($outbound_calls < 1) )
 			{
 			echo "There are no inbound calls during this time period for these parameters\n";
 			exit;
@@ -254,8 +259,11 @@ if ($run_export > 0)
 				{
 				$row=mysql_fetch_row($rslt);
 
-				$export_group_rows .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\r\n";
+				$export_status[$k] =	$row[2];
+				$export_list_id[$k] =	$row[8];
+				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t";
 				$i++;
+				$k++;
 				}
 			}
 		}
@@ -267,7 +275,7 @@ if ($run_export > 0)
 		$SQL_log = "$stmt|$stmtA|";
 		$SQL_log = ereg_replace(';','',$SQL_log);
 		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='EXPORT', record_id='', event_code='ADMIN ΕΚΘΕΣΗ ΕΞΑΓΩΓΗΣ CALLS', event_sql=\"$SQL_log\", event_notes='';";
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='EXPORT', record_id='', event_code='ADMIN EXPORT CALLS REPORT', event_sql=\"$SQL_log\", event_notes='';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
 
@@ -284,7 +292,48 @@ if ($run_export > 0)
 		ob_clean();
 		flush();
 
-		echo "$export_campaign_rows$export_group_rows";
+		$i=0;
+		while ($k > $i)
+			{
+			$ex_list_name='';
+			$ex_list_description='';
+			$stmt = "SELECT list_name,list_description FROM vicidial_lists where list_id='$export_list_id[$i]';";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$ex_list_ct = mysql_num_rows($rslt);
+			if ($ex_list_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$ex_list_name =			$row[0];
+				$ex_list_description =	$row[1];
+				}
+
+			$ex_status_name='';
+			$stmt = "SELECT status_name FROM vicidial_statuses where status='$export_status[$i]';";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$ex_list_ct = mysql_num_rows($rslt);
+			if ($ex_list_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$ex_status_name =			$row[0];
+				}
+			else
+				{
+				$stmt = "SELECT status_name FROM vicidial_campaign_statuses where status='$export_status[$i]';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$ex_list_ct = mysql_num_rows($rslt);
+				if ($ex_list_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$ex_status_name =			$row[0];
+					}
+				}
+
+			echo "$export_rows[$i]$ex_list_name\t$ex_list_description\t$ex_status_name\r\n";
+			$i++;
+			}
 		}
 	else
 		{
@@ -397,7 +446,7 @@ else
 
 
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-	echo "<TITLE>VICIDIAL: Εξαγωγή ζητεί έκθεση";
+	echo "<TITLE>ADMINISTRATION: Export Calls Report";
 
 	##### BEGIN Set variables to make header show properly #####
 	$ADD =					'100';
@@ -422,19 +471,19 @@ else
 
 
 	echo "<CENTER><BR>\n";
-	echo "<FONT SIZE=3 FACE=\"Arial,Helvetica\"><B>Εξαγωγή ζητεί έκθεση</B></FONT><BR><BR>\n";
+	echo "<FONT SIZE=3 FACE=\"Arial,Helvetica\"><B>Export Calls Report</B></FONT><BR><BR>\n";
 	echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
 	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">";
 	echo "<INPUT TYPE=HIDDEN NAME=run_export VALUE=\"1\">";
-	echo "<TABLE Border=0 CELLSPACING=8><TR><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
+	echo "<TABLE BORDER=0 CELLSPACING=8><TR><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
 
-	echo "<font class=\"select_bold\"><B>Χρονικό διάστημα:</B></font><BR><CENTER>\n";
+	echo "<font class=\"select_bold\"><B>Date Range:</B></font><BR><CENTER>\n";
 	echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 	echo "<BR>to<BR>\n";
 	echo "<INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
 
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=2>\n";
-	echo "<font class=\"select_bold\"><B>Εκστρατείες:</B></font><BR><CENTER>\n";
+	echo "<font class=\"select_bold\"><B>Campaigns:</B></font><BR><CENTER>\n";
 	echo "<SELECT SIZE=15 NAME=campaign[] multiple>\n";
 		$o=0;
 		while ($campaigns_to_print > $o)
@@ -448,7 +497,7 @@ else
 	echo "</SELECT>\n";
 
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
-	echo "<font class=\"select_bold\"><B>Εισερχόμενες Ομάδες:</B></font><BR><CENTER>\n";
+	echo "<font class=\"select_bold\"><B>Inbound Groups:</B></font><BR><CENTER>\n";
 	echo "<SELECT SIZE=15 NAME=group[] multiple>\n";
 		$o=0;
 		while ($groups_to_print > $o)
@@ -461,7 +510,7 @@ else
 		}
 	echo "</SELECT>\n";
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
-	echo "<font class=\"select_bold\"><B>Λίστες:</B></font><BR><CENTER>\n";
+	echo "<font class=\"select_bold\"><B>Lists:</B></font><BR><CENTER>\n";
 	echo "<SELECT SIZE=15 NAME=list_id[] multiple>\n";
 		$o=0;
 		while ($lists_to_print > $o)
@@ -474,7 +523,7 @@ else
 		}
 	echo "</SELECT>\n";
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
-	echo "<font class=\"select_bold\"><B>Καθεστώτων:</B></font><BR><CENTER>\n";
+	echo "<font class=\"select_bold\"><B>Statuses:</B></font><BR><CENTER>\n";
 	echo "<SELECT SIZE=15 NAME=status[] multiple>\n";
 		$o=0;
 		while ($statuses_to_print > $o)
@@ -487,7 +536,7 @@ else
 		}
 	echo "</SELECT>\n";
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
-	echo "<font class=\"select_bold\"><B>Ομάδες Χρήστη:</B></font><BR><CENTER>\n";
+	echo "<font class=\"select_bold\"><B>User Groups:</B></font><BR><CENTER>\n";
 	echo "<SELECT SIZE=15 NAME=user_group[] multiple>\n";
 		$o=0;
 		while ($user_groups_to_print > $o)
@@ -503,7 +552,7 @@ else
 	echo "</TD></TR><TR></TD><TD ALIGN=LEFT VALIGN=TOP COLSPAN=2>\n";
 
 	echo "</TD></TR><TR></TD><TD ALIGN=LEFT VALIGN=TOP COLSPAN=3>\n";
-	echo "<INPUT TYPE=Submit NAME=ΕΠΙΒΕΒΑΙΩΣΗ VALUE=ΥΠΟΒΑΛΛΩ>\n";
+	echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
 	echo "</TD></TR></TABLE>\n";
 	echo "</FORM>\n\n";
 

@@ -1,4 +1,4 @@
-<?
+<?php
 # timeclock_edit.php
 # 
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
@@ -8,6 +8,7 @@
 # 80624-1342 - First build
 # 80701-1323 - functional beta version done
 # 90310-2109 - Added admin header
+# 90508-0644 - Changed to PHP long tags
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -50,7 +51,7 @@ if (isset($_GET["SUBMIT"]))						{$SUBMIT=$_GET["SUBMIT"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -58,8 +59,10 @@ $i=0;
 while ($i < $qm_conf_ct)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =		$row[0];
-	$webroot_writable =	$row[1];
+	$non_latin =					$row[0];
+	$webroot_writable =				$row[1];
+	$SSoutbound_autodial_active =	$row[2];
+	$user_territories_active =		$row[3];
 	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
@@ -77,11 +80,11 @@ $invalid_record=0;
 if (!isset($begin_date)) {$begin_date = $TODAY;}
 if (!isset($end_date)) {$end_date = $TODAY;}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
-	if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
+if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
 $fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
@@ -215,8 +218,8 @@ $browser = getenv("HTTP_USER_AGENT");
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>VICIDIAL ADMIN:Timeclock Datensatz bearbeiten
-<?
+<title>ADMINISTRATION:Timeclock Datensatz bearbeiten
+<?php
 
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'3';
@@ -243,9 +246,9 @@ require("admin_header.php");
 
 
 <CENTER>
-<TABLE WIDTH=720 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Timeclock Datensatz bearbeiten for <? echo $user ?></TD><TD ALIGN=RIGHT> &nbsp; </TD></TR>
+<TABLE WIDTH=720 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Timeclock Datensatz bearbeiten for <?php echo $user ?></TD><TD ALIGN=RIGHT> &nbsp; </TD></TR>
 
-<? 
+<?php 
 
 echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3><B> &nbsp; \n";
 
@@ -436,7 +439,7 @@ if ($modify_timeclock_log > 0)
 	}
 
 
-echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">VICIDIAL Time Sheet</a>\n";
+echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">Agent Time Sheet</a>\n";
 echo " - <a href=\"./user_stats.php?user=$user\">User-Statistiken</a>\n";
 echo " - <a href=\"./admin.php?ADD=3&user=$user\">Ändern Sie Benutzer</a>\n";
 
@@ -468,7 +471,7 @@ echo "ERROR! You cannot edit this timeclock record: $timeclock_id\n";
 </body>
 </html>
 
-<?
+<?php
 	
 exit; 
 

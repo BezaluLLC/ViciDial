@@ -1,4 +1,4 @@
-<?
+<?php
 # user_stats.php
 # 
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
@@ -17,11 +17,31 @@
 # 90208-0504 - Added link to multi-day report and fixed call status summary section
 # 90305-1226 - Added user_call_log manual dial logs
 # 90310-0734 - Added admin header
+# 90508-0644 - Changed to PHP long tags
+# 90524-2009 - Changed time display to use functions.php
+# 91130-2037 - Added user closer log manager flag display
 #
 
 header ("Content-type: text/html; charset=utf-8");
 
 require("dbconnect.php");
+require("functions.php");
+
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin,outbound_autodial_active,user_territories_active FROM system_settings;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$ss_conf_ct = mysql_num_rows($rslt);
+if ($ss_conf_ct > 0)
+	{
+	$row=mysql_fetch_row($rslt);
+	$non_latin =						$row[0];
+	$SSoutbound_autodial_active =		$row[1];
+	$user_territories_active =			$row[2];
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -50,32 +70,33 @@ $TODAY = date("Y-m-d");
 if (!isset($begin_date)) {$begin_date = $TODAY;}
 if (!isset($end_date)) {$end_date = $TODAY;}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
+if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
 $fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "Nombre y contraseña inválidos del usuario: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
 	}
-  else
+else
 	{
 
 	if($auth>0)
 		{
-			$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname=$row[0];
+		$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$LOGfullname=$row[0];
 
 		fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
 		fclose($fp);
@@ -92,7 +113,6 @@ $browser = getenv("HTTP_USER_AGENT");
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$full_name = $row[0];
-
 	}
 
 
@@ -102,8 +122,8 @@ $browser = getenv("HTTP_USER_AGENT");
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>VICIDIAL ADMIN: Estadísticas de usuario
-<?
+<title>ADMINISTRATION: Estadísticas de usuario
+<?php
 
 
 ##### BEGIN Set variables to make header show properly #####
@@ -129,12 +149,12 @@ require("admin_header.php");
 
 
 ?>
-<TABLE WIDTH=770 BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR BGCOLOR=#E6E6E6><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; Estadísticas de usuario for <? echo $user ?></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" SIZE=2> &nbsp; </TD></TR>
+<TABLE WIDTH=770 BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR BGCOLOR=#E6E6E6><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; Estadísticas de usuario for <?php echo $user ?></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" SIZE=2> &nbsp; </TD></TR>
 
 
 
 
-<? 
+<?php 
 
 echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> &nbsp; \n";
 
@@ -152,7 +172,7 @@ echo "<input type=submit name=submit value=submit>\n";
 echo " &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $user - $full_name<BR><BR>\n";
 
 echo "<center>\n";
-echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">VICIDIAL Hoja de tiempo</a>\n";
+echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">Agent Hoja de tiempo</a>\n";
 echo " | <a href=\"./user_status.php?user=$user\">Condición de Usuario</a>\n";
 echo " | <a href=\"./admin.php?ADD=3&user=$user\">Modificar Usuario</a>\n";
 echo " | <a href=\"./AST_agent_days_detail.php?user=$user&query_date=$begin_date&end_date=$end_date&group[]=--ALL--&shift=ALL\">Usuario multiple day status detail report</a>";
@@ -166,10 +186,10 @@ echo "<br><center>\n";
 
 ##### vicidial agent talk time and status #####
 
-echo "<B>VICIDIAL TIEMPO Y ESTADO DE CONVERSACIÓN:</B>\n";
+echo "<B>AGENTE TIEMPO Y ESTADO DE CONVERSACIÓN:</B>\n";
 
 echo "<center><TABLE width=300 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=2>ESTADO</td><td align=right><font size=2>CUENTA</td><td align=right><font size=2>HORAS:MINUTOS</td></tr>\n";
+echo "<tr><td><font size=2>ESTADO</td><td align=right><font size=2>CUENTA</td><td align=right><font size=2>HOURS:MM:SS</td></tr>\n";
 
 $stmt="SELECT count(*),status, sum(length_in_sec) from vicidial_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' group by status order by status";
 $rslt=mysql_query($stmt, $link);
@@ -225,34 +245,20 @@ while ($o < $p)
 	else
 		{$bgcolor='bgcolor="#9BB9FB"';}
 
-	$call_seconds = $call_sec[$o];
-	$call_hours = ($call_seconds / 3600);
-	$call_hours_int = round($call_hours, 2);
-	$call_hours_int = intval("$call_hours_int");
-	$call_minutes = ($call_hours - $call_hours_int);
-	$call_minutes = ($call_minutes * 60);
-	$call_minutes_int = round($call_minutes, 0);
-	if ($call_minutes_int < 10) {$call_minutes_int = "0$call_minutes_int";}
+	$call_hours_minutes =		sec_convert($call_sec[$o],'H'); 
 
 	echo "<tr $bgcolor><td><font size=2>$status[$o]</td>";
 	echo "<td align=right><font size=2> $counts[$o]</td>\n";
-	echo "<td align=right><font size=2> $call_hours_int:$call_minutes_int</td></tr>\n";
+	echo "<td align=right><font size=2> $call_hours_minutes</td></tr>\n";
 	$total_calls = ($total_calls + $counts[$o]);
 	$total_sec = ($total_sec + $call_sec[$o]);
 	$call_seconds=0;
 	$o++;
 	}
 
-$call_seconds = $total_sec;
-$call_hours = ($call_seconds / 3600);
-$call_hours_int = round($call_hours, 2);
-$call_hours_int = intval("$call_hours_int");
-$call_minutes = ($call_hours - $call_hours_int);
-$call_minutes = ($call_minutes * 60);
-$call_minutes_int = round($call_minutes, 0);
-if ($call_minutes_int < 10) {$call_minutes_int = "0$call_minutes_int";}
+$call_hours_minutes =		sec_convert($total_sec,'H'); 
 
-echo "<tr><td><font size=2>LLAMADAS TOTALES </td><td align=right><font size=2> $total_calls</td><td align=right><font size=2> $call_hours_int:$call_minutes_int</td></tr>\n";
+echo "<tr><td><font size=2>LLAMADAS TOTALES </td><td align=right><font size=2> $total_calls</td><td align=right><font size=2> $call_hours_minutes</td></tr>\n";
 echo "</TABLE></center>\n";
 
 
@@ -262,9 +268,9 @@ echo "<br><br>\n";
 
 echo "<center>\n";
 
-echo "<B>VICIDIAL AGENTE TIEMPO LOGIN/LOGOUT:</B>\n";
+echo "<B>AGENTE TIEMPO LOGIN/LOGOUT:</B>\n";
 echo "<TABLE width=500 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=2>EVENTO</td><td align=right><font size=2> FECHA</td><td align=right><font size=2> CAMPAÑA</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HORAS:MINUTOS</td></tr>\n";
+echo "<tr><td><font size=2>EVENTO</td><td align=right><font size=2> FECHA</td><td align=right><font size=2> CAMPAÑA</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MM:SS</td></tr>\n";
 
 	$stmt="SELECT event,event_epoch,event_date,campaign_id,user_group from vicidial_user_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59'";
 	$rslt=mysql_query($stmt, $link);
@@ -294,21 +300,17 @@ echo "<tr><td><font size=2>EVENTO</td><td align=right><font size=2> FECHA</td><t
 			{
 			if ($event_start_seconds)
 				{
+
 				$event_stop_seconds = $row[1];
 				$event_seconds = ($event_stop_seconds - $event_start_seconds);
 				$total_login_time = ($total_login_time + $event_seconds);
-				$event_hours = ($event_seconds / 3600);
-				$event_hours_int = round($event_hours, 2);
-				$event_hours_int = intval("$event_hours_int");
-				$event_minutes = ($event_hours - $event_hours_int);
-				$event_minutes = ($event_minutes * 60);
-				$event_minutes_int = round($event_minutes, 0);
-				if ($event_minutes_int < 10) {$event_minutes_int = "0$event_minutes_int";}
+				$event_hours_minutes =		sec_convert($event_seconds,'H'); 
+
 				echo "<tr $bgcolor><td><font size=2>$row[0]</td>";
 				echo "<td align=right><font size=2> $row[2]</td>\n";
 				echo "<td align=right><font size=2> $row[3]</td>\n";
 				echo "<td align=right><font size=2> $row[4]</td>\n";
-				echo "<td align=right><font size=2> $event_hours_int:$event_minutes_int</td></tr>\n";
+				echo "<td align=right><font size=2> $event_hours_minutes</td></tr>\n";
 				$event_start_seconds='';
 				$event_stop_seconds='';
 				}
@@ -327,19 +329,13 @@ echo "<tr><td><font size=2>EVENTO</td><td align=right><font size=2> FECHA</td><t
 		$o++;
 	}
 
-$total_login_hours = ($total_login_time / 3600);
-$total_login_hours_int = round($total_login_hours, 2);
-$total_login_hours_int = intval("$total_login_hours_int");
-$total_login_minutes = ($total_login_hours - $total_login_hours_int);
-$total_login_minutes = ($total_login_minutes * 60);
-$total_login_minutes_int = round($total_login_minutes, 0);
-if ($total_login_minutes_int < 10) {$total_login_minutes_int = "0$total_login_minutes_int";}
+$total_login_hours_minutes =		sec_convert($total_login_time,'H'); 
 
 echo "<tr><td><font size=2>TOTAL</td>";
 echo "<td align=right><font size=2> </td>\n";
 echo "<td align=right><font size=2> </td>\n";
 echo "<td align=right><font size=2> </td>\n";
-echo "<td align=right><font size=2> $total_login_hours_int:$total_login_minutes_int</td></tr>\n";
+echo "<td align=right><font size=2> $total_login_hours_minutes</td></tr>\n";
 
 echo "</TABLE></center>\n";
 
@@ -361,7 +357,7 @@ echo "<center>\n";
 
 echo "<B>TIMECLOCK TIEMPO LOGIN/LOGOUT:</B>\n";
 echo "<TABLE width=550 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right><font size=2>EVENTO</td><td align=right><font size=2> FECHA</td><td align=right><font size=2> IP ADDRESS</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HORAS:MINUTOS</td></tr>\n";
+echo "<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right><font size=2>EVENTO</td><td align=right><font size=2> FECHA</td><td align=right><font size=2> IP ADDRESS</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MM:SS</td></tr>\n";
 
 	$stmt="SELECT event,event_epoch,user_group,login_sec,ip_address,timeclock_id,manager_user from vicidial_timeclock_log where user='" . mysql_real_escape_string($user) . "' and event_epoch >= '$SQepoch'  and event_epoch <= '$EQepoch';";
 	if ($DB>0) {echo "|$stmt|";}
@@ -397,20 +393,15 @@ echo "<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right><f
 			{
 			$login_sec = $row[3];
 			$total_login_time = ($total_login_time + $login_sec);
-			$event_hours = ($login_sec / 3600);
-			$event_hours_int = round($event_hours, 2);
-			$event_hours_int = intval("$event_hours_int");
-			$event_minutes = ($event_hours - $event_hours_int);
-			$event_minutes = ($event_minutes * 60);
-			$event_minutes_int = round($event_minutes, 0);
-			if ($event_minutes_int < 10) {$event_minutes_int = "0$event_minutes_int";}
+			$event_hours_minutes =		sec_convert($login_sec,'H'); 
+
 			echo "<tr $bgcolor><td><font size=2><A HREF=\"./timeclock_edit.php?timeclock_id=$row[5]\">$row[5]</A></td>";
 			echo "<td align=right><font size=2>$manager_edit</td>";
 			echo "<td align=right><font size=2>$row[0]</td>";
 			echo "<td align=right><font size=2> $TC_log_date</td>\n";
 			echo "<td align=right><font size=2> $row[4]</td>\n";
 			echo "<td align=right><font size=2> $row[2]</td>\n";
-			echo "<td align=right><font size=2> $event_hours_int:$event_minutes_int";
+			echo "<td align=right><font size=2> $event_hours_minutes";
 			if ($DB) {echo " - $total_login_time - $login_sec";}
 			echo "</td></tr>\n";
 			}
@@ -422,24 +413,19 @@ if (strlen($login_sec)<1)
 	$total_login_time = ($total_login_time + $login_sec);
 		if ($DB) {echo "LOGIN ONLY - $total_login_time - $login_sec";}
 	}
-$total_login_hours = ($total_login_time / 3600);
-$total_login_hours_int = round($total_login_hours, 2);
-$total_login_hours_int = intval("$total_login_hours_int");
-$total_login_minutes = ($total_login_hours - $total_login_hours_int);
-$total_login_minutes = ($total_login_minutes * 60);
-$total_login_minutes_int = round($total_login_minutes, 0);
-if ($total_login_minutes_int < 10) {$total_login_minutes_int = "0$total_login_minutes_int";}
+$total_login_hours_minutes =		sec_convert($total_login_time,'H'); 
 
-	if ($DB) {echo " - $total_login_time - $login_sec";}
+if ($DB) {echo " - $total_login_time - $login_sec";}
 
 echo "<tr><td align=right><font size=2> </td>";
 echo "<td align=right><font size=2> </td>\n";
 echo "<td align=right><font size=2> </td>\n";
 echo "<td align=right><font size=2> </td>\n";
 echo "<td align=right><font size=2><font size=2>TOTAL </td>\n";
-echo "<td align=right><font size=2> $total_login_hours_int:$total_login_minutes_int  </td></tr>\n";
+echo "<td align=right><font size=2> $total_login_hours_minutes  </td></tr>\n";
 
 echo "</TABLE></center>\n";
+
 
 
 ##### closer in-group selection logs #####
@@ -450,29 +436,30 @@ echo "<center>\n";
 
 echo "<B>CLOSER IN-GROUP SELECTION LOGS:</B>\n";
 echo "<TABLE width=670 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2> CAMPAÑA</td><td align=left><font size=2>BLEND</td><td align=left><font size=2> GROUPS</td></tr>\n";
+echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2> CAMPAÑA</td><td align=left><font size=2>BLEND</td><td align=left><font size=2> GROUPS</td><td align=left><font size=2> MANAGER</td></tr>\n";
 
-	$stmt="select * from vicidial_user_closer_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by event_date desc limit 1000;";
-	$rslt=mysql_query($stmt, $link);
-	$logs_to_print = mysql_num_rows($rslt);
+$stmt="select user,campaign_id,event_date,blended,closer_campaigns,manager_change from vicidial_user_closer_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by event_date desc limit 1000;";
+$rslt=mysql_query($stmt, $link);
+$logs_to_print = mysql_num_rows($rslt);
 
-	$u=0;
-	while ($logs_to_print > $u) {
-		$row=mysql_fetch_row($rslt);
-		if (eregi("1$|3$|5$|7$|9$", $u))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
+$u=0;
+while ($logs_to_print > $u) 
+	{
+	$row=mysql_fetch_row($rslt);
+	if (eregi("1$|3$|5$|7$|9$", $u))
+		{$bgcolor='bgcolor="#B9CBFD"';} 
+	else
+		{$bgcolor='bgcolor="#9BB9FB"';}
 
-			$u++;
-			echo "<tr $bgcolor>";
-			echo "<td><font size=1>$u</td>";
-			echo "<td><font size=2>$row[2]</td>";
-			echo "<td align=left><font size=2> $row[1]</td>\n";
-			echo "<td align=left><font size=2> $row[3]</td>\n";
-			echo "<td align=left><font size=2> $row[4] </td>\n";
-			echo "</tr>\n";
-
+	$u++;
+	echo "<tr $bgcolor>";
+	echo "<td><font size=1>$u</td>";
+	echo "<td><font size=2>$row[2]</td>";
+	echo "<td align=left><font size=2> $row[1]</td>\n";
+	echo "<td align=left><font size=2> $row[3]</td>\n";
+	echo "<td align=left><font size=2> $row[4] </td>\n";
+	echo "<td align=left><font size=2> $row[5]</td>\n";
+	echo "</tr>\n";
 	}
 
 
@@ -485,31 +472,31 @@ echo "<B>SALIENTE CALLS FOR THIS TIME PERIOD: (10000 record limit)</B>\n";
 echo "<TABLE width=670 cellspacing=0 cellpadding=1>\n";
 echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAÑA</td><td align=right><font size=2> GROUP</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
 
-	$stmt="select * from vicidial_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by call_date desc limit 10000;";
-	$rslt=mysql_query($stmt, $link);
-	$logs_to_print = mysql_num_rows($rslt);
+$stmt="select uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial from vicidial_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by call_date desc limit 10000;";
+$rslt=mysql_query($stmt, $link);
+$logs_to_print = mysql_num_rows($rslt);
 
-	$u=0;
-	while ($logs_to_print > $u) {
-		$row=mysql_fetch_row($rslt);
-		if (eregi("1$|3$|5$|7$|9$", $u))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
+$u=0;
+while ($logs_to_print > $u) 
+	{
+	$row=mysql_fetch_row($rslt);
+	if (eregi("1$|3$|5$|7$|9$", $u))
+		{$bgcolor='bgcolor="#B9CBFD"';} 
+	else
+		{$bgcolor='bgcolor="#9BB9FB"';}
 
-			$u++;
-			echo "<tr $bgcolor>";
-			echo "<td><font size=1>$u</td>";
-			echo "<td><font size=2>$row[4]</td>";
-			echo "<td align=left><font size=2> $row[7]</td>\n";
-			echo "<td align=left><font size=2> $row[8]</td>\n";
-			echo "<td align=left><font size=2> $row[10] </td>\n";
-			echo "<td align=right><font size=2> $row[3] </td>\n";
-			echo "<td align=right><font size=2> $row[14] </td>\n";
-			echo "<td align=right><font size=2> $row[2] </td>\n";
-			echo "<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[1]\" target=\"_blank\">$row[1]</A> </td>\n";
-			echo "<td align=right><font size=2> $row[15] </td></tr>\n";
-
+	$u++;
+	echo "<tr $bgcolor>";
+	echo "<td><font size=1>$u</td>";
+	echo "<td><font size=2>$row[4]</td>";
+	echo "<td align=left><font size=2> $row[7]</td>\n";
+	echo "<td align=left><font size=2> $row[8]</td>\n";
+	echo "<td align=left><font size=2> $row[10] </td>\n";
+	echo "<td align=right><font size=2> $row[3] </td>\n";
+	echo "<td align=right><font size=2> $row[14] </td>\n";
+	echo "<td align=right><font size=2> $row[2] </td>\n";
+	echo "<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[1]\" target=\"_blank\">$row[1]</A> </td>\n";
+	echo "<td align=right><font size=2> $row[15] </td></tr>\n";
 	}
 
 
@@ -522,7 +509,7 @@ echo "<B>Entrantes/CLOSER CALLS FOR THIS TIME PERIOD: (10000 record limit)</B>\n
 echo "<TABLE width=670 cellspacing=0 cellpadding=1>\n";
 echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAÑA</td><td align=right><font size=2> WAIT (S)</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
 
-	$stmt="select * from vicidial_closer_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by call_date desc limit 10000;";
+	$stmt="select closecallid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,queue_seconds,user_group,xfercallid,term_reason,uniqueid,agent_only from vicidial_closer_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by call_date desc limit 10000;";
 	$rslt=mysql_query($stmt, $link);
 	$logs_to_print = mysql_num_rows($rslt);
 
@@ -559,7 +546,7 @@ echo "<B>RECORDINGS FOR THIS TIME PERIOD: (10000 record limit)</B>\n";
 echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
 echo "<tr><td><font size=1># </td><td align=left><font size=2> LEAD</td><td><font size=2>DATE/TIME </td><td align=left><font size=2>SECONDS </td><td align=left><font size=2> &nbsp; RECID</td><td align=center><font size=2>FILENAME</td><td align=center><font size=2>LOCATION &nbsp; </td></tr>\n";
 
-	$stmt="select * from recording_log where user='" . mysql_real_escape_string($user) . "' and start_time >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and start_time <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by recording_id desc limit 10000;";
+	$stmt="select recording_id,channel,server_ip,extension,start_time,start_epoch,end_time,end_epoch,length_in_sec,length_in_min,filename,location,lead_id,user,vicidial_id from recording_log where user='" . mysql_real_escape_string($user) . "' and start_time >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and start_time <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by recording_id desc limit 10000;";
 	$rslt=mysql_query($stmt, $link);
 	$logs_to_print = mysql_num_rows($rslt);
 
@@ -676,7 +663,7 @@ echo "<font size=0>\n\n\n<br><br><br>\nScript runtime: $RUNtime seconds</font>";
 </body>
 </html>
 
-<?
+<?php
 	
 exit; 
 

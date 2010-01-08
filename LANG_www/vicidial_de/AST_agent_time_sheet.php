@@ -1,4 +1,4 @@
-<? 
+<?php 
 # AST_agent_time_sheet.php
 # 
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
@@ -9,9 +9,28 @@
 #            - Added required user/pass to gain access to this page
 # 80624-0132 - Added vicidial_timeclock entries
 # 90310-0745 - Added admin header
+# 90508-0644 - Changed to PHP long tags
+# 90524-2231 - Changed to use functions.php for seconds to HH:MM:SS conversion
 #
 
 require("dbconnect.php");
+require("functions.php");
+
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin,outbound_autodial_active,user_territories_active FROM system_settings;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$ss_conf_ct = mysql_num_rows($rslt);
+if ($ss_conf_ct > 0)
+	{
+	$row=mysql_fetch_row($rslt);
+	$non_latin =						$row[0];
+	$SSoutbound_autodial_active =		$row[1];
+	$user_territories_active =			$row[2];
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -32,11 +51,12 @@ $user=$agent;
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
+if ($DB) {echo "|$stmt|\n";}
+if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
   if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
@@ -64,9 +84,9 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 -->
  </STYLE>
 
-<? 
+<?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>VICIDIAL: Agent Time Sheet";
+echo "<TITLE>Agent Time Sheet";
 
 
 ##### BEGIN Set variables to make header show properly #####
@@ -122,7 +142,7 @@ if ($DB) {echo "$stmt\n";}
 $row=mysql_fetch_row($rslt);
 $full_name = $row[0];
 
-echo "VICIDIAL: AgentTime Sheet                            $NOW_TIME\n";
+echo "AgentTime Sheet                            $NOW_TIME\n";
 
 echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
 echo "---------- MITTELTIME SHEET: $agent - $full_name -------------\n\n";
@@ -136,120 +156,25 @@ if ($calls_summary)
 
 	$TOTAL_TIME = ($row[1] + $row[3] + $row[5] + $row[7]);
 
-		$TOTAL_TIME_H = ($TOTAL_TIME / 3600);
-		$TOTAL_TIME_H = round($TOTAL_TIME_H, 2);
-		$TOTAL_TIME_H_int = intval("$TOTAL_TIME_H");
-		$TOTAL_TIME_M = ($TOTAL_TIME_H - $TOTAL_TIME_H_int);
-		$TOTAL_TIME_M = ($TOTAL_TIME_M * 60);
-		$TOTAL_TIME_M = round($TOTAL_TIME_M, 2);
-		$TOTAL_TIME_M_int = intval("$TOTAL_TIME_M");
-		$TOTAL_TIME_S = ($TOTAL_TIME_M - $TOTAL_TIME_M_int);
-		$TOTAL_TIME_S = ($TOTAL_TIME_S * 60);
-		$TOTAL_TIME_S = round($TOTAL_TIME_S, 0);
-		if ($TOTAL_TIME_S < 10) {$TOTAL_TIME_S = "0$TOTAL_TIME_S";}
-		if ($TOTAL_TIME_M_int < 10) {$TOTAL_TIME_M_int = "0$TOTAL_TIME_M_int";}
-		$TOTAL_TIME_HMS = "$TOTAL_TIME_H_int:$TOTAL_TIME_M_int:$TOTAL_TIME_S";
-		$pfTOTAL_TIME_HMS =		sprintf("%8s", $TOTAL_TIME_HMS);
+	$TOTAL_TIME_HMS =		sec_convert($TOTAL_TIME,'H'); 
+	$TALK_TIME_HMS =		sec_convert($row[1],'H'); 
+	$PAUSE_TIME_HMS =		sec_convert($row[3],'H'); 
+	$WAIT_TIME_HMS =		sec_convert($row[5],'H'); 
+	$WRAPUP_TIME_HMS =		sec_convert($row[7],'H'); 
+	$TALK_AVG_MS =			sec_convert($row[2],'H'); 
+	$PAUSE_AVG_MS =			sec_convert($row[4],'H'); 
+	$WAIT_AVG_MS =			sec_convert($row[6],'H'); 
+	$WRAPUP_AVG_MS =		sec_convert($row[8],'H'); 
 
-		$TALK_TIME_H = ($row[1] / 3600);
-		$TALK_TIME_H = round($TALK_TIME_H, 2);
-		$TALK_TIME_H_int = intval("$TALK_TIME_H");
-		$TALK_TIME_M = ($TALK_TIME_H - $TALK_TIME_H_int);
-		$TALK_TIME_M = ($TALK_TIME_M * 60);
-		$TALK_TIME_M = round($TALK_TIME_M, 2);
-		$TALK_TIME_M_int = intval("$TALK_TIME_M");
-		$TALK_TIME_S = ($TALK_TIME_M - $TALK_TIME_M_int);
-		$TALK_TIME_S = ($TALK_TIME_S * 60);
-		$TALK_TIME_S = round($TALK_TIME_S, 0);
-		if ($TALK_TIME_S < 10) {$TALK_TIME_S = "0$TALK_TIME_S";}
-		if ($TALK_TIME_M_int < 10) {$TALK_TIME_M_int = "0$TALK_TIME_M_int";}
-		$TALK_TIME_HMS = "$TALK_TIME_H_int:$TALK_TIME_M_int:$TALK_TIME_S";
-		$pfTALK_TIME_HMS =		sprintf("%8s", $TALK_TIME_HMS);
-
-		$PAUSE_TIME_H = ($row[3] / 3600);
-		$PAUSE_TIME_H = round($PAUSE_TIME_H, 2);
-		$PAUSE_TIME_H_int = intval("$PAUSE_TIME_H");
-		$PAUSE_TIME_M = ($PAUSE_TIME_H - $PAUSE_TIME_H_int);
-		$PAUSE_TIME_M = ($PAUSE_TIME_M * 60);
-		$PAUSE_TIME_M = round($PAUSE_TIME_M, 2);
-		$PAUSE_TIME_M_int = intval("$PAUSE_TIME_M");
-		$PAUSE_TIME_S = ($PAUSE_TIME_M - $PAUSE_TIME_M_int);
-		$PAUSE_TIME_S = ($PAUSE_TIME_S * 60);
-		$PAUSE_TIME_S = round($PAUSE_TIME_S, 0);
-		if ($PAUSE_TIME_S < 10) {$PAUSE_TIME_S = "0$PAUSE_TIME_S";}
-		if ($PAUSE_TIME_M_int < 10) {$PAUSE_TIME_M_int = "0$PAUSE_TIME_M_int";}
-		$PAUSE_TIME_HMS = "$PAUSE_TIME_H_int:$PAUSE_TIME_M_int:$PAUSE_TIME_S";
-		$pfPAUSE_TIME_HMS =		sprintf("%8s", $PAUSE_TIME_HMS);
-
-		$WAIT_TIME_H = ($row[5] / 3600);
-		$WAIT_TIME_H = round($WAIT_TIME_H, 2);
-		$WAIT_TIME_H_int = intval("$WAIT_TIME_H");
-		$WAIT_TIME_M = ($WAIT_TIME_H - $WAIT_TIME_H_int);
-		$WAIT_TIME_M = ($WAIT_TIME_M * 60);
-		$WAIT_TIME_M = round($WAIT_TIME_M, 2);
-		$WAIT_TIME_M_int = intval("$WAIT_TIME_M");
-		$WAIT_TIME_S = ($WAIT_TIME_M - $WAIT_TIME_M_int);
-		$WAIT_TIME_S = ($WAIT_TIME_S * 60);
-		$WAIT_TIME_S = round($WAIT_TIME_S, 0);
-		if ($WAIT_TIME_S < 10) {$WAIT_TIME_S = "0$WAIT_TIME_S";}
-		if ($WAIT_TIME_M_int < 10) {$WAIT_TIME_M_int = "0$WAIT_TIME_M_int";}
-		$WAIT_TIME_HMS = "$WAIT_TIME_H_int:$WAIT_TIME_M_int:$WAIT_TIME_S";
-		$pfWAIT_TIME_HMS =		sprintf("%8s", $WAIT_TIME_HMS);
-
-		$WRAPUP_TIME_H = ($row[7] / 3600);
-		$WRAPUP_TIME_H = round($WRAPUP_TIME_H, 2);
-		$WRAPUP_TIME_H_int = intval("$WRAPUP_TIME_H");
-		$WRAPUP_TIME_M = ($WRAPUP_TIME_H - $WRAPUP_TIME_H_int);
-		$WRAPUP_TIME_M = ($WRAPUP_TIME_M * 60);
-		$WRAPUP_TIME_M = round($WRAPUP_TIME_M, 2);
-		$WRAPUP_TIME_M_int = intval("$WRAPUP_TIME_M");
-		$WRAPUP_TIME_S = ($WRAPUP_TIME_M - $WRAPUP_TIME_M_int);
-		$WRAPUP_TIME_S = ($WRAPUP_TIME_S * 60);
-		$WRAPUP_TIME_S = round($WRAPUP_TIME_S, 0);
-		if ($WRAPUP_TIME_S < 10) {$WRAPUP_TIME_S = "0$WRAPUP_TIME_S";}
-		if ($WRAPUP_TIME_M_int < 10) {$WRAPUP_TIME_M_int = "0$WRAPUP_TIME_M_int";}
-		$WRAPUP_TIME_HMS = "$WRAPUP_TIME_H_int:$WRAPUP_TIME_M_int:$WRAPUP_TIME_S";
-		$pfWRAPUP_TIME_HMS =		sprintf("%8s", $WRAPUP_TIME_HMS);
-
-		$TALK_AVG_M = ($row[2] / 60);
-		$TALK_AVG_M = round($TALK_AVG_M, 2);
-		$TALK_AVG_M_int = intval("$TALK_AVG_M");
-		$TALK_AVG_S = ($TALK_AVG_M - $TALK_AVG_M_int);
-		$TALK_AVG_S = ($TALK_AVG_S * 60);
-		$TALK_AVG_S = round($TALK_AVG_S, 0);
-		if ($TALK_AVG_S < 10) {$TALK_AVG_S = "0$TALK_AVG_S";}
-		$TALK_AVG_MS = "$TALK_AVG_M_int:$TALK_AVG_S";
-		$pfTALK_AVG_MS =		sprintf("%6s", $TALK_AVG_MS);
-
-		$PAUSE_AVG_M = ($row[4] / 60);
-		$PAUSE_AVG_M = round($PAUSE_AVG_M, 2);
-		$PAUSE_AVG_M_int = intval("$PAUSE_AVG_M");
-		$PAUSE_AVG_S = ($PAUSE_AVG_M - $PAUSE_AVG_M_int);
-		$PAUSE_AVG_S = ($PAUSE_AVG_S * 60);
-		$PAUSE_AVG_S = round($PAUSE_AVG_S, 0);
-		if ($PAUSE_AVG_S < 10) {$PAUSE_AVG_S = "0$PAUSE_AVG_S";}
-		$PAUSE_AVG_MS = "$PAUSE_AVG_M_int:$PAUSE_AVG_S";
-		$pfPAUSE_AVG_MS =		sprintf("%6s", $PAUSE_AVG_MS);
-
-		$WAIT_AVG_M = ($row[6] / 60);
-		$WAIT_AVG_M = round($WAIT_AVG_M, 2);
-		$WAIT_AVG_M_int = intval("$WAIT_AVG_M");
-		$WAIT_AVG_S = ($WAIT_AVG_M - $WAIT_AVG_M_int);
-		$WAIT_AVG_S = ($WAIT_AVG_S * 60);
-		$WAIT_AVG_S = round($WAIT_AVG_S, 0);
-		if ($WAIT_AVG_S < 10) {$WAIT_AVG_S = "0$WAIT_AVG_S";}
-		$WAIT_AVG_MS = "$WAIT_AVG_M_int:$WAIT_AVG_S";
-		$pfWAIT_AVG_MS =		sprintf("%6s", $WAIT_AVG_MS);
-
-		$WRAPUP_AVG_M = ($row[8] / 60);
-		$WRAPUP_AVG_M = round($WRAPUP_AVG_M, 2);
-		$WRAPUP_AVG_M_int = intval("$WRAPUP_AVG_M");
-		$WRAPUP_AVG_S = ($WRAPUP_AVG_M - $WRAPUP_AVG_M_int);
-		$WRAPUP_AVG_S = ($WRAPUP_AVG_S * 60);
-		$WRAPUP_AVG_S = round($WRAPUP_AVG_S, 0);
-		if ($WRAPUP_AVG_S < 10) {$WRAPUP_AVG_S = "0$WRAPUP_AVG_S";}
-		$WRAPUP_AVG_MS = "$WRAPUP_AVG_M_int:$WRAPUP_AVG_S";
-		$pfWRAPUP_AVG_MS =		sprintf("%6s", $WRAPUP_AVG_MS);
+	$pfTOTAL_TIME_HMS =		sprintf("%8s", $TOTAL_TIME_HMS);
+	$pfTALK_TIME_HMS =		sprintf("%8s", $TALK_TIME_HMS);
+	$pfPAUSE_TIME_HMS =		sprintf("%8s", $PAUSE_TIME_HMS);
+	$pfWAIT_TIME_HMS =		sprintf("%8s", $WAIT_TIME_HMS);
+	$pfWRAPUP_TIME_HMS =	sprintf("%8s", $WRAPUP_TIME_HMS);
+	$pfTALK_AVG_MS =		sprintf("%6s", $TALK_AVG_MS);
+	$pfPAUSE_AVG_MS =		sprintf("%6s", $PAUSE_AVG_MS);
+	$pfWAIT_AVG_MS =		sprintf("%6s", $WAIT_AVG_MS);
+	$pfWRAPUP_AVG_MS =		sprintf("%6s", $WRAPUP_AVG_MS);
 
 	echo "GESAMTANRUFETAKEN: $row[0]\n";
 	echo "TALK TIME:               $pfTALK_TIME_HMS     AVERAGE: $pfTALK_AVG_MS\n";
@@ -284,23 +209,11 @@ echo "LAST LOG ACTIVITY:    $row[0]\n";
 $end = $row[1];
 
 $login_time = ($end - $start);
-	$LOGIN_TIME_H = ($login_time / 3600);
-	$LOGIN_TIME_H = round($LOGIN_TIME_H, 2);
-	$LOGIN_TIME_H_int = intval("$LOGIN_TIME_H");
-	$LOGIN_TIME_M = ($LOGIN_TIME_H - $LOGIN_TIME_H_int);
-	$LOGIN_TIME_M = ($LOGIN_TIME_M * 60);
-	$LOGIN_TIME_M = round($LOGIN_TIME_M, 2);
-	$LOGIN_TIME_M_int = intval("$LOGIN_TIME_M");
-	$LOGIN_TIME_S = ($LOGIN_TIME_M - $LOGIN_TIME_M_int);
-	$LOGIN_TIME_S = ($LOGIN_TIME_S * 60);
-	$LOGIN_TIME_S = round($LOGIN_TIME_S, 0);
-	if ($LOGIN_TIME_S < 10) {$LOGIN_TIME_S = "0$LOGIN_TIME_S";}
-	if ($LOGIN_TIME_M_int < 10) {$LOGIN_TIME_M_int = "0$LOGIN_TIME_M_int";}
-	$LOGIN_TIME_HMS = "$LOGIN_TIME_H_int:$LOGIN_TIME_M_int:$LOGIN_TIME_S";
-	$pfLOGIN_TIME_HMS =		sprintf("%8s", $LOGIN_TIME_HMS);
+$LOGIN_TIME_HMS =		sec_convert($login_time,'H'); 
+$pfLOGIN_TIME_HMS =		sprintf("%8s", $LOGIN_TIME_HMS);
 
 echo "-----------------------------------------\n";
-echo "TOTAL LOGGED-IN TIME:    $pfLOGIN_TIME_HMS\n";
+echo "TOTAL LOGGED-IN TIME:            $pfLOGIN_TIME_HMS\n";
 
 
 ### timeclock records
@@ -354,20 +267,15 @@ echo "<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right><f
 			{
 			$login_sec = $row[3];
 			$total_login_time = ($total_login_time + $login_sec);
-			$event_hours = ($login_sec / 3600);
-			$event_hours_int = round($event_hours, 2);
-			$event_hours_int = intval("$event_hours_int");
-			$event_minutes = ($event_hours - $event_hours_int);
-			$event_minutes = ($event_minutes * 60);
-			$event_minutes_int = round($event_minutes, 0);
-			if ($event_minutes_int < 10) {$event_minutes_int = "0$event_minutes_int";}
+			$event_hours_minutes =		sec_convert($login_sec,'H'); 
+
 			echo "<tr $bgcolor><td><font size=2><A HREF=\"./timeclock_edit.php?timeclock_id=$row[5]\">$row[5]</A></td>";
 			echo "<td align=right><font size=2>$manager_edit</td>";
 			echo "<td align=right><font size=2>$row[0]</td>";
 			echo "<td align=right><font size=2> $TC_log_date</td>\n";
 			echo "<td align=right><font size=2> $row[4]</td>\n";
 			echo "<td align=right><font size=2> $row[2]</td>\n";
-			echo "<td align=right><font size=2> $event_hours_int:$event_minutes_int";
+			echo "<td align=right><font size=2> $event_hours_minutes";
 			if ($DB) {echo " - $total_login_time - $login_sec";}
 			echo "</td></tr>\n";
 			}
@@ -379,13 +287,7 @@ if (strlen($login_sec)<1)
 	$total_login_time = ($total_login_time + $login_sec);
 		if ($DB) {echo "LOGIN ONLY - $total_login_time - $login_sec";}
 	}
-$total_login_hours = ($total_login_time / 3600);
-$total_login_hours_int = round($total_login_hours, 2);
-$total_login_hours_int = intval("$total_login_hours_int");
-$total_login_minutes = ($total_login_hours - $total_login_hours_int);
-$total_login_minutes = ($total_login_minutes * 60);
-$total_login_minutes_int = round($total_login_minutes, 0);
-if ($total_login_minutes_int < 10) {$total_login_minutes_int = "0$total_login_minutes_int";}
+$total_login_hours_minutes =		sec_convert($total_login_time,'H'); 
 
 	if ($DB) {echo " - $total_login_time - $login_sec";}
 
@@ -393,8 +295,8 @@ echo "<tr><td align=right><font size=2> </td>";
 echo "<td align=right><font size=2> </td>\n";
 echo "<td align=right><font size=2> </td>\n";
 echo "<td align=right><font size=2> </td>\n";
-echo "<td align=right><font size=2><font size=2>TOTAL </td>\n";
-echo "<td align=right><font size=2> $total_login_hours_int:$total_login_minutes_int  </td></tr>\n";
+echo "<td align=right colspan=2><font size=2><font size=2>TOTAL </td>\n";
+echo "<td align=right><font size=2> $total_login_hours_minutes  </td></tr>\n";
 
 echo "</TABLE>\n";
 
