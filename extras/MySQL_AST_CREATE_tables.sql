@@ -1912,7 +1912,7 @@ INSERT INTO vicidial_inbound_groups(group_id,group_name,group_color,active,queue
 INSERT INTO vicidial_lists SET list_id='999',list_name='Default inbound list',campaign_id='TESTCAMP',active='N';
 INSERT INTO vicidial_lists SET list_id='998',list_name='Default Manual list',campaign_id='TESTCAMP',active='N';
 
-INSERT INTO system_settings (version,install_date) values('2.2.0rc1', CURDATE());
+INSERT INTO system_settings (version,install_date) values('2.4b0.5', CURDATE());
 
 INSERT INTO vicidial_status_categories (vsc_id,vsc_name) values('UNDEFINED','Default Category');
 
