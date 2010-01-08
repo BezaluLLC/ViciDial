@@ -721,3 +721,5 @@ CREATE TABLE vicidial_agent_log_archive LIKE vicidial_agent_log;
 ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT NULL;
 
 UPDATE system_settings SET db_schema_version='1191',db_schema_update_date=NOW();
+
+UPDATE system_settings SET version='2.2.0rc1',db_schema_update_date=NOW();
