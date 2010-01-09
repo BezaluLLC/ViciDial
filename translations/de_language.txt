@@ -286,7 +286,7 @@ CB Comments|WV Anmerkungen|
 Title|Titel|
 Your Status|Ihr Status|
  STATUS| STATUS|
-RESET|ZURÜCKSETZEN|
+ RESET| ZURÜCKSETZEN|
 CLEAR FORM|FORMULAR ZURÜCKSETZEN|
 SUBMIT|ÜBERNEHMEN|
 Incoming|Eingehend|
@@ -295,7 +295,7 @@ Called|Angerufen|
 Campaign|Kampagne|
 Status|Status|
 Inserted|Eingefügt|
- seconds|Sekunden|
+ seconds| Sekunden|
 HELP|HILFE|
 Login|Login|
 User|Benutzer|
@@ -303,15 +303,13 @@ Password|Passwort|
 VERSION|VERSION|
 BUILD|BUILD|
 Server|Server|
-RECORD|AUFNAHME|
-HANGUP|AUFLEGEN|
+RECORD |AUFNAHME |
+>HANGUP|>AUFLEGEN|
 >XFER|VERBINDEN|
 PARK|PARK|
 IN-NUMBER|IN-NUMMER|
 NUMBER|NUMMER|
-LENGTH|LÄNGE|
 CALLERID|ANRUFERID|
-CallerID|AnruferID|
  CALL| ANRUF|
 PICKUP|ABNEHMEN|
 CONFERENCE|KONFERENZ|
@@ -319,8 +317,8 @@ Refresh|Aktualisieren|
 Send DTMF|DTMF Senden|
 ORDER|BESTELLEN|
  on | an |
-LOGOUT|LOGOUT|
-Channel|Kanal|
+>LOGOUT|>LOGOUT|
+ Channel| Kanal|
 Extensions|Erweiterungen|
 Conferences|Konferenzen|
 Conference|Konferenz|
@@ -330,8 +328,6 @@ Welcome|Willkommen|
 VOICEMAIL|VOICEMAIL|
  NEW| NEU|
  OLD| ALT|
-STOP|STOP|
-START|START|
  Pause | Pause |
 Resume|WiederAufnehmen|
 Faster|Schneller|
@@ -339,7 +335,6 @@ Slower|Langsamer|
 Initializing|Initialisierung|
 Invalid|Unzulässig|
 Username|Username|
-CUSTOM|ANGEPASST|
 Notes|Anmerkungen|
 First|Vorname|
 MI: |MI:|

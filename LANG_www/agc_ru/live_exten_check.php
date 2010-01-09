@@ -165,9 +165,9 @@ echo "$row[0]|";
 		{
 		$row=mysql_fetch_row($rslt);
 		echo "Conversation: $counter ~";
-		echo "КаналA: $ChanneLA[$counter] ~";
-		echo "КаналB: $ChanneLB[$counter] ~";
-		echo "КаналBtrunk: $row[0]|";
+		echo "ChannelA: $ChanneLA[$counter] ~";
+		echo "ChannelB: $ChanneLB[$counter] ~";
+		echo "ChannelBtrunk: $row[0]|";
 		}
 		else
 		{
@@ -179,9 +179,9 @@ echo "$row[0]|";
 			{
 			$row=mysql_fetch_row($rslt);
 			echo "Conversation: $counter ~";
-			echo "КаналA: $ChanneLA[$counter] ~";
-			echo "КаналB: $ChanneLB[$counter] ~";
-			echo "КаналBtrunk: $row[0]|";
+			echo "ChannelA: $ChanneLA[$counter] ~";
+			echo "ChannelB: $ChanneLB[$counter] ~";
+			echo "ChannelBtrunk: $row[0]|";
 			}
 			else
 			{
@@ -193,9 +193,9 @@ echo "$row[0]|";
 				{
 				$row=mysql_fetch_row($rslt);
 				echo "Conversation: $counter ~";
-				echo "КаналA: $ChanneLA[$counter] ~";
-				echo "КаналB: $ChanneLB[$counter] ~";
-				echo "КаналBtrunk: $row[0]|";
+				echo "ChannelA: $ChanneLA[$counter] ~";
+				echo "ChannelB: $ChanneLB[$counter] ~";
+				echo "ChannelBtrunk: $row[0]|";
 				}
 				else
 				{
@@ -207,16 +207,16 @@ echo "$row[0]|";
 					{
 					$row=mysql_fetch_row($rslt);
 					echo "Conversation: $counter ~";
-					echo "КаналA: $ChanneLA[$counter] ~";
-					echo "КаналB: $ChanneLB[$counter] ~";
-					echo "КаналBtrunk: $row[0]|";
+					echo "ChannelA: $ChanneLA[$counter] ~";
+					echo "ChannelB: $ChanneLB[$counter] ~";
+					echo "ChannelBtrunk: $row[0]|";
 					}
 					else
 					{
 					echo "Conversation: $counter ~";
-					echo "КаналA: $ChanneLA[$counter] ~";
-					echo "КаналB: $ChanneLB[$counter] ~";
-					echo "КаналBtrunk: $ChanneLA[$counter]|";
+					echo "ChannelA: $ChanneLA[$counter] ~";
+					echo "ChannelB: $ChanneLB[$counter] ~";
+					echo "ChannelBtrunk: $ChanneLA[$counter]|";
 					}
 				}
 			}
@@ -270,7 +270,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- время выполнения скрипта: $RUNtimeсекунды -->";
+	echo "\n<!-- время выполнения скрипта: $RUNtime секунды -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

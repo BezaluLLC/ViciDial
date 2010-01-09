@@ -313,7 +313,7 @@ CB Comments|Note Richiamo|
 Title|Titolo|
 Your Status|Il tuo stato|
  STATUS| STATO|
-RESET|RESET|
+ RESET| RESET|
 CLEAR FORM|PULISCI IL FORM|
 SUBMIT|INVIA|
 Incoming|In entrata|
@@ -322,7 +322,7 @@ Called|Chiamato|
 Campaign|Campagna|
 Status|Stato|
 Inserted|Inserito|
- seconds|secondi|
+ seconds| secondi|
 HELP|AIUTO|
 Login|Login|
 User|Utente|
@@ -330,15 +330,13 @@ Password|Password|
 VERSION|VERSIONE|
 BUILD|BUILD|
 Server|Server|
-RECORD|Registrazione|
-HANGUP|RIAGGANCIA|
+RECORD |Registrazione |
+>HANGUP|>RIAGGANCIA|
 >XFER|>TRASF|
 PARK|ATTESA|
 IN-NUMBER|IN-NUMBER|
 NUMBER|NUMERO|
-LENGTH|LUNGHEZZA|
 CALLERID|CALLERID|
-CallerID|CallerID|
  CALL| CHIAMATA|
 PICKUP|RIPRENDI|
 CONFERENCE|CONFERENZA|
@@ -346,8 +344,8 @@ Refresh|Aggiorna|
 Send DTMF|Trasmetti Tono Tastiera|
 ORDER|ORDINE|
  on | su |
-LOGOUT|LOGOUT|
-Channel|Canale|
+>LOGOUT|>LOGOUT|
+ Channel| Canale|
 Extensions|Interni|
 Conferences|Conferenze|
 Conference|Conferenza|
@@ -357,8 +355,6 @@ Welcome|Benvenuto|
 VOICEMAIL|VOICEMAIL|
  NEW| NUOVO|
  OLD| VECCHIO|
-STOP|ARRESTO|
-START|INIZIO|
  Pause | Pausa |
 Resume|Riprendi|
 Faster|Piu` veloce|
@@ -366,7 +362,6 @@ Slower|Piu` lento|
 Initializing|Inizializzazione|
 Invalid|Non valido|
 Username|Username|
-CUSTOM|CLIENTE|
 Notes|Note|
 First|Nome|
 MI: |MI: |

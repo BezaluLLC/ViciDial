@@ -312,7 +312,7 @@ CB Comments|TB Opmerkingen|
 Title|Titel|
 Your Status|Jouw Status|
  STATUS| STATUS|
-RESET|RESET|
+ RESET| RESET|
 CLEAR FORM|RESET FORM|
 SUBMIT|OPSLAAN|
 Incoming|Inkomend|
@@ -321,7 +321,7 @@ Called|Gebeld|
 Campaign|Campagne|
 Status|Status|
 Inserted|Ingevoerd|
- seconds|seconden|
+ seconds| seconden|
 HELP|HELP|
 Login|Inloggen|
 User|Gebruiker|
@@ -329,15 +329,13 @@ Password|Wachtwoord|
 VERSION|VERSIE|
 BUILD|BUILD|
 Server|Server|
-RECORD|OPENEMEN|
-HANGUP|OPHANGEN|
+RECORD |OPENEMEN |
+>HANGUP|>OPHANGEN|
 >XFER|>XFER|
 PARK|PARKEER|
 IN-NUMBER|INKOMEND-NUMMER|
 NUMBER|NUMMER|
-LENGTH|LENGTE|
 CALLERID|CALLERID|
-CallerID|CallerID|
  CALL| BEL|
 PICKUP|OPPAKKEN|
 CONFERENCE|CONFERENTIE|
@@ -345,8 +343,8 @@ Refresh|Ververs|
 Send DTMF|Stuur DTMF|
 ORDER|SORTEER|
  on | op |
-LOGOUT|UITLOGGEN|
-Channel|Kanaal|
+>LOGOUT|>UITLOGGEN|
+ Channel| Kanaal|
 Extensions|Extenties|
 Conferences|Conferenties|
 Conference|Conferentie|
@@ -356,8 +354,6 @@ Welcome|Welkom|
 VOICEMAIL|VOICEMAIL|
  NEW| NIEUW|
  OLD| OUD|
-STOP|STOP|
-START|START|
  Pause | Pauze |
 Resume|Doorgaan|
 Faster|Sneller|
@@ -365,7 +361,6 @@ Slower|Langzamer|
 Initializing|Initialiseren|
 Invalid|Ongeldig|
 Username|Gebruikersnaam|
-CUSTOM|AANGEPAST|
 Notes|Opmerkingen|
 First|Eerste|
 MI: |MI: |

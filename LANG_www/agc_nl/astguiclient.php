@@ -718,7 +718,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		}
 
 // ################################################################################
-// LIVE TRUNK LIST FOR OPHANGEN/HIJACK MENU FUNCTIONS
+// LIVE TRUNK LIST FOR HANGUP/HIJACK MENU FUNCTIONS
 	function refresh_busytrunkhangup()
 		{
 		document.getElementById("TrunkHangupContent").innerHTML = Nactiveext;
@@ -765,7 +765,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		}
 
 // ################################################################################
-// LIVE LOCAL LIST FOR OPHANGEN/HIJACK MENU FUNCTIONS
+// LIVE LOCAL LIST FOR HANGUP/HIJACK MENU FUNCTIONS
 	function refresh_busylocalhangup()
 		{
 		document.getElementById("LocalHangupContent").innerHTML = Nactiveext;
@@ -1386,7 +1386,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=3;
 					if (live_calls > 0)
 						{
-						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>LIVE GESPREKKEN OP DEZE TELEFOON:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CLIENT KANAAL</td><td><font class=\"log_title\">REMOTE KANAAL</td><td><font class=\"log_title\">OPENEMEN</td><td><font class=\"log_title\">OPHANGEN</td><td><font class=\"log_title\">XFER</td><td><font class=\"log_title\">PARKEER</td></tr>";
+						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>LIVE GESPREKKEN OP DEZE TELEFOON:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CLIENT KANAAL</td><td><font class=\"log_title\">REMOTE KANAAL</td><td><font class=\"log_title\">RECORD</td><td><font class=\"log_title\">OPHANGEN</td><td><font class=\"log_title\">XFER</td><td><font class=\"log_title\">PARKEER</td></tr>";
 						if ( (LCAcount > live_calls)  || (LCAcount < live_calls) )
 							{
 							LCAe[0]=''; LCAe[1]=''; LCAe[2]=''; LCAe[3]=''; LCAe[4]=''; LCAe[5]=''; 
@@ -1533,7 +1533,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=0;
 					if (out_calls > 0)
 						{
-						var out_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> DATUM\/TIJD GESPREK</td><td><font class=\"log_title\">NUMMER</td><td align=right><font class=\"log_title\">LENGTE (M:SS)</td><td><font class=\"log_title\"> </td></tr>"
+						var out_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> DATUM\/TIJD GESPREK</td><td><font class=\"log_title\">NUMMER</td><td align=right><font class=\"log_title\">LENGTH (M:SS)</td><td><font class=\"log_title\"> </td></tr>"
 						while (loop_ct < out_calls)
 							{
 							loop_ct++;
@@ -1561,7 +1561,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=0;
 					if (in_calls > 0)
 						{
-						var in_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> DATUM\/TIJD GESPREK</td><td><font class=\"log_title\">INKOMEND-NUMMER</td><td COLSPAN=2><font class=\"log_title\">CALLERID</td><td align=right><font class=\"log_title\">LENGTE</td><td><font class=\"log_title\"> </td></tr>"
+						var in_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> DATUM\/TIJD GESPREK</td><td><font class=\"log_title\">INKOMEND-NUMMER</td><td COLSPAN=2><font class=\"log_title\">CALLERID</td><td align=right><font class=\"log_title\">LENGTH</td><td><font class=\"log_title\"> </td></tr>"
 						while (loop_ct < in_calls)
 							{
 							loop_ct++;
@@ -2734,7 +2734,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:0px;top:12px;z-index:29;" id="TrunkHangupBox">
-    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> TRUNK OPHANGEN <BR><BR>
+    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> TRUNK HANGUP <BR><BR>
 	<span id="TrunkHangupContent"> Active Trunks Menu </span><BR>
 	<span id="TrunkHangup_HUlink"><a href="#" onclick="busyhangup_send_hangup('Trunk');return false;">Trunk Ophangen</a> &nbsp; | &nbsp; </span>
 	<span id="TrunkHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Trunk','HIJACK');return false;">Trunk Kapen</a> &nbsp; | &nbsp; </span>
@@ -2758,7 +2758,7 @@ echo "</head>\n";
 <span style="position:absolute;left:80px;top:12px;z-index:42;" id="MainXfeRBox">
 	<input type=hidden name=H_XfeR_channel>
 	<input type=hidden name=M_XfeR_channel>
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> LIVE GESPREK DOORSCHAKELEN</b> <BR>Doorschakelkanaal: <span id="MainXfeRChanneL">Kanaal</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> LIVE GESPREK DOORSCHAKELEN</b> <BR>Doorschakelkanaal: <span id="MainXfeRChanneL">Channel</span><BR></tr>
 	<tr><td>Extenties:<BR><span id="MainXfeRContent"> Extentie Menu </span></td>
 	<td>
 	<BR>
@@ -2772,7 +2772,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:80px;top:12px;z-index:43;" id="LocalDialBox">
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> Bel Lokale Extenties</b> <BR>Telefoon belt vanaf: <span id="LocalDialChanneL">Kanaal</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> Bel Lokale Extenties</b> <BR>Telefoon belt vanaf: <span id="LocalDialChanneL">Channel</span><BR></tr>
 	<tr><td>Extenties:<BR><span id="LocalDialContent"> Extentie Menu </span></td>
 	<td>
 	<BR>

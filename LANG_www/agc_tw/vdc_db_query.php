@@ -12,7 +12,7 @@
 #  - $pass
 # optional variables:
 #  - $format - ('text','debug')
-#  - $ACTION - ('regCLOSER','regTERRITORY','manDiaLnextCALL','manDiaLskip','manDiaLonly','manDiaLlookCALL','manDiaLlogCALL','userLOGout','updateDISPO','updateLEAD','VDADpause','VDADready','VDADcheckINCOMING','UpdatEFavoritEs','CalLBacKLisT','CalLBacKCounT','PauseCodeSubmit','LogiNCamPaigns','alt_phone_change','AlertControl','AGENTSview','CALLSINQUEUEview','CALLSINQUEUEgrab','DiaLableLeaDsCounT','UpdateFields')
+#  - $ACTION - ('regCLOSER','regTERRITORY','manDiaLnextCALL','manDiaLskip','manDiaLonly','manDiaLlookCaLL','manDiaLlogCALL','userLOGout','updateDISPO','updateLEAD','VDADpause','VDADready','VDADcheckINCOMING','UpdatEFavoritEs','CalLBacKLisT','CalLBacKCounT','PauseCodeSubmit','LogiNCamPaigns','alt_phone_change','AlertControl','AGENTSview','CALLSINQUEUEview','CALLSINQUEUEgrab','DiaLableLeaDsCounT','UpdateFields')
 #  - $stage - ('start','finish','lookup','new')
 #  - $closer_choice - ('CL_TESTCAMP_L CL_OUT123_L -')
 #  - $conf_exten - ('8600011',...)
@@ -85,6 +85,8 @@
 #  - $vtiger_callback_id - ('16534'...)
 #  - $nodeletevdac - ('0','1')
 #  - $agent_territories - ('ABC001','ABC002'...)
+#  - $alt_num_status - ('0','1')
+#  - $DiaL_SecondS - ('0','1','2',...)
 #
 # CHANGELOG:
 # 50629-1044 - First build of script
@@ -226,12 +228,14 @@
 # 91228-1340 - Added API fields update functions
 # 100103-1254 - Added 3 more conf-presets, list ID override presets and call start/dispo URLs
 # 100104-1509 - Fixed vicidial_log duplicate check to allow update if dup and logging update
+# 100109-0745 - Added alt_num_status for ALTNUM dialing status
+# 100109-1336 - Fixed Manual dial live call detection
 #
 
-$version = '2.2.0-136';
-$build = '100104-1509';
+$version = '2.2.0-138';
+$build = '100109-1336';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=290;
+$mysql_log_count=296;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -407,6 +411,11 @@ if (isset($_GET["nodeletevdac"]))				{$nodeletevdac=$_GET["nodeletevdac"];}
 	elseif (isset($_POST["nodeletevdac"]))		{$nodeletevdac=$_POST["nodeletevdac"];}
 if (isset($_GET["agent_territories"]))			{$agent_territories=$_GET["agent_territories"];}
 	elseif (isset($_POST["agent_territories"]))	{$agent_territories=$_POST["agent_territories"];}
+if (isset($_GET["alt_num_status"]))				{$alt_num_status=$_GET["alt_num_status"];}
+	elseif (isset($_POST["alt_num_status"]))	{$alt_num_status=$_POST["alt_num_status"];}
+if (isset($_GET["DiaL_SecondS"]))				{$DiaL_SecondS=$_GET["DiaL_SecondS"];}
+	elseif (isset($_POST["DiaL_SecondS"]))		{$DiaL_SecondS=$_POST["DiaL_SecondS"];}
+
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -589,13 +598,13 @@ if ($ACTION == 'LogiNCamPaigns')
 				$rowx=mysql_fetch_row($rslt);
 				$last_agent_event = $rowx[0];
 				}
-			if ( (strlen($last_agent_event)<2) or (ereg('登出',$last_agent_event)) )
+			if ( (strlen($last_agent_event)<2) or (ereg('LOGOUT',$last_agent_event)) )
 				{$show_campaign_list=0;}
 			}
 		}
 
 	### CHECK TO SEE IF AGENT IS WITHIN THEIR SHIFT IF RESTRICTED, IF NOT, OUTPUT ERROR
-	if ( ( (ereg("開始|ALL",$shift_enforcement)) and (!ereg("OFF",$VU_agent_shift_enforcement_override)) ) or (ereg("開始|ALL",$VU_agent_shift_enforcement_override)) )
+	if ( ( (ereg("START|ALL",$shift_enforcement)) and (!ereg("OFF",$VU_agent_shift_enforcement_override)) ) or (ereg("START|ALL",$VU_agent_shift_enforcement_override)) )
 		{
 		$shift_ok=0;
 		if ( (strlen($LOGgroup_shiftsSQL) < 3) and ($VU_shift_override_flag < 1) )
@@ -1854,7 +1863,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					}
 
 				#############################################
-				##### 開始 QUEUEMETRICS LOGGING LOOKUP #####
+				##### START QUEUEMETRICS LOGGING LOOKUP #####
 				$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00037',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -2262,7 +2271,7 @@ if ($ACTION == 'manDiaLonly')
 
 
 		#############################################
-		##### 開始 QUEUEMETRICS LOGGING LOOKUP #####
+		##### START QUEUEMETRICS LOGGING LOOKUP #####
 		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00048',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -2316,61 +2325,115 @@ if ($ACTION == 'manDiaLonly')
 
 
 ################################################################################
-### manDiaLlookCALL - for manual VICIDiaL dialing this will attempt to look up
+### manDiaLlookCaLL - for manual VICIDiaL dialing this will attempt to look up
 ###                   the trunk channel that the call was placed on
 ################################################################################
 if ($ACTION == 'manDiaLlookCaLL')
-{
+	{
 	$MT[0]='';
 	$row='';   $rowx='';
-if (strlen($MDnextCID)<18)
-	{
-	echo "NO\n";
-	echo "MDnextCID $MDnextCID 是無效的\n";
-	exit;
-	}
-else
-	{
-	##### look for the channel in the UPDATED vicidial_manager record of the call initiation
-	$stmt="SELECT uniqueid,channel FROM vicidial_manager where callerid='$MDnextCID' and server_ip='$server_ip' and status IN('UPDATED','DEAD') LIMIT 1;";
-	$rslt=mysql_query($stmt, $link);
-		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00052',$user,$server_ip,$session_name,$one_mysql_log);}
-	if ($DB) {echo "$stmt\n";}
-	$VM_mancall_ct = mysql_num_rows($rslt);
-	if ($VM_mancall_ct > 0)
+	$call_good=0;
+	if (strlen($MDnextCID)<18)
 		{
-		$row=mysql_fetch_row($rslt);
-		$uniqueid =$row[0];
-		$channel =$row[1];
-		echo "$uniqueid\n$channel";
-
-		$wait_sec=0;
-		$stmt = "select wait_epoch,wait_sec from vicidial_agent_log where agent_log_id='$agent_log_id';";
-		if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00053',$user,$server_ip,$session_name,$one_mysql_log);}
-		$VDpr_ct = mysql_num_rows($rslt);
-		if ($VDpr_ct > 0)
-			{
-			$row=mysql_fetch_row($rslt);
-			$wait_sec = (($StarTtime - $row[0]) + $row[1]);
-			}
-		$stmt="UPDATE vicidial_agent_log set wait_sec='$wait_sec',wait_epoch='$StarTtime',talk_epoch='$StarTtime',lead_id='$lead_id' where agent_log_id='$agent_log_id';";
-			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00054',$user,$server_ip,$session_name,$one_mysql_log);}
-
-		$stmt="UPDATE vicidial_auto_calls set uniqueid='$uniqueid',channel='$channel' where callerid='$MDnextCID';";
-			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00055',$user,$server_ip,$session_name,$one_mysql_log);}
+		echo "NO\n";
+		echo "MDnextCID $MDnextCID 是無效的\n";
+		exit;
 		}
 	else
 		{
-		echo "NO\n";
+		##### look for the channel in the UPDATED vicidial_manager record of the call initiation
+		$stmt="SELECT uniqueid,channel FROM vicidial_manager where callerid='$MDnextCID' and server_ip='$server_ip' and status IN('UPDATED','DEAD') LIMIT 1;";
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00052',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$VM_mancall_ct = mysql_num_rows($rslt);
+		if ($VM_mancall_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$uniqueid =$row[0];
+			$channel =$row[1];
+			$call_output = "$uniqueid\n$channel\n";
+			$call_good++;
+			}
+		else
+			{
+			### after 10 秒, start checking for call termination in the carrier log
+			if ( ($DiaL_SecondS > 0) and (preg_match("/0$/",$DiaL_SecondS)) )
+				{
+				$stmt="SELECT uniqueid,channel,end_epoch FROM call_log where caller_code='$MDnextCID' and server_ip='$server_ip' order by start_time desc LIMIT 1;";
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00291',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$VM_mancallX_ct = mysql_num_rows($rslt);
+				if ($VM_mancallX_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$uniqueid =		$row[0];
+					$channel =		$row[1];
+					$end_epoch =	$row[2];
+
+					### Local channel hung up, check carrier log for error
+					if ($end_epoch > 1000)
+						{
+						$stmt="SELECT dialstatus,hangup_cause FROM vicidial_carrier_log where uniqueid='$uniqueid' and server_ip='$server_ip' and channel='$channel' and dialstatus IN('BUSY','CHANUNAVAIL','CONGESTION') LIMIT 1;";
+						$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00292',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($DB) {echo "$stmt\n";}
+						$CL_mancall_ct = mysql_num_rows($rslt);
+						if ($CL_mancall_ct > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$dialstatus =$row[0];
+							$hangup_cause =$row[1];
+							$channel = $dialstatus . "-" . $hangup_cause;
+
+							$call_output = "$uniqueid\n$channel\nERROR";
+							$call_good++;
+
+							### Delete call record
+							$stmt="DELETE from vicidial_auto_calls where callerid='$MDnextCID';";
+								if ($format=='debug') {echo "\n<!-- $stmt -->";}
+							$rslt=mysql_query($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00293',$user,$server_ip,$session_name,$one_mysql_log);}
+							}
+						}
+					}
+				}
+			}
+
+		if ($call_good > 0)
+			{
+			$wait_sec=0;
+			$dead_epochSQL = '';
+			$stmt = "select wait_epoch,wait_sec,dead_epoch from vicidial_agent_log where agent_log_id='$agent_log_id';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00053',$user,$server_ip,$session_name,$one_mysql_log);}
+			$VDpr_ct = mysql_num_rows($rslt);
+			if ($VDpr_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$wait_sec = (($StarTtime - $row[0]) + $row[1]);
+				$now_dead_epoch = $row[2];
+				if ( ($now_dead_epoch > 1000) and ($now_dead_epoch < $StarTtime) )
+					{$dead_epochSQL = ",dead_epoch='$StarTtime'";}
+				}
+			$stmt="UPDATE vicidial_agent_log set wait_sec='$wait_sec',wait_epoch='$StarTtime',talk_epoch='$StarTtime',lead_id='$lead_id' $dead_epochSQL where agent_log_id='$agent_log_id';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00054',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			$stmt="UPDATE vicidial_auto_calls set uniqueid='$uniqueid',channel='$channel' where callerid='$MDnextCID';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00055',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			echo "$call_output";
+			}
+		else
+			{echo "NO\n$DiaL_SecondS\n";}
 		}
 	}
-}
 
 
 
@@ -2481,6 +2544,9 @@ if ($stage == "start")
 
 if ($stage == "end")
 	{
+	$status_dispo = 'DISPO';
+	if ($alt_num_status > 0)
+		{$status_dispo = 'ALTNUM';}
 	##### get call type from vicidial_live_agents table
 	$VLA_inOUT='NONE';
 	$stmt="SELECT comments FROM vicidial_live_agents where user='$user' order by last_update_time desc limit 1;";
@@ -2578,7 +2644,7 @@ if ($stage == "end")
 
 		if ($VLA_inOUT == 'INBOUND')
 			{
-			$stmt = "UPDATE vicidial_closer_log set end_epoch='$StarTtime', length_in_sec='$length_in_sec' where lead_id='$lead_id' and user='$user' and call_date > \"$four_hours_ago\" order by call_date desc limit 1;";
+			$stmt = "UPDATE vicidial_closer_log set end_epoch='$StarTtime', length_in_sec='$length_in_sec', status='$status_dispo' where lead_id='$lead_id' and user='$user' and call_date > \"$four_hours_ago\" order by call_date desc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00062',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -2596,7 +2662,7 @@ if ($stage == "end")
 			}
 
 		#############################################
-		##### 開始 QUEUEMETRICS LOGGING LOOKUP #####
+		##### START QUEUEMETRICS LOGGING LOOKUP #####
 		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00063',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3155,7 +3221,7 @@ if ($stage == "end")
 				}
 
 			##### update the duration and end time in the vicidial_log table
-			$stmt="UPDATE vicidial_log set $SQLterm end_epoch='$StarTtime', length_in_sec='$length_in_sec' where uniqueid='$uniqueid' and lead_id='$lead_id' and user='$user' order by call_date desc limit 1;";
+			$stmt="UPDATE vicidial_log set $SQLterm end_epoch='$StarTtime', length_in_sec='$length_in_sec', status='$status_dispo' where uniqueid='$uniqueid' and lead_id='$lead_id' and user='$user' order by call_date desc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00090',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3204,7 +3270,7 @@ if ($stage == "end")
 			if (strlen($SQLterm) > 0)
 				{
 				##### update the duration and end time in the vicidial_log table
-				$stmt="UPDATE vicidial_closer_log set $SQLterm where lead_id='$lead_id' and call_date > \"$four_hours_ago\" order by call_date desc limit 1;";
+				$stmt="UPDATE vicidial_closer_log set $SQLterm, status='$status_dispo' where lead_id='$lead_id' and call_date > \"$four_hours_ago\" order by call_date desc limit 1;";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00092',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3372,7 +3438,7 @@ if ($stage == "end")
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00098',$user,$server_ip,$session_name,$one_mysql_log);}
 
-				echo "REC_停止|$rec_channels[$loop_count]|$filename[$loop_count]|";
+				echo "REC_STOP|$rec_channels[$loop_count]|$filename[$loop_count]|";
 				if (strlen($filename)>2)
 					{
 					$stmt="SELECT recording_id,start_epoch,vicidial_id,lead_id FROM recording_log where filename='$filename[$loop_count]'";
@@ -3416,7 +3482,7 @@ if ($stage == "end")
 						echo "$recording_id|$length_in_min|";
 
 			#			$fp = fopen ("./recording_debug_$NOW_DATE$txt", "a");
-			#			fwrite ($fp, "$NOW_TIME|錄音_LOG|$filename[$loop_count]|$uniqueid|$lead_id|$user|$inOUT|$VLA_inOUT|$length_in_sec|$VDterm_reason|$VDvicidial_id|$VDvicidial_id|$vicidial_id|$start_epoch|$recording_id|$VDIDselect|\n");
+			#			fwrite ($fp, "$NOW_TIME|RECORD_LOG|$filename[$loop_count]|$uniqueid|$lead_id|$user|$inOUT|$VLA_inOUT|$length_in_sec|$VDterm_reason|$VDvicidial_id|$VDvicidial_id|$vicidial_id|$start_epoch|$recording_id|$VDIDselect|\n");
 			#			fclose($fp);
 						}
 					else {echo "||";}
@@ -4335,7 +4401,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				##### BEGIN special filtering and response for Vtiger account balance function #####
 				$stmt = "SELECT enable_vtiger_integration FROM system_settings;";
 				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00294',$user,$server_ip,$session_name,$one_mysql_log);}
 				$ss_conf_ct = mysql_num_rows($rslt);
 				if ($ss_conf_ct > 0)
 					{
@@ -4358,7 +4424,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 						$stmt="UPDATE vicidial_live_agents set external_timer_action='D1_DIAL',external_timer_action_message='3 minute warning for customer',external_timer_action_seconds='$durationLimitSEC' where user='$user';";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_query($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00295',$user,$server_ip,$session_name,$one_mysql_log);}
 						$vla_update_timer = mysql_affected_rows($link);
 
 						$fp = fopen ("./call_url_log.txt", "a");
@@ -4406,8 +4472,8 @@ if ($ACTION == 'userLOGout')
 			$row=mysql_fetch_row($rslt);
 			$user_group =		trim("$row[0]");
 			}
-		##### Insert a 登出 record into the user log
-		$stmt="INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$user','登出','$campaign','$NOW_TIME','$StarTtime','$user_group');";
+		##### Insert a LOGOUT record into the user log
+		$stmt="INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$user','LOGOUT','$campaign','$NOW_TIME','$StarTtime','$user_group');";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00128',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4505,7 +4571,7 @@ if ($ACTION == 'userLOGout')
 		if ($vla_delete > 0) 
 			{
 			#############################################
-			##### 開始 QUEUEMETRICS LOGGING LOOKUP #####
+			##### START QUEUEMETRICS LOGGING LOOKUP #####
 			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages FROM system_settings;";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00138',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4577,7 +4643,7 @@ if ($ACTION == 'userLOGout')
 
 ################################################################################
 ### updateDISPO - update the vicidial_list table to reflect the agent choice of
-###               call disposition for that leand
+###               call disposition for that lead
 ################################################################################
 if ($ACTION == 'updateDISPO')
 	{
@@ -5031,7 +5097,7 @@ if ($ACTION == 'updateDISPO')
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00158',$user,$server_ip,$session_name,$one_mysql_log);}
 		}
 
-	####### 開始 Vtiger Call Logging #######
+	####### START Vtiger Call Logging #######
 	$stmt = "SELECT enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url FROM system_settings;";
 	$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00197',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -5420,7 +5486,7 @@ if ($ACTION == 'updateDISPO')
 	####### END Vtiger Call Logging #######
 
 	#############################################
-	##### 開始 QUEUEMETRICS LOGGING LOOKUP #####
+	##### START QUEUEMETRICS LOGGING LOOKUP #####
 	$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00159',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -5616,7 +5682,7 @@ if ($ACTION == 'updateDISPO')
 
 		$stmt = "SELECT enable_vtiger_integration FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00296',$user,$server_ip,$session_name,$one_mysql_log);}
 		$ss_conf_ct = mysql_num_rows($rslt);
 		if ($ss_conf_ct > 0)
 			{
@@ -5792,7 +5858,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 		if ( ($affected_rows > 0) or ($comments == 'NO_STATUS_CHANGE') )
 			{
 			#############################################
-			##### 開始 QUEUEMETRICS LOGGING LOOKUP #####
+			##### START QUEUEMETRICS LOGGING LOOKUP #####
 			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00167',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -5994,7 +6060,7 @@ if ($ACTION == 'PauseCodeSubmit')
 		if ($affected_rows > 0) 
 			{
 			#############################################
-			##### 開始 QUEUEMETRICS LOGGING LOOKUP #####
+			##### START QUEUEMETRICS LOGGING LOOKUP #####
 			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages FROM system_settings;";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00176',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -6503,7 +6569,7 @@ if ($format=='debug')
 {
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $StarTtime);
-echo "\n<!-- 運行腳本: $RUNtime秒 -->";
+echo "\n<!-- 運行腳本: $RUNtime 秒 -->";
 echo "\n</body>\n</html>\n";
 }
 	

@@ -138,7 +138,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- χρόνος εκτέλεσης: $RUNtimeδευτερόλεπτα -->";
+	echo "\n<!-- χρόνος εκτέλεσης: $RUNtime δευτερόλεπτα -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

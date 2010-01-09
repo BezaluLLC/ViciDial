@@ -470,7 +470,7 @@ if ($ADD==5)
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $StarTtime);
-if ($format=='table') {echo "\n<!-- время выполнения скрипта: $RUNtimeсекунды -->";}
+if ($format=='table') {echo "\n<!-- время выполнения скрипта: $RUNtime секунды -->";}
 if ($format=='table') {echo "\n</body>\n</html>\n";}
 	
 exit; 

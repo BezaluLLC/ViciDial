@@ -49,12 +49,13 @@
 # 90908-1037 - Added DEAD call logging
 # 91130-2022 - Added code for manager override of in-group selection
 # 91228-1341 - Added API fields update functions
+# 100109-1337 - Fixed Manual dial live call detection
 #
 
-$version = '2.2.0-24';
-$build = '91228-1341';
+$version = '2.2.0-25';
+$build = '100109-1337';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=17;
+$mysql_log_count=32;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -347,6 +348,42 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 					$one_mysql_log=0;
 					$retry_count++;
 					}
+				##### BEGIN DEAD logging section #####
+				### find whether the call the agent is em is hung up
+				$stmt="SELECT count(*) from vicidial_auto_calls where callerid='$Acallerid';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03029',$user,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysql_fetch_row($rslt);
+				$AcalleridCOUNT=$row[0];
+
+				if ( ($AcalleridCOUNT < 1) and (eregi("INCALL",$Astatus)) and (strlen($Aagent_log_id) > 0) )
+					{
+					$DEADcustomer++;
+					### find whether the agent log record has already logged DEAD
+					$stmt="SELECT count(*) from vicidial_agent_log where agent_log_id='$Aagent_log_id' and ( (dead_epoch IS NOT NULL) or (dead_epoch > 10000) );";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03030',$user,$server_ip,$session_name,$one_mysql_log);}
+					$row=mysql_fetch_row($rslt);
+					$Aagent_log_idCOUNT=$row[0];
+					
+					if ($Aagent_log_idCOUNT < 1)
+						{
+						$NEWdead_epoch = date("U");
+						$deadNOW_TIME = date("Y-m-d H:i:s");
+						$stmt="UPDATE vicidial_agent_log set dead_epoch='$NEWdead_epoch' where agent_log_id='$Aagent_log_id';";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03031',$user,$server_ip,$session_name,$one_mysql_log);}
+
+						$stmt="UPDATE vicidial_live_agents set last_state_change='$deadNOW_TIME' where agent_log_id='$Aagent_log_id';";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03032',$user,$server_ip,$session_name,$one_mysql_log);}
+						}
+					}
+				##### END DEAD logging section #####
 				}
 
 			### grab the API hangup and API dispo fields in vicidial_live_agents
@@ -465,7 +502,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 
 			### CHECK TO SEE IF AGENT IS WITHIN THEIR SHIFT IF RESTRICTED, IF NOT, OUTPUT ERROR
 			$Ashift_logout=0;
-			if ( ( (ereg("ALL",$shift_enforcement)) and (!ereg("OFF|COMEÇO",$VU_agent_shift_enforcement_override)) ) or (ereg("ALL",$VU_agent_shift_enforcement_override)) )
+			if ( ( (ereg("ALL",$shift_enforcement)) and (!ereg("OFF|START",$VU_agent_shift_enforcement_override)) ) or (ereg("ALL",$VU_agent_shift_enforcement_override)) )
 				{
 				$shift_ok=0;
 				if (strlen($LOGgroup_shiftsSQL) < 3)
@@ -556,7 +593,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			{
 			$loop_count++; $total_conf++;
 			$row=mysql_fetch_row($rslt);
-			$CanaletaA[$total_conf] = "$row[0]";
+			$ChannelA[$total_conf] = "$row[0]";
 			if ($format=='debug') {echo "\n<!-- $row[0] -->";}
 			}
 		$stmt="SELECT channel FROM live_channels where server_ip = '$server_ip' and extension = '$conf_exten';";
@@ -570,7 +607,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			{
 			$loop_count++; $total_conf++;
 			$row=mysql_fetch_row($rslt);
-			$CanaletaA[$total_conf] = "$row[0]";
+			$ChannelA[$total_conf] = "$row[0]";
 			if ($format=='debug') {echo "\n<!-- $row[0] -->";}
 			}
 		}
@@ -582,8 +619,8 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 		while($total_conf > $counter)
 		{
 			$counter++;
-			$countecho = "$countecho$CanaletaA[$counter] ~";
-		#	echo "$CanaletaA[$counter] ~";
+			$countecho = "$countecho$ChannelA[$counter] ~";
+		#	echo "$ChannelA[$counter] ~";
 		}
 
 	echo "$countecho\n";
@@ -616,7 +653,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- runtime do certificado: $RUNtimesegundos -->";
+	echo "\n<!-- runtime do certificado: $RUNtime segundos -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

@@ -132,7 +132,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- czas działania skyptu: $RUNtimesekundy -->";
+	echo "\n<!-- czas działania skyptu: $RUNtime sekundy -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

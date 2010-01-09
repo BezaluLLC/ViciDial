@@ -313,7 +313,7 @@ CB Comments|Commentaires du Rappel|
 Title|Titre|
 Your Status|Votre Statut|
  STATUS| STATUT|
-RESET|REINITIALISATION|
+ RESET| REINITIALISATION|
 CLEAR FORM|EFFACER LE FORMULAIRE|
 SUBMIT|VALIDER|
 Incoming|Entrant|
@@ -322,7 +322,7 @@ Called|Appelé|
 Campaign|Campagne|
 Status|Statut|
 Inserted|Inséré|
- seconds|secondes|
+ seconds| secondes|
 HELP|AIDE|
 Login|Ouverture de Session|
 User|Utilisateur|
@@ -330,15 +330,13 @@ Password|Mot de passe|
 VERSION|VERSION|
 BUILD|BUILD|
 Server|Serveur|
-RECORD|ENREGISTREMENT|
-HANGUP|RACCROCHER|
+RECORD |ENREGISTREMENT |
+>HANGUP|>RACCROCHER|
 >XFER|>TRANSFERT|
 PARK|MISE EN ATT|
 IN-NUMBER|IN-NUMBER|
 NUMBER|NOMBRE|
-LENGTH|LONGUEUR|
 CALLERID|APPELANT|
-CallerID|Appelant|
  CALL| APPEL|
 PICKUP|INTERCEPTER|
 CONFERENCE|CONFÉRENCE|
@@ -346,8 +344,8 @@ Refresh|Rafraichir|
 Send DTMF|Envoyez DTMF|
 ORDER|ORDRE|
  on | sur |
-LOGOUT|DÉCONNEXION|
-Channel|Canal|
+>LOGOUT|>DÉCONNEXION|
+ Channel| Canal|
 Extensions|Extensions|
 Conferences|Conférences|
 Conference|Conférence|
@@ -357,8 +355,6 @@ Welcome|Bienvenue|
 VOICEMAIL|Boite Vocale|
  NEW| NOUVEAU|
  OLD| ANCIEN|
-STOP|ARRÊT|
-START|DEBUT|
  Pause | Pause |
 Resume|Résumé|
 Faster|Plus rapidement|
@@ -366,7 +362,6 @@ Slower|Plus lentement|
 Initializing|Initialisation|
 Invalid|Invalide|
 Username|Username|
-CUSTOM|COUTUME|
 Notes|Notes|
 First|Prenom|
 MI: |Mi:|

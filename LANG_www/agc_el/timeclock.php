@@ -214,17 +214,17 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		else
 			{
 			### No vicidial_timeclock_status record found, insert one
-			$stmt="INSERT INTO vicidial_timeclock_status set status='ΕΝΑΡΞΗ', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip';";
+			$stmt="INSERT INTO vicidial_timeclock_status set status='START', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
-				$status='ΕΝΑΡΞΗ';
+				$status='START';
 				$totTIME_HMS='0:00:00';
 			$affected_rows = mysql_affected_rows($link);
 			print "<!-- ΝΕΟ vicidial_timeclock_status record inserted for $user:   |$affected_rows| -->\n";
 			}
-		if ( ($last_action_sec < 30) and ($status != 'ΕΝΑΡΞΗ') )
+		if ( ($last_action_sec < 30) and ($status != 'START') )
 			{
-			### You cannot log in or out within 30δευτερόλεπτα of your last login/logout
+			### You cannot log in or out within 30 δευτερόλεπτα of your last login/logout
 			$VDdisplayMESSAGE = "Δεν μπορείτε να συνδεθείτε ή να αναφέρονται μέσα σε 30 δευτερόλεπτα από την τελευταία σας login ή logout";
 
 			echo"<HTML><HEAD>\n";
@@ -262,7 +262,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 		if ($commit == 'YES')
 			{
-			if ( ( ($status=='AUTOΑΠΟΣΥΝΔΕΣΗ') or ($status=='ΕΝΑΡΞΗ') or ($status=='ΑΠΟΣΥΝΔΕΣΗ') ) and ($stage=='login') )
+			if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='login') )
 				{
 				$VDdisplayMESSAGE = "You have now logged-in";
 				$LOGtimeMESSAGE = "You logged in at $NOW_TIME";
@@ -296,7 +296,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				$LOGtimeMESSAGE = "Έχετε αποσυνδεθεί από την$NOW_TIME<BR>Ποσό φορά που ήταν συνδεδεμένος στο:$totTIME_HMS";
 
 				### Add a record to the timeclock log
-				$stmt="INSERT INTO vicidial_timeclock_log set event='ΑΠΟΣΥΝΔΕΣΗ', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
+				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$affected_rows = mysql_affected_rows($link);
@@ -311,14 +311,14 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				print "<!-- vicidial_timeclock_log record updated for $user:   |$affected_rows| -->\n";
 
 				### Update the user's timeclock status record
-				$stmt="UPDATE vicidial_timeclock_status set status='ΑΠΟΣΥΝΔΕΣΗ', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip' where user='$user';";
+				$stmt="UPDATE vicidial_timeclock_status set status='LOGOUT', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip' where user='$user';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$affected_rows = mysql_affected_rows($link);
 				print "<!-- vicidial_timeclock_status record updated for $user:   |$affected_rows| -->\n";
 
 				### Add a record to the timeclock audit log
-				$stmt="INSERT INTO vicidial_timeclock_audit_log set timeclock_id='$timeclock_id', event='ΑΠΟΣΥΝΔΕΣΗ', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
+				$stmt="INSERT INTO vicidial_timeclock_audit_log set timeclock_id='$timeclock_id', event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$affected_rows = mysql_affected_rows($link);
@@ -332,7 +332,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				print "<!-- vicidial_timeclock_audit_log record updated for $user:   |$affected_rows| -->\n";
 				}
 
-			if ( ( ( ($status=='AUTOΑΠΟΣΥΝΔΕΣΗ') or ($status=='ΕΝΑΡΞΗ') or ($status=='ΑΠΟΣΥΝΔΕΣΗ') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
+			if ( ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
 				{echo "ERROR: timeclock καταχώρηση αρχείου καταγραφής που έχουν ήδη πραγματοποιηθεί:$status|$stage";  exit;}
 
 			if ($referrer=='agent') 
@@ -366,7 +366,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 
 
-		if ( ($status=='AUTOΑΠΟΣΥΝΔΕΣΗ') or ($status=='ΕΝΑΡΞΗ') or ($status=='ΑΠΟΣΥΝΔΕΣΗ') )
+		if ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') )
 			{
 			$VDdisplayMESSAGE = "Ο χρόνος από την τελευταία φορά που είναι συνδεδεμένος στο:$totTIME_HMS";
 			$log_action = 'login';
@@ -377,8 +377,8 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			{
 			$VDdisplayMESSAGE = "Χρονικό διάστημα σας έχει συνδεθεί σε:$totTIME_HMS";
 			$log_action = 'logout';
-			$button_name = 'ΑΠΟΣΥΝΔΕΣΗ';
-			$LOGtimeMESSAGE = "Μπορείτε συνδεδεμένος στην διεύθυνση: $last_action_date<BR>Χρονικό διάστημα σας έχει συνδεθεί σε:$totTIME_HMS<BR><BR>Κάντε κλικ παρακάτω για να ΑΠΟΣΥΝΔΕΣΗ log-out";
+			$button_name = 'LOGOUT';
+			$LOGtimeMESSAGE = "Μπορείτε συνδεδεμένος στην διεύθυνση: $last_action_date<BR>Χρονικό διάστημα σας έχει συνδεθεί σε:$totTIME_HMS<BR><BR>Κάντε κλικ παρακάτω για να LOGOUT log-out";
 			}
 
 		echo"<HTML><HEAD>\n";

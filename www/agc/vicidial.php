@@ -172,7 +172,7 @@
 # 80331-1433 - Added second transfer try for VICIDIAL transfers/hangups on manual dial calls
 # 80402-0121 - Fixes for manual dial transfers on some systems
 # 80407-2112 - Work on adding phone login load balancing across servers
-# 80416-0559 - Added ability to log computer_ip at login, set the $PhoneSComPIP variable
+# 80416-0559 - Added ability to log computer_ip at login, set the $PhonESComPIP variable
 # 80428-0413 - UTF8 changes and testing
 # 80505-0054 - Added multi-phones load-balanced alias option
 # 80507-0932 - Fixed Script display bug (+ instead of space)
@@ -270,10 +270,11 @@
 # 100103-1250 - Added 3 more conf-presets, list ID override presets and call start/dispo URLs
 # 100107-0108 - Added dynamic screen size based on login screen browser dimensions
 # 100109-0801 - Added ALTNUM alt number status, fixed alt number dialing from setting
+# 100109-1338 - Fixed Manual dial live call detection
 #
 
-$version = '2.2.0-248';
-$build = '100109-0801';
+$version = '2.2.0-249';
+$build = '100109-1338';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -404,7 +405,7 @@ $LogiNAJAX				= '1';	# set to 1 to do lookups on campaigns for login
 $HidEMonitoRSessionS	= '1';	# set to 1 to hide remote monitoring channels from "session calls"
 $hangup_all_non_reserved= '1';	# set to 1 to force hangup all non-reserved channels upon Hangup Customer
 $LogouTKicKAlL			= '1';	# set to 1 to hangup all calls in session upon agent logout
-$PhoneSComPIP			= '1';	# set to 1 to log computer IP to phone if blank, set to 2 to force log each login
+$PhonESComPIP			= '1';	# set to 1 to log computer IP to phone if blank, set to 2 to force log each login
 $DefaulTAlTDiaL			= '0';	# set to 1 to enable ALT DIAL by default if enabled for the campaign
 $AgentAlert_allowed		= '1';	# set to 1 to allow Agent alert option
 $disable_blended_checkbox='0';	# set to 1 to disable the BLENDED checkbox from the in-group chooser screen
@@ -1719,7 +1720,7 @@ else
 		{
 		$no_empty_session_warnings=1;
 		}
-	if ($PhoneSComPIP == '1')
+	if ($PhonESComPIP == '1')
 		{
 		if (strlen($computer_ip) < 4)
 			{
@@ -1729,7 +1730,7 @@ else
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01026',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			}
 		}
-	if ($PhoneSComPIP == '2')
+	if ($PhonESComPIP == '2')
 		{
 		$stmt="UPDATE phones SET computer_ip='$ip' where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 		if ($DB) {echo "|$stmt|\n";}
@@ -4113,7 +4114,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					reselect_alt_dial = 1;
 					alt_dial_active = 1;
 					alt_dial_status_display = 1;
-					var man_status = "Dial Alt Phone Number: <a href=\"#\" onclick=\"ManualDialOnly('MaiNPhonE')\"><font class=\"preview_text\">MAIN PHONE</font></a> or <a href=\"#\" onclick=\"ManualDialOnly('ALTPhoneE')\"><font class=\"preview_text\">ALT PHONE</font></a> or <a href=\"#\" onclick=\"ManualDialOnly('AddresS3')\"><font class=\"preview_text\">ADDRESS3</font></a> or <a href=\"#\" onclick=\"ManualDialAltDonE()\"><font class=\"preview_text_red\">FINISH LEAD</font></a>"; 
+					var man_status = "Dial Alt Phone Number: <a href=\"#\" onclick=\"ManualDialOnly('MaiNPhonE')\"><font class=\"preview_text\">MAIN PHONE</font></a> or <a href=\"#\" onclick=\"ManualDialOnly('ALTPhonE')\"><font class=\"preview_text\">ALT PHONE</font></a> or <a href=\"#\" onclick=\"ManualDialOnly('AddresS3')\"><font class=\"preview_text\">ADDRESS3</font></a> or <a href=\"#\" onclick=\"ManualDialAltDonE()\"><font class=\"preview_text_red\">FINISH LEAD</font></a>"; 
 					document.getElementById("MainStatuSSpan").innerHTML = man_status;
 					}
 				}
@@ -4556,7 +4557,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		if (xmlhttp) 
 			{ 
-			manDiaLlook_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLlookCaLL&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&MDnextCID=" + CIDcheck + "&agent_log_id=" + agent_log_id + "&lead_id=" + document.vicidial_form.lead_id.value;
+			manDiaLlook_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLlookCaLL&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&MDnextCID=" + CIDcheck + "&agent_log_id=" + agent_log_id + "&lead_id=" + document.vicidial_form.lead_id.value + "&DiaL_SecondS=" + MD_ring_secondS;
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(manDiaLlook_query); 
@@ -4590,6 +4591,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							{
 							XDuniqueid = MDlookResponse_array[0];
 							XDchannel = MDlookResponse_array[1];
+							var XDalert = MDlookResponse_array[2];
+							
+							if (XDalert == 'ERROR')
+								{
+								var DiaLAlerTMessagE = "Call Rejected: " + XDchannel;
+								TimerActionRun("DiaLAlerT",DiaLAlerTMessagE);
+								}
 							if ( (XDchannel.match(regMDL)) && (asterisk_version != '1.0.8') && (asterisk_version != '1.0.9') && (MD_ring_secondS < 10) )
 								{
 								// bad grab of Local channel, try again
@@ -4626,6 +4634,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							{
 							MDuniqueid = MDlookResponse_array[0];
 							MDchannel = MDlookResponse_array[1];
+							var MDalert = MDlookResponse_array[2];
+							
+							if (MDalert == 'ERROR')
+								{
+								var DiaLAlerTMessagE = "Call Rejected: " + MDchannel;
+								TimerActionRun("DiaLAlerT",DiaLAlerTMessagE);
+								}
 							if ( (MDchannel.match(regMDL)) && (asterisk_version != '1.0.8') && (asterisk_version != '1.0.9') )
 								{
 								// bad grab of Local channel, try again
@@ -5757,7 +5772,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		all_record = 'NO';
 		all_record_count=0;
 		var usegroupalias=0;
-		if (taskaltnum == 'ALTPhoneE')
+		if (taskaltnum == 'ALTPhonE')
 			{
 			var manDiaLonly_num = document.vicidial_form.alt_phone.value;
 			lead_dial_number = document.vicidial_form.alt_phone.value;
@@ -7381,7 +7396,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					reselect_alt_dial = 1;
 					if (altdispo == 'ALTPH2')
 						{
-						ManualDialOnly('ALTPhoneE');
+						ManualDialOnly('ALTPhonE');
 						}
 					else
 						{
@@ -7419,7 +7434,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					reselect_alt_dial = 1;
 					if (altdispo == 'ALTPH2')
 						{
-						ManualDialOnly('ALTPhoneE');
+						ManualDialOnly('ALTPhonE');
 						}
 					else
 						{
@@ -9541,46 +9556,54 @@ else
 
 // ################################################################################
 // Finish the wrapup timer early
-	function TimerActionRun()
+	function TimerActionRun(taskaction,taskdialalert)
 		{
-		if ( (timer_action_message.length > 0) || (timer_action == 'MESSAGE_ONLY') )
+		if (taskaction == 'DiaLAlerT')
 			{
-			document.getElementById("TimerContentSpan").innerHTML = "<b>TIMER NOTIFICATION: " + timer_action_seconds + " seconds<BR><BR>" + timer_action_message + "</b>";
+			document.getElementById("TimerContentSpan").innerHTML = "<b>DIAL ALERT:<BR><BR>" + taskdialalert + "</b>";
 
 			showDiv('TimerSpan');
 			}
+		else
+			{
+			if ( (timer_action_message.length > 0) || (timer_action == 'MESSAGE_ONLY') )
+				{
+				document.getElementById("TimerContentSpan").innerHTML = "<b>TIMER NOTIFICATION: " + timer_action_seconds + " seconds<BR><BR>" + timer_action_message + "</b>";
 
-		if (timer_action == 'WEBFORM')
-			{
-			WebFormRefresH('NO','YES');
-			window.open(TEMP_VDIC_web_form_address, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+				showDiv('TimerSpan');
+				}
+
+			if (timer_action == 'WEBFORM')
+				{
+				WebFormRefresH('NO','YES');
+				window.open(TEMP_VDIC_web_form_address, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+				}
+			if (timer_action == 'WEBFORM2')
+				{
+				WebFormTwoRefresH('NO','YES');
+				window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+				}
+			if (timer_action == 'D1_DIAL')
+				{
+				DtMf_PreSet_a_DiaL();
+				}
+			if (timer_action == 'D2_DIAL')
+				{
+				DtMf_PreSet_b_DiaL();
+				}
+			if (timer_action == 'D3_DIAL')
+				{
+				DtMf_PreSet_c_DiaL();
+				}
+			if (timer_action == 'D4_DIAL')
+				{
+				DtMf_PreSet_d_DiaL();
+				}
+			if (timer_action == 'D5_DIAL')
+				{
+				DtMf_PreSet_e_DiaL();
+				}
 			}
-		if (timer_action == 'WEBFORM2')
-			{
-			WebFormTwoRefresH('NO','YES');
-			window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
-			}
-		if (timer_action == 'D1_DIAL')
-			{
-			DtMf_PreSet_a_DiaL();
-			}
-		if (timer_action == 'D2_DIAL')
-			{
-			DtMf_PreSet_b_DiaL();
-			}
-		if (timer_action == 'D3_DIAL')
-			{
-			DtMf_PreSet_c_DiaL();
-			}
-		if (timer_action == 'D4_DIAL')
-			{
-			DtMf_PreSet_d_DiaL();
-			}
-		if (timer_action == 'D5_DIAL')
-			{
-			DtMf_PreSet_e_DiaL();
-			}
-		
 		timer_action = 'NONE';
 		}
 
@@ -9844,7 +9867,7 @@ else
 					}
 				if ( (timer_action != 'NONE') && (timer_action.length > 3) && (timer_action_seconds <= VD_live_call_secondS) && (timer_action_seconds >= 0) )
 					{
-					TimerActionRun();
+					TimerActionRun('','');
 					}
 				if (HKdispo_display > 0)
 					{
@@ -10267,7 +10290,7 @@ else
 						{
 						document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
 						}
-					if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') )
+					if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'PRESET_5') )
 						{
 						document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
 						}
@@ -10879,7 +10902,7 @@ if ($agent_display_dialable_leads > 0)
 		<?php
 		}
 	?>
-	<a href="#" onclick="CloserSelectContent_create();return false;">RESET</a> | 
+	<a href="#" onclick="CloserSelectContent_create();return false;"> RESET </a> | 
 	<a href="#" onclick="CloserSelect_submit();return false;">SUBMIT</a>
 	<BR><BR><BR><BR> &nbsp; 
 	</TD></TR></TABLE>
@@ -10889,7 +10912,7 @@ if ($agent_display_dialable_leads > 0)
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> TERRITORY SELECTION <BR>
 	<span id="TerritorySelectContent"> Territory Selection </span>
 	<input type=hidden name=TerritorySelectList><BR>
-	<a href="#" onclick="TerritorySelectContent_create();return false;">RESET</a> | 
+	<a href="#" onclick="TerritorySelectContent_create();return false;"> RESET </a> | 
 	<a href="#" onclick="TerritorySelect_submit();return false;">SUBMIT</a>
 	<BR><BR><BR><BR> &nbsp; 
 	</TD></TR></TABLE>
@@ -10897,8 +10920,8 @@ if ($agent_display_dialable_leads > 0)
 
 <span style="position:absolute;left:0px;top:0px;z-index:55;" id="NothingBox">
     <BUTTON Type=button name="inert_button"><img src="./images/blank.gif"></BUTTON>
-	<span id="DiaLLeaDPrevieWHide">Channel</span>
-	<span id="DiaLDiaLAltPhonEHide">Channel</span>
+	<span id="DiaLLeaDPrevieWHide"> Channel</span>
+	<span id="DiaLDiaLAltPhonEHide"> Channel</span>
 	<?php
 	if (!$agentonly_callbacks)
 		{echo "<input type=checkbox name=CallBackOnlyMe size=1 value=\"0\"> MY CALLBACK ONLY <BR>";}

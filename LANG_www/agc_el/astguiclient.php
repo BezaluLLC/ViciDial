@@ -718,7 +718,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		}
 
 // ################################################################################
-// LIVE TRUNK LIST FOR ΚΛΕΙΣΙΜΟ/HIJACK MENU FUNCTIONS
+// LIVE TRUNK LIST FOR HANGUP/HIJACK MENU FUNCTIONS
 	function refresh_busytrunkhangup()
 		{
 		document.getElementById("TrunkHangupContent").innerHTML = Nactiveext;
@@ -765,7 +765,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		}
 
 // ################################################################################
-// LIVE LOCAL LIST FOR ΚΛΕΙΣΙΜΟ/HIJACK MENU FUNCTIONS
+// LIVE LOCAL LIST FOR HANGUP/HIJACK MENU FUNCTIONS
 	function refresh_busylocalhangup()
 		{
 		document.getElementById("LocalHangupContent").innerHTML = Nactiveext;
@@ -1386,7 +1386,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=3;
 					if (live_calls > 0)
 						{
-						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>ΕΝΕΡΓΕΣ ΚΛΗΣΕΙΣ ΣΕ ΑΥΤΟ ΤΟ ΤΗΛΕΦΩΝΟ:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">ΚΑΝΑΛΙ ΠΕΛΑΤΩΝ</td><td><font class=\"log_title\">ΑΠΟΜΑΚΡΟ ΚΑΝΑΛΙ</td><td><font class=\"log_title\">ΕΓΓΡΑΦΗ</td><td><font class=\"log_title\">ΚΛΕΙΣΙΜΟ</td><td><font class=\"log_title\">XFER</td><td><font class=\"log_title\">ΣΤΑΘΜΕΥΣΗ</td></tr>";
+						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>ΕΝΕΡΓΕΣ ΚΛΗΣΕΙΣ ΣΕ ΑΥΤΟ ΤΟ ΤΗΛΕΦΩΝΟ:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">ΚΑΝΑΛΙ ΠΕΛΑΤΩΝ</td><td><font class=\"log_title\">ΑΠΟΜΑΚΡΟ ΚΑΝΑΛΙ</td><td><font class=\"log_title\">RECORD</td><td><font class=\"log_title\">ΚΛΕΙΣΙΜΟ</td><td><font class=\"log_title\">XFER</td><td><font class=\"log_title\">ΣΤΑΘΜΕΥΣΗ</td></tr>";
 						if ( (LCAcount > live_calls)  || (LCAcount < live_calls) )
 							{
 							LCAe[0]=''; LCAe[1]=''; LCAe[2]=''; LCAe[3]=''; LCAe[4]=''; LCAe[5]=''; 
@@ -1533,7 +1533,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=0;
 					if (out_calls > 0)
 						{
-						var out_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> ΗΜΕΡΟΜΗΝΙΑ/ΧΡΟΝΟΣ ΚΛΗΣΗΣ</td><td><font class=\"log_title\">ΑΡΙΘΜΟΣ</td><td align=right><font class=\"log_title\">ΜΗΚΟΣ (M:SS)</td><td><font class=\"log_title\"> </td></tr>"
+						var out_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> ΗΜΕΡΟΜΗΝΙΑ/ΧΡΟΝΟΣ ΚΛΗΣΗΣ</td><td><font class=\"log_title\">ΑΡΙΘΜΟΣ</td><td align=right><font class=\"log_title\">LENGTH (M:SS)</td><td><font class=\"log_title\"> </td></tr>"
 						while (loop_ct < out_calls)
 							{
 							loop_ct++;
@@ -1561,7 +1561,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=0;
 					if (in_calls > 0)
 						{
-						var in_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> ΗΜΕΡΟΜΗΝΙΑ/ΧΡΟΝΟΣ ΚΛΗΣΗΣ</td><td><font class=\"log_title\">ΣΕ-ΑΡΙΘΜΟ</td><td COLSPAN=2><font class=\"log_title\">CALLERID</td><td align=right><font class=\"log_title\">ΜΗΚΟΣ</td><td><font class=\"log_title\"> </td></tr>"
+						var in_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> ΗΜΕΡΟΜΗΝΙΑ/ΧΡΟΝΟΣ ΚΛΗΣΗΣ</td><td><font class=\"log_title\">ΣΕ-ΑΡΙΘΜΟ</td><td COLSPAN=2><font class=\"log_title\">CALLERID</td><td align=right><font class=\"log_title\">LENGTH</td><td><font class=\"log_title\"> </td></tr>"
 						while (loop_ct < in_calls)
 							{
 							loop_ct++;
@@ -2734,7 +2734,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:0px;top:12px;z-index:29;" id="TrunkHangupBox">
-    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> TRUNK ΚΛΕΙΣΙΜΟ <BR><BR>
+    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> TRUNK HANGUP <BR><BR>
 	<span id="TrunkHangupContent"> Active Trunks Menu </span><BR>
 	<span id="TrunkHangup_HUlink"><a href="#" onclick="busyhangup_send_hangup('Trunk');return false;">Κλείσιμο Κορμού</a> &nbsp; | &nbsp; </span>
 	<span id="TrunkHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Trunk','HIJACK');return false;">Κλέψιμο Κορμού</a> &nbsp; | &nbsp; </span>
@@ -2758,7 +2758,7 @@ echo "</head>\n";
 <span style="position:absolute;left:80px;top:12px;z-index:42;" id="MainXfeRBox">
 	<input type=hidden name=H_XfeR_channel>
 	<input type=hidden name=M_XfeR_channel>
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> ΜΕΤΑΦΟΡΑ ΕΝΕΡΓΗΣ ΚΛΗΣΗΣ</b> <BR>Κανάλι προς μεταφορά: <span id="MainXfeRChanneL">Κανάλι</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> ΜΕΤΑΦΟΡΑ ΕΝΕΡΓΗΣ ΚΛΗΣΗΣ</b> <BR>Κανάλι προς μεταφορά: <span id="MainXfeRChanneL">Channel</span><BR></tr>
 	<tr><td>Τηλ.συνδέσεις:<BR><span id="MainXfeRContent"> Επιλογές τηλ. συνδέσεων </span></td>
 	<td>
 	<BR>
@@ -2772,7 +2772,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:80px;top:12px;z-index:43;" id="LocalDialBox">
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> ΤΟΠΙΚΕΣ τηλ. συνδέσεις Κλήσεως</b> <BR>Τηλέφωνο που καλεί από: <span id="LocalDialChanneL">Κανάλι</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> ΤΟΠΙΚΕΣ τηλ. συνδέσεις Κλήσεως</b> <BR>Τηλέφωνο που καλεί από: <span id="LocalDialChanneL">Channel</span><BR></tr>
 	<tr><td>Τηλ.συνδέσεις:<BR><span id="LocalDialContent"> Επιλογές τηλ. συνδέσεων </span></td>
 	<td>
 	<BR>
@@ -2839,7 +2839,7 @@ echo "</head>\n";
 <span style="position:absolute;left:0px;top:46px;z-index:20;" id="ActiveLinesPanel">
 <table border=0 BGCOLOR="#CDE0C2" width=640>
 <tr><td colspan=3>
-<a href="#" onclick="pause();return false;">ΣΤΑΣΗ</a> | <a href="#" onclick="start();return false;">ΕΝΑΡΞΗ</a> &nbsp; &nbsp; Ρυθμός ανανέωσης: <span id="refresh_rate">1000 ms</span> <a href="#" onclick="faster();return false;">Γρηγορότερα</a> | <a href="#" onclick="slower();return false;">Πιό αργά</a></p>
+<a href="#" onclick="pause();return false;">STOP</a> | <a href="#" onclick="start();return false;">START</a> &nbsp; &nbsp; Ρυθμός ανανέωσης: <span id="refresh_rate">1000 ms</span> <a href="#" onclick="faster();return false;">Γρηγορότερα</a> | <a href="#" onclick="slower();return false;">Πιό αργά</a></p>
 	<div id="status"><em>Αρχή..</em></div>
 </td></tr>
 <tr><td>Ενεργές τηλ. συνδέσεις <BR> 

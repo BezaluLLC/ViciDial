@@ -112,7 +112,7 @@ cpu_idle_percent SMALLINT(3) UNSIGNED NOT NULL default '0',
 disk_usage VARCHAR(255) default '1',
 sounds_update ENUM('Y','N') default 'N',
 vicidial_recording_limit MEDIUMINT(8) default '60',
-carrier_logging_active ENUM('Y','N') default 'N',
+carrier_logging_active ENUM('Y','N') default 'Y',
 vicidial_balance_rank TINYINT(3) UNSIGNED default '0',
 rebuild_music_on_hold ENUM('Y','N') default 'Y',
 active_agent_login_server ENUM('Y','N') default 'Y',
@@ -2024,7 +2024,9 @@ CREATE TABLE vicidial_log_archive LIKE vicidial_log;
 CREATE TABLE vicidial_agent_log_archive LIKE vicidial_agent_log; 
 ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT NULL;
 
-UPDATE system_settings SET db_schema_version='1191',db_schema_update_date=NOW();
+CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
+
+UPDATE system_settings SET db_schema_version='1193',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

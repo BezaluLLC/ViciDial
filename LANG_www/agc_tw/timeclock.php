@@ -214,17 +214,17 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		else
 			{
 			### No vicidial_timeclock_status record found, insert one
-			$stmt="INSERT INTO vicidial_timeclock_status set status='開始', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip';";
+			$stmt="INSERT INTO vicidial_timeclock_status set status='START', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
-				$status='開始';
+				$status='START';
 				$totTIME_HMS='0:00:00';
 			$affected_rows = mysql_affected_rows($link);
 			print "<!-- 新 vicidial_timeclock_status record inserted for $user:   |$affected_rows| -->\n";
 			}
-		if ( ($last_action_sec < 30) and ($status != '開始') )
+		if ( ($last_action_sec < 30) and ($status != 'START') )
 			{
-			### You cannot log in or out within 30秒 of your last login/logout
+			### You cannot log in or out within 30 秒 of your last login/logout
 			$VDdisplayMESSAGE = "您不能在前次登出或登入後30秒內再次登出或登入";
 
 			echo"<HTML><HEAD>\n";
@@ -262,7 +262,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 		if ($commit == 'YES')
 			{
-			if ( ( ($status=='AUTO登出') or ($status=='開始') or ($status=='登出') ) and ($stage=='login') )
+			if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='login') )
 				{
 				$VDdisplayMESSAGE = "You have now logged-in";
 				$LOGtimeMESSAGE = "You logged in at $NOW_TIME";
@@ -296,7 +296,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				$LOGtimeMESSAGE = "您登出在$NOW_TIME<BR>您登入的時間(多久時間): $totTIME_HMS";
 
 				### Add a record to the timeclock log
-				$stmt="INSERT INTO vicidial_timeclock_log set event='登出', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
+				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$affected_rows = mysql_affected_rows($link);
@@ -311,14 +311,14 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				print "<!-- vicidial_timeclock_log record updated for $user:   |$affected_rows| -->\n";
 
 				### Update the user's timeclock status record
-				$stmt="UPDATE vicidial_timeclock_status set status='登出', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip' where user='$user';";
+				$stmt="UPDATE vicidial_timeclock_status set status='LOGOUT', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip' where user='$user';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$affected_rows = mysql_affected_rows($link);
 				print "<!-- vicidial_timeclock_status record updated for $user:   |$affected_rows| -->\n";
 
 				### Add a record to the timeclock audit log
-				$stmt="INSERT INTO vicidial_timeclock_audit_log set timeclock_id='$timeclock_id', event='登出', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
+				$stmt="INSERT INTO vicidial_timeclock_audit_log set timeclock_id='$timeclock_id', event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$affected_rows = mysql_affected_rows($link);
@@ -332,7 +332,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				print "<!-- vicidial_timeclock_audit_log record updated for $user:   |$affected_rows| -->\n";
 				}
 
-			if ( ( ( ($status=='AUTO登出') or ($status=='開始') or ($status=='登出') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
+			if ( ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
 				{echo "ERROR: timeclock log entry already made: $status|$stage";  exit;}
 
 			if ($referrer=='agent') 
@@ -366,7 +366,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 
 
-		if ( ($status=='AUTO登出') or ($status=='開始') or ($status=='登出') )
+		if ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') )
 			{
 			$VDdisplayMESSAGE = "自從您上次登入已經有(多久時間): $totTIME_HMS";
 			$log_action = 'login';
@@ -377,7 +377,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			{
 			$VDdisplayMESSAGE = "您已經登入的時間(多久時間): $totTIME_HMS";
 			$log_action = 'logout';
-			$button_name = '登出';
+			$button_name = 'LOGOUT';
 			$LOGtimeMESSAGE = "您登入在: $last_action_date<BR>您已經登入的時間(多久時間): $totTIME_HMS<BR><BR>點選下方登出進行登出";
 			}
 

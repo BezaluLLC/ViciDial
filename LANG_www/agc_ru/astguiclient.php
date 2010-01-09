@@ -718,7 +718,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		}
 
 // ################################################################################
-// LIVE TRUNK LIST FOR РАЗЪЕДИНЕНИЕ/HIJACK MENU FUNCTIONS
+// LIVE TRUNK LIST FOR HANGUP/HIJACK MENU FUNCTIONS
 	function refresh_busytrunkhangup()
 		{
 		document.getElementById("TrunkHangupContent").innerHTML = Nactiveext;
@@ -765,7 +765,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		}
 
 // ################################################################################
-// LIVE LOCAL LIST FOR РАЗЪЕДИНЕНИЕ/HIJACK MENU FUNCTIONS
+// LIVE LOCAL LIST FOR HANGUP/HIJACK MENU FUNCTIONS
 	function refresh_busylocalhangup()
 		{
 		document.getElementById("LocalHangupContent").innerHTML = Nactiveext;
@@ -1386,7 +1386,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=3;
 					if (live_calls > 0)
 						{
-						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>ЖИВЫЕ ВЫЗОВЫ НА ЭТОТ ТЕЛЕФОН:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">КАНАЛ КЛИЕНТА</td><td><font class=\"log_title\">УДАЛЕННЫЙ КАНАЛ</td><td><font class=\"log_title\">ЗАПИСЬ</td><td><font class=\"log_title\">РАЗЪЕДИНЕНИЕ</td><td><font class=\"log_title\">ПЕРЕВОД</td><td><font class=\"log_title\">ПАРКОВКА</td></tr>";
+						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>ЖИВЫЕ ВЫЗОВЫ НА ЭТОТ ТЕЛЕФОН:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">КАНАЛ КЛИЕНТА</td><td><font class=\"log_title\">УДАЛЕННЫЙ КАНАЛ</td><td><font class=\"log_title\">RECORD</td><td><font class=\"log_title\">РАЗЪЕДИНЕНИЕ</td><td><font class=\"log_title\">ПЕРЕВОД</td><td><font class=\"log_title\">ПАРКОВКА</td></tr>";
 						if ( (LCAcount > live_calls)  || (LCAcount < live_calls) )
 							{
 							LCAe[0]=''; LCAe[1]=''; LCAe[2]=''; LCAe[3]=''; LCAe[4]=''; LCAe[5]=''; 
@@ -1533,7 +1533,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=0;
 					if (out_calls > 0)
 						{
-						var out_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> ЗВОНИТЬ ДАТА/ВРЕМЯ</td><td><font class=\"log_title\">НОМЕР</td><td align=right><font class=\"log_title\">ДЛИНА (M:SS)</td><td><font class=\"log_title\"> </td></tr>"
+						var out_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> ЗВОНИТЬ ДАТА/ВРЕМЯ</td><td><font class=\"log_title\">НОМЕР</td><td align=right><font class=\"log_title\">LENGTH (M:SS)</td><td><font class=\"log_title\"> </td></tr>"
 						while (loop_ct < out_calls)
 							{
 							loop_ct++;
@@ -1561,7 +1561,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=0;
 					if (in_calls > 0)
 						{
-						var in_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> ЗВОНИТЬ ДАТА/ВРЕМЯ</td><td><font class=\"log_title\">В-НОМЕР</td><td COLSPAN=2><font class=\"log_title\">ВЫЗЫВАЮЩИЙID</td><td align=right><font class=\"log_title\">ДЛИНА</td><td><font class=\"log_title\"> </td></tr>"
+						var in_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> ЗВОНИТЬ ДАТА/ВРЕМЯ</td><td><font class=\"log_title\">В-НОМЕР</td><td COLSPAN=2><font class=\"log_title\">ВЫЗЫВАЮЩИЙID</td><td align=right><font class=\"log_title\">LENGTH</td><td><font class=\"log_title\"> </td></tr>"
 						while (loop_ct < in_calls)
 							{
 							loop_ct++;
@@ -2468,7 +2468,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		start_all_refresh();
 		}
 	function pause()	// Pauses the refreshing of the lists
-		{active_display=2;  display_message="  - ACTIVE DISPLAY ПАУЗПАD -";}
+		{active_display=2;  display_message="  - ACTIVE DISPLAY PAUSED -";}
 	function start()	// resumes the refreshing of the lists
 		{active_display=1;  display_message='';}
 	function faster()	// lowers by 1000 milliseconds the time until the next refresh
@@ -2734,7 +2734,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:0px;top:12px;z-index:29;" id="TrunkHangupBox">
-    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> TRUNK РАЗЪЕДИНЕНИЕ <BR><BR>
+    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> TRUNK HANGUP <BR><BR>
 	<span id="TrunkHangupContent"> Active Trunks Menu </span><BR>
 	<span id="TrunkHangup_HUlink"><a href="#" onclick="busyhangup_send_hangup('Trunk');return false;">Hangup Trunk</a> &nbsp; | &nbsp; </span>
 	<span id="TrunkHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Trunk','HIJACK');return false;">Hijack Trunk</a> &nbsp; | &nbsp; </span>
@@ -2745,7 +2745,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:0px;top:12px;z-index:28;" id="LocalHangupBox">
-    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> ЛОКАЛЬНВЙ РАЗЪЕДИНЕНИЕ <BR><BR>
+    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> ЛОКАЛЬНВЙ HANGUP <BR><BR>
 	<span id="LocalHangupContent"> Активное Локальное Меню </span><BR>
 	<span id="LocalHangup_HUlink"><a href="#" onclick="busyhangup_send_hangup('Local');return false;">Hangup Local</a> &nbsp; | &nbsp; </span>
 	<span id="LocalHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Local');return false;">Hijack Local</a> &nbsp; | &nbsp; </span>
@@ -2758,7 +2758,7 @@ echo "</head>\n";
 <span style="position:absolute;left:80px;top:12px;z-index:42;" id="MainXfeRBox">
 	<input type=hidden name=H_XfeR_channel>
 	<input type=hidden name=M_XfeR_channel>
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> ПЕРЕВОД ЖИВОГО ВЫЗОВА</b> <BR>Канал в который будет переведен: <span id="MainXfeRChanneL">Канал</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> ПЕРЕВОД ЖИВОГО ВЫЗОВА</b> <BR>Канал в который будет переведен: <span id="MainXfeRChanneL">Channel</span><BR></tr>
 	<tr><td>Расширения:<BR><span id="MainXfeRContent"> Меню Расширений </span></td>
 	<td>
 	<BR>
@@ -2772,7 +2772,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:80px;top:12px;z-index:43;" id="LocalDialBox">
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> ЛОКАЛЬНОЕ Расширение Набора номера</b> <BR>Телефонный вызов от: <span id="LocalDialChanneL">Канал</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> ЛОКАЛЬНОЕ Расширение Набора номера</b> <BR>Телефонный вызов от: <span id="LocalDialChanneL">Channel</span><BR></tr>
 	<tr><td>Расширения:<BR><span id="LocalDialContent"> Меню Расширений </span></td>
 	<td>
 	<BR>
@@ -2839,7 +2839,7 @@ echo "</head>\n";
 <span style="position:absolute;left:0px;top:46px;z-index:20;" id="ActiveLinesPanel">
 <table border=0 BGCOLOR="#CDE0C2" width=640>
 <tr><td colspan=3>
-<a href="#" onclick="pause();return false;">STOP</a> | <a href="#" onclick="start();return false;">СТАРТ</a> &nbsp; &nbsp; Норма обновлений: <span id="refresh_rate">1000 ms</span> <a href="#" onclick="faster();return false;">Быстрее</a> | <a href="#" onclick="slower();return false;">Медленее</a></p>
+<a href="#" onclick="pause();return false;">STOP</a> | <a href="#" onclick="start();return false;">START</a> &nbsp; &nbsp; Норма обновлений: <span id="refresh_rate">1000 ms</span> <a href="#" onclick="faster();return false;">Быстрее</a> | <a href="#" onclick="slower();return false;">Медленее</a></p>
 	<div id="status"><em>Инициализация..</em></div>
 </td></tr>
 <tr><td>Активные Расширения <BR> 

@@ -310,7 +310,7 @@ Dial Now|Discar Agora|
 CB Comments|Comentarios do CB|
 Title|Título|
  STATUS| STATUS|
-RESET|REINICIAR|
+ RESET| REINICIAR|
 CLEAR FORM|LIMPAR FORMULARIO|
 SUBMIT|ENVIAR|
 Incoming|Entrante|
@@ -319,7 +319,7 @@ Called|Ligado|
 Campaign|Campanha|
 Status|Status|
 Inserted|Inserido|
- seconds|segundos|
+ seconds| segundos|
 HELP|AJUDA|
 Login|Login|
 User|Usuário|
@@ -327,15 +327,13 @@ Password|Senha|
 VERSION|VERSÃO|
 BUILD|CONFIGURAÇÃO|
 Server|Servidor|
-RECORD|REGISTRO|
-HANGUP|DESLIGAR|
+RECORD |REGISTRO |
+>HANGUP|>DESLIGAR|
 >XFER|>TRANFERENCIA|
 PARK|ESPERA|
 IN-NUMBER|NUMERO ENTRANTE|
 NUMBER|NUMERO|
-LENGTH|COMPRIMENTO|
 CALLERID|CALLERID|
-CallerID|CallerID|
  CALL| CHAMADA|
 PICKUP|CAPTURAR|
 CONFERENCE|CONFERENCIA|
@@ -344,8 +342,8 @@ Send DTMF|Enviar DTMF|
 BORDER|BORDA|
 ORDER|ORDEM|
  on |ligado|
-LOGOUT|SAIR|
-Channel|Canal|
+>LOGOUT|>SAIR|
+ Channel| Canal|
 Extensions|Extensões|
 Conferences|Conferencias|
 Conference|Conferencia|
@@ -355,8 +353,6 @@ Welcome|Bem vindo|
 VOICEMAIL|CAIXA POSTAL|
  NEW| NOVO|
  OLD| VELHO|
-STOP|BATENTE|
-START|INICIAR|
  Pause | Pausa |
 Resume|Início|
 Faster|Mais rápido|
@@ -364,7 +360,6 @@ Slower|Mais devagar|
 Initializing|Inicializando|
 Invalid|Inválido|
 Username|Usuário|
-CUSTOM|CUSTOMIZADO|
 Notes|Notas|
 First|Primeiro|
 MI: |MI:|

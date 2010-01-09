@@ -313,7 +313,7 @@ CB Comments|Notatki|
 Title|Tytuł|
 Your Status|Twój Status|
  STATUS| STATUS|
-RESET|RESET|
+ RESET| RESET|
 CLEAR FORM|WYCZYŚĆ FORMULARZ|
 SUBMIT|ZATWIERDŹ|
 Incoming|Przychodząca|
@@ -322,7 +322,7 @@ Called|Zadzwoniono|
 Campaign|Kampania|
 Status|Status|
 Inserted|Wstawiony|
- seconds|sekundy|
+ seconds| sekundy|
 HELP|POMOC|
 Login|Login|
 User|Użytkownik|
@@ -330,15 +330,13 @@ Password|Hasło|
 VERSION|WERSJA|
 BUILD|KOMPILACJA|
 Server|Serwer|
-RECORD|NAGRYWAJ|
-HANGUP|ROZŁĄCZ|
+RECORD |NAGRYWAJ |
+>HANGUP|>ROZŁĄCZ|
 >XFER|>TRANSFER|
 PARK|PARKING|
 IN-NUMBER|IN-NUMBER|
 NUMBER|NUMER|
-LENGTH|DŁUGOŚĆ|
 CALLERID|IDROZMÓWCY|
-CallerID|IDRozmówcy|
  CALL| Rozmowa|
 PICKUP|ODBIERZ|
 CONFERENCE|KONFERENCJA|
@@ -346,8 +344,8 @@ Refresh|Odswież|
 Send DTMF|Wyślij tonowo|
 ORDER|PORZĄDEK|
  on | na |
-LOGOUT|WYLOGUJ|
-Channel|Kanał|
+>LOGOUT|>WYLOGUJ|
+ Channel| Kanał|
 Extensions|NumerWenętrzny|
 Conferences|Konferencje|
 Conference|Konferencja|
@@ -357,8 +355,6 @@ Welcome|Witaj|
 VOICEMAIL|POCZTAGŁOSOWA|
  NEW| NOWY|
  OLD| STARY|
-STOP|BATENTE|
-START|START|
  Pause | Przerwa |
 Resume|Ponów|
 Faster|Szybciej|
@@ -366,7 +362,6 @@ Slower|Wolniej|
 Initializing|Inicjalizuje|
 Invalid|Nieprawidłowy|
 Username|NazwaUżytkownika|
-CUSTOM|UŻYTKOWNIKA|
 Notes|Notatki|
 First|Imię|
 MI: |2 Imię: |

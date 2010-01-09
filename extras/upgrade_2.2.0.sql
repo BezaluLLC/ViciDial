@@ -727,4 +727,11 @@ ALTER TABLE vicidial_carrier_log ADD answered_time SMALLINT(4) UNSIGNED default 
 
 UPDATE system_settings SET db_schema_version='1192',db_schema_update_date=NOW();
 
+ALTER TABLE servers MODIFY carrier_logging_active ENUM('Y','N') default 'Y';
+UPDATE servers SET carrier_logging_active='Y';
+
+CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
+
+UPDATE system_settings SET db_schema_version='1193',db_schema_update_date=NOW();
+
 UPDATE system_settings SET version='2.2.0rc1',db_schema_update_date=NOW();

@@ -214,17 +214,17 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		else
 			{
 			### No vicidial_timeclock_status record found, insert one
-			$stmt="INSERT INTO vicidial_timeclock_status set status='СТАРТ', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip';";
+			$stmt="INSERT INTO vicidial_timeclock_status set status='START', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
-				$status='СТАРТ';
+				$status='START';
 				$totTIME_HMS='0:00:00';
 			$affected_rows = mysql_affected_rows($link);
 			print "<!-- НОВЫЙ vicidial_timeclock_status record inserted for $user:   |$affected_rows| -->\n";
 			}
-		if ( ($last_action_sec < 30) and ($status != 'СТАРТ') )
+		if ( ($last_action_sec < 30) and ($status != 'START') )
 			{
-			### You cannot log in or out within 30секунды of your last login/logout
+			### You cannot log in or out within 30 секунды of your last login/logout
 			$VDdisplayMESSAGE = "Вы не можете войти или в течение 30 секунд после вашего последнего входа в систему или Logout";
 
 			echo"<HTML><HEAD>\n";
@@ -262,7 +262,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 		if ($commit == 'YES')
 			{
-			if ( ( ($status=='AUTOВЫХОД') or ($status=='СТАРТ') or ($status=='ВЫХОД') ) and ($stage=='login') )
+			if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='login') )
 				{
 				$VDdisplayMESSAGE = "You have now logged-in";
 				$LOGtimeMESSAGE = "You logged in at $NOW_TIME";
@@ -296,7 +296,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				$LOGtimeMESSAGE = "Вы вошли на$NOW_TIME<BR>Количество раз, когда вы были зарегистрированы в:$totTIME_HMS";
 
 				### Add a record to the timeclock log
-				$stmt="INSERT INTO vicidial_timeclock_log set event='ВЫХОД', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
+				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$affected_rows = mysql_affected_rows($link);
@@ -311,14 +311,14 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				print "<!-- vicidial_timeclock_log record updated for $user:   |$affected_rows| -->\n";
 
 				### Update the user's timeclock status record
-				$stmt="UPDATE vicidial_timeclock_status set status='ВЫХОД', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip' where user='$user';";
+				$stmt="UPDATE vicidial_timeclock_status set status='LOGOUT', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip' where user='$user';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$affected_rows = mysql_affected_rows($link);
 				print "<!-- vicidial_timeclock_status record updated for $user:   |$affected_rows| -->\n";
 
 				### Add a record to the timeclock audit log
-				$stmt="INSERT INTO vicidial_timeclock_audit_log set timeclock_id='$timeclock_id', event='ВЫХОД', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
+				$stmt="INSERT INTO vicidial_timeclock_audit_log set timeclock_id='$timeclock_id', event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$affected_rows = mysql_affected_rows($link);
@@ -332,7 +332,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				print "<!-- vicidial_timeclock_audit_log record updated for $user:   |$affected_rows| -->\n";
 				}
 
-			if ( ( ( ($status=='AUTOВЫХОД') or ($status=='СТАРТ') or ($status=='ВЫХОД') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
+			if ( ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
 				{echo "ОШИБКА: timeclock вход вход уже сделал:$status|$stage";  exit;}
 
 			if ($referrer=='agent') 
@@ -366,7 +366,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 
 
-		if ( ($status=='AUTOВЫХОД') or ($status=='СТАРТ') or ($status=='ВЫХОД') )
+		if ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') )
 			{
 			$VDdisplayMESSAGE = "Время с момента вашего последнего входа в:$totTIME_HMS";
 			$log_action = 'login';
@@ -377,8 +377,8 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			{
 			$VDdisplayMESSAGE = "Количество раз, когда вы вышли в:$totTIME_HMS";
 			$log_action = 'logout';
-			$button_name = 'ВЫХОД';
-			$LOGtimeMESSAGE = "Вы вошли в по адресу: $last_action_date<BR>Количество раз, когда вы вышли в:$totTIME_HMS<BR><BR>Нажмите ВЫХОД для входа из";
+			$button_name = 'LOGOUT';
+			$LOGtimeMESSAGE = "Вы вошли в по адресу: $last_action_date<BR>Количество раз, когда вы вышли в:$totTIME_HMS<BR><BR>Нажмите LOGOUT для входа из";
 			}
 
 		echo"<HTML><HEAD>\n";

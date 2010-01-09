@@ -470,7 +470,7 @@ if ($ADD==5)
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $StarTtime);
-if ($format=='table') {echo "\n<!-- runtime do certificado: $RUNtimesegundos -->";}
+if ($format=='table') {echo "\n<!-- runtime do certificado: $RUNtime segundos -->";}
 if ($format=='table') {echo "\n</body>\n</html>\n";}
 	
 exit; 

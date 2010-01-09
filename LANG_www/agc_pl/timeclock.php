@@ -224,7 +224,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			}
 		if ( ($last_action_sec < 30) and ($status != 'START') )
 			{
-			### You cannot log in or out within 30sekundy of your last login/logout
+			### You cannot log in or out within 30 sekundy of your last login/logout
 			$VDdisplayMESSAGE = "Nie można zalogować się w ciągu 30 sekund od ostatniego logowania lub wylogowywania";
 
 			echo"<HTML><HEAD>\n";
@@ -262,7 +262,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 		if ($commit == 'YES')
 			{
-			if ( ( ($status=='AUTOWYLOGUJ') or ($status=='START') or ($status=='WYLOGUJ') ) and ($stage=='login') )
+			if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='login') )
 				{
 				$VDdisplayMESSAGE = "You have now logged-in";
 				$LOGtimeMESSAGE = "You logged in at $NOW_TIME";
@@ -296,7 +296,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				$LOGtimeMESSAGE = "Możesz zalogować się na$NOW_TIME<BR>Czas był zalogowany w:$totTIME_HMS";
 
 				### Add a record to the timeclock log
-				$stmt="INSERT INTO vicidial_timeclock_log set event='WYLOGUJ', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
+				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$affected_rows = mysql_affected_rows($link);
@@ -311,14 +311,14 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				print "<!-- vicidial_timeclock_log record updated for $user:   |$affected_rows| -->\n";
 
 				### Update the user's timeclock status record
-				$stmt="UPDATE vicidial_timeclock_status set status='WYLOGUJ', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip' where user='$user';";
+				$stmt="UPDATE vicidial_timeclock_status set status='LOGOUT', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip' where user='$user';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$affected_rows = mysql_affected_rows($link);
 				print "<!-- vicidial_timeclock_status record updated for $user:   |$affected_rows| -->\n";
 
 				### Add a record to the timeclock audit log
-				$stmt="INSERT INTO vicidial_timeclock_audit_log set timeclock_id='$timeclock_id', event='WYLOGUJ', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
+				$stmt="INSERT INTO vicidial_timeclock_audit_log set timeclock_id='$timeclock_id', event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$affected_rows = mysql_affected_rows($link);
@@ -332,7 +332,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				print "<!-- vicidial_timeclock_audit_log record updated for $user:   |$affected_rows| -->\n";
 				}
 
-			if ( ( ( ($status=='AUTOWYLOGUJ') or ($status=='START') or ($status=='WYLOGUJ') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
+			if ( ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
 				{echo "ERROR: timeclock wpisu już wykonane:$status|$stage";  exit;}
 
 			if ($referrer=='agent') 
@@ -366,7 +366,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 
 
-		if ( ($status=='AUTOWYLOGUJ') or ($status=='START') or ($status=='WYLOGUJ') )
+		if ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') )
 			{
 			$VDdisplayMESSAGE = "Czas od twojego ostatniego logowania w:$totTIME_HMS";
 			$log_action = 'login';
@@ -377,8 +377,8 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			{
 			$VDdisplayMESSAGE = "Kwota czas były rejestrowane w:$totTIME_HMS";
 			$log_action = 'logout';
-			$button_name = 'WYLOGUJ';
-			$LOGtimeMESSAGE = "Możesz zalogować się na stronie: $last_action_date<BR>Kwota czas były rejestrowane w:$totTIME_HMS<BR><BR>Kliknij poniżej, aby zalogować WYLOGUJ-out";
+			$button_name = 'LOGOUT';
+			$LOGtimeMESSAGE = "Możesz zalogować się na stronie: $last_action_date<BR>Kwota czas były rejestrowane w:$totTIME_HMS<BR><BR>Kliknij poniżej, aby zalogować LOGOUT-out";
 			}
 
 		echo"<HTML><HEAD>\n";

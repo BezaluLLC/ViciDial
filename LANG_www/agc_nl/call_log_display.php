@@ -188,7 +188,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- script looptijd: $RUNtimeseconden -->";
+	echo "\n<!-- script looptijd: $RUNtime seconden -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

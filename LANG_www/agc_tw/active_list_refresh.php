@@ -470,7 +470,7 @@ if ($ADD==5)
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $StarTtime);
-if ($format=='table') {echo "\n<!-- 運行腳本: $RUNtime秒 -->";}
+if ($format=='table') {echo "\n<!-- 運行腳本: $RUNtime 秒 -->";}
 if ($format=='table') {echo "\n</body>\n</html>\n";}
 	
 exit; 

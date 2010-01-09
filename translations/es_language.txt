@@ -313,7 +313,7 @@ CB Comments|Comentarios de los CBES|
 Title|Título|
 Your Status|Su Estado|
  STATUS| ESTADO|
-RESET|REINICIAR|
+ RESET| REINICIAR|
 CLEAR FORM|REINICIAR|
 SUBMIT|ENVIAR|
 Incoming|Entrante|
@@ -322,7 +322,7 @@ Called|Llamado|
 Campaign|Campaña|
 Status|Estado|
 Inserted|Insertado|
- seconds|segundos|
+ seconds| segundos|
 HELP|AYUDA|
 Login|Conexión|
 User|Usuario|
@@ -330,15 +330,13 @@ Password|Contraseña|
 VERSION|VERSIÓN|
 BUILD|CONSTRUCCION|
 Server|Servidor|
-RECORD|GRABACIÓN|
-HANGUP|COLGAR|
+RECORD |GRABACIÓN |
+>HANGUP|>COLGAR|
 >XFER|>TRANSFERENCIA|
 PARK|PARKING|
 IN-NUMBER|NÚMERO-ENTRANTE|
 NUMBER|NÚMERO|
-LENGTH|LONGITUD|
 CALLERID|LLAMADORID|
-CallerID|LlamadorID|
  CALL| LLAMADA|
 PICKUP|CAPTURAR|
 CONFERENCE|CONFERENCIA|
@@ -346,8 +344,8 @@ Refresh|Recarga|
 Send DTMF|Enviar DTMF|
 ORDER|ORDEN|
  on | en |
-LOGOUT|SALIR|
-Channel|Canal|
+>LOGOUT|>SALIR|
+ Channel| Canal|
 Extensions|Extensiones|
 Conferences|Conferencias|
 Conference|Conferencia|
@@ -357,8 +355,6 @@ Welcome|Bienvenido|
 VOICEMAIL|BUZÓN DE VOZ|
  NEW| NUEVO|
  OLD| VIEJO|
-STOP|PARADA|
-START|COMIENZO|
  Pause | Pausa |
 Resume|Comienzo|
 Faster|Más rápido|
@@ -366,7 +362,6 @@ Slower|Más lento|
 Initializing|Inizializando|
 Invalid|Inválido|
 Username|Nombre del usuario|
-CUSTOM|A MEDIDA|
 Notes|Notas|
 First|Primero|
 MI: |IM: |

@@ -188,7 +188,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- runtime do certificado: $RUNtimesegundos -->";
+	echo "\n<!-- runtime do certificado: $RUNtime segundos -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

@@ -313,7 +313,7 @@ CB Comments|CB Комментарии|
 Title|Title|
 Your Status|Ваш Статус|
  STATUS| СТАТУС|
-RESET|RESET|
+ RESET| RESET|
 CLEAR FORM|ОЧИСТИТЬ ФОРМУ|
 SUBMIT|SUBMIT|
 Incoming|Входящий|
@@ -322,7 +322,7 @@ Called|Вызванный|
 Campaign|Кампания|
 Status|Статус|
 Inserted|Введенный|
- seconds|секунды|
+ seconds| секунды|
 HELP|ПОМОЩЬ|
 Login|Логин|
 User|Пользователь|
@@ -330,15 +330,13 @@ Password|Пароль|
 VERSION|ВЕРСИЯ|
 BUILD|СБОРКА|
 Server|Сервер|
-RECORD|ЗАПИСЬ|
-HANGUP|РАЗЪЕДИНЕНИЕ|
+RECORD |ЗАПИСЬ |
+>HANGUP|>РАЗЪЕДИНЕНИЕ|
 >XFER|>ПЕРЕВОД|
 PARK|ПАРКОВКА|
 IN-NUMBER|В-НОМЕР|
 NUMBER|НОМЕР|
-LENGTH|ДЛИНА|
 CALLERID|ВЫЗЫВАЮЩИЙID|
-CallerID|ВызывающийID|
  CALL| ВЫЗОВ|
 PICKUP|PICKUP|
 CONFERENCE|КОНФЕРЕНЦИЯ|
@@ -346,8 +344,8 @@ Refresh|Обновление|
 Send DTMF|Послать DTMF|
 ORDER|ПОРЯДОК|
  on | на |
-LOGOUT|ВЫХОД|
-Channel|Канал|
+>LOGOUT|>ВЫХОД|
+ Channel| Канал|
 Extensions|Расширения|
 Conferences|Конференции|
 Conference|Конференция|
@@ -357,8 +355,6 @@ Welcome|Добро пожаловать|
 VOICEMAIL|VOICEMAIL|
  NEW| НОВЫЙ|
  OLD| СТАРЫЙ|
-PAUSE|ПАУЗПА|
-START|СТАРТ|
  Pause | Пауза |
 Resume|Резюме|
 Faster|Быстрее|
@@ -366,7 +362,6 @@ Slower|Медленее|
 Initializing|Инициализация|
 Invalid|Недопустимо|
 Username|Username|
-CUSTOM|ПОЛЬЗОВАТЕЛЬСКИЙ|
 Notes|Примечания|
 First|Имя|
 MI: |MI: |

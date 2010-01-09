@@ -1386,7 +1386,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=3;
 					if (live_calls > 0)
 						{
-						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>VIVO CONVIDA ESTE TELEFONE:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CANALETA DO CLIENTE</td><td><font class=\"log_title\">CANALETA REMOTA</td><td><font class=\"log_title\">REGISTRO</td><td><font class=\"log_title\">HANGUP</td><td><font class=\"log_title\">XFER</td><td><font class=\"log_title\">PARQUE</td></tr>";
+						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>VIVO CONVIDA ESTE TELEFONE:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CANALETA DO CLIENTE</td><td><font class=\"log_title\">CANALETA REMOTA</td><td><font class=\"log_title\">RECORD</td><td><font class=\"log_title\">HANGUP</td><td><font class=\"log_title\">XFER</td><td><font class=\"log_title\">PARQUE</td></tr>";
 						if ( (LCAcount > live_calls)  || (LCAcount < live_calls) )
 							{
 							LCAe[0]=''; LCAe[1]=''; LCAe[2]=''; LCAe[3]=''; LCAe[4]=''; LCAe[5]=''; 
@@ -1533,7 +1533,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=0;
 					if (out_calls > 0)
 						{
-						var out_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> DATE/TIME DA CHAMADA</td><td><font class=\"log_title\">NÚMERO</td><td align=right><font class=\"log_title\">COMPRIMENTO (M:SS)</td><td><font class=\"log_title\"> </td></tr>"
+						var out_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> DATE/TIME DA CHAMADA</td><td><font class=\"log_title\">NÚMERO</td><td align=right><font class=\"log_title\">LENGTH (M:SS)</td><td><font class=\"log_title\"> </td></tr>"
 						while (loop_ct < out_calls)
 							{
 							loop_ct++;
@@ -1561,7 +1561,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=0;
 					if (in_calls > 0)
 						{
-						var in_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> DATE/TIME DA CHAMADA</td><td><font class=\"log_title\">IN-NÚMERO</td><td COLSPAN=2><font class=\"log_title\">CALLERID</td><td align=right><font class=\"log_title\">COMPRIMENTO</td><td><font class=\"log_title\"> </td></tr>"
+						var in_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> DATE/TIME DA CHAMADA</td><td><font class=\"log_title\">IN-NÚMERO</td><td COLSPAN=2><font class=\"log_title\">CALLERID</td><td align=right><font class=\"log_title\">LENGTH</td><td><font class=\"log_title\"> </td></tr>"
 						while (loop_ct < in_calls)
 							{
 							loop_ct++;
@@ -2758,7 +2758,7 @@ echo "</head>\n";
 <span style="position:absolute;left:80px;top:12px;z-index:42;" id="MainXfeRBox">
 	<input type=hidden name=H_XfeR_channel>
 	<input type=hidden name=M_XfeR_channel>
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> TRANSFERÊNCIA VIVA DA CHAMADA</b> <BR>Canaleta a ser transferida: <span id="MainXfeRChanneL">Canaleta</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> TRANSFERÊNCIA VIVA DA CHAMADA</b> <BR>Canaleta a ser transferida: <span id="MainXfeRChanneL">Channel</span><BR></tr>
 	<tr><td>Extensões:<BR><span id="MainXfeRContent"> Menu Das Extensões </span></td>
 	<td>
 	<BR>
@@ -2772,7 +2772,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:80px;top:12px;z-index:43;" id="LocalDialBox">
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> Seletor LOCAL Das Extensões</b> <BR>Telefone que chama-se de: <span id="LocalDialChanneL">Canaleta</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> Seletor LOCAL Das Extensões</b> <BR>Telefone que chama-se de: <span id="LocalDialChanneL">Channel</span><BR></tr>
 	<tr><td>Extensões:<BR><span id="LocalDialContent"> Menu Das Extensões </span></td>
 	<td>
 	<BR>
@@ -2839,7 +2839,7 @@ echo "</head>\n";
 <span style="position:absolute;left:0px;top:46px;z-index:20;" id="ActiveLinesPanel">
 <table border=0 BGCOLOR="#CDE0C2" width=640>
 <tr><td colspan=3>
-<a href="#" onclick="pause();return false;">BATENTE</a> | <a href="#" onclick="start();return false;">COMEÇO</a> &nbsp; &nbsp; Refresque a taxa: <span id="refresh_rate">1000 ms</span> <a href="#" onclick="faster();return false;">Mais rapidamente</a> | <a href="#" onclick="slower();return false;">Mais lento</a></p>
+<a href="#" onclick="pause();return false;">STOP</a> | <a href="#" onclick="start();return false;">START</a> &nbsp; &nbsp; Refresque a taxa: <span id="refresh_rate">1000 ms</span> <a href="#" onclick="faster();return false;">Mais rapidamente</a> | <a href="#" onclick="slower();return false;">Mais lento</a></p>
 	<div id="status"><em>Inicializar..</em></div>
 </td></tr>
 <tr><td>Extensões Ativas <BR> 

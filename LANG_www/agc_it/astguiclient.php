@@ -718,7 +718,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		}
 
 // ################################################################################
-// LIVE TRUNK LIST FOR RIAGGANCIA/HIJACK MENU FUNCTIONS
+// LIVE TRUNK LIST FOR HANGUP/HIJACK MENU FUNCTIONS
 	function refresh_busytrunkhangup()
 		{
 		document.getElementById("TrunkHangupContent").innerHTML = Nactiveext;
@@ -765,7 +765,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		}
 
 // ################################################################################
-// LIVE LOCAL LIST FOR RIAGGANCIA/HIJACK MENU FUNCTIONS
+// LIVE LOCAL LIST FOR HANGUP/HIJACK MENU FUNCTIONS
 	function refresh_busylocalhangup()
 		{
 		document.getElementById("LocalHangupContent").innerHTML = Nactiveext;
@@ -1386,7 +1386,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=3;
 					if (live_calls > 0)
 						{
-						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>CHIAMATE IN CORSO SU QUESTO TELEFONO:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CANALE CLIENT</td><td><font class=\"log_title\">CANALE REMOTO</td><td><font class=\"log_title\">Registrazione</td><td><font class=\"log_title\">RIAGGANCIA</td><td><font class=\"log_title\">TRASF</td><td><font class=\"log_title\">ATTESA</td></tr>";
+						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>CHIAMATE IN CORSO SU QUESTO TELEFONO:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CANALE CLIENT</td><td><font class=\"log_title\">CANALE REMOTO</td><td><font class=\"log_title\">RECORD</td><td><font class=\"log_title\">RIAGGANCIA</td><td><font class=\"log_title\">TRASF</td><td><font class=\"log_title\">ATTESA</td></tr>";
 						if ( (LCAcount > live_calls)  || (LCAcount < live_calls) )
 							{
 							LCAe[0]=''; LCAe[1]=''; LCAe[2]=''; LCAe[3]=''; LCAe[4]=''; LCAe[5]=''; 
@@ -1533,7 +1533,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=0;
 					if (out_calls > 0)
 						{
-						var out_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> DATA/ORA CHIAMATA</td><td><font class=\"log_title\">NUMERO</td><td align=right><font class=\"log_title\">LUNGHEZZA (M:SS)</td><td><font class=\"log_title\"> </td></tr>"
+						var out_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> DATA/ORA CHIAMATA</td><td><font class=\"log_title\">NUMERO</td><td align=right><font class=\"log_title\">LENGTH (M:SS)</td><td><font class=\"log_title\"> </td></tr>"
 						while (loop_ct < out_calls)
 							{
 							loop_ct++;
@@ -1561,7 +1561,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=0;
 					if (in_calls > 0)
 						{
-						var in_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> DATA/ORA CHIAMATA</td><td><font class=\"log_title\">IN-NUMERO</td><td COLSPAN=2><font class=\"log_title\">CALLERID</td><td align=right><font class=\"log_title\">LUNGHEZZA</td><td><font class=\"log_title\"> </td></tr>"
+						var in_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> DATA/ORA CHIAMATA</td><td><font class=\"log_title\">IN-NUMERO</td><td COLSPAN=2><font class=\"log_title\">CALLERID</td><td align=right><font class=\"log_title\">LENGTH</td><td><font class=\"log_title\"> </td></tr>"
 						while (loop_ct < in_calls)
 							{
 							loop_ct++;
@@ -2734,7 +2734,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:0px;top:12px;z-index:29;" id="TrunkHangupBox">
-    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> TRUNK RIAGGANCIA <BR><BR>
+    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> TRUNK HANGUP <BR><BR>
 	<span id="TrunkHangupContent"> Active Trunks Menu </span><BR>
 	<span id="TrunkHangup_HUlink"><a href="#" onclick="busyhangup_send_hangup('Trunk');return false;">Disconnetti il Trunk</a> &nbsp; | &nbsp; </span>
 	<span id="TrunkHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Trunk','HIJACK');return false;">Dirotta il Trunk</a> &nbsp; | &nbsp; </span>
@@ -2758,7 +2758,7 @@ echo "</head>\n";
 <span style="position:absolute;left:80px;top:12px;z-index:42;" id="MainXfeRBox">
 	<input type=hidden name=H_XfeR_channel>
 	<input type=hidden name=M_XfeR_channel>
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> TRASFERIMENTO DELLA CHIAMATA IN CORSO</b> <BR>Canale trasferito: <span id="MainXfeRChanneL">Canale</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> TRASFERIMENTO DELLA CHIAMATA IN CORSO</b> <BR>Canale trasferito: <span id="MainXfeRChanneL">Channel</span><BR></tr>
 	<tr><td>Interni:<BR><span id="MainXfeRContent"> Menu Interni </span></td>
 	<td>
 	<BR>
@@ -2772,7 +2772,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:80px;top:12px;z-index:43;" id="LocalDialBox">
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> LOCAL Interni Dial</b> <BR>Chiamata proveniente da: <span id="LocalDialChanneL">Canale</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> LOCAL Interni Dial</b> <BR>Chiamata proveniente da: <span id="LocalDialChanneL">Channel</span><BR></tr>
 	<tr><td>Interni:<BR><span id="LocalDialContent"> Menu Interni </span></td>
 	<td>
 	<BR>
@@ -2839,7 +2839,7 @@ echo "</head>\n";
 <span style="position:absolute;left:0px;top:46px;z-index:20;" id="ActiveLinesPanel">
 <table border=0 BGCOLOR="#CDE0C2" width=640>
 <tr><td colspan=3>
-<a href="#" onclick="pause();return false;">ARRESTO</a> | <a href="#" onclick="start();return false;">INIZIO</a> &nbsp; &nbsp; Frequenza di refresh: <span id="refresh_rate">1000 ms</span> <a href="#" onclick="faster();return false;">Piu` veloce</a> | <a href="#" onclick="slower();return false;">Piu` lento</a></p>
+<a href="#" onclick="pause();return false;">STOP</a> | <a href="#" onclick="start();return false;">START</a> &nbsp; &nbsp; Frequenza di refresh: <span id="refresh_rate">1000 ms</span> <a href="#" onclick="faster();return false;">Piu` veloce</a> | <a href="#" onclick="slower();return false;">Piu` lento</a></p>
 	<div id="status"><em>Inizializzazione..</em></div>
 </td></tr>
 <tr><td>Interni Attivi <BR> 

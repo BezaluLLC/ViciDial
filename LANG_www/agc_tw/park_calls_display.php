@@ -138,7 +138,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- 運行腳本: $RUNtime秒 -->";
+	echo "\n<!-- 運行腳本: $RUNtime 秒 -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

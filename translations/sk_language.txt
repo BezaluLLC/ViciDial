@@ -313,7 +313,7 @@ CB Comments|Poznámky CB|
 Title|Titul|
 Your Status|Váš stav|
  STATUS| STAV|
-RESET|ZNOVU INCIALIZOVAŤ|
+ RESET| ZNOVU INCIALIZOVAŤ|
 CLEAR FORM|VYMAZAŤ FORMULÁR|
 SUBMIT|POTVRDIŤ|
 Incoming|Príchodzie|
@@ -322,7 +322,7 @@ Called|Volaný|
 Campaign|Kampaň|
 Status|Stav|
 Inserted|Vložiť|
- seconds|sekúnd|
+ seconds| sekúnd|
 HELP|POMOC|
 Login|Prihlásiť|
 User|Užívateľ|
@@ -330,15 +330,13 @@ Password|Heslo|
 VERSION|VERZIA|
 BUILD|POSTAVENÉ|
 Server|Server|
-RECORD|ZÁZNAM|
-HANGUP|POLOŹIŤ|
+RECORD |ZÁZNAM |
+>HANGUP|>POLOŹIŤ|
 >XFER|>PREPOJIŤ|
 PARK|ZAPARKOVAŤ|
 IN-NUMBER|V-ČÍSLE|
 NUMBER|ČÍSLO|
-LENGTH|DĹŽKA|
 CALLERID|IDVOLAJÚCEHO|
-CallerID|IDvolajúceho|
  CALL| HOVOR|
 PICKUP|PREVZIAŤ|
 CONFERENCE|KONFERENCIA|
@@ -346,8 +344,8 @@ Refresh|Osviežiť|
 Send DTMF|Poslať DTMF|
 ORDER|PORADIE|
  on | na |
-LOGOUT|ODHLÁSIŤ|
-Channel|Kanál|
+>LOGOUT|>ODHLÁSIŤ|
+ Channel| Kanál|
 Extensions|Pobočky|
 Conferences|Konferencie|
 Conference|Konferencia|
@@ -357,8 +355,6 @@ Welcome|Vítame Vás|
 VOICEMAIL|HLASOVÁ SCHRÁNKA|
  NEW| NOVÁ|
  OLD| STARÁ|
-STOP|ZASTAVIŤ|
-START|SPUSTIŤ|
  Pause | Pauza |
 Resume|Pokračovať|
 Faster|Rýchlejšie|
@@ -366,7 +362,6 @@ Slower|Pomalšie|
 Initializing|Inicializovať|
 Invalid|Nesprávny|
 Username|Užívateľské meno|
-CUSTOM|UPRAVENÉ|
 Notes|Poznámka|
 First|Prvý|
 MI: |MI: |

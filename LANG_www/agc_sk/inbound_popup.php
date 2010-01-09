@@ -234,7 +234,7 @@ echo "<!-- VERZIA: $version     POSTAVENÉ: $build    UNIQUEID: $uniqueid   serv
 
 
 // ################################################################################
-// timeout to deactivate the call action links after 30sekúnd
+// timeout to deactivate the call action links after 30 sekúnd
 	function link_timeout() 
 		{
 		window.focus();
@@ -282,8 +282,8 @@ else
 #		Zap/73|"V.I.C.I. MARKET" <7275338730>|2005-04-28 14:01:21|7274514936|Inbound direct to Matt|||||
 		if ($format=='debug') {echo "\n<!-- $row[0]|$row[1]|$row[2]|$row[3]|$row[4]|$row[5]|$row[6]|$row[7]|$row[8]|$row[9]|$row[10]|$row[11]|$row[12]|$row[13]| -->";}
 		echo "<table width=95% cellpadding=1 cellspacing=3>\n";
-		echo "<tr bgcolor=\"#DDDDFF\"><td>Kanál: </td><td align=left>$row[1]</td></tr>\n";
-		echo "<tr bgcolor=\"#DDDDFF\"><td>IDvolajúceho: </td><td align=left>$row[3]</td></tr>\n";
+		echo "<tr bgcolor=\"#DDDDFF\"><td>Channel: </td><td align=left>$row[1]</td></tr>\n";
+		echo "<tr bgcolor=\"#DDDDFF\"><td>CallerID: </td><td align=left>$row[3]</td></tr>\n";
 		echo "<tr bgcolor=\"#DDDDFF\"><td colspan=2 align=center>\n";
 
 		$phone = eregi_replace(".*\<","",$row[3]);
@@ -305,7 +305,7 @@ else
 			$local_web_callerID_QUERY_STRING.="&callerID_prefix=$NXX";
 			$local_web_callerID_QUERY_STRING.="&callerID_last4=$XXXX";
 			$local_web_callerID_QUERY_STRING.="&callerID_Time=$row[6]";
-			$local_web_callerID_QUERY_STRING.="&callerID_Kanál=$row[1]";
+			$local_web_callerID_QUERY_STRING.="&callerID_Channel=$row[1]";
 			$local_web_callerID_QUERY_STRING.="&callerID_uniqueID=$row[0]";
 			$local_web_callerID_QUERY_STRING.="&callerID_phone_ext=$row[5]";
 			$local_web_callerID_QUERY_STRING.="&callerID_server_ip=$row[2]";
@@ -316,7 +316,7 @@ else
 			$local_web_callerID_QUERY_STRING.="&callerID_comment_c=$row[11]";
 			$local_web_callerID_QUERY_STRING.="&callerID_comment_d=$row[12]";
 			$local_web_callerID_QUERY_STRING.="&callerID_comment_e=$row[13]";
-		echo "<a href=\"$local_web_callerID_URL$local_web_callerID_QUERY_STRING\" target=\"_blank\">UPRAVENÉ</a> - \n";
+		echo "<a href=\"$local_web_callerID_URL$local_web_callerID_QUERY_STRING\" target=\"_blank\">CUSTOM</a> - \n";
 
 		echo "</td></tr>\n";
 		echo "<tr bgcolor=\"#DDDDFF\"><td>Volané číslo: </td><td align=left>$row[8]</td></tr>\n";
@@ -343,7 +343,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- bežiaci script: $RUNtimesekúnd -->";
+	echo "\n<!-- bežiaci script: $RUNtime sekúnd -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

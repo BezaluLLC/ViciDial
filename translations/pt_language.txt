@@ -313,7 +313,7 @@ CB Comments|Comentários dos CB|
 Title|Título|
 Your Status|Seu Status|
  STATUS| STATUS|
-RESET|RESTAURAÇÃO|
+ RESET| RESTAURAÇÃO|
 CLEAR FORM|RESTAURAÇÃO|
 SUBMIT|SUBMETA|
 Incoming|Entrante|
@@ -322,7 +322,7 @@ Called|Chamado|
 Campaign|Campanha|
 Status|Status|
 Inserted|Introduzido|
- seconds|segundos|
+ seconds| segundos|
 HELP|AJUDA|
 Login|Início de uma sessão|
 User|Usuário|
@@ -330,15 +330,13 @@ Password|Senha|
 VERSION|VERSÃO|
 BUILD|CONFIGURAÇÃO|
 Server|Usuário|
-RECORD|REGISTRO|
-HANGUP|HANGUP|
+RECORD |REGISTRO |
+>HANGUP|>HANGUP|
 >XFER|>XFER|
 PARK|PARQUE|
 IN-NUMBER|IN-NUMBER|
 NUMBER|NÚMERO|
-LENGTH|COMPRIMENTO|
 CALLERID|CALLERID|
-CallerID|CallerID|
  CALL| CHAMADA|
 PICKUP|COLETOR|
 CONFERENCE|CONFERÊNCIA|
@@ -346,8 +344,8 @@ Refresh|Refresque|
 Send DTMF|Emita DTMF|
 ORDER|ORDEM|
  on | em |
-LOGOUT|LOGOUT|
-Channel|Canaleta|
+>LOGOUT|>LOGOUT|
+ Channel| Canaleta|
 Extensions|Extensões|
 Conferences|Conferências|
 Conference|Conferência|
@@ -357,8 +355,6 @@ Welcome|Boa vinda|
 VOICEMAIL|VOICEMAIL|
  NEW| NOVO|
  OLD| VELHO|
-STOP|BATENTE|
-START|COMEÇO|
  Pause | Pausa |
 Resume|Resumo|
 Faster|Mais rapidamente|
@@ -366,7 +362,6 @@ Slower|Mais lento|
 Initializing|Inicializar|
 Invalid|Inválido|
 Username|Username|
-CUSTOM|COSTUME|
 Notes|Notas|
 First|Prime|
 MI: |Mi:|

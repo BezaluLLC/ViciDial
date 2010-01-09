@@ -224,7 +224,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			}
 		if ( ($last_action_sec < 30) and ($status != 'START') )
 			{
-			### You cannot log in or out within 30Sekunden of your last login/logout
+			### You cannot log in or out within 30 Sekunden of your last login/logout
 			$VDdisplayMESSAGE = "Bitte warten Sie wenigstens 30 Sekunden zwischen dem an- und abmelden und umgekehrt";
 
 			echo"<HTML><HEAD>\n";

@@ -470,7 +470,7 @@ if ($ADD==5)
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $StarTtime);
-if ($format=='table') {echo "\n<!-- czas działania skyptu: $RUNtimesekundy -->";}
+if ($format=='table') {echo "\n<!-- czas działania skyptu: $RUNtime sekundy -->";}
 if ($format=='table') {echo "\n</body>\n</html>\n";}
 	
 exit; 

@@ -718,7 +718,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		}
 
 // ################################################################################
-// LIVE TRUNK LIST FOR RACCROCHER/HIJACK MENU FUNCTIONS
+// LIVE TRUNK LIST FOR HANGUP/HIJACK MENU FUNCTIONS
 	function refresh_busytrunkhangup()
 		{
 		document.getElementById("TrunkHangupContent").innerHTML = Nactiveext;
@@ -765,7 +765,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		}
 
 // ################################################################################
-// LIVE LOCAL LIST FOR RACCROCHER/HIJACK MENU FUNCTIONS
+// LIVE LOCAL LIST FOR HANGUP/HIJACK MENU FUNCTIONS
 	function refresh_busylocalhangup()
 		{
 		document.getElementById("LocalHangupContent").innerHTML = Nactiveext;
@@ -1386,7 +1386,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=3;
 					if (live_calls > 0)
 						{
-						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>APPELS EN COURS SUR CE TELEPHONE:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CANAL CLIENT</td><td><font class=\"log_title\">CANAL DISTANT</td><td><font class=\"log_title\">ENREGISTREMENT</td><td><font class=\"log_title\">RACCROCHER</td><td><font class=\"log_title\">TRANSFERT</td><td><font class=\"log_title\">MISE EN ATT</td></tr>";
+						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>APPELS EN COURS SUR CE TELEPHONE:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CANAL CLIENT</td><td><font class=\"log_title\">CANAL DISTANT</td><td><font class=\"log_title\">RECORD</td><td><font class=\"log_title\">RACCROCHER</td><td><font class=\"log_title\">TRANSFERT</td><td><font class=\"log_title\">MISE EN ATT</td></tr>";
 						if ( (LCAcount > live_calls)  || (LCAcount < live_calls) )
 							{
 							LCAe[0]=''; LCAe[1]=''; LCAe[2]=''; LCAe[3]=''; LCAe[4]=''; LCAe[5]=''; 
@@ -1533,7 +1533,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=0;
 					if (out_calls > 0)
 						{
-						var out_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> APPEL DATE/TIME</td><td><font class=\"log_title\">NOMBRE</td><td align=right><font class=\"log_title\">LONGUEUR (M:SS)</td><td><font class=\"log_title\"> </td></tr>"
+						var out_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> APPEL DATE/TIME</td><td><font class=\"log_title\">NOMBRE</td><td align=right><font class=\"log_title\">LENGTH (M:SS)</td><td><font class=\"log_title\"> </td></tr>"
 						while (loop_ct < out_calls)
 							{
 							loop_ct++;
@@ -1561,7 +1561,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=0;
 					if (in_calls > 0)
 						{
-						var in_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> APPEL DATE/TIME</td><td><font class=\"log_title\">IN-NOMBRE</td><td COLSPAN=2><font class=\"log_title\">APPELANT</td><td align=right><font class=\"log_title\">LONGUEUR</td><td><font class=\"log_title\"> </td></tr>"
+						var in_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> APPEL DATE/TIME</td><td><font class=\"log_title\">IN-NOMBRE</td><td COLSPAN=2><font class=\"log_title\">APPELANT</td><td align=right><font class=\"log_title\">LENGTH</td><td><font class=\"log_title\"> </td></tr>"
 						while (loop_ct < in_calls)
 							{
 							loop_ct++;
@@ -2734,7 +2734,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:0px;top:12px;z-index:29;" id="TrunkHangupBox">
-    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> TRUNK RACCROCHER <BR><BR>
+    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> TRUNK HANGUP <BR><BR>
 	<span id="TrunkHangupContent"> Active Trunks Menu </span><BR>
 	<span id="TrunkHangup_HUlink"><a href="#" onclick="busyhangup_send_hangup('Trunk');return false;">Raccrocher le Faisceau</a> &nbsp; | &nbsp; </span>
 	<span id="TrunkHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Trunk','HIJACK');return false;">Intercepter le Faisceau</a> &nbsp; | &nbsp; </span>
@@ -2758,7 +2758,7 @@ echo "</head>\n";
 <span style="position:absolute;left:80px;top:12px;z-index:42;" id="MainXfeRBox">
 	<input type=hidden name=H_XfeR_channel>
 	<input type=hidden name=M_XfeR_channel>
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> TRANSFERT D'APPEL EN COURS</b> <BR>Canal à transférer: <span id="MainXfeRChanneL">Canal</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> TRANSFERT D'APPEL EN COURS</b> <BR>Canal à transférer: <span id="MainXfeRChanneL">Channel</span><BR></tr>
 	<tr><td>Extensions:<BR><span id="MainXfeRContent"> Extensions </span></td>
 	<td>
 	<BR>
@@ -2772,7 +2772,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:80px;top:12px;z-index:43;" id="LocalDialBox">
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> Composer une Extension LOCALE</b> <BR>Téléphone appelant de: <span id="LocalDialChanneL">Canal</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> Composer une Extension LOCALE</b> <BR>Téléphone appelant de: <span id="LocalDialChanneL">Channel</span><BR></tr>
 	<tr><td>Extensions:<BR><span id="LocalDialContent"> Extensions </span></td>
 	<td>
 	<BR>
@@ -2839,7 +2839,7 @@ echo "</head>\n";
 <span style="position:absolute;left:0px;top:46px;z-index:20;" id="ActiveLinesPanel">
 <table border=0 BGCOLOR="#CDE0C2" width=640>
 <tr><td colspan=3>
-<a href="#" onclick="pause();return false;">ARRÊT</a> | <a href="#" onclick="start();return false;">DEBUT</a> &nbsp; &nbsp; Vitesse de rafraichissement: <span id="refresh_rate">1000 ms</span> <a href="#" onclick="faster();return false;">Plus rapidement</a> | <a href="#" onclick="slower();return false;">Plus lentement</a></p>
+<a href="#" onclick="pause();return false;">STOP</a> | <a href="#" onclick="start();return false;">START</a> &nbsp; &nbsp; Vitesse de rafraichissement: <span id="refresh_rate">1000 ms</span> <a href="#" onclick="faster();return false;">Plus rapidement</a> | <a href="#" onclick="slower();return false;">Plus lentement</a></p>
 	<div id="status"><em>Initialisation..</em></div>
 </td></tr>
 <tr><td>Extensions Actives <BR> 

@@ -214,17 +214,17 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		else
 			{
 			### No vicidial_timeclock_status record found, insert one
-			$stmt="INSERT INTO vicidial_timeclock_status set status='COMEÇO', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip';";
+			$stmt="INSERT INTO vicidial_timeclock_status set status='START', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
-				$status='COMEÇO';
+				$status='START';
 				$totTIME_HMS='0:00:00';
 			$affected_rows = mysql_affected_rows($link);
 			print "<!-- NOVO vicidial_timeclock_status record inserted for $user:   |$affected_rows| -->\n";
 			}
-		if ( ($last_action_sec < 30) and ($status != 'COMEÇO') )
+		if ( ($last_action_sec < 30) and ($status != 'START') )
 			{
-			### You cannot log in or out within 30segundos of your last login/logout
+			### You cannot log in or out within 30 segundos of your last login/logout
 			$VDdisplayMESSAGE = "Você não pode efetuar login ou para fora dentro de 30 segundos do seu último login ou logout";
 
 			echo"<HTML><HEAD>\n";
@@ -262,7 +262,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 		if ($commit == 'YES')
 			{
-			if ( ( ($status=='AUTOLOGOUT') or ($status=='COMEÇO') or ($status=='LOGOUT') ) and ($stage=='login') )
+			if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='login') )
 				{
 				$VDdisplayMESSAGE = "You have now logged-in";
 				$LOGtimeMESSAGE = "You logged in at $NOW_TIME";
@@ -332,7 +332,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				print "<!-- vicidial_timeclock_audit_log record updated for $user:   |$affected_rows| -->\n";
 				}
 
-			if ( ( ( ($status=='AUTOLOGOUT') or ($status=='COMEÇO') or ($status=='LOGOUT') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
+			if ( ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
 				{echo "ERRO: timeclock entrada do log já realizados:$status|$stage";  exit;}
 
 			if ($referrer=='agent') 
@@ -366,7 +366,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 
 
-		if ( ($status=='AUTOLOGOUT') or ($status=='COMEÇO') or ($status=='LOGOUT') )
+		if ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') )
 			{
 			$VDdisplayMESSAGE = "Vez desde que foi registrado em:$totTIME_HMS";
 			$log_action = 'login';

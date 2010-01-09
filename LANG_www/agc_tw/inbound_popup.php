@@ -234,7 +234,7 @@ echo "<!-- 版本: $version     版次: $build    UNIQUEID: $uniqueid   server_i
 
 
 // ################################################################################
-// timeout to deactivate the call action links after 30秒
+// timeout to deactivate the call action links after 30 秒
 	function link_timeout() 
 		{
 		window.focus();
@@ -282,7 +282,7 @@ else
 #		Zap/73|"V.I.C.I. MARKET" <7275338730>|2005-04-28 14:01:21|7274514936|Inbound direct to Matt|||||
 		if ($format=='debug') {echo "\n<!-- $row[0]|$row[1]|$row[2]|$row[3]|$row[4]|$row[5]|$row[6]|$row[7]|$row[8]|$row[9]|$row[10]|$row[11]|$row[12]|$row[13]| -->";}
 		echo "<table width=95% cellpadding=1 cellspacing=3>\n";
-		echo "<tr bgcolor=\"#DDDDFF\"><td>渠道: </td><td align=left>$row[1]</td></tr>\n";
+		echo "<tr bgcolor=\"#DDDDFF\"><td>Channel: </td><td align=left>$row[1]</td></tr>\n";
 		echo "<tr bgcolor=\"#DDDDFF\"><td>CallerID: </td><td align=left>$row[3]</td></tr>\n";
 		echo "<tr bgcolor=\"#DDDDFF\"><td colspan=2 align=center>\n";
 
@@ -305,7 +305,7 @@ else
 			$local_web_callerID_QUERY_STRING.="&callerID_prefix=$NXX";
 			$local_web_callerID_QUERY_STRING.="&callerID_last4=$XXXX";
 			$local_web_callerID_QUERY_STRING.="&callerID_Time=$row[6]";
-			$local_web_callerID_QUERY_STRING.="&callerID_渠道=$row[1]";
+			$local_web_callerID_QUERY_STRING.="&callerID_Channel=$row[1]";
 			$local_web_callerID_QUERY_STRING.="&callerID_uniqueID=$row[0]";
 			$local_web_callerID_QUERY_STRING.="&callerID_phone_ext=$row[5]";
 			$local_web_callerID_QUERY_STRING.="&callerID_server_ip=$row[2]";
@@ -343,7 +343,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- 運行腳本: $RUNtime秒 -->";
+	echo "\n<!-- 運行腳本: $RUNtime 秒 -->";
 	echo "\n</body>\n</html>\n";
 	}
 	
