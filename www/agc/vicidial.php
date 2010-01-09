@@ -269,10 +269,11 @@
 # 91228-1339 - Added API "fields update" functions and "timer action" functions
 # 100103-1250 - Added 3 more conf-presets, list ID override presets and call start/dispo URLs
 # 100107-0108 - Added dynamic screen size based on login screen browser dimensions
+# 100109-0801 - Added ALTNUM alt number status, fixed alt number dialing from setting
 #
 
-$version = '2.2.0-247';
-$build = '100107-0108';
+$version = '2.2.0-248';
+$build = '100109-0801';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -4091,6 +4092,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // Insert or update the vicidial_log entry for a customer call
 	function DialLog(taskMDstage,nodeletevdac)
 		{
+		var alt_num_status = 0;
 		if (taskMDstage == "start") 
 			{
 			var MDlogEPOCH = 0;
@@ -4107,6 +4109,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				{
 				if (document.vicidial_form.DiaLAltPhonE.checked==true)
 					{
+					alt_num_status = 1;
 					reselect_alt_dial = 1;
 					alt_dial_active = 1;
 					alt_dial_status_display = 1;
@@ -4135,14 +4138,14 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			xmlhttp = new XMLHttpRequest();
 			}
 		if (xmlhttp) 
-			{ 
+			{
 			manDiaLlog_query = "format=text&server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLlogCaLL&stage=" + taskMDstage + "&uniqueid=" + document.vicidial_form.uniqueid.value + 
 			"&user=" + user + "&pass=" + pass + "&campaign=" + campaign + 
 			"&lead_id=" + document.vicidial_form.lead_id.value + 
 			"&list_id=" + document.vicidial_form.list_id.value + 
 			"&length_in_sec=0&phone_code=" + document.vicidial_form.phone_code.value + 
 			"&phone_number=" + lead_dial_number + 
-			"&exten=" + extension + "&channel=" + lastcustchannel + "&start_epoch=" + MDlogEPOCH + "&auto_dial_level=" + auto_dial_level + "&VDstop_rec_after_each_call=" + VDstop_rec_after_each_call + "&conf_silent_prefix=" + conf_silent_prefix + "&protocol=" + protocol + "&extension=" + extension + "&ext_context=" + ext_context + "&conf_exten=" + session_id + "&user_abb=" + user_abb + "&agent_log_id=" + agent_log_id + "&MDnextCID=" + LasTCID + "&inOUT=" + inOUT + "&alt_dial=" + dialed_label + "&DB=0" + "&agentchannel=" + agentchannel + "&conf_dialed=" + conf_dialed + "&leaving_threeway=" + leaving_threeway + "&hangup_all_non_reserved=" + hangup_all_non_reserved + "&blind_transfer=" + blind_transfer + "&dial_method" + dial_method + "&nodeletevdac=" + nodeletevdac;
+			"&exten=" + extension + "&channel=" + lastcustchannel + "&start_epoch=" + MDlogEPOCH + "&auto_dial_level=" + auto_dial_level + "&VDstop_rec_after_each_call=" + VDstop_rec_after_each_call + "&conf_silent_prefix=" + conf_silent_prefix + "&protocol=" + protocol + "&extension=" + extension + "&ext_context=" + ext_context + "&conf_exten=" + session_id + "&user_abb=" + user_abb + "&agent_log_id=" + agent_log_id + "&MDnextCID=" + LasTCID + "&inOUT=" + inOUT + "&alt_dial=" + dialed_label + "&DB=0" + "&agentchannel=" + agentchannel + "&conf_dialed=" + conf_dialed + "&leaving_threeway=" + leaving_threeway + "&hangup_all_non_reserved=" + hangup_all_non_reserved + "&blind_transfer=" + blind_transfer + "&dial_method" + dial_method + "&nodeletevdac=" + nodeletevdac + "&alt_num_status=" + alt_num_status;
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		//		document.getElementById("busycallsdebug").innerHTML = "vdc_db_query.php?" + manDiaLlog_query;
@@ -4376,14 +4379,15 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // Open up a callback customer record as manual dial preview mode
 	function new_callback_call(taskCBid,taskLEADid)
 		{
-		alt_phone_dialing=1;
+	//	alt_phone_dialing=1;
 		auto_dial_level=0;
 		manual_dial_in_progress=1;
 		MainPanelToFront();
 		buildDiv('DiaLLeaDPrevieW');
-		buildDiv('DiaLDiaLAltPhonE');
+		if (alt_phone_dialing == 1)
+			{buildDiv('DiaLDiaLAltPhonE');}
 		document.vicidial_form.LeadPreview.checked=true;
-		document.vicidial_form.DiaLAltPhonE.checked=true;
+	//	document.vicidial_form.DiaLAltPhonE.checked=true;
 		hideDiv('CallBacKsLisTBox');
 		ManualDialNext(taskCBid,taskLEADid,'','','','0');
 		}
@@ -4455,7 +4459,6 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		else
 			{
-			alt_phone_dialing=1;
 			auto_dial_level=0;
 			manual_dial_in_progress=1;
 			agent_dialed_number=1;
@@ -4463,11 +4466,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 			if (tempDiaLnow == 'PREVIEW')
 				{
+			//	alt_phone_dialing=1;
 				agent_dialed_type='MANUAL_PREVIEW';
 				buildDiv('DiaLLeaDPrevieW');
-				buildDiv('DiaLDiaLAltPhonE');
+				if (alt_phone_dialing == 1)
+					{buildDiv('DiaLDiaLAltPhonE');}
 				document.vicidial_form.LeadPreview.checked=true;
-				document.vicidial_form.DiaLAltPhonE.checked=true;
+			//	document.vicidial_form.DiaLAltPhonE.checked=true;
 				}
 			else
 				{
@@ -4505,14 +4510,15 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		
 			agent_dialed_number=1;
 			agent_dialed_type='MANUAL_DIALFAST';
-			alt_phone_dialing=1;
+		//	alt_phone_dialing=1;
 			auto_dial_level=0;
 			manual_dial_in_progress=1;
 			MainPanelToFront();
 			buildDiv('DiaLLeaDPrevieW');
-			buildDiv('DiaLDiaLAltPhonE');
+			if (alt_phone_dialing == 1)
+				{buildDiv('DiaLDiaLAltPhonE');}
 			document.vicidial_form.LeadPreview.checked=false;
-			document.vicidial_form.DiaLAltPhonE.checked=true;
+		//	document.vicidial_form.DiaLAltPhonE.checked=true;
 			ManualDialNext("","",MDDiaLCodEform,MDPhonENumbeRform,MDLookuPLeaD,MDVendorLeadCode,'0');
 			}
 		}

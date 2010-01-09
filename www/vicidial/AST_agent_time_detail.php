@@ -411,12 +411,12 @@ else
 		{
 		echo "AGENT TIME BREAKDOWN:\n";
 		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-		echo "| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=CALLS\">CALLS</a>    | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | <a href=\"$LINKbase&stage=TIME\">AGENT TIME</a> | WAIT       | TALK       | DISPO      | PAUSE      | DEAD       |   |$sub_statusesHTML\n";
+		echo "| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">LEADS</a>    | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | <a href=\"$LINKbase&stage=TIME\">AGENT TIME</a> | WAIT       | TALK       | DISPO      | PAUSE      | DEAD       |   |$sub_statusesHTML\n";
 		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 		}
 	else
 		{
-		$file_output .= "USER,ID,CALLS,TIME CLOCK,AGENT TIME,WAIT,TALK,DISPO,PAUSE,DEAD$sub_statusesFILE\n";
+		$file_output .= "USER,ID,LEADS,TIME CLOCK,AGENT TIME,WAIT,TALK,DISPO,PAUSE,DEAD$sub_statusesFILE\n";
 		}
 	##### END print the output to screen or put into file output variable
 
@@ -588,7 +588,7 @@ else
 			$TOPsort[$m] =	'' . sprintf("%08s", $RAWuser) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);
 			$TOPsortTALLY[$m]=$RAWcalls;
 			}
-		if ($stage == 'CALLS')
+		if ($stage == 'LEADS')
 			{
 			$TOPsort[$m] =	'' . sprintf("%08s", $RAWcalls) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);
 			$TOPsortTALLY[$m]=$RAWcalls;
@@ -603,7 +603,7 @@ else
 			$TOPsort[$m] =	'' . sprintf("%010s", $RAWtimeTCsec) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);
 			$TOPsortTALLY[$m]=$RAWtimeTCsec;
 			}
-		if (!ereg("NAME|ID|TIME|CALLS|TCLOCK",$stage))
+		if (!ereg("NAME|ID|TIME|LEADS|TCLOCK",$stage))
 			if ($file_download < 1)
 				{echo "$Toutput";}
 			else
@@ -624,11 +624,11 @@ else
 
 
 	### BEGIN sort through output to display properly ###
-	if (ereg("NAME|ID|TIME|CALLS|TCLOCK",$stage))
+	if (ereg("NAME|ID|TIME|LEADS|TCLOCK",$stage))
 		{
 		if (ereg("ID",$stage))
 			{sort($TOPsort, SORT_NUMERIC);}
-		if (ereg("TIME|CALLS|TCLOCK",$stage))
+		if (ereg("TIME|LEADS|TCLOCK",$stage))
 			{rsort($TOPsort, SORT_NUMERIC);}
 		if (ereg("NAME",$stage))
 			{rsort($TOPsort, SORT_STRING);}

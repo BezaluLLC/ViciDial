@@ -326,9 +326,9 @@ while ($i < $rows_to_print)
 	$i++;
 	}
 
-echo "CALL STATS BREAKDOWN:\n";
+echo "CALL STATS BREAKDOWN: (Statistics related to handling of calls only)\n";
 echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-echo "| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=CALLS\">CALLS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG | DEAD     |DEADAVG |$statusesHTML\n";
+echo "| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">LEADS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG | DEAD     |DEADAVG |$statusesHTML\n";
 echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
 
 
@@ -449,11 +449,11 @@ while ($m < $k)
 
 	if ($stage == 'ID')
 		{$TOPsort[$m] =	'' . sprintf("%08s", $RAWuser) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);}
-	if ($stage == 'CALLS')
+	if ($stage == 'LEADS')
 		{$TOPsort[$m] =	'' . sprintf("%08s", $RAWcalls) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);}
 	if ($stage == 'TIME')
 		{$TOPsort[$m] =	'' . sprintf("%08s", $Stime) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);}
-	if (!ereg("ID|TIME|CALLS",$stage))
+	if (!ereg("ID|TIME|LEADS",$stage))
 		{echo "$Toutput";}
 
 	$m++;
@@ -463,11 +463,11 @@ while ($m < $k)
 
 
 ### BEGIN sort through output to display properly ###
-if (ereg("ID|TIME|CALLS",$stage))
+if (ereg("ID|TIME|LEADS",$stage))
 	{
 	if (ereg("ID",$stage))
 		{sort($TOPsort, SORT_NUMERIC);}
-	if (ereg("TIME|CALLS",$stage))
+	if (ereg("TIME|LEADS",$stage))
 		{rsort($TOPsort, SORT_NUMERIC);}
 
 	$m=0;
@@ -737,7 +737,7 @@ while ($m < $k)
 
 
 ### BEGIN sort through output to display properly ###
-#if (ereg("ID|TIME|CALLS",$stage))
+#if (ereg("ID|TIME|LEADS",$stage))
 #	{
 #	$n=0;
 #	while ($n <= $m)

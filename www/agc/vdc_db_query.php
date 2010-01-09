@@ -85,6 +85,7 @@
 #  - $vtiger_callback_id - ('16534'...)
 #  - $nodeletevdac - ('0','1')
 #  - $agent_territories - ('ABC001','ABC002'...)
+#  - $alt_num_status - ('0','1')
 #
 # CHANGELOG:
 # 50629-1044 - First build of script
@@ -226,10 +227,11 @@
 # 91228-1340 - Added API fields update functions
 # 100103-1254 - Added 3 more conf-presets, list ID override presets and call start/dispo URLs
 # 100104-1509 - Fixed vicidial_log duplicate check to allow update if dup and logging update
+# 100109-0745 - Added alt_num_status for ALTNUM dialing status
 #
 
-$version = '2.2.0-136';
-$build = '100104-1509';
+$version = '2.2.0-137';
+$build = '100109-0745';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=290;
 $one_mysql_log=0;
@@ -407,6 +409,8 @@ if (isset($_GET["nodeletevdac"]))				{$nodeletevdac=$_GET["nodeletevdac"];}
 	elseif (isset($_POST["nodeletevdac"]))		{$nodeletevdac=$_POST["nodeletevdac"];}
 if (isset($_GET["agent_territories"]))			{$agent_territories=$_GET["agent_territories"];}
 	elseif (isset($_POST["agent_territories"]))	{$agent_territories=$_POST["agent_territories"];}
+if (isset($_GET["alt_num_status"]))				{$alt_num_status=$_GET["alt_num_status"];}
+	elseif (isset($_POST["alt_num_status"]))	{$alt_num_status=$_POST["alt_num_status"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -2481,6 +2485,9 @@ if ($stage == "start")
 
 if ($stage == "end")
 	{
+	$status_dispo = 'DISPO';
+	if ($alt_num_status > 0)
+		{$status_dispo = 'ALTNUM';}
 	##### get call type from vicidial_live_agents table
 	$VLA_inOUT='NONE';
 	$stmt="SELECT comments FROM vicidial_live_agents where user='$user' order by last_update_time desc limit 1;";
@@ -2578,7 +2585,7 @@ if ($stage == "end")
 
 		if ($VLA_inOUT == 'INBOUND')
 			{
-			$stmt = "UPDATE vicidial_closer_log set end_epoch='$StarTtime', length_in_sec='$length_in_sec' where lead_id='$lead_id' and user='$user' and call_date > \"$four_hours_ago\" order by call_date desc limit 1;";
+			$stmt = "UPDATE vicidial_closer_log set end_epoch='$StarTtime', length_in_sec='$length_in_sec', status='$status_dispo' where lead_id='$lead_id' and user='$user' and call_date > \"$four_hours_ago\" order by call_date desc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00062',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3155,7 +3162,7 @@ if ($stage == "end")
 				}
 
 			##### update the duration and end time in the vicidial_log table
-			$stmt="UPDATE vicidial_log set $SQLterm end_epoch='$StarTtime', length_in_sec='$length_in_sec' where uniqueid='$uniqueid' and lead_id='$lead_id' and user='$user' order by call_date desc limit 1;";
+			$stmt="UPDATE vicidial_log set $SQLterm end_epoch='$StarTtime', length_in_sec='$length_in_sec', status='$status_dispo' where uniqueid='$uniqueid' and lead_id='$lead_id' and user='$user' order by call_date desc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00090',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3204,7 +3211,7 @@ if ($stage == "end")
 			if (strlen($SQLterm) > 0)
 				{
 				##### update the duration and end time in the vicidial_log table
-				$stmt="UPDATE vicidial_closer_log set $SQLterm where lead_id='$lead_id' and call_date > \"$four_hours_ago\" order by call_date desc limit 1;";
+				$stmt="UPDATE vicidial_closer_log set $SQLterm, status='$status_dispo' where lead_id='$lead_id' and call_date > \"$four_hours_ago\" order by call_date desc limit 1;";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00092',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4577,7 +4584,7 @@ if ($ACTION == 'userLOGout')
 
 ################################################################################
 ### updateDISPO - update the vicidial_list table to reflect the agent choice of
-###               call disposition for that leand
+###               call disposition for that lead
 ################################################################################
 if ($ACTION == 'updateDISPO')
 	{
