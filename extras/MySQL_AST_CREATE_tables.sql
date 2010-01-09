@@ -1632,7 +1632,8 @@ lead_id INT(9) UNSIGNED,
 hangup_cause TINYINT(1) UNSIGNED default '0',
 dialstatus VARCHAR(16),
 channel VARCHAR(100),
-dial_time SMALLINT(2) UNSIGNED default '0',
+dial_time SMALLINT(3) UNSIGNED default '0',
+answered_time SMALLINT(4) UNSIGNED default '0',
 index (call_date)
 );
 

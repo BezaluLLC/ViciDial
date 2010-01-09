@@ -120,10 +120,10 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 	if ($valid_user < 1)
 		{
 		### NOT A VALID USER/PASS
-		$VDdisplayMESSAGE = "De gebruiker en wachtwoord die je hebt ingevoerd zijn niet actief in het systeem<BR>Probeer aub nogmaals:";
+		$VDdisplayMESSAGE = "De gebruikersnaam en wachtwoord die je hebt ingevoerd zijn niet actief in het systeem<BR>Probeer aub nogmaals:";
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>Agent Tijdslot</TITLE>\n";
+		echo"<TITLE>Agent Tijdklok</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -138,12 +138,12 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Tijdslot </B></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Tijdklok </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>Gebruiker Inloggen:  </TD>";
+		echo "<TR><TD ALIGN=RIGHT>Gebruikersnaam:  </TD>";
 		echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 maxlength=20 VALUE=\"$VD_login\"></TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>Gebruiker Wachtwoord:  </TD>";
+		echo "<TR><TD ALIGN=RIGHT>Gebruikerswachtwoord:  </TD>";
 		echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 maxlength=20 VALUE=''></TD></TR>\n";
 		echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=OPSLAAN VALUE=OPSLAAN> &nbsp; </TD></TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSIE: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
@@ -225,10 +225,10 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		if ( ($last_action_sec < 30) and ($status != 'START') )
 			{
 			### You cannot log in or out within 30seconden of your last login/logout
-			$VDdisplayMESSAGE = "Je kunt niet inloggen binnen 30 seconden na je laatste login of log-uit";
+			$VDdisplayMESSAGE = "Je kunt niet inloggen binnen 30 seconden na je laatste in- of uitlogpoging";
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>Agent Tijdslot</TITLE>\n";
+			echo"<TITLE>Agent Tijdklok</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -243,12 +243,12 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 			echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Tijdslot </B></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Tijdklok </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-			echo "<TR><TD ALIGN=RIGHT>Gebruiker Inloggen:  </TD>";
+			echo "<TR><TD ALIGN=RIGHT>Gebruikersnaam:  </TD>";
 			echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 maxlength=20 VALUE=\"$VD_login\"></TD></TR>\n";
-			echo "<TR><TD ALIGN=RIGHT>Gebruiker Wachtwoord:  </TD>";
+			echo "<TR><TD ALIGN=RIGHT>Gebruikerswachtwoord:  </TD>";
 			echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 maxlength=20 VALUE=''></TD></TR>\n";
 			echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=OPSLAAN VALUE=OPSLAAN> &nbsp; </TD></TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSIE: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
@@ -333,24 +333,24 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				}
 
 			if ( ( ( ($status=='AUTOUITLOGGEN') or ($status=='START') or ($status=='UITLOGGEN') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
-				{echo "FOUT: tijdslot log toevoegin reeds gemaakt: $status|$stage";  exit;}
+				{echo "FOUT: tijdslot log toevoeging reeds gemaakt: $status|$stage";  exit;}
 
 			if ($referrer=='agent') 
-				{$BACKlink = "<A HREF=\"./vicidial.php?pl=$phone_login&pp=$phone_pass&VD_login=$user\"><font color=\"#003333\">TERUG naar Agent Inloggen Scherm</font></A>";}
+				{$BACKlink = "<A HREF=\"./vicidial.php?pl=$phone_login&pp=$phone_pass&VD_login=$user\"><font color=\"#003333\">TERUG naar Agent Inlog scherm</font></A>";}
 			if ($referrer=='admin') 
 				{$BACKlink = "<A HREF=\"../vicidial/admin.php\"><font color=\"#003333\">TERUG naar Administratie</font></A>";}
 			if ($referrer=='welcome') 
-				{$BACKlink = "<A HREF=\"$welcomeURL\"><font color=\"#003333\">TERUG naar Welkomst Scherm</font></A>";}
+				{$BACKlink = "<A HREF=\"$welcomeURL\"><font color=\"#003333\">TERUG naar Welkomstscherm</font></A>";}
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>Agent Tijdslot</TITLE>\n";
+			echo"<TITLE>Agent Tijdklok</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 			echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 			echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Tijdslot </B></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Tijdklok </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 			echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
@@ -371,18 +371,18 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			$VDdisplayMESSAGE = "Tijd sinds je laatste login: $totTIME_HMS";
 			$log_action = 'login';
 			$button_name = 'LOGIN';
-			$LOGtimeMESSAGE = "Je laatste log-uit was om: $last_action_date<BR><BR>Klik INLOGGEN om in te loggen";
+			$LOGtimeMESSAGE = "Je laatste log-uit was op: $last_action_date<BR><BR>Klik op INLOGGEN om in te loggen";
 			}
 		if ($status=='LOGIN')
 			{
-			$VDdisplayMESSAGE = "Tijd dat je bent ingelogged$totTIME_HMS";
+			$VDdisplayMESSAGE = "Tijd dat je bent ingelogd$totTIME_HMS";
 			$log_action = 'logout';
 			$button_name = 'UITLOGGEN';
-			$LOGtimeMESSAGE = "Je bint ingelogged om: $last_action_date<BR>Tijd dat je bent ingelogged$totTIME_HMS<BR><BR>Klik UITLOGGEN om uit te loggen";
+			$LOGtimeMESSAGE = "Je bent ingelogd om: $last_action_date<BR>Tijd dat je bent ingelogd$totTIME_HMS<BR><BR>Klik op UITLOGGEN om uit te loggen";
 			}
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>Agent Tijdslot</TITLE>\n";
+		echo"<TITLE>Agent Tijdklok</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -400,7 +400,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Tijdslot </B></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Tijdklok </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 		echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
@@ -421,7 +421,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 else
 	{
 	echo"<HTML><HEAD>\n";
-	echo"<TITLE>Agent Tijdslot</TITLE>\n";
+	echo"<TITLE>Agent Tijdklok</TITLE>\n";
 	echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo"</HEAD>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -436,12 +436,12 @@ else
 	echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 	echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Tijdslot </B></TD>";
+	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Tijdklok </B></TD>";
 	echo "</TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Gebruiker Inloggen:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>Gebruikersnaam:  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 maxlength=20 VALUE=\"$VD_login\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Gebruiker Wachtwoord:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>Gebruikerswachtwoord:  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 maxlength=20 VALUE=''></TD></TR>\n";
 	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=OPSLAAN VALUE=OPSLAAN> &nbsp; </TD></TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSIE: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";

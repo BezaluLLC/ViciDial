@@ -136,7 +136,7 @@ $auth=$row[0];
 
   if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Foutief Gebruikersnaam/Wachtwoord: |$user|$pass|\n";
+    echo "Ongeldig Gebruikersnaam/Wachtwoord: |$user|$pass|\n";
     exit;
 	}
   else
@@ -144,7 +144,7 @@ $auth=$row[0];
 
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo "Foutief server_ip: |$server_ip|  or  Foutief session_name: |$session_name|\n";
+		echo "Ongeldig server_ip: |$server_ip|  or  Ongeldig session_name: |$session_name|\n";
 		exit;
 		}
 	else
@@ -157,7 +157,7 @@ $auth=$row[0];
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
-			echo "Foutief session_name: |$session_name|$server_ip|\n";
+			echo "Ongeldig session_name: |$session_name|$server_ip|\n";
 			exit;
 			}
 		  else
@@ -607,8 +607,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03013',$user,$server_ip,$session_name,$one_mysql_log);}
 		}
-		echo "Conferentie
- $conf_exten is geregistreer aan $exten\n";
+		echo "Conferentie $conf_exten is geregistreerd op $exten\n";
 	}
 
 
@@ -617,7 +616,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- script runtime: $RUNtimeseconden -->";
+	echo "\n<!-- script looptijd: $RUNtimeseconden -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

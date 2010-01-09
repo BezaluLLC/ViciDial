@@ -74,7 +74,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
   if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Foutief Gebruikersnaam/Wachtwoord: |$user|$pass|\n";
+    echo "Ongeldig Gebruikersnaam/Wachtwoord: |$user|$pass|\n";
     exit;
 	}
   else
@@ -82,7 +82,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo "Foutief server_ip: |$server_ip|  or  Foutief session_name: |$session_name|\n";
+		echo "Ongeldig server_ip: |$server_ip|  or  Ongeldig session_name: |$session_name|\n";
 		exit;
 		}
 	else
@@ -94,7 +94,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
-			echo "Foutief session_name: |$session_name|$server_ip|\n";
+			echo "Ongeldig session_name: |$session_name|$server_ip|\n";
 			exit;
 			}
 		  else
@@ -109,7 +109,7 @@ if ($format=='debug')
 echo "<html>\n";
 echo "<head>\n";
 echo "<!-- VERSIE: $version     BUILD: $build    EXTEN: $exten   server_ip: $server_ip-->\n";
-echo "<title>Gesprekken Log Display";
+echo "<title>Gesprekken Log Tonen";
 echo "</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -188,7 +188,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- script runtime: $RUNtimeseconden -->";
+	echo "\n<!-- script looptijd: $RUNtimeseconden -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

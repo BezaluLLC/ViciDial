@@ -86,7 +86,7 @@ if ( (eregi("^Zap",$channel)) and (!eregi("-",$channel)) ) {$channel = "$channel
 
   if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Foutief Gebruikersnaam/Wachtwoord: |$user|$pass|\n";
+    echo "Ongeldig Gebruikersnaam/Wachtwoord: |$user|$pass|\n";
     exit;
 	}
   else
@@ -94,7 +94,7 @@ if ( (eregi("^Zap",$channel)) and (!eregi("-",$channel)) ) {$channel = "$channel
 
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo "Foutief server_ip: |$server_ip|  or  Foutief session_name: |$session_name|\n";
+		echo "Ongeldig server_ip: |$server_ip|  or  Ongeldig session_name: |$session_name|\n";
 		exit;
 		}
 	else
@@ -106,7 +106,7 @@ if ( (eregi("^Zap",$channel)) and (!eregi("-",$channel)) ) {$channel = "$channel
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
-			echo "Foutief session_name: |$session_name|$server_ip|\n";
+			echo "Ongeldig session_name: |$session_name|$server_ip|\n";
 			exit;
 			}
 		  else
@@ -316,10 +316,10 @@ else
 			$local_web_callerID_QUERY_STRING.="&callerID_comment_c=$row[11]";
 			$local_web_callerID_QUERY_STRING.="&callerID_comment_d=$row[12]";
 			$local_web_callerID_QUERY_STRING.="&callerID_comment_e=$row[13]";
-		echo "<a href=\"$local_web_callerID_URL$local_web_callerID_QUERY_STRING\" target=\"_blank\">CUSTOM</a> - \n";
+		echo "<a href=\"$local_web_callerID_URL$local_web_callerID_QUERY_STRING\" target=\"_blank\">AANGEPAST</a> - \n";
 
 		echo "</td></tr>\n";
-		echo "<tr bgcolor=\"#DDDDFF\"><td>Nummer Gedraaid: </td><td align=left>$row[8]</td></tr>\n";
+		echo "<tr bgcolor=\"#DDDDFF\"><td>Nummer Gekozen: </td><td align=left>$row[8]</td></tr>\n";
 		echo "<tr bgcolor=\"#DDDDFF\"><td>Opmerkingen: </td><td align=left>$row[9]|$row[10]|$row[11]|$row[12]|$row[13]|</td></tr>\n";
 		echo "<tr bgcolor=\"#DDDDFF\"><td colspan=2 align=center>\n<span id=\"callactions\">";
 		echo "<a href=\"#\" onclick=\"livehangup_send_hangup('$row[1]');return false;\">OPHANGEN</a> - \n";
@@ -343,7 +343,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- script runtime: $RUNtimeseconden -->";
+	echo "\n<!-- script looptijd: $RUNtimeseconden -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

@@ -158,11 +158,11 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/astguicli
 	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Inloggen </TD>";
 	echo "</TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Gebruiker Inloggen:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>Gebruikersnaam:  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 maxlength=20 VALUE=\"$user\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Gebruiker Wachtwoord:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>Gebruikerswachtwoord:  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 maxlength=20 VALUE=\"$pass\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Telefoon Inloggen: </TD>";
+	echo "<TR><TD ALIGN=RIGHT>Telefoon login\/nummer: </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 maxlength=20 VALUE=\"$phone_login\"></TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Telefoon Wachtwoord:  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 maxlength=20 VALUE=\"$phone_pass\"></TD></TR>\n";
@@ -210,7 +210,7 @@ echo "<!-- VERSIE: $version     BUILD: $build      ADD: $ADD-->\n";
 
 if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
 {
-echo "<title>astGUIclient web client: Telefoon Inloggen</title>\n";
+echo "<title>astGUIclient web client: Telefoon login\/nummer</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 echo "<TABLE><TR><TD></TD>\n";
@@ -222,10 +222,10 @@ echo "<INPUT TYPE=HIDDEN NAME=user VALUE=\"$user\">\n";
 echo "<INPUT TYPE=HIDDEN NAME=pass VALUE=\"$pass\">\n";
 echo "<BR><BR><BR><CENTER><TABLE WIDTH=360 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCC2E0\"><TR BGCOLOR=WHITE>";
 echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/agc_tab_astguiclient.gif\" Border=0></TD>";
-echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Telefoon Inloggen </TD>";
+echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Telefoon login\/nummer </TD>";
 echo "</TR>\n";
 echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-echo "<TR><TD ALIGN=RIGHT>Telefoon Inloggen: </TD>";
+echo "<TR><TD ALIGN=RIGHT>Telefoon login\/nummer: </TD>";
 echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 maxlength=20 VALUE=\"$phone_login\"></TD></TR>\n";
 echo "<TR><TD ALIGN=RIGHT>Telefoon Wachtwoord:  </TD>";
 echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 maxlength=20 VALUE=\"$phone_pass\"></TD></TR>\n";
@@ -247,7 +247,7 @@ $row=mysql_fetch_row($rslt);
 $authphone=$row[0];
 if (!$authphone)
 	{
-	echo "<title>astGUIclient web client: Telefoon Inloggen</title>\n";
+	echo "<title>astGUIclient web client: Telefoon login\/nummer</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 	echo "<TABLE><TR><TD></TD>\n";
@@ -259,10 +259,10 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/astguicli
 	echo "<INPUT TYPE=HIDDEN NAME=pass VALUE=\"$pass\">\n";
 	echo "<BR><BR><BR><CENTER><TABLE WIDTH=360 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCC2E0\"><TR BGCOLOR=WHITE>";
 	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/agc_tab_astguiclient.gif\" Border=0></TD>";
-	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Telefoon Inloggen </TD>";
+	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Telefoon login\/nummer </TD>";
 	echo "</TR>\n";
-	echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=1> &nbsp; <BR><FONT SIZE=3>Sorry, je telefoon login en wachtwoord zijn niet acitef in dit systeem, probeer het nogmaals: <BR> &nbsp; </TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Telefoon Inloggen: </TD>";
+	echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=1> &nbsp; <BR><FONT SIZE=3>Sorry, de opgegeven telefoon login en wachtwoord zijn niet acitef in dit systeem, probeer het nogmaals: <BR> &nbsp; </TD></TR>\n";
+	echo "<TR><TD ALIGN=RIGHT>Telefoon login\/nummer: </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 maxlength=20 VALUE=\"$phone_login\"></TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Telefoon Wachtwoord:  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 maxlength=20 VALUE=\"$phone_pass\"></TD></TR>\n";
@@ -1636,7 +1636,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=-1;
 					if (parked_count > 0)
 						{
-						var park_HTML = "<table width=600><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CHANNEL<BR>&nbsp; BEL ID</td><td><font class=\"log_title\">GEPARKEEREERD DOOR<BR>&nbsp; PARKEEREER TIJD</td><td><font class=\"log_title\">OPHANGEN</td><td><font class=\"log_title\">XFER</td><td><font class=\"log_title\">OPPAKKEN</td></tr>"
+						var park_HTML = "<table width=600><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CHANNEL<BR>&nbsp; BEL ID</td><td><font class=\"log_title\">GEPARKEEREERD DOOR<BR>&nbsp; PARKEEREERTIJD</td><td><font class=\"log_title\">OPHANGEN</td><td><font class=\"log_title\">XFER</td><td><font class=\"log_title\">OPPAKKEN</td></tr>"
 						while (loop_ct < parked_count)
 							{
 							loop_ct++;
@@ -1764,7 +1764,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 			show_reglink=1;
 			reglink = "<a href=\"#\" onclick=\"conf_register_room('" + head_conf + "');return false;\">Register</a>";
 			}
-		var conf_head_HTML = "<font class=\"sh_text\">CONFERENTIE " + head_conf + "</b></font><font class=\"sb_text\">&nbsp; &nbsp; Gegegistreerd voor: " + head_reg + " &nbsp; " + reglink + " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"basic_originate_call('" + head_conf + "','NO','NO');return false;\">Open Conferentie </a><BR><a href=\"#\" onclick=\"check_for_conf_calls('" + head_conf + "','1');return false;\">Ververs </a> &nbsp; &nbsp; <span id=\"conf_rec_link\"><a href=\"#\" onclick=\"conf_send_recording('MonitorConf','conf_rec_link','" + head_conf + "');return false;\">Opnemen</a></span> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dtmf STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendConfDTMF(" + head_conf + ");\">Stuur DTMF</A> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dial STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendManualDial('YES'," + head_conf + ");\">Bel Van Conf</A><BR></font>";
+		var conf_head_HTML = "<font class=\"sh_text\">CONFERENTIE " + head_conf + "</b></font><font class=\"sb_text\">&nbsp; &nbsp; Geregistreerd op: " + head_reg + " &nbsp; " + reglink + " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"basic_originate_call('" + head_conf + "','NO','NO');return false;\">Ga naar conferentie </a><BR><a href=\"#\" onclick=\"check_for_conf_calls('" + head_conf + "','1');return false;\">Ververs </a> &nbsp; &nbsp; <span id=\"conf_rec_link\"><a href=\"#\" onclick=\"conf_send_recording('MonitorConf','conf_rec_link','" + head_conf + "');return false;\">Opnemen</a></span> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dtmf STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendConfDTMF(" + head_conf + ");\">Stuur DTMF</A> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dial STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendManualDial('YES'," + head_conf + ");\">Bel van conf</A><BR></font>";
 	
 		document.getElementById("ConfereNceHeaderContent").innerHTML = conf_head_HTML;
 		check_for_conf_calls(head_conf,taskrefresh);
@@ -2468,7 +2468,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		start_all_refresh();
 		}
 	function pause()	// Pauses the refreshing of the lists
-		{active_display=2;  display_message="  - AKTIEVE DISPLAY GEPAUZEERD -";}
+		{active_display=2;  display_message="  - AKTIEF SCHERM GEPAUZEERD -";}
 	function start()	// resumes the refreshing of the lists
 		{active_display=1;  display_message='';}
 	function faster()	// lowers by 1000 milliseconds the time until the next refresh
@@ -2723,9 +2723,8 @@ echo "</head>\n";
 <TR VALIGN=TOP ALIGN=LEFT>
 <TD><A HREF="#" onclick="MainPanelToFront();"><IMG SRC="../agc/images/agc_tab_main.gif" ALT="Hoofd Paneel" WIDTH=83 HEIGHT=30 Border=0></A></TD>
 <TD><A HREF="#" onclick="ActiveLinesPanelToFront();"><IMG SRC="../agc/images/agc_tab_active_lines.gif" ALT="Actieve lijnen paneel" WIDTH=139 HEIGHT=30 Border=0></A></TD>
-<TD><A HREF="#" onclick="ConfereNcesPanelToFront();"><IMG SRC="../agc/images/agc_tab_conferences.gif" ALT="Conferentie
- paneel" WIDTH=139 HEIGHT=30 Border=0></A></TD>
-<TD><A HREF="#" onclick="SendCheckVoiceMail();"><IMG SRC="../agc/images/agc_check_voicemail_ON.gif" NAME=voicemail ALT="Check voicemail" WIDTH=170 HEIGHT=30 Border=0></A></TD>
+<TD><A HREF="#" onclick="ConfereNcesPanelToFront();"><IMG SRC="../agc/images/agc_tab_conferences.gif" ALT="Conferentie paneel" WIDTH=139 HEIGHT=30 Border=0></A></TD>
+<TD><A HREF="#" onclick="SendCheckVoiceMail();"><IMG SRC="../agc/images/agc_check_voicemail_ON.gif" NAME=voicemail ALT="Controleer voicemail" WIDTH=170 HEIGHT=30 Border=0></A></TD>
 <TD><IMG SRC="../agc/images/agc_live_call_OFF.gif" NAME=livecall ALT="Live Gesprek" WIDTH=109 HEIGHT=30 Border=0></TD>
 </TR></TABLE>
 </SPAN>
@@ -2739,17 +2738,17 @@ echo "</head>\n";
 	<span id="TrunkHangupContent"> Active Trunks Menu </span><BR>
 	<span id="TrunkHangup_HUlink"><a href="#" onclick="busyhangup_send_hangup('Trunk');return false;">Trunk Ophangen</a> &nbsp; | &nbsp; </span>
 	<span id="TrunkHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Trunk','HIJACK');return false;">Trunk Kapen</a> &nbsp; | &nbsp; </span>
-	<span id="TrunkHangup_ZMlink"><a href="#" onclick="busyhangup_send_redirect('Trunk','LISTEN');return false;">Beluisten Trunk</a> &nbsp; | &nbsp; </span>
+	<span id="TrunkHangup_ZMlink"><a href="#" onclick="busyhangup_send_redirect('Trunk','LISTEN');return false;">Trunk Beluisteren</a> &nbsp; | &nbsp; </span>
 	<a href="#" onclick="busytrunkhangup_force_refresh();return false;">Ververs</a> &nbsp; | &nbsp; 
 	<a href="#" onclick="hideTrunkHangup('TrunkHangupBox');">Terug naar hoofdscherm</a>
 	</TD></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:0px;top:12px;z-index:28;" id="LocalHangupBox">
-    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> OPHANGEN LOKAAL <BR><BR>
+    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> LOKAAL OPHANGEN <BR><BR>
 	<span id="LocalHangupContent"> Aktief Lokaal Menu </span><BR>
-	<span id="LocalHangup_HUlink"><a href="#" onclick="busyhangup_send_hangup('Local');return false;">Openhangen Lokaal</a> &nbsp; | &nbsp; </span>
-	<span id="LocalHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Local');return false;">Kapen Lokaal</a> &nbsp; | &nbsp; </span>
+	<span id="LocalHangup_HUlink"><a href="#" onclick="busyhangup_send_hangup('Local');return false;">Lokaal Ophangen</a> &nbsp; | &nbsp; </span>
+	<span id="LocalHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Local');return false;">Lokaal Kapen</a> &nbsp; | &nbsp; </span>
 	<span id="LocalHangup_ZMlink"><a href="#" onclick="busyhangup_send_redirect('Local','LISTEN');return false;">Lokaal Beluisteren</a> &nbsp; | &nbsp; </span>
 	<a href="#" onclick="busylocalhangup_force_refresh();return false;">Ververs</a> &nbsp; | &nbsp; 
 	<a href="#" onclick="hideLocalHangup('LocalHangupBox');">Terug naar hoofdscherm</a>
@@ -2759,7 +2758,7 @@ echo "</head>\n";
 <span style="position:absolute;left:80px;top:12px;z-index:42;" id="MainXfeRBox">
 	<input type=hidden name=H_XfeR_channel>
 	<input type=hidden name=M_XfeR_channel>
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> LIVE GESPREK TRANSFER</b> <BR>Kanaal om te transferen: <span id="MainXfeRChanneL">Kanaal</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> LIVE GESPREK DOORSCHAKELEN</b> <BR>Doorschakelkanaal: <span id="MainXfeRChanneL">Kanaal</span><BR></tr>
 	<tr><td>Extenties:<BR><span id="MainXfeRContent"> Extentie Menu </span></td>
 	<td>
 	<BR>
@@ -2769,11 +2768,11 @@ echo "</head>\n";
 	<a href="#" onclick="getactiveext('MainXfeRBox');return false;">Ververs</a> <BR><BR><BR>
 	<a href="#" onclick="hideMainXfeR('MainXfeRBox');">Terug naar hoofdscherm</a> <BR><BR>
 	</TD>
-	<TD>Conferenties:<BR><font size=1>(klik op een onderstaand nummer om naar een conferentie te sturen)<BR><input type=checkbox name=MainXfeRconfXTRA size=1 value="1"> Verstuur mijn kanaal ook<div class="scroll_list" id="MainXfeRconfContent"> Conferentie Menu </div></td></TR></TABLE>
+	<TD>Conferenties:<BR><font size=1>(klik op een onderstaand nummer om naar een conferentie te sturen)<BR><input type=checkbox name=MainXfeRconfXTRA size=1 value="1"> Verstuur mijn kanaal ook<div class="scroll_list" id="MainXfeRconfContent"> Conferenties Menu </div></td></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:80px;top:12px;z-index:43;" id="LocalDialBox">
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> Bel Lokale Extenties</b> <BR>Telefoon belt van: <span id="LocalDialChanneL">Kanaal</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> Bel Lokale Extenties</b> <BR>Telefoon belt vanaf: <span id="LocalDialChanneL">Kanaal</span><BR></tr>
 	<tr><td>Extenties:<BR><span id="LocalDialContent"> Extentie Menu </span></td>
 	<td>
 	<BR>
@@ -2829,8 +2828,8 @@ echo "</head>\n";
 <span style="position:absolute;left:5px;top:5px;z-index:34;" id="FavoriteSEdiT">
     <table border=0 bgcolor="#DDDDFF" width=800 height=450 cellpadding=2 ALIGN=TOP><TR HEIGHT=95%><TD align=center HEIGHT=95%><span id="FavoriteSEditContent"> FAVORIETEN</span></TD></TR>
 	<TR><TD ALIGN=CENTER><BR> &nbsp; </TD></TR>
-	<TR VALIGN=BOTTOM><TD VALIGN=BOTTOM ALIGN=CENTER BGCOLOR="#FFFFCC"><a href="#" onclick="SubmiT_FavoritE_ChangEs();return false;">OPSLAAN FAVORIET AANPASSINGEN - opnieuw inloggen</a></TD></TR>
-	<TR VALIGN=BOTTOM><TD VALIGN=BOTTOM ALIGN=CENTER BGCOLOR="#FFFFCC"><a href="#" onclick="hideDiv('FavoriteSEdiT');return false;">TERUG NAAR HOOFD SCHERM - negeer gemaakte aanpassingen</a></TD></TR>
+	<TR VALIGN=BOTTOM><TD VALIGN=BOTTOM ALIGN=CENTER BGCOLOR="#FFFFCC"><a href="#" onclick="SubmiT_FavoritE_ChangEs();return false;">OPSLAAN AANPASSINGEN FAVORIETEN - uitloggen verplicht</a></TD></TR>
+	<TR VALIGN=BOTTOM><TD VALIGN=BOTTOM ALIGN=CENTER BGCOLOR="#FFFFCC"><a href="#" onclick="hideDiv('FavoriteSEdiT');return false;">TERUG NAAR HOOFDSCHERM - negeer gemaakte aanpassingen</a></TD></TR>
 	</TABLE>
 </span>
 
@@ -2848,7 +2847,7 @@ echo "</head>\n";
 <span id="activeext_order"><a href="#" onclick="activeext_order_desc();return false;">SORTEER</a> | </span>
 </td>
 
-<td>Buiten Lijnen <BR>
+<td>Buitenlijnen <BR>
 <a href="#" onclick="busytrunk_force_refresh();return false;">VERVERS</a> | 
 <span id="busytrunk_order"><a href="#" onclick="busytrunk_order_desc();return false;">SORTEER</a> | </span>
 </td>
@@ -2859,11 +2858,11 @@ echo "</head>\n";
 </td></tr>
 
 <tr><td VALIGN=TOP>
-	<span id="activeext"><em>Data Komt Hier</em></span><BR><BR>
+	<span id="activeext"><em>Data Hier Invullen</em></span><BR><BR>
 </td><td VALIGN=TOP>
-	<span id="busytrunk"><em>Data Komt Hier</em></span><BR><BR><span id="TrunkHangupLink"><a href="#" onclick="showTrunkHangup('TrunkHangupBox');return false;">Trunk Actie</a></span>
+	<span id="busytrunk"><em>Data Hier Invullen</em></span><BR><BR><span id="TrunkHangupLink"><a href="#" onclick="showTrunkHangup('TrunkHangupBox');return false;">Trunk Actie</a></span>
 </td><td VALIGN=TOP>
-	<span id="busyext"><em>Data Komt Hier</em></span><BR><BR><span id="LocalHangupLink"><a href="#" onclick="showLocalHangup('LocalHangupBox');return false;">Lokale Actie</a></span>
+	<span id="busyext"><em>Data Hier Invullen</em></span><BR><BR><span id="LocalHangupLink"><a href="#" onclick="showLocalHangup('LocalHangupBox');return false;">Lokale Actie</a></span>
 </td></tr>
 
 </table>
@@ -2875,7 +2874,7 @@ echo "</head>\n";
 <TR><TD></TD></TR></TABLE>
 
 <span style="position:absolute;left:0px;top:0px;z-index:31;color:black;" id="ConfereNcesListSpan">
-<span id="ConfereNcesListContent">Conferentie Lijst </span>
+<span id="ConfereNcesListContent">Conferentielijst </span>
 </span>
 
 <span style="position:absolute;left:140px;top:0px;z-index:32;color:black;width:500;" id="ConfereNceHeaderSpan">

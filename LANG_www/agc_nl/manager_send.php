@@ -239,14 +239,14 @@ $auth=$row[0];
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Foutief Gebruikersnaam/Wachtwoord: |$user|$pass|\n";
+    echo "Ongeldig Gebruikersnaam/Wachtwoord: |$user|$pass|\n";
     exit;
 	}
 else
 	{
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo "Foutief server_ip: |$server_ip|  or  Foutief session_name: |$session_name|\n";
+		echo "Ongeldig server_ip: |$server_ip|  or  Ongeldig session_name: |$session_name|\n";
 		exit;
 		}
 	else
@@ -259,7 +259,7 @@ else
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
-			echo "Foutief session_name: |$session_name|$server_ip|\n";
+			echo "Ongeldig session_name: |$session_name|$server_ip|\n";
 			exit;
 			}
 		  else
@@ -274,7 +274,7 @@ if ($format=='debug')
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "<!-- VERSIE: $version     BUILD: $build    ACTION: $ACTION   server_ip: $server_ip-->\n";
-	echo "<title>ManagerSend: ";
+	echo "<title>ManagerStuur: ";
 	if ($ACTION=="Originate")		{echo "Originate";}
 	if ($ACTION=="Redirect")		{echo "Redirect";}
 	if ($ACTION=="RedirectName")	{echo "RedirectName";}
@@ -305,7 +305,7 @@ if ($ACTION=="SysCIDOriginate")
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02004',$user,$server_ip,$session_name,$one_mysql_log);}
-		echo "Originate commando verstuurt Exten $exten Kanaal $channel op $server_ip\n";
+		echo "Originate commando verstuurd voor Exten $exten Kanaal $channel op $server_ip\n";
 		}
 	}
 
@@ -322,9 +322,9 @@ if ($ACTION=="OriginateName")
 		echo "Een van deze variabelen is niet geldig:\n";
 		echo "Kanaal $channel moet groter zijn dan 2 karakters\n";
 		echo "queryCID $queryCID moet groter zijn dan 14 karakters\n";
-		echo "extenName $extenName moet gezet zijn\n";
-		echo "ext_context $ext_context moet gezet zijn\n";
-		echo "ext_priority $ext_priority moet gezet zijn\n";
+		echo "extenName $extenName moet ingevuld zijn\n";
+		echo "ext_context $ext_context moet ingevuld zijn\n";
+		echo "ext_priority $ext_priority moet ingevuld zijn\n";
 		echo "\nOriginateName Action niet verstuurd\n";
 		}
 	else
@@ -351,10 +351,10 @@ if ($ACTION=="OriginateNameVmail")
 		echo "Een van deze variabelen is niet geldig:\n";
 		echo "Kanaal $channel moet groter zijn dan 2 karakters\n";
 		echo "queryCID $queryCID moet groter zijn dan 14 karakters\n";
-		echo "extenName $extenName moet gezet zijn\n";
-		echo "exten $exten moet gezet zijn\n";
-		echo "ext_context $ext_context moet gezet zijn\n";
-		echo "ext_priority $ext_priority moet gezet zijn\n";
+		echo "extenName $extenName moet ingevuld zijn\n";
+		echo "exten $exten moet ingevuld zijn\n";
+		echo "ext_context $ext_context moet ingevuld zijn\n";
+		echo "ext_priority $ext_priority moet ingevuld zijn\n";
 		echo "\nOriginateNameVmail Action niet verstuurd\n";
 		}
 	else
@@ -398,7 +398,7 @@ if ($ACTION=="Originate")
 		{
 		if ( (eregi('MANUAL',$agent_dialed_type)) and ( (preg_match("/^\d860\d\d\d\d$/i",$exten)) or (preg_match("/^860\d\d\d\d$/i",$exten)) ) )
 			{
-			echo "ERROR U bent niet toegestaan te bellen naar andere agent sessies $exten\n";
+			echo "ERROR Je bent niet toegestaan te bellen naar andere agent sessies $exten\n";
 			exit;
 			}
 
@@ -418,7 +418,7 @@ if ($ACTION=="Originate")
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02007',$user,$server_ip,$session_name,$one_mysql_log);}
-		echo "Originate commando verstuurt Exten $exten Kanaal $channel op $server_ip |$account|$variable|\n";
+		echo "Originate commando verstuurd voor Exten $exten Kanaal $channel op $server_ip |$account|$variable|\n";
 
 		if ($agent_dialed_number > 0)
 			{
@@ -677,7 +677,7 @@ if ($ACTION=="Hangup")
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02020',$user,$server_ip,$session_name,$one_mysql_log);}
-			echo "Hangup commando verstuurt Kanaal $channel op $call_server_ip\n";
+			echo "Hangup commando verstuurd voor Kanaal $channel op $call_server_ip\n";
 			}
 		}
 	}
@@ -696,13 +696,13 @@ if ($ACTION=="RedirectVD")
 		echo "Een van deze variabelen is niet geldig:\n";
 		echo "Kanaal $channel moet groter zijn dan 2 karakters\n";
 		echo "queryCID $queryCID moet groter zijn dan 14 karakters\n";
-		echo "exten $exten moet gezet zijn\n";
-		echo "ext_context $ext_context moet gezet zijn\n";
-		echo "ext_priority $ext_priority moet gezet zijn\n";
-		echo "auto_dial_level $auto_dial_level moet gezet zijn\n";
-		echo "campaign $campaign moet gezet zijn\n";
-		echo "uniqueid $uniqueid moet gezet zijn\n";
-		echo "lead_id $lead_id moet gezet zijn\n";
+		echo "exten $exten moet ingevuld zijn\n";
+		echo "ext_context $ext_context moet ingevuld zijn\n";
+		echo "ext_priority $ext_priority moet ingevuld zijn\n";
+		echo "auto_dial_level $auto_dial_level moet ingevuld zijn\n";
+		echo "campaign $campaign moet ingevuld zijn\n";
+		echo "uniqueid $uniqueid moet ingevuld zijn\n";
+		echo "lead_id $lead_id moet ingevuld zijn\n";
 		echo "\nRedirectVD Action niet verstuurd\n";
 		}
 	else
@@ -779,11 +779,11 @@ if ($ACTION=="RedirectToPark")
 		echo "Een van deze variabelen is niet geldig:\n";
 		echo "Kanaal $channel moet groter zijn dan 2 karakters\n";
 		echo "queryCID $queryCID moet groter zijn dan 14 karakters\n";
-		echo "exten $exten moet gezet zijn\n";
-		echo "extenName $extenName moet gezet zijn\n";
-		echo "ext_context $ext_context moet gezet zijn\n";
-		echo "ext_priority $ext_priority moet gezet zijn\n";
-		echo "parkedby $parkedby moet gezet zijn\n";
+		echo "exten $exten moet ingevuld zijn\n";
+		echo "extenName $extenName moet ingevuld zijn\n";
+		echo "ext_context $ext_context moet ingevuld zijn\n";
+		echo "ext_priority $ext_priority moet ingevuld zijn\n";
+		echo "parkedby $parkedby moet ingevuld zijn\n";
 		echo "\nRedirectToPark Action niet verstuurd\n";
 		}
 	else
@@ -809,9 +809,9 @@ if ($ACTION=="RedirectFromPark")
 		echo "Een van deze variabelen is niet geldig:\n";
 		echo "Kanaal $channel moet groter zijn dan 2 karakters\n";
 		echo "queryCID $queryCID moet groter zijn dan 14 karakters\n";
-		echo "exten $exten moet gezet zijn\n";
-		echo "ext_context $ext_context moet gezet zijn\n";
-		echo "ext_priority $ext_priority moet gezet zijn\n";
+		echo "exten $exten moet ingevuld zijn\n";
+		echo "ext_context $ext_context moet ingevuld zijn\n";
+		echo "ext_priority $ext_priority moet ingevuld zijn\n";
 		echo "\nRedirectFromPark Action niet verstuurd\n";
 		}
 	else
@@ -833,9 +833,9 @@ if ($ACTION=="RedirectName")
 		echo "Een van deze variabelen is niet geldig:\n";
 		echo "Kanaal $channel moet groter zijn dan 2 karakters\n";
 		echo "queryCID $queryCID moet groter zijn dan 14 karakters\n";
-		echo "extenName $extenName moet gezet zijn\n";
-		echo "ext_context $ext_context moet gezet zijn\n";
-		echo "ext_priority $ext_priority moet gezet zijn\n";
+		echo "extenName $extenName moet ingevuld zijn\n";
+		echo "ext_context $ext_context moet ingevuld zijn\n";
+		echo "ext_priority $ext_priority moet ingevuld zijn\n";
 		echo "\nRedirectName Action niet verstuurd\n";
 		}
 	else
@@ -862,10 +862,10 @@ if ($ACTION=="RedirectNameVmail")
 		echo "Een van deze variabelen is niet geldig:\n";
 		echo "Kanaal $channel moet groter zijn dan 2 karakters\n";
 		echo "queryCID $queryCID moet groter zijn dan 14 karakters\n";
-		echo "extenName $extenName moet gezet zijn\n";
-		echo "exten $exten moet gezet zijn\n";
-		echo "ext_context $ext_context moet gezet zijn\n";
-		echo "ext_priority $ext_priority moet gezet zijn\n";
+		echo "extenName $extenName moet ingevuld zijn\n";
+		echo "exten $exten moet ingevuld zijn\n";
+		echo "ext_context $ext_context moet ingevuld zijn\n";
+		echo "ext_priority $ext_priority moet ingevuld zijn\n";
 		echo "\nRedirectNameVmail Action niet verstuurd\n";
 		}
 	else
@@ -903,9 +903,9 @@ if ($ACTION=="RedirectXtraCXNeW")
 		echo "Kanaal $channel moet groter zijn dan 2 karakters\n";
 		echo "ExtraKanaal $extrachannel moet groter zijn dan 2 karakters\n";
 		echo "queryCID $queryCID moet groter zijn dan 14 karakters\n";
-		echo "exten $exten moet gezet zijn\n";
-		echo "ext_context $ext_context moet gezet zijn\n";
-		echo "ext_priority $ext_priority moet gezet zijn\n";
+		echo "exten $exten moet ingevuld zijn\n";
+		echo "ext_context $ext_context moet ingevuld zijn\n";
+		echo "ext_priority $ext_priority moet ingevuld zijn\n";
 		echo "\nRedirect Action niet verstuurd\n";
 		if (ereg("SECOND|FIRST|DEBUG",$filename))
 			{
@@ -1077,7 +1077,7 @@ if ($ACTION=="RedirectXtraCXNeW")
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02044',$user,$server_ip,$session_name,$one_mysql_log);}
 
-				echo "RedirectXtraCX commando verstuurt Kanaal $channel op $call_server_ip and \nHungup $extrachannel op $server_ip\n";
+				echo "RedirectXtraCX commando verstuurd voor Kanaal $channel op $call_server_ip and \nHungup $extrachannel op $server_ip\n";
 				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel op $call_server_ip, Hungup $extrachannel op $server_ip";}
 				}
 			}
@@ -1128,10 +1128,10 @@ if ($ACTION=="RedirectXtraNeW")
 			echo "Kanaal $channel moet groter zijn dan 2 karakters\n";
 			echo "ExtraKanaal $extrachannel moet groter zijn dan 2 karakters\n";
 			echo "queryCID $queryCID moet groter zijn dan 14 karakters\n";
-			echo "exten $exten moet gezet zijn\n";
-			echo "ext_context $ext_context moet gezet zijn\n";
-			echo "ext_priority $ext_priority moet gezet zijn\n";
-			echo "session_id $session_id moet gezet zijn\n";
+			echo "exten $exten moet ingevuld zijn\n";
+			echo "ext_context $ext_context moet ingevuld zijn\n";
+			echo "ext_priority $ext_priority moet ingevuld zijn\n";
+			echo "session_id $session_id moet ingevuld zijn\n";
 			echo "\nRedirect Action niet verstuurd\n";
 			if (ereg("SECOND|FIRST|DEBUG",$filename))
 				{
@@ -1257,7 +1257,7 @@ if ($ACTION=="RedirectXtraNeW")
 					$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02057',$user,$server_ip,$session_name,$one_mysql_log);}
 
-					echo "RedirectXtra commando verstuurt Kanaal $channel and \nExtraKanaal $extrachannel\n to $exten op $server_ip\n";
+					echo "RedirectXtra commando verstuurd voor Kanaal $channel and \nExtraKanaal $extrachannel\n to $exten op $server_ip\n";
 					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel and $extrachannel to $exten op $server_ip";}
 					}
 				else
@@ -1284,7 +1284,7 @@ if ($ACTION=="RedirectXtraNeW")
 					$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02059',$user,$server_ip,$session_name,$one_mysql_log);}
 
-					echo "RedirectXtra commando verstuurt Kanaal $channel op $call_server_ip and \nExtraKanaal $extrachannel\n to $exten op $server_ip\n";
+					echo "RedirectXtra commando verstuurd voor Kanaal $channel op $call_server_ip and \nExtraKanaal $extrachannel\n to $exten op $server_ip\n";
 					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel/$call_server_ip and $extrachannel/$server_ip to $exten";}
 					}
 				}
@@ -1348,9 +1348,9 @@ if ($ACTION=="Redirect")
 		echo "Een van deze variabelen is niet geldig:\n";
 		echo "Kanaal $channel moet groter zijn dan 2 karakters\n";
 		echo "queryCID $queryCID moet groter zijn dan 14 karakters\n";
-		echo "exten $exten moet gezet zijn\n";
-		echo "ext_context $ext_context moet gezet zijn\n";
-		echo "ext_priority $ext_priority moet gezet zijn\n";
+		echo "exten $exten moet ingevuld zijn\n";
+		echo "ext_context $ext_context moet ingevuld zijn\n";
+		echo "ext_priority $ext_priority moet ingevuld zijn\n";
 		echo "\nRedirect Action niet verstuurd\n";
 		}
 	else
@@ -1381,7 +1381,7 @@ if ($ACTION=="Redirect")
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02064',$user,$server_ip,$session_name,$one_mysql_log);}
 
-			echo "Redirect commando verstuurt Kanaal $channel op $server_ip\n";
+			echo "Redirect commando verstuurd voor Kanaal $channel op $server_ip\n";
 			}
 		}
 	}
@@ -1468,7 +1468,7 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02071',$user,$server_ip,$session_name,$one_mysql_log);}
 					}
 				}
-			echo "$ACTION commando verstuurt Kanaal $channel op $server_ip\nFilename: $filename\nRecorDing_ID: $recording_id\n";
+			echo "$ACTION commando verstuurd voor Kanaal $channel op $server_ip\nFilename: $filename\nRecorDing_ID: $recording_id\n";
 			}
 		}
 	}
@@ -1624,7 +1624,7 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 				$i++;
 				}
 			}
-			echo "$ACTION commando verstuurt Kanaal $channel op $server_ip\nFilename: $filename\nRecorDing_ID: $recording_id\n OPNEMEN DUURT TOT 60 MINUTEN\n";
+			echo "$ACTION commando verstuurd voor Kanaal $channel op $server_ip\nFilename: $filename\nRecorDing_ID: $recording_id\n OPNEMEN DUURT TOT MAXIMAAL 60 MINUTEN\n";
 		}
 	}
 
@@ -1639,8 +1639,7 @@ if ($ACTION=="VolumeControl")
 	{
 	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($stage)<1) or (strlen($queryCID)<1) )
 		{
-		echo "Conferentie
- $exten, Stage $stage is niet geldig or queryCID $queryCID is niet geldig, Originate commando niet uitgevoerd\n";
+		echo "Conferentie $exten, Stage $stage is niet geldig or queryCID $queryCID is niet geldig, Originate commando niet uitgevoerd\n";
 		}
 	else
 		{
@@ -1657,8 +1656,7 @@ if ($ACTION=="VolumeControl")
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02082',$user,$server_ip,$session_name,$one_mysql_log);}
-		echo "Volume commando verstuurt Conferentie
- $exten, Stage $stage Kanaal $channel op $server_ip\n";
+		echo "Volume commando verstuurd voor Conferentie $exten, Stage $stage Kanaal $channel op $server_ip\n";
 		}
 	}
 
@@ -1675,7 +1673,7 @@ if ($ACTION=="VolumeControl")
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $StarTtime);
-if ($format=='debug') {echo "\n<!-- script runtime: $RUNtimeseconden -->";}
+if ($format=='debug') {echo "\n<!-- script looptijd: $RUNtimeseconden -->";}
 if ($format=='debug') {echo "\n</body>\n</html>\n";}
 	
 exit; 

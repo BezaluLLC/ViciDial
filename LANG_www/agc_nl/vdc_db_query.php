@@ -475,14 +475,14 @@ else
 
 	if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 		{
-		echo "Foutief Gebruikersnaam/Wachtwoord: |$user|$pass|\n";
+		echo "Ongeldig Gebruikersnaam/Wachtwoord: |$user|$pass|\n";
 		exit;
 		}
 	else
 		{
 		if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 			{
-			echo "Foutief server_ip: |$server_ip|  or  Foutief session_name: |$session_name|\n";
+			echo "Ongeldig server_ip: |$server_ip|  or  Ongeldig session_name: |$session_name|\n";
 			exit;
 			}
 		else
@@ -495,7 +495,7 @@ else
 			$SNauth=$row[0];
 			  if($SNauth==0)
 				{
-				echo "Foutief session_name: |$session_name|$server_ip|\n";
+				echo "Ongeldig session_name: |$session_name|$server_ip|\n";
 				exit;
 				}
 			  else
@@ -600,7 +600,7 @@ if ($ACTION == 'LogiNCamPaigns')
 		$shift_ok=0;
 		if ( (strlen($LOGgroup_shiftsSQL) < 3) and ($VU_shift_override_flag < 1) )
 			{
-			$VDdisplayMESSAGE = "<B>FOUT: Er zijn geen Verschuivingen ingeschakeld voor uw gebruikers-groep</B>\n";
+			$VDdisplayMESSAGE = "<B>FOUT: Er zijn geen diensten ingeschakeld voor je gebruikersgroep</B>\n";
 			$VDloginDISPLAY=1;
 			}
 		else
@@ -653,14 +653,14 @@ if ($ACTION == 'LogiNCamPaigns')
 
 			if ( ($shift_ok < 1) and ($VU_shift_override_flag < 1) )
 				{
-				$VDdisplayMESSAGE = "<B>FOUT: U bent niet toegestaan om in te loggen buiten uw verschuiving</B>\n";
+				$VDdisplayMESSAGE = "<B>FOUT: Het is niet toegestaan om in te loggen buiten je dienst</B>\n";
 				$VDloginDISPLAY=1;
 				}
 			}
 		if ($VDloginDISPLAY > 0)
 			{
 			$loginDATE = date("Ymd");
-			$VDdisplayMESSAGE.= "<BR><BR>MANAGER BOVEN:<BR>\n";
+			$VDdisplayMESSAGE.= "<BR><BR>MANAGER OVERRIDE:<BR>\n";
 			$VDdisplayMESSAGE.= "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=MGR_override VALUE=\"1\">\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=relogin VALUE=\"YES\">\n";
@@ -696,7 +696,7 @@ if ($ACTION == 'LogiNCamPaigns')
 	else
 		{
 		echo "<select size=1 name=VD_campaign id=VD_campaign onFocus=\"login_allowable_campaigns()\">\n";
-		echo "<option value=\"\">-- JE MOET EERS INLOGGEN IN HET TIJDSLOT --</option>\n";
+		echo "<option value=\"\">-- JE MOET EERS INLOGGEN BIJ DE TIJDKLOK --</option>\n";
 		echo "</select>\n";
 		}
 	exit;
@@ -5930,7 +5930,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 			$VLAaffected_rows_update = mysql_affected_rows($link);
 			}
 		}
-	echo 'Agent ' . $user . ' is nu in status ' . $stage . "\nNext agent_log_id:\n$agent_log_id\n";
+	echo 'Agent ' . $user . ' heeft nu de status ' . $stage . "\nNext agent_log_id:\n$agent_log_id\n";
 	}
 
 
@@ -6503,7 +6503,7 @@ if ($format=='debug')
 {
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $StarTtime);
-echo "\n<!-- script runtime: $RUNtimeseconden -->";
+echo "\n<!-- script looptijd: $RUNtimeseconden -->";
 echo "\n</body>\n</html>\n";
 }
 	

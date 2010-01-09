@@ -722,4 +722,9 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 UPDATE system_settings SET db_schema_version='1191',db_schema_update_date=NOW();
 
+ALTER TABLE vicidial_carrier_log MODIFY dial_time SMALLINT(3) UNSIGNED default '0';
+ALTER TABLE vicidial_carrier_log ADD answered_time SMALLINT(4) UNSIGNED default '0';
+
+UPDATE system_settings SET db_schema_version='1192',db_schema_update_date=NOW();
+
 UPDATE system_settings SET version='2.2.0rc1',db_schema_update_date=NOW();

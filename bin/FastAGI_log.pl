@@ -52,6 +52,7 @@
 # 91020-0055 - Fixed several bugs with auto-alt-dial, DNC and extended alt number dialing
 # 91026-1148 - Added AREACODE DNC option
 # 91213-1213 - Added queue_position to queue_log COMPLETE... and ABANDON records
+# 100108-2242 - Added answered_time to vicidial_carrier_log
 #
 
 # defaults for PreFork
@@ -305,7 +306,11 @@ sub process_request
 			$hangup_cause = $ARGV_vars[2];
 			$dialstatus = $ARGV_vars[3];
 			$dial_time = $ARGV_vars[4];
-			$ring_time = $ARGV_vars[5];
+			$answered_time = $ARGV_vars[5];
+            if( $dial_time > $answered_time ) 
+				{$ring_time = $dial_time - $answered_time;}
+            else 
+				{$ring_time = 0;}
 			$agi_string = "URL HVcauses: |$PRI|$DEBUG|$hangup_cause|$dialstatus|$dial_time|$ring_time|";   
 			&agi_output;
 			}
@@ -538,11 +543,15 @@ sub process_request
 					@ARGV_vars = split(/-----/, $request);
 					$PRI = $ARGV_vars[0];
 					$PRI =~ s/.*--HVcauses--//gi;
-					$DEBUG = $ARGV_vars[1];
-					$hangup_cause = $ARGV_vars[2];
-					$dialstatus = $ARGV_vars[3];
-					$dial_time = $ARGV_vars[4];
-					$ring_time = $ARGV_vars[5];
+					$DEBUG =			$ARGV_vars[1];
+					$hangup_cause =		$ARGV_vars[2];
+					$dialstatus =		$ARGV_vars[3];
+					$dial_time =		$ARGV_vars[4];
+					$answered_time =	$ARGV_vars[5];
+					if( $dial_time > $answered_time ) 
+						{$ring_time = $dial_time - $answered_time;}
+					else 
+						{$ring_time = 0;}
 					$agi_string = "URL HVcauses: |$PRI|$DEBUG|$hangup_cause|$dialstatus|$dial_time|$ring_time|";   
 					&agi_output;
 
@@ -565,7 +574,7 @@ sub process_request
 
 						if ($carrier_logging_active > 0)
 							{
-							$stmtA = "INSERT IGNORE INTO vicidial_carrier_log set uniqueid='$uniqueid',call_date='$now_date',server_ip='$VARserver_ip',lead_id='$CIDlead_id',hangup_cause='$hangup_cause',dialstatus='$dialstatus',channel='$channel',dial_time='$dial_time';";
+							$stmtA = "INSERT IGNORE INTO vicidial_carrier_log set uniqueid='$uniqueid',call_date='$now_date',server_ip='$VARserver_ip',lead_id='$CIDlead_id',hangup_cause='$hangup_cause',dialstatus='$dialstatus',channel='$channel',dial_time='$dial_time',answered_time='$answered_time';";
 								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 							$VCARaffected_rows = $dbhA->do($stmtA);
 							if ($AGILOG) {$agi_string = "--    CARRIER LOG insert: |$VCARaffected_rows|$CIDlead_id|$hangup_cause";   &agi_output;}

@@ -126,7 +126,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
   if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Foutief Gebruikersnaam/Wachtwoord: |$user|$pass|\n";
+    echo "Ongeldig Gebruikersnaam/Wachtwoord: |$user|$pass|\n";
     exit;
 	}
   else
@@ -134,7 +134,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo "Foutief server_ip: |$server_ip|  or  Foutief session_name: |$session_name|\n";
+		echo "Ongeldig server_ip: |$server_ip|  or  Ongeldig session_name: |$session_name|\n";
 		exit;
 		}
 	else
@@ -146,7 +146,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
-			echo "Foutief session_name: |$session_name|$server_ip|\n";
+			echo "Ongeldig session_name: |$session_name|$server_ip|\n";
 			exit;
 			}
 		  else
@@ -164,7 +164,7 @@ echo "<!-- VERSIE: $version     BUILD: $build    ADD: $ADD   server_ip: $server_
 echo "<title>Toon Lijst: ";
 if ($ADD==1)		{echo "Live Extenties";}
 if ($ADD==2)		{echo "Bezette Extenties";}
-if ($ADD==3)		{echo "Buiten Lijnen";}
+if ($ADD==3)		{echo "Buitenlijnen";}
 if ($ADD==4)		{echo "Lokale Extenties";}
 if ($ADD==5)		{echo "Conferenties";}
 if ($ADD==99999)	{echo "HELP";}
@@ -470,7 +470,7 @@ if ($ADD==5)
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $StarTtime);
-if ($format=='table') {echo "\n<!-- script runtime: $RUNtimeseconden -->";}
+if ($format=='table') {echo "\n<!-- script looptijd: $RUNtimeseconden -->";}
 if ($format=='table') {echo "\n</body>\n</html>\n";}
 	
 exit; 
