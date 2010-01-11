@@ -922,7 +922,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		if ($asterisk_version =~ /^1.2/)
 			{$Vext .= "exten => 8501,1,VoicemailMain(s\${CALLERIDNUM})\n";}
 		else
-			{$Vext .= "exten => 8501,1,VoicemailMain(s\${{CALLERID(num)}(num)})\n";}
+			{$Vext .= "exten => 8501,1,VoicemailMain(s\${CALLERID(num)})\n";}
 		$Vext .= "exten => 8501,2,Hangup\n";
 		$Vext .= "\n";
 		$Vext .= "; Prompt Extensions:\n";
