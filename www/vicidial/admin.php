@@ -23998,7 +23998,7 @@ if ($ADD==160000000000)
 	$rslt=mysql_query($stmt, $link);
 	$moh_to_print = mysql_num_rows($rslt);
 
-	echo "<br>TEXT-TO-SPEECH(TTS) LISTINGS:\n";
+	echo "<br>MUSIC-ON-HOLD(MOH) LISTINGS:\n";
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<tr bgcolor=black>";
 	echo "<td><font size=1 color=white align=left><B>MOH ID</B></td>";

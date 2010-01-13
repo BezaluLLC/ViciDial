@@ -10518,7 +10518,7 @@ echo "</head>\n";
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> NEW MANUAL DIAL LEAD FOR <?php echo "$VD_login in campaign $VD_campaign" ?>:<BR><BR>Enter information below for the new lead you wish to call.
 	<BR>
 	<?php 
-	if (eregi("X",dial_prefix))
+	if (eregi("X",$dial_prefix))
 		{
 		echo "Note: a dial prefix of $dial_prefix will be added to the beginning of this number<BR>\n";
 		}

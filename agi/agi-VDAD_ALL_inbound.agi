@@ -1537,7 +1537,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 				if ($AGENTgrab > 0)
 					{
-					$stmtA = "SELECT conf_exten,extension from vicidial_live_agents WHERE user='$AGENTuser';";
+					$stmtA = "SELECT conf_exten,extension,server_ip from vicidial_live_agents WHERE user='$AGENTuser';";
 						if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1549,6 +1549,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						$VDADconf_exten	=	$aryA[0];
 						$VDADextension	=	$aryA[1];
 						$VDADuser =			$AGENTuser;
+						$VDADserver_ip =	$aryA[2];
 						}
 					$sthA->finish();
 					}
@@ -1928,7 +1929,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 				if ($AGENTgrab > 0)
 					{
-					$stmtA = "SELECT conf_exten,extension from vicidial_live_agents WHERE user='$AGENTuser';";
+					$stmtA = "SELECT conf_exten,extension,server_ip from vicidial_live_agents WHERE user='$AGENTuser';";
 						if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1940,6 +1941,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						$VDADconf_exten	=	$aryA[0];
 						$VDADextension	=	$aryA[1];
 						$VDADuser =			$AGENTuser;
+						$VDADserver_ip =	$aryA[2];
 						}
 					$sthA->finish();
 					}
