@@ -583,6 +583,7 @@ sub process_request
 					}
 
 				### get uniqueid and start_epoch from the call_log table
+				$CALLunique_id = $unique_id;
 				$stmtA = "SELECT uniqueid,start_epoch,channel FROM call_log where uniqueid='$unique_id';";
 				if ($callerid =~ /^M/) 
 					{$stmtA = "SELECT uniqueid,start_epoch,channel FROM call_log where caller_code='$callerid' and channel NOT LIKE \"Local\/%\";";}
@@ -616,7 +617,7 @@ sub process_request
 					$affected_rows = $dbhA->do($stmtA);
 					}
 
-				$stmtA = "DELETE from live_inbound where uniqueid='$unique_id' and server_ip='$VARserver_ip'";
+				$stmtA = "DELETE from live_inbound where uniqueid IN('$unique_id','$CALLunique_id') and server_ip='$VARserver_ip'";
 				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 				$affected_rows = $dbhA->do($stmtA);
 

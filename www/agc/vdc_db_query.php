@@ -236,7 +236,7 @@
 $version = '2.2.0-139';
 $build = '100113-1949';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=298;
+$mysql_log_count=300;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -2430,7 +2430,7 @@ if ($ACTION == 'manDiaLlookCaLL')
 			$stmt="UPDATE call_log set uniqueid='$uniqueid',channel='$channel' where caller_code='$MDnextCID';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00300',$user,$server_ip,$session_name,$one_mysql_log);}
 
 			echo "$call_output";
 			}
@@ -3541,6 +3541,12 @@ if ($stage == "end")
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00102',$user,$server_ip,$session_name,$one_mysql_log);}
 
+	### update vicidial_carrier_log to match uniqueIDs
+	$beginUNIQUEID = preg_replace("/\..*/","",$uniqueid);
+	$stmt="UPDATE vicidial_carrier_log set uniqueid='$uniqueid' where lead_id='$lead_id' and uniqueid LIKE \"$beginUNIQUEID%\";";
+		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+	$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00299',$user,$server_ip,$session_name,$one_mysql_log);}
 	}
 }
 
