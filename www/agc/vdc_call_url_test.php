@@ -8,10 +8,11 @@
 #
 # CHANGELOG:
 # 100103-1317 - First build of script
+# 100113-2023 - Added dispo_name
 #
 
-$version = '2.2.0-1';
-$build = '100103-1317';
+$version = '2.2.0-2';
+$build = '100113-2023';
 
 require("dbconnect.php");
 
@@ -148,7 +149,8 @@ if (isset($_GET["talk_time_min"]))	{$talk_time_min=$_GET["talk_time_min"];}
 	elseif (isset($_POST["talk_time_min"]))	{$talk_time_min=$_POST["talk_time_min"];}
 if (isset($_GET["agent_log_id"]))	{$agent_log_id=$_GET["agent_log_id"];}
 	elseif (isset($_POST["agent_log_id"]))	{$agent_log_id=$_POST["agent_log_id"];}
-
+if (isset($_GET["dispo_name"]))	{$dispo_name=$_GET["dispo_name"];}
+	elseif (isset($_POST["dispo_name"]))	{$dispo_name=$_POST["dispo_name"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -280,6 +282,7 @@ $output .= "$user_custom_five|";
 $output .= "$talk_time|";
 $output .= "$talk_time_min|";
 $output .= "$agent_log_id|";
+$output .= "$dispo_name|";
 
 echo "$output\n$query_string\n";
 

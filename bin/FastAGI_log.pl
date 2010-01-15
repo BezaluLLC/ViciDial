@@ -583,7 +583,9 @@ sub process_request
 					}
 
 				### get uniqueid and start_epoch from the call_log table
-				$stmtA = "SELECT uniqueid,start_epoch FROM call_log where uniqueid='$unique_id';";
+				$stmtA = "SELECT uniqueid,start_epoch,channel FROM call_log where uniqueid='$unique_id';";
+				if ($callerid =~ /^M/) 
+					{$stmtA = "SELECT uniqueid,start_epoch,channel FROM call_log where caller_code='$callerid' and channel NOT LIKE \"Local\/%\";";}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -591,7 +593,10 @@ sub process_request
 				while ($sthArows > $rec_count)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$start_time	=			"$aryA[1]";
+					$unique_id =	$aryA[0];
+					$uniqueid =		$aryA[0];
+					$start_time	=	$aryA[1];
+					$channel =		$aryA[2];
 					if ($AGILOG) {$agi_string = "|$aryA[0]|$aryA[1]|";   &agi_output;}
 					$rec_count++;
 					}

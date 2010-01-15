@@ -2373,30 +2373,28 @@ if ($ACTION == 'manDiaLlookCaLL')
 					$channel =		$row[1];
 					$end_epoch =	$row[2];
 
-					### Local channel hung up, check carrier log for error
-					if ($end_epoch > 1000)
+					### Check carrier log for error
+					$stmt="SELECT dialstatus,hangup_cause FROM vicidial_carrier_log where uniqueid='$uniqueid' and server_ip='$server_ip' and channel='$channel' and dialstatus IN('BUSY','CHANUNAVAIL','CONGESTION') LIMIT 1;";
+					$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00292',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$CL_mancall_ct = mysql_num_rows($rslt);
+					if ($CL_mancall_ct > 0)
 						{
-						$stmt="SELECT dialstatus,hangup_cause FROM vicidial_carrier_log where uniqueid='$uniqueid' and server_ip='$server_ip' and channel='$channel' and dialstatus IN('BUSY','CHANUNAVAIL','CONGESTION') LIMIT 1;";
+						$row=mysql_fetch_row($rslt);
+						$dialstatus =$row[0];
+						$hangup_cause =$row[1];
+						
+						$channel = $dialstatus . "-" . $hangup_cause;
+
+						$call_output = "$uniqueid\n$channel\nERROR";
+						$call_good++;
+
+						### Delete call record
+						$stmt="DELETE from vicidial_auto_calls where callerid='$MDnextCID';";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_query($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00292',$user,$server_ip,$session_name,$one_mysql_log);}
-						if ($DB) {echo "$stmt\n";}
-						$CL_mancall_ct = mysql_num_rows($rslt);
-						if ($CL_mancall_ct > 0)
-							{
-							$row=mysql_fetch_row($rslt);
-							$dialstatus =$row[0];
-							$hangup_cause =$row[1];
-							$channel = $dialstatus . "-" . $hangup_cause;
-
-							$call_output = "$uniqueid\n$channel\nERROR";
-							$call_good++;
-
-							### Delete call record
-							$stmt="DELETE from vicidial_auto_calls where callerid='$MDnextCID';";
-								if ($format=='debug') {echo "\n<!-- $stmt -->";}
-							$rslt=mysql_query($stmt, $link);
-								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00293',$user,$server_ip,$session_name,$one_mysql_log);}
-							}
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00293',$user,$server_ip,$session_name,$one_mysql_log);}
 						}
 					}
 				}
@@ -2428,6 +2426,11 @@ if ($ACTION == 'manDiaLlookCaLL')
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00055',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			$stmt="UPDATE call_log set uniqueid='$uniqueid',channel='$channel' where caller_code='$MDnextCID';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 
 			echo "$call_output";
 			}
