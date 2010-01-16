@@ -6,11 +6,12 @@
 # send the calls to various places depending on the settings for each DID.
 # 
 #
-# You need to put a line similar to this below in your extensions.conf file:
+# You need to put a line similar to this below in your extensions.conf file in
+# the context for where incoming calls go from your trunks:
 # ;inbound DID catch-all:
 #exten => _X.,1,AGI(agi-DID_route.agi)
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 81007-0324 - First Build
@@ -20,6 +21,7 @@
 # 90507-1145 - Added CALLMENU option
 # 90825-2252 - Changed PHONE to route using dialplan number
 # 91122-0743 - Added QueueMetrics logging as DID INFO entries
+# 100116-0631 - Logging bug fixes
 #
 
 $script = 'agi-DID_route.agi';
@@ -44,10 +46,10 @@ $now_date_epoch = time();
 $now_date = "$year-$mon-$mday $hour:$min:$sec";
 $CLInow_date = "$year-$mon-$mday\\ $hour:$min:$sec";
 $start_time=$now_date;
-	$CIDdate = "$mon$mday$hour$min$sec";
-	$tsSQLdate = "$year$mon$mday$hour$min$sec";
-	$SQLdate = "$year-$mon-$mday $hour:$min:$sec";
-	$SQLdateBEGIN = $SQLdate;
+$CIDdate = "$mon$mday$hour$min$sec";
+$tsSQLdate = "$year$mon$mday$hour$min$sec";
+$SQLdate = "$year-$mon-$mday $hour:$min:$sec";
+$SQLdateBEGIN = $SQLdate;
 
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
@@ -174,6 +176,7 @@ if ( (!$callerid) or ($callerid =~ /unknown/) )
 
 
 ### Grab DID values from the database
+$DIDs_in_system=0;
 $stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id FROM vicidial_inbound_dids where did_pattern = '$extension' and did_active='Y';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -195,15 +198,10 @@ if ($sthArows > 0)
 	$user_unavailable_action =		$aryA[11];
 	$user_route_settings_ingroup =	$aryA[12];
 	$menu_id =						$aryA[13];
+
+	$DIDs_in_system++;
 	}
 $sthA->finish();
-
-$stmtA = "INSERT INTO vicidial_did_log SET uniqueid='$uniqueid',channel='$channel',server_ip='$VARserver_ip',caller_id_number='$callerid',caller_id_name='$calleridname',extension='$extension',call_date='$SQLdate',did_id='$did_id',did_route='$did_route';";
-	if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-$affected_rowsL = $dbhA->do($stmtA);
-if ($AGILOG) {$agi_string = "--    DID LOG : |$affected_rowsL|$stmtA|";   &agi_output;}
-
-if ($AGILOG) {$did_string = "$SQLdate|$uniqueid|$channel|$extension|$callerid|$calleridname|$did_id|$did_route|";   &did_output;}
 
 if ($sthArows < 1)
 	{
@@ -211,8 +209,8 @@ if ($sthArows < 1)
 	$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id FROM vicidial_inbound_dids where did_pattern = 'default' and did_active='Y';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
+	$DIDs_in_system=$sthA->rows;
+	if ($DIDs_in_system > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
 		$did_id =						$aryA[0];
@@ -231,12 +229,21 @@ if ($sthArows < 1)
 		$menu_id =						$aryA[13];
 		}
 	$sthA->finish();
+	}
 
-	if ($sthArows < 1)
-		{
-		### if nothing found, exit script
-		exit;
-		}
+### Log the call
+$stmtA = "INSERT INTO vicidial_did_log SET uniqueid='$uniqueid',channel='$channel',server_ip='$VARserver_ip',caller_id_number='$callerid',caller_id_name='$calleridname',extension='$extension',call_date='$SQLdate',did_id='$did_id',did_route='$did_route';";
+	if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+$affected_rowsL = $dbhA->do($stmtA);
+if ($AGILOG) {$agi_string = "--    DID LOG : |$affected_rowsL|$stmtA|";   &agi_output;}
+
+if ($AGILOG) {$did_string = "$SQLdate|$uniqueid|$channel|$extension|$callerid|$calleridname|$did_id|$did_route|";   &did_output;}
+
+if ($DIDs_in_system < 1)
+	{
+	### if nothing found, exit script
+	if ($AGILOG) {$did_string = "NO default DID DEFINED! EXITING...   $SQLdate|$uniqueid|$channel|$extension|$callerid|$calleridname|";   &did_output;}
+	exit;
 	}
 
 ### Grab Server values from the database
