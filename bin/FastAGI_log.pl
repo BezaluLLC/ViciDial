@@ -574,6 +574,23 @@ sub process_request
 
 						if ($carrier_logging_active > 0)
 							{
+							if ($callerid =~ /^M/) 
+								{
+								$beginUNIQUEID = $unique_id;
+								$beginUNIQUEID =~ s/\..*//gi;
+								$stmtA = "SELECT uniqueid FROM call_log where uniqueid LIKE \"$beginUNIQUEID%\" and caller_code LIKE \"%$CIDlead_id\";";
+								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+								$sthArows=$sthA->rows;
+								$rec_count=0;
+								if ($sthArows > 0)
+									{
+									@aryA = $sthA->fetchrow_array;
+									$unique_id =	$aryA[0];
+									$uniqueid =		$aryA[0];
+									}
+								$sthA->finish();
+								}
 							$stmtA = "INSERT IGNORE INTO vicidial_carrier_log set uniqueid='$uniqueid',call_date='$now_date',server_ip='$VARserver_ip',lead_id='$CIDlead_id',hangup_cause='$hangup_cause',dialstatus='$dialstatus',channel='$channel',dial_time='$dial_time',answered_time='$answered_time';";
 								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 							$VCARaffected_rows = $dbhA->do($stmtA);
