@@ -230,12 +230,13 @@
 # 100104-1509 - Fixed vicidial_log duplicate check to allow update if dup and logging update
 # 100109-0745 - Added alt_num_status for ALTNUM dialing status
 # 100109-1336 - Fixed Manual dial live call detection
+# 100113-1949 - Fixed dispo_choice bug and added dispo_status to dispo URL call
 #
 
-$version = '2.2.0-138';
-$build = '100109-1336';
+$version = '2.2.0-139';
+$build = '100113-1949';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=296;
+$mysql_log_count=300;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -2372,30 +2373,28 @@ if ($ACTION == 'manDiaLlookCaLL')
 					$channel =		$row[1];
 					$end_epoch =	$row[2];
 
-					### Local channel hung up, check carrier log for error
-					if ($end_epoch > 1000)
+					### Check carrier log for error
+					$stmt="SELECT dialstatus,hangup_cause FROM vicidial_carrier_log where uniqueid='$uniqueid' and server_ip='$server_ip' and channel='$channel' and dialstatus IN('BUSY','CHANUNAVAIL','CONGESTION') LIMIT 1;";
+					$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00292',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$CL_mancall_ct = mysql_num_rows($rslt);
+					if ($CL_mancall_ct > 0)
 						{
-						$stmt="SELECT dialstatus,hangup_cause FROM vicidial_carrier_log where uniqueid='$uniqueid' and server_ip='$server_ip' and channel='$channel' and dialstatus IN('BUSY','CHANUNAVAIL','CONGESTION') LIMIT 1;";
+						$row=mysql_fetch_row($rslt);
+						$dialstatus =$row[0];
+						$hangup_cause =$row[1];
+						
+						$channel = $dialstatus . "-" . $hangup_cause;
+
+						$call_output = "$uniqueid\n$channel\nERROR";
+						$call_good++;
+
+						### Delete call record
+						$stmt="DELETE from vicidial_auto_calls where callerid='$MDnextCID';";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_query($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00292',$user,$server_ip,$session_name,$one_mysql_log);}
-						if ($DB) {echo "$stmt\n";}
-						$CL_mancall_ct = mysql_num_rows($rslt);
-						if ($CL_mancall_ct > 0)
-							{
-							$row=mysql_fetch_row($rslt);
-							$dialstatus =$row[0];
-							$hangup_cause =$row[1];
-							$channel = $dialstatus . "-" . $hangup_cause;
-
-							$call_output = "$uniqueid\n$channel\nERROR";
-							$call_good++;
-
-							### Delete call record
-							$stmt="DELETE from vicidial_auto_calls where callerid='$MDnextCID';";
-								if ($format=='debug') {echo "\n<!-- $stmt -->";}
-							$rslt=mysql_query($stmt, $link);
-								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00293',$user,$server_ip,$session_name,$one_mysql_log);}
-							}
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00293',$user,$server_ip,$session_name,$one_mysql_log);}
 						}
 					}
 				}
@@ -2427,6 +2426,11 @@ if ($ACTION == 'manDiaLlookCaLL')
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00055',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			$stmt="UPDATE call_log set uniqueid='$uniqueid',channel='$channel' where caller_code='$MDnextCID';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00300',$user,$server_ip,$session_name,$one_mysql_log);}
 
 			echo "$call_output";
 			}
@@ -3537,6 +3541,12 @@ if ($stage == "end")
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00102',$user,$server_ip,$session_name,$one_mysql_log);}
 
+	### update vicidial_carrier_log to match uniqueIDs
+	$beginUNIQUEID = preg_replace("/\..*/","",$uniqueid);
+	$stmt="UPDATE vicidial_carrier_log set uniqueid='$uniqueid' where lead_id='$lead_id' and uniqueid LIKE \"$beginUNIQUEID%\";";
+		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+	$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00299',$user,$server_ip,$session_name,$one_mysql_log);}
 	}
 }
 
@@ -4325,73 +4335,73 @@ if ($ACTION == 'VDADcheckINCOMING')
 					if ($VUC_ct > 0)
 						{
 						$row=mysql_fetch_row($rslt);
-						$user_custom_one	=		$row[0];
-						$user_custom_two	=		$row[1];
-						$user_custom_three	=		$row[2];
-						$user_custom_four	=		$row[3];
-						$user_custom_five	=		$row[4];
+						$user_custom_one	=		urlencode(trim($row[0]));
+						$user_custom_two	=		urlencode(trim($row[1]));
+						$user_custom_three	=		urlencode(trim($row[2]));
+						$user_custom_four	=		urlencode(trim($row[3]));
+						$user_custom_five	=		urlencode(trim($row[4]));
 						}
 					}
 				$VDCL_start_call_url = preg_replace('/^VAR/','',$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--lead_id--B--',"$lead_id",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--vendor_id--B--',"$vendor_id",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--vendor_lead_code--B--',"$vendor_id",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--list_id--B--',"$list_id",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--gmt_offset_now--B--',"$gmt_offset_now",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--phone_code--B--',"$phone_code",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--phone_number--B--',"$phone_number",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--title--B--',"$title",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--first_name--B--',"$first_name",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--middle_initial--B--',"$middle_initial",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--last_name--B--',"$last_name",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--address1--B--',"$address1",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--address2--B--',"$address2",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--address3--B--',"$address3",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--city--B--',"$city",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--state--B--',"$state",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--province--B--',"$province",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--postal_code--B--',"$postal_code",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--country_code--B--',"$country_code",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--gender--B--',"$gender",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--date_of_birth--B--',"$date_of_birth",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--alt_phone--B--',"$alt_phone",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--email--B--',"$email",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--security_phrase--B--',"$security_phrase",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--comments--B--',"$comments",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--user--B--',"$user",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--pass--B--',"$pass",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--campaign--B--',"$campaign",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--phone_login--B--',"$phone_login",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--original_phone_login--B--',"$original_phone_login",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--phone_pass--B--',"$phone_pass",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--fronter--B--',"$fronter",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--closer--B--',"$closer",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--group--B--',"$group",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--channel_group--B--',"$channel_group",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--SQLdate--B--',"$SQLdate",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--epoch--B--',"$epoch",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--uniqueid--B--',"$uniqueid",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--customer_zap_channel--B--',"$customer_zap_channel",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--customer_server_ip--B--',"$customer_server_ip",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--server_ip--B--',"$server_ip",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--SIPexten--B--',"$SIPexten",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--session_id--B--',"$session_id",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--phone--B--',"$phone",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--parked_by--B--',"$parked_by",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--dispo--B--',"$dispo",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--dialed_number--B--',"$dialed_number",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--dialed_label--B--',"$dialed_label",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--source_id--B--',"$source_id",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--rank--B--',"$rank",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--owner--B--',"$owner",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--camp_script--B--',"$camp_script",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--in_script--B--',"$in_script",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--fullname--B--',"$fullname",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--user_custom_one--B--',"$user_custom_one",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--user_custom_two--B--',"$user_custom_two",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--user_custom_three--B--',"$user_custom_three",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--user_custom_four--B--',"$user_custom_four",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--user_custom_five--B--',"$user_custom_five",$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--lead_id--B--',urlencode(trim($lead_id)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--vendor_id--B--',urlencode(trim($vendor_id)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--vendor_lead_code--B--',urlencode(trim($vendor_id)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--list_id--B--',urlencode(trim($list_id)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--gmt_offset_now--B--',urlencode(trim($gmt_offset_now)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--phone_code--B--',urlencode(trim($phone_code)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--phone_number--B--',urlencode(trim($phone_number)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--title--B--',urlencode(trim($title)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--first_name--B--',urlencode(trim($first_name)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--middle_initial--B--',urlencode(trim($middle_initial)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--last_name--B--',urlencode(trim($last_name)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--address1--B--',urlencode(trim($address1)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--address2--B--',urlencode(trim($address2)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--address3--B--',urlencode(trim($address3)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--city--B--',urlencode(trim($city)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--state--B--',urlencode(trim($state)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--province--B--',urlencode(trim($province)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--postal_code--B--',urlencode(trim($postal_code)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--country_code--B--',urlencode(trim($country_code)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--gender--B--',urlencode(trim($gender)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--date_of_birth--B--',urlencode(trim($date_of_birth)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--alt_phone--B--',urlencode(trim($alt_phone)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--email--B--',urlencode(trim($email)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--security_phrase--B--',urlencode(trim($security_phrase)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--comments--B--',urlencode(trim($comments)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--user--B--',urlencode(trim($user)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--pass--B--',urlencode(trim($pass)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--campaign--B--',urlencode(trim($campaign)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--phone_login--B--',urlencode(trim($phone_login)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--original_phone_login--B--',urlencode(trim($original_phone_login)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--phone_pass--B--',urlencode(trim($phone_pass)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--fronter--B--',urlencode(trim($fronter)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--closer--B--',urlencode(trim($closer)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--group--B--',urlencode(trim($group)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--channel_group--B--',urlencode(trim($channel_group)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--SQLdate--B--',urlencode(trim($SQLdate)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--epoch--B--',urlencode(trim($epoch)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--uniqueid--B--',urlencode(trim($uniqueid)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--customer_zap_channel--B--',urlencode(trim($customer_zap_channel)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--customer_server_ip--B--',urlencode(trim($customer_server_ip)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--server_ip--B--',urlencode(trim($server_ip)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--SIPexten--B--',urlencode(trim($SIPexten)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--session_id--B--',urlencode(trim($session_id)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--phone--B--',urlencode(trim($phone)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--parked_by--B--',urlencode(trim($parked_by)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--dispo--B--',urlencode(trim($dispo)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--dialed_number--B--',urlencode(trim($dialed_number)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--dialed_label--B--',urlencode(trim($dialed_label)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--source_id--B--',urlencode(trim($source_id)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--rank--B--',urlencode(trim($rank)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--owner--B--',urlencode(trim($owner)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--camp_script--B--',urlencode(trim($camp_script)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--in_script--B--',urlencode(trim($in_script)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--fullname--B--',urlencode(trim($fullname)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--user_custom_one--B--',urlencode(trim($user_custom_one)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--user_custom_two--B--',urlencode(trim($user_custom_two)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--user_custom_three--B--',urlencode(trim($user_custom_three)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--user_custom_four--B--',urlencode(trim($user_custom_four)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--user_custom_five--B--',urlencode(trim($user_custom_five)),$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--talk_time--B--',"0",$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--talk_time_min--B--',"0",$VDCL_start_call_url);
 				if ($DB > 0) {echo "$VDCL_start_call_url<BR>\n";}
@@ -4577,8 +4587,7 @@ if ($ACTION == 'userLOGout')
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00138',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
 			$qm_conf_ct = mysql_num_rows($rslt);
-			$i=0;
-			while ($i < $qm_conf_ct)
+			if ($qm_conf_ct > 0)
 				{
 				$row=mysql_fetch_row($rslt);
 				$enable_queuemetrics_logging =	$row[0];
@@ -4588,7 +4597,6 @@ if ($ACTION == 'userLOGout')
 				$queuemetrics_pass =			$row[4];
 				$queuemetrics_log_id =			$row[5];
 				$allow_sipsak_messages =		$row[6];
-				$i++;
 				}
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
 			###########################################
@@ -5154,7 +5162,7 @@ if ($ACTION == 'updateDISPO')
 					$status_name =		$row[0];
 					}
 				}
-			if (strlen($status_name) < 1) {$status_name = $dispo_chioce;}
+			if (strlen($status_name) < 1) {$status_name = $dispo_choice;}
 
 			### connect to your vtiger database
 			$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
@@ -5537,11 +5545,11 @@ if ($ACTION == 'updateDISPO')
 			if ($VUC_ct > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$user_custom_one	=		$row[0];
-				$user_custom_two	=		$row[1];
-				$user_custom_three	=		$row[2];
-				$user_custom_four	=		$row[3];
-				$user_custom_five	=		$row[4];
+				$user_custom_one	=		urlencode(trim($row[0]));
+				$user_custom_two	=		urlencode(trim($row[1]));
+				$user_custom_three	=		urlencode(trim($row[2]));
+				$user_custom_four	=		urlencode(trim($row[3]));
+				$user_custom_five	=		urlencode(trim($row[4]));
 				}
 			}
 
@@ -5571,6 +5579,38 @@ if ($ACTION == 'updateDISPO')
 				}
 			}
 
+		if (eregi('--A--dispo_name--B--',$dispo_call_url))
+			{
+			### find the full status name for this status
+			$stmt = "select status_name from vicidial_statuses where status='$dispo_choice';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00297',$user,$server_ip,$session_name,$one_mysql_log);}
+			$vs_name_ct = mysql_num_rows($rslt);
+			if ($vs_name_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$status_name =		$row[0];
+				}
+			else
+				{
+				$stmt = "select status_name from vicidial_campaign_statuses where status='$dispo_choice' and campaign_id='$campaign';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00298',$user,$server_ip,$session_name,$one_mysql_log);}
+				$vcs_name_ct = mysql_num_rows($rslt);
+				if ($vcs_name_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$status_name =		$row[0];
+					}
+				}
+			if (strlen($status_name) < 1) {$status_name = $dispo_choice;}
+			}
+		$dispo_name = urlencode(trim($status_name));
+			
+
+
 		##### grab the data from vicidial_list for the lead_id
 		$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
 		$rslt=mysql_query($stmt, $link);
@@ -5580,36 +5620,36 @@ if ($ACTION == 'updateDISPO')
 		if ($list_lead_ct > 0)
 			{
 			$row=mysql_fetch_row($rslt);
-			$dispo			= trim("$row[3]");
-			$tsr			= trim("$row[4]");
-			$vendor_id		= trim("$row[5]");
-			$vendor_lead_code	= trim("$row[5]");
-			$source_id		= trim("$row[6]");
-			$list_id		= trim("$row[7]");
-			$gmt_offset_now	= trim("$row[8]");
-			$phone_code		= trim("$row[10]");
-			$phone_number	= trim("$row[11]");
-			$title			= trim("$row[12]");
-			$first_name		= trim("$row[13]");
-			$middle_initial	= trim("$row[14]");
-			$last_name		= trim("$row[15]");
-			$address1		= trim("$row[16]");
-			$address2		= trim("$row[17]");
-			$address3		= trim("$row[18]");
-			$city			= trim("$row[19]");
-			$state			= trim("$row[20]");
-			$province		= trim("$row[21]");
-			$postal_code	= trim("$row[22]");
-			$country_code	= trim("$row[23]");
-			$gender			= trim("$row[24]");
-			$date_of_birth	= trim("$row[25]");
-			$alt_phone		= trim("$row[26]");
-			$email			= trim("$row[27]");
-			$security		= trim("$row[28]");
-			$comments		= stripslashes(trim("$row[29]"));
-			$called_count	= trim("$row[30]");
-			$rank			= trim("$row[32]");
-			$owner			= trim("$row[33]");
+			$dispo			= urlencode(trim($row[3]));
+			$tsr			= urlencode(trim($row[4]));
+			$vendor_id		= urlencode(trim($row[5]));
+			$vendor_lead_code	= urlencode(trim($row[5]));
+			$source_id		= urlencode(trim($row[6]));
+			$list_id		= urlencode(trim($row[7]));
+			$gmt_offset_now	= urlencode(trim($row[8]));
+			$phone_code		= urlencode(trim($row[10]));
+			$phone_number	= urlencode(trim($row[11]));
+			$title			= urlencode(trim($row[12]));
+			$first_name		= urlencode(trim($row[13]));
+			$middle_initial	= urlencode(trim($row[14]));
+			$last_name		= urlencode(trim($row[15]));
+			$address1		= urlencode(trim($row[16]));
+			$address2		= urlencode(trim($row[17]));
+			$address3		= urlencode(trim($row[18]));
+			$city			= urlencode(trim($row[19]));
+			$state			= urlencode(trim($row[20]));
+			$province		= urlencode(trim($row[21]));
+			$postal_code	= urlencode(trim($row[22]));
+			$country_code	= urlencode(trim($row[23]));
+			$gender			= urlencode(trim($row[24]));
+			$date_of_birth	= urlencode(trim($row[25]));
+			$alt_phone		= urlencode(trim($row[26]));
+			$email			= urlencode(trim($row[27]));
+			$security		= urlencode(trim($row[28]));
+			$comments		= urlencode(trim($row[29]));
+			$called_count	= urlencode(trim($row[30]));
+			$rank			= urlencode(trim($row[32]));
+			$owner			= urlencode(trim($row[33]));
 			}
 
 		$dispo_call_url = preg_replace('/^VAR/','',$dispo_call_url);
@@ -5659,6 +5699,7 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_url = eregi_replace('--A--phone--B--',"$phone",$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--parked_by--B--',"$parked_by",$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--dispo--B--',"$dispo",$dispo_call_url);
+		$dispo_call_url = eregi_replace('--A--dispo_name--B--',"$dispo_name",$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--dialed_number--B--',"$dialed_number",$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--dialed_label--B--',"$dialed_label",$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--source_id--B--',"$source_id",$dispo_call_url);

@@ -271,10 +271,11 @@
 # 100107-0108 - Added dynamic screen size based on login screen browser dimensions
 # 100109-0801 - Added ALTNUM alt number status, fixed alt number dialing from setting
 # 100109-1338 - Fixed Manual dial live call detection
+# 100116-0709 - Added presets to script and web form variables
 #
 
-$version = '2.2.0-249';
-$build = '100109-1338';
+$version = '2.2.0-250';
+$build = '100116-0709';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -4982,6 +4983,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&user_custom_three=" + VU_custom_three + '' +
 							"&user_custom_four=" + VU_custom_four + '' +
 							"&user_custom_five=" + VU_custom_five + '' +
+							"&preset_number_a=" + CalL_XC_a_NuMber + '' +
+							"&preset_number_b=" + CalL_XC_b_NuMber + '' +
+							"&preset_number_c=" + CalL_XC_c_NuMber + '' +
+							"&preset_number_d=" + CalL_XC_d_NuMber + '' +
+							"&preset_number_e=" + CalL_XC_e_NuMber + '' +
+							"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
+							"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -5070,6 +5078,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&user_custom_three=" + VU_custom_three + '' +
 							"&user_custom_four=" + VU_custom_four + '' +
 							"&user_custom_five=" + VU_custom_five + '' +
+							"&preset_number_a=" + CalL_XC_a_NuMber + '' +
+							"&preset_number_b=" + CalL_XC_b_NuMber + '' +
+							"&preset_number_c=" + CalL_XC_c_NuMber + '' +
+							"&preset_number_d=" + CalL_XC_d_NuMber + '' +
+							"&preset_number_e=" + CalL_XC_e_NuMber + '' +
+							"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
+							"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -5379,6 +5394,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&user_custom_three=" + VU_custom_three + '' +
 							"&user_custom_four=" + VU_custom_four + '' +
 							"&user_custom_five=" + VU_custom_five + '' +
+							"&preset_number_a=" + CalL_XC_a_NuMber + '' +
+							"&preset_number_b=" + CalL_XC_b_NuMber + '' +
+							"&preset_number_c=" + CalL_XC_c_NuMber + '' +
+							"&preset_number_d=" + CalL_XC_d_NuMber + '' +
+							"&preset_number_e=" + CalL_XC_e_NuMber + '' +
+							"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
+							"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -5467,6 +5489,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&user_custom_three=" + VU_custom_three + '' +
 							"&user_custom_four=" + VU_custom_four + '' +
 							"&user_custom_five=" + VU_custom_five + '' +
+							"&preset_number_a=" + CalL_XC_a_NuMber + '' +
+							"&preset_number_b=" + CalL_XC_b_NuMber + '' +
+							"&preset_number_c=" + CalL_XC_c_NuMber + '' +
+							"&preset_number_d=" + CalL_XC_d_NuMber + '' +
+							"&preset_number_e=" + CalL_XC_e_NuMber + '' +
+							"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
+							"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -5577,6 +5606,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&user_custom_three=" + VU_custom_three + '' +
 								"&user_custom_four=" + VU_custom_four + '' +
 								"&user_custom_five=" + VU_custom_five + '' +
+								"&preset_number_a=" + CalL_XC_a_NuMber + '' +
+								"&preset_number_b=" + CalL_XC_b_NuMber + '' +
+								"&preset_number_c=" + CalL_XC_c_NuMber + '' +
+								"&preset_number_d=" + CalL_XC_d_NuMber + '' +
+								"&preset_number_e=" + CalL_XC_e_NuMber + '' +
+								"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
+								"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -5956,6 +5992,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&user_custom_three=" + VU_custom_three + '' +
 							"&user_custom_four=" + VU_custom_four + '' +
 							"&user_custom_five=" + VU_custom_five + '' +
+							"&preset_number_a=" + CalL_XC_a_NuMber + '' +
+							"&preset_number_b=" + CalL_XC_b_NuMber + '' +
+							"&preset_number_c=" + CalL_XC_c_NuMber + '' +
+							"&preset_number_d=" + CalL_XC_d_NuMber + '' +
+							"&preset_number_e=" + CalL_XC_e_NuMber + '' +
+							"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
+							"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -6681,6 +6724,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&user_custom_three=" + VU_custom_three + '' +
 								"&user_custom_four=" + VU_custom_four + '' +
 								"&user_custom_five=" + VU_custom_five + '' +
+								"&preset_number_a=" + CalL_XC_a_NuMber + '' +
+								"&preset_number_b=" + CalL_XC_b_NuMber + '' +
+								"&preset_number_c=" + CalL_XC_c_NuMber + '' +
+								"&preset_number_d=" + CalL_XC_d_NuMber + '' +
+								"&preset_number_e=" + CalL_XC_e_NuMber + '' +
+								"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
+								"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -6769,6 +6819,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&user_custom_three=" + VU_custom_three + '' +
 								"&user_custom_four=" + VU_custom_four + '' +
 								"&user_custom_five=" + VU_custom_five + '' +
+								"&preset_number_a=" + CalL_XC_a_NuMber + '' +
+								"&preset_number_b=" + CalL_XC_b_NuMber + '' +
+								"&preset_number_c=" + CalL_XC_c_NuMber + '' +
+								"&preset_number_d=" + CalL_XC_d_NuMber + '' +
+								"&preset_number_e=" + CalL_XC_e_NuMber + '' +
+								"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
+								"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -6862,6 +6919,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&user_custom_three=" + VU_custom_three + '' +
 								"&user_custom_four=" + VU_custom_four + '' +
 								"&user_custom_five=" + VU_custom_five + '' +
+								"&preset_number_a=" + CalL_XC_a_NuMber + '' +
+								"&preset_number_b=" + CalL_XC_b_NuMber + '' +
+								"&preset_number_c=" + CalL_XC_c_NuMber + '' +
+								"&preset_number_d=" + CalL_XC_d_NuMber + '' +
+								"&preset_number_e=" + CalL_XC_e_NuMber + '' +
+								"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
+								"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -7036,6 +7100,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			"&user_custom_three=" + VU_custom_three + '' +
 			"&user_custom_four=" + VU_custom_four + '' +
 			"&user_custom_five=" + VU_custom_five + '' +
+			"&preset_number_a=" + CalL_XC_a_NuMber + '' +
+			"&preset_number_b=" + CalL_XC_b_NuMber + '' +
+			"&preset_number_c=" + CalL_XC_c_NuMber + '' +
+			"&preset_number_d=" + CalL_XC_d_NuMber + '' +
+			"&preset_number_e=" + CalL_XC_e_NuMber + '' +
+			"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
+			"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
 			webform_session;
 			
 			var regWFspace = new RegExp(" ","ig");
@@ -7154,6 +7225,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			"&user_custom_three=" + VU_custom_three + '' +
 			"&user_custom_four=" + VU_custom_four + '' +
 			"&user_custom_five=" + VU_custom_five + '' +
+			"&preset_number_a=" + CalL_XC_a_NuMber + '' +
+			"&preset_number_b=" + CalL_XC_b_NuMber + '' +
+			"&preset_number_c=" + CalL_XC_c_NuMber + '' +
+			"&preset_number_d=" + CalL_XC_d_NuMber + '' +
+			"&preset_number_e=" + CalL_XC_e_NuMber + '' +
+			"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
+			"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
 			webform_session;
 			
 			var regWFspace = new RegExp(" ","ig");
@@ -8735,11 +8813,11 @@ else
 	var RGplus = new RegExp(" ","g");
 	var RGiframe = new RegExp("iframe","gi");
 
-var xtest;
-xtest=unescape(encoded);
-encoded=utf8_decode(xtest);
+	var xtest;
+	xtest=unescape(encoded);
+	encoded=utf8_decode(xtest);
 
-	   if (scriptformat == 'YES')
+	if (scriptformat == 'YES')
 		{
 		var SCvendor_lead_code = document.vicidial_form.vendor_lead_code.value;
 		var SCsource_id = source_id;
@@ -8799,6 +8877,13 @@ encoded=utf8_decode(xtest);
 		var SCuser_custom_three = VU_custom_three;
 		var SCuser_custom_four = VU_custom_four;
 		var SCuser_custom_five = VU_custom_five;
+		var SCpreset_number_a = CalL_XC_a_NuMber;
+		var SCpreset_number_b = CalL_XC_b_NuMber;
+		var SCpreset_number_c = CalL_XC_c_NuMber;
+		var SCpreset_number_d = CalL_XC_d_NuMber;
+		var SCpreset_number_e = CalL_XC_e_NuMber;
+		var SCpreset_dtmf_a = CalL_XC_a_Dtmf;
+		var SCpreset_dtmf_b = CalL_XC_b_Dtmf;
 		var SCweb_vars = LIVE_web_vars;
 
 		if (encoded.match(RGiframe))
@@ -8859,6 +8944,13 @@ encoded=utf8_decode(xtest);
 			SCuser_custom_three = SCuser_custom_three.replace(RGplus,'+');
 			SCuser_custom_four = SCuser_custom_four.replace(RGplus,'+');
 			SCuser_custom_five = SCuser_custom_five.replace(RGplus,'+');
+			SCpreset_number_a = SCpreset_number_a.replace(RGplus,'+');
+			SCpreset_number_b = SCpreset_number_b.replace(RGplus,'+');
+			SCpreset_number_c = SCpreset_number_c.replace(RGplus,'+');
+			SCpreset_number_d = SCpreset_number_d.replace(RGplus,'+');
+			SCpreset_number_e = SCpreset_number_e.replace(RGplus,'+');
+			SCpreset_dtmf_a = SCpreset_dtmf_a.replace(RGplus,'+');
+			SCpreset_dtmf_b = SCpreset_dtmf_b.replace(RGplus,'+');
 			SCweb_vars = SCweb_vars.replace(RGplus,'+');
 			}
 
@@ -8920,6 +9012,13 @@ encoded=utf8_decode(xtest);
 		var RGuser_custom_three = new RegExp("--A--user_custom_three--B--","g");
 		var RGuser_custom_four = new RegExp("--A--user_custom_four--B--","g");
 		var RGuser_custom_five = new RegExp("--A--user_custom_five--B--","g");
+		var RGpreset_number_a = new RegExp("--A--preset_number_a--B--","g");
+		var RGpreset_number_b = new RegExp("--A--preset_number_b--B--","g");
+		var RGpreset_number_c = new RegExp("--A--preset_number_c--B--","g");
+		var RGpreset_number_d = new RegExp("--A--preset_number_d--B--","g");
+		var RGpreset_number_e = new RegExp("--A--preset_number_e--B--","g");
+		var RGpreset_dtmf_a = new RegExp("--A--preset_dtmf_a--B--","g");
+		var RGpreset_dtmf_b = new RegExp("--A--preset_dtmf_b--B--","g");
 		var RGweb_vars = new RegExp("--A--web_vars--B--","g");
 
 		encoded = encoded.replace(RGvendor_lead_code, SCvendor_lead_code);
@@ -8980,31 +9079,38 @@ encoded=utf8_decode(xtest);
 		encoded = encoded.replace(RGuser_custom_three, SCuser_custom_three);
 		encoded = encoded.replace(RGuser_custom_four, SCuser_custom_four);
 		encoded = encoded.replace(RGuser_custom_five, SCuser_custom_five);
+		encoded = encoded.replace(RGpreset_number_a, SCpreset_number_a);
+		encoded = encoded.replace(RGpreset_number_b, SCpreset_number_b);
+		encoded = encoded.replace(RGpreset_number_c, SCpreset_number_c);
+		encoded = encoded.replace(RGpreset_number_d, SCpreset_number_d);
+		encoded = encoded.replace(RGpreset_number_e, SCpreset_number_e);
+		encoded = encoded.replace(RGpreset_dtmf_a, SCpreset_dtmf_a);
+		encoded = encoded.replace(RGpreset_dtmf_b, SCpreset_dtmf_b);
 		encoded = encoded.replace(RGweb_vars, SCweb_vars);
 		}
-decoded=encoded; // simple no ?
-decoded = decoded.replace(RGnl, "<BR>");
-//	   while (i < encoded.length) {
-//		   var ch = encoded.charAt(i);
-//		   if (ch == "%") {
-//				if (i < (encoded.length-2) 
-//						&& HEXCHAR.indexOf(encoded.charAt(i+1)) != -1 
-//						&& HEXCHAR.indexOf(encoded.charAt(i+2)) != -1 ) {
-//					decoded += unescape( encoded.substr(i,3) );
-//					i += 3;
-//				} else {
-//					alert( 'Bad escape combo near ...' + encoded.substr(i) );
-//					decoded += "%[ERR]";
-//					i++;
-//				}
-//			} else {
-//			   decoded += ch;
-//			   i++;
-//			}
-//		} // while
-//		decoded = decoded.replace(RGnl, "<BR>");
-//
-	   return false;
+	decoded=encoded; // simple no ?
+	decoded = decoded.replace(RGnl, "<BR>");
+	//	   while (i < encoded.length) {
+	//		   var ch = encoded.charAt(i);
+	//		   if (ch == "%") {
+	//				if (i < (encoded.length-2) 
+	//						&& HEXCHAR.indexOf(encoded.charAt(i+1)) != -1 
+	//						&& HEXCHAR.indexOf(encoded.charAt(i+2)) != -1 ) {
+	//					decoded += unescape( encoded.substr(i,3) );
+	//					i += 3;
+	//				} else {
+	//					alert( 'Bad escape combo near ...' + encoded.substr(i) );
+	//					decoded += "%[ERR]";
+	//					i++;
+	//				}
+	//			} else {
+	//			   decoded += ch;
+	//			   i++;
+	//			}
+	//		} // while
+	//		decoded = decoded.replace(RGnl, "<BR>");
+	//
+	return false;
 	};
 
 
@@ -10518,7 +10624,7 @@ echo "</head>\n";
     <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> NOVA DISCAGEM MANUAL PARA <?php echo "$VD_login in campaign $VD_campaign" ?>:<BR><BR>Digite abaixo a informação do novo contato que você deseja ligar.
 	<BR>
 	<?php 
-	if (eregi("X",dial_prefix))
+	if (eregi("X",$dial_prefix))
 		{
 		echo "Nota: prefixo de discagem de $dial_prefix será inserido no inicio deste número<BR>\n";
 		}

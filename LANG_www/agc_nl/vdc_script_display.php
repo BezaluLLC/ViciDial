@@ -1,7 +1,7 @@
 <?php
 # vdc_script_display.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display the contents of the SCRIPT tab in the agent interface
 #
@@ -10,10 +10,11 @@
 # 90827-1548 - Added list override script option
 # 91204-1913 - Added recording_filename and recording_id variables
 # 91211-1103 - Added user_custom_... variables
+# 100116-0702 - Added preset variables
 #
 
-$version = '2.2.0-4';
-$build = '91211-1103';
+$version = '2.2.0-5';
+$build = '100116-0702';
 
 require("dbconnect.php");
 
@@ -143,7 +144,22 @@ if (isset($_GET["user_custom_four"]))	{$user_custom_four=$_GET["user_custom_four
 	elseif (isset($_POST["user_custom_four"]))	{$user_custom_four=$_POST["user_custom_four"];}
 if (isset($_GET["user_custom_five"]))	{$user_custom_five=$_GET["user_custom_five"];}
 	elseif (isset($_POST["user_custom_five"]))	{$user_custom_five=$_POST["user_custom_five"];}
-
+if (isset($_GET["preset_number_a"]))	{$preset_number_a=$_GET["preset_number_a"];}
+	elseif (isset($_POST["preset_number_a"]))	{$preset_number_a=$_POST["preset_number_a"];}
+if (isset($_GET["preset_number_b"]))	{$preset_number_b=$_GET["preset_number_b"];}
+	elseif (isset($_POST["preset_number_b"]))	{$preset_number_b=$_POST["preset_number_b"];}
+if (isset($_GET["preset_number_c"]))	{$preset_number_c=$_GET["preset_number_c"];}
+	elseif (isset($_POST["preset_number_c"]))	{$preset_number_c=$_POST["preset_number_c"];}
+if (isset($_GET["preset_number_d"]))	{$preset_number_d=$_GET["preset_number_d"];}
+	elseif (isset($_POST["preset_number_d"]))	{$preset_number_d=$_POST["preset_number_d"];}
+if (isset($_GET["preset_number_e"]))	{$preset_number_e=$_GET["preset_number_e"];}
+	elseif (isset($_POST["preset_number_e"]))	{$preset_number_e=$_POST["preset_number_e"];}
+if (isset($_GET["preset_number_f"]))	{$preset_number_f=$_GET["preset_number_f"];}
+	elseif (isset($_POST["preset_number_f"]))	{$preset_number_f=$_POST["preset_number_f"];}
+if (isset($_GET["preset_dtmf_a"]))	{$preset_dtmf_a=$_GET["preset_dtmf_a"];}
+	elseif (isset($_POST["preset_dtmf_a"]))	{$preset_dtmf_a=$_POST["preset_dtmf_a"];}
+if (isset($_GET["preset_dtmf_b"]))	{$preset_dtmf_b=$_GET["preset_dtmf_b"];}
+	elseif (isset($_POST["preset_dtmf_b"]))	{$preset_dtmf_b=$_POST["preset_dtmf_b"];}
 if (isset($_GET["ScrollDIV"]))	{$ScrollDIV=$_GET["ScrollDIV"];}
 	elseif (isset($_POST["ScrollDIV"]))	{$ScrollDIV=$_POST["ScrollDIV"];}
 if (isset($_GET["ignore_list_script"]))	{$ignore_list_script=$_GET["ignore_list_script"];}
@@ -316,6 +332,14 @@ if (eregi("iframe src",$script_text))
 	$user_custom_three = eregi_replace(' ','+',$user_custom_three);
 	$user_custom_four = eregi_replace(' ','+',$user_custom_four);
 	$user_custom_five = eregi_replace(' ','+',$user_custom_five);
+	$preset_number_a = eregi_replace(' ','+',$preset_number_a);
+	$preset_number_b = eregi_replace(' ','+',$preset_number_b);
+	$preset_number_c = eregi_replace(' ','+',$preset_number_c);
+	$preset_number_d = eregi_replace(' ','+',$preset_number_d);
+	$preset_number_e = eregi_replace(' ','+',$preset_number_e);
+	$preset_number_f = eregi_replace(' ','+',$preset_number_f);
+	$preset_dtmf_a = eregi_replace(' ','+',$preset_dtmf_a);
+	$preset_dtmf_b = eregi_replace(' ','+',$preset_dtmf_b);
 	}
 
 $script_text = eregi_replace('--A--lead_id--B--',"$lead_id",$script_text);
@@ -381,6 +405,14 @@ $script_text = eregi_replace('--A--user_custom_two--B--',"$user_custom_two",$scr
 $script_text = eregi_replace('--A--user_custom_three--B--',"$user_custom_three",$script_text);
 $script_text = eregi_replace('--A--user_custom_four--B--',"$user_custom_four",$script_text);
 $script_text = eregi_replace('--A--user_custom_five--B--',"$user_custom_five",$script_text);
+$script_text = eregi_replace('--A--preset_number_a--B--',"$preset_number_a",$script_text);
+$script_text = eregi_replace('--A--preset_number_b--B--',"$preset_number_b",$script_text);
+$script_text = eregi_replace('--A--preset_number_c--B--',"$preset_number_c",$script_text);
+$script_text = eregi_replace('--A--preset_number_d--B--',"$preset_number_d",$script_text);
+$script_text = eregi_replace('--A--preset_number_e--B--',"$preset_number_e",$script_text);
+$script_text = eregi_replace('--A--preset_number_f--B--',"$preset_number_f",$script_text);
+$script_text = eregi_replace('--A--preset_dtmf_a--B--',"$preset_dtmf_a",$script_text);
+$script_text = eregi_replace('--A--preset_dtmf_b--B--',"$preset_dtmf_b",$script_text);
 $script_text = eregi_replace("\n","<BR>",$script_text);
 $script_text = stripslashes($script_text);
 
