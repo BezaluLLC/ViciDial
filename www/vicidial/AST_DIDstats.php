@@ -402,8 +402,8 @@ else
 	$stmt="select did_route from vicidial_inbound_dids where did_pattern='default';";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$records_to_grab = mysql_num_rows($rslt);
-	if ($records_to_grab > 0)
+	$Drecords_to_grab = mysql_num_rows($rslt);
+	if ($Drecords_to_grab > 0)
 		{
 		$row=mysql_fetch_row($rslt);
 		$default_route =	$row[0];

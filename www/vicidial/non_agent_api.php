@@ -1,7 +1,7 @@
 <?php
 # non_agent_api.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with all non-agent-screen VICIDIAL functions
@@ -30,10 +30,11 @@
 # 91026-1059 - Added AREACODE DNC option
 # 91203-1140 - Added agent_ingroup_info feature
 # 91216-0331 - Added duplication check features to add_lead function
+# 100118-0543 - Added new Australian and New Zealand DST schemes (FSO-FSA and LSS-FSA)
 #
 
-$version = '2.2.0-16';
-$build = '91216-0331';
+$version = '2.2.0-17';
+$build = '100118-0543';
 
 require("dbconnect.php");
 
@@ -2046,6 +2047,74 @@ if ( (!$AC_processed) and ($dst_range == 'FSO-LSM') )
 	if ($AUST_DST) {$gmt_offset++;}
 	$AC_processed++;
 	}
+
+if ( (!$AC_processed) and ($dst_range == 'FSO-FSA') )
+	{
+	if ($DBX) {print "     Sunday in October to First Sunday in April\n";}
+	#**********************************************************************
+	# FSO-FSA
+	#   2008+ AUSTRALIA ONLY (country code 61)
+	#     This is returns 1 if Daylight Savings Time is in effect and 0 if 
+	#       Standard time is in effect.
+	#     Based on first Sunday in October and first Sunday in April at 1 am.
+	#**********************************************************************
+    
+	$AUSE_DST=0;
+	$mm = $mon;
+	$dd = $mday;
+	$ns = $dsec;
+	$dow= $wday;
+
+    if ($mm < 4 or $mm > 10) {
+	$AUSE_DST=1;   
+    } elseif ($mm >= 5 and $mm <= 9) {
+	$AUSE_DST=0;   
+    } elseif ($mm == 4) {
+	if ($dd > 7) {
+	    $AUSE_DST=0;   
+	} elseif ($dd >= ($dow+1)) {
+	    if ($timezone) {
+		if ($dow == 0 and $ns < (3600+$timezone*3600)) {
+		    $AUSE_DST=1;   
+		} else {
+		    $AUSE_DST=0;   
+		}
+	    } else {
+		if ($dow == 0 and $ns < 7200) {
+		    $AUSE_DST=1;   
+		} else {
+		    $AUSE_DST=0;   
+		}
+	    }
+	} else {
+	    $AUSE_DST=1;   
+	}
+    } elseif ($mm == 10) {
+	if ($dd >= 8) {
+	    $AUSE_DST=1;   
+	} elseif ($dd >= ($dow+1)) {
+	    if ($timezone) {
+		if ($dow == 0 and $ns < (7200+$timezone*3600)) {
+		    $AUSE_DST=0;   
+		} else {
+		    $AUSE_DST=1;   
+		}
+	    } else {
+		if ($dow == 0 and $ns < 3600) {
+		    $AUSE_DST=0;   
+		} else {
+		    $AUSE_DST=1;   
+		}
+	    }
+	} else {
+	    $AUSE_DST=0;   
+	}
+    } # end of month checks
+	if ($DBX) {print "     DST: $AUSE_DST\n";}
+	if ($AUSE_DST) {$gmt_offset++;}
+	$AC_processed++;
+	}
+
 if ( (!$AC_processed) and ($dst_range == 'FSO-TSM') )
 	{
 	if ($DBX) {print "     First Sunday October to Third Sunday March\n";}
@@ -2110,6 +2179,75 @@ if ( (!$AC_processed) and ($dst_range == 'FSO-TSM') )
 		} # end of month checks						
 	if ($DBX) {print "     DST: $NZL_DST\n";}
 	if ($NZL_DST) {$gmt_offset++;}
+	$AC_processed++;
+	}
+
+if ( (!$AC_processed) and ($dst_range == 'LSS-FSA') )
+	{
+	if ($DBX) {print "     Last Sunday in September to First Sunday in April\n";}
+	#**********************************************************************
+	# LSS-FSA
+	#   2007+ NEW ZEALAND (country code 64)
+	#     This is returns 1 if Daylight Savings Time is in effect and 0 if 
+	#       Standard time is in effect.
+	#     Based on last Sunday in September and first Sunday in April at 1 am.
+	#**********************************************************************
+    
+	$NZLN_DST=0;
+	$mm = $mon;
+	$dd = $mday;
+	$ns = $dsec;
+	$dow= $wday;
+
+    if ($mm < 4 || $mm > 9) {
+	$NZLN_DST=1;   
+    } elseif ($mm >= 5 && $mm <= 9) {
+	$NZLN_DST=0;   
+    } elseif ($mm == 4) {
+	if ($dd > 7) {
+	    $NZLN_DST=0;   
+	} elseif ($dd >= ($dow+1)) {
+	    if ($timezone) {
+		if ($dow == 0 && $ns < (3600+$timezone*3600)) {
+		    $NZLN_DST=1;   
+		} else {
+		    $NZLN_DST=0;   
+		}
+	    } else {
+		if ($dow == 0 && $ns < 7200) {
+		    $NZLN_DST=1;   
+		} else {
+		    $NZLN_DST=0;   
+		}
+	    }
+	} else {
+	    $NZLN_DST=1;   
+	}
+    } elseif ($mm == 9) {
+	if ($dd < 25) {
+	    $NZLN_DST=0;   
+	} elseif ($dd < ($dow+25)) {
+	    $NZLN_DST=0;   
+	} elseif ($dow == 0) {
+	    if ($timezone) { # UTC calculations
+		if ($ns < (3600+($timezone-1)*3600)) {
+		    $NZLN_DST=0;   
+		} else {
+		    $NZLN_DST=1;   
+		}
+	    } else { # local time calculations
+		if ($ns < 3600) {
+		    $NZLN_DST=0;   
+		} else {
+		    $NZLN_DST=1;   
+		}
+	    }
+	} else {
+	    $NZLN_DST=1;   
+	}
+    } # end of month checks
+	if ($DBX) {print "     DST: $NZLN_DST\n";}
+	if ($NZLN_DST) {$gmt_offset++;}
 	$AC_processed++;
 	}
 

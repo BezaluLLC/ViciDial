@@ -8,7 +8,7 @@
 #
 # It is recommended that you run this program on the local Asterisk machine
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES
@@ -40,6 +40,7 @@
 # 90830-0953 - Added forcelistfilename option
 # 91112-0645 - Added title/alt_phone duplicate checks
 # 91129-2202 - removed SELECT STAR and formatting fixes
+# 100118-0527 - Added new Australian and New Zealand DST schemes (FSO-FSA and LSS-FSA)
 #
 
 $secX = time();
@@ -1247,12 +1248,28 @@ foreach(@FILES)
 						if ($AUST_DST) {$gmt_offset++;}
 						$AC_processed++;
 						}
+					if ( (!$AC_processed) && ($area_GMT_method =~ /FSO-FSA/) )
+						{
+						if ($DBX) {print "     First Sunday October to First Sunday April\n";}
+						&AUSE_dstcalc;
+						if ($DBX) {print "     DST: $AUSE_DST\n";}
+						if ($AUSE_DST) {$area_GMT++;}
+						$AC_processed++;
+						}
 					if ( (!$AC_processed) && ($dst_range =~ /FSO-TSM/) )
 						{
 						if ($DBX) {print "     First Sunday October to Third Sunday March\n";}
 						&NZL_dstcalc;
 						if ($DBX) {print "     DST: $NZL_DST\n";}
 						if ($NZL_DST) {$gmt_offset++;}
+						$AC_processed++;
+						}
+					if ( (!$AC_processed) && ($area_GMT_method =~ /LSS-FSA/) )
+						{
+						if ($DBX) {print "     Last Sunday September to First Sunday April\n";}
+						&NZLN_dstcalc;
+						if ($DBX) {print "     DST: $NZLN_DST\n";}
+						if ($NZLN_DST) {$area_GMT++;}
 						$AC_processed++;
 						}
 					if ( (!$AC_processed) && ($dst_range =~ /TSO-LSF/) )
@@ -1791,6 +1808,72 @@ sub AUST_dstcalc {
 
 
 
+sub AUSE_dstcalc {
+#**********************************************************************
+# FSO-FSA
+#   2008+ AUSTRALIA ONLY (country code 61)
+#     This is returns 1 if Daylight Savings Time is in effect and 0 if 
+#       Standard time is in effect.
+#     Based on first Sunday in October and first Sunday in April at 1 am.
+#**********************************************************************
+    
+	$AUSE_DST=0;
+	$mm = $mon;
+	$dd = $mday;
+	$ns = $dsec;
+	$dow= $wday;
+
+    if ($mm < 4 || $mm > 10) {
+	$AUSE_DST=1;   return 1;
+    } elsif ($mm >= 5 && $mm <= 9) {
+	$AUSE_DST=0;   return 0;
+    } elsif ($mm == 4) {
+	if ($dd > 7) {
+	    $AUSE_DST=0;   return 1;
+	} elsif ($dd >= ($dow+1)) {
+	    if ($timezone) {
+		if ($dow == 0 && $ns < (3600+$timezone*3600)) {
+		    $AUSE_DST=1;   return 0;
+		} else {
+		    $AUSE_DST=0;   return 1;
+		}
+	    } else {
+		if ($dow == 0 && $ns < 7200) {
+		    $AUSE_DST=1;   return 0;
+		} else {
+		    $AUSE_DST=0;   return 1;
+		}
+	    }
+	} else {
+	    $AUSE_DST=1;   return 0;
+	}
+    } elsif ($mm == 10) {
+	if ($dd >= 8) {
+	    $AUSE_DST=1;   return 1;
+	} elsif ($dd >= ($dow+1)) {
+	    if ($timezone) {
+		if ($dow == 0 && $ns < (7200+$timezone*3600)) {
+		    $AUSE_DST=0;   return 0;
+		} else {
+		    $AUSE_DST=1;   return 1;
+		}
+	    } else {
+		if ($dow == 0 && $ns < 3600) {
+		    $AUSE_DST=0;   return 0;
+		} else {
+		    $AUSE_DST=1;   return 1;
+		}
+	    }
+	} else {
+	    $AUSE_DST=0;   return 0;
+	}
+    } # end of month checks
+} # end of subroutine dstcalc
+
+
+
+
+
 sub NZL_dstcalc {
 #**********************************************************************
 # FSO-TSM
@@ -1853,6 +1936,74 @@ sub NZL_dstcalc {
 	}
     } # end of month checks
 } # end of subroutine dstcalc
+
+
+
+
+sub NZLN_dstcalc {
+#**********************************************************************
+# LSS-FSA
+#   2007+ NEW ZEALAND (country code 64)
+#     This is returns 1 if Daylight Savings Time is in effect and 0 if 
+#       Standard time is in effect.
+#     Based on last Sunday in September and first Sunday in April at 1 am.
+#**********************************************************************
+    
+	$NZLN_DST=0;
+	$mm = $mon;
+	$dd = $mday;
+	$ns = $dsec;
+	$dow= $wday;
+
+    if ($mm < 4 || $mm > 9) {
+	$NZLN_DST=1;   return 1;
+    } elsif ($mm >= 5 && $mm <= 9) {
+	$NZLN_DST=0;   return 0;
+    } elsif ($mm == 4) {
+	if ($dd > 7) {
+	    $NZLN_DST=0;   return 1;
+	} elsif ($dd >= ($dow+1)) {
+	    if ($timezone) {
+		if ($dow == 0 && $ns < (3600+$timezone*3600)) {
+		    $NZLN_DST=1;   return 0;
+		} else {
+		    $NZLN_DST=0;   return 1;
+		}
+	    } else {
+		if ($dow == 0 && $ns < 7200) {
+		    $NZLN_DST=1;   return 0;
+		} else {
+		    $NZLN_DST=0;   return 1;
+		}
+	    }
+	} else {
+	    $NZLN_DST=1;   return 0;
+	}
+    } elsif ($mm == 9) {
+	if ($dd < 25) {
+	    $NZLN_DST=0;   return 0;
+	} elsif ($dd < ($dow+25)) {
+	    $NZLN_DST=0;   return 0;
+	} elsif ($dow == 0) {
+	    if ($timezone) { # UTC calculations
+		if ($ns < (3600+($timezone-1)*3600)) {
+		    $NZLN_DST=0;   return 0;
+		} else {
+		    $NZLN_DST=1;   return 1;
+		}
+	    } else { # local time calculations
+		if ($ns < 3600) {
+		    $NZLN_DST=0;   return 0;
+		} else {
+		    $NZLN_DST=1;   return 1;
+		}
+	    }
+	} else {
+	    $NZLN_DST=1;   return 1;
+	}
+    } # end of month checks
+} # end of subroutine dstcalc
+
 
 
 

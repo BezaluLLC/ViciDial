@@ -7,7 +7,7 @@
 #
 # run every time you load leads into the vicidial_list table
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES
@@ -25,10 +25,17 @@
 # 90129-1114 - Added NANPA prefix lookup option
 # 90401-1327 - Fixed quiet flag function
 # 91129-2155 - Replaced SELECT STAR queries with field lists, formatting fixes
+# 100117-2122 - Added force-date option and activated FSO-FSA and LSS-FSA
 #
 
+use Time::Local;
+
+$secX = time();
+$time = $secX;
+	
 $MT[0]='';
 $q=0;
+$forcedate='';
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -50,6 +57,7 @@ if (length($ARGV[0])>1)
 		print "  [--postal-code-gmt] = Attempt postal codes lookup for timezones\n";
 		print "  [--nanpa-prefix-gmt] = Attempt nanpa prefix lookup for timezones\n";
 		print "  [--singlelistid=XXX] = Only lookup and alter leads in one list_id\n";
+		print "  [--force-date=YYYY-MM-DD] = Force this date as date to run\n";
 		print "\n";
 
 		exit;
@@ -88,12 +96,25 @@ if (length($ARGV[0])>1)
 		if ($args =~ /-singlelistid=/i)
 			{
 			@data_in = split(/-singlelistid=/,$args);
-				$singlelistid = $data_in[1];
+			$singlelistid = $data_in[1];
 			if ($q < 1) {print "\n----- SINGLE LISTID OVERRIDE: $singlelistid -----\n\n";}
 			}
 		else
 			{$singlelistid = '';}
 
+		if ($args =~ /-force-date=/i)
+			{
+			@data_in = split(/-force-date=/,$args);
+			$forcedate = $data_in[1];
+			@cli_date = split("-",$forcedate);
+			$year = $cli_date[0];
+			$mon =	$cli_date[1];
+			$mday = $cli_date[2];
+			$cli_date[1] = ($cli_date[1] - 1);
+			$time = timelocal(0,0,2,$cli_date[2],$cli_date[1],$cli_date[0]);
+
+			if ($q < 1) {print "\n----- FORCE DATE OVERRIDE: $forcedate $time -----\n\n";}
+			}
 		}
 	}
 else
@@ -148,11 +169,7 @@ $server_ip = $VARserver_ip;		# Asterisk server IP
 
 if (!$VARDB_port) {$VARDB_port='3306';}
 
-$secX = time();
-#	$secX = '1079989363';	# epoch for March 22, 2993
-#	$secX = '1097989363';	# epoch for October 17, 2004
-	
-($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($secX);
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($time);
 $mon++;
 $year = ($year + 1900);
 if ($mon < 10) {$mon = "0$mon";}
@@ -173,8 +190,7 @@ $stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERN
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
-$rec_countY=0;
-while ($sthArows > $rec_countY)
+if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
 	$DBtelnet_host	=			"$aryA[0]";
@@ -199,7 +215,6 @@ while ($sthArows > $rec_countY)
 	if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
 	if ($DBSERVER_GMT)				{$SERVER_GMT = $DBSERVER_GMT;}
 	if ($DBext_context)				{$ext_context = $DBext_context;}
-	$rec_countY++;	
 	}
 $sthA->finish();
 
@@ -207,7 +222,7 @@ $LOCAL_GMT_OFF = $SERVER_GMT;
 $LOCAL_GMT_OFF_STD = $SERVER_GMT;
 
 if ($isdst) {$LOCAL_GMT_OFF++;} 
-if ($DB) {print "SEED TIME  $secX      :   $year-$mon-$mday $hour:$min:$sec  LOCAL GMT OFFSET NOW: $LOCAL_GMT_OFF\n";}
+if ($DB) {print "SEED TIME  $time      :   $year-$mon-$mday $hour:$min:$sec  LOCAL GMT OFFSET NOW: $LOCAL_GMT_OFF\n";}
 
 if (length($singlelistid)> 0) {$listSQL = "where list_id='$singlelistid'";  $XlistSQL=" and list_id='$singlelistid' ";}
 else {$listSQL = '';  $XlistSQL='';}
@@ -355,7 +370,7 @@ foreach (@phone_codes)
 			else
 				{
 				$AC_GMT_diff = ($area_GMT - $LOCAL_GMT_OFF_STD);
-				$AC_localtime = ($secX + (3600 * $AC_GMT_diff));
+				$AC_localtime = ($time + (3600 * $AC_GMT_diff));
 				($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($AC_localtime);
 				$year = ($year + 1900);
 				$mon++;
@@ -537,7 +552,7 @@ foreach (@phone_codes)
 				else
 					{
 					$AC_GMT_diff = ($area_GMT - $LOCAL_GMT_OFF_STD);
-					$AC_localtime = ($secX + (3600 * $AC_GMT_diff));
+					$AC_localtime = ($time + (3600 * $AC_GMT_diff));
 					($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($AC_localtime);
 					$year = ($year + 1900);
 					$mon++;
@@ -719,7 +734,7 @@ foreach (@phone_codes)
 			else
 				{
 				$AC_GMT_diff = ($area_GMT - $LOCAL_GMT_OFF_STD);
-				$AC_localtime = ($secX + (3600 * $AC_GMT_diff));
+				$AC_localtime = ($time + (3600 * $AC_GMT_diff));
 				($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($AC_localtime);
 				$year = ($year + 1900);
 				$mon++;
@@ -877,6 +892,7 @@ exit;
 sub USACAN_dstcalc {
 #**********************************************************************
 # SSM-FSN
+#   USA and CANADA
 #     This is returns 1 if Daylight Savings Time is in effect and 0 if 
 #       Standard time is in effect.
 #     Based on Second Sunday March to First Sunday November at 2 am.
@@ -971,6 +987,7 @@ sub USACAN_dstcalc {
 sub NA_dstcalc {
 #**********************************************************************
 # FSA-LSO
+#   Mexico and parts of North America
 #     This is returns 1 if Daylight Savings Time is in effect and 0 if 
 #       Standard time is in effect.
 #     Based on first Sunday in April and last Sunday in October at 2 am.
@@ -1037,6 +1054,7 @@ sub NA_dstcalc {
 sub GBR_dstcalc {
 #**********************************************************************
 # LSM-LSO
+#    Europe
 #     This is returns 1 if Daylight Savings Time is in effect and 0 if 
 #       Standard time is in effect.
 #     Based on last Sunday in March and last Sunday in October at 1 am.
@@ -1104,7 +1122,7 @@ sub GBR_dstcalc {
 
 sub AUS_dstcalc {
 #**********************************************************************
-# LSO-LSM - Australia, for 2008-9 Western Australia only
+# LSO-LSM - Australia, for 2008-9 Western Australia only (stopped in 2009)
 #     This is returns 1 if Daylight Savings Time is in effect and 0 if 
 #       Standard time is in effect.
 #     Based on last Sunday in October and last Sunday in March at 1 am.
@@ -1174,7 +1192,7 @@ sub AUS_dstcalc {
 sub AUST_dstcalc {
 #**********************************************************************
 # FSO-LSM
-#   TASMANIA ONLY
+#   TASMANIA ONLY (stopped in 2008)
 #     This is returns 1 if Daylight Savings Time is in effect and 0 if 
 #       Standard time is in effect.
 #     Based on first Sunday in October and last Sunday in March at 1 am.
@@ -1242,7 +1260,7 @@ sub AUST_dstcalc {
 sub AUSE_dstcalc {
 #**********************************************************************
 # FSO-FSA
-#   2008+ EASTERN AUSTRALIA ONLY
+#   2008+ AUSTRALIA ONLY (country code 61)
 #     This is returns 1 if Daylight Savings Time is in effect and 0 if 
 #       Standard time is in effect.
 #     Based on first Sunday in October and first Sunday in April at 1 am.
@@ -1260,23 +1278,23 @@ sub AUSE_dstcalc {
 	$AUSE_DST=0;   return 0;
     } elsif ($mm == 4) {
 	if ($dd > 7) {
-	    $AUSE_DST=0;   return 0;
-	} elsif ($dd >= ($dow+0)) {
+	    $AUSE_DST=0;   return 1;
+	} elsif ($dd >= ($dow+1)) {
 	    if ($timezone) {
 		if ($dow == 0 && $ns < (3600+$timezone*3600)) {
-		    $AUSE_DST=1;   return 1;
+		    $AUSE_DST=1;   return 0;
 		} else {
-		    $AUSE_DST=0;   return 0;
+		    $AUSE_DST=0;   return 1;
 		}
 	    } else {
-		if ($dow == 0 && $ns < 3600) {
-		    $AUSE_DST=1;   return 1;
+		if ($dow == 0 && $ns < 7200) {
+		    $AUSE_DST=1;   return 0;
 		} else {
-		    $AUSE_DST=0;   return 0;
+		    $AUSE_DST=0;   return 1;
 		}
 	    }
 	} else {
-	    $AUSE_DST=0;   return 0;
+	    $AUSE_DST=1;   return 0;
 	}
     } elsif ($mm == 10) {
 	if ($dd >= 8) {
@@ -1307,7 +1325,7 @@ sub AUSE_dstcalc {
 
 sub NZL_dstcalc {
 #**********************************************************************
-# FSO-TSM
+# FSO-TSM (stopped in 2007)
 #     This is returns 1 if Daylight Savings Time is in effect and 0 if 
 #       Standard time is in effect.
 #     Based on first Sunday in October and third Sunday in March at 1 am.
@@ -1374,7 +1392,7 @@ sub NZL_dstcalc {
 sub NZLN_dstcalc {
 #**********************************************************************
 # LSS-FSA
-#   2007+ NEW ZEALAND
+#   2007+ NEW ZEALAND (country code 64)
 #     This is returns 1 if Daylight Savings Time is in effect and 0 if 
 #       Standard time is in effect.
 #     Based on last Sunday in September and first Sunday in April at 1 am.
@@ -1392,23 +1410,23 @@ sub NZLN_dstcalc {
 	$NZLN_DST=0;   return 0;
     } elsif ($mm == 4) {
 	if ($dd > 7) {
-	    $NZLN_DST=0;   return 0;
-	} elsif ($dd >= ($dow+0)) {
+	    $NZLN_DST=0;   return 1;
+	} elsif ($dd >= ($dow+1)) {
 	    if ($timezone) {
 		if ($dow == 0 && $ns < (3600+$timezone*3600)) {
-		    $NZLN_DST=1;   return 1;
+		    $NZLN_DST=1;   return 0;
 		} else {
-		    $NZLN_DST=0;   return 0;
+		    $NZLN_DST=0;   return 1;
 		}
 	    } else {
-		if ($dow == 0 && $ns < 3600) {
-		    $NZLN_DST=1;   return 1;
+		if ($dow == 0 && $ns < 7200) {
+		    $NZLN_DST=1;   return 0;
 		} else {
-		    $NZLN_DST=0;   return 0;
+		    $NZLN_DST=0;   return 1;
 		}
 	    }
 	} else {
-	    $NZLN_DST=0;   return 0;
+	    $NZLN_DST=1;   return 0;
 	}
     } elsif ($mm == 9) {
 	if ($dd < 25) {
@@ -1443,6 +1461,7 @@ sub NZLN_dstcalc {
 sub BZL_dstcalc {
 #**********************************************************************
 # TSO-LSF
+#   BRAZIL
 #     This is returns 1 if Daylight Savings Time is in effect and 0 if 
 #       Standard time is in effect. Brazil
 #     Based on Third Sunday October to Last Sunday February at 1 am.

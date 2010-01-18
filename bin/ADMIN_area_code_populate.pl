@@ -23,7 +23,8 @@
 # default path to astguiclient configuration file:
 $PATHconf =		"/etc/astguiclient.conf";
 $domain   =		"http://phonecodes.vicidial.com";
-$URL1     =		"$domain/phone_codes_GMT-latest.txt";
+#$URL1     =		"$domain/phone_codes_GMT-latest.txt";
+$URL1     =		"$domain/phone_codes_GMT-latest-220.txt";
 $URL2     =		"$domain/GMT_USA_zip-latest.txt";
 
 
@@ -47,7 +48,7 @@ if (length($ARGV[0])>1)
 		print "  [--load-NANPA-prefix] = Only loads the special NANPA list into the database\n";
 		print "  [--purge-table] = Purges the table to be inserted before inserting\n";
 		print "\n     files used by this script are:\n";
-		print "   phone_codes_GMT-latest.txt - Phone codes and country codes with time zone data\n";
+		print "   phone_codes_GMT-latest-220.txt - Phone codes and country codes with time zone data\n";
 		print "   GMT_USA_zip-latest.txt - USA zip code and time zone data\n";
 		print "   NANPA_prefix-latest.txt - North American areacode, prefix and time zone data\n";
 
@@ -286,8 +287,8 @@ else
 		`wget $URL2`;
 		}
 
-	#### BEGIN vicidial_phone_codes population from phone_codes_GMT-latest.txt file ####
-	open(codefile, "$PATHhome/phone_codes_GMT-latest.txt") || die "can't open $PATHhome/phone_codes_GMT-latest.txt: $!\n";
+	#### BEGIN vicidial_phone_codes population from phone_codes_GMT-latest-220.txt file ####
+	open(codefile, "$PATHhome/phone_codes_GMT-latest-220.txt") || die "can't open $PATHhome/phone_codes_GMT-latest-220.txt: $!\n";
 	@codefile = <codefile>;
 	close(codefile);
 	if ( ($purge_table > 0) && ($#codefile > 10) )
