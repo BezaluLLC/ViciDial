@@ -1336,6 +1336,33 @@ else
 	}
 
 
+##########################################################
+### end logging for call_log logged DID_INBOUND calls  ###
+$CLchannel_group='';
+$stmtA = "SELECT channel_group,start_epoch FROM call_log where uniqueid='$unique_id' order by start_time desc limit 1;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$CLchannel_group = 	$aryA[0];
+	$CLstart_epoch =	$aryA[1];
+	}
+$sthA->finish();
+
+if ($CLchannel_group =~ /DID_INBOUND/)
+	{
+	$CLlength_in_sec = ($now_date_epoch - $CLstart_epoch);
+	$CLlength_in_min = ($CLlength_in_sec / 60);
+	$CLlength_in_min = sprintf("%8.2f", $CLlength_in_min);
+
+	$stmtA = "UPDATE call_log set end_time='$now_date',end_epoch='$now_date_epoch',length_in_sec=$CLlength_in_sec,length_in_min='$CLlength_in_min',extension='$callerid' where uniqueid='$unique_id'";
+	$affected_rowsCL = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "DID IVR time logged: $start_time|$now_date_epoch|$affected_rowsCL|$stmtA|";   &agi_output;}
+	}
+
+
 ############################################
 ### Loop to try to send call to an agent ###
 while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
@@ -1763,8 +1790,8 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 				$dbhA->disconnect();
 
-					$now_date_epoch = time();
-					$now_date = "$year-$mon-$mday $hour:$min:$sec";
+				$now_date_epoch = time();
+				$now_date = "$year-$mon-$mday $hour:$min:$sec";
 				if ($AGILOG) {$agi_string = "XXXXX VDAD transferred: start|stop  $start_time|$now_date";   &agi_output;}
 				
 				exit;
