@@ -1,7 +1,7 @@
 <?php 
 # AST_agent_status_detail.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -9,6 +9,7 @@
 # 90225-2252 - Added CSV download option
 # 90310-2030 - Admin header
 # 90508-0644 - Changed to PHP long tags
+# 100119-0935 - Fixed bug 291
 #
 
 
@@ -372,6 +373,7 @@ else
 			if ($status_found < 1)
 				{
 				$SstatusesHTML .= "        0 |";
+				$SstatusesFILE .= "0,";
 				}
 			### END loop through each stat line ###
 			$n++;

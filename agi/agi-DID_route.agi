@@ -4,10 +4,12 @@
 # 
 # runs when a call comes into an inbound context on a trunk. This script will 
 # send the calls to various places depending on the settings for each DID.
-# 
 #
 # You need to put a line similar to this below in your extensions.conf file in
-# the context for where incoming calls go from your trunks:
+# the context for where incoming calls go from your trunks (for example, the
+# trunkinbound context which is present in the default dialplan):
+#
+#[trunkinbound]
 # ;inbound DID catch-all:
 #exten => _X.,1,AGI(agi-DID_route.agi)
 #
@@ -28,6 +30,7 @@ $script = 'agi-DID_route.agi';
 $dtmf_silent_prefix = '7';
 $at='@';
 $S='*';
+$US='_';
 
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -198,6 +201,7 @@ if ($sthArows > 0)
 	$user_unavailable_action =		$aryA[11];
 	$user_route_settings_ingroup =	$aryA[12];
 	$menu_id =						$aryA[13];
+	$record_call =					'';
 
 	$DIDs_in_system++;
 	}
@@ -227,15 +231,21 @@ if ($sthArows < 1)
 		$user_unavailable_action =		$aryA[11];
 		$user_route_settings_ingroup =	$aryA[12];
 		$menu_id =						$aryA[13];
+		$record_call =					'';
 		}
 	$sthA->finish();
 	}
 
-### Log the call
+### Log the call to vicidial_did_log
 $stmtA = "INSERT INTO vicidial_did_log SET uniqueid='$uniqueid',channel='$channel',server_ip='$VARserver_ip',caller_id_number='$callerid',caller_id_name='$calleridname',extension='$extension',call_date='$SQLdate',did_id='$did_id',did_route='$did_route';";
 	if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 $affected_rowsL = $dbhA->do($stmtA);
 if ($AGILOG) {$agi_string = "--    DID LOG : |$affected_rowsL|$stmtA|";   &agi_output;}
+
+### Log the call to call_log
+$stmtA = "INSERT INTO call_log SET uniqueid='$unique_id', channel='$channel', channel_group='DID_INBOUND', server_ip='$VARserver_ip', type='$type', extension='$extension', number_dialed='$extension', caller_code='$callerid', start_time='$SQLdate', start_epoch='$now_date_epoch';";
+$affected_rowsC = $dbhA->do($stmtA);
+if ($AGILOG) {$agi_string = "--    CALL LOG : |$affected_rowsC|$stmtA|";   &agi_output;}
 
 if ($AGILOG) {$did_string = "$SQLdate|$uniqueid|$channel|$extension|$callerid|$calleridname|$did_id|$did_route|";   &did_output;}
 
@@ -244,6 +254,35 @@ if ($DIDs_in_system < 1)
 	### if nothing found, exit script
 	if ($AGILOG) {$did_string = "NO default DID DEFINED! EXITING...   $SQLdate|$uniqueid|$channel|$extension|$callerid|$calleridname|";   &did_output;}
 	exit;
+	}
+
+### if set to record this call, start recording ###
+if ($record_call =~ /Y/)
+	{
+	$insert_recording_id='';
+	$filename = "$tsSQLdate$US$extension$US$callerid";
+	### code to record call goes here ###
+
+	$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$filename"); 
+
+	### insert record into recording_log table ###
+	$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$extension','$SQLdate','now_date_epoch','0','$filename','0','$callerid','$filename','$unique_id');";
+	$affected_rowsR = $dbhA->do($stmtA);
+	if ($affected_rowsR > 0)
+		{
+		$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+		$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$insert_recording_id = $aryA[0];
+			}
+		$sthA->finish();
+		}
+
+	if ($AGILOG) {$did_string = "--    RECORDING LOG : |$affected_rowsR|$insert_recording_id|$stmtA|";   &did_output;}
 	}
 
 ### Grab Server values from the database
@@ -256,12 +295,12 @@ while ($sthArows > $cbc)
 	{
 	@aryA = $sthA->fetchrow_array;
 	
-	$DBvoicemail_dump_exten	=		"$aryA[0]";
-	$DBext_context		=			"$aryA[1]";
-	$DBanswer_transfer_agent	=	"$aryA[2]";
-	$DBSERVER_GMT		=			"$aryA[3]";
-	$DBasterisk_version	=			"$aryA[4]";
-	$DBmax_vicidial_trunks	=		"$aryA[5]";
+	$DBvoicemail_dump_exten	=		$aryA[0];
+	$DBext_context		=			$aryA[1];
+	$DBanswer_transfer_agent	=	$aryA[2];
+	$DBSERVER_GMT		=			$aryA[3];
+	$DBasterisk_version	=			$aryA[4];
+	$DBmax_vicidial_trunks	=		$aryA[5];
 	if ($DBvoicemail_dump_exten)	{$voicemail_dump_exten = $DBvoicemail_dump_exten;}
 	if ($DBext_context)				{$ext_context = $DBext_context;}
 	if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
@@ -286,10 +325,10 @@ if ($did_route =~ /PHONE/)
 	if ($sthArows > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$dialplan_number =	"$aryA[0]";
-		$voicemail_id =		"$aryA[1]";
-		$protocol =			"$aryA[2]";
-		$ext_context =		"$aryA[3]";
+		$dialplan_number =	$aryA[0];
+		$voicemail_id =		$aryA[1];
+		$protocol =			$aryA[2];
+		$ext_context =		$aryA[3];
 		}
 	$sthA->finish();
 
