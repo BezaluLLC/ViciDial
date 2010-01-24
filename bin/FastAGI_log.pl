@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# FastAGI_log.pl version 2.2.0   *DBI-version*
+# FastAGI_log.pl version 2.4
 # 
 # Experimental Deamon using perl Net::Server that runs as FastAGI to reduce load
 # replaces the following AGI scripts:
@@ -25,7 +25,7 @@
 # exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
 # 
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 61010-1007 - First test build
@@ -53,6 +53,7 @@
 # 91026-1148 - Added AREACODE DNC option
 # 91213-1213 - Added queue_position to queue_log COMPLETE... and ABANDON records
 # 100108-2242 - Added answered_time to vicidial_carrier_log
+# 100123-1449 - Added double-log end logging
 #
 
 # defaults for PreFork
@@ -631,12 +632,65 @@ sub process_request
 					$length_in_min = ($length_in_sec / 60);
 					$length_in_min = sprintf("%8.2f", $length_in_min);
 
-					if ($AGILOG) {$agi_string = "QUERY done: start time = $start_time | sec: $length_in_sec | min: $length_in_min |";   &agi_output;}
-
 					$stmtA = "UPDATE call_log set end_time='$now_date',end_epoch='$now_date_epoch',length_in_sec=$length_in_sec,length_in_min='$length_in_min',channel='$channel' where uniqueid='$unique_id'";
 
 					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-					$affected_rows = $dbhA->do($stmtA);
+					$affected_rowsL = $dbhA->do($stmtA);
+
+					if ($AGILOG) {$agi_string = "QUERY done: start time = $start_time | sec: $length_in_sec | min: $length_in_min |$affected_rowsL";   &agi_output;}
+
+					if ($channel_group =~ /DID_INBOUND/)
+						{
+						$stmtA = "SELECT recording_id,start_epoch,filename,end_epoch FROM recording_log where vicidial_id='$unique_id' order by start_time desc limit 1;";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$CLrecording_id = 	$aryA[0];
+							$CLstart_epoch =	$aryA[1];
+							$CLfilename = 		$aryA[2];
+							$CLend_epoch = 		$aryA[3];
+
+							if (length($CLend_epoch) < 5)
+								{
+								$CLlength_in_sec = ($now_date_epoch - $CLstart_epoch);
+								$CLlength_in_min = ($CLlength_in_sec / 60);
+								$CLlength_in_min = sprintf("%8.2f", $CLlength_in_min);
+
+								$stmtA = "UPDATE recording_log set end_time='$now_date',end_epoch='$now_date_epoch',length_in_sec=$CLlength_in_sec,length_in_min='$CLlength_in_min' where recording_id='$CLrecording_id'";
+								$affected_rowsRL = $dbhA->do($stmtA);
+								if ($AGILOG) {$agi_string = "Recording stopped: $CLstart_epoch|$now_date_epoch|$affected_rowsRL|$stmtA|";   &agi_output;}
+								}
+							}
+						$sthA->finish();
+
+						### BEGIN Double-log end logging ###
+						$DOUBLEunique_id = $unique_id . "99";
+						$stmtA = "SELECT start_epoch FROM call_log where uniqueid='$DOUBLEunique_id' and channel_group='DOUBLE_LOG' order by start_time desc limit 1;";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$DOUBLEstart_epoch =	$aryA[0];
+
+							$DOUBLElength_in_sec = ($now_date_epoch - $DOUBLEstart_epoch);
+							$DOUBLElength_in_min = ($DOUBLElength_in_sec / 60);
+							$DOUBLElength_in_min = sprintf("%8.2f", $DOUBLElength_in_min);
+
+							$stmtA = "UPDATE call_log set end_time='$now_date',end_epoch='$now_date_epoch',length_in_sec=$DOUBLElength_in_sec,length_in_min='$DOUBLElength_in_min' where uniqueid='$DOUBLEunique_id' and channel_group='DOUBLE_LOG' order by start_time desc limit 1";
+
+							if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+							$affected_rowsDB = $dbhA->do($stmtA);
+
+							if ($AGILOG) {$agi_string = "DOUBLE QUERY done: start time = $DOUBLEstart_epoch | sec: $DOUBLElength_in_sec | min: $DOUBLElength_in_min |$affected_rowsDB";   &agi_output;}
+							}
+						$sthA->finish();
+						### END Double-log end logging ###
+						}
 					}
 
 				$stmtA = "DELETE from live_inbound where uniqueid IN('$unique_id','$CALLunique_id') and server_ip='$VARserver_ip'";

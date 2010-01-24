@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-DID_route.agi version 2.2.0
+# agi-DID_route.agi version 2.4y
 # 
 # runs when a call comes into an inbound context on a trunk. This script will 
 # send the calls to various places depending on the settings for each DID.
@@ -24,6 +24,7 @@
 # 90825-2252 - Changed PHONE to route using dialplan number
 # 91122-0743 - Added QueueMetrics logging as DID INFO entries
 # 100116-0631 - Logging bug fixes
+# 100123-1423 - Added record call DID option
 #
 
 $script = 'agi-DID_route.agi';
@@ -180,7 +181,7 @@ if ( (!$callerid) or ($callerid =~ /unknown/) )
 
 ### Grab DID values from the database
 $DIDs_in_system=0;
-$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id FROM vicidial_inbound_dids where did_pattern = '$extension' and did_active='Y';";
+$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call FROM vicidial_inbound_dids where did_pattern = '$extension' and did_active='Y';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -201,7 +202,7 @@ if ($sthArows > 0)
 	$user_unavailable_action =		$aryA[11];
 	$user_route_settings_ingroup =	$aryA[12];
 	$menu_id =						$aryA[13];
-	$record_call =					'';
+	$record_call =					$aryA[14];
 
 	$DIDs_in_system++;
 	}
@@ -210,7 +211,7 @@ $sthA->finish();
 if ($sthArows < 1)
 	{
 	### Grab DID values from the database for a default DID pattern if there is one
-	$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id FROM vicidial_inbound_dids where did_pattern = 'default' and did_active='Y';";
+	$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call FROM vicidial_inbound_dids where did_pattern = 'default' and did_active='Y';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$DIDs_in_system=$sthA->rows;
@@ -231,7 +232,7 @@ if ($sthArows < 1)
 		$user_unavailable_action =		$aryA[11];
 		$user_route_settings_ingroup =	$aryA[12];
 		$menu_id =						$aryA[13];
-		$record_call =					'';
+		$record_call =					$aryA[14];
 		}
 	$sthA->finish();
 	}
@@ -266,7 +267,7 @@ if ($record_call =~ /Y/)
 	$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$filename"); 
 
 	### insert record into recording_log table ###
-	$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$extension','$SQLdate','now_date_epoch','0','$filename','0','$callerid','$filename','$unique_id');";
+	$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$extension','$SQLdate','$now_date_epoch','0','$filename','0','$callerid','$filename','$unique_id');";
 	$affected_rowsR = $dbhA->do($stmtA);
 	if ($affected_rowsR > 0)
 		{

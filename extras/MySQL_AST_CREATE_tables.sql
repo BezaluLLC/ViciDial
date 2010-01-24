@@ -537,7 +537,8 @@ custom_one VARCHAR(100) default '',
 custom_two VARCHAR(100) default '',
 custom_three VARCHAR(100) default '',
 custom_four VARCHAR(100) default '',
-custom_five VARCHAR(100) default ''
+custom_five VARCHAR(100) default '',
+voicemail_id VARCHAR(10)
 );
 
 
@@ -1457,6 +1458,7 @@ list_id BIGINT(14) UNSIGNED default '999',
 campaign_id VARCHAR(8),
 phone_code VARCHAR(10) default '1',
 menu_id VARCHAR(50) default '',
+record_call ENUM('Y','N','Y_QUEUESTOP') default 'N',
 unique index (did_pattern),
 index (group_id)
 );

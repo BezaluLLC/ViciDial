@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-NVA_recording.agi version 0.1
+# agi-NVA_recording.agi version 2.4
 #
 # This script is designed to give recording ability to agents not the using 
 # ViciDial agent screen
@@ -10,22 +10,24 @@
 # ; 3. log this call in user_call_log (Y|N) default N
 # ; 4. log this call in call_log (Y|N) default N, ONLY NEEDED FOR INBOUND AND INTERSYSTEM CALLS!!!
 # ; 5. audio record this call (Y|N) default N
+# ; 6. double-log this call in call_log (Y|N) default N, ONLY NEEDED FOR INBOUND CALLMENU FORWARDED CALLS!!!
 #
 # ;custom dialplan entry example:
-#exten => _.,1,AGI(agi-NVA_recording.agi,BOTH------Y---N---Y)
+#exten => _.,1,AGI(agi-NVA_recording.agi,BOTH------Y---N---Y---N)
 #exten => _.,n,Goto(default,${EXTEN},1)
 #exten => _.,n,Hangup
 #
 # ;inbound to agent example:
-#exten => 5678,1,AGI(agi-NVA_recording.agi,BOTH------Y---Y---Y)
+#exten => 5678,1,AGI(agi-NVA_recording.agi,BOTH------Y---Y---Y---N)
 #exten => 5678,n,Goto(vicidial-auto,5678,1)
 #exten => 5678,n,Hangup
 #
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 91105-1402 - First build
+# 100123-1434 - Added double-log option for CallMenu forwarded calls
 #
 
 &get_time_now;
@@ -107,13 +109,14 @@ if (length($ARGV[0])>1)
 		$log_user_call =	$ARGV_vars[2];
 		$log_call =			$ARGV_vars[3];
 		$record_call =		$ARGV_vars[4];
+		$double_log =		$ARGV_vars[5];
 
 		if ($AGI_output =~ /STDERR/)	{$AGILOG = '1';}
 		if ($AGI_output =~ /FILE/)	{$AGILOG = '2';}
 		if ($AGI_output =~ /BOTH/)	{$AGILOG = '3';}
 
 		if ($AGILOG) {$agi_string = "Perl Environment Dump:";   &agi_output;}
-		if ($AGILOG) {$agi_string = "$AGI_output|$user|$log_call|$record_call|$uniqueid_log";   &agi_output;}
+		if ($AGILOG) {$agi_string = "$AGI_output|$user|$log_call|$record_call|$uniqueid_log|$double_log";   &agi_output;}
 		}
 	}
 
@@ -164,7 +167,7 @@ if ($record_call =~ /Y/)
 	$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$filename"); 
 
 	### insert record into recording_log table ###
-	$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$extension','$now_date','start_epoch','0','$filename','0','$accountcode','$filename','$unique_id');";
+	$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$extension','$now_date','$start_epoch','0','$filename','0','$accountcode','$filename','$unique_id');";
 	$affected_rows = $dbhA->do($stmtA);
 	}
 
@@ -181,6 +184,14 @@ if ($log_call =~ /Y/)
 	{
 	### insert record into call_log table ###
 	$stmtA = "INSERT INTO call_log SET uniqueid='$unique_id', channel='$channel', channel_group='PHONE_DIAL', server_ip='$VARserver_ip', type='$type', extension='$accountcode', number_dialed='$extension', caller_code='$callerid', start_time='$now_date', start_epoch='$start_epoch';";
+	$affected_rows = $dbhA->do($stmtA);
+	}
+
+### if set to double-log this call, insert call_log entry with uniqueid appended with a 99 ###
+if ($double_log =~ /Y/)
+	{
+	### insert record into call_log table ###
+	$stmtA = "INSERT INTO call_log SET uniqueid='" . $unique_id . "99', channel='$channel', channel_group='DOUBLE_LOG', server_ip='$VARserver_ip', type='$type', extension='$accountcode', number_dialed='$extension', caller_code='$callerid', start_time='$now_date', start_epoch='$start_epoch';";
 	$affected_rows = $dbhA->do($stmtA);
 	}
 

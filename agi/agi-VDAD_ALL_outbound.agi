@@ -1357,6 +1357,8 @@ while ($drop_timer <= $DROP_TIME)
 	##### Attempt to send call to an agent on this server only #####
 	if ($agent_search_method =~ /^SO|^LO/)
 		{
+		if ($agent_search_method =~ /^SO/)
+			{$agent_search_method = 'LO';}
 		$rec_countWAIT=0;
 		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and server_ip='$VARserver_ip' and campaign_id = '$VDADcampaign' and call_time < \"$VDADcall_time\" and lead_id != '$CIDlead_id';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}

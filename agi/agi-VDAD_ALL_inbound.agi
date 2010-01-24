@@ -118,6 +118,8 @@
 # 91214-2034 - Fixes for rare in-group rank route bug
 # 91223-0959 - Added VID(vendor_lead_code) options
 # 91230-0911 - Reset to original callerID when sending the call to VMAIL/CALLMENU/PHONE/etc...
+# 100121-1954 - Added TIMEOT/AFTHRS/NANQUE dropping event statuses
+# 100123-1015 - Added voicemail_id lookup for user from AGENTDIRECT drop
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -522,7 +524,7 @@ while ($sthArows > $cbc)
 	$drop_exten	=					"$aryA[13]";
 	$CAMP_callorder	=				"$aryA[14]";
 	$VDADvoicemail_ext =			"$aryA[15]";
-		$VDADvoicemail_ext =~ s/\D//gi;
+#		$VDADvoicemail_ext =~ s/\D//gi;
 	$queue_priority =				"$aryA[16]";
 	$drop_inbound_group =			"$aryA[17]";
 	$afterhours_xfer_group =		"$aryA[18]";
@@ -752,7 +754,7 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 	{
 	$VHqueryCID = "VA$CIDdate$hour$min$sec$sec";
 
-	$stmtA = "INSERT INTO vicidial_closer_log set status='DROP',start_epoch='$now_date_epoch',end_epoch='$now_date_epoch',length_in_sec='1',queue_seconds='0',lead_id = '$insert_lead_id',campaign_id='$channel_group',user='VDCL',list_id='$list_id',call_date='$now_date',phone_code='$phone_code',phone_number='$phone_number',comments='AFTER HOURS DROP',term_reason='AFTERHOURS',uniqueid='$uniqueid';";
+	$stmtA = "INSERT INTO vicidial_closer_log set status='AFTHRS',start_epoch='$now_date_epoch',end_epoch='$now_date_epoch',length_in_sec='1',queue_seconds='0',lead_id = '$insert_lead_id',campaign_id='$channel_group',user='VDCL',list_id='$list_id',call_date='$now_date',phone_code='$phone_code',phone_number='$phone_number',comments='AFTER HOURS DROP',term_reason='AFTERHOURS',uniqueid='$uniqueid';";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02016';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
@@ -769,7 +771,7 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 	$sthA->finish();
 	if ($AGILOG) {$agi_string = "--  AH VDCL vcl insert: |$affected_rows|$insert_lead_id|$insert_close_id|\n|$stmtA|";   &agi_output;}
 
-	$stmtA = "UPDATE vicidial_list set status='DROP' where lead_id = '$insert_lead_id';";
+	$stmtA = "UPDATE vicidial_list set status='AFTHRS' where lead_id = '$insert_lead_id';";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02018';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	if ($AGILOG) {$agi_string = "--  AH VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
@@ -912,7 +914,7 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 		{
 		$VHqueryCID = "VA$CIDdate$hour$min$sec$sec";
 
-		$stmtA = "INSERT INTO vicidial_closer_log set status='DROP',start_epoch='$now_date_epoch',end_epoch='$now_date_epoch',length_in_sec='1',queue_seconds='0',lead_id = '$insert_lead_id',campaign_id='$channel_group',user='VDCL',list_id='$list_id',call_date='$now_date',phone_code='$phone_code',phone_number='$phone_number',comments='NO AGENT DROP',term_reason='NOAGENT',uniqueid='$uniqueid';";
+		$stmtA = "INSERT INTO vicidial_closer_log set status='NANQUE',start_epoch='$now_date_epoch',end_epoch='$now_date_epoch',length_in_sec='1',queue_seconds='0',lead_id = '$insert_lead_id',campaign_id='$channel_group',user='VDCL',list_id='$list_id',call_date='$now_date',phone_code='$phone_code',phone_number='$phone_number',comments='NO AGENT DROP',term_reason='NOAGENT',uniqueid='$uniqueid';";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02105';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
@@ -929,7 +931,7 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 		$sthA->finish();
 		if ($AGILOG) {$agi_string = "--  NA VDCL vcl insert: |$affected_rows|$insert_lead_id|$insert_close_id|\n|$stmtA|";   &agi_output;}
 
-		$stmtA = "UPDATE vicidial_list set status='DROP' where lead_id = '$insert_lead_id';";
+		$stmtA = "UPDATE vicidial_list set status='NANQUE' where lead_id = '$insert_lead_id';";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02106';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		if ($AGILOG) {$agi_string = "--  NA VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
@@ -1339,7 +1341,7 @@ else
 ##########################################################
 ### end logging for call_log logged DID_INBOUND calls  ###
 $CLchannel_group='';
-$stmtA = "SELECT channel_group,start_epoch FROM call_log where uniqueid='$unique_id' order by start_time desc limit 1;";
+$stmtA = "SELECT channel_group,start_epoch,number_dialed,end_epoch FROM call_log where uniqueid='$unique_id' order by start_time desc limit 1;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -1348,10 +1350,12 @@ if ($sthArows > 0)
 	@aryA = $sthA->fetchrow_array;
 	$CLchannel_group = 	$aryA[0];
 	$CLstart_epoch =	$aryA[1];
+	$CLnumber_dialed =	$aryA[2];
+	$CLend_epoch =		$aryA[3];
 	}
 $sthA->finish();
 
-if ($CLchannel_group =~ /DID_INBOUND/)
+if ( ($CLchannel_group =~ /DID_INBOUND/) && (length($CLend_epoch) < 5) )
 	{
 	$CLlength_in_sec = ($now_date_epoch - $CLstart_epoch);
 	$CLlength_in_min = ($CLlength_in_sec / 60);
@@ -1360,6 +1364,58 @@ if ($CLchannel_group =~ /DID_INBOUND/)
 	$stmtA = "UPDATE call_log set end_time='$now_date',end_epoch='$now_date_epoch',length_in_sec=$CLlength_in_sec,length_in_min='$CLlength_in_min',extension='$callerid' where uniqueid='$unique_id'";
 	$affected_rowsCL = $dbhA->do($stmtA);
 	if ($AGILOG) {$agi_string = "DID IVR time logged: $start_time|$now_date_epoch|$affected_rowsCL|$stmtA|";   &agi_output;}
+
+	$stmtA = "SELECT record_call FROM vicidial_inbound_dids where did_pattern = '$CLnumber_dialed';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$DIDs_in_system=$sthA->rows;
+	if ($DIDs_in_system > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$record_call =	$aryA[0];
+		}
+	else
+		{
+		$stmtA = "SELECT record_call FROM vicidial_inbound_dids where did_pattern = 'default';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$DIDs_in_system=$sthA->rows;
+		if ($DIDs_in_system > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$record_call =	$aryA[0];
+			}
+		}
+	$sthA->finish();
+	if ($record_call =~ /QUEUESTOP/)
+		{
+		$stmtA = "SELECT recording_id,start_epoch,filename,end_epoch FROM recording_log where vicidial_id='$unique_id' order by start_time desc limit 1;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$CLrecording_id = 	$aryA[0];
+			$CLstart_epoch =	$aryA[1];
+			$CLfilename = 		$aryA[2];
+			$CLend_epoch = 		$aryA[3];
+
+			if (length($CLend_epoch) < 5)
+				{
+				$CLlength_in_sec = ($now_date_epoch - $CLstart_epoch);
+				$CLlength_in_min = ($CLlength_in_sec / 60);
+				$CLlength_in_min = sprintf("%8.2f", $CLlength_in_min);
+
+				$AGI->exec("StopMonitor wav|/var/spool/asterisk/monitor/MIX/$CLfilename"); 
+
+				$stmtA = "UPDATE recording_log set end_time='$now_date',end_epoch='$now_date_epoch',length_in_sec=$CLlength_in_sec,length_in_min='$CLlength_in_min' where recording_id='$CLrecording_id'";
+				$affected_rowsRL = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "Recording stopped: $CLstart_epoch|$now_date_epoch|$affected_rowsRL|$stmtA|";   &agi_output;}
+				}
+			}
+		$sthA->finish();
+		}
 	}
 
 
@@ -1441,8 +1497,11 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 	################################################################
 	##### Attempt to send call to an agent on this server only #####
+
 	if ( ($agent_search_method =~ /^SO|^LO/) && ($skipLOSO < 1) )
 		{
+		if ($agent_search_method =~ /^SO/)
+			{$agent_search_method = 'LO';}
 		### Get count of number of calls in this group that are ahead of this call
 		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and server_ip='$VARserver_ip' and campaign_id = '$channel_group' and call_time < \"$SQLdateBEGIN\" and lead_id != '$insert_lead_id';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
@@ -2905,7 +2964,7 @@ if ($drop_timer > $DROP_TIME)
 		$Baffected_rows = $dbhB->do($stmtB);
 			$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02097';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
-		$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='DROP',serverid='$queuemetrics_log_id';";
+		$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='TIMEOT',serverid='$queuemetrics_log_id';";
 		$Baffected_rows = $dbhB->do($stmtB);
 			$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02098';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
@@ -2918,11 +2977,29 @@ if ($drop_timer > $DROP_TIME)
 		$drop_seconds = $DROP_TIME;
 		}
 
-	if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && (length($user_unavailable_action) > 1) )
+	if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ( (length($user_unavailable_action) > 1) || ($VDADvoicemail_ext =~ /AGENTVMAIL/) ) )
 		{
-		$drop_action = $user_unavailable_action;
-		$drop_inbound_group = $did_in_group;
+		if ($VDADvoicemail_ext !~ /AGENTVMAIL/) 
+			{
+			$drop_action = $user_unavailable_action;
+			$drop_inbound_group = $did_in_group;
+			}
 		$VDADvoicemail_ext = $did_voicemail_ext;
+		if (length($did_voicemail_ext) < 1)
+			{
+			### Grab user's voicemail ID from the database
+			$stmtA = "SELECT voicemail_id FROM vicidial_users where user='$agent_only';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+				$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$VDADvoicemail_ext = 	$aryA[0];
+				}
+			$sthA->finish();
+			}
 		}
 
 	if ($drop_action =~ /MESSAGE|EXTEN/)
@@ -3011,12 +3088,12 @@ if ($drop_timer > $DROP_TIME)
 		$dbhP=$dbhA;   $mysql_count='02099';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
 
-	$stmtA = "UPDATE vicidial_closer_log set status='DROP',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',queue_seconds='$drop_seconds',term_reason='QUEUETIMEOUT' where lead_id = '$insert_lead_id' order by start_epoch desc limit 1;";
+	$stmtA = "UPDATE vicidial_closer_log set status='TIMEOT',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',queue_seconds='$drop_seconds',term_reason='QUEUETIMEOUT' where lead_id = '$insert_lead_id' order by start_epoch desc limit 1;";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02100';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	if ($AGILOG) {$agi_string = "--    VDCL vcl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
 
-	$stmtA = "UPDATE vicidial_list set status='XDROP' where lead_id = '$insert_lead_id';";
+	$stmtA = "UPDATE vicidial_list set status='TIMEOT' where lead_id = '$insert_lead_id';";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02101';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	if ($AGILOG) {$agi_string = "--    VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}

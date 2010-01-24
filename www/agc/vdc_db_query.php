@@ -231,12 +231,13 @@
 # 100109-0745 - Added alt_num_status for ALTNUM dialing status
 # 100109-1336 - Fixed Manual dial live call detection
 # 100113-1949 - Fixed dispo_choice bug and added dispo_status to dispo URL call
+# 100122-0757 - Added NOT-LOGGED-IN-AGENTS option for sidebar view and transfer view
 #
 
-$version = '2.2.0-139';
-$build = '100113-1949';
+$version = '2.4-140';
+$build = '100122-0757';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=300;
+$mysql_log_count=301;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -6191,6 +6192,8 @@ if ($ACTION == 'AGENTSview')
 
 	echo "<TABLE CELLPADDING=0 CELLSPACING=1>";
 	### Gather agents data and statuses
+	$agentviewlistSQL='';
+	$j=0;
 	$stmt="SELECT vla.user,vla.status,vu.full_name,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish) from vicidial_live_agents vla,vicidial_users vu where vla.user=vu.user $AGENTviewSQL order by vu.full_name;";
 	$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00227',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -6204,6 +6207,7 @@ if ($ACTION == 'AGENTSview')
 		$full_name =	$row[2];
 		$call_start =	$row[3];
 		$call_finish =	$row[4];
+		$agentviewlistSQL .= "'$user',";
 
 		if ( ($status=='READY') or ($status=='CLOSER') ) 
 			{
@@ -6239,10 +6243,11 @@ if ($ACTION == 'AGENTSview')
 
 		if ($comments=='AgentXferViewSelect') 
 			{
-			echo "<TR BGCOLOR=\"$statuscolor\"><TD><font style=\"font-size: 12px; font-family: sans-serif;\"> &nbsp; <a href=\"#\" onclick=\"AgentsXferSelect('$row[0]','$comments');return false;\">$row[0] - $row[2]</a>&nbsp;</font></TD>";
-			if ($agent_status_view_time > 0)
-				{echo "<TD><font style=\"font-size: 12px;  font-family: sans-serif;\">&nbsp; $call_time &nbsp;</font></TD>";}
-			echo "</TR>";
+			$AXVSuser[$j] =			$user;
+			$AXVSfull_name[$j] =	$full_name;
+			$AXVScall_time[$j] =	$call_time;
+			$AXVSstatuscolor[$j] =	$statuscolor;
+			$j++;
 			}
 		else
 			{
@@ -6255,8 +6260,84 @@ if ($ACTION == 'AGENTSview')
 			}
 		$loop_count++;
 		}
+	$agentviewlistSQL = eregi_replace(".$","",$agentviewlistSQL);
+	if (strlen($agentviewlistSQL)<3)
+		{$agentviewlistSQL = "''";}
+
+	if (ereg("NOT-LOGGED-IN-AGENTS",$agent_status_viewable_groups))
+		{
+		$stmt="SELECT user,full_name from vicidial_users where user NOT IN($agentviewlistSQL) order by full_name;";
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00301',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		if ($rslt) {$agents_count = mysql_num_rows($rslt);}
+		$loop_count=0;
+		while ($agents_count > $loop_count)
+			{
+			$row=mysql_fetch_row($rslt);
+			$user =			$row[0];
+			$full_name =	$row[1];
+
+			if ($comments=='AgentXferViewSelect') 
+				{
+				$AXVSuser[$j] =			$user;
+				$AXVSfull_name[$j] =	$full_name;
+				$AXVScall_time[$j] =	'0:00';
+				$AXVSstatuscolor[$j] =	'white';
+				$j++;
+				}
+			else
+				{
+				echo "<TR BGCOLOR=\"white\"><TD><font style=\"font-size: 12px;  font-family: sans-serif;\"> &nbsp; ";
+				echo "$user - $full_name";
+				echo "&nbsp;</font></TD>";
+				if ($agent_status_view_time > 0)
+					{echo "<TD><font style=\"font-size: 12px;  font-family: sans-serif;\">&nbsp; 0:00 &nbsp;</font></TD>";}
+				echo "</TR>";
+				}
+			$loop_count++;
+			}
+		}
+
+	### BEGIN Display the agent transfer select view ###
+	$k=0;
+	if ($comments=='AgentXferViewSelect') 
+		{
+		echo "<TABLE CELLPADDING=0 CELLSPACING=1><TR><TD VALIGN=TOP><TABLE CELLPADDING=0 CELLSPACING=1>";
+
+		$AXVSrecords=100;
+		$AXVScolumns=1;
+		$AXVSfontsize='12px';
+		if ($j > 30) {$AXVScolumns++;}
+		if ($j > 60) {$AXVScolumns++;   $AXVSfontsize='11px';}
+		if ($j > 90) {$AXVScolumns++;   $AXVSfontsize='10px';}
+		if ($j > 120) {$AXVScolumns++;   $AXVSfontsize='9px';}
+		$AXVSrecords = ($j / $AXVScolumns);
+		$AXVSrecords = round($AXVSrecords, 0);
+		$m=0;
+		while ($j > $k)
+			{
+			echo "<TR BGCOLOR=\"$AXVSstatuscolor[$k]\"><TD><font style=\"font-size: $AXVSfontsize; font-family: sans-serif;\"> &nbsp; <a href=\"#\" onclick=\"AgentsXferSelect('$AXVSuser[$k]','AgentXferViewSelect');return false;\">$AXVSuser[$k] - $AXVSfull_name[$k]</a>&nbsp;</font></TD>";
+			if ($agent_status_view_time > 0)
+				{echo "<TD><font style=\"font-size: $AXVSfontsize;  font-family: sans-serif;\">&nbsp; $AXVScall_time[$k] &nbsp;</font></TD>";}
+			echo "</TR>";
+
+			$k++;
+			$m++;
+			if ($m >= $AXVSrecords)
+				{
+				echo "</TABLE></TD><TD VALIGN=TOP> &nbsp; </TD>";
+				echo "<TD VALIGN=TOP><TABLE CELLPADDING=0 CELLSPACING=1>";
+				$m=0;
+				}
+			}
+		echo "</TD></TR></TABLE>";
+		}
+
 	echo "</TABLE><BR>\n";
 	echo "<font style=\"font-size:10px;font-family:sans-serif;\"><font style=\"background-color:#ADD8E6;\"> &nbsp; &nbsp;</font>-READY &nbsp; <font style=\"background-color:#D8BFD8;\">&nbsp; &nbsp;</font>-INCALL &nbsp; <font style=\"background-color:#F0E68C;\"> &nbsp; &nbsp;</font>-PAUSED &nbsp;\n";
+	if (ereg("NOT-LOGGED-IN-AGENTS",$agent_status_viewable_groups))
+		{echo "<font style=\"background-color:#FFFFFF;\"> &nbsp; &nbsp;</font>-LOGGED-OUT &nbsp;\n";}
+
 	if ($comments=='AgentXferViewSelect') 
 		{
 		echo "<BR><BR><a href=\"#\" onclick=\"AgentsXferSelect('0','$comments');return false;\">Close Window</a>&nbsp;";

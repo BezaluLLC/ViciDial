@@ -272,10 +272,11 @@
 # 100109-0801 - Added ALTNUM alt number status, fixed alt number dialing from setting
 # 100109-1338 - Fixed Manual dial live call detection
 # 100116-0709 - Added presets to script and web form variables
+# 100123-0954 - changes to AGENTDIRECT selection span
 #
 
-$version = '2.2.0-250';
-$build = '100116-0709';
+$version = '2.4-251';
+$build = '100123-0954';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -10772,7 +10773,7 @@ if ($view_calls_in_queue > 0)
 <span style="position:absolute;left:<?php echo $SBwidth ?>px;top:0px;height:500;overflow:scroll;z-index:25;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentViewSpan"><TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">
 Other Agents Status: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="AgentViewStatus">&nbsp;</span></TD></TR></TABLE></span>
 
-<span style="position:absolute;left:60px;top:<?php echo $BPheight ?>px;width:400;height:500;overflow:scroll;z-index:33;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentXferViewSpan"><CENTER><font class="body_text">
+<span style="position:absolute;left:0px;top:0px;width:<?php echo $JS_browser_width ?>;height:<?php echo $JS_browser_height ?>;overflow:scroll;z-index:33;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentXferViewSpan"><CENTER><font class="body_text">
 Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font></span>
 
 <span style="position:absolute;left:<?php echo $SCwidth ?>px;top:<?php echo $SLheight ?>px;z-index:27;" id="AgentViewLinkSpan"><TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=91><TR><TD ALIGN=RIGHT><font class="body_small"><span id="AgentViewLink"><a href="#" onclick="AgentsViewOpen('AgentViewSpan','open');return false;">Agents View +</a></span></font></TD></TR></TABLE></span>
