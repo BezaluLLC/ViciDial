@@ -6,10 +6,6 @@ INSERT INTO vicidial_statuses values('NANQUE','Inbound No Agent No Queue Drop','
 
 UPDATE system_settings SET db_schema_version='1194',db_schema_update_date=NOW();
 
-
-
-
-
 ALTER TABLE vicidial_users ADD voicemail_id VARCHAR(10) default '';
 
 ALTER TABLE vicidial_inbound_dids ADD record_call ENUM('Y','N','Y_QUEUESTOP') default 'N';
