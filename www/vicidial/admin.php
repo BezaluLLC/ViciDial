@@ -1307,7 +1307,6 @@ if ($non_latin < 1)
 	$vicidial_transfers = ereg_replace("[^0-9]","",$vicidial_transfers);
 	$voicemail_button_enabled = ereg_replace("[^0-9]","",$voicemail_button_enabled);
 	$voicemail_dump_exten = ereg_replace("[^0-9]","",$voicemail_dump_exten);
-	$voicemail_ext = ereg_replace("[^0-9]","",$voicemail_ext);
 	$voicemail_exten = ereg_replace("[^0-9]","",$voicemail_exten);
 	$wrapup_seconds = ereg_replace("[^0-9]","",$wrapup_seconds);
 	$use_non_latin = ereg_replace("[^0-9]","",$use_non_latin);
