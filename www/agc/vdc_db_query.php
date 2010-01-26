@@ -431,6 +431,7 @@ $CIDdate = date("mdHis");
 $ENTRYdate = date("YmdHis");
 $MT[0]='';
 $agents='@agents';
+$US='_';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -6243,6 +6244,7 @@ if ($ACTION == 'AGENTSview')
 
 		if ($comments=='AgentXferViewSelect') 
 			{
+			$AXVSuserORDER[$j] =	"$full_name$US$j";
 			$AXVSuser[$j] =			$user;
 			$AXVSfull_name[$j] =	$full_name;
 			$AXVScall_time[$j] =	$call_time;
@@ -6279,6 +6281,7 @@ if ($ACTION == 'AGENTSview')
 
 			if ($comments=='AgentXferViewSelect') 
 				{
+				$AXVSuserORDER[$j] =	"$full_name$US$j";
 				$AXVSuser[$j] =			$user;
 				$AXVSfull_name[$j] =	$full_name;
 				$AXVScall_time[$j] =	'0:00';
@@ -6314,11 +6317,16 @@ if ($ACTION == 'AGENTSview')
 		$AXVSrecords = ($j / $AXVScolumns);
 		$AXVSrecords = round($AXVSrecords, 0);
 		$m=0;
+
+		sort($AXVSuserORDER);
 		while ($j > $k)
 			{
-			echo "<TR BGCOLOR=\"$AXVSstatuscolor[$k]\"><TD><font style=\"font-size: $AXVSfontsize; font-family: sans-serif;\"> &nbsp; <a href=\"#\" onclick=\"AgentsXferSelect('$AXVSuser[$k]','AgentXferViewSelect');return false;\">$AXVSuser[$k] - $AXVSfull_name[$k]</a>&nbsp;</font></TD>";
+			$order_split = explode("_",$AXVSuserORDER[$k]);
+			$i = $order_split[1];
+
+			echo "<TR BGCOLOR=\"$AXVSstatuscolor[$i]\"><TD><font style=\"font-size: $AXVSfontsize; font-family: sans-serif;\"> &nbsp; <a href=\"#\" onclick=\"AgentsXferSelect('$AXVSuser[$i]','AgentXferViewSelect');return false;\">$AXVSuser[$i] - $AXVSfull_name[$i]</a>&nbsp;</font></TD>";
 			if ($agent_status_view_time > 0)
-				{echo "<TD><font style=\"font-size: $AXVSfontsize;  font-family: sans-serif;\">&nbsp; $AXVScall_time[$k] &nbsp;</font></TD>";}
+				{echo "<TD><font style=\"font-size: $AXVSfontsize;  font-family: sans-serif;\">&nbsp; $AXVScall_time[$i] &nbsp;</font></TD>";}
 			echo "</TR>";
 
 			$k++;

@@ -267,7 +267,7 @@ if ($record_call =~ /Y/)
 	$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$filename"); 
 
 	### insert record into recording_log table ###
-	$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$extension','$SQLdate','$now_date_epoch','0','$filename','0','$callerid','$filename','$unique_id');";
+	$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$callerid','$SQLdate','$now_date_epoch','0','$filename','0','$extension','$filename','$unique_id');";
 	$affected_rowsR = $dbhA->do($stmtA);
 	if ($affected_rowsR > 0)
 		{
