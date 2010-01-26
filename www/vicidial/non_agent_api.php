@@ -1256,7 +1256,7 @@ if ($function == 'add_lead')
 								$duplicate_lists .=	"'$row[0]',";
 								$L++;
 								}
-							$duplicate_lists = eregi_replace(",$",'',$dup_lists);
+							$duplicate_lists = eregi_replace(",$",'',$duplicate_lists);
 							}
 						}
 					}
@@ -1288,7 +1288,7 @@ if ($function == 'add_lead')
 					}
 				if (eregi("DUPCAMP",$duplicate_check)) # duplicate check within campaign lists
 					{
-					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPCAMP\n";}
+					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPCAMP - $duplicate_lists\n";}
 					$duplicate_found=0;
 					$stmt="SELECT lead_id,list_id from vicidial_list where phone_number='$phone_number' and list_id IN($duplicate_lists) limit 1;";
 					$rslt=mysql_query($stmt, $link);

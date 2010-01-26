@@ -210,8 +210,8 @@ echo " &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $user - $full_name<BR><BR>\n";
 echo "<center>\n";
 if ($did > 0)
 	{
-	echo "<a href=\"./AST_DIDstats.php?group[0]=$did_id\">DID traffic report</a>\n";
-	echo " | <a href=\"./admin.php?ADD=33111&did_id=$did_id\">Modify DID</a>\n";
+	echo "<a href=\"./AST_DIDstats.php?group[0]=$did_id&query_date=$begin_date&end_date=$end_date\">DID traffic report</a>\n";
+	echo " | <a href=\"./admin.php?ADD=3311&did_id=$did_id\">Modify DID</a>\n";
 	}
 else
 	{
