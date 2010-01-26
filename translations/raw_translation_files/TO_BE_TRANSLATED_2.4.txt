@@ -1,0 +1,21 @@
+############################################################  ADMIN
+All users in the system, even not logged-in users||
+The NOT-LOGGED-IN-AGENTS option allows all users in the system to be displayed, even if they are not logged-in curently||
+Voicemail ID||
+This is the voicemail box that calls will be directed to in an AGENTDIRECT in-group at the drop time if the in-group has the drop method set to VOICEMAIL and the Voicemail field set to AGENTVMAIL||
+In an AGENTDIRECT in-group, setting this to AGENTVMAIL will select the User voicemail ID to use||
+Record Call||
+This option allows you to set the calls coming into this DID to be recorded. Y will record the entire call, Y_QUEUESTOP will record the call until the call is hungup or enters an in-group queue, N will not record the call. Default is N.||
+Click here to see a list of recordings and calls for this DID||
+
+
+############################################################ CLIENT
+
+
+
+############################################################  MANAGER Manual
+
+
+
+############################################################  AGENT Manual
+

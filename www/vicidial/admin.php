@@ -20038,6 +20038,7 @@ if ($ADD==3311)
 		echo "<BR></center></FORM><br>\n";
 
 		echo "<br><a href=\"./AST_DIDstats.php?group[0]=$did_id\">Click here to see a traffic report for this DID</FONT><br>\n";
+		echo "<br><a href=\"./user_stats.php?user=$did_pattern&did=1&did_id=$did_id\">Click here to see a list of recordings and calls for this DID</FONT><br>\n";
 
 		if ($LOGdelete_dids > 0)
 			{

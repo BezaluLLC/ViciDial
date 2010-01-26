@@ -1497,11 +1497,11 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 	################################################################
 	##### Attempt to send call to an agent on this server only #####
+	if ($agent_search_method =~ /^SO/)
+		{$agent_search_method = 'LO';}
 
 	if ( ($agent_search_method =~ /^SO|^LO/) && ($skipLOSO < 1) )
 		{
-		if ($agent_search_method =~ /^SO/)
-			{$agent_search_method = 'LO';}
 		### Get count of number of calls in this group that are ahead of this call
 		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and server_ip='$VARserver_ip' and campaign_id = '$channel_group' and call_time < \"$SQLdateBEGIN\" and lead_id != '$insert_lead_id';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
