@@ -322,8 +322,9 @@ Status|Κατάσταση|
 Inserted|Εισαγωγή |
  seconds| δευτερόλεπτα|
 HELP|ΒΟΗΘΕΙΑ|
-Login|Σύνδεση|
-User|Χρήστης|
+ Login | Σύνδεση |
+Login:|Σύνδεση:|
+User |Χρήστης |
 Password|Κωδικός πρόσβασης|
 VERSION|ΕΚΔΟΣΗ|
 BUILD|ΔΗΜΙΟΥΡΓΙΑ|

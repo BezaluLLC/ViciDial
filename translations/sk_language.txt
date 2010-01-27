@@ -324,8 +324,9 @@ Status|Stav|
 Inserted|Vložiť|
  seconds| sekúnd|
 HELP|POMOC|
-Login|Prihlásiť|
-User|Užívateľ|
+ Login | Prihlásiť |
+Login:|Prihlásiť:|
+User |Užívateľ |
 Password|Heslo|
 VERSION|VERZIA|
 BUILD|POSTAVENÉ|

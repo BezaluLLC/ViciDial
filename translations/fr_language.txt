@@ -324,8 +324,9 @@ Status|Statut|
 Inserted|Inséré|
  seconds| secondes|
 HELP|AIDE|
-Login|Ouverture de Session|
-User|Utilisateur|
+ Login | Ouverture de Session |
+Login:|Ouverture de Session:|
+User |Utilisateur |
 Password|Mot de passe|
 VERSION|VERSION|
 BUILD|BUILD|

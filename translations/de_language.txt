@@ -297,8 +297,9 @@ Status|Status|
 Inserted|Eingefügt|
  seconds| Sekunden|
 HELP|HILFE|
-Login|Login|
-User|Benutzer|
+ Login | Login |
+Login:|Login:|
+User |Benutzer |
 Password|Passwort|
 VERSION|VERSION|
 BUILD|BUILD|

@@ -324,8 +324,9 @@ Status|Статус|
 Inserted|Введенный|
  seconds| секунды|
 HELP|ПОМОЩЬ|
-Login|Логин|
-User|Пользователь|
+ Login | Логин |
+Login:|Логин:|
+User |Пользователь |
 Password|Пароль|
 VERSION|ВЕРСИЯ|
 BUILD|СБОРКА|

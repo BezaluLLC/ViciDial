@@ -324,8 +324,9 @@ Status|Estado|
 Inserted|Insertado|
  seconds| segundos|
 HELP|AYUDA|
-Login|Conexión|
-User|Usuario|
+ Login | Conexión |
+Login:|Conexión:|
+User |Usuario |
 Password|Contraseña|
 VERSION|VERSIÓN|
 BUILD|CONSTRUCCION|
@@ -484,3 +485,4 @@ has selected your in-group choices|ha seleccionado en las opciones de su grupo|
 CONSULTATIVE|CONSULTIVO|
 Close Message|Cerrar Mensaje|
 TIMER NOTIFICATION|NOTIFICACIÓN TIMER|
+login_language=en_us|login_language=es_es|

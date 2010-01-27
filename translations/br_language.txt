@@ -321,8 +321,9 @@ Status|Status|
 Inserted|Inserido|
  seconds| segundos|
 HELP|AJUDA|
-Login|Login|
-User|Usuário|
+ Login | Login |
+Login:|Login:|
+User |Usuário |
 Password|Senha|
 VERSION|VERSÃO|
 BUILD|CONFIGURAÇÃO|

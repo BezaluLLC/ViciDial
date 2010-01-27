@@ -323,8 +323,9 @@ Status|Status|
 Inserted|Ingevoerd|
  seconds| seconden|
 HELP|HELP|
-Login|Inloggen|
-User|Gebruiker|
+ Login | Inloggen |
+Login:|Inloggen:|
+User |Gebruiker |
 Password|Wachtwoord|
 VERSION|VERSIE|
 BUILD|BUILD|

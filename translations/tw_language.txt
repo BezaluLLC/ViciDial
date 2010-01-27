@@ -324,8 +324,9 @@ Status|狀態|
 Inserted|已插入|
  seconds| 秒|
 HELP|協助|
-Login|登入|
-User|使用者|
+ Login | 登入 |
+Login:|登入:|
+User |使用者 |
 Password|密碼|
 VERSION|版本|
 BUILD|版次|
