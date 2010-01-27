@@ -859,7 +859,8 @@ start_call_url TEXT,
 dispo_call_url TEXT,
 xferconf_c_number VARCHAR(50) default '',
 xferconf_d_number VARCHAR(50) default '',
-xferconf_e_number VARCHAR(50) default ''
+xferconf_e_number VARCHAR(50) default '',
+ignore_list_script_override ENUM('Y','N') default 'N'
 );
 
 CREATE TABLE vicidial_stations (
@@ -2033,7 +2034,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1196',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1197',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

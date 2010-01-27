@@ -11,10 +11,11 @@
 # 91204-1913 - Added recording_filename and recording_id variables
 # 91211-1103 - Added user_custom_... variables
 # 100116-0702 - Added preset variables
+# 100127-1611 - Added ignore_list_script_override option
 #
 
-$version = '2.2.0-5';
-$build = '100116-0702';
+$version = '2.2.0-6';
+$build = '100127-1611';
 
 require("dbconnect.php");
 
@@ -249,6 +250,19 @@ if (strlen($in_script) < 1)
 	{$call_script = $camp_script;}
 else
 	{$call_script = $in_script;}
+
+$ignore_list_script_override='N';
+$stmt = "SELECT ignore_list_script_override FROM vicidial_inbound_groups where group_id='$group';";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$ilso_ct = mysql_num_rows($rslt);
+if ($ilso_ct > 0)
+	{
+	$row=mysql_fetch_row($rslt);
+	$ignore_list_script_override =		$row[0];
+	}
+if ($ignore_list_script_override=='Y')
+	{$ignore_list_script=1;}
 
 if ($ignore_list_script < 1)
 	{

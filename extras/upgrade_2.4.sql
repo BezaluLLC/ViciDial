@@ -18,3 +18,7 @@ vtiger_role VARCHAR(5)
 );
 
 UPDATE system_settings SET db_schema_version='1196',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_inbound_groups ADD ignore_list_script_override ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1197',db_schema_update_date=NOW();

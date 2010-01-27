@@ -7,6 +7,8 @@ In an AGENTDIRECT in-group, setting this to AGENTVMAIL will select the User voic
 Record Call||
 This option allows you to set the calls coming into this DID to be recorded. Y will record the entire call, Y_QUEUESTOP will record the call until the call is hungup or enters an in-group queue, N will not record the call. Default is N.||
 Click here to see a list of recordings and calls for this DID||
+Ignore List Script Override||
+This option allows you to ignore the list ID Script Override option for calls coming into this In-Group. Setting this to Y will ignore any List ID script settings. Default is N||
 
 
 ############################################################ CLIENT
