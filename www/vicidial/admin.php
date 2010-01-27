@@ -2048,11 +2048,12 @@ else
 # 100116-0718 - Added presets to script select list
 # 100122-0747 - Added NOT-LOGGED-IN-AGENTS option for User Groups
 # 100123-1301 - Added DID record call option
+# 100127-0601 - Added Vtiger ViciDial user_level role lookup
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-236';
-$build = '100123-1301';
+$admin_version = '2.4-237';
+$build = '100127-0601';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -8130,6 +8131,16 @@ if ($ADD=="2")
 				$salt = substr($user_name, 0, 2);
 				$salt = '$1$' . $salt . '$';
 				$encrypted_password = crypt($user_password, $salt);
+				### search for role in ViciDial
+				$stmt = "SELECT vtiger_role FROM vtiger_vicidial_roles where user_level='$user_level';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$vvr_ct = mysql_num_rows($rslt);
+				if ($vvr_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$roleid =	$row[0];
+					}
 
 				######################################
 				##### BEGIN Add/Update group info in Vtiger
@@ -8412,6 +8423,16 @@ if ($ADD=="2A")
 				$salt = substr($user_name, 0, 2);
 				$salt = '$1$' . $salt . '$';
 				$encrypted_password = crypt($user_password, $salt);
+				### search for role in ViciDial
+				$stmt = "SELECT vtiger_role FROM vtiger_vicidial_roles where user_level='$user_level';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$vvr_ct = mysql_num_rows($rslt);
+				if ($vvr_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$roleid =	$row[0];
+					}
 
 				######################################
 				##### BEGIN Add/Update group info in Vtiger
@@ -10525,6 +10546,16 @@ if ($ADD=="4A")
 				$salt = substr($user_name, 0, 2);
 				$salt = '$1$' . $salt . '$';
 				$encrypted_password = crypt($user_password, $salt);
+				### search for role in ViciDial
+				$stmt = "SELECT vtiger_role FROM vtiger_vicidial_roles where user_level='$user_level';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$vvr_ct = mysql_num_rows($rslt);
+				if ($vvr_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$roleid =	$row[0];
+					}
 
 				######################################
 				##### BEGIN Add/Update group info in Vtiger
@@ -10758,6 +10789,16 @@ if ($ADD=="4B")
 				$salt = substr($user_name, 0, 2);
 				$salt = '$1$' . $salt . '$';
 				$encrypted_password = crypt($user_password, $salt);
+				### search for role in ViciDial
+				$stmt = "SELECT vtiger_role FROM vtiger_vicidial_roles where user_level='$user_level';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$vvr_ct = mysql_num_rows($rslt);
+				if ($vvr_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$roleid =	$row[0];
+					}
 
 				######################################
 				##### BEGIN Add/Update group info in Vtiger
@@ -10985,6 +11026,16 @@ if ($ADD==4)
 				$salt = substr($user_name, 0, 2);
 				$salt = '$1$' . $salt . '$';
 				$encrypted_password = crypt($user_password, $salt);
+				### search for role in ViciDial
+				$stmt = "SELECT vtiger_role FROM vtiger_vicidial_roles where user_level='$user_level';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$vvr_ct = mysql_num_rows($rslt);
+				if ($vvr_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$roleid =	$row[0];
+					}
 
 				######################################
 				##### BEGIN Add/Update group info in Vtiger

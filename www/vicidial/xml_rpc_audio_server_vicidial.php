@@ -3,13 +3,14 @@
 # 
 # Used for integration with QueueMetrics of audio recordings
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # Copyright (C) 2007  Lenz Emilitri <lenz.loway@gmail.com> LICENSE: ????
 # 
 # CHANGES
 # 90525-1141 - First build
 # 90529-2041 - Added Realtime monitoring
 # 91012-0641 - Fixed to work with non-sequential time_ids in the queue_log
+# 100127-0603 - Added OpenSuSE install instructions
 #
 
 // $Id: xmlrpc_audio_server.php,v 1.3 2007/11/12 17:53:09 lenz Exp $
@@ -27,6 +28,12 @@
 // IMPORTANT:
 // in order to run this, you must have the XML_RPC module that comes with the PEAR library
 // correctly installed on your PHP server. See http://pear.php.net 
+// on OpenSuSE: 
+//     sudo zypper install php5-pear
+//     sudo zypper install php5-pear-xml_rpc
+//     sudo zypper install php5-pear-xml_parser
+//     sudo zypper install php5-pear-xml_util
+// on system with basic pear already installed:
 //  "pear install XML_RPC-1.5.1"
 //
 

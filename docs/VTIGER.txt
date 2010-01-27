@@ -104,6 +104,16 @@ cp /usr/src/astguiclient/trunk/extras/Vtiger510_vicidial_001_noclose.patch ./
 patch -p1 < ./Vtiger510_vicidial_001_noclose.patch
 
 
+To link specific Vtiger Roles to ViciDial user levels, you need to find the Vtiger user Role code "H5, H4, etc..." and then run these MySQL queries to set the relationship:
+INSERT INTO vtiger_vicidial_roles SET user_level='1',vtiger_role='H5';
+INSERT INTO vtiger_vicidial_roles SET user_level='2',vtiger_role='H5';
+INSERT INTO vtiger_vicidial_roles SET user_level='3',vtiger_role='H5';
+INSERT INTO vtiger_vicidial_roles SET user_level='4',vtiger_role='H5';
+INSERT INTO vtiger_vicidial_roles SET user_level='5',vtiger_role='H5';
+INSERT INTO vtiger_vicidial_roles SET user_level='6',vtiger_role='H5';
+INSERT INTO vtiger_vicidial_roles SET user_level='7',vtiger_role='H4';
+INSERT INTO vtiger_vicidial_roles SET user_level='8',vtiger_role='H3';
+INSERT INTO vtiger_vicidial_roles SET user_level='9',vtiger_role='H2';
 
 
 Now to explain the database side of things. 

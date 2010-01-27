@@ -3,12 +3,13 @@
 #                   vicidial_users table into the Vtiger system as well as
 #                   the groups from VICIDIAL to Vtiger
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 81231-1307 - First build
 # 90228-2152 - Added Groups support
 # 90508-0644 - Changed to PHP long tags
+# 100127-0616 - Added Vtiger ViciDial user_level role lookup
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -183,15 +184,25 @@ while ($i < $VD_users_ct)
 	$roleid =			'H5';
 	$status =			'Active';
 	$groupid =			'1';
-		if ($user_level[$i] >= 7) {$roleid = 'H4';}
-		if ($user_level[$i] >= 8) {$roleid = 'H3';}
-		if ($user_level[$i] >= 9) {$roleid = 'H2';}
-		if ($user_level[$i] >= 9) {$is_admin = 'on';}
-		if (ereg('N',$active[$i])) {$status = 'Inactive';}
+	if ($user_level[$i] >= 7) {$roleid = 'H4';}
+	if ($user_level[$i] >= 8) {$roleid = 'H3';}
+	if ($user_level[$i] >= 9) {$roleid = 'H2';}
+	if ($user_level[$i] >= 9) {$is_admin = 'on';}
+	if (ereg('N',$active[$i])) {$status = 'Inactive';}
 	$salt = substr($user_name, 0, 2);
 	$salt = '$1$' . $salt . '$';
 	$encrypted_password = crypt($user_password, $salt);
 	$i++;
+	### search for role in ViciDial
+	$stmt = "SELECT vtiger_role FROM vtiger_vicidial_roles where user_level='$user_level';";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$vvr_ct = mysql_num_rows($rslt);
+	if ($vvr_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$roleid =	$row[0];
+		}
 
 	$j=0;
 	$all_VICIDIAL_groups_SQL='';

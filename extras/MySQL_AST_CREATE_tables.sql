@@ -1891,6 +1891,11 @@ index (user),
 index (campaign_id)
 );
 
+CREATE TABLE vtiger_vicidial_roles (
+user_level TINYINT(2),
+vtiger_role VARCHAR(5)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
@@ -2028,7 +2033,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1195',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1196',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
