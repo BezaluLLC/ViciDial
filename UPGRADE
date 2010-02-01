@@ -29,10 +29,13 @@ OTHER CHANGES:
 	to use AFTHRS/NANQUE/TIMEOT statuses respectively
 
 2. Added an option to record calls that enter through a DID until they end or
-	enter an in-group queue
+	enter an in-group queue. MUST ENABLE --MIX CRONTAB ENTRY!!!
 
 3. Added ability to have AGENTDIRECT calls that drop go to user's defined
 	voicemail box
+
+4. Added ability to use a webphone added in an IFRAME in the agent screen.
+	Tested with Zoiper webphone and sample code included
 
 
 

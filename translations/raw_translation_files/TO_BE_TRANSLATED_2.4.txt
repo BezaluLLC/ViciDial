@@ -9,6 +9,18 @@ This option allows you to set the calls coming into this DID to be recorded. Y w
 Click here to see a list of recordings and calls for this DID||
 Ignore List Script Override||
 This option allows you to ignore the list ID Script Override option for calls coming into this In-Group. Setting this to Y will ignore any List ID script settings. Default is N||
+External Server IP||
+This setting is where you can put a server IP or other machine name that can be used in place of the server_ip when using a webphone in the agent interface. For this to work you also must have the phones entry set to use the External Server IP. Default is empty||
+Set As Webphone||
+Setting this option to Y will attempt to load a web-based phone when the agent logs into their agent screen. Default is N.||
+Use External Server IP||
+If using as a web phone, you can set this to Y to use the servers External IP to register to instead of the Server IP. Default is empty||
+Default Webphone||
+If set to 1, this option will make all new phones created have Set As Webphone set to Y. Default is 0||
+Default External Server IP||
+If set to 1, this option will make all new phones created have Use External Server IP set to Y. Default is 0||
+Webphone URL||
+This is the URL of the webphone that will be used with this system if it is enabled in the phones record that an agent is using. Default is empty||
 
 
 ############################################################ CLIENT

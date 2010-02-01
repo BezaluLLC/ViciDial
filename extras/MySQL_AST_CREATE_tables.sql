@@ -73,6 +73,8 @@ phone_context VARCHAR(20) default 'default',
 phone_ring_timeout SMALLINT(3) default '60',
 conf_secret VARCHAR(20) default 'test',
 delete_vm_after_email ENUM('N','Y') default 'N',
+is_webphone ENUM('Y','N') default 'N',
+use_external_server_ip ENUM('Y','N') default 'N',
 index (server_ip),
 unique index extenserver (extension, server_ip)
 );
@@ -100,7 +102,7 @@ vd_server_logs ENUM('Y','N') default 'Y',
 agi_output ENUM('NONE','STDERR','FILE','BOTH') default 'FILE',
 vicidial_balance_active ENUM('Y','N') default 'N',
 balance_trunks_offlimits SMALLINT(5) UNSIGNED default '0',
-recording_web_link ENUM('SERVER_IP','ALT_IP') default 'SERVER_IP',
+recording_web_link ENUM('SERVER_IP','ALT_IP','EXTERNAL_IP') default 'SERVER_IP',
 alt_server_ip VARCHAR(100) default '',
 active_asterisk_server ENUM('Y','N') default 'Y',
 generate_vicidial_conf ENUM('Y','N') default 'Y',
@@ -116,7 +118,8 @@ carrier_logging_active ENUM('Y','N') default 'Y',
 vicidial_balance_rank TINYINT(3) UNSIGNED default '0',
 rebuild_music_on_hold ENUM('Y','N') default 'Y',
 active_agent_login_server ENUM('Y','N') default 'Y',
-conf_secret VARCHAR(20) default 'test'
+conf_secret VARCHAR(20) default 'test',
+external_server_ip VARCHAR(100) default ''
 );
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -1197,7 +1200,10 @@ auto_dial_limit VARCHAR(5) default '4',
 user_territories_active ENUM('0','1') default '0',
 allow_custom_dialplan ENUM('0','1') default '0',
 db_schema_update_date DATETIME,
-enable_second_webform ENUM('0','1') default '1'
+enable_second_webform ENUM('0','1') default '1',
+default_webphone ENUM('1','0') default '0',
+default_external_server_ip ENUM('1','0') default '0',
+webphone_url VARCHAR(255) default ''
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2034,7 +2040,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1197',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1198',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
