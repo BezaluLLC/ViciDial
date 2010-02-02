@@ -1,7 +1,7 @@
 <?php 
 # AST_VDADstats.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60619-1718 - Added variable filtering to eliminate SQL injection attack threat
@@ -23,6 +23,7 @@
 # 90806-0001 - Added CI(Customer Interaction/Human Answered) stats, added option to add inbound rollover stats to these
 # 90827-1154 - Added List ID breakdown of calls
 # 91222-0843 - Fixed ALL-CAMPAIGNS inbound rollover issue(bug #262), and some other bugs
+# 100202-1034 - Added statuses to no-answer section
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -627,17 +628,26 @@ else
 	$OUToutput .= "\n";
 	$OUToutput .= "---------- AUTO-DIAL NO ANSWERS\n";
 
-	$stmt="select count(*),sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand and status IN('NA','B') and (length_in_sec <= 60 or length_in_sec is null);";
+	$stmt="select count(*),sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand and status IN('NA','ADC','AB','CPDB','CPDUK','CPDATB','CPDNA','CPDREJ','CPDINV','CPDSUA','CPDSI','CPDSNC','CPDSR','CPDSUK','CPDSV','CPDERR') and (length_in_sec <= 60 or length_in_sec is null);";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {$OUToutput .= "$stmt\n";}
 	$row=mysql_fetch_row($rslt);
+	$autoNAcalls =	sprintf("%10s", $row[0]);
 
-	$NAcalls =	sprintf("%10s", $row[0]);
-	if ( ($NAcalls < 1) or ($TOTALcalls < 1) )
+	$stmt="select count(*),sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand and status IN('B','DC') and (length_in_sec <= 60 or length_in_sec is null);";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {$OUToutput .= "$stmt\n";}
+	$row=mysql_fetch_row($rslt);
+	$manualNAcalls =	sprintf("%10s", $row[0]);
+
+	$totalNAcalls = ($autoNAcalls + $manualNAcalls);
+	$totalNAcalls =	sprintf("%10s", $totalNAcalls);
+
+	if ( ($totalNAcalls < 1) or ($TOTALcalls < 1) )
 		{$NApercent = '0';}
 	else
 		{
-		$NApercent = (($NAcalls / $TOTALcalls) * 100);
+		$NApercent = (($totalNAcalls / $TOTALcalls) * 100);
 		$NApercent = round($NApercent, 2);
 		}
 
@@ -650,7 +660,9 @@ else
 		$average_na_seconds =	sprintf("%10s", $average_na_seconds);
 		}
 
-	$OUToutput .= "Total NA calls -Busy,Disconnect,RingNoAnswer: $NAcalls  $NApercent%\n";
+	$OUToutput .= "Total NA calls -Busy,Disconnect,RingNoAnswer: $totalNAcalls  $NApercent%\n";
+	$OUToutput .= "Total auto NA calls -system-set:              $autoNAcalls\n";
+	$OUToutput .= "Total manual NA calls -agent-set:             $manualNAcalls\n";
 	$OUToutput .= "Average Call Length for NA Calls in seconds:  $average_na_seconds\n";
 
 
