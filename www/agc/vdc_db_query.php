@@ -236,7 +236,7 @@
 
 $version = '2.4-140';
 $build = '100122-0757';
-$mel=2;					# Mysql Error Log enabled = 1
+$mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=301;
 $one_mysql_log=0;
 
