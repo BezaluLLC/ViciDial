@@ -236,7 +236,7 @@
 
 $version = '2.4-140';
 $build = '100122-0757';
-$mel=1;					# Mysql Error Log enabled = 1
+$mel=2;					# Mysql Error Log enabled = 1
 $mysql_log_count=301;
 $one_mysql_log=0;
 
@@ -4570,8 +4570,8 @@ if ($ACTION == 'userLOGout')
 		$VDpr_ct = mysql_num_rows($rslt);
 		if ( ($VDpr_ct > 0) and (strlen($row[3]<5)) and (strlen($row[4]<5)) )
 			{
-			$agent_log_id = $row[5];
 			$row=mysql_fetch_row($rslt);
+			$agent_log_id = $row[5];
 			$pause_sec = (($StarTtime - $row[0]) + $row[1]);
 
 			$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
