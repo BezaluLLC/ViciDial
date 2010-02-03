@@ -21,6 +21,8 @@ Default External Server IP||
 If set to 1, this option will make all new phones created have Use External Server IP set to Y. Default is 0||
 Webphone URL||
 This is the URL of the webphone that will be used with this system if it is enabled in the phones record that an agent is using. Default is empty||
+AGENT ACTIVITY FOR THIS TIME PERIOD||
+these fields are in seconds||
 
 
 ############################################################ CLIENT

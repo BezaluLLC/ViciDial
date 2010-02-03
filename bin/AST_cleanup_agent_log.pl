@@ -10,7 +10,7 @@
 #
 # This program only needs to be run by one server
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60711-0945 - Changed to DBI by Marin Blu
@@ -23,6 +23,7 @@
 # 91209-0956 - Added PAUSEREASON-LAGGED queue_log correction during live call
 # 91210-0609 - Added LOGOFF queue_log correction during live call
 # 91214-0933 - Added queue_position to queue_log COMPLETE... and ABANDON records
+# 100203-1110 - Added fix for vicidial_closer_log records with 0 length
 #
 
 # constants
@@ -151,12 +152,14 @@ if ($Tsec < 10) {$Tsec = "0$Tsec";}
 	$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
 
 $VDAD_SQL_time = "and event_time > \"$TDSQLdate\" and event_time < \"$FDSQLdate\"";
+$VDCL_SQL_time = "and call_date > \"$TDSQLdate\" and call_date < \"$FDSQLdate\"";
 $QM_SQL_time = "and time_id > $TDtarget and time_id < $FDtarget";
 $QM_SQL_time_H = "and time_id > $TDtarget and time_id < $HDtarget";
 
 if ($ALL_TIME > 0)
 	{
 	$VDAD_SQL_time = "";
+	$VDCL_SQL_time = "";
 	$QM_SQL_time = "";
 	}
 if ($TWENTYFOUR_HOURS > 0)
@@ -173,6 +176,7 @@ if ($TWENTYFOUR_HOURS > 0)
 		$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
 
 	$VDAD_SQL_time = "and event_time > \"$TDSQLdate\" and event_time < \"$FDSQLdate\"";
+	$VDCL_SQL_time = "and call_date > \"$TDSQLdate\" and event_time < \"$FDSQLdate\"";
 	$QM_SQL_time = "and time_id > $TDtarget and time_id < $FDtarget";
 	$QM_SQL_time_H = "and time_id > $TDtarget and time_id < $HDtarget";
 	}
@@ -190,6 +194,7 @@ if ($TWENTYFOUR_OLDER > 0)
 		$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
 
 	$VDAD_SQL_time = "and event_time < \"$TDSQLdate\"";
+	$VDCL_SQL_time = "and call_date < \"$TDSQLdate\"";
 	$QM_SQL_time = "and time_id < $TDtarget";
 	$QM_SQL_time_H = "and time_id < $TDtarget";
 	}
@@ -739,6 +744,17 @@ if ($TEST < 1)
 	$affected_rows = $dbhA->do($stmtA); 	
 	}
 if ($DB) {print STDERR "     Bad Dispo times zeroed out: $affected_rows\n";}
+
+
+if ($DBX) {print "\n\n";}
+if ($DB) {print " - cleaning up closer records\n";}
+	$stmtA = "UPDATE vicidial_closer_log set length_in_sec=(end_epoch - start_epoch) where length_in_sec < 1 and end_epoch > 1000 $VDCL_SQL_time;";
+		if($DBX){print STDERR "|$stmtA|\n";}
+if ($TEST < 1)
+	{
+	$affected_rows = $dbhA->do($stmtA); 	
+	}
+if ($DB) {print STDERR "     Bad Closer times recalculated: $affected_rows\n\n";}
 
 
 
