@@ -232,10 +232,11 @@
 # 100109-1336 - Fixed Manual dial live call detection
 # 100113-1949 - Fixed dispo_choice bug and added dispo_status to dispo URL call
 # 100122-0757 - Added NOT-LOGGED-IN-AGENTS option for sidebar view and transfer view
+# 100202-2305 - Fixed logging issues related to INBOUND_MAN dial_method
 #
 
-$version = '2.4-140';
-$build = '100122-0757';
+$version = '2.4-141';
+$build = '100202-2305';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=301;
 $one_mysql_log=0;
@@ -1857,6 +1858,28 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00036',$user,$server_ip,$session_name,$one_mysql_log);}
 
+				#### update vicidial_agent_log if not MANUAL dial_method
+				if ($dial_method != 'MANUAL')
+					{
+					$pause_sec=0;
+					$stmt = "select pause_epoch,pause_sec,wait_epoch,talk_epoch,dispo_epoch,agent_log_id from vicidial_agent_log where agent_log_id >= '$agent_log_id' and user='$user' order by agent_log_id desc limit 1;";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					$VDpr_ct = mysql_num_rows($rslt);
+					if ( ($VDpr_ct > 0) and (strlen($row[3]<5)) and (strlen($row[4]<5)) )
+						{
+						$row=mysql_fetch_row($rslt);
+						$agent_log_id = $row[5];
+						$pause_sec = (($StarTtime - $row[0]) + $row[1]);
+
+						$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						}
+					}
+
 				if ($agent_dialed_number > 0)
 					{
 					$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id) values('$user','$NOW_TIME','$agent_dialed_type','$server_ip','$phone_number','$Ndialstring','$lead_id','$CCID','$RAWaccount')";
@@ -2263,6 +2286,28 @@ if ($ACTION == 'manDiaLonly')
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00047',$user,$server_ip,$session_name,$one_mysql_log);}
 
 		echo "$MqueryCID\n";
+
+		#### update vicidial_agent_log if not MANUAL dial_method
+		if ($dial_method != 'MANUAL')
+			{
+			$pause_sec=0;
+			$stmt = "select pause_epoch,pause_sec,wait_epoch,talk_epoch,dispo_epoch,agent_log_id from vicidial_agent_log where agent_log_id >= '$agent_log_id' and user='$user' order by agent_log_id desc limit 1;";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			$VDpr_ct = mysql_num_rows($rslt);
+			if ( ($VDpr_ct > 0) and (strlen($row[3]<5)) and (strlen($row[4]<5)) )
+				{
+				$row=mysql_fetch_row($rslt);
+				$agent_log_id = $row[5];
+				$pause_sec = (($StarTtime - $row[0]) + $row[1]);
+
+				$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
+			}
 
 		if ($agent_dialed_number > 0)
 			{

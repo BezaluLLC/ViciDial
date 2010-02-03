@@ -626,7 +626,7 @@ else
 
 
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- AUTO-DIAL NO ANSWERS\n";
+	$OUToutput .= "---------- NO ANSWERS\n";
 
 	$stmt="select count(*),sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand and status IN('NA','ADC','AB','CPDB','CPDUK','CPDATB','CPDNA','CPDREJ','CPDINV','CPDSUA','CPDSI','CPDSNC','CPDSR','CPDSUK','CPDSV','CPDERR') and (length_in_sec <= 60 or length_in_sec is null);";
 	$rslt=mysql_query($stmt, $link);
@@ -634,7 +634,7 @@ else
 	$row=mysql_fetch_row($rslt);
 	$autoNAcalls =	sprintf("%10s", $row[0]);
 
-	$stmt="select count(*),sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand and status IN('B','DC') and (length_in_sec <= 60 or length_in_sec is null);";
+	$stmt="select count(*),sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand and status IN('B','DC','N') and (length_in_sec <= 60 or length_in_sec is null);";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {$OUToutput .= "$stmt\n";}
 	$row=mysql_fetch_row($rslt);
