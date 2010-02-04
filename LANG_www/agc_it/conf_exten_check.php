@@ -137,7 +137,7 @@ $auth=$row[0];
 
   if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Utentename/Password non validi: |$user|$pass|\n";
+    echo "Username/Password non validi: |$user|$pass|\n";
     exit;
 	}
   else
@@ -187,7 +187,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 		if (strlen($conf_exten)<1)
 		{
 		$channel_live=0;
-		echo "Conf Exten $conf_exten non e` valido\n";
+		echo "Conf Exten $conf_exten non è valido\n";
 		exit;
 		}
 		else
@@ -634,7 +634,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 		if ( (strlen($conf_exten)<1) || (strlen($exten)<1) )
 		{
 		$channel_live=0;
-		echo "Conf Exten $conf_exten non e` valido or Exten $exten non e` valido\n";
+		echo "Conf Exten $conf_exten non è valido or Exten $exten non è valido\n";
 		exit;
 		}
 		else
@@ -644,7 +644,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03013',$user,$server_ip,$session_name,$one_mysql_log);}
 		}
-		echo "Conferenza $conf_exten e` stato registrato su $exten\n";
+		echo "Conferenza $conf_exten è stato registrato su $exten\n";
 	}
 
 

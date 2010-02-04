@@ -268,14 +268,14 @@ else
 
 	if ($file_download < 1)
 		{
-		echo "CALL STATS BREAKDOWN:\n";
+		echo "LEAD STATS BREAKDOWN:\n";
 		echo "+------------+--------+--------+--------+$statusesHEAD\n";
-		echo "| <a href=\"$LINKbase\">DATE</a>       | <a href=\"$LINKbase&stage=CALLS\">CALLS</a>  | <a href=\"$LINKbase&stage=CI\">CIcalls</a>| <a href=\"$LINKbase&stage=DNCCI\">DNC/CI%</a>|$statusesHTML\n";
+		echo "| <a href=\"$LINKbase\">DATE</a>       | <a href=\"$LINKbase&stage=LEADS\">LEADS</a>  | <a href=\"$LINKbase&stage=CI\">CIcalls</a>| <a href=\"$LINKbase&stage=DNCCI\">DNC/CI%</a>|$statusesHTML\n";
 		echo "+------------+--------+--------+--------+$statusesHEAD\n";
 		}
 	else
 		{
-		$file_output .= "DATE,CALLS,CIcalls,DNC-CI%,$statusesFILE\n";
+		$file_output .= "DATE,LEADS,CIcalls,DNC-CI%,$statusesFILE\n";
 		}
 
 	### BEGIN loop through each user ###
@@ -371,7 +371,7 @@ else
 			$TOPsort[$m] =	'' . sprintf("%08s", $RAWdate) . '-----' . $m . '-----' . sprintf("%020s", $RAWdate);
 			$TOPsortTALLY[$m]=$RAWcalls;
 			}
-		if ($stage == 'CALLS')
+		if ($stage == 'LEADS')
 			{
 			$TOPsort[$m] =	'' . sprintf("%08s", $RAWcalls) . '-----' . $m . '-----' . sprintf("%020s", $RAWdate);
 			$TOPsortTALLY[$m]=$RAWcalls;
@@ -391,7 +391,7 @@ else
 			$TOPsort[$m] =	'' . sprintf("%08s", $RAWdncPCT) . '-----' . $m . '-----' . sprintf("%020s", $RAWdate);
 			$TOPsortTALLY[$m]=$RAWdncPCT;
 			}
-		if (!ereg("ID|TIME|CALLS|CI|DNCCI",$stage))
+		if (!ereg("ID|TIME|LEADS|CI|DNCCI",$stage))
 			{
 			if ($file_download < 1)
 				{echo "$Toutput";}
@@ -409,11 +409,11 @@ else
 
 
 	### BEGIN sort through output to display properly ###
-	if (ereg("ID|TIME|CALLS|CI|DNCCI",$stage))
+	if (ereg("ID|TIME|LEADS|CI|DNCCI",$stage))
 		{
 		if (ereg("ID",$stage))
 			{sort($TOPsort, SORT_NUMERIC);}
-		if (ereg("TIME|CALLS|CI|DNCCI",$stage))
+		if (ereg("TIME|LEADS|CI|DNCCI",$stage))
 			{rsort($TOPsort, SORT_NUMERIC);}
 
 		$m=0;

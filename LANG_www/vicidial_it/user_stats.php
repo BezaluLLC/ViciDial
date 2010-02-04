@@ -1,7 +1,7 @@
 <?php
 # user_stats.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -20,6 +20,7 @@
 # 90508-0644 - Changed to PHP long tags
 # 90524-2009 - Changed time display to use functions.php
 # 91130-2037 - Added user closer log manager flag display
+# 100203-1008 - Added agent activity log section
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -506,38 +507,148 @@ echo "</TABLE><BR><BR>\n";
 ##### vicidial agent inbound calls for this time period #####
 
 echo "<B>INBOUND/CLOSER CALLS FOR THIS TIME PERIOD: (10000 record limit)</B>\n";
-echo "<TABLE width=670 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAGNA</td><td align=right><font size=2> WAIT (S)</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
+echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAGNA</td><td align=right><font size=2> WAIT (S)</td><td align=right><font size=2> AGENT (S)</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
 
-	$stmt="select closecallid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,queue_seconds,user_group,xfercallid,term_reason,uniqueid,agent_only from vicidial_closer_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by call_date desc limit 10000;";
-	$rslt=mysql_query($stmt, $link);
-	$logs_to_print = mysql_num_rows($rslt);
+$stmt="select call_date,length_in_sec,status,phone_number,campaign_id,queue_seconds,list_id,lead_id,term_reason from vicidial_closer_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by call_date desc limit 10000;";
+$rslt=mysql_query($stmt, $link);
+$logs_to_print = mysql_num_rows($rslt);
 
-	$u=0;
-	while ($logs_to_print > $u) {
-		$row=mysql_fetch_row($rslt);
-		if (eregi("1$|3$|5$|7$|9$", $u))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
+$u=0;
+$TOTALinSECONDS=0;
+$TOTALagentSECONDS=0;
+while ($logs_to_print > $u) 
+	{
+	$row=mysql_fetch_row($rslt);
+	if (eregi("1$|3$|5$|7$|9$", $u))
+		{$bgcolor='bgcolor="#B9CBFD"';} 
+	else
+		{$bgcolor='bgcolor="#9BB9FB"';}
 
-			$u++;
-			echo "<tr $bgcolor>";
-			echo "<td><font size=1>$u</td>";
-			echo "<td><font size=2>$row[4]</td>";
-			echo "<td align=left><font size=2> $row[7]</td>\n";
-			echo "<td align=left><font size=2> $row[8]</td>\n";
-			echo "<td align=left><font size=2> $row[10] </td>\n";
-			echo "<td align=right><font size=2> $row[3] </td>\n";
-			echo "<td align=right><font size=2> $row[14] </td>\n";
-			echo "<td align=right><font size=2> $row[2] </td>\n";
-			echo "<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[1]\" target=\"_blank\">$row[1]</A> </td>\n";
-			echo "<td align=right><font size=2> $row[17] </td></tr>\n";
+	$TOTALinSECONDS = ($TOTALinSECONDS + $row[1]);
+	$AGENTseconds = ($row[1] - $row[5]);
+	if ($AGENTseconds < 0)
+		{$AGENTseconds=0;}
 
+	$TOTALagentSECONDS = ($TOTALagentSECONDS + $AGENTseconds);
+
+	$u++;
+	echo "<tr $bgcolor>";
+	echo "<td><font size=1>$u</td>";
+	echo "<td><font size=2>$row[0]</td>";
+	echo "<td align=left><font size=2> $row[1]</td>\n";
+	echo "<td align=left><font size=2> $row[2]</td>\n";
+	echo "<td align=left><font size=2> $row[3] </td>\n";
+	echo "<td align=right><font size=2> $row[4] </td>\n";
+	echo "<td align=right><font size=2> $row[5] </td>\n";
+	echo "<td align=right><font size=2> $AGENTseconds </td>\n";
+	echo "<td align=right><font size=2> $row[6] </td>\n";
+	echo "<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[7]\" target=\"_blank\">$row[7]</A> </td>\n";
+	echo "<td align=right><font size=2> $row[8] </td></tr>\n";
 	}
 
+echo "<tr bgcolor=white>";
+echo "<td colspan=2><font size=2>TOTALI</td>";
+echo "<td align=left><font size=2> $TOTALinSECONDS</td>\n";
+echo "<td colspan=4><font size=2> &nbsp; </td>\n";
+echo "<td align=right><font size=2> $TOTALagentSECONDS</td>\n";
+echo "<td colspan=3><font size=2> &nbsp; </td></tr>\n";
+echo "</TABLE></center><BR><BR>\n";
+
+
+##### vicidial agent activity records for this time period #####
+echo "<B>AGENT ACTIVITY FOR THIS TIME PERIOD: (10000 record limit)</B>\n";
+echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
+echo "<tr><td colspan=2><font size=1> &nbsp; </td><td colspan=6 align=center bgcolor=white><font size=1>these fields are in seconds </td><td colspan=4><font size=1> &nbsp; </td></tr>\n";
+echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>PAUSE</td><td align=left><font size=2> WAIT</td><td align=left><font size=2> TALK</td><td align=right><font size=2> DISPO</td><td align=right><font size=2> DEAD</td><td align=right><font size=2> CUSTOMER</td><td align=right><font size=2> STATUS</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> CAMPAGNA</td><td align=right><font size=2> PAUSE CODE</td></tr>\n";
+
+$stmt="select event_time,lead_id,campaign_id,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec,status,sub_status,user_group from vicidial_agent_log where user='" . mysql_real_escape_string($user) . "' and event_time >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_time <= '" . mysql_real_escape_string($end_date) . " 23:59:59' and ( (pause_sec > 0) or (wait_sec > 0) or (talk_sec > 0) or (dispo_sec > 0) ) order by event_time desc limit 10000;";
+$rslt=mysql_query($stmt, $link);
+$logs_to_print = mysql_num_rows($rslt);
+
+$u=0;
+$TOTALpauseSECONDS=0;
+$TOTALwaitSECONDS=0;
+$TOTALtalkSECONDS=0;
+$TOTALdispoSECONDS=0;
+$TOTALdeadSECONDS=0;
+$TOTALcustomerSECONDS=0;
+while ($logs_to_print > $u) 
+	{
+	$row=mysql_fetch_row($rslt);
+	$event_time =	$row[0];
+	$lead_id =		$row[1];
+	$campaign_id =	$row[2];
+	$pause_sec =	$row[3];
+	$wait_sec =		$row[4];
+	$talk_sec =		$row[5];
+	$dispo_sec =	$row[6];
+	$dead_sec =		$row[7];
+	$status =		$row[8];
+	$pause_code =	$row[9];
+	$user_group =	$row[10];
+	$customer_sec = ($talk_sec - $dead_sec);
+	if ($customer_sec < 0)
+		{$customer_sec=0;}
+
+	if (eregi("1$|3$|5$|7$|9$", $u))
+		{$bgcolor='bgcolor="#B9CBFD"';}
+	else
+		{$bgcolor='bgcolor="#9BB9FB"';}
+
+	$TOTALpauseSECONDS = ($TOTALpauseSECONDS + $pause_sec);
+	$TOTALwaitSECONDS = ($TOTALwaitSECONDS + $wait_sec);
+	$TOTALtalkSECONDS = ($TOTALtalkSECONDS + $talk_sec);
+	$TOTALdispoSECONDS = ($TOTALdispoSECONDS + $dispo_sec);
+	$TOTALdeadSECONDS = ($TOTALdeadSECONDS + $dead_sec);
+	$TOTALcustomerSECONDS = ($TOTALcustomerSECONDS + $customer_sec);
+
+
+	$u++;
+	echo "<tr $bgcolor>";
+	echo "<td><font size=1>$u</td>";
+	echo "<td><font size=2>$event_time</td>";
+	echo "<td align=right><font size=2> $pause_sec</td>\n";
+	echo "<td align=right><font size=2> $wait_sec</td>\n";
+	echo "<td align=right><font size=2> $talk_sec </td>\n";
+	echo "<td align=right><font size=2> $dispo_sec </td>\n";
+	echo "<td align=right><font size=2> $dead_sec </td>\n";
+	echo "<td align=right><font size=2> $customer_sec </td>\n";
+	echo "<td align=right><font size=2> $status </td>\n";
+	echo "<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[7]\" target=\"_blank\">$lead_id</A> </td>\n";
+	echo "<td align=right><font size=2> $campaign_id </td>\n";
+	echo "<td align=right><font size=2> $pause_code </td></tr>\n";
+	}
+
+echo "<tr bgcolor=white>";
+echo "<td colspan=2><font size=2>TOTALI</td>";
+echo "<td align=right><font size=2> $TOTALpauseSECONDS</td>\n";
+echo "<td align=right><font size=2> $TOTALwaitSECONDS</td>\n";
+echo "<td align=right><font size=2> $TOTALtalkSECONDS</td>\n";
+echo "<td align=right><font size=2> $TOTALdispoSECONDS</td>\n";
+echo "<td align=right><font size=2> $TOTALdeadSECONDS</td>\n";
+echo "<td align=right><font size=2> $TOTALcustomerSECONDS</td>\n";
+echo "<td colspan=4><font size=2> &nbsp; </td></tr>\n";
+
+$TOTALpauseSECONDShh =	sec_convert($TOTALpauseSECONDS,'H'); 
+$TOTALwaitSECONDShh =	sec_convert($TOTALwaitSECONDS,'H'); 
+$TOTALtalkSECONDShh =	sec_convert($TOTALtalkSECONDS,'H'); 
+$TOTALdispoSECONDShh =	sec_convert($TOTALdispoSECONDS,'H'); 
+$TOTALdeadSECONDShh =	sec_convert($TOTALdeadSECONDS,'H'); 
+$TOTALcustomerSECONDShh =	sec_convert($TOTALcustomerSECONDS,'H'); 
+
+echo "<tr bgcolor=white>";
+echo "<td colspan=2><font size=1>(in HH:MM:SS)</td>";
+echo "<td align=right><font size=2> $TOTALpauseSECONDShh</td>\n";
+echo "<td align=right><font size=2> $TOTALwaitSECONDShh</td>\n";
+echo "<td align=right><font size=2> $TOTALtalkSECONDShh</td>\n";
+echo "<td align=right><font size=2> $TOTALdispoSECONDShh</td>\n";
+echo "<td align=right><font size=2> $TOTALdeadSECONDShh</td>\n";
+echo "<td align=right><font size=2> $TOTALcustomerSECONDShh</td>\n";
+echo "<td colspan=4><font size=2> &nbsp; </td></tr>\n";
 
 echo "</TABLE></center><BR><BR>\n";
+
 
 
 ##### vicidial recordings for this time period #####

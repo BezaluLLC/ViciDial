@@ -1,7 +1,7 @@
 <?php
 # admin.php - VICIDIAL administration page
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 require("dbconnect.php");
@@ -2043,11 +2043,12 @@ else
 # 91228-1837 - Added timer action settings to in-groups and campaigns
 # 100103-0727 - Added Start/Dispo call url, 3/4/5 conf number presets, Lists conf-number overrides
 # 100104-1454 - Fixed in-group/campaign copy duplication issue
+# 100116-0718 - Added presets to script select list
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.2.0-233';
-$build = '100104-1454';
+$admin_version = '2.2.0-234';
+$build = '100116-0718';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6187,6 +6188,14 @@ if ($ADD==7111111)
 	$user_custom_three = 'custom three';
 	$user_custom_four = 'custom four';
 	$user_custom_five = 'custom five';
+	$preset_number_a = 'preset_a';
+	$preset_number_b = 'preset_b';
+	$preset_number_c = 'preset_c';
+	$preset_number_d = 'preset_d';
+	$preset_number_e = 'preset_e';
+	$preset_number_f = 'preset_f';
+	$preset_dtmf_a = 'preset_dtmf_a';
+	$preset_dtmf_b = 'preset_dtmf_b';
 
 	echo "</title>\n";
 	echo "</head>\n";
@@ -6253,6 +6262,14 @@ if ($ADD==7111111)
 		$user_custom_three = eregi_replace(' ','+',$user_custom_three);
 		$user_custom_four = eregi_replace(' ','+',$user_custom_four);
 		$user_custom_five = eregi_replace(' ','+',$user_custom_five);
+		$preset_number_a = eregi_replace(' ','+',$preset_number_a);
+		$preset_number_b = eregi_replace(' ','+',$preset_number_b);
+		$preset_number_c = eregi_replace(' ','+',$preset_number_c);
+		$preset_number_d = eregi_replace(' ','+',$preset_number_d);
+		$preset_number_e = eregi_replace(' ','+',$preset_number_e);
+		$preset_number_f = eregi_replace(' ','+',$preset_number_f);
+		$preset_dtmf_a = eregi_replace(' ','+',$preset_dtmf_a);
+		$preset_dtmf_b = eregi_replace(' ','+',$preset_dtmf_b);
 		}
 
 	$script_text = eregi_replace('--A--vendor_lead_code--B--',"$vendor_lead_code",$script_text);
@@ -6308,6 +6325,14 @@ if ($ADD==7111111)
 	$script_text = eregi_replace('--A--user_custom_three--B--',"$user_custom_three",$script_text);
 	$script_text = eregi_replace('--A--user_custom_four--B--',"$user_custom_four",$script_text);
 	$script_text = eregi_replace('--A--user_custom_five--B--',"$user_custom_five",$script_text);
+	$script_text = eregi_replace('--A--preset_number_a--B--',"$preset_number_a",$script_text);
+	$script_text = eregi_replace('--A--preset_number_b--B--',"$preset_number_b",$script_text);
+	$script_text = eregi_replace('--A--preset_number_c--B--',"$preset_number_c",$script_text);
+	$script_text = eregi_replace('--A--preset_number_d--B--',"$preset_number_d",$script_text);
+	$script_text = eregi_replace('--A--preset_number_e--B--',"$preset_number_e",$script_text);
+	$script_text = eregi_replace('--A--preset_number_f--B--',"$preset_number_f",$script_text);
+	$script_text = eregi_replace('--A--preset_dtmf_a--B--',"$preset_dtmf_a",$script_text);
+	$script_text = eregi_replace('--A--preset_dtmf_b--B--',"$preset_dtmf_b",$script_text);
 	$script_text = eregi_replace("\n","<BR>",$script_text);
 
 
@@ -7362,6 +7387,19 @@ if ($ADD==1111111)
 		echo "<option>script_height</option>";
 		echo "<option>recording_filename</option>";
 		echo "<option>recording_id</option>";
+		echo "<option>user_custom_one</option>";
+		echo "<option>user_custom_two</option>";
+		echo "<option>user_custom_three</option>";
+		echo "<option>user_custom_four</option>";
+		echo "<option>user_custom_five</option>";
+		echo "<option>preset_number_a</option>";
+		echo "<option>preset_number_b</option>";
+		echo "<option>preset_number_c</option>";
+		echo "<option>preset_number_d</option>";
+		echo "<option>preset_number_e</option>";
+		echo "<option>preset_number_f</option>";
+		echo "<option>preset_dtmf_a</option>";
+		echo "<option>preset_dtmf_b</option>";
 		echo "</select>";
 		echo "<input type=\"button\" name=\"insertField\" value=\"Insert\" onClick=\"scriptInsertField();\"><BR>";
 		# END Insert Field
@@ -20618,6 +20656,19 @@ if ($ADD==3111111)
 		echo "<option>script_height</option>";
 		echo "<option>recording_filename</option>";
 		echo "<option>recording_id</option>";
+		echo "<option>user_custom_one</option>";
+		echo "<option>user_custom_two</option>";
+		echo "<option>user_custom_three</option>";
+		echo "<option>user_custom_four</option>";
+		echo "<option>user_custom_five</option>";
+		echo "<option>preset_number_a</option>";
+		echo "<option>preset_number_b</option>";
+		echo "<option>preset_number_c</option>";
+		echo "<option>preset_number_d</option>";
+		echo "<option>preset_number_e</option>";
+		echo "<option>preset_number_f</option>";
+		echo "<option>preset_dtmf_a</option>";
+		echo "<option>preset_dtmf_b</option>";
 		echo "</select>";
 		echo "<input type=\"button\" name=\"insertField\" value=\"Insert\" onClick=\"scriptInsertField();\"><BR>";
 		# END Insert Field
@@ -23998,7 +24049,7 @@ if ($ADD==160000000000)
 	$rslt=mysql_query($stmt, $link);
 	$moh_to_print = mysql_num_rows($rslt);
 
-	echo "<br>TEXT-TO-SPEECH(TTS) LISTINGS:\n";
+	echo "<br>MUSIC-ON-HOLD(MOH) LISTINGS:\n";
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<tr bgcolor=black>";
 	echo "<td><font size=1 color=white align=left><B>MOH ID</B></td>";

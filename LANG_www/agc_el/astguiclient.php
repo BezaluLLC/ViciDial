@@ -145,7 +145,7 @@ if( (strlen($user)<2) or (strlen($pass)<2) or (!$auth) or ($relogin == 'YES') )
 	{
 	header ("Content-type: text/html; charset=utf-8");
 
-	echo "<title>χειριστής astGUIclient: Σύνδεση</title>\n";
+	echo "<title>χειριστής astGUIclient: Login</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 	echo "<TABLE><TR><TD></TD>\n";

@@ -1,7 +1,7 @@
 <?php 
 # AST_agent_status_detail.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -9,6 +9,7 @@
 # 90225-2252 - Added CSV download option
 # 90310-2030 - Admin header
 # 90508-0644 - Changed to PHP long tags
+# 100119-0935 - Fixed bug 291
 #
 
 
@@ -314,14 +315,14 @@ else
 
 	if ($file_download < 1)
 		{
-		echo "CALL STATS BREAKDOWN:\n";
+		echo "LEADS STATS BREAKDOWN:\n";
 		echo "+-----------------+----------+--------+--------+--------+$statusesHEAD\n";
-		echo "| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=CALLS\">CALLS</a>  | <a href=\"$LINKbase&stage=CI\">CIcalls</a>| <a href=\"$LINKbase&stage=DNCCI\">DNC/CI%</a>|$statusesHTML\n";
+		echo "| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">LEADS</a>  | <a href=\"$LINKbase&stage=CI\">CIcalls</a>| <a href=\"$LINKbase&stage=DNCCI\">DNC/CI%</a>|$statusesHTML\n";
 		echo "+-----------------+----------+--------+--------+--------+$statusesHEAD\n";
 		}
 	else
 		{
-		$file_output .= "USER,ID,CALLS,CIcalls,DNC-CI%,$statusesFILE\n";
+		$file_output .= "USER,ID,LEADS,CIcalls,DNC-CI%,$statusesFILE\n";
 		}
 
 
@@ -372,6 +373,7 @@ else
 			if ($status_found < 1)
 				{
 				$SstatusesHTML .= "        0 |";
+				$SstatusesFILE .= "0,";
 				}
 			### END loop through each stat line ###
 			$n++;
@@ -431,7 +433,7 @@ else
 			$TOPsort[$m] =	'' . sprintf("%08s", $RAWuser) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);
 			$TOPsortTALLY[$m]=$RAWcalls;
 			}
-		if ($stage == 'CALLS')
+		if ($stage == 'LEADS')
 			{
 			$TOPsort[$m] =	'' . sprintf("%08s", $RAWcalls) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);
 			$TOPsortTALLY[$m]=$RAWcalls;
@@ -451,7 +453,7 @@ else
 			$TOPsort[$m] =	'' . sprintf("%08s", $RAWdncPCT) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);
 			$TOPsortTALLY[$m]=$RAWdncPCT;
 			}
-		if (!ereg("ID|TIME|CALLS|CI|DNCCI",$stage))
+		if (!ereg("ID|TIME|LEADS|CI|DNCCI",$stage))
 			if ($file_download < 1)
 				{echo "$Toutput";}
 			else
@@ -467,11 +469,11 @@ else
 
 
 	### BEGIN sort through output to display properly ###
-	if (ereg("ID|TIME|CALLS|CI|DNCCI",$stage))
+	if (ereg("ID|TIME|LEADS|CI|DNCCI",$stage))
 		{
 		if (ereg("ID",$stage))
 			{sort($TOPsort, SORT_NUMERIC);}
-		if (ereg("TIME|CALLS|CI|DNCCI",$stage))
+		if (ereg("TIME|LEADS|CI|DNCCI",$stage))
 			{rsort($TOPsort, SORT_NUMERIC);}
 
 		$m=0;

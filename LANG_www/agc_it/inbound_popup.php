@@ -86,7 +86,7 @@ if ( (eregi("^Zap",$channel)) and (!eregi("-",$channel)) ) {$channel = "$channel
 
   if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Utentename/Password non validi: |$user|$pass|\n";
+    echo "Username/Password non validi: |$user|$pass|\n";
     exit;
 	}
   else
@@ -266,7 +266,7 @@ $channel_live=1;
 if (strlen($uniqueid)<9)
 	{
 	$channel_live=0;
-	echo "Uniqueid $uniqueid non e` valido\n";
+	echo "Uniqueid $uniqueid non è valido\n";
 	exit;
 	}
 else
@@ -320,7 +320,7 @@ else
 
 		echo "</td></tr>\n";
 		echo "<tr bgcolor=\"#DDDDFF\"><td>Numero chiamato: </td><td align=left>$row[8]</td></tr>\n";
-		echo "<tr bgcolor=\"#DDDDFF\"><td>Note:</td><td align=left>$row[9]|$row[10]|$row[11]|$row[12]|$row[13]|</td></tr>\n";
+		echo "<tr bgcolor=\"#DDDDFF\"><td>Note: </td><td align=left>$row[9]|$row[10]|$row[11]|$row[12]|$row[13]|</td></tr>\n";
 		echo "<tr bgcolor=\"#DDDDFF\"><td colspan=2 align=center>\n<span id=\"callactions\">";
 		echo "<a href=\"#\" onclick=\"livehangup_send_hangup('$row[1]');return false;\">RIAGGANCIA</a> - \n";
 		echo "<a href=\"#\" onclick=\"liveredirect_send_vmail('$row[1]','$vmail_box');return false;\">INVIA ALLA MIA VOICEMAIL</a>\n";

@@ -261,7 +261,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/astguicli
 	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/agc_tab_astguiclient.gif\" Border=0></TD>";
 	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Login Telefono </TD>";
 	echo "</TR>\n";
-	echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=1> &nbsp; <BR><FONT SIZE=3>Spiacente, il telefono inserito non e` attivo in questo sistema, riprova di nuovo: <BR> &nbsp; </TD></TR>\n";
+	echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=1> &nbsp; <BR><FONT SIZE=3>Spiacente, il telefono inserito non è attivo in questo sistema, riprova di nuovo: <BR> &nbsp; </TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Login Telefono: </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 maxlength=20 VALUE=\"$phone_login\"></TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Password Telefono:  </TD>";
@@ -953,7 +953,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		}
 
 // ################################################################################
-// Send Redirect command for live call to Managersends phone name where call is going to
+// Send Redirect command for live call to Manager sends phone name where call is going to
 	function mainxfer_send_redirect(taskvar,taskxferconf) 
 		{
 		var xmlhttp=false;
@@ -1046,7 +1046,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 
 
 // ################################################################################
-// Send Originate command for local dial to Managersends phone name where call is going to
+// Send Originate command for local dial to Manager sends phone name where call is going to
 	function mainxfer_send_originate(taskvar,taskxferconf,taskentrypop) 
 		{
 		var xmlhttp=false;
@@ -1825,7 +1825,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 						var LMAcontent_change=0;
 						var LMAcontent_match=0;
 						var conv_start=-1;
-						var live_conf_HTML = "<font face=\"Arial,Helvetica\"><B>CHIAMATE IN CORSO SU QUESTA CONFERENZA:</B></font><BR><TABLE WIDTH=500><TR BGCOLOR=#E6E6E6><TD><font class=\"log_title\">#</TD><TD><font class=\"log_title\">CANALE REMOTO</TD><TD><font class=\"log_title\">RIAGGANCIA</TD><TD><font class=\"log_title\">TRASF</TD></TR>";
+						var live_conf_HTML = "<font face=\"Arial,Helvetica\"><B>CHIAMATE IN CORSO IN QUESTA CONFERENZA:</B></font><BR><TABLE WIDTH=500><TR BGCOLOR=#E6E6E6><TD><font class=\"log_title\">#</TD><TD><font class=\"log_title\">CANALE REMOTO</TD><TD><font class=\"log_title\">RIAGGANCIA</TD><TD><font class=\"log_title\">TRASF</TD></TR>";
 						if ( (LMAcount > live_conf_calls)  || (LMAcount < live_conf_calls) || (LMAforce > 0))
 							{
 							LMAe[0]=''; LMAe[1]=''; LMAe[2]=''; LMAe[3]=''; LMAe[4]=''; LMAe[5]=''; 
@@ -2758,7 +2758,7 @@ echo "</head>\n";
 <span style="position:absolute;left:80px;top:12px;z-index:42;" id="MainXfeRBox">
 	<input type=hidden name=H_XfeR_channel>
 	<input type=hidden name=M_XfeR_channel>
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> TRASFERIMENTO DELLA CHIAMATA IN CORSO</b> <BR>Canale trasferito: <span id="MainXfeRChanneL">Channel</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> TRASFERIMENTO DELLA CHIAMATA IN CORSO</b> <BR>Canale da trasferire: <span id="MainXfeRChanneL">Channel</span><BR></tr>
 	<tr><td>Interni:<BR><span id="MainXfeRContent"> Menu Interni </span></td>
 	<td>
 	<BR>
@@ -2768,7 +2768,7 @@ echo "</head>\n";
 	<a href="#" onclick="getactiveext('MainXfeRBox');return false;">Aggiorna</a> <BR><BR><BR>
 	<a href="#" onclick="hideMainXfeR('MainXfeRBox');">Torna alla schermata principale</a> <BR><BR>
 	</TD>
-	<TD>Conferenze:<BR><font size=1>(Seleziona uno dei numeri sotto per inviarlo ad una conferenza)<BR><input type=checkbox name=MainXfeRconfXTRA size=1 value="1"> Invia anche il mio canale<div class="scroll_list" id="MainXfeRconfContent"> Menu Conferenze </div></td></TR></TABLE>
+	<TD>Conferenze:<BR><font size=1>(seleziona uno dei numeri sotto per inviarlo ad una conferenza)<BR><input type=checkbox name=MainXfeRconfXTRA size=1 value="1"> Invia anche il mio canale<div class="scroll_list" id="MainXfeRconfContent"> Menu Conferenze </div></td></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:80px;top:12px;z-index:43;" id="LocalDialBox">
@@ -2839,7 +2839,7 @@ echo "</head>\n";
 <span style="position:absolute;left:0px;top:46px;z-index:20;" id="ActiveLinesPanel">
 <table border=0 BGCOLOR="#CDE0C2" width=640>
 <tr><td colspan=3>
-<a href="#" onclick="pause();return false;">STOP</a> | <a href="#" onclick="start();return false;">START</a> &nbsp; &nbsp; Frequenza di refresh: <span id="refresh_rate">1000 ms</span> <a href="#" onclick="faster();return false;">Piu` veloce</a> | <a href="#" onclick="slower();return false;">Piu` lento</a></p>
+<a href="#" onclick="pause();return false;">STOP</a> | <a href="#" onclick="start();return false;">START</a> &nbsp; &nbsp; Frequenza di refresh: <span id="refresh_rate">1000 ms</span> <a href="#" onclick="faster();return false;">Più veloce</a> | <a href="#" onclick="slower();return false;">Più lento</a></p>
 	<div id="status"><em>Inizializzazione..</em></div>
 </td></tr>
 <tr><td>Interni Attivi <BR> 

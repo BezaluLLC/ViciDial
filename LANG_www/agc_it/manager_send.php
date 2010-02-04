@@ -239,7 +239,7 @@ $auth=$row[0];
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Utentename/Password non validi: |$user|$pass|\n";
+    echo "Username/Password non validi: |$user|$pass|\n";
     exit;
 	}
 else
@@ -297,7 +297,7 @@ if ($ACTION=="SysCIDOriginate")
 	{
 	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($ext_context)<1) or (strlen($queryCID)<1) )
 		{
-		echo "Exten $exten non e` valido or queryCID $queryCID non e` valido, Originate comando non inserito\n";
+		echo "Exten $exten non è valido or queryCID $queryCID non è valido, Originate comando non inserito\n";
 		}
 	else
 		{
@@ -319,9 +319,9 @@ if ($ACTION=="OriginateName")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($extenName)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "Una di queste variabili non e` valido:\n";
-		echo "Channel $channel deve avere piu' di 2 caratteri\n";
-		echo "queryCID $queryCID deve avere piu' di 14 caratteri\n";
+		echo "Una di queste variabili non è valido:\n";
+		echo "Channel $channel deve avere più di 2 caratteri\n";
+		echo "queryCID $queryCID deve avere più di 14 caratteri\n";
 		echo "extenName $extenName deve essere impostato\n";
 		echo "ext_context $ext_context deve essere impostato\n";
 		echo "ext_priority $ext_priority deve essere impostato\n";
@@ -348,9 +348,9 @@ if ($ACTION=="OriginateNameVmail")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($extenName)<1)  or (strlen($exten)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "Una di queste variabili non e` valido:\n";
-		echo "Channel $channel deve avere piu' di 2 caratteri\n";
-		echo "queryCID $queryCID deve avere piu' di 14 caratteri\n";
+		echo "Una di queste variabili non è valido:\n";
+		echo "Channel $channel deve avere più di 2 caratteri\n";
+		echo "queryCID $queryCID deve avere più di 14 caratteri\n";
 		echo "extenName $extenName deve essere impostato\n";
 		echo "exten $exten deve essere impostato\n";
 		echo "ext_context $ext_context deve essere impostato\n";
@@ -392,13 +392,13 @@ if ($ACTION=="Originate")
 	{
 	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($ext_context)<1) or (strlen($queryCID)<10) )
 		{
-		echo "ERROR Exten $exten non e` valido or queryCID $queryCID non e` valido, Originate comando non inserito\n";
+		echo "ERROR Exten $exten non è valido or queryCID $queryCID non è valido, Originate comando non inserito\n";
 		}
 	else
 		{
 		if ( (eregi('MANUAL',$agent_dialed_type)) and ( (preg_match("/^\d860\d\d\d\d$/i",$exten)) or (preg_match("/^860\d\d\d\d$/i",$exten)) ) )
 			{
-			echo "ERROR Non ti è permesso di comporre in sessioni altro agente $exten\n";
+			echo "ERROR Non ti è permesso lavorare nella sessione di un altro operatore $exten\n";
 			exit;
 			}
 
@@ -442,7 +442,7 @@ if ($ACTION=="HangupConfDial")
 	if ( (strlen($exten)<3) or (strlen($queryCID)<15) or (strlen($ext_context)<1) )
 		{
 		$channel_live=0;
-		echo "conference $exten non e` valido or ext_context $ext_context or queryCID $queryCID non e` valido, Hangup comando non inserito\n";
+		echo "conference $exten non è valido or ext_context $ext_context or queryCID $queryCID non è valido, Hangup comando non inserito\n";
 		}
 	else
 		{
@@ -486,7 +486,7 @@ if ($ACTION=="Hangup")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) )
 		{
 		$channel_live=0;
-		echo "Channel $channel non e` valido or queryCID $queryCID non e` valido, Hangup comando non inserito\n";
+		echo "Channel $channel non è valido or queryCID $queryCID non è valido, Hangup comando non inserito\n";
 		}
 	else
 		{
@@ -517,7 +517,7 @@ if ($ACTION=="Hangup")
 			$rowx=mysql_fetch_row($rslt);
 			if ($rowx[0]==0)
 				{
-				echo "Call $CalLCID $channel non e` attivo su $call_server_ip, Checking Live Canale...\n";
+				echo "Call $CalLCID $channel non è attivo su $call_server_ip, Checking Live Canale...\n";
 
 				$stmt="SELECT count(*) FROM live_channels where server_ip = '$call_server_ip' and channel='$channel' and extension LIKE \"%$exten\";";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
@@ -527,7 +527,7 @@ if ($ACTION=="Hangup")
 				if ($row[0]==0)
 					{
 					$channel_live=0;
-					echo "Channel $channel non e` attivo su $call_server_ip, Hangup comando non inserito $rowx[0]\n$stmt\n";
+					echo "Channel $channel non è attivo su $call_server_ip, Hangup comando non inserito $rowx[0]\n$stmt\n";
 					}
 				else
 					{
@@ -693,9 +693,9 @@ if ($ACTION=="RedirectVD")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($campaign)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($uniqueid)<2) or (strlen($lead_id)<1) )
 		{
 		$channel_live=0;
-		echo "Una di queste variabili non e` valido:\n";
-		echo "Channel $channel deve avere piu' di 2 caratteri\n";
-		echo "queryCID $queryCID deve avere piu' di 14 caratteri\n";
+		echo "Una di queste variabili non è valido:\n";
+		echo "Channel $channel deve avere più di 2 caratteri\n";
+		echo "queryCID $queryCID deve avere più di 14 caratteri\n";
 		echo "exten $exten deve essere impostato\n";
 		echo "ext_context $ext_context deve essere impostato\n";
 		echo "ext_priority $ext_priority deve essere impostato\n";
@@ -776,9 +776,9 @@ if ($ACTION=="RedirectToPark")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($extenName)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($parkedby)<1) )
 		{
 		$channel_live=0;
-		echo "Una di queste variabili non e` valido:\n";
-		echo "Channel $channel deve avere piu' di 2 caratteri\n";
-		echo "queryCID $queryCID deve avere piu' di 14 caratteri\n";
+		echo "Una di queste variabili non è valido:\n";
+		echo "Channel $channel deve avere più di 2 caratteri\n";
+		echo "queryCID $queryCID deve avere più di 14 caratteri\n";
 		echo "exten $exten deve essere impostato\n";
 		echo "extenName $extenName deve essere impostato\n";
 		echo "ext_context $ext_context deve essere impostato\n";
@@ -806,9 +806,9 @@ if ($ACTION=="RedirectFromPark")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "Una di queste variabili non e` valido:\n";
-		echo "Channel $channel deve avere piu' di 2 caratteri\n";
-		echo "queryCID $queryCID deve avere piu' di 14 caratteri\n";
+		echo "Una di queste variabili non è valido:\n";
+		echo "Channel $channel deve avere più di 2 caratteri\n";
+		echo "queryCID $queryCID deve avere più di 14 caratteri\n";
 		echo "exten $exten deve essere impostato\n";
 		echo "ext_context $ext_context deve essere impostato\n";
 		echo "ext_priority $ext_priority deve essere impostato\n";
@@ -830,9 +830,9 @@ if ($ACTION=="RedirectName")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($extenName)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "Una di queste variabili non e` valido:\n";
-		echo "Channel $channel deve avere piu' di 2 caratteri\n";
-		echo "queryCID $queryCID deve avere piu' di 14 caratteri\n";
+		echo "Una di queste variabili non è valido:\n";
+		echo "Channel $channel deve avere più di 2 caratteri\n";
+		echo "queryCID $queryCID deve avere più di 14 caratteri\n";
 		echo "extenName $extenName deve essere impostato\n";
 		echo "ext_context $ext_context deve essere impostato\n";
 		echo "ext_priority $ext_priority deve essere impostato\n";
@@ -859,9 +859,9 @@ if ($ACTION=="RedirectNameVmail")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($extenName)<1)  or (strlen($exten)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "Una di queste variabili non e` valido:\n";
-		echo "Channel $channel deve avere piu' di 2 caratteri\n";
-		echo "queryCID $queryCID deve avere piu' di 14 caratteri\n";
+		echo "Una di queste variabili non è valido:\n";
+		echo "Channel $channel deve avere più di 2 caratteri\n";
+		echo "queryCID $queryCID deve avere più di 14 caratteri\n";
 		echo "extenName $extenName deve essere impostato\n";
 		echo "exten $exten deve essere impostato\n";
 		echo "ext_context $ext_context deve essere impostato\n";
@@ -899,10 +899,10 @@ if ($ACTION=="RedirectXtraCXNeW")
 		{
 		$channel_liveX=0;
 		$channel_liveY=0;
-		echo "Una di queste variabili non e` valido:\n";
-		echo "Channel $channel deve avere piu' di 2 caratteri\n";
-		echo "ExtraChannel $extrachannel deve avere piu' di 2 caratteri\n";
-		echo "queryCID $queryCID deve avere piu' di 14 caratteri\n";
+		echo "Una di queste variabili non è valido:\n";
+		echo "Channel $channel deve avere più di 2 caratteri\n";
+		echo "ExtraChannel $extrachannel deve avere più di 2 caratteri\n";
+		echo "queryCID $queryCID deve avere più di 14 caratteri\n";
 		echo "exten $exten deve essere impostato\n";
 		echo "ext_context $ext_context deve essere impostato\n";
 		echo "ext_priority $ext_priority deve essere impostato\n";
@@ -1008,8 +1008,8 @@ if ($ACTION=="RedirectXtraCXNeW")
 			if ($rowx[0]==0)
 				{
 				$channel_liveX=0;
-				echo "Channel $channel non e` attivo su $call_server_ip, Redirect comando non inserito\n";
-				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel non e` attivo su $call_server_ip";}
+				echo "Channel $channel non è attivo su $call_server_ip, Redirect comando non inserito\n";
+				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel non è attivo su $call_server_ip";}
 				}	
 			}
 		$stmt="SELECT count(*) FROM live_channels where server_ip = '$server_ip' and channel='$extrachannel';";
@@ -1027,8 +1027,8 @@ if ($ACTION=="RedirectXtraCXNeW")
 			if ($rowx[0]==0)
 				{
 				$channel_liveY=0;
-				echo "Channel $channel non e` attivo su $server_ip, Redirect comando non inserito\n";
-				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel non e` attivo su $server_ip";}
+				echo "Channel $channel non è attivo su $server_ip, Redirect comando non inserito\n";
+				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel non è attivo su $server_ip";}
 				}	
 			}
 		if ( ($channel_liveX==1) && ($channel_liveY==1) )
@@ -1124,10 +1124,10 @@ if ($ACTION=="RedirectXtraNeW")
 			{
 			$channel_liveX=0;
 			$channel_liveY=0;
-			echo "Una di queste variabili non e` valido:\n";
-			echo "Channel $channel deve avere piu' di 2 caratteri\n";
-			echo "ExtraChannel $extrachannel deve avere piu' di 2 caratteri\n";
-			echo "queryCID $queryCID deve avere piu' di 14 caratteri\n";
+			echo "Una di queste variabili non è valido:\n";
+			echo "Channel $channel deve avere più di 2 caratteri\n";
+			echo "ExtraChannel $extrachannel deve avere più di 2 caratteri\n";
+			echo "queryCID $queryCID deve avere più di 14 caratteri\n";
 			echo "exten $exten deve essere impostato\n";
 			echo "ext_context $ext_context deve essere impostato\n";
 			echo "ext_priority $ext_priority deve essere impostato\n";
@@ -1225,8 +1225,8 @@ if ($ACTION=="RedirectXtraNeW")
 				if ($rowx[0]==0)
 					{
 					$channel_liveX=0;
-					echo "Channel $channel non e` attivo su $call_server_ip, Redirect comando non inserito\n";
-					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel non e` attivo su $call_server_ip";}
+					echo "Channel $channel non è attivo su $call_server_ip, Redirect comando non inserito\n";
+					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel non è attivo su $call_server_ip";}
 					}	
 				}
 			$stmt="SELECT count(*) FROM live_channels where server_ip = '$server_ip' and channel='$extrachannel';";
@@ -1244,8 +1244,8 @@ if ($ACTION=="RedirectXtraNeW")
 				if ($rowx[0]==0)
 					{
 					$channel_liveY=0;
-					echo "Channel $channel non e` attivo su $server_ip, Redirect comando non inserito\n";
-					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel non e` attivo su $server_ip";}
+					echo "Channel $channel non è attivo su $server_ip, Redirect comando non inserito\n";
+					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel non è attivo su $server_ip";}
 					}	
 				}
 			if ( ($channel_liveX==1) && ($channel_liveY==1) )
@@ -1345,9 +1345,9 @@ if ($ACTION=="Redirect")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($exten)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "Una di queste variabili non e` valido:\n";
-		echo "Channel $channel deve avere piu' di 2 caratteri\n";
-		echo "queryCID $queryCID deve avere piu' di 14 caratteri\n";
+		echo "Una di queste variabili non è valido:\n";
+		echo "Channel $channel deve avere più di 2 caratteri\n";
+		echo "queryCID $queryCID deve avere più di 14 caratteri\n";
 		echo "exten $exten deve essere impostato\n";
 		echo "ext_context $ext_context deve essere impostato\n";
 		echo "ext_priority $ext_priority deve essere impostato\n";
@@ -1371,7 +1371,7 @@ if ($ACTION=="Redirect")
 			if ($rowx[0]==0)
 				{
 				$channel_live=0;
-				echo "Channel $channel non e` attivo su $server_ip, Redirect comando non inserito\n";
+				echo "Channel $channel non è attivo su $server_ip, Redirect comando non inserito\n";
 				}	
 			}
 		if ($channel_live==1)
@@ -1403,7 +1403,7 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($filename)<8) )
 		{
 		$channel_live=0;
-		echo "Channel $channel non e` valido or queryCID $queryCID non e` valido or filename: $filename non e` valido, $ACTION comando non inserito\n";
+		echo "Channel $channel non è valido or queryCID $queryCID non è valido or filename: $filename non è valido, $ACTION comando non inserito\n";
 		}
 	else
 		{
@@ -1422,7 +1422,7 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 			if ($rowx[0]==0)
 				{
 				$channel_live=0;
-				echo "Channel $channel non e` attivo su $server_ip, $ACTION comando non inserito\n";
+				echo "Channel $channel non è attivo su $server_ip, $ACTION comando non inserito\n";
 				}	
 			}
 		if ($channel_live==1)
@@ -1490,7 +1490,7 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 	if ( (strlen($exten)<3) or (strlen($channel)<4) or (strlen($filename)<8) )
 		{
 		$channel_live=0;
-		echo "Channel $channel non e` valido or exten $exten non e` valido or filename: $filename non e` valido, $ACTION comando non inserito\n";
+		echo "Channel $channel non è valido or exten $exten non è valido or filename: $filename non è valido, $ACTION comando non inserito\n";
 		}
 	else
 		{
@@ -1639,7 +1639,7 @@ if ($ACTION=="VolumeControl")
 	{
 	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($stage)<1) or (strlen($queryCID)<1) )
 		{
-		echo "Conferenza $exten, Stage $stage non e` valido or queryCID $queryCID non e` valido, Originate comando non inserito\n";
+		echo "Conferenza $exten, Stage $stage non è valido or queryCID $queryCID non è valido, Originate comando non inserito\n";
 		}
 	else
 		{

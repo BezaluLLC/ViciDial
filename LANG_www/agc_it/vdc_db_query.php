@@ -231,10 +231,11 @@
 # 100109-0745 - Added alt_num_status for ALTNUM dialing status
 # 100109-1336 - Fixed Manual dial live call detection
 # 100113-1949 - Fixed dispo_choice bug and added dispo_status to dispo URL call
+# 100202-2306 - Fixed logging issues related to INBOUND_MAN dial_method
 #
 
-$version = '2.2.0-139';
-$build = '100113-1949';
+$version = '2.2.0-140';
+$build = '100202-2306';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=300;
 $one_mysql_log=0;
@@ -430,6 +431,7 @@ $CIDdate = date("mdHis");
 $ENTRYdate = date("YmdHis");
 $MT[0]='';
 $agents='@agents';
+$US='_';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -485,7 +487,7 @@ else
 
 	if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 		{
-		echo "Utentename/Password non validi: |$user|$pass|\n";
+		echo "Username/Password non validi: |$user|$pass|\n";
 		exit;
 		}
 	else
@@ -610,7 +612,7 @@ if ($ACTION == 'LogiNCamPaigns')
 		$shift_ok=0;
 		if ( (strlen($LOGgroup_shiftsSQL) < 3) and ($VU_shift_override_flag < 1) )
 			{
-			$VDdisplayMESSAGE = "<B>ERRORE: Non ci sono cambiamenti abilitati per il tuo gruppo di utenti</B>\n";
+			$VDdisplayMESSAGE = "<B>ERRORE: Non ci sono turni abilitati per il tuo gruppo di utenti</B>\n";
 			$VDloginDISPLAY=1;
 			}
 		else
@@ -670,14 +672,14 @@ if ($ACTION == 'LogiNCamPaigns')
 		if ($VDloginDISPLAY > 0)
 			{
 			$loginDATE = date("Ymd");
-			$VDdisplayMESSAGE.= "<BR><BR>Sovrascrive MANAGER:<BR>\n";
+			$VDdisplayMESSAGE.= "<BR><BR>OVERRIDE MANAGER:<BR>\n";
 			$VDdisplayMESSAGE.= "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=MGR_override VALUE=\"1\">\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=relogin VALUE=\"YES\">\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=VD_login VALUE=\"$user\">\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=VD_pass VALUE=\"$pass\">\n";
-			$VDdisplayMESSAGE.= "ManagerLogin: <INPUT TYPE=TEXT NAME=\"MGR_login$loginDATE\" SIZE=10 maxlength=20><br>\n";
-			$VDdisplayMESSAGE.= "ManagerPassword: <INPUT TYPE=PASSWORD NAME=\"MGR_pass$loginDATE\" SIZE=10 maxlength=20><br>\n";
+			$VDdisplayMESSAGE.= "Manager Login: <INPUT TYPE=TEXT NAME=\"MGR_login$loginDATE\" SIZE=10 maxlength=20><br>\n";
+			$VDdisplayMESSAGE.= "Manager Password: <INPUT TYPE=PASSWORD NAME=\"MGR_pass$loginDATE\" SIZE=10 maxlength=20><br>\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=Submit NAME=INVIA VALUE=INVIA></FORM><BR><BR><BR><BR>\n";
 			echo "$VDdisplayMESSAGE";
 			exit;
@@ -706,7 +708,7 @@ if ($ACTION == 'LogiNCamPaigns')
 	else
 		{
 		echo "<select size=1 name=VD_campaign id=VD_campaign onFocus=\"login_allowable_campaigns()\">\n";
-		echo "<option value=\"\">-- È necessario accedere al orologio LA PRIMA --</option>\n";
+		echo "<option value=\"\">-- è necessario accedere prima all`orologio --</option>\n";
 		echo "</select>\n";
 		}
 	exit;
@@ -725,7 +727,7 @@ if ($ACTION == 'regCLOSER')
 	if ( (strlen($closer_choice)<1) || (strlen($user)<1) )
 		{
 		$channel_live=0;
-		echo "Scelta del Gruppo $closer_choice non e` valido\n";
+		echo "Scelta del Gruppo $closer_choice non è valido\n";
 		exit;
 		}
 	else
@@ -807,7 +809,7 @@ if ($ACTION == 'regCLOSER')
 			}
 
 		}
-	echo "Closer In Scelta del Gruppo $closer_choice e` stato registrato dall`utente $user\n";
+	echo "Closer In Scelta del Gruppo $closer_choice è stato registrato dall`utente $user\n";
 	}
 
 
@@ -825,7 +827,7 @@ if ($ACTION == 'regTERRITORY')
 	if ( (strlen($agent_territories)<1) || (strlen($user)<1) )
 		{
 		$channel_live=0;
-		echo "Territory Choice $agent_territories non e` valido\n";
+		echo "Territory Choice $agent_territories non è valido\n";
 		exit;
 		}
 	else
@@ -865,7 +867,7 @@ if ($ACTION == 'regTERRITORY')
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00256',$user,$server_ip,$session_name,$one_mysql_log);}
 		}
-	echo "Territory Choice $agent_territories e` stato registrato dall`utente $user\n";
+	echo "Territory Choice $agent_territories è stato registrato dall`utente $user\n";
 	}
 
 
@@ -999,7 +1001,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 		{
 		$channel_live=0;
 		echo "LISTA DI CHIAMATA VUOTA\n";
-		echo "Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context non e` valido\n";
+		echo "Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context non è valido\n";
 		exit;
 		}
 	else
@@ -1855,6 +1857,28 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00036',$user,$server_ip,$session_name,$one_mysql_log);}
 
+				#### update vicidial_agent_log if not MANUAL dial_method
+				if ($dial_method != 'MANUAL')
+					{
+					$pause_sec=0;
+					$stmt = "select pause_epoch,pause_sec,wait_epoch,talk_epoch,dispo_epoch,agent_log_id from vicidial_agent_log where agent_log_id >= '$agent_log_id' and user='$user' order by agent_log_id desc limit 1;";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					$VDpr_ct = mysql_num_rows($rslt);
+					if ( ($VDpr_ct > 0) and (strlen($row[3]<5)) and (strlen($row[4]<5)) )
+						{
+						$row=mysql_fetch_row($rslt);
+						$agent_log_id = $row[5];
+						$pause_sec = (($StarTtime - $row[0]) + $row[1]);
+
+						$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						}
+					}
+
 				if ($agent_dialed_number > 0)
 					{
 					$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id) values('$user','$NOW_TIME','$agent_dialed_type','$server_ip','$phone_number','$Ndialstring','$lead_id','$CCID','$RAWaccount')";
@@ -2055,7 +2079,7 @@ if ($ACTION == 'alt_phone_change')
 		{
 		$channel_live=0;
 		echo "NUMERO ALTERNATIVO NUMERO STATO NOT CHANGED\n";
-		echo "$phone_number $stage $lead_id or $called_count non e` valido\n";
+		echo "$phone_number $stage $lead_id or $called_count non è valido\n";
 		exit;
 		}
 	else
@@ -2080,7 +2104,7 @@ if ($ACTION == 'AlertControl')
 		{
 		$channel_live=0;
 		echo "AGENT ALERT SETTING NOT CHANGED\n";
-		echo "$stage non e` valido\n";
+		echo "$stage non è valido\n";
 		exit;
 		}
 	else
@@ -2111,7 +2135,7 @@ if ($ACTION == 'manDiaLskip')
 		{
 		$channel_live=0;
 		echo "LEAD NOT REVERTED\n";
-		echo "Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context non e` valido\n";
+		echo "Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context non è valido\n";
 		exit;
 		}
 	else
@@ -2142,7 +2166,7 @@ if ($ACTION == 'manDiaLonly')
 		{
 		$channel_live=0;
 		echo " CHIAMATA NOT PLACED\n";
-		echo "Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context non e` valido\n";
+		echo "Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context non è valido\n";
 		exit;
 		}
 	else
@@ -2262,6 +2286,28 @@ if ($ACTION == 'manDiaLonly')
 
 		echo "$MqueryCID\n";
 
+		#### update vicidial_agent_log if not MANUAL dial_method
+		if ($dial_method != 'MANUAL')
+			{
+			$pause_sec=0;
+			$stmt = "select pause_epoch,pause_sec,wait_epoch,talk_epoch,dispo_epoch,agent_log_id from vicidial_agent_log where agent_log_id >= '$agent_log_id' and user='$user' order by agent_log_id desc limit 1;";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			$VDpr_ct = mysql_num_rows($rslt);
+			if ( ($VDpr_ct > 0) and (strlen($row[3]<5)) and (strlen($row[4]<5)) )
+				{
+				$row=mysql_fetch_row($rslt);
+				$agent_log_id = $row[5];
+				$pause_sec = (($StarTtime - $row[0]) + $row[1]);
+
+				$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
+			}
+
 		if ($agent_dialed_number > 0)
 			{
 			$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id) values('$user','$NOW_TIME','$agent_dialed_type','$server_ip','$phone_number','$Ndialstring','$lead_id','$CCID','$RAWaccount')";
@@ -2337,7 +2383,7 @@ if ($ACTION == 'manDiaLlookCaLL')
 	if (strlen($MDnextCID)<18)
 		{
 		echo "NO\n";
-		echo "MDnextCID $MDnextCID non e` valido\n";
+		echo "MDnextCID $MDnextCID non è valido\n";
 		exit;
 		}
 	else
@@ -2461,7 +2507,7 @@ if ($stage == "start")
 		fclose($fp);
 
 		echo "LOG NON INSERITO\n";
-		echo "uniqueid $uniqueid or lead_id: $lead_id or list_id: $list_id or phone_number: $phone_number or campaign: $campaign non e` valido\n";
+		echo "uniqueid $uniqueid or lead_id: $lead_id or list_id: $list_id or phone_number: $phone_number or campaign: $campaign non è valido\n";
 		exit;
 		}
 	else
@@ -2574,7 +2620,7 @@ if ($stage == "end")
 	if ( (strlen($uniqueid)<1) or (strlen($lead_id)<1) )
 		{
 		echo "LOG NON INSERITO\n";
-		echo "uniqueid $uniqueid or lead_id: $lead_id non e` valido\n";
+		echo "uniqueid $uniqueid or lead_id: $lead_id non è valido\n";
 		exit;
 		}
 	else
@@ -3564,8 +3610,8 @@ if ($ACTION == 'VDADREcheckINCOMING')
 		{
 		$channel_live=0;
 		echo "0\n";
-		echo "Campagna $campaign non e` valido\n";
-		echo "lead_id $lead_id non e` valido\n";
+		echo "Campagna $campaign non è valido\n";
+		echo "lead_id $lead_id non è valido\n";
 		exit;
 		}
 	else
@@ -3615,7 +3661,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 		{
 		$channel_live=0;
 		echo "0\n";
-		echo "Campagna $campaign non e` valido\n";
+		echo "Campagna $campaign non è valido\n";
 		exit;
 		}
 	else
@@ -4466,7 +4512,7 @@ if ($ACTION == 'userLOGout')
 	if ( (strlen($campaign)<1) || (strlen($conf_exten)<1) )
 		{
 		echo "NO\n";
-		echo "campaign $campaign or conf_exten $conf_exten non e` valido\n";
+		echo "campaign $campaign or conf_exten $conf_exten non è valido\n";
 		exit;
 		}
 	else
@@ -4568,8 +4614,8 @@ if ($ACTION == 'userLOGout')
 		$VDpr_ct = mysql_num_rows($rslt);
 		if ( ($VDpr_ct > 0) and (strlen($row[3]<5)) and (strlen($row[4]<5)) )
 			{
-			$agent_log_id = $row[5];
 			$row=mysql_fetch_row($rslt);
+			$agent_log_id = $row[5];
 			$pause_sec = (($StarTtime - $row[0]) + $row[1]);
 
 			$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
@@ -4660,7 +4706,7 @@ if ($ACTION == 'updateDISPO')
 	$MAN_vl_insert=0;
 	if ( (strlen($dispo_choice)<1) || (strlen($lead_id)<1) )
 		{
-		echo "Dispo Choice $dispo or lead_id $lead_id non e` valido\n";
+		echo "Dispo Choice $dispo or lead_id $lead_id non è valido\n";
 		exit;
 		}
 	else
@@ -5740,7 +5786,7 @@ if ($ACTION == 'updateDISPO')
 			fclose($fp);
 			}
 		}
-	echo 'Lead ' . $lead_id . ' e` cambiato ' . $dispo_choice . " Stato\nNext agent_log_id:\n" . $agent_log_id . "\n";
+	echo 'Lead ' . $lead_id . ' è cambiato ' . $dispo_choice . " Stato\nNext agent_log_id:\n" . $agent_log_id . "\n";
 	}
 
 ################################################################################
@@ -5755,7 +5801,7 @@ if ($ACTION == 'updateLEAD')
 	$DO_NOT_UPDATE_text='';
 	if ( (strlen($phone_number)<1) || (strlen($lead_id)<1) )
 		{
-		echo "phone_number $phone_number or lead_id $lead_id non e` valido\n";
+		echo "phone_number $phone_number or lead_id $lead_id non è valido\n";
 		exit;
 		}
 	else
@@ -5856,7 +5902,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 	$row='';   $rowx='';
 	if ( (strlen($stage)<2) || (strlen($server_ip)<1) )
 		{
-		echo "stage $stage non e` valido\n";
+		echo "stage $stage non è valido\n";
 		exit;
 		}
 	else
@@ -6037,7 +6083,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 			$VLAaffected_rows_update = mysql_affected_rows($link);
 			}
 		}
-	echo 'Agent ' . $user . ' e` ora nello stato ' . $stage . "\nNext agent_log_id:\n$agent_log_id\n";
+	echo 'Agent ' . $user . ' è ora nello stato ' . $stage . "\nNext agent_log_id:\n$agent_log_id\n";
 	}
 
 
@@ -6050,7 +6096,7 @@ if ($ACTION == 'UpdatEFavoritEs')
 	$channel_live=1;
 	if ( (strlen($favorites_list)<1) || (strlen($user)<1) || (strlen($exten)<1) )
 		{
-		echo "favorites list $favorites_list non e` valido\n";
+		echo "favorites list $favorites_list non è valido\n";
 		exit;
 		}
 	else
@@ -6088,7 +6134,7 @@ if ($ACTION == 'PauseCodeSubmit')
 	$row='';   $rowx='';
 	if ( (strlen($status)<1) || (strlen($agent_log_id)<1) )
 		{
-		echo "agent_log_id $agent_log_id or pause_code $status non e` valido\n";
+		echo "agent_log_id $agent_log_id or pause_code $status non è valido\n";
 		exit;
 		}
 	else
@@ -6280,7 +6326,7 @@ if ($ACTION == 'CALLSINQUEUEview')
 
 	if (eregi('NONE',$view_calls_in_queue))
 		{
-		echo "Chiamate in coda Visualizza disabili per questa campagna\n";
+		echo "Visualizzazione Chiamate in coda disabilitato per questa campagna\n";
 		exit;
 		}
 	else
@@ -6472,7 +6518,7 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 
 	if ( (eregi('NONE',$view_calls_in_queue)) or (eregi('N',$grab_calls_in_queue)) )
 		{
-		echo "ERROR: Chiamate in coda Visualizza disabili per questa campagna\n";
+		echo "ERROR: Visualizzazione Chiamate in coda disabilitato per questa campagna\n";
 		exit;
 		}
 	else

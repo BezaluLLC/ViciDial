@@ -120,10 +120,10 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 	if ($valid_user < 1)
 		{
 		### NOT A VALID USER/PASS
-		$VDdisplayMESSAGE = "Lutente e la password che hai inserito non sono attivi nel sistema<BR>Si prega di riprovare:";
+		$VDdisplayMESSAGE = "L`utente e la password che hai inserito non sono attivi nel sistema<BR>Si prega di riprovare:";
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>AgentOrologio</TITLE>\n";
+		echo"<TITLE>Agent Orologio</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -138,7 +138,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Orologio </B></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Orologio </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 		echo "<TR><TD ALIGN=RIGHT>Login Utente:  </TD>";
@@ -225,10 +225,10 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		if ( ($last_action_sec < 30) and ($status != 'START') )
 			{
 			### You cannot log in or out within 30 secondi of your last login/logout
-			$VDdisplayMESSAGE = "Non è possibile accedere o entro 30 secondi del tuo ultimo accesso o il logout";
+			$VDdisplayMESSAGE = "Non è possibile accedere o scollegarsi prima di 30 secondi dal tuo ultimo accesso o logout";
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>AgentOrologio</TITLE>\n";
+			echo"<TITLE>Agent Orologio</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -243,7 +243,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 			echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Orologio </B></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Orologio </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 			echo "<TR><TD ALIGN=RIGHT>Login Utente:  </TD>";
@@ -292,8 +292,8 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 			if ( ($status=='LOGIN') and ($stage=='logout') )
 				{
-				$VDdisplayMESSAGE = "Lei ha appena effettuato laccesso-out";
-				$LOGtimeMESSAGE = "Hai effettuato laccesso a$NOW_TIME<BR>Importo di tempo sono state registrate in:$totTIME_HMS";
+				$VDdisplayMESSAGE = "Ti sei appena scollegato dal sistema";
+				$LOGtimeMESSAGE = "Ti sei scollegato alle $NOW_TIME<BR>Durata della tua connessione: $totTIME_HMS";
 
 				### Add a record to the timeclock log
 				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
@@ -333,24 +333,24 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				}
 
 			if ( ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
-				{echo "ERRORE: orologio registro entrata già fatto:$status|$stage";  exit;}
+				{echo "ERRORE: Registrazione entrata già effettuata: $status|$stage";  exit;}
 
 			if ($referrer=='agent') 
-				{$BACKlink = "<A HREF=\"./vicidial.php?pl=$phone_login&pp=$phone_pass&VD_login=$user\"><font color=\"#003333\">Torna alla schermata di login di agente</font></A>";}
+				{$BACKlink = "<A HREF=\"./vicidial.php?pl=$phone_login&pp=$phone_pass&VD_login=$user\"><font color=\"#003333\">Torna alla schermata di Login</font></A>";}
 			if ($referrer=='admin') 
-				{$BACKlink = "<A HREF=\"../vicidial/admin.php\"><font color=\"#003333\">BACK per Amministrazione</font></A>";}
+				{$BACKlink = "<A HREF=\"../vicidial/admin.php\"><font color=\"#003333\">Torna ad Amministrazione</font></A>";}
 			if ($referrer=='welcome') 
 				{$BACKlink = "<A HREF=\"$welcomeURL\"><font color=\"#003333\">Torna alla schermata iniziale</font></A>";}
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>AgentOrologio</TITLE>\n";
+			echo"<TITLE>Agent Orologio</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 			echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 			echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Orologio </B></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Orologio </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 			echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
@@ -368,21 +368,21 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 		if ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') )
 			{
-			$VDdisplayMESSAGE = "Tempo dallultimo registrato in:$totTIME_HMS";
+			$VDdisplayMESSAGE = "Tempo dal tuo ultimo login: $totTIME_HMS";
 			$log_action = 'login';
 			$button_name = 'LOGIN';
-			$LOGtimeMESSAGE = "È lultima connesso a:$last_action_date<BR><BR>Clicca qui sotto per LOGIN log-in";
+			$LOGtimeMESSAGE = "Ti sei scollegato l`ultima volta alle: $last_action_date<BR><BR>Clicca LOGIN qui sotto per collegarti";
 			}
 		if ($status=='LOGIN')
 			{
-			$VDdisplayMESSAGE = "Quantità di tempo è stato registrato in:$totTIME_HMS";
+			$VDdisplayMESSAGE = "Durata connessione al sistema: $totTIME_HMS";
 			$log_action = 'logout';
 			$button_name = 'LOGOUT';
-			$LOGtimeMESSAGE = "Hai effettuato laccesso al-in: $last_action_date<BR>Quantità di tempo è stato registrato in:$totTIME_HMS<BR><BR>Clicca qui sotto per LOGOUT log-out";
+			$LOGtimeMESSAGE = "Ti sei collegata l`ultima volta alle: $last_action_date<BR>Durata connessione al sistema: $totTIME_HMS<BR><BR>Clicca LOGOUT qui sotto per scollegarti";
 			}
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>AgentOrologio</TITLE>\n";
+		echo"<TITLE>Agent Orologio</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -400,7 +400,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Orologio </B></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Orologio </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 		echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
@@ -421,7 +421,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 else
 	{
 	echo"<HTML><HEAD>\n";
-	echo"<TITLE>AgentOrologio</TITLE>\n";
+	echo"<TITLE>Agent Orologio</TITLE>\n";
 	echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo"</HEAD>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -436,7 +436,7 @@ else
 	echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 	echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Orologio </B></TD>";
+	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Orologio </B></TD>";
 	echo "</TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Login Utente:  </TD>";

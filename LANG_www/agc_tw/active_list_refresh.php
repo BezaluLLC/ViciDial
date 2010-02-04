@@ -126,7 +126,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
   if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "無效 使用者name/密碼: |$user|$pass|\n";
+    echo "無效 Username/密碼: |$user|$pass|\n";
     exit;
 	}
   else

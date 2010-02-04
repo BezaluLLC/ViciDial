@@ -239,7 +239,7 @@ $auth=$row[0];
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Unzulässig Benutzername/Passwort: |$user|$pass|\n";
+    echo "Unzulässig Username/Passwort: |$user|$pass|\n";
     exit;
 	}
 else

@@ -1,7 +1,7 @@
 <?php 
 # AST_agent_performance_detail.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -20,6 +20,7 @@
 # 90523-0935 - Rewrite of seconds to minutes and hours conversion
 # 90717-1500 - Changed to be multi-campaign, multi-user-group select
 # 90908-1058 - Added DEAD time statistics
+# 100203-1131 - Added CUSTOMER time statistics
 #
 
 require("dbconnect.php");
@@ -58,12 +59,10 @@ $stmt = "SELECT use_non_latin FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -78,7 +77,7 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
@@ -306,6 +305,9 @@ while ($i < $rows_to_print)
 	$dispo_sec[$i] =	$row[6];
 	$status[$i] =		$row[7];
 	$dead_sec[$i] =		$row[8];
+	$customer_sec[$i] =	($talk_sec[$i] - $dead_sec[$i]);
+	if ($customer_sec[$i] < 1)
+		{$customer_sec[$i]=0;}
 	if ( (!eregi("-$status[$i]-", $statuses)) and (strlen($status[$i])>0) )
 		{
 		$statusesTXT = sprintf("%8s", $status[$i]);
@@ -326,10 +328,10 @@ while ($i < $rows_to_print)
 	$i++;
 	}
 
-echo "CALL STATS BREAKDOWN:\n";
-echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-echo "| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=CALLS\">CALLS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG | DEAD     |DEADAVG |$statusesHTML\n";
-echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+echo "CALL STATS BREAKDOWN: (Statistics related to handling of calls only)\n";
+echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+echo "| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">LEADS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG | DEAD     |DEADAVG | CUSTOMER |CUSTAVG |$statusesHTML\n";
+echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
 
 
 ### BEGIN loop through each user ###
@@ -345,6 +347,7 @@ while ($m < $k)
 	$Swait_sec=0;
 	$Sdispo_sec=0;
 	$Sdead_sec=0;
+	$Scustomer_sec=0;
 	$SstatusesHTML='';
 
 	### BEGIN loop through each status ###
@@ -365,6 +368,7 @@ while ($m < $k)
 				$Swait_sec =	($Swait_sec + $wait_sec[$i]);
 				$Sdispo_sec =	($Sdispo_sec + $dispo_sec[$i]);
 				$Sdead_sec =	($Sdead_sec + $dead_sec[$i]);
+				$Scustomer_sec =	($Scustomer_sec + $customer_sec[$i]);
 				$SstatusTXT = sprintf("%8s", $calls[$i]);
 				$SstatusesHTML .= " $SstatusTXT |";
 				$status_found++;
@@ -387,6 +391,7 @@ while ($m < $k)
 	$TOTtotPAUSE=($TOTtotPAUSE + $Spause_sec);
 	$TOTtotDISPO=($TOTtotDISPO + $Sdispo_sec);
 	$TOTtotDEAD=($TOTtotDEAD + $Sdead_sec);
+	$TOTtotCUSTOMER=($TOTtotCUSTOMER + $Scustomer_sec);
 	$Stime = ($Stalk_sec + $Spause_sec + $Swait_sec + $Sdispo_sec);
 	if ( ($Scalls > 0) and ($Stalk_sec > 0) ) {$Stalk_avg = ($Stalk_sec/$Scalls);}
 		else {$Stalk_avg=0;}
@@ -398,6 +403,8 @@ while ($m < $k)
 		else {$Sdispo_avg=0;}
 	if ( ($Scalls > 0) and ($Sdead_sec > 0) ) {$Sdead_avg = ($Sdead_sec/$Scalls);}
 		else {$Sdead_avg=0;}
+	if ( ($Scalls > 0) and ($Scustomer_sec > 0) ) {$Scustomer_avg = ($Scustomer_sec/$Scalls);}
+		else {$Scustomer_avg=0;}
 
 	$RAWuser = $Suser;
 	$RAWcalls = $Scalls;
@@ -429,6 +436,8 @@ while ($m < $k)
 	$USERavgDISPO_MS =		sec_convert($Sdispo_avg,'M'); 
 	$USERtotDEAD_MS =		sec_convert($Sdead_sec,'H'); 
 	$USERavgDEAD_MS =		sec_convert($Sdead_avg,'M'); 
+	$USERtotCUSTOMER_MS =	sec_convert($Scustomer_sec,'H'); 
+	$USERavgCUSTOMER_MS =	sec_convert($Scustomer_avg,'M'); 
 
 	$pfUSERtime_MS =		sprintf("%9s", $pfUSERtime_MS);
 	$pfUSERtotTALK_MS =		sprintf("%8s", $pfUSERtotTALK_MS);
@@ -441,19 +450,21 @@ while ($m < $k)
 	$pfUSERavgDISPO_MS =	sprintf("%6s", $USERavgDISPO_MS);
 	$pfUSERtotDEAD_MS =		sprintf("%8s", $USERtotDEAD_MS);
 	$pfUSERavgDEAD_MS =		sprintf("%6s", $USERavgDEAD_MS);
+	$pfUSERtotCUSTOMER_MS =	sprintf("%8s", $USERtotCUSTOMER_MS);
+	$pfUSERavgCUSTOMER_MS =	sprintf("%6s", $USERavgCUSTOMER_MS);
 	$PAUSEtotal[$m] = $pfUSERtotPAUSE_MS;
 
-	$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERavgDEAD_MS |$SstatusesHTML\n";
+	$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERavgDEAD_MS | $pfUSERtotCUSTOMER_MS | $pfUSERavgCUSTOMER_MS |$SstatusesHTML\n";
 
 	$TOPsorted_output[$m] = $Toutput;
 
 	if ($stage == 'ID')
 		{$TOPsort[$m] =	'' . sprintf("%08s", $RAWuser) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);}
-	if ($stage == 'CALLS')
+	if ($stage == 'LEADS')
 		{$TOPsort[$m] =	'' . sprintf("%08s", $RAWcalls) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);}
 	if ($stage == 'TIME')
 		{$TOPsort[$m] =	'' . sprintf("%08s", $Stime) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);}
-	if (!ereg("ID|TIME|CALLS",$stage))
+	if (!ereg("ID|TIME|LEADS",$stage))
 		{echo "$Toutput";}
 
 	$m++;
@@ -463,11 +474,11 @@ while ($m < $k)
 
 
 ### BEGIN sort through output to display properly ###
-if (ereg("ID|TIME|CALLS",$stage))
+if (ereg("ID|TIME|LEADS",$stage))
 	{
 	if (ereg("ID",$stage))
 		{sort($TOPsort, SORT_NUMERIC);}
-	if (ereg("TIME|CALLS",$stage))
+	if (ereg("TIME|LEADS",$stage))
 		{rsort($TOPsort, SORT_NUMERIC);}
 
 	$m=0;
@@ -531,6 +542,8 @@ if ($TOTtotPAUSE < 1) {$TOTavgPAUSE = '0';}
 else {$TOTavgPAUSE = ($TOTtotPAUSE / $TOTcalls);}
 if ($TOTtotWAIT < 1) {$TOTavgWAIT = '0';}
 else {$TOTavgWAIT = ($TOTtotWAIT / $TOTcalls);}
+if ($TOTtotCUSTOMER < 1) {$TOTavgCUSTOMER = '0';}
+else {$TOTavgCUSTOMER = ($TOTtotCUSTOMER / $TOTcalls);}
 
 $TOTtime_MS =		sec_convert($TOTtime,'H'); 
 $TOTtotTALK_MS =	sec_convert($TOTtotTALK,'H'); 
@@ -538,11 +551,13 @@ $TOTtotDISPO_MS =	sec_convert($TOTtotDISPO,'H');
 $TOTtotDEAD_MS =	sec_convert($TOTtotDEAD,'H'); 
 $TOTtotPAUSE_MS =	sec_convert($TOTtotPAUSE,'H'); 
 $TOTtotWAIT_MS =	sec_convert($TOTtotWAIT,'H'); 
+$TOTtotCUSTOMER_MS =	sec_convert($TOTtotCUSTOMER,'H'); 
 $TOTavgTALK_MS =	sec_convert($TOTavgTALK,'M'); 
 $TOTavgDISPO_MS =	sec_convert($TOTavgDISPO,'H'); 
 $TOTavgDEAD_MS =	sec_convert($TOTavgDEAD,'H'); 
 $TOTavgPAUSE_MS =	sec_convert($TOTavgPAUSE,'H'); 
 $TOTavgWAIT_MS =	sec_convert($TOTavgWAIT,'H'); 
+$TOTavgCUSTOMER_MS =	sec_convert($TOTavgCUSTOMER,'H'); 
 
 $TOTtime_MS =		sprintf("%10s", $TOTtime_MS);
 $TOTtotTALK_MS =	sprintf("%10s", $TOTtotTALK_MS);
@@ -550,11 +565,13 @@ $TOTtotDISPO_MS =	sprintf("%10s", $TOTtotDISPO_MS);
 $TOTtotDEAD_MS =	sprintf("%10s", $TOTtotDEAD_MS);
 $TOTtotPAUSE_MS =	sprintf("%10s", $TOTtotPAUSE_MS);
 $TOTtotWAIT_MS =	sprintf("%10s", $TOTtotWAIT_MS);
+$TOTtotCUSTOMER_MS =	sprintf("%10s", $TOTtotCUSTOMER_MS);
 $TOTavgTALK_MS =	sprintf("%6s", $TOTavgTALK_MS);
 $TOTavgDISPO_MS =	sprintf("%6s", $TOTavgDISPO_MS);
 $TOTavgDEAD_MS =	sprintf("%6s", $TOTavgDEAD_MS);
 $TOTavgPAUSE_MS =	sprintf("%6s", $TOTavgPAUSE_MS);
 $TOTavgWAIT_MS =	sprintf("%6s", $TOTavgWAIT_MS);
+$TOTavgCUSTOMER_MS =	sprintf("%6s", $TOTavgCUSTOMER_MS);
 
 while(strlen($TOTtime_MS)>10) {$TOTtime_MS = substr("$TOTtime_MS", 0, -1);}
 while(strlen($TOTtotTALK_MS)>10) {$TOTtotTALK_MS = substr("$TOTtotTALK_MS", 0, -1);}
@@ -562,16 +579,18 @@ while(strlen($TOTtotDISPO_MS)>10) {$TOTtotDISPO_MS = substr("$TOTtotDISPO_MS", 0
 while(strlen($TOTtotDEAD_MS)>10) {$TOTtotDEAD_MS = substr("$TOTtotDEAD_MS", 0, -1);}
 while(strlen($TOTtotPAUSE_MS)>10) {$TOTtotPAUSE_MS = substr("$TOTtotPAUSE_MS", 0, -1);}
 while(strlen($TOTtotWAIT_MS)>10) {$TOTtotWAIT_MS = substr("$TOTtotWAIT_MS", 0, -1);}
+while(strlen($TOTtotCUSTOMER_MS)>10) {$TOTtotCUSTOMER_MS = substr("$TOTtotCUSTOMER_MS", 0, -1);}
 while(strlen($TOTavgTALK_MS)>6) {$TOTavgTALK_MS = substr("$TOTavgTALK_MS", 0, -1);}
 while(strlen($TOTavgDISPO_MS)>6) {$TOTavgDISPO_MS = substr("$TOTavgDISPO_MS", 0, -1);}
 while(strlen($TOTavgDEAD_MS)>6) {$TOTavgDEAD_MS = substr("$TOTavgDEAD_MS", 0, -1);}
 while(strlen($TOTavgPAUSE_MS)>6) {$TOTavgPAUSE_MS = substr("$TOTavgPAUSE_MS", 0, -1);}
 while(strlen($TOTavgWAIT_MS)>6) {$TOTavgWAIT_MS = substr("$TOTavgWAIT_MS", 0, -1);}
+while(strlen($TOTavgCUSTOMER_MS)>6) {$TOTavgCUSTOMER_MS = substr("$TOTavgCUSTOMER_MS", 0, -1);}
 
 
-echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-echo "|  TOTALI        AGENTS:$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTavgDEAD_MS |$SUMstatusesHTML\n";
-echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+echo "|  TOTALI        AGENTS:$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
+echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
 
 echo "\n\n";
 
@@ -737,7 +756,7 @@ while ($m < $k)
 
 
 ### BEGIN sort through output to display properly ###
-#if (ereg("ID|TIME|CALLS",$stage))
+#if (ereg("ID|TIME|LEADS",$stage))
 #	{
 #	$n=0;
 #	while ($n <= $m)

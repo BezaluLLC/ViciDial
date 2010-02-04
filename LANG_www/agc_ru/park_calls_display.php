@@ -65,7 +65,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
   if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) )
 	{
-    echo "Недопустимо Пользовательname/Пароль: |$user|$pass|\n";
+    echo "Недопустимо Username/Пароль: |$user|$pass|\n";
     exit;
 	}
   else

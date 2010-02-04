@@ -4,13 +4,14 @@
 # downloads the entire contents of a vicidial list ID to a flat text file
 # that is tab delimited
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
 # 90209-1310 - First build
 # 90508-0644 - Changed to PHP long tags
 # 90721-1238 - Added rank and owner as vicidial_list fields
+# 100119-1039 - Filtered comments for \n newlines
 #
 
 require("dbconnect.php");
@@ -35,18 +36,16 @@ $stmt = "SELECT use_non_latin FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
+$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and download_lists='1';";
 if ($DB) {echo "|$stmt|\n";}
@@ -55,7 +54,7 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
 #	Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
 #	Header("HTTP/1.0 401 Unauthorized");
@@ -121,6 +120,8 @@ $i=0;
 while ($i < $leads_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
+
+	$row[29] = preg_replace("/\n|\r/",'!N',$row[29]);
 
 	echo "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\r\n";
 

@@ -86,7 +86,7 @@ if ( (eregi("^Zap",$channel)) and (!eregi("-",$channel)) ) {$channel = "$channel
 
   if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Inválido Usuárioname/Senha: |$user|$pass|\n";
+    echo "Inválido Username/Senha: |$user|$pass|\n";
     exit;
 	}
   else
