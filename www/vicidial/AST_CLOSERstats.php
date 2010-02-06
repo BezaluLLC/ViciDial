@@ -1,7 +1,7 @@
 <?php 
 # AST_CLOSERstats.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -24,6 +24,7 @@
 # 90524-2231 - Changed to use functions.php for seconds to HH:MM:SS conversion
 # 90801-0921 - Added in-group name to pulldown
 # 91214-0955 - Added INITIAL QUEUE POSITION BREAKDOWN
+# 100206-1454 - Fixed TMR(service level) calculation
 #
 
 require("dbconnect.php");
@@ -336,7 +337,7 @@ $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $row=mysql_fetch_row($rslt);
 
-$stmt="select count(*),sum(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE');";
+$stmt="select count(*),sum(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND');";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $rowy=mysql_fetch_row($rslt);
@@ -432,13 +433,13 @@ if (strlen($group_SQL)>3)
 	$Sanswer_sec_pct_rt_stat_one = $row[0];
 	$Sanswer_sec_pct_rt_stat_two = $row[1];
 
-	$stmt = "SELECT count(*) from vicidial_closer_log where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and queue_seconds <= $Sanswer_sec_pct_rt_stat_one;";
+	$stmt = "SELECT count(*) from vicidial_closer_log where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and queue_seconds <= $Sanswer_sec_pct_rt_stat_one and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND');";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$row=mysql_fetch_row($rslt);
 	$answer_sec_pct_rt_stat_one = $row[0];
 
-	$stmt = "SELECT count(*) from vicidial_closer_log where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and queue_seconds <= $Sanswer_sec_pct_rt_stat_two;";
+	$stmt = "SELECT count(*) from vicidial_closer_log where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and queue_seconds <= $Sanswer_sec_pct_rt_stat_two and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND');";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$row=mysql_fetch_row($rslt);
@@ -680,7 +681,7 @@ echo "          +---------------------------------------------------------------
 echo "          |     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
 echo "----------+-------------------------------------------------------------------------------------------+------------+\n";
 
-$stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE') group by queue_seconds;";
+$stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND') group by queue_seconds;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $reasons_to_print = mysql_num_rows($rslt);
@@ -1222,7 +1223,7 @@ while ($j < $calls_to_print)
 			{
 			$Ftotal[$i]++;
 			if (ereg("DROP",$Cstatus[$j])) {$Fdrop[$i]++;}
-			if (!ereg("DROP|XDROP|HXFER|QVMAIL|HOLDTO|LIVE|QUEUE",$Cstatus[$j]))
+			if (!ereg("DROP|XDROP|HXFER|QVMAIL|HOLDTO|LIVE|QUEUE|TIMEOT|AFTHRS|NANQUE|INBND",$Cstatus[$j]))
 				{
 				$BDansweredCALLS++;
 				$Fanswer[$i]++;

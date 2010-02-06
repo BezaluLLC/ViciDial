@@ -41,6 +41,7 @@
 # 91112-0645 - Added title/alt_phone duplicate checks
 # 91129-2202 - removed SELECT STAR and formatting fixes
 # 100118-0527 - Added new Australian and New Zealand DST schemes (FSO-FSA and LSS-FSA)
+# 100204-2333 - Added dccsv10 file format
 #
 
 $secX = time();
@@ -171,6 +172,9 @@ if (length($ARGV[0])>1)
 		print "sccsv11:\n";
 		print "STATE,ID,NAME,ADDRESS,ADDRESS2,CITY,COUNTY,PHONE,FAX,ZIP,COMMENTS\n";
 		print "AL,16700,Fairfax Retirement Center (Crowder House),1324 25th St,,FAIRFAX,JEFFERSON,(205) 555-0508,,35733,Comments\n\n";
+		print "dccsv10:\n";
+		print "VENDOR_ID,FIRST_NAME,LAST_NAME,PHONE_1,PHONE_2,PHONE_3,PHONE_4,PHONE_5,PHONE_6,PHONE_7\n";
+		print "\"100998\",\"ANGELA    \",\"SMITH     \",\"3145551212\",\"3145551213\",\"3145551214\",\"0\",\"3145551215\",\"3145551216\",\"0\",\n\n";
 
 		exit;
 		}
@@ -829,6 +833,87 @@ foreach(@FILES)
 						$ALTm_phone_note[$r] =		$ncn[2];
 						$r++;
 						}
+					}
+
+				$format_set++;
+				}
+
+		# This is the format for the dccsv10 lead files
+		#"100998","ANGELA    ","SMITH     ","3145551212","3145551213","3145551214","0","3145551215","3145551216","0",
+			if ( ($format =~ /dccsv10/) && ($format_set < 1) )
+				{
+				$raw_number = $number;
+				chomp($number);
+				$number =~ s/,"0"//gi;
+				$number =~ s/\t/\|/gi;
+				$number =~ s/\'|\t|\r|\n|\l//gi;
+				$number =~ s/\'|\t|\r|\n|\l//gi;
+				$number =~ s/\",,,,,,,\"/\|\|\|\|\|\|\|/gi;
+				$number =~ s/\",,,,,,\"/\|\|\|\|\|\|/gi;
+				$number =~ s/\",,,,,\"/\|\|\|\|\|/gi;
+				$number =~ s/\",,,,\"/\|\|\|\|/gi;
+				$number =~ s/\",,,\"/\|\|\|/gi;
+				$number =~ s/\",,\"/\|\|/gi;
+				$number =~ s/\",\"/\|/gi;
+				$number =~ s/\"//gi;
+				@m = split(/\|/, $number);
+
+				$vendor_lead_code =		$m[0];		chomp($vendor_lead_code);
+				$source_code =			'';
+				$list_id =				'929';
+				$phone_code =			'1';
+				$first_name =			$m[1];		chomp($first_name);		$first_name =~ s/\s+$//gi;
+				$middle_initial =		'';
+				$last_name =			$m[2];		chomp($last_name);		$last_name =~ s/\s+$//gi;
+				$phone_number =			$m[3];
+					$USarea = 			substr($phone_number, 0, 3);
+				$title =				'';
+				$address1 =				'';
+				$address2 =				'';
+				$address3 =				$m[5];		chomp($alt_phone);	$alt_phone =~ s/\D//gi;
+				$city =					'';
+				$state =				'';
+				$province =				'';
+				$postal_code =			'';
+				$country =				'';
+				$gender =				'';
+				$date_of_birth =		'';
+				$alt_phone =			$m[4];		chomp($alt_phone);	$alt_phone =~ s/\D//gi;
+				$email =				'';
+				$security_phrase =		'';
+				$comments =				'';
+				$called_count =			'0';
+				$status =				'NEW';
+				$insert_date =			$pulldate0;
+				$rank =					'';
+				$owner =				'';
+				$multi_alt_phones =		'';
+
+				$r=0;
+				$map_count=0;
+				if (length($m[6]) > 9) 
+					{
+					$ALTm_phone_number[$r] =	$m[6];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					}
+				if (length($m[7]) > 9) 
+					{
+					$ALTm_phone_number[$r] =	$m[7];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					}
+				if (length($m[8]) > 9) 
+					{
+					$ALTm_phone_number[$r] =	$m[8];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					}
+				if (length($m[9]) > 9) 
+					{
+					$ALTm_phone_number[$r] =	$m[9];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
 					}
 
 				$format_set++;

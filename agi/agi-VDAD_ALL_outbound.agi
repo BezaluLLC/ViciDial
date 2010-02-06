@@ -46,7 +46,7 @@
 #exten => 8366,4,AGI(agi-VDAD_ALL_outbound.agi,SURVEY-----LB-----US_pol_survey_hello-----1238-----8-----US_pol_survey_transfer-----US_thanks_no_contact-----OPTOUT-----DNC)
 #exten => 8366,5,Hangup
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 80218-2027 - First Build
@@ -71,6 +71,7 @@
 # 90924-1605 - Added drop_inbound_group_override list_id option
 # 91112-1101 - Changed ENTERQUEUE to CALLOUTBOUND in QM logging for outbound calls
 # 91230-1159 - Change to callee callerID when sending the call to VMAIL
+# 100205-1024 - Fixed CPD send to message
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -2127,6 +2128,16 @@ sub cpd_end_call
 	if ( ($cpd_amd_action =~ /MESSAGE/) && ($cpd_result !~ /Fax/i) )
 		{
 		$DROPexten = "8320";
+		$AMDSTATUS_set =	$AGI->set_variable('AMDSTATUS', "CPDMACHINE");
+		$AMDCAUSE_set =		$AGI->set_variable('AMDCAUSE', $cpd_result);
+
+		}
+	else
+		{
+		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' order by call_time desc limit 1;";
+		$affected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='01052';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "--    VDAD CPD vac record deleted: |$affected_rows|$VDADcampaign|";   &agi_output;}
 		}
 
 	$Euniqueid=$uniqueid;
@@ -2142,11 +2153,6 @@ sub cpd_end_call
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='01051';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	if ($AGILOG) {$agi_string = "--    VDAD CPD vicidial_list update: |$affected_rows|$CIDlead_id";   &agi_output;}
-
-	$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' order by call_time desc limit 1;";
-	$affected_rows = $dbhA->do($stmtA);
-		$dbhP=$dbhA;   $mysql_count='01052';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-	if ($AGILOG) {$agi_string = "--    VDAD CPD vac record deleted: |$affected_rows|$VDADcampaign|";   &agi_output;}
 
 	$stmtA = "UPDATE vicidial_cpd_log SET status='PROCESSED',cpd_seconds='$drop_timer' where callerid='$callerid' and result IN('Answering-Machine','Fax') and status='NEW';";
 	$affected_rows = $dbhA->do($stmtA);

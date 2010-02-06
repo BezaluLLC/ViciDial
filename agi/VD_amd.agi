@@ -19,7 +19,7 @@
 # exten => 8320,1,AGI(VD_amd.agi,${EXTEN}-----YES)
 # exten => 8320,2,Hangup
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 60206-1434 first build
@@ -31,6 +31,7 @@
 # 71118-0252 - compatibility with Asterisk 1.4, added AA and AM statuses
 # 90916-1317 - Changed to audio file playback and TTS playback
 # 90924-1533 - Added answering machine message list_id override option
+# 100205-1025 - Fixed CPD send to message
 #
 
 $script = 'VD_amd.agi';
@@ -292,12 +293,14 @@ else
 		}
 	$sthA->finish();
 
-
-	########## UPDATE vicidial_list ##########
-	$stmtA = "UPDATE vicidial_list set status='AA' where lead_id = '$VD_lead_id';";
-		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-		$affected_rows = $dbhA->do($stmtA);
-	if ($AGILOG) {$agi_string = "--    VDAD vicidial_list update: |$affected_rows|$VD_lead_id";   &agi_output;}
+	if ($AMDSTATUS !~ /CPD/)
+		{
+		########## UPDATE vicidial_list ##########
+		$stmtA = "UPDATE vicidial_list set status='AA' where lead_id = '$VD_lead_id';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+			$affected_rows = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    VDAD vicidial_list update: |$affected_rows|$VD_lead_id";   &agi_output;}
+		}
 
 	########## DELETE vicidial_auto_calls entry ##########
 	$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' order by auto_call_id desc limit 1;";
@@ -310,7 +313,7 @@ else
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
-	 $epc_countCUSTDATA=0;
+	$epc_countCUSTDATA=0;
 	while ($sthArows > $epc_countCUSTDATA)
 		{
 		@aryA = $sthA->fetchrow_array;
@@ -373,7 +376,7 @@ else
 		}
 
 	### check for list_id override
-	if ($DB_amd_send_to_vmx =~ /Y/)
+	if ( ($DB_amd_send_to_vmx =~ /Y/) || ($AMDSTATUS =~ /CPD/) )
 		{
 		### find list_id for this lead
 		$stmtA = "SELECT list_id from vicidial_list where lead_id = '$VD_lead_id';";
