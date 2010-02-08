@@ -874,7 +874,7 @@ while($one_day_interval > 0)
 						$failsafe_ct=0;
 						$RANK_calls_placed=0;
 						$st_si_loop=0;
-						while ( ($TOTAL_available > $RANK_calls_placed) && ($failsafe_ct < 99999) )
+						while ( ($TOTAL_available > $RANK_calls_placed) && ($failsafe_ct < 99999) && ($staggered_fill <= $staggered_ct) )
 							{
 							$TEMP_server_ip = $ST_server_ip[$st_si_loop];
 
@@ -885,10 +885,13 @@ while($one_day_interval > 0)
 							$TEMP_vm_insert =~ s/XXXXXXXXXXXXXXX/$TEMP_server_ip/gi;
 							$TEMP_vac_insert =~ s/XXXXXXXXXXXXXXX/$TEMP_server_ip/gi;
 
-							$affected_rows_vm = $dbhA->do($TEMP_vm_insert);
-							$affected_rows_vac = $dbhA->do($TEMP_vac_insert);
+							if (length($TEMP_vm_insert) > 20)
+								{
+								$affected_rows_vm = $dbhA->do($TEMP_vm_insert);
+								$affected_rows_vac = $dbhA->do($TEMP_vac_insert);
+								}
 
-							$event_string = "|     number call stagger dialed|$TEMP_server_ip|   $TEMP_st_logged";
+							$event_string = "|     number call stagger dialed|$TEMP_server_ip|$staggered_fill|$staggered_ct|$affected_rows_vm|$affected_rows_vac   $TEMP_st_logged";
 							 &event_logger;
 
 							### sleep for 2.5 hundredths of a second to not flood the server with new calls
@@ -1104,7 +1107,7 @@ sub get_time_now	#get the current date and time and epoch for logging call lengt
 		$PDtsSQLdate = "$Pyear$Pmon$Pmday$Phour$Pmin$Psec";
 		$halfminSQLdate = "$Pyear-$Pmon-$Pmday $Phour:$Pmin:$Psec";
 
-	$XDtarget = ($secX - 120);
+	$XDtarget = ($secX - 1200);
 	($Xsec,$Xmin,$Xhour,$Xmday,$Xmon,$Xyear,$Xwday,$Xyday,$Xisdst) = localtime($XDtarget);
 	$Xyear = ($Xyear + 1900);
 	$Xmon++;
