@@ -97,6 +97,7 @@ function OnZoiperReady(phone)
 	{
 	Zoiper = phone;
 	var Config = Zoiper.GetConfig();
+	Config.PopupMenuOnIncomingCall = "false";
 
 	var Account = Zoiper.GetAccount("Sample");
 	if (null == Account)
