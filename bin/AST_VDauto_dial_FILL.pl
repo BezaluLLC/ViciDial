@@ -606,9 +606,9 @@ while($one_day_interval > 0)
 										else
 											{
 											$stmtA = "UPDATE vicidial_hopper set status='INCALL' where lead_id='$lead_id';";
-											print "|$stmtA|\n";
+										#	print "|$stmtA|\n";
 											$UQaffected_rows = $dbhA->do($stmtA);
-											print "hopper row updated to INCALL: |$UQaffected_rows|$lead_id|\n";
+										#	print "hopper row updated to INCALL: |$UQaffected_rows|$lead_id|\n";
 
 											$stmtA = "SELECT list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,address3,alt_phone,called_count FROM vicidial_list where lead_id='$lead_id';";
 											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -715,7 +715,14 @@ while($one_day_interval > 0)
 													{
 													$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR', called_count='$called_count',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id';";
 													}
-												$affected_rows = $dbhA->do($stmtA);
+												if ($staggered < 1)
+													{
+													$affected_rows = $dbhA->do($stmtA);
+													}
+												else
+													{
+													$vl_updates[$staggered_ct] = $stmtA;
+													}
 
 												$stmtA = "DELETE FROM vicidial_hopper where lead_id='$lead_id';";
 												$affected_rows = $dbhA->do($stmtA);
@@ -880,6 +887,7 @@ while($one_day_interval > 0)
 
 							$TEMP_vm_insert = $vm_inserts[$staggered_fill];
 							$TEMP_vac_insert = $vac_inserts[$staggered_fill];
+							$TEMP_vl_update = $vl_updates[$staggered_fill];
 							$TEMP_st_logged = $st_logged[$staggered_fill];
 
 							$TEMP_vm_insert =~ s/XXXXXXXXXXXXXXX/$TEMP_server_ip/gi;
@@ -887,11 +895,12 @@ while($one_day_interval > 0)
 
 							if (length($TEMP_vm_insert) > 20)
 								{
+								$affected_rows_vl = $dbhA->do($TEMP_vl_update);
 								$affected_rows_vm = $dbhA->do($TEMP_vm_insert);
 								$affected_rows_vac = $dbhA->do($TEMP_vac_insert);
 								}
 
-							$event_string = "|     number call stagger dialed|$TEMP_server_ip|$staggered_fill|$staggered_ct|$affected_rows_vm|$affected_rows_vac   $TEMP_st_logged";
+							$event_string = "|     number call stagger dialed|$TEMP_server_ip|$staggered_fill|$staggered_ct|$affected_rows_vm|$affected_rows_vac|$affected_rows_vl   $TEMP_st_logged";
 							 &event_logger;
 
 							### sleep for 2.5 hundredths of a second to not flood the server with new calls
@@ -912,6 +921,7 @@ while($one_day_interval > 0)
 				$staggered_ct=0;
 				@vm_inserts=@MT;
 				@vac_inserts=@MT;
+				@vl_updates=@MT;
 				@st_logged=@MT;
 				###############################################################################
 				###### END - experimental balanced FILL dialing ($staggered)

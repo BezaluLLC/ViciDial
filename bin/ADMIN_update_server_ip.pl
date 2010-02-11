@@ -204,14 +204,17 @@ if (-e "$PATHconf")
 if ($AUTO)
 	{
 	$manual='n';
-	@ip = `/sbin/ifconfig`;
-	$j=0;
-	while($#ip>=$j)
-		{
-		if ($ip[$j] =~ /inet addr/) {$VARserver_ip = $ip[$j]; $j=1000;}
-		$j++;
+	if (length($VARserver_ip)<7)
+		{	
+		@ip = `/sbin/ifconfig`;
+		$j=0;
+		while($#ip>=$j)
+			{
+			if ($ip[$j] =~ /inet addr/) {$VARserver_ip = $ip[$j]; $j=1000;}
+			$j++;
+			}
+		$VARserver_ip =~ s/.*addr:| Bcast.*|\r|\n|\t| //gi;
 		}
-	$VARserver_ip =~ s/.*addr:| Bcast.*|\r|\n|\t| //gi;
 	}
 else
 	{
@@ -481,10 +484,10 @@ exit;
 
 
 sub leading_zero($) 
-{
+	{
     $_ = $_[0];
     s/^(\d)$/0$1/;
     s/^(\d\d)$/0$1/;
     return $_;
-} # End of the leading_zero() routine.
+	} # End of the leading_zero() routine.
 

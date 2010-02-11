@@ -5,7 +5,7 @@
 # DESCRIPTION:
 # Backs-up the asterisk database, conf/agi/sounds/bin files 
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 #
@@ -14,6 +14,7 @@
 # 80328-0135 - Do not attempt to archive /etc/my.cnf is --without-db flag is set
 # 80611-0549 - Added DB option to backup all tables except for log tables
 # 90620-1851 - Moved mysqldump bin lookup to database backup section
+# 100211-0910 - Added crontab backup and voicemail bacup option
 #
 
 $secT = time();
@@ -50,6 +51,8 @@ if (length($ARGV[0])>1)
 		print "  [--without-conf] = do not backup the conf files\n";
 		print "  [--without-web] = do not backup web files\n";
 		print "  [--without-sounds] = do not backup asterisk sounds\n";
+		print "  [--without-voicemail] = do not backup asterisk voicemail\n";
+		print "  [--without-crontab] = do not backup crontab\n";
 		print "  [--ftp-transfer] = Transfer backup to FTP server\n";
 		print "  [--debugX] = super debug\n";
 		print "  [--debug] = debug\n";
@@ -107,6 +110,16 @@ if (length($ARGV[0])>1)
 			{
 			$without_web=1;
 			print "\n----- No web files Backup -----\n\n";
+			}
+		if ($args =~ /--without-voicemail/i)
+			{
+			$without_voicemail=1;
+			print "\n----- No voicemail files Backup -----\n\n";
+			}
+		if ($args =~ /--without-crontab/i)
+			{
+			$without_crontab=1;
+			print "\n----- No crontab Backup -----\n\n";
 			}
 		if ($args =~ /--ftp-transfer/i)
 			{
@@ -213,6 +226,7 @@ $linux='_LINUX_';
 $bin='_BIN_';
 $web='_WEB_';
 $sounds='_SOUNDS_';
+$voicemail='_VOICEMAIL_';
 $all='_ALL_';
 $tar='.tar';
 $gz='.gz';
@@ -279,6 +293,7 @@ if ( ($without_db < 1) && ($conf_only < 1) )
 		}
 	else
 		{
+		if ($DBX) {print "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database | $gzipbin > $ARCHIVEpath/temp/$VARserver_ip$VARDB_database$wday.gz\n";}
 		`$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database | $gzipbin > $ARCHIVEpath/temp/$VARserver_ip$VARDB_database$wday.gz`;
 		}
 	}
@@ -286,7 +301,9 @@ if ( ($without_db < 1) && ($conf_only < 1) )
 if ( ($without_conf < 1) && ($db_only < 1) )
 	{
 	### BACKUP THE ASTERISK CONF FILES ON THE SERVER ###
+	if ($DBX) {print "$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$conf$wday$tar /etc/astguiclient.conf /etc/zaptel.conf /etc/asterisk\n";}
 	`$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$conf$wday$tar /etc/astguiclient.conf /etc/zaptel.conf /etc/asterisk`;
+
 
 	### BACKUP THE WANPIPE CONF FILES(if there are any) ###
 	if ( -e ('/etc/wanpipe/wanpipe1.conf')) 
@@ -301,60 +318,73 @@ if ( ($without_conf < 1) && ($db_only < 1) )
 		if ( -e ('/etc/wanpipe/wanpipe8.conf')) {$sgSTRING .= '/etc/wanpipe/wanpipe8.conf ';}
 		if ( -e ('/etc/wanpipe/wanrouter.rc')) {$sgSTRING .= '/etc/wanpipe/wanrouter.rc ';}
 
+		if ($DBX) {print "$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$sangoma$wday$tar $sgSTRING\n";}
 		`$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$sangoma$wday$tar $sgSTRING`;
 		}
 
+	### BACKUP OTHER CONF FILES ON THE SERVER ###
+	$files = "";
+
 	if ($without_db < 1)
 		{
-		### BACKUP OTHER CONF FILES ON THE SERVER ###
-		$files = "";
 		if ( -e ('/etc/my.cnf')) {$files .= "/etc/my.cnf ";}
-		if ( -e ('/etc/hosts')) {$files .= "/etc/hosts ";}
-		if ( -e ('/etc/rc.d/rc.local')) {$files .= "/etc/rc.d/rc.local ";}
-		if ( -e ('/etc/resolv.conf')) {$files .= "/etc/resolv.conf ";}
-
-		`$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$linux$wday$tar $files`;
 		}
-	else
+	if ($without_crontab < 1)
 		{
-		### BACKUP OTHER CONF FILES ON THE SERVER ###
-		$files = "";
-		if ( -e ('/etc/hosts')) {$files += "/etc/hosts ";}
-		if ( -e ('/etc/rc.d/rc.local')) {$files += "/etc/rc.d/rc.local ";}
-		if ( -e ('/etc/resolv.conf')) {$files += "/etc/resolv.conf ";}
-
-		`$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$linux$wday$tar $files`;
+		`crontab -l > /etc/crontab_snapshot`;
+		if ( -e ('/etc/crontab_snapshot')) {$files .= "/etc/crontab_snapshot ";}
 		}
+
+	if ( -e ('/etc/hosts')) {$files .= "/etc/hosts ";}
+	if ( -e ('/etc/rc.d/rc.local')) {$files .= "/etc/rc.d/rc.local ";}
+	if ( -e ('/etc/resolv.conf')) {$files .= "/etc/resolv.conf ";}
+
+	if ($DBX) {print "$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$linux$wday$tar $files\n";}
+	`$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$linux$wday$tar $files`;
 	}
 
 if ( ($conf_only < 1) && ($db_only < 1) && ($without_web < 1) )
 	{
 	### BACKUP THE WEB FILES ON THE SERVER ###
+	if ($DBX) {print "$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$web$wday$tar $PATHweb\n";}
 	`$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$web$wday$tar $PATHweb`;
 	}
 
 if ( ($conf_only < 1) && ($db_only < 1) )
 	{
 	### BACKUP THE ASTGUICLIENT AND AGI FILES ON THE SERVER ###
+	if ($DBX) {print "$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$bin$wday$tar $PATHagi $PATHhome\n";}
 	`$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$bin$wday$tar $PATHagi $PATHhome`;
 	}
 
 if ( ($conf_only < 1) && ($db_only < 1) && ($without_sounds < 1) )
 	{
 	### BACKUP THE ASTERISK SOUNDS ON THE SERVER ###
+	if ($DBX) {print "$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$sounds$wday$tar $PATHsounds\n";}
 	`$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$sounds$wday$tar $PATHsounds`;
 	}
 
+if ( ($conf_only < 1) && ($db_only < 1) && ($without_voicemail < 1) )
+	{
+	### BACKUP THE ASTERISK VOICEMAIL ON THE SERVER ###
+	if ($DBX) {print "$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$voicemail$wday$tar /var/spool/asterisk/voicemail\n";}
+	`$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$voicemail$wday$tar /var/spool/asterisk/voicemail`;
+	}
+
 ### PUT EVERYTHING TOGETHER TO BE COMPRESSED ###
+if ($DBX) {print "$tarbin cf $ARCHIVEpath/$VARserver_ip$all$wday$tar $ARCHIVEpath/temp\n";}
 `$tarbin cf $ARCHIVEpath/$VARserver_ip$all$wday$tar $ARCHIVEpath/temp`;
 
 ### REMOVE OLD GZ FILE
+if ($DBX) {print "rm -f $ARCHIVEpath/$VARserver_ip$all$wday$tar$gz\n";}
 `rm -f $ARCHIVEpath/$VARserver_ip$all$wday$tar$gz`;
 
 ### COMPRESS THE ALL FILE ###
+if ($DBX) {print "$gzipbin -9 $ARCHIVEpath/$VARserver_ip$all$wday$tar\n";}
 `$gzipbin -9 $ARCHIVEpath/$VARserver_ip$all$wday$tar`;
 
 ### REMOVE TEMP FILES ###
+if ($DBX) {print "rm -fR $ARCHIVEpath/temp\n";}
 `rm -fR $ARCHIVEpath/temp`;
 
 
@@ -370,5 +400,7 @@ if ($ftp_transfer > 0)
 	$ftp->quit;
 	}
 
+
+if ($DBX) {print "DONE, Exiting...\n";}
 
 exit;
