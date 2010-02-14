@@ -1,12 +1,13 @@
 <?php 
 # AST_OUTBOUNDsummary_interval.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
 # 091128-0311 - First build
 # 091129-0017 - Added Sales-type and DNC-type tallies
+# 100214-1421 - Sort menu alphabetically
 #
 
 require("dbconnect.php");
@@ -54,12 +55,10 @@ $stmt = "SELECT use_non_latin FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -140,7 +139,7 @@ while($i < $group_ct)
 	$i++;
 	}
 
-$stmt="select campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL;";
+$stmt="select campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $campaigns_to_print = mysql_num_rows($rslt);
@@ -224,7 +223,7 @@ while ($i < $statcats_to_print)
 	$i++;
 	}
 
-$stmt="select call_time_id,call_time_name from vicidial_call_times;";
+$stmt="select call_time_id,call_time_name from vicidial_call_times order by call_time_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $times_to_print = mysql_num_rows($rslt);

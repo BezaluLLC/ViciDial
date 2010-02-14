@@ -120,6 +120,7 @@
 # 91230-0911 - Reset to original callerID when sending the call to VMAIL/CALLMENU/PHONE/etc...
 # 100121-1954 - Added TIMEOT/AFTHRS/NANQUE dropping event statuses
 # 100123-1015 - Added voicemail_id lookup for user from AGENTDIRECT drop
+# 100212-0653 - Added AGENTVMAIL AGENTDIRECT option for no-queue, hold time and after hours features
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -809,6 +810,21 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 			}
 		if ($after_hours_action =~ /VOICEMAIL/)
 			{
+			if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($after_hours_voicemail =~ /AGENTVMAIL/) )
+				{
+				### Grab user's voicemail ID from the database
+				$stmtA = "SELECT voicemail_id FROM vicidial_users where user='$agent_only';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$after_hours_voicemail = 	$aryA[0];
+					}
+				$sthA->finish();
+				}
 			$newcallerid = "\"$VCcallerid <$originalCID>\"";
 			$AGI->set_callerid($newcallerid);
 			print STDERR "Setting CID \"$newcallerid\"\n";
@@ -996,6 +1012,21 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 				}
 			if ($no_agent_action =~ /VOICEMAIL/)
 				{
+				if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($no_agent_action_value =~ /AGENTVMAIL/) )
+					{
+					### Grab user's voicemail ID from the database
+					$stmtA = "SELECT voicemail_id FROM vicidial_users where user='$agent_only';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+						$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$no_agent_action_value = 	$aryA[0];
+						}
+					$sthA->finish();
+					}
 				$newcallerid = "\"$VCcallerid <$originalCID>\"";
 				$AGI->set_callerid($newcallerid);
 				print STDERR "Setting CID \"$newcallerid\"\n";
@@ -2288,7 +2319,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			}
 		}
 
-	if ($hold_recall_xfer_group !~ /NONE/)
+	if ( ($hold_recall_xfer_group !~ /NONE/) && (length($hold_recall_xfer_group) > 1) )
 		{
 		$now_date_epoch = time();
 		$FDtarget = ($now_date_epoch - 86400);
@@ -2732,6 +2763,21 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		}
 	if ($hold_time_option =~ /VOICEMAIL/)
 		{
+		if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($hold_time_option_voicemail =~ /AGENTVMAIL/) )
+			{
+			### Grab user's voicemail ID from the database
+			$stmtA = "SELECT voicemail_id FROM vicidial_users where user='$agent_only';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+				$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$hold_time_option_voicemail = 	$aryA[0];
+				}
+			$sthA->finish();
+			}
 		$newcallerid = "\"$VCcallerid <$originalCID>\"";
 		$AGI->set_callerid($newcallerid);
 		print STDERR "Setting CID \"$newcallerid\"\n";

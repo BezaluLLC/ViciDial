@@ -4288,7 +4288,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_inbound_groups-after_hours_voicemail">
 	<BR>
-	<B>After Hours Voicemail -</B> The voicemail box to send the call to if the Action is set to VOICEMAIL.
+	<B>After Hours Voicemail -</B> The voicemail box to send the call to if the Action is set to VOICEMAIL. In an AGENTDIRECT in-group, setting this to AGENTVMAIL will select the User voicemail ID to use.
 
 	<BR>
 	<A NAME="vicidial_inbound_groups-afterhours_xfer_group">
@@ -4298,7 +4298,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_inbound_groups-no_agent_no_queue">
 	<BR>
-	<B>No Agents No Queueing -</B> If this field is set to Y or NO_PAUSED then no calls will be put into the queue for this in-group if there are no agents logged in and the calls will go to the No Agent No Queue Action. The NO_PAUSED option will also not send the callers into the queue if there are only paused agents in the in-group. Default is N.
+	<B>No Agents No Queueing -</B> If this field is set to Y or NO_PAUSED then no calls will be put into the queue for this in-group if there are no agents logged in and the calls will go to the No Agent No Queue Action. The NO_PAUSED option will also not send the callers into the queue if there are only paused agents in the in-group. Default is N. In an AGENTDIRECT in-group, setting this to AGENTVMAIL will select the User voicemail ID to use.
 
 	<BR>
 	<A NAME="vicidial_inbound_groups-no_agent_action">
@@ -4363,7 +4363,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_inbound_groups-hold_time_option_voicemail">
 	<BR>
-	<B>Hold Time Option Voicemail -</B> If Hold Time Option is set to VOICEMAIL, this is the voicemail box that the call will be sent to if the estimated hold time exceeds the Hold Time Option Seconds.
+	<B>Hold Time Option Voicemail -</B> If Hold Time Option is set to VOICEMAIL, this is the voicemail box that the call will be sent to if the estimated hold time exceeds the Hold Time Option Seconds. In an AGENTDIRECT in-group, setting this to AGENTVMAIL will select the User voicemail ID to use.
 
 	<BR>
 	<A NAME="vicidial_inbound_groups-hold_time_option_xfer_group">

@@ -25,6 +25,7 @@
 # 90801-0921 - Added in-group name to pulldown
 # 91214-0955 - Added INITIAL QUEUE POSITION BREAKDOWN
 # 100206-1454 - Fixed TMR(service level) calculation
+# 100214-1421 - Sort menu alphabetically
 #
 
 require("dbconnect.php");
@@ -105,7 +106,7 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
-$stmt="select group_id,group_name from vicidial_inbound_groups;";
+$stmt="select group_id,group_name from vicidial_inbound_groups order by group_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);

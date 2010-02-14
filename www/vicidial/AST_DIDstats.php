@@ -7,6 +7,7 @@
 #
 # 90601-1443 - First build
 # 100116-0620 - Bug fixes
+# 100214-1421 - Sort menu alphabetically
 #
 
 require("dbconnect.php");
@@ -72,7 +73,7 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
-$stmt="select did_id,did_pattern,did_description from vicidial_inbound_dids;";
+$stmt="select did_id,did_pattern,did_description from vicidial_inbound_dids order by did_pattern;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);

@@ -1,12 +1,13 @@
 <?php 
 # AST_CLOSERsummary_hourly.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
 # 90801-0910 - First build
 # 90809-0216 - Added Exclude Outbound Drop Group option
+# 100214-1421 - Sort menu alphabetically
 #
 
 require("dbconnect.php");
@@ -56,12 +57,10 @@ $stmt = "SELECT use_non_latin FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -103,7 +102,7 @@ if (!isset($end_date)) {$end_date = $NOW_DATE;}
 $exclude_rolloverSQL='';
 if (eregi("YES",$exclude_rollover))
 	{$exclude_rolloverSQL = " where group_id NOT IN(SELECT drop_inbound_group from vicidial_campaigns)";}
-$stmt="select group_id,group_name from vicidial_inbound_groups $exclude_rolloverSQL;";
+$stmt="select group_id,group_name from vicidial_inbound_groups $exclude_rolloverSQL order by group_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
@@ -155,7 +154,7 @@ while ($i < $statcats_to_print)
 	$i++;
 	}
 
-$stmt="select call_time_id,call_time_name from vicidial_call_times;";
+$stmt="select call_time_id,call_time_name from vicidial_call_times order by call_time_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $times_to_print = mysql_num_rows($rslt);

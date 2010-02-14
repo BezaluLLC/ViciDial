@@ -24,6 +24,7 @@
 # 90827-1154 - Added List ID breakdown of calls
 # 91222-0843 - Fixed ALL-CAMPAIGNS inbound rollover issue(bug #262), and some other bugs
 # 100202-1034 - Added statuses to no-answer section
+# 100214-1421 - Sort menu alphabetically
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -128,7 +129,7 @@ while($i < $group_ct)
 	$i++;
 	}
 
-$stmt="select campaign_id,campaign_name from vicidial_campaigns;";
+$stmt="select campaign_id,campaign_name from vicidial_campaigns order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $campaigns_to_print = mysql_num_rows($rslt);

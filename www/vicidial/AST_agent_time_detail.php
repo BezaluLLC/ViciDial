@@ -10,6 +10,7 @@
 # 90522-0723 - First build
 # 90908-1103 - Added DEAD time stats
 # 100203-1147 - Added CUSTOMER time statistics
+# 100214-1421 - Sort menu alphabetically
 #
 
 require("dbconnect.php");
@@ -82,7 +83,7 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
-$stmt="select campaign_id from vicidial_campaigns;";
+$stmt="select campaign_id from vicidial_campaigns order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $campaigns_to_print = mysql_num_rows($rslt);
@@ -93,7 +94,7 @@ while ($i < $campaigns_to_print)
 	$groups[$i] =$row[0];
 	$i++;
 	}
-$stmt="select user_group from vicidial_user_groups;";
+$stmt="select user_group from vicidial_user_groups order by user_group;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $user_groups_to_print = mysql_num_rows($rslt);

@@ -15,6 +15,7 @@
 # 90721-1137 - Added rank and owner as vicidial_list fields
 # 91121-0253 - Added list name, list description and status name
 # 100119-1039 - Filtered comments for \n newlines
+# 100214-1421 - Sort menu alphabetically
 #
 
 require("dbconnect.php");
@@ -358,7 +359,7 @@ else
 	if (!isset($query_date)) {$query_date = $NOW_DATE;}
 	if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
-	$stmt="select campaign_id from vicidial_campaigns;";
+	$stmt="select campaign_id from vicidial_campaigns order by campaign_id;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$campaigns_to_print = mysql_num_rows($rslt);
@@ -373,7 +374,7 @@ else
 		$i++;
 		}
 
-	$stmt="select group_id from vicidial_inbound_groups;";
+	$stmt="select group_id from vicidial_inbound_groups order by group_id;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$groups_to_print = mysql_num_rows($rslt);
@@ -388,7 +389,7 @@ else
 		$i++;
 		}
 
-	$stmt="select user_group from vicidial_user_groups;";
+	$stmt="select user_group from vicidial_user_groups order by user_group;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$user_groups_to_print = mysql_num_rows($rslt);
@@ -403,7 +404,7 @@ else
 		$i++;
 		}
 
-	$stmt="select list_id from vicidial_lists;";
+	$stmt="select list_id from vicidial_lists order by list_id;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$lists_to_print = mysql_num_rows($rslt);
@@ -418,7 +419,7 @@ else
 		$i++;
 		}
 
-	$stmt="select status from vicidial_statuses;";
+	$stmt="select status from vicidial_statuses order by status;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$statuses_to_print = mysql_num_rows($rslt);
@@ -433,7 +434,7 @@ else
 		$i++;
 		}
 
-	$stmt="select distinct status from vicidial_campaign_statuses;";
+	$stmt="select distinct status from vicidial_campaign_statuses order by status;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$Cstatuses_to_print = mysql_num_rows($rslt);
