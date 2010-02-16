@@ -37,6 +37,9 @@ OTHER CHANGES:
 4. Added ability to use a webphone added in an IFRAME in the agent screen.
 	Tested with Zoiper webphone and sample code included
 
+5. Added vdc_script_notes.php for call notes and appointment taking, read 
+	comments for more information.
+
 
 
 

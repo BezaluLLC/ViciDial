@@ -4975,7 +4975,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						else
 							{
 							web_form_vars = 
-							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&lead_id=" + document.vicidial_form.lead_id.value + 
 							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 							"&list_id=" + document.vicidial_form.list_id.value + 
 							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -5070,7 +5070,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						else
 							{
 							web_form_vars_two = 
-							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&lead_id=" + document.vicidial_form.lead_id.value + 
 							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 							"&list_id=" + document.vicidial_form.list_id.value + 
 							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -5391,7 +5391,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						else
 							{
 							web_form_vars = 
-							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&lead_id=" + document.vicidial_form.lead_id.value + 
 							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 							"&list_id=" + document.vicidial_form.list_id.value + 
 							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -5486,7 +5486,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						else
 							{
 							web_form_vars_two = 
-							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&lead_id=" + document.vicidial_form.lead_id.value + 
 							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 							"&list_id=" + document.vicidial_form.list_id.value + 
 							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -5603,7 +5603,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							if ( (view_scripts == 1) && (campaign_script.length > 0) )
 								{
 								web_form_vars = 
-								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&lead_id=" + document.vicidial_form.lead_id.value + 
 								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 								"&list_id=" + document.vicidial_form.list_id.value + 
 								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -5989,7 +5989,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						if ( (view_scripts == 1) && (campaign_script.length > 0) )
 							{
 							web_form_vars = 
-							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&lead_id=" + document.vicidial_form.lead_id.value + 
 							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 							"&list_id=" + document.vicidial_form.list_id.value + 
 							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -6364,7 +6364,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			{
 			all_record = 'NO';
 			all_record_count=0;
-			document.vicidial_form.lead_id.value = '';
+		//	document.vicidial_form.lead_id.value = '';
 			var xmlhttprequestcheckauto=false;
 			/*@cc_on @*/
 			/*@if (@_jscript_version >= 5)
@@ -6722,7 +6722,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							else
 								{
 								web_form_vars = 
-								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&lead_id=" + document.vicidial_form.lead_id.value + 
 								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 								"&list_id=" + document.vicidial_form.list_id.value + 
 								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -6817,7 +6817,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							else
 								{
 								web_form_vars_two = 
-								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&lead_id=" + document.vicidial_form.lead_id.value + 
 								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 								"&list_id=" + document.vicidial_form.list_id.value + 
 								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -6917,7 +6917,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							if ( (view_scripts == 1) && (CalL_ScripT_id.length > 0) )
 								{
 								web_form_vars = 
-								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&lead_id=" + document.vicidial_form.lead_id.value + 
 								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 								"&list_id=" + document.vicidial_form.list_id.value + 
 								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -7098,7 +7098,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		if ( (webvars_refresh > 0) || (force_webvars_refresh > 0) )
 			{
 			web_form_vars = 
-			"lead_id=" + document.vicidial_form.lead_id.value + 
+			"&lead_id=" + document.vicidial_form.lead_id.value + 
 			"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 			"&list_id=" + document.vicidial_form.list_id.value + 
 			"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -7223,7 +7223,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		else
 			{
 			web_form_vars_two = 
-			"lead_id=" + document.vicidial_form.lead_id.value + 
+			"&lead_id=" + document.vicidial_form.lead_id.value + 
 			"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 			"&list_id=" + document.vicidial_form.list_id.value + 
 			"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 

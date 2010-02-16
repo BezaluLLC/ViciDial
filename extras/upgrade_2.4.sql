@@ -34,3 +34,18 @@ ALTER TABLE system_settings ADD default_external_server_ip ENUM('1','0') default
 ALTER TABLE system_settings ADD webphone_url VARCHAR(255) default '';
 
 UPDATE system_settings SET db_schema_version='1198',db_schema_update_date=NOW();
+
+CREATE TABLE vicidial_call_notes (
+notesid INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+lead_id INT(9) UNSIGNED NOT NULL,
+vicidial_id VARCHAR(20),
+call_date DATETIME,
+order_id VARCHAR(20),
+appointment_date DATE,
+appointment_time TIME,
+call_notes TEXT
+);
+
+ALTER TABLE vicidial_call_notes AUTO_INCREMENT = 100;
+
+UPDATE system_settings SET db_schema_version='1199',db_schema_update_date=NOW();

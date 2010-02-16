@@ -178,6 +178,7 @@ $CIDdate = date("mdHis");
 $ENTRYdate = date("YmdHis");
 $MT[0]='';
 $agents='@agents';
+$script_height = ($script_height - 20);
 
 $IFRAME=0;
 
