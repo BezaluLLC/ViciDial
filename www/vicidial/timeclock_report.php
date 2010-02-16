@@ -11,6 +11,7 @@
 # 90310-2059 - Added admin header
 # 90508-0644 - Changed to PHP long tags
 # 100214-1421 - Sort menu alphabetically
+# 100216-0042 - Added popup date selector
 #
 
 require("dbconnect.php");
@@ -134,6 +135,9 @@ while ($i < $user_groups_to_print)
 -->
 </style>
 
+<script language="JavaScript" src="calendar_db.js"></script>
+<link rel="stylesheet" href="calendar.css">
+
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <TITLE>User Timeclock Report
 
@@ -189,14 +193,42 @@ if ($DB > 0)
 	}
 
 echo "<CENTER>\n";
-echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
+echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">";
 echo "<TABLE BORDER=0 CELLSPACING=6><TR><TD ALIGN=LEFT VALIGN=TOP>\n";
 
 echo "<font class=\"select_bold\"><B>Date Range:</B></font><BR><CENTER>\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
+
+?>
+<script language="JavaScript">
+var o_cal = new tcal ({
+	// form name
+	'formname': 'vicidial_report',
+	// input name
+	'controlname': 'query_date'
+});
+o_cal.a_tpl.yearscroll = false;
+// o_cal.a_tpl.weekstart = 1; // Monday week start
+</script>
+<?php
+
 echo "<BR>to<BR>\n";
-echo "<INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
+echo "<INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+
+?>
+<script language="JavaScript">
+var o_cal = new tcal ({
+	// form name
+	'formname': 'vicidial_report',
+	// input name
+	'controlname': 'end_date'
+});
+o_cal.a_tpl.yearscroll = false;
+// o_cal.a_tpl.weekstart = 1; // Monday week start
+</script>
+<?php
+
 echo "</TD><TD ALIGN=LEFT VALIGN=TOP>\n";
 echo "<font class=\"select_bold\"><B>User Groups:</B></font><BR><CENTER>\n";
 echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";

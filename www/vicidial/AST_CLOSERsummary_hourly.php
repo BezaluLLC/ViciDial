@@ -8,6 +8,7 @@
 # 90801-0910 - First build
 # 90809-0216 - Added Exclude Outbound Drop Group option
 # 100214-1421 - Sort menu alphabetically
+# 100216-0042 - Added popup date selector
 #
 
 require("dbconnect.php");
@@ -181,6 +182,10 @@ while ($i < $times_to_print)
  </STYLE>
 
 <?php 
+
+echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
+echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 echo "<TITLE>Inbound Summary Hourly Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
@@ -201,7 +206,7 @@ if ($bareformat < 1)
 		echo "<BR>\n";
 		}
 
-	echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
+	echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 	echo "<TABLE BORDER=0><TR><TD VALIGN=TOP>\n";
 	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=inbound_rate VALUE=\"$inbound_rate\">\n";
@@ -209,8 +214,36 @@ if ($bareformat < 1)
 	echo "<INPUT TYPE=HIDDEN NAME=costformat VALUE=\"$costformat\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=print_calls VALUE=\"$print_calls\">\n";
 	echo "Date Range:<BR>\n";
-	echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
-	echo " to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
+	echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
+
+	?>
+	<script language="JavaScript">
+	var o_cal = new tcal ({
+		// form name
+		'formname': 'vicidial_report',
+		// input name
+		'controlname': 'query_date'
+	});
+	o_cal.a_tpl.yearscroll = false;
+	// o_cal.a_tpl.weekstart = 1; // Monday week start
+	</script>
+	<?php
+
+	echo " to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+
+	?>
+	<script language="JavaScript">
+	var o_cal = new tcal ({
+		// form name
+		'formname': 'vicidial_report',
+		// input name
+		'controlname': 'end_date'
+	});
+	o_cal.a_tpl.yearscroll = false;
+	// o_cal.a_tpl.weekstart = 1; // Monday week start
+	</script>
+	<?php
+
 	echo "</TD><TD VALIGN=TOP> &nbsp; \n";
 	echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 	echo "Inbound Groups: <BR>\n";

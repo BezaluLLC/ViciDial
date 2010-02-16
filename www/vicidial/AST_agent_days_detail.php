@@ -10,6 +10,7 @@
 # 90310-0752 - Added admin header
 # 90508-0644 - Changed to PHP long tags
 # 100214-1421 - Sort menu alphabetically
+# 100216-0042 - Added popup date selector
 #
 
 
@@ -158,6 +159,9 @@ if ($file_download < 1)
 	 </STYLE>
 
 	<?php
+
+	echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
+	echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo "<TITLE>Agent Days Status Report</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -521,11 +525,39 @@ if ($file_download > 0)
 
 
 
-echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
+echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Dates:<BR>";
 echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
-echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
-echo "<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
+echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
+
+?>
+<script language="JavaScript">
+var o_cal = new tcal ({
+	// form name
+	'formname': 'vicidial_report',
+	// input name
+	'controlname': 'query_date'
+});
+o_cal.a_tpl.yearscroll = false;
+// o_cal.a_tpl.weekstart = 1; // Monday week start
+</script>
+<?php
+
+echo "<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+
+?>
+<script language="JavaScript">
+var o_cal = new tcal ({
+	// form name
+	'formname': 'vicidial_report',
+	// input name
+	'controlname': 'end_date'
+});
+o_cal.a_tpl.yearscroll = false;
+// o_cal.a_tpl.weekstart = 1; // Monday week start
+</script>
+<?php
+
 echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
 echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
 if  (eregi("--ALL--",$group_string))

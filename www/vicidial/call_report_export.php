@@ -16,6 +16,7 @@
 # 91121-0253 - Added list name, list description and status name
 # 100119-1039 - Filtered comments for \n newlines
 # 100214-1421 - Sort menu alphabetically
+# 100216-0042 - Added popup date selector
 #
 
 require("dbconnect.php");
@@ -450,6 +451,8 @@ else
 
 	echo "<HTML><HEAD>\n";
 
+	echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
+	echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo "<TITLE>ADMINISTRATION: Export Calls Report";
@@ -478,15 +481,42 @@ else
 
 	echo "<CENTER><BR>\n";
 	echo "<FONT SIZE=3 FACE=\"Arial,Helvetica\"><B>Export Calls Report</B></FONT><BR><BR>\n";
-	echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
+	echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">";
 	echo "<INPUT TYPE=HIDDEN NAME=run_export VALUE=\"1\">";
 	echo "<TABLE BORDER=0 CELLSPACING=8><TR><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
 
 	echo "<font class=\"select_bold\"><B>Date Range:</B></font><BR><CENTER>\n";
 	echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
+
+	?>
+	<script language="JavaScript">
+	var o_cal = new tcal ({
+		// form name
+		'formname': 'vicidial_report',
+		// input name
+		'controlname': 'query_date'
+	});
+	o_cal.a_tpl.yearscroll = false;
+	// o_cal.a_tpl.weekstart = 1; // Monday week start
+	</script>
+	<?php
+
 	echo "<BR>to<BR>\n";
-	echo "<INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
+	echo "<INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+
+	?>
+	<script language="JavaScript">
+	var o_cal = new tcal ({
+		// form name
+		'formname': 'vicidial_report',
+		// input name
+		'controlname': 'end_date'
+	});
+	o_cal.a_tpl.yearscroll = false;
+	// o_cal.a_tpl.weekstart = 1; // Monday week start
+	</script>
+	<?php
 
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=2>\n";
 	echo "<font class=\"select_bold\"><B>Campaigns:</B></font><BR><CENTER>\n";

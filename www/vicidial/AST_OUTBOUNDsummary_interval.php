@@ -8,6 +8,7 @@
 # 091128-0311 - First build
 # 091129-0017 - Added Sales-type and DNC-type tallies
 # 100214-1421 - Sort menu alphabetically
+# 100216-0042 - Added popup date selector
 #
 
 require("dbconnect.php");
@@ -154,7 +155,7 @@ while ($i < $campaigns_to_print)
 	$i++;
 	}
 
-		if ($DB) {echo "$group_string|$i\n";}
+if ($DB) {echo "$group_string|$i\n";}
 
 $rollover_groups_count=0;
 $i=0;
@@ -330,6 +331,10 @@ while ($i < $statdnc_to_print)
  </STYLE>
 
 <?php 
+
+echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
+echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 echo "<TITLE>Outbound Summary Interval Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
@@ -350,14 +355,42 @@ if ($bareformat < 1)
 		echo "<BR>\n";
 		}
 
-	echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
+	echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 	echo "<TABLE BORDER=0><TR><TD VALIGN=TOP>\n";
 	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=costformat VALUE=\"$costformat\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=print_calls VALUE=\"$print_calls\">\n";
 	echo "Date Range:<BR>\n";
-	echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
-	echo " to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
+	echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
+
+	?>
+	<script language="JavaScript">
+	var o_cal = new tcal ({
+		// form name
+		'formname': 'vicidial_report',
+		// input name
+		'controlname': 'query_date'
+	});
+	o_cal.a_tpl.yearscroll = false;
+	// o_cal.a_tpl.weekstart = 1; // Monday week start
+	</script>
+	<?php
+
+	echo " to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+
+	?>
+	<script language="JavaScript">
+	var o_cal = new tcal ({
+		// form name
+		'formname': 'vicidial_report',
+		// input name
+		'controlname': 'end_date'
+	});
+	o_cal.a_tpl.yearscroll = false;
+	// o_cal.a_tpl.weekstart = 1; // Monday week start
+	</script>
+	<?php
+
 	echo "</TD><TD VALIGN=TOP ROWSPAN=2> Campaigns:<BR>";
 	echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
 	if  (eregi("--ALL--",$group_string))
