@@ -104,6 +104,7 @@ if (length($ARGV[0])>1)
 		{
 		print "allowed run time options:\n";
 		print "  [--date=YYYY-MM-DD] = date override\n";
+		print "  [--hour-offset=X] = print datetime strings with this hour offset\n";
 		print "  [--filename=XXX] = Name to be used for file\n";
 		print "  [--campaign=XXX] = Campaign that sales will be pulled from\n";
 		print "  [--without-camp=XXX] = Campaign that will be excluded from ALL\n";
@@ -127,6 +128,10 @@ if (length($ARGV[0])>1)
 		print "  [--debug] = debugging messages\n";
 		print "  [--debugX] = Super debugging messages\n";
 		print "\n";
+		print "  format options:\n";
+		print "   pipe-standard|csv-standard|tab-standard|pipe-triplep|pipe-vici|html-rec|fixed-as400|tab-QMcustomUSA|tab-SCcustomUSA\n";
+		print "\n";
+
 
 		exit;
 		}
@@ -149,6 +154,15 @@ if (length($ARGV[0])>1)
 		if ($args =~ /-totals-only/i)
 			{$totals_only=1;}
 
+		if ($args =~ /--hour-offset=/i)
+			{
+			@data_in = split(/--hour-offset=/,$args);
+			$hour_offset = $data_in[1];
+			$hour_offset =~ s/ .*//gi;
+			if (!$Q) {print "\n----- HOUR OFFSET: $hour_offset -----\n\n";}
+			}
+		else
+			{$hour_offset=0;}
 		if ($args =~ /--date=/i)
 			{
 			@data_in = split(/--date=/,$args);
@@ -509,6 +523,32 @@ $dbhB = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 $TOTAL_SALES=0;
 
 
+$timezone='-5';
+$stmtA = "SELECT local_gmt FROM servers where server_ip='$server_ip';";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+	if ($DBX) {print "   $sthArows|$stmtA|\n";}
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$timezone =	$aryA[0];
+	$sthA->finish();
+	}
+$offset_timezone = ($timezone + $hour_offset);
+$SQLtimezone = sprintf("%10.2f",$timezone);
+$SQLtimezone =~ s/\./:/gi;
+$SQLtimezone =~ s/:50/:30/gi;
+$SQLtimezone =~ s/ //gi;
+$SQLoffset_timezone = sprintf("%10.2f",$offset_timezone);
+$SQLoffset_timezone =~ s/\./:/gi;
+$SQLoffset_timezone =~ s/:50/:30/gi;
+$SQLoffset_timezone =~ s/ //gi;
+$convert_tz = "'$SQLtimezone','$SQLoffset_timezone'";
+
+if (!$Q)
+	{print "\n----- SQL CONVERT_TZ: $SQLtimezone|$SQLoffset_timezone     $convert_tz -----\n\n";}
+
 
 $stmtA = "SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times FROM vicidial_call_times where call_time_id='$call_time';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -518,22 +558,22 @@ $sthArows=$sthA->rows;
 if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$Gct_default_start =	"$aryA[3]";
-	$Gct_default_stop =		"$aryA[4]";
-	$Gct_sunday_start =		"$aryA[5]";
-	$Gct_sunday_stop =		"$aryA[6]";
-	$Gct_monday_start =		"$aryA[7]";
-	$Gct_monday_stop =		"$aryA[8]";
-	$Gct_tuesday_start =	"$aryA[9]";
-	$Gct_tuesday_stop =		"$aryA[10]";
-	$Gct_wednesday_start =	"$aryA[11]";
-	$Gct_wednesday_stop =	"$aryA[12]";
-	$Gct_thursday_start =	"$aryA[13]";
-	$Gct_thursday_stop =	"$aryA[14]";
-	$Gct_friday_start =		"$aryA[15]";
-	$Gct_friday_stop =		"$aryA[16]";
-	$Gct_saturday_start =	"$aryA[17]";
-	$Gct_saturday_stop =	"$aryA[18]";
+	$Gct_default_start =	$aryA[3];
+	$Gct_default_stop =		$aryA[4];
+	$Gct_sunday_start =		$aryA[5];
+	$Gct_sunday_stop =		$aryA[6];
+	$Gct_monday_start =		$aryA[7];
+	$Gct_monday_stop =		$aryA[8];
+	$Gct_tuesday_start =	$aryA[9];
+	$Gct_tuesday_stop =		$aryA[10];
+	$Gct_wednesday_start =	$aryA[11];
+	$Gct_wednesday_stop =	$aryA[12];
+	$Gct_thursday_start =	$aryA[13];
+	$Gct_thursday_stop =	$aryA[14];
+	$Gct_friday_start =		$aryA[15];
+	$Gct_friday_stop =		$aryA[16];
+	$Gct_saturday_start =	$aryA[17];
+	$Gct_saturday_stop =	$aryA[18];
 	$sthA->finish();
 	}
 else
@@ -546,10 +586,10 @@ else
 ###########################################################################
 ########### CURRENT DAY SALES GATHERING outbound-only: vicidial_log  ######
 ###########################################################################
-$stmtA = "select vicidial_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,call_date,vicidial_list.lead_id,vicidial_users.full_name,vicidial_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_log.list_id,title,address3,last_local_call_time,uniqueid,length_in_sec,vicidial_list.list_id,vicidial_list.list_id,UNIX_TIMESTAMP(vicidial_log.call_date),vicidial_campaigns.campaign_name,vicidial_campaigns.campaign_cid from vicidial_list,vicidial_log,vicidial_users,vicidial_campaigns where $campaignSQL $sale_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_log.user and vicidial_log.campaign_id=vicidial_campaigns.campaign_id order by call_date;";
+$stmtA = "select vicidial_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,CONVERT_TZ(call_date,$convert_tz),vicidial_list.lead_id,vicidial_users.full_name,vicidial_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_log.list_id,title,address3,last_local_call_time,uniqueid,length_in_sec,vicidial_list.list_id,vicidial_list.list_id,UNIX_TIMESTAMP(vicidial_log.call_date),vicidial_campaigns.campaign_name,vicidial_campaigns.campaign_cid from vicidial_list,vicidial_log,vicidial_users,vicidial_campaigns where $campaignSQL $sale_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_log.user and vicidial_log.campaign_id=vicidial_campaigns.campaign_id order by call_date;";
 if ($output_format =~ /^tab-QMcustomUSA$|^tab-SCcustomUSA$/)
 	{
-	$stmtA = "select vicidial_log.user,8,8,8,8,8,8,8,vicidial_log.phone_number,8,8,8,call_date,vicidial_log.lead_id,vicidial_users.full_name,vicidial_log.status,8,8,vicidial_log.list_id,8,8,call_date,uniqueid,length_in_sec,vicidial_log.list_id,vicidial_log.list_id,UNIX_TIMESTAMP(vicidial_log.call_date),vicidial_campaigns.campaign_name,vicidial_campaigns.campaign_cid from vicidial_log,vicidial_users,vicidial_campaigns where $campaignSQL $sale_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_users.user=vicidial_log.user and vicidial_log.campaign_id=vicidial_campaigns.campaign_id order by call_date;";
+	$stmtA = "select vicidial_log.user,8,8,8,8,8,8,8,vicidial_log.phone_number,8,8,8,CONVERT_TZ(call_date,$convert_tz),vicidial_log.lead_id,vicidial_users.full_name,vicidial_log.status,8,8,vicidial_log.list_id,8,8,CONVERT_TZ(call_date,$convert_tz),uniqueid,length_in_sec,vicidial_log.list_id,vicidial_log.list_id,UNIX_TIMESTAMP(vicidial_log.call_date),vicidial_campaigns.campaign_name,vicidial_campaigns.campaign_cid from vicidial_log,vicidial_users,vicidial_campaigns where $campaignSQL $sale_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_users.user=vicidial_log.user and vicidial_log.campaign_id=vicidial_campaigns.campaign_id order by call_date;";
 	}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -606,10 +646,10 @@ if (length($with_inboundSQL)>3)
 	###########################################################################
 	########### CURRENT DAY SALES GATHERING inbound-only: vicidial_closer_log  ######
 	###########################################################################
-	$stmtA = "select vicidial_closer_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,call_date,vicidial_list.lead_id,vicidial_users.full_name,vicidial_closer_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_closer_log.list_id,campaign_id,title,address3,last_local_call_time,xfercallid,closecallid,uniqueid,length_in_sec,queue_seconds,vicidial_list.list_id,vicidial_list.list_id,UNIX_TIMESTAMP(vicidial_closer_log.call_date),agent_alert_delay from vicidial_list,vicidial_closer_log,vicidial_users,vicidial_inbound_groups where $with_inboundSQL $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_closer_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_closer_log.user and vicidial_inbound_groups.group_id=vicidial_closer_log.campaign_id order by call_date;";
+	$stmtA = "select vicidial_closer_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,CONVERT_TZ(call_date,$convert_tz),vicidial_list.lead_id,vicidial_users.full_name,vicidial_closer_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_closer_log.list_id,campaign_id,title,address3,last_local_call_time,xfercallid,closecallid,uniqueid,length_in_sec,queue_seconds,vicidial_list.list_id,vicidial_list.list_id,UNIX_TIMESTAMP(vicidial_closer_log.call_date),agent_alert_delay from vicidial_list,vicidial_closer_log,vicidial_users,vicidial_inbound_groups where $with_inboundSQL $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_closer_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_closer_log.user and vicidial_inbound_groups.group_id=vicidial_closer_log.campaign_id order by call_date;";
 	if ($output_format =~ /^tab-QMcustomUSA$|^tab-SCcustomUSA$/)
 		{
-		$stmtA = "select vicidial_closer_log.user,8,8,8,8,8,8,8,vicidial_closer_log.phone_number,8,8,8,call_date,vicidial_closer_log.lead_id,vicidial_users.full_name,vicidial_closer_log.status,8,8,vicidial_closer_log.list_id,campaign_id,8,8,call_date,xfercallid,closecallid,uniqueid,length_in_sec,queue_seconds,vicidial_closer_log.list_id,vicidial_closer_log.list_id,UNIX_TIMESTAMP(vicidial_closer_log.call_date),agent_alert_delay from vicidial_closer_log,vicidial_users,vicidial_inbound_groups where $with_inboundSQL $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_users.user=vicidial_closer_log.user and vicidial_inbound_groups.group_id=vicidial_closer_log.campaign_id order by call_date;";
+		$stmtA = "select vicidial_closer_log.user,8,8,8,8,8,8,8,vicidial_closer_log.phone_number,8,8,8,CONVERT_TZ(call_date,$convert_tz),vicidial_closer_log.lead_id,vicidial_users.full_name,vicidial_closer_log.status,8,8,vicidial_closer_log.list_id,campaign_id,8,8,CONVERT_TZ(call_date,$convert_tz),xfercallid,closecallid,uniqueid,length_in_sec,queue_seconds,vicidial_closer_log.list_id,vicidial_closer_log.list_id,UNIX_TIMESTAMP(vicidial_closer_log.call_date),agent_alert_delay from vicidial_closer_log,vicidial_users,vicidial_inbound_groups where $with_inboundSQL $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_users.user=vicidial_closer_log.user and vicidial_inbound_groups.group_id=vicidial_closer_log.campaign_id order by call_date;";
 		}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1038,7 +1078,7 @@ sub select_format_loop
 			$did_name = '';
 			$did_date = '';
 
-			$stmtB = "select did_pattern,did_description,call_date from vicidial_inbound_dids vid,vicidial_did_log vdl where uniqueid='$uniqueid' and call_date > '$shipdate 00:00:01' and call_date <= '$call_date' and vid.did_id=vdl.did_id order by call_date desc limit 1;";
+			$stmtB = "select did_pattern,did_description,CONVERT_TZ(call_date,$convert_tz) from vicidial_inbound_dids vid,vicidial_did_log vdl where uniqueid='$uniqueid' and call_date > '$shipdate 00:00:01' and call_date <= '$call_date' and vid.did_id=vdl.did_id order by call_date desc limit 1;";
 			if ($DBX > 0) {print "$stmtB\n";}
 			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
@@ -1053,7 +1093,7 @@ sub select_format_loop
 				}
 			else
 				{
-				$stmtB = "select vc.campaign_cid,vc.campaign_name,call_date from vicidial_campaigns vc,vicidial_log vl where lead_id='$lead_id' and call_date > '$shipdate 00:00:01' and call_date <= '$call_date' and vc.campaign_id=vl.campaign_id order by call_date desc limit 1;";
+				$stmtB = "select vc.campaign_cid,vc.campaign_name,CONVERT_TZ(call_date,$convert_tz) from vicidial_campaigns vc,vicidial_log vl where lead_id='$lead_id' and call_date > '$shipdate 00:00:01' and call_date <= '$call_date' and vc.campaign_id=vl.campaign_id order by call_date desc limit 1;";
 				if ($DBX > 0) {print "$stmtB\n";}
 				$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 				$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
@@ -1219,7 +1259,7 @@ sub select_format_loop
 
 		if ($output_format =~ /^tab-SCcustomUSA$/) 
 			{
-			# 1245328655100219	2009-06-18	05:37:35	937	9375551212	8185551223	8106	35	255	0	DSAW	-	q8187-20090618-053939-1245328655.100219.WAV|q8186-20090618-053735-1245328655.100219.WAV
+			# 1031266398284129        02-17-2010      01:18:04        727     7275551212              6666    0       114     11              NI      1234567890      20100217-041806_7275551212-all.wav|20100217-041806_7275551212-all.wav  Inbound 02-24-2010  19:00:00    02-17-2010 01:18:47     this is a test
 
 			# 1-  Call id: uniqueid padded
 			# 2-  Date: call date in EST
@@ -1240,26 +1280,11 @@ sub select_format_loop
 			# 17-  Note Time Stamp: Time Stamp of Note
 			# 18-  Note Text: Actual Note taken by agent
 
-			# 1-  unique number (digits only)
-			# 2-  date
-			# 3-  time
-			# 4-  CID arecode
-			# 5-  CID full
-			# 6-  DID
-			# 7-  user
-			# 8-  hold time (seconds)
-			# 9-  talk time (seconds)
-			# 10- after call work time (seconds)
-			# 11- application name, 4 characters
-			# 12- order number (just a dash for now '-')
-			# 13- call recording filenames
-			# 14- outbound/inbound
-			# 15- domestic or international
-
-			$stmtB = "select call_date,order_id,appointment_date,appointment_time,call_notes from vicidial_call_notes where lead_id='$lead_id' and uniqueid='$uniqueid' and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' order by call_date desc limit 1;";
+			$stmtB = "select CONVERT_TZ(call_date,$convert_tz),order_id,appointment_date,appointment_time,call_notes from vicidial_call_notes where lead_id='$lead_id' and vicidial_id='$uniqueid' and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' order by call_date desc limit 1;";
 			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 			$sthBrows=$sthB->rows;
+			if ($DB) {print "$sthBrows|$stmtB|\n";}
 			$rec_countB=0;
 			while ($sthBrows > $rec_countB)
 				{
@@ -1273,27 +1298,27 @@ sub select_format_loop
 				}
 			$sthB->finish();
 
-			$dispo_time = 0;
-			$stmtB = "select dispo_sec from vicidial_agent_log where lead_id='$lead_id' and user='$user' and event_time > '$shipdate 00:00:01' and event_time < '$shipdate 23:59:59' order by event_time desc limit 1;";
-			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
-			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
-			$sthBrows=$sthB->rows;
-			$rec_countB=0;
-			while ($sthBrows > $rec_countB)
-				{
-				@aryB = $sthB->fetchrow_array;
-				$dispo_time =	$aryB[0];
-				$rec_countB++;
-				}
-			$sthB->finish();
-
 			$uniqueid =~ s/\.00000//gi;
 			$uniqueid =~ s/\.0000//gi;
 			$uniqueid =~ s/\.000//gi;
 			$uniqueid =~ s/\.00//gi;
 			$uniqueid =~ s/\.0//gi;
 			$uniqueid =~ s/\D//gi;
+
 			@call_date_array = split(/ /,$call_date);
+			@call_date_format = split(/-/,$call_date_array[0]);
+			$call_date_array[0] = "$call_date_format[1]-$call_date_format[2]-$call_date_format[0]";
+
+			@appointment_date_array = split(/ /,$appointment_date);
+			@appointment_date_format = split(/-/,$appointment_date_array[0]);
+			$appointment_date_array[0] = "$appointment_date_format[1]-$appointment_date_format[2]-$appointment_date_format[0]";
+			$appointment_date = "$appointment_date_array[0] $appointment_date_array[1]";
+
+			@appointment_call_date_array = split(/ /,$appointment_call_date);
+			@appointment_call_date_format = split(/-/,$appointment_call_date_array[0]);
+			$appointment_call_date_array[0] = "$appointment_call_date_format[1]-$appointment_call_date_format[2]-$appointment_call_date_format[0]";
+			$appointment_call_date = "$appointment_call_date_array[0] $appointment_call_date_array[1]";
+
 			while (length($phone_number)>10) {$phone_number =~ s/^.//gi;}
 			$phone_areacode = substr($phone_number, 0, 3);
 			if (length($closer) < 1) {$closer = $user;}
@@ -1305,6 +1330,21 @@ sub select_format_loop
 			$call_notes =~ s/\r|\n|\t//gi;
 			if ($outbound =~ /Y/) {$in_out = "Outbound";}
 			else {$in_out = "Inbound";}
+
+			$dispo_time = 0;
+			$stmtB = "select dispo_sec from vicidial_agent_log where lead_id='$lead_id' and user='$closer' and event_time > '$shipdate 00:00:01' and event_time < '$shipdate 23:59:59' order by event_time desc limit 1;";
+			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+			$sthBrows=$sthB->rows;
+			if ($DB) {print "$sthBrows|$stmtB|\n";}
+			$rec_countB=0;
+			while ($sthBrows > $rec_countB)
+				{
+				@aryB = $sthB->fetchrow_array;
+				$dispo_time =	$aryB[0];
+				$rec_countB++;
+				}
+			$sthB->finish();
 
 			if ($uniqueidLIST !~ /\|$uniqueid\|/)
 				{
