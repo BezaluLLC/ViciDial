@@ -21,6 +21,7 @@
 # 90524-2009 - Changed time display to use functions.php
 # 91130-2037 - Added user closer log manager flag display
 # 100203-1008 - Added agent activity log section
+# 100216-0042 - Added popup date selector
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -122,6 +123,10 @@ else
 ?>
 <html>
 <head>
+
+<script language="JavaScript" src="calendar_db.js"></script>
+<link rel="stylesheet" href="calendar.css">
+
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <title>ADMINISTRATION: Estadísticas de usuario
 <?php
@@ -159,14 +164,42 @@ require("admin_header.php");
 
 echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> &nbsp; \n";
 
-echo "<form action=$PHP_SELF method=POST>\n";
+echo "<form action=$PHP_SELF method=POST name=vicidial_report id=vicidial_report>\n";
 echo "<input type=hidden name=DB value=\"$DB\">\n";
-echo "<input type=text name=begin_date value=\"$begin_date\" size=10 maxsize=10> to \n";
-echo "<input type=text name=end_date value=\"$end_date\" size=10 maxsize=10> &nbsp;\n";
+echo "<input type=text name=begin_date value=\"$begin_date\" size=10 maxsize=10>";
+
+?>
+<script language="JavaScript">
+var o_cal = new tcal ({
+	// form name
+	'formname': 'vicidial_report',
+	// input name
+	'controlname': 'begin_date'
+});
+o_cal.a_tpl.yearscroll = false;
+// o_cal.a_tpl.weekstart = 1; // Lunes week start
+</script>
+<?php
+
+echo " to <input type=text name=end_date value=\"$end_date\" size=10 maxsize=10>";
+
+?>
+<script language="JavaScript">
+var o_cal = new tcal ({
+	// form name
+	'formname': 'vicidial_report',
+	// input name
+	'controlname': 'end_date'
+});
+o_cal.a_tpl.yearscroll = false;
+// o_cal.a_tpl.weekstart = 1; // Lunes week start
+</script>
+<?php
+
 if (strlen($user)>1)
-	{echo "<input type=hidden name=user value=\"$user\">\n";}
+	{echo " &nbsp;<input type=hidden name=user value=\"$user\">\n";}
 else
-	{echo "<input type=text name=user size=12 maxlength=10>\n";}
+	{echo " &nbsp;<input type=text name=user size=12 maxlength=10>\n";}
 echo "<input type=submit name=submit value=submit>\n";
 
 

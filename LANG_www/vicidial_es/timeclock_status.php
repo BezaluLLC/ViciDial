@@ -1,7 +1,7 @@
 <?php
 # timeclock_status.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -9,6 +9,7 @@
 # 80603-1500 - formatting changes
 # 90310-2103 - Added admin header
 # 90508-0644 - Changed to PHP long tags
+# 100214-1421 - Sort menu alphabetically
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -40,16 +41,13 @@ $stmt = "SELECT use_non_latin,webroot_writable,timeclock_end_of_day,outbound_aut
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$timeclock_end_of_day =			$row[2];
 	$SSoutbound_autodial_active =	$row[3];
-
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -70,27 +68,26 @@ else
 
 $EoDdate = date("Y-m-d H:i:s", $EoD);
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
-	if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
+if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
 $fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "Nombre y contraseña inválidos del usuario: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
 	}
-  else
+else
 	{
-
 	if($auth>0)
 		{
 			$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
@@ -115,7 +112,7 @@ $browser = getenv("HTTP_USER_AGENT");
 	}
 
 
-$stmt="select user_group from vicidial_user_groups;";
+$stmt="select user_group from vicidial_user_groups order by user_group;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $user_groups_to_print = mysql_num_rows($rslt);

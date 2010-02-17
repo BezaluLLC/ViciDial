@@ -49,3 +49,10 @@ call_notes TEXT
 ALTER TABLE vicidial_call_notes AUTO_INCREMENT = 100;
 
 UPDATE system_settings SET db_schema_version='1199',db_schema_update_date=NOW();
+
+CREATE INDEX lead_id on vicidial_call_notes (lead_id);
+
+ALTER TABLE system_settings ADD static_agent_url VARCHAR(255) default '';
+ALTER TABLE system_settings ADD default_phone_code VARCHAR(8) default '1';
+
+UPDATE system_settings SET db_schema_version='1200',db_schema_update_date=NOW();

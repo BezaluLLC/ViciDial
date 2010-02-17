@@ -405,6 +405,8 @@ OTHER CHANGES:
 88. Added Traditional Chinese (zt_tw) language translation of the agent screen
 	which can be found in the LANG_www/agc_tw directory
 
+89. Added popup calendars to many of the reports for easier date selection
+
 
 
 

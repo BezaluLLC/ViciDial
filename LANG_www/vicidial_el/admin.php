@@ -481,6 +481,8 @@ if (isset($_GET["state_rule"]))	{$state_rule=$_GET["state_rule"];}
 	elseif (isset($_POST["state_rule"]))	{$state_rule=$_POST["state_rule"];}
 if (isset($_GET["status"]))	{$status=$_GET["status"];}
 	elseif (isset($_POST["status"]))	{$status=$_POST["status"];}
+if (isset($_GET["status_id"]))	{$status_id=$_GET["status_id"];}
+	elseif (isset($_POST["status_id"]))	{$status_id=$_POST["status_id"];}
 if (isset($_GET["status_name"]))	{$status_name=$_GET["status_name"];}
 	elseif (isset($_POST["status_name"]))	{$status_name=$_POST["status_name"];}
 if (isset($_GET["submit"]))	{$submit=$_GET["submit"];}
@@ -1307,7 +1309,6 @@ if ($non_latin < 1)
 	$voicemail_dump_exten = ereg_replace("[^0-9]","",$voicemail_dump_exten);
 	$voicemail_ext = ereg_replace("[^0-9]","",$voicemail_ext);
 	$voicemail_exten = ereg_replace("[^0-9]","",$voicemail_exten);
-	$voicemail_id = ereg_replace("[^0-9]","",$voicemail_id);
 	$wrapup_seconds = ereg_replace("[^0-9]","",$wrapup_seconds);
 	$use_non_latin = ereg_replace("[^0-9]","",$use_non_latin);
 	$webroot_writable = ereg_replace("[^0-9]","",$webroot_writable);
@@ -1477,6 +1478,8 @@ if ($non_latin < 1)
 	$pause_after_each_call = ereg_replace("[^0-9a-zA-Z]","",$pause_after_each_call);
 	$use_internal_dnc = ereg_replace("[^0-9a-zA-Z]","",$use_internal_dnc);
 	$use_campaign_dnc = ereg_replace("[^0-9a-zA-Z]","",$use_campaign_dnc);
+	$voicemail_id = ereg_replace("[^0-9a-zA-Z]","",$voicemail_id);
+	$status_id = ereg_replace("[^0-9a-zA-Z]","",$status_id);
 
 	### DIGITS and Dots
 	$server_ip = ereg_replace("[^\.0-9]","",$server_ip);
@@ -1551,7 +1554,6 @@ if ($non_latin < 1)
 	$server_id = ereg_replace("[^-_0-9a-zA-Z]","",$server_id);
 	$stage = ereg_replace("[^-_0-9a-zA-Z]","",$stage);
 	$state_rule = ereg_replace("[^-_0-9a-zA-Z]","",$state_rule);
-	$status = ereg_replace("[^-_0-9a-zA-Z]","",$status);
 	$trunk_restriction = ereg_replace("[^-_0-9a-zA-Z]","",$trunk_restriction);
 	$user = ereg_replace("[^-_0-9a-zA-Z]","",$user);
 	$user_group = ereg_replace("[^-_0-9a-zA-Z]","",$user_group);
@@ -8704,21 +8706,21 @@ if ($ADD==20)
 if ($ADD==22)
 	{
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_campaign_statuses where campaign_id='$campaign_id' and status='$status';";
+	$stmt="SELECT count(*) from vicidial_campaign_statuses where campaign_id='$campaign_id' and status='$status_id';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	if ($row[0] > 0)
 		{echo "<br>Η ΚΑΤΑΣΤΑΣΗ ΤΗΣ ΕΚΣΤΡΑΤΕΙΑΣ ΔΕΝ ΠΡΟΣΤΕΘΗΚΕ - υπάρχει ήδη κατάσταση-εκστρατείας με αυτό το όνομα\n";}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_statuses where status='$status';";
+		$stmt="SELECT count(*) from vicidial_statuses where status='$status_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
 			{echo "<br>Η ΚΑΤΑΣΤΑΣΗ ΤΗΣ ΕΚΣΤΡΑΤΕΙΑΣ ΔΕΝ ΠΡΟΣΤΕΘΗΚΕ - υπάρχει ήδη μία καθολική-κατάσταση με αυτό το όνομα\n";}
 		else
 			{
-			if ( (strlen($campaign_id) < 2) or (strlen($status) < 1) or (strlen($status_name) < 2) )
+			if ( (strlen($campaign_id) < 2) or (strlen($status_id) < 1) or (strlen($status_name) < 2) )
 				{
 				echo "<br>Η ΚΑΤΑΣΤΑΣΗ ΤΗΣ ΕΚΣΤΡΑΤΕΙΑΣ ΔΕΝ ΠΡΟΣΤΕΘΗΚΕ - Παρακαλώ ελέγξτε τα δεδομένα που καταχωρήσατε\n";
 				echo "<br>η κατάσταση πρέπει να είναι μεταξύ 1 και 8 χαρακτήρρες\n";
@@ -8726,16 +8728,16 @@ if ($ADD==22)
 				}
 			else
 				{
-				echo "<br><B>ΚΑΤΑΣΤΑΣΗ ΕΚΣΤΡΑΤΕΙΑΣ ΠΡΟΣΤΕΘΗΚΕ: $campaign_id - $status</B>\n";
+				echo "<br><B>ΚΑΤΑΣΤΑΣΗ ΕΚΣΤΡΑΤΕΙΑΣ ΠΡΟΣΤΕΘΗΚΕ: $campaign_id - $status_id</B>\n";
 
-				$stmt="INSERT INTO vicidial_campaign_statuses (status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable) values('$status','$status_name','$selectable','$campaign_id','$human_answered','$category','$sale','$dnc','$customer_contact','$not_interested','$unworkable');";
+				$stmt="INSERT INTO vicidial_campaign_statuses (status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable) values('$status_id','$status_name','$selectable','$campaign_id','$human_answered','$category','$sale','$dnc','$customer_contact','$not_interested','$unworkable');";
 				$rslt=mysql_query($stmt, $link);
 
 				### LOG INSERTION Admin Log Table ###
 				$SQL_log = "$stmt|";
 				$SQL_log = ereg_replace(';','',$SQL_log);
 				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_STATUS', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ΠΡΟΣΘΗΚΗ ΕΚΣΤΡΑΤΕΙΑΣ STATUS', event_sql=\"$SQL_log\", event_notes='Κατάσταση:$status';";
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_STATUS', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ΠΡΟΣΘΗΚΗ ΕΚΣΤΡΑΤΕΙΑΣ STATUS', event_sql=\"$SQL_log\", event_notes='Κατάσταση:$status_id';";
 				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				}
@@ -10298,21 +10300,21 @@ if ($ADD==21111111111111)
 if ($ADD==221111111111111)
 	{
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_campaign_statuses where status='$status';";
+	$stmt="SELECT count(*) from vicidial_campaign_statuses where status='$status_id';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	if ($row[0] > 0)
 		{echo "<br>ΘΕΣΗ ΣΥΣΤΗΜΑΤΩΝ ΠΡΟΣΤΙΘΕΜΕΝΗ - there is already a campaign-status in the system with this name: $row[0]\n";}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_statuses where status='$status';";
+		$stmt="SELECT count(*) from vicidial_statuses where status='$status_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
 			{echo "<br>ΘΕΣΗ ΣΥΣΤΗΜΑΤΩΝ ΠΡΟΣΤΙΘΕΜΕΝΗ - there is already a global-status in the system with this name\n";}
 		else
 			{
-			if ( (strlen($status) < 1) or (strlen($status_name) < 2) )
+			if ( (strlen($status_id) < 1) or (strlen($status_name) < 2) )
 				{
 				echo "<br>ΘΕΣΗ ΣΥΣΤΗΜΑΤΩΝ ΠΡΟΣΤΙΘΕΜΕΝΗ - Παρακαλώ επιστρέψτε πίσω και κάνετε έλεγχο των δεδομένων που καταχωρήσατε\n";
 				echo "<br>η κατάσταση πρέπει να είναι μεταξύ 1 και 8 χαρακτήρρες\n";
@@ -10320,16 +10322,16 @@ if ($ADD==221111111111111)
 				}
 			else
 				{
-				echo "<br><B>ΘΕΣΗ ΣΥΣΤΗΜΑΤΩΝ ΠΡΟΣΤΙΘΕΜΕΝΗ: $status_name - $status</B>\n";
+				echo "<br><B>ΘΕΣΗ ΣΥΣΤΗΜΑΤΩΝ ΠΡΟΣΤΙΘΕΜΕΝΗ: $status_name - $status_id</B>\n";
 
-				$stmt="INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable) values('$status','$status_name','$selectable','$human_answered','$category','$sale','$dnc','$customer_contact','$not_interested','$unworkable');";
+				$stmt="INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable) values('$status_id','$status_name','$selectable','$human_answered','$category','$sale','$dnc','$customer_contact','$not_interested','$unworkable');";
 				$rslt=mysql_query($stmt, $link);
 
 				### LOG INSERTION Admin Log Table ###
 				$SQL_log = "$stmt|";
 				$SQL_log = ereg_replace(';','',$SQL_log);
 				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SYSTEMSTATUSES', event_type='ADD', record_id='$status', event_code='ADMIN ADD SYSTEM STATUS', event_sql=\"$SQL_log\", event_notes='';";
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SYSTEMSTATUSES', event_type='ADD', record_id='$status_id', event_code='ADMIN ADD SYSTEM STATUS', event_sql=\"$SQL_log\", event_notes='';";
 				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				}
@@ -17100,7 +17102,7 @@ if ($ADD==31)
 		echo "<br>ΠΡΟΣΘΗΚΗ ΝΕΑΣ ΠΡΟΣΑΡΜΟΣΜΕΝΗΣ ΚΑΤΑΣΤΑΣΗΣ ΣΤΗΝ ΕΚΣΤΡΑΤΕΙΑ<BR><form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=22>\n";
 		echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
-		echo "Κατάσταση:<input type=text name=status size=10 maxlength=8> &nbsp; \n";
+		echo "Κατάσταση:<input type=text name=status_id size=8 maxlength=6> &nbsp; \n";
 		echo "Περιγραφή:<input type=text name=status_name size=20 maxlength=30> &nbsp; \n";
 		echo "Επιλέξιμο:<select size=1 name=selectable><option>Y</option><option>N</option></select> &nbsp; <BR>\n";
 		echo "Ανθρώπινα Απάντηση: <select size=1 name=human_answered><option>Y</option><option SELECTED>N</option></select> &nbsp; \n";
@@ -22613,7 +22615,7 @@ if ($ADD==321111111111111)
 
 		echo "<br>ΠΡΟΣΘΕΣΤΕ ΤΗ ΝΕΑ ΘΕΣΗ ΣΥΣΤΗΜΑΤΩΝ<BR><form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=221111111111111>\n";
-		echo "Κατάσταση:<input type=text name=status size=7 maxlength=6> &nbsp; \n";
+		echo "Κατάσταση:<input type=text name=status_id size=7 maxlength=6> &nbsp; \n";
 		echo "Περιγραφή:<input type=text name=status_name size=30 maxlength=30><BR>\n";
 		echo "Επιλέξιμο:<select size=1 name=selectable><option>Y</option><option>N</option></select> &nbsp; \n";
 		echo "Ανθρώπινα Απάντηση: <select size=1 name=human_answered><option>Y</option><option>N</option></select> &nbsp; \n";

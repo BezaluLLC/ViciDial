@@ -1,12 +1,14 @@
 <?php 
 # AST_CLOSERsummary_hourly.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
 # 90801-0910 - First build
 # 90809-0216 - Added Exclude Outbound Drop Group option
+# 100214-1421 - Sort menu alphabetically
+# 100216-0042 - Added popup date selector
 #
 
 require("dbconnect.php");
@@ -56,12 +58,10 @@ $stmt = "SELECT use_non_latin FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -103,7 +103,7 @@ if (!isset($end_date)) {$end_date = $NOW_DATE;}
 $exclude_rolloverSQL='';
 if (eregi("YES",$exclude_rollover))
 	{$exclude_rolloverSQL = " where group_id NOT IN(SELECT drop_inbound_group from vicidial_campaigns)";}
-$stmt="select group_id,group_name from vicidial_inbound_groups $exclude_rolloverSQL;";
+$stmt="select group_id,group_name from vicidial_inbound_groups $exclude_rolloverSQL order by group_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
@@ -155,7 +155,7 @@ while ($i < $statcats_to_print)
 	$i++;
 	}
 
-$stmt="select call_time_id,call_time_name from vicidial_call_times;";
+$stmt="select call_time_id,call_time_name from vicidial_call_times order by call_time_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $times_to_print = mysql_num_rows($rslt);
@@ -182,6 +182,10 @@ while ($i < $times_to_print)
  </STYLE>
 
 <?php 
+
+echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
+echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 echo "<TITLE>Inbound Summary Hourly Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
@@ -202,7 +206,7 @@ if ($bareformat < 1)
 		echo "<BR>\n";
 		}
 
-	echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
+	echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 	echo "<TABLE BORDER=0><TR><TD VALIGN=TOP>\n";
 	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=inbound_rate VALUE=\"$inbound_rate\">\n";
@@ -210,8 +214,36 @@ if ($bareformat < 1)
 	echo "<INPUT TYPE=HIDDEN NAME=costformat VALUE=\"$costformat\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=print_calls VALUE=\"$print_calls\">\n";
 	echo "Date Range:<BR>\n";
-	echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
-	echo " to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
+	echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
+
+	?>
+	<script language="JavaScript">
+	var o_cal = new tcal ({
+		// form name
+		'formname': 'vicidial_report',
+		// input name
+		'controlname': 'query_date'
+	});
+	o_cal.a_tpl.yearscroll = false;
+	// o_cal.a_tpl.weekstart = 1; // Monday week start
+	</script>
+	<?php
+
+	echo " to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+
+	?>
+	<script language="JavaScript">
+	var o_cal = new tcal ({
+		// form name
+		'formname': 'vicidial_report',
+		// input name
+		'controlname': 'end_date'
+	});
+	o_cal.a_tpl.yearscroll = false;
+	// o_cal.a_tpl.weekstart = 1; // Monday week start
+	</script>
+	<?php
+
 	echo "</TD><TD VALIGN=TOP> &nbsp; \n";
 	echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 	echo "Inbound Groups: <BR>\n";

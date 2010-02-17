@@ -1,7 +1,7 @@
 <?php 
 # fcstats.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -12,6 +12,8 @@
 # 80328-1139 - adapted for basic fronter/closer stats
 # 90310-2132 - Added admin header
 # 90508-0644 - Changed to PHP long tags
+# 100214-1421 - Sort menu alphabetically
+# 100216-0042 - Added popup date selector
 #
 
 require("dbconnect.php");
@@ -37,13 +39,13 @@ $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
 if (strlen($shift)<2) {$shift='ALL';}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
@@ -57,7 +59,7 @@ $STARTtime = date("U");
 if (!isset($group)) {$group = 'CL_TEST_L';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
-$stmt="select group_id from vicidial_inbound_groups;";
+$stmt="select group_id from vicidial_inbound_groups order by group_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
@@ -81,6 +83,9 @@ while ($i < $groups_to_print)
 -->
  </STYLE>
 
+<script language="JavaScript" src="calendar_db.js"></script>
+<link rel="stylesheet" href="calendar.css">
+
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 echo "<TITLE>In-Group Fronter-Closer Stats Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -91,8 +96,22 @@ echo "<TITLE>In-Group Fronter-Closer Stats Report</TITLE></HEAD><BODY BGCOLOR=WH
 
 echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
-echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
-echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
+echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
+echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
+
+?>
+<script language="JavaScript">
+var o_cal = new tcal ({
+	// form name
+	'formname': 'vicidial_report',
+	// input name
+	'controlname': 'query_date'
+});
+o_cal.a_tpl.yearscroll = false;
+// o_cal.a_tpl.weekstart = 1; // Lunedi week start
+</script>
+<?php
+
 echo "<SELECT SIZE=1 NAME=group>\n";
 	$o=0;
 	while ($groups_to_print > $o)

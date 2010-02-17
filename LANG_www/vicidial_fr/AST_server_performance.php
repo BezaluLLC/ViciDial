@@ -1,7 +1,7 @@
 <?php 
 # AST_server_performance.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -12,6 +12,7 @@
 # 80118-1508 - Fixed horizontal scale marking issues
 # 90310-2151 - Added admin header
 # 90508-0644 - Changed to PHP long tags
+# 100214-1421 - Sort menu alphabetically
 #
 
 require("dbconnect.php");
@@ -35,13 +36,13 @@ if (isset($_GET["VALIDER"]))				{$VALIDER=$_GET["VALIDER"];}
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and modify_servers='1';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and modify_servers='1';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
@@ -61,7 +62,7 @@ if (!isset($begin_query_time)) {$begin_query_time = "$NOW_DATE 09:00:00";}
 if (!isset($end_query_time)) {$end_query_time = "$NOW_DATE 15:30:00";}
 if (!isset($group)) {$group = '';}
 
-$stmt="select server_ip from servers;";
+$stmt="select server_ip from servers order by server_ip;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $servers_to_print = mysql_num_rows($rslt);

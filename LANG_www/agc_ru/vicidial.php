@@ -273,10 +273,11 @@
 # 100109-1338 - Fixed Manual dial live call detection
 # 100116-0709 - Added presets to script and web form variables
 # 100203-0640 - Fixed logging issues related to INBOUND_MAN dial method
+# 100207-1109 - Changed Pause Codes function to allow for multiple pause codes per pause period
 #
 
-$version = '2.2.0-251';
-$build = '100203-0640';
+$version = '2.2.0-252';
+$build = '100207-1109';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -2238,6 +2239,7 @@ $HKwidth =  ($MASTERwidth + 20);	# 450 - Hotkeys button
 $HSwidth =  ($MASTERwidth + 1);		# 431 - Header spacer
 $CLwidth =  ($MASTERwidth - 160);	# 270 - Calls in queue link
 
+$WRheight =  ($MASTERheight + 160);	# 460 - Warning boxes
 $CQheight =  ($MASTERheight + 140);	# 440 - Calls in queue section
 $SLheight =  ($MASTERheight + 122);	# 422 - SideBar link, Calls in queue link
 $HKheight =  ($MASTERheight + 105);	# 405 - HotKey active Button
@@ -2744,6 +2746,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var timer_action='';
 	var timer_action_message='';
 	var timer_action_seconds='';
+	var pause_code_counter=1;
 	var DiaLControl_auto_HTML = "<IMG SRC=\"../agc/images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Пауза \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"../agc/images/vdc_LB_resume.gif\" border=0 alt=\"Резюме\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"../agc/images/vdc_LB_pause.gif\" border=0 alt=\" Пауза \"></a><IMG SRC=\"../agc/images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Резюме\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"../agc/images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Пауза \"><IMG SRC=\"../agc/images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Резюме\">";
@@ -4301,7 +4304,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // Request list of USERONLY callbacks for this agent
 	function CalLBacKsLisTCheck()
 		{
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
 			{
 			alert("ВЫ ДОЛЖНЫ СДЕЛАТЬ ПАУЗУ, ЧТОБЫ ПРОВЕРИТЬ ВЫЗОВЫ В РЕЖИМЕ АВТОМАТИЧЕСКОГО НАБОРА НОМЕРА");
 			}
@@ -4412,7 +4415,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // Open page to enter details for a new manual dial lead
 	function NeWManuaLDiaLCalL(TVfast)
 		{
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
 			{
 			alert("ВЫ ДОЛЖНЫ СДЕЛАТЬ ПАУЗУ РУЧНОГО НАБОРА НОМЕРА НОВЫЙ LEAD В РЕЖИМЕ АВТО НАБОРА НОМЕРА");
 			}
@@ -4922,7 +4925,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						else
 							{
 							web_form_vars = 
-							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&lead_id=" + document.vicidial_form.lead_id.value + 
 							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 							"&list_id=" + document.vicidial_form.list_id.value + 
 							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -5017,7 +5020,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						else
 							{
 							web_form_vars_two = 
-							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&lead_id=" + document.vicidial_form.lead_id.value + 
 							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 							"&list_id=" + document.vicidial_form.list_id.value + 
 							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -5338,7 +5341,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						else
 							{
 							web_form_vars = 
-							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&lead_id=" + document.vicidial_form.lead_id.value + 
 							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 							"&list_id=" + document.vicidial_form.list_id.value + 
 							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -5433,7 +5436,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						else
 							{
 							web_form_vars_two = 
-							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&lead_id=" + document.vicidial_form.lead_id.value + 
 							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 							"&list_id=" + document.vicidial_form.list_id.value + 
 							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -5550,7 +5553,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							if ( (view_scripts == 1) && (campaign_script.length > 0) )
 								{
 								web_form_vars = 
-								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&lead_id=" + document.vicidial_form.lead_id.value + 
 								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 								"&list_id=" + document.vicidial_form.list_id.value + 
 								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -5936,7 +5939,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						if ( (view_scripts == 1) && (campaign_script.length > 0) )
 							{
 							web_form_vars = 
-							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&lead_id=" + document.vicidial_form.lead_id.value + 
 							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 							"&list_id=" + document.vicidial_form.list_id.value + 
 							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -6087,6 +6090,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			VDRP_stage = 'PAUSED';
 			AutoDialReady = 0;
 			AutoDialWaiting = 0;
+			pause_code_counter = 0;
 			if (dial_method == "INBOUND_MAN")
 				{
 				auto_dial_level=starting_dial_level;
@@ -6668,7 +6672,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							else
 								{
 								web_form_vars = 
-								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&lead_id=" + document.vicidial_form.lead_id.value + 
 								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 								"&list_id=" + document.vicidial_form.list_id.value + 
 								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -6763,7 +6767,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							else
 								{
 								web_form_vars_two = 
-								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&lead_id=" + document.vicidial_form.lead_id.value + 
 								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 								"&list_id=" + document.vicidial_form.list_id.value + 
 								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -6863,7 +6867,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							if ( (view_scripts == 1) && (CalL_ScripT_id.length > 0) )
 								{
 								web_form_vars = 
-								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&lead_id=" + document.vicidial_form.lead_id.value + 
 								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 								"&list_id=" + document.vicidial_form.list_id.value + 
 								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -7044,7 +7048,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		if ( (webvars_refresh > 0) || (force_webvars_refresh > 0) )
 			{
 			web_form_vars = 
-			"lead_id=" + document.vicidial_form.lead_id.value + 
+			"&lead_id=" + document.vicidial_form.lead_id.value + 
 			"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 			"&list_id=" + document.vicidial_form.list_id.value + 
 			"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -7169,7 +7173,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		else
 			{
 			web_form_vars_two = 
-			"lead_id=" + document.vicidial_form.lead_id.value + 
+			"&lead_id=" + document.vicidial_form.lead_id.value + 
 			"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 			"&list_id=" + document.vicidial_form.list_id.value + 
 			"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -7810,7 +7814,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // Generate the Пауза Code Chooser panel
 	function PauseCodeSelectContent_create()
 		{
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
 			{
 			alert("ВЫ ДОЛЖНЫ АКТИВИРОВАТЬ ПАУЗУ, ЧТОБЫ ВВЕСТИ КОД ПАУЗЫ В РЕЖИМЕ АВТО-НАБОРА");
 			}
@@ -8085,7 +8089,6 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					}
 				}
 			}
-
 		}
 
 
@@ -8119,7 +8122,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		if (xmlhttp) 
 			{ 
-			VMCpausecode_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass  + "&ACTION=PauseCodeSubmit&format=text&status=" + newpausecode + "&agent_log_id=" + agent_log_id + "&campaign=" + campaign + "&extension=" + extension + "&protocol=" + protocol + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages;
+			VMCpausecode_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass  + "&ACTION=PauseCodeSubmit&format=text&status=" + newpausecode + "&agent_log_id=" + agent_log_id + "&campaign=" + campaign + "&extension=" + extension + "&protocol=" + protocol + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&stage=" + pause_code_counter;
+			pause_code_counter++;
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(VMCpausecode_query); 
@@ -8127,11 +8131,17 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				{ 
 				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
 					{
-			//		alert(xmlhttp.responseText);
+					var check_pause_code = null;
+					var check_pause_code = xmlhttp.responseText;
+					var check_PC_array=check_pause_code.split("\n");
+					if (check_PC_array[1] == 'Next agent_log_id:')
+						{agent_log_id = check_PC_array[2];}
+				//	alert(xmlhttp.responseText + "\n|" + check_PC_array[1] + "\n|" + check_PC_array[2] + "|" + agent_log_id + "|" + pause_code_counter);
 					}
 				}
 			delete xmlhttp;
 			}
+//		return agent_log_id;
 		}
 
 
@@ -9260,7 +9270,7 @@ function phone_number_format(formatphone) {
 		{
 		if (CQauto_call_id > 0)
 			{
-			if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) )
+			if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
 				{
 				alert("ВЫ ДОЛЖНЫ быть приостановлена схватить Звонки в ОЧЕРЕДЬ");
 				}
@@ -9495,7 +9505,7 @@ function phone_number_format(formatphone) {
 // Показать the groups selection span
 	function OpeNGrouPSelectioN()
 		{
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
 			{
 			alert("ТЫ ДОЛЖЕН БЫТЬ PAUSED сменить группу");
 			}
@@ -9518,9 +9528,9 @@ function phone_number_format(formatphone) {
 // Показать the territories selection span
 	function OpeNTerritorYSelectioN()
 		{
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
 			{
-			alert("ТЫ ДОЛЖЕН БЫТЬ PAUSED сменить группу");
+			alert("YOU MUST BE PAUSED TO CHANGE TERRITORIES");
 			}
 		else
 			{
@@ -10615,7 +10625,7 @@ echo "</head>\n";
 </font></span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:51;" id="CallBacKsLisTBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> ВЫЗОВBACK ДЛЯ ОПЕРАТОРА <?php echo $VD_login ?>:<BR>Чтобы позвонить клиенту сейчас, кликните на callback ниже. Если Вы нажмете на record ниже, чтобы позвонить, то это будет удалено из списка.
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> ВЫЗОВBACK ДЛЯ ОПЕРАТОРА <?php echo $VD_login ?>:<BR>Чтобы позвонить клиенту сейчас, кликните на callback ниже. Если Вы нажмете на record ниже, чтобы позвонить, то это будет удалено из списка.
 	<BR>
 	<div class="scroll_callback" id="CallBacKsLisT"></div>
 	<BR> &nbsp; 
@@ -10626,7 +10636,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:52;" id="NeWManuaLDiaLBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> НОВЫЙ LEAD РУЧНОЙ НАБОР НОМЕРА ДЛЯ <?php echo "$VD_login in campaign $VD_campaign" ?>:<BR><BR>Ведите информацию ниже для нового lead который вы хотите вызвать.
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> НОВЫЙ LEAD РУЧНОЙ НАБОР НОМЕРА ДЛЯ <?php echo "$VD_login in campaign $VD_campaign" ?>:<BR><BR>Ведите информацию ниже для нового lead который вы хотите вызвать.
 	<BR>
 	<?php 
 	if (eregi("X",$dial_prefix))
@@ -10860,7 +10870,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:12px;z-index:39;" id="NoneInSessionBox">
-    <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center> Никого нет в вашей сессии: <span id="NoneInSessionID"></span><BR>
+    <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center> Никого нет в вашей сессии: <span id="NoneInSessionID"></span><BR>
 	<a href="#" onclick="NoneInSessionOK();return false;">Вернуться</a>
 	<BR><BR>
 	<a href="#" onclick="NoneInSessionCalL();return false;">Вызов Оператора Снова</a>
@@ -10868,7 +10878,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:40;" id="CustomerGoneBox">
-    <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center> Клиент разъединен: <span id="CustomerGoneChanneL"></span><BR>
+    <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center> Клиент разъединен: <span id="CustomerGoneChanneL"></span><BR>
 	<a href="#" onclick="CustomerGoneOK();return false;">Вернуться</a>
 	<BR><BR>
 	<a href="#" onclick="CustomerGoneHangup();return false;">Конец и Вызов Диспозиции</a>
@@ -10876,7 +10886,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:41;" id="WrapupBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=550><TR><TD align=center> Call Wrapup: <span id="WrapupTimer"></span> секунд осталось в wrapup<BR><BR>
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center> Call Wrapup: <span id="WrapupTimer"></span> секунд осталось в wrapup<BR><BR>
 	<span id="WrapupMessage"><?php echo $wrapup_message ?></span>
 	<BR><BR>
 	<a href="#" onclick="WrapupFinish();return false;">Финиш Wrapup и Переход</a>
@@ -10891,17 +10901,17 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:43;" id="AgenTDisablEBoX">
-    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center>Ваша сессия отключена<BR><a href="#" onclick="LogouT('DISABLED');return false;">ВЫХОД</a><BR><BR><a href="#" onclick="hideDiv('AgenTDisablEBoX');return false;">Вернуться</a>
+    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center>Ваша сессия отключена<BR><a href="#" onclick="LogouT('DISABLED');return false;">ВЫХОД</a><BR><BR><a href="#" onclick="hideDiv('AgenTDisablEBoX');return false;">Вернуться</a>
 </TD></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:44;" id="SysteMDisablEBoX">
-    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center>Существует проблема синхронизации времени с вашей системой, пожалуйста, сообщите об этом вашему системному администратору<BR><BR><BR><a href="#" onclick="hideDiv('SysteMDisablEBoX');return false;">Вернуться</a>
+    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center>Существует проблема синхронизации времени с вашей системой, пожалуйста, сообщите об этом вашему системному администратору<BR><BR><BR><a href="#" onclick="hideDiv('SysteMDisablEBoX');return false;">Вернуться</a>
 </TD></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:45;" id="LogouTBox">
-    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center><BR><span id="LogouTBoxLink">ВЫХОД</span></TD></TR></TABLE>
+    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center><BR><span id="LogouTBoxLink">ВЫХОД</span></TD></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:0px;top:70px;z-index:46;" id="DispoButtonHideA">
@@ -10917,7 +10927,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:49;" id="DispoSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> DISPOSITION ВЫЗОВ :<span id="DispoSelectPhonE"></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectHAspan"><a href="#" onclick="DispoHanguPAgaiN()">Разъединить Снова</a></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectMaxMin"><a href="#" onclick="DispoMinimize()"> минимизировать </a></span><BR>
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> DISPOSITION ВЫЗОВ :<span id="DispoSelectPhonE"></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectHAspan"><a href="#" onclick="DispoHanguPAgaiN()">Разъединить Снова</a></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectMaxMin"><a href="#" onclick="DispoMinimize()"> минимизировать </a></span><BR>
 	<span id="DispoSelectContent"> Выбор Диспозиции End-of-call </span>
 	<input type=hidden name=DispoSelection><BR>
 	<input type=checkbox name=DispoSelectStop size=1 value="0"> ПАУЗА ВЫЗОВА <BR>
@@ -10930,7 +10940,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:64;" id="PauseCodeSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> ВЫБЕРИТЕ КОД ПАУЗЫ :<BR>
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> ВЫБЕРИТЕ КОД ПАУЗЫ :<BR>
 	<span id="PauseCodeSelectContent"> Пауза Code Selection </span>
 	<input type=hidden name=PauseCodeSelection>
 	<BR><BR> &nbsp; 
@@ -10938,7 +10948,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:65;" id="GroupAliasSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> ВЫБОР ГРУППЫ ALIAS :<BR>
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> ВЫБОР ГРУППЫ ALIAS :<BR>
 	<span id="GroupAliasSelectContent"> Группа Alias выбора </span>
 	<input type=hidden name=GroupAliasSelection>
 	<BR><BR> &nbsp; 
@@ -10949,7 +10959,7 @@ if ($agent_display_dialable_leads > 0)
 
 
 <span style="position:absolute;left:0px;top:0px;z-index:50;" id="CallBackSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> Выберите дату для CallBack :<span id="CallBackDatE"></span><BR>
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> Выберите дату для CallBack :<span id="CallBackDatE"></span><BR>
 	<input type=hidden name=CallBackDatESelectioN ID="CallBackDatESelectioN">
 	<input type=hidden name=CallBackTimESelectioN ID="CallBackTimESelectioN">
 	<span id="CallBackDatEPrinT">Выберите Дату Ниже</span> &nbsp;
@@ -11002,7 +11012,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:53;" id="CloserSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> ВЫБОР INBOUND ГРУППЫ CLOSER <BR>
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> ВЫБОР INBOUND ГРУППЫ CLOSER <BR>
 	<span id="CloserSelectContent"> Closer Inbound Group Selection </span>
 	<input type=hidden name=CloserSelectList><BR>
 	<?php
@@ -11020,7 +11030,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:54;" id="TerritorySelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> TERRITORY SELECTION <BR>
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> TERRITORY SELECTION <BR>
 	<span id="TerritorySelectContent"> Territory Selection </span>
 	<input type=hidden name=TerritorySelectList><BR>
 	<a href="#" onclick="TerritorySelectContent_create();return false;"> RESET </a> | 

@@ -1,7 +1,7 @@
 <?php 
 # AST_IVRstats.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 81026-2026 - First build
@@ -11,6 +11,7 @@
 # 90310-2056 - Admin header
 # 90508-0644 - Changed to PHP long tags
 # 91112-0719 - Added in-group names to select list
+# 100214-1421 - Sort menu alphabetically
 #
 
 require("dbconnect.php");
@@ -44,12 +45,10 @@ $stmt = "SELECT use_non_latin FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -77,7 +76,7 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = "$NOW_DATE 00:00:00";}
 if (!isset($end_date)) {$end_date = "$NOW_DATE 23:23:59";}
 
-$stmt="select group_id,group_name from vicidial_inbound_groups;";
+$stmt="select group_id,group_name from vicidial_inbound_groups order by group_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);

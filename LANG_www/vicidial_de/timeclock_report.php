@@ -1,7 +1,7 @@
 <?php 
 # timeclock_report.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -10,6 +10,8 @@
 # 80707-0754 - Fixed groups bug, changed formatting
 # 90310-2059 - Added admin header
 # 90508-0644 - Changed to PHP long tags
+# 100214-1421 - Sort menu alphabetically
+# 100216-0042 - Added popup date selector
 #
 
 require("dbconnect.php");
@@ -46,14 +48,12 @@ $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active FROM sys
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -68,7 +68,7 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
@@ -83,7 +83,7 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
-$stmt="select user_group from vicidial_user_groups;";
+$stmt="select user_group from vicidial_user_groups order by user_group;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $user_groups_to_print = mysql_num_rows($rslt);
@@ -134,6 +134,9 @@ while ($i < $user_groups_to_print)
 
 -->
 </style>
+
+<script language="JavaScript" src="calendar_db.js"></script>
+<link rel="stylesheet" href="calendar.css">
 
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <TITLE>UserTimeclock Report
@@ -190,14 +193,42 @@ if ($DB > 0)
 	}
 
 echo "<CENTER>\n";
-echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
+echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">";
 echo "<TABLE Border=0 CELLSPACING=6><TR><TD ALIGN=LEFT VALIGN=TOP>\n";
 
 echo "<font class=\"select_bold\"><B>Zeitraum:</B></font><BR><CENTER>\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
+
+?>
+<script language="JavaScript">
+var o_cal = new tcal ({
+	// form name
+	'formname': 'vicidial_report',
+	// input name
+	'controlname': 'query_date'
+});
+o_cal.a_tpl.yearscroll = false;
+// o_cal.a_tpl.weekstart = 1; // Montag week start
+</script>
+<?php
+
 echo "<BR>to<BR>\n";
-echo "<INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
+echo "<INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+
+?>
+<script language="JavaScript">
+var o_cal = new tcal ({
+	// form name
+	'formname': 'vicidial_report',
+	// input name
+	'controlname': 'end_date'
+});
+o_cal.a_tpl.yearscroll = false;
+// o_cal.a_tpl.weekstart = 1; // Montag week start
+</script>
+<?php
+
 echo "</TD><TD ALIGN=LEFT VALIGN=TOP>\n";
 echo "<font class=\"select_bold\"><B>Benutzer-Gruppen:</B></font><BR><CENTER>\n";
 echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";

@@ -273,10 +273,11 @@
 # 100109-1338 - Fixed Manual dial live call detection
 # 100116-0709 - Added presets to script and web form variables
 # 100203-0640 - Fixed logging issues related to INBOUND_MAN dial method
+# 100207-1109 - Changed Pause Codes function to allow for multiple pause codes per pause period
 #
 
-$version = '2.2.0-251';
-$build = '100203-0640';
+$version = '2.2.0-252';
+$build = '100207-1109';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -2238,6 +2239,7 @@ $HKwidth =  ($MASTERwidth + 20);	# 450 - Hotkeys button
 $HSwidth =  ($MASTERwidth + 1);		# 431 - Header spacer
 $CLwidth =  ($MASTERwidth - 160);	# 270 - Calls in queue link
 
+$WRheight =  ($MASTERheight + 160);	# 460 - Warning boxes
 $CQheight =  ($MASTERheight + 140);	# 440 - Calls in queue section
 $SLheight =  ($MASTERheight + 122);	# 422 - SideBar link, Calls in queue link
 $HKheight =  ($MASTERheight + 105);	# 405 - HotKey active Button
@@ -2744,6 +2746,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var timer_action='';
 	var timer_action_message='';
 	var timer_action_seconds='';
+	var pause_code_counter=1;
 	var DiaLControl_auto_HTML = "<IMG SRC=\"../agc/images/vdc_LB_pause_OFF_tw.gif\" border=0 alt=\" 暫停 \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"../agc/images/vdc_LB_resume_tw.gif\" border=0 alt=\"恢復\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"../agc/images/vdc_LB_pause_tw.gif\" border=0 alt=\" 暫停 \"></a><IMG SRC=\"../agc/images/vdc_LB_resume_OFF_tw.gif\" border=0 alt=\"恢復\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"../agc/images/vdc_LB_pause_OFF_tw.gif\" border=0 alt=\" 暫停 \"><IMG SRC=\"../agc/images/vdc_LB_resume_OFF_tw.gif\" border=0 alt=\"恢復\">";
@@ -4301,7 +4304,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // Request list of USERONLY callbacks for this agent
 	function CalLBacKsLisTCheck()
 		{
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
 			{
 			alert("在自動外撥模式下您必須暫停才可以檢查回撥");
 			}
@@ -4412,7 +4415,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // Open page to enter details for a new manual dial lead
 	function NeWManuaLDiaLCalL(TVfast)
 		{
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
 			{
 			alert("在自動外撥模式下您必須暫停才可以人工外撥一個新的紀錄");
 			}
@@ -4922,7 +4925,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						else
 							{
 							web_form_vars = 
-							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&lead_id=" + document.vicidial_form.lead_id.value + 
 							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 							"&list_id=" + document.vicidial_form.list_id.value + 
 							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -5017,7 +5020,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						else
 							{
 							web_form_vars_two = 
-							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&lead_id=" + document.vicidial_form.lead_id.value + 
 							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 							"&list_id=" + document.vicidial_form.list_id.value + 
 							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -5338,7 +5341,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						else
 							{
 							web_form_vars = 
-							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&lead_id=" + document.vicidial_form.lead_id.value + 
 							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 							"&list_id=" + document.vicidial_form.list_id.value + 
 							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -5433,7 +5436,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						else
 							{
 							web_form_vars_two = 
-							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&lead_id=" + document.vicidial_form.lead_id.value + 
 							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 							"&list_id=" + document.vicidial_form.list_id.value + 
 							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -5550,7 +5553,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							if ( (view_scripts == 1) && (campaign_script.length > 0) )
 								{
 								web_form_vars = 
-								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&lead_id=" + document.vicidial_form.lead_id.value + 
 								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 								"&list_id=" + document.vicidial_form.list_id.value + 
 								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -5936,7 +5939,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						if ( (view_scripts == 1) && (campaign_script.length > 0) )
 							{
 							web_form_vars = 
-							"lead_id=" + document.vicidial_form.lead_id.value + 
+							"&lead_id=" + document.vicidial_form.lead_id.value + 
 							"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 							"&list_id=" + document.vicidial_form.list_id.value + 
 							"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -6087,6 +6090,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			VDRP_stage = 'PAUSED';
 			AutoDialReady = 0;
 			AutoDialWaiting = 0;
+			pause_code_counter = 0;
 			if (dial_method == "INBOUND_MAN")
 				{
 				auto_dial_level=starting_dial_level;
@@ -6668,7 +6672,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							else
 								{
 								web_form_vars = 
-								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&lead_id=" + document.vicidial_form.lead_id.value + 
 								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 								"&list_id=" + document.vicidial_form.list_id.value + 
 								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -6763,7 +6767,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							else
 								{
 								web_form_vars_two = 
-								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&lead_id=" + document.vicidial_form.lead_id.value + 
 								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 								"&list_id=" + document.vicidial_form.list_id.value + 
 								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -6863,7 +6867,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							if ( (view_scripts == 1) && (CalL_ScripT_id.length > 0) )
 								{
 								web_form_vars = 
-								"lead_id=" + document.vicidial_form.lead_id.value + 
+								"&lead_id=" + document.vicidial_form.lead_id.value + 
 								"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 								"&list_id=" + document.vicidial_form.list_id.value + 
 								"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -7044,7 +7048,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		if ( (webvars_refresh > 0) || (force_webvars_refresh > 0) )
 			{
 			web_form_vars = 
-			"lead_id=" + document.vicidial_form.lead_id.value + 
+			"&lead_id=" + document.vicidial_form.lead_id.value + 
 			"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 			"&list_id=" + document.vicidial_form.list_id.value + 
 			"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -7169,7 +7173,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		else
 			{
 			web_form_vars_two = 
-			"lead_id=" + document.vicidial_form.lead_id.value + 
+			"&lead_id=" + document.vicidial_form.lead_id.value + 
 			"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
 			"&list_id=" + document.vicidial_form.list_id.value + 
 			"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
@@ -7810,7 +7814,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // Generate the 暫停 Code Chooser panel
 	function PauseCodeSelectContent_create()
 		{
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
 			{
 			alert("在自動撥號模式下您必須入暫停原因代碼才能暫停");
 			}
@@ -8085,7 +8089,6 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					}
 				}
 			}
-
 		}
 
 
@@ -8119,7 +8122,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		if (xmlhttp) 
 			{ 
-			VMCpausecode_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass  + "&ACTION=PauseCodeSubmit&format=text&status=" + newpausecode + "&agent_log_id=" + agent_log_id + "&campaign=" + campaign + "&extension=" + extension + "&protocol=" + protocol + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages;
+			VMCpausecode_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass  + "&ACTION=PauseCodeSubmit&format=text&status=" + newpausecode + "&agent_log_id=" + agent_log_id + "&campaign=" + campaign + "&extension=" + extension + "&protocol=" + protocol + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&stage=" + pause_code_counter;
+			pause_code_counter++;
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(VMCpausecode_query); 
@@ -8127,11 +8131,17 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				{ 
 				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
 					{
-			//		alert(xmlhttp.responseText);
+					var check_pause_code = null;
+					var check_pause_code = xmlhttp.responseText;
+					var check_PC_array=check_pause_code.split("\n");
+					if (check_PC_array[1] == 'Next agent_log_id:')
+						{agent_log_id = check_PC_array[2];}
+				//	alert(xmlhttp.responseText + "\n|" + check_PC_array[1] + "\n|" + check_PC_array[2] + "|" + agent_log_id + "|" + pause_code_counter);
 					}
 				}
 			delete xmlhttp;
 			}
+//		return agent_log_id;
 		}
 
 
@@ -9260,7 +9270,7 @@ function phone_number_format(formatphone) {
 		{
 		if (CQauto_call_id > 0)
 			{
-			if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) )
+			if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
 				{
 				alert("您必須暫停籲請搶占隊列");
 				}
@@ -9495,7 +9505,7 @@ function phone_number_format(formatphone) {
 // 展現 the groups selection span
 	function OpeNGrouPSelectioN()
 		{
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
 			{
 			alert("您必須暫停才能變更群組");
 			}
@@ -9518,9 +9528,9 @@ function phone_number_format(formatphone) {
 // 展現 the territories selection span
 	function OpeNTerritorYSelectioN()
 		{
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
 			{
-			alert("您必須暫停才能變更群組");
+			alert("YOU MUST BE PAUSED TO CHANGE TERRITORIES");
 			}
 		else
 			{
@@ -10615,7 +10625,7 @@ echo "</head>\n";
 </font></span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:51;" id="CallBacKsLisTBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> 值機員的回撥電話 <?php echo $VD_login ?>:<BR>點選以下回撥紀錄進行客戶回撥，如果點選紀錄進行撥號，該筆紀錄將會從名單內移除.
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> 值機員的回撥電話 <?php echo $VD_login ?>:<BR>點選以下回撥紀錄進行客戶回撥，如果點選紀錄進行撥號，該筆紀錄將會從名單內移除.
 	<BR>
 	<div class="scroll_callback" id="CallBacKsLisT"></div>
 	<BR> &nbsp; 
@@ -10626,7 +10636,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:52;" id="NeWManuaLDiaLBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> 新的人工撥號紀錄給 <?php echo "$VD_login in campaign $VD_campaign" ?>:<BR><BR>請輸入下面的資訊給您想要外撥的新紀錄.
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> 新的人工撥號紀錄給 <?php echo "$VD_login in campaign $VD_campaign" ?>:<BR><BR>請輸入下面的資訊給您想要外撥的新紀錄.
 	<BR>
 	<?php 
 	if (eregi("X",$dial_prefix))
@@ -10860,7 +10870,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:12px;z-index:39;" id="NoneInSessionBox">
-    <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center> 無人在你主持的會議中: <span id="NoneInSessionID"></span><BR>
+    <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center> 無人在你主持的會議中: <span id="NoneInSessionID"></span><BR>
 	<a href="#" onclick="NoneInSessionOK();return false;">回上一頁</a>
 	<BR><BR>
 	<a href="#" onclick="NoneInSessionCalL();return false;">再次呼叫值機員</a>
@@ -10868,7 +10878,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:40;" id="CustomerGoneBox">
-    <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center> 客戶已掛斷電話: <span id="CustomerGoneChanneL"></span><BR>
+    <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center> 客戶已掛斷電話: <span id="CustomerGoneChanneL"></span><BR>
 	<a href="#" onclick="CustomerGoneOK();return false;">回上一頁</a>
 	<BR><BR>
 	<a href="#" onclick="CustomerGoneHangup();return false;">結束通話並註記結束碼</a>
@@ -10876,7 +10886,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:41;" id="WrapupBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=550><TR><TD align=center> 電話文書: <span id="WrapupTimer"></span> 文書狀態尚餘秒數<BR><BR>
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center> 電話文書: <span id="WrapupTimer"></span> 文書狀態尚餘秒數<BR><BR>
 	<span id="WrapupMessage"><?php echo $wrapup_message ?></span>
 	<BR><BR>
 	<a href="#" onclick="WrapupFinish();return false;">結束文書並繼續</a>
@@ -10891,17 +10901,17 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:43;" id="AgenTDisablEBoX">
-    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center>Your session has been disabled<BR><a href="#" onclick="LogouT('DISABLED');return false;">登出</a><BR><BR><a href="#" onclick="hideDiv('AgenTDisablEBoX');return false;">回上一頁</a>
+    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center>Your session has been disabled<BR><a href="#" onclick="LogouT('DISABLED');return false;">登出</a><BR><BR><a href="#" onclick="hideDiv('AgenTDisablEBoX');return false;">回上一頁</a>
 </TD></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:44;" id="SysteMDisablEBoX">
-    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center>系統中有時間同步問題，請洽系統管理者<BR><BR><BR><a href="#" onclick="hideDiv('SysteMDisablEBoX');return false;">回上一頁</a>
+    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center>系統中有時間同步問題，請洽系統管理者<BR><BR><BR><a href="#" onclick="hideDiv('SysteMDisablEBoX');return false;">回上一頁</a>
 </TD></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:45;" id="LogouTBox">
-    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=500><TR><TD align=center><BR><span id="LogouTBoxLink">登出</span></TD></TR></TABLE>
+    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center><BR><span id="LogouTBoxLink">登出</span></TD></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:0px;top:70px;z-index:46;" id="DispoButtonHideA">
@@ -10917,7 +10927,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:49;" id="DispoSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> 通話結束 :<span id="DispoSelectPhonE"></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectHAspan"><a href="#" onclick="DispoHanguPAgaiN()">再次掛斷</a></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectMaxMin"><a href="#" onclick="DispoMinimize()"> 最小 </a></span><BR>
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> 通話結束 :<span id="DispoSelectPhonE"></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectHAspan"><a href="#" onclick="DispoHanguPAgaiN()">再次掛斷</a></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectMaxMin"><a href="#" onclick="DispoMinimize()"> 最小 </a></span><BR>
 	<span id="DispoSelectContent"> 結束碼選擇 </span>
 	<input type=hidden name=DispoSelection><BR>
 	<input type=checkbox name=DispoSelectStop size=1 value="0"> 暫停值機員撥號 <BR>
@@ -10930,7 +10940,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:64;" id="PauseCodeSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> 選擇暫停原因代碼 :<BR>
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> 選擇暫停原因代碼 :<BR>
 	<span id="PauseCodeSelectContent"> 暫停 Code Selection </span>
 	<input type=hidden name=PauseCodeSelection>
 	<BR><BR> &nbsp; 
@@ -10938,7 +10948,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:65;" id="GroupAliasSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> 選擇群組代名 :<BR>
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> 選擇群組代名 :<BR>
 	<span id="GroupAliasSelectContent"> 群組代名選擇 </span>
 	<input type=hidden name=GroupAliasSelection>
 	<BR><BR> &nbsp; 
@@ -10949,7 +10959,7 @@ if ($agent_display_dialable_leads > 0)
 
 
 <span style="position:absolute;left:0px;top:0px;z-index:50;" id="CallBackSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> 選擇回撥日期 :<span id="CallBackDatE"></span><BR>
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> 選擇回撥日期 :<span id="CallBackDatE"></span><BR>
 	<input type=hidden name=CallBackDatESelectioN ID="CallBackDatESelectioN">
 	<input type=hidden name=CallBackTimESelectioN ID="CallBackTimESelectioN">
 	<span id="CallBackDatEPrinT">選擇日期小於</span> &nbsp;
@@ -11002,7 +11012,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:53;" id="CloserSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> CLOSER INBOUND GROUP SELECTION <BR>
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> CLOSER INBOUND GROUP SELECTION <BR>
 	<span id="CloserSelectContent"> Closer Inbound Group Selection </span>
 	<input type=hidden name=CloserSelectList><BR>
 	<?php
@@ -11020,7 +11030,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:54;" id="TerritorySelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=460><TR><TD align=center VALIGN=top> TERRITORY SELECTION <BR>
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> TERRITORY SELECTION <BR>
 	<span id="TerritorySelectContent"> Territory Selection </span>
 	<input type=hidden name=TerritorySelectList><BR>
 	<a href="#" onclick="TerritorySelectContent_create();return false;"> 重置 </a> | 

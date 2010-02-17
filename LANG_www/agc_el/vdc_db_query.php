@@ -232,12 +232,13 @@
 # 100109-1336 - Fixed Manual dial live call detection
 # 100113-1949 - Fixed dispo_choice bug and added dispo_status to dispo URL call
 # 100202-2306 - Fixed logging issues related to INBOUND_MAN dial_method
+# 100207-1110 - Changed Pause Codes function to allow for multiple pause codes per pause period
 #
 
-$version = '2.2.0-140';
-$build = '100202-2306';
+$version = '2.2.0-141';
+$build = '100207-1110';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=300;
+$mysql_log_count=309;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -1864,7 +1865,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$stmt = "select pause_epoch,pause_sec,wait_epoch,talk_epoch,dispo_epoch,agent_log_id from vicidial_agent_log where agent_log_id >= '$agent_log_id' and user='$user' order by agent_log_id desc limit 1;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00301',$user,$server_ip,$session_name,$one_mysql_log);}
 					$VDpr_ct = mysql_num_rows($rslt);
 					if ( ($VDpr_ct > 0) and (strlen($row[3]<5)) and (strlen($row[4]<5)) )
 						{
@@ -1875,7 +1876,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
 							if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_query($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00302',$user,$server_ip,$session_name,$one_mysql_log);}
 						}
 					}
 
@@ -2293,7 +2294,7 @@ if ($ACTION == 'manDiaLonly')
 			$stmt = "select pause_epoch,pause_sec,wait_epoch,talk_epoch,dispo_epoch,agent_log_id from vicidial_agent_log where agent_log_id >= '$agent_log_id' and user='$user' order by agent_log_id desc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00303',$user,$server_ip,$session_name,$one_mysql_log);}
 			$VDpr_ct = mysql_num_rows($rslt);
 			if ( ($VDpr_ct > 0) and (strlen($row[3]<5)) and (strlen($row[4]<5)) )
 				{
@@ -2304,7 +2305,7 @@ if ($ACTION == 'manDiaLonly')
 				$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00304',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 			}
 
@@ -6139,11 +6140,61 @@ if ($ACTION == 'PauseCodeSubmit')
 		}
 	else
 		{
-		$stmt="UPDATE vicidial_agent_log set sub_status=\"$status\" where agent_log_id='$agent_log_id';";
-			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00175',$user,$server_ip,$session_name,$one_mysql_log);}
-		$affected_rows = mysql_affected_rows($link);
+		### if this is the first pause code entry in a pause session, simply update and log to queue_log
+		if ($stage < 1)
+			{
+			$stmt="UPDATE vicidial_agent_log set sub_status=\"$status\" where agent_log_id='$agent_log_id';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00175',$user,$server_ip,$session_name,$one_mysql_log);}
+			$affected_rows = mysql_affected_rows($link);
+			}
+		### this is not the first pause code entry, insert new vicidial_agent_log entry
+		else
+			{
+			$pause_sec=0;
+			$stmt = "select pause_epoch from vicidial_agent_log where agent_log_id='$agent_log_id';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00305',$user,$server_ip,$session_name,$one_mysql_log);}
+			$VDpr_ct = mysql_num_rows($rslt);
+			if ($VDpr_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$pause_sec = ($StarTtime - $row[0]);
+				}
+			$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec' where agent_log_id='$agent_log_id';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00306',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			$user_group='';
+			$stmt="SELECT user_group FROM vicidial_users where user='$user' LIMIT 1;";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00309',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$ug_record_ct = mysql_num_rows($rslt);
+			if ($ug_record_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$user_group =		trim("$row[0]");
+				}
+
+			$stmt="INSERT INTO vicidial_agent_log (user,server_ip,event_time,campaign_id,pause_epoch,pause_sec,wait_epoch,user_group,sub_status) values('$user','$server_ip','$NOW_TIME','$campaign','$StarTtime','0','$StarTtime','$user_group','$status');";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00307',$user,$server_ip,$session_name,$one_mysql_log);}
+			$affected_rows = mysql_affected_rows($link);
+			$agent_log_id = mysql_insert_id($link);
+
+			$stmt="UPDATE vicidial_live_agents SET agent_log_id='$agent_log_id' where user='$user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00308',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$VLAaffected_rows_update = mysql_affected_rows($link);
+			}
+
+		### if entry accepted, add a queue_log entry if QM integration is enabled
 		if ($affected_rows > 0) 
 			{
 			#############################################
@@ -6188,7 +6239,7 @@ if ($ACTION == 'PauseCodeSubmit')
 				}
 			}
 		}
-	echo " Παύση Code has been updated to $status for $agent_log_id\n";
+	echo ' Παύση Code ' . $status . " has been recorded\nNext agent_log_id:\n" . $agent_log_id . "\n";
 	}
 
 

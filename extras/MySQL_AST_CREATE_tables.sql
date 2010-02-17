@@ -1203,7 +1203,9 @@ db_schema_update_date DATETIME,
 enable_second_webform ENUM('0','1') default '1',
 default_webphone ENUM('1','0') default '0',
 default_external_server_ip ENUM('1','0') default '0',
-webphone_url VARCHAR(255) default ''
+webphone_url VARCHAR(255) default '',
+static_agent_url VARCHAR(255) default '',
+default_phone_code VARCHAR(8) default '1'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -1915,6 +1917,7 @@ call_notes TEXT
 );
 
 ALTER TABLE vicidial_call_notes AUTO_INCREMENT = 100;
+CREATE INDEX lead_id on vicidial_call_notes (lead_id);
 
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
@@ -2053,7 +2056,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1199',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1200',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

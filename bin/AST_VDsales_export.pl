@@ -547,7 +547,7 @@ else
 ########### CURRENT DAY SALES GATHERING outbound-only: vicidial_log  ######
 ###########################################################################
 $stmtA = "select vicidial_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,call_date,vicidial_list.lead_id,vicidial_users.full_name,vicidial_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_log.list_id,title,address3,last_local_call_time,uniqueid,length_in_sec,vicidial_list.list_id,vicidial_list.list_id,UNIX_TIMESTAMP(vicidial_log.call_date),vicidial_campaigns.campaign_name,vicidial_campaigns.campaign_cid from vicidial_list,vicidial_log,vicidial_users,vicidial_campaigns where $campaignSQL $sale_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_log.user and vicidial_log.campaign_id=vicidial_campaigns.campaign_id order by call_date;";
-if ($output_format =~ /^tab-QMcustomUSA$/)
+if ($output_format =~ /^tab-QMcustomUSA$|^tab-SCcustomUSA$/)
 	{
 	$stmtA = "select vicidial_log.user,8,8,8,8,8,8,8,vicidial_log.phone_number,8,8,8,call_date,vicidial_log.lead_id,vicidial_users.full_name,vicidial_log.status,8,8,vicidial_log.list_id,8,8,call_date,uniqueid,length_in_sec,vicidial_log.list_id,vicidial_log.list_id,UNIX_TIMESTAMP(vicidial_log.call_date),vicidial_campaigns.campaign_name,vicidial_campaigns.campaign_cid from vicidial_log,vicidial_users,vicidial_campaigns where $campaignSQL $sale_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_users.user=vicidial_log.user and vicidial_log.campaign_id=vicidial_campaigns.campaign_id order by call_date;";
 	}
@@ -607,7 +607,7 @@ if (length($with_inboundSQL)>3)
 	########### CURRENT DAY SALES GATHERING inbound-only: vicidial_closer_log  ######
 	###########################################################################
 	$stmtA = "select vicidial_closer_log.user,first_name,last_name,address1,address2,city,state,postal_code,vicidial_list.phone_number,vicidial_list.email,security_phrase,vicidial_list.comments,call_date,vicidial_list.lead_id,vicidial_users.full_name,vicidial_closer_log.status,vicidial_list.vendor_lead_code,vicidial_list.source_id,vicidial_closer_log.list_id,campaign_id,title,address3,last_local_call_time,xfercallid,closecallid,uniqueid,length_in_sec,queue_seconds,vicidial_list.list_id,vicidial_list.list_id,UNIX_TIMESTAMP(vicidial_closer_log.call_date),agent_alert_delay from vicidial_list,vicidial_closer_log,vicidial_users,vicidial_inbound_groups where $with_inboundSQL $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_closer_log.lead_id=vicidial_list.lead_id and vicidial_users.user=vicidial_closer_log.user and vicidial_inbound_groups.group_id=vicidial_closer_log.campaign_id order by call_date;";
-	if ($output_format =~ /^tab-QMcustomUSA$/)
+	if ($output_format =~ /^tab-QMcustomUSA$|^tab-SCcustomUSA$/)
 		{
 		$stmtA = "select vicidial_closer_log.user,8,8,8,8,8,8,8,vicidial_closer_log.phone_number,8,8,8,call_date,vicidial_closer_log.lead_id,vicidial_users.full_name,vicidial_closer_log.status,8,8,vicidial_closer_log.list_id,campaign_id,8,8,call_date,xfercallid,closecallid,uniqueid,length_in_sec,queue_seconds,vicidial_closer_log.list_id,vicidial_closer_log.list_id,UNIX_TIMESTAMP(vicidial_closer_log.call_date),agent_alert_delay from vicidial_closer_log,vicidial_users,vicidial_inbound_groups where $with_inboundSQL $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' and vicidial_users.user=vicidial_closer_log.user and vicidial_inbound_groups.group_id=vicidial_closer_log.campaign_id order by call_date;";
 		}
@@ -749,7 +749,7 @@ if ($ftp_transfer > 0)
 	$ftp->quit;
 	}
 
-if ( ( ($DB) || ($totals_only > 0) ) && ($output_format =~ /^tab-QMcustomUSA$/) )
+if ( ( ($DB) || ($totals_only > 0) ) && ($output_format =~ /^tab-QMcustomUSA$|^tab-SCcustomUSA$/) )
 	{
 	if ($OUTtalk > 0) {$OUTtalkmin = ($OUTtalk / 60);}
 	if ($INtalk > 0) {$INtalkmin = ($INtalk / 60);}
@@ -1183,6 +1183,8 @@ sub select_format_loop
 			# 11- application name, 4 characters
 			# 12- order number (just a dash for now '-')
 			# 13- call recording filenames
+			# 14- outbound/inbound
+			# 15- domestic or international
 
 			$uniqueid =~ s/\.00000//gi;
 			$uniqueid =~ s/\.0000//gi;
@@ -1204,6 +1206,109 @@ sub select_format_loop
 			if ($uniqueidLIST !~ /\|$uniqueid\|/)
 				{
 				$str = "103$uniqueid\t$call_date_array[0]\t$call_date_array[1]\t$phone_areacode\t$phone_number\t$did_pattern\t$closer\t$queue_seconds\t$talk_seconds\t$dispo_time\t$application\t-\t$ivr_filename\t$outbound\t$domestic\t\n";
+
+				$uniqueidLIST .= "$uniqueid|";
+				if ($DBX > 0) {print "UNIQUE: -----$uniqueidLIST-----$uniqueid";}
+		#		if ($DBX > 0) {print "$uniqueid|$talk_seconds|$outbound|$INcalls|$OUTcalls\n";}
+
+				if ($outbound =~ /Y/) {$OUTtalk = ($OUTtalk + $talk_seconds);   $OUTcalls++;}
+				else {$INtalk = ($INtalk + $talk_seconds);   $INcalls++;}
+				}
+
+			}
+
+		if ($output_format =~ /^tab-SCcustomUSA$/) 
+			{
+			# 1245328655100219	2009-06-18	05:37:35	937	9375551212	8185551223	8106	35	255	0	DSAW	-	q8187-20090618-053939-1245328655.100219.WAV|q8186-20090618-053735-1245328655.100219.WAV
+
+			# 1-  Call id: uniqueid padded
+			# 2-  Date: call date in EST
+			# 3-  Time: call time in EST.
+			# 4-  Area Code: area code of the caller
+			# 5-  CID: full 10-digit phone number of the caller
+			# 6-  DID: inbound number that was dialed by the caller
+			# 7-  Agent id: Who answered the call(user), leave blank is call was dropped / abondoned.
+			# 8-  Hold: time in seconds for how long the call was holding before getting answered by an agent
+			# 9-  Talk: time in seconds for how long the agent was talking with the customer
+			# 10-  ACW: time in seconds for how long the agent spent wrapping up the call before answering the next call.
+			# 11-  Campaign: Name of Campaign(application code, 4 characters)
+			# 12-  Type of Call: status(disposition)
+			# 13-  Work Order #: i.e. Cxxxxxxxxxxx
+			# 14-  Call_Recording_Filenames: file name for recorded file name for the call.. Example: 1001.wav
+			# 15-  Inbound/Outbound: Inbound or Outbound call designation
+			# 16-  Appointment Set Date and Time: Time appt was set for in EST
+			# 17-  Note Time Stamp: Time Stamp of Note
+			# 18-  Note Text: Actual Note taken by agent
+
+			# 1-  unique number (digits only)
+			# 2-  date
+			# 3-  time
+			# 4-  CID arecode
+			# 5-  CID full
+			# 6-  DID
+			# 7-  user
+			# 8-  hold time (seconds)
+			# 9-  talk time (seconds)
+			# 10- after call work time (seconds)
+			# 11- application name, 4 characters
+			# 12- order number (just a dash for now '-')
+			# 13- call recording filenames
+			# 14- outbound/inbound
+			# 15- domestic or international
+
+			$stmtB = "select call_date,order_id,appointment_date,appointment_time,call_notes from vicidial_call_notes where lead_id='$lead_id' and uniqueid='$uniqueid' and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' order by call_date desc limit 1;";
+			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+			$sthBrows=$sthB->rows;
+			$rec_countB=0;
+			while ($sthBrows > $rec_countB)
+				{
+				@aryB = $sthB->fetchrow_array;
+				$appointment_call_date =	$aryB[0];
+				$order_id =					$aryB[1];
+				$appointment_date =			$aryB[2];
+				$appointment_time =			$aryB[3];
+				$call_notes =				$aryB[4];
+				$rec_countB++;
+				}
+			$sthB->finish();
+
+			$dispo_time = 0;
+			$stmtB = "select dispo_sec from vicidial_agent_log where lead_id='$lead_id' and user='$user' and event_time > '$shipdate 00:00:01' and event_time < '$shipdate 23:59:59' order by event_time desc limit 1;";
+			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+			$sthBrows=$sthB->rows;
+			$rec_countB=0;
+			while ($sthBrows > $rec_countB)
+				{
+				@aryB = $sthB->fetchrow_array;
+				$dispo_time =	$aryB[0];
+				$rec_countB++;
+				}
+			$sthB->finish();
+
+			$uniqueid =~ s/\.00000//gi;
+			$uniqueid =~ s/\.0000//gi;
+			$uniqueid =~ s/\.000//gi;
+			$uniqueid =~ s/\.00//gi;
+			$uniqueid =~ s/\.0//gi;
+			$uniqueid =~ s/\D//gi;
+			@call_date_array = split(/ /,$call_date);
+			while (length($phone_number)>10) {$phone_number =~ s/^.//gi;}
+			$phone_areacode = substr($phone_number, 0, 3);
+			if (length($closer) < 1) {$closer = $user;}
+			if ($closer =~ /VDCL|VDAD/) {$closer='-';}
+			$application = 	substr($did_name, 0, 4);
+			$queue_seconds = int($queue_seconds + .5);
+			$talk_seconds = ( ($length_in_sec - $queue_seconds) - $agent_alert_delay);
+			if ($talk_seconds < 0) {$talk_seconds=0;}
+			$call_notes =~ s/\r|\n|\t//gi;
+			if ($outbound =~ /Y/) {$in_out = "Outbound";}
+			else {$in_out = "Inbound";}
+
+			if ($uniqueidLIST !~ /\|$uniqueid\|/)
+				{
+				$str = "103$uniqueid\t$call_date_array[0]\t$call_date_array[1]\t$phone_areacode\t$phone_number\t$did_pattern\t$closer\t$queue_seconds\t$talk_seconds\t$dispo_time\t$application\t$status\t$order_id\t$ivr_filename\t$in_out\t$appointment_date $appointment_time\t$appointment_call_date\t$call_notes\t\n";
 
 				$uniqueidLIST .= "$uniqueid|";
 				if ($DBX > 0) {print "UNIQUE: -----$uniqueidLIST-----$uniqueid";}
