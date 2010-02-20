@@ -43,6 +43,8 @@ OTHER CHANGES:
 6. Added Call Log View options to the Agent screen, can be enabled in the 
 	User Group screen or the User screen in Administration
 
+7. Added custom dialplan entries fields for System Settings and Servers
+
 
 
 

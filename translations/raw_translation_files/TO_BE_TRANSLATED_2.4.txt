@@ -29,6 +29,10 @@ Agent Call Log View||
 This option defines whether the agent will be able to see their call log for calls handled through the ViciDial agent screen. Default is N for no or disabled||
 Agent Call Log View Override||
 This setting will override whatever the users user group has set for Agent Call Log View. DISABLED will use the user group setting. N will not allow showing the users call log. Y will allow showing the user call log. Default is DISABLED||
+Custom Dialplan Entry||
+This field allows you to enter in any dialplan elements that you want for the server, the lines will be added to the default context||
+This field allows you to enter in any dialplan elements that you want for all of the asterisk servers, the lines will be added to the default context||
+This option allows you to enter custom dialplan lines into Call Menus, Servers and System Settings. Default is 0 for inactive||
 
 
 ############################################################ CLIENT

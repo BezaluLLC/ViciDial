@@ -66,3 +66,9 @@ ALTER TABLE vicidial_user_groups ADD agent_call_log_view ENUM('Y','N') default '
 ALTER TABLE vicidial_users ADD agent_call_log_view_override ENUM('DISABLED','Y','N') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1201',db_schema_update_date=NOW();
+
+ALTER TABLE system_settings ADD custom_dialplan_entry TEXT;
+
+ALTER TABLE servers ADD custom_dialplan_entry TEXT;
+
+UPDATE system_settings SET db_schema_version='1202',db_schema_update_date=NOW();

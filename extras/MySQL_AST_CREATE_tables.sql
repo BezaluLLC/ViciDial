@@ -119,7 +119,8 @@ vicidial_balance_rank TINYINT(3) UNSIGNED default '0',
 rebuild_music_on_hold ENUM('Y','N') default 'Y',
 active_agent_login_server ENUM('Y','N') default 'Y',
 conf_secret VARCHAR(20) default 'test',
-external_server_ip VARCHAR(100) default ''
+external_server_ip VARCHAR(100) default '',
+custom_dialplan_entry TEXT
 );
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -1208,7 +1209,8 @@ default_external_server_ip ENUM('1','0') default '0',
 webphone_url VARCHAR(255) default '',
 static_agent_url VARCHAR(255) default '',
 default_phone_code VARCHAR(8) default '1',
-enable_agc_dispo_log ENUM('0','1') default '0'
+enable_agc_dispo_log ENUM('0','1') default '0',
+custom_dialplan_entry TEXT
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2061,7 +2063,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1201',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1202',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# ADMIN_keepalive_ALL.pl   version  2.2.0
+# ADMIN_keepalive_ALL.pl   version  2.4
 #
 # Designed to keep the astGUIclient processes alive and check every minute
 # Replaces all other ADMIN_keepalive scripts
@@ -14,7 +14,7 @@
 #  - Runs trigger processes at defined times
 #  - Auto reset lists at defined times
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61011-1348 - First build
@@ -47,6 +47,7 @@
 # 91109-1205 - Added requirecalltoken=no as IAX setting for newer Asterisk 1.4 versions
 # 91125-0709 - Added conf_secret to servers conf
 # 91205-2315 - Added delete_vm_after_email option to voicemail conf generation
+# 100220-1410 - Added System Settings and Servers custom dialplan entries
 #
 
 $DB=0; # Debug flag
@@ -739,7 +740,7 @@ if ($timeclock_end_of_day_NOW > 0)
 ################################################################################
 
 ##### Get the settings from system_settings #####
-$stmtA = "SELECT sounds_central_control_active,active_voicemail_server FROM system_settings;";
+$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry FROM system_settings;";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -749,6 +750,7 @@ if ($sthArows > 0)
 	@aryA = $sthA->fetchrow_array;
 	$sounds_central_control_active =	$aryA[0];
 	$active_voicemail_server =			$aryA[1];
+	$SScustom_dialplan_entry =			$aryA[2];
 	}
 $sthA->finish();
 if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_server)) eq (length($server_ip))) )
@@ -769,7 +771,7 @@ else
 	}
 
 ##### Get the settings for this server's server_ip #####
-$stmtA = "SELECT active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,asterisk_version,sounds_update,conf_secret FROM servers where server_ip='$server_ip';";
+$stmtA = "SELECT active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,asterisk_version,sounds_update,conf_secret,custom_dialplan_entry FROM servers where server_ip='$server_ip';";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -777,12 +779,13 @@ $sthArows=$sthA->rows;
 if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$active_asterisk_server	=	$aryA[0];
-	$generate_vicidial_conf	=	$aryA[1];
-	$rebuild_conf_files	=		$aryA[2];
-	$asterisk_version =			$aryA[3];
-	$sounds_update =			$aryA[4];
-	$self_conf_secret =			$aryA[5];
+	$active_asterisk_server	=		$aryA[0];
+	$generate_vicidial_conf	=		$aryA[1];
+	$rebuild_conf_files	=			$aryA[2];
+	$asterisk_version =				$aryA[3];
+	$sounds_update =				$aryA[4];
+	$self_conf_secret =				$aryA[5];
+	$SERVERcustom_dialplan_entry =	$aryA[6];
 	}
 $sthA->finish();
 
@@ -1791,6 +1794,10 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	print ext "[vicidial-auto]\n";
 	print ext 'exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
 	print ext "\n";
+	if (length($SScustom_dialplan_entry)>5)
+		{print ext "; System Setting Custom Dialplan\n$SScustom_dialplan_entry\n\n";}
+	if (length($SERVERcustom_dialplan_entry)>5)
+		{print ext "; Server Custom Dialplan\n$SERVERcustom_dialplan_entry\n\n";}
 	print ext "$Lext\n";
 	print ext "$Vext\n";
 	print ext "$Pext\n";
