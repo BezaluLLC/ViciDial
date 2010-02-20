@@ -12,7 +12,7 @@
 #  - $pass
 # optional variables:
 #  - $format - ('text','debug')
-#  - $ACTION - ('regCLOSER','regTERRITORY','manDiaLnextCALL','manDiaLskip','manDiaLonly','manDiaLlookCaLL','manDiaLlogCALL','userLOGout','updateDISPO','updateLEAD','VDADpause','VDADready','VDADcheckINCOMING','UpdatEFavoritEs','CalLBacKLisT','CalLBacKCounT','PauseCodeSubmit','LogiNCamPaigns','alt_phone_change','AlertControl','AGENTSview','CALLSINQUEUEview','CALLSINQUEUEgrab','DiaLableLeaDsCounT','UpdateFields')
+#  - $ACTION - ('regCLOSER','regTERRITORY','manDiaLnextCALL','manDiaLskip','manDiaLonly','manDiaLlookCaLL','manDiaLlogCALL','userLOGout','updateDISPO','updateLEAD','VDADpause','VDADready','VDADcheckINCOMING','UpdatEFavoritEs','CalLBacKLisT','CalLBacKCounT','PauseCodeSubmit','LogiNCamPaigns','alt_phone_change','AlertControl','AGENTSview','CALLSINQUEUEview','CALLSINQUEUEgrab','DiaLableLeaDsCounT','UpdateFields','CALLLOGview','LEADINFOview')
 #  - $stage - ('start','finish','lookup','new')
 #  - $closer_choice - ('CL_TESTCAMP_L CL_OUT123_L -')
 #  - $conf_exten - ('8600011',...)
@@ -87,6 +87,7 @@
 #  - $agent_territories - ('ABC001','ABC002'...)
 #  - $alt_num_status - ('0','1')
 #  - $DiaL_SecondS - ('0','1','2',...)
+#  - $date - ('2010-02-19')
 #
 # CHANGELOG:
 # 50629-1044 - First build of script
@@ -234,12 +235,14 @@
 # 100122-0757 - Added NOT-LOGGED-IN-AGENTS option for sidebar view and transfer view
 # 100202-2305 - Fixed logging issues related to INBOUND_MAN dial_method
 # 100207-1104 - Changed Pause Codes function to allow for multiple pause codes per pause period
+# 100219-1437 - Added agent_dispo_log file option
+# 100220-1041 - Added CALLLOGview and LEADINFOview functions
 #
 
-$version = '2.4-142';
-$build = '100207-1104';
+$version = '2.4-144';
+$build = '100220-1041';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=310;
+$mysql_log_count=312;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -419,6 +422,8 @@ if (isset($_GET["alt_num_status"]))				{$alt_num_status=$_GET["alt_num_status"];
 	elseif (isset($_POST["alt_num_status"]))	{$alt_num_status=$_POST["alt_num_status"];}
 if (isset($_GET["DiaL_SecondS"]))				{$DiaL_SecondS=$_GET["DiaL_SecondS"];}
 	elseif (isset($_POST["DiaL_SecondS"]))		{$DiaL_SecondS=$_POST["DiaL_SecondS"];}
+if (isset($_GET["date"]))						{$date=$_GET["date"];}
+	elseif (isset($_POST["date"]))				{$date=$_POST["date"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -5788,6 +5793,46 @@ if ($ACTION == 'updateDISPO')
 			fclose($fp);
 			}
 		}
+
+	##### check if system is set to generate logfile for dispos
+	$stmt="SELECT enable_agc_dispo_log FROM system_settings;";
+	$rslt=mysql_query($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00311',$user,$server_ip,$session_name,$one_mysql_log);}
+	if ($DB) {echo "$stmt\n";}
+	$enable_agc_dispo_log_ct = mysql_num_rows($rslt);
+	if ($enable_agc_dispo_log_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$enable_agc_dispo_log =$row[0];
+		}
+
+	if ( ($WeBRooTWritablE > 0) and ($enable_agc_dispo_log > 0) )
+		{
+		$talk_time = 0;
+		$stmt = "select talk_sec,dead_sec from vicidial_agent_log where lead_id='$lead_id' and agent_log_id='$CALL_agent_log_id';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00312',$user,$server_ip,$session_name,$one_mysql_log);}
+		$VAL_talk_ct = mysql_num_rows($rslt);
+		if ($VAL_talk_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$talk_sec	=		$row[0];
+			$dead_sec	=		$row[1];
+			$talk_time = ($talk_sec - $dead_sec);
+			if ($talk_time < 1)
+				{
+				$talk_time = 0;
+				}
+			}
+
+		#	DATETIME|campaign|lead_id|phone_number|user|type|Call_ID||province|talk_sec|
+		#	2010-02-19 11:11:11|TESTCAMP|65432|3125551212|1234|D|Y09876543210987654||note|123|
+		$fp = fopen ("./xfer_log.txt", "a");
+		fwrite ($fp, "$NOW_TIME|$campaign|$lead_id|$phone_number|$user|D|$MDnextCID||$province|$talk_sec|\n");
+		fclose($fp);
+		}
+
 	echo 'Lead ' . $lead_id . ' has been changed to ' . $dispo_choice . " Status\nNext agent_log_id:\n" . $agent_log_id . "\n";
 	}
 
@@ -6638,6 +6683,201 @@ if ($ACTION == 'CALLSINQUEUEview')
 			$loop_count++;
 			}
 		echo "</TABLE><BR> &nbsp;\n";
+		}
+	}
+
+
+################################################################################
+### CALLLOGview - display one day calls for an agent
+################################################################################
+if ($ACTION == 'CALLLOGview')
+	{
+	if (strlen($date) < 10)
+		{$date = $NOW_DATE;}
+	if (strlen($stage) < 3)
+		{$stage = '670';}
+
+	$date_array = explode("-",$date);
+	$day_next = mktime(7, 0, 0, $date_array[1], ($date_array[2] + 1), $date_array[0]);
+	$next_day_date = date("Y-m-d",$day_next);
+	$day_old = mktime(7, 0, 0, $date_array[1], ($date_array[2] - 1), $date_array[0]);
+	$past_day_date = date("Y-m-d",$day_old);
+	$week_old = mktime(7, 0, 0, $date_array[1], ($date_array[2] - 7), $date_array[0]);
+	$past_week_date = date("Y-m-d",$week_old);
+
+	echo "<CENTER>\n";
+	echo "<font style=\"font-size:14px;font-family:sans-serif;\"><B>";
+	echo "<a href=\"#\" onclick=\"VieWCalLLoG('$past_week_date','');return false;\"> << $past_week_date</a> &nbsp; &nbsp; ";
+	echo "<a href=\"#\" onclick=\"VieWCalLLoG('$past_day_date','');return false;\"> < $past_day_date</a> &nbsp; &nbsp; ";
+	if ($NOW_DATE != $date)
+		{echo "<a href=\"#\" onclick=\"VieWCalLLoG('$next_day_date','');return false;\"> $next_day_date > </a> &nbsp; &nbsp; ";}
+	echo "<input type=text name=calllogdate id=calllogdate value=\"$date\" size=12 maxlength=10> ";
+	echo "<a href=\"#\" onclick=\"VieWCalLLoG('','form');return false;\">GO</a> &nbsp;  &nbsp; &nbsp; ";
+	echo "<a href=\"#\" onclick=\"hideDiv('CalLLoGDisplaYBox');return false;\">close</a>";
+	echo "</B></font>\n";
+	echo "<BR>\n";
+	echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
+	echo "<TR>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> &nbsp; # &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; DATE/TIME &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; LENGTH &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; STATUS &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; PHONE &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; CAMPAIGN &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; IN/OUT &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; ALT &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; HANGUP &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; INFO &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; DIAL &nbsp; </font></TD>";
+	echo "</TR>";
+
+
+	$stmt="select start_epoch,call_date,campaign_id,length_in_sec,status,phone_code,phone_number,lead_id,term_reason,alt_dial,comments from vicidial_log where user='$user' and call_date >= '$date 0:00:00'  and call_date <= '$date 23:59:59' order by call_date desc limit 10000;";
+	$rslt=mysql_query($stmt, $link);
+	$out_logs_to_print = mysql_num_rows($rslt);
+	if ($format=='debug') {echo "|$out_logs_to_print|$stmt|";}
+
+	$g=0;
+	$u=0;
+	while ($out_logs_to_print > $u) 
+		{
+		$row=mysql_fetch_row($rslt);
+		$ALLsort[$g] =			"$row[0]-----$g";
+		$ALLstart_epoch[$g] =	$row[0];
+		$ALLcall_date[$g] =		$row[1];
+		$ALLcampaign_id[$g] =	$row[2];
+		$ALLlength_in_sec[$g] =	$row[3];
+		$ALLstatus[$g] =		$row[4];
+		$ALLphone_code[$g] =	$row[5];
+		$ALLphone_number[$g] =	$row[6];
+		$ALLlead_id[$g] =		$row[7];
+		$ALLhangup_reason[$g] =	$row[8];
+		$ALLalt_dial[$g] =		$row[9];
+		$ALLin_out[$g] =		"OUT-AUTO";
+		if ($row[10] == 'MANUAL') {$ALLin_out[$g] = "OUT-MANUAL";}
+		$g++;
+		$u++;
+		}
+
+	$stmt="select start_epoch,call_date,campaign_id,length_in_sec,status,phone_code,phone_number,lead_id,term_reason,queue_seconds from vicidial_closer_log where user='$user' and call_date >= '$date 0:00:00'  and call_date <= '$date 23:59:59' order by call_date desc limit 10000;";
+	$rslt=mysql_query($stmt, $link);
+	$in_logs_to_print = mysql_num_rows($rslt);
+	if ($format=='debug') {echo "|$in_logs_to_print|$stmt|";}
+
+	$u=0;
+	while ($in_logs_to_print > $u) 
+		{
+		$row=mysql_fetch_row($rslt);
+		$ALLsort[$g] =			"$row[0]-----$g";
+		$ALLstart_epoch[$g] =	$row[0];
+		$ALLcall_date[$g] =		$row[1];
+		$ALLcampaign_id[$g] =	$row[2];
+		$ALLlength_in_sec[$g] =	($row[3] - $row[9]);
+		if ($ALLlength_in_sec[$g] < 0) {$ALLlength_in_sec[$g]=0;}
+		$ALLstatus[$g] =		$row[4];
+		$ALLphone_code[$g] =	$row[5];
+		$ALLphone_number[$g] =	$row[6];
+		$ALLlead_id[$g] =		$row[7];
+		$ALLhangup_reason[$g] =	$row[8];
+		$ALLalt_dial[$g] =		"MAIN";
+		$ALLin_out[$g] =		"IN";
+		$g++;
+		$u++;
+		}
+
+	if ($g > 0)
+		{sort($ALLsort, SORT_NUMERIC);}
+	else
+		{echo "<tr bgcolor=white><td colspan=11 align=center>No calls on this day</td></tr>";}
+
+	$u=0;
+	while ($g > $u) 
+		{
+		$sort_split = explode("-----",$ALLsort[$u]);
+		$i = $sort_split[1];
+
+		if (eregi("1$|3$|5$|7$|9$", $u))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+
+		$u++;
+		echo "<tr $bgcolor>";
+		echo "<td><font size=1>$u</td>";
+		echo "<td align=right><font size=2>$ALLcall_date[$i]</td>";
+		echo "<td align=right><font size=2> $ALLlength_in_sec[$i]</td>\n";
+		echo "<td align=right><font size=2> $ALLstatus[$i]</td>\n";
+		echo "<td align=right><font size=2> $ALLphone_code[$i] $ALLphone_number[$i] </td>\n";
+		echo "<td align=right><font size=2> $ALLcampaign_id[$i] </td>\n";
+		echo "<td align=right><font size=2> $ALLin_out[$i] </td>\n";
+		echo "<td align=right><font size=2> $ALLalt_dial[$i] </td>\n";
+		echo "<td align=right><font size=2> $ALLhangup_reason[$i] </td>\n";
+		echo "<td align=right><font size=2> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i]);return false;\">INFO</A> </td>\n";
+		echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$ALLphone_code[$i], $ALLphone_number[$i]);return false;\">DIAL</A> </td>\n";
+		echo "</tr>\n";
+		}
+
+	echo "</TABLE>";
+	echo "<BR>";
+	echo "<a href=\"#\" onclick=\"hideDiv('CalLLoGDisplaYBox');return false;\">Close Call Log</a>";
+	echo "</CENTER>";
+	}
+
+
+################################################################################
+### LEADINFOview - display the information for a lead
+################################################################################
+if ($ACTION == 'LEADINFOview')
+	{
+	if (strlen($lead_id) < 1)
+		{echo "ERROR: no Lead ID";}
+	else
+		{
+		echo "<CENTER>\n";
+		echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=500>";
+
+		$stmt="select status,vendor_lead_code,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where lead_id='$lead_id'limit 1;";
+		$rslt=mysql_query($stmt, $link);
+		$info_to_print = mysql_num_rows($rslt);
+		if ($format=='debug') {echo "|$out_logs_to_print|$stmt|";}
+
+		if ($info_to_print > 0) 
+			{
+			$row=mysql_fetch_row($rslt);
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Status: &nbsp; </td><td ALIGN=left><font size=2>$row[0]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Vendor ID: &nbsp; </td><td ALIGN=left><font size=2>$row[1]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>List ID: &nbsp; </td><td ALIGN=left><font size=2>$row[2]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Timezone: &nbsp; </td><td ALIGN=left><font size=2>$row[3]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Called SInce Last Reset: &nbsp; </td><td ALIGN=left><font size=2>$row[4]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Phone Code: &nbsp; </td><td ALIGN=left><font size=2>$row[5]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Phone Number: &nbsp; </td><td ALIGN=left><font size=2>$row[6] - &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6]);return false;\">DIAL</A></td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Title: &nbsp; </td><td ALIGN=left><font size=2>$row[7]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>First Name: &nbsp; </td><td ALIGN=left><font size=2>$row[8]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>MI: &nbsp; </td><td ALIGN=left><font size=2>$row[9]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Last Name: &nbsp; </td><td ALIGN=left><font size=2>$row[10]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Address 1: &nbsp; </td><td ALIGN=left><font size=2>$row[11]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Address 2: &nbsp; </td><td ALIGN=left><font size=2>$row[12]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Address 3: &nbsp; </td><td ALIGN=left><font size=2>$row[13]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>City: &nbsp; </td><td ALIGN=left><font size=2>$row[14]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>State: &nbsp; </td><td ALIGN=left><font size=2>$row[15]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Province: &nbsp; </td><td ALIGN=left><font size=2>$row[16]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Postal Code: &nbsp; </td><td ALIGN=left><font size=2>$row[17]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Country: &nbsp; </td><td ALIGN=left><font size=2>$row[18]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Gender: &nbsp; </td><td ALIGN=left><font size=2>$row[19]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Alt. Phone: &nbsp; </td><td ALIGN=left><font size=2>$row[20] - &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20]);return false;\">DIAL</A></td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Email: &nbsp; </td><td ALIGN=left><font size=2>$row[21]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Show: &nbsp; </td><td ALIGN=left><font size=2>$row[22]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Comments: &nbsp; </td><td ALIGN=left><font size=2>$row[23]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Called Count: &nbsp; </td><td ALIGN=left><font size=2>$row[24]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Last Local Call Time: &nbsp; </td><td ALIGN=left><font size=2>$row[25]</td></tr>";
+	#		echo "<tr bgcolor=white><td ALIGN=right><font size=2>Rank: &nbsp; </td><td ALIGN=left><font size=2>$row[26]</td></tr>";
+	#		echo "<tr bgcolor=white><td ALIGN=right><font size=2>Owner: &nbsp; </td><td ALIGN=left><font size=2>$row[27]</td></tr>";
+			}
+
+		echo "</TABLE>";
+		echo "<BR>";
+		echo "<a href=\"#\" onclick=\"hideDiv('LeaDInfOBox');return false;\">Close Info Box</a>";
+		echo "</CENTER>";
 		}
 	}
 

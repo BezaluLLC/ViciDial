@@ -152,10 +152,10 @@ if (length($ARGV[0])>1)
 		print "\n";
 		print "This script takes in lead files in the following order when they are placed in the $PATHhome/LEADS_IN directory to be imported into the vicidial_list table (examples):\n\n";
 		print "standard:\n";
-		print "vendor_lead_code|source_code|list_id|phone_code|phone_number|title|first_name|middle|last_name|address1|address2|address3|city|state|province|postal_code|country|gender|date_of_birth|alt_phone|email|security_phrase|COMMENTS|called_count|status|entry_date|multi-alt-entries\n";
+		print "vendor_lead_code|source_id|list_id|phone_code|phone_number|title|first_name|middle|last_name|address1|address2|address3|city|state|province|postal_code|country|gender|date_of_birth|alt_phone|email|security_phrase|COMMENTS|called_count|status|entry_date|multi-alt-entries\n";
 		print "3857822|31022|105|01144|1625551212|MRS|B||BURTON|249 MUNDON ROAD|MALDON|ESSEX||||CM9 6PW|UK||||||COMMENTS|2|B|2007-08-09 00:00:00|7275551212_1_work!7275551213_61_sister house!7275551214_44_neighbor\n\n";
 		print "stdrankowner:\n";
-		print "vendor_lead_code|source_code|list_id|phone_code|phone_number|title|first_name|middle|last_name|address1|address2|address3|city|state|province|postal_code|country|gender|date_of_birth|alt_phone|email|security_phrase|COMMENTS|called_count|status|entry_date|rank|owner|multi-alt-entries\n";
+		print "vendor_lead_code|source_id|list_id|phone_code|phone_number|title|first_name|middle|last_name|address1|address2|address3|city|state|province|postal_code|country|gender|date_of_birth|alt_phone|email|security_phrase|COMMENTS|called_count|status|entry_date|rank|owner|multi-alt-entries\n";
 		print "3857822|31022|105|01144|1625551212|MRS|B||BURTON|249 MUNDON ROAD|MALDON|ESSEX||||CM9 6PW|UK||||||COMMENTS|2|B|2007-08-09 00:00:00|99|6666|7275551212_1_work!7275551213_61_sister house!7275551214_44_neighbor\n\n";
 		print "minicsv:\n";
 		print "address1,city,name,phone_number,state,postal_code\n";
@@ -526,7 +526,7 @@ foreach(@FILES)
 				{
 				@name=@MT;
 				$vendor_lead_code =		'';
-				$source_code =			'';
+				$source_id =			'';
 				$list_id =				'995';
 				$phone_code =			'1';
 				$phone_number =			$m[5];		chomp($phone_number);	$phone_number =~ s/\D//gi;
@@ -562,7 +562,7 @@ foreach(@FILES)
 				{
 				@name=@MT;
 				$vendor_lead_code =		'';
-				$source_code =			'';
+				$source_id =			'';
 				$list_id =				'995';
 				$phone_code =			'1';
 				$phone_number =			$m[3];		chomp($phone_number);	$phone_number =~ s/\D//gi;
@@ -610,7 +610,7 @@ foreach(@FILES)
 				$vendor_lead_code =		substr($raw_number, 173, 8);	$vendor_lead_code =~ s/^\s+//gi;
 				$security_phrase =		substr($raw_number, 181, 4);
 
-				$source_code =			'';
+				$source_id =			'';
 				$list_id =				'995';
 				$country =				'USA';
 				$gender =				'U';
@@ -631,7 +631,7 @@ foreach(@FILES)
 				{
 				@name=@MT;
 				$vendor_lead_code =		'';
-				$source_code =			'';
+				$source_id =			'';
 				$list_id =				'995';
 				$phone_code =			'1';
 				$phone_number =			$m[2];		chomp($phone_number);	$phone_number =~ s/\D//gi;
@@ -750,7 +750,7 @@ foreach(@FILES)
 					}
 				$comments =~ s/\"|\)|\(|;//gi;
 
-				$source_code =			'';
+				$source_id =			'';
 				$list_id =				'995';
 				$phone_code =			'1';
 				$title =				'';
@@ -771,7 +771,7 @@ foreach(@FILES)
 			if ( ($format =~ /stdrankowner/) && ($format_set < 1) )
 				{
 				$vendor_lead_code =		$m[0];		chomp($vendor_lead_code);
-				$source_code =			$m[1];		chomp($source_code); $source_id = $source_code;
+				$source_id =			$m[1];		chomp($source_id);
 				$list_id =				$m[2];		chomp($list_id);
 				$phone_code =			$m[3];		chomp($phone_code);	$phone_code =~ s/\D//gi;
 				$phone_number =			$m[4];		chomp($phone_number);	$phone_number =~ s/\D//gi;
@@ -859,7 +859,7 @@ foreach(@FILES)
 				@m = split(/\|/, $number);
 
 				$vendor_lead_code =		$m[0];		chomp($vendor_lead_code);
-				$source_code =			'';
+				$source_id =			'';
 				$list_id =				'929';
 				$phone_code =			'1';
 				$first_name =			$m[1];		chomp($first_name);		$first_name =~ s/\s+$//gi;
@@ -919,12 +919,111 @@ foreach(@FILES)
 				$format_set++;
 				}
 
+		# This is the format for the dccsv26 lead files
+#"BFRAME","RECORD_TYPE","LAST_NAME","FIRST_NAME","4ADDR1","5ADDR2","6CITY","STATE","ZIP","9ZIP4","ADDR_STATUS","DATE_PLACED","DATE_ADDED","DOB","LAST_LETTER","LAST_LETTER_DATE","LAST_WORKED","NEXT_ACTION_DATE","CAPTURE_CODE","CUR_CATEGORY","TIMES_DIALED","LAST_DIALED","TOTAL_PAID","DATE_LAST_PAID","NMBR_CALLS","NMBR_CONTACTS","NMBR_TIMES_WRKD","NMBR_LETTERS","STATUS_CODE","STATUS_DATE","SCORE","TIMES_TO_SERVICER","1ST-PMT-DEFAULT","TIME_ZONE","ORIG_CREDITOR","BALANCE","HOME_PHONE","WORK_PHONE","OTHER_PHONE","ACCT_OTHTEL2","ACCT_OTHTEL3","ACCT_OTHTEL4","ACCT_OTHTEL5"
+#"","RECORD_TYPE","2","3","4","5","6","7","8","9","10ADDR_STATUS","DATE_PLACED","DATE_ADDED","13","14LAST_LETTER","15LAST_LETTER_DATE","16LAST_WORKED","17NEXT_ACTION_DATE","18CAPTURE_CODE","19CUR_CATEGORY","20TIMES_DIALED","21LAST_DIALED","22TOTAL_PAID","23DATE_LAST_PAID","24NMBR_CALLS","25NMBR_CONTACTS","26NMBR_TIMES_WRKD","27NMBR_LETTERS","28STATUS_CODE","29STATUS_DATE","30SCORE","31TIMES_TO_SERVICER","321ST-PMT-DEFAULT","","34ORIG_CREDITOR","35BALANCE","","","","39","","",""
+#"II ACCT/1103521789  ","P","STRAYER          ","     SHERYL K","7575 W 106TH ST APT 57        ","                              ","OVERLAND PARK       ","KS","66212","0000","G","20091110","20091110","19661216","NOLTTR","00000000","20091214","20091219","1000","03","000","00000000","000000000.00 ","00000000","0004","0003","0004","000","ACTIVE","20091110","0648","00"," ","C","HSBC                          ","000000692.09 ","9139635053","0000000000","0000000000","0000000000","0000000000","0000000000","0000000000"
+
+			if ( ($format =~ /dccsv26/) && ($format_set < 1) )
+				{
+				$raw_number = $number;
+				chomp($number);
+				$number =~ s/,"0"//gi;
+				$number =~ s/,"0000000000"//gi;
+				$number =~ s/\t/\|/gi;
+				$number =~ s/\'|\t|\r|\n|\l//gi;
+				$number =~ s/\'|\t|\r|\n|\l//gi;
+				$number =~ s/\",,,,,,,\"/\|\|\|\|\|\|\|/gi;
+				$number =~ s/\",,,,,,\"/\|\|\|\|\|\|/gi;
+				$number =~ s/\",,,,,\"/\|\|\|\|\|/gi;
+				$number =~ s/\",,,,\"/\|\|\|\|/gi;
+				$number =~ s/\",,,\"/\|\|\|/gi;
+				$number =~ s/\",,\"/\|\|/gi;
+				$number =~ s/\",\"/\|/gi;
+				$number =~ s/\"//gi;
+				@m=@MT;
+				@m = split(/\|/, $number);
+
+				$vendor_lead_code =		$m[0];		chomp($vendor_lead_code);
+					$vendor_lead_code =~s/II ACCT\///gi;
+					$vendor_lead_code =~s/WDRF  //gi;
+					while (length($vendor_lead_code) > 10) {chop($vendor_lead_code);}
+				$source_id =			$m[0];		chomp($source_id);
+				$list_id =				'929';
+				$phone_code =			'1';
+				$first_name =			$m[3];		chomp($first_name);		$first_name =~ s/\s+$//gi;
+				$middle_initial =		'';
+				$last_name =			$m[2];		chomp($last_name);		$last_name =~ s/\s+$//gi;
+				$phone_number =			$m[36];
+					$USarea = 			substr($phone_number, 0, 3);
+				$title =				'';
+				$address1 =				$m[4];
+				$address2 =				$m[5];
+				$address3 =				'';
+				$city =					$m[6];
+				$state =				$m[7];
+				$province =				'';
+				$postal_code =			"$m[8]$m[9]";
+				$country =				$m[5];
+				$gender =				'';
+				$date_of_birth =		$m[13];
+					$dobYYYY = substr($date_of_birth, 0, 4);
+					$dobMM = substr($date_of_birth, 4, 2);
+					$dobDD = substr($date_of_birth, 6, 2);
+					$date_of_birth = "$dobYYYY-$dobMM-$dobDD";
+				$alt_phone =			$m[37];		chomp($alt_phone);	$alt_phone =~ s/\D//gi;
+				$email =				'';
+				$security_phrase =		'';
+				$comments =				'';
+				$called_count =			'0';
+				$status =				'NEW';
+				$insert_date =			$pulldate0;
+				$rank =					'';
+				$owner =				'';
+				$multi_alt_phones =		'';
+
+				$r=0;
+				$map_count=0;
+				if (length($m[38]) > 9) 
+					{
+					$ALTm_phone_number[$r] =	$m[38];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					}
+				if (length($m[39]) > 9) 
+					{
+					$ALTm_phone_number[$r] =	$m[39];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					}
+				if (length($m[40]) > 9) 
+					{
+					$ALTm_phone_number[$r] =	$m[40];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					}
+				if (length($m[41]) > 9) 
+					{
+					$ALTm_phone_number[$r] =	$m[41];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					}
+				if (length($m[42]) > 9) 
+					{
+					$ALTm_phone_number[$r] =	$m[42];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					}
+
+				$format_set++;
+				}
+
 		# This is the format for the standard lead files
 		#3857822|31022|105|01144|1625551212|MRS|B||BURTON|249 MUNDON ROAD|MALDON|ESSEX||||CM9 6PW|UK||||||COMMENTS
 			if ($format_set < 1)
 				{
 				$vendor_lead_code =		$m[0];		chomp($vendor_lead_code);
-				$source_code =			$m[1];		chomp($source_code); $source_id = $source_code;
+				$source_id =			$m[1];		chomp($source_id);
 				$list_id =				$m[2];		chomp($list_id);
 				$phone_code =			$m[3];		chomp($phone_code);	$phone_code =~ s/\D//gi;
 				$phone_number =			$m[4];		chomp($phone_number);	$phone_number =~ s/\D//gi;
@@ -965,7 +1064,7 @@ foreach(@FILES)
 					@map=@MT;  @ALTm_phone_code=@MT;  @ALTm_phone_number=@MT;  @ALTm_phone_note=@MT;
 					@map = split(/\!/, $multi_alt_phones);
 					$map_count = ($#map +1);
-					if ($DBX) {print "multi-al-entry: $a|$map_count|$multi_alt_phones\n";}
+					if ($DBX) {print "multi-alt-entry: $a|$map_count|$multi_alt_phones\n";}
 					$g++;
 					$r=0;
 					while ($r < $map_count)

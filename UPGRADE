@@ -40,6 +40,9 @@ OTHER CHANGES:
 5. Added vdc_script_notes.php for call notes and appointment taking, read 
 	comments for more information.
 
+6. Added Call Log View options to the Agent screen, can be enabled in the 
+	User Group screen or the User screen in Administration
+
 
 
 

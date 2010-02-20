@@ -541,7 +541,8 @@ custom_two VARCHAR(100) default '',
 custom_three VARCHAR(100) default '',
 custom_four VARCHAR(100) default '',
 custom_five VARCHAR(100) default '',
-voicemail_id VARCHAR(10)
+voicemail_id VARCHAR(10),
+agent_call_log_view_override ENUM('DISABLED','Y','N') default 'DISABLED'
 );
 
 
@@ -568,7 +569,8 @@ group_shifts TEXT,
 forced_timeclock_login ENUM('Y','N','ADMIN_EXEMPT') default 'N',
 shift_enforcement ENUM('OFF','START','ALL') default 'OFF',
 agent_status_viewable_groups TEXT,
-agent_status_view_time ENUM('Y','N') default 'N'
+agent_status_view_time ENUM('Y','N') default 'N',
+agent_call_log_view ENUM('Y','N') default 'N'
 );
 
 CREATE TABLE vicidial_campaigns (
@@ -1205,7 +1207,8 @@ default_webphone ENUM('1','0') default '0',
 default_external_server_ip ENUM('1','0') default '0',
 webphone_url VARCHAR(255) default '',
 static_agent_url VARCHAR(255) default '',
-default_phone_code VARCHAR(8) default '1'
+default_phone_code VARCHAR(8) default '1',
+enable_agc_dispo_log ENUM('0','1') default '0'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2027,6 +2030,8 @@ INSERT INTO vicidial_call_menu SET menu_id='defaultlog',menu_name='logging of al
 
 INSERT INTO vicidial_call_menu_options SET menu_id='defaultlog',option_value='TIMEOUT',option_description='hangup',option_route='HANGUP',option_route_value='vm-goodbye',option_route_value_context='';
 
+INSERT INTO vicidial_scripts (script_id,script_name,script_comments,active,script_text) values('CALLNOTES','Call Notes and Appointment Setting','','Y','<iframe src=\"../agc/vdc_script_notes.php?lead_id=--A--lead_id--B--&vendor_id=--A--vendor_lead_code--B--&list_id=--A--list_id--B--&gmt_offset_now=--A--gmt_offset_now--B--&phone_code=--A--phone_code--B--&phone_number=--A--phone_number--B--&title=--A--title--B--&first_name=--A--first_name--B--&middle_initial=--A--middle_initial--B--&last_name=--A--last_name--B--&address1=--A--address1--B--&address2=--A--address2--B--&address3=--A--address3--B--&city=--A--city--B--&state=--A--state--B--&province=--A--province--B--&postal_code=--A--postal_code--B--&country_code=--A--country_code--B--&gender=--A--gender--B--&date_of_birth=--A--date_of_birth--B--&alt_phone=--A--alt_phone--B--&email=--A--email--B--&security_phrase=--A--security_phrase--B--&comments=--A--comments--B--&user=--A--user--B--&pass=--A--pass--B--&campaign=--A--campaign--B--&phone_login=--A--phone_login--B--&fronter=--A--fronter--B--&closer=--A--user--B--&group=--A--group--B--&channel_group=--A--group--B--&SQLdate=--A--SQLdate--B--&epoch=--A--epoch--B--&uniqueid=--A--uniqueid--B--&rank=--A--rank--B--&owner=--A--owner--B--&customer_zap_channel=--A--customer_zap_channel--B--&server_ip=--A--server_ip--B--&SIPexten=--A--SIPexten--B--&session_id=--A--session_id--B--\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"popupFrame\" name=\"popupFrame\"  width=\"--A--script_width--B--\" height=\"--A--script_height--B--\" STYLE=\"z-index:17\"> </iframe>');
+
 UPDATE system_settings SET qc_last_pull_time=NOW();
 
 CREATE INDEX country_postal_code on vicidial_postal_codes (country_code,postal_code);
@@ -2056,7 +2061,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1200',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1201',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

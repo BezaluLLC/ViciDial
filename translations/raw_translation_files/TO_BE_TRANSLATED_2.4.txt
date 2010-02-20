@@ -23,10 +23,21 @@ Webphone URL||
 This is the URL of the webphone that will be used with this system if it is enabled in the phones record that an agent is using. Default is empty||
 AGENT ACTIVITY FOR THIS TIME PERIOD||
 these fields are in seconds||
+Enable Agent Disposition Logfile||
+This option will log to a text logfile on the webserver every time a call is dispositioned by an agent. Default is 0, disabled||
+Agent Call Log View||
+This option defines whether the agent will be able to see their call log for calls handled through the ViciDial agent screen. Default is N for no or disabled||
+Agent Call Log View Override||
+This setting will override whatever the users user group has set for Agent Call Log View. DISABLED will use the user group setting. N will not allow showing the users call log. Y will allow showing the user call log. Default is DISABLED||
 
 
 ############################################################ CLIENT
-
+VIEW CALL LOG||
+click to dial||
+Close Call Log||
+YOU MUST BE PAUSED TO VIEW YOUR CALL LOG||
+Close Info Box||
+No calls on this day||
 
 
 ############################################################  MANAGER Manual
