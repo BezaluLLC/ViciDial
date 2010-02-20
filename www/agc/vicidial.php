@@ -362,7 +362,7 @@ $random = (rand(1000000, 9999999) + 10000000);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -381,6 +381,7 @@ if ($qm_conf_ct > 0)
 	$outbound_autodial_active =		$row[8];
 	$enable_second_webform =		$row[9];
 	$user_territories_active =		$row[10];
+	$static_agent_url =				$row[11];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -448,6 +449,8 @@ if (($server_port == '80') or ($server_port == '443') ) {$server_port='';}
 else {$server_port = "$CL$server_port";}
 $agcPAGE = "$HTTPprotocol$server_name$server_port$script_name";
 $agcDIR = eregi_replace('vicidial.php','',$agcPAGE);
+if (strlen($static_agent_url) > 5)
+	{$agcPAGE = $static_agent_url;}
 
 
 header ("Content-type: text/html; charset=utf-8");
