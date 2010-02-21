@@ -671,7 +671,7 @@ manual_dial_filter VARCHAR(50) default 'NONE',
 agent_clipboard_copy VARCHAR(50) default 'NONE',
 agent_extended_alt_dial ENUM('Y','N') default 'N',
 use_campaign_dnc ENUM('Y','N','AREACODE') default 'N',
-three_way_call_cid ENUM('CAMPAIGN','CUSTOMER','AGENT_PHONE','AGENT_CHOOSE') default 'CAMPAIGN',
+three_way_call_cid ENUM('CAMPAIGN','CUSTOMER','AGENT_PHONE','AGENT_CHOOSE','CUSTOM_CID') default 'CAMPAIGN',
 three_way_dial_prefix VARCHAR(20) default '',
 web_form_target VARCHAR(100) NOT NULL default 'vdcwebform',
 vtiger_search_category VARCHAR(100) default 'LEAD',
@@ -716,7 +716,8 @@ start_call_url TEXT,
 dispo_call_url TEXT,
 xferconf_c_number VARCHAR(50) default '',
 xferconf_d_number VARCHAR(50) default '',
-xferconf_e_number VARCHAR(50) default ''
+xferconf_e_number VARCHAR(50) default '',
+use_custom_cid ENUM('Y','N') default 'N'
 );
 
 CREATE TABLE vicidial_lists (
@@ -960,6 +961,7 @@ comments VARCHAR(20),
 sub_status VARCHAR(6),
 dead_epoch INT(10) UNSIGNED,
 dead_sec SMALLINT(5) UNSIGNED default '0',
+processed ENUM('Y','N') default 'N',
 index (lead_id),
 index (user),
 index (event_time)
@@ -1924,6 +1926,16 @@ call_notes TEXT
 ALTER TABLE vicidial_call_notes AUTO_INCREMENT = 100;
 CREATE INDEX lead_id on vicidial_call_notes (lead_id);
 
+CREATE TABLE vicidial_custom_cid (
+cid VARCHAR(18) NOT NULL,
+state VARCHAR(20),
+areacode VARCHAR(6),
+country_code SMALLINT(5) UNSIGNED,
+campaign_id VARCHAR(8) default '--ALL--',
+index (state),
+index (areacode)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
@@ -2063,7 +2075,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1202',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1203',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

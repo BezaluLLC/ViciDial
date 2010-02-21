@@ -237,12 +237,13 @@
 # 100207-1104 - Changed Pause Codes function to allow for multiple pause codes per pause period
 # 100219-1437 - Added agent_dispo_log file option
 # 100220-1041 - Added CALLLOGview and LEADINFOview functions
+# 100221-1105 - Added custom CID use compatibility
 #
 
-$version = '2.4-144';
-$build = '100220-1041';
+$version = '2.4-145';
+$build = '100221-1105';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=312;
+$mysql_log_count=314;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -1815,6 +1816,24 @@ if ($ACTION == 'manDiaLnextCaLL')
 						}
 					}
 				if (strlen($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
+				### check for custom cid use
+				$use_custom_cid=0;
+				$stmt = "SELECT count(*) FROM vicidial_campaigns where use_custom_cid='Y' and campaign_id='$campaign';";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00313',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$uccid_ct = mysql_num_rows($rslt);
+				if ($uccid_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$use_custom_cid =	$row[0];
+					}
+				if ($use_custom_cid > 0)
+					{
+					$temp_CID = preg_replace("/\D/",'',$security);
+					if (strlen($temp_CID) > 6) 
+						{$CCID = "$temp_CID";   $CCID_on++;}
+					}
 				if (eregi("x",$dial_prefix)) {$Local_out_prefix = '';}
 
 				$PADlead_id = sprintf("%09s", $lead_id);
@@ -2236,6 +2255,24 @@ if ($ACTION == 'manDiaLonly')
 				}
 			}
 		if (strlen($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
+		### check for custom cid use
+		$use_custom_cid=0;
+		$stmt = "SELECT count(*) FROM vicidial_campaigns where use_custom_cid='Y' and campaign_id='$campaign';";
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00314',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$uccid_ct = mysql_num_rows($rslt);
+		if ($uccid_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$use_custom_cid =	$row[0];
+			}
+		if ($use_custom_cid > 0)
+			{
+			$temp_CID = preg_replace("/\D/",'',$security);
+			if (strlen($temp_CID) > 6) 
+				{$CCID = "$temp_CID";   $CCID_on++;}
+			}
 
 		$PADlead_id = sprintf("%09s", $lead_id);
 			while (strlen($PADlead_id) > 9) {$PADlead_id = substr("$PADlead_id", 0, -1);}

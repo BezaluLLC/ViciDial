@@ -45,6 +45,9 @@ OTHER CHANGES:
 
 7. Added custom dialplan entries fields for System Settings and Servers
 
+8. Added ability to use security_phrase field in the vicidial_list table as a 
+	Custom CallerID, must enable in Campaign settings
+
 
 
 

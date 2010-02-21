@@ -72,3 +72,21 @@ ALTER TABLE system_settings ADD custom_dialplan_entry TEXT;
 ALTER TABLE servers ADD custom_dialplan_entry TEXT;
 
 UPDATE system_settings SET db_schema_version='1202',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD use_custom_cid ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_campaigns MODIFY three_way_call_cid ENUM('CAMPAIGN','CUSTOMER','AGENT_PHONE','AGENT_CHOOSE','CUSTOM_CID') default 'CAMPAIGN';
+
+CREATE TABLE vicidial_custom_cid (
+cid VARCHAR(18) NOT NULL,
+state VARCHAR(20),
+areacode VARCHAR(6),
+country_code SMALLINT(5) UNSIGNED,
+campaign_id VARCHAR(8) default '--ALL--',
+index (state),
+index (areacode)
+);
+
+ALTER TABLE vicidial_agent_log ADD processed ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_agent_log_archive ADD processed ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1203',db_schema_update_date=NOW();

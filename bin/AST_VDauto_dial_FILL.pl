@@ -238,6 +238,7 @@ while($one_day_interval > 0)
 		@DBIPserver_trunks_other=@MT;
 		@DBIPserver_trunks_allowed=@MT;
 		@DBIPqueue_priority=@MT;
+		@DBIPuse_custom_cid=@MT;
 
 		$active_line_counter=0;
 		$camp_counter=0;
@@ -316,7 +317,7 @@ while($one_day_interval > 0)
 
 				### grab the dial_level and multiply by active agents to get your goalcalls
 				$DBIPadlevel[$camp_CIPct]=0;
-				$stmtA = "SELECT dial_timeout,dial_prefix,campaign_cid,active,campaign_vdad_exten,omit_phone_code,auto_alt_dial,queue_priority FROM vicidial_campaigns where campaign_id='$DBfill_campaign[$camp_CIPct]';";
+				$stmtA = "SELECT dial_timeout,dial_prefix,campaign_cid,active,campaign_vdad_exten,omit_phone_code,auto_alt_dial,queue_priority,use_custom_cid FROM vicidial_campaigns where campaign_id='$DBfill_campaign[$camp_CIPct]';";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -333,6 +334,7 @@ while($one_day_interval > 0)
 					$omit_phone_code =					$aryA[5];
 					$DBIPautoaltdial[$camp_CIPct] =		$aryA[6];
 					$DBIPqueue_priority[$camp_CIPct] =	$aryA[7];
+					$DBIPuse_custom_cid[$camp_CIPct] =	$aryA[8];
 
 					if ($omit_phone_code =~ /Y/) {$DBIPomitcode[$camp_CIPct] = 1;}
 					else {$DBIPomitcode[$camp_CIPct] = 0;}
@@ -610,7 +612,7 @@ while($one_day_interval > 0)
 											$UQaffected_rows = $dbhA->do($stmtA);
 										#	print "hopper row updated to INCALL: |$UQaffected_rows|$lead_id|\n";
 
-											$stmtA = "SELECT list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,address3,alt_phone,called_count FROM vicidial_list where lead_id='$lead_id';";
+											$stmtA = "SELECT list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,address3,alt_phone,called_count,security_phrase FROM vicidial_list where lead_id='$lead_id';";
 											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 											$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 											$sthArows=$sthA->rows;
@@ -626,6 +628,7 @@ while($one_day_interval > 0)
 												$address3 =					$aryA[5];
 												$alt_phone =				$aryA[6];
 												$called_count =				$aryA[7];
+												$security_phrase =			$aryA[8];
 
 												$rec_countCUSTDATA++;
 												}
@@ -740,6 +743,13 @@ while($one_day_interval > 0)
 
 												if (length($DBIPcampaigncid[$camp_CIPct]) > 6) {$CCID = "$DBIPcampaigncid[$camp_CIPct]";   $CCID_on++;}
 												if (length($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
+												if ($DBIPuse_custom_cid[$camp_CIPct] =~ /Y/) 
+													{
+													$temp_CID = $security_phrase;
+													$temp_CID =~ s/\D//gi;
+													if (length($temp_CID) > 6) 
+														{$CCID = "$temp_CID";   $CCID_on++;}
+													}
 												if ($DBIPdialprefix[$camp_CIPct] =~ /x/i) {$Local_out_prefix = '';}
 
 												if ($RECcount)

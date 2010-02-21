@@ -33,6 +33,9 @@ Custom Dialplan Entry||
 This field allows you to enter in any dialplan elements that you want for the server, the lines will be added to the default context||
 This field allows you to enter in any dialplan elements that you want for all of the asterisk servers, the lines will be added to the default context||
 This option allows you to enter custom dialplan lines into Call Menus, Servers and System Settings. Default is 0 for inactive||
+Custom CallerID||
+When set to Y, this option allows you to use the security_phrase field in the vicidial_list table as the CallerID to send out when placing for each specific lead. If this field has no CID in it then the Campaign CallerID defined above will be used instead. This option will disable the list CallerID Override if there is a CID present in the security_phrase field. Default is N||
+CUSTOM_CID will use the Custom CID that is defined in the security_phrase field of the vicidial_list table for the lead||
 
 
 ############################################################ CLIENT

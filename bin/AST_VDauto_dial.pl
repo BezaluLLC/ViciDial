@@ -311,6 +311,7 @@ while($one_day_interval > 0)
 		@DBIPserver_trunks_allowed=@MT;
 		@DBIPqueue_priority=@MT;
 		@DBIPdial_method=@MT;
+		@DBIPuse_custom_cid=@MT;
 
 		$active_line_counter=0;
 		$user_counter=0;
@@ -505,7 +506,7 @@ while($one_day_interval > 0)
 
 			### grab the dial_level and multiply by active agents to get your goalcalls
 			$DBIPadlevel[$user_CIPct]=0;
-			$stmtA = "SELECT auto_dial_level,local_call_time,dial_timeout,dial_prefix,campaign_cid,active,campaign_vdad_exten,closer_campaigns,omit_phone_code,available_only_ratio_tally,auto_alt_dial,campaign_allow_inbound,queue_priority,dial_method FROM vicidial_campaigns where campaign_id='$DBIPcampaign[$user_CIPct]'";
+			$stmtA = "SELECT auto_dial_level,local_call_time,dial_timeout,dial_prefix,campaign_cid,active,campaign_vdad_exten,closer_campaigns,omit_phone_code,available_only_ratio_tally,auto_alt_dial,campaign_allow_inbound,queue_priority,dial_method,use_custom_cid FROM vicidial_campaigns where campaign_id='$DBIPcampaign[$user_CIPct]'";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -514,27 +515,29 @@ while($one_day_interval > 0)
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$DBIPadlevel[$user_CIPct] =		$aryA[0];
-				$DBIPcalltime[$user_CIPct] =	$aryA[1];
-				$DBIPdialtimeout[$user_CIPct] =	$aryA[2];
-				$DBIPdialprefix[$user_CIPct] =	$aryA[3];
-				$DBIPcampaigncid[$user_CIPct] =	$aryA[4];
-				$DBIPactive[$user_CIPct] =		$aryA[5];
-				$DBIPvdadexten[$user_CIPct] =	$aryA[6];
-				$DBIPclosercamp[$user_CIPct] =	$aryA[7];
-				$omit_phone_code =				$aryA[8];
+				$DBIPadlevel[$user_CIPct] =			$aryA[0];
+				$DBIPcalltime[$user_CIPct] =		$aryA[1];
+				$DBIPdialtimeout[$user_CIPct] =		$aryA[2];
+				$DBIPdialprefix[$user_CIPct] =		$aryA[3];
+				$DBIPcampaigncid[$user_CIPct] =		$aryA[4];
+				$DBIPactive[$user_CIPct] =			$aryA[5];
+				$DBIPvdadexten[$user_CIPct] =		$aryA[6];
+				$DBIPclosercamp[$user_CIPct] =		$aryA[7];
+				$omit_phone_code =					$aryA[8];
 				if ($omit_phone_code =~ /Y/) {$DBIPomitcode[$user_CIPct] = 1;}
 				else {$DBIPomitcode[$user_CIPct] = 0;}
-				$available_only_ratio_tally =	$aryA[9];
+				$available_only_ratio_tally =		$aryA[9];
 				if ($available_only_ratio_tally =~ /Y/) 
 					{
 					$DBIPcount[$user_CIPct] = $DBIPACTIVEcount[$user_CIPct];
 					$active_only=1;
 					}
-				$DBIPautoaltdial[$user_CIPct] =	$aryA[10];
+				$DBIPautoaltdial[$user_CIPct] =		$aryA[10];
 				$DBIPcampaign_allow_inbound[$user_CIPct] =	$aryA[11];
 				$DBIPqueue_priority[$user_CIPct] =	$aryA[12];
-				$DBIPdial_method[$user_CIPct] =	$aryA[13];
+				$DBIPdial_method[$user_CIPct] =		$aryA[13];
+				$DBIPuse_custom_cid[$user_CIPct] =	$aryA[14];
+
 				$rec_count++;
 				}
 			$sthA->finish();
@@ -850,7 +853,7 @@ while($one_day_interval > 0)
 							print "hopper row updated to INCALL: |$UQaffected_rows|$lead_id|\n";
 
 							### Gather lead data
-							$stmtA = "SELECT list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,address3,alt_phone,called_count FROM vicidial_list where lead_id='$lead_id';";
+							$stmtA = "SELECT list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,address3,alt_phone,called_count,security_phrase FROM vicidial_list where lead_id='$lead_id';";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
@@ -867,6 +870,7 @@ while($one_day_interval > 0)
 								$address3 =					$aryA[5];
 								$alt_phone =				$aryA[6];
 								$called_count =				$aryA[7];
+								$security_phrase =			$aryA[8];
 
 								$rec_countCUSTDATA++;
 								$rec_count++;
@@ -975,6 +979,14 @@ while($one_day_interval > 0)
 
 								if (length($DBIPcampaigncid[$user_CIPct]) > 6) {$CCID = "$DBIPcampaigncid[$user_CIPct]";   $CCID_on++;}
 								if (length($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
+								if ($DBIPuse_custom_cid[$user_CIPct] =~ /Y/) 
+									{
+									$temp_CID = $security_phrase;
+									$temp_CID =~ s/\D//gi;
+									if (length($temp_CID) > 6) 
+										{$CCID = "$temp_CID";   $CCID_on++;}
+									}
+								
 								if ($DBIPdialprefix[$user_CIPct] =~ /x/i) {$Local_out_prefix = '';}
 
 								if ($RECcount)
