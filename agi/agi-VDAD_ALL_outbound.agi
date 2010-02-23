@@ -342,7 +342,7 @@ $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
 	$dbhP=$dbhA;   $mysql_count='01003';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
- $rec_count=0;
+$rec_count=0;
 while ($sthArows > $rec_count)
 	{
 	@aryA = $sthA->fetchrow_array;
@@ -381,12 +381,12 @@ if ($affected_rows > 0)
 	while ($sthArows > $rec_count)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$VDADcampaign =		"$aryA[0]";
-		$VDADphone	=		"$aryA[1]";
-		$VDADphone_code	=	"$aryA[2]";
-		$VDADlead_id =		"$aryA[3]";
-		$VDADcall_time =	"$aryA[4]";
-		$VDADalt_dial =		"$aryA[5]";
+		$VDADcampaign =		$aryA[0];
+		$VDADphone	=		$aryA[1];
+		$VDADphone_code	=	$aryA[2];
+		$VDADlead_id =		$aryA[3];
+		$VDADcall_time =	$aryA[4];
+		$VDADalt_dial =		$aryA[5];
 		$rec_count++;
 		}
 	$sthA->finish();
