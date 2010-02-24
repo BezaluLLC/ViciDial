@@ -2011,7 +2011,8 @@ else
 				$b64_callerid =			base64_encode($outbound_cid);
 				$b64_protocol =			base64_encode($protocol);
 
-				$webphone_content = "<iframe src=\"$webphone_url?phone_login=$b64_phone_login&phone_login=$b64_phone_login&phone_pass=$b64_phone_pass&server_ip=$b64_server_ip&callerid=$b64_callerid&protocol=$b64_protocol\" style=\"width:200;height:500;background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"webphone\" name=\"webphone\" width=\"200\" height=\"500\" STYLE=\"z-index:17\"> </iframe>";
+				$WebPhonEurl = "$webphone_url?phone_login=$b64_phone_login&phone_login=$b64_phone_login&phone_pass=$b64_phone_pass&server_ip=$b64_server_ip&callerid=$b64_callerid&protocol=$b64_protocol";
+				$webphone_content = "<iframe src=\"$WebPhonEurl\" style=\"width:200;height:500;background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"webphone\" name=\"webphone\" width=\"200\" height=\"500\" STYLE=\"z-index:17\"> </iframe>";
 				}
 
 			##### grab the campaign_weight and number of calls today on that campaign for the agent
@@ -2810,6 +2811,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var timer_action_message='';
 	var timer_action_seconds='';
 	var is_webphone='<?php echo $is_webphone ?>';
+	var WebPhonEurl='<?php echo $WebPhonEurl ?>';
 	var pause_code_counter=1;
 	var agent_call_log_view='<?php echo $agent_call_log_view ?>';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
@@ -10078,6 +10080,12 @@ else
 				{
 				NoneInSession();
 				document.getElementById("NoneInSessionLink").innerHTML = "<a href=\"#\" onclick=\"NoneInSessionCalL();return false;\">Call Agent Webphone -></a>";
+				
+				var WebPhonEtarget = 'webphonewindow';
+
+			//	WebPhonEwin =window.open(WebPhonEurl, WebPhonEtarget,'toolbar=1,location=1,directories=1,status=1,menubar=1,scrollbars=1,resizable=1,width=180,height=270');
+
+			//	WebPhonEwin.blur();
 				}
 			VICIDiaL_closer_login_checked = 1;
 			}

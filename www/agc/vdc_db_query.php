@@ -6939,12 +6939,12 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 		}
 	else
 		{
-		$stmt="UPDATE vicidial_auto_calls set agent_grab=\"$user\" where auto_call_id='$stage' and agent_grab='' and status='LIVE';";
+		$stmtU="UPDATE vicidial_auto_calls set agent_grab=\"$user\" where auto_call_id='$stage' and agent_grab='' and status='LIVE';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_query($stmtU, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00234',$user,$server_ip,$session_name,$one_mysql_log);}
-		$affected_rows = mysql_affected_rows($link);
-		if ($affected_rows > 0) 
+		$VACaffected_rows = mysql_affected_rows($link);
+		if ($VACaffected_rows > 0) 
 			{
 			$stmt="SELECT call_time,campaign_id,uniqueid,phone_number,lead_id,queue_priority,call_type from vicidial_auto_calls where auto_call_id='$stage';";
 			$rslt=mysql_query($stmt, $link);
@@ -6969,13 +6969,27 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 				}
 
 			echo "SUCCESS: Call $stage grabbed for $user";
-			exit;
 			}
 		else
 			{
 			echo "ERROR: Call $stage could not be grabbed for $user\n";
-			exit;
 			}
+
+		$stmtD="SELECT * from vicidial_auto_calls where auto_call_id='$stage';";
+		$rslt=mysql_query($stmtD, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($rslt) {$DEBUGvac_count = mysql_num_rows($rslt);}
+		if ($DEBUGvac_count > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			if ($WeBRooTWritablE > 0)
+				{
+				$fp = fopen ("./vicidial_debug.txt", "a");
+				fwrite ($fp, "$NOW_TIME|GRAB_CALL  |$stmtU|$VACaffected_rows|$stmtD|$row[0]|$row[1]|$row[2]|$row[3]|$row[4]|$row[5]|$row[6]|$row[7]|$row[8]|$row[9]|$row[10]|$row[11]|$row[12]|$row[13]|$row[14]|$row[15]|$row[16]|$row[17]|$row[18]|\n");
+				fclose($fp);
+				}
+			}
+		exit;
 		}
 	}
 
