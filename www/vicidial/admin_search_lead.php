@@ -1,12 +1,12 @@
 <?php
 # admin_search_lead.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # AST GUI database administration search for lead info
 # admin_modify_lead.php
 #
-# this is the administration lead information modifier screen, the administrator 
+# this is the administration lead information search screen, the administrator 
 # just needs to enter the leadID and then they can view and modify the information
 # in the record for that lead
 #
@@ -21,6 +21,7 @@
 # 90508-0644 - Changed to PHP long tags
 # 90917-2307 - Added alternate phone number searching option
 # 90921-0713 - Removed SELECT STAR
+# 100224-1621 - Added first/last name search and changed format of the page
 #
 
 require("dbconnect.php");
@@ -30,6 +31,10 @@ $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
 if (isset($_GET["vendor_id"]))			{$vendor_id=$_GET["vendor_id"];}
 	elseif (isset($_POST["vendor_id"]))	{$vendor_id=$_POST["vendor_id"];}
+if (isset($_GET["first_name"]))				{$first_name=$_GET["first_name"];}
+	elseif (isset($_POST["first_name"]))	{$first_name=$_POST["first_name"];}
+if (isset($_GET["last_name"]))			{$last_name=$_GET["last_name"];}
+	elseif (isset($_POST["last_name"]))	{$last_name=$_POST["last_name"];}
 if (isset($_GET["phone"]))				{$phone=$_GET["phone"];}
 	elseif (isset($_POST["phone"]))		{$phone=$_POST["phone"];}
 if (isset($_GET["lead_id"]))			{$lead_id=$_GET["lead_id"];}
@@ -137,22 +142,57 @@ $subcamp_color =	'#C6C6C6';
 require("admin_header.php");
 
 
-echo " Lead search: $vendor_id $phone $lead_id $status $list_id $user<BR>\n";
+echo " Lead search: $vendor_id $phone $lead_id $status $list_id $user\n";
+echo date("l F j, Y G:i:s A");
+echo "<BR>\n";
 
-if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and ( (strlen($status)<1) and (strlen($list_id)<1) and (strlen($user)<1) )) 
+if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and ( (strlen($status)<1) and (strlen($list_id)<1) and (strlen($user)<1) ) and ( (strlen($first_name)<1) and (strlen($last_name)<1) )) 
 	{
-	echo date("l F j, Y G:i:s A");
-	echo "\n<br><br><center>\n";
+	echo "<br><center>\n";
 	echo "<form method=post name=search action=\"$PHP_SELF\">\n";
 	echo "<input type=hidden name=DB value=\"$DB\">\n";
-	echo "<b>Please enter a:<br> Vendor ID(vendor lead code): <input type=text name=vendor_id size=10 maxlength=10> or \n";
-	echo "<br><b>a Home Phone Number: <input type=text name=phone size=20 maxlength=16> Alt phone search: \n";
-	echo "<select size=1 name=alt_phone_search><option>No</option><option>Yes</option><option SELECTED>$alt_phone_search</option></select> or \n";
-	echo "<br><b>a lead ID: <input type=text name=lead_id size=10 maxlength=10> or\n";
-	echo "<br><b>status: <input type=text name=status size=7 maxlength=6> &nbsp; \n";
-	echo "<b>list ID: <input type=text name=list_id size=15 maxlength=14> &nbsp; \n";
-	echo "<b>user: <input type=text name=user size=15 maxlength=20> <br><br>\n";
-	echo "<input type=submit name=submit value=SUBMIT></b>\n";
+	echo "<TABLE CELLPADDING=3 CELLSPACING=3>";
+	echo "<TR>";
+	echo "<TD colspan=3 align=center><b>Lead Search Options:</TD>";
+	echo "</TR><TR bgcolor=#B9CBFD>";
+
+	echo "<TD ALIGN=right>Vendor ID(vendor lead code): &nbsp; </TD><TD ALIGN=left><input type=text name=vendor_id size=10 maxlength=10></TD>";
+	echo "<TD><input type=submit name=submit value=SUBMIT></TD>\n";
+	echo "</TR><TR>";
+	echo "<TD colspan=3 align=center> &nbsp; </TD>";
+	echo "</TR><TR bgcolor=#B9CBFD>";
+
+	echo "<TD ALIGN=right>Home Phone Number: &nbsp; </TD><TD ALIGN=left><input type=text name=phone size=14 maxlength=18></TD>";
+	echo "<TD rowspan=2><input type=submit name=submit value=SUBMIT></TD>\n";
+	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "<TD ALIGN=right>Alt phone search: &nbsp; </TD><TD ALIGN=left><select size=1 name=alt_phone_search><option>No</option><option>Yes</option><option SELECTED>$alt_phone_search</option></select></TD>";
+	echo "</TR><TR>";
+	echo "<TD colspan=3 align=center> &nbsp; </TD>";
+	echo "</TR><TR bgcolor=#B9CBFD>";
+
+	echo "<TD ALIGN=right>Lead ID: &nbsp; </TD><TD ALIGN=left><input type=text name=lead_id size=10 maxlength=10></TD>";
+	echo "<TD><input type=submit name=submit value=SUBMIT></TD>\n";
+	echo "</TR><TR>";
+	echo "<TD colspan=3 align=center> &nbsp; </TD>";
+	echo "</TR><TR bgcolor=#B9CBFD>";
+
+	echo "<TD ALIGN=right>Status: &nbsp; </TD><TD ALIGN=left><input type=text name=status size=7 maxlength=6></TD>";
+	echo "<TD rowspan=3><input type=submit name=submit value=SUBMIT></TD>\n";
+	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "<TD ALIGN=right>List ID: &nbsp; </TD><TD ALIGN=left><input type=text name=list_id size=15 maxlength=14></TD>";
+	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "<TD ALIGN=right>User: &nbsp; </TD><TD ALIGN=left><input type=text name=user size=15 maxlength=20></TD>";
+	echo "</TR><TR>";
+	echo "<TD colspan=3 align=center> &nbsp; </TD>";
+	echo "</TR><TR bgcolor=#B9CBFD>";
+
+	echo "<TD ALIGN=right>First Name: &nbsp; </TD><TD ALIGN=left><input type=text name=first_name size=15 maxlength=30></TD>";
+	echo "<TD rowspan=2><input type=submit name=submit value=SUBMIT></TD>\n";
+	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "<TD ALIGN=right>Last Name: &nbsp; </TD><TD ALIGN=left><input type=text name=last_name size=15 maxlength=30></TD>";
+	echo "</TR>";
+
+	echo "</TABLE>\n";
 	echo "</form>\n</center>\n";
 	echo "</body></html>\n";
 	exit;
@@ -160,7 +200,6 @@ if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and ( (strlen($status)<1) and 
 
 else
 	{
-
 	if ($vendor_id)
 		{
 		$stmt="SELECT $vicidial_list_fields from vicidial_list where vendor_lead_code='" . mysql_real_escape_string($vendor_id) . "'";
@@ -209,8 +248,26 @@ else
 					}
 				else
 					{
-					print "ERROR: you must search for something! Go back and search for something";
-					exit;
+					if ( (strlen($first_name)>0) or (strlen($last_name)>0) )
+						{
+						$first_nameSQL = '';
+						$last_nameSQL = '';
+						if (strlen($first_name)>0)	
+							{
+							$first_nameSQL = "first_name='" . mysql_real_escape_string($first_name) . "'"; $SQLctA++;
+							}
+						if (strlen($last_name)>0) 
+							{
+							if ($SQLctA > 0) {$andA = 'and';}
+							$last_nameSQL = "$andA last_name='" . mysql_real_escape_string($last_name) . "'";
+							}
+						$stmt="SELECT $vicidial_list_fields from vicidial_list where $first_nameSQL $last_nameSQL";
+						}
+					else
+						{
+						print "ERROR: you must search for something! Go back and search for something";
+						exit;
+						}
 					}
 				}
 			}
@@ -259,19 +316,19 @@ else
 	else
 		{
 		echo "<b>RESULTS: $results_to_print</b><BR><BR>\n";
-		echo "<TABLE BGCOLOR=WHITE CELLPADDING=1 CELLSPACING=0>\n";
+		echo "<TABLE BGCOLOR=WHITE CELLPADDING=1 CELLSPACING=0 WIDTH=770>\n";
 		echo "<TR BGCOLOR=BLACK>\n";
-		echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>#</B></FONT></TD>\n";
-		echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LEAD ID</B></FONT></TD>\n";
-		echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>STATUS</B></FONT></TD>\n";
-		echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>VENDOR ID</B></FONT></TD>\n";
-		echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LAST AGENT</B></FONT></TD>\n";
-		echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LIST ID</B></FONT></TD>\n";
-		echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>PHONE</B></FONT></TD>\n";
-		echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>NAME</B></FONT></TD>\n";
-		echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>CITY</B></FONT></TD>\n";
-		echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>SECURITY</B></FONT></TD>\n";
-		echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LAST CALL</B></FONT></TD>\n";
+		echo "<TD ALIGN=LEFT VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>#</B></FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LEAD ID</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>STATUS</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>VENDOR ID</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LAST AGENT</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LIST ID</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>PHONE</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>NAME</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>CITY</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>SECURITY</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LAST CALL</B></FONT></TD>\n";
 		echo "</TR>\n";
 		$o=0;
 		while ($results_to_print > $o)
