@@ -616,7 +616,8 @@ sub process_request
 					$unique_id =		$aryA[0];
 					$uniqueid =			$aryA[0];
 					$start_time	=		$aryA[1];
-					$channel =			$aryA[2];
+					if ($callerid =~ /^M/)
+						{$channel =			$aryA[2];}
 					$end_epoch =		$aryA[3];
 					$channel_group = 	$aryA[4]; 
 					if ($AGILOG) {$agi_string = "|$aryA[0]|$aryA[1]|$aryA[2]|$aryA[3]|";   &agi_output;}
