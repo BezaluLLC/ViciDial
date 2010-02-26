@@ -48,6 +48,7 @@
 # 91125-0709 - Added conf_secret to servers conf
 # 91205-2315 - Added delete_vm_after_email option to voicemail conf generation
 # 100220-1410 - Added System Settings and Servers custom dialplan entries
+# 100225-2020 - Change voicemail configuration to use voicemail.conf
 #
 
 $DB=0; # Debug flag
@@ -754,7 +755,123 @@ if ($sthArows > 0)
 	}
 $sthA->finish();
 if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_server)) eq (length($server_ip))) )
-	{$THISserver_voicemail=1;}
+	{
+	$THISserver_voicemail=1;
+
+	if ( !-e ('/etc/asterisk/voicemail.conf'))
+		{`echo -e \"; END OF FILE\n\" > /etc/asterisk/voicemail.conf`;}
+	if ( !-e ('/etc/asterisk/BUILDvoicemail-vicidial.conf'))
+		{`echo -e \"; END OF FILE\n\" > /etc/asterisk/BUILDvoicemail-vicidial.conf`;}
+	$vmCMP =  compare("/etc/asterisk/BUILDvoicemail-vicidial.conf","/etc/asterisk/voicemail.conf");
+	if ($vmCMP > 0)
+		{
+		################################################################################
+		#####  START Parsing of the voicemail.conf file
+		################################################################################
+		# default path to voicemail configuration file:
+		$VMCconf = '/etc/asterisk/voicemail.conf';
+
+		open(vmc, "$VMCconf") || die "can't open $VMCconf: $!\n";
+		@vmc = <vmc>;
+		close(vmc);
+		$i=0;
+		$vm_header_content='';
+		$boxes=9999999;
+		$otherboxes=9999999;
+		foreach(@vmc)
+			{
+			$line = $vmc[$i];
+			$line =~ s/\n|\r//gi;
+			if ($line =~ /\[default\]/)
+				{$boxes = $i;}
+			if ($line =~ /^; Other Voicemail Entries/)
+				{$otherboxes = $i;}
+			### parse through voicemail boxes and update DB with any changed settings
+			if ($i > $boxes)
+				{
+				if ( ($line !~ /^;/) && (length($line) > 5) )
+					{
+					# 102 => 102,102a Mailbox,test@vicidial.com,,|delete=yes
+					@parse_line = split(/ => /,$line);
+					$mailbox = $parse_line[0];
+					$mboptions = $parse_line[1];
+					@options_line = split(/,/,$parse_line[1]);
+					$vmc_pass = $options_line[0];
+					$vmc_email = $options_line[2];
+					$vmc_delete_vm_after_email='N';
+					if ($mboptions =~ /delete=yes/)
+						{$vmc_delete_vm_after_email='Y';}
+					$sthArows=0;
+
+					if ($i < $otherboxes)
+						{
+						$stmtA = "SELECT voicemail_id,pass,email,delete_vm_after_email FROM phones where voicemail_id='$mailbox' and active='Y' order by extension limit 1;";
+						#	print "$stmtA\n";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$mb_voicemail =				$aryA[0];
+							$mb_pass =					$aryA[1];
+							$mb_email =					$aryA[2];
+							$mb_delete_vm_after_email =	$aryA[3];
+
+							if ( ( ($mb_pass !~ /$vmc_pass/) || (length($mb_pass) != length($vmc_pass)) ) || ( ($mb_email !~ /$vmc_email/) || (length($mb_email) != length($vmc_email)) ) || ( ($mb_delete_vm_after_email !~ /$vmc_delete_vm_after_email/) || (length($mb_delete_vm_after_email) != length($vmc_delete_vm_after_email)) ) )
+								{
+								$stmtA="UPDATE phones SET pass='$vmc_pass',email='$vmc_email',delete_vm_after_email='$vmc_delete_vm_after_email' where voicemail_id='$mailbox' and active='Y' order by extension limit 1;";
+								$affected_rows = $dbhA->do($stmtA);
+
+								$stmtA="UPDATE servers SET rebuild_conf_files='Y' where server_ip='$server_ip'";
+								$affected_rows = $dbhA->do($stmtA);
+								}
+							}
+						$sthA->finish();
+						}
+					else
+						{
+						$stmtA = "SELECT voicemail_id,pass,email,delete_vm_after_email FROM vicidial_voicemail WHERE voicemail_id='$mailbox' and active='Y' limit 1;";
+						#	print "$stmtA\n";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$mb_voicemail =				$aryA[0];
+							$mb_pass =					$aryA[1];
+							$mb_email =					$aryA[2];
+							$mb_delete_vm_after_email =	$aryA[3];
+
+							if ( ( ($mb_pass !~ /$vmc_pass/) || (length($mb_pass) != length($vmc_pass)) ) || ( ($mb_email !~ /$vmc_email/) || (length($mb_email) != length($vmc_email)) ) || ( ($mb_delete_vm_after_email !~ /$vmc_delete_vm_after_email/) || (length($mb_delete_vm_after_email) != length($vmc_delete_vm_after_email)) ) )
+								{
+								$stmtA="UPDATE vicidial_voicemail SET pass='$vmc_pass',email='$vmc_email',delete_vm_after_email='$vmc_delete_vm_after_email' where voicemail_id='$mailbox' and active='Y' limit 1;";
+								$affected_rows = $dbhA->do($stmtA);
+
+								$stmtA="UPDATE servers SET rebuild_conf_files='Y' where server_ip='$server_ip'";
+								$affected_rows = $dbhA->do($stmtA);
+								}
+							}
+						$sthA->finish();
+						}
+					if ($sthArows < 1) 
+						{
+						if ($DB) {print "Mailbox not found: $mailbox     it will be removed from voicemail.conf";}
+						}
+					}
+				}
+			else
+				{
+				$vm_header_content .= "$line\n";
+				}
+			$i++;
+			}
+		################################################################################
+		#####  END Parsing of the voicemail.conf file
+		################################################################################
+		}
+	}
 else
 	{
 	$stmtA = "SELECT server_id FROM servers,system_settings where servers.server_ip=system_settings.active_voicemail_server;";
@@ -1777,7 +1894,29 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 	##### END generate music on hold entries for this server
 
+	##### BEGIN gather header lines for voicemail.conf file
+	# default path to voicemail configuration file:
+	$VMCconf = '/etc/asterisk/voicemail.conf';
 
+	open(vmc, "$VMCconf") || die "can't open $VMCconf: $!\n";
+	@vmc = <vmc>;
+	close(vmc);
+	$i=0;
+	$vm_header_content='';
+	$boxes=9999999;
+	foreach(@vmc)
+		{
+		$line = $vmc[$i];
+		$line =~ s/\n|\r//gi;
+		if ($line =~ /\[default\]/)
+			{$boxes = $i;}
+		if ($i <= $boxes)
+			{
+			$vm_header_content .= "$line\n";
+			}
+		$i++;
+		}
+	##### END  gather header lines for voicemail.conf file
 
 	if ($DB) {print "writing auto-gen conf files\n";}
 
@@ -1815,8 +1954,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	print sip "$Psip\n";
 	print sip "\n; END OF FILE\n";
 
-	print vm "; WARNING- THIS FILE IS AUTO-GENERATED BY VICIDIAL, ANY EDITS YOU MAKE WILL BE LOST\n";
-#	print vm "[vicidial-auto]\n";
+#	print vm "; WARNING- THIS FILE IS AUTO-GENERATED BY VICIDIAL, ANY EDITS YOU MAKE WILL BE LOST\n";
+	print vm "$vm_header_content\n";
 	print vm "$vm\n";
 	print vm "\n; END OF FILE\n";
 
@@ -1861,8 +2000,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	if ( !-e ('/etc/asterisk/sip-vicidial.conf'))
 		{`echo -e \"; END OF FILE\n\" > /etc/asterisk/sip-vicidial.conf`;}
 
-	if ( !-e ('/etc/asterisk/voicemail-vicidial.conf'))
-		{`echo -e \"; END OF FILE\n\" > /etc/asterisk/voicemail-vicidial.conf`;}
+	if ( !-e ('/etc/asterisk/voicemail.conf'))
+		{`echo -e \"; END OF FILE\n\" > /etc/asterisk/voicemail.conf`;}
 
 	if ( !-e ('/etc/asterisk/musiconhold-vicidial.conf'))
 		{`echo -e \"; END OF FILE\n\" > /etc/asterisk/musiconhold-vicidial.conf`;}
@@ -1875,7 +2014,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	$extCMP = compare("/etc/asterisk/BUILDextensions-vicidial.conf","/etc/asterisk/extensions-vicidial.conf");
 	$iaxCMP = compare("/etc/asterisk/BUILDiax-vicidial.conf","/etc/asterisk/iax-vicidial.conf");
 	$sipCMP = compare("/etc/asterisk/BUILDsip-vicidial.conf","/etc/asterisk/sip-vicidial.conf");
-	$vmCMP =  compare("/etc/asterisk/BUILDvoicemail-vicidial.conf","/etc/asterisk/voicemail-vicidial.conf");
+	$vmCMP =  compare("/etc/asterisk/BUILDvoicemail-vicidial.conf","/etc/asterisk/voicemail.conf");
 	$mohCMP = compare("/etc/asterisk/BUILDmusiconhold-vicidial.conf","/etc/asterisk/musiconhold-vicidial.conf");
 	$mmCMP =  compare("/etc/asterisk/BUILDmeetme-vicidial.conf","/etc/asterisk/meetme-vicidial.conf");
 
@@ -1908,7 +2047,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			}
 		if ($vmCMP > 0)
 			{
-			`cp -f /etc/asterisk/BUILDvoicemail-vicidial.conf /etc/asterisk/voicemail-vicidial.conf`;
+			`cp -f /etc/asterisk/BUILDvoicemail-vicidial.conf /etc/asterisk/voicemail.conf`;
 			`screen -XS asterisk eval 'stuff "reload app_voicemail.so\015"'`;
 			if ($DB) {print "reload app_voicemail.so\n";}
 			sleep(1);
@@ -1953,7 +2092,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			}
 		if ($vmCMP > 0)
 			{
-			`cp -f /etc/asterisk/BUILDvoicemail-vicidial.conf /etc/asterisk/voicemail-vicidial.conf`;
+			`cp -f /etc/asterisk/BUILDvoicemail-vicidial.conf /etc/asterisk/voicemail.conf`;
 			`screen -XS asterisk eval 'stuff "module reload app_voicemail.so\015"'`;
 			if ($DB) {print "module reload app_voicemail.so\n";}
 			sleep(1);
@@ -1977,7 +2116,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	`rm -f /etc/asterisk/BUILDextensions-vicidial.conf`;
 	`rm -f /etc/asterisk/BUILDiax-vicidial.conf`;
 	`rm -f /etc/asterisk/BUILDsip-vicidial.conf`;
-	`rm -f /etc/asterisk/BUILDvoicemail-vicidial.conf`;
+#	`rm -f /etc/asterisk/BUILDvoicemail-vicidial.conf`;
 	`rm -f /etc/asterisk/BUILDmusiconhold-vicidial.conf`;
 	`rm -f /etc/asterisk/BUILDmeetme-vicidial.conf`;
 
