@@ -121,6 +121,7 @@
 # 100121-1954 - Added TIMEOT/AFTHRS/NANQUE dropping event statuses
 # 100123-1015 - Added voicemail_id lookup for user from AGENTDIRECT drop
 # 100212-0653 - Added AGENTVMAIL AGENTDIRECT option for no-queue, hold time and after hours features
+# 100226-0927 - Fixed reinsert issue in vicidial_auto_calls table with auto_call_id
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -131,7 +132,7 @@ $start_moh=1;
 $at='@';
 $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=123;
+$mysql_log_count=130;
 $one_mysql_log=0;
 
 
@@ -817,7 +818,7 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
-					$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+					$dbhP=$dbhA;   $mysql_count='02124';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
@@ -1019,7 +1020,7 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 					$sthArows=$sthA->rows;
-						$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						$dbhP=$dbhA;   $mysql_count='02125';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 					if ($sthArows > 0)
 						{
 						@aryA = $sthA->fetchrow_array;
@@ -1535,7 +1536,6 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		{
 		### Get count of number of calls in this group that are ahead of this call
 		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and server_ip='$VARserver_ip' and campaign_id = '$channel_group' and call_time < \"$SQLdateBEGIN\" and lead_id != '$insert_lead_id';";
-			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -1547,6 +1547,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			$cbc++;
 			}
 		$sthA->finish();
+		if ($AGILOG) {$agi_string = "$rec_countWAIT|$AGENTgrab|$stmtA|";   &agi_output;}
 
 		if ( ($rec_countWAIT < 1) || ($AGENTgrab > 0) )
 			{
@@ -1728,7 +1729,18 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$stmtA = "INSERT INTO vicidial_auto_calls SET server_ip='$VARserver_ip',campaign_id='$channel_group',status='CLOSER',lead_id='$insert_lead_id',uniqueid='$uniqueid',callerid='$callerid',channel='$channel',phone_code='$phone_code',phone_number='$phone_number',call_time='$SQLdate',call_type='IN',stage='CLOSER-$drop_timer',queue_priority='$queue_priority' $adSQL;";
 					$affected_rows = $dbhA->do($stmtA);
 						$dbhP=$dbhA;   $mysql_count='02044';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-						if ($AGILOG) {$agi_string = "$affected_rows|VDAC-reinsert|$stmtA|";   &agi_output;}
+					$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+					$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtB ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+						$dbhP=$dbhA;   $stmtA=$stmtB;   $mysql_count='02126';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$auto_call_id = $aryA[0];
+						}
+					$sthA->finish();
+						if ($AGILOG) {$agi_string = "$affected_rows|VDAC-reinsert|$mysql_count|$auto_call_id|$stmtA|";   &agi_output;}
 					}
 
 				if ($enable_queuemetrics_logging > 0)
@@ -1937,7 +1949,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			$cbc++;
 			}
 		$sthA->finish();
-		if ($AGILOG) {$agi_string = "$rec_countWAITrem|$stmtA|";   &agi_output;}
+		if ($AGILOG) {$agi_string = "$rec_countWAITrem|$AGENTgrab|$stmtA|";   &agi_output;}
 		
 		if ( ($rec_countWAITrem < 1) || ($AGENTgrab > 0) )
 			{
@@ -2120,7 +2132,18 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$stmtA = "INSERT INTO vicidial_auto_calls SET server_ip='$VARserver_ip',campaign_id='$channel_group',status='CLOSER',lead_id='$insert_lead_id',uniqueid='$uniqueid',callerid='$callerid',channel='$channel',phone_code='$phone_code',phone_number='$phone_number',call_time='$SQLdate',call_type='IN',stage='CLOSER-$drop_timer',queue_priority='$queue_priority' $adSQL;";
 					$affected_rows = $dbhA->do($stmtA);
 						$dbhP=$dbhA;   $mysql_count='02064';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-						if ($AGILOG) {$agi_string = "$affected_rows|VDAC-reinsert|$stmtA|";   &agi_output;}
+					$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+					$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtB ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+						$dbhP=$dbhA;   $stmtA=$stmtB;   $mysql_count='02127';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$auto_call_id = $aryA[0];
+						}
+					$sthA->finish();
+						if ($AGILOG) {$agi_string = "$affected_rows|VDAC-reinsert|$mysql_count|$auto_call_id|$stmtA|";   &agi_output;}
 					}
 
 				if ($enable_queuemetrics_logging > 0)
@@ -2770,7 +2793,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
-				$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				$dbhP=$dbhA;   $mysql_count='02128';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
@@ -2964,7 +2987,18 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		$stmtA = "INSERT INTO vicidial_auto_calls SET server_ip='$VARserver_ip',campaign_id='$channel_group',status='LIVE',lead_id='$insert_lead_id',uniqueid='$uniqueid',callerid='$callerid',channel='$channel',phone_code='$phone_code',phone_number='$phone_number',call_time='$SQLdate',call_type='IN',stage='LIVE-$drop_timer',queue_priority='$queue_priority' $adSQL;";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02096';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-			if ($AGILOG) {$agi_string = "$affected_rows|VDAC-reinsert|$stmtA|";   &agi_output;}
+		$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+		$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtB ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+			$dbhP=$dbhA;   $stmtA=$stmtB;   $mysql_count='02129';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$auto_call_id = $aryA[0];
+			}
+		$sthA->finish();
+			if ($AGILOG) {$agi_string = "$affected_rows|VDAC-reinsert|$mysql_count|$auto_call_id|$stmtA|";   &agi_output;}
 		}
 	else
 		{
@@ -3038,7 +3072,7 @@ if ($drop_timer > $DROP_TIME)
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
-				$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				$dbhP=$dbhA;   $mysql_count='02130';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
@@ -3384,23 +3418,35 @@ sub leading_zero($)
 
 sub agi_output
 	{
+	($Lsec,$Lmin,$Lhour,$Lmday,$Lmon,$Lyear,$Lwday,$Lyday,$Lisdst) = localtime(time);
+	if ($Lhour < 10) {$Lhour = "0$Lhour";}
+	if ($Lmin < 10) {$Lmin = "0$Lmin";}
+	if ($Lsec < 10) {$Lsec = "0$Lsec";}
+	$LOGtime = "$Lhour:$Lmin:$Lsec";
+
 	if ($AGILOG >=2)
 		{
 		### open the log file for writing ###
 		open(Lout, ">>$AGILOGfile")
 				|| die "Can't open $AGILOGfile: $!\n";
-		print Lout "$now_date|$script|$agi_string\n";
+		print Lout "$now_date|$LOGtime|$script|$agi_string\n";
 		close(Lout);
 		}
 		### send to STDERR writing ###
 	if ( ($AGILOG == '1') || ($AGILOG == '3') )
-		{print STDERR "$now_date|$script|$agi_string\n";}
+		{print STDERR "$now_date|$LOGtime|$script|$agi_string\n";}
 	$agi_string='';
 	}
 
 
 sub mysql_error_logging
 	{
+	($Lsec,$Lmin,$Lhour,$Lmday,$Lmon,$Lyear,$Lwday,$Lyday,$Lisdst) = localtime(time);
+	if ($Lhour < 10) {$Lhour = "0$Lhour";}
+	if ($Lmin < 10) {$Lmin = "0$Lmin";}
+	if ($Lsec < 10) {$Lsec = "0$Lsec";}
+	$LOGtime = "$Lhour:$Lmin:$Lsec";
+
 	$errno='';
 	$error='';
 	if ( ($mel > 0) || ($one_mysql_log > 0) )
@@ -3412,7 +3458,7 @@ sub mysql_error_logging
 			### open the log file for writing ###
 			open(Eout, ">>$ERRLOGfile")
 					|| die "Can't open $ERRLOGfile: $!\n";
-			print Eout "$now_date|$script|$mysql_count|$MEL_aff_rows|$errno|$error|$stmtA|$callerid|$insert_lead_id|\n";
+			print Eout "$now_date|$LOGtime|$script|$mysql_count|$MEL_aff_rows|$errno|$error|$stmtA|$callerid|$insert_lead_id|\n";
 			close(Eout);
 			}
 		}
