@@ -48,6 +48,15 @@ OTHER CHANGES:
 8. Added ability to use security_phrase field in the vicidial_list table as a 
 	Custom CallerID, must enable in Campaign settings
 
+9. Changed voicemail auto-config to use voicemail.conf directly because include
+	files are not fully supported in voicemail.conf. If you have any custom
+	voicemail boxes that are NOT defined in ViciDial then you need to put
+	them in a custom context above the [default] context in voicemail.conf
+	in order to keep them. This change will update the ViciDial database if 
+	the user changes their voicemail password through their phone. If that
+	user also uses that phone entry to login to vicidial.php that password
+	will be changed as well
+
 
 
 
