@@ -238,10 +238,11 @@
 # 100219-1437 - Added agent_dispo_log file option
 # 100220-1041 - Added CALLLOGview and LEADINFOview functions
 # 100221-1105 - Added custom CID use compatibility
+# 100301-1342 - Changed Available agents output for AGENTDIRECT selection
 #
 
-$version = '2.4-145';
-$build = '100221-1105';
+$version = '2.4-146';
+$build = '100301-1342';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=314;
 $one_mysql_log=0;
@@ -6524,10 +6525,6 @@ if ($ACTION == 'AGENTSview')
 	if (ereg("NOT-LOGGED-IN-AGENTS",$agent_status_viewable_groups))
 		{echo "<font style=\"background-color:#FFFFFF;\"> &nbsp; &nbsp;</font>-LOGGED-OUT &nbsp;\n";}
 
-	if ($comments=='AgentXferViewSelect') 
-		{
-		echo "<BR><BR><a href=\"#\" onclick=\"AgentsXferSelect('0','$comments');return false;\">Close Window</a>&nbsp;";
-		}
 	echo "</font>\n";
 	}
 

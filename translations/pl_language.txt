@@ -485,3 +485,4 @@ has selected your in-group choices|wybrał się w grupie-wybory|
 CONSULTATIVE|KONSULTACYJNA|
 Close Message|Zamknij komunikat|
 TIMER NOTIFICATION|ZAWIADOMIENIE TIMER|
+>AGENTS<|>agentów<|

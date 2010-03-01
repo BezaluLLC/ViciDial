@@ -278,10 +278,11 @@
 # 100207-1103 - Changed Pause Codes function to allow for multiple pause codes per pause period
 # 100220-1040 - Added Call Log View and Customer Info View and fixed HotKeys position
 # 100221-1107 - Added Custom CID compatibility
+# 100301-1330 - Changed AGENTDIRECT user selection launching to AGENTS link next to number-to-dial field
 #
 
-$version = '2.4-256';
-$build = '100221-1107';
+$version = '2.4-257';
+$build = '100301-1330';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -541,7 +542,7 @@ if ($campaign_login_list > 0)
 		if ($VD_campaign)
 			{
 			if ( (eregi("$VD_campaign",$rowx[0])) and (strlen($VD_campaign) == strlen($rowx[0])) )
-				{$camp_form_code .= "<option value=\"$rowx[0]\" SELECTED>$rowx[0]$campname</option>\n";}
+				{$camp_form_code .= "<option value=\"$rowx[0]\" selected>$rowx[0]$campname</option>\n";}
 			else
 				{
 				if (!ereg('login_allowable_campaigns',$camp_form_code))
@@ -4816,12 +4817,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								while (loop_ct < XFgroupCOUNT)
 									{
 									if (VARxfergroups[loop_ct] == LIVE_default_xfer_group)
-										{XfeR_SelecT = 'SELECTED ';}
+										{XfeR_SelecT = 'selected ';}
 									else {XfeR_SelecT = '';}
 									live_XfeR_HTML = live_XfeR_HTML + "<option " + XfeR_SelecT + "value=\"" + VARxfergroups[loop_ct] + "\">" + VARxfergroups[loop_ct] + " - " + VARxfergroupsnames[loop_ct] + "</option>\n";
 									loop_ct++;
 									}
-								document.getElementById("XfeRGrouPLisT").innerHTML = "<select size=1 name=XfeRGrouP class=\"cust_form\" id=XfeRGrouP>" + live_XfeR_HTML + "</select>";
+								document.getElementById("XfeRGrouPLisT").innerHTML = "<select size=1 name=XfeRGrouP id=XfeRGrouP class=\"cust_form\" onChange=\"XferAgentSelectLink();return false;\">" + live_XfeR_HTML + "</select>";
 
 								// INSERT VICIDIAL_LOG ENTRY FOR THIS CALL PROCESS
 								DialLog("start");
@@ -6448,7 +6449,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							 CalL_XC_a_NuMber			= VDIC_data_VDIG[8];
 							 CalL_XC_b_Dtmf				= VDIC_data_VDIG[9];
 							 CalL_XC_b_NuMber			= VDIC_data_VDIG[10];
-							if (VDIC_data_VDIG[11].length > 0)
+							if ( (VDIC_data_VDIG[11].length > 1) && (VDIC_data_VDIG[11] != '---NONE---') )
 								{LIVE_default_xfer_group = VDIC_data_VDIG[11];}
 							else
 								{LIVE_default_xfer_group = default_xfer_group;}
@@ -6705,12 +6706,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							while (loop_ct < XFgroupCOUNT)
 								{
 								if (VARxfergroups[loop_ct] == LIVE_default_xfer_group)
-									{XfeR_SelecT = 'SELECTED ';}
+									{XfeR_SelecT = 'selected ';}
 								else {XfeR_SelecT = '';}
 								live_XfeR_HTML = live_XfeR_HTML + "<option " + XfeR_SelecT + "value=\"" + VARxfergroups[loop_ct] + "\">" + VARxfergroups[loop_ct] + " - " + VARxfergroupsnames[loop_ct] + "</option>\n";
 								loop_ct++;
 								}
-							document.getElementById("XfeRGrouPLisT").innerHTML = "<select size=1 name=XfeRGrouP class=\"cust_form\" id=XfeRGrouP>" + live_XfeR_HTML + "</select>";
+							document.getElementById("XfeRGrouPLisT").innerHTML = "<select size=1 name=XfeRGrouP class=\"cust_form\" id=XfeRGrouP onChange=\"XferAgentSelectLink();return false;\">" + live_XfeR_HTML + "</select>";
 
 							if (lastcustserverip == server_ip)
 								{
@@ -9328,13 +9329,21 @@ function phone_number_format(formatphone) {
 						{ 
 						if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
 							{
-						//	alert(xmlhttp.responseText);
-							document.getElementById(RAlocation).innerHTML = xmlhttp.responseText + "\n";
+							var newRAlocationHTML = xmlhttp.responseText;
+						//	alert(newRAlocationHTML);
+
+							if (RAlocation == 'AgentXferViewSelect') 
+								{
+								document.getElementById(RAlocation).innerHTML = newRAlocationHTML + "\n<BR><BR><a href=\"#\" onclick=\"AgentsXferSelect('0','AgentXferViewSelect');return false;\">Close Window</a>&nbsp;";
+								}
+							else
+								{
+								document.getElementById(RAlocation).innerHTML = newRAlocationHTML + "\n";
+								}
 							}
 						}
 					delete xmlhttp;
 					}
-
 				}
 			}
 		}
@@ -9517,6 +9526,7 @@ function phone_number_format(formatphone) {
 	function AgentsXferSelect(AXuser,AXlocation)
 		{
 		xfer_select_agents_active=0;
+		document.getElementById('AgentXferViewSelect').innerHTML = '';
 		hideDiv('AgentXferViewSpan');
 		hideDiv(AXlocation);
 		document.vicidial_form.xfernumber.value = AXuser;
@@ -9524,7 +9534,24 @@ function phone_number_format(formatphone) {
 
 
 // ################################################################################
-// OnFocus function for number to dial
+// OnChange function for transfer group select list
+	function XferAgentSelectLink()
+		{
+		var XfeRSelecT = document.getElementById("XfeRGrouP");
+		var XScheck = XfeRSelecT.value
+		if (XScheck.match(/AGENTDIRECT/))
+			{
+			showDiv('agentdirectlink');
+			}
+		else
+			{
+			hideDiv('agentdirectlink');
+			}
+		}
+
+
+// ################################################################################
+// function for number to dial for AGENTDIRECT in-group transfers
 	function XferAgentSelectLaunch()
 		{
 		var XfeRSelecT = document.getElementById("XfeRGrouP");
@@ -9552,12 +9579,12 @@ function phone_number_format(formatphone) {
 		while (loop_ct < XFgroupCOUNT)
 			{
 			if (VARxfergroups[loop_ct] == 'AGENTDIRECT')
-				{XfeR_SelecT = 'SELECTED ';}
+				{XfeR_SelecT = 'selected ';}
 			else {XfeR_SelecT = '';}
 			live_XfeR_HTML = live_XfeR_HTML + "<option " + XfeR_SelecT + "value=\"" + VARxfergroups[loop_ct] + "\">" + VARxfergroups[loop_ct] + " - " + VARxfergroupsnames[loop_ct] + "</option>\n";
 			loop_ct++;
 			}
-		document.getElementById("XfeRGrouPLisT").innerHTML = "<select size=1 name=XfeRGrouP class=\"cust_form\" id=XfeRGrouP>" + live_XfeR_HTML + "</select>";
+		document.getElementById("XfeRGrouPLisT").innerHTML = "<select size=1 name=XfeRGrouP class=\"cust_form\" id=XfeRGrouP onChange=\"XferAgentSelectLink();return false;\">" + live_XfeR_HTML + "</select>";
 
 		mainxfer_send_redirect('XfeRLOCAL',lastcustchannel,lastcustserverip,'','NO');
 
@@ -9970,6 +9997,7 @@ else
 			hideDiv('TimerSpan');
 			hideDiv('CalLLoGDisplaYBox');
 			hideDiv('LeaDInfOBox');
+			hideDiv('agentdirectlink');
 			if (is_webphone!='Y')
 				{hideDiv('webphoneSpan');}
 			if (view_calls_in_queue_launch != '1')
@@ -10595,6 +10623,8 @@ else
 		{
 		if (VU_vicidial_transfers == '1')
 			{
+			XferAgentSelectLink();
+
 			if (showxfervar == 'ON')
 				{
 				var xfer_height = <?php echo $HTheight ?>;
@@ -10751,6 +10781,7 @@ else
    .preview_text {font-size: 13px;  font-family: sans-serif; background: #CCFFCC}
    .preview_text_red {font-size: 13px;  font-family: sans-serif; background: #FFCCCC}
    .body_small {font-size: 11px;  font-family: sans-serif;}
+   .body_small_bold {font-size: 11px;  font-family: sans-serif; font-weight: bold;}
    .body_tiny {font-size: 10px;  font-family: sans-serif;}
    .log_text {font-size: 11px;  font-family: monospace;}
    .log_text_red {font-size: 11px;  font-family: monospace; font-weight: bold; background: #FF3333}
@@ -11093,7 +11124,7 @@ if ($agent_display_dialable_leads > 0)
 	<TABLE cellpadding=0 cellspacing=1 border=0>
 	<TR>
 	<TD ALIGN=LEFT COLSPAN=3>
-	<span id="XfeRGrouPLisT"><select size=1 name=XfeRGrouP class="cust_form"><option>-- SELECT A GROUP TO SEND YOUR CALL TO --</option></select></span>
+	<span id="XfeRGrouPLisT"><select size=1 name=XfeRGrouP id=XfeRGrouP class="cust_form" onChange="XferAgentSelectLink();return false;"><option>-- SELECT A GROUP TO SEND YOUR CALL TO --</option></select></span>
 	 
 	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="LocalCloser"><IMG SRC="./images/vdc_XB_localcloser_OFF.gif" border=0 alt="LOCAL CLOSER" style="vertical-align:middle"></span> &nbsp; &nbsp;
 	</TD>
@@ -11120,7 +11151,8 @@ if ($agent_display_dialable_leads > 0)
 	<TD ALIGN=LEFT COLSPAN=2>
 	<IMG SRC="./images/vdc_XB_number.gif" border=0 alt="Number to call" style="vertical-align:middle">
 	&nbsp; 
-	<input type=text size=20 name=xfernumber maxlength=25 class="cust_form" value="<?php echo $preset_populate ?>" onFocus="XferAgentSelectLaunch();return false;"> &nbsp; 
+	<input type=text size=20 name=xfernumber maxlength=25 class="cust_form" value="<?php echo $preset_populate ?>"> &nbsp; 
+	<span id=agentdirectlink><font class="body_small_bold"><a href="#" onclick="XferAgentSelectLaunch();return false;">AGENTS</a></font></span>
 	<input type=hidden name=xferuniqueid>
 	</TD>
 	<TD ALIGN=LEFT>
