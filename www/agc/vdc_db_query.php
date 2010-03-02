@@ -6271,7 +6271,7 @@ if ($ACTION == 'PauseCodeSubmit')
 			$affected_rows = mysql_affected_rows($link);
 			$agent_log_id = mysql_insert_id($link);
 
-			$stmt="UPDATE vicidial_live_agents SET agent_log_id='$agent_log_id' where user='$user';";
+			$stmt="UPDATE vicidial_live_agents SET agent_log_id='$agent_log_id',last_state_change='$NOW_TIME' where user='$user';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00310',$VD_login,$server_ip,$session_name,$one_mysql_log);}
