@@ -59,10 +59,11 @@
 # 91102-2013 - Changed in-group color styles for incoming calls waiting
 # 91204-1548 - Added ability to change agent in-groups and blended
 # 100214-1127 - Added no-dialable-leads alert and in-groups stats option
+# 100301-1229 - Added 3-WAY status for consultative transfer agents
 #
 
-$version = '2.2.0-50';
-$build = '100214-1127';
+$version = '2.2.0-51';
+$build = '100301-1229';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -664,6 +665,7 @@ function hide_ingroup_info()
 	.violet {color: black; background-color: #EE82EE} 
 	.thistle {color: black; background-color: #D8BFD8} 
 	.olive {color: white; background-color: #808000}
+	.lime {color: white; background-color: #006600}
 	.yellow {color: black; background-color: yellow}
 	.khaki {color: black; background-color: #F0E68C}
 	.orange {color: black; background-color: orange}
@@ -1729,6 +1731,20 @@ $talking_to_print = mysql_num_rows($rslt);
 		$Alead_id[$i] =			$row[14];
 		$Astate_change[$i] =	$row[15];
 
+		### 3-WAY Check ###
+		if ($Alead_id[$i]!=0) 
+			{
+			$threewaystmt="select UNIX_TIMESTAMP(last_call_time) from vicidial_live_agents where lead_id='$Alead_id[$i]' and status='INCALL' order by UNIX_TIMESTAMP(last_call_time) desc";
+			$threewayrslt=mysql_query($threewaystmt, $link);
+			if (mysql_num_rows($threewayrslt)>1) 
+				{
+				$Astatus[$i]="3-WAY";
+				$srow=mysql_fetch_row($threewayrslt);
+				$Acall_mostrecent[$i]=$srow[0];
+				}
+			}
+		### END 3-WAY Check ###
+
 		$i++;
 		}
 
@@ -1946,8 +1962,10 @@ $calls_to_list = mysql_num_rows($rslt);
 				while(mb_strlen($user, 'utf-8')>20) {$user = mb_substr("$user", 0, -1,'utf8');}
 				}
 			}
-		if (!eregi("INCALL|QUEUE|PARK",$Astatus[$i]))
+		if (!eregi("INCALL|QUEUE|PARK|3-WAY",$Astatus[$i]))
 			{$call_time_S = ($STARTtime - $Astate_change[$i]);}
+		else if (eregi("3-WAY",$Astatus[$i]))
+			{$call_time_S = ($STARTtime - $Acall_mostrecent[$i]);}
 		else
 			{$call_time_S = ($STARTtime - $Acall_time[$i]);}
 
@@ -1960,6 +1978,10 @@ $calls_to_list = mysql_num_rows($rslt);
 			if ($call_time_S >= 60) {$G='<SPAN class="violet"><B>'; $EG='</B></SPAN>';}
 			if ($call_time_S >= 300) {$G='<SPAN class="purple"><B>'; $EG='</B></SPAN>';}
 	#		if ($call_time_S >= 600) {$G='<SPAN class="purple"><B>'; $EG='</B></SPAN>';}
+			}
+		if ($Lstatus=='3-WAY')
+			{
+			if ($call_time_S >= 10) {$G='<SPAN class="lime"><B>'; $EG='</B></SPAN>';}
 			}
 		if ($Lstatus=='DEAD')
 			{
@@ -2012,7 +2034,7 @@ $calls_to_list = mysql_num_rows($rslt);
 #		if ( (strlen($Acall_server_ip[$i])> 4) and ($Acall_server_ip[$i] != "$Aserver_ip[$i]") )
 #				{$G='<SPAN class="orange"><B>'; $EG='</B></SPAN>';}
 
-		if ( (eregi("INCALL",$status)) or (eregi("QUEUE",$status)) or (eregi("PARK",$status)) ) {$agent_incall++;  $agent_total++;}
+		if ( (eregi("INCALL",$status)) or (eregi("QUEUE",$status))  or (eregi("3-WAY",$status)) or (eregi("PARK",$status))) {$agent_incall++;  $agent_total++;}
 		if ( (eregi("READY",$status)) or (eregi("CLOSER",$status)) ) {$agent_ready++;  $agent_total++;}
 		if ( (eregi("READY",$status)) or (eregi("CLOSER",$status)) ) 
 			{
@@ -2085,6 +2107,7 @@ $calls_to_list = mysql_num_rows($rslt);
 		$Aecho .= "  <SPAN class=\"khaki\"><B>          </SPAN> - Agent Paused > 10 seconds</B>\n";
 		$Aecho .= "  <SPAN class=\"yellow\"><B>          </SPAN> - Agent Paused > 1 minute</B>\n";
 		$Aecho .= "  <SPAN class=\"olive\"><B>          </SPAN> - Agent Paused > 5 minutes</B>\n";
+		$Aecho .= "  <SPAN class=\"lime\"><B>          </SPAN> - Agent in 3-WAY > 10 seconds</B>\n";
 		$Aecho .= "  <SPAN class=\"black\"><B>          </SPAN> - Agent on a dead call</B>\n";
 
 		if ($agent_ready > 0) {$B='<FONT class="b1">'; $BG='</FONT>';}

@@ -10641,6 +10641,7 @@ else
 				{
 				HKbutton_allowed = 1;
 				hideDiv('TransferMain');
+				hideDiv('agentdirectlink');
 				if (showoffvar == 'YES')
 					{
 					document.getElementById("XferControl").innerHTML = "<a href=\"#\" onclick=\"ShoWTransferMain('ON');\"><IMG SRC=\"./images/vdc_LB_transferconf.gif\" border=0 alt=\"Transfer - Conference\"></a>";

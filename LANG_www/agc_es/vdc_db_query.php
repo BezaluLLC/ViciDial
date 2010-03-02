@@ -233,10 +233,11 @@
 # 100113-1949 - Fixed dispo_choice bug and added dispo_status to dispo URL call
 # 100202-2306 - Fixed logging issues related to INBOUND_MAN dial_method
 # 100207-1110 - Changed Pause Codes function to allow for multiple pause codes per pause period
+# 100301-1342 - Changed Available agents output for AGENTDIRECT selection
 #
 
-$version = '2.2.0-141';
-$build = '100207-1110';
+$version = '2.2.0-142';
+$build = '100301-1342';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=309;
 $one_mysql_log=0;
@@ -6354,10 +6355,7 @@ if ($ACTION == 'AGENTSview')
 		}
 	echo "</TABLE><BR>\n";
 	echo "<font style=\"font-size:10px;font-family:sans-serif;\"><font style=\"background-color:#ADD8E6;\"> &nbsp; &nbsp;</font>-READY &nbsp; <font style=\"background-color:#D8BFD8;\">&nbsp; &nbsp;</font>-INCALL &nbsp; <font style=\"background-color:#F0E68C;\"> &nbsp; &nbsp;</font>-PAUSED &nbsp;\n";
-	if ($comments=='AgentXferViewSelect') 
-		{
-		echo "<BR><BR><a href=\"#\" onclick=\"AgentsXferSelect('0','$comments');return false;\">Close Window</a>&nbsp;";
-		}
+
 	echo "</font>\n";
 	}
 

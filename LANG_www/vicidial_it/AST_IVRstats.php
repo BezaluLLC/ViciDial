@@ -12,6 +12,7 @@
 # 90508-0644 - Changed to PHP long tags
 # 91112-0719 - Added in-group names to select list
 # 100214-1421 - Sort menu alphabetically
+# 100301-1401 - Added popup date selector
 #
 
 require("dbconnect.php");
@@ -180,6 +181,21 @@ else
 	$query_date_END = "$end_date $time_END";
 	}
 
+$query_dateARRAY = explode(" ",$query_date_BEGIN);
+$query_date_D = $query_dateARRAY[0];
+$query_date_T = $query_dateARRAY[1];
+$end_dateARRAY = explode(" ",$query_date_END);
+$end_date_D = $end_dateARRAY[0];
+$end_date_T = $end_dateARRAY[1];
+
+
+?>
+
+<script language="JavaScript" src="calendar_db.js"></script>
+<link rel="stylesheet" href="calendar.css">
+
+<?php
+
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 echo "<TITLE>IVR Stats Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
@@ -198,12 +214,48 @@ if ($DB > 0)
 	echo "<BR>\n";
 	}
 
-echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
+echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 echo "<TABLE Border=0><TR><TD VALIGN=TOP>\n";
 echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 echo "Date:<BR>\n";
-echo "<INPUT TYPE=TEXT NAME=query_date SIZE=19 MAXLENGTH=19 VALUE=\"$query_date_BEGIN\">\n";
-echo " to <INPUT TYPE=TEXT NAME=end_date SIZE=19 MAXLENGTH=19 VALUE=\"$query_date_END\">\n";
+
+echo "<INPUT TYPE=hidden NAME=query_date ID=query_date VALUE=\"$query_date\">\n";
+echo "<INPUT TYPE=hidden NAME=end_date ID=end_date VALUE=\"$end_date\">\n";
+echo "<INPUT TYPE=TEXT NAME=query_date_D SIZE=11 MAXLENGTH=10 VALUE=\"$query_date_D\">";
+
+?>
+<script language="JavaScript">
+var o_cal = new tcal ({
+	// form name
+	'formname': 'vicidial_report',
+	// input name
+	'controlname': 'query_date_D'
+});
+o_cal.a_tpl.yearscroll = false;
+// o_cal.a_tpl.weekstart = 1; // Lunedi week start
+</script>
+<?php
+
+echo " &nbsp; <INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_T\">";
+
+echo "<BR> to <BR><INPUT TYPE=TEXT NAME=end_date_D SIZE=11 MAXLENGTH=10 VALUE=\"$end_date_D\">";
+
+?>
+<script language="JavaScript">
+var o_cal = new tcal ({
+	// form name
+	'formname': 'vicidial_report',
+	// input name
+	'controlname': 'end_date_D'
+});
+o_cal.a_tpl.yearscroll = false;
+// o_cal.a_tpl.weekstart = 1; // Lunedi week start
+</script>
+<?php
+
+echo " &nbsp; <INPUT TYPE=TEXT NAME=end_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$end_date_T\">";
+
+
 echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 echo "Gruppi Inbound: \n";
 echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
@@ -245,7 +297,23 @@ echo "<option value=\"PM\">PM</option>\n";
 echo "<option value=\"ALL\">ALL</option>\n";
 echo "<option value=\"RANGE\">RANGE</option>\n";
 echo "</SELECT>\n";
-echo " &nbsp; <INPUT TYPE=submit NAME=INVIA VALUE=INVIA>\n";
+
+?>
+<SCRIPT LANGUAGE="JavaScript">
+
+function submit_form()
+	{
+	document.vicidial_report.end_date.value = document.vicidial_report.end_date_D.value + " " + document.vicidial_report.end_date_T.value;
+	document.vicidial_report.query_date.value = document.vicidial_report.query_date_D.value + " " + document.vicidial_report.query_date_T.value;
+
+	document.vicidial_report.submit();
+	}
+
+</SCRIPT>
+
+ &nbsp; <input type=button value="INVIA" name=smt id=smt onClick="submit_form()">
+<?php
+
 echo "</TD></TR></TABLE>\n";
 echo "</FORM>\n\n";
 
@@ -260,7 +328,8 @@ if ($groups_to_print < 1)
 
 else
 	{
-	echo "IVR Stats Report: $group_string          $NOW_TIME\n";
+	echo "IVR Stats Report: $query_date_BEGIN to $query_date_END               $NOW_TIME\n";
+	echo "                  $group_string\n";
 
 	$TOTALcalls=0;
 	$NOCALLERIDcalls=0;
@@ -493,17 +562,6 @@ else
 	echo "+--------+--------+--------+--------+------+------+\n";
 
 
-
-
-
-
-
-
-
-
-
-
-
 	##############################
 	#########  TIME STATS
 
@@ -658,14 +716,6 @@ else
 
 
 	echo "+------+-------------------------------------------------------------------------------------------------------+-------+\n\n";
-
-
-
-
-
-
-
-
 
 
 	$ENDtime = date("U");

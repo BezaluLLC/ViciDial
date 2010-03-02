@@ -648,7 +648,7 @@ while ($logs_to_print > $u)
 	echo "<td align=right><font size=2> $dead_sec </td>\n";
 	echo "<td align=right><font size=2> $customer_sec </td>\n";
 	echo "<td align=right><font size=2> $status </td>\n";
-	echo "<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[7]\" target=\"_blank\">$lead_id</A> </td>\n";
+	echo "<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$lead_id\" target=\"_blank\">$lead_id</A> </td>\n";
 	echo "<td align=right><font size=2> $campaign_id </td>\n";
 	echo "<td align=right><font size=2> $pause_code </td></tr>\n";
 	}
