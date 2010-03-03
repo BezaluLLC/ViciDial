@@ -36,6 +36,8 @@ This option allows you to enter custom dialplan lines into Call Menus, Servers a
 Custom CallerID||
 When set to Y, this option allows you to use the security_phrase field in the vicidial_list table as the CallerID to send out when placing for each specific lead. If this field has no CID in it then the Campaign CallerID defined above will be used instead. This option will disable the list CallerID Override if there is a CID present in the security_phrase field. Default is N||
 CUSTOM_CID will use the Custom CID that is defined in the security_phrase field of the vicidial_list table for the lead||
+Scheduled Callbacks Alert||
+This option allows the callbacks status line in the agent interface to be red, blink or blink red when there are AGENTONLY scheduled callbacks that have hit their trigger time and date. Default is NONE for standard status line||
 
 
 ############################################################ CLIENT

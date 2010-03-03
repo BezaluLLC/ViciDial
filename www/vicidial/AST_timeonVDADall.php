@@ -155,7 +155,7 @@ if (!isset($PAUSEcodes))	{$PAUSEcodes='N';}  # 0=no, 1=yes
 if (!isset($with_inbound))	
 	{
 	if ($outbound_autodial_active > 0)
-		{$with_inbound='N';}  # N=no, Y=yes, O=only
+		{$with_inbound='Y';}  # N=no, Y=yes, O=only
 	else
 		{$with_inbound='O';}  # N=no, Y=yes, O=only
 	}

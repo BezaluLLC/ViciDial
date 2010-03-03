@@ -90,3 +90,7 @@ ALTER TABLE vicidial_agent_log ADD processed ENUM('Y','N') default 'N';
 ALTER TABLE vicidial_agent_log_archive ADD processed ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1203',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD scheduled_callbacks_alert ENUM('NONE','BLINK','RED','BLINK_RED') default 'NONE';
+
+UPDATE system_settings SET db_schema_version='1204',db_schema_update_date=NOW();
