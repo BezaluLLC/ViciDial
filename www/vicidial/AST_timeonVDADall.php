@@ -936,6 +936,7 @@ if ( ($DROPINGROUPstats > 0) and (!preg_match("/ALL-ACTIVE/",$group_string)) )
 		$dtp++;
 		}
 	$DIGcampaigns = preg_replace("/,$/",'',$DIGcampaigns);
+	if (strlen($DIGcampaigns) < 2) {$DIGcampaigns = "''";}
 
 	$stmtB="select sum(calls_today),sum(drops_today),sum(answers_today) from vicidial_campaign_stats where campaign_id IN($DIGcampaigns);";
 	if ($DB > 0) {echo "\n|$stmtB|\n";}
