@@ -1823,6 +1823,11 @@ if ($drop_timer > $DROP_TIME)
 
 	if ($drop_action =~ /MESSAGE/)
 		{
+		$newcallerid = "\"$callerid <$VDADphone>\"";
+		$AGI->set_callerid($newcallerid);
+		print STDERR "Setting CID \"$newcallerid\"\n";
+		checkresult($result);
+		if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 		if (length($safe_harbor_exten)>0)
 			{$DROPexten = "$safe_harbor_exten";}
 		}
