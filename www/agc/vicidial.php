@@ -280,10 +280,11 @@
 # 100221-1107 - Added Custom CID compatibility
 # 100301-1330 - Changed AGENTDIRECT user selection launching to AGENTS link next to number-to-dial field
 # 100302-2145 - Added scheduled callbacks alert feature
+# 100306-0852 - Added options.php optional file for setting interface options that will survive upgrade
 #
 
-$version = '2.4-258';
-$build = '100302-2145';
+$version = '2.4-259';
+$build = '100306-0852';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -392,48 +393,50 @@ if ($qm_conf_ct > 0)
 
 ##### DEFINABLE SETTINGS AND OPTIONS
 ###########################################
-$conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
-$dtmf_silent_prefix		= '7';	# vicidial_conferences prefix to enter silently
-$HKuser_level			= '5';	# minimum vicidial user_level for HotKeys
-$campaign_login_list	= '1';	# show drop-down list of campaigns at login	
-$manual_dial_preview	= '1';	# allow preview lead option when manual dial
-$multi_line_comments	= '1';	# set to 1 to allow multi-line comment box
-$user_login_first		= '0';	# set to 1 to have the vicidial_user login before the phone login
-$view_scripts			= '1';	# set to 1 to show the SCRIPTS tab
-$dispo_check_all_pause	= '0';	# set to 1 to allow for persistent pause after dispo
-$callholdstatus			= '1';	# set to 1 to show calls on hold count
-$agentcallsstatus		= '0';	# set to 1 to show agent status and call dialed count
-   $campagentstatctmax	= '3';	# Number of seconds for campaign call and agent stats
-$show_campname_pulldown	= '1';	# set to 1 to show campaign name on login pulldown
-$webform_sessionname	= '1';	# set to 1 to include the session_name in webform URL
-$local_consult_xfers	= '1';	# set to 1 to send consultative transfers from original server
-$clientDST				= '1';	# set to 1 to check for DST on server for agent time
-$no_delete_sessions		= '1';	# set to 1 to not delete sessions at logout
-$volumecontrol_active	= '1';	# set to 1 to allow agents to alter volume of channels
-$PreseT_DiaL_LinKs		= '0';	# set to 1 to show a DIAL link for Dial Presets
-$LogiNAJAX				= '1';	# set to 1 to do lookups on campaigns for login
-$HidEMonitoRSessionS	= '1';	# set to 1 to hide remote monitoring channels from "session calls"
-$hangup_all_non_reserved= '1';	# set to 1 to force hangup all non-reserved channels upon Hangup Customer
-$LogouTKicKAlL			= '1';	# set to 1 to hangup all calls in session upon agent logout
-$PhonESComPIP			= '1';	# set to 1 to log computer IP to phone if blank, set to 2 to force log each login
-$DefaulTAlTDiaL			= '0';	# set to 1 to enable ALT DIAL by default if enabled for the campaign
-$AgentAlert_allowed		= '1';	# set to 1 to allow Agent alert option
-$disable_blended_checkbox='0';	# set to 1 to disable the BLENDED checkbox from the in-group chooser screen
 
-$TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
+if (file_exists('options.php'))
+	{
+	require('options.php');
+	}
+else
+	{
+	$conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
+	$dtmf_silent_prefix		= '7';	# vicidial_conferences prefix to enter silently
+	$HKuser_level			= '5';	# minimum vicidial user_level for HotKeys
+	$campaign_login_list	= '1';	# show drop-down list of campaigns at login	
+	$manual_dial_preview	= '1';	# allow preview lead option when manual dial
+	$multi_line_comments	= '1';	# set to 1 to allow multi-line comment box
+	$user_login_first		= '0';	# set to 1 to have the vicidial_user login before the phone login
+	$view_scripts			= '1';	# set to 1 to show the SCRIPTS tab
+	$dispo_check_all_pause	= '0';	# set to 1 to allow for persistent pause after dispo
+	$callholdstatus			= '1';	# set to 1 to show calls on hold count
+	$agentcallsstatus		= '0';	# set to 1 to show agent status and call dialed count
+	   $campagentstatctmax	= '3';	# Number of seconds for campaign call and agent stats
+	$show_campname_pulldown	= '1';	# set to 1 to show campaign name on login pulldown
+	$webform_sessionname	= '1';	# set to 1 to include the session_name in webform URL
+	$local_consult_xfers	= '1';	# set to 1 to send consultative transfers from original server
+	$clientDST				= '1';	# set to 1 to check for DST on server for agent time
+	$no_delete_sessions		= '1';	# set to 1 to not delete sessions at logout
+	$volumecontrol_active	= '1';	# set to 1 to allow agents to alter volume of channels
+	$PreseT_DiaL_LinKs		= '0';	# set to 1 to show a DIAL link for Dial Presets
+	$LogiNAJAX				= '1';	# set to 1 to do lookups on campaigns for login
+	$HidEMonitoRSessionS	= '1';	# set to 1 to hide remote monitoring channels from "session calls"
+	$hangup_all_non_reserved= '1';	# set to 1 to force hangup all non-reserved channels upon Hangup Customer
+	$LogouTKicKAlL			= '1';	# set to 1 to hangup all calls in session upon agent logout
+	$PhonESComPIP			= '1';	# set to 1 to log computer IP to phone if blank, set to 2 to force log each login
+	$DefaulTAlTDiaL			= '0';	# set to 1 to enable ALT DIAL by default if enabled for the campaign
+	$AgentAlert_allowed		= '1';	# set to 1 to allow Agent alert option
+	$disable_blended_checkbox='0';	# set to 1 to disable the BLENDED checkbox from the in-group chooser screen
 
-$stretch_dimensions		= '1';	# sets the vicidial screen to the size of the browser window
-$BROWSER_HEIGHT			= 500;	# set to the minimum browser height, default=500
-$BROWSER_WIDTH			= 770;	# set to the minimum browser width, default=770
-$MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
-$SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
-$SIDEBAR_COLOR			= '#F6F6F6';
+	$TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
 
-# options now set in DB:
-#$alt_phone_dialing		= '1';	# allow agents to call alt phone numbers
-#$scheduled_callbacks	= '1';	# set to 1 to allow agent to choose scheduled callbacks
-#   $agentonly_callbacks	= '1';	# set to 1 to allow agent to choose agent-only scheduled callbacks
-#$agentcall_manual		= '1';	# set to 1 to allow agent to make manual calls during autodial session
+	$stretch_dimensions		= '1';	# sets the vicidial screen to the size of the browser window
+	$BROWSER_HEIGHT			= 500;	# set to the minimum browser height, default=500
+	$BROWSER_WIDTH			= 770;	# set to the minimum browser width, default=770
+	$MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
+	$SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
+	$SIDEBAR_COLOR			= '#F6F6F6';
+	}
 
 
 $US='_';
@@ -2015,7 +2018,7 @@ else
 				$b64_protocol =			base64_encode($protocol);
 
 				$WebPhonEurl = "$webphone_url?phone_login=$b64_phone_login&phone_login=$b64_phone_login&phone_pass=$b64_phone_pass&server_ip=$b64_server_ip&callerid=$b64_callerid&protocol=$b64_protocol";
-				$webphone_content = "<iframe src=\"$WebPhonEurl\" style=\"width:200;height:500;background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"webphone\" name=\"webphone\" width=\"200\" height=\"500\" STYLE=\"z-index:17\"> </iframe>";
+				$webphone_content = "<iframe src=\"$WebPhonEurl\" style=\"width:200;height:500;background-color:transparent;z-index:17;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"webphone\" name=\"webphone\" width=\"200\" height=\"500\"> </iframe>";
 				}
 
 			##### grab the campaign_weight and number of calls today on that campaign for the agent
@@ -10104,7 +10107,7 @@ else
 				}
 			if ( (VtigeRLogiNScripT == 'Y') && (VtigeREnableD > 0) )
 				{
-				document.getElementById("ScriptContents").innerHTML = "<iframe src=\"" + VtigeRurl + "/index.php?module=Users&action=Authenticate&return_module=Users&return_action=Login&user_name=" + user + "&user_password=" + pass + "&login_theme=softed&login_language=en_us\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"popupFrame\" name=\"popupFrame\" width=\"" + script_width + "\" height=\"" + script_height + "\" STYLE=\"z-index:17\"> </iframe> ";
+				document.getElementById("ScriptContents").innerHTML = "<iframe src=\"" + VtigeRurl + "/index.php?module=Users&action=Authenticate&return_module=Users&return_action=Login&user_name=" + user + "&user_password=" + pass + "&login_theme=softed&login_language=en_us\" style=\"background-color:transparent;z-index:17;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"popupFrame\" name=\"popupFrame\" width=\"" + script_width + "\" height=\"" + script_height + "\"> </iframe> ";
 				}
 			if ( (VtigeRLogiNScripT == 'NEW_WINDOW') && (VtigeREnableD > 0) )
 				{

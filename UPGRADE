@@ -57,6 +57,28 @@ OTHER CHANGES:
 	user also uses that phone entry to login to vicidial.php that password
 	will be changed as well
 
+10. Changed AGENTDIRECT selection to be triggered by clicking on AGENTS link
+	instead of number-to-dial field
+
+11. Reformatted lead search page and added first and last name search options
+
+12. Added 3-WAY status to the Real-time report to show when agents are in 
+	consultative transfer sessions
+
+13. Added AGENTONLY Scheduled Callbacks display options to allow the Callbacks
+	link line in the agent interface to show as red and/or blink
+
+14. Added carrier log display option to Real-time report to show the hangup
+	causes for the last 24/6/1 hours and 15/5/1 minutes of outbound calls
+
+15. Added agc/deactivate_lead.php script that can change the status of a lead in
+	another campaign with the same vendor_lead_code, source_id or other 
+	field match. See the file comments for more information
+
+16. Added options.php for vicidial.php to give you the ability to change the 
+	interface options in a separate file so that they can be preserved
+	through an upgrade. See options-example.php for more information
+
 
 
 
