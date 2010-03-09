@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDremote_agents.pl version 2.2.0   *DBI-version*
+# AST_VDremote_agents.pl version 2.4
 #
 # SUMMARY:
 # This program was designed for people using the Asterisk PBX with VICIDIAL
@@ -16,7 +16,7 @@
 # It is good practice to keep this program running by placing the associated 
 # KEEPALIVE script running every minute to ensure this program is always running
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50215-0954 - First version of script
@@ -36,6 +36,7 @@
 # 90808-0247 - Added agent last_state_change field
 # 91013-1128 - Added full inbound compatibility with vicidial_live_inbound_agents table
 # 91123-1802 - Added outbound_autodial field
+# 100309-0555 - Added queuemetrics_loginout option
 #
 
 ### begin parsing run-time options ###
@@ -209,12 +210,11 @@ while($one_day_interval > 0)
 
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
-			$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+			$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout FROM system_settings;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
-			$rec_count=0;
-			while ($sthArows > $rec_count)
+			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
 				$enable_queuemetrics_logging =	$aryA[0];
@@ -223,7 +223,7 @@ while($one_day_interval > 0)
 				$queuemetrics_login	=			$aryA[3];
 				$queuemetrics_pass =			$aryA[4];
 				$queuemetrics_log_id =			$aryA[5];
-				$rec_count++;
+				$queuemetrics_loginout =		$aryA[6];
 				}
 			$sthA->finish();
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -578,12 +578,16 @@ while($one_day_interval > 0)
 							{
 							if ($enable_queuemetrics_logging > 0)
 								{
+								$QM_LOGIN = 'AGENTLOGIN';
+								if ($queuemetrics_loginout =~ /CALLBACK/)
+									{$QM_LOGIN = 'AGENTCALLBACKLOGIN';}
+
 								$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
 								 or die "Couldn't connect to database: " . DBI->errstr;
 
 								if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$DBremote_campaign[$h]',agent='Agent/$DBremote_user[$h]',verb='AGENTLOGIN',data1='$DBremote_user[$h]$agents',serverid='$queuemetrics_log_id';";
+								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$DBremote_campaign[$h]',agent='Agent/$DBremote_user[$h]',verb='$QM_LOGIN',data1='$DBremote_user[$h]$agents',serverid='$queuemetrics_log_id';";
 								$Baffected_rows = $dbhB->do($stmtB);
 
 								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$DBremote_campaign[$h]',agent='Agent/$DBremote_user[$h]',verb='UNPAUSE',serverid='$queuemetrics_log_id';";
@@ -712,6 +716,10 @@ while($one_day_interval > 0)
 						{
 						if ($enable_queuemetrics_logging > 0)
 							{
+							$QM_LOGOFF = 'AGENTLOGOFF';
+							if ($queuemetrics_loginout =~ /CALLBACK/)
+								{$QM_LOGOFF = 'AGENTCALLBACKLOGOFF';}
+
 							$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
 							 or die "Couldn't connect to database: " . DBI->errstr;
 
@@ -720,7 +728,7 @@ while($one_day_interval > 0)
 							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='NONE',agent='Agent/$VD_user[$z]',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
 							$Baffected_rows = $dbhB->do($stmtB);
 
-							$stmtB = "SELECT time_id FROM queue_log where agent='Agent/$VD_user[$z]' and verb='AGENTLOGIN' order by time_id desc limit 1;";
+							$stmtB = "SELECT time_id,data1 FROM queue_log where agent='Agent/$VD_user[$z]' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') order by time_id desc limit 1;";
 							$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 							$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 							$sthBrows=$sthB->rows;
@@ -728,7 +736,8 @@ while($one_day_interval > 0)
 							while ($sthBrows > $rec_count)
 								{
 								@aryB = $sthB->fetchrow_array;
-								$logintime =	$aryB[0];
+								$logintime =		$aryB[0];
+								$phone_logged_in =	$aryB[1];
 								$rec_count++;
 								}
 							$sthB->finish();
@@ -737,7 +746,7 @@ while($one_day_interval > 0)
 							$time_logged_in = ($secX - $logintime);
 							if ($time_logged_in > 1000000) {$time_logged_in=1;}
 
-							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$VD_campaign_id[$z]',agent='Agent/$VD_user[$z]',verb='AGENTLOGOFF',data1='$VD_user[$z]$agents',data2='$time_logged_in',serverid='$queuemetrics_log_id';";
+							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$VD_campaign_id[$z]',agent='Agent/$VD_user[$z]',verb='$QM_LOGOFF',data1='$phone_logged_in',data2='$time_logged_in',serverid='$queuemetrics_log_id';";
 							$Baffected_rows = $dbhB->do($stmtB);
 
 							$dbhB->disconnect();

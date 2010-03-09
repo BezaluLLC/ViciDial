@@ -94,3 +94,7 @@ UPDATE system_settings SET db_schema_version='1203',db_schema_update_date=NOW();
 ALTER TABLE vicidial_campaigns ADD scheduled_callbacks_alert ENUM('NONE','BLINK','RED','BLINK_RED') default 'NONE';
 
 UPDATE system_settings SET db_schema_version='1204',db_schema_update_date=NOW();
+
+ALTER TABLE system_settings ADD queuemetrics_loginout ENUM('STANDARD','CALLBACK') default 'STANDARD';
+
+UPDATE system_settings SET db_schema_version='1205',db_schema_update_date=NOW();

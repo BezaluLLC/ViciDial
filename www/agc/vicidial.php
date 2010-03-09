@@ -281,10 +281,11 @@
 # 100301-1330 - Changed AGENTDIRECT user selection launching to AGENTS link next to number-to-dial field
 # 100302-2145 - Added scheduled callbacks alert feature
 # 100306-0852 - Added options.php optional file for setting interface options that will survive upgrade
+# 100309-0525 - Added queuemetrics_loginout option
 #
 
-$version = '2.4-259';
-$build = '100306-0852';
+$version = '2.4-260';
+$build = '100309-0525';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -1940,7 +1941,7 @@ else
 
 			#############################################
 			##### START SYSTEM_SETTINGS LOOKUP #####
-			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,vicidial_agent_disable,allow_sipsak_messages FROM system_settings;";
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,vicidial_agent_disable,allow_sipsak_messages,queuemetrics_loginout FROM system_settings;";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01040',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -1956,6 +1957,7 @@ else
 				$queuemetrics_log_id =			$row[5];
 				$vicidial_agent_disable =		$row[6];
 				$allow_sipsak_messages =		$row[7];
+				$queuemetrics_loginout =		$row[8];
 				}
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
 			###########################################
@@ -2061,15 +2063,22 @@ else
 
 				if ($enable_queuemetrics_logging > 0)
 					{
+					$QM_LOGIN = 'AGENTLOGIN';
+					$QM_PHONE = "$VD_login@agents";
+					if ($queuemetrics_loginout=='CALLBACK')
+						{
+						$QM_LOGIN = 'AGENTCALLBACKLOGIN';
+						$QM_PHONE = "$SIP_user_DiaL";
+						}
 					$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
 					mysql_select_db("$queuemetrics_dbname", $linkB);
 
-					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='AGENTLOGIN',data1='$VD_login@agents',serverid='$queuemetrics_log_id';";
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='$QM_LOGIN',data1='$QM_PHONE',serverid='$queuemetrics_log_id';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01045',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 					$affected_rows = mysql_affected_rows($linkB);
-					echo "<!-- queue_log AGENTLOGIN entry added: $VD_login|$affected_rows -->\n";
+					echo "<!-- queue_log $QM_LOGIN entry added: $VD_login|$affected_rows|$QM_PHONE -->\n";
 
 					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
 					if ($DB) {echo "$stmt\n";}
@@ -2101,15 +2110,22 @@ else
 
 				if ($enable_queuemetrics_logging > 0)
 					{
+					$QM_LOGIN = 'AGENTLOGIN';
+					$QM_PHONE = "$VD_login@agents";
+					if ($queuemetrics_loginout=='CALLBACK')
+						{
+						$QM_LOGIN = 'AGENTCALLBACKLOGIN';
+						$QM_PHONE = "$SIP_user_DiaL";
+						}
 					$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
 					mysql_select_db("$queuemetrics_dbname", $linkB);
 
-					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='$VD_campaign',agent='Agent/$VD_login',verb='AGENTLOGIN',data1='$VD_login@agents',serverid='$queuemetrics_log_id';";
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='$VD_campaign',agent='Agent/$VD_login',verb='$QM_LOGIN',data1='$QM_PHONE',serverid='$queuemetrics_log_id';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01048',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 					$affected_rows = mysql_affected_rows($linkB);
-					echo "<!-- queue_log AGENTLOGIN entry added: $VD_login|$affected_rows -->\n";
+					echo "<!-- queue_log $QM_LOGIN entry added: $VD_login|$affected_rows|$QM_PHONE -->\n";
 
 					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
 					if ($DB) {echo "$stmt\n";}

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDauto_dial.pl version 2.2.0   *DBI-version*
+# AST_VDauto_dial.pl version 2.4
 #
 # DESCRIPTION:
 # Places auto_dial calls on the VICIDIAL dialer system 
@@ -25,7 +25,7 @@
 # It is good practice to keep this program running by placing the associated 
 # KEEPALIVE script running every minute to ensure this program is always running
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50125-1201 - Changed dial timeout to 120 seconds from 180 seconds
@@ -88,6 +88,7 @@
 # 91108-2122 - Added LAGGED PAUSEREASON QM entry for lagged agents
 # 91123-1802 - Added outbound_autodial field, and exception for outbound-only agents on blended campaign
 # 91213-1856 - Added queue_position to queue_log ABANDON records
+# 100309-0551 - Added queuemetrics_loginout option
 #
 
 
@@ -242,7 +243,7 @@ $event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
 
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,outbound_autodial_active FROM system_settings;";
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,outbound_autodial_active,queuemetrics_loginout FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -256,6 +257,7 @@ if ($sthArows > 0)
 	$queuemetrics_pass =			$aryA[4];
 	$queuemetrics_log_id =			$aryA[5];
 	$outbound_autodial_active =		$aryA[6];
+	$queuemetrics_loginout =		$aryA[7];
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -1872,6 +1874,10 @@ while($one_day_interval > 0)
 
 					if ($enable_queuemetrics_logging > 0)
 						{
+						$QM_LOGOFF = 'AGENTLOGOFF';
+						if ($queuemetrics_loginout =~ /CALLBACK/)
+							{$QM_LOGOFF = 'AGENTCALLBACKLOGOFF';}
+
 						$secX = time();
 						$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
 						 or die "Couldn't connect to database: " . DBI->errstr;
@@ -1880,7 +1886,7 @@ while($one_day_interval > 0)
 
 						$agents='@agents';
 						$time_logged_in='';
-						$stmtB = "SELECT time_id FROM queue_log where agent='Agent/$VALOuser[$logrun]' and verb='AGENTLOGIN' order by time_id desc limit 1;";
+						$stmtB = "SELECT time_id,data1 FROM queue_log where agent='Agent/$VALOuser[$logrun]' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') order by time_id desc limit 1;";
 						$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 						$sthB->execute or die "executing: $stmtA ", $dbhB->errstr;
 						$sthBrows=$sthB->rows;
@@ -1888,6 +1894,7 @@ while($one_day_interval > 0)
 							{
 							@aryB = $sthB->fetchrow_array;
 							$time_logged_in =		$aryB[0];
+							$phone_logged_in =		$aryB[1];
 							}
 						$sthB->finish();
 
@@ -1895,7 +1902,7 @@ while($one_day_interval > 0)
 						if ($time_logged_in > 1000000) {$time_logged_in=1;}
 						$LOGOFFtime = ($secX + 1);
 
-						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='NONE',agent='Agent/$VALOuser[$logrun]',verb='AGENTLOGOFF',serverid='$queuemetrics_log_id',data1='$VALOuser[$logrun]$agents',data2='$time_logged_in';";
+						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='NONE',agent='Agent/$VALOuser[$logrun]',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
 						$Baffected_rows = $dbhB->do($stmtB);
 
 						$dbhB->disconnect();
@@ -2118,12 +2125,11 @@ while($one_day_interval > 0)
 
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
-			$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+			$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout FROM system_settings;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
-			$rec_count=0;
-			while ($sthArows > $rec_count)
+			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
 				$enable_queuemetrics_logging =	$aryA[0];
@@ -2132,7 +2138,7 @@ while($one_day_interval > 0)
 				$queuemetrics_login=			$aryA[3];
 				$queuemetrics_pass =			$aryA[4];
 				$queuemetrics_log_id =			$aryA[5];
-				$rec_count++;
+				$queuemetrics_loginout =		$aryA[6];
 				}
 			$sthA->finish();
 			##### END QUEUEMETRICS LOGGING LOOKUP #####

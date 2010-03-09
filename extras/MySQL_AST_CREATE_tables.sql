@@ -1213,7 +1213,8 @@ webphone_url VARCHAR(255) default '',
 static_agent_url VARCHAR(255) default '',
 default_phone_code VARCHAR(8) default '1',
 enable_agc_dispo_log ENUM('0','1') default '0',
-custom_dialplan_entry TEXT
+custom_dialplan_entry TEXT,
+queuemetrics_loginout ENUM('STANDARD','CALLBACK') default 'STANDARD'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2076,7 +2077,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1204',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1205',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

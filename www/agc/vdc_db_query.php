@@ -239,10 +239,11 @@
 # 100220-1041 - Added CALLLOGview and LEADINFOview functions
 # 100221-1105 - Added custom CID use compatibility
 # 100301-1342 - Changed Available agents output for AGENTDIRECT selection
+# 100309-0535 - Added queuemetrics_loginout option
 #
 
-$version = '2.4-146';
-$build = '100301-1342';
+$version = '2.4-147';
+$build = '100309-0535';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=314;
 $one_mysql_log=0;
@@ -4673,7 +4674,7 @@ if ($ACTION == 'userLOGout')
 			{
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
-			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages FROM system_settings;";
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages,queuemetrics_loginout FROM system_settings;";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00138',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -4688,6 +4689,7 @@ if ($ACTION == 'userLOGout')
 				$queuemetrics_pass =			$row[4];
 				$queuemetrics_log_id =			$row[5];
 				$allow_sipsak_messages =		$row[6];
+				$queuemetrics_loginout =		$row[7];
 				}
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
 			###########################################
@@ -4699,6 +4701,10 @@ if ($ACTION == 'userLOGout')
 
 			if ($enable_queuemetrics_logging > 0)
 				{
+				$QM_LOGOFF = 'AGENTLOGOFF';
+				if ($queuemetrics_loginout=='CALLBACK')
+					{$QM_LOGOFF = 'AGENTCALLBACKLOGOFF';}
+
 				$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
 				mysql_select_db("$queuemetrics_dbname", $linkB);
 
@@ -4708,7 +4714,7 @@ if ($ACTION == 'userLOGout')
 			#	$rslt=mysql_query($stmt, $linkB);
 			#	$affected_rows = mysql_affected_rows($linkB);
 
-				$stmt = "SELECT time_id FROM queue_log where agent='Agent/$user' and verb='AGENTLOGIN' order by time_id desc limit 1;";
+				$stmt = "SELECT time_id,data1 FROM queue_log where agent='Agent/$user' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') order by time_id desc limit 1;";
 				$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00139',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -4719,13 +4725,14 @@ if ($ACTION == 'userLOGout')
 					{
 					$row=mysql_fetch_row($rslt);
 					$logintime =	$row[0];
+					$loginphone =	$row[1];
 					$i++;
 					}
 
 				$time_logged_in = ($StarTtime - $logintime);
 				if ($time_logged_in > 1000000) {$time_logged_in=1;}
 
-				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='AGENTLOGOFF',data1='$user$agents',data2='$time_logged_in',serverid='$queuemetrics_log_id';";
+				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='$QM_LOGOFF',data1='$loginphone',data2='$time_logged_in',serverid='$queuemetrics_log_id';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00140',$user,$server_ip,$session_name,$one_mysql_log);}

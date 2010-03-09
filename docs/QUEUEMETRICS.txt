@@ -21,6 +21,8 @@ As of 2009-05-30, live montoring and playback of archived recordings through the
 
 As of 2009-11-23, DID and IVR logging through QueueMetrics queue_log is now part of the code. DID entries for the queue will be counted only for calls that actually enter the queue or are sent to an agent through a ViciDial in-group. For IVR entries, only the last Call Menu will be counted in the QueueMetrics reports.
 
+As of 2010-03-09, queuemetrics_loginout system settings option was added to allow for slightly different logging of logins and logouts. STANDARD will use standard AGENTLOGIN AGENTLOGOFF, CALLBACK will use AGENTCALLBACKLOGIN and AGENTCALLBACKLOGOFF that QM will parse differently.
+
 
 Entries you should have in your crontab on one server:
 ### fix the vicidial_agent_log once every hour and the full day run at night
@@ -180,8 +182,10 @@ system actions - used by the AST_VDadapt.pl script when starting up
 	QUEUESTART
 
 agent actions - used by vicidial.php, vdc_db_query.php and AST_VDremote_agents.pl
-	AGENTLOGIN(channel) 
-	AGENTLOGOFF(channel|logintime) 
+	AGENTLOGIN(agent phone channel)
+	AGENTLOGOFF(agent phone channel|logintime)
+	AGENTCALLBACKLOGIN(agent phone channel)
+	AGENTCALLBACKLOGOFF(agent phone channel|logintime)
 	PAUSEALL
 	PAUSE
 	UNPAUSEALL

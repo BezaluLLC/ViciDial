@@ -1193,6 +1193,8 @@ if (isset($_GET["use_custom_cid"]))				{$use_custom_cid=$_GET["use_custom_cid"];
 	elseif (isset($_POST["use_custom_cid"]))	{$use_custom_cid=$_POST["use_custom_cid"];}
 if (isset($_GET["scheduled_callbacks_alert"]))			{$scheduled_callbacks_alert=$_GET["scheduled_callbacks_alert"];}
 	elseif (isset($_POST["scheduled_callbacks_alert"]))	{$scheduled_callbacks_alert=$_POST["scheduled_callbacks_alert"];}
+if (isset($_GET["queuemetrics_loginout"]))			{$queuemetrics_loginout=$_GET["queuemetrics_loginout"];}
+	elseif (isset($_POST["queuemetrics_loginout"]))	{$queuemetrics_loginout=$_POST["queuemetrics_loginout"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1516,6 +1518,7 @@ if ($non_latin < 1)
 	$status_id = ereg_replace("[^0-9a-zA-Z]","",$status_id);
 	$agent_call_log_view = ereg_replace("[^0-9a-zA-Z]","",$agent_call_log_view);
 	$agent_call_log_view_override = ereg_replace("[^0-9a-zA-Z]","",$agent_call_log_view_override);
+	$queuemetrics_loginout = ereg_replace("[^0-9a-zA-Z]","",$queuemetrics_loginout);
 
 	### DIGITS and Dots
 	$server_ip = ereg_replace("[^\.0-9]","",$server_ip);
@@ -2094,11 +2097,12 @@ else
 # 100220-1411 - Added system settings and servers custom_dialplan_entry
 # 100221-0924 - Added Custom CallerID capability in Campaign settings
 # 100302-2133 - Added Scheduled Callbacks Alert option
+# 100309-0510 - Added queuemetrics_loginout option
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-242';
-$build = '100302-2133';
+$admin_version = '2.4-243';
+$build = '100309-0510';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6102,6 +6106,11 @@ if ($ADD==99999)
 	<A NAME="settings-queuemetrics_eq_prepend">
 	<BR>
 	<B>QueueMetrics EnterQueue Prepend -</B> This field is used to allow for prepending of one of the vicidial_list data fields in front of the phone number of the customer for customized QueueMetrics reports. Default is NONE to not populate anything.
+
+	<BR>
+	<A NAME="settings-queuemetrics_loginout">
+	<BR>
+	<B>QueueMetrics Login-Out -</B> This option affects how vicidial will log the logins and logouts of an agent in the queue_log. Default is STANDARD to use standard AGENTLOGIN AGENTLOGOFF, CALLBACK will use AGENTCALLBACKLOGIN and AGENTCALLBACKLOGOFF that QM will parse differently.
 
 	<BR>
 	<A NAME="settings-enable_vtiger_integration">
@@ -13532,7 +13541,7 @@ if ($ADD==411111111111111)
 
 		echo "<br>VICIDIAL SYSTEM SETTINGS MODIFIED\n";
 
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='$webphone_url',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry';";
+		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='$webphone_url',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout';";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -14605,7 +14614,7 @@ if ($ADD==62)
 
 				#############################################
 				##### START QUEUEMETRICS LOGGING LOOKUP #####
-				$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+				$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout FROM system_settings;";
 				$rslt=mysql_query($stmt, $link);
 				if ($DB) {echo "<BR>$stmt\n";}
 				$qm_conf_ct = mysql_num_rows($rslt);
@@ -14618,11 +14627,16 @@ if ($ADD==62)
 					$queuemetrics_login	=			$row[3];
 					$queuemetrics_pass =			$row[4];
 					$queuemetrics_log_id =			$row[5];
+					$queuemetrics_loginout =		$row[6];
 					}
 				##### END QUEUEMETRICS LOGGING LOOKUP #####
 				###########################################
 				if ($enable_queuemetrics_logging > 0)
 					{
+					$QM_LOGOFF = 'AGENTLOGOFF';
+					if ($queuemetrics_loginout=='CALLBACK')
+						{$QM_LOGOFF = 'AGENTCALLBACKLOGOFF';}
+
 					$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
 					mysql_select_db("$queuemetrics_dbname", $linkB);
 
@@ -14630,7 +14644,7 @@ if ($ADD==62)
 					$agent_logged_in='';
 					$time_logged_in='';
 
-					$stmtB = "SELECT agent,time_id FROM queue_log where agent='Agent/$VLA_user[$k]' and verb='AGENTLOGIN' order by time_id desc limit 1;";
+					$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/$VLA_user[$k]' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') order by time_id desc limit 1;";
 					$rsltB=mysql_query($stmtB, $linkB);
 					if ($DB) {echo "<BR>$stmtB\n";}
 					$qml_ct = mysql_num_rows($rsltB);
@@ -14639,12 +14653,13 @@ if ($ADD==62)
 						$row=mysql_fetch_row($rsltB);
 						$agent_logged_in =	$row[0];
 						$time_logged_in =	$row[1];
+						$phone_logged_in =	$row[2];
 						}
 
 					$time_logged_in = ($now_date_epoch - $time_logged_in);
 					if ($time_logged_in > 1000000) {$time_logged_in=1;}
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='AGENTLOGOFF',serverid='$queuemetrics_log_id',data1='$VLA_user[$k]$agents',data2='$time_logged_in';";
+					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
 					if ($DB) {echo "<BR>$stmtB\n";}
 					$rsltB=mysql_query($stmtB, $linkB);
 					}
@@ -22483,7 +22498,7 @@ if ($ADD==311111111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry from system_settings;";
+		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout from system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$version =						$row[0];
@@ -22536,6 +22551,7 @@ if ($ADD==311111111111111)
 		$webphone_url =					$row[47];
 		$enable_agc_dispo_log =			$row[48];
 		$custom_dialplan_entry =		$row[49];
+		$queuemetrics_loginout =		$row[50];
 
 		echo "<br>MODIFY VICIDIAL SYSTEM SETTINGS<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=411111111111111>\n";
@@ -22716,6 +22732,11 @@ if ($ADD==311111111111111)
 		echo "<option value=\"security_phrase\">security_phrase</option>\n";
 		echo "<option selected value=\"$queuemetrics_eq_prepend\">$queuemetrics_eq_prepend</option>\n";
 		echo "</select>$NWB#settings-queuemetrics_eq_prepend$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>QueueMetrics Login-Out: </td><td align=left><select size=1 name=queuemetrics_loginout>\n";
+		echo "<option value=\"STANDARD\">STANDARD</option>\n";
+		echo "<option value=\"CALLBACK\">CALLBACK</option>\n";
+		echo "<option selected value=\"$queuemetrics_loginout\">$queuemetrics_loginout</option>\n";
+		echo "</select>$NWB#settings-queuemetrics_loginout$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Enable Vtiger Integration: </td><td align=left><select size=1 name=enable_vtiger_integration><option>1</option><option>0</option><option selected>$enable_vtiger_integration</option></select>$NWB#settings-enable_vtiger_integration$NWE\n";
 		echo " &nbsp; <a href=\"./vtiger_user.php\" target=\"_blank\">Click here to Synchronize users with Vtiger</a>\n";

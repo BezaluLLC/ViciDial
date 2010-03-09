@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_cleanup_agent_log.pl version 2.2.0
+# AST_cleanup_agent_log.pl version 2.4
 #
 # DESCRIPTION:
 # to be run frequently to clean up the vicidial_agent_log to fix erroneous time 
@@ -24,6 +24,7 @@
 # 91210-0609 - Added LOGOFF queue_log correction during live call
 # 91214-0933 - Added queue_position to queue_log COMPLETE... and ABANDON records
 # 100203-1110 - Added fix for vicidial_closer_log records with 0 length
+# 100309-0555 - Added queuemetrics_loginout option
 #
 
 # constants
@@ -251,7 +252,7 @@ or die "Couldn't connect to database: " . DBI->errstr;
 
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend FROM system_settings;";
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_loginout FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -265,6 +266,7 @@ if ($sthArows > 0)
 	$queuemetrics_pass =		$aryA[4];
 	$queuemetrics_log_id =		$aryA[5];
 	$queuemetrics_eq_prepend =	$aryA[6];
+	$queuemetrics_loginout =	$aryA[7];
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -467,7 +469,7 @@ if ($enable_queuemetrics_logging > 0)
 
 	##############################################################
 	##### grab all queue_log entries with a verb of AGENTLOGOFF to validate
-	$stmtB = "SELECT time_id,agent FROM queue_log where verb='AGENTLOGOFF' $QM_SQL_time_H order by time_id;";
+	$stmtB = "SELECT time_id,agent FROM queue_log where verb IN('AGENTLOGOFF','AGENTCALLBACKLOGOFF') $QM_SQL_time_H order by time_id;";
 	$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 	$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 	$A_logoff_records=$sthB->rows;
@@ -510,7 +512,7 @@ if ($enable_queuemetrics_logging > 0)
 			if ($DB) {print "LOGOFF DURING CALL: $h|$time_id[$h]|$agent[$h]|$NEXTtime|$NEXTverb|$NEXTqueue|$NEXTcall_id\n";}
 
 			##### update the AGENTLOGOFF record in the queue_log to one second after the end of the call
-			$stmtB = "UPDATE queue_log SET time_id='$NEXTtimeLOGOFF' where agent='$agent[$h]' and time_id='$time_id[$h]' and verb='AGENTLOGOFF' limit 1;";
+			$stmtB = "UPDATE queue_log SET time_id='$NEXTtimeLOGOFF' where agent='$agent[$h]' and time_id='$time_id[$h]' and verb IN('AGENTLOGOFF','AGENTCALLBACKLOGOFF') limit 1;";
 			if ($TEST < 1)
 				{
 				$Baffected_rows = $dbhB->do($stmtB);
@@ -547,7 +549,7 @@ if ( ($enable_queuemetrics_logging > 0) && ($login_lagged_check > 0) )
 	$PAUSEREASONinsert=0;
 	##############################################################
 	##### grab all queue_log entries for AGENTLOGIN verb to validate
-	$stmtB = "SELECT time_id,agent,verb,serverid FROM queue_log where verb='AGENTLOGIN' and serverid='$queuemetrics_log_id' $QM_SQL_time order by time_id;";
+	$stmtB = "SELECT time_id,agent,verb,serverid FROM queue_log where verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') and serverid='$queuemetrics_log_id' $QM_SQL_time order by time_id;";
 	$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 	$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 	$EQ_records=$sthB->rows;
@@ -556,10 +558,10 @@ if ( ($enable_queuemetrics_logging > 0) && ($login_lagged_check > 0) )
 	while ($EQ_records > $h)
 		{
 		@aryB = $sthB->fetchrow_array;
-		$time_id[$h] =	"$aryB[0]";
-		$agent[$h] =	"$aryB[1]";
-		$verb[$h] =		"$aryB[2]";
-		$serverid[$h] =	"$aryB[3]";
+		$time_id[$h] =	$aryB[0];
+		$agent[$h] =	$aryB[1];
+		$verb[$h] =		$aryB[2];
+		$serverid[$h] =	$aryB[3];
 		$h++;
 		}
 	$sthB->finish();
