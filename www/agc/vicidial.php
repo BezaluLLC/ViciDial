@@ -10140,7 +10140,8 @@ else
 				var TEMP_crm_login_address = decoded;
 				TEMP_crm_login_address = TEMP_crm_login_address.replace(regWFAcustom, '');
 
-				CRMwin = window.open(TEMP_crm_login_address, 'CRMwin,toolbar=1,location=1,directories=1,status=1,menubar=1,scrollbars=1,resizable=1,width=700,height=480');
+				var CRMwin = 'CRMwin';
+				CRMwin = window.open(TEMP_crm_login_address, CRMwin,'toolbar=1,location=1,directories=1,status=1,menubar=1,scrollbars=1,resizable=1,width=700,height=480');
 
 				CRMwin.blur();
 				}
