@@ -1638,7 +1638,7 @@ exit;
 
 function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code)
 {
-require("dbconnect.php");
+global $link;
 
 $postalgmt_found=0;
 if ( (eregi("POSTAL",$postalgmt)) && (strlen($postal_code)>4) )
