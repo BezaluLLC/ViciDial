@@ -240,12 +240,13 @@
 # 100221-1105 - Added custom CID use compatibility
 # 100301-1342 - Changed Available agents output for AGENTDIRECT selection
 # 100309-0535 - Added queuemetrics_loginout option
+# 100311-1559 - Added callcard logging to startcallurl and dispourl functions
 #
 
-$version = '2.4-147';
-$build = '100309-0535';
+$version = '2.4-148';
+$build = '100311-1559';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=314;
+$mysql_log_count=321;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -4501,6 +4502,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				if ($DB > 0) {echo "$SCUfile[0]<BR>\n";}
 
 				##### BEGIN special filtering and response for Vtiger account balance function #####
+				# http://vtiger/vicidial/api.php?mode=callxfer&contactwsid=--A--vendor_lead_code--B--&minuteswarning=3
 				$stmt = "SELECT enable_vtiger_integration FROM system_settings;";
 				$rslt=mysql_query($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00294',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4510,27 +4512,57 @@ if ($ACTION == 'VDADcheckINCOMING')
 					$row=mysql_fetch_row($rslt);
 					$enable_vtiger_integration =	$row[0];
 					}
-				if ( ($enable_vtiger_integration > 0) and (ereg('callxfer',$VDCL_start_call_url)) and (ereg('contactwsid',$VDCL_start_call_url)) )
+				if ( ( ($enable_vtiger_integration > 0) and (ereg('callxfer',$VDCL_start_call_url)) and (ereg('contactwsid',$VDCL_start_call_url)) ) or (preg_match("/minuteswarning/",$VDCL_start_call_url)) )
 					{
 					$SCUoutput='';
 					foreach ($SCUfile as $SCUline) 
 						{$SCUoutput .= "$SCUline";}
 					# {"result":true,"durationLimit":3071}
-					if (strlen($SCUoutput) > 4)
+					if ( (strlen($SCUoutput) > 4) or (preg_match("/minuteswarning/",$VDCL_start_call_url)) )
 						{
-						$SCUresponse = explode('durationLimit',$SCUoutput);
-						$durationLimit = preg_replace('/\D/','',$SCUresponse[1]);
-						$durationLimitSEC = ( ( ($durationLimit + 0) - 3) * 60);  # minutes - 3 for 3-minute-warning
+						$minuteswarning=3; # default to 3
+						if (preg_match("/minuteswarning/",$VDCL_start_call_url))
+							{
+							$minuteswarningARY = explode('minuteswarning=',$VDCL_start_call_url);
+							$minuteswarning = preg_replace('/&.*/','',$minuteswarningARY[1]);
+							}
+						### add this to the Start Call URL for callcard calls to be logged "&minuteswarning=1&callcard=1"
+						if (preg_match("/callcard=/",$VDCL_start_call_url))
+							{
+							$stmt="SELECT balance_minutes_start FROM callcard_log where uniqueid='$uniqueid' order by call_time desc LIMIT 1;";
+							$rslt=mysql_query($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00315',$user,$server_ip,$session_name,$one_mysql_log);}
+							if ($DB) {echo "$stmt\n";}
+							$bms_ct = mysql_num_rows($rslt);
+							if ($bms_ct > 0)
+								{
+								$row=mysql_fetch_row($rslt);
+								$durationLimit = $row[0];
+
+								$stmt="UPDATE callcard_log set agent_time='$NOW_TIME',agent='$user' where uniqueid='$uniqueid' order by call_time desc LIMIT 1;";
+								if ($DB) {echo "$stmt\n";}
+								$rslt=mysql_query($stmt, $link);
+									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00316',$user,$server_ip,$session_name,$one_mysql_log);}
+								$ccl_update = mysql_affected_rows($link);
+								}
+							}
+						else
+							{
+							$SCUresponse = explode('durationLimit',$SCUoutput);
+							$durationLimit = preg_replace('/\D/','',$SCUresponse[1]);
+							}
+						if (strlen($durationLimit) < 1) {$durationLimit = 0;}
+						$durationLimitSEC = ( ( ($durationLimit + 0) - $minuteswarning) * 60);  # minutes - 3 for 3-minute-warning
 						if ($durationLimitSEC < 5) {$durationLimitSEC = 5;}
 
-						$stmt="UPDATE vicidial_live_agents set external_timer_action='D1_DIAL',external_timer_action_message='3 minute warning for customer',external_timer_action_seconds='$durationLimitSEC' where user='$user';";
+						$stmt="UPDATE vicidial_live_agents set external_timer_action='D1_DIAL',external_timer_action_message='$minuteswarning minute warning for customer',external_timer_action_seconds='$durationLimitSEC' where user='$user';";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_query($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00295',$user,$server_ip,$session_name,$one_mysql_log);}
 						$vla_update_timer = mysql_affected_rows($link);
 
 						$fp = fopen ("./call_url_log.txt", "a");
-						fwrite ($fp, "$VDCL_start_call_url\n$SCUoutput\n$durationLimit|$durationLimitSEC|$vla_update_timer\n");
+						fwrite ($fp, "$VDCL_start_call_url\n$SCUoutput\n$durationLimit|$durationLimitSEC|$vla_update_timer|$minuteswarning|$uniqueid|\n");
 						fclose($fp);
 						}
 					}
@@ -5626,8 +5658,10 @@ if ($ACTION == 'updateDISPO')
 
 		mysql_close($linkB);
 		}
-
-	### Issue Dispo Call URL if defined
+	
+	############################################
+	### BEGIN Issue Dispo Call URL if defined
+	############################################
 	if (strlen($dispo_call_url) > 7)
 		{
 		$talk_time=0;
@@ -5837,7 +5871,51 @@ if ($ACTION == 'updateDISPO')
 			fwrite ($fp, "$dispo_call_url\n$SCUoutput\n");
 			fclose($fp);
 			}
+
+		### add this to the Dispo URL for callcard calls to be logged "&callcard=--A--talk_time_min--B--"
+		if (preg_match("/callcard/",$dispo_call_url))
+			{
+			$stmt="SELECT balance_minutes_start,card_id FROM callcard_log where uniqueid='$uniqueid' order by call_time desc LIMIT 1;";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00317',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$bms_ct = mysql_num_rows($rslt);
+			$fp = fopen ("./call_url_log.txt", "a");
+			fwrite ($fp, "$dispo_call_url\n$stmt|$bms_ct\n");
+			fclose($fp);
+
+			if ($bms_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$balance_minutes_start =	$row[0];
+				$card_id =					$row[1];
+
+				$current_minutes = ($balance_minutes_start - $talk_time_min);
+
+				$stmt="UPDATE callcard_log set agent_talk_sec='$talk_time',agent_talk_min='$talk_time_min',dispo_time='$NOW_TIME',agent_dispo='$dispo' where uniqueid='$uniqueid' order by call_time desc LIMIT 1;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00318',$user,$server_ip,$session_name,$one_mysql_log);}
+				$ccl_update = mysql_affected_rows($link);
+
+				$stmt="UPDATE callcard_accounts set balance_minutes='$current_minutes' where card_id='$card_id';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00319',$user,$server_ip,$session_name,$one_mysql_log);}
+				$cca_update = mysql_affected_rows($link);
+
+				$stmt="UPDATE callcard_accounts_details set balance_minutes='$current_minutes' where card_id='$card_id';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00320',$user,$server_ip,$session_name,$one_mysql_log);}
+				$ccad_update = mysql_affected_rows($link);
+				}
+			}
 		}
+	############################################
+	### END Issue Dispo Call URL if defined
+	############################################
+
 
 	##### check if system is set to generate logfile for dispos
 	$stmt="SELECT enable_agc_dispo_log FROM system_settings;";
@@ -6981,7 +7059,7 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 
 		$stmtD="SELECT * from vicidial_auto_calls where auto_call_id='$stage';";
 		$rslt=mysql_query($stmtD, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00321',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($rslt) {$DEBUGvac_count = mysql_num_rows($rslt);}
 		if ($DEBUGvac_count > 0)
 			{

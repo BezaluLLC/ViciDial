@@ -98,3 +98,62 @@ UPDATE system_settings SET db_schema_version='1204',db_schema_update_date=NOW();
 ALTER TABLE system_settings ADD queuemetrics_loginout ENUM('STANDARD','CALLBACK') default 'STANDARD';
 
 UPDATE system_settings SET db_schema_version='1205',db_schema_update_date=NOW();
+
+CREATE TABLE callcard_accounts (
+card_id VARCHAR(20) PRIMARY KEY NOT NULL,
+pin VARCHAR(10) NOT NULL,
+status ENUM('GENERATE','PRINT','SHIP','HOLD','ACTIVE','USED','EMPTY','CANCEL','VOID') default 'GENERATE',
+balance_minutes SMALLINT(5) default '3',
+inbound_group_id VARCHAR(20) default '',
+index (pin)
+);
+
+CREATE TABLE callcard_accounts_details (
+card_id VARCHAR(20) PRIMARY KEY NOT NULL,
+run VARCHAR(4) default '',
+batch VARCHAR(5) default '',
+pack VARCHAR(5) default '',
+sequence VARCHAR(5) default '',
+status ENUM('GENERATE','PRINT','SHIP','HOLD','ACTIVE','USED','EMPTY','CANCEL','VOID') default 'GENERATE',
+balance_minutes SMALLINT(5) default '3',
+initial_value VARCHAR(6) default '0.00',
+initial_minutes SMALLINT(5) default '3',
+note_purchase_order VARCHAR(20) default '',
+note_printer VARCHAR(20) default '',
+note_did VARCHAR(18) default '',
+inbound_group_id VARCHAR(20) default '',
+note_language VARCHAR(10) default 'English',
+note_name VARCHAR(20) default '',
+note_comments VARCHAR(255) default '',
+create_user VARCHAR(20) default '',
+activate_user VARCHAR(20) default '',
+used_user VARCHAR(20) default '',
+void_user VARCHAR(20) default '',
+create_time DATETIME,
+activate_time DATETIME,
+used_time DATETIME,
+void_time DATETIME
+);
+
+CREATE TABLE callcard_log (
+uniqueid VARCHAR(20) PRIMARY KEY NOT NULL,
+card_id VARCHAR(20),
+balance_minutes_start SMALLINT(5) default '3',
+call_time DATETIME,
+agent_time DATETIME,
+dispo_time DATETIME,
+agent VARCHAR(20) default '',
+agent_dispo VARCHAR(6) default '',
+agent_talk_sec MEDIUMINT(8) default '0',
+agent_talk_min MEDIUMINT(8) default '0',
+phone_number VARCHAR(18),
+inbound_did VARCHAR(18),
+index (card_id),
+index (call_time)
+);
+
+ALTER TABLE system_settings ADD callcard_enabled ENUM('1','0') default '0';
+
+ALTER TABLE vicidial_users ADD callcard_admin ENUM('1','0') default '0';
+
+UPDATE system_settings SET db_schema_version='1206',db_schema_update_date=NOW();

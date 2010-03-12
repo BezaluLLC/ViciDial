@@ -49,6 +49,7 @@
 # 91205-2315 - Added delete_vm_after_email option to voicemail conf generation
 # 100220-1410 - Added System Settings and Servers custom dialplan entries
 # 100225-2020 - Change voicemail configuration to use voicemail.conf
+# 100312-1012 - Changed TIMEOUT Call Menu function to work with AGI routes
 #
 
 $DB=0; # Debug flag
@@ -1656,6 +1657,15 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		else
 			{$menu_prompt_ext .= "exten => s,n,Background($menu_prompt[$i])\n";}
 
+		if ($time_check_route =~ /AGI/)
+			{
+			$call_menu_options_ext .= "; time check after hours AGI special extension\n";
+			$call_menu_options_ext .= "exten => 9999999999999999999988,1,AGI($time_check_route_value)\n";
+
+			$time_check_route = 'EXTENSION';
+			$time_check_route_value = '9999999999999999999988';
+			$time_check_route_context = $menu_id[$i];
+			}
 		$call_menu_ext .= "\n";
 		$call_menu_ext .= "; $menu_name[$i]\n";
 		$call_menu_ext .= "[$menu_id[$i]]\n";

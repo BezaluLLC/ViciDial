@@ -10,6 +10,7 @@
 # user is prompted for their passcode then press #
 # then the user is forwarded to the active vicidial agent session
 #
+# can be added as an AGI to a Call Menu, or as below:
 # ;agent dial-in:
 #exten => 2345,1,Answer		; Answer the line
 #exten => 2345,2,AGI(agi-AGENT_dial_in.agi)

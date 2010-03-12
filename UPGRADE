@@ -79,6 +79,11 @@ OTHER CHANGES:
 	interface options in a separate file so that they can be preserved
 	through an upgrade. See options-example.php for more information
 
+17. Added CallCard featureset to allow for pin-number entry before entering an
+	In-Group by a customer with minute balances and a basic admin interface.
+	See the CALLCARD.txt doc for more information.
+
+
 
 
 

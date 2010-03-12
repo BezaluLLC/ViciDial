@@ -314,6 +314,7 @@ if ($extension =~ /^999\d\d\*/)
 	
 	$referring_extension =	$EXT_vars[0];	# initial extension sent
 	$did_id =				$EXT_vars[1];	# the DID ID to grab settings from
+	$in_group_override = 	$EXT_vars[2];	# the in-group override, if set
 
 	### Grab DID values from the database
 	$stmtA = "SELECT call_handle_method,agent_search_method,group_id,did_pattern,list_id,phone_code,campaign_id,user,user_unavailable_action,user_route_settings_ingroup,did_route,voicemail_ext,extension,exten_context,phone,server_ip FROM vicidial_inbound_dids where did_id = '$did_id';";
@@ -346,6 +347,30 @@ if ($extension =~ /^999\d\d\*/)
 			{$channel_group = $did_in_group;}
 		}
 	$sthA->finish();
+
+	if (length($in_group_override) > 1) 
+		{
+		$igo_valid=0;
+		### if in_group_override is set, make sure it's valid
+		$stmtA = "SELECT count(*) FROM vicidial_inbound_groups where group_id='$in_group_override' and active='Y';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+			$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$igo_valid = 			$aryA[0];
+			}
+		$sthA->finish();
+		
+		if ($igo_valid > 0)
+			{
+			$channel_group = $in_group_override;
+			if ($AGILOG) {$agi_string = "In-Group Override: $in_group_override";   &agi_output;}
+			}
+
+		}
 	}
 
 if ($call_handle_method =~ /^CLOSER/)
