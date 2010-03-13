@@ -1199,6 +1199,18 @@ if (isset($_GET["callcard_enabled"]))				{$callcard_enabled=$_GET["callcard_enab
 	elseif (isset($_POST["callcard_enabled"]))		{$callcard_enabled=$_POST["callcard_enabled"];}
 if (isset($_GET["callcard_admin"]))					{$callcard_admin=$_GET["callcard_admin"];}
 	elseif (isset($_POST["callcard_admin"]))		{$callcard_admin=$_POST["callcard_admin"];}
+if (isset($_GET["agent_xfer_consultative"]))				{$agent_xfer_consultative=$_GET["agent_xfer_consultative"];}
+	elseif (isset($_POST["agent_xfer_consultative"]))		{$agent_xfer_consultative=$_POST["agent_xfer_consultative"];}
+if (isset($_GET["agent_xfer_dial_override"]))				{$agent_xfer_dial_override=$_GET["agent_xfer_dial_override"];}
+	elseif (isset($_POST["agent_xfer_dial_override"]))		{$agent_xfer_dial_override=$_POST["agent_xfer_dial_override"];}
+if (isset($_GET["agent_xfer_vm_transfer"]))					{$agent_xfer_vm_transfer=$_GET["agent_xfer_vm_transfer"];}
+	elseif (isset($_POST["agent_xfer_vm_transfer"]))		{$agent_xfer_vm_transfer=$_POST["agent_xfer_vm_transfer"];}
+if (isset($_GET["agent_xfer_blind_transfer"]))				{$agent_xfer_blind_transfer=$_GET["agent_xfer_blind_transfer"];}
+	elseif (isset($_POST["agent_xfer_blind_transfer"]))		{$agent_xfer_blind_transfer=$_POST["agent_xfer_blind_transfer"];}
+if (isset($_GET["agent_xfer_dial_with_customer"]))			{$agent_xfer_dial_with_customer=$_GET["agent_xfer_dial_with_customer"];}
+	elseif (isset($_POST["agent_xfer_dial_with_customer"]))	{$agent_xfer_dial_with_customer=$_POST["agent_xfer_dial_with_customer"];}
+if (isset($_GET["agent_xfer_park_customer_dial"]))			{$agent_xfer_park_customer_dial=$_GET["agent_xfer_park_customer_dial"];}
+	elseif (isset($_POST["agent_xfer_park_customer_dial"]))	{$agent_xfer_park_customer_dial=$_POST["agent_xfer_park_customer_dial"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1475,6 +1487,12 @@ if ($non_latin < 1)
 	$is_webphone = ereg_replace("[^NY]","",$is_webphone);
 	$use_external_server_ip = ereg_replace("[^NY]","",$use_external_server_ip);
 	$use_custom_cid = ereg_replace("[^NY]","",$use_custom_cid);
+	$agent_xfer_consultative = ereg_replace("[^NY]","",$agent_xfer_consultative);
+	$agent_xfer_dial_override = ereg_replace("[^NY]","",$agent_xfer_dial_override);
+	$agent_xfer_vm_transfer = ereg_replace("[^NY]","",$agent_xfer_vm_transfer);
+	$agent_xfer_blind_transfer = ereg_replace("[^NY]","",$agent_xfer_blind_transfer);
+	$agent_xfer_dial_with_customer = ereg_replace("[^NY]","",$agent_xfer_dial_with_customer);
+	$agent_xfer_park_customer_dial = ereg_replace("[^NY]","",$agent_xfer_park_customer_dial);
 
 	$qc_enabled = ereg_replace("[^0-9NY]","",$qc_enabled);
 	$active = ereg_replace("[^0-9NY]","",$active);
@@ -2105,11 +2123,12 @@ else
 # 100302-2133 - Added Scheduled Callbacks Alert option
 # 100309-0510 - Added queuemetrics_loginout option
 # 100311-2348 - Added CallCard links and settings
+# 100313-0020 - Added User Group agent screen transfer-conf button display options
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-244';
-$build = '100311-2348';
+$admin_version = '2.4-245';
+$build = '100313-0020';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4876,6 +4895,11 @@ if ($ADD==99999)
 	<A NAME="vicidial_user_groups-agent_call_log_view">
 	<BR>
 	<B>Agent Call Log View -</B> This option defines whether the agent will be able to see their call log for calls handled through the ViciDial agent screen. Default is N for no or disabled.
+
+	<BR>
+	<A NAME="vicidial_user_groups-agent_xfer_options">
+	<BR>
+	<B>Agent Transfer Options -</B> These options allow for the disabling of specific buttons in the Transfer Conference section of the Agent interface. Default is Y for yes or enabled.
 
 	<?php
 	if ($SSqc_features_active > 0)
@@ -12611,7 +12635,7 @@ if ($ADD==411111)
 				$p++;
 				}
 		
-			$stmt="UPDATE vicidial_user_groups set user_group='$user_group', group_name='$group_name',allowed_campaigns='$campaigns_value',qc_allowed_campaigns='$qc_campaigns_value',qc_allowed_inbound_groups='$qc_groups_value',group_shifts='$GROUP_shifts',forced_timeclock_login='$forced_timeclock_login',shift_enforcement='$shift_enforcement',agent_status_viewable_groups='$VGROUP_vgroups',agent_status_view_time='$agent_status_view_time',agent_call_log_view='$agent_call_log_view' where user_group='$OLDuser_group';";
+			$stmt="UPDATE vicidial_user_groups set user_group='$user_group', group_name='$group_name',allowed_campaigns='$campaigns_value',qc_allowed_campaigns='$qc_campaigns_value',qc_allowed_inbound_groups='$qc_groups_value',group_shifts='$GROUP_shifts',forced_timeclock_login='$forced_timeclock_login',shift_enforcement='$shift_enforcement',agent_status_viewable_groups='$VGROUP_vgroups',agent_status_view_time='$agent_status_view_time',agent_call_log_view='$agent_call_log_view',agent_xfer_consultative='$agent_xfer_consultative',agent_xfer_dial_override='$agent_xfer_dial_override',agent_xfer_vm_transfer='$agent_xfer_vm_transfer',agent_xfer_blind_transfer='$agent_xfer_blind_transfer',agent_xfer_dial_with_customer='$agent_xfer_dial_with_customer',agent_xfer_park_customer_dial='$agent_xfer_park_customer_dial' where user_group='$OLDuser_group';";
 			$rslt=mysql_query($stmt, $link);
 
 			echo "<br><B>USER GROUP MODIFIED</B>\n";
@@ -20648,17 +20672,23 @@ if ($ADD==311111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT user_group,group_name,allowed_campaigns,qc_allowed_campaigns,qc_allowed_inbound_groups,group_shifts,forced_timeclock_login,shift_enforcement,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view from vicidial_user_groups where user_group='$user_group';";
+		$stmt="SELECT user_group,group_name,allowed_campaigns,qc_allowed_campaigns,qc_allowed_inbound_groups,group_shifts,forced_timeclock_login,shift_enforcement,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial from vicidial_user_groups where user_group='$user_group';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
-		$user_group =				$row[0];
-		$group_name =				$row[1];
-		$GROUP_shifts =				$row[5];
-		$forced_timeclock_login =	$row[6];
-		$shift_enforcement =		$row[7];
-		$VGROUP_vgroups =			$row[8];
-		$agent_status_view_time =	$row[9];
-		$agent_call_log_view =		$row[10];
+		$user_group =						$row[0];
+		$group_name =						$row[1];
+		$GROUP_shifts =						$row[5];
+		$forced_timeclock_login =			$row[6];
+		$shift_enforcement =				$row[7];
+		$VGROUP_vgroups =					$row[8];
+		$agent_status_view_time =			$row[9];
+		$agent_call_log_view =				$row[10];
+		$agent_xfer_consultative =			$row[11];
+		$agent_xfer_dial_override =			$row[12];
+		$agent_xfer_vm_transfer =			$row[13];
+		$agent_xfer_blind_transfer =		$row[14];
+		$agent_xfer_dial_with_customer =	$row[15];
+		$agent_xfer_park_customer_dial =	$row[16];
 
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -20746,6 +20776,18 @@ if ($ADD==311111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Call Log View: </td><td align=left><select size=1 name=agent_call_log_view><option SELECTED>Y</option><option>N</option><option SELECTED>$agent_call_log_view</option></select>$NWB#vicidial_user_groups-agent_call_log_view$NWE</td></tr>\n";
 
+		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Allow Consultative Xfer: </td><td align=left><select size=1 name=agent_xfer_consultative><option SELECTED>Y</option><option>N</option><option SELECTED>$agent_xfer_consultative</option></select>$NWB#vicidial_user_groups-agent_xfer_options$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Allow Dial Override Xfer: </td><td align=left><select size=1 name=agent_xfer_dial_override><option SELECTED>Y</option><option>N</option><option SELECTED>$agent_xfer_dial_override</option></select>$NWB#vicidial_user_groups-agent_xfer_options$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Allow Voicemail Message Xfer: </td><td align=left><select size=1 name=agent_xfer_vm_transfer><option SELECTED>Y</option><option>N</option><option SELECTED>$agent_xfer_vm_transfer</option></select>$NWB#vicidial_user_groups-agent_xfer_options$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Allow Blind Xfer: </td><td align=left><select size=1 name=agent_xfer_blind_transfer><option SELECTED>Y</option><option>N</option><option SELECTED>$agent_xfer_blind_transfer</option></select>$NWB#vicidial_user_groups-agent_xfer_options$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Allow Dial With Customer Xfer: </td><td align=left><select size=1 name=agent_xfer_dial_with_customer><option SELECTED>Y</option><option>N</option><option SELECTED>$agent_xfer_dial_with_customer</option></select>$NWB#vicidial_user_groups-agent_xfer_options$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Allow Park Customer Dial Xfer: </td><td align=left><select size=1 name=agent_xfer_park_customer_dial><option SELECTED>Y</option><option>N</option><option SELECTED>$agent_xfer_park_customer_dial</option></select>$NWB#vicidial_user_groups-agent_xfer_options$NWE</td></tr>\n";
+		
 		if ($SSqc_features_active > 0)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>QC Allowed Campaigns: <BR>$NWB#vicidial_user_groups-qc_allowed_campaigns$NWE</td><td align=left>\n";

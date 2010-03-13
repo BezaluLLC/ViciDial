@@ -282,10 +282,11 @@
 # 100302-2145 - Added scheduled callbacks alert feature
 # 100306-0852 - Added options.php optional file for setting interface options that will survive upgrade
 # 100309-0525 - Added queuemetrics_loginout option
+# 100313-0053 - Added display options for transfer/conf buttons
 #
 
-$version = '2.4-260';
-$build = '100309-0525';
+$version = '2.4-261';
+$build = '100313-0053';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -886,7 +887,7 @@ else
 			$AgentAlert_allowed = $VU_allow_alerts;
 
 			### Gather timeclock and shift enforcement restriction settings
-			$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view from vicidial_user_groups where user_group='$VU_user_group';";
+			$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial from vicidial_user_groups where user_group='$VU_user_group';";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01052',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysql_fetch_row($rslt);
@@ -907,6 +908,18 @@ else
 				{$agent_status_view_time=1;}
 			if ($row[5] == 'Y')
 				{$agent_call_log_view=1;}
+			if ($row[6] == 'Y')
+				{$agent_xfer_consultative=1;}
+			if ($row[7] == 'Y')
+				{$agent_xfer_dial_override=1;}
+			if ($row[8] == 'Y')
+				{$agent_xfer_vm_transfer=1;}
+			if ($row[9] == 'Y')
+				{$agent_xfer_blind_transfer=1;}
+			if ($row[10] == 'Y')
+				{$agent_xfer_dial_with_customer=1;}
+			if ($row[11] == 'Y')
+				{$agent_xfer_park_customer_dial=1;}
 			if ($VU_agent_call_log_view_override == 'Y')
 				{$agent_call_log_view=1;}
 			if ($VU_agent_call_log_view_override == 'N')
@@ -2838,6 +2851,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var agent_call_log_view='<?php echo $agent_call_log_view ?>';
 	var scheduled_callbacks_alert='<?php echo $scheduled_callbacks_alert ?>';
 	var last_uniqueid='';
+	var agent_xfer_consultative='<?php echo $agent_xfer_consultative ?>';
+	var agent_xfer_dial_override='<?php echo $agent_xfer_dial_override ?>';
+	var agent_xfer_vm_transfer='<?php echo $agent_xfer_vm_transfer ?>';
+	var agent_xfer_blind_transfer='<?php echo $agent_xfer_blind_transfer ?>';
+	var agent_xfer_dial_with_customer='<?php echo $agent_xfer_dial_with_customer ?>';
+	var agent_xfer_park_customer_dial='<?php echo $agent_xfer_park_customer_dial ?>';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -4105,7 +4124,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					if (XFRDop == "NeWSessioN")
 						{
 						threeway_end=1;
-						document.vicidial_form.callchannel.value = '';
+						document.getElementById("callchannel").innerHTML = '';
 						document.vicidial_form.callserverip.value = '';
 						dialedcall_send_hangup();
 
@@ -4168,7 +4187,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		if ( (taskvar == 'XfeRLOCAL') || (taskvar == 'XfeRBLIND') || (taskvar == 'XfeRVMAIL') )
 			{
 			if (auto_dial_level == 0) {RedirecTxFEr = 1;}
-			document.vicidial_form.callchannel.value = '';
+			document.getElementById("callchannel").innerHTML = '';
 			document.vicidial_form.callserverip.value = '';
 			if( document.images ) { document.images['livecall'].src = image_livecall_OFF.src;}
 		//	alert(RedirecTxFEr + "|" + auto_dial_level);
@@ -4779,7 +4798,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 								document.vicidial_form.uniqueid.value		= MDlookResponse_array[0];
 								last_uniqueid = MDlookResponse_array[0];
-								document.vicidial_form.callchannel.value	= MDlookResponse_array[1];
+								document.getElementById("callchannel").innerHTML	= MDlookResponse_array[1];
 								lastcustchannel = MDlookResponse_array[1];
 								if( document.images ) { document.images['livecall'].src = image_livecall_ON.src;}
 								document.vicidial_form.SecondS.value		= 0;
@@ -6322,7 +6341,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						else
 							{
 				//	alert("Channel has changed from:\n" + lastcustchannel + '|' + lastcustserverip + "\nto:\n" + reVDIC_data_VDAC[3] + '|' + reVDIC_data_VDAC[4]);
-							document.vicidial_form.callchannel.value	= reVDIC_data_VDAC[3];
+							document.getElementById("callchannel").innerHTML	= reVDIC_data_VDAC[3];
 							lastcustchannel = reVDIC_data_VDAC[3];
 							document.vicidial_form.callserverip.value	= reVDIC_data_VDAC[4];
 							lastcustserverip = reVDIC_data_VDAC[4];
@@ -6558,7 +6577,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							last_uniqueid								= VDIC_data_VDAC[1];
 							CIDcheck									= VDIC_data_VDAC[2];
 							CalLCID										= VDIC_data_VDAC[2];
-							document.vicidial_form.callchannel.value	= VDIC_data_VDAC[3];
+							document.getElementById("callchannel").innerHTML	= VDIC_data_VDAC[3];
 							lastcustchannel = VDIC_data_VDAC[3];
 							document.vicidial_form.callserverip.value	= VDIC_data_VDAC[4];
 							lastcustserverip = VDIC_data_VDAC[4];
@@ -7403,7 +7422,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	function DispoHanguPAgaiN() 
 	{
 	form_cust_channel = AgaiNHanguPChanneL;
-	document.vicidial_form.callchannel.value = AgaiNHanguPChanneL;
+	document.getElementById("callchannel").innerHTML = AgaiNHanguPChanneL;
 	document.vicidial_form.callserverip.value = AgaiNHanguPServeR;
 	lastcustchannel = AgaiNHanguPChanneL;
 	lastcustserverip = AgaiNHanguPServeR;
@@ -7455,7 +7474,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			{var group = VDCL_group_id;}
 		else
 			{var group = campaign;}
-		var form_cust_channel = document.vicidial_form.callchannel.value;
+		var form_cust_channel = document.getElementById("callchannel").innerHTML;
 		var form_cust_serverip = document.vicidial_form.callserverip.value;
 		var customer_channel = lastcustchannel;
 		var customer_server_ip = lastcustserverip;
@@ -7570,7 +7589,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				}
 
 		//  DEACTIVATE CHANNEL-DEPENDANT BUTTONS AND VARIABLES
-			document.vicidial_form.callchannel.value = '';
+			document.getElementById("callchannel").innerHTML = '';
 			document.vicidial_form.callserverip.value = '';
 			lastcustchannel='';
 			lastcustserverip='';
@@ -7599,7 +7618,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				document.getElementById("ReQueueCall").innerHTML =  "<IMG SRC=\"./images/vdc_LB_requeue_call_OFF.gif\" border=0 alt=\"Re-Queue Call\">";
 				}
 
-			document.vicidial_form.custdatetime.value		= '';
+			document.getElementById("custdatetime").innerHTML = ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';
 
 			if ( (auto_dial_level == 0) && (dial_method != 'INBOUND_MAN') )
 				{
@@ -8009,7 +8028,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		{
 		leaving_threeway=0;
 		blind_transfer=0;
-		document.vicidial_form.callchannel.value = '';
+		document.getElementById("callchannel").innerHTML = '';
 		document.vicidial_form.callserverip.value = '';
 		document.vicidial_form.xferchannel.value = '';
 		document.getElementById("DialWithCustomer").innerHTML ="<a href=\"#\" onclick=\"SendManualDial('YES');return false;\"><IMG SRC=\"./images/vdc_XB_dialwithcustomer.gif\" border=0 alt=\"Dial With Customer\" style=\"vertical-align:middle\"></a>";
@@ -8051,7 +8070,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		leaving_threeway=0;
 		blind_transfer=0;
 		CheckDEADcallON=0;
-		document.vicidial_form.callchannel.value = '';
+		document.getElementById("callchannel").innerHTML = '';
 		document.vicidial_form.callserverip.value = '';
 		document.vicidial_form.xferchannel.value = '';
 		document.getElementById("DialWithCustomer").innerHTML ="<a href=\"#\" onclick=\"SendManualDial('YES');return false;\"><IMG SRC=\"./images/vdc_XB_dialwithcustomer.gif\" border=0 alt=\"Dial With Customer\" style=\"vertical-align:middle\"></a>";
@@ -8346,7 +8365,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		{
 		showDiv('CustomerGoneBox');
 
-		document.vicidial_form.callchannel.value = '';
+		document.getElementById("callchannel").innerHTML = '';
 		document.vicidial_form.callserverip.value = '';
 		document.getElementById("CustomerGoneChanneL").innerHTML = lastcustchannel;
 		if( document.images ) { document.images['livecall'].src = image_livecall_OFF.src;}
@@ -10074,7 +10093,18 @@ else
 				{document.getElementById("AgentViewLink").innerHTML = "";}
 			if (dispo_check_all_pause == '1')
 				{document.vicidial_form.DispoSelectStop.checked=true;}
-
+			if (agent_xfer_consultative < 1)
+				{hideDiv('consultative_checkbox');}
+			if (agent_xfer_dial_override < 1)
+				{hideDiv('dialoverride_checkbox');}
+			if (agent_xfer_vm_transfer < 1)
+				{hideDiv('DialBlindVMail');}
+			if (agent_xfer_blind_transfer < 1)
+				{hideDiv('DialBlindTransfer');}
+			if (agent_xfer_dial_with_customer < 1)
+				{hideDiv('DialWithCustomer');}
+			if (agent_xfer_park_customer_dial < 1)
+				{hideDiv('ParkCustomerDial');}
 			document.vicidial_form.LeadLookuP.checked=true;
 
 			if ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') )
@@ -10498,8 +10528,7 @@ else
 			}
 
 			var customer_local_time = customer_date + " " + customer_time;
-			document.vicidial_form.custdatetime.value		= customer_local_time;
-
+			document.getElementById("custdatetime").innerHTML = customer_local_time;
 			}
 		start_all_refresh();
 		}
@@ -10956,7 +10985,7 @@ $zi=1;
 	<span class="text_input" id="MainPanelCustInfo">
 	<TABLE><tr>
 	<td align=right></td>
-	<td align=left><font class="body_text">&nbsp; Customer Time: <input type=text size=27 name=custdatetime class="cust_form" value=""> &nbsp; Channel: <input type=text size=27 name=callchannel class="cust_form" value=""></td>
+	<td align=left><font class="body_text">&nbsp; Customer Time: <span name=custdatetime id=custdatetime class="log_title"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span> &nbsp; &nbsp; Channel: <span name=callchannel id=callchannel class="cust_form"> </span></td>
 	</tr><tr>
 	<td colspan=2 align=center> Customer Information: <span id="CusTInfOSpaN"></span></td>
 	</tr><tr>
@@ -11184,12 +11213,12 @@ if ($agent_display_dialable_leads > 0)
 
 	<TR>
 	<TD ALIGN=LEFT COLSPAN=2>
-	<IMG SRC="./images/vdc_XB_seconds.gif" border=0 alt="seconds" style="vertical-align:middle"><input type=text size=2 name=xferlength maxlength=4 class="cust_form">
+	<IMG SRC="./images/vdc_XB_seconds.gif" border=0 alt="seconds" style="vertical-align:middle"><input type=text size=2 name=xferlength maxlength=4 class="cust_form" readonly>
 	&nbsp; 
-	<IMG SRC="./images/vdc_XB_channel.gif" border=0 alt="channel" style="vertical-align:middle"><input type=text size=12 name=xferchannel maxlength=200 class="cust_form">
+	<IMG SRC="./images/vdc_XB_channel.gif" border=0 alt="channel" style="vertical-align:middle"><input type=text size=12 name=xferchannel maxlength=200 class="cust_form" readonly>
 	</TD>
 	<TD ALIGN=LEFT>
-	<input type=checkbox name=consultativexfer size=1 value="0"><font class="body_tiny"> CONSULTATIVE &nbsp;</font>
+	<span id=consultative_checkbox><input type=checkbox name=consultativexfer size=1 value="0"><font class="body_tiny"> CONSULTATIVE &nbsp;</font></span>
 	</TD>
 	<TD ALIGN=LEFT>
 	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="HangupBothLines"><a href="#" onclick="bothcall_send_hangup();return false;"><IMG SRC="./images/vdc_XB_hangupbothlines.gif" border=0 alt="Hangup Both Lines" style="vertical-align:middle"></a></span>
@@ -11205,7 +11234,7 @@ if ($agent_display_dialable_leads > 0)
 	<input type=hidden name=xferuniqueid>
 	</TD>
 	<TD ALIGN=LEFT>
-	<input type=checkbox name=xferoverride size=1 value="0"><font class="body_tiny"> DIAL OVERRIDE</font>
+	<span id=dialoverride_checkbox><input type=checkbox name=xferoverride size=1 value="0"><font class="body_tiny"> DIAL OVERRIDE</font></span>
 	</TD>
 	<TD ALIGN=LEFT>
 	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="Leave3WayCall"><a href="#" onclick="leave_3way_call('FIRST');return false;"><IMG SRC="./images/vdc_XB_leave3waycall.gif" border=0 alt="LEAVE 3-WAY CALL" style="vertical-align:middle"></a></span> 

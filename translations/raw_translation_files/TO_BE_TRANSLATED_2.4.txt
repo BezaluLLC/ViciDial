@@ -43,6 +43,14 @@ This option affects how vicidial will log the logins and logouts of an agent in 
 Enable CallCard||
 This setting enables the CallCard features with ViciDial to allow for callers to use pin numbers and card_ids that have a balance of minutes and those balances can have agent talk time on customer calls to in-groups deducted. Default is 0 for disabled||
 CallCard Access||
+Agent Transfer Options||
+These options allow for the disabling of specific buttons in the Transfer Conference section of the Agent interface. Default is Y for yes or enabled||
+Agent Allow Park Customer Dial Xfer||
+Agent Allow Dial With Customer Xfer||
+Agent Allow Blind Xfer||
+Agent Allow Voicemail Message Xfer||
+Agent Allow Dial Override Xfer||
+Agent Allow Consultative Xfer||
 
 
 ############################################################ CLIENT

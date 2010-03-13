@@ -157,3 +157,15 @@ ALTER TABLE system_settings ADD callcard_enabled ENUM('1','0') default '0';
 ALTER TABLE vicidial_users ADD callcard_admin ENUM('1','0') default '0';
 
 UPDATE system_settings SET db_schema_version='1206',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_user_groups ADD agent_xfer_consultative ENUM('Y','N') default 'Y';
+ALTER TABLE vicidial_user_groups ADD agent_xfer_dial_override ENUM('Y','N') default 'Y';
+ALTER TABLE vicidial_user_groups ADD agent_xfer_vm_transfer ENUM('Y','N') default 'Y';
+ALTER TABLE vicidial_user_groups ADD agent_xfer_blind_transfer ENUM('Y','N') default 'Y';
+ALTER TABLE vicidial_user_groups ADD agent_xfer_dial_with_customer ENUM('Y','N') default 'Y';
+ALTER TABLE vicidial_user_groups ADD agent_xfer_park_customer_dial ENUM('Y','N') default 'Y';
+
+ALTER TABLE vicidial_agent_log ADD uniqueid VARCHAR(20) default '';
+ALTER TABLE vicidial_agent_log_archive ADD uniqueid VARCHAR(20) default '';
+
+UPDATE system_settings SET db_schema_version='1207',db_schema_update_date=NOW();

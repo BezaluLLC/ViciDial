@@ -571,7 +571,13 @@ forced_timeclock_login ENUM('Y','N','ADMIN_EXEMPT') default 'N',
 shift_enforcement ENUM('OFF','START','ALL') default 'OFF',
 agent_status_viewable_groups TEXT,
 agent_status_view_time ENUM('Y','N') default 'N',
-agent_call_log_view ENUM('Y','N') default 'N'
+agent_call_log_view ENUM('Y','N') default 'N',
+agent_xfer_consultative ENUM('Y','N') default 'Y',
+agent_xfer_dial_override ENUM('Y','N') default 'Y',
+agent_xfer_vm_transfer ENUM('Y','N') default 'Y',
+agent_xfer_blind_transfer ENUM('Y','N') default 'Y',
+agent_xfer_dial_with_customer ENUM('Y','N') default 'Y',
+agent_xfer_park_customer_dial ENUM('Y','N') default 'Y'
 );
 
 CREATE TABLE vicidial_campaigns (
@@ -963,6 +969,7 @@ sub_status VARCHAR(6),
 dead_epoch INT(10) UNSIGNED,
 dead_sec SMALLINT(5) UNSIGNED default '0',
 processed ENUM('Y','N') default 'N',
+uniqueid VARCHAR(20) default '',
 index (lead_id),
 index (user),
 index (event_time)
@@ -2131,7 +2138,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1206',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1207',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

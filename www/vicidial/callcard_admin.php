@@ -129,50 +129,6 @@ if (strlen($action) < 1)
 
 
 
-
-
-
-### BEGIN change territory owner for one account
-if ( ($action == "CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_integration > 0) )
-	{
-	echo "</TITLE></HEAD><BODY BGCOLOR=white>\n";
-	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-
-	echo "<br>Vtiger Change Territory Owner<form action=$PHP_SELF method=POST>\n";
-	echo "<input type=hidden name=action value=PROCESS_CHANGE_TERRITORY_OWNER_ACCOUNT>\n";
-	echo "<center><TABLE width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Account ID: </td><td align=left><input type=text name=accountid value=\"$accountid\"></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>New Owner: </td><td align=left><select size=1 name=user>\n";
-
-	$stmt="SELECT user,full_name from vicidial_users where active='Y' order by user";
-	$rslt=mysql_query($stmt, $link);
-	$users_to_print = mysql_num_rows($rslt);
-	$users_list='';
-
-	$o=0;
-	while ($users_to_print > $o) 
-		{
-		$rowx=mysql_fetch_row($rslt);
-		$users_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
-		$o++;
-		}
-	echo "$users_list";
-	echo "</select></td></tr>\n";
-
-	echo "<tr bgcolor=#B6D3FC><td align=right>Update ViciDial List Owner: </td><td align=left><select size=1 name=vl_owner>\n";
-	echo "<option SELECTED>YES</option>\n";
-	echo "<option>NO</option>\n";
-	echo "</select></td></tr>\n";
-
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
-	echo "</TABLE></center>\n";
-	exit;
-	}
-### END change territory owner for one account
-
-
-
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'0';
 $hh =					'admin';
@@ -194,7 +150,7 @@ $cc_font =		'BLACK';
 $cc_color =		'#C6C6C6';
 $subcamp_color =	'#C6C6C6';
 ##### END Set variables to make header show properly #####
-;
+
 require("admin_header.php");
 
 $colspan='3';
@@ -228,194 +184,6 @@ $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIG
 $secX = date("U");
 $pulldate0 = "$year-$mon-$mday $hour:$min:$sec";
 
-
-
-
-
-### BEGIN change territory owner in the system
-if ( ($action == "CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integration > 0) )
-	{
-	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-
-	echo "<br>Vtiger Change Territory Owner<form action=$PHP_SELF method=POST>\n";
-	echo "<input type=hidden name=action value=PROCESS_CHANGE_TERRITORY_OWNER>\n";
-	echo "<center><TABLE width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Territory: </td><td align=left><select size=1 name=territory>\n";
-
-	$stmt="SELECT territory,territory_description from vicidial_territories order by territory";
-	$rslt=mysql_query($stmt, $link);
-	$territories_to_print = mysql_num_rows($rslt);
-	$territories_list='';
-
-	$o=0;
-	while ($territories_to_print > $o) 
-		{
-		$rowx=mysql_fetch_row($rslt);
-		$territories_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
-		$o++;
-		}
-	echo "$territories_list";
-	echo "</select></td></tr>\n";
-
-	echo "<tr bgcolor=#B6D3FC><td align=right>New Owner: </td><td align=left><select size=1 name=user>\n";
-
-	$stmt="SELECT user,full_name from vicidial_users where active='Y' order by user";
-	$rslt=mysql_query($stmt, $link);
-	$users_to_print = mysql_num_rows($rslt);
-	$users_list='';
-
-	$o=0;
-	while ($users_to_print > $o) 
-		{
-		$rowx=mysql_fetch_row($rslt);
-		$users_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
-		$o++;
-		}
-	echo "$users_list";
-	echo "</select></td></tr>\n";
-
-	echo "<tr bgcolor=#B6D3FC><td align=right>Update ViciDial List Owner: </td><td align=left><select size=1 name=vl_owner>\n";
-	echo "<option SELECTED>YES</option>\n";
-	echo "<option>NO</option>\n";
-	echo "</select></td></tr>\n";
-
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
-	echo "</TABLE></center>\n";
-	}
-### END change territory owner in the system
-
-
-### BEGIN delete user territory page
-if ($action == "DELETE_USER_TERRITORY")
-	{
-	if ( (strlen($territory)<1) or (strlen($user)<1) )
-		{
-		echo "ERROR: Territory and User must be filled in<BR>\n";
-		}
-	else
-		{
-		$stmt="SELECT count(*) from vicidial_user_territories where territory='$territory' and user='$user';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		if ($row[0] < 0)
-			{
-			echo "ERROR: this territory user is not in the system<BR>\n";
-			}
-		else
-			{
-			$stmt="DELETE from vicidial_user_territories where territory='$territory' and user='$user';";
-			$rslt=mysql_query($stmt, $link);
-
-			echo "User Territory Deleted: $user $territory<BR>\n";
-
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|$stmtB|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='DELETE', record_id='$territory', event_code='ADMIN DELETE USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
-			}
-		}
-	$action = "MODIFY_TERRITORY";
-	}
-### END delete user territory page
-
-
-
-
-
-
-### BEGIN add territory page
-if ($action == "ADD_TERRITORY")
-	{
-	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-
-	echo "<br>Add Territory<form action=$PHP_SELF method=POST>\n";
-	echo "<input type=hidden name=action value=PROCESS_ADD_TERRITORY>\n";
-	echo "<center><TABLE width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Territory: </td><td align=left><input type=text name=territory size=30 maxlength=100></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Territory Description: </td><td align=left><input type=text name=territory_description size=50 maxlength=255></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
-	echo "</TABLE></center>\n";
-	}
-### END add territory page
-
-
-### BEGIN process add territory page
-if ($action == "PROCESS_ADD_TERRITORY")
-	{
-	if ( (strlen($territory)<1) or (strlen($territory_description)<1) )
-		{
-		echo "ERROR: Territory and Territory Description must be filled in<BR>\n";
-		}
-	else
-		{
-		$stmt="SELECT count(*) from vicidial_territories where territory='$territory';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		if ($row[0] > 0)
-			{
-			echo "ERROR: there is already a territory in the system with this name<BR>\n";
-			}
-		else
-			{
-			$stmt="INSERT INTO vicidial_territories SET territory='$territory',territory_description='$territory_description';";
-			$rslt=mysql_query($stmt, $link);
-
-			echo "Territory Added: $territory<BR>\n";
-
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
-			}
-		}
-	$action = "CALLCARD_SUMMARY";
-	}
-### END process add territory page
-
-
-### BEGIN delete territory page
-if ($action == "DELETE_TERRITORY")
-	{
-	if (strlen($territory)<1)
-		{
-		echo "ERROR: Territory must be filled in<BR>\n";
-		}
-	else
-		{
-		$stmt="SELECT count(*) from vicidial_territories where territory='$territory';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		if ($row[0] < 0)
-			{
-			echo "ERROR: This territory is not in the system with this name<BR>\n";
-			}
-		else
-			{
-			$stmt="DELETE from vicidial_territories where territory='$territory';";
-			$rslt=mysql_query($stmt, $link);
-
-			echo "Territory Deleted: $territory<BR>\n";
-
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='DELETE', record_id='$territory', event_code='ADMIN DELETE TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
-			}
-		}
-	$action = "CALLCARD_SUMMARY";
-	}
-### END delete territory page
 
 
 ### BEGIN modify card status page
@@ -479,15 +247,13 @@ if ($action == "CALLCARD_STATUS")
 		}
 	$action = "CALLCARD_DETAIL";
 	}
-### END process modify territory page
-
+### END modify card status page
 
 
 
 ### BEGIN CallCard record Detail page
 if ($action == "CALLCARD_DETAIL")
 	{
-
 	$stmt="SELECT card_id,run,batch,pack,sequence,status,balance_minutes,initial_value,initial_minutes,note_purchase_order,note_printer,note_did,inbound_group_id,note_language,note_name,note_comments,create_user,activate_user,used_user,void_user,create_time,activate_time,used_time,void_time from callcard_accounts_details where card_id='$card_id';";
 	$rslt=mysql_query($stmt, $link);
 	$details_to_print = mysql_num_rows($rslt);
@@ -621,8 +387,6 @@ if ($action == "CALLCARD_DETAIL")
 
 
 
-
-
 ### BEGIN callcard summary
 if ($action == "CALLCARD_SUMMARY")
 	{
@@ -725,6 +489,7 @@ if ($action == "CALLCARD_SUMMARY")
 ### END callcard summary
 
 
+
 ### BEGIN list batches
 if ($action == "CALLCARD_BATCHES")
 	{
@@ -767,7 +532,6 @@ if ($action == "CALLCARD_BATCHES")
 	echo "</center>\n";
 	}
 ### END list batches
-
 
 
 

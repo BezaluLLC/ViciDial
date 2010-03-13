@@ -13,9 +13,13 @@ As of the 2.4 version we have added an optional callcard system to allow calls f
 
 
 
-Script involved in call card feature:
+AGI Script involved in call card feature:
 - agi-CALLCARD_dial_in.agi
 
+
+Web scripts involved:
+- callcard_admin.php
+- callcard_export_report.php
 
 
 For the calls to be properly logged, use these settings(or add to existing URLs) in the in-group that is handling these calls:
