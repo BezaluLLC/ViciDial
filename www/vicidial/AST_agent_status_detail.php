@@ -338,7 +338,7 @@ else
 		{
 		$Suser=$usersARY[$m];
 		$Sfull_name=$user_namesARY[$m];
-		$Scalls=$calls[$m];
+		$Scalls=0;
 		$SstatusesHTML='';
 		$SstatusesFILE='';
 		$CIScount=0;
