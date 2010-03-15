@@ -85,6 +85,7 @@ $i=0;
 	$LISTgroups[$i]='CALLMENU';
 	$LISTgroups_names[$i]='IVR';
 	$i++;
+	$groups_to_print++;
 	$LISTgroups[$i]='XMLPULL';
 	$LISTgroups_names[$i]='Dynamic Application';
 	$i++;
