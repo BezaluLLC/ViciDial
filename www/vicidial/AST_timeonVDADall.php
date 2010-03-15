@@ -1583,6 +1583,20 @@ if ( ($with_inbound != 'O') and ($NOLEADSalert == 'YES') )
 ###################################################################################
 if ($campaign_allow_inbound > 0)
 	{
+	if (eregi('ALL-ACTIVE',$group_string)) 
+		{
+		$stmt="select closer_campaigns from vicidial_campaigns $group_SQLwhere";
+		$rslt=mysql_query($stmt, $link);
+		$closer_campaigns="";
+		while ($row=mysql_fetch_row($rslt)) 
+			{
+			$closer_campaigns.="$row[0]";
+			}
+		$closer_campaigns = preg_replace("/^ | -$/","",$closer_campaigns);
+		$closer_campaigns = preg_replace("/ - /"," ",$closer_campaigns);
+		$closer_campaigns = preg_replace("/ /","','",$closer_campaigns);
+		$closer_campaignsSQL = "'$closer_campaigns'";
+		}	
 	$stmtB="from vicidial_auto_calls where status NOT IN('XFER') and ( (call_type='IN' and campaign_id IN($closer_campaignsSQL)) or (call_type IN('OUT','OUTBALANCE') $group_SQLand) ) order by queue_priority desc,campaign_id,call_time;";
 	}
 else
@@ -1708,15 +1722,15 @@ if ($agentonlycount > 0)
 	{$agentonlyheader = 'AGENTONLY';}
 $Cecho = '';
 $Cecho .= "VICIDIAL: Calls Waiting                      $NOW_TIME\n";
-$Cecho .= "+--------+--------------+--------------+-----------------+---------+------------+----------+\n";
-$Cecho .= "| STATUS | CAMPAIGN     | PHONE NUMBER | SERVER_IP       | DIALTIME| CALL TYPE  | PRIORITY | $agentonlyheader\n";
-$Cecho .= "+--------+--------------+--------------+-----------------+---------+------------+----------+\n";
+$Cecho .= "+--------+----------------------+--------------+-----------------+---------+------------+----------+\n";
+$Cecho .= "| STATUS | CAMPAIGN             | PHONE NUMBER | SERVER_IP       | DIALTIME| CALL TYPE  | PRIORITY | $agentonlyheader\n";
+$Cecho .= "+--------+----------------------+--------------+-----------------+---------+------------+----------+\n";
 
 $p=0;
 while($p<$k)
 	{
 	$Cstatus =			sprintf("%-6s", $CDstatus[$p]);
-	$Ccampaign_id =		sprintf("%-12s", $CDcampaign_id[$p]);
+	$Ccampaign_id =		sprintf("%-20s", $CDcampaign_id[$p]);
 	$Cphone_number =	sprintf("%-12s", $CDphone_number[$p]);
 	$Cserver_ip =		sprintf("%-15s", $CDserver_ip[$p]);
 	$Ccall_type =		sprintf("%-10s", $CDcall_type[$p]);
@@ -1741,7 +1755,7 @@ while($p<$k)
 
 	$p++;
 	}
-$Cecho .= "+--------+--------------+--------------+-----------------+---------+------------+----------+\n";
+$Cecho .= "+--------+----------------------+--------------+-----------------+---------+------------+----------+\n";
 
 if ($p<1)
 	{$Cecho='';}
