@@ -283,10 +283,11 @@
 # 100306-0852 - Added options.php optional file for setting interface options that will survive upgrade
 # 100309-0525 - Added queuemetrics_loginout option
 # 100313-0053 - Added display options for transfer/conf buttons
+# 100315-1148 - fix for rare recording_log uniqueid issue on manual dial calls to same number
 #
 
-$version = '2.4-261';
-$build = '100313-0053';
+$version = '2.4-262';
+$build = '100315-1148';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -2851,6 +2852,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var agent_call_log_view='<?php echo $agent_call_log_view ?>';
 	var scheduled_callbacks_alert='<?php echo $scheduled_callbacks_alert ?>';
 	var last_uniqueid='';
+	var tmp_vicidial_id='';
 	var agent_xfer_consultative='<?php echo $agent_xfer_consultative ?>';
 	var agent_xfer_dial_override='<?php echo $agent_xfer_dial_override ?>';
 	var agent_xfer_vm_transfer='<?php echo $agent_xfer_vm_transfer ?>';
@@ -3802,11 +3804,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		{
 		if (inOUT == 'OUT')
 			{
-			var tmp_vicidial_id = document.vicidial_form.uniqueid.value;
+			tmp_vicidial_id = document.vicidial_form.uniqueid.value;
 			}
 		else
 			{
-			var tmp_vicidial_id = 'IN';
+			tmp_vicidial_id = 'IN';
 			}
 		var xmlhttp=false;
 		/*@cc_on @*/
@@ -8168,6 +8170,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				vtiger_callback_id='0';
 				recording_filename='';
 				recording_id='';
+				document.vicidial_form.uniqueid.value='';
+				MDuniqueid='';
+				XDuniqueid='';
+				tmp_vicidial_id='';
 
 				if (manual_dial_in_progress==1)
 					{
