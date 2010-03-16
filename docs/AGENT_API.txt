@@ -20,7 +20,7 @@ update_fields - changes values for selected data fields in the agent interface
 set_timer_action - sets timer action for the current call the agent is on
 st_login_log - looks up the vicidial_users.custom_three field and logs event from CRM
 st_get_agent_active_lead - looks up active lead info for an agent and outputs lead information
-
+ra_call_control - remote agent call control: hangup/transfer calls being handled by remote agents
 
 
 New scripts:
@@ -343,6 +343,40 @@ ERROR: no active lead found - 6666
 SUCCESS: st_get_agent_active_lead lead found - 6666|7275551212|123456|9987-1234765|SK|WILLIAMS|JUH764AJJJ9
 
 
+
+--------------------------------------------------------------------------------
+ra_call_control - 
+
+DESCRIPTION:
+Allows for remote agent call control: hangup/transfer calls being handled by remote agents, also options for recording a disposition and call length
+
+VALUES:
+value -
+ REQUIRED, The call ID of the call as received as CallerIDname field or a special SIP-header, i.e. Y0315201639000402027
+agent_user -
+ REQUIRED, alphanumeric string for remote agent user
+stage - 
+ REQUIRED, one of these choices: 'HANGUP','EXTENSIONTRANSFER','INGROUPTRANSFER'
+ingroup_choices - 
+ OPTIONAL, only required if INGROUPTRANSFER stage is used, must be a single active in-group, reserved option of "DEFAULTINGROUP" can be used to send the call to the default in-group for the in-group or campaign that originated the call to the remote agent
+phone_number -
+ OPTIONAL, only required if EXTENSIONTRANSFER stage is used, must be a full number when dialed that will dial through the default context
+status -
+ OPTIONAL, status of the call, maximum of 6 characters, if not set, status will be RAXFER
+
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1028&function=ra_call_control&stage=INGROUPTRANSFER&ingroup_choices=DEFAULTINGROUP&value=Y0316001655000402028
+
+RESPONSES:
+ERROR: ra_call_control not valid - Y0315201639000402027|6666|INGROUPTRANSFER
+ERROR: no user found - 6666
+ERROR: user not logged in - 6666
+ERROR: no active call found - Y0315201639000402027
+ERROR: phone_number is not valid - 9
+ERROR: ingroup is not valid - TESTINGROUP
+ERROR: stage is not valid - XYZ
+SUCCESS: ra_call_control transferred - 6666|Y0315201639000402027|SALESLINE
+SUCCESS: ra_call_control hungup - 6666|Y0315201639000402027|HANGUP
 
 
 

@@ -86,6 +86,10 @@ OTHER CHANGES:
 18. Added display options for agent screen Transfer-conf buttons in the User
 	Group modification screen.
 
+19. Added ra_call_control function to agent API to allow for hangup and transfer
+	of calls sent to a Remote Agent also allows for setting of a disposition
+	for more information read the AGENT_API.txt doc.
+
 
 
 

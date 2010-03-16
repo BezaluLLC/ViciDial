@@ -52,3 +52,4 @@ CPDERR - Sangoma Call Progress Detection CPD Error
 TIMEOT - Inbound call Drop Timeout, call waited until drop-seconds and was sent on to the drop action
 AFTHRS - Inbound after hours drop, call received outside of in-group call time
 NANQUE - Inbound no agent no queue drop, no agent logged in
+RAXFER - Remote Agent API transfer

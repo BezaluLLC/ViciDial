@@ -1,7 +1,7 @@
 <?php
 # api.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with the VICIDIAL Agent screen
@@ -27,6 +27,8 @@
 #  - $ingroup_choices - (' TEST_IN SALESLINE -')
 #  - $set_as_default - ('YES','NO')
 #  - $alt_user
+#  - $stage
+#  - $status
 
 # CHANGELOG:
 # 80703-2225 - First build of script
@@ -40,10 +42,11 @@
 # 91130-1307 - Added change_ingroups(Manager InGroup change feature)
 # 91211-1805 - Added st_login_log and st_get_agent_active_lead functions, added alt_user
 # 91228-1059 - Added update_fields function
+# 100315-2021 - Added ra_call_control function
 #
 
-$version = '2.2.0-11';
-$build = '91228-1059';
+$version = '2.2.0-12';
+$build = '100315-2021';
 
 require("dbconnect.php");
 
@@ -140,6 +143,10 @@ if (isset($_GET["rank"]))						{$rank=$_GET["rank"];}
 	elseif (isset($_POST["rank"]))				{$rank=$_POST["rank"];}
 if (isset($_GET["owner"]))						{$owner=$_GET["owner"];}
 	elseif (isset($_POST["owner"]))				{$owner=$_POST["owner"];}
+if (isset($_GET["stage"]))						{$stage=$_GET["stage"];}
+	elseif (isset($_POST["stage"]))				{$stage=$_POST["stage"];}
+if (isset($_GET["status"]))						{$status=$_GET["status"];}
+	elseif (isset($_POST["status"]))			{$status=$_POST["status"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -250,7 +257,7 @@ if ($function == 'version')
 
 
 ################################################################################
-### BEGIN - user validation section
+### BEGIN - user validation section (most functions run through this first)
 ################################################################################
 
 if ($ACTION == 'LogiNCamPaigns')
@@ -310,6 +317,7 @@ else
 
 if ($format=='debug')
 	{
+	$DB=1;
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "<!-- VERSION: $version     BUILD: $build    USER: $user\n";
@@ -1490,6 +1498,288 @@ if ($function == 'st_get_agent_active_lead')
 	}
 ################################################################################
 ### END - st_get_agent_active_lead
+################################################################################
+
+
+
+
+################################################################################
+### BEGIN - ra_call_control - remote agent call control: hangup/transfer
+################################################################################
+if ($function == 'ra_call_control')
+	{
+	if ( (strlen($value)<1) or (strlen($agent_user)<1) or (strlen($stage)<1) )
+		{
+		$result = 'ERROR';
+		$result_reason = "ra_call_control not valid";
+		echo "$result: $result_reason - $value|$agent_user|$stage\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt = "select count(*) from vicidial_auto_calls where callerid='$value';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select channel,server_ip,call_type,campaign_id,lead_id,phone_number,uniqueid,stage,queue_position from vicidial_auto_calls where callerid='$value';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$channel =		$row[0];
+				$server_ip = 	$row[1];
+				$call_type = 	$row[2];
+				$campaign_id =	$row[3];
+				$lead_id =		$row[4];
+				$vdac_phone =	$row[5];
+				$uniqueid =		$row[6];
+				$ra_stage =		$row[7];
+				$queue_position =	$row[8];
+
+				$stmt = "select server_ip,user from vicidial_live_agents where callerid='$value';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$ra_server_ip = $row[0];
+				$ra_user =		$row[1];
+
+				$processed=0;
+				if ($stage=='HANGUP')
+					{
+					$processed++;
+					$HANGUPcid = $value;
+					$HANGUPcid = preg_replace("/^..../",'HAPI',$HANGUPcid);
+
+					$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Hangup','$HANGUPcid','Channel: $channel','','','','','','','','','');";
+				#		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				#	$rslt=mysql_query($stmt, $link);
+					$result = 'SUCCESS';
+					$result_reason = "ra_call_control hungup";
+					echo "$result: $result_reason - $agent_user|$value|HANGUP\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				if ($stage=='EXTENSIONTRANSFER')
+					{
+					$processed++;
+					if (strlen($phone_number) < 2)
+						{
+						$result = 'ERROR';
+						$result_reason = "phone_number is not valid";
+						echo "$result: $result_reason - $phone_number\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					else
+						{
+						$stmt = "select ext_context from servers where server_ip='$server_ip';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$ext_context =		$row[0];
+
+						$TRANSFERcid = $value;
+						$TRANSFERcid = preg_replace("/^..../",'XAPI',$TRANSFERcid);
+
+						$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Redirect','$TRANSFERcid','Channel: $channel','Context: $ext_context','Exten: $phone_number','Priority: 1','CallerID: $TRANSFERcid','','','','','');";
+					#		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					#	$rslt=mysql_query($stmt, $link);
+						$result = 'SUCCESS';
+						$result_reason = "ra_call_control transfer";
+						echo "$result: $result_reason - $agent_user|$value|$phone_number\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					}
+				if ($stage=='INGROUPTRANSFER')
+					{
+					$processed++;
+					if (strlen($ingroup_choices) < 2)
+						{
+						$result = 'ERROR';
+						$result_reason = "ingroup is not valid";
+						echo "$result: $result_reason - $ingroup_choices\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					else
+						{
+						$stmt = "select ext_context from servers where server_ip='$server_ip';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$ext_context =		$row[0];
+
+						if (preg_match("/DEFAULTINGROUP/",$ingroup_choices))
+							{
+							if ($call_type=='IN')
+								{
+								$stmt = "select default_xfer_group from vicidial_inbound_groups where group_id='$campaign_id';";
+								}
+							else
+								{
+								$stmt = "select default_xfer_group from vicidial_campaigns where campaign_id='$campaign_id';";
+								}
+							if ($DB) {echo "$stmt\n";}
+							$rslt=mysql_query($stmt, $link);
+							$row=mysql_fetch_row($rslt);
+							$ingroup_choices =		$row[0];
+							}
+
+						$stmt = "select count(*) from vicidial_inbound_groups where group_id='$ingroup_choices' and active='Y';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$ingroupactive =	$row[0];
+
+						if ($ingroupactive < 1)
+							{
+							$result = 'ERROR';
+							$result_reason = "ingroup is not valid";
+							echo "$result: $result_reason - $ingroup_choices\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						else
+							{
+							$TRANSFERcid = $value;
+							$TRANSFERcid = preg_replace("/^..../",'XAPI',$TRANSFERcid);
+
+							$TRANSFERexten = "90009*$ingroup_choices**$lead_id**$vdac_phone**$agent_user**";
+
+							$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Redirect','$TRANSFERcid','Channel: $channel','Context: $ext_context','Exten: $TRANSFERexten','Priority: 1','CallerID: $TRANSFERcid','','','','','');";
+						#		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						#	$rslt=mysql_query($stmt, $link);
+							$result = 'SUCCESS';
+							$result_reason = "ra_call_control transfer";
+							echo "$result: $result_reason - $agent_user|$value|$phone_number\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						}
+					}
+				if ($processed < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "stage is not valid";
+					echo "$result: $result_reason - $stage\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+
+				if ($result == 'SUCCESS')
+					{
+					if (strlen($status)<1)
+						{$status='RAXFER';}
+					if ($call_type=='IN')
+						{
+						$stmt = "UPDATE vicidial_closer_log SET status='$status' where uniqueid='$uniqueid' and lead_id='$lead_id' and campaign_id='$campaign_id' order by call_date desc limit 1;";
+						}
+					else
+						{
+						$stmt = "UPDATE vicidial_log SET status='$status',user='$agent_user' where uniqueid='$uniqueid' and lead_id='$lead_id' order by call_date desc limit 1;";
+						}
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_query($stmt, $link);
+
+					$stmt = "UPDATE vicidial_list SET status='$status' where lead_id='$lead_id' limit 1;";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_query($stmt, $link);
+
+					$StarTtime = date("U");
+					$RArandom = (rand(1000000, 9999999) + 10000000);
+
+					#############################################
+					##### START QUEUEMETRICS LOGGING LOOKUP #####
+					$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+					$rslt=mysql_query($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$qm_conf_ct = mysql_num_rows($rslt);
+					if ($qm_conf_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$enable_queuemetrics_logging =	$row[0];
+						$queuemetrics_server_ip	=		$row[1];
+						$queuemetrics_dbname =			$row[2];
+						$queuemetrics_login	=			$row[3];
+						$queuemetrics_pass =			$row[4];
+						$queuemetrics_log_id =			$row[5];
+						}
+					##### END QUEUEMETRICS LOGGING LOOKUP #####
+					###########################################
+					if ($enable_queuemetrics_logging > 0)
+						{
+						$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+						mysql_select_db("$queuemetrics_dbname", $linkB);
+
+						$stmt = "SELECT time_id from queue_log where call_id='$value' and queue='$campaign_id' and agent='Agent/$ra_user' and verb='CONNECT';";
+						$rslt=mysql_query($stmt, $linkB);
+						if ($DB) {echo "$stmt\n";}
+						$qm_con_ct = mysql_num_rows($rslt);
+						if ($qm_con_ct > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$ra_time_id =	$row[0];
+							$ra_length = ($StarTtime - $ra_time_id);
+							}
+						if ($ra_length < 1) {$ra_length=1;}
+						$ra_stage = preg_replace("/XFER|CLOSER|-/",'',$ra_stage);
+						if ($ra_stage < 0.25) {$ra_stage=0;}
+
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$value',queue='$campaign_id',agent='Agent/$ra_user',verb='COMPLETEAGENT',data1='$ra_stage',data2='$ra_length',data3='$queue_position',serverid='$queuemetrics_log_id';";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_query($stmt, $linkB);
+
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$value',queue='$campaign_id',agent='Agent/$ra_user',verb='CALLSTATUS',data1='$status',serverid='$queuemetrics_log_id';";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_query($stmt, $linkB);
+
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$ra_user',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_query($stmt, $linkB);
+
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$ra_user',verb='UNPAUSEALL',serverid='$queuemetrics_log_id';";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_query($stmt, $linkB);
+						}
+
+					### finally send the call
+					if ($format=='debug') {echo "\n<!-- $stmtX -->";}
+					$rslt=mysql_query($stmtX, $link);
+
+					$stmt = "UPDATE vicidial_live_agents set random_id='$RArandom',last_call_finish='$NOW_TIME',lead_id='',uniqueid='',callerid='',channel='',last_state_change='$NOW_TIME' where user='$ra_user' and server_ip='$ra_server_ip';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_query($stmt, $link);
+
+					$stmt = "UPDATE vicidial_live_agents set status='READY' where user='$ra_user' and server_ip='$ra_server_ip';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_query($stmt, $link);
+
+					$stmt = "DELETE from vicidial_auto_calls where callerid='$value';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_query($stmt, $link);
+					}
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "no active call found";
+				echo "$result: $result_reason - $value\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - ra_call_control
 ################################################################################
 
 
