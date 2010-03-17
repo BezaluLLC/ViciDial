@@ -249,7 +249,7 @@ STILL A LIVE CALL! Hang it up then you can log out|VOCÊ ESTÁ EM UMA CHAMADA AT
 Hide conference call channel information|Ocultar informações de discagem do canal|
 Show conference call channel information|Mostrar informações de discagem do canal|
 Logged in as User|Loggado como usuario|
-Noone is in your session|Não existe ninguem na sua sessão|
+No one is in your session|Não existe ninguem na sua sessão|
 Customer has hung up|O cliente desligou|
 End-of-call Disposition Selection|Fim da seleção de status|
 CLOSER INBOUND GROUP SELECTION|SELECAO DO GRUPO DE ENTRADA DO CLOSER|

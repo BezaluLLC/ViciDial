@@ -250,7 +250,7 @@ STILL A LIVE CALL! Hang it up then you can log out|JESTEŚ W TRAKCIE ROZMOWY! Ro
 Hide conference call channel information|Ukryj informacje o kanałach konferencyjnych|
 Show conference call channel information|Pokaż informacje o kanałach konferencyjnych|
 Logged in as User|Zalogowany jako|
-Noone is in your session|Nikt nie uczestniczy w Twojej sesji|
+No one is in your session|Nikt nie uczestniczy w Twojej sesji|
 Customer has hung up|Klient sie rozłączył|
 End-of-call Disposition Selection|Koniec rozmowy, wybierz rezultat|
 CLOSER INBOUND GROUP SELECTION|SELEKCJA GRUPY ZAWNĘTRZNYCH FINALIZUJĄCYCH|

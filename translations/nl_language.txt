@@ -249,7 +249,7 @@ STILL A LIVE CALL! Hang it up then you can log out|IN EEN LIVE GESPREK! Hang op,
 Hide conference call channel information|Verberg kanaalinformatie van conferentie gesprek|
 Show conference call channel information|Toon kanaalinformatie van conferentie gesprek|
 Logged in as User|Ingelogd als gebruiker|
-Noone is in your session|Er is niemand in jouw sessie|
+No one is in your session|Er is niemand in jouw sessie|
 Customer has hung up|Klant heeft opgehangen|
 End-of-call Disposition Selection|Einde Gesprek Dispositie Selectie|
 CLOSER INBOUND GROUP SELECTION|CLOSER INKOMENDE GROEP SELECTIE|

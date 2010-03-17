@@ -250,7 +250,7 @@ STILL A LIVE CALL! Hang it up then you can log out|Υπάρχει ΑΚΟΜΑ μ�
 Hide conference call channel information|Απόκρυψη πηροφοριών κλήσης καναλιού συνδιάσκεψης|
 Show conference call channel information|Παρουσίαση πληροφοριών κλήσης καναλιού διασκέψης|
 Logged in as User|Σύνδεση ως χρήστης |
-Noone is in your session|Κανένας δεν είναι στη σύνοδό σας|
+No one is in your session|Κανένας δεν είναι στη σύνοδό σας|
 Customer has hung up|Ο πελάτης έχει κλείσει το τηλέφωνο|
 End-of-call Disposition Selection|Επιλογή τερματισμού της κλήσης|
 CLOSER INBOUND GROUP SELECTION|CLOSER ΕΙΣΕΡΧΟΜΕΝΗ ΕΠΙΛΟΓΗ ΟΜΑΔΑΣ|

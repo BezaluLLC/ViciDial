@@ -223,7 +223,7 @@ STILL A LIVE CALL! Hang it up then you can log out|Abmelden während des Gesprä
 Hide conference call channel information|Konferenz Informationen verbergen|
 Show conference call channel information|Konferenz Informationen anzeigen|
 Logged in as User|Angemeldet als Benutzer|
-Noone is in your session|Niemand ist in ihrer Konferenz.|
+No one is in your session|Niemand ist in ihrer Konferenz.|
 Customer has hung up|Kunde hat aufgelegt|
 End-of-call Disposition Selection|Gesprächsergebnis Auswahl|
 CLOSER INBOUND GROUP SELECTION|SUPERVISOR INBOUND GRUPPENWAHL|

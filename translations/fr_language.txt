@@ -250,7 +250,7 @@ STILL A LIVE CALL! Hang it up then you can log out|Un APPEL EST EN COURS ! Raccr
 Hide conference call channel information|Cacher les informations sur la conférence|
 Show conference call channel information|Montrez les informations sur la conférence|
 Logged in as User|Utilisateur |
-Noone is in your session|Votre session est vide|
+No one is in your session|Votre session est vide|
 Customer has hung up|Le client a raccroché|
 End-of-call Disposition Selection|Selection du status de fin d'appel|
 CLOSER INBOUND GROUP SELECTION|UN CHOIX DE GROUPE D'ARRIVÉE PLUS ÉTROIT|

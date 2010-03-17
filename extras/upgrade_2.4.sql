@@ -169,3 +169,7 @@ ALTER TABLE vicidial_agent_log ADD uniqueid VARCHAR(20) default '';
 ALTER TABLE vicidial_agent_log_archive ADD uniqueid VARCHAR(20) default '';
 
 UPDATE system_settings SET db_schema_version='1207',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_user_groups ADD agent_fullscreen ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1208',db_schema_update_date=NOW();

@@ -250,7 +250,7 @@ STILL A LIVE CALL! Hang it up then you can log out|TODAVÍA UNA LLAMADA ACTIVA! 
 Hide conference call channel information|Ocultar la información del canal Conferencia|
 Show conference call channel information|Mostrar la información del canal Conferencia|
 Logged in as User|Usuario|
-Noone is in your session|Nadie está en su sesión|
+No one is in your session|Nadie está en su sesión|
 Customer has hung up|El cliente ha colgado|
 End-of-call Disposition Selection|selección de la disposición del End-of-call|
 CLOSER INBOUND GROUP SELECTION|SELECCIÓN DEL GRUPO DE ENTRANTES CLOSER|

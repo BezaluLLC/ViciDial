@@ -284,10 +284,11 @@
 # 100309-0525 - Added queuemetrics_loginout option
 # 100313-0053 - Added display options for transfer/conf buttons
 # 100315-1148 - fix for rare recording_log uniqueid issue on manual dial calls to same number
+# 100317-1301 - Added agent_fullscreen User Group option
 #
 
-$version = '2.4-262';
-$build = '100315-1148';
+$version = '2.4-263';
+$build = '100317-1301';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -888,7 +889,7 @@ else
 			$AgentAlert_allowed = $VU_allow_alerts;
 
 			### Gather timeclock and shift enforcement restriction settings
-			$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial from vicidial_user_groups where user_group='$VU_user_group';";
+			$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial,agent_fullscreen from vicidial_user_groups where user_group='$VU_user_group';";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01052',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysql_fetch_row($rslt);
@@ -925,6 +926,7 @@ else
 				{$agent_call_log_view=1;}
 			if ($VU_agent_call_log_view_override == 'N')
 				{$agent_call_log_view=0;}
+			$agent_fullscreen =			$row[12];
 
 			### BEGIN - CHECK TO SEE IF AGENT IS LOGGED IN TO TIMECLOCK, IF NOT, OUTPUT ERROR
 			if ( (ereg('Y',$forced_timeclock_login)) or ( (ereg('ADMIN_EXEMPT',$forced_timeclock_login)) and ($VU_user_level < 8) ) )
@@ -2315,6 +2317,11 @@ if ($stretch_dimensions > 0)
 		}
 	if ($JS_browser_height >= 340)
 		{$BROWSER_HEIGHT = ($JS_browser_height - 40);}
+	}
+if ($agent_fullscreen=='Y')
+	{
+	$BROWSER_WIDTH = ($JS_browser_width - 10);
+	$BROWSER_HEIGHT = $JS_browser_height;
 	}
 $MASTERwidth=($BROWSER_WIDTH - 340);
 $MASTERheight=($BROWSER_HEIGHT - 200);
@@ -11342,7 +11349,7 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 </span>
 
 <span style="position:absolute;left:0px;top:12px;z-index:<?php $zi++; echo $zi ?>;" id="NoneInSessionBox">
-    <TABLE border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center> Noone is in your session: <span id="NoneInSessionID"></span><BR>
+    <TABLE border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center> No one is in your session: <span id="NoneInSessionID"></span><BR>
 	<a href="#" onclick="NoneInSessionOK();return false;">Go Back</a>
 	<BR><BR>
 	<span id="NoneInSessionLink"><a href="#" onclick="NoneInSessionCalL();return false;">Call Agent Again</a></span>

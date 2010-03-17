@@ -250,7 +250,7 @@ STILL A LIVE CALL! Hang it up then you can log out|UŽ PREBIEHA ŽIVÝ HOVOR! Po
 Hide conference call channel information|Skryť informáciu o konferenčný kanále|
 Show conference call channel information|Ukázať informáciu o konferenčnom kanále|
 Logged in as User|Ste prihlásený ako užívateľ|
-Noone is in your session|Nikto nie je vo Vašej relácii|
+No one is in your session|Nikto nie je vo Vašej relácii|
 Customer has hung up|Zákazník položil|
 End-of-call Disposition Selection|Ukončenie hovoru vybranej dispozície|
 CLOSER INBOUND GROUP SELECTION|Užší výber prichádzajúce skupiny|

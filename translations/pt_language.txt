@@ -250,7 +250,7 @@ STILL A LIVE CALL! Hang it up then you can log out|AINDA Uma CHAMADA VIVA! Pendu
 Hide conference call channel information|Informação da canaleta da chamada de conferência do hide|
 Show conference call channel information|Mostre a informação da canaleta da chamada de conferência|
 Logged in as User|Usuário|
-Noone is in your session|Noone está em sua sessão|
+No one is in your session|Ninguém está na sua sessão|
 Customer has hung up|O cliente pendurou acima|
 End-of-call Disposition Selection|Extremidade-$$$-CHAME A Seleção Da Disposição|
 CLOSER INBOUND GROUP SELECTION|SELEÇÃO DE GRUPO INBOUND MAIS PRÓXIMA|

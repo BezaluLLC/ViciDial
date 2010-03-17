@@ -51,6 +51,8 @@ Agent Allow Blind Xfer||
 Agent Allow Voicemail Message Xfer||
 Agent Allow Dial Override Xfer||
 Agent Allow Consultative Xfer||
+Agent Fullscreen||
+This option if set to Y will set the height and width of the ViciDial agent screen to the size of the web browser window without any allowance for the Agents View, Calls in Queue View or Calls in Session view. Default is N for no or disabled||
 
 
 ############################################################ CLIENT

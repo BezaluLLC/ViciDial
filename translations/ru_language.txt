@@ -250,7 +250,7 @@ STILL A LIVE CALL! Hang it up then you can log out|ВСЕ ЕЩЕ АКТИВНЫ�
 Hide conference call channel information|Скрыть информацию о канале конференц-связи|
 Show conference call channel information|Показать информацию о канале конференц-связи|
 Logged in as User|Пользователь|
-Noone is in your session|Никого нет в вашей сессии|
+No one is in your session|Никого нет в вашей сессии|
 Customer has hung up|Клиент разъединен|
 End-of-call Disposition Selection|Выбор Диспозиции End-of-call|
 CLOSER INBOUND GROUP SELECTION|ВЫБОР INBOUND ГРУППЫ CLOSER|

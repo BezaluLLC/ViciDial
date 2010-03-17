@@ -1211,6 +1211,8 @@ if (isset($_GET["agent_xfer_dial_with_customer"]))			{$agent_xfer_dial_with_cust
 	elseif (isset($_POST["agent_xfer_dial_with_customer"]))	{$agent_xfer_dial_with_customer=$_POST["agent_xfer_dial_with_customer"];}
 if (isset($_GET["agent_xfer_park_customer_dial"]))			{$agent_xfer_park_customer_dial=$_GET["agent_xfer_park_customer_dial"];}
 	elseif (isset($_POST["agent_xfer_park_customer_dial"]))	{$agent_xfer_park_customer_dial=$_POST["agent_xfer_park_customer_dial"];}
+if (isset($_GET["agent_fullscreen"]))			{$agent_fullscreen=$_GET["agent_fullscreen"];}
+	elseif (isset($_POST["agent_fullscreen"]))	{$agent_fullscreen=$_POST["agent_fullscreen"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1493,6 +1495,7 @@ if ($non_latin < 1)
 	$agent_xfer_blind_transfer = ereg_replace("[^NY]","",$agent_xfer_blind_transfer);
 	$agent_xfer_dial_with_customer = ereg_replace("[^NY]","",$agent_xfer_dial_with_customer);
 	$agent_xfer_park_customer_dial = ereg_replace("[^NY]","",$agent_xfer_park_customer_dial);
+	$agent_fullscreen = ereg_replace("[^NY]","",$agent_fullscreen);
 
 	$qc_enabled = ereg_replace("[^0-9NY]","",$qc_enabled);
 	$active = ereg_replace("[^0-9NY]","",$active);
@@ -2124,11 +2127,12 @@ else
 # 100309-0510 - Added queuemetrics_loginout option
 # 100311-2348 - Added CallCard links and settings
 # 100313-0020 - Added User Group agent screen transfer-conf button display options
+# 100317-1244 - Added User Group agent_fullscreen option
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-245';
-$build = '100313-0020';
+$admin_version = '2.4-246';
+$build = '100317-1244';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4900,6 +4904,11 @@ if ($ADD==99999)
 	<A NAME="vicidial_user_groups-agent_xfer_options">
 	<BR>
 	<B>Agent Transfer Options -</B> These options allow for the disabling of specific buttons in the Transfer Conference section of the Agent interface. Default is Y for yes or enabled.
+
+	<BR>
+	<A NAME="vicidial_user_groups-agent_fullscreen">
+	<BR>
+	<B>Agent Fullscreen -</B> This option if set to Y will set the height and width of the ViciDial agent screen to the size of the web browser window without any allowance for the Agents View, Calls in Queue View or Calls in Session view. Default is N for no or disabled.
 
 	<?php
 	if ($SSqc_features_active > 0)
@@ -12635,7 +12644,7 @@ if ($ADD==411111)
 				$p++;
 				}
 		
-			$stmt="UPDATE vicidial_user_groups set user_group='$user_group', group_name='$group_name',allowed_campaigns='$campaigns_value',qc_allowed_campaigns='$qc_campaigns_value',qc_allowed_inbound_groups='$qc_groups_value',group_shifts='$GROUP_shifts',forced_timeclock_login='$forced_timeclock_login',shift_enforcement='$shift_enforcement',agent_status_viewable_groups='$VGROUP_vgroups',agent_status_view_time='$agent_status_view_time',agent_call_log_view='$agent_call_log_view',agent_xfer_consultative='$agent_xfer_consultative',agent_xfer_dial_override='$agent_xfer_dial_override',agent_xfer_vm_transfer='$agent_xfer_vm_transfer',agent_xfer_blind_transfer='$agent_xfer_blind_transfer',agent_xfer_dial_with_customer='$agent_xfer_dial_with_customer',agent_xfer_park_customer_dial='$agent_xfer_park_customer_dial' where user_group='$OLDuser_group';";
+			$stmt="UPDATE vicidial_user_groups set user_group='$user_group', group_name='$group_name',allowed_campaigns='$campaigns_value',qc_allowed_campaigns='$qc_campaigns_value',qc_allowed_inbound_groups='$qc_groups_value',group_shifts='$GROUP_shifts',forced_timeclock_login='$forced_timeclock_login',shift_enforcement='$shift_enforcement',agent_status_viewable_groups='$VGROUP_vgroups',agent_status_view_time='$agent_status_view_time',agent_call_log_view='$agent_call_log_view',agent_xfer_consultative='$agent_xfer_consultative',agent_xfer_dial_override='$agent_xfer_dial_override',agent_xfer_vm_transfer='$agent_xfer_vm_transfer',agent_xfer_blind_transfer='$agent_xfer_blind_transfer',agent_xfer_dial_with_customer='$agent_xfer_dial_with_customer',agent_xfer_park_customer_dial='$agent_xfer_park_customer_dial',agent_fullscreen='$agent_fullscreen' where user_group='$OLDuser_group';";
 			$rslt=mysql_query($stmt, $link);
 
 			echo "<br><B>USER GROUP MODIFIED</B>\n";
@@ -20672,7 +20681,7 @@ if ($ADD==311111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT user_group,group_name,allowed_campaigns,qc_allowed_campaigns,qc_allowed_inbound_groups,group_shifts,forced_timeclock_login,shift_enforcement,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial from vicidial_user_groups where user_group='$user_group';";
+		$stmt="SELECT user_group,group_name,allowed_campaigns,qc_allowed_campaigns,qc_allowed_inbound_groups,group_shifts,forced_timeclock_login,shift_enforcement,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial,agent_fullscreen from vicidial_user_groups where user_group='$user_group';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$user_group =						$row[0];
@@ -20689,6 +20698,7 @@ if ($ADD==311111)
 		$agent_xfer_blind_transfer =		$row[14];
 		$agent_xfer_dial_with_customer =	$row[15];
 		$agent_xfer_park_customer_dial =	$row[16];
+		$agent_fullscreen =					$row[17];
 
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -20788,6 +20798,8 @@ if ($ADD==311111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Allow Park Customer Dial Xfer: </td><td align=left><select size=1 name=agent_xfer_park_customer_dial><option SELECTED>Y</option><option>N</option><option SELECTED>$agent_xfer_park_customer_dial</option></select>$NWB#vicidial_user_groups-agent_xfer_options$NWE</td></tr>\n";
 		
+		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Fullscreen: </td><td align=left><select size=1 name=agent_fullscreen><option SELECTED>Y</option><option>N</option><option SELECTED>$agent_fullscreen</option></select>$NWB#vicidial_user_groups-agent_fullscreen$NWE</td></tr>\n";
+
 		if ($SSqc_features_active > 0)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>QC Allowed Campaigns: <BR>$NWB#vicidial_user_groups-qc_allowed_campaigns$NWE</td><td align=left>\n";

@@ -250,7 +250,7 @@ STILL A LIVE CALL! Hang it up then you can log out|電話仍在通話中，請�
 Hide conference call channel information|隱藏電話會議中的來電通道資訊|
 Show conference call channel information|顯示電話會議中的來電通道資訊|
 Logged in as User|以使用者身份登入|
-Noone is in your session|無人在你主持的會議中|
+No one is in your session|無人在你主持的會議中|
 Customer has hung up|客戶已掛斷電話|
 End-of-call Disposition Selection|結束碼選擇|
 CLOSER INBOUND GROUP SELECTION|CLOSER INBOUND GROUP SELECTION|
