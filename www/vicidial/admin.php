@@ -1213,6 +1213,14 @@ if (isset($_GET["agent_xfer_park_customer_dial"]))			{$agent_xfer_park_customer_
 	elseif (isset($_POST["agent_xfer_park_customer_dial"]))	{$agent_xfer_park_customer_dial=$_POST["agent_xfer_park_customer_dial"];}
 if (isset($_GET["agent_fullscreen"]))			{$agent_fullscreen=$_GET["agent_fullscreen"];}
 	elseif (isset($_POST["agent_fullscreen"]))	{$agent_fullscreen=$_POST["agent_fullscreen"];}
+if (isset($_GET["extension_id"]))				{$extension_id=$_GET["extension_id"];}
+	elseif (isset($_POST["extension_id"]))		{$extension_id=$_POST["extension_id"];}
+if (isset($_GET["extension_group_id"]))				{$extension_group_id=$_GET["extension_group_id"];}
+	elseif (isset($_POST["extension_group_id"]))	{$extension_group_id=$_POST["extension_group_id"];}
+if (isset($_GET["campaign_groups"]))			{$campaign_groups=$_GET["campaign_groups"];}
+	elseif (isset($_POST["campaign_groups"]))	{$campaign_groups=$_POST["campaign_groups"];}
+if (isset($_GET["extension_group"]))			{$extension_group=$_GET["extension_group"];}
+	elseif (isset($_POST["extension_group"]))	{$extension_group=$_POST["extension_group"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1418,6 +1426,7 @@ if ($non_latin < 1)
 	$enable_agc_dispo_log = ereg_replace("[^0-9]","",$enable_agc_dispo_log);
 	$callcard_enabled = ereg_replace("[^0-9]","",$callcard_enabled);
 	$callcard_admin = ereg_replace("[^0-9]","",$callcard_admin);
+	$extension_id = ereg_replace("[^0-9]","",$extension_id);
 
 	$drop_call_seconds = ereg_replace("[^-0-9]","",$drop_call_seconds);
 
@@ -1700,6 +1709,8 @@ if ($non_latin < 1)
 	$timer_action = ereg_replace("[^-_0-9a-zA-Z]","",$timer_action);
 	$record_call = ereg_replace("[^-_0-9a-zA-Z]","",$record_call);
 	$scheduled_callbacks_alert = ereg_replace("[^-_0-9a-zA-Z]","",$scheduled_callbacks_alert);
+	$extension_group_id = ereg_replace("[^-_0-9a-zA-Z]","",$extension_group_id);
+	$extension_group = ereg_replace("[^-_0-9a-zA-Z]","",$extension_group);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
@@ -1713,6 +1724,7 @@ if ($non_latin < 1)
 	$filename = ereg_replace("[^-\/\._0-9a-zA-Z]","",$filename);
 	$am_message_exten = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$am_message_exten);
 	$am_message_exten_override = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$am_message_exten_override);
+	$campaign_groups = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$campaign_groups);
 
 	### ALPHA-NUMERIC and underscore and dash and comma
 	$logins_list = ereg_replace("[^-\,\_0-9a-zA-Z]","",$logins_list);
@@ -2309,6 +2321,7 @@ if ($ADD==1411)			{$hh='ingroups';	echo "Copy DID";}
 if ($ADD==1511)			{$hh='ingroups';	echo "Add Call Menu";}
 if ($ADD==1611)			{$hh='ingroups';	echo "Copy Call Menu";}
 if ($ADD==11111)		{$hh='remoteagent';	echo "Add New Remote Agents";}
+if ($ADD==12111)		{$hh='remoteagent';	echo "Add Extension Group";}
 if ($ADD==111111)		{$hh='usergroups';	echo "Add New Users Group";}
 if ($ADD==1111111)		{$hh='scripts';		echo "Add New Script";}
 if ($ADD==11111111)		{$hh='filters';		echo "Add New Filter";}
@@ -2345,6 +2358,7 @@ if ($ADD==2411)			{$hh='ingroups';	echo "New Copied DID Addition";}
 if ($ADD==2511)			{$hh='ingroups';	echo "New Call Menu";}
 if ($ADD==2611)			{$hh='ingroups';	echo "New Call Menu";}
 if ($ADD==21111)		{$hh='remoteagent';	echo "New Remote Agents Addition";}
+if ($ADD==22111)		{$hh='remoteagent';	echo "New Group Extension Addition";}
 if ($ADD==211111)		{$hh='usergroups';	echo "New Users Group Addition";}
 if ($ADD==2111111)		{$hh='scripts';		echo "New Script Addition";}
 if ($ADD==21111111)		{$hh='filters';		echo "New Filter Addition";}
@@ -2404,6 +2418,7 @@ if ($ADD==3111)			{$hh='ingroups';	echo "Modify In-Group";}
 if ($ADD==3311)			{$hh='ingroups';	echo "Modify DID";}
 if ($ADD==3511)			{$hh='ingroups';	echo "Modify Call Menu";}
 if ($ADD==31111)		{$hh='remoteagent';	echo "Modify Remote Agents";}
+if ($ADD==32111)		{$hh='remoteagent';	echo "Modify Extension Group";}
 if ($ADD==311111)		{$hh='usergroups';	echo "Modify Users Groups";}
 if ($ADD==3111111)		{$hh='scripts';		echo "Modify Script";}
 if ($ADD==31111111)		{$hh='filters';		echo "Modify Filter";}
@@ -2443,6 +2458,7 @@ if ($ADD==4111)			{$hh='ingroups';	echo "Modify In-Group";}
 if ($ADD==4311)			{$hh='ingroups';	echo "Modify DID";}
 if ($ADD==4511)			{$hh='ingroups';	echo "Modify Call Menu";}
 if ($ADD==41111)		{$hh='remoteagent';	echo "Modify Remote Agents";}
+if ($ADD==42111)		{$hh='remoteagent';	echo "Modify Extension Group";}
 if ($ADD==411111)		{$hh='usergroups';	echo "Modify Users Groups";}
 if ($ADD==4111111)		{$hh='scripts';		echo "Modify Script";}
 if ($ADD==41111111)		{$hh='filters';		echo "Modify Filter";}
@@ -2474,6 +2490,7 @@ if ($ADD==5111)			{$hh='ingroups';	echo "Delete In-Group";}
 if ($ADD==5311)			{$hh='ingroups';	echo "Delete DID";}
 if ($ADD==5511)			{$hh='ingroups';	echo "Delete Call Menu";}
 if ($ADD==51111)		{$hh='remoteagent';	echo "Delete Remote Agents";}
+if ($ADD==52111)		{$hh='remoteagent';	echo "Delete Extension Group";}
 if ($ADD==511111)		{$hh='usergroups';	echo "Delete Users Group";}
 if ($ADD==5111111)		{$hh='scripts';		echo "Delete Script";}
 if ($ADD==51111111)		{$hh='filters';		echo "Delete Filter";}
@@ -2505,6 +2522,7 @@ if ($ADD==6111)			{$hh='ingroups';	echo "Delete In-Group";}
 if ($ADD==6311)			{$hh='ingroups';	echo "Delete DID";}
 if ($ADD==6511)			{$hh='ingroups';	echo "Delete Call Menu";}
 if ($ADD==61111)		{$hh='remoteagent';	echo "Delete Remote Agents";}
+if ($ADD==62111)		{$hh='remoteagent';	echo "Delete Extension Group";}
 if ($ADD==611111)		{$hh='usergroups';	echo "Delete Users Group";}
 if ($ADD==6111111)		{$hh='scripts';		echo "Delete Script";}
 if ($ADD==61111111)		{$hh='filters';		echo "Delete Filter";}
@@ -2540,6 +2558,7 @@ if ($ADD==1000)			{$hh='ingroups';	echo "In-Groups";}
 if ($ADD==1300)			{$hh='ingroups';	echo "DIDs";}
 if ($ADD==1500)			{$hh='ingroups';	echo "Call Menus";}
 if ($ADD==10000)		{$hh='remoteagent';	echo "Remote Agents";}
+if ($ADD==12000)		{$hh='remoteagent';	echo "Extension Groups";}
 if ($ADD==100000)		{$hh='usergroups';	echo "User Groups";}
 if ($ADD==1000000)		{$hh='scripts';		echo "Scripts";}
 if ($ADD==10000000)		{$hh='filters';		echo "Filters";}
@@ -4771,6 +4790,11 @@ if ($ADD==99999)
 	<B>External Extension -</B> This is the number that you want the calls forwarded to. Make sure that it is a full dial plan number and that if you need a 9 at the beginning you put it in here. Test by dialing this number from a phone on the system.
 
 	<BR>
+	<A NAME="vicidial_remote_agents-extension_group">
+	<BR>
+	<B>Extension Group -</B> If set to something other than NONE or empty this will override the External Extension field and use the Extension Group entries that have the same extension group ID. Default is NONE for deactivated.
+
+	<BR>
 	<A NAME="vicidial_remote_agents-status">
 	<BR>
 	<B>Status -</B> Here is where you turn the remote agent on and off. As soon as the agent is Active the system assumes that it can send calls to it. It may take up to 30 seconds once you change the status to Inactive to stop receiving calls.
@@ -4784,6 +4808,29 @@ if ($ADD==99999)
 	<A NAME="vicidial_remote_agents-closer_campaigns">
 	<BR>
 	<B>Inbound Groups -</B> Here is where you select the inbound groups you want to receive calls from if you have selected the CLOSER campaign.
+
+
+	<BR><BR><BR><BR>
+
+	<B><FONT SIZE=3>VICIDIAL_EXTENSION_GROUPS TABLE</FONT></B><BR><BR>
+	<A NAME="vicidial_extension_groups-extension_group_id">
+	<BR>
+	<B>Extension Group -</B> This required field is where you enter the group ID that you want this extension to be put into. No spaces or special characters except for underscore letters and numbers.
+
+	<BR>
+	<A NAME="vicidial_extension_groups-extension">
+	<BR>
+	<B>Extension -</B> This required field is where you put the dialplan extension that you want the remote agent calls to be sent to for this extension group entry.
+
+	<BR>
+	<A NAME="vicidial_extension_groups-rank">
+	<BR>
+	<B>Rank -</B> This field allows you to rank the extension group entries that share the same extension group. Default is 0.
+
+	<BR>
+	<A NAME="vicidial_extension_groups-campaign_groups">
+	<BR>
+	<B>Campaigns Groups -</B> In this field you can put a list of campaign IDs and or inbound group IDs that you want to restrict the use of the extension group for. List must be separate by pipes and have a pipe at the beginning and end of the string.
 
 
 	<BR><BR><BR><BR>
@@ -6583,9 +6630,9 @@ if ($ADD=="1")
 			}
 		else
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>User Number: </td><td align=left><input type=text name=user id=user size=20 maxlength=10> <input type=button name=auto_user value=\"AUTO-GENERATE\" onClick=\"user_auto()\"> $NWB#vicidial_users-user$NWE</td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right>User Number: </td><td align=left><input type=text name=user id=user size=20 maxlength=20> <input type=button name=auto_user value=\"AUTO-GENERATE\" onClick=\"user_auto()\"> $NWB#vicidial_users-user$NWE</td></tr>\n";
 			}
-		echo "<tr bgcolor=#B6D3FC><td align=right>Password: </td><td align=left><input type=text name=pass size=20 maxlength=10>$NWB#vicidial_users-pass$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Password: </td><td align=left><input type=text name=pass size=20 maxlength=20>$NWB#vicidial_users-pass$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Full Name: </td><td align=left><input type=text name=full_name size=20 maxlength=100>$NWB#vicidial_users-full_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>User Level: </td><td align=left><select size=1 name=user_level>";
 		$h=1;
@@ -6657,9 +6704,9 @@ if ($ADD=="1A")
 			}
 		else
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>User Number: </td><td align=left><input type=text name=user id=user size=20 maxlength=10> <input type=button name=auto_user value=\"AUTO-GENERATE\" onClick=\"user_auto()\"> $NWB#vicidial_users-user$NWE</td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right>User Number: </td><td align=left><input type=text name=user id=user size=20 maxlength=20> <input type=button name=auto_user value=\"AUTO-GENERATE\" onClick=\"user_auto()\"> $NWB#vicidial_users-user$NWE</td></tr>\n";
 			}
-		echo "<tr bgcolor=#B6D3FC><td align=right>Password: </td><td align=left><input type=text name=pass size=20 maxlength=10>$NWB#vicidial_users-pass$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Password: </td><td align=left><input type=text name=pass size=20 maxlength=20>$NWB#vicidial_users-pass$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Full Name: </td><td align=left><input type=text name=full_name size=20 maxlength=100>$NWB#vicidial_users-full_name$NWE</td></tr>\n";
 
 		if ($LOGuser_level==9) {$levelMAX=10;}
@@ -7443,6 +7490,46 @@ if ($ADD==11111)
 
 
 ######################
+# ADD=12111 display the ADD NEW EXTENSION GROUP SCREEN
+######################
+
+if ($ADD==12111)
+	{
+	if ($LOGmodify_remoteagents==1)
+		{
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		echo "<br>Add Extension Group Entry<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=22111>\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Extension Group: </td><td align=left><input type=text name=extension_group_id size=20 maxlength=20> (no spaces)$NWB#vicidial_extension_groups-extension_group_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Extension: </td><td align=left><input type=text name=extension size=18 maxlength=18> (numbers only)$NWB#vicidial_extension_groups-extension$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Rank: </td><td align=left><select size=1 name=rank>\n";
+		$n=99; $rank=0;
+		while ($n>=-99)
+			{
+			if ($n == $rank) 
+				{echo "<option SELECTED value=\"$n\">$n</option>\n";}
+			else
+				{echo "<option value=\"$n\">$n</option>\n";}
+			$n--;
+			}
+		echo "</select> $NWB#vicidial_extension_groups-rank$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Campaigns Groups: </td><td align=left><input type=text name=campaign_groups size=50 maxlength=255> (pipe-delimited list)$NWB#vicidial_extension_groups-extension$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+		echo "</TABLE></center>\n";
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	}
+
+
+######################
 # ADD=111111 display the ADD NEW USERS GROUP SCREEN
 ######################
 
@@ -8203,10 +8290,10 @@ if ($ADD=="2")
 			{
 			$user = 'AUTOGENERA';
 			}
-		if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (strlen($user_group) < 2) or ( (strlen($user) > 10) and (!ereg('AUTOGENERA',$user)) ) )
+		if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (strlen($user_group) < 2) or ( (strlen($user) > 20) and (!ereg('AUTOGENERA',$user)) ) )
 			{
 			echo "<br>USER NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>user id must be between 2 and 10 characters long\n";
+			echo "<br>user id must be between 2 and 20 characters long\n";
 			echo "<br>full name and password must be at least 2 characters long\n";
 			echo "<br>you must select a user group\n";
 			}
@@ -8491,10 +8578,10 @@ if ($ADD=="2A")
 		{echo "<br>USER NOT ADDED - there is already a user in the system with this user number\n";}
 	else
 		{
-		if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (strlen($user) > 10) )
+		if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (strlen($user) > 20) )
 			{
 			echo "<br>USER NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>user id must be between 2 and 10 characters long\n";
+			echo "<br>user id must be between 2 and 20 characters long\n";
 			echo "<br>full name and password must be at least 2 characters long\n";
 			echo "<!-- |$user|$pass|$full_name| -->\n";
 			}
@@ -9581,7 +9668,7 @@ if ($ADD==21111)
 			}
 		else
 			{
-			$stmt="INSERT INTO vicidial_remote_agents values('','$user_start','$number_of_lines','$server_ip','$conf_exten','$status','$campaign_id','$groups_value');";
+			$stmt="INSERT INTO vicidial_remote_agents (user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns) values('$user_start','$number_of_lines','$server_ip','$conf_exten','$status','$campaign_id','$groups_value');";
 			$rslt=mysql_query($stmt, $link);
 
 			echo "<br><B>REMOTE AGENTS ADDED: $user_start</B>\n";
@@ -9597,6 +9684,51 @@ if ($ADD==21111)
 		}
 	$ADD=10000;
 	}
+
+
+######################
+# ADD=22111 adds new extension group entry to the system
+######################
+
+if ($ADD==22111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	$stmt="SELECT count(*) from vicidial_extension_groups where extension_group_id='$extension_group_id' and extension='$extension';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	if ($row[0] > 0)
+		{echo "<br>EXTENSION GROUP ENTRY NOT ADDED - there is already an extension group entry with these values\n";}
+	else
+		{
+		if ( (strlen($extension_group_id) < 2) or (strlen($extension) < 2)  or (strlen($rank) < 1) )
+			{
+			echo "<br>EXTENSION GROUP ENTRY NOT ADDED - Please go back and look at the data you entered\n";
+			echo "<br>extension group id and extension and rank must be at least 2 characters in length\n";
+			}
+		else
+			{
+			$stmt="INSERT INTO vicidial_extension_groups (extension_group_id,extension,rank,campaign_groups) values('$extension_group_id','$extension','$rank','$campaign_groups');";
+			$rslt=mysql_query($stmt, $link);
+
+			$stmt="SELECT extension_id from vicidial_extension_groups where extension_group_id='$extension_group_id' and extension='$extension';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$extension_id = $row[0];
+
+			echo "<br><B>EXTENSION GROUP ENTRY ADDED: $extension_id - $extension_group_id - $extension</B>\n";
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='EXTENGROUP', event_type='ADD', record_id='$extension_id', event_code='ADMIN ADD EXTENSION GROUP', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
+		}
+	$ADD=12000;
+	}
+
 
 ######################
 # ADD=211111 adds new user group to the system
@@ -12585,7 +12717,7 @@ if ($ADD==41111)
 			}
 		else
 			{
-			$stmt="UPDATE vicidial_remote_agents set user_start='$user_start', number_of_lines='$number_of_lines', server_ip='$server_ip', conf_exten='$conf_exten', status='$status', campaign_id='$campaign_id', closer_campaigns='$groups_value' where remote_agent_id='$remote_agent_id';";
+			$stmt="UPDATE vicidial_remote_agents set user_start='$user_start', number_of_lines='$number_of_lines', server_ip='$server_ip', conf_exten='$conf_exten', status='$status', campaign_id='$campaign_id', closer_campaigns='$groups_value',extension_group='$extension_group' where remote_agent_id='$remote_agent_id';";
 			$rslt=mysql_query($stmt, $link);
 
 			echo "<br><B>REMOTE AGENTS MODIFIED</B>\n";
@@ -12605,6 +12737,46 @@ if ($ADD==41111)
 		exit;
 		}
 	$ADD=31111;	# go to remote agents modification form below
+	}
+
+
+######################
+# ADD=42111 modify extenison group entry in the system
+######################
+
+if ($ADD==42111)
+	{
+	if ($LOGmodify_remoteagents==1)
+		{
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		if ( (strlen($extension_id) < 1) or (strlen($extension_group_id) < 2)  or (strlen($extension) < 2) or (strlen($rank) < 1) )
+			{
+			echo "<br>EXTENSION GROUP ENTRY NOT MODIFIED - Please go back and look at the data you entered\n";
+			echo "<br>Extension group id and extension must be at least 2 characters in length\n";
+			}
+		else
+			{
+			$stmt="UPDATE vicidial_extension_groups set extension_group_id='$extension_group_id', extension='$extension', rank='$rank', campaign_groups='$campaign_groups' where extension_id='$extension_id';";
+			$rslt=mysql_query($stmt, $link);
+
+			echo "<br><B>EXTENSION GROUP ENTRY MODIFIED</B>\n";
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='EXTENGROUP', event_type='MODIFY', record_id='$extension_id', event_code='ADMIN MODIFY EXTENSION GROUP', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	$ADD=32111;	# go to extension group modification form below
 	}
 
 
@@ -14028,6 +14200,28 @@ if ($ADD==51111)
 	}
 
 ######################
+# ADD=52111 confirmation before deletion of extension group record
+######################
+
+if ($ADD==52111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( (strlen($extension_id) < 1) or ($LOGdelete_remote_agents < 1) )
+		{
+		echo "<br>EXTENSION GROUP ENTRY NOT DELETED - Please go back and look at the data you entered\n";
+		echo "<br>extension_id be at least 1 characters in length\n";
+		}
+	else
+		{
+		echo "<br><B>EXTENSION GROUP ENTRY DELETION CONFIRMATION: $extension_id</B>\n";
+		echo "<br><br><a href=\"$PHP_SELF?ADD=62111&extension_id=$extension_id&CoNfIrM=YES\">Click here to delete extension group entry $extension_id</a><br><br><br>\n";
+		}
+
+	$ADD='32111';		# go to extension group modification below
+	}
+
+######################
 # ADD=511111 confirmation before deletion of user group record
 ######################
 
@@ -15157,6 +15351,41 @@ if ($ADD==61111)
 
 	$ADD='10000';		# go to remote agents list
 	}
+
+######################
+# ADD=62111 delete extension group record
+######################
+
+if ($ADD==62111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( (strlen($extension_id) < 1) or ($CoNfIrM != 'YES') or ($LOGdelete_remote_agents < 1) )
+		{
+		echo "<br>EXTENSION GROUP ENTRY NOT DELETED - Please go back and look at the data you entered\n";
+		echo "<br>extension_id be at least 1 characters in length\n";
+		}
+	else
+		{
+		$stmt="DELETE from vicidial_extension_groups where extension_id='$extension_id' limit 1;";
+		$rslt=mysql_query($stmt, $link);
+
+		### LOG INSERTION Admin Log Table ###
+		$SQL_log = "$stmt|";
+		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = addslashes($SQL_log);
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='EXTENGROUP', event_type='DELETE', record_id='$extension_id', event_code='ADMIN DELETE EXTENSION GROUP', event_sql=\"$SQL_log\", event_notes='';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+
+		echo "<br><B>EXTENSION GROUP ENTRY DELETION COMPLETED: $extension_id</B>\n";
+		echo "<br><br>\n";
+		}
+
+	$ADD='12000';		# go to extension group list
+	}
+
+
 
 ######################
 # ADD=611111 delete user group record
@@ -20618,7 +20847,7 @@ if ($ADD==31111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT remote_agent_id,user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns from vicidial_remote_agents where remote_agent_id='$remote_agent_id';";
+		$stmt="SELECT remote_agent_id,user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns,extension_group from vicidial_remote_agents where remote_agent_id='$remote_agent_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$remote_agent_id =	$row[0];
@@ -20628,18 +20857,37 @@ if ($ADD==31111)
 		$conf_exten =		$row[4];
 		$status =			$row[5];
 		$campaign_id =		$row[6];
+		$extension_group =	$row[8];
+
+		##### get extension group listing for dynamic pulldown
+		$stmt="SELECT extension_group_id,count(*) from vicidial_extension_groups group by extension_group_id order by extension_group_id;";
+		$rsltx=mysql_query($stmt, $link);
+		$extengrp_to_print = mysql_num_rows($rsltx);
+		$extengrp_list='';
+		$o=0;
+		while ($extengrp_to_print > $o)
+			{
+			$rowx=mysql_fetch_row($rsltx);
+			$extengrp_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+			$o++;
+			}
 
 		echo "<br>MODIFY A REMOTE AGENTS ENTRY: $row[0]<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=41111>\n";
 		echo "<input type=hidden name=remote_agent_id value=\"$row[0]\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>User ID Start: </td><td align=left><input type=text name=user_start size=6 maxlength=6 value=\"$user_start\"> (numbers only, incremented)$NWB#vicidial_remote_agents-user_start$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=3&user=$user_start\">User ID Start</a>: </td><td align=left><input type=text name=user_start size=6 maxlength=6 value=\"$user_start\"> (numbers only, incremented)$NWB#vicidial_remote_agents-user_start$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Number of Lines: </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3 value=\"$number_of_lines\"> (numbers only)$NWB#vicidial_remote_agents-number_of_lines$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left><select size=1 name=server_ip>\n";
 		echo "$servers_list";
 		echo "<option SELECTED>$row[3]</option>\n";
 		echo "</select>$NWB#vicidial_remote_agents-server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>External Extension: </td><td align=left><input type=text name=conf_exten size=20 maxlength=20 value=\"$conf_exten\"> (dial plan number dialed to reach agents)$NWB#vicidial_remote_agents-conf_exten$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Extension Group: </td><td align=left><select size=1 name=extension_group>\n";
+		echo "$extengrp_list";
+		echo "<option>NONE</option>\n";
+		echo "<option SELECTED>$extension_group</option>\n";
+		echo "</select>$NWB#vicidial_remote_agents-extension_group$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Status: </td><td align=left><select size=1 name=status><option SELECTED>ACTIVE</option><option>INACTIVE</option><option SELECTED>$status</option></select>$NWB#vicidial_remote_agents-status$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign: </td><td align=left><select size=1 name=campaign_id>\n";
 		echo "$campaigns_list";
@@ -20660,6 +20908,76 @@ if ($ADD==31111)
 		if ($LOGuser_level >= 9)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=REMOTEAGENTS&stage=$remote_agent_id\">Click here to see Admin chages to this remote agent</FONT>\n";
+			}
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	}
+
+
+######################
+# ADD=32111 modify extension group entry in the system
+######################
+
+if ($ADD==32111)
+	{
+	if ($LOGmodify_remoteagents==1)
+		{
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		$stmt="SELECT extension_id,extension_group_id,extension,rank,campaign_groups,call_count_today,last_call_time,last_callerid from vicidial_extension_groups where extension_id='$extension_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$extension_id =			$row[0];
+		$extension_group_id =	$row[1];
+		$extension =			$row[2];
+		$rank =					$row[3];
+		$campaign_groups =		$row[4];
+		$call_count_today =		$row[5];
+		$last_call_time =		$row[6];
+		$last_callerid =		$row[7];
+
+		echo "<br>MODIFY AN EXTENSION GROUP ENTRY: $row[0]<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=42111>\n";
+		echo "<input type=hidden name=extension_id value=\"$extension_id\">\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Extension Group: </td><td align=left><input type=text name=extension_group_id size=20 maxlength=20 value=\"$extension_group_id\"> (no spaces)$NWB#vicidial_extension_groups-extension_group_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Extension: </td><td align=left><input type=text name=extension size=18 maxlength=18 value=\"$extension\"> (numbers only)$NWB#vicidial_extension_groups-extension$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Rank: </td><td align=left><select size=1 name=rank>\n";
+		$n=99;
+		$rankfound=0;
+		while ($n>=-99)
+			{
+			if ($n == $rank) 
+				{echo "<option SELECTED value=\"$n\">$n</option>\n";   $rankfound++;}
+			else
+				{echo "<option value=\"$n\">$n</option>\n";}
+			$n--;
+			}
+		if ($rankfound < 1)
+			{echo "<option SELECTED value=\"$rank\">$rank</option>\n";}
+
+		echo "</select> $NWB#vicidial_extension_groups-rank$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Campaigns Groups: </td><td align=left><input type=text name=campaign_groups size=50 maxlength=255 value=\"$campaign_groups\"> (pipe-delimited list)$NWB#vicidial_extension_groups-extension$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Call Count Today: </td><td align=left>$call_count_today</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Last Call Time: </td><td align=left>$last_call_time</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Last Call ID: </td><td align=left>$last_callerid</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+		echo "</TABLE></center>\n";
+
+		if ($LOGdelete_remote_agents > 0)
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=52111&extension_id=$extension_id\">DELETE THIS EXTENSION GROUP ENTRY</a>\n";
+			}
+		if ($LOGuser_level >= 9)
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=EXTENGROUP&stage=$extension_id\">Click here to see Admin chages to this extension group entry</FONT>\n";
 			}
 		}
 	else
@@ -21563,7 +21881,7 @@ if ($ADD==31111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>VMailDump Exten: </td><td align=left><input type=text name=voicemail_dump_exten size=20 maxlength=20 value=\"$row[30]\">$NWB#phones-voicemail_dump_exten$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Exten Context: </td><td align=left><input type=text name=ext_context size=20 maxlength=20 value=\"$row[31]\">$NWB#phones-ext_context$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Phone Context: </td><td align=left><input type=text name=phone_context size=20 maxlength=20 value=\"$row[70]\">$NWB#phones-phone_context$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Conf File Secret: </td><td align=left><input type=text name=conf_secret size=20 maxlength=20 value=\"$row[72]\">$NWB#phones-conf_secret$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Conf File Secret: </td><td align=left><input type=text name=conf_secret size=20 maxlength=20 value=\"$row[72]\">$NWB#phones-conf_secret$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>DTMFSend Channel: </td><td align=left><input type=text name=dtmf_send_extension size=40 maxlength=100 value=\"$row[32]\">$NWB#phones-dtmf_send_extension$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Outbound Call Group: </td><td align=left><input type=text name=call_out_number_group size=40 maxlength=100 value=\"$row[33]\">$NWB#phones-call_out_number_group$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Browser Location: </td><td align=left><input type=text name=client_browser size=40 maxlength=100 value=\"$row[34]\">$NWB#phones-client_browser$NWE</td></tr>\n";
@@ -23813,6 +24131,53 @@ if ($ADD==10000)
 		echo "<td><font size=1> $row[5]</td>";
 		echo "<td><font size=1> $row[6]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=31111&remote_agent_id=$row[0]\">MODIFY</a></td></tr>\n";
+		$o++;
+		}
+
+	echo "</TABLE></center>\n";
+	}
+
+
+######################
+# ADD=12000 display all extension group entries
+######################
+if ($ADD==12000)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	$stmt="SELECT extension_id,extension_group_id,extension,rank,campaign_groups,call_count_today,last_call_time,last_callerid from vicidial_extension_groups order by extension_group_id,rank,extension";
+	$rslt=mysql_query($stmt, $link);
+	$extensiongroups_to_print = mysql_num_rows($rslt);
+
+	echo "<br>EXTENSION GROUP LISTINGS:\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<tr bgcolor=black>";
+	echo "<td><font size=1 color=white><B>GROUP</B></td>";
+	echo "<td><font size=1 color=white><B>EXTENSION</B></td>";
+	echo "<td><font size=1 color=white><B>RANK &nbsp; </B></td>";
+	echo "<td><font size=1 color=white><B>RESTRICT &nbsp; </B></td>";
+	echo "<td><font size=1 color=white><B>COUNT &nbsp; </B></td>";
+	echo "<td><font size=1 color=white><B>LAST CALL &nbsp; </B></td>";
+	echo "<td><font size=1 color=white><B>LAST ID &nbsp; </B></td>";
+	echo "<td align=center><font size=1 color=white><B>MODIFY</B></td></tr>\n";
+
+	$o=0;
+	while ($extensiongroups_to_print > $o) 
+		{
+		$row=mysql_fetch_row($rslt);
+		if (eregi("1$|3$|5$|7$|9$", $o))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=32111&extension_id=$row[0]\">$row[1]</a></td>";
+		echo "<td><font size=1> $row[2]</td>";
+		echo "<td><font size=1> $row[3]</td>";
+		echo "<td><font size=1> $row[4]</td>";
+		echo "<td><font size=1> $row[5]</td>";
+		echo "<td><font size=1> $row[6]</td>";
+		echo "<td><font size=1> $row[7]</td>";
+		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=32111&extension_id=$row[0]\">MODIFY</a></td></tr>\n";
 		$o++;
 		}
 

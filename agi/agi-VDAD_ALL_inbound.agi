@@ -122,6 +122,7 @@
 # 100123-1015 - Added voicemail_id lookup for user from AGENTDIRECT drop
 # 100212-0653 - Added AGENTVMAIL AGENTDIRECT option for no-queue, hold time and after hours features
 # 100226-0927 - Fixed reinsert issue in vicidial_auto_calls table with auto_call_id
+# 100319-0614 - Added extension group remote agent feature
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -132,7 +133,7 @@ $start_moh=1;
 $at='@';
 $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=130;
+$mysql_log_count=143;
 $one_mysql_log=0;
 
 
@@ -356,7 +357,7 @@ if ($extension =~ /^999\d\d\*/)
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
-			$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='01139';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
@@ -1660,7 +1661,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				else
 					{$vlia_users="''";}
 
-				$stmtA = "SELECT vicidial_live_agents.conf_exten,vicidial_live_agents.user,vicidial_live_agents.extension,vicidial_live_agents.server_ip,vicidial_live_inbound_agents.group_weight from vicidial_live_agents, vicidial_live_inbound_agents WHERE vicidial_live_agents.user=vicidial_live_inbound_agents.user and status IN('CLOSER','READY') and lead_id<1 and server_ip='$VARserver_ip' $ADUfindSQL and vicidial_live_inbound_agents.group_id='$channel_group' and last_update_time > '$BDtsSQLdate' and vicidial_live_agents.user NOT IN($vlia_users) $qp_groupWAIT_camp_SQL $agent_call_order limit 1;";
+				$stmtA = "SELECT vicidial_live_agents.conf_exten,vicidial_live_agents.user,vicidial_live_agents.extension,vicidial_live_agents.server_ip,vicidial_live_inbound_agents.group_weight,ra_user from vicidial_live_agents, vicidial_live_inbound_agents WHERE vicidial_live_agents.user=vicidial_live_inbound_agents.user and status IN('CLOSER','READY') and lead_id<1 and server_ip='$VARserver_ip' $ADUfindSQL and vicidial_live_inbound_agents.group_id='$channel_group' and last_update_time > '$BDtsSQLdate' and vicidial_live_agents.user NOT IN($vlia_users) $qp_groupWAIT_camp_SQL $agent_call_order limit 1;";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -1674,13 +1675,14 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$VDADextension	=	$aryA[2];
 					$VDADserver_ip =	$aryA[3];
 					$VDADgroup_weight = $aryA[4];
+					$ra_user =			$aryA[5];
 					}
 				$sthA->finish();
 					if ($AGILOG) {$agi_string = "$VDADuser|$VDADgroup_weight|$stmtA|";   &agi_output;}
 
 				if ($AGENTgrab > 0)
 					{
-					$stmtA = "SELECT conf_exten,extension,server_ip from vicidial_live_agents WHERE user='$AGENTuser';";
+					$stmtA = "SELECT conf_exten,extension,server_ip,ra_user from vicidial_live_agents WHERE user='$AGENTuser';";
 						if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1693,6 +1695,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						$VDADextension	=	$aryA[1];
 						$VDADuser =			$AGENTuser;
 						$VDADserver_ip =	$aryA[2];
+						$ra_user =			$aryA[3];
 						}
 					$sthA->finish();
 					}
@@ -1725,7 +1728,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				if ($aco_sub<1)
 					{
 					$cbc=0;	
-					$stmtA = "SELECT conf_exten,user,extension FROM vicidial_live_agents where status IN('QUEUE','INCALL') and server_ip='$VARserver_ip' and campaign_id IN($INBOUNDcampsSQL) and callerid='$callerid' and channel='$channel' order by last_call_time limit 1;";
+					$stmtA = "SELECT conf_exten,user,extension,ra_user FROM vicidial_live_agents where status IN('QUEUE','INCALL') and server_ip='$VARserver_ip' and campaign_id IN($INBOUNDcampsSQL) and callerid='$callerid' and channel='$channel' order by last_call_time limit 1;";
 						if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1735,10 +1738,10 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					while ($sthArows > $cbc)
 						{
 						@aryA = $sthA->fetchrow_array;
-
-						$VDADconf_exten	=	"$aryA[0]";
-						$VDADuser	=		"$aryA[1]";
-						$VDADextension	=	"$aryA[2]";
+						$VDADconf_exten	=	$aryA[0];
+						$VDADuser	=		$aryA[1];
+						$VDADextension	=	$aryA[2];
+						$ra_user	=		$aryA[3];
 					
 						$cbc++;
 						}
@@ -1850,7 +1853,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$calls_today	= "$aryA[0]";
+					$calls_today	= $aryA[0];
 					$calls_today++;
 					}
 				$sthA->finish();
@@ -1880,6 +1883,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					if ($min < 10) {$min = "0$min";}
 					if ($sec < 10) {$sec = "0$sec";}
 
+				### BEGIN REMOTE AGENT SECTION
 				if ($VDADextension =~ /^R\//)
 					{
 					### set the callerid to the ACQS value(calleridname)
@@ -1895,10 +1899,67 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						$VDADconf_exten = "$phone_number$S$vendor_id";
 						}
 
+					if (length($ra_user) > 0)
+						{
+						$extension_group='';
+						$stmtA = "SELECT extension_group,extension_group_order FROM vicidial_remote_agents where user_start='$ra_user';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='01131';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$extension_group =			$aryA[0];
+							$extension_group_order =	$aryA[1];
+							}
+						$sthA->finish();
+						if ( (length($extension_group) > 0) and ($extension_group !~ /^NONE/) )
+							{
+							$extension_group_orderSQL = 'order by last_call_time';
+							if ($extension_group_order =~ /RANK/)
+								{$extension_group_orderSQL = 'order by rank desc, last_call_time';}
+							if ($extension_group_order =~ /CALL_COUNT/)
+								{$extension_group_orderSQL = 'order by call_count_today, last_call_time';}
+							$stmtA = "UPDATE vicidial_extension_groups set last_callerid='$callerid',last_call_time=NOW(),call_count_today=(call_count_today + 1) where extension_group_id='$extension_group' and ( (campaign_groups='') or (campaign_groups LIKE \"%|$channel_group|%\") ) $extension_group_orderSQL limit 1;";
+							$VEGaffected_rows = $dbhA->do($stmtA);
+								$dbhP=$dbhA;   $mysql_count='01132';   $MEL_aff_rows=$VEGaffected_rows;   &mysql_error_logging;
+							if ($AGILOG) {$agi_string = "--    REMOTE EXTEN GROUP : |$VEGaffected_rows|update of veg table: $callerid\n|$stmtA|";   &agi_output;}
+							if ($VEGaffected_rows > 0)
+								{
+								$stmtA = "SELECT extension,extension_id,call_count_today FROM vicidial_extension_groups where last_callerid='$callerid' order by last_call_time desc limit 1;";
+								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+								$sthArows=$sthA->rows;
+									$dbhP=$dbhA;   $mysql_count='01133';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+								if ($sthArows > 0)
+									{
+									@aryA = $sthA->fetchrow_array;
+									$VDADconf_exten =			$aryA[0];
+
+									if ($AGILOG) {$agi_string = "--    REMOTE EXTEN SET : |$VDADconf_exten|$aryA[1]|$aryA[2]|";   &agi_output;}
+									}
+								$sthA->finish();
+								}
+							}
+						}
 					print STDERR "Setting CID \"$newcallerid\"\n";
 					checkresult($result);
-					if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$phone_number\>";   &agi_output;}
+
+					$stmtA = "UPDATE vicidial_live_agents set ra_extension='$VDADconf_exten' where extension='$VDADextension' and ra_user='$ra_user';";
+					$rVLAaffected_rows = $dbhA->do($stmtA);
+						$dbhP=$dbhA;   $mysql_count='01140';   $MEL_aff_rows=$rVLAaffected_rows;   &mysql_error_logging;
+
+					$stmtA = "UPDATE vicidial_auto_calls set extension='$VDADconf_exten' where callerid='$callerid';";
+					$rVACaffected_rows = $dbhA->do($stmtA);
+						$dbhP=$dbhA;   $mysql_count='01141';   $MEL_aff_rows=$rVACaffected_rows;   &mysql_error_logging;
+
+					$stmtA = "INSERT INTO vicidial_remote_agent_log set callerid='$callerid',uniqueid='$uniqueid',ra_user='$ra_user',user='$VDADuser',call_time=NOW(),extension='$VDADconf_exten',lead_id='$insert_lead_id',phone_number='$phone_number',campaign_id='$channel_group',processed='N';";
+					$RALaffected_rows = $dbhA->do($stmtA);
+						$dbhP=$dbhA;   $mysql_count='01137';   $MEL_aff_rows=$RALaffected_rows;   &mysql_error_logging;
+					if ($AGILOG) {$agi_string = "--    REMOTE EXTEN LOG : |$RALaffected_rows|CID changed: \"$callerid\" \<$phone_number\>\n|$stmtA|";   &agi_output;}
 					}
+				### END REMOTE AGENT SECTION
 
 				$stmtA = "UPDATE vicidial_closer_log set queue_seconds='$drop_timer' where lead_id = '$insert_lead_id' and call_date='$SQLdate';";
 				$affected_rows = $dbhA->do($stmtA);
@@ -2062,7 +2123,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				else
 					{$vlia_users="''";}
 
-				$stmtA = "SELECT vicidial_live_agents.conf_exten,vicidial_live_agents.user,vicidial_live_agents.extension,vicidial_live_agents.server_ip,vicidial_live_inbound_agents.group_weight from vicidial_live_agents, vicidial_live_inbound_agents WHERE vicidial_live_agents.user=vicidial_live_inbound_agents.user and status IN('CLOSER','READY') and lead_id<1 $ADUfindSQL and vicidial_live_inbound_agents.group_id='$channel_group' and last_update_time > '$BDtsSQLdate' and vicidial_live_agents.user NOT IN($vlia_users) $qp_groupWAIT_camp_SQL $agent_call_order limit 1;";
+				$stmtA = "SELECT vicidial_live_agents.conf_exten,vicidial_live_agents.user,vicidial_live_agents.extension,vicidial_live_agents.server_ip,vicidial_live_inbound_agents.group_weight,ra_user from vicidial_live_agents, vicidial_live_inbound_agents WHERE vicidial_live_agents.user=vicidial_live_inbound_agents.user and status IN('CLOSER','READY') and lead_id<1 $ADUfindSQL and vicidial_live_inbound_agents.group_id='$channel_group' and last_update_time > '$BDtsSQLdate' and vicidial_live_agents.user NOT IN($vlia_users) $qp_groupWAIT_camp_SQL $agent_call_order limit 1;";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -2077,13 +2138,14 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$VDADextension =	$aryA[2];
 					$VDADserver_ip =	$aryA[3];
 					$VDADgroup_weight = $aryA[4];
+					$ra_user =			$aryA[5];
 					}
 				$sthA->finish();
 				if ($AGILOG) {$agi_string = "$VDADuser|$VDADgroup_weight|$stmtA|";   &agi_output;}
 
 				if ($AGENTgrab > 0)
 					{
-					$stmtA = "SELECT conf_exten,extension,server_ip from vicidial_live_agents WHERE user='$AGENTuser';";
+					$stmtA = "SELECT conf_exten,extension,server_ip,ra_user from vicidial_live_agents WHERE user='$AGENTuser';";
 						if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2096,6 +2158,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						$VDADextension	=	$aryA[1];
 						$VDADuser =			$AGENTuser;
 						$VDADserver_ip =	$aryA[2];
+						$ra_user	=		$aryA[3];
 						}
 					$sthA->finish();
 					}
@@ -2129,7 +2192,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				if ($aco_sub<1)
 					{
 					$cbc=0;	
-					$stmtA = "SELECT conf_exten,user,extension,server_ip,last_call_time FROM vicidial_live_agents where status IN('QUEUE','INCALL') and campaign_id IN($INBOUNDcampsSQL) and callerid='$callerid' and channel='$channel' order by last_call_time limit 1;";
+					$stmtA = "SELECT conf_exten,user,extension,server_ip,last_call_time,ra_user FROM vicidial_live_agents where status IN('QUEUE','INCALL') and campaign_id IN($INBOUNDcampsSQL) and callerid='$callerid' and channel='$channel' order by last_call_time limit 1;";
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 					$sthArows=$sthA->rows;
@@ -2143,6 +2206,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						$VDADextension =		$aryA[2];
 						$VDADserver_ip =		$aryA[3];
 						$VDADlast_call_time =	$aryA[4];
+						$ra_user =				$aryA[5];
 						$cbc++;
 						}
 					$sthA->finish();
@@ -2293,6 +2357,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					if ($min < 10) {$min = "0$min";}
 					if ($sec < 10) {$sec = "0$sec";}
 
+				### BEGIN REMOTE AGENT SSECTION
 				if ($VDADextension =~ /^R\//)
 					{
 					### set the callerid to the ACQS value(calleridname)
@@ -2308,10 +2373,69 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						$VDADremDIALstr = "$a$S$b$S$c$S$d$S$phone_number$S$vendor_id";
 						}
 
+					if (length($ra_user) > 0)
+						{
+						$extension_group='';
+						$stmtA = "SELECT extension_group,extension_group_order FROM vicidial_remote_agents where user_start='$ra_user';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='01134';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$extension_group =			$aryA[0];
+							$extension_group_order =	$aryA[1];
+							}
+						$sthA->finish();
+						if ( (length($extension_group) > 0) and ($extension_group !~ /^NONE/) )
+							{
+							$extension_group_orderSQL = 'order by last_call_time';
+							if ($extension_group_order =~ /RANK/)
+								{$extension_group_orderSQL = 'order by rank desc, last_call_time';}
+							if ($extension_group_order =~ /CALL_COUNT/)
+								{$extension_group_orderSQL = 'order by call_count_today, last_call_time';}
+							$stmtA = "UPDATE vicidial_extension_groups set last_callerid='$callerid',last_call_time=NOW(),call_count_today=(call_count_today + 1) where extension_group_id='$extension_group' and ( (campaign_groups='') or (campaign_groups LIKE \"%|$channel_group|%\") ) $extension_group_orderSQL limit 1;";
+							$VEGaffected_rows = $dbhA->do($stmtA);
+								$dbhP=$dbhA;   $mysql_count='01135';   $MEL_aff_rows=$VEGaffected_rows;   &mysql_error_logging;
+							if ($AGILOG) {$agi_string = "--    REMOTE EXTEN GROUP : |$VEGaffected_rows|update of veg table: $callerid\n|$stmtA|";   &agi_output;}
+							if ($VEGaffected_rows > 0)
+								{
+								$stmtA = "SELECT extension,extension_id,call_count_today FROM vicidial_extension_groups where last_callerid='$callerid' order by last_call_time desc limit 1;";
+								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+								$sthArows=$sthA->rows;
+									$dbhP=$dbhA;   $mysql_count='01136';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+								if ($sthArows > 0)
+									{
+									@aryA = $sthA->fetchrow_array;
+									$VDADconf_exten =			$aryA[0];
+
+									if ($AGILOG) {$agi_string = "--    REMOTE EXTEN SET : |$VDADconf_exten|$aryA[1]|$aryA[2]|";   &agi_output;}
+									}
+								$sthA->finish();
+								}
+							}
+						}
 					print STDERR "Setting CID \"$newcallerid\"\n";
 					checkresult($result);
-					if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$phone_number\>";   &agi_output;}
+
+					$VDADremDIALstr = "$a$S$b$S$c$S$d$S$VDADconf_exten";
+
+					$stmtA = "UPDATE vicidial_live_agents set ra_extension='$VDADremDIALstr' where extension='$VDADextension' and ra_user='$ra_user';";
+					$rVLAaffected_rows = $dbhA->do($stmtA);
+						$dbhP=$dbhA;   $mysql_count='01142';   $MEL_aff_rows=$rVLAaffected_rows;   &mysql_error_logging;
+
+					$stmtA = "UPDATE vicidial_auto_calls set extension='$VDADremDIALstr' where callerid='$callerid';";
+					$rVACaffected_rows = $dbhA->do($stmtA);
+						$dbhP=$dbhA;   $mysql_count='01143';   $MEL_aff_rows=$rVACaffected_rows;   &mysql_error_logging;
+
+					$stmtA = "INSERT INTO vicidial_remote_agent_log set callerid='$callerid',uniqueid='$uniqueid',ra_user='$ra_user',user='$VDADuser',call_time=NOW(),extension='$VDADconf_exten',lead_id='$insert_lead_id',phone_number='$phone_number',campaign_id='$channel_group',processed='N';";
+					$RALaffected_rows = $dbhA->do($stmtA);
+						$dbhP=$dbhA;   $mysql_count='01138';   $MEL_aff_rows=$RALaffected_rows;   &mysql_error_logging;
+					if ($AGILOG) {$agi_string = "--    REMOTE EXTEN LOG : |$RALaffected_rows|CID changed: \"$callerid\" \<$phone_number\>\n|$stmtA|";   &agi_output;}
 					}
+				### END REMOTE AGENT SECTION
 
 				$stmtA = "UPDATE vicidial_closer_log set queue_seconds='$drop_timer' where lead_id = '$insert_lead_id' and call_date='$SQLdate';";
 				$affected_rows = $dbhA->do($stmtA);

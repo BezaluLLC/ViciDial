@@ -28,11 +28,15 @@ New scripts:
 
 
 
-Required variables for API calls:
+Required variables for all API calls:
 # user - is the API user
 # pass - is the API user password
 # agent_user - is the vicidial agent user whose session that you want to affect
 # source - description of what originated the API call (maximum 20 characters)
+
+Optional variable for all API calls:
+# close_window_link - will display a link to close the window, useful if you pop up the API link in a browser window
+# language - currently only works for close window link: en=English, es=Spanish
 
 
 

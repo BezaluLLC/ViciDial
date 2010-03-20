@@ -369,6 +369,8 @@ last_state_change DATETIME,
 agent_territories TEXT,
 outbound_autodial ENUM('Y','N') default 'N',
 manager_ingroup_set ENUM('Y','N','SET') default 'N',
+ra_user VARCHAR(20) default '',
+ra_extension VARCHAR(100) default '',
 index (random_id),
 index (last_call_time),
 index (last_update_time),
@@ -395,6 +397,7 @@ queue_priority TINYINT(2) default '0',
 agent_only VARCHAR(20) default '',
 agent_grab VARCHAR(20) default '',
 queue_position SMALLINT(4) UNSIGNED default '1',
+extension VARCHAR(100) default '',
 index (uniqueid),
 index (callerid),
 index (call_time),
@@ -897,7 +900,9 @@ server_ip VARCHAR(15) NOT NULL,
 conf_exten VARCHAR(20),
 status ENUM('ACTIVE','INACTIVE') default 'INACTIVE',
 campaign_id VARCHAR(8),
-closer_campaigns TEXT
+closer_campaigns TEXT,
+extension_group VARCHAR(20) default 'NONE',
+extension_group_order VARCHAR(20) default 'NONE'
 );
 
 CREATE TABLE live_inbound_log (
@@ -954,7 +959,7 @@ user VARCHAR(20),
 server_ip VARCHAR(15) NOT NULL,
 event_time DATETIME,
 lead_id INT(9) UNSIGNED,
-campaign_id VARCHAR(8),	
+campaign_id VARCHAR(8),
 pause_epoch INT(10) UNSIGNED,
 pause_sec SMALLINT(5) UNSIGNED default '0',
 wait_epoch INT(10) UNSIGNED,
@@ -2000,6 +2005,36 @@ index (card_id),
 index (call_time)
 );
 
+CREATE TABLE vicidial_extension_groups (
+extension_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+extension_group_id VARCHAR(20) NOT NULL,
+extension VARCHAR(100) default '8300',
+rank MEDIUMINT(7) default '0',
+campaign_groups TEXT,
+call_count_today MEDIUMINT(7) default '0',
+last_call_time DATETIME,
+last_callerid VARCHAR(20) default '',
+index (extension_group_id)
+);
+
+CREATE TABLE vicidial_remote_agent_log (
+uniqueid VARCHAR(20) default '',
+callerid VARCHAR(20) default '',
+ra_user VARCHAR(20),
+user VARCHAR(20),
+call_time DATETIME,
+extension VARCHAR(100) default '',
+lead_id INT(9) UNSIGNED default '0',
+phone_number VARCHAR(18) default '',
+campaign_id VARCHAR(20) default '',
+processed ENUM('Y','N') default 'N',
+comment VARCHAR(255) default '',
+index (call_time),
+index (ra_user),
+index (extension),
+index (phone_number)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
@@ -2139,7 +2174,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1208',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1209',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

@@ -29,6 +29,8 @@
 #  - $alt_user
 #  - $stage
 #  - $status
+#  - $close_window_link
+#  - $language
 
 # CHANGELOG:
 # 80703-2225 - First build of script
@@ -43,10 +45,10 @@
 # 91211-1805 - Added st_login_log and st_get_agent_active_lead functions, added alt_user
 # 91228-1059 - Added update_fields function
 # 100315-2021 - Added ra_call_control function
-#
+# 100318-0605 - Added close_window_link and language options
 
-$version = '2.2.0-12';
-$build = '100315-2021';
+$version = '2.2.0-13';
+$build = '100318-0605';
 
 require("dbconnect.php");
 
@@ -147,6 +149,9 @@ if (isset($_GET["stage"]))						{$stage=$_GET["stage"];}
 	elseif (isset($_POST["stage"]))				{$stage=$_POST["stage"];}
 if (isset($_GET["status"]))						{$status=$_GET["status"];}
 	elseif (isset($_POST["status"]))			{$status=$_POST["status"];}
+if (isset($_GET["close_window_link"]))			{$close_window_link=$_GET["close_window_link"];}
+	elseif (isset($_POST["close_window_link"]))	{$close_window_link=$_POST["close_window_link"];}
+
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -345,7 +350,6 @@ if ($function == 'external_hangup')
 		$result_reason = "external_hangup not valid";
 		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-		exit;
 		}
 	else
 		{
@@ -413,7 +417,6 @@ if ($function == 'external_status')
 		$result_reason = "external_status not valid";
 		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-		exit;
 		}
 	else
 		{
@@ -481,7 +484,6 @@ if ($function == 'external_pause')
 		$result_reason = "external_pause not valid";
 		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-		exit;
 		}
 	else
 		{
@@ -568,7 +570,6 @@ if ($function == 'external_dial')
 		$data = "$phone_code|$search|$preview|$focus";
 		echo "$result: $result_reason - $value|$data|$agent_user|$alt_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-		exit;
 		}
 	else
 		{
@@ -796,7 +797,6 @@ if ($function == 'change_ingroups')
 		$data = "$value|$blended|$ingroup_choices";
 		echo "$result: $result_reason - $data|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-		exit;
 		}
 	else
 		{
@@ -1033,7 +1033,6 @@ if ($function == 'update_fields')
 		$data = "$agent_user";
 		echo "$result: $result_reason - $data\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-		exit;
 		}
 	else
 		{
@@ -1259,7 +1258,6 @@ if ($function == 'update_fields')
 						$result_reason = "no fields have been defined";
 						echo "$result: $result_reason - $agent_user\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-						exit;
 						}
 					}
 				else
@@ -1268,7 +1266,6 @@ if ($function == 'update_fields')
 					$result_reason = "agent_user does not have a lead on their screen";
 					echo "$result: $result_reason - $agent_user\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-					exit;
 					}
 				}
 			else
@@ -1308,7 +1305,6 @@ if ($function == 'set_timer_action')
 		$data = "$agent_user|$value";
 		echo "$result: $result_reason - $data\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-		exit;
 		}
 	else
 		{
@@ -1371,7 +1367,6 @@ if ($function == 'st_login_log')
 		$data = "$value|$vendor_id";
 		echo "$result: $result_reason - $data\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-		exit;
 		}
 	else
 		{
@@ -1425,7 +1420,6 @@ if ($function == 'st_get_agent_active_lead')
 		$data = "$value|$vendor_id";
 		echo "$result: $result_reason - $data\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-		exit;
 		}
 	else
 		{
@@ -1514,7 +1508,6 @@ if ($function == 'ra_call_control')
 		$result_reason = "ra_call_control not valid";
 		echo "$result: $result_reason - $value|$agent_user|$stage\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-		exit;
 		}
 	else
 		{
@@ -1780,6 +1773,24 @@ if ($function == 'ra_call_control')
 	}
 ################################################################################
 ### END - ra_call_control
+################################################################################
+
+
+
+
+
+################################################################################
+### BEGIN - optional "close window" link
+################################################################################
+if ($close_window_link > 0) 
+	{
+	$close_this_window_text = 'Close This Window';
+	if ($language=='es')
+		{$close_this_window_text = 'Cerrar esta ventana';}
+	echo "\n<a href=\"javascript:window.opener='x';window.close();\">$close_this_window_text</a>\n";
+	}
+################################################################################
+### END - optional "close window" link
 ################################################################################
 
 

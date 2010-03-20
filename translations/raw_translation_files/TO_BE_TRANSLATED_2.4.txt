@@ -53,6 +53,37 @@ Agent Allow Dial Override Xfer||
 Agent Allow Consultative Xfer||
 Agent Fullscreen||
 This option if set to Y will set the height and width of the ViciDial agent screen to the size of the web browser window without any allowance for the Agents View, Calls in Queue View or Calls in Session view. Default is N for no or disabled||
+Add Extension Group||
+New Group Extension Addition||
+Modify Extension Group||
+Delete Extension Group||
+Extension Groups||
+Add Extension Group Entry||
+Extension Group||
+This required field is where you enter the group ID that you want this extension to be put into. No spaces or special characters except for underscore letters and numbers||
+Extension:||
+This required field is where you put the dialplan extension that you want the remote agent calls to be sent to for this extension group entry||
+This field allows you to rank the extension group entries that share the same extension group. Default is 0||
+Campaigns Groups||
+In this field you can put a list of campaign IDs and or inbound group IDs that you want to restrict the use of the extension group for. List must be separate by pipes and have a pipe at the beginning and end of the string||
+EXTENSION GROUP ENTRY NOT ADDED||
+there is already an extension group entry with these values||
+EXTENSION GROUP ENTRY ADDED||
+MODIFY AN EXTENSION GROUP ENTRY||
+Click here to see Admin chages to this extension group entry||
+DELETE THIS EXTENSION GROUP ENTRY||
+Call Count Today||
+Last Call Time||
+Last Call ID||
+EXTENSION GROUP ENTRY NOT MODIFIED||
+EXTENSION GROUP ENTRY MODIFIED||
+EXTENSION GROUP ENTRY NOT DELETED||
+EXTENSION GROUP ENTRY DELETION CONFIRMATION||
+Click here to delete extension group entry||
+EXTENSION GROUP ENTRY DELETION COMPLETED||
+EXTENSION GROUP LISTINGS||
+Extension Group||
+If set to something other than NONE or empty this will override the External Extension field and use the Extension Group entries that have the same extension group ID. Default is NONE for deactivated||
 
 
 ############################################################ CLIENT

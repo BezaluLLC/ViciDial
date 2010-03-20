@@ -173,3 +173,43 @@ UPDATE system_settings SET db_schema_version='1207',db_schema_update_date=NOW();
 ALTER TABLE vicidial_user_groups ADD agent_fullscreen ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1208',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_auto_calls ADD extension VARCHAR(100) default '';
+
+ALTER TABLE vicidial_live_agents ADD ra_user VARCHAR(20) default '';
+ALTER TABLE vicidial_live_agents ADD ra_extension VARCHAR(100) default '';
+
+ALTER TABLE vicidial_remote_agents ADD extension_group VARCHAR(20) default 'NONE';
+ALTER TABLE vicidial_remote_agents ADD extension_group_order VARCHAR(20) default 'NONE';
+
+CREATE TABLE vicidial_extension_groups (
+extension_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+extension_group_id VARCHAR(20) NOT NULL,
+extension VARCHAR(100) default '8300',
+rank MEDIUMINT(7) default '0',
+campaign_groups TEXT,
+call_count_today MEDIUMINT(7) default '0',
+last_call_time DATETIME,
+last_callerid VARCHAR(20) default '',
+index (extension_group_id)
+);
+
+CREATE TABLE vicidial_remote_agent_log (
+uniqueid VARCHAR(20) default '',
+callerid VARCHAR(20) default '',
+ra_user VARCHAR(20),
+user VARCHAR(20),
+call_time DATETIME,
+extension VARCHAR(100) default '',
+lead_id INT(9) UNSIGNED default '0',
+phone_number VARCHAR(18) default '',
+campaign_id VARCHAR(20) default '',
+processed ENUM('Y','N') default 'N',
+comment VARCHAR(255) default '',
+index (call_time),
+index (ra_user),
+index (extension),
+index (phone_number)
+);
+
+UPDATE system_settings SET db_schema_version='1209',db_schema_update_date=NOW();

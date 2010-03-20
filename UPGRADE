@@ -90,6 +90,10 @@ OTHER CHANGES:
 	of calls sent to a Remote Agent also allows for setting of a disposition
 	for more information read the AGENT_API.txt doc.
 
+20. Added Extension Groups feature to Remote Agents section allowing calls to be
+	sent to different numbers in a round-robin method when enabled on 
+	multi-line remote agent accounts. To enable, you must create Extension
+	Group entries and enable Extension Group in the Remote Agent entry.
 
 
 
