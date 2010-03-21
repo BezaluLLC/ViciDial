@@ -95,6 +95,16 @@ OTHER CHANGES:
 	multi-line remote agent accounts. To enable, you must create Extension
 	Group entries and enable Extension Group in the Remote Agent entry.
 
+21. Added agi-AGENT_route.agi script to more easily allow for agentdirect calls
+	from call menus without having to create a DID entry for every agent.
+	Simply put this line in the custom dialplan section of the call menu
+	that you want to allow agentdirect dialing for:
+	   "exten => _XXXX,1,AGI(agi-AGENT_route.agi,default---AGENTDIRECT)"
+	That example will only work for agents that have 4-digit IDs.
+	This works well even after hours and when the agent is not available
+	because you can set the call to go to a voicemail box in the selected
+	in-group by using AGENTVMAIL in the voicemail field of the in-group.
+
 
 
 

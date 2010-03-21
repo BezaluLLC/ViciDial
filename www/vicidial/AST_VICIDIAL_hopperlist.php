@@ -79,7 +79,13 @@ while ($i < $campaigns_to_print)
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>Hopper List Report</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
+echo "<TITLE>Hopper List Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+
+	$short_header=1;
+
+	require("admin_header.php");
+
+echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
 echo "<SELECT SIZE=1 NAME=group>\n";
 $o=0;
@@ -163,5 +169,7 @@ else
 
 ?>
 </PRE>
+
+</TD></TR></TABLE>
 
 </BODY></HTML>
