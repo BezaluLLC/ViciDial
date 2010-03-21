@@ -20286,6 +20286,8 @@ if ($ADD==3111)
 
 		echo "<a href=\"./AST_CLOSERstats.php?group[]=$group_id\">Click here to see a report for this inbound group</a><BR><BR>\n";
 
+		echo "<a href=\"./AST_VICIDIAL_ingrouplist.php?group=$group_id\">Click here to see agents logged in to this inbound group</a><BR><BR>\n";
+
 		echo "<center><b>\n";
 
 		echo "<B>DIDS USING THIS IN-GROUP:</B><BR>\n";
