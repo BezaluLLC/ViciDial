@@ -1166,10 +1166,8 @@ if (ereg('O',$with_inbound))
 
 	if (eregi('ALL-ACTIVE',$group_string))
 		{
-		$non_inboundSQL='';
-		if (ereg('N',$with_inbound))
-			{$non_inboundSQL = "where campaign_id NOT IN ($ALLcloser_campaignsSQL)";}
-		$stmtB="select sum(calls_today),sum(drops_today),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(hold_sec_stat_one),sum(hold_sec_stat_two),sum(hold_sec_answer_calls),sum(hold_sec_drop_calls),sum(hold_sec_queue_calls) from vicidial_campaign_stats $non_inboundSQL;";
+		$inboundSQL = "where campaign_id IN ($ALLcloser_campaignsSQL)";
+		$stmtB="select sum(calls_today),sum(drops_today),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(hold_sec_stat_one),sum(hold_sec_stat_two),sum(hold_sec_answer_calls),sum(hold_sec_drop_calls),sum(hold_sec_queue_calls) from vicidial_campaign_stats $inboundSQL;";
 		}
 
 	$stmtC="select agent_non_pause_sec from vicidial_campaign_stats $group_SQLwhere;";

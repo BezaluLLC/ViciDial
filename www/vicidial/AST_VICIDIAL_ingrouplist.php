@@ -128,8 +128,8 @@ else
 
 
 	##############################
-	#########  AGENT STATS
-
+	#########  LIVE AGENT STATS
+	$user_list='|';
 	echo "\n";
 	echo "---------- LIVE AGENTS IN IN-GROUP\n";
 	echo "+------+--------------------------------+----------------------+--------+---------------------+\n";
@@ -153,11 +153,55 @@ else
 		$campaign_id =	sprintf("%-8s", $row[2]);
 		$status =		sprintf("%-6s", $row[3]);
 		$time =			sprintf("%-19s", $row[4]);
+		$user_list .=	"$row[0]---$row[3]|";
 
 		echo "| $FMT_i | <a href=\"./user_status.php?user=$row[0]\">$user</a> | <a href=\"./admin.php?ADD=34&campaign_id=$row[2]\">$campaign_id</a>   <a href=\"./AST_timeonVDADall.php?RR=4&DB=0&group=$row[2]\">Real-Time</a> | $status | $time |\n";
 		}
 
 	echo "+------+--------------------------------+----------------------+--------+---------------------+\n";
+
+	
+	if ($DB) {echo "\n$user_list\n";}
+
+	##############################
+	#########  ALL AGENT STATS
+
+	echo "\n";
+	echo "---------- DEFAULT AGENTS IN IN-GROUP\n";
+	echo "+------+--------------------------------+-----------+\n";
+	echo "| #    | USER                           | LOGGED IN |\n";
+	echo "+------+--------------------------------+-----------+\n";
+
+	$stmt="select vu.user,vu.full_name from vicidial_users vu where vu.closer_campaigns LIKE\"% " . mysql_real_escape_string($group) . " %\" order by vu.user limit 2000;";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$Xusers_to_print = mysql_num_rows($rslt);
+	$i=0;
+	while ($i < $Xusers_to_print)
+		{
+		$row=mysql_fetch_row($rslt);
+
+		$i++;
+
+		$FMT_i =		sprintf("%-4s", $i);
+		$user =			sprintf("%-30s", "$row[0] - $row[1]");
+			while(strlen($user)>30) {$user = substr("$user", 0, -1);}
+		if (preg_match("/\|$row[0]---/",$user_list))
+			{
+			$userstatusARY =	explode("|$row[0]---",$user_list);
+			$userstatus =		explode('|',$userstatusARY[1]);
+			$status_line =		sprintf("%-9s", $userstatus[0]);
+
+			if ($DB) {echo "\n$user_list     |$row[0]---     $userstatusARY[1]     $userstatus[0]\n";}
+			}
+		else
+			{$status_line = '         ';}
+
+		echo "| $FMT_i | <a href=\"./user_status.php?user=$row[0]\">$user</a> | $status_line |\n";
+		}
+
+	echo "+------+--------------------------------+-----------+\n";
+	
 	}
 
 

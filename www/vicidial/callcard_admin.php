@@ -35,6 +35,10 @@ if (isset($_GET["card_id"]))				{$card_id=$_GET["card_id"];}
 	elseif (isset($_POST["card_id"]))		{$card_id=$_POST["card_id"];}
 if (isset($_GET["status"]))					{$status=$_GET["status"];}
 	elseif (isset($_POST["status"]))		{$status=$_POST["status"];}
+if (isset($_GET["total"]))					{$total=$_GET["total"];}
+	elseif (isset($_POST["total"]))			{$total=$_POST["total"];}
+if (isset($_GET["comment"]))				{$comment=$_GET["comment"];}
+	elseif (isset($_POST["comment"]))		{$comment=$_POST["comment"];}
 
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
 	elseif (isset($_POST["user"]))			{$user=$_POST["user"];}
@@ -535,6 +539,135 @@ if ($action == "CALLCARD_BATCHES")
 
 
 
+### BEGIN generate results
+if ($action == "GENERATE_RESULTS")
+	{
+	if ( (strlen($sequence) < 1) or (strlen($batch) < 1) or (strlen($run) < 1) or (strlen($total) < 1) )
+		{
+		echo "you must enter in all fields<BR><BR>\n";
+		$action = 'GENERATE';
+		}
+	else
+		{
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<br>CallCard GENERATE:\n";
+		echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+		echo "<TR BGCOLOR=BLACK>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>CARD ID</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>PIN</B></TD>";
+		echo "</TR>\n";
+
+		$i=0;
+		$Gbatch=1;
+		$Gbatch_count=0;
+		$Gsequence=0;
+		while ($i < $total)
+			{
+			$Gbatch_count++;
+			$Gsequence++;
+			if ($Gbatch_count > $batch)
+				{
+				$Gbatch_count = 0;
+				$Gbatch++;
+				}
+
+			$Pbatch =		sprintf("%05s", $Gbatch);
+			$Psequence =	sprintf("%05s", $Gsequence);
+			$Pcard_id = "$run-$Pbatch-$Psequence";
+
+			$stmt = "SELECT count(*) FROM callcard_accounts_details where card_id='$Pcard_id';";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$vt_ct = mysql_num_rows($rslt);
+			if ($vt_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$duplicate_count =	$row[0];
+				if ($duplicate_count < 1)
+					{
+					$duplicate_pin=1;
+					$pin_give_up=0;
+					while ( ($duplicate_pin > 0) and ($pin_give_up < 100000) )
+						{
+						$Ppin = rand(10000000, 99999999);
+						$stmt = "SELECT count(*) FROM callcard_accounts where pin='$Ppin';";
+						$rslt=mysql_query($stmt, $link);
+						if ($DB) {echo "$stmt\n";}
+						$pin_ct = mysql_num_rows($rslt);
+						if ($pin_ct > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$duplicate_pin =	$row[0];
+							}
+						else
+							{
+							echo "ERROR - cannot query system<BR>\n";
+							}
+						$pin_give_up++;
+						}
+
+					### insert card_id and pin into tables
+					$stmt="INSERT INTO callcard_accounts SET card_id='$Pcard_id',pin='$Ppin',status='GENERATE';";
+					$rslt=mysql_query($stmt, $link);
+
+					$stmt="INSERT INTO callcard_accounts_details SET card_id='$Pcard_id',pin='$Ppin',status='GENERATE';";
+					$rslt=mysql_query($stmt, $link);
+
+					if (eregi("1$|3$|5$|7$|9$", $i))
+						{$bgcolor='bgcolor="#9BB9FB"';}
+					else
+						{$bgcolor='bgcolor="#B9CBFD"';} 
+					echo "<tr $bgcolor>\n";
+					echo "<td><font size=1> <a href=\"$PHP_SELF?action=CALLCARD_DETAIL&card_id=$Pcard_id&DB=$DB\"><font color=black>$Pcard_id</font></a> </td>";
+					echo "<td><font size=1> $Ppin </td>";
+					echo "</tr>\n";
+					}
+				else
+					{
+					echo "ERROR - card_id already exists: $Pcard_id<BR>\n";
+					}
+				}
+			else
+				{
+				echo "ERROR - cannot query system<BR>\n";
+				}
+			$i++;
+			}
+		echo "</TABLE><BR><BR>\n";
+
+		echo "\n";
+		echo "</center>\n";
+		}
+	}
+### END generate results
+
+
+
+### GENERATE search
+if ($action == "GENERATE")
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	echo "<br>CallCard Generate IDs<form action=$PHP_SELF method=POST>\n";
+	echo "<input type=hidden name=action value=GENERATE_RESULTS>\n";
+	echo "<input type=hidden name=DB value=$DB>\n";
+	echo "<center><TABLE width=$section_width cellspacing=3>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Generate Comment: </td><td align=left><input type=text name=comment size=50 maxlength=255></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Run: </td><td align=left><input type=text name=run size=5 maxlength=4></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Batch: </td><td align=left><input type=text name=batch size=6 maxlength=5></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Sequence: </td><td align=left><input type=text name=sequence size=6 maxlength=5></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Total: </td><td align=left><input type=text name=total size=8 maxlength=7></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+	echo "</TABLE></center>\n";
+	echo "\n";
+	echo "</center>\n";
+	}
+### GENERATE search
+
+
+
 ### BEGIN search results
 if ($action == "SEARCH_RESULTS")
 	{
@@ -627,6 +760,7 @@ if ($action == "SEARCH_RESULTS")
 		}
 	}
 ### END search results
+
 
 
 ### BEGIN search
