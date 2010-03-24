@@ -177,7 +177,7 @@ if ($TWENTYFOUR_HOURS > 0)
 		$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
 
 	$VDAD_SQL_time = "and event_time > \"$TDSQLdate\" and event_time < \"$FDSQLdate\"";
-	$VDCL_SQL_time = "and call_date > \"$TDSQLdate\" and event_time < \"$FDSQLdate\"";
+	$VDCL_SQL_time = "and call_date > \"$TDSQLdate\" and call_date < \"$FDSQLdate\"";
 	$QM_SQL_time = "and time_id > $TDtarget and time_id < $FDtarget";
 	$QM_SQL_time_H = "and time_id > $TDtarget and time_id < $HDtarget";
 	}
