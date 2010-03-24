@@ -145,6 +145,7 @@ if ( (ereg("--ALL--",$user_group_string) ) or ($user_group_ct < 1) )
 	{$user_group_SQL = "";}
 else
 	{
+	$TCuser_group_SQL = $user_group_SQL;
 	$user_group_SQL = eregi_replace(",$",'',$user_group_SQL);
 	$user_group_SQL = "and vicidial_agent_log.user_group IN($user_group_SQL)";
 	$TCuser_group_SQL = eregi_replace(",$",'',$TCuser_group_SQL);
@@ -636,7 +637,7 @@ else
 $o=0;
 while ($user_groups_to_print > $o)
 	{
-	if  (eregi("$user_groups[$o]\|",$user_group_string)) {echo "<option selected value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
+	if  (eregi("\|$user_groups[$o]\|",$user_group_string)) {echo "<option selected value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
 	  else {echo "<option value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
 	$o++;
 	}
