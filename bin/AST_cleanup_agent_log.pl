@@ -25,6 +25,7 @@
 # 91214-0933 - Added queue_position to queue_log COMPLETE... and ABANDON records
 # 100203-1110 - Added fix for vicidial_closer_log records with 0 length
 # 100309-0555 - Added queuemetrics_loginout option
+# 100327-0926 - Added validation of four agent "sec" fields
 #
 
 # constants
@@ -48,7 +49,9 @@ if (length($ARGV[0])>1)
 		print "   (without time flag will do logs from 150-10 minutes ago)\n";
 		print "  [-last-24hours] = will clean up logs for the last 24 hours only\n";
 		print "  [-more-than-24hours] = will clean up logs older than 24 hours only\n";
+		print "  [-last-30days] = will clean up logs for the last 30 days only\n";
 		print "  [-skip-queue-log-inserts] = will skip only the queue_log missing record checks\n";
+		print "  [-skip-agent-log-validation] = will skip only the vicidial_agent_log validation\n";
 		print "  [-only-check-agent-login-lags] = will only fix queue_log missing PAUSEREASON records\n";
 		print "  [-only-qm-live-call-check] = will only check the queue_log calls that report as live, in ViciDial\n";
 		print "  [-q] = quiet, no output\n";
@@ -99,6 +102,11 @@ if (length($ARGV[0])>1)
 			$TWENTYFOUR_HOURS=1;
 			if ($Q < 1) {print "\n----- LAST 24 HOURS ONLY -----\n\n";}
 			}
+		if ($args =~ /-last-30days/i)
+			{
+			$THIRTY_DAYS=1;
+			if ($Q < 1) {print "\n----- LAST 30 DAYS ONLY -----\n\n";}
+			}
 		if ($args =~ /-more-than-24hours/i)
 			{
 			$TWENTYFOUR_OLDER=1;
@@ -108,6 +116,11 @@ if (length($ARGV[0])>1)
 			{
 			$skip_queue_log_inserts=1;
 			if ($Q < 1) {print "\n----- SKIPPING QUEUE_LOG INSERTS -----\n\n";}
+			}
+		if ($args =~ /-skip-agent-log-validation/i)
+			{
+			$skip_agent_log_validation=1;
+			if ($Q < 1) {print "\n----- SKIPPING VICIDIAL_AGENT_LOG VALIDATION -----\n\n";}
 			}
 		}
 	}
@@ -198,6 +211,24 @@ if ($TWENTYFOUR_OLDER > 0)
 	$VDCL_SQL_time = "and call_date < \"$TDSQLdate\"";
 	$QM_SQL_time = "and time_id < $TDtarget";
 	$QM_SQL_time_H = "and time_id < $TDtarget";
+	}
+if ($THIRTY_DAYS > 0)
+	{
+	$TDtarget = ($secX - 2592000); # 30 days in the past
+	($Tsec,$Tmin,$Thour,$Tmday,$Tmon,$Tyear,$Twday,$Tyday,$Tisdst) = localtime($TDtarget);
+	$Tyear = ($Tyear + 1900);
+	$Tmon++;
+	if ($Tmon < 10) {$Tmon = "0$Tmon";}
+	if ($Tmday < 10) {$Tmday = "0$Tmday";}
+	if ($Thour < 10) {$Thour = "0$Thour";}
+	if ($Tmin < 10) {$Tmin = "0$Tmin";}
+	if ($Tsec < 10) {$Tsec = "0$Tsec";}
+		$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
+
+	$VDAD_SQL_time = "and event_time > \"$TDSQLdate\" and event_time < \"$FDSQLdate\"";
+	$VDCL_SQL_time = "and call_date > \"$TDSQLdate\" and call_date < \"$FDSQLdate\"";
+	$QM_SQL_time = "and time_id > $TDtarget and time_id < $FDtarget";
+	$QM_SQL_time_H = "and time_id > $TDtarget and time_id < $HDtarget";
 	}
 
 # default path to astguiclient configuration file:
@@ -759,6 +790,208 @@ if ($TEST < 1)
 if ($DB) {print STDERR "     Bad Closer times recalculated: $affected_rows\n\n";}
 
 
+
+
+
+
+
+##### BEGIN vicidial_agent_log sec validation #####
+if ($skip_agent_log_validation < 1)
+	{
+	if ($DBX) {print "\n\n";}
+	if ($DB) {print " - starting validation of vicidial_agent_log sec fields\n";}
+	$total_corrected_records=0;
+	$total_scanned_records=0;
+	$total_pause=0;
+	$total_wait=0;
+	$total_talk=0;
+	$total_dispo=0;
+	$total_dead=0;
+
+	### Gather distinct users in vicidial_agent_log during time period
+	$stmtA = "SELECT distinct user from vicidial_agent_log where user != '' $VDAD_SQL_time;";
+	if ($DBX) {print "$stmtA\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArowsU=$sthA->rows;
+
+	$i=0;
+	while ($sthArowsU > $i)
+		{
+		@aryA = $sthA->fetchrow_array;	
+		$Vuser[$i]	=		$aryA[0];
+		$i++;
+		}
+	$sthA->finish();
+
+	$i=0;
+	while ($sthArowsU > $i)
+		{
+		### Gather distinct users in vicidial_agent_log during time period
+		$stmtA = "SELECT agent_log_id,pause_epoch,pause_sec,wait_epoch,wait_sec,talk_epoch,talk_sec,dispo_epoch,dispo_sec,dead_epoch,dead_sec,event_time from vicidial_agent_log where user='$Vuser[$i]' $VDAD_SQL_time;";
+		if ($DBX) {print "$stmtA\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArowsR=$sthA->rows;
+		$r=0;
+		$total_Vrecords=0;
+		@Vagent_log_id =	@MT;
+		@Vpause_epoch =		@MT;
+		@Vpause_sec =		@MT;
+		@Vwait_epoch =		@MT;
+		@Vwait_sec =		@MT;
+		@Vtalk_epoch =		@MT;
+		@Vtalk_sec =		@MT;
+		@Vdispo_epoch =		@MT;
+		@Vdispo_sec =		@MT;
+		@Vdead_epoch =		@MT;
+		@Vdead_sec =		@MT;
+		@Vevent_time =		@MT;
+
+		# gather records
+		while ($sthArowsR > $r)
+			{
+			@aryA = $sthA->fetchrow_array;	
+			$Vagent_log_id[$r] =	$aryA[0];
+			$Vpause_epoch[$r] =		$aryA[1];
+			$Vpause_sec[$r] =		$aryA[2];
+			$Vwait_epoch[$r] =		$aryA[3];
+			$Vwait_sec[$r] =		$aryA[4];
+			$Vtalk_epoch[$r] =		$aryA[5];
+			$Vtalk_sec[$r] =		$aryA[6];
+			$Vdispo_epoch[$r] =		$aryA[7];
+			$Vdispo_sec[$r] =		$aryA[8];
+			$Vdead_epoch[$r] =		$aryA[9];
+			$Vdead_sec[$r] =		$aryA[10];
+			$Vevent_time[$r] =		$aryA[11];
+			$r++;
+			} 
+		$sthA->finish();
+
+		$total_Vrecords = $r;
+		$r=0;
+		while ($sthArowsR > $r)
+			{
+			$NVpause_sec=0;
+			$NVwait_sec=0;
+			$NVtalk_sec=0;
+			$NVdispo_sec=0;
+			$NVdead_sec=0;
+			$next_r = ($r + 1);
+			if ($next_r < $total_Vrecords)
+				{$next_begin_epoch = $Vpause_epoch[$next_r];}
+			else
+				{$next_begin_epoch = 0;}
+			
+			if ( ($Vwait_epoch[$r] < 1000) || ( ($Vwait_epoch[$r] <= $Vpause_epoch[$r]) && ($Vtalk_epoch[$r] < 1000) && ($Vpause_sec[$r] > 0) ) )
+				{
+				$Vwait_epoch[$r] = $next_begin_epoch;
+				$NVpause_sec = ($Vwait_epoch[$r] - $Vpause_epoch[$r]);
+				}
+			else
+				{
+				$NVpause_sec = ($Vwait_epoch[$r] - $Vpause_epoch[$r]);
+				if ($Vtalk_epoch[$r] < 1000)
+					{
+					$Vtalk_epoch[$r] = $next_begin_epoch;
+					$NVwait_sec = ($Vtalk_epoch[$r] - $Vwait_epoch[$r]);
+					}
+				else
+					{
+					$NVwait_sec = ($Vtalk_epoch[$r] - $Vwait_epoch[$r]);
+					if ($Vdispo_epoch[$r] < 1000)
+						{
+						$Vdispo_epoch[$r] = $next_begin_epoch;
+						$NVtalk_sec = ($Vdispo_epoch[$r] - $Vtalk_epoch[$r]);
+						}
+					else
+						{
+						$NVtalk_sec = ($Vdispo_epoch[$r] - $Vtalk_epoch[$r]);
+						if ($next_begin_epoch < 1000)
+							{
+							$NVdispo_sec = $Vdispo_sec[$r];
+							}
+						else
+							{
+							$NVdispo_sec = ($next_begin_epoch - $Vdispo_epoch[$r]);
+							}
+						}
+					}
+				}
+
+			if ( ($NVpause_sec > 43999) || ($NVpause_sec < 0) )		{$NVpause_sec = 0;}
+			if ( ($NVwait_sec > 43999) || ($NVwait_sec < 0) )		{$NVwait_sec = 0;}
+			if ( ($NVtalk_sec > 43999) || ($NVtalk_sec < 0) )		{$NVtalk_sec = 0;}
+			if ( ($NVdispo_sec > 43999) || ($NVdispo_sec < 0) )		{$NVdispo_sec = 0;}
+
+			$corrections=0;
+			$corrections_LOG='';
+			$corrections_SQL='';
+			if ( ($NVpause_sec > $Vpause_sec[$r]) || ($NVpause_sec < $Vpause_sec[$r]) )
+				{
+				$corrections++;
+				$total_pause++;
+				$corrections_LOG .= "PAUSE:$NVpause_sec!$Vpause_sec[$r]|";
+				$corrections_SQL .= "pause_sec='$NVpause_sec',";
+				}
+			if ( ($NVwait_sec > $Vwait_sec[$r]) || ($NVwait_sec < $Vwait_sec[$r]) )
+				{
+				$corrections++;
+				$total_wait++;
+				$corrections_LOG .= "WAIT:$NVwait_sec!$Vwait_sec[$r]|";
+				$corrections_SQL .= "wait_sec='$NVwait_sec',";
+				}
+			if ( ($NVtalk_sec > $Vtalk_sec[$r]) || ($NVtalk_sec < $Vtalk_sec[$r]) )
+				{
+				$corrections++;
+				$total_talk++;
+				$corrections_LOG .= "TALK:$NVtalk_sec!$Vtalk_sec[$r]|";
+				$corrections_SQL .= "talk_sec='$NVtalk_sec',";
+				}
+			if ( ($NVdispo_sec > $Vdispo_sec[$r]) || ($NVdispo_sec < $Vdispo_sec[$r]) )
+				{
+				$corrections++;
+				$total_dispo++;
+				$corrections_LOG .= "DISPO:$NVdispo_sec!$Vdispo_sec[$r]|";
+				$corrections_SQL .= "dispo_sec='$NVdispo_sec',";
+				}
+			if ($NVtalk_sec < $Vdead_sec[$r])
+				{
+				$corrections++;
+				$total_dead++;
+				$corrections_LOG .= "DEAD:$NVtalk_sec!$Vdead_sec[$r]|";
+				}
+
+			if ($corrections > 0)
+				{
+				$total_corrected_records++;
+				chop($corrections_SQL);
+				if ($DB > 0) {print "$Vevent_time[$r] $Vuser[$i] $corrections  $Vagent_log_id[$r]   $corrections_LOG   $corrections_SQL\n";}
+				$stmtA = "UPDATE vicidial_agent_log set $corrections_SQL where agent_log_id='$Vagent_log_id[$r]';";
+					if($DBX){print STDERR "|$stmtA|\n";}
+				if ($TEST < 1)
+					{
+					$affected_rows = $dbhA->do($stmtA); 	
+					}
+				}
+
+			$total_scanned_records++;
+			$r++;
+			} 
+
+		$i++;
+		} 
+
+	if ($DB) {print " - finished validation of vicidial_agent_log sec fields:\n";}
+	if ($DB) {print "     records scanned/corrected:  $total_scanned_records / $total_corrected_records\n";}
+	if ($DB) {print "        PAUSE updates: $total_pause\n";}
+	if ($DB) {print "        WAIT updates:	$total_wait\n";}
+	if ($DB) {print "        TALK updates:	$total_talk\n";}
+	if ($DB) {print "        DISPO updates: $total_dispo\n";}
+	if ($DB) {print "        DEAD updates:	$total_dead\n";}
+	if ($DB) {print "     distinct users: $i\n";}
+	}
+##### END vicidial_agent_log sec validation #####
 
 
 

@@ -89,6 +89,7 @@
 # 91123-1802 - Added outbound_autodial field, and exception for outbound-only agents on blended campaign
 # 91213-1856 - Added queue_position to queue_log ABANDON records
 # 100309-0551 - Added queuemetrics_loginout option
+# 100327-1359 - Fixed LAGGED issues
 #
 
 
@@ -1331,53 +1332,46 @@ while($one_day_interval > 0)
 								 &event_logger;
 								}
 
-							if ($KLcallerid[$kill_vac] !~ /^M\d\d\d\d\d\d\d\d\d\d/)
-								{
-								$stmtA = "UPDATE vicidial_live_agents set status='PAUSED',random_id='10' where callerid='$KLcallerid[$kill_vac]';";
-								$Vaffected_rows = $dbhA->do($stmtA);
-
-								if ($Vaffected_rows > 0)
-									{
-									$stmtA = "SELECT agent_log_id,user from vicidial_live_agents where callerid='$KLcallerid[$kill_vac]';";
-									$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-									$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-									$sthArowsML=$sthA->rows;
-									$lagged_ids=0;
-									while ($sthArowsML > $lagged_ids)
-										{
-										@aryA = $sthA->fetchrow_array;
-										$MLAGagent_log_id[$lagged_ids] =	$aryA[0];
-										$MLAGuser[$lagged_ids] =			$aryA[1];
-										$lagged_ids++;
-										}
-									$sthA->finish();
-									$lagged_ids=0;
-									while ($sthArowsML > $lagged_ids)
-										{
-										$stmtA = "UPDATE vicidial_agent_log set sub_status='LAGGED' where agent_log_id='$MLAGagent_log_id[$lagged_ids]';";
-										$VLaffected_rows = $dbhA->do($stmtA);
-
-										if ($enable_queuemetrics_logging > 0)
-											{
-											$secX = time();
-											$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
-											 or die "Couldn't connect to database: " . DBI->errstr;
-
-											if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
-
-											$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='NONE',agent='Agent/$MLAGuser[$lagged_ids]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LAGGED';";
-											$Baffected_rows = $dbhB->do($stmtB);
-
-											$dbhB->disconnect();
-											}
-
-										$lagged_ids++;
-										}
-
-									$event_string = "|     dead call vla agent PAUSED $Vaffected_rows|$VLaffected_rows|$CLlead_id|$CLphone_number|$CLstatus|";
-									 &event_logger;
-									}
-								}
+					#		if ($KLcallerid[$kill_vac] !~ /^M\d\d\d\d\d\d\d\d\d\d/)
+					#			{
+					#			$stmtA = "UPDATE vicidial_live_agents set status='PAUSED',random_id='10' where callerid='$KLcallerid[$kill_vac]';";
+					#			$Vaffected_rows = $dbhA->do($stmtA);
+					#			if ($Vaffected_rows > 0)
+					#				{
+					#				$stmtA = "SELECT agent_log_id,user from vicidial_live_agents where callerid='$KLcallerid[$kill_vac]';";
+					#				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					#				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					#				$sthArowsML=$sthA->rows;
+					#				$lagged_ids=0;
+					#				while ($sthArowsML > $lagged_ids)
+					#					{
+					#					@aryA = $sthA->fetchrow_array;
+					#					$MLAGagent_log_id[$lagged_ids] =	$aryA[0];
+					#					$MLAGuser[$lagged_ids] =			$aryA[1];
+					#					$lagged_ids++;
+					#					}
+					#				$sthA->finish();
+					#				$lagged_ids=0;
+					#				while ($sthArowsML > $lagged_ids)
+					#					{
+					#					$stmtA = "UPDATE vicidial_agent_log set sub_status='LAGGED' where agent_log_id='$MLAGagent_log_id[$lagged_ids]';";
+					#					$VLaffected_rows = $dbhA->do($stmtA);
+					#					if ($enable_queuemetrics_logging > 0)
+					#						{
+					#						$secX = time();
+					#						$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+					#						 or die "Couldn't connect to database: " . DBI->errstr;
+					#						if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+					#						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='NONE',agent='Agent/$MLAGuser[$lagged_ids]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LAGGED';";
+					#						$Baffected_rows = $dbhB->do($stmtB);
+					#						$dbhB->disconnect();
+					#						}
+					#					$lagged_ids++;
+					#					}
+					#				$event_string = "|     dead call vla agent PAUSED $Vaffected_rows|$VLaffected_rows|$CLlead_id|$CLphone_number|$CLstatus|";
+					#				 &event_logger;
+					#				}
+					#			}
 
 							if ( ($enable_queuemetrics_logging > 0) && ($CLstatus =~ /LIVE/) )
 								{
@@ -1790,7 +1784,7 @@ while($one_day_interval > 0)
 
 		if ($toPAUSEcount > 0)
 			{
-			$stmtA = "SELECT agent_log_id,user from vicidial_live_agents where server_ip='$server_ip' and last_update_time < '$PDtsSQLdate' and status NOT IN('PAUSED');";
+			$stmtA = "SELECT agent_log_id,user,server_ip,campaign_id,user_group from vicidial_live_agents where server_ip='$server_ip' and last_update_time < '$PDtsSQLdate' and status NOT IN('PAUSED');";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArowsL=$sthA->rows;
@@ -1800,18 +1794,24 @@ while($one_day_interval > 0)
 				@aryA = $sthA->fetchrow_array;
 				$LAGagent_log_id[$lagged_ids] =	$aryA[0];
 				$LAGuser[$lagged_ids] =			$aryA[1];
+				$LAGserver_ip[$lagged_ids] =	$aryA[2];
+				$LAGcampaign_id[$lagged_ids] =	$aryA[3];
+				$LAGuser_group[$lagged_ids] =	$aryA[4];
 				$lagged_ids++;
 				}
 			$sthA->finish();
 			$lagged_ids=0;
 			while ($sthArowsL > $lagged_ids)
 				{
+				$secX = time();
 				$stmtA = "UPDATE vicidial_agent_log set sub_status='LAGGED' where agent_log_id='$LAGagent_log_id[$lagged_ids]';";
+				$VLaffected_rows = $dbhA->do($stmtA);
+
+				$stmtA = "INSERT INTO vicidial_agent_log set event_time='$now_date',server_ip='$LAGserver_ip[$lagged_ids]',campaign_id='$LAGcampaign_id[$lagged_ids]',user_group='$LAGuser_group[$lagged_ids]',user='$LAGuser[$lagged_ids]',pause_epoch='$secX',pause_sec='0',wait_epoch='$secX';";
 				$VLaffected_rows = $dbhA->do($stmtA);
 
 				if ($enable_queuemetrics_logging > 0)
 					{
-					$secX = time();
 					$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
 					 or die "Couldn't connect to database: " . DBI->errstr;
 
