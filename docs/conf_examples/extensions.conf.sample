@@ -380,6 +380,8 @@ exten => 8307,3,Hangup
 ; this is used for playing a message to an answering machine forwarded from AMD in VICIDIAL
 exten => 8320,1,AGI(VD_amd.agi,${EXTEN}-----YES)
 exten => 8320,2,Hangup
+exten => _8320*.,1,AGI(VD_amd.agi,${EXTEN}-----YES)
+exten => _8320*.,2,Hangup
 
 ; use for selective CallerID hangup by area code(hard-coded)
 exten => 8352,1,AGI(agi-VDADselective_CID_hangup.agi,${EXTEN})

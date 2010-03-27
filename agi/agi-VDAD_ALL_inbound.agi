@@ -1863,7 +1863,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 				if ($sthArows > 0)
 					{
-					$stmtA = "UPDATE vicidial_live_inbound_agents set calls_today='$calls_today' WHERE user='$VDADuser' and group_id='$channel_group';";
+					$stmtA = "UPDATE vicidial_live_inbound_agents set calls_today='$calls_today',last_call_time=NOW() WHERE user='$VDADuser' and group_id='$channel_group';";
 					$affected_rows = $dbhA->do($stmtA);
 						$dbhP=$dbhA;   $mysql_count='02050';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 					$stmtA = "UPDATE vicidial_inbound_group_agents set calls_today='$calls_today' WHERE user='$VDADuser' and group_id='$channel_group';";
@@ -2337,7 +2337,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 				if ($sthArows > 0)
 					{
-					$stmtA = "UPDATE vicidial_live_inbound_agents set calls_today='$calls_today' WHERE user='$VDADuser' and group_id='$channel_group';";
+					$stmtA = "UPDATE vicidial_live_inbound_agents set calls_today='$calls_today',last_call_time=NOW() WHERE user='$VDADuser' and group_id='$channel_group';";
 					$affected_rows = $dbhA->do($stmtA);
 						$dbhP=$dbhA;   $mysql_count='02070';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 					$stmtA = "UPDATE vicidial_inbound_group_agents set calls_today='$calls_today' WHERE user='$VDADuser' and group_id='$channel_group';";

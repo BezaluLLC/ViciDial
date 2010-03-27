@@ -698,6 +698,29 @@ if ($did < 1)
 		$TOTALdeadSECONDS = ($TOTALdeadSECONDS + $dead_sec);
 		$TOTALcustomerSECONDS = ($TOTALcustomerSECONDS + $customer_sec);
 
+		if ($DB > 0)
+			{
+			$DBtotal_sec = ($pause_sec + $wait_sec + $talk_sec + $dispo_sec);
+			$DBdatetime = explode(" ",$event_time);
+			$DBdate = explode("-",$DBdatetime[0]);
+			$DBtime = explode(":",$DBdatetime[1]);
+	
+			$DBcall_end_sec = mktime($DBtime[0], $DBtime[1], ($DBtime[2] + $DBtotal_sec), $DBdate[1], $DBdate[2], $DBdate[0]);
+			$DBcall_end = date("Y-m-d H:i:s",$DBcall_end_sec);
+			echo "<tr $bgcolor>";
+			echo "<td><font size=1> &nbsp;</td>";
+			echo "<td><font size=2>$DBcall_end</td>";
+			echo "<td align=right><font size=2> $DBtotal_sec </td>\n";
+			echo "<td align=right><font size=2> &nbsp; </td>\n";
+			echo "<td align=right><font size=2> &nbsp; </td>\n";
+			echo "<td align=right><font size=2> &nbsp; </td>\n";
+			echo "<td align=right><font size=2> &nbsp; </td>\n";
+			echo "<td align=right><font size=2> &nbsp; </td>\n";
+			echo "<td align=right><font size=2> &nbsp; </td>\n";
+			echo "<td align=right><font size=2> &nbsp; </td>\n";
+			echo "<td align=right><font size=2> &nbsp; </td>\n";
+			echo "<td align=right><font size=2> &nbsp; </td></tr>\n";
+			}
 
 		$u++;
 		echo "<tr $bgcolor>";

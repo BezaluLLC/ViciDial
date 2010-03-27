@@ -285,10 +285,11 @@
 # 100313-0053 - Added display options for transfer/conf buttons
 # 100315-1148 - fix for rare recording_log uniqueid issue on manual dial calls to same number
 # 100317-1301 - Added agent_fullscreen User Group option
+# 100327-0901 - fix for manual dial answering machine message
 #
 
-$version = '2.4-263';
-$build = '100317-1301';
+$version = '2.4-264';
+$build = '100327-0901';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -3999,7 +4000,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				no_delete_VDAC=0;
 				if (taskvar == 'XfeRVMAIL')
 					{
-					var blindxferdialstring = campaign_am_message_exten;
+					var blindxferdialstring = campaign_am_message_exten + '*' + campaign + '*' + document.vicidial_form.phone_code.value + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value;
 					no_delete_VDAC=1;
 					}
 				if (blindxferdialstring.length<'2')

@@ -1,7 +1,7 @@
 <?php
 # manager_send.php    version 2.2.0
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to insert records into the vicidial_manager table to signal Actions to an asterisk server
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -94,10 +94,10 @@
 # 91112-1110 - Added CALLOUTBOUND value to QM entry lookup
 # 91205-2103 - Code cleanup
 # 91213-1208 - Added queue_position to queue_log COMPLETE... records
-#
+# 100327-0846 - Fix for list_id override answering machine message
 
-$version = '2.2.0-46';
-$build = '91213-1208';
+$version = '2.2.0-47';
+$build = '100327-0846';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -733,39 +733,6 @@ if ($ACTION=="RedirectVD")
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02024',$user,$server_ip,$session_name,$one_mysql_log);}
-			}
-		else
-			{
-			if (strlen($lead_id) > 1)
-				{
-				$list_id='';
-				$stmt = "SELECT list_id FROM vicidial_list where lead_id='$lead_id';";
-				$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02084',$user,$server_ip,$session_name,$one_mysql_log);}
-				if ($DB) {echo "$stmt\n";}
-				$lio_ct = mysql_num_rows($rslt);
-				if ($lio_ct > 0)
-					{
-					$row=mysql_fetch_row($rslt);
-					$list_id =	$row[0];
-
-					if (strlen($list_id) > 1)
-						{
-						$stmt = "SELECT am_message_exten_override FROM vicidial_lists where list_id='$list_id';";
-						$rslt=mysql_query($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02085',$user,$server_ip,$session_name,$one_mysql_log);}
-						if ($DB) {echo "$stmt\n";}
-						$lio_ct = mysql_num_rows($rslt);
-						if ($lio_ct > 0)
-							{
-							$row=mysql_fetch_row($rslt);
-							$am_message_exten_override =	$row[0];
-							if (strlen($am_message_exten_override) > 0) {$exten = "$am_message_exten_override";}
-							}
-						}
-					}
-				}
-
 			}
 		$ACTION="Redirect";
 		}

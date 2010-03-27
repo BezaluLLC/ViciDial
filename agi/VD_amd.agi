@@ -18,6 +18,8 @@
 # 
 # exten => 8320,1,AGI(VD_amd.agi,${EXTEN}-----YES)
 # exten => 8320,2,Hangup
+# exten => _8320*.,1,AGI(VD_amd.agi,${EXTEN}-----YES)
+# exten => _8320*.,2,Hangup
 #
 # Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -32,6 +34,7 @@
 # 90916-1317 - Changed to audio file playback and TTS playback
 # 90924-1533 - Added answering machine message list_id override option
 # 100205-1025 - Fixed CPD send to message
+# 100327-0819 - Fixed issue with Manual dial treansfers
 #
 
 $script = 'VD_amd.agi';
@@ -111,14 +114,13 @@ while ($sthArows > $rec_count)
 	{
 	$AGILOG = '0';
 	@aryA = $sthA->fetchrow_array;
-	$DBagi_output =			"$aryA[0]";
+	$DBagi_output =			$aryA[0];
 	if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
 	if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
 	if ($DBagi_output =~ /BOTH/)	{$AGILOG = '3';}
 	$rec_count++;
 	}
 $sthA->finish();
-
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -162,6 +164,17 @@ while(<STDIN>)
 	if (/^agi_calleridname\:\s+(.*)$/)	{$calleridname = $1;}
 	}
 
+# extension variables if set: 8320*TESTCAMP*1*9998888112*194239
+if ($extension =~ /\*/)
+	{
+	@EXT_vars = split(/\*/, $extension);
+	$referring_extension =	$EXT_vars[0];
+	$CLIcampaign_id =		$EXT_vars[1];
+	$CLIphone_code = 		$EXT_vars[2];
+	$CLIphone_number =		$EXT_vars[3];
+	$CLIlead_id =			$EXT_vars[4];
+	}
+
 if ( (length($callerid)>20) && ($callerid =~ /\"\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) )
 	{
 	$callerid =~ s/^\"//gi;
@@ -201,6 +214,7 @@ $callerid =~ s/\"//gi;
 $CIDlead_id = $callerid;
 $CIDlead_id = substr($CIDlead_id, 11, 9);
 $CIDlead_id = ($CIDlead_id + 0);
+if ( ($CLIlead_id > 0) && ($CIDlead_id < 1) ) {$CIDlead_id = $CLIlead_id;}
 $VD_lead_id = $CIDlead_id;
 
 if ($AGILOG) {$agi_string = "+++++ VD amd START : |$CIDlead_id|$now_date|$AST_ver|$priority|$calleridname|";   &agi_output;}
@@ -269,7 +283,7 @@ else
 	while ($sthArows > $rec_count)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$DBext_context	= "$aryA[0]";
+		$DBext_context	= $aryA[0];
 		if ($DBext_context)		{$ext_context = $DBext_context;}
 		 $rec_count++;
 		}
@@ -278,20 +292,24 @@ else
 
 	########## FIND vicidial_auto_calls record ##########
 	$stmtA = "SELECT campaign_id,phone_code,phone_number FROM vicidial_auto_calls where callerid='$callerid' order by auto_call_id desc limit 1;";
-		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
-	 $rec_count=0;
-	while ($sthArows > $rec_count)
+	if ($AGILOG) {$agi_string = "$sthArows|$stmtA|";   &agi_output;}
+	if ($sthArows > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$VD_campaign_id		= "$aryA[0]";
-		$VD_phone_code		= "$aryA[1]";
-		$VD_phone_number	= "$aryA[2]";
-		$rec_count++;
+		$VD_campaign_id		= $aryA[0];
+		$VD_phone_code		= $aryA[1];
+		$VD_phone_number	= $aryA[2];
+		$sthA->finish();
 		}
-	$sthA->finish();
+	if ( (length($CLIcampaign_id) > 1) && (length($VD_campaign_id) < 1) )
+		{$VD_campaign_id = $CLIcampaign_id;}
+	if ( (length($CLIphone_code) > 1) && (length($VD_phone_code) < 1) )
+		{$VD_phone_code = $CLIphone_code;}
+	if ( (length($CLIphone_number) > 1) && (length($VD_phone_number) < 1) )
+		{$VD_phone_number = $CLIphone_number;}
 
 	if ($AMDSTATUS !~ /CPD/)
 		{
@@ -317,7 +335,7 @@ else
 	while ($sthArows > $epc_countCUSTDATA)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$VD_start_epoch		= "$aryA[0]";
+		$VD_start_epoch		= $aryA[0];
 		$epc_countCUSTDATA++;
 		}
 	$sthA->finish();

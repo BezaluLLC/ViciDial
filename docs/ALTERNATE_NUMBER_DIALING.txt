@@ -6,6 +6,12 @@ ALTERNATE NUMBER DIALING Redesign				2008-08-20
 
 As of the 2.2.0 version a lot of bugs have been fixed, and DNC statuses can now be used as auto-alt-dial triggering statuses
 
+Some important rules:
+- never duplicate the same number for the same lead in phone_number, alt_phone, address3 or any of the vicidial_list_alt_phones entries, doing so will mess up the auto-alt-dialing process causing numbers to be dialed many more times than they should
+- make sure you do not have conflicting lead recycling and auto-alt-dial statuses, this can cause other duplicate dialing problems
+
+
+
 
 In order to allow for more alt-numbers per lead to dial we built a new method of storing and dialing alt-numbers for leads.
 

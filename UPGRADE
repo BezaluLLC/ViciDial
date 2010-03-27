@@ -105,6 +105,11 @@ OTHER CHANGES:
 	because you can set the call to go to a voicemail box in the selected
 	in-group by using AGENTVMAIL in the voicemail field of the in-group.
 
+22. Add the following lines to the extensions.conf to fix bug with manual dial
+	leave answering machine message(put in the default context):
+		exten => _8320*.,1,AGI(VD_amd.agi,${EXTEN}-----YES)
+		exten => _8320*.,2,Hangup
+
 
 
 
