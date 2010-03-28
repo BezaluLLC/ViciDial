@@ -4,7 +4,7 @@
 #
 # This script is designed to put all  records from call_log, vicidial_log and 
 # vicidial_agent_log in relevant _archive tables and delete records in original
-# tables older than 2 months from current date. Also, deletes old
+# tables older than X months from current date. Also, deletes old
 # server_performance table records without archiving them as well as optimizing
 # all involved tables.
 #
@@ -18,7 +18,7 @@
 #
 # original author: I. Taushanov(okli)
 # Based on perl scripts in ViciDial from Matt Florell and post: 
-# http://www.eflo.net/VICIDIALforum/viewtopic.php?p=22506&sid=ca5347cffa6f6382f56ce3db9fb3d068#22506
+# http://www.vicidial.org/VICIDIALforum/viewtopic.php?p=22506&sid=ca5347cffa6f6382f56ce3db9fb3d068#22506
 #
 # Copyright (C) 2010  I. Taushanov, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -27,6 +27,7 @@
 # 100101-1722 - Added error safety checks
 # 100103-2052 - Formatting fixes, name change, added initial table counts and added archive tables to official SQL files
 # 100109-1018 - Added vicidial_carrier_log archiving
+# 100328-1008 - Added --months CLI option
 #
 
 ### begin parsing run-time options ###
@@ -41,7 +42,10 @@ if (length($ARGV[0])>1)
 
 	if ($args =~ /--help/i)
 		{
-		print "allowed run time options:\n  [-q] = quiet\n  [-t] = test\n\n";
+		print "allowed run time options:\n";
+		print "  [--months=XX] = number of months to archive past, must be 12 or less, default is 2\n";
+		print "  [-q] = quiet\n";
+		print "  [-t] = test\n\n";
 		exit;
 		}
 	else
@@ -55,6 +59,17 @@ if (length($ARGV[0])>1)
 			$T=1;   $TEST=1;
 			print "\n-----TESTING-----\n\n";
 			}
+		if ($args =~ /--months=/i)
+			{
+			@data_in = split(/--months=/,$args);
+			$CLImonths = $data_in[1];
+			$CLImonths =~ s/ .*$//gi;
+			$CLImonths =~ s/\D//gi;
+			if ($CLImonths > 12)
+				{$CLImonths=12;}
+			if ($Q < 1) 
+				{print "\n----- MONTHS OVERRIDE: $CLImonths -----\n\n";}
+			}
 		}
 	}
 else
@@ -62,13 +77,13 @@ else
 	print "no command line options set\n";
 	}
 ### end parsing run-time options ###
-
+if ( ($CLImonths > 12) || ($CLImonths < 1) )
+	{$CLImonths=2;}
 
 $secX = time();
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 $year = ($year + 1900);
-#change 2 to how many months old records to be moved and deleted
-$mon = ($mon - 2);
+$mon = ($mon - $CLImonths);
 if ($mon < 0) 		
 	{		
 	$mon = ($mon + 12);
@@ -80,9 +95,11 @@ if ($mday < 10) {$mday = "0$mday";}
 
 $del_time = "$year-$mon-$mday 01:00:00";
 
-
-if (!$Q) {print "\n\n\n\n-- ADMIN_archive_log_tables.pl --\n\n";}
-if (!$Q) {print "This program is designed to put all records from  call_log, vicidial_log, server_performance and vicidial_agent_log in relevant _archive tables \nand delete records in original tables older than 2 months ( $del_time ) from current date \n\n";}
+if (!$Q) {print "\n\n-- ADMIN_archive_log_tables.pl --\n\n";}
+if (!$Q) {print "This program is designed to put all records from  call_log, vicidial_log,\n";}
+if (!$Q) {print "server_performance, vicidial_agent_log and vicidial_carrier_log in relevant\n";}
+if (!$Q) {print "_archive tables and delete records in original tables older than\n";}
+if (!$Q) {print "$CLImonths months ( $del_time ) from current date \n\n";}
 
 
 # default path to astguiclient configuration file:
