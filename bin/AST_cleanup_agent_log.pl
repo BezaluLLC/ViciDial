@@ -26,6 +26,7 @@
 # 100203-1110 - Added fix for vicidial_closer_log records with 0 length
 # 100309-0555 - Added queuemetrics_loginout option
 # 100327-0926 - Added validation of four agent "sec" fields
+# 100331-0310 - Added one-day-ago and only-fix-old-lagged options, fixed validation process
 #
 
 # constants
@@ -50,10 +51,12 @@ if (length($ARGV[0])>1)
 		print "  [-last-24hours] = will clean up logs for the last 24 hours only\n";
 		print "  [-more-than-24hours] = will clean up logs older than 24 hours only\n";
 		print "  [-last-30days] = will clean up logs for the last 30 days only\n";
+		print "  [-one-day-ago] = will clean up logs for the last 24-48 hours ago only\n";
 		print "  [-skip-queue-log-inserts] = will skip only the queue_log missing record checks\n";
 		print "  [-skip-agent-log-validation] = will skip only the vicidial_agent_log validation\n";
 		print "  [-only-check-agent-login-lags] = will only fix queue_log missing PAUSEREASON records\n";
 		print "  [-only-qm-live-call-check] = will only check the queue_log calls that report as live, in ViciDial\n";
+		print "  [-only-fix-old-lagged] = will go through old lagged entries and add a new entry after\n";
 		print "  [-q] = quiet, no output\n";
 		print "  [-test] = test\n";
 		print "  [-debug] = verbose debug messages\n";
@@ -84,6 +87,7 @@ if (length($ARGV[0])>1)
 			}
 		if ($args =~ /-no-time-restriction/i)
 			{
+			$VAL_validate=1;
 			$ALL_TIME=1;
 			if ($Q < 1) {print "\n----- NO TIME RESTRICTIONS -----\n\n";}
 			}
@@ -99,16 +103,25 @@ if (length($ARGV[0])>1)
 			}
 		if ($args =~ /-last-24hours/i)
 			{
+			$VAL_validate=1;
 			$TWENTYFOUR_HOURS=1;
 			if ($Q < 1) {print "\n----- LAST 24 HOURS ONLY -----\n\n";}
 			}
+		if ($args =~ /-one-day-ago/i)
+			{
+			$VAL_validate=1;
+			$ONEDAYAGO=1;
+			if ($Q < 1) {print "\n----- ONE DAY AGO ONLY -----\n\n";}
+			}
 		if ($args =~ /-last-30days/i)
 			{
+			$VAL_validate=1;
 			$THIRTY_DAYS=1;
 			if ($Q < 1) {print "\n----- LAST 30 DAYS ONLY -----\n\n";}
 			}
 		if ($args =~ /-more-than-24hours/i)
 			{
+			$VAL_validate=1;
 			$TWENTYFOUR_OLDER=1;
 			if ($Q < 1) {print "\n----- MORE THAN 24 HOURS OLD ONLY -----\n\n";}
 			}
@@ -121,6 +134,11 @@ if (length($ARGV[0])>1)
 			{
 			$skip_agent_log_validation=1;
 			if ($Q < 1) {print "\n----- SKIPPING VICIDIAL_AGENT_LOG VALIDATION -----\n\n";}
+			}
+		if ($args =~ /-only-fix-old-lagged/i)
+			{
+			$fix_old_lagged_entries=1;
+			if ($Q < 1) {print "\n----- FIX OLD LAGGED ENTRIES ONLY -----\n\n";}
 			}
 		}
 	}
@@ -193,6 +211,35 @@ if ($TWENTYFOUR_HOURS > 0)
 	$VDCL_SQL_time = "and call_date > \"$TDSQLdate\" and call_date < \"$FDSQLdate\"";
 	$QM_SQL_time = "and time_id > $TDtarget and time_id < $FDtarget";
 	$QM_SQL_time_H = "and time_id > $TDtarget and time_id < $HDtarget";
+	}
+if ($ONEDAYAGO > 0)
+	{
+	$TDtarget = ($secX - 86400); # 24 hours in the past
+	($Tsec,$Tmin,$Thour,$Tmday,$Tmon,$Tyear,$Twday,$Tyday,$Tisdst) = localtime($TDtarget);
+	$Tyear = ($Tyear + 1900);
+	$Tmon++;
+	if ($Tmon < 10) {$Tmon = "0$Tmon";}
+	if ($Tmday < 10) {$Tmday = "0$Tmday";}
+	if ($Thour < 10) {$Thour = "0$Thour";}
+	if ($Tmin < 10) {$Tmin = "0$Tmin";}
+	if ($Tsec < 10) {$Tsec = "0$Tsec";}
+		$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
+
+	$KDtarget = ($secX - 172800); # 48 hours in the past
+	($Ksec,$Kmin,$Khour,$Kmday,$Kmon,$Kyear,$Kwday,$Kyday,$Kisdst) = localtime($KDtarget);
+	$Kyear = ($Kyear + 1900);
+	$Kmon++;
+	if ($Kmon < 10) {$Kmon = "0$Kmon";}
+	if ($Kmday < 10) {$Kmday = "0$Kmday";}
+	if ($Khour < 10) {$Khour = "0$Khour";}
+	if ($Kmin < 10) {$Kmin = "0$Kmin";}
+	if ($Ksec < 10) {$Ksec = "0$Ksec";}
+		$KDSQLdate = "$Kyear-$Kmon-$Kmday $Khour:$Kmin:$Ksec";
+
+	$VDAD_SQL_time = "and event_time > \"$KDSQLdate\" and event_time < \"$TDSQLdate\"";
+	$VDCL_SQL_time = "and call_date > \"$KDSQLdate\" and call_date < \"$TDSQLdate\"";
+	$QM_SQL_time = "and time_id > $KDtarget and time_id < $TDtarget";
+	$QM_SQL_time_H = "and time_id > $KDtarget and time_id < $TDtarget";
 	}
 if ($TWENTYFOUR_OLDER > 0)
 	{
@@ -303,6 +350,97 @@ $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
 ###########################################
 
+
+##### BEGIN fix_old_lagged_entries process (not recurring process, only run once) #####
+if ($fix_old_lagged_entries > 0)
+	{
+	if ($DBX) {print "\n\n";}
+	if ($DB) {print " - starting validation of vicidial_agent_log sec fields\n";}
+	$total_corrected_records=0;
+	$total_scanned_records=0;
+	$total_pause=0;
+	$total_wait=0;
+	$total_talk=0;
+	$total_dispo=0;
+	$total_dead=0;
+
+	### Gather distinct users in vicidial_agent_log during time period
+	$stmtA = "SELECT user,agent_log_id,pause_epoch,wait_epoch,talk_epoch,dispo_epoch,UNIX_TIMESTAMP(event_time),server_ip,campaign_id,user_group from vicidial_agent_log where sub_status='LAGGED' $VDAD_SQL_time;";
+	if ($DBX) {print "$stmtA\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArowsU=$sthA->rows;
+
+	$i=0;
+	while ($sthArowsU > $i)
+		{
+		@aryA = $sthA->fetchrow_array;	
+		$Vuser[$i]	=			$aryA[0];
+		$Vagent_log_id[$i]	=	$aryA[1];
+		$Vpause_epoch[$i]	=	$aryA[2];
+		$Vwait_epoch[$i]	=	$aryA[3];
+		$Vtalk_epoch[$i]	=	$aryA[4];
+		$Vdispo_epoch[$i]	=	$aryA[5];
+		$Vevent_epoch[$i]	=	$aryA[6];
+		$Vserver_ip[$i]	=		$aryA[7];
+		$Vcampaign_id[$i]	=	$aryA[8];
+		$Vuser_group[$i]	=	$aryA[9];
+		if ($Vpause_epoch[$i] > 1000) {$Vlast_epoch[$i] = $Vpause_epoch[$i];}
+		if ($Vwait_epoch[$i] > 1000) {$Vlast_epoch[$i] = $Vwait_epoch[$i];}
+		if ($Vtalk_epoch[$i] > 1000) {$Vlast_epoch[$i] = $Vtalk_epoch[$i];}
+		if ($Vdispo_epoch[$i] > 1000) {$Vlast_epoch[$i] = $Vdispo_epoch[$i];}
+		
+		($Ksec,$Kmin,$Khour,$Kmday,$Kmon,$Kyear,$Kwday,$Kyday,$Kisdst) = localtime($Vlast_epoch[$i]);
+		$Kyear = ($Kyear + 1900);
+		$Kmon++;
+		if ($Kmon < 10) {$Kmon = "0$Kmon";}
+		if ($Kmday < 10) {$Kmday = "0$Kmday";}
+		if ($Khour < 10) {$Khour = "0$Khour";}
+		if ($Kmin < 10) {$Kmin = "0$Kmin";}
+		if ($Ksec < 10) {$Ksec = "0$Ksec";}
+		$Vlast_date[$i] = "$Kyear-$Kmon-$Kmday $Khour:$Kmin:$Ksec";
+
+		$i++;
+		}
+	$sthA->finish();
+
+	$i=0;
+	while ($sthArowsU > $i)
+		{
+		### Gather distinct users in vicidial_agent_log during time period
+		$stmtA = "SELECT count(*) from vicidial_agent_log where user='$Vuser[$i]' and pause_epoch='$Vlast_epoch[$i]' $VDAD_SQL_time;";
+		if ($DBX) {print "$stmtA\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		@aryA = $sthA->fetchrow_array;	
+		if ($aryA[0] < 1)
+			{
+			##### insert vicidial_agent_log record
+			$stmtAX = "INSERT INTO vicidial_agent_log SET user='$Vuser[$i]',event_time='$Vlast_date[$i]',pause_epoch='$Vlast_epoch[$i]',wait_epoch='$Vlast_epoch[$i]',pause_sec='0',user_group='$Vuser_group[$i]',campaign_id='$Vcampaign_id[$i]',server_ip='$Vserver_ip[$i]',sub_status='LOGOUT';";
+			if ($TEST < 1)
+				{$VALaffected_rows = $dbhA->do($stmtAX);}
+			if ($DB) {print "     VAL record inserted: $VALaffected_rows|$stmtAX|\n";}
+			$val_fixed++;
+			}
+		else
+			{
+			if ($DB) {print "   VAL record exists: $aryA[0]|$stmtA|\n";}
+			$val_good++;
+			}
+
+		$i++;
+		}
+
+	if ($DB) {print " - finished lagged fixing:\n";}
+	if ($DB) {print "     records scanned:       $i\n";}
+	if ($DB) {print "     records fixed:      $val_fixed\n";}
+	if ($DB) {print "     records good:       $val_good\n";}
+
+	if ($DB) {print "process completed, exiting...\n";}
+
+	exit;
+	}
+##### END fix_old_lagged_entries process #####
 
 
 
@@ -796,7 +934,7 @@ if ($DB) {print STDERR "     Bad Closer times recalculated: $affected_rows\n\n";
 
 
 ##### BEGIN vicidial_agent_log sec validation #####
-if ($skip_agent_log_validation < 1)
+if ( ($skip_agent_log_validation < 1) && ($VAL_validate > 0) )
 	{
 	if ($DBX) {print "\n\n";}
 	if ($DB) {print " - starting validation of vicidial_agent_log sec fields\n";}
@@ -807,9 +945,10 @@ if ($skip_agent_log_validation < 1)
 	$total_talk=0;
 	$total_dispo=0;
 	$total_dead=0;
+	$epoch_changes=0;
 
 	### Gather distinct users in vicidial_agent_log during time period
-	$stmtA = "SELECT distinct user from vicidial_agent_log where user != '' $VDAD_SQL_time;";
+	$stmtA = "SELECT distinct user from vicidial_agent_log where user != '' $VDAD_SQL_time order by user;";
 	if ($DBX) {print "$stmtA\n";}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -828,7 +967,7 @@ if ($skip_agent_log_validation < 1)
 	while ($sthArowsU > $i)
 		{
 		### Gather distinct users in vicidial_agent_log during time period
-		$stmtA = "SELECT agent_log_id,pause_epoch,pause_sec,wait_epoch,wait_sec,talk_epoch,talk_sec,dispo_epoch,dispo_sec,dead_epoch,dead_sec,event_time from vicidial_agent_log where user='$Vuser[$i]' $VDAD_SQL_time;";
+		$stmtA = "SELECT agent_log_id,pause_epoch,pause_sec,wait_epoch,wait_sec,talk_epoch,talk_sec,dispo_epoch,dispo_sec,dead_epoch,dead_sec,event_time from vicidial_agent_log where user='$Vuser[$i]' $VDAD_SQL_time order by event_time, agent_log_id;";
 		if ($DBX) {print "$stmtA\n";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -872,6 +1011,9 @@ if ($skip_agent_log_validation < 1)
 		$r=0;
 		while ($sthArowsR > $r)
 			{
+			$corrections=0;
+			$corrections_LOG='';
+			$corrections_SQL='';
 			$NVpause_sec=0;
 			$NVwait_sec=0;
 			$NVtalk_sec=0;
@@ -882,9 +1024,47 @@ if ($skip_agent_log_validation < 1)
 				{$next_begin_epoch = $Vpause_epoch[$next_r];}
 			else
 				{$next_begin_epoch = 0;}
-			
+			$Vpause_date="1970-01-01 00:00:00";
+			if ($Vpause_epoch[$next_r] > 1000)
+				{
+				($Ksec,$Kmin,$Khour,$Kmday,$Kmon,$Kyear,$Kwday,$Kyday,$Kisdst) = localtime($Vpause_epoch[$next_r]);
+				$Kyear = ($Kyear + 1900);
+				$Kmon++;
+				if ($Kmon < 10) {$Kmon = "0$Kmon";}
+				if ($Kmday < 10) {$Kmday = "0$Kmday";}
+				if ($Khour < 10) {$Khour = "0$Khour";}
+				if ($Kmin < 10) {$Kmin = "0$Kmin";}
+				if ($Ksec < 10) {$Ksec = "0$Ksec";}
+				$Vpause_date = "$Kyear-$Kmon-$Kmday $Khour:$Kmin:$Ksec";
+				$Vpause_dayB = "$Kyear-$Kmon-$Kmday 00:00:00";
+				}
+
+			### find if next record is a LOGIN
+			$LOGOUT_update=0;
+			$stmtA = "SELECT count(*) from vicidial_user_log where user='$Vuser[$i]' and event_date='$Vpause_date' and event='LOGIN';";
+		#	if ($DBX) {print "$stmtA\n";}
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			@aryA = $sthA->fetchrow_array;	
+			if ($aryA[0] > 0)
+				{
+				$stmtA = "SELECT UNIX_TIMESTAMP(event_date),event_date from vicidial_user_log where user='$Vuser[$i]' and event_date < '$Vpause_date' and event_date > \"$Vpause_dayB\" and event='LOGOUT' order by event_date desc limit 1;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				@aryA = $sthA->fetchrow_array;	
+				$next_begin_epoch = $aryA[0];
+				$LOGOUT_update++;
+			#	if ($DBX) {print "$next_begin_epoch|$aryA[1]|$LOGOUT_update|$stmtA\n";}
+				}
+
 			if ( ($Vwait_epoch[$r] < 1000) || ( ($Vwait_epoch[$r] <= $Vpause_epoch[$r]) && ($Vtalk_epoch[$r] < 1000) && ($Vpause_sec[$r] > 0) ) )
 				{
+				if ($LOGOUT_update > 0) 
+					{
+					$corrections_LOG .= "WAITEPOCH:$next_begin_epoch!$Vwait_epoch[$r]|";
+					$corrections_SQL .= "wait_epoch='$next_begin_epoch',";
+					$epoch_changes++;
+					}
 				$Vwait_epoch[$r] = $next_begin_epoch;
 				$NVpause_sec = ($Vwait_epoch[$r] - $Vpause_epoch[$r]);
 				}
@@ -893,6 +1073,12 @@ if ($skip_agent_log_validation < 1)
 				$NVpause_sec = ($Vwait_epoch[$r] - $Vpause_epoch[$r]);
 				if ($Vtalk_epoch[$r] < 1000)
 					{
+					if ($LOGOUT_update > 0) 
+						{
+						$corrections_LOG .= "TALKEPOCH:$next_begin_epoch!$Vtalk_epoch[$r]|";
+						$corrections_SQL .= "talk_epoch='$next_begin_epoch',";
+						$epoch_changes++;
+						}
 					$Vtalk_epoch[$r] = $next_begin_epoch;
 					$NVwait_sec = ($Vtalk_epoch[$r] - $Vwait_epoch[$r]);
 					}
@@ -901,6 +1087,12 @@ if ($skip_agent_log_validation < 1)
 					$NVwait_sec = ($Vtalk_epoch[$r] - $Vwait_epoch[$r]);
 					if ($Vdispo_epoch[$r] < 1000)
 						{
+						if ($LOGOUT_update > 0) 
+							{
+							$corrections_LOG .= "DISPOEPOCH:$next_begin_epoch!$Vdispo_epoch[$r]|";
+							$corrections_SQL .= "dispo_epoch='$next_begin_epoch',";
+							$epoch_changes++;
+							}
 						$Vdispo_epoch[$r] = $next_begin_epoch;
 						$NVtalk_sec = ($Vdispo_epoch[$r] - $Vtalk_epoch[$r]);
 						}
@@ -924,9 +1116,6 @@ if ($skip_agent_log_validation < 1)
 			if ( ($NVtalk_sec > 43999) || ($NVtalk_sec < 0) )		{$NVtalk_sec = 0;}
 			if ( ($NVdispo_sec > 43999) || ($NVdispo_sec < 0) )		{$NVdispo_sec = 0;}
 
-			$corrections=0;
-			$corrections_LOG='';
-			$corrections_SQL='';
 			if ( ($NVpause_sec > $Vpause_sec[$r]) || ($NVpause_sec < $Vpause_sec[$r]) )
 				{
 				$corrections++;
@@ -985,10 +1174,11 @@ if ($skip_agent_log_validation < 1)
 	if ($DB) {print " - finished validation of vicidial_agent_log sec fields:\n";}
 	if ($DB) {print "     records scanned/corrected:  $total_scanned_records / $total_corrected_records\n";}
 	if ($DB) {print "        PAUSE updates: $total_pause\n";}
-	if ($DB) {print "        WAIT updates:	$total_wait\n";}
-	if ($DB) {print "        TALK updates:	$total_talk\n";}
+	if ($DB) {print "        WAIT updates:  $total_wait\n";}
+	if ($DB) {print "        TALK updates:  $total_talk\n";}
 	if ($DB) {print "        DISPO updates: $total_dispo\n";}
-	if ($DB) {print "        DEAD updates:	$total_dead\n";}
+	if ($DB) {print "        DEAD updates:  $total_dead\n";}
+	if ($DB) {print "        EPOCH updates: $epoch_changes\n";}
 	if ($DB) {print "     distinct users: $i\n";}
 	}
 ##### END vicidial_agent_log sec validation #####

@@ -3547,7 +3547,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 							dialedcall_send_hangup();
 							}
-						if ( (APIStatuS.length < 10) && (APIStatuS.length > 0) && (AgentDispoing > 0) )
+						if ( (APIStatuS.length < 10) && (APIStatuS.length > 0) && (AgentDispoing > 1) )
 							{
 							document.vicidial_form.DispoSelection.value = APIStatuS;
 							DispoSelect_submit();
@@ -10249,10 +10249,11 @@ else
 						}
 					}
 				}
-			if (AgentDispoing==1)	
+			if (AgentDispoing > 0)	
 				{
 				WaitingForNextStep=1;
 				check_for_conf_calls(session_id, '0');
+				AgentDispoing++;
 				}
 			if (logout_stop_timeouts==1)	{WaitingForNextStep=1;}
 			if ( (custchannellive < -30) && (lastcustchannel.length > 3) && (no_empty_session_warnings < 1) ) {CustomerChanneLGone();}
