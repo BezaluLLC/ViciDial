@@ -547,7 +547,8 @@ custom_four VARCHAR(100) default '',
 custom_five VARCHAR(100) default '',
 voicemail_id VARCHAR(10),
 agent_call_log_view_override ENUM('DISABLED','Y','N') default 'DISABLED',
-callcard_admin ENUM('1','0') default '0'
+callcard_admin ENUM('1','0') default '0',
+agent_choose_blended ENUM('0','1') default '1'
 );
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -2174,7 +2175,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1209',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1210',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

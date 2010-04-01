@@ -287,10 +287,11 @@
 # 100317-1301 - Added agent_fullscreen User Group option
 # 100327-0901 - fix for manual dial answering machine message
 # 100331-1220 - Added human-readable hangup codes for manual dial
+# 100401-0019 - Added agent_choose_blended option
 #
 
-$version = '2.4-265';
-$build = '100331-1220';
+$version = '2.4-266';
+$build = '100401-0019';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -856,7 +857,7 @@ else
 			$login=strtoupper($VD_login);
 			$password=strtoupper($VD_pass);
 			##### grab the full name of the agent
-			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override from vicidial_users where user='$VD_login' and pass='$VD_pass'";
+			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended from vicidial_users where user='$VD_login' and pass='$VD_pass'";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01007',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysql_fetch_row($rslt);
@@ -884,7 +885,9 @@ else
 			$VU_custom_three =						$row[21];
 			$VU_custom_four =						$row[22];
 			$VU_custom_five =						$row[23];
-			$VU_agent_call_log_view_override =		$row[23];
+			$VU_agent_call_log_view_override =		$row[24];
+			$VU_agent_choose_blended =				$row[25];
+
 
 			if ( ($VU_alert_enabled > 0) and ($VU_allow_alerts > 0) ) {$VU_alert_enabled = 'ON';}
 			else {$VU_alert_enabled = 'OFF';}
@@ -2514,6 +2517,7 @@ $CCAL_OUT .= "</table>";
 	var VU_agent_choose_ingroups_DV = '';
 	var agent_choose_territories = '<?php echo $VU_agent_choose_territories ?>';
 	var agent_select_territories = '<?php echo $agent_select_territories ?>';
+	var agent_choose_blended = '<?php echo $VU_agent_choose_blended ?>';
 	var VU_closer_campaigns = '<?php echo $VU_closer_campaigns ?>';
 	var CallBackDatETimE = '';
 	var CallBackrecipient = '';
@@ -11534,7 +11538,7 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 	<span id="CloserSelectContent"> Closer Inbound Group Selection </span>
 	<input type=hidden name=CloserSelectList><BR>
 	<?php
-	if ( ($outbound_autodial_active > 0) and ($disable_blended_checkbox < 1) and ($dial_method != 'INBOUND_MAN') )
+	if ( ($outbound_autodial_active > 0) and ($disable_blended_checkbox < 1) and ($dial_method != 'INBOUND_MAN') and ($VU_agent_choose_blended > 0) )
 		{
 		?>
 		<input type=checkbox name=CloserSelectBlended size=1 value="0"> BLENDED CALLING(outbound activated) <BR>
@@ -11564,7 +11568,7 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 	<?php
 	if (!$agentonly_callbacks)
 		{echo "<input type=checkbox name=CallBackOnlyMe size=1 value=\"0\"> MY CALLBACK ONLY <BR>";}
-	if ( ($outbound_autodial_active < 1) or ($disable_blended_checkbox > 0) or ($dial_method == 'INBOUND_MAN') )
+	if ( ($outbound_autodial_active < 1) or ($disable_blended_checkbox > 0) or ($dial_method == 'INBOUND_MAN') or ($VU_agent_choose_blended < 1) )
 		{echo "<input type=checkbox name=CloserSelectBlended size=1 value=\"0\"> BLENDED CALLING<BR>";}
 	?>
 </span>

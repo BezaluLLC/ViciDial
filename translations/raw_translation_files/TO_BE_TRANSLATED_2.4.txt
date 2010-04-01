@@ -85,6 +85,8 @@ EXTENSION GROUP LISTINGS||
 Extension Group||
 If set to something other than NONE or empty this will override the External Extension field and use the Extension Group entries that have the same extension group ID. Default is NONE for deactivated||
 Click here to see agents logged in to this inbound group||
+Agent Choose Blended||
+This option if set to 1 allows the user to choose if the agent has their campaign set to blended or not, and if not then the default blended setting will be used. Default is 1 for enabled||
 
 
 AST_VICIDIAL_ingrouplist.php
