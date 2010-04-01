@@ -23156,7 +23156,7 @@ if ($ADD==311111111111111)
 		echo "</form>\n";
 		if ($LOGuser_level >= 9)
 			{
-			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=SYSTEM\">Click here to see Admin chages to the system settings</FONT>\n";
+			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=SYSTEMSETTINGS&stage=system_settings\">Click here to see Admin chages to the system settings</FONT>\n";
 			}
 		}
 	else
@@ -25098,73 +25098,81 @@ if ($ADD==710000000000000)
 
 if ($ADD==720000000000000)
 	{
-	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-
-	$stmt="SELECT admin_log_id,event_date,user,ip_address,event_section,event_type,record_id,event_code from vicidial_admin_log where event_section='$category' and record_id='$stage' order by event_date desc limit 10000;";
-	$rslt=mysql_query($stmt, $link);
-	$logs_to_print = mysql_num_rows($rslt);
-
-	echo "<br>ADMIN CHANGE LOG: Section Records - $category - $stage\n";
-	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
-	echo "<TR BGCOLOR=BLACK>";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>ID</B></TD>";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>DATE TIME</B></TD>";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>USER</B></TD>\n";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>IP</TD>\n";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>SECTION</TD>\n";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>TYPE</TD>\n";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>RECORD ID</TD>\n";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>DESCRIPTION</TD>\n";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>GOTO</TD>\n";
-	echo "</TR>\n";
-
-	$logs_printed = '';
-	$o=0;
-	while ($logs_to_print > $o)
+	if ($LOGuser_level >= 9)
 		{
-		$row=mysql_fetch_row($rslt);
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		if (eregi("USER|AGENT",$row[4])) {$record_link = "ADD=3&user=$row[6]";}
-		if (eregi('CAMPAIGN',$row[4])) {$record_link = "ADD=31&campaign_id=$row[6]";}
-		if (eregi('LIST',$row[4])) {$record_link = "ADD=311&list_id=$row[6]";}
-		if (eregi('SCRIPT',$row[4])) {$record_link = "ADD=3111111&script_id=$row[6]";}
-		if (eregi('FILTER',$row[4])) {$record_link = "ADD=31111111&lead_filter_id=$row[6]";}
-		if (eregi('INGROUP',$row[4])) {$record_link = "ADD=3111&group_id=$row[6]";}
-		if (eregi('DID',$row[4])) {$record_link = "ADD=3311&did_id=$row[6]";}
-		if (eregi('USERGROUP',$row[4])) {$record_link = "ADD=311111&user_group=$row[6]";}
-		if (eregi('REMOTEAGENT',$row[4])) {$record_link = "ADD=31111&remote_agent_id=$row[6]";}
-		if (eregi('PHONE',$row[4])) {$record_link = "ADD=10000000000";}
-		if (eregi('CALLTIME',$row[4])) {$record_link = "ADD=311111111&call_time_id=$row[6]";}
-		if (eregi('SHIFT',$row[4])) {$record_link = "ADD=331111111&shift_id=$row[6]";}
-		if (eregi('CONFTEMPLATE',$row[4])) {$record_link = "ADD=331111111111&template_id=$row[6]";}
-		if (eregi('CARRIER',$row[4])) {$record_link = "ADD=341111111111&carrier_id=$row[6]";}
-		if (eregi('SERVER',$row[4])) {$record_link = "ADD=311111111111&server_id=$row[6]";}
-		if (eregi('CONFERENCE',$row[4])) {$record_link = "ADD=1000000000000";}
-		if (eregi('SYSTEM',$row[4])) {$record_link = "ADD=311111111111111";}
-		if (eregi('CATEGOR',$row[4])) {$record_link = "ADD=331111111111111";}
-		if (eregi('GROUPALIAS',$row[4])) {$record_link = "ADD=33111111111&group_alias_id=$row[6]";}
+		$stmt="SELECT admin_log_id,event_date,user,ip_address,event_section,event_type,record_id,event_code from vicidial_admin_log where event_section='$category' and record_id='$stage' order by event_date desc limit 10000;";
+		$rslt=mysql_query($stmt, $link);
+		$logs_to_print = mysql_num_rows($rslt);
 
-		if (eregi("1$|3$|5$|7$|9$", $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=730000000000000&stage=$row[0]\">$row[0]</a></td>";
-		echo "<td><font size=1> $row[1]</td>";
-		echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=710000000000000&stage=$row[2]\">$row[2]</a></td>";
-		echo "<td><font size=1> $row[3]</td>";
-		echo "<td><font size=1> $row[4]</td>";
-		echo "<td><font size=1> $row[5]</td>";
-		echo "<td><font size=1> $row[6]</td>";
-		echo "<td><font size=1> $row[7]</td>";
-		echo "<td><font size=1> <a href=\"$PHP_SELF?$record_link\">GOTO</a></td>";
-		echo "</tr>\n";
-		$logs_printed .= "'$row[0]',";
-		$o++;
+		echo "<br>ADMIN CHANGE LOG: Section Records - $category - $stage\n";
+		echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+		echo "<TR BGCOLOR=BLACK>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>ID</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>DATE TIME</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>USER</B></TD>\n";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>IP</TD>\n";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>SECTION</TD>\n";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>TYPE</TD>\n";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>RECORD ID</TD>\n";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>DESCRIPTION</TD>\n";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>GOTO</TD>\n";
+		echo "</TR>\n";
+
+		$logs_printed = '';
+		$o=0;
+		while ($logs_to_print > $o)
+			{
+			$row=mysql_fetch_row($rslt);
+
+			if (eregi("USER|AGENT",$row[4])) {$record_link = "ADD=3&user=$row[6]";}
+			if (eregi('CAMPAIGN',$row[4])) {$record_link = "ADD=31&campaign_id=$row[6]";}
+			if (eregi('LIST',$row[4])) {$record_link = "ADD=311&list_id=$row[6]";}
+			if (eregi('SCRIPT',$row[4])) {$record_link = "ADD=3111111&script_id=$row[6]";}
+			if (eregi('FILTER',$row[4])) {$record_link = "ADD=31111111&lead_filter_id=$row[6]";}
+			if (eregi('INGROUP',$row[4])) {$record_link = "ADD=3111&group_id=$row[6]";}
+			if (eregi('DID',$row[4])) {$record_link = "ADD=3311&did_id=$row[6]";}
+			if (eregi('USERGROUP',$row[4])) {$record_link = "ADD=311111&user_group=$row[6]";}
+			if (eregi('REMOTEAGENT',$row[4])) {$record_link = "ADD=31111&remote_agent_id=$row[6]";}
+			if (eregi('PHONE',$row[4])) {$record_link = "ADD=10000000000";}
+			if (eregi('CALLTIME',$row[4])) {$record_link = "ADD=311111111&call_time_id=$row[6]";}
+			if (eregi('SHIFT',$row[4])) {$record_link = "ADD=331111111&shift_id=$row[6]";}
+			if (eregi('CONFTEMPLATE',$row[4])) {$record_link = "ADD=331111111111&template_id=$row[6]";}
+			if (eregi('CARRIER',$row[4])) {$record_link = "ADD=341111111111&carrier_id=$row[6]";}
+			if (eregi('SERVER',$row[4])) {$record_link = "ADD=311111111111&server_id=$row[6]";}
+			if (eregi('CONFERENCE',$row[4])) {$record_link = "ADD=1000000000000";}
+			if (eregi('SYSTEM',$row[4])) {$record_link = "ADD=311111111111111";}
+			if (eregi('CATEGOR',$row[4])) {$record_link = "ADD=331111111111111";}
+			if (eregi('GROUPALIAS',$row[4])) {$record_link = "ADD=33111111111&group_alias_id=$row[6]";}
+
+			if (eregi("1$|3$|5$|7$|9$", $o))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=730000000000000&stage=$row[0]\">$row[0]</a></td>";
+			echo "<td><font size=1> $row[1]</td>";
+			echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=710000000000000&stage=$row[2]\">$row[2]</a></td>";
+			echo "<td><font size=1> $row[3]</td>";
+			echo "<td><font size=1> $row[4]</td>";
+			echo "<td><font size=1> $row[5]</td>";
+			echo "<td><font size=1> $row[6]</td>";
+			echo "<td><font size=1> $row[7]</td>";
+			echo "<td><font size=1> <a href=\"$PHP_SELF?$record_link\">GOTO</a></td>";
+			echo "</tr>\n";
+			$logs_printed .= "'$row[0]',";
+			$o++;
+			}
+		echo "</TABLE><BR><BR>\n";
+		echo "\n";
+		echo "</center>\n";
 		}
-	echo "</TABLE><BR><BR>\n";
-	echo "\n";
-	echo "</center>\n";
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
 	}
 
 
@@ -25174,53 +25182,61 @@ if ($ADD==720000000000000)
 
 if ($ADD==730000000000000)
 	{
-	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-
-	$stmt="SELECT admin_log_id,event_date,val.user,ip_address,event_section,event_type,record_id,event_code,event_notes,event_sql,full_name from vicidial_admin_log val, vicidial_users vu where admin_log_id='$stage' and val.user=vu.user;";
-	$rslt=mysql_query($stmt, $link);
-	$logs_to_print = mysql_num_rows($rslt);
-
-	if ($logs_to_print > 0)
+	if ($LOGuser_level >= 9)
 		{
-		$row=mysql_fetch_row($rslt);
-		echo "<br>ADMIN CHANGE LOG: Record Detail - $stage<BR><BR>\n";
-		echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=0>\n";
-		echo "<TR>";
-		echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>ID: </B></TD>";
-		echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[0]</TD>";
-		echo "</TR><TR>\n";
-		echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>DATE TIME: </B></TD>";
-		echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[1]</TD>";
-		echo "</TR><TR>\n";
-		echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>USER: </B></TD>";
-		echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[2] - $row[10]</TD>";
-		echo "</TR><TR>\n";
-		echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>IP: </B></TD>";
-		echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[3]</TD>";
-		echo "</TR><TR>\n";
-		echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>SECTION: </B></TD>";
-		echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[4]</TD>";
-		echo "</TR><TR>\n";
-		echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>TYPE: </B></TD>";
-		echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[5]</TD>";
-		echo "</TR><TR>\n";
-		echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>RECORD ID: </B></TD>";
-		echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[6]</TD>";
-		echo "</TR><TR>\n";
-		echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>DESCRIPTION: </B></TD>";
-		echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=1>$row[7]</TD>";
-		echo "</TR><TR>\n";
-		echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>NOTES: </B></TD>";
-		echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=1>$row[8]</TD>";
-		echo "</TR><TR>\n";
-		$row[9] = eregi_replace("',","' ,",$row[9]);
-		echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>SQL: </B></TD>";
-		echo "<TD ALIGN=LEFT width=700><p style=\"width: 700; text-wrap: normal; word-wrap: break-word\"><FONT FACE=\"Arial,Helvetica\" size=1>$row[9]</TD>";
-		echo "</TR>\n";
-		echo "</TABLE><BR><BR>\n";
-		echo "\n";
-		echo "</center>\n";
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		$stmt="SELECT admin_log_id,event_date,val.user,ip_address,event_section,event_type,record_id,event_code,event_notes,event_sql,full_name from vicidial_admin_log val, vicidial_users vu where admin_log_id='$stage' and val.user=vu.user;";
+		$rslt=mysql_query($stmt, $link);
+		$logs_to_print = mysql_num_rows($rslt);
+
+		if ($logs_to_print > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			echo "<br>ADMIN CHANGE LOG: Record Detail - $stage<BR><BR>\n";
+			echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=0>\n";
+			echo "<TR>";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>ID: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[0]</TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>DATE TIME: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[1]</TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>USER: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[2] - $row[10]</TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>IP: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[3]</TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>SECTION: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[4]</TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>TYPE: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[5]</TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>RECORD ID: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[6]</TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>DESCRIPTION: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=1>$row[7]</TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>NOTES: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=1>$row[8]</TD>";
+			echo "</TR><TR>\n";
+			$row[9] = eregi_replace("',","' ,",$row[9]);
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>SQL: </B></TD>";
+			echo "<TD ALIGN=LEFT width=700><p style=\"width: 700; text-wrap: normal; word-wrap: break-word\"><FONT FACE=\"Arial,Helvetica\" size=1>$row[9]</TD>";
+			echo "</TR>\n";
+			echo "</TABLE><BR><BR>\n";
+			echo "\n";
+			echo "</center>\n";
+			}
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
 		}
 	}
 
