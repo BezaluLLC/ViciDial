@@ -812,6 +812,8 @@ while ($h < $i)
 		if($DBX){print STDERR "\n|$stmtA|\n";}
 	if ($TEST < 1)	{$affected_rows = $dbhA->do($stmtA); }
 	$h++;
+	$event_string = "VAL UPDATE PAUSESEC: $h|$pause_epoch[$h]|$wait_epoch[$h]|$affected_rows|$stmtA|";
+	&event_logger;
 	}
 if ($DB) {print STDERR "     Pause times fixed: $h\n";}
 
@@ -855,6 +857,8 @@ while ($h < $i)
 		if($DBX){print STDERR "\n|$stmtA|\n";}
 	if ($TEST < 1)	{$affected_rows = $dbhA->do($stmtA); }
 	$h++;
+	$event_string = "VAL UPDATE WAITSEC: $h|$wait_epoch[$h]|$wait_epoch[$h]|$affected_rows|$stmtA|";
+	&event_logger;
 	}
 if ($DB) {print STDERR "     Wait times fixed: $h\n";}
 
@@ -898,6 +902,8 @@ while ($h < $i)
 		if($DBX){print STDERR "|$stmtA|\n";}
 	if ($TEST < 1)	{$affected_rows = $dbhA->do($stmtA);  }
 	$h++;
+	$event_string = "VAL UPDATE TALKSEC: $h|$talk_epoch[$h]|$dispo_epoch[$h]|$affected_rows|$stmtA|";
+	&event_logger;
 	}
 if ($DB) {print STDERR "     Talk times fixed: $h\n";}
 
@@ -1162,6 +1168,8 @@ if ( ($skip_agent_log_validation < 1) && ($VAL_validate > 0) )
 					{
 					$affected_rows = $dbhA->do($stmtA); 	
 					}
+				$event_string = "VAL UPDATE: $r|$i|$Vuser[$i]|$Vevent_time[$r]|$affected_rows|$corrections_LOG|$stmtA|";
+				&event_logger;
 				}
 
 			$total_scanned_records++;

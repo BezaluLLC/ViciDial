@@ -1784,7 +1784,7 @@ while($one_day_interval > 0)
 
 		if ($toPAUSEcount > 0)
 			{
-			$stmtA = "SELECT agent_log_id,user,server_ip,campaign_id,user_group from vicidial_live_agents where server_ip='$server_ip' and last_update_time < '$PDtsSQLdate' and status NOT IN('PAUSED');";
+			$stmtA = "SELECT agent_log_id,user,server_ip,campaign_id from vicidial_live_agents where server_ip='$server_ip' and last_update_time < '$PDtsSQLdate' and status NOT IN('PAUSED');";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArowsL=$sthA->rows;
@@ -1796,7 +1796,6 @@ while($one_day_interval > 0)
 				$LAGuser[$lagged_ids] =			$aryA[1];
 				$LAGserver_ip[$lagged_ids] =	$aryA[2];
 				$LAGcampaign_id[$lagged_ids] =	$aryA[3];
-				$LAGuser_group[$lagged_ids] =	$aryA[4];
 				$lagged_ids++;
 				}
 			$sthA->finish();
@@ -1806,6 +1805,17 @@ while($one_day_interval > 0)
 				$secX = time();
 				$stmtA = "UPDATE vicidial_agent_log set sub_status='LAGGED' where agent_log_id='$LAGagent_log_id[$lagged_ids]';";
 				$VLaffected_rows = $dbhA->do($stmtA);
+
+				$stmtA = "SELECT user_group from vicidial_users where user='$server_ip' limit 1;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArowsLU=$sthA->rows;
+				if ($sthArowsLU > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$LAGuser_group[$lagged_ids] =	$aryA[0];
+					}
+				$sthA->finish();
 
 				$stmtA = "INSERT INTO vicidial_agent_log set event_time='$now_date',server_ip='$LAGserver_ip[$lagged_ids]',campaign_id='$LAGcampaign_id[$lagged_ids]',user_group='$LAGuser_group[$lagged_ids]',user='$LAGuser[$lagged_ids]',pause_epoch='$secX',pause_sec='0',wait_epoch='$secX';";
 				$VLaffected_rows = $dbhA->do($stmtA);

@@ -286,10 +286,11 @@
 # 100315-1148 - fix for rare recording_log uniqueid issue on manual dial calls to same number
 # 100317-1301 - Added agent_fullscreen User Group option
 # 100327-0901 - fix for manual dial answering machine message
+# 100331-1220 - Added human-readable hangup codes for manual dial
 #
 
-$version = '2.4-264';
-$build = '100327-0901';
+$version = '2.4-265';
+$build = '100331-1220';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -4750,7 +4751,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							
 							if (XDalert == 'ERROR')
 								{
-								var DiaLAlerTMessagE = "Call Rejected: " + XDchannel;
+								var XDerrorDesc = MDlookResponse_array[3];
+								var DiaLAlerTMessagE = "Call Rejected: " + XDchannel + "\n" + XDerrorDesc;
 								TimerActionRun("DiaLAlerT",DiaLAlerTMessagE);
 								}
 							if ( (XDchannel.match(regMDL)) && (asterisk_version != '1.0.8') && (asterisk_version != '1.0.9') && (MD_ring_secondS < 10) )
@@ -4793,7 +4795,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							
 							if (MDalert == 'ERROR')
 								{
-								var DiaLAlerTMessagE = "Call Rejected: " + MDchannel;
+								var MDerrorDesc = MDlookResponse_array[3];
+								var DiaLAlerTMessagE = "Call Rejected: " + MDchannel + "\n" + MDerrorDesc;
 								TimerActionRun("DiaLAlerT",DiaLAlerTMessagE);
 								}
 							if ( (MDchannel.match(regMDL)) && (asterisk_version != '1.0.8') && (asterisk_version != '1.0.9') )
@@ -9976,7 +9979,7 @@ else
 		{
 		if (taskaction == 'DiaLAlerT')
 			{
-			document.getElementById("TimerContentSpan").innerHTML = "<b>DIAL ALERT:<BR><BR>" + taskdialalert + "</b>";
+			document.getElementById("TimerContentSpan").innerHTML = "<b>DIAL ALERT:<BR><BR>" + taskdialalert.replace("\n","<BR>") + "</b>";
 
 			showDiv('TimerSpan');
 			}
