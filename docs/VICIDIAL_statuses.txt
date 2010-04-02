@@ -53,3 +53,4 @@ TIMEOT - Inbound call Drop Timeout, call waited until drop-seconds and was sent 
 AFTHRS - Inbound after hours drop, call received outside of in-group call time
 NANQUE - Inbound no agent no queue drop, no agent logged in
 RAXFER - Remote Agent API transfer
+ALTNUM - Agent manual Dial Alternate number dialing, number dialed before final disposition

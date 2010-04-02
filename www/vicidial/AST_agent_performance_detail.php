@@ -364,7 +364,7 @@ while ($i < $rows_to_print)
 
 echo "CALL STATS BREAKDOWN: (Statistics related to handling of calls only)\n";
 echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-echo "| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">LEADS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG | DEAD     |DEADAVG | CUSTOMER |CUSTAVG |$statusesHTML\n";
+echo "| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG | DEAD     |DEADAVG | CUSTOMER |CUSTAVG |$statusesHTML\n";
 echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
 
 

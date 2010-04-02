@@ -421,12 +421,12 @@ else
 		{
 		echo "AGENT TIME BREAKDOWN:\n";
 		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-		echo "| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">LEADS</a>    | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | <a href=\"$LINKbase&stage=TIME\">AGENT TIME</a> | WAIT       | TALK       | DISPO      | PAUSE      | DEAD       | CUSTOMER   |   |$sub_statusesHTML\n";
+		echo "| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>    | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | <a href=\"$LINKbase&stage=TIME\">AGENT TIME</a> | WAIT       | TALK       | DISPO      | PAUSE      | DEAD       | CUSTOMER   |   |$sub_statusesHTML\n";
 		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 		}
 	else
 		{
-		$file_output .= "USER,ID,LEADS,TIME CLOCK,AGENT TIME,WAIT,TALK,DISPO,PAUSE,DEAD,CUSTOMER$sub_statusesFILE\n";
+		$file_output .= "USER,ID,CALLS,TIME CLOCK,AGENT TIME,WAIT,TALK,DISPO,PAUSE,DEAD,CUSTOMER$sub_statusesFILE\n";
 		}
 	##### END print the output to screen or put into file output variable
 

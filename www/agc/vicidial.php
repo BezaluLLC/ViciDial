@@ -6064,7 +6064,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			manDiaLonly_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLonly&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&lead_id=" + document.vicidial_form.lead_id.value + "&phone_number=" + manDiaLonly_num + "&phone_code=" + document.vicidial_form.phone_code.value + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&omit_phone_code=" + omit_phone_code + "&usegroupalias=" + usegroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&dial_method=" + dial_method + "&agent_log_id=" + agent_log_id + "&security=" + document.vicidial_form.security_phrase.value;
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-			xmlhttp.send(manDiaLonly_query); 
+			xmlhttp.send(manDiaLonly_query);
 			xmlhttp.onreadystatechange = function() 
 				{ 
 				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
@@ -6075,7 +6075,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					MDOnextResponse = xmlhttp.responseText;
 
 					var MDOnextResponse_array=MDOnextResponse.split("\n");
-					MDnextCID =	MDOnextResponse_array[0];
+					MDnextCID =		MDOnextResponse_array[0];
+					agent_log_id =	MDOnextResponse_array[1];
 					if (MDnextCID == " CALL NOT PLACED")
 						{
 						alert("call was not placed, there was an error:\n" + MDOnextResponse);
@@ -8828,56 +8829,61 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				}
 			else
 				{
-				var xmlhttp=false;
-				/*@cc_on @*/
-				/*@if (@_jscript_version >= 5)
-				// JScript gives us Conditional compilation, we can cope with old IE versions.
-				// and security blocked creation of the objects.
-				 try {
-				  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
-				 } catch (e) {
-				  try {
-				   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				  } catch (E) {
-				   xmlhttp = false;
-				  }
-				 }
-				@end @*/
-				if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+				if (alt_dial_status_display==1)
 					{
-					xmlhttp = new XMLHttpRequest();
+					alert("You are in ALT dial mode, you must finish the lead before logging out.\n" + reselect_alt_dial);
 					}
-				if (xmlhttp) 
-					{ 
-					VDlogout_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=userLOGout&format=text&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&agent_log_id=" + agent_log_id + "&no_delete_sessions=" + no_delete_sessions + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&LogouTKicKAlL=" + LogouTKicKAlL + "&ext_context=" + ext_context;
-					xmlhttp.open('POST', 'vdc_db_query.php'); 
-					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-					xmlhttp.send(VDlogout_query); 
-					xmlhttp.onreadystatechange = function() 
-						{ 
-						if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
-							{
-				//			alert(xmlhttp.responseText);
-							}
+				else
+					{
+					var xmlhttp=false;
+					/*@cc_on @*/
+					/*@if (@_jscript_version >= 5)
+					// JScript gives us Conditional compilation, we can cope with old IE versions.
+					// and security blocked creation of the objects.
+					 try {
+					  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+					 } catch (e) {
+					  try {
+					   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+					  } catch (E) {
+					   xmlhttp = false;
+					  }
+					 }
+					@end @*/
+					if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+						{
+						xmlhttp = new XMLHttpRequest();
 						}
-					delete xmlhttp;
+					if (xmlhttp) 
+						{ 
+						VDlogout_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=userLOGout&format=text&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&agent_log_id=" + agent_log_id + "&no_delete_sessions=" + no_delete_sessions + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&LogouTKicKAlL=" + LogouTKicKAlL + "&ext_context=" + ext_context;
+						xmlhttp.open('POST', 'vdc_db_query.php'); 
+						xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+						xmlhttp.send(VDlogout_query); 
+						xmlhttp.onreadystatechange = function() 
+							{ 
+							if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+								{
+					//			alert(xmlhttp.responseText);
+								}
+							}
+						delete xmlhttp;
+						}
+
+					hideDiv('MainPanel');
+					showDiv('LogouTBox');
+					var logout_content='';
+					if (tempreason=='SHIFT')
+						{logout_content='Your Shift is over or has changed, you have been logged out of your session<BR><BR>';}
+
+					document.getElementById("LogouTBoxLink").innerHTML = logout_content + "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + original_phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass + "\">CLICK HERE TO LOG IN AGAIN</a>\n";
+
+					logout_stop_timeouts = 1;
+						
+					//	window.location= agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass;
 					}
-
-				hideDiv('MainPanel');
-				showDiv('LogouTBox');
-				var logout_content='';
-				if (tempreason=='SHIFT')
-					{logout_content='Your Shift is over or has changed, you have been logged out of your session<BR><BR>';}
-
-				document.getElementById("LogouTBoxLink").innerHTML = logout_content + "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + original_phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass + "\">CLICK HERE TO LOG IN AGAIN</a>\n";
-
-				logout_stop_timeouts = 1;
-					
-				//	window.location= agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass;
-
 				}
 			}
-
 		}
 <?php
 if ($useIE > 0)

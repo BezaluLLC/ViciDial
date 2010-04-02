@@ -319,14 +319,14 @@ else
 
 	if ($file_download < 1)
 		{
-		echo "LEADS STATS BREAKDOWN:\n";
+		echo "CALLS STATS BREAKDOWN:\n";
 		echo "+-----------------+----------+--------+--------+--------+$statusesHEAD\n";
-		echo "| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">LEADS</a>  | <a href=\"$LINKbase&stage=CI\">CIcalls</a>| <a href=\"$LINKbase&stage=DNCCI\">DNC/CI%</a>|$statusesHTML\n";
+		echo "| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=CI\">CIcalls</a>| <a href=\"$LINKbase&stage=DNCCI\">DNC/CI%</a>|$statusesHTML\n";
 		echo "+-----------------+----------+--------+--------+--------+$statusesHEAD\n";
 		}
 	else
 		{
-		$file_output .= "USER,ID,LEADS,CIcalls,DNC-CI%,$statusesFILE\n";
+		$file_output .= "USER,ID,CALLS,CIcalls,DNC-CI%,$statusesFILE\n";
 		}
 
 

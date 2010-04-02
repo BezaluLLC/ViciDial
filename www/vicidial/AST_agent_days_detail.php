@@ -273,12 +273,12 @@ else
 		{
 		echo "LEAD STATS BREAKDOWN:\n";
 		echo "+------------+--------+--------+--------+$statusesHEAD\n";
-		echo "| <a href=\"$LINKbase\">DATE</a>       | <a href=\"$LINKbase&stage=LEADS\">LEADS</a>  | <a href=\"$LINKbase&stage=CI\">CIcalls</a>| <a href=\"$LINKbase&stage=DNCCI\">DNC/CI%</a>|$statusesHTML\n";
+		echo "| <a href=\"$LINKbase\">DATE</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=CI\">CIcalls</a>| <a href=\"$LINKbase&stage=DNCCI\">DNC/CI%</a>|$statusesHTML\n";
 		echo "+------------+--------+--------+--------+$statusesHEAD\n";
 		}
 	else
 		{
-		$file_output .= "DATE,LEADS,CIcalls,DNC-CI%,$statusesFILE\n";
+		$file_output .= "DATE,CALLS,CIcalls,DNC-CI%,$statusesFILE\n";
 		}
 
 	### BEGIN loop through each user ###

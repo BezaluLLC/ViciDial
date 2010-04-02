@@ -1942,27 +1942,48 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00036',$user,$server_ip,$session_name,$one_mysql_log);}
 
-				#### update vicidial_agent_log if not MANUAL dial_method
-				if ($dial_method != 'MANUAL')
-					{
-					$pause_sec=0;
-					$stmt = "select pause_epoch,pause_sec,wait_epoch,talk_epoch,dispo_epoch,agent_log_id from vicidial_agent_log where agent_log_id >= '$agent_log_id' and user='$user' order by agent_log_id desc limit 1;";
-					if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_query($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00302',$user,$server_ip,$session_name,$one_mysql_log);}
-					$VDpr_ct = mysql_num_rows($rslt);
-					if ( ($VDpr_ct > 0) and (strlen($row[3]<5)) and (strlen($row[4]<5)) )
-						{
-						$row=mysql_fetch_row($rslt);
-						$agent_log_id = $row[5];
-						$pause_sec = (($StarTtime - $row[0]) + $row[1]);
+		#		#### update vicidial_agent_log if not MANUAL dial_method
+		#		if ($dial_method != 'MANUAL')
+		#			{
+		#			$pause_sec=0;
+		#			$stmt = "select pause_epoch,pause_sec,wait_epoch,talk_epoch,dispo_epoch,agent_log_id from vicidial_agent_log where agent_log_id >= '$agent_log_id' and user='$user' order by agent_log_id desc limit 1;";
+		#			if ($DB) {echo "$stmt\n";}
+		#			$rslt=mysql_query($stmt, $link);
+		#					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00302',$user,$server_ip,$session_name,$one_mysql_log);}
+		#			$VDpr_ct = mysql_num_rows($rslt);
+		#			if ( ($VDpr_ct > 0) and (strlen($row[3]<5)) and (strlen($row[4]<5)) )
+		#				{
+		#				$row=mysql_fetch_row($rslt);
+		#				$agent_log_id = $row[5];
+		#				$pause_sec = (($StarTtime - $row[0]) + $row[1]);
+		#
+		#				$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
+		#					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		#				$rslt=mysql_query($stmt, $link);
+		#					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00303',$user,$server_ip,$session_name,$one_mysql_log);}
+		#				}
+		#			}
 
-						$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
-							if ($format=='debug') {echo "\n<!-- $stmt -->";}
-						$rslt=mysql_query($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00303',$user,$server_ip,$session_name,$one_mysql_log);}
-						}
+
+				$val_pause_epoch=0;
+				$val_pause_sec=0;
+				$stmt = "SELECT pause_epoch FROM vicidial_agent_log where agent_log_id='$agent_log_id';";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$vald_ct = mysql_num_rows($rslt);
+				if ($vald_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$val_pause_epoch =	$row[0];
+					$val_pause_sec = ($StarTtime - $val_pause_epoch);
 					}
+
+				$stmt="UPDATE vicidial_agent_log set pause_sec='$val_pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
 
 				if ($agent_dialed_number > 0)
 					{
@@ -2389,27 +2410,91 @@ if ($ACTION == 'manDiaLonly')
 
 		echo "$MqueryCID\n";
 
-		#### update vicidial_agent_log if not MANUAL dial_method
-		if ($dial_method != 'MANUAL')
+#		#### update vicidial_agent_log if not MANUAL dial_method
+#		if ($dial_method != 'MANUAL')
+#			{
+#			$pause_sec=0;
+#			$stmt = "SELECT pause_epoch,pause_sec,wait_epoch,talk_epoch,dispo_epoch,agent_log_id from vicidial_agent_log where agent_log_id >= '$agent_log_id' and user='$user' order by agent_log_id desc limit 1;";
+#			if ($DB) {echo "$stmt\n";}
+#			$rslt=mysql_query($stmt, $link);
+#					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00304',$user,$server_ip,$session_name,$one_mysql_log);}
+#			$VDpr_ct = mysql_num_rows($rslt);
+#			if ( ($VDpr_ct > 0) and (strlen($row[3]<5)) and (strlen($row[4]<5)) )
+#				{
+#				$row=mysql_fetch_row($rslt);
+#				$agent_log_id = $row[5];
+#				$pause_sec = (($StarTtime - $row[0]) + $row[1]);
+#
+#				$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
+#					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+#				$rslt=mysql_query($stmt, $link);
+#					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00305',$user,$server_ip,$session_name,$one_mysql_log);}
+#				}
+#			}
+
+		$val_pause_epoch=0;
+		$val_pause_sec=0;
+		$val_dispo_epoch=0;
+		$val_dispo_sec=0;
+		$val_wait_epoch=0;
+		$val_wait_sec=0;
+		$stmt = "SELECT dispo_epoch,wait_epoch,pause_epoch FROM vicidial_agent_log where agent_log_id='$agent_log_id';";
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$vald_ct = mysql_num_rows($rslt);
+		if ($vald_ct > 0)
 			{
-			$pause_sec=0;
-			$stmt = "select pause_epoch,pause_sec,wait_epoch,talk_epoch,dispo_epoch,agent_log_id from vicidial_agent_log where agent_log_id >= '$agent_log_id' and user='$user' order by agent_log_id desc limit 1;";
-			if ($DB) {echo "$stmt\n";}
+			$row=mysql_fetch_row($rslt);
+			$val_dispo_epoch =	$row[0];
+			$val_wait_epoch =	$row[1];
+			$val_pause_epoch =	$row[2];
+			$val_dispo_sec = ($StarTtime - $val_dispo_epoch);
+			$val_wait_sec = ($StarTtime - $val_wait_epoch);
+			$val_pause_sec = ($StarTtime - $val_pause_epoch);
+			}
+		if ($val_dispo_epoch > 1000)
+			{
+			$stmt="UPDATE vicidial_agent_log set status='ALTNUM',dispo_sec='$val_dispo_sec' where agent_log_id='$agent_log_id';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00304',$user,$server_ip,$session_name,$one_mysql_log);}
-			$VDpr_ct = mysql_num_rows($rslt);
-			if ( ($VDpr_ct > 0) and (strlen($row[3]<5)) and (strlen($row[4]<5)) )
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			$user_group='';
+			$stmt="SELECT user_group FROM vicidial_users where user='$user' LIMIT 1;";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$ug_record_ct = mysql_num_rows($rslt);
+			if ($ug_record_ct > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$agent_log_id = $row[5];
-				$pause_sec = (($StarTtime - $row[0]) + $row[1]);
-
-				$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
-					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00305',$user,$server_ip,$session_name,$one_mysql_log);}
+				$user_group =		trim("$row[0]");
 				}
+
+			$stmt="INSERT INTO vicidial_agent_log (user,server_ip,event_time,campaign_id,pause_epoch,pause_sec,wait_epoch,user_group,sub_status) values('$user','$server_ip','$NOW_TIME','$campaign','$StarTtime','0','$StarTtime','$user_group','ANDIAL');";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			$affected_rows = mysql_affected_rows($link);
+			$agent_log_id = mysql_insert_id($link);
+
+			$stmt="UPDATE vicidial_live_agents SET agent_log_id='$agent_log_id',last_state_change='$NOW_TIME' where user='$user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$VLAaffected_rows_update = mysql_affected_rows($link);
 			}
+		else
+			{
+			$stmt="UPDATE vicidial_agent_log set pause_sec='$val_pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			}
+
+		echo "$agent_log_id\n";
+
 
 		if ($agent_dialed_number > 0)
 			{
@@ -2427,8 +2512,7 @@ if ($ACTION == 'manDiaLonly')
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00048',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
 		$qm_conf_ct = mysql_num_rows($rslt);
-		$i=0;
-		while ($i < $qm_conf_ct)
+		if ($qm_conf_ct > 0)
 			{
 			$row=mysql_fetch_row($rslt);
 			$enable_queuemetrics_logging =	$row[0];
@@ -2437,7 +2521,6 @@ if ($ACTION == 'manDiaLonly')
 			$queuemetrics_login	=			$row[3];
 			$queuemetrics_pass =			$row[4];
 			$queuemetrics_log_id =			$row[5];
-			$i++;
 			}
 		##### END QUEUEMETRICS LOGGING LOOKUP #####
 		###########################################
@@ -3693,7 +3776,7 @@ if ($stage == "end")
 				}
 			}
 		}
-	$stmt="UPDATE vicidial_agent_log set talk_sec='$talk_sec',dispo_epoch='$StarTtime' $talk_epochSQL $dead_secSQL $lead_id_commentsSQL where agent_log_id='$agent_log_id';";
+	$stmt="UPDATE vicidial_agent_log set talk_sec='$talk_sec',dispo_epoch='$StarTtime',uniqueid='$uniqueid' $talk_epochSQL $dead_secSQL $lead_id_commentsSQL where agent_log_id='$agent_log_id';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00102',$user,$server_ip,$session_name,$one_mysql_log);}

@@ -98,6 +98,7 @@ Close Call Log||
 YOU MUST BE PAUSED TO VIEW YOUR CALL LOG||
 Close Info Box||
 No calls on this day||
+You are in ALT dial mode, you must finish the lead before logging out||
 
 
 ############################################################  MANAGER Manual
