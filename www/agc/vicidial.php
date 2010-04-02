@@ -2871,6 +2871,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var agent_xfer_blind_transfer='<?php echo $agent_xfer_blind_transfer ?>';
 	var agent_xfer_dial_with_customer='<?php echo $agent_xfer_dial_with_customer ?>';
 	var agent_xfer_park_customer_dial='<?php echo $agent_xfer_park_customer_dial ?>';
+	var EAphone_code='';
+	var EAphone_number='';
+	var EAalt_phone_notes='';
+	var EAalt_phone_active='';
+	var EAalt_phone_count='';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -6508,7 +6513,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var check_VDIC_array=check_incoming.split("\n");
 						if (check_VDIC_array[0] == '1')
 							{
-						//	alert(xmlhttprequestcheckauto.responseText);
+					//		alert(xmlhttprequestcheckauto.responseText);
 							AutoDialWaiting = 0;
 
 							var VDIC_data_VDAC=check_VDIC_array[1].split("|");
@@ -8186,6 +8191,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				MDuniqueid='';
 				XDuniqueid='';
 				tmp_vicidial_id='';
+				EAphone_code='';
+				EAphone_number='';
+				EAalt_phone_notes='';
+				EAalt_phone_active='';
+				EAalt_phone_count='';
 
 				if (manual_dial_in_progress==1)
 					{
