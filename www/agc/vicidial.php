@@ -8196,6 +8196,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				EAalt_phone_notes='';
 				EAalt_phone_active='';
 				EAalt_phone_count='';
+				XDnextCID='';
+				XDcheck = '';
+				MDnextCID='';
+				XD_live_customer_call = 0;
+				XD_live_call_secondS = 0;
+				MD_channel_look=0;
+				MD_ring_secondS=0;
 
 				if (manual_dial_in_progress==1)
 					{
