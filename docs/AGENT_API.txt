@@ -15,6 +15,7 @@ external_hangup - sends command to hangup the current phone call for one specifi
 external_status - sends command to set the disposition for one specific agent and move on to next call
 external_pause - sends command to pause/resume an agent now if not on a call, or pause after their next call if on call
 external_dial - sends command to manually dial a number on the agent's screen
+external_add_lead - Adds a lead in the manual dial list of the campaign for logged-in agent
 change_ingroups - changes the selected in-groups for a logged-in agent
 update_fields - changes values for selected data fields in the agent interface
 set_timer_action - sets timer action for the current call the agent is on
@@ -180,6 +181,66 @@ ERROR: caller_id_number from group_alias is not valid - 6666|TESTING|123
 ERROR: group_alias is not valid - 6666|TESTING
 ERROR: vtiger callback activity does not exist in vtiger system - 12345
 SUCCESS: external_dial function set - 7275551212|6666|1|YES|NO|YES|123456|1232020456|9|TESTING|7275551211
+
+
+
+
+
+--------------------------------------------------------------------------------
+external_add_lead - 
+
+DESCRIPTION:
+Adds a lead in the manual dial list of the campaign for logged-in agent. A much simplified add lead function compared to the Non-Agent API function
+
+VALUES:
+agent_user -
+ REQUIRED alphanumeric string for agent user
+dnc_check - 
+ OPTIONAL - Check for number against system DNC
+campaign_dnc_check - 
+ OPTIONAL - Check for number against campaign DNC from the agent's campaign
+LEAD DATA (must populate at least one)
+   NOTE: Only fields that are specified in the API call will be modified
+	address1
+	address2
+	address3
+	alt_phone
+	city
+	comments
+	country_code
+	date_of_birth
+	email
+	first_name
+	gender
+	gmt_offset_now
+	last_name
+	middle_initial
+	phone_number
+	phone_code
+	postal_code
+	province
+	security_phrase
+	source_id
+	state
+	title
+	vendor_lead_code
+	rank
+	owner
+
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_add_lead&phone_number=7275551212&phone_code=1&first_name=Bob&last_name=Smith=NO&dnc_check=YES
+
+RESPONSES:
+ERROR: external_add_lead not valid - 7275551212|1|6666|
+ERROR: no user found - 6666
+ERROR: lead insertion failed - 7275551212|TESTCAMP|101|6666
+ERROR: add_lead PHONE NUMBER IN DNC - 7275551212|6666
+ERROR: add_lead PHONE NUMBER IN CAMPAIGN DNC - 7275551212|TESTCAMP|6666
+ERROR: campaign manual dial list undefined - 7275551212|TESTCAMP|6666
+ERROR: agent_user is not logged in - 6666
+SUCCESS: lead added - 7275551212|TESTCAMP|101|123456|6666
+
+
 
 
 

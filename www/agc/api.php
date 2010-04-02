@@ -46,9 +46,11 @@
 # 91228-1059 - Added update_fields function
 # 100315-2021 - Added ra_call_control function
 # 100318-0605 - Added close_window_link and language options
+# 100401-2357 - Added external_add_lead function (contributed by aouyar)
+#
 
-$version = '2.2.0-13';
-$build = '100318-0605';
+$version = '2.4-14';
+$build = '100401-2357';
 
 require("dbconnect.php");
 
@@ -151,6 +153,12 @@ if (isset($_GET["status"]))						{$status=$_GET["status"];}
 	elseif (isset($_POST["status"]))			{$status=$_POST["status"];}
 if (isset($_GET["close_window_link"]))			{$close_window_link=$_GET["close_window_link"];}
 	elseif (isset($_POST["close_window_link"]))	{$close_window_link=$_POST["close_window_link"];}
+if (isset($_GET["dnc_check"]))					{$dnc_check=$_GET["dnc_check"];}
+	elseif (isset($_POST["dnc_check"]))			{$dnc_check=$_POST["dnc_check"];}
+if (isset($_GET["campaign_dnc_check"]))				{$campaign_dnc_check=$_GET["campaign_dnc_check"];}
+	elseif (isset($_POST["campaign_dnc_check"]))	{$campaign_dnc_check=$_POST["campaign_dnc_check"];}
+if (isset($_GET["DB"]))							{$DB=$_GET["DB"];}
+	elseif (isset($_POST["DB"]))				{$DB=$_POST["DB"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -779,6 +787,163 @@ if ($function == 'external_dial')
 ### END - external_dial
 ################################################################################
 
+
+
+
+
+################################################################################
+### BEGIN - external_add_lead - add lead in manual dial list of the campaign for logged-in agent
+################################################################################
+if ($function == 'external_add_lead')
+	{
+	if ( (strlen($value) < 1) and (strlen($phone_number) > 1) )
+		{$value = $phone_number;}
+	if ( ( (strlen($agent_user)<2) and (strlen($alt_user)<2) ) or (strlen($phone_code)<1) or (strlen($value)<2) )
+		{
+		$result = 'ERROR';
+		$result_reason = "external_add_lead not valid";
+		$data = "$value|$phone_code";
+		echo "$result: $result_reason - $data|$agent_user|$alt_user\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		if (strlen($vendor_id) > 0 )
+			{
+			$vendor_lead_code = $vendor_id;
+			}
+		if (strlen($alt_user)>1)
+			{
+			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$agent_user = $row[0];
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "no user found";
+				echo "$result: $result_reason - $alt_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt = "select c.campaign_id,c.manual_dial_list_id from vicidial_campaigns c,vicidial_live_agents a where a.user='$agent_user' and a.campaign_id=c.campaign_id;";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$nrow=mysql_num_rows($rslt);
+			if ($nrow > 0)
+				{
+				$list_id =		$row[1];
+				$campaign_id =	$row[0];
+
+				# DNC Check
+				if ($dnc_check == 'YES' or $dnc_check=='Y')
+					{
+					$stmt="SELECT count(*) from vicidial_dnc where phone_number='$value';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$dnc_found=$row[0];
+					}
+				else
+					{
+					$dnc_found=0;
+					}
+
+				# Campaign DNC Check
+				if ($campaign_dnc_check == 'YES' or $campaign_dnc_check=='Y')
+					{
+					$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number='$value' and campaign_id='$campaign_id';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$camp_dnc_found=$row[0];
+					}
+				else
+					{
+					$camp_dnc_found=0;
+					}
+
+				if ($dnc_found==0 and $camp_dnc_found==0)
+					{
+					### insert a new lead in the system with this phone number
+					$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$value',list_id='$list_id',status='NEW',user='$user',vendor_lead_code='$vendor_lead_code',source_id='$source_id',title='$title',first_name='$first_name',middle_initial='$middle_initial',last_name='$last_name',address1='$address1',address2='$address2',address3='$address3',city='$city',state='$state',province='$province',postal_code='$postal_code',country_code='$country_code',gender='$gender',date_of_birth='$date_of_birth',alt_phone='$alt_phone',email='$email',security_phrase='$security_phrase',comments='$comments',called_since_last_reset='N',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME',rank='$rank',owner='$owner';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $link);
+					$affected_rows = mysql_affected_rows($link);
+					if ($affected_rows > 0)
+						{
+						$lead_id = mysql_insert_id($link);
+						$result = 'SUCCESS';
+						$result_reason = "lead added";
+						echo "$result: $result_reason - $value|$campaign_id|$list_id|$lead_id|$agent_user\n";
+						$data = "$value|$list_id|$lead_id";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					else
+						{
+						$result = 'ERROR';
+						$result_reason = "lead insertion failed";
+						echo "$result: $result_reason - $value|$campaign_id|$list_id|$agent_user\n";
+						$data = "$value|$list_id|$stmt";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					}
+				else
+					{
+					if ($dnc_found>0)
+						{
+						$result = 'ERROR';
+						$result_reason = "add_lead PHONE NUMBER IN DNC";
+						echo "$result: $result_reason - $value|$agent_user\n";
+						$data = "$value";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					if ($camp_dnc_found>0)
+						{
+						$result = 'ERROR';
+						$result_reason = "add_lead PHONE NUMBER IN CAMPAIGN DNC";
+						echo "$result: $result_reason - $value|$campaign_id|$agent_user\n";
+						$data = "$value|$campaign_id";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					}
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "campaign manual dial list undefined";
+				echo "$result: $result_reason - $value|$campaign_id|$agent_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}		
+		}
+	}
+################################################################################
+### END - external_add_lead
+################################################################################
 
 
 
