@@ -1145,6 +1145,15 @@ if ($function == 'change_ingroups')
 							if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_query($stmt, $link);
 						$default_data = "User settings set as default";
+
+						### LOG INSERTION Admin Log Table ###
+						$ip = getenv("REMOTE_ADDR");
+						$SQL_log = "$stmt|";
+						$SQL_log = ereg_replace(';','',$SQL_log);
+						$SQL_log = addslashes($SQL_log);
+						$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$user', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$agent_user', event_code='API MODIFY USER', event_sql=\"$SQL_log\", event_notes='';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_query($stmt, $link);
 						}
 
 					$result = 'SUCCESS';
