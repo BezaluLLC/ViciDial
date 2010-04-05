@@ -88,6 +88,8 @@ Click here to see agents logged in to this inbound group||
 Agent Choose Blended||
 This option if set to 1 allows the user to choose if the agent has their campaign set to blended or not, and if not then the default blended setting will be used. Default is 1 for enabled||
 Click here to see a log of the uploads to the audio store||
+QueueMetrics CallStatus||
+This option if set to 0 will not put in the CALLSTATUS entry into queue_log when an agent dispositions a call. Default is 1 for enabled||
 
 
 AST_VICIDIAL_ingrouplist.php

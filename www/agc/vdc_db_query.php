@@ -242,10 +242,11 @@
 # 100309-0535 - Added queuemetrics_loginout option
 # 100311-1559 - Added callcard logging to startcallurl and dispourl functions
 # 100331-1217 - Added human-readable hangup codes for manual dial
+# 100405-1430 - Added queuemetrics_callstatus option
 #
 
-$version = '2.4-149';
-$build = '100331-1217';
+$version = '2.4-150';
+$build = '100405-1430';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=321;
 $one_mysql_log=0;
@@ -5786,7 +5787,7 @@ if ($ACTION == 'updateDISPO')
 
 	#############################################
 	##### START QUEUEMETRICS LOGGING LOOKUP #####
-	$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+	$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_callstatus FROM system_settings;";
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00159',$user,$server_ip,$session_name,$one_mysql_log);}
 	if ($DB) {echo "$stmt\n";}
@@ -5800,10 +5801,11 @@ if ($ACTION == 'updateDISPO')
 		$queuemetrics_login	=			$row[3];
 		$queuemetrics_pass =			$row[4];
 		$queuemetrics_log_id =			$row[5];
+		$queuemetrics_callstatus =		$row[6];
 		}
 	##### END QUEUEMETRICS LOGGING LOOKUP #####
 	###########################################
-	if ($enable_queuemetrics_logging > 0)
+	if ( ($enable_queuemetrics_logging > 0) and ($queuemetrics_callstatus > 0) )
 		{
 		$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
 		mysql_select_db("$queuemetrics_dbname", $linkB);
