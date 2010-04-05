@@ -110,6 +110,8 @@ OTHER CHANGES:
 		exten => _8320*.,1,AGI(VD_amd.agi,${EXTEN}-----YES)
 		exten => _8320*.,2,Hangup
 
+23. Added ability to search logs from admin search lead page
+
 
 
 

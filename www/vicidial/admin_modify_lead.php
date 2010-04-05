@@ -8,7 +8,7 @@
 # just needs to enter the leadID and then they can view and modify the 
 # information in the record for that lead
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -33,6 +33,7 @@
 # 90708-1549 - Added phone number dialed to outbound log
 # 90721-1246 - Added rank and owner as vicidial_list fields
 # 90917-2355 - Added extended alt phone entries
+# 100405-1333 - Changed to show logs of non-found leads
 #
 
 require("dbconnect.php");
@@ -366,271 +367,6 @@ else
 			$alts_output .= "<td align=left><font size=2> $row[4] </td></tr>\n";
 			}
 
-		##### grab vicidial_log records #####
-		$stmt="select uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial from vicidial_log where lead_id='" . mysql_real_escape_string($lead_id) . "' order by uniqueid desc limit 500;";
-		$rslt=mysql_query($stmt, $link);
-		$logs_to_print = mysql_num_rows($rslt);
-
-		$u=0;
-		$call_log = '';
-		$log_campaign = '';
-		while ($logs_to_print > $u) 
-			{
-			$row=mysql_fetch_row($rslt);
-			if (strlen($log_campaign)<1) {$log_campaign = $row[3];}
-			if (eregi("1$|3$|5$|7$|9$", $u))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
-			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
-
-			$u++;
-			$call_log .= "<tr $bgcolor>";
-			$call_log .= "<td><font size=1>$u</td>";
-			$call_log .= "<td><font size=2>$row[4]</td>";
-			$call_log .= "<td align=left><font size=2> $row[7]</td>\n";
-			$call_log .= "<td align=left><font size=2> $row[8]</td>\n";
-			$call_log .= "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[11]\" target=\"_blank\">$row[11]</A> </td>\n";
-			$call_log .= "<td align=right><font size=2> $row[3] </td>\n";
-			$call_log .= "<td align=right><font size=2> $row[2] </td>\n";
-			$call_log .= "<td align=right><font size=2> $row[1] </td>\n";
-			$call_log .= "<td align=right><font size=2> $row[15] </td>\n";
-			$call_log .= "<td align=right><font size=2>&nbsp; $row[10] </td></tr>\n";
-
-			$campaign_id = $row[3];
-			}
-
-		##### grab vicidial_agent_log records #####
-		$stmt="select agent_log_id,user,server_ip,event_time,lead_id,campaign_id,pause_epoch,pause_sec,wait_epoch,wait_sec,talk_epoch,talk_sec,dispo_epoch,dispo_sec,status,user_group,comments,sub_status from vicidial_agent_log where lead_id='" . mysql_real_escape_string($lead_id) . "' order by agent_log_id desc limit 500;";
-		$rslt=mysql_query($stmt, $link);
-		$Alogs_to_print = mysql_num_rows($rslt);
-
-		$y=0;
-		$agent_log = '';
-		$Alog_campaign = '';
-		while ($Alogs_to_print > $y) 
-			{
-			$row=mysql_fetch_row($rslt);
-			if (strlen($Alog_campaign)<1) {$Alog_campaign = $row[5];}
-			if (eregi("1$|3$|5$|7$|9$", $y))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
-			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
-
-			$y++;
-			$agent_log .= "<tr $bgcolor>";
-			$agent_log .= "<td><font size=1>$y</td>";
-			$agent_log .= "<td><font size=2>$row[3]</td>";
-			$agent_log .= "<td align=left><font size=2> $row[5]</td>\n";
-			$agent_log .= "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[1]\" target=\"_blank\">$row[1]</A> </td>\n";
-			$agent_log .= "<td align=right><font size=2> $row[7]</td>\n";
-			$agent_log .= "<td align=right><font size=2> $row[9] </td>\n";
-			$agent_log .= "<td align=right><font size=2> $row[11] </td>\n";
-			$agent_log .= "<td align=right><font size=2> $row[13] </td>\n";
-			$agent_log .= "<td align=right><font size=2> &nbsp; $row[14] </td>\n";
-			$agent_log .= "<td align=right><font size=2> &nbsp; $row[15] </td>\n";
-			$agent_log .= "<td align=right><font size=2> &nbsp; $row[17] </td></tr>\n";
-
-			$campaign_id = $row[5];
-			}
-
-		##### grab vicidial_closer_log records #####
-		$stmt="select closecallid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,queue_seconds,user_group,xfercallid,term_reason,uniqueid,agent_only from vicidial_closer_log where lead_id='" . mysql_real_escape_string($lead_id) . "' order by closecallid desc limit 500;";
-		$rslt=mysql_query($stmt, $link);
-		$Clogs_to_print = mysql_num_rows($rslt);
-
-		$y=0;
-		$closer_log = '';
-		$Clog_campaign = '';
-		while ($Clogs_to_print > $y) 
-			{
-			$row=mysql_fetch_row($rslt);
-			if (strlen($Clog_campaign)<1) {$Clog_campaign = $row[3];}
-			if (eregi("1$|3$|5$|7$|9$", $y))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
-			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
-
-			$y++;
-			$closer_log .= "<tr $bgcolor>";
-			$closer_log .= "<td><font size=1>$y</td>";
-			$closer_log .= "<td><font size=2>$row[4]</td>";
-			$closer_log .= "<td align=left><font size=2> $row[7]</td>\n";
-			$closer_log .= "<td align=left><font size=2> $row[8]</td>\n";
-			$closer_log .= "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[11]\" target=\"_blank\">$row[11]</A> </td>\n";
-			$closer_log .= "<td align=right><font size=2> $row[3] </td>\n";
-			$closer_log .= "<td align=right><font size=2> $row[2] </td>\n";
-			$closer_log .= "<td align=right><font size=2> $row[1] </td>\n";
-			$closer_log .= "<td align=right><font size=2> &nbsp; $row[14] </td>\n";
-			$closer_log .= "<td align=right><font size=2> &nbsp; $row[17] </td></tr>\n";
-
-			$campaign_id = $row[3];
-			}
-
-		##### grab vicidial_list data for lead #####
-		$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
-		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
-		$row=mysql_fetch_row($rslt);
-		$lead_id			= "$row[0]";
-		$dispo				= "$row[3]";
-		$tsr				= "$row[4]";
-		$vendor_id			= "$row[5]";
-		$list_id			= "$row[7]";
-		$gmt_offset_now		= "$row[8]";
-		$phone_code			= "$row[10]";
-		$phone_number		= "$row[11]";
-		$title				= "$row[12]";
-		$first_name			= "$row[13]";
-		$middle_initial		= "$row[14]";
-		$last_name			= "$row[15]";
-		$address1			= "$row[16]";
-		$address2			= "$row[17]";
-		$address3			= "$row[18]";
-		$city				= "$row[19]";
-		$state				= "$row[20]";
-		$province			= "$row[21]";
-		$postal_code		= "$row[22]";
-		$country_code		= "$row[23]";
-		$gender				= "$row[24]";
-		$date_of_birth		= "$row[25]";
-		$alt_phone			= "$row[26]";
-		$email				= "$row[27]";
-		$security			= "$row[28]";
-		$comments			= "$row[29]";
-		$called_count		= "$row[30]";
-		$last_local_call_time = "$row[31]";
-		$rank				= "$row[32]";
-		$owner				= "$row[33]";
-
-		echo "<br>Call information: $first_name $last_name - $phone_number<br><br><form action=$PHP_SELF method=POST>\n";
-		echo "<input type=hidden name=end_call value=1>\n";
-		echo "<input type=hidden name=DB value=\"$DB\">\n";
-		echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
-		echo "<input type=hidden name=dispo value=\"$dispo\">\n";
-		echo "<input type=hidden name=list_id value=\"$list_id\">\n";
-		echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
-		echo "<input type=hidden name=phone_code value=\"$phone_code\">\n";
-		echo "<input type=hidden name=old_phone value=\"$phone_number\">\n";
-		echo "<input type=hidden name=server_ip value=\"$server_ip\">\n";
-		echo "<input type=hidden name=extension value=\"$extension\">\n";
-		echo "<input type=hidden name=channel value=\"$channel\">\n";
-		echo "<input type=hidden name=call_began value=\"$call_began\">\n";
-		echo "<input type=hidden name=parked_time value=\"$parked_time\">\n";
-		echo "<table cellpadding=1 cellspacing=0>\n";
-		echo "<tr><td colspan=2>Vendor ID: $vendor_id &nbsp; &nbsp; Lead ID: $lead_id</td></tr>\n";
-		echo "<tr><td colspan=2>Fronter: <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; List ID: $list_id</td></tr>\n";
-		echo "<tr><td align=right>First Name: </td><td align=left><input type=text name=first_name size=15 maxlength=30 value=\"$first_name\"> &nbsp; \n";
-		echo " Last Name: <input type=text name=last_name size=15 maxlength=30 value=\"$last_name\"> </td></tr>\n";
-		echo "<tr><td align=right>Address 1 : </td><td align=left><input type=text name=address1 size=30 maxlength=30 value=\"$address1\"></td></tr>\n";
-		echo "<tr><td align=right>Address 2 : </td><td align=left><input type=text name=address2 size=30 maxlength=30 value=\"$address2\"></td></tr>\n";
-		echo "<tr><td align=right>Address 3 : </td><td align=left><input type=text name=address3 size=30 maxlength=30 value=\"$address3\"></td></tr>\n";
-		echo "<tr><td align=right>City : </td><td align=left><input type=text name=city size=30 maxlength=30 value=\"$city\"></td></tr>\n";
-		echo "<tr><td align=right>State: </td><td align=left><input type=text name=state size=2 maxlength=2 value=\"$state\"> &nbsp; \n";
-		echo " Postal Code: <input type=text name=postal_code size=10 maxlength=10 value=\"$postal_code\"> </td></tr>\n";
-
-		echo "<tr><td align=right>Province : </td><td align=left><input type=text name=province size=30 maxlength=30 value=\"$province\"></td></tr>\n";
-		echo "<tr><td align=right>Country : </td><td align=left><input type=text name=country_code size=3 maxlength=3 value=\"$country_code\"></td></tr>\n";
-		echo "<tr><td align=right>Main Phone : </td><td align=left><input type=text name=phone_number size=20 maxlength=20 value=\"$phone_number\"></td></tr>\n";
-		echo "<tr><td align=right>Alt Phone : </td><td align=left><input type=text name=alt_phone size=20 maxlength=20 value=\"$alt_phone\"></td></tr>\n";
-		echo "<tr><td align=right>Email : </td><td align=left><input type=text name=email size=30 maxlength=50 value=\"$email\"></td></tr>\n";
-		echo "<tr><td align=right>Security : </td><td align=left><input type=text name=security size=30 maxlength=100 value=\"$security\"></td></tr>\n";
-		echo "<tr><td align=right>Rank : </td><td align=left><input type=text name=rank size=7 maxlength=5 value=\"$rank\"></td></tr>\n";
-		echo "<tr><td align=right>Owner : </td><td align=left><input type=text name=owner size=22 maxlength=20 value=\"$owner\"></td></tr>\n";
-		echo "<tr><td align=right>Comments : </td><td align=left><TEXTAREA name=comments ROWS=3 COLS=65>$comments</TEXTAREA></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Disposition: </td><td align=left><select size=1 name=status>\n";
-
-		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses where selectable='Y' order by status";
-		$rslt=mysql_query($stmt, $link);
-		$statuses_to_print = mysql_num_rows($rslt);
-		$statuses_list='';
-
-		$o=0;
-		$DS=0;
-		while ($statuses_to_print > $o) 
-			{
-			$rowx=mysql_fetch_row($rslt);
-			if ( (strlen($dispo) ==  strlen($rowx[0])) and (eregi($dispo,$rowx[0])) )
-				{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
-			else
-				{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
-			$o++;
-			}
-
-		$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where selectable='Y' and campaign_id='$log_campaign' order by status";
-		$rslt=mysql_query($stmt, $link);
-		$CAMPstatuses_to_print = mysql_num_rows($rslt);
-
-		$o=0;
-		while ($CAMPstatuses_to_print > $o) 
-			{
-			$rowx=mysql_fetch_row($rslt);
-			if ( (strlen($dispo) ==  strlen($rowx[0])) and (eregi($dispo,$rowx[0])) )
-				{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
-			else
-				{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
-			$o++;
-			}
-
-
-		if ($DS < 1) {$statuses_list .= "<option SELECTED value=\"$dispo\">$dispo</option>\n";}
-		echo "$statuses_list";
-		echo "</select> <i>(with $log_campaign statuses)</i></td></tr>\n";
-
-
-		echo "<tr bgcolor=#B6D3FC><td align=left>Modify vicidial log </td><td align=left><input type=checkbox name=modify_logs value=\"1\" CHECKED></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=left>Modify agent log </td><td align=left><input type=checkbox name=modify_agent_logs value=\"1\" CHECKED></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=left>Modify closer log </td><td align=left><input type=checkbox name=modify_closer_logs value=\"1\"></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=left>Add closer log record </td><td align=left><input type=checkbox name=add_closer_record value=\"1\"></td></tr>\n";
-
-
-		echo "<tr><td colspan=2 align=center><input type=submit name=submit value=\"SUBMIT\"></td></tr>\n";
-		echo "</table></form>\n";
-		echo "<BR><BR><BR>\n";
-
-		if ( ($dispo == 'CALLBK') or ($dispo == 'CBHOLD') )
-			{
-			### find any vicidial_callback records for this lead 
-			$stmt="select callback_id,lead_id,list_id,campaign_id,status,entry_time,callback_time,modify_date,user,recipient,comments,user_group from vicidial_callbacks where lead_id='" . mysql_real_escape_string($lead_id) . "' and status IN('ACTIVE','LIVE') order by callback_id desc LIMIT 1;";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
-			$CB_to_print = mysql_num_rows($rslt);
-			$rowx=mysql_fetch_row($rslt);
-
-			if ($CB_to_print>0)
-				{
-				if ($rowx[9] == 'USERONLY')
-					{
-					echo "<br><form action=$PHP_SELF method=POST>\n";
-					echo "<input type=hidden name=CBchangeUSERtoANY value=\"YES\">\n";
-					echo "<input type=hidden name=DB value=\"$DB\">\n";
-					echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
-					echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
-					echo "<input type=submit name=submit value=\"CHANGE TO ANYONE CALLBACK\"></form><BR>\n";
-
-					echo "<br><form action=$PHP_SELF method=POST>\n";
-					echo "<input type=hidden name=CBchangeUSERtoUSER value=\"YES\">\n";
-					echo "<input type=hidden name=DB value=\"$DB\">\n";
-					echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
-					echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
-					echo "New Callback Owner UserID: <input type=text name=CBuser size=8 maxlength=10 value=\"$rowx[8]\"> \n";
-					echo "<input type=submit name=submit value=\"CHANGE USERONLY CALLBACK USER\"></form><BR>\n";
-					}
-				else
-					{
-					echo "<br><form action=$PHP_SELF method=POST>\n";
-					echo "<input type=hidden name=CBchangeANYtoUSER value=\"YES\">\n";
-					echo "<input type=hidden name=DB value=\"$DB\">\n";
-					echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
-					echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
-					echo "New Callback Owner UserID: <input type=text name=CBuser size=8 maxlength=10 value=\"$rowx[8]\"> \n";
-					echo "<input type=submit name=submit value=\"CHANGE TO USERONLY CALLBACK\"></form><BR>\n";
-					}
-				}
-			else
-				{
-				echo "<BR>No Callback records found<BR>\n";
-				}
-			}
 		}
 	else
 		{
@@ -638,6 +374,272 @@ else
 #		echo "<a href=\"$PHP_SELF\">Close this window</a>\n<BR><BR>\n";
 		}
 
+	##### grab vicidial_log records #####
+	$stmt="select uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial from vicidial_log where lead_id='" . mysql_real_escape_string($lead_id) . "' order by uniqueid desc limit 500;";
+	$rslt=mysql_query($stmt, $link);
+	$logs_to_print = mysql_num_rows($rslt);
+
+	$u=0;
+	$call_log = '';
+	$log_campaign = '';
+	while ($logs_to_print > $u) 
+		{
+		$row=mysql_fetch_row($rslt);
+		if (strlen($log_campaign)<1) {$log_campaign = $row[3];}
+		if (eregi("1$|3$|5$|7$|9$", $u))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+
+		$u++;
+		$call_log .= "<tr $bgcolor>";
+		$call_log .= "<td><font size=1>$u</td>";
+		$call_log .= "<td><font size=2>$row[4]</td>";
+		$call_log .= "<td align=left><font size=2> $row[7]</td>\n";
+		$call_log .= "<td align=left><font size=2> $row[8]</td>\n";
+		$call_log .= "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[11]\" target=\"_blank\">$row[11]</A> </td>\n";
+		$call_log .= "<td align=right><font size=2> $row[3] </td>\n";
+		$call_log .= "<td align=right><font size=2> $row[2] </td>\n";
+		$call_log .= "<td align=right><font size=2> $row[1] </td>\n";
+		$call_log .= "<td align=right><font size=2> $row[15] </td>\n";
+		$call_log .= "<td align=right><font size=2>&nbsp; $row[10] </td></tr>\n";
+
+		$campaign_id = $row[3];
+		}
+
+	##### grab vicidial_agent_log records #####
+	$stmt="select agent_log_id,user,server_ip,event_time,lead_id,campaign_id,pause_epoch,pause_sec,wait_epoch,wait_sec,talk_epoch,talk_sec,dispo_epoch,dispo_sec,status,user_group,comments,sub_status from vicidial_agent_log where lead_id='" . mysql_real_escape_string($lead_id) . "' order by agent_log_id desc limit 500;";
+	$rslt=mysql_query($stmt, $link);
+	$Alogs_to_print = mysql_num_rows($rslt);
+
+	$y=0;
+	$agent_log = '';
+	$Alog_campaign = '';
+	while ($Alogs_to_print > $y) 
+		{
+		$row=mysql_fetch_row($rslt);
+		if (strlen($Alog_campaign)<1) {$Alog_campaign = $row[5];}
+		if (eregi("1$|3$|5$|7$|9$", $y))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+
+		$y++;
+		$agent_log .= "<tr $bgcolor>";
+		$agent_log .= "<td><font size=1>$y</td>";
+		$agent_log .= "<td><font size=2>$row[3]</td>";
+		$agent_log .= "<td align=left><font size=2> $row[5]</td>\n";
+		$agent_log .= "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[1]\" target=\"_blank\">$row[1]</A> </td>\n";
+		$agent_log .= "<td align=right><font size=2> $row[7]</td>\n";
+		$agent_log .= "<td align=right><font size=2> $row[9] </td>\n";
+		$agent_log .= "<td align=right><font size=2> $row[11] </td>\n";
+		$agent_log .= "<td align=right><font size=2> $row[13] </td>\n";
+		$agent_log .= "<td align=right><font size=2> &nbsp; $row[14] </td>\n";
+		$agent_log .= "<td align=right><font size=2> &nbsp; $row[15] </td>\n";
+		$agent_log .= "<td align=right><font size=2> &nbsp; $row[17] </td></tr>\n";
+
+		$campaign_id = $row[5];
+		}
+
+	##### grab vicidial_closer_log records #####
+	$stmt="select closecallid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,queue_seconds,user_group,xfercallid,term_reason,uniqueid,agent_only from vicidial_closer_log where lead_id='" . mysql_real_escape_string($lead_id) . "' order by closecallid desc limit 500;";
+	$rslt=mysql_query($stmt, $link);
+	$Clogs_to_print = mysql_num_rows($rslt);
+
+	$y=0;
+	$closer_log = '';
+	$Clog_campaign = '';
+	while ($Clogs_to_print > $y) 
+		{
+		$row=mysql_fetch_row($rslt);
+		if (strlen($Clog_campaign)<1) {$Clog_campaign = $row[3];}
+		if (eregi("1$|3$|5$|7$|9$", $y))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+
+		$y++;
+		$closer_log .= "<tr $bgcolor>";
+		$closer_log .= "<td><font size=1>$y</td>";
+		$closer_log .= "<td><font size=2>$row[4]</td>";
+		$closer_log .= "<td align=left><font size=2> $row[7]</td>\n";
+		$closer_log .= "<td align=left><font size=2> $row[8]</td>\n";
+		$closer_log .= "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[11]\" target=\"_blank\">$row[11]</A> </td>\n";
+		$closer_log .= "<td align=right><font size=2> $row[3] </td>\n";
+		$closer_log .= "<td align=right><font size=2> $row[2] </td>\n";
+		$closer_log .= "<td align=right><font size=2> $row[1] </td>\n";
+		$closer_log .= "<td align=right><font size=2> &nbsp; $row[14] </td>\n";
+		$closer_log .= "<td align=right><font size=2> &nbsp; $row[17] </td></tr>\n";
+
+		$campaign_id = $row[3];
+		}
+
+	##### grab vicidial_list data for lead #####
+	$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$row=mysql_fetch_row($rslt);
+	if (strlen($row[0]) > 0)
+		{$lead_id		= $row[0];}
+	$dispo				= $row[3];
+	$tsr				= $row[4];
+	$vendor_id			= $row[5];
+	$list_id			= $row[7];
+	$gmt_offset_now		= $row[8];
+	$phone_code			= $row[10];
+	$phone_number		= $row[11];
+	$title				= $row[12];
+	$first_name			= $row[13];
+	$middle_initial		= $row[14];
+	$last_name			= $row[15];
+	$address1			= $row[16];
+	$address2			= $row[17];
+	$address3			= $row[18];
+	$city				= $row[19];
+	$state				= $row[20];
+	$province			= $row[21];
+	$postal_code		= $row[22];
+	$country_code		= $row[23];
+	$gender				= $row[24];
+	$date_of_birth		= $row[25];
+	$alt_phone			= $row[26];
+	$email				= $row[27];
+	$security			= $row[28];
+	$comments			= $row[29];
+	$called_count		= $row[30];
+	$last_local_call_time = $row[31];
+	$rank				= $row[32];
+	$owner				= $row[33];
+
+	echo "<br>Call information: $first_name $last_name - $phone_number<br><br><form action=$PHP_SELF method=POST>\n";
+	echo "<input type=hidden name=end_call value=1>\n";
+	echo "<input type=hidden name=DB value=\"$DB\">\n";
+	echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
+	echo "<input type=hidden name=dispo value=\"$dispo\">\n";
+	echo "<input type=hidden name=list_id value=\"$list_id\">\n";
+	echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
+	echo "<input type=hidden name=phone_code value=\"$phone_code\">\n";
+	echo "<input type=hidden name=old_phone value=\"$phone_number\">\n";
+	echo "<input type=hidden name=server_ip value=\"$server_ip\">\n";
+	echo "<input type=hidden name=extension value=\"$extension\">\n";
+	echo "<input type=hidden name=channel value=\"$channel\">\n";
+	echo "<input type=hidden name=call_began value=\"$call_began\">\n";
+	echo "<input type=hidden name=parked_time value=\"$parked_time\">\n";
+	echo "<table cellpadding=1 cellspacing=0>\n";
+	echo "<tr><td colspan=2>Vendor ID: $vendor_id &nbsp; &nbsp; Lead ID: $lead_id</td></tr>\n";
+	echo "<tr><td colspan=2>Fronter: <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; List ID: $list_id</td></tr>\n";
+	echo "<tr><td align=right>First Name: </td><td align=left><input type=text name=first_name size=15 maxlength=30 value=\"$first_name\"> &nbsp; \n";
+	echo " Last Name: <input type=text name=last_name size=15 maxlength=30 value=\"$last_name\"> </td></tr>\n";
+	echo "<tr><td align=right>Address 1 : </td><td align=left><input type=text name=address1 size=30 maxlength=30 value=\"$address1\"></td></tr>\n";
+	echo "<tr><td align=right>Address 2 : </td><td align=left><input type=text name=address2 size=30 maxlength=30 value=\"$address2\"></td></tr>\n";
+	echo "<tr><td align=right>Address 3 : </td><td align=left><input type=text name=address3 size=30 maxlength=30 value=\"$address3\"></td></tr>\n";
+	echo "<tr><td align=right>City : </td><td align=left><input type=text name=city size=30 maxlength=30 value=\"$city\"></td></tr>\n";
+	echo "<tr><td align=right>State: </td><td align=left><input type=text name=state size=2 maxlength=2 value=\"$state\"> &nbsp; \n";
+	echo " Postal Code: <input type=text name=postal_code size=10 maxlength=10 value=\"$postal_code\"> </td></tr>\n";
+
+	echo "<tr><td align=right>Province : </td><td align=left><input type=text name=province size=30 maxlength=30 value=\"$province\"></td></tr>\n";
+	echo "<tr><td align=right>Country : </td><td align=left><input type=text name=country_code size=3 maxlength=3 value=\"$country_code\"></td></tr>\n";
+	echo "<tr><td align=right>Main Phone : </td><td align=left><input type=text name=phone_number size=20 maxlength=20 value=\"$phone_number\"></td></tr>\n";
+	echo "<tr><td align=right>Alt Phone : </td><td align=left><input type=text name=alt_phone size=20 maxlength=20 value=\"$alt_phone\"></td></tr>\n";
+	echo "<tr><td align=right>Email : </td><td align=left><input type=text name=email size=30 maxlength=50 value=\"$email\"></td></tr>\n";
+	echo "<tr><td align=right>Security : </td><td align=left><input type=text name=security size=30 maxlength=100 value=\"$security\"></td></tr>\n";
+	echo "<tr><td align=right>Rank : </td><td align=left><input type=text name=rank size=7 maxlength=5 value=\"$rank\"></td></tr>\n";
+	echo "<tr><td align=right>Owner : </td><td align=left><input type=text name=owner size=22 maxlength=20 value=\"$owner\"></td></tr>\n";
+	echo "<tr><td align=right>Comments : </td><td align=left><TEXTAREA name=comments ROWS=3 COLS=65>$comments</TEXTAREA></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Disposition: </td><td align=left><select size=1 name=status>\n";
+
+	$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses where selectable='Y' order by status";
+	$rslt=mysql_query($stmt, $link);
+	$statuses_to_print = mysql_num_rows($rslt);
+	$statuses_list='';
+
+	$o=0;
+	$DS=0;
+	while ($statuses_to_print > $o) 
+		{
+		$rowx=mysql_fetch_row($rslt);
+		if ( (strlen($dispo) ==  strlen($rowx[0])) and (eregi($dispo,$rowx[0])) )
+			{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
+		else
+			{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
+		$o++;
+		}
+
+	$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where selectable='Y' and campaign_id='$log_campaign' order by status";
+	$rslt=mysql_query($stmt, $link);
+	$CAMPstatuses_to_print = mysql_num_rows($rslt);
+
+	$o=0;
+	while ($CAMPstatuses_to_print > $o) 
+		{
+		$rowx=mysql_fetch_row($rslt);
+		if ( (strlen($dispo) ==  strlen($rowx[0])) and (eregi($dispo,$rowx[0])) )
+			{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
+		else
+			{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
+		$o++;
+		}
+
+
+	if ($DS < 1) {$statuses_list .= "<option SELECTED value=\"$dispo\">$dispo</option>\n";}
+	echo "$statuses_list";
+	echo "</select> <i>(with $log_campaign statuses)</i></td></tr>\n";
+
+
+	echo "<tr bgcolor=#B6D3FC><td align=left>Modify vicidial log </td><td align=left><input type=checkbox name=modify_logs value=\"1\" CHECKED></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=left>Modify agent log </td><td align=left><input type=checkbox name=modify_agent_logs value=\"1\" CHECKED></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=left>Modify closer log </td><td align=left><input type=checkbox name=modify_closer_logs value=\"1\"></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=left>Add closer log record </td><td align=left><input type=checkbox name=add_closer_record value=\"1\"></td></tr>\n";
+
+
+	echo "<tr><td colspan=2 align=center><input type=submit name=submit value=\"SUBMIT\"></td></tr>\n";
+	echo "</table></form>\n";
+	echo "<BR><BR><BR>\n";
+
+	if ( ($dispo == 'CALLBK') or ($dispo == 'CBHOLD') )
+		{
+		### find any vicidial_callback records for this lead 
+		$stmt="select callback_id,lead_id,list_id,campaign_id,status,entry_time,callback_time,modify_date,user,recipient,comments,user_group from vicidial_callbacks where lead_id='" . mysql_real_escape_string($lead_id) . "' and status IN('ACTIVE','LIVE') order by callback_id desc LIMIT 1;";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+		$CB_to_print = mysql_num_rows($rslt);
+		$rowx=mysql_fetch_row($rslt);
+
+		if ($CB_to_print>0)
+			{
+			if ($rowx[9] == 'USERONLY')
+				{
+				echo "<br><form action=$PHP_SELF method=POST>\n";
+				echo "<input type=hidden name=CBchangeUSERtoANY value=\"YES\">\n";
+				echo "<input type=hidden name=DB value=\"$DB\">\n";
+				echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
+				echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
+				echo "<input type=submit name=submit value=\"CHANGE TO ANYONE CALLBACK\"></form><BR>\n";
+
+				echo "<br><form action=$PHP_SELF method=POST>\n";
+				echo "<input type=hidden name=CBchangeUSERtoUSER value=\"YES\">\n";
+				echo "<input type=hidden name=DB value=\"$DB\">\n";
+				echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
+				echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
+				echo "New Callback Owner UserID: <input type=text name=CBuser size=8 maxlength=10 value=\"$rowx[8]\"> \n";
+				echo "<input type=submit name=submit value=\"CHANGE USERONLY CALLBACK USER\"></form><BR>\n";
+				}
+			else
+				{
+				echo "<br><form action=$PHP_SELF method=POST>\n";
+				echo "<input type=hidden name=CBchangeANYtoUSER value=\"YES\">\n";
+				echo "<input type=hidden name=DB value=\"$DB\">\n";
+				echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
+				echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
+				echo "New Callback Owner UserID: <input type=text name=CBuser size=8 maxlength=10 value=\"$rowx[8]\"> \n";
+				echo "<input type=submit name=submit value=\"CHANGE TO USERONLY CALLBACK\"></form><BR>\n";
+				}
+			}
+		else
+			{
+			echo "<BR>No Callback records found<BR>\n";
+			}
+		}
 
 
 	echo "<br><br>\n";
@@ -692,6 +694,7 @@ else
 	$stmt="select recording_id,channel,server_ip,extension,start_time,start_epoch,end_time,end_epoch,length_in_sec,length_in_min,filename,location,lead_id,user,vicidial_id from recording_log where lead_id='" . mysql_real_escape_string($lead_id) . "' order by recording_id desc limit 500;";
 	$rslt=mysql_query($stmt, $link);
 	$logs_to_print = mysql_num_rows($rslt);
+	if ($DB) {echo "$logs_to_print|$stmt|\n";}
 
 	$u=0;
 	while ($logs_to_print > $u) 
