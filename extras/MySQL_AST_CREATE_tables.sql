@@ -729,7 +729,8 @@ xferconf_c_number VARCHAR(50) default '',
 xferconf_d_number VARCHAR(50) default '',
 xferconf_e_number VARCHAR(50) default '',
 use_custom_cid ENUM('Y','N') default 'N',
-scheduled_callbacks_alert ENUM('NONE','BLINK','RED','BLINK_RED') default 'NONE'
+scheduled_callbacks_alert ENUM('NONE','BLINK','RED','BLINK_RED') default 'NONE',
+queuemetrics_callstatus_override ENUM('DISABLED','NO','YES') default 'DISABLED'
 );
 
 CREATE TABLE vicidial_lists (
@@ -2176,7 +2177,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1211',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1212',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

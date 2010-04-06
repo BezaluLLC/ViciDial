@@ -4943,7 +4943,7 @@ if ($ACTION == 'updateDISPO')
 		}
 	else
 		{
-		$stmt = "SELECT dispo_call_url from vicidial_campaigns where campaign_id='$campaign';";
+		$stmt = "SELECT dispo_call_url,queuemetrics_callstatus_override from vicidial_campaigns vc,vicidial_live_agents vla where vla.campaign_id=vc.campaign_id and vla.user='$user';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00284',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4951,7 +4951,8 @@ if ($ACTION == 'updateDISPO')
 		if ($VC_dcu_ct > 0)
 			{
 			$row=mysql_fetch_row($rslt);
-			$dispo_call_url	=$row[0];
+			$dispo_call_url =						$row[0];
+			$queuemetrics_callstatus_override =		$row[1];
 			}
 
 		### reset the API fields in vicidial_live_agents record
@@ -5805,7 +5806,7 @@ if ($ACTION == 'updateDISPO')
 		}
 	##### END QUEUEMETRICS LOGGING LOOKUP #####
 	###########################################
-	if ( ($enable_queuemetrics_logging > 0) and ($queuemetrics_callstatus > 0) )
+	if ( ($enable_queuemetrics_logging > 0) and ( ( ($queuemetrics_callstatus > 0) or ($queuemetrics_callstatus_override=='YES') ) and ($queuemetrics_callstatus_override!='NO') ) )
 		{
 		$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
 		mysql_select_db("$queuemetrics_dbname", $linkB);

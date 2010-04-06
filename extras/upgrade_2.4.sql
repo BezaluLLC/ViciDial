@@ -221,3 +221,7 @@ UPDATE system_settings SET db_schema_version='1210',db_schema_update_date=NOW();
 ALTER TABLE system_settings ADD queuemetrics_callstatus ENUM('0','1') default '1';
 
 UPDATE system_settings SET db_schema_version='1211',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD queuemetrics_callstatus_override ENUM('DISABLED','NO','YES') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1212',db_schema_update_date=NOW();
