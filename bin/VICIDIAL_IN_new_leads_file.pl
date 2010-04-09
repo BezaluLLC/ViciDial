@@ -962,7 +962,7 @@ foreach(@FILES)
 				$title =				$m[25];			# number of contacts
 				$address1 =				$m[4];					$address1 =~ s/\s+$//gi;
 				$address2 =				$m[5];					$address2 =~ s/\s+$//gi;
-				$address3 =				$m[18];			# capture code
+				$address3 =				$m[34];			# orig creditor
 				$city =					$m[6];					$city =~ s/\s+$//gi;
 				$state =				$m[7];
 				$province =				$m[35];			$province =~ s/\s+$//gi;   # balance

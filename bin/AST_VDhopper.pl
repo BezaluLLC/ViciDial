@@ -23,7 +23,7 @@
 # a minute, you may want to play with the variables below to streamline for 
 # your usage
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 50810-1613 - Added database server variable definitions lookup
@@ -61,6 +61,7 @@
 # 90907-2132 - Fixed order issues
 # 91020-0054 - Fixed Auto-alt-dial DNC issues
 # 91026-1207 - Added AREACODE DNC option
+# 100409-1101 - Fix for rare dial-time duplicate hopper load issue
 #
 
 # constants
@@ -147,6 +148,7 @@ if (length($ARGV[0])>1)
 		print "  [-t] = test\n";
 		print "  [--level=XXX] = force a hopper_level of XXX\n";
 		print "  [--campaign=XXX] = run for campaign XXX only\n";
+		print "  [--wipe-hopper-clean] = deletes everything from the hopper    USE WITH CAUTION!!!\n";
 		print "\n";
 		exit;
 		}
@@ -2064,29 +2066,62 @@ foreach(@campaign_id)
 								if ($DBX) {print "Flagging DNC lead:     $affected_rows  $phone_to_hopper[$h] $campaign_id[$i]\n";}
 								}
 							}
-						if ($DNClead == '0')
-							{
-							$stmtA = "INSERT INTO $vicidial_hopper (lead_id,campaign_id,status,user,list_id,gmt_offset_now,state,priority) values('$leads_to_hopper[$h]','$campaign_id[$i]','READY','','$lists_to_hopper[$h]','$gmt_to_hopper[$h]','$state_to_hopper[$h]','0');";
-							$affected_rows = $dbhA->do($stmtA);
-							if ($DBX) {print "LEAD INSERTED: $affected_rows|$leads_to_hopper[$h]|\n";}
-							if ($DB_detail) 
+
+							$VAC_exist=0;
+							$stmtA="SELECT count(*) FROM vicidial_auto_calls where lead_id='$leads_to_hopper[$h]';";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							if ($sthArows > 0)
 								{
-								$detail_string = "|$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|";
-								&detail_logger;
+								@aryA = $sthA->fetchrow_array;
+								$VAC_exist =	$aryA[0];
 								}
+							$sthA->finish();
+
+							$VLA_exist=0;
+							$stmtA="SELECT count(*) FROM vicidial_live_agents where lead_id='$leads_to_hopper[$h]';";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$VLA_exist =	$aryA[0];
+								}
+							$sthA->finish();
+
+						if ( ($VAC_exist > 0) || ($VLA_exist > 0) )
+							{
+							$detail_string = "LIVE CALL SKIPPING     |$VAC_exist|$VLA_exist|     |$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|";
+							&detail_logger;
 							}
 						else
 							{
-							##### Auto-Alt-Dial if DNCC or DNCL are set to campaign auto-alt-dial statuses, insert lead into hopper as DNC status
-							if ( ( ($auto_alt_dial_statuses[$i] =~ / DNCC /) && ($DNCC > 0) ) || ( ($auto_alt_dial_statuses[$i] =~ / DNCL /) && ($DNCL > 0) ) )
+							if ($DNClead == '0')
 								{
-								$stmtA = "INSERT INTO $vicidial_hopper (lead_id,campaign_id,status,user,list_id,gmt_offset_now,state,priority) values('$leads_to_hopper[$h]','$campaign_id[$i]','DNC','','$lists_to_hopper[$h]','$gmt_to_hopper[$h]','$state_to_hopper[$h]','0');";
+								$stmtA = "INSERT INTO $vicidial_hopper (lead_id,campaign_id,status,user,list_id,gmt_offset_now,state,priority) values('$leads_to_hopper[$h]','$campaign_id[$i]','READY','','$lists_to_hopper[$h]','$gmt_to_hopper[$h]','$state_to_hopper[$h]','0');";
 								$affected_rows = $dbhA->do($stmtA);
-								if ($DBX) {print "LEAD INSERTED AS DNC: $affected_rows|$leads_to_hopper[$h]|\n";}
+								if ($DBX) {print "LEAD INSERTED: $affected_rows|$leads_to_hopper[$h]|\n";}
 								if ($DB_detail) 
 									{
 									$detail_string = "|$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|";
 									&detail_logger;
+									}
+								}
+							else
+								{
+								##### Auto-Alt-Dial if DNCC or DNCL are set to campaign auto-alt-dial statuses, insert lead into hopper as DNC status
+								if ( ( ($auto_alt_dial_statuses[$i] =~ / DNCC /) && ($DNCC > 0) ) || ( ($auto_alt_dial_statuses[$i] =~ / DNCL /) && ($DNCL > 0) ) )
+									{
+									$stmtA = "INSERT INTO $vicidial_hopper (lead_id,campaign_id,status,user,list_id,gmt_offset_now,state,priority) values('$leads_to_hopper[$h]','$campaign_id[$i]','DNC','','$lists_to_hopper[$h]','$gmt_to_hopper[$h]','$state_to_hopper[$h]','0');";
+									$affected_rows = $dbhA->do($stmtA);
+									if ($DBX) {print "LEAD INSERTED AS DNC: $affected_rows|$leads_to_hopper[$h]|\n";}
+									if ($DB_detail) 
+										{
+										$detail_string = "|$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|";
+										&detail_logger;
+										}
 									}
 								}
 							}
@@ -2094,10 +2129,8 @@ foreach(@campaign_id)
 					$h++;
 					}
 				if ($DB) {print "     DONE with this campaign\n";}
-
 				}
 			}
-		
 		}
 	$i++;
 	}
