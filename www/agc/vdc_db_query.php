@@ -243,10 +243,11 @@
 # 100311-1559 - Added callcard logging to startcallurl and dispourl functions
 # 100331-1217 - Added human-readable hangup codes for manual dial
 # 100405-1430 - Added queuemetrics_callstatus option
+# 100413-1341 - Fixes for extended alt-dial
 #
 
-$version = '2.4-150';
-$build = '100405-1430';
+$version = '2.4-151';
+$build = '100413-1341';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=321;
 $one_mysql_log=0;
@@ -4023,7 +4024,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 							$rslt=mysql_query($stmt, $link);
 								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00248',$user,$server_ip,$session_name,$one_mysql_log);}
 							$VDAP_cid_ct = mysql_num_rows($rslt);
-							if ($VDACP_cid_ct > 0)
+							if ($VDAP_cid_ct > 0)
 								{
 								$row=mysql_fetch_row($rslt);
 								$Xalt_phone_count	=$row[0];
@@ -4033,7 +4034,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 								$rslt=mysql_query($stmt, $link);
 									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00249',$user,$server_ip,$session_name,$one_mysql_log);}
 								$VDAPct_cid_ct = mysql_num_rows($rslt);
-								if ($VDACPct_cid_ct > 0)
+								if ($VDAPct_cid_ct > 0)
 									{
 									$row=mysql_fetch_row($rslt);
 									$COUNTalt_phone_count	=$row[0];
@@ -5081,7 +5082,7 @@ if ($ACTION == 'updateDISPO')
 										$rslt=mysql_query($stmt, $link);
 											if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00250',$user,$server_ip,$session_name,$one_mysql_log);}
 										$VDAP_cid_ct = mysql_num_rows($rslt);
-										if ($VDACP_cid_ct > 0)
+										if ($VDAP_cid_ct > 0)
 											{
 											$row=mysql_fetch_row($rslt);
 											$Xalt_phone_count	=$row[0];
@@ -5091,7 +5092,7 @@ if ($ACTION == 'updateDISPO')
 											$rslt=mysql_query($stmt, $link);
 												if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00251',$user,$server_ip,$session_name,$one_mysql_log);}
 											$VDAPct_cid_ct = mysql_num_rows($rslt);
-											if ($VDACPct_cid_ct > 0)
+											if ($VDAPct_cid_ct > 0)
 												{
 												$row=mysql_fetch_row($rslt);
 												$COUNTalt_phone_count	=$row[0];

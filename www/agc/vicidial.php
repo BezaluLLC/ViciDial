@@ -288,10 +288,11 @@
 # 100327-0901 - fix for manual dial answering machine message
 # 100331-1220 - Added human-readable hangup codes for manual dial
 # 100401-0019 - Added agent_choose_blended option
+# 100413-1349 - Various small logging fixes and extended alt-dial fixes
 #
 
-$version = '2.4-266';
-$build = '100401-0019';
+$version = '2.4-267';
+$build = '100413-1349';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -6514,7 +6515,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var check_VDIC_array=check_incoming.split("\n");
 						if (check_VDIC_array[0] == '1')
 							{
-					//		alert(xmlhttprequestcheckauto.responseText);
+						//	alert(xmlhttprequestcheckauto.responseText);
 							AutoDialWaiting = 0;
 
 							var VDIC_data_VDAC=check_VDIC_array[1].split("|");
