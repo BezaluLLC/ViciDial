@@ -92,6 +92,9 @@ QueueMetrics CallStatus||
 This option if set to 0 will not put in the CALLSTATUS entry into queue_log when an agent dispositions a call. Default is 1 for enabled||
 QM CallStatus Override||
 If QueueMetrics integration is enabled in the system settings then this setting allow the overriding of the System Settings setting for CallStatus queue_log entries. Default is DISABLED which will use the system setting||
+Extension Append CID||
+If enabled, the calls placed from this campaign will have a space and the phone extension of the agent appended to the end of the CallerID name for the call before it is sent to the agent. Default is N for disabled||
+If enabled, the calls coming in from this in-group will have a space and the phone extension of the agent appended to the end of the CallerID name for the call before it is sent to the agent. Default is N for disabled||
 
 
 AST_VICIDIAL_ingrouplist.php

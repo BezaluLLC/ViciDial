@@ -73,6 +73,7 @@
 # 91230-1159 - Change to callee callerID when sending the call to VMAIL
 # 100205-1024 - Fixed CPD send to message
 # 100319-0610 - Added extension group remote agent feature
+# 100414-2156 - Added extension_appended_cidname option
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -193,13 +194,13 @@ $sthArows=$sthA->rows;
 while ($sthArows > $rec_count)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$DBvoicemail_dump_exten	=	"$aryA[0]";
-	$DBext_context =			"$aryA[1]";
-	$DBanswer_transfer_agent =	"$aryA[2]";
-	$DBSERVER_GMT =				"$aryA[3]";
-	$DBasterisk_version =		"$aryA[4]";
-	$DBmax_vicidial_trunks =	"$aryA[5]";
-	$DBagi_output =				"$aryA[6]";
+	$DBvoicemail_dump_exten	=	$aryA[0];
+	$DBext_context =			$aryA[1];
+	$DBanswer_transfer_agent =	$aryA[2];
+	$DBSERVER_GMT =				$aryA[3];
+	$DBasterisk_version =		$aryA[4];
+	$DBmax_vicidial_trunks =	$aryA[5];
+	$DBagi_output =				$aryA[6];
 	if ($DBvoicemail_dump_exten)	{$voicemail_dump_exten = $DBvoicemail_dump_exten;}
 	if ($DBext_context)				{$ext_context = $DBext_context;}
 	if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
@@ -274,6 +275,7 @@ if ( (length($callerid)>20) && ($callerid =~ /\"\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S
 	{
 	$callerid =~ s/^\"//gi;
 	$callerid =~ s/\".*$//gi;
+	$callerid =~ s/ .*//gi;
 	### set the callerid to the ACQS value(calleridname)
 	print "SET CALLERID $callerid\n";
 	checkresult($result);
@@ -283,6 +285,7 @@ if ( (
 (length($calleridname)>5) && ( (!$callerid) or ($callerid =~ /unknown|private|00000000/i) or ($callerid =~ /5551212/) )
 ) or ( (length($calleridname)>17) && ($calleridname =~ /\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/) ) )
 	{
+	$calleridname =~ s/ .*//gi;
 	$callerid = $calleridname;
 	### set the callerid to the ACQS value(calleridname)
 	print "SET CALLERID $callerid\n";
@@ -304,6 +307,7 @@ $VDADphone='';
 $VDADphone_code='';
 
 $callerid =~ s/\"//gi;
+$callerid =~ s/ .*//gi;
 $CIDlead_id = $callerid;
 $CIDlead_id = substr($CIDlead_id, 11, 9);
 $CIDlead_id = ($CIDlead_id + 0);
@@ -322,11 +326,11 @@ $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
 	$dbhP=$dbhA;   $mysql_count='01002';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
- $rec_count=0;
+$rec_count=0;
 while ($sthArows > $rec_count)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$Pseudo_duplicate_count	= "$aryA[0]";
+	$Pseudo_duplicate_count	= $aryA[0];
 	$rec_count++;
 	}
 $sthA->finish();
@@ -347,7 +351,7 @@ $rec_count=0;
 while ($sthArows > $rec_count)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$dialplan_duplicate_count = "$aryA[0]";
+	$dialplan_duplicate_count = $aryA[0];
 	$rec_count++;
 	}
 $sthA->finish();
@@ -393,7 +397,7 @@ if ($affected_rows > 0)
 	$sthA->finish();
 
 	### Grab campaign values from the database
-	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
+	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -401,27 +405,28 @@ if ($affected_rows > 0)
 	if ($sthArows > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$DBdrop_call_seconds	= "$aryA[0]";
-		$DBdrop_action	=		"$aryA[1]";
-		$DBsafe_harbor_exten	= "$aryA[2]";
-		$DBconcurrent_transfers	= "$aryA[3]";
+		$DBdrop_call_seconds	=		$aryA[0];
+		$DBdrop_action	=				$aryA[1];
+		$DBsafe_harbor_exten	=		$aryA[2];
+		$DBconcurrent_transfers	=		$aryA[3];
 		if ($DBdrop_call_seconds)	{$DROP_TIME = $DBdrop_call_seconds;}
 		if ($DBdrop_action)	{$drop_action = $DBdrop_action;}
 		if ($DBsafe_harbor_exten)	{$safe_harbor_exten = $DBsafe_harbor_exten;}
-		$CAMP_callorder	=		"$aryA[4]";
-		$VDADvoicemail_ext =	"$aryA[5]";
-		$drop_inbound_group =	"$aryA[6]";
-		$use_internal_dnc =		"$aryA[7]";
-		$use_campaign_dnc =		"$aryA[8]";
-		$cpd_amd_action =		"$aryA[9]";
-		$am_message_exten =		"$aryA[10]";
-		$three_way_call_cid =	"$aryA[11]";
-		$campaign_cid =			"$aryA[12]";
-		$survey_first_audio_file =		"$aryA[13]";
-		$survey_opt_in_audio_file = 	"$aryA[14]";
-		$survey_ni_audio_file =			"$aryA[15]";
-		$survey_third_audio_file =		"$aryA[16]";
-		$survey_fourth_audio_file =		"$aryA[17]";
+		$CAMP_callorder	=				$aryA[4];
+		$VDADvoicemail_ext =			$aryA[5];
+		$drop_inbound_group =			$aryA[6];
+		$use_internal_dnc =				$aryA[7];
+		$use_campaign_dnc =				$aryA[8];
+		$cpd_amd_action =				$aryA[9];
+		$am_message_exten =				$aryA[10];
+		$three_way_call_cid =			$aryA[11];
+		$campaign_cid =					$aryA[12];
+		$survey_first_audio_file =		$aryA[13];
+		$survey_opt_in_audio_file = 	$aryA[14];
+		$survey_ni_audio_file =			$aryA[15];
+		$survey_third_audio_file =		$aryA[16];
+		$survey_fourth_audio_file =		$aryA[17];
+		$extension_appended_cidname =	$aryA[18];
 		}
 	$sthA->finish();
 
@@ -609,7 +614,7 @@ if ($affected_rows > 0)
 	if ($sthArowsLI > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$xCLlist_id =	"$aryA[0]";
+		$xCLlist_id =	$aryA[0];
 		}
 	$sthA->finish();
 
@@ -630,15 +635,15 @@ if ($affected_rows > 0)
 	$rec_count=0;
 	while ($sthArows > $rec_count)
 		{
-		 @aryA = $sthA->fetchrow_array;
-			$enable_queuemetrics_logging =	"$aryA[0]";
-			$queuemetrics_server_ip	=	"$aryA[1]";
-			$queuemetrics_dbname =		"$aryA[2]";
-			$queuemetrics_login=		"$aryA[3]";
-			$queuemetrics_pass =		"$aryA[4]";
-			$queuemetrics_log_id =		"$aryA[5]";
-			$queuemetrics_eq_prepend =	"$aryA[6]";
-		 $rec_count++;
+		@aryA = $sthA->fetchrow_array;
+		$enable_queuemetrics_logging =	$aryA[0];
+		$queuemetrics_server_ip	=		$aryA[1];
+		$queuemetrics_dbname =			$aryA[2];
+		$queuemetrics_login=			$aryA[3];
+		$queuemetrics_pass =			$aryA[4];
+		$queuemetrics_log_id =			$aryA[5];
+		$queuemetrics_eq_prepend =		$aryA[6];
+		$rec_count++;
 		}
 	$sthA->finish();
 	##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -654,8 +659,8 @@ if ($affected_rows > 0)
 		while ($sthArows > $rec_count)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$phone_number =	"$aryA[0]";
-			$data2 = "$phone_number";
+			$phone_number =		$aryA[0];
+			$data2 =			$phone_number;
 			$rec_count++;
 			}
 		$sthA->finish();
@@ -672,7 +677,7 @@ if ($affected_rows > 0)
 				{
 				 $DASH='-';
 				 @aryA = $sthA->fetchrow_array;
-				 $QMprepend =	"$aryA[0]";
+				 $QMprepend =	$aryA[0];
 				 $rec_count++;
 				 $data2 = "$QMprepend$DASH$phone_number";
 				}
@@ -710,7 +715,7 @@ if ($call_handle_method =~ /REMIND/)
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$cpd_amd		= "$aryA[0]";
+			$cpd_amd = $aryA[0];
 			}
 		$sthA->finish();
 
@@ -751,7 +756,7 @@ if ($call_handle_method =~ /SURVEY/)
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$cpd_amd		= "$aryA[0]";
+			$cpd_amd		= $aryA[0];
 			}
 		$sthA->finish();
 
@@ -778,21 +783,20 @@ if ($call_handle_method =~ /SURVEY/)
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-
-			$survey_dtmf_digits =			"$aryA[0]";
-			$survey_ni_digit =				"$aryA[1]";
-			$survey_method =				"$aryA[2]";
-			$survey_no_response_action =	"$aryA[3]";
-			$survey_ni_status =				"$aryA[4]";
-			$survey_response_digit_map =	"$aryA[5]";
-			$survey_xfer_exten =			"$aryA[6]";
-			$survey_camp_record_dir =		"$aryA[7]";
-			$survey_third_digit =			"$aryA[8]";
-			$survey_third_status =			"$aryA[9]";
-			$survey_third_exten =			"$aryA[10]";
-			$survey_fourth_digit =			"$aryA[11]";
-			$survey_fourth_status =			"$aryA[12]";
-			$survey_fourth_exten =			"$aryA[13]";
+			$survey_dtmf_digits =			$aryA[0];
+			$survey_ni_digit =				$aryA[1];
+			$survey_method =				$aryA[2];
+			$survey_no_response_action =	$aryA[3];
+			$survey_ni_status =				$aryA[4];
+			$survey_response_digit_map =	$aryA[5];
+			$survey_xfer_exten =			$aryA[6];
+			$survey_camp_record_dir =		$aryA[7];
+			$survey_third_digit =			$aryA[8];
+			$survey_third_status =			$aryA[9];
+			$survey_third_exten =			$aryA[10];
+			$survey_fourth_digit =			$aryA[11];
+			$survey_fourth_status =			$aryA[12];
+			$survey_fourth_exten =			$aryA[13];
 
 			@digit_map = split(/\|/,$survey_response_digit_map);
 
@@ -1330,7 +1334,7 @@ while ($drop_timer <= $DROP_TIME)
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$cpd_amd		= "$aryA[0]";
+			$cpd_amd		= $aryA[0];
 			}
 		$sthA->finish();
 
@@ -1372,7 +1376,7 @@ while ($drop_timer <= $DROP_TIME)
 		while ($sthArows > $rec_count)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$rec_countWAIT		= "$aryA[0]";
+			$rec_countWAIT		= $aryA[0];
 			$rec_count++;
 			}
 		$sthA->finish();
@@ -1389,7 +1393,7 @@ while ($drop_timer <= $DROP_TIME)
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$active_agents		= "$aryA[0]";
+				$active_agents		= $aryA[0];
 				$rec_count++;
 				}
 			
@@ -1546,6 +1550,30 @@ while ($drop_timer <= $DROP_TIME)
 					if ($AGILOG) {$agi_string = "--    REMOTE EXTEN LOG : |$RALaffected_rows|CID changed: \"$callerid\" \<$VDADphone\>\n|$stmtA|";   &agi_output;}
 					}
 				### END REMOTE AGENT SECTION
+				else
+					{
+					if ($extension_appended_cidname =~ /Y/)
+						{
+						$eac_cbc=0;	
+						$stmtA = "SELECT extension FROM vicidial_live_agents where user='$VDADuser' order by last_call_time limit 1;";
+							if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						while ($sthArows > $eac_cbc)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$eac_extension	=	$aryA[0];
+							$eac_extension =~ s/SIP\/|IAX2\/|Zap\/|DAHDI\/|Local\///gi;
+							$eac_cbc++;
+							}
+						$sthA->finish();
+						
+						$newcallerid = "\"$callerid $eac_extension <$phone_number>\"";
+						$AGI->set_callerid($newcallerid);
+						}
+					}
 
 				$stmtA = "UPDATE vicidial_auto_calls set status='XFER', stage='XFER-$drop_timer', extension='$VDADconf_exten' where callerid='$callerid';";
 				$affected_rows = $dbhA->do($stmtA);
@@ -1618,7 +1646,7 @@ while ($drop_timer <= $DROP_TIME)
 		while ($sthArows > $rec_count)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$rec_countWAITrem	= "$aryA[0]";
+			$rec_countWAITrem	= $aryA[0];
 			$rec_count++;
 			}
 		$sthA->finish();
@@ -1635,7 +1663,7 @@ while ($drop_timer <= $DROP_TIME)
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$active_agents		= "$aryA[0]";
+				$active_agents		= $aryA[0];
 				$rec_count++;
 				}
 			
@@ -1806,6 +1834,30 @@ while ($drop_timer <= $DROP_TIME)
 					if ($AGILOG) {$agi_string = "--    REMOTE EXTEN LOG : |$RALaffected_rows|CID changed: \"$callerid\" \<$VDADphone\>\n|$stmtA|";   &agi_output;}
 					}
 				### END REMOTE AGENT SECTION
+				else
+					{
+					if ($extension_appended_cidname =~ /Y/)
+						{
+						$eac_cbc=0;	
+						$stmtA = "SELECT extension FROM vicidial_live_agents where user='$VDADuser' order by last_call_time limit 1;";
+							if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						while ($sthArows > $eac_cbc)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$eac_extension	=	$aryA[0];
+							$eac_extension =~ s/SIP\/|IAX2\/|Zap\/|DAHDI\/|Local\///gi;
+							$eac_cbc++;
+							}
+						$sthA->finish();
+						
+						$newcallerid = "\"$callerid $eac_extension <$phone_number>\"";
+						$AGI->set_callerid($newcallerid);
+						}
+					}
 
 				$VDADremDIALstr .= "$VDADconf_exten";
 
@@ -2186,7 +2238,7 @@ sub cpd_end_call
 	if ($sthArows > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$cpd_result		= "$aryA[0]";
+		$cpd_result		= $aryA[0];
 		}
 	$sthA->finish();
 	$CPDfound=0;

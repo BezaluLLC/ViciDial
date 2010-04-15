@@ -347,12 +347,12 @@ How to install Queue Metrics on OpenSuSE v.11.1 (32 or 64 bit) with a system tha
 - Say yes to install, and say yes to license
 
 3) cd /usr/src
-4) wget http://queuemetrics.com/download/QueueMetrics-1.5.5-trial.tar.gz
+4) wget http://queuemetrics.com/download/QueueMetrics-1.6.0.1-trial.tar.gz
 5) mkdir tars (incase it doesn't exist)
-6) tar -xzf QueueMetrics-1.5.5-trial.tar.gz
-7) mv QueueMetrics-1.5.5-trial.tar.gz ./tars/
+6) tar xvfz QueueMetrics-1.6.0.1-trial.tar.gz
+7) mv QueueMetrics-1.6.0.1-trial.tar.gz ./tars/
 8) mkdir /srv/tomcat6/webapps/QM
-9) cp -r queuemetrics-1.5.5/* /srv/tomcat6/webapps/QM/
+9) cp -r queuemetrics-1.6.0.1/* /srv/tomcat6/webapps/QM/
 10) zypper in mysql-connector-java
 11) cp /usr/share/java/mysql-connector-java.jar /srv/tomcat6/webapps/QM/WEB-INF/lib/
 12) chkconfig tomcat6 on

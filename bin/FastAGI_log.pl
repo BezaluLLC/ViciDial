@@ -383,6 +383,7 @@ sub process_request
 		### call start stage
 		if ($stage =~ /START/)
 			{
+			$callerid =~ s/ .*//gi;
 			$channel_group='';
 
 			if ($AGILOG) {$agi_string = "+++++ CALL LOG START : $now_date";   &agi_output;}
@@ -497,6 +498,7 @@ sub process_request
 			{
 			if ($AGILOG) {$agi_string = "|CALL HUNG UP|";   &agi_output;}
 
+			$callerid =~ s/ .*//gi;
 			$callerid =~ s/\"//gi;
 			$CIDlead_id = $callerid;
 			$CIDlead_id = substr($CIDlead_id, 11, 9);

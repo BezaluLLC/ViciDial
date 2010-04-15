@@ -123,6 +123,7 @@
 # 100212-0653 - Added AGENTVMAIL AGENTDIRECT option for no-queue, hold time and after hours features
 # 100226-0927 - Fixed reinsert issue in vicidial_auto_calls table with auto_call_id
 # 100319-0614 - Added extension group remote agent feature
+# 100414-2046 - Added extension_appended_cidname option
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -233,8 +234,8 @@ while ($sthArows > $rec_count)
 	{
 	$AGILOG = '0';
 	@aryA = $sthA->fetchrow_array;
-	$DBagi_output =		"$aryA[0]";
-	$local_gmt =		"$aryA[0]";
+	$DBagi_output =		$aryA[0];
+	$local_gmt =		$aryA[1];
 	if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
 	if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
 	if ($DBagi_output =~ /BOTH/)	{$AGILOG = '3';}
@@ -479,7 +480,7 @@ if ($channel =~ /Local/i)
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$Pseudo_duplicate_count	= "$aryA[0]";
+				$Pseudo_duplicate_count	= $aryA[0];
 				$rec_count++;
 				}
 			$sthA->finish();
@@ -507,14 +508,13 @@ $sthArows=$sthA->rows;
 	$dbhP=$dbhA;   $mysql_count='02004';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 while ($sthArows > $cbc)
 	{
-	@aryA = $sthA->fetchrow_array;
-	
-	$DBvoicemail_dump_exten	=		"$aryA[0]";
-	$DBext_context		=			"$aryA[1]";
-	$DBanswer_transfer_agent	=	"$aryA[2]";
-	$DBSERVER_GMT		=			"$aryA[3]";
-	$DBasterisk_version	=			"$aryA[4]";
-	$DBmax_vicidial_trunks	=		"$aryA[5]";
+	@aryA = $sthA->fetchrow_array;	
+	$DBvoicemail_dump_exten	=		$aryA[0];
+	$DBext_context		=			$aryA[1];
+	$DBanswer_transfer_agent	=	$aryA[2];
+	$DBSERVER_GMT		=			$aryA[3];
+	$DBasterisk_version	=			$aryA[4];
+	$DBmax_vicidial_trunks	=		$aryA[5];
 	if ($DBvoicemail_dump_exten)	{$voicemail_dump_exten = $DBvoicemail_dump_exten;}
 	if ($DBext_context)				{$ext_context = $DBext_context;}
 	if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
@@ -529,7 +529,7 @@ $sthA->finish();
 
 ### Grab inbound groups values from the database
 $cbc=0;
-$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value FROM vicidial_inbound_groups where group_id = '$channel_group';";
+$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname FROM vicidial_inbound_groups where group_id = '$channel_group';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -538,44 +538,45 @@ while ($sthArows > $cbc)
 	{
 	@aryA = $sthA->fetchrow_array;
 	
-	$call_time_id	=				"$aryA[0]";
-	$after_hours_action	=			"$aryA[1]";
-	$after_hours_message_filename	=	"$aryA[2]";
-	$after_hours_exten	=			"$aryA[3]";
-	$after_hours_voicemail	=		"$aryA[4]";
-	$welcome_message_filename	=	"$aryA[5]";
-	$moh_context	=				"$aryA[6]";
-	$onhold_prompt_filename	=		"$aryA[7]";
-	$prompt_interval	=			"$aryA[8]";
-	$agent_alert_exten	=			"$aryA[9]";
-	$agent_alert_delay	=			"$aryA[10]";
-	$drop_call_seconds	=			"$aryA[11]";
+	$call_time_id =						$aryA[0];
+	$after_hours_action =				$aryA[1];
+	$after_hours_message_filename =		$aryA[2];
+	$after_hours_exten	=				$aryA[3];
+	$after_hours_voicemail	=			$aryA[4];
+	$welcome_message_filename	=		$aryA[5];
+	$moh_context	=					$aryA[6];
+	$onhold_prompt_filename	=			$aryA[7];
+	$prompt_interval	=				$aryA[8];
+	$agent_alert_exten	=				$aryA[9];
+	$agent_alert_delay	=				$aryA[10];
+	$drop_call_seconds	=				$aryA[11];
 		$DROP_TIME = $drop_call_seconds;
-	$drop_action =					"$aryA[12]";
-	$drop_exten	=					"$aryA[13]";
-	$CAMP_callorder	=				"$aryA[14]";
-	$VDADvoicemail_ext =			"$aryA[15]";
+	$drop_action =						$aryA[12];
+	$drop_exten	=						$aryA[13];
+	$CAMP_callorder	=					$aryA[14];
+	$VDADvoicemail_ext =				$aryA[15];
 #		$VDADvoicemail_ext =~ s/\D//gi;
-	$queue_priority =				"$aryA[16]";
-	$drop_inbound_group =			"$aryA[17]";
-	$afterhours_xfer_group =		"$aryA[18]";
-	$play_place_in_line =			"$aryA[19]";
-	$play_estimate_hold_time =		"$aryA[20]";
-	$hold_time_option =				"$aryA[21]";
-	$hold_time_option_seconds =		"$aryA[22]";
-	$hold_time_option_exten =		"$aryA[23]";
-	$hold_time_option_voicemail =	"$aryA[24]";
-	$hold_time_option_xfer_group =	"$aryA[25]";
-	$hold_time_option_callback_filename =	"$aryA[26]";
-	$hold_time_option_callback_list_id =	"$aryA[27]";
-	$hold_recall_xfer_group =		"$aryA[28]";
-	$no_delay_call_route =			"$aryA[29]";
+	$queue_priority =					$aryA[16];
+	$drop_inbound_group =				$aryA[17];
+	$afterhours_xfer_group =			$aryA[18];
+	$play_place_in_line =				$aryA[19];
+	$play_estimate_hold_time =			$aryA[20];
+	$hold_time_option =					$aryA[21];
+	$hold_time_option_seconds =			$aryA[22];
+	$hold_time_option_exten =			$aryA[23];
+	$hold_time_option_voicemail =		$aryA[24];
+	$hold_time_option_xfer_group =		$aryA[25];
+	$hold_time_option_callback_filename =	$aryA[26];
+	$hold_time_option_callback_list_id =	$aryA[27];
+	$hold_recall_xfer_group =			$aryA[28];
+	$no_delay_call_route =				$aryA[29];
 	if ($hold_time_option =~ /DROP_ACTION/)
 		{$hold_time_option = $drop_action;}
-	$play_welcome_message =			"$aryA[30]";
-	$no_agent_no_queue =			"$aryA[31]";
-	$no_agent_action =				"$aryA[32]";
-	$no_agent_action_value =		"$aryA[33]";
+	$play_welcome_message =				$aryA[30];
+	$no_agent_no_queue =				$aryA[31];
+	$no_agent_action =					$aryA[32];
+	$no_agent_action_value =			$aryA[33];
+	$extension_appended_cidname =		$aryA[34];
 
 	$cbc++;
 	}
@@ -596,10 +597,10 @@ $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
 	$dbhP=$dbhA;   $mysql_count='02006';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 @aryA = $sthA->fetchrow_array;
-$ct_default_start	=		"$aryA[0]";
-$ct_default_stop	=		"$aryA[1]";
-$ct_day_start	=			"$aryA[2]";
-$ct_day_stop	=			"$aryA[3]";
+$ct_default_start	=		$aryA[0];
+$ct_default_stop	=		$aryA[1];
+$ct_day_start	=			$aryA[2];
+$ct_day_stop	=			$aryA[3];
 $sthA->finish();
 
 if ( ($ct_day_start > 0) || ($ct_day_stop > 0) )  
@@ -640,7 +641,7 @@ if ($call_handle_method =~ /LOOKUP/)
 		while ($sthArows > $cbc)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$insert_lead_id = "$aryA[0]";
+			$insert_lead_id = $aryA[0];
 			$cbc++; 
 			}
 		$sthA->finish();
@@ -698,7 +699,7 @@ if ($call_handle_method =~ /LOOKUP/)
 			while ($sthArows > $cbc)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$insert_lead_id = "$aryA[0]";
+				$insert_lead_id = $aryA[0];
 				$cbc++;	
 				} 
 			$sthA->finish();
@@ -720,7 +721,7 @@ if ($call_handle_method =~ /LOOKUP/)
 			while ($sthArows > $cbc)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$insert_lead_id = "$aryA[0]";
+				$insert_lead_id = $aryA[0];
 				$cbc++; 
 				}
 			$sthA->finish();
@@ -746,11 +747,11 @@ else
 			@aryA = $sthA->fetchrow_array;	
 			$campaign	=		"$channel_group";
 			if (length($phone_number) < 10) 
-				{$phone_number =		"$aryA[0]";}
-			$phone_code	=		"$aryA[1]";
-			$insert_lead_id	=	"$CIDlead_id";
-			$fronter =			"$aryA[2]";
-			$vendor_id =		"$aryA[3]";
+				{$phone_number =		$aryA[0];}
+			$phone_code	=		$aryA[1];
+			$insert_lead_id	=	$CIDlead_id;
+			$fronter =			$aryA[2];
+			$vendor_id =		$aryA[3];
 			$cbc++;
 			}
 		$sthA->finish();
@@ -771,7 +772,7 @@ else
 		while ($sthArows > $cbc)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$insert_lead_id = "$aryA[0]";
+			$insert_lead_id = $aryA[0];
 			$cbc++; 
 			}
 		$sthA->finish();
@@ -796,7 +797,7 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 	if ($sthArows > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$insert_close_id = "$aryA[0]";
+		$insert_close_id = $aryA[0];
 		$cbc++; 
 		}
 	$sthA->finish();
@@ -952,7 +953,7 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 	if ($sthArows > 0)
 		{
 		@aryA = $sthA->fetchrow_array;	
-		$group_agents_count	= "$aryA[0]";
+		$group_agents_count	= $aryA[0];
 		}
 	$sthA->finish();
 
@@ -971,7 +972,7 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$insert_close_id = "$aryA[0]";
+			$insert_close_id = $aryA[0];
 			$cbc++; 
 			}
 		$sthA->finish();
@@ -1215,7 +1216,7 @@ if ($call_handle_method =~ /CLOSER|DIGITID$/)
 	if ($sthArows > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$insert_xfer_id = "$aryA[0]";
+		$insert_xfer_id = $aryA[0];
 		$cbc++; 
 		}
 	$sthA->finish();
@@ -1260,7 +1261,7 @@ if ($enable_queuemetrics_logging > 0)
 			{
 			$DASH='-';
 			@aryA = $sthA->fetchrow_array;
-			$QMprepend =	"$aryA[0]";
+			$QMprepend =	$aryA[0];
 			$rec_count++;
 			$data2 = "$QMprepend$DASH$phone_number";
 			}
@@ -1367,7 +1368,7 @@ $sthArows=$sthA->rows;
 if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$insert_close_id = "$aryA[0]";
+	$insert_close_id = $aryA[0];
 	$cbc++; 
 	}
 $sthA->finish();
@@ -1795,7 +1796,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					if ($sthBrowsQLA > 0)
 						{
 						@aryB = $sthB->fetchrow_array;
-						$QLabandon = 	"$aryB[0]";
+						$QLabandon = 	$aryB[0];
 						}
 					$sthB->finish();
 					if ( ($QLabandon > 0) && (length($callerid) > 15) )
@@ -1963,6 +1964,30 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					if ($AGILOG) {$agi_string = "--    REMOTE EXTEN LOG : |$RALaffected_rows|CID changed: \"$callerid\" \<$phone_number\>\n|$stmtA|";   &agi_output;}
 					}
 				### END REMOTE AGENT SECTION
+				else
+					{
+					if ($extension_appended_cidname =~ /Y/)
+						{
+						$eac_cbc=0;	
+						$stmtA = "SELECT extension FROM vicidial_live_agents where user='$VDADuser' order by last_call_time limit 1;";
+							if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						while ($sthArows > $eac_cbc)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$eac_extension	=	$aryA[0];
+							$eac_extension =~ s/SIP\/|IAX2\/|Zap\/|DAHDI\/|Local\///gi;
+							$eac_cbc++;
+							}
+						$sthA->finish();
+						
+						$newcallerid = "\"$callerid $eac_extension <$phone_number>\"";
+						$AGI->set_callerid($newcallerid);
+						}
+					}
 
 				$stmtA = "UPDATE vicidial_closer_log set queue_seconds='$drop_timer' where lead_id = '$insert_lead_id' and call_date='$SQLdate';";
 				$affected_rows = $dbhA->do($stmtA);
@@ -2439,6 +2464,30 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					if ($AGILOG) {$agi_string = "--    REMOTE EXTEN LOG : |$RALaffected_rows|CID changed: \"$callerid\" \<$phone_number\>\n|$stmtA|";   &agi_output;}
 					}
 				### END REMOTE AGENT SECTION
+				else
+					{
+					if ($extension_appended_cidname =~ /Y/)
+						{
+						$eac_cbc=0;	
+						$stmtA = "SELECT extension FROM vicidial_live_agents where user='$VDADuser' order by last_call_time limit 1;";
+							if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						while ($sthArows > $eac_cbc)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$eac_extension	=	$aryA[0];
+							$eac_extension =~ s/SIP\/|IAX2\/|Zap\/|DAHDI\/|Local\///gi;
+							$eac_cbc++;
+							}
+						$sthA->finish();
+						
+						$newcallerid = "\"$callerid $eac_extension <$phone_number>\"";
+						$AGI->set_callerid($newcallerid);
+						}
+					}
 
 				$stmtA = "UPDATE vicidial_closer_log set queue_seconds='$drop_timer' where lead_id = '$insert_lead_id' and call_date='$SQLdate';";
 				$affected_rows = $dbhA->do($stmtA);
@@ -2517,7 +2566,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$hrxg_count = "$aryA[0]";
+			$hrxg_count = $aryA[0];
 			}
 		$sthA->finish();
 

@@ -217,6 +217,7 @@ $VDADphone='';
 $VDADphone_code='';
 
 
+$callerid =~ s/ .*//gi;
 $callerid =~ s/\"//gi;
 $CIDlead_id = $callerid;
 $CIDlead_id = substr($CIDlead_id, 11, 9);
