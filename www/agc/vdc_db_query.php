@@ -1076,7 +1076,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 	else
 	{
 	##### grab number of calls today in this campaign and increment
-	$stmt="SELECT calls_today FROM vicidial_live_agents WHERE user='$user' and campaign_id='$campaign';";
+	$eac_phone='';
+	$stmt="SELECT calls_today,extension FROM vicidial_live_agents WHERE user='$user' and campaign_id='$campaign';";
 	$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00015',$user,$server_ip,$session_name,$one_mysql_log);}
 	if ($DB) {echo "$stmt\n";}
@@ -1084,7 +1085,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 	if ($vla_cc_ct > 0)
 		{
 		$row=mysql_fetch_row($rslt);
-		$calls_today = $row[0];
+		$calls_today =	$row[0];
+		$eac_phone =	$row[1];
 		}
 	else
 		{$calls_today ='0';}
@@ -1900,10 +1902,29 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$PADlead_id = sprintf("%09s", $lead_id);
 					while (strlen($PADlead_id) > 9) {$PADlead_id = substr("$PADlead_id", 0, -1);}
 
+				### check for extension append in campaign
+				$use_eac=0;
+				$stmt = "SELECT count(*) FROM vicidial_campaigns where extension_appended_cidname='Y' and campaign_id='$campaign';";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$eacid_ct = mysql_num_rows($rslt);
+				if ($eacid_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$use_eac =	$row[0];
+					}
+
 				# Create unique calleridname to track the call: MmmddhhmmssLLLLLLLLL
 					$MqueryCID = "M$CIDdate$PADlead_id";
-				if ($CCID_on) {$CIDstring = "\"$MqueryCID\" <$CCID>";}
-				else {$CIDstring = "$MqueryCID";}
+				$EAC='';
+				if ($use_eac > 0)
+					{
+					$eac_extension = preg_replace("/SIP\/|IAX2\/|Zap\/|DAHDI\/|Local\//",'',$eac_phone);
+					$EAC=" $eac_extension";
+					}
+				if ($CCID_on) {$CIDstring = "\"$MqueryCID$EAC\" <$CCID>";}
+				else {$CIDstring = "$MqueryCID$EAC";}
 
 				### whether to omit phone_code or not
 				if (eregi('Y',$omit_phone_code)) 
@@ -2280,7 +2301,7 @@ if ($ACTION == 'manDiaLonly')
 	else
 		{
 		##### grab number of calls today in this campaign and increment
-		$stmt="SELECT calls_today FROM vicidial_live_agents WHERE user='$user' and campaign_id='$campaign';";
+		$stmt="SELECT calls_today,extension FROM vicidial_live_agents WHERE user='$user' and campaign_id='$campaign';";
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00043',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -2288,11 +2309,25 @@ if ($ACTION == 'manDiaLonly')
 		if ($vla_cc_ct > 0)
 			{
 			$row=mysql_fetch_row($rslt);
-			$calls_today =$row[0];
+			$calls_today =	$row[0];
+			$eac_phone =	$row[1];
 			}
 		else
 			{$calls_today ='0';}
 		$calls_today++;
+
+		### check for extension append in campaign
+		$use_eac=0;
+		$stmt = "SELECT count(*) FROM vicidial_campaigns where extension_appended_cidname='Y' and campaign_id='$campaign';";
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$eacid_ct = mysql_num_rows($rslt);
+		if ($eacid_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$use_eac =	$row[0];
+			}
 
 		### prepare variables to place manual call from VICIDiaL
 		$CCID_on=0;   $CCID='';
@@ -2361,8 +2396,14 @@ if ($ACTION == 'manDiaLonly')
 
 		# Create unique calleridname to track the call: MmmddhhmmssLLLLLLLLL
 			$MqueryCID = "M$CIDdate$PADlead_id";
-		if ($CCID_on) {$CIDstring = "\"$MqueryCID\" <$CCID>";}
-		else {$CIDstring = "$MqueryCID";}
+		$EAC='';
+		if ($use_eac > 0)
+			{
+			$eac_extension = preg_replace("/SIP\/|IAX2\/|Zap\/|DAHDI\/|Local\//",'',$eac_phone);
+			$EAC=" $eac_extension";
+			}
+		if ($CCID_on) {$CIDstring = "\"$MqueryCID$EAC\" <$CCID>";}
+		else {$CIDstring = "$MqueryCID$EAC";}
 
 		if ( ($usegroupalias > 0) and (strlen($account)>1) )
 			{

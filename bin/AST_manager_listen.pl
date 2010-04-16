@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_manager_listen.pl version 2.0.5   *DBI-version*
+# AST_manager_listen.pl version 2.4
 #
 # Part of the Asterisk Central Queue System (ACQS)
 #
@@ -15,7 +15,7 @@
 # the call update the status and information of an action record in the 
 # vicidial_manager table of the asterisk MySQL database.
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 50322-1300 - changed callerid parsing to remove quotes and number
@@ -32,6 +32,7 @@
 # 60814-1733 - added option for no logging to file
 # 60906-1714 - added updating for special vicidial conference calls
 # 71129-2004 - Fixed SQL error
+# 100416-0635 - Added fix for extension append feature
 #
 
 # constants
@@ -41,40 +42,40 @@ $MT[0]='';
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
-{
+	{
 	$i=0;
 	while ($#ARGV >= $i)
-	{
-	$args = "$args $ARGV[$i]";
-	$i++;
-	}
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
 
 	if ($args =~ /--help/i)
-	{
-	print "allowed run time options:\n  [-t] = test\n  [-debug] = verbose debug messages\n[-debugX] = Extra-verbose debug messages\n\n";
-	}
+		{
+		print "allowed run time options:\n  [-t] = test\n  [-debug] = verbose debug messages\n[-debugX] = Extra-verbose debug messages\n\n";
+		}
 	else
-	{
+		{
 		if ($args =~ /-debug/i)
-		{
-		$DB=1; # Debug flag
-		}
+			{
+			$DB=1; # Debug flag
+			}
 		if ($args =~ /--debugX/i)
-		{
-		$DBX=1;
-		print "\n----- SUPER-DUPER DEBUGGING -----\n\n";
-		}
+			{
+			$DBX=1;
+			print "\n----- SUPER-DUPER DEBUGGING -----\n\n";
+			}
 		if ($args =~ /-t/i)
-		{
-		$TEST=1;
-		$T=1;
+			{
+			$TEST=1;
+			$T=1;
+			}
 		}
 	}
-}
 else
-{
-#	print "no command line options set\n";
-}
+	{
+	#	print "no command line options set\n";
+	}
 ### end parsing run-time options ###
 
 # default path to astguiclient configuration file:
@@ -126,45 +127,43 @@ if (!$VARDB_port) {$VARDB_port='3306';}
 use Time::HiRes ('gettimeofday','usleep','sleep');  # necessary to have perl sleep command of less than one second
 use DBI;
 use Net::Telnet ();
-	  
-	$dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
-    or die "Couldn't connect to database: " . DBI->errstr;
+  
+$dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
+or die "Couldn't connect to database: " . DBI->errstr;
 
 ### Grab Server values from the database
 $stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context,vd_server_logs FROM servers where server_ip = '$server_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
-$rec_count=0;
-while ($sthArows > $rec_count)
+if ($sthArows > 0)
 	{
-	 @aryA = $sthA->fetchrow_array;
-		$DBtelnet_host	=			"$aryA[0]";
-		$DBtelnet_port	=			"$aryA[1]";
-		$DBASTmgrUSERNAME	=		"$aryA[2]";
-		$DBASTmgrSECRET	=			"$aryA[3]";
-		$DBASTmgrUSERNAMEupdate	=	"$aryA[4]";
-		$DBASTmgrUSERNAMElisten	=	"$aryA[5]";
-		$DBASTmgrUSERNAMEsend	=	"$aryA[6]";
-		$DBmax_vicidial_trunks	=	"$aryA[7]";
-		$DBanswer_transfer_agent=	"$aryA[8]";
-		$DBSERVER_GMT		=		"$aryA[9]";
-		$DBext_context	=			"$aryA[10]";
-		$DBvd_server_logs =			"$aryA[11]";
-		if ($DBtelnet_host)				{$telnet_host = $DBtelnet_host;}
-		if ($DBtelnet_port)				{$telnet_port = $DBtelnet_port;}
-		if ($DBASTmgrUSERNAME)			{$ASTmgrUSERNAME = $DBASTmgrUSERNAME;}
-		if ($DBASTmgrSECRET)			{$ASTmgrSECRET = $DBASTmgrSECRET;}
-		if ($DBASTmgrUSERNAMEupdate)	{$ASTmgrUSERNAMEupdate = $DBASTmgrUSERNAMEupdate;}
-		if ($DBASTmgrUSERNAMElisten)	{$ASTmgrUSERNAMElisten = $DBASTmgrUSERNAMElisten;}
-		if ($DBASTmgrUSERNAMEsend)		{$ASTmgrUSERNAMEsend = $DBASTmgrUSERNAMEsend;}
-		if ($DBmax_vicidial_trunks)		{$max_vicidial_trunks = $DBmax_vicidial_trunks;}
-		if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
-		if ($DBSERVER_GMT)				{$SERVER_GMT = $DBSERVER_GMT;}
-		if ($DBext_context)				{$ext_context = $DBext_context;}
-		if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
-			else {$SYSLOG = '0';}
-	 $rec_count++;
+	@aryA = $sthA->fetchrow_array;
+	$DBtelnet_host	=			$aryA[0];
+	$DBtelnet_port	=			$aryA[1];
+	$DBASTmgrUSERNAME	=		$aryA[2];
+	$DBASTmgrSECRET	=			$aryA[3];
+	$DBASTmgrUSERNAMEupdate	=	$aryA[4];
+	$DBASTmgrUSERNAMElisten	=	$aryA[5];
+	$DBASTmgrUSERNAMEsend	=	$aryA[6];
+	$DBmax_vicidial_trunks	=	$aryA[7];
+	$DBanswer_transfer_agent=	$aryA[8];
+	$DBSERVER_GMT		=		$aryA[9];
+	$DBext_context	=			$aryA[10];
+	$DBvd_server_logs =			$aryA[11];
+	if ($DBtelnet_host)				{$telnet_host = $DBtelnet_host;}
+	if ($DBtelnet_port)				{$telnet_port = $DBtelnet_port;}
+	if ($DBASTmgrUSERNAME)			{$ASTmgrUSERNAME = $DBASTmgrUSERNAME;}
+	if ($DBASTmgrSECRET)			{$ASTmgrSECRET = $DBASTmgrSECRET;}
+	if ($DBASTmgrUSERNAMEupdate)	{$ASTmgrUSERNAMEupdate = $DBASTmgrUSERNAMEupdate;}
+	if ($DBASTmgrUSERNAMElisten)	{$ASTmgrUSERNAMElisten = $DBASTmgrUSERNAMElisten;}
+	if ($DBASTmgrUSERNAMEsend)		{$ASTmgrUSERNAMEsend = $DBASTmgrUSERNAMEsend;}
+	if ($DBmax_vicidial_trunks)		{$max_vicidial_trunks = $DBmax_vicidial_trunks;}
+	if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
+	if ($DBSERVER_GMT)				{$SERVER_GMT = $DBSERVER_GMT;}
+	if ($DBext_context)				{$ext_context = $DBext_context;}
+	if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
+		else {$SYSLOG = '0';}
 	}
 $sthA->finish();
 
@@ -175,7 +174,7 @@ if (!$telnet_port) {$telnet_port = '5038';}
 
 $one_day_interval = 90;		# 1 day loops for 3 months
 while($one_day_interval > 0)
-{
+	{
 
 		$event_string="STARTING NEW MANAGER TELNET CONNECTION||ATTEMPT|ONE DAY INTERVAL:$one_day_interval|";
 	&event_logger;
@@ -202,7 +201,7 @@ while($one_day_interval > 0)
 	$endless_loop=864000;		# 1 day at .10 seconds per loop
 
 	while($endless_loop > 0)
-	{
+		{
 		### sleep for 10 hundredths of a second
 		usleep(1*100*1000);
 
@@ -211,14 +210,14 @@ while($one_day_interval > 0)
 		$input_buf_length = length($read_input_buf);
 		$msg = $tn->errmsg;
 		if ($msg =~ /filehandle isn\'t open/i)
-		{
-		$endless_loop=0;
-		$one_day_interval=0;
-		print "ERRMSG: |$msg|\n";
-		print "\nAsterisk server shutting down, PROCESS KILLED... EXITING\n\n";
-			$event_string="Asterisk server shutting down, PROCESS KILLED... EXITING|ONE DAY INTERVAL:$one_day_interval|$msg|";
-		&event_logger;
-		}
+			{
+			$endless_loop=0;
+			$one_day_interval=0;
+			print "ERRMSG: |$msg|\n";
+			print "\nAsterisk server shutting down, PROCESS KILLED... EXITING\n\n";
+				$event_string="Asterisk server shutting down, PROCESS KILLED... EXITING|ONE DAY INTERVAL:$one_day_interval|$msg|";
+			&event_logger;
+			}
 
 		if ( ($read_input_buf !~ /\n\n/) or ($input_buf_length < 10) )
 			{
@@ -275,6 +274,7 @@ while($one_day_interval > 0)
 							$callid = $command_line[5];
 							$callid =~ s/CallerIDName: |\s*$//gi;
 							   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
+							   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
 							$uniqueid = $command_line[6];
 							$uniqueid =~ s/SrcUniqueID: |\s*$//gi;
 							$stmtA = "UPDATE vicidial_manager set status='UPDATED', channel='$channel', uniqueid = '$uniqueid' where server_ip = '$server_ip' and callerid = '$callid'";
@@ -295,6 +295,7 @@ while($one_day_interval > 0)
 							$callid = $command_line[5];
 							$callid =~ s/CallerIDName: |\s*$//gi;
 							   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
+							   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
 							$uniqueid = $command_line[6];
 							$uniqueid =~ s/SrcUniqueID: |\s*$//gi;
 							$stmtA = "UPDATE vicidial_manager set status='UPDATED', channel='$channel', uniqueid = '$uniqueid' where server_ip = '$server_ip' and callerid = '$callid' and status='SENT';";
@@ -304,7 +305,6 @@ while($one_day_interval > 0)
 							}
 						}
 					### END 1.2.X tree versions
-
 					}
 
 				##### parse through all other important events #####
@@ -374,6 +374,7 @@ while($one_day_interval > 0)
 							$callid = $command_line[3];
 							$callid =~ s/Callerid: |\s*$//gi;
 							   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
+							   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
 							$uniqueid = $command_line[4];
 							$uniqueid =~ s/Uniqueid: |\s*$//gi;
 							$stmtA = "UPDATE vicidial_manager set status='SENT', channel='$channel', uniqueid = '$uniqueid' where server_ip = '$server_ip' and callerid = '$callid'";
@@ -389,6 +390,7 @@ while($one_day_interval > 0)
 							$callid = $command_line[4];
 							$callid =~ s/CalleridName: |\s*$//gi;
 							   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
+							   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
 							$uniqueid = $command_line[5];
 							$uniqueid =~ s/Uniqueid: |\s*$//gi;
 							$stmtA = "UPDATE vicidial_manager set status='SENT', channel='$channel', uniqueid = '$uniqueid' where server_ip = '$server_ip' and callerid = '$callid'";
@@ -403,6 +405,7 @@ while($one_day_interval > 0)
 							$callid = $command_line[5];
 							$callid =~ s/CalleridName: |\s*$//gi;
 							   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
+							   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
 							$uniqueid = $command_line[6];
 							$uniqueid =~ s/Uniqueid: |\s*$//gi;
 							$stmtA = "UPDATE vicidial_manager set status='SENT', channel='$channel', uniqueid = '$uniqueid' where server_ip = '$server_ip' and callerid = '$callid'";
@@ -417,6 +420,7 @@ while($one_day_interval > 0)
 							$callid = $command_line[6];
 							$callid =~ s/CalleridName: |\s*$//gi;
 							   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
+							   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
 							$uniqueid = $command_line[7];
 							$uniqueid =~ s/Uniqueid: |\s*$//gi;
 							$stmtA = "UPDATE vicidial_manager set status='SENT', channel='$channel', uniqueid = '$uniqueid' where server_ip = '$server_ip' and callerid = '$callid'";
@@ -434,6 +438,7 @@ while($one_day_interval > 0)
 							$callid = $command_line[3];
 							$callid =~ s/Callerid: |\s*$//gi;
 							   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
+							   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
 							$uniqueid = $command_line[4];
 							$uniqueid =~ s/Uniqueid: |\s*$//gi;
 							$stmtA = "UPDATE vicidial_manager set status='UPDATED', channel='$channel', uniqueid = '$uniqueid' where server_ip = '$server_ip' and callerid = '$callid'";
@@ -451,6 +456,7 @@ while($one_day_interval > 0)
 							$callid = $command_line[4];
 							$callid =~ s/CalleridName: |\s*$//gi;
 							   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
+							   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
 							$uniqueid = $command_line[5];
 							$uniqueid =~ s/Uniqueid: |\s*$//gi;
 							$stmtA = "UPDATE vicidial_manager set status='UPDATED', channel='$channel', uniqueid = '$uniqueid' where server_ip = '$server_ip' and callerid = '$callid'";
@@ -468,6 +474,7 @@ while($one_day_interval > 0)
 							$callid = $command_line[5];
 							$callid =~ s/CalleridName: |\s*$//gi;
 							   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
+							   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
 							$uniqueid = $command_line[6];
 							$uniqueid =~ s/Uniqueid: |\s*$//gi;
 							$stmtA = "UPDATE vicidial_manager set status='UPDATED', channel='$channel', uniqueid = '$uniqueid' where server_ip = '$server_ip' and callerid = '$callid'";
@@ -485,6 +492,7 @@ while($one_day_interval > 0)
 							$callid = $command_line[6];
 							$callid =~ s/CalleridName: |\s*$//gi;
 							   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
+							   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
 							$uniqueid = $command_line[7];
 							$uniqueid =~ s/Uniqueid: |\s*$//gi;
 							$stmtA = "UPDATE vicidial_manager set status='UPDATED', channel='$channel', uniqueid = '$uniqueid' where server_ip = '$server_ip' and callerid = '$callid'";
@@ -506,6 +514,7 @@ while($one_day_interval > 0)
 							$callid = $command_line[2];
 							$callid =~ s/Callerid: |\s*$//gi;
 							   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
+							   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
 							$uniqueid = $command_line[3];
 							$uniqueid =~ s/Uniqueid: |\s*$//gi;
 							$stmtA = "UPDATE vicidial_manager set status='UPDATED', channel='$channel', uniqueid = '$uniqueid' where server_ip = '$server_ip' and callerid = '$callid'";
@@ -524,6 +533,7 @@ while($one_day_interval > 0)
 							$callid =~ s/Callerid: |\s*$//gi;
 					#		$callid =~ s/CallerIDName: |\s*$//gi;
 							   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
+							   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
 							$uniqueid = $command_line[6];
 							$uniqueid =~ s/Uniqueid: |\s*$//gi;
 							$stmtA = "UPDATE vicidial_manager set status='UPDATED', channel='$channel', uniqueid = '$uniqueid' where server_ip = '$server_ip' and callerid = '$callid'";
@@ -569,6 +579,8 @@ while($one_day_interval > 0)
 							$channel =~ s/Channel: |\s*$//gi;
 							$callid = $command_line[4];
 							$callid =~ s/CallerIDName: |\s*$//gi;
+							   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
+							   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
 							$uniqueid = $command_line[5];
 							$uniqueid =~ s/Uniqueid: |\s*$//gi;
 							$result = $command_line[6];
@@ -616,14 +628,12 @@ while($one_day_interval > 0)
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
-				$rec_count=0;
-				while ($sthArows > $rec_count)
+				if ($sthArows > 0)
 					{
-					 @aryA = $sthA->fetchrow_array;
-						$DBvd_server_logs =			"$aryA[0]";
-						if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
-							else {$SYSLOG = '0';}
-					 $rec_count++;
+					@aryA = $sthA->fetchrow_array;
+					$DBvd_server_logs =			"$aryA[0]";
+					if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
+						else {$SYSLOG = '0';}
 					}
 				$sthA->finish();
 
@@ -642,32 +652,28 @@ while($one_day_interval > 0)
 			$keepalive_count_loop=0;
 
 			}
+		}
 
+	if($DB){print "DONE... Exiting... Goodbye... See you later... Not really, initiating next loop...$one_day_interval left\n";}
 
-	}
+	$event_string='HANGING UP|';
+	&event_logger;
 
+	@hangup = $tn->cmd(String => "Action: Logoff\n\n", Prompt => "/.*/", Errmode    => Return, Timeout    => 1); 
 
-		if($DB){print "DONE... Exiting... Goodbye... See you later... Not really, initiating next loop...$one_day_interval left\n";}
-
-		$event_string='HANGING UP|';
-		&event_logger;
-
-		@hangup = $tn->cmd(String => "Action: Logoff\n\n", Prompt => "/.*/", Errmode    => Return, Timeout    => 1); 
-
-		$ok = $tn->close;
+	$ok = $tn->close;
 
 	$one_day_interval--;
+	}
 
-}
-
-		$event_string='CLOSING DB CONNECTION|';
-		&event_logger;
-
-
-	$dbhA->disconnect();
+$event_string='CLOSING DB CONNECTION|';
+&event_logger;
 
 
-	if($DB){print "DONE... Exiting... Goodbye... See you later... Really I mean it this time\n";}
+$dbhA->disconnect();
+
+
+if($DB){print "DONE... Exiting... Goodbye... See you later... Really I mean it this time\n";}
 
 
 exit;
@@ -679,48 +685,48 @@ exit;
 
 
 sub get_time_now	#get the current date and time and epoch for logging call lengths and datetimes
-{
-($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-$year = ($year + 1900);
-$mon++;
-if ($mon < 10) {$mon = "0$mon";}
-if ($mday < 10) {$mday = "0$mday";}
-if ($hour < 10) {$Fhour = "0$hour";}
-if ($min < 10) {$min = "0$min";}
-if ($sec < 10) {$sec = "0$sec";}
+	{
+	($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+	$year = ($year + 1900);
+	$mon++;
+	if ($mon < 10) {$mon = "0$mon";}
+	if ($mday < 10) {$mday = "0$mday";}
+	if ($hour < 10) {$Fhour = "0$hour";}
+	if ($min < 10) {$min = "0$min";}
+	if ($sec < 10) {$sec = "0$sec";}
 
-$now_date_epoch = time();
-$now_date = "$year-$mon-$mday $hour:$min:$sec";
-$action_log_date = "$year-$mon-$mday";
-}
+	$now_date_epoch = time();
+	$now_date = "$year-$mon-$mday $hour:$min:$sec";
+	$action_log_date = "$year-$mon-$mday";
+	}
 
 
 
 
 
 sub event_logger 
-{
-if ($SYSLOG)
 	{
-	### open the log file for writing ###
-	open(Lout, ">>$PATHlogs/listen_process.$action_log_date")
-			|| die "Can't open $PATHlogs/listen_process.$action_log_date: $!\n";
-	print Lout "$now_date|$event_string|\n";
-	close(Lout);
+	if ($SYSLOG)
+		{
+		### open the log file for writing ###
+		open(Lout, ">>$PATHlogs/listen_process.$action_log_date")
+				|| die "Can't open $PATHlogs/listen_process.$action_log_date: $!\n";
+		print Lout "$now_date|$event_string|\n";
+		close(Lout);
+		}
+	$event_string='';
 	}
-$event_string='';
-}
 
 
 
 
 sub manager_output_logger
-{
-if ($SYSLOG)
 	{
-	open(MOout, ">>$PATHlogs/listen.$action_log_date")
-			|| die "Can't open $PATHlogs/listen.$action_log_date: $!\n";
-	print MOout "$now_date|$manager_string|\n";
-	close(MOout);
+	if ($SYSLOG)
+		{
+		open(MOout, ">>$PATHlogs/listen.$action_log_date")
+				|| die "Can't open $PATHlogs/listen.$action_log_date: $!\n";
+		print MOout "$now_date|$manager_string|\n";
+		close(MOout);
+		}
 	}
-}
