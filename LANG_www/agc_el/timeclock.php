@@ -120,10 +120,10 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 	if ($valid_user < 1)
 		{
 		### NOT A VALID USER/PASS
-		$VDdisplayMESSAGE = "Ο χρήστη και τον κωδικό πρόσβασης που πληκτρολογήσατε δεν είναι ενεργό στο σύστημα<BR>Παρακαλώ δοκιμάστε ξανά:";
+		$VDdisplayMESSAGE = "Ο χρήστης και ο κωδικός πρόσβασης που πληκτρολογήσατε δεν είναι ενεργός στο σύστημα<BR>Παρακαλώ δοκιμάστε ξανά:";
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>AgentTimeclock</TITLE>\n";
+		echo"<TITLE>Agent Timeclock</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -138,7 +138,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Timeclock </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 		echo "<TR><TD ALIGN=RIGHT>Σύνδεση χρήστη:  </TD>";
@@ -225,10 +225,10 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		if ( ($last_action_sec < 30) and ($status != 'START') )
 			{
 			### You cannot log in or out within 30 δευτερόλεπτα of your last login/logout
-			$VDdisplayMESSAGE = "Δεν μπορείτε να συνδεθείτε ή να αναφέρονται μέσα σε 30 δευτερόλεπτα από την τελευταία σας login ή logout";
+			$VDdisplayMESSAGE = "Δεν μπορείτε να συνδεθείτε για διάστημα 30 δευτερολέπτων από την τελευταία σας σύνδεση ή αποσύνδεση";
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>AgentTimeclock</TITLE>\n";
+			echo"<TITLE>Agent Timeclock</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -243,7 +243,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 			echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Timeclock </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 			echo "<TR><TD ALIGN=RIGHT>Σύνδεση χρήστη:  </TD>";
@@ -292,8 +292,8 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 			if ( ($status=='LOGIN') and ($stage=='logout') )
 				{
-				$VDdisplayMESSAGE = "Έχετε πλέον συνδεθεί-out";
-				$LOGtimeMESSAGE = "Έχετε αποσυνδεθεί από την$NOW_TIME<BR>Ποσό φορά που ήταν συνδεδεμένος στο:$totTIME_HMS";
+				$VDdisplayMESSAGE = "Έχετε αποσυνδεθεί";
+				$LOGtimeMESSAGE = "Έχετε αποσυνδεθεί από την$NOW_TIME<BR>Ποσό χρόνο ήταν συνδεδεμένος:$totTIME_HMS";
 
 				### Add a record to the timeclock log
 				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
@@ -333,24 +333,24 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				}
 
 			if ( ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
-				{echo "ERROR: timeclock καταχώρηση αρχείου καταγραφής που έχουν ήδη πραγματοποιηθεί:$status|$stage";  exit;}
+				{echo "ERROR: η καταχώρηση του timeclock στο αρχείο καταγραφής έχει ήδη πραγματοποιηθεί:$status|$stage";  exit;}
 
 			if ($referrer=='agent') 
-				{$BACKlink = "<A HREF=\"./vicidial.php?pl=$phone_login&pp=$phone_pass&VD_login=$user\"><font color=\"#003333\">ΕΠΙΣΤΡΟΦΗ στο γραφείο Σύνδεση οθόνης</font></A>";}
+				{$BACKlink = "<A HREF=\"./vicidial.php?pl=$phone_login&pp=$phone_pass&VD_login=$user\"><font color=\"#003333\">ΕΠΙΣΤΡΟΦΗ στην οθόνη Συνδεσης του Χειριστή</font></A>";}
 			if ($referrer=='admin') 
-				{$BACKlink = "<A HREF=\"../vicidial/admin.php\"><font color=\"#003333\">ΕΠΙΣΤΡΟΦΗ στην Διοίκηση</font></A>";}
+				{$BACKlink = "<A HREF=\"../vicidial/admin.php\"><font color=\"#003333\">ΕΠΙΣΤΡΟΦΗ στην Διαχείριση</font></A>";}
 			if ($referrer=='welcome') 
 				{$BACKlink = "<A HREF=\"$welcomeURL\"><font color=\"#003333\">ΕΠΙΣΤΡΟΦΗ στην οθόνη υποδοχής</font></A>";}
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>AgentTimeclock</TITLE>\n";
+			echo"<TITLE>Agent Timeclock</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 			echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 			echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Timeclock </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 			echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
@@ -368,21 +368,21 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 		if ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') )
 			{
-			$VDdisplayMESSAGE = "Ο χρόνος από την τελευταία φορά που είναι συνδεδεμένος στο:$totTIME_HMS";
+			$VDdisplayMESSAGE = "Ο χρόνος από την τελευταία φορά σύνδεσης:$totTIME_HMS";
 			$log_action = 'login';
 			$button_name = 'LOGIN';
-			$LOGtimeMESSAGE = "Μπορείτε τελευταίου συνδεδεμένου αναφέρονται σε:$last_action_date<BR><BR>Κάντε κλικ παρακάτω για να ΕΙΣΟΔΟΣ log-in";
+			$LOGtimeMESSAGE = "Τελευταάι αποσύνδεση:$last_action_date<BR><BR>Κάντε κλικ παρακάτω για να συνδεθείτε";
 			}
 		if ($status=='LOGIN')
 			{
-			$VDdisplayMESSAGE = "Χρονικό διάστημα σας έχει συνδεθεί σε:$totTIME_HMS";
+			$VDdisplayMESSAGE = "Χρονικό διάστημα που είσαστε συνδεμένος:$totTIME_HMS";
 			$log_action = 'logout';
 			$button_name = 'LOGOUT';
-			$LOGtimeMESSAGE = "Μπορείτε συνδεδεμένος στην διεύθυνση: $last_action_date<BR>Χρονικό διάστημα σας έχει συνδεθεί σε:$totTIME_HMS<BR><BR>Κάντε κλικ παρακάτω για να LOGOUT log-out";
+			$LOGtimeMESSAGE = "Συνδεθήκατε: $last_action_date<BR>Χρονικό διάστημα που είσαστε συνδεμένος:$totTIME_HMS<BR><BR>Κάντε κλικ στην ΑΠΣΥΝΔΕΣΗ για να αποσυνδεθείτε";
 			}
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>AgentTimeclock</TITLE>\n";
+		echo"<TITLE>Agent Timeclock</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -400,7 +400,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Timeclock </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 		echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
@@ -421,7 +421,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 else
 	{
 	echo"<HTML><HEAD>\n";
-	echo"<TITLE>AgentTimeclock</TITLE>\n";
+	echo"<TITLE>Agent Timeclock</TITLE>\n";
 	echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo"</HEAD>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -436,7 +436,7 @@ else
 	echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 	echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Timeclock </B></TD>";
 	echo "</TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Σύνδεση χρήστη:  </TD>";

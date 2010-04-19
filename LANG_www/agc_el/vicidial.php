@@ -276,10 +276,14 @@
 # 100207-1109 - Changed Pause Codes function to allow for multiple pause codes per pause period
 # 100228-1257 - Fixed no-selected default transfer group issue on inbound calls
 # 100301-1329 - Changed AGENTDIRECT user selection launching to AGENTS link next to number-to-dial field
+# 100309-1709 - small fix for IE CRM popup
+# 100315-1149 - fix for rare recording_log uniqueid issue on manual dial calls to same number
+# 100327-0902 - fix for manual dial answering machine message
+# 100413-1347 - Various fixes for logging and extended alt-dialing
 #
 
-$version = '2.2.0-254';
-$build = '100301-1329';
+$version = '2.2.0-258';
+$build = '100413-1347';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -664,7 +668,7 @@ if ($relogin == 'YES')
 echo "<title>Agent web client: Επανασύνδεση</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
+echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_el/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Ελληνικά <img src=\"../agc/images/el.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "</TR></TABLE>\n";
@@ -704,7 +708,7 @@ if ($user_login_first == 1)
 	echo "<title>Agent web client: Σύνδεση εκστρατείας</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
+	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 	echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 	echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_el/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Ελληνικά <img src=\"../agc/images/el.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";	echo "</TR></TABLE>\n";
@@ -750,7 +754,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 		echo "<title>Agent web client: Login</title>\n";
 		echo "</head>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
+		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 		echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 		echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_el/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Ελληνικά <img src=\"../agc/images/el.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";		echo "</TR></TABLE>\n";
@@ -791,7 +795,7 @@ if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
 echo "<title>Agent web client:  Σύνδεση Τηλεφώνου</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
+echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_el/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Ελληνικά <img src=\"../agc/images/el.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "</TR></TABLE>\n";
@@ -924,7 +928,7 @@ $VDloginDISPLAY=0;
 			if ( (strlen($last_agent_event)<2) or (ereg('LOGOUT',$last_agent_event)) )
 				{
 				$VDloginDISPLAY=1;
-				$VDdisplayMESSAGE = "Πρέπει να συνδεθείτε ΣΤΗΝ ΠΡΩΤΗ ΤΟΥ TIMECLOCK<BR>";
+				$VDdisplayMESSAGE = "Πρέπει πρώτα να συνδεθείτε στο TIMECLOCK<BR>";
 				}
 			}
 		### END - CHECK TO SEE IF AGENT IS LOGGED IN TO TIMECLOCK, IF NOT, OUTPUT ERROR
@@ -1003,8 +1007,8 @@ $VDloginDISPLAY=0;
 				$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
 				$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=VD_login VALUE=\"$VD_login\">\n";
 				$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=VD_pass VALUE=\"$VD_pass\">\n";
-				$VDdisplayMESSAGE.= "ΔιευθυντήςΣύνδεση: <INPUT TYPE=TEXT NAME=\"MGR_login$loginDATE\" SIZE=10 maxlength=20><br>\n";
-				$VDdisplayMESSAGE.= "ΔιευθυντήςΚωδικός πρόσβασης: <INPUT TYPE=PASSWORD NAME=\"MGR_pass$loginDATE\" SIZE=10 maxlength=20><br>\n";
+				$VDdisplayMESSAGE.= "Διευθυντής Σύνδεση: <INPUT TYPE=TEXT NAME=\"MGR_login$loginDATE\" SIZE=10 maxlength=20><br>\n";
+				$VDdisplayMESSAGE.= "Διευθυντής Κωδικός πρόσβασης: <INPUT TYPE=PASSWORD NAME=\"MGR_pass$loginDATE\" SIZE=10 maxlength=20><br>\n";
 				$VDdisplayMESSAGE.= "<INPUT TYPE=Submit NAME=ΥΠΟΒΑΛΕΤΕ VALUE=ΥΠΟΒΑΛΕΤΕ></FORM>\n";
 				}
 			}
@@ -1032,7 +1036,7 @@ $VDloginDISPLAY=0;
 			echo "<title>Agent web client: Σύνδεση εκστρατείας</title>\n";
 			echo "</head>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-			echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
+			echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 			echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 			echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_el/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Ελληνικά <img src=\"../agc/images/el.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";			echo "</TR></TABLE>\n";
@@ -1473,7 +1477,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 	echo "<title>Agent web client: Σύνδεση εκστρατείας</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
+	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 	echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 	echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_el/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Ελληνικά <img src=\"../agc/images/el.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";	echo "</TR></TABLE>\n";
@@ -1566,7 +1570,7 @@ if (!$authphone)
 	echo "<title>Agent web client: Σύνδεση Τηλεφώνου Error</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
+	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 	echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 	echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_el/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Ελληνικά <img src=\"../agc/images/el.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";	echo "</TR></TABLE>\n";
@@ -2063,7 +2067,7 @@ else
 		echo "<title>Agent web client: Σύνδεση εκστρατείας</title>\n";
 		echo "</head>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
+		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 		echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 		echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_el/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Ελληνικά <img src=\"../agc/images/el.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";		echo "</TR></TABLE>\n";
@@ -2089,7 +2093,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 		echo "<title>Agent web client: Σύνδεση εκστρατείας</title>\n";
 		echo "</head>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
+		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
 		echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 		echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_el/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Ελληνικά <img src=\"../agc/images/el.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";		echo "</TR></TABLE>\n";
@@ -2749,6 +2753,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var timer_action_message='';
 	var timer_action_seconds='';
 	var pause_code_counter=1;
+	var last_uniqueid='';
+	var tmp_vicidial_id='';
+	var EAphone_code='';
+	var EAphone_number='';
+	var EAalt_phone_notes='';
+	var EAalt_phone_active='';
+	var EAalt_phone_count='';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"../agc/images/vdc_LB_pause_OFF_el.gif\" border=0 alt=\" Παύση \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"../agc/images/vdc_LB_resume_el.gif\" border=0 alt=\"Επανάληψη\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"../agc/images/vdc_LB_pause_el.gif\" border=0 alt=\" Παύση \"></a><IMG SRC=\"../agc/images/vdc_LB_resume_OFF_el.gif\" border=0 alt=\"Επανάληψη\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"../agc/images/vdc_LB_pause_OFF_el.gif\" border=0 alt=\" Παύση \"><IMG SRC=\"../agc/images/vdc_LB_resume_OFF_el.gif\" border=0 alt=\"Επανάληψη\">";
@@ -3692,11 +3703,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		{
 		if (inOUT == 'OUT')
 			{
-			var tmp_vicidial_id = document.vicidial_form.uniqueid.value;
+			tmp_vicidial_id = document.vicidial_form.uniqueid.value;
 			}
 		else
 			{
-			var tmp_vicidial_id = 'IN';
+			tmp_vicidial_id = 'IN';
 			}
 		var xmlhttp=false;
 		/*@cc_on @*/
@@ -3810,7 +3821,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		}
 
 // ################################################################################
-// Send Redirect command for live call to Διευθυντήςsends phone name where call is going to
+// Send Redirect command for live call to Διευθυντής sends phone name where call is going to
 // Covers the following types: XFER, VMAIL, ENTRY, CONF, ΣΤΑΘΜΕΥΣΗ, FROMΣΤΑΘΜΕΥΣΗ, XfeRLOCAL, XfeRINTERNAL, XfeRBLIND, VfeRVMAIL
 	function mainxfer_send_redirect(taskvar,taskxferconf,taskserverip,taskdebugnote,taskdispowindow) 
 		{
@@ -3881,7 +3892,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				no_delete_VDAC=0;
 				if (taskvar == 'XfeRVMAIL')
 					{
-					var blindxferdialstring = campaign_am_message_exten;
+					var blindxferdialstring = campaign_am_message_exten + '*' + campaign + '*' + document.vicidial_form.phone_code.value + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value;
 					no_delete_VDAC=1;
 					}
 				if (blindxferdialstring.length<'2')
@@ -4431,8 +4442,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				{
 				if (agent_allow_group_alias == 'Y')
 					{
-					document.getElementById("ManuaLDiaLGrouPSelecteD").innerHTML = "<font size=2 face=\"Arial,Helvetica\">Ομάδα Γνωστός: " + active_group_alias + "</font>";
-					document.getElementById("ManuaLDiaLGrouP").innerHTML = "<a href=\"#\" onclick=\"GroupAliasSelectContent_create('0');\"><font size=1 face=\"Arial,Helvetica\">Κάντε κλικ εδώ για να Επιλέξτε μια ομάδα Γνωστός</font></a>";
+					document.getElementById("ManuaLDiaLGrouPSelecteD").innerHTML = "<font size=2 face=\"Arial,Helvetica\">Ψευδώνυμο Ομάδας: " + active_group_alias + "</font>";
+					document.getElementById("ManuaLDiaLGrouP").innerHTML = "<a href=\"#\" onclick=\"GroupAliasSelectContent_create('0');\"><font size=1 face=\"Arial,Helvetica\">Κάντε κλικ εδώ για να Επιλέξτε ένα Ψευδώνυμο Ομάδας</font></a>";
 					}
 				showDiv('NeWManuaLDiaLBox');
 				}
@@ -4508,7 +4519,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 		if ( (MDDiaLCodEform.length < 1) || (MDPhonENumbeRform.length < 5) )
 			{
-			alert("ΠΡΕΠΕΙ ΝΑ ΠΛΗΚΤΡΟΛΟΓΕΣΕΤΕ έναν ΤΗΛΕΦΩΝΙΚΟ ΑΡΙΘΜΟ ΚΑΙ έναν ΚΩΔΙΚΟΠΙΝΑΚΩΝ στο ΓΡΗΓΟΡΟ ΠΙΝΑΚΑ ΧΡΗΣΗΣ");
+			alert("ΠΡΕΠΕΙ ΝΑ ΠΛΗΚΤΡΟΛΟΓΕΙΣΕΤΕ έναν ΤΗΛΕΦΩΝΙΚΟ ΑΡΙΘΜΟ ΚΑΙ έναν ΚΩΔΙΚΟ ΓΙΑ ΤΗΝ ΓΡΗΓΟΡΗ ΚΛΗΣΗ");
 			}
 		else
 			{
@@ -4602,7 +4613,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							
 							if (XDalert == 'ERROR')
 								{
-								var DiaLAlerTMessagE = "Call Rejected: " + XDchannel;
+								var XDerrorDesc = MDlookResponse_array[3];
+								var DiaLAlerTMessagE = "Call Rejected: " + XDchannel + "\n" + XDerrorDesc;
 								TimerActionRun("DiaLAlerT",DiaLAlerTMessagE);
 								}
 							if ( (XDchannel.match(regMDL)) && (asterisk_version != '1.0.8') && (asterisk_version != '1.0.9') && (MD_ring_secondS < 10) )
@@ -4645,7 +4657,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							
 							if (MDalert == 'ERROR')
 								{
-								var DiaLAlerTMessagE = "Call Rejected: " + MDchannel;
+								var MDerrorDesc = MDlookResponse_array[3];
+								var DiaLAlerTMessagE = "Call Rejected: " + MDchannel + "\n" + MDerrorDesc;
 								TimerActionRun("DiaLAlerT",DiaLAlerTMessagE);
 								}
 							if ( (MDchannel.match(regMDL)) && (asterisk_version != '1.0.8') && (asterisk_version != '1.0.9') )
@@ -4658,6 +4671,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								custchannellive=1;
 
 								document.vicidial_form.uniqueid.value		= MDlookResponse_array[0];
+								last_uniqueid = MDlookResponse_array[0];
 								document.vicidial_form.callchannel.value	= MDlookResponse_array[1];
 								lastcustchannel = MDlookResponse_array[1];
 								if( document.images ) { document.images['livecall'].src = image_livecall_ON.src;}
@@ -5226,7 +5240,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						if (MDnextCID.match(regMDFvarDNC))
 							{alert("This phone number is in the DNC list:\n" + mdnPhonENumbeR);   alert_displayed=1;}
 						if (MDnextCID.match(regMDFvarCAMP))
-							{alert("Αυτός ο αριθμός τηλεφώνου δεν είναι στην εκστρατεία καταλόγους:\n" + mdnPhonENumbeR);   alert_displayed=1;}
+							{alert("Αυτός ο αριθμός τηλεφώνου δεν είναι στις λίστες της εκστρατεία:\n" + mdnPhonENumbeR);   alert_displayed=1;}
 						if (alert_displayed==0)						
 							{alert("Απροσδιόριστο σφάλμα:\n" + mdnPhonENumbeR + "|" + MDnextCID);   alert_displayed=1;}
 
@@ -5534,10 +5548,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							{
 							document.getElementById("CusTInfOSpaN").innerHTML = " <B> PREVIOUS ΚΛΗΣΗBACK </B>";
 							document.getElementById("CusTInfOSpaN").style.background = CusTCB_bgcolor;
-							document.getElementById("CBcommentsBoxA").innerHTML = "<b>Στο τέλος καλέστε:</b>" + CBentry_time;
-							document.getElementById("CBcommentsBoxB").innerHTML = "<b>CallBack:</b>" + CBcallback_time;
-							document.getElementById("CBcommentsBoxC").innerHTML = "<b>Πράκτορας:</b>" + CBuser;
-							document.getElementById("CBcommentsBoxD").innerHTML = "<b>Σχολιάζει:</b><br>" + CBcomments;
+							document.getElementById("CBcommentsBoxA").innerHTML = "<b>Τελευταία Κλήση: </b>" + CBentry_time;
+							document.getElementById("CBcommentsBoxB").innerHTML = "<b>Επανάκληση: </b>" + CBcallback_time;
+							document.getElementById("CBcommentsBoxC").innerHTML = "<b>Χειριστής: </b>" + CBuser;
+							document.getElementById("CBcommentsBoxD").innerHTML = "<b>Σχολιασμός: </b><br>" + CBcomments;
 							showDiv('CBcommentsBox');
 							}
 
@@ -5847,23 +5861,23 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				}
 			}
 		if (dialed_label == 'ALT')
-			{document.getElementById("CusTInfOSpaN").innerHTML = " <B> ALT ΤΗΛΕΦΩΝΕΙΣΤΕ ΑΡΙΘΜΟΣ: ALT </B>";}
+			{document.getElementById("CusTInfOSpaN").innerHTML = " <B> ΕΝΑΛΛ ΑΡΙΘΜΟΣ ΚΛΗΣΗΣ: ALT </B>";}
 		if (dialed_label == 'ADDR3')
-			{document.getElementById("CusTInfOSpaN").innerHTML = " <B> ALT ΤΗΛΕΦΩΝΕΙΣΤΕ ΑΡΙΘΜΟΣ: 3ΔΙΕΥΘΥΝΣΗ </B>";}
+			{document.getElementById("CusTInfOSpaN").innerHTML = " <B> ΕΝΑΛΛ ΑΡΙΘΜΟΣ ΚΛΗΣΗΣ: 3ΔΙΕΥΘΥΝΣΗ </B>";}
 		var REGalt_dial = new RegExp("X","g");
 		if (dialed_label.match(REGalt_dial))
 			{
-			document.getElementById("CusTInfOSpaN").innerHTML = " <B> ALT ΤΗΛΕΦΩΝΕΙΣΤΕ ΑΡΙΘΜΟΣ: " + dialed_label + "</B>";
-			document.getElementById("EAcommentsBoxA").innerHTML = "<b>Μήκη και Αριθμός: </b>" + EAphone_code + " " + EAphone_number;
+			document.getElementById("CusTInfOSpaN").innerHTML = " <B> ΕΝΑΛΛ ΑΡΙΘΜΟΣ ΚΛΗΣΗΣ: " + dialed_label + "</B>";
+			document.getElementById("EAcommentsBoxA").innerHTML = "<b>Τηλεφωνικός Αριθμός και Κωδικός: </b>" + EAphone_code + " " + EAphone_number;
 
 			var EAactive_link = '';
 			if (EAalt_phone_active == 'Y') 
-				{EAactive_link = "<a href=\"#\" onclick=\"alt_phone_change('" + EAphone_number + "','" + EAalt_phone_count + "','" + document.vicidial_form.lead_id.value + "','N');\">Αλλαγή αυτό τον αριθμό τηλεφώνου για να Ανενεργό</a>";}
+				{EAactive_link = "<a href=\"#\" onclick=\"alt_phone_change('" + EAphone_number + "','" + EAalt_phone_count + "','" + document.vicidial_form.lead_id.value + "','N');\">Αλλαγή του αριθμού τηλεφώνου σε Ανενεργό</a>";}
 			else
-				{EAactive_link = "<a href=\"#\" onclick=\"alt_phone_change('" + EAphone_number + "','" + EAalt_phone_count + "','" + document.vicidial_form.lead_id.value + "','Y');\">Αλλαγή αυτό τον αριθμό τηλεφώνου για να ΔΡΑΣΤΙΚΗΣ</a>";}
+				{EAactive_link = "<a href=\"#\" onclick=\"alt_phone_change('" + EAphone_number + "','" + EAalt_phone_count + "','" + document.vicidial_form.lead_id.value + "','Y');\">Αλλαγή του αριθμού τηλεφώνου σε Ενεργό</a>";}
 
-			document.getElementById("EAcommentsBoxB").innerHTML = "<b>Active:</b>" + EAalt_phone_active + "<BR>" + EAactive_link;
-			document.getElementById("EAcommentsBoxC").innerHTML = "<b>Alt Count:</b>" + EAalt_phone_count;
+			document.getElementById("EAcommentsBoxB").innerHTML = "<b>Ενεργό:</b>" + EAalt_phone_active + "<BR>" + EAactive_link;
+			document.getElementById("EAcommentsBoxC").innerHTML = "<b>Εναλλ Μετρητής:</b>" + EAalt_phone_count;
 			document.getElementById("EAcommentsBoxD").innerHTML = "<b>Σημειώσεις:</b><br>" + EAalt_phone_notes;
 			showDiv('EAcommentsBox');
 			}
@@ -5915,7 +5929,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					MDOnextResponse = xmlhttp.responseText;
 
 					var MDOnextResponse_array=MDOnextResponse.split("\n");
-					MDnextCID =	MDOnextResponse_array[0];
+					MDnextCID =		MDOnextResponse_array[0];
+					agent_log_id =	MDOnextResponse_array[1];
 					if (MDnextCID == " ΚΛΗΣΗ NOT PLACED")
 						{
 						alert("η κλήση δεν τοποθετήθηκε, υπήρξε ένα λάθος:\n" + MDOnextResponse);
@@ -6265,11 +6280,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 		var EAactive_link = '';
 		if (APCactive == 'Y') 
-			{EAactive_link = "<a href=\"#\" onclick=\"alt_phone_change('" + EAphone_number + "','" + EAalt_phone_count + "','" + document.vicidial_form.lead_id.value + "','N');\">Αλλαγή αυτό τον αριθμό τηλεφώνου για να Ανενεργό</a>";}
+			{EAactive_link = "<a href=\"#\" onclick=\"alt_phone_change('" + EAphone_number + "','" + EAalt_phone_count + "','" + document.vicidial_form.lead_id.value + "','N');\">Αλλαγή του αριθμού τηλεφώνου σε Ανενεργό</a>";}
 		else
-			{EAactive_link = "<a href=\"#\" onclick=\"alt_phone_change('" + EAphone_number + "','" + EAalt_phone_count + "','" + document.vicidial_form.lead_id.value + "','Y');\">Αλλαγή αυτό τον αριθμό τηλεφώνου για να ΔΡΑΣΤΙΚΗΣ</a>";}
+			{EAactive_link = "<a href=\"#\" onclick=\"alt_phone_change('" + EAphone_number + "','" + EAalt_phone_count + "','" + document.vicidial_form.lead_id.value + "','Y');\">Αλλαγή του αριθμού τηλεφώνου σε Ενεργό</a>";}
 
-		document.getElementById("EAcommentsBoxB").innerHTML = "<b>Active:</b>" + EAalt_phone_active + "<BR>" + EAactive_link;
+		document.getElementById("EAcommentsBoxB").innerHTML = "<b>Ενεργό:</b>" + EAalt_phone_active + "<BR>" + EAactive_link;
 
 		var xmlhttp=false;
 		/*@cc_on @*/
@@ -6434,6 +6449,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							
 							document.vicidial_form.lead_id.value		= VDIC_data_VDAC[0];
 							document.vicidial_form.uniqueid.value		= VDIC_data_VDAC[1];
+							last_uniqueid								= VDIC_data_VDAC[1];
 							CIDcheck									= VDIC_data_VDAC[2];
 							CalLCID										= VDIC_data_VDAC[2];
 							document.vicidial_form.callchannel.value	= VDIC_data_VDAC[3];
@@ -6522,30 +6538,30 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								{
 								document.getElementById("CusTInfOSpaN").innerHTML = " <B> PREVIOUS ΚΛΗΣΗBACK </B>";
 								document.getElementById("CusTInfOSpaN").style.background = CusTCB_bgcolor;
-								document.getElementById("CBcommentsBoxA").innerHTML = "<b>Στο τέλος καλέστε:</b>" + CBentry_time;
-								document.getElementById("CBcommentsBoxB").innerHTML = "<b>CallBack:</b>" + CBcallback_time;
-								document.getElementById("CBcommentsBoxC").innerHTML = "<b>Πράκτορας:</b>" + CBuser;
-								document.getElementById("CBcommentsBoxD").innerHTML = "<b>Σχολιάζει:</b><br>" + CBcomments;
+								document.getElementById("CBcommentsBoxA").innerHTML = "<b>Τελευταία Κλήση: </b>" + CBentry_time;
+								document.getElementById("CBcommentsBoxB").innerHTML = "<b>Επανάκληση: </b>" + CBcallback_time;
+								document.getElementById("CBcommentsBoxC").innerHTML = "<b>Χειριστής: </b>" + CBuser;
+								document.getElementById("CBcommentsBoxD").innerHTML = "<b>Σχολιασμός: </b><br>" + CBcomments;
 								showDiv('CBcommentsBox');
 								}
 							if (dialed_label == 'ALT')
-								{document.getElementById("CusTInfOSpaN").innerHTML = " <B> ALT ΤΗΛΕΦΩΝΕΙΣΤΕ ΑΡΙΘΜΟΣ: ALT </B>";}
+								{document.getElementById("CusTInfOSpaN").innerHTML = " <B> ΕΝΑΛΛ ΑΡΙΘΜΟΣ ΚΛΗΣΗΣ: ALT </B>";}
 							if (dialed_label == 'ADDR3')
-								{document.getElementById("CusTInfOSpaN").innerHTML = " <B> ALT ΤΗΛΕΦΩΝΕΙΣΤΕ ΑΡΙΘΜΟΣ: 3ΔΙΕΥΘΥΝΣΗ </B>";}
+								{document.getElementById("CusTInfOSpaN").innerHTML = " <B> ΕΝΑΛΛ ΑΡΙΘΜΟΣ ΚΛΗΣΗΣ: 3ΔΙΕΥΘΥΝΣΗ </B>";}
 							var REGalt_dial = new RegExp("X","g");
 							if (dialed_label.match(REGalt_dial))
 								{
-								document.getElementById("CusTInfOSpaN").innerHTML = " <B> ALT ΤΗΛΕΦΩΝΕΙΣΤΕ ΑΡΙΘΜΟΣ: " + dialed_label + "</B>";
-								document.getElementById("EAcommentsBoxA").innerHTML = "<b>Μήκη και Αριθμός: </b>" + EAphone_code + " " + EAphone_number;
+								document.getElementById("CusTInfOSpaN").innerHTML = " <B> ΕΝΑΛΛ ΑΡΙΘΜΟΣ ΚΛΗΣΗΣ: " + dialed_label + "</B>";
+								document.getElementById("EAcommentsBoxA").innerHTML = "<b>Τηλεφωνικός Αριθμός και Κωδικός: </b>" + EAphone_code + " " + EAphone_number;
 
 								var EAactive_link = '';
 								if (EAalt_phone_active == 'Y') 
-									{EAactive_link = "<a href=\"#\" onclick=\"alt_phone_change('" + EAphone_number + "','" + EAalt_phone_count + "','" + document.vicidial_form.lead_id.value + "','N');\">Αλλαγή αυτό τον αριθμό τηλεφώνου για να Ανενεργό</a>";}
+									{EAactive_link = "<a href=\"#\" onclick=\"alt_phone_change('" + EAphone_number + "','" + EAalt_phone_count + "','" + document.vicidial_form.lead_id.value + "','N');\">Αλλαγή του αριθμού τηλεφώνου σε Ανενεργό</a>";}
 								else
-									{EAactive_link = "<a href=\"#\" onclick=\"alt_phone_change('" + EAphone_number + "','" + EAalt_phone_count + "','" + document.vicidial_form.lead_id.value + "','Y');\">Αλλαγή αυτό τον αριθμό τηλεφώνου για να ΔΡΑΣΤΙΚΗΣ</a>";}
+									{EAactive_link = "<a href=\"#\" onclick=\"alt_phone_change('" + EAphone_number + "','" + EAalt_phone_count + "','" + document.vicidial_form.lead_id.value + "','Y');\">Αλλαγή του αριθμού τηλεφώνου σε Ενεργό</a>";}
 
-								document.getElementById("EAcommentsBoxB").innerHTML = "<b>Active:</b>" + EAalt_phone_active + "<BR>" + EAactive_link;
-								document.getElementById("EAcommentsBoxC").innerHTML = "<b>Alt Count:</b>" + EAalt_phone_count;
+								document.getElementById("EAcommentsBoxB").innerHTML = "<b>Ενεργό:</b>" + EAalt_phone_active + "<BR>" + EAactive_link;
+								document.getElementById("EAcommentsBoxC").innerHTML = "<b>Εναλλ Μετρητής:</b>" + EAalt_phone_count;
 								document.getElementById("EAcommentsBoxD").innerHTML = "<b>Σημειώσεις:</b>" + EAalt_phone_notes;
 								showDiv('EAcommentsBox');
 								}
@@ -7818,7 +7834,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		{
 		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
 			{
-			alert("ΠΡΕΠΕΙ ΝΑ ΣΤΑΜΑΤΗΘΕΙΤΕ ΓΙΑ ΝΑ ΠΛΗΚΤΡΟΛΟΓΕΙΤΕ έναν ΚΩΔΙΚΟ ΜΙΚΡΗΣΔΙΑΚΟΠΉΣ στον ΤΡΟΠΟ αυτόματος-ΠΙΝΑΚΩΝ");
+			alert("ΠΡΕΠΕΙ ΝΑ ΠΛΗΚΤΡΟΛΟΓΕΙΣΕΤΕ έναν ΚΩΔΙΚΟ ΣΥΝΤΟΜΗΣ ΔΙΑΚΟΠΗΣ στον ΤΡΟΠΟ αυτόματων κλήσεων");
 			}
 		else
 			{
@@ -7849,7 +7865,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		}
 
 // ################################################################################
-// Generate the Ομάδα Γνωστός Chooser panel
+// Generate the Ψευδώνυμο Ομάδας Chooser panel
 	function GroupAliasSelectContent_create(task3way)
 		{
 		HidEGenDerPulldown();
@@ -7968,7 +7984,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					}
 				if (xmlhttp) 
 					{ 
-					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&comments=" + CallBackCommenTs;
+					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + last_uniqueid + "&comments=" + CallBackCommenTs;
 					xmlhttp.open('POST', 'vdc_db_query.php');
 					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 					xmlhttp.send(DSupdate_query); 
@@ -8027,13 +8043,29 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				vtiger_callback_id='0';
 				recording_filename='';
 				recording_id='';
+				document.vicidial_form.uniqueid.value='';
+				MDuniqueid='';
+				XDuniqueid='';
+				tmp_vicidial_id='';
+				EAphone_code='';
+				EAphone_number='';
+				EAalt_phone_notes='';
+				EAalt_phone_active='';
+				EAalt_phone_count='';
+				XDnextCID='';
+				XDcheck = '';
+				MDnextCID='';
+				XD_live_customer_call = 0;
+				XD_live_call_secondS = 0;
+				MD_channel_look=0;
+				MD_ring_secondS=0;
 
 				if (manual_dial_in_progress==1)
 					{
 					manual_dial_finished();
 					}
 				document.getElementById("GENDERhideFORieALT").innerHTML = '';
-				document.getElementById("GENDERhideFORie").innerHTML = '<select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
+				document.getElementById("GENDERhideFORie").innerHTML = '<select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Μη Ορισμένο</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
 				hideDiv('DispoSelectBox');
 				hideDiv('DispoButtonHideA');
 				hideDiv('DispoButtonHideB');
@@ -8148,7 +8180,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 
 // ################################################################################
-// Submit the Ομάδα Γνωστός 
+// Submit the Ψευδώνυμο Ομάδας 
 	function GroupAliasSelect_submit(newgroupalias,newgroupcid,newusegroup)
 		{
 		hideDiv('GroupAliasSelectBox');
@@ -8158,8 +8190,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		if (newusegroup > 0)
 			{
 			active_group_alias = newgroupalias;
-			document.getElementById("ManuaLDiaLGrouPSelecteD").innerHTML = "<font size=2 face=\"Arial,Helvetica\">Ομάδα Γνωστός: " + active_group_alias + "</font>";
-			document.getElementById("XfeRDiaLGrouPSelecteD").innerHTML = "<font size=1 face=\"Arial,Helvetica\">Ομάδα Γνωστός: " + active_group_alias + "</font>";
+			document.getElementById("ManuaLDiaLGrouPSelecteD").innerHTML = "<font size=2 face=\"Arial,Helvetica\">Ψευδώνυμο Ομάδας: " + active_group_alias + "</font>";
+			document.getElementById("XfeRDiaLGrouPSelecteD").innerHTML = "<font size=1 face=\"Arial,Helvetica\">Ψευδώνυμο Ομάδας: " + active_group_alias + "</font>";
 			}
 		cid_choice = newgroupcid;
 		}
@@ -8341,7 +8373,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		else
 			{
 			VU_agent_choose_ingroups_DV = "MGRLOCK";
-			var live_CSC_HTML = "Διευθυντήςhas selected groups for you<BR>";
+			var live_CSC_HTML = "Διευθυντής has selected groups for you<BR>";
 			document.vicidial_form.CloserSelectList.value = '';
 			document.getElementById("CloserSelectContent").innerHTML = live_CSC_HTML;
 			}
@@ -8494,7 +8526,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			else
 				{
 				agent_select_territories = "MGRLOCK";
-				var live_TERR_HTML = "Διευθυντήςhas selected territories for you<BR>";
+				var live_TERR_HTML = "Διευθυντής has selected territories for you<BR>";
 				document.vicidial_form.TerritorySelectList.value = '';
 				document.getElementById("TerritorySelectContent").innerHTML = live_TERR_HTML;
 				}
@@ -8652,56 +8684,58 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				}
 			else
 				{
-				var xmlhttp=false;
-				/*@cc_on @*/
-				/*@if (@_jscript_version >= 5)
-				// JScript gives us Conditional compilation, we can cope with old IE versions.
-				// and security blocked creation of the objects.
-				 try {
-				  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
-				 } catch (e) {
-				  try {
-				   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				  } catch (E) {
-				   xmlhttp = false;
-				  }
-				 }
-				@end @*/
-				if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+				if (alt_dial_status_display==1)
 					{
-					xmlhttp = new XMLHttpRequest();
+					alert("You are in ALT dial mode, you must finish the lead before logging out.\n" + reselect_alt_dial);
 					}
-				if (xmlhttp) 
-					{ 
-					VDlogout_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=userLOGout&format=text&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&agent_log_id=" + agent_log_id + "&no_delete_sessions=" + no_delete_sessions + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&LogouTKicKAlL=" + LogouTKicKAlL + "&ext_context=" + ext_context;
-					xmlhttp.open('POST', 'vdc_db_query.php'); 
-					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-					xmlhttp.send(VDlogout_query); 
-					xmlhttp.onreadystatechange = function() 
-						{ 
-						if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
-							{
-				//			alert(xmlhttp.responseText);
-							}
+				else
+					{
+					var xmlhttp=false;
+					/*@cc_on @*/
+					/*@if (@_jscript_version >= 5)
+					// JScript gives us Conditional compilation, we can cope with old IE versions.
+					// and security blocked creation of the objects.
+					 try {
+					  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+					 } catch (e) {
+					  try {
+					   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+					  } catch (E) {
+					   xmlhttp = false;
+					  }
+					 }
+					@end @*/
+					if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+						{
+						xmlhttp = new XMLHttpRequest();
 						}
-					delete xmlhttp;
+					if (xmlhttp) 
+						{ 
+						VDlogout_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=userLOGout&format=text&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&agent_log_id=" + agent_log_id + "&no_delete_sessions=" + no_delete_sessions + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&LogouTKicKAlL=" + LogouTKicKAlL + "&ext_context=" + ext_context;
+						xmlhttp.open('POST', 'vdc_db_query.php'); 
+						xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+						xmlhttp.send(VDlogout_query); 
+						xmlhttp.onreadystatechange = function() 	
+							{ 
+							if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+								{
+					//			alert(xmlhttp.responseText);
+								}
+							}
+						delete xmlhttp;
+						}
+					hideDiv('MainPanel');
+					showDiv('LogouTBox');
+					var logout_content='';
+					if (tempreason=='SHIFT')
+						{logout_content='Your Shift is over or has changed, you have been logged out of your session<BR><BR>';}
+					document.getElementById("LogouTBoxLink").innerHTML = logout_content + "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + original_phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass + "\">ΕΠΙΛΕΞΤΕ ΕΔΩ ΓΙΑ ΝΑ ΣΥΝΔΕΘΕΙΤΕ ΠΑΛΙ</a>\n";
+					logout_stop_timeouts = 1;
+						
+					//	window.location= agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass;
 					}
-
-				hideDiv('MainPanel');
-				showDiv('LogouTBox');
-				var logout_content='';
-				if (tempreason=='SHIFT')
-					{logout_content='Your Shift is over or has changed, you have been logged out of your session<BR><BR>';}
-
-				document.getElementById("LogouTBoxLink").innerHTML = logout_content + "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + original_phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass + "\">ΕΠΙΛΕΞΤΕ ΕΔΩ ΓΙΑ ΝΑ ΣΥΝΔΕΘΕΙΤΕ ΠΑΛΙ</a>\n";
-
-				logout_stop_timeouts = 1;
-					
-				//	window.location= agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass;
-
 				}
 			}
-
 		}
 <?php
 if ($useIE > 0)
@@ -9282,7 +9316,7 @@ function phone_number_format(formatphone) {
 			{
 			if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
 				{
-				alert("ΠΡΕΠΕΙ να διακοπεί για να αρπάξει ΚΛΗΣΕΙΣ σε αναμονή");
+				alert("ΠΡΕΠΕΙ να είστε σε Παύση για να αρπάξετε τις ΚΛΗΣΕΙΣ στην Ουρά");
 				}
 			else
 				{
@@ -9391,13 +9425,13 @@ function phone_number_format(formatphone) {
 		{
 		if (CQoperation=='SHOW')
 			{
-			document.getElementById("callsinqueuelink").innerHTML = "<a href=\"#\"  onclick=\"show_calls_in_queue('HIDE');\">Απόκρυψη καλεί Στην ουρά</a>";
+			document.getElementById("callsinqueuelink").innerHTML = "<a href=\"#\"  onclick=\"show_calls_in_queue('HIDE');\">Απόκρυψη Κλήσεων Στην Ουρά</a>";
 			view_calls_in_queue_active=1;
 			showDiv('callsinqueuedisplay');
 			}
 		else
 			{
-			document.getElementById("callsinqueuelink").innerHTML = "<a href=\"#\"  onclick=\"show_calls_in_queue('SHOW');\">Παρουσίαση καλεί Στην ουρά</a>";
+			document.getElementById("callsinqueuelink").innerHTML = "<a href=\"#\"  onclick=\"show_calls_in_queue('SHOW');\">Παρουσίαση Κλήσεων Στην Ουρά</a>";
 			view_calls_in_queue_active=0;
 			hideDiv('callsinqueuedisplay');
 			}
@@ -9535,13 +9569,13 @@ function phone_number_format(formatphone) {
 		{
 		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
 			{
-			alert("Πρέπει να είστε Paused TO CHANGE ΟΜΑΔΕΣ");
+			alert("Πρέπει να είστε σε ΠΑΥΣΗ για να αλλάξετε ΟΜΑΔΕΣ");
 			}
 		else
 			{
 			if (manager_ingroups_set > 0)
 				{
-				alert("Διευθυντής" + external_igb_set_name + " έχει επιλέξει σε σας τις επιλογές της ομάδας");
+				alert("Διευθυντής " + external_igb_set_name + " έχει επιλέξει τις εισερχ-ομάδες");
 				}
 			else
 				{
@@ -9709,7 +9743,7 @@ else
 		{
 		if (taskaction == 'DiaLAlerT')
 			{
-			document.getElementById("TimerContentSpan").innerHTML = "<b>DIAL ALERT:<BR><BR>" + taskdialalert + "</b>";
+			document.getElementById("TimerContentSpan").innerHTML = "<b>DIAL ALERT:<BR><BR>" + taskdialalert.replace("\n","<BR>") + "</b>";
 
 			showDiv('TimerSpan');
 			}
@@ -9717,7 +9751,7 @@ else
 			{
 			if ( (timer_action_message.length > 0) || (timer_action == 'MESSAGE_ONLY') )
 				{
-				document.getElementById("TimerContentSpan").innerHTML = "<b>TIMER ΚΟΙΝΟΠΟΙΗΣΗ: " + timer_action_seconds + " δευτερόλεπτα<BR><BR>" + timer_action_message + "</b>";
+				document.getElementById("TimerContentSpan").innerHTML = "<b>ΚΟΙΝΟΠΟΙΗΣΗ ΧΡΟΝΟΥ: " + timer_action_seconds + " δευτερόλεπτα<BR><BR>" + timer_action_message + "</b>";
 
 				showDiv('TimerSpan');
 				}
@@ -9836,7 +9870,7 @@ else
 
 			if ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') )
 				{
-				document.getElementById("PauseCodeLinkSpan").innerHTML = "<a href=\"#\" onclick=\"PauseCodeSelectContent_create();return false;\">ΠΛΗΚΤΡΟΛΟΓΕΣΤΕ έναν ΚΩΔΙΚΟ ΜΙΚΡΗΣ ΔΙΑΚΟΠΉΣ</a>";
+				document.getElementById("PauseCodeLinkSpan").innerHTML = "<a href=\"#\" onclick=\"PauseCodeSelectContent_create();return false;\">ΠΛΗΚΤΡΟΛΟΓΕΣΤΕ έναν ΚΩΔΙΚΟ ΓΙΑ ΣΥΝΤΟΜΗ ΔΙΑΚΟΠΗ</a>";
 				}
 			if (VICIDiaL_allow_closers < 1)
 				{
@@ -9900,7 +9934,8 @@ else
 				var TEMP_crm_login_address = decoded;
 				TEMP_crm_login_address = TEMP_crm_login_address.replace(regWFAcustom, '');
 
-				CRMwin = window.open(TEMP_crm_login_address, 'CRMwin,toolbar=1,location=1,directories=1,status=1,menubar=1,scrollbars=1,resizable=1,width=700,height=480');
+				var CRMwin = 'CRMwin';
+				CRMwin = window.open(TEMP_crm_login_address, CRMwin,'toolbar=1,location=1,directories=1,status=1,menubar=1,scrollbars=1,resizable=1,width=700,height=480');
 
 				CRMwin.blur();
 				}
@@ -9926,7 +9961,7 @@ else
 					}
 				CustomerData_update();
 				document.getElementById("GENDERhideFORie").innerHTML = '';
-				document.getElementById("GENDERhideFORieALT").innerHTML = '<select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
+				document.getElementById("GENDERhideFORieALT").innerHTML = '<select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Μη Ορισμένο</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
 				showDiv('DispoSelectBox');
 				DispoSelectContent_create('','ReSET');
 				WaitingForNextStep=1;
@@ -10456,8 +10491,8 @@ else
 					active_group_alias = LIVE_default_group_alias;
 					cid_choice = LIVE_caller_id_number;
 					}
-				document.getElementById("XfeRDiaLGrouPSelecteD").innerHTML = "<font size=1 face=\"Arial,Helvetica\">Ομάδα Γνωστός: " + active_group_alias + "</font>";
-				document.getElementById("XfeRCID").innerHTML = "<a href=\"#\" onclick=\"GroupAliasSelectContent_create('1');\"><font size=1 face=\"Arial,Helvetica\">Κάντε κλικ εδώ για να Επιλέξτε μια ομάδα Γνωστός</font></a>";
+				document.getElementById("XfeRDiaLGrouPSelecteD").innerHTML = "<font size=1 face=\"Arial,Helvetica\">Ψευδώνυμο Ομάδας: " + active_group_alias + "</font>";
+				document.getElementById("XfeRCID").innerHTML = "<a href=\"#\" onclick=\"GroupAliasSelectContent_create('1');\"><font size=1 face=\"Arial,Helvetica\">Κάντε κλικ εδώ για να Επιλέξτε ένα Ψευδώνυμο Ομάδας</font></a>";
 				}
 			else
 				{
@@ -10541,7 +10576,7 @@ else
 		var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
 		if (genderValue == 'M') {var gIndex = 1;}
 		if (genderValue == 'F') {var gIndex = 2;}
-		document.getElementById("GENDERhideFORieALT").innerHTML = '<select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
+		document.getElementById("GENDERhideFORieALT").innerHTML = '<select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Μη Ορισμένο</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
 		document.getElementById("GENDERhideFORie").innerHTML = '';
 		document.getElementById("gender_list").selectedIndex = gIndex;
 		}
@@ -10553,7 +10588,7 @@ else
 		var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
 		if (genderValue == 'M') {var gIndex = 1;}
 		if (genderValue == 'F') {var gIndex = 2;}
-		document.getElementById("GENDERhideFORie").innerHTML = '<select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
+		document.getElementById("GENDERhideFORie").innerHTML = '<select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Μη Ορισμένο</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
 		document.getElementById("GENDERhideFORieALT").innerHTML = '';
 		document.getElementById("gender_list").selectedIndex = gIndex;
 		}
@@ -10629,7 +10664,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:300px;top:<?php echo $MBheight ?>px;z-index:12;" id="ManuaLDiaLButtons"><font class="body_text">
-<span id="MDstatusSpan"><a href="#" onclick="NeWManuaLDiaLCalL('NO');return false;">ΧΕΙΡ.ΚΛΗΣΗ</a></span> &nbsp; &nbsp; &nbsp; <a href="#" onclick="NeWManuaLDiaLCalL('FAST');return false;">ΓΡΗΓΟΡΟΣ ΠΙΝΑΚΑΣ</a><BR>
+<span id="MDstatusSpan"><a href="#" onclick="NeWManuaLDiaLCalL('NO');return false;">ΧΕΙΡ.ΚΛΗΣΗ</a></span> &nbsp; &nbsp; &nbsp; <a href="#" onclick="NeWManuaLDiaLCalL('FAST');return false;">ΓΡΗΓΟΡΗ ΚΛΗΣΗ</a><BR>
 </font></span>
 
 <span style="position:absolute;left:300px;top:<?php echo $CBheight ?>px;z-index:13;" id="CallbacksButtons"><font class="body_text">
@@ -10704,7 +10739,7 @@ echo "</head>\n";
 	<BR>
 	<a href="#" onclick="NeWManuaLDiaLCalLSubmiT('NOW');return false;">Κάλεσε Τώρα</a>
 	 &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp; 
-	<a href="#" onclick="NeWManuaLDiaLCalLSubmiT('PREVIEW');return false;">Προεπισκόπηση πρόσκλησης</a>
+	<a href="#" onclick="NeWManuaLDiaLCalLSubmiT('PREVIEW');return false;">Προεπισκόπηση Κλήσης</a>
 	 &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp; 
 	<a href="#" onclick="hideDiv('NeWManuaLDiaLBox');return false;">Επιστροφή</a>
 	</TD></TR></TABLE>
@@ -10762,7 +10797,7 @@ Your Κατάσταση: <span id="AgentΚατάστασηΚατάσταση"></
 	<IMG SRC="../agc/images/vdc_XB_number_el.gif" border=0 alt="Αριθμός για κλήση" style="vertical-align:middle">
 	&nbsp; 
 	<input type=text size=20 name=xfernumber maxlength=25 class="cust_form" value="<?php echo $preset_populate ?>"> &nbsp; 
-	<span id=agentdirectlink><font class="body_small_bold"><a href="#" onclick="XferAgentSelectLaunch();return false;">πράκτορες</a></font></span>
+	<span id=agentdirectlink><font class="body_small_bold"><a href="#" onclick="XferAgentSelectLaunch();return false;">ΧΕΙΡΙΣΤΕΣ</a></font></span>
 	<input type=hidden name=xferuniqueid>
 	</TD>
 	<TD ALIGN=LEFT>
@@ -10803,26 +10838,26 @@ Your Κατάσταση: <span id="AgentΚατάστασηΚατάσταση"></
 
 
 
-<span style="position:absolute;left:0px;top:<?php echo $CQheight ?>px;width:<?php echo $MNwidth ?>;overflow:scroll;z-index:23;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="callsinqueuedisplay"><TABLE CELLPADDING=0 CELLSPACING=0 Border=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">Κλήσεις σε αναμονή: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="callsinqueuelist">&nbsp;</span></TD></TR></TABLE></span>
+<span style="position:absolute;left:0px;top:<?php echo $CQheight ?>px;width:<?php echo $MNwidth ?>;overflow:scroll;z-index:23;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="callsinqueuedisplay"><TABLE CELLPADDING=0 CELLSPACING=0 Border=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">Κλήσεις Στην Ουρά: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="callsinqueuelist">&nbsp;</span></TD></TR></TABLE></span>
 
 <font class="body_small"><span style="position:absolute;left:<?php echo $CLwidth ?>px;top:<?php echo $SLheight ?>px;z-index:24;" id="callsinqueuelink">
 <?php 
 if ($view_calls_in_queue > 0)
 	{ 
 	if ($view_calls_in_queue_launch > 0) 
-		{echo "<a href=\"#\" onclick=\"show_calls_in_queue('HIDE');\">Απόκρυψη καλεί Στην ουρά</a>\n";}
+		{echo "<a href=\"#\" onclick=\"show_calls_in_queue('HIDE');\">Απόκρυψη Κλήσεων Στην Ουρά</a>\n";}
 	else 
-		{echo "<a href=\"#\" onclick=\"show_calls_in_queue('SHOW');\">Παρουσίαση καλεί Στην ουρά</a>\n";}
+		{echo "<a href=\"#\" onclick=\"show_calls_in_queue('SHOW');\">Παρουσίαση Κλήσεων Στην Ουρά</a>\n";}
 	}
 ?>
 </span></font>
 
 
 <span style="position:absolute;left:<?php echo $SBwidth ?>px;top:0px;height:500;overflow:scroll;z-index:25;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentViewSpan"><TABLE CELLPADDING=0 CELLSPACING=0 Border=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">
-Άλλα Κατάσταση Πράκτορες: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="AgentViewΚατάσταση">&nbsp;</span></TD></TR></TABLE></span>
+Άλλη Κατάσταση Χειριστών: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="AgentViewΚατάσταση">&nbsp;</span></TD></TR></TABLE></span>
 
 <span style="position:absolute;left:60px;top:<?php echo $BPheight ?>px;width:400;height:500;overflow:scroll;z-index:33;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentXferViewSpan"><CENTER><font class="body_text">
-Διαθέσιμο Agents Μεταφορά: <span id="AgentXferViewSelect"></span></CENTER></font></span>
+Διαθέσιμοι Χειριστές για Μεταφορά: <span id="AgentXferViewSelect"></span></CENTER></font></span>
 
 <span style="position:absolute;left:<?php echo $SCwidth ?>px;top:<?php echo $SLheight ?>px;z-index:27;" id="AgentViewLinkSpan"><TABLE CELLPADDING=0 CELLSPACING=0 Border=0 WIDTH=91><TR><TD ALIGN=RIGHT><font class="body_small"><span id="AgentViewLink"><a href="#" onclick="AgentsViewOpen('AgentViewSpan','open');return false;">Agents View +</a></span></font></TD></TR></TABLE></span>
 
@@ -10882,7 +10917,7 @@ if ($agent_display_dialable_leads > 0)
 <span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:37;" id="EAcommentsBox">
     <table border=0 bgcolor="#FFFFCC" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFFF66">
-	<TD align=left><font class="sh_text"> Εκτεταμένη Alt Τηλέφωνο Πληροφοριών:</font></td>
+	<TD align=left><font class="sh_text"> Εκτεταμένη Πληροφορία Εναλλ Τηλεφώνου:</font></td>
 	<TD align=right><font class="sk_text"> <a href="#" onclick="EAcommentsBoxhide('YES');return false;"> ελαχιστοποιήστε </a> </font></td>
 	</tr><tr>
 	<TD VALIGN=top><font class="sk_text">
@@ -10904,7 +10939,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:12px;z-index:39;" id="NoneInSessionBox">
-    <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center> Κανένας δεν είναι στη σύνοδό σας: <span id="NoneInSessionID"></span><BR>
+    <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center> Noone is in your session: <span id="NoneInSessionID"></span><BR>
 	<a href="#" onclick="NoneInSessionOK();return false;">Επιστροφή</a>
 	<BR><BR>
 	<a href="#" onclick="NoneInSessionCalL();return false;">Ξανακάλεσε τον Χειριστή</a>
@@ -10930,7 +10965,7 @@ if ($agent_display_dialable_leads > 0)
 <span style="position:absolute;left:200px;top:150px;z-index:42;" id="TimerSpan">
     <table border=1 bgcolor="#CCFFCC" width=400 height=200><TR><TD align=center>
 	<BR><span id="TimerContentSpan"></span><BR><BR>
-	<a href="#" onclick="hideDiv('TimerSpan');return false;">Κλείσιμο Μήνυμα</a>
+	<a href="#" onclick="hideDiv('TimerSpan');return false;">Κλείσιμο Μηνύματος</a>
 	</TD></TR></TABLE>
 </span>
 
@@ -10940,7 +10975,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:44;" id="SysteMDisablEBoX">
-    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center>Υπάρχει ένα πρόβλημα συγχρονισμού με το χρόνο σας, παρακαλούμε ενημερώστε τον διαχειριστή του συστήματός σας<BR><BR><BR><a href="#" onclick="hideDiv('SysteMDisablEBoX');return false;">Επιστροφή</a>
+    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center>Υπάρχει πρόβλημα συγχρονισμού με το σύστημα, παρακαλούμε ενημερώστε τον διαχειριστή του συστήματός σας<BR><BR><BR><a href="#" onclick="hideDiv('SysteMDisablEBoX');return false;">Επιστροφή</a>
 </TD></TR></TABLE>
 </span>
 
@@ -10974,7 +11009,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:64;" id="PauseCodeSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> ΕΠΙΛΕΞΤΕ έναν ΚΩΔΙΚΑ ΜΙΚΡΗΣ ΔΙΑΚΟΠΉΣ :<BR>
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> ΕΠΙΛΕΞΤΕ έναν ΚΩΔΙΚΟ ΓΙΑ ΣΥΝΤΟΜΗ ΔΙΑΚΟΠΗ :<BR>
 	<span id="PauseCodeSelectContent"> Παύση Code Selection </span>
 	<input type=hidden name=PauseCodeSelection>
 	<BR><BR> &nbsp; 
@@ -10982,8 +11017,8 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:65;" id="GroupAliasSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> ΕΠΙΛΕΞΤΕ ΟΜΑΔΑ ALIAS :<BR>
-	<span id="GroupAliasSelectContent"> Γνωστός Ομάδα Επιλογής </span>
+    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> ΕΠΙΛΕΞΤΕ ΕΝΑ ΨΕΥΔΩΝΥΜΟ ΟΜΑΔΑΣ :<BR>
+	<span id="GroupAliasSelectContent"> Επιλογή Ψευδώνυμο Ομάδας </span>
 	<input type=hidden name=GroupAliasSelection>
 	<BR><BR> &nbsp; 
 	</TD></TR></TABLE>
@@ -11229,7 +11264,7 @@ if ($call_requeue_button > 0)
 <td align=right><font class="body_text">ID προμηθευτού: </td>
 <td align=left><font class="body_text"><input type=text size=15 name=vendor_lead_code maxlength=20 class="cust_form" value=""></td>
 <td align=right><font class="body_text">Φύλο:</td>
-<td align=left><font class="body_text"><span id="GENDERhideFORie"><select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select></span></td>
+<td align=left><font class="body_text"><span id="GENDERhideFORie"><select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Μη Ορισμένο</option><option value="M">M - Male</option><option value="F">F - Female</option></select></span></td>
 </tr><tr>
 <td align=right><font class="body_text"> Τηλ: </td>
 <td align=left><font class="body_text">
@@ -11256,7 +11291,7 @@ else
 <td align=right><font class="body_text">Ηλεκτρονικό ταχυδρομείο: </td>
 <td align=left colspan=3><font class="body_text"><input type=text size=45 name=email maxlength=70 class="cust_form" value=""></td>
 </tr><tr>
-<td align=right valign=top><font class="body_text"> Σχολιάζει:</td>
+<td align=right valign=top><font class="body_text"> Σχολιασμός: </td>
 <td align=left colspan=5>
 <font class="body_text">
 <?php

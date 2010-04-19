@@ -953,7 +953,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		}
 
 // ################################################################################
-// Send Redirect command for live call to Διευθυντήςsends phone name where call is going to
+// Send Redirect command for live call to Διευθυντής sends phone name where call is going to
 	function mainxfer_send_redirect(taskvar,taskxferconf) 
 		{
 		var xmlhttp=false;
@@ -1046,7 +1046,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 
 
 // ################################################################################
-// Send Originate command for local dial to Διευθυντήςsends phone name where call is going to
+// Send Originate command for local dial to Διευθυντής sends phone name where call is going to
 	function mainxfer_send_originate(taskvar,taskxferconf,taskentrypop) 
 		{
 		var xmlhttp=false;

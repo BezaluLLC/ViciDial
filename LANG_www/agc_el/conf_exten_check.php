@@ -309,8 +309,8 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03007',$user,$server_ip,$session_name,$one_mysql_log);}
 					$row=mysql_fetch_row($rslt);
 					$RingCalls=$row[0];
-					if ($RingCalls > 0) {$RingCalls = "<font class=\"queue_text_red\">Ζητεί, στο Queue: $RingCalls</font>";}
-					else {$RingCalls = "<font class=\"queue_text\">Ζητεί, στο Queue: $RingCalls</font>";}
+					if ($RingCalls > 0) {$RingCalls = "<font class=\"queue_text_red\">Κλήσεις στη ουρά: $RingCalls</font>";}
+					else {$RingCalls = "<font class=\"queue_text\">Κλήσεις στη ουρά: $RingCalls</font>";}
 
 					### grab the number of calls being placed from this server and campaign
 					$stmt="SELECT count(*) from vicidial_auto_calls where status NOT IN('XFER') and ( (campaign_id='$Acampaign') or (campaign_id IN('$AccampSQL')) );";

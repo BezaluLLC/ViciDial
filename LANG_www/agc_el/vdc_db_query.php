@@ -234,12 +234,13 @@
 # 100202-2306 - Fixed logging issues related to INBOUND_MAN dial_method
 # 100207-1110 - Changed Pause Codes function to allow for multiple pause codes per pause period
 # 100301-1342 - Changed Available agents output for AGENTDIRECT selection
+# 100413-1342 - Fixes for extended alt-dial
 #
 
-$version = '2.2.0-142';
-$build = '100301-1342';
+$version = '2.2.0-143';
+$build = '100413-1342';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=309;
+$mysql_log_count=310;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -434,6 +435,61 @@ $ENTRYdate = date("YmdHis");
 $MT[0]='';
 $agents='@agents';
 $US='_';
+
+
+##### Hangup Cause Dictionary #####
+$hangup_cause_dictionary = array(
+0 => "Unspecified. No other cause codes applicable.",
+1 => "Unallocated (unassigned) number.",
+2 => "No route to specified transit network (national use).",
+3 => "No route to destination.",
+6 => "Channel unacceptable.",
+7 => "Call awarded, being delivered in an established channel.",
+16 => "Normal call clearing.",
+17 => "Χρήστης busy.",
+18 => "No user responding.",
+19 => "No answer from user (user alerted).",
+20 => "Subscriber absent.",
+21 => "Call rejected.",
+22 => "Number changed.",
+23 => "Redirection to new destination.",
+25 => "Exchange routing error.",
+27 => "Destination out of order.",
+28 => "Ακυρο number format (address incomplete).",
+29 => "Facilities rejected.",
+30 => "Response to ΚΑΤΑΣΤΑΣΗ INQUIRY.",
+31 => "Normal, unspecified.",
+34 => "No circuit/channel available.",
+38 => "Network out of order.",
+41 => "Temporary failure.",
+42 => "Switching equipment congestion.",
+43 => "Access information discarded.",
+44 => "Requested circuit/channel not available.",
+50 => "Requested facility not subscribed.",
+52 => "Outgoing calls barred.",
+54 => "Εισερχόμενο calls barred.",
+57 => "Bearer capability not authorized.",
+58 => "Bearer capability not presently available.",
+63 => "Service or option not available, unspecified.",
+65 => "Bearer capability not implemented.",
+66 => "Channel type not implemented.",
+69 => "Requested facility not implemented.",
+79 => "Service or option not implemented, unspecified.",
+81 => "Ακυρο call reference value.",
+88 => "Incompatible destination.",
+95 => "Ακυρο message, unspecified.",
+96 => "Mandatory information element is missing.",
+97 => "Message type non-existent or not implemented.",
+98 => "Message not compatible with call state or message type non-existent or not implemented.",
+99 => "Information element / parameter non-existent or not implemented.",
+100 => "Ακυρο information element contents.",
+101 => "Message not compatible with call state.",
+102 => "Recovery στο timer expiry.",
+103 => "Parameter non-existent or not implemented - passed στο (national use).",
+111 => "Protocol error, unspecified.",
+127 => "Interworking, unspecified."
+);
+
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -680,8 +736,8 @@ if ($ACTION == 'LogiNCamPaigns')
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=relogin VALUE=\"YES\">\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=VD_login VALUE=\"$user\">\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=VD_pass VALUE=\"$pass\">\n";
-			$VDdisplayMESSAGE.= "ΔιευθυντήςΣύνδεση: <INPUT TYPE=TEXT NAME=\"MGR_login$loginDATE\" SIZE=10 maxlength=20><br>\n";
-			$VDdisplayMESSAGE.= "ΔιευθυντήςΚωδικός πρόσβασης: <INPUT TYPE=PASSWORD NAME=\"MGR_pass$loginDATE\" SIZE=10 maxlength=20><br>\n";
+			$VDdisplayMESSAGE.= "Διευθυντής Σύνδεση: <INPUT TYPE=TEXT NAME=\"MGR_login$loginDATE\" SIZE=10 maxlength=20><br>\n";
+			$VDdisplayMESSAGE.= "Διευθυντής Κωδικός πρόσβασης: <INPUT TYPE=PASSWORD NAME=\"MGR_pass$loginDATE\" SIZE=10 maxlength=20><br>\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=Submit NAME=ΥΠΟΒΑΛΕΤΕ VALUE=ΥΠΟΒΑΛΕΤΕ></FORM><BR><BR><BR><BR>\n";
 			echo "$VDdisplayMESSAGE";
 			exit;
@@ -710,7 +766,7 @@ if ($ACTION == 'LogiNCamPaigns')
 	else
 		{
 		echo "<select size=1 name=VD_campaign id=VD_campaign onFocus=\"login_allowable_campaigns()\">\n";
-		echo "<option value=\"\">-- Πρέπει να συνδεθείτε ΣΤΗΝ ΠΡΩΤΗ ΤΟΥ TIMECLOCK --</option>\n";
+		echo "<option value=\"\">-- Πρέπει πρώτα να συνδεθείτε στο TIMECLOCK --</option>\n";
 		echo "</select>\n";
 		}
 	exit;
@@ -1859,27 +1915,48 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00036',$user,$server_ip,$session_name,$one_mysql_log);}
 
-				#### update vicidial_agent_log if not MANUAL dial_method
-				if ($dial_method != 'MANUAL')
-					{
-					$pause_sec=0;
-					$stmt = "select pause_epoch,pause_sec,wait_epoch,talk_epoch,dispo_epoch,agent_log_id from vicidial_agent_log where agent_log_id >= '$agent_log_id' and user='$user' order by agent_log_id desc limit 1;";
-					if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_query($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00301',$user,$server_ip,$session_name,$one_mysql_log);}
-					$VDpr_ct = mysql_num_rows($rslt);
-					if ( ($VDpr_ct > 0) and (strlen($row[3]<5)) and (strlen($row[4]<5)) )
-						{
-						$row=mysql_fetch_row($rslt);
-						$agent_log_id = $row[5];
-						$pause_sec = (($StarTtime - $row[0]) + $row[1]);
+		#		#### update vicidial_agent_log if not MANUAL dial_method
+		#		if ($dial_method != 'MANUAL')
+		#			{
+		#			$pause_sec=0;
+		#			$stmt = "select pause_epoch,pause_sec,wait_epoch,talk_epoch,dispo_epoch,agent_log_id from vicidial_agent_log where agent_log_id >= '$agent_log_id' and user='$user' order by agent_log_id desc limit 1;";
+		#			if ($DB) {echo "$stmt\n";}
+		#			$rslt=mysql_query($stmt, $link);
+		#					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00302',$user,$server_ip,$session_name,$one_mysql_log);}
+		#			$VDpr_ct = mysql_num_rows($rslt);
+		#			if ( ($VDpr_ct > 0) and (strlen($row[3]<5)) and (strlen($row[4]<5)) )
+		#				{
+		#				$row=mysql_fetch_row($rslt);
+		#				$agent_log_id = $row[5];
+		#				$pause_sec = (($StarTtime - $row[0]) + $row[1]);
+		#
+		#				$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
+		#					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		#				$rslt=mysql_query($stmt, $link);
+		#					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00303',$user,$server_ip,$session_name,$one_mysql_log);}
+		#				}
+		#			}
 
-						$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
-							if ($format=='debug') {echo "\n<!-- $stmt -->";}
-						$rslt=mysql_query($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00302',$user,$server_ip,$session_name,$one_mysql_log);}
-						}
+
+				$val_pause_epoch=0;
+				$val_pause_sec=0;
+				$stmt = "SELECT pause_epoch FROM vicidial_agent_log where agent_log_id='$agent_log_id';";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$vald_ct = mysql_num_rows($rslt);
+				if ($vald_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$val_pause_epoch =	$row[0];
+					$val_pause_sec = ($StarTtime - $val_pause_epoch);
 					}
+
+				$stmt="UPDATE vicidial_agent_log set pause_sec='$val_pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
 
 				if ($agent_dialed_number > 0)
 					{
@@ -2288,27 +2365,91 @@ if ($ACTION == 'manDiaLonly')
 
 		echo "$MqueryCID\n";
 
-		#### update vicidial_agent_log if not MANUAL dial_method
-		if ($dial_method != 'MANUAL')
+#		#### update vicidial_agent_log if not MANUAL dial_method
+#		if ($dial_method != 'MANUAL')
+#			{
+#			$pause_sec=0;
+#			$stmt = "SELECT pause_epoch,pause_sec,wait_epoch,talk_epoch,dispo_epoch,agent_log_id from vicidial_agent_log where agent_log_id >= '$agent_log_id' and user='$user' order by agent_log_id desc limit 1;";
+#			if ($DB) {echo "$stmt\n";}
+#			$rslt=mysql_query($stmt, $link);
+#					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00304',$user,$server_ip,$session_name,$one_mysql_log);}
+#			$VDpr_ct = mysql_num_rows($rslt);
+#			if ( ($VDpr_ct > 0) and (strlen($row[3]<5)) and (strlen($row[4]<5)) )
+#				{
+#				$row=mysql_fetch_row($rslt);
+#				$agent_log_id = $row[5];
+#				$pause_sec = (($StarTtime - $row[0]) + $row[1]);
+#
+#				$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
+#					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+#				$rslt=mysql_query($stmt, $link);
+#					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00305',$user,$server_ip,$session_name,$one_mysql_log);}
+#				}
+#			}
+
+		$val_pause_epoch=0;
+		$val_pause_sec=0;
+		$val_dispo_epoch=0;
+		$val_dispo_sec=0;
+		$val_wait_epoch=0;
+		$val_wait_sec=0;
+		$stmt = "SELECT dispo_epoch,wait_epoch,pause_epoch FROM vicidial_agent_log where agent_log_id='$agent_log_id';";
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$vald_ct = mysql_num_rows($rslt);
+		if ($vald_ct > 0)
 			{
-			$pause_sec=0;
-			$stmt = "select pause_epoch,pause_sec,wait_epoch,talk_epoch,dispo_epoch,agent_log_id from vicidial_agent_log where agent_log_id >= '$agent_log_id' and user='$user' order by agent_log_id desc limit 1;";
-			if ($DB) {echo "$stmt\n";}
+			$row=mysql_fetch_row($rslt);
+			$val_dispo_epoch =	$row[0];
+			$val_wait_epoch =	$row[1];
+			$val_pause_epoch =	$row[2];
+			$val_dispo_sec = ($StarTtime - $val_dispo_epoch);
+			$val_wait_sec = ($StarTtime - $val_wait_epoch);
+			$val_pause_sec = ($StarTtime - $val_pause_epoch);
+			}
+		if ($val_dispo_epoch > 1000)
+			{
+			$stmt="UPDATE vicidial_agent_log set status='ALTNUM',dispo_sec='$val_dispo_sec' where agent_log_id='$agent_log_id';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00303',$user,$server_ip,$session_name,$one_mysql_log);}
-			$VDpr_ct = mysql_num_rows($rslt);
-			if ( ($VDpr_ct > 0) and (strlen($row[3]<5)) and (strlen($row[4]<5)) )
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			$user_group='';
+			$stmt="SELECT user_group FROM vicidial_users where user='$user' LIMIT 1;";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$ug_record_ct = mysql_num_rows($rslt);
+			if ($ug_record_ct > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$agent_log_id = $row[5];
-				$pause_sec = (($StarTtime - $row[0]) + $row[1]);
-
-				$stmt="UPDATE vicidial_agent_log set pause_sec='$pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
-					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00304',$user,$server_ip,$session_name,$one_mysql_log);}
+				$user_group =		trim("$row[0]");
 				}
+
+			$stmt="INSERT INTO vicidial_agent_log (user,server_ip,event_time,campaign_id,pause_epoch,pause_sec,wait_epoch,user_group,sub_status) values('$user','$server_ip','$NOW_TIME','$campaign','$StarTtime','0','$StarTtime','$user_group','ANDIAL');";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			$affected_rows = mysql_affected_rows($link);
+			$agent_log_id = mysql_insert_id($link);
+
+			$stmt="UPDATE vicidial_live_agents SET agent_log_id='$agent_log_id',last_state_change='$NOW_TIME' where user='$user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$VLAaffected_rows_update = mysql_affected_rows($link);
 			}
+		else
+			{
+			$stmt="UPDATE vicidial_agent_log set pause_sec='$val_pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			}
+
+		echo "$agent_log_id\n";
+
 
 		if ($agent_dialed_number > 0)
 			{
@@ -2326,8 +2467,7 @@ if ($ACTION == 'manDiaLonly')
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00048',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
 		$qm_conf_ct = mysql_num_rows($rslt);
-		$i=0;
-		while ($i < $qm_conf_ct)
+		if ($qm_conf_ct > 0)
 			{
 			$row=mysql_fetch_row($rslt);
 			$enable_queuemetrics_logging =	$row[0];
@@ -2336,7 +2476,6 @@ if ($ACTION == 'manDiaLonly')
 			$queuemetrics_login	=			$row[3];
 			$queuemetrics_pass =			$row[4];
 			$queuemetrics_log_id =			$row[5];
-			$i++;
 			}
 		##### END QUEUEMETRICS LOGGING LOOKUP #####
 		###########################################
@@ -2433,9 +2572,10 @@ if ($ACTION == 'manDiaLlookCaLL')
 						$dialstatus =$row[0];
 						$hangup_cause =$row[1];
 						
-						$channel = $dialstatus . "-" . $hangup_cause;
+						$channel = $dialstatus;
+						$hangup_cause_msg = "Cause: " . $hangup_cause . " - " . hangup_cause_description($hangup_cause);
 
-						$call_output = "$uniqueid\n$channel\nERROR";
+						$call_output = "$uniqueid\n$channel\nERROR\n" . $hangup_cause_msg; 
 						$call_good++;
 
 						### Delete call record
@@ -2465,7 +2605,7 @@ if ($ACTION == 'manDiaLlookCaLL')
 				if ( ($now_dead_epoch > 1000) and ($now_dead_epoch < $StarTtime) )
 					{$dead_epochSQL = ",dead_epoch='$StarTtime'";}
 				}
-			$stmt="UPDATE vicidial_agent_log set wait_sec='$wait_sec',wait_epoch='$StarTtime',talk_epoch='$StarTtime',lead_id='$lead_id' $dead_epochSQL where agent_log_id='$agent_log_id';";
+			$stmt="UPDATE vicidial_agent_log set wait_sec='$wait_sec',talk_epoch='$StarTtime',lead_id='$lead_id' $dead_epochSQL where agent_log_id='$agent_log_id';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00054',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3830,7 +3970,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 							$rslt=mysql_query($stmt, $link);
 								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00248',$user,$server_ip,$session_name,$one_mysql_log);}
 							$VDAP_cid_ct = mysql_num_rows($rslt);
-							if ($VDACP_cid_ct > 0)
+							if ($VDAP_cid_ct > 0)
 								{
 								$row=mysql_fetch_row($rslt);
 								$Xalt_phone_count	=$row[0];
@@ -3840,7 +3980,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 								$rslt=mysql_query($stmt, $link);
 									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00249',$user,$server_ip,$session_name,$one_mysql_log);}
 								$VDAPct_cid_ct = mysql_num_rows($rslt);
-								if ($VDACPct_cid_ct > 0)
+								if ($VDAPct_cid_ct > 0)
 									{
 									$row=mysql_fetch_row($rslt);
 									$COUNTalt_phone_count	=$row[0];
@@ -4764,6 +4904,11 @@ if ($ACTION == 'updateDISPO')
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00144',$user,$server_ip,$session_name,$one_mysql_log);}
 
+			$stmt = "UPDATE vicidial_live_inbound_agents set last_call_finish=NOW() where group_id='$stage' and user='$user' limit 1;";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00310',$user,$server_ip,$session_name,$one_mysql_log);}
+
 			$stmt = "SELECT dispo_call_url from vicidial_inbound_groups where group_id='$stage';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
@@ -4836,7 +4981,7 @@ if ($ACTION == 'updateDISPO')
 										$rslt=mysql_query($stmt, $link);
 											if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00250',$user,$server_ip,$session_name,$one_mysql_log);}
 										$VDAP_cid_ct = mysql_num_rows($rslt);
-										if ($VDACP_cid_ct > 0)
+										if ($VDAP_cid_ct > 0)
 											{
 											$row=mysql_fetch_row($rslt);
 											$Xalt_phone_count	=$row[0];
@@ -4846,7 +4991,7 @@ if ($ACTION == 'updateDISPO')
 											$rslt=mysql_query($stmt, $link);
 												if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00251',$user,$server_ip,$session_name,$one_mysql_log);}
 											$VDAPct_cid_ct = mysql_num_rows($rslt);
-											if ($VDACPct_cid_ct > 0)
+											if ($VDAPct_cid_ct > 0)
 												{
 												$row=mysql_fetch_row($rslt);
 												$COUNTalt_phone_count	=$row[0];
@@ -6144,7 +6289,7 @@ if ($ACTION == 'PauseCodeSubmit')
 		### if this is the first pause code entry in a pause session, simply update and log to queue_log
 		if ($stage < 1)
 			{
-			$stmt="UPDATE vicidial_agent_log set sub_status=\"$status\" where agent_log_id='$agent_log_id';";
+			$stmt="UPDATE vicidial_agent_log set sub_status=\"$status\" where agent_log_id >= '$agent_log_id' and user='$user' and ( (sub_status is NULL) or (sub_status='') )order by agent_log_id limit 2;";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00175',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -6375,7 +6520,7 @@ if ($ACTION == 'CALLSINQUEUEview')
 
 	if (eregi('NONE',$view_calls_in_queue))
 		{
-		echo "Καλεί σε ουρά Δείτε τα άτομα με ειδικές ανάγκες για αυτή την καμπάνια\n";
+		echo "Εμφάνιση Κλήσεων στην Ουρά απενεργοποιημένη για αυτή την εκστρατεία\n";
 		exit;
 		}
 	else
@@ -6567,7 +6712,7 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 
 	if ( (eregi('NONE',$view_calls_in_queue)) or (eregi('N',$grab_calls_in_queue)) )
 		{
-		echo "ERROR: Καλεί σε ουρά Δείτε τα άτομα με ειδικές ανάγκες για αυτή την καμπάνια\n";
+		echo "ERROR: Εμφάνιση Κλήσεων στην Ουρά απενεργοποιημένη για αυτή την εκστρατεία\n";
 		exit;
 		}
 	else
@@ -6712,7 +6857,13 @@ echo "\n</body>\n</html>\n";
 exit; 
 
 
-
+##### Hangup Cause Description Map  #####
+function hangup_cause_description($code)
+	{
+	global $hangup_cause_dictionary;
+	if ( array_key_exists($code,$hangup_cause_dictionary)  ) { return $hangup_cause_dictionary[$code]; }
+	else { return "Unidentified Hangup Cause Code."; }
+	}
 
 
 ##### MySQL Error Logging #####
