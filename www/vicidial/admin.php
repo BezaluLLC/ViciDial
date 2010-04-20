@@ -25427,8 +25427,18 @@ if ($ADD==999999)
 		}
 	?>
 		<PRE><TABLE BORDER=1 CELLPADDING=2 cellspacing=0>
-		<TR><TD>SERVER</TD><TD>DESCRIPTION</TD><TD>IP</TD><TD>ACT</TD><TD>LOAD</TD><TD>CHAN</TD><TD>DISK</TD><TD>OUTBOUND</TD><TD>INBOUND</TD></TR>
 		<?php 
+
+		if ($stage == 'TIME')
+			{
+			echo "<TR><TD>SERVER <a href=\"$PHP_SELF?ADD=999999\">-</a></TD>";
+			echo "<TD>DESCRIPTION</TD><TD>IP</TD><TD>ACT</TD><TD>LOAD</TD><TD>CHAN</TD><TD>DISK</TD><TD>TIME</TD></TR>\n";
+			}
+		else
+			{
+			echo "<TR><TD>SERVER <a href=\"$PHP_SELF?ADD=999999&stage=TIME\">+</a></TD>";
+			echo "<TD>DESCRIPTION</TD><TD>IP</TD><TD>ACT</TD><TD>LOAD</TD><TD>CHAN</TD><TD>DISK</TD><TD>OUTBOUND</TD><TD>INBOUND</TD></TR>\n";
+			}
 
 		$o=0;
 		while ($servers_to_print > $o)
@@ -25457,10 +25467,40 @@ if ($ADD==999999)
 			echo "<TD>$sysload[$o] - $cpu%</TD>\n";
 			echo "<TD>$channels_total[$o]</TD>\n";
 			echo "<TD ALIGN=RIGHT>$disk</TD>\n";
-			echo "<TD><a href=\"AST_timeonVDAD.php?server_ip=$server_ip[$o]\">LINK</a></TD>\n";
-			echo "<TD><a href=\"AST_timeonVDAD.php?server_ip=$server_ip[$o]&closer_display=1\">LINK</a></TD>\n";
+			if ($stage == 'TIME')
+				{
+				$stmt="select last_update from server_updater where server_ip='$server_ip[$o]';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$servertime_to_print = mysql_num_rows($rslt);
+				if ($servertime_to_print)
+					{
+					$row=mysql_fetch_row($rslt);
+					echo "<TD NOWRAP>$row[0]</TD>";
+					}
+				}
+			else
+				{
+				echo "<TD><a href=\"AST_timeonVDAD.php?server_ip=$server_ip[$o]\">LINK</a></TD>\n";
+				echo "<TD><a href=\"AST_timeonVDAD.php?server_ip=$server_ip[$o]&closer_display=1\">LINK</a></TD>\n";
+				}
 			echo "</TR>\n";
 			$o++;
+			}
+
+		if ($stage == 'TIME')
+			{
+			echo "<TR><TD COLSPAN=2> &nbsp; </TD><TD>PHP Time</TD><TD COLSPAN=4> &nbsp; </TD><TD NOWRAP>" . date("Y-m-d H:i:s") . "</TD></TR>";
+
+			$stmt="select NOW();";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$dbtime_to_print = mysql_num_rows($rslt);
+			if ($dbtime_to_print)
+				{
+				$row=mysql_fetch_row($rslt);
+				echo "<TR><TD COLSPAN=2> &nbsp; </TD><TD>DB Time</TD><TD COLSPAN=4> &nbsp; </TD><TD NOWRAP>$row[0]</TD></TR>";
+				}
 			}
 
 		echo "</TABLE>\n";
