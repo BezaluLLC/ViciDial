@@ -525,7 +525,7 @@ if ($non_latin < 1)
 	$pass=ereg_replace("[^-_0-9a-zA-Z]","",$pass);
 	$length_in_sec = ereg_replace("[^0-9]","",$length_in_sec);
 	$phone_code = ereg_replace("[^0-9]","",$phone_code);
-	$phone_number = ereg_replace("[^0-9]","",$phone_number);
+	$phone_number = ereg_replace("[^0-9a-zA-Z]","",$phone_number);
 	}
 else
 	{
