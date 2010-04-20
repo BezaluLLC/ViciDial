@@ -95,6 +95,8 @@ If QueueMetrics integration is enabled in the system settings then this setting 
 Extension Append CID||
 If enabled, the calls placed from this campaign will have a space and the phone extension of the agent appended to the end of the CallerID name for the call before it is sent to the agent. Default is N for disabled||
 If enabled, the calls coming in from this in-group will have a space and the phone extension of the agent appended to the end of the CallerID name for the call before it is sent to the agent. Default is N for disabled||
+Scheduled Callbacks Count||
+This option allows you to set whether only LIVE callbacks, user-only scheduled callbacks that have hit their trigger date and time, or ALL_ACTIVE callbacks, user-only callbacks that are active in the system as well as LIVE callbacks, should be3 counted int he agent callback alert section on the agent screen. Default is ALL_ACTIVE||
 
 
 AST_VICIDIAL_ingrouplist.php

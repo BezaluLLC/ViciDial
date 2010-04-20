@@ -244,12 +244,13 @@
 # 100331-1217 - Added human-readable hangup codes for manual dial
 # 100405-1430 - Added queuemetrics_callstatus option
 # 100413-1341 - Fixes for extended alt-dial
+# 100420-1006 - Added option for LIVE-only callback count
 #
 
-$version = '2.4-151';
-$build = '100413-1341';
+$version = '2.4-152';
+$build = '100420-1006';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=321;
+$mysql_log_count=332;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -1906,7 +1907,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$use_eac=0;
 				$stmt = "SELECT count(*) FROM vicidial_campaigns where extension_appended_cidname='Y' and campaign_id='$campaign';";
 				$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00322',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$eacid_ct = mysql_num_rows($rslt);
 				if ($eacid_ct > 0)
@@ -1992,7 +1993,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$val_pause_sec=0;
 				$stmt = "SELECT pause_epoch FROM vicidial_agent_log where agent_log_id='$agent_log_id';";
 				$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00323',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$vald_ct = mysql_num_rows($rslt);
 				if ($vald_ct > 0)
@@ -2005,7 +2006,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$stmt="UPDATE vicidial_agent_log set pause_sec='$val_pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00324',$user,$server_ip,$session_name,$one_mysql_log);}
 
 
 				if ($agent_dialed_number > 0)
@@ -2320,7 +2321,7 @@ if ($ACTION == 'manDiaLonly')
 		$use_eac=0;
 		$stmt = "SELECT count(*) FROM vicidial_campaigns where extension_appended_cidname='Y' and campaign_id='$campaign';";
 		$rslt=mysql_query($stmt, $link);
-		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00325',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
 		$eacid_ct = mysql_num_rows($rslt);
 		if ($eacid_ct > 0)
@@ -2483,7 +2484,7 @@ if ($ACTION == 'manDiaLonly')
 		$val_wait_sec=0;
 		$stmt = "SELECT dispo_epoch,wait_epoch,pause_epoch FROM vicidial_agent_log where agent_log_id='$agent_log_id';";
 		$rslt=mysql_query($stmt, $link);
-		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00326',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
 		$vald_ct = mysql_num_rows($rslt);
 		if ($vald_ct > 0)
@@ -2501,12 +2502,12 @@ if ($ACTION == 'manDiaLonly')
 			$stmt="UPDATE vicidial_agent_log set status='ALTNUM',dispo_sec='$val_dispo_sec' where agent_log_id='$agent_log_id';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00327',$user,$server_ip,$session_name,$one_mysql_log);}
 
 			$user_group='';
 			$stmt="SELECT user_group FROM vicidial_users where user='$user' LIMIT 1;";
 			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00328',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
 			$ug_record_ct = mysql_num_rows($rslt);
 			if ($ug_record_ct > 0)
@@ -2518,14 +2519,14 @@ if ($ACTION == 'manDiaLonly')
 			$stmt="INSERT INTO vicidial_agent_log (user,server_ip,event_time,campaign_id,pause_epoch,pause_sec,wait_epoch,user_group,sub_status) values('$user','$server_ip','$NOW_TIME','$campaign','$StarTtime','0','$StarTtime','$user_group','ANDIAL');";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00329',$user,$server_ip,$session_name,$one_mysql_log);}
 			$affected_rows = mysql_affected_rows($link);
 			$agent_log_id = mysql_insert_id($link);
 
 			$stmt="UPDATE vicidial_live_agents SET agent_log_id='$agent_log_id',last_state_change='$NOW_TIME' where user='$user';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00330',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$VLAaffected_rows_update = mysql_affected_rows($link);
 			}
 		else
@@ -2533,7 +2534,7 @@ if ($ACTION == 'manDiaLonly')
 			$stmt="UPDATE vicidial_agent_log set pause_sec='$val_pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00331',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
 
 		echo "$agent_log_id\n";
@@ -7342,7 +7343,14 @@ if ($ACTION == 'CalLBacKCounT')
 	$row=mysql_fetch_row($rslt);
 	$cbcount=$row[0];
 
-	echo "$cbcount";
+	$stmt = "select count(*) from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql and status IN('LIVE');";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00332',$user,$server_ip,$session_name,$one_mysql_log);}
+	$row=mysql_fetch_row($rslt);
+	$cbcount_live=$row[0];
+
+	echo "$cbcount|$cbcount_live";
 	}
 
 

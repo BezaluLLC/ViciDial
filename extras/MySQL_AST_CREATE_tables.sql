@@ -731,7 +731,8 @@ xferconf_e_number VARCHAR(50) default '',
 use_custom_cid ENUM('Y','N') default 'N',
 scheduled_callbacks_alert ENUM('NONE','BLINK','RED','BLINK_RED') default 'NONE',
 queuemetrics_callstatus_override ENUM('DISABLED','NO','YES') default 'DISABLED',
-extension_appended_cidname ENUM('Y','N') default 'N'
+extension_appended_cidname ENUM('Y','N') default 'N',
+scheduled_callbacks_count ENUM('LIVE','ALL_ACTIVE') default 'ALL_ACTIVE'
 );
 
 CREATE TABLE vicidial_lists (

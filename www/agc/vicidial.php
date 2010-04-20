@@ -289,10 +289,11 @@
 # 100331-1220 - Added human-readable hangup codes for manual dial
 # 100401-0019 - Added agent_choose_blended option
 # 100413-1349 - Various small logging fixes and extended alt-dial fixes
+# 100420-1009 - Added scheduled_callbacks_count option
 #
 
-$version = '2.4-267';
-$build = '100413-1349';
+$version = '2.4-268';
+$build = '100420-1009';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -1176,7 +1177,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1249,6 +1250,7 @@ else
 				$xferconf_e_number =		$row[65];
 				$use_custom_cid =			$row[66];
 				$scheduled_callbacks_alert = $row[67];
+				$scheduled_callbacks_count = $row[68];
 
 				if ($user_territories_active < 1)
 					{$agent_select_territories = 0;}
@@ -2865,6 +2867,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var pause_code_counter=1;
 	var agent_call_log_view='<?php echo $agent_call_log_view ?>';
 	var scheduled_callbacks_alert='<?php echo $scheduled_callbacks_alert ?>';
+	var scheduled_callbacks_count='<?php echo $scheduled_callbacks_count ?>';
 	var tmp_vicidial_id='';
 	var agent_xfer_consultative='<?php echo $agent_xfer_consultative ?>';
 	var agent_xfer_dial_override='<?php echo $agent_xfer_dial_override ?>';
@@ -4423,7 +4426,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					var CBpost = '';
 
 				//	alert(xmlhttp.responseText);
-					var CBcounT = xmlhttp.responseText;
+					var CBcounTtotal = xmlhttp.responseText;
+					var CBcounTtotal_array=CBcounTtotal.split("|");
+					var CBcounT = CBcounTtotal_array[0];
+					if (scheduled_callbacks_count='LIVE')
+						{CBcounT = CBcounTtotal_array[1];}
 					if (CBcounT == 0) {var CBprint = "NO";}
 					else 
 						{
@@ -4502,7 +4509,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var CB_calls = all_CBs_array[0];
 						var loop_ct=0;
 						var conv_start=0;
-						var CB_HTML = "<table width=610><tr bgcolor=<?php echo $SCRIPT_COLOR ?>><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> CALLBACK DATE/TIME</td><td><font class=\"log_title\">NUMBER</td><td><font class=\"log_title\">NAME</td><td><font class=\"log_title\">  STATUS</td><td align=right><font class=\"log_title\">CAMPAIGN</td><td><font class=\"log_title\">LAST CALL DATE/TIME</td><td align=left><font class=\"log_title\"> COMMENTS</td></tr>"
+						var CB_HTML = "<table width=<?php echo $HCwidth ?>><tr bgcolor=<?php echo $SCRIPT_COLOR ?>><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> CALLBACK DATE/TIME</td><td><font class=\"log_title\">NUMBER</td><td><font class=\"log_title\">NAME</td><td><font class=\"log_title\">  STATUS</td><td align=right><font class=\"log_title\">CAMPAIGN</td><td><font class=\"log_title\">LAST CALL DATE/TIME</td><td align=left><font class=\"log_title\"> COMMENTS</td></tr>"
 						while (loop_ct < CB_calls)
 							{
 							loop_ct++;
@@ -10891,7 +10898,7 @@ else
 <style type="text/css">
 <!--
 	div.scroll_calllog {height: <?php echo $CQheight ?>px; width: <?php echo $MNwidth ?>px; overflow: scroll;}
-	div.scroll_callback {height: 300px; width: 620px; overflow: scroll;}
+	div.scroll_callback {height: 300px; width: <?php echo $MNwidth ?>px; overflow: scroll;}
 	div.scroll_list {height: 400px; width: 140px; overflow: scroll;}
 	div.scroll_script {height: <?php echo $SSheight ?>px; width: <?php echo $SDwidth ?>px; background: #FFF5EC; overflow: auto; font-size: 12px;  font-family: sans-serif;}
 	div.noscroll_script {height: <?php echo $SSheight ?>px; width: <?php echo $SDwidth ?>px; background: #FFF5EC; overflow: hidden; font-size: 12px;  font-family: sans-serif;}

@@ -231,3 +231,8 @@ ALTER TABLE vicidial_campaigns ADD extension_appended_cidname ENUM('Y','N') defa
 ALTER TABLE vicidial_inbound_groups ADD extension_appended_cidname ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1213',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD scheduled_callbacks_count ENUM('LIVE','ALL_ACTIVE') default 'ALL_ACTIVE';
+
+UPDATE system_settings SET db_schema_version='1214',db_schema_update_date=NOW();
+
