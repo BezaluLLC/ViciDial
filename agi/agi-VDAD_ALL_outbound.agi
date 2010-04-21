@@ -1573,6 +1573,11 @@ while ($drop_timer <= $DROP_TIME)
 						$newcallerid = "\"$callerid $eac_extension <$phone_number>\"";
 						$AGI->set_callerid($newcallerid);
 						}
+					else
+						{
+						$newcallerid = "\"$callerid <$phone_number>\"";
+						$AGI->set_callerid($newcallerid);
+						}
 					}
 
 				$stmtA = "UPDATE vicidial_auto_calls set status='XFER', stage='XFER-$drop_timer', extension='$VDADconf_exten' where callerid='$callerid';";
@@ -1855,6 +1860,11 @@ while ($drop_timer <= $DROP_TIME)
 						$sthA->finish();
 						
 						$newcallerid = "\"$callerid $eac_extension <$phone_number>\"";
+						$AGI->set_callerid($newcallerid);
+						}
+					else
+						{
+						$newcallerid = "\"$callerid <$phone_number>\"";
 						$AGI->set_callerid($newcallerid);
 						}
 					}

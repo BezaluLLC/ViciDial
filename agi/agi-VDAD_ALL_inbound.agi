@@ -405,9 +405,9 @@ if ($call_handle_method =~ /^CLOSER/)
 		$callerid = $JqueryCID;
 		$VCcallerid = $JqueryCID;
 		### set the new call callerid to track the call
-		print "SET CALLERID $JqueryCID\n";
-		checkresult($result);
-		if ($AGILOG) {$agi_string = "callerID changed: $JqueryCID";   &agi_output;}
+		$Jnewcallerid = "\"$JqueryCID <$phone_number>\"";
+		$AGI->set_callerid($Jnewcallerid);
+		if ($AGILOG) {$agi_string = "callerID changed: $Jnewcallerid";   &agi_output;}
 		}
 	}
 
@@ -1189,9 +1189,9 @@ $YqueryCID = "Y$CIDdate$PADlead_id";
 $callerid = $YqueryCID;
 $VCcallerid = $YqueryCID;
 ### set the callerid 
-print "SET CALLERID $YqueryCID\n";
-checkresult($result);
-if ($AGILOG) {$agi_string = "callerID changed: $YqueryCID";   &agi_output;}
+$Ynewcallerid = "\"$YqueryCID <$originalCID>\"";
+$AGI->set_callerid($Ynewcallerid);
+if ($AGILOG) {$agi_string = "callerID changed: $Ynewcallerid";   &agi_output;}
 
 if ($call_handle_method =~ /DIGITID$/)
 	{

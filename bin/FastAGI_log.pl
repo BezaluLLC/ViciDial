@@ -670,32 +670,31 @@ sub process_request
 							}
 						$sthA->finish();
 						}
-
-					### BEGIN Double-log end logging ###
-					$DOUBLEunique_id = $unique_id . "99";
-					$stmtA = "SELECT start_epoch FROM call_log where uniqueid='$DOUBLEunique_id' and channel_group='DOUBLE_LOG' order by start_time desc limit 1;";
-					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-					$sthArows=$sthA->rows;
-					if ($sthArows > 0)
-						{
-						@aryA = $sthA->fetchrow_array;
-						$DOUBLEstart_epoch =	$aryA[0];
-
-						$DOUBLElength_in_sec = ($now_date_epoch - $DOUBLEstart_epoch);
-						$DOUBLElength_in_min = ($DOUBLElength_in_sec / 60);
-						$DOUBLElength_in_min = sprintf("%8.2f", $DOUBLElength_in_min);
-
-						$stmtA = "UPDATE call_log set end_time='$now_date',end_epoch='$now_date_epoch',length_in_sec=$DOUBLElength_in_sec,length_in_min='$DOUBLElength_in_min' where uniqueid='$DOUBLEunique_id' and channel_group='DOUBLE_LOG' order by start_time desc limit 1";
-
-						if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-						$affected_rowsDB = $dbhA->do($stmtA);
-
-						if ($AGILOG) {$agi_string = "DOUBLE QUERY done: start time = $DOUBLEstart_epoch | sec: $DOUBLElength_in_sec | min: $DOUBLElength_in_min |$affected_rowsDB";   &agi_output;}
-						}
-					$sthA->finish();
-					### END Double-log end logging ###
 					}
+				### BEGIN Double-log end logging ###
+				$DOUBLEunique_id = $unique_id . "99";
+				$stmtA = "SELECT start_epoch FROM call_log where uniqueid='$DOUBLEunique_id' and channel_group='DOUBLE_LOG' order by start_time desc limit 1;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$DOUBLEstart_epoch =	$aryA[0];
+
+					$DOUBLElength_in_sec = ($now_date_epoch - $DOUBLEstart_epoch);
+					$DOUBLElength_in_min = ($DOUBLElength_in_sec / 60);
+					$DOUBLElength_in_min = sprintf("%8.2f", $DOUBLElength_in_min);
+
+					$stmtA = "UPDATE call_log set end_time='$now_date',end_epoch='$now_date_epoch',length_in_sec=$DOUBLElength_in_sec,length_in_min='$DOUBLElength_in_min' where uniqueid='$DOUBLEunique_id' and channel_group='DOUBLE_LOG' order by start_time desc limit 1";
+
+					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+					$affected_rowsDB = $dbhA->do($stmtA);
+
+					if ($AGILOG) {$agi_string = "DOUBLE QUERY done: start time = $DOUBLEstart_epoch | sec: $DOUBLElength_in_sec | min: $DOUBLElength_in_min |$affected_rowsDB";   &agi_output;}
+					}
+				$sthA->finish();
+				### END Double-log end logging ###
 
 				$stmtA = "DELETE from live_inbound where uniqueid IN('$unique_id','$CALLunique_id') and server_ip='$VARserver_ip'";
 				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
