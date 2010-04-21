@@ -272,14 +272,28 @@
 # 100109-0801 - Added ALTNUM alt number status, fixed alt number dialing from setting
 # 100109-1338 - Fixed Manual dial live call detection
 # 100116-0709 - Added presets to script and web form variables
-# 100203-0640 - Fixed logging issues related to INBOUND_MAN dial method
-# 100207-1109 - Changed Pause Codes function to allow for multiple pause codes per pause period
-# 100228-1257 - Fixed no-selected default transfer group issue on inbound calls
-# 100301-1329 - Changed AGENTDIRECT user selection launching to AGENTS link next to number-to-dial field
+# 100123-0954 - changes to AGENTDIRECT selection span
+# 100131-2233 - Added functions to allow for a webphone loaded in a separate IFRAME
+# 100203-0639 - Fixed logging issues related to INBOUND_MAN dial method
+# 100207-1103 - Changed Pause Codes function to allow for multiple pause codes per pause period
+# 100220-1040 - Added Call Log View and Customer Info View and fixed HotKeys position
+# 100221-1107 - Added Custom CID compatibility
+# 100301-1330 - Changed AGENTDIRECT user selection launching to AGENTS link next to number-to-dial field
+# 100302-2145 - Added scheduled callbacks alert feature
+# 100306-0852 - Added options.php optional file for setting interface options that will survive upgrade
+# 100309-0525 - Added queuemetrics_loginout option
+# 100313-0053 - Added display options for transfer/conf buttons
+# 100315-1148 - fix for rare recording_log uniqueid issue on manual dial calls to same number
+# 100317-1301 - Added agent_fullscreen User Group option
+# 100327-0901 - fix for manual dial answering machine message
+# 100331-1220 - Added human-readable hangup codes for manual dial
+# 100401-0019 - Added agent_choose_blended option
+# 100413-1349 - Various small logging fixes and extended alt-dial fixes
+# 100420-1009 - Added scheduled_callbacks_count option
 #
 
-$version = '2.2.0-254';
-$build = '100301-1329';
+$version = '2.4-268';
+$build = '100420-1009';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=64;
 $one_mysql_log=0;
@@ -361,7 +375,7 @@ $random = (rand(1000000, 9999999) + 10000000);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -380,6 +394,7 @@ if ($qm_conf_ct > 0)
 	$outbound_autodial_active =		$row[8];
 	$enable_second_webform =		$row[9];
 	$user_territories_active =		$row[10];
+	$static_agent_url =				$row[11];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -387,48 +402,50 @@ if ($qm_conf_ct > 0)
 
 ##### DEFINABLE SETTINGS AND OPTIONS
 ###########################################
-$conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
-$dtmf_silent_prefix		= '7';	# vicidial_conferences prefix to enter silently
-$HKuser_level			= '5';	# minimum vicidial user_level for HotKeys
-$campaign_login_list	= '1';	# show drop-down list of campaigns at login	
-$manual_dial_preview	= '1';	# allow preview lead option when manual dial
-$multi_line_comments	= '1';	# set to 1 to allow multi-line comment box
-$user_login_first		= '0';	# set to 1 to have the vicidial_user login before the phone login
-$view_scripts			= '1';	# set to 1 to show the SCRIPTS tab
-$dispo_check_all_pause	= '0';	# set to 1 to allow for persistent pause after dispo
-$callholdstatus			= '1';	# set to 1 to show calls sur hold count
-$agentcallsstatus		= '0';	# set to 1 to show agent status and call dialed count
-   $campagentstatctmax	= '3';	# Number of secondes for campaign call and agent stats
-$show_campname_pulldown	= '1';	# set to 1 to show campaign name sur login pulldown
-$webform_sessionname	= '1';	# set to 1 to include the session_name in webform URL
-$local_consult_xfers	= '1';	# set to 1 to send consultative transfers from original server
-$clientDST				= '1';	# set to 1 to check for DST sur server for agent time
-$no_delete_sessions		= '1';	# set to 1 to not delete sessions at logout
-$volumecontrol_active	= '1';	# set to 1 to allow agents to alter volume of channels
-$PreseT_DiaL_LinKs		= '0';	# set to 1 to show a COMPOSER link for Dial Presets
-$LogiNAJAX				= '1';	# set to 1 to do lookups sur campaigns for login
-$HidEMonitoRSessionS	= '1';	# set to 1 to hide remote monitoring channels from "session calls"
-$hangup_all_non_reserved= '1';	# set to 1 to force hangup all non-reserved channels upon Raccrocher
-$LogouTKicKAlL			= '1';	# set to 1 to hangup all calls in session upon agent logout
-$PhonESComPIP			= '1';	# set to 1 to log computer IP to phone if blank, set to 2 to force log each login
-$DefaulTAlTDiaL			= '0';	# set to 1 to enable ALT COMPOSER by default if enabled for the campaign
-$AgentAlert_allowed		= '1';	# set to 1 to allow Agent alert option
-$disable_blended_checkbox='0';	# set to 1 to disable the BLENDED checkbox from the in-group chooser screen
 
-$TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
+if (file_exists('options.php'))
+	{
+	require('options.php');
+	}
+else
+	{
+	$conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
+	$dtmf_silent_prefix		= '7';	# vicidial_conferences prefix to enter silently
+	$HKuser_level			= '5';	# minimum vicidial user_level for HotKeys
+	$campaign_login_list	= '1';	# show drop-down list of campaigns at login	
+	$manual_dial_preview	= '1';	# allow preview lead option when manual dial
+	$multi_line_comments	= '1';	# set to 1 to allow multi-line comment box
+	$user_login_first		= '0';	# set to 1 to have the vicidial_user login before the phone login
+	$view_scripts			= '1';	# set to 1 to show the SCRIPTS tab
+	$dispo_check_all_pause	= '0';	# set to 1 to allow for persistent pause after dispo
+	$callholdstatus			= '1';	# set to 1 to show calls sur hold count
+	$agentcallsstatus		= '0';	# set to 1 to show agent status and call dialed count
+	   $campagentstatctmax	= '3';	# Number of secondes for campaign call and agent stats
+	$show_campname_pulldown	= '1';	# set to 1 to show campaign name sur login pulldown
+	$webform_sessionname	= '1';	# set to 1 to include the session_name in webform URL
+	$local_consult_xfers	= '1';	# set to 1 to send consultative transfers from original server
+	$clientDST				= '1';	# set to 1 to check for DST sur server for agent time
+	$no_delete_sessions		= '1';	# set to 1 to not delete sessions at logout
+	$volumecontrol_active	= '1';	# set to 1 to allow agents to alter volume of channels
+	$PreseT_DiaL_LinKs		= '0';	# set to 1 to show a COMPOSER link for Dial Presets
+	$LogiNAJAX				= '1';	# set to 1 to do lookups sur campaigns for login
+	$HidEMonitoRSessionS	= '1';	# set to 1 to hide remote monitoring channels from "session calls"
+	$hangup_all_non_reserved= '1';	# set to 1 to force hangup all non-reserved channels upon Raccrocher
+	$LogouTKicKAlL			= '1';	# set to 1 to hangup all calls in session upon agent logout
+	$PhonESComPIP			= '1';	# set to 1 to log computer IP to phone if blank, set to 2 to force log each login
+	$DefaulTAlTDiaL			= '0';	# set to 1 to enable ALT COMPOSER by default if enabled for the campaign
+	$AgentAlert_allowed		= '1';	# set to 1 to allow Agent alert option
+	$disable_blended_checkbox='0';	# set to 1 to disable the BLENDED checkbox from the in-group chooser screen
 
-$stretch_dimensions		= '1';	# sets the vicidial screen to the size of the browser window
-$BROWSER_HEIGHT			= 500;	# set to the minimum browser height, default=500
-$BROWSER_WIDTH			= 770;	# set to the minimum browser width, default=770
-$MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
-$SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
-$SIDEBAR_COLOR			= '#F6F6F6';
+	$TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
 
-# options now set in DB:
-#$alt_phone_dialing		= '1';	# allow agents to call alt phone numbers
-#$scheduled_callbacks	= '1';	# set to 1 to allow agent to choose scheduled callbacks
-#   $agentonly_callbacks	= '1';	# set to 1 to allow agent to choose agent-only scheduled callbacks
-#$agentcall_manual		= '1';	# set to 1 to allow agent to make manual calls during autodial session
+	$stretch_dimensions		= '1';	# sets the vicidial screen to the size of the browser window
+	$BROWSER_HEIGHT			= 500;	# set to the minimum browser height, default=500
+	$BROWSER_WIDTH			= 770;	# set to the minimum browser width, default=770
+	$MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
+	$SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
+	$SIDEBAR_COLOR			= '#F6F6F6';
+	}
 
 
 $US='_';
@@ -447,6 +464,8 @@ if (($server_port == '80') or ($server_port == '443') ) {$server_port='';}
 else {$server_port = "$CL$server_port";}
 $agcPAGE = "$HTTPprotocol$server_name$server_port$script_name";
 $agcDIR = eregi_replace('vicidial.php','',$agcPAGE);
+if (strlen($static_agent_url) > 5)
+	{$agcPAGE = $static_agent_url;}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -660,66 +679,27 @@ else
 	}
 
 if ($relogin == 'YES')
-{
-echo "<title>Agent web client: S'identifier à nouveau</title>\n";
-echo "</head>\n";
-echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
-echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
-echo "<!-- ILPV -->\n";
-echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_fr/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Français <img src=\"../agc/images/fr.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "</TR></TABLE>\n";
-echo "<FORM NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
-echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
-echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
-echo "<BR><BR><BR><CENTER><TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
-echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vdc_tab_vicidial.gif\" Border=0></TD>";
-echo "<TD ALIGN=CENTER VALIGN=MIDDLE> S'identifier à nouveau </TD>";
-echo "</TR>\n";
-echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-echo "<TR><TD ALIGN=RIGHT>Ouverture de Session téléphonique: </TD>";
-echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 maxlength=20 VALUE=\"$phone_login\"></TD></TR>\n";
-echo "<TR><TD ALIGN=RIGHT>Mot de passe du Téléphone:  </TD>";
-echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 maxlength=20 VALUE=\"$phone_pass\"></TD></TR>\n";
-echo "<TR><TD ALIGN=RIGHT>Ouverture de Session:  </TD>";
-echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=VD_login SIZE=10 maxlength=20 VALUE=\"$VD_login\"></TD></TR>\n";
-echo "<TR><TD ALIGN=RIGHT>Mot de passe Utilisateur:  </TD>";
-echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=VD_pass SIZE=10 maxlength=20 VALUE=\"$VD_pass\"></TD></TR>\n";
-echo "<TR><TD ALIGN=RIGHT>Campagne:  </TD>";
-echo "<TD ALIGN=LEFT><span id=\"LogiNCamPaigns\">$camp_form_code</span></TD></TR>\n";
-echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=VALIDER VALUE=VALIDER> &nbsp; \n";
-echo "<span id=\"LogiNReseT\"><INPUT TYPE=BUTTON VALUE=\"Rafraichir Campagne List\" OnClick=\"login_allowable_campaigns()\"></span></TD></TR>\n";
-echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
-echo "</TABLE>\n";
-echo "</FORM>\n\n";
-echo "</body>\n\n";
-echo "</html>\n\n";
-exit;
-}
-
-if ($user_login_first == 1)
-{
-	if ( (strlen($VD_login)<1) or (strlen($VD_pass)<1) or (strlen($VD_campaign)<1) )
 	{
-	echo "<title>Agent web client: Ouverture de Campagne</title>\n";
+	echo "<title>Agent web client: S'identifier à nouveau</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
 	echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 	echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_fr/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Français <img src=\"../agc/images/fr.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";	echo "</TR></TABLE>\n";
-	echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
+	echo "<FORM NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
 	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
-	#echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
-	#echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
-	echo "<CENTER><BR><B>Ouverture de Session</B><BR><BR>";
-	echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
+	echo "<BR><BR><BR><CENTER><TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
 	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vdc_tab_vicidial.gif\" Border=0></TD>";
-	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Ouverture de Campagne </TD>";
+	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> S'identifier à nouveau </TD>";
 	echo "</TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
+	echo "<TR><TD ALIGN=RIGHT>Ouverture de Session téléphonique: </TD>";
+	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 maxlength=20 VALUE=\"$phone_login\"></TD></TR>\n";
+	echo "<TR><TD ALIGN=RIGHT>Mot de passe du Téléphone:  </TD>";
+	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 maxlength=20 VALUE=\"$phone_pass\"></TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Ouverture de Session:  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=VD_login SIZE=10 maxlength=20 VALUE=\"$VD_login\"></TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Mot de passe Utilisateur:  </TD>";
@@ -727,7 +707,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 	echo "<TR><TD ALIGN=RIGHT>Campagne:  </TD>";
 	echo "<TD ALIGN=LEFT><span id=\"LogiNCamPaigns\">$camp_form_code</span></TD></TR>\n";
 	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=VALIDER VALUE=VALIDER> &nbsp; \n";
-	echo "<span id=\"LogiNReseT\"></span></TD></TR>\n";
+	echo "<span id=\"LogiNReseT\"><INPUT TYPE=BUTTON VALUE=\"Rafraichir Campagne List\" OnClick=\"login_allowable_campaigns()\"></span></TD></TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
 	echo "</TABLE>\n";
 	echo "</FORM>\n\n";
@@ -735,19 +715,12 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 	echo "</html>\n\n";
 	exit;
 	}
-	else
-	{
-		if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
-		{
-		$stmt="SELECT phone_login,phone_pass from vicidial_users where user='$VD_login' and pass='$VD_pass' and user_level > 0 and active='Y';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01005',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
-		$phone_login=$row[0];
-		$phone_pass=$row[1];
 
-		echo "<title>Agent web client: Login</title>\n";
+if ($user_login_first == 1)
+	{
+	if ( (strlen($VD_login)<1) or (strlen($VD_pass)<1) or (strlen($VD_campaign)<1) )
+		{
+		echo "<title>Agent web client: Ouverture de Campagne</title>\n";
 		echo "</head>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
 		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
@@ -758,15 +731,14 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 		echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
 		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
-		echo "<BR><BR><BR><CENTER><TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
+		#echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
+		#echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
+		echo "<CENTER><BR><B>Ouverture de Session</B><BR><BR>";
+		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vdc_tab_vicidial.gif\" Border=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Ouverture de Session </TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Ouverture de Campagne </TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>Ouverture de Session téléphonique: </TD>";
-		echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 maxlength=20 VALUE=\"$phone_login\"></TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>Mot de passe du Téléphone:  </TD>";
-		echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 maxlength=20 VALUE=\"$phone_pass\"></TD></TR>\n";
 		echo "<TR><TD ALIGN=RIGHT>Ouverture de Session:  </TD>";
 		echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=VD_login SIZE=10 maxlength=20 VALUE=\"$VD_login\"></TD></TR>\n";
 		echo "<TR><TD ALIGN=RIGHT>Mot de passe Utilisateur:  </TD>";
@@ -781,253 +753,1417 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 		echo "</body>\n\n";
 		echo "</html>\n\n";
 		exit;
+		}
+	else
+		{
+		if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
+			{
+			$stmt="SELECT phone_login,phone_pass from vicidial_users where user='$VD_login' and pass='$VD_pass' and user_level > 0 and active='Y';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01005',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$row=mysql_fetch_row($rslt);
+			$phone_login=$row[0];
+			$phone_pass=$row[1];
 
+			echo "<title>Agent web client: Ouverture de Session</title>\n";
+			echo "</head>\n";
+			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
+			echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
+			echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
+			echo "<!-- ILPV -->\n";
+echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_fr/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Français <img src=\"../agc/images/fr.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";			echo "</TR></TABLE>\n";
+			echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
+			echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+			echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+			echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
+			echo "<BR><BR><BR><CENTER><TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
+			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vdc_tab_vicidial.gif\" Border=0></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Ouverture de Session </TD>";
+			echo "</TR>\n";
+			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
+			echo "<TR><TD ALIGN=RIGHT>Ouverture de Session téléphonique: </TD>";
+			echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 maxlength=20 VALUE=\"$phone_login\"></TD></TR>\n";
+			echo "<TR><TD ALIGN=RIGHT>Mot de passe du Téléphone:  </TD>";
+			echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 maxlength=20 VALUE=\"$phone_pass\"></TD></TR>\n";
+			echo "<TR><TD ALIGN=RIGHT>Ouverture de Session:  </TD>";
+			echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=VD_login SIZE=10 maxlength=20 VALUE=\"$VD_login\"></TD></TR>\n";
+			echo "<TR><TD ALIGN=RIGHT>Mot de passe Utilisateur:  </TD>";
+			echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=VD_pass SIZE=10 maxlength=20 VALUE=\"$VD_pass\"></TD></TR>\n";
+			echo "<TR><TD ALIGN=RIGHT>Campagne:  </TD>";
+			echo "<TD ALIGN=LEFT><span id=\"LogiNCamPaigns\">$camp_form_code</span></TD></TR>\n";
+			echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=VALIDER VALUE=VALIDER> &nbsp; \n";
+			echo "<span id=\"LogiNReseT\"></span></TD></TR>\n";
+			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
+			echo "</TABLE>\n";
+			echo "</FORM>\n\n";
+			echo "</body>\n\n";
+			echo "</html>\n\n";
+			exit;
+			}
 		}
 	}
-}
 
 if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
-{
-echo "<title>Agent web client:  Ouverture de Session téléphonique</title>\n";
-echo "</head>\n";
-echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
-echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
-echo "<!-- ILPV -->\n";
-echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_fr/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Français <img src=\"../agc/images/fr.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "</TR></TABLE>\n";
-echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
-echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
-echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
-echo "<BR><BR><BR><CENTER><TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
-echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vdc_tab_vicidial.gif\" Border=0></TD>";
-echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Ouverture de Session téléphonique </TD>";
-echo "</TR>\n";
-echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-echo "<TR><TD ALIGN=RIGHT>Ouverture de Session téléphonique: </TD>";
-echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 maxlength=20 VALUE=\"\"></TD></TR>\n";
-echo "<TR><TD ALIGN=RIGHT>Mot de passe du Téléphone:  </TD>";
-echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 maxlength=20 VALUE=\"\"></TD></TR>\n";
-echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=VALIDER VALUE=VALIDER> &nbsp; \n";
-echo "<span id=\"LogiNReseT\"></span></TD></TR>\n";
-echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
-echo "</TABLE>\n";
-echo "</FORM>\n\n";
-echo "</body>\n\n";
-echo "</html>\n\n";
-exit;
-}
+	{
+	echo "<title>Agent web client:  Ouverture de Session téléphonique</title>\n";
+	echo "</head>\n";
+	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
+	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
+	echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
+	echo "<!-- ILPV -->\n";
+echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_fr/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Français <img src=\"../agc/images/fr.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";	echo "</TR></TABLE>\n";
+	echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
+	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
+	echo "<BR><BR><BR><CENTER><TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
+	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vdc_tab_vicidial.gif\" Border=0></TD>";
+	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Ouverture de Session téléphonique </TD>";
+	echo "</TR>\n";
+	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
+	echo "<TR><TD ALIGN=RIGHT>Ouverture de Session téléphonique: </TD>";
+	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 maxlength=20 VALUE=\"\"></TD></TR>\n";
+	echo "<TR><TD ALIGN=RIGHT>Mot de passe du Téléphone:  </TD>";
+	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 maxlength=20 VALUE=\"\"></TD></TR>\n";
+	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=VALIDER VALUE=VALIDER> &nbsp; \n";
+	echo "<span id=\"LogiNReseT\"></span></TD></TR>\n";
+	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
+	echo "</TABLE>\n";
+	echo "</FORM>\n\n";
+	echo "</body>\n\n";
+	echo "</html>\n\n";
+	exit;
+	}
 else
-{
-if ($WeBRooTWritablE > 0)
-	{$fp = fopen ("./vicidial_auth_entries.txt", "a");}
-$VDloginDISPLAY=0;
+	{
+	if ($WeBRooTWritablE > 0)
+		{$fp = fopen ("./vicidial_auth_entries.txt", "a");}
+	$VDloginDISPLAY=0;
 
 	if ( (strlen($VD_login)<2) or (strlen($VD_pass)<2) or (strlen($VD_campaign)<2) )
-	{
-	$VDloginDISPLAY=1;
-	}
-	else
-	{
-	$stmt="SELECT count(*) from vicidial_users where user='$VD_login' and pass='$VD_pass' and user_level > 0 and active='Y';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01006',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
-
-	if($auth>0)
 		{
-		$login=strtoupper($VD_login);
-		$password=strtoupper($VD_pass);
-		##### grab the full name of the agent
-		$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_users where user='$VD_login' and pass='$VD_pass'";
+		$VDloginDISPLAY=1;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$VD_login' and pass='$VD_pass' and user_level > 0 and active='Y';";
+		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01007',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01006',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$row=mysql_fetch_row($rslt);
-		$LOGfullname =							$row[0];
-		$user_level =							$row[1];
-		$VU_hotkeys_active =					$row[2];
-		$VU_agent_choose_ingroups =				$row[3];
-		$VU_scheduled_callbacks =				$row[4];
-		$agentonly_callbacks =					$row[5];
-		$agentcall_manual =						$row[6];
-		$VU_vicidial_recording =				$row[7];
-		$VU_vicidial_transfers =				$row[8];
-		$VU_closer_default_blended =			$row[9];
-		$VU_user_group =						$row[10];
-		$VU_vicidial_recording_override =		$row[11];
-		$VU_alter_custphone_override =			$row[12];
-		$VU_alert_enabled =						$row[13];
-		$VU_agent_shift_enforcement_override =	$row[14];
-		$VU_shift_override_flag =				$row[15];
-		$VU_allow_alerts =						$row[16];
-		$VU_closer_campaigns =					$row[17];
-		$VU_agent_choose_territories =			$row[18];
-		$VU_custom_one =						$row[19];
-		$VU_custom_two =						$row[20];
-		$VU_custom_three =						$row[21];
-		$VU_custom_four =						$row[22];
-		$VU_custom_five =						$row[23];
+		$auth=$row[0];
 
-		if ( ($VU_alert_enabled > 0) and ($VU_allow_alerts > 0) ) {$VU_alert_enabled = 'ON';}
-		else {$VU_alert_enabled = 'OFF';}
-		$AgentAlert_allowed = $VU_allow_alerts;
-
-		### Gather timeclock and shift enforcement restriction settings
-		$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts,agent_status_viewable_groups,agent_status_view_time from vicidial_user_groups where user_group='$VU_user_group';";
-		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01052',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
-		$forced_timeclock_login =	$row[0];
-		$shift_enforcement =		$row[1];
-		$LOGgroup_shiftsSQL = eregi_replace('  ','',$row[2]);
-		$LOGgroup_shiftsSQL = eregi_replace(' ',"','",$LOGgroup_shiftsSQL);
-		$LOGgroup_shiftsSQL = "shift_id IN('$LOGgroup_shiftsSQL')";
-		$agent_status_viewable_groups = $row[3];
-		$agent_status_viewable_groupsSQL = eregi_replace('  ','',$agent_status_viewable_groups);
-		$agent_status_viewable_groupsSQL = eregi_replace(' ',"','",$agent_status_viewable_groupsSQL);
-		$agent_status_viewable_groupsSQL = "user_group IN('$agent_status_viewable_groupsSQL')";
-		$agent_status_view = 0;
-		if (strlen($agent_status_viewable_groups) > 2)
-			{$agent_status_view = 1;}
-		$agent_status_view_time=0;
-		if ($row[4] == 'Y')
-			{$agent_status_view_time=1;}
-
-		### BEGIN - CHECK TO SEE IF AGENT IS LOGGED IN TO TIMECLOCK, IF NOT, OUTPUT ERROR
-		if ( (ereg('Y',$forced_timeclock_login)) or ( (ereg('ADMIN_EXEMPT',$forced_timeclock_login)) and ($VU_user_level < 8) ) )
+		if($auth>0)
 			{
-			$last_agent_event='';
-			$HHMM = date("Hi");
-			$HHteod = substr($timeclock_end_of_day,0,2);
-			$MMteod = substr($timeclock_end_of_day,2,2);
-
-			if ($HHMM < $timeclock_end_of_day)
-				{$EoD = mktime($HHteod, $MMteod, 10, date("m"), date("d")-1, date("Y"));}
-			else
-				{$EoD = mktime($HHteod, $MMteod, 10, date("m"), date("d"), date("Y"));}
-
-			$EoDdate = date("Y-m-d H:i:s", $EoD);
-
-			##### grab timeclock logged-in time for each user #####
-			$stmt="SELECT event from vicidial_timeclock_log where user='$VD_login' and event_epoch >= '$EoD' order by timeclock_id desc limit 1;";
+			$login=strtoupper($VD_login);
+			$password=strtoupper($VD_pass);
+			##### grab the full name of the agent
+			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended from vicidial_users where user='$VD_login' and pass='$VD_pass'";
 			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01053',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			$events_to_parse = mysql_num_rows($rslt);
-			if ($events_to_parse > 0)
-				{
-				$rowx=mysql_fetch_row($rslt);
-				$last_agent_event = $rowx[0];
-				}
-			if ($DB>0) {echo "|$stmt|$events_to_parse|$last_agent_event|";}
-			if ( (strlen($last_agent_event)<2) or (ereg('LOGOUT',$last_agent_event)) )
-				{
-				$VDloginDISPLAY=1;
-				$VDdisplayMESSAGE = "Vous devez vous connecter pour timeclock LE PREMIER<BR>";
-				}
-			}
-		### END - CHECK TO SEE IF AGENT IS LOGGED IN TO TIMECLOCK, IF NOT, OUTPUT ERROR
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01007',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$row=mysql_fetch_row($rslt);
+			$LOGfullname =							$row[0];
+			$user_level =							$row[1];
+			$VU_hotkeys_active =					$row[2];
+			$VU_agent_choose_ingroups =				$row[3];
+			$VU_scheduled_callbacks =				$row[4];
+			$agentonly_callbacks =					$row[5];
+			$agentcall_manual =						$row[6];
+			$VU_vicidial_recording =				$row[7];
+			$VU_vicidial_transfers =				$row[8];
+			$VU_closer_default_blended =			$row[9];
+			$VU_user_group =						$row[10];
+			$VU_vicidial_recording_override =		$row[11];
+			$VU_alter_custphone_override =			$row[12];
+			$VU_alert_enabled =						$row[13];
+			$VU_agent_shift_enforcement_override =	$row[14];
+			$VU_shift_override_flag =				$row[15];
+			$VU_allow_alerts =						$row[16];
+			$VU_closer_campaigns =					$row[17];
+			$VU_agent_choose_territories =			$row[18];
+			$VU_custom_one =						$row[19];
+			$VU_custom_two =						$row[20];
+			$VU_custom_three =						$row[21];
+			$VU_custom_four =						$row[22];
+			$VU_custom_five =						$row[23];
+			$VU_agent_call_log_view_override =		$row[24];
+			$VU_agent_choose_blended =				$row[25];
 
-		### BEGIN - CHECK TO SEE IF SHIFT ENFORCEMENT IS ENABLED AND AGENT IS OUTSIDE OF THEIR SHIFTS, IF SO, OUTPUT ERROR
-		if ( ( (ereg("START|ALL",$shift_enforcement)) and (!ereg("OFF",$VU_agent_shift_enforcement_override)) ) or (ereg("START|ALL",$VU_agent_shift_enforcement_override)) )
-			{
-			$shift_ok=0;
-			if ( (strlen($LOGgroup_shiftsSQL) < 3) and ($VU_shift_override_flag < 1) )
+
+			if ( ($VU_alert_enabled > 0) and ($VU_allow_alerts > 0) ) {$VU_alert_enabled = 'ON';}
+			else {$VU_alert_enabled = 'OFF';}
+			$AgentAlert_allowed = $VU_allow_alerts;
+
+			### Gather timeclock and shift enforcement restriction settings
+			$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial,agent_fullscreen from vicidial_user_groups where user_group='$VU_user_group';";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01052',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$row=mysql_fetch_row($rslt);
+			$forced_timeclock_login =	$row[0];
+			$shift_enforcement =		$row[1];
+			$LOGgroup_shiftsSQL = eregi_replace('  ','',$row[2]);
+			$LOGgroup_shiftsSQL = eregi_replace(' ',"','",$LOGgroup_shiftsSQL);
+			$LOGgroup_shiftsSQL = "shift_id IN('$LOGgroup_shiftsSQL')";
+			$agent_status_viewable_groups = $row[3];
+			$agent_status_viewable_groupsSQL = eregi_replace('  ','',$agent_status_viewable_groups);
+			$agent_status_viewable_groupsSQL = eregi_replace(' ',"','",$agent_status_viewable_groupsSQL);
+			$agent_status_viewable_groupsSQL = "user_group IN('$agent_status_viewable_groupsSQL')";
+			$agent_status_view = 0;
+			if (strlen($agent_status_viewable_groups) > 2)
+				{$agent_status_view = 1;}
+			$agent_status_view_time=0;
+			if ($row[4] == 'Y')
+				{$agent_status_view_time=1;}
+			if ($row[5] == 'Y')
+				{$agent_call_log_view=1;}
+			if ($row[6] == 'Y')
+				{$agent_xfer_consultative=1;}
+			if ($row[7] == 'Y')
+				{$agent_xfer_dial_override=1;}
+			if ($row[8] == 'Y')
+				{$agent_xfer_vm_transfer=1;}
+			if ($row[9] == 'Y')
+				{$agent_xfer_blind_transfer=1;}
+			if ($row[10] == 'Y')
+				{$agent_xfer_dial_with_customer=1;}
+			if ($row[11] == 'Y')
+				{$agent_xfer_park_customer_dial=1;}
+			if ($VU_agent_call_log_view_override == 'Y')
+				{$agent_call_log_view=1;}
+			if ($VU_agent_call_log_view_override == 'N')
+				{$agent_call_log_view=0;}
+			$agent_fullscreen =			$row[12];
+
+			### BEGIN - CHECK TO SEE IF AGENT IS LOGGED IN TO TIMECLOCK, IF NOT, OUTPUT ERROR
+			if ( (ereg('Y',$forced_timeclock_login)) or ( (ereg('ADMIN_EXEMPT',$forced_timeclock_login)) and ($VU_user_level < 8) ) )
 				{
-				$VDloginDISPLAY=1;
-				$VDdisplayMESSAGE = "ERREUR: Il n'y a pas de changements activée pour votre groupe d'utilisateurs<BR>";
-				}
-			else
-				{
+				$last_agent_event='';
 				$HHMM = date("Hi");
-				$wday = date("w");
+				$HHteod = substr($timeclock_end_of_day,0,2);
+				$MMteod = substr($timeclock_end_of_day,2,2);
 
-				$stmt="SELECT shift_id,shift_start_time,shift_length,shift_weekdays from vicidial_shifts where $LOGgroup_shiftsSQL order by shift_id";
+				if ($HHMM < $timeclock_end_of_day)
+					{$EoD = mktime($HHteod, $MMteod, 10, date("m"), date("d")-1, date("Y"));}
+				else
+					{$EoD = mktime($HHteod, $MMteod, 10, date("m"), date("d"), date("Y"));}
+
+				$EoDdate = date("Y-m-d H:i:s", $EoD);
+
+				##### grab timeclock logged-in time for each user #####
+				$stmt="SELECT event from vicidial_timeclock_log where user='$VD_login' and event_epoch >= '$EoD' order by timeclock_id desc limit 1;";
 				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01056',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$shifts_to_print = mysql_num_rows($rslt);
-
-				$o=0;
-				while ( ($shifts_to_print > $o) and ($shift_ok < 1) )
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01053',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$events_to_parse = mysql_num_rows($rslt);
+				if ($events_to_parse > 0)
 					{
 					$rowx=mysql_fetch_row($rslt);
-					$shift_id =			$rowx[0];
-					$shift_start_time =	$rowx[1];
-					$shift_length =		$rowx[2];
-					$shift_weekdays =	$rowx[3];
-
-					if (eregi("$wday",$shift_weekdays))
-						{
-						$HHshift_length = substr($shift_length,0,2);
-						$MMshift_length = substr($shift_length,3,2);
-						$HHshift_start_time = substr($shift_start_time,0,2);
-						$MMshift_start_time = substr($shift_start_time,2,2);
-						$HHshift_end_time = ($HHshift_length + $HHshift_start_time);
-						$MMshift_end_time = ($MMshift_length + $MMshift_start_time);
-						if ($MMshift_end_time > 59)
-							{
-							$MMshift_end_time = ($MMshift_end_time - 60);
-							$HHshift_end_time++;
-							}
-						if ($HHshift_end_time > 23)
-							{$HHshift_end_time = ($HHshift_end_time - 24);}
-						$HHshift_end_time = sprintf("%02s", $HHshift_end_time);	
-						$MMshift_end_time = sprintf("%02s", $MMshift_end_time);	
-						$shift_end_time = "$HHshift_end_time$MMshift_end_time";
-
-						if ( 
-							( ($HHMM >= $shift_start_time) and ($HHMM < $shift_end_time) ) or
-							( ($HHMM < $shift_start_time) and ($HHMM < $shift_end_time) and ($shift_end_time <= $shift_start_time) ) or
-							( ($HHMM >= $shift_start_time) and ($HHMM >= $shift_end_time) and ($shift_end_time <= $shift_start_time) )
-						   )
-							{$shift_ok++;}
-						}
-					$o++;
+					$last_agent_event = $rowx[0];
 					}
-
-				if ( ($shift_ok < 1) and ($VU_shift_override_flag < 1) )
+				if ($DB>0) {echo "|$stmt|$events_to_parse|$last_agent_event|";}
+				if ( (strlen($last_agent_event)<2) or (ereg('LOGOUT',$last_agent_event)) )
 					{
 					$VDloginDISPLAY=1;
-					$VDdisplayMESSAGE = "ERREUR: Vous n'êtes pas autorisés à se connecter à l'extérieur de votre quart de travail<BR>";
+					$VDdisplayMESSAGE = "Vous devez vous connecter pour timeclock LE PREMIER<BR>";
 					}
 				}
-			if ( ($shift_ok < 1) and ($VU_shift_override_flag < 1) and ($VDloginDISPLAY > 0) )
+			### END - CHECK TO SEE IF AGENT IS LOGGED IN TO TIMECLOCK, IF NOT, OUTPUT ERROR
+
+			### BEGIN - CHECK TO SEE IF SHIFT ENFORCEMENT IS ENABLED AND AGENT IS OUTSIDE OF THEIR SHIFTS, IF SO, OUTPUT ERROR
+			if ( ( (ereg("START|ALL",$shift_enforcement)) and (!ereg("OFF",$VU_agent_shift_enforcement_override)) ) or (ereg("START|ALL",$VU_agent_shift_enforcement_override)) )
 				{
-				$VDdisplayMESSAGE.= "<BR><BR>MANAGER OVERRIDE:<BR>\n";
-				$VDdisplayMESSAGE.= "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
-				$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=MGR_override VALUE=\"1\">\n";
-				$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=relogin VALUE=\"YES\">\n";
-				$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-				$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
-				$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
-				$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=VD_login VALUE=\"$VD_login\">\n";
-				$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=VD_pass VALUE=\"$VD_pass\">\n";
-				$VDdisplayMESSAGE.= "GestionnaireOuverture de Session: <INPUT TYPE=TEXT NAME=\"MGR_login$loginDATE\" SIZE=10 maxlength=20><br>\n";
-				$VDdisplayMESSAGE.= "GestionnaireMot de passe: <INPUT TYPE=PASSWORD NAME=\"MGR_pass$loginDATE\" SIZE=10 maxlength=20><br>\n";
-				$VDdisplayMESSAGE.= "<INPUT TYPE=Submit NAME=VALIDER VALUE=VALIDER></FORM>\n";
+				$shift_ok=0;
+				if ( (strlen($LOGgroup_shiftsSQL) < 3) and ($VU_shift_override_flag < 1) )
+					{
+					$VDloginDISPLAY=1;
+					$VDdisplayMESSAGE = "ERREUR: Il n'y a pas de changements activée pour votre groupe d'utilisateurs<BR>";
+					}
+				else
+					{
+					$HHMM = date("Hi");
+					$wday = date("w");
+
+					$stmt="SELECT shift_id,shift_start_time,shift_length,shift_weekdays from vicidial_shifts where $LOGgroup_shiftsSQL order by shift_id";
+					$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01056',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					$shifts_to_print = mysql_num_rows($rslt);
+
+					$o=0;
+					while ( ($shifts_to_print > $o) and ($shift_ok < 1) )
+						{
+						$rowx=mysql_fetch_row($rslt);
+						$shift_id =			$rowx[0];
+						$shift_start_time =	$rowx[1];
+						$shift_length =		$rowx[2];
+						$shift_weekdays =	$rowx[3];
+
+						if (eregi("$wday",$shift_weekdays))
+							{
+							$HHshift_length = substr($shift_length,0,2);
+							$MMshift_length = substr($shift_length,3,2);
+							$HHshift_start_time = substr($shift_start_time,0,2);
+							$MMshift_start_time = substr($shift_start_time,2,2);
+							$HHshift_end_time = ($HHshift_length + $HHshift_start_time);
+							$MMshift_end_time = ($MMshift_length + $MMshift_start_time);
+							if ($MMshift_end_time > 59)
+								{
+								$MMshift_end_time = ($MMshift_end_time - 60);
+								$HHshift_end_time++;
+								}
+							if ($HHshift_end_time > 23)
+								{$HHshift_end_time = ($HHshift_end_time - 24);}
+							$HHshift_end_time = sprintf("%02s", $HHshift_end_time);	
+							$MMshift_end_time = sprintf("%02s", $MMshift_end_time);	
+							$shift_end_time = "$HHshift_end_time$MMshift_end_time";
+
+							if ( 
+								( ($HHMM >= $shift_start_time) and ($HHMM < $shift_end_time) ) or
+								( ($HHMM < $shift_start_time) and ($HHMM < $shift_end_time) and ($shift_end_time <= $shift_start_time) ) or
+								( ($HHMM >= $shift_start_time) and ($HHMM >= $shift_end_time) and ($shift_end_time <= $shift_start_time) )
+							   )
+								{$shift_ok++;}
+							}
+						$o++;
+						}
+
+					if ( ($shift_ok < 1) and ($VU_shift_override_flag < 1) )
+						{
+						$VDloginDISPLAY=1;
+						$VDdisplayMESSAGE = "ERREUR: Vous n'êtes pas autorisés à se connecter à l'extérieur de votre quart de travail<BR>";
+						}
+					}
+				if ( ($shift_ok < 1) and ($VU_shift_override_flag < 1) and ($VDloginDISPLAY > 0) )
+					{
+					$VDdisplayMESSAGE.= "<BR><BR>MANAGER OVERRIDE:<BR>\n";
+					$VDdisplayMESSAGE.= "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
+					$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=MGR_override VALUE=\"1\">\n";
+					$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=relogin VALUE=\"YES\">\n";
+					$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+					$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
+					$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
+					$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=VD_login VALUE=\"$VD_login\">\n";
+					$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=VD_pass VALUE=\"$VD_pass\">\n";
+					$VDdisplayMESSAGE.= "GestionnaireOuverture de Session: <INPUT TYPE=TEXT NAME=\"MGR_login$loginDATE\" SIZE=10 maxlength=20><br>\n";
+					$VDdisplayMESSAGE.= "GestionnaireMot de passe: <INPUT TYPE=PASSWORD NAME=\"MGR_pass$loginDATE\" SIZE=10 maxlength=20><br>\n";
+					$VDdisplayMESSAGE.= "<INPUT TYPE=Submit NAME=VALIDER VALUE=VALIDER></FORM>\n";
+					}
+				}
+				### END - CHECK TO SEE IF SHIFT ENFORCEMENT IS ENABLED AND AGENT IS OUTSIDE OF THEIR SHIFTS, IF SO, OUTPUT ERROR
+
+
+
+			if ($WeBRooTWritablE > 0)
+				{
+				fwrite ($fp, "vdweb|GOOD|$date|$VD_login|$VD_pass|$ip|$browser|$LOGfullname|\n");
+				fclose($fp);
+				}
+			$user_abb = "$VD_login$VD_login$VD_login$VD_login";
+			while ( (strlen($user_abb) > 4) and ($forever_stop < 200) )
+				{$user_abb = eregi_replace("^.","",$user_abb);   $forever_stop++;}
+
+			$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$VU_user_group';";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01008',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$row=mysql_fetch_row($rslt);
+			$LOGallowed_campaigns		=$row[0];
+
+			if ( (!eregi(" $VD_campaign ",$LOGallowed_campaigns)) and (!eregi("ALL-CAMPAIGNS",$LOGallowed_campaigns)) )
+				{
+				echo "<title>Agent web client: Ouverture de Campagne</title>\n";
+				echo "</head>\n";
+				echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
+				echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
+				echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
+				echo "<!-- ILPV -->\n";
+echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_fr/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Français <img src=\"../agc/images/fr.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";				echo "</TR></TABLE>\n";
+				echo "<B>Sorry, you are not allowed to login to this campaign: $VD_campaign</B>\n";
+				echo "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
+				echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+				echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+				echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
+				echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
+				echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
+				echo "Ouverture de Session: <INPUT TYPE=TEXT NAME=VD_login SIZE=10 maxlength=20 VALUE=\"$VD_login\">\n<br>";
+				echo "Mot de passe: <INPUT TYPE=PASSWORD NAME=VD_pass SIZE=10 maxlength=20 VALUE=\"$VD_pass\"><br>\n";
+				echo "Campagne: <span id=\"LogiNCamPaigns\">$camp_form_code</span><br>\n";
+				echo "<INPUT TYPE=Submit NAME=VALIDER VALUE=VALIDER> &nbsp; \n";
+				echo "<span id=\"LogiNReseT\"></span>\n";
+				echo "</FORM>\n\n";
+				echo "</body>\n\n";
+				echo "</html>\n\n";
+				exit;
+				}
+
+			##### check to see that the campaign is active
+			$stmt="SELECT count(*) FROM vicidial_campaigns where campaign_id='$VD_campaign' and active='Y';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01009',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$row=mysql_fetch_row($rslt);
+			$CAMPactive=$row[0];
+			if($CAMPactive>0)
+				{
+				if ($TEST_all_statuses > 0) {$selectableSQL = '';}
+				else {$selectableSQL = "selectable='Y' and";}
+				$VARstatuses='';
+				$VARstatusnames='';
+				##### grab the statuses that can be used for dispositioning by an agent
+				$stmt="SELECT status,status_name FROM vicidial_statuses WHERE $selectableSQL status != 'NEW' order by status limit 50;";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01010',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$VD_statuses_ct = mysql_num_rows($rslt);
+				$i=0;
+				while ($i < $VD_statuses_ct)
+					{
+					$row=mysql_fetch_row($rslt);
+					$statuses[$i] =$row[0];
+					$status_names[$i] =$row[1];
+					$VARstatuses = "$VARstatuses'$statuses[$i]',";
+					$VARstatusnames = "$VARstatusnames'$status_names[$i]',";
+					$i++;
+					}
+
+				##### grab the campaign-specific statuses that can be used for dispositioning by an agent
+				$stmt="SELECT status,status_name FROM vicidial_campaign_statuses WHERE $selectableSQL status != 'NEW' and campaign_id='$VD_campaign' order by status limit 80;";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01011',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$VD_statuses_camp = mysql_num_rows($rslt);
+				$j=0;
+				while ($j < $VD_statuses_camp)
+					{
+					$row=mysql_fetch_row($rslt);
+					$statuses[$i] =$row[0];
+					$status_names[$i] =$row[1];
+					$VARstatuses = "$VARstatuses'$statuses[$i]',";
+					$VARstatusnames = "$VARstatusnames'$status_names[$i]',";
+					$i++;
+					$j++;
+					}
+				$VD_statuses_ct = ($VD_statuses_ct+$VD_statuses_camp);
+				$VARstatuses = substr("$VARstatuses", 0, -1); 
+				$VARstatusnames = substr("$VARstatusnames", 0, -1); 
+
+				##### grab the campaign-specific HotKey statuses that can be used for dispositioning by an agent
+				$stmt="SELECT hotkey,status,status_name FROM vicidial_campaign_hotkeys WHERE selectable='Y' and status != 'NEW' and campaign_id='$VD_campaign' order by hotkey limit 9;";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01012',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$HK_statuses_camp = mysql_num_rows($rslt);
+				$w=0;
+				$HKboxA='';
+				$HKboxB='';
+				$HKboxC='';
+				while ($w < $HK_statuses_camp)
+					{
+					$row=mysql_fetch_row($rslt);
+					$HKhotkey[$w] =$row[0];
+					$HKstatus[$w] =$row[1];
+					$HKstatus_name[$w] =$row[2];
+					$HKhotkeys = "$HKhotkeys'$HKhotkey[$w]',";
+					$HKstatuses = "$HKstatuses'$HKstatus[$w]',";
+					$HKstatusnames = "$HKstatusnames'$HKstatus_name[$w]',";
+					if ($w < 3)
+						{$HKboxA = "$HKboxA <font class=\"skb_text\">$HKhotkey[$w]</font> - $HKstatus[$w] - $HKstatus_name[$w]<BR>";}
+					if ( ($w >= 3) and ($w < 6) )
+						{$HKboxB = "$HKboxB <font class=\"skb_text\">$HKhotkey[$w]</font> - $HKstatus[$w] - $HKstatus_name[$w]<BR>";}
+					if ($w >= 6)
+						{$HKboxC = "$HKboxC <font class=\"skb_text\">$HKhotkey[$w]</font> - $HKstatus[$w] - $HKstatus_name[$w]<BR>";}
+					$w++;
+					}
+				$HKhotkeys = substr("$HKhotkeys", 0, -1); 
+				$HKstatuses = substr("$HKstatuses", 0, -1); 
+				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
+
+				##### grab the campaign settings
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$row=mysql_fetch_row($rslt);
+				$park_ext =					$row[0];
+				$park_file_name =			$row[1];
+				$web_form_address =			stripslashes($row[2]);
+				$allow_closers =			$row[3];
+				$auto_dial_level =			$row[4];
+				$dial_timeout =				$row[5];
+				$dial_prefix =				$row[6];
+				$campaign_cid =				$row[7];
+				$campaign_vdad_exten =		$row[8];
+				$campaign_rec_exten =		$row[9];
+				$campaign_recording =		$row[10];
+				$campaign_rec_filename =	$row[11];
+				$campaign_script =			$row[12];
+				$get_call_launch =			$row[13];
+				$campaign_am_message_exten = '8320';
+				$xferconf_a_dtmf =			$row[15];
+				$xferconf_a_number =		$row[16];
+				$xferconf_b_dtmf =			$row[17];
+				$xferconf_b_number =		$row[18];
+				$alt_number_dialing =		$row[19];
+				$VC_scheduled_callbacks =	$row[20];
+				$wrapup_seconds =			$row[21];
+				$wrapup_message =			$row[22];
+				$closer_campaigns =			$row[23];
+				$use_internal_dnc =			$row[24];
+				$allcalls_delay =			$row[25];
+				$omit_phone_code =			$row[26];
+				$agent_pause_codes_active =	$row[27];
+				$no_hopper_leads_logins =	$row[28];
+				$campaign_allow_inbound =	$row[29];
+				$manual_dial_list_id =		$row[30];
+				$default_xfer_group =		$row[31];
+				$xfer_groups =				$row[32];
+				$disable_alter_custphone =	$row[33];
+				$display_queue_count =		$row[34];
+				$manual_dial_filter =		$row[35];
+				$CopY_tO_ClipboarD =		$row[36];
+				$use_campaign_dnc =			$row[37];
+				$three_way_call_cid =		$row[38];
+				$dial_method =				$row[39];
+				$three_way_dial_prefix =	$row[40];
+				$web_form_target =			$row[41];
+				$vtiger_screen_login =		$row[42];
+				$agent_allow_group_alias =	$row[43];
+				$default_group_alias =		$row[44];
+				$quick_transfer_button =	$row[45];
+				$prepopulate_transfer_preset = $row[46];
+				$view_calls_in_queue =		$row[47];
+				$view_calls_in_queue_launch = $row[48];
+				$call_requeue_button =		$row[49];
+				$pause_after_each_call =	$row[50];
+				$no_hopper_dialing =		$row[51];
+				$agent_dial_owner_only =	$row[52];
+				$agent_display_dialable_leads = $row[53];
+				$web_form_address_two =		$row[54];
+				$agent_select_territories = $row[55];
+				$crm_popup_login =			$row[56];
+				$crm_login_address =		$row[57];
+				$timer_action =				$row[58];
+				$timer_action_message =		$row[59];
+				$timer_action_seconds =		$row[60];
+				$start_call_url =			$row[61];
+				$dispo_call_url =			$row[62];
+				$xferconf_c_number =		$row[63];
+				$xferconf_d_number =		$row[64];
+				$xferconf_e_number =		$row[65];
+				$use_custom_cid =			$row[66];
+				$scheduled_callbacks_alert = $row[67];
+				$scheduled_callbacks_count = $row[68];
+
+				if ($user_territories_active < 1)
+					{$agent_select_territories = 0;}
+				if (preg_match("/Y/",$agent_select_territories))
+					{$agent_select_territories=1;}
+				else
+					{$agent_select_territories=0;}
+
+				if (preg_match("/Y/",$agent_display_dialable_leads))
+					{$agent_display_dialable_leads=1;}
+				else
+					{$agent_display_dialable_leads=0;}
+
+				if (preg_match("/Y/",$no_hopper_dialing))
+					{$no_hopper_dialing=1;}
+				else
+					{$no_hopper_dialing=0;}
+
+				if ( (preg_match("/Y/",$call_requeue_button)) and ($auto_dial_level > 0) )
+					{$call_requeue_button=1;}
+				else
+					{$call_requeue_button=0;}
+
+				if ( (preg_match("/AUTO/",$view_calls_in_queue_launch)) and ($auto_dial_level > 0) )
+					{$view_calls_in_queue_launch=1;}
+				else
+					{$view_calls_in_queue_launch=0;}
+
+				if ( (!preg_match("/NONE/",$view_calls_in_queue)) and ($auto_dial_level > 0) )
+					{$view_calls_in_queue=1;}
+				else
+					{$view_calls_in_queue=0;}
+
+				if (preg_match("/Y/",$pause_after_each_call))
+					{$dispo_check_all_pause=1;}
+
+				$quick_transfer_button_enabled=0;
+				if (preg_match("/IN_GROUP|PRESET_1|PRESET_2|PRESET_3|PRESET_4|PRESET_5/",$quick_transfer_button))
+					{$quick_transfer_button_enabled=1;}
+
+				$preset_populate='';
+				$prepopulate_transfer_preset_enabled=0;
+				if (preg_match("/PRESET_1|PRESET_2|PRESET_3|PRESET_4|PRESET_5/",$prepopulate_transfer_preset))
+					{
+					$prepopulate_transfer_preset_enabled=1;
+					if (preg_match("/PRESET_1/",$prepopulate_transfer_preset))
+						{$preset_populate = $xferconf_a_number;}
+					if (preg_match("/PRESET_2/",$prepopulate_transfer_preset))
+						{$preset_populate = $xferconf_b_number;}
+					if (preg_match("/PRESET_3/",$prepopulate_transfer_preset))
+						{$preset_populate = $xferconf_c_number;}
+					if (preg_match("/PRESET_4/",$prepopulate_transfer_preset))
+						{$preset_populate = $xferconf_d_number;}
+					if (preg_match("/PRESET_5/",$prepopulate_transfer_preset))
+						{$preset_populate = $xferconf_e_number;}
+					}
+
+				$default_group_alias_cid='';
+				if (strlen($default_group_alias)>1)
+					{
+					$stmt = "select caller_id_number from groups_alias where group_alias_id='$default_group_alias';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01055',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					$VDIG_cidnum_ct = mysql_num_rows($rslt);
+					if ($VDIG_cidnum_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$default_group_alias_cid	= $row[0];
+						}
+					}
+
+				$stmt = "select group_web_vars from vicidial_campaign_agents where campaign_id='$VD_campaign' and user='$VD_login';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01056',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$VDIG_cidogwv = mysql_num_rows($rslt);
+				if ($VDIG_cidogwv > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$default_web_vars =	$row[0];
+					}
+
+				if ( (!ereg('DISABLED',$VU_vicidial_recording_override)) and ($VU_vicidial_recording > 0) )
+					{
+					$campaign_recording = $VU_vicidial_recording_override;
+					echo "<!-- USER RECORDING OVERRIDE: |$VU_vicidial_recording_override|$campaign_recording| -->\n";
+					}
+				if ( ($VC_scheduled_callbacks=='Y') and ($VU_scheduled_callbacks=='1') )
+					{$scheduled_callbacks='1';}
+				if ($VU_vicidial_recording=='0')
+					{$campaign_recording='NEVER';}
+				if ($VU_alter_custphone_override=='ALLOW_ALTER')
+					{$disable_alter_custphone='N';}
+				if (strlen($three_way_dial_prefix) < 1)
+					{$three_way_dial_prefix = $dial_prefix ;}
+				if ($alt_number_dialing=='Y')
+					{$alt_phone_dialing='1';}
+				else
+					{
+					$alt_phone_dialing='0';
+					$DefaulTAlTDiaL='0';
+					}
+				if ($display_queue_count=='N')
+					{$callholdstatus='0';}
+				if ( ($dial_method == 'INBOUND_MAN') or ($outbound_autodial_active < 1) )
+					{$VU_closer_default_blended=0;}
+
+				$closer_campaigns = preg_replace("/^ | -$/","",$closer_campaigns);
+				$closer_campaigns = preg_replace("/ /","','",$closer_campaigns);
+				$closer_campaigns = "'$closer_campaigns'";
+
+				if ( (ereg('Y',$agent_pause_codes_active)) or (ereg('FORCE',$agent_pause_codes_active)) )
+					{
+					##### grab the pause codes for this campaign
+					$stmt="SELECT pause_code,pause_code_name FROM vicidial_pause_codes WHERE campaign_id='$VD_campaign' order by pause_code limit 50;";
+					$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01014',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$VD_pause_codes = mysql_num_rows($rslt);
+					$j=0;
+					while ($j < $VD_pause_codes)
+						{
+						$row=mysql_fetch_row($rslt);
+						$pause_codes[$i] =$row[0];
+						$pause_code_names[$i] =$row[1];
+						$VARpause_codes = "$VARpause_codes'$pause_codes[$i]',";
+						$VARpause_code_names = "$VARpause_code_names'$pause_code_names[$i]',";
+						$i++;
+						$j++;
+						}
+					$VD_pause_codes_ct = ($VD_pause_codes_ct+$VD_pause_codes);
+					$VARpause_codes = substr("$VARpause_codes", 0, -1); 
+					$VARpause_code_names = substr("$VARpause_code_names", 0, -1); 
+					}
+
+				##### grab the inbound groups to choose from if campaign contains CLOSER
+				$VARingroups="''";
+				if ( ($campaign_allow_inbound == 'Y') and ($dial_method != 'MANUAL') )
+					{
+					$VARingroups='';
+					$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and group_id IN($closer_campaigns) order by group_id limit 600;";
+					$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01015',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$closer_ct = mysql_num_rows($rslt);
+					$INgrpCT=0;
+					while ($INgrpCT < $closer_ct)
+						{
+						$row=mysql_fetch_row($rslt);
+						$closer_groups[$INgrpCT] =$row[0];
+						$VARingroups = "$VARingroups'$closer_groups[$INgrpCT]',";
+						$INgrpCT++;
+						}
+					$VARingroups = substr("$VARingroups", 0, -1); 
+					}
+				else
+					{$closer_campaigns = "''";}
+
+				##### gather territory listings for this agent if select territories is enabled
+				$VARterritories='';
+				if ($agent_select_territories > 0)
+					{
+					$stmt="SELECT territory from vicidial_user_territories where user='$VD_login';";
+					$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01062',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$territory_ct = mysql_num_rows($rslt);
+					$territoryCT=0;
+					while ($territoryCT < $territory_ct)
+						{
+						$row=mysql_fetch_row($rslt);
+						$territories[$territoryCT] =$row[0];
+						$VARterritories = "$VARterritories'$territories[$territoryCT]',";
+						$territoryCT++;
+						}
+					$VARterritories = substr("$VARterritories", 0, -1); 
+					echo "<!-- $territory_ct  $territoryCT |$stmt| -->\n";
+					}
+
+				##### grab the allowable inbound groups to choose from for transfer options
+				$xfer_groups = preg_replace("/^ | -$/","",$xfer_groups);
+				$xfer_groups = preg_replace("/ /","','",$xfer_groups);
+				$xfer_groups = "'$xfer_groups'";
+				$VARxfergroups="''";
+				if ($allow_closers == 'Y')
+					{
+					$VARxfergroups='';
+					$stmt="select group_id,group_name from vicidial_inbound_groups where active = 'Y' and group_id IN($xfer_groups) order by group_id limit 600;";
+					$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01016',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$xfer_ct = mysql_num_rows($rslt);
+					$XFgrpCT=0;
+					while ($XFgrpCT < $xfer_ct)
+						{
+						$row=mysql_fetch_row($rslt);
+						$VARxfergroups = "$VARxfergroups'$row[0]',";
+						$VARxfergroupsnames = "$VARxfergroupsnames'$row[1]',";
+						if ($row[0] == "$default_xfer_group") {$default_xfer_group_name = $row[1];}
+						$XFgrpCT++;
+						}
+					$VARxfergroups = substr("$VARxfergroups", 0, -1); 
+					$VARxfergroupsnames = substr("$VARxfergroupsnames", 0, -1); 
+					}
+
+				if (ereg('Y',$agent_allow_group_alias))
+					{
+					##### grab the active group aliases
+					$stmt="SELECT group_alias_id,group_alias_name,caller_id_number FROM groups_alias WHERE active='Y' order by group_alias_id limit 1000;";
+					$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01054',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$VD_group_aliases = mysql_num_rows($rslt);
+					$j=0;
+					while ($j < $VD_group_aliases)
+						{
+						$row=mysql_fetch_row($rslt);
+						$group_alias_id[$i] =	$row[0];
+						$group_alias_name[$i] = $row[1];
+						$caller_id_number[$i] = $row[2];
+						$VARgroup_alias_ids = "$VARgroup_alias_ids'$group_alias_id[$i]',";
+						$VARgroup_alias_names = "$VARgroup_alias_names'$group_alias_name[$i]',";
+						$VARcaller_id_numbers = "$VARcaller_id_numbers'$caller_id_number[$i]',";
+						$i++;
+						$j++;
+						}
+					$VD_group_aliases_ct = ($VD_group_aliases_ct+$VD_group_aliases);
+					$VARgroup_alias_ids = substr("$VARgroup_alias_ids", 0, -1); 
+					$VARgroup_alias_names = substr("$VARgroup_alias_names", 0, -1); 
+					$VARcaller_id_numbers = substr("$VARcaller_id_numbers", 0, -1); 
+					}
+
+				##### grab the number of leads in the hopper for this campaign
+				$stmt="SELECT count(*) FROM vicidial_hopper where campaign_id = '$VD_campaign' and status='READY';";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01017',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$row=mysql_fetch_row($rslt);
+				   $campaign_leads_to_call = $row[0];
+				   echo "<!-- $campaign_leads_to_call - fiches Restant à appeler -->\n";
+
+				}
+			else
+				{
+				$VDloginDISPLAY=1;
+				$VDdisplayMESSAGE = "Campagne inactive, réessayez<BR>";
 				}
 			}
-			### END - CHECK TO SEE IF SHIFT ENFORCEMENT IS ENABLED AND AGENT IS OUTSIDE OF THEIR SHIFTS, IF SO, OUTPUT ERROR
-
-
-
-		if ($WeBRooTWritablE > 0)
+		else
 			{
-			fwrite ($fp, "vdweb|GOOD|$date|$VD_login|$VD_pass|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
+			if ($WeBRooTWritablE > 0)
+				{
+				fwrite ($fp, "vdweb|FAIL|$date|$VD_login|$VD_pass|$ip|$browser|\n");
+				fclose($fp);
+				}
+			$VDloginDISPLAY=1;
+			$VDdisplayMESSAGE = "L'ouverture de session a èchoué, réessayez<BR>";
 			}
-		$user_abb = "$VD_login$VD_login$VD_login$VD_login";
-		while ( (strlen($user_abb) > 4) and ($forever_stop < 200) )
-			{$user_abb = eregi_replace("^.","",$user_abb);   $forever_stop++;}
+		}
+	if ($VDloginDISPLAY)
+		{
+		echo "<title>Agent web client: Ouverture de Campagne</title>\n";
+		echo "</head>\n";
+		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
+		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
+		echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
+		echo "<!-- ILPV -->\n";
+echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_fr/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Français <img src=\"../agc/images/fr.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";		echo "</TR></TABLE>\n";
+		echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
+		echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
+		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
+		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
+		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vdc_tab_vicidial.gif\" Border=0></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Ouverture de Campagne </TD>";
+		echo "</TR>\n";
+		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>Ouverture de Session:  </TD>";
+		echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=VD_login SIZE=10 maxlength=20 VALUE=\"$VD_login\"></TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>Mot de passe Utilisateur:  </TD>";
+		echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=VD_pass SIZE=10 maxlength=20 VALUE=\"$VD_pass\"></TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>Campagne:  </TD>";
+		echo "<TD ALIGN=LEFT><span id=\"LogiNCamPaigns\">$camp_form_code</span></TD></TR>\n";
+		echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=VALIDER VALUE=VALIDER> &nbsp; \n";
+		echo "<span id=\"LogiNReseT\"></span></TD></TR>\n";
+		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
+		echo "</TABLE>\n";
+		echo "</FORM>\n\n";
+		echo "</body>\n\n";
+		echo "</html>\n\n";
+		exit;
+		}
 
-		$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$VU_user_group';";
-		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01008',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+	$original_phone_login = $phone_login;
+
+	# code for parsing load-balanced agent phone allocation where agent interface
+	# will send multiple phones-table logins so that the script can determine the
+	# server that has the fewest agents logged into it.
+	#   login: ca101,cb101,cc101
+		$alias_found=0;
+	$stmt="select count(*) from phones_alias where alias_id = '$phone_login';";
+	$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01018',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+	$alias_ct = mysql_num_rows($rslt);
+	if ($alias_ct > 0)
+		{
 		$row=mysql_fetch_row($rslt);
-		$LOGallowed_campaigns		=$row[0];
+		$alias_found = "$row[0]";
+		}
+	if ($alias_found > 0)
+		{
+		$stmt="select alias_name,logins_list from phones_alias where alias_id = '$phone_login' limit 1;";
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01019',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		$alias_ct = mysql_num_rows($rslt);
+		if ($alias_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$alias_name = "$row[0]";
+			$phone_login = "$row[1]";
+			}
+		}
 
-		if ( (!eregi(" $VD_campaign ",$LOGallowed_campaigns)) and (!eregi("ALL-CAMPAIGNS",$LOGallowed_campaigns)) )
+	$pa=0;
+	if ( (eregi(',',$phone_login)) and (strlen($phone_login) > 2) )
+		{
+		$phoneSQL = "(";
+		$phones_auto = explode(',',$phone_login);
+		$phones_auto_ct = count($phones_auto);
+		while($pa < $phones_auto_ct)
+			{
+			if ($pa > 0)
+				{$phoneSQL .= " or ";}
+			$desc = ($phones_auto_ct - $pa); # traverse in reverse order
+			$phoneSQL .= "(login='$phones_auto[$desc]' and pass='$phone_pass')";
+			$pa++;
+			}
+		$phoneSQL .= ")";
+		}
+	else {$phoneSQL = "login='$phone_login' and pass='$phone_pass'";}
+
+	$authphone=0;
+	#$stmt="SELECT count(*) from phones where $phoneSQL and active = 'Y';";
+	$stmt="SELECT count(*) from phones,servers where $phoneSQL and phones.active = 'Y' and active_agent_login_server='Y' and phones.server_ip=servers.server_ip;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01020',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+	$row=mysql_fetch_row($rslt);
+	$authphone=$row[0];
+	if (!$authphone)
+		{
+		echo "<title>Agent web client: Ouverture de Session téléphonique Error</title>\n";
+		echo "</head>\n";
+		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
+		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
+		echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
+		echo "<!-- ILPV -->\n";
+echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_fr/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Français <img src=\"../agc/images/fr.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";		echo "</TR></TABLE>\n";
+		echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
+		echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=VD_login VALUE=\"$VD_login\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=VD_pass VALUE=\"$VD_pass\">\n";
+		echo "<INPUT TYPE=HIDDEN NAME=VD_campaign VALUE=\"$VD_campaign\">\n";
+		echo "<BR><BR><BR><CENTER><TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
+		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vdc_tab_vicidial.gif\" Border=0></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Ouverture de Session Error</TD>";
+		echo "</TR>\n";
+		echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=1> &nbsp; <BR><FONT SIZE=3>L'ouverture de la session Téléphonique à échoué, réessayez: <BR> &nbsp;</TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>Ouverture de Session téléphonique: </TD>";
+		echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 maxlength=20 VALUE=\"$phone_login\"></TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>Mot de passe du Téléphone:  </TD>";
+		echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 maxlength=20 VALUE=\"$phone_pass\"></TD></TR>\n";
+		echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=VALIDER VALUE=VALIDER></TD></TR>\n";
+		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
+		echo "</TABLE>\n";
+		echo "</FORM>\n\n";
+		echo "</body>\n\n";
+		echo "</html>\n\n";
+		exit;
+		}
+	else
+		{
+	### go through the entered phones to figure out which server has fewest agents
+	### logged in and use that phone login account
+		if ($pa > 0)
+			{
+			$pb=0;
+			$pb_login='';
+			$pb_server_ip='';
+			$pb_count=0;
+			$pb_log='';
+			while($pb < $phones_auto_ct)
+				{
+				### find the server_ip of each phone_login
+				$stmtx="SELECT server_ip from phones where login = '$phones_auto[$pb]';";
+				if ($DB) {echo "|$stmtx|\n";}
+				if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
+				$rslt=mysql_query($stmtx, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01021',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$rowx=mysql_fetch_row($rslt);
+
+				### get number of agents logged in to each server
+				$stmt="SELECT count(*) from vicidial_live_agents where server_ip = '$rowx[0]';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01022',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysql_fetch_row($rslt);
+				
+				### find out whether the server is set to active
+				$stmt="SELECT count(*) from servers where server_ip = '$rowx[0]' and active='Y' and active_agent_login_server='Y';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01023',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$rowy=mysql_fetch_row($rslt);
+
+				### find out whether the server_updater is running
+				$stmt="SELECT count(*) from server_updater where server_ip = '$rowx[0]' and last_update > '$past_minutes_date';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01024',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$rowz=mysql_fetch_row($rslt);
+
+				$pb_log .= "$phones_auto[$pb]|$rowx[0]|$row[0]|$rowy[0]|$rowz[0]|  ";
+
+				if ( ($rowy[0] > 0) && ($rowz[0] > 0) )
+					{
+					if ( ($pb_count >= $row[0]) || (strlen($pb_server_ip) < 4) )
+						{
+						$pb_count=$row[0];
+						$pb_server_ip=$rowx[0];
+						$phone_login=$phones_auto[$pb];
+						}
+					}
+				$pb++;
+				}
+			echo "<!-- Téléphones balance selection: $phone_login|$pb_server_ip|$past_minutes_date|     |$pb_log -->\n";
+			}
+		echo "<title>Agent web client</title>\n";
+		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,is_webphone,use_external_server_ip from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01025',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		$row=mysql_fetch_row($rslt);
+		$extension=$row[0];
+		$dialplan_number=$row[1];
+		$voicemail_id=$row[2];
+		$phone_ip=$row[3];
+		$computer_ip=$row[4];
+		$server_ip=$row[5];
+		$login=$row[6];
+		$pass=$row[7];
+		$status=$row[8];
+		$active=$row[9];
+		$phone_type=$row[10];
+		$fullname=$row[11];
+		$company=$row[12];
+		$picture=$row[13];
+		$messages=$row[14];
+		$old_messages=$row[15];
+		$protocol=$row[16];
+		$local_gmt=$row[17];
+		$ASTmgrUSERNAME=$row[18];
+		$ASTmgrSECRET=$row[19];
+		$login_user=$row[20];
+		$login_pass=$row[21];
+		$login_campaign=$row[22];
+		$park_on_extension=$row[23];
+		$conf_on_extension=$row[24];
+		$VICIDiaL_park_on_extension=$row[25];
+		$VICIDiaL_park_on_filename=$row[26];
+		$monitor_prefix=$row[27];
+		$recording_exten=$row[28];
+		$voicemail_exten=$row[29];
+		$voicemail_dump_exten=$row[30];
+		$ext_context=$row[31];
+		$dtmf_send_extension=$row[32];
+		$call_out_number_group=$row[33];
+		$client_browser=$row[34];
+		$install_directory=$row[35];
+		$local_web_callerID_URL=$row[36];
+		$VICIDiaL_web_URL=$row[37];
+		$AGI_call_logging_enabled=$row[38];
+		$user_switching_enabled=$row[39];
+		$conferencing_enabled=$row[40];
+		$admin_hangup_enabled=$row[41];
+		$admin_hijack_enabled=$row[42];
+		$admin_monitor_enabled=$row[43];
+		$call_parking_enabled=$row[44];
+		$updater_check_enabled=$row[45];
+		$AFLogging_enabled=$row[46];
+		$QUEUE_ACTION_enabled=$row[47];
+		$CallerID_popup_enabled=$row[48];
+		$voicemail_button_enabled=$row[49];
+		$enable_fast_refresh=$row[50];
+		$fast_refresh_rate=$row[51];
+		$enable_persistant_mysql=$row[52];
+		$auto_dial_next_number=$row[53];
+		$VDstop_rec_after_each_call=$row[54];
+		$DBX_server=$row[55];
+		$DBX_database=$row[56];
+		$DBX_user=$row[57];
+		$DBX_pass=$row[58];
+		$DBX_port=$row[59];
+		$outbound_cid=$row[65];
+		$enable_sipsak_messages=$row[66];
+		$is_webphone=$row[73];
+		$use_external_server_ip=$row[74];
+
+		$no_empty_session_warnings=0;
+		if ($phone_login == 'nophone')
+			{
+			$no_empty_session_warnings=1;
+			}
+		if ($PhonESComPIP == '1')
+			{
+			if (strlen($computer_ip) < 4)
+				{
+				$stmt="UPDATE phones SET computer_ip='$ip' where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01026',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				}
+			}
+		if ($PhonESComPIP == '2')
+			{
+			$stmt="UPDATE phones SET computer_ip='$ip' where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01027',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			}
+		if ($clientDST)
+			{
+			$local_gmt = ($local_gmt + $isdst);
+			}
+		if ($protocol == 'EXTERNAL')
+			{
+			$protocol = 'Local';
+			$extension = "$dialplan_number$AT$ext_context";
+			}
+		$SIP_user = "$protocol/$extension";
+		$SIP_user_DiaL = "$protocol/$extension";
+		if ( (ereg('8300',$dialplan_number)) and (strlen($dialplan_number)<5) and ($protocol == 'Local') )
+			{
+			$SIP_user = "$protocol/$extension$VD_login";
+			}
+
+		$stmt="SELECT asterisk_version from servers where server_ip='$server_ip';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01028',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		$row=mysql_fetch_row($rslt);
+		$asterisk_version=$row[0];
+
+		# If a park extension is not set, use the default one
+		if ( (strlen($park_ext)>0) && (strlen($park_file_name)>0) )
+			{
+			$VICIDiaL_park_on_extension = "$park_ext";
+			$VICIDiaL_park_on_filename = "$park_file_name";
+			echo "<!-- ATTENTE SPECIFIQUE:  |$VICIDiaL_park_on_extension|$VICIDiaL_park_on_filename| -->\n";
+			}
+		echo "<!-- ATTENTE PAR DEFAUT: |$VICIDiaL_park_on_extension|$VICIDiaL_park_on_filename| -->\n";
+
+		# If a web form address is not set, use the default one
+		if (strlen($web_form_address)>0)
+			{
+			$VICIDiaL_web_form_address = "$web_form_address";
+			echo "<!-- FORMULAIRE SPECIFIQUE :   |$VICIDiaL_web_form_address| -->\n";
+			}
+		else
+			{
+			$VICIDiaL_web_form_address = "$VICIDiaL_web_URL";
+			print "<!-- FORMULAIRE PAR DEFAUT:  |$VICIDiaL_web_form_address| -->\n";
+			$VICIDiaL_web_form_address_enc = rawurlencode($VICIDiaL_web_form_address);
+			}
+		$VICIDiaL_web_form_address_enc = rawurlencode($VICIDiaL_web_form_address);
+
+		# If a web form address two is not set, use the first one
+		if (strlen($web_form_address_two)>0)
+			{
+			$VICIDiaL_web_form_address_two = "$web_form_address_two";
+			echo "<!-- FORMULAIRE SPECIFIQUE  2:   |$VICIDiaL_web_form_address_two| -->\n";
+			}
+		else
+			{
+			$VICIDiaL_web_form_address_two = "$VICIDiaL_web_form_address";
+			echo "<!-- FORMULAIRE PAR DEFAUT 2:  |$VICIDiaL_web_form_address_two| -->\n";
+			$VICIDiaL_web_form_address_two_enc = rawurlencode($VICIDiaL_web_form_address_two);
+			}
+		$VICIDiaL_web_form_address_two_enc = rawurlencode($VICIDiaL_web_form_address_two);
+
+		# If closers are allowed sur this campaign
+		if ($allow_closers=="Y")
+			{
+			$VICIDiaL_allow_closers = 1;
+			echo "<!-- CAMPAGNE PERMETANT LES CLOSERS:    |$VICIDiaL_allow_closers| -->\n";
+			}
+		else
+			{
+			$VICIDiaL_allow_closers = 0;
+			echo "<!-- CAMPAGNE NE PERMETANT PAS LES CLOSERS: |$VICIDiaL_allow_closers| -->\n";
+			}
+
+
+		$session_ext = eregi_replace("[^a-z0-9]", "", $extension);
+		if (strlen($session_ext) > 10) {$session_ext = substr($session_ext, 0, 10);}
+		$session_rand = (rand(1,9999999) + 10000000);
+		$session_name = "$StarTtimE$US$session_ext$session_rand";
+
+		if ($webform_sessionname)
+			{$webform_sessionname = "&session_name=$session_name";}
+		else
+			{$webform_sessionname = '';}
+
+		$stmt="DELETE from web_client_sessions where start_time < '$past_month_date' and extension='$extension' and server_ip = '$server_ip' and program = 'vicidial';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01029',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+
+		$stmt="INSERT INTO web_client_sessions values('$extension','$server_ip','vicidial','$NOW_TIME','$session_name');";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01030',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+
+		if ( ( ($campaign_allow_inbound == 'Y') and ($dial_method != 'MANUAL') ) || ($campaign_leads_to_call > 0) || (ereg('Y',$no_hopper_leads_logins)) )
+			{
+			### insert an entry into the user log for the login event
+			$stmt = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$VD_login','LOGIN','$VD_campaign','$NOW_TIME','$StarTtimE','$VU_user_group')";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01031',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+
+			##### check to see if the user has a conf extension already, this happens if they previously exited uncleanly
+			$stmt="SELECT conf_exten FROM vicidial_conferences where extension='$SIP_user' and server_ip = '$server_ip' LIMIT 1;";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01032',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$prev_login_ct = mysql_num_rows($rslt);
+			$i=0;
+			while ($i < $prev_login_ct)
+				{
+				$row=mysql_fetch_row($rslt);
+				$session_id =$row[0];
+				$i++;
+				}
+			if ($prev_login_ct > 0)
+				{echo "<!-- UTILISER LA SALLE MEETME PRECEDENTE - $session_id - $NOW_TIME - $SIP_user -->\n";}
+			else
+				{
+				##### grab the next available vicidial_conference room and reserve it
+				$stmt="SELECT count(*) FROM vicidial_conferences where server_ip='$server_ip' and ((extension='') or (extension is null));";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01033',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysql_fetch_row($rslt);
+				if ($row[0] > 0)
+					{
+					$stmt="UPDATE vicidial_conferences set extension='$SIP_user', leave_3way='0' where server_ip='$server_ip' and ((extension='') or (extension is null)) limit 1;";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01034',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+
+					$stmt="SELECT conf_exten from vicidial_conferences where server_ip='$server_ip' and ( (extension='$SIP_user') or (extension='$VD_login') );";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01035',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					$row=mysql_fetch_row($rslt);
+					$session_id = $row[0];
+					}
+				echo "<!-- UTILISER UNE NOUVELLE SALLE MEETME - $session_id - $NOW_TIME - $SIP_user -->\n";
+				}
+
+			### mark leads that were not dispositioned during previous calls as ERI
+			$stmt="UPDATE vicidial_list set status='ERI', user='' where status IN('QUEUE','INCALL') and user ='$VD_login';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01036',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$affected_rows = mysql_affected_rows($link);
+			echo "<!-- vieille FILE D'ATTENTE et liste retournée par INCALL:   |$affected_rows| -->\n";
+
+			$stmt="DELETE from vicidial_hopper where status IN('QUEUE','INCALL','DONE') and user ='$VD_login';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01037',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$affected_rows = mysql_affected_rows($link);
+			echo "<!-- vieille FILE D'ATTENTE et liste predictive retourné par INCALL: |$affected_rows| -->\n";
+
+			$stmt="DELETE from vicidial_live_agents where user ='$VD_login';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01038',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$affected_rows = mysql_affected_rows($link);
+			echo "<!-- supression des anciens enregistrements vicidial_live_agents: |$affected_rows| -->\n";
+
+			$stmt="DELETE from vicidial_live_inbound_agents where user ='$VD_login';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01039',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$affected_rows = mysql_affected_rows($link);
+			echo "<!-- old vicidial_live_inbound_agents records cleared: |$affected_rows| -->\n";
+
+		#	echo "<B>You have logged in as user: $VD_login sur phone: $SIP_user Campagne:: $VD_campaign</B><BR>\n";
+			$VICIDiaL_is_logged_in=1;
+
+			### set the callerID for manager middleware-app to connect the phone to the user
+			$SIqueryCID = "S$CIDdate$session_id";
+
+			#############################################
+			##### START SYSTEM_SETTINGS LOOKUP #####
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,vicidial_agent_disable,allow_sipsak_messages,queuemetrics_loginout FROM system_settings;";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01040',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$qm_conf_ct = mysql_num_rows($rslt);
+			if ($qm_conf_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$enable_queuemetrics_logging =	$row[0];
+				$queuemetrics_server_ip	=		$row[1];
+				$queuemetrics_dbname =			$row[2];
+				$queuemetrics_login	=			$row[3];
+				$queuemetrics_pass =			$row[4];
+				$queuemetrics_log_id =			$row[5];
+				$vicidial_agent_disable =		$row[6];
+				$allow_sipsak_messages =		$row[7];
+				$queuemetrics_loginout =		$row[8];
+				}
+			##### END QUEUEMETRICS LOGGING LOOKUP #####
+			###########################################
+
+			if ( ($enable_sipsak_messages > 0) and ($allow_sipsak_messages > 0) and (eregi("SIP",$protocol)) )
+				{
+				$SIPSAK_prefix = 'LIN-';
+				echo "<!-- sending login sipsak message: $SIPSAK_prefix$VD_campaign -->\n";
+				passthru("/usr/local/bin/sipsak -M -O desktop -B \"$SIPSAK_prefix$VD_campaign\" -r 5060 -s sip:$extension@$phone_ip > /dev/null");
+				$SIqueryCID = "$SIPSAK_prefix$VD_campaign$DS$CIDdate";
+				}
+
+			$webphone_content='';
+			if ($is_webphone != 'Y')
+				{
+				### insert a NOUVEAU record to the vicidial_manager table to be processed
+				$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$SIqueryCID','Channel: $SIP_user_DiaL','Context: $ext_context','Exten: $session_id','Priority: 1','Callerid: \"$SIqueryCID\" <$campaign_cid>','','','','','');";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01041',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rows = mysql_affected_rows($link);
+				echo "<!-- call placed to session_id: $session_id from phone: $SIP_user $SIP_user_DiaL -->\n";
+				}
+			else
+				{
+				### build Iframe variable content for webphone here
+				$webphone_server_ip = $server_ip;
+				if ($use_external_server_ip=='Y')
+					{
+					##### find external_server_ip if enabled for this phone account
+					$stmt="SELECT external_server_ip FROM servers where server_ip='$server_ip' LIMIT 1;";
+					$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$exip_ct = mysql_num_rows($rslt);
+					if ($exip_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$webphone_server_ip =$row[0];
+						}
+					}
+				##### find webphone_url in system_settings and generate IFRAME code for it #####
+				$stmt="SELECT webphone_url FROM system_settings LIMIT 1;";
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$wu_ct = mysql_num_rows($rslt);
+				if ($wu_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$webphone_url =$row[0];
+					}
+
+				### base64 encode variables
+				$b64_phone_login =		base64_encode($extension);
+				$b64_phone_pass =		base64_encode($phone_pass);
+				$b64_session_name =		base64_encode($session_name);
+				$b64_server_ip =		base64_encode($webphone_server_ip);
+				$b64_callerid =			base64_encode($outbound_cid);
+				$b64_protocol =			base64_encode($protocol);
+
+				$WebPhonEurl = "$webphone_url?phone_login=$b64_phone_login&phone_login=$b64_phone_login&phone_pass=$b64_phone_pass&server_ip=$b64_server_ip&callerid=$b64_callerid&protocol=$b64_protocol";
+				$webphone_content = "<iframe src=\"$WebPhonEurl\" style=\"width:200;height:500;background-color:transparent;z-index:17;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"webphone\" name=\"webphone\" width=\"200\" height=\"500\"> </iframe>";
+				}
+
+			##### grab the campaign_weight and number of calls today sur that campaign for the agent
+			$stmt="SELECT campaign_weight,calls_today FROM vicidial_campaign_agents where user='$VD_login' and campaign_id = '$VD_campaign';";
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01042',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$vca_ct = mysql_num_rows($rslt);
+			if ($vca_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$campaign_weight =	$row[0];
+				$calls_today =		$row[1];
+				$i++;
+				}
+			else
+				{
+				$campaign_weight =	'0';
+				$calls_today =		'0';
+				$stmt="INSERT INTO vicidial_campaign_agents (user,campaign_id,campaign_rank,campaign_weight,calls_today) values('$VD_login','$VD_campaign','0','0','$calls_today');";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01043',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rows = mysql_affected_rows($link);
+				echo "<!-- new vicidial_campaign_agents record inserted: |$affected_rows| -->\n";
+				}
+
+			if ($auto_dial_level > 0)
+				{
+				echo "<!-- campagne configurée en auto_dial_level: $auto_dial_level -->\n";
+
+
+				$closer_chooser_string='';
+				$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial,manager_ingroup_set) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$closer_chooser_string','$user_level','$campaign_weight','$calls_today','$NOW_TIME','Y','N');";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01044',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rows = mysql_affected_rows($link);
+				echo "<!-- nouvel enregistrement vicidial_live_agents inséré: |$affected_rows| -->\n";
+
+				if ($enable_queuemetrics_logging > 0)
+					{
+					$QM_LOGIN = 'AGENTLOGIN';
+					$QM_PHONE = "$VD_login@agents";
+					if ($queuemetrics_loginout=='CALLBACK')
+						{
+						$QM_LOGIN = 'AGENTCALLBACKLOGIN';
+						$QM_PHONE = "$SIP_user_DiaL";
+						}
+					$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+					mysql_select_db("$queuemetrics_dbname", $linkB);
+
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='$QM_LOGIN',data1='$QM_PHONE',serverid='$queuemetrics_log_id';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $linkB);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01045',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					$affected_rows = mysql_affected_rows($linkB);
+					echo "<!-- queue_log $QM_LOGIN entry added: $VD_login|$affected_rows|$QM_PHONE -->\n";
+
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $linkB);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01046',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					$affected_rows = mysql_affected_rows($linkB);
+					echo "<!-- queue_log PAUSE entry added: $VD_login|$affected_rows -->\n";
+
+					mysql_close($linkB);
+					mysql_select_db("$VARDB_database", $link);
+					}
+
+
+				if ( ($campaign_allow_inbound == 'Y') and ($dial_method != 'MANUAL') )
+					{
+					print "<!-- CLOSER-type campaign -->\n";
+					}
+				}
+			else
+				{
+				print "<!-- campagne comfigurée en mode Appel Manuel: $auto_dial_level -->\n";
+
+				$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial,manager_ingroup_set) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$user_level', '$campaign_weight', '$calls_today','$NOW_TIME','N','N');";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01047',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rows = mysql_affected_rows($link);
+				echo "<!-- nouvel enregistrement vicidial_live_agents inséré: |$affected_rows| -->\n";
+
+				if ($enable_queuemetrics_logging > 0)
+					{
+					$QM_LOGIN = 'AGENTLOGIN';
+					$QM_PHONE = "$VD_login@agents";
+					if ($queuemetrics_loginout=='CALLBACK')
+						{
+						$QM_LOGIN = 'AGENTCALLBACKLOGIN';
+						$QM_PHONE = "$SIP_user_DiaL";
+						}
+					$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+					mysql_select_db("$queuemetrics_dbname", $linkB);
+
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='$VD_campaign',agent='Agent/$VD_login',verb='$QM_LOGIN',data1='$QM_PHONE',serverid='$queuemetrics_log_id';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $linkB);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01048',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					$affected_rows = mysql_affected_rows($linkB);
+					echo "<!-- queue_log $QM_LOGIN entry added: $VD_login|$affected_rows|$QM_PHONE -->\n";
+
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $linkB);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01049',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					$affected_rows = mysql_affected_rows($linkB);
+					echo "<!-- queue_log PAUSE entry added: $VD_login|$affected_rows -->\n";
+
+					mysql_close($linkB);
+					mysql_select_db("$VARDB_database", $link);
+					}
+				}
+			}
+		else
 			{
 			echo "<title>Agent web client: Ouverture de Campagne</title>\n";
 			echo "</head>\n";
@@ -1036,7 +2172,33 @@ $VDloginDISPLAY=0;
 			echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 			echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_fr/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Français <img src=\"../agc/images/fr.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";			echo "</TR></TABLE>\n";
-			echo "<B>Sorry, you are not allowed to login to this campaign: $VD_campaign</B>\n";
+			echo "<B>Aucune fiche client n'est éligible pour cette campagne</B>\n";
+			echo "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
+			echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+			echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+			echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
+			echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
+			echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
+			echo "Ouverture de Session: <INPUT TYPE=TEXT NAME=VD_login SIZE=10 maxlength=20 VALUE=\"$VD_login\">\n<br>";
+			echo "Mot de passe: <INPUT TYPE=PASSWORD NAME=VD_pass SIZE=10 maxlength=20 VALUE=\"$VD_pass\"><br>\n";
+			echo "Campagne: <span id=\"LogiNCamPaigns\">$camp_form_code</span><br>\n";
+			echo "<INPUT TYPE=Submit NAME=VALIDER VALUE=VALIDER> &nbsp; \n";
+			echo "<span id=\"LogiNReseT\"></span>\n";
+			echo "</FORM>\n\n";
+			echo "</body>\n\n";
+			echo "</html>\n\n";
+			exit;
+			}
+		if (strlen($session_id) < 1)
+			{
+			echo "<title>Agent web client: Ouverture de Campagne</title>\n";
+			echo "</head>\n";
+			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
+			echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
+			echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
+			echo "<!-- ILPV -->\n";
+echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_fr/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Français <img src=\"../agc/images/fr.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";			echo "</TR></TABLE>\n";
+			echo "<B>Sorry, there are no available sessions</B>\n";
 			echo "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
 			echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 			echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
@@ -1054,1154 +2216,97 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 			exit;
 			}
 
-		##### check to see that the campaign is active
-		$stmt="SELECT count(*) FROM vicidial_campaigns where campaign_id='$VD_campaign' and active='Y';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01009',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
-		$CAMPactive=$row[0];
-		if($CAMPactive>0)
+		if (ereg('MSIE',$browser)) 
 			{
-			if ($TEST_all_statuses > 0) {$selectableSQL = '';}
-			else {$selectableSQL = "selectable='Y' and";}
-			$VARstatuses='';
-			$VARstatusnames='';
-			##### grab the statuses that can be used for dispositioning by an agent
-			$stmt="SELECT status,status_name FROM vicidial_statuses WHERE $selectableSQL status != 'NEW' order by status limit 50;";
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01010',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			if ($DB) {echo "$stmt\n";}
-			$VD_statuses_ct = mysql_num_rows($rslt);
-			$i=0;
-			while ($i < $VD_statuses_ct)
-				{
-				$row=mysql_fetch_row($rslt);
-				$statuses[$i] =$row[0];
-				$status_names[$i] =$row[1];
-				$VARstatuses = "$VARstatuses'$statuses[$i]',";
-				$VARstatusnames = "$VARstatusnames'$status_names[$i]',";
-				$i++;
-				}
-
-			##### grab the campaign-specific statuses that can be used for dispositioning by an agent
-			$stmt="SELECT status,status_name FROM vicidial_campaign_statuses WHERE $selectableSQL status != 'NEW' and campaign_id='$VD_campaign' order by status limit 80;";
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01011',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			if ($DB) {echo "$stmt\n";}
-			$VD_statuses_camp = mysql_num_rows($rslt);
-			$j=0;
-			while ($j < $VD_statuses_camp)
-				{
-				$row=mysql_fetch_row($rslt);
-				$statuses[$i] =$row[0];
-				$status_names[$i] =$row[1];
-				$VARstatuses = "$VARstatuses'$statuses[$i]',";
-				$VARstatusnames = "$VARstatusnames'$status_names[$i]',";
-				$i++;
-				$j++;
-				}
-			$VD_statuses_ct = ($VD_statuses_ct+$VD_statuses_camp);
-			$VARstatuses = substr("$VARstatuses", 0, -1); 
-			$VARstatusnames = substr("$VARstatusnames", 0, -1); 
-
-			##### grab the campaign-specific HotKey statuses that can be used for dispositioning by an agent
-			$stmt="SELECT hotkey,status,status_name FROM vicidial_campaign_hotkeys WHERE selectable='Y' and status != 'NEW' and campaign_id='$VD_campaign' order by hotkey limit 9;";
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01012',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			if ($DB) {echo "$stmt\n";}
-			$HK_statuses_camp = mysql_num_rows($rslt);
-			$w=0;
-			$HKboxA='';
-			$HKboxB='';
-			$HKboxC='';
-			while ($w < $HK_statuses_camp)
-				{
-				$row=mysql_fetch_row($rslt);
-				$HKhotkey[$w] =$row[0];
-				$HKstatus[$w] =$row[1];
-				$HKstatus_name[$w] =$row[2];
-				$HKhotkeys = "$HKhotkeys'$HKhotkey[$w]',";
-				$HKstatuses = "$HKstatuses'$HKstatus[$w]',";
-				$HKstatusnames = "$HKstatusnames'$HKstatus_name[$w]',";
-				if ($w < 3)
-					{$HKboxA = "$HKboxA <font class=\"skb_text\">$HKhotkey[$w]</font> - $HKstatus[$w] - $HKstatus_name[$w]<BR>";}
-				if ( ($w >= 3) and ($w < 6) )
-					{$HKboxB = "$HKboxB <font class=\"skb_text\">$HKhotkey[$w]</font> - $HKstatus[$w] - $HKstatus_name[$w]<BR>";}
-				if ($w >= 6)
-					{$HKboxC = "$HKboxC <font class=\"skb_text\">$HKhotkey[$w]</font> - $HKstatus[$w] - $HKstatus_name[$w]<BR>";}
-				$w++;
-				}
-			$HKhotkeys = substr("$HKhotkeys", 0, -1); 
-			$HKstatuses = substr("$HKstatuses", 0, -1); 
-			$HKstatusnames = substr("$HKstatusnames", 0, -1); 
-
-			##### grab the campaign settings
-			$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			if ($DB) {echo "$stmt\n";}
-			$row=mysql_fetch_row($rslt);
-			$park_ext =					$row[0];
-			$park_file_name =			$row[1];
-			$web_form_address =			stripslashes($row[2]);
-			$allow_closers =			$row[3];
-			$auto_dial_level =			$row[4];
-			$dial_timeout =				$row[5];
-			$dial_prefix =				$row[6];
-			$campaign_cid =				$row[7];
-			$campaign_vdad_exten =		$row[8];
-			$campaign_rec_exten =		$row[9];
-			$campaign_recording =		$row[10];
-			$campaign_rec_filename =	$row[11];
-			$campaign_script =			$row[12];
-			$get_call_launch =			$row[13];
-			$campaign_am_message_exten = '8320';
-			$xferconf_a_dtmf =			$row[15];
-			$xferconf_a_number =		$row[16];
-			$xferconf_b_dtmf =			$row[17];
-			$xferconf_b_number =		$row[18];
-			$alt_number_dialing =		$row[19];
-			$VC_scheduled_callbacks =	$row[20];
-			$wrapup_seconds =			$row[21];
-			$wrapup_message =			$row[22];
-			$closer_campaigns =			$row[23];
-			$use_internal_dnc =			$row[24];
-			$allcalls_delay =			$row[25];
-			$omit_phone_code =			$row[26];
-			$agent_pause_codes_active =	$row[27];
-			$no_hopper_leads_logins =	$row[28];
-			$campaign_allow_inbound =	$row[29];
-			$manual_dial_list_id =		$row[30];
-			$default_xfer_group =		$row[31];
-			$xfer_groups =				$row[32];
-			$disable_alter_custphone =	$row[33];
-			$display_queue_count =		$row[34];
-			$manual_dial_filter =		$row[35];
-			$CopY_tO_ClipboarD =		$row[36];
-			$use_campaign_dnc =			$row[37];
-			$three_way_call_cid =		$row[38];
-			$dial_method =				$row[39];
-			$three_way_dial_prefix =	$row[40];
-			$web_form_target =			$row[41];
-			$vtiger_screen_login =		$row[42];
-			$agent_allow_group_alias =	$row[43];
-			$default_group_alias =		$row[44];
-			$quick_transfer_button =	$row[45];
-			$prepopulate_transfer_preset = $row[46];
-			$view_calls_in_queue =		$row[47];
-			$view_calls_in_queue_launch = $row[48];
-			$call_requeue_button =		$row[49];
-			$pause_after_each_call =	$row[50];
-			$no_hopper_dialing =		$row[51];
-			$agent_dial_owner_only =	$row[52];
-			$agent_display_dialable_leads = $row[53];
-			$web_form_address_two =		$row[54];
-			$agent_select_territories = $row[55];
-			$crm_popup_login =			$row[56];
-			$crm_login_address =		$row[57];
-			$timer_action =				$row[58];
-			$timer_action_message =		$row[59];
-			$timer_action_seconds =		$row[60];
-			$start_call_url =			$row[61];
-			$dispo_call_url =			$row[62];
-			$xferconf_c_number =		$row[63];
-			$xferconf_d_number =		$row[64];
-			$xferconf_e_number =		$row[65];
-
-			if ($user_territories_active < 1)
-				{$agent_select_territories = 0;}
-			if (preg_match("/Y/",$agent_select_territories))
-				{$agent_select_territories=1;}
-			else
-				{$agent_select_territories=0;}
-
-			if (preg_match("/Y/",$agent_display_dialable_leads))
-				{$agent_display_dialable_leads=1;}
-			else
-				{$agent_display_dialable_leads=0;}
-
-			if (preg_match("/Y/",$no_hopper_dialing))
-				{$no_hopper_dialing=1;}
-			else
-				{$no_hopper_dialing=0;}
-
-			if ( (preg_match("/Y/",$call_requeue_button)) and ($auto_dial_level > 0) )
-				{$call_requeue_button=1;}
-			else
-				{$call_requeue_button=0;}
-
-			if ( (preg_match("/AUTO/",$view_calls_in_queue_launch)) and ($auto_dial_level > 0) )
-				{$view_calls_in_queue_launch=1;}
-			else
-				{$view_calls_in_queue_launch=0;}
-
-			if ( (!preg_match("/NONE/",$view_calls_in_queue)) and ($auto_dial_level > 0) )
-				{$view_calls_in_queue=1;}
-			else
-				{$view_calls_in_queue=0;}
-
-			if (preg_match("/Y/",$pause_after_each_call))
-				{$dispo_check_all_pause=1;}
-
-			$quick_transfer_button_enabled=0;
-			if (preg_match("/IN_GROUP|PRESET_1|PRESET_2|PRESET_3|PRESET_4|PRESET_5/",$quick_transfer_button))
-				{$quick_transfer_button_enabled=1;}
-
-			$preset_populate='';
-			$prepopulate_transfer_preset_enabled=0;
-			if (preg_match("/PRESET_1|PRESET_2|PRESET_3|PRESET_4|PRESET_5/",$prepopulate_transfer_preset))
-				{
-				$prepopulate_transfer_preset_enabled=1;
-				if (preg_match("/PRESET_1/",$prepopulate_transfer_preset))
-					{$preset_populate = $xferconf_a_number;}
-				if (preg_match("/PRESET_2/",$prepopulate_transfer_preset))
-					{$preset_populate = $xferconf_b_number;}
-				if (preg_match("/PRESET_3/",$prepopulate_transfer_preset))
-					{$preset_populate = $xferconf_c_number;}
-				if (preg_match("/PRESET_4/",$prepopulate_transfer_preset))
-					{$preset_populate = $xferconf_d_number;}
-				if (preg_match("/PRESET_5/",$prepopulate_transfer_preset))
-					{$preset_populate = $xferconf_e_number;}
-				}
-
-			$default_group_alias_cid='';
-			if (strlen($default_group_alias)>1)
-				{
-				$stmt = "select caller_id_number from groups_alias where group_alias_id='$default_group_alias';";
-				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01055',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$VDIG_cidnum_ct = mysql_num_rows($rslt);
-				if ($VDIG_cidnum_ct > 0)
-					{
-					$row=mysql_fetch_row($rslt);
-					$default_group_alias_cid	= $row[0];
-					}
-				}
-
-			$stmt = "select group_web_vars from vicidial_campaign_agents where campaign_id='$VD_campaign' and user='$VD_login';";
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01056',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			$VDIG_cidogwv = mysql_num_rows($rslt);
-			if ($VDIG_cidogwv > 0)
-				{
-				$row=mysql_fetch_row($rslt);
-				$default_web_vars =	$row[0];
-				}
-
-			if ( (!ereg('DISABLED',$VU_vicidial_recording_override)) and ($VU_vicidial_recording > 0) )
-				{
-				$campaign_recording = $VU_vicidial_recording_override;
-				echo "<!-- USER RECORDING OVERRIDE: |$VU_vicidial_recording_override|$campaign_recording| -->\n";
-				}
-			if ( ($VC_scheduled_callbacks=='Y') and ($VU_scheduled_callbacks=='1') )
-				{$scheduled_callbacks='1';}
-			if ($VU_vicidial_recording=='0')
-				{$campaign_recording='NEVER';}
-			if ($VU_alter_custphone_override=='ALLOW_ALTER')
-				{$disable_alter_custphone='N';}
-			if (strlen($three_way_dial_prefix) < 1)
-				{$three_way_dial_prefix = $dial_prefix ;}
-			if ($alt_number_dialing=='Y')
-				{$alt_phone_dialing='1';}
-			else
-				{
-				$alt_phone_dialing='0';
-				$DefaulTAlTDiaL='0';
-				}
-			if ($display_queue_count=='N')
-				{$callholdstatus='0';}
-			if ( ($dial_method == 'INBOUND_MAN') or ($outbound_autodial_active < 1) )
-				{$VU_closer_default_blended=0;}
-
-			$closer_campaigns = preg_replace("/^ | -$/","",$closer_campaigns);
-			$closer_campaigns = preg_replace("/ /","','",$closer_campaigns);
-			$closer_campaigns = "'$closer_campaigns'";
-
-			if ( (ereg('Y',$agent_pause_codes_active)) or (ereg('FORCE',$agent_pause_codes_active)) )
-				{
-				##### grab the pause codes for this campaign
-				$stmt="SELECT pause_code,pause_code_name FROM vicidial_pause_codes WHERE campaign_id='$VD_campaign' order by pause_code limit 50;";
-				$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01014',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				if ($DB) {echo "$stmt\n";}
-				$VD_pause_codes = mysql_num_rows($rslt);
-				$j=0;
-				while ($j < $VD_pause_codes)
-					{
-					$row=mysql_fetch_row($rslt);
-					$pause_codes[$i] =$row[0];
-					$pause_code_names[$i] =$row[1];
-					$VARpause_codes = "$VARpause_codes'$pause_codes[$i]',";
-					$VARpause_code_names = "$VARpause_code_names'$pause_code_names[$i]',";
-					$i++;
-					$j++;
-					}
-				$VD_pause_codes_ct = ($VD_pause_codes_ct+$VD_pause_codes);
-				$VARpause_codes = substr("$VARpause_codes", 0, -1); 
-				$VARpause_code_names = substr("$VARpause_code_names", 0, -1); 
-				}
-
-			##### grab the inbound groups to choose from if campaign contains CLOSER
-			$VARingroups="''";
-			if ( ($campaign_allow_inbound == 'Y') and ($dial_method != 'MANUAL') )
-				{
-				$VARingroups='';
-				$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and group_id IN($closer_campaigns) order by group_id limit 600;";
-				$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01015',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				if ($DB) {echo "$stmt\n";}
-				$closer_ct = mysql_num_rows($rslt);
-				$INgrpCT=0;
-				while ($INgrpCT < $closer_ct)
-					{
-					$row=mysql_fetch_row($rslt);
-					$closer_groups[$INgrpCT] =$row[0];
-					$VARingroups = "$VARingroups'$closer_groups[$INgrpCT]',";
-					$INgrpCT++;
-					}
-				$VARingroups = substr("$VARingroups", 0, -1); 
-				}
-			else
-				{$closer_campaigns = "''";}
-
-			##### gather territory listings for this agent if select territories is enabled
-			$VARterritories='';
-			if ($agent_select_territories > 0)
-				{
-				$stmt="SELECT territory from vicidial_user_territories where user='$VD_login';";
-				$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01062',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				if ($DB) {echo "$stmt\n";}
-				$territory_ct = mysql_num_rows($rslt);
-				$territoryCT=0;
-				while ($territoryCT < $territory_ct)
-					{
-					$row=mysql_fetch_row($rslt);
-					$territories[$territoryCT] =$row[0];
-					$VARterritories = "$VARterritories'$territories[$territoryCT]',";
-					$territoryCT++;
-					}
-				$VARterritories = substr("$VARterritories", 0, -1); 
-				echo "<!-- $territory_ct  $territoryCT |$stmt| -->\n";
-				}
-
-			##### grab the allowable inbound groups to choose from for transfer options
-			$xfer_groups = preg_replace("/^ | -$/","",$xfer_groups);
-			$xfer_groups = preg_replace("/ /","','",$xfer_groups);
-			$xfer_groups = "'$xfer_groups'";
-			$VARxfergroups="''";
-			if ($allow_closers == 'Y')
-				{
-				$VARxfergroups='';
-				$stmt="select group_id,group_name from vicidial_inbound_groups where active = 'Y' and group_id IN($xfer_groups) order by group_id limit 600;";
-				$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01016',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				if ($DB) {echo "$stmt\n";}
-				$xfer_ct = mysql_num_rows($rslt);
-				$XFgrpCT=0;
-				while ($XFgrpCT < $xfer_ct)
-					{
-					$row=mysql_fetch_row($rslt);
-					$VARxfergroups = "$VARxfergroups'$row[0]',";
-					$VARxfergroupsnames = "$VARxfergroupsnames'$row[1]',";
-					if ($row[0] == "$default_xfer_group") {$default_xfer_group_name = $row[1];}
-					$XFgrpCT++;
-					}
-				$VARxfergroups = substr("$VARxfergroups", 0, -1); 
-				$VARxfergroupsnames = substr("$VARxfergroupsnames", 0, -1); 
-				}
-
-			if (ereg('Y',$agent_allow_group_alias))
-				{
-				##### grab the active group aliases
-				$stmt="SELECT group_alias_id,group_alias_name,caller_id_number FROM groups_alias WHERE active='Y' order by group_alias_id limit 1000;";
-				$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01054',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				if ($DB) {echo "$stmt\n";}
-				$VD_group_aliases = mysql_num_rows($rslt);
-				$j=0;
-				while ($j < $VD_group_aliases)
-					{
-					$row=mysql_fetch_row($rslt);
-					$group_alias_id[$i] =	$row[0];
-					$group_alias_name[$i] = $row[1];
-					$caller_id_number[$i] = $row[2];
-					$VARgroup_alias_ids = "$VARgroup_alias_ids'$group_alias_id[$i]',";
-					$VARgroup_alias_names = "$VARgroup_alias_names'$group_alias_name[$i]',";
-					$VARcaller_id_numbers = "$VARcaller_id_numbers'$caller_id_number[$i]',";
-					$i++;
-					$j++;
-					}
-				$VD_group_aliases_ct = ($VD_group_aliases_ct+$VD_group_aliases);
-				$VARgroup_alias_ids = substr("$VARgroup_alias_ids", 0, -1); 
-				$VARgroup_alias_names = substr("$VARgroup_alias_names", 0, -1); 
-				$VARcaller_id_numbers = substr("$VARcaller_id_numbers", 0, -1); 
-				}
-
-			##### grab the number of leads in the hopper for this campaign
-			$stmt="SELECT count(*) FROM vicidial_hopper where campaign_id = '$VD_campaign' and status='READY';";
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01017',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			if ($DB) {echo "$stmt\n";}
-			$row=mysql_fetch_row($rslt);
-			   $campaign_leads_to_call = $row[0];
-			   echo "<!-- $campaign_leads_to_call - fiches Restant à appeler -->\n";
-
+			$useIE=1;
+			echo "<!-- client web browser used: MSIE |$browser|$useIE| -->\n";
 			}
-		else
+		else 
 			{
-			$VDloginDISPLAY=1;
-			$VDdisplayMESSAGE = "Campagne inactive, réessayez<BR>";
-			}
-		}
-	else
-		{
-		if ($WeBRooTWritablE > 0)
-			{
-			fwrite ($fp, "vdweb|FAIL|$date|$VD_login|$VD_pass|$ip|$browser|\n");
-			fclose($fp);
-			}
-		$VDloginDISPLAY=1;
-		$VDdisplayMESSAGE = "L'ouverture de session a èchoué, réessayez<BR>";
-		}
-	}
-	if ($VDloginDISPLAY)
-	{
-	echo "<title>Agent web client: Ouverture de Campagne</title>\n";
-	echo "</head>\n";
-	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
-	echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
-	echo "<!-- ILPV -->\n";
-echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_fr/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Français <img src=\"../agc/images/fr.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";	echo "</TR></TABLE>\n";
-	echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
-	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
-	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
-	echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
-	echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
-	echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
-	echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
-	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vdc_tab_vicidial.gif\" Border=0></TD>";
-	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Ouverture de Campagne </TD>";
-	echo "</TR>\n";
-	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Ouverture de Session:  </TD>";
-	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=VD_login SIZE=10 maxlength=20 VALUE=\"$VD_login\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Mot de passe Utilisateur:  </TD>";
-	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=VD_pass SIZE=10 maxlength=20 VALUE=\"$VD_pass\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Campagne:  </TD>";
-	echo "<TD ALIGN=LEFT><span id=\"LogiNCamPaigns\">$camp_form_code</span></TD></TR>\n";
-	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=VALIDER VALUE=VALIDER> &nbsp; \n";
-	echo "<span id=\"LogiNReseT\"></span></TD></TR>\n";
-	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
-	echo "</TABLE>\n";
-	echo "</FORM>\n\n";
-	echo "</body>\n\n";
-	echo "</html>\n\n";
-	exit;
-	}
-
-$original_phone_login = $phone_login;
-
-# code for parsing load-balanced agent phone allocation where agent interface
-# will send multiple phones-table logins so that the script can determine the
-# server that has the fewest agents logged into it.
-#   login: ca101,cb101,cc101
-	$alias_found=0;
-$stmt="select count(*) from phones_alias where alias_id = '$phone_login';";
-$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01018',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-$alias_ct = mysql_num_rows($rslt);
-if ($alias_ct > 0)
-	{
-	$row=mysql_fetch_row($rslt);
-	$alias_found = "$row[0]";
-	}
-if ($alias_found > 0)
-	{
-	$stmt="select alias_name,logins_list from phones_alias where alias_id = '$phone_login' limit 1;";
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01019',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$alias_ct = mysql_num_rows($rslt);
-	if ($alias_ct > 0)
-		{
-		$row=mysql_fetch_row($rslt);
-		$alias_name = "$row[0]";
-		$phone_login = "$row[1]";
-		}
-	}
-
-$pa=0;
-if ( (eregi(',',$phone_login)) and (strlen($phone_login) > 2) )
-	{
-	$phoneSQL = "(";
-	$phones_auto = explode(',',$phone_login);
-	$phones_auto_ct = count($phones_auto);
-	while($pa < $phones_auto_ct)
-		{
-		if ($pa > 0)
-			{$phoneSQL .= " or ";}
-		$desc = ($phones_auto_ct - $pa); # traverse in reverse order
-		$phoneSQL .= "(login='$phones_auto[$desc]' and pass='$phone_pass')";
-		$pa++;
-		}
-	$phoneSQL .= ")";
-	}
-else {$phoneSQL = "login='$phone_login' and pass='$phone_pass'";}
-
-$authphone=0;
-#$stmt="SELECT count(*) from phones where $phoneSQL and active = 'Y';";
-$stmt="SELECT count(*) from phones,servers where $phoneSQL and phones.active = 'Y' and active_agent_login_server='Y' and phones.server_ip=servers.server_ip;";
-if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01020',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-$row=mysql_fetch_row($rslt);
-$authphone=$row[0];
-if (!$authphone)
-	{
-	echo "<title>Agent web client: Ouverture de Session téléphonique Error</title>\n";
-	echo "</head>\n";
-	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
-	echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
-	echo "<!-- ILPV -->\n";
-echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_fr/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Français <img src=\"../agc/images/fr.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";	echo "</TR></TABLE>\n";
-	echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
-	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
-	echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
-	echo "<INPUT TYPE=HIDDEN NAME=VD_login VALUE=\"$VD_login\">\n";
-	echo "<INPUT TYPE=HIDDEN NAME=VD_pass VALUE=\"$VD_pass\">\n";
-	echo "<INPUT TYPE=HIDDEN NAME=VD_campaign VALUE=\"$VD_campaign\">\n";
-	echo "<BR><BR><BR><CENTER><TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
-	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vdc_tab_vicidial.gif\" Border=0></TD>";
-	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Ouverture de Session Error</TD>";
-	echo "</TR>\n";
-	echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=1> &nbsp; <BR><FONT SIZE=3>L'ouverture de la session Téléphonique à échoué, réessayez: <BR> &nbsp;</TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Ouverture de Session téléphonique: </TD>";
-	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 maxlength=20 VALUE=\"$phone_login\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Mot de passe du Téléphone:  </TD>";
-	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 maxlength=20 VALUE=\"$phone_pass\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=VALIDER VALUE=VALIDER></TD></TR>\n";
-	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
-	echo "</TABLE>\n";
-	echo "</FORM>\n\n";
-	echo "</body>\n\n";
-	echo "</html>\n\n";
-	exit;
-	}
-else
-	{
-### go through the entered phones to figure out which server has fewest agents
-### logged in and use that phone login account
-	if ($pa > 0)
-		{
-		$pb=0;
-		$pb_login='';
-		$pb_server_ip='';
-		$pb_count=0;
-		$pb_log='';
-		while($pb < $phones_auto_ct)
-			{
-			### find the server_ip of each phone_login
-			$stmtx="SELECT server_ip from phones where login = '$phones_auto[$pb]';";
-			if ($DB) {echo "|$stmtx|\n";}
-			if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-			$rslt=mysql_query($stmtx, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01021',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			$rowx=mysql_fetch_row($rslt);
-
-			### get number of agents logged in to each server
-			$stmt="SELECT count(*) from vicidial_live_agents where server_ip = '$rowx[0]';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01022',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			$row=mysql_fetch_row($rslt);
-			
-			### find out whether the server is set to active
-			$stmt="SELECT count(*) from servers where server_ip = '$rowx[0]' and active='Y' and active_agent_login_server='Y';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01023',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			$rowy=mysql_fetch_row($rslt);
-
-			### find out whether the server_updater is running
-			$stmt="SELECT count(*) from server_updater where server_ip = '$rowx[0]' and last_update > '$past_minutes_date';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01024',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			$rowz=mysql_fetch_row($rslt);
-
-			$pb_log .= "$phones_auto[$pb]|$rowx[0]|$row[0]|$rowy[0]|$rowz[0]|  ";
-
-			if ( ($rowy[0] > 0) && ($rowz[0] > 0) )
-				{
-				if ( ($pb_count >= $row[0]) || (strlen($pb_server_ip) < 4) )
-					{
-					$pb_count=$row[0];
-					$pb_server_ip=$rowx[0];
-					$phone_login=$phones_auto[$pb];
-					}
-				}
-			$pb++;
-			}
-		echo "<!-- Téléphones balance selection: $phone_login|$pb_server_ip|$past_minutes_date|     |$pb_log -->\n";
-		}
-	echo "<title>Agent web client</title>\n";
-	$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01025',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$row=mysql_fetch_row($rslt);
-	$extension=$row[0];
-	$dialplan_number=$row[1];
-	$voicemail_id=$row[2];
-	$phone_ip=$row[3];
-	$computer_ip=$row[4];
-	$server_ip=$row[5];
-	$login=$row[6];
-	$pass=$row[7];
-	$status=$row[8];
-	$active=$row[9];
-	$phone_type=$row[10];
-	$fullname=$row[11];
-	$company=$row[12];
-	$picture=$row[13];
-	$messages=$row[14];
-	$old_messages=$row[15];
-	$protocol=$row[16];
-	$local_gmt=$row[17];
-	$ASTmgrUSERNAME=$row[18];
-	$ASTmgrSECRET=$row[19];
-	$login_user=$row[20];
-	$login_pass=$row[21];
-	$login_campaign=$row[22];
-	$park_on_extension=$row[23];
-	$conf_on_extension=$row[24];
-	$VICIDiaL_park_on_extension=$row[25];
-	$VICIDiaL_park_on_filename=$row[26];
-	$monitor_prefix=$row[27];
-	$recording_exten=$row[28];
-	$voicemail_exten=$row[29];
-	$voicemail_dump_exten=$row[30];
-	$ext_context=$row[31];
-	$dtmf_send_extension=$row[32];
-	$call_out_number_group=$row[33];
-	$client_browser=$row[34];
-	$install_directory=$row[35];
-	$local_web_callerID_URL=$row[36];
-	$VICIDiaL_web_URL=$row[37];
-	$AGI_call_logging_enabled=$row[38];
-	$user_switching_enabled=$row[39];
-	$conferencing_enabled=$row[40];
-	$admin_hangup_enabled=$row[41];
-	$admin_hijack_enabled=$row[42];
-	$admin_monitor_enabled=$row[43];
-	$call_parking_enabled=$row[44];
-	$updater_check_enabled=$row[45];
-	$AFLogging_enabled=$row[46];
-	$QUEUE_ACTION_enabled=$row[47];
-	$CallerID_popup_enabled=$row[48];
-	$voicemail_button_enabled=$row[49];
-	$enable_fast_refresh=$row[50];
-	$fast_refresh_rate=$row[51];
-	$enable_persistant_mysql=$row[52];
-	$auto_dial_next_number=$row[53];
-	$VDstop_rec_after_each_call=$row[54];
-	$DBX_server=$row[55];
-	$DBX_database=$row[56];
-	$DBX_user=$row[57];
-	$DBX_pass=$row[58];
-	$DBX_port=$row[59];
-	$outbound_cid=$row[65];
-	$enable_sipsak_messages=$row[66];
-
-	$no_empty_session_warnings=0;
-	if ($phone_login == 'nophone')
-		{
-		$no_empty_session_warnings=1;
-		}
-	if ($PhonESComPIP == '1')
-		{
-		if (strlen($computer_ip) < 4)
-			{
-			$stmt="UPDATE phones SET computer_ip='$ip' where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01026',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			}
-		}
-	if ($PhonESComPIP == '2')
-		{
-		$stmt="UPDATE phones SET computer_ip='$ip' where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01027',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		}
-	if ($clientDST)
-		{
-		$local_gmt = ($local_gmt + $isdst);
-		}
-	if ($protocol == 'EXTERNAL')
-		{
-		$protocol = 'Local';
-		$extension = "$dialplan_number$AT$ext_context";
-		}
-	$SIP_user = "$protocol/$extension";
-	$SIP_user_DiaL = "$protocol/$extension";
-	if ( (ereg('8300',$dialplan_number)) and (strlen($dialplan_number)<5) and ($protocol == 'Local') )
-		{
-		$SIP_user = "$protocol/$extension$VD_login";
-		}
-
-	$stmt="SELECT asterisk_version from servers where server_ip='$server_ip';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01028',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$row=mysql_fetch_row($rslt);
-	$asterisk_version=$row[0];
-
-	# If a park extension is not set, use the default one
-	if ( (strlen($park_ext)>0) && (strlen($park_file_name)>0) )
-		{
-		$VICIDiaL_park_on_extension = "$park_ext";
-		$VICIDiaL_park_on_filename = "$park_file_name";
-		echo "<!-- ATTENTE SPECIFIQUE:  |$VICIDiaL_park_on_extension|$VICIDiaL_park_on_filename| -->\n";
-		}
-	echo "<!-- ATTENTE PAR DEFAUT: |$VICIDiaL_park_on_extension|$VICIDiaL_park_on_filename| -->\n";
-
-	# If a web form address is not set, use the default one
-	if (strlen($web_form_address)>0)
-		{
-		$VICIDiaL_web_form_address = "$web_form_address";
-		echo "<!-- FORMULAIRE SPECIFIQUE :   |$VICIDiaL_web_form_address| -->\n";
-		}
-	else
-		{
-		$VICIDiaL_web_form_address = "$VICIDiaL_web_URL";
-		print "<!-- FORMULAIRE PAR DEFAUT:  |$VICIDiaL_web_form_address| -->\n";
-		$VICIDiaL_web_form_address_enc = rawurlencode($VICIDiaL_web_form_address);
-		}
-	$VICIDiaL_web_form_address_enc = rawurlencode($VICIDiaL_web_form_address);
-
-	# If a web form address two is not set, use the first one
-	if (strlen($web_form_address_two)>0)
-		{
-		$VICIDiaL_web_form_address_two = "$web_form_address_two";
-		echo "<!-- FORMULAIRE SPECIFIQUE  2:   |$VICIDiaL_web_form_address_two| -->\n";
-		}
-	else
-		{
-		$VICIDiaL_web_form_address_two = "$VICIDiaL_web_form_address";
-		echo "<!-- FORMULAIRE PAR DEFAUT 2:  |$VICIDiaL_web_form_address_two| -->\n";
-		$VICIDiaL_web_form_address_two_enc = rawurlencode($VICIDiaL_web_form_address_two);
-		}
-	$VICIDiaL_web_form_address_two_enc = rawurlencode($VICIDiaL_web_form_address_two);
-
-	# If closers are allowed sur this campaign
-	if ($allow_closers=="Y")
-		{
-		$VICIDiaL_allow_closers = 1;
-		echo "<!-- CAMPAGNE PERMETANT LES CLOSERS:    |$VICIDiaL_allow_closers| -->\n";
-		}
-	else
-		{
-		$VICIDiaL_allow_closers = 0;
-		echo "<!-- CAMPAGNE NE PERMETANT PAS LES CLOSERS: |$VICIDiaL_allow_closers| -->\n";
-		}
-
-
-	$session_ext = eregi_replace("[^a-z0-9]", "", $extension);
-	if (strlen($session_ext) > 10) {$session_ext = substr($session_ext, 0, 10);}
-	$session_rand = (rand(1,9999999) + 10000000);
-	$session_name = "$StarTtimE$US$session_ext$session_rand";
-
-	if ($webform_sessionname)
-		{$webform_sessionname = "&session_name=$session_name";}
-	else
-		{$webform_sessionname = '';}
-
-	$stmt="DELETE from web_client_sessions where start_time < '$past_month_date' and extension='$extension' and server_ip = '$server_ip' and program = 'vicidial';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01029',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-
-	$stmt="INSERT INTO web_client_sessions values('$extension','$server_ip','vicidial','$NOW_TIME','$session_name');";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01030',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-
-	if ( ( ($campaign_allow_inbound == 'Y') and ($dial_method != 'MANUAL') ) || ($campaign_leads_to_call > 0) || (ereg('Y',$no_hopper_leads_logins)) )
-		{
-		### insert an entry into the user log for the login event
-		$stmt = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$VD_login','LOGIN','$VD_campaign','$NOW_TIME','$StarTtimE','$VU_user_group')";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01031',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-
-		##### check to see if the user has a conf extension already, this happens if they previously exited uncleanly
-		$stmt="SELECT conf_exten FROM vicidial_conferences where extension='$SIP_user' and server_ip = '$server_ip' LIMIT 1;";
-		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01032',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		if ($DB) {echo "$stmt\n";}
-		$prev_login_ct = mysql_num_rows($rslt);
-		$i=0;
-		while ($i < $prev_login_ct)
-			{
-			$row=mysql_fetch_row($rslt);
-			$session_id =$row[0];
-			$i++;
-			}
-		if ($prev_login_ct > 0)
-			{echo "<!-- UTILISER LA SALLE MEETME PRECEDENTE - $session_id - $NOW_TIME - $SIP_user -->\n";}
-		else
-			{
-			##### grab the next available vicidial_conference room and reserve it
-			$stmt="SELECT count(*) FROM vicidial_conferences where server_ip='$server_ip' and ((extension='') or (extension is null));";
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01033',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			$row=mysql_fetch_row($rslt);
-			if ($row[0] > 0)
-				{
-				$stmt="UPDATE vicidial_conferences set extension='$SIP_user', leave_3way='0' where server_ip='$server_ip' and ((extension='') or (extension is null)) limit 1;";
-					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01034',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-
-				$stmt="SELECT conf_exten from vicidial_conferences where server_ip='$server_ip' and ( (extension='$SIP_user') or (extension='$VD_login') );";
-					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01035',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$row=mysql_fetch_row($rslt);
-				$session_id = $row[0];
-				}
-			echo "<!-- UTILISER UNE NOUVELLE SALLE MEETME - $session_id - $NOW_TIME - $SIP_user -->\n";
+			$useIE=0;
+			echo "<!-- client web browser used: W3C-Compliant |$browser|$useIE| -->\n";
 			}
 
-		### mark leads that were not dispositioned during previous calls as ERI
-		$stmt="UPDATE vicidial_list set status='ERI', user='' where status IN('QUEUE','INCALL') and user ='$VD_login';";
+		$StarTtimE = date("U");
+		$NOW_TIME = date("Y-m-d H:i:s");
+		##### Agent is going to log in so insert the vicidial_agent_log entry now
+		$stmt="INSERT INTO vicidial_agent_log (user,server_ip,event_time,campaign_id,pause_epoch,pause_sec,wait_epoch,user_group,sub_status) values('$VD_login','$server_ip','$NOW_TIME','$VD_campaign','$StarTtimE','0','$StarTtimE','$VU_user_group','LOGIN');";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01036',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01050',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$affected_rows = mysql_affected_rows($link);
-		echo "<!-- vieille FILE D'ATTENTE et liste retournée par INCALL:   |$affected_rows| -->\n";
+		$agent_log_id = mysql_insert_id($link);
+		echo "<!-- vicidial_agent_log record inserted: |$affected_rows|$agent_log_id| -->\n";
 
-		$stmt="DELETE from vicidial_hopper where status IN('QUEUE','INCALL','DONE') and user ='$VD_login';";
+		##### update vicidial_campaigns to show agent has logged in
+		$stmt="UPDATE vicidial_campaigns set campaign_logindate='$NOW_TIME' where campaign_id='$VD_campaign';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01037',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$affected_rows = mysql_affected_rows($link);
-		echo "<!-- vieille FILE D'ATTENTE et liste predictive retourné par INCALL: |$affected_rows| -->\n";
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01064',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		$VCaffected_rows = mysql_affected_rows($link);
+		echo "<!-- vicidial_campaigns campaign_logindate updated: |$VCaffected_rows|$NOW_TIME| -->\n";
 
-		$stmt="DELETE from vicidial_live_agents where user ='$VD_login';";
+		if ($enable_queuemetrics_logging > 0)
+			{
+			$StarTtimEpause = ($StarTtimE + 1);
+			$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+			mysql_select_db("$queuemetrics_dbname", $linkB);
+
+			$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimEpause',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEREASON',data1='LOGIN',serverid='$queuemetrics_log_id';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $linkB);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01063',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$affected_rows = mysql_affected_rows($linkB);
+			echo "<!-- queue_log PAUSEREASON LOGIN entry added: $VD_login|$affected_rows -->\n";
+
+			mysql_close($linkB);
+			mysql_select_db("$VARDB_database", $link);
+			}
+
+		$stmt="UPDATE vicidial_live_agents SET agent_log_id='$agent_log_id' where user='$VD_login';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01038',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$affected_rows = mysql_affected_rows($link);
-		echo "<!-- supression des anciens enregistrements vicidial_live_agents: |$affected_rows| -->\n";
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01061',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		$VLAaffected_rows_update = mysql_affected_rows($link);
 
-		$stmt="DELETE from vicidial_live_inbound_agents where user ='$VD_login';";
+		$stmt="UPDATE vicidial_users SET shift_override_flag='0' where user='$VD_login' and shift_override_flag='1';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01039',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$affected_rows = mysql_affected_rows($link);
-		echo "<!-- old vicidial_live_inbound_agents records cleared: |$affected_rows| -->\n";
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01057',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		$VUaffected_rows = mysql_affected_rows($link);
 
-	#	echo "<B>You have logged in as user: $VD_login sur phone: $SIP_user Campagne:: $VD_campaign</B><BR>\n";
-		$VICIDiaL_is_logged_in=1;
+		$S='*';
+		$D_s_ip = explode('.', $server_ip);
+		if (strlen($D_s_ip[0])<2) {$D_s_ip[0] = "0$D_s_ip[0]";}
+		if (strlen($D_s_ip[0])<3) {$D_s_ip[0] = "0$D_s_ip[0]";}
+		if (strlen($D_s_ip[1])<2) {$D_s_ip[1] = "0$D_s_ip[1]";}
+		if (strlen($D_s_ip[1])<3) {$D_s_ip[1] = "0$D_s_ip[1]";}
+		if (strlen($D_s_ip[2])<2) {$D_s_ip[2] = "0$D_s_ip[2]";}
+		if (strlen($D_s_ip[2])<3) {$D_s_ip[2] = "0$D_s_ip[2]";}
+		if (strlen($D_s_ip[3])<2) {$D_s_ip[3] = "0$D_s_ip[3]";}
+		if (strlen($D_s_ip[3])<3) {$D_s_ip[3] = "0$D_s_ip[3]";}
+		$server_ip_dialstring = "$D_s_ip[0]$S$D_s_ip[1]$S$D_s_ip[2]$S$D_s_ip[3]$S";
 
-		### set the callerID for manager middleware-app to connect the phone to the user
-		$SIqueryCID = "S$CIDdate$session_id";
-
-		#############################################
-		##### START SYSTEM_SETTINGS LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,vicidial_agent_disable,allow_sipsak_messages FROM system_settings;";
+		##### grab the datails of all active scripts in the system
+		$stmt="SELECT script_id,script_name FROM vicidial_scripts WHERE active='Y' order by script_id limit 1000;";
 		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01040',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01051',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
-		$qm_conf_ct = mysql_num_rows($rslt);
-		if ($qm_conf_ct > 0)
+		$MM_scripts = mysql_num_rows($rslt);
+		$e=0;
+		while ($e < $MM_scripts)
 			{
 			$row=mysql_fetch_row($rslt);
-			$enable_queuemetrics_logging =	$row[0];
-			$queuemetrics_server_ip	=		$row[1];
-			$queuemetrics_dbname =			$row[2];
-			$queuemetrics_login	=			$row[3];
-			$queuemetrics_pass =			$row[4];
-			$queuemetrics_log_id =			$row[5];
-			$vicidial_agent_disable =		$row[6];
-			$allow_sipsak_messages =		$row[7];
+			$MMscriptid[$e] =$row[0];
+			$MMscriptname[$e] = urlencode($row[1]);
+			$MMscriptids = "$MMscriptids'$MMscriptid[$e]',";
+			$MMscriptnames = "$MMscriptnames'$MMscriptname[$e]',";
+			$e++;
 			}
-		##### END QUEUEMETRICS LOGGING LOOKUP #####
-		###########################################
-
-		if ( ($enable_sipsak_messages > 0) and ($allow_sipsak_messages > 0) and (eregi("SIP",$protocol)) )
-			{
-			$SIPSAK_prefix = 'LIN-';
-			echo "<!-- sending login sipsak message: $SIPSAK_prefix$VD_campaign -->\n";
-			passthru("/usr/local/bin/sipsak -M -O desktop -B \"$SIPSAK_prefix$VD_campaign\" -r 5060 -s sip:$extension@$phone_ip > /dev/null");
-			$SIqueryCID = "$SIPSAK_prefix$VD_campaign$DS$CIDdate";
-			}
-
-		### insert a NOUVEAU record to the vicidial_manager table to be processed
-		$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$SIqueryCID','Channel: $SIP_user_DiaL','Context: $ext_context','Exten: $session_id','Priority: 1','Callerid: \"$SIqueryCID\" <$campaign_cid>','','','','','');";
-		if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01041',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$affected_rows = mysql_affected_rows($link);
-		echo "<!-- call placed to session_id: $session_id from phone: $SIP_user $SIP_user_DiaL -->\n";
-
-		##### grab the campaign_weight and number of calls today sur that campaign for the agent
-		$stmt="SELECT campaign_weight,calls_today FROM vicidial_campaign_agents where user='$VD_login' and campaign_id = '$VD_campaign';";
-		$rslt=mysql_query($stmt, $link);
-		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01042',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		if ($DB) {echo "$stmt\n";}
-		$vca_ct = mysql_num_rows($rslt);
-		if ($vca_ct > 0)
-			{
-			$row=mysql_fetch_row($rslt);
-			$campaign_weight =	$row[0];
-			$calls_today =		$row[1];
-			$i++;
-			}
-		else
-			{
-			$campaign_weight =	'0';
-			$calls_today =		'0';
-			$stmt="INSERT INTO vicidial_campaign_agents (user,campaign_id,campaign_rank,campaign_weight,calls_today) values('$VD_login','$VD_campaign','0','0','$calls_today');";
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01043',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			$affected_rows = mysql_affected_rows($link);
-			echo "<!-- new vicidial_campaign_agents record inserted: |$affected_rows| -->\n";
-			}
-
-		if ($auto_dial_level > 0)
-			{
-			echo "<!-- campagne configurée en auto_dial_level: $auto_dial_level -->\n";
-
-
-			$closer_chooser_string='';
-			$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial,manager_ingroup_set) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$closer_chooser_string','$user_level','$campaign_weight','$calls_today','$NOW_TIME','Y','N');";
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01044',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			$affected_rows = mysql_affected_rows($link);
-			echo "<!-- nouvel enregistrement vicidial_live_agents inséré: |$affected_rows| -->\n";
-
-			if ($enable_queuemetrics_logging > 0)
-				{
-				$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
-				mysql_select_db("$queuemetrics_dbname", $linkB);
-
-				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='AGENTLOGIN',data1='$VD_login@agents',serverid='$queuemetrics_log_id';";
-				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $linkB);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01045',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$affected_rows = mysql_affected_rows($linkB);
-				echo "<!-- queue_log AGENTLOGIN entry added: $VD_login|$affected_rows -->\n";
-
-				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
-				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $linkB);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01046',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$affected_rows = mysql_affected_rows($linkB);
-				echo "<!-- queue_log PAUSE entry added: $VD_login|$affected_rows -->\n";
-
-				mysql_close($linkB);
-				mysql_select_db("$VARDB_database", $link);
-				}
-
-
-			if ( ($campaign_allow_inbound == 'Y') and ($dial_method != 'MANUAL') )
-				{
-				print "<!-- CLOSER-type campaign -->\n";
-				}
-			}
-		else
-			{
-			print "<!-- campagne comfigurée en mode Appel Manuel: $auto_dial_level -->\n";
-
-			$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial,manager_ingroup_set) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$user_level', '$campaign_weight', '$calls_today','$NOW_TIME','N','N');";
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01047',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			$affected_rows = mysql_affected_rows($link);
-			echo "<!-- nouvel enregistrement vicidial_live_agents inséré: |$affected_rows| -->\n";
-
-			if ($enable_queuemetrics_logging > 0)
-				{
-				$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
-				mysql_select_db("$queuemetrics_dbname", $linkB);
-
-				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='$VD_campaign',agent='Agent/$VD_login',verb='AGENTLOGIN',data1='$VD_login@agents',serverid='$queuemetrics_log_id';";
-				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $linkB);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01048',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$affected_rows = mysql_affected_rows($linkB);
-				echo "<!-- queue_log AGENTLOGIN entry added: $VD_login|$affected_rows -->\n";
-
-				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
-				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $linkB);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01049',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$affected_rows = mysql_affected_rows($linkB);
-				echo "<!-- queue_log PAUSE entry added: $VD_login|$affected_rows -->\n";
-
-				mysql_close($linkB);
-				mysql_select_db("$VARDB_database", $link);
-				}
-			}
+		$MMscriptids = substr("$MMscriptids", 0, -1); 
+		$MMscriptnames = substr("$MMscriptnames", 0, -1); 
 		}
-	else
-		{
-		echo "<title>Agent web client: Ouverture de Campagne</title>\n";
-		echo "</head>\n";
-		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
-		echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
-		echo "<!-- ILPV -->\n";
-echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_fr/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Français <img src=\"../agc/images/fr.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";		echo "</TR></TABLE>\n";
-		echo "<B>Aucune fiche client n'est éligible pour cette campagne</B>\n";
-		echo "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
-		echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
-		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
-		echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
-		echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
-		echo "Ouverture de Session: <INPUT TYPE=TEXT NAME=VD_login SIZE=10 maxlength=20 VALUE=\"$VD_login\">\n<br>";
-		echo "Mot de passe: <INPUT TYPE=PASSWORD NAME=VD_pass SIZE=10 maxlength=20 VALUE=\"$VD_pass\"><br>\n";
-		echo "Campagne: <span id=\"LogiNCamPaigns\">$camp_form_code</span><br>\n";
-		echo "<INPUT TYPE=Submit NAME=VALIDER VALUE=VALIDER> &nbsp; \n";
-		echo "<span id=\"LogiNReseT\"></span>\n";
-		echo "</FORM>\n\n";
-		echo "</body>\n\n";
-		echo "</html>\n\n";
-		exit;
-		}
-	if (strlen($session_id) < 1)
-		{
-		echo "<title>Agent web client: Ouverture de Campagne</title>\n";
-		echo "</head>\n";
-		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\">Timeclock</A><BR>\n";
-		echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
-		echo "<!-- ILPV -->\n";
-echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../agc_fr/vicidial.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Français <img src=\"../agc/images/fr.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";		echo "</TR></TABLE>\n";
-		echo "<B>Sorry, there are no available sessions</B>\n";
-		echo "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
-		echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
-		echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
-		echo "<INPUT TYPE=HIDDEN NAME=phone_login VALUE=\"$phone_login\">\n";
-		echo "<INPUT TYPE=HIDDEN NAME=phone_pass VALUE=\"$phone_pass\">\n";
-		echo "Ouverture de Session: <INPUT TYPE=TEXT NAME=VD_login SIZE=10 maxlength=20 VALUE=\"$VD_login\">\n<br>";
-		echo "Mot de passe: <INPUT TYPE=PASSWORD NAME=VD_pass SIZE=10 maxlength=20 VALUE=\"$VD_pass\"><br>\n";
-		echo "Campagne: <span id=\"LogiNCamPaigns\">$camp_form_code</span><br>\n";
-		echo "<INPUT TYPE=Submit NAME=VALIDER VALUE=VALIDER> &nbsp; \n";
-		echo "<span id=\"LogiNReseT\"></span>\n";
-		echo "</FORM>\n\n";
-		echo "</body>\n\n";
-		echo "</html>\n\n";
-		exit;
-		}
-
-	if (ereg('MSIE',$browser)) 
-		{
-		$useIE=1;
-		echo "<!-- client web browser used: MSIE |$browser|$useIE| -->\n";
-		}
-	else 
-		{
-		$useIE=0;
-		echo "<!-- client web browser used: W3C-Compliant |$browser|$useIE| -->\n";
-		}
-
-	$StarTtimE = date("U");
-	$NOW_TIME = date("Y-m-d H:i:s");
-	##### Agent is going to log in so insert the vicidial_agent_log entry now
-	$stmt="INSERT INTO vicidial_agent_log (user,server_ip,event_time,campaign_id,pause_epoch,pause_sec,wait_epoch,user_group,sub_status) values('$VD_login','$server_ip','$NOW_TIME','$VD_campaign','$StarTtimE','0','$StarTtimE','$VU_user_group','LOGIN');";
-	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01050',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$affected_rows = mysql_affected_rows($link);
-	$agent_log_id = mysql_insert_id($link);
-	echo "<!-- vicidial_agent_log record inserted: |$affected_rows|$agent_log_id| -->\n";
-
-	##### update vicidial_campaigns to show agent has logged in
-	$stmt="UPDATE vicidial_campaigns set campaign_logindate='$NOW_TIME' where campaign_id='$VD_campaign';";
-	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01064',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$VCaffected_rows = mysql_affected_rows($link);
-	echo "<!-- vicidial_campaigns campaign_logindate updated: |$VCaffected_rows|$NOW_TIME| -->\n";
-
-	if ($enable_queuemetrics_logging > 0)
-		{
-		$StarTtimEpause = ($StarTtimE + 1);
-		$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
-		mysql_select_db("$queuemetrics_dbname", $linkB);
-
-		$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimEpause',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEREASON',data1='LOGIN',serverid='$queuemetrics_log_id';";
-		if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $linkB);
-	if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01063',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$affected_rows = mysql_affected_rows($linkB);
-		echo "<!-- queue_log PAUSEREASON LOGIN entry added: $VD_login|$affected_rows -->\n";
-
-		mysql_close($linkB);
-		mysql_select_db("$VARDB_database", $link);
-		}
-
-	$stmt="UPDATE vicidial_live_agents SET agent_log_id='$agent_log_id' where user='$VD_login';";
-	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01061',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$VLAaffected_rows_update = mysql_affected_rows($link);
-
-	$stmt="UPDATE vicidial_users SET shift_override_flag='0' where user='$VD_login' and shift_override_flag='1';";
-	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01057',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$VUaffected_rows = mysql_affected_rows($link);
-
-	$S='*';
-	$D_s_ip = explode('.', $server_ip);
-	if (strlen($D_s_ip[0])<2) {$D_s_ip[0] = "0$D_s_ip[0]";}
-	if (strlen($D_s_ip[0])<3) {$D_s_ip[0] = "0$D_s_ip[0]";}
-	if (strlen($D_s_ip[1])<2) {$D_s_ip[1] = "0$D_s_ip[1]";}
-	if (strlen($D_s_ip[1])<3) {$D_s_ip[1] = "0$D_s_ip[1]";}
-	if (strlen($D_s_ip[2])<2) {$D_s_ip[2] = "0$D_s_ip[2]";}
-	if (strlen($D_s_ip[2])<3) {$D_s_ip[2] = "0$D_s_ip[2]";}
-	if (strlen($D_s_ip[3])<2) {$D_s_ip[3] = "0$D_s_ip[3]";}
-	if (strlen($D_s_ip[3])<3) {$D_s_ip[3] = "0$D_s_ip[3]";}
-	$server_ip_dialstring = "$D_s_ip[0]$S$D_s_ip[1]$S$D_s_ip[2]$S$D_s_ip[3]$S";
-
-	##### grab the datails of all active scripts in the system
-	$stmt="SELECT script_id,script_name FROM vicidial_scripts WHERE active='Y' order by script_id limit 1000;";
-	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01051',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	if ($DB) {echo "$stmt\n";}
-	$MM_scripts = mysql_num_rows($rslt);
-	$e=0;
-	while ($e < $MM_scripts)
-		{
-		$row=mysql_fetch_row($rslt);
-		$MMscriptid[$e] =$row[0];
-		$MMscriptname[$e] = urlencode($row[1]);
-		$MMscriptids = "$MMscriptids'$MMscriptid[$e]',";
-		$MMscriptnames = "$MMscriptnames'$MMscriptname[$e]',";
-		$e++;
-		}
-	$MMscriptids = substr("$MMscriptids", 0, -1); 
-	$MMscriptnames = substr("$MMscriptnames", 0, -1); 
 	}
-}
 
 
 ### SCREEN WIDTH AND HEIGHT CALCULATIONS ###
@@ -2220,6 +2325,11 @@ if ($stretch_dimensions > 0)
 		}
 	if ($JS_browser_height >= 340)
 		{$BROWSER_HEIGHT = ($JS_browser_height - 40);}
+	}
+if ($agent_fullscreen=='Y')
+	{
+	$BROWSER_WIDTH = ($JS_browser_width - 10);
+	$BROWSER_HEIGHT = $JS_browser_height;
 	}
 $MASTERwidth=($BROWSER_WIDTH - 340);
 $MASTERheight=($BROWSER_HEIGHT - 200);
@@ -2251,6 +2361,8 @@ $CBheight =  ($MASTERheight + 50);	# 350 - Agent Callback, pause code, volume co
 $SSheight =  ($MASTERheight + 31);	# 331 - script content
 $HTheight =  ($MASTERheight + 10);	# 310 - transfer frame, callback comments and hotkey
 $BPheight =  ($MASTERheight - 250);	# 50 - bottom buffer, Agent Xfer Span
+$AVTheight = '0';
+if ($is_webphone) {$AVTheight = '20';}
 
 
 ################################################################
@@ -2408,6 +2520,7 @@ $CCAL_OUT .= "</table>";
 	var VU_agent_choose_ingroups_DV = '';
 	var agent_choose_territories = '<?php echo $VU_agent_choose_territories ?>';
 	var agent_select_territories = '<?php echo $agent_select_territories ?>';
+	var agent_choose_blended = '<?php echo $VU_agent_choose_blended ?>';
 	var VU_closer_campaigns = '<?php echo $VU_closer_campaigns ?>';
 	var CallBackDatETimE = '';
 	var CallBackrecipient = '';
@@ -2538,6 +2651,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var dial_prefix = '<?php echo $dial_prefix ?>';
 	var three_way_dial_prefix = '<?php echo $three_way_dial_prefix ?>';
 	var campaign_cid = '<?php echo $campaign_cid ?>';
+	var use_custom_cid = '<?php echo $use_custom_cid ?>';
 	var campaign_vdad_exten = '<?php echo $campaign_vdad_exten ?>';
 	var campaign_leads_to_call = '<?php echo $campaign_leads_to_call ?>';
 	var epoch_sec = <?php echo $StarTtimE ?>;
@@ -2748,7 +2862,24 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var timer_action='';
 	var timer_action_message='';
 	var timer_action_seconds='';
+	var is_webphone='<?php echo $is_webphone ?>';
+	var WebPhonEurl='<?php echo $WebPhonEurl ?>';
 	var pause_code_counter=1;
+	var agent_call_log_view='<?php echo $agent_call_log_view ?>';
+	var scheduled_callbacks_alert='<?php echo $scheduled_callbacks_alert ?>';
+	var scheduled_callbacks_count='<?php echo $scheduled_callbacks_count ?>';
+	var tmp_vicidial_id='';
+	var agent_xfer_consultative='<?php echo $agent_xfer_consultative ?>';
+	var agent_xfer_dial_override='<?php echo $agent_xfer_dial_override ?>';
+	var agent_xfer_vm_transfer='<?php echo $agent_xfer_vm_transfer ?>';
+	var agent_xfer_blind_transfer='<?php echo $agent_xfer_blind_transfer ?>';
+	var agent_xfer_dial_with_customer='<?php echo $agent_xfer_dial_with_customer ?>';
+	var agent_xfer_park_customer_dial='<?php echo $agent_xfer_park_customer_dial ?>';
+	var EAphone_code='';
+	var EAphone_number='';
+	var EAalt_phone_notes='';
+	var EAalt_phone_active='';
+	var EAalt_phone_count='';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"../agc/images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"../agc/images/vdc_LB_resume.gif\" border=0 alt=\"Résumé\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"../agc/images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"../agc/images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Résumé\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"../agc/images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"../agc/images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Résumé\">";
@@ -3030,6 +3161,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				{threeway_cid = outbound_cid;}
 			if (three_way_call_cid == 'CUSTOMER')
 				{threeway_cid = document.vicidial_form.phone_number.value;}
+			if (three_way_call_cid == 'CUSTOM_CID')
+				{threeway_cid = document.vicidial_form.security_phrase.value;}
 			if (three_way_call_cid == 'AGENT_CHOOSE')
 				{
 				threeway_cid = cid_choice;
@@ -3428,7 +3561,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 							dialedcall_send_hangup();
 							}
-						if ( (APIStatuS.length < 10) && (APIStatuS.length > 0) && (AgentDispoing > 0) )
+						if ( (APIStatuS.length < 10) && (APIStatuS.length > 0) && (AgentDispoing > 1) )
 							{
 							document.vicidial_form.DispoSelection.value = APIStatuS;
 							DispoSelect_submit();
@@ -3515,7 +3648,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						if (InGroupChange > 0)
 							{
 							var external_blended = InGroupChangeBlend;
-							var external_igb_set_user = InGroupChangeUser;
+							var external_igb_set_user = InGroupChangeUtilisateur;
 							external_igb_set_name = InGroupChangeName;
 							manager_ingroups_set=1;
 
@@ -3692,11 +3825,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		{
 		if (inOUT == 'OUT')
 			{
-			var tmp_vicidial_id = document.vicidial_form.uniqueid.value;
+			tmp_vicidial_id = document.vicidial_form.uniqueid.value;
 			}
 		else
 			{
-			var tmp_vicidial_id = 'IN';
+			tmp_vicidial_id = 'IN';
 			}
 		var xmlhttp=false;
 		/*@cc_on @*/
@@ -3881,7 +4014,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				no_delete_VDAC=0;
 				if (taskvar == 'XfeRVMAIL')
 					{
-					var blindxferdialstring = campaign_am_message_exten;
+					var blindxferdialstring = campaign_am_message_exten + '*' + campaign + '*' + document.vicidial_form.phone_code.value + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value;
 					no_delete_VDAC=1;
 					}
 				if (blindxferdialstring.length<'2')
@@ -4014,7 +4147,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					if (XFRDop == "NeWSessioN")
 						{
 						threeway_end=1;
-						document.vicidial_form.callchannel.value = '';
+						document.getElementById("callchannel").innerHTML = '';
 						document.vicidial_form.callserverip.value = '';
 						dialedcall_send_hangup();
 
@@ -4077,7 +4210,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		if ( (taskvar == 'XfeRLOCAL') || (taskvar == 'XfeRBLIND') || (taskvar == 'XfeRVMAIL') )
 			{
 			if (auto_dial_level == 0) {RedirecTxFEr = 1;}
-			document.vicidial_form.callchannel.value = '';
+			document.getElementById("callchannel").innerHTML = '';
 			document.vicidial_form.callserverip.value = '';
 			if( document.images ) { document.images['livecall'].src = image_livecall_OFF.src;}
 		//	alert(RedirecTxFEr + "|" + auto_dial_level);
@@ -4289,12 +4422,38 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				{ 
 				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
 					{
+					var CBpre = '';
+					var CBpost = '';
+
 				//	alert(xmlhttp.responseText);
-					var CBcounT = xmlhttp.responseText;
+					var CBcounTtotal = xmlhttp.responseText;
+					var CBcounTtotal_array=CBcounTtotal.split("|");
+					var CBcounT = CBcounTtotal_array[0];
+					if (scheduled_callbacks_count='LIVE')
+						{CBcounT = CBcounTtotal_array[1];}
 					if (CBcounT == 0) {var CBprint = "NO";}
-					else {var CBprint = CBcounT;}
-						document.getElementById("CBstatusSpan").innerHTML ="<a href=\"#\" onclick=\"CalLBacKsLisTCheck();return false;\">" + CBprint + " RAPPELS EN COURS</a>";
-						
+					else 
+						{
+						var CBprint = CBcounT;
+
+						if (scheduled_callbacks_alert == 'BLINK')
+							{
+							CBpre = '<BLINK>';
+							CBpost = '</BLINK>';
+							}
+						if (scheduled_callbacks_alert == 'RED')
+							{
+							CBpre = '<b><font color=red>';
+							CBpost = '</font></b>';
+							}
+						if (scheduled_callbacks_alert == 'BLINK_RED')
+							{
+							CBpre = '<b><font color=red><BLINK>';
+							CBpost = '</BLINK></font></b>';
+							}
+						}
+
+					document.getElementById("CBstatusSpan").innerHTML ="<a href=\"#\" onclick=\"CalLBacKsLisTCheck();return false;\">" + CBpre + '' + CBprint + '' + " RAPPELS EN COURS" + CBpost + "</a>";	
 					}
 				}
 			delete xmlhttp;
@@ -4350,7 +4509,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var CB_calls = all_CBs_array[0];
 						var loop_ct=0;
 						var conv_start=0;
-						var CB_HTML = "<table width=610><tr bgcolor=<?php echo $SCRIPT_COLOR ?>><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> APPELBACK DATE/TIME</td><td><font class=\"log_title\">NOMBRE</td><td><font class=\"log_title\">NAME</td><td><font class=\"log_title\">  STATUT</td><td align=right><font class=\"log_title\">CAMPAIGN</td><td><font class=\"log_title\">LAST APPEL DATE/TIME</td><td align=left><font class=\"log_title\"> COMMENTS</td></tr>"
+						var CB_HTML = "<table width=<?php echo $HCwidth ?>><tr bgcolor=<?php echo $SCRIPT_COLOR ?>><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> APPELBACK DATE/TIME</td><td><font class=\"log_title\">NOMBRE</td><td><font class=\"log_title\">NAME</td><td><font class=\"log_title\">  STATUT</td><td align=right><font class=\"log_title\">CAMPAIGN</td><td><font class=\"log_title\">LAST APPEL DATE/TIME</td><td align=left><font class=\"log_title\"> COMMENTS</td></tr>"
 						while (loop_ct < CB_calls)
 							{
 							loop_ct++;
@@ -4415,7 +4574,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 // ################################################################################
 // Open page to enter details for a new manual dial lead
-	function NeWManuaLDiaLCalL(TVfast)
+	function NeWManuaLDiaLCalL(TVfast,TVphone_code,TVphone_number)
 		{
 		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
 			{
@@ -4429,6 +4588,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				}
 			else
 				{
+				if (TVfast=='CALLLOG')
+					{
+					hideDiv('CalLLoGDisplaYBox');
+					hideDiv('LeaDInfOBox');
+					document.vicidial_form.MDDiaLCodE.value = TVphone_code;
+					document.vicidial_form.MDPhonENumbeR.value = TVphone_number;
+					}
 				if (agent_allow_group_alias == 'Y')
 					{
 					document.getElementById("ManuaLDiaLGrouPSelecteD").innerHTML = "<font size=2 face=\"Arial,Helvetica\">Groupe Alias: " + active_group_alias + "</font>";
@@ -4602,7 +4768,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							
 							if (XDalert == 'ERROR')
 								{
-								var DiaLAlerTMessagE = "Call Rejected: " + XDchannel;
+								var XDerrorDesc = MDlookResponse_array[3];
+								var DiaLAlerTMessagE = "Call Rejected: " + XDchannel + "\n" + XDerrorDesc;
 								TimerActionRun("DiaLAlerT",DiaLAlerTMessagE);
 								}
 							if ( (XDchannel.match(regMDL)) && (asterisk_version != '1.0.8') && (asterisk_version != '1.0.9') && (MD_ring_secondS < 10) )
@@ -4645,7 +4812,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							
 							if (MDalert == 'ERROR')
 								{
-								var DiaLAlerTMessagE = "Call Rejected: " + MDchannel;
+								var MDerrorDesc = MDlookResponse_array[3];
+								var DiaLAlerTMessagE = "Call Rejected: " + MDchannel + "\n" + MDerrorDesc;
 								TimerActionRun("DiaLAlerT",DiaLAlerTMessagE);
 								}
 							if ( (MDchannel.match(regMDL)) && (asterisk_version != '1.0.8') && (asterisk_version != '1.0.9') )
@@ -4658,7 +4826,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								custchannellive=1;
 
 								document.vicidial_form.uniqueid.value		= MDlookResponse_array[0];
-								document.vicidial_form.callchannel.value	= MDlookResponse_array[1];
+								document.getElementById("callchannel").innerHTML	= MDlookResponse_array[1];
 								lastcustchannel = MDlookResponse_array[1];
 								if( document.images ) { document.images['livecall'].src = image_livecall_ON.src;}
 								document.vicidial_form.SecondS.value		= 0;
@@ -5901,10 +6069,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			else
 				{var call_prefix = dial_prefix;}
 
-			manDiaLonly_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLonly&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&lead_id=" + document.vicidial_form.lead_id.value + "&phone_number=" + manDiaLonly_num + "&phone_code=" + document.vicidial_form.phone_code.value + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&omit_phone_code=" + omit_phone_code + "&usegroupalias=" + usegroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&dial_method=" + dial_method + "&agent_log_id=" + agent_log_id;
+			manDiaLonly_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLonly&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&lead_id=" + document.vicidial_form.lead_id.value + "&phone_number=" + manDiaLonly_num + "&phone_code=" + document.vicidial_form.phone_code.value + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&omit_phone_code=" + omit_phone_code + "&usegroupalias=" + usegroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&dial_method=" + dial_method + "&agent_log_id=" + agent_log_id + "&security=" + document.vicidial_form.security_phrase.value;
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-			xmlhttp.send(manDiaLonly_query); 
+			xmlhttp.send(manDiaLonly_query);
 			xmlhttp.onreadystatechange = function() 
 				{ 
 				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
@@ -5915,7 +6083,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					MDOnextResponse = xmlhttp.responseText;
 
 					var MDOnextResponse_array=MDOnextResponse.split("\n");
-					MDnextCID =	MDOnextResponse_array[0];
+					MDnextCID =		MDOnextResponse_array[0];
+					agent_log_id =	MDOnextResponse_array[1];
 					if (MDnextCID == " APPEL NOT PLACED")
 						{
 						alert("l'appel n'a pas été composé, une erreur s'est produite:\n" + MDOnextResponse);
@@ -6201,7 +6370,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						else
 							{
 				//	alert("Channel has changed from:\n" + lastcustchannel + '|' + lastcustserverip + "\nto:\n" + reVDIC_data_VDAC[3] + '|' + reVDIC_data_VDAC[4]);
-							document.vicidial_form.callchannel.value	= reVDIC_data_VDAC[3];
+							document.getElementById("callchannel").innerHTML	= reVDIC_data_VDAC[3];
 							lastcustchannel = reVDIC_data_VDAC[3];
 							document.vicidial_form.callserverip.value	= reVDIC_data_VDAC[4];
 							lastcustserverip = reVDIC_data_VDAC[4];
@@ -6316,7 +6485,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			{
 			all_record = 'NO';
 			all_record_count=0;
-			document.vicidial_form.lead_id.value = '';
+		//	document.vicidial_form.lead_id.value = '';
 			var xmlhttprequestcheckauto=false;
 			/*@cc_on @*/
 			/*@if (@_jscript_version >= 5)
@@ -6436,7 +6605,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							document.vicidial_form.uniqueid.value		= VDIC_data_VDAC[1];
 							CIDcheck									= VDIC_data_VDAC[2];
 							CalLCID										= VDIC_data_VDAC[2];
-							document.vicidial_form.callchannel.value	= VDIC_data_VDAC[3];
+							document.getElementById("callchannel").innerHTML	= VDIC_data_VDAC[3];
 							lastcustchannel = VDIC_data_VDAC[3];
 							document.vicidial_form.callserverip.value	= VDIC_data_VDAC[4];
 							lastcustserverip = VDIC_data_VDAC[4];
@@ -7281,7 +7450,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	function DispoHanguPAgaiN() 
 	{
 	form_cust_channel = AgaiNHanguPChanneL;
-	document.vicidial_form.callchannel.value = AgaiNHanguPChanneL;
+	document.getElementById("callchannel").innerHTML = AgaiNHanguPChanneL;
 	document.vicidial_form.callserverip.value = AgaiNHanguPServeR;
 	lastcustchannel = AgaiNHanguPChanneL;
 	lastcustserverip = AgaiNHanguPServeR;
@@ -7333,7 +7502,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			{var group = VDCL_group_id;}
 		else
 			{var group = campaign;}
-		var form_cust_channel = document.vicidial_form.callchannel.value;
+		var form_cust_channel = document.getElementById("callchannel").innerHTML;
 		var form_cust_serverip = document.vicidial_form.callserverip.value;
 		var customer_channel = lastcustchannel;
 		var customer_server_ip = lastcustserverip;
@@ -7448,7 +7617,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				}
 
 		//  DEACTIVATE CHANNEL-DEPENDANT BUTTONS AND VARIABLES
-			document.vicidial_form.callchannel.value = '';
+			document.getElementById("callchannel").innerHTML = '';
 			document.vicidial_form.callserverip.value = '';
 			lastcustchannel='';
 			lastcustserverip='';
@@ -7477,7 +7646,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				document.getElementById("ReQueueCall").innerHTML =  "<IMG SRC=\"../agc/images/vdc_LB_requeue_call_OFF.gif\" border=0 alt=\"Re-Queue Call\">";
 				}
 
-			document.vicidial_form.custdatetime.value		= '';
+			document.getElementById("custdatetime").innerHTML = ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';
 
 			if ( (auto_dial_level == 0) && (dial_method != 'INBOUND_MAN') )
 				{
@@ -7887,7 +8056,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		{
 		leaving_threeway=0;
 		blind_transfer=0;
-		document.vicidial_form.callchannel.value = '';
+		document.getElementById("callchannel").innerHTML = '';
 		document.vicidial_form.callserverip.value = '';
 		document.vicidial_form.xferchannel.value = '';
 		document.getElementById("DialWithCustomer").innerHTML ="<a href=\"#\" onclick=\"SendManualDial('YES');return false;\"><IMG SRC=\"../agc/images/vdc_XB_dialwithcustomer.gif\" border=0 alt=\"Appel Client\" style=\"vertical-align:middle\"></a>";
@@ -7929,7 +8098,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		leaving_threeway=0;
 		blind_transfer=0;
 		CheckDEADcallON=0;
-		document.vicidial_form.callchannel.value = '';
+		document.getElementById("callchannel").innerHTML = '';
 		document.vicidial_form.callserverip.value = '';
 		document.vicidial_form.xferchannel.value = '';
 		document.getElementById("DialWithCustomer").innerHTML ="<a href=\"#\" onclick=\"SendManualDial('YES');return false;\"><IMG SRC=\"../agc/images/vdc_XB_dialwithcustomer.gif\" border=0 alt=\"Appel Client\" style=\"vertical-align:middle\"></a>";
@@ -7968,7 +8137,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					}
 				if (xmlhttp) 
 					{ 
-					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&comments=" + CallBackCommenTs;
+					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&comments=" + CallBackCommenTs;
 					xmlhttp.open('POST', 'vdc_db_query.php');
 					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 					xmlhttp.send(DSupdate_query); 
@@ -8027,6 +8196,22 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				vtiger_callback_id='0';
 				recording_filename='';
 				recording_id='';
+				document.vicidial_form.uniqueid.value='';
+				MDuniqueid='';
+				XDuniqueid='';
+				tmp_vicidial_id='';
+				EAphone_code='';
+				EAphone_number='';
+				EAalt_phone_notes='';
+				EAalt_phone_active='';
+				EAalt_phone_count='';
+				XDnextCID='';
+				XDcheck = '';
+				MDnextCID='';
+				XD_live_customer_call = 0;
+				XD_live_call_secondS = 0;
+				MD_channel_look=0;
+				MD_ring_secondS=0;
 
 				if (manual_dial_in_progress==1)
 					{
@@ -8224,7 +8409,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		{
 		showDiv('CustomerGoneBox');
 
-		document.vicidial_form.callchannel.value = '';
+		document.getElementById("callchannel").innerHTML = '';
 		document.vicidial_form.callserverip.value = '';
 		document.getElementById("CustomerGoneChanneL").innerHTML = lastcustchannel;
 		if( document.images ) { document.images['livecall'].src = image_livecall_OFF.src;}
@@ -8652,56 +8837,61 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				}
 			else
 				{
-				var xmlhttp=false;
-				/*@cc_on @*/
-				/*@if (@_jscript_version >= 5)
-				// JScript gives us Conditional compilation, we can cope with old IE versions.
-				// and security blocked creation of the objects.
-				 try {
-				  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
-				 } catch (e) {
-				  try {
-				   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				  } catch (E) {
-				   xmlhttp = false;
-				  }
-				 }
-				@end @*/
-				if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+				if (alt_dial_status_display==1)
 					{
-					xmlhttp = new XMLHttpRequest();
+					alert("You are in ALT dial mode, you must finish the lead before logging out.\n" + reselect_alt_dial);
 					}
-				if (xmlhttp) 
-					{ 
-					VDlogout_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=userLOGout&format=text&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&agent_log_id=" + agent_log_id + "&no_delete_sessions=" + no_delete_sessions + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&LogouTKicKAlL=" + LogouTKicKAlL + "&ext_context=" + ext_context;
-					xmlhttp.open('POST', 'vdc_db_query.php'); 
-					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-					xmlhttp.send(VDlogout_query); 
-					xmlhttp.onreadystatechange = function() 
-						{ 
-						if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
-							{
-				//			alert(xmlhttp.responseText);
-							}
+				else
+					{
+					var xmlhttp=false;
+					/*@cc_on @*/
+					/*@if (@_jscript_version >= 5)
+					// JScript gives us Conditional compilation, we can cope with old IE versions.
+					// and security blocked creation of the objects.
+					 try {
+					  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+					 } catch (e) {
+					  try {
+					   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+					  } catch (E) {
+					   xmlhttp = false;
+					  }
+					 }
+					@end @*/
+					if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+						{
+						xmlhttp = new XMLHttpRequest();
 						}
-					delete xmlhttp;
+					if (xmlhttp) 
+						{ 
+						VDlogout_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=userLOGout&format=text&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&agent_log_id=" + agent_log_id + "&no_delete_sessions=" + no_delete_sessions + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&LogouTKicKAlL=" + LogouTKicKAlL + "&ext_context=" + ext_context;
+						xmlhttp.open('POST', 'vdc_db_query.php'); 
+						xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+						xmlhttp.send(VDlogout_query); 
+						xmlhttp.onreadystatechange = function() 
+							{ 
+							if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+								{
+					//			alert(xmlhttp.responseText);
+								}
+							}
+						delete xmlhttp;
+						}
+
+					hideDiv('MainPanel');
+					showDiv('LogouTBox');
+					var logout_content='';
+					if (tempreason=='SHIFT')
+						{logout_content='Votre Shift est au dessus ou a changé, vous avez été déconnecté de votre session<BR><BR>';}
+
+					document.getElementById("LogouTBoxLink").innerHTML = logout_content + "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + original_phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass + "\">APPUYER ICI POUR VOUS IDENTIFIER</a>\n";
+
+					logout_stop_timeouts = 1;
+						
+					//	window.location= agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass;
 					}
-
-				hideDiv('MainPanel');
-				showDiv('LogouTBox');
-				var logout_content='';
-				if (tempreason=='SHIFT')
-					{logout_content='Votre Shift est au dessus ou a changé, vous avez été déconnecté de votre session<BR><BR>';}
-
-				document.getElementById("LogouTBoxLink").innerHTML = logout_content + "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + original_phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass + "\">APPUYER ICI POUR VOUS IDENTIFIER</a>\n";
-
-				logout_stop_timeouts = 1;
-					
-				//	window.location= agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass;
-
 				}
 			}
-
 		}
 <?php
 if ($useIE > 0)
@@ -9430,6 +9620,23 @@ function phone_number_format(formatphone) {
 
 
 // ################################################################################
+// Open or close the webphone view sidebar
+	function webphoneOpen(WVlocation,WVoperation)
+		{
+		if (WVoperation=='open')
+			{
+			document.getElementById("webphoneLink").innerHTML = " &nbsp; <a href=\"#\" onclick=\"webphoneOpen('webphoneSpan','close');return false;\">WebTéléphone View -</a>";
+			showDiv(WVlocation);
+			}
+		else
+			{
+			document.getElementById("webphoneLink").innerHTML = " &nbsp; <a href=\"#\" onclick=\"webphoneOpen('webphoneSpan','open');return false;\">WebTéléphone View +</a>";
+			hideDiv(WVlocation);
+			}
+		}
+
+
+// ################################################################################
 // Populate the number to dial field with the selected user ID
 	function AgentsXferSelect(AXuser,AXlocation)
 		{
@@ -9502,6 +9709,104 @@ function phone_number_format(formatphone) {
 		AutoDial_ReSume_PauSe("VDADpause",'','','',"REQUEUE");
 
 		PauseCodeSelect_submit("RQUEUE");
+		}
+
+
+// ################################################################################
+// View Customer lead information
+	function VieWLeaDInfO(VLI_lead_id)
+		{
+		showDiv('LeaDInfOBox');
+
+		var xmlhttp=false;
+		/*@cc_on @*/
+		/*@if (@_jscript_version >= 5)
+		// JScript gives us Conditional compilation, we can cope with old IE versions.
+		// and security blocked creation of the objects.
+		 try {
+		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+		 } catch (e) {
+		  try {
+		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		  } catch (E) {
+		   xmlhttp = false;
+		  }
+		 }
+		@end @*/
+		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+			{
+			xmlhttp = new XMLHttpRequest();
+			}
+		if (xmlhttp) 
+			{ 
+			RAview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=LEADINFOview&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&lead_id=" + VLI_lead_id + "&campaign=" + campaign + "&stage=<?php echo $HCwidth ?>";
+			xmlhttp.open('POST', 'vdc_db_query.php'); 
+			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+			xmlhttp.send(RAview_query); 
+			xmlhttp.onreadystatechange = function() 
+				{ 
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+					{
+				//	alert(xmlhttp.responseText);
+					document.getElementById('LeaDInfOSpan').innerHTML = xmlhttp.responseText + "\n";
+					}
+				}
+			delete xmlhttp;
+			}
+		}
+
+
+// ################################################################################
+// Rafraichir the call log display
+	function VieWCalLLoG(logdate,formdate)
+		{
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
+			{
+			alert("YOU MUST BE PAUSED TO VIEW YOUR APPEL LOG");
+			}
+		else
+			{
+			showDiv('CalLLoGDisplaYBox');
+
+			if (formdate=='form')
+				{logdate = document.vicidial_form.calllogdate.value;}
+
+			var xmlhttp=false;
+			/*@cc_on @*/
+			/*@if (@_jscript_version >= 5)
+			// JScript gives us Conditional compilation, we can cope with old IE versions.
+			// and security blocked creation of the objects.
+			 try {
+			  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+			 } catch (e) {
+			  try {
+			   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+			  } catch (E) {
+			   xmlhttp = false;
+			  }
+			 }
+			@end @*/
+			if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+				{
+				xmlhttp = new XMLHttpRequest();
+				}
+			if (xmlhttp) 
+				{ 
+				RAview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=CALLLOGview&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&date=" + logdate + "&campaign=" + campaign + "&stage=<?php echo $HCwidth ?>";
+				xmlhttp.open('POST', 'vdc_db_query.php'); 
+				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+				xmlhttp.send(RAview_query); 
+				xmlhttp.onreadystatechange = function() 
+					{ 
+					if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+						{
+					//	alert(xmlhttp.responseText);
+						document.getElementById('CallLogSpan').innerHTML = xmlhttp.responseText + "\n";
+						}
+					}
+				delete xmlhttp;
+				}
+			}
 		}
 
 
@@ -9709,7 +10014,7 @@ else
 		{
 		if (taskaction == 'DiaLAlerT')
 			{
-			document.getElementById("TimerContentSpan").innerHTML = "<b>DIAL ALERT:<BR><BR>" + taskdialalert + "</b>";
+			document.getElementById("TimerContentSpan").innerHTML = "<b>DIAL ALERT:<BR><BR>" + taskdialalert.replace("\n","<BR>") + "</b>";
 
 			showDiv('TimerSpan');
 			}
@@ -9805,7 +10110,11 @@ else
 			hideDiv('AgentViewSpan');
 			hideDiv('AgentXferViewSpan');
 			hideDiv('TimerSpan');
+			hideDiv('CalLLoGDisplaYBox');
+			hideDiv('LeaDInfOBox');
 			hideDiv('agentdirectlink');
+			if (is_webphone!='Y')
+				{hideDiv('webphoneSpan');}
 			if (view_calls_in_queue_launch != '1')
 				{hideDiv('callsinqueuedisplay');}
 			if (agentonly_callbacks != '1')
@@ -9815,6 +10124,8 @@ else
 		//	if ( (agentcall_manual != '1') && (starting_dial_level > 0) )
 			if (agentcall_manual != '1')
 				{hideDiv('ManuaLDiaLButtons');}
+			if (agent_call_log_view != '1')
+				{hideDiv('CallLogButtons');}
 			if (callholdstatus != '1')
 				{hideDiv('AgentStatutCalls');}
 			if (agentcallsstatus != '1')
@@ -9831,7 +10142,18 @@ else
 				{document.getElementById("AgentViewLink").innerHTML = "";}
 			if (dispo_check_all_pause == '1')
 				{document.vicidial_form.DispoSelectStop.checked=true;}
-
+			if (agent_xfer_consultative < 1)
+				{hideDiv('consultative_checkbox');}
+			if (agent_xfer_dial_override < 1)
+				{hideDiv('dialoverride_checkbox');}
+			if (agent_xfer_vm_transfer < 1)
+				{hideDiv('DialBlindVMail');}
+			if (agent_xfer_blind_transfer < 1)
+				{hideDiv('DialBlindTransfer');}
+			if (agent_xfer_dial_with_customer < 1)
+				{hideDiv('DialWithCustomer');}
+			if (agent_xfer_park_customer_dial < 1)
+				{hideDiv('ParkCustomerDial');}
 			document.vicidial_form.LeadLookuP.checked=true;
 
 			if ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') )
@@ -9883,11 +10205,11 @@ else
 				}
 			if ( (VtigeRLogiNScripT == 'Y') && (VtigeREnableD > 0) )
 				{
-				document.getElementById("ScriptContents").innerHTML = "<iframe src=\"" + VtigeRurl + "/index.php?module=Users&action=Authenticate&return_module=Users&return_action=Login&user_name=" + user + "&user_password=" + pass + "&login_theme=softed&login_language=en_us\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"popupFrame\" name=\"popupFrame\" width=\"" + script_width + "\" height=\"" + script_height + "\" STYLE=\"z-index:17\"> </iframe> ";
+				document.getElementById("ScriptContents").innerHTML = "<iframe src=\"" + VtigeRurl + "/index.php?module=Utilisateurs&action=Authenticate&return_module=Utilisateurs&return_action=Ouverture de Session&user_name=" + user + "&user_password=" + pass + "&login_theme=softed&login_language=en_us\" style=\"background-color:transparent;z-index:17;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"popupFrame\" name=\"popupFrame\" width=\"" + script_width + "\" height=\"" + script_height + "\"> </iframe> ";
 				}
 			if ( (VtigeRLogiNScripT == 'NEW_WINDOW') && (VtigeREnableD > 0) )
 				{
-				var VtigeRall = VtigeRurl + "/index.php?module=Users&action=Authenticate&return_module=Users&return_action=Login&user_name=" + user + "&user_password=" + pass + "&login_theme=softed&login_language=en_us";
+				var VtigeRall = VtigeRurl + "/index.php?module=Utilisateurs&action=Authenticate&return_module=Utilisateurs&return_action=Ouverture de Session&user_name=" + user + "&user_password=" + pass + "&login_theme=softed&login_language=en_us";
 				
 				VtigeRwin =window.open(VtigeRall, web_form_target,'toolbar=1,location=1,directories=1,status=1,menubar=1,scrollbars=1,resizable=1,width=700,height=480');
 
@@ -9900,13 +10222,25 @@ else
 				var TEMP_crm_login_address = decoded;
 				TEMP_crm_login_address = TEMP_crm_login_address.replace(regWFAcustom, '');
 
-				CRMwin = window.open(TEMP_crm_login_address, 'CRMwin,toolbar=1,location=1,directories=1,status=1,menubar=1,scrollbars=1,resizable=1,width=700,height=480');
+				var CRMwin = 'CRMwin';
+				CRMwin = window.open(TEMP_crm_login_address, CRMwin,'toolbar=1,location=1,directories=1,status=1,menubar=1,scrollbars=1,resizable=1,width=700,height=480');
 
 				CRMwin.blur();
 				}
 			if (INgroupCOUNT > 0)
 				{
 				HidEGenDerPulldown();
+				}
+			if (is_webphone=='Y')
+				{
+				NoneInSession();
+				document.getElementById("NoneInSessionLink").innerHTML = "<a href=\"#\" onclick=\"NoneInSessionCalL();return false;\">Call Agent Webphone -></a>";
+				
+				var WebPhonEtarget = 'webphonewindow';
+
+			//	WebPhonEwin =window.open(WebPhonEurl, WebPhonEtarget,'toolbar=1,location=1,directories=1,status=1,menubar=1,scrollbars=1,resizable=1,width=180,height=270');
+
+			//	WebPhonEwin.blur();
 				}
 			VICIDiaL_closer_login_checked = 1;
 			}
@@ -9953,10 +10287,11 @@ else
 						}
 					}
 				}
-			if (AgentDispoing==1)	
+			if (AgentDispoing > 0)	
 				{
 				WaitingForNextStep=1;
 				check_for_conf_calls(session_id, '0');
+				AgentDispoing++;
 				}
 			if (logout_stop_timeouts==1)	{WaitingForNextStep=1;}
 			if ( (custchannellive < -30) && (lastcustchannel.length > 3) && (no_empty_session_warnings < 1) ) {CustomerChanneLGone();}
@@ -10243,8 +10578,7 @@ else
 			}
 
 			var customer_local_time = customer_date + " " + customer_time;
-			document.vicidial_form.custdatetime.value		= customer_local_time;
-
+			document.getElementById("custdatetime").innerHTML = customer_local_time;
 			}
 		start_all_refresh();
 		}
@@ -10563,7 +10897,8 @@ else
 
 <style type="text/css">
 <!--
-	div.scroll_callback {height: 300px; width: 620px; overflow: scroll;}
+	div.scroll_calllog {height: <?php echo $CQheight ?>px; width: <?php echo $MNwidth ?>px; overflow: scroll;}
+	div.scroll_callback {height: 300px; width: <?php echo $MNwidth ?>px; overflow: scroll;}
 	div.scroll_list {height: 400px; width: 140px; overflow: scroll;}
 	div.scroll_script {height: <?php echo $SSheight ?>px; width: <?php echo $SDwidth ?>px; background: #FFF5EC; overflow: auto; font-size: 12px;  font-family: sans-serif;}
 	div.noscroll_script {height: <?php echo $SSheight ?>px; width: <?php echo $SDwidth ?>px; background: #FFF5EC; overflow: hidden; font-size: 12px;  font-family: sans-serif;}
@@ -10594,57 +10929,253 @@ else
 <?php
 echo "</head>\n";
 
+$zi=1;
 
 ?>
 <BODY onload="begin_all_refresh();"  onunload="BrowserCloseLogout();">
 <FORM name=vicidial_form>
-<span style="position:absolute;left:0px;top:0px;z-index:2;" id="Header">
-<TABLE Border=0 CELLPADDING=0 CELLSPACING=0 BGCOLOR=white WIDTH=<?php echo $MNwidth ?> MARGINWIDTH=0 MARGINHEIGHT=0 LEFTMARGIN=0 TOPMARGIN=0 VALIGN=TOP ALIGN=LEFT>
-<TR VALIGN=TOP ALIGN=LEFT><TD COLSPAN=3 VALIGN=TOP ALIGN=LEFT>
-<INPUT TYPE=HIDDEN NAME=extension>
-<font class="queue_text">
-<?php	echo "Utilisateur : $VD_login sur Téléphone: $SIP_user Campagne:: $VD_campaign&nbsp; \n"; ?>
- &nbsp; &nbsp; <span id="agentchannelSPAN"></span>
-</TD><TD COLSPAN=3 VALIGN=TOP ALIGN=RIGHT><font class="body_text">
-<?php if ($territoryCT > 0) {echo "<a href=\"#\" onclick=\"OpeNTerritorYSelectioN();return false;\">TERRITORIES</a> &nbsp; &nbsp; \n";} ?>
-<?php if ($INgrpCT > 0) {echo "<a href=\"#\" onclick=\"OpeNGrouPSelectioN();return false;\">GROUPS</a> &nbsp; &nbsp; \n";} ?>
-<?php	echo "<a href=\"#\" onclick=\"NormalLogout();return false;\">DÉCONNEXION</a>\n"; ?>
-</TD></TR></TABLE>
-</SPAN>
 
-<span style="position:absolute;left:0px;top:13px;z-index:1;" id="Tabs">
-    <table border=0 bgcolor="#FFFFFF" width=<?php echo $MNwidth ?> height=30>
-<TR VALIGN=TOP ALIGN=LEFT>
-<TD ALIGN=LEFT WIDTH=115><A HREF="#" onclick="MainPanelToFront('NO');"><IMG SRC="../agc/images/vdc_tab_vicidial.gif" ALT="MAIN" WIDTH=115 HEIGHT=30 Border=0></A></TD>
-<TD ALIGN=LEFT WIDTH=105><A HREF="#" onclick="ScriptPanelToFront();"><IMG SRC="../agc/images/vdc_tab_script.gif" ALT="SCRIPT" WIDTH=105 HEIGHT=30 Border=0></A></TD>
-<TD WIDTH=<?php echo $HSwidth ?> VALIGN=MIDDLE ALIGN=CENTER><font class="body_text">&nbsp; <span id=status>LIVE</span>&nbsp; &nbsp;session ID: <span id=sessionIDspan></span>&nbsp; &nbsp;<span id=AgentStatutCalls></span></TD>
-<TD WIDTH=109><IMG SRC="../agc/images/agc_live_call_OFF.gif" NAME=livecall ALT="Appel en cours" WIDTH=109 HEIGHT=30 Border=0></TD>
-</TR></TABLE>
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="Header">
+	<TABLE Border=0 CELLPADDING=0 CELLSPACING=0 BGCOLOR=white WIDTH=<?php echo $MNwidth ?> MARGINWIDTH=0 MARGINHEIGHT=0 LEFTMARGIN=0 TOPMARGIN=0 VALIGN=TOP ALIGN=LEFT>
+	<TR VALIGN=TOP ALIGN=LEFT><TD COLSPAN=3 VALIGN=TOP ALIGN=LEFT>
+	<INPUT TYPE=HIDDEN NAME=extension>
+	<font class="queue_text">
+	<?php	echo "Utilisateur : $VD_login sur Téléphone: $SIP_user Campagne:: $VD_campaign&nbsp; \n"; ?>
+	 &nbsp; &nbsp; <span id="agentchannelSPAN"></span>
+	</TD><TD COLSPAN=3 VALIGN=TOP ALIGN=RIGHT><font class="body_text">
+	<?php if ($territoryCT > 0) {echo "<a href=\"#\" onclick=\"OpeNTerritorYSelectioN();return false;\">TERRITORIES</a> &nbsp; &nbsp; \n";} ?>
+	<?php if ($INgrpCT > 0) {echo "<a href=\"#\" onclick=\"OpeNGrouPSelectioN();return false;\">GROUPS</a> &nbsp; &nbsp; \n";} ?>
+	<?php	echo "<a href=\"#\" onclick=\"NormalLogout();return false;\">DÉCONNEXION</a>\n"; ?>
+	</TD></TR>
+	</TABLE>
+</span>
+
+<span style="position:absolute;left:0px;top:13px;z-index:<?php $zi++; echo $zi ?>;" id="Tabs">
+	<TABLE border=0 bgcolor="#FFFFFF" width=<?php echo $MNwidth ?> height=30>
+	<TR VALIGN=TOP ALIGN=LEFT>
+	<TD ALIGN=LEFT WIDTH=115><A HREF="#" onclick="MainPanelToFront('NO');"><IMG SRC="../agc/images/vdc_tab_vicidial.gif" ALT="MAIN" WIDTH=115 HEIGHT=30 Border=0></A></TD>
+	<TD ALIGN=LEFT WIDTH=105><A HREF="#" onclick="ScriptPanelToFront();"><IMG SRC="../agc/images/vdc_tab_script.gif" ALT="SCRIPT" WIDTH=105 HEIGHT=30 Border=0></A></TD>
+	<TD WIDTH=<?php echo $HSwidth ?> VALIGN=MIDDLE ALIGN=CENTER><font class="body_text">&nbsp; <span id=status>LIVE</span>&nbsp; &nbsp;session ID: <span id=sessionIDspan></span>&nbsp; &nbsp;<span id=AgentStatutCalls></span></TD>
+	<TD WIDTH=109><IMG SRC="../agc/images/agc_live_call_OFF.gif" NAME=livecall ALT="Appel en cours" WIDTH=109 HEIGHT=30 Border=0></TD>
+	</TR>
+	</TABLE>
+</span>
+
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="BienvenueBoxA">
+    <TABLE border=0 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $HKwidth ?>><TR><TD align=center><BR><span id="BienvenueBoxAt">Agent Screen</span></TD></TR></TABLE>
 </span>
 
 
+<!-- BEGIN *********   Here is the main VICIDIAL display panel -->
+<span style="position:absolute;left:0px;top:46px;z-index:<?php $zi++; echo $zi ?>;" id="MainPanel">
+	<TABLE border=0 BGCOLOR="<?php echo $MAIN_COLOR ?>" width=<?php echo $MNwidth ?> id="MainTable">
+	<TR><TD colspan=3><font class="body_text"> STATUT: <span id="MainStatuSSpan"></span></font></TD></TR>
+	<tr><td colspan=3><span id="busycallsdebug"></span></td></tr>
+	<tr><td width=150 align=left valign=top>
+	<font class="body_text"><center>
+	<span STYLE="background-color: #CCFFCC" id="DiaLControl"><a href="#" onclick="ManualDialNext('','','','','','0');"><IMG SRC="../agc/images/vdc_LB_dialnextnumber_OFF.gif" border=0 alt="Appel Numéro Suivant"></a></span><BR>
+	<span id="DiaLLeaDPrevieW"><font class="preview_text"> <input type=checkbox name=LeadPreview size=1 value="0"> Prévisualisation<BR></font></span>
+	<span id="DiaLDiaLAltPhonE"><font class="preview_text"> <input type=checkbox name=DiaLAltPhonE size=1 value="0"> APPEL NUM. 2nd.<BR></font></span>
+	<!--
+	<?php
+	if ( ($manual_dial_preview) and ($auto_dial_level==0) )
+		{echo "<font class=\"preview_text\"> <input type=checkbox name=LeadPreview size=1 value=\"0\"> Prévisualisation<BR></font>";}
+	if ( ($alt_phone_dialing) and ($auto_dial_level==0) )
+		{echo "<font class=\"preview_text\"> <input type=checkbox name=DiaLAltPhonE size=1 value=\"0\"> APPEL NUM. 2nd.<BR></font>";}
+	?> -->
+	ENREGISTREMENT:<BR>
+	</center>
+	<font class="body_tiny"><span id="RecorDingFilename"></span></font><BR>
+	IDENTIFIANT: <font class="body_small"><span id="RecorDID"></span></font><BR>
+	<center>
+	<!-- <a href=\"#\" onclick=\"conf_send_recording('MonitorConf','" + head_conf + "','');return false;\">Enregistrement</a> -->
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="RecorDControl"><a href="#" onclick="conf_send_recording('MonitorConf',session_id,'');return false;"><IMG SRC="../agc/images/vdc_LB_startrecording.gif" border=0 alt="Enregistrer"></a></span><BR>
+	<span id="SpacerSpanA"><IMG SRC="../agc/images/blank.gif" width=145 height=16 border=0></span><BR>
+	<span STYLE="background-color: #FFFFFF" id="WebFormSpan"><IMG SRC="../agc/images/vdc_LB_webform_OFF.gif" border=0 alt="Formulaire Web"></span><BR>
+	<?php
+	if ($enable_second_webform > 0)
+		{echo "<span STYLE=\"background-color: #FFFFFF\" id=\"WebFormSpanTwo\"><IMG SRC=\"../agc/images/vdc_LB_webform_two_OFF.gif\" border=0 alt=\"Formulaire Web 2\"></span><BR>\n";}
+	?>
+	<span id="SpacerSpanB"><IMG SRC="../agc/images/blank.gif" width=145 height=16 border=0></span><BR>
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="ParkControl"><IMG SRC="../agc/images/vdc_LB_parkcall_OFF.gif" border=0 alt="Mettre en Attente"></span><BR>
+	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="XferControl"><IMG SRC="../agc/images/vdc_LB_transferconf_OFF.gif" border=0 alt="Transfert - Conférence"></span><BR>
 
-<span style="position:absolute;left:0px;top:0px;z-index:3;" id="BienvenueBoxA">
-    <table border=0 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $HKwidth ?>><TR><TD align=center><BR><span id="BienvenueBoxAt">Agent Screen</span></TD></TR></TABLE>
+	<?php
+	if ($quick_transfer_button_enabled > 0)
+		{echo "<span STYLE=\"background-color: $MAIN_COLOR\" id=\"QuickXfer\"><IMG SRC=\"../agc/images/vdc_LB_quickxfer_OFF.gif\" border=0 alt=\"Quick Transfer\"></span><BR>\n";}
+	?>
+
+	<span id="ReQueueCall"></span>
+
+	<?php
+	if ($call_requeue_button > 0)
+		{echo "<BR>\n";}
+	?>
+
+	<span id="SpacerSpanC"><IMG SRC="../agc/images/blank.gif" width=145 height=16 border=0></span><BR>
+	<span STYLE="background-color: #FFCCFF" id="HangupControl"><IMG SRC="../agc/images/vdc_LB_hangupcustomer_OFF.gif" border=0 alt="Raccrocher"></span><BR>
+	<span id="SpacerSpanD"><IMG SRC="../agc/images/blank.gif" width=145 height=16 border=0></span><BR>
+	<div class="text_input" id="SendDTMFdiv"><span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="SendDTMF"><a href="#" onclick="SendConfDTMF(session_id);return false;"><IMG SRC="../agc/images/vdc_LB_senddtmf.gif" border=0 alt="Envoyez DTMF" align=bottom></a>  <input type=text size=5 name=conf_dtmf class="cust_form" value="" maxlength=50></div></span><BR>
+	</center>
+	</font>
+	</td>
+	<td width=<?php echo $SDwidth ?> align=left valign=top>
+	<input type=hidden name=lead_id value="">
+	<input type=hidden name=list_id value="">
+	<input type=hidden name=called_count value="">
+	<input type=hidden name=rank value="">
+	<input type=hidden name=owner value="">
+	<input type=hidden name=gmt_offset_now value="">
+	<input type=hidden name=gender value="">
+	<input type=hidden name=date_of_birth value="">
+	<input type=hidden name=country_code value="">
+	<input type=hidden name=uniqueid value="">
+	<input type=hidden name=callserverip value="">
+	<input type=hidden name=SecondS value="">
+	<span class="text_input" id="MainPanelCustInfo">
+	<TABLE><tr>
+	<td align=right></td>
+	<td align=left><font class="body_text">&nbsp; Customer Time: <span name=custdatetime id=custdatetime class="log_title"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span> &nbsp; &nbsp; Canal: <span name=callchannel id=callchannel class="cust_form"> </span></td>
+	</tr><tr>
+	<td colspan=2 align=center> Informations Client: <span id="CusTInfOSpaN"></span></td>
+	</tr><tr>
+	<td align=left colspan=2>
+
+	<TABLE width=550><tr>
+	<td align=right><font class="body_text"> Titre: </td>
+	<td align=left colspan=5><font class="body_text"><input type=text size=4 name=title maxlength=4 class="cust_form" value="">&nbsp; Prenom: <input type=text size=17 name=first_name maxlength=30 class="cust_form" value="">&nbsp; Mi:<input type=text size=1 name=middle_initial maxlength=1 class="cust_form" value="">&nbsp; Nom: <input type=text size=23 name=last_name maxlength=30 class="cust_form" value=""></td>
+	</tr><tr>
+	<td align=right><font class="body_text"> Adresse1: </td>
+	<td align=left colspan=5><font class="body_text"><input type=text size=85 name=address1 maxlength=100 class="cust_form" value=""></td>
+	</tr><tr>
+	<td align=right><font class="body_text"> Adresse2: </td>
+	<td align=left><font class="body_text"><input type=text size=20 name=address2 maxlength=100 class="cust_form" value=""></td>
+	<td align=right><font class="body_text">Adresse3: </td>
+	<td align=left colspan=3><font class="body_text"><input type=text size=45 name=address3 maxlength=100 class="cust_form" value=""></td>
+	</tr><tr>
+	<td align=right><font class="body_text"> Ville: </td>
+	<td align=left><font class="body_text"><input type=text size=20 name=city maxlength=50 class="cust_form" value=""></td>
+	<td align=right><font class="body_text">État: </td>
+	<td align=left><font class="body_text"><input type=text size=4 name=state maxlength=2 class="cust_form" value=""></td>
+	<td align=right><font class="body_text">CodePostal: </td>
+	<td align=left><font class="body_text"><input type=text size=14 name=postal_code maxlength=10 class="cust_form" value=""></td>
+	</tr><tr>
+	<td align=right><font class="body_text"> Province: </td>
+	<td align=left><font class="body_text"><input type=text size=20 name=province maxlength=50 class="cust_form" value=""></td>
+	<td align=right><font class="body_text">CodeVendeur: </td>
+	<td align=left><font class="body_text"><input type=text size=15 name=vendor_lead_code maxlength=20 class="cust_form" value=""></td>
+	<td align=right><font class="body_text">Sexe:</td>
+	<td align=left><font class="body_text"><span id="GENDERhideFORie"><select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select></span></td>
+	</tr><tr>
+	<td align=right><font class="body_text"> Téléphone: </td>
+	<td align=left><font class="body_text">
+	<?php 
+	if ( (ereg('Y',$disable_alter_custphone)) or (ereg('HIDE',$disable_alter_custphone)) )
+		{
+		echo "<font class=\"body_text\"><span id=phone_numberDISP> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></font>";
+		echo "<input type=hidden name=phone_number value=\"\">";
+		}
+	else
+		{
+		echo "<input type=text size=20 name=phone_number maxlength=16 class=\"cust_form\" value=\"\">";
+		}
+	?>
+
+	</td>
+	<td align=right><font class="body_text">DialCode: </td>
+	<td align=left><font class="body_text"><input type=text size=4 name=phone_code maxlength=10 class="cust_form" value=""></td>
+	<td align=right><font class="body_text">Tel. 2nd: </td>
+	<td align=left><font class="body_text"><input type=text size=14 name=alt_phone maxlength=16 class="cust_form" value=""></td>
+	</tr><tr>
+	<td align=right><font class="body_text"> Visualiser: </td>
+	<td align=left><font class="body_text"><input type=text size=20 name=security_phrase maxlength=100 class="cust_form" value=""></td>
+	<td align=right><font class="body_text">Email: </td>
+	<td align=left colspan=3><font class="body_text"><input type=text size=45 name=email maxlength=70 class="cust_form" value=""></td>
+	</tr><tr>
+	<td align=right valign=top><font class="body_text"> Commentaires:</td>
+	<td align=left colspan=5>
+	<font class="body_text">
+	<?php
+	if ( ($multi_line_comments) )
+		{echo "<TEXTAREA NAME=comments ROWS=2 COLS=85 class=\"cust_form_text\" value=\"\"></TEXTAREA>\n";}
+	else
+		{echo "<input type=text size=65 name=comments maxlength=255 class=\"cust_form\" value=\"\">\n";}
+	?>
+	</font>
+	</td>
+
+	</tr></TABLE></td>
+	</tr></TABLE>
+	</span>
+	</font>
+	</td>
+	<td width=1 align=center>
+	</td>
+	</tr>
+	<tr><td align=left colspan=3 height=<?php echo $BPheight ?>>
+	&nbsp;</td></tr>
+	<tr><td align=left colspan=3>
+	&nbsp;</td></tr>
+	</TABLE>
+	</td></tr>
+	</TABLE>
 </span>
+<!-- END *********   Here is the main VICIDIAL display panel -->
 
-<span style="position:absolute;left:300px;top:<?php echo $MBheight ?>px;z-index:12;" id="ManuaLDiaLButtons"><font class="body_text">
+
+<span style="position:absolute;left:300px;top:<?php echo $MBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="ManuaLDiaLButtons"><font class="body_text">
 <span id="MDstatusSpan"><a href="#" onclick="NeWManuaLDiaLCalL('NO');return false;">APPEL MANUEL</a></span> &nbsp; &nbsp; &nbsp; <a href="#" onclick="NeWManuaLDiaLCalL('FAST');return false;">CADRAN RAPIDE</a><BR>
 </font></span>
 
-<span style="position:absolute;left:300px;top:<?php echo $CBheight ?>px;z-index:13;" id="CallbacksButtons"><font class="body_text">
+<span style="position:absolute;left:300px;top:<?php echo $CBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="CallbacksButtons"><font class="body_text">
 <span id="CBstatusSpan">X RAPPELS EN COURS</span> <BR>
 </font></span>
 
-<span style="position:absolute;left:500px;top:<?php echo $CBheight ?>px;z-index:14;" id="PauseCodeButtons"><font class="body_text">
+<span style="position:absolute;left:500px;top:<?php echo $CBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="PauseCodeButtons"><font class="body_text">
 <span id="PauseCodeLinkSpan"></span> <BR>
 </font></span>
 
-<span style="position:absolute;left:<?php echo $SCwidth ?>px;top:49px;z-index:18;" id="SecondSspan"><font class="body_text"> secondes: 
+<span style="position:absolute;left:500px;top:<?php echo $MBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="CallLogButtons"><font class="body_text">
+<span id="CallLogLinkSpan"><a href="#" onclick="VieWCalLLoG();return false;">VIEW APPEL LOG</a></span> <BR>
+</font></span>
+
+<span style="position:absolute;left:0px;top:<?php echo $HKheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="MaiNfooterspan">
+	<TABLE BGCOLOR="<?php echo $MAIN_COLOR ?>" id="MaiNfooter" width=<?php echo $MNwidth ?>><tr height=32><td height=32><font face="Arial,Helvetica" size=1>Agent web-client version: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Serveur: <?php echo $server_ip ?>  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</font><BR>
+	<font class="body_small">
+	<span id="busycallsdisplay"><a href="#"  onclick="conf_channels_detail('SHOW');">Montrez les informations sur la conférence</a>
+	<BR><BR>&nbsp;</span></font></td><td align=right height=32>
+	</td></tr>
+	<tr><td colspan=3><span id="outboundcallsspan"></span></td></tr>
+	<tr><td colspan=3><font class="body_small"><span id="AgentAlertSpan">
+	<?php
+	if ( (ereg('ON',$VU_alert_enabled)) and ($AgentAlert_allowed > 0) )
+		{echo "<a href=\"#\" onclick=\"alert_control('OFF');return false;\">Alert is ON</a>";}
+	else
+		{echo "<a href=\"#\" onclick=\"alert_control('ON');return false;\">Alert is OFF</a>";}
+	?>
+	</span></td></tr>
+	<tr><td colspan=3>
+	<font class="body_small">
+
+	</td></tr></TABLE>
+</span>
+
+<?php if ( ($HK_statuses_camp > 0) && ( ($user_level>=$HKuser_level) or ($VU_hotkeys_active > 0) ) ) { ?>
+<span style="position:absolute;left:<?php echo $HKwidth ?>px;top:<?php echo $HKheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="hotkeysdisplay"><a href="#" onMouseOver="HotKeys('ON')"><IMG SRC="../agc/images/vdc_XB_hotkeysactive_OFF.gif" border=0 alt="RACCOURCIS INACTIFS"></a></span>
+<?php } ?>
+
+<span style="position:absolute;left:<?php echo $SCwidth ?>px;top:49px;z-index:<?php $zi++; echo $zi ?>;" id="SecondSspan"><font class="body_text"> secondes: 
 <span id="SecondSDISP"> &nbsp; &nbsp; </span>
 </font></span>
 
-<span style="position:absolute;left:<?php echo $AMwidth ?>px;top:<?php echo $AMheight ?>px;z-index:22;" id="AgentMuteANDPreseTDiaL"><font class="body_text">
+<span style="position:absolute;left:5px;top:<?php echo $CBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="VolumeControlSpan"><span id="VolumeUpSpan"><IMG SRC="../agc/images/vdc_volume_up_off.gif" Border=0></span><BR><span id="VolumeDownSpan"><IMG SRC="../agc/images/vdc_volume_down_off.gif" Border=0></span>
+</font></span>
+
+<span style="position:absolute;left:35px;top:<?php echo $CBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="AgentStatutSpan"><font class="body_text">
+Votre Statut: <span id="AgentStatutStatut"></span> <BR>Calls Dialing: <span id="AgentStatutDiaLs"></span> 
+</font></span>
+
+<span style="position:absolute;left:<?php echo $AMwidth ?>px;top:<?php echo $AMheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="AgentMuteANDPreseTDiaL"><font class="body_text">
 	<?php
 	if ($PreseT_DiaL_LinKs)
 		{
@@ -10654,80 +11185,67 @@ echo "</head>\n";
 		}
 	else {echo "<BR>\n";}
 	?>
-<BR><BR> &nbsp; <BR>
+	<BR><BR> &nbsp; <BR>
 </font></span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:51;" id="CallBacKsLisTBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> RAPPELS PERSONNELS <?php echo $VD_login ?>:<BR>Selectionnez un rappel a éffectuer immédiatement. Une fois éffectué, ce rappel diparaitra de la liste.
-	<BR>
-	<div class="scroll_callback" id="CallBacKsLisT"></div>
-	<BR> &nbsp; 
-	<a href="#" onclick="CalLBacKsLisTCheck();return false;">Rafraichir</a>
-	 &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp; 
-	<a href="#" onclick="hideDiv('CallBacKsLisTBox');return false;">Retour</a>
-	</TD></TR></TABLE>
-</span>
+<span style="position:absolute;left:0px;top:<?php echo $CQheight ?>px;width:<?php echo $MNwidth ?>;overflow:scroll;z-index:<?php $zi++; echo $zi ?>;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="callsinqueuedisplay"><TABLE CELLPADDING=0 CELLSPACING=0 Border=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">Appels en attente: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="callsinqueuelist">&nbsp;</span></TD></TR></TABLE></span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:52;" id="NeWManuaLDiaLBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> NOUVEL APPEL MANUEL VERS <?php echo "$VD_login in campaign $VD_campaign" ?>:<BR><BR>Nouveau prospect: remplissez le formulaire ci dessous.
-	<BR>
-	<?php 
-	if (eregi("X",$dial_prefix))
-		{
-		echo "Note : préfixe : $dial_prefix servira de préfixe à ce nombre<BR>\n";
-		}
+<font class="body_small"><span style="position:absolute;left:<?php echo $CLwidth ?>px;top:<?php echo $SLheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="callsinqueuelink">
+<?php 
+if ($view_calls_in_queue > 0)
+	{ 
+	if ($view_calls_in_queue_launch > 0) 
+		{echo "<a href=\"#\" onclick=\"show_calls_in_queue('HIDE');\">Cacher les appels en attente</a>\n";}
+	else 
+		{echo "<a href=\"#\" onclick=\"show_calls_in_queue('SHOW');\">Afficher les appels en attente</a>\n";}
+	}
+?>
+</span></font>
+
+<span style="position:absolute;left:<?php echo $SBwidth ?>px;top:<?php echo $AVTheight ?>px;height:500;overflow:scroll;z-index:<?php $zi++; echo $zi ?>;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentViewSpan"><TABLE CELLPADDING=0 CELLSPACING=0 Border=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">
+Autres agents Etat: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="AgentViewStatut">&nbsp;</span></TD></TR></TABLE></span>
+
+<span style="position:absolute;left:<?php echo $SBwidth ?>px;top:15px;height:500;overflow:scroll;z-index:<?php $zi++; echo $zi ?>;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="webphoneSpan"><TABLE CELLPADDING=0 CELLSPACING=0 Border=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">
+Web Téléphone: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="webphonecontent"><?php echo $webphone_content ?></span></TD></TR></TABLE></span>
+
+<span style="position:absolute;left:<?php echo $SCwidth ?>px;top:<?php echo $SLheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="AgentViewLinkSpan"><TABLE CELLPADDING=0 CELLSPACING=0 Border=0 WIDTH=91><TR><TD ALIGN=RIGHT><font class="body_small"><span id="AgentViewLink"><a href="#" onclick="AgentsViewOpen('AgentViewSpan','open');return false;">Agents View +</a></span></font></TD></TR></TABLE></span>
+
+<?php 
+if ($is_webphone=='Y')
+	{ 
 	?>
-	Note: all new manual dial leads will go into list <?php echo $manual_dial_list_id ?><BR><BR>
-	<table><tr>
-	<td align=right><font class="body_text"> Code d'Appel: </td>
-	<td align=left><font class="body_text"><input type=text size=7 maxlength=10 name=MDDiaLCodE class="cust_form" value="1">&nbsp; (La valeur de ce champ est habituellement 1 aux Etats-Unis et au Canada)</td>
-	</tr><tr>
-	<td align=right><font class="body_text"> Téléphone Number: </td>
-	<td align=left><font class="body_text">
-	<input type=text size=14 maxlength=12 name=MDPhonENumbeR class="cust_form" value="">&nbsp; (12 digits max - digits only)
-	</td>
-	</tr><tr>
-	<td align=right><font class="body_text"> Rechercher dans les fiches client existantes: </td>
-	<td align=left><font class="body_text"><input type=checkbox name=LeadLookuP size=1 value="0">&nbsp; (Si cette option est activée, le numéro de téléphone sera recherché dans la base avant d'être inséré)</td>
-	</tr><tr>
 
-	<td align=left colspan=2>
-	<BR><BR><CENTER>
-	<span id="ManuaLDiaLGrouPSelecteD"></span> &nbsp; &nbsp; <span id="ManuaLDiaLGrouP"></span>
-	</CENTER>
-	<BR><BR>Si vous désirez composer un numéro sans insérer de nouvelle fiche client, entrez le N° a appeler dans le champ Surnumerotation. Pour raccrocher cet appel, vous devrez ouvrir la page Appels en Cours et raccrocher manuellement le canal correspondant.<BR> &nbsp; </td>
-	</tr><tr>
-	<td align=right><font class="body_text"> Surnumérotation: </td>
-	<td align=left><font class="body_text"><input type=text size=24 maxlength=20 name=MDDiaLOverridE class="cust_form" value="">&nbsp; (Ce champ n'accepte que des chiffres)
-	</td>
-	</tr></table>
-	<BR>
-	<a href="#" onclick="NeWManuaLDiaLCalLSubmiT('NOW');return false;">Appel Manuel</a>
-	 &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp; 
-	<a href="#" onclick="NeWManuaLDiaLCalLSubmiT('PREVIEW');return false;">Preview Call</a>
-	 &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp; 
-	<a href="#" onclick="hideDiv('NeWManuaLDiaLBox');return false;">Retour</a>
-	</TD></TR></TABLE>
+	<span style="position:absolute;left:<?php echo $SBwidth ?>px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="webphoneLinkSpan"><TABLE CELLPADDING=0 CELLSPACING=0 Border=0 WIDTH=120><TR><TD ALIGN=RIGHT><font class="body_small"><span id="webphoneLink"> &nbsp; <a href="#" onclick="webphoneOpen('webphoneSpan','close');return false;">WebTéléphone View -</a></span></font></TD></TR></TABLE></span>
+
+	<?php 
+	}
+?>
+
+<font class="body_small"><span style="position:absolute;left:200px;top:<?php echo $CBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="dialableleadsspan">
+<?php 
+if ($agent_display_dialable_leads > 0)
+	{ 
+	echo "Dialable Leads:<BR> &nbsp;\n";
+	}
+?>
+</span></font>
+
+<span style="position:absolute;left:<?php echo $MUwidth ?>px;top:<?php echo $SLheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="AgentMuteSpan"></span>
+
+<span style="position:absolute;left:154px;top:65px;z-index:<?php $zi++; echo $zi ?>;" id="ScriptPanel">
+    <TABLE border=0 bgcolor="<?php echo $SCRIPT_COLOR ?>" width=<?php echo $SSwidth ?> height=<?php echo $SSheight ?>><TR><TD align=left valign=top><font class="sb_text"><div class="noscroll_script" id="ScriptContents">AGENT SCRIPT</div></font></TD></TR></TABLE>
+</span>
+
+<span style="position:absolute;left:<?php echo $AMwidth ?>px;top:69px;z-index:<?php $zi++; echo $zi ?>;" id="ScriptRefresH">
+<a href="#" onclick="RefresHScript()"><font class="body_small">refresh</font></a>
 </span>
 
 
-
-<span style="position:absolute;left:5px;top:<?php echo $CBheight ?>px;z-index:19;" id="VolumeControlSpan"><span id="VolumeUpSpan"><IMG SRC="../agc/images/vdc_volume_up_off.gif" Border=0></span><BR><span id="VolumeDownSpan"><IMG SRC="../agc/images/vdc_volume_down_off.gif" Border=0></span>
-</font></span>
-
-
-
-<span style="position:absolute;left:35px;top:<?php echo $CBheight ?>px;z-index:20;" id="AgentStatutSpan"><font class="body_text">
-Votre Statut: <span id="AgentStatutStatut"></span> <BR>Calls Dialing: <span id="AgentStatutDiaLs"></span> 
-</font></span>
-
-
-
-<span style="position:absolute;left:157px;top:<?php echo $HTheight ?>px;z-index:32;" id="TransferMain">
-	<table bgcolor="#CCCCFF" width=<?php echo $SDwidth ?>>
+<span style="position:absolute;left:157px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="TransferMain">
+	<TABLE bgcolor="#CCCCFF" width=<?php echo $SDwidth ?>>
 	<tr valign=top>
 	<td align=left height=30>
-	<div class="text_input" id="TransferMaindiv">
+	<span class="text_input" id="TransferMaindiv">
 	<font class="body_text">
 	<IMG SRC="../agc/images/vdc_XB_header.gif" border=0 alt="Transfert - Conférence" style="vertical-align:middle"> &nbsp; &nbsp; &nbsp; &nbsp; <span id="XfeRDiaLGrouPSelecteD"></span> &nbsp; &nbsp; <span id="XfeRCID"></span><BR>
 
@@ -10745,12 +11263,12 @@ Votre Statut: <span id="AgentStatutStatut"></span> <BR>Calls Dialing: <span id="
 
 	<TR>
 	<TD ALIGN=LEFT COLSPAN=2>
-	<IMG SRC="../agc/images/vdc_XB_seconds.gif" border=0 alt="seconds" style="vertical-align:middle"><input type=text size=2 name=xferlength maxlength=4 class="cust_form">
+	<IMG SRC="../agc/images/vdc_XB_seconds.gif" border=0 alt="seconds" style="vertical-align:middle"><input type=text size=2 name=xferlength maxlength=4 class="cust_form" readonly>
 	&nbsp; 
-	<IMG SRC="../agc/images/vdc_XB_channel.gif" border=0 alt="channel" style="vertical-align:middle"><input type=text size=12 name=xferchannel maxlength=200 class="cust_form">
+	<IMG SRC="../agc/images/vdc_XB_channel.gif" border=0 alt="channel" style="vertical-align:middle"><input type=text size=12 name=xferchannel maxlength=200 class="cust_form" readonly>
 	</TD>
 	<TD ALIGN=LEFT>
-	<input type=checkbox name=consultativexfer size=1 value="0"><font class="body_tiny"> CONSULTATIF &nbsp;</font>
+	<span id=consultative_checkbox><input type=checkbox name=consultativexfer size=1 value="0"><font class="body_tiny"> CONSULTATIF &nbsp;</font></span>
 	</TD>
 	<TD ALIGN=LEFT>
 	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="HangupBothLines"><a href="#" onclick="bothcall_send_hangup();return false;"><IMG SRC="../agc/images/vdc_XB_hangupbothlines.gif" border=0 alt="Raccrocher les deux lignes" style="vertical-align:middle"></a></span>
@@ -10766,7 +11284,7 @@ Votre Statut: <span id="AgentStatutStatut"></span> <BR>Calls Dialing: <span id="
 	<input type=hidden name=xferuniqueid>
 	</TD>
 	<TD ALIGN=LEFT>
-	<input type=checkbox name=xferoverride size=1 value="0"><font class="body_tiny"> SURNUMEROTATION</font>
+	<span id=dialoverride_checkbox><input type=checkbox name=xferoverride size=1 value="0"><font class="body_tiny"> SURNUMEROTATION</font></span>
 	</TD>
 	<TD ALIGN=LEFT>
 	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="Leave3WayCall"><a href="#" onclick="leave_3way_call('FIRST');return false;"><IMG SRC="../agc/images/vdc_XB_leave3waycall.gif" border=0 alt="QUITTER LA CONF A 3" style="vertical-align:middle"></a></span> 
@@ -10796,58 +11314,25 @@ Votre Statut: <span id="AgentStatutStatut"></span> <BR>Calls Dialing: <span id="
 	</TABLE>
 
 	</font>
-	</div>
+	</span>
 	</td>
-	</tr></table>
+	</tr></TABLE>
 </span>
 
-
-
-<span style="position:absolute;left:0px;top:<?php echo $CQheight ?>px;width:<?php echo $MNwidth ?>;overflow:scroll;z-index:23;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="callsinqueuedisplay"><TABLE CELLPADDING=0 CELLSPACING=0 Border=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">Appels en attente: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="callsinqueuelist">&nbsp;</span></TD></TR></TABLE></span>
-
-<font class="body_small"><span style="position:absolute;left:<?php echo $CLwidth ?>px;top:<?php echo $SLheight ?>px;z-index:24;" id="callsinqueuelink">
-<?php 
-if ($view_calls_in_queue > 0)
-	{ 
-	if ($view_calls_in_queue_launch > 0) 
-		{echo "<a href=\"#\" onclick=\"show_calls_in_queue('HIDE');\">Cacher les appels en attente</a>\n";}
-	else 
-		{echo "<a href=\"#\" onclick=\"show_calls_in_queue('SHOW');\">Afficher les appels en attente</a>\n";}
-	}
-?>
-</span></font>
-
-
-<span style="position:absolute;left:<?php echo $SBwidth ?>px;top:0px;height:500;overflow:scroll;z-index:25;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentViewSpan"><TABLE CELLPADDING=0 CELLSPACING=0 Border=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">
-Autres agents Etat: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="AgentViewStatut">&nbsp;</span></TD></TR></TABLE></span>
-
-<span style="position:absolute;left:60px;top:<?php echo $BPheight ?>px;width:400;height:500;overflow:scroll;z-index:33;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentXferViewSpan"><CENTER><font class="body_text">
+<span style="position:absolute;left:0px;top:0px;width:<?php echo $JS_browser_width ?>;height:<?php echo $JS_browser_height ?>;overflow:scroll;z-index:<?php $zi++; echo $zi ?>;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentXferViewSpan"><CENTER><font class="body_text">
 Transfert des agents disponibles: <span id="AgentXferViewSelect"></span></CENTER></font></span>
 
-<span style="position:absolute;left:<?php echo $SCwidth ?>px;top:<?php echo $SLheight ?>px;z-index:27;" id="AgentViewLinkSpan"><TABLE CELLPADDING=0 CELLSPACING=0 Border=0 WIDTH=91><TR><TD ALIGN=RIGHT><font class="body_small"><span id="AgentViewLink"><a href="#" onclick="AgentsViewOpen('AgentViewSpan','open');return false;">Agents View +</a></span></font></TD></TR></TABLE></span>
 
-<font class="body_small"><span style="position:absolute;left:200px;top:<?php echo $CBheight ?>px;z-index:28;" id="dialableleadsspan">
-<?php 
-if ($agent_display_dialable_leads > 0)
-	{ 
-	echo "Dialable Leads:<BR> &nbsp;\n";
-	}
-?>
-</span></font>
-
-<span style="position:absolute;left:<?php echo $MUwidth ?>px;top:<?php echo $SLheight ?>px;z-index:29;" id="AgentMuteSpan"></span>
-
-
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:34;" id="HotKeyActionBox">
-    <table border=0 bgcolor="#FFDD99" width=<?php echo $HCwidth ?> height=70>
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="HotKeyActionBox">
+    <TABLE border=0 bgcolor="#FFDD99" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFEEBB"><TD height=70><font class="sh_text"> Fiche Prospect Statuée en: </font><BR><BR><CENTER>
 	<font class="sd_text"><span id="HotKeyDispo"> - </span></font></CENTER>
 	</TD>
 	</TR></TABLE>
 </span>
 
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:35;" id="HotKeyEntriesBox">
-    <table border=0 bgcolor="#FFDD99" width=<?php echo $HCwidth ?> height=70>
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="HotKeyEntriesBox">
+    <TABLE border=0 bgcolor="#FFDD99" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFEEBB"><TD width=200><font class="sh_text"> Raccourcis clavier des Statut: </font></td><td colspan=2>
 	<font class="body_small">Si actif, utilisez le raccourci clavier pour statuer et raccrocher un appel:</font></td></tr><tr>
 	<TD width=200><font class="sk_text">
@@ -10862,8 +11347,8 @@ if ($agent_display_dialable_leads > 0)
 	</TR></TABLE>
 </span>
 
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:36;" id="CBcommentsBox">
-    <table border=0 bgcolor="#FFFFCC" width=<?php echo $HCwidth ?> height=70>
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="CBcommentsBox">
+    <TABLE border=0 bgcolor="#FFFFCC" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFFF66">
 	<TD align=left><font class="sh_text"> Information De Rappels: </font></td>
 	<TD align=right><font class="sk_text"> <a href="#" onclick="CBcommentsBoxhide();return false;">close</a> </font></td>
@@ -10879,8 +11364,8 @@ if ($agent_display_dialable_leads > 0)
 	</TR></TABLE>
 </span>
 
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:37;" id="EAcommentsBox">
-    <table border=0 bgcolor="#FFFFCC" width=<?php echo $HCwidth ?> height=70>
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="EAcommentsBox">
+    <TABLE border=0 bgcolor="#FFFFCC" width=<?php echo $HCwidth ?> height=70>
 	<TR bgcolor="#FFFF66">
 	<TD align=left><font class="sh_text"> Extended Information Alt Téléphone:</font></td>
 	<TD align=right><font class="sk_text"> <a href="#" onclick="EAcommentsBoxhide('YES');return false;"> réduire </a> </font></td>
@@ -10896,72 +11381,72 @@ if ($agent_display_dialable_leads > 0)
 	</TR></TABLE>
 </span>
 
-<span style="position:absolute;left:695px;top:<?php echo $HTheight ?>px;z-index:38;" id="EAcommentsMinBox">
-    <table border=0 bgcolor="#FFFFCC" width=40 height=20>
+<span style="position:absolute;left:695px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="EAcommentsMinBox">
+    <TABLE border=0 bgcolor="#FFFFCC" width=40 height=20>
 	<TR bgcolor="#FFFF66">
 	<TD align=left><font class="sk_text"><a href="#" onclick="EAcommentsBoxshow();return false;"> agrandir </a> <BR>Alt Téléphone Info</font></td>
 	</tr></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:12px;z-index:39;" id="NoneInSessionBox">
-    <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center> Votre session est vide: <span id="NoneInSessionID"></span><BR>
+<span style="position:absolute;left:0px;top:12px;z-index:<?php $zi++; echo $zi ?>;" id="NoneInSessionBox">
+    <TABLE border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center> No one is in your session: <span id="NoneInSessionID"></span><BR>
 	<a href="#" onclick="NoneInSessionOK();return false;">Retour</a>
 	<BR><BR>
-	<a href="#" onclick="NoneInSessionCalL();return false;">Rappeler l'agent</a>
+	<span id="NoneInSessionLink"><a href="#" onclick="NoneInSessionCalL();return false;">Rappeler l'agent</a></span>
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:40;" id="CustomerGoneBox">
-    <table border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center> Le client a raccroché: <span id="CustomerGoneChanneL"></span><BR>
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="CustomerGoneBox">
+    <TABLE border=1 bgcolor="#CCFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center> Le client a raccroché: <span id="CustomerGoneChanneL"></span><BR>
 	<a href="#" onclick="CustomerGoneOK();return false;">Retour</a>
 	<BR><BR>
 	<a href="#" onclick="CustomerGoneHangup();return false;">Terminer et Statuer l'Appel</a>
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:41;" id="WrapupBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center> Traitement Post Appel : <span id="WrapupTimer"></span> secondes restant pour le traitement post appel<BR><BR>
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="WrapupBox">
+    <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center> Traitement Post Appel : <span id="WrapupTimer"></span> secondes restant pour le traitement post appel<BR><BR>
 	<span id="WrapupMessage"><?php echo $wrapup_message ?></span>
 	<BR><BR>
 	<a href="#" onclick="WrapupFinish();return false;">Terminer le traitement post appel et continuer</a>
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:200px;top:150px;z-index:42;" id="TimerSpan">
-    <table border=1 bgcolor="#CCFFCC" width=400 height=200><TR><TD align=center>
+<span style="position:absolute;left:200px;top:150px;z-index:<?php $zi++; echo $zi ?>;" id="TimerSpan">
+    <TABLE border=1 bgcolor="#CCFFCC" width=400 height=200><TR><TD align=center>
 	<BR><span id="TimerContentSpan"></span><BR><BR>
 	<a href="#" onclick="hideDiv('TimerSpan');return false;">Fermer Message</a>
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:43;" id="AgenTDisablEBoX">
-    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center>Votre session a été neutralisée<BR><a href="#" onclick="LogouT('DISABLED');return false;">DÉCONNEXION</a><BR><BR><a href="#" onclick="hideDiv('AgenTDisablEBoX');return false;">Retour</a>
-</TD></TR></TABLE>
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="AgenTDisablEBoX">
+    <TABLE border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center>Votre session a été neutralisée<BR><a href="#" onclick="LogouT('DISABLED');return false;">DÉCONNEXION</a><BR><BR><a href="#" onclick="hideDiv('AgenTDisablEBoX');return false;">Retour</a>
+	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:44;" id="SysteMDisablEBoX">
-    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center>Il ya un problème de synchronisation avec votre système, s'il vous plaît dites-le à votre administrateur système<BR><BR><BR><a href="#" onclick="hideDiv('SysteMDisablEBoX');return false;">Retour</a>
-</TD></TR></TABLE>
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="SysteMDisablEBoX">
+    <TABLE border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center>Il ya un problème de synchronisation avec votre système, s'il vous plaît dites-le à votre administrateur système<BR><BR><BR><a href="#" onclick="hideDiv('SysteMDisablEBoX');return false;">Retour</a>
+	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:45;" id="LogouTBox">
-    <table border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center><BR><span id="LogouTBoxLink">DÉCONNEXION</span></TD></TR></TABLE>
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="LogouTBox">
+    <TABLE border=1 bgcolor="#FFFFFF" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center><BR><span id="LogouTBoxLink">DÉCONNEXION</span></TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:70px;z-index:46;" id="DispoButtonHideA">
-    <table border=0 bgcolor="#CCFFCC" width=165 height=22><TR><TD align=center VALIGN=top></TD></TR></TABLE>
+<span style="position:absolute;left:0px;top:70px;z-index:<?php $zi++; echo $zi ?>;" id="DispoButtonHideA">
+    <TABLE border=0 bgcolor="#CCFFCC" width=165 height=22><TR><TD align=center VALIGN=top></TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:138px;z-index:47;" id="DispoButtonHideB">
-    <table border=0 bgcolor="#CCFFCC" width=165 height=250><TR><TD align=center VALIGN=top>&nbsp;</TD></TR></TABLE>
+<span style="position:absolute;left:0px;top:138px;z-index:<?php $zi++; echo $zi ?>;" id="DispoButtonHideB">
+    <TABLE border=0 bgcolor="#CCFFCC" width=165 height=250><TR><TD align=center VALIGN=top>&nbsp;</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:48;" id="DispoButtonHideC">
-    <table border=0 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=47><TR><TD align=center VALIGN=top>Aucune modification ne peut être prise en compte, les modifications doivent être validées avant de raccrocher. </TD></TR></TABLE>
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="DispoButtonHideC">
+    <TABLE border=0 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=47><TR><TD align=center VALIGN=top>Aucune modification ne peut être prise en compte, les modifications doivent être validées avant de raccrocher. </TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:49;" id="DispoSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> STATUER L'APPEL :<span id="DispoSelectPhonE"></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectHAspan"><a href="#" onclick="DispoHanguPAgaiN()">Décrochement Encore</a></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectMaxMin"><a href="#" onclick="DispoMinimize()"> réduire </a></span><BR>
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="DispoSelectBox">
+    <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> STATUER L'APPEL :<span id="DispoSelectPhonE"></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectHAspan"><a href="#" onclick="DispoHanguPAgaiN()">Décrochement Encore</a></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectMaxMin"><a href="#" onclick="DispoMinimize()"> réduire </a></span><BR>
 	<span id="DispoSelectContent"> Selection du status de fin d'appel </span>
 	<input type=hidden name=DispoSelection><BR>
 	<input type=checkbox name=DispoSelectStop size=1 value="0"> PAUSE DE LA NUMEROTATION <BR>
@@ -10973,27 +11458,8 @@ if ($agent_display_dialable_leads > 0)
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:64;" id="PauseCodeSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> CHOISISSEZ Un CODE De PAUSE :<BR>
-	<span id="PauseCodeSelectContent"> Pause Code Selection </span>
-	<input type=hidden name=PauseCodeSelection>
-	<BR><BR> &nbsp; 
-	</TD></TR></TABLE>
-</span>
-
-<span style="position:absolute;left:0px;top:0px;z-index:65;" id="GroupAliasSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> CHOISIR UN GROUPE ALIAS :<BR>
-	<span id="GroupAliasSelectContent"> Groupe de sélection Alias </span>
-	<input type=hidden name=GroupAliasSelection>
-	<BR><BR> &nbsp; 
-	</TD></TR></TABLE>
-</span>
-
-<span style="position:absolute;left:0px;top:1500px;z-index:66;" id="GENDERhideFORieALT"></span>
-
-
-<span style="position:absolute;left:0px;top:0px;z-index:50;" id="CallBackSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> Choisissez une date de Rappel :<span id="CallBackDatE"></span><BR>
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="CallBackSelectBox">
+    <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> Choisissez une date de Rappel :<span id="CallBackDatE"></span><BR>
 	<input type=hidden name=CallBackDatESelectioN ID="CallBackDatESelectioN">
 	<input type=hidden name=CallBackTimESelectioN ID="CallBackTimESelectioN">
 	<span id="CallBackDatEPrinT">Choisissez une date ci-dessous</span> &nbsp;
@@ -11045,12 +11511,65 @@ if ($agent_display_dialable_leads > 0)
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:53;" id="CloserSelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> UN CHOIX DE GROUPE D'ARRIVÉE PLUS ÉTROIT <BR>
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="CallBacKsLisTBox">
+    <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> RAPPELS PERSONNELS <?php echo $VD_login ?>:<BR>Selectionnez un rappel a éffectuer immédiatement. Une fois éffectué, ce rappel diparaitra de la liste.
+	<BR>
+	<div class="scroll_callback" id="CallBacKsLisT"></div>
+	<BR> &nbsp; 
+	<a href="#" onclick="CalLBacKsLisTCheck();return false;">Rafraichir</a>
+	 &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp; 
+	<a href="#" onclick="hideDiv('CallBacKsLisTBox');return false;">Retour</a>
+	</TD></TR></TABLE>
+</span>
+
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="NeWManuaLDiaLBox">
+    <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> NOUVEL APPEL MANUEL VERS <?php echo "$VD_login in campaign $VD_campaign" ?>:<BR><BR>Nouveau prospect: remplissez le formulaire ci dessous.
+	<BR>
+	<?php 
+	if (eregi("X",$dial_prefix))
+		{
+		echo "Note : préfixe : $dial_prefix servira de préfixe à ce nombre<BR>\n";
+		}
+	?>
+	Note: all new manual dial leads will go into list <?php echo $manual_dial_list_id ?><BR><BR>
+	<TABLE><tr>
+	<td align=right><font class="body_text"> Code d'Appel: </td>
+	<td align=left><font class="body_text"><input type=text size=7 maxlength=10 name=MDDiaLCodE id=MDDiaLCodE class="cust_form" value="1">&nbsp; (La valeur de ce champ est habituellement 1 aux Etats-Unis et au Canada)</td>
+	</tr><tr>
+	<td align=right><font class="body_text"> Téléphone Number: </td>
+	<td align=left><font class="body_text">
+	<input type=text size=14 maxlength=12 name=MDPhonENumbeR id=MDPhonENumbeR class="cust_form" value="">&nbsp; (12 digits max - digits only)
+	</td>
+	</tr><tr>
+	<td align=right><font class="body_text"> Rechercher dans les fiches client existantes: </td>
+	<td align=left><font class="body_text"><input type=checkbox name=LeadLookuP size=1 value="0">&nbsp; (Si cette option est activée, le numéro de téléphone sera recherché dans la base avant d'être inséré)</td>
+	</tr><tr>
+
+	<td align=left colspan=2>
+	<BR><BR><CENTER>
+	<span id="ManuaLDiaLGrouPSelecteD"></span> &nbsp; &nbsp; <span id="ManuaLDiaLGrouP"></span>
+	</CENTER>
+	<BR><BR>Si vous désirez composer un numéro sans insérer de nouvelle fiche client, entrez le N° a appeler dans le champ Surnumerotation. Pour raccrocher cet appel, vous devrez ouvrir la page Appels en Cours et raccrocher manuellement le canal correspondant.<BR> &nbsp; </td>
+	</tr><tr>
+	<td align=right><font class="body_text"> Surnumérotation: </td>
+	<td align=left><font class="body_text"><input type=text size=24 maxlength=20 name=MDDiaLOverridE class="cust_form" value="">&nbsp; (Ce champ n'accepte que des chiffres)
+	</td>
+	</tr></TABLE>
+	<BR>
+	<a href="#" onclick="NeWManuaLDiaLCalLSubmiT('NOW');return false;">Appel Manuel</a>
+	 &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp; 
+	<a href="#" onclick="NeWManuaLDiaLCalLSubmiT('PREVIEW');return false;">Preview Call</a>
+	 &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp; 
+	<a href="#" onclick="hideDiv('NeWManuaLDiaLBox');return false;">Retour</a>
+	</TD></TR></TABLE>
+</span>
+
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="CloserSelectBox">
+    <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> UN CHOIX DE GROUPE D'ARRIVÉE PLUS ÉTROIT <BR>
 	<span id="CloserSelectContent"> Un Choix De Groupe D'arrivée Plus étroit </span>
 	<input type=hidden name=CloserSelectList><BR>
 	<?php
-	if ( ($outbound_autodial_active > 0) and ($disable_blended_checkbox < 1) and ($dial_method != 'INBOUND_MAN') )
+	if ( ($outbound_autodial_active > 0) and ($disable_blended_checkbox < 1) and ($dial_method != 'INBOUND_MAN') and ($VU_agent_choose_blended > 0) )
 		{
 		?>
 		<input type=checkbox name=CloserSelectBlended size=1 value="0"> APPEL EN MODE BLENDED(Mode "Appels Sortants" Activé) <BR>
@@ -11063,8 +11582,8 @@ if ($agent_display_dialable_leads > 0)
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:54;" id="TerritorySelectBox">
-    <table border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> TERRITORY SELECTION <BR>
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="TerritorySelectBox">
+    <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> TERRITORY SELECTION <BR>
 	<span id="TerritorySelectContent"> Territory Selection </span>
 	<input type=hidden name=TerritorySelectList><BR>
 	<a href="#" onclick="TerritorySelectContent_create();return false;"> REINITIALISATION </a> | 
@@ -11073,224 +11592,53 @@ if ($agent_display_dialable_leads > 0)
 	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:55;" id="NothingBox">
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="NothingBox">
     <BUTTON Type=button name="inert_button"><img src="../agc/images/blank.gif"></BUTTON>
 	<span id="DiaLLeaDPrevieWHide"> Canal</span>
 	<span id="DiaLDiaLAltPhonEHide"> Canal</span>
 	<?php
 	if (!$agentonly_callbacks)
 		{echo "<input type=checkbox name=CallBackOnlyMe size=1 value=\"0\"> RAPPELS PERSONNELS <BR>";}
-	if ( ($outbound_autodial_active < 1) or ($disable_blended_checkbox > 0) or ($dial_method == 'INBOUND_MAN') )
+	if ( ($outbound_autodial_active < 1) or ($disable_blended_checkbox > 0) or ($dial_method == 'INBOUND_MAN') or ($VU_agent_choose_blended < 1) )
 		{echo "<input type=checkbox name=CloserSelectBlended size=1 value=\"0\"> APPEL EN MODE BLENDED<BR>";}
 	?>
 </span>
 
-
-<span style="position:absolute;left:154px;top:65px;z-index:30;" id="ScriptPanel">
-    <table border=0 bgcolor="<?php echo $SCRIPT_COLOR ?>" width=<?php echo $SSwidth ?> height=<?php echo $SSheight ?>><TR><TD align=left valign=top><font class="sb_text"><div class="noscroll_script" id="ScriptContents">AGENT SCRIPT</div></font></TD></TR></TABLE>
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="CalLLoGDisplaYBox">
+    <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> AGENT APPEL LOG:<BR>
+	<div class="scroll_calllog" id="CallLogSpan"> Call log List </div>
+	<BR><BR> &nbsp; 
+	</TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:<?php echo $AMwidth ?>px;top:69px;z-index:31;" id="ScriptRefresH">
-<a href="#" onclick="RefresHScript()"><font class="body_small">refresh</font></a>
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="LeaDInfOBox">
+    <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> Informations Client:<BR>
+	<span id="LeaDInfOSpan"> Lead Info </span>
+	<BR><BR> &nbsp; 
+	</TD></TR></TABLE>
 </span>
 
-
-<?php if ( ($HK_statuses_camp > 0) && ( ($user_level>=$HKuser_level) or ($VU_hotkeys_active > 0) ) ) { ?>
-<span style="position:absolute;left:<?php echo $HKwidth ?>px;top:<?php echo $HKheight ?>px;z-index:16;" id="hotkeysdisplay"><a href="#" onMouseOver="HotKeys('ON')"><IMG SRC="../agc/images/vdc_XB_hotkeysactive_OFF.gif" border=0 alt="RACCOURCIS INACTIFS"></a></span>
-<?php } ?>
-
-
-<span style="position:absolute;left:0px;top:<?php echo $HKheight ?>px;z-index:15;" id="MaiNfooterspan">
-<table BGCOLOR="<?php echo $MAIN_COLOR ?>" id="MaiNfooter" width=<?php echo $MNwidth ?>><tr height=32><td height=32><font face="Arial,Helvetica" size=1>Agent web-client version: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Serveur: <?php echo $server_ip ?>  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</font><BR>
-<font class="body_small">
-<span id="busycallsdisplay"><a href="#"  onclick="conf_channels_detail('SHOW');">Montrez les informations sur la conférence</a>
-<BR><BR>&nbsp;</span></font></td><td align=right height=32>
-</td></tr>
-<tr><td colspan=3><span id="outboundcallsspan"></span></td></tr>
-
-<tr><td colspan=3><font class="body_small"><span id="AgentAlertSpan">
-<?php
-if ( (ereg('ON',$VU_alert_enabled)) and ($AgentAlert_allowed > 0) )
-	{echo "<a href=\"#\" onclick=\"alert_control('OFF');return false;\">Alert is ON</a>";}
-else
-	{echo "<a href=\"#\" onclick=\"alert_control('ON');return false;\">Alert is OFF</a>";}
-?>
-</span></td></tr>
-<tr><td colspan=3>
-<font class="body_small">
-<span style="position:absolute;left:0px;top:700px;z-index:67;" id="debugbottomspan"></span>
-</font>
-</td></tr>
-</TABLE>
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="PauseCodeSelectBox">
+    <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> CHOISISSEZ Un CODE De PAUSE :<BR>
+	<span id="PauseCodeSelectContent"> Pause Code Selection </span>
+	<input type=hidden name=PauseCodeSelection>
+	<BR><BR> &nbsp; 
+	</TD></TR></TABLE>
 </span>
 
-
-<!-- BEGIN *********   Here is the main VICIDIAL display panel -->
-<span style="position:absolute;left:0px;top:46px;z-index:10;" id="MainPanel">
-<TABLE border=0 BGCOLOR="<?php echo $MAIN_COLOR ?>" width=<?php echo $MNwidth ?> id="MainTable">
-<TR><TD colspan=3><font class="body_text"> STATUT: <span id="MainStatuSSpan"></span></font></TD></TR>
-<tr><td colspan=3><span id="busycallsdebug"></span></td></tr>
-<tr><td width=150 align=left valign=top>
-<font class="body_text"><center>
-<span STYLE="background-color: #CCFFCC" id="DiaLControl"><a href="#" onclick="ManualDialNext('','','','','','0');"><IMG SRC="../agc/images/vdc_LB_dialnextnumber_OFF.gif" border=0 alt="Appel Numéro Suivant"></a></span><BR>
-<span id="DiaLLeaDPrevieW"><font class="preview_text"> <input type=checkbox name=LeadPreview size=1 value="0"> Prévisualisation<BR></font></span>
-<span id="DiaLDiaLAltPhonE"><font class="preview_text"> <input type=checkbox name=DiaLAltPhonE size=1 value="0"> APPEL NUM. 2nd.<BR></font></span>
-
-<!--
-<?php
-if ( ($manual_dial_preview) and ($auto_dial_level==0) )
-	{echo "<font class=\"preview_text\"> <input type=checkbox name=LeadPreview size=1 value=\"0\"> Prévisualisation<BR></font>";}
-if ( ($alt_phone_dialing) and ($auto_dial_level==0) )
-	{echo "<font class=\"preview_text\"> <input type=checkbox name=DiaLAltPhonE size=1 value=\"0\"> APPEL NUM. 2nd.<BR></font>";}
-
-
-?> -->
-ENREGISTREMENT:<BR>
-</center>
-<font class="body_tiny"><span id="RecorDingFilename"></span></font><BR>
-IDENTIFIANT: <font class="body_small"><span id="RecorDID"></span></font><BR>
-<center>
-<!-- <a href=\"#\" onclick=\"conf_send_recording('MonitorConf','" + head_conf + "','');return false;\">Enregistrement</a> -->
-<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="RecorDControl"><a href="#" onclick="conf_send_recording('MonitorConf',session_id,'');return false;"><IMG SRC="../agc/images/vdc_LB_startrecording.gif" border=0 alt="Enregistrer"></a></span><BR>
-<span id="SpacerSpanA"><IMG SRC="../agc/images/blank.gif" width=145 height=16 border=0></span><BR>
-<span STYLE="background-color: #FFFFFF" id="WebFormSpan"><IMG SRC="../agc/images/vdc_LB_webform_OFF.gif" border=0 alt="Formulaire Web"></span><BR>
-<?php
-if ($enable_second_webform > 0)
-	{echo "<span STYLE=\"background-color: #FFFFFF\" id=\"WebFormSpanTwo\"><IMG SRC=\"../agc/images/vdc_LB_webform_two_OFF.gif\" border=0 alt=\"Formulaire Web 2\"></span><BR>\n";}
-?>
-<span id="SpacerSpanB"><IMG SRC="../agc/images/blank.gif" width=145 height=16 border=0></span><BR>
-<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="ParkControl"><IMG SRC="../agc/images/vdc_LB_parkcall_OFF.gif" border=0 alt="Mettre en Attente"></span><BR>
-<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="XferControl"><IMG SRC="../agc/images/vdc_LB_transferconf_OFF.gif" border=0 alt="Transfert - Conférence"></span><BR>
-
-<?php
-if ($quick_transfer_button_enabled > 0)
-	{echo "<span STYLE=\"background-color: $MAIN_COLOR\" id=\"QuickXfer\"><IMG SRC=\"../agc/images/vdc_LB_quickxfer_OFF.gif\" border=0 alt=\"Quick Transfer\"></span><BR>\n";}
-?>
-
-<span id="ReQueueCall"></span>
-
-<?php
-if ($call_requeue_button > 0)
-	{echo "<BR>\n";}
-?>
-
-
-<span id="SpacerSpanC"><IMG SRC="../agc/images/blank.gif" width=145 height=16 border=0></span><BR>
-<span STYLE="background-color: #FFCCFF" id="HangupControl"><IMG SRC="../agc/images/vdc_LB_hangupcustomer_OFF.gif" border=0 alt="Raccrocher"></span><BR>
-<span id="SpacerSpanD"><IMG SRC="../agc/images/blank.gif" width=145 height=16 border=0></span><BR>
-<div class="text_input" id="SendDTMFdiv"><span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="SendDTMF"><a href="#" onclick="SendConfDTMF(session_id);return false;"><IMG SRC="../agc/images/vdc_LB_senddtmf.gif" border=0 alt="Envoyez DTMF" align=bottom></a>  <input type=text size=5 name=conf_dtmf class="cust_form" value="" maxlength=50></div></span><BR>
-</center>
-</font>
-</td>
-<td width=<?php echo $SDwidth ?> align=left valign=top>
-<input type=hidden name=lead_id value="">
-<input type=hidden name=list_id value="">
-<input type=hidden name=called_count value="">
-<input type=hidden name=rank value="">
-<input type=hidden name=owner value="">
-<input type=hidden name=gmt_offset_now value="">
-<input type=hidden name=gender value="">
-<input type=hidden name=date_of_birth value="">
-<input type=hidden name=country_code value="">
-<input type=hidden name=uniqueid value="">
-<input type=hidden name=callserverip value="">
-<input type=hidden name=SecondS value="">
-<div class="text_input" id="MainPanelCustInfo">
-<table><tr>
-<td align=right></td>
-<td align=left><font class="body_text">&nbsp; Customer Time: <input type=text size=27 name=custdatetime class="cust_form" value=""> &nbsp; Canal: <input type=text size=27 name=callchannel class="cust_form" value=""></td>
-</tr><tr>
-<td colspan=2 align=center> Informations Client: <span id="CusTInfOSpaN"></span></td>
-</tr><tr>
-<td align=left colspan=2>
-
-
-<table width=550><tr>
-<td align=right><font class="body_text"> Titre: </td>
-<td align=left colspan=5><font class="body_text"><input type=text size=4 name=title maxlength=4 class="cust_form" value="">&nbsp; Prenom: <input type=text size=17 name=first_name maxlength=30 class="cust_form" value="">&nbsp; Mi:<input type=text size=1 name=middle_initial maxlength=1 class="cust_form" value="">&nbsp; Nom: <input type=text size=23 name=last_name maxlength=30 class="cust_form" value=""></td>
-</tr><tr>
-<td align=right><font class="body_text"> Adresse1: </td>
-<td align=left colspan=5><font class="body_text"><input type=text size=85 name=address1 maxlength=100 class="cust_form" value=""></td>
-</tr><tr>
-<td align=right><font class="body_text"> Adresse2: </td>
-<td align=left><font class="body_text"><input type=text size=20 name=address2 maxlength=100 class="cust_form" value=""></td>
-<td align=right><font class="body_text">Adresse3: </td>
-<td align=left colspan=3><font class="body_text"><input type=text size=45 name=address3 maxlength=100 class="cust_form" value=""></td>
-</tr><tr>
-<td align=right><font class="body_text"> Ville: </td>
-<td align=left><font class="body_text"><input type=text size=20 name=city maxlength=50 class="cust_form" value=""></td>
-<td align=right><font class="body_text">État: </td>
-<td align=left><font class="body_text"><input type=text size=4 name=state maxlength=2 class="cust_form" value=""></td>
-<td align=right><font class="body_text">CodePostal: </td>
-<td align=left><font class="body_text"><input type=text size=14 name=postal_code maxlength=10 class="cust_form" value=""></td>
-</tr><tr>
-<td align=right><font class="body_text"> Province: </td>
-<td align=left><font class="body_text"><input type=text size=20 name=province maxlength=50 class="cust_form" value=""></td>
-<td align=right><font class="body_text">CodeVendeur: </td>
-<td align=left><font class="body_text"><input type=text size=15 name=vendor_lead_code maxlength=20 class="cust_form" value=""></td>
-<td align=right><font class="body_text">Sexe:</td>
-<td align=left><font class="body_text"><span id="GENDERhideFORie"><select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select></span></td>
-</tr><tr>
-<td align=right><font class="body_text"> Téléphone: </td>
-<td align=left><font class="body_text">
-<?php 
-if ( (ereg('Y',$disable_alter_custphone)) or (ereg('HIDE',$disable_alter_custphone)) )
-	{
-	echo "<font class=\"body_text\"><span id=phone_numberDISP> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></font>";
-	echo "<input type=hidden name=phone_number value=\"\">";
-	}
-else
-	{
-	echo "<input type=text size=20 name=phone_number maxlength=16 class=\"cust_form\" value=\"\">";
-	}
-?>
-
-</td>
-<td align=right><font class="body_text">DialCode: </td>
-<td align=left><font class="body_text"><input type=text size=4 name=phone_code maxlength=10 class="cust_form" value=""></td>
-<td align=right><font class="body_text">Tel. 2nd: </td>
-<td align=left><font class="body_text"><input type=text size=14 name=alt_phone maxlength=16 class="cust_form" value=""></td>
-</tr><tr>
-<td align=right><font class="body_text"> Visualiser: </td>
-<td align=left><font class="body_text"><input type=text size=20 name=security_phrase maxlength=100 class="cust_form" value=""></td>
-<td align=right><font class="body_text">Email: </td>
-<td align=left colspan=3><font class="body_text"><input type=text size=45 name=email maxlength=70 class="cust_form" value=""></td>
-</tr><tr>
-<td align=right valign=top><font class="body_text"> Commentaires:</td>
-<td align=left colspan=5>
-<font class="body_text">
-<?php
-if ( ($multi_line_comments) )
-	{echo "<TEXTAREA NAME=comments ROWS=2 COLS=85 class=\"cust_form_text\" value=\"\"></TEXTAREA>\n";}
-else
-	{echo "<input type=text size=65 name=comments maxlength=255 class=\"cust_form\" value=\"\">\n";}
-?>
-</font>
-</td>
-
-
-</tr></table></td>
-</tr></table>
-</div>
-</font>
-</td>
-<td width=1 align=center>
-</td>
-</tr>
-<tr><td align=left colspan=3 height=<?php echo $BPheight ?>>
-&nbsp;</td></tr>
-<tr><td align=left colspan=3>
-&nbsp;</td></tr>
-
-</td></tr>
-
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="GroupAliasSelectBox">
+    <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> CHOISIR UN GROUPE ALIAS :<BR>
+	<span id="GroupAliasSelectContent"> Groupe de sélection Alias </span>
+	<input type=hidden name=GroupAliasSelection>
+	<BR><BR> &nbsp; 
+	</TD></TR></TABLE>
 </span>
-<!-- END *********   Here is the main VICIDIAL display panel -->
 
+<span style="position:absolute;left:0px;top:1500px;z-index:<?php $zi++; echo $zi ?>;" id="GENDERhideFORieALT"></span>
 
-</TD></TR></TABLE>
+<span style="position:absolute;left:0px;top:700px;z-index:<?php $zi++; echo $zi ?>;" id="debugbottomspan"></span>
+
 </FORM>
-
 
 </body>
 </html>
@@ -11302,23 +11650,23 @@ exit;
 
 ##### MySQL Error Logging #####
 function mysql_error_logging($NOW_TIME,$link,$mel,$stmt,$query_id,$user,$server_ip,$session_name,$one_mysql_log)
-{
-$NOW_TIME = date("Y-m-d H:i:s");
-#	mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);
-$errno='';   $error='';
-if ( ($mel > 0) or ($one_mysql_log > 0) )
 	{
-	$errno = mysql_errno($link);
-	if ( ($errno > 0) or ($mel > 1) or ($one_mysql_log > 0) )
+	$NOW_TIME = date("Y-m-d H:i:s");
+	#	mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);
+	$errno='';   $error='';
+	if ( ($mel > 0) or ($one_mysql_log > 0) )
 		{
-		$error = mysql_error($link);
-		$efp = fopen ("./vicidial_mysql_errors.txt", "a");
-		fwrite ($efp, "$NOW_TIME|vicidial    |$query_id|$errno|$error|$stmt|$user|$server_ip|$session_name|\n");
-		fclose($efp);
+		$errno = mysql_errno($link);
+		if ( ($errno > 0) or ($mel > 1) or ($one_mysql_log > 0) )
+			{
+			$error = mysql_error($link);
+			$efp = fopen ("./vicidial_mysql_errors.txt", "a");
+			fwrite ($efp, "$NOW_TIME|vicidial    |$query_id|$errno|$error|$stmt|$user|$server_ip|$session_name|\n");
+			fclose($efp);
+			}
 		}
+	$one_mysql_log=0;
+	return $errno;
 	}
-$one_mysql_log=0;
-return $errno;
-}
 
 ?>
