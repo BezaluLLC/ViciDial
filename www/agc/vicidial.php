@@ -1762,6 +1762,7 @@ else
 		$DBX_port=$row[59];
 		$outbound_cid=$row[65];
 		$enable_sipsak_messages=$row[66];
+		$conf_secret=$row[72];
 		$is_webphone=$row[73];
 		$use_external_server_ip=$row[74];
 
@@ -2037,7 +2038,7 @@ else
 
 				### base64 encode variables
 				$b64_phone_login =		base64_encode($extension);
-				$b64_phone_pass =		base64_encode($phone_pass);
+				$b64_phone_pass =		base64_encode($conf_secret);
 				$b64_session_name =		base64_encode($session_name);
 				$b64_server_ip =		base64_encode($webphone_server_ip);
 				$b64_callerid =			base64_encode($outbound_cid);
