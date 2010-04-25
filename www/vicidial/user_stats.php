@@ -23,6 +23,7 @@
 # 100126-0847 - Added DID log display options
 # 100203-1008 - Added agent activity log section
 # 100216-0042 - Added popup date selector
+# 100425-0115 - Added more login data
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -349,10 +350,10 @@ if ($did < 1)
 	echo "<center>\n";
 
 	echo "<B>AGENT LOGIN/LOGOUT TIME:</B>\n";
-	echo "<TABLE width=500 cellspacing=0 cellpadding=1>\n";
-	echo "<tr><td><font size=2>EVENT </td><td align=right><font size=2> DATE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MM:SS</td></tr>\n";
+	echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
+	echo "<tr><td><font size=2>EVENT </td><td align=right><font size=2> DATE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MM:SS</td><td align=right><font size=2>SESSION</td><td align=right><font size=2>SERVER</td><td align=right><font size=2>PHONE</td><td align=right><font size=2>COMPUTER</td></tr>\n";
 
-		$stmt="SELECT event,event_epoch,event_date,campaign_id,user_group from vicidial_user_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59'";
+		$stmt="SELECT event,event_epoch,event_date,campaign_id,user_group,session_id,server_ip,extension,computer_ip from vicidial_user_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59'";
 		$rslt=mysql_query($stmt, $link);
 		$events_to_print = mysql_num_rows($rslt);
 
@@ -374,7 +375,11 @@ if ($did < 1)
 				echo "<td align=right><font size=2> $row[2]</td>\n";
 				echo "<td align=right><font size=2> $row[3]</td>\n";
 				echo "<td align=right><font size=2> $row[4]</td>\n";
-				echo "<td align=right><font size=2> </td></tr>\n";
+				echo "<td align=right><font size=2> </td>\n";
+				echo "<td align=right><font size=2> $row[5] </td>\n";
+				echo "<td align=right><font size=2> $row[6] </td>\n";
+				echo "<td align=right><font size=2> $row[7] </td>\n";
+				echo "<td align=right><font size=2> $row[8] </td></tr>\n";
 				}
 			if (ereg("LOGOUT", $row[0]))
 				{
@@ -390,7 +395,8 @@ if ($did < 1)
 					echo "<td align=right><font size=2> $row[2]</td>\n";
 					echo "<td align=right><font size=2> $row[3]</td>\n";
 					echo "<td align=right><font size=2> $row[4]</td>\n";
-					echo "<td align=right><font size=2> $event_hours_minutes</td></tr>\n";
+					echo "<td align=right><font size=2> $event_hours_minutes</td>\n";
+					echo "<td align=right colspan=4><font size=2> &nbsp;</td></tr>\n";
 					$event_start_seconds='';
 					$event_stop_seconds='';
 					}
@@ -399,7 +405,8 @@ if ($did < 1)
 					echo "<tr $bgcolor><td><font size=2>$row[0]</td>";
 					echo "<td align=right><font size=2> $row[2]</td>\n";
 					echo "<td align=right><font size=2> $row[3]</td>\n";
-					echo "<td align=right><font size=2> </td></tr>\n";
+					echo "<td align=right><font size=2> </td>\n";
+					echo "<td align=right colspan=5><font size=2> &nbsp;</td></tr>\n";
 					}
 				}
 

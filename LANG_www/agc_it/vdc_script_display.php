@@ -11,10 +11,11 @@
 # 91204-1913 - Added recording_filename and recording_id variables
 # 91211-1103 - Added user_custom_... variables
 # 100116-0702 - Added preset variables
+# 100127-1611 - Added ignore_list_script_override option
 #
 
-$version = '2.2.0-5';
-$build = '100116-0702';
+$version = '2.2.0-6';
+$build = '100127-1611';
 
 require("dbconnect.php");
 
@@ -177,7 +178,6 @@ $CIDdate = date("mdHis");
 $ENTRYdate = date("YmdHis");
 $MT[0]='';
 $agents='@agents';
-
 $script_height = ($script_height - 20);
 
 $IFRAME=0;
@@ -252,6 +252,19 @@ if (strlen($in_script) < 1)
 else
 	{$call_script = $in_script;}
 
+$ignore_list_script_override='N';
+$stmt = "SELECT ignore_list_script_override FROM vicidial_inbound_groups where group_id='$group';";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$ilso_ct = mysql_num_rows($rslt);
+if ($ilso_ct > 0)
+	{
+	$row=mysql_fetch_row($rslt);
+	$ignore_list_script_override =		$row[0];
+	}
+if ($ignore_list_script_override=='Y')
+	{$ignore_list_script=1;}
+
 if ($ignore_list_script < 1)
 	{
 	$stmt="SELECT agent_script_override from vicidial_lists where list_id='$list_id';";
@@ -261,6 +274,12 @@ if ($ignore_list_script < 1)
 	if (strlen($agent_script_override) > 0)
 		{$call_script = $agent_script_override;}
 	}
+
+$stmt="SELECT list_name,list_description from vicidial_lists where list_id='$list_id';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$list_name =			$row[0];
+$list_description =		$row[1];
 
 $stmt="SELECT script_name,script_text from vicidial_scripts where script_id='$call_script';";
 $rslt=mysql_query($stmt, $link);
@@ -275,6 +294,8 @@ if (eregi("iframe src",$script_text))
 	$vendor_id = eregi_replace(' ','+',$vendor_id);
 	$vendor_lead_code = eregi_replace(' ','+',$vendor_lead_code);
 	$list_id = eregi_replace(' ','+',$list_id);
+	$list_name = eregi_replace(' ','+',$list_name);
+	$list_description = eregi_replace(' ','+',$list_description);
 	$gmt_offset_now = eregi_replace(' ','+',$gmt_offset_now);
 	$phone_code = eregi_replace(' ','+',$phone_code);
 	$phone_number = eregi_replace(' ','+',$phone_number);
@@ -348,6 +369,8 @@ $script_text = eregi_replace('--A--lead_id--B--',"$lead_id",$script_text);
 $script_text = eregi_replace('--A--vendor_id--B--',"$vendor_id",$script_text);
 $script_text = eregi_replace('--A--vendor_lead_code--B--',"$vendor_lead_code",$script_text);
 $script_text = eregi_replace('--A--list_id--B--',"$list_id",$script_text);
+$script_text = eregi_replace('--A--list_name--B--',"$list_name",$script_text);
+$script_text = eregi_replace('--A--list_description--B--',"$list_description",$script_text);
 $script_text = eregi_replace('--A--gmt_offset_now--B--',"$gmt_offset_now",$script_text);
 $script_text = eregi_replace('--A--phone_code--B--',"$phone_code",$script_text);
 $script_text = eregi_replace('--A--phone_number--B--',"$phone_number",$script_text);

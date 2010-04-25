@@ -66,7 +66,8 @@ OTHER CHANGES:
 	consultative transfer sessions
 
 13. Added AGENTONLY Scheduled Callbacks display options to allow the Callbacks
-	link line in the agent interface to show as red and/or blink
+	link line in the agent interface to show as red and/or blink. Also, 
+	added option to have callbacks count display only triggered callbacks
 
 14. Added carrier log display option to Real-time report to show the hangup
 	causes for the last 24/6/1 hours and 15/5/1 minutes of outbound calls
@@ -111,6 +112,26 @@ OTHER CHANGES:
 		exten => _8320*.,2,Hangup
 
 23. Added ability to search logs from admin search lead page
+
+24. Added more login information to the User Stats page including session,
+	server, phone and computer IP
+
+25. Added Manual Dial override option to campaigns to allow overriding of 
+	user options for manual dial permissions
+
+26. Added campaign option for alerting the agent when they are being blind
+	monitored. Options include an alert, a notice and an audio alert
+
+27. Added inbound custom call ID display and logging feature, also added 
+	vicidial_log_extended which stores more useful call log info
+
+28. Added optional phone codecs definitions as well as system-wide defaults
+	for codec definition. Default for both is blank which will keep 
+	whatever is set at the top of the iax.conf or sip.conf files
+
+29. Added option to allow user information to be blocked form the real-time
+	report by user login(the user viewing the report)
+
 
 
 

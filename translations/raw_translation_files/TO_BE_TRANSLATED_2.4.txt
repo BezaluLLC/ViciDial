@@ -97,6 +97,26 @@ If enabled, the calls placed from this campaign will have a space and the phone 
 If enabled, the calls coming in from this in-group will have a space and the phone extension of the agent appended to the end of the CallerID name for the call before it is sent to the agent. Default is N for disabled||
 Scheduled Callbacks Count||
 This option allows you to set whether only LIVE callbacks, user-only scheduled callbacks that have hit their trigger date and time, or ALL_ACTIVE callbacks, user-only callbacks that are active in the system as well as LIVE callbacks, should be3 counted int he agent callback alert section on the agent screen. Default is ALL_ACTIVE||
+Realtime Block User Info||
+This setting if set to 1 will block user and station information from being displayed in the Real-time report. Default is 0 for disabled||
+Manual Dial Override||
+The setting can override the Users setting for manual dial ability for agents when they are logged into this campaign. NONE will follow the Users setting, ALLOW_ALL will allow any agent logged into this campaign to place manual dial calls, DISABLE_ALL will not allow anyone logged into this campaign to place manual dial calls. Default is NONE||
+Blind Monitor Warning||
+This option if enabled will let the agent know in various optional ways if they are being blind monitored by someone. DISABLED means this feature is not active, ALERT will only pop an alert up on the agent screen, NOTICE will post a note that stays up on the agent screen as long as theya re being monitored, AUDIO will play the filename defined below when an agent is starting to be monitored and the other options are combibnations of the above options. Default is DISABLED||
+Blind Monitor Notice||
+This is the message that will show on the agent screen while they are being monitored if the NOTICE option is selected. Default is||
+Blind Monitor Filename||
+This is the audio file that will play in the agents session at the start of someone blind monitoring them. This prompt will be played for everyone in the session including the customer if any is present. Default is empty||
+Uniqueid Status Display||
+If enabled, when an agent receives a call through this in-group they will see the uniqueid of the call added to the status line in their agent interface. The PREFIX option will add the prefix defined blow to the beginning of the uniqueid in the display. Default is DISABLED. If there was already a Uniqueid defined on a call entering this in-group, then the original uniqueid will be displayed||
+Uniqueid Status Prefix||
+If PREFIX option is selected above then this is the value of that prefix. Default is empty||
+Default Codecs||
+You can define a comma delimited list of codecs to be set as the default codecs for all systems. Options for codecs include ulaw, alaw, gsm, g729, speex, g722, g723, g726, ilbc, ... Default is empty||
+Allowed Codecs||
+You can define a comma delimited list of codecs to be set as the default codecs for this phone. Options for codecs include ulaw, alaw, gsm, g729, speex, g722, g723, g726, ilbc, ... Some of these codecs might not be available on your system, like g729 or g726. If the field is empty, then the system default codecs or the phone entry above this one will be used for the allowable codecs. Default is empty||
+Allowed Codecs With Template||
+Setting this option to 1 will include the codecs defined above even if a conf file template is used. Default is 0||
 
 
 AST_VICIDIAL_ingrouplist.php

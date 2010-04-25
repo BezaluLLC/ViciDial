@@ -75,6 +75,8 @@ conf_secret VARCHAR(20) default 'test',
 delete_vm_after_email ENUM('N','Y') default 'N',
 is_webphone ENUM('Y','N') default 'N',
 use_external_server_ip ENUM('Y','N') default 'N',
+codecs_list VARCHAR(100) default '',
+codecs_with_template ENUM('0','1') default '0',
 index (server_ip),
 unique index extenserver (extension, server_ip)
 );
@@ -548,7 +550,8 @@ custom_five VARCHAR(100) default '',
 voicemail_id VARCHAR(10),
 agent_call_log_view_override ENUM('DISABLED','Y','N') default 'DISABLED',
 callcard_admin ENUM('1','0') default '0',
-agent_choose_blended ENUM('0','1') default '1'
+agent_choose_blended ENUM('0','1') default '1',
+realtime_block_user_info ENUM('0','1') default '0'
 );
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -561,6 +564,12 @@ campaign_id VARCHAR(8),
 event_date DATETIME,
 event_epoch INT(10) UNSIGNED,
 user_group VARCHAR(20),
+session_id VARCHAR(20),
+server_ip VARCHAR(15),
+extension VARCHAR(50),
+computer_ip VARCHAR(15),
+browser VARCHAR(255),
+data VARCHAR(255),
 index (user)
 );
 
@@ -732,7 +741,11 @@ use_custom_cid ENUM('Y','N') default 'N',
 scheduled_callbacks_alert ENUM('NONE','BLINK','RED','BLINK_RED') default 'NONE',
 queuemetrics_callstatus_override ENUM('DISABLED','NO','YES') default 'DISABLED',
 extension_appended_cidname ENUM('Y','N') default 'N',
-scheduled_callbacks_count ENUM('LIVE','ALL_ACTIVE') default 'ALL_ACTIVE'
+scheduled_callbacks_count ENUM('LIVE','ALL_ACTIVE') default 'ALL_ACTIVE',
+manual_dial_override ENUM('NONE','ALLOW_ALL','DISABLE_ALL') default 'NONE',
+blind_monitor_warning ENUM('DISABLED','ALERT','NOTICE','AUDIO','ALERT_NOTICE','ALERT_AUDIO','NOTICE_AUDIO','ALL') default 'DISABLED',
+blind_monitor_message VARCHAR(255) default 'Someone is blind monitoring your session',
+blind_monitor_filename VARCHAR(100) default ''
 );
 
 CREATE TABLE vicidial_lists (
@@ -883,7 +896,9 @@ xferconf_c_number VARCHAR(50) default '',
 xferconf_d_number VARCHAR(50) default '',
 xferconf_e_number VARCHAR(50) default '',
 ignore_list_script_override ENUM('Y','N') default 'N',
-extension_appended_cidname ENUM('Y','N') default 'N'
+extension_appended_cidname ENUM('Y','N') default 'N',
+uniqueid_status_display ENUM('DISABLED','ENABLED','ENABLED_PREFIX') default 'DISABLED',
+uniqueid_status_prefix VARCHAR(50) default ''
 );
 
 CREATE TABLE vicidial_stations (
@@ -1234,7 +1249,8 @@ enable_agc_dispo_log ENUM('0','1') default '0',
 custom_dialplan_entry TEXT,
 queuemetrics_loginout ENUM('STANDARD','CALLBACK') default 'STANDARD',
 callcard_enabled ENUM('1','0') default '0',
-queuemetrics_callstatus ENUM('0','1') default '1'
+queuemetrics_callstatus ENUM('0','1') default '1',
+default_codecs VARCHAR(100) default ''
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2041,6 +2057,15 @@ index (extension),
 index (phone_number)
 );
 
+CREATE TABLE vicidial_log_extended (
+uniqueid VARCHAR(50) PRIMARY KEY NOT NULL,
+server_ip VARCHAR(15),
+call_date DATETIME,
+lead_id INT(9) UNSIGNED,
+caller_code VARCHAR(30) NOT NULL,
+custom_call_id VARCHAR(100)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
@@ -2180,7 +2205,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1213',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1215',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

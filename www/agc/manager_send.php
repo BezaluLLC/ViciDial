@@ -41,6 +41,7 @@
 #  - $agent_dialed_number - ('1','')
 #  - $agent_dialed_type - ('MANUAL_OVERRIDE','MANUAL_DIALNOW','MANUAL_PREVIEW',...)
 #  - $nodeletevdac - ('0','1')
+#  - $alertCID - ('0','1')
 #
 # CHANGELOG:
 # 50401-1002 - First build of script, Hangup function only
@@ -95,9 +96,11 @@
 # 91205-2103 - Code cleanup
 # 91213-1208 - Added queue_position to queue_log COMPLETE... records
 # 100327-0846 - Fix for list_id override answering machine message
+# 100423-2304 - Added alertCID
+#
 
-$version = '2.2.0-47';
-$build = '100327-0846';
+$version = '2.2.0-48';
+$build = '100423-2304';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -185,6 +188,8 @@ if (isset($_GET["agent_dialed_type"]))				{$agent_dialed_type=$_GET["agent_diale
 	elseif (isset($_POST["agent_dialed_type"]))		{$agent_dialed_type=$_POST["agent_dialed_type"];}
 if (isset($_GET["nodeletevdac"]))				{$nodeletevdac=$_GET["nodeletevdac"];}
 	elseif (isset($_POST["nodeletevdac"]))		{$nodeletevdac=$_POST["nodeletevdac"];}
+if (isset($_GET["alertCID"]))				{$alertCID=$_GET["alertCID"];}
+	elseif (isset($_POST["alertCID"]))		{$alertCID=$_POST["alertCID"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -390,7 +395,7 @@ if ($ACTION=="OriginateVDRelogin")
 
 if ($ACTION=="Originate")
 	{
-	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($ext_context)<1) or (strlen($queryCID)<10) )
+	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($ext_context)<1) or ( (strlen($queryCID)<10) && ($alertCID < 1) ) )
 		{
 		echo "ERROR Exten $exten is not valid or queryCID $queryCID is not valid, Originate command not inserted\n";
 		}

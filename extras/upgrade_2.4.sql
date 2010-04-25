@@ -236,3 +236,35 @@ ALTER TABLE vicidial_campaigns ADD scheduled_callbacks_count ENUM('LIVE','ALL_AC
 
 UPDATE system_settings SET db_schema_version='1214',db_schema_update_date=NOW();
 
+ALTER TABLE vicidial_user_log ADD session_id VARCHAR(20);
+ALTER TABLE vicidial_user_log ADD server_ip VARCHAR(15);
+ALTER TABLE vicidial_user_log ADD extension VARCHAR(50);
+ALTER TABLE vicidial_user_log ADD computer_ip VARCHAR(15);
+ALTER TABLE vicidial_user_log ADD browser VARCHAR(255);
+ALTER TABLE vicidial_user_log ADD data VARCHAR(255);
+
+ALTER TABLE vicidial_campaigns ADD manual_dial_override ENUM('NONE','ALLOW_ALL','DISABLE_ALL') default 'NONE';
+ALTER TABLE vicidial_campaigns ADD blind_monitor_warning ENUM('DISABLED','ALERT','NOTICE','AUDIO','ALERT_NOTICE','ALERT_AUDIO','NOTICE_AUDIO','ALL') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD blind_monitor_message VARCHAR(255) default 'Someone is blind monitoring your session';
+ALTER TABLE vicidial_campaigns ADD blind_monitor_filename VARCHAR(100) default '';
+
+ALTER TABLE vicidial_users ADD realtime_block_user_info ENUM('0','1') default '0';
+
+ALTER TABLE vicidial_inbound_groups ADD uniqueid_status_display ENUM('DISABLED','ENABLED','ENABLED_PREFIX') default 'DISABLED';
+ALTER TABLE vicidial_inbound_groups ADD uniqueid_status_prefix VARCHAR(50) default '';
+
+CREATE TABLE vicidial_log_extended (
+uniqueid VARCHAR(50) PRIMARY KEY NOT NULL,
+server_ip VARCHAR(15),
+call_date DATETIME,
+lead_id INT(9) UNSIGNED,
+caller_code VARCHAR(30) NOT NULL,
+custom_call_id VARCHAR(100)
+);
+
+ALTER TABLE system_settings ADD default_codecs VARCHAR(100) default '';
+
+ALTER TABLE phones ADD codecs_list VARCHAR(100) default '';
+ALTER TABLE phones ADD codecs_with_template ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1215',db_schema_update_date=NOW();

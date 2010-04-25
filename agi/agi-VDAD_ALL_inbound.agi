@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_ALL_inbound.agi version 2.2.0
+# agi-VDAD_ALL_inbound.agi version 2.4
 # 
 # runs when a call comes in from an inbound call. This script will 
 # send the calls out to the closers that are logged in.
@@ -68,7 +68,7 @@
 #exten => _99909*.,2,AGI(agi-VDAD_ALL_inbound.agi)
 #exten => _99909*.,3,Hangup
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 70828-0924 - First Build
@@ -124,6 +124,7 @@
 # 100226-0927 - Fixed reinsert issue in vicidial_auto_calls table with auto_call_id
 # 100319-0614 - Added extension group remote agent feature
 # 100414-2046 - Added extension_appended_cidname option
+# 100424-1234 - Added unique status options and extended logging
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -134,7 +135,7 @@ $start_moh=1;
 $at='@';
 $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=143;
+$mysql_log_count=149;
 $one_mysql_log=0;
 
 
@@ -307,6 +308,20 @@ $calleridname =~ s/unknown//gi;
 if ( (!$callerid) or ($callerid =~ /unknown/) )
 	{$callerid = $calleridname;}
 $originalCID = $callerid;
+
+##### find out if this call is already in the vicidial_log_extended table
+$VLEcount=0;
+$stmtA = "SELECT count(*) FROM vicidial_log_extended where uniqueid='$uniqueid';";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+	$dbhP=$dbhA;   $mysql_count='02144';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$VLEcount = 			$aryA[0];
+	}
+$sthA->finish();
 
 $user_unavailable_action='';
 ##### special processing for DID forwarded calls  "99909*1*"
@@ -529,7 +544,7 @@ $sthA->finish();
 
 ### Grab inbound groups values from the database
 $cbc=0;
-$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname FROM vicidial_inbound_groups where group_id = '$channel_group';";
+$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix FROM vicidial_inbound_groups where group_id = '$channel_group';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -577,7 +592,14 @@ while ($sthArows > $cbc)
 	$no_agent_action =					$aryA[32];
 	$no_agent_action_value =			$aryA[33];
 	$extension_appended_cidname =		$aryA[34];
-
+	$uniqueid_status_display =			$aryA[35];
+	$uniqueid_status_prefix =			$aryA[36];
+	
+	$custom_call_id='';
+	if ($uniqueid_status_display =~ /ENABLED/)
+		{$custom_call_id = "$uniqueid";}
+	if ($uniqueid_status_display =~ /ENABLED_PREFIX/)
+		{$custom_call_id = "$uniqueid_status_prefix$uniqueid";}
 	$cbc++;
 	}
 $sthA->finish();
@@ -803,6 +825,15 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 	$sthA->finish();
 	if ($AGILOG) {$agi_string = "--  AH VDCL vcl insert: |$affected_rows|$insert_lead_id|$insert_close_id|\n|$stmtA|";   &agi_output;}
 
+	if ($VLEcount < 1)
+		{
+		$stmtA = "INSERT INTO vicidial_log_extended set uniqueid='$uniqueid',server_ip='$VARserver_ip',call_date='$now_date',lead_id = '$insert_lead_id',caller_code='$callerid',custom_call_id='$custom_call_id';";
+		$affected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='02145';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "--  AH VLE insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
+		$VLEcount++;
+		}
+
 	$stmtA = "UPDATE vicidial_list set status='AFTHRS' where lead_id = '$insert_lead_id';";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02018';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
@@ -977,6 +1008,15 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 			}
 		$sthA->finish();
 		if ($AGILOG) {$agi_string = "--  NA VDCL vcl insert: |$affected_rows|$insert_lead_id|$insert_close_id|\n|$stmtA|";   &agi_output;}
+
+		if ($VLEcount < 1)
+			{
+			$stmtA = "INSERT INTO vicidial_log_extended set uniqueid='$uniqueid',server_ip='$VARserver_ip',call_date='$now_date',lead_id = '$insert_lead_id',caller_code='$callerid',custom_call_id='$custom_call_id';";
+			$affected_rows = $dbhA->do($stmtA);
+				$dbhP=$dbhA;   $mysql_count='02146';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+			if ($AGILOG) {$agi_string = "--  AH VLE insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
+			$VLEcount++;
+			}
 
 		$stmtA = "UPDATE vicidial_list set status='NANQUE' where lead_id = '$insert_lead_id';";
 		$affected_rows = $dbhA->do($stmtA);
@@ -1373,6 +1413,15 @@ if ($sthArows > 0)
 	}
 $sthA->finish();
 if ($AGILOG) {$agi_string = "--    VDCL : |$insert_lead_id|$insert_xfer_id|$insert_close_id|insert to vicidial_closer_log";   &agi_output;}
+
+if ($VLEcount < 1)
+	{
+	$stmtA = "INSERT INTO vicidial_log_extended set uniqueid='$uniqueid',server_ip='$VARserver_ip',call_date='$now_date',lead_id = '$insert_lead_id',caller_code='$callerid',custom_call_id='$custom_call_id';";
+	$affected_rows = $dbhA->do($stmtA);
+		$dbhP=$dbhA;   $mysql_count='02147';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+	if ($AGILOG) {$agi_string = "--  AH VLE insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
+	$VLEcount++;
+	}
 
 
 
@@ -1974,7 +2023,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
-							$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='02148';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 						while ($sthArows > $eac_cbc)
 							{
 							@aryA = $sthA->fetchrow_array;
@@ -2474,7 +2523,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
-							$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='02149';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 						while ($sthArows > $eac_cbc)
 							{
 							@aryA = $sthA->fetchrow_array;

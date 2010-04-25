@@ -61,10 +61,11 @@
 # 100214-1127 - Added no-dialable-leads alert and in-groups stats option
 # 100301-1229 - Added 3-WAY status for consultative transfer agents
 # 100303-0930 - Added carrier stats display option
+# 100424-0943 - Added realtime_block_user_info option
 #
 
-$version = '2.2.0-52';
-$build = '100303-0930';
+$version = '2.2.0-53';
+$build = '100424-0943';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -259,6 +260,13 @@ if ( (!isset($monitor_phone)) or (strlen($monitor_phone)<1) )
 	$row=mysql_fetch_row($rslt);
 	$monitor_phone = $row[0];
 	}
+
+$stmt="SELECT realtime_block_user_info from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$realtime_block_user_info=$row[0];
 
 $stmt="select campaign_id,campaign_name from vicidial_campaigns where active='Y' order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
@@ -1877,9 +1885,16 @@ if ($SERVdisplay < 1)
 	}
 
 
-
-$Aline  = "$HDbegin$HDstation$HDphone$HDuser$HDusergroup$HDsessionid$HDbarge$HDstatus$HDpause$HDcustphone$HDserver_ip$HDcall_server_ip$HDtime$HDcampaign$HDcalls$HDigcall\n";
-$Bline  = "$HTbegin$HTstation$HTphone$HTuser$HTusergroup$HTsessionid$HTbarge$HTstatus$HTpause$HTcustphone$HTserver_ip$HTcall_server_ip$HTtime$HTcampaign$HTcalls$HTigcall\n";
+if ($realtime_block_user_info > 0)
+	{
+	$Aline  = "$HDbegin$HDusergroup$HDsessionid$HDbarge$HDstatus$HDpause$HDcustphone$HDserver_ip$HDcall_server_ip$HDtime$HDcampaign$HDcalls$HDigcall\n";
+	$Bline  = "$HTbegin$HTusergroup$HTsessionid$HTbarge$HTstatus$HTpause$HTcustphone$HTserver_ip$HTcall_server_ip$HTtime$HTcampaign$HTcalls$HTigcall\n";
+	}
+else
+	{
+	$Aline  = "$HDbegin$HDstation$HDphone$HDuser$HDusergroup$HDsessionid$HDbarge$HDstatus$HDpause$HDcustphone$HDserver_ip$HDcall_server_ip$HDtime$HDcampaign$HDcalls$HDigcall\n";
+	$Bline  = "$HTbegin$HTstation$HTphone$HTuser$HTusergroup$HTsessionid$HTbarge$HTstatus$HTpause$HTcustphone$HTserver_ip$HTcall_server_ip$HTtime$HTcampaign$HTcalls$HTigcall\n";
+	}
 $Aecho .= "$Aline";
 $Aecho .= "$Bline";
 $Aecho .= "$Aline";
@@ -2293,8 +2308,14 @@ $calls_to_list = mysql_num_rows($rslt);
 
 		$agentcount++;
 
-		$Aecho .= "| $G$extension$EG |$phoneD<a href=\"./user_status.php?user=$Luser\" target=\"_blank\">$G$user$EG</a> <a href=\"javascript:ingroup_info('$Luser','$j');\">+</a> |$UGD $G$sessionid$EG$L$R | $G$status$EG $CM $pausecode| $CP$SVD$G$call_time_MS$EG | $G$campaign_id$EG | $G$calls_today$EG |$INGRP\n";
-
+		if ($realtime_block_user_info > 0)
+			{
+			$Aecho .= "|$UGD $G$sessionid$EG$L$R | $G$status$EG $CM $pausecode| $CP$SVD$G$call_time_MS$EG | $G$campaign_id$EG | $G$calls_today$EG |$INGRP\n";
+			}
+		if ($realtime_block_user_info < 1)
+			{
+			$Aecho .= "| $G$extension$EG |$phoneD<a href=\"./user_status.php?user=$Luser\" target=\"_blank\">$G$user$EG</a> <a href=\"javascript:ingroup_info('$Luser','$j');\">+</a> |$UGD $G$sessionid$EG$L$R | $G$status$EG $CM $pausecode| $CP$SVD$G$call_time_MS$EG | $G$campaign_id$EG | $G$calls_today$EG |$INGRP\n";
+			}
 		$j++;
 		}
 

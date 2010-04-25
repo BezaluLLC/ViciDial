@@ -9,9 +9,11 @@
 # $server_ip - the server that you are to login to
 # $callerid - the callerid number
 # $protocol - IAX or SIP
+# $codecs - list of codecs to use
 #
 # CHANGELOG
 # 100130-2359 - First Build of VICIDIAL web client basic login process finished
+# 100424-2102 - Added codecs option and updated zoiperweb code reference
 #
 
 if (isset($_GET["DB"]))							{$DB=$_GET["DB"];}
@@ -26,12 +28,15 @@ if (isset($_GET["callerid"]))					{$callerid=$_GET["callerid"];}
         elseif (isset($_POST["callerid"]))		{$callerid=$_POST["callerid"];}
 if (isset($_GET["protocol"]))					{$protocol=$_GET["protocol"];}
         elseif (isset($_POST["protocol"]))		{$protocol=$_POST["protocol"];}
+if (isset($_GET["codecs"]))						{$codecs=$_GET["codecs"];}
+        elseif (isset($_POST["codecs"]))		{$codecs=$_POST["codecs"];}
 
 $b64_phone_login =		base64_decode($phone_login);
 $b64_phone_pass =		base64_decode($phone_pass);
 $b64_server_ip =		base64_decode($server_ip);
 $b64_callerid =			base64_decode($callerid);
 $b64_protocol =			base64_decode($protocol);
+$b64_codecs =			base64_decode($codecs);
 if ($b64_protocol != 'SIP')
 	{$b64_protocol = 'IAX';}
 
@@ -107,6 +112,16 @@ function OnZoiperReady(phone)
 	Account.CallerID = "<?php echo $b64_callerid ?>";
 	Account.UserName = "<?php echo $b64_phone_login ?>";
 	Account.Password = "<?php echo $b64_phone_pass ?>";
+
+
+	<?php
+	if (preg_match("/gsm/i",$b64_codecs))	{echo "Account.AddCodec(\"GSM\")\n";}
+	if (preg_match("/ulaw/i",$b64_codecs))	{echo "Account.AddCodec(\"u-law\")\n";}
+	if (preg_match("/alaw/i",$b64_codecs))	{echo "Account.AddCodec(\"a-law\")\n";}
+	if (preg_match("/speex/i",$b64_codecs)) {echo "Account.AddCodec(\"Speex\")\n";}
+	if (preg_match("/ilbc/i",$b64_codecs))	{echo "Account.AddCodec(\"iLBC 30\")\n";}
+	if (preg_match("/ilbc/i",$b64_codecs))	{echo "Account.AddCodec(\"iLBC 20\")\n";}
+	?>
 
 	Account.Apply();
 	Account.Register();
@@ -206,7 +221,7 @@ function OnZoiperContactStatus(contact,status)
 <div id="supportedBrowsersScreen" style="display:block;">	   
         <!--CODEBASE="Activextest.ocx"    -->
 		<div style="background:url(http://www.zoiper.com/images/loader.gif) 50% 50% no-repeat;width:434px;height:236px;float:left;"> 
-		<object id="ZoiperA" classid="clsid:BCCA9B64-41B3-4A20-8D8B-E69FE61F1F8B" align="center" width="434" height="236" CODEBASE="http://www.zoiper.com/webphone/InstallerWeb.cab#Version=1,14,0,6132">
+		<object id="ZoiperA" classid="clsid:BCCA9B64-41B3-4A20-8D8B-E69FE61F1F8B" align="center" width="434" height="236" CODEBASE="http://www.zoiper.com/webphone/InstallerWeb.cab#Version=1,17,0,6802">
 			<embed id="ZoiperN" type="application/x-zoiper-plugin" align="center" width="434" height="236" />
 		</object> 
 		</div>

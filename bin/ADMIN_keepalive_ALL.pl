@@ -50,6 +50,7 @@
 # 100220-1410 - Added System Settings and Servers custom dialplan entries
 # 100225-2020 - Change voicemail configuration to use voicemail.conf
 # 100312-1012 - Changed TIMEOUT Call Menu function to work with AGI routes
+# 100424-2121 - Added codecs options for phones
 #
 
 $DB=0; # Debug flag
@@ -93,6 +94,11 @@ if (length($ARGV[0])>1)
 			{
 			$DBX=1;
 			print "\n----- SUPER-DUPER DEBUGGING -----\n\n";
+			}
+		if ($args =~ /--debugXXX/i)
+			{
+			$DBXXX=1;
+			print "\n----- TRIPLE DEBUGGING -----\n\n";
 			}
 		if ($args =~ /-t/i)
 			{
@@ -742,7 +748,7 @@ if ($timeclock_end_of_day_NOW > 0)
 ################################################################################
 
 ##### Get the settings from system_settings #####
-$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry FROM system_settings;";
+$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs FROM system_settings;";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -753,8 +759,10 @@ if ($sthArows > 0)
 	$sounds_central_control_active =	$aryA[0];
 	$active_voicemail_server =			$aryA[1];
 	$SScustom_dialplan_entry =			$aryA[2];
+	$SSdefault_codecs =					$aryA[3];
 	}
 $sthA->finish();
+if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
 if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_server)) eq (length($server_ip))) )
 	{
 	$THISserver_voicemail=1;
@@ -1218,7 +1226,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the IAX phone entries #####
-	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
+	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,codecs_list,codecs_with_template FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1242,6 +1250,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$phone_ring_timeout[$i] =		$aryA[12];
 		$conf_secret[$i] =				$aryA[13];
 		$delete_vm_after_email[$i] =	$aryA[14];
+		$codecs_list[$i] =				$aryA[15];
+		$codecs_with_template[$i] =		$aryA[16];
+		if ( (length($SSdefault_codecs) > 2) && (length($codecs_list[$i]) < 3) )
+			{$codecs_list[$i] = $SSdefault_codecs;}
+		
 		$i++;
 		}
 	$sthA->finish();
@@ -1251,6 +1264,25 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		{
 		$conf_entry_written=0;
 		$template_contents[$i]='';
+		$Pcodec='';
+		if (length($codecs_list[$i]) > 2)
+			{
+			if ($codecs_list[$i] =~ /gsm/i)			{$Pcodec .= "allow=gsm\n";}
+			if ($codecs_list[$i] =~ /ulaw|u-law/i)	{$Pcodec .= "allow=ulaw\n";}
+			if ($codecs_list[$i] =~ /alaw|a-law/i)	{$Pcodec .= "allow=alaw\n";}
+			if ($codecs_list[$i] =~ /g722|g\.722/i)	{$Pcodec .= "allow=g722\n";}
+			if ($codecs_list[$i] =~ /g723|g\.723/i)	{$Pcodec .= "allow=g723.1\n";}
+			if ($codecs_list[$i] =~ /g726|g\.726/i)	{$Pcodec .= "allow=g726\n";}
+			if ($codecs_list[$i] =~ /g729|g\.729/i)	{$Pcodec .= "allow=g729\n";}
+			if ($codecs_list[$i] =~ /ilbc/i)		{$Pcodec .= "allow=ilbc\n";}
+			if ($codecs_list[$i] =~ /lpc10/i)		{$Pcodec .= "allow=lpc10\n";}
+			if ($codecs_list[$i] =~ /speex/i)		{$Pcodec .= "allow=speex\n";}
+			if ($codecs_list[$i] =~ /adpcm/i)		{$Pcodec .= "allow=adpcm\n";}
+			if (length($Pcodec) > 2)
+				{$Pcodec = "disallow=all\n$Pcodec";}
+			}
+		if ($DBXXX > 0) {print "IAX|$extension[$i]|$codecs_list[$i]|$Pcodec\n";}
+
 		if ( (length($template_id[$i]) > 1) && ($template_id[$i] !~ /--NONE--/) ) 
 			{
 			$stmtA = "SELECT template_contents FROM vicidial_conf_templates where template_id='$template_id[$i]';";
@@ -1267,6 +1299,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				$Piax .= "secret=$conf_secret[$i]\n";
 				$Piax .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 				$Piax .= "mailbox=$voicemail[$i]\n";
+				if ($codecs_with_template[$i] > 0) 
+					{$Piax .= "$Pcodec";}
 				$Piax .= "$template_contents[$i]\n";
 				
 				$conf_entry_written++;
@@ -1288,6 +1322,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Piax .= "mailbox=$voicemail[$i]\n";
 			$Piax .= "requirecalltoken=no\n";
 			$Piax .= "context=$phone_context[$i]\n";
+			$Piax .= "$Pcodec";
 			$Piax .= "type=friend\n";
 			$Piax .= "auth=md5\n";
 			$Piax .= "host=dynamic\n";
@@ -1307,7 +1342,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the SIP phone entries #####
-	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email FROM phones where server_ip='$server_ip' and protocol='SIP' and active='Y' order by extension;";
+	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,codecs_list,codecs_with_template FROM phones where server_ip='$server_ip' and protocol='SIP' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1331,6 +1366,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$phone_ring_timeout[$i] =		$aryA[12];
 		$conf_secret[$i] =				$aryA[13];
 		$delete_vm_after_email[$i] =	$aryA[14];
+		$codecs_list[$i] =				$aryA[15];
+		$codecs_with_template[$i] =		$aryA[16];
+		if ( (length($SSdefault_codecs) > 2) && (length($codecs_list[$i]) < 3) )
+			{$codecs_list[$i] = $SSdefault_codecs;}
+
 		$i++;
 		}
 	$sthA->finish();
@@ -1340,6 +1380,25 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		{
 		$conf_entry_written=0;
 		$template_contents[$i]='';
+		$Pcodec='';
+		if (length($codecs_list[$i]) > 2)
+			{
+			if ($codecs_list[$i] =~ /gsm/i)			{$Pcodec .= "allow=gsm\n";}
+			if ($codecs_list[$i] =~ /ulaw|u-law/i)	{$Pcodec .= "allow=ulaw\n";}
+			if ($codecs_list[$i] =~ /alaw|a-law/i)	{$Pcodec .= "allow=alaw\n";}
+			if ($codecs_list[$i] =~ /g722|g\.722/i)	{$Pcodec .= "allow=g722\n";}
+			if ($codecs_list[$i] =~ /g723|g\.723/i)	{$Pcodec .= "allow=g723.1\n";}
+			if ($codecs_list[$i] =~ /g726|g\.726/i)	{$Pcodec .= "allow=g726\n";}
+			if ($codecs_list[$i] =~ /g729|g\.729/i)	{$Pcodec .= "allow=g729\n";}
+			if ($codecs_list[$i] =~ /ilbc/i)		{$Pcodec .= "allow=ilbc\n";}
+			if ($codecs_list[$i] =~ /lpc10/i)		{$Pcodec .= "allow=lpc10\n";}
+			if ($codecs_list[$i] =~ /speex/i)		{$Pcodec .= "allow=speex\n";}
+			if ($codecs_list[$i] =~ /adpcm/i)		{$Pcodec .= "allow=adpcm\n";}
+			if (length($Pcodec) > 2)
+				{$Pcodec = "disallow=all\n$Pcodec";}
+			}
+		if ($DBXXX > 0) {print "SIP|$extension[$i]|$codecs_list[$i]|$Pcodec\n";}
+
 		if ( (length($template_id[$i]) > 1) && ($template_id[$i] !~ /--NONE--/) ) 
 			{
 			$stmtA = "SELECT template_contents FROM vicidial_conf_templates where template_id='$template_id[$i]';";
@@ -1356,6 +1415,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				$Psip .= "secret=$conf_secret[$i]\n";
 				$Psip .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 				$Psip .= "mailbox=$voicemail[$i]\n";
+				if ($codecs_with_template[$i] > 0) 
+					{$Piax .= "$Pcodec";}
 				$Psip .= "$template_contents[$i]\n";
 				
 				$conf_entry_written++;
@@ -1376,6 +1437,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Psip .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 			$Psip .= "mailbox=$voicemail[$i]\n";
 			$Psip .= "context=$phone_context[$i]\n";
+			$Piax .= "$Pcodec";
 			$Psip .= "type=friend\n";
 			$Psip .= "host=dynamic\n";
 			}

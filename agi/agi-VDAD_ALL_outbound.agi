@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_ALL_outbound.agi version 2.2.0
+# agi-VDAD_ALL_outbound.agi version 2.4
 # 
 # runs when an outbound call is answered. This script will 
 # send the calls out to the agents that are logged in.
@@ -74,12 +74,13 @@
 # 100205-1024 - Fixed CPD send to message
 # 100319-0610 - Added extension group remote agent feature
 # 100414-2156 - Added extension_appended_cidname option
+# 100424-1341 - Added extended logging
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
 $AGILOG = '0';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=67;
+$mysql_log_count=69;
 $one_mysql_log=0;
 
 
@@ -624,6 +625,12 @@ if ($affected_rows > 0)
 		$dbhP=$dbhA;   $mysql_count='01008';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 
 	if ($AGILOG) {$agi_string = "--    VDAD : |$VDADlead_id|$CIDlead_id|insert to vicidial_log: $uniqueid";   &agi_output;}
+
+	$stmtA = "INSERT INTO vicidial_log_extended set uniqueid='$uniqueid',server_ip='$VARserver_ip',call_date='$SQLdate',lead_id = '$CIDlead_id',caller_code='$callerid',custom_call_id='';";
+	$affected_rows = $dbhA->do($stmtA);
+		$dbhP=$dbhA;   $mysql_count='01067';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+	if ($AGILOG) {$agi_string = "--  VDAD VLE insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
+
 
 	#############################################
 	##### START QUEUEMETRICS LOGGING LOOKUP #####
@@ -1560,7 +1567,7 @@ while ($drop_timer <= $DROP_TIME)
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
-							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='01068';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 						while ($sthArows > $eac_cbc)
 							{
 							@aryA = $sthA->fetchrow_array;
@@ -1849,7 +1856,7 @@ while ($drop_timer <= $DROP_TIME)
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
-							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='01069';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 						while ($sthArows > $eac_cbc)
 							{
 							@aryA = $sthA->fetchrow_array;
