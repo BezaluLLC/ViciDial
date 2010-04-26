@@ -5232,6 +5232,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								{web_form_vars = '?' + web_form_vars}
 
 							TEMP_VDIC_web_form_address = VDIC_web_form_address + "" + web_form_vars;
+
+							var regWFAqavars = new RegExp("\\?&","ig");
+							var regWFAaavars = new RegExp("&&","ig");
+							TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAqavars, '?');
+							TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAaavars, '&');
 							}
 
 						if (VDIC_web_form_address_two.match(regWFAcustom))
@@ -5327,6 +5332,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								{web_form_vars_two = '?' + web_form_vars_two}
 
 							TEMP_VDIC_web_form_address_two = VDIC_web_form_address_two + "" + web_form_vars_two;
+
+							var regWFAqavars = new RegExp("\\?&","ig");
+							var regWFAaavars = new RegExp("&&","ig");
+							TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAqavars, '?');
+							TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAaavars, '&');
 							}
 
 						document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH();\"><IMG SRC=\"./images/vdc_LB_webform.gif\" border=0 alt=\"Web Form\"></a>\n";
@@ -5648,6 +5658,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								{web_form_vars = '?' + web_form_vars}
 
 							TEMP_VDIC_web_form_address = VDIC_web_form_address + "" + web_form_vars;
+
+							var regWFAqavars = new RegExp("\\?&","ig");
+							var regWFAaavars = new RegExp("&&","ig");
+							TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAqavars, '?');
+							TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAaavars, '&');
 							}
 
 						if (VDIC_web_form_address_two.match(regWFAcustom))
@@ -5743,6 +5758,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								{web_form_vars_two = '?' + web_form_vars_two}
 
 							TEMP_VDIC_web_form_address_two = VDIC_web_form_address_two + "" + web_form_vars_two;
+
+							var regWFAqavars = new RegExp("\\?&","ig");
+							var regWFAaavars = new RegExp("&&","ig");
+							TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAqavars, '?');
+							TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAaavars, '&');
 							}
 
 						document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH();\"><IMG SRC=\"./images/vdc_LB_webform.gif\" border=0 alt=\"Web Form\"></a>\n";
@@ -6984,6 +7004,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 									{web_form_vars = '?' + web_form_vars}
 
 								TEMP_VDIC_web_form_address = VDIC_web_form_address + "" + web_form_vars;
+
+								var regWFAqavars = new RegExp("\\?&","ig");
+								var regWFAaavars = new RegExp("&&","ig");
+								TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAqavars, '?');
+								TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAaavars, '&');
 								}
 
 							if (VDIC_web_form_address_two.match(regWFAcustom))
@@ -7079,6 +7104,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 									{web_form_vars_two = '?' + web_form_vars_two}
 
 								TEMP_VDIC_web_form_address_two = VDIC_web_form_address_two + "" + web_form_vars_two;
+
+								var regWFAqavars = new RegExp("\\?&","ig");
+								var regWFAaavars = new RegExp("&&","ig");
+								TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAqavars, '?');
+								TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAaavars, '&');
 								}
 
 
@@ -7360,6 +7390,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				{web_form_vars = '?' + web_form_vars}
 
 			TEMP_VDIC_web_form_address = VDIC_web_form_address + "" + web_form_vars;
+
+			var regWFAqavars = new RegExp("\\?&","ig");
+			var regWFAaavars = new RegExp("&&","ig");
+			TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAqavars, '?');
+			TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAaavars, '&');
 			}
 
 
@@ -7485,6 +7520,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				{web_form_vars_two = '?' + web_form_vars_two}
 
 			TEMP_VDIC_web_form_address_two = VDIC_web_form_address_two + "" + web_form_vars_two;
+
+			var regWFAqavars = new RegExp("\\?&","ig");
+			var regWFAaavars = new RegExp("&&","ig");
+			TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAqavars, '?');
+			TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAaavars, '&');
 			}
 
 
