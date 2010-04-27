@@ -62,6 +62,7 @@
 # 91020-0054 - Fixed Auto-alt-dial DNC issues
 # 91026-1207 - Added AREACODE DNC option
 # 100409-1101 - Fix for rare dial-time duplicate hopper load issue
+# 100427-0429 - Fix for list mix no-status-selected issue
 #
 
 # constants
@@ -1906,8 +1907,16 @@ foreach(@campaign_id)
 							@list_mix_stepARY=@MT;
 
 							@list_mix_stepARY = split(/\|/,$list_mixARY[$x]);
-							$LM_step_goal[$x] = ( ($list_mix_stepARY[2] / 100) * $hopper_level[$i]);
-							$LM_step_even[$x] = ( (100 / $list_mix_stepARY[2]) * 100000);
+							if ($list_mix_stepARY[2] > 0)
+								{
+								$LM_step_goal[$x] = ( ($list_mix_stepARY[2] / 100) * $hopper_level[$i]);
+								$LM_step_even[$x] = ( (100 / $list_mix_stepARY[2]) * 100000);
+								}
+							else
+								{
+								$LM_step_goal[$x] = 0;
+								$LM_step_even[$x] = 0;
+								}
 							$list_mix_stepARY[3] =~ s/ /','/gi;
 							$list_mix_stepARY[3] =~ s/^',|,'-//gi;
 							if ($list_mix_stepARY[3] !~ /\'$/)

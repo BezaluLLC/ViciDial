@@ -1,12 +1,14 @@
 #!/usr/bin/perl
 #
-# VICIDIAL_IN_new_leads_file.pl version 2.2.0   *DBI-version*
+# VICIDIAL_IN_new_leads_file.pl version 2.4
 #
 # DESCRIPTION:
 # script lets you insert leads into the vicidial_list table from a TAB-delimited
 # lead file that is in the proper format. (for format see --help)
 #
 # It is recommended that you run this program on the local Asterisk machine
+#
+# NOTE: the machine this is run on must have a servers entry in the database
 #
 # Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -43,7 +45,10 @@
 # 100118-0527 - Added new Australian and New Zealand DST schemes (FSO-FSA and LSS-FSA)
 # 100204-2333 - Added dccsv10 file format
 # 100221-0939 - Added dccsv43 file format with custom cid lookup
+# 100427-0434 - Added ability to create new list in system for each new loaded file
 #
+
+$version = '100427-0434';
 
 $secX = time();
 $MT[0]='';
@@ -61,6 +66,7 @@ if ($mon < 10) {$mon = "0$mon";}
 if ($mday < 10) {$mday = "0$mday";}
 $pulldate0 = "$year-$mon-$mday $hour:$min:$sec";
 $insert_date = "$year-$mon-$mday $hour:$min:$sec";
+$listdate = "$year$mon$mday";
 $inSD = $pulldate0;
 $dsec = ( ( ($hour * 3600) + ($min * 60) ) + $sec );
 $MT[0]='';
@@ -128,17 +134,27 @@ if (length($ARGV[0])>1)
 		$i++;
 		}
 
+	if ($args =~ /--version/i)
+		{
+		print "$version\n";
+		exit;
+		}
 	if ($args =~ /--help|-h/i)
 		{
 		print "allowed run time options:\n";
 		print "  [-q] = quiet\n";
 		print "  [-t] = test\n";
+		print "  [--version] = version\n";
 		print "  [--forcegmt] = forces gmt value of column after comments column\n";
 		print "  [--debug] = debug output\n";
 		print "  [--format=standard] = ability to define a format, standard is default, formats allowed shown in examples\n";
 		print "  [--forcelistid=1234] = overrides the listID given in the file with the 1234\n";
 		print "  [--forcelistfilename] = overrides the listID using last number in filename: (XYZ_1234.txt = list ID 1234)\n";
 		print "  [--forcephonecode=44] = overrides the phone_code given in the lead with the 44\n";
+		print "  [--new-list-for-each-file] = creates a new list for each file loaded, listID = YYYYMMDDX where X is incremented\n";
+		print "  [--new-listid-prefix=X] = prefix for listID when creating new lists, must be only numbers, and 4 or less digits\n";
+		print "  [--new-listname-prefix=X] = prefix for list name when creating new lists, will be followed by filename\n";
+		print "  [--new-list-campaign=X] = campaign that the new list will be assigned to\n";
 		print "  [--duplicate-check] = checks for the same phone number in the same list id before inserting lead\n";
 		print "  [--duplicate-campaign-check] = checks for the same phone number in the same campaign before inserting lead\n";
 		print "  [--duplicate-system-check] = checks for the same phone number in the entire system before inserting lead\n";
@@ -176,7 +192,7 @@ if (length($ARGV[0])>1)
 		print "dccsv10:\n";
 		print "VENDOR_ID,FIRST_NAME,LAST_NAME,PHONE_1,PHONE_2,PHONE_3,PHONE_4,PHONE_5,PHONE_6,PHONE_7\n";
 		print "\"100998\",\"ANGELA    \",\"SMITH     \",\"3145551212\",\"3145551213\",\"3145551214\",\"0\",\"3145551215\",\"3145551216\",\"0\",\n\n";
-		print "dccsv43:\n";
+		print "dccsv43 and dccsvref43:\n";
 		print "---format too confusing to list in the help screen---\n\n";
 
 		exit;
@@ -279,6 +295,40 @@ if (length($ARGV[0])>1)
 			$postalgmt=1;
 			if ($q < 1) {print "\n----- POSTAL CODE TIMEZONE -----\n\n";}
 			}
+
+		if ($args =~ /-new-list-for-each-file/i)
+			{
+			$new_list_for_each_file=1;
+			if ($q < 1) {print "\n----- NEW LIST FOR EACH FILE -----\n\n";}
+			}
+		if ($args =~ /--new-listid-prefix=/i)
+			{
+			@data_in = split(/--new-listid-prefix=/,$args);
+				$list_id_prefix = $data_in[1];
+				$list_id_prefix =~ s/ .*//gi;
+			if ($q < 1) {print "\n----- NEW LISTID PREFIX: $list_id_prefix -----\n\n";}
+			}
+		else
+			{$list_id_prefix = '';}
+		if ($args =~ /--new-listname-prefix=/i)
+			{
+			@data_in = split(/--new-listname-prefix=/,$args);
+				$list_name_prefix = $data_in[1];
+				$list_name_prefix =~ s/ .*//gi;
+			if ($q < 1) {print "\n----- NEW LISTNAME PREFIX: $list_name_prefix -----\n\n";}
+			}
+		else
+			{$list_name_prefix = '';}
+		if ($args =~ /--new-list-campaign=/i)
+			{
+			@data_in = split(/--new-list-campaign=/,$args);
+				$list_campaign = $data_in[1];
+				$list_campaign =~ s/ .*//gi;
+			if ($q < 1) {print "\n----- NEW LIST CAMPAIGN: $list_campaign -----\n\n";}
+			}
+		else
+			{$list_campaign = '';}
+
 		if ($args =~ /-ftp-pull/i)
 			{
 			$ftp_pull=1;
@@ -461,6 +511,39 @@ foreach(@FILES)
 				$forcelistfilename_listid = $forcelistfilename_nameARY[$#forcelistfilename_nameARY];
 				$forcelistfilename_listid =~ s/\D//gi;
 				if ($DB > 0) {print "$forcelistfilename_listid|$#forcelistfilename_nameARY|$forcelistfilename_name|$FILES[$i]\n";}
+				}
+
+			if ($new_list_for_each_file > 0)
+				{
+				$dup_list_id=1;
+				$xloop=0;
+				$x=1;
+				$new_list_id = "$list_id_prefix$listdate$x";
+				while ( ($xloop < 10000) && ($dup_list_id > 0) )
+					{
+					$stmtA = "select count(*) from vicidial_lists where list_id='$new_list_id';";
+						if($DBX){print STDERR "\n|$stmtA|\n";}
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$dup_list_id = $aryA[0];
+						}
+					$sthA->finish();
+					if ($dup_list_id > 0)
+						{
+						$x++;
+						$new_list_id = "$list_id_prefix$listdate$x";
+						}
+					$xloop++;
+					}
+
+				$forcelistfilename_listid = $new_list_id;
+				$stmtZ = "INSERT INTO vicidial_lists (list_id,list_name,list_description,campaign_id,active,list_changedate) values('$new_list_id','$list_name_prefix $FILES[$i]','Created: $insert_date','$list_campaign','N','$insert_date');";
+					if (!$T) {$affected_rows = $dbhA->do($stmtZ); } #  or die  "Couldn't execute query: |$stmtZ|\n";
+				if ($DB > 0) {print "LIST CREATED: $new_list_id|$affected_rows|$stmtZ\n";}
 				}
 
 
@@ -928,6 +1011,118 @@ foreach(@FILES)
 #"II ACCT/1103566666  ","P","SMITH           ","        SAMMY","7838 W 109TH ST APT 12        ","                              ","OVERLAND PARK       ","KS","66212","0000","G","20091110","20091110","19661216","NOLTTR","00000000","20091214","20091219","1000","03","000","00000000","000000000.00 ","00000000","0004","0003","0004","000","ACTIVE","20091110","0648","00"," ","C","HSBC                          ","000000692.09 ","9135551212","0000000000","0000000000","0000000000","0000000000","0000000000","0000000000"
 
 			if ( ($format =~ /dccsv43/) && ($format_set < 1) )
+				{
+				$raw_number = $number;
+				chomp($number);
+				$number =~ s/,\"0\"/,/gi;
+				$number =~ s/\t/\|/gi;
+				$number =~ s/\'|\t|\r|\n|\l//gi;
+				$number =~ s/\",,,,,,,\"/\|\|\|\|\|\|\|/gi;
+				$number =~ s/\",,,,,,\"/\|\|\|\|\|\|/gi;
+				$number =~ s/\",,,,,\"/\|\|\|\|\|/gi;
+				$number =~ s/\",,,,\"/\|\|\|\|/gi;
+				$number =~ s/\",,,\"/\|\|\|/gi;
+				$number =~ s/\",,\"/\|\|/gi;
+				$number =~ s/\",\"/\|/gi;
+				$number =~ s/\"//gi;
+				$number =~ s/\|0000000000//gi;
+				@m=@MT;
+				@m = split(/\|/, $number);
+				if ($DBX) {print "RAW: $#m-----$number\n";}
+
+				$vendor_lead_code =		$m[0];		chomp($vendor_lead_code);		$vendor_lead_code =~ s/\s+$//gi;
+					$vendor_lead_code =~s/II ACCT\///gi;
+					$vendor_lead_code =~s/WDRF  //gi;
+					while (length($vendor_lead_code) > 10) {chop($vendor_lead_code);}
+				$source_id =			$m[0];		chomp($source_id);		$source_id =~ s/\s+$//gi;
+				$list_id =				'929';
+				$phone_code =			'1';
+				$first_name =			$m[3];		chomp($first_name);		$first_name =~ s/^\s+|\s+$//gi;
+				$middle_initial =		'';
+				$last_name =			$m[2];		chomp($last_name);		$last_name =~ s/\s+$//gi;
+				$phone_number =			$m[36];			$phone_number =~ s/\D//gi;
+					$USarea = 			substr($phone_number, 0, 3);
+				$title =				$m[25];			# number of contacts
+				$address1 =				$m[4];					$address1 =~ s/\s+$//gi;
+				$address2 =				$m[5];					$address2 =~ s/\s+$//gi;
+				$address3 =				$m[34];			# orig creditor
+				$city =					$m[6];					$city =~ s/\s+$//gi;
+				$state =				$m[7];
+				$province =				$m[35];			$province =~ s/\s+$//gi;   # balance
+				$postal_code =			$m[8];
+				$country =				'';
+				$gender =				'';
+				$date_of_birth =		$m[13];
+					$dobYYYY = substr($date_of_birth, 0, 4);
+					$dobMM = substr($date_of_birth, 4, 2);
+					$dobDD = substr($date_of_birth, 6, 2);
+					$date_of_birth = "$dobYYYY-$dobMM-$dobDD";
+				$alt_phone =			$m[37];		chomp($alt_phone);	$alt_phone =~ s/\D//gi;
+				$email =				$m[11];			# date placed
+				$security_phrase =		''; # looked-up geographic CID will go here
+				$comments =				"$m[16]|$m[21]";	# last worked/dialed
+				$called_count =			'0';
+				$status =				'NEW';
+				$insert_date =			$pulldate0;
+				$rank =					$m[26];			# number of times worked
+				$owner =				$m[28];			# old status code
+				$multi_alt_phones =		'';
+
+				$r=0;
+				$map_count=0;
+				if (length($m[38]) > 9) 
+					{
+					$ALTm_phone_number[$r] =	$m[38];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					$g++;
+					}
+				if (length($m[39]) > 9) 
+					{
+					$ALTm_phone_number[$r] =	$m[39];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					}
+				if (length($m[40]) > 9) 
+					{
+					$ALTm_phone_number[$r] =	$m[40];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					}
+				if (length($m[41]) > 9) 
+					{
+					$ALTm_phone_number[$r] =	$m[41];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					}
+				if (length($m[42]) > 9) 
+					{
+					$ALTm_phone_number[$r] =	$m[42];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					}
+
+				### look up the custom CID to use for this state
+				$stmtA = "select cid from vicidial_custom_cid where state='$state';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					if($DBX){print STDERR "\n$sthArows|$stmtA|\n";}
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$security_phrase = $aryA[0];
+					}
+				$sthA->finish();
+
+				$format_set++;
+				}
+
+		# This is the format for the dccsvref43 lead files
+#"BF_ID","RECORD_TYPE","LAST_NAME","FIRST_NAME","4ADDR1","5ADDR2","6CITY","STATE","ZIP","9ZIP4","ADDR_STATUS","DATE_PLACED","DATE_ADDED","DOB","LAST_LETTER","LAST_LETTER_DATE","LAST_WORKED","NEXT_ACTION_DATE","CAPTURE_CODE","CUR_CATEGORY","TIMES_DIALED","LAST_DIALED","TOTAL_PAID","DATE_LAST_PAID","NMBR_CALLS","NMBR_CONTACTS","NMBR_TIMES_WRKD","NMBR_LETTERS","STATUS_CODE","STATUS_DATE","SCORE","TIMES_TO_SERVICER","1ST-PMT-DEFAULT","TIME_ZONE","ORIG_CREDITOR","BALANCE","HOME_PHONE","WORK_PHONE","OTHER_PHONE","ACCT_OTHTEL2","ACCT_OTHTEL3","ACCT_OTHTEL4","ACCT_OTHTEL5"
+#"II ACCT/1103566666  ","P","SMITH           ","        SAMMY","7838 W 109TH ST APT 12        ","                              ","OVERLAND PARK       ","KS","66212","0000","G","20091110","20091110","19661216","NOLTTR","00000000","20091214","20091219","1000","03","000","00000000","000000000.00 ","00000000","0004","0003","0004","000","ACTIVE","20091110","0648","00"," ","C","HSBC                          ","000000692.09 ","9135551212","0000000000","0000000000","0000000000","0000000000","0000000000","0000000000"
+
+			if ( ($format =~ /dccsvref43/) && ($format_set < 1) )
 				{
 				$raw_number = $number;
 				chomp($number);
@@ -1578,6 +1773,8 @@ foreach(@FILES)
 
 			### close file handler and DB connections ###
 			$Falert  = "\n\nTOTALS FOR $FILEname:\n";
+			if ($new_list_for_each_file > 0)
+				{$Falert .= "New List ID:        $new_list_id\n";}
 			$Falert .= "Lines in lead file: $a\n";
 			$Falert .= "INSERTED:           $b\n";
 			$Falert .= "INSERT STATEMENTS:  $c\n";
