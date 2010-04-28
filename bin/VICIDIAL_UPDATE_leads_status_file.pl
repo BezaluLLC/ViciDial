@@ -16,6 +16,7 @@
 # CHANGES
 # 90627-1402 - First Build
 # 90907-0635 - Added list_id to table and allowed for multiple matches in results
+# 100427-0604 - Added purge callbacks option
 #
 
 $secX = time();
@@ -107,6 +108,7 @@ if (length($ARGV[0])>1)
 		print "  [--test] = test\n";
 		print "  [--debug] = debug output\n";
 		print "  [--delete-from-hopper] = delete lead from hopper if present\n";
+		print "  [--delete-from-callbacks] = delete lead from scheduled callbacks if present\n";
 		print "  [--format=standard] = ability to define a format, standard is default, formats allowed shown in examples\n";
 		print "  [--ftp-pull] = grabs lead files from a remote FTP server, uses REPORTS FTP login information\n";
 		print "  [--ftp-dir=leads_in] = remote FTP server directory to grab files from, should have a DONE sub-directory\n";
@@ -147,7 +149,13 @@ if (length($ARGV[0])>1)
 			$delete_from_hopper=1;
 			if ($q < 1) {print "\n----- DELETE FROM HOPPER -----\n\n";}
 			}
-		else {$DBX=0;}
+		else {$delete_from_hopper=0;}
+		if ($args =~ /--delete-from-callbacks/)
+			{
+			$delete_from_callbacks=1;
+			if ($q < 1) {print "\n----- DELETE FROM CALLBACKS -----\n\n";}
+			}
+		else {$delete_from_callbacks=0;}
 
 		if ($args =~ /-format=/i)
 			{
@@ -456,7 +464,13 @@ foreach(@FILES)
 					{
 					$stmtZ = "DELETE from vicidial_hopper where lead_id IN($lead_id);";
 						if (!$T) {$Uaffected_rows = $dbhA->do($stmtZ); } #  or die  "Couldn't execute query: |$stmtZ|\n";
-						if($DB){print STDERR "\n|$Uaffected_rows|$stmtZ|\n";}
+						if($DB){print STDERR "\nhopper purge: |$Uaffected_rows|$stmtZ|\n";}
+					}
+				if ($delete_from_callbacks > 0)
+					{
+					$stmtZ = "DELETE from vicidial_callbacks where lead_id IN($lead_id);";
+						if (!$T) {$Uaffected_rows = $dbhA->do($stmtZ); } #  or die  "Couldn't execute query: |$stmtZ|\n";
+						if($DB){print STDERR "\ncallbacks purge: |$Uaffected_rows|$stmtZ|\n";}
 					}
 				}
 			else

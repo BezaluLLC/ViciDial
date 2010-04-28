@@ -4674,7 +4674,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_inbound_groups-uniqueid_status_display">
 	<BR>
-	<B>Uniqueid Status Display -</B> If enabled, when an agent receives a call through this in-group they will see the uniqueid of the call added to the status line in their agent interface. The PREFIX option will add the prefix defined blow to the beginning of the uniqueid in the display. Default is DISABLED. If there was already a Uniqueid defined on a call entering this in-group, then the original uniqueid will be displayed.
+	<B>Uniqueid Status Display -</B> If enabled, when an agent receives a call through this in-group they will see the uniqueid of the call added to the status line in their agent interface. The PREFIX option will add the prefix defined blow to the beginning of the uniqueid in the display. Default is DISABLED. If there was already a Uniqueid defined on a call entering this in-group, then the original uniqueid will be displayed. If the PRESERVE option is used and the call is sent to a second agent, the uniqueid and prefix displayed to the first agent will also be displayed to the second agent.
 
 	<BR>
 	<A NAME="vicidial_inbound_groups-uniqueid_status_prefix">
@@ -20325,7 +20325,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Extension Append CID: </td><td align=left><select size=1 name=extension_appended_cidname><option>Y</option><option>N</option><option SELECTED>$extension_appended_cidname</option></select>$NWB#vicidial_inbound_groups-extension_appended_cidname$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Uniqueid Status Display: </td><td align=left><select size=1 name=uniqueid_status_display><option>DISABLED</option><option>ENABLED</option><option>ENABLED_PREFIX</option><option SELECTED>$uniqueid_status_display</option></select>$NWB#vicidial_inbound_groups-uniqueid_status_display$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Uniqueid Status Display: </td><td align=left><select size=1 name=uniqueid_status_display><option>DISABLED</option><option>ENABLED</option><option>ENABLED_PREFIX</option><option>ENABLED_PRESERVE</option><option SELECTED>$uniqueid_status_display</option></select>$NWB#vicidial_inbound_groups-uniqueid_status_display$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Uniqueid Status Prefix: </td><td align=left><input type=text name=uniqueid_status_prefix size=10 maxlength=50 value=\"$uniqueid_status_prefix\">$NWB#vicidial_inbound_groups-uniqueid_status_prefix$NWE</td></tr>\n";
 

@@ -117,6 +117,7 @@ Allowed Codecs||
 You can define a comma delimited list of codecs to be set as the default codecs for this phone. Options for codecs include ulaw, alaw, gsm, g729, speex, g722, g723, g726, ilbc, ... Some of these codecs might not be available on your system, like g729 or g726. If the field is empty, then the system default codecs or the phone entry above this one will be used for the allowable codecs. Default is empty||
 Allowed Codecs With Template||
 Setting this option to 1 will include the codecs defined above even if a conf file template is used. Default is 0||
+If the PRESERVE option is used and the call is sent to a second agent, the uniqueid and prefix displayed to the first agent will also be displayed to the second agent||
 
 
 AST_VICIDIAL_ingrouplist.php

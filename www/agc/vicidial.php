@@ -291,10 +291,11 @@
 # 100413-1349 - Various small logging fixes and extended alt-dial fixes
 # 100420-1009 - Added scheduled_callbacks_count option
 # 100423-1156 - Added more user logging data and manual_dial_override, blind monitor warnings, uniqueid display and codec features
+# 100428-0544 - Added uniqueid display option for PRESERVE
 #
 
-$version = '2.4-269';
-$build = '100423-1156';
+$version = '2.4-270';
+$build = '100428-0544';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -2903,6 +2904,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var blind_monitoring_now_trigger=0;
 	var no_blind_monitors=0;
 	var uniqueid_status_display='';
+	var uniqueid_status_prefix='';
 	var custom_call_id='';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -6671,9 +6673,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							CalL_XC_e_NuMber			= VDIC_data_VDIG[23];
 							CalL_XC_e_NuMber			= VDIC_data_VDIG[23];
 							uniqueid_status_display		= VDIC_data_VDIG[24];
-							if ( (uniqueid_status_display=='ENABLED') || (uniqueid_status_display=='ENABLED_PREFIX') )
-								{custom_call_id			= " Call ID " + VDIC_data_VDIG[25];}
-
+							uniqueid_status_prefix		= VDIC_data_VDIG[26];
 							var VDIC_data_VDFR=check_VDIC_array[3].split("|");
 							if ( (VDIC_data_VDFR[1].length > 1) && (VDCL_fronter_display == 'Y') )
 								{VDIC_fronter = "  Fronter: " + VDIC_data_VDFR[0] + " - " + VDIC_data_VDFR[1];}
@@ -6689,6 +6689,13 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							if( document.images ) { document.images['livecall'].src = image_livecall_ON.src;}
 							document.vicidial_form.SecondS.value		= 0;
 							document.getElementById("SecondSDISP").innerHTML = '0';
+
+							if (uniqueid_status_display=='ENABLED')
+								{custom_call_id			= " Call ID " + VDIC_data_VDAC[1];}
+							if (uniqueid_status_display=='ENABLED_PREFIX')
+								{custom_call_id			= " Call ID " + uniqueid_status_prefix + "" + VDIC_data_VDAC[1];}
+							if (uniqueid_status_display=='ENABLED_PRESERVE')
+								{custom_call_id			= " Call ID " + VDIC_data_VDIG[25];}
 
 							VD_live_customer_call = 1;
 							VD_live_call_secondS = 0;
@@ -8310,6 +8317,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				MD_channel_look=0;
 				MD_ring_secondS=0;
 				uniqueid_status_display='';
+				uniqueid_status_prefix='';
 				custom_call_id='';
 
 				if (manual_dial_in_progress==1)

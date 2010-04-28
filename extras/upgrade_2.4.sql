@@ -268,3 +268,7 @@ ALTER TABLE phones ADD codecs_list VARCHAR(100) default '';
 ALTER TABLE phones ADD codecs_with_template ENUM('0','1') default '0';
 
 UPDATE system_settings SET db_schema_version='1215',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_inbound_groups MODIFY uniqueid_status_display ENUM('DISABLED','ENABLED','ENABLED_PREFIX','ENABLED_PRESERVE') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1216',db_schema_update_date=NOW();
