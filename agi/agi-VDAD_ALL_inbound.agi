@@ -2057,7 +2057,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 				$now_date_epoch = time();
 				$now_date = "$year-$mon-$mday $hour:$min:$sec";
-				if ($AGILOG) {$agi_string = "XXXXX VDAD transferred: start|stop  $start_time|$now_date";   &agi_output;}
+				if ($AGILOG) {$agi_string = "XXXXX VDAD transferred: start|stop  $start_time|$now_date|$VDADconf_exten";   &agi_output;}
 				
 				exit;
 				}
@@ -2365,6 +2365,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$c = leading_zero($3); 
 					$d = leading_zero($4);
 					$VDADremDIALstr = "$a$S$b$S$c$S$d$S";
+					$RAredDIALstr = "$a$S$b$S$c$S$d$S";
 					}
 				$alertVDADremDIALstr = "$VDADremDIALstr";
 				$alertVDADremDIALstr .= "$dtmf_silent_prefix$VDADconf_exten";
@@ -2447,7 +2448,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					### custom change to allow exten to be sent as phone*vendor_id
 					if ($VDADremDIALstr =~ /888888888888/)
 						{
-						$VDADremDIALstr = "$a$S$b$S$c$S$d$S$phone_number$S$vendor_id";
+						$VDADremDIALstr = "$RAredDIALstr$phone_number$S$vendor_id";
 						}
 
 					if (length($ra_user) > 0)
@@ -2497,7 +2498,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					print STDERR "Setting CID \"$newcallerid\"\n";
 					checkresult($result);
 
-					$VDADremDIALstr = "$a$S$b$S$c$S$d$S$VDADconf_exten";
+					$VDADremDIALstr = "$RAredDIALstr$VDADconf_exten";
 
 					$stmtA = "UPDATE vicidial_live_agents set ra_extension='$VDADremDIALstr' where extension='$VDADextension' and ra_user='$ra_user';";
 					$rVLAaffected_rows = $dbhA->do($stmtA);
@@ -2557,7 +2558,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 					$now_date_epoch = time();
 					$now_date = "$year-$mon-$mday $hour:$min:$sec";
-				if ($AGILOG) {$agi_string = "XXXXX VDAD transferred: start|stop  $start_time|$now_date";   &agi_output;}
+				if ($AGILOG) {$agi_string = "XXXXX VDAD transferred: start|stop  $start_time|$now_date|$VDADremDIALstr";   &agi_output;}
 				
 				exit;
 				}
