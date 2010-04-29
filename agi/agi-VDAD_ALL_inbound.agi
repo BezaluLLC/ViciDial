@@ -125,6 +125,7 @@
 # 100319-0614 - Added extension group remote agent feature
 # 100414-2046 - Added extension_appended_cidname option
 # 100424-1234 - Added unique status options and extended logging
+# 100429-1457 - Remote agent fixes
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -1873,7 +1874,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				if ($AGILOG) {$agi_string = "--    closer log : |$affected_rows|$insert_lead_id|$insert_close_id|\n|$stmtA|";   &agi_output;}
 
 				### if agent alert exten is not disabled, then trigger the alert and wait
-				if ( ($agent_alert_exten !~ /^X$/i) && (length($agent_alert_exten)>0) && ($no_delay_call_route !~ /Y/i) )
+				if ( ($agent_alert_exten !~ /^X$/i) && (length($agent_alert_exten)>0) && ($no_delay_call_route !~ /Y/i) && ($VDADextension !~ /^R\//) )
 					{
 					if ($agent_alert_exten =~ /^8304$/)
 						{$agent_alert_exten = 'ding';}
@@ -2372,7 +2373,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				$VDADremDIALstr .= "$VDADconf_exten";
 
 				### if agent alert exten is not disabled, then trigger the alert and wait
-				if ( ($agent_alert_exten !~ /^X$/i) && (length($agent_alert_exten)>0) && ($no_delay_call_route !~ /Y/i) )
+				if ( ($agent_alert_exten !~ /^X$/i) && (length($agent_alert_exten)>0) && ($no_delay_call_route !~ /Y/i) && ($VDADextension !~ /^R\//) )
 					{
 					if ($agent_alert_exten =~ /^8304$/)
 						{$agent_alert_exten = 'ding';}
@@ -2435,7 +2436,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					if ($min < 10) {$min = "0$min";}
 					if ($sec < 10) {$sec = "0$sec";}
 
-				### BEGIN REMOTE AGENT SSECTION
+				### BEGIN REMOTE AGENT SECTION
 				if ($VDADextension =~ /^R\//)
 					{
 					### set the callerid to the ACQS value(calleridname)
