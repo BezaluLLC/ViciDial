@@ -2750,7 +2750,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			$dbhP=$dbhA;   $mysql_count='02081';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		if ($AGILOG) {$agi_string = "--    VDAC posttime record: |$affected_rows|$FDtsSQLdate|$callerid|";   &agi_output;}
 
-		if (length($onhold_prompt_filename) > 0)
+		if ( (length($onhold_prompt_filename) > 0) && ($onhold_prompt_filename !~ /---NONE---/) )
 			{
 			$AGI->stream_file('sip-silence'); # stop music-on-hold process
 			$AGI->stream_file('sip-silence'); # stop music-on-hold process
