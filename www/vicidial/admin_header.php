@@ -19,6 +19,7 @@
 # 90916-2334 - Added Voicemail options
 # 91223-1030 - Added VIDPROMPT options for in-group routing in Call Menus
 # 100311-2210 - Added callcard_enabled Admin element
+# 100428-1039 - Added custom fields display
 #
 
 
@@ -897,12 +898,13 @@ echo "</head>\n";
 echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 
-$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled from system_settings;";
+$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled from system_settings;";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $admin_home_url_LU =		$row[0];
 $SSenable_tts_integration = $row[1];
 $SScallcard_enabled =		$row[2];
+$SScustom_fields_enabled =	$row[3];
 
 ?>
 <CENTER>
@@ -1000,22 +1002,33 @@ $SScallcard_enabled =		$row[2];
 		?>
 		<TR><TD ALIGN=LEFT <?php echo $lists_hh ?>><a href="<?php echo $ADMIN ?>?ADD=100"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $lists_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $lists_bold ?>Lists</a></TD></TR>
 		<?php
-		if (strlen($lists_hh) > 1) { 
+		if (strlen($lists_hh) > 1) 
+			{ 
 			if ($LOGdelete_from_dnc > 0) {$DNClink = 'Add-Delete Number From DNC';}
 			else {$DNClink = 'Add Number To DNC';}
 			?>
-		<TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=100"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Lists </a>
-		</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New List </a>
-		</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="admin_search_lead.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Search For A Lead </a>
-		</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=121"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo $DNClink ?> </a>
-		</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="./new_listloader_superL.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Load New Leads </a>
-		</TD></TR>
-		<?php } 
+			<TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+			<a href="<?php echo $ADMIN ?>?ADD=100"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Lists </a>
+			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+			<a href="<?php echo $ADMIN ?>?ADD=111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New List </a>
+			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+			<a href="admin_search_lead.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Search For A Lead </a>
+			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+			<a href="<?php echo $ADMIN ?>?ADD=121"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo $DNClink ?> </a>
+			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+			<a href="./new_listloader_superL.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Load New Leads </a>
+			<?php
+			if ($SScustom_fields_enabled > 0)
+				{
+				?>
+				</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+				<a href="./admin_lists_custom.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> List Custom Fields </a>
+				<?php
+				}
+			?>
+			</TD></TR>
+			<?php
+			}
 		}
 	?>
 	<!-- SCRIPTS NAVIGATION -->

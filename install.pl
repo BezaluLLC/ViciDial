@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 
-# install.pl version 2.2.0
+# install.pl version 2.4
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 
 # CHANGES
@@ -21,6 +21,7 @@
 # 90727-1457 - Added GSW directory creation
 # 91105-1359 - Added MIX directory to /var/spool/asterisk/monitor
 # 91123-0001 - Added FTP2 directory to /var/spool/asterisk/monitorDONE
+# 100428-0936 - Added DB custom user/pass fields
 #
 
 ############################################
@@ -51,6 +52,8 @@ $VARDB_server =	'localhost';
 $VARDB_database =	'asterisk';
 $VARDB_user =	'cron';
 $VARDB_pass =	'1234';
+$VARDB_custom_user =	'custom';
+$VARDB_custom_pass =	'custom1234';
 $VARDB_port =	'3306';
 # default keepalive processes: 
 $VARactive_keepalives =		'1234568';
@@ -91,6 +94,8 @@ $CLIDB_server=0;
 $CLIDB_database=0;
 $CLIDB_user=0;
 $CLIDB_pass=0;
+$CLIDB_custom_user=0;
+$CLIDB_custom_pass=0;
 $CLIDB_port=0;
 $CLIVARactive_keepalives=0;
 $CLIVARasterisk_version=0;
@@ -163,6 +168,8 @@ if (length($ARGV[0])>1)
 		print "  [--DB_database=asterisk] = define database name at runtime\n";
 		print "  [--DB_user=cron] = define database user login at runtime\n";
 		print "  [--DB_pass=1234] = define database user password at runtime\n";
+		print "  [--DB_custom_user=custom] = define database custom user login at runtime\n";
+		print "  [--DB_custom_pass=custom1234] = define database custom user password at runtime\n";
 		print "  [--DB_port=3306] = define database connection port at runtime\n";
 		print "  [--active_keepalives=123456] = define processes to keepalive\n";
 		print "     X - NO KEEPALIVE PROCESSES (use only if you want none to be keepalive)\n";
@@ -357,6 +364,30 @@ if (length($ARGV[0])>1)
 				$VARDB_pass =~ s/ |\r|\n|\t//gi;
 				$CLIDB_pass=1;
 				print "  CLI defined DB password:    $VARDB_pass\n";
+				}
+			}
+		if ($args =~ /--DB_custom_user=/i) # CLI defined Database custom user login
+			{
+			@CLIDB_custom_userARY = split(/--DB_custom_user=/,$args);
+			@CLIDB_custom_userARX = split(/ /,$CLIDB_custom_userARY[1]);
+			if (length($CLIDB_custom_userARX[0])>1)
+				{
+				$VARDB_custom_user = $CLIDB_custom_userARX[0];
+				$VARDB_custom_user =~ s/ |\r|\n|\t//gi;
+				$CLIDB_custom_user=1;
+				print "  CLI defined DB custom user: $VARDB_custom_user\n";
+				}
+			}
+		if ($args =~ /--DB_custom_pass=/i) # CLI defined Database custom password login
+			{
+			@CLIDB_custom_passARY = split(/--DB_custom_pass=/,$args);
+			@CLIDB_custom_passARX = split(/ /,$CLIDB_custom_passARY[1]);
+			if (length($CLIDB_custom_passARX[0])>1)
+				{
+				$VARDB_custom_pass = $CLIDB_custom_passARX[0];
+				$VARDB_custom_pass =~ s/ |\r|\n|\t//gi;
+				$CLIDB_custom_pass=1;
+				print "  CLI defined DB custom pass: $VARDB_custom_pass\n";
 				}
 			}
 		if ($args =~ /--DB_port=/i) # CLI defined Database connection port
@@ -651,6 +682,10 @@ if (length($ARGV[0])>1)
 					{$VARDB_user = $line;   $VARDB_user =~ s/.*=//gi;}
 				if ( ($line =~ /^VARDB_pass/) && ($CLIDB_pass < 1) )
 					{$VARDB_pass = $line;   $VARDB_pass =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_custom_user/) && ($CLIDB_custom_user < 1) )
+					{$VARDB_custom_user = $line;   $VARDB_custom_user =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_custom_pass/) && ($CLIDB_custom_pass < 1) )
+					{$VARDB_custom_pass = $line;   $VARDB_custom_pass =~ s/.*=//gi;}
 				if ( ($line =~ /^VARDB_port/) && ($CLIDB_port < 1) )
 					{$VARDB_port = $line;   $VARDB_port =~ s/.*=//gi;}
 				$i++;
@@ -811,6 +846,10 @@ if (length($ARGV[0])>1)
 					{$VARDB_user = $line;   $VARDB_user =~ s/.*=//gi;}
 				if ( ($line =~ /^VARDB_pass/) && ($CLIDB_pass < 1) )
 					{$VARDB_pass = $line;   $VARDB_pass =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_custom_user/) && ($CLIDB_custom_user < 1) )
+					{$VARDB_custom_user = $line;   $VARDB_custom_user =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_custom_pass/) && ($CLIDB_custom_pass < 1) )
+					{$VARDB_custom_pass = $line;   $VARDB_custom_pass =~ s/.*=//gi;}
 				if ( ($line =~ /^VARDB_port/) && ($CLIDB_port < 1) )
 					{$VARDB_port = $line;   $VARDB_port =~ s/.*=//gi;}
 				$i++;
@@ -952,6 +991,10 @@ if (-e "$PATHconf")
 			{$VARDB_user = $line;   $VARDB_user =~ s/.*=//gi;}
 		if ( ($line =~ /^VARDB_pass/) && ($CLIDB_pass < 1) )
 			{$VARDB_pass = $line;   $VARDB_pass =~ s/.*=//gi;}
+		if ( ($line =~ /^VARDB_custom_user/) && ($CLIDB_custom_user < 1) )
+			{$VARDB_custom_user = $line;   $VARDB_custom_user =~ s/.*=//gi;}
+		if ( ($line =~ /^VARDB_custom_pass/) && ($CLIDB_custom_pass < 1) )
+			{$VARDB_custom_pass = $line;   $VARDB_custom_pass =~ s/.*=//gi;}
 		if ( ($line =~ /^VARDB_port/) && ($CLIDB_port < 1) )
 			{$VARDB_port = $line;   $VARDB_port =~ s/.*=//gi;}
 		if ( ($line =~ /^VARactive_keepalives/) && ($CLIactive_keepalives < 1) )
@@ -1546,6 +1589,46 @@ else
 			}
 		##### END DB_pass prompting and check  #####
 
+		##### BEGIN DB_custom_user prompting and check #####
+		$continue='NO';
+		while ($continue =~/NO/)
+			{
+			print("\nDB custom user login or press enter for default: [$VARDB_custom_user] ");
+			$PROMPTDB_custom_user = <STDIN>;
+			chomp($PROMPTDB_custom_user);
+			if (length($PROMPTDB_custom_user)>1)
+				{
+				$PROMPTDB_custom_user =~ s/ |\n|\r|\t|\/$//gi;
+				$VARDB_custom_user=$PROMPTDB_custom_user;
+				$continue='YES';
+				}
+			else
+				{
+				$continue='YES';
+				}
+			}
+		##### END DB_custom_user prompting and check  #####
+
+		##### BEGIN DB_custom_pass prompting and check #####
+		$continue='NO';
+		while ($continue =~/NO/)
+			{
+			print("\nDB custom password login or press enter for default: [$VARDB_custom_pass] ");
+			$PROMPTDB_custom_pass = <STDIN>;
+			chomp($PROMPTDB_custom_pass);
+			if (length($PROMPTDB_custom_pass)>1)
+				{
+				$PROMPTDB_custom_pass =~ s/ |\n|\r|\t|\/$//gi;
+				$VARDB_custom_pass=$PROMPTDB_custom_pass;
+				$continue='YES';
+				}
+			else
+				{
+				$continue='YES';
+				}
+			}
+		##### END DB_custom_pass prompting and check  #####
+
 		##### BEGIN DB_port prompting and check #####
 		$continue='NO';
 		while ($continue =~/NO/)
@@ -2043,6 +2126,8 @@ else
 		print "  defined DB_database:      $VARDB_database\n";
 		print "  defined DB_user:          $VARDB_user\n";
 		print "  defined DB_pass:          $VARDB_pass\n";
+		print "  defined DB_custom_user:   $VARDB_custom_user\n";
+		print "  defined DB_custom_pass:   $VARDB_custom_pass\n";
 		print "  defined DB_port:          $VARDB_port\n";
 		print "  defined active_keepalives:     $VARactive_keepalives\n";
 		print "  defined asterisk_version:      $VARasterisk_version\n";
@@ -2101,6 +2186,8 @@ print conf "VARDB_server => $VARDB_server\n";
 print conf "VARDB_database => $VARDB_database\n";
 print conf "VARDB_user => $VARDB_user\n";
 print conf "VARDB_pass => $VARDB_pass\n";
+print conf "VARDB_custom_user => $VARDB_custom_user\n";
+print conf "VARDB_custom_pass => $VARDB_custom_pass\n";
 print conf "VARDB_port => $VARDB_port\n";
 print conf "\n";
 print conf "# Alpha-Numeric list of the astGUIclient processes to be kept running\n";

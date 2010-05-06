@@ -6,13 +6,14 @@
 # astguiclient.conf file to reflect a change in IP address. The script will 
 # automatically default to the first eth address in the ifconfig output.
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 71205-2144 - Added display of extensions.conf example for call routing
 # 80321-0220 - Updated for new settings
 # 90211-1247 - Added asterisk version
 # 90630-2256 - vicidial_process_triggers
+# 100428-0943 - Added DB custom user/pass fields
 #
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
@@ -155,6 +156,10 @@ if (-e "$PATHconf")
 			{$VARDB_user = $line;   $VARDB_user =~ s/.*=//gi;}
 		if ( ($line =~ /^VARDB_pass/) && ($CLIDB_pass < 1) )
 			{$VARDB_pass = $line;   $VARDB_pass =~ s/.*=//gi;}
+		if ( ($line =~ /^VARDB_custom_user/) && ($CLIDB_custom_user < 1) )
+			{$VARDB_custom_user = $line;   $VARDB_custom_user =~ s/.*=//gi;}
+		if ( ($line =~ /^VARDB_custom_pass/) && ($CLIDB_custom_pass < 1) )
+			{$VARDB_custom_pass = $line;   $VARDB_custom_pass =~ s/.*=//gi;}
 		if ( ($line =~ /^VARDB_port/) && ($CLIDB_port < 1) )
 			{$VARDB_port = $line;   $VARDB_port =~ s/.*=//gi;}
 		if ( ($line =~ /^VARactive_keepalives/) && ($CLIactive_keepalives < 1) )
@@ -329,6 +334,8 @@ print conf "VARDB_server => $VARDB_server\n";
 print conf "VARDB_database => $VARDB_database\n";
 print conf "VARDB_user => $VARDB_user\n";
 print conf "VARDB_pass => $VARDB_pass\n";
+print conf "VARDB_custom_user => $VARDB_custom_user\n";
+print conf "VARDB_custom_pass => $VARDB_custom_pass\n";
 print conf "VARDB_port => $VARDB_port\n";
 print conf "\n";
 print conf "# Alpha-Numeric list of the astGUIclient processes to be kept running\n";

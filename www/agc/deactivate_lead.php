@@ -18,6 +18,7 @@
 #
 # Example of what to put in the Dispo URL field:
 # VARhttp://192.168.1.1/agc/deactivate_lead.php?search_field=vendor_lead_code&new_status=INACTIV&dispo=--A--dispo--B--&lead_id=--A--lead_id--B--&campaign_check=TESTCAMP&user=--A--user--B--&pass=--A--pass--B--&sale_status=SALE---SSALE---XSALE&log_to_file=1
+# VARhttp://192.168.1.1/agc/deactivate_lead.php?search_field=phone_number&new_status=--A--dispo--B--&dispo=--A--dispo--B--&lead_id=--A--lead_id--B--&campaign_check=TESTCAMP&user=--A--user--B--&pass=--A--pass--B--&sale_status=BI---CX&log_to_file=1
 # 
 #
 # CHANGES
@@ -66,6 +67,7 @@ $TD = '---';
 $STARTtime = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
 $sale_status = "$TD$sale_status$TD";
+$search_value='';
 
 if ($DB>0) {echo "$lead_id|$search_field|$campaign_check|$sale_status|$dispo|$new_status|$user|$pass|$DB|$log_to_file|\n";}
 
@@ -110,7 +112,6 @@ if (preg_match("/$TD$dispo$TD/",$sale_status))
 		}
 
 
-	$search_value='';
 	$stmt = "SELECT $search_field FROM vicidial_list where lead_id='$lead_id';";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
@@ -195,6 +196,6 @@ else
 if ($log_to_file > 0)
 	{
 	$fp = fopen ("./deactivate_lead.txt", "a");
-	fwrite ($fp, "$NOW_TIME|$lead_id|$search_field|$campaign_check|$sale_status|$dispo|$new_status|$user|$pass|$DB|$log_to_file|$MESSAGE|\n");
+	fwrite ($fp, "$NOW_TIME|$lead_id|$search_field|$search_value|$campaign_check|$sale_status|$dispo|$new_status|$user|$pass|$DB|$log_to_file|$MESSAGE|\n");
 	fclose($fp);
 	}

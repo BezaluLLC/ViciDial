@@ -118,9 +118,51 @@ You can define a comma delimited list of codecs to be set as the default codecs 
 Allowed Codecs With Template||
 Setting this option to 1 will include the codecs defined above even if a conf file template is used. Default is 0||
 If the PRESERVE option is used and the call is sent to a second agent, the uniqueid and prefix displayed to the first agent will also be displayed to the second agent||
+Custom Fields Modify||
+This option if set to 1 allows the user to modify custom list fields||
+ERROR: Custom Fields are not active on this system||
+Lists Custom Field||
+Field Label||
+This is the database field identifier for this field. This needs to be a unique identifier within the custom fields for this list. Do not use any spaces or punctuation for this field. max 50 characters, minimum of 2 characters||
+Field Name||
+This is the name of the field as it will appear to an agent through their interface. You can use spaces in this field, but no punctuation characters, maximum of 50 characters and minimum of 2 characters||
+Field Description||
+The description of this field as it will appear in the administration interface. This is an optional field with a maximum of 100 characters||
+Field Rank||
+The order in which these fields is displayed to the agent from lowest on top to highest on the bottom||
+Field Help||
+Optional field, if you fill it in, the agent will be able to see this text when they click on a help link next to the field in their agent interface||
+Field Type||
+This option defines the type of field that will be displayed. TEXT is a standard single-line entry form, AREA is a multi-line text box, SELECT is a single-selection pull-down menu, MULTI is a multiple-select box, RADIO is a list of radio buttons where only one option can be selected, CHECKBOX is a list of checkboxes where multiple options can be selected, DATE is a year month day calendar popup where the agent can select the date and TIME is a time selection box. The default is TEXT. For the SELECT, MULTI, RADIO and CHECKBOX options you must define the option values below in the Field Options box||
+Field Options||
+For the SELECT, MULTI, RADIO and CHECKBOX field types, you must define the option values in this box. You must put a list of comma separated option label and option text here with each option one its own line. The first value should have no spaces in it, and neither values should have any punctuation. For example - electric_meter, Electric Meter||
+Field Size||
+This setting will mean different things depending on what the field type is. For TEXT fields, the size is the number of characters that will show in the field. For AREA fields, the size is the width of the text box in characters. For MULTI fields, this setting defines the number of options to be shown in the multi select list. For SELECT, RADIO, CHECKBOX, DATE and TIME this setting is ignored||
+Field Max||
+This setting will mean different things depending on what the field type is. For TEXT fields, the size is the maximum number of characters that are allowed in the field. For AREA fields, this field defines the number of rows of text visible in the text box. For MULTI, SELECT, RADIO, CHECKBOX, DATE and TIME this setting is ignored||
+Field Cost||
+This read only field tells you what the cost of this field is in the custom field table for this list. There is no hard limit for the number of custom fields you can have in a list, but the total of the cost of all fields for the list must be below 65000. This typically allows for hundreds of fields, but if you specify several TEXT fields that are hundreds or thousands of characters in length then you may hit this limit quickly. If you need that much text in a field you should choose an AREA type, which are stored differently and do not use as much table space||
+Field Required||
+If set to Y, this field will force the agent to enter text or select an option for this field. Default is N||
+Field Default||
+This optional field lets you define what value to assign to a field if nothing is loaded into that field. Default is NULL which disables the default function||
+MODIFY FIELDS||
+LIST LISTINGS WITH CUSTOM FIELDS COUNT||
+SUMMARY OF FIELDS||
+ADD A NEW CUSTOM FIELD FOR THIS LIST||
+ERROR: Field does not exist||
+ERROR: Table does not exist||
+ERROR: Field already exists for this list||
+CLICK HERE TO CONFIRM DELETION OF THIS CUSTOM FIELD||
+THIS CUSTOM FIELD HAS BEEN DELETED||
+Records in this custom table||
+EXAMPLE OF CUSTOM FORM||
+For DATE field types, the default is always set to today unless a number is put in in which case the date will be that many days plus or minus today. For TIME field types, the default is always set to the current server time unless a number is put in in which case the time will be that many minutes plus or minus current time||
+MODIFY EXISTING FIELDS||
 
 
 AST_VICIDIAL_ingrouplist.php
+admin_lists_custom.php
 ############################################################ CLIENT
 VIEW CALL LOG||
 click to dial||

@@ -54,6 +54,9 @@ tar xvf apache-tomcat-5.5.20.tar
 ln -s apache-tomcat-5.5.20 tomcat
 cd apache-tomcat-5.5.20
 
+* You may need to change all permissions to jar and sh files on /usr/local/apache-tomcat-6.0.18/bin to 0777
+
+
 JAVA_HOME=/usr/java/jdk1.5.0_11/
 JAVA_OPTS="-Xms256M -Xmx512M"
 JRE_HOME=/usr/java/jdk1.5.0_11/jre
@@ -63,6 +66,7 @@ or
 JRE_HOME=/usr/java/jre1.6.0/
 JAVA_HOME=/usr/java/
 JAVA_OPTS="-Xms256M -Xmx512M"
+
 
 export JAVA_HOME
 export JAVA_OPTS

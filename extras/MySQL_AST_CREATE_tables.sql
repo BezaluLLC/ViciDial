@@ -551,7 +551,8 @@ voicemail_id VARCHAR(10),
 agent_call_log_view_override ENUM('DISABLED','Y','N') default 'DISABLED',
 callcard_admin ENUM('1','0') default '0',
 agent_choose_blended ENUM('0','1') default '1',
-realtime_block_user_info ENUM('0','1') default '0'
+realtime_block_user_info ENUM('0','1') default '0',
+custom_fields_modify ENUM('0','1') default '0'
 );
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -1250,7 +1251,8 @@ custom_dialplan_entry TEXT,
 queuemetrics_loginout ENUM('STANDARD','CALLBACK') default 'STANDARD',
 callcard_enabled ENUM('1','0') default '0',
 queuemetrics_callstatus ENUM('0','1') default '1',
-default_codecs VARCHAR(100) default ''
+default_codecs VARCHAR(100) default '',
+custom_fields_enabled ENUM('0','1') default '0'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2066,6 +2068,25 @@ caller_code VARCHAR(30) NOT NULL,
 custom_call_id VARCHAR(100)
 );
 
+CREATE TABLE vicidial_lists_fields (
+field_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+list_id BIGINT(14) UNSIGNED NOT NULL DEFAULT '0',
+field_label VARCHAR(50),
+field_name VARCHAR(50),
+field_description VARCHAR(100),
+field_rank SMALLINT(5),
+field_help VARCHAR(255),
+field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME') default 'TEXT',
+field_options VARCHAR(5000),
+field_size SMALLINT(5),
+field_max SMALLINT(5),
+field_default VARCHAR(255),
+field_cost SMALLINT(5),
+field_required ENUM('Y','N') default 'N'
+);
+
+CREATE UNIQUE INDEX listfield on vicidial_lists_fields (list_id, field_label);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
 
@@ -2205,9 +2226,12 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1216',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1217',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
+
+GRANT ALTER,CREATE on asterisk.* TO custom@'%' IDENTIFIED BY 'custom1234';
+GRANT ALTER,CREATE on asterisk.* TO custom@localhost IDENTIFIED BY 'custom1234';
 
 flush privileges;

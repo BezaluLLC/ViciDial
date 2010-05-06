@@ -1,6 +1,6 @@
 <?php
 # 
-# dbconnect.php    version 2.2.0
+# dbconnect.php    version 2.4
 #
 # database connection settings and some global web settings
 #
@@ -26,6 +26,10 @@ if ( file_exists("/etc/astguiclient.conf") )
 			{$VARDB_user = $DBCline;   $VARDB_user = preg_replace("/.*=/","",$VARDB_user);}
 		if (ereg("^VARDB_pass", $DBCline))
 			{$VARDB_pass = $DBCline;   $VARDB_pass = preg_replace("/.*=/","",$VARDB_pass);}
+		if (ereg("^VARDB_custom_user", $DBCline))
+			{$VARDB_custom_user = $DBCline;   $VARDB_custom_user = preg_replace("/.*=/","",$VARDB_custom_user);}
+		if (ereg("^VARDB_custom_pass", $DBCline))
+			{$VARDB_custom_pass = $DBCline;   $VARDB_custom_pass = preg_replace("/.*=/","",$VARDB_custom_pass);}
 		if (ereg("^VARDB_port", $DBCline))
 			{$VARDB_port = $DBCline;   $VARDB_port = preg_replace("/.*=/","",$VARDB_port);}
 		}
@@ -37,6 +41,8 @@ else
 	$VARDB_port = '3306';
 	$VARDB_user = 'cron';
 	$VARDB_pass = '1234';
+	$VARDB_custom_user = 'custom';
+	$VARDB_custom_pass = 'custom1234';
 	$VARDB_database = '1234';
 	$WeBServeRRooT = '/usr/local/apache2/htdocs';
 	}

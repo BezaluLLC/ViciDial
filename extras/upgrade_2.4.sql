@@ -272,3 +272,31 @@ UPDATE system_settings SET db_schema_version='1215',db_schema_update_date=NOW();
 ALTER TABLE vicidial_inbound_groups MODIFY uniqueid_status_display ENUM('DISABLED','ENABLED','ENABLED_PREFIX','ENABLED_PRESERVE') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1216',db_schema_update_date=NOW();
+
+ALTER TABLE system_settings ADD custom_fields_enabled ENUM('0','1') default '0';
+
+ALTER TABLE vicidial_users ADD custom_fields_modify ENUM('0','1') default '0';
+
+GRANT ALTER,CREATE on asterisk.* TO custom@'%' IDENTIFIED BY 'custom1234';
+GRANT ALTER,CREATE on asterisk.* TO custom@localhost IDENTIFIED BY 'custom1234';
+
+CREATE TABLE vicidial_lists_fields (
+field_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+list_id BIGINT(14) UNSIGNED NOT NULL DEFAULT '0',
+field_label VARCHAR(50),
+field_name VARCHAR(50),
+field_description VARCHAR(100),
+field_rank SMALLINT(5),
+field_help VARCHAR(255),
+field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME') default 'TEXT',
+field_options VARCHAR(5000),
+field_size SMALLINT(5),
+field_max SMALLINT(5),
+field_default VARCHAR(255),
+field_cost SMALLINT(5),
+field_required ENUM('Y','N') default 'N'
+);
+
+CREATE UNIQUE INDEX listfield on vicidial_lists_fields (list_id, field_label);
+
+UPDATE system_settings SET db_schema_version='1217',db_schema_update_date=NOW();
