@@ -1297,6 +1297,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				$Piax .= "\n\[$extension[$i]\]\n";
 				$Piax .= "username=$extension[$i]\n";
 				$Piax .= "secret=$conf_secret[$i]\n";
+				$Piax .= "accountcode=$extension[$i]\n";
 				$Piax .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 				$Piax .= "mailbox=$voicemail[$i]\n";
 				if ($codecs_with_template[$i] > 0) 
@@ -1318,6 +1319,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Piax .= "\n\[$extension[$i]\]\n";
 			$Piax .= "username=$extension[$i]\n";
 			$Piax .= "secret=$conf_secret[$i]\n";
+			$Piax .= "accountcode=$extension[$i]\n";
 			$Piax .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 			$Piax .= "mailbox=$voicemail[$i]\n";
 			$Piax .= "requirecalltoken=no\n";
@@ -1413,10 +1415,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				$Psip .= "\n\[$extension[$i]\]\n";
 				$Psip .= "username=$extension[$i]\n";
 				$Psip .= "secret=$conf_secret[$i]\n";
+				$Psip .= "accountcode=$extension[$i]\n";
 				$Psip .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 				$Psip .= "mailbox=$voicemail[$i]\n";
 				if ($codecs_with_template[$i] > 0) 
-					{$Piax .= "$Pcodec";}
+					{$Psip .= "$Pcodec";}
 				$Psip .= "$template_contents[$i]\n";
 				
 				$conf_entry_written++;
@@ -1434,10 +1437,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Psip .= "\n\[$extension[$i]\]\n";
 			$Psip .= "username=$extension[$i]\n";
 			$Psip .= "secret=$conf_secret[$i]\n";
+			$Psip .= "accountcode=$extension[$i]\n";
 			$Psip .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 			$Psip .= "mailbox=$voicemail[$i]\n";
 			$Psip .= "context=$phone_context[$i]\n";
-			$Piax .= "$Pcodec";
+			$Psip .= "$Pcodec";
 			$Psip .= "type=friend\n";
 			$Psip .= "host=dynamic\n";
 			}
