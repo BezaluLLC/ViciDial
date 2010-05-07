@@ -300,3 +300,12 @@ field_required ENUM('Y','N') default 'N'
 CREATE UNIQUE INDEX listfield on vicidial_lists_fields (list_id, field_label);
 
 UPDATE system_settings SET db_schema_version='1217',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_lists_fields MODIFY field_name VARCHAR(1000);
+ALTER TABLE vicidial_lists_fields MODIFY field_help VARCHAR(1000);
+ALTER TABLE vicidial_lists_fields ADD name_position ENUM('LEFT','TOP') default 'LEFT';
+ALTER TABLE vicidial_lists_fields ADD multi_position ENUM('HORIZONTAL','VERTICAL') default 'HORIZONTAL';
+
+ALTER TABLE vicidial_inbound_groups ADD hold_time_option_minimum SMALLINT(5) default '0';
+
+UPDATE system_settings SET db_schema_version='1218',db_schema_update_date=NOW();

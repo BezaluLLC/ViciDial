@@ -132,6 +132,8 @@ OTHER CHANGES:
 29. Added option to allow user information to be blocked form the real-time
 	report by user login(the user viewing the report)
 
+30. Added Hold Time Option Minimum option to in-groups which will prevent the
+	hold time option from running until a minimum number of hold seconds.
 
 
 

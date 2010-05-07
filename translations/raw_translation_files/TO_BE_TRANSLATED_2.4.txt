@@ -159,6 +159,12 @@ Records in this custom table||
 EXAMPLE OF CUSTOM FORM||
 For DATE field types, the default is always set to today unless a number is put in in which case the date will be that many days plus or minus today. For TIME field types, the default is always set to the current server time unless a number is put in in which case the time will be that many minutes plus or minus current time||
 MODIFY EXISTING FIELDS||
+Field Name Position||
+If set to LEFT, this field name will appear to the left of the field, if set to TOP the field name will take up the entire line and appear above the field. Default is LEFT||
+Option Position||
+For CHECKBOX and RADIO field types only, if set to HORIZONTAL the options will appear on the same line possibly wrapping to the line below if there are many options. If set to VERTICAL there will be only one option per line. Default is HORIZONTAL||
+Hold Time Option Minimum||
+If Hold Time Option enabled, this is the minimum number of seconds the call must be waiting before it will be presented with the hold time option. The hold time option will immediately be presented at this time if the estimated hold time is greater than the Hold Time Option Seconds value. Default is 0 seconds||
 
 
 AST_VICIDIAL_ingrouplist.php

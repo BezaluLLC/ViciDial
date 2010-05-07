@@ -6,8 +6,13 @@
 # this screen manages the custom lists fields in ViciDial
 #
 # changes:
-# 10506-1801 - First Build
+# 100506-1801 - First Build
+# 100507-1027 - Added name position and options position, added extra space for name and help
 #
+
+$admin_version = '2.4-2';
+$build = '100507-1027';
+
 
 require("dbconnect.php");
 
@@ -46,6 +51,10 @@ if (isset($_GET["field_cost"]))					{$field_cost=$_GET["field_cost"];}
 	elseif (isset($_POST["field_cost"]))		{$field_cost=$_POST["field_cost"];}
 if (isset($_GET["field_required"]))				{$field_required=$_GET["field_required"];}
 	elseif (isset($_POST["field_required"]))	{$field_required=$_POST["field_required"];}
+if (isset($_GET["name_position"]))				{$name_position=$_GET["name_position"];}
+	elseif (isset($_POST["name_position"]))		{$name_position=$_POST["name_position"];}
+if (isset($_GET["multi_position"]))				{$multi_position=$_GET["multi_position"];}
+	elseif (isset($_POST["multi_position"]))	{$multi_position=$_POST["multi_position"];}
 if (isset($_GET["ConFiRm"]))					{$ConFiRm=$_GET["ConFiRm"];}
 	elseif (isset($_POST["ConFiRm"]))			{$ConFiRm=$_POST["ConFiRm"];}
 if (isset($_GET["SUBMIT"]))						{$SUBMIT=$_GET["SUBMIT"];}
@@ -74,6 +83,8 @@ if ($non_latin < 1)
 
 	$field_type = ereg_replace("[^0-9a-zA-Z]","",$field_type);
 	$ConFiRm = ereg_replace("[^0-9a-zA-Z]","",$ConFiRm);
+	$name_position = ereg_replace("[^0-9a-zA-Z]","",$name_position);
+	$multi_position = ereg_replace("[^0-9a-zA-Z]","",$multi_position);
 
 	$field_label = ereg_replace("[^_0-9a-zA-Z]","",$field_label);
 
@@ -229,6 +240,11 @@ if ($action == "HELP")
 	<B>Field Options -</B> For the SELECT, MULTI, RADIO and CHECKBOX field types, you must define the option values in this box. You must put a list of comma separated option label and option text here with each option one its own line. The first value should have no spaces in it, and neither values should have any punctuation. For example - electric_meter, Electric Meter
 	<BR><BR>
 
+	<A NAME="vicidial_lists_fields-multi_position">
+	<BR>
+	<B>Option Position -</B> For CHECKBOX and RADIO field types only, if set to HORIZONTAL the options will appear on the same line possibly wrapping to the line below if there are many options. If set to VERTICAL there will be only one option per line. Default is HORIZONTAL.
+	<BR><BR>
+
 	<A NAME="vicidial_lists_fields-field_size">
 	<BR>
 	<B>Field Size -</B> This setting will mean different things depending on what the field type is. For TEXT fields, the size is the number of characters that will show in the field. For AREA fields, the size is the width of the text box in characters. For MULTI fields, this setting defines the number of options to be shown in the multi select list. For SELECT, RADIO, CHECKBOX, DATE and TIME this setting is ignored.
@@ -253,6 +269,12 @@ if ($action == "HELP")
 	<BR>
 	<B>Field Required -</B> If set to Y, this field will force the agent to enter text or select an option for this field. Default is N.
 	<BR><BR>
+
+	<A NAME="vicidial_lists_fields-name_position">
+	<BR>
+	<B>Field Name Position -</B> If set to LEFT, this field name will appear to the left of the field, if set to TOP the field name will take up the entire line and appear above the field. Default is LEFT.
+	<BR><BR>
+
 
 	</TD></TR></TABLE>
 	<?php
@@ -518,7 +540,7 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 		if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
 		if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
 
-		$stmt="INSERT INTO vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',list_id='$list_id';";
+		$stmt="INSERT INTO vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',list_id='$list_id',multi_position='$multi_position',name_position='$name_position';";
 		$rslt=mysql_query($stmt, $link);
 		$field_update = mysql_affected_rows($link);
 		if ($DB) {echo "$field_update|$stmt\n";}
@@ -646,7 +668,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELD_SUBMIT") and ($list_id > 99) and ($field_i
 			if ($DB) {echo "$field_update|$stmtCUSTOM\n";}
 			if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
 
-			$stmt="UPDATE vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost' where list_id='$list_id' and field_id='$field_id';";
+			$stmt="UPDATE vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',multi_position='$multi_position',name_position='$name_position' where list_id='$list_id' and field_id='$field_id';";
 			$rslt=mysql_query($stmt, $link);
 			$field_update = mysql_affected_rows($link);
 			if ($DB) {echo "$field_update|$stmt\n";}
@@ -703,7 +725,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "Records in this custom table: $custom_records_count<br>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
-	$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_label;";
+	$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_label;";
 	$rslt=mysql_query($stmt, $link);
 	$fields_to_print = mysql_num_rows($rslt);
 	$fields_list='';
@@ -724,6 +746,8 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		$A_field_default[$o] =		$rowx[10];
 		$A_field_cost[$o] =			$rowx[11];
 		$A_field_required[$o] =		$rowx[12];
+		$A_multi_position[$o] =		$rowx[13];
+		$A_name_position[$o] =		$rowx[14];
 
 		$o++;
 		$rank_select .= "<option>$o</option>";
@@ -783,9 +807,17 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	$o=0;
 	while ($fields_to_print > $o) 
 		{
-		echo "<tr bgcolor=white><td align=right><font size=2>";
+		echo "<tr bgcolor=white><td align=";
+		if ($A_name_position[$o]=='TOP') 
+			{echo "left colspan=2";}
+		else
+			{echo "right";}
+		echo "><font size=2>";
 		echo "<a href=\"#ANCHOR_$A_field_label[$o]\">$A_field_name[$o]</a>";
-		echo "</td>";
+		if ($A_name_position[$o]=='TOP') 
+			{echo " &nbsp; <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> &nbsp; <a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">?</a></span><BR>";}
+		else
+			{echo "</td>";}
 		$field_HTML='';
 
 		if ($A_field_type[$o]=='SELECT')
@@ -814,8 +846,12 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 						}
 					if ( ($A_field_type[$o]=='RADIO') or ($A_field_type[$o]=='CHECKBOX') )
 						{
+						if ($A_multi_position[$o]=='VERTICAL') 
+							{$field_HTML .= " &nbsp; ";}
 						if ($A_field_default[$o] == "$field_options_value_array[0]") {$field_selected = 'CHECKED';}
 						$field_HTML .= "<input type=$A_field_type[$o] name=$A_field_label[$o][] id=$A_field_label[$o][] value=\"$field_options_value_array[0]\" $field_selected> $field_options_value_array[1]\n";
+						if ($A_multi_position[$o]=='VERTICAL') 
+							{$field_HTML .= "<BR>\n";}
 						}
 					}
 				$te++;
@@ -899,7 +935,12 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 			$field_HTML .= "</SELECT>";
 			}
 
-		echo "<td align=left><font size=2> $field_HTML <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> &nbsp; <a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">?</a></span></td></tr>\n";
+		if ($A_name_position[$o]=='LEFT') 
+			{echo "<td align=left><font size=2> $field_HTML <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> &nbsp; <a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">?</a></span>";}
+		else
+			{
+			echo " $field_HTML </td></tr>\n";
+			}
 
 		$o++;
 		}
@@ -928,9 +969,14 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "$rank_select\n";
 		echo "<option selected>$A_field_rank[$o]</option>\n";
 		echo "</select> &nbsp; $NWB#vicidial_lists_fields-field_rank$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Name $A_field_rank[$o]: </td><td align=left><input type=text name=field_name size=20 maxlength=50 value=\"$A_field_name[$o]\"> $NWB#vicidial_lists_fields-field_name$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Field Name $A_field_rank[$o]: </td><td align=left><textarea name=field_name rows=2 cols=60>$A_field_name[$o]</textarea> $NWB#vicidial_lists_fields-field_name$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Field Name Position $A_field_rank[$o]: </td><td align=left><select size=1 name=name_position>\n";
+		echo "<option value=\"LEFT\">LEFT</option>\n";
+		echo "<option value=\"TOP\">TOP</option>\n";
+		echo "<option selected>$A_name_position[$o]</option>\n";
+		echo "</select>  $NWB#vicidial_lists_fields-name_position$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Field Description $A_field_rank[$o]: </td><td align=left><input type=text name=field_description size=70 maxlength=100 value=\"$A_field_description[$o]\"> $NWB#vicidial_lists_fields-field_description$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Help $A_field_rank[$o]: </td><td align=left><input type=text name=field_help size=70 maxlength=255 value=\"$A_field_help[$o]\"> $NWB#vicidial_lists_fields-field_help$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Field Help $A_field_rank[$o]: </td><td align=left><textarea name=field_help rows=2 cols=60>$A_field_help[$o]</textarea> $NWB#vicidial_lists_fields-field_help$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Field Type $A_field_rank[$o]: </td><td align=left><select size=1 name=field_type>\n";
 		echo "<option>TEXT</option>\n";
 		echo "<option>AREA</option>\n";
@@ -942,7 +988,12 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<option>TIME</option>\n";
 		echo "<option selected>$A_field_type[$o]</option>\n";
 		echo "</select>  $NWB#vicidial_lists_fields-field_type$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Options $A_field_rank[$o]: </td><td align=left><textarea name=field_options ROWS=5 COLS=50>$A_field_options[$o]</textarea>  $NWB#vicidial_lists_fields-field_options$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Field Options $A_field_rank[$o]: </td><td align=left><textarea name=field_options ROWS=5 COLS=60>$A_field_options[$o]</textarea>  $NWB#vicidial_lists_fields-field_options$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Option Position $A_field_rank[$o]: </td><td align=left><select size=1 name=multi_position>\n";
+		echo "<option value=\"HORIZONTAL\">HORIZONTAL</option>\n";
+		echo "<option value=\"VERTICAL\">VERTICAL</option>\n";
+		echo "<option selected>$A_multi_position[$o]</option>\n";
+		echo "</select>  $NWB#vicidial_lists_fields-multi_position$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Field Size $A_field_rank[$o]: </td><td align=left><input type=text name=field_size size=5 maxlength=3 value=\"$A_field_size[$o]\">  $NWB#vicidial_lists_fields-field_size$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Field Max $A_field_rank[$o]: </td><td align=left><input type=text name=field_max size=5 maxlength=3 value=\"$A_field_max[$o]\">  $NWB#vicidial_lists_fields-field_max$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Field Default $A_field_rank[$o]: </td><td align=left><input type=text name=field_default size=50 maxlength=255 value=\"$A_field_default[$o]\">  $NWB#vicidial_lists_fields-field_default$NWE </td></tr>\n";
@@ -973,9 +1024,13 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "<option selected>$last_rank</option>\n";
 	echo "</select> &nbsp; $NWB#vicidial_lists_fields-field_rank$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Field Label: </td><td align=left><input type=text name=field_label size=20 maxlength=50> $NWB#vicidial_lists_fields-field_label$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Name: </td><td align=left><input type=text name=field_name size=20 maxlength=50> $NWB#vicidial_lists_fields-field_name$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Field Name: </td><td align=left><textarea name=field_name rows=2 cols=60></textarea> $NWB#vicidial_lists_fields-field_name$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Field Name Position: </td><td align=left><select size=1 name=name_position>\n";
+	echo "<option value=\"LEFT\">LEFT</option>\n";
+	echo "<option value=\"TOP\">TOP</option>\n";
+	echo "</select>  $NWB#vicidial_lists_fields-name_position$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Field Description: </td><td align=left><input name=field_description type=text size=70 maxlength=100> $NWB#vicidial_lists_fields-field_description$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Help: </td><td align=left><input type=text name=field_help size=70 maxlength=255> $NWB#vicidial_lists_fields-field_help$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Field Help: </td><td align=left><textarea name=field_help rows=2 cols=60></textarea> $NWB#vicidial_lists_fields-field_help$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Field Type: </td><td align=left><select size=1 name=field_type>\n";
 	echo "<option>TEXT</option>\n";
 	echo "<option>AREA</option>\n";
@@ -987,7 +1042,11 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "<option>TIME</option>\n";
 	echo "<option selected>TEXT</option>\n";
 	echo "</select>  $NWB#vicidial_lists_fields-field_type$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Options: </td><td align=left><textarea name=field_options ROWS=5 COLS=50></textarea>  $NWB#vicidial_lists_fields-field_options$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Field Options: </td><td align=left><textarea name=field_options ROWS=5 COLS=60></textarea>  $NWB#vicidial_lists_fields-field_options$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Option Position: </td><td align=left><select size=1 name=multi_position>\n";
+	echo "<option selected value=\"HORIZONTAL\">HORIZONTAL</option>\n";
+	echo "<option value=\"VERTICAL\">VERTICAL</option>\n";
+	echo "</select>  $NWB#vicidial_lists_fields-multi_position$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Field Size: </td><td align=left><input type=text name=field_size size=5 maxlength=3>  $NWB#vicidial_lists_fields-field_size$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Field Max: </td><td align=left><input type=text name=field_max size=5 maxlength=3>  $NWB#vicidial_lists_fields-field_max$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Field Default: </td><td align=left><input type=text name=field_default size=50 maxlength=255 value=\"NULL\">  $NWB#vicidial_lists_fields-field_default$NWE </td></tr>\n";
@@ -1000,7 +1059,6 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "</table></center><BR><BR>\n";
 	echo "</TABLE>\n";
 	echo "&nbsp; <a href=\"$PHP_SELF?action=ADMIN_LOG&list_id=$list_id\">Click here to see Admin changes to this lists custom fields</a><BR><BR><BR> </center> &nbsp; \n";
-	exit;
 	}
 ### END modify custom fields for list
 
@@ -1158,7 +1216,7 @@ if ($action == "ADMIN_LOG")
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
-echo "\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds";
+echo "\n\n\n<br><br><br>\n<font size=1> runtime: $RUNtime seconds &nbsp; &nbsp; &nbsp; &nbsp; Version: $admin_version &nbsp; &nbsp; Build: $build</font>";
 
 ?>
 

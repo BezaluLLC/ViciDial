@@ -899,7 +899,8 @@ xferconf_e_number VARCHAR(50) default '',
 ignore_list_script_override ENUM('Y','N') default 'N',
 extension_appended_cidname ENUM('Y','N') default 'N',
 uniqueid_status_display ENUM('DISABLED','ENABLED','ENABLED_PREFIX','ENABLED_PRESERVE') default 'DISABLED',
-uniqueid_status_prefix VARCHAR(50) default ''
+uniqueid_status_prefix VARCHAR(50) default '',
+hold_time_option_minimum SMALLINT(5) default '0'
 );
 
 CREATE TABLE vicidial_stations (
@@ -2072,17 +2073,19 @@ CREATE TABLE vicidial_lists_fields (
 field_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
 list_id BIGINT(14) UNSIGNED NOT NULL DEFAULT '0',
 field_label VARCHAR(50),
-field_name VARCHAR(50),
+field_name VARCHAR(1000),
 field_description VARCHAR(100),
 field_rank SMALLINT(5),
-field_help VARCHAR(255),
+field_help VARCHAR(1000),
 field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME') default 'TEXT',
 field_options VARCHAR(5000),
 field_size SMALLINT(5),
 field_max SMALLINT(5),
 field_default VARCHAR(255),
 field_cost SMALLINT(5),
-field_required ENUM('Y','N') default 'N'
+field_required ENUM('Y','N') default 'N',
+name_position ENUM('LEFT','TOP') default 'LEFT',
+multi_position ENUM('HORIZONTAL','VERTICAL') default 'HORIZONTAL'
 );
 
 CREATE UNIQUE INDEX listfield on vicidial_lists_fields (list_id, field_label);
@@ -2226,7 +2229,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1217',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1218',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
