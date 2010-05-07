@@ -1253,6 +1253,8 @@ if (isset($_GET["custom_fields_modify"]))			{$custom_fields_modify=$_GET["custom
 	elseif (isset($_POST["custom_fields_modify"]))	{$custom_fields_modify=$_POST["custom_fields_modify"];}
 if (isset($_GET["hold_time_option_minimum"]))			{$hold_time_option_minimum=$_GET["hold_time_option_minimum"];}
 	elseif (isset($_POST["hold_time_option_minimum"]))	{$hold_time_option_minimum=$_POST["hold_time_option_minimum"];}
+if (isset($_GET["source_carrier"]))				{$source_carrier=$_GET["source_carrier"];}
+	elseif (isset($_POST["source_carrier"]))	{$source_carrier=$_POST["source_carrier"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1725,6 +1727,7 @@ if ($non_latin < 1)
 	$cpd_amd_action = ereg_replace("[^-_0-9a-zA-Z]","",$cpd_amd_action);
 	$template_id = ereg_replace("[^-_0-9a-zA-Z]","",$template_id);
 	$carrier_id = ereg_replace("[^-_0-9a-zA-Z]","",$carrier_id);
+	$source_carrier = ereg_replace("[^-_0-9a-zA-Z]","",$source_carrier);
 	$group_alias_id = ereg_replace("[^-_0-9a-zA-Z]","",$group_alias_id);
 	$default_group_alias = ereg_replace("[^-_0-9a-zA-Z]","",$default_group_alias);
 	$vtiger_search_dead = ereg_replace("[^-_0-9a-zA-Z]","",$vtiger_search_dead);
@@ -2197,7 +2200,7 @@ else
 # 100420-1010 - Added scheduled_callbacks_count campaign option
 # 100423-1030 - Added realtime_block_user_info, manual dial campaign, blind monitor warnings, in-group callid, phones codecs features
 # 100506-1807 - Added hidden settings for lists custom fields
-# 100507-1102 - Added hold_time_option_minimum option to in-groups
+# 100507-1102 - Added hold_time_option_minimum option to in-groups and copy carrier function
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
@@ -2392,6 +2395,7 @@ if ($ADD==13111111111)	{$hh='admin';	$sh='phones';	echo "ADD NEW GROUP ALIAS";}
 if ($ADD==111111111111)	{$hh='admin';	$sh='server';	echo "ADD NEW SERVER";}
 if ($ADD==131111111111)	{$hh='admin';	$sh='templates';	echo "ADD NEW CONF TEMPLATE";}
 if ($ADD==141111111111)	{$hh='admin';	$sh='carriers';	echo "ADD NEW CARRIER";}
+if ($ADD==140111111111)	{$hh='admin';	$sh='carriers';	echo "ADD COPIED CARRIER";}
 if ($ADD==151111111111)	{$hh='admin';	$sh='tts';	echo "ADD NEW TTS ENTRY";}
 if ($ADD==161111111111)	{$hh='admin';	$sh='moh';	echo "ADD NEW MUSIC ON HOLD ENTRY";}
 if ($ADD==171111111111)	{$hh='admin';	$sh='vm';	echo "ADD NEW VOICEMAIL BOX";}
@@ -2430,6 +2434,7 @@ if ($ADD==211111111111)	{$hh='admin';	$sh='server';	echo "ADDING NEW SERVER";}
 if ($ADD==221111111111)	{$hh='admin';	$sh='server';	echo "ADDING NEW SERVER VICIDIAL TRUNK RECORD";}
 if ($ADD==231111111111)	{$hh='admin';	$sh='templates';	echo "ADDING NEW CONF TEMPLATE";}
 if ($ADD==241111111111)	{$hh='admin';	$sh='carriers';	echo "ADDING NEW CARRIER";}
+if ($ADD==240111111111)	{$hh='admin';	$sh='carriers';	echo "ADDING COPIED CARRIER";}
 if ($ADD==251111111111)	{$hh='admin';	$sh='tts';	echo "ADDING NEW TTS ENTRY";}
 if ($ADD==261111111111)	{$hh='admin';	$sh='moh';	echo "ADDING NEW MUSIC ON HOLD ENTRY";}
 if ($ADD==271111111111)	{$hh='admin';	$sh='vm';	echo "ADDING NEW VOICEMAIL BOX";}
@@ -8261,6 +8266,70 @@ if ($ADD==141111111111)
 
 
 ######################
+# ADD=140111111111 display the ADD COPIED CARRIER SCREEN
+######################
+
+if ($ADD==140111111111)
+	{
+	if ($LOGmodify_servers==1)
+		{
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		echo "<br>ADD COPIED CARRIER<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=240111111111>\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Carrier ID: </td><td align=left><input type=text name=carrier_id size=15 maxlength=15>$NWB#vicidial_server_carriers-carrier_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Carrier Name: </td><td align=left><input type=text name=carrier_name size=40 maxlength=50>$NWB#vicidial_server_carriers-carrier_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left><select size=1 name=server_ip>\n";
+		##### get server listing for dynamic pulldown
+		$stmt="SELECT server_ip,server_description from servers order by server_ip";
+		$rsltx=mysql_query($stmt, $link);
+		$servers_to_print = mysql_num_rows($rsltx);
+		$servers_list='';
+
+		$o=0;
+		while ($servers_to_print > $o)
+			{
+			$rowx=mysql_fetch_row($rsltx);
+			$servers_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+			$o++;
+			}
+
+		echo "$servers_list";
+		echo "</select>$NWB#vicidial_server_carriers-server_ip$NWE</td></tr>\n";
+
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Source Carrier: </td><td align=left><select size=1 name=source_carrier>\n";
+
+		$stmt="SELECT carrier_id,carrier_name,server_ip from vicidial_server_carriers order by carrier_id";
+		$rslt=mysql_query($stmt, $link);
+		$menus_to_print = mysql_num_rows($rslt);
+		$menus_list='';
+
+		$o=0;
+		while ($menus_to_print > $o) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$menus_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1] - $rowx[2]</option>\n";
+			$o++;
+			}
+		echo "$menus_list";
+		echo "</select>$NWB#vicidial_server_carriers-carrier_id$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+		echo "</TABLE></center>\n";
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	}
+
+
+
+######################
 # ADD=151111111111 display the ADD NEW TTS ENTRY SCREEN
 ######################
 
@@ -10602,6 +10671,45 @@ if ($ADD==241111111111)
 			$SQL_log = ereg_replace(';','',$SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CARRIERS', event_type='ADD', record_id='$carrier_id', event_code='ADMIN ADD CARRIER', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
+		}
+	$ADD=341111111111;
+	}
+
+
+######################
+# ADD=240111111111 adds copied server carrier to the system
+######################
+
+if ($ADD==240111111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	$stmt="SELECT count(*) from vicidial_server_carriers where carrier_id='$carrier_id';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	if ($row[0] > 0)
+		{echo "<br>CARRIER NOT ADDED - there is already a carrier in the system with this ID\n";}
+	else
+		{
+		if ( (strlen($carrier_id) < 2) or (strlen($server_ip) < 7) )
+			{echo "<br>CARRIER NOT ADDED - Please go back and look at the data you entered\n";}
+		else
+			{
+			echo "<br>COPIED CARRIER ADDED\n";
+
+			$stmt="INSERT INTO vicidial_server_carriers (carrier_id,carrier_name,registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,server_ip,active,carrier_description) SELECT \"$carrier_id\",\"$carrier_name\",registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,\"$server_ip\",\"N\",carrier_description from vicidial_server_carriers where carrier_id=\"$source_carrier\";";
+			$rslt=mysql_query($stmt, $link);
+
+			$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
+			$rslt=mysql_query($stmtA, $link);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CARRIERS', event_type='COPY', record_id='$carrier_id', event_code='ADMIN COPY CARRIER', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			}
@@ -22059,6 +22167,9 @@ if ($ADD==31111111111)
 		echo "<input type=hidden name=ADD value=41111111111>\n";
 		echo "<input type=hidden name=old_extension value=\"$row[0]\">\n";
 		echo "<input type=hidden name=old_server_ip value=\"$row[5]\">\n";
+		echo "<input type=hidden name=client_browser value=\"$row[34]\">\n";
+		echo "<input type=hidden name=install_directory value=\"$row[35]\">\n";
+
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Phone extension: </td><td align=left><input type=text name=extension size=20 maxlength=100 value=\"$row[0]\">$NWB#phones-extension$NWE <i>(Agent Screen Phone Login)</i></td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Dial Plan Number: </td><td align=left><input type=text name=dialplan_number size=15 maxlength=20 value=\"$row[1]\"> (digits only)$NWB#phones-dialplan_number$NWE</td></tr>\n";
@@ -22110,8 +22221,6 @@ if ($ADD==31111111111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>DTMFSend Channel: </td><td align=left><input type=text name=dtmf_send_extension size=40 maxlength=100 value=\"$row[32]\">$NWB#phones-dtmf_send_extension$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Outbound Call Group: </td><td align=left><input type=text name=call_out_number_group size=40 maxlength=100 value=\"$row[33]\">$NWB#phones-call_out_number_group$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Browser Location: </td><td align=left><input type=text name=client_browser size=40 maxlength=100 value=\"$row[34]\">$NWB#phones-client_browser$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Install Directory: </td><td align=left><input type=text name=install_directory size=40 maxlength=100 value=\"$row[35]\">$NWB#phones-install_directory$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>CallerID URL: </td><td align=left><input type=text name=local_web_callerID_URL size=40 maxlength=255 value=\"$row[36]\">$NWB#phones-local_web_callerID_URL$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>VICIDIAL Default URL: </td><td align=left><input type=text name=VICIDIAL_web_URL size=40 maxlength=255 value=\"$row[37]\">$NWB#phones-VICIDIAL_web_URL$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Call Logging: </td><td align=left><select size=1 name=AGI_call_logging_enabled><option>1</option><option>0</option><option selected>$row[38]</option></select>$NWB#phones-AGI_call_logging_enabled$NWE</td></tr>\n";
@@ -22165,6 +22274,8 @@ if ($ADD==31111111111)
 		echo "</TABLE></center>\n";
 
 		echo "<br><br><a href=\"./phone_stats.php?extension=$row[0]&server_ip=$row[5]\">Click here for phone stats</a>\n";
+
+		echo "<br><br><a href=\"./user_stats.php?user=$row[0]\">Click here for phone call recordings</a>\n";
 
 		if ($LOGast_delete_phones > 0)
 			{

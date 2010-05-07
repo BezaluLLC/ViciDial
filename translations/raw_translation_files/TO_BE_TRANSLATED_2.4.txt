@@ -165,6 +165,11 @@ Option Position||
 For CHECKBOX and RADIO field types only, if set to HORIZONTAL the options will appear on the same line possibly wrapping to the line below if there are many options. If set to VERTICAL there will be only one option per line. Default is HORIZONTAL||
 Hold Time Option Minimum||
 If Hold Time Option enabled, this is the minimum number of seconds the call must be waiting before it will be presented with the hold time option. The hold time option will immediately be presented at this time if the estimated hold time is greater than the Hold Time Option Seconds value. Default is 0 seconds||
+ADDING COPIED CARRIER||
+ADD COPIED CARRIER||
+Source Carrier||
+COPIED CARRIER ADDED||
+Copy A Carrier||
 
 
 AST_VICIDIAL_ingrouplist.php

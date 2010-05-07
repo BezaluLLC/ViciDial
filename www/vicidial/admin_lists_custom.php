@@ -179,14 +179,14 @@ else
 <script language="Javascript">
 function open_help(taskspan,taskhelp) 
 	{
-	document.getElementById("P_" + taskspan).innerHTML = " &nbsp; <a href=\"javascript:close_help('" + taskspan + "','" + taskhelp + "');\">close</a><BR> &nbsp; ";
+	document.getElementById("P_" + taskspan).innerHTML = " &nbsp; <a href=\"javascript:close_help('" + taskspan + "','" + taskhelp + "');\">help-</a><BR> &nbsp; ";
 	document.getElementById(taskspan).innerHTML = "<B>" + taskhelp + "</B>";
-	document.getElementById(taskspan).style.background = "yellow";
+	document.getElementById(taskspan).style.background = "#FFFF99";
 	}
 function close_help(taskspan,taskhelp) 
 	{
 	document.getElementById("P_" + taskspan).innerHTML = "";
-	document.getElementById(taskspan).innerHTML = " &nbsp; <a href=\"javascript:open_help('" + taskspan + "','" + taskhelp + "');\">?</a>";
+	document.getElementById(taskspan).innerHTML = " &nbsp; <a href=\"javascript:open_help('" + taskspan + "','" + taskhelp + "');\">help+</a>";
 	document.getElementById(taskspan).style.background = "white";
 	}
 </script>
@@ -815,7 +815,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "><font size=2>";
 		echo "<a href=\"#ANCHOR_$A_field_label[$o]\">$A_field_name[$o]</a>";
 		if ($A_name_position[$o]=='TOP') 
-			{echo " &nbsp; <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> &nbsp; <a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">?</a></span><BR>";}
+			{echo " &nbsp; <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> &nbsp; <a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">help+</a></span><BR>";}
 		else
 			{echo "</td>";}
 		$field_HTML='';
@@ -936,7 +936,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 			}
 
 		if ($A_name_position[$o]=='LEFT') 
-			{echo "<td align=left><font size=2> $field_HTML <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> &nbsp; <a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">?</a></span>";}
+			{echo "<td align=left><font size=2> $field_HTML <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> &nbsp; <a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">help+</a></span>";}
 		else
 			{
 			echo " $field_HTML </td></tr>\n";

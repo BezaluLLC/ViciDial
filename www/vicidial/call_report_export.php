@@ -17,6 +17,7 @@
 # 100119-1039 - Filtered comments for \n newlines
 # 100214-1421 - Sort menu alphabetically
 # 100216-0042 - Added popup date selector
+# 100507-1413 - Added headers for export
 #
 
 require("dbconnect.php");
@@ -42,6 +43,8 @@ if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
 if (isset($_GET["run_export"]))				{$run_export=$_GET["run_export"];}
 	elseif (isset($_POST["run_export"]))	{$run_export=$_POST["run_export"];}
+if (isset($_GET["header_row"]))				{$header_row=$_GET["header_row"];}
+	elseif (isset($_POST["header_row"]))	{$header_row=$_POST["header_row"];}
 if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
@@ -299,6 +302,11 @@ if ($run_export > 0)
 		ob_clean();
 		flush();
 
+		if ($header_row=='YES')
+			{
+			echo "call_date\tphone_number\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id\tlist_name\tlist_description\tstatus_name\r\n";
+			}
+
 		$i=0;
 		while ($k > $i)
 			{
@@ -517,6 +525,11 @@ else
 	// o_cal.a_tpl.weekstart = 1; // Monday week start
 	</script>
 	<?php
+
+	echo "<BR><BR><BR>\n";
+
+	echo "Header Row:<BR>\n";
+	echo "<select size=1 name=header_row><option selected>YES</option><option>NO</option>\n";
 
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=2>\n";
 	echo "<font class=\"select_bold\"><B>Campaigns:</B></font><BR><CENTER>\n";

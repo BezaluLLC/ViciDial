@@ -46,6 +46,13 @@ New settings will be added in the astguiclient.conf file for DB_custom_user and 
 
 
 
+Admin changes:
+
+Added admin_lists_custom.php for these features to be administered. This will allow the viewing of custom fields as well as the copying of custom field definitions to lists with no custom fields.
+
+
+
+
 
 
 MySQL tables:
