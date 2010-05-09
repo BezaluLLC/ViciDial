@@ -1024,6 +1024,8 @@ $SScustom_fields_enabled =	$row[3];
 				?>
 				</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
 				<a href="./admin_lists_custom.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> List Custom Fields </a>
+				</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+				<a href="./admin_lists_custom.php?action=COPY_FIELDS_FORM"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy List Custom Fields </a>
 				<?php
 				}
 			?>

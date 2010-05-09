@@ -12,6 +12,7 @@
 # 90508-0644 - Changed to PHP long tags
 # 90721-1238 - Added rank and owner as vicidial_list fields
 # 100119-1039 - Filtered comments for \n newlines
+# 100508-1439 - Added header row to output
 #
 
 require("dbconnect.php");
@@ -111,6 +112,8 @@ header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
 header('Pragma: public');
 ob_clean();
 flush();
+
+echo "lead_id\tentry_date\tmodify_date\tstatus\tuser\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tcalled_since_last_reset\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tcalled_count\tlast_local_call_time\trank\towner\r\n";
 
 $stmt="select lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where list_id='$list_id';";
 $rslt=mysql_query($stmt, $link);

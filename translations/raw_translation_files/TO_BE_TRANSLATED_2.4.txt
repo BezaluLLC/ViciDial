@@ -170,6 +170,18 @@ ADD COPIED CARRIER||
 Source Carrier||
 COPIED CARRIER ADDED||
 Copy A Carrier||
+Field Order||If more than one field has the same rank, they will be placed on the same line and they will be placed in order by this value from lowest to highest, left to right||
+Copy Fields to Another List||
+List ID to Copy Fields to||
+List ID to Copy Fields From||
+Copy Option||
+When copying field definitions from one list to another, you have a few options for how the copying process works. APPEND will add the fields that are not present in the destination list, if there are matching field labels those will remained untouched, no custom field data will be deleted or modified using this option. UPDATE will update the common field_label fields in the destination list to the field definitions from the source list. custom field data may be modified or lost using this option. REPLACE will remove all existing custom fields in the destination list and replace them with the custom fields from the source list, all custom field data will be deleted using this option||
+ERROR: Source list has no custom fields||
+SUCCESS: Custom Field Added||
+SUCCESS: Custom Field Modified||
+SUCCESS: Custom Field Deleted||
+Copy List Custom Fields||
+ERROR: You cannot copy fields to the same list||
 
 
 AST_VICIDIAL_ingrouplist.php

@@ -2085,7 +2085,8 @@ field_default VARCHAR(255),
 field_cost SMALLINT(5),
 field_required ENUM('Y','N') default 'N',
 name_position ENUM('LEFT','TOP') default 'LEFT',
-multi_position ENUM('HORIZONTAL','VERTICAL') default 'HORIZONTAL'
+multi_position ENUM('HORIZONTAL','VERTICAL') default 'HORIZONTAL',
+field_order SMALLINT(5) default '1'
 );
 
 CREATE UNIQUE INDEX listfield on vicidial_lists_fields (list_id, field_label);
@@ -2229,7 +2230,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1218',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1219',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

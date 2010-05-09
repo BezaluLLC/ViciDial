@@ -309,3 +309,7 @@ ALTER TABLE vicidial_lists_fields ADD multi_position ENUM('HORIZONTAL','VERTICAL
 ALTER TABLE vicidial_inbound_groups ADD hold_time_option_minimum SMALLINT(5) default '0';
 
 UPDATE system_settings SET db_schema_version='1218',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_lists_fields ADD field_order SMALLINT(5) default '1';
+
+UPDATE system_settings SET db_schema_version='1219',db_schema_update_date=NOW();

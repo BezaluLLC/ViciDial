@@ -81,7 +81,8 @@ field_default VARCHAR(255),
 field_cost SMALLINT(5),
 field_required ENUM('Y','N') default 'N',
 name_position ENUM('LEFT','TOP') default 'LEFT',
-multi_position ENUM('HORIZONTAL','VERTICAL') default 'HORIZONTAL'
+multi_position ENUM('HORIZONTAL','VERTICAL') default 'HORIZONTAL',
+field_order SMALLINT(5) default '1'
 );
 
 CREATE UNIQUE INDEX listfield on vicidial_lists_fields (list_id, field_label);

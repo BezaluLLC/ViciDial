@@ -135,6 +135,8 @@ OTHER CHANGES:
 30. Added Hold Time Option Minimum option to in-groups which will prevent the
 	hold time option from running until a minimum number of hold seconds.
 
+31. Added headers to the list export and calls export reports
+
 
 
 

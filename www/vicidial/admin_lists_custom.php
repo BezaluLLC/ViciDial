@@ -8,10 +8,12 @@
 # changes:
 # 100506-1801 - First Build
 # 100507-1027 - Added name position and options position, added extra space for name and help
+# 100508-1855 - Added field_order to allow for multiple fields on the same line
+# 100509-0922 - Added copy fields options
 #
 
-$admin_version = '2.4-2';
-$build = '100507-1027';
+$admin_version = '2.4-4';
+$build = '100509-0922';
 
 
 require("dbconnect.php");
@@ -55,6 +57,12 @@ if (isset($_GET["name_position"]))				{$name_position=$_GET["name_position"];}
 	elseif (isset($_POST["name_position"]))		{$name_position=$_POST["name_position"];}
 if (isset($_GET["multi_position"]))				{$multi_position=$_GET["multi_position"];}
 	elseif (isset($_POST["multi_position"]))	{$multi_position=$_POST["multi_position"];}
+if (isset($_GET["field_order"]))				{$field_order=$_GET["field_order"];}
+	elseif (isset($_POST["field_order"]))		{$field_order=$_POST["field_order"];}
+if (isset($_GET["source_list_id"]))				{$source_list_id=$_GET["source_list_id"];}
+	elseif (isset($_POST["source_list_id"]))	{$source_list_id=$_POST["source_list_id"];}
+if (isset($_GET["copy_option"]))				{$copy_option=$_GET["copy_option"];}
+	elseif (isset($_POST["copy_option"]))		{$copy_option=$_POST["copy_option"];}
 if (isset($_GET["ConFiRm"]))					{$ConFiRm=$_GET["ConFiRm"];}
 	elseif (isset($_POST["ConFiRm"]))			{$ConFiRm=$_POST["ConFiRm"];}
 if (isset($_GET["SUBMIT"]))						{$SUBMIT=$_GET["SUBMIT"];}
@@ -78,6 +86,8 @@ if ($non_latin < 1)
 	$field_rank = ereg_replace("[^0-9]","",$field_rank);
 	$field_size = ereg_replace("[^0-9]","",$field_size);
 	$field_max = ereg_replace("[^0-9]","",$field_max);
+	$field_order = ereg_replace("[^0-9]","",$field_order);
+	$source_list_id = ereg_replace("[^0-9]","",$source_list_id);
 
 	$field_required = ereg_replace("[^NY]","",$field_required);
 
@@ -87,6 +97,7 @@ if ($non_latin < 1)
 	$multi_position = ereg_replace("[^0-9a-zA-Z]","",$multi_position);
 
 	$field_label = ereg_replace("[^_0-9a-zA-Z]","",$field_label);
+	$copy_option = ereg_replace("[^_0-9a-zA-Z]","",$copy_option);
 
 	$field_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$field_name);
 	$field_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$field_description);
@@ -131,6 +142,7 @@ if ($WeBRooTWritablE > 0)
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
+$user = $PHP_AUTH_USER;
 
 if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
@@ -225,6 +237,11 @@ if ($action == "HELP")
 	<B>Field Rank -</B> The order in which these fields is displayed to the agent from lowest on top to highest on the bottom.
 	<BR><BR>
 
+	<A NAME="vicidial_lists_fields-field_order">
+	<BR>
+	<B>Field Order -</B> If more than one field has the same rank, they will be placed on the same line and they will be placed in order by this value from lowest to highest, left to right.
+	<BR><BR>
+
 	<A NAME="vicidial_lists_fields-field_help">
 	<BR>
 	<B>Field Help -</B> Optional field, if you fill it in, the agent will be able to see this text when they click on a help link next to the field in their agent interface.
@@ -275,6 +292,10 @@ if ($action == "HELP")
 	<B>Field Name Position -</B> If set to LEFT, this field name will appear to the left of the field, if set to TOP the field name will take up the entire line and appear above the field. Default is LEFT.
 	<BR><BR>
 
+	<A NAME="vicidial_lists_fields-copy_option">
+	<BR>
+	<B>Copy Option -</B> When copying field definitions from one list to another, you have a few options for how the copying process works. APPEND will add the fields that are not present in the destination list, if there are matching field labels those will remained untouched, no custom field data will be deleted or modified using this option. UPDATE will update the common field_label fields in the destination list to the field definitions from the source list. custom field data may be modified or lost using this option. REPLACE will remove all existing custom fields in the destination list and replace them with the custom fields from the source list, all custom field data will be deleted using this option.
+	<BR><BR>
 
 	</TD></TR></TABLE>
 	<?php
@@ -324,6 +345,258 @@ $NWB = " &nbsp; <a href=\"javascript:openNewWindow('$PHP_SELF?action=HELP";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 
+if ($DB > 0)
+{
+echo "$DB,$action,$ip,$user,$copy_option,$field_id,$list_id,$source_list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order";
+}
+
+
+
+
+
+################################################################################
+##### BEGIN copy fields to a list form
+if ($action == "COPY_FIELDS_FORM")
+	{
+	##### get lists listing for dynamic pulldown
+	$stmt="SELECT list_id,list_name from vicidial_lists order by list_id";
+	$rsltx=mysql_query($stmt, $link);
+	$lists_to_print = mysql_num_rows($rsltx);
+	$lists_list='';
+	$o=0;
+	while ($lists_to_print > $o)
+		{
+		$rowx=mysql_fetch_row($rsltx);
+		$lists_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+		$o++;
+		}
+
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<br>Copy Fields to Another List<form action=$PHP_SELF method=POST>\n";
+	echo "<input type=hidden name=DB value=\"$DB\">\n";
+	echo "<input type=hidden name=action value=COPY_FIELDS_SUBMIT>\n";
+	echo "<center><TABLE width=$section_width cellspacing=3>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>List ID to Copy Fields From: </td><td align=left><select size=1 name=source_list_id>\n";
+	echo "$lists_list";
+	echo "</select></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>List ID to Copy Fields to: </td><td align=left><select size=1 name=list_id>\n";
+	echo "$lists_list";
+	echo "</select></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Copy Option: </td><td align=left><select size=1 name=copy_option>\n";
+	echo "<option selected>APPEND</option>";
+	echo "<option>UPDATE</option>";
+	echo "<option>REPLACE</option>";
+	echo "</select> $NWB#vicidial_lists_fields-copy_option$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+	echo "</TABLE></center>\n";
+	echo "</TD></TR></TABLE>\n";
+	}
+### END copy fields to a list form
+
+
+
+
+################################################################################
+##### BEGIN copy list fields submit
+if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id > 99) and (strlen($copy_option) > 2) )
+	{
+	if ($list_id=="$source_list_id")
+		{echo "ERROR: You cannot copy fields to the same list: $list_id|$source_list_id";}
+	else
+		{
+		$table_exists=0;
+		$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
+		if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
+		mysql_select_db("$VARDB_database", $linkCUSTOM);
+
+		$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$source_list_id';";
+		if ($DB>0) {echo "$stmt";}
+		$rslt=mysql_query($stmt, $link);
+		$fieldscount_to_print = mysql_num_rows($rslt);
+		if ($fieldscount_to_print > 0) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$source_field_exists =	$rowx[0];
+			}
+		
+		$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id';";
+		if ($DB>0) {echo "$stmt";}
+		$rslt=mysql_query($stmt, $link);
+		$fieldscount_to_print = mysql_num_rows($rslt);
+		if ($fieldscount_to_print > 0) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$field_exists =	$rowx[0];
+			}
+		
+		$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
+		if ($DB>0) {echo "$stmt";}
+		$rslt=mysql_query($stmt, $link);
+		$tablecount_to_print = mysql_num_rows($rslt);
+		if ($tablecount_to_print > 0) 
+			{$table_exists =	1;}
+		
+		if ($source_field_exists < 1)
+			{echo "ERROR: Source list has no custom fields\n<BR>";}
+		else
+			{
+			##### REPLACE option #####
+			if ($copy_option=='REPLACE')
+				{
+				if ($DB > 0) {echo "Starting REPLACE copy\n<BR>";}
+				if ($table_exists > 0)
+					{
+					$stmt="SELECT field_id,field_label from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
+					$rslt=mysql_query($stmt, $link);
+					$fields_to_print = mysql_num_rows($rslt);
+					$fields_list='';
+					$o=0;
+					while ($fields_to_print > $o) 
+						{
+						$rowx=mysql_fetch_row($rslt);
+						$A_field_id[$o] =			$rowx[0];
+						$A_field_label[$o] =		$rowx[1];
+						$o++;
+						}
+
+					$o=0;
+					while ($fields_to_print > $o) 
+						{
+						### delete field function
+						delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$A_field_id[$o],$list_id,$A_field_label[$o],$A_field_name[$o],$A_field_description[$o],$A_field_rank[$o],$A_field_help[$o],$A_field_type[$o],$A_field_options[$o],$A_field_size[$o],$A_field_max[$o],$A_field_default[$o],$A_field_required[$o],$A_field_cost[$o],$A_multi_position[$o],$A_name_position[$o],$A_field_order[$o]);
+
+						echo "SUCCESS: Custom Field Deleted - $list_id|$A_field_label[$o]\n<BR>";
+						$o++;
+						}
+					}
+				$copy_option='APPEND';
+				}
+			##### APPEND option #####
+			if ($copy_option=='APPEND')
+				{
+				if ($DB > 0) {echo "Starting APPEND copy\n<BR>";}
+				$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$source_list_id' order by field_rank,field_order,field_label;";
+				$rslt=mysql_query($stmt, $link);
+				$fields_to_print = mysql_num_rows($rslt);
+				$fields_list='';
+				$o=0;
+				while ($fields_to_print > $o) 
+					{
+					$rowx=mysql_fetch_row($rslt);
+					$A_field_id[$o] =			$rowx[0];
+					$A_field_label[$o] =		$rowx[1];
+					$A_field_name[$o] =			$rowx[2];
+					$A_field_description[$o] =	$rowx[3];
+					$A_field_rank[$o] =			$rowx[4];
+					$A_field_help[$o] =			$rowx[5];
+					$A_field_type[$o] =			$rowx[6];
+					$A_field_options[$o] =		$rowx[7];
+					$A_field_size[$o] =			$rowx[8];
+					$A_field_max[$o] =			$rowx[9];
+					$A_field_default[$o] =		$rowx[10];
+					$A_field_cost[$o] =			$rowx[11];
+					$A_field_required[$o] =		$rowx[12];
+					$A_multi_position[$o] =		$rowx[13];
+					$A_name_position[$o] =		$rowx[14];
+					$A_field_order[$o] =		$rowx[15];
+
+					$o++;
+					$rank_select .= "<option>$o</option>";
+					}
+
+				$o=0;
+				while ($fields_to_print > $o) 
+					{
+					$new_field_exists=0;
+					if ($table_exists > 0)
+						{
+						$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id' and field_label='$A_field_label[$o]';";
+						if ($DB>0) {echo "$stmt";}
+						$rslt=mysql_query($stmt, $link);
+						$fieldscount_to_print = mysql_num_rows($rslt);
+						if ($fieldscount_to_print > 0) 
+							{
+							$rowx=mysql_fetch_row($rslt);
+							$new_field_exists =	$rowx[0];
+							}
+						}
+					if ($new_field_exists < 1)
+						{
+						### add field function
+						add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$A_field_id[$o],$list_id,$A_field_label[$o],$A_field_name[$o],$A_field_description[$o],$A_field_rank[$o],$A_field_help[$o],$A_field_type[$o],$A_field_options[$o],$A_field_size[$o],$A_field_max[$o],$A_field_default[$o],$A_field_required[$o],$A_field_cost[$o],$A_multi_position[$o],$A_name_position[$o],$A_field_order[$o]);
+
+						echo "SUCCESS: Custom Field Added - $list_id|$A_field_label[$o]\n<BR>";
+
+						if ($table_exists < 1) {$table_exists=1;}
+						}
+					$o++;
+					}
+				}
+			##### UPDATE option #####
+			if ($copy_option=='UPDATE')
+				{
+				if ($DB > 0) {echo "Starting UPDATE copy\n<BR>";}
+				if ($table_exists < 1)
+					{echo "ERROR: Table does not exist\n<BR>";}
+				else
+					{
+					$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$source_list_id' order by field_rank,field_order,field_label;";
+					$rslt=mysql_query($stmt, $link);
+					$fields_to_print = mysql_num_rows($rslt);
+					$fields_list='';
+					$o=0;
+					while ($fields_to_print > $o) 
+						{
+						$rowx=mysql_fetch_row($rslt);
+						$A_field_id[$o] =			$rowx[0];
+						$A_field_label[$o] =		$rowx[1];
+						$A_field_name[$o] =			$rowx[2];
+						$A_field_description[$o] =	$rowx[3];
+						$A_field_rank[$o] =			$rowx[4];
+						$A_field_help[$o] =			$rowx[5];
+						$A_field_type[$o] =			$rowx[6];
+						$A_field_options[$o] =		$rowx[7];
+						$A_field_size[$o] =			$rowx[8];
+						$A_field_max[$o] =			$rowx[9];
+						$A_field_default[$o] =		$rowx[10];
+						$A_field_cost[$o] =			$rowx[11];
+						$A_field_required[$o] =		$rowx[12];
+						$A_multi_position[$o] =		$rowx[13];
+						$A_name_position[$o] =		$rowx[14];
+						$A_field_order[$o] =		$rowx[15];
+						$o++;
+						}
+
+					$o=0;
+					while ($fields_to_print > $o) 
+						{
+						$stmt="SELECT field_id from vicidial_lists_fields where list_id='$list_id' and field_label='$A_field_label[$o]';";
+						if ($DB>0) {echo "$stmt";}
+						$rslt=mysql_query($stmt, $link);
+						$fieldscount_to_print = mysql_num_rows($rslt);
+						if ($fieldscount_to_print > 0) 
+							{
+							$rowx=mysql_fetch_row($rslt);
+							$current_field_id =	$rowx[0];
+
+							### modify field function
+							modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$current_field_id,$list_id,$A_field_label[$o],$A_field_name[$o],$A_field_description[$o],$A_field_rank[$o],$A_field_help[$o],$A_field_type[$o],$A_field_options[$o],$A_field_size[$o],$A_field_max[$o],$A_field_default[$o],$A_field_required[$o],$A_field_cost[$o],$A_multi_position[$o],$A_name_position[$o],$A_field_order[$o]);
+
+							echo "SUCCESS: Custom Field Modified - $list_id|$A_field_label[$o]\n<BR>";
+							}
+						$o++;
+						}
+					}
+				}
+			}
+
+		$action = "MODIFY_CUSTOM_FIELDS";
+		}
+	}
+### END copy list fields submit
+
+
 
 
 
@@ -366,6 +639,7 @@ if ( ($action == "DELETE_CUSTOM_FIELD_CONFIRMATION") and ($list_id > 99) and ($f
 
 
 
+
 ################################################################################
 ##### BEGIN delete custom field
 if ( ($action == "DELETE_CUSTOM_FIELD") and ($list_id > 99) and ($field_id > 0) and (strlen($field_label) > 0) and ($ConFiRm=='YES') )
@@ -400,27 +674,10 @@ if ( ($action == "DELETE_CUSTOM_FIELD") and ($list_id > 99) and ($field_id > 0) 
 			{echo "ERROR: Table does not exist\n<BR>";}
 		else
 			{
-			$stmtCUSTOM="ALTER TABLE custom_$list_id DROP $field_label;";
-			$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
-			$table_update = mysql_affected_rows($linkCUSTOM);
-			if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
-			if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
+			### delete field function
+			delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order);
 
-			$stmt="DELETE FROM vicidial_lists_fields WHERE field_label='$field_label' and field_id='$field_id' and list_id='$list_id' LIMIT 1;";
-			$rslt=mysql_query($stmt, $link);
-			$field_update = mysql_affected_rows($link);
-			if ($DB) {echo "$field_update|$stmt\n";}
-			if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-			echo "<BR><BR><B>THIS CUSTOM FIELD HAS BEEN DELETED: $field_label - $field_id - $list_id</B><BR><BR>";
-
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|$stmtCUSTOM";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='CUSTOM_FIELDS', event_type='DELETE', record_id='$list_id', event_code='ADMIN DELETE CUSTOM LIST FIELD', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			echo "SUCCESS: Custom Field Deleted - $list_id|$field_label\n<BR>";
 			}
 		}
 
@@ -461,98 +718,10 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 		{echo "ERROR: Field already exists for this list - $list_id|$field_label\n<BR>";}
 	else
 		{
-		if ($table_exists < 1)
-			{$field_sql = "CREATE TABLE custom_$list_id (lead_id INT(9) UNSIGNED PRIMARY KEY NOT NULL, $field_label ";}
-		else
-			{$field_sql = "ALTER TABLE custom_$list_id ADD $field_label ";}
+		### add field function
+		add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order);
 
-		$field_options_ENUM='';
-		$field_cost=1;
-		if ( ($field_type=='SELECT') or ($field_type=='RADIO') )
-			{
-			$field_options_array = explode("\n",$field_options);
-			$field_options_count = count($field_options_array);
-			$te=0;
-			while ($te < $field_options_count)
-				{
-				if (preg_match("/,/",$field_options_array[$te]))
-					{
-					$field_options_value_array = explode(",",$field_options_array[$te]);
-					$field_options_ENUM .= "'$field_options_value_array[0]',";
-					}
-				$te++;
-				}
-			$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
-			$field_sql .= "ENUM($field_options_ENUM) ";
-			$field_cost = strlen($field_options_ENUM);
-			}
-		if ( ($field_type=='MULTI') or ($field_type=='CHECKBOX') )
-			{
-			$field_options_array = explode("\n",$field_options);
-			$field_options_count = count($field_options_array);
-			$te=0;
-			while ($te < $field_options_count)
-				{
-				if (preg_match("/,/",$field_options_array[$te]))
-					{
-					$field_options_value_array = explode(",",$field_options_array[$te]);
-					$field_options_ENUM .= "'$field_options_value_array[0]',";
-					}
-				$te++;
-				}
-			$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
-			$field_cost = strlen($field_options_ENUM);
-			$field_sql .= "VARCHAR($field_cost) ";
-			}
-		if ($field_type=='TEXT') 
-			{
-			$field_sql .= "VARCHAR($field_max) ";
-			$field_cost = ($field_max + $field_cost);
-			}
-		if ($field_type=='AREA') 
-			{
-			$field_sql .= "TEXT ";
-			$field_cost = 15;
-			}
-		if ($field_type=='DATE') 
-			{
-			$field_sql .= "DATE ";
-			$field_cost = 10;
-			}
-		if ($field_type=='TIME') 
-			{
-			$field_sql .= "TIME ";
-			$field_cost = 8;
-			}
-		$field_cost = ($field_cost * 3); # account for utf8 database
-
-		if ( ($field_default != 'NULL') and ($field_type!='AREA') and ($field_type!='DATE') and ($field_type!='TIME') )
-			{$field_sql .= "default '$field_default'";}
-
-		if ($table_exists < 1)
-			{$field_sql .= ");";}
-		else
-			{$field_sql .= ";";}
-
-		$stmtCUSTOM="$field_sql";
-		$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
-		$table_update = mysql_affected_rows($linkCUSTOM);
-		if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
-		if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
-
-		$stmt="INSERT INTO vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',list_id='$list_id',multi_position='$multi_position',name_position='$name_position';";
-		$rslt=mysql_query($stmt, $link);
-		$field_update = mysql_affected_rows($link);
-		if ($DB) {echo "$field_update|$stmt\n";}
-		if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|$stmtCUSTOM";
-		$SQL_log = ereg_replace(';','',$SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='CUSTOM_FIELDS', event_type='ADD', record_id='$list_id', event_code='ADMIN ADD CUSTOM LIST FIELD', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+		echo "SUCCESS: Custom Field Added - $list_id|$field_label\n<BR>";
 		}
 
 	$action = "MODIFY_CUSTOM_FIELDS";
@@ -596,91 +765,10 @@ if ( ($action == "MODIFY_CUSTOM_FIELD_SUBMIT") and ($list_id > 99) and ($field_i
 			{echo "ERROR: Table does not exist\n<BR>";}
 		else
 			{
-			$field_sql = "ALTER TABLE custom_$list_id MODIFY $field_label ";
-			$field_options_ENUM='';
-			$field_cost=1;
-			if ( ($field_type=='SELECT') or ($field_type=='RADIO') )
-				{
-				$field_options_array = explode("\n",$field_options);
-				$field_options_count = count($field_options_array);
-				$te=0;
-				while ($te < $field_options_count)
-					{
-					if (preg_match("/,/",$field_options_array[$te]))
-						{
-						$field_options_value_array = explode(",",$field_options_array[$te]);
-						$field_options_ENUM .= "'$field_options_value_array[0]',";
-						}
-					$te++;
-					}
-				$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
-				$field_sql .= "ENUM($field_options_ENUM) ";
-				$field_cost = strlen($field_options_ENUM);
-				}
-			if ( ($field_type=='MULTI') or ($field_type=='CHECKBOX') )
-				{
-				$field_options_array = explode("\n",$field_options);
-				$field_options_count = count($field_options_array);
-				$te=0;
-				while ($te < $field_options_count)
-					{
-					if (preg_match("/,/",$field_options_array[$te]))
-						{
-						$field_options_value_array = explode(",",$field_options_array[$te]);
-						$field_options_ENUM .= "'$field_options_value_array[0]',";
-						}
-					$te++;
-					}
-				$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
-				$field_cost = strlen($field_options_ENUM);
-				$field_sql .= "VARCHAR($field_cost) ";
-				}
-			if ($field_type=='TEXT') 
-				{
-				$field_sql .= "VARCHAR($field_max) ";
-				$field_cost = ($field_max + $field_cost);
-				}
-			if ($field_type=='AREA') 
-				{
-				$field_sql .= "TEXT ";
-				$field_cost = 15;
-				}
-			if ($field_type=='DATE') 
-				{
-				$field_sql .= "DATE ";
-				$field_cost = 10;
-				}
-			if ($field_type=='TIME') 
-				{
-				$field_sql .= "TIME ";
-				$field_cost = 8;
-				}
-			$field_cost = ($field_cost * 3); # account for utf8 database
+			### modify field function
+			modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order);
 
-			if ( ($field_default == 'NULL') or ($field_type=='AREA') or ($field_type=='DATE') or ($field_type=='TIME') )
-				{$field_sql .= ";";}
-			else
-				{$field_sql .= "default '$field_default';";}
-
-			$stmtCUSTOM="$field_sql";
-			$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
-			$field_update = mysql_affected_rows($linkCUSTOM);
-			if ($DB) {echo "$field_update|$stmtCUSTOM\n";}
-			if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
-
-			$stmt="UPDATE vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',multi_position='$multi_position',name_position='$name_position' where list_id='$list_id' and field_id='$field_id';";
-			$rslt=mysql_query($stmt, $link);
-			$field_update = mysql_affected_rows($link);
-			if ($DB) {echo "$field_update|$stmt\n";}
-			if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|$stmtCUSTOM";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='CUSTOM_FIELDS', event_type='MODIFY', record_id='$list_id', event_code='ADMIN MODIFY CUSTOM LIST FIELD', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			echo "SUCCESS: Custom Field Modified - $list_id|$field_label\n<BR>";
 			}
 		}
 
@@ -725,7 +813,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "Records in this custom table: $custom_records_count<br>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
-	$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_label;";
+	$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
 	$rslt=mysql_query($stmt, $link);
 	$fields_to_print = mysql_num_rows($rslt);
 	$fields_list='';
@@ -748,6 +836,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		$A_field_required[$o] =		$rowx[12];
 		$A_multi_position[$o] =		$rowx[13];
 		$A_name_position[$o] =		$rowx[14];
+		$A_field_order[$o] =		$rowx[15];
 
 		$o++;
 		$rank_select .= "<option>$o</option>";
@@ -774,7 +863,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor align=right><td><font size=1>$A_field_rank[$o] &nbsp; &nbsp; </td>";
+		echo "<tr $bgcolor align=right><td><font size=1>$A_field_rank[$o] - $A_field_order[$o] &nbsp; &nbsp; </td>";
 		echo "<td align=right><font size=2> <a href=\"#ANCHOR_$A_field_label[$o]\">$A_field_label[$o]</a> &nbsp; &nbsp; </td>";
 		echo "<td align=right><font size=2> $A_field_name[$o] &nbsp; &nbsp; </td>";
 		echo "<td align=right><font size=2> $A_field_type[$o] &nbsp; &nbsp; </td>";
@@ -805,19 +894,31 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		{echo "<tr bgcolor=white align=center><td colspan=4><font size=1>There are no custom fields for this list</td></tr>";}
 
 	$o=0;
+	$last_field_rank=0;
 	while ($fields_to_print > $o) 
 		{
-		echo "<tr bgcolor=white><td align=";
-		if ($A_name_position[$o]=='TOP') 
-			{echo "left colspan=2";}
+		if ($last_field_rank=="$A_field_rank[$o]")
+			{echo " &nbsp; &nbsp; &nbsp; &nbsp; ";}
 		else
-			{echo "right";}
-		echo "><font size=2>";
+			{
+			echo "</td></tr>\n";
+			echo "<tr bgcolor=white><td align=";
+			if ($A_name_position[$o]=='TOP') 
+				{echo "left colspan=2";}
+			else
+				{echo "right";}
+			echo "><font size=2>";
+			}
 		echo "<a href=\"#ANCHOR_$A_field_label[$o]\">$A_field_name[$o]</a>";
 		if ($A_name_position[$o]=='TOP') 
 			{echo " &nbsp; <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> &nbsp; <a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">help+</a></span><BR>";}
 		else
-			{echo "</td>";}
+			{
+			if ($last_field_rank=="$A_field_rank[$o]")
+				{echo " &nbsp;";}
+			else
+				{echo "</td><td align=left><font size=2>";}
+			}
 		$field_HTML='';
 
 		if ($A_field_type[$o]=='SELECT')
@@ -936,15 +1037,18 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 			}
 
 		if ($A_name_position[$o]=='LEFT') 
-			{echo "<td align=left><font size=2> $field_HTML <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> &nbsp; <a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">help+</a></span>";}
+			{
+			echo " $field_HTML <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> &nbsp; <a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">help+</a></span>";
+			}
 		else
 			{
-			echo " $field_HTML </td></tr>\n";
+			echo " $field_HTML\n";
 			}
 
+		$last_field_rank=$A_field_rank[$o];
 		$o++;
 		}
-	echo "</table></form></center><BR><BR>\n";
+	echo "</td></tr></table></form></center><BR><BR>\n";
 
 
 	### MODIFY FIELDS ###
@@ -968,7 +1072,15 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<tr $bgcolor><td align=right>Field Rank $A_field_rank[$o]: </td><td align=left><select size=1 name=field_rank>\n";
 		echo "$rank_select\n";
 		echo "<option selected>$A_field_rank[$o]</option>\n";
-		echo "</select> &nbsp; $NWB#vicidial_lists_fields-field_rank$NWE </td></tr>\n";
+		echo "</select> &nbsp; $NWB#vicidial_lists_fields-field_rank$NWE \n";
+		echo " &nbsp; &nbsp; &nbsp; &nbsp; Field Order: <select size=1 name=field_order>\n";
+		echo "<option>1</option>\n";
+		echo "<option>2</option>\n";
+		echo "<option>3</option>\n";
+		echo "<option>4</option>\n";
+		echo "<option>5</option>\n";
+		echo "<option selected>$A_field_order[$o]</option>\n";
+		echo "</select> &nbsp; $NWB#vicidial_lists_fields-field_order$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Field Name $A_field_rank[$o]: </td><td align=left><textarea name=field_name rows=2 cols=60>$A_field_name[$o]</textarea> $NWB#vicidial_lists_fields-field_name$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Field Name Position $A_field_rank[$o]: </td><td align=left><select size=1 name=name_position>\n";
 		echo "<option value=\"LEFT\">LEFT</option>\n";
@@ -1022,7 +1134,14 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "<tr $bgcolor><td align=right>New Field Rank: </td><td align=left><select size=1 name=field_rank>\n";
 	echo "$rank_select\n";
 	echo "<option selected>$last_rank</option>\n";
-	echo "</select> &nbsp; $NWB#vicidial_lists_fields-field_rank$NWE </td></tr>\n";
+	echo "</select> &nbsp; $NWB#vicidial_lists_fields-field_rank$NWE \n";
+	echo " &nbsp; &nbsp; &nbsp; &nbsp; Field Order: <select size=1 name=field_order>\n";
+	echo "<option selected>1</option>\n";
+	echo "<option>2</option>\n";
+	echo "<option>3</option>\n";
+	echo "<option>4</option>\n";
+	echo "<option>5</option>\n";
+	echo "</select> &nbsp; $NWB#vicidial_lists_fields-field_order$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Field Label: </td><td align=left><input type=text name=field_label size=20 maxlength=50> $NWB#vicidial_lists_fields-field_label$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Field Name: </td><td align=left><textarea name=field_name rows=2 cols=60></textarea> $NWB#vicidial_lists_fields-field_name$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Field Name Position: </td><td align=left><select size=1 name=name_position>\n";
@@ -1222,3 +1341,239 @@ echo "\n\n\n<br><br><br>\n<font size=1> runtime: $RUNtime seconds &nbsp; &nbsp; 
 
 </body>
 </html>
+
+
+<?
+################################################################################
+################################################################################
+##### Functions
+################################################################################
+################################################################################
+
+
+
+
+################################################################################
+##### BEGIN add field function
+function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order)
+	{
+	if ($table_exists < 1)
+		{$field_sql = "CREATE TABLE custom_$list_id (lead_id INT(9) UNSIGNED PRIMARY KEY NOT NULL, $field_label ";}
+	else
+		{$field_sql = "ALTER TABLE custom_$list_id ADD $field_label ";}
+
+	$field_options_ENUM='';
+	$field_cost=1;
+	if ( ($field_type=='SELECT') or ($field_type=='RADIO') )
+		{
+		$field_options_array = explode("\n",$field_options);
+		$field_options_count = count($field_options_array);
+		$te=0;
+		while ($te < $field_options_count)
+			{
+			if (preg_match("/,/",$field_options_array[$te]))
+				{
+				$field_options_value_array = explode(",",$field_options_array[$te]);
+				$field_options_ENUM .= "'$field_options_value_array[0]',";
+				}
+			$te++;
+			}
+		$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
+		$field_sql .= "ENUM($field_options_ENUM) ";
+		$field_cost = strlen($field_options_ENUM);
+		}
+	if ( ($field_type=='MULTI') or ($field_type=='CHECKBOX') )
+		{
+		$field_options_array = explode("\n",$field_options);
+		$field_options_count = count($field_options_array);
+		$te=0;
+		while ($te < $field_options_count)
+			{
+			if (preg_match("/,/",$field_options_array[$te]))
+				{
+				$field_options_value_array = explode(",",$field_options_array[$te]);
+				$field_options_ENUM .= "'$field_options_value_array[0]',";
+				}
+			$te++;
+			}
+		$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
+		$field_cost = strlen($field_options_ENUM);
+		$field_sql .= "VARCHAR($field_cost) ";
+		}
+	if ($field_type=='TEXT') 
+		{
+		$field_sql .= "VARCHAR($field_max) ";
+		$field_cost = ($field_max + $field_cost);
+		}
+	if ($field_type=='AREA') 
+		{
+		$field_sql .= "TEXT ";
+		$field_cost = 15;
+		}
+	if ($field_type=='DATE') 
+		{
+		$field_sql .= "DATE ";
+		$field_cost = 10;
+		}
+	if ($field_type=='TIME') 
+		{
+		$field_sql .= "TIME ";
+		$field_cost = 8;
+		}
+	$field_cost = ($field_cost * 3); # account for utf8 database
+
+	if ( ($field_default != 'NULL') and ($field_type!='AREA') and ($field_type!='DATE') and ($field_type!='TIME') )
+		{$field_sql .= "default '$field_default'";}
+
+	if ($table_exists < 1)
+		{$field_sql .= ");";}
+	else
+		{$field_sql .= ";";}
+
+	$stmtCUSTOM="$field_sql";
+	$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
+	$table_update = mysql_affected_rows($linkCUSTOM);
+	if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
+	if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
+
+	$stmt="INSERT INTO vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',list_id='$list_id',multi_position='$multi_position',name_position='$name_position',field_order='$field_order';";
+	$rslt=mysql_query($stmt, $link);
+	$field_update = mysql_affected_rows($link);
+	if ($DB) {echo "$field_update|$stmt\n";}
+	if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+	### LOG INSERTION Admin Log Table ###
+	$SQL_log = "$stmt|$stmtCUSTOM";
+	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = addslashes($SQL_log);
+	$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$user', ip_address='$ip', event_section='CUSTOM_FIELDS', event_type='ADD', record_id='$list_id', event_code='ADMIN ADD CUSTOM LIST FIELD', event_sql=\"$SQL_log\", event_notes='';";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	}
+##### END add field function
+
+
+
+
+
+################################################################################
+##### BEGIN modify field function
+function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order)
+	{
+	$field_sql = "ALTER TABLE custom_$list_id MODIFY $field_label ";
+	$field_options_ENUM='';
+	$field_cost=1;
+	if ( ($field_type=='SELECT') or ($field_type=='RADIO') )
+		{
+		$field_options_array = explode("\n",$field_options);
+		$field_options_count = count($field_options_array);
+		$te=0;
+		while ($te < $field_options_count)
+			{
+			if (preg_match("/,/",$field_options_array[$te]))
+				{
+				$field_options_value_array = explode(",",$field_options_array[$te]);
+				$field_options_ENUM .= "'$field_options_value_array[0]',";
+				}
+			$te++;
+			}
+		$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
+		$field_sql .= "ENUM($field_options_ENUM) ";
+		$field_cost = strlen($field_options_ENUM);
+		}
+	if ( ($field_type=='MULTI') or ($field_type=='CHECKBOX') )
+		{
+		$field_options_array = explode("\n",$field_options);
+		$field_options_count = count($field_options_array);
+		$te=0;
+		while ($te < $field_options_count)
+			{
+			if (preg_match("/,/",$field_options_array[$te]))
+				{
+				$field_options_value_array = explode(",",$field_options_array[$te]);
+				$field_options_ENUM .= "'$field_options_value_array[0]',";
+				}
+			$te++;
+			}
+		$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
+		$field_cost = strlen($field_options_ENUM);
+		$field_sql .= "VARCHAR($field_cost) ";
+		}
+	if ($field_type=='TEXT') 
+		{
+		$field_sql .= "VARCHAR($field_max) ";
+		$field_cost = ($field_max + $field_cost);
+		}
+	if ($field_type=='AREA') 
+		{
+		$field_sql .= "TEXT ";
+		$field_cost = 15;
+		}
+	if ($field_type=='DATE') 
+		{
+		$field_sql .= "DATE ";
+		$field_cost = 10;
+		}
+	if ($field_type=='TIME') 
+		{
+		$field_sql .= "TIME ";
+		$field_cost = 8;
+		}
+	$field_cost = ($field_cost * 3); # account for utf8 database
+
+	if ( ($field_default == 'NULL') or ($field_type=='AREA') or ($field_type=='DATE') or ($field_type=='TIME') )
+		{$field_sql .= ";";}
+	else
+		{$field_sql .= "default '$field_default';";}
+
+	$stmtCUSTOM="$field_sql";
+	$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
+	$field_update = mysql_affected_rows($linkCUSTOM);
+	if ($DB) {echo "$field_update|$stmtCUSTOM\n";}
+	if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
+
+	$stmt="UPDATE vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',multi_position='$multi_position',name_position='$name_position',field_order='$field_order' where list_id='$list_id' and field_id='$field_id';";
+	$rslt=mysql_query($stmt, $link);
+	$field_update = mysql_affected_rows($link);
+	if ($DB) {echo "$field_update|$stmt\n";}
+	if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+	### LOG INSERTION Admin Log Table ###
+	$SQL_log = "$stmt|$stmtCUSTOM";
+	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = addslashes($SQL_log);
+	$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$user', ip_address='$ip', event_section='CUSTOM_FIELDS', event_type='MODIFY', record_id='$list_id', event_code='ADMIN MODIFY CUSTOM LIST FIELD', event_sql=\"$SQL_log\", event_notes='';";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	}
+##### END modify field function
+
+
+
+
+
+################################################################################
+##### BEGIN delete field function
+function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order)
+	{	
+	$stmtCUSTOM="ALTER TABLE custom_$list_id DROP $field_label;";
+	$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
+	$table_update = mysql_affected_rows($linkCUSTOM);
+	if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
+	if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
+
+	$stmt="DELETE FROM vicidial_lists_fields WHERE field_label='$field_label' and field_id='$field_id' and list_id='$list_id' LIMIT 1;";
+	$rslt=mysql_query($stmt, $link);
+	$field_update = mysql_affected_rows($link);
+	if ($DB) {echo "$field_update|$stmt\n";}
+	if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+	### LOG INSERTION Admin Log Table ###
+	$SQL_log = "$stmt|$stmtCUSTOM";
+	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = addslashes($SQL_log);
+	$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$user', ip_address='$ip', event_section='CUSTOM_FIELDS', event_type='DELETE', record_id='$list_id', event_code='ADMIN DELETE CUSTOM LIST FIELD', event_sql=\"$SQL_log\", event_notes='';";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	}
+##### END delete field function
