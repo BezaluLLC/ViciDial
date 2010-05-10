@@ -313,3 +313,7 @@ UPDATE system_settings SET db_schema_version='1218',db_schema_update_date=NOW();
 ALTER TABLE vicidial_lists_fields ADD field_order SMALLINT(5) default '1';
 
 UPDATE system_settings SET db_schema_version='1219',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_lists_fields MODIFY field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY') default 'TEXT';
+
+UPDATE system_settings SET db_schema_version='1220',db_schema_update_date=NOW();

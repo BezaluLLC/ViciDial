@@ -182,6 +182,7 @@ SUCCESS: Custom Field Modified||
 SUCCESS: Custom Field Deleted||
 Copy List Custom Fields||
 ERROR: You cannot copy fields to the same list||
+DISPLAY will display only and not allow for modification by the agent||
 
 
 AST_VICIDIAL_ingrouplist.php

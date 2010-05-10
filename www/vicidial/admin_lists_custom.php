@@ -10,10 +10,11 @@
 # 100507-1027 - Added name position and options position, added extra space for name and help
 # 100508-1855 - Added field_order to allow for multiple fields on the same line
 # 100509-0922 - Added copy fields options
+# 100510-1130 - Added DISPLAY field type option
 #
 
-$admin_version = '2.4-4';
-$build = '100509-0922';
+$admin_version = '2.4-5';
+$build = '100510-1130';
 
 
 require("dbconnect.php");
@@ -77,6 +78,10 @@ if (strlen($DB) < 1)
 	{$DB=0;}
 if ($field_size > 100)
 	{$field_size = 100;}
+if ( (strlen($field_size) < 1) or ($field_size < 1) )
+	{$field_size = 1;}
+if ( (strlen($field_max) < 1) or ($field_max < 1) )
+	{$field_max = 1;}
 
 
 if ($non_latin < 1)
@@ -249,7 +254,7 @@ if ($action == "HELP")
 
 	<A NAME="vicidial_lists_fields-field_type">
 	<BR>
-	<B>Field Type -</B> This option defines the type of field that will be displayed. TEXT is a standard single-line entry form, AREA is a multi-line text box, SELECT is a single-selection pull-down menu, MULTI is a multiple-select box, RADIO is a list of radio buttons where only one option can be selected, CHECKBOX is a list of checkboxes where multiple options can be selected, DATE is a year month day calendar popup where the agent can select the date and TIME is a time selection box. The default is TEXT. For the SELECT, MULTI, RADIO and CHECKBOX options you must define the option values below in the Field Options box.
+	<B>Field Type -</B> This option defines the type of field that will be displayed. TEXT is a standard single-line entry form, AREA is a multi-line text box, SELECT is a single-selection pull-down menu, MULTI is a multiple-select box, RADIO is a list of radio buttons where only one option can be selected, CHECKBOX is a list of checkboxes where multiple options can be selected, DATE is a year month day calendar popup where the agent can select the date and TIME is a time selection box. The default is TEXT. For the SELECT, MULTI, RADIO and CHECKBOX options you must define the option values below in the Field Options box. DISPLAY will display only and not allow for modification by the agent.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_options">
@@ -909,7 +914,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 				{echo "right";}
 			echo "><font size=2>";
 			}
-		echo "<a href=\"#ANCHOR_$A_field_label[$o]\">$A_field_name[$o]</a>";
+		echo "<a href=\"#ANCHOR_$A_field_label[$o]\"><B>$A_field_name[$o]</B></a>";
 		if ($A_name_position[$o]=='TOP') 
 			{echo " &nbsp; <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> &nbsp; <a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">help+</a></span><BR>";}
 		else
@@ -970,6 +975,11 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		if ($A_field_type[$o]=='AREA') 
 			{
 			$field_HTML .= "<textarea name=$A_field_label[$o] id=$A_field_label[$o] ROWS=$A_field_max[$o] COLS=$A_field_size[$o]></textarea>";
+			}
+		if ($A_field_type[$o]=='DISPLAY') 
+			{
+			if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
+			$field_HTML .= "$A_field_default[$o]\n";
 			}
 		if ($A_field_type[$o]=='DATE') 
 			{
@@ -1098,6 +1108,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<option>CHECKBOX</option>\n";
 		echo "<option>DATE</option>\n";
 		echo "<option>TIME</option>\n";
+		echo "<option>DISPLAY</option>\n";
 		echo "<option selected>$A_field_type[$o]</option>\n";
 		echo "</select>  $NWB#vicidial_lists_fields-field_type$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Field Options $A_field_rank[$o]: </td><td align=left><textarea name=field_options ROWS=5 COLS=60>$A_field_options[$o]</textarea>  $NWB#vicidial_lists_fields-field_options$NWE </td></tr>\n";
@@ -1159,6 +1170,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "<option>CHECKBOX</option>\n";
 	echo "<option>DATE</option>\n";
 	echo "<option>TIME</option>\n";
+	echo "<option>DISPLAY</option>\n";
 	echo "<option selected>TEXT</option>\n";
 	echo "</select>  $NWB#vicidial_lists_fields-field_type$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Field Options: </td><td align=left><textarea name=field_options ROWS=5 COLS=60></textarea>  $NWB#vicidial_lists_fields-field_options$NWE </td></tr>\n";
@@ -1401,6 +1413,11 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 		$field_sql .= "VARCHAR($field_cost) ";
 		}
 	if ($field_type=='TEXT') 
+		{
+		$field_sql .= "VARCHAR($field_max) ";
+		$field_cost = ($field_max + $field_cost);
+		}
+	if ($field_type=='DISPLAY') 
 		{
 		$field_sql .= "VARCHAR($field_max) ";
 		$field_cost = ($field_max + $field_cost);
