@@ -1255,6 +1255,10 @@ if (isset($_GET["hold_time_option_minimum"]))			{$hold_time_option_minimum=$_GET
 	elseif (isset($_POST["hold_time_option_minimum"]))	{$hold_time_option_minimum=$_POST["hold_time_option_minimum"];}
 if (isset($_GET["source_carrier"]))				{$source_carrier=$_GET["source_carrier"];}
 	elseif (isset($_POST["source_carrier"]))	{$source_carrier=$_POST["source_carrier"];}
+if (isset($_GET["hold_time_option_press_filename"]))			{$hold_time_option_press_filename=$_GET["hold_time_option_press_filename"];}
+	elseif (isset($_POST["hold_time_option_press_filename"]))	{$hold_time_option_press_filename=$_POST["hold_time_option_press_filename"];}
+if (isset($_GET["hold_time_option_callmenu"]))			{$hold_time_option_callmenu=$_GET["hold_time_option_callmenu"];}
+	elseif (isset($_POST["hold_time_option_callmenu"]))	{$hold_time_option_callmenu=$_POST["hold_time_option_callmenu"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1758,6 +1762,7 @@ if ($non_latin < 1)
 	$manual_dial_override = ereg_replace("[^-_0-9a-zA-Z]","",$manual_dial_override);
 	$blind_monitor_warning = ereg_replace("[^-_0-9a-zA-Z]","",$blind_monitor_warning);
 	$uniqueid_status_display = ereg_replace("[^-_0-9a-zA-Z]","",$uniqueid_status_display);
+	$hold_time_option_callmenu = ereg_replace("[^-_0-9a-zA-Z]","",$hold_time_option_callmenu);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
@@ -1773,6 +1778,7 @@ if ($non_latin < 1)
 	$am_message_exten_override = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$am_message_exten_override);
 	$campaign_groups = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$campaign_groups);
 	$blind_monitor_filename = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$blind_monitor_filename);
+	$hold_time_option_press_filename = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$hold_time_option_press_filename);
 
 	### ALPHA-NUMERIC and underscore and dash and comma
 	$logins_list = ereg_replace("[^-\,\_0-9a-zA-Z]","",$logins_list);
@@ -2201,11 +2207,12 @@ else
 # 100423-1030 - Added realtime_block_user_info, manual dial campaign, blind monitor warnings, in-group callid, phones codecs features
 # 100506-1807 - Added hidden settings for lists custom fields
 # 100507-1102 - Added hold_time_option_minimum option to in-groups and copy carrier function
+# 100512-1615 - Added more hold time press-1 options
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-253';
-$build = '100507-1102';
+$admin_version = '2.4-254';
+$build = '100512-1615';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4560,7 +4567,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_inbound_groups-hold_time_option">
 	<BR>
-	<B>Hold Time Option -</B> This allows you to specify the routing of the call if the estimated hold time is over the amount of seconds specified below. Default is NONE.
+	<B>Hold Time Option -</B> This allows you to specify the routing of the call if the estimated hold time is over the amount of seconds specified below. Default is NONE. If one of the PRESS_ options is selected, it will play the Press Filename defined below and give the customer the option to press 1 on their phone to leave the queue and run the selected option.
 
 	<BR>
 	<A NAME="vicidial_inbound_groups-hold_time_option_seconds">
@@ -4578,6 +4585,11 @@ if ($ADD==99999)
 	<B>Hold Time Option Extension -</B> If Hold Time Option is set to EXTENSION, this is the dialplan extension that the call will be sent to if the estimated hold time exceeds the Hold Time Option Seconds.
 
 	<BR>
+	<A NAME="vicidial_inbound_groups-hold_time_option_callmenu">
+	<BR>
+	<B>Hold Time Option Callmenu -</B> If Hold Time Option is set to CALL_MENU, this is the Call Menu that the call will be sent to if the estimated hold time exceeds the Hold Time Option Seconds.
+
+	<BR>
 	<A NAME="vicidial_inbound_groups-hold_time_option_voicemail">
 	<BR>
 	<B>Hold Time Option Voicemail -</B> If Hold Time Option is set to VOICEMAIL, this is the voicemail box that the call will be sent to if the estimated hold time exceeds the Hold Time Option Seconds. In an AGENTDIRECT in-group, setting this to AGENTVMAIL will select the User voicemail ID to use.
@@ -4586,6 +4598,11 @@ if ($ADD==99999)
 	<A NAME="vicidial_inbound_groups-hold_time_option_xfer_group">
 	<BR>
 	<B>Hold Time Option Transfer In-Group -</B> If Hold Time Option is set to IN_GROUP, this is the inbound group that the call will be sent to if the estimated hold time exceeds the Hold Time Option Seconds.
+
+	<BR>
+	<A NAME="vicidial_inbound_groups-hold_time_option_press_filename">
+	<BR>
+	<B>Hold Time Option Press Filename -</B> If Hold Time Option is set to one of the PRESS_ options, this is the filename prompt that is played if the estimated hold time exceeds the Hold Time Option Seconds to give the customer the option to press 1 on their phone to run the selected Hold Time Press Option. It is very important that this audio file is 10 seconds or less or there will be problems. Default is to-be-called-back.
 
 	<BR>
 	<A NAME="vicidial_inbound_groups-hold_time_option_callback_filename">
@@ -9656,7 +9673,7 @@ if ($ADD==2011)
 				}
 			else
 				{
-				$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum) SELECT \"$group_id\",\"$group_name\",group_color,\"N\",web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum from vicidial_inbound_groups where group_id=\"$source_group_id\";";
+				$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu) SELECT \"$group_id\",\"$group_name\",group_color,\"N\",web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu from vicidial_inbound_groups where group_id=\"$source_group_id\";";
 				$rslt=mysql_query($stmt, $link);
 
 				echo "<br><B>GROUP ADDED: $group_id</B>\n";
@@ -12768,7 +12785,7 @@ if ($ADD==4111)
 
 			echo "<br><B>GROUP MODIFIED: $group_id</B>\n";
 
-			$stmt="UPDATE vicidial_inbound_groups set group_name='$group_name', group_color='$group_color', active='$active', web_form_address='" . mysql_real_escape_string($web_form_address) . "', voicemail_ext='$voicemail_ext', next_agent_call='$next_agent_call', fronter_display='$fronter_display', ingroup_script='$script_id', get_call_launch='$get_call_launch', xferconf_a_dtmf='$xferconf_a_dtmf',xferconf_a_number='$xferconf_a_number', xferconf_b_dtmf='$xferconf_b_dtmf',xferconf_b_number='$xferconf_b_number',drop_action='$drop_action',drop_call_seconds='$drop_call_seconds',drop_exten='$drop_exten',call_time_id='$call_time_id',after_hours_action='$after_hours_action',after_hours_message_filename='$after_hours_message_filename',after_hours_exten='$after_hours_exten',after_hours_voicemail='$after_hours_voicemail',welcome_message_filename='$welcome_message_filename',moh_context='$moh_context',onhold_prompt_filename='$onhold_prompt_filename',prompt_interval='$prompt_interval',agent_alert_exten='$agent_alert_exten',agent_alert_delay='$agent_alert_delay',default_xfer_group='$default_xfer_group',queue_priority='$queue_priority',drop_inbound_group='$drop_inbound_group',ingroup_recording_override='$ingroup_recording_override',ingroup_rec_filename='$ingroup_rec_filename',afterhours_xfer_group='$afterhours_xfer_group',qc_enabled='$qc_enabled',qc_statuses='$QC_statuses',qc_shift_id='$qc_shift_id',qc_get_record_launch='$qc_get_record_launch',qc_show_recording='$qc_show_recording',qc_web_form_address='$qc_web_form_address',qc_script='$qc_script',play_place_in_line='$play_place_in_line',play_estimate_hold_time='$play_estimate_hold_time',hold_time_option='$hold_time_option',hold_time_option_seconds='$hold_time_option_seconds',hold_time_option_exten='$hold_time_option_exten',hold_time_option_voicemail='$hold_time_option_voicemail',hold_time_option_xfer_group='$hold_time_option_xfer_group',hold_time_option_callback_filename='$hold_time_option_callback_filename',hold_time_option_callback_list_id='$hold_time_option_callback_list_id',hold_recall_xfer_group='$hold_recall_xfer_group',no_delay_call_route='$no_delay_call_route',play_welcome_message='$play_welcome_message',answer_sec_pct_rt_stat_one='$answer_sec_pct_rt_stat_one',answer_sec_pct_rt_stat_two='$answer_sec_pct_rt_stat_two',default_group_alias='$default_group_alias',no_agent_no_queue='$no_agent_no_queue',no_agent_action='$no_agent_action',no_agent_action_value='$no_agent_action_value',web_form_address_two='" . mysql_real_escape_string($web_form_address_two) . "',timer_action='$timer_action',timer_action_message='$timer_action_message',timer_action_seconds='$timer_action_seconds',start_call_url='" . mysql_real_escape_string($start_call_url) . "',dispo_call_url='" . mysql_real_escape_string($dispo_call_url) . "',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',ignore_list_script_override='$ignore_list_script_override',extension_appended_cidname='$extension_appended_cidname',uniqueid_status_display='$uniqueid_status_display',uniqueid_status_prefix='$uniqueid_status_prefix',hold_time_option_minimum='$hold_time_option_minimum' where group_id='$group_id';";
+			$stmt="UPDATE vicidial_inbound_groups set group_name='$group_name', group_color='$group_color', active='$active', web_form_address='" . mysql_real_escape_string($web_form_address) . "', voicemail_ext='$voicemail_ext', next_agent_call='$next_agent_call', fronter_display='$fronter_display', ingroup_script='$script_id', get_call_launch='$get_call_launch', xferconf_a_dtmf='$xferconf_a_dtmf',xferconf_a_number='$xferconf_a_number', xferconf_b_dtmf='$xferconf_b_dtmf',xferconf_b_number='$xferconf_b_number',drop_action='$drop_action',drop_call_seconds='$drop_call_seconds',drop_exten='$drop_exten',call_time_id='$call_time_id',after_hours_action='$after_hours_action',after_hours_message_filename='$after_hours_message_filename',after_hours_exten='$after_hours_exten',after_hours_voicemail='$after_hours_voicemail',welcome_message_filename='$welcome_message_filename',moh_context='$moh_context',onhold_prompt_filename='$onhold_prompt_filename',prompt_interval='$prompt_interval',agent_alert_exten='$agent_alert_exten',agent_alert_delay='$agent_alert_delay',default_xfer_group='$default_xfer_group',queue_priority='$queue_priority',drop_inbound_group='$drop_inbound_group',ingroup_recording_override='$ingroup_recording_override',ingroup_rec_filename='$ingroup_rec_filename',afterhours_xfer_group='$afterhours_xfer_group',qc_enabled='$qc_enabled',qc_statuses='$QC_statuses',qc_shift_id='$qc_shift_id',qc_get_record_launch='$qc_get_record_launch',qc_show_recording='$qc_show_recording',qc_web_form_address='$qc_web_form_address',qc_script='$qc_script',play_place_in_line='$play_place_in_line',play_estimate_hold_time='$play_estimate_hold_time',hold_time_option='$hold_time_option',hold_time_option_seconds='$hold_time_option_seconds',hold_time_option_exten='$hold_time_option_exten',hold_time_option_voicemail='$hold_time_option_voicemail',hold_time_option_xfer_group='$hold_time_option_xfer_group',hold_time_option_callback_filename='$hold_time_option_callback_filename',hold_time_option_callback_list_id='$hold_time_option_callback_list_id',hold_recall_xfer_group='$hold_recall_xfer_group',no_delay_call_route='$no_delay_call_route',play_welcome_message='$play_welcome_message',answer_sec_pct_rt_stat_one='$answer_sec_pct_rt_stat_one',answer_sec_pct_rt_stat_two='$answer_sec_pct_rt_stat_two',default_group_alias='$default_group_alias',no_agent_no_queue='$no_agent_no_queue',no_agent_action='$no_agent_action',no_agent_action_value='$no_agent_action_value',web_form_address_two='" . mysql_real_escape_string($web_form_address_two) . "',timer_action='$timer_action',timer_action_message='$timer_action_message',timer_action_seconds='$timer_action_seconds',start_call_url='" . mysql_real_escape_string($start_call_url) . "',dispo_call_url='" . mysql_real_escape_string($dispo_call_url) . "',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',ignore_list_script_override='$ignore_list_script_override',extension_appended_cidname='$extension_appended_cidname',uniqueid_status_display='$uniqueid_status_display',uniqueid_status_prefix='$uniqueid_status_prefix',hold_time_option_minimum='$hold_time_option_minimum',hold_time_option_press_filename='$hold_time_option_press_filename',hold_time_option_callmenu='$hold_time_option_callmenu' where group_id='$group_id';";
 			$rslt=mysql_query($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -20061,7 +20078,7 @@ if ($ADD==3111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum from vicidial_inbound_groups where group_id='$group_id';";
+		$stmt="SELECT group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu from vicidial_inbound_groups where group_id='$group_id';";
 
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
@@ -20137,6 +20154,30 @@ if ($ADD==3111)
 		$uniqueid_status_display =	$row[70];
 		$uniqueid_status_prefix =	$row[71];
 		$hold_time_option_minimum = $row[72];
+		$hold_time_option_press_filename = $row[73];
+		$hold_time_option_callmenu = $row[74];
+
+		##### get callmenu listings for dynamic pulldown
+		$stmt="SELECT menu_id,menu_name from vicidial_call_menu order by menu_id";
+		$rslt=mysql_query($stmt, $link);
+		$Xmenus_to_print = mysql_num_rows($rslt);
+		$o=0;
+		$Xmenuslist='';
+		while ($Xmenus_to_print > $o) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$Xmenuslist .= "<option ";
+			if ($hold_time_option_callmenu == "$rowx[0]") 
+				{
+				$Xmenuslist .= "SELECTED ";
+				$Xmenus_selected++;
+				}
+			$Xmenuslist .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+			$o++;
+			}
+		if ($Xmenus_selected < 1) 
+			{$Xmenuslist .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
+
 
 		##### get in-groups listings for dynamic pulldown
 		$stmt="SELECT group_id,group_name from vicidial_inbound_groups where group_id NOT IN('AGENTDIRECT') order by group_id";
@@ -20288,7 +20329,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#99FFCC><td align=right>Drop Exten: </td><td align=left><input type=text name=drop_exten size=10 maxlength=20 value=\"$drop_exten\">$NWB#vicidial_inbound_groups-drop_exten$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#99FFCC><td align=right>Voicemail: </td><td align=left><input type=text name=voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',400);\">voicemail chooser</a>$NWB#vicidial_inbound_groups-voicemail_ext$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>Voicemail: </td><td align=left><input type=text name=voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',500);\">voicemail chooser</a>$NWB#vicidial_inbound_groups-voicemail_ext$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right>Drop Transfer Group: </td><td align=left><select size=1 name=drop_inbound_group>";
 		echo "$Dgroups_menu";
@@ -20301,11 +20342,11 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Action: </td><td align=left><select size=1 name=after_hours_action><option>HANGUP</option><option>MESSAGE</option><option>EXTENSION</option><option>VOICEMAIL</option><option>IN_GROUP</option><option SELECTED>$after_hours_action</option></select>$NWB#vicidial_inbound_groups-after_hours_action$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Message Filename: </td><td align=left><input type=text name=after_hours_message_filename id=after_hours_message_filename size=50 maxlength=255 value=\"$after_hours_message_filename\"> <a href=\"javascript:launch_chooser('after_hours_message_filename','date',400);\">audio chooser</a> $NWB#vicidial_inbound_groups-after_hours_message_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Message Filename: </td><td align=left><input type=text name=after_hours_message_filename id=after_hours_message_filename size=50 maxlength=255 value=\"$after_hours_message_filename\"> <a href=\"javascript:launch_chooser('after_hours_message_filename','date',600);\">audio chooser</a> $NWB#vicidial_inbound_groups-after_hours_message_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Extension: </td><td align=left><input type=text name=after_hours_exten size=10 maxlength=20 value=\"$after_hours_exten\">$NWB#vicidial_inbound_groups-after_hours_exten$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Voicemail: </td><td align=left><input type=text name=after_hours_voicemail id=after_hours_voicemail size=12 maxlength=10 value=\"$after_hours_voicemail\"> <a href=\"javascript:launch_vm_chooser('after_hours_voicemail','vm',600);\">voicemail chooser</a>$NWB#vicidial_inbound_groups-after_hours_voicemail$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Voicemail: </td><td align=left><input type=text name=after_hours_voicemail id=after_hours_voicemail size=12 maxlength=10 value=\"$after_hours_voicemail\"> <a href=\"javascript:launch_vm_chooser('after_hours_voicemail','vm',700);\">voicemail chooser</a>$NWB#vicidial_inbound_groups-after_hours_voicemail$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Transfer Group: </td><td align=left><select size=1 name=afterhours_xfer_group>";
 		echo "$Agroups_menu";
@@ -20385,13 +20426,13 @@ if ($ADD==3111)
 		echo "</span>
 		<BR> &nbsp; </td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Welcome Message Filename: </td><td align=left><input type=text name=welcome_message_filename id=welcome_message_filename size=50 maxlength=255 value=\"$welcome_message_filename\"> <a href=\"javascript:launch_chooser('welcome_message_filename','date',500);\">audio chooser</a> $NWB#vicidial_inbound_groups-welcome_message_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Welcome Message Filename: </td><td align=left><input type=text name=welcome_message_filename id=welcome_message_filename size=50 maxlength=255 value=\"$welcome_message_filename\"> <a href=\"javascript:launch_chooser('welcome_message_filename','date',800);\">audio chooser</a> $NWB#vicidial_inbound_groups-welcome_message_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Play Welcome Message: </td><td align=left><select size=1 name=play_welcome_message><option>ALWAYS</option><option>NEVER</option><option>IF_WAIT_ONLY</option><option>YES_UNLESS_NODELAY</option><option SELECTED>$play_welcome_message</option></select>$NWB#vicidial_inbound_groups-play_welcome_message$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Music On Hold Context: </td><td align=left><input type=text name=moh_context id=moh_context size=50 maxlength=50 value=\"$moh_context\"> <a href=\"javascript:launch_moh_chooser('moh_context','moh',500);\">moh chooser</a> $NWB#vicidial_inbound_groups-moh_context$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Music On Hold Context: </td><td align=left><input type=text name=moh_context id=moh_context size=50 maxlength=50 value=\"$moh_context\"> <a href=\"javascript:launch_moh_chooser('moh_context','moh',800);\">moh chooser</a> $NWB#vicidial_inbound_groups-moh_context$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>On Hold Prompt Filename: </td><td align=left><input type=text name=onhold_prompt_filename id=onhold_prompt_filename size=50 maxlength=255 value=\"$onhold_prompt_filename\"> <a href=\"javascript:launch_chooser('onhold_prompt_filename','date',600);\">audio chooser</a> $NWB#vicidial_inbound_groups-onhold_prompt_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>On Hold Prompt Filename: </td><td align=left><input type=text name=onhold_prompt_filename id=onhold_prompt_filename size=50 maxlength=255 value=\"$onhold_prompt_filename\"> <a href=\"javascript:launch_chooser('onhold_prompt_filename','date',800);\">audio chooser</a> $NWB#vicidial_inbound_groups-onhold_prompt_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>On Hold Prompt Interval: </td><td align=left><input type=text name=prompt_interval size=5 maxlength=5 value=\"$prompt_interval\">$NWB#vicidial_inbound_groups-prompt_interval$NWE</td></tr>\n";
 
@@ -20399,7 +20440,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Play Estimated Hold Time: </td><td align=left><select size=1 name=play_estimate_hold_time><option>Y</option><option>N</option><option SELECTED>$play_estimate_hold_time</option></select>$NWB#vicidial_inbound_groups-play_estimate_hold_time$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option: </td><td align=left><select size=1 name=hold_time_option><option>NONE</option><option>EXTENSION</option><option>VOICEMAIL</option><option>IN_GROUP</option><option>CALLERID_CALLBACK</option><option>DROP_ACTION</option><option>PRESS_VMAIL</option><option SELECTED>$hold_time_option</option></select>$NWB#vicidial_inbound_groups-hold_time_option$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option: </td><td align=left><select size=1 name=hold_time_option><option>NONE</option><option>EXTENSION</option><option>CALL_MENU</option><option>VOICEMAIL</option><option>IN_GROUP</option><option>CALLERID_CALLBACK</option><option>DROP_ACTION</option><option>PRESS_VMAIL</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$hold_time_option</option></select>$NWB#vicidial_inbound_groups-hold_time_option$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Seconds: </td><td align=left><input type=text name=hold_time_option_seconds size=5 maxlength=5 value=\"$hold_time_option_seconds\">$NWB#vicidial_inbound_groups-hold_time_option_seconds$NWE</td></tr>\n";
 
@@ -20407,17 +20448,23 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Extension: </td><td align=left><input type=text name=hold_time_option_exten size=20 maxlength=20 value=\"$hold_time_option_exten\">$NWB#vicidial_inbound_groups-hold_time_option_exten$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Voicemail: </td><td align=left><input type=text name=hold_time_option_voicemail id=hold_time_option_voicemail size=12 maxlength=10 value=\"$hold_time_option_voicemail\"> <a href=\"javascript:launch_vm_chooser('hold_time_option_voicemail','vm',900);\">voicemail chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_voicemail$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3511&menu_id=$hold_time_option_callmenu\">Hold Time Option Callmenu</a>: </td><td align=left><select size=1 name=hold_time_option_callmenu>\n";
+		echo "$Xmenuslist";
+		echo "</select>$NWB#vicidial_inbound_groups-hold_time_option_callmenu$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Voicemail: </td><td align=left><input type=text name=hold_time_option_voicemail id=hold_time_option_voicemail size=12 maxlength=10 value=\"$hold_time_option_voicemail\"> <a href=\"javascript:launch_vm_chooser('hold_time_option_voicemail','vm',1100);\">voicemail chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_voicemail$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Transfer In-Group: </td><td align=left><select size=1 name=hold_time_option_xfer_group>";
 		echo "$Tgroups_menu";
 		echo "</select>$NWB#vicidial_inbound_groups-hold_time_option_xfer_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Callback Filename: </td><td align=left><input type=text name=hold_time_option_callback_filename id=hold_time_option_callback_filename size=50 maxlength=255 value=\"$hold_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_callback_filename','date',900);\">audio chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_callback_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Press Filename: </td><td align=left><input type=text name=hold_time_option_press_filename id=hold_time_option_press_filename size=50 maxlength=255 value=\"$hold_time_option_press_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_press_filename','date',1200);\">audio chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_press_filename$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Callback Filename: </td><td align=left><input type=text name=hold_time_option_callback_filename id=hold_time_option_callback_filename size=50 maxlength=255 value=\"$hold_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_callback_filename','date',1300);\">audio chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_callback_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Callback List ID: </td><td align=left><input type=text name=hold_time_option_callback_list_id size=14 maxlength=14 value=\"$hold_time_option_callback_list_id\">$NWB#vicidial_inbound_groups-hold_time_option_callback_list_id$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Alert Filename: </td><td align=left><input type=text name=agent_alert_exten id=agent_alert_exten size=40 maxlength=100 value=\"$agent_alert_exten\"> <a href=\"javascript:launch_chooser('agent_alert_exten','date',1000);\">audio chooser</a> $NWB#vicidial_inbound_groups-agent_alert_exten$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Alert Filename: </td><td align=left><input type=text name=agent_alert_exten id=agent_alert_exten size=40 maxlength=100 value=\"$agent_alert_exten\"> <a href=\"javascript:launch_chooser('agent_alert_exten','date',1500);\">audio chooser</a> $NWB#vicidial_inbound_groups-agent_alert_exten$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Alert Delay: </td><td align=left><input type=text name=agent_alert_delay size=6 maxlength=6 value=\"$agent_alert_delay\">$NWB#vicidial_inbound_groups-agent_alert_delay$NWE</td></tr>\n";
 

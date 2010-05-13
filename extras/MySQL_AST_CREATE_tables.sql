@@ -871,7 +871,7 @@ qc_web_form_address VARCHAR(255),
 qc_script VARCHAR(10),
 play_place_in_line ENUM('Y','N') default 'N',
 play_estimate_hold_time ENUM('Y','N') default 'N',
-hold_time_option ENUM('NONE','EXTENSION','VOICEMAIL','IN_GROUP','CALLERID_CALLBACK','DROP_ACTION','PRESS_VMAIL') default 'NONE',
+hold_time_option VARCHAR(30) default 'NONE',
 hold_time_option_seconds SMALLINT(5) default '360',
 hold_time_option_exten VARCHAR(20) default '8300',
 hold_time_option_voicemail VARCHAR(20) default '',
@@ -900,7 +900,9 @@ ignore_list_script_override ENUM('Y','N') default 'N',
 extension_appended_cidname ENUM('Y','N') default 'N',
 uniqueid_status_display ENUM('DISABLED','ENABLED','ENABLED_PREFIX','ENABLED_PRESERVE') default 'DISABLED',
 uniqueid_status_prefix VARCHAR(50) default '',
-hold_time_option_minimum SMALLINT(5) default '0'
+hold_time_option_minimum SMALLINT(5) default '0',
+hold_time_option_press_filename VARCHAR(255) default 'to-be-called-back',
+hold_time_option_callmenu VARCHAR(50) default ''
 );
 
 CREATE TABLE vicidial_stations (
@@ -2230,7 +2232,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1220',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1221',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

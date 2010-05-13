@@ -317,3 +317,9 @@ UPDATE system_settings SET db_schema_version='1219',db_schema_update_date=NOW();
 ALTER TABLE vicidial_lists_fields MODIFY field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY') default 'TEXT';
 
 UPDATE system_settings SET db_schema_version='1220',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_inbound_groups MODIFY hold_time_option VARCHAR(30) default 'NONE';
+ALTER TABLE vicidial_inbound_groups ADD hold_time_option_press_filename VARCHAR(255) default 'to-be-called-back';
+ALTER TABLE vicidial_inbound_groups ADD hold_time_option_callmenu VARCHAR(50) default '';
+
+UPDATE system_settings SET db_schema_version='1221',db_schema_update_date=NOW();
