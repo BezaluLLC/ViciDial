@@ -292,10 +292,11 @@
 # 100420-1009 - Added scheduled_callbacks_count option
 # 100423-1156 - Added more user logging data and manual_dial_override, blind monitor warnings, uniqueid display and codec features
 # 100428-0544 - Added uniqueid display option for PRESERVE
+# 100513-0714 - Added options.php option to hide the timeclock link
 #
 
-$version = '2.4-270';
-$build = '100428-0544';
+$version = '2.4-271';
+$build = '100513-0714';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -438,6 +439,7 @@ else
 	$DefaulTAlTDiaL			= '0';	# set to 1 to enable ALT DIAL by default if enabled for the campaign
 	$AgentAlert_allowed		= '1';	# set to 1 to allow Agent alert option
 	$disable_blended_checkbox='0';	# set to 1 to disable the BLENDED checkbox from the in-group chooser screen
+	$hide_timeclock_link	= '0';	# set to 1 to hide the timeclock link on the agent login screen
 
 	$TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
 
@@ -685,7 +687,8 @@ if ($relogin == 'YES')
 	echo "<title>Agent web client: Re-Login</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
+	if ($hide_timeclock_link < 1)
+		{echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";}
 	echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 	echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 	echo "</TR></TABLE>\n";
@@ -725,7 +728,8 @@ if ($user_login_first == 1)
 		echo "<title>Agent web client: Campaign Login</title>\n";
 		echo "</head>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
+		if ($hide_timeclock_link < 1)
+			{echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";}
 		echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 		echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 		echo "</TR></TABLE>\n";
@@ -771,7 +775,8 @@ if ($user_login_first == 1)
 			echo "<title>Agent web client: Login</title>\n";
 			echo "</head>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-			echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
+			if ($hide_timeclock_link < 1)
+				{echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";}
 			echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 			echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 			echo "</TR></TABLE>\n";
@@ -811,7 +816,8 @@ if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
 	echo "<title>Agent web client:  Phone Login</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-	echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
+	if ($hide_timeclock_link < 1)
+		{echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";}
 	echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 	echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 	echo "</TR></TABLE>\n";
@@ -1074,7 +1080,8 @@ else
 				echo "<title>Agent web client: Campaign Login</title>\n";
 				echo "</head>\n";
 				echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-				echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
+				if ($hide_timeclock_link < 1)
+					{echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";}
 				echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 				echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 				echo "</TR></TABLE>\n";
@@ -1526,7 +1533,8 @@ else
 		echo "<title>Agent web client: Campaign Login</title>\n";
 		echo "</head>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
+		if ($hide_timeclock_link < 1)
+			{echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";}
 		echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 		echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 		echo "</TR></TABLE>\n";
@@ -1619,7 +1627,8 @@ else
 		echo "<title>Agent web client: Phone Login Error</title>\n";
 		echo "</head>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-		echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
+		if ($hide_timeclock_link < 1)
+			{echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";}
 		echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 		echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 		echo "</TR></TABLE>\n";
@@ -2185,7 +2194,8 @@ else
 			echo "<title>Agent web client: Campaign Login</title>\n";
 			echo "</head>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-			echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
+			if ($hide_timeclock_link < 1)
+				{echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";}
 			echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 			echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 			echo "</TR></TABLE>\n";
@@ -2211,7 +2221,8 @@ else
 			echo "<title>Agent web client: Campaign Login</title>\n";
 			echo "</head>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-			echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";
+			if ($hide_timeclock_link < 1)
+				{echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";}
 			echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
 			echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 			echo "</TR></TABLE>\n";

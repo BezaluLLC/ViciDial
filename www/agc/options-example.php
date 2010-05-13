@@ -36,6 +36,7 @@ $PhonESComPIP			= '1';	# set to 1 to log computer IP to phone if blank, set to 2
 $DefaulTAlTDiaL			= '0';	# set to 1 to enable ALT DIAL by default if enabled for the campaign
 $AgentAlert_allowed		= '1';	# set to 1 to allow Agent alert option
 $disable_blended_checkbox='0';	# set to 1 to disable the BLENDED checkbox from the in-group chooser screen
+$hide_timeclock_link	= '0';	# set to 1 to hide the timeclock link on the agent login screen
 
 $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
 
