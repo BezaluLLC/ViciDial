@@ -3235,6 +3235,8 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				exit;
 				}
 			}
+		$start_moh=1;
+		$moh_delay=1;
 		}
 	}
 
@@ -3615,11 +3617,23 @@ sub press_one_hold_time_option_prompt
 	undef $interrupt_digit;
 	$digit_loop_counter=0;
 
-	$interrupt_digit = $AGI->stream_file("$hold_time_option_press_filename",'1');   
-	if ($interrupt_digit < 2)
-		{$interrupt_digit = $AGI->stream_file('digits/1','1');}  
+	if ($hold_time_option_press_filename =~ /\|/)
+		{
+		@hold_time_option_press_filename_array = split(/\|/,$hold_time_option_press_filename);
+		$w=0;
+		foreach(@hold_time_option_press_filename_array)
+			{
+			if ( (length($hold_time_option_press_filename_array[$w])>0) && ($interrupt_digit < 2) )
+				{
+				$interrupt_digit = $AGI->stream_file("$hold_time_option_press_filename_array[$w]",'1');
+				}
+			$w++;
+			}
+		}
+	else
+		{$interrupt_digit = $AGI->stream_file("$hold_time_option_press_filename",'1');} # this prompt must be less than 10 seconds long
 
-		if ($AGILOG) {$agi_string = "interrupt_digit |$interrupt_digit|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "interrupt_digit |$interrupt_digit|";   &agi_output;}
 
 	$digits_being_entered=1;
 	$totalDTMF='';

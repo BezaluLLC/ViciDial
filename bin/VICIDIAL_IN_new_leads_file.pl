@@ -192,7 +192,7 @@ if (length($ARGV[0])>1)
 		print "dccsv10:\n";
 		print "VENDOR_ID,FIRST_NAME,LAST_NAME,PHONE_1,PHONE_2,PHONE_3,PHONE_4,PHONE_5,PHONE_6,PHONE_7\n";
 		print "\"100998\",\"ANGELA    \",\"SMITH     \",\"3145551212\",\"3145551213\",\"3145551214\",\"0\",\"3145551215\",\"3145551216\",\"0\",\n\n";
-		print "dccsv43 and dccsvref43:\n";
+		print "dccsv43 and dccsvref51:\n";
 		print "---format too confusing to list in the help screen---\n\n";
 
 		exit;
@@ -1026,6 +1026,7 @@ foreach(@FILES)
 				$number =~ s/\",\"/\|/gi;
 				$number =~ s/\"//gi;
 				$number =~ s/\|0000000000//gi;
+				$number =~ s/          //gi;
 				@m=@MT;
 				@m = split(/\|/, $number);
 				if ($DBX) {print "RAW: $#m-----$number\n";}
@@ -1070,32 +1071,32 @@ foreach(@FILES)
 
 				$r=0;
 				$map_count=0;
-				if (length($m[38]) > 9) 
+				if ( (length($m[38]) > 9) && ($m[38] !~ /000000000/) )
 					{
 					$ALTm_phone_number[$r] =	$m[38];
 					$ALTm_phone_code[$r] =		'1';
 					$r++;	$map_count++;
 					$g++;
 					}
-				if (length($m[39]) > 9) 
+				if ( (length($m[39]) > 9) && ($m[39] !~ /000000000/) )
 					{
 					$ALTm_phone_number[$r] =	$m[39];
 					$ALTm_phone_code[$r] =		'1';
 					$r++;	$map_count++;
 					}
-				if (length($m[40]) > 9) 
+				if ( (length($m[40]) > 9) && ($m[40] !~ /000000000/) )
 					{
 					$ALTm_phone_number[$r] =	$m[40];
 					$ALTm_phone_code[$r] =		'1';
 					$r++;	$map_count++;
 					}
-				if (length($m[41]) > 9) 
+				if ( (length($m[41]) > 9) && ($m[41] !~ /000000000/) )
 					{
 					$ALTm_phone_number[$r] =	$m[41];
 					$ALTm_phone_code[$r] =		'1';
 					$r++;	$map_count++;
 					}
-				if (length($m[42]) > 9) 
+				if ( (length($m[42]) > 9) && ($m[42] !~ /000000000/) )
 					{
 					$ALTm_phone_number[$r] =	$m[42];
 					$ALTm_phone_code[$r] =		'1';
@@ -1118,11 +1119,11 @@ foreach(@FILES)
 				$format_set++;
 				}
 
-		# This is the format for the dccsvref43 lead files
+		# This is the format for the dccsvref51 lead files
 #"BF_ID","RECORD_TYPE","LAST_NAME","FIRST_NAME","4ADDR1","5ADDR2","6CITY","STATE","ZIP","9ZIP4","ADDR_STATUS","DATE_PLACED","DATE_ADDED","DOB","LAST_LETTER","LAST_LETTER_DATE","LAST_WORKED","NEXT_ACTION_DATE","CAPTURE_CODE","CUR_CATEGORY","TIMES_DIALED","LAST_DIALED","TOTAL_PAID","DATE_LAST_PAID","NMBR_CALLS","NMBR_CONTACTS","NMBR_TIMES_WRKD","NMBR_LETTERS","STATUS_CODE","STATUS_DATE","SCORE","TIMES_TO_SERVICER","1ST-PMT-DEFAULT","TIME_ZONE","ORIG_CREDITOR","BALANCE","HOME_PHONE","WORK_PHONE","OTHER_PHONE","ACCT_OTHTEL2","ACCT_OTHTEL3","ACCT_OTHTEL4","ACCT_OTHTEL5"
 #"II ACCT/1103566666  ","P","SMITH           ","        SAMMY","7838 W 109TH ST APT 12        ","                              ","OVERLAND PARK       ","KS","66212","0000","G","20091110","20091110","19661216","NOLTTR","00000000","20091214","20091219","1000","03","000","00000000","000000000.00 ","00000000","0004","0003","0004","000","ACTIVE","20091110","0648","00"," ","C","HSBC                          ","000000692.09 ","9135551212","0000000000","0000000000","0000000000","0000000000","0000000000","0000000000"
 
-			if ( ($format =~ /dccsvref43/) && ($format_set < 1) )
+			if ( ($format =~ /dccsvref51/) && ($format_set < 1) )
 				{
 				$raw_number = $number;
 				chomp($number);
@@ -1137,7 +1138,7 @@ foreach(@FILES)
 				$number =~ s/\",,\"/\|\|/gi;
 				$number =~ s/\",\"/\|/gi;
 				$number =~ s/\"//gi;
-				$number =~ s/\|0000000000//gi;
+			#	$number =~ s/\|0000000000//gi;
 				@m=@MT;
 				@m = split(/\|/, $number);
 				if ($DBX) {print "RAW: $#m-----$number\n";}
@@ -1172,7 +1173,7 @@ foreach(@FILES)
 				$alt_phone =			$m[37];		chomp($alt_phone);	$alt_phone =~ s/\D//gi;
 				$email =				$m[11];			# date placed
 				$security_phrase =		''; # looked-up geographic CID will go here
-				$comments =				"$m[16]|$m[21]";	# last worked/dialed
+				$comments =				$m[43];			# ref-name
 				$called_count =			'0';
 				$status =				'NEW';
 				$insert_date =			$pulldate0;
@@ -1182,32 +1183,32 @@ foreach(@FILES)
 
 				$r=0;
 				$map_count=0;
-				if (length($m[38]) > 9) 
+				if ( (length($m[38]) > 9) && ($m[38] !~ /000000000/) )
 					{
 					$ALTm_phone_number[$r] =	$m[38];
 					$ALTm_phone_code[$r] =		'1';
 					$r++;	$map_count++;
 					$g++;
 					}
-				if (length($m[39]) > 9) 
+				if ( (length($m[39]) > 9) && ($m[39] !~ /000000000/) )
 					{
 					$ALTm_phone_number[$r] =	$m[39];
 					$ALTm_phone_code[$r] =		'1';
 					$r++;	$map_count++;
 					}
-				if (length($m[40]) > 9) 
+				if ( (length($m[40]) > 9) && ($m[40] !~ /000000000/) )
 					{
 					$ALTm_phone_number[$r] =	$m[40];
 					$ALTm_phone_code[$r] =		'1';
 					$r++;	$map_count++;
 					}
-				if (length($m[41]) > 9) 
+				if ( (length($m[41]) > 9) && ($m[41] !~ /000000000/) )
 					{
 					$ALTm_phone_number[$r] =	$m[41];
 					$ALTm_phone_code[$r] =		'1';
 					$r++;	$map_count++;
 					}
-				if (length($m[42]) > 9) 
+				if ( (length($m[42]) > 9) && ($m[42] !~ /000000000/) )
 					{
 					$ALTm_phone_number[$r] =	$m[42];
 					$ALTm_phone_code[$r] =		'1';

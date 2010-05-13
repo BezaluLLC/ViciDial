@@ -901,7 +901,7 @@ extension_appended_cidname ENUM('Y','N') default 'N',
 uniqueid_status_display ENUM('DISABLED','ENABLED','ENABLED_PREFIX','ENABLED_PRESERVE') default 'DISABLED',
 uniqueid_status_prefix VARCHAR(50) default '',
 hold_time_option_minimum SMALLINT(5) default '0',
-hold_time_option_press_filename VARCHAR(255) default 'to-be-called-back',
+hold_time_option_press_filename VARCHAR(255) default 'to-be-called-back|digits/1',
 hold_time_option_callmenu VARCHAR(50) default ''
 );
 
@@ -2232,7 +2232,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1221',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1222',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

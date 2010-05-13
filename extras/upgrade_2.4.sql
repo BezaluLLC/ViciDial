@@ -323,3 +323,10 @@ ALTER TABLE vicidial_inbound_groups ADD hold_time_option_press_filename VARCHAR(
 ALTER TABLE vicidial_inbound_groups ADD hold_time_option_callmenu VARCHAR(50) default '';
 
 UPDATE system_settings SET db_schema_version='1221',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_inbound_groups MODIFY hold_time_option_press_filename VARCHAR(255) default 'to-be-called-back|digits/1';
+
+UPDATE vicidial_inbound_groups SET hold_time_option_press_filename='to-be-called-back|digits/1' where hold_time_option_press_filename='to-be-called-back';
+
+UPDATE system_settings SET db_schema_version='1222',db_schema_update_date=NOW();
+
