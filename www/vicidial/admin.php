@@ -4607,7 +4607,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_inbound_groups-hold_time_option_callback_filename">
 	<BR>
-	<B>Hold Time Option Callback Filename -</B> If Hold Time Option is set to CALLERID_CALLBACK, this is the filename prompt that is played before the call is logged as a new lead to the list ID specified below if the estimated hold time exceeds the Hold Time Option Seconds.
+	<B>Hold Time Option After Press Filename -</B> If Hold Time Option is set to one of the PRESS_ options or CALLERID_CALLBACK, this is the filename prompt that is played after the customer has pressed 1 or the call has been added to the callback list.
 
 	<BR>
 	<A NAME="vicidial_inbound_groups-hold_time_option_callback_list_id">
@@ -20460,7 +20460,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Press Filename: </td><td align=left><input type=text name=hold_time_option_press_filename id=hold_time_option_press_filename size=50 maxlength=255 value=\"$hold_time_option_press_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_press_filename','date',1200);\">audio chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_press_filename$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Callback Filename: </td><td align=left><input type=text name=hold_time_option_callback_filename id=hold_time_option_callback_filename size=50 maxlength=255 value=\"$hold_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_callback_filename','date',1300);\">audio chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_callback_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option After Press Filename: </td><td align=left><input type=text name=hold_time_option_callback_filename id=hold_time_option_callback_filename size=50 maxlength=255 value=\"$hold_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_callback_filename','date',1300);\">audio chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_callback_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Callback List ID: </td><td align=left><input type=text name=hold_time_option_callback_list_id size=14 maxlength=14 value=\"$hold_time_option_callback_list_id\">$NWB#vicidial_inbound_groups-hold_time_option_callback_list_id$NWE</td></tr>\n";
 

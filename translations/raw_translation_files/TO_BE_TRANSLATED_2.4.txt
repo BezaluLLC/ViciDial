@@ -188,6 +188,8 @@ Hold Time Option Press Filename||
 If Hold Time Option is set to CALL_MENU, this is the Call Menu that the call will be sent to if the estimated hold time exceeds the Hold Time Option Seconds||
 If Hold Time Option is set to one of the PRESS_ options, this is the filename prompt that is played if the estimated hold time exceeds the Hold Time Option Seconds to give the customer the option to press 1 on their phone to run the selected Hold Time Press Option. It is very important that this audio file is 10 seconds or less or there will be problems. Default is to-be-called-back||
 If one of the PRESS_ options is selected, it will play the Press Filename defined below and give the customer the option to press 1 on their phone to leave the queue and run the selected option||
+Hold Time Option After Press Filename||
+If Hold Time Option is set to one of the PRESS_ options or CALLERID_CALLBACK, this is the filename prompt that is played after the customer has pressed 1 or the call has been added to the callback list||
 
 
 AST_VICIDIAL_ingrouplist.php

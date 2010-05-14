@@ -293,10 +293,11 @@
 # 100423-1156 - Added more user logging data and manual_dial_override, blind monitor warnings, uniqueid display and codec features
 # 100428-0544 - Added uniqueid display option for PRESERVE
 # 100513-0714 - Added options.php option to hide the timeclock link
+# 100513-2337 - Changed user_login_first to attempt full login if phone_login/pass are filled in
 #
 
-$version = '2.4-271';
-$build = '100513-0714';
+$version = '2.4-272';
+$build = '100513-2337';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -772,41 +773,44 @@ if ($user_login_first == 1)
 			$phone_login=$row[0];
 			$phone_pass=$row[1];
 
-			echo "<title>Agent web client: Login</title>\n";
-			echo "</head>\n";
-			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
-			if ($hide_timeclock_link < 1)
-				{echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";}
-			echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
-			echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
-			echo "</TR></TABLE>\n";
-			echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
-			echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-			echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
-			echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
-			echo "<BR><BR><BR><CENTER><TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
-			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/vdc_tab_vicidial.gif\" BORDER=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Login </TD>";
-			echo "</TR>\n";
-			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-			echo "<TR><TD ALIGN=RIGHT>Phone Login: </TD>";
-			echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 MAXLENGTH=20 VALUE=\"$phone_login\"></TD></TR>\n";
-			echo "<TR><TD ALIGN=RIGHT>Phone Password:  </TD>";
-			echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 MAXLENGTH=20 VALUE=\"$phone_pass\"></TD></TR>\n";
-			echo "<TR><TD ALIGN=RIGHT>User Login:  </TD>";
-			echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=VD_login SIZE=10 MAXLENGTH=20 VALUE=\"$VD_login\"></TD></TR>\n";
-			echo "<TR><TD ALIGN=RIGHT>User Password:  </TD>";
-			echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=VD_pass SIZE=10 MAXLENGTH=20 VALUE=\"$VD_pass\"></TD></TR>\n";
-			echo "<TR><TD ALIGN=RIGHT>Campaign:  </TD>";
-			echo "<TD ALIGN=LEFT><span id=\"LogiNCamPaigns\">$camp_form_code</span></TD></TR>\n";
-			echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT> &nbsp; \n";
-			echo "<span id=\"LogiNReseT\"></span></TD></TR>\n";
-			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
-			echo "</TABLE>\n";
-			echo "</FORM>\n\n";
-			echo "</body>\n\n";
-			echo "</html>\n\n";
-			exit;
+			if ( (strlen($phone_login) < 1) or (strlen($phone_pass) < 1) )
+				{
+				echo "<title>Agent web client: Login</title>\n";
+				echo "</head>\n";
+				echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0 onResize=\"browser_dimensions();\"  onLoad=\"browser_dimensions();\">\n";
+				if ($hide_timeclock_link < 1)
+					{echo "<A HREF=\"./timeclock.php?referrer=agent&pl=$phone_login&pp=$phone_pass&VD_login=$VD_login&VD_pass=$VD_pass\"> Timeclock</A><BR>\n";}
+				echo "<TABLE WIDTH=100%><TR><TD></TD>\n";
+				echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
+				echo "</TR></TABLE>\n";
+				echo "<FORM  NAME=vicidial_form ID=vicidial_form ACTION=\"$agcPAGE\" METHOD=POST>\n";
+				echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+				echo "<INPUT TYPE=HIDDEN NAME=JS_browser_height VALUE=\"\">\n";
+				echo "<INPUT TYPE=HIDDEN NAME=JS_browser_width VALUE=\"\">\n";
+				echo "<BR><BR><BR><CENTER><TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"$MAIN_COLOR\"><TR BGCOLOR=WHITE>";
+				echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/vdc_tab_vicidial.gif\" BORDER=0></TD>";
+				echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Login </TD>";
+				echo "</TR>\n";
+				echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
+				echo "<TR><TD ALIGN=RIGHT>Phone Login: </TD>";
+				echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 MAXLENGTH=20 VALUE=\"$phone_login\"></TD></TR>\n";
+				echo "<TR><TD ALIGN=RIGHT>Phone Password:  </TD>";
+				echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 MAXLENGTH=20 VALUE=\"$phone_pass\"></TD></TR>\n";
+				echo "<TR><TD ALIGN=RIGHT>User Login:  </TD>";
+				echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=VD_login SIZE=10 MAXLENGTH=20 VALUE=\"$VD_login\"></TD></TR>\n";
+				echo "<TR><TD ALIGN=RIGHT>User Password:  </TD>";
+				echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=VD_pass SIZE=10 MAXLENGTH=20 VALUE=\"$VD_pass\"></TD></TR>\n";
+				echo "<TR><TD ALIGN=RIGHT>Campaign:  </TD>";
+				echo "<TD ALIGN=LEFT><span id=\"LogiNCamPaigns\">$camp_form_code</span></TD></TR>\n";
+				echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT> &nbsp; \n";
+				echo "<span id=\"LogiNReseT\"></span></TD></TR>\n";
+				echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
+				echo "</TABLE>\n";
+				echo "</FORM>\n\n";
+				echo "</body>\n\n";
+				echo "</html>\n\n";
+				exit;
+				}
 			}
 		}
 	}

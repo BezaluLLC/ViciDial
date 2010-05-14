@@ -127,6 +127,7 @@
 # 100424-1234 - Added unique status options and extended logging
 # 100429-1457 - Remote agent fixes
 # 100512-2118 - Added several press-1 hold time options
+# 100513-2338 - Changed hold time callback filename to after press filename and now plays after all PRESS-1
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -2952,6 +2953,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		$wait_in_queue=0; # exits wait loop
 		$DROPexten = ''; 
 		$exitwithkey=0;
+		$play_post_press_audio=0;
 
 		### Available hold time options:
 		# - EXTENSION
@@ -2995,12 +2997,17 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 			if ($pin =~ /1/)
 				{
+				$now_date_epoch = time();
+				$drop_timer = ($now_date_epoch - $start_epoch);
+
 				if ($hold_time_option =~ /PRESS_VMAIL/)			{$hold_time_option = 'VOICEMAIL';   $HT_status='QVMAIL';}
 				if ($hold_time_option =~ /PRESS_EXTEN/)			{$hold_time_option = 'EXTENSION';   $HT_status='HOLDTO';}
 				if ($hold_time_option =~ /PRESS_CALLMENU/)		{$hold_time_option = 'CALL_MENU';   $HT_status='HOLDTO';}
 				if ($hold_time_option =~ /PRESS_CID_CALLBACK/)	{$hold_time_option = 'CALLERID_CALLBACK';   $HT_status='HOLDTO';}
 				if ($hold_time_option =~ /PRESS_INGROUP/)		{$hold_time_option = 'IN_GROUP';   $HT_status='HOLDTO';}
 				if ($AGILOG) {$agi_string = "HOLD TIME OPTION PRESSED $pin: $hold_time_option|$HT_status";   &agi_output;}
+
+				$play_post_press_audio=1;
 
 				if ($enable_queuemetrics_logging > 0)
 					{
@@ -3132,26 +3139,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 				$DROPexten = "8300";
 
-				if (length($hold_time_option_callback_filename) > 0)
-					{
-					$AGI->stream_file('sip-silence'); # stop music-on-hold process
-					$AGI->stream_file('sip-silence'); # stop music-on-hold process
-					if ($hold_time_option_callback_filename =~ /\|/)
-						{
-						@hold_time_option_callback_filename_array = split(/\|/,$hold_time_option_callback_filename);
-						$w=0;
-						foreach(@hold_time_option_callback_filename_array)
-							{
-							if (length($hold_time_option_callback_filename_array[$w])>0)
-								{
-								$AGI->stream_file("$hold_time_option_callback_filename_array[$w]");
-								}
-							$w++;
-							}
-						}
-					else
-						{$AGI->stream_file("$hold_time_option_callback_filename");} # this prompt must be less than 10 seconds long
-					}
+				$play_post_press_audio=1;
 				}
 			else
 				{
@@ -3178,10 +3166,17 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					usleep(1*990*1000);
 					}
 
+				$now_date_epoch = time();
+
 				$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
 				$affected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02090';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
+
+				$stmtA = "UPDATE vicidial_list set status='HOLDTO' where lead_id = '$insert_lead_id';";
+				$affected_rows = $dbhA->do($stmtA);
+					$dbhP=$dbhA;   $mysql_count='02092';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				if ($AGILOG) {$agi_string = "--    VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
 
 				if ($drop_seconds < 1) {$drop_seconds = $drop_timer;}
 
@@ -3190,11 +3185,6 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				$affected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02091';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				if ($AGILOG) {$agi_string = "--    VDCL vcl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
-
-				$stmtA = "UPDATE vicidial_list set status='HOLDTO' where lead_id = '$insert_lead_id';";
-				$affected_rows = $dbhA->do($stmtA);
-					$dbhP=$dbhA;   $mysql_count='02092';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-				if ($AGILOG) {$agi_string = "--    VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
 
 				if ( ($enable_queuemetrics_logging > 0) && ($exitwithkey < 1) )
 					{
@@ -3221,6 +3211,27 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 				$AGI->stream_file('sip-silence');
 				$AGI->stream_file('sip-silence');
+
+				if ( (length($hold_time_option_callback_filename) > 0) && ($play_post_press_audio > 0) )
+					{
+					$AGI->stream_file('sip-silence'); # stop music-on-hold process
+					$AGI->stream_file('sip-silence'); # stop music-on-hold process
+					if ($hold_time_option_callback_filename =~ /\|/)
+						{
+						@hold_time_option_callback_filename_array = split(/\|/,$hold_time_option_callback_filename);
+						$w=0;
+						foreach(@hold_time_option_callback_filename_array)
+							{
+							if (length($hold_time_option_callback_filename_array[$w])>0)
+								{
+								$AGI->stream_file("$hold_time_option_callback_filename_array[$w]");
+								}
+							$w++;
+							}
+						}
+					else
+						{$AGI->stream_file("$hold_time_option_callback_filename");}
+					}
 
 				if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $DROPexten";   &agi_output;}
 				print "SET CONTEXT $ext_context\n";
