@@ -746,7 +746,8 @@ scheduled_callbacks_count ENUM('LIVE','ALL_ACTIVE') default 'ALL_ACTIVE',
 manual_dial_override ENUM('NONE','ALLOW_ALL','DISABLE_ALL') default 'NONE',
 blind_monitor_warning ENUM('DISABLED','ALERT','NOTICE','AUDIO','ALERT_NOTICE','ALERT_AUDIO','NOTICE_AUDIO','ALL') default 'DISABLED',
 blind_monitor_message VARCHAR(255) default 'Someone is blind monitoring your session',
-blind_monitor_filename VARCHAR(100) default ''
+blind_monitor_filename VARCHAR(100) default '',
+inbound_queue_no_dial ENUM('DISABLED','ENABLED','ALL_SERVERS') default 'DISABLED'
 );
 
 CREATE TABLE vicidial_lists (
@@ -1078,7 +1079,15 @@ ct_friday_start SMALLINT(4) unsigned default '0',
 ct_friday_stop SMALLINT(4) unsigned default '0',
 ct_saturday_start SMALLINT(4) unsigned default '0',
 ct_saturday_stop SMALLINT(4) unsigned default '0',
-ct_state_call_times TEXT default ''
+ct_state_call_times TEXT default '',
+default_afterhours_filename_override VARCHAR(255) default '',
+sunday_afterhours_filename_override VARCHAR(255) default '',
+monday_afterhours_filename_override VARCHAR(255) default '',
+tuesday_afterhours_filename_override VARCHAR(255) default '',
+wednesday_afterhours_filename_override VARCHAR(255) default '',
+thursday_afterhours_filename_override VARCHAR(255) default '',
+friday_afterhours_filename_override VARCHAR(255) default '',
+saturday_afterhours_filename_override VARCHAR(255) default ''
 );
 
 CREATE TABLE vicidial_state_call_times (
@@ -2232,7 +2241,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1222',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1223',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

@@ -128,6 +128,7 @@
 # 100429-1457 - Remote agent fixes
 # 100512-2118 - Added several press-1 hold time options
 # 100513-2338 - Changed hold time callback filename to after press filename and now plays after all PRESS-1
+# 100518-0710 - Added call time after hours override options
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -610,25 +611,27 @@ while ($sthArows > $cbc)
 	}
 $sthA->finish();
 
-if ($wday==0) {$daySQL=',ct_sunday_start,ct_sunday_stop';}
-if ($wday==1) {$daySQL=',ct_monday_start,ct_monday_stop';}
-if ($wday==2) {$daySQL=',ct_tuesday_start,ct_tuesday_stop';}
-if ($wday==3) {$daySQL=',ct_wednesday_start,ct_wednesday_stop';}
-if ($wday==4) {$daySQL=',ct_thursday_start,ct_thursday_stop';}
-if ($wday==5) {$daySQL=',ct_friday_start,ct_friday_stop';}
-if ($wday==6) {$daySQL=',ct_saturday_start,ct_saturday_stop';}
+if ($wday==0) {$daySQL=',ct_sunday_start,ct_sunday_stop,sunday_afterhours_filename_override';}
+if ($wday==1) {$daySQL=',ct_monday_start,ct_monday_stop,monday_afterhours_filename_override';}
+if ($wday==2) {$daySQL=',ct_tuesday_start,ct_tuesday_stop,tuesday_afterhours_filename_override';}
+if ($wday==3) {$daySQL=',ct_wednesday_start,ct_wednesday_stop,wednesday_afterhours_filename_override';}
+if ($wday==4) {$daySQL=',ct_thursday_start,ct_thursday_stop,thursday_afterhours_filename_override';}
+if ($wday==5) {$daySQL=',ct_friday_start,ct_friday_stop,friday_afterhours_filename_override';}
+if ($wday==6) {$daySQL=',ct_saturday_start,ct_saturday_stop,saturday_afterhours_filename_override';}
 
 ### Grab call_times values from the database
-$stmtA = "SELECT ct_default_start,ct_default_stop $daySQL FROM vicidial_call_times where call_time_id = '$call_time_id';";
+$stmtA = "SELECT ct_default_start,ct_default_stop,default_afterhours_filename_override $daySQL FROM vicidial_call_times where call_time_id = '$call_time_id';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
 	$dbhP=$dbhA;   $mysql_count='02006';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 @aryA = $sthA->fetchrow_array;
-$ct_default_start	=		$aryA[0];
-$ct_default_stop	=		$aryA[1];
-$ct_day_start	=			$aryA[2];
-$ct_day_stop	=			$aryA[3];
+$ct_default_start = 					$aryA[0];
+$ct_default_stop = 						$aryA[1];
+$deafult_afterhours_filename_override =	$aryA[2];
+$ct_day_start = 						$aryA[3];
+$ct_day_stop =							$aryA[4];
+$day_afterhours_filename_override =		$aryA[5];
 $sthA->finish();
 
 if ( ($ct_day_start > 0) || ($ct_day_stop > 0) )  
@@ -636,6 +639,11 @@ if ( ($ct_day_start > 0) || ($ct_day_stop > 0) )
 	$ct_default_start	=	$ct_day_start;
 	$ct_default_stop	=	$ct_day_stop;
 	}
+
+if ( (length($deafult_afterhours_filename_override) > 0) && ($deafult_afterhours_filename_override !~ /---NONE---/) )
+	{$after_hours_message_filename = $deafult_afterhours_filename_override;}
+if ( (length($day_afterhours_filename_override) > 0) && ($day_afterhours_filename_override !~ /---NONE---/) )
+	{$after_hours_message_filename = $day_afterhours_filename_override;}
 
 $AGI->stream_file('sip-silence');
 $AGI->stream_file('sip-silence');
@@ -849,6 +857,7 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02019';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	if ($AGILOG) {$agi_string = "--  AH VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "--  AH action: |$$after_hours_action|$after_hours_exten|$after_hours_message_filename|$after_hours_voicemail|";   &agi_output;}
 
 	if ($after_hours_action =~ /EXTENSION|VOICEMAIL|IN_GROUP/)
 		{
@@ -2990,6 +2999,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 			if ($drop_timer >= 2) {$drop_timer = ($drop_timer + 10);} # add prompt play time to total queue time
 
+			$AGI->stream_file('sip-silence'); # stop music-on-hold process
 			$AGI->stream_file('sip-silence'); # stop music-on-hold process
 			$AGI->stream_file('sip-silence'); # stop music-on-hold process
 

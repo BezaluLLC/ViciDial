@@ -330,3 +330,19 @@ UPDATE vicidial_inbound_groups SET hold_time_option_press_filename='to-be-called
 
 UPDATE system_settings SET db_schema_version='1222',db_schema_update_date=NOW();
 
+
+
+
+
+ALTER TABLE vicidial_campaigns ADD inbound_queue_no_dial ENUM('DISABLED','ENABLED','ALL_SERVERS') default 'DISABLED';
+
+ALTER TABLE vicidial_call_times ADD default_afterhours_filename_override VARCHAR(255) default '';
+ALTER TABLE vicidial_call_times ADD sunday_afterhours_filename_override VARCHAR(255) default '';
+ALTER TABLE vicidial_call_times ADD monday_afterhours_filename_override VARCHAR(255) default '';
+ALTER TABLE vicidial_call_times ADD tuesday_afterhours_filename_override VARCHAR(255) default '';
+ALTER TABLE vicidial_call_times ADD wednesday_afterhours_filename_override VARCHAR(255) default '';
+ALTER TABLE vicidial_call_times ADD thursday_afterhours_filename_override VARCHAR(255) default '';
+ALTER TABLE vicidial_call_times ADD friday_afterhours_filename_override VARCHAR(255) default '';
+ALTER TABLE vicidial_call_times ADD saturday_afterhours_filename_override VARCHAR(255) default '';
+
+UPDATE system_settings SET db_schema_version='1223',db_schema_update_date=NOW();
