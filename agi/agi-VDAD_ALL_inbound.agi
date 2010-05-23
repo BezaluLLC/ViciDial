@@ -164,6 +164,7 @@ $start_time=$now_date;
 	$tsSQLdate = "$year$mon$mday$hour$min$sec";
 	$SQLdate = "$year-$mon-$mday $hour:$min:$sec";
 	$SQLdateBEGIN = $SQLdate;
+	$ORIGINAL_call_time = $SQLdate;
 
 $BDtarget = ($now_date_epoch - 5);
 ($Bsec,$Bmin,$Bhour,$Bmday,$Bmon,$Byear,$Bwday,$Byday,$Bisdst) = localtime($BDtarget);
@@ -548,7 +549,7 @@ $sthA->finish();
 
 ### Grab inbound groups values from the database
 $cbc=0;
-$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu FROM vicidial_inbound_groups where group_id = '$channel_group';";
+$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds FROM vicidial_inbound_groups where group_id = '$channel_group';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -601,7 +602,11 @@ while ($sthArows > $cbc)
 	$hold_time_option_minimum =			$aryA[37];
 	$hold_time_option_press_filename = 	$aryA[38];
 	$hold_time_option_callmenu =		$aryA[39];
-	
+	$onhold_prompt_no_block =			$aryA[40];
+	$onhold_prompt_seconds =			$aryA[41];
+	$hold_time_option_no_block =		$aryA[42];
+	$hold_time_option_prompt_seconds =	$aryA[43];
+
 	$custom_call_id='';
 	if ($uniqueid_status_display =~ /ENABLED/)
 		{$custom_call_id = "$uniqueid";}
@@ -2748,7 +2753,27 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 	if ( ($hold_message_counter > $prompt_interval) && ($prompt_interval > 0) )
 		{
 		$now_date_epoch = time();
-		$FDtarget = ($now_date_epoch + 10);
+		$no_block_SQL = '';
+
+		### if No-Block is enabled, then set the call time to right now
+		if ($onhold_prompt_no_block =~ /Y/)
+			{
+			$NBDtarget = $now_date_epoch;
+			($NBsec,$NBmin,$NBhour,$NBmday,$NBmon,$NByear,$NBwday,$NByday,$NBisdst) = localtime($NBDtarget);
+			$NByear = ($NByear + 1900);
+			$NBmon++;
+			if ($NBmon < 10) {$NBmon = "0$NBmon";}
+			if ($NBmday < 10) {$NBmday = "0$NBmday";}
+			if ($NBhour < 10) {$NBhour = "0$NBhour";}
+			if ($NBmin < 10) {$NBmin = "0$NBmin";}
+			if ($NBsec < 10) {$NBsec = "0$NBsec";}
+				$NB_SQLdate = "$NByear-$NBmon-$NBmday $NBhour:$NBmin:$NBsec";
+			$no_block_SQL = ",call_time='$NB_SQLdate'";
+			}
+
+		if ($onhold_prompt_seconds < 0) {$onhold_prompt_seconds=0;}
+		if ($onhold_prompt_seconds > 1000) {$onhold_prompt_seconds=1000;}
+		$FDtarget = ($now_date_epoch + $onhold_prompt_seconds);
 		($Fsec,$Fmin,$Fhour,$Fmday,$Fmon,$Fyear,$Fwday,$Fyday,$Fisdst) = localtime($FDtarget);
 		$Fyear = ($Fyear + 1900);
 		$Fmon++;
@@ -2759,10 +2784,10 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		if ($Fsec < 10) {$Fsec = "0$Fsec";}
 			$FDtsSQLdate = "$Fyear$Fmon$Fmday$Fhour$Fmin$Fsec";
 
-		$stmtA = "UPDATE vicidial_auto_calls set last_update_time='$FDtsSQLdate' where callerid='$callerid' order by call_time desc limit 1;";
+		$stmtA = "UPDATE vicidial_auto_calls set last_update_time='$FDtsSQLdate' $no_block_SQL where callerid='$callerid' order by call_time desc limit 1;";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02081';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-		if ($AGILOG) {$agi_string = "--    VDAC posttime record: |$affected_rows|$FDtsSQLdate|$callerid|";   &agi_output;}
+		if ($AGILOG) {$agi_string = "--    VDAC posttime record: |$affected_rows|$FDtsSQLdate|$callerid|$no_block_SQL|";   &agi_output;}
 
 		if ( (length($onhold_prompt_filename) > 0) && ($onhold_prompt_filename !~ /---NONE---/) )
 			{
@@ -2784,6 +2809,16 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			else
 				{$AGI->stream_file("$onhold_prompt_filename");} # this prompt must be less than 10 seconds long
 			}
+
+		### if No-Block is enabled, then set the call time back to original call time
+		if ($onhold_prompt_no_block =~ /Y/)
+			{
+			$stmtA = "UPDATE vicidial_auto_calls set call_time='$ORIGINAL_call_time' where callerid='$callerid' order by call_time desc limit 1;";
+			$affected_rows = $dbhA->do($stmtA);
+				$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+			if ($AGILOG) {$agi_string = "--    No-Block Prompt Set: |$affected_rows|$ORIGINAL_call_time|$callerid|";   &agi_output;}
+			}
+
 		$hold_message_counter = 0;
 		$start_moh=1;
 		$moh_delay=1;
@@ -2981,7 +3016,27 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		if ($hold_time_option =~ /PRESS_/)
 			{
 			$now_date_epoch = time();
-			$FDtarget = ($now_date_epoch + 10);
+			$HTO_no_block_SQL = '';
+
+			### if No-Block is enabled, then set the call time to right now
+			if ($hold_time_option_no_block =~ /Y/)
+				{
+				$NBDtarget = $now_date_epoch;
+				($NBsec,$NBmin,$NBhour,$NBmday,$NBmon,$NByear,$NBwday,$NByday,$NBisdst) = localtime($NBDtarget);
+				$NByear = ($NByear + 1900);
+				$NBmon++;
+				if ($NBmon < 10) {$NBmon = "0$NBmon";}
+				if ($NBmday < 10) {$NBmday = "0$NBmday";}
+				if ($NBhour < 10) {$NBhour = "0$NBhour";}
+				if ($NBmin < 10) {$NBmin = "0$NBmin";}
+				if ($NBsec < 10) {$NBsec = "0$NBsec";}
+					$NB_SQLdate = "$NByear-$NBmon-$NBmday $NBhour:$NBmin:$NBsec";
+				$HTO_no_block_SQL = ",call_time='$NB_SQLdate'";
+				}
+
+			if ($hold_time_option_prompt_seconds < 0) {$hold_time_option_prompt_seconds=0;}
+			if ($hold_time_option_prompt_seconds > 1000) {$hold_time_option_prompt_seconds=1000;}
+			$FDtarget = ($now_date_epoch + $hold_time_option_prompt_seconds);
 			($Fsec,$Fmin,$Fhour,$Fmday,$Fmon,$Fyear,$Fwday,$Fyday,$Fisdst) = localtime($FDtarget);
 			$Fyear = ($Fyear + 1900);
 			$Fmon++;
@@ -2992,10 +3047,10 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			if ($Fsec < 10) {$Fsec = "0$Fsec";}
 				$FDtsSQLdate = "$Fyear$Fmon$Fmday$Fhour$Fmin$Fsec";
 
-			$stmtA = "UPDATE vicidial_auto_calls set last_update_time='$FDtsSQLdate' where callerid='$callerid' order by call_time desc limit 1;";
+			$stmtA = "UPDATE vicidial_auto_calls set last_update_time='$FDtsSQLdate' $HTO_no_block_SQL where callerid='$callerid' order by call_time desc limit 1;";
 			$affected_rows = $dbhA->do($stmtA);
 				$dbhP=$dbhA;   $mysql_count='02086';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-			if ($AGILOG) {$agi_string = "--    VDAC posttime record for Hold-Time-Option-Press: |$affected_rows|$FDtsSQLdate|$callerid|";   &agi_output;}
+			if ($AGILOG) {$agi_string = "--    VDAC posttime record for Hold-Time-Option-Press: |$affected_rows|$FDtsSQLdate|$callerid|$HTO_no_block_SQL|";   &agi_output;}
 
 			if ($drop_timer >= 2) {$drop_timer = ($drop_timer + 10);} # add prompt play time to total queue time
 
@@ -3004,6 +3059,15 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			$AGI->stream_file('sip-silence'); # stop music-on-hold process
 
 			&press_one_hold_time_option_prompt;
+
+			### if No-Block is enabled, then set the call time back to original call time
+			if ($hold_time_option_no_block =~ /Y/)
+				{
+				$stmtA = "UPDATE vicidial_auto_calls set call_time='$ORIGINAL_call_time' where callerid='$callerid' order by call_time desc limit 1;";
+				$affected_rows = $dbhA->do($stmtA);
+					$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				if ($AGILOG) {$agi_string = "--    No-Block HTO Prompt Set: |$affected_rows|$ORIGINAL_call_time|$callerid|";   &agi_output;}
+				}
 
 			if ($pin =~ /1/)
 				{
@@ -3632,11 +3696,19 @@ sub press_one_hold_time_option_prompt
 
 	# To be called back when a representative is available, press 1
 
+	$AGI->stream_file('sip-silence');
+	$AGI->stream_file('sip-silence');
+
 	$digit='';
 	undef $digit;
 	$interrupt_digit='';
 	undef $interrupt_digit;
 	$digit_loop_counter=0;
+
+	$interrupt_digit = $AGI->stream_file('sip-silence','1');
+
+	$interrupt_digit='';
+	undef $interrupt_digit;
 
 	if ($hold_time_option_press_filename =~ /\|/)
 		{
@@ -3654,7 +3726,7 @@ sub press_one_hold_time_option_prompt
 	else
 		{$interrupt_digit = $AGI->stream_file("$hold_time_option_press_filename",'1');} # this prompt must be less than 10 seconds long
 
-	if ($AGILOG) {$agi_string = "interrupt_digit |$interrupt_digit|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "interrupt_digit |$interrupt_digit|    |$hold_time_option_press_filename|";   &agi_output;}
 
 	$digits_being_entered=1;
 	$totalDTMF='';

@@ -149,6 +149,11 @@ OTHER CHANGES:
 34. Added Campaign setting for inbound queue no dial that will prohibit outbound
 	auto-dialing if there are any allowed in-group calls in queue if enabled
 
+35. Added In-group options for setting the length of the on hold message and the
+	hold time option press message as well as offering the option to have
+	those two prompts be non-blocking and allow existing newer calls through
+	to agents while the prompts are playing
+
 
 
 

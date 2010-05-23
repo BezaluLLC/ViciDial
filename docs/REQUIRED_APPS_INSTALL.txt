@@ -313,7 +313,7 @@ install Net::Domain
 quit
 
 cd /usr/local
-wget http://superb-east.dl.sourceforge.net/sourceforge/mtop/mtop-0.6.6.tar.gz
+wget http://voxel.dl.sourceforge.net/project/mtop/mtop/v0.6.6/mtop-0.6.6.tar.gz
 gunzip mtop-0.6.6.tar.gz
 tar xvf mtop-0.6.6.tar
 cd mtop-0.6.6

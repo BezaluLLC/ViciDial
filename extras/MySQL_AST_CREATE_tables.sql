@@ -903,7 +903,11 @@ uniqueid_status_display ENUM('DISABLED','ENABLED','ENABLED_PREFIX','ENABLED_PRES
 uniqueid_status_prefix VARCHAR(50) default '',
 hold_time_option_minimum SMALLINT(5) default '0',
 hold_time_option_press_filename VARCHAR(255) default 'to-be-called-back|digits/1',
-hold_time_option_callmenu VARCHAR(50) default ''
+hold_time_option_callmenu VARCHAR(50) default '',
+hold_time_option_no_block ENUM('N','Y') default 'N',
+hold_time_option_prompt_seconds SMALLINT(5) default '10',
+onhold_prompt_no_block ENUM('N','Y') default 'N',
+onhold_prompt_seconds SMALLINT(5) default '10'
 );
 
 CREATE TABLE vicidial_stations (
@@ -2241,7 +2245,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1223',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1224',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
