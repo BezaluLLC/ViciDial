@@ -38,6 +38,7 @@
 # 91123-1802 - Added outbound_autodial field
 # 100309-0555 - Added queuemetrics_loginout option
 # 100318-2307 - Added ra_user field input to vla table
+# 100524-1542 - Fixed live call detection bug on multi-server systems
 #
 
 ### begin parsing run-time options ###
@@ -656,10 +657,10 @@ while($one_day_interval > 0)
 
 
 		###############################################################################
-		###### fourth, validate that the calls that the vicidial_live_agents are on are not dead
+		###### fourth, validate that the calls that the vicidial_live_agents are on and not dead
 		###### and if they are wipe out the values and set the agent record back to READY
 		###############################################################################
-		$stmtA = "SELECT user,extension,status,uniqueid,callerid,lead_id,campaign_id FROM vicidial_live_agents where extension LIKE \"R/%\" and server_ip='$server_ip' and uniqueid > 10;";
+		$stmtA = "SELECT user,extension,status,uniqueid,callerid,lead_id,campaign_id,call_server_ip FROM vicidial_live_agents where extension LIKE \"R/%\" and server_ip='$server_ip' and uniqueid > 10;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -675,6 +676,7 @@ while($one_day_interval > 0)
 			$VDcallerid =			$aryA[4];
 			$VDlead_id =			$aryA[5];
 			$VDcampaign_id =		$aryA[6];
+			$VDcall_server_ip =		$aryA[7];
 			$VDrandom = int( rand(9999999)) + 10000000;
 
 			$VD_user[$z] =			$VDuser;
@@ -684,6 +686,7 @@ while($one_day_interval > 0)
 			$VD_callerid[$z] =		$VDcallerid;
 			$VD_lead_id[$z] =		$VDlead_id;
 			$VD_campaign_id[$z] =	$VDcampaign_id;
+			$VD_call_server_ip[$z] =	$VDcall_server_ip;
 			$VD_random[$z] =		$VDrandom;
 
 			$z++;				
@@ -695,7 +698,7 @@ while($one_day_interval > 0)
 		$z=0;
 		foreach(@VD_user) 
 			{
-			$stmtA = "SELECT count(*) FROM vicidial_auto_calls where uniqueid='$VD_uniqueid[$z]' and server_ip='$server_ip';";
+			$stmtA = "SELECT count(*) FROM vicidial_auto_calls where uniqueid='$VD_uniqueid[$z]' and server_ip IN('$server_ip','$VD_call_server_ip[$z]');";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -710,9 +713,9 @@ while($one_day_interval > 0)
 				{
 				if ($DELusers =~ /R\/$VD_user[$z]\|/)
 					{
-					$stmtA = "UPDATE vicidial_live_agents set random_id='$VD_random[$z]',status='PAUSED', last_call_finish='$SQLdate',lead_id='',uniqueid='',callerid='',channel='',last_state_change='$SQLdate'  where user='$VD_user[$z]' and server_ip='$server_ip';";
+					$stmtA = "UPDATE vicidial_live_agents set random_id='$VD_random[$z]',status='PAUSED', last_call_finish='$SQLdate',lead_id='',uniqueid='',callerid='',channel='',last_state_change='$SQLdate' where user='$VD_user[$z]' and server_ip='$server_ip';";
 					$affected_rows = $dbhA->do($stmtA);
-					if ($DB) {print STDERR "$VD_user[$z] CALL WIPE UPDATE: $affected_rows|PAUSED|$VD_uniqueid[$z]|$VD_user[$z]|\n";}
+					if ($DB) {print STDERR "$VD_user[$z] CALL WIPE DELETE UPDATE: $affected_rows|PAUSED|$VD_uniqueid[$z]|$VD_user[$z]|\n";}
 					if ($affected_rows>0) 
 						{
 						if ($enable_queuemetrics_logging > 0)
