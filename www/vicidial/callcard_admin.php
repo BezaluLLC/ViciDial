@@ -9,10 +9,11 @@
 # 
 # CHANGES
 # 100311-2325 - first build
+# 100525-1824 - Added generate option
 #
 
-$version = '2.4-1';
-$build = '100311-2325';
+$version = '2.4-2';
+$build = '100525-1824';
 
 $MT[0]='';
 
@@ -27,6 +28,8 @@ if (isset($_GET["run"]))					{$run=$_GET["run"];}
 	elseif (isset($_POST["run"]))			{$run=$_POST["run"];}
 if (isset($_GET["batch"]))					{$batch=$_GET["batch"];}
 	elseif (isset($_POST["batch"]))			{$batch=$_POST["batch"];}
+if (isset($_GET["starting_batch"]))				{$starting_batch=$_GET["starting_batch"];}
+	elseif (isset($_POST["starting_batch"]))	{$starting_batch=$_POST["starting_batch"];}
 if (isset($_GET["pack"]))					{$pack=$_GET["pack"];}
 	elseif (isset($_POST["pack"]))			{$pack=$_POST["pack"];}
 if (isset($_GET["sequence"]))				{$sequence=$_GET["sequence"];}
@@ -39,7 +42,26 @@ if (isset($_GET["total"]))					{$total=$_GET["total"];}
 	elseif (isset($_POST["total"]))			{$total=$_POST["total"];}
 if (isset($_GET["comment"]))				{$comment=$_GET["comment"];}
 	elseif (isset($_POST["comment"]))		{$comment=$_POST["comment"];}
-
+if (isset($_GET["balance_minutes"]))			{$balance_minutes=$_GET["balance_minutes"];}
+	elseif (isset($_POST["balance_minutes"]))	{$balance_minutes=$_POST["balance_minutes"];}
+if (isset($_GET["initial_value"]))			{$initial_value=$_GET["initial_value"];}
+	elseif (isset($_POST["initial_value"]))	{$initial_value=$_POST["initial_value"];}
+if (isset($_GET["initial_minutes"]))			{$initial_minutes=$_GET["initial_minutes"];}
+	elseif (isset($_POST["initial_minutes"]))	{$initial_minutes=$_POST["initial_minutes"];}
+if (isset($_GET["note_purchase_order"]))			{$note_purchase_order=$_GET["note_purchase_order"];}
+	elseif (isset($_POST["note_purchase_order"]))	{$note_purchase_order=$_POST["note_purchase_order"];}
+if (isset($_GET["note_printer"]))			{$note_printer=$_GET["note_printer"];}
+	elseif (isset($_POST["note_printer"]))	{$note_printer=$_POST["note_printer"];}
+if (isset($_GET["note_did"]))				{$note_did=$_GET["note_did"];}
+	elseif (isset($_POST["note_did"]))		{$note_did=$_POST["note_did"];}
+if (isset($_GET["inbound_group_id"]))			{$inbound_group_id=$_GET["inbound_group_id"];}
+	elseif (isset($_POST["inbound_group_id"]))	{$inbound_group_id=$_POST["inbound_group_id"];}
+if (isset($_GET["note_language"]))			{$note_language=$_GET["note_language"];}
+	elseif (isset($_POST["note_language"]))	{$note_language=$_POST["note_language"];}
+if (isset($_GET["note_name"]))				{$note_name=$_GET["note_name"];}
+	elseif (isset($_POST["note_name"]))		{$note_name=$_POST["note_name"];}
+if (isset($_GET["note_comments"]))			{$note_comments=$_GET["note_comments"];}
+	elseif (isset($_POST["note_comments"]))	{$note_comments=$_POST["note_comments"];}
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
 	elseif (isset($_POST["user"]))			{$user=$_POST["user"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
@@ -494,6 +516,51 @@ if ($action == "CALLCARD_SUMMARY")
 
 
 
+### BEGIN list runs
+if ($action == "CALLCARD_RUNS")
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<br>CallCard Batches:\n";
+	echo "<center><TABLE width=400 cellspacing=0 cellpadding=1>\n";
+	echo "<TR BGCOLOR=BLACK>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>RUN</B></TD>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>COUNT</B></TD>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST</B></TD>";
+	echo "</TR>\n";
+
+	$stmt = "SELECT count(*),run FROM callcard_accounts_details group by run order by run;";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$vt_ct = mysql_num_rows($rslt);
+	$i=0;
+	while ($vt_ct > $i)
+		{
+		$row=mysql_fetch_row($rslt);
+		$Lcount[$i] =		$row[0];
+		$Lrun[$i] =		$row[1];
+
+		if (eregi("1$|3$|5$|7$|9$", $i))
+			{$bgcolor='bgcolor="#9BB9FB"';}
+		else
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		echo "<tr $bgcolor>\n";
+		echo "<td><font size=1> $Lrun[$i] </td>";
+		echo "<td><font size=1> $Lcount[$i] </td>";
+		echo "<td><font size=1> <a href=\"$PHP_SELF?action=SEARCH_RESULTS&run=$Lrun[$i]&DB=$DB\">LIST</a> </td>";
+		echo "</tr>\n";
+
+		$i++;
+		}
+	echo "</TABLE><BR><BR>\n";
+
+	echo "\n";
+	echo "</center>\n";
+	}
+### END list runs
+
+
+
 ### BEGIN list batches
 if ($action == "CALLCARD_BATCHES")
 	{
@@ -542,7 +609,7 @@ if ($action == "CALLCARD_BATCHES")
 ### BEGIN generate results
 if ($action == "GENERATE_RESULTS")
 	{
-	if ( (strlen($sequence) < 1) or (strlen($batch) < 1) or (strlen($run) < 1) or (strlen($total) < 1) )
+	if ( (strlen($sequence) < 1) or (strlen($starting_batch) < 1) or (strlen($batch) < 1) or (strlen($run) < 1) or (strlen($total) < 1) )
 		{
 		echo "you must enter in all fields<BR><BR>\n";
 		$action = 'GENERATE';
@@ -559,9 +626,9 @@ if ($action == "GENERATE_RESULTS")
 		echo "</TR>\n";
 
 		$i=0;
-		$Gbatch=1;
+		$Gbatch=$starting_batch;
 		$Gbatch_count=0;
-		$Gsequence=0;
+		$Gsequence=$sequence;
 		while ($i < $total)
 			{
 			$Gbatch_count++;
@@ -611,7 +678,7 @@ if ($action == "GENERATE_RESULTS")
 					$stmt="INSERT INTO callcard_accounts SET card_id='$Pcard_id',pin='$Ppin',status='GENERATE';";
 					$rslt=mysql_query($stmt, $link);
 
-					$stmt="INSERT INTO callcard_accounts_details SET card_id='$Pcard_id',pin='$Ppin',status='GENERATE';";
+					$stmt="INSERT INTO callcard_accounts_details SET card_id='$Pcard_id',status='GENERATE',run='$run',pack='',batch='$Pbatch',sequence='$Psequence',balance_minutes='$balance_minutes',initial_value='$initial_value',initial_minutes='$initial_minutes',note_purchase_order='$note_purchase_order',note_printer='$note_printer',note_did='$note_did',inbound_group_id='$inbound_group_id',note_language='$note_language',note_name='$note_name',note_comments='$note_comments',create_time='$NOW_TIME',create_user='$USER';";
 					$rslt=mysql_query($stmt, $link);
 
 					if (eregi("1$|3$|5$|7$|9$", $i))
@@ -649,16 +716,26 @@ if ($action == "GENERATE")
 	{
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-
 	echo "<br>CallCard Generate IDs<form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=action value=GENERATE_RESULTS>\n";
 	echo "<input type=hidden name=DB value=$DB>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Generate Comment: </td><td align=left><input type=text name=comment size=50 maxlength=255></td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Run: </td><td align=left><input type=text name=run size=5 maxlength=4></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Batch: </td><td align=left><input type=text name=batch size=6 maxlength=5></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Sequence: </td><td align=left><input type=text name=sequence size=6 maxlength=5></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Starting Batch: </td><td align=left><input type=text name=starting_batch size=6 maxlength=5></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>IDs in Batch: </td><td align=left><input type=text name=batch size=6 maxlength=5></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Starting Sequence: </td><td align=left><input type=text name=sequence size=6 maxlength=5></td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Total: </td><td align=left><input type=text name=total size=8 maxlength=7></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Balance Minutes: </td><td align=left><input type=text name=balance_minutes size=3 maxlength=5></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Initial Value: </td><td align=left><input type=text name=initial_value size=7 maxlength=6></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Initial Minutes: </td><td align=left><input type=text name=initial_minutes size=3 maxlength=5></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Purchase Order: </td><td align=left><input type=text name=note_purchase_order size=20 maxlength=20></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Printer: </td><td align=left><input type=text name=note_printer size=20 maxlength=20></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>DID: </td><td align=left><input type=text name=note_did size=18 maxlength=18></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>In-Group: </td><td align=left><input type=text name=inbound_group_id size=20 maxlength=20></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Language: </td><td align=left><input type=text name=note_language size=10 maxlength=10></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Name: </td><td align=left><input type=text name=note_name size=20 maxlength=20></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Comment: </td><td align=left><input type=text name=note_comments size=50 maxlength=255></td></tr>\n";
+
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 	echo "</TABLE></center>\n";
 	echo "\n";

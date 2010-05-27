@@ -154,6 +154,8 @@ OTHER CHANGES:
 	those two prompts be non-blocking and allow existing newer calls through
 	to agents while the prompts are playing
 
+36. Added utility in CallCard section to generate new card IDs and view by Run.
+
 
 
 
