@@ -5458,7 +5458,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					var MDnextResponse_array=MDnextResponse.split("\n");
 					MDnextCID = MDnextResponse_array[0];
 
-					var regMNCvar = new RegExp("HOPPER","ig");
+					var regMNCvar = new RegExp("HOPPER EMPTY","ig");
 					var regMDFvarDNC = new RegExp("DNC","ig");
 					var regMDFvarCAMP = new RegExp("CAMPLISTS","ig");
 					if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarCAMP)) )

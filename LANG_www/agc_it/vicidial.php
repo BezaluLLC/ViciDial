@@ -293,10 +293,11 @@
 # 100423-1156 - Added more user logging data and manual_dial_override, blind monitor warnings, uniqueid display and codec features
 # 100428-0544 - Added uniqueid display option for PRESERVE
 # 100513-0714 - Added options.php option to hide the timeclock link
+# 100513-2337 - Changed user_login_first to attempt full login if phone_login/pass are filled in
 #
 
-$version = '2.4-271';
-$build = '100513-0714';
+$version = '2.4-272';
+$build = '100513-2337';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -5457,7 +5458,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					var MDnextResponse_array=MDnextResponse.split("\n");
 					MDnextCID = MDnextResponse_array[0];
 
-					var regMNCvar = new RegExp("HOPPER","ig");
+					var regMNCvar = new RegExp("LISTA DI CHIAMATA VUOTA","ig");
 					var regMDFvarDNC = new RegExp("DNC","ig");
 					var regMDFvarCAMP = new RegExp("CAMPLISTS","ig");
 					if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarCAMP)) )
