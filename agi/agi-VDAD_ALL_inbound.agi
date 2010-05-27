@@ -129,6 +129,7 @@
 # 100512-2118 - Added several press-1 hold time options
 # 100513-2338 - Changed hold time callback filename to after press filename and now plays after all PRESS-1
 # 100518-0710 - Added call time after hours override options
+# 100527-0111 - Added on-hold and hold-time-option no-block options and message seconds, NA CID cleaning
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -312,7 +313,6 @@ $callerid =~ s/\D//gi;
 $calleridname =~ s/unknown//gi;
 if ( (!$callerid) or ($callerid =~ /unknown/) )
 	{$callerid = $calleridname;}
-$originalCID = $callerid;
 
 ##### find out if this call is already in the vicidial_log_extended table
 $VLEcount=0;
@@ -397,6 +397,13 @@ if ($extension =~ /^999\d\d\*/)
 
 		}
 	}
+
+if ( ($phone_code =~ /^1$/) && ($callerid =~ /^1/) && (length($callerid) > 10) )
+	{
+	$callerid =~ s/^1//gi;
+	if ($AGILOG) {$agi_string = "North America CID Check: $phone_code|$callerid|";   &agi_output;}
+	}
+$originalCID = $callerid;
 
 if ($call_handle_method =~ /^CLOSER/)
 	{
@@ -1795,7 +1802,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$dbhP=$dbhA;   $mysql_count='02041';   $MEL_aff_rows=$Faffected_rows;   &mysql_error_logging;
 				$found_agents=$Faffected_rows;
 				}
-			if ($AGILOG) {$agi_string = "--    VDAD get agent: |$Faffected_rows|$channel_group|$found_agents|$stmtA|";   &agi_output;}
+			if ($AGILOG) {$agi_string = "--    VDAD get agent: |$DROP_TIME|$drop_timer|$hold_message_counter|$prompt_interval|$Faffected_rows|$channel_group|$found_agents|$stmtA|";   &agi_output;}
 			if ($found_agents > 0)
 				{
 				if ($aco_sub<1)
@@ -2283,7 +2290,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				$found_agents=$Faffected_rows;
 					if ($AGILOG) {$agi_string = "$Faffected_rows|$stmtA|";   &agi_output;}
 				}
-			if ($AGILOG) {$agi_string = "--    VDAD get agent: |$DROP_TIME|$drop_timer|$Faffected_rows|$found_agents|update of vla table: $channel_group|\n|$stmtA|";   &agi_output;}
+			if ($AGILOG) {$agi_string = "--    VDAD get agent: |$DROP_TIME|$drop_timer|$hold_message_counter|$prompt_interval|$Faffected_rows|$found_agents|update of vla table: $channel_group|\n|$stmtA|";   &agi_output;}
 			if ($found_agents > 0)
 				{
 				if ($aco_sub<1)
@@ -2998,6 +3005,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		$DROPexten = ''; 
 		$exitwithkey=0;
 		$play_post_press_audio=0;
+		$hold_message_counter = 0;
 
 		### Available hold time options:
 		# - EXTENSION
