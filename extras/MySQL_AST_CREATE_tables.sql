@@ -373,6 +373,9 @@ outbound_autodial ENUM('Y','N') default 'N',
 manager_ingroup_set ENUM('Y','N','SET') default 'N',
 ra_user VARCHAR(20) default '',
 ra_extension VARCHAR(100) default '',
+external_dtmf VARCHAR(100) default '',
+external_transferconf VARCHAR(100) default '',
+external_park VARCHAR(40) default '',
 index (random_id),
 index (last_call_time),
 index (last_update_time),
@@ -2245,7 +2248,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1224',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1225',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

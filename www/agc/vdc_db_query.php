@@ -5014,7 +5014,7 @@ if ($ACTION == 'updateDISPO')
 			}
 
 		### reset the API fields in vicidial_live_agents record
-		$stmt = "UPDATE vicidial_live_agents set lead_id=0,external_hangup=0,external_status='',external_update_fields='0',external_update_fields_data='',external_timer_action_seconds='-1',last_state_change='$NOW_TIME' where user='$user' and server_ip='$server_ip';";
+		$stmt = "UPDATE vicidial_live_agents set lead_id=0,external_hangup=0,external_status='',external_update_fields='0',external_update_fields_data='',external_timer_action_seconds='-1',external_dtmf='',external_transferconf='',external_park='',last_state_change='$NOW_TIME' where user='$user' and server_ip='$server_ip';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00141',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -7389,6 +7389,21 @@ if ($ACTION == 'DiaLableLeaDsCounT')
 
 	echo "$DLcount";
 	}
+
+
+################################################################################
+### Clear_API_Field - clears a single vicidial_live_agents field
+################################################################################
+if ($ACTION == 'Clear_API_Field')
+	{
+	$stmt="UPDATE vicidial_live_agents SET $comments='' where user='$user';";
+		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
+	echo "DONE: $comments";
+	}
+
 
 
 

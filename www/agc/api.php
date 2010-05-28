@@ -10,7 +10,7 @@
 #  - $user
 #  - $pass
 #  - $agent_user
-#  - $function - ('external_hangup','external_status','external_pause','external_dial','change_ingroups')
+#  - $function - ('external_hangup','external_status','external_pause','external_dial','change_ingroups',...)
 #  - $value
 #  - $vendor_id
 #  - $focus
@@ -47,10 +47,11 @@
 # 100315-2021 - Added ra_call_control function
 # 100318-0605 - Added close_window_link and language options
 # 100401-2357 - Added external_add_lead function (contributed by aouyar)
+# 100527-0926 - Added send_dtmf, transfer_conference and park_call functions
 #
 
-$version = '2.4-14';
-$build = '100401-2357';
+$version = '2.4-15';
+$build = '100527-0926';
 
 require("dbconnect.php");
 
@@ -157,6 +158,10 @@ if (isset($_GET["dnc_check"]))					{$dnc_check=$_GET["dnc_check"];}
 	elseif (isset($_POST["dnc_check"]))			{$dnc_check=$_POST["dnc_check"];}
 if (isset($_GET["campaign_dnc_check"]))				{$campaign_dnc_check=$_GET["campaign_dnc_check"];}
 	elseif (isset($_POST["campaign_dnc_check"]))	{$campaign_dnc_check=$_POST["campaign_dnc_check"];}
+if (isset($_GET["dial_override"]))				{$dial_override=$_GET["dial_override"];}
+	elseif (isset($_POST["dial_override"]))		{$dial_override=$_POST["dial_override"];}
+if (isset($_GET["consultative"]))				{$consultative=$_GET["consultative"];}
+	elseif (isset($_POST["consultative"]))		{$consultative=$_POST["consultative"];}
 if (isset($_GET["DB"]))							{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))				{$DB=$_POST["DB"];}
 
@@ -228,6 +233,8 @@ if ($non_latin < 1)
 	$vendor_lead_code = ereg_replace("[^ -\.\_0-9a-zA-Z]","",$vendor_lead_code);
 	$rank = ereg_replace("[^-0-9]","",$rank);
 	$owner = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$owner);
+	$dial_override = ereg_replace("[^A-Z]","",$dial_override);
+	$consultative = ereg_replace("[^A-Z]","",$consultative);
 	}
 else
 	{
@@ -248,6 +255,7 @@ $ENTRYdate = date("YmdHis");
 $MT[0]='';
 $api_script = 'agent';
 $api_logging = 1;
+if ($consultative != 'YES') {$consultative='NO';}
 
 
 ################################################################################
@@ -1948,6 +1956,338 @@ if ($function == 'ra_call_control')
 ################################################################################
 ### END - ra_call_control
 ################################################################################
+
+
+
+
+
+
+################################################################################
+### BEGIN - send_dtmf - send dtmf signals
+################################################################################
+if ($function == 'send_dtmf')
+	{
+	if ( (strlen($value)<1) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
+		{
+		$result = 'ERROR';
+		$result_reason = "send_dtmf not valid";
+		echo "$result: $result_reason - $value|$agent_user\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		}
+	else
+		{
+		if (strlen($alt_user)>1)
+			{
+			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$agent_user = $row[0];
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "no user found";
+				echo "$result: $result_reason - $alt_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt="UPDATE vicidial_live_agents set external_dtmf='$value' where user='$agent_user';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+			$result = 'SUCCESS';
+			$result_reason = "send_dtmf function set";
+			echo "$result: $result_reason - $value|$agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - send_dtmf
+################################################################################
+
+
+
+
+
+################################################################################
+### BEGIN - park_call - send customer to park or pick up customer from park
+################################################################################
+if ($function == 'park_call')
+	{
+	if ( (strlen($value)<10) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
+		{
+		$result = 'ERROR';
+		$result_reason = "park_call not valid";
+		echo "$result: $result_reason - $value|$agent_user\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		}
+	else
+		{
+		if (strlen($alt_user)>1)
+			{
+			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$agent_user = $row[0];
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "no user found";
+				echo "$result: $result_reason - $alt_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt = "select lead_id from vicidial_live_agents where user='$agent_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$lead_id = $row[0];
+			if ($lead_id > 0)
+				{
+				$stmt="UPDATE vicidial_live_agents set external_park='$value' where user='$agent_user';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+				$result = 'SUCCESS';
+				$result_reason = "park_call function set";
+				echo "$result: $result_reason - $value|$agent_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "agent_user does not have a lead on their screen";
+				echo "$result: $result_reason - $agent_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - park_call
+################################################################################
+
+
+
+
+
+################################################################################
+### BEGIN - transfer_conference - send several different functions for 3-way calling and transfers
+################################################################################
+if ($function == 'transfer_conference')
+	{
+	if ( (strlen($value)<8) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
+		{
+		$result = 'ERROR';
+		$result_reason = "transfer_conference not valid";
+		echo "$result: $result_reason - $value|$agent_user\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		}
+	else
+		{
+		$processed=0;
+		$SUCCESS=0;
+		if (strlen($alt_user)>1)
+			{
+			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$agent_user = $row[0];
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "no user found";
+				echo "$result: $result_reason - $alt_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt = "select lead_id,callerid from vicidial_live_agents where user='$agent_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$lead_id =	$row[0];
+			$callerid = $row[1];
+			if ( ($lead_id > 0) and (strlen($callerid)>15) )
+				{
+				### START In-group transfer or bridge ###
+				if ( ($value=='LOCAL_CLOSER') or ( ( ($value=='DIAL_WITH_CUSTOMER') or ($value=='PARK_CUSTOMER_DIAL') ) and ($consultative=='YES') ) )
+					{
+					$processed++;
+					if (strlen($ingroup_choices) < 2)
+						{
+						$result = 'ERROR';
+						$result_reason = "ingroup is not valid";
+						echo "$result: $result_reason - $ingroup_choices\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					else
+						{
+						if (preg_match("/DEFAULTINGROUP/",$ingroup_choices))
+							{
+							$stmt = "select campaign_id,call_type from vicidial_auto_calls where callerid='$callerid';";
+							if ($DB) {echo "$stmt\n";}
+							$rslt=mysql_query($stmt, $link);
+							$row=mysql_fetch_row($rslt);
+							$campaign_id =	$row[0];
+							$call_type =	$row[1];
+
+							if ($call_type=='IN')
+								{
+								$stmt = "select default_xfer_group from vicidial_inbound_groups where group_id='$campaign_id';";
+								}
+							else
+								{
+								$stmt = "select default_xfer_group from vicidial_campaigns where campaign_id='$campaign_id';";
+								}
+							if ($DB) {echo "$stmt\n";}
+							$rslt=mysql_query($stmt, $link);
+							$row=mysql_fetch_row($rslt);
+							$ingroup_choices =		$row[0];
+							}
+
+						$stmt = "select count(*) from vicidial_inbound_groups where group_id='$ingroup_choices' and active='Y';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$ingroupactive =	$row[0];
+
+						if ($ingroupactive < 1)
+							{
+							$result = 'ERROR';
+							$result_reason = "ingroup is not valid";
+							echo "$result: $result_reason - $ingroup_choices\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						else
+							{
+							$SUCCESS++;
+							
+							$external_transferconf = "$value---$ingroup_choices---$phone_number---$consultative---";
+							}
+						}
+					}
+				### END In-group transfer or bridge ###
+
+				### START other transfers ###
+				if ( ($processed < 1) and (($value=='BLIND_TRANSFER') or ($value=='LEAVE_VM') or ($value=='DIAL_WITH_CUSTOMER') or ($value=='PARK_CUSTOMER_DIAL')) )
+					{
+					$processed++;
+					$external_transferconf = "$value------$phone_number---NO---$dial_override";
+					$SUCCESS++;
+					}
+
+				### START hangups ###
+				if ( ($processed < 1) and ( ($value=='HANGUP_XFER') or ($value=='HANGUP_BOTH') ) )
+					{
+					$processed++;
+					$external_transferconf = "$value---------NO---";
+					$SUCCESS++;
+					}
+
+				### START leave-3way-call ###
+				if ( ($processed < 1) and ($value=='LEAVE_3WAY_CALL') )
+					{
+					$processed++;
+					$external_transferconf = "$value---------NO---";
+					$SUCCESS++;
+					}
+
+				if ($processed < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "value is not valid";
+					echo "$result: $result_reason - $value|$user\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				else
+					{
+					if ($SUCCESS > 0)
+						{
+						$stmt="UPDATE vicidial_live_agents set external_transferconf='$external_transferconf' where user='$agent_user';";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_query($stmt, $link);
+						$result = 'SUCCESS';
+						$result_reason = "transfer_conference function set";
+						echo "$result: $result_reason - $value|$ingroup_choices|$phone_number|$consultative|$agent_user\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					}
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "agent_user does not have a live call";
+				echo "$result: $result_reason - $agent_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - transfer_conference
+################################################################################
+
 
 
 

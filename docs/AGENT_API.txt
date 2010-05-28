@@ -22,6 +22,9 @@ set_timer_action - sets timer action for the current call the agent is on
 st_login_log - looks up the vicidial_users.custom_three field and logs event from CRM
 st_get_agent_active_lead - looks up active lead info for an agent and outputs lead information
 ra_call_control - remote agent call control: hangup/transfer calls being handled by remote agents
+send_dtmf - sends dtmf signal string to agent's session
+transfer_conference - sends several commands related to the agent transfer-conf frame
+park_call - sends command to park customer or grab customer from park
 
 
 New scripts:
@@ -445,6 +448,107 @@ SUCCESS: ra_call_control hungup - 6666|Y0315201639000402027|HANGUP
 
 
 
+--------------------------------------------------------------------------------
+send_dtmf - 
+
+DESCRIPTION:
+Sends dtmf signal string to agent's session
+
+VALUES: (value)
+only valid DTMF characters with these replacements:
+  P = # (pound or hash)
+  S = * (star)
+  Q = (one second of silence)
+
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=send_dtmf&value=QQQQ1234SQQQQQ6654P
+
+RESPONSES:
+ERROR: send_dtmf not valid - QQ|6666
+ERROR: no user found - 6666
+ERROR: agent_user is not logged in - 6666
+SUCCESS: send_dtmf function set - QQQQ1234SQQQQQ6654P|6666
+
+
+
+--------------------------------------------------------------------------------
+park_call - 
+
+DESCRIPTION:
+sends command to park customer or grab customer out of park
+
+VALUES:
+ value - 
+  REQUIRED, choices are below
+   PARK_CUSTOMER - send customer to the park extension as defined in the campaign the agent is logged into
+   GRAB_CUSTOMER - grab customer from the park extension and send them to the agent session
+
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=park_call&value=PARK_CUSTOMER
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=park_call&value=GRAB_CUSTOMER
+
+RESPONSES:
+ERROR: park_call not valid - PARK_CUSTOMER|6666
+ERROR: no user found - 6666
+ERROR: agent_user is not logged in - 6666
+ERROR: agent_user does not have a lead on their screen - 6666
+SUCCESS: park_call function set - PARK_CUSTOMER|6666
+
+
+
+--------------------------------------------------------------------------------
+transfer_conference - 
+
+DESCRIPTION:
+sends several commands related to the agent transfer-conf frame
+
+VALUES:
+ value - 
+  REQUIRED, choices are below
+   HANGUP_XFER - hangup the third party line
+   HANGUP_BOTH - hangup customer and third party line
+   BLIND_TRANSFER - send a call to a defined phone number
+   LEAVE_VM - blind transfer customer to the campaign-defined voicemail message
+   LOCAL_CLOSER - send call to another ViciDial agent, must have in-group, optional phone_number field for AGENTDIRECT agent
+   DIAL_WITH_CUSTOMER - 3-way call with customer on the line
+   PARK_CUSTOMER_DIAL - send customer to park and place a call to a third party
+   LEAVE_3WAY_CALL - leave customer and third party in conference and go to the disposition screen
+ phone_number - 
+  OPTIONAL/REQUIRED, required for any transfer or dial value
+ ingroup_choices - 
+  OPTIONAL/REQUIRED, required for local_closer and consultative transfers, must be a single active in-group, reserved option of "DEFAULTINGROUP" can be used to select the default in-group for the in-group or campaign that the call originated from
+ consultative -
+  OPTIONAL, when you want to do a consultative transfer with your customer and another ViciDial agent, 'YES' and 'NO' are valid options, you can only use this with DIAL_WITH_CUSTOMER or PARK_CUSTOMER_DIAL
+ dial_override - 
+  OPTIONAL, dials exactly the phone number specified with no campaign-defined phone code or prefix
+
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=transfer_conference&value=HANGUP_XFER
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=transfer_conference&value=HANGUP_BOTH
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=transfer_conference&value=BLIND_TRANSFER&phone_number=8500
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=transfer_conference&value=LEAVE_VM
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=transfer_conference&value=LOCAL_CLOSER&ingroup_choices=DEFAULTINGROUP
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=transfer_conference&value=LOCAL_CLOSER&ingroup_choices=AGENTDIRECT&phone_number=6666
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=transfer_conference&value=LOCAL_CLOSER&ingroup_choices=SALESLINE
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=transfer_conference&value=DIAL_WITH_CUSTOMER&ingroup_choices=TEST_IN3&consultative=YES
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=transfer_conference&value=DIAL_WITH_CUSTOMER&phone_number=8500
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=transfer_conference&value=DIAL_WITH_CUSTOMER&phone_number=919998888112&dial_override=YES
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=transfer_conference&value=PARK_CUSTOMER_DIAL&ingroup_choices=TEST_IN3&consultative=YES
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=transfer_conference&value=LEAVE_3WAY_CALL
+
+RESPONSES:
+ERROR: transfer_conference not valid - QQ|6666
+ERROR: value is not valid - XYZFUNCTION|6666
+ERROR: no user found - 6666
+ERROR: ingroup is not valid - XYZINGROUP
+ERROR: agent_user is not logged in - 6666
+ERROR: agent_user does not have a live call - 6666
+SUCCESS: transfer_conference function set - LOCAL_CLOSER|SALESLINE||YES|6666
+
+
+
+
+
 
 
 
@@ -458,16 +562,6 @@ Example MySQL query options for executing API functions(not available for all fu
 update vicidial_live_agents set external_hangup=1 where user='1000';
 update vicidial_live_agents set external_status='A' where user='1000';
 
-
-Database changes: (these are already in the system, DO NOT RUN THEM)
-ALTER TABLE vicidial_live_agents ADD external_hangup VARCHAR(1) default '';
-ALTER TABLE vicidial_live_agents ADD external_status VARCHAR(6) default '';
-ALTER TABLE vicidial_live_agents ADD external_pause VARCHAR(20) default '';
-ALTER TABLE vicidial_live_agents ADD external_dial VARCHAR(100) default '';
-
-ALTER TABLE vicidial_users ADD vdc_agent_api_access ENUM('0','1') default '0';
-
-ALTER TABLE system_settings ADD vdc_agent_api_active ENUM('0','1') default '0';
 
 CREATE TABLE vicidial_api_log (
 api_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,

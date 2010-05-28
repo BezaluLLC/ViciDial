@@ -156,6 +156,9 @@ OTHER CHANGES:
 
 36. Added utility in CallCard section to generate new card IDs and view by Run.
 
+37. Added Agent API functions for Send DTMF, Park Customer and the Transfer 
+	Conference functions as well
+
 
 
 
