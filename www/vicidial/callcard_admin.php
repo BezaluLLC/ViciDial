@@ -10,10 +10,11 @@
 # CHANGES
 # 100311-2325 - first build
 # 100525-1824 - Added generate option
+# 100616-0847 - Fixed batch issue
 #
 
-$version = '2.4-2';
-$build = '100525-1824';
+$version = '2.4-3';
+$build = '100616-0847';
 
 $MT[0]='';
 
@@ -627,13 +628,13 @@ if ($action == "GENERATE_RESULTS")
 
 		$i=0;
 		$Gbatch=$starting_batch;
-		$Gbatch_count=0;
+		$Gbatch_count=-1;
 		$Gsequence=$sequence;
 		while ($i < $total)
 			{
 			$Gbatch_count++;
 			$Gsequence++;
-			if ($Gbatch_count > $batch)
+			if ($Gbatch_count >= $batch)
 				{
 				$Gbatch_count = 0;
 				$Gbatch++;

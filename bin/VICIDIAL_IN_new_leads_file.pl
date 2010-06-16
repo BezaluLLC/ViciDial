@@ -46,9 +46,10 @@
 # 100204-2333 - Added dccsv10 file format
 # 100221-0939 - Added dccsv43 file format with custom cid lookup
 # 100427-0434 - Added ability to create new list in system for each new loaded file
+# 100610-0756 - Added dccsv52 file format
 #
 
-$version = '100427-0434';
+$version = '100610-0756';
 
 $secX = time();
 $MT[0]='';
@@ -192,7 +193,7 @@ if (length($ARGV[0])>1)
 		print "dccsv10:\n";
 		print "VENDOR_ID,FIRST_NAME,LAST_NAME,PHONE_1,PHONE_2,PHONE_3,PHONE_4,PHONE_5,PHONE_6,PHONE_7\n";
 		print "\"100998\",\"ANGELA    \",\"SMITH     \",\"3145551212\",\"3145551213\",\"3145551214\",\"0\",\"3145551215\",\"3145551216\",\"0\",\n\n";
-		print "dccsv43 and dccsvref51:\n";
+		print "dccsv43, dccsvref51 and dccsv52:\n";
 		print "---format too confusing to list in the help screen---\n\n";
 
 		exit;
@@ -1180,6 +1181,127 @@ foreach(@FILES)
 				$rank =					$m[26];			# number of times worked
 				$owner =				$m[28];			# old status code
 				$multi_alt_phones =		'';
+
+				$r=0;
+				$map_count=0;
+				if ( (length($m[38]) > 9) && ($m[38] !~ /000000000/) )
+					{
+					$ALTm_phone_number[$r] =	$m[38];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					$g++;
+					}
+				if ( (length($m[39]) > 9) && ($m[39] !~ /000000000/) )
+					{
+					$ALTm_phone_number[$r] =	$m[39];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					}
+				if ( (length($m[40]) > 9) && ($m[40] !~ /000000000/) )
+					{
+					$ALTm_phone_number[$r] =	$m[40];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					}
+				if ( (length($m[41]) > 9) && ($m[41] !~ /000000000/) )
+					{
+					$ALTm_phone_number[$r] =	$m[41];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					}
+				if ( (length($m[42]) > 9) && ($m[42] !~ /000000000/) )
+					{
+					$ALTm_phone_number[$r] =	$m[42];
+					$ALTm_phone_code[$r] =		'1';
+					$r++;	$map_count++;
+					}
+
+				### look up the custom CID to use for this state
+				$stmtA = "select cid from vicidial_custom_cid where state='$state';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					if($DBX){print STDERR "\n$sthArows|$stmtA|\n";}
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$security_phrase = $aryA[0];
+					}
+				$sthA->finish();
+
+				$format_set++;
+				}
+		# This is the format for the dccsv52 lead files
+#"BFRAME","RECORD_TYPE","LAST_NAME","FIRST_NAME","ADDR1","ADDR2","CITY","STATE","ZIP","ZIP4","ADDR_STATUS","DATE_PLACED","DATE_ADDED","DOB","LAST_LETTER","LAST_LETTER_DATE","LAST_WORKED","NEXT_ACTION_DATE","CAPTURE_CODE","CUR_CATEGORY","TIMES_DIALED","LAST_DIALED","TOTAL_PAID","DATE_LAST_PAID","NMBR_CALLS","NMBR_CONTACTS","NMBR_TIMES_WRKD","NMBR_LETTERS","STATUS_CODE","STATUS_DATE","SCORE","TIMES_TO_SERVICER","1ST-PMT-DEFAULT","TIME_ZONE","ORIG_CREDITOR","BALANCE","HOME_PHONE","WORK_PHONE","OTHER_PHONE","ACCT_OTHTEL2","ACCT_OTHTEL3","ACCT_OTHTEL4","ACCT_OTHTEL5","REF-NAME","REF-AD1","REF-AD2","REF-CITY","REF-ST","REF-POSTAL","REF-TEL1","REF-TEL2","SSN"
+#"II ACCT/1103566666  ","P","SMITH           ","        SAMMY","7838 W 109TH ST APT 12        ","                              ","OVERLAND PARK       ","KS","66212","0000","G","20091110","20091110","19661216","NOLTTR","00000000","20091214","20091219","1000","03","000","00000000","000000000.00 ","00000000","0004","0003","0004","000","ACTIVE","20091110","0648","00"," ","C","HSBC                          ","000000692.09 ","9135551212","0000000000","0000000000","0000000000","0000000000","0000000000","0000000000","","","","","  ","          ","          ","          ","578888888"
+
+			if ( ($format =~ /dccsv52/) && ($format_set < 1) )
+				{
+				$raw_number = $number;
+				chomp($number);
+				$number =~ s/,\"0\"/,/gi;
+				$number =~ s/\t/\|/gi;
+				$number =~ s/\'|\t|\r|\n|\l//gi;
+				$number =~ s/\",,,,,,,\"/\|\|\|\|\|\|\|/gi;
+				$number =~ s/\",,,,,,\"/\|\|\|\|\|\|/gi;
+				$number =~ s/\",,,,,\"/\|\|\|\|\|/gi;
+				$number =~ s/\",,,,\"/\|\|\|\|/gi;
+				$number =~ s/\",,,\"/\|\|\|/gi;
+				$number =~ s/\",,\"/\|\|/gi;
+				$number =~ s/\",\"/\|/gi;
+				$number =~ s/\"//gi;
+			#	$number =~ s/\|0000000000//gi;
+				@m=@MT;
+				@m = split(/\|/, $number);
+				if ($DBX) {print "RAW: $#m-----$number\n";}
+
+				$vendor_lead_code =		$m[0];		chomp($vendor_lead_code);		$vendor_lead_code =~ s/\s+$//gi;
+					$vendor_lead_code =~s/II ACCT\///gi;
+					$vendor_lead_code =~s/WDRF  //gi;
+					while (length($vendor_lead_code) > 10) {chop($vendor_lead_code);}
+				$source_id =			$m[0];		chomp($source_id);		$source_id =~ s/\s+$//gi;
+				$list_id =				'929';
+				$phone_code =			'1';
+				$first_name =			$m[3];		chomp($first_name);		$first_name =~ s/^\s+|\s+$//gi;
+				$middle_initial =		'';
+				$last_name =			$m[2];		chomp($last_name);		$last_name =~ s/\s+$//gi;
+				$title =				$m[25];			# number of contacts
+				$address1 =				$m[4];					$address1 =~ s/\s+$//gi;
+				$address2 =				$m[5];					$address2 =~ s/\s+$//gi;
+				$address3 =				$m[34];			# orig creditor
+				$city =					$m[6];					$city =~ s/\s+$//gi;
+				$state =				$m[7];
+				$province =				$m[35];			$province =~ s/\s+$//gi;   # balance
+				$postal_code =			$m[8];
+				$country =				'';
+				$gender =				'';
+				$date_of_birth =		$m[13];
+					$dobYYYY = substr($date_of_birth, 0, 4);
+					$dobMM = substr($date_of_birth, 4, 2);
+					$dobDD = substr($date_of_birth, 6, 2);
+					$date_of_birth = "$dobYYYY-$dobMM-$dobDD";
+				$email =				$m[51];			# date placed
+				$security_phrase =		''; # looked-up geographic CID will go here
+				$comments =				$m[43];			# ref-name
+				$called_count =			'0';
+				$status =				'NEW';
+				$insert_date =			$pulldate0;
+				$rank =					$m[26];			# number of times worked
+				$owner =				$m[28];			# old status code
+				$multi_alt_phones =		'';
+
+				$number =~ s/\|0000000000//gi;
+				@m=@MT;
+				@m = split(/\|/, $number);
+				$m[36] =~ s/\D//gi; $m[37] =~ s/\D//gi; $m[38] =~ s/\D//gi; $m[39] =~ s/\D//gi; $m[40] =~ s/\D//gi; $m[41] =~ s/\D//gi; $m[42] =~ s/\D//gi;
+
+				$phone_number =			$m[36];			$phone_number =~ s/\D//gi;
+					$USarea = 			substr($phone_number, 0, 3);
+				$alt_phone='';
+				if ( (length($m[37]) > 9) && ($m[37] !~ /000000000/) )
+					{
+					$alt_phone =			$m[37];		chomp($alt_phone);
+					}
 
 				$r=0;
 				$map_count=0;

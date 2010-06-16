@@ -1,27 +1,16 @@
 #!/usr/bin/perl
 #
-# AST_VDhopper.pl version 2.2.0   *DBI-version*
+# AST_VDhopper.pl version 2.2.0
 #
 # DESCRIPTION:
-# uses DBD::MySQL to update the VICIDIAL leads hopper for the streamlined 
-# approach of allocating leads to client machines. 
+# Updates the VICIDIAL leads hopper for the streamlined 
+# approach of allocating leads to dialers. 
 #
 # SUMMARY:
-# This program was designed for people using the Asterisk PBX with VICIDIAL
-#
-# For the client to use VICIDIAL, this program must be in the cron running 
-# every minute
-# 
-# For this program to work you need to have the "asterisk" MySQL database 
-# created and create the tables listed in the CONF_MySQL.txt file, also make sure
-# that the machine running this program has read/write/update/delete access 
-# to that database
+# For VICIDIAL auto-dial outbound dialing, this program must be in the crontab
+# running every minute
 # 
 # It is recommended that you run this program on the local Asterisk machine
-#
-# If this script is run ever minute and you are getting close to no leads after
-# a minute, you may want to play with the variables below to streamline for 
-# your usage
 #
 # Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -63,6 +52,7 @@
 # 91026-1207 - Added AREACODE DNC option
 # 100409-1101 - Fix for rare dial-time duplicate hopper load issue
 # 100427-0429 - Fix for list mix no-status-selected issue
+# 100529-0843 - Changed dialable leads to calculate every run for active campaigns
 #
 
 # constants
@@ -272,8 +262,8 @@ if ($sthArows==0) {die "Server IP $VARserver_ip does not have an entry in the se
 if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$DBvd_server_logs =			"$aryA[0]";
-	$DBSERVER_GMT		=		"$aryA[1]";
+	$DBvd_server_logs =			$aryA[0];
+	$DBSERVER_GMT		=		$aryA[1];
 	if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
 	else {$SYSLOG = '0';}
 	if (length($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
@@ -853,7 +843,6 @@ foreach(@campaign_id)
 
 		if ($list_order_mix[$i] =~ /DISABLED/)
 			{
-			### BEGIN - GATHER STATS FOR THE vicidial_campaign_stats TABLE ###
 			$dial_statuses[$i] =~ s/ -$//gi;
 			@Dstatuses = split(/ /,$dial_statuses[$i]);
 			$Ds_to_print = (($#Dstatuses) + 0);
@@ -868,6 +857,7 @@ foreach(@campaign_id)
 			else {chop($STATUSsql[$i]);}
 			}
 
+		### BEGIN - GATHER STATS FROM THE vicidial_campaign_stats TABLE ###
 		$stmtA = "SELECT dialable_leads from vicidial_campaign_stats where campaign_id='$campaign_id[$i]';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -876,11 +866,11 @@ foreach(@campaign_id)
 		while ($sthArows > $rec_count)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$VCSdialable_leads[$i] =		 "$aryA[0]";
+			$VCSdialable_leads[$i] = $aryA[0];
 			$rec_count++;
 			}
 		$sthA->finish();
-		### END - GATHER STATS FOR THE vicidial_campaign_stats TABLE ###
+		### END - GATHER STATS FROM THE vicidial_campaign_stats TABLE ###
 
 		##### BEGIN calculate what gmt_offset_now values are within the allowed local_call_time setting ###
 		$g=0;
@@ -913,23 +903,23 @@ foreach(@campaign_id)
 		while ($sthArows > $rec_count)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$Gct_default_start =	"$aryA[3]";
-			$Gct_default_stop =		"$aryA[4]";
-			$Gct_sunday_start =		"$aryA[5]";
-			$Gct_sunday_stop =		"$aryA[6]";
-			$Gct_monday_start =		"$aryA[7]";
-			$Gct_monday_stop =		"$aryA[8]";
-			$Gct_tuesday_start =	"$aryA[9]";
-			$Gct_tuesday_stop =		"$aryA[10]";
-			$Gct_wednesday_start =	"$aryA[11]";
-			$Gct_wednesday_stop =	"$aryA[12]";
-			$Gct_thursday_start =	"$aryA[13]";
-			$Gct_thursday_stop =	"$aryA[14]";
-			$Gct_friday_start =		"$aryA[15]";
-			$Gct_friday_stop =		"$aryA[16]";
-			$Gct_saturday_start =	"$aryA[17]";
-			$Gct_saturday_stop =	"$aryA[18]";
-			$Gct_state_call_times = "$aryA[19]";
+			$Gct_default_start =	$aryA[3];
+			$Gct_default_stop =		$aryA[4];
+			$Gct_sunday_start =		$aryA[5];
+			$Gct_sunday_stop =		$aryA[6];
+			$Gct_monday_start =		$aryA[7];
+			$Gct_monday_stop =		$aryA[8];
+			$Gct_tuesday_start =	$aryA[9];
+			$Gct_tuesday_stop =		$aryA[10];
+			$Gct_wednesday_start =	$aryA[11];
+			$Gct_wednesday_stop =	$aryA[12];
+			$Gct_thursday_start =	$aryA[13];
+			$Gct_thursday_stop =	$aryA[14];
+			$Gct_friday_start =		$aryA[15];
+			$Gct_friday_stop =		$aryA[16];
+			$Gct_saturday_start =	$aryA[17];
+			$Gct_saturday_stop =	$aryA[18];
+			$Gct_state_call_times = $aryA[19];
 			$rec_count++;
 			}
 		$sthA->finish();
@@ -1087,24 +1077,24 @@ foreach(@campaign_id)
 				while ($sthArows > $rec_count)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$Gstate_call_time_id =		"$aryA[0]";
-					$Gstate_call_time_state =	"$aryA[1]";
-					$Gsct_default_start =		"$aryA[4]";
-					$Gsct_default_stop =		"$aryA[5]";
-					$Gsct_sunday_start =		"$aryA[6]";
-					$Gsct_sunday_stop =			"$aryA[7]";
-					$Gsct_monday_start =		"$aryA[8]";
-					$Gsct_monday_stop =			"$aryA[9]";
-					$Gsct_tuesday_start =		"$aryA[10]";
-					$Gsct_tuesday_stop =		"$aryA[11]";
-					$Gsct_wednesday_start =		"$aryA[12]";
-					$Gsct_wednesday_stop =		"$aryA[13]";
-					$Gsct_thursday_start =		"$aryA[14]";
-					$Gsct_thursday_stop =		"$aryA[15]";
-					$Gsct_friday_start =		"$aryA[16]";
-					$Gsct_friday_stop =			"$aryA[17]";
-					$Gsct_saturday_start =		"$aryA[18]";
-					$Gsct_saturday_stop =		"$aryA[19]";
+					$Gstate_call_time_id =		$aryA[0];
+					$Gstate_call_time_state =	$aryA[1];
+					$Gsct_default_start =		$aryA[4];
+					$Gsct_default_stop =		$aryA[5];
+					$Gsct_sunday_start =		$aryA[6];
+					$Gsct_sunday_stop =			$aryA[7];
+					$Gsct_monday_start =		$aryA[8];
+					$Gsct_monday_stop =			$aryA[9];
+					$Gsct_tuesday_start =		$aryA[10];
+					$Gsct_tuesday_stop =		$aryA[11];
+					$Gsct_wednesday_start =		$aryA[12];
+					$Gsct_wednesday_stop =		$aryA[13];
+					$Gsct_thursday_start =		$aryA[14];
+					$Gsct_thursday_stop =		$aryA[15];
+					$Gsct_friday_start =		$aryA[16];
+					$Gsct_friday_stop =			$aryA[17];
+					$Gsct_saturday_start =		$aryA[18];
+					$Gsct_saturday_stop =		$aryA[19];
 					$ct_states .="'$Gstate_call_time_state',";
 					$rec_count++;
 					}
@@ -1405,9 +1395,9 @@ foreach(@campaign_id)
 		while ($sthArows > $r_ct)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$recycle_status[$r_ct] =	 "$aryA[2]";
-			$recycle_delay[$r_ct] =		 "$aryA[3]";
-			$recycle_maximum[$r_ct] =	 "$aryA[4]";
+			$recycle_status[$r_ct] =	 $aryA[2];
+			$recycle_delay[$r_ct] =		 $aryA[3];
+			$recycle_maximum[$r_ct] =	 $aryA[4];
 			$r_ct++;
 			$rec_ct[$i]++;
 			}
@@ -1512,182 +1502,192 @@ foreach(@campaign_id)
 		$event_string = "|$campaign_id[$i]|$hopper_level[$i]|$hopper_ready_count|$local_call_time[$i]||";
 		&event_logger;
 
-		##### IF hopper level is below set minimum, then try to add more leads #####
-		if ($hopper_ready_count < $hopper_level[$i])
+		$active_listSQL = "and active='Y'";
+		if ( ($list_order_mix[$i] !~ /DISABLED/) && ($allow_inactive_list_leads > 0) )
+			{$active_listSQL = '';}
+	
+		### Get list of the lists in the campaign ###
+		$stmtA = "SELECT list_id FROM vicidial_lists where campaign_id='$campaign_id[$i]' $active_listSQL;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$rec_countLISTS=0;
+		$camp_lists[$i] = '';
+		while ($sthArows > $rec_countLISTS)
 			{
-			if ($DB) {print "     hopper too low ($hopper_ready_count|$hopper_level[$i]) starting hopper dump\n";}
+			@aryA = $sthA->fetchrow_array;
+			$camp_lists[$i] .= "'$aryA[0]',";
+			$rec_countLISTS++;
+			}
+		$sthA->finish();
+		if (length($camp_lists[$i])<3) {$camp_lists[$i]="'999876543210'";}
+		   else {chop($camp_lists[$i]);}
 
-			$active_listSQL = "and active='Y'";
-			if ( ($list_order_mix[$i] !~ /DISABLED/) && ($allow_inactive_list_leads > 0) )
-				{$active_listSQL = '';}
-		
-			### Get list of the lists in the campaign ###
-			$stmtA = "SELECT list_id FROM vicidial_lists where campaign_id='$campaign_id[$i]' $active_listSQL;";
+		if ($DB) {print "     campaign lists count: $rec_countLISTS | $camp_lists[$i]\n";}
+		if ($DBX) {print "     |$stmtA|\n";}
+
+		if ($list_order_mix[$i] !~ /DISABLED/)
+			{
+			$stmtA = "SELECT vcl_id,vcl_name,list_mix_container,mix_method FROM vicidial_campaigns_list_mix where campaign_id='$campaign_id[$i]' and status='ACTIVE';";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
-			$rec_countLISTS=0;
-			$camp_lists[$i] = '';
-			while ($sthArows > $rec_countLISTS)
+			$rec_count=0;
+			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$camp_lists[$i] .= "'$aryA[0]',";
-				$rec_countLISTS++;
+				$vcl_id[$i] =				$aryA[0];
+				$vcl_name[$i] =				$aryA[1];
+				$list_mix_container[$i] =	$aryA[2];
+				$mix_method[$i] =			$aryA[3];
+				$rec_count++;
 				}
 			$sthA->finish();
-			if (length($camp_lists[$i])<3) {$camp_lists[$i]="'999876543210'";}
-			   else {chop($camp_lists[$i]);}
 
-			if ($DB) {print "     campaign lists count: $rec_countLISTS | $camp_lists[$i]\n";}
+			@list_mixARY=@MT;
+			$list_mix_dialableSQL='';
+			@list_mixARY = split(/:/,$list_mix_container[$i]);
+			$x=0;
+			foreach(@list_mixARY)
+				{
+				if ($x > 0) {$list_mix_dialableSQL .= " or ";}
+				@list_mix_stepARY = split(/\|/,$list_mixARY[$x]);
+				$list_mix_stepARY[3] =~ s/ /\',\'/gi;
+				$list_mix_stepARY[3] =~ s/^\',|,\'-//gi;
+				if ($list_mix_stepARY[3] !~ /\'$/)
+					{$list_mix_stepARY[3] = "$list_mix_stepARY[3]'";}
+				if ($DBX) {print "     LM $x ++$list_mixARY[$x]++ |$list_mix_stepARY[0]|$list_mix_stepARY[2]|$list_mix_stepARY[3]|\n";}
+				$list_mix_dialableSQL .= "(list_id='$list_mix_stepARY[0]' and status IN($list_mix_stepARY[3]))";
+
+				$x++;
+				}
+
+			if ($DB) {print "     campaign mix: $list_order_mix[$i] |$vcl_id[$i] - $vcl_name[$i]|$list_mix_container[$i]|$x|$mix_method[$i]|\n";}
+			}
+
+		if ( ($lead_filter_id[$i] !~ /NONE/) && (length($lead_filter_id[$i])>0) )
+			{
+			### Get SQL of lead filter for the campaign ###
+			$stmtA = "SELECT lead_filter_sql FROM vicidial_lead_filters where lead_filter_id='$lead_filter_id[$i]';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			$rec_count=0;
+			while ($sthArows > $rec_count)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$lead_filter_sql[$i] = $aryA[0];
+				$lead_filter_sql[$i] =~ s/\\//gi;
+				$rec_count++;
+				}
+			$sthA->finish();
+			$lead_filter_sql[$i] =~ s/^and|and$|^or|or$|^ and|and $|^ or|or $//gi;
+			$lead_filter_sql[$i] = "and $lead_filter_sql[$i]";
+			if ($DB) {print "     lead filter $lead_filter_id[$i] defined for $campaign_id[$i]\n";}
+			if ($DBX) {print "     |$lead_filter_sql[$i]|\n";}
+			}
+		else
+			{
+			$lead_filter_sql[$i] = '';
+			if ($DB) {print "     no lead filter defined for campaign: $campaign_id[$i]\n";}
+			if ($DBX) {print "     |$lead_filter_id[$i]|\n";}
+			}
+
+		$DLTsql[$i]='';
+		if ($drop_lockout_time[$i] > 0)
+			{
+			$DLseconds[$i] = ($drop_lockout_time[$i] * 3600);
+			$DLTsql[$i] = "and ( ( (status IN('DROP','XDROP')) and (last_local_call_time < CONCAT(DATE_ADD(NOW(), INTERVAL -$DLseconds[$i] SECOND),' ',CURTIME()) ) ) or (status NOT IN('DROP','XDROP')) )";
+			if ($DB) {print "     drop lockout time $drop_lockout_time[$i]($DLseconds[$i]) defined for $campaign_id[$i]\n";}
+			if ($DBX) {print "     |$DLTsql[$i]|\n";}
+			}
+		
+		##### Get count of leads that are dialable #####
+		if ($list_order_mix[$i] =~ /DISABLED/)
+			{
+			$stmtA = "SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and status IN($STATUSsql[$i]) and list_id IN($camp_lists[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
+			}
+		else
+			{
+			$stmtA = "SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and ($list_mix_dialableSQL) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
+			}
 			if ($DBX) {print "     |$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$campaign_leads_to_call[$i] = $aryA[0];
+			if ($DB) {print "     leads to call count:  $campaign_leads_to_call[$i]\n";}
+			if ($DBX) {print "     |$stmtA|\n";}
+			}
+		$sthA->finish();
 
-			if ($list_order_mix[$i] !~ /DISABLED/)
-				{
-				$stmtA = "SELECT vcl_id,vcl_name,list_mix_container,mix_method FROM vicidial_campaigns_list_mix where campaign_id='$campaign_id[$i]' and status='ACTIVE';";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				$sthArows=$sthA->rows;
-				$rec_count=0;
-				while ($sthArows > $rec_count)
-					{
-					@aryA = $sthA->fetchrow_array;
-					$vcl_id[$i] =				"$aryA[0]";
-					$vcl_name[$i] =				"$aryA[1]";
-					$list_mix_container[$i] =	"$aryA[2]";
-					$mix_method[$i] =			"$aryA[3]";
-					$rec_count++;
-					}
-				$sthA->finish();
-
-				@list_mixARY=@MT;
-				$list_mix_dialableSQL='';
-				@list_mixARY = split(/:/,$list_mix_container[$i]);
-				$x=0;
-				foreach(@list_mixARY)
-					{
-					if ($x > 0) {$list_mix_dialableSQL .= " or ";}
-					@list_mix_stepARY = split(/\|/,$list_mixARY[$x]);
-					$list_mix_stepARY[3] =~ s/ /\',\'/gi;
-					$list_mix_stepARY[3] =~ s/^\',|,\'-//gi;
-					if ($list_mix_stepARY[3] !~ /\'$/)
-						{$list_mix_stepARY[3] = "$list_mix_stepARY[3]'";}
-					if ($DBX) {print "     LM $x ++$list_mixARY[$x]++ |$list_mix_stepARY[0]|$list_mix_stepARY[2]|$list_mix_stepARY[3]|\n";}
-					$list_mix_dialableSQL .= "(list_id='$list_mix_stepARY[0]' and status IN($list_mix_stepARY[3]))";
-
-					$x++;
-					}
-
-				if ($DB) {print "     campaign mix: $list_order_mix[$i] |$vcl_id[$i] - $vcl_name[$i]|$list_mix_container[$i]|$x|$mix_method[$i]|\n";}
-				}
-
-			if ( ($lead_filter_id[$i] !~ /NONE/) && (length($lead_filter_id[$i])>0) )
-				{
-				### Get SQL of lead filter for the campaign ###
-				$stmtA = "SELECT lead_filter_sql FROM vicidial_lead_filters where lead_filter_id='$lead_filter_id[$i]';";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				$sthArows=$sthA->rows;
-				$rec_count=0;
-				while ($sthArows > $rec_count)
-					{
-					@aryA = $sthA->fetchrow_array;
-					$lead_filter_sql[$i] = "$aryA[0]";
-					$lead_filter_sql[$i] =~ s/\\//gi;
-					$rec_count++;
-					}
-				$sthA->finish();
-				$lead_filter_sql[$i] =~ s/^and|and$|^or|or$|^ and|and $|^ or|or $//gi;
-				$lead_filter_sql[$i] = "and $lead_filter_sql[$i]";
-				if ($DB) {print "     lead filter $lead_filter_id[$i] defined for $campaign_id[$i]\n";}
-				if ($DBX) {print "     |$lead_filter_sql[$i]|\n";}
-				}
-			else
-				{
-				$lead_filter_sql[$i] = '';
-				if ($DB) {print "     no lead filter defined for campaign: $campaign_id[$i]\n";}
-				if ($DBX) {print "     |$lead_filter_id[$i]|\n";}
-				}
-
-			$DLTsql[$i]='';
-			if ($drop_lockout_time[$i] > 0)
-				{
-				$DLseconds[$i] = ($drop_lockout_time[$i] * 3600);
-				$DLTsql[$i] = "and ( ( (status IN('DROP','XDROP')) and (last_local_call_time < CONCAT(DATE_ADD(NOW(), INTERVAL -$DLseconds[$i] SECOND),' ',CURTIME()) ) ) or (status NOT IN('DROP','XDROP')) )";
-				if ($DB) {print "     drop lockout time $drop_lockout_time[$i]($DLseconds[$i]) defined for $campaign_id[$i]\n";}
-				if ($DBX) {print "     |$DLTsql[$i]|\n";}
-				}
-			
-			##### Get count of leads that are dialable #####
-			if ($list_order_mix[$i] =~ /DISABLED/)
-				{
-				$stmtA = "SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and status IN($STATUSsql[$i]) and list_id IN($camp_lists[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
-				}
-			else
-				{
-				$stmtA = "SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and ($list_mix_dialableSQL) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
-				}
-				if ($DBX) {print "     |$stmtA|\n";}
+		if ( ($lead_order[$i] =~ / 2nd NEW$| 3rd NEW$| 4th NEW$| 5th NEW$| 6th NEW$/) && ($list_order_mix[$i] =~ /DISABLED/) )
+			{
+			$stmtA = "SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and status IN('NEW') and list_id IN($camp_lists[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
 			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$campaign_leads_to_call[$i] = "$aryA[0]";
-				if ($DB) {print "     leads to call count:  $campaign_leads_to_call[$i]\n";}
+				$NEW_campaign_leads_to_call[$i] = $aryA[0];
+				if ($DB) {print "     NEW leads to call count:  $NEW_campaign_leads_to_call[$i]\n";}
 				if ($DBX) {print "     |$stmtA|\n";}
 				}
 			$sthA->finish();
+			}
 
-			if ( ($lead_order[$i] =~ / 2nd NEW$| 3rd NEW$| 4th NEW$| 5th NEW$| 6th NEW$/) && ($list_order_mix[$i] =~ /DISABLED/) )
+		##### IF no NEW leads to be called, error out of this campaign #####
+		if ( ($lead_order[$i] =~ / 2nd NEW$| 3rd NEW$| 4th NEW$| 5th NEW$| 6th NEW$/) && ($NEW_campaign_leads_to_call[$i] > 0) && ($list_order_mix[$i] =~ /DISABLED/) ) {$GOOD=1;}
+		else
+			{
+			if ($lead_order[$i] !~ / 2nd NEW$| 3rd NEW$| 4th NEW$| 5th NEW$| 6th NEW$/)
 				{
-				$stmtA = "SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and status IN('NEW') and list_id IN($camp_lists[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				$sthArows=$sthA->rows;
-				if ($sthArows > 0)
-					{
-					@aryA = $sthA->fetchrow_array;
-					$NEW_campaign_leads_to_call[$i] = "$aryA[0]";
-					if ($DB) {print "     NEW leads to call count:  $NEW_campaign_leads_to_call[$i]\n";}
-					if ($DBX) {print "     |$stmtA|\n";}
-					}
-				$sthA->finish();
+				if ($DB) {print "     NO SHUFFLE-NEW-LEADS INTO HOPPER DEFINED FOR LEAD ORDER\n";}
 				}
-
-			##### IF no NEW leads to be called, error out of this campaign #####
-			if ( ($lead_order[$i] =~ / 2nd NEW$| 3rd NEW$| 4th NEW$| 5th NEW$| 6th NEW$/) && ($NEW_campaign_leads_to_call[$i] > 0) && ($list_order_mix[$i] =~ /DISABLED/) ) {$GOOD=1;}
 			else
 				{
-				if ($lead_order[$i] !~ / 2nd NEW$| 3rd NEW$| 4th NEW$| 5th NEW$| 6th NEW$/)
-					{
-					if ($DB) {print "     NO SHUFFLE-NEW-LEADS INTO HOPPER DEFINED FOR LEAD ORDER\n";}
-					}
-				else
-					{
-					if ($DB) {print "     ERROR CANNOT ADD ANY NEW LEADS TO HOPPER\n";}
-					}
+				if ($DB) {print "     ERROR CANNOT ADD ANY NEW LEADS TO HOPPER\n";}
 				}
+			}
+
+		##### UPDATE the leads to be dialed for this campaign #####
+		if ( ($campaign_leads_to_call[$i] < 1) && ($rec_ct[$i] < 1) )
+			{
+			if ($DB) {print "     NO DIALABLE LEADS FOR THIS CAMPAIGN\n";}
+			if ($VCSdialable_leads[$i] > 0)
+				{
+				$stmtA = "UPDATE vicidial_campaign_stats SET dialable_leads='0' where campaign_id='$campaign_id[$i]';";
+				$affected_rows = $dbhA->do($stmtA);
+				if ($DBX) {print "CAMPAIGN STATS: $affected_rows|$stmtA|\n";}
+				}
+			}
+		else
+			{
+			if ($VCSdialable_leads[$i] != $campaign_leads_to_call[$i])
+				{
+				$stmtA = "UPDATE vicidial_campaign_stats SET dialable_leads='$campaign_leads_to_call[$i]' where campaign_id='$campaign_id[$i]';";
+				$affected_rows = $dbhA->do($stmtA);
+				if ($DBX) {print "CAMPAIGN STATS: $affected_rows|$stmtA|\n";}
+				}
+			}
+		$ENDoutput .= "$campaign_id[$i]     $campaign_leads_to_call[$i]     $hopper_level[$i]     $hopper_ready_count\n";
+
+		##### IF hopper level is below set minimum, then try to add more leads #####
+		if ($hopper_ready_count < $hopper_level[$i])
+			{
+			if ($DB) {print "     hopper too low ($hopper_ready_count|$hopper_level[$i]) starting hopper dump\n";}
 
 			##### IF no leads to be called, error out of this campaign #####
 			if ( ($campaign_leads_to_call[$i] < 1) && ($rec_ct[$i] < 1) )
 				{
 				if ($DB) {print "     ERROR CANNOT ADD ANY LEADS TO HOPPER\n";}
-				if ($VCSdialable_leads[$i] > 0)
-					{
-					$stmtA = "UPDATE vicidial_campaign_stats SET dialable_leads='0' where campaign_id='$campaign_id[$i]';";
-					$affected_rows = $dbhA->do($stmtA);
-					if ($DBX) {print "CAMPAIGN STATS: $affected_rows|$stmtA|\n";}
-					}
 				}
 			else
 				{
-				if ($VCSdialable_leads[$i] != $campaign_leads_to_call[$i])
-					{
-					$stmtA = "UPDATE vicidial_campaign_stats SET dialable_leads='$campaign_leads_to_call[$i]' where campaign_id='$campaign_id[$i]';";
-					$affected_rows = $dbhA->do($stmtA);
-					if ($DBX) {print "CAMPAIGN STATS: $affected_rows|$stmtA|\n";}
-					}
 				if ($DB) {print "     Getting Leads to add to hopper\n";}
 				### grab leads already in hopper so we don't duplicate
 				$stmtA = "SELECT lead_id FROM $vicidial_hopper where campaign_id='$campaign_id[$i]';";
@@ -1756,14 +1756,14 @@ foreach(@campaign_id)
 					while ($sthArows > $REC_rec_countLEADS)
 						{
 						@aryA = $sthA->fetchrow_array;
-						$REC_leads_to_hopper[$REC_rec_countLEADS] = "$aryA[0]";
-						$REC_lists_to_hopper[$REC_rec_countLEADS] = "$aryA[1]";
-						$REC_gmt_to_hopper[$REC_rec_countLEADS] = "$aryA[2]";
-						$REC_phone_to_hopper[$REC_rec_countLEADS] = "$aryA[3]";
-						$REC_state_to_hopper[$REC_rec_countLEADS] = "$aryA[4]";
-						$REC_status_to_hopper[$REC_rec_countLEADS] = "$aryA[5]";
-						$REC_modify_to_hopper[$REC_rec_countLEADS] = "$aryA[6]";
-						$REC_user_to_hopper[$REC_rec_countLEADS] = "$aryA[7]";
+						$REC_leads_to_hopper[$REC_rec_countLEADS] =		$aryA[0];
+						$REC_lists_to_hopper[$REC_rec_countLEADS] =		$aryA[1];
+						$REC_gmt_to_hopper[$REC_rec_countLEADS] =		$aryA[2];
+						$REC_phone_to_hopper[$REC_rec_countLEADS] =		$aryA[3];
+						$REC_state_to_hopper[$REC_rec_countLEADS] =		$aryA[4];
+						$REC_status_to_hopper[$REC_rec_countLEADS] =	$aryA[5];
+						$REC_modify_to_hopper[$REC_rec_countLEADS] =	$aryA[6];
+						$REC_user_to_hopper[$REC_rec_countLEADS] =		$aryA[7];
 						if ($DB_show_offset) {print "LEAD_ADD: $aryA[2] $aryA[3] $aryA[4]\n";}
 						$REC_rec_countLEADS++;
 						}
@@ -1800,14 +1800,14 @@ foreach(@campaign_id)
 					while ($sthArows > $NEW_rec_countLEADS)
 						{
 						@aryA = $sthA->fetchrow_array;
-						$NEW_leads_to_hopper[$NEW_rec_countLEADS] = "$aryA[0]";
-						$NEW_lists_to_hopper[$NEW_rec_countLEADS] = "$aryA[1]";
-						$NEW_gmt_to_hopper[$NEW_rec_countLEADS] = "$aryA[2]";
-						$NEW_phone_to_hopper[$NEW_rec_countLEADS] = "$aryA[3]";
-						$NEW_state_to_hopper[$NEW_rec_countLEADS] = "$aryA[4]";
-						$NEW_status_to_hopper[$NEW_rec_countLEADS] = "$aryA[5]";
-						$NEW_modify_to_hopper[$NEW_rec_countLEADS] = "$aryA[6]";
-						$NEW_user_to_hopper[$NEW_rec_countLEADS] = "$aryA[7]";
+						$NEW_leads_to_hopper[$NEW_rec_countLEADS] =		$aryA[0];
+						$NEW_lists_to_hopper[$NEW_rec_countLEADS] =		$aryA[1];
+						$NEW_gmt_to_hopper[$NEW_rec_countLEADS] =		$aryA[2];
+						$NEW_phone_to_hopper[$NEW_rec_countLEADS] =		$aryA[3];
+						$NEW_state_to_hopper[$NEW_rec_countLEADS] =		$aryA[4];
+						$NEW_status_to_hopper[$NEW_rec_countLEADS] =	$aryA[5];
+						$NEW_modify_to_hopper[$NEW_rec_countLEADS] =	$aryA[6];
+						$NEW_user_to_hopper[$NEW_rec_countLEADS] =		$aryA[7];
 						if ($DB_show_offset) {print "LEAD_ADD: $aryA[2] $aryA[3] $aryA[4]\n";}
 						$NEW_rec_countLEADS++;
 						}
@@ -1852,14 +1852,14 @@ foreach(@campaign_id)
 									}
 								else
 									{
-									$leads_to_hopper[$rec_countLEADS] = "$NEW_leads_to_hopper[$NEW_in]";
-									$lists_to_hopper[$rec_countLEADS] = "$NEW_lists_to_hopper[$NEW_in]";
-									$gmt_to_hopper[$rec_countLEADS] = "$NEW_gmt_to_hopper[$NEW_in]";
-									$state_to_hopper[$rec_countLEADS] = "$NEW_state_to_hopper[$NEW_in]";
-									$phone_to_hopper[$rec_countLEADS] = "$NEW_phone_to_hopper[$NEW_in]";
-									$status_to_hopper[$rec_countLEADS] = "$NEW_status_to_hopper[$NEW_in]";
-									$modify_to_hopper[$rec_countLEADS] = "$NEW_modify_to_hopper[$NEW_in]";
-									$user_to_hopper[$rec_countLEADS] = "$NEW_user_to_hopper[$NEW_in]";
+									$leads_to_hopper[$rec_countLEADS] =		$NEW_leads_to_hopper[$NEW_in];
+									$lists_to_hopper[$rec_countLEADS] =		$NEW_lists_to_hopper[$NEW_in];
+									$gmt_to_hopper[$rec_countLEADS] =		$NEW_gmt_to_hopper[$NEW_in];
+									$state_to_hopper[$rec_countLEADS] =		$NEW_state_to_hopper[$NEW_in];
+									$phone_to_hopper[$rec_countLEADS] =		$NEW_phone_to_hopper[$NEW_in];
+									$status_to_hopper[$rec_countLEADS] =	$NEW_status_to_hopper[$NEW_in];
+									$modify_to_hopper[$rec_countLEADS] =	$NEW_modify_to_hopper[$NEW_in];
+									$user_to_hopper[$rec_countLEADS] =		$NEW_user_to_hopper[$NEW_in];
 									if ($DB_show_offset) {print "LEAD_ADD:    $NEW_leads_to_hopper[$NEW_in]   $NEW_phone_to_hopper[$NEW_in]\n";}
 									$rec_countLEADS++;
 									$NEW_in++;
@@ -1868,25 +1868,25 @@ foreach(@campaign_id)
 								}
 							if ($REC_rec_countLEADS > $REC_insert_count)
 								{
-								$leads_to_hopper[$rec_countLEADS] = "$REC_leads_to_hopper[$REC_insert_count]";
-								$lists_to_hopper[$rec_countLEADS] = "$REC_lists_to_hopper[$REC_insert_count]";
-								$gmt_to_hopper[$rec_countLEADS] = "$REC_gmt_to_hopper[$REC_insert_count]";
-								$state_to_hopper[$rec_countLEADS] = "$REC_state_to_hopper[$REC_insert_count]";
-								$phone_to_hopper[$rec_countLEADS] = "$REC_phone_to_hopper[$REC_insert_count]";
-								$status_to_hopper[$rec_countLEADS] = "$REC_status_to_hopper[$REC_insert_count]";
-								$modify_to_hopper[$rec_countLEADS] = "$REC_modify_to_hopper[$REC_insert_count]";
-								$user_to_hopper[$rec_countLEADS] = "$REC_user_to_hopper[$REC_insert_count]";
+								$leads_to_hopper[$rec_countLEADS] =		$REC_leads_to_hopper[$REC_insert_count];
+								$lists_to_hopper[$rec_countLEADS] =		$REC_lists_to_hopper[$REC_insert_count];
+								$gmt_to_hopper[$rec_countLEADS] =		$REC_gmt_to_hopper[$REC_insert_count];
+								$state_to_hopper[$rec_countLEADS] =		$REC_state_to_hopper[$REC_insert_count];
+								$phone_to_hopper[$rec_countLEADS] =		$REC_phone_to_hopper[$REC_insert_count];
+								$status_to_hopper[$rec_countLEADS] =	$REC_status_to_hopper[$REC_insert_count];
+								$modify_to_hopper[$rec_countLEADS] =	$REC_modify_to_hopper[$REC_insert_count];
+								$user_to_hopper[$rec_countLEADS] =		$REC_user_to_hopper[$REC_insert_count];
 								$rec_countLEADS++;
 								$REC_insert_count++;
 								}
-							$leads_to_hopper[$rec_countLEADS] = "$aryA[0]";
-							$lists_to_hopper[$rec_countLEADS] = "$aryA[1]";
-							$gmt_to_hopper[$rec_countLEADS] = "$aryA[2]";
-							$state_to_hopper[$rec_countLEADS] = "$aryA[4]";
-							$phone_to_hopper[$rec_countLEADS] = "$aryA[3]";
-							$status_to_hopper[$rec_countLEADS] = "$aryA[5]";
-							$modify_to_hopper[$rec_countLEADS] = "$aryA[6]";
-							$user_to_hopper[$rec_countLEADS] = "$aryA[7]";
+							$leads_to_hopper[$rec_countLEADS] =		$aryA[0];
+							$lists_to_hopper[$rec_countLEADS] =		$aryA[1];
+							$gmt_to_hopper[$rec_countLEADS] =		$aryA[2];
+							$state_to_hopper[$rec_countLEADS] =		$aryA[4];
+							$phone_to_hopper[$rec_countLEADS] =		$aryA[3];
+							$status_to_hopper[$rec_countLEADS] =	$aryA[5];
+							$modify_to_hopper[$rec_countLEADS] =	$aryA[6];
+							$user_to_hopper[$rec_countLEADS] =		$aryA[7];
 							if ($DB_show_offset) {print "LEAD_ADD: $aryA[2] $aryA[3] $aryA[4]\n";}
 							$rec_countLEADS++;
 							$rec_count++;
@@ -1966,25 +1966,25 @@ foreach(@campaign_id)
 							@aryA = split(/_____/,$LM_results_SORT[$w]);
 							if ($REC_rec_countLEADS > $REC_insert_count)
 								{
-								$leads_to_hopper[$rec_countLEADS] = "$REC_leads_to_hopper[$REC_insert_count]";
-								$lists_to_hopper[$rec_countLEADS] = "$REC_lists_to_hopper[$REC_insert_count]";
-								$gmt_to_hopper[$rec_countLEADS] = "$REC_gmt_to_hopper[$REC_insert_count]";
-								$state_to_hopper[$rec_countLEADS] = "$REC_state_to_hopper[$REC_insert_count]";
-								$phone_to_hopper[$rec_countLEADS] = "$REC_phone_to_hopper[$REC_insert_count]";
-								$status_to_hopper[$rec_countLEADS] = "$REC_status_to_hopper[$REC_insert_count]";
-								$modify_to_hopper[$rec_countLEADS] = "$REC_modify_to_hopper[$REC_insert_count]";
-								$user_to_hopper[$rec_countLEADS] = "$REC_user_to_hopper[$REC_insert_count]";
+								$leads_to_hopper[$rec_countLEADS] =		$REC_leads_to_hopper[$REC_insert_count];
+								$lists_to_hopper[$rec_countLEADS] =		$REC_lists_to_hopper[$REC_insert_count];
+								$gmt_to_hopper[$rec_countLEADS] =		$REC_gmt_to_hopper[$REC_insert_count];
+								$state_to_hopper[$rec_countLEADS] =		$REC_state_to_hopper[$REC_insert_count];
+								$phone_to_hopper[$rec_countLEADS] =		$REC_phone_to_hopper[$REC_insert_count];
+								$status_to_hopper[$rec_countLEADS] =	$REC_status_to_hopper[$REC_insert_count];
+								$modify_to_hopper[$rec_countLEADS] =	$REC_modify_to_hopper[$REC_insert_count];
+								$user_to_hopper[$rec_countLEADS] =		$REC_user_to_hopper[$REC_insert_count];
 								$rec_countLEADS++;
 								$REC_insert_count++;
 								}
-							$leads_to_hopper[$rec_countLEADS] = "$aryA[1]";
-							$lists_to_hopper[$rec_countLEADS] = "$aryA[2]";
-							$gmt_to_hopper[$rec_countLEADS] = "$aryA[3]";
-							$phone_to_hopper[$rec_countLEADS] = "$aryA[4]";
-							$state_to_hopper[$rec_countLEADS] = "$aryA[5]";
-							$status_to_hopper[$rec_countLEADS] = "$aryA[6]";
-							$modify_to_hopper[$rec_countLEADS] = "$aryA[7]";
-							$user_to_hopper[$rec_countLEADS] = "$aryA[8]";
+							$leads_to_hopper[$rec_countLEADS] =		$aryA[1];
+							$lists_to_hopper[$rec_countLEADS] =		$aryA[2];
+							$gmt_to_hopper[$rec_countLEADS] =		$aryA[3];
+							$phone_to_hopper[$rec_countLEADS] =		$aryA[4];
+							$state_to_hopper[$rec_countLEADS] =		$aryA[5];
+							$status_to_hopper[$rec_countLEADS] =	$aryA[6];
+							$modify_to_hopper[$rec_countLEADS] =	$aryA[7];
+							$user_to_hopper[$rec_countLEADS] =		$aryA[8];
 							if ($DB_show_offset) {print "LEAD_ADD: $aryA[3] $aryA[4] $aryA[5]\n";}
 							if ($DBX) {print "     $w|$LM_results[$w]\n";}
 							$rec_countLEADS++;
@@ -1995,14 +1995,14 @@ foreach(@campaign_id)
 				### finish inserting any recycled leads if any
 				while ($REC_rec_countLEADS > $REC_insert_count)
 					{
-					$leads_to_hopper[$rec_countLEADS] = "$REC_leads_to_hopper[$REC_insert_count]";
-					$lists_to_hopper[$rec_countLEADS] = "$REC_lists_to_hopper[$REC_insert_count]";
-					$gmt_to_hopper[$rec_countLEADS] = "$REC_gmt_to_hopper[$REC_insert_count]";
-					$state_to_hopper[$rec_countLEADS] = "$REC_state_to_hopper[$REC_insert_count]";
-					$phone_to_hopper[$rec_countLEADS] = "$REC_phone_to_hopper[$REC_insert_count]";
-					$status_to_hopper[$rec_countLEADS] = "$REC_status_to_hopper[$REC_insert_count]";
-					$modify_to_hopper[$rec_countLEADS] = "$REC_modify_to_hopper[$REC_insert_count]";
-					$user_to_hopper[$rec_countLEADS] = "$REC_user_to_hopper[$REC_insert_count]";
+					$leads_to_hopper[$rec_countLEADS] =		$REC_leads_to_hopper[$REC_insert_count];
+					$lists_to_hopper[$rec_countLEADS] =		$REC_lists_to_hopper[$REC_insert_count];
+					$gmt_to_hopper[$rec_countLEADS] =		$REC_gmt_to_hopper[$REC_insert_count];
+					$state_to_hopper[$rec_countLEADS] =		$REC_state_to_hopper[$REC_insert_count];
+					$phone_to_hopper[$rec_countLEADS] =		$REC_phone_to_hopper[$REC_insert_count];
+					$status_to_hopper[$rec_countLEADS] =	$REC_status_to_hopper[$REC_insert_count];
+					$modify_to_hopper[$rec_countLEADS] =	$REC_modify_to_hopper[$REC_insert_count];
+					$user_to_hopper[$rec_countLEADS] =		$REC_user_to_hopper[$REC_insert_count];
 					$rec_countLEADS++;
 					$REC_insert_count++;
 					}
@@ -2149,6 +2149,12 @@ $dbhA->disconnect();
 
 if($DB)
 	{
+	if (length($ENDoutput) > 10)
+		{
+		print "\n";
+		print "SUMMARY:     $i campaigns\n";
+		print "$ENDoutput";
+		}
 	### calculate time to run script ###
 	$secY = time();
 	$secZ = ($secY - $secT);
