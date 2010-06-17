@@ -21,6 +21,7 @@
 # 100311-2210 - Added callcard_enabled Admin element
 # 100428-1039 - Added custom fields display
 # 100507-1339 - Added copy carrier submenu
+# 100616-2350 - Added VIDPROMPT call menu options
 #
 
 
@@ -625,13 +626,17 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 		if (selected_route=='INGROUP')
 			{
 			if (value_context.length < 10)
-				{value_context = 'CID,LB,998,TESTCAMP,1';}
-			var value_context_split = value_context.split(",");
-			var IGhandle_method =	value_context_split[0];
-			var IGsearch_method =	value_context_split[1];
-			var IGlist_id =			value_context_split[2];
-			var IGcampaign_id =		value_context_split[3];
-			var IGphone_code =		value_context_split[4];
+				{value_context = 'CID,LB,998,TESTCAMP,1,,,,';}
+			var value_context_split =		value_context.split(",");
+			var IGhandle_method =			value_context_split[0];
+			var IGsearch_method =			value_context_split[1];
+			var IGlist_id =					value_context_split[2];
+			var IGcampaign_id =				value_context_split[3];
+			var IGphone_code =				value_context_split[4];
+			var IGvid_enter_filename =		value_context_split[5];
+			var IGvid_id_number_filename =	value_context_split[6];
+			var IGvid_confirm_filename =	value_context_split[7];
+			var IGvid_validate_digits =		value_context_split[8];
 
 			if (route == selected_route)
 				{
@@ -651,6 +656,10 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 			new_content = new_content + '<BR>Campaign ID: <select size=1 name=IGcampaign_id_' + option + ' id=IGcampaign_id_' + option + '>';
 			new_content = new_content + '' + IGcampaign_id_list + "\n" + '<option SELECTED>' + IGcampaign_id + '</select>';
 			new_content = new_content + ' &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_' + option + ' id=IGphone_code_' + option + ' value="' + IGphone_code + '">';
+			new_content = new_content + "<BR> &nbsp; VID Enter Filename: <input type=text name=IGvid_enter_filename_" + option + " id=IGvid_enter_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_enter_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+			new_content = new_content + "<BR> &nbsp; VID ID Number Filename: <input type=text name=IGvid_id_number_filename_" + option + " id=IGvid_id_number_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_id_number_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+			new_content = new_content + "<BR> &nbsp; VID Confirm Filename: <input type=text name=IGvid_confirm_filename_" + option + " id=IGvid_confirm_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_confirm_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+			new_content = new_content + ' &nbsp; VID Digits: <input type=text size=3 maxlength=3 name=IGvid_validate_digits_' + option + ' id=IGvid_validate_digits_' + option + ' value="' + IGvid_validate_digits + '">';
 			}
 		if (selected_route=='DID')
 			{
@@ -785,14 +794,18 @@ if ( ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111
 		if (selected_route=='INGROUP')
 			{
 			if ( (route != selected_route) || (value.length < 10) )
-				{value = 'SALESLINE,CID,LB,998,TESTCAMP,1';}
+				{value = 'SALESLINE,CID,LB,998,TESTCAMP,1,,,,';}
 			var value_split = value.split(",");
-			var IGgroup_id =		value_split[0];
-			var IGhandle_method =	value_split[1];
-			var IGsearch_method =	value_split[2];
-			var IGlist_id =			value_split[3];
-			var IGcampaign_id =		value_split[4];
-			var IGphone_code =		value_split[5];
+			var IGgroup_id =				value_split[0];
+			var IGhandle_method =			value_split[1];
+			var IGsearch_method =			value_split[2];
+			var IGlist_id =					value_split[3];
+			var IGcampaign_id =				value_split[4];
+			var IGphone_code =				value_split[5];
+			var IGvid_enter_filename =		value_split[6];
+			var IGvid_id_number_filename =	value_split[7];
+			var IGvid_confirm_filename =	value_split[8];
+			var IGvid_validate_digits =		value_split[9];
 
 			if (route == selected_route)
 				{
@@ -810,6 +823,11 @@ if ( ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111
 			new_content = new_content + '<BR>Campaign ID: <select size=1 name=IGcampaign_id_' + option + ' id=IGcampaign_id_' + option + '>';
 			new_content = new_content + '' + IGcampaign_id_list + "\n" + '<option SELECTED>' + IGcampaign_id + '</select>';
 			new_content = new_content + ' &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_' + option + ' id=IGphone_code_' + option + ' value="' + IGphone_code + '">';
+		//	new_content = new_content + "<BR> &nbsp; VID Enter Filename: <input type=text name=IGvid_enter_filename_" + option + " id=IGvid_enter_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_enter_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+		//	new_content = new_content + "<BR> &nbsp; VID ID Number Filename: <input type=text name=IGvid_id_number_filename_" + option + " id=IGvid_id_number_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_id_number_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+		//	new_content = new_content + "<BR> &nbsp; VID Confirm Filename: <input type=text name=IGvid_confirm_filename_" + option + " id=IGvid_confirm_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_confirm_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+		//	new_content = new_content + ' &nbsp; VID Digits: <input type=text size=3 maxlength=3 name=IGvid_validate_digits_' + option + ' id=IGvid_validate_digits_' + option + ' value="' + IGvid_validate_digits + '">';
+
 			}
 		if (selected_route=='DID')
 			{

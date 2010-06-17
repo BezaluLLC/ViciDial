@@ -159,6 +159,9 @@ OTHER CHANGES:
 37. Added Agent API functions for Send DTMF, Park Customer and the Transfer 
 	Conference functions as well
 
+38. Added prompt options for in-group VIDPROMPT methods when initiated from Call
+	Menus
+
 
 
 

@@ -44,6 +44,10 @@
 # ; 10. the campaign_id to search within lists if CIDLOOKUPRC
 # ; 11. the user to queue the call to for AGENTDIRECT in-group calls
 # ; 12. vendor_lead_code if external mechanism like custom IVR is used to prompt user for ID
+# ; 13. VID enter prompt filename to play if method is set to a VID* option
+# ; 14. VID you-have-entered filename to play if method is set to a VID* option
+# ; 15. VID confirm prompt filename to play if method is set to a VID* option
+# ; 16. VID digit length validation to use if method is set to a VID* option, set to empty or X to disable
 #
 # ;inbound VICIDIAL calls:
 #exten => 1234,1,Answer                  ; Answer the line
@@ -130,6 +134,7 @@
 # 100513-2338 - Changed hold time callback filename to after press filename and now plays after all PRESS-1
 # 100518-0710 - Added call time after hours override options
 # 100527-0111 - Added on-hold and hold-time-option no-block options and message seconds, NA CID cleaning
+# 100616-1600 - Added VID filename and digit validation options
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -266,18 +271,22 @@ if (length($ARGV[0])>1)
 	### list of command-line array arguments:
 	@ARGV_vars = split(/-----/, $ARGV[0]);
 
-	$call_handle_method = 	$ARGV_vars[0];
-	$agent_search_method = 	$ARGV_vars[1];
-	$channel_group = 	$ARGV_vars[2];
-	$inbound_number = 	$ARGV_vars[3];
-	$parked_by = 		$ARGV_vars[4];
-	$park_extension = 	$ARGV_vars[5];
-	$status = 			$ARGV_vars[6];
-	$list_id = 			$ARGV_vars[7];
-	$phone_code = 		$ARGV_vars[8];
-	$Scampaign_id = 	$ARGV_vars[9];
-	$agent_only = 		$ARGV_vars[10];
-	$vendor_id = 		$ARGV_vars[11];
+	$call_handle_method = 		$ARGV_vars[0];
+	$agent_search_method = 		$ARGV_vars[1];
+	$channel_group = 			$ARGV_vars[2];
+	$inbound_number = 			$ARGV_vars[3];
+	$parked_by = 				$ARGV_vars[4];
+	$park_extension = 			$ARGV_vars[5];
+	$status = 					$ARGV_vars[6];
+	$list_id = 					$ARGV_vars[7];
+	$phone_code = 				$ARGV_vars[8];
+	$Scampaign_id = 			$ARGV_vars[9];
+	$agent_only = 				$ARGV_vars[10];
+	$vendor_id = 				$ARGV_vars[11];
+	$vid_enter_filename =		$ARGV_vars[12];
+	$vid_id_number_filename =	$ARGV_vars[13];
+	$vid_confirm_filename =		$ARGV_vars[14];
+	$vid_validate_digits =		$ARGV_vars[15];
 	}
 
 $|=1;
@@ -3668,35 +3677,143 @@ sub enter_pin_number
 	}
 
 
-# PROMPTS USED:
-# please_enter_id_number - "Please enter your ID Number followed by the # key
-# id_number - "Your ID number is"
-# confirm_id_number - "Press 1 if it is correct. Press 2 to repeat entry"
+### BEGIN VIDPROMPT gather of ID section ###
 sub enter_id_number
 	{
-	for ( $i = 0; $i < 2; $i++ ) 
-		{
-		$vendor_id = 0;
-		$id_number = $AGI->get_data('please_enter_id_number',5000,16);
-	
-		if ( length $id_number == 0 ) { return; }
-		if ($AGILOG) {$agi_string = "prompt id_number: $id_number";   &agi_output;}
+	# DEFAULT PROMPTS USED:
+	# please_enter_id_number - "Please enter your ID Number followed by the # key
+	# id_number - "Your ID number is"
+	# confirm_id_number - "Press 1 if it is correct. Press 2 to repeat entry"
+	$vid_validate_length=1;
+	$vendor_id='';
+	if (length($vid_enter_filename) < 1)	{$vid_enter_filename = 'please_enter_id_number';}
+	if (length($vid_id_number_filename) < 1){$vid_id_number_filename = 'id_number';}
+	if (length($vid_confirm_filename) < 1)	{$vid_confirm_filename = 'confirm_id_number';}
+	if (length($vid_validate_digits) < 1)	{$vid_validate_digits = 'X';   $vid_validate_length=0;}
+	if ($vid_validate_digits =~ /X/) {$vid_validate_digits=99;   $vid_validate_length=0;}
 
-		$AGI->stream_file('id_number');
-		$AGI->say_digits($id_number);
-	
-		$id_verify = $AGI->get_data('confirm_id_number',5000,1);
-		if( length $id_verify == 0 ) { return; }
-		if ($AGILOG) {$agi_string = "prompt verify id: $id_verify";   &agi_output;}
-		
-		if($id_verify == 1) 
+	if ($AGILOG) {$agi_string = "$call_handle_method method: |$vid_enter_filename|$vid_id_number_filename|$vid_confirm_filename|$vid_validate_digits|$vid_validate_length|";   &agi_output;}
+
+	$confirmation=0;
+	$confirmation_chances=0;
+	while ( ($confirmation_chances < 3) && ($confirmation < 1) )
+		{
+		$entry_chances=0;
+		$Lvendor_id=0;
+
+	if ($AGILOG) {$agi_string = "DEBUG------------------( ($entry_chances < 3) && ( ( ($Lvendor_id < 1) && ($vid_validate_length < 1) ) || ( ($Lvendor_id != $vid_validate_digits) && ($vid_validate_length > 0) ) ) )";   &agi_output;}
+
+
+		while ( ($entry_chances < 3) && ( ( ($Lvendor_id < 1) && ($vid_validate_length < 1) ) || ( ($Lvendor_id != $vid_validate_digits) && ($vid_validate_length > 0) ) ) ) 
 			{
+			$entry_chances++;
+			$digits_being_entered=1;
+			$id_number='';
+			$interrupt_digit='';
+			$interrupt_digit = $AGI->stream_file("$vid_enter_filename",'0123456789');   
+
+			if ($AGILOG) {$agi_string = "interrupt_digit |$interrupt_digit|";   &agi_output;}
+			if ($interrupt_digit > 0)
+				{
+			#	if ($interrupt_digit == 35) {$interrupt_digit='#';}
+			#	if ($interrupt_digit == 42) {$interrupt_digit='*';}
+				if ($interrupt_digit == 48) {$interrupt_digit=0;}
+				if ($interrupt_digit == 49) {$interrupt_digit=1;}
+				if ($interrupt_digit == 50) {$interrupt_digit=2;}
+				if ($interrupt_digit == 51) {$interrupt_digit=3;}
+				if ($interrupt_digit == 52) {$interrupt_digit=4;}
+				if ($interrupt_digit == 53) {$interrupt_digit=5;}
+				if ($interrupt_digit == 54) {$interrupt_digit=6;}
+				if ($interrupt_digit == 55) {$interrupt_digit=7;}
+				if ($interrupt_digit == 56) {$interrupt_digit=8;}
+				if ($interrupt_digit == 57) {$interrupt_digit=9;}
+				
+				$id_number=$interrupt_digit;
+				}
+
+			$digit_loop_counter=0;
+			while ($digits_being_entered > 0)
+				{
+				$digit = chr($AGI->wait_for_digit('5000'));  # wait 5 seconds for input or until the pound key is pressed
+				if ($digit =~ /\d/)
+					{
+					$id_number = "$id_number$digit";
+					if ($AGILOG) {$agi_string = "digit |$digit|     id_number |$id_number|";   &agi_output;}
+					undef $digit;
+					}
+				else
+					{
+					$digits_being_entered=0;
+					}
+				$Lid_number = length($id_number);
+				if ($Lid_number >= $vid_validate_digits) 
+					{
+					$digits_being_entered=0;
+					}
+				
+				$digit_loop_counter++;
+				}
+
+			$id_number =~ s/\D//gi;
 			$vendor_id = $id_number;
-			return; 
+			$Lvendor_id = length($vendor_id);
 			}
+
+		$AGI->stream_file("$vid_id_number_filename");
+		$AGI->say_digits("$vendor_id");
+
+		### if vendor_id has been set, ask to confirm it
+		if (length($vendor_id) > 0)
+			{
+			$interrupt_digit = $AGI->stream_file("$vid_confirm_filename",'12');   
+
+			if ($AGILOG) {$agi_string = "interrupt_digit |$interrupt_digit|";   &agi_output;}
+			$digits_being_entered=1;
+			$ANSWER_confirm='';
+			if ($interrupt_digit > 0)
+				{
+				if ($interrupt_digit == 49) {$interrupt_digit=1;}
+				if ($interrupt_digit == 50) {$interrupt_digit=2;}
+				$ANSWER_confirm=$interrupt_digit;
+				}
+
+			if (length($ANSWER_confirm) < 1)
+				{
+				$digit_loop_counter=0;
+				while ( ($digits_being_entered > 0) && ($digit_loop_counter < 1) )
+					{
+					$digit = chr($AGI->wait_for_digit('5000'));  # wait 5 seconds for input
+					if ($digit =~ /\d/)
+						{
+						$ANSWER_confirm = "$ANSWER_confirm$digit";
+						if ($AGILOG) {$agi_string = "digit |$digit|     ANSWER_confirm |$ANSWER_confirm|";   &agi_output;}
+						undef $digit;
+						}
+					else
+						{
+						$digits_being_entered=0;
+						}
+					
+					$digit_loop_counter++;
+					}
+				}
+
+			$ANSWER_confirm =~ s/\D//gi;
+
+			if ($ANSWER_confirm > 1)
+				{$vendor_id='';}
+			if ( ($ANSWER_confirm > 0) && ($ANSWER_confirm < 2) )
+				{$confirmation=1;}
+			}
+		if ($confirmation < 1) 
+			{
+			$AGI->stream_file('buzz');
+			}
+		$confirmation_chances++;
 		}
 	}
- 
+### END VIDPROMPT gather of ID section ###
+
 
 sub press_one_hold_time_option_prompt
 	{

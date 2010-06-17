@@ -1675,7 +1675,7 @@ option_value VARCHAR(20) NOT NULL default '',
 option_description VARCHAR(255) default '',
 option_route VARCHAR(20),
 option_route_value VARCHAR(255),
-option_route_value_context VARCHAR(100),
+option_route_value_context VARCHAR(1000),
 index (menu_id),
 unique index menuoption (menu_id, option_value)
 );
@@ -2248,7 +2248,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1225',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1226',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

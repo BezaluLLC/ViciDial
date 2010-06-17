@@ -295,10 +295,11 @@
 # 100513-0714 - Added options.php option to hide the timeclock link
 # 100513-2337 - Changed user_login_first to attempt full login if phone_login/pass are filled in
 # 100527-2212 - Added API send_dtmf, transfer_conference and park_call functions
+# 100616-1622 - Allowed longer manual dial numbers
 #
 
-$version = '2.4-273';
-$build = '100527-2212';
+$version = '2.4-274';
+$build = '100616-1622';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -11823,7 +11824,7 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 	</tr><tr>
 	<td align=right><font class="body_text"> Phone Number: </td>
 	<td align=left><font class="body_text">
-	<input type=text size=14 maxlength=12 name=MDPhonENumbeR id=MDPhonENumbeR class="cust_form" value="">&nbsp; (12 digits max - digits only)
+	<input type=text size=14 maxlength=18 name=MDPhonENumbeR id=MDPhonENumbeR class="cust_form" value="">&nbsp; (digits only)
 	</td>
 	</tr><tr>
 	<td align=right><font class="body_text"> Search Existing Leads: </td>

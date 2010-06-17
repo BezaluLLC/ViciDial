@@ -355,3 +355,7 @@ ALTER TABLE vicidial_live_agents ADD external_transferconf VARCHAR(100) default 
 ALTER TABLE vicidial_live_agents ADD external_park VARCHAR(40) default '';
 
 UPDATE system_settings SET db_schema_version='1225',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_call_menu_options MODIFY option_route_value_context VARCHAR(1000);
+
+UPDATE system_settings SET db_schema_version='1226',db_schema_update_date=NOW();

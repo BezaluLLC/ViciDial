@@ -51,6 +51,7 @@
 # 100225-2020 - Change voicemail configuration to use voicemail.conf
 # 100312-1012 - Changed TIMEOUT Call Menu function to work with AGI routes
 # 100424-2121 - Added codecs options for phones
+# 100616-2245 - Added VIDPROMPT options for call menus, changed INGROUP TIMECHECK routes to special extension like AGI
 #
 
 $DB=0; # Debug flag
@@ -1492,6 +1493,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 	$i=0;
 	$call_menu_ext = '';
+	$CM_agi_string='';
 	while ($sthArows > $i)
 		{
 		$stmtA = "SELECT option_value,option_description,option_route,option_route_value,option_route_value_context FROM vicidial_call_menu_options where menu_id='$menu_id[$i]' order by option_value;";
@@ -1532,6 +1534,22 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				$time_check_route =				$option_route[$j];
 				$time_check_route_value =		$option_route_value[$j];
 				$time_check_route_context =		$option_route_value_context[$j];
+
+				if ($option_route[$j] =~ /INGROUP/)
+					{
+					@IGoption_route_value_context = split(/,/,$option_route_value_context[$j]);
+					$IGhandle_method =			$IGoption_route_value_context[0];
+					$IGsearch_method =			$IGoption_route_value_context[1];
+					$IGlist_id =				$IGoption_route_value_context[2];
+					$IGcampaign_id =			$IGoption_route_value_context[3];
+					$IGphone_code =				$IGoption_route_value_context[4];
+					$IGvid_enter_filename =		$IGoption_route_value_context[5];
+					$IGvid_id_number_filename =	$IGoption_route_value_context[6];
+					$IGvid_confirm_filename =	$IGoption_route_value_context[7];
+					$IGvid_validate_digits =	$IGoption_route_value_context[8];
+
+					$CM_agi_string = "agi-VDAD_ALL_inbound.agi,$IGhandle_method-----$IGsearch_method-----$option_route_value[$j]-----$menu_id[$i]--------------------$IGlist_id-----$IGphone_code-----$IGcampaign_id---------------$IGvid_enter_filename-----$IGvid_id_number_filename-----$IGvid_confirm_filename-----$IGvid_validate_digits";
+					}
 				}
 			else
 				{
@@ -1612,13 +1630,17 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				if ($option_route[$j] =~ /INGROUP/)
 					{
 					@IGoption_route_value_context = split(/,/,$option_route_value_context[$j]);
-					$IGhandle_method =	$IGoption_route_value_context[0];
-					$IGsearch_method =	$IGoption_route_value_context[1];
-					$IGlist_id =		$IGoption_route_value_context[2];
-					$IGcampaign_id =	$IGoption_route_value_context[3];
-					$IGphone_code =		$IGoption_route_value_context[4];
+					$IGhandle_method =			$IGoption_route_value_context[0];
+					$IGsearch_method =			$IGoption_route_value_context[1];
+					$IGlist_id =				$IGoption_route_value_context[2];
+					$IGcampaign_id =			$IGoption_route_value_context[3];
+					$IGphone_code =				$IGoption_route_value_context[4];
+					$IGvid_enter_filename =		$IGoption_route_value_context[5];
+					$IGvid_id_number_filename =	$IGoption_route_value_context[6];
+					$IGvid_confirm_filename =	$IGoption_route_value_context[7];
+					$IGvid_validate_digits =	$IGoption_route_value_context[8];
 
-					$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(agi-VDAD_ALL_inbound.agi,$IGhandle_method-----$IGsearch_method-----$option_route_value[$j]-----$menu_id[$i]--------------------$IGlist_id-----$IGphone_code-----$IGcampaign_id)\n";
+					$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(agi-VDAD_ALL_inbound.agi,$IGhandle_method-----$IGsearch_method-----$option_route_value[$j]-----$menu_id[$i]--------------------$IGlist_id-----$IGphone_code-----$IGcampaign_id---------------$IGvid_enter_filename-----$IGvid_id_number_filename-----$IGvid_confirm_filename-----$IGvid_validate_digits)\n";
 					}
 				if ($option_route[$j] =~ /EXTENSION/)
 					{
@@ -1727,6 +1749,15 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			{
 			$call_menu_options_ext .= "; time check after hours AGI special extension\n";
 			$call_menu_options_ext .= "exten => 9999999999999999999988,1,AGI($time_check_route_value)\n";
+
+			$time_check_route = 'EXTENSION';
+			$time_check_route_value = '9999999999999999999988';
+			$time_check_route_context = $menu_id[$i];
+			}
+		if ($time_check_route =~ /INGROUP/)
+			{
+			$call_menu_options_ext .= "; time check after hours INGROUP special extension\n";
+			$call_menu_options_ext .= "exten => 9999999999999999999988,1,AGI($CM_agi_string)\n";
 
 			$time_check_route = 'EXTENSION';
 			$time_check_route_value = '9999999999999999999988';

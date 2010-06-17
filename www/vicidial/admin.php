@@ -2249,11 +2249,12 @@ else
 # 100512-1615 - Added more hold time press-1 options
 # 100518-0643 - Added inbound_queue_no_dial and call time after hours override features
 # 100523-0840 - Added inbound prompt and no-block options
+# 100616-2232 - Added VIDPROMPT call menu options
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-256';
-$build = '100523-0840';
+$admin_version = '2.4-257';
+$build = '100616-2232';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -12957,18 +12958,26 @@ if ($ADD==4511)
 
 				if ($option_route == "INGROUP")
 					{
-					if (isset($_GET["IGhandle_method_$h"]))				{$IGhandle_method=$_GET["IGhandle_method_$h"];}
-						elseif (isset($_POST["IGhandle_method_$h"]))	{$IGhandle_method=$_POST["IGhandle_method_$h"];}
-					if (isset($_GET["IGsearch_method_$h"]))				{$IGsearch_method=$_GET["IGsearch_method_$h"];}
-						elseif (isset($_POST["IGsearch_method_$h"]))	{$IGsearch_method=$_POST["IGsearch_method_$h"];}
-					if (isset($_GET["IGlist_id_$h"]))					{$IGlist_id=$_GET["IGlist_id_$h"];}
-						elseif (isset($_POST["IGlist_id_$h"]))			{$IGlist_id=$_POST["IGlist_id_$h"];}
-					if (isset($_GET["IGcampaign_id_$h"]))				{$IGcampaign_id=$_GET["IGcampaign_id_$h"];}
-						elseif (isset($_POST["IGcampaign_id_$h"]))		{$IGcampaign_id=$_POST["IGcampaign_id_$h"];}
-					if (isset($_GET["IGphone_code_$h"]))				{$IGphone_code=$_GET["IGphone_code_$h"];}
-						elseif (isset($_POST["IGphone_code_$h"]))		{$IGphone_code=$_POST["IGphone_code_$h"];}
+					if (isset($_GET["IGhandle_method_$h"]))						{$IGhandle_method=$_GET["IGhandle_method_$h"];}
+						elseif (isset($_POST["IGhandle_method_$h"]))			{$IGhandle_method=$_POST["IGhandle_method_$h"];}
+					if (isset($_GET["IGsearch_method_$h"]))						{$IGsearch_method=$_GET["IGsearch_method_$h"];}
+						elseif (isset($_POST["IGsearch_method_$h"]))			{$IGsearch_method=$_POST["IGsearch_method_$h"];}
+					if (isset($_GET["IGlist_id_$h"]))							{$IGlist_id=$_GET["IGlist_id_$h"];}
+						elseif (isset($_POST["IGlist_id_$h"]))					{$IGlist_id=$_POST["IGlist_id_$h"];}
+					if (isset($_GET["IGcampaign_id_$h"]))						{$IGcampaign_id=$_GET["IGcampaign_id_$h"];}
+						elseif (isset($_POST["IGcampaign_id_$h"]))				{$IGcampaign_id=$_POST["IGcampaign_id_$h"];}
+					if (isset($_GET["IGphone_code_$h"]))						{$IGphone_code=$_GET["IGphone_code_$h"];}
+						elseif (isset($_POST["IGphone_code_$h"]))				{$IGphone_code=$_POST["IGphone_code_$h"];}
+					if (isset($_GET["IGvid_enter_filename_$h"]))				{$IGvid_enter_filename=$_GET["IGvid_enter_filename_$h"];}
+						elseif (isset($_POST["IGvid_enter_filename_$h"]))		{$IGvid_enter_filename=$_POST["IGvid_enter_filename_$h"];}
+					if (isset($_GET["IGvid_id_number_filename_$h"]))			{$IGvid_id_number_filename=$_GET["IGvid_id_number_filename_$h"];}
+						elseif (isset($_POST["IGvid_id_number_filename_$h"]))	{$IGvid_id_number_filename=$_POST["IGvid_id_number_filename_$h"];}
+					if (isset($_GET["IGvid_confirm_filename_$h"]))				{$IGvid_confirm_filename=$_GET["IGvid_confirm_filename_$h"];}
+						elseif (isset($_POST["IGvid_confirm_filename_$h"]))		{$IGvid_confirm_filename=$_POST["IGvid_confirm_filename_$h"];}
+					if (isset($_GET["IGvid_validate_digits_$h"]))				{$IGvid_validate_digits=$_GET["IGvid_validate_digits_$h"];}
+						elseif (isset($_POST["IGvid_validate_digits_$h"]))		{$IGvid_validate_digits=$_POST["IGvid_validate_digits_$h"];}
 
-					$option_route_value_context = "$IGhandle_method,$IGsearch_method,$IGlist_id,$IGcampaign_id,$IGphone_code";
+					$option_route_value_context = "$IGhandle_method,$IGsearch_method,$IGlist_id,$IGcampaign_id,$IGphone_code,$IGvid_enter_filename,$IGvid_id_number_filename,$IGvid_confirm_filename,$IGvid_validate_digits";
 					}
 
 				if ($non_latin < 1)
@@ -21134,13 +21143,18 @@ if ($ADD==3511)
 			if ($option_route=='INGROUP')
 				{
 				if (strlen($option_route_value_context) < 10)
-					{$option_route_value_context = 'CID,LB,998,TESTCAMP,1';}
+					{$option_route_value_context = 'CID,LB,998,TESTCAMP,1,,,,';}
 				$IGoption_route_value_context = explode(",",$option_route_value_context);
-				$IGhandle_method =	$IGoption_route_value_context[0];
-				$IGsearch_method =	$IGoption_route_value_context[1];
-				$IGlist_id =		$IGoption_route_value_context[2];
-				$IGcampaign_id =	$IGoption_route_value_context[3];
-				$IGphone_code =		$IGoption_route_value_context[4];
+				$IGhandle_method =			$IGoption_route_value_context[0];
+				$IGsearch_method =			$IGoption_route_value_context[1];
+				$IGlist_id =				$IGoption_route_value_context[2];
+				$IGcampaign_id =			$IGoption_route_value_context[3];
+				$IGphone_code =				$IGoption_route_value_context[4];
+				$IGvid_enter_filename =		$IGoption_route_value_context[5];
+				$IGvid_id_number_filename =	$IGoption_route_value_context[6];
+				$IGvid_confirm_filename =	$IGoption_route_value_context[7];
+				$IGvid_validate_digits =	$IGoption_route_value_context[8];
+
 				echo "<span name=option_route_link_$j id=option_route_link_$j>";
 				echo "<a href=\"$PHP_SELF?ADD=3111&group_id=$option_route_value\">In-Group:</a>";
 				echo "</span>";
@@ -21155,6 +21169,10 @@ if ($ADD==3511)
 				echo "<BR>Campaign ID: <select size=1 name=IGcampaign_id_$j id=IGcampaign_id_$j>";
 				echo "$IGcampaign_id_list<option SELECTED>$IGcampaign_id</option></select>\n";
 				echo " &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_$j id=IGphone_code_$j value=\"$IGphone_code\">";
+				echo "<BR> &nbsp; VID Enter Filename: <input type=text name=IGvid_enter_filename_$j id=IGvid_enter_filename_$j size=40 maxlength=255 value=\"$IGvid_enter_filename\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_$j','date',$choose_height);\">audio chooser</a>";
+				echo "<BR> &nbsp; VID ID Number Filename: <input type=text name=IGvid_id_number_filename_$j id=IGvid_id_number_filename_$j size=40 maxlength=255 value=\"$IGvid_id_number_filename\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_$j','date',$choose_height);\">audio chooser</a>";
+				echo "<BR> &nbsp; VID Confirm Filename: <input type=text name=IGvid_confirm_filename_$j id=IGvid_confirm_filename_$j size=40 maxlength=255 value=\"$IGvid_confirm_filename\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_$j','date',$choose_height);\">audio chooser</a>";
+				echo " &nbsp; VID Digits: <input type=text size=3 maxlength=3 name=IGvid_validate_digits_$j id=IGvid_validate_digits_$j value=\"$IGvid_validate_digits\">";
 				}
 			if ($option_route=='DID')
 				{
