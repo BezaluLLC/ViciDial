@@ -203,6 +203,14 @@ Setting this option to Y will allow calls in line behind a call where the Hold T
 Hold Time Option Press Filename Seconds||
 This field needs to be set to the number of seconds that the Hold Time Option Press Filename plays for. Default is 10||
 CallCard Generate New Numbers||
+Call Menu In-Group Settings||
+If the route is set to INGROUP then there are many options that you can set to define how the call is sent to into the queue. In-Group is the inbound group that you want the call to go to. Handle Method is the way you want the call to be handled||
+Click here to see a list of the available handle methods||
+VID Enter Filename||
+VID ID Number Filename||
+VID Confirm Filename||
+VID Digits||
+Search Method defines how the queue will find the next agent, recommend leave this on LB. List ID is the list that the new lead is inserted into, also if the Method is not a LOOKUP method and the lead is not found. Campaign ID is the campaign to search lists through if one of the RC methods is used. Phone Code is the phone_code field entry for the lead that is inserted with. VID Enter Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played to ask the customer to enter their ID. VID ID Number Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played after customer enters their ID, something like YOU HAVE ENTERED. VID Confirm Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played to confirm their ID, something like PRESS 1 TO CONFIRM AND 2 TO REENTER. VID Digits is used if the Method is set to one of the VIDPROMPT methods, if it is set to a number it is the number of digits that must be ebtered by the customer when prompted for their ID, if set to empty or X then the customer will have to press pound or hash to finish their entry of their ID||
 
 
 AST_VICIDIAL_ingrouplist.php

@@ -4985,6 +4985,11 @@ if ($ADD==99999)
 	<B>Option Route Value Context -</B> This field is optional and only used for EXTENSION Option Routes.
 
 	<BR>
+	<A NAME="vicidial_call_menu-ingroup_settings">
+	<BR>
+	<B>Call Menu In-Group Settings -</B> If the route is set to INGROUP then there are many options that you can set to define how the call is sent to into the queue. In-Group is the inbound group that you want the call to go to. Handle Method is the way you want the call to be handled, <a href="#vicidial_inbound_dids-call_handle_method">Click here to see a list of the available handle methods</a>. Search Method defines how the queue will find the next agent, recommend leave this on LB. List ID is the list that the new lead is inserted into, also if the Method is not a LOOKUP method and the lead is not found. Campaign ID is the campaign to search lists through if one of the RC methods is used. Phone Code is the phone_code field entry for the lead that is inserted with. VID Enter Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played to ask the customer to enter their ID. VID ID Number Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played after customer enters their ID, something like YOU HAVE ENTERED. VID Confirm Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played to confirm their ID, something like PRESS 1 TO CONFIRM AND 2 TO REENTER. VID Digits is used if the Method is set to one of the VIDPROMPT methods, if it is set to a number it is the number of digits that must be ebtered by the customer when prompted for their ID, if set to empty or X then the customer will have to press pound or hash to finish their entry of their ID.
+
+	<BR>
 	<A NAME="vicidial_call_menu-custom_dialplan_entry">
 	<BR>
 	<B>Custom Dialplan Entry -</B> This field allows you to enter in any dialplan elements that you want for the Call Menu.
@@ -21162,7 +21167,7 @@ if ($ADD==3511)
 				echo " <select size=1 name=option_route_value_$j id=option_route_value_$j onChange=\"call_menu_link('$j','INGROUP');\">";
 				echo "$ingroup_list<option SELECTED>$option_route_value</option></select>";
 				echo " &nbsp; Handle Method: <select size=1 name=IGhandle_method_$j id=IGhandle_method_$j>";
-				echo "$IGhandle_method_list<option SELECTED>$IGhandle_method</option></select>\n";
+				echo "$IGhandle_method_list<option SELECTED>$IGhandle_method</option></select> $NWB#vicidial_call_menu-ingroup_settings$NWE\n";
 				echo "<BR>Search Method: <select size=1 name=IGsearch_method_$j id=IGsearch_method_$j>";
 				echo "$IGsearch_method_list<option SELECTED>$IGsearch_method</option></select>\n";
 				echo " &nbsp; List ID: <input type=text size=5 maxlength=14 name=IGlist_id_$j id=IGlist_id_$j value=\"$IGlist_id\">";

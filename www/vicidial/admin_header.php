@@ -650,6 +650,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 			new_content = new_content + '' + ingroup_list + "\n" + selected_value + '</select>';
 			new_content = new_content + ' &nbsp; Handle Method: <select size=1 name=IGhandle_method_' + option + ' id=IGhandle_method_' + option + '>';
 			new_content = new_content + '' + IGhandle_method_list + "\n" + '<option SELECTED>' + IGhandle_method + '</select>';
+			new_content = new_content + ' &nbsp; <a href="javascript:openNewWindow(\'admin.php?ADD=99999#vicidial_call_menu-ingroup_settings\')"><IMG SRC="help.gif" WIDTH=20 HEIGHT=20 BORDER=0 ALT="HELP" ALIGN=TOP></a>';
 			new_content = new_content + '<BR>Search Method: <select size=1 name=IGsearch_method_' + option + ' id=IGsearch_method_' + option + '>';
 			new_content = new_content + '' + IGsearch_method_list + "\n" + '<option SELECTED>' + IGsearch_method + '</select>';
 			new_content = new_content + ' &nbsp; List ID: <input type=text size=5 maxlength=14 name=IGlist_id_' + option + ' id=IGlist_id_' + option + ' value="' + IGlist_id + '">';
