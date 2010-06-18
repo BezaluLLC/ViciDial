@@ -34,6 +34,7 @@
 # 90721-1246 - Added rank and owner as vicidial_list fields
 # 90917-2355 - Added extended alt phone entries
 # 100405-1333 - Changed to show logs of non-found leads
+# 100618-0148 - Added Middle name modify and fixes statuses list
 #
 
 require("dbconnect.php");
@@ -51,6 +52,8 @@ if (isset($_GET["lead_id"]))				{$lead_id=$_GET["lead_id"];}
 	elseif (isset($_POST["lead_id"]))		{$lead_id=$_POST["lead_id"];}
 if (isset($_GET["first_name"]))				{$first_name=$_GET["first_name"];}
 	elseif (isset($_POST["first_name"]))		{$first_name=$_POST["first_name"];}
+if (isset($_GET["middle_initial"]))				{$middle_initial=$_GET["middle_initial"];}
+	elseif (isset($_POST["middle_initial"]))	{$middle_initial=$_POST["middle_initial"];}
 if (isset($_GET["last_name"]))				{$last_name=$_GET["last_name"];}
 	elseif (isset($_POST["last_name"]))		{$last_name=$_POST["last_name"];}
 if (isset($_GET["phone_number"]))				{$phone_number=$_GET["phone_number"];}
@@ -225,7 +228,7 @@ echo "<a href=\"./admin.php?ADD=100\">ADMINISTRATION</a>: Lead record modificati
 if ($end_call > 0)
 	{
 	### update the lead record in the vicidial_list table 
-	$stmt="UPDATE vicidial_list set status='" . mysql_real_escape_string($status) . "',first_name='" . mysql_real_escape_string($first_name) . "',last_name='" . mysql_real_escape_string($last_name) . "',address1='" . mysql_real_escape_string($address1) . "',address2='" . mysql_real_escape_string($address2) . "',address3='" . mysql_real_escape_string($address3) . "',city='" . mysql_real_escape_string($city) . "',state='" . mysql_real_escape_string($state) . "',province='" . mysql_real_escape_string($province) . "',postal_code='" . mysql_real_escape_string($postal_code) . "',country_code='" . mysql_real_escape_string($country_code) . "',alt_phone='" . mysql_real_escape_string($alt_phone) . "',phone_number='$phone_number',email='" . mysql_real_escape_string($email) . "',security_phrase='" . mysql_real_escape_string($security) . "',comments='" . mysql_real_escape_string($comments) . "',rank='" . mysql_real_escape_string($rank) . "',owner='" . mysql_real_escape_string($owner) . "' where lead_id='" . mysql_real_escape_string($lead_id) . "'";
+	$stmt="UPDATE vicidial_list set status='" . mysql_real_escape_string($status) . "',first_name='" . mysql_real_escape_string($first_name) . "',middle_initial='" . mysql_real_escape_string($middle_initial) . "',last_name='" . mysql_real_escape_string($last_name) . "',address1='" . mysql_real_escape_string($address1) . "',address2='" . mysql_real_escape_string($address2) . "',address3='" . mysql_real_escape_string($address3) . "',city='" . mysql_real_escape_string($city) . "',state='" . mysql_real_escape_string($state) . "',province='" . mysql_real_escape_string($province) . "',postal_code='" . mysql_real_escape_string($postal_code) . "',country_code='" . mysql_real_escape_string($country_code) . "',alt_phone='" . mysql_real_escape_string($alt_phone) . "',phone_number='$phone_number',email='" . mysql_real_escape_string($email) . "',security_phrase='" . mysql_real_escape_string($security) . "',comments='" . mysql_real_escape_string($comments) . "',rank='" . mysql_real_escape_string($rank) . "',owner='" . mysql_real_escape_string($owner) . "' where lead_id='" . mysql_real_escape_string($lead_id) . "'";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_query($stmt, $link);
 
@@ -529,6 +532,7 @@ else
 	echo "<tr><td colspan=2>Vendor ID: $vendor_id &nbsp; &nbsp; Lead ID: $lead_id</td></tr>\n";
 	echo "<tr><td colspan=2>Fronter: <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; List ID: $list_id</td></tr>\n";
 	echo "<tr><td align=right>First Name: </td><td align=left><input type=text name=first_name size=15 maxlength=30 value=\"$first_name\"> &nbsp; \n";
+	echo " MI: <input type=text name=middle_initial size=2 maxlength=1 value=\"$middle_initial\"> &nbsp; \n";
 	echo " Last Name: <input type=text name=last_name size=15 maxlength=30 value=\"$last_name\"> </td></tr>\n";
 	echo "<tr><td align=right>Address 1 : </td><td align=left><input type=text name=address1 size=30 maxlength=30 value=\"$address1\"></td></tr>\n";
 	echo "<tr><td align=right>Address 2 : </td><td align=left><input type=text name=address2 size=30 maxlength=30 value=\"$address2\"></td></tr>\n";
@@ -548,6 +552,18 @@ else
 	echo "<tr><td align=right>Comments : </td><td align=left><TEXTAREA name=comments ROWS=3 COLS=65>$comments</TEXTAREA></td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Disposition: </td><td align=left><select size=1 name=status>\n";
 
+
+	$list_campaign='';
+	$stmt="SELECT campaign_id from vicidial_lists where list_id='$list_id'";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$Cstatuses_to_print = mysql_num_rows($rslt);
+	if ($Cstatuses_to_print > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$list_campaign = $row[0];
+		}
+
 	$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses where selectable='Y' order by status";
 	$rslt=mysql_query($stmt, $link);
 	$statuses_to_print = mysql_num_rows($rslt);
@@ -565,7 +581,7 @@ else
 		$o++;
 		}
 
-	$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where selectable='Y' and campaign_id='$log_campaign' order by status";
+	$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where selectable='Y' and campaign_id='$list_campaign' order by status";
 	$rslt=mysql_query($stmt, $link);
 	$CAMPstatuses_to_print = mysql_num_rows($rslt);
 
@@ -583,7 +599,7 @@ else
 
 	if ($DS < 1) {$statuses_list .= "<option SELECTED value=\"$dispo\">$dispo</option>\n";}
 	echo "$statuses_list";
-	echo "</select> <i>(with $log_campaign statuses)</i></td></tr>\n";
+	echo "</select> <i>(with $list_campaign statuses)</i></td></tr>\n";
 
 
 	echo "<tr bgcolor=#B6D3FC><td align=left>Modify vicidial log </td><td align=left><input type=checkbox name=modify_logs value=\"1\" CHECKED></td></tr>\n";

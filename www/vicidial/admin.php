@@ -20949,7 +20949,7 @@ if ($ADD==3311)
 		echo "<option SELECTED>$server_ip</option>\n";
 		echo "</select>$NWB#vicidial_inbound_dids-server_ip$NWE</td></tr>\n";
 
-		$stmt="select menu_id,menu_name,menu_prompt from vicidial_call_menu;";
+		$stmt="select menu_id,menu_name,menu_prompt from vicidial_call_menu order by menu_id;";
 		$rslt=mysql_query($stmt, $link);
 		$menus_to_print = mysql_num_rows($rslt);
 		$menu_list='';
