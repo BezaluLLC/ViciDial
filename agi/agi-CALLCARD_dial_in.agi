@@ -20,6 +20,7 @@
 # ; 1. language
 # ; 	- en -			English <default>
 # ; 	- es -			Spanish
+# ; 	- fr -			French, not fully supported
 # ; 2. maximum attempts before hangup:
 # ; 	- 3        <default>
 # ; 3. audio file enter pin number prompt:
@@ -131,8 +132,23 @@ if (length($ARGV[0])>1)
 	if (length($ARGV_vars[3]) > 0) {$pin_invalid_audio = 	$ARGV_vars[3];}
 	if (length($ARGV_vars[4]) > 0) {$did_ingroup_settings = $ARGV_vars[4];}
 	}
-if ($language =~ /es/) {$audio_suffix='_es';}
-else {$audio_suffix='';}
+if ($language =~ /es/) 
+	{
+	$audio_suffix='_es';
+	$AGI->exec("EXEC Set(CHANNEL(language)=$language)");
+#	$AGI->exec("SetLanguage($language)");
+	$AGI->stream_file('sip-silence');
+	$AGI->stream_file('sip-silence');
+	}
+if ($language =~ /fr/) 
+	{
+	$audio_suffix='_fr';
+	$AGI->exec("EXEC Set(CHANNEL(language)=$language)");
+#	$AGI->exec("SetLanguage($language)");
+	$AGI->stream_file('sip-silence');
+	$AGI->stream_file('sip-silence');
+	}
+if ($language !~ /es|fr/) {$audio_suffix='';}
 
 
 $|=1;
@@ -302,10 +318,7 @@ else
 
 	##### play customer's balance to them before transferring
 	$AGI->stream_file("vm-youhave$audio_suffix");
-	if ($language=='es')
-		{$AGI->stream_file("$balance_minutes$audio_suffix");}
-	else
-		{$AGI->say_number("$balance_minutes");}
+	$AGI->say_number("$balance_minutes");
 	$AGI->stream_file("callcard_minutes_left$audio_suffix");
 
 

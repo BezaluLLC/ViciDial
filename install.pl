@@ -2302,7 +2302,7 @@ if ($WEBONLY < 1)
 	`chmod 0755 $PATHagi/*`;
 
 	print "Copying sounds to $PATHsounds...\n";
-	`cp -f ./sounds/* $PATHsounds/`;
+	`cp -fR ./sounds/* $PATHsounds/`;
 
 	print "Copying ip_relay scripts to $PATHhome...\n";
 	`cp -fR ./extras/ip_relay $PATHhome/`;
