@@ -676,7 +676,7 @@ if ($action == "GENERATE_RESULTS")
 						}
 
 					### insert card_id and pin into tables
-					$stmt="INSERT INTO callcard_accounts SET card_id='$Pcard_id',pin='$Ppin',status='GENERATE';";
+					$stmt="INSERT INTO callcard_accounts SET card_id='$Pcard_id',pin='$Ppin',status='GENERATE',balance_minutes='$balance_minutes';";
 					$rslt=mysql_query($stmt, $link);
 
 					$stmt="INSERT INTO callcard_accounts_details SET card_id='$Pcard_id',status='GENERATE',run='$run',pack='',batch='$Pbatch',sequence='$Psequence',balance_minutes='$balance_minutes',initial_value='$initial_value',initial_minutes='$initial_minutes',note_purchase_order='$note_purchase_order',note_printer='$note_printer',note_did='$note_did',inbound_group_id='$inbound_group_id',note_language='$note_language',note_name='$note_name',note_comments='$note_comments',create_time='$NOW_TIME',create_user='$USER';";
