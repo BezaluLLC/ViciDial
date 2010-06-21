@@ -30,11 +30,12 @@
 # 90721-1339 - Added rank and owner as vicidial_list fields
 # 91112-0616 - Added title/alt-phone duplicate checking
 # 100118-0543 - Added new Australian and New Zealand DST schemes (FSO-FSA and LSS-FSA)
+# 100621-1026 - Added admin_web_directory variable
 #
 # make sure vicidial_list exists and that your file follows the formatting correctly. This page does not dedupe or do any other lead filtering actions yet at this time.
 
-$version = '2.2.0-34';
-$build = '100118-0543';
+$version = '2.2.0-35';
+$build = '100621-1026';
 
 
 require("dbconnect.php");
@@ -133,16 +134,15 @@ if (isset($_GET["phone_code_override"]))			{$phone_code_override=$_GET["phone_co
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,admin_web_directory FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =					$row[0];
-	$i++;
+	$non_latin =				$row[0];
+	$admin_web_directory =		$row[1];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -666,7 +666,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 			{
 			print "<BR><BR>PHONE CODE OVERRIDE FOR THIS FILE: $phone_code_override<BR><BR>\n";
 			}
-		# print "|$WeBServeRRooT/vicidial/listloader_super.pl $vendor_lead_code_field,$source_id_field,$list_id_field,$phone_code_field,$phone_number_field,$title_field,$first_name_field,$middle_initial_field,$last_name_field,$address1_field,$address2_field,$address3_field,$city_field,$state_field,$province_field,$postal_code_field,$country_code_field,$gender_field,$date_of_birth_field,$alt_phone_field,$email_field,$security_phrase_field,$comments_field,$rank_field,$owner_field, --forcelistid=$list_id_override --lead_file=$lead_file|";
+		# print "|$WeBServeRRooT/$admin_web_directory/listloader_super.pl $vendor_lead_code_field,$source_id_field,$list_id_field,$phone_code_field,$phone_number_field,$title_field,$first_name_field,$middle_initial_field,$last_name_field,$address1_field,$address2_field,$address3_field,$city_field,$state_field,$province_field,$postal_code_field,$country_code_field,$gender_field,$date_of_birth_field,$alt_phone_field,$email_field,$security_phrase_field,$comments_field,$rank_field,$owner_field, --forcelistid=$list_id_override --lead_file=$lead_file|";
 			$dupcheckCLI=''; $postalgmtCLI='';
 			if (eregi("DUPLIST",$dupcheck)) {$dupcheckCLI='--duplicate-check';}
 			if (eregi("DUPCAMP",$dupcheck)) {$dupcheckCLI='--duplicate-campaign-check';}
@@ -674,13 +674,13 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 			if (eregi("DUPTITLEALTPHONELIST",$dupcheck)) {$dupcheckCLI='--duplicate-tap-list-check';}
 			if (eregi("DUPTITLEALTPHONESYS",$dupcheck)) {$dupcheckCLI='--duplicate-tap-system-check';}
 			if (eregi("POSTAL",$postalgmt)) {$postalgmtCLI='--postal-code-gmt';}
-			passthru("$WeBServeRRooT/vicidial/listloader_super.pl $vendor_lead_code_field,$source_id_field,$list_id_field,$phone_code_field,$phone_number_field,$title_field,$first_name_field,$middle_initial_field,$last_name_field,$address1_field,$address2_field,$address3_field,$city_field,$state_field,$province_field,$postal_code_field,$country_code_field,$gender_field,$date_of_birth_field,$alt_phone_field,$email_field,$security_phrase_field,$comments_field,$rank_field,$owner_field, --forcelistid=$list_id_override --forcephonecode=$phone_code_override --lead-file=$lead_file $postalgmtCLI $dupcheckCLI");
+			passthru("$WeBServeRRooT/$admin_web_directory/listloader_super.pl $vendor_lead_code_field,$source_id_field,$list_id_field,$phone_code_field,$phone_number_field,$title_field,$first_name_field,$middle_initial_field,$last_name_field,$address1_field,$address2_field,$address3_field,$city_field,$state_field,$province_field,$postal_code_field,$country_code_field,$gender_field,$date_of_birth_field,$alt_phone_field,$email_field,$security_phrase_field,$comments_field,$rank_field,$owner_field, --forcelistid=$list_id_override --forcephonecode=$phone_code_override --lead-file=$lead_file $postalgmtCLI $dupcheckCLI");
 		} else {
 			# copy($leadfile, "./vicidial_temp_file.csv");
 			$file=fopen("$lead_file", "r");
 
 			if ($WeBRooTWritablE > 0)
-				{$stmt_file=fopen("$WeBServeRRooT/vicidial/listloader_stmts.txt", "w");}
+				{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 			
 			print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing CSV file... \n";
 			if (strlen($list_id_override)>0) 
@@ -932,7 +932,7 @@ if ($leadfile) {
 
 		if ($WeBRooTWritablE > 0)
 			{
-			copy($LF_path, "$WeBServeRRooT/vicidial/vicidial_temp_file.txt");
+			copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.txt");
 			$lead_file = "./vicidial_temp_file.txt";
 			}
 		else
@@ -942,7 +942,7 @@ if ($leadfile) {
 			}
 		$file=fopen("$lead_file", "r");
 		if ($WeBRooTWritablE > 0)
-			{$stmt_file=fopen("$WeBServeRRooT/vicidial/listloader_stmts.txt", "w");}
+			{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 
 		$buffer=fgets($file, 4096);
 		$tab_count=substr_count($buffer, "\t");
@@ -1196,8 +1196,8 @@ if ($leadfile) {
 		{
 		if ($WeBRooTWritablE > 0)
 			{
-			copy($LF_path, "$WeBServeRRooT/vicidial/vicidial_temp_file.xls");
-			$lead_file = "$WeBServeRRooT/vicidial/vicidial_temp_file.xls";
+			copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.xls");
+			$lead_file = "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.xls";
 			}
 		else
 			{
@@ -1206,7 +1206,7 @@ if ($leadfile) {
 			}
 		$file=fopen("$lead_file", "r");
 
-	#	echo "|$WeBServeRRooT/vicidial/listloader.pl --forcelistid=$list_id_override --lead-file=$lead_file|";
+	#	echo "|$WeBServeRRooT/$admin_web_directory/listloader.pl --forcelistid=$list_id_override --lead-file=$lead_file|";
 		$dupcheckCLI=''; $postalgmtCLI='';
 		if (eregi("DUPLIST",$dupcheck)) {$dupcheckCLI='--duplicate-check';}
 		if (eregi("DUPCAMP",$dupcheck)) {$dupcheckCLI='--duplicate-campaign-check';}
@@ -1214,15 +1214,15 @@ if ($leadfile) {
 		if (eregi("DUPTITLEALTPHONELIST",$dupcheck)) {$dupcheckCLI='--duplicate-tap-list-check';}
 		if (eregi("DUPTITLEALTPHONESYS",$dupcheck)) {$dupcheckCLI='--duplicate-tap-system-check';}
 		if (eregi("POSTAL",$postalgmt)) {$postalgmtCLI='--postal-code-gmt';}
-		passthru("$WeBServeRRooT/vicidial/listloader.pl --forcelistid=$list_id_override --forcephonecode=$phone_code_override --lead-file=$lead_file  $postalgmtCLI $dupcheckCLI");
+		passthru("$WeBServeRRooT/$admin_web_directory/listloader.pl --forcelistid=$list_id_override --forcephonecode=$phone_code_override --lead-file=$lead_file  $postalgmtCLI $dupcheckCLI");
 	
 		}
 		else 
 		{
 		if ($WeBRooTWritablE > 0)
 			{
-			copy($LF_path, "$WeBServeRRooT/vicidial/vicidial_temp_file.csv");
-			$lead_file = "$WeBServeRRooT/vicidial/vicidial_temp_file.csv";
+			copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.csv");
+			$lead_file = "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.csv";
 			}
 		else
 			{
@@ -1231,7 +1231,7 @@ if ($leadfile) {
 			}
 		$file=fopen("$lead_file", "r");
 		if ($WeBRooTWritablE > 0)
-			{$stmt_file=fopen("$WeBServeRRooT/vicidial/listloader_stmts.txt", "w");}
+			{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 		
 		print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing CSV file... \n";
 
@@ -1479,8 +1479,8 @@ if ($leadfile) {
 				{
 				if ($WeBRooTWritablE > 0)
 					{
-					copy($LF_path, "$WeBServeRRooT/vicidial/vicidial_temp_file.txt");
-					$lead_file = "$WeBServeRRooT/vicidial/vicidial_temp_file.txt";
+					copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.txt");
+					$lead_file = "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.txt";
 					}
 				else
 					{
@@ -1489,7 +1489,7 @@ if ($leadfile) {
 					}
 				$file=fopen("$lead_file", "r");
 				if ($WeBRooTWritablE > 0)
-					{$stmt_file=fopen("$WeBServeRRooT/vicidial/listloader_stmts.txt", "w");}
+					{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 
 				$buffer=fgets($file, 4096);
 				$tab_count=substr_count($buffer, "\t");
@@ -1538,8 +1538,8 @@ if ($leadfile) {
 			{
 				if ($WeBRooTWritablE > 0)
 					{
-					copy($LF_path, "$WeBServeRRooT/vicidial/vicidial_temp_file.xls");
-					$lead_file = "$WeBServeRRooT/vicidial/vicidial_temp_file.xls";
+					copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.xls");
+					$lead_file = "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.xls";
 					}
 				else
 					{
@@ -1547,7 +1547,7 @@ if ($leadfile) {
 					$lead_file = "/tmp/vicidial_temp_file.xls";
 					}
 
-			#	echo "|$WeBServeRRooT/vicidial/listloader_rowdisplay.pl --lead-file=$lead_file|";
+			#	echo "|$WeBServeRRooT/$admin_web_directory/listloader_rowdisplay.pl --lead-file=$lead_file|";
 				$dupcheckCLI=''; $postalgmtCLI='';
 				if (eregi("DUPLIST",$dupcheck)) {$dupcheckCLI='--duplicate-check';}
 				if (eregi("DUPCAMP",$dupcheck)) {$dupcheckCLI='--duplicate-campaign-check';}
@@ -1555,14 +1555,14 @@ if ($leadfile) {
 				if (eregi("DUPTITLEALTPHONELIST",$dupcheck)) {$dupcheckCLI='--duplicate-tap-list-check';}
 				if (eregi("DUPTITLEALTPHONESYS",$dupcheck)) {$dupcheckCLI='--duplicate-tap-system-check';}
 				if (eregi("POSTAL",$postalgmt)) {$postalgmtCLI='--postal-code-gmt';}
-				passthru("$WeBServeRRooT/vicidial/listloader_rowdisplay.pl --lead-file=$lead_file $postalgmtCLI $dupcheckCLI");
+				passthru("$WeBServeRRooT/$admin_web_directory/listloader_rowdisplay.pl --lead-file=$lead_file $postalgmtCLI $dupcheckCLI");
 			} 
 			else 
 			{
 				if ($WeBRooTWritablE > 0)
 					{
-					copy($LF_path, "$WeBServeRRooT/vicidial/vicidial_temp_file.csv");
-					$lead_file = "$WeBServeRRooT/vicidial/vicidial_temp_file.csv";
+					copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.csv");
+					$lead_file = "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.csv";
 					}
 				else
 					{
@@ -1572,7 +1572,7 @@ if ($leadfile) {
 				$file=fopen("$lead_file", "r");
 
 				if ($WeBRooTWritablE > 0)
-					{$stmt_file=fopen("$WeBServeRRooT/vicidial/listloader_stmts.txt", "w");}
+					{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 				
 				print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing CSV file... \n";
 				

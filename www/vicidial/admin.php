@@ -1285,6 +1285,8 @@ if (isset($_GET["hold_time_option_no_block"]))			{$hold_time_option_no_block=$_G
 	elseif (isset($_POST["hold_time_option_no_block"]))	{$hold_time_option_no_block=$_POST["hold_time_option_no_block"];}
 if (isset($_GET["hold_time_option_prompt_seconds"]))			{$hold_time_option_prompt_seconds=$_GET["hold_time_option_prompt_seconds"];}
 	elseif (isset($_POST["hold_time_option_prompt_seconds"]))	{$hold_time_option_prompt_seconds=$_POST["hold_time_option_prompt_seconds"];}
+if (isset($_GET["admin_web_directory"]))			{$admin_web_directory=$_GET["admin_web_directory"];}
+	elseif (isset($_POST["admin_web_directory"]))	{$admin_web_directory=$_POST["admin_web_directory"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1298,7 +1300,7 @@ if (strlen($dial_status) > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -1314,6 +1316,7 @@ if ($qm_conf_ct > 0)
 	$SSenable_second_webform =			$row[6];
 	$SSuser_territories_active =		$row[7];
 	$SScustom_fields_enabled =			$row[8];
+	$SSadmin_web_directory =			$row[9];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -1818,6 +1821,7 @@ if ($non_latin < 1)
 	$thursday_afterhours_filename_override = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$thursday_afterhours_filename_override);
 	$friday_afterhours_filename_override = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$friday_afterhours_filename_override);
 	$saturday_afterhours_filename_override = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$saturday_afterhours_filename_override);
+	$admin_web_directory = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$admin_web_directory);
 
 	### ALPHA-NUMERIC and underscore and dash and comma
 	$logins_list = ereg_replace("[^-\,\_0-9a-zA-Z]","",$logins_list);
@@ -2250,11 +2254,12 @@ else
 # 100518-0643 - Added inbound_queue_no_dial and call time after hours override features
 # 100523-0840 - Added inbound prompt and no-block options
 # 100616-2232 - Added VIDPROMPT call menu options
+# 100621-1010 - Added admin_web_directory system setting
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-257';
-$build = '100616-2232';
+$admin_version = '2.4-258';
+$build = '100621-1010';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6332,6 +6337,11 @@ if ($ADD==99999)
 	<A NAME="settings-sounds_web_directory">
 	<BR>
 	<B>Sounds Web Directory -</B> This auto-generated directory name is created at random by the system as the place that the audio store will be kept. All audio files will reside in this directory.
+
+	<BR>
+	<A NAME="settings-admin_web_directory">
+	<BR>
+	<B>Admin Web Directory -</B> This is the directory that your administation web content, like admin.php, are in. Default is vicidial. To figure out your Admin web directory, it is everything that is between the domain name and the admin.php in the URL on this page, without the beginning and ending slashes.
 
 	<BR>
 	<A NAME="settings-active_voicemail_server">
@@ -14132,7 +14142,7 @@ if ($ADD==411111111111111)
 
 		echo "<br>VICIDIAL SYSTEM SETTINGS MODIFIED\n";
 
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='$webphone_url',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs';";
+		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='$webphone_url',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory';";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -23384,7 +23394,7 @@ if ($ADD==311111111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs from system_settings;";
+		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory from system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$version =						$row[0];
@@ -23441,6 +23451,7 @@ if ($ADD==311111111111111)
 		$callcard_enabled =				$row[51];
 		$queuemetrics_callstatus =		$row[52];
 		$default_codecs =				$row[53];
+		$admin_web_directory =			$row[54];
 
 		echo "<br>MODIFY VICIDIAL SYSTEM SETTINGS<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=411111111111111>\n";
@@ -23504,6 +23515,7 @@ if ($ADD==311111111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Central Sound Control Active: </td><td align=left><select size=1 name=sounds_central_control_active><option>1</option><option>0</option><option selected>$sounds_central_control_active</option></select>$NWB#settings-sounds_central_control_active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Sounds Web Server: </td><td align=left><input type=text name=sounds_web_server size=30 maxlength=50 value=\"$sounds_web_server\">$NWB#settings-sounds_web_server$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Sounds Web Directory: </td><td align=left><a href=\"http://$sounds_web_server/$sounds_web_directory\">$sounds_web_directory</a> $NWB#settings-sounds_web_directory$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Admin Web Directory: </td><td align=left><input type=text name=admin_web_directory size=50 maxlength=255 value=\"$admin_web_directory\">$NWB#settings-admin_web_directory$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active Voicemail Server: </td><td align=left><select size=1 name=active_voicemail_server>\n";
 		##### get server listing for dynamic pulldown

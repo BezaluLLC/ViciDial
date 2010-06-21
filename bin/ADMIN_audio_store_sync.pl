@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# ADMIN_audio_store_sync.pl      version 2.2.0
+# ADMIN_audio_store_sync.pl      version 2.4
 #
 # DESCRIPTION:
 # syncronizes audio between audio store and this server
@@ -12,6 +12,7 @@
 # 90513-0458 - First Build
 # 90518-2107 - Added force-upload option
 # 90831-1349 - Added music-on-hold sync
+# 100621-1018 - Added admin_web_directory variable use
 #
 
 # constants
@@ -167,21 +168,22 @@ $sthArows=$sthA->rows;
 if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$active_asterisk_server = "$aryA[0]";
+	$active_asterisk_server =	$aryA[0];
 	}
 $sthA->finish();
 
 ### Grab system_settings values from the database
-$stmtA = "SELECT sounds_central_control_active,sounds_web_server,sounds_web_directory FROM system_settings;";
+$stmtA = "SELECT sounds_central_control_active,sounds_web_server,sounds_web_directory,admin_web_directory FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
 if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$sounds_central_control_active =	"$aryA[0]";
-	$sounds_web_server =				"$aryA[1]";
-	$sounds_web_directory =				"$aryA[2]";
+	$sounds_central_control_active =	$aryA[0];
+	$sounds_web_server =				$aryA[1];
+	$sounds_web_directory =				$aryA[2];
+	$admin_web_directory =				$aryA[3];
 	}
 $sthA->finish();
 
@@ -232,7 +234,7 @@ else
 	}
 
 
-$URL = "http://$sounds_web_server/vicidial/audio_store.php?action=LIST&audio_server_ip=$VARserver_ip";
+$URL = "http://$sounds_web_server/$admin_web_directory/audio_store.php?action=LIST&audio_server_ip=$VARserver_ip";
 
 $URL =~ s/&/\\&/gi;
 if ($DB) 
@@ -357,7 +359,7 @@ if ($upload > 0)
 
 			if ( ($found_file < 1) || ($force_upload > 0) )
 				{
-				$curloptions = "-s 'http://$sounds_web_server/vicidial/audio_store.php?action=AUTOUPLOAD&audio_server_ip=$VARserver_ip' -F \"audiofile=\@$PATHsounds/$soundname\"";
+				$curloptions = "-s 'http://$sounds_web_server/$admin_web_directory/audio_store.php?action=AUTOUPLOAD&audio_server_ip=$VARserver_ip' -F \"audiofile=\@$PATHsounds/$soundname\"";
 				`$curlbin $curloptions`;
 				$event_string = "UPLOADING: $soundname     $soundsize";
 				if ($DB > 0) {print "          $event_string\n|$curlbin $curloptions|\n";}

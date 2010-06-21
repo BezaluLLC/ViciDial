@@ -211,6 +211,8 @@ VID ID Number Filename||
 VID Confirm Filename||
 VID Digits||
 Search Method defines how the queue will find the next agent, recommend leave this on LB. List ID is the list that the new lead is inserted into, also if the Method is not a LOOKUP method and the lead is not found. Campaign ID is the campaign to search lists through if one of the RC methods is used. Phone Code is the phone_code field entry for the lead that is inserted with. VID Enter Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played to ask the customer to enter their ID. VID ID Number Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played after customer enters their ID, something like YOU HAVE ENTERED. VID Confirm Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played to confirm their ID, something like PRESS 1 TO CONFIRM AND 2 TO REENTER. VID Digits is used if the Method is set to one of the VIDPROMPT methods, if it is set to a number it is the number of digits that must be ebtered by the customer when prompted for their ID, if set to empty or X then the customer will have to press pound or hash to finish their entry of their ID||
+Admin Web Directory||
+This is the directory that your administation web content, like admin.php, are in. Default is vicidial. To figure out your Admin web directory, it is everything that is between the domain name and the admin.php in the URL on this page, without the beginning and ending slashes||
 
 
 AST_VICIDIAL_ingrouplist.php
