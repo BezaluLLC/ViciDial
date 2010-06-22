@@ -165,6 +165,8 @@ OTHER CHANGES:
 39. Added web-configurable TTS voice option. Please make sure the Cepstral voice 
 	is installed before entering one.
 
+40. Added function for start_call_url to work with remote agents
+
 
 
 

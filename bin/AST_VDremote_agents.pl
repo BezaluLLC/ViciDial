@@ -34,7 +34,7 @@
 # 100309-0555 - Added queuemetrics_loginout option
 # 100318-2307 - Added ra_user field input to vla table
 # 100524-1542 - Fixed live call detection bug on multi-server systems
-# 100621-2152 - Added start_call_url and dispo_call_url functions for remote agents
+# 100622-0917 - Added start_call_url function for remote agents, this launches a separate child script
 #
 
 ### begin parsing run-time options ###
@@ -272,8 +272,10 @@ while($one_day_interval > 0)
 			@QHuser=@MT;
 			@QHcall_type=@MT;
 			@QHcampaign_id=@MT;
+			@QHphone_number=@MT;
+			@QHalt_dial=@MT;
 			##### grab number of QUEUE calls right now and update
-			$stmtA = "SELECT vla.live_agent_id,vla.lead_id,vla.uniqueid,vla.user,vac.call_type,vac.campaign_id FROM vicidial_live_agents vla,vicidial_auto_calls vac where vla.server_ip='$server_ip' and vla.status IN('QUEUE') and vla.extension LIKE \"R/%\" and vla.uniqueid=vac.uniqueid and vla.channel=vac.channel;";
+			$stmtA = "SELECT vla.live_agent_id,vla.lead_id,vla.uniqueid,vla.user,vac.call_type,vac.campaign_id,vac.phone_number,vac.alt_dial FROM vicidial_live_agents vla,vicidial_auto_calls vac where vla.server_ip='$server_ip' and vla.status IN('QUEUE') and vla.extension LIKE \"R/%\" and vla.uniqueid=vac.uniqueid and vla.channel=vac.channel;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$vla_qh_ct=$sthA->rows;
@@ -287,6 +289,9 @@ while($one_day_interval > 0)
 				$QHuser[$w] =			$aryA[3];
 				$QHcall_type[$w] =		$aryA[4];
 				$QHcampaign_id[$w] =	$aryA[5];
+				$QHphone_number[$w] =	$aryA[6];
+				$QHalt_dial[$w] =		$aryA[7];
+				if (length($QHalt_dial[$w]) < 1) {$QHalt_dial[$w] = 'MAIN';}
 				$w++;
 				}
 			$sthA->finish();
@@ -294,6 +299,8 @@ while($one_day_interval > 0)
 			$w=0;
 			while ($vla_qh_ct > $w)
 				{
+				$start_call_url='';
+
 				$stmtA = "UPDATE vicidial_live_agents set status='INCALL',last_call_time='$SQLdate',comments='REMOTE',calls_today=(calls_today + 1),last_state_change='$SQLdate' where live_agent_id='$QHlive_agent_id[$w]';";
 				$Aaffected_rows = $dbhA->do($stmtA);
 
@@ -310,6 +317,8 @@ while($one_day_interval > 0)
 
 					$stmtE = "UPDATE vicidial_inbound_group_agents set calls_today=(calls_today + 1) where user='$QHuser[$w]' and group_id='$QHcampaign_id[$w]';";
 					$Eaffected_rows = $dbhA->do($stmtE);
+
+					$stmtG = "SELECT start_call_url FROM vicidial_inbound_groups where group_id='$QHcampaign_id[$w]';";
 					}
 				else
 					{
@@ -318,6 +327,38 @@ while($one_day_interval > 0)
 
 					$Daffected_rows=0;
 					$Eaffected_rows=0;
+
+					$stmtG = "SELECT start_call_url FROM vicidial_campaigns where campaign_id='$QHcampaign_id[$w]';";
+					}
+
+				$sthA = $dbhA->prepare($stmtG) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtG ", $dbhA->errstr;
+				$start_url_ct=$sthA->rows;
+				if ($start_url_ct > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$start_call_url =	$aryA[0];
+					}
+				$sthA->finish();
+
+				### This is where the call to the start_call_url launch will go
+
+				if (length($start_call_url) > 5) 
+					{
+					$launch = $PATHhome . "/AST_send_URL.pl";
+					$launch .= " --SYSLOG" if ($SYSLOG);
+					$launch .= " --lead_id=" . $QHlead_id[$w];
+					$launch .= " --phone_number=" . $QHphone_number[$w];
+					$launch .= " --user=" . $QHuser[$w];
+					$launch .= " --call_type=" . $QHcall_type[$w];
+					$launch .= " --campaign=" . $QHcampaign_id[$w];
+					$launch .= " --uniqueid=" . $QHuniqueid[$w];
+					$launch .= " --alt_dial=" . $QHalt_dial[$w];
+
+					system($launch . ' &');
+
+					$event_string="$launch|";
+					&event_logger;
 					}
 
 				$event_string = "|     QUEUEd listing UPDATEd:  |$Aaffected_rows|$Baffected_rows|$Caffected_rows|$Daffected_rows|$Eaffected_rows|     |$QHlive_agent_id[$w]|$QHlead_id[$w]|$QHuniqueid[$w]|$QHuser[$w]|$QHcall_type[$w]|$QHcampaign_id[$w]|";
@@ -527,6 +568,7 @@ while($one_day_interval > 0)
 			#					}
 
 			#				}
+
 						}
 					### no records exist so insert a new one
 					else
