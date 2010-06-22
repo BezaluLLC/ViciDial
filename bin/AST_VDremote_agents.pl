@@ -3,8 +3,6 @@
 # AST_VDremote_agents.pl version 2.4
 #
 # SUMMARY:
-# This program was designed for people using the Asterisk PBX with VICIDIAL
-#
 # To use VICIDIAL with remote agents, this must always be running 
 # 
 # This program must be run on each local Asterisk machine that has Remote Agents
@@ -12,9 +10,6 @@
 # This script is to run perpetually querying every second to update the remote 
 # agents that should appear to be logged in so that the calls can be transferred 
 # out to them properly.
-#
-# It is good practice to keep this program running by placing the associated 
-# KEEPALIVE script running every minute to ensure this program is always running
 #
 # Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -39,6 +34,7 @@
 # 100309-0555 - Added queuemetrics_loginout option
 # 100318-2307 - Added ra_user field input to vla table
 # 100524-1542 - Fixed live call detection bug on multi-server systems
+# 100621-2152 - Added start_call_url and dispo_call_url functions for remote agents
 #
 
 ### begin parsing run-time options ###
@@ -52,7 +48,10 @@ if (length($ARGV[0])>1)
 		}
 	if ($args =~ /--help/i)
 		{
-		print "allowed run time options:\n  [-t] = test\n  [-v] = verbose debug messages\n  [--delay=XXX] = delay of XXX seconds per loop, default 2 seconds\n\n";
+		print "allowed run time options:\n";
+		print "  [-t] = test\n";
+		print "  [-v] = verbose debug messages\n";
+		print "  [--delay=XXX] = delay of XXX seconds per loop, default 2 seconds\n\n";
 		}
 	else
 		{
@@ -158,8 +157,7 @@ $stmtA = "SELECT vd_server_logs,local_gmt,ext_context FROM servers where server_
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
-$rec_count=0;
-while ($sthArows > $rec_count)
+if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
 	$DBvd_server_logs =		$aryA[0];
@@ -168,7 +166,6 @@ while ($sthArows > $rec_count)
 	if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
 	else {$SYSLOG = '0';}
 	if (length($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
-	$rec_count++;
 	}
 $sthA->finish();
 
@@ -199,14 +196,12 @@ while($one_day_interval > 0)
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
-			$rec_count=0;
-			while ($sthArows > $rec_count)
+			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
 				$DBvd_server_logs =			$aryA[0];
 				if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
 				else {$SYSLOG = '0';}
-				$rec_count++;
 				}
 			$sthA->finish();
 

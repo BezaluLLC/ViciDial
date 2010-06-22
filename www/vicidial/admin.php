@@ -1287,6 +1287,8 @@ if (isset($_GET["hold_time_option_prompt_seconds"]))			{$hold_time_option_prompt
 	elseif (isset($_POST["hold_time_option_prompt_seconds"]))	{$hold_time_option_prompt_seconds=$_POST["hold_time_option_prompt_seconds"];}
 if (isset($_GET["admin_web_directory"]))			{$admin_web_directory=$_GET["admin_web_directory"];}
 	elseif (isset($_POST["admin_web_directory"]))	{$admin_web_directory=$_POST["admin_web_directory"];}
+if (isset($_GET["tts_voice"]))				{$tts_voice=$_GET["tts_voice"];}
+	elseif (isset($_POST["tts_voice"]))		{$tts_voice=$_POST["tts_voice"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1822,6 +1824,7 @@ if ($non_latin < 1)
 	$friday_afterhours_filename_override = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$friday_afterhours_filename_override);
 	$saturday_afterhours_filename_override = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$saturday_afterhours_filename_override);
 	$admin_web_directory = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$admin_web_directory);
+	$tts_voice = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$tts_voice);
 
 	### ALPHA-NUMERIC and underscore and dash and comma
 	$logins_list = ereg_replace("[^-\,\_0-9a-zA-Z]","",$logins_list);
@@ -5386,6 +5389,10 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_tts_prompts-active">
 	<B>Active -</B> This option allows you to set the TTS entry to active or inactive.
+
+	<BR>
+	<A NAME="vicidial_tts_prompts-tts_voice">
+	<B>TTS Voice -</B> This is where you define the voice to be used in the TTS generation. Default is Allison-8kHz.
 
 	<BR>
 	<A NAME="vicidial_tts_prompts-tts_text">
@@ -13886,7 +13893,7 @@ if ($ADD==451111111111)
 			{echo "<br>TTS ENTRY NOT MODIFIED - Please go back and look at the data you entered\n";}
 		else
 			{
-			$stmt="UPDATE vicidial_tts_prompts set tts_name='$tts_name',active='$active',tts_text=\"$tts_text\" where tts_id='$tts_id';";
+			$stmt="UPDATE vicidial_tts_prompts set tts_name='$tts_name',active='$active',tts_voice='$tts_voice',tts_text=\"$tts_text\" where tts_id='$tts_id';";
 			$rslt=mysql_query($stmt, $link);
 
 			echo "<br>TTS ENTRY MODIFIED: $tts_id\n";
@@ -23114,13 +23121,14 @@ if ($ADD==351111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT tts_id,tts_name,active,tts_text from vicidial_tts_prompts where tts_id='$tts_id';";
+		$stmt="SELECT tts_id,tts_name,active,tts_text,tts_voice from vicidial_tts_prompts where tts_id='$tts_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$tts_id =		$row[0];
 		$tts_name =		$row[1];
 		$active =		$row[2];
 		$tts_text =		$row[3];
+		$tts_voice =	$row[4];
 
 		echo "<br>MODIFY A TTS RECORD: $tts_id<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=451111111111>\n";
@@ -23130,6 +23138,7 @@ if ($ADD==351111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>TTS ID: </td><td align=left><B>$tts_id</B></td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>TTS Name: </td><td align=left><input type=text name=tts_name size=50 maxlength=100 value=\"$tts_name\">$NWB#vicidial_tts_prompts-tts_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>N</option><option>Y</option><option SELECTED>$active</option></select>$NWB#vicidial_tts_prompts-active$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>TTS Voice: </td><td align=left><input type=text name=tts_voice size=20 maxlength=100 value=\"$tts_voice\">$NWB#vicidial_tts_prompts-tts_voice$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>TTS Text: </td><td align=left><TEXTAREA NAME=tts_text ROWS=20 COLS=70>$tts_text</TEXTAREA> $NWB#vicidial_tts_prompts-tts_text$NWE</td></tr>\n";
 
@@ -25216,7 +25225,7 @@ if ($ADD==150000000000)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT tts_id,tts_name,active,tts_text from vicidial_tts_prompts order by tts_id";
+	$stmt="SELECT tts_id,tts_name,active,tts_text,tts_voice from vicidial_tts_prompts order by tts_id";
 	$rslt=mysql_query($stmt, $link);
 	$tts_to_print = mysql_num_rows($rslt);
 
@@ -25226,6 +25235,7 @@ if ($ADD==150000000000)
 	echo "<td><font size=1 color=white align=left><B>TTS ID</B></td>";
 	echo "<td><font size=1 color=white><B>TTS Name</B></td>";
 	echo "<td><font size=1 color=white><B>Active</B></td>";
+	echo "<td><font size=1 color=white><B>TTS Voice</B></td>";
 	echo "<td><font size=1 color=white><B>TTS Text</B></td>";
 	echo "<td align=center><font size=1 color=white><B>MODIFY</B></td></tr>\n";
 
@@ -25244,6 +25254,7 @@ if ($ADD==150000000000)
 		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=351111111111&tts_id=$row[0]\">$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
+		echo "<td><font size=1>$row[4]</td>";
 		echo "<td><font size=1>$row[3]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=351111111111&tts_id=$row[0]\">MODIFY</a></td></tr>\n";
 		$o++;

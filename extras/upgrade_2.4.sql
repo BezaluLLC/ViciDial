@@ -363,3 +363,7 @@ UPDATE system_settings SET db_schema_version='1226',db_schema_update_date=NOW();
 ALTER TABLE system_settings ADD admin_web_directory VARCHAR(255) default 'vicidial';
 
 UPDATE system_settings SET db_schema_version='1227',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_tts_prompts ADD tts_voice VARCHAR(100) default 'Allison-8kHz';
+
+UPDATE system_settings SET db_schema_version='1228',db_schema_update_date=NOW();

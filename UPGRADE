@@ -162,6 +162,9 @@ OTHER CHANGES:
 38. Added prompt options for in-group VIDPROMPT methods when initiated from Call
 	Menus
 
+39. Added web-configurable TTS voice option. Please make sure the Cepstral voice 
+	is installed before entering one.
+
 
 
 

@@ -1652,7 +1652,8 @@ CREATE TABLE vicidial_tts_prompts (
 tts_id VARCHAR(50) PRIMARY KEY NOT NULL,
 tts_name VARCHAR(100),
 active ENUM('Y','N'),
-tts_text TEXT
+tts_text TEXT,
+tts_voice VARCHAR(100) default 'Allison-8kHz'
 );
 
 CREATE TABLE vicidial_call_menu (
@@ -2249,7 +2250,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1227',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1228',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

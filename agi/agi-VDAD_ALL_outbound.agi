@@ -521,7 +521,7 @@ if ($affected_rows > 0)
 			$s=0;
 			while ($s < $t)
 				{
-				$stmtA = "SELECT tts_text FROM vicidial_tts_prompts where tts_id='$TTS_filename[$s]';";
+				$stmtA = "SELECT tts_text,tts_voice FROM vicidial_tts_prompts where tts_id='$TTS_filename[$s]';";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -531,6 +531,7 @@ if ($affected_rows > 0)
 				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
+					$TTS_voice =	$aryA[1];
 					$TTS_text[$s] =	$aryA[0];
 					$TTS_text[$s] =~ s/--A--lead_id--B--/$TTS_lead_id/gi;
 					$TTS_text[$s] =~ s/--A--entry_date--B--/$TTS_entry_date/gi;
@@ -572,13 +573,13 @@ if ($affected_rows > 0)
 					$TTS_text[$s] =~ s/\>/\\>/gi;
 					$TTS_text[$s] =~ s/\//\\\//gi;
 					$TTS_text[$s] =~ s/\'/\\'/gi;
-					$voice = 'Allison-8kHz';
-					print STDERR "\nGenerating: $TTS_text[$s] - $voice\n";
-					`$PATHagi/cepstral_generate.pl --debug --voice=$voice --dialog=$TTS_text[$s] >> $CEPLOGfile $hideCLI`;
+				#	$voice = 'Allison-8kHz';
+					print STDERR "\nGenerating: $TTS_text[$s] - $TTS_voice\n";
+					`$PATHagi/cepstral_generate.pl --debug --voice=$TTS_voice --dialog=$TTS_text[$s] >> $CEPLOGfile $hideCLI`;
 
 					use Digest::MD5 qw(md5_hex);
 
-					$enc = md5_hex("$TTS_textRAW[$s]-$voice");	# the hash
+					$enc = md5_hex("$TTS_textRAW[$s]-$TTS_voice");	# the hash
 					$enc_ftl = substr($enc, 0, 2);	# first letter of hash
 					$TTS_filename_path[$s] = $PATHsounds . "/tts/" . $enc_ftl . "/tts-" . $enc;
 					print STDERR "\nfilename: $TTS_filename_path[$s]\n";
