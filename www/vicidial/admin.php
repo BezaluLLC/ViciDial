@@ -3835,7 +3835,7 @@ if ($ADD==99999)
 		<BR>
 		<A NAME="vicidial_campaigns-queue_priority">
 		<BR>
-		<B>Queue Priority -</B> This setting is used to define the order in which the calls from this outbound campaign should be answered in relation to the inbound calls if this campaign is in blended mode.
+		<B>Queue Priority -</B> This setting is used to define the order in which the calls from this outbound campaign should be answered in relation to the inbound calls if this campaign is in blended mode. We do not recommend setting inbound calls to a higher priority than the outbound campaign calls because people calling in expect to wait and people being called expect for someone to be there on the phone.
 
 		<BR>
 		<A NAME="vicidial_campaigns-drop_rate_group">

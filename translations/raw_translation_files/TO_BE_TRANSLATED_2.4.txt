@@ -236,6 +236,7 @@ Label Alt Phone||
 Label Security Phrase||
 Label Email||
 Label Comments||
+We do not recommend setting inbound calls to a higher priority than the outbound campaign calls because people calling in expect to wait and people being called expect for someone to be there on the phone||
 
 
 AST_VICIDIAL_ingrouplist.php

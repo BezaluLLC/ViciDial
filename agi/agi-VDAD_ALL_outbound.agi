@@ -75,6 +75,7 @@
 # 100319-0610 - Added extension group remote agent feature
 # 100414-2156 - Added extension_appended_cidname option
 # 100424-1341 - Added extended logging
+# 100623-1310 - Added queue_priority to queue processing
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -378,7 +379,7 @@ if ($affected_rows > 0)
 		$dbhP=$dbhA;   $mysql_count='01005';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	if ($AGILOG) {$agi_string = "--    VDAD vicidial_list PU update: |$affected_rows|$uniqueid|";   &agi_output;}
 
-	$stmtA = "SELECT campaign_id,phone_number,phone_code,lead_id,call_time,alt_dial FROM vicidial_auto_calls where callerid='$callerid' order by call_time desc limit 1;";
+	$stmtA = "SELECT campaign_id,phone_number,phone_code,lead_id,call_time,alt_dial,queue_priority FROM vicidial_auto_calls where callerid='$callerid' order by call_time desc limit 1;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -387,18 +388,19 @@ if ($affected_rows > 0)
 	while ($sthArows > $rec_count)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$VDADcampaign =		$aryA[0];
-		$VDADphone	=		$aryA[1];
-		$VDADphone_code	=	$aryA[2];
-		$VDADlead_id =		$aryA[3];
-		$VDADcall_time =	$aryA[4];
-		$VDADalt_dial =		$aryA[5];
+		$VDADcampaign =			$aryA[0];
+		$VDADphone	=			$aryA[1];
+		$VDADphone_code	=		$aryA[2];
+		$VDADlead_id =			$aryA[3];
+		$VDADcall_time =		$aryA[4];
+		$VDADalt_dial =			$aryA[5];
+		$VDADqueue_priority =	$aryA[6];
 		$rec_count++;
 		}
 	$sthA->finish();
 
 	### Grab campaign values from the database
-	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
+	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname,queue_priority,closer_campaigns FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -428,6 +430,15 @@ if ($affected_rows > 0)
 		$survey_third_audio_file =		$aryA[16];
 		$survey_fourth_audio_file =		$aryA[17];
 		$extension_appended_cidname =	$aryA[18];
+		$queue_priority =				$aryA[19];
+		$closer_campaigns =				$aryA[20];
+		if (length($closer_campaigns) > 2)
+			{
+			$closer_campaigns =~ s/^ | -$//gi;
+			$closer_campaigns =~ s/ /','/gi;
+			$closer_campaigns = "'$closer_campaigns'";
+			}
+		else {$closer_campaigns="''";}
 		}
 	$sthA->finish();
 
@@ -1354,6 +1365,12 @@ while ($drop_timer <= $DROP_TIME)
 	############# END CPD AMD SECTION ############################
 
 
+
+
+
+	############################################################################
+	### BEGIN  attempt to send call to agent
+	############################################################################
 	$rec_countCUSTDATA=0;
 	$rec_countWAIT=0;
 	$cbc=0;
@@ -1374,7 +1391,7 @@ while ($drop_timer <= $DROP_TIME)
 		if ($agent_search_method =~ /^SO/)
 			{$agent_search_method = 'LO';}
 		$rec_countWAIT=0;
-		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and server_ip='$VARserver_ip' and campaign_id = '$VDADcampaign' and call_time < \"$VDADcall_time\" and lead_id != '$CIDlead_id';";
+		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and server_ip='$VARserver_ip' and lead_id != '$CIDlead_id' and ( ( (campaign_id = '$VDADcampaign') and (call_time < \"$VDADcall_time\") ) or ( (queue_priority > '$VDADqueue_priority') and (call_type='IN') and (campaign_id IN($closer_campaigns)) ) );";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1649,7 +1666,7 @@ while ($drop_timer <= $DROP_TIME)
 		##### Attempt to send call to an agent on any server #####
 		$cbc=0;
 		$rec_countWAITrem=0;
-		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and campaign_id = '$VDADcampaign' and call_time < \"$VDADcall_time\" and lead_id != '$CIDlead_id';";
+		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and lead_id != '$CIDlead_id' and ( ( (campaign_id = '$VDADcampaign') and (call_time < \"$VDADcall_time\") ) or ( (queue_priority > '$VDADqueue_priority') and (call_type='IN') and (campaign_id IN($closer_campaigns)) ) );";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1933,6 +1950,10 @@ while ($drop_timer <= $DROP_TIME)
 			if ($AGILOG) {$agi_string = "WWWWWWWW VDAD XFER BALANCE WAIT: |$rec_countWAIT|$VDADcampaign|$channel|$callerid|$uniqueid|";   &agi_output;}
 			}
 		}
+	############################################################################
+	### END  attempt to send call to agent
+	############################################################################
+
 
 	if ($drop_timer < 3)
 		{
@@ -1952,7 +1973,7 @@ while ($drop_timer <= $DROP_TIME)
 	$affected_rows = $dbhA->do($stmtA);
 	if ($affected_rows < 1)
 		{
-		$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,uniqueid,callerid,channel,phone_code,phone_number,call_time,call_type,stage)  values('$VARserver_ip','$channel_group','CLOSER','$CIDlead_id','$uniqueid','$callerid','$channel','$phone_code','$phone_number','$SQLdate','IN','CLOSER-$drop_timer')";
+		$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,uniqueid,callerid,channel,phone_code,phone_number,call_time,call_type,stage,queue_priority)  values('$VARserver_ip','$channel_group','CLOSER','$CIDlead_id','$uniqueid','$callerid','$channel','$phone_code','$phone_number','$SQLdate','IN','CLOSER-$drop_timer','$queue_priority')";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='01047';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			if ($AGILOG) {$agi_string = "$affected_rows|VDAC-reinsert|$stmtA|";   &agi_output;}
