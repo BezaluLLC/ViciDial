@@ -246,10 +246,11 @@
 # 100413-1341 - Fixes for extended alt-dial
 # 100420-1006 - Added option for LIVE-only callback count
 # 100424-1630 - Added uniqueid display options
+# 100622-2217 - Added field labels
 #
 
-$version = '2.4-153';
-$build = '100424-1630';
+$version = '2.4-154';
+$build = '100622-2217';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=333;
 $one_mysql_log=0;
@@ -7174,6 +7175,51 @@ if ($ACTION == 'LEADINFOview')
 		{echo "ERROR: no Lead ID";}
 	else
 		{
+		### BEGIN find any custom field labels ###
+		$label_title =				'Title';
+		$label_first_name =			'First';
+		$label_middle_initial =		'MI';
+		$label_last_name =			'Last';
+		$label_address1 =			'Address1';
+		$label_address2 =			'Address2';
+		$label_address3 =			'Address3';
+		$label_city =				'City';
+		$label_state =				'State';
+		$label_province =			'Province';
+		$label_postal_code =		'PostCode';
+		$label_vendor_lead_code =	'Vendor ID';
+		$label_gender =				'Gender';
+		$label_phone_number =		'Phone';
+		$label_phone_code =			'DialCode';
+		$label_alt_phone =			'Alt. Phone';
+		$label_security_phrase =	'Show';
+		$label_email =				'Email';
+		$label_comments =			'Comments';
+
+		$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if (strlen($row[0])>0)	{$label_title =				$row[0];}
+		if (strlen($row[1])>0)	{$label_first_name =		$row[1];}
+		if (strlen($row[2])>0)	{$label_middle_initial =	$row[2];}
+		if (strlen($row[3])>0)	{$label_last_name =			$row[3];}
+		if (strlen($row[4])>0)	{$label_address1 =			$row[4];}
+		if (strlen($row[5])>0)	{$label_address2 =			$row[5];}
+		if (strlen($row[6])>0)	{$label_address3 =			$row[6];}
+		if (strlen($row[7])>0)	{$label_city =				$row[7];}
+		if (strlen($row[8])>0)	{$label_state =				$row[8];}
+		if (strlen($row[9])>0)	{$label_province =			$row[9];}
+		if (strlen($row[10])>0) {$label_postal_code =		$row[10];}
+		if (strlen($row[11])>0) {$label_vendor_lead_code =	$row[11];}
+		if (strlen($row[12])>0) {$label_gender =			$row[12];}
+		if (strlen($row[13])>0) {$label_phone_number =		$row[13];}
+		if (strlen($row[14])>0) {$label_phone_code =		$row[14];}
+		if (strlen($row[15])>0) {$label_alt_phone =			$row[15];}
+		if (strlen($row[16])>0) {$label_security_phrase =	$row[16];}
+		if (strlen($row[17])>0) {$label_email =				$row[17];}
+		if (strlen($row[18])>0) {$label_comments =			$row[18];}
+		### END find any custom field labels ###
+
 		echo "<CENTER>\n";
 		echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=500>";
 
@@ -7186,29 +7232,29 @@ if ($ACTION == 'LEADINFOview')
 			{
 			$row=mysql_fetch_row($rslt);
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Status: &nbsp; </td><td ALIGN=left><font size=2>$row[0]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Vendor ID: &nbsp; </td><td ALIGN=left><font size=2>$row[1]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_vendor_lead_code: &nbsp; </td><td ALIGN=left><font size=2>$row[1]</td></tr>";
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>List ID: &nbsp; </td><td ALIGN=left><font size=2>$row[2]</td></tr>";
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Timezone: &nbsp; </td><td ALIGN=left><font size=2>$row[3]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Called SInce Last Reset: &nbsp; </td><td ALIGN=left><font size=2>$row[4]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Phone Code: &nbsp; </td><td ALIGN=left><font size=2>$row[5]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Phone Number: &nbsp; </td><td ALIGN=left><font size=2>$row[6] - &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6]);return false;\">DIAL</A></td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Title: &nbsp; </td><td ALIGN=left><font size=2>$row[7]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>First Name: &nbsp; </td><td ALIGN=left><font size=2>$row[8]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>MI: &nbsp; </td><td ALIGN=left><font size=2>$row[9]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Last Name: &nbsp; </td><td ALIGN=left><font size=2>$row[10]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Address 1: &nbsp; </td><td ALIGN=left><font size=2>$row[11]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Address 2: &nbsp; </td><td ALIGN=left><font size=2>$row[12]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Address 3: &nbsp; </td><td ALIGN=left><font size=2>$row[13]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>City: &nbsp; </td><td ALIGN=left><font size=2>$row[14]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>State: &nbsp; </td><td ALIGN=left><font size=2>$row[15]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Province: &nbsp; </td><td ALIGN=left><font size=2>$row[16]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Postal Code: &nbsp; </td><td ALIGN=left><font size=2>$row[17]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Called Since Last Reset: &nbsp; </td><td ALIGN=left><font size=2>$row[4]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_code: &nbsp; </td><td ALIGN=left><font size=2>$row[5]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_number: &nbsp; </td><td ALIGN=left><font size=2>$row[6] - &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6]);return false;\">DIAL</A></td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_title: &nbsp; </td><td ALIGN=left><font size=2>$row[7]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_first_name: &nbsp; </td><td ALIGN=left><font size=2>$row[8]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_middle_initial: &nbsp; </td><td ALIGN=left><font size=2>$row[9]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_last_name: &nbsp; </td><td ALIGN=left><font size=2>$row[10]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address1: &nbsp; </td><td ALIGN=left><font size=2>$row[11]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address2: &nbsp; </td><td ALIGN=left><font size=2>$row[12]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address3: &nbsp; </td><td ALIGN=left><font size=2>$row[13]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_city: &nbsp; </td><td ALIGN=left><font size=2>$row[14]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_state: &nbsp; </td><td ALIGN=left><font size=2>$row[15]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_province: &nbsp; </td><td ALIGN=left><font size=2>$row[16]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_postal_code: &nbsp; </td><td ALIGN=left><font size=2>$row[17]</td></tr>";
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Country: &nbsp; </td><td ALIGN=left><font size=2>$row[18]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Gender: &nbsp; </td><td ALIGN=left><font size=2>$row[19]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Alt. Phone: &nbsp; </td><td ALIGN=left><font size=2>$row[20] - &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20]);return false;\">DIAL</A></td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Email: &nbsp; </td><td ALIGN=left><font size=2>$row[21]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Show: &nbsp; </td><td ALIGN=left><font size=2>$row[22]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Comments: &nbsp; </td><td ALIGN=left><font size=2>$row[23]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_gender: &nbsp; </td><td ALIGN=left><font size=2>$row[19]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_alt_phone: &nbsp; </td><td ALIGN=left><font size=2>$row[20] - &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20]);return false;\">DIAL</A></td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_email: &nbsp; </td><td ALIGN=left><font size=2>$row[21]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_security_phrase: &nbsp; </td><td ALIGN=left><font size=2>$row[22]</td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_comments: &nbsp; </td><td ALIGN=left><font size=2>$row[23]</td></tr>";
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Called Count: &nbsp; </td><td ALIGN=left><font size=2>$row[24]</td></tr>";
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Last Local Call Time: &nbsp; </td><td ALIGN=left><font size=2>$row[25]</td></tr>";
 	#		echo "<tr bgcolor=white><td ALIGN=right><font size=2>Rank: &nbsp; </td><td ALIGN=left><font size=2>$row[26]</td></tr>";

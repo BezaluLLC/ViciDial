@@ -215,6 +215,27 @@ Admin Web Directory||
 This is the directory that your administation web content, like admin.php, are in. Default is vicidial. To figure out your Admin web directory, it is everything that is between the domain name and the admin.php in the URL on this page, without the beginning and ending slashes||
 TTS Voice||
 This is where you define the voice to be used in the TTS generation. Default is Allison-8kHz||
+Default Field Labels||
+These 19 fields allow you to set the name as it will appear in the ViciDial agent interface as well as the administrative modify lead page. Default is empty which will use the hard-coded defaults in the agent interface||
+Label Title||
+Label First Name||
+Label Middle Initial||
+Label Last Name||
+Label Address1||
+Label Address2||
+Label Address3||
+Label City||
+Label State||
+Label Province||
+Label Postal Code||
+Label Vendor Lead Code||
+Label Gender||
+Label Phone Number||
+Label Phone Code||
+Label Alt Phone||
+Label Security Phrase||
+Label Email||
+Label Comments||
 
 
 AST_VICIDIAL_ingrouplist.php

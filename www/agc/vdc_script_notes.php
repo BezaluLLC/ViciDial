@@ -11,10 +11,11 @@
 #
 # CHANGELOG:
 # 100215-0744 - First build of script
+# 100622-2230 - Added field labels
 #
 
-$version = '2.4-1';
-$build = '100215-0744';
+$version = '2.4-2';
+$build = '100622-2230';
 
 require("dbconnect.php");
 
@@ -245,6 +246,51 @@ if ($DB > 0)
 	echo "<BR>$lead_id|$entry_date|$modify_date|$status|$user|$vendor_lead_code|$source_id|$list_id|$gmt_offset_now|$called_since_last_reset|$phone_code|$phone_number|$title|$first_name|$middle_initial|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country_code|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$comments|$called_count|$last_local_call_time|$rank|$owner|\n<BR>";
 	}
 
+### BEGIN find any custom field labels ###
+$label_title =				'Title';
+$label_first_name =			'First';
+$label_middle_initial =		'MI';
+$label_last_name =			'Last';
+$label_address1 =			'Address1';
+$label_address2 =			'Address2';
+$label_address3 =			'Address3';
+$label_city =				'City';
+$label_state =				'State';
+$label_province =			'Province';
+$label_postal_code =		'PostCode';
+$label_vendor_lead_code =	'Vendor ID';
+$label_gender =				'Gender';
+$label_phone_number =		'Phone';
+$label_phone_code =			'DialCode';
+$label_alt_phone =			'Alt. Phone';
+$label_security_phrase =	'Show';
+$label_email =				'Email';
+$label_comments =			'Comments';
+
+$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+if (strlen($row[0])>0)	{$label_title =				$row[0];}
+if (strlen($row[1])>0)	{$label_first_name =		$row[1];}
+if (strlen($row[2])>0)	{$label_middle_initial =	$row[2];}
+if (strlen($row[3])>0)	{$label_last_name =			$row[3];}
+if (strlen($row[4])>0)	{$label_address1 =			$row[4];}
+if (strlen($row[5])>0)	{$label_address2 =			$row[5];}
+if (strlen($row[6])>0)	{$label_address3 =			$row[6];}
+if (strlen($row[7])>0)	{$label_city =				$row[7];}
+if (strlen($row[8])>0)	{$label_state =				$row[8];}
+if (strlen($row[9])>0)	{$label_province =			$row[9];}
+if (strlen($row[10])>0) {$label_postal_code =		$row[10];}
+if (strlen($row[11])>0) {$label_vendor_lead_code =	$row[11];}
+if (strlen($row[12])>0) {$label_gender =			$row[12];}
+if (strlen($row[13])>0) {$label_phone_number =		$row[13];}
+if (strlen($row[14])>0) {$label_phone_code =		$row[14];}
+if (strlen($row[15])>0) {$label_alt_phone =			$row[15];}
+if (strlen($row[16])>0) {$label_security_phrase =	$row[16];}
+if (strlen($row[17])>0) {$label_email =				$row[17];}
+if (strlen($row[18])>0) {$label_comments =			$row[18];}
+### END find any custom field labels ###
+
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
 	if ($format == 'debug')	{$DB=1;}
@@ -354,28 +400,28 @@ $URLsubmit = $URLarray[0];
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Title: </TD><TD ALIGN=LEFT><input type=text name=title id=title size=5 maxlength=4 value="<?php echo $title ?>"></TD>
 </TR> -->
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">First Name: </TD><TD ALIGN=LEFT><input type=text name=first_name id=first_name size=30 maxlength=30 value="<?php echo $first_name ?>"> *</TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo $label_first_name ?>: </TD><TD ALIGN=LEFT><input type=text name=first_name id=first_name size=30 maxlength=30 value="<?php echo $first_name ?>"> *</TD>
 </TR>
 <!-- <TR BGCOLOR="#E6E6E6">
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Middle Initial: </TD><TD ALIGN=LEFT><input type=text name=middle_initial id=middle_initial size=2 maxlength=1 value="<?php echo $middle_initial ?>"></TD>
 </TR> -->
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Last Name: </TD><TD ALIGN=LEFT><input type=text name=last_name id=last_name size=30 maxlength=30 value="<?php echo $last_name ?>"> *</TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo $label_last_name ?>: </TD><TD ALIGN=LEFT><input type=text name=last_name id=last_name size=30 maxlength=30 value="<?php echo $last_name ?>"> *</TD>
 </TR>
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Address: </TD><TD ALIGN=LEFT><input type=text name=address1 id=address1 size=30 maxlength=100 value="<?php echo $address1 ?>"> *</TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo $label_address1 ?>: </TD><TD ALIGN=LEFT><input type=text name=address1 id=address1 size=30 maxlength=100 value="<?php echo $address1 ?>"> *</TD>
 </TR>
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Address2: </TD><TD ALIGN=LEFT><input type=text name=address2 id=address2 size=30 maxlength=100 value="<?php echo $address2 ?>"></TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo $label_address2 ?>: </TD><TD ALIGN=LEFT><input type=text name=address2 id=address2 size=30 maxlength=100 value="<?php echo $address2 ?>"></TD>
 </TR>
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Address3: </TD><TD ALIGN=LEFT><input type=text name=address3 id=address3 size=30 maxlength=100 value="<?php echo $address3 ?>"></TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo $label_address3 ?>: </TD><TD ALIGN=LEFT><input type=text name=address3 id=address3 size=30 maxlength=100 value="<?php echo $address3 ?>"></TD>
 </TR>
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">City: </TD><TD ALIGN=LEFT><input type=text name=city id=city size=30 maxlength=50 value="<?php echo $city ?>"> *</TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo $label_city ?>: </TD><TD ALIGN=LEFT><input type=text name=city id=city size=30 maxlength=50 value="<?php echo $city ?>"> *</TD>
 </TR>
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">State: </TD><TD ALIGN=LEFT>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo $label_state ?>: </TD><TD ALIGN=LEFT>
 <SELECT name="state" id=state>
 <OPTION value="<?php echo $state ?>" selected><?php echo $state ?></OPTION>
 <OPTGROUP label="United States"> 
@@ -454,13 +500,13 @@ $URLsubmit = $URLarray[0];
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Province: </TD><TD ALIGN=LEFT><input type=text name=province id=province size=20 maxlength=50 value="<?php echo $province ?>"></TD>
 </TR> -->
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Postal Code: </TD><TD ALIGN=LEFT><input type=text name=postal_code id=postal_code size=6 maxlength=5 value="<?php echo $postal_code ?>"> *</TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo $label_postal_code ?>: </TD><TD ALIGN=LEFT><input type=text name=postal_code id=postal_code size=6 maxlength=5 value="<?php echo $postal_code ?>"> *</TD>
 </TR>
 <!-- <TR BGCOLOR="#E6E6E6">
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Phone Code: </TD><TD ALIGN=LEFT><input type=text name=phone_code id=phone_code size=10 maxlength=10 value="<?php echo $phone_code ?>"></TD>
 </TR> -->
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Phone Number: </TD><TD ALIGN=LEFT><input type=text name=phone_number id=phone_number size=18 maxlength=18 value="<?php echo $phone_number ?>"> *</TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo $label_phone_number ?>: </TD><TD ALIGN=LEFT><input type=text name=phone_number id=phone_number size=18 maxlength=18 value="<?php echo $phone_number ?>"> *</TD>
 </TR>
 <!-- <TR BGCOLOR="#E6E6E6">
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Gender: </TD><TD ALIGN=LEFT><input type=text name=gender id=gender size=2 maxlength=1 value="<?php echo $gender ?>"></TD>

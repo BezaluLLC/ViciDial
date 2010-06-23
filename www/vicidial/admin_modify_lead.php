@@ -1,5 +1,5 @@
 <?php
-# admin_modify_lead.php
+# admin_modify_lead.php   version 2.4
 # 
 # ViciDial database administration modify lead in vicidial_list
 # admin_modify_lead.php
@@ -35,6 +35,7 @@
 # 90917-2355 - Added extended alt phone entries
 # 100405-1333 - Changed to show logs of non-found leads
 # 100618-0148 - Added Middle name modify and fixes statuses list
+# 100622-0945 - Added field labels
 #
 
 require("dbconnect.php");
@@ -50,6 +51,8 @@ if (isset($_GET["old_phone"]))				{$old_phone=$_GET["old_phone"];}
 	elseif (isset($_POST["old_phone"]))		{$old_phone=$_POST["old_phone"];}
 if (isset($_GET["lead_id"]))				{$lead_id=$_GET["lead_id"];}
 	elseif (isset($_POST["lead_id"]))		{$lead_id=$_POST["lead_id"];}
+if (isset($_GET["title"]))				{$title=$_GET["title"];}
+	elseif (isset($_POST["title"]))		{$title=$_POST["title"];}
 if (isset($_GET["first_name"]))				{$first_name=$_GET["first_name"];}
 	elseif (isset($_POST["first_name"]))		{$first_name=$_POST["first_name"];}
 if (isset($_GET["middle_initial"]))				{$middle_initial=$_GET["middle_initial"];}
@@ -148,12 +151,10 @@ $stmt = "SELECT use_non_latin FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -214,6 +215,50 @@ else
 		}
 	}
 
+$label_title =				'Title';
+$label_first_name =			'First';
+$label_middle_initial =		'MI';
+$label_last_name =			'Last';
+$label_address1 =			'Address1';
+$label_address2 =			'Address2';
+$label_address3 =			'Address3';
+$label_city =				'City';
+$label_state =				'State';
+$label_province =			'Province';
+$label_postal_code =		'Postal Code';
+$label_vendor_lead_code =	'Vendor ID';
+$label_gender =				'Gender';
+$label_phone_number =		'Phone';
+$label_phone_code =			'DialCode';
+$label_alt_phone =			'Alt. Phone';
+$label_security_phrase =	'Show';
+$label_email =				'Email';
+$label_comments =			'Comments';
+
+### find any custom field labels
+$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+if (strlen($row[0])>0)	{$label_title =				$row[0];}
+if (strlen($row[1])>0)	{$label_first_name =		$row[1];}
+if (strlen($row[2])>0)	{$label_middle_initial =	$row[2];}
+if (strlen($row[3])>0)	{$label_last_name =			$row[3];}
+if (strlen($row[4])>0)	{$label_address1 =			$row[4];}
+if (strlen($row[5])>0)	{$label_address2 =			$row[5];}
+if (strlen($row[6])>0)	{$label_address3 =			$row[6];}
+if (strlen($row[7])>0)	{$label_city =				$row[7];}
+if (strlen($row[8])>0)	{$label_state =				$row[8];}
+if (strlen($row[9])>0)	{$label_province =			$row[9];}
+if (strlen($row[10])>0) {$label_postal_code =		$row[10];}
+if (strlen($row[11])>0) {$label_vendor_lead_code =	$row[11];}
+if (strlen($row[12])>0) {$label_gender =			$row[12];}
+if (strlen($row[13])>0) {$label_phone_number =		$row[13];}
+if (strlen($row[14])>0) {$label_phone_code =		$row[14];}
+if (strlen($row[15])>0) {$label_alt_phone =			$row[15];}
+if (strlen($row[16])>0) {$label_security_phrase =	$row[16];}
+if (strlen($row[17])>0) {$label_email =				$row[17];}
+if (strlen($row[18])>0) {$label_comments =			$row[18];}
+
 ?>
 <html>
 <head>
@@ -228,7 +273,7 @@ echo "<a href=\"./admin.php?ADD=100\">ADMINISTRATION</a>: Lead record modificati
 if ($end_call > 0)
 	{
 	### update the lead record in the vicidial_list table 
-	$stmt="UPDATE vicidial_list set status='" . mysql_real_escape_string($status) . "',first_name='" . mysql_real_escape_string($first_name) . "',middle_initial='" . mysql_real_escape_string($middle_initial) . "',last_name='" . mysql_real_escape_string($last_name) . "',address1='" . mysql_real_escape_string($address1) . "',address2='" . mysql_real_escape_string($address2) . "',address3='" . mysql_real_escape_string($address3) . "',city='" . mysql_real_escape_string($city) . "',state='" . mysql_real_escape_string($state) . "',province='" . mysql_real_escape_string($province) . "',postal_code='" . mysql_real_escape_string($postal_code) . "',country_code='" . mysql_real_escape_string($country_code) . "',alt_phone='" . mysql_real_escape_string($alt_phone) . "',phone_number='$phone_number',email='" . mysql_real_escape_string($email) . "',security_phrase='" . mysql_real_escape_string($security) . "',comments='" . mysql_real_escape_string($comments) . "',rank='" . mysql_real_escape_string($rank) . "',owner='" . mysql_real_escape_string($owner) . "' where lead_id='" . mysql_real_escape_string($lead_id) . "'";
+	$stmt="UPDATE vicidial_list set status='" . mysql_real_escape_string($status) . "',title='" . mysql_real_escape_string($title) . "',first_name='" . mysql_real_escape_string($first_name) . "',middle_initial='" . mysql_real_escape_string($middle_initial) . "',last_name='" . mysql_real_escape_string($last_name) . "',address1='" . mysql_real_escape_string($address1) . "',address2='" . mysql_real_escape_string($address2) . "',address3='" . mysql_real_escape_string($address3) . "',city='" . mysql_real_escape_string($city) . "',state='" . mysql_real_escape_string($state) . "',province='" . mysql_real_escape_string($province) . "',postal_code='" . mysql_real_escape_string($postal_code) . "',country_code='" . mysql_real_escape_string($country_code) . "',alt_phone='" . mysql_real_escape_string($alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysql_real_escape_string($email) . "',security_phrase='" . mysql_real_escape_string($security) . "',comments='" . mysql_real_escape_string($comments) . "',rank='" . mysql_real_escape_string($rank) . "',owner='" . mysql_real_escape_string($owner) . "' where lead_id='" . mysql_real_escape_string($lead_id) . "'";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_query($stmt, $link);
 
@@ -521,7 +566,6 @@ else
 	echo "<input type=hidden name=dispo value=\"$dispo\">\n";
 	echo "<input type=hidden name=list_id value=\"$list_id\">\n";
 	echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
-	echo "<input type=hidden name=phone_code value=\"$phone_code\">\n";
 	echo "<input type=hidden name=old_phone value=\"$phone_number\">\n";
 	echo "<input type=hidden name=server_ip value=\"$server_ip\">\n";
 	echo "<input type=hidden name=extension value=\"$extension\">\n";
@@ -529,27 +573,30 @@ else
 	echo "<input type=hidden name=call_began value=\"$call_began\">\n";
 	echo "<input type=hidden name=parked_time value=\"$parked_time\">\n";
 	echo "<table cellpadding=1 cellspacing=0>\n";
-	echo "<tr><td colspan=2>Vendor ID: $vendor_id &nbsp; &nbsp; Lead ID: $lead_id</td></tr>\n";
+	echo "<tr><td colspan=2>$label_vendor_lead_code: $vendor_id &nbsp; &nbsp; Lead ID: $lead_id</td></tr>\n";
 	echo "<tr><td colspan=2>Fronter: <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; List ID: $list_id</td></tr>\n";
-	echo "<tr><td align=right>First Name: </td><td align=left><input type=text name=first_name size=15 maxlength=30 value=\"$first_name\"> &nbsp; \n";
-	echo " MI: <input type=text name=middle_initial size=2 maxlength=1 value=\"$middle_initial\"> &nbsp; \n";
-	echo " Last Name: <input type=text name=last_name size=15 maxlength=30 value=\"$last_name\"> </td></tr>\n";
-	echo "<tr><td align=right>Address 1 : </td><td align=left><input type=text name=address1 size=30 maxlength=30 value=\"$address1\"></td></tr>\n";
-	echo "<tr><td align=right>Address 2 : </td><td align=left><input type=text name=address2 size=30 maxlength=30 value=\"$address2\"></td></tr>\n";
-	echo "<tr><td align=right>Address 3 : </td><td align=left><input type=text name=address3 size=30 maxlength=30 value=\"$address3\"></td></tr>\n";
-	echo "<tr><td align=right>City : </td><td align=left><input type=text name=city size=30 maxlength=30 value=\"$city\"></td></tr>\n";
-	echo "<tr><td align=right>State: </td><td align=left><input type=text name=state size=2 maxlength=2 value=\"$state\"> &nbsp; \n";
-	echo " Postal Code: <input type=text name=postal_code size=10 maxlength=10 value=\"$postal_code\"> </td></tr>\n";
 
-	echo "<tr><td align=right>Province : </td><td align=left><input type=text name=province size=30 maxlength=30 value=\"$province\"></td></tr>\n";
+	echo "<tr><td align=right>$label_title: </td><td align=left><input type=text name=title size=4 maxlength=4 value=\"$title\"> &nbsp; \n";
+	echo "$label_first_name: <input type=text name=first_name size=15 maxlength=30 value=\"$first_name\"> </td></tr>\n";
+	echo "<tr><td align=right>$label_middle_initial:  </td><td align=left><input type=text name=middle_initial size=4 maxlength=1 value=\"$middle_initial\"> &nbsp; \n";
+	echo " $label_last_name: <input type=text name=last_name size=15 maxlength=30 value=\"$last_name\"> </td></tr>\n";
+	echo "<tr><td align=right>$label_address1 : </td><td align=left><input type=text name=address1 size=30 maxlength=30 value=\"$address1\"></td></tr>\n";
+	echo "<tr><td align=right>$label_address2 : </td><td align=left><input type=text name=address2 size=30 maxlength=30 value=\"$address2\"></td></tr>\n";
+	echo "<tr><td align=right>$label_address3 : </td><td align=left><input type=text name=address3 size=30 maxlength=30 value=\"$address3\"></td></tr>\n";
+	echo "<tr><td align=right>$label_city : </td><td align=left><input type=text name=city size=30 maxlength=30 value=\"$city\"></td></tr>\n";
+	echo "<tr><td align=right>$label_state: </td><td align=left><input type=text name=state size=2 maxlength=2 value=\"$state\"> &nbsp; \n";
+	echo " $label_postal_code: <input type=text name=postal_code size=10 maxlength=10 value=\"$postal_code\"> </td></tr>\n";
+
+	echo "<tr><td align=right>$label_province : </td><td align=left><input type=text name=province size=30 maxlength=30 value=\"$province\"></td></tr>\n";
 	echo "<tr><td align=right>Country : </td><td align=left><input type=text name=country_code size=3 maxlength=3 value=\"$country_code\"></td></tr>\n";
-	echo "<tr><td align=right>Main Phone : </td><td align=left><input type=text name=phone_number size=20 maxlength=20 value=\"$phone_number\"></td></tr>\n";
-	echo "<tr><td align=right>Alt Phone : </td><td align=left><input type=text name=alt_phone size=20 maxlength=20 value=\"$alt_phone\"></td></tr>\n";
-	echo "<tr><td align=right>Email : </td><td align=left><input type=text name=email size=30 maxlength=50 value=\"$email\"></td></tr>\n";
-	echo "<tr><td align=right>Security : </td><td align=left><input type=text name=security size=30 maxlength=100 value=\"$security\"></td></tr>\n";
+	echo "<tr><td align=right>$label_phone_number : </td><td align=left><input type=text name=phone_number size=20 maxlength=20 value=\"$phone_number\"></td></tr>\n";
+	echo "<tr><td align=right>$label_phone_code : </td><td align=left><input type=text name=phone_code size=10 maxlength=10 value=\"$phone_code\"></td></tr>\n";
+	echo "<tr><td align=right>$label_alt_phone : </td><td align=left><input type=text name=alt_phone size=20 maxlength=20 value=\"$alt_phone\"></td></tr>\n";
+	echo "<tr><td align=right>$label_email : </td><td align=left><input type=text name=email size=30 maxlength=50 value=\"$email\"></td></tr>\n";
+	echo "<tr><td align=right>$label_security_phrase : </td><td align=left><input type=text name=security size=30 maxlength=100 value=\"$security\"></td></tr>\n";
 	echo "<tr><td align=right>Rank : </td><td align=left><input type=text name=rank size=7 maxlength=5 value=\"$rank\"></td></tr>\n";
 	echo "<tr><td align=right>Owner : </td><td align=left><input type=text name=owner size=22 maxlength=20 value=\"$owner\"></td></tr>\n";
-	echo "<tr><td align=right>Comments : </td><td align=left><TEXTAREA name=comments ROWS=3 COLS=65>$comments</TEXTAREA></td></tr>\n";
+	echo "<tr><td align=right>$label_comments : </td><td align=left><TEXTAREA name=comments ROWS=3 COLS=65>$comments</TEXTAREA></td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Disposition: </td><td align=left><select size=1 name=status>\n";
 
 

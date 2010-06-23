@@ -296,10 +296,11 @@
 # 100513-2337 - Changed user_login_first to attempt full login if phone_login/pass are filled in
 # 100527-2212 - Added API send_dtmf, transfer_conference and park_call functions
 # 100616-1622 - Allowed longer manual dial numbers
+# 100622-2209 - Added field labels
 #
 
-$version = '2.4-274';
-$build = '100616-1622';
+$version = '2.4-275';
+$build = '100622-2209';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -454,6 +455,50 @@ else
 	$SIDEBAR_COLOR			= '#F6F6F6';
 	}
 
+### BEGIN find any custom field labels ###
+$label_title =				'Title';
+$label_first_name =			'First';
+$label_middle_initial =		'MI';
+$label_last_name =			'Last';
+$label_address1 =			'Address1';
+$label_address2 =			'Address2';
+$label_address3 =			'Address3';
+$label_city =				'City';
+$label_state =				'State';
+$label_province =			'Province';
+$label_postal_code =		'PostCode';
+$label_vendor_lead_code =	'Vendor ID';
+$label_gender =				'Gender';
+$label_phone_number =		'Phone';
+$label_phone_code =			'DialCode';
+$label_alt_phone =			'Alt. Phone';
+$label_security_phrase =	'Show';
+$label_email =				'Email';
+$label_comments =			'Comments';
+
+$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+if (strlen($row[0])>0)	{$label_title =				$row[0];}
+if (strlen($row[1])>0)	{$label_first_name =		$row[1];}
+if (strlen($row[2])>0)	{$label_middle_initial =	$row[2];}
+if (strlen($row[3])>0)	{$label_last_name =			$row[3];}
+if (strlen($row[4])>0)	{$label_address1 =			$row[4];}
+if (strlen($row[5])>0)	{$label_address2 =			$row[5];}
+if (strlen($row[6])>0)	{$label_address3 =			$row[6];}
+if (strlen($row[7])>0)	{$label_city =				$row[7];}
+if (strlen($row[8])>0)	{$label_state =				$row[8];}
+if (strlen($row[9])>0)	{$label_province =			$row[9];}
+if (strlen($row[10])>0) {$label_postal_code =		$row[10];}
+if (strlen($row[11])>0) {$label_vendor_lead_code =	$row[11];}
+if (strlen($row[12])>0) {$label_gender =			$row[12];}
+if (strlen($row[13])>0) {$label_phone_number =		$row[13];}
+if (strlen($row[14])>0) {$label_phone_code =		$row[14];}
+if (strlen($row[15])>0) {$label_alt_phone =			$row[15];}
+if (strlen($row[16])>0) {$label_security_phrase =	$row[16];}
+if (strlen($row[17])>0) {$label_email =				$row[17];}
+if (strlen($row[18])>0) {$label_comments =			$row[18];}
+### END find any custom field labels ###
 
 $US='_';
 $CL=':';
@@ -11327,32 +11372,32 @@ $zi=1;
 	<td align=left colspan=2>
 
 	<TABLE width=550><tr>
-	<td align=right><font class="body_text"> Title: </td>
-	<td align=left colspan=5><font class="body_text"><input type=text size=4 name=title maxlength=4 class="cust_form" value="">&nbsp; First: <input type=text size=17 name=first_name maxlength=30 class="cust_form" value="">&nbsp; MI: <input type=text size=1 name=middle_initial maxlength=1 class="cust_form" value="">&nbsp; Last: <input type=text size=23 name=last_name maxlength=30 class="cust_form" value=""></td>
+	<td align=right><font class="body_text"> <?php echo $label_title ?>: </td>
+	<td align=left colspan=5><font class="body_text"><input type=text size=4 name=title maxlength=4 class="cust_form" value="">&nbsp; <?php echo $label_first_name ?>: <input type=text size=17 name=first_name maxlength=30 class="cust_form" value="">&nbsp; <?php echo $label_middle_initial ?>: <input type=text size=1 name=middle_initial maxlength=1 class="cust_form" value="">&nbsp; <?php echo $label_last_name ?>: <input type=text size=23 name=last_name maxlength=30 class="cust_form" value=""></td>
 	</tr><tr>
-	<td align=right><font class="body_text"> Address1: </td>
+	<td align=right><font class="body_text"> <?php echo $label_address1 ?>: </td>
 	<td align=left colspan=5><font class="body_text"><input type=text size=85 name=address1 maxlength=100 class="cust_form" value=""></td>
 	</tr><tr>
-	<td align=right><font class="body_text"> Address2: </td>
+	<td align=right><font class="body_text"> <?php echo $label_address2 ?>: </td>
 	<td align=left><font class="body_text"><input type=text size=20 name=address2 maxlength=100 class="cust_form" value=""></td>
-	<td align=right><font class="body_text">Address3: </td>
+	<td align=right><font class="body_text"><?php echo $label_address3 ?>: </td>
 	<td align=left colspan=3><font class="body_text"><input type=text size=45 name=address3 maxlength=100 class="cust_form" value=""></td>
 	</tr><tr>
-	<td align=right><font class="body_text"> City: </td>
+	<td align=right><font class="body_text"> <?php echo $label_city ?>: </td>
 	<td align=left><font class="body_text"><input type=text size=20 name=city maxlength=50 class="cust_form" value=""></td>
-	<td align=right><font class="body_text">State: </td>
+	<td align=right><font class="body_text"><?php echo $label_state ?>: </td>
 	<td align=left><font class="body_text"><input type=text size=4 name=state maxlength=2 class="cust_form" value=""></td>
-	<td align=right><font class="body_text">PostCode: </td>
+	<td align=right><font class="body_text"><?php echo $label_postal_code ?>: </td>
 	<td align=left><font class="body_text"><input type=text size=14 name=postal_code maxlength=10 class="cust_form" value=""></td>
 	</tr><tr>
-	<td align=right><font class="body_text"> Province: </td>
+	<td align=right><font class="body_text"> <?php echo $label_province ?>: </td>
 	<td align=left><font class="body_text"><input type=text size=20 name=province maxlength=50 class="cust_form" value=""></td>
-	<td align=right><font class="body_text">Vendor ID: </td>
+	<td align=right><font class="body_text"><?php echo $label_vendor_lead_code ?>: </td>
 	<td align=left><font class="body_text"><input type=text size=15 name=vendor_lead_code maxlength=20 class="cust_form" value=""></td>
-	<td align=right><font class="body_text">Gender: </td>
+	<td align=right><font class="body_text"><?php echo $label_gender ?>: </td>
 	<td align=left><font class="body_text"><span id="GENDERhideFORie"><select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select></span></td>
 	</tr><tr>
-	<td align=right><font class="body_text"> Phone: </td>
+	<td align=right><font class="body_text"> <?php echo $label_phone_number ?>: </td>
 	<td align=left><font class="body_text">
 	<?php 
 	if ( (ereg('Y',$disable_alter_custphone)) or (ereg('HIDE',$disable_alter_custphone)) )
@@ -11367,17 +11412,17 @@ $zi=1;
 	?>
 
 	</td>
-	<td align=right><font class="body_text">DialCode: </td>
+	<td align=right><font class="body_text"><?php echo $label_phone_code ?>: </td>
 	<td align=left><font class="body_text"><input type=text size=4 name=phone_code maxlength=10 class="cust_form" value=""></td>
-	<td align=right><font class="body_text">Alt. Phone: </td>
+	<td align=right><font class="body_text"><?php echo $label_alt_phone ?>: </td>
 	<td align=left><font class="body_text"><input type=text size=14 name=alt_phone maxlength=16 class="cust_form" value=""></td>
 	</tr><tr>
-	<td align=right><font class="body_text"> Show: </td>
+	<td align=right><font class="body_text"> <?php echo $label_security_phrase ?>: </td>
 	<td align=left><font class="body_text"><input type=text size=20 name=security_phrase maxlength=100 class="cust_form" value=""></td>
-	<td align=right><font class="body_text">Email: </td>
+	<td align=right><font class="body_text"><?php echo $label_email ?>: </td>
 	<td align=left colspan=3><font class="body_text"><input type=text size=45 name=email maxlength=70 class="cust_form" value=""></td>
 	</tr><tr>
-	<td align=right valign=top><font class="body_text"> Comments: </td>
+	<td align=right valign=top><font class="body_text"> <?php echo $label_comments ?>: </td>
 	<td align=left colspan=5>
 	<font class="body_text">
 	<?php

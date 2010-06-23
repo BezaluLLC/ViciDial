@@ -1272,7 +1272,26 @@ callcard_enabled ENUM('1','0') default '0',
 queuemetrics_callstatus ENUM('0','1') default '1',
 default_codecs VARCHAR(100) default '',
 custom_fields_enabled ENUM('0','1') default '0',
-admin_web_directory VARCHAR(255) default 'vicidial'
+admin_web_directory VARCHAR(255) default 'vicidial',
+label_title VARCHAR(40) default '',
+label_first_name VARCHAR(40) default '',
+label_middle_initial VARCHAR(40) default '',
+label_last_name VARCHAR(40) default '',
+label_address1 VARCHAR(40) default '',
+label_address2 VARCHAR(40) default '',
+label_address3 VARCHAR(40) default '',
+label_city VARCHAR(40) default '',
+label_state VARCHAR(40) default '',
+label_province VARCHAR(40) default '',
+label_postal_code VARCHAR(40) default '',
+label_vendor_lead_code VARCHAR(40) default '',
+label_gender VARCHAR(40) default '',
+label_phone_number VARCHAR(40) default '',
+label_phone_code VARCHAR(40) default '',
+label_alt_phone VARCHAR(40) default '',
+label_security_phrase VARCHAR(40) default '',
+label_email VARCHAR(40) default '',
+label_comments VARCHAR(40) default ''
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2250,7 +2269,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1228',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1229',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

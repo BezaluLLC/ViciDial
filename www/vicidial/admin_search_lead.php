@@ -1,5 +1,5 @@
 <?php
-# admin_search_lead.php
+# admin_search_lead.php   version 2.4
 # 
 # Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -23,6 +23,7 @@
 # 90921-0713 - Removed SELECT STAR
 # 100224-1621 - Added first/last name search and changed format of the page
 # 100405-1331 - Added log search ability
+# 100622-0928 - Added field labels
 #
 
 require("dbconnect.php");
@@ -146,6 +147,50 @@ $subcamp_color =	'#C6C6C6';
 
 require("admin_header.php");
 
+$label_title =				'Title';
+$label_first_name =			'First';
+$label_middle_initial =		'MI';
+$label_last_name =			'Last';
+$label_address1 =			'Address1';
+$label_address2 =			'Address2';
+$label_address3 =			'Address3';
+$label_city =				'City';
+$label_state =				'State';
+$label_province =			'Province';
+$label_postal_code =		'Postal Code';
+$label_vendor_lead_code =	'Vendor ID';
+$label_gender =				'Gender';
+$label_phone_number =		'Phone';
+$label_phone_code =			'DialCode';
+$label_alt_phone =			'Alt. Phone';
+$label_security_phrase =	'Show';
+$label_email =				'Email';
+$label_comments =			'Comments';
+
+### find any custom field labels
+$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+if (strlen($row[0])>0)	{$label_title =				$row[0];}
+if (strlen($row[1])>0)	{$label_first_name =		$row[1];}
+if (strlen($row[2])>0)	{$label_middle_initial =	$row[2];}
+if (strlen($row[3])>0)	{$label_last_name =			$row[3];}
+if (strlen($row[4])>0)	{$label_address1 =			$row[4];}
+if (strlen($row[5])>0)	{$label_address2 =			$row[5];}
+if (strlen($row[6])>0)	{$label_address3 =			$row[6];}
+if (strlen($row[7])>0)	{$label_city =				$row[7];}
+if (strlen($row[8])>0)	{$label_state =				$row[8];}
+if (strlen($row[9])>0)	{$label_province =			$row[9];}
+if (strlen($row[10])>0) {$label_postal_code =		$row[10];}
+if (strlen($row[11])>0) {$label_vendor_lead_code =	$row[11];}
+if (strlen($row[12])>0) {$label_gender =			$row[12];}
+if (strlen($row[13])>0) {$label_phone_number =		$row[13];}
+if (strlen($row[14])>0) {$label_phone_code =		$row[14];}
+if (strlen($row[15])>0) {$label_alt_phone =			$row[15];}
+if (strlen($row[16])>0) {$label_security_phrase =	$row[16];}
+if (strlen($row[17])>0) {$label_email =				$row[17];}
+if (strlen($row[18])>0) {$label_comments =			$row[18];}
+
 
 echo " Lead search: $vendor_id $phone $lead_id $status $list_id $user\n";
 echo date("l F j, Y G:i:s A");
@@ -162,16 +207,16 @@ if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_
 	echo "<TD colspan=3 align=center><b>Lead Search Options:</TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 
-	echo "<TD ALIGN=right>Vendor ID(vendor lead code): &nbsp; </TD><TD ALIGN=left><input type=text name=vendor_id size=10 maxlength=10></TD>";
+	echo "<TD ALIGN=right>$label_vendor_lead_code(vendor lead code): &nbsp; </TD><TD ALIGN=left><input type=text name=vendor_id size=10 maxlength=10></TD>";
 	echo "<TD><input type=submit name=submit value=SUBMIT></TD>\n";
 	echo "</TR><TR>";
 	echo "<TD colspan=3 align=center> &nbsp; </TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 
-	echo "<TD ALIGN=right>Home Phone Number: &nbsp; </TD><TD ALIGN=left><input type=text name=phone size=14 maxlength=18></TD>";
+	echo "<TD ALIGN=right>$label_phone_number: &nbsp; </TD><TD ALIGN=left><input type=text name=phone size=14 maxlength=18></TD>";
 	echo "<TD rowspan=2><input type=submit name=submit value=SUBMIT></TD>\n";
 	echo "</TR><TR bgcolor=#B9CBFD>";
-	echo "<TD ALIGN=right>Alt phone search: &nbsp; </TD><TD ALIGN=left><select size=1 name=alt_phone_search><option>No</option><option>Yes</option><option SELECTED>$alt_phone_search</option></select></TD>";
+	echo "<TD ALIGN=right>$label_alt_phone search: &nbsp; </TD><TD ALIGN=left><select size=1 name=alt_phone_search><option>No</option><option>Yes</option><option SELECTED>$alt_phone_search</option></select></TD>";
 	echo "</TR><TR>";
 	echo "<TD colspan=3 align=center> &nbsp; </TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
@@ -192,10 +237,10 @@ if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_
 	echo "<TD colspan=3 align=center> &nbsp; </TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 
-	echo "<TD ALIGN=right>First Name: &nbsp; </TD><TD ALIGN=left><input type=text name=first_name size=15 maxlength=30></TD>";
+	echo "<TD ALIGN=right>$label_first_name: &nbsp; </TD><TD ALIGN=left><input type=text name=first_name size=15 maxlength=30></TD>";
 	echo "<TD rowspan=2><input type=submit name=submit value=SUBMIT></TD>\n";
 	echo "</TR><TR bgcolor=#B9CBFD>";
-	echo "<TD ALIGN=right>Last Name: &nbsp; </TD><TD ALIGN=left><input type=text name=last_name size=15 maxlength=30></TD>";
+	echo "<TD ALIGN=right>$label_last_name: &nbsp; </TD><TD ALIGN=left><input type=text name=last_name size=15 maxlength=30></TD>";
 	echo "</TR>";
 
 
@@ -212,7 +257,7 @@ if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_
 	echo "<TD colspan=3 align=center> &nbsp; </TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 
-	echo "<TD ALIGN=right>Phone Number Dialed: &nbsp; </TD><TD ALIGN=left><input type=text name=log_phone size=18 maxlength=18></TD>";
+	echo "<TD ALIGN=right>$label_phone_number Dialed: &nbsp; </TD><TD ALIGN=left><input type=text name=log_phone size=18 maxlength=18></TD>";
 	echo "<TD><input type=submit name=submit value=SUBMIT></TD>\n";
 	echo "</TR><TR>";
 	echo "<TD colspan=3 align=center> &nbsp; </TD>";

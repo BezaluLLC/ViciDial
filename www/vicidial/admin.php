@@ -1289,6 +1289,44 @@ if (isset($_GET["admin_web_directory"]))			{$admin_web_directory=$_GET["admin_we
 	elseif (isset($_POST["admin_web_directory"]))	{$admin_web_directory=$_POST["admin_web_directory"];}
 if (isset($_GET["tts_voice"]))				{$tts_voice=$_GET["tts_voice"];}
 	elseif (isset($_POST["tts_voice"]))		{$tts_voice=$_POST["tts_voice"];}
+if (isset($_GET["label_title"]))					{$label_title=$_GET["label_title"];}
+	elseif (isset($_POST["label_title"]))			{$label_title=$_POST["label_title"];}
+if (isset($_GET["label_first_name"]))				{$label_first_name=$_GET["label_first_name"];}
+	elseif (isset($_POST["label_first_name"]))		{$label_first_name=$_POST["label_first_name"];}
+if (isset($_GET["label_middle_initial"]))			{$label_middle_initial=$_GET["label_middle_initial"];}
+	elseif (isset($_POST["label_middle_initial"]))	{$label_middle_initial=$_POST["label_middle_initial"];}
+if (isset($_GET["label_last_name"]))				{$label_last_name=$_GET["label_last_name"];}
+	elseif (isset($_POST["label_last_name"]))		{$label_last_name=$_POST["label_last_name"];}
+if (isset($_GET["label_address1"]))					{$label_address1=$_GET["label_address1"];}
+	elseif (isset($_POST["label_address1"]))		{$label_address1=$_POST["label_address1"];}
+if (isset($_GET["label_address2"]))					{$label_address2=$_GET["label_address2"];}
+	elseif (isset($_POST["label_address2"]))		{$label_address2=$_POST["label_address2"];}
+if (isset($_GET["label_address3"]))					{$label_address3=$_GET["label_address3"];}
+	elseif (isset($_POST["label_address3"]))		{$label_address3=$_POST["label_address3"];}
+if (isset($_GET["label_city"]))						{$label_city=$_GET["label_city"];}
+	elseif (isset($_POST["label_city"]))			{$label_city=$_POST["label_city"];}
+if (isset($_GET["label_state"]))					{$label_state=$_GET["label_state"];}
+	elseif (isset($_POST["label_state"]))			{$label_state=$_POST["label_state"];}
+if (isset($_GET["label_province"]))					{$label_province=$_GET["label_province"];}
+	elseif (isset($_POST["label_province"]))		{$label_province=$_POST["label_province"];}
+if (isset($_GET["label_postal_code"]))				{$label_postal_code=$_GET["label_postal_code"];}
+	elseif (isset($_POST["label_postal_code"]))		{$label_postal_code=$_POST["label_postal_code"];}
+if (isset($_GET["label_vendor_lead_code"]))			{$label_vendor_lead_code=$_GET["label_vendor_lead_code"];}
+	elseif (isset($_POST["label_vendor_lead_code"])){$label_vendor_lead_code=$_POST["label_vendor_lead_code"];}
+if (isset($_GET["label_gender"]))					{$label_gender=$_GET["label_gender"];}
+	elseif (isset($_POST["label_gender"]))			{$label_gender=$_POST["label_gender"];}
+if (isset($_GET["label_phone_number"]))				{$label_phone_number=$_GET["label_phone_number"];}
+	elseif (isset($_POST["label_phone_number"]))	{$label_phone_number=$_POST["label_phone_number"];}
+if (isset($_GET["label_phone_code"]))				{$label_phone_code=$_GET["label_phone_code"];}
+	elseif (isset($_POST["label_phone_code"]))		{$label_phone_code=$_POST["label_phone_code"];}
+if (isset($_GET["label_alt_phone"]))				{$label_alt_phone=$_GET["label_alt_phone"];}
+	elseif (isset($_POST["label_alt_phone"]))		{$label_alt_phone=$_POST["label_alt_phone"];}
+if (isset($_GET["label_security_phrase"]))			{$label_security_phrase=$_GET["label_security_phrase"];}
+	elseif (isset($_POST["label_security_phrase"]))	{$label_security_phrase=$_POST["label_security_phrase"];}
+if (isset($_GET["label_email"]))					{$label_email=$_GET["label_email"];}
+	elseif (isset($_POST["label_email"]))			{$label_email=$_POST["label_email"];}
+if (isset($_GET["label_comments"]))					{$label_comments=$_GET["label_comments"];}
+	elseif (isset($_POST["label_comments"]))		{$label_comments=$_POST["label_comments"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1893,6 +1931,26 @@ if ($non_latin < 1)
 	$external_server_ip = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$external_server_ip);
 	$default_codecs = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$default_codecs);
 	$codecs_list = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$codecs_list);
+	$label_title = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_title);
+	$label_first_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_first_name);
+	$label_middle_initial = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_middle_initial);
+	$label_last_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_last_name);
+	$label_address1 = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_address1);
+	$label_address2 = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_address2);
+	$label_address3 = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_address3);
+	$label_city = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_city);
+	$label_state = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_state);
+	$label_province = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_province);
+	$label_postal_code = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_postal_code);
+	$label_vendor_lead_code = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_vendor_lead_code);
+	$label_gender = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_gender);
+	$label_phone_number = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_phone_number);
+	$label_phone_code = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_phone_code);
+	$label_alt_phone = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_alt_phone);
+	$label_security_phrase = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_security_phrase);
+	$label_email = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_email);
+	$label_comments = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_comments);
+
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
 	$call_out_number_group = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$call_out_number_group);
@@ -2258,11 +2316,12 @@ else
 # 100523-0840 - Added inbound prompt and no-block options
 # 100616-2232 - Added VIDPROMPT call menu options
 # 100621-1010 - Added admin_web_directory system setting
+# 100622-1700 - Added custom agent field names for default fields
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-258';
-$build = '100621-1010';
+$admin_version = '2.4-259';
+$build = '100622-1700';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6394,6 +6453,11 @@ if ($ADD==99999)
 	<A NAME="settings-callcard_enabled">
 	<BR>
 	<B>Enable CallCard -</B> This setting enables the CallCard features with ViciDial to allow for callers to use pin numbers and card_ids that have a balance of minutes and those balances can have agent talk time on customer calls to in-groups deducted. Default is 0 for disabled.
+
+	<BR>
+	<A NAME="settings-default_field_labels">
+	<BR>
+	<B>Default Field Labels -</B> These 19 fields allow you to set the name as it will appear in the ViciDial agent interface as well as the administrative modify lead page. Default is empty which will use the hard-coded defaults in the agent interface. 
 
 	<BR>
 	<A NAME="settings-qc_features_active">
@@ -14149,7 +14213,7 @@ if ($ADD==411111111111111)
 
 		echo "<br>VICIDIAL SYSTEM SETTINGS MODIFIED\n";
 
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='$webphone_url',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory';";
+		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='$webphone_url',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments';";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -23403,7 +23467,7 @@ if ($ADD==311111111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory from system_settings;";
+		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$version =						$row[0];
@@ -23461,6 +23525,25 @@ if ($ADD==311111111111111)
 		$queuemetrics_callstatus =		$row[52];
 		$default_codecs =				$row[53];
 		$admin_web_directory =			$row[54];
+		$label_title =					$row[55];
+		$label_first_name =				$row[56];
+		$label_middle_initial =			$row[57];
+		$label_last_name =				$row[58];
+		$label_address1 =				$row[59];
+		$label_address2 =				$row[60];
+		$label_address3 =				$row[61];
+		$label_city =					$row[62];
+		$label_state =					$row[63];
+		$label_province =				$row[64];
+		$label_postal_code =			$row[65];
+		$label_vendor_lead_code =		$row[66];
+		$label_gender =					$row[67];
+		$label_phone_number =			$row[68];
+		$label_phone_code =				$row[69];
+		$label_alt_phone =				$row[70];
+		$label_security_phrase =		$row[71];
+		$label_email =					$row[72];
+		$label_comments =				$row[73];
 
 		echo "<br>MODIFY VICIDIAL SYSTEM SETTINGS<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=411111111111111>\n";
@@ -23619,6 +23702,49 @@ if ($ADD==311111111111111)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>Custom Dialplan Entry: </td><td align=left>Disabled <input type=hidden name=custom_dialplan_entry value=\"\">$NWB#settings-custom_dialplan_entry$NWE</td></tr>\n";
 			}
+
+
+
+
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label Title: </td><td align=left><input type=text name=label_title size=20 maxlength=40 value=\"$label_title\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label First Name: </td><td align=left><input type=text name=label_first_name size=20 maxlength=40 value=\"$label_first_name\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label Middle Initial: </td><td align=left><input type=text name=label_middle_initial size=20 maxlength=40 value=\"$label_middle_initial\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label Last Name: </td><td align=left><input type=text name=label_last_name size=20 maxlength=40 value=\"$label_last_name\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label Address1: </td><td align=left><input type=text name=label_address1 size=20 maxlength=40 value=\"$label_address1\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label Address2: </td><td align=left><input type=text name=label_address2 size=20 maxlength=40 value=\"$label_address2\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label Address3: </td><td align=left><input type=text name=label_address3 size=20 maxlength=40 value=\"$label_address3\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label City: </td><td align=left><input type=text name=label_city size=20 maxlength=40 value=\"$label_city\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label State: </td><td align=left><input type=text name=label_state size=20 maxlength=40 value=\"$label_state\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label Province: </td><td align=left><input type=text name=label_province size=20 maxlength=40 value=\"$label_province\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label Postal Code: </td><td align=left><input type=text name=label_postal_code size=20 maxlength=40 value=\"$label_postal_code\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label Vendor Lead Code: </td><td align=left><input type=text name=label_vendor_lead_code size=20 maxlength=40 value=\"$label_vendor_lead_code\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label Gender: </td><td align=left><input type=text name=label_gender size=20 maxlength=40 value=\"$label_gender\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label Phone Number: </td><td align=left><input type=text name=label_phone_number size=20 maxlength=40 value=\"$label_phone_number\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label Phone Code: </td><td align=left><input type=text name=label_phone_code size=20 maxlength=40 value=\"$label_phone_code\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label Alt Phone: </td><td align=left><input type=text name=label_alt_phone size=20 maxlength=40 value=\"$label_alt_phone\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label Security Phrase: </td><td align=left><input type=text name=label_security_phrase size=20 maxlength=40 value=\"$label_security_phrase\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label Email: </td><td align=left><input type=text name=label_email size=20 maxlength=40 value=\"$label_email\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCCCCC><td align=right>Label Comments: </td><td align=left><input type=text name=label_comments size=20 maxlength=40 value=\"$label_comments\">$NWB#settings-default_field_labels$NWE</td></tr>\n";
+
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>QC Features Active: </td><td align=left><select size=1 name=qc_features_active><option>1</option><option>0</option><option selected>$qc_features_active</option></select>$NWB#settings-qc_features_active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>QC Last Pull Time: </td><td align=left> $qc_last_pull_time</td></tr>\n";

@@ -367,3 +367,25 @@ UPDATE system_settings SET db_schema_version='1227',db_schema_update_date=NOW();
 ALTER TABLE vicidial_tts_prompts ADD tts_voice VARCHAR(100) default 'Allison-8kHz';
 
 UPDATE system_settings SET db_schema_version='1228',db_schema_update_date=NOW();
+
+ALTER TABLE system_settings ADD label_title VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_first_name VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_middle_initial VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_last_name VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_address1 VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_address2 VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_address3 VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_city VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_state VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_province VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_postal_code VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_vendor_lead_code VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_gender VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_phone_number VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_phone_code VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_alt_phone VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_security_phrase VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_email VARCHAR(40) default '';
+ALTER TABLE system_settings ADD label_comments VARCHAR(40) default '';
+
+UPDATE system_settings SET db_schema_version='1229',db_schema_update_date=NOW();

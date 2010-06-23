@@ -167,6 +167,8 @@ OTHER CHANGES:
 
 40. Added function for start_call_url to work with remote agents
 
+41. Added custom default field names for fields in the agent interface. Defined
+	in the Admin System Settings
 
 
 
