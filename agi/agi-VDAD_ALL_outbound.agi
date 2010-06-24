@@ -619,7 +619,7 @@ if ($affected_rows > 0)
 		}
 
 	$xCLlist_id=0;
-	$stmtA = "SELECT list_id from vicidial_list where lead_id='$CIDlead_id' limit 1;";
+	$stmtA = "SELECT list_id,security_phrase from vicidial_list where lead_id='$CIDlead_id' limit 1;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArowsLI=$sthA->rows;
@@ -627,7 +627,8 @@ if ($affected_rows > 0)
 	if ($sthArowsLI > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$xCLlist_id =	$aryA[0];
+		$xCLlist_id =		$aryA[0];
+		$security_phrase =	$aryA[1];
 		}
 	$sthA->finish();
 
@@ -838,7 +839,10 @@ if ($call_handle_method =~ /SURVEY/)
 		}
 
 	# record what they entered
-	$stmtA = "UPDATE vicidial_list set security_phrase='$opt_description',status='PM' where lead_id = '$CIDlead_id';";
+	$sec_phrase_SQL='';
+	if (length($security_phrase)<1) 
+		{$sec_phrase_SQL = "security_phrase='$opt_description',";}
+	$stmtA = "UPDATE vicidial_list set $sec_phrase_SQL status='PM' where lead_id = '$CIDlead_id';";
 	if ($AGILOG) { $agi_string = "|$stmtA|"; &agi_output; }
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='01016';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
