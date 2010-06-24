@@ -247,10 +247,11 @@
 # 100420-1006 - Added option for LIVE-only callback count
 # 100424-1630 - Added uniqueid display options
 # 100622-2217 - Added field labels
+# 100624-1401 - Fix for dispo call url bug related to dialed number and label
 #
 
-$version = '2.4-154';
-$build = '100622-2217';
+$version = '2.4-155';
+$build = '100624-1401';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=333;
 $one_mysql_log=0;
@@ -5053,6 +5054,7 @@ if ($ACTION == 'updateDISPO')
 			$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
 			{
+			$call_type='IN';
 			$stmt = "UPDATE vicidial_closer_log set status='$dispo_choice' where lead_id='$lead_id' and user='$user' order by closecallid desc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
@@ -5077,6 +5079,7 @@ if ($ACTION == 'updateDISPO')
 			}
 		else
 			{
+			$call_type='OUT';
 			$four_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-4,date("i"),date("s"),date("m"),date("d"),date("Y")));
 
 			if ( ($auto_dial_level < 1) or (preg_match('/^M/',$MDnextCID)) )
@@ -5963,7 +5966,30 @@ if ($ACTION == 'updateDISPO')
 			if (strlen($status_name) < 1) {$status_name = $dispo_choice;}
 			}
 		$dispo_name = urlencode(trim($status_name));
-			
+
+
+		if (eregi('--A--dialed_',$dispo_call_url))
+			{
+			$dialed_number =	$phone_number;
+			$dialed_label =		'NONE';
+
+			if ($call_type=='OUT')
+				{
+				### find the dialed number and label for this call
+				$stmt = "SELECT phone_number,alt_dial from vicidial_log where uniqueid='$uniqueid';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				$vl_dialed_ct = mysql_num_rows($rslt);
+				if ($vl_dialed_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$dialed_number =	$row[0];
+					$dialed_label =		$row[1];
+					}
+				}
+			}
+
 
 
 		##### grab the data from vicidial_list for the lead_id
