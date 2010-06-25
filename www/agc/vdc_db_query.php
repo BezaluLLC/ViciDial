@@ -248,10 +248,11 @@
 # 100424-1630 - Added uniqueid display options
 # 100622-2217 - Added field labels
 # 100624-1401 - Fix for dispo call url bug related to dialed number and label
+# 100625-0915 - Fix for auto-dial bug for presets and timer actions
 #
 
-$version = '2.4-155';
-$build = '100624-1401';
+$version = '2.4-156';
+$build = '100625-0915';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=333;
 $one_mysql_log=0;
@@ -4162,7 +4163,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 					$script_recording_delay = $row[0];
 					}
 
-				$stmt = "SELECT campaign_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_xfer_group,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number from vicidial_campaigns where campaign_id='$campaign';";
+				$stmt = "SELECT campaign_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_xfer_group,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,timer_action,timer_action_message,timer_action_seconds from vicidial_campaigns where campaign_id='$campaign';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00114',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4170,19 +4171,23 @@ if ($ACTION == 'VDADcheckINCOMING')
 				if ($VDIG_cid_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
-					$VDCL_campaign_script =		$row[0];
-					$VDCL_get_call_launch =		$row[1];
-					$VDCL_xferconf_a_dtmf =		$row[2];
-					$VDCL_xferconf_a_number =	$row[3];
-					$VDCL_xferconf_b_dtmf =		$row[4];
-					$VDCL_xferconf_b_number =	$row[5];
-					$VDCL_default_xfer_group =	$row[6];
+					$VDCL_campaign_script =			$row[0];
+					$VDCL_get_call_launch =			$row[1];
+					$VDCL_xferconf_a_dtmf =			$row[2];
+					$VDCL_xferconf_a_number =		$row[3];
+					$VDCL_xferconf_b_dtmf =			$row[4];
+					$VDCL_xferconf_b_number =		$row[5];
+					$VDCL_default_xfer_group =		$row[6];
 					if (strlen($VDCL_default_xfer_group)<2) {$VDCL_default_xfer_group='X';}
-					$VDCL_start_call_url =		$row[7];
-					$VDCL_dispo_call_url =		$row[8];
-					$VDCL_xferconf_c_number =	$row[9];
-					$VDCL_xferconf_d_number =	$row[10];
-					$VDCL_xferconf_e_number =	$row[11];
+					$VDCL_start_call_url =			$row[7];
+					$VDCL_dispo_call_url =			$row[8];
+					$VDCL_xferconf_c_number =		$row[9];
+					$VDCL_xferconf_d_number =		$row[10];
+					$VDCL_xferconf_e_number =		$row[11];
+					$VDCL_timer_action =			$row[11];
+					$VDCL_timer_action_message =	$row[11];
+					$VDCL_timer_action_seconds =	$row[11];
+
 					}
 
 				### Check for List ID override settings
@@ -4209,7 +4214,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 						}
 					}
 
-				echo "|||||$VDCL_campaign_script|$VDCL_get_call_launch|$VDCL_xferconf_a_dtmf|$VDCL_xferconf_a_number|$VDCL_xferconf_b_dtmf|$VDCL_xferconf_b_number|$VDCL_default_xfer_group|X|X|||||$VDCL_xferconf_c_number|$VDCL_xferconf_d_number|$VDCL_xferconf_e_number\n|\n";
+				echo "|||||$VDCL_campaign_script|$VDCL_get_call_launch|$VDCL_xferconf_a_dtmf|$VDCL_xferconf_a_number|$VDCL_xferconf_b_dtmf|$VDCL_xferconf_b_number|$VDCL_default_xfer_group|X|X|||||$VDCL_timer_action|$VDCL_timer_action_message|$VDCL_timer_action_seconds|$VDCL_xferconf_c_number|$VDCL_xferconf_d_number|$VDCL_xferconf_e_number||||\n|\n";
 				
 				if (ereg('X',$dialed_label))
 					{
