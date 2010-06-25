@@ -33,6 +33,7 @@
 # 60906-1714 - added updating for special vicidial conference calls
 # 71129-2004 - Fixed SQL error
 # 100416-0635 - Added fix for extension append feature
+# 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
 #
 
 # constants
@@ -661,6 +662,8 @@ while($one_day_interval > 0)
 
 	@hangup = $tn->cmd(String => "Action: Logoff\n\n", Prompt => "/.*/", Errmode    => Return, Timeout    => 1); 
 
+	$tn->buffer_empty;
+	$tn->waitfor(Match => '/Message:.*\n\n/', Timeout => 10);
 	$ok = $tn->close;
 
 	$one_day_interval--;

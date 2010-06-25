@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_update.pl version 2.0.5   *DBI-version*
+# AST_update.pl version 2.4
 #
 # DESCRIPTION:
 # uses the Asterisk Manager interface and Net::MySQL to update the live_channels
@@ -30,7 +30,7 @@
 #
 # It is recommended that you run this program on the local Asterisk machine
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # version changes:
 # 41228-1659 - modified to compensate for manager output response hiccups
@@ -58,9 +58,10 @@
 # 80111-1850 - fixed server_updater record missing bug
 # 90307-1932 - Added servers table stats updating, reformatted code to match standard
 # 90604-1127 - Added support for DAHDI channels
+# 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
 #
 
-$build = '90604-1127';
+$build = '100625-1220';
 
 # constants
 $SYSPERF=0;	# system performance logging to MySQL server_performance table every 5 seconds
@@ -1044,6 +1045,8 @@ while($one_day_interval > 0)
 
 	@hangup = $t->cmd(String => "Action: Logoff\n\n", Prompt => "/.*/"); 
 
+	$t->buffer_empty;
+	$t->waitfor(Match => '/Message:.*\n\n/', Timeout => 10);
 	$ok = $t->close;
 
 	$one_day_interval--;

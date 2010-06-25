@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 #
-# AST_conf_update.pl version 2.0.5   *DBI-version*
+# AST_conf_update.pl version 2.4
 #
 # This script checks if there are channels in reserved conferences
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 50810-1532 - Added database server variable definitions lookup
 # 50823-1456 - Added commandline arguments for debug at runtime
@@ -13,6 +13,7 @@
 # 80506-1055 - Added check for vicidial_conferences in 3WAY
 # 80914-1533 - Added kickall for leave-3way calls after one hour
 # 81008-0937 - Added kickall from vicidial_conferences if only one participant
+# 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
 #
 
 # constants
@@ -313,6 +314,7 @@ foreach(@PTextensions)
 $t->buffer_empty;
 @hangup = $t->cmd(String => "Action: Logoff\n\n", Prompt => "/.*/"); 
 $t->buffer_empty;
+$t->waitfor(Match => '/Message:.*\n\n/', Timeout => 10);
 $ok = $t->close;
 
 
@@ -421,6 +423,7 @@ foreach(@PTextensions)
 $t->buffer_empty;
 @hangup = $t->cmd(String => "Action: Logoff\n\n", Prompt => "/.*/"); 
 $t->buffer_empty;
+$t->waitfor(Match => '/Message:.*\n\n/', Timeout => 10);
 $ok = $t->close;
 
 $dbhA->disconnect();

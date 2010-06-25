@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_vm_update.pl version 2.2.0   *DBI-version*
+# AST_vm_update.pl version 2.4
 #
 # DESCRIPTION:
 # uses the Asterisk Manager interface to update the count of voicemail messages 
@@ -12,13 +12,14 @@
 # more than this either change the cron when this script is run or change the 
 # wait interval below
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 50823-1422 - Added database server variable definitions lookup
 # 50823-1452 - Added commandline arguments for debug at runtime
 # 60717-1204 - Changed to DBI by Marin Blu
 # 60715-2301 - Changed to use /etc/astguiclient.conf for configs
 # 90919-1739 - Added other voicemail checking from vicidial_voicemail table
+# 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
 #
 
 # constants
@@ -299,6 +300,7 @@ if ($active_voicemail_server > 0)
 $t->buffer_empty;
 @hangup = $t->cmd(String => "Action: Logoff\n\n", Prompt => "/.*/"); 
 $t->buffer_empty;
+$t->waitfor(Match => '/Message:.*\n\n/', Timeout => 10);
 $ok = $t->close;
 
 

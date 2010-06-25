@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_send_action_child.pl version 2.0.5   *DBI-version
+# AST_send_action_child.pl version 2.4
 # 
 # Part of the Asterisk Central Queue System (ACQS)
 #
@@ -14,24 +14,30 @@
 # to be executed. connect to the manager interface, send the action and logoff
 # then exit.
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 50810-1547 - Added database server variable definitions lookup
 # 50823-1527 - Altered commandline debug options with debug printouts
 # 50902-1032 - Changed default logging to fulllog
-# 60718-0909 - changed to DBI by Marin Blu
-# 60718-1024 - changed to use /etc/astguiclient.conf for configs
-# 60814-1720 - added option for no logging to file
-# 60817-1244 - removed all DB calls and config file open to reduce footprint
-# 61004-1728 - added ability to parse volume control and lookup meetme IDs
-# 61220-1720 - optimize and clean code, lc.
-# 61221-1942 - additional modification to structure, lc.
-# 80418-0927 - added man_id to logging output for better tracking, raised sleep times
+# 60718-0909 - Changed to DBI by Marin Blu
+# 60718-1024 - Changed to use /etc/astguiclient.conf for configs
+# 60814-1720 - Added option for no logging to file
+# 60817-1244 - Removed all DB calls and config file open to reduce footprint
+# 61004-1728 - Added ability to parse volume control and lookup meetme IDs
+# 61220-1720 - Optimize and clean code <LottC>
+# 61221-1942 - Additional modification to structure <LottC>
+# 80418-0927 - Added man_id to logging output for better tracking, raised sleep times
+# 100625-1141 - Added waitfors after orginate and logout to fix broken pipe errors in asterisk <MikeC>
+# 100625-1206 - Use strict is a performance hit and should only be uncommented for debugging <MikeC>
 #
 
 $|++;
-use strict;
+
+# use strict is a performance hit and should only be uncommented for debugging
+#use strict;
+#
+
 use Getopt::Long;
 use Net::Telnet;
 
@@ -223,8 +229,9 @@ if ($action) {
 	my @list_channels = $tn->cmd(String => $originate_command,
 		Prompt => '/.*/'); 
 
-	sleep(4);
-	
+	$tn->waitfor(Match => '/Response:.*\n/', Timeout => 10);
+	$tn->waitfor(Match => '/Message:.*\n\n/', Timeout => 10);
+
 	my $data1;  # ? Useless ?
 	if ($FULL_LOG and $SYSLOG) {
 		my $event_string = $man_id . "|1|" . $data1 . "|";
@@ -239,8 +246,10 @@ if ($action) {
 
 	$tn->buffer_empty;
 	#@hangup = $tn->cmd(String => "Action: Logoff\n\n", Prompt => "/.*/"); 
-	$tn->cmd(String => "Action: Logoff\n\n", Prompt => "/.*/"); 
-	sleep(3);
+	$tn->cmd(String => "Action: Logoff\n\n", Prompt => "/.*/");
+        $tn->buffer_empty;	
+	
+	$tn->waitfor(Match => '/Message:.*\n\n/', Timeout => 10);
 
 	if ($FULL_LOG and $SYSLOG) {
 		my $event_string = $man_id . "|2|" . $data1 . "|";
