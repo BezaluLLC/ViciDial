@@ -170,6 +170,10 @@ OTHER CHANGES:
 41. Added custom default field names for fields in the agent interface. Defined
 	in the Admin System Settings
 
+42. Added new code to help deal with agents on poor network connections. New
+	vicidial.php option is $conf_check_attempts
+
+
 
 
 

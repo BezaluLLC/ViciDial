@@ -297,10 +297,11 @@
 # 100527-2212 - Added API send_dtmf, transfer_conference and park_call functions
 # 100616-1622 - Allowed longer manual dial numbers
 # 100622-2209 - Added field labels
+# 100625-1118 - Added poor-network-connection-mitigating code
 #
 
-$version = '2.4-275';
-$build = '100622-2209';
+$version = '2.4-276';
+$build = '100625-1118';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -444,6 +445,7 @@ else
 	$AgentAlert_allowed		= '1';	# set to 1 to allow Agent alert option
 	$disable_blended_checkbox='0';	# set to 1 to disable the BLENDED checkbox from the in-group chooser screen
 	$hide_timeclock_link	= '0';	# set to 1 to hide the timeclock link on the agent login screen
+	$conf_check_attempts	= '3';	# number of attempts to try before loosing webserver connection, for bad network setups
 
 	$TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
 
@@ -2959,6 +2961,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var EAalt_phone_notes='';
 	var EAalt_phone_active='';
 	var EAalt_phone_count='';
+	var conf_check_attempts = '<?php echo $conf_check_attempts ?>';
+	var conf_check_attempts_cleanup = '<?php echo ($conf_check_attempts + 2) ?>';
 	var blind_monitor_warning='<?php echo $blind_monitor_warning ?>';
 	var blind_monitor_message='<?php echo $blind_monitor_message ?>';
 	var blind_monitor_filename='<?php echo $blind_monitor_filename ?>';
@@ -3521,6 +3525,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		{
 		if (typeof(xmlhttprequestcheckconf) == "undefined") {
 			//alert (xmlhttprequestcheckconf == xmlhttpSendConf);
+			xmlhttprequestcheckconf_wait = 0;
 			custchannellive--;
 			if ( (agentcallsstatus == '1') || (callholdstatus == '1') )
 				{
@@ -3567,8 +3572,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				xmlhttprequestcheckconf.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 				xmlhttprequestcheckconf.send(checkconf_query); 
 				xmlhttprequestcheckconf.onreadystatechange = function() 
-					{ 
-					if (xmlhttprequestcheckconf.readyState == 4 && xmlhttprequestcheckconf.status == 200) 
+					{
+					if (xmlhttprequestcheckconf && xmlhttprequestcheckconf.readyState == 4 && xmlhttprequestcheckconf.status == 200) 
 						{
 						var check_conf = null;
 						var LMAforce = taskforce;
@@ -4012,13 +4017,46 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 									{blind_monitoring_now=0;}
 								}
 							}
+							delete xmlhttprequestcheckconf;
 							xmlhttprequestcheckconf = undefined; 
-							delete xmlhttprequestcheckconf;						
+						}
+					else if (xmlhttprequestcheckconf && xmlhttprequestcheckconf.readyState == 4 && xmlhttprequestcheckconf.status != 200) 
+						{
+						// Cleanup  after AJAX Request returns error.
+						// alert("Status: " + xmlhttprequestcheckconf.status);
+						delete xmlhttprequestcheckconf;
+						xmlhttprequestcheckconf = undefined;
 						}
 					}
 				}
 			}
+		else 
+			{
+			if (xmlhttprequestcheckconf) 
+				{
+				xmlhttprequestcheckconf_wait++;
+				if (xmlhttprequestcheckconf_wait >= conf_check_attempts) 
+					{
+					// Abort AJAX Request, due to timeout.
+					// The handler must take care of cleanup.
+					// alert("xmlhttprequestcheckconf: Abort (Wait > 3 sec)");
+					xmlhttprequestcheckconf.abort();
+					}
+				}
+			if (xmlhttprequestcheckconf_wait >= conf_check_attempts_cleanup) 
+				{
+				// In case the handler function fails to do cleanup, cleanup manually.
+				xmlhttprequestcheckconf_wait = 0;
+				delete xmlhttprequestcheckconf;
+				xmlhttprequestcheckconf = undefined;
+				}
+			else 
+				{
+				xmlhttprequestcheckconf = undefined;
+				}
+			}
 		}
+
 
 // ################################################################################
 // Send MonitorConf/StopMonitorConf command for recording of conferences
@@ -11235,7 +11273,7 @@ else
 	div.text_input {overflow: auto; font-size: 10px;  font-family: sans-serif;}
    .body_text {font-size: 13px;  font-family: sans-serif;}
    .queue_text_red {font-size: 12px;  font-family: sans-serif; font-weight: bold; color: red}
-   .queue_text {font-size: 12px;  font-family: sans-serif; color: black}
+   .queue_text {font-size: 12px;  font-family: sans-serif; color: black; text-decoration:none}
    .preview_text {font-size: 13px;  font-family: sans-serif; background: #CCFFCC}
    .preview_text_red {font-size: 13px;  font-family: sans-serif; background: #FFCCCC}
    .body_small {font-size: 11px;  font-family: sans-serif;}
@@ -11270,7 +11308,8 @@ $zi=1;
 	<TR VALIGN=TOP ALIGN=LEFT><TD COLSPAN=3 VALIGN=TOP ALIGN=LEFT>
 	<INPUT TYPE=HIDDEN NAME=extension>
 	<font class="queue_text">
-	<?php	echo "Logged in as User: $VD_login on Phone: $SIP_user to campaign: $VD_campaign&nbsp; \n"; ?>
+	<a href="#" onclick="start_all_refresh();"><font class="queue_text">Logged in as User</font></a>
+	<?php echo ": $VD_login on Phone: $SIP_user to campaign: $VD_campaign&nbsp; \n"; ?>
 	 &nbsp; &nbsp; <span id="agentchannelSPAN"></span>
 	</TD><TD COLSPAN=3 VALIGN=TOP ALIGN=RIGHT><font class="body_text">
 	<?php if ($territoryCT > 0) {echo "<a href=\"#\" onclick=\"OpeNTerritorYSelectioN();return false;\">TERRITORIES</a> &nbsp; &nbsp; \n";} ?>
