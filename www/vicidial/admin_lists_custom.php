@@ -11,10 +11,11 @@
 # 100508-1855 - Added field_order to allow for multiple fields on the same line
 # 100509-0922 - Added copy fields options
 # 100510-1130 - Added DISPLAY field type option
+# 100629-0200 - Added SCRIPT field type option
 #
 
-$admin_version = '2.4-5';
-$build = '100510-1130';
+$admin_version = '2.4-6';
+$build = '100629-0200';
 
 
 require("dbconnect.php");
@@ -254,7 +255,7 @@ if ($action == "HELP")
 
 	<A NAME="vicidial_lists_fields-field_type">
 	<BR>
-	<B>Field Type -</B> This option defines the type of field that will be displayed. TEXT is a standard single-line entry form, AREA is a multi-line text box, SELECT is a single-selection pull-down menu, MULTI is a multiple-select box, RADIO is a list of radio buttons where only one option can be selected, CHECKBOX is a list of checkboxes where multiple options can be selected, DATE is a year month day calendar popup where the agent can select the date and TIME is a time selection box. The default is TEXT. For the SELECT, MULTI, RADIO and CHECKBOX options you must define the option values below in the Field Options box. DISPLAY will display only and not allow for modification by the agent.
+	<B>Field Type -</B> This option defines the type of field that will be displayed. TEXT is a standard single-line entry form, AREA is a multi-line text box, SELECT is a single-selection pull-down menu, MULTI is a multiple-select box, RADIO is a list of radio buttons where only one option can be selected, CHECKBOX is a list of checkboxes where multiple options can be selected, DATE is a year month day calendar popup where the agent can select the date and TIME is a time selection box. The default is TEXT. For the SELECT, MULTI, RADIO and CHECKBOX options you must define the option values below in the Field Options box. DISPLAY will display only and not allow for modification by the agent. SCRIPT will also display only, but you are able to use script variables just like in the Scripts feature. SCRIPT fields will also only display the content in the Options, and not the field name like the DISPLAY type does.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_options">
@@ -976,10 +977,15 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 			{
 			$field_HTML .= "<textarea name=$A_field_label[$o] id=$A_field_label[$o] ROWS=$A_field_max[$o] COLS=$A_field_size[$o]></textarea>";
 			}
-		if ($A_field_type[$o]=='DISPLAY') 
+		if ($A_field_type[$o]=='DISPLAY')
 			{
 			if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
 			$field_HTML .= "$A_field_default[$o]\n";
+			}
+		if ($A_field_type[$o]=='SCRIPT')
+			{
+			if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
+			$field_HTML .= "$A_field_options[$o]\n";
 			}
 		if ($A_field_type[$o]=='DATE') 
 			{
@@ -1109,6 +1115,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<option>DATE</option>\n";
 		echo "<option>TIME</option>\n";
 		echo "<option>DISPLAY</option>\n";
+		echo "<option>SCRIPT</option>\n";
 		echo "<option selected>$A_field_type[$o]</option>\n";
 		echo "</select>  $NWB#vicidial_lists_fields-field_type$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Field Options $A_field_rank[$o]: </td><td align=left><textarea name=field_options ROWS=5 COLS=60>$A_field_options[$o]</textarea>  $NWB#vicidial_lists_fields-field_options$NWE </td></tr>\n";
@@ -1171,6 +1178,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "<option>DATE</option>\n";
 	echo "<option>TIME</option>\n";
 	echo "<option>DISPLAY</option>\n";
+	echo "<option>SCRIPT</option>\n";
 	echo "<option selected>TEXT</option>\n";
 	echo "</select>  $NWB#vicidial_lists_fields-field_type$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Field Options: </td><td align=left><textarea name=field_options ROWS=5 COLS=60></textarea>  $NWB#vicidial_lists_fields-field_options$NWE </td></tr>\n";
@@ -1417,11 +1425,6 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 		$field_sql .= "VARCHAR($field_max) ";
 		$field_cost = ($field_max + $field_cost);
 		}
-	if ($field_type=='DISPLAY') 
-		{
-		$field_sql .= "VARCHAR($field_max) ";
-		$field_cost = ($field_max + $field_cost);
-		}
 	if ($field_type=='AREA') 
 		{
 		$field_sql .= "TEXT ";
@@ -1447,11 +1450,18 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 	else
 		{$field_sql .= ";";}
 
-	$stmtCUSTOM="$field_sql";
-	$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
-	$table_update = mysql_affected_rows($linkCUSTOM);
-	if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
-	if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
+	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') )
+		{
+		if ($DB) {echo "Non-DB $field_type field type\n";} 
+		}
+	else
+		{
+		$stmtCUSTOM="$field_sql";
+		$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
+		$table_update = mysql_affected_rows($linkCUSTOM);
+		if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
+		if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
+		}
 
 	$stmt="INSERT INTO vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',list_id='$list_id',multi_position='$multi_position',name_position='$name_position',field_order='$field_order';";
 	$rslt=mysql_query($stmt, $link);
@@ -1543,11 +1553,18 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 	else
 		{$field_sql .= "default '$field_default';";}
 
-	$stmtCUSTOM="$field_sql";
-	$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
-	$field_update = mysql_affected_rows($linkCUSTOM);
-	if ($DB) {echo "$field_update|$stmtCUSTOM\n";}
-	if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
+	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') )
+		{
+		if ($DB) {echo "Non-DB $field_type field type\n";} 
+		}
+	else
+		{
+		$stmtCUSTOM="$field_sql";
+		$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
+		$field_update = mysql_affected_rows($linkCUSTOM);
+		if ($DB) {echo "$field_update|$stmtCUSTOM\n";}
+		if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
+		}
 
 	$stmt="UPDATE vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',multi_position='$multi_position',name_position='$name_position',field_order='$field_order' where list_id='$list_id' and field_id='$field_id';";
 	$rslt=mysql_query($stmt, $link);
@@ -1572,12 +1589,19 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 ################################################################################
 ##### BEGIN delete field function
 function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order)
-	{	
-	$stmtCUSTOM="ALTER TABLE custom_$list_id DROP $field_label;";
-	$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
-	$table_update = mysql_affected_rows($linkCUSTOM);
-	if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
-	if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
+	{
+	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') )
+		{
+		if ($DB) {echo "Non-DB $field_type field type\n";} 
+		}
+	else
+		{
+		$stmtCUSTOM="ALTER TABLE custom_$list_id DROP $field_label;";
+		$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
+		$table_update = mysql_affected_rows($linkCUSTOM);
+		if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
+		if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
+		}
 
 	$stmt="DELETE FROM vicidial_lists_fields WHERE field_label='$field_label' and field_id='$field_id' and list_id='$list_id' LIMIT 1;";
 	$rslt=mysql_query($stmt, $link);

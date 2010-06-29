@@ -389,3 +389,7 @@ ALTER TABLE system_settings ADD label_email VARCHAR(40) default '';
 ALTER TABLE system_settings ADD label_comments VARCHAR(40) default '';
 
 UPDATE system_settings SET db_schema_version='1229',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_lists_fields MODIFY field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT') default 'TEXT';
+
+UPDATE system_settings SET db_schema_version='1230',db_schema_update_date=NOW();

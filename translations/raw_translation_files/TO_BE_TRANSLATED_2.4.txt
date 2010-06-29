@@ -237,6 +237,11 @@ Label Security Phrase||
 Label Email||
 Label Comments||
 We do not recommend setting inbound calls to a higher priority than the outbound campaign calls because people calling in expect to wait and people being called expect for someone to be there on the phone||
+Formerly called Conf File Secret||
+Registration Password||
+Login Password||
+The password used for the phone user to login to the web-based client applications. IMPORTANT, this is the password only for the agent web interface phone login, to change the sip.conf or iax.conf password, or secret, for this phone device you need to modify the Registration Password in the next field||
+SCRIPT will also display only, but you are able to use script variables just like in the Scripts feature. SCRIPT fields will also only display the content in the Options, and not the field name like the DISPLAY type does||
 
 
 AST_VICIDIAL_ingrouplist.php

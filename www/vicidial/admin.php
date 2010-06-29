@@ -5584,7 +5584,12 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="phones-pass">
 	<BR>
-	<B>Password -</B>  The password used for the phone user to login to the client applications. IMPORTANT, this is the password only for the agent web interface phone login, to change the sip.conf or iax.conf password, or secret, for this phone device you need to modify the Conf File Secret field further down on this page.
+	<B>Login Password -</B>  The password used for the phone user to login to the web-based client applications. IMPORTANT, this is the password only for the agent web interface phone login, to change the sip.conf or iax.conf password, or secret, for this phone device you need to modify the Registration Password in the next field.
+
+	<BR>
+	<A NAME="phones-conf_secret">
+	<BR>
+	<B>Registration Password -</B> This is the secret, or password, for the phone in the iax or sip auto-generated conf file for this phone. Limit is 20 characters alphanumeric dash and underscore accepted. Default is test. Formerly called Conf File Secret.
 
 	<BR>
 	<A NAME="phones-is_webphone">
@@ -5734,11 +5739,6 @@ if ($ADD==99999)
 	<A NAME="phones-phone_context">
 	<BR>
 	<B>Phone Context -</B> This is the dial plan context that this phone will use to dial out. If you are running a call center and you do not want your agents to be able to dial out outside of the ViciDial applicaiton for example, then you would set this field to a dialplan context that does not exist, something like agent-nodial. default is default.
-
-	<BR>
-	<A NAME="phones-conf_secret">
-	<BR>
-	<B>Conf File Secret -</B> This is the secret, or password, for the phone in the iax or sip auto-generated conf file for this phone. Limit is 20 characters alphanumeric dash and underscore accepted. Default is test.
 
 	<BR>
 	<A NAME="phones-codecs_list">
@@ -22426,7 +22426,8 @@ if ($ADD==31111111111)
 		echo "<option SELECTED>$row[5]</option>\n";
 		echo "</select>$NWB#phones-server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Login: </td><td align=left><input type=text name=login size=10 maxlength=10 value=\"$row[6]\">$NWB#phones-login$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Password: </td><td align=left><input type=text name=pass size=10 maxlength=10 value=\"$row[7]\">$NWB#phones-pass$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Login Password: </td><td align=left><input type=text name=pass size=10 maxlength=10 value=\"$row[7]\">$NWB#phones-pass$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Registration Password: </td><td align=left><input type=text name=conf_secret size=20 maxlength=20 value=\"$row[72]\">$NWB#phones-conf_secret$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Set As Webphone: </td><td align=left><select size=1 name=is_webphone><option>Y</option><option>N</option><option selected>$row[74]</option></select>$NWB#phones-is_webphone$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Use External Server IP: </td><td align=left><select size=1 name=use_external_server_ip><option>Y</option><option>N</option><option selected>$row[75]</option></select>$NWB#phones-use_external_server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Status: </td><td align=left><select size=1 name=status><option>ACTIVE</option><option>SUSPENDED</option><option>CLOSED</option><option>PENDING</option><option>ADMIN</option><option selected>$row[8]</option></select>$NWB#phones-status$NWE</td></tr>\n";
@@ -22458,7 +22459,6 @@ if ($ADD==31111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Exten Context: </td><td align=left><input type=text name=ext_context size=20 maxlength=20 value=\"$row[31]\">$NWB#phones-ext_context$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Phone Context: </td><td align=left><input type=text name=phone_context size=20 maxlength=20 value=\"$row[70]\">$NWB#phones-phone_context$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>Conf File Secret: </td><td align=left><input type=text name=conf_secret size=20 maxlength=20 value=\"$row[72]\">$NWB#phones-conf_secret$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Allowed Codecs: </td><td align=left><input type=text name=codecs_list size=40 maxlength=100 value=\"$row[76]\">$NWB#phones-codecs_list$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Allowed Codecs With Template: </td><td align=left><select size=1 name=codecs_with_template><option>1</option><option>0</option><option selected>$row[77]</option></select>$NWB#phones-codecs_with_template$NWE</td></tr>\n";
 
