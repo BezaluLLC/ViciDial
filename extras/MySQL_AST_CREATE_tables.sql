@@ -625,7 +625,7 @@ campaign_rec_exten VARCHAR(20) default '8309',
 campaign_recording ENUM('NEVER','ONDEMAND','ALLCALLS','ALLFORCE') default 'ONDEMAND',
 campaign_rec_filename VARCHAR(50) default 'FULLDATE_CUSTPHONE',
 campaign_script VARCHAR(10),
-get_call_launch ENUM('NONE','SCRIPT','WEBFORM') default 'NONE',
+get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','FORM') default 'NONE',
 am_message_exten VARCHAR(100) default 'vm-goodbye',
 amd_send_to_vmx ENUM('Y','N') default 'N',
 xferconf_a_dtmf VARCHAR(50),
@@ -841,7 +841,7 @@ voicemail_ext VARCHAR(10),
 next_agent_call ENUM('random','oldest_call_start','oldest_call_finish','overall_user_level','inbound_group_rank','campaign_rank','fewest_calls','fewest_calls_campaign','longest_wait_time') default 'longest_wait_time',
 fronter_display ENUM('Y','N') default 'Y',
 ingroup_script VARCHAR(10),
-get_call_launch ENUM('NONE','SCRIPT','WEBFORM') default 'NONE',
+get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','FORM') default 'NONE',
 xferconf_a_dtmf VARCHAR(50),
 xferconf_a_number VARCHAR(50),
 xferconf_b_dtmf VARCHAR(50),
@@ -2269,7 +2269,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1230',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1231',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

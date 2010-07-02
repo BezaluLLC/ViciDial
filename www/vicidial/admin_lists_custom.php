@@ -120,6 +120,8 @@ $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 
+$vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|';
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,custom_fields_enabled FROM system_settings;";
@@ -191,6 +193,10 @@ else
 <html>
 <head>
 
+<?php
+if ($action != "HELP")
+	{
+?>
 <script language="JavaScript" src="calendar_db.js"></script>
 <link rel="stylesheet" href="calendar.css">
 
@@ -209,6 +215,10 @@ function close_help(taskspan,taskhelp)
 	}
 </script>
 
+<?php
+	}
+?>
+
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <title>ADMINISTRATION: Lists Custom Fields
 <?php 
@@ -218,92 +228,99 @@ function close_help(taskspan,taskhelp)
 if ($action == "HELP")
 	{
 	?>
-	<TABLE WIDTH=98% BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR><TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=4>
+	</title>
+	</head>
+	<body bgcolor=white>
+	<center>
+	<TABLE WIDTH=98% BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=4><TR><TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>
 	<BR>
 	<B>ViciDial Lists Custom Fields Help</B>
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_label">
 	<BR>
-	<B>Field Label -</B> This is the database field identifier for this field. This needs to be a unique identifier within the custom fields for this list. Do not use any spaces or punctuation for this field. max 50 characters, minimum of 2 characters.
+	 <B>Field Label -</B> This is the database field identifier for this field. This needs to be a unique identifier within the custom fields for this list. Do not use any spaces or punctuation for this field. max 50 characters, minimum of 2 characters. You can also include the default ViciDial fields in a custom field setup, and you will see them in red in the list. These fields will not be added to the custom list database table, the agent interface will instead reference the vicidial_list table directly. The labels that you can use to include the default fieds are - 
+	lead_id, vendor_lead_code, source_id, list_id, gmt_offset_now, called_since_last_reset, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, called_count, last_local_call_time, rank, owner
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_name">
 	<BR>
-	<B>Field Name -</B> This is the name of the field as it will appear to an agent through their interface. You can use spaces in this field, but no punctuation characters, maximum of 50 characters and minimum of 2 characters.
+	 <B>Field Name -</B> This is the name of the field as it will appear to an agent through their interface. You can use spaces in this field, but no punctuation characters, maximum of 50 characters and minimum of 2 characters.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_description">
 	<BR>
-	<B>Field Description -</B> The description of this field as it will appear in the administration interface. This is an optional field with a maximum of 100 characters.
+	 <B>Field Description -</B> The description of this field as it will appear in the administration interface. This is an optional field with a maximum of 100 characters.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_rank">
 	<BR>
-	<B>Field Rank -</B> The order in which these fields is displayed to the agent from lowest on top to highest on the bottom.
+	 <B>Field Rank -</B> The order in which these fields is displayed to the agent from lowest on top to highest on the bottom.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_order">
 	<BR>
-	<B>Field Order -</B> If more than one field has the same rank, they will be placed on the same line and they will be placed in order by this value from lowest to highest, left to right.
+	 <B>Field Order -</B> If more than one field has the same rank, they will be placed on the same line and they will be placed in order by this value from lowest to highest, left to right.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_help">
 	<BR>
-	<B>Field Help -</B> Optional field, if you fill it in, the agent will be able to see this text when they click on a help link next to the field in their agent interface.
+	 <B>Field Help -</B> Optional field, if you fill it in, the agent will be able to see this text when they click on a help link next to the field in their agent interface.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_type">
 	<BR>
-	<B>Field Type -</B> This option defines the type of field that will be displayed. TEXT is a standard single-line entry form, AREA is a multi-line text box, SELECT is a single-selection pull-down menu, MULTI is a multiple-select box, RADIO is a list of radio buttons where only one option can be selected, CHECKBOX is a list of checkboxes where multiple options can be selected, DATE is a year month day calendar popup where the agent can select the date and TIME is a time selection box. The default is TEXT. For the SELECT, MULTI, RADIO and CHECKBOX options you must define the option values below in the Field Options box. DISPLAY will display only and not allow for modification by the agent. SCRIPT will also display only, but you are able to use script variables just like in the Scripts feature. SCRIPT fields will also only display the content in the Options, and not the field name like the DISPLAY type does.
+	 <B>Field Type -</B> This option defines the type of field that will be displayed. TEXT is a standard single-line entry form, AREA is a multi-line text box, SELECT is a single-selection pull-down menu, MULTI is a multiple-select box, RADIO is a list of radio buttons where only one option can be selected, CHECKBOX is a list of checkboxes where multiple options can be selected, DATE is a year month day calendar popup where the agent can select the date and TIME is a time selection box. The default is TEXT. For the SELECT, MULTI, RADIO and CHECKBOX options you must define the option values below in the Field Options box. DISPLAY will display only and not allow for modification by the agent. SCRIPT will also display only, but you are able to use script variables just like in the Scripts feature. SCRIPT fields will also only display the content in the Options, and not the field name like the DISPLAY type does.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_options">
 	<BR>
-	<B>Field Options -</B> For the SELECT, MULTI, RADIO and CHECKBOX field types, you must define the option values in this box. You must put a list of comma separated option label and option text here with each option one its own line. The first value should have no spaces in it, and neither values should have any punctuation. For example - electric_meter, Electric Meter
+	 <B>Field Options -</B> For the SELECT, MULTI, RADIO and CHECKBOX field types, you must define the option values in this box. You must put a list of comma separated option label and option text here with each option one its own line. The first value should have no spaces in it, and neither values should have any punctuation. For example - electric_meter, Electric Meter
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-multi_position">
 	<BR>
-	<B>Option Position -</B> For CHECKBOX and RADIO field types only, if set to HORIZONTAL the options will appear on the same line possibly wrapping to the line below if there are many options. If set to VERTICAL there will be only one option per line. Default is HORIZONTAL.
+	 <B>Option Position -</B> For CHECKBOX and RADIO field types only, if set to HORIZONTAL the options will appear on the same line possibly wrapping to the line below if there are many options. If set to VERTICAL there will be only one option per line. Default is HORIZONTAL.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_size">
 	<BR>
-	<B>Field Size -</B> This setting will mean different things depending on what the field type is. For TEXT fields, the size is the number of characters that will show in the field. For AREA fields, the size is the width of the text box in characters. For MULTI fields, this setting defines the number of options to be shown in the multi select list. For SELECT, RADIO, CHECKBOX, DATE and TIME this setting is ignored.
+	 <B>Field Size -</B> This setting will mean different things depending on what the field type is. For TEXT fields, the size is the number of characters that will show in the field. For AREA fields, the size is the width of the text box in characters. For MULTI fields, this setting defines the number of options to be shown in the multi select list. For SELECT, RADIO, CHECKBOX, DATE and TIME this setting is ignored.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_max">
 	<BR>
-	<B>Field Max -</B> This setting will mean different things depending on what the field type is. For TEXT fields, the size is the maximum number of characters that are allowed in the field. For AREA fields, this field defines the number of rows of text visible in the text box. For MULTI, SELECT, RADIO, CHECKBOX, DATE and TIME this setting is ignored.
+	 <B>Field Max -</B> This setting will mean different things depending on what the field type is. For TEXT fields, the size is the maximum number of characters that are allowed in the field. For AREA fields, this field defines the number of rows of text visible in the text box. For MULTI, SELECT, RADIO, CHECKBOX, DATE and TIME this setting is ignored.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_default">
 	<BR>
-	<B>Field Default -</B> This optional field lets you define what value to assign to a field if nothing is loaded into that field. Default is NULL which disables the default function. For DATE field types, the default is always set to today unless a number is put in in which case the date will be that many days plus or minus today. For TIME field types, the default is always set to the current server time unless a number is put in in which case the time will be that many minutes plus or minus current time.
+	 <B>Field Default -</B> This optional field lets you define what value to assign to a field if nothing is loaded into that field. Default is NULL which disables the default function. For DATE field types, the default is always set to today unless a number is put in in which case the date will be that many days plus or minus today. For TIME field types, the default is always set to the current server time unless a number is put in in which case the time will be that many minutes plus or minus current time.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_cost">
 	<BR>
-	<B>Field Cost -</B> This read only field tells you what the cost of this field is in the custom field table for this list. There is no hard limit for the number of custom fields you can have in a list, but the total of the cost of all fields for the list must be below 65000. This typically allows for hundreds of fields, but if you specify several TEXT fields that are hundreds or thousands of characters in length then you may hit this limit quickly. If you need that much text in a field you should choose an AREA type, which are stored differently and do not use as much table space.
+	 <B>Field Cost -</B> This read only field tells you what the cost of this field is in the custom field table for this list. There is no hard limit for the number of custom fields you can have in a list, but the total of the cost of all fields for the list must be below 65000. This typically allows for hundreds of fields, but if you specify several TEXT fields that are hundreds or thousands of characters in length then you may hit this limit quickly. If you need that much text in a field you should choose an AREA type, which are stored differently and do not use as much table space.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_required">
 	<BR>
-	<B>Field Required -</B> If set to Y, this field will force the agent to enter text or select an option for this field. Default is N.
+	 <B>Field Required -</B> If set to Y, this field will force the agent to enter text or select an option for this field. Default is N.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-name_position">
 	<BR>
-	<B>Field Name Position -</B> If set to LEFT, this field name will appear to the left of the field, if set to TOP the field name will take up the entire line and appear above the field. Default is LEFT.
+	 <B>Field Name Position -</B> If set to LEFT, this field name will appear to the left of the field, if set to TOP the field name will take up the entire line and appear above the field. Default is LEFT.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-copy_option">
 	<BR>
-	<B>Copy Option -</B> When copying field definitions from one list to another, you have a few options for how the copying process works. APPEND will add the fields that are not present in the destination list, if there are matching field labels those will remained untouched, no custom field data will be deleted or modified using this option. UPDATE will update the common field_label fields in the destination list to the field definitions from the source list. custom field data may be modified or lost using this option. REPLACE will remove all existing custom fields in the destination list and replace them with the custom fields from the source list, all custom field data will be deleted using this option.
+	 <B>Copy Option -</B> When copying field definitions from one list to another, you have a few options for how the copying process works. APPEND will add the fields that are not present in the destination list, if there are matching field labels those will remained untouched, no custom field data will be deleted or modified using this option. UPDATE will update the common field_label fields in the destination list to the field definitions from the source list. custom field data may be modified or lost using this option. REPLACE will remove all existing custom fields in the destination list and replace them with the custom fields from the source list, all custom field data will be deleted using this option.
 	<BR><BR>
 
 	</TD></TR></TABLE>
+	</BODY>
+	</HTML>
 	<?php
 	exit;
 	}
@@ -470,7 +487,7 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 					while ($fields_to_print > $o) 
 						{
 						### delete field function
-						delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$A_field_id[$o],$list_id,$A_field_label[$o],$A_field_name[$o],$A_field_description[$o],$A_field_rank[$o],$A_field_help[$o],$A_field_type[$o],$A_field_options[$o],$A_field_size[$o],$A_field_max[$o],$A_field_default[$o],$A_field_required[$o],$A_field_cost[$o],$A_multi_position[$o],$A_name_position[$o],$A_field_order[$o]);
+						delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$A_field_id[$o],$list_id,$A_field_label[$o],$A_field_name[$o],$A_field_description[$o],$A_field_rank[$o],$A_field_help[$o],$A_field_type[$o],$A_field_options[$o],$A_field_size[$o],$A_field_max[$o],$A_field_default[$o],$A_field_required[$o],$A_field_cost[$o],$A_multi_position[$o],$A_name_position[$o],$A_field_order[$o],$vicidial_list_fields);
 
 						echo "SUCCESS: Custom Field Deleted - $list_id|$A_field_label[$o]\n<BR>";
 						$o++;
@@ -530,7 +547,7 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 					if ($new_field_exists < 1)
 						{
 						### add field function
-						add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$A_field_id[$o],$list_id,$A_field_label[$o],$A_field_name[$o],$A_field_description[$o],$A_field_rank[$o],$A_field_help[$o],$A_field_type[$o],$A_field_options[$o],$A_field_size[$o],$A_field_max[$o],$A_field_default[$o],$A_field_required[$o],$A_field_cost[$o],$A_multi_position[$o],$A_name_position[$o],$A_field_order[$o]);
+						add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$A_field_id[$o],$list_id,$A_field_label[$o],$A_field_name[$o],$A_field_description[$o],$A_field_rank[$o],$A_field_help[$o],$A_field_type[$o],$A_field_options[$o],$A_field_size[$o],$A_field_max[$o],$A_field_default[$o],$A_field_required[$o],$A_field_cost[$o],$A_multi_position[$o],$A_name_position[$o],$A_field_order[$o],$vicidial_list_fields);
 
 						echo "SUCCESS: Custom Field Added - $list_id|$A_field_label[$o]\n<BR>";
 
@@ -587,7 +604,7 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 							$current_field_id =	$rowx[0];
 
 							### modify field function
-							modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$current_field_id,$list_id,$A_field_label[$o],$A_field_name[$o],$A_field_description[$o],$A_field_rank[$o],$A_field_help[$o],$A_field_type[$o],$A_field_options[$o],$A_field_size[$o],$A_field_max[$o],$A_field_default[$o],$A_field_required[$o],$A_field_cost[$o],$A_multi_position[$o],$A_name_position[$o],$A_field_order[$o]);
+							modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$current_field_id,$list_id,$A_field_label[$o],$A_field_name[$o],$A_field_description[$o],$A_field_rank[$o],$A_field_help[$o],$A_field_type[$o],$A_field_options[$o],$A_field_size[$o],$A_field_max[$o],$A_field_default[$o],$A_field_required[$o],$A_field_cost[$o],$A_multi_position[$o],$A_name_position[$o],$A_field_order[$o],$vicidial_list_fields);
 
 							echo "SUCCESS: Custom Field Modified - $list_id|$A_field_label[$o]\n<BR>";
 							}
@@ -681,7 +698,7 @@ if ( ($action == "DELETE_CUSTOM_FIELD") and ($list_id > 99) and ($field_id > 0) 
 		else
 			{
 			### delete field function
-			delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order);
+			delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields);
 
 			echo "SUCCESS: Custom Field Deleted - $list_id|$field_label\n<BR>";
 			}
@@ -725,7 +742,7 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 	else
 		{
 		### add field function
-		add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order);
+		add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields);
 
 		echo "SUCCESS: Custom Field Added - $list_id|$field_label\n<BR>";
 		}
@@ -772,7 +789,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELD_SUBMIT") and ($list_id > 99) and ($field_i
 		else
 			{
 			### modify field function
-			modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order);
+			modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields);
 
 			echo "SUCCESS: Custom Field Modified - $list_id|$field_label\n<BR>";
 			}
@@ -865,12 +882,18 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	$o=0;
 	while ($fields_to_print > $o) 
 		{
+		$LcolorB='';   $LcolorE='';
+		if (preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+			{
+			$LcolorB='<font color=red>';
+			$LcolorE='</font>';
+			}
 		if (eregi("1$|3$|5$|7$|9$", $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
 		echo "<tr $bgcolor align=right><td><font size=1>$A_field_rank[$o] - $A_field_order[$o] &nbsp; &nbsp; </td>";
-		echo "<td align=right><font size=2> <a href=\"#ANCHOR_$A_field_label[$o]\">$A_field_label[$o]</a> &nbsp; &nbsp; </td>";
+		echo "<td align=right><font size=2> <a href=\"#ANCHOR_$A_field_label[$o]\">$LcolorB$A_field_label[$o]$LcolorE</a> &nbsp; &nbsp; </td>";
 		echo "<td align=right><font size=2> $A_field_name[$o] &nbsp; &nbsp; </td>";
 		echo "<td align=right><font size=2> $A_field_type[$o] &nbsp; &nbsp; </td>";
 		echo "<td align=right><font size=2> $A_field_cost[$o] &nbsp; &nbsp; </td></tr>\n";
@@ -933,7 +956,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 			}
 		if ($A_field_type[$o]=='MULTI')
 			{
-			$field_HTML .= "<select size=$A_field_size[$o] name=$A_field_label[$o] id=$A_field_label[$o]>\n";
+			$field_HTML .= "<select MULTIPLE size=$A_field_size[$o] name=$A_field_label[$o] id=$A_field_label[$o]>\n";
 			}
 		if ( ($A_field_type[$o]=='SELECT') or ($A_field_type[$o]=='MULTI') or ($A_field_type[$o]=='RADIO') or ($A_field_type[$o]=='CHECKBOX') )
 			{
@@ -1072,6 +1095,12 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	$o=0;
 	while ($fields_to_print > $o) 
 		{
+		$LcolorB='';   $LcolorE='';
+		if (preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+			{
+			$LcolorB='<font color=red>';
+			$LcolorE='</font>';
+			}
 		if (eregi("1$|3$|5$|7$|9$", $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
@@ -1084,7 +1113,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<input type=hidden name=field_label value=\"$A_field_label[$o]\">\n";
 		echo "<a name=\"ANCHOR_$A_field_label[$o]\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3 cellpadding=1>\n";
-		echo "<tr $bgcolor><td align=right>Field Label $A_field_rank[$o]: </td><td align=left> <B>$A_field_label[$o]</B> $NWB#vicidial_lists_fields-field_label$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Field Label $A_field_rank[$o]: </td><td align=left> $LcolorB<B>$A_field_label[$o]</B>$LcolorE $NWB#vicidial_lists_fields-field_label$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Field Rank $A_field_rank[$o]: </td><td align=left><select size=1 name=field_rank>\n";
 		echo "$rank_select\n";
 		echo "<option selected>$A_field_rank[$o]</option>\n";
@@ -1375,7 +1404,7 @@ echo "\n\n\n<br><br><br>\n<font size=1> runtime: $RUNtime seconds &nbsp; &nbsp; 
 
 ################################################################################
 ##### BEGIN add field function
-function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order)
+function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields)
 	{
 	if ($table_exists < 1)
 		{$field_sql = "CREATE TABLE custom_$list_id (lead_id INT(9) UNSIGNED PRIMARY KEY NOT NULL, $field_label ";}
@@ -1450,9 +1479,9 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 	else
 		{$field_sql .= ";";}
 
-	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') )
+	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or (preg_match("/\|$field_label\|/",$vicidial_list_fields)) )
 		{
-		if ($DB) {echo "Non-DB $field_type field type\n";} 
+		if ($DB) {echo "Non-DB $field_type field type, $field_label\n";} 
 		}
 	else
 		{
@@ -1485,7 +1514,7 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 
 ################################################################################
 ##### BEGIN modify field function
-function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order)
+function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields)
 	{
 	$field_sql = "ALTER TABLE custom_$list_id MODIFY $field_label ";
 	$field_options_ENUM='';
@@ -1553,9 +1582,9 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 	else
 		{$field_sql .= "default '$field_default';";}
 
-	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') )
+	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or (preg_match("/\|$field_label\|/",$vicidial_list_fields)) )
 		{
-		if ($DB) {echo "Non-DB $field_type field type\n";} 
+		if ($DB) {echo "Non-DB $field_type field type, $field_label\n";} 
 		}
 	else
 		{
@@ -1588,11 +1617,11 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 
 ################################################################################
 ##### BEGIN delete field function
-function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order)
+function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields)
 	{
-	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') )
+	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or (preg_match("/\|$field_label\|/",$vicidial_list_fields)) )
 		{
-		if ($DB) {echo "Non-DB $field_type field type\n";} 
+		if ($DB) {echo "Non-DB $field_type field type, $field_label\n";} 
 		}
 	else
 		{

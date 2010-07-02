@@ -18,6 +18,7 @@
 # 100214-1421 - Sort menu alphabetically
 # 100216-0042 - Added popup date selector
 # 100507-1413 - Added headers for export
+# 100702-1332 - Added custom fields option
 #
 
 require("dbconnect.php");
@@ -45,6 +46,8 @@ if (isset($_GET["run_export"]))				{$run_export=$_GET["run_export"];}
 	elseif (isset($_POST["run_export"]))	{$run_export=$_POST["run_export"];}
 if (isset($_GET["header_row"]))				{$header_row=$_GET["header_row"];}
 	elseif (isset($_POST["header_row"]))	{$header_row=$_POST["header_row"];}
+if (isset($_GET["custom_fields"]))			{$custom_fields=$_GET["custom_fields"];}
+	elseif (isset($_POST["custom_fields"]))	{$custom_fields=$_POST["custom_fields"];}
 if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
@@ -54,14 +57,15 @@ if (strlen($shift)<2) {$shift='ALL';}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =	$row[0];
+	$non_latin =				$row[0];
+	$custom_fields_enabled =	$row[1];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -241,6 +245,7 @@ if ($run_export > 0)
 
 				$export_status[$k] =	$row[2];
 				$export_list_id[$k] =	$row[8];
+				$export_lead_id[$k] =	$row[35];
 				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t";
 				$i++;
 				$k++;
@@ -271,6 +276,7 @@ if ($run_export > 0)
 
 				$export_status[$k] =	$row[2];
 				$export_list_id[$k] =	$row[8];
+				$export_lead_id[$k] =	$row[35];
 				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t";
 				$i++;
 				$k++;
@@ -304,12 +310,17 @@ if ($run_export > 0)
 
 		if ($header_row=='YES')
 			{
-			echo "call_date\tphone_number\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id\tlist_name\tlist_description\tstatus_name\r\n";
+			$CFheader = '';
+			if ( ($custom_fields_enabled > 0) and ($custom_fields=='YES') )
+				{$CFheader = 'custom_fields';}
+
+			echo "call_date\tphone_number\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id\tlist_name\tlist_description\tstatus_name\t$CFheader\r\n";
 			}
 
 		$i=0;
 		while ($k > $i)
 			{
+			$custom_data='';
 			$ex_list_name='';
 			$ex_list_description='';
 			$stmt = "SELECT list_name,list_description FROM vicidial_lists where list_id='$export_list_id[$i]';";
@@ -346,7 +357,48 @@ if ($run_export > 0)
 					}
 				}
 
-			echo "$export_rows[$i]$ex_list_name\t$ex_list_description\t$ex_status_name\r\n";
+			if ( ($custom_fields_enabled > 0) and ($custom_fields=='YES') )
+				{
+				$stmt="SHOW TABLES LIKE \"custom_$export_list_id[$i]\";";
+				if ($DB>0) {echo "$stmt";}
+				$rslt=mysql_query($stmt, $link);
+				$tablecount_to_print = mysql_num_rows($rslt);
+				if ($tablecount_to_print > 0) 
+					{
+					$stmt = "describe custom_$export_list_id[$i];";
+					$rslt=mysql_query($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$columns_ct = mysql_num_rows($rslt);
+					$u=0;
+					while ($columns_ct > $u)
+						{
+						$row=mysql_fetch_row($rslt);
+						$column =	$row[0];
+						$u++;
+						}
+					if ($columns_ct > 1)
+						{
+						$stmt = "SELECT * from custom_$export_list_id[$i] where lead_id='$export_lead_id[$i]' limit 1;";
+						$rslt=mysql_query($stmt, $link);
+						if ($DB) {echo "$stmt\n";}
+						$customfield_ct = mysql_num_rows($rslt);
+						if ($customfield_ct > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$t=1;
+							while ($columns_ct > $t) 
+								{
+								$custom_data .= "\t$row[$t]";
+								$t++;
+								}
+							}
+						}
+					$custom_data = preg_replace("/\r\n/",'!N',$custom_data);
+					$custom_data = preg_replace("/\n/",'!N',$custom_data);
+					}
+				}
+
+			echo "$export_rows[$i]$ex_list_name\t$ex_list_description\t$ex_status_name$custom_data\r\n";
 			$i++;
 			}
 		}
@@ -526,10 +578,18 @@ else
 	</script>
 	<?php
 
-	echo "<BR><BR><BR>\n";
+	echo "<BR><BR>\n";
 
 	echo "Header Row:<BR>\n";
-	echo "<select size=1 name=header_row><option selected>YES</option><option>NO</option>\n";
+	echo "<select size=1 name=header_row><option selected>YES</option><option>NO</option></select>\n";
+
+	if ($custom_fields_enabled > 0)
+		{
+		echo "<BR><BR>\n";
+
+		echo "Custom Fields:<BR>\n";
+		echo "<select size=1 name=custom_fields><option>YES</option><option selected>NO</option></select>\n";
+		}
 
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=2>\n";
 	echo "<font class=\"select_bold\"><B>Campaigns:</B></font><BR><CENTER>\n";

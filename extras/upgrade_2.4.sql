@@ -393,3 +393,9 @@ UPDATE system_settings SET db_schema_version='1229',db_schema_update_date=NOW();
 ALTER TABLE vicidial_lists_fields MODIFY field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT') default 'TEXT';
 
 UPDATE system_settings SET db_schema_version='1230',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns MODIFY get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','FORM') default 'NONE';
+
+ALTER TABLE vicidial_inbound_groups MODIFY get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','FORM') default 'NONE';
+
+UPDATE system_settings SET db_schema_version='1231',db_schema_update_date=NOW();

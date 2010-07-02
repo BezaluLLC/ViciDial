@@ -173,6 +173,16 @@ OTHER CHANGES:
 42. Added new code to help deal with agents on poor network connections. New
 	vicidial.php option is $conf_check_attempts
 
+43. Added Custom List Fields functions to the Admin and Agent web interfaces.
+	To activate you need to enable custom fields in system settings, then
+	you can go to the Lists section to add custom fields to a list. The
+	fields are tied to a list, not a campaign, and they can be displayed
+	in a new tab in the agent interface, and there is a new option to have
+	the Get Call Launch open this custom fields tab upon a call being sent
+	to the agent. Also, the Calls Export Report and the List Download 
+	feature include the custom fields values for the leads exported. There
+	is currently no way to import data through the lead loader into custom
+	fields.
 
 
 

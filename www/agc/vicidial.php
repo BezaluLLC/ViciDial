@@ -298,15 +298,18 @@
 # 100616-1622 - Allowed longer manual dial numbers
 # 100622-2209 - Added field labels
 # 100625-1118 - Added poor-network-connection-mitigating code
+# 100629-1158 - Added initial code for custom list fields
+# 100702-1315 - Custom List Fields functionality enabled
 #
 
-$version = '2.4-276';
-$build = '100625-1118';
+$version = '2.4-278';
+$build = '100702-1315';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
 
 require("dbconnect.php");
+require("functions.php");
 
 if (isset($_GET["DB"]))						    {$DB=$_GET["DB"];}
         elseif (isset($_POST["DB"]))            {$DB=$_POST["DB"];}
@@ -383,7 +386,7 @@ $random = (rand(1000000, 9999999) + 10000000);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -403,6 +406,7 @@ if ($qm_conf_ct > 0)
 	$enable_second_webform =		$row[9];
 	$user_territories_active =		$row[10];
 	$static_agent_url =				$row[11];
+	$custom_fields_enabled =		$row[12];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -454,6 +458,7 @@ else
 	$BROWSER_WIDTH			= 770;	# set to the minimum browser width, default=770
 	$MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
 	$SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
+	$FORM_COLOR				= '#EFEFEF';
 	$SIDEBAR_COLOR			= '#F6F6F6';
 	}
 
@@ -2980,6 +2985,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var api_transferconf_override='';
 	var api_parkcustomer='';
 	var API_selected_xfergroup='';
+	var custom_fields_enabled='<?php echo $custom_fields_enabled ?>';
+	var form_contents_loaded=0;
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -6074,6 +6081,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								else
 									{
 									load_script_contents();
+									FormContentsLoad();
 									}
 								}
 
@@ -6085,6 +6093,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 									}
 								ScriptPanelToFront();
 								}
+
+							if (get_call_launch == 'FORM')
+								{
+								FormPanelToFront();
+								}
+
 
 							if (get_call_launch == 'WEBFORM')
 								{
@@ -6461,6 +6475,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							else
 								{
 								load_script_contents();
+								FormContentsLoad();
 								}
 							}
 
@@ -6471,6 +6486,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								load_script_contents();
 								}
 							ScriptPanelToFront();
+							}
+						if (get_call_launch == 'FORM')
+							{
+							FormPanelToFront();
 							}
 						if (get_call_launch == 'WEBFORM')
 							{
@@ -7408,6 +7427,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								else
 									{
 									load_script_contents();
+									FormContentsLoad();
 									}
 								}
 
@@ -7418,6 +7438,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 									load_script_contents();
 									}
 								ScriptPanelToFront();
+								}
+							if (CalL_AutO_LauncH == 'FORM')
+								{
+								FormPanelToFront();
 								}
 
 							if (CalL_AutO_LauncH == 'WEBFORM')
@@ -10150,6 +10174,14 @@ function phone_number_format(formatphone) {
 		}
 
 
+
+// ################################################################################
+// Refresh the FORM content
+	function FormContentsLoad()
+		{
+		document.getElementById('vcFormIFrame').src='./vdc_form_display.php?lead_id=' + document.vicidial_form.lead_id.value + '&list_id=' + document.vicidial_form.list_id.value + '&user=' + user + '&pass=' + pass + '&campaign=' + campaign + '&server_ip=' + server_ip + '&session_id=' + '&uniqueid=' + document.vicidial_form.uniqueid.value + '&stage=DISPLAY';
+		}
+
 // ################################################################################
 // Move the Dispo frame out of the way and change the link to maximize
 	function DispoMinimize()
@@ -10430,6 +10462,8 @@ else
 			hideDiv('MainPanel');
 			hideDiv('ScriptPanel');
 			hideDiv('ScriptRefresH');
+			hideDiv('FormPanel');
+			hideDiv('FormRefresH');
 			hideDiv('DispoSelectBox');
 			hideDiv('LogouTBox');
 			hideDiv('AgenTDisablEBoX');
@@ -10626,6 +10660,13 @@ else
 						{
 						reselect_alt_dial = 0;
 						}
+					}
+
+				// Submit custom form if it is custom_fields_enabled
+				if (custom_fields_enabled > 0)
+					{
+				//	alert("IFRAME submitting!");
+					vcFormIFrame.document.form_custom_fields.submit();
 					}
 				}
 			if (AgentDispoing > 0)	
@@ -11182,6 +11223,8 @@ else
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $MAIN_COLOR ?>";
 		hideDiv('ScriptPanel');
 		hideDiv('ScriptRefresH');
+		hideDiv('FormPanel');
+		hideDiv('FormRefresH');
 		showDiv('MainPanel');
 		ShoWGenDerPulldown();
 
@@ -11228,9 +11271,23 @@ else
 		{
 		showDiv('ScriptPanel');
 		showDiv('ScriptRefresH');
+		hideDiv('FormPanel');
+		hideDiv('FormRefresH');
 		document.getElementById("MainTable").style.backgroundColor="<?php echo $SCRIPT_COLOR ?>";
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $SCRIPT_COLOR ?>";
 		panel_bgcolor='<?php echo $SCRIPT_COLOR ?>';
+		document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
+
+		HidEGenDerPulldown();
+		}
+
+	function FormPanelToFront()
+		{
+		showDiv('FormPanel');
+		showDiv('FormRefresH');
+		document.getElementById("MainTable").style.backgroundColor="<?php echo $FORM_COLOR ?>";
+		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $FORM_COLOR ?>";
+		panel_bgcolor='<?php echo $FORM_COLOR ?>';
 		document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
 
 		HidEGenDerPulldown();
@@ -11323,7 +11380,10 @@ $zi=1;
 	<TABLE border=0 bgcolor="#FFFFFF" width=<?php echo $MNwidth ?> height=30>
 	<TR VALIGN=TOP ALIGN=LEFT>
 	<TD ALIGN=LEFT WIDTH=115><A HREF="#" onclick="MainPanelToFront('NO');"><IMG SRC="./images/vdc_tab_vicidial.gif" ALT="MAIN" WIDTH=115 HEIGHT=30 BORDER=0></A></TD>
-	<TD ALIGN=LEFT WIDTH=105><A HREF="#" onclick="ScriptPanelToFront();"><IMG SRC="./images/vdc_tab_script.gif" ALT="SCRIPT" WIDTH=105 HEIGHT=30 BORDER=0></A></TD>
+	<TD ALIGN=LEFT WIDTH=90><A HREF="#" onclick="ScriptPanelToFront();"><IMG SRC="./images/vdc_tab_script.gif" ALT="SCRIPT" WIDTH=90 HEIGHT=30 BORDER=0></A></TD>
+	<?php if ($custom_fields_enabled > 0)
+	{echo "<TD ALIGN=LEFT WIDTH=67><A HREF=\"#\" onclick=\"FormPanelToFront();\"><IMG SRC=\"./images/vdc_tab_form.gif\" ALT=\"FORM\" WIDTH=67 HEIGHT=30 BORDER=0></A></TD>\n";}
+	?>
 	<TD WIDTH=<?php echo $HSwidth ?> VALIGN=MIDDLE ALIGN=CENTER><font class="body_text">&nbsp; <span id=status>LIVE</span>&nbsp; &nbsp;session ID: <span id=sessionIDspan></span>&nbsp; &nbsp;<span id=AgentStatusCalls></span></TD>
 	<TD WIDTH=109><IMG SRC="./images/agc_live_call_OFF.gif" NAME=livecall ALT="Live Call" WIDTH=109 HEIGHT=30 BORDER=0></TD>
 	</TR>
@@ -11608,6 +11668,14 @@ if ($agent_display_dialable_leads > 0)
 
 <span style="position:absolute;left:<?php echo $AMwidth ?>px;top:69px;z-index:<?php $zi++; echo $zi ?>;" id="ScriptRefresH">
 <a href="#" onclick="RefresHScript()"><font class="body_small">refresh</font></a>
+</span>
+
+<span style="position:absolute;left:154px;top:65px;z-index:<?php $zi++; echo $zi ?>;" id="FormPanel">
+    <TABLE border=0 bgcolor="<?php echo $SCRIPT_COLOR ?>" width=<?php echo $SSwidth ?> height=<?php echo $SSheight ?>><TR><TD align=left valign=top><font class="sb_text"><div class="noscroll_script" id="FormContents"><iframe src="./vdc_form_display.php?lead_id=&list_id=&stage=DISPLAY" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="vcFormIFrame" name="vcFormIFrame" width="<?php echo $SDwidth ?>" height="<?php echo $SSheight ?>" STYLE="z-index:18"> </iframe></div></font></TD></TR></TABLE>
+</span>
+
+<span style="position:absolute;left:<?php echo $AMwidth ?>px;top:69px;z-index:<?php $zi++; echo $zi ?>;" id="FormRefresH">
+<a href="#" onclick="FormContentsLoad()"><font class="body_small">refresh</font></a>
 </span>
 
 
@@ -12024,27 +12092,5 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 <?php
 	
 exit; 
-
-
-##### MySQL Error Logging #####
-function mysql_error_logging($NOW_TIME,$link,$mel,$stmt,$query_id,$user,$server_ip,$session_name,$one_mysql_log)
-	{
-	$NOW_TIME = date("Y-m-d H:i:s");
-	#	mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);
-	$errno='';   $error='';
-	if ( ($mel > 0) or ($one_mysql_log > 0) )
-		{
-		$errno = mysql_errno($link);
-		if ( ($errno > 0) or ($mel > 1) or ($one_mysql_log > 0) )
-			{
-			$error = mysql_error($link);
-			$efp = fopen ("./vicidial_mysql_errors.txt", "a");
-			fwrite ($efp, "$NOW_TIME|vicidial    |$query_id|$errno|$error|$stmt|$user|$server_ip|$session_name|\n");
-			fclose($efp);
-			}
-		}
-	$one_mysql_log=0;
-	return $errno;
-	}
 
 ?>

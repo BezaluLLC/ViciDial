@@ -242,6 +242,10 @@ Registration Password||
 Login Password||
 The password used for the phone user to login to the web-based client applications. IMPORTANT, this is the password only for the agent web interface phone login, to change the sip.conf or iax.conf password, or secret, for this phone device you need to modify the Registration Password in the next field||
 SCRIPT will also display only, but you are able to use script variables just like in the Scripts feature. SCRIPT fields will also only display the content in the Options, and not the field name like the DISPLAY type does||
+You can also include the default ViciDial fields in a custom field setup, and you will see them in red in the list. These fields will not be added to the custom list database table, the agent interface will instead reference the vicidial_list table directly. The labels that you can use to include the default fieds are||
+If custom list fields are enabled on your system, FORM will open the FORM tab upon connection of a call to an agent||
+Enable Custom List Fields||
+This setting enables the custom list fields feature that allows for custom data fields to be defined in the administration web interface on a per-list basis and then have those fields available in a FORM tab to the agent in the agent web interface. Default is 0 for disabled||
 
 
 AST_VICIDIAL_ingrouplist.php

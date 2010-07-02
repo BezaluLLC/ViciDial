@@ -1327,6 +1327,8 @@ if (isset($_GET["label_email"]))					{$label_email=$_GET["label_email"];}
 	elseif (isset($_POST["label_email"]))			{$label_email=$_POST["label_email"];}
 if (isset($_GET["label_comments"]))					{$label_comments=$_GET["label_comments"];}
 	elseif (isset($_POST["label_comments"]))		{$label_comments=$_POST["label_comments"];}
+if (isset($_GET["custom_fields_enabled"]))			{$custom_fields_enabled=$_GET["custom_fields_enabled"];}
+	elseif (isset($_POST["custom_fields_enabled"]))	{$custom_fields_enabled=$_POST["custom_fields_enabled"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1542,6 +1544,7 @@ if ($non_latin < 1)
 	$hold_time_option_minimum = ereg_replace("[^0-9]","",$hold_time_option_minimum);
 	$onhold_prompt_seconds = ereg_replace("[^0-9]","",$onhold_prompt_seconds);
 	$hold_time_option_prompt_seconds = ereg_replace("[^0-9]","",$hold_time_option_prompt_seconds);
+	$custom_fields_enabled = ereg_replace("[^0-9]","",$custom_fields_enabled);
 
 	$drop_call_seconds = ereg_replace("[^-0-9]","",$drop_call_seconds);
 
@@ -2317,11 +2320,12 @@ else
 # 100616-2232 - Added VIDPROMPT call menu options
 # 100621-1010 - Added admin_web_directory system setting
 # 100622-1700 - Added custom agent field names for default fields
+# 100702-1142 - Added FORM get_call_launch option for custom list fields tab in agent interface
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-259';
-$build = '100622-1700';
+$admin_version = '2.4-260';
+$build = '100702-1142';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4130,7 +4134,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_campaigns-get_call_launch">
 	<BR>
-	<B>Get Call Launch -</B> This menu allows you to choose whether you want to auto-launch the web-form page in a separate window, auto-switch to the SCRIPT tab or do nothing when a call is sent to the agent for this campaign. 
+	<B>Get Call Launch -</B> This menu allows you to choose whether you want to auto-launch the web-form page in a separate window, auto-switch to the SCRIPT tab or do nothing when a call is sent to the agent for this campaign. If custom list fields are enabled on your system, FORM will open the FORM tab upon connection of a call to an agent.
 
 	<BR>
 	<A NAME="vicidial_campaigns-xferconf_a_dtmf">
@@ -4551,7 +4555,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_inbound_groups-get_call_launch">
 	<BR>
-	<B>Get Call Launch -</B> This menu allows you to choose whether you want to auto-launch the web-form page in a separate window, auto-switch to the SCRIPT tab or do nothing when a call is sent to the agent for this campaign. 
+	<B>Get Call Launch -</B> This menu allows you to choose whether you want to auto-launch the web-form page in a separate window, auto-switch to the SCRIPT tab or do nothing when a call is sent to the agent for this campaign. If custom list fields are enabled on your system, FORM will open the FORM tab upon connection of a call to an agent.
 
 	<BR>
 	<A NAME="vicidial_inbound_groups-xferconf_a_dtmf">
@@ -6455,6 +6459,11 @@ if ($ADD==99999)
 	<B>Enable CallCard -</B> This setting enables the CallCard features with ViciDial to allow for callers to use pin numbers and card_ids that have a balance of minutes and those balances can have agent talk time on customer calls to in-groups deducted. Default is 0 for disabled.
 
 	<BR>
+	<A NAME="settings-custom_fields_enabled">
+	<BR>
+	<B>Enable Custom List Fields -</B> This setting enables the custom list fields feature that allows for custom data fields to be defined in the administration web interface on a per-list basis and then have those fields available in a FORM tab to the agent in the agent web interface. Default is 0 for disabled.
+
+	<BR>
 	<A NAME="settings-default_field_labels">
 	<BR>
 	<B>Default Field Labels -</B> These 19 fields allow you to set the name as it will appear in the ViciDial agent interface as well as the administrative modify lead page. Default is empty which will use the hard-coded defaults in the agent interface. 
@@ -7192,10 +7201,12 @@ if ($ADD==11)
 		echo "$scripts_list";
 		echo "</select>$NWB#vicidial_campaigns-campaign_script$NWE</td></tr>\n";
 
-		$eswHTML='';
+		$eswHTML=''; $cfwHTML='';
 		if ($SSenable_second_webform > 0)
 			{$eswHTML = '<option>WEBFORMTWO</option>';}
-		echo "<tr bgcolor=#B6D3FC><td align=right>Get Call Launch: </td><td align=left><select size=1 name=get_call_launch><option selected>NONE</option><option>SCRIPT</option><option>WEBFORM</option>$eswHTML</select>$NWB#vicidial_campaigns-get_call_launch$NWE</td></tr>\n";
+		if ($SScustom_fields_enabled > 0)
+			{$cfwHTML = '<option>FORM</option>';}
+		echo "<tr bgcolor=#B6D3FC><td align=right>Get Call Launch: </td><td align=left><select size=1 name=get_call_launch><option selected>NONE</option><option>SCRIPT</option><option>WEBFORM</option>$eswHTML$cfwHTML</select>$NWB#vicidial_campaigns-get_call_launch$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 		echo "</TABLE></center>\n";
 		}
@@ -7533,10 +7544,12 @@ if ($ADD==1111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Script: </td><td align=left><select size=1 name=script_id>\n";
 		echo "$scripts_list";
 		echo "</select>$NWB#vicidial_inbound_groups-ingroup_script$NWE</td></tr>\n";
-		$eswHTML='';
+		$eswHTML=''; $cfwHTML='';
 		if ($SSenable_second_webform > 0)
 			{$eswHTML = '<option>WEBFORMTWO</option>';}
-		echo "<tr bgcolor=#B6D3FC><td align=right>Get Call Launch: </td><td align=left><select size=1 name=get_call_launch><option selected>NONE</option><option>SCRIPT</option><option>WEBFORM</option>$eswHTML</select>$NWB#vicidial_inbound_groups-get_call_launch$NWE</td></tr>\n";
+		if ($SScustom_fields_enabled > 0)
+			{$cfwHTML = '<option>FORM</option>';}
+		echo "<tr bgcolor=#B6D3FC><td align=right>Get Call Launch: </td><td align=left><select size=1 name=get_call_launch><option selected>NONE</option><option>SCRIPT</option><option>WEBFORM</option>$eswHTML$cfwHTML</select>$NWB#vicidial_inbound_groups-get_call_launch$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 		echo "</TABLE></center>\n";
 		}
@@ -14213,7 +14226,7 @@ if ($ADD==411111111111111)
 
 		echo "<br>VICIDIAL SYSTEM SETTINGS MODIFIED\n";
 
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='$webphone_url',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments';";
+		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='$webphone_url',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled';";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -17635,10 +17648,12 @@ if ($ADD==31)
 			{echo " <font color=red>LIST OVERRIDE ACTIVE</font>";}
 		echo "</td></tr>\n";
 
-		$eswHTML='';
+		$eswHTML=''; $cfwHTML='';
 		if ($SSenable_second_webform > 0)
 			{$eswHTML = '<option>WEBFORMTWO</option>';}
-		echo "<tr bgcolor=#B6D3FC><td align=right>Get Call Launch: </td><td align=left><select size=1 name=get_call_launch><option selected>NONE</option><option>SCRIPT</option><option>WEBFORM</option>$eswHTML<option selected>$get_call_launch</option></select>$NWB#vicidial_campaigns-get_call_launch$NWE</td></tr>\n";
+		if ($SScustom_fields_enabled > 0)
+			{$cfwHTML = '<option>FORM</option>';}
+		echo "<tr bgcolor=#B6D3FC><td align=right>Get Call Launch: </td><td align=left><select size=1 name=get_call_launch><option selected>NONE</option><option>SCRIPT</option><option>WEBFORM</option>$eswHTML$cfwHTML<option selected>$get_call_launch</option></select>$NWB#vicidial_campaigns-get_call_launch$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>Answering Machine Message: </td><td><input type=text size=50 maxlength=100 name=am_message_exten id=am_message_exten value=\"$am_message_exten\"> <a href=\"javascript:launch_chooser('am_message_exten','date',1200);\">audio chooser</a>  $NWB#vicidial_campaigns-am_message_exten$NWE\n";
 		$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and am_message_exten_override != '' and active='Y';";
@@ -20469,10 +20484,12 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Ignore List Script Override: </td><td align=left><select size=1 name=ignore_list_script_override><option>Y</option><option>N</option><option SELECTED>$ignore_list_script_override</option></select>$NWB#vicidial_inbound_groups-ignore_list_script_override$NWE</td></tr>\n";
 
-		$eswHTML='';
+		$eswHTML=''; $cfwHTML='';
 		if ($SSenable_second_webform > 0)
 			{$eswHTML = '<option>WEBFORMTWO</option>';}
-		echo "<tr bgcolor=#B6D3FC><td align=right>Get Call Launch: </td><td align=left><select size=1 name=get_call_launch><option selected>NONE</option><option>SCRIPT</option><option>WEBFORM</option>$eswHTML<option selected>$get_call_launch</option></select>$NWB#vicidial_inbound_groups-get_call_launch$NWE</td></tr>\n";
+		if ($SScustom_fields_enabled > 0)
+			{$cfwHTML = '<option>FORM</option>';}
+		echo "<tr bgcolor=#B6D3FC><td align=right>Get Call Launch: </td><td align=left><select size=1 name=get_call_launch><option selected>NONE</option><option>SCRIPT</option><option>WEBFORM</option>$eswHTML$cfwHTML<option selected>$get_call_launch</option></select>$NWB#vicidial_inbound_groups-get_call_launch$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Transfer-Conf DTMF 1: </td><td align=left><input type=text name=xferconf_a_dtmf size=20 maxlength=50 value=\"$xferconf_a_dtmf\">$NWB#vicidial_inbound_groups-xferconf_a_dtmf$NWE</td></tr>\n";
 
@@ -23467,7 +23484,7 @@ if ($ADD==311111111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
+		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled from system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$version =						$row[0];
@@ -23544,6 +23561,7 @@ if ($ADD==311111111111111)
 		$label_security_phrase =		$row[71];
 		$label_email =					$row[72];
 		$label_comments =				$row[73];
+		$custom_fields_enabled =		$row[74];
 
 		echo "<br>MODIFY VICIDIAL SYSTEM SETTINGS<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=411111111111111>\n";
@@ -23693,6 +23711,8 @@ if ($ADD==311111111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Enable TTS Integration: </td><td align=left><select size=1 name=enable_tts_integration><option>1</option><option>0</option><option selected>$enable_tts_integration</option></select>$NWB#settings-enable_tts_integration$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Enable CallCard: </td><td align=left><select size=1 name=callcard_enabled><option>1</option><option>0</option><option selected>$callcard_enabled</option></select>$NWB#settings-callcard_enabled$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Enable Custom List Fields: </td><td align=left><select size=1 name=custom_fields_enabled><option>1</option><option>0</option><option selected>$custom_fields_enabled</option></select>$NWB#settings-custom_fields_enabled$NWE</td></tr>\n";
 
 		if ($SSallow_custom_dialplan > 0)
 			{

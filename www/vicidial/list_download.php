@@ -13,6 +13,7 @@
 # 90721-1238 - Added rank and owner as vicidial_list fields
 # 100119-1039 - Filtered comments for \n newlines
 # 100508-1439 - Added header row to output
+# 100702-1335 - Added custom fields
 #
 
 require("dbconnect.php");
@@ -33,14 +34,15 @@ if (strlen($shift)<2) {$shift='ALL';}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =					$row[0];
+	$non_latin =				$row[0];
+	$custom_fields_enabled =	$row[1];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -113,7 +115,8 @@ header('Pragma: public');
 ob_clean();
 flush();
 
-echo "lead_id\tentry_date\tmodify_date\tstatus\tuser\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tcalled_since_last_reset\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tcalled_count\tlast_local_call_time\trank\towner\r\n";
+$header_row = "lead_id\tentry_date\tmodify_date\tstatus\tuser\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tcalled_since_last_reset\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tcalled_count\tlast_local_call_time\trank\towner";
+$header_columns='';
 
 $stmt="select lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where list_id='$list_id';";
 $rslt=mysql_query($stmt, $link);
@@ -126,7 +129,70 @@ while ($i < $leads_to_print)
 
 	$row[29] = preg_replace("/\n|\r/",'!N',$row[29]);
 
-	echo "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\r\n";
+	$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]";
+	$export_lead_id[$i] = $row[0];
+
+	$i++;
+	}
+
+
+if ($custom_fields_enabled > 0)
+	{
+	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
+	if ($DB>0) {echo "$stmt";}
+	$rslt=mysql_query($stmt, $link);
+	$tablecount_to_print = mysql_num_rows($rslt);
+	if ($tablecount_to_print > 0) 
+		{
+		$stmt = "describe custom_$list_id;";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$columns_ct = mysql_num_rows($rslt);
+		$u=0;
+		while ($columns_ct > $u)
+			{
+			$row=mysql_fetch_row($rslt);
+			$column =	$row[0];
+			if ($u > 0)
+				{$header_columns .= "\t$column";}
+			$u++;
+			}
+		if ($columns_ct > 1)
+			{
+			$i=0;
+			while ($i < $leads_to_print)
+				{
+				$stmt = "SELECT * from custom_$list_id where lead_id='$export_lead_id[$i]' limit 1;";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$customfield_ct = mysql_num_rows($rslt);
+				if ($customfield_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$t=1;
+					while ($columns_ct > $t) 
+						{
+						$custom_data[$i] .= "\t$row[$t]";
+						$t++;
+						}
+					}
+
+				$custom_data[$i] = preg_replace("/\r\n/",'!N',$custom_data[$i]);
+				$custom_data[$i] = preg_replace("/\n/",'!N',$custom_data[$i]);
+
+				$i++;
+				}
+			}
+		}
+	}
+
+
+echo "$header_row$header_columns\r\n";
+
+$i=0;
+while ($i < $leads_to_print)
+	{
+	echo "$row_data[$i]$custom_data[$i]\r\n";
 
 	$i++;
 	}
