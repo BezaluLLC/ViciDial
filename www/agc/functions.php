@@ -84,7 +84,10 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 						}
 					}
 				else
-					{$A_field_value[$o] = '--A--' . $A_field_label[$o] . '--B--';}
+					{
+					$select_SQL .= "8,";
+					$A_field_value[$o] = '--A--' . $A_field_label[$o] . '--B--';
+					}
 				$o++;
 				$rank_select .= "<option>$o</option>";
 				}
@@ -92,7 +95,6 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 			$rank_select .= "<option>$o</option>";
 			$last_rank = $o;
 			$select_SQL = preg_replace("/.$/",'',$select_SQL);
-
 
 			##### BEGIN grab the data from custom table for the lead_id
 			$stmt="SELECT $select_SQL FROM custom_$list_id where lead_id='$lead_id' LIMIT 1;";
@@ -104,7 +106,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 				{
 				$row=mysql_fetch_row($rslt);
 				$o=0;
-				while ($fields_to_print > $o) 
+				while ($fields_to_print >= $o) 
 					{
 					$A_field_value[$o]		= trim("$row[$o]");
 					if ($A_field_select[$o]=='----EMPTY----')
@@ -242,7 +244,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 					if ( (strlen($A_field_default[$o])<1) or ($A_field_default[$o]=='NULL') ) {$A_field_default[$o]=0;}
 					$day_diff = $A_field_default[$o];
 					$default_date = date("Y-m-d", mktime(date("H"),date("i"),date("s"),date("m"),date("d")+$day_diff,date("Y")));
-					if (strlen($A_field_value[$o]) < 1) {$A_field_value[$o] = $default_date;}
+					if (strlen($A_field_value[$o]) > 0) {$default_date = $A_field_value[$o];}
 
 					$field_HTML .= "<input type=text size=11 maxlength=10 name=$A_field_label[$o] id=$A_field_label[$o] value=\"$default_date\" onclick=\"f_tcalToggle()\">\n";
 					$field_HTML .= "<script language=\"JavaScript\">\n";
