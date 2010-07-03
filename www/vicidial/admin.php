@@ -2321,11 +2321,12 @@ else
 # 100621-1010 - Added admin_web_directory system setting
 # 100622-1700 - Added custom agent field names for default fields
 # 100702-1142 - Added FORM get_call_launch option for custom list fields tab in agent interface
+# 100703-1322 - Added LEADS ability to admin log display
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-260';
-$build = '100702-1142';
+$admin_version = '2.4-261';
+$build = '100703-1322';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -25787,25 +25788,26 @@ if ($ADD==720000000000000)
 			{
 			$row=mysql_fetch_row($rslt);
 
-			if (eregi("USER|AGENT",$row[4])) {$record_link = "ADD=3&user=$row[6]";}
-			if (eregi('CAMPAIGN',$row[4])) {$record_link = "ADD=31&campaign_id=$row[6]";}
-			if (eregi('LIST',$row[4])) {$record_link = "ADD=311&list_id=$row[6]";}
-			if (eregi('SCRIPT',$row[4])) {$record_link = "ADD=3111111&script_id=$row[6]";}
-			if (eregi('FILTER',$row[4])) {$record_link = "ADD=31111111&lead_filter_id=$row[6]";}
-			if (eregi('INGROUP',$row[4])) {$record_link = "ADD=3111&group_id=$row[6]";}
-			if (eregi('DID',$row[4])) {$record_link = "ADD=3311&did_id=$row[6]";}
-			if (eregi('USERGROUP',$row[4])) {$record_link = "ADD=311111&user_group=$row[6]";}
-			if (eregi('REMOTEAGENT',$row[4])) {$record_link = "ADD=31111&remote_agent_id=$row[6]";}
-			if (eregi('PHONE',$row[4])) {$record_link = "ADD=10000000000";}
-			if (eregi('CALLTIME',$row[4])) {$record_link = "ADD=311111111&call_time_id=$row[6]";}
-			if (eregi('SHIFT',$row[4])) {$record_link = "ADD=331111111&shift_id=$row[6]";}
-			if (eregi('CONFTEMPLATE',$row[4])) {$record_link = "ADD=331111111111&template_id=$row[6]";}
-			if (eregi('CARRIER',$row[4])) {$record_link = "ADD=341111111111&carrier_id=$row[6]";}
-			if (eregi('SERVER',$row[4])) {$record_link = "ADD=311111111111&server_id=$row[6]";}
-			if (eregi('CONFERENCE',$row[4])) {$record_link = "ADD=1000000000000";}
-			if (eregi('SYSTEM',$row[4])) {$record_link = "ADD=311111111111111";}
-			if (eregi('CATEGOR',$row[4])) {$record_link = "ADD=331111111111111";}
-			if (eregi('GROUPALIAS',$row[4])) {$record_link = "ADD=33111111111&group_alias_id=$row[6]";}
+			if (eregi("USER|AGENT",$row[4])) {$record_link = "$PHP_SELF?ADD=3&user=$row[6]";}
+			if (eregi('CAMPAIGN',$row[4])) {$record_link = "$PHP_SELF?ADD=31&campaign_id=$row[6]";}
+			if (eregi('LIST',$row[4])) {$record_link = "$PHP_SELF?ADD=311&list_id=$row[6]";}
+			if (eregi('SCRIPT',$row[4])) {$record_link = "$PHP_SELF?ADD=3111111&script_id=$row[6]";}
+			if (eregi('FILTER',$row[4])) {$record_link = "$PHP_SELF?ADD=31111111&lead_filter_id=$row[6]";}
+			if (eregi('INGROUP',$row[4])) {$record_link = "$PHP_SELF?ADD=3111&group_id=$row[6]";}
+			if (eregi('DID',$row[4])) {$record_link = "$PHP_SELF?ADD=3311&did_id=$row[6]";}
+			if (eregi('USERGROUP',$row[4])) {$record_link = "$PHP_SELF?ADD=311111&user_group=$row[6]";}
+			if (eregi('REMOTEAGENT',$row[4])) {$record_link = "$PHP_SELF?ADD=31111&remote_agent_id=$row[6]";}
+			if (eregi('PHONE',$row[4])) {$record_link = "$PHP_SELF?ADD=10000000000";}
+			if (eregi('CALLTIME',$row[4])) {$record_link = "$PHP_SELF?ADD=311111111&call_time_id=$row[6]";}
+			if (eregi('SHIFT',$row[4])) {$record_link = "$PHP_SELF?ADD=331111111&shift_id=$row[6]";}
+			if (eregi('CONFTEMPLATE',$row[4])) {$record_link = "$PHP_SELF?ADD=331111111111&template_id=$row[6]";}
+			if (eregi('CARRIER',$row[4])) {$record_link = "$PHP_SELF?ADD=341111111111&carrier_id=$row[6]";}
+			if (eregi('SERVER',$row[4])) {$record_link = "$PHP_SELF?ADD=311111111111&server_id=$row[6]";}
+			if (eregi('CONFERENCE',$row[4])) {$record_link = "$PHP_SELF?ADD=1000000000000";}
+			if (eregi('SYSTEM',$row[4])) {$record_link = "$PHP_SELF?ADD=311111111111111";}
+			if (eregi('CATEGOR',$row[4])) {$record_link = "$PHP_SELF?ADD=331111111111111";}
+			if (eregi('GROUPALIAS',$row[4])) {$record_link = "$PHP_SELF?ADD=33111111111&group_alias_id=$row[6]";}
+			if (eregi('LEADS',$row[4])) {$record_link = "./admin_modify_lead.php?lead_id=$row[6]";}
 
 			if (eregi("1$|3$|5$|7$|9$", $o))
 				{$bgcolor='bgcolor="#B9CBFD"';} 
@@ -25819,7 +25821,7 @@ if ($ADD==720000000000000)
 			echo "<td><font size=1> $row[5]</td>";
 			echo "<td><font size=1> $row[6]</td>";
 			echo "<td><font size=1> $row[7]</td>";
-			echo "<td><font size=1> <a href=\"$PHP_SELF?$record_link\">GOTO</a></td>";
+			echo "<td><font size=1> <a href=\"$record_link\">GOTO</a></td>";
 			echo "</tr>\n";
 			$logs_printed .= "'$row[0]',";
 			$o++;

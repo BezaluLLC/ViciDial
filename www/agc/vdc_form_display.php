@@ -9,10 +9,11 @@
 #
 # CHANGELOG:
 # 100630-1119 - First build of script
+# 100703-1124 - Added submit_button,admin_submit fields, which will log to admin log
 #
 
-$version = '2.4-1';
-$build = '100630-1119';
+$version = '2.4-2';
+$build = '100703-1124';
 
 require("dbconnect.php");
 require("functions.php");
@@ -34,6 +35,12 @@ if (isset($_GET["uniqueid"]))			{$uniqueid=$_GET["uniqueid"];}
 	elseif (isset($_POST["uniqueid"]))	{$uniqueid=$_POST["uniqueid"];}
 if (isset($_GET["stage"]))				{$stage=$_GET["stage"];}
 	elseif (isset($_POST["stage"]))		{$stage=$_POST["stage"];}
+if (isset($_GET["submit_button"]))			{$submit_button=$_GET["submit_button"];}
+	elseif (isset($_POST["submit_button"]))	{$submit_button=$_POST["submit_button"];}
+if (isset($_GET["admin_submit"]))			{$admin_submit=$_GET["admin_submit"];}
+	elseif (isset($_POST["admin_submit"]))	{$admin_submit=$_POST["admin_submit"];}
+if (isset($_GET["bgcolor"]))			{$bgcolor=$_GET["bgcolor"];}
+	elseif (isset($_POST["bgcolor"]))	{$bgcolor=$_POST["bgcolor"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -48,6 +55,7 @@ $ENTRYdate = date("YmdHis");
 $MT[0]='';
 $agents='@agents';
 $script_height = ($script_height - 20);
+if (strlen($bgcolor) < 6) {$bgcolor='FFFFFF';}
 
 $vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|';
 
@@ -55,7 +63,7 @@ $IFRAME=0;
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock FROM system_settings;";
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,custom_fields_enabled FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -65,6 +73,7 @@ if ($qm_conf_ct > 0)
 	$non_latin =							$row[0];
 	$timeclock_end_of_day =					$row[1];
 	$agentonly_callback_campaign_lock =		$row[2];
+	$custom_fields_enabled =				$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -109,6 +118,14 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LVAactive=$row[0];
 
+if ($custom_fields_enabled < 1)
+	{
+	echo "Custom Fields Disabled: |$custom_fields_enabled|\n";
+	echo "<form action=./vdc_form_display.php method=POST name=form_custom_fields id=form_custom_fields>\n";
+	echo "<input type=hidden name=user id=user value=\"$user\">\n";
+	echo "</form>\n";
+	exit;
+	}
 
 if ( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) or ( ($LVAactive < 1) and ($VUmodify < 1) ) )
 	{
@@ -127,6 +144,7 @@ else
 ### BEGIN parse submission of the custom fields form ###
 if ($stage=='SUBMIT')
 	{
+	$update_sent=0;
 	$CFoutput='';
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
 	if ($DB>0) {echo "$stmt";}
@@ -224,6 +242,8 @@ if ($stage=='SUBMIT')
 				$list_update_count = mysql_affected_rows($link);
 				if ($DB) {echo "$field_update|$list_table_update_SQL\n";}
 				if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+				$update_sent++;
 				}
 
 			if (strlen($update_SQL)>3)
@@ -248,9 +268,21 @@ if ($stage=='SUBMIT')
 				$custom_update_count = mysql_affected_rows($link);
 				if ($DB) {echo "$field_update|$custom_table_update_SQL\n";}
 				if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+				$update_sent++;
 				}
 
-#			echo "$list_update_count|$list_table_update_SQL\n<BR>\n$custom_update_count|$custom_table_update_SQL<BR>\n";
+			if ( ($admin_submit=='YES') and ($update_sent > 0) )
+				{
+				### LOG INSERTION Admin Log Table ###
+				$ip = getenv("REMOTE_ADDR");
+				$SQL_log = "$list_table_update_SQL|$custom_table_update_SQL|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LEADS', event_type='MODIFY', record_id='$lead_id', event_code='ADMIN MODIFY CUSTOM LEAD', event_sql=\"$SQL_log\", event_notes='$custom_update_count|$list_update_count';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		else
 			{$CFoutput .= "ERROR: no custom list fields\n";}
@@ -272,7 +304,7 @@ else
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "<!-- VERSION: $version     BUILD: $build    USER: $user   server_ip: $server_ip-->\n";
-	echo "<title>ViciDiaL Form Display Script";
+	echo "<title>ViciDial Form Display Script";
 	echo "</title>\n";
 
 	echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
@@ -293,7 +325,8 @@ else
 	echo "	</script>\n";
 	echo "	<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo "</head>\n";
-	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	echo '<BODY BGCOLOR="#' . $bgcolor . '" marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>';
+	echo "\n";
 	echo "<form action=./vdc_form_display.php method=POST name=form_custom_fields id=form_custom_fields>\n";
 	echo "<input type=hidden name=lead_id id=lead_id value=\"$lead_id\">\n";
 	echo "<input type=hidden name=list_id id=list_id value=\"$list_id\">\n";
@@ -308,7 +341,11 @@ else
 
 	echo "$CFoutput";
 
-#	echo "<BR><BR><BR><BR><input type=submit name=VCformSubmit id=VCformSubmit value=submit>\n";
+	if ($submit_button=='YES')
+		{
+		echo "<input type=hidden name=admin_submit id=admin_submit value=\"YES\">\n";
+		echo "<BR><BR><input type=submit name=VCformSubmit id=VCformSubmit value=submit>\n";
+		}
 	echo "</form></center><BR><BR>\n";
 	echo "</BODY></HTML>\n";
 	}

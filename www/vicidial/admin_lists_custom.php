@@ -87,6 +87,9 @@ if ( (strlen($field_max) < 1) or ($field_max < 1) )
 
 if ($non_latin < 1)
 	{
+	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+
 	$list_id = ereg_replace("[^0-9]","",$list_id);
 	$field_id = ereg_replace("[^0-9]","",$field_id);
 	$field_rank = ereg_replace("[^0-9]","",$field_rank);

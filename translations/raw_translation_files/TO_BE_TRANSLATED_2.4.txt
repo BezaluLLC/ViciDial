@@ -246,6 +246,7 @@ You can also include the default ViciDial fields in a custom field setup, and yo
 If custom list fields are enabled on your system, FORM will open the FORM tab upon connection of a call to an agent||
 Enable Custom List Fields||
 This setting enables the custom list fields feature that allows for custom data fields to be defined in the administration web interface on a per-list basis and then have those fields available in a FORM tab to the agent in the agent web interface. Default is 0 for disabled||
+CUSTOM FIELDS FOR THIS LEAD||
 
 
 AST_VICIDIAL_ingrouplist.php

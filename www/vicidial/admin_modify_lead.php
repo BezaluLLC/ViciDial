@@ -36,6 +36,7 @@
 # 100405-1333 - Changed to show logs of non-found leads
 # 100618-0148 - Added Middle name modify and fixes statuses list
 # 100622-0945 - Added field labels
+# 100703-1122 - Added custom fields display/edit
 #
 
 require("dbconnect.php");
@@ -138,8 +139,8 @@ if (isset($_GET["modify_agent_logs"]))			{$modify_agent_logs=$_GET["modify_agent
 if (isset($_GET["add_closer_record"]))			{$add_closer_record=$_GET["add_closer_record"];}
 	elseif (isset($_POST["add_closer_record"]))	{$add_closer_record=$_POST["add_closer_record"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
+$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
@@ -147,24 +148,34 @@ $NOW_TIME = date("Y-m-d H:i:s");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =					$row[0];
+	$non_latin =				$row[0];
+	$custom_fields_enabled =	$row[1];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
 if ($non_latin < 1)
 	{
+	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+
 	$old_phone = ereg_replace("[^0-9]","",$old_phone);
 	$phone_number = ereg_replace("[^0-9]","",$phone_number);
 	$alt_phone = ereg_replace("[^0-9]","",$alt_phone);
+	}	# end of non_latin
+else
+	{
+	$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
 	}
+
 if (strlen($phone_number)<6) {$phone_number=$old_phone;}
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and modify_leads='1';";
@@ -721,6 +732,34 @@ else
 		echo "<BR><BR>\n";
 		}
 
+
+
+	### iframe for custom fields display/editing
+	if ($custom_fields_enabled > 0)
+		{
+		$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
+		if ($DB>0) {echo "$stmt";}
+		$rslt=mysql_query($stmt, $link);
+		$tablecount_to_print = mysql_num_rows($rslt);
+		if ($tablecount_to_print > 0) 
+			{
+			$stmt="SELECT count(*) from custom_$list_id where lead_id='$lead_id';";
+			if ($DB>0) {echo "$stmt";}
+			$rslt=mysql_query($stmt, $link);
+			$fieldscount_to_print = mysql_num_rows($rslt);
+			if ($fieldscount_to_print > 0) 
+				{
+				$rowx=mysql_fetch_row($rslt);
+				$custom_records_count =	$rowx[0];
+
+				echo "<B>CUSTOM FIELDS FOR THIS LEAD:</B><BR>\n";
+				echo "<iframe src=\"../agc/vdc_form_display.php?lead_id=$lead_id&list_id=$list_id&stage=DISPLAY&submit_button=YES&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bgcolor=E6E6E6\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"2\" allowtransparency=\"true\" id=\"vcFormIFrame\" name=\"vcFormIFrame\" width=\"740\" height=\"300\" STYLE=\"z-index:18\"> </iframe>\n";
+				echo "<BR><BR>";
+				}
+			}
+		}
+
+
 	echo "<B>CALLS TO THIS LEAD:</B>\n";
 	echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
 	echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> TSR</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td><td align=right><font size=2> PHONE</td></tr>\n";
@@ -816,7 +855,21 @@ else
 		}
 
 
-	echo "</TABLE></center>\n";
+	echo "</TABLE><BR><BR>\n";
+
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 9 and modify_leads='1';";
+	if ($DB) {echo "|$stmt|\n";}
+	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$admin_display=$row[0];
+	if ($admin_display > 0)
+		{
+		echo "<a href=\"./admin.php?ADD=720000000000000&stage=$lead_id&category=LEADS\">Click here to see Lead Modify changes to this lead</a>\n";
+		}
+
+	echo "</center>\n";
 	}
 
 
