@@ -21,7 +21,7 @@
 # 90721-1341 - Added rank and owner as vicidial_list fields
 # 91112-0616 - Added title/alt-phone duplicate checking
 # 100118-0539 - Added new Australian and New Zealand DST schemes (FSO-FSA and LSS-FSA)
-#
+# 100630-1609 - Added a check for invalid ListIds and filtered out ' " ; ` \ from the field <mikec>
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -271,7 +271,37 @@ foreach $oWkS (@{$oBook->{Worksheet}}) {
 		$oWkC = $oWkS->{Cells}[$iR][$xls_fields[24]];
 		if ($oWkC) {$owner=$oWkC->Value; }
 
-
+		$entry_date                     =~ s/\'|\\|\"|;|\`|\224//gi;
+		$modify_date                    =~ s/\'|\\|\"|;|\`|\224//gi;
+		$status                         =~ s/\'|\\|\"|;|\`|\224//gi;
+		$user                           =~ s/\'|\\|\"|;|\`|\224//gi;
+		$vendor_lead_code               =~ s/\'|\\|\"|;|\`|\224//gi;
+		$source_id                      =~ s/\'|\\|\"|;|\`|\224//gi;
+		$list_id                        =~ s/\'|\\|\"|;|\`|\224//gi;
+		$gmt_offset                     =~ s/\'|\\|\"|;|\`|\224//gi;
+		$called_since_last_reset        =~ s/\'|\\|\"|;|\`|\224//gi;
+		$phone_code                     =~ s/\'|\\|\"|;|\`|\224//gi;
+		$phone_number                   =~ s/\'|\\|\"|;|\`|\224//gi;
+		$title                          =~ s/\'|\\|\"|;|\`|\224//gi;
+		$first_name                     =~ s/\'|\\|\"|;|\`|\224//gi;
+		$middle_initial                 =~ s/\'|\\|\"|;|\`|\224//gi;
+		$last_name                      =~ s/\'|\\|\"|;|\`|\224//gi;
+		$address1                       =~ s/\'|\\|\"|;|\`|\224//gi;
+		$address2                       =~ s/\'|\\|\"|;|\`|\224//gi;
+		$address3                       =~ s/\'|\\|\"|;|\`|\224//gi;
+		$city                           =~ s/\'|\\|\"|;|\`|\224//gi;
+		$state                          =~ s/\'|\\|\"|;|\`|\224//gi;
+		$province                       =~ s/\'|\\|\"|;|\`|\224//gi;
+		$postal_code                    =~ s/\'|\\|\"|;|\`|\224//gi;
+		$country                        =~ s/\'|\\|\"|;|\`|\224//gi;
+		$gender                         =~ s/\'|\\|\"|;|\`|\224//gi;
+		$date_of_birth                  =~ s/\'|\\|\"|;|\`|\224//gi;
+		$alt_phone                      =~ s/\'|\\|\"|;|\`|\224//gi;
+		$email                          =~ s/\'|\\|\"|;|\`|\224//gi;
+		$security_phrase                =~ s/\'|\\|\"|;|\`|\224//gi;
+		$comments                       =~ s/\'|\\|\"|;|\`|\224//gi;
+		$rank                           =~ s/\'|\\|\"|;|\`|\224//gi;
+		$owner                          =~ s/\'|\\|\"|;|\`|\224//gi;
 		
 		if (length($forcelistid) > 0)
 			{
@@ -428,7 +458,7 @@ foreach $oWkS (@{$oBook->{Worksheet}}) {
 				}
 			}
 
-		if ( (length($phone_number)>6) && ($dup_lead < 1) )
+		if ( (length($phone_number)>6) && ($dup_lead < 1) && ($list_id >= 100))
 			{
 			if ( ($duptapchecklist > 0) || ($duptapchecksys > 0) )
 				{$phone_list .= "$alt_phone$title$US$list_id|";}
@@ -655,8 +685,18 @@ foreach $oWkS (@{$oBook->{Worksheet}}) {
 
 			$good++;
 		} else {
-			if ($bad < 10000) {print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| $dup_lead_list</font><b>\n";}
-			$bad++;
+		if ($bad < 1000000)
+			{
+			if ( $list_id < 100 )
+				{
+				print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INVALID LIST ID</font><b>\n";
+				}
+			else
+				{
+				print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";
+				}
+			}
+		$bad++;
 		}
 		$total++;
 		if ($total%100==0) {

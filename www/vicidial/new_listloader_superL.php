@@ -31,6 +31,7 @@
 # 91112-0616 - Added title/alt-phone duplicate checking
 # 100118-0543 - Added new Australian and New Zealand DST schemes (FSO-FSA and LSS-FSA)
 # 100621-1026 - Added admin_web_directory variable
+# 100630-1609 - Added a check for invalid ListIds and filtered out ' " ; ` \ from the field <mikec>
 #
 # make sure vicidial_list exists and that your file follows the formatting correctly. This page does not dedupe or do any other lead filtering actions yet at this time.
 
@@ -130,6 +131,9 @@ if (isset($_GET["phone_code_override"]))			{$phone_code_override=$_GET["phone_co
 	$phone_code_override = (preg_replace("/\D/","",$phone_code_override));
 
 # $country_field=$_GET["country_field"];					if (!$country_field) {$country_field=$_POST["country_field"];}
+
+### REGEX to prevent weird characters from ending up in the fields
+$field_regx = "['\"`\\;]";
 
 
 #############################################
@@ -445,7 +449,6 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 						$called_since_last_reset='N';
 						$phone_code =			eregi_replace("[^0-9]", "", $row[$phone_code_field]);
 						$phone_number =			eregi_replace("[^0-9]", "", $row[$phone_number_field]);
-							$USarea = 			substr($phone_number, 0, 3);
 						$title =				$row[$title_field];
 						$first_name =			$row[$first_name_field];
 						$middle_initial =		$row[$middle_initial_field];
@@ -466,6 +469,36 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 						$comments =				trim($row[$comments_field]);
 						$rank =					$row[$rank_field];
 						$owner =				$row[$owner_field];
+						
+						# replace ' " ` \ ; with nothing
+						$vendor_lead_code =		eregi_replace($field_regx, "", $vendor_lead_code);
+						$source_code =			eregi_replace($field_regx, "", $source_code);
+						$source_id = 			eregi_replace($field_regx, "", $source_id);
+						$list_id =				eregi_replace($field_regx, "", $list_id);
+						$phone_code =			eregi_replace($field_regx, "", $phone_code);
+						$phone_number =			eregi_replace($field_regx, "", $phone_number);
+						$title =				eregi_replace($field_regx, "", $title);
+						$first_name =			eregi_replace($field_regx, "", $first_name);
+						$middle_initial =		eregi_replace($field_regx, "", $middle_initial);
+						$last_name =			eregi_replace($field_regx, "", $last_name);
+						$address1 =				eregi_replace($field_regx, "", $address1);
+						$address2 =				eregi_replace($field_regx, "", $address2);
+						$address3 =				eregi_replace($field_regx, "", $address3);
+						$city =					eregi_replace($field_regx, "", $city);
+						$state =				eregi_replace($field_regx, "", $state);
+						$province =				eregi_replace($field_regx, "", $province);
+						$postal_code =			eregi_replace($field_regx, "", $postal_code);
+						$country_code =			eregi_replace($field_regx, "", $country_code);
+						$gender =				eregi_replace($field_regx, "", $gender);
+						$date_of_birth =		eregi_replace($field_regx, "", $date_of_birth);
+						$alt_phone =			eregi_replace($field_regx, "", $alt_phone);
+						$email =				eregi_replace($field_regx, "", $email);
+						$security_phrase =		eregi_replace($field_regx, "", $security_phrase);
+						$comments =				eregi_replace($field_regx, "", $comments);
+						$rank =					eregi_replace($field_regx, "", $rank);
+						$owner =				eregi_replace($field_regx, "", $owner);
+						
+						$USarea = 			substr($phone_number, 0, 3);
 
 						if (strlen($list_id_override)>0) 
 							{
@@ -603,7 +636,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 							}
 
 
-						if ( (strlen($phone_number)>6) and ($dup_lead<1) )
+						if ( (strlen($phone_number)>6) and ($dup_lead<1) and ($list_id >= 100 ))
 							{
 							if (strlen($phone_code)<1) {$phone_code = '1';}
 
@@ -630,7 +663,17 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
 							$good++;
 						} else {
-							if ($bad < 1000000) {print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";}
+							if ($bad < 1000000)
+								{
+								if ( $list_id < 100 )
+									{
+									print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INVALID LIST ID</font><b>\n";
+									}
+								else
+									{
+									print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";
+									}
+								}
 							$bad++;
 						}
 						$total++;
@@ -708,7 +751,6 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 				$called_since_last_reset='N';
 				$phone_code =			eregi_replace("[^0-9]", "", $row[$phone_code_field]);
 				$phone_number =			eregi_replace("[^0-9]", "", $row[$phone_number_field]);
-					$USarea = 			substr($phone_number, 0, 3);
 				$title =				$row[$title_field];
 				$first_name =			$row[$first_name_field];
 				$middle_initial =		$row[$middle_initial_field];
@@ -729,6 +771,38 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 				$comments =				trim($row[$comments_field]);
 				$rank =					$row[$rank_field];
 				$owner =				$row[$owner_field];
+				
+				# replace ' " ` \ ; with nothing
+				$vendor_lead_code =		eregi_replace($field_regx, "", $vendor_lead_code);
+				$source_code =			eregi_replace($field_regx, "", $source_code);
+				$source_id = 			eregi_replace($field_regx, "", $source_id);
+				$list_id =				eregi_replace($field_regx, "", $list_id);
+				$phone_code =			eregi_replace($field_regx, "", $phone_code);
+				$phone_number =			eregi_replace($field_regx, "", $phone_number);
+				$title =				eregi_replace($field_regx, "", $title);
+				$first_name =			eregi_replace($field_regx, "", $first_name);
+				$middle_initial =		eregi_replace($field_regx, "", $middle_initial);
+				$last_name =			eregi_replace($field_regx, "", $last_name);
+				$address1 =				eregi_replace($field_regx, "", $address1);
+				$address2 =				eregi_replace($field_regx, "", $address2);
+				$address3 =				eregi_replace($field_regx, "", $address3);
+				$city =					eregi_replace($field_regx, "", $city);
+				$state =				eregi_replace($field_regx, "", $state);
+				$province =				eregi_replace($field_regx, "", $province);
+				$postal_code =			eregi_replace($field_regx, "", $postal_code);
+				$country_code =			eregi_replace($field_regx, "", $country_code);
+				$gender =				eregi_replace($field_regx, "", $gender);
+				$date_of_birth =		eregi_replace($field_regx, "", $date_of_birth);
+				$alt_phone =			eregi_replace($field_regx, "", $alt_phone);
+				$email =				eregi_replace($field_regx, "", $email);
+				$security_phrase =		eregi_replace($field_regx, "", $security_phrase);
+				$comments =				eregi_replace($field_regx, "", $comments);
+				$rank =					eregi_replace($field_regx, "", $rank);
+				$owner =				eregi_replace($field_regx, "", $owner);
+				
+				$USarea = 			substr($phone_number, 0, 3);
+				
+				
 
 					if (strlen($rank)<1) {$rank='0';}
 
@@ -865,7 +939,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 							}
 						}
 
-					if ( (strlen($phone_number)>6) and ($dup_lead<1) )
+					if ( (strlen($phone_number)>6) and ($dup_lead<1) and ($list_id >= 100 ))
 						{
 						if (strlen($phone_code)<1) {$phone_code = '1';}
 
@@ -894,7 +968,17 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
 					$good++;
 				} else {
-					if ($bad < 1000000) {print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead</font><b>\n";}
+					if ($bad < 1000000)
+						{
+						if ( $list_id < 100 )
+							{
+							print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INVALID LIST ID</font><b>\n";
+							}
+						else
+							{
+							print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";
+							}
+						}
 					$bad++;
 				}
 				$total++;
@@ -985,7 +1069,6 @@ if ($leadfile) {
 					$called_since_last_reset='N';
 					$phone_code =			eregi_replace("[^0-9]", "", $row[3]);
 					$phone_number =			eregi_replace("[^0-9]", "", $row[4]);
-						$USarea = 			substr($phone_number, 0, 3);
 					$title =				$row[5];
 					$first_name =			$row[6];
 					$middle_initial =		$row[7];
@@ -1006,6 +1089,36 @@ if ($leadfile) {
 					$comments =				trim($row[22]);
 					$rank =					$row[23];
 					$owner =				$row[24];
+						
+					# replace ' " ` \ ; with nothing
+					$vendor_lead_code =		eregi_replace($field_regx, "", $vendor_lead_code);
+					$source_code =			eregi_replace($field_regx, "", $source_code);
+					$source_id = 			eregi_replace($field_regx, "", $source_id);
+					$list_id =				eregi_replace($field_regx, "", $list_id);
+					$phone_code =			eregi_replace($field_regx, "", $phone_code);
+					$phone_number =			eregi_replace($field_regx, "", $phone_number);
+					$title =				eregi_replace($field_regx, "", $title);
+					$first_name =			eregi_replace($field_regx, "", $first_name);
+					$middle_initial =		eregi_replace($field_regx, "", $middle_initial);
+					$last_name =			eregi_replace($field_regx, "", $last_name);
+					$address1 =				eregi_replace($field_regx, "", $address1);
+					$address2 =				eregi_replace($field_regx, "", $address2);
+					$address3 =				eregi_replace($field_regx, "", $address3);
+					$city =					eregi_replace($field_regx, "", $city);
+					$state =				eregi_replace($field_regx, "", $state);
+					$province =				eregi_replace($field_regx, "", $province);
+					$postal_code =			eregi_replace($field_regx, "", $postal_code);
+					$country_code =			eregi_replace($field_regx, "", $country_code);
+					$gender =				eregi_replace($field_regx, "", $gender);
+					$date_of_birth =		eregi_replace($field_regx, "", $date_of_birth);
+					$alt_phone =			eregi_replace($field_regx, "", $alt_phone);
+					$email =				eregi_replace($field_regx, "", $email);
+					$security_phrase =		eregi_replace($field_regx, "", $security_phrase);
+					$comments =				eregi_replace($field_regx, "", $comments);
+					$rank =					eregi_replace($field_regx, "", $rank);
+					$owner =				eregi_replace($field_regx, "", $owner);
+					
+					$USarea = 			substr($phone_number, 0, 3);
 
 					if (strlen($list_id_override)>0) 
 						{
@@ -1140,7 +1253,7 @@ if ($leadfile) {
 							}
 						}
 
-					if ( (strlen($phone_number)>6) and ($dup_lead<1) )
+					if ( (strlen($phone_number)>6) and ($dup_lead<1) and ($list_id >= 100 ))
 						{
 						if (strlen($phone_code)<1) {$phone_code = '1';}
 
@@ -1169,7 +1282,17 @@ if ($leadfile) {
 
 						$good++;
 					} else {
-						if ($bad < 1000000) {print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead</font><b>\n";}
+						if ($bad < 1000000)
+							{
+							if ( $list_id < 100 )
+								{
+								print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INVALID LIST ID</font><b>\n";
+								}
+							else
+								{
+								print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";
+								}
+							}
 						$bad++;
 					}
 					$total++;
@@ -1258,7 +1381,6 @@ if ($leadfile) {
 				$called_since_last_reset='N';
 				$phone_code =			eregi_replace("[^0-9]", "", $row[3]);
 				$phone_number =			eregi_replace("[^0-9]", "", $row[4]);
-					$USarea = 			substr($phone_number, 0, 3);
 				$title =				$row[5];
 				$first_name =			$row[6];
 				$middle_initial =		$row[7];
@@ -1279,6 +1401,36 @@ if ($leadfile) {
 				$comments =				trim($row[22]);
 				$rank =					$row[23];
 				$owner =				$row[24];
+				
+				# replace ' " ` \ ; with nothing
+				$vendor_lead_code =		eregi_replace($field_regx, "", $vendor_lead_code);
+				$source_code =			eregi_replace($field_regx, "", $source_code);
+				$source_id = 			eregi_replace($field_regx, "", $source_id);
+				$list_id =				eregi_replace($field_regx, "", $list_id);
+				$phone_code =			eregi_replace($field_regx, "", $phone_code);
+				$phone_number =			eregi_replace($field_regx, "", $phone_number);
+				$title =				eregi_replace($field_regx, "", $title);
+				$first_name =			eregi_replace($field_regx, "", $first_name);
+				$middle_initial =		eregi_replace($field_regx, "", $middle_initial);
+				$last_name =			eregi_replace($field_regx, "", $last_name);
+				$address1 =				eregi_replace($field_regx, "", $address1);
+				$address2 =				eregi_replace($field_regx, "", $address2);
+				$address3 =				eregi_replace($field_regx, "", $address3);
+				$city =					eregi_replace($field_regx, "", $city);
+				$state =				eregi_replace($field_regx, "", $state);
+				$province =				eregi_replace($field_regx, "", $province);
+				$postal_code =			eregi_replace($field_regx, "", $postal_code);
+				$country_code =			eregi_replace($field_regx, "", $country_code);
+				$gender =				eregi_replace($field_regx, "", $gender);
+				$date_of_birth =		eregi_replace($field_regx, "", $date_of_birth);
+				$alt_phone =			eregi_replace($field_regx, "", $alt_phone);
+				$email =				eregi_replace($field_regx, "", $email);
+				$security_phrase =		eregi_replace($field_regx, "", $security_phrase);
+				$comments =				eregi_replace($field_regx, "", $comments);
+				$rank =					eregi_replace($field_regx, "", $rank);
+				$owner =				eregi_replace($field_regx, "", $owner);
+				
+				$USarea = 			substr($phone_number, 0, 3);
 
 					if (strlen($list_id_override)>0) 
 						{
@@ -1413,7 +1565,7 @@ if ($leadfile) {
 							}
 						}
 
-					if ( (strlen($phone_number)>6) and ($dup_lead<1) )
+					if ( (strlen($phone_number)>6) and ($dup_lead<1) and ($list_id >= 100 ))
 						{
 						if (strlen($phone_code)<1) {$phone_code = '1';}
 
@@ -1441,7 +1593,17 @@ if ($leadfile) {
 
 					$good++;
 				} else {
-					if ($bad < 1000000) {print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead</font><b>\n";}
+					if ($bad < 1000000)
+						{
+						if ( $list_id < 100 )
+							{
+							print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INVALID LIST ID</font><b>\n";
+							}
+						else
+							{
+							print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";
+							}
+						}
 					$bad++;
 				}
 				$total++;
