@@ -1062,7 +1062,7 @@ foreach(@campaign_id)
 		if (length($Gct_state_call_times)>2)
 			{
 			@state_rules = split(/\|/,$Gct_state_call_times);
-			$ct_srs = ($#state_rules - 2);
+			$ct_srs = ($#state_rules - 0);
 			}
 		while($ct_srs >= $b)
 			{
