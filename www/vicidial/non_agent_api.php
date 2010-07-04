@@ -31,10 +31,11 @@
 # 91203-1140 - Added agent_ingroup_info feature
 # 91216-0331 - Added duplication check features to add_lead function
 # 100118-0543 - Added new Australian and New Zealand DST schemes (FSO-FSA and LSS-FSA)
+# 100704-1148 - Added custom fields inserts to the add_lead function
 #
 
-$version = '2.2.0-17';
-$build = '100118-0543';
+$version = '2.4-18';
+$build = '100704-1148';
 
 require("dbconnect.php");
 
@@ -129,6 +130,8 @@ if (isset($_GET["agent_user"]))					{$agent_user=$_GET["agent_user"];}
 	elseif (isset($_POST["agent_user"]))		{$agent_user=$_POST["agent_user"];}
 if (isset($_GET["duplicate_check"]))			{$duplicate_check=$_GET["duplicate_check"];}
 	elseif (isset($_POST["duplicate_check"]))	{$duplicate_check=$_POST["duplicate_check"];}
+if (isset($_GET["custom_fields"]))				{$custom_fields=$_GET["custom_fields"];}
+	elseif (isset($_POST["custom_fields"]))		{$custom_fields=$_POST["custom_fields"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -136,13 +139,14 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 $qm_conf_ct = mysql_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =			$row[0];
+	$non_latin =				$row[0];
+	$custom_fields_enabled =	$row[1];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -208,6 +212,7 @@ if ($non_latin < 1)
 	$rank = ereg_replace("[^0-9]","",$rank);
 	$owner = ereg_replace("[^-_0-9a-zA-Z]","",$owner);
 	$duplicate_check = ereg_replace("[^-_0-9a-zA-Z]","",$duplicate_check);
+	$custom_fields = ereg_replace("[^0-9a-zA-Z]","",$custom_fields);
 	}
 else
 	{
@@ -233,6 +238,7 @@ $postalgmt='';
 $api_script = 'non-agent';
 $api_logging = 1;
 
+$vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|';
 
 $secX = date("U");
 $hour = date("H");
@@ -1469,6 +1475,109 @@ if ($function == 'add_lead')
 						$data = "$inserted_alt_phones|$lead_id";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						}
+
+					### BEGIN custom fields insert section ###
+					if ($custom_fields == 'Y')
+						{
+						if ($custom_fields_enabled > 0)
+							{
+							$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
+							if ($DB>0) {echo "$stmt";}
+							$rslt=mysql_query($stmt, $link);
+							$tablecount_to_print = mysql_num_rows($rslt);
+							if ($tablecount_to_print > 0) 
+								{
+								$CFinsert_SQL='';
+								$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
+								$rslt=mysql_query($stmt, $link);
+								$fields_to_print = mysql_num_rows($rslt);
+								$fields_list='';
+								$o=0;
+								while ($fields_to_print > $o) 
+									{
+									$new_field_value='';
+									$form_field_value='';
+									$rowx=mysql_fetch_row($rslt);
+									$A_field_id[$o] =			$rowx[0];
+									$A_field_label[$o] =		$rowx[1];
+									$A_field_name[$o] =			$rowx[2];
+									$A_field_type[$o] =			$rowx[6];
+									$A_field_size[$o] =			$rowx[8];
+									$A_field_max[$o] =			$rowx[9];
+									$A_field_required[$o] =		$rowx[12];
+									$A_field_value[$o] =		'';
+									$field_name_id =			$A_field_label[$o];
+
+									if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
+										elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
+
+									$A_field_value[$o] = $form_field_value;
+
+									if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
+										{
+										$A_field_value[$o]='----IGNORE----';
+										}
+									else
+										{
+										if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+											{
+											$CFinsert_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
+											}
+										}
+									$o++;
+									}
+
+								if (strlen($CFinsert_SQL)>3)
+									{
+									$CFinsert_SQL = preg_replace("/,$/","",$CFinsert_SQL);
+									$custom_table_update_SQL = "INSERT INTO custom_$list_id SET lead_id='$lead_id',$CFinsert_SQL;";
+									$rslt=mysql_query($custom_table_update_SQL, $link);
+									$custom_insert_count = mysql_affected_rows($link);
+									if ($custom_insert_count > 0) 
+										{
+										$result = 'NOTICE';
+										$result_reason = "add_lead CUSTOM FIELDS VALUES ADDED";
+										echo "$result: $result_reason - $phone_number|$lead_id|$list_id\n";
+										$data = "$phone_number|$lead_id|$list_id";
+										api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+										}
+									else
+										{
+										$result = 'NOTICE';
+										$result_reason = "add_lead CUSTOM FIELDS NOT ADDED, NO FIELDS DEFINED";
+										echo "$result: $result_reason - $phone_number|$lead_id|$list_id\n";
+										$data = "$phone_number|$lead_id|$list_id";
+										api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+										}
+									}
+								else
+									{
+									$result = 'NOTICE';
+									$result_reason = "add_lead CUSTOM FIELDS NOT ADDED, NO FIELDS DEFINED";
+									echo "$result: $result_reason - $phone_number|$lead_id|$list_id\n";
+									$data = "$phone_number|$lead_id|$list_id";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									}
+								}
+							else
+								{
+								$result = 'NOTICE';
+								$result_reason = "add_lead CUSTOM FIELDS NOT ADDED, NO CUSTOM FIELDS DEFINED FOR THIS LIST";
+								echo "$result: $result_reason - $phone_number|$lead_id|$list_id\n";
+								$data = "$phone_number|$lead_id|$list_id";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								}
+							}
+						else
+							{
+							$result = 'NOTICE';
+							$result_reason = "add_lead CUSTOM FIELDS NOT ADDED, CUSTOM FIELDS DISABLED";
+							echo "$result: $result_reason - $phone_number|$lead_id|$custom_fields|$custom_fields_enabled\n";
+							$data = "$phone_number|$lead_id|$custom_fields|$custom_fields_enabled";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						}
+					### END custom fields insert section ###
 
 					if ($add_to_hopper == 'Y')
 						{

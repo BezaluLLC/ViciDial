@@ -182,7 +182,8 @@ OTHER CHANGES:
 	to the agent. Also, the Calls Export Report and the List Download 
 	feature include the custom fields values for the leads exported. There
 	is currently no way to import data through the lead loader into custom
-	fields.
+	fields, but you can import custom field data when using the non-agent
+	API add_lead function(see the NON-AGENT_API.txt doc for more info).
 
 
 

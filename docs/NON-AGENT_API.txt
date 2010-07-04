@@ -5,7 +5,7 @@ Interface) for all functions NOT directly relating to the VICIDIAL Agent screen.
 This functionality will be rather limited at first and will be built upon as 
 critical functions are identified and programmed into it.
 
-There is also a new agent API script, for more information on that, please read
+There is also an agent API script, for more information on that, please read
 the AGENT_API.txt document.
 
 
@@ -35,6 +35,8 @@ Changes:
 90916-2342 - Added vm_list voicemail list
 91203-1140 - Added agent_ingroup_info feature
 91216-0331 - Added duplication check features to add_lead function
+100118-0543 - Added new Australian and New Zealand DST schemes (FSO-FSA and LSS-FSA)
+100704-1148 - Added custom fields inserts to the add_lead function
 
 
 
@@ -213,6 +215,9 @@ duplicate_check -	Check for duplicate records in the system, can select more tha
 				DUPTITLEALTPHONELIST - check for duplicate title and alt_phone in same list
 				DUPTITLEALTPHONECAMP - check for duplicate title and alt_phone in all lists for this list's campaign
 				DUPTITLEALTPHONESYS - check for duplicate title and alt_phone in entire system
+custom_fields -		Y or N, default is N. Defines whether the API will accept custom field data when inserting leads into the vicidial_list table
+			For custom fields to be inserted, just add the field label as a variable to the URL string
+			For example, if the field_label is "favorite_color" you would add "&favorite_color=blue"
 
 (for fields with spaces in the values, you can replace the space with a plus + sign[address, city, first_name, etc...])
 OPTIONAL FIELDS- 
@@ -242,6 +247,7 @@ rank -			1-5 digits
 owner -			1-20 characters (user ID, Territory or user group)
 
 
+
 Multi-ALT-Phones format:
 
 7275551212_1_work!7275551213_1_sister+house!1234567890_1_neighbor
@@ -260,12 +266,18 @@ http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&functio
 
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=add_lead&phone_number=7275551212&phone_code=1&list_id=999&dnc_check=N&first_name=Bob&last_name=Wilson&duplicate_check=DUPLIST-DUPTITLEALTPHONELIST
 
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=add_lead&phone_number=7275551212&phone_code=1&list_id=999&custom_fields=Y&favorite_color=blue
+
 
 Example responses:
 SUCCESS: add_lead LEAD HAS BEEN ADDED - 7275551111|6666|999|193715|-4
 NOTICE: add_lead ADDED TO HOPPER - 7275551111|6666|193715|1677922
 
 SUCCESS: add_lead LEAD HAS BEEN ADDED - 7275551111|6666|999|193716|-4
+NOTICE: add_lead CUSTOM FIELDS VALUES ADDED - 7275551111|1234|101
+NOTICE: add_lead CUSTOM FIELDS NOT ADDED, CUSTOM FIELDS DISABLED - 7275551111|Y|0
+NOTICE: add_lead CUSTOM FIELDS NOT ADDED, NO CUSTOM FIELDS DEFINED FOR THIS LIST - 7275551111|1234|101
+NOTICE: add_lead CUSTOM FIELDS NOT ADDED, NO FIELDS DEFINED - 7275551111|1234|101
 NOTICE: add_lead MULTI-ALT-PHONE NUMBERS LOADED - 3|6666|193716
 NOTICE: add_lead NOT ADDED TO HOPPER, OUTSIDE OF LOCAL TIME - 7275551111|6666|193716|-4|0
 
