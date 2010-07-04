@@ -256,6 +256,9 @@ GRANT SELECT,INSERT,UPDATE,DELETE,LOCK TABLES on asterisk.* TO cron@localhost ID
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
 
+GRANT ALTER,CREATE on asterisk.* TO custom@'%' IDENTIFIED BY 'custom1234';
+GRANT ALTER,CREATE on asterisk.* TO custom@localhost IDENTIFIED BY 'custom1234';
+
 flush privileges;
 
 use asterisk;
@@ -302,6 +305,18 @@ NOTE: if you are not installing using default user/pass or have MySQL on another
 server, you will need to edit either the /etc/astguiclient.conf file or the 
 dbconnect.php files in the astguiclient, vicidial and agc directories of your 
 webroot.
+
+NOTE: if you have a dedicated MySQL database server with a lot of RAM(8GB or 
+   greater) then you should consider running the following MySQL queries to 
+   turn heavily used tables into MEMORY tables to speed up execution and reduce 
+   load on your database server:
+	ALTER TABLE vicidial_live_agents MODIFY closer_campaigns VARCHAR(8000) default '';
+	ALTER TABLE vicidial_live_agents MODIFY external_ingroups VARCHAR(8000) default '';
+	ALTER TABLE vicidial_live_agents MODIFY agent_territories VARCHAR(1000) default '';
+	ALTER TABLE vicidial_live_agents ENGINE=MEMORY;
+	ALTER TABLE vicidial_manager ENGINE=MEMORY;
+
+
 
 3. Enter the astguiclient administration page:
 http://10.10.10.15/vicidial/admin.php

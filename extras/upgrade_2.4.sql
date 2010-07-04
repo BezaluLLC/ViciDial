@@ -399,3 +399,7 @@ ALTER TABLE vicidial_campaigns MODIFY get_call_launch ENUM('NONE','SCRIPT','WEBF
 ALTER TABLE vicidial_inbound_groups MODIFY get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','FORM') default 'NONE';
 
 UPDATE system_settings SET db_schema_version='1231',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_auto_calls ENGINE=MEMORY;
+
+UPDATE system_settings SET db_schema_version='1232',db_schema_update_date=NOW();

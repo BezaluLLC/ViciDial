@@ -52,6 +52,7 @@
 # 100312-1012 - Changed TIMEOUT Call Menu function to work with AGI routes
 # 100424-2121 - Added codecs options for phones
 # 100616-2245 - Added VIDPROMPT options for call menus, changed INGROUP TIMECHECK routes to special extension like AGI
+# 100703-2137 - Added memory table reset nightly
 #
 
 $DB=0; # Debug flag
@@ -529,6 +530,10 @@ foreach(@conf)
 		{$VARDB_user = $line;   $VARDB_user =~ s/.*=//gi;}
 	if ( ($line =~ /^VARDB_pass/) && ($CLIDB_pass < 1) )
 		{$VARDB_pass = $line;   $VARDB_pass =~ s/.*=//gi;}
+	if ( ($line =~ /^VARDB_custom_user/) && ($CLIDB_custom_user < 1) )
+		{$VARDB_custom_user = $line;   $VARDB_custom_user =~ s/.*=//gi;}
+	if ( ($line =~ /^VARDB_custom_pass/) && ($CLIDB_custom_pass < 1) )
+		{$VARDB_custom_pass = $line;   $VARDB_custom_pass =~ s/.*=//gi;}
 	if ( ($line =~ /^VARDB_port/) && ($CLIDB_port < 1) )
 		{$VARDB_port = $line;   $VARDB_port =~ s/.*=//gi;}
 	$i++;
@@ -732,6 +737,29 @@ if ($timeclock_end_of_day_NOW > 0)
 	$sthArows=$sthA->rows;
 	@aryA = $sthA->fetchrow_array;
 	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+
+
+	$dbhC = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_custom_user", "$VARDB_custom_pass")
+	 or die "Couldn't connect to database: " . DBI->errstr;
+
+	##### find MEMORY tables for reset of empty space #####
+	$stmtA = "SHOW TABLE STATUS WHERE Engine='MEMORY';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	$i=0;
+	while ($sthArows > $i)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$table_name	= 	$aryA[0];
+
+		$stmtC = "ALTER TABLE $table_name ENGINE=MEMORY;";
+		if($DBX){print STDERR "\n|$stmtC|\n";}
+		$Caffected_rows = $dbhC->do($stmtC);
+		if($DB){print STDERR "\n|$table_name memory reset $Caffected_rows rows|\n";}
+		$i++;
+		}
 	$sthA->finish();
 	}
 

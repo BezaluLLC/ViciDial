@@ -24,6 +24,16 @@ NOTE: as of 2.0.5 most of these settings are already done for you if you are usi
 
 NOTE: as of SVN trunk 2009-05-19 the voicemail and prompt recording extensions are also auto-generated
 
+NOTE: if you have a dedicated MySQL database server with a lot of RAM(8GB or greater) then you should consider running the following MySQL queries to turn heavily used tables into MEMORY tables to speed up execution and reduce load on your database server:
+
+		ALTER TABLE vicidial_live_agents MODIFY closer_campaigns VARCHAR(8000) default '';
+		ALTER TABLE vicidial_live_agents MODIFY external_ingroups VARCHAR(8000) default '';
+		ALTER TABLE vicidial_live_agents MODIFY agent_territories VARCHAR(1000) default '';
+
+		ALTER TABLE vicidial_live_agents ENGINE=MEMORY;
+
+		ALTER TABLE vicidial_manager ENGINE=MEMORY;
+
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

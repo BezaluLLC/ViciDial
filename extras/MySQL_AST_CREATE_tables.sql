@@ -2131,17 +2131,19 @@ field_order SMALLINT(5) default '1'
 CREATE UNIQUE INDEX listfield on vicidial_lists_fields (list_id, field_label);
 
 
-ALTER TABLE vicidial_campaign_server_stats ENGINE=HEAP;
+ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
-ALTER TABLE live_channels ENGINE=HEAP;
+ALTER TABLE live_channels ENGINE=MEMORY;
 
-ALTER TABLE live_sip_channels ENGINE=HEAP;
+ALTER TABLE live_sip_channels ENGINE=MEMORY;
 
-ALTER TABLE parked_channels ENGINE=HEAP;
+ALTER TABLE parked_channels ENGINE=MEMORY;
 
-ALTER TABLE server_updater ENGINE=HEAP;
+ALTER TABLE server_updater ENGINE=MEMORY;
 
-ALTER TABLE web_client_sessions ENGINE=HEAP;
+ALTER TABLE web_client_sessions ENGINE=MEMORY;
+
+ALTER TABLE vicidial_auto_calls ENGINE=MEMORY;
 
 
 UPDATE system_settings SET auto_user_add_value='1101';
@@ -2269,7 +2271,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1231',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1232',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
