@@ -1167,8 +1167,8 @@ else
 			$hTOTcalls_count =			sprintf("%6s", $hTOTcalls_count);
 			$hTOTsystem_count =			sprintf("%6s", $hTOTsystem_count);
 			$hTOTagent_count =			sprintf("%6s", $hTOTagent_count);
-			$hTOTptp_count =			sprintf("%6s", $hTOTrtp_count);
-			$hTOTrtp_count =			sprintf("%6s", $hTOTptp_count);
+			$hTOTptp_count =			sprintf("%6s", $hTOTptp_count);
+			$hTOTrtp_count =			sprintf("%6s", $hTOTrtp_count);
 			if ( ($hTOTcalls_count < 1) or ($hTOTna_count < 1) )
 				{$hTOTna_percent=0;}
 			else
