@@ -180,10 +180,11 @@ OTHER CHANGES:
 	in a new tab in the agent interface, and there is a new option to have
 	the Get Call Launch open this custom fields tab upon a call being sent
 	to the agent. Also, the Calls Export Report and the List Download 
-	feature include the custom fields values for the leads exported. There
-	is currently no way to import data through the lead loader into custom
-	fields, but you can import custom field data when using the non-agent
-	API add_lead function(see the NON-AGENT_API.txt doc for more info).
+	feature include the custom fields values for the leads exported. You 
+	can import custom field data through the web-based lead loader in TXT
+	and CSV format(you must set a list ID override and you must select
+	Custom Format). You can also use the non-agent API add_lead function,
+	(see the NON-AGENT_API.txt doc for more info).
 
 44. Added more options to agi-AGENT_route.agi to allow it to prompt for user IDs
 	as well as set the number of digits to collect and check whether a user
