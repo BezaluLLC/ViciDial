@@ -2,19 +2,37 @@
 #
 # agi-AGENT_route.agi version 2.4
 # 
-# for use with a Call Menu in the custom dialplan section.
+# for use with a Call Menu in the custom dialplan section or as an AGI route.
 #
 # ; settings for this script:
 # ; 1. DID pattern to use for In-group initiation settings ('default' is default)
 # ; 2. the agentdirect in-group to send the calls to ('AGENTDIRECT' is default)
+# ; 3. transfer only to ACTIVE in the system agent or vicidial LOGGED_IN agent
+# ;		('ACTIVE' is default)
+# ; 4. prompt for user ID, if this is filled in with a filename it will ask, 
+# ;		otherwise it will assume $extension is the user ID
+# ; 5. number of digits required for user ID validation, X will allow anything,
+# ;		this will only be enforced if "prompt for user ID" prompt is populated
+# ; 6. audio filename for invalid selection, agent not available ('invalid' is default)
+# ; 7. audio filename for invalid user id re-enter prompt, agent not available
+# ; 8. number of retry attempts to enter a valid user ID
+# ;		this will only be enforced if "prompt for user ID" prompt is populated
+# ; 7. in-group to send the call to if there is no valid agent, if none is
+# ;		defined, then the call will be directed to 's' exten
+# ; 10. audio filename before sending call to no-agent route
+# ; 11. audio filename before sending call to no-agent route if agent active but
+# ;		not logged-in to vicidial
 #
+#; example in CallMenu AGI route with all options
+# "agi-AGENT_route.agi,default---AGENTDIRECT---LOGGED_IN---if-u-know-ext-dial---X---invalid---please-try-again---3---TEST_IN3---pbxtransfer---outside-transfer"
 #; example with 4-digit agent IDs
-# exten => _XXXX,1,AGI(agi-AGENT_route.agi,default---AGENTDIRECT)
+# exten => _XXXX,1,AGI(agi-AGENT_route.agi,default---AGENTDIRECT---ACTIVE)
 #
 # Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 100321-0108 - First Build
+# 100704-2128 - Added several options
 #
 
 $script = 'agi-AGENT_route.agi';
@@ -124,14 +142,36 @@ if (length($ARGV[0])>1)
 	### list of command-line array arguments:
 	@ARGV_vars = split(/---/, $ARGV[0]);
 
-	$did_settings = $ARGV_vars[0];
-	$in_group = 	$ARGV_vars[1];
+	$did_settings =				$ARGV_vars[0];
+	$in_group = 				$ARGV_vars[1];
+	$agent_active_filter =		$ARGV_vars[2];
+	$user_id_prompt =			$ARGV_vars[3];
+	$minimum_user_digits =		$ARGV_vars[4];
+	$invalid_prompt =			$ARGV_vars[5];
+	$invalid_reenter_prompt = 	$ARGV_vars[6];
+	$retry_attempts =			$ARGV_vars[7];
+	$invalid_ingroup =			$ARGV_vars[8];
+	$transfer_prompt =			$ARGV_vars[9];
+	$transfer_logout_prompt =	$ARGV_vars[10];
 	}
 if (length($did_settings) < 1)
 	{$did_settings = 'default';}
 if (length($in_group) < 1)
 	{$in_group = 'AGENTDIRECT';}
-
+if (length($agent_active_filter) < 1)
+	{$agent_active_filter = 'ACTIVE';}
+if (length($invalid_prompt) < 1)
+	{$invalid_prompt = 'invalid';}
+if (length($retry_attempts) < 1)
+	{$retry_attempts = '3';}
+if (length($minimum_user_digits) < 1)
+	{$minimum_user_digits = 'X';}
+$pound_finish =	0;
+if ($minimum_user_digits =~ /X/)
+	{
+	$minimum_user_digits = '20';
+	$pound_finish =	1;
+	}
 
 $|=1;
 while(<STDIN>) 
@@ -214,19 +254,40 @@ while ($sthArows > $cbc)
 	}
 $sthA->finish();
 
-### find out if user exists and is active in system
-$active_user=0;
-$stmtA = "SELECT count(*) FROM vicidial_users where user='$extension' and active='Y';";
-$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-$sthArows=$sthA->rows;
-if ($sthArows > 0)
-	{
-	@aryA = $sthA->fetchrow_array;
-	$active_user = $aryA[0];
-	}
-$sthA->finish();
 
+
+$active_user=0;
+$logged_in_user=0;
+if (length($user_id_prompt) > 0)
+	{
+	$attempts=0;
+	while ( ($retry_attempts > $attempts) && ($active_user < 1) )
+		{
+		$attempts++;
+		$AGI->stream_file('sip-silence');
+		$AGI->stream_file('sip-silence');
+		$AGI->stream_file('sip-silence');
+
+		&user_id_gather;
+
+		&find_if_active_user;
+
+		if (length($invalid_reenter_prompt) > 0)
+			{
+			$user_id_prompt = $invalid_reenter_prompt;
+			}
+		}
+	}
+else
+	{
+	&find_if_active_user;
+	}
+
+if ( ($agent_active_filter =~ /LOGGED_IN/) && ($logged_in_user < 1) && ($active_user > 0) )
+	{
+	$transfer_prompt = $transfer_logout_prompt;
+	$active_user=0;
+	}
 
 
 ### Route call to a logged-in VICIDIAL agent
@@ -236,13 +297,30 @@ if ($active_user > 0)
 	}
 else
 	{
-	$did_extension = "s";
-	$ext_context = $context;
+	$AGI->stream_file('sip-silence');
+	$AGI->stream_file('sip-silence');
+	$AGI->stream_file('sip-silence');
+	$AGI->stream_file("$invalid_prompt");
 
-	$AGI->stream_file('sip-silence');
-	$AGI->stream_file('sip-silence');
-	$AGI->stream_file('invalid');
+	if (length($invalid_ingroup) > 1)
+		{
+		$did_extension = "99909$S$did_id$S$invalid_ingroup$S$S";
+		}
+	else
+		{
+		$did_extension = "s";
+		$ext_context = $context;
+		}
 	}
+
+if (length($transfer_prompt) > 1)
+	{
+	$AGI->stream_file('sip-silence');
+	$AGI->stream_file('sip-silence');
+	$AGI->stream_file('sip-silence');
+	$AGI->stream_file("$transfer_prompt");
+	}
+
 
 
 if ($AGILOG) {$agi_string = "exiting the AGENT app, transferring call to $did_extension @ $ext_context";   &agi_output;}
@@ -260,6 +338,94 @@ exit;
 
 
 ######### SUBROUTINES #################
+
+sub find_if_active_user
+	{
+	### find out if user exists and is active in system
+	$stmtA = "SELECT count(*) FROM vicidial_users where user='$extension' and active='Y';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$active_user = $aryA[0];
+		}
+	$sthA->finish();
+
+	if ($agent_active_filter =~ /LOGGED_IN/)
+		{
+		$stmtA = "SELECT count(*) FROM vicidial_live_agents where user='$extension';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$logged_in_user = $aryA[0];
+			}
+		$sthA->finish();
+		}
+	}
+
+
+##### BEGIN collect the user id number ######################################
+sub user_id_gather
+	{
+	################################################################################
+	# please enter the agent id followed by the pound key
+
+	$interrupt_digit='';
+
+	$interrupt_digit = $AGI->stream_file("$user_id_prompt",'0123456789');   
+
+		print STDERR "interrupt_digit |$interrupt_digit|\n";
+
+	$digits_being_entered=1;
+	$extension='';
+	if ($interrupt_digit > 0)
+		{
+	#	if ($interrupt_digit == 35) {$interrupt_digit='#';}
+	#	if ($interrupt_digit == 42) {$interrupt_digit='*';}
+		if ($interrupt_digit == 48) {$interrupt_digit=0;}
+		if ($interrupt_digit == 49) {$interrupt_digit=1;}
+		if ($interrupt_digit == 50) {$interrupt_digit=2;}
+		if ($interrupt_digit == 51) {$interrupt_digit=3;}
+		if ($interrupt_digit == 52) {$interrupt_digit=4;}
+		if ($interrupt_digit == 53) {$interrupt_digit=5;}
+		if ($interrupt_digit == 54) {$interrupt_digit=6;}
+		if ($interrupt_digit == 55) {$interrupt_digit=7;}
+		if ($interrupt_digit == 56) {$interrupt_digit=8;}
+		if ($interrupt_digit == 57) {$interrupt_digit=9;}
+		
+		$extension=$interrupt_digit;
+		}
+
+	$digit_loop_counter=0;
+	while ( ($digits_being_entered > 0) && ($digit_loop_counter < $minimum_user_digits) )
+		{
+		$digit = chr($AGI->wait_for_digit('10000'));  # wait 10 seconds for input, until the pound key is pressed or X digits
+		if ($digit =~ /\d/)
+			{
+			$extension = "$extension$digit";
+			print STDERR "digit |$digit|     extension |$extension|\n";
+	#		$AGI->say_digits("$digit");
+			undef $digit;
+			}
+		else
+			{
+			if ($pound_finish > 0)
+				{$digits_being_entered=0;}
+			}
+		
+		$digit_loop_counter++;
+		}
+
+	$extension =~ s/\D//gi;
+	if ($extension > 0) {print STDERR "digit collection done|$digit|     extension |$extension|\n";}
+	}
+	##### END collect the user id number ###############################################
+
 
 sub checkresult 
 	{
@@ -288,6 +454,7 @@ sub checkresult
 		$fail++;
 		}
 	}
+
 
 sub agi_output
 	{

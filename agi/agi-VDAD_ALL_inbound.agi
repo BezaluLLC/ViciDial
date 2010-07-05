@@ -44,6 +44,7 @@
 # ; 10. the campaign_id to search within lists if CIDLOOKUPRC
 # ; 11. the user to queue the call to for AGENTDIRECT in-group calls
 # ; 12. vendor_lead_code if external mechanism like custom IVR is used to prompt user for ID
+# ;		 you can also set the vendor_lead_code variable instead if you are using VIDPROMPT
 # ; 13. VID enter prompt filename to play if method is set to a VID* option
 # ; 14. VID you-have-entered filename to play if method is set to a VID* option
 # ; 15. VID confirm prompt filename to play if method is set to a VID* option
@@ -678,7 +679,17 @@ if ($call_handle_method =~ /DIGITID$/)
 
 if ($call_handle_method =~ /^VIDPROMPT/)
 	{
-	&enter_id_number;
+	$vendor_lead_code = $AGI->get_variable('vendor_lead_code');
+	if ( ($AGILOG) && (length($vendor_lead_code)>0) ) {$agi_string = "vendor id AGI variable:    |$vendor_lead_code|";   &agi_output;}
+
+	if (length($vendor_lead_code)>2)
+		{
+		$vendor_id = $vendor_lead_code;
+		}
+	else
+		{
+		&enter_id_number;
+		}
 	}
 
 if ($call_handle_method =~ /LOOKUP/)

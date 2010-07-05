@@ -185,6 +185,13 @@ OTHER CHANGES:
 	fields, but you can import custom field data when using the non-agent
 	API add_lead function(see the NON-AGENT_API.txt doc for more info).
 
+44. Added more options to agi-AGENT_route.agi to allow it to prompt for user IDs
+	as well as set the number of digits to collect and check whether a user
+	is logged into ViciDial. The script can also now be run as an AGI route
+	option in CallMenus as well as in the custom dialplan.
+	Look at the comments in the code for more info.
+
+
 
 
 
