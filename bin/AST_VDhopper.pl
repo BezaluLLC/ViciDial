@@ -53,6 +53,7 @@
 # 100409-1101 - Fix for rare dial-time duplicate hopper load issue
 # 100427-0429 - Fix for list mix no-status-selected issue
 # 100529-0843 - Changed dialable leads to calculate every run for active campaigns
+# 100706-2332 - Added ability to purge only one campaign's leads in the hopper
 #
 
 # constants
@@ -292,7 +293,14 @@ if ($DB) {print "TIME DEBUG: $LOCAL_GMT_OFF_STD|$LOCAL_GMT_OFF|$isdst|   GMT: $h
 
 if ($wipe_hopper_clean)
 	{
-	$stmtA = "DELETE from $vicidial_hopper;";
+	if (length($CLIcampaign)>0)
+		{
+		$stmtA = "DELETE from $vicidial_hopper where campaign_id = '$CLIcampaign';";
+		}
+	else
+		{
+		$stmtA = "DELETE from $vicidial_hopper;";
+		}
 	$affected_rows = $dbhA->do($stmtA);
 	if ($DB) {print "Hopper Wiped Clean:  $affected_rows\n";}
 	$event_string = "|HOPPER WIPE CLEAN|";

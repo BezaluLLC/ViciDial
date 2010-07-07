@@ -185,7 +185,7 @@ OTHER CHANGES:
 	and CSV format(you must set a list ID override and you must select
 	Custom Format). You can also use the non-agent API add_lead function,
 	(see the NON-AGENT_API.txt doc for more info). You can also use the 
-	third gen lead loader to import leads with custom fieles in several 
+	third gen lead loader to import leads with custom files in several 
 	other formats.
 
 44. Added more options to agi-AGENT_route.agi to allow it to prompt for user IDs
