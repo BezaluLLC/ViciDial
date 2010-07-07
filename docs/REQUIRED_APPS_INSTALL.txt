@@ -62,6 +62,17 @@ install Spreadsheet::WriteExcel
 install Proc::ProcessTable
 install IO::Scalar
 install Spreadsheet::ParseExcel
+install Archive::Zip
+install Compress::Raw::Zlib
+install Spreadsheet::XLSX
+install Test::Tester
+install Spreadsheet::ReadSXC
+install Text::CSV
+install Test::NoWarnings
+install Text::CSV_PP
+install File::Temp
+install Text::CSV_XS
+install Spreadsheet::Read
 quit
 
 
