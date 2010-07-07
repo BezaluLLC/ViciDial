@@ -184,13 +184,33 @@ OTHER CHANGES:
 	can import custom field data through the web-based lead loader in TXT
 	and CSV format(you must set a list ID override and you must select
 	Custom Format). You can also use the non-agent API add_lead function,
-	(see the NON-AGENT_API.txt doc for more info).
+	(see the NON-AGENT_API.txt doc for more info). You can also use the 
+	third gen lead loader to import leads with custom fieles in several 
+	other formats.
 
 44. Added more options to agi-AGENT_route.agi to allow it to prompt for user IDs
 	as well as set the number of digits to collect and check whether a user
 	is logged into ViciDial. The script can also now be run as an AGI route
 	option in CallMenus as well as in the custom dialplan.
 	Look at the comments in the code for more info.
+
+45. Added third generation web-based lead loader capable of loading more data 
+	file types and optionally loading all of them with custom list fields. 
+	You must install the following perl modules on your web server for this
+	new lead loader to work:
+		cpan> install Spreadsheet::XLSX
+		cpan> install Spreadsheet::Read
+	To get to the new lead loader, click to:
+		Lists -> Load New Leads -> 3rd Gen Lead Loader
+	Here is a list of the file formats(by file extension) that are now
+	supported by the third generation web lead loader:
+		TXT  - tab or pipe delimited
+		CSV  - comma separated values
+		XLS  - MS Excel 2000/XP
+		XLSX - MS Excel 2007+
+		SXC  - OpenOffice.org First Generation Spreadsheet
+		ODS  - OpenOffice.org OpenDocument Spreadsheet
+
 
 
 
