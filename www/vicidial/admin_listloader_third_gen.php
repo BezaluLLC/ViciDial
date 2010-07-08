@@ -36,7 +36,8 @@
 # 100705-1507 - Added custom fields to field chooser, only when liast_id_override is used and only with TXT and CSV file formats
 # 100706-1250 - Forked script to create new script that will only load TXT(tab-
 #				delimited files) and use a perl script to convert others to TXT
-#
+# 100707-1040 - Converted List Id Override and Phone Code Override to drop downs <mikec>
+# 100707-1156 - Made it so you cannot submit with no lead file selected. Also fixed Start Over Link <mikec>
 
 $version = '2.4-37';
 $build = '100706-1250';
@@ -130,6 +131,10 @@ if (isset($_GET["phone_code_override"]))			{$phone_code_override=$_GET["phone_co
 	$phone_code_override = (preg_replace("/\D/","",$phone_code_override));
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
+
+# if the didnt select an over ride wipe out in_file
+if ( $list_id_override == "in_file" ) { $list_id_override = ""; }
+if ( $phone_code_override == "in_file" ) { $phone_code_override = ""; }
 
 # $country_field=$_GET["country_field"];					if (!$country_field) {$country_field=$_POST["country_field"];}
 
@@ -233,7 +238,7 @@ $server_port = getenv("SERVER_PORT");
 if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
 	else {$HTTPprotocol = 'http://';}
 $admDIR = "$HTTPprotocol$server_name$script_name";
-$admDIR = eregi_replace('new_listloader_superL.php','',$admDIR);
+$admDIR = eregi_replace('admin_listloader_third_gen.php','',$admDIR);
 $admSCR = 'admin.php';
 $NWB = " &nbsp; <a href=\"javascript:openNewWindow('$admDIR$admSCR?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
@@ -374,11 +379,45 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard") ) )
 		  </tr>
 		  <tr>
 			<td align=right width="25%"><font face="arial, helvetica" size=2>List ID Override: </font></td>
-			<td align=left width="75%"><font face="arial, helvetica" size=1><input type=text value="<?php echo $list_id_override ?>" name='list_id_override' size=10 maxlength=8> (numbers only or leave blank for values in the file)</td>
+			<td align=left width="75%"><font face="arial, helvetica" size=1>
+			<select name='list_id_override'>
+			<option value='in_file' selected='yes'>Load from Lead File</option>
+			<?php
+			$stmt="SELECT list_id, list_name from vicidial_lists order by list_id;";
+			$rslt=mysql_query($stmt, $link);
+			$num_rows = mysql_num_rows($rslt);
+
+			$count=0;
+			while ( $num_rows > $count ) 
+				{
+				$row = mysql_fetch_row($rslt);
+				echo "<option value=\'$row[0]\'>$row[0] - $row[1]</option>\n";
+				$count++;
+				}
+			?>
+			</select>
+			</font></td>
 		  </tr>
 		  <tr>
 			<td align=right width="25%"><font face="arial, helvetica" size=2>Phone Code Override: </font></td>
-			<td align=left width="75%"><font face="arial, helvetica" size=1><input type=text value="<?php echo $phone_code_override ?>" name='phone_code_override' size=8 maxlength=6> (numbers only or leave blank for values in the file)</td>
+			<td align=left width="75%"><font face="arial, helvetica" size=1>
+			<select name='phone_code_override'>
+                        <option value='in_file' selected='yes'>Load from Lead File</option>
+			<?php
+			$stmt="select distinct country_code, country from vicidial_phone_codes;";
+			$rslt=mysql_query($stmt, $link);
+			$num_rows = mysql_num_rows($rslt);
+			
+			$count=0;
+	                while ( $num_rows > $count )
+				{
+				$row = mysql_fetch_row($rslt);
+				echo "<option value=\'$row[0]\'>$row[0] - $row[1]</option>\n";
+				$count++;
+				}
+			?>
+			</select>
+			</font></td>
 		  </tr>
 		  <tr>
 			<td align=right><B><font face="arial, helvetica" size=2>File layout to use:</font></B></td>
@@ -868,7 +907,7 @@ if ($OK_to_process)
 
 
 
-if ($leadfile) 
+if (($leadfile) && ($LF_path))
 	{
 	$total=0; $good=0; $bad=0; $dup=0; $post=0; $phone_list='';
 
@@ -1381,7 +1420,7 @@ if ($leadfile)
 		print "  <input type=hidden name=lead_file value=\"$lead_file\">\r\n";
 		print "  <input type=hidden name=list_id_override value=\"$list_id_override\">\r\n";
 		print "  <input type=hidden name=phone_code_override value=\"$phone_code_override\">\r\n";
-		print "    <th colspan=2><input type=submit name='OK_to_process' value='OK TO PROCESS'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button onClick=\"javascript:document.location='new_listloader_superL.php'\" value=\"START OVER\" name='reload_page'></th>\r\n";
+		print "    <th colspan=2><input type=submit name='OK_to_process' value='OK TO PROCESS'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button onClick=\"javascript:document.location='admin_listloader_third_gen.php'\" value=\"START OVER\" name='reload_page'></th>\r\n";
 		print "  </tr>\r\n";
 		print "</table>\r\n";
 
