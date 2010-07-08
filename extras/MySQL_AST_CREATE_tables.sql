@@ -2145,6 +2145,8 @@ ALTER TABLE web_client_sessions ENGINE=MEMORY;
 
 ALTER TABLE vicidial_auto_calls ENGINE=MEMORY;
 
+ALTER TABLE vicidial_hopper ENGINE=MEMORY;
+
 
 UPDATE system_settings SET auto_user_add_value='1101';
 
@@ -2271,7 +2273,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1232',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1233',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
