@@ -24,6 +24,7 @@
 # 100203-1008 - Added agent activity log section
 # 100216-0042 - Added popup date selector
 # 100425-0115 - Added more login data
+# 100712-1324 - Added system setting slave server option
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -31,21 +32,36 @@ header ("Content-type: text/html; charset=utf-8");
 require("dbconnect.php");
 require("functions.php");
 
+
+$report_name = 'User Stats';
+$db_source = 'M';
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,user_territories_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$ss_conf_ct = mysql_num_rows($rslt);
-if ($ss_conf_ct > 0)
+$qm_conf_ct = mysql_num_rows($rslt);
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =						$row[0];
-	$SSoutbound_autodial_active =		$row[1];
-	$user_territories_active =			$row[2];
+	$non_latin =					$row[0];
+	$SSoutbound_autodial_active =	$row[1];
+	$slave_db_server =				$row[2];
+	$reports_use_slave_db =			$row[3];
+	$user_territories_active =		$row[4];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	}
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -149,7 +165,7 @@ else
 if ($did > 0)
 	{echo "<title>ADMINISTRATION: DID Call Stats";}
 else
-	{echo "<title>ADMINISTRATION: User Stats";}
+	{echo "<title>ADMINISTRATION: $report_name";}
 
 
 
@@ -887,7 +903,7 @@ $RUNtime = ($ENDtime - $STARTtime);
 echo "\n\n\n<br><br><br>\n\n";
 
 
-echo "<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds</font>";
+echo "<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds|$db_source</font>";
 
 
 ?>

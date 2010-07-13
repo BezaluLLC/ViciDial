@@ -457,11 +457,11 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 			}
 		
 		$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-		if ($DB>0) {echo "$stmt";}
 		$rslt=mysql_query($stmt, $link);
 		$tablecount_to_print = mysql_num_rows($rslt);
 		if ($tablecount_to_print > 0) 
 			{$table_exists =	1;}
+		if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
 		
 		if ($source_field_exists < 1)
 			{echo "ERROR: Source list has no custom fields\n<BR>";}
@@ -564,7 +564,7 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 				{
 				if ($DB > 0) {echo "Starting UPDATE copy\n<BR>";}
 				if ($table_exists < 1)
-					{echo "ERROR: Table does not exist\n<BR>";}
+					{echo "ERROR: Table does not exist custom_$list_id\n<BR>";}
 				else
 					{
 					$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$source_list_id' order by field_rank,field_order,field_label;";
@@ -641,18 +641,18 @@ if ( ($action == "DELETE_CUSTOM_FIELD_CONFIRMATION") and ($list_id > 99) and ($f
 		}
 	
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-	if ($DB>0) {echo "$stmt";}
 	$rslt=mysql_query($stmt, $link);
 	$tablecount_to_print = mysql_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{$table_exists =	1;}
+	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
 	
 	if ($field_exists < 1)
 		{echo "ERROR: Field does not exist\n<BR>";}
 	else
 		{
 		if ($table_exists < 1)
-			{echo "ERROR: Table does not exist\n<BR>";}
+			{echo "ERROR: Table does not exist custom_$list_id\n<BR>";}
 		else
 			{
 			echo "<BR><BR><B><a href=\"$PHP_SELF?action=DELETE_CUSTOM_FIELD&list_id=$list_id&field_id=$field_id&field_label=$field_label&ConFiRm=YES&DB=$DB\">CLICK HERE TO CONFIRM DELETION OF THIS CUSTOM FIELD: $field_label - $field_id - $list_id</a></B><BR><BR>";
@@ -686,18 +686,18 @@ if ( ($action == "DELETE_CUSTOM_FIELD") and ($list_id > 99) and ($field_id > 0) 
 		}
 	
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-	if ($DB>0) {echo "$stmt";}
 	$rslt=mysql_query($stmt, $link);
 	$tablecount_to_print = mysql_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{$table_exists =	1;}
+	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
 	
 	if ($field_exists < 1)
 		{echo "ERROR: Field does not exist\n<BR>";}
 	else
 		{
 		if ($table_exists < 1)
-			{echo "ERROR: Table does not exist\n<BR>";}
+			{echo "ERROR: Table does not exist custom_$list_id\n<BR>";}
 		else
 			{
 			### delete field function
@@ -734,11 +734,11 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 		}
 	
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-	if ($DB>0) {echo "$stmt";}
 	$rslt=mysql_query($stmt, $link);
 	$tablecount_to_print = mysql_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{$table_exists =	1;}
+	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
 	
 	if ($field_exists > 0)
 		{echo "ERROR: Field already exists for this list - $list_id|$field_label\n<BR>";}
@@ -777,12 +777,12 @@ if ( ($action == "MODIFY_CUSTOM_FIELD_SUBMIT") and ($list_id > 99) and ($field_i
 		}
 	
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-	if ($DB>0) {echo "$stmt";}
 	$rslt=mysql_query($stmt, $link);
 	$tablecount_to_print = mysql_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{$table_exists =	1;}
-	
+	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
+
 	if ($field_exists < 1)
 		{echo "ERROR: Field does not exist\n<BR>";}
 	else
@@ -815,11 +815,11 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 
 	$custom_records_count=0;
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-	if ($DB>0) {echo "$stmt";}
 	$rslt=mysql_query($stmt, $link);
 	$tablecount_to_print = mysql_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{$table_exists =	1;}
+	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
 	
 	if ($table_exists > 0)
 		{
@@ -1409,6 +1409,14 @@ echo "\n\n\n<br><br><br>\n<font size=1> runtime: $RUNtime seconds &nbsp; &nbsp; 
 ##### BEGIN add field function
 function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields)
 	{
+	$table_exists=0;
+	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
+	$rslt=mysql_query($stmt, $link);
+	$tablecount_to_print = mysql_num_rows($rslt);
+	if ($tablecount_to_print > 0) 
+		{$table_exists =	1;}
+	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
+
 	if ($table_exists < 1)
 		{$field_sql = "CREATE TABLE custom_$list_id (lead_id INT(9) UNSIGNED PRIMARY KEY NOT NULL, $field_label ";}
 	else
@@ -1492,14 +1500,14 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 		$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
 		$table_update = mysql_affected_rows($linkCUSTOM);
 		if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
-		if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
+		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysql_error());}
 		}
 
 	$stmt="INSERT INTO vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',list_id='$list_id',multi_position='$multi_position',name_position='$name_position',field_order='$field_order';";
 	$rslt=mysql_query($stmt, $link);
 	$field_update = mysql_affected_rows($link);
 	if ($DB) {echo "$field_update|$stmt\n";}
-	if (!$rslt) {die('Could not execute: ' . mysql_error());}
+	if (!$rslt) {echo('Could not execute: ' . mysql_error());}
 
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|$stmtCUSTOM";
@@ -1595,14 +1603,14 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 		$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
 		$field_update = mysql_affected_rows($linkCUSTOM);
 		if ($DB) {echo "$field_update|$stmtCUSTOM\n";}
-		if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
+		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysql_error());}
 		}
 
 	$stmt="UPDATE vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',multi_position='$multi_position',name_position='$name_position',field_order='$field_order' where list_id='$list_id' and field_id='$field_id';";
 	$rslt=mysql_query($stmt, $link);
 	$field_update = mysql_affected_rows($link);
 	if ($DB) {echo "$field_update|$stmt\n";}
-	if (!$rslt) {die('Could not execute: ' . mysql_error());}
+	if (!$rslt) {echo('Could not execute: ' . mysql_error());}
 
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|$stmtCUSTOM";
@@ -1632,14 +1640,14 @@ function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 		$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
 		$table_update = mysql_affected_rows($linkCUSTOM);
 		if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
-		if (!$rsltCUSTOM) {die('Could not execute: ' . mysql_error());}
+		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysql_error());}
 		}
 
 	$stmt="DELETE FROM vicidial_lists_fields WHERE field_label='$field_label' and field_id='$field_id' and list_id='$list_id' LIMIT 1;";
 	$rslt=mysql_query($stmt, $link);
 	$field_update = mysql_affected_rows($link);
 	if ($DB) {echo "$field_update|$stmt\n";}
-	if (!$rslt) {die('Could not execute: ' . mysql_error());}
+	if (!$rslt) {echo('Could not execute: ' . mysql_error());}
 
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|$stmtCUSTOM";

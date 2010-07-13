@@ -10,10 +10,11 @@
 # CHANGELOG:
 # 100630-1119 - First build of script
 # 100703-1124 - Added submit_button,admin_submit fields, which will log to admin log
+# 100712-2322 - Added code to log vicidial_list.entry_list_id field if data altered
 #
 
-$version = '2.4-2';
-$build = '100703-1124';
+$version = '2.4-3';
+$build = '100712-2322';
 
 require("dbconnect.php");
 require("functions.php");
@@ -233,19 +234,7 @@ if ($stage=='SUBMIT')
 				$o++;
 				}
 
-			if (strlen($VL_update_SQL)>3)
-				{
-				$VL_update_SQL = preg_replace("/,$/","",$VL_update_SQL);
-				$list_table_update_SQL = "UPDATE vicidial_list SET $VL_update_SQL where lead_id='$lead_id';";
-
-				$rslt=mysql_query($list_table_update_SQL, $link);
-				$list_update_count = mysql_affected_rows($link);
-				if ($DB) {echo "$field_update|$list_table_update_SQL\n";}
-				if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-				$update_sent++;
-				}
-
+			$custom_update_count=0;
 			if (strlen($update_SQL)>3)
 				{
 				$custom_record_lead_count=0;
@@ -266,10 +255,37 @@ if ($stage=='SUBMIT')
 
 				$rslt=mysql_query($custom_table_update_SQL, $link);
 				$custom_update_count = mysql_affected_rows($link);
-				if ($DB) {echo "$field_update|$custom_table_update_SQL\n";}
+				if ($DB) {echo "$custom_update_count|$custom_table_update_SQL\n";}
 				if (!$rslt) {die('Could not execute: ' . mysql_error());}
 
 				$update_sent++;
+				}
+
+			if (strlen($VL_update_SQL)>3)
+				{
+				$custom_update_vl_SQL='';
+				if ($custom_update_count > 0)
+					{$custom_update_vl_SQL = "entry_list_id='$list_id',";}
+				$VL_update_SQL = preg_replace("/,$/","",$VL_update_SQL);
+				$list_table_update_SQL = "UPDATE vicidial_list SET $custom_update_vl_SQL $VL_update_SQL where lead_id='$lead_id';";
+
+				$rslt=mysql_query($list_table_update_SQL, $link);
+				$list_update_count = mysql_affected_rows($link);
+				if ($DB) {echo "$list_update_count|$list_table_update_SQL\n";}
+				if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+				$update_sent++;
+				}
+			else
+				{
+				if ($custom_update_count > 0)
+					{
+					$list_table_update_SQL = "UPDATE vicidial_list SET entry_list_id='$list_id' where lead_id='$lead_id';";
+					$rslt=mysql_query($list_table_update_SQL, $link);
+					$list_update_count = mysql_affected_rows($link);
+					if ($DB) {echo "$list_update_count|$list_table_update_SQL\n";}
+					if (!$rslt) {die('Could not execute: ' . mysql_error());}
+					}
 				}
 
 			if ( ($admin_submit=='YES') and ($update_sent > 0) )

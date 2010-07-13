@@ -62,10 +62,11 @@
 # 100301-1229 - Added 3-WAY status for consultative transfer agents
 # 100303-0930 - Added carrier stats display option
 # 100424-0943 - Added realtime_block_user_info option
+# 100709-1054 - Added system setting slave server option
 #
 
-$version = '2.2.0-53';
-$build = '100424-0943';
+$version = '2.4-54';
+$build = '100709-1054';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -128,10 +129,12 @@ if (isset($_GET["monitor_phone"]))				{$monitor_phone=$_GET["monitor_phone"];}
 if (isset($_GET["CARRIERstats"]))			{$CARRIERstats=$_GET["CARRIERstats"];}
 	elseif (isset($_POST["CARRIERstats"]))	{$CARRIERstats=$_POST["CARRIERstats"];}
 
+$report_name = 'Real-Time Main Report';
+$db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -140,9 +143,20 @@ if ($qm_conf_ct > 0)
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$outbound_autodial_active =		$row[1];
+	$slave_db_server =				$row[2];
+	$reports_use_slave_db =			$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	}
 
 if (!isset($DB))			{$DB=0;}
 if (!isset($RR))			{$RR=40;}
@@ -748,7 +762,7 @@ $rslt=mysql_query($stmt, $link);
 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 echo"<META HTTP-EQUIV=Refresh CONTENT=\"$RR; URL=$PHP_SELF?RR=$RR&DB=$DB$groupQS&adastats=$adastats&SIPmonitorLINK=$SIPmonitorLINK&IAXmonitorLINK=$IAXmonitorLINK&usergroup=$usergroup&UGdisplay=$UGdisplay&UidORname=$UidORname&orderby=$orderby&SERVdisplay=$SERVdisplay&CALLSdisplay=$CALLSdisplay&PHONEdisplay=$PHONEdisplay&CUSTPHONEdisplay=$CUSTPHONEdisplay&with_inbound=$with_inbound&monitor_active=$monitor_active&monitor_phone=$monitor_phone&ALLINGROUPstats=$ALLINGROUPstats&DROPINGROUPstats=$DROPINGROUPstats&NOLEADSalert=$NOLEADSalert&CARRIERstats=$CARRIERstats\">\n";
-echo "<TITLE>Real-Time Report: $group</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>$report_name: $group</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
@@ -2321,7 +2335,7 @@ $calls_to_list = mysql_num_rows($rslt);
 
 		$Aecho .= "$Aline";
 		$Aecho .= "  $agentcount agents logged in on all servers\n";
-		$Aecho .= "  System Load Average: $load_ave\n\n";
+		$Aecho .= "  System Load Average: $load_ave  &nbsp; $db_source\n\n";
 
 	#	$Aecho .= "  <SPAN class=\"orange\"><B>          </SPAN> - Balanced call</B>\n";
 		$Aecho .= "  <SPAN class=\"lightblue\"><B>          </SPAN> - Agent waiting for call</B>\n";

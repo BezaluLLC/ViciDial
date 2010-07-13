@@ -1,7 +1,7 @@
 <?php 
 # AST_agent_time_sheet.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -11,26 +11,41 @@
 # 90310-0745 - Added admin header
 # 90508-0644 - Changed to PHP long tags
 # 90524-2231 - Changed to use functions.php for seconds to HH:MM:SS conversion
+# 100712-1324 - Added system setting slave server option
 #
 
 require("dbconnect.php");
 require("functions.php");
 
+$report_name = 'User Time Sheet';
+$db_source = 'M';
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,user_territories_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$ss_conf_ct = mysql_num_rows($rslt);
-if ($ss_conf_ct > 0)
+$qm_conf_ct = mysql_num_rows($rslt);
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =						$row[0];
-	$SSoutbound_autodial_active =		$row[1];
-	$user_territories_active =			$row[2];
+	$non_latin =					$row[0];
+	$SSoutbound_autodial_active =	$row[1];
+	$slave_db_server =				$row[2];
+	$reports_use_slave_db =			$row[3];
+	$user_territories_active =		$row[4];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	}
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -86,7 +101,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>Agent Time Sheet";
+echo "<TITLE>$report_name";
 
 
 ##### BEGIN Set variables to make header show properly #####
@@ -298,7 +313,7 @@ echo "<td align=right><font size=2> </td>\n";
 echo "<td align=right colspan=2><font size=2><font size=2>TOTAL </td>\n";
 echo "<td align=right><font size=2> $total_login_hours_minutes  </td></tr>\n";
 
-echo "</TABLE>\n";
+echo "</TABLE><BR>$db_source\n";
 
 
 

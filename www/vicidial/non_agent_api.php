@@ -32,10 +32,11 @@
 # 91216-0331 - Added duplication check features to add_lead function
 # 100118-0543 - Added new Australian and New Zealand DST schemes (FSO-FSA and LSS-FSA)
 # 100704-1148 - Added custom fields inserts to the add_lead function
+# 100712-1416 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
 #
 
-$version = '2.4-18';
-$build = '100704-1148';
+$version = '2.4-19';
+$build = '100712-1416';
 
 require("dbconnect.php");
 
@@ -1425,7 +1426,7 @@ if ($function == 'add_lead')
 
 
 				### insert a new lead in the system with this phone number
-				$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$list_id',status='NEW',user='$user',vendor_lead_code='$vendor_lead_code',source_id='$source_id',gmt_offset_now='$gmt_offset',title='$title',first_name='$first_name',middle_initial='$middle_initial',last_name='$last_name',address1='$address1',address2='$address2',address3='$address3',city='$city',state='$state',province='$province',postal_code='$postal_code',country_code='$country_code',gender='$gender',date_of_birth='$date_of_birth',alt_phone='$alt_phone',email='$email',security_phrase='$security_phrase',comments='$comments',called_since_last_reset='N',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME',rank='$rank',owner='$owner';";
+				$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$list_id',status='NEW',user='$user',vendor_lead_code='$vendor_lead_code',source_id='$source_id',gmt_offset_now='$gmt_offset',title='$title',first_name='$first_name',middle_initial='$middle_initial',last_name='$last_name',address1='$address1',address2='$address2',address3='$address3',city='$city',state='$state',province='$province',postal_code='$postal_code',country_code='$country_code',gender='$gender',date_of_birth='$date_of_birth',alt_phone='$alt_phone',email='$email',security_phrase='$security_phrase',comments='$comments',called_since_last_reset='N',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME',rank='$rank',owner='$owner',entry_list_id='0';";
 				if ($DB>0) {echo "DEBUG: add_lead query - $stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$affected_rows = mysql_affected_rows($link);
@@ -1535,9 +1536,14 @@ if ($function == 'add_lead')
 									$custom_insert_count = mysql_affected_rows($link);
 									if ($custom_insert_count > 0) 
 										{
+										# Update vicidial_list entry to put list_id as entry_list_id 
+										$vl_table_entry_update_SQL = "UPDATE vicidial_list SET entry_list_id='$list_id' where lead_id='$lead_id';";
+										$rslt=mysql_query($vl_table_entry_update_SQL, $link);
+										$vl_table_entry_update_count = mysql_affected_rows($link);
+
 										$result = 'NOTICE';
 										$result_reason = "add_lead CUSTOM FIELDS VALUES ADDED";
-										echo "$result: $result_reason - $phone_number|$lead_id|$list_id\n";
+										echo "$result: $result_reason - $phone_number|$lead_id|$list_id|$vl_table_entry_update_count\n";
 										$data = "$phone_number|$lead_id|$list_id";
 										api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 										}

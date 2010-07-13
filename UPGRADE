@@ -211,6 +211,10 @@ OTHER CHANGES:
 		SXC  - OpenOffice.org First Generation Spreadsheet
 		ODS  - OpenOffice.org OpenDocument Spreadsheet
 
+46. Added the ability to run selected reports from a MySQL slave server. This is
+	definable in the System Settings in the admin.php interface. You must
+	already have MySQL Master/Slave replication set up for this to work.
+
 
 
 

@@ -1,7 +1,7 @@
 <?php 
 # AST_timeonVDADallSUMMARY.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Summary for all campaigns live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -16,7 +16,9 @@
 # 80525-1040 - Added IVR status summary display for inbound calls
 # 90310-2119 - Added admin header
 # 90508-0644 - Changed to PHP long tags
+# 100709-1806 - Added system setting slave server option
 #
+
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -37,6 +39,35 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 
 if (!isset($RR))			{$gRRroup=4;}
+
+$report_name = 'Real-Time Campaign Summary';
+$db_source = 'M';
+
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysql_num_rows($rslt);
+if ($qm_conf_ct > 0)
+	{
+	$row=mysql_fetch_row($rslt);
+	$non_latin =					$row[0];
+	$outbound_autodial_active =		$row[1];
+	$slave_db_server =				$row[2];
+	$reports_use_slave_db =			$row[3];
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	}
 
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
@@ -107,7 +138,7 @@ if (!isset($RR))   {$RR=4;}
 <?php 
 
 echo"<META HTTP-EQUIV=Refresh CONTENT=\"$RR; URL=$PHP_SELF?RR=$RR&DB=$DB&adastats=$adastats\">\n";
-echo "<TITLE>Real-Time All Campaigns Summary</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
@@ -446,7 +477,7 @@ echo "</TD>";
 echo "</TR>";
 echo "</TABLE>";
 
-echo "</FORM>\n\n";
+echo "</FORM>\n\n<BR>$db_source";
 $k++;
 }
 

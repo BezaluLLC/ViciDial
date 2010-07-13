@@ -6,6 +6,10 @@
 #
 # Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
+# CHANGES
+# 100712-1430 - Added slave server option for connection
+#
+
 if ( file_exists("/etc/astguiclient.conf") )
 	{
 	$DBCagc = file("/etc/astguiclient.conf");
@@ -47,6 +51,8 @@ else
 	$WeBServeRRooT = '/usr/local/apache2/htdocs';
 	}
 
+if ( ($use_slave_server > 0) and (strlen($slave_db_server)>5) )
+	{$VARDB_server = $slave_db_server;}
 $link=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass");
 if (!$link) 
 	{

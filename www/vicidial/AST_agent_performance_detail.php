@@ -23,6 +23,7 @@
 # 100203-1131 - Added CUSTOMER time statistics
 # 100214-1421 - Sort menu alphabetically
 # 100216-0042 - Added popup date selector
+# 100712-1324 - Added system setting slave server option
 #
 
 require("dbconnect.php");
@@ -55,9 +56,12 @@ if (strlen($shift)<2) {$shift='ALL';}
 
 $LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date&group=$group&user_group=$user_group&shift=$shift&DB=$DB";
 
+$report_name = 'Agent Performance Detail';
+$db_source = 'M';
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -65,9 +69,21 @@ if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
+	$outbound_autodial_active =		$row[1];
+	$slave_db_server =				$row[2];
+	$reports_use_slave_db =			$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -174,7 +190,7 @@ echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>Agent Performance Detail</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
@@ -863,7 +879,7 @@ echo "+-----------------+----------+----------+----------+----------+  +$sub_sta
 echo "|  TOTALS        AGENTS:$TOT_AGENTS |$TOTtotTOTAL_MS|$TOTtotNONPAUSE_MS|$TOTtotPAUSE_MS|  |$SUMstatusesHTML\n";
 echo "+----------------------------+----------+----------+----------+  +$sub_statusesHEAD\n";
 
-echo "\n\n";
+echo "\n\n<BR>$db_source";
 
 }
 

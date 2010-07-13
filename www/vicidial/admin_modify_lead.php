@@ -37,6 +37,7 @@
 # 100618-0148 - Added Middle name modify and fixes statuses list
 # 100622-0945 - Added field labels
 # 100703-1122 - Added custom fields display/edit
+# 100712-1416 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
 #
 
 require("dbconnect.php");
@@ -534,7 +535,7 @@ else
 		}
 
 	##### grab vicidial_list data for lead #####
-	$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
+	$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$row=mysql_fetch_row($rslt);
@@ -569,6 +570,7 @@ else
 	$last_local_call_time = $row[31];
 	$rank				= $row[32];
 	$owner				= $row[33];
+	$entry_list_id		= $row[34];
 
 	echo "<br>Call information: $first_name $last_name - $phone_number<br><br><form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=end_call value=1>\n";
@@ -737,13 +739,16 @@ else
 	### iframe for custom fields display/editing
 	if ($custom_fields_enabled > 0)
 		{
-		$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
+		$CLlist_id = $list_id;
+		if (strlen($entry_list_id) > 2)
+			{$CLlist_id = $entry_list_id;}
+		$stmt="SHOW TABLES LIKE \"custom_$CLlist_id\";";
 		if ($DB>0) {echo "$stmt";}
 		$rslt=mysql_query($stmt, $link);
 		$tablecount_to_print = mysql_num_rows($rslt);
 		if ($tablecount_to_print > 0) 
 			{
-			$stmt="SELECT count(*) from custom_$list_id where lead_id='$lead_id';";
+			$stmt="SELECT count(*) from custom_$CLlist_id where lead_id='$lead_id';";
 			if ($DB>0) {echo "$stmt";}
 			$rslt=mysql_query($stmt, $link);
 			$fieldscount_to_print = mysql_num_rows($rslt);
@@ -753,7 +758,7 @@ else
 				$custom_records_count =	$rowx[0];
 
 				echo "<B>CUSTOM FIELDS FOR THIS LEAD:</B><BR>\n";
-				echo "<iframe src=\"../agc/vdc_form_display.php?lead_id=$lead_id&list_id=$list_id&stage=DISPLAY&submit_button=YES&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bgcolor=E6E6E6\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"2\" allowtransparency=\"true\" id=\"vcFormIFrame\" name=\"vcFormIFrame\" width=\"740\" height=\"300\" STYLE=\"z-index:18\"> </iframe>\n";
+				echo "<iframe src=\"../agc/vdc_form_display.php?lead_id=$lead_id&list_id=$CLlist_id&stage=DISPLAY&submit_button=YES&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bgcolor=E6E6E6\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"2\" allowtransparency=\"true\" id=\"vcFormIFrame\" name=\"vcFormIFrame\" width=\"740\" height=\"300\" STYLE=\"z-index:18\"> </iframe>\n";
 				echo "<BR><BR>";
 				}
 			}

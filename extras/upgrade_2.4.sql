@@ -407,3 +407,10 @@ UPDATE system_settings SET db_schema_version='1232',db_schema_update_date=NOW();
 ALTER TABLE vicidial_hopper ENGINE=MEMORY;
 
 UPDATE system_settings SET db_schema_version='1233',db_schema_update_date=NOW();
+
+ALTER TABLE system_settings ADD slave_db_server VARCHAR(50) default '';
+ALTER TABLE system_settings ADD reports_use_slave_db VARCHAR(2000) default '';
+
+ALTER TABLE vicidial_list ADD entry_list_id BIGINT(14) UNSIGNED NOT NULL DEFAULT '0';
+
+UPDATE system_settings SET db_schema_version='1234',db_schema_update_date=NOW();

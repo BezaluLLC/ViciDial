@@ -300,10 +300,11 @@
 # 100625-1118 - Added poor-network-connection-mitigating code
 # 100629-1158 - Added initial code for custom list fields
 # 100702-1315 - Custom List Fields functionality enabled
+# 100712-1441 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
 #
 
-$version = '2.4-278';
-$build = '100702-1315';
+$version = '2.4-279';
+$build = '100712-1441';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -5739,6 +5740,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						CalL_XC_c_NuMber								= MDnextResponse_array[41];
 						CalL_XC_d_NuMber								= MDnextResponse_array[42];
 						CalL_XC_e_NuMber								= MDnextResponse_array[43];
+						document.vicidial_form.entry_list_id.value		= MDnextResponse_array[44];
 
 						timer_action = campaign_timer_action;
 						timer_action_message = campaign_timer_action_message;
@@ -6198,6 +6200,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							document.vicidial_form.lead_id.value		='';
 							document.vicidial_form.vendor_lead_code.value='';
 							document.vicidial_form.list_id.value		='';
+							document.vicidial_form.entry_list_id.value	='';
 							document.vicidial_form.gmt_offset_now.value	='';
 							document.vicidial_form.phone_code.value		='';
 							if ( (disable_alter_custphone=='Y') || (disable_alter_custphone=='HIDE') )
@@ -6967,6 +6970,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							document.vicidial_form.rank.value				= check_VDIC_array[44];
 							document.vicidial_form.owner.value				= check_VDIC_array[45];
 							script_recording_delay							= check_VDIC_array[46];
+							document.vicidial_form.entry_list_id.value		= check_VDIC_array[47];
 
 							var gIndex = 0;
 							if (document.vicidial_form.gender.value == 'M') {var gIndex = 1;}
@@ -8482,6 +8486,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				document.vicidial_form.lead_id.value		='';
 				document.vicidial_form.vendor_lead_code.value='';
 				document.vicidial_form.list_id.value		='';
+				document.vicidial_form.entry_list_id.value	='';
 				document.vicidial_form.gmt_offset_now.value	='';
 				document.vicidial_form.phone_code.value		='';
 				if ( (disable_alter_custphone=='Y') || (disable_alter_custphone=='HIDE') )
@@ -10179,7 +10184,13 @@ function phone_number_format(formatphone) {
 // Refresh the FORM content
 	function FormContentsLoad()
 		{
-		document.getElementById('vcFormIFrame').src='./vdc_form_display.php?lead_id=' + document.vicidial_form.lead_id.value + '&list_id=' + document.vicidial_form.list_id.value + '&user=' + user + '&pass=' + pass + '&campaign=' + campaign + '&server_ip=' + server_ip + '&session_id=' + '&uniqueid=' + document.vicidial_form.uniqueid.value + '&stage=DISPLAY';
+		var form_list_id = document.vicidial_form.list_id.value;
+		var form_entry_list_id = document.vicidial_form.entry_list_id.value;
+		if (form_entry_list_id.length > 2)
+			{form_list_id = form_entry_list_id}
+		document.getElementById('vcFormIFrame').src='./vdc_form_display.php?lead_id=' + document.vicidial_form.lead_id.value + '&list_id=' + form_list_id + '&user=' + user + '&pass=' + pass + '&campaign=' + campaign + '&server_ip=' + server_ip + '&session_id=' + '&uniqueid=' + document.vicidial_form.uniqueid.value + '&stage=DISPLAY';
+		form_list_id = '';
+		form_entry_list_id = '';
 		}
 
 // ################################################################################
@@ -11451,6 +11462,7 @@ $zi=1;
 	<td width=<?php echo $SDwidth ?> align=left valign=top>
 	<input type=hidden name=lead_id value="">
 	<input type=hidden name=list_id value="">
+	<input type=hidden name=entry_list_id value="">
 	<input type=hidden name=called_count value="">
 	<input type=hidden name=rank value="">
 	<input type=hidden name=owner value="">

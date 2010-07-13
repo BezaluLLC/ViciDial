@@ -307,6 +307,7 @@ called_count SMALLINT(5) UNSIGNED default '0',
 last_local_call_time DATETIME,
 rank SMALLINT(5) NOT NULL default '0',
 owner VARCHAR(20) default '',
+entry_list_id BIGINT(14) UNSIGNED NOT NULL DEFAULT '0',
 index (phone_number),
 index (list_id),
 index (called_since_last_reset),
@@ -1291,7 +1292,9 @@ label_phone_code VARCHAR(40) default '',
 label_alt_phone VARCHAR(40) default '',
 label_security_phrase VARCHAR(40) default '',
 label_email VARCHAR(40) default '',
-label_comments VARCHAR(40) default ''
+label_comments VARCHAR(40) default '',
+slave_db_server VARCHAR(50) default '',
+reports_use_slave_db VARCHAR(2000) default ''
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2273,7 +2276,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1233',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1234',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
