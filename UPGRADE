@@ -215,6 +215,9 @@ OTHER CHANGES:
 	definable in the System Settings in the admin.php interface. You must
 	already have MySQL Master/Slave replication set up for this to work.
 
+47. Added options to include recording ID, Filename and/or Location with Call 
+	Export Report results
+
 
 
 

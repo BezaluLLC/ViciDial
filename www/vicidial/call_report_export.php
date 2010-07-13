@@ -20,6 +20,7 @@
 # 100507-1413 - Added headers for export
 # 100702-1332 - Added custom fields option
 # 100712-1324 - Added system setting slave server option
+# 100713-0101 - Added recordings fields option (for filename, recording ID and URL)
 #
 
 require("dbconnect.php");
@@ -47,6 +48,8 @@ if (isset($_GET["run_export"]))				{$run_export=$_GET["run_export"];}
 	elseif (isset($_POST["run_export"]))	{$run_export=$_POST["run_export"];}
 if (isset($_GET["header_row"]))				{$header_row=$_GET["header_row"];}
 	elseif (isset($_POST["header_row"]))	{$header_row=$_POST["header_row"];}
+if (isset($_GET["rec_fields"]))				{$rec_fields=$_GET["rec_fields"];}
+	elseif (isset($_POST["rec_fields"]))	{$rec_fields=$_POST["rec_fields"];}
 if (isset($_GET["custom_fields"]))			{$custom_fields=$_GET["custom_fields"];}
 	elseif (isset($_POST["custom_fields"]))	{$custom_fields=$_POST["custom_fields"];}
 if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
@@ -241,7 +244,7 @@ if ($run_export > 0)
 	$k=0;
 	if ($RUNcampaign > 0)
 		{
-		$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id from vicidial_users vu,vicidial_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+		$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid from vicidial_users vu,vicidial_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$outbound_to_print = mysql_num_rows($rslt);
@@ -259,9 +262,10 @@ if ($run_export > 0)
 
 				$row[29] = preg_replace("/\n|\r/",'!N',$row[29]);
 
-				$export_status[$k] =	$row[2];
-				$export_list_id[$k] =	$row[8];
-				$export_lead_id[$k] =	$row[35];
+				$export_status[$k] =		$row[2];
+				$export_list_id[$k] =		$row[8];
+				$export_lead_id[$k] =		$row[35];
+				$export_vicidial_id[$k] =	$row[36];
 				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t";
 				$i++;
 				$k++;
@@ -272,7 +276,7 @@ if ($run_export > 0)
 
 	if ($RUNgroup > 0)
 		{
-		$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id from vicidial_users vu,vicidial_closer_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+		$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid from vicidial_users vu,vicidial_closer_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 		$rslt=mysql_query($stmtA, $link);
 		if ($DB) {echo "$stmt\n";}
 		$inbound_to_print = mysql_num_rows($rslt);
@@ -290,9 +294,10 @@ if ($run_export > 0)
 
 				$row[29] = preg_replace("/\n|\r/",'!N',$row[29]);
 
-				$export_status[$k] =	$row[2];
-				$export_list_id[$k] =	$row[8];
-				$export_lead_id[$k] =	$row[35];
+				$export_status[$k] =		$row[2];
+				$export_list_id[$k] =		$row[8];
+				$export_lead_id[$k] =		$row[35];
+				$export_vicidial_id[$k] =	$row[36];
 				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t";
 				$i++;
 				$k++;
@@ -327,10 +332,19 @@ if ($run_export > 0)
 		if ($header_row=='YES')
 			{
 			$CFheader = '';
+			$RFheader = '';
 			if ( ($custom_fields_enabled > 0) and ($custom_fields=='YES') )
-				{$CFheader = 'custom_fields';}
+				{$CFheader = "\tcustom_fields";}
+			if ($rec_fields=='ID')
+				{$RFheader = "\trecording_id";}
+			if ($rec_fields=='FILENAME')
+				{$RFheader = "\trecording_filename";}
+			if ($rec_fields=='LOCATION')
+				{$RFheader = "\trecording_location";}
+			if ($rec_fields=='ALL')
+				{$RFheader = "\trecording_id\trecording_filename\trecording_location";}
 
-			echo "call_date\tphone_number\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id\tlist_name\tlist_description\tstatus_name\t$CFheader\r\n";
+			echo "call_date\tphone_number\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id\tlist_name\tlist_description\tstatus_name$RFheader$CFheader\r\n";
 			}
 
 		$i=0;
@@ -371,6 +385,40 @@ if ($run_export > 0)
 					$row=mysql_fetch_row($rslt);
 					$ex_status_name =			$row[0];
 					}
+				}
+
+			$rec_data='';
+			if ( ($rec_fields=='ID') or ($rec_fields=='FILENAME') or ($rec_fields=='LOCATION') or ($rec_fields=='ALL') )
+				{
+				$rec_id='';
+				$rec_filename='';
+				$rec_location='';
+				$stmt = "SELECT recording_id,filename,location from recording_log where vicidial_id='$export_vicidial_id[$i]' order by recording_id desc LIMIT 10;";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$recordings_ct = mysql_num_rows($rslt);
+				$u=0;
+				while ($recordings_ct > $u)
+					{
+					$row=mysql_fetch_row($rslt);
+					$rec_id .=			"$row[0]|";
+					$rec_filename .=	"$row[1]|";
+					$rec_location .=	"$row[2]|";
+
+					$u++;
+					}
+				$rec_id = preg_replace("/.$/",'',$rec_id);
+				$rec_filename = preg_replace("/.$/",'',$rec_filename);
+				$rec_location = preg_replace("/.$/",'',$rec_location);
+
+				if ($rec_fields=='ID')
+					{$rec_data = "\t$rec_id";}
+				if ($rec_fields=='FILENAME')
+					{$rec_data = "\t$rec_filename";}
+				if ($rec_fields=='LOCATION')
+					{$rec_data = "\t$rec_location";}
+				if ($rec_fields=='ALL')
+					{$rec_data = "\t$rec_id\t$rec_filename\t$rec_location";}
 				}
 
 			if ( ($custom_fields_enabled > 0) and ($custom_fields=='YES') )
@@ -414,7 +462,7 @@ if ($run_export > 0)
 					}
 				}
 
-			echo "$export_rows[$i]$ex_list_name\t$ex_list_description\t$ex_status_name$custom_data\r\n";
+			echo "$export_rows[$i]$ex_list_name\t$ex_list_description\t$ex_status_name$rec_data$custom_data\r\n";
 			$i++;
 			}
 		}
@@ -598,6 +646,17 @@ else
 
 	echo "Header Row:<BR>\n";
 	echo "<select size=1 name=header_row><option selected>YES</option><option>NO</option></select>\n";
+
+	echo "<BR><BR>\n";
+
+	echo "Recording Fields:<BR>\n";
+	echo "<select size=1 name=rec_fields>";
+	echo "<option>ID</option>";
+	echo "<option>FILENAME</option>";
+	echo "<option>LOCATION</option>";
+	echo "<option>ALL</option>";
+	echo "<option selected>NONE</option>";
+	echo "</select>\n";
 
 	if ($custom_fields_enabled > 0)
 		{
