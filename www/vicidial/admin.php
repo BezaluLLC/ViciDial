@@ -20254,7 +20254,16 @@ if ($ADD==311)
 
 		echo "<center><b>\n";
 
-		echo "<br><br><a href=\"$PHP_SELF?ADD=811&list_id=$list_id\">Click here to see all CallBack Holds in this list</a><BR><BR>\n";
+		if ($SScustom_fields_enabled > 0)
+			{
+			$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id';";
+			$rslt=mysql_query($stmt, $link);
+			$rowx=mysql_fetch_row($rslt);
+
+			echo "<br><br><a href=\"./admin_lists_custom.php?action=MODIFY_CUSTOM_FIELDS&list_id=$list_id\">Custom fields defined for this list: $rowx[0]</a><BR>\n";
+			}
+
+		echo "<br><br><a href=\"$PHP_SELF?ADD=811&list_id=$list_id\">Click here to see all CallBack Holds in this list</a><BR>\n";
 		echo "<br><br><a href=\"./list_download.php?list_id=$list_id\">Click here to download this list</a><BR><BR>\n";
 
 		if ($LOGdelete_lists > 0)

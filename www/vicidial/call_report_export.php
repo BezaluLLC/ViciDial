@@ -21,6 +21,7 @@
 # 100702-1332 - Added custom fields option
 # 100712-1324 - Added system setting slave server option
 # 100713-0101 - Added recordings fields option (for filename, recording ID and URL)
+# 100713-1050 - Fixed minor custom fields issue
 #
 
 require("dbconnect.php");
@@ -244,7 +245,7 @@ if ($run_export > 0)
 	$k=0;
 	if ($RUNcampaign > 0)
 		{
-		$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid from vicidial_users vu,vicidial_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+		$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid,vi.entry_list_id from vicidial_users vu,vicidial_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$outbound_to_print = mysql_num_rows($rslt);
@@ -266,6 +267,7 @@ if ($run_export > 0)
 				$export_list_id[$k] =		$row[8];
 				$export_lead_id[$k] =		$row[35];
 				$export_vicidial_id[$k] =	$row[36];
+				$export_entry_list_id[$k] =	$row[37];
 				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t";
 				$i++;
 				$k++;
@@ -276,7 +278,7 @@ if ($run_export > 0)
 
 	if ($RUNgroup > 0)
 		{
-		$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid from vicidial_users vu,vicidial_closer_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+		$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id from vicidial_users vu,vicidial_closer_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 		$rslt=mysql_query($stmtA, $link);
 		if ($DB) {echo "$stmt\n";}
 		$inbound_to_print = mysql_num_rows($rslt);
@@ -298,6 +300,7 @@ if ($run_export > 0)
 				$export_list_id[$k] =		$row[8];
 				$export_lead_id[$k] =		$row[35];
 				$export_vicidial_id[$k] =	$row[36];
+				$export_entry_list_id[$k] =	$row[37];
 				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t";
 				$i++;
 				$k++;
@@ -423,13 +426,16 @@ if ($run_export > 0)
 
 			if ( ($custom_fields_enabled > 0) and ($custom_fields=='YES') )
 				{
-				$stmt="SHOW TABLES LIKE \"custom_$export_list_id[$i]\";";
+				$CF_list_id = $export_list_id[$i];
+				if ($export_entry_list_id[$i] > 99)
+					{$CF_list_id = $export_entry_list_id[$i];}
+				$stmt="SHOW TABLES LIKE \"custom_$CF_list_id\";";
 				if ($DB>0) {echo "$stmt";}
 				$rslt=mysql_query($stmt, $link);
 				$tablecount_to_print = mysql_num_rows($rslt);
 				if ($tablecount_to_print > 0) 
 					{
-					$stmt = "describe custom_$export_list_id[$i];";
+					$stmt = "describe custom_$CF_list_id;";
 					$rslt=mysql_query($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
 					$columns_ct = mysql_num_rows($rslt);
@@ -442,7 +448,7 @@ if ($run_export > 0)
 						}
 					if ($columns_ct > 1)
 						{
-						$stmt = "SELECT * from custom_$export_list_id[$i] where lead_id='$export_lead_id[$i]' limit 1;";
+						$stmt = "SELECT * from custom_$CF_list_id where lead_id='$export_lead_id[$i]' limit 1;";
 						$rslt=mysql_query($stmt, $link);
 						if ($DB) {echo "$stmt\n";}
 						$customfield_ct = mysql_num_rows($rslt);

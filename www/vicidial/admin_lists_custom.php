@@ -1229,6 +1229,9 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "</table></center></form><BR><BR>\n";
 	echo "</table></center><BR><BR>\n";
 	echo "</TABLE>\n";
+
+	echo "&nbsp; <a href=\"./admin.php?ADD=311&list_id=$list_id\">Go to the list modification page for this list</a><BR><BR>\n";
+
 	echo "&nbsp; <a href=\"$PHP_SELF?action=ADMIN_LOG&list_id=$list_id\">Click here to see Admin changes to this lists custom fields</a><BR><BR><BR> </center> &nbsp; \n";
 	}
 ### END modify custom fields for list

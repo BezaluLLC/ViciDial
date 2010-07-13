@@ -251,6 +251,8 @@ Slave Database Server||
 If you have a MySQL slave database server then enter the local IP address for that server here. This option is currently only used by the selected reports in the next option and has nothing to do with automatically configuring MySQL master-slave replication. Default is empty for disabled||
 Reports to use Slave DB||
 This option allows you to select the reports that you want to have use the MySQL slave database as defined in the option above instead of the master database that your live ViciDial system is running on. You must set up the MySQL slave replication before you can enable this option. Default is empty for disabled||
+Custom fields defined for this list||
+Go to the list modification page for this list||
 
 
 AST_VICIDIAL_ingrouplist.php
