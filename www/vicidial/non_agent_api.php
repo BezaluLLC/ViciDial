@@ -9,7 +9,7 @@
 # required variables:
 #  - $user
 #  - $pass
-#  - $function - ('add_lead','version')
+#  - $function - ('add_lead','update_lead','version','sounds_list','moh_list','vm_list','blind_monitor','agent_ingroup_info')
 #  - $source - ('vtiger','webform','adminweb')
 #  - $format - ('text','debug')
 
@@ -33,10 +33,11 @@
 # 100118-0543 - Added new Australian and New Zealand DST schemes (FSO-FSA and LSS-FSA)
 # 100704-1148 - Added custom fields inserts to the add_lead function
 # 100712-1416 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
+# 100718-0245 - Added update_lead function to update existing leads
 #
 
-$version = '2.4-19';
-$build = '100712-1416';
+$version = '2.4-20';
+$build = '100718-0245';
 
 require("dbconnect.php");
 
@@ -133,6 +134,22 @@ if (isset($_GET["duplicate_check"]))			{$duplicate_check=$_GET["duplicate_check"
 	elseif (isset($_POST["duplicate_check"]))	{$duplicate_check=$_POST["duplicate_check"];}
 if (isset($_GET["custom_fields"]))				{$custom_fields=$_GET["custom_fields"];}
 	elseif (isset($_POST["custom_fields"]))		{$custom_fields=$_POST["custom_fields"];}
+if (isset($_GET["search_method"]))				{$search_method=$_GET["search_method"];}
+	elseif (isset($_POST["search_method"]))		{$search_method=$_POST["search_method"];}
+if (isset($_GET["insert_if_not_found"]))			{$insert_if_not_found=$_GET["insert_if_not_found"];}
+	elseif (isset($_POST["insert_if_not_found"]))	{$insert_if_not_found=$_POST["insert_if_not_found"];}
+if (isset($_GET["records"]))					{$records=$_GET["records"];}
+	elseif (isset($_POST["records"]))			{$records=$_POST["records"];}
+if (isset($_GET["search_location"]))			{$search_location=$_GET["search_location"];}
+	elseif (isset($_POST["search_location"]))	{$search_location=$_POST["search_location"];}
+if (isset($_GET["status"]))						{$status=$_GET["status"];}
+	elseif (isset($_POST["status"]))			{$status=$_POST["status"];}
+if (isset($_GET["user_field"]))					{$user_field=$_GET["user_field"];}
+	elseif (isset($_POST["user_field"]))		{$user_field=$_POST["user_field"];}
+if (isset($_GET["list_id_field"]))				{$list_id_field=$_GET["list_id_field"];}
+	elseif (isset($_POST["list_id_field"]))		{$list_id_field=$_POST["list_id_field"];}
+if (isset($_GET["lead_id"]))					{$lead_id=$_GET["lead_id"];}
+	elseif (isset($_POST["lead_id"]))			{$lead_id=$_POST["lead_id"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -214,6 +231,13 @@ if ($non_latin < 1)
 	$owner = ereg_replace("[^-_0-9a-zA-Z]","",$owner);
 	$duplicate_check = ereg_replace("[^-_0-9a-zA-Z]","",$duplicate_check);
 	$custom_fields = ereg_replace("[^0-9a-zA-Z]","",$custom_fields);
+	$search_method = ereg_replace("[^-_0-9a-zA-Z]","",$search_method);
+	$insert_if_not_found = ereg_replace("[^A-Z]","",$insert_if_not_found);
+	$records = ereg_replace("[^0-9]","",$records);
+	$search_location = ereg_replace("[^A-Z]","",$search_location);
+	$user_field = ereg_replace("[^-_0-9a-zA-Z]","",$user_field);
+	$list_id_field = ereg_replace("[^0-9]","",$list_id_field);
+	$lead_id = ereg_replace("[^0-9]","",$lead_id);
 	}
 else
 	{
@@ -222,12 +246,8 @@ else
 	$source = ereg_replace("'|\"|\\\\|;","",$source);
 	}
 
-if (strlen($list_id)<1) {$list_id='999';}
-if (strlen($phone_code)<1) {$phone_code='1';}
 $USarea = 			substr($phone_number, 0, 3);
 if (strlen($hopper_priority)<1) {$hopper_priority=0;}
-if (strlen($gender)<1) {$gender='U';}
-if (strlen($rank)<1) {$rank='0';}
 
 $StarTtime = date("U");
 $NOW_DATE = date("Y-m-d");
@@ -1174,6 +1194,11 @@ if ($function == 'add_lead')
 			}
 		else
 			{
+			if (strlen($gender)<1) {$gender='U';}
+			if (strlen($rank)<1) {$rank='0';}
+			if (strlen($list_id)<1) {$list_id='999';}
+			if (strlen($phone_code)<1) {$phone_code='1';}
+
 			if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )
 				{
 				$result = 'ERROR';
@@ -1654,6 +1679,536 @@ if ($function == 'add_lead')
 ################################################################################
 ### END add_lead
 ################################################################################
+
+
+
+
+
+################################################################################
+### update_lead - updates a lead in the vicidial_list table
+################################################################################
+if ($function == 'update_lead')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7;";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$modify_leads=$row[0];
+
+		if ($modify_leads < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "update_lead USER DOES NOT HAVE PERMISSION TO UPDATE LEADS IN THE SYSTEM";
+			echo "$result: $result_reason: |$user|$modify_leads|\n";
+			$data = "$modify_leads";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$search_SQL='';
+			$lead_id_SQL='';
+			$vendor_lead_code_SQL='';
+			$phone_number_SQL='';
+			$find_lead_id=0;
+			$find_vendor_lead_code=0;
+			$find_phone_number=0;
+			if ( (strlen($search_location)<4) or ($list_id < 99) or (strlen($list_id)<3) )
+				{$search_location='SYSTEM';}
+			if (strlen($search_method)<6)
+				{$search_method='LEAD_ID';}
+			if (strlen($records)<1)
+				{$records='1';}
+			if ( (preg_match("/LEAD_ID/",$search_method)) and (strlen($lead_id)>0) )
+				{
+				$find_lead_id=1;
+				$lead_id_SQL = "lead_id='$lead_id'";
+				}
+			if ( (preg_match("/VENDOR_LEAD_CODE/",$search_method)) and (strlen($vendor_lead_code)>0) )
+				{
+				$find_vendor_lead_code=1;
+				$vendor_lead_code_SQL = "vendor_lead_code='$vendor_lead_code'";
+				}
+			if ( (preg_match("/PHONE_NUMBER/",$search_method)) and (strlen($phone_number)>5) and (strlen($phone_number)<19) )
+				{
+				$find_phone_number=1;
+				$phone_number_SQL = "phone_number='$phone_number'";
+				}
+			if ( ($find_lead_id<1) and ($find_vendor_lead_code<1) and ($find_phone_number<1) )
+				{
+				$result = 'ERROR';
+				$result_reason = "update_lead NO VALID SEARCH METHOD";
+				$data = "$search_method|$lead_id|$vendor_lead_code|$phone_number";
+				echo "$result: $result_reason - $user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				if (eregi("CAMPAIGN",$search_location)) # find lists within campaign
+					{
+					$stmt="SELECT campaign_id from vicidial_lists where list_id='$list_id';";
+					$rslt=mysql_query($stmt, $link);
+					$ci_recs = mysql_num_rows($rslt);
+					if ($ci_recs > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$search_camp =	$row[0];
+
+						$stmt="select list_id from vicidial_lists where campaign_id='$search_camp';";
+						$rslt=mysql_query($stmt, $link);
+						$li_recs = mysql_num_rows($rslt);
+						if ($li_recs > 0)
+							{
+							$L=0;
+							while ($li_recs > $L)
+								{
+								$row=mysql_fetch_row($rslt);
+								$search_lists .=	"'$row[0]',";
+								$L++;
+								}
+							$search_lists = eregi_replace(",$",'',$search_lists);
+							$search_SQL = "and list_id IN($search_lists)";
+							}
+						}
+					}
+				if (eregi("LIST",$search_location)) # search check within list
+					{
+					$search_SQL = "and list_id='$list_id'";
+					}
+
+				$search_found=0;
+				if ($find_lead_id > 0) # search for the lead_id
+					{
+					if ($DB>0) {echo "DEBUG: Checking for lead_id - $lead_id\n";}
+					$stmt="SELECT lead_id,list_id,entry_list_id from vicidial_list where $lead_id_SQL $search_SQL order by entry_date desc limit $records;";
+					$rslt=mysql_query($stmt, $link);
+					$pc_recs = mysql_num_rows($rslt);
+					$n=0;
+					while ($pc_recs > $n)
+						{
+						$row=mysql_fetch_row($rslt);
+						$search_lead_id[$n] =		$row[0];
+						$search_lead_list[$n] =		$row[1];
+						$search_entry_list[$n] =	$row[2];
+						$n++;
+						$search_found++;
+						}
+					}
+				if ( ($find_vendor_lead_code > 0) and ($search_found < 1) ) # search for the vendor_lead_code
+					{
+					if ($DB>0) {echo "DEBUG: Checking for vendor_lead_code - $vendor_lead_code\n";}
+					$stmt="SELECT lead_id,list_id,entry_list_id from vicidial_list where $vendor_lead_code_SQL $search_SQL order by entry_date desc limit $records;";
+					$rslt=mysql_query($stmt, $link);
+					$pc_recs = mysql_num_rows($rslt);
+					$n=0;
+					while ($pc_recs > $n)
+						{
+						$row=mysql_fetch_row($rslt);
+						$search_lead_id[$n] =		$row[0];
+						$search_lead_list[$n] =		$row[1];
+						$search_entry_list[$n] =	$row[2];
+						$n++;
+						$search_found++;
+						}
+					}
+				if ( ($find_phone_number > 0) and ($search_found < 1) ) # search for the phone_number
+					{
+					if ($DB>0) {echo "DEBUG: Checking for phone_number - $phone_number\n";}
+					$stmt="SELECT lead_id,list_id,entry_list_id from vicidial_list where $phone_number_SQL $search_SQL order by entry_date desc limit $records;";
+					$rslt=mysql_query($stmt, $link);
+					$pc_recs = mysql_num_rows($rslt);
+					$n=0;
+					while ($pc_recs > $n)
+						{
+						$row=mysql_fetch_row($rslt);
+						$search_lead_id[$n] =		$row[0];
+						$search_lead_list[$n] =		$row[1];
+						$search_entry_list[$n] =	$row[2];
+						$n++;
+						$search_found++;
+						}
+					}
+				### END searching ###
+
+				if ($search_found > 0)
+					{
+					$VL_update_SQL='';
+					##### BEGIN update lead information in the system #####
+					if (strlen($user_field)>0)			{$VL_update_SQL .= "user='$user_field',";}
+					if (strlen($list_id_field)>0)		{$VL_update_SQL .= "list_id='$list_id_field',";}
+					if (strlen($status)>0)				{$VL_update_SQL .= "status='$status',";}
+					if (strlen($vendor_lead_code)>0)	{$VL_update_SQL .= "vendor_lead_code='$vendor_lead_code',";}
+					if (strlen($source_id)>0)			{$VL_update_SQL .= "source_id='$source_id',";}
+					if (strlen($gmt_offset_now)>0)		{$VL_update_SQL .= "gmt_offset_now='$gmt_offset_now',";}
+					if (strlen($title)>0)				{$VL_update_SQL .= "title='$title',";}
+					if (strlen($first_name)>0)			{$VL_update_SQL .= "first_name='$first_name',";}
+					if (strlen($middle_initial)>0)		{$VL_update_SQL .= "middle_initial='$middle_initial',";}
+					if (strlen($last_name)>0)			{$VL_update_SQL .= "last_name='$last_name',";}
+					if (strlen($address1)>0)			{$VL_update_SQL .= "address1='$address1',";}
+					if (strlen($address2)>0)			{$VL_update_SQL .= "address2='$address2',";}
+					if (strlen($address3)>0)			{$VL_update_SQL .= "address3='$address3',";}
+					if (strlen($city)>0)				{$VL_update_SQL .= "city='$city',";}
+					if (strlen($state)>0)				{$VL_update_SQL .= "state='$state',";}
+					if (strlen($province)>0)			{$VL_update_SQL .= "province='$province',";}
+					if (strlen($postal_code)>0)			{$VL_update_SQL .= "postal_code='$postal_code',";}
+					if (strlen($country_code)>0)		{$VL_update_SQL .= "country_code='$country_code',";}
+					if (strlen($gender)>0)				{$VL_update_SQL .= "gender='$gender',";}
+					if (strlen($date_of_birth)>0)		{$VL_update_SQL .= "date_of_birth='$date_of_birth',";}
+					if (strlen($alt_phone)>0)			{$VL_update_SQL .= "alt_phone='$alt_phone',";}
+					if (strlen($email)>0)				{$VL_update_SQL .= "email='$email',";}
+					if (strlen($security_phrase)>0)		{$VL_update_SQL .= "security_phrase='$security_phrase',";}
+					if (strlen($comments)>0)			{$VL_update_SQL .= "comments='$comments',";}
+					if (strlen($rank)>0)				{$VL_update_SQL .= "rank='$rank',";}
+					if (strlen($owner)>0)				{$VL_update_SQL .= "owner='$owner',";}
+					$VL_update_SQL = preg_replace("/,$/","",$VL_update_SQL);
+					$VL_update_SQL = preg_replace("/'--BLANK--'/","''",$VL_update_SQL);
+					$VL_update_SQL = preg_replace("/\n/","!N",$VL_update_SQL);
+
+					$n=0;
+					while ($search_found > $n)
+						{
+						$VLaffected_rows=0;
+						$CFaffected_rows=0;
+						if (strlen($VL_update_SQL)>6)
+							{
+							$stmt = "UPDATE vicidial_list SET $VL_update_SQL where lead_id='$search_lead_id[$n]';";
+							if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
+							$rslt=mysql_query($stmt, $link);
+							$VLaffected_rows = mysql_affected_rows($link);
+
+							$result = 'SUCCESS';
+							$result_reason = "update_lead LEAD HAS BEEN UPDATED";
+							echo "$result: $result_reason - $user|$search_lead_id[$n]\n";
+							$data = "$phone_number|$list_id|$lead_id|$gmt_offset";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						##### BEGIN custom fields update query build #####
+						if ($custom_fields=='Y')
+							{
+							$lead_custom_list = $search_lead_list[$n];
+							if ($search_entry_list[$n] > 99) {$lead_custom_list = $search_entry_list[$n];}
+							$update_sent=0;
+							$CFoutput='';
+							$stmt="SHOW TABLES LIKE \"custom_$lead_custom_list\";";
+							if ($DB>0) {echo "$stmt";}
+							$rslt=mysql_query($stmt, $link);
+							$tablecount_to_print = mysql_num_rows($rslt);
+							if ($tablecount_to_print > 0) 
+								{
+								$update_SQL='';
+								$VL_update_SQL='';
+								$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$lead_custom_list' order by field_rank,field_order,field_label;";
+								$rslt=mysql_query($stmt, $link);
+								$fields_to_print = mysql_num_rows($rslt);
+								$fields_list='';
+								$o=0;
+								while ($fields_to_print > $o) 
+									{
+									$new_field_value='';
+									$form_field_value='';
+									$rowx=mysql_fetch_row($rslt);
+									$A_field_id[$o] =			$rowx[0];
+									$A_field_label[$o] =		$rowx[1];
+									$A_field_name[$o] =			$rowx[2];
+									$A_field_type[$o] =			$rowx[6];
+									$A_field_size[$o] =			$rowx[8];
+									$A_field_max[$o] =			$rowx[9];
+									$A_field_required[$o] =		$rowx[12];
+									$A_field_value[$o] =		'';
+									$field_name_id =			$A_field_label[$o];
+
+									if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
+										elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
+
+									$A_field_value[$o] = $form_field_value;
+
+									if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
+										{
+										$A_field_value[$o]='----IGNORE----';
+										}
+									else
+										{
+										if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+											{
+											$update_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
+											}
+										}
+									$o++;
+									}
+
+								$custom_update_count=0;
+								if (strlen($update_SQL)>3)
+									{
+									$custom_record_lead_count=0;
+									$stmt="SELECT count(*) from custom_$lead_custom_list where lead_id='$search_lead_id[$n]';";
+									if ($DB>0) {echo "$stmt";}
+									$rslt=mysql_query($stmt, $link);
+									$fieldleadcount_to_print = mysql_num_rows($rslt);
+									if ($fieldleadcount_to_print > 0) 
+										{
+										$rowx=mysql_fetch_row($rslt);
+										$custom_record_lead_count =	$rowx[0];
+										}
+									$update_SQL = preg_replace("/,$/","",$update_SQL);
+									$custom_table_update_SQL = "INSERT INTO custom_$lead_custom_list SET lead_id='$search_lead_id[$n]',$update_SQL;";
+									if ($custom_record_lead_count > 0)
+										{$custom_table_update_SQL = "UPDATE custom_$lead_custom_list SET $update_SQL where lead_id='$search_lead_id[$n]';";}
+
+									$rslt=mysql_query($custom_table_update_SQL, $link);
+									$custom_update_count = mysql_affected_rows($link);
+									if ($DB) {echo "$custom_update_count|$custom_table_update_SQL\n";}
+									if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+									$result = 'NOTICE';
+									$result_reason = "update_lead CUSTOM FIELDS VALUES UPDATED";
+									echo "$result: $result_reason - $phone_number|$search_lead_id[$n]|$search_lead_list[$n]|$search_entry_list[$n]|$lead_custom_list|$custom_update_count\n";
+									$data = "$phone_number|$lead_id|$list_id";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+
+									$update_sent++;
+									}
+
+								if ($custom_update_count > 0)
+									{
+									$list_table_update_SQL = "UPDATE vicidial_list SET entry_list_id='$lead_custom_list' where lead_id='$search_lead_id[$n]';";
+									$rslt=mysql_query($list_table_update_SQL, $link);
+									$list_update_count = mysql_affected_rows($link);
+									if ($DB) {echo "$list_update_count|$list_table_update_SQL\n";}
+									if (!$rslt) {die('Could not execute: ' . mysql_error());}
+									}
+								}
+							else
+								{
+								$result = 'NOTICE';
+								$result_reason = "update_lead CUSTOM FIELDS NOT ADDED, NO CUSTOM FIELDS DEFINED FOR THIS LIST";
+								echo "$result: $result_reason - $phone_number|$lead_id|$list_id\n";
+								$data = "$phone_number|$lead_id|$list_id";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								}
+							}
+						##### END custom fields update query build #####
+
+						$n++;
+						}
+
+					##### END update lead information in the system #####
+					}
+				else
+					{
+					$result = 'ERROR';
+					if ($insert_if_not_found=='Y')
+						{$result = 'NOTICE';}
+					$result_reason = "update_lead NO MATCHES FOUND IN THE SYSTEM";
+					$data = "$lead_id|$vendor_lead_code|$phone_number";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					if ($insert_if_not_found!='Y')
+						{exit;}
+					else
+						{
+						##### BEGIN insert not-found lead into the system #####
+						if  ( (strlen($phone_number)<6) or (strlen($phone_number)>18) or (strlen($phone_code)<1) or (strlen($list_id)<3) )
+							{
+							$result = 'ERROR';
+							$result_reason = "update_lead INVALID DATA FOR LEAD INSERTION";
+							$data = "$phone_number|$phone_code|$list_id|$insert_if_not_found";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{
+							### get current gmt_offset of the phone_number
+							$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
+
+							if (strlen($status)<1)
+								{$status='NEW';}
+							### insert a new lead in the system with this phone number
+							$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$list_id',status='$status',user='$user',vendor_lead_code='$vendor_lead_code',source_id='$source_id',gmt_offset_now='$gmt_offset',title='$title',first_name='$first_name',middle_initial='$middle_initial',last_name='$last_name',address1='$address1',address2='$address2',address3='$address3',city='$city',state='$state',province='$province',postal_code='$postal_code',country_code='$country_code',gender='$gender',date_of_birth='$date_of_birth',alt_phone='$alt_phone',email='$email',security_phrase='$security_phrase',comments='$comments',called_since_last_reset='N',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME',rank='$rank',owner='$owner',entry_list_id='0';";
+							if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
+							$rslt=mysql_query($stmt, $link);
+							$affected_rows = mysql_affected_rows($link);
+							if ($affected_rows > 0)
+								{
+								$lead_id = mysql_insert_id($link);
+
+								$result = 'SUCCESS';
+								$result_reason = "update_lead LEAD HAS BEEN ADDED";
+								echo "$result: $result_reason - $phone_number|$list_id|$lead_id|$gmt_offset|$user\n";
+								$data = "$phone_number|$list_id|$lead_id|$gmt_offset";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+
+								if (strlen($multi_alt_phones) > 5)
+									{
+									$map=$MT;  $ALTm_phone_code=$MT;  $ALTm_phone_number=$MT;  $ALTm_phone_note=$MT;
+									$map = explode('!', $multi_alt_phones);
+									$map_count = count($map);
+									if ($DB>0) {echo "DEBUG: update_lead multi-al-entry - $a|$map_count|$multi_alt_phones\n";}
+									$g++;
+									$r=0;   $s=0;   $inserted_alt_phones=0;
+									while ($r < $map_count)
+										{
+										$s++;
+										$ncn=$MT;
+										$ncn = explode('_', $map[$r]);
+										print "$ncn[0]|$ncn[1]|$ncn[2]";
+
+										if (strlen($forcephonecode) > 0)
+											{$ALTm_phone_code[$r] =	$forcephonecode;}
+										else
+											{$ALTm_phone_code[$r] =		$ncn[1];}
+										if (strlen($ALTm_phone_code[$r]) < 1)
+											{$ALTm_phone_code[$r]='1';}
+										$ALTm_phone_number[$r] =	$ncn[0];
+										$ALTm_phone_note[$r] =		$ncn[2];
+										$stmt = "INSERT INTO vicidial_list_alt_phones (lead_id,phone_code,phone_number,alt_phone_note,alt_phone_count) values('$lead_id','$ALTm_phone_code[$r]','$ALTm_phone_number[$r]','$ALTm_phone_note[$r]','$s');";
+										if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
+										$rslt=mysql_query($stmt, $link);
+										$Zaffected_rows = mysql_affected_rows($link);
+										$inserted_alt_phones = ($inserted_alt_phones + $Zaffected_rows);
+										$r++;
+										}
+									$result = 'NOTICE';
+									$result_reason = "update_lead MULTI-ALT-PHONE NUMBERS LOADED";
+									echo "$result: $result_reason - $inserted_alt_phones|$lead_id|$user\n";
+									$data = "$inserted_alt_phones|$lead_id";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									}
+
+
+								### BEGIN custom fields insert section ###
+								if ($custom_fields == 'Y')
+									{
+									if ($custom_fields_enabled > 0)
+										{
+										$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
+										if ($DB>0) {echo "$stmt";}
+										$rslt=mysql_query($stmt, $link);
+										$tablecount_to_print = mysql_num_rows($rslt);
+										if ($tablecount_to_print > 0) 
+											{
+											$CFinsert_SQL='';
+											$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
+											$rslt=mysql_query($stmt, $link);
+											$fields_to_print = mysql_num_rows($rslt);
+											$fields_list='';
+											$o=0;
+											while ($fields_to_print > $o) 
+												{
+												$new_field_value='';
+												$form_field_value='';
+												$rowx=mysql_fetch_row($rslt);
+												$A_field_id[$o] =			$rowx[0];
+												$A_field_label[$o] =		$rowx[1];
+												$A_field_name[$o] =			$rowx[2];
+												$A_field_type[$o] =			$rowx[6];
+												$A_field_size[$o] =			$rowx[8];
+												$A_field_max[$o] =			$rowx[9];
+												$A_field_required[$o] =		$rowx[12];
+												$A_field_value[$o] =		'';
+												$field_name_id =			$A_field_label[$o];
+
+												if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
+													elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
+
+												$A_field_value[$o] = $form_field_value;
+
+												if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
+													{
+													$A_field_value[$o]='----IGNORE----';
+													}
+												else
+													{
+													if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+														{
+														$CFinsert_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
+														}
+													}
+												$o++;
+												}
+
+											if (strlen($CFinsert_SQL)>3)
+												{
+												$CFinsert_SQL = preg_replace("/,$/","",$CFinsert_SQL);
+												$custom_table_update_SQL = "INSERT INTO custom_$list_id SET lead_id='$lead_id',$CFinsert_SQL;";
+												$rslt=mysql_query($custom_table_update_SQL, $link);
+												$custom_insert_count = mysql_affected_rows($link);
+												if ($custom_insert_count > 0) 
+													{
+													# Update vicidial_list entry to put list_id as entry_list_id 
+													$vl_table_entry_update_SQL = "UPDATE vicidial_list SET entry_list_id='$list_id' where lead_id='$lead_id';";
+													$rslt=mysql_query($vl_table_entry_update_SQL, $link);
+													$vl_table_entry_update_count = mysql_affected_rows($link);
+
+													$result = 'NOTICE';
+													$result_reason = "update_lead CUSTOM FIELDS VALUES ADDED";
+													echo "$result: $result_reason - $phone_number|$lead_id|$list_id|$vl_table_entry_update_count\n";
+													$data = "$phone_number|$lead_id|$list_id";
+													api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+													}
+												else
+													{
+													$result = 'NOTICE';
+													$result_reason = "update_lead CUSTOM FIELDS NOT ADDED, NO FIELDS DEFINED";
+													echo "$result: $result_reason - $phone_number|$lead_id|$list_id\n";
+													$data = "$phone_number|$lead_id|$list_id";
+													api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+													}
+												}
+											else
+												{
+												$result = 'NOTICE';
+												$result_reason = "update_lead CUSTOM FIELDS NOT ADDED, NO FIELDS DEFINED";
+												echo "$result: $result_reason - $phone_number|$lead_id|$list_id\n";
+												$data = "$phone_number|$lead_id|$list_id";
+												api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+												}
+											}
+										else
+											{
+											$result = 'NOTICE';
+											$result_reason = "update_lead CUSTOM FIELDS NOT ADDED, NO CUSTOM FIELDS DEFINED FOR THIS LIST";
+											echo "$result: $result_reason - $phone_number|$lead_id|$list_id\n";
+											$data = "$phone_number|$lead_id|$list_id";
+											api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+											}
+										}
+									else
+										{
+										$result = 'NOTICE';
+										$result_reason = "update_lead CUSTOM FIELDS NOT ADDED, CUSTOM FIELDS DISABLED";
+										echo "$result: $result_reason - $phone_number|$lead_id|$custom_fields|$custom_fields_enabled\n";
+										$data = "$phone_number|$lead_id|$custom_fields|$custom_fields_enabled";
+										api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+										}
+									}
+								### END custom fields insert section ###
+								}
+							}
+						##### END insert not-found lead into the system #####
+						}
+					}
+				}
+			}
+		exit;
+		}
+	}
+################################################################################
+### END update_lead
+################################################################################
+
+
 
 
 

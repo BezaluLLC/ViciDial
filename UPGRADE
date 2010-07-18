@@ -218,6 +218,12 @@ OTHER CHANGES:
 47. Added options to include recording ID, Filename and/or Location with Call 
 	Export Report results
 
+48. Added Non-Agent API function for updating leads: update_lead
+	Allows for searching by lead_id, vendor_lead_code and phone_number
+	as well as the ability to insert a new lead if no results found.
+	Works with custom fields as well.
+	For more information, look in the docs/NON-AGENT_API.txt doc
+
 
 
 

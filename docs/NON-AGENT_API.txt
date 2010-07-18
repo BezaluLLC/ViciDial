@@ -18,6 +18,7 @@ moh_list - outputs a list of music on hold classes in the system
 vm_list - outputs a list of voicemail boxes in the system
 blind_monitor - calls user-defined phone and places them in session as blind monitor
 add_lead - adds a new lead to the vicidial_list table with several fields and options
+update_lead - updates lead information in vicidial_list and associated custom table
 agent_ingroup_info - shows in-group and outbound auto-dial info for logged-in agent
 
 
@@ -37,6 +38,8 @@ Changes:
 91216-0331 - Added duplication check features to add_lead function
 100118-0543 - Added new Australian and New Zealand DST schemes (FSO-FSA and LSS-FSA)
 100704-1148 - Added custom fields inserts to the add_lead function
+100718-0245 - Added update_lead function to update existing leads
+
 
 
 
@@ -185,8 +188,6 @@ ERROR: agent_ingroup_info INVALID USER ID - 1255|6666
 
 
 
-
-
 --------------------------------------------------------------------------------
 add_lead - adds a new lead to the vicidial_list table with several fields and options
 
@@ -293,3 +294,105 @@ ERROR: add_lead DUPLICATE PHONE NUMBER IN SYSTEM - 7275551111|101|8765444|101
 ERROR: add_lead DUPLICATE TITLE ALT_PHONE IN LIST - 1234|7275551111|101|8765444
 ERROR: add_lead DUPLICATE TITLE ALT_PHONE IN CAMPAIGN LISTS - 1234|7275551111|101|8765444|101
 ERROR: add_lead DUPLICATE TITLE ALT_PHONE IN SYSTEM - 1234|7275551111|101|8765444|101
+
+
+
+
+
+--------------------------------------------------------------------------------
+update_lead - updates lead information in the vicidial_list and custom_ tables
+
+NOTE: api user for this function must have modify_leads set to 1 and user_level
+      must be set to 8 or higher
+
+REQUIRED FIELDS-
+lead_id -		must be all numbers, 1-9 digits, not required if using vendor_lead_code or phone_number
+vendor_lead_code -	can be used instead of lead_id to match leads
+phone_number -		can be used instead of lead_id or vendor_lead_code to match leads
+source -		description of what originated the API call (maximum 20 characters)
+
+SETTINGS FIELDS-
+search_method -		You can combine the following 3 options in this field to search the parameters you desire:
+				LEAD_ID, will attempt to find a match with the lead_id
+				VENDOR_LEAD_CODE, will attempt to find a match with the vendor_lead_code
+				PHONE_NUMBER, will attempt to find a match with the phone_number
+			  For example to search lead_id and vendor_lead_code: "&search_method=LEAD_ID_VENDOR_LEAD_CODE"
+			  The search order is NOT preserved, Lead ID is always first, Vendor Lead Code is second
+			  and Phone number is last. Default is "LEAD_ID"
+search_location -	Where to check for records in the system, can select only one(default is SYSTEM):
+				LIST - check for lead in same list
+				CAMPAIGN - check for lead in all lists for this list's campaign
+				SYSTEM - check for lead in entire system
+			  If no list_id is defined, the the search_location will be assumed as SYSTEM
+insert_if_not_found -	Y or N, will attempt to insert as a NEW lead if no match is found, default is N.
+			Insertion will require phone_code, phone_number and list_id. lead_id will be ignored.
+			Most of the add_lead options that are not available if you use this setting in this function
+records -		number of records to update if more than 1 found (defaults to '1'[most recently loaded lead])
+custom_fields -		Y or N, default is N. Defines whether the API will accept custom field data when updating leads in the vicidial_list table
+			For custom fields to be updated, just add the field label as a variable to the URL string
+			For example, if the field_label is "favorite_color" you would add "&favorite_color=blue"
+
+EDITABLE FIELDS- 
+user_field -		1-20 characters, this updates the 'user' field in the vicidial_list table
+list_id_field -		3-12 digits, this updates the 'list_id' field in the vicidial_list table
+status -		1-6 characters, not punctuation or spaces
+vendor_lead_code -	1-20 characters
+source_id  -		1-50 characters
+gmt_offset_now -	overridden by auto-lookup of phone_code and area_code portion of phone number if applicable
+title -			1-4 characters
+first_name -		1-30 characters
+middle_initial -	1 character
+last_name -		1-30 characters
+address1 -		1-100 characters
+address2 -		1-100 characters
+address3 -		1-100 characters
+city -			1-50 characters
+state -			2 characters
+province -		1-50 characters
+postal_code -		1-10 characters
+country_code -		3 characters
+gender -		U, M, F (Undefined, Male, Female) - defaults to 'U'
+date_of_birth -		YYYY-MM-DD
+alt_phone -		1-12 characters
+email -			1-70 characters
+security_phrase -	1-100 characters
+comments -		1-255 characters
+rank -			1-5 digits
+owner -			1-20 characters (user ID, Territory or user group)
+NOTES: 
+ - in order to set a field to empty('') set it equal to --BLANK--, i.e. "&province=--BLANK--"
+ - please use no special characters like apostrophes, quotes or amphersands
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_lead&lead_id=27&last_name=SMITH
+
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_lead&search_method=VENDOR_LEAD_CODE&vendor_lead_code=1000019&last_name=JOHNSON
+
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_lead&search_method=PHONE_NUMBER&records=2&list_id=8107&search_location=LIST&phone_number=9999000019&last_name=WILSON
+
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_lead&lead_id=405794&last_name=SMITH&city=Chicago&custom_fields=Y&favorite_color=blue
+
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_lead&search_location=LIST&search_method=PHONE_NUMBER&insert_if_not_found=Y&phone_number=9999000029&phone_code=1&list_id=999&first_name=Bob&last_name=Wilson&city=Chicago&custom_fields=Y&favorite_color=red
+
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_lead&insert_if_not_found=Y&search_method=VENDOR_LEAD_CODE_PHONE_NUMBER&vendor_lead_code=89763545&phone_number=7275551212&phone_code=1&list_id=999&first_name=Bob&last_name=Wilson&custom_fields=Y&favorite_color=blue
+
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_lead&search_location=LIST&search_method=VENDOR_LEAD_CODE_PHONE_NUMBER&insert_if_not_found=Y&phone_number=9999000029&phone_code=1&list_id=999&first_name=Bob&last_name=Wilson&city=Chicago&custom_fields=Y&favorite_color=red&user_field=1008&list_id_field=107&status=OLD
+
+Example responses:
+SUCCESS: update_lead LEAD HAS BEEN UPDATED - 6666|193716
+NOTICE: update_lead CUSTOM FIELDS VALUES UPDATED - 7275551111|1234|101
+NOTICE: update_lead CUSTOM FIELDS NOT UPDATED, CUSTOM FIELDS DISABLED - 7275551111|Y|0
+NOTICE: update_lead CUSTOM FIELDS NOT UPDATED, NO CUSTOM FIELDS DEFINED FOR THIS LIST - 7275551111|1234|101
+NOTICE: update_lead CUSTOM FIELDS NOT UPDATED, NO FIELDS DEFINED - 7275551111|1234|101
+
+NOTICE: update_lead NO MATCHES FOUND IN THE SYSTEM - 6666|4567|897654327|7275551212
+SUCCESS: update_lead LEAD HAS BEEN ADDED - 7275551111|6666|999|193716|-4
+
+ERROR: update_lead INVALID DATA FOR LEAD INSERTION - 6666|||
+ERROR: update_lead NO MATCHES FOUND IN THE SYSTEM - 6666|||
+ERROR: update_lead NO VALID SEARCH METHOD - 6666|SYSTEM|||
+
+ERROR: update_lead USER DOES NOT HAVE PERMISSION TO UPDATE LEADS IN THE SYSTEM - 6666|0 
+
+ERROR: NO FUNCTION SPECIFIED
+

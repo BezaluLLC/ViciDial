@@ -154,154 +154,141 @@ if ($stage=='SUBMIT')
 	$tablecount_to_print = mysql_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{
-		$stmt="SELECT count(*) from custom_$list_id;";
-		if ($DB>0) {echo "$stmt";}
+		$update_SQL='';
+		$VL_update_SQL='';
+		$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
 		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'06002',$user,$server_ip,$session_name,$one_mysql_log);}
-		$fieldscount_to_print = mysql_num_rows($rslt);
-		if ($fieldscount_to_print > 0) 
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'06003',$user,$server_ip,$session_name,$one_mysql_log);}
+		$fields_to_print = mysql_num_rows($rslt);
+		$fields_list='';
+		$o=0;
+		while ($fields_to_print > $o) 
 			{
+			$new_field_value='';
+			$form_field_value='';
 			$rowx=mysql_fetch_row($rslt);
-			$custom_records_count =	$rowx[0];
+			$A_field_id[$o] =			$rowx[0];
+			$A_field_label[$o] =		$rowx[1];
+			$A_field_name[$o] =			$rowx[2];
+			$A_field_type[$o] =			$rowx[6];
+			$A_field_size[$o] =			$rowx[8];
+			$A_field_max[$o] =			$rowx[9];
+			$A_field_required[$o] =		$rowx[12];
+			$A_field_value[$o] =		'';
+			$field_name_id =			$A_field_label[$o];
 
-			$update_SQL='';
-			$VL_update_SQL='';
-			$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
-			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'06003',$user,$server_ip,$session_name,$one_mysql_log);}
-			$fields_to_print = mysql_num_rows($rslt);
-			$fields_list='';
-			$o=0;
-			while ($fields_to_print > $o) 
+			if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
+				elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
+
+			if ( ($A_field_type[$o]=='MULTI') or ($A_field_type[$o]=='CHECKBOX') or ($A_field_type[$o]=='RADIO') )
 				{
-				$new_field_value='';
-				$form_field_value='';
-				$rowx=mysql_fetch_row($rslt);
-				$A_field_id[$o] =			$rowx[0];
-				$A_field_label[$o] =		$rowx[1];
-				$A_field_name[$o] =			$rowx[2];
-				$A_field_type[$o] =			$rowx[6];
-				$A_field_size[$o] =			$rowx[8];
-				$A_field_max[$o] =			$rowx[9];
-				$A_field_required[$o] =		$rowx[12];
-				$A_field_value[$o] =		'';
-				$field_name_id =			$A_field_label[$o];
-
-				if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
-					elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
-
-				if ( ($A_field_type[$o]=='MULTI') or ($A_field_type[$o]=='CHECKBOX') or ($A_field_type[$o]=='RADIO') )
+				$k=0;
+				$multi_count = count($form_field_value);
+				$multi_array = $form_field_value;
+				while ($k < $multi_count)
 					{
-					$k=0;
-					$multi_count = count($form_field_value);
-					$multi_array = $form_field_value;
-					while ($k < $multi_count)
-						{
-						$new_field_value .= "$multi_array[$k],";
-						$k++;
-						}
-					$form_field_value = preg_replace("/,$/","",$new_field_value);
+					$new_field_value .= "$multi_array[$k],";
+					$k++;
 					}
+				$form_field_value = preg_replace("/,$/","",$new_field_value);
+				}
 
-				if ($A_field_type[$o]=='TIME')
+			if ($A_field_type[$o]=='TIME')
+				{
+				if (isset($_GET["MINUTE_$field_name_id"]))			{$form_field_valueM=$_GET["MINUTE_$field_name_id"];}
+					elseif (isset($_POST["MINUTE_$field_name_id"]))	{$form_field_valueM=$_POST["MINUTE_$field_name_id"];}
+				if (isset($_GET["HOUR_$field_name_id"]))			{$form_field_valueH=$_GET["HOUR_$field_name_id"];}
+					elseif (isset($_POST["HOUR_$field_name_id"]))	{$form_field_valueH=$_POST["HOUR_$field_name_id"];}
+				$form_field_value = "$form_field_valueH:$form_field_valueM:00";
+				}
+
+			$A_field_value[$o] = $form_field_value;
+
+			if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
+				{
+				$A_field_value[$o]='----IGNORE----';
+				}
+			else
+				{
+				if (preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
 					{
-					if (isset($_GET["MINUTE_$field_name_id"]))			{$form_field_valueM=$_GET["MINUTE_$field_name_id"];}
-						elseif (isset($_POST["MINUTE_$field_name_id"]))	{$form_field_valueM=$_POST["MINUTE_$field_name_id"];}
-					if (isset($_GET["HOUR_$field_name_id"]))			{$form_field_valueH=$_GET["HOUR_$field_name_id"];}
-						elseif (isset($_POST["HOUR_$field_name_id"]))	{$form_field_valueH=$_POST["HOUR_$field_name_id"];}
-					$form_field_value = "$form_field_valueH:$form_field_valueM:00";
-					}
-
-				$A_field_value[$o] = $form_field_value;
-
-				if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
-					{
-					$A_field_value[$o]='----IGNORE----';
+					$VL_update_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
 					}
 				else
 					{
-					if (preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
-						{
-						$VL_update_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
-						}
-					else
-						{
-						$update_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
-						}
-
-					$SUBMIT_output .= "<b>$A_field_name[$o]:</b> $A_field_value[$o]<BR>";
+					$update_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
 					}
-				$o++;
+
+				$SUBMIT_output .= "<b>$A_field_name[$o]:</b> $A_field_value[$o]<BR>";
 				}
+			$o++;
+			}
 
-			$custom_update_count=0;
-			if (strlen($update_SQL)>3)
+		$custom_update_count=0;
+		if (strlen($update_SQL)>3)
+			{
+			$custom_record_lead_count=0;
+			$stmt="SELECT count(*) from custom_$list_id where lead_id='$lead_id';";
+			if ($DB>0) {echo "$stmt";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'06004',$user,$server_ip,$session_name,$one_mysql_log);}
+			$fieldleadcount_to_print = mysql_num_rows($rslt);
+			if ($fieldleadcount_to_print > 0) 
 				{
-				$custom_record_lead_count=0;
-				$stmt="SELECT count(*) from custom_$list_id where lead_id='$lead_id';";
-				if ($DB>0) {echo "$stmt";}
-				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'06004',$user,$server_ip,$session_name,$one_mysql_log);}
-				$fieldleadcount_to_print = mysql_num_rows($rslt);
-				if ($fieldleadcount_to_print > 0) 
-					{
-					$rowx=mysql_fetch_row($rslt);
-					$custom_record_lead_count =	$rowx[0];
-					}
-				$update_SQL = preg_replace("/,$/","",$update_SQL);
-				$custom_table_update_SQL = "INSERT INTO custom_$list_id SET lead_id='$lead_id',$update_SQL;";
-				if ($custom_record_lead_count > 0)
-					{$custom_table_update_SQL = "UPDATE custom_$list_id SET $update_SQL where lead_id='$lead_id';";}
-
-				$rslt=mysql_query($custom_table_update_SQL, $link);
-				$custom_update_count = mysql_affected_rows($link);
-				if ($DB) {echo "$custom_update_count|$custom_table_update_SQL\n";}
-				if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-				$update_sent++;
+				$rowx=mysql_fetch_row($rslt);
+				$custom_record_lead_count =	$rowx[0];
 				}
+			$update_SQL = preg_replace("/,$/","",$update_SQL);
+			$custom_table_update_SQL = "INSERT INTO custom_$list_id SET lead_id='$lead_id',$update_SQL;";
+			if ($custom_record_lead_count > 0)
+				{$custom_table_update_SQL = "UPDATE custom_$list_id SET $update_SQL where lead_id='$lead_id';";}
 
-			if (strlen($VL_update_SQL)>3)
+			$rslt=mysql_query($custom_table_update_SQL, $link);
+			$custom_update_count = mysql_affected_rows($link);
+			if ($DB) {echo "$custom_update_count|$custom_table_update_SQL\n";}
+			if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+			$update_sent++;
+			}
+
+		if (strlen($VL_update_SQL)>3)
+			{
+			$custom_update_vl_SQL='';
+			if ($custom_update_count > 0)
+				{$custom_update_vl_SQL = "entry_list_id='$list_id',";}
+			$VL_update_SQL = preg_replace("/,$/","",$VL_update_SQL);
+			$list_table_update_SQL = "UPDATE vicidial_list SET $custom_update_vl_SQL $VL_update_SQL where lead_id='$lead_id';";
+
+			$rslt=mysql_query($list_table_update_SQL, $link);
+			$list_update_count = mysql_affected_rows($link);
+			if ($DB) {echo "$list_update_count|$list_table_update_SQL\n";}
+			if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+			$update_sent++;
+			}
+		else
+			{
+			if ($custom_update_count > 0)
 				{
-				$custom_update_vl_SQL='';
-				if ($custom_update_count > 0)
-					{$custom_update_vl_SQL = "entry_list_id='$list_id',";}
-				$VL_update_SQL = preg_replace("/,$/","",$VL_update_SQL);
-				$list_table_update_SQL = "UPDATE vicidial_list SET $custom_update_vl_SQL $VL_update_SQL where lead_id='$lead_id';";
-
+				$list_table_update_SQL = "UPDATE vicidial_list SET entry_list_id='$list_id' where lead_id='$lead_id';";
 				$rslt=mysql_query($list_table_update_SQL, $link);
 				$list_update_count = mysql_affected_rows($link);
 				if ($DB) {echo "$list_update_count|$list_table_update_SQL\n";}
 				if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-				$update_sent++;
-				}
-			else
-				{
-				if ($custom_update_count > 0)
-					{
-					$list_table_update_SQL = "UPDATE vicidial_list SET entry_list_id='$list_id' where lead_id='$lead_id';";
-					$rslt=mysql_query($list_table_update_SQL, $link);
-					$list_update_count = mysql_affected_rows($link);
-					if ($DB) {echo "$list_update_count|$list_table_update_SQL\n";}
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-					}
-				}
-
-			if ( ($admin_submit=='YES') and ($update_sent > 0) )
-				{
-				### LOG INSERTION Admin Log Table ###
-				$ip = getenv("REMOTE_ADDR");
-				$SQL_log = "$list_table_update_SQL|$custom_table_update_SQL|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LEADS', event_type='MODIFY', record_id='$lead_id', event_code='ADMIN MODIFY CUSTOM LEAD', event_sql=\"$SQL_log\", event_notes='$custom_update_count|$list_update_count';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
 				}
 			}
-		else
-			{$CFoutput .= "ERROR: no custom list fields\n";}
+
+		if ( ($admin_submit=='YES') and ($update_sent > 0) )
+			{
+			### LOG INSERTION Admin Log Table ###
+			$ip = getenv("REMOTE_ADDR");
+			$SQL_log = "$list_table_update_SQL|$custom_table_update_SQL|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LEADS', event_type='MODIFY', record_id='$lead_id', event_code='ADMIN MODIFY CUSTOM LEAD', event_sql=\"$SQL_log\", event_notes='$custom_update_count|$list_update_count';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
 		}
 	else
 		{$CFoutput .= "ERROR: no custom list fields table\n";}
