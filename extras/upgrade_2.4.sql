@@ -414,3 +414,23 @@ ALTER TABLE system_settings ADD reports_use_slave_db VARCHAR(2000) default '';
 ALTER TABLE vicidial_list ADD entry_list_id BIGINT(14) UNSIGNED NOT NULL DEFAULT '0';
 
 UPDATE system_settings SET db_schema_version='1234',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_inbound_groups ADD hold_time_second_option VARCHAR(30) default 'NONE';
+ALTER TABLE vicidial_inbound_groups ADD hold_time_third_option VARCHAR(30) default 'NONE';
+ALTER TABLE vicidial_inbound_groups ADD wait_hold_option_priority ENUM('WAIT','HOLD','BOTH') default 'WAIT';
+ALTER TABLE vicidial_inbound_groups ADD wait_time_option VARCHAR(30) default 'NONE';
+ALTER TABLE vicidial_inbound_groups ADD wait_time_second_option VARCHAR(30) default 'NONE';
+ALTER TABLE vicidial_inbound_groups ADD wait_time_third_option VARCHAR(30) default 'NONE';
+ALTER TABLE vicidial_inbound_groups ADD wait_time_option_seconds SMALLINT(5) default '120';
+ALTER TABLE vicidial_inbound_groups ADD wait_time_option_exten VARCHAR(20) default '8300';
+ALTER TABLE vicidial_inbound_groups ADD wait_time_option_voicemail VARCHAR(20) default '';
+ALTER TABLE vicidial_inbound_groups ADD wait_time_option_xfer_group VARCHAR(20) default '---NONE---';
+ALTER TABLE vicidial_inbound_groups ADD wait_time_option_callmenu VARCHAR(50) default '';
+ALTER TABLE vicidial_inbound_groups ADD wait_time_option_callback_filename VARCHAR(255) default 'vm-hangup';
+ALTER TABLE vicidial_inbound_groups ADD wait_time_option_callback_list_id BIGINT(14) UNSIGNED default '999';
+ALTER TABLE vicidial_inbound_groups ADD wait_time_option_press_filename VARCHAR(255) default 'to-be-called-back|digits/1';
+ALTER TABLE vicidial_inbound_groups ADD wait_time_option_no_block ENUM('N','Y') default 'N';
+ALTER TABLE vicidial_inbound_groups ADD wait_time_option_prompt_seconds SMALLINT(5) default '10';
+
+UPDATE system_settings SET db_schema_version='1235',db_schema_update_date=NOW();
+

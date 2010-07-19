@@ -224,6 +224,10 @@ OTHER CHANGES:
 	Works with custom fields as well.
 	For more information, look in the docs/NON-AGENT_API.txt doc
 
+49. Added Wait Time options to in-groups. This is different from the Estimated
+	Hold Time options because this is based only on the customer wait time.
+	Also, second and third options were added for both allow the offering of
+	a press 1, 2 and 3 option in the wait/hold time option features.
 
 
 

@@ -195,7 +195,7 @@ ALTER TABLE vicidial_call_menu_options MODIFY option_route_value VARCHAR(255);
 UPDATE system_settings SET db_schema_version='1153';
 
 ALTER TABLE phones ADD conf_secret VARCHAR(20) default 'test';
-UPDATE phones set conf_secret=pass;
+UPDATE phones set conf_secret=pass where ( (conf_secret IS NULL) or (conf_secret='') );
 
 UPDATE system_settings SET db_schema_version='1154';
 

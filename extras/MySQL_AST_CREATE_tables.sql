@@ -911,7 +911,23 @@ hold_time_option_callmenu VARCHAR(50) default '',
 hold_time_option_no_block ENUM('N','Y') default 'N',
 hold_time_option_prompt_seconds SMALLINT(5) default '10',
 onhold_prompt_no_block ENUM('N','Y') default 'N',
-onhold_prompt_seconds SMALLINT(5) default '10'
+onhold_prompt_seconds SMALLINT(5) default '10',
+hold_time_second_option VARCHAR(30) default 'NONE',
+hold_time_third_option VARCHAR(30) default 'NONE',
+wait_hold_option_priority ENUM('WAIT','HOLD','BOTH') default 'WAIT',
+wait_time_option VARCHAR(30) default 'NONE',
+wait_time_second_option VARCHAR(30) default 'NONE',
+wait_time_third_option VARCHAR(30) default 'NONE',
+wait_time_option_seconds SMALLINT(5) default '120',
+wait_time_option_exten VARCHAR(20) default '8300',
+wait_time_option_voicemail VARCHAR(20) default '',
+wait_time_option_xfer_group VARCHAR(20) default '---NONE---',
+wait_time_option_callmenu VARCHAR(50) default '',
+wait_time_option_callback_filename VARCHAR(255) default 'vm-hangup',
+wait_time_option_callback_list_id BIGINT(14) UNSIGNED default '999',
+wait_time_option_press_filename VARCHAR(255) default 'to-be-called-back|digits/1',
+wait_time_option_no_block ENUM('N','Y') default 'N',
+wait_time_option_prompt_seconds SMALLINT(5) default '10'
 );
 
 CREATE TABLE vicidial_stations (
@@ -2276,7 +2292,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1234',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1235',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

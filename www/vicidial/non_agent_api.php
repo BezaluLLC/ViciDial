@@ -1196,7 +1196,7 @@ if ($function == 'add_lead')
 			{
 			if (strlen($gender)<1) {$gender='U';}
 			if (strlen($rank)<1) {$rank='0';}
-			if (strlen($list_id)<1) {$list_id='999';}
+			if (strlen($list_id)<3) {$list_id='999';}
 			if (strlen($phone_code)<1) {$phone_code='1';}
 
 			if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )

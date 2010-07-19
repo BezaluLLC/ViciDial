@@ -253,6 +253,39 @@ Reports to use Slave DB||
 This option allows you to select the reports that you want to have use the MySQL slave database as defined in the option above instead of the master database that your live ViciDial system is running on. You must set up the MySQL slave replication before you can enable this option. Default is empty for disabled||
 Custom fields defined for this list||
 Go to the list modification page for this list||
+Estimated Hold Time Option||
+Hold Time Second Option||
+Same as the first Hold Time Option field above, except this one will check for the customer pressing the 2 key. Default is NONE. If no first Hold Time Option is selected then this option will not be offered||
+Hold Time Third Option||
+Same as the first Hold Time Option field above, except this one will check for the customer pressing the 3 key. Default is NONE. If no Second Hold Time Option is selected then this option will not be offered||
+Wait Time Option||
+This allows you to give customers options to leave the queue if their wait time is over the amount of seconds specified below. Default is NONE. If one of the PRESS_ options is selected, it will play the Press Filename defined below and give the customer the option to press 1 on their phone to leave the queue and run the selected option. The PRESS_STAY option will send the customer back to the queue without loosing their place in line||
+Wait Time Second Option||
+Same as the first Wait Time Option field above, except this one will check for the customer pressing the 2 key. Default is NONE. If no first Wait Time Option is selected then this option will not be offered||
+Wait Time Third Option||
+Same as the first Wait Time Option field above, except this one will check for the customer pressing the 3 key. Default is NONE. If no Second Wait Time Option is selected then this option will not be offered||
+Wait Time Option Seconds||
+If Wait Time Option is set to anything but NONE, this is the number of seconds that the customer has been waiting in queue that will trigger the wait time options. Default is 120 seconds||
+Wait Time Option Extension||
+If Wait Time Option is set to PRESS_EXTEN, this is the dialplan extension that the call will be sent to if the customer presses the option key when presented with the option||
+Wait Time Option Callmenu||
+If Wait Time Option is set to PRESS_CALLMENU, this is the Call Menu that the call will be sent to if the customer presses the option key when presented with the option||
+Wait Time Option Voicemail||
+If Wait Time Option is set to PRESS_VMAIL, this is the voicemail box that the call will be sent to if the customer presses the option key when presented with the option. In an AGENTDIRECT in-group, setting this to AGENTVMAIL will select the User voicemail ID to use||
+Wait Time Option Transfer In-Group||
+If Wait Time Option is set to PRESS_INGROUP, this is the inbound group that the call will be sent to if the customer presses the option key when presented with the option||
+Wait Time Option Press Filename||
+If Wait Time Option is set to one of the PRESS_ options, this is the filename prompt that is played if the customer wait time exceeds the Wait Time Option Seconds to give the customer the option to press 1, 2 or 3 on their phone to run the selected Wait Time Press options. It is very important that you include options in the audio file for all of your selected Wait Time Options, and that the audio file length in seconds is properly defined in the Filename Seconds field below or there will be problems. Default is to-be-called-back||
+Wait Time Option Press No Block||
+Setting this option to Y will allow calls in line behind a call where the Wait Time Option Press Filename prompt is playing to go to an agent if one becomes available while the message is playing. While the Wait Time Option Press Filename message is playing to a customer they cannot be sent to an agent. Default is N||
+Wait Time Option Press Filename Seconds||
+This field needs to be set to the number of seconds that the Wait Time Option Press Filename plays for. Default is 10||
+Wait Time Option After Press Filename||
+If Wait Time Option is set to one of the PRESS_ options, this is the filename prompt that is played after the customer has pressed 1, 2 or 3||
+Wait Time Option Callback List ID||
+If Wait Time Option is set to PRESS_CID_CALLBACK, this is the List ID the call is added to as a new lead if the customer presses the option key when presented with the option||
+Wait Hold Option Priority||
+If both Estimated Hold Time options and Wait Time options are active, this setting will define whether one, the other or both of these features are active. For example, if the Estimated Hold Time Option is set to 360, the Wait Time option is set to 120 and the customer has been waiting for 120 seconds and there are still 400 seconds estimated hold time, then they are both active at the same time and this setting will be checked to see what options will be offered. Default is WAIT only||
 
 
 AST_VICIDIAL_ingrouplist.php

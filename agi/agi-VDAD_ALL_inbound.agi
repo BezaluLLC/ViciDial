@@ -136,6 +136,7 @@
 # 100518-0710 - Added call time after hours override options
 # 100527-0111 - Added on-hold and hold-time-option no-block options and message seconds, NA CID cleaning
 # 100616-1600 - Added VID filename and digit validation options
+# 100718-1822 - Added second hold time option and wait time options
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -143,6 +144,7 @@ $dtmf_silent_prefix = '7';
 
 $DROP_TIME = 720;	### default number of seconds to wait until you drop a waiting call
 $start_moh=1;
+$wait_prompt_runs=0;
 $at='@';
 $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
@@ -566,7 +568,7 @@ $sthA->finish();
 
 ### Grab inbound groups values from the database
 $cbc=0;
-$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds FROM vicidial_inbound_groups where group_id = '$channel_group';";
+$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds FROM vicidial_inbound_groups where group_id = '$channel_group';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -623,6 +625,22 @@ while ($sthArows > $cbc)
 	$onhold_prompt_seconds =			$aryA[41];
 	$hold_time_option_no_block =		$aryA[42];
 	$hold_time_option_prompt_seconds =	$aryA[43];
+	$hold_time_second_option =			$aryA[44];
+	$hold_time_third_option =			$aryA[45];
+	$wait_hold_option_priority =		$aryA[46];
+	$wait_time_option =					$aryA[47];
+	$wait_time_second_option =			$aryA[48];
+	$wait_time_third_option =			$aryA[49];
+	$wait_time_option_seconds =			$aryA[50];
+	$wait_time_option_exten =			$aryA[51];
+	$wait_time_option_voicemail =		$aryA[52];
+	$wait_time_option_xfer_group =		$aryA[53];
+	$wait_time_option_callmenu =		$aryA[54];
+	$wait_time_option_callback_filename =	$aryA[55];
+	$wait_time_option_callback_list_id =	$aryA[56];
+	$wait_time_option_press_filename =	$aryA[57];
+	$wait_time_option_no_block =		$aryA[58];
+	$wait_time_option_prompt_seconds =	$aryA[59];
 
 	$custom_call_id='';
 	if ($uniqueid_status_display =~ /ENABLED/)
@@ -1822,7 +1840,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$dbhP=$dbhA;   $mysql_count='02041';   $MEL_aff_rows=$Faffected_rows;   &mysql_error_logging;
 				$found_agents=$Faffected_rows;
 				}
-			if ($AGILOG) {$agi_string = "--    VDAD get agent: |$DROP_TIME|$drop_timer|$hold_message_counter|$prompt_interval|$Faffected_rows|$channel_group|$found_agents|$stmtA|";   &agi_output;}
+			if ($AGILOG) {$agi_string = "--    VDAD get agent: |$DROP_TIME|$drop_timer|$hold_message_counter|$prompt_interval|$Faffected_rows|$channel_group|$found_agents|$moh_delay|$wait_prompt_runs|$stmtA|";   &agi_output;}
 			if ($found_agents > 0)
 				{
 				if ($aco_sub<1)
@@ -2310,7 +2328,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				$found_agents=$Faffected_rows;
 					if ($AGILOG) {$agi_string = "$Faffected_rows|$stmtA|";   &agi_output;}
 				}
-			if ($AGILOG) {$agi_string = "--    VDAD get agent: |$DROP_TIME|$drop_timer|$hold_message_counter|$prompt_interval|$Faffected_rows|$found_agents|update of vla table: $channel_group|\n|$stmtA|";   &agi_output;}
+			if ($AGILOG) {$agi_string = "--    VDAD get agent: |$DROP_TIME|$drop_timer|$hold_message_counter|$prompt_interval|$Faffected_rows|$found_agents|$moh_delay|$wait_prompt_runs|update of vla table: $channel_group|\n|$stmtA|";   &agi_output;}
 			if ($found_agents > 0)
 				{
 				if ($aco_sub<1)
@@ -2851,8 +2869,9 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		$moh_delay=1;
 		if ($play_place_in_line =~ /Y/i) {$start_place_in_line=1; $moh_delay=2;}
 		if ($play_estimate_hold_time =~ /Y/i) {$start_hold_estimate=1; $moh_delay=2;}
-		if ($hold_time_option !~ /NONE/) {$start_hold_estimate=1; $moh_delay=2;};
+		if ($hold_time_option !~ /NONE/) {$start_hold_estimate=1; $moh_delay=2;}
 		if ($drop_timer >= 2) {$drop_timer = ($drop_timer + 5);} # add prompt play time to total queue time
+		if ($wait_time_option !~ /NONE/) {$wait_in_queue=1; $moh_delay=2;}
 		}
 	else {$hold_message_counter++;}
 	if ($hold_tone_counter > 3)
@@ -2905,7 +2924,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		}
 
 	##### calculate hold time estimate if needed
-	$holdtime_estimate=1;   $holdtime_estimate_sec=0;   $livetime_estimate_sec=0;   # Make hold time estimate available to other sections
+	$holdtime_estimate=1;   $holdtime_estimate_sec=0;   $livetime_estimate_sec=0;  $hold_wait_in_queue=0; # Make hold time estimate available to other sections
 	if ( ($start_hold_estimate > 0) && ($moh_delay == '1') )
 		{
 		$now_date_epoch = time();
@@ -3010,44 +3029,38 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 		$start_hold_estimate=0;
 		$wait_in_queue = 1; # trigger hold-time-option is applicable
+		$hold_wait_in_queue = 1;
 		}
 
-	##### check if hold_time_option is set to leave Queue	
-	if ( ($hold_time_option !~ /NONE/ ) && ( $holdtime_estimate_sec_diff > $hold_time_option_seconds ) && ($wait_in_queue < 2) )
-	{
-	if ($drop_timer < $hold_time_option_minimum) 
+
+
+	$last_wait_run++;
+	### BEGIN wait time option press-123 options ###
+	if ( ($wait_time_option !~ /NONE/ ) && ($drop_timer > $wait_time_option_seconds) && ( ( ($wait_in_queue < 2) && ($last_wait_run > 5) ) || ($wait_prompt_runs < 1) ) )
 		{
-		if ($AGILOG) {$agi_string = "--    HOLD OPTION NO-TRIGGER: |$drop_timer|$hold_time_option_minimum|  |$holdtime_estimate_sec_diff|$hold_time_option_seconds|  |$callerid|";   &agi_output;}
-		}
-	else
-		{
+		$wait_prompt_runs++;
 		$wait_in_queue=0; # exits wait loop
 		$DROPexten = ''; 
 		$exitwithkey=0;
 		$play_post_press_audio=0;
-		$hold_message_counter = 0;
+		$wait_message_counter = 0;
+		$last_wait_run=0;
 
-		### Available hold time options:
-		# - EXTENSION
-		# - CALL_MENU
-		# - VOICEMAIL
-		# - IN_GROUP
-		# - CALLERID_CALLBACK
-		# - DROP_ACTION
+		### Available wait time options:
+		# - PRESS_STAY
 		# - PRESS_VMAIL
 		# - PRESS_EXTEN
 		# - PRESS_CALLMENU
 		# - PRESS_CID_CALLBACK
 		# - PRESS_INGROUP
 
-		### BEGIN hold time option press-1 options ###
-		if ($hold_time_option =~ /PRESS_/)
+		if ($wait_time_option =~ /PRESS_/)
 			{
 			$now_date_epoch = time();
 			$HTO_no_block_SQL = '';
 
 			### if No-Block is enabled, then set the call time to right now
-			if ($hold_time_option_no_block =~ /Y/)
+			if ($wait_time_option_no_block =~ /Y/)
 				{
 				$NBDtarget = $now_date_epoch;
 				($NBsec,$NBmin,$NBhour,$NBmday,$NBmon,$NByear,$NBwday,$NByday,$NBisdst) = localtime($NBDtarget);
@@ -3062,9 +3075,9 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				$HTO_no_block_SQL = ",call_time='$NB_SQLdate'";
 				}
 
-			if ($hold_time_option_prompt_seconds < 0) {$hold_time_option_prompt_seconds=0;}
-			if ($hold_time_option_prompt_seconds > 1000) {$hold_time_option_prompt_seconds=1000;}
-			$FDtarget = ($now_date_epoch + $hold_time_option_prompt_seconds);
+			if ($wait_time_option_prompt_seconds < 0) {$wait_time_option_prompt_seconds=0;}
+			if ($wait_time_option_prompt_seconds > 1000) {$wait_time_option_prompt_seconds=1000;}
+			$FDtarget = ($now_date_epoch + $wait_time_option_prompt_seconds);
 			($Fsec,$Fmin,$Fhour,$Fmday,$Fmon,$Fyear,$Fwday,$Fyday,$Fisdst) = localtime($FDtarget);
 			$Fyear = ($Fyear + 1900);
 			$Fmon++;
@@ -3078,7 +3091,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			$stmtA = "UPDATE vicidial_auto_calls set last_update_time='$FDtsSQLdate' $HTO_no_block_SQL where callerid='$callerid' order by call_time desc limit 1;";
 			$affected_rows = $dbhA->do($stmtA);
 				$dbhP=$dbhA;   $mysql_count='02086';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-			if ($AGILOG) {$agi_string = "--    VDAC posttime record for Hold-Time-Option-Press: |$affected_rows|$FDtsSQLdate|$callerid|$HTO_no_block_SQL|";   &agi_output;}
+			if ($AGILOG) {$agi_string = "--    VDAC posttime record for Wait-Time-Option-Press: |$affected_rows|$FDtsSQLdate|$callerid|$HTO_no_block_SQL|";   &agi_output;}
 
 			if ($drop_timer >= 2) {$drop_timer = ($drop_timer + 10);} # add prompt play time to total queue time
 
@@ -3086,52 +3099,83 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			$AGI->stream_file('sip-silence'); # stop music-on-hold process
 			$AGI->stream_file('sip-silence'); # stop music-on-hold process
 
+			$HTO_digits="1";
+			$HTO_filename=$wait_time_option_press_filename;
+			if ($wait_time_second_option !~ /NONE/ ) {$HTO_digits .= "2";}
+			if ($wait_time_third_option !~ /NONE/ ) {$HTO_digits .= "3";}
+
 			&press_one_hold_time_option_prompt;
 
 			### if No-Block is enabled, then set the call time back to original call time
-			if ($hold_time_option_no_block =~ /Y/)
+			if ($wait_time_option_no_block =~ /Y/)
 				{
 				$stmtA = "UPDATE vicidial_auto_calls set call_time='$ORIGINAL_call_time' where callerid='$callerid' order by call_time desc limit 1;";
 				$affected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-				if ($AGILOG) {$agi_string = "--    No-Block HTO Prompt Set: |$affected_rows|$ORIGINAL_call_time|$callerid|";   &agi_output;}
+				if ($AGILOG) {$agi_string = "--    No-Block WTO Prompt Set: |$affected_rows|$ORIGINAL_call_time|$callerid|";   &agi_output;}
 				}
 
-			if ($pin =~ /1/)
+			if ($pin =~ /1|2|3/)
 				{
 				$now_date_epoch = time();
 				$drop_timer = ($now_date_epoch - $start_epoch);
 
-				if ($hold_time_option =~ /PRESS_VMAIL/)			{$hold_time_option = 'VOICEMAIL';   $HT_status='QVMAIL';}
-				if ($hold_time_option =~ /PRESS_EXTEN/)			{$hold_time_option = 'EXTENSION';   $HT_status='HOLDTO';}
-				if ($hold_time_option =~ /PRESS_CALLMENU/)		{$hold_time_option = 'CALL_MENU';   $HT_status='HOLDTO';}
-				if ($hold_time_option =~ /PRESS_CID_CALLBACK/)	{$hold_time_option = 'CALLERID_CALLBACK';   $HT_status='HOLDTO';}
-				if ($hold_time_option =~ /PRESS_INGROUP/)		{$hold_time_option = 'IN_GROUP';   $HT_status='HOLDTO';}
-				if ($AGILOG) {$agi_string = "HOLD TIME OPTION PRESSED $pin: $hold_time_option|$HT_status";   &agi_output;}
-
-				$play_post_press_audio=1;
-
-				if ($enable_queuemetrics_logging > 0)
+				if ($pin =~ /1/)
 					{
-					$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
-					 or die "Couldn't connect to database: " . DBI->errstr;
+					if ($wait_time_option =~ /PRESS_STAY/)			{$wait_time_option = 'STAY_IN_QUEUE';  $wait_in_queue = 2;  $DROPexten='';}
+					if ($wait_time_option =~ /PRESS_VMAIL/)			{$wait_time_option = 'VOICEMAIL';   $HT_status='QVMAIL';}
+					if ($wait_time_option =~ /PRESS_EXTEN/)			{$wait_time_option = 'EXTENSION';   $HT_status='WAITTO';}
+					if ($wait_time_option =~ /PRESS_CALLMENU/)		{$wait_time_option = 'CALL_MENU';   $HT_status='WAITTO';}
+					if ($wait_time_option =~ /PRESS_CID_CALLBACK/)	{$wait_time_option = 'CALLERID_CALLBACK';   $HT_status='WAITTO';}
+					if ($wait_time_option =~ /PRESS_INGROUP/)		{$wait_time_option = 'IN_GROUP';   $HT_status='WAITTO';}
+					}
+				if ($pin =~ /2/)
+					{
+					if ($wait_time_second_option =~ /PRESS_STAY/)			{$wait_time_option = 'STAY_IN_QUEUE';  $wait_in_queue = 2;  $DROPexten='';}
+					if ($wait_time_second_option =~ /PRESS_VMAIL/)			{$wait_time_option = 'VOICEMAIL';   $HT_status='QVMAIL';}
+					if ($wait_time_second_option =~ /PRESS_EXTEN/)			{$wait_time_option = 'EXTENSION';   $HT_status='WAITTO';}
+					if ($wait_time_second_option =~ /PRESS_CALLMENU/)		{$wait_time_option = 'CALL_MENU';   $HT_status='WAITTO';}
+					if ($wait_time_second_option =~ /PRESS_CID_CALLBACK/)	{$wait_time_option = 'CALLERID_CALLBACK';   $HT_status='WAITTO';}
+					if ($wait_time_second_option =~ /PRESS_INGROUP/)		{$wait_time_option = 'IN_GROUP';   $HT_status='WAITTO';}
+					}
+				if ($pin =~ /3/)
+					{
+					if ($wait_time_third_option =~ /PRESS_STAY/)			{$wait_time_option = 'STAY_IN_QUEUE';  $wait_in_queue = 2;  $DROPexten='';}
+					if ($wait_time_third_option =~ /PRESS_VMAIL/)			{$wait_time_option = 'VOICEMAIL';   $HT_status='QVMAIL';}
+					if ($wait_time_third_option =~ /PRESS_EXTEN/)			{$wait_time_option = 'EXTENSION';   $HT_status='WAITTO';}
+					if ($wait_time_third_option =~ /PRESS_CALLMENU/)		{$wait_time_option = 'CALL_MENU';   $HT_status='WAITTO';}
+					if ($wait_time_third_option =~ /PRESS_CID_CALLBACK/)	{$wait_time_option = 'CALLERID_CALLBACK';   $HT_status='WAITTO';}
+					if ($wait_time_third_option =~ /PRESS_INGROUP/)			{$wait_time_option = 'IN_GROUP';   $HT_status='WAITTO';}
+					}
 
-					$place=0;
-					if ($rec_countWAIT > 0) {$place = $rec_countWAIT;}
-					if ($rec_countWAITrem > 0) {$place = $rec_countWAITrem;}
-					$place++;
+				if ($AGILOG) {$agi_string = "WAIT TIME OPTION PRESSED $pin: $wait_time_option|$HT_status";   &agi_output;}
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='EXITWITHKEY',data1='1',data2='$place',serverid='$queuemetrics_log_id';";
-					$Baffected_rows = $dbhB->do($stmtB);
-						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02087';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+				if ($wait_time_option !~ /STAY_IN_QUEUE/)
+					{
+					$play_post_press_audio=1;
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='QVMAIL',serverid='$queuemetrics_log_id';";
-					$Baffected_rows = $dbhB->do($stmtB);
-						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02088';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+					if ($enable_queuemetrics_logging > 0)
+						{
+						$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+						 or die "Couldn't connect to database: " . DBI->errstr;
 
-					$exitwithkey++;
+						$place=0;
+						if ($rec_countWAIT > 0) {$place = $rec_countWAIT;}
+						if ($rec_countWAITrem > 0) {$place = $rec_countWAITrem;}
+						$place++;
 
-					$dbhB->disconnect();
+						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='EXITWITHKEY',data1='1',data2='$place',serverid='$queuemetrics_log_id';";
+						$Baffected_rows = $dbhB->do($stmtB);
+							$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02087';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+
+						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='QVMAIL',serverid='$queuemetrics_log_id';";
+						$Baffected_rows = $dbhB->do($stmtB);
+							$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02088';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+
+						$exitwithkey++;
+
+						$dbhB->disconnect();
+						}
 					}
 				}
 			else
@@ -3140,14 +3184,14 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				$wait_in_queue = 2; #continue waiting on hold
 				}
 			}
-		### END hold time option press 1 options ###
+		### END wait time option press 1 options ###
 
 
-		if ($hold_time_option =~ /EXTENSION/)
+		if ($wait_time_option =~ /EXTENSION/)
 			{
-			if (length($hold_time_option_exten)>0)
+			if (length($wait_time_option_exten)>0)
 				{
-				$DROPexten = "$hold_time_option_exten";
+				$DROPexten = "$wait_time_option_exten";
 
 				$CIDcampaign_cid='0000000000';
 				### Grab ID values from the database
@@ -3172,9 +3216,9 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				}
 			}
 
-		if ($hold_time_option =~ /VOICEMAIL/)
+		if ($wait_time_option =~ /VOICEMAIL/)
 			{
-			if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($hold_time_option_voicemail =~ /AGENTVMAIL/) )
+			if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($wait_time_option_voicemail =~ /AGENTVMAIL/) )
 				{
 				### Grab user's voicemail ID from the database
 				$stmtA = "SELECT voicemail_id FROM vicidial_users where user='$agent_only';";
@@ -3185,7 +3229,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$hold_time_option_voicemail = 	$aryA[0];
+					$wait_time_option_voicemail = 	$aryA[0];
 					}
 				$sthA->finish();
 				}
@@ -3194,35 +3238,35 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			print STDERR "Setting CID \"$newcallerid\"\n";
 			checkresult($result);
 			if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
-			if (length($hold_time_option_voicemail)>0)
-				{$DROPexten = "$voicemail_dump_exten$hold_time_option_voicemail";}
+			if (length($wait_time_option_voicemail)>0)
+				{$DROPexten = "$voicemail_dump_exten$wait_time_option_voicemail";}
 			}
-		if ($hold_time_option =~ /CALL_MENU/)
+		if ($wait_time_option =~ /CALL_MENU/)
 			{
 			$newcallerid = "\"$VCcallerid <$originalCID>\"";
 			$AGI->set_callerid($newcallerid);
 			print STDERR "Setting CID \"$newcallerid\"\n";
 			checkresult($result);
 			if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
-			if ( (length($hold_time_option_callmenu)>0) && ($hold_time_option_callmenu !~ /---NONE---/) )
+			if ( (length($wait_time_option_callmenu)>0) && ($wait_time_option_callmenu !~ /---NONE---/) )
 				{
 				$DROPexten = "s";
-				$ext_context = "$hold_time_option_callmenu";
+				$ext_context = "$wait_time_option_callmenu";
 				}
 			}
-		if ($hold_time_option =~ /IN_GROUP/)
+		if ($wait_time_option =~ /IN_GROUP/)
 			{ # 90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*"
-			$DROPexten = "90009*$hold_time_option_xfer_group$S$S$insert_lead_id$S$S$phone_number$S$fronter$S";
+			$DROPexten = "90009*$wait_time_option_xfer_group$S$S$insert_lead_id$S$S$phone_number$S$fronter$S";
 			}
-		if ($hold_time_option =~ /CALLERID_CALLBACK/)
+		if ($wait_time_option =~ /CALLERID_CALLBACK/)
 			{
-			if (length($hold_time_option_exten)>0)
-				{$DROPexten = "$hold_time_option_exten";}
+			if (length($wait_time_option_exten)>0)
+				{$DROPexten = "$wait_time_option_exten";}
 			# if callerid is not valid do not execute
 			if ( ( length($phone_number) > 6 ) && ( $phone_number > 0) )
 				{
 				### insert a record into the vicidial_list table 
-				$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$hold_time_option_callback_list_id','N','$phone_code','$phone_number','$channel_group','1','$local_gmt','$VLcomments');";
+				$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$wait_time_option_callback_list_id','N','$phone_code','$phone_number','$channel_group','1','$local_gmt','$VLcomments');";
 				$affected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02089';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
@@ -3250,7 +3294,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			
 			}
 
-		if ($AGILOG) {$agi_string = "--    VDCL HOLD TIME OPT: |$hold_time_option|$DROPexten|$wait_in_queue|";   &agi_output;}
+		if ($AGILOG) {$agi_string = "--    VDCL WAIT TIME OPT: |$wait_time_option|$DROPexten|$wait_in_queue|";   &agi_output;}
 
 		if ($wait_in_queue < 1)
 			{
@@ -3275,14 +3319,14 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$dbhP=$dbhA;   $mysql_count='02090';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
 
-				$stmtA = "UPDATE vicidial_list set status='HOLDTO' where lead_id = '$insert_lead_id';";
+				$stmtA = "UPDATE vicidial_list set status='WAITTO' where lead_id = '$insert_lead_id';";
 				$affected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02092';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				if ($AGILOG) {$agi_string = "--    VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
 
 				if ($drop_seconds < 1) {$drop_seconds = $drop_timer;}
 
-				if (length($HT_status)<1) {$HT_status='HOLDTO';}
+				if (length($HT_status)<1) {$HT_status='WAITTO';}
 				$stmtA = "UPDATE vicidial_closer_log set status='$HT_status',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',queue_seconds='$drop_seconds',term_reason='HOLDTIME' where lead_id = '$insert_lead_id' order by start_epoch desc limit 1;";
 				$affected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02091';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
@@ -3304,7 +3348,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$Baffected_rows = $dbhB->do($stmtB);
 						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02093';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='HOLDTO',serverid='$queuemetrics_log_id';";
+					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='WAITTO',serverid='$queuemetrics_log_id';";
 					$Baffected_rows = $dbhB->do($stmtB);
 						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02094';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
@@ -3314,25 +3358,25 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				$AGI->stream_file('sip-silence');
 				$AGI->stream_file('sip-silence');
 
-				if ( (length($hold_time_option_callback_filename) > 0) && ($play_post_press_audio > 0) )
+				if ( (length($wait_time_option_callback_filename) > 0) && ($play_post_press_audio > 0) )
 					{
 					$AGI->stream_file('sip-silence'); # stop music-on-hold process
 					$AGI->stream_file('sip-silence'); # stop music-on-hold process
-					if ($hold_time_option_callback_filename =~ /\|/)
+					if ($wait_time_option_callback_filename =~ /\|/)
 						{
-						@hold_time_option_callback_filename_array = split(/\|/,$hold_time_option_callback_filename);
+						@wait_time_option_callback_filename_array = split(/\|/,$wait_time_option_callback_filename);
 						$w=0;
-						foreach(@hold_time_option_callback_filename_array)
+						foreach(@wait_time_option_callback_filename_array)
 							{
-							if (length($hold_time_option_callback_filename_array[$w])>0)
+							if (length($wait_time_option_callback_filename_array[$w])>0)
 								{
-								$AGI->stream_file("$hold_time_option_callback_filename_array[$w]");
+								$AGI->stream_file("$wait_time_option_callback_filename_array[$w]");
 								}
 							$w++;
 							}
 						}
 					else
-						{$AGI->stream_file("$hold_time_option_callback_filename");}
+						{$AGI->stream_file("$wait_time_option_callback_filename");}
 					}
 
 				if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $DROPexten";   &agi_output;}
@@ -3349,9 +3393,394 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				}
 			}
 		$start_moh=1;
-		$moh_delay=1;
+	#	$moh_delay=1;
 		}
-	}
+	### END wait time option press-123 options ###
+
+
+
+	if ( ($wait_hold_option_priority =~ /WAIT/) && ($wait_prompt_runs > 0) )
+		{
+		if ($AGILOG) {$agi_string = "--    WAIT OPTION PRIORITY, HOLD NO RUN: |$drop_timer|$wait_hold_option_priority|  |$wait_prompt_runs|  |$callerid|";   &agi_output;}
+		$wait_in_queue=2;
+		}
+	else
+		{
+		if ($AGILOG) {$agi_string = "--    DEBUUUUUUUUUUUUUUUUUUUUUUUUUUUUUG: |$hold_wait_in_queue|$hold_time_option|$holdtime_estimate_sec_diff|$wait_in_queue|$last_wait_run|";   &agi_output;}
+		##### check if hold_time_option is set to leave Queue	
+		if ( ($hold_time_option !~ /NONE/ ) && ($holdtime_estimate_sec_diff > $hold_time_option_seconds) && ($wait_in_queue < 2) )
+			{
+			if ($drop_timer < $hold_time_option_minimum) 
+				{
+				if ($AGILOG) {$agi_string = "--    HOLD OPTION NO-TRIGGER: |$drop_timer|$hold_time_option_minimum|  |$holdtime_estimate_sec_diff|$hold_time_option_seconds|  |$callerid|";   &agi_output;}
+				}
+			else
+				{
+				$wait_in_queue=0; # exits wait loop
+				$DROPexten = ''; 
+				$exitwithkey=0;
+				$play_post_press_audio=0;
+				$hold_message_counter = 0;
+
+				### Available hold time options:
+				# - EXTENSION
+				# - CALL_MENU
+				# - VOICEMAIL
+				# - IN_GROUP
+				# - CALLERID_CALLBACK
+				# - DROP_ACTION
+				# - PRESS_STAY
+				# - PRESS_VMAIL
+				# - PRESS_EXTEN
+				# - PRESS_CALLMENU
+				# - PRESS_CID_CALLBACK
+				# - PRESS_INGROUP
+
+				### BEGIN hold time option press-123 options ###
+				if ($hold_time_option =~ /PRESS_/)
+					{
+					$now_date_epoch = time();
+					$HTO_no_block_SQL = '';
+
+					### if No-Block is enabled, then set the call time to right now
+					if ($hold_time_option_no_block =~ /Y/)
+						{
+						$NBDtarget = $now_date_epoch;
+						($NBsec,$NBmin,$NBhour,$NBmday,$NBmon,$NByear,$NBwday,$NByday,$NBisdst) = localtime($NBDtarget);
+						$NByear = ($NByear + 1900);
+						$NBmon++;
+						if ($NBmon < 10) {$NBmon = "0$NBmon";}
+						if ($NBmday < 10) {$NBmday = "0$NBmday";}
+						if ($NBhour < 10) {$NBhour = "0$NBhour";}
+						if ($NBmin < 10) {$NBmin = "0$NBmin";}
+						if ($NBsec < 10) {$NBsec = "0$NBsec";}
+							$NB_SQLdate = "$NByear-$NBmon-$NBmday $NBhour:$NBmin:$NBsec";
+						$HTO_no_block_SQL = ",call_time='$NB_SQLdate'";
+						}
+
+					if ($hold_time_option_prompt_seconds < 0) {$hold_time_option_prompt_seconds=0;}
+					if ($hold_time_option_prompt_seconds > 1000) {$hold_time_option_prompt_seconds=1000;}
+					$FDtarget = ($now_date_epoch + $hold_time_option_prompt_seconds);
+					($Fsec,$Fmin,$Fhour,$Fmday,$Fmon,$Fyear,$Fwday,$Fyday,$Fisdst) = localtime($FDtarget);
+					$Fyear = ($Fyear + 1900);
+					$Fmon++;
+					if ($Fmon < 10) {$Fmon = "0$Fmon";}
+					if ($Fmday < 10) {$Fmday = "0$Fmday";}
+					if ($Fhour < 10) {$Fhour = "0$Fhour";}
+					if ($Fmin < 10) {$Fmin = "0$Fmin";}
+					if ($Fsec < 10) {$Fsec = "0$Fsec";}
+						$FDtsSQLdate = "$Fyear$Fmon$Fmday$Fhour$Fmin$Fsec";
+
+					$stmtA = "UPDATE vicidial_auto_calls set last_update_time='$FDtsSQLdate' $HTO_no_block_SQL where callerid='$callerid' order by call_time desc limit 1;";
+					$affected_rows = $dbhA->do($stmtA);
+						$dbhP=$dbhA;   $mysql_count='02086';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+					if ($AGILOG) {$agi_string = "--    VDAC posttime record for Hold-Time-Option-Press: |$affected_rows|$FDtsSQLdate|$callerid|$HTO_no_block_SQL|";   &agi_output;}
+
+					if ($drop_timer >= 2) {$drop_timer = ($drop_timer + 10);} # add prompt play time to total queue time
+
+					$AGI->stream_file('sip-silence'); # stop music-on-hold process
+					$AGI->stream_file('sip-silence'); # stop music-on-hold process
+					$AGI->stream_file('sip-silence'); # stop music-on-hold process
+
+					$HTO_digits="1";
+					$HTO_filename=$hold_time_option_press_filename;
+					if ($hold_time_second_option !~ /NONE/ ) {$HTO_digits .= "2";}
+					if ($hold_time_third_option !~ /NONE/ ) {$HTO_digits .= "3";}
+
+					&press_one_hold_time_option_prompt;
+
+					### if No-Block is enabled, then set the call time back to original call time
+					if ($hold_time_option_no_block =~ /Y/)
+						{
+						$stmtA = "UPDATE vicidial_auto_calls set call_time='$ORIGINAL_call_time' where callerid='$callerid' order by call_time desc limit 1;";
+						$affected_rows = $dbhA->do($stmtA);
+							$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+						if ($AGILOG) {$agi_string = "--    No-Block HTO Prompt Set: |$affected_rows|$ORIGINAL_call_time|$callerid|";   &agi_output;}
+						}
+
+					if ($pin =~ /1|2|3/)
+						{
+						$now_date_epoch = time();
+						$drop_timer = ($now_date_epoch - $start_epoch);
+
+						if ($pin =~ /1/)
+							{
+							if ($hold_time_option =~ /PRESS_STAY/)			{$hold_time_option = 'STAY_IN_QUEUE';  $hold_in_queue = 2;  $DROPexten='';}
+							if ($hold_time_option =~ /PRESS_VMAIL/)			{$hold_time_option = 'VOICEMAIL';   $HT_status='QVMAIL';}
+							if ($hold_time_option =~ /PRESS_EXTEN/)			{$hold_time_option = 'EXTENSION';   $HT_status='WAITTO';}
+							if ($hold_time_option =~ /PRESS_CALLMENU/)		{$hold_time_option = 'CALL_MENU';   $HT_status='WAITTO';}
+							if ($hold_time_option =~ /PRESS_CID_CALLBACK/)	{$hold_time_option = 'CALLERID_CALLBACK';   $HT_status='WAITTO';}
+							if ($hold_time_option =~ /PRESS_INGROUP/)		{$hold_time_option = 'IN_GROUP';   $HT_status='WAITTO';}
+							}
+						if ($pin =~ /2/)
+							{
+							if ($hold_time_second_option =~ /PRESS_STAY/)			{$hold_time_option = 'STAY_IN_QUEUE';  $hold_in_queue = 2;  $DROPexten='';}
+							if ($hold_time_second_option =~ /PRESS_VMAIL/)			{$hold_time_option = 'VOICEMAIL';   $HT_status='QVMAIL';}
+							if ($hold_time_second_option =~ /PRESS_EXTEN/)			{$hold_time_option = 'EXTENSION';   $HT_status='WAITTO';}
+							if ($hold_time_second_option =~ /PRESS_CALLMENU/)		{$hold_time_option = 'CALL_MENU';   $HT_status='WAITTO';}
+							if ($hold_time_second_option =~ /PRESS_CID_CALLBACK/)	{$hold_time_option = 'CALLERID_CALLBACK';   $HT_status='WAITTO';}
+							if ($hold_time_second_option =~ /PRESS_INGROUP/)		{$hold_time_option = 'IN_GROUP';   $HT_status='WAITTO';}
+							}
+						if ($pin =~ /3/)
+							{
+							if ($hold_time_third_option =~ /PRESS_STAY/)			{$hold_time_option = 'STAY_IN_QUEUE';  $hold_in_queue = 2;  $DROPexten='';}
+							if ($hold_time_third_option =~ /PRESS_VMAIL/)			{$hold_time_option = 'VOICEMAIL';   $HT_status='QVMAIL';}
+							if ($hold_time_third_option =~ /PRESS_EXTEN/)			{$hold_time_option = 'EXTENSION';   $HT_status='WAITTO';}
+							if ($hold_time_third_option =~ /PRESS_CALLMENU/)		{$hold_time_option = 'CALL_MENU';   $HT_status='WAITTO';}
+							if ($hold_time_third_option =~ /PRESS_CID_CALLBACK/)	{$hold_time_option = 'CALLERID_CALLBACK';   $HT_status='WAITTO';}
+							if ($hold_time_third_option =~ /PRESS_INGROUP/)			{$hold_time_option = 'IN_GROUP';   $HT_status='WAITTO';}
+							}
+
+						if ($AGILOG) {$agi_string = "HOLD TIME OPTION PRESSED $pin: $hold_time_option|$HT_status";   &agi_output;}
+
+						if ($hold_time_option !~ /STAY_IN_QUEUE/)
+							{
+							$play_post_press_audio=1;
+
+							if ($enable_queuemetrics_logging > 0)
+								{
+								$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+								 or die "Couldn't connect to database: " . DBI->errstr;
+
+								$place=0;
+								if ($rec_countWAIT > 0) {$place = $rec_countWAIT;}
+								if ($rec_countWAITrem > 0) {$place = $rec_countWAITrem;}
+								$place++;
+
+								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='EXITWITHKEY',data1='1',data2='$place',serverid='$queuemetrics_log_id';";
+								$Baffected_rows = $dbhB->do($stmtB);
+									$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02087';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+
+								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='QVMAIL',serverid='$queuemetrics_log_id';";
+								$Baffected_rows = $dbhB->do($stmtB);
+									$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02088';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+
+								$exitwithkey++;
+
+								$dbhB->disconnect();
+								}
+							}
+						}
+					else
+						{
+						$DROPexten='';
+						$wait_in_queue = 2; #continue waiting on hold
+						}
+					}
+				### END hold time option press 1 options ###
+
+
+				if ($hold_time_option =~ /EXTENSION/)
+					{
+					if (length($hold_time_option_exten)>0)
+						{
+						$DROPexten = "$hold_time_option_exten";
+
+						$CIDcampaign_cid='0000000000';
+						### Grab ID values from the database
+						$stmtA = "SELECT campaign_id,campaign_cid FROM vicidial_campaigns where closer_campaigns LIKE \"% $channel_group %\" and active='Y';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='02119';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$CIDcampaign_id = 			$aryA[0];
+							$CIDcampaign_cid = 			$aryA[1];
+							}
+						$sthA->finish();
+
+						$newcallerid = "\"$callerid <$CIDcampaign_cid>\"";
+						$AGI->set_callerid($newcallerid);
+						print STDERR "Setting CID \"$newcallerid\"\n";
+						checkresult($result);
+						if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$CIDcampaign_cid\> from $CIDcampaign_id";   &agi_output;}
+						}
+					}
+
+				if ($hold_time_option =~ /VOICEMAIL/)
+					{
+					if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($hold_time_option_voicemail =~ /AGENTVMAIL/) )
+						{
+						### Grab user's voicemail ID from the database
+						$stmtA = "SELECT voicemail_id FROM vicidial_users where user='$agent_only';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='02128';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$hold_time_option_voicemail = 	$aryA[0];
+							}
+						$sthA->finish();
+						}
+					$newcallerid = "\"$VCcallerid <$originalCID>\"";
+					$AGI->set_callerid($newcallerid);
+					print STDERR "Setting CID \"$newcallerid\"\n";
+					checkresult($result);
+					if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
+					if (length($hold_time_option_voicemail)>0)
+						{$DROPexten = "$voicemail_dump_exten$hold_time_option_voicemail";}
+					}
+				if ($hold_time_option =~ /CALL_MENU/)
+					{
+					$newcallerid = "\"$VCcallerid <$originalCID>\"";
+					$AGI->set_callerid($newcallerid);
+					print STDERR "Setting CID \"$newcallerid\"\n";
+					checkresult($result);
+					if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
+					if ( (length($hold_time_option_callmenu)>0) && ($hold_time_option_callmenu !~ /---NONE---/) )
+						{
+						$DROPexten = "s";
+						$ext_context = "$hold_time_option_callmenu";
+						}
+					}
+				if ($hold_time_option =~ /IN_GROUP/)
+					{ # 90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*"
+					$DROPexten = "90009*$hold_time_option_xfer_group$S$S$insert_lead_id$S$S$phone_number$S$fronter$S";
+					}
+				if ($hold_time_option =~ /CALLERID_CALLBACK/)
+					{
+					if (length($hold_time_option_exten)>0)
+						{$DROPexten = "$hold_time_option_exten";}
+					# if callerid is not valid do not execute
+					if ( ( length($phone_number) > 6 ) && ( $phone_number > 0) )
+						{
+						### insert a record into the vicidial_list table 
+						$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$hold_time_option_callback_list_id','N','$phone_code','$phone_number','$channel_group','1','$local_gmt','$VLcomments');";
+						$affected_rows = $dbhA->do($stmtA);
+							$dbhP=$dbhA;   $mysql_count='02089';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+						$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+						$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $stmtA=$stmtB;   $mysql_count='02103';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$CALLBACK_insert_lead_id = $aryA[0];
+							}
+						$sthA->finish();
+
+						if ($AGILOG) {$agi_string = "VDAD vicidial_list insert |$CALLBACK_insert_lead_id|$stmtA|";   &agi_output;}
+
+						$DROPexten = "8300";
+
+						$play_post_press_audio=1;
+						}
+					else
+						{
+						$wait_in_queue = 2; #continue waiting
+						}
+					
+					}
+
+				if ($AGILOG) {$agi_string = "--    VDCL HOLD TIME OPT: |$hold_time_option|$DROPexten|$wait_in_queue|";   &agi_output;}
+
+				if ($wait_in_queue < 1)
+					{
+					if (length($DROPexten)>0)
+						{	### if DROP extension is defined then send the dropped call there instead of hangup
+
+						### use STDOUT to send call to proper DROP location
+						$VHqueryCID = "VH$CIDdate$VDADconf_exten";
+
+						if ($no_delay_call_route =~ /N/)
+							{
+							$AGI->stream_file('sip-silence'); # stop music-on-hold process
+							$AGI->stream_file('sip-silence');
+							### sleep for 99 hundredths of a second
+							usleep(1*990*1000);
+							}
+
+						$now_date_epoch = time();
+
+						$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
+						$affected_rows = $dbhA->do($stmtA);
+							$dbhP=$dbhA;   $mysql_count='02090';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+						if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
+
+						$stmtA = "UPDATE vicidial_list set status='HOLDTO' where lead_id = '$insert_lead_id';";
+						$affected_rows = $dbhA->do($stmtA);
+							$dbhP=$dbhA;   $mysql_count='02092';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+						if ($AGILOG) {$agi_string = "--    VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
+
+						if ($drop_seconds < 1) {$drop_seconds = $drop_timer;}
+
+						if (length($HT_status)<1) {$HT_status='HOLDTO';}
+						$stmtA = "UPDATE vicidial_closer_log set status='$HT_status',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',queue_seconds='$drop_seconds',term_reason='HOLDTIME' where lead_id = '$insert_lead_id' order by start_epoch desc limit 1;";
+						$affected_rows = $dbhA->do($stmtA);
+							$dbhP=$dbhA;   $mysql_count='02091';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+						if ($AGILOG) {$agi_string = "--    VDCL vcl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
+
+						if ( ($enable_queuemetrics_logging > 0) && ($exitwithkey < 1) )
+							{
+							$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+							 or die "Couldn't connect to database: " . DBI->errstr;
+
+							if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+							$place=0;
+							if ($rec_countWAIT > 0) {$place = $rec_countWAIT;}
+							if ($rec_countWAITrem > 0) {$place = $rec_countWAITrem;}
+							$place++;
+
+							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='EXITWITHKEY',data1='2',data2='$place',serverid='$queuemetrics_log_id';";
+							$Baffected_rows = $dbhB->do($stmtB);
+								$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02093';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+
+							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='HOLDTO',serverid='$queuemetrics_log_id';";
+							$Baffected_rows = $dbhB->do($stmtB);
+								$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02094';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+
+							$dbhB->disconnect();
+							}
+
+						$AGI->stream_file('sip-silence');
+						$AGI->stream_file('sip-silence');
+
+						if ( (length($hold_time_option_callback_filename) > 0) && ($play_post_press_audio > 0) )
+							{
+							$AGI->stream_file('sip-silence'); # stop music-on-hold process
+							$AGI->stream_file('sip-silence'); # stop music-on-hold process
+							if ($hold_time_option_callback_filename =~ /\|/)
+								{
+								@hold_time_option_callback_filename_array = split(/\|/,$hold_time_option_callback_filename);
+								$w=0;
+								foreach(@hold_time_option_callback_filename_array)
+									{
+									if (length($hold_time_option_callback_filename_array[$w])>0)
+										{
+										$AGI->stream_file("$hold_time_option_callback_filename_array[$w]");
+										}
+									$w++;
+									}
+								}
+							else
+								{$AGI->stream_file("$hold_time_option_callback_filename");}
+							}
+
+						if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $DROPexten";   &agi_output;}
+						print "SET CONTEXT $ext_context\n";
+							checkresult($result);
+						print "SET EXTENSION $DROPexten\n";
+							checkresult($result);
+						print "SET PRIORITY 1\n";
+							checkresult($result);
+
+						$dbhA->disconnect();
+
+						exit;
+						}
+					}
+				$start_moh=1;
+				$moh_delay=1;
+				}
+			}
+		}
+	### END hold time options ###
 
 
 
@@ -3826,6 +4255,7 @@ sub enter_id_number
 ### END VIDPROMPT gather of ID section ###
 
 
+
 sub press_one_hold_time_option_prompt
 	{
 	$digits_to_collect = 1;
@@ -3841,26 +4271,26 @@ sub press_one_hold_time_option_prompt
 	undef $interrupt_digit;
 	$digit_loop_counter=0;
 
-	$interrupt_digit = $AGI->stream_file('sip-silence','1');
+	$interrupt_digit = $AGI->stream_file('sip-silence',"$HTO_digits");
 
 	$interrupt_digit='';
 	undef $interrupt_digit;
 
-	if ($hold_time_option_press_filename =~ /\|/)
+	if ($HTO_filename =~ /\|/)
 		{
-		@hold_time_option_press_filename_array = split(/\|/,$hold_time_option_press_filename);
+		@hold_time_option_press_filename_array = split(/\|/,$HTO_filename);
 		$w=0;
 		foreach(@hold_time_option_press_filename_array)
 			{
 			if ( (length($hold_time_option_press_filename_array[$w])>0) && ($interrupt_digit < 2) )
 				{
-				$interrupt_digit = $AGI->stream_file("$hold_time_option_press_filename_array[$w]",'1');
+				$interrupt_digit = $AGI->stream_file("$hold_time_option_press_filename_array[$w]","$HTO_digits");
 				}
 			$w++;
 			}
 		}
 	else
-		{$interrupt_digit = $AGI->stream_file("$hold_time_option_press_filename",'1');} # this prompt must be less than 10 seconds long
+		{$interrupt_digit = $AGI->stream_file("$HTO_filename","$HTO_digits");} # this prompt should be less than 10 seconds long
 
 	if ($AGILOG) {$agi_string = "interrupt_digit |$interrupt_digit|    |$hold_time_option_press_filename|";   &agi_output;}
 

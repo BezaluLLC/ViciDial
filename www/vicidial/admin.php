@@ -1333,6 +1333,38 @@ if (isset($_GET["slave_db_server"]))				{$slave_db_server=$_GET["slave_db_server
 	elseif (isset($_POST["slave_db_server"]))		{$slave_db_server=$_POST["slave_db_server"];}
 if (isset($_GET["reports_use_slave_db"]))			{$reports_use_slave_db=$_GET["reports_use_slave_db"];}
 	elseif (isset($_POST["reports_use_slave_db"]))	{$reports_use_slave_db=$_POST["reports_use_slave_db"];}
+if (isset($_GET["hold_time_second_option"]))			{$hold_time_second_option=$_GET["hold_time_second_option"];}
+	elseif (isset($_POST["hold_time_second_option"]))	{$hold_time_second_option=$_POST["hold_time_second_option"];}
+if (isset($_GET["hold_time_third_option"]))				{$hold_time_third_option=$_GET["hold_time_third_option"];}
+	elseif (isset($_POST["hold_time_third_option"]))	{$hold_time_third_option=$_POST["hold_time_third_option"];}
+if (isset($_GET["wait_hold_option_priority"]))			{$wait_hold_option_priority=$_GET["wait_hold_option_priority"];}
+	elseif (isset($_POST["wait_hold_option_priority"]))	{$wait_hold_option_priority=$_POST["wait_hold_option_priority"];}
+if (isset($_GET["wait_time_option"]))					{$wait_time_option=$_GET["wait_time_option"];}
+	elseif (isset($_POST["wait_time_option"]))			{$wait_time_option=$_POST["wait_time_option"];}
+if (isset($_GET["wait_time_second_option"]))			{$wait_time_second_option=$_GET["wait_time_second_option"];}
+	elseif (isset($_POST["wait_time_second_option"]))	{$wait_time_second_option=$_POST["wait_time_second_option"];}
+if (isset($_GET["wait_time_third_option"]))				{$wait_time_third_option=$_GET["wait_time_third_option"];}
+	elseif (isset($_POST["wait_time_third_option"]))	{$wait_time_third_option=$_POST["wait_time_third_option"];}
+if (isset($_GET["wait_time_option_seconds"]))			{$wait_time_option_seconds=$_GET["wait_time_option_seconds"];}
+	elseif (isset($_POST["wait_time_option_seconds"]))	{$wait_time_option_seconds=$_POST["wait_time_option_seconds"];}
+if (isset($_GET["wait_time_option_exten"]))				{$wait_time_option_exten=$_GET["wait_time_option_exten"];}
+	elseif (isset($_POST["wait_time_option_exten"]))	{$wait_time_option_exten=$_POST["wait_time_option_exten"];}
+if (isset($_GET["wait_time_option_voicemail"]))			{$wait_time_option_voicemail=$_GET["wait_time_option_voicemail"];}
+	elseif (isset($_POST["wait_time_option_voicemail"]))	{$wait_time_option_voicemail=$_POST["wait_time_option_voicemail"];}
+if (isset($_GET["wait_time_option_xfer_group"]))			{$wait_time_option_xfer_group=$_GET["wait_time_option_xfer_group"];}
+	elseif (isset($_POST["wait_time_option_xfer_group"]))	{$wait_time_option_xfer_group=$_POST["wait_time_option_xfer_group"];}
+if (isset($_GET["wait_time_option_callmenu"]))				{$wait_time_option_callmenu=$_GET["wait_time_option_callmenu"];}
+	elseif (isset($_POST["wait_time_option_callmenu"]))		{$wait_time_option_callmenu=$_POST["wait_time_option_callmenu"];}
+if (isset($_GET["wait_time_option_callback_filename"]))				{$wait_time_option_callback_filename=$_GET["wait_time_option_callback_filename"];}
+	elseif (isset($_POST["wait_time_option_callback_filename"]))	{$wait_time_option_callback_filename=$_POST["wait_time_option_callback_filename"];}
+if (isset($_GET["wait_time_option_callback_list_id"]))			{$wait_time_option_callback_list_id=$_GET["wait_time_option_callback_list_id"];}
+	elseif (isset($_POST["wait_time_option_callback_list_id"]))	{$wait_time_option_callback_list_id=$_POST["wait_time_option_callback_list_id"];}
+if (isset($_GET["wait_time_option_press_filename"]))			{$wait_time_option_press_filename=$_GET["wait_time_option_press_filename"];}
+	elseif (isset($_POST["wait_time_option_press_filename"]))	{$wait_time_option_press_filename=$_POST["wait_time_option_press_filename"];}
+if (isset($_GET["wait_time_option_no_block"]))			{$wait_time_option_no_block=$_GET["wait_time_option_no_block"];}
+	elseif (isset($_POST["wait_time_option_no_block"]))	{$wait_time_option_no_block=$_POST["wait_time_option_no_block"];}
+if (isset($_GET["wait_time_option_prompt_seconds"]))			{$wait_time_option_prompt_seconds=$_GET["wait_time_option_prompt_seconds"];}
+	elseif (isset($_POST["wait_time_option_prompt_seconds"]))	{$wait_time_option_prompt_seconds=$_POST["wait_time_option_prompt_seconds"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1549,6 +1581,9 @@ if ($non_latin < 1)
 	$onhold_prompt_seconds = ereg_replace("[^0-9]","",$onhold_prompt_seconds);
 	$hold_time_option_prompt_seconds = ereg_replace("[^0-9]","",$hold_time_option_prompt_seconds);
 	$custom_fields_enabled = ereg_replace("[^0-9]","",$custom_fields_enabled);
+	$wait_time_option_seconds = ereg_replace("[^0-9]","",$wait_time_option_seconds);
+	$wait_time_option_callback_list_id = ereg_replace("[^0-9]","",$wait_time_option_callback_list_id);
+	$wait_time_option_prompt_seconds = ereg_replace("[^0-9]","",$wait_time_option_prompt_seconds);
 
 	$drop_call_seconds = ereg_replace("[^-0-9]","",$drop_call_seconds);
 
@@ -1630,6 +1665,7 @@ if ($non_latin < 1)
 	$extension_appended_cidname = ereg_replace("[^NY]","",$extension_appended_cidname);
 	$onhold_prompt_no_block = ereg_replace("[^NY]","",$onhold_prompt_no_block);
 	$hold_time_option_no_block = ereg_replace("[^NY]","",$hold_time_option_no_block);
+	$wait_time_option_no_block = ereg_replace("[^NY]","",$wait_time_option_no_block);
 
 	$qc_enabled = ereg_replace("[^0-9NY]","",$qc_enabled);
 	$active = ereg_replace("[^0-9NY]","",$active);
@@ -1844,6 +1880,18 @@ if ($non_latin < 1)
 	$uniqueid_status_display = ereg_replace("[^-_0-9a-zA-Z]","",$uniqueid_status_display);
 	$hold_time_option_callmenu = ereg_replace("[^-_0-9a-zA-Z]","",$hold_time_option_callmenu);
 	$inbound_queue_no_dial = ereg_replace("[^-_0-9a-zA-Z]","",$inbound_queue_no_dial);
+	$hold_time_second_option = ereg_replace("[^-_0-9a-zA-Z]","",$hold_time_second_option);
+	$hold_time_third_option = ereg_replace("[^-_0-9a-zA-Z]","",$hold_time_third_option);
+	$wait_hold_option_priority = ereg_replace("[^-_0-9a-zA-Z]","",$wait_hold_option_priority);
+	$wait_time_option = ereg_replace("[^-_0-9a-zA-Z]","",$wait_time_option);
+	$wait_time_second_option = ereg_replace("[^-_0-9a-zA-Z]","",$wait_time_second_option);
+	$wait_time_third_option = ereg_replace("[^-_0-9a-zA-Z]","",$wait_time_third_option);
+	$wait_time_option_xfer_group = ereg_replace("[^-_0-9a-zA-Z]","",$wait_time_option_xfer_group);
+	$wait_time_option_callmenu = ereg_replace("[^-_0-9a-zA-Z]","",$wait_time_option_callmenu);
+	$wait_time_option_voicemail = ereg_replace("[^-_0-9a-zA-Z]","",$wait_time_option_voicemail);
+
+	$wait_time_third_option = ereg_replace("[^-_0-9a-zA-Z]","",$wait_time_third_option);
+	$wait_time_third_option = ereg_replace("[^-_0-9a-zA-Z]","",$wait_time_third_option);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
@@ -1870,6 +1918,8 @@ if ($non_latin < 1)
 	$saturday_afterhours_filename_override = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$saturday_afterhours_filename_override);
 	$admin_web_directory = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$admin_web_directory);
 	$tts_voice = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$tts_voice);
+	$wait_time_option_callback_filename = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$wait_time_option_callback_filename);
+	$wait_time_option_press_filename = ereg_replace("[^-\|\/\._0-9a-zA-Z]","",$wait_time_option_press_filename);
 
 	### ALPHA-NUMERIC and underscore and dash and comma
 	$logins_list = ereg_replace("[^-\,\_0-9a-zA-Z]","",$logins_list);
@@ -1888,6 +1938,7 @@ if ($non_latin < 1)
 	$voicemail_ext = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$voicemail_ext);
 	$phone = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$phone);
 	$phone_code = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$phone_code);
+	$wait_time_option_exten = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$wait_time_option_exten);
 
 	### ALPHA-NUMERIC and spaces dots, commas, dashes, underscores
 	$adaptive_dl_diff_target = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$adaptive_dl_diff_target);
@@ -2327,11 +2378,12 @@ else
 # 100702-1142 - Added FORM get_call_launch option for custom list fields tab in agent interface
 # 100703-1322 - Added LEADS ability to admin log display
 # 100709-1025 - Added option for slave DB server to be used for selected reports
+# 100718-2318 - Added Wait Time options to in-groups
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-262';
-$build = '100709-1025';
+$admin_version = '2.4-263';
+$build = '100718-2318';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4699,9 +4751,89 @@ if ($ADD==99999)
 	<B>Play Estimated Hold Time -</B> This defines whether the caller will hear the estimated hold time before they are transferred to an agent. Default is N. If the customer is on hold and hears this estimated hold time message, the minimum time that will be played is 15 seconds.
 
 	<BR>
+	<A NAME="vicidial_inbound_groups-wait_time_option">
+	<BR>
+	<B>Wait Time Option -</B> This allows you to give customers options to leave the queue if their wait time is over the amount of seconds specified below. Default is NONE. If one of the PRESS_ options is selected, it will play the Press Filename defined below and give the customer the option to press 1 on their phone to leave the queue and run the selected option. The PRESS_STAY option will send the customer back to the queue without loosing their place in line.
+
+	<BR>
+	<A NAME="vicidial_inbound_groups-wait_time_second_option">
+	<BR>
+	<B>Wait Time Second Option -</B> Same as the first Wait Time Option field above, except this one will check for the customer pressing the 2 key. Default is NONE. If no first Wait Time Option is selected then this option will not be offered.
+
+	<BR>
+	<A NAME="vicidial_inbound_groups-wait_time_third_option">
+	<BR>
+	<B>Wait Time Third Option -</B> Same as the first Wait Time Option field above, except this one will check for the customer pressing the 3 key. Default is NONE. If no Second Wait Time Option is selected then this option will not be offered.
+
+	<BR>
+	<A NAME="vicidial_inbound_groups-wait_time_option_seconds">
+	<BR>
+	<B>Wait Time Option Seconds -</B> If Wait Time Option is set to anything but NONE, this is the number of seconds that the customer has been waiting in queue that will trigger the wait time options. Default is 120 seconds.
+
+	<BR>
+	<A NAME="vicidial_inbound_groups-wait_time_option_exten">
+	<BR>
+	<B>Wait Time Option Extension -</B> If Wait Time Option is set to PRESS_EXTEN, this is the dialplan extension that the call will be sent to if the customer presses the option key when presented with the option.
+
+	<BR>
+	<A NAME="vicidial_inbound_groups-wait_time_option_callmenu">
+	<BR>
+	<B>Wait Time Option Callmenu -</B> If Wait Time Option is set to PRESS_CALLMENU, this is the Call Menu that the call will be sent to if the customer presses the option key when presented with the option.
+
+	<BR>
+	<A NAME="vicidial_inbound_groups-wait_time_option_voicemail">
+	<BR>
+	<B>Wait Time Option Voicemail -</B> If Wait Time Option is set to PRESS_VMAIL, this is the voicemail box that the call will be sent to if the customer presses the option key when presented with the option. In an AGENTDIRECT in-group, setting this to AGENTVMAIL will select the User voicemail ID to use.
+
+	<BR>
+	<A NAME="vicidial_inbound_groups-wait_time_option_xfer_group">
+	<BR>
+	<B>Wait Time Option Transfer In-Group -</B> If Wait Time Option is set to PRESS_INGROUP, this is the inbound group that the call will be sent to if the customer presses the option key when presented with the option.
+
+	<BR>
+	<A NAME="vicidial_inbound_groups-wait_time_option_press_filename">
+	<BR>
+	<B>Wait Time Option Press Filename -</B> If Wait Time Option is set to one of the PRESS_ options, this is the filename prompt that is played if the customer wait time exceeds the Wait Time Option Seconds to give the customer the option to press 1, 2 or 3 on their phone to run the selected Wait Time Press options. It is very important that you include options in the audio file for all of your selected Wait Time Options, and that the audio file length in seconds is properly defined in the Filename Seconds field below or there will be problems. Default is to-be-called-back.
+
+	<BR>
+	<A NAME="vicidial_inbound_groups-wait_time_option_no_block">
+	<BR>
+	<B>Wait Time Option Press No Block -</B> Setting this option to Y will allow calls in line behind a call where the Wait Time Option Press Filename prompt is playing to go to an agent if one becomes available while the message is playing. While the Wait Time Option Press Filename message is playing to a customer they cannot be sent to an agent. Default is N.
+
+	<BR>
+	<A NAME="vicidial_inbound_groups-wait_time_option_prompt_seconds">
+	<BR>
+	<B>Wait Time Option Press Filename Seconds -</B> This field needs to be set to the number of seconds that the Wait Time Option Press Filename plays for. Default is 10.
+
+	<BR>
+	<A NAME="vicidial_inbound_groups-wait_time_option_callback_filename">
+	<BR>
+	<B>Wait Time Option After Press Filename -</B> If Wait Time Option is set to one of the PRESS_ options, this is the filename prompt that is played after the customer has pressed 1, 2 or 3.
+
+	<BR>
+	<A NAME="vicidial_inbound_groups-wait_time_option_callback_list_id">
+	<BR>
+	<B>Wait Time Option Callback List ID -</B> If Wait Time Option is set to PRESS_CID_CALLBACK, this is the List ID the call is added to as a new lead if the customer presses the option key when presented with the option.
+
+	<BR>
+	<A NAME="vicidial_inbound_groups-wait_hold_option_priority">
+	<BR>
+	<B>Wait Hold Option Priority -</B> If both Estimated Hold Time options and Wait Time options are active, this setting will define whether one, the other or both of these features are active. For example, if the Estimated Hold Time Option is set to 360, the Wait Time option is set to 120 and the customer has been waiting for 120 seconds and there are still 400 seconds estimated hold time, then they are both active at the same time and this setting will be checked to see what options will be offered. Default is WAIT only.
+
+	<BR>
 	<A NAME="vicidial_inbound_groups-hold_time_option">
 	<BR>
-	<B>Hold Time Option -</B> This allows you to specify the routing of the call if the estimated hold time is over the amount of seconds specified below. Default is NONE. If one of the PRESS_ options is selected, it will play the Press Filename defined below and give the customer the option to press 1 on their phone to leave the queue and run the selected option.
+	<B>Estimated Hold Time Option -</B> This allows you to specify the routing of the call if the estimated hold time is over the amount of seconds specified below. Default is NONE. If one of the PRESS_ options is selected, it will play the Press Filename defined below and give the customer the option to press 1 on their phone to leave the queue and run the selected option.
+
+	<BR>
+	<A NAME="vicidial_inbound_groups-hold_time_second_option">
+	<BR>
+	<B>Hold Time Second Option -</B> Same as the first Hold Time Option field above, except this one will check for the customer pressing the 2 key. Default is NONE. If no first Hold Time Option is selected then this option will not be offered.
+
+	<BR>
+	<A NAME="vicidial_inbound_groups-hold_time_third_option">
+	<BR>
+	<B>Hold Time Third Option -</B> Same as the first Hold Time Option field above, except this one will check for the customer pressing the 3 key. Default is NONE. If no Second Hold Time Option is selected then this option will not be offered.
 
 	<BR>
 	<A NAME="vicidial_inbound_groups-hold_time_option_seconds">
@@ -9859,7 +9991,7 @@ if ($ADD==2011)
 				}
 			else
 				{
-				$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds) SELECT \"$group_id\",\"$group_name\",group_color,\"N\",web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds from vicidial_inbound_groups where group_id=\"$source_group_id\";";
+				$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds) SELECT \"$group_id\",\"$group_name\",group_color,\"N\",web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds from vicidial_inbound_groups where group_id=\"$source_group_id\";";
 				$rslt=mysql_query($stmt, $link);
 
 				echo "<br><B>GROUP ADDED: $group_id</B>\n";
@@ -12971,7 +13103,7 @@ if ($ADD==4111)
 
 			echo "<br><B>GROUP MODIFIED: $group_id</B>\n";
 
-			$stmt="UPDATE vicidial_inbound_groups set group_name='$group_name', group_color='$group_color', active='$active', web_form_address='" . mysql_real_escape_string($web_form_address) . "', voicemail_ext='$voicemail_ext', next_agent_call='$next_agent_call', fronter_display='$fronter_display', ingroup_script='$script_id', get_call_launch='$get_call_launch', xferconf_a_dtmf='$xferconf_a_dtmf',xferconf_a_number='$xferconf_a_number', xferconf_b_dtmf='$xferconf_b_dtmf',xferconf_b_number='$xferconf_b_number',drop_action='$drop_action',drop_call_seconds='$drop_call_seconds',drop_exten='$drop_exten',call_time_id='$call_time_id',after_hours_action='$after_hours_action',after_hours_message_filename='$after_hours_message_filename',after_hours_exten='$after_hours_exten',after_hours_voicemail='$after_hours_voicemail',welcome_message_filename='$welcome_message_filename',moh_context='$moh_context',onhold_prompt_filename='$onhold_prompt_filename',prompt_interval='$prompt_interval',agent_alert_exten='$agent_alert_exten',agent_alert_delay='$agent_alert_delay',default_xfer_group='$default_xfer_group',queue_priority='$queue_priority',drop_inbound_group='$drop_inbound_group',ingroup_recording_override='$ingroup_recording_override',ingroup_rec_filename='$ingroup_rec_filename',afterhours_xfer_group='$afterhours_xfer_group',qc_enabled='$qc_enabled',qc_statuses='$QC_statuses',qc_shift_id='$qc_shift_id',qc_get_record_launch='$qc_get_record_launch',qc_show_recording='$qc_show_recording',qc_web_form_address='$qc_web_form_address',qc_script='$qc_script',play_place_in_line='$play_place_in_line',play_estimate_hold_time='$play_estimate_hold_time',hold_time_option='$hold_time_option',hold_time_option_seconds='$hold_time_option_seconds',hold_time_option_exten='$hold_time_option_exten',hold_time_option_voicemail='$hold_time_option_voicemail',hold_time_option_xfer_group='$hold_time_option_xfer_group',hold_time_option_callback_filename='$hold_time_option_callback_filename',hold_time_option_callback_list_id='$hold_time_option_callback_list_id',hold_recall_xfer_group='$hold_recall_xfer_group',no_delay_call_route='$no_delay_call_route',play_welcome_message='$play_welcome_message',answer_sec_pct_rt_stat_one='$answer_sec_pct_rt_stat_one',answer_sec_pct_rt_stat_two='$answer_sec_pct_rt_stat_two',default_group_alias='$default_group_alias',no_agent_no_queue='$no_agent_no_queue',no_agent_action='$no_agent_action',no_agent_action_value='$no_agent_action_value',web_form_address_two='" . mysql_real_escape_string($web_form_address_two) . "',timer_action='$timer_action',timer_action_message='$timer_action_message',timer_action_seconds='$timer_action_seconds',start_call_url='" . mysql_real_escape_string($start_call_url) . "',dispo_call_url='" . mysql_real_escape_string($dispo_call_url) . "',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',ignore_list_script_override='$ignore_list_script_override',extension_appended_cidname='$extension_appended_cidname',uniqueid_status_display='$uniqueid_status_display',uniqueid_status_prefix='$uniqueid_status_prefix',hold_time_option_minimum='$hold_time_option_minimum',hold_time_option_press_filename='$hold_time_option_press_filename',hold_time_option_callmenu='$hold_time_option_callmenu',onhold_prompt_no_block='$onhold_prompt_no_block',onhold_prompt_seconds='$onhold_prompt_seconds',hold_time_option_no_block='$hold_time_option_no_block',hold_time_option_prompt_seconds='$hold_time_option_prompt_seconds' where group_id='$group_id';";
+			$stmt="UPDATE vicidial_inbound_groups set group_name='$group_name', group_color='$group_color', active='$active', web_form_address='" . mysql_real_escape_string($web_form_address) . "', voicemail_ext='$voicemail_ext', next_agent_call='$next_agent_call', fronter_display='$fronter_display', ingroup_script='$script_id', get_call_launch='$get_call_launch', xferconf_a_dtmf='$xferconf_a_dtmf',xferconf_a_number='$xferconf_a_number', xferconf_b_dtmf='$xferconf_b_dtmf',xferconf_b_number='$xferconf_b_number',drop_action='$drop_action',drop_call_seconds='$drop_call_seconds',drop_exten='$drop_exten',call_time_id='$call_time_id',after_hours_action='$after_hours_action',after_hours_message_filename='$after_hours_message_filename',after_hours_exten='$after_hours_exten',after_hours_voicemail='$after_hours_voicemail',welcome_message_filename='$welcome_message_filename',moh_context='$moh_context',onhold_prompt_filename='$onhold_prompt_filename',prompt_interval='$prompt_interval',agent_alert_exten='$agent_alert_exten',agent_alert_delay='$agent_alert_delay',default_xfer_group='$default_xfer_group',queue_priority='$queue_priority',drop_inbound_group='$drop_inbound_group',ingroup_recording_override='$ingroup_recording_override',ingroup_rec_filename='$ingroup_rec_filename',afterhours_xfer_group='$afterhours_xfer_group',qc_enabled='$qc_enabled',qc_statuses='$QC_statuses',qc_shift_id='$qc_shift_id',qc_get_record_launch='$qc_get_record_launch',qc_show_recording='$qc_show_recording',qc_web_form_address='$qc_web_form_address',qc_script='$qc_script',play_place_in_line='$play_place_in_line',play_estimate_hold_time='$play_estimate_hold_time',hold_time_option='$hold_time_option',hold_time_option_seconds='$hold_time_option_seconds',hold_time_option_exten='$hold_time_option_exten',hold_time_option_voicemail='$hold_time_option_voicemail',hold_time_option_xfer_group='$hold_time_option_xfer_group',hold_time_option_callback_filename='$hold_time_option_callback_filename',hold_time_option_callback_list_id='$hold_time_option_callback_list_id',hold_recall_xfer_group='$hold_recall_xfer_group',no_delay_call_route='$no_delay_call_route',play_welcome_message='$play_welcome_message',answer_sec_pct_rt_stat_one='$answer_sec_pct_rt_stat_one',answer_sec_pct_rt_stat_two='$answer_sec_pct_rt_stat_two',default_group_alias='$default_group_alias',no_agent_no_queue='$no_agent_no_queue',no_agent_action='$no_agent_action',no_agent_action_value='$no_agent_action_value',web_form_address_two='" . mysql_real_escape_string($web_form_address_two) . "',timer_action='$timer_action',timer_action_message='$timer_action_message',timer_action_seconds='$timer_action_seconds',start_call_url='" . mysql_real_escape_string($start_call_url) . "',dispo_call_url='" . mysql_real_escape_string($dispo_call_url) . "',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',ignore_list_script_override='$ignore_list_script_override',extension_appended_cidname='$extension_appended_cidname',uniqueid_status_display='$uniqueid_status_display',uniqueid_status_prefix='$uniqueid_status_prefix',hold_time_option_minimum='$hold_time_option_minimum',hold_time_option_press_filename='$hold_time_option_press_filename',hold_time_option_callmenu='$hold_time_option_callmenu',onhold_prompt_no_block='$onhold_prompt_no_block',onhold_prompt_seconds='$onhold_prompt_seconds',hold_time_option_no_block='$hold_time_option_no_block',hold_time_option_prompt_seconds='$hold_time_option_prompt_seconds',hold_time_second_option='$hold_time_second_option',hold_time_third_option='$hold_time_third_option',wait_hold_option_priority='$wait_hold_option_priority',wait_time_option='$wait_time_option',wait_time_second_option='$wait_time_second_option',wait_time_third_option='$wait_time_third_option',wait_time_option_seconds='$wait_time_option_seconds',wait_time_option_exten='$wait_time_option_exten',wait_time_option_voicemail='$wait_time_option_voicemail',wait_time_option_xfer_group='$wait_time_option_xfer_group',wait_time_option_callmenu='$wait_time_option_callmenu',wait_time_option_callback_filename='$wait_time_option_callback_filename',wait_time_option_callback_list_id='$wait_time_option_callback_list_id',wait_time_option_press_filename='$wait_time_option_press_filename',wait_time_option_no_block='$wait_time_option_no_block',wait_time_option_prompt_seconds='$wait_time_option_prompt_seconds' where group_id='$group_id';";
 			$rslt=mysql_query($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -20295,7 +20427,7 @@ if ($ADD==3111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds from vicidial_inbound_groups where group_id='$group_id';";
+		$stmt="SELECT group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds from vicidial_inbound_groups where group_id='$group_id';";
 
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
@@ -20376,7 +20508,23 @@ if ($ADD==3111)
 		$onhold_prompt_no_block =	$row[75];
 		$onhold_prompt_seconds =	$row[76];
 		$hold_time_option_no_block = $row[77];
-		$hold_time_option_prompt_seconds = $row[78];
+		$hold_time_option_prompt_seconds =	$row[78];
+		$hold_time_second_option =			$row[79];
+		$hold_time_third_option =			$row[80];
+		$wait_hold_option_priority =		$row[81];
+		$wait_time_option =					$row[82];
+		$wait_time_second_option =			$row[83];
+		$wait_time_third_option =			$row[84];
+		$wait_time_option_seconds =			$row[85];
+		$wait_time_option_exten =			$row[86];
+		$wait_time_option_voicemail =		$row[87];
+		$wait_time_option_xfer_group =		$row[88];
+		$wait_time_option_callmenu =		$row[89];
+		$wait_time_option_callback_filename =	$row[90];
+		$wait_time_option_callback_list_id =	$row[91];
+		$wait_time_option_press_filename =	$row[92];
+		$wait_time_option_no_block =		$row[93];
+		$wait_time_option_prompt_seconds =	$row[94];
 
 		##### get callmenu listings for dynamic pulldown
 		$stmt="SELECT menu_id,menu_name from vicidial_call_menu order by menu_id";
@@ -20667,7 +20815,43 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Play Estimated Hold Time: </td><td align=left><select size=1 name=play_estimate_hold_time><option>Y</option><option>N</option><option SELECTED>$play_estimate_hold_time</option></select>$NWB#vicidial_inbound_groups-play_estimate_hold_time$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option: </td><td align=left><select size=1 name=hold_time_option><option>NONE</option><option>EXTENSION</option><option>CALL_MENU</option><option>VOICEMAIL</option><option>IN_GROUP</option><option>CALLERID_CALLBACK</option><option>DROP_ACTION</option><option>PRESS_VMAIL</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$hold_time_option</option></select>$NWB#vicidial_inbound_groups-hold_time_option$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option: </td><td align=left><select size=1 name=wait_time_option><option>NONE</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$wait_time_option</option></select>$NWB#vicidial_inbound_groups-wait_time_option$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Second Option: </td><td align=left><select size=1 name=wait_time_second_option><option>NONE</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$wait_time_second_option</option></select>$NWB#vicidial_inbound_groups-wait_time_second_option$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Third Option: </td><td align=left><select size=1 name=wait_time_third_option><option>NONE</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$wait_time_third_option</option></select>$NWB#vicidial_inbound_groups-wait_time_third_option$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Seconds: </td><td align=left><input type=text name=wait_time_option_seconds size=5 maxlength=5 value=\"$wait_time_option_seconds\">$NWB#vicidial_inbound_groups-wait_time_option_seconds$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Extension: </td><td align=left><input type=text name=wait_time_option_exten size=20 maxlength=20 value=\"$wait_time_option_exten\">$NWB#vicidial_inbound_groups-wait_time_option_exten$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#99FFCC><td align=right><a href=\"$PHP_SELF?ADD=3511&menu_id=$wait_time_option_callmenu\">Wait Time Option Callmenu</a>: </td><td align=left><select size=1 name=wait_time_option_callmenu>\n";
+		echo "$Xmenuslist";
+		echo "</select>$NWB#vicidial_inbound_groups-wait_time_option_callmenu$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Voicemail: </td><td align=left><input type=text name=wait_time_option_voicemail id=wait_time_option_voicemail size=12 maxlength=10 value=\"$wait_time_option_voicemail\"> <a href=\"javascript:launch_vm_chooser('wait_time_option_voicemail','vm',1100);\">voicemail chooser</a> $NWB#vicidial_inbound_groups-wait_time_option_voicemail$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Transfer In-Group: </td><td align=left><select size=1 name=wait_time_option_xfer_group>";
+		echo "$Tgroups_menu";
+		echo "</select>$NWB#vicidial_inbound_groups-wait_time_option_xfer_group$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Press Filename: </td><td align=left><input type=text name=wait_time_option_press_filename id=wait_time_option_press_filename size=50 maxlength=255 value=\"$wait_time_option_press_filename\"> <a href=\"javascript:launch_chooser('wait_time_option_press_filename','date',1200);\">audio chooser</a> $NWB#vicidial_inbound_groups-wait_time_option_press_filename$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Press No Block: </td><td align=left><select size=1 name=wait_time_option_no_block><option>N</option><option>Y</option><option SELECTED>$wait_time_option_no_block</option></select>$NWB#vicidial_inbound_groups-wait_time_option_no_block$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Press Filename Seconds: </td><td align=left><input type=text name=wait_time_option_prompt_seconds size=5 maxlength=5 value=\"$wait_time_option_prompt_seconds\">$NWB#vicidial_inbound_groups-wait_time_option_prompt_seconds$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option After Press Filename: </td><td align=left><input type=text name=wait_time_option_callback_filename id=wait_time_option_callback_filename size=50 maxlength=255 value=\"$wait_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('wait_time_option_callback_filename','date',1300);\">audio chooser</a> $NWB#vicidial_inbound_groups-wait_time_option_callback_filename$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Callback List ID: </td><td align=left><input type=text name=wait_time_option_callback_list_id size=14 maxlength=14 value=\"$wait_time_option_callback_list_id\">$NWB#vicidial_inbound_groups-wait_time_option_callback_list_id$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Wait Hold Option Priority: </td><td align=left><select size=1 name=wait_hold_option_priority><option>WAIT</option><option>BOTH</option><option SELECTED>$wait_hold_option_priority</option></select>$NWB#vicidial_inbound_groups-wait_hold_option_priority$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCFFFF><td align=right>Estimated Hold Time Option: </td><td align=left><select size=1 name=hold_time_option><option>NONE</option><option>EXTENSION</option><option>CALL_MENU</option><option>VOICEMAIL</option><option>IN_GROUP</option><option>CALLERID_CALLBACK</option><option>DROP_ACTION</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$hold_time_option</option></select>$NWB#vicidial_inbound_groups-hold_time_option$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Second Option: </td><td align=left><select size=1 name=hold_time_second_option><option>NONE</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$hold_time_second_option</option></select>$NWB#vicidial_inbound_groups-hold_time_second_option$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Third Option: </td><td align=left><select size=1 name=hold_time_third_option><option>NONE</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$hold_time_third_option</option></select>$NWB#vicidial_inbound_groups-hold_time_third_option$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Seconds: </td><td align=left><input type=text name=hold_time_option_seconds size=5 maxlength=5 value=\"$hold_time_option_seconds\">$NWB#vicidial_inbound_groups-hold_time_option_seconds$NWE</td></tr>\n";
 
