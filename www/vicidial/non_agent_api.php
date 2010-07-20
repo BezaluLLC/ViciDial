@@ -2017,6 +2017,7 @@ if ($function == 'update_lead')
 						{exit;}
 					else
 						{
+						if (strlen($list_id_field)>0)		{$list_id=$list_id_field;}
 						##### BEGIN insert not-found lead into the system #####
 						if  ( (strlen($phone_number)<6) or (strlen($phone_number)>18) or (strlen($phone_code)<1) or (strlen($list_id)<3) )
 							{

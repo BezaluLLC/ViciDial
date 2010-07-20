@@ -2379,11 +2379,12 @@ else
 # 100703-1322 - Added LEADS ability to admin log display
 # 100709-1025 - Added option for slave DB server to be used for selected reports
 # 100718-2318 - Added Wait Time options to in-groups
+# 100720-1332 - Small changes to Phone addition and modification pages
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-263';
-$build = '100718-2318';
+$admin_version = '2.4-264';
+$build = '100720-1332';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -2874,19 +2875,6 @@ if ( ($ADD>9) && ($ADD < 99998) )
 
 if ( ( (strlen($ADD)>4) && ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($ADD<70)) or ($ADD=="4A")  or ($ADD=="4B") or (strlen($ADD)==12) )
 	{
-	##### get server listing for dynamic pulldown
-	$stmt="SELECT server_ip,server_description from servers order by server_ip";
-	$rslt=mysql_query($stmt, $link);
-	$servers_to_print = mysql_num_rows($rslt);
-	$servers_list='';
-
-	$o=0;
-	while ($servers_to_print > $o)
-		{
-		$rowx=mysql_fetch_row($rslt);
-		$servers_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
-		$o++;
-		}
 
 	##### BEGIN get campaigns listing for rankings #####
 
@@ -3307,10 +3295,10 @@ if ( ($ADD==211111) or ($ADD==311111) or ($ADD==411111) or ($ADD==511111) or ($A
 	##### END get campaigns listing for checkboxes #####
 
 
-if ( (strlen($ADD)==11) or (strlen($ADD)>12) or ( ($ADD > 1299) and ($ADD < 9999) ) )
+if ( (strlen($ADD)==11) or (strlen($ADD)>12) or ( ($ADD > 1299) and ($ADD < 9999) ) or ($ADD=='141111111111') or ($ADD=='140111111111') or ($ADD=='341111111111') or ($ADD=='311111111111111') or ( (strlen($ADD)>4) && ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($ADD<70)) or ($ADD=="4A") or ($ADD=="4B") or (strlen($ADD)==12) )
 	{
-	##### get server listing for dynamic pulldown
-	$stmt="SELECT server_ip,server_description from servers order by server_ip";
+	##### get server listing for dynamic pulldown 
+	$stmt="SELECT server_ip,server_description,external_server_ip from servers order by server_ip";
 	$rsltx=mysql_query($stmt, $link);
 	$servers_to_print = mysql_num_rows($rsltx);
 	$servers_list='';
@@ -3319,7 +3307,7 @@ if ( (strlen($ADD)==11) or (strlen($ADD)>12) or ( ($ADD > 1299) and ($ADD < 9999
 	while ($servers_to_print > $o)
 		{
 		$rowx=mysql_fetch_row($rsltx);
-		$servers_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+		$servers_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1] - $rowx[2]</option>\n";
 		$o++;
 		}
 	}
@@ -8379,21 +8367,21 @@ if ($ADD==11111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Dial Plan Number: </td><td align=left><input type=text name=dialplan_number size=15 maxlength=20> (digits only)$NWB#phones-dialplan_number$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail Box: </td><td align=left><input type=text name=voicemail_id size=10 maxlength=10> (digits only)$NWB#phones-voicemail_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Outbound CallerID: </td><td align=left><input type=text name=outbound_cid size=10 maxlength=20> (digits only)$NWB#phones-outbound_cid$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Phone IP address: </td><td align=left><input type=text name=phone_ip size=20 maxlength=15> (optional)$NWB#phones-phone_ip$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Computer IP address: </td><td align=left><input type=text name=computer_ip size=20 maxlength=15> (optional)$NWB#phones-computer_ip$NWE</td></tr>\n";
+#		echo "<tr bgcolor=#B6D3FC><td align=right>Phone IP address: </td><td align=left><input type=text name=phone_ip size=20 maxlength=15> (optional)$NWB#phones-phone_ip$NWE</td></tr>\n";
+#		echo "<tr bgcolor=#B6D3FC><td align=right>Computer IP address: </td><td align=left><input type=text name=computer_ip size=20 maxlength=15> (optional)$NWB#phones-computer_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left><select size=1 name=server_ip>\n";
 
 		echo "$servers_list";
-		echo "<option SELECTED>$row[5]</option>\n";
 		echo "</select>$NWB#phones-server_ip$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Login: </td><td align=left><input type=text name=login size=10 maxlength=10>$NWB#phones-login$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Password: </td><td align=left><input type=text name=pass size=10 maxlength=10>$NWB#phones-pass$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Login: </td><td align=left><input type=text name=login size=15 maxlength=15>$NWB#phones-login$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Login Password: </td><td align=left><input type=text name=pass size=10 maxlength=10>$NWB#phones-pass$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Registration Password: </td><td align=left><input type=text name=conf_secret size=20 maxlength=20>$NWB#phones-conf_secret$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Status: </td><td align=left><select size=1 name=status><option SELECTED>ACTIVE</option><option>SUSPENDED</option><option>CLOSED</option><option>PENDING</option><option>ADMIN</option></select>$NWB#phones-status$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active Account: </td><td align=left><select size=1 name=active><option SELECTED>Y</option><option>N</option></select>$NWB#phones-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Phone Type: </td><td align=left><input type=text name=phone_type size=20 maxlength=50>$NWB#phones-phone_type$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Full Name: </td><td align=left><input type=text name=fullname size=20 maxlength=50>$NWB#phones-fullname$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Company: </td><td align=left><input type=text name=company size=10 maxlength=10>$NWB#phones-company$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Picture: </td><td align=left><input type=text name=picture size=20 maxlength=19>$NWB#phones-picture$NWE</td></tr>\n";
+#		echo "<tr bgcolor=#B6D3FC><td align=right>Company: </td><td align=left><input type=text name=company size=10 maxlength=10>$NWB#phones-company$NWE</td></tr>\n";
+#		echo "<tr bgcolor=#B6D3FC><td align=right>Picture: </td><td align=left><input type=text name=picture size=20 maxlength=19>$NWB#phones-picture$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Client Protocol: </td><td align=left><select size=1 name=protocol><option SELECTED>SIP</option><option>Zap</option><option>IAX2</option><option>EXTERNAL</option></select>$NWB#phones-protocol$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Local GMT: </td><td align=left><select size=1 name=local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option SELECTED>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option></select> (Do NOT Adjust for DST)$NWB#phones-local_gmt$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE=SUBMIT></td></tr>\n";
@@ -8572,20 +8560,6 @@ if ($ADD==141111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Dialplan Entry: </td><td align=left><TEXTAREA NAME=dialplan_entry ROWS=10 COLS=70></TEXTAREA> $NWB#vicidial_server_carriers-dialplan_entry$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left><select size=1 name=server_ip>\n";
-		##### get server listing for dynamic pulldown
-		$stmt="SELECT server_ip,server_description from servers order by server_ip";
-		$rsltx=mysql_query($stmt, $link);
-		$servers_to_print = mysql_num_rows($rsltx);
-		$servers_list='';
-
-		$o=0;
-		while ($servers_to_print > $o)
-			{
-			$rowx=mysql_fetch_row($rsltx);
-			$servers_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
-			$o++;
-			}
-
 		echo "$servers_list";
 		echo "</select>$NWB#vicidial_server_carriers-server_ip$NWE</td></tr>\n";
 
@@ -8617,20 +8591,6 @@ if ($ADD==140111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Carrier ID: </td><td align=left><input type=text name=carrier_id size=15 maxlength=15>$NWB#vicidial_server_carriers-carrier_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Carrier Name: </td><td align=left><input type=text name=carrier_name size=40 maxlength=50>$NWB#vicidial_server_carriers-carrier_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left><select size=1 name=server_ip>\n";
-		##### get server listing for dynamic pulldown
-		$stmt="SELECT server_ip,server_description from servers order by server_ip";
-		$rsltx=mysql_query($stmt, $link);
-		$servers_to_print = mysql_num_rows($rsltx);
-		$servers_list='';
-
-		$o=0;
-		while ($servers_to_print > $o)
-			{
-			$rowx=mysql_fetch_row($rsltx);
-			$servers_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
-			$o++;
-			}
-
 		echo "$servers_list";
 		echo "</select>$NWB#vicidial_server_carriers-server_ip$NWE</td></tr>\n";
 
@@ -8772,9 +8732,7 @@ if ($ADD==1111111111111)
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Conference Number: </td><td align=left><input type=text name=conf_exten size=8 maxlength=7> (digits only)$NWB#conferences-conf_exten$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left><select size=1 name=server_ip>\n";
-
 		echo "$servers_list";
-		echo "<option SELECTED>$server_ip</option>\n";
 		echo "</select>$NWB#conferences-server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE=SUBMIT></td></tr>\n";
 		echo "</TABLE></center>\n";
@@ -8803,9 +8761,7 @@ if ($ADD==11111111111111)
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Conference Number: </td><td align=left><input type=text name=conf_exten size=8 maxlength=7> (digits only)$NWB#conferences-conf_exten$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left><select size=1 name=server_ip>\n";
-
 		echo "$servers_list";
-		echo "<option SELECTED>$server_ip</option>\n";
 		echo "</select>$NWB#conferences-server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE=SUBMIT></td></tr>\n";
 		echo "</TABLE></center>\n";
@@ -10735,7 +10691,7 @@ if ($ADD==21111111111)
 						{
 						echo "<br>PHONE ADDED\n";
 
-						$stmt="INSERT INTO phones (extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,protocol,local_gmt,outbound_cid) values('$extension','$dialplan_number','$voicemail_id','$phone_ip','$computer_ip','$server_ip','$login','$pass','$status','$active','$phone_type','$fullname','$company','$picture','$protocol','$local_gmt','$outbound_cid');";
+						$stmt="INSERT INTO phones (extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,protocol,local_gmt,outbound_cid,conf_secret) values('$extension','$dialplan_number','$voicemail_id','$phone_ip','$computer_ip','$server_ip','$login','$pass','$status','$active','$phone_type','$fullname','$company','$picture','$protocol','$local_gmt','$outbound_cid','$conf_secret');";
 						$rslt=mysql_query($stmt, $link);
 
 						$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
@@ -22661,7 +22617,7 @@ if ($ADD==31111111111)
 		echo "$servers_list";
 		echo "<option SELECTED>$row[5]</option>\n";
 		echo "</select>$NWB#phones-server_ip$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Login: </td><td align=left><input type=text name=login size=10 maxlength=10 value=\"$row[6]\">$NWB#phones-login$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Login: </td><td align=left><input type=text name=login size=15 maxlength=15 value=\"$row[6]\">$NWB#phones-login$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Login Password: </td><td align=left><input type=text name=pass size=10 maxlength=10 value=\"$row[7]\">$NWB#phones-pass$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Registration Password: </td><td align=left><input type=text name=conf_secret size=20 maxlength=20 value=\"$row[72]\">$NWB#phones-conf_secret$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Set As Webphone: </td><td align=left><select size=1 name=is_webphone><option>Y</option><option>N</option><option selected>$row[74]</option></select>$NWB#phones-is_webphone$NWE</td></tr>\n";
@@ -23371,20 +23327,6 @@ if ($ADD==341111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Dialplan Entry: </td><td align=left><TEXTAREA NAME=dialplan_entry ROWS=10 COLS=70>$dialplan_entry</TEXTAREA> $NWB#vicidial_server_carriers-dialplan_entry$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left><select size=1 name=server_ip>\n";
-		##### get server listing for dynamic pulldown
-		$stmt="SELECT server_ip,server_description from servers order by server_ip";
-		$rsltx=mysql_query($stmt, $link);
-		$servers_to_print = mysql_num_rows($rsltx);
-		$servers_list='';
-
-		$o=0;
-		while ($servers_to_print > $o)
-			{
-			$rowx=mysql_fetch_row($rsltx);
-			$servers_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
-			$o++;
-			}
-
 		echo "$servers_list";
 		echo "<option SELECTED>$server_ip</option>\n";
 		echo "</select>$NWB#vicidial_server_carriers-server_ip$NWE</td></tr>\n";
@@ -23849,20 +23791,6 @@ if ($ADD==311111111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Admin Web Directory: </td><td align=left><input type=text name=admin_web_directory size=50 maxlength=255 value=\"$admin_web_directory\">$NWB#settings-admin_web_directory$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active Voicemail Server: </td><td align=left><select size=1 name=active_voicemail_server>\n";
-		##### get server listing for dynamic pulldown
-		$stmt="SELECT server_ip,server_description from servers order by server_ip";
-		$rsltx=mysql_query($stmt, $link);
-		$servers_to_print = mysql_num_rows($rsltx);
-		$servers_list='';
-
-		$o=0;
-		while ($servers_to_print > $o)
-			{
-			$rowx=mysql_fetch_row($rsltx);
-			$servers_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
-			$o++;
-			}
-
 		echo "$servers_list";
 		echo "<option SELECTED>$active_voicemail_server</option>\n";
 		echo "</select>$NWB#settings-active_voicemail_server$NWE</td></tr>\n";

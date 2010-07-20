@@ -3406,7 +3406,6 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		}
 	else
 		{
-		if ($AGILOG) {$agi_string = "--    DEBUUUUUUUUUUUUUUUUUUUUUUUUUUUUUG: |$hold_wait_in_queue|$hold_time_option|$holdtime_estimate_sec_diff|$wait_in_queue|$last_wait_run|";   &agi_output;}
 		##### check if hold_time_option is set to leave Queue	
 		if ( ($hold_time_option !~ /NONE/ ) && ($holdtime_estimate_sec_diff > $hold_time_option_seconds) && ($wait_in_queue < 2) )
 			{
@@ -3505,7 +3504,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 						if ($pin =~ /1/)
 							{
-							if ($hold_time_option =~ /PRESS_STAY/)			{$hold_time_option = 'STAY_IN_QUEUE';  $hold_in_queue = 2;  $DROPexten='';}
+							if ($hold_time_option =~ /PRESS_STAY/)			{$hold_time_option = 'STAY_IN_QUEUE';  $wait_in_queue = 2;  $DROPexten='';}
 							if ($hold_time_option =~ /PRESS_VMAIL/)			{$hold_time_option = 'VOICEMAIL';   $HT_status='QVMAIL';}
 							if ($hold_time_option =~ /PRESS_EXTEN/)			{$hold_time_option = 'EXTENSION';   $HT_status='WAITTO';}
 							if ($hold_time_option =~ /PRESS_CALLMENU/)		{$hold_time_option = 'CALL_MENU';   $HT_status='WAITTO';}
@@ -3514,7 +3513,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 							}
 						if ($pin =~ /2/)
 							{
-							if ($hold_time_second_option =~ /PRESS_STAY/)			{$hold_time_option = 'STAY_IN_QUEUE';  $hold_in_queue = 2;  $DROPexten='';}
+							if ($hold_time_second_option =~ /PRESS_STAY/)			{$hold_time_option = 'STAY_IN_QUEUE';  $wait_in_queue = 2;  $DROPexten='';}
 							if ($hold_time_second_option =~ /PRESS_VMAIL/)			{$hold_time_option = 'VOICEMAIL';   $HT_status='QVMAIL';}
 							if ($hold_time_second_option =~ /PRESS_EXTEN/)			{$hold_time_option = 'EXTENSION';   $HT_status='WAITTO';}
 							if ($hold_time_second_option =~ /PRESS_CALLMENU/)		{$hold_time_option = 'CALL_MENU';   $HT_status='WAITTO';}
@@ -3523,7 +3522,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 							}
 						if ($pin =~ /3/)
 							{
-							if ($hold_time_third_option =~ /PRESS_STAY/)			{$hold_time_option = 'STAY_IN_QUEUE';  $hold_in_queue = 2;  $DROPexten='';}
+							if ($hold_time_third_option =~ /PRESS_STAY/)			{$hold_time_option = 'STAY_IN_QUEUE';  $wait_in_queue = 2;  $DROPexten='';}
 							if ($hold_time_third_option =~ /PRESS_VMAIL/)			{$hold_time_option = 'VOICEMAIL';   $HT_status='QVMAIL';}
 							if ($hold_time_third_option =~ /PRESS_EXTEN/)			{$hold_time_option = 'EXTENSION';   $HT_status='WAITTO';}
 							if ($hold_time_third_option =~ /PRESS_CALLMENU/)		{$hold_time_option = 'CALL_MENU';   $HT_status='WAITTO';}
