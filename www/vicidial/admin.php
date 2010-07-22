@@ -2016,7 +2016,6 @@ if ($non_latin < 1)
 	$DBX_server = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$DBX_server);
 	$DBY_server = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$DBY_server);
 	$dtmf_send_extension = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$dtmf_send_extension);
-	$extension = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$extension);
 	$install_directory = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$install_directory);
 	$old_extension = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$old_extension);
 	$telnet_host = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$telnet_host);
@@ -2032,6 +2031,9 @@ if ($non_latin < 1)
 	$custom_three = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$custom_three);
 	$custom_four = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$custom_four);
 	$custom_five = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$custom_five);
+
+	### ALPHA-NUMERIC and underscore and dash and slash and at and dot and pound and star
+	$extension = ereg_replace("[^-\*\#\.\:\/\@\_0-9a-zA-Z]","",$extension);
 
 	### NUMERIC and comma and pipe
 	$waitforsilence_options = ereg_replace("[^\|\,0-9]","",$waitforsilence_options);

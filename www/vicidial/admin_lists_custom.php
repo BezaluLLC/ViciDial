@@ -12,10 +12,10 @@
 # 100509-0922 - Added copy fields options
 # 100510-1130 - Added DISPLAY field type option
 # 100629-0200 - Added SCRIPT field type option
-#
+# 100722-1313 - Added field validation
 
-$admin_version = '2.4-6';
-$build = '100629-0200';
+$admin_version = '2.4-7';
+$build = '100722-1313';
 
 
 require("dbconnect.php");
@@ -718,11 +718,6 @@ if ( ($action == "DELETE_CUSTOM_FIELD") and ($list_id > 99) and ($field_id > 0) 
 ##### BEGIN add new custom field
 if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 	{
-	$table_exists=0;
-	$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
-	if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
-	mysql_select_db("$VARDB_database", $linkCUSTOM);
-
 	$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id' and field_label='$field_label';";
 	if ($DB>0) {echo "$stmt";}
 	$rslt=mysql_query($stmt, $link);
@@ -733,21 +728,31 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 		$field_exists =	$rowx[0];
 		}
 	
-	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-	$rslt=mysql_query($stmt, $link);
-	$tablecount_to_print = mysql_num_rows($rslt);
-	if ($tablecount_to_print > 0) 
-		{$table_exists =	1;}
-	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
-	
-	if ($field_exists > 0)
-		{echo "ERROR: Field already exists for this list - $list_id|$field_label\n<BR>";}
+	if ( (strlen($field_label)<1) or (strlen($field_name)<2) or (strlen($field_size)<1) )
+		{echo "ERROR: You must enter a field label, field name and field size - $list_id|$field_label|$field_name|$field_size\n<BR>";}
 	else
 		{
-		### add field function
-		add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields);
+		if ($field_exists > 0)
+			{echo "ERROR: Field already exists for this list - $list_id|$field_label\n<BR>";}
+		else
+			{
+			$table_exists=0;
+			$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
+			if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
+			mysql_select_db("$VARDB_database", $linkCUSTOM);
 
-		echo "SUCCESS: Custom Field Added - $list_id|$field_label\n<BR>";
+			$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
+			$rslt=mysql_query($stmt, $link);
+			$tablecount_to_print = mysql_num_rows($rslt);
+			if ($tablecount_to_print > 0) 
+				{$table_exists =	1;}
+			if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
+		
+			### add field function
+			add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields);
+
+			echo "SUCCESS: Custom Field Added - $list_id|$field_label\n<BR>";
+			}
 		}
 
 	$action = "MODIFY_CUSTOM_FIELDS";
