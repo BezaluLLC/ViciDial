@@ -611,6 +611,7 @@ while ($sthArows > $cbc)
 	$no_delay_call_route =				$aryA[29];
 	if ($hold_time_option =~ /DROP_ACTION/)
 		{$hold_time_option = $drop_action;}
+		$hold_time_option_SETTING = $hold_time_option;
 	$play_welcome_message =				$aryA[30];
 	$no_agent_no_queue =				$aryA[31];
 	$no_agent_action =					$aryA[32];
@@ -629,6 +630,7 @@ while ($sthArows > $cbc)
 	$hold_time_third_option =			$aryA[45];
 	$wait_hold_option_priority =		$aryA[46];
 	$wait_time_option =					$aryA[47];
+		$wait_time_option_SETTING = $wait_time_option;
 	$wait_time_second_option =			$aryA[48];
 	$wait_time_third_option =			$aryA[49];
 	$wait_time_option_seconds =			$aryA[50];
@@ -907,7 +909,7 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02019';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	if ($AGILOG) {$agi_string = "--  AH VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
-	if ($AGILOG) {$agi_string = "--  AH action: |$$after_hours_action|$after_hours_exten|$after_hours_message_filename|$after_hours_voicemail|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "--  AH action: |$after_hours_action|$after_hours_exten|$after_hours_message_filename|$after_hours_voicemail|";   &agi_output;}
 
 	if ($after_hours_action =~ /EXTENSION|VOICEMAIL|IN_GROUP/)
 		{
@@ -2869,7 +2871,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		$moh_delay=1;
 		if ($play_place_in_line =~ /Y/i) {$start_place_in_line=1; $moh_delay=2;}
 		if ($play_estimate_hold_time =~ /Y/i) {$start_hold_estimate=1; $moh_delay=2;}
-		if ($hold_time_option !~ /NONE/) {$start_hold_estimate=1; $moh_delay=2;}
+		if ($hold_time_option_SETTING !~ /NONE/) {$start_hold_estimate=1; $moh_delay=2;}
 		if ($drop_timer >= 2) {$drop_timer = ($drop_timer + 5);} # add prompt play time to total queue time
 		if ($wait_time_option !~ /NONE/) {$wait_in_queue=1; $moh_delay=2;}
 		}
@@ -3036,8 +3038,9 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 	$last_wait_run++;
 	### BEGIN wait time option press-123 options ###
-	if ( ($wait_time_option !~ /NONE/ ) && ($drop_timer > $wait_time_option_seconds) && ( ( ($wait_in_queue < 2) && ($last_wait_run > 5) ) || ($wait_prompt_runs < 1) ) )
+	if ( ($wait_time_option_SETTING !~ /NONE/ ) && ($drop_timer > $wait_time_option_seconds) && ( ( ($wait_in_queue < 2) && ($last_wait_run > 5) ) || ($wait_prompt_runs < 1) ) )
 		{
+		$pin='';
 		$wait_prompt_runs++;
 		$wait_in_queue=0; # exits wait loop
 		$DROPexten = ''; 
@@ -3054,7 +3057,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		# - PRESS_CID_CALLBACK
 		# - PRESS_INGROUP
 
-		if ($wait_time_option =~ /PRESS_/)
+		if ($wait_time_option_SETTING =~ /PRESS_/)
 			{
 			$now_date_epoch = time();
 			$HTO_no_block_SQL = '';
@@ -3122,12 +3125,12 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 				if ($pin =~ /1/)
 					{
-					if ($wait_time_option =~ /PRESS_STAY/)			{$wait_time_option = 'STAY_IN_QUEUE';  $wait_in_queue = 2;  $DROPexten='';}
-					if ($wait_time_option =~ /PRESS_VMAIL/)			{$wait_time_option = 'VOICEMAIL';   $HT_status='QVMAIL';}
-					if ($wait_time_option =~ /PRESS_EXTEN/)			{$wait_time_option = 'EXTENSION';   $HT_status='WAITTO';}
-					if ($wait_time_option =~ /PRESS_CALLMENU/)		{$wait_time_option = 'CALL_MENU';   $HT_status='WAITTO';}
-					if ($wait_time_option =~ /PRESS_CID_CALLBACK/)	{$wait_time_option = 'CALLERID_CALLBACK';   $HT_status='WAITTO';}
-					if ($wait_time_option =~ /PRESS_INGROUP/)		{$wait_time_option = 'IN_GROUP';   $HT_status='WAITTO';}
+					if ($wait_time_option_SETTING =~ /PRESS_STAY/)			{$wait_time_option = 'STAY_IN_QUEUE';  $wait_in_queue = 2;  $DROPexten='';}
+					if ($wait_time_option_SETTING =~ /PRESS_VMAIL/)			{$wait_time_option = 'VOICEMAIL';   $HT_status='QVMAIL';}
+					if ($wait_time_option_SETTING =~ /PRESS_EXTEN/)			{$wait_time_option = 'EXTENSION';   $HT_status='WAITTO';}
+					if ($wait_time_option_SETTING =~ /PRESS_CALLMENU/)		{$wait_time_option = 'CALL_MENU';   $HT_status='WAITTO';}
+					if ($wait_time_option_SETTING =~ /PRESS_CID_CALLBACK/)	{$wait_time_option = 'CALLERID_CALLBACK';   $HT_status='WAITTO';}
+					if ($wait_time_option_SETTING =~ /PRESS_INGROUP/)		{$wait_time_option = 'IN_GROUP';   $HT_status='WAITTO';}
 					}
 				if ($pin =~ /2/)
 					{
@@ -3407,7 +3410,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 	else
 		{
 		##### check if hold_time_option is set to leave Queue	
-		if ( ($hold_time_option !~ /NONE/ ) && ($holdtime_estimate_sec_diff > $hold_time_option_seconds) && ($wait_in_queue < 2) )
+		if ( ($hold_time_option_SETTING !~ /NONE/ ) && ($holdtime_estimate_sec_diff > $hold_time_option_seconds) && ($wait_in_queue < 2) )
 			{
 			if ($drop_timer < $hold_time_option_minimum) 
 				{
@@ -3415,6 +3418,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				}
 			else
 				{
+				$pin='';
 				$wait_in_queue=0; # exits wait loop
 				$DROPexten = ''; 
 				$exitwithkey=0;
@@ -3436,7 +3440,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				# - PRESS_INGROUP
 
 				### BEGIN hold time option press-123 options ###
-				if ($hold_time_option =~ /PRESS_/)
+				if ($hold_time_option_SETTING =~ /PRESS_/)
 					{
 					$now_date_epoch = time();
 					$HTO_no_block_SQL = '';
@@ -3504,12 +3508,12 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 						if ($pin =~ /1/)
 							{
-							if ($hold_time_option =~ /PRESS_STAY/)			{$hold_time_option = 'STAY_IN_QUEUE';  $wait_in_queue = 2;  $DROPexten='';}
-							if ($hold_time_option =~ /PRESS_VMAIL/)			{$hold_time_option = 'VOICEMAIL';   $HT_status='QVMAIL';}
-							if ($hold_time_option =~ /PRESS_EXTEN/)			{$hold_time_option = 'EXTENSION';   $HT_status='WAITTO';}
-							if ($hold_time_option =~ /PRESS_CALLMENU/)		{$hold_time_option = 'CALL_MENU';   $HT_status='WAITTO';}
-							if ($hold_time_option =~ /PRESS_CID_CALLBACK/)	{$hold_time_option = 'CALLERID_CALLBACK';   $HT_status='WAITTO';}
-							if ($hold_time_option =~ /PRESS_INGROUP/)		{$hold_time_option = 'IN_GROUP';   $HT_status='WAITTO';}
+							if ($hold_time_option_SETTING =~ /PRESS_STAY/)			{$hold_time_option = 'STAY_IN_QUEUE';  $wait_in_queue = 2;  $DROPexten='';}
+							if ($hold_time_option_SETTING =~ /PRESS_VMAIL/)			{$hold_time_option = 'VOICEMAIL';   $HT_status='QVMAIL';}
+							if ($hold_time_option_SETTING =~ /PRESS_EXTEN/)			{$hold_time_option = 'EXTENSION';   $HT_status='WAITTO';}
+							if ($hold_time_option_SETTING =~ /PRESS_CALLMENU/)		{$hold_time_option = 'CALL_MENU';   $HT_status='WAITTO';}
+							if ($hold_time_option_SETTING =~ /PRESS_CID_CALLBACK/)	{$hold_time_option = 'CALLERID_CALLBACK';   $HT_status='WAITTO';}
+							if ($hold_time_option_SETTING =~ /PRESS_INGROUP/)		{$hold_time_option = 'IN_GROUP';   $HT_status='WAITTO';}
 							}
 						if ($pin =~ /2/)
 							{
@@ -3564,6 +3568,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						{
 						$DROPexten='';
 						$wait_in_queue = 2; #continue waiting on hold
+						if ($AGILOG) {$agi_string = "HOLD TIME OPTION NOTHING PRESSED $pin: $hold_time_option|$HT_status";   &agi_output;}
 						}
 					}
 				### END hold time option press 1 options ###
@@ -3673,7 +3678,6 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						{
 						$wait_in_queue = 2; #continue waiting
 						}
-					
 					}
 
 				if ($AGILOG) {$agi_string = "--    VDCL HOLD TIME OPT: |$hold_time_option|$DROPexten|$wait_in_queue|";   &agi_output;}

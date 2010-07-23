@@ -775,6 +775,20 @@ installation on another machine)
 	- php -v
 
 
+NOTE: there is now a utility available to manage eaccelerator from a web interface:
+	#> cd /usr/src/eaccelerator-0.9.5.3
+	#> cp control.php /srv/www/htdocs/eaccelerator_control.php
+	#> cd /srv/www/htdocs/
+	#> vim eaccelerator_control.php
+	Edit the following two lines:
+		$user = "username";
+		$pw = "password";
+	#> vim /etc/php5/conf.d/eaccelerator.ini
+	Add the following line:
+		eaccelerator.allowed_admin_path = "/srv/www/htdocs/"
+
+
+
 
 
 balance is a load-balancing application for Linux that will allow you to spread
