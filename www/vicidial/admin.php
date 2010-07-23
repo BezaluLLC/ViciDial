@@ -2382,11 +2382,12 @@ else
 # 100709-1025 - Added option for slave DB server to be used for selected reports
 # 100718-2318 - Added Wait Time options to in-groups
 # 100720-1332 - Small changes to Phone addition and modification pages
+# 100723-1519 - Added LOCKED options for Quick Transfer Button in campaigns
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-264';
-$build = '100720-1332';
+$admin_version = '2.4-265';
+$build = '100723-1519';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4192,7 +4193,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_campaigns-quick_transfer_button">
 	<BR>
-	<B>Quick Transfer Button -</B> This option will add a Quick Transfer button to the agent screen below the Transfer-Conf button that will allow one click blind transferring of calls to the selected In-Group or number. IN_GROUP will send calls to the Default Xfer Group for this Campaign, or In-Group if there was an inbound call. The PRESET options will send the calls to the preset selected. Default is N for disabled.
+	<B>Quick Transfer Button -</B> This option will add a Quick Transfer button to the agent screen below the Transfer-Conf button that will allow one click blind transferring of calls to the selected In-Group or number. IN_GROUP will send calls to the Default Xfer Group for this Campaign, or In-Group if there was an inbound call. The PRESET options will send the calls to the preset selected. Default is N for disabled. The LOCKED options are used to lock the value to the Quick Transfer Button even if the agent uses the transfer conference features during a cacll before using the Quick Transfer Button.
 
 	<BR>
 	<A NAME="vicidial_campaigns-prepopulate_transfer_preset">
@@ -7270,7 +7271,7 @@ if ($ADD==11)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>Allow Closers: </td><td align=left><select size=1 name=allow_closers><option>Y</option><option>N</option></select>$NWB#vicidial_campaigns-allow_closers$NWE</td></tr>\n";
 			echo "<tr bgcolor=#8EBCFD><td align=right>Hopper Level: </td><td align=left><select size=1 name=hopper_level><option>1</option><option>5</option><option>10</option><option>20</option><option>50</option><option>100</option><option>200</option><option>500</option><option>1000</option><option>2000</option></select>$NWB#vicidial_campaigns-hopper_level$NWE</td></tr>\n";
-			echo "<tr bgcolor=#B6D3FC><td align=right>Auto Dial Level: </td><td align=left><select size=1 name=auto_dial_level><option selected>$auto_dial_level</option>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right>Auto Dial Level: </td><td align=left><select size=1 name=auto_dial_level><option selected>1</option>\n";
 			$adl=0;
 			while($adl <= $SSauto_dial_limit)
 				{
@@ -17801,7 +17802,7 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Transfer-Conf Number 5: </td><td align=left><input type=text name=xferconf_e_number size=20 maxlength=50 value=\"$xferconf_e_number\">$NWB#vicidial_campaigns-xferconf_a_dtmf$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Quick Transfer Button: </td><td align=left><select size=1 name=quick_transfer_button><option>N</option><option>IN_GROUP</option><option>PRESET_1</option><option>PRESET_2</option><option>PRESET_3</option><option>PRESET_4</option><option>PRESET_5</option><option SELECTED>$quick_transfer_button</option></select>$NWB#vicidial_campaigns-quick_transfer_button$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Quick Transfer Button: </td><td align=left><select size=1 name=quick_transfer_button><option>N</option><option>IN_GROUP</option><option>PRESET_1</option><option>PRESET_2</option><option>PRESET_3</option><option>PRESET_4</option><option>PRESET_5</option><option SELECTED>$quick_transfer_button</option><option>LOCKED_IN_GROUP</option><option>LOCKED_PRESET_1</option><option>LOCKED_PRESET_2</option><option>LOCKED_PRESET_3</option><option>LOCKED_PRESET_4</option><option>LOCKED_PRESET_5</option></select>$NWB#vicidial_campaigns-quick_transfer_button$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>PrePopulate Transfer Preset: </td><td align=left><select size=1 name=prepopulate_transfer_preset><option>N</option><option>PRESET_1</option><option>PRESET_2</option><option>PRESET_3</option><option>PRESET_4</option><option>PRESET_5</option><option SELECTED>$prepopulate_transfer_preset</option></select>$NWB#vicidial_campaigns-prepopulate_transfer_preset$NWE</td></tr>\n";
 

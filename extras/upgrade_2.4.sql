@@ -434,3 +434,6 @@ ALTER TABLE vicidial_inbound_groups ADD wait_time_option_prompt_seconds SMALLINT
 
 UPDATE system_settings SET db_schema_version='1235',db_schema_update_date=NOW();
 
+ALTER TABLE vicidial_campaigns MODIFY quick_transfer_button VARCHAR(20) default 'N';
+
+UPDATE system_settings SET db_schema_version='1236',db_schema_update_date=NOW();

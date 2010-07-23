@@ -301,10 +301,11 @@
 # 100629-1158 - Added initial code for custom list fields
 # 100702-1315 - Custom List Fields functionality enabled
 # 100712-1441 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
+# 100723-1522 - Added LOCKED options for quick transfer button feature
 #
 
-$version = '2.4-279';
-$build = '100712-1441';
+$version = '2.4-280';
+$build = '100723-1522';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -1364,8 +1365,11 @@ else
 					{$dispo_check_all_pause=1;}
 
 				$quick_transfer_button_enabled=0;
+				$quick_transfer_button_locked=0;
 				if (preg_match("/IN_GROUP|PRESET_1|PRESET_2|PRESET_3|PRESET_4|PRESET_5/",$quick_transfer_button))
 					{$quick_transfer_button_enabled=1;}
+				if (preg_match("/LOCKED/",$quick_transfer_button))
+					{$quick_transfer_button_locked=1;}
 
 				$preset_populate='';
 				$prepopulate_transfer_preset_enabled=0;
@@ -2913,6 +2917,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var VU_user_group = '<?php echo $VU_user_group ?>';
 	var quick_transfer_button = '<?php echo $quick_transfer_button ?>';
 	var quick_transfer_button_enabled = '<?php echo $quick_transfer_button_enabled ?>';
+	var quick_transfer_button_orig = '';
+	var quick_transfer_button_locked = '<?php echo $quick_transfer_button_locked ?>';
 	var prepopulate_transfer_preset = '<?php echo $prepopulate_transfer_preset ?>';
 	var prepopulate_transfer_preset_enabled = '<?php echo $prepopulate_transfer_preset_enabled ?>';
 	var view_calls_in_queue = '<?php echo $view_calls_in_queue ?>';
@@ -4192,7 +4198,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // ################################################################################
 // Send Redirect command for live call to Manager sends phone name where call is going to
 // Covers the following types: XFER, VMAIL, ENTRY, CONF, PARK, FROMPARK, XfeRLOCAL, XfeRINTERNAL, XfeRBLIND, VfeRVMAIL
-	function mainxfer_send_redirect(taskvar,taskxferconf,taskserverip,taskdebugnote,taskdispowindow) 
+	function mainxfer_send_redirect(taskvar,taskxferconf,taskserverip,taskdebugnote,taskdispowindow,tasklockedquick) 
 		{
 		blind_transfer=1;
 		var consultativexfer_checked = 0;
@@ -4228,6 +4234,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				{redirectvalue = lastcustchannel}
 			if ( (taskvar == 'XfeRBLIND') || (taskvar == 'XfeRVMAIL') )
 				{
+				if (tasklockedquick > 0)
+					{document.vicidial_form.xfernumber.value = quick_transfer_button_orig;}
 				var queryCID = "XBvdcW" + epoch_sec + user_abb;
 				var blindxferdialstring = document.vicidial_form.xfernumber.value;
 				var regXFvars = new RegExp("XFER","g");
@@ -4292,6 +4300,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				var XfeR_GrouP = XfeRSelecT.value;
 				if (API_selected_xfergroup.length > 1)
 					{var XfeR_GrouP = API_selected_xfergroup;}
+				if (tasklockedquick > 0)
+					{XfeR_GrouP = quick_transfer_button_orig;}
 				var queryCID = "XLvdcW" + epoch_sec + user_abb;
 				// 		 "90009*$group**$lead_id**$phone_number*$user*$agent_only*";
 				var redirectdestination = closerxferinternal + '90009*' + XfeR_GrouP + '**' + document.vicidial_form.lead_id.value + '**' + dialed_number + '*' + user + '*' + document.vicidial_form.xfernumber.value + '*';
@@ -5110,37 +5120,44 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								document.getElementById("VolumeUpSpan").innerHTML = "<a href=\"#\" onclick=\"volume_control('UP','" + MDchannel + "','');return false;\"><IMG SRC=\"./images/vdc_volume_up.gif\" BORDER=0></a>";
 								document.getElementById("VolumeDownSpan").innerHTML = "<a href=\"#\" onclick=\"volume_control('DOWN','" + MDchannel + "','');return false;\"><IMG SRC=\"./images/vdc_volume_down.gif\" BORDER=0></a>";
 
-								if (quick_transfer_button == 'IN_GROUP')
+								if ( (quick_transfer_button == 'IN_GROUP') || (quick_transfer_button == 'LOCKED_IN_GROUP') )
 									{
-									document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
+									quick_transfer_button_orig='';
+									if (quick_transfer_button_locked > 0)
+										{quick_transfer_button_orig = default_xfer_group;}
+
+									document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "','','','" + quick_transfer_button_locked + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
 									}
 								if (prepopulate_transfer_preset_enabled > 0)
 									{
-									if (prepopulate_transfer_preset == 'PRESET_1')
+									if ( (prepopulate_transfer_preset == 'PRESET_1') || (prepopulate_transfer_preset == 'LOCKED_PRESET_1') )
 										{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
-									if (prepopulate_transfer_preset == 'PRESET_2')
+									if ( (prepopulate_transfer_preset == 'PRESET_2') || (prepopulate_transfer_preset == 'LOCKED_PRESET_2') )
 										{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
-									if (prepopulate_transfer_preset == 'PRESET_3')
+									if ( (prepopulate_transfer_preset == 'PRESET_3') || (prepopulate_transfer_preset == 'LOCKED_PRESET_3') )
 										{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;}
-									if (prepopulate_transfer_preset == 'PRESET_4')
+									if ( (prepopulate_transfer_preset == 'PRESET_4') || (prepopulate_transfer_preset == 'LOCKED_PRESET_4') )
 										{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;}
-									if (prepopulate_transfer_preset == 'PRESET_5')
+									if ( (prepopulate_transfer_preset == 'PRESET_5') || (prepopulate_transfer_preset == 'LOCKED_PRESET_5') )
 										{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;}
 									}
-								if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'PRESET_5') )
+								if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'PRESET_5') || (quick_transfer_button == 'LOCKED_PRESET_1') || (quick_transfer_button == 'LOCKED_PRESET_2') || (quick_transfer_button == 'LOCKED_PRESET_3') || (quick_transfer_button == 'LOCKED_PRESET_4') || (quick_transfer_button == 'LOCKED_PRESET_5') )
 									{
-									document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
-
-									if (quick_transfer_button == 'PRESET_1')
+									if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'LOCKED_PRESET_1') )
 										{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
-									if (quick_transfer_button == 'PRESET_2')
+									if ( (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'LOCKED_PRESET_2') )
 										{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
-									if (quick_transfer_button == 'PRESET_3')
+									if ( (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'LOCKED_PRESET_3') )
 										{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;}
-									if (quick_transfer_button == 'PRESET_4')
+									if ( (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'LOCKED_PRESET_4') )
 										{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;}
-									if (quick_transfer_button == 'PRESET_5')
+									if ( (quick_transfer_button == 'PRESET_5') || (quick_transfer_button == 'LOCKED_PRESET_5') )
 										{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;}
+									quick_transfer_button_orig='';
+									if (quick_transfer_button_locked > 0)
+										{quick_transfer_button_orig = document.vicidial_form.xfernumber.value;}
+
+									document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "','','','" + quick_transfer_button_locked + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
 									}
 
 								if (call_requeue_button > 0)
@@ -7044,37 +7061,42 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 							document.getElementById("DialBlindVMail").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRVMAIL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_XB_ammessage.gif\" border=0 alt=\"Blind Transfer VMail Message\" style=\"vertical-align:middle\"></a>";
 		
-							if (quick_transfer_button == 'IN_GROUP')
+							if ( (quick_transfer_button == 'IN_GROUP') || (quick_transfer_button == 'LOCKED_IN_GROUP') )
 								{
-								document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
+								if (quick_transfer_button_locked > 0)
+									{quick_transfer_button_orig = default_xfer_group;}
+
+								document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "','','','" + quick_transfer_button_locked + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
 								}
 							if (prepopulate_transfer_preset_enabled > 0)
 								{
-								if (prepopulate_transfer_preset == 'PRESET_1')
+								if ( (prepopulate_transfer_preset == 'PRESET_1') || (prepopulate_transfer_preset == 'LOCKED_PRESET_1') )
 									{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
-								if (prepopulate_transfer_preset == 'PRESET_2')
+								if ( (prepopulate_transfer_preset == 'PRESET_2') || (prepopulate_transfer_preset == 'LOCKED_PRESET_2') )
 									{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
-								if (prepopulate_transfer_preset == 'PRESET_3')
+								if ( (prepopulate_transfer_preset == 'PRESET_3') || (prepopulate_transfer_preset == 'LOCKED_PRESET_3') )
 									{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;}
-								if (prepopulate_transfer_preset == 'PRESET_4')
+								if ( (prepopulate_transfer_preset == 'PRESET_4') || (prepopulate_transfer_preset == 'LOCKED_PRESET_4') )
 									{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;}
-								if (prepopulate_transfer_preset == 'PRESET_5')
+								if ( (prepopulate_transfer_preset == 'PRESET_5') || (prepopulate_transfer_preset == 'LOCKED_PRESET_5') )
 									{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;}
 								}
-							if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'PRESET_5') )
+							if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'PRESET_5') || (quick_transfer_button == 'LOCKED_PRESET_1') || (quick_transfer_button == 'LOCKED_PRESET_2') || (quick_transfer_button == 'LOCKED_PRESET_3') || (quick_transfer_button == 'LOCKED_PRESET_4') || (quick_transfer_button == 'LOCKED_PRESET_5') )
 								{
-								document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
-
-								if (quick_transfer_button == 'PRESET_1')
+								if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'LOCKED_PRESET_1') )
 									{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
-								if (quick_transfer_button == 'PRESET_2')
+								if ( (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'LOCKED_PRESET_2') )
 									{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
-								if (quick_transfer_button == 'PRESET_3')
+								if ( (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'LOCKED_PRESET_3') )
 									{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;}
-								if (quick_transfer_button == 'PRESET_4')
+								if ( (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'LOCKED_PRESET_4') )
 									{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;}
-								if (quick_transfer_button == 'PRESET_5')
+								if ( (quick_transfer_button == 'PRESET_5') || (quick_transfer_button == 'LOCKED_PRESET_5') )
 									{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;}
+								if (quick_transfer_button_locked > 0)
+									{quick_transfer_button_orig = document.vicidial_form.xfernumber.value;}
+
+								document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "','','','" + quick_transfer_button_locked + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
 								}
 
 							if (call_requeue_button > 0)
@@ -11181,7 +11203,7 @@ else
 				HKbutton_allowed = 0;
 				showDiv('TransferMain');
 				document.getElementById("XferControl").innerHTML = "<a href=\"#\" onclick=\"ShoWTransferMain('OFF','YES');\"><IMG SRC=\"./images/vdc_LB_transferconf.gif\" border=0 alt=\"Transfer - Conference\"></a>";
-				if (quick_transfer_button_enabled > 0)
+				if ( (quick_transfer_button_enabled > 0) && (quick_transfer_button_locked < 1) )
 					{document.getElementById("QuickXfer").innerHTML = "<IMG SRC=\"./images/vdc_LB_quickxfer_OFF.gif\" border=0 alt=\"QUICK TRANSFER\">";}
 				}
 			else
@@ -11193,13 +11215,13 @@ else
 					{
 					document.getElementById("XferControl").innerHTML = "<a href=\"#\" onclick=\"ShoWTransferMain('ON');\"><IMG SRC=\"./images/vdc_LB_transferconf.gif\" border=0 alt=\"Transfer - Conference\"></a>";
 
-					if (quick_transfer_button == 'IN_GROUP')
+					if ( (quick_transfer_button == 'IN_GROUP') || (quick_transfer_button == 'LOCKED_IN_GROUP') )
 						{
-						document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
+						document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "','','','" + quick_transfer_button_locked + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
 						}
-					if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'PRESET_5') )
+					if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'PRESET_5') || (quick_transfer_button == 'LOCKED_PRESET_1') || (quick_transfer_button == 'LOCKED_PRESET_2') || (quick_transfer_button == 'LOCKED_PRESET_3') || (quick_transfer_button == 'LOCKED_PRESET_4') || (quick_transfer_button == 'LOCKED_PRESET_5') )
 						{
-						document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
+						document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "','','','" + quick_transfer_button_locked + "');return false;\"><IMG SRC=\"./images/vdc_LB_quickxfer.gif\" border=0 alt=\"QUICK TRANSFER\"></a>";
 						}
 					}
 				}

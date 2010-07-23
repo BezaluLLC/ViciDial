@@ -717,7 +717,7 @@ survey_fourth_audio_file VARCHAR(50) default 'US_thanks_no_contact',
 survey_fourth_status VARCHAR(6) default 'NI',
 survey_fourth_exten VARCHAR(20) default '8300',
 drop_lockout_time VARCHAR(6) default '0',
-quick_transfer_button ENUM('N','IN_GROUP','PRESET_1','PRESET_2','PRESET_3','PRESET_4','PRESET_5') default 'N',
+quick_transfer_button VARCHAR(20) default 'N',
 prepopulate_transfer_preset ENUM('N','PRESET_1','PRESET_2','PRESET_3','PRESET_4','PRESET_5') default 'N',
 drop_rate_group VARCHAR(20) default 'DISABLED',
 view_calls_in_queue ENUM('NONE','ALL','1','2','3','4','5') default 'NONE',
@@ -2292,7 +2292,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1235',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1236',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
