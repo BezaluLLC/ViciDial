@@ -508,7 +508,7 @@ if ($OK_to_process)
 	if ($tab_count>$pipe_count) {$delimiter="\t";  $delim_name="tab";} else {$delimiter="|";  $delim_name="pipe";}
 	$field_check=explode($delimiter, $buffer);
 
-	if (count($field_check)>=5) 
+	if (count($field_check)>=2) 
 		{
 		flush();
 		$file=fopen("$lead_file", "r");
@@ -974,7 +974,7 @@ if (($leadfile) && ($LF_path))
 
 		$field_check=explode($delimiter, $buffer);
 
-		if (count($field_check)>=5) 
+		if (count($field_check)>=2) 
 			{
 			flush();
 			$file=fopen("$lead_file", "r");
@@ -1260,7 +1260,7 @@ if (($leadfile) && ($LF_path))
 			$rslt=mysql_query($stmt, $link);
 
 			print "<BR><BR>Done</B> GOOD: $good &nbsp; &nbsp; &nbsp; BAD: $bad &nbsp; &nbsp; &nbsp; TOTAL: $total</font></center>";
-			} 
+			}
 		else 
 			{
 			print "<center><font face='arial, helvetica' size=3 color='#990000'><B>ERROR: The file does not have the required number of fields to process it.</B></font></center>";

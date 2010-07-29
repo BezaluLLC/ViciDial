@@ -420,7 +420,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 			if ($tab_count>$pipe_count) {$delimiter="\t";  $delim_name="tab";} else {$delimiter="|";  $delim_name="pipe";}
 			$field_check=explode($delimiter, $buffer);
 
-			if (count($field_check)>=5) {
+			if (count($field_check)>=2) {
 				flush();
 				$file=fopen("$lead_file", "r");
 				print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing $delim_name-delimited file...\n";
@@ -1208,7 +1208,7 @@ if ($leadfile) {
 		if ($tab_count>$pipe_count) {$delimiter="\t";  $delim_name="tab";} else {$delimiter="|";  $delim_name="pipe";}
 		$field_check=explode($delimiter, $buffer);
 
-		if (count($field_check)>=5) {
+		if (count($field_check)>=2) {
 			flush();
 			$file=fopen("$lead_file", "r");
 			$total=0; $good=0; $bad=0; $dup=0; $post=0; $phone_list='';
