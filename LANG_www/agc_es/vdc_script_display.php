@@ -275,6 +275,12 @@ if ($ignore_list_script < 1)
 		{$call_script = $agent_script_override;}
 	}
 
+$stmt="SELECT list_name,list_description from vicidial_lists where list_id='$list_id';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$list_name =			$row[0];
+$list_description =		$row[1];
+
 $stmt="SELECT script_name,script_text from vicidial_scripts where script_id='$call_script';";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
@@ -288,6 +294,8 @@ if (eregi("iframe src",$script_text))
 	$vendor_id = eregi_replace(' ','+',$vendor_id);
 	$vendor_lead_code = eregi_replace(' ','+',$vendor_lead_code);
 	$list_id = eregi_replace(' ','+',$list_id);
+	$list_name = eregi_replace(' ','+',$list_name);
+	$list_description = eregi_replace(' ','+',$list_description);
 	$gmt_offset_now = eregi_replace(' ','+',$gmt_offset_now);
 	$phone_code = eregi_replace(' ','+',$phone_code);
 	$phone_number = eregi_replace(' ','+',$phone_number);
@@ -361,6 +369,8 @@ $script_text = eregi_replace('--A--lead_id--B--',"$lead_id",$script_text);
 $script_text = eregi_replace('--A--vendor_id--B--',"$vendor_id",$script_text);
 $script_text = eregi_replace('--A--vendor_lead_code--B--',"$vendor_lead_code",$script_text);
 $script_text = eregi_replace('--A--list_id--B--',"$list_id",$script_text);
+$script_text = eregi_replace('--A--list_name--B--',"$list_name",$script_text);
+$script_text = eregi_replace('--A--list_description--B--',"$list_description",$script_text);
 $script_text = eregi_replace('--A--gmt_offset_now--B--',"$gmt_offset_now",$script_text);
 $script_text = eregi_replace('--A--phone_code--B--',"$phone_code",$script_text);
 $script_text = eregi_replace('--A--phone_number--B--',"$phone_number",$script_text);

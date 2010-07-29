@@ -1,5 +1,5 @@
 <?php
-# manager_send.php    version 2.2.0
+# manager_send.php    version 2.4
 # 
 # Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -12,7 +12,7 @@
 #  - $user
 #  - $pass
 # optional variables:
-#  - $ACTION - ('Originate','Redirect','Hangup','Command','Monitor','StopMonitor','SysCIDOriginate','RedirectName','RedirectNameVmail','MonitorConf','StopMonitorConf','RedirectXtra','RedirectXtraCX','RedirectVD','HangupConfDial','VolumeControl','OriginateVDRelogin')
+#  - $ACTION - ('Originate','Redirect','Hangup','Command','Monitor','StopMonitor','SysCIDOriginate','SysCIDdtmfOriginate','RedirectName','RedirectNameVmail','MonitorConf','StopMonitorConf','RedirectXtra','RedirectXtraCX','RedirectVD','HangupConfDial','VolumeControl','OriginateVDRelogin')
 #  - $queryCID - ('CN012345678901234567',...)
 #  - $format - ('text','debug')
 #  - $channel - ('Zap/41-1','SIP/test101-1jut','IAX2/iaxy@iaxy',...)
@@ -97,10 +97,11 @@
 # 91213-1208 - Added queue_position to queue_log COMPLETE... records
 # 100327-0846 - Fix for list_id override answering machine message
 # 100423-2304 - Added alertCID
+# 100527-1014 - Added SysCIDdtmfOriginate function
 #
 
-$version = '2.2.0-48';
-$build = '100423-2304';
+$version = '2.4-49';
+$build = '100527-1014';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -292,6 +293,20 @@ if ($format=='debug')
 	}
 
 
+
+
+######################
+# ACTION=SysCIDdtmfOriginate  - prep the send dtmf command
+######################
+if ($ACTION=="SysCIDdtmfOriginate")
+	{
+	$stmt="UPDATE vicidial_live_agents SET external_dtmf='' where user='$user';";
+		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+	$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
+	$ACTION="SysCIDOriginate";
+	}
 
 
 
@@ -771,6 +786,11 @@ if ($ACTION=="RedirectToPark")
 	#	fwrite ($fp, "$NOW_TIME|MS_LOG_0|$queryCID|$stmt|\n");
 	#	fclose($fp);
 		}
+
+	$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
+		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 	}
 
 if ($ACTION=="RedirectFromPark")
@@ -795,6 +815,11 @@ if ($ACTION=="RedirectFromPark")
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02026',$user,$server_ip,$session_name,$one_mysql_log);}
 		$ACTION="Redirect";
 		}
+
+	$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
+		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 	}
 
 if ($ACTION=="RedirectName")

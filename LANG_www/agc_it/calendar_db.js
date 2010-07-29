@@ -4,19 +4,19 @@
 
 // default settins
 var A_TCALDEF = {
-	'months' : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+	'months' : ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'],
 	'weekdays' : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
 	'yearscroll': true, // show year scroller
 	'weekstart': 0, // first day of week: 0-Su or 1-Mo
 	'centyear'  : 70, // 2 digit years less than 'centyear' are in 20xx, othewise in 19xx.
-	'imgpath' : './images/' // directory with calendar images
+	'imgpath' : '../agc/images/' // directory with calendar images
 }
 // date parsing function
 function f_tcalParseDate (s_date) {
 
 	var re_date = /^\s*(\d{2,4})\-(\d{1,2})\-(\d{1,2})\s*$/;
 	if (!re_date.exec(s_date))
-		return alert ("Invalid date: '" + s_date + "'.\nAccepted format is yyyy-mm-dd.")
+		return alert ("Non valido date: '" + s_date + "'.\nAccepted format is yyyy-mm-dd.")
 	var n_day = Number(RegExp.$3),
 		n_month = Number(RegExp.$2),
 		n_year = Number(RegExp.$1);
@@ -24,10 +24,10 @@ function f_tcalParseDate (s_date) {
 	if (n_year < 100)
 		n_year += (n_year < this.a_tpl.centyear ? 2000 : 1900);
 	if (n_month < 1 || n_month > 12)
-		return alert ("Invalid month value: '" + n_month + "'.\nAllowed range is 01-12.");
+		return alert ("Non valido month value: '" + n_month + "'.\nAllowed range is 01-12.");
 	var d_numdays = new Date(n_year, n_month, 0);
 	if (n_day > d_numdays.getDate())
-		return alert("Invalid day of month value: '" + n_day + "'.\nAllowed range for selected month is 01 - " + d_numdays.getDate() + ".");
+		return alert("Non valido day of month value: '" + n_day + "'.\nAllowed range for selected month is 01 - " + d_numdays.getDate() + ".");
 
 	return new Date (n_year, n_month - 1, n_day);
 }

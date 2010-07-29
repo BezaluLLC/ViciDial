@@ -22,6 +22,11 @@ agc|voicemail_check.php|0
 agc|dbconnect.php|1
 agc|timeclock.php|0
 agc|vdc_script_display.php|1
+agc|vdc_script_notes.php|0
+agc|functions.php|1
+agc|vdc_form_display.php|1
+agc|calendar.css|1
+agc|calendar_db.js|0
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"ENE"|
