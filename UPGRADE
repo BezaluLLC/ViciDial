@@ -201,7 +201,7 @@ OTHER CHANGES:
 		cpan> install Spreadsheet::XLSX
 		cpan> install Spreadsheet::Read
 	To get to the new lead loader, click to:
-		Lists -> Load New Leads -> 3rd Gen Lead Loader
+		Lists -> Load New Leads
 	Here is a list of the file formats(by file extension) that are now
 	supported by the third generation web lead loader:
 		TXT  - tab or pipe delimited
@@ -228,6 +228,10 @@ OTHER CHANGES:
 	Hold Time options because this is based only on the customer wait time.
 	Also, second and third options were added for both allow the offering of
 	a press 1, 2 and 3 option in the wait/hold time option features.
+
+50. Added timer action methods HANGUP, EXTENSION, CALLMENU and IN_GROUP. These
+	allow you to hangup or transfer the call at a set number of seconds
+	from start time or triggered from an outside process.
 
 
 

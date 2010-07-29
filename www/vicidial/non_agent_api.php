@@ -35,10 +35,11 @@
 # 100712-1416 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
 # 100718-0245 - Added update_lead function to update existing leads
 # 100723-1333 - Added no_update option to the update_lead function
+# 100728-1952 - Added delete_lead option to the update_lead function
 #
 
-$version = '2.4-21';
-$build = '100723-1333';
+$version = '2.4-22';
+$build = '100728-1952';
 
 require("dbconnect.php");
 
@@ -153,6 +154,9 @@ if (isset($_GET["lead_id"]))					{$lead_id=$_GET["lead_id"];}
 	elseif (isset($_POST["lead_id"]))			{$lead_id=$_POST["lead_id"];}
 if (isset($_GET["no_update"]))					{$no_update=$_GET["no_update"];}
 	elseif (isset($_POST["no_update"]))			{$no_update=$_POST["no_update"];}
+if (isset($_GET["delete_lead"]))				{$delete_lead=$_GET["delete_lead"];}
+	elseif (isset($_POST["delete_lead"]))		{$delete_lead=$_POST["delete_lead"];}
+
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -242,6 +246,7 @@ if ($non_latin < 1)
 	$list_id_field = ereg_replace("[^0-9]","",$list_id_field);
 	$lead_id = ereg_replace("[^0-9]","",$lead_id);
 	$no_update = ereg_replace("[^A-Z]","",$no_update);
+	$delete_lead = ereg_replace("[^A-Z]","",$delete_lead);
 	}
 else
 	{
@@ -1906,15 +1911,23 @@ if ($function == 'update_lead')
 							{
 							$VLaffected_rows=0;
 							$CFaffected_rows=0;
-							if (strlen($VL_update_SQL)>6)
+							if ( (strlen($VL_update_SQL)>6) or ($delete_lead=='Y') )
 								{
-								$stmt = "UPDATE vicidial_list SET $VL_update_SQL where lead_id='$search_lead_id[$n]';";
+								if ($delete_lead=='Y')
+									{
+									$stmt = "DELETE from vicidial_list where lead_id='$search_lead_id[$n]';";
+									$result_reason = "update_lead LEAD HAS BEEN DELETED";
+									}
+								else
+									{
+									$stmt = "UPDATE vicidial_list SET $VL_update_SQL where lead_id='$search_lead_id[$n]';";
+									$result_reason = "update_lead LEAD HAS BEEN UPDATED";
+									}
 								if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
 								$rslt=mysql_query($stmt, $link);
 								$VLaffected_rows = mysql_affected_rows($link);
 
 								$result = 'SUCCESS';
-								$result_reason = "update_lead LEAD HAS BEEN UPDATED";
 								echo "$result: $result_reason - $user|$search_lead_id[$n]\n";
 								$data = "$phone_number|$list_id|$lead_id|$gmt_offset";
 								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);

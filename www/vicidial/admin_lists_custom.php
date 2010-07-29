@@ -12,10 +12,12 @@
 # 100509-0922 - Added copy fields options
 # 100510-1130 - Added DISPLAY field type option
 # 100629-0200 - Added SCRIPT field type option
-# 100722-1313 - Added field validation
+# 100722-1313 - Added field validation for label and name
+# 100728-1724 - Added field validation for select lists and checkbox/radio buttons
+#
 
-$admin_version = '2.4-7';
-$build = '100722-1313';
+$admin_version = '2.4-8';
+$build = '100728-1724';
 
 
 require("dbconnect.php");
@@ -732,26 +734,50 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 		{echo "ERROR: You must enter a field label, field name and field size - $list_id|$field_label|$field_name|$field_size\n<BR>";}
 	else
 		{
-		if ($field_exists > 0)
-			{echo "ERROR: Field already exists for this list - $list_id|$field_label\n<BR>";}
+		$TEST_valid_options=0;
+		if ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') )
+			{
+			$TESTfield_options_array = explode("\n",$field_options);
+			$TESTfield_options_count = count($TESTfield_options_array);
+			$te=0;
+			while ($te < $TESTfield_options_count)
+				{
+				if (preg_match("/,/",$TESTfield_options_array[$te]))
+					{
+					$TESTfield_options_value_array = explode(",",$TESTfield_options_array[$te]);
+					if ( (strlen($TESTfield_options_value_array[0]) > 0) and (strlen($TESTfield_options_value_array[1]) > 0) )
+						{$TEST_valid_options++;}
+					}
+				$te++;
+				}
+			$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
+			}
+
+		if ( ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') ) and ( (!preg_match("/,/",$field_options)) or (!preg_match("/\n/",$field_options)) or (strlen($field_options)<6) or ($TEST_valid_options < 1) ) )
+			{echo "ERROR: You must enter field options when adding a SELECT, MULTI, RADIO or CHECKBOX field type  - $list_id|$field_label|$field_type|$field_options\n<BR>";}
 		else
 			{
-			$table_exists=0;
-			$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
-			if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
-			mysql_select_db("$VARDB_database", $linkCUSTOM);
+			if ($field_exists > 0)
+				{echo "ERROR: Field already exists for this list - $list_id|$field_label\n<BR>";}
+			else
+				{
+				$table_exists=0;
+				$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
+				if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
+				mysql_select_db("$VARDB_database", $linkCUSTOM);
 
-			$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-			$rslt=mysql_query($stmt, $link);
-			$tablecount_to_print = mysql_num_rows($rslt);
-			if ($tablecount_to_print > 0) 
-				{$table_exists =	1;}
-			if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
-		
-			### add field function
-			add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields);
+				$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
+				$rslt=mysql_query($stmt, $link);
+				$tablecount_to_print = mysql_num_rows($rslt);
+				if ($tablecount_to_print > 0) 
+					{$table_exists =	1;}
+				if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
+			
+				### add field function
+				add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields);
 
-			echo "SUCCESS: Custom Field Added - $list_id|$field_label\n<BR>";
+				echo "SUCCESS: Custom Field Added - $list_id|$field_label\n<BR>";
+				}
 			}
 		}
 
@@ -796,10 +822,34 @@ if ( ($action == "MODIFY_CUSTOM_FIELD_SUBMIT") and ($list_id > 99) and ($field_i
 			{echo "ERROR: Table does not exist\n<BR>";}
 		else
 			{
-			### modify field function
-			modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields);
+			$TEST_valid_options=0;
+			if ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') )
+				{
+				$TESTfield_options_array = explode("\n",$field_options);
+				$TESTfield_options_count = count($TESTfield_options_array);
+				$te=0;
+				while ($te < $TESTfield_options_count)
+					{
+					if (preg_match("/,/",$TESTfield_options_array[$te]))
+						{
+						$TESTfield_options_value_array = explode(",",$TESTfield_options_array[$te]);
+						if ( (strlen($TESTfield_options_value_array[0]) > 0) and (strlen($TESTfield_options_value_array[1]) > 0) )
+							{$TEST_valid_options++;}
+						}
+					$te++;
+					}
+				$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
+				}
 
-			echo "SUCCESS: Custom Field Modified - $list_id|$field_label\n<BR>";
+			if ( ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') ) and ( (!preg_match("/,/",$field_options)) or (!preg_match("/\n/",$field_options)) or (strlen($field_options)<6) or ($TEST_valid_options < 1) ) )
+				{echo "ERROR: You must enter field options when updating a SELECT, MULTI, RADIO or CHECKBOX field type  - $list_id|$field_label|$field_type|$field_options\n<BR>";}
+			else
+				{
+				### modify field function
+				modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields);
+
+				echo "SUCCESS: Custom Field Modified - $list_id|$field_label\n<BR>";
+				}
 			}
 		}
 
@@ -1466,10 +1516,12 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 			}
 		$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
 		$field_cost = strlen($field_options_ENUM);
+		if ($field_cost < 1) {$field_cost=1;};
 		$field_sql .= "VARCHAR($field_cost) ";
 		}
 	if ($field_type=='TEXT') 
 		{
+		if ($field_max < 1) {$field_max=1;};
 		$field_sql .= "VARCHAR($field_max) ";
 		$field_cost = ($field_max + $field_cost);
 		}

@@ -22,6 +22,7 @@
 # 100428-1039 - Added custom fields display
 # 100507-1339 - Added copy carrier submenu
 # 100616-2350 - Added VIDPROMPT call menu options
+# 100728-0904 - Changed Lead Loader link to the new 3rd gen lead loader
 #
 
 
@@ -1036,7 +1037,7 @@ $SScustom_fields_enabled =	$row[3];
 			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
 			<a href="<?php echo $ADMIN ?>?ADD=121"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo $DNClink ?> </a>
 			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-			<a href="./new_listloader_superL.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Load New Leads </a>
+			<a href="./admin_listloader_third_gen.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Load New Leads </a>
 			<?php
 			if ($SScustom_fields_enabled > 0)
 				{

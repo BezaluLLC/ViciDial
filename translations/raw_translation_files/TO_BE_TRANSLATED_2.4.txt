@@ -287,6 +287,11 @@ If Wait Time Option is set to PRESS_CID_CALLBACK, this is the List ID the call i
 Wait Hold Option Priority||
 If both Estimated Hold Time options and Wait Time options are active, this setting will define whether one, the other or both of these features are active. For example, if the Estimated Hold Time Option is set to 360, the Wait Time option is set to 120 and the customer has been waiting for 120 seconds and there are still 400 seconds estimated hold time, then they are both active at the same time and this setting will be checked to see what options will be offered. Default is WAIT only||
 The LOCKED options are used to lock the value to the Quick Transfer Button even if the agent uses the transfer conference features during a cacll before using the Quick Transfer Button||
+HANGUP will hang up the call when the timer is triggered, CALLMENU will send the call to the Call Menu specified in the Timer Action Destination field, EXTENSION will send the call to the Extension that is specified in the Timer Action Destination field, IN_GROUP will send the call to the In-Group specified in the Timer Action Destination field||
+Timer Action Destination||
+This field is where you specify the Call Menu, Extension or In-Group that you want the cacll sent to if the Time Action is set to CALLMENU, EXTENSION or IN_GROUP. Default is empty||
+You must enter field options when adding a||
+You must enter field options when updating a||
 
 
 AST_VICIDIAL_ingrouplist.php

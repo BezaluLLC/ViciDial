@@ -39,10 +39,11 @@
 # 100707-1040 - Converted List Id Override and Phone Code Override to drop downs <mikec>
 # 100707-1156 - Made it so you cannot submit with no lead file selected. Also fixed Start Over Link <mikec>
 # 100712-1416 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
+# 100728-0900 - Filtered uploaded filenames for unsupported characters
 #
 
-$version = '2.4-38';
-$build = '100712-1416';
+$version = '2.4-39';
+$build = '100728-0900';
 
 
 require("dbconnect.php");
@@ -443,7 +444,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard") ) )
 		<tr>
 			<td align=center colspan=2><input type=submit value="SUBMIT" name='submit_file'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button onClick="javascript:document.location='admin_listloader_third_gen.php'" value="START OVER" name='reload_page'></td>
 		  </tr>
-		  <tr><td align=left><font size=1> &nbsp; &nbsp; &nbsp; &nbsp; <a href="admin.php?ADD=100" target="_parent">BACK TO ADMIN</a></font></td><td align=right><font size=1>LIST LOADER 3rd Gen- &nbsp; &nbsp; VERSION: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
+		  <tr><td align=left><font size=1> &nbsp; &nbsp; &nbsp; &nbsp; <a href="admin.php?ADD=100" target="_parent">BACK TO ADMIN</a> &nbsp; &nbsp; &nbsp; &nbsp; <a href="./new_listloader_superL.php">Old Lead Loader</a> &nbsp; &nbsp; </font></td><td align=right><font size=1>LIST LOADER 3rd Gen- &nbsp; &nbsp; VERSION: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
 		</table>
 		<?php 
 
@@ -931,6 +932,7 @@ if (($leadfile) && ($LF_path))
 		# csv xls xlsx ods sxc conversion
 		if (preg_match("/\.csv$|\.xls$|\.xlsx$|\.ods$|\.sxc$/i", $leadfile_name)) 
 			{
+			$leadfile_name = ereg_replace("[^-\.\_0-9a-zA-Z]","_",$leadfile_name);
 			copy($LF_path, "/tmp/$leadfile_name");
 			$new_filename = preg_replace("/\.csv$|\.xls$|\.xlsx$|\.ods$|\.sxc$/i", '.txt', $leadfile_name);
 			$convert_command = "$WeBServeRRooT/$admin_web_directory/sheet2tab.pl /tmp/$leadfile_name /tmp/$new_filename";
@@ -1337,6 +1339,7 @@ if (($leadfile) && ($LF_path))
 		$delim_set=0;
 		if (preg_match("/\.csv$|\.xls$|\.xlsx$|\.ods$|\.sxc$/i", $leadfile_name)) 
 			{
+			$leadfile_name = ereg_replace("[^-\.\_0-9a-zA-Z]","_",$leadfile_name);
 			copy($LF_path, "/tmp/$leadfile_name");
 			$new_filename = preg_replace("/\.csv$|\.xls$|\.xlsx$|\.ods$|\.sxc$/i", '.txt', $leadfile_name);
 			$convert_command = "$WeBServeRRooT/$admin_web_directory/sheet2tab.pl /tmp/$leadfile_name /tmp/$new_filename";

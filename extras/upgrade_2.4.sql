@@ -437,3 +437,13 @@ UPDATE system_settings SET db_schema_version='1235',db_schema_update_date=NOW();
 ALTER TABLE vicidial_campaigns MODIFY quick_transfer_button VARCHAR(20) default 'N';
 
 UPDATE system_settings SET db_schema_version='1236',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns MODIFY timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','D3_DIAL','D4_DIAL','D5_DIAL','MESSAGE_ONLY','HANGUP','CALLMENU','EXTENSION','IN_GROUP') default 'NONE';
+ALTER TABLE vicidial_campaigns ADD timer_action_destination VARCHAR(30) default '';
+
+ALTER TABLE vicidial_inbound_groups MODIFY timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','D3_DIAL','D4_DIAL','D5_DIAL','MESSAGE_ONLY','HANGUP','CALLMENU','EXTENSION','IN_GROUP') default 'NONE';
+ALTER TABLE vicidial_inbound_groups ADD timer_action_destination VARCHAR(30) default '';
+
+ALTER TABLE vicidial_live_agents ADD external_timer_action_destination VARCHAR(100) default '';
+
+UPDATE system_settings SET db_schema_version='1237',db_schema_update_date=NOW();

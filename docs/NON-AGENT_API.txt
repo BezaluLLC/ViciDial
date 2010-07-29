@@ -40,6 +40,7 @@ Changes:
 100704-1148 - Added custom fields inserts to the add_lead function
 100718-0245 - Added update_lead function to update existing leads
 100723-1333 - Added no_update option to the update_lead function
+100728-1952 - Added delete_lead option to the update_lead function
 
 
 
@@ -335,6 +336,7 @@ custom_fields -		Y or N, default is N. Defines whether the API will accept custo
 			For example, if the field_label is "favorite_color" you would add "&favorite_color=blue"
 no_update -		Y or N, Setting this to Y will not perform any updates, but will instead only tell
 			you if a lead exists that matches the search criteria, default is N.
+delete_lead -		Y or N, Setting this to Y will delete the lead from the vicidial_list table, default is N.
 
 EDITABLE FIELDS- 
 user_field -		1-20 characters, this updates the 'user' field in the vicidial_list table
@@ -384,6 +386,8 @@ http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&functio
 
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_lead&lead_id=27&no_update=Y
 
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_lead&lead_id=27&delete_lead=Y
+
 Example responses:
 SUCCESS: update_lead LEAD HAS BEEN UPDATED - 6666|193716
 NOTICE: update_lead CUSTOM FIELDS VALUES UPDATED - 7275551111|1234|101
@@ -393,6 +397,8 @@ NOTICE: update_lead CUSTOM FIELDS NOT UPDATED, NO FIELDS DEFINED - 7275551111|12
 
 NOTICE: update_lead NO MATCHES FOUND IN THE SYSTEM - 6666|4567|897654327|7275551212
 SUCCESS: update_lead LEAD HAS BEEN ADDED - 7275551111|6666|999|193716|-4
+
+SUCCESS: update_lead LEAD HAS BEEN DELETED - 7275551111|6666|999|193716|-4
 
 NOTICE: update_lead LEADS FOUND IN THE SYSTEM - 6666|4567|897654327|7275551212
 

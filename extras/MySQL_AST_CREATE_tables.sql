@@ -377,6 +377,7 @@ ra_extension VARCHAR(100) default '',
 external_dtmf VARCHAR(100) default '',
 external_transferconf VARCHAR(100) default '',
 external_park VARCHAR(40) default '',
+external_timer_action_destination VARCHAR(100) default '',
 index (random_id),
 index (last_call_time),
 index (last_update_time),
@@ -734,7 +735,7 @@ agent_select_territories ENUM('Y','N') default 'N',
 campaign_calldate DATETIME,
 crm_popup_login ENUM('Y','N') default 'N',
 crm_login_address TEXT,
-timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','D3_DIAL','D4_DIAL','D5_DIAL','MESSAGE_ONLY') default 'NONE',
+timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','D3_DIAL','D4_DIAL','D5_DIAL','MESSAGE_ONLY','HANGUP','CALLMENU','EXTENSION','IN_GROUP') default 'NONE',
 timer_action_message VARCHAR(255) default '',
 timer_action_seconds MEDIUMINT(7) default '-1',
 start_call_url TEXT,
@@ -751,7 +752,8 @@ manual_dial_override ENUM('NONE','ALLOW_ALL','DISABLE_ALL') default 'NONE',
 blind_monitor_warning ENUM('DISABLED','ALERT','NOTICE','AUDIO','ALERT_NOTICE','ALERT_AUDIO','NOTICE_AUDIO','ALL') default 'DISABLED',
 blind_monitor_message VARCHAR(255) default 'Someone is blind monitoring your session',
 blind_monitor_filename VARCHAR(100) default '',
-inbound_queue_no_dial ENUM('DISABLED','ENABLED','ALL_SERVERS') default 'DISABLED'
+inbound_queue_no_dial ENUM('DISABLED','ENABLED','ALL_SERVERS') default 'DISABLED',
+timer_action_destination VARCHAR(30) default ''
 );
 
 CREATE TABLE vicidial_lists (
@@ -893,7 +895,7 @@ no_agent_no_queue ENUM('N','Y','NO_PAUSED') default 'N',
 no_agent_action ENUM('CALLMENU','INGROUP','DID','MESSAGE','EXTENSION','VOICEMAIL') default 'MESSAGE',
 no_agent_action_value VARCHAR(255) default 'nbdy-avail-to-take-call|vm-goodbye',
 web_form_address_two TEXT,
-timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','D3_DIAL','D4_DIAL','D5_DIAL','MESSAGE_ONLY') default 'NONE',
+timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','D3_DIAL','D4_DIAL','D5_DIAL','MESSAGE_ONLY','HANGUP','CALLMENU','EXTENSION','IN_GROUP') default 'NONE',
 timer_action_message VARCHAR(255) default '',
 timer_action_seconds MEDIUMINT(7) default '-1',
 start_call_url TEXT,
@@ -927,7 +929,8 @@ wait_time_option_callback_filename VARCHAR(255) default 'vm-hangup',
 wait_time_option_callback_list_id BIGINT(14) UNSIGNED default '999',
 wait_time_option_press_filename VARCHAR(255) default 'to-be-called-back|digits/1',
 wait_time_option_no_block ENUM('N','Y') default 'N',
-wait_time_option_prompt_seconds SMALLINT(5) default '10'
+wait_time_option_prompt_seconds SMALLINT(5) default '10',
+timer_action_destination VARCHAR(30) default ''
 );
 
 CREATE TABLE vicidial_stations (
@@ -2292,7 +2295,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1236',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1237',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
