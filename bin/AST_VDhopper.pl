@@ -1617,6 +1617,7 @@ foreach(@campaign_id)
 			}
 		else
 			{
+			if (length($list_mix_dialableSQL)<3) {$list_mix_dialableSQL="called_count < 0";}
 			$stmtA = "SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and ($list_mix_dialableSQL) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
 			}
 			if ($DBX) {print "     |$stmtA|\n";}
