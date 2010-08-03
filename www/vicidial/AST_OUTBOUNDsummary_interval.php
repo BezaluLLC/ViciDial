@@ -10,6 +10,7 @@
 # 100214-1421 - Sort menu alphabetically
 # 100216-0042 - Added popup date selector
 # 100712-1324 - Added system setting slave server option
+# 100802-2347 - Added User Group Allowed Reports option validation
 #
 
 require("dbconnect.php");
@@ -117,27 +118,30 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
-if ($user_level < 9)
+$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$user_group';";
+$rslt=mysql_query($stmt, $link);
+$records_to_print = mysql_num_rows($rslt);
+if ($records_to_print > 0)
 	{
-	$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$user_group';";
-	$rslt=mysql_query($stmt, $link);
-	$records_to_print = mysql_num_rows($rslt);
-	if ($records_to_print > 0)
+	$row=mysql_fetch_row($rslt);
+	$LOGallowed_reports =	$row[1];
+	if ( (!eregi("ALL-CAMPAIGNS",$row[0])) )
 		{
-		$row=mysql_fetch_row($rslt);
-		if ( (!eregi("ALL-CAMPAIGNS",$row[0])) )
-			{
-			$rawLOGallowed_campaignsSQL = eregi_replace(' -','',$row[0]);
-			$rawLOGallowed_campaignsSQL = eregi_replace(' ',"','",$rawLOGallowed_campaignsSQL);
-			$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
-			$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
-			}
+		$rawLOGallowed_campaignsSQL = eregi_replace(' -','',$row[0]);
+		$rawLOGallowed_campaignsSQL = eregi_replace(' ',"','",$rawLOGallowed_campaignsSQL);
+		$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+		$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
 		}
-	else
+	if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 		{
-		echo "Campaigns Permissions Error: |$PHP_AUTH_USER|$user_group|\n";
+		echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
 		exit;
 		}
+	}
+else
+	{
+	echo "Campaigns Permissions Error: |$PHP_AUTH_USER|$user_group|\n";
+	exit;
 	}
 
 $NOW_DATE = date("Y-m-d");
@@ -179,10 +183,6 @@ $group_string='|';
 $group_ct = count($group);
 while($i < $group_ct)
 	{
-	$group_string .= "$group[$i]|";
-	$group_SQL .= "'$group[$i]',";
-	$groupQS .= "&group[]=$group[$i]";
-
 	$stmt="select campaign_name from vicidial_campaigns where campaign_id='$group[$i]' $LOGallowed_campaignsSQL;";
 	$rslt=mysql_query($stmt, $link);
 	$campaign_names_to_print = mysql_num_rows($rslt);
@@ -190,6 +190,9 @@ while($i < $group_ct)
 		{
 		$row=mysql_fetch_row($rslt);
 		$group_cname[$i] =	$row[0];
+		$group_string .= "$group[$i]|";
+		$group_SQL .= "'$group[$i]',";
+		$groupQS .= "&group[]=$group[$i]";
 		}
 
 	if (eregi("YES",$include_rollover))

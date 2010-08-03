@@ -14,6 +14,7 @@
 # 90508-0644 - Changed to PHP long tags
 # 100214-1421 - Sort menu alphabetically
 # 100712-1324 - Added system setting slave server option
+# 100802-2347 - Added User Group Allowed Reports option validation
 #
 
 require("dbconnect.php");
@@ -66,7 +67,7 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and modify_servers='1';";
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
@@ -77,6 +78,27 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
+    exit;
+	}
+
+$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGuser_group =			$row[0];
+
+$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns = $row[0];
+$LOGallowed_reports =	$row[1];
+
+if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+	{
+    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("HTTP/1.0 401 Unauthorized");
+    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 

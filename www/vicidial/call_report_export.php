@@ -22,6 +22,7 @@
 # 100712-1324 - Added system setting slave server option
 # 100713-0101 - Added recordings fields option (for filename, recording ID and URL)
 # 100713-1050 - Fixed minor custom fields issue
+# 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
 #
 
 require("dbconnect.php");
@@ -93,7 +94,7 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 $PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and export_reports='1';";
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and export_reports='1' and active='Y';";
 if ($DB) {echo "|$stmt|\n";}
 if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
@@ -107,6 +108,38 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     echo "Invalid Username/Password or no export report permission: |$PHP_AUTH_USER|\n";
     exit;
 	}
+
+$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGuser_group =			$row[0];
+
+$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns = $row[0];
+$LOGallowed_reports =	$row[1];
+
+if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+	{
+    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("HTTP/1.0 401 Unauthorized");
+    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    exit;
+	}
+
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
+$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 
 
 ##### START RUN THE EXPORT AND OUTPUT FLAT DATA FILE #####
@@ -137,8 +170,11 @@ if ($run_export > 0)
 	$i=0;
 	while($i < $campaign_ct)
 		{
-		$campaign_string .= "$campaign[$i]|";
-		$campaign_SQL .= "'$campaign[$i]',";
+		if ( (preg_match("/ $campaign[$i] /",$regexLOGallowed_campaigns)) or (preg_match("/-ALL/",$LOGallowed_campaigns)) )
+			{
+			$campaign_string .= "$campaign[$i]|";
+			$campaign_SQL .= "'$campaign[$i]',";
+			}
 		$i++;
 		}
 	if ( (ereg("--NONE--",$campaign_string) ) or ($campaign_ct < 1) )
@@ -490,7 +526,7 @@ else
 	if (!isset($query_date)) {$query_date = $NOW_DATE;}
 	if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
-	$stmt="select campaign_id from vicidial_campaigns order by campaign_id;";
+	$stmt="select campaign_id from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$campaigns_to_print = mysql_num_rows($rslt);
@@ -535,7 +571,7 @@ else
 		$i++;
 		}
 
-	$stmt="select list_id from vicidial_lists order by list_id;";
+	$stmt="select list_id from vicidial_lists $whereLOGallowed_campaignsSQL order by list_id;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$lists_to_print = mysql_num_rows($rslt);
@@ -565,7 +601,7 @@ else
 		$i++;
 		}
 
-	$stmt="select distinct status from vicidial_campaign_statuses order by status;";
+	$stmt="select distinct status from vicidial_campaign_statuses $whereLOGallowed_campaignsSQL order by status;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$Cstatuses_to_print = mysql_num_rows($rslt);

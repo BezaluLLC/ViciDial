@@ -94,6 +94,10 @@ $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
 
+$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Fronter - Closer Report, Export Calls Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Perforrmance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List';
+
+$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Fronter - Closer Report, Export Calls Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Perforrmance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Custom Reports Links';
+
 ######################################################################################################
 ######################################################################################################
 #######   Form variable declaration
@@ -1367,6 +1371,8 @@ if (isset($_GET["wait_time_option_prompt_seconds"]))			{$wait_time_option_prompt
 	elseif (isset($_POST["wait_time_option_prompt_seconds"]))	{$wait_time_option_prompt_seconds=$_POST["wait_time_option_prompt_seconds"];}
 if (isset($_GET["timer_action_destination"]))			{$timer_action_destination=$_GET["timer_action_destination"];}
 	elseif (isset($_POST["timer_action_destination"]))	{$timer_action_destination=$_POST["timer_action_destination"];}
+if (isset($_GET["allowed_reports"]))			{$allowed_reports=$_GET["allowed_reports"];}
+	elseif (isset($_POST["allowed_reports"]))	{$allowed_reports=$_POST["allowed_reports"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2385,11 +2391,13 @@ else
 # 100723-1519 - Added LOCKED options for Quick Transfer Button in campaigns
 # 100726-1017 - Added HANGUP, CALLMENU, EXTENSION and IN_GROUP timer actions to campaigns and in-groups
 # 100802-2130 - Changed Admin links to point to links page instead of Phones listings, changed Remote Agents to allow 9-digit IDs
+# 100803-1412 - Added allowed_reports option to User Groups, added CAMPLISTS_ALL for manual_dial_filter(issue #369)
+#             - Added allowed_campaigns enforcement for Campaign listings
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-267';
-$build = '100802-2130';
+$admin_version = '2.4-268';
+$build = '100803-1412';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -2459,6 +2467,19 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and active='Y' and view_reports='1';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$reports_auth=$row[0];
+
+$reports_only_user=0;
+if ( ($reports_auth > 0) and ($auth < 1) )
+	{
+	$ADD=999999;
+	$reports_only_user=1;
+	}
+
 if ($WeBRooTWritablE > 0)
 	{$fp = fopen ("./project_auth_entries.txt", "a");}
 
@@ -2466,77 +2487,88 @@ $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or ($auth<1))
+if ( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or ( ($auth < 1 ) and ($reports_auth < 1) ) )
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
+	exit;
+	}
+
+if ( ($auth > 0) or ($reports_auth > 0) )
+	{
+	$office_no=strtoupper($PHP_AUTH_USER);
+	$password=strtoupper($PHP_AUTH_PW);
+	$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$LOGfull_name				=$row[3];
+	$LOGuser_level				=$row[4];
+	$LOGuser_group				=$row[5];
+	$LOGdelete_users			=$row[8];
+	$LOGdelete_user_groups		=$row[9];
+	$LOGdelete_lists			=$row[10];
+	$LOGdelete_campaigns		=$row[11];
+	$LOGdelete_ingroups			=$row[12];
+	$LOGdelete_remote_agents	=$row[13];
+	$LOGload_leads				=$row[14];
+	$LOGcampaign_detail			=$row[15];
+	$LOGast_admin_access		=$row[16];
+	$LOGast_delete_phones		=$row[17];
+	$LOGdelete_scripts			=$row[18];
+	$LOGdelete_filters			=$row[29];
+	$LOGalter_agent_interface	=$row[30];
+	$LOGdelete_call_times		=$row[32];
+	$LOGmodify_call_times		=$row[33];
+	$LOGmodify_users			=$row[34];
+	$LOGmodify_campaigns		=$row[35];
+	$LOGmodify_lists			=$row[36];
+	$LOGmodify_scripts			=$row[37];
+	$LOGmodify_filters			=$row[38];
+	$LOGmodify_ingroups			=$row[39];
+	$LOGmodify_usergroups		=$row[40];
+	$LOGmodify_remoteagents		=$row[41];
+	$LOGmodify_servers			=$row[42];
+	$LOGview_reports			=$row[43];
+	$LOGmodify_dids				=$row[56];
+	$LOGdelete_dids				=$row[57];
+	$LOGmanager_shift_enforcement_override=$row[61];
+	$LOGexport_reports			=$row[64];
+	$LOGdelete_from_dnc			=$row[65];
+	$LOGcallcard_admin			=$row[66];
+
+	$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$LOGallowed_campaigns = $row[0];
+	$LOGallowed_reports =	$row[1];
+
+	$LOGallowed_campaignsSQL='';
+	$whereLOGallowed_campaignsSQL='';
+	if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+		{
+		$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+		$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+		$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+		$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+		}
+	$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
+
+	if ($WeBRooTWritablE > 0)
+		{
+		fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfull_name|\n");
+		fclose($fp);
+		}
 	}
 else
 	{
-	if($auth>0)
+	if ($WeBRooTWritablE > 0)
 		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfull_name				=$row[3];
-		$LOGuser_level				=$row[4];
-		$LOGuser_group				=$row[5];
-		$LOGdelete_users			=$row[8];
-		$LOGdelete_user_groups		=$row[9];
-		$LOGdelete_lists			=$row[10];
-		$LOGdelete_campaigns		=$row[11];
-		$LOGdelete_ingroups			=$row[12];
-		$LOGdelete_remote_agents	=$row[13];
-		$LOGload_leads				=$row[14];
-		$LOGcampaign_detail			=$row[15];
-		$LOGast_admin_access		=$row[16];
-		$LOGast_delete_phones		=$row[17];
-		$LOGdelete_scripts			=$row[18];
-		$LOGdelete_filters			=$row[29];
-		$LOGalter_agent_interface	=$row[30];
-		$LOGdelete_call_times		=$row[32];
-		$LOGmodify_call_times		=$row[33];
-		$LOGmodify_users			=$row[34];
-		$LOGmodify_campaigns		=$row[35];
-		$LOGmodify_lists			=$row[36];
-		$LOGmodify_scripts			=$row[37];
-		$LOGmodify_filters			=$row[38];
-		$LOGmodify_ingroups			=$row[39];
-		$LOGmodify_usergroups		=$row[40];
-		$LOGmodify_remoteagents		=$row[41];
-		$LOGmodify_servers			=$row[42];
-		$LOGview_reports			=$row[43];
-		$LOGmodify_dids				=$row[56];
-		$LOGdelete_dids				=$row[57];
-		$LOGmanager_shift_enforcement_override=$row[61];
-		$LOGexport_reports			=$row[64];
-		$LOGdelete_from_dnc			=$row[65];
-		$LOGcallcard_admin			=$row[66];
-
-		$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$LOGuser_group';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGallowed_campaigns = $row[0];
-
-		if ($WeBRooTWritablE > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfull_name|\n");
-			fclose($fp);
-			}
-		}
-	else
-		{
-		if ($WeBRooTWritablE > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
-			fclose($fp);
-			}
+		fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
+		fclose($fp);
 		}
 	}
+
 
 ######################################################################################################
 ######################################################################################################
@@ -2831,6 +2863,7 @@ if ($ADD==99999)		{$hh='users';		echo "HELP";}
 if ($ADD==999999)		{$hh='reports';		echo "REPORTS";}
 if ($ADD==999998)		{$hh='admin';		echo "ADMIN";}
 
+
 if ( ($ADD>9) && ($ADD < 99998) )
 	{
 	##### get scripts listing for dynamic pulldown
@@ -2884,7 +2917,7 @@ if ( ( (strlen($ADD)>4) && ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($ADD
 
 	##### BEGIN get campaigns listing for rankings #####
 
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
+	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 	$rslt=mysql_query($stmt, $link);
 	$campaigns_to_print = mysql_num_rows($rslt);
 	$campaigns_list='';
@@ -3235,7 +3268,7 @@ if ( ($ADD==211111) or ($ADD==311111) or ($ADD==411111) or ($ADD==511111) or ($A
 	$qc_campaigns_list.="> ALL-CAMPAIGNS - USERS CAN QC ANY CAMPAIGN</B><BR>\n";
 	$qc_groups_list.="> ALL-GROUPS - USERS CAN QC ANY INBOUND GROUP</B><BR>\n";
 
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
+	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 	$rslt=mysql_query($stmt, $link);
 	$campaigns_to_print = mysql_num_rows($rslt);
 
@@ -4296,7 +4329,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_campaigns-manual_dial_filter">
 	<BR>
-	<B>Manual Dial Filter -</B> This allows you to filter the calls that agents make in manual dial mode for this campaign by any combination of the following: DNC - to kick out, CAMPAIGNLISTS - the number must be within the lists for the campaign, NONE - no filter on manual dial or fast dial lists.
+	<B>Manual Dial Filter -</B> This allows you to filter the calls that agents make in manual dial mode for this campaign by any combination of the following: DNC - to kick out, CAMPAIGNLISTS - the number must be within the lists for the campaign, NONE - no filter on manual dial or fast dial lists. CAMPLISTS_ALL - will include inactive lists in the search for the number.
 
 	<BR>
 	<A NAME="vicidial_campaigns-agent_clipboard_copy">
@@ -5400,6 +5433,11 @@ if ($ADD==99999)
 	<A NAME="vicidial_user_groups-agent_fullscreen">
 	<BR>
 	<B>Agent Fullscreen -</B> This option if set to Y will set the height and width of the ViciDial agent screen to the size of the web browser window without any allowance for the Agents View, Calls in Queue View or Calls in Session view. Default is N for no or disabled.
+
+	<BR>
+	<A NAME="vicidial_user_groups-allowed_reports">
+	<BR>
+	<B>Allowed Reports -</B> If a user in this group is set to user level 7 or higher, then this feature can be used to restrict the reports that the users can view. Default is ALL. If you want to select more than one report then press the Ctrl key on your keyboard as you select the reports.
 
 	<?php
 	if ($SSqc_features_active > 0)
@@ -7407,7 +7445,7 @@ if ($ADD==12)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Source Campaign: </td><td align=left><select size=1 name=source_campaign_id>\n";
 
-		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 		$rslt=mysql_query($stmt, $link);
 		$campaigns_to_print = mysql_num_rows($rslt);
 		$campaigns_list='';
@@ -7471,7 +7509,7 @@ if ($ADD==111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>List Description: </td><td align=left><input type=text name=list_description size=30 maxlength=255>$NWB#vicidial_lists-list_description$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign: </td><td align=left><select size=1 name=campaign_id>\n";
 
-		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 		$rslt=mysql_query($stmt, $link);
 		$campaigns_to_print = mysql_num_rows($rslt);
 		$campaigns_list='';
@@ -7509,7 +7547,7 @@ if ($ADD==121)
 
 	$campaigns_list = "<option SELECTED value=\"SYSTEM_INTERNAL\">SYSTEM_INTERNAL - INTERNAL VICIDIAL DNC LIST</option>\n";
 
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where use_campaign_dnc IN('Y','AREACODE') order by campaign_id";
+	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where use_campaign_dnc IN('Y','AREACODE') $LOGallowed_campaignsSQL order by campaign_id";
 	$rslt=mysql_query($stmt, $link);
 	$campaigns_to_print = mysql_num_rows($rslt);
 
@@ -13402,8 +13440,17 @@ if ($ADD==411111)
 				$VGROUP_vgroups .= "$agent_status_viewable_groups[$p] ";
 				$p++;
 				}
-		
-			$stmt="UPDATE vicidial_user_groups set user_group='$user_group', group_name='$group_name',allowed_campaigns='$campaigns_value',qc_allowed_campaigns='$qc_campaigns_value',qc_allowed_inbound_groups='$qc_groups_value',group_shifts='$GROUP_shifts',forced_timeclock_login='$forced_timeclock_login',shift_enforcement='$shift_enforcement',agent_status_viewable_groups='$VGROUP_vgroups',agent_status_view_time='$agent_status_view_time',agent_call_log_view='$agent_call_log_view',agent_xfer_consultative='$agent_xfer_consultative',agent_xfer_dial_override='$agent_xfer_dial_override',agent_xfer_vm_transfer='$agent_xfer_vm_transfer',agent_xfer_blind_transfer='$agent_xfer_blind_transfer',agent_xfer_dial_with_customer='$agent_xfer_dial_with_customer',agent_xfer_park_customer_dial='$agent_xfer_park_customer_dial',agent_fullscreen='$agent_fullscreen' where user_group='$OLDuser_group';";
+			$k=0;
+			$multi_count = count($allowed_reports);
+			$multi_array = $allowed_reports;
+			while ($k < $multi_count)
+				{
+				$new_field_value .= "$multi_array[$k],";
+				$k++;
+				}
+			$allowed_reports = preg_replace("/,$/","",$new_field_value);
+
+			$stmt="UPDATE vicidial_user_groups set user_group='$user_group', group_name='$group_name',allowed_campaigns='$campaigns_value',qc_allowed_campaigns='$qc_campaigns_value',qc_allowed_inbound_groups='$qc_groups_value',group_shifts='$GROUP_shifts',forced_timeclock_login='$forced_timeclock_login',shift_enforcement='$shift_enforcement',agent_status_viewable_groups='$VGROUP_vgroups',agent_status_view_time='$agent_status_view_time',agent_call_log_view='$agent_call_log_view',agent_xfer_consultative='$agent_xfer_consultative',agent_xfer_dial_override='$agent_xfer_dial_override',agent_xfer_vm_transfer='$agent_xfer_vm_transfer',agent_xfer_blind_transfer='$agent_xfer_blind_transfer',agent_xfer_dial_with_customer='$agent_xfer_dial_with_customer',agent_xfer_park_customer_dial='$agent_xfer_park_customer_dial',agent_fullscreen='$agent_fullscreen',allowed_reports='$allowed_reports' where user_group='$OLDuser_group';";
 			$rslt=mysql_query($stmt, $link);
 
 			echo "<br><B>USER GROUP MODIFIED</B>\n";
@@ -17706,7 +17753,7 @@ if ($ADD==31)
 			while ($DRgroups_to_print > $o)
 				{
 				$DRcampaigns='';
-				$stmt="SELECT campaign_id from vicidial_campaigns where drop_rate_group='$DRgroups[$o]';";
+				$stmt="SELECT campaign_id from vicidial_campaigns where drop_rate_group='$DRgroups[$o]' $LOGallowed_campaignsSQL;";
 				$rslt=mysql_query($stmt, $link);
 				$DRcampaigns_to_print = mysql_num_rows($rslt);
 				$p=0;
@@ -17904,7 +17951,7 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>Manual Dial List ID: </td><td align=left><input type=text name=manual_dial_list_id size=15 maxlength=12 value=\"$manual_dial_list_id\">$NWB#vicidial_campaigns-manual_dial_list_id$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#8EBCFD><td align=right>Manual Dial Filter: </td><td align=left><select size=1 name=manual_dial_filter><option>NONE</option><option>DNC_ONLY</option><option>CAMPLISTS_ONLY</option><option>DNC_AND_CAMPLISTS</option><option SELECTED>$manual_dial_filter</option></select>$NWB#vicidial_campaigns-manual_dial_filter$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Manual Dial Filter: </td><td align=left><select size=1 name=manual_dial_filter><option>NONE</option><option>DNC_ONLY</option><option>CAMPLISTS_ONLY</option><option>CAMPLISTS_ALL</option><option>DNC_AND_CAMPLISTS</option><option>DNC_AND_CAMPLISTS_ALL</option><option SELECTED>$manual_dial_filter</option></select>$NWB#vicidial_campaigns-manual_dial_filter$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Screen Clipboard Copy: </td><td align=left><select size=1 name=agent_clipboard_copy><option>NONE</option><option>lead_id</option><option>list_id</option><option>title</option><option>first_name</option><option>middle_initial</option><option>last_name</option><option>phone_code</option><option>phone_number</option><option>address1</option><option>address2</option><option>address3</option><option>city</option><option>state</option><option>province</option><option>postal_code</option><option>country_code</option><option>alt_phone</option><option>comments</option><option>date_of_birth</option><option>email</option><option>gender</option><option>gmt_offset_now</option><option>security_phrase</option><option>vendor_lead_code</option><option SELECTED>$agent_clipboard_copy</option></select>$NWB#vicidial_campaigns-agent_clipboard_copy$NWE</td></tr>\n";
 
@@ -19457,7 +19504,7 @@ echo "<td><B>STATUSES</B></td>\n";
 echo "<td><B>MODIFY</B></td>\n";
 echo "</tr>\n";
 
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
+	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 	$rslt=mysql_query($stmt, $link);
 	$campaigns_to_print = mysql_num_rows($rslt);
 
@@ -19519,7 +19566,7 @@ echo "<td><B>HOTKEYS</B></td>\n";
 echo "<td><B>MODIFY</B></td>\n";
 echo "</tr>\n";
 
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
+	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 	$rslt=mysql_query($stmt, $link);
 	$campaigns_to_print = mysql_num_rows($rslt);
 
@@ -19581,7 +19628,7 @@ echo "<td><B>LEAD RECYCLES</B></td>\n";
 echo "<td><B>MODIFY</B></td>\n";
 echo "</tr>\n";
 
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
+	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 	$rslt=mysql_query($stmt, $link);
 	$campaigns_to_print = mysql_num_rows($rslt);
 
@@ -19643,7 +19690,7 @@ echo "<td><B>AUTO-ALT DIAL</B></td>\n";
 echo "<td><B>MODIFY</B></td>\n";
 echo "</tr>\n";
 
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
+	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 	$rslt=mysql_query($stmt, $link);
 	$campaigns_to_print = mysql_num_rows($rslt);
 
@@ -19705,7 +19752,7 @@ echo "<td><B>PAUSE CODES</B></td>\n";
 echo "<td><B>MODIFY</B></td>\n";
 echo "</tr>\n";
 
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
+	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 	$rslt=mysql_query($stmt, $link);
 	$campaigns_to_print = mysql_num_rows($rslt);
 
@@ -19767,7 +19814,7 @@ echo "<td><B>LIST MIX</B></td>\n";
 echo "<td><B>MODIFY</B></td>\n";
 echo "</tr>\n";
 
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
+	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 	$rslt=mysql_query($stmt, $link);
 	$campaigns_to_print = mysql_num_rows($rslt);
 
@@ -19921,7 +19968,7 @@ if ($ADD==311)
 		echo "<tr bgcolor=#B6D3FC><td align=right>List Description: </td><td align=left><input type=text name=list_description size=30 maxlength=255 value=\"$list_description\">$NWB#vicidial_lists-list_description$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id\">Campaign</a>: </td><td align=left><select size=1 name=campaign_id>\n";
 
-		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 		$rslt=mysql_query($stmt, $link);
 		$campaigns_to_print = mysql_num_rows($rslt);
 		$campaigns_list='';
@@ -21091,7 +21138,7 @@ if ($ADD==3111)
 		echo "<B>CAMPAIGNS ALLOWING THIS IN-GROUP:</B><BR>\n";
 		echo "<TABLE>\n";
 
-		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where closer_campaigns LIKE \"% $group_id %\";";
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where closer_campaigns LIKE \"% $group_id %\" $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 		$campin_to_print = mysql_num_rows($rslt);
 		$o=0;
@@ -21164,7 +21211,7 @@ if ($ADD==3311)
 		$record_call =			$row[20];
 
 
-		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 		$rslt=mysql_query($stmt, $link);
 		$campaigns_to_print = mysql_num_rows($rslt);
 		$campaigns_list='';
@@ -21778,7 +21825,7 @@ if ($ADD==311111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT user_group,group_name,allowed_campaigns,qc_allowed_campaigns,qc_allowed_inbound_groups,group_shifts,forced_timeclock_login,shift_enforcement,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial,agent_fullscreen from vicidial_user_groups where user_group='$user_group';";
+		$stmt="SELECT user_group,group_name,allowed_campaigns,qc_allowed_campaigns,qc_allowed_inbound_groups,group_shifts,forced_timeclock_login,shift_enforcement,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial,agent_fullscreen,allowed_reports from vicidial_user_groups where user_group='$user_group';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$user_group =						$row[0];
@@ -21796,6 +21843,7 @@ if ($ADD==311111)
 		$agent_xfer_dial_with_customer =	$row[15];
 		$agent_xfer_park_customer_dial =	$row[16];
 		$agent_fullscreen =					$row[17];
+		$allowed_reports =					$row[18];
 
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -21896,6 +21944,21 @@ if ($ADD==311111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Allow Park Customer Dial Xfer: </td><td align=left><select size=1 name=agent_xfer_park_customer_dial><option SELECTED>Y</option><option>N</option><option SELECTED>$agent_xfer_park_customer_dial</option></select>$NWB#vicidial_user_groups-agent_xfer_options$NWE</td></tr>\n";
 		
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Fullscreen: </td><td align=left><select size=1 name=agent_fullscreen><option SELECTED>Y</option><option>N</option><option SELECTED>$agent_fullscreen</option></select>$NWB#vicidial_user_groups-agent_fullscreen$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Allowed Reports: </td><td align=left><select MULTIPLE size=8 name=allowed_reports[]>\n";
+		$Vreports_ARY = explode(',',$UGreports);
+		$Vreports_ct = count($Vreports_ARY);
+		$b=0;
+		while ($b < $Vreports_ct)
+			{
+			$field_selected='';
+			trim($Vreports_ARY[$b]);
+			if (preg_match("/$Vreports_ARY[$b]/",$allowed_reports))
+				{$field_selected = 'SELECTED';}
+			echo "<option value=\"$Vreports_ARY[$b]\" $field_selected>$Vreports_ARY[$b]</option>\n";
+			$b++;
+			}
+		echo "</select>$NWB#vicidial_user_groups-allowed_reports$NWE</td></tr>\n";
 
 		if ($SSqc_features_active > 0)
 			{
@@ -22069,7 +22132,7 @@ if ($ADD==3111111)
 		echo "<B> CAMPAIGNS USING THIS SCRIPT:</B><BR>\n";
 		echo "<TABLE>\n";
 
-		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where campaign_script='$script_id';";
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where campaign_script='$script_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 		$camps_to_print = mysql_num_rows($rslt);
 		$o=0;
@@ -22099,7 +22162,7 @@ if ($ADD==3111111)
 		echo "<B> LIST OVERRIDES USING THIS SCRIPT:</B><BR>\n";
 		echo "<TABLE>\n";
 
-		$stmt="SELECT list_id,list_name from vicidial_lists where agent_script_override='$script_id';";
+		$stmt="SELECT list_id,list_name from vicidial_lists where agent_script_override='$script_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 		$camps_to_print = mysql_num_rows($rslt);
 		$o=0;
@@ -22161,7 +22224,7 @@ if ($ADD==31111111)
 		echo "</TABLE></center></form>\n";
 
 		##### get campaigns listing for dynamic pulldown
-		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 		$rslt=mysql_query($stmt, $link);
 		$campaigns_to_print = mysql_num_rows($rslt);
 		$campaigns_list='';
@@ -22363,7 +22426,7 @@ if ($ADD==311111111)
 		echo "<B>CAMPAIGNS USING THIS CALL TIME:</B><BR>\n";
 		echo "<TABLE>\n";
 
-		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where local_call_time='$call_time_id';";
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where local_call_time='$call_time_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 		$camps_to_print = mysql_num_rows($rslt);
 		$o=0;
@@ -23889,7 +23952,6 @@ if ($ADD==311111111111111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Reports to use Slave DB: </td><td align=left><select MULTIPLE size=4 name=reports_use_slave_db[]>\n";
 
-		$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Fronter - Closer Report, Export Calls Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Perforrmance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List';
 		$Vreports_ARY = explode(',',$Vreports);
 		$Vreports_ct = count($Vreports_ARY);
 		$b=0;
@@ -24666,7 +24728,7 @@ if ($ADD==10)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT campaign_id,campaign_name,active,dial_method,auto_dial_level,lead_order,dial_statuses from vicidial_campaigns order by campaign_id";
+	$stmt="SELECT campaign_id,campaign_name,active,dial_method,auto_dial_level,lead_order,dial_statuses from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 	$rslt=mysql_query($stmt, $link);
 	$campaigns_to_print = mysql_num_rows($rslt);
 
@@ -24735,7 +24797,7 @@ if ($ADD==100)
 	if (eregi("CAMPAIGNDOWN",$stage))	{$SQLorder='order by campaign_id desc';			$CAMPAIGNlink='stage=CAMPAIGNUP';}
 	if (eregi("CALLDATEUP",$stage))		{$SQLorder='order by list_lastcalldate asc';	$CALLDATElink='stage=CALLDATEDOWN';}
 	if (eregi("CALLDATEDOWN",$stage))	{$SQLorder='order by list_lastcalldate desc';	$CALLDATElink='stage=CALLDATEUP';}
-	$stmt="SELECT vls.list_id,list_name,list_description,count(*) as tally,active,list_lastcalldate,campaign_id,reset_time from vicidial_lists vls,vicidial_list vl where vls.list_id=vl.list_id group by list_id $SQLorder";
+	$stmt="SELECT vls.list_id,list_name,list_description,count(*) as tally,active,list_lastcalldate,campaign_id,reset_time from vicidial_lists vls,vicidial_list vl where vls.list_id=vl.list_id $LOGallowed_campaignsSQL group by list_id $SQLorder";
 	$rslt=mysql_query($stmt, $link);
 	$lists_to_print = mysql_num_rows($rslt);
 
@@ -24775,7 +24837,7 @@ if ($ADD==100)
 		$o++;
 		}
 
-	$stmt="SELECT list_id,list_name,list_description,0,active,list_lastcalldate,campaign_id,reset_time from vicidial_lists where list_id NOT IN($lists_printed'');";
+	$stmt="SELECT list_id,list_name,list_description,0,active,list_lastcalldate,campaign_id,reset_time from vicidial_lists where list_id NOT IN($lists_printed'') $LOGallowed_campaignsSQL;";
 	$rslt=mysql_query($stmt, $link);
 	$lists_to_print = mysql_num_rows($rslt);
 	$o=0;
@@ -24962,7 +25024,7 @@ if ($ADD==10000)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT remote_agent_id,user_start,number_of_lines,server_ip,conf_exten,extension_group,status,campaign_id from vicidial_remote_agents order by server_ip,campaign_id,user_start";
+	$stmt="SELECT remote_agent_id,user_start,number_of_lines,server_ip,conf_exten,extension_group,status,campaign_id from vicidial_remote_agents $whereLOGallowed_campaignsSQL order by server_ip,campaign_id,user_start";
 	$rslt=mysql_query($stmt, $link);
 	$remoteagents_to_print = mysql_num_rows($rslt);
 
@@ -26145,54 +26207,75 @@ if ($ADD==999999)
 		<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=0><TR><TD VALIGN=TOP>
 		 &nbsp; &nbsp; &nbsp;
 		</TD><TD VALIGN=TOP>
-		<B>Real-Time Reports</B><BR>
-		<UL>
-		<LI><a href="AST_timeonVDADall.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Real-Time Main Report</a></FONT>
-<!--		<BR> &nbsp; Real-Time SIP: <a href="AST_timeonVDADall.php?SIPmonitorLINK=1"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Listen</a></FONT> - <a href="AST_timeonVDADall.php?SIPmonitorLINK=2"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Barge</a></FONT>
-		<BR> &nbsp; Real-Time IAX: <a href="AST_timeonVDADall.php?IAXmonitorLINK=1"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Listen</a></FONT> - <a href="AST_timeonVDADall.php?IAXmonitorLINK=2"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Barge</a></FONT><BR><BR> -->
-		<LI><a href="AST_timeonVDADallSUMMARY.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Real-Time Campaign Summary</a></FONT>
-		</UL><BR>
-		<B>Inbound and Outbound Calling Reports</B><BR>
-		<UL>
-		<LI><a href="AST_CLOSERstats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Inbound Report</a></FONT>
-		<LI><a href="AST_CLOSER_service_level.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Inbound Service Level Report</a></FONT>
-		<LI><a href="AST_CLOSERsummary_hourly.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Inbound Summary Hourly Report</a></FONT>
-		<LI><a href="AST_DIDstats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Inbound DID Report</a></FONT>
-		<LI><a href="AST_IVRstats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Inbound IVR Report</a></FONT>
-		<LI><a href="AST_VDADstats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Outbound Calling Report</a></FONT>
-		<LI><a href="AST_OUTBOUNDsummary_interval.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Outbound Summary Interval Report</a></FONT>
 
-		<LI><a href="fcstats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Fronter - Closer Report</a></FONT>
-	<!-- <LI><a href="vicidial_sales_viewer.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>AGENT SPREADSHEET PERFORMANCE</a></FONT> -->
-	<?php
+		<?php
+
+		echo "<B>Real-Time Reports</B><BR>\n";
+		echo "<UL>\n";
+		if ( (preg_match("/Real-Time Main Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_timeonVDADall.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Real-Time Main Report</a></FONT>\n";}
+				#	echo "<BR> &nbsp; Real-Time SIP: <a href=\"AST_timeonVDADall.php?SIPmonitorLINK=1\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Listen</a></FONT> - <a href=\"AST_timeonVDADall.php?SIPmonitorLINK=2\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Barge</a></FONT>\n";
+				#	echo "<BR> &nbsp; Real-Time IAX: <a href=\"AST_timeonVDADall.php?IAXmonitorLINK=1\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Listen</a></FONT> - <a href=\"AST_timeonVDADall.php?IAXmonitorLINK=2\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Barge</a></FONT><BR><BR>\n";
+		if ( (preg_match("/Real-Time Campaign Summary/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_timeonVDADallSUMMARY.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Real-Time Campaign Summary</a></FONT>\n";}
+		echo "</UL><BR>\n";
+		echo "<B>Inbound and Outbound Calling Reports</B><BR>\n";
+		echo "<UL>\n";
+		if ( (preg_match("/Inbound Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_CLOSERstats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound Report</a></FONT>\n";}
+		if ( (preg_match("/Inbound Service Level Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_CLOSER_service_level.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound Service Level Report</a></FONT>\n";}
+		if ( (preg_match("/Inbound Summary Hourly Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_CLOSERsummary_hourly.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound Summary Hourly Report</a></FONT>\n";}
+		if ( (preg_match("/Inbound DID Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_DIDstats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound DID Report</a></FONT>\n";}
+		if ( (preg_match("/Inbound IVR Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_IVRstats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound IVR Report</a></FONT>\n";}
+		if ( (preg_match("/Outbound Calling Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_VDADstats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Outbound Calling Report</a></FONT>\n";}
+		if ( (preg_match("/Outbound Summary Interval Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_OUTBOUNDsummary_interval.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Outbound Summary Interval Report</a></FONT>\n";}
+		if ( (preg_match("/Fronter - Closer Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"fcstats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Fronter - Closer Report</a></FONT>\n";}
+				# echo "<LI><a href=\"vicidial_sales_viewer.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>AGENT SPREADSHEET PERFORMANCE</a></FONT>\n";
 		if ($LOGexport_reports >= 1)
 			{
 			echo "<LI><a href=\"call_report_export.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Export Calls Report</a></FONT>\n";
 			}
-	?>
-		</UL>
+		echo "</UL>\n";
+		echo "</TD><TD VALIGN=TOP>\n";
+		echo " &nbsp; &nbsp; &nbsp;\n";
+		echo "</TD><TD VALIGN=TOP>\n";
+		echo "<B>Agent Reports</B><BR>\n";
+		echo "<UL>\n";
+		if ( (preg_match("/Agent Time Detail/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_agent_time_detail.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Agent Time Detail</a></FONT>\n";}
+		if ( (preg_match("/Agent Status Detail/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_agent_status_detail.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Agent Status Detail</a></FONT>\n";}
+		if ( (preg_match("/Agent Performance Detail/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_agent_performance_detail.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Agent Performance Detail</a></FONT>\n";}
+		if ( (preg_match("/Single Agent Daily/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_agent_days_detail.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Single Agent Daily</a></FONT>\n";}
+		if ( (preg_match("/User Stats/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"user_stats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>User Stats</a></FONT>\n";}
+		if ( (preg_match("/User Time Sheet/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_agent_time_sheet.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>User Time Sheet</a></FONT>\n";}
+		echo "</UL><BR>\n";
+		echo "<B>Time Clock Reports</B><BR>\n";
+		echo "<UL>\n";
+		if ( (preg_match("/User Timeclock Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"timeclock_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>User Timeclock Report</a></FONT>\n";}
+		if ( (preg_match("/User Group Timeclock Status Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"timeclock_status.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>User Group Timeclock Status Report</a></FONT>\n";}
+		if ( (preg_match("/User Timeclock Detail Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_agent_timeclock_detail.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>User Timeclock Detail Report</a></FONT>\n";}
+		echo "</UL><BR>\n";
+		echo "<B>Other Reports and Links</B><BR>\n";
+		echo "<UL>\n";
+		if ( (preg_match("/Server Perforrmance Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_server_performance.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Server Perforrmance Report</a></FONT>\n";}
 
-		</TD><TD VALIGN=TOP>
-		 &nbsp; &nbsp; &nbsp;
-		</TD><TD VALIGN=TOP>
-		<B>Agent Reports</B><BR>
-		<UL>
-		<LI><a href="AST_agent_time_detail.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Agent Time Detail</a></FONT>
-		<LI><a href="AST_agent_status_detail.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Agent Status Detail</a></FONT>
-		<LI><a href="AST_agent_performance_detail.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Agent Performance Detail</a></FONT>
-		<LI><a href="AST_agent_days_detail.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Single Agent Daily</a></FONT>
-		</UL><BR>
-		<B>Time Clock Reports</B><BR>
-		<UL>
-		<LI><a href="timeclock_report.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>User Timeclock Report</a></FONT> 
-		<LI><a href="timeclock_status.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>User Group Timeclock Status Report</a></FONT>
-		<LI><a href="AST_agent_timeclock_detail.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>User Timeclock Detail Report</a></FONT>
-		</UL><BR>
-		<B>Other Reports and Links</B><BR>
-		<UL>
-		<LI><a href="AST_server_performance.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>Server Perforrmance Report</a></FONT>
-	<?php
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<LI><a href=\"$PHP_SELF?ADD=700000000000000\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Administration Change Log</a></FONT>\n";
 			}
@@ -26204,98 +26287,106 @@ if ($ADD==999999)
 			{
 			echo "<LI><a href=\"$vtiger_url_LU\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>VtigerCRM Home</a></FONT>\n";
 			}
-		if ($list_update_count > 0)
+		if ( ($list_update_count > 0) and ( (preg_match("/List Update Stats/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<LI><a href=\"./AST_LIST_UPDATEstats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>List Update Stats</a></FONT>\n";
 			}
-	?>
-		</UL>
-		</TD></TR></TABLE>
+		echo "</UL>\n";
+		echo "</TD></TR></TABLE>\n";
 
-	<?
-	if (file_exists('custom_report_links.html'))
-		{
-		readfile('custom_report_links.html');
-		}
-	?>
-		<PRE><TABLE BORDER=1 CELLPADDING=2 cellspacing=0>
-		<?php 
-
-		if ($stage == 'TIME')
+		if ( (file_exists('custom_report_links.html')) and ( (preg_match("/Custom Reports Links/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
-			echo "<TR><TD>SERVER <a href=\"$PHP_SELF?ADD=999999\">-</a></TD>";
-			echo "<TD>DESCRIPTION</TD><TD>IP</TD><TD>ACT</TD><TD>LOAD</TD><TD>CHAN</TD><TD>DISK</TD><TD>TIME</TD></TR>\n";
-			}
-		else
-			{
-			echo "<TR><TD>SERVER <a href=\"$PHP_SELF?ADD=999999&stage=TIME\">+</a></TD>";
-			echo "<TD>DESCRIPTION</TD><TD>IP</TD><TD>ACT</TD><TD>LOAD</TD><TD>CHAN</TD><TD>DISK</TD><TD>OUTBOUND</TD><TD>INBOUND</TD></TR>\n";
+			readfile('custom_report_links.html');
 			}
 
-		$o=0;
-		while ($servers_to_print > $o)
+
+		if ($reports_only_user < 1)
 			{
-			$cpu = (100 - $cpu_idle_percent[$o]);
-			$disk = '';
-			$disk_ary = explode('|',$disk_usage[$o]);
-			$disk_ary_ct = count($disk_ary);
-			$k=0;
-			while ($k < $disk_ary_ct)
-				{
-				$disk_ary[$k] = preg_replace("/^\d* /","",$disk_ary[$k]);
-				if ($k<1) {$disk = "$disk_ary[$k]";}
-				else
-					{
-					if ($disk_ary[$k] > $disk) {$disk = "$disk_ary[$k]";}
-					}
-				$k++;
-				}
-			$disk = "$disk%";
-			echo "<TR>\n";
-			echo "<TD><a href=\"$PHP_SELF?ADD=311111111111&server_id=$server_id[$o]\">$server_id[$o]</a></TD>\n";
-			echo "<TD>$server_description[$o]</TD>\n";
-			echo "<TD>$server_ip[$o]</TD>\n";
-			echo "<TD>$active[$o]</TD>\n";
-			echo "<TD>$sysload[$o] - $cpu%</TD>\n";
-			echo "<TD>$channels_total[$o]</TD>\n";
-			echo "<TD ALIGN=RIGHT>$disk</TD>\n";
+			echo "<PRE><TABLE BORDER=1 CELLPADDING=2 cellspacing=0>\n";
+
 			if ($stage == 'TIME')
 				{
-				$stmt="select last_update from server_updater where server_ip='$server_ip[$o]';";
-				$rslt=mysql_query($stmt, $link);
-				if ($DB) {echo "$stmt\n";}
-				$servertime_to_print = mysql_num_rows($rslt);
-				if ($servertime_to_print)
-					{
-					$row=mysql_fetch_row($rslt);
-					echo "<TD NOWRAP>$row[0]</TD>";
-					}
+				echo "<TR><TD>SERVER <a href=\"$PHP_SELF?ADD=999999\">-</a></TD>";
+				echo "<TD>DESCRIPTION</TD><TD>IP</TD><TD>ACT</TD><TD>LOAD</TD><TD>CHAN</TD><TD>DISK</TD><TD>TIME</TD></TR>\n";
 				}
 			else
 				{
-				echo "<TD><a href=\"AST_timeonVDAD.php?server_ip=$server_ip[$o]\">LINK</a></TD>\n";
-				echo "<TD><a href=\"AST_timeonVDAD.php?server_ip=$server_ip[$o]&closer_display=1\">LINK</a></TD>\n";
+				echo "<TR><TD>SERVER <a href=\"$PHP_SELF?ADD=999999&stage=TIME\">+</a></TD>";
+				echo "<TD>DESCRIPTION</TD><TD>IP</TD><TD>ACT</TD><TD>LOAD</TD><TD>CHAN</TD><TD>DISK</TD><TD>OUTBOUND</TD><TD>INBOUND</TD></TR>\n";
 				}
-			echo "</TR>\n";
-			$o++;
-			}
 
-		if ($stage == 'TIME')
-			{
-			echo "<TR><TD COLSPAN=2> &nbsp; </TD><TD>PHP Time</TD><TD COLSPAN=4> &nbsp; </TD><TD NOWRAP>" . date("Y-m-d H:i:s") . "</TD></TR>";
-
-			$stmt="select NOW();";
-			$rslt=mysql_query($stmt, $link);
-			if ($DB) {echo "$stmt\n";}
-			$dbtime_to_print = mysql_num_rows($rslt);
-			if ($dbtime_to_print)
+			$o=0;
+			while ($servers_to_print > $o)
 				{
-				$row=mysql_fetch_row($rslt);
-				echo "<TR><TD COLSPAN=2> &nbsp; </TD><TD>DB Time</TD><TD COLSPAN=4> &nbsp; </TD><TD NOWRAP>$row[0]</TD></TR>";
+				$cpu = (100 - $cpu_idle_percent[$o]);
+				$disk = '';
+				$disk_ary = explode('|',$disk_usage[$o]);
+				$disk_ary_ct = count($disk_ary);
+				$k=0;
+				while ($k < $disk_ary_ct)
+					{
+					$disk_ary[$k] = preg_replace("/^\d* /","",$disk_ary[$k]);
+					if ($k<1) {$disk = "$disk_ary[$k]";}
+					else
+						{
+						if ($disk_ary[$k] > $disk) {$disk = "$disk_ary[$k]";}
+						}
+					$k++;
+					}
+				$disk = "$disk%";
+				echo "<TR>\n";
+				echo "<TD><a href=\"$PHP_SELF?ADD=311111111111&server_id=$server_id[$o]\">$server_id[$o]</a></TD>\n";
+				echo "<TD>$server_description[$o]</TD>\n";
+				echo "<TD>$server_ip[$o]</TD>\n";
+				echo "<TD>$active[$o]</TD>\n";
+				echo "<TD>$sysload[$o] - $cpu%</TD>\n";
+				echo "<TD>$channels_total[$o]</TD>\n";
+				echo "<TD ALIGN=RIGHT>$disk</TD>\n";
+				if ($stage == 'TIME')
+					{
+					$stmt="select last_update from server_updater where server_ip='$server_ip[$o]';";
+					$rslt=mysql_query($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$servertime_to_print = mysql_num_rows($rslt);
+					if ($servertime_to_print)
+						{
+						$row=mysql_fetch_row($rslt);
+						echo "<TD NOWRAP>$row[0]</TD>";
+						}
+					}
+				else
+					{
+					if ( (preg_match("/Real-Time Main Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+						{
+						echo "<TD><a href=\"AST_timeonVDAD.php?server_ip=$server_ip[$o]\">LINK</a></TD>\n";
+						echo "<TD><a href=\"AST_timeonVDAD.php?server_ip=$server_ip[$o]&closer_display=1\">LINK</a></TD>\n";
+						}
+					else
+						{
+						echo "<TD> &nbsp; </TD>\n";
+						echo "<TD> &nbsp; </TD>\n";
+						}
+					}
+				echo "</TR>\n";
+				$o++;
 				}
-			}
 
-		echo "</TABLE>\n";
+			if ($stage == 'TIME')
+				{
+				echo "<TR><TD COLSPAN=2> &nbsp; </TD><TD>PHP Time</TD><TD COLSPAN=4> &nbsp; </TD><TD NOWRAP>" . date("Y-m-d H:i:s") . "</TD></TR>";
+
+				$stmt="select NOW();";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$dbtime_to_print = mysql_num_rows($rslt);
+				if ($dbtime_to_print)
+					{
+					$row=mysql_fetch_row($rslt);
+					echo "<TR><TD COLSPAN=2> &nbsp; </TD><TD>DB Time</TD><TD COLSPAN=4> &nbsp; </TD><TD NOWRAP>$row[0]</TD></TR>";
+					}
+				}
+			echo "</TABLE>\n";
+			}
 		}
 	else
 		{

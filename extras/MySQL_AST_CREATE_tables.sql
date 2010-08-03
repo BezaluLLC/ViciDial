@@ -597,7 +597,8 @@ agent_xfer_vm_transfer ENUM('Y','N') default 'Y',
 agent_xfer_blind_transfer ENUM('Y','N') default 'Y',
 agent_xfer_dial_with_customer ENUM('Y','N') default 'Y',
 agent_xfer_park_customer_dial ENUM('Y','N') default 'Y',
-agent_fullscreen ENUM('Y','N') default 'N'
+agent_fullscreen ENUM('Y','N') default 'N',
+allowed_reports VARCHAR(2000) default 'ALL REPORTS'
 );
 
 CREATE TABLE vicidial_campaigns (
@@ -2295,7 +2296,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1237',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1238',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

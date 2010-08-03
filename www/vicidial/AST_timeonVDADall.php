@@ -63,10 +63,11 @@
 # 100303-0930 - Added carrier stats display option
 # 100424-0943 - Added realtime_block_user_info option
 # 100709-1054 - Added system setting slave server option
+# 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
 #
 
-$version = '2.4-54';
-$build = '100709-1054';
+$version = '2.4-55';
+$build = '100802-2347';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -160,7 +161,7 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 
 if (!isset($DB))			{$DB=0;}
 if (!isset($RR))			{$RR=40;}
-if (!isset($group))			{$group='';}
+if (!isset($group))			{$group='ALL-ACTIVE';}
 if (!isset($usergroup))		{$usergroup='';}
 if (!isset($UGdisplay))		{$UGdisplay=0;}	# 0=no, 1=yes
 if (!isset($UidORname))		{$UidORname=1;}	# 0=id, 1=name
@@ -258,7 +259,7 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
@@ -275,14 +276,40 @@ if ( (!isset($monitor_phone)) or (strlen($monitor_phone)<1) )
 	$monitor_phone = $row[0];
 	}
 
-$stmt="SELECT realtime_block_user_info from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+$stmt="SELECT realtime_block_user_info,user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
 if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
-$realtime_block_user_info=$row[0];
+$realtime_block_user_info = $row[0];
+$LOGuser_group =			$row[1];
 
-$stmt="select campaign_id,campaign_name from vicidial_campaigns where active='Y' order by campaign_id;";
+$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns = $row[0];
+$LOGallowed_reports =	$row[1];
+
+if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+	{
+    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("HTTP/1.0 401 Unauthorized");
+    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    exit;
+	}
+
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+if ( (!preg_match("/-ALL/",$LOGallowed_campaigns)) )
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
+$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
+
+$stmt="select campaign_id,campaign_name from vicidial_campaigns where active='Y' $LOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
@@ -303,18 +330,22 @@ $group_string='|';
 $group_ct = count($groups);
 while($i < $group_ct)
 	{
-	$group_string .= "$groups[$i]|";
-	$group_SQL .= "'$groups[$i]',";
-	$groupQS .= "&groups[]=$groups[$i]";
+	if ( (preg_match("/ $groups[$i] /",$regexLOGallowed_campaigns)) or (preg_match("/-ALL/",$LOGallowed_campaigns)) )
+		{
+		$group_string .= "$groups[$i]|";
+		$group_SQL .= "'$groups[$i]',";
+		$groupQS .= "&groups[]=$groups[$i]";
+		}
+
 	$i++;
 	}
 $group_SQL = eregi_replace(",$",'',$group_SQL);
 
 ### if no campaigns selected, display all
-if ($group_ct < 1)
+if ( ($group_ct < 1) or (strlen($group_string) < 2) )
 	{
 	$groups[0] = 'ALL-ACTIVE';
-	$group_string = 'ALL-ACTIVE';
+	$group_string = '|ALL-ACTIVE|';
 	$group = 'ALL-ACTIVE';
 	$groupQS .= "&groups[]=ALL-ACTIVE";
 	}
@@ -329,9 +360,9 @@ if ( (ereg("--NONE--",$group_string) ) or ($group_ct < 1) )
 elseif ( eregi('ALL-ACTIVE',$group_string) )
 	{
 	$all_active = 1;
-	$group_SQL = "''";
-	$group_SQLand = "";
-	$group_SQLwhere = "";
+	$group_SQL = "'$rawLOGallowed_campaignsSQL'";
+	$group_SQLand = "$LOGallowed_campaignsSQL";
+	$group_SQLwhere = "$whereLOGallowed_campaignsSQL";
 	}
 else
 	{
@@ -853,10 +884,9 @@ if ( ( ereg('Y',$with_inbound) or ereg('O',$with_inbound) ) and ($campaign_allow
 		}
 	$closer_campaignsSQL = preg_replace("/,$/","",$closer_campaignsSQL);
 	}
-else
-	{
-	$closer_campaignsSQL = "''";
-	}	
+if (strlen($closer_campaignsSQL)<2)
+	{$closer_campaignsSQL="''";}
+
 if ($DB > 0) {echo "\n|$closer_campaigns|$closer_campaignsSQL|$stmt|\n";}
 
 
@@ -1188,7 +1218,7 @@ if (ereg('O',$with_inbound))
 
 	if (eregi('ALL-ACTIVE',$group_string))
 		{
-		$inboundSQL = "where campaign_id IN ($ALLcloser_campaignsSQL)";
+		$inboundSQL = "where campaign_id IN ($closer_campaignsSQL)";
 		$stmtB="select sum(calls_today),sum(drops_today),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(hold_sec_stat_one),sum(hold_sec_stat_two),sum(hold_sec_answer_calls),sum(hold_sec_drop_calls),sum(hold_sec_queue_calls) from vicidial_campaign_stats $inboundSQL;";
 		}
 
@@ -1312,11 +1342,13 @@ else
 		{
 		$non_inboundSQL='';
 		if (ereg('N',$with_inbound))
-			{$non_inboundSQL = "where campaign_id NOT IN ($ALLcloser_campaignsSQL)";}
+			{$non_inboundSQL = "and campaign_id NOT IN($ALLcloser_campaignsSQL)";}
+		else
+			{$non_inboundSQL = "and campaign_id IN($group_SQL,$closer_campaignsSQL)";}
 		$multi_drop++;
-		$stmt="select avg(auto_dial_level),min(dial_status_a),min(dial_status_b),min(dial_status_c),min(dial_status_d),min(dial_status_e),min(lead_order),min(lead_filter_id),sum(hopper_level),min(dial_method),avg(adaptive_maximum_level),avg(adaptive_dropped_percentage),avg(adaptive_dl_diff_target),avg(adaptive_intensity),min(available_only_ratio_tally),min(adaptive_latest_server_time),min(local_call_time),avg(dial_timeout),min(dial_statuses),max(agent_pause_codes_active),max(list_order_mix) from vicidial_campaigns where active='Y';";
+		$stmt="select avg(auto_dial_level),min(dial_status_a),min(dial_status_b),min(dial_status_c),min(dial_status_d),min(dial_status_e),min(lead_order),min(lead_filter_id),sum(hopper_level),min(dial_method),avg(adaptive_maximum_level),avg(adaptive_dropped_percentage),avg(adaptive_dl_diff_target),avg(adaptive_intensity),min(available_only_ratio_tally),min(adaptive_latest_server_time),min(local_call_time),avg(dial_timeout),min(dial_statuses),max(agent_pause_codes_active),max(list_order_mix) from vicidial_campaigns where active='Y' $group_SQLand;";
 
-		$stmtB="select sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4) from vicidial_campaign_stats $non_inboundSQL;";
+		$stmtB="select sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4) from vicidial_campaign_stats where calls_today > -1 $non_inboundSQL;";
 		}
 	else
 		{
@@ -1419,7 +1451,7 @@ else
 		}
 	else
 		{
-		$stmt="select vcl_id from vicidial_campaigns_list_mix where status='ACTIVE' $groupSQLand limit 1;";
+		$stmt="select vcl_id from vicidial_campaigns_list_mix where status='ACTIVE' $group_SQLand limit 1;";
 		$rslt=mysql_query($stmt, $link);
 		$Lmix_to_print = mysql_num_rows($rslt);
 		if ($Lmix_to_print > 0)
@@ -1605,7 +1637,7 @@ if ($campaign_allow_inbound > 0)
 	{
 	if (eregi('ALL-ACTIVE',$group_string)) 
 		{
-		$stmt="select closer_campaigns from vicidial_campaigns $group_SQLwhere";
+		$stmt="select closer_campaigns from vicidial_campaigns where active='Y' $group_SQLand";
 		$rslt=mysql_query($stmt, $link);
 		$closer_campaigns="";
 		while ($row=mysql_fetch_row($rslt)) 
@@ -1932,7 +1964,7 @@ else
 	if ($orderby=='userdown') {$orderSQL='vicidial_live_agents.user desc';}
 	}
 
-if (eregi('ALL-ACTIVE',$group_string)) {$UgroupSQL = '';}
+if ( (eregi('ALL-ACTIVE',$group_string)) and (strlen($group_SQL) < 3) ) {$UgroupSQL = '';}
 else {$UgroupSQL = " and vicidial_live_agents.campaign_id IN($group_SQL)";}
 if (strlen($usergroup)<1) {$usergroupSQL = '';}
 else {$usergroupSQL = " and user_group='" . mysql_real_escape_string($usergroup) . "'";}

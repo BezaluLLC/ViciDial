@@ -292,6 +292,10 @@ Timer Action Destination||
 This field is where you specify the Call Menu, Extension or In-Group that you want the cacll sent to if the Time Action is set to CALLMENU, EXTENSION or IN_GROUP. Default is empty||
 You must enter field options when adding a||
 You must enter field options when updating a||
+Allowed Reports||
+If a user in this group is set to user level 7 or higher, then this feature can be used to restrict the reports that the users can view. Default is ALL. If you want to select more than one report then press the Ctrl key on your keyboard as you select the reports||
+You are not allowed to view this report||
+CAMPLISTS_ALL - will include inactive lists in the search for the number||
 
 
 AST_VICIDIAL_ingrouplist.php

@@ -15,6 +15,7 @@
 # 100508-1439 - Added header row to output
 # 100702-1335 - Added custom fields
 # 100712-1324 - Added system setting slave server option
+# 100802-2347 - Added User Group Allowed Reports option validation
 #
 
 require("dbconnect.php");
@@ -66,7 +67,7 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 $PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and download_lists='1';";
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and download_lists='1' and active='Y';";
 if ($DB) {echo "|$stmt|\n";}
 if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
@@ -79,6 +80,52 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 #	Header("HTTP/1.0 401 Unauthorized");
     echo "Invalid Username/Password or no list download permission: |$PHP_AUTH_USER|\n";
     exit;
+	}
+
+$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGuser_group =			$row[0];
+
+$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns = $row[0];
+$LOGallowed_reports =	$row[1];
+
+if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+	{
+ #   Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+ #   Header("HTTP/1.0 401 Unauthorized");
+    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    exit;
+	}
+
+$LOGallowed_campaignsSQL='';
+if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
+
+$stmt="select count(*) from vicidial_lists where list_id='$list_id' $LOGallowed_campaignsSQL;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$count_to_print = mysql_num_rows($rslt);
+if ($count_to_print > 0)
+	{
+	$row=mysql_fetch_row($rslt);
+	$lists_allowed =$row[0];
+	$i++;
+	}
+
+if ($lists_allowed < 1)
+	{
+	echo "You are not allowed to download this list: $list_id\n";
+	exit;
 	}
 
 $stmt="select count(*) from vicidial_list where list_id='$list_id';";

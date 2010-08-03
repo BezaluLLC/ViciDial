@@ -233,6 +233,14 @@ OTHER CHANGES:
 	allow you to hangup or transfer the call at a set number of seconds
 	from start time or triggered from an outside process.
 
+51. Added Allowable Reports option in User Groups for user_level 7 and higher 
+	users to restrict viewable reports. Also enforced the Allowed
+	Campaigns option in User Group across admin.php and reports
+
+52. Changed the "Admin" link in admin.php to go to a links page instead of a 
+	listing of Phones, also forced level 7 users to the reports links page
+	if they try going anywhere in admin.php
+
 
 
 

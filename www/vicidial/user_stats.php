@@ -25,6 +25,7 @@
 # 100216-0042 - Added popup date selector
 # 100425-0115 - Added more login data
 # 100712-1324 - Added system setting slave server option
+# 100802-2347 - Added User Group Allowed Reports option validation
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -94,7 +95,7 @@ $TODAY = date("Y-m-d");
 if (!isset($begin_date)) {$begin_date = $TODAY;}
 if (!isset($end_date)) {$end_date = $TODAY;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
 if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
@@ -112,41 +113,44 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
 	}
+
+$stmt="SELECT full_name,user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGfullname =		$row[0];
+$LOGuser_group =	$row[1];
+
+fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
+fclose($fp);
+
+$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns = $row[0];
+$LOGallowed_reports =	$row[1];
+
+if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+	{
+    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("HTTP/1.0 401 Unauthorized");
+    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    exit;
+	}
+
+if ($did > 0)
+	{
+	$stmt="SELECT did_description from vicidial_inbound_dids where did_pattern='$user';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$full_name = $row[0];
+	}
 else
 	{
-
-	if($auth>0)
-		{
-		$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname=$row[0];
-
-		fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
-		fclose($fp);
-		}
-	else
-		{
-		fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
-		fclose($fp);
-		echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-		exit;
-		}
-
-	if ($did > 0)
-		{
-		$stmt="SELECT did_description from vicidial_inbound_dids where did_pattern='$user';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$full_name = $row[0];
-		}
-	else
-		{
-		$stmt="SELECT full_name from vicidial_users where user='$user';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$full_name = $row[0];
-		}
+	$stmt="SELECT full_name from vicidial_users where user='$user';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$full_name = $row[0];
 	}
 
 

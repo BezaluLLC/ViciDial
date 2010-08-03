@@ -27,6 +27,7 @@
 # 100214-1421 - Sort menu alphabetically
 # 100216-0042 - Added popup date selector
 # 100712-1324 - Added system setting slave server option
+# 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -114,7 +115,7 @@ if ($srv_conf_ct > 0)
 	$carrier_logging_active =		$row[0];
 	}
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1';";
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1' and active='Y';";
 if ($DB) {echo "|$stmt|\n";}
 if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
@@ -126,6 +127,27 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
+    exit;
+	}
+
+$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGuser_group =			$row[0];
+
+$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns = $row[0];
+$LOGallowed_reports =	$row[1];
+
+if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+	{
+    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("HTTP/1.0 401 Unauthorized");
+    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -145,7 +167,18 @@ while($i < $group_ct)
 	$i++;
 	}
 
-$stmt="select campaign_id,campaign_name from vicidial_campaigns order by campaign_id;";
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
+$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
+
+$stmt="select campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $campaigns_to_print = mysql_num_rows($rslt);
@@ -155,7 +188,7 @@ while ($i < $campaigns_to_print)
 	$row=mysql_fetch_row($rslt);
 	$groups[$i] =		$row[0];
 	$group_names[$i] =	$row[1];
-	if (ereg("--ALL",$group_string) )
+	if (ereg("-ALL",$group_string) )
 		{$group[$i] = $groups[$i];}
 	$i++;
 	}
@@ -166,13 +199,16 @@ $group_string='|';
 $group_ct = count($group);
 while($i < $group_ct)
 	{
-	$group_string .= "$group[$i]|";
-	$group_SQL .= "'$group[$i]',";
-	$groupQS .= "&group[]=$group[$i]";
+	if ( (preg_match("/ $group[$i] /",$regexLOGallowed_campaigns)) or (preg_match("/-ALL/",$LOGallowed_campaigns)) )
+		{
+		$group_string .= "$group[$i]|";
+		$group_SQL .= "'$group[$i]',";
+		$groupQS .= "&group[]=$group[$i]";
+		}
 
 	if (eregi("YES",$include_rollover))
 		{
-		$stmt="select drop_inbound_group from vicidial_campaigns where campaign_id='$group[$i]' and drop_inbound_group NOT LIKE \"%NONE%\" and drop_inbound_group is NOT NULL and drop_inbound_group != '';";
+		$stmt="select drop_inbound_group from vicidial_campaigns where campaign_id='$group[$i]' $LOGallowed_campaignsSQL and drop_inbound_group NOT LIKE \"%NONE%\" and drop_inbound_group is NOT NULL and drop_inbound_group != '';";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$in_groups_to_print = mysql_num_rows($rslt);
@@ -189,9 +225,9 @@ while($i < $group_ct)
 	}
 if (strlen($group_drop_SQL) < 2)
 	{$group_drop_SQL = "''";}
-if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) )
+if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) or (strlen($group_string) < 2) )
 	{
-	$group_SQL = "";
+	$group_SQL = "$LOGallowed_campaignsSQL";
 	$group_drop_SQL = "";
 	}
 else

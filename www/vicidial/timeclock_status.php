@@ -11,6 +11,7 @@
 # 90508-0644 - Changed to PHP long tags
 # 100214-1421 - Sort menu alphabetically
 # 100712-1324 - Added system setting slave server option
+# 100802-2347 - Added User Group Allowed Reports option validation
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -83,7 +84,7 @@ else
 
 $EoDdate = date("Y-m-d H:i:s", $EoD);
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
 if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
@@ -101,31 +102,27 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
 	}
-else
+
+$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGuser_group =			$row[0];
+
+$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns = $row[0];
+$LOGallowed_reports =	$row[1];
+
+if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 	{
-	if($auth>0)
-		{
-			$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname=$row[0];
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
-		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
-			fclose($fp);
-			}
-		}
-
+    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("HTTP/1.0 401 Unauthorized");
+    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    exit;
 	}
-
 
 $stmt="select user_group from vicidial_user_groups order by user_group;";
 $rslt=mysql_query($stmt, $link);

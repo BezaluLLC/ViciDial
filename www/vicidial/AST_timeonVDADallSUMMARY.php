@@ -17,8 +17,8 @@
 # 90310-2119 - Added admin header
 # 90508-0644 - Changed to PHP long tags
 # 100709-1806 - Added system setting slave server option
+# 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
 #
-
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -73,13 +73,13 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
@@ -87,10 +87,41 @@ $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
     exit;
 	}
 
+$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGuser_group =			$row[0];
+
+$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns = $row[0];
+$LOGallowed_reports =	$row[1];
+
+if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+	{
+    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("HTTP/1.0 401 Unauthorized");
+    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    exit;
+	}
+
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
 
-$stmt="select campaign_id from vicidial_campaigns where active='Y';";
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
+
+$stmt="select campaign_id from vicidial_campaigns where active='Y' $LOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
 if (!isset($DB))   {$DB=0;}
 if ($DB) {echo "$stmt\n";}
@@ -477,10 +508,12 @@ echo "</TD>";
 echo "</TR>";
 echo "</TABLE>";
 
-echo "</FORM>\n\n<BR>$db_source";
+echo "</FORM>\n\n<BR>";
 $k++;
 }
 
+
+echo "$db_source\n";
 ?>
 </PRE>
 </TD></TR></TABLE>

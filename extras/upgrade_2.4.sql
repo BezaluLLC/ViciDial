@@ -447,3 +447,7 @@ ALTER TABLE vicidial_inbound_groups ADD timer_action_destination VARCHAR(30) def
 ALTER TABLE vicidial_live_agents ADD external_timer_action_destination VARCHAR(100) default '';
 
 UPDATE system_settings SET db_schema_version='1237',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_user_groups ADD allowed_reports VARCHAR(2000) default 'ALL REPORTS';
+
+UPDATE system_settings SET db_schema_version='1238',db_schema_update_date=NOW();
