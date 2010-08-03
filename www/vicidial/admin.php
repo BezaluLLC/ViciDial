@@ -2384,11 +2384,12 @@ else
 # 100720-1332 - Small changes to Phone addition and modification pages
 # 100723-1519 - Added LOCKED options for Quick Transfer Button in campaigns
 # 100726-1017 - Added HANGUP, CALLMENU, EXTENSION and IN_GROUP timer actions to campaigns and in-groups
+# 100802-2130 - Changed Admin links to point to links page instead of Phones listings, changed Remote Agents to allow 9-digit IDs
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-266';
-$build = '100726-1017';
+$admin_version = '2.4-267';
+$build = '100802-2130';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -2828,6 +2829,7 @@ if ($ADD==660)			{$hh='users';		echo "Search Results";}
 if ($ADD==661)			{$hh='users';		echo "SEARCH PHONES RESULTS";}
 if ($ADD==99999)		{$hh='users';		echo "HELP";}
 if ($ADD==999999)		{$hh='reports';		echo "REPORTS";}
+if ($ADD==999998)		{$hh='admin';		echo "ADMIN";}
 
 if ( ($ADD>9) && ($ADD < 99998) )
 	{
@@ -7968,7 +7970,7 @@ if ($ADD==11111)
 		echo "<br>ADD NEW REMOTE AGENTS<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=21111>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>User ID Start: </td><td align=left><input type=text name=user_start size=6 maxlength=6> (numbers only, incremented)$NWB#vicidial_remote_agents-user_start$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>User ID Start: </td><td align=left><input type=text name=user_start size=9 maxlength=9> (numbers only, incremented)$NWB#vicidial_remote_agents-user_start$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Number of Lines: </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3> (numbers only)$NWB#vicidial_remote_agents-number_of_lines$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left><select size=1 name=server_ip>\n";
 		echo "$servers_list";
@@ -21653,7 +21655,7 @@ if ($ADD==31111)
 		echo "<input type=hidden name=ADD value=41111>\n";
 		echo "<input type=hidden name=remote_agent_id value=\"$row[0]\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=3&user=$user_start\">User ID Start</a>: </td><td align=left><input type=text name=user_start size=6 maxlength=6 value=\"$user_start\"> (numbers only, incremented)$NWB#vicidial_remote_agents-user_start$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=3&user=$user_start\">User ID Start</a>: </td><td align=left><input type=text name=user_start size=9 maxlength=9 value=\"$user_start\"> (numbers only, incremented)$NWB#vicidial_remote_agents-user_start$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Number of Lines: </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3 value=\"$number_of_lines\"> (numbers only)$NWB#vicidial_remote_agents-number_of_lines$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left><select size=1 name=server_ip>\n";
 		echo "$servers_list";
@@ -26300,6 +26302,53 @@ if ($ADD==999999)
 		echo "You do not have permission to view this page\n";
 		exit;
 		}
+	}
+
+
+
+######################
+# ADD=999998 display admin links page
+######################
+if ($ADD==999998)
+	{
+	?>
+
+	<HTML>
+	<HEAD>
+
+	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+	<TITLE>Administration: Admin</TITLE></HEAD><BODY BGCOLOR=WHITE>
+	<FONT SIZE=4><B>Administration</B></FONT><BR><BR>
+	<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=0><TR><TD VALIGN=TOP>
+	<B><UL>
+	<?php
+
+	echo "<LI><a href=\"$PHP_SELF?ADD=100000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Call Times </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=130000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Shifts </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=10000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Phones </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=130000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Templates </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=140000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Carriers </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=100000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Servers </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=1000000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Conferences </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=311111111111111\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> System Settings </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=321111111111111\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> System Statuses </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=170000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Voicemail </a>\n";
+
+	if ( ($sounds_central_control_active > 0) or ($SSsounds_central_control_active > 0) )
+		{
+		echo "<LI><a href=\"audio_store.php\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Audio Store </a>\n";
+		echo "<LI><a href=\"$PHP_SELF?ADD=160000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Music On Hold </a>\n";
+		}
+	if ($SSenable_tts_integration > 0)
+		{
+		echo "<LI><a href=\"$PHP_SELF?ADD=150000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Text To Speech </a>\n";
+		}
+	if ($SScallcard_enabled > 0)
+		{
+		echo "<LI><a href=\"callcard_admin.php\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> CallCard Admin </a>\n";
+		}
+
+	echo "</UL></B>\n";
 	}
 
 

@@ -23,6 +23,7 @@
 # 100507-1339 - Added copy carrier submenu
 # 100616-2350 - Added VIDPROMPT call menu options
 # 100728-0904 - Changed Lead Loader link to the new 3rd gen lead loader
+# 100802-2127 - Changed Admin to point to links page instead of Phones listings
 #
 
 
@@ -40,7 +41,7 @@ if($short_header)
 	<TD> &nbsp; <A HREF="admin.php?ADD=1000" ALT="In-Groups"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>In-Groups</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=100000" ALT="User Groups"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>User Groups</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10000" ALT="Remote Agents"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Remote Agents</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=10000000000" ALT="Admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Admin</B></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=999998" ALT="Admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Admin</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=999999" ALT="Reports"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Reports</B></A> &nbsp; </TD>
 	</TR>
 	</TABLE>
@@ -1156,7 +1157,7 @@ $SScustom_fields_enabled =	$row[3];
 	?>
 	<!-- ADMIN NAVIGATION -->
 	<TR><TD <?php echo $admin_hh ?>>
-	<a href="<?php echo $ADMIN ?>?ADD=10000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $admin_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $admin_bold ?> Admin </a>
+	<a href="<?php echo $ADMIN ?>?ADD=999998"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $admin_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $admin_bold ?> Admin </a>
 	</TD></TR>
 	<?php
 	if (strlen($admin_hh) > 1) 
