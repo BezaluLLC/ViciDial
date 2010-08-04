@@ -303,10 +303,11 @@
 # 100712-1441 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
 # 100723-1522 - Added LOCKED options for quick transfer button feature
 # 100726-1233 - Added HANGUP, CALLMENU, EXTENSION, IN_GROUP timer actions
+# 100803-2324 - Cleanup of URLDecode (issue #375)
 #
 
-$version = '2.4-281';
-$build = '100726-1233';
+$version = '2.4-282';
+$build = '100803-2324';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -2669,7 +2670,6 @@ $CCAL_OUT .= "</table>";
 		$h++;
 		}
 	?>
-	var decoded = '';
 	var view_scripts = '<?php echo $view_scripts ?>';
 	var LOGfullname = '<?php echo $LOGfullname ?>';
 	var recLIST = '';
@@ -5373,8 +5373,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var regWFAcustom = new RegExp("^VAR","ig");
 						if (VDIC_web_form_address.match(regWFAcustom))
 							{
-							URLDecode(VDIC_web_form_address,'YES');
-							TEMP_VDIC_web_form_address = decoded;
+							TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES');
 							TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAcustom, '');
 							}
 						else
@@ -5473,8 +5472,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 						if (VDIC_web_form_address_two.match(regWFAcustom))
 							{
-							URLDecode(VDIC_web_form_address_two,'YES');
-							TEMP_VDIC_web_form_address_two = decoded;
+							TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES');
 							TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAcustom, '');
 							}
 						else
@@ -5801,8 +5799,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var regWFAcustom = new RegExp("^VAR","ig");
 						if (VDIC_web_form_address.match(regWFAcustom))
 							{
-							URLDecode(VDIC_web_form_address,'YES');
-							TEMP_VDIC_web_form_address = decoded;
+							TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES');
 							TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAcustom, '');
 							}
 						else
@@ -5901,8 +5898,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 						if (VDIC_web_form_address_two.match(regWFAcustom))
 							{
-							URLDecode(VDIC_web_form_address_two,'YES');
-							TEMP_VDIC_web_form_address_two = decoded;
+							TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES');
 							TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAcustom, '');
 							}
 						else
@@ -7180,8 +7176,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							var regWFAcustom = new RegExp("^VAR","ig");
 							if (VDIC_web_form_address.match(regWFAcustom))
 								{
-								URLDecode(VDIC_web_form_address,'YES');
-								TEMP_VDIC_web_form_address = decoded;
+								TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES');
 								TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAcustom, '');
 								}
 							else
@@ -7280,8 +7275,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 
 							if (VDIC_web_form_address_two.match(regWFAcustom))
 								{
-								URLDecode(VDIC_web_form_address_two,'YES');
-								TEMP_VDIC_web_form_address_two = decoded;
+								TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES');
 								TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAcustom, '');
 								}
 							else
@@ -7571,8 +7565,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		var regWFAcustom = new RegExp("^VAR","ig");
 		if (VDIC_web_form_address.match(regWFAcustom))
 			{
-			URLDecode(VDIC_web_form_address,'YES');
-			TEMP_VDIC_web_form_address = decoded;
+			TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES');
 			TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAcustom, '');
 			}
 		else
@@ -7704,8 +7697,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		var regWFAcustom = new RegExp("^VAR","ig");
 		if (VDIC_web_form_address_two.match(regWFAcustom))
 			{
-			URLDecode(VDIC_web_form_address_two,'YES');
-			TEMP_VDIC_web_form_address_two = decoded;
+			TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES');
 			TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAcustom, '');
 			}
 		else
@@ -9462,7 +9454,7 @@ else
    // Put [ERR] in output if %ZZ is invalid.
 	var HEXCHAR = "0123456789ABCDEFabcdef"; 
 	var encoded = encodedvar;
-	decoded = '';
+	var decoded = '';
 	var i = 0;
 	var RGnl = new RegExp("[\r]\n","g");
 	var RGplus = new RegExp(" ","g");
@@ -9765,7 +9757,7 @@ else
 	//		} // while
 	//		decoded = decoded.replace(RGnl, "<BR>");
 	//
-	return false;
+	return decoded;
 	};
 
 
@@ -10719,8 +10711,7 @@ else
 			if ( (crm_popup_login == 'Y') && (crm_login_address.length > 4) )
 				{
 				var regWFAcustom = new RegExp("^VAR","ig");
-				URLDecode(crm_login_address,'YES');
-				var TEMP_crm_login_address = decoded;
+				var TEMP_crm_login_address = URLDecode(crm_login_address,'YES');
 				TEMP_crm_login_address = TEMP_crm_login_address.replace(regWFAcustom, '');
 
 				var CRMwin = 'CRMwin';
