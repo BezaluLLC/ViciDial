@@ -64,10 +64,11 @@
 # 100424-0943 - Added realtime_block_user_info option
 # 100709-1054 - Added system setting slave server option
 # 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
+# 100805-0704 - Fixed minor bug in campaigns restrictions
 #
 
-$version = '2.4-55';
-$build = '100802-2347';
+$version = '2.4-56';
+$build = '100805-0704';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -180,7 +181,7 @@ if (!isset($with_inbound))
 	}
 $ingroup_detail='';
 
-if (strlen($group)>1) {$groups[0] = $group;  $RR=40;}
+if ( (strlen($group)>1) and (strlen($groups[0])<1) ) {$groups[0] = $group;  $RR=40;}
 else {$group = $groups[0];}
 
 function get_server_load($windows = false) 
