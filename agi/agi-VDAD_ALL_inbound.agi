@@ -137,6 +137,7 @@
 # 100527-0111 - Added on-hold and hold-time-option no-block options and message seconds, NA CID cleaning
 # 100616-1600 - Added VID filename and digit validation options
 # 100718-1822 - Added second hold time option and wait time options
+# 100805-1530 - Added FILTER from-did-route feature, changed active=n to go to after hours action
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -341,7 +342,7 @@ if ($sthArows > 0)
 $sthA->finish();
 
 $user_unavailable_action='';
-##### special processing for DID forwarded calls  "99909*1*"
+##### special processing for DID forwarded calls  "99909*1***DID"
 if ($extension =~ /^999\d\d\*/)
 	{
 	@EXT_vars = split(/\*/, $extension);
@@ -350,9 +351,17 @@ if ($extension =~ /^999\d\d\*/)
 	$did_id =				$EXT_vars[1];	# the DID ID to grab settings from
 	$in_group_override = 	$EXT_vars[2];	# the in-group override, if set
 	$agentdirect_override = $EXT_vars[3];	# the agentdirect override, if set
+	$route_type =			$EXT_vars[4];	# DID or FILTER from the did, if set
 
 	### Grab DID values from the database
-	$stmtA = "SELECT call_handle_method,agent_search_method,group_id,did_pattern,list_id,phone_code,campaign_id,user,user_unavailable_action,user_route_settings_ingroup,did_route,voicemail_ext,extension,exten_context,phone,server_ip FROM vicidial_inbound_dids where did_id = '$did_id';";
+	if ($route_type =~ /FILTER/) 
+		{
+		$stmtA = "SELECT filter_call_handle_method,filter_agent_search_method,filter_group_id,did_pattern,filter_list_id,filter_phone_code,filter_campaign_id,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_action,filter_voicemail_ext,filter_extension,filter_exten_context,filter_phone,filter_server_ip FROM vicidial_inbound_dids where did_id = '$did_id';";
+		}
+	else
+		{
+		$stmtA = "SELECT call_handle_method,agent_search_method,group_id,did_pattern,list_id,phone_code,campaign_id,user,user_unavailable_action,user_route_settings_ingroup,did_route,voicemail_ext,extension,exten_context,phone,server_ip FROM vicidial_inbound_dids where did_id = '$did_id';";
+		}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -568,7 +577,7 @@ $sthA->finish();
 
 ### Grab inbound groups values from the database
 $cbc=0;
-$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds FROM vicidial_inbound_groups where group_id = '$channel_group';";
+$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active FROM vicidial_inbound_groups where group_id = '$channel_group';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -643,6 +652,7 @@ while ($sthArows > $cbc)
 	$wait_time_option_press_filename =	$aryA[57];
 	$wait_time_option_no_block =		$aryA[58];
 	$wait_time_option_prompt_seconds =	$aryA[59];
+	$ingroup_active =					$aryA[60];
 
 	$custom_call_id='';
 	if ($uniqueid_status_display =~ /ENABLED/)
@@ -686,6 +696,14 @@ if ( (length($deafult_afterhours_filename_override) > 0) && ($deafult_afterhours
 	{$after_hours_message_filename = $deafult_afterhours_filename_override;}
 if ( (length($day_afterhours_filename_override) > 0) && ($day_afterhours_filename_override !~ /---NONE---/) )
 	{$after_hours_message_filename = $day_afterhours_filename_override;}
+
+# send call to after hours action if in-group is set to inactive
+if ($ingroup_active !~ /Y/)
+	{
+	$ct_default_start	=	2400;
+	$ct_default_stop	=	2400;
+	if ($AGILOG) {$agi_string = "IN-GROUP INACTIVE!    Sending to After Hours Action:    |$after_hours_action|$ingroup_active|";   &agi_output;}
+	}
 
 $AGI->stream_file('sip-silence');
 $AGI->stream_file('sip-silence');

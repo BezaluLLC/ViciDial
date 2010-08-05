@@ -241,6 +241,23 @@ OTHER CHANGES:
 	listing of Phones, also forced level 7 users to the reports links page
 	if they try going anywhere in admin.php
 
+53. Renamed "In-Groups" header in admin.php to "Inbound" to reflect that it is
+	not just for In-groups, but includes DIDs and Call Menus as well
+
+54. Added Filter Phone Groups to allow calls coming into DIDs to be filtered
+	and sent to a different route if the caller ID number matches one in
+	the selected Filter Phone Group, or the search can be done by a web GET
+	to a URL that you define.
+
+55. Added method to clean caller ID number when calls come into DIDs, either by
+	stripping specific digits from the front of a number if they are there
+	or taking only the right X numbers, i.e. R10 will take only the 10 
+	digits on the right of a number, and L1 will remove only a 1 from the
+	left side of the number.
+
+56. Added ability to download DNC numbers from the internal and campaign-
+	specific DNC lists, as well as the Filter Phone Groups
+
 
 
 

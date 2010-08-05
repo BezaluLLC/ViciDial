@@ -451,3 +451,40 @@ UPDATE system_settings SET db_schema_version='1237',db_schema_update_date=NOW();
 ALTER TABLE vicidial_user_groups ADD allowed_reports VARCHAR(2000) default 'ALL REPORTS';
 
 UPDATE system_settings SET db_schema_version='1238',db_schema_update_date=NOW();
+
+CREATE TABLE vicidial_filter_phone_groups (
+filter_phone_group_id VARCHAR(20) NOT NULL,
+filter_phone_group_name VARCHAR(40) NOT NULL,
+filter_phone_group_description VARCHAR(100),
+index (filter_phone_group_id)
+);
+
+CREATE TABLE vicidial_filter_phone_numbers (
+phone_number VARCHAR(18) NOT NULL,
+filter_phone_group_id VARCHAR(20) NOT NULL,
+index (phone_number),
+unique index phonefilter (phone_number, filter_phone_group_id)
+);
+
+ALTER TABLE vicidial_inbound_dids ADD filter_inbound_number ENUM('DISABLED','GROUP','URL') default 'DISABLED';
+ALTER TABLE vicidial_inbound_dids ADD filter_phone_group_id VARCHAR(20) default '';
+ALTER TABLE vicidial_inbound_dids ADD filter_url VARCHAR(1000) default '';
+ALTER TABLE vicidial_inbound_dids ADD filter_action ENUM('EXTEN','VOICEMAIL','AGENT','PHONE','IN_GROUP','CALLMENU') default 'EXTEN';
+ALTER TABLE vicidial_inbound_dids ADD filter_extension VARCHAR(50) default '9998811112';
+ALTER TABLE vicidial_inbound_dids ADD filter_exten_context VARCHAR(50) default 'default';
+ALTER TABLE vicidial_inbound_dids ADD filter_voicemail_ext VARCHAR(10);
+ALTER TABLE vicidial_inbound_dids ADD filter_phone VARCHAR(100);
+ALTER TABLE vicidial_inbound_dids ADD filter_server_ip VARCHAR(15);
+ALTER TABLE vicidial_inbound_dids ADD filter_user VARCHAR(20);
+ALTER TABLE vicidial_inbound_dids ADD filter_user_unavailable_action ENUM('IN_GROUP','EXTEN','VOICEMAIL','PHONE') default 'VOICEMAIL';
+ALTER TABLE vicidial_inbound_dids ADD filter_user_route_settings_ingroup VARCHAR(20) default 'AGENTDIRECT';
+ALTER TABLE vicidial_inbound_dids ADD filter_group_id VARCHAR(20);
+ALTER TABLE vicidial_inbound_dids ADD filter_call_handle_method VARCHAR(20) default 'CID';
+ALTER TABLE vicidial_inbound_dids ADD filter_agent_search_method ENUM('LO','LB','SO') default 'LB';
+ALTER TABLE vicidial_inbound_dids ADD filter_list_id BIGINT(14) UNSIGNED default '999';
+ALTER TABLE vicidial_inbound_dids ADD filter_campaign_id VARCHAR(8);
+ALTER TABLE vicidial_inbound_dids ADD filter_phone_code VARCHAR(10) default '1';
+ALTER TABLE vicidial_inbound_dids ADD filter_menu_id VARCHAR(50) default '';
+ALTER TABLE vicidial_inbound_dids ADD filter_clean_cid_number VARCHAR(20) default '';
+
+UPDATE system_settings SET db_schema_version='1239',db_schema_update_date=NOW();

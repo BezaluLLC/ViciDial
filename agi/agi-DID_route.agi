@@ -25,6 +25,7 @@
 # 91122-0743 - Added QueueMetrics logging as DID INFO entries
 # 100116-0631 - Logging bug fixes
 # 100123-1423 - Added record call DID option
+# 100805-0943 - Added Filter Phone Group alternate routing feature and CID number cleanup
 #
 
 $script = 'agi-DID_route.agi';
@@ -32,7 +33,7 @@ $dtmf_silent_prefix = '7';
 $at='@';
 $S='*';
 $US='_';
-
+$route_type='DID';
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 $year = ($year + 1900);
@@ -181,7 +182,7 @@ if ( (!$callerid) or ($callerid =~ /unknown/) )
 
 ### Grab DID values from the database
 $DIDs_in_system=0;
-$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call FROM vicidial_inbound_dids where did_pattern = '$extension' and did_active='Y';";
+$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number FROM vicidial_inbound_dids where did_pattern = '$extension' and did_active='Y';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -203,6 +204,26 @@ if ($sthArows > 0)
 	$user_route_settings_ingroup =	$aryA[12];
 	$menu_id =						$aryA[13];
 	$record_call =					$aryA[14];
+	$filter_inbound_number =		$aryA[15];
+	$filter_phone_group_id =		$aryA[16];
+	$filter_url =					$aryA[17];
+	$filter_action =				$aryA[18];
+	$filter_extension =				$aryA[19];
+	$filter_exten_context =			$aryA[20];
+	$filter_voicemail_ext =			$aryA[21];
+	$filter_phone =					$aryA[22];
+	$filter_server_ip =				$aryA[23];
+	$filter_user =					$aryA[24];
+	$filter_user_unavailable_action = $aryA[25];
+	$filter_user_route_settings_ingroup = $aryA[26];
+	$filter_group_id =				$aryA[27];
+	$filter_call_handle_method =	$aryA[28];
+	$filter_agent_search_method =	$aryA[29];
+	$filter_list_id =				$aryA[30];
+	$filter_campaign_id =			$aryA[31];
+	$filter_phone_code =			$aryA[32];
+	$filter_menu_id =				$aryA[33];
+	$filter_clean_cid_number =		$aryA[34];
 
 	$DIDs_in_system++;
 	}
@@ -211,7 +232,7 @@ $sthA->finish();
 if ($sthArows < 1)
 	{
 	### Grab DID values from the database for a default DID pattern if there is one
-	$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call FROM vicidial_inbound_dids where did_pattern = 'default' and did_active='Y';";
+	$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number FROM vicidial_inbound_dids where did_pattern = 'default' and did_active='Y';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$DIDs_in_system=$sthA->rows;
@@ -233,6 +254,26 @@ if ($sthArows < 1)
 		$user_route_settings_ingroup =	$aryA[12];
 		$menu_id =						$aryA[13];
 		$record_call =					$aryA[14];
+		$filter_inbound_number =		$aryA[15];
+		$filter_phone_group_id =		$aryA[16];
+		$filter_url =					$aryA[17];
+		$filter_action =				$aryA[18];
+		$filter_extension =				$aryA[19];
+		$filter_exten_context =			$aryA[20];
+		$filter_voicemail_ext =			$aryA[21];
+		$filter_phone =					$aryA[22];
+		$filter_server_ip =				$aryA[23];
+		$filter_user =					$aryA[24];
+		$filter_user_unavailable_action = $aryA[25];
+		$filter_user_route_settings_ingroup = $aryA[26];
+		$filter_group_id =				$aryA[27];
+		$filter_call_handle_method =	$aryA[28];
+		$filter_agent_search_method =	$aryA[29];
+		$filter_list_id =				$aryA[30];
+		$filter_campaign_id =			$aryA[31];
+		$filter_phone_code =			$aryA[32];
+		$filter_menu_id =				$aryA[33];
+		$filter_clean_cid_number =		$aryA[34];
 		}
 	$sthA->finish();
 	}
@@ -313,13 +354,124 @@ while ($sthArows > $cbc)
 $sthA->finish();
 
 
+### BEGIN clean caller id number ###
+if (length($filter_clean_cid_number) > 1)
+	{
+	$original_callerid = $callerid;
+	$filter_number_altered=0;
+	if ($filter_clean_cid_number =~ /^R\d/)
+		{
+		@filter_rule = split(/R/,$filter_clean_cid_number);
+		$filter_rule[1] =~ s/ .*//gi;
+		while (length($callerid) > $filter_rule[1])
+			{$callerid =~ s/^.//gi;}
+		if (length($callerid) != length($original_callerid))
+			{$filter_number_altered++;}
+		}
+	if ($filter_clean_cid_number =~ /^L\d/)
+		{
+		@filter_rule = split(/L/,$filter_clean_cid_number);
+		$filter_rule[1] =~ s/ .*//gi;
+		$filter_rule_reg = $filter_rule[1];
+		$callerid =~ s/^$filter_rule_reg//gi;
+		if (length($callerid) != length($original_callerid))
+			{$filter_number_altered++;}
+		}
+	if ($filter_number_altered > 0)
+		{
+		$newcallerid = "\"$calleridname <$callerid>\"";
+		$AGI->set_callerid($newcallerid);
+		if ($AGILOG) {$agi_string = "filter clean callerid, setting new CID: |$callerid|$calleridname|$newcallerid|$filter_clean_cid_number|   Old: |$original_callerid|";   &agi_output;}
+		}
+	}
+### END clean caller id number ###
+
+
+##### BEGIN filtering process #####
+if ($filter_inbound_number =~ /GROUP|URL/)
+	{
+	$filter_match_found=0;
+	if ($AGILOG) {$agi_string = "filtering active: |$extension|$filter_inbound_number|$filter_phone_group_id|$filter_url|$filter_action|$filter_clean_cid_number|";   &agi_output;}
+	if ($filter_inbound_number =~ /GROUP/)
+		{
+		$stmtA = "SELECT count(*) FROM vicidial_filter_phone_numbers where filter_phone_group_id='$filter_phone_group_id' and phone_number='$callerid';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$filter_match_found =	$aryA[0];
+			}
+		$sthA->finish();
+		}
+	else
+		{
+		### first, find curl binary
+		$curlbin = '';
+		if ( -e ('/bin/curl')) {$curlbin = '/bin/curl';}
+		else 
+			{
+			if ( -e ('/usr/bin/curl')) {$curlbin = '/usr/bin/curl';}
+			else 
+				{
+				if ( -e ('/usr/local/bin/curl')) {$curlbin = '/usr/local/bin/curl';}
+				else
+					{
+					if ($AGILOG) {$agi_string = "ERROR: cannot filter by URL, curl binary not found";   &agi_output;}
+					}
+				}
+			}
+		if ( (length($curlbin) > 4) && ($filter_url =~ /http/i) && (length($filter_url) > 8) )
+			{
+			$filter_url =~ s/--A--phone_number--B--/$callerid/gi;
+			$filter_url =~ s/--A--did_pattern--B--/$callerid/gi;
+			$filter_url =~ s/&/\\&/gi;
+			$filter_url =~ s/ /+/gi;
+
+			@curl_output = `$curlbin $filter_url`;
+			
+			$k=0;
+			$full_output='';
+			foreach (@curl_output)
+				{
+				$full_output .= $curl_output[$k];
+				$k++;
+				}
+			$full_output =~ s/\D//gi;
+			if ($full_output > 0) 
+				{
+				$filter_match_found = $full_output;
+				}
+			if ($AGILOG) {$agi_string = "URL filter search response: |$filter_match_found|$full_output|$filter_url|";   &agi_output;}
+			}
+		}
+	if ($filter_match_found > 0)
+		{
+		$did_route =					$filter_action;
+		$did_extension =				$filter_extension;
+		$exten_context =				$filter_exten_context;
+		$voicemail_ext =				$filter_voicemail_ext;
+		$phone =						$filter_phone;
+		$did_server_ip =				$filter_server_ip;
+		$user =							$filter_user;
+		$user_unavailable_action =		$filter_user_unavailable_action;
+		$user_route_settings_ingroup =	$filter_user_route_settings_ingroup;
+		$menu_id =						$filter_menu_id;
+		$route_type =					'FILTER';
+
+		if ($AGILOG) {$agi_string = "Filter match found: |$filter_match_found|$filter_action|$did_route|";   &agi_output;}
+		}
+	}
+##### END filtering process #####
+
 
 
 
 ### Route call to a VICIDIAL-defined phone
 if ($did_route =~ /PHONE/)
 	{
-	$stmtA = "SELECT dialplan_number,voicemail_id,protocol,ext_context FROM phones where server_ip = '$did_server_ip' and extension='$phone';";
+	$stmtA = "SELECT dialplan_number,voicemail_id,protocol,ext_context FROM phones where server_ip='$did_server_ip' and extension='$phone';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -368,7 +520,7 @@ if ($did_route =~ /VOICEMAIL/)
 ### Route call to a VICIDIAL Inbound Group
 if ($did_route =~ /IN_GROUP/)
 	{
-	$did_extension = "99909$S$did_id$S";
+	$did_extension = "99909$S$did_id$S$S$S$route_type";
 	$exten_context = $ext_context;
 	$did_route = 'EXTEN';
 	}
@@ -377,7 +529,7 @@ if ($did_route =~ /IN_GROUP/)
 ### Route call to a logged-in VICIDIAL agent
 if ($did_route =~ /AGENT/)
 	{
-	$did_extension = "99909$S$did_id$S";
+	$did_extension = "99909$S$did_id$S$S$S$route_type";
 	$exten_context = $ext_context;
 	$did_route = 'EXTEN';
 	}

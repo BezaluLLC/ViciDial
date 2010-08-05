@@ -1373,6 +1373,50 @@ if (isset($_GET["timer_action_destination"]))			{$timer_action_destination=$_GET
 	elseif (isset($_POST["timer_action_destination"]))	{$timer_action_destination=$_POST["timer_action_destination"];}
 if (isset($_GET["allowed_reports"]))			{$allowed_reports=$_GET["allowed_reports"];}
 	elseif (isset($_POST["allowed_reports"]))	{$allowed_reports=$_POST["allowed_reports"];}
+if (isset($_GET["filter_phone_group_id"]))			{$filter_phone_group_id=$_GET["filter_phone_group_id"];}
+	elseif (isset($_POST["filter_phone_group_id"]))	{$filter_phone_group_id=$_POST["filter_phone_group_id"];}
+if (isset($_GET["filter_phone_group_name"]))			{$filter_phone_group_name=$_GET["filter_phone_group_name"];}
+	elseif (isset($_POST["filter_phone_group_name"]))	{$filter_phone_group_name=$_POST["filter_phone_group_name"];}
+if (isset($_GET["filter_phone_group_description"]))				{$filter_phone_group_description=$_GET["filter_phone_group_description"];}
+	elseif (isset($_POST["filter_phone_group_description"]))	{$filter_phone_group_description=$_POST["filter_phone_group_description"];}
+if (isset($_GET["filter_inbound_number"]))			{$filter_inbound_number=$_GET["filter_inbound_number"];}
+	elseif (isset($_POST["filter_inbound_number"]))	{$filter_inbound_number=$_POST["filter_inbound_number"];}
+if (isset($_GET["filter_url"]))				{$filter_url=$_GET["filter_url"];}
+	elseif (isset($_POST["filter_url"]))	{$filter_url=$_POST["filter_url"];}
+if (isset($_GET["filter_action"]))			{$filter_action=$_GET["filter_action"];}
+	elseif (isset($_POST["filter_action"]))	{$filter_action=$_POST["filter_action"];}
+if (isset($_GET["filter_extension"]))			{$filter_extension=$_GET["filter_extension"];}
+	elseif (isset($_POST["filter_extension"]))	{$filter_extension=$_POST["filter_extension"];}
+if (isset($_GET["filter_exten_context"]))			{$filter_exten_context=$_GET["filter_exten_context"];}
+	elseif (isset($_POST["filter_exten_context"]))	{$filter_exten_context=$_POST["filter_exten_context"];}
+if (isset($_GET["filter_voicemail_ext"]))			{$filter_voicemail_ext=$_GET["filter_voicemail_ext"];}
+	elseif (isset($_POST["filter_voicemail_ext"]))	{$filter_voicemail_ext=$_POST["filter_voicemail_ext"];}
+if (isset($_GET["filter_phone"]))			{$filter_phone=$_GET["filter_phone"];}
+	elseif (isset($_POST["filter_phone"]))	{$filter_phone=$_POST["filter_phone"];}
+if (isset($_GET["filter_server_ip"]))			{$filter_server_ip=$_GET["filter_server_ip"];}
+	elseif (isset($_POST["filter_server_ip"]))	{$filter_server_ip=$_POST["filter_server_ip"];}
+if (isset($_GET["filter_user"]))			{$filter_user=$_GET["filter_user"];}
+	elseif (isset($_POST["filter_user"]))	{$filter_user=$_POST["filter_user"];}
+if (isset($_GET["filter_user_unavailable_action"]))				{$filter_user_unavailable_action=$_GET["filter_user_unavailable_action"];}
+	elseif (isset($_POST["filter_user_unavailable_action"]))	{$filter_user_unavailable_action=$_POST["filter_user_unavailable_action"];}
+if (isset($_GET["filter_user_route_settings_ingroup"]))				{$filter_user_route_settings_ingroup=$_GET["filter_user_route_settings_ingroup"];}
+	elseif (isset($_POST["filter_user_route_settings_ingroup"]))	{$filter_user_route_settings_ingroup=$_POST["filter_user_route_settings_ingroup"];}
+if (isset($_GET["filter_group_id"]))			{$filter_group_id=$_GET["filter_group_id"];}
+	elseif (isset($_POST["filter_group_id"]))	{$filter_group_id=$_POST["filter_group_id"];}
+if (isset($_GET["filter_call_handle_method"]))			{$filter_call_handle_method=$_GET["filter_call_handle_method"];}
+	elseif (isset($_POST["filter_call_handle_method"]))	{$filter_call_handle_method=$_POST["filter_call_handle_method"];}
+if (isset($_GET["filter_agent_search_method"]))				{$filter_agent_search_method=$_GET["filter_agent_search_method"];}
+	elseif (isset($_POST["filter_agent_search_method"]))	{$filter_agent_search_method=$_POST["filter_agent_search_method"];}
+if (isset($_GET["filter_list_id"]))				{$filter_list_id=$_GET["filter_list_id"];}
+	elseif (isset($_POST["filter_list_id"]))	{$filter_list_id=$_POST["filter_list_id"];}
+if (isset($_GET["filter_campaign_id"]))				{$filter_campaign_id=$_GET["filter_campaign_id"];}
+	elseif (isset($_POST["filter_campaign_id"]))	{$filter_campaign_id=$_POST["filter_campaign_id"];}
+if (isset($_GET["filter_phone_code"]))			{$filter_phone_code=$_GET["filter_phone_code"];}
+	elseif (isset($_POST["filter_phone_code"]))	{$filter_phone_code=$_POST["filter_phone_code"];}
+if (isset($_GET["filter_menu_id"]))				{$filter_menu_id=$_GET["filter_menu_id"];}
+	elseif (isset($_POST["filter_menu_id"]))	{$filter_menu_id=$_POST["filter_menu_id"];}
+if (isset($_GET["filter_clean_cid_number"]))			{$filter_clean_cid_number=$_GET["filter_clean_cid_number"];}
+	elseif (isset($_POST["filter_clean_cid_number"]))	{$filter_clean_cid_number=$_POST["filter_clean_cid_number"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1592,6 +1636,7 @@ if ($non_latin < 1)
 	$wait_time_option_seconds = ereg_replace("[^0-9]","",$wait_time_option_seconds);
 	$wait_time_option_callback_list_id = ereg_replace("[^0-9]","",$wait_time_option_callback_list_id);
 	$wait_time_option_prompt_seconds = ereg_replace("[^0-9]","",$wait_time_option_prompt_seconds);
+	$filter_list_id = ereg_replace("[^0-9]","",$filter_list_id);
 
 	$drop_call_seconds = ereg_replace("[^-0-9]","",$drop_call_seconds);
 
@@ -1725,6 +1770,7 @@ if ($non_latin < 1)
 	$agent_call_log_view_override = ereg_replace("[^0-9a-zA-Z]","",$agent_call_log_view_override);
 	$queuemetrics_loginout = ereg_replace("[^0-9a-zA-Z]","",$queuemetrics_loginout);
 	$queuemetrics_callstatus = ereg_replace("[^0-9a-zA-Z]","",$queuemetrics_callstatus);
+	$filter_inbound_number = ereg_replace("[^0-9a-zA-Z]","",$filter_inbound_number);
 
 	### DIGITS and Dots
 	$server_ip = ereg_replace("[^\.0-9]","",$server_ip);
@@ -1739,6 +1785,7 @@ if ($non_latin < 1)
 	$auto_dial_limit = ereg_replace("[^\.0-9]","",$auto_dial_limit);
 	$adaptive_dropped_percentage = ereg_replace("[^\.0-9]","",$adaptive_dropped_percentage);
 	$drop_lockout_time = ereg_replace("[^\.0-9]","",$drop_lockout_time);
+	$filter_server_ip = ereg_replace("[^\.0-9]","",$filter_server_ip);
 
 	### ALPHA-NUMERIC and spaces and hash and star and comma
 	$xferconf_a_dtmf = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$xferconf_a_dtmf);
@@ -1897,6 +1944,17 @@ if ($non_latin < 1)
 	$wait_time_option_xfer_group = ereg_replace("[^-_0-9a-zA-Z]","",$wait_time_option_xfer_group);
 	$wait_time_option_callmenu = ereg_replace("[^-_0-9a-zA-Z]","",$wait_time_option_callmenu);
 	$wait_time_option_voicemail = ereg_replace("[^-_0-9a-zA-Z]","",$wait_time_option_voicemail);
+	$filter_phone_group_id = ereg_replace("[^-_0-9a-zA-Z]","",$filter_phone_group_id);
+	$filter_action = ereg_replace("[^-_0-9a-zA-Z]","",$filter_action);
+	$filter_user_unavailable_action = ereg_replace("[^-_0-9a-zA-Z]","",$filter_user_unavailable_action);
+	$filter_user_route_settings_ingroup = ereg_replace("[^-_0-9a-zA-Z]","",$filter_user_route_settings_ingroup);
+	$filter_agent_search_method = ereg_replace("[^-_0-9a-zA-Z]","",$filter_agent_search_method);
+	$filter_campaign_id = ereg_replace("[^-_0-9a-zA-Z]","",$filter_campaign_id);
+	$filter_group_id = ereg_replace("[^-_0-9a-zA-Z]","",$filter_group_id);
+	$filter_menu_id = ereg_replace("[^-_0-9a-zA-Z]","",$filter_menu_id);
+	$filter_call_handle_method = ereg_replace("[^-_0-9a-zA-Z]","",$filter_call_handle_method);
+	$filter_user = ereg_replace("[^-_0-9a-zA-Z]","",$filter_user);
+	$filter_exten_context = ereg_replace("[^-_0-9a-zA-Z]","",$filter_exten_context);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
@@ -1944,6 +2002,9 @@ if ($non_latin < 1)
 	$phone = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$phone);
 	$phone_code = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$phone_code);
 	$wait_time_option_exten = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$wait_time_option_exten);
+	$filter_voicemail_ext = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$filter_voicemail_ext);
+	$filter_phone_code = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$filter_phone_code);
+	$filter_phone = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$filter_phone);
 
 	### ALPHA-NUMERIC and spaces dots, commas, dashes, underscores
 	$adaptive_dl_diff_target = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$adaptive_dl_diff_target);
@@ -2014,6 +2075,9 @@ if ($non_latin < 1)
 	$label_email = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_email);
 	$label_comments = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_comments);
 	$slave_db_server = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$slave_db_server);
+	$filter_phone_group_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$filter_phone_group_name);
+	$filter_phone_group_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$filter_phone_group_description);
+	$filter_clean_cid_number = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$filter_clean_cid_number);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
 	$call_out_number_group = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$call_out_number_group);
@@ -2040,6 +2104,7 @@ if ($non_latin < 1)
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot and pound and star
 	$extension = ereg_replace("[^-\*\#\.\:\/\@\_0-9a-zA-Z]","",$extension);
 	$timer_action_destination = ereg_replace("[^-\*\#\.\:\/\@\_0-9a-zA-Z]","",$timer_action_destination);
+	$filter_extension = ereg_replace("[^-\*\#\.\:\/\@\_0-9a-zA-Z]","",$filter_extension);
 
 	### NUMERIC and comma and pipe
 	$waitforsilence_options = ereg_replace("[^\|\,0-9]","",$waitforsilence_options);
@@ -2095,6 +2160,7 @@ if ($non_latin < 1)
 	# $start_call_url
 	# $dispo_call_url
 	# $webphone_url
+	# $filter_url
 
 	### VARIABLES not filtered at all ###
 	# $script_text
@@ -2393,11 +2459,13 @@ else
 # 100802-2130 - Changed Admin links to point to links page instead of Phones listings, changed Remote Agents to allow 9-digit IDs
 # 100803-1412 - Added allowed_reports option to User Groups, added CAMPLISTS_ALL for manual_dial_filter(issue #369)
 #             - Added allowed_campaigns enforcement for Campaign listings
+# 100804-2313 - Added filter phone groups section for inbound call filtering by incoming phone number when it comes into a DID
+# 100805-1539 - Added option to clean up cid numbers when calls come into DIDs
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-268';
-$build = '100803-1412';
+$admin_version = '2.4-270';
+$build = '100805-1539';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -2591,12 +2659,14 @@ if ($ADD==11)			{$hh='campaigns';	$sh='basic';	echo "Add New Campaign";}
 if ($ADD==12)			{$hh='campaigns';	$sh='basic';	echo "Copy Campaign";}
 if ($ADD==111)			{$hh='lists';		echo "Add New List";}
 if ($ADD==121)			{$hh='lists';		echo "Add New DNC";}
+if ($ADD==171)			{$hh='ingroups';	echo "Filter Phone Group Numbers";}
 if ($ADD==1111)			{$hh='ingroups';	echo "Add New In-Group";}
 if ($ADD==1211)			{$hh='ingroups';	echo "Copy In-Group";}
 if ($ADD==1311)			{$hh='ingroups';	echo "Add New DID";}
 if ($ADD==1411)			{$hh='ingroups';	echo "Copy DID";}
 if ($ADD==1511)			{$hh='ingroups';	echo "Add Call Menu";}
 if ($ADD==1611)			{$hh='ingroups';	echo "Copy Call Menu";}
+if ($ADD==1711)			{$hh='ingroups';	echo "Add Filter Phone Group";}
 if ($ADD==11111)		{$hh='remoteagent';	echo "Add New Remote Agents";}
 if ($ADD==12111)		{$hh='remoteagent';	echo "Add Extension Group";}
 if ($ADD==111111)		{$hh='usergroups';	echo "Add New Users Group";}
@@ -2635,6 +2705,7 @@ if ($ADD==2311)			{$hh='ingroups';	echo "New DID Addition";}
 if ($ADD==2411)			{$hh='ingroups';	echo "New Copied DID Addition";}
 if ($ADD==2511)			{$hh='ingroups';	echo "New Call Menu";}
 if ($ADD==2611)			{$hh='ingroups';	echo "New Call Menu";}
+if ($ADD==2711)			{$hh='ingroups';	echo "New Filter Phone Group";}
 if ($ADD==21111)		{$hh='remoteagent';	echo "New Remote Agents Addition";}
 if ($ADD==22111)		{$hh='remoteagent';	echo "New Group Extension Addition";}
 if ($ADD==211111)		{$hh='usergroups';	echo "New Users Group Addition";}
@@ -2696,6 +2767,7 @@ if ($ADD==311)			{$hh='lists';		echo "Modify List";}
 if ($ADD==3111)			{$hh='ingroups';	echo "Modify In-Group";}
 if ($ADD==3311)			{$hh='ingroups';	echo "Modify DID";}
 if ($ADD==3511)			{$hh='ingroups';	echo "Modify Call Menu";}
+if ($ADD==3711)			{$hh='ingroups';	echo "Modify Filter Phone Group";}
 if ($ADD==31111)		{$hh='remoteagent';	echo "Modify Remote Agents";}
 if ($ADD==32111)		{$hh='remoteagent';	echo "Modify Extension Group";}
 if ($ADD==311111)		{$hh='usergroups';	echo "Modify Users Groups";}
@@ -2736,6 +2808,7 @@ if ($ADD==411)			{$hh='lists';		echo "Modify List";}
 if ($ADD==4111)			{$hh='ingroups';	echo "Modify In-Group";}
 if ($ADD==4311)			{$hh='ingroups';	echo "Modify DID";}
 if ($ADD==4511)			{$hh='ingroups';	echo "Modify Call Menu";}
+if ($ADD==4711)			{$hh='ingroups';	echo "Modify Filter Phone Group";}
 if ($ADD==41111)		{$hh='remoteagent';	echo "Modify Remote Agents";}
 if ($ADD==42111)		{$hh='remoteagent';	echo "Modify Extension Group";}
 if ($ADD==411111)		{$hh='usergroups';	echo "Modify Users Groups";}
@@ -2768,6 +2841,7 @@ if ($ADD==511)			{$hh='lists';		echo "Delete List";}
 if ($ADD==5111)			{$hh='ingroups';	echo "Delete In-Group";}
 if ($ADD==5311)			{$hh='ingroups';	echo "Delete DID";}
 if ($ADD==5511)			{$hh='ingroups';	echo "Delete Call Menu";}
+if ($ADD==5711)			{$hh='ingroups';	echo "Delete Phone Filter Group";}
 if ($ADD==51111)		{$hh='remoteagent';	echo "Delete Remote Agents";}
 if ($ADD==52111)		{$hh='remoteagent';	echo "Delete Extension Group";}
 if ($ADD==511111)		{$hh='usergroups';	echo "Delete Users Group";}
@@ -2800,6 +2874,7 @@ if ($ADD==611)			{$hh='lists';		echo "Delete List";}
 if ($ADD==6111)			{$hh='ingroups';	echo "Delete In-Group";}
 if ($ADD==6311)			{$hh='ingroups';	echo "Delete DID";}
 if ($ADD==6511)			{$hh='ingroups';	echo "Delete Call Menu";}
+if ($ADD==6711)			{$hh='ingroups';	echo "Delete Phone Filter Group";}
 if ($ADD==61111)		{$hh='remoteagent';	echo "Delete Remote Agents";}
 if ($ADD==62111)		{$hh='remoteagent';	echo "Delete Extension Group";}
 if ($ADD==611111)		{$hh='usergroups';	echo "Delete Users Group";}
@@ -2836,6 +2911,7 @@ if ($ADD==100)			{$hh='lists';		echo "Lists";}
 if ($ADD==1000)			{$hh='ingroups';	echo "In-Groups";}
 if ($ADD==1300)			{$hh='ingroups';	echo "DIDs";}
 if ($ADD==1500)			{$hh='ingroups';	echo "Call Menus";}
+if ($ADD==1700)			{$hh='ingroups';	echo "Filter Phone Groups";}
 if ($ADD==10000)		{$hh='remoteagent';	echo "Remote Agents";}
 if ($ADD==12000)		{$hh='remoteagent';	echo "Extension Groups";}
 if ($ADD==100000)		{$hh='usergroups';	echo "User Groups";}
@@ -5145,6 +5221,32 @@ if ($ADD==99999)
 	<BR>
 	<B>In-Group Phone Code -</B> If IN_GROUP is selected as the DID Route, then this is the Phone Code used if a new lead is created.
 
+	<BR>
+	<A NAME="vicidial_inbound_dids-filter_clean_cid_number">
+	<BR>
+	<B>Clean CID Number -</B> This field allows you to specify a number of digits to restrict the incoming caller ID number to by putting an R in front of the number of digits, for example to restrict to the right 10 digits you would enter in R10. You can also use this feature to remove only a leading digit or digits by putting an L in front of the specific digits that you want to remove, for example to remove a 1 as the first digit you would enter in L1. Default is empty. If more than one rule is specified make sure you separate them with a space and the R will run before the L.
+
+	<BR>
+	<A NAME="vicidial_inbound_dids-filter_inbound_number">
+	<BR>
+	<B>Filter Inbound Number -</B> This option if enabled allows you to filter calls coming into this DID and send them to an alternative action if they match a phone number that is in the filter phone group or a URL response if you have configured one. Default is DISABLED. GROUP will search in a Filter Phone Group. URL will send a URL and will match if a 1 is sent back.
+
+	<BR>
+	<A NAME="vicidial_inbound_dids-filter_phone_group_id">
+	<BR>
+	<B>Filter Phone Group ID -</B> If the Filter Inbound Number field is set to GROUP then this is the ID of the Filter Phone Group that will have its numbers searched looking for a match to the caller ID number of the incoming call.
+
+	<BR>
+	<A NAME="vicidial_inbound_dids-filter_url">
+	<BR>
+	<B>Filter URL -</B> If the Filter Inbound Number field is set to URL then this is the web address of a script that will search a remote system and return a 1 for a match and a 0 for no match. Only two variables are available in the address if you use the VAR prefix like with webform addresses in campaigns, --A--phone_number--B-- and --A--did_pattern--B-- can be used in the URL to indicate the caller ID of the caller and the DID that the customer caclled in on.
+
+	<BR>
+	<A NAME="vicidial_inbound_dids-filter_action">
+	<BR>
+	<B>Filter Action -</B> If Filter Inbound Number is activated and a match is found then this is the action that is to be taken. This is the same as the Route that you select for a DID, and the settings below function just like they do for a standard routing.
+
+
 
 
 
@@ -5240,6 +5342,26 @@ if ($ADD==99999)
 	<BR>
 	<B>Custom Dialplan Entry -</B> This field allows you to enter in any dialplan elements that you want for the Call Menu.
 
+
+
+
+
+	<BR><BR><BR><BR>
+
+	<BR>
+	<A NAME="vicidial_filter_phone_groups-filter_phone_group_id">
+	<BR>
+	<B>Filter Phone Group ID -</B> This is the ID of the Filter Phone Group that is the container for a group of phone numbers that you can have automatically searched through when a call comes into a DID and send to an alternate route if there is a match. This field should be between 2 and 20 characters and have no punctuation except for underscore.
+
+	<BR>
+	<A NAME="vicidial_filter_phone_groups-filter_phone_group_name">
+	<BR>
+	<B>Filter Phone Group Name -</B> This is the name of the Filter Phone Group and is displayed with the ID in select lists where this feature is used. This field should be between 2 and 40 characters.
+
+	<BR>
+	<A NAME="vicidial_filter_phone_groups-filter_phone_group_description">
+	<BR>
+	<B>Filter Phone Group Description -</B> This is the description of the Filter Phone Group, it is purely for notation purposes only and is not a required field.
 
 
 
@@ -7687,7 +7809,123 @@ if ($ADD==121)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Add or Delete: </td><td align=left><select size=1 name=stage><option SELECTED>add</option><option>delete</option></select></td></tr>\n";
 		}
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
-	echo "</TABLE></center>\n";
+	echo "</FORM></TABLE></center>\n";
+
+	if ($LOGuser_level >= 9)
+		{
+		echo "<br>Download numbers in this list to a file: <form action=\"list_download.php\" method=POST>\n";
+		echo "<input type=hidden name=download_type value=dnc>\n";
+		echo "<select size=1 name=group_id>\n";
+		echo "$campaigns_list";
+		echo "</select><input type=submit name=SUBMIT value=SUBMIT></FORM>\n";
+		}
+	}
+
+
+######################
+# ADD=171 display the ADD NUMBER TO Filter Phone Group FORM SCREEN and add a new number
+######################
+
+if ($ADD==171)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	$stmt="SELECT filter_phone_group_id,filter_phone_group_name from vicidial_filter_phone_groups order by filter_phone_group_id";
+	$rslt=mysql_query($stmt, $link);
+	$vfpg_to_print = mysql_num_rows($rslt);
+
+	$o=0;
+	while ($vfpg_to_print > $o) 
+		{
+		$rowx=mysql_fetch_row($rslt);
+		$vfpg_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+		$o++;
+		}
+
+	if (strlen($phone_numbers) > 2)
+		{
+		$PN = explode("\n",$phone_numbers);
+		$PNct = count($PN);
+		$p=0;
+		while ($p < $PNct)
+			{
+			if ( (ereg('delete',$stage)) and ($LOGdelete_from_dnc > 0) )
+				{
+				$stmt="SELECT count(*) from vicidial_filter_phone_numbers where phone_number='$PN[$p]' and filter_phone_group_id='$filter_phone_group_id';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				if ($row[0] < 1)
+					{echo "<br>FILTER PHONE GROUP NUMBER NOT DELETED - This phone number is not in the Filter Phone Group List: $PN[$p] $filter_phone_group_id\n";}
+				else
+					{
+					$stmt="DELETE FROM vicidial_filter_phone_numbers where phone_number='$PN[$p]' and filter_phone_group_id='$filter_phone_group_id';";
+					$rslt=mysql_query($stmt, $link);
+
+					echo "<br><B>FILTER PHONE GROUP NUMBER DELETED: $PN[$p] $filter_phone_group_id</B>\n";
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='FILTERPHONEGROUPS', event_type='DELETE', record_id='$PN[$p]', event_code='ADMIN DELETE NUMBER FROM FILTER PHONE GROUP $filter_phone_group_id', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
+				}
+			else
+				{
+				$stmt="SELECT count(*) from vicidial_filter_phone_numbers where phone_number='$PN[$p]' and filter_phone_group_id='$filter_phone_group_id';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				if ($row[0] > 0)
+					{echo "<br>FILTER PHONE GROUP NUMBER NOT ADDED - This phone number is already in the Filter Phone Group List: $PN[$p] $filter_phone_group_id\n";}
+				else
+					{
+					$stmt="INSERT INTO vicidial_filter_phone_numbers (phone_number,filter_phone_group_id) values('$PN[$p]','$filter_phone_group_id');";
+					$rslt=mysql_query($stmt, $link);
+
+					echo "<br><B>FILTER PHONE GROUP NUMBER ADDED: $PN[$p] $filter_phone_group_id</B>\n";
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='FILTERPHONEGROUPS', event_type='ADD', record_id='$PN[$p]', event_code='ADMIN ADD NUMBER TO FILTER PHONE GROUP $filter_phone_group_id', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
+				}
+			$p++;
+			}
+		}
+
+	if ($LOGdelete_from_dnc > 0)
+		{echo "<br>ADD OR DELETE NUMBERS FROM THE FILTER PHONE GROUP LIST<form action=$PHP_SELF method=POST>\n";}
+	else
+		{echo "<br>ADD NUMBERS TO THE FILTER PHONE GROUP LIST<form action=$PHP_SELF method=POST>\n";}
+	echo "<input type=hidden name=ADD value=171>\n";
+	echo "<center><TABLE width=$section_width cellspacing=3>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Filter Phone Group: </td><td align=left><select size=1 name=filter_phone_group_id>\n";
+	echo "$vfpg_list";
+	echo "</select></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Phone Numbers: <BR><BR> (one phone number per line only)<BR>$NWB#vicidial_list-dnc$NWE</td><td align=left><TEXTAREA name=phone_numbers ROWS=20 COLS=20></TEXTAREA></td></tr>\n";
+	if ($LOGdelete_from_dnc > 0)
+		{
+		echo "<tr bgcolor=#B6D3FC><td align=right>Add or Delete: </td><td align=left><select size=1 name=stage><option SELECTED>add</option><option>delete</option></select></td></tr>\n";
+		}
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+	echo "</FORM></TABLE></center>\n";
+
+	if ($LOGuser_level >= 9)
+		{
+		echo "<br>Download numbers in this list to a file: <form action=\"list_download.php\" method=POST>\n";
+		echo "<input type=hidden name=download_type value=fpgn>\n";
+		echo "<select size=1 name=group_id>\n";
+		echo "$vfpg_list";
+		echo "</select><input type=submit name=SUBMIT value=SUBMIT></FORM>\n";
+		}
+
 	}
 
 
@@ -7983,6 +8221,34 @@ if ($ADD==1611)
 		echo "$menus_list";
 		echo "</select>$NWB#vicidial_call_menu-menu_id$NWE</td></tr>\n";
 
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+		echo "</TABLE></center>\n";
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	}
+
+
+######################
+# ADD=1711 display the ADD NEW FILTER PHONE GROUP SCREEN
+######################
+
+if ($ADD==1711)
+	{
+	if ($LOGmodify_dids==1)
+		{
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		echo "<br>Add Filter Phone Group<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=2711>\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Filter Phone Group ID: </td><td align=left><input type=text name=filter_phone_group_id size=20 maxlength=20> (no spaces or special characters)$NWB#vicidial_filter_phone_groups-filter_phone_group_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Filter Phone Group Name: </td><td align=left><input type=text name=filter_phone_group_name size=40 maxlength=40>$NWB#vicidial_filter_phone_groups-filter_phone_group_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Filter Phone Group Description: </td><td align=left><input type=text name=filter_phone_group_description size=60 maxlength=100>$NWB#vicidial_filter_phone_groups-filter_phone_group_description$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 		echo "</TABLE></center>\n";
 		}
@@ -10093,7 +10359,7 @@ if ($ADD==2411)
 			}
 		else
 			{
-			$stmt="INSERT INTO vicidial_inbound_dids (did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call) SELECT \"$did_pattern\",\"$did_description\",did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call from vicidial_inbound_dids where did_id=\"$source_did\";";
+			$stmt="INSERT INTO vicidial_inbound_dids (did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number) SELECT \"$did_pattern\",\"$did_description\",did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number from vicidial_inbound_dids where did_id=\"$source_did\";";
 			$rslt=mysql_query($stmt, $link);
 
 			$stmt="SELECT did_id from vicidial_inbound_dids where did_pattern='$did_pattern';";
@@ -10222,6 +10488,45 @@ if ($ADD==2611)
 			}
 		}
 	$ADD=3511;
+	}
+
+
+######################
+# ADD=2711 adds the new filter phone group to the system
+######################
+
+if ($ADD==2711)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	$stmt="SELECT count(*) from vicidial_filter_phone_groups where filter_phone_group_id='$filter_phone_group_id';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	if ($row[0] > 0)
+		{echo "<br>PHONE FILTER GROUP NOT ADDED - there is already a PHONE FILTER GROUP in the system with this ID\n";}
+	else
+		{
+		if ( (strlen($filter_phone_group_id) < 2) or (strlen($filter_phone_group_id) > 20) or (eregi(' ',$filter_phone_group_id)) )
+			{
+			echo "<br>PHONE FILTER GROUP NOT ADDED - Please go back and look at the data you entered\n";
+			echo "<br>Phone Filter Group ID must be between 2 and 20 characters in length and contain no ' '.\n";
+			}
+		else
+			{
+			$stmt="INSERT INTO vicidial_filter_phone_groups (filter_phone_group_id,filter_phone_group_name,filter_phone_group_description) values('$filter_phone_group_id','$filter_phone_group_name','$filter_phone_group_description');";
+			$rslt=mysql_query($stmt, $link);
+
+			echo "<br><B>PHONE FILTER GROUP ADDED: $filter_phone_group_id $filter_phone_group_name</B>\n";
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='FILTERPHONEGROUPS', event_type='ADD', record_id='$filter_phone_group_id', event_code='ADMIN ADD FILTER PHONE GROUP', event_sql=\"$SQL_log\", event_notes='$filter_phone_group_name';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
+		}
+	$ADD=3711;
 	}
 
 
@@ -13153,7 +13458,7 @@ if ($ADD==4311)
 			{
 			echo "<br><B>DID MODIFIED: $did_pattern</B>\n";
 
-			$stmt="UPDATE vicidial_inbound_dids set did_pattern='$did_pattern',did_description='$did_description',did_active='$did_active',did_route='$did_route',extension='$extension',exten_context='$exten_context',voicemail_ext='$voicemail_ext',phone='$phone',server_ip='$server_ip',user='$user',user_unavailable_action='$user_unavailable_action',user_route_settings_ingroup='$user_route_settings_ingroup',group_id='$group_id',call_handle_method='$call_handle_method',agent_search_method='$agent_search_method',list_id='$list_id',campaign_id='$campaign_id',phone_code='$phone_code',menu_id='$menu_id',record_call='$record_call' where did_id='$did_id';";
+			$stmt="UPDATE vicidial_inbound_dids set did_pattern='$did_pattern',did_description='$did_description',did_active='$did_active',did_route='$did_route',extension='$extension',exten_context='$exten_context',voicemail_ext='$voicemail_ext',phone='$phone',server_ip='$server_ip',user='$user',user_unavailable_action='$user_unavailable_action',user_route_settings_ingroup='$user_route_settings_ingroup',group_id='$group_id',call_handle_method='$call_handle_method',agent_search_method='$agent_search_method',list_id='$list_id',campaign_id='$campaign_id',phone_code='$phone_code',menu_id='$menu_id',record_call='$record_call',filter_inbound_number='$filter_inbound_number',filter_phone_group_id='$filter_phone_group_id',filter_url='$filter_url',filter_action='$filter_action',filter_extension='$filter_extension',filter_exten_context='$filter_exten_context',filter_voicemail_ext='$filter_voicemail_ext',filter_phone='$filter_phone',filter_server_ip='$filter_server_ip',filter_user='$filter_user',filter_user_unavailable_action='$filter_user_unavailable_action',filter_user_route_settings_ingroup='$filter_user_route_settings_ingroup',filter_group_id='$filter_group_id',filter_call_handle_method='$filter_call_handle_method',filter_agent_search_method='$filter_agent_search_method',filter_list_id='$filter_list_id',filter_campaign_id='$filter_campaign_id',filter_phone_code='$filter_phone_code',filter_menu_id='$filter_menu_id',filter_clean_cid_number='$filter_clean_cid_number' where did_id='$did_id';";
 			$rslt=mysql_query($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -13322,6 +13627,46 @@ if ($ADD==4511)
 		exit;
 		}
 	$ADD=3511;	# go to call menu modification form below
+	}
+
+
+######################
+# ADD=4711 modify filter phone group info in the system
+######################
+
+if ($ADD==4711)
+	{
+	if ($LOGmodify_dids==1)
+		{
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		if ( (strlen($filter_phone_group_id) < 2) or (strlen($filter_phone_group_name) < 2) or (strlen($filter_phone_group_name) > 40) )
+			{
+			echo "<br>FILTER PHONE GROUP NOT MODIFIED - Please go back and look at the data you entered\n";
+			echo "<br>Filter Phone Group Name and ID must be at least 2 characters in length\n";
+			}
+		else
+			{
+			$stmt="UPDATE vicidial_filter_phone_groups set filter_phone_group_name='$filter_phone_group_name', filter_phone_group_description='$filter_phone_group_description' where filter_phone_group_id='$filter_phone_group_id';";
+			$rslt=mysql_query($stmt, $link);
+
+			echo "<br><B>FILTER PHONE GROUP MODIFIED</B>\n";
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='FILTERPHONEGROUPS', event_type='MODIFY', record_id='$filter_phone_group_id', event_code='ADMIN FILTER PHONE GROUP', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	$ADD=3711;	# go to filter phone group modification form below
 	}
 
 
@@ -14822,6 +15167,28 @@ if ($ADD==5511)
 	}
 
 ######################
+# ADD=5711 confirmation before deletion of filter phone group
+######################
+
+if ($ADD==5711)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( (strlen($filter_phone_group_id) < 2) or ($LOGdelete_dids < 1) )
+		{
+		echo "<br>FILTER PHONE GROUP NOT DELETED - Please go back and look at the data you entered\n";
+		echo "<br>filter_phone_group_id be at least 2 characters in length\n";
+		}
+	else
+		{
+		echo "<br><B>FILTER PHONE GROUP DELETION CONFIRMATION: $filter_phone_group_id</B>\n";
+		echo "<br><br><a href=\"$PHP_SELF?ADD=6711&filter_phone_group_id=$filter_phone_group_id&CoNfIrM=YES\">Click here to delete FILTER PHONE GROUP $filter_phone_group_id</a><br><br><br>\n";
+		}
+
+	$ADD='3711';		# go to filter phone group modification below
+	}
+
+######################
 # ADD=51111 confirmation before deletion of remote agent record
 ######################
 
@@ -15961,6 +16328,42 @@ if ($ADD==6511)
 		}
 
 	$ADD='1500';		# go to call menu list
+	}
+
+######################
+# ADD=6711 delete filter phone group record
+######################
+
+if ($ADD==6711)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( (strlen($filter_phone_group_id) < 1) or ($CoNfIrM != 'YES') or ($LOGdelete_dids < 1) )
+		{
+		echo "<br>FILTER PHONE GROUP NOT DELETED - Please go back and look at the data you entered\n";
+		echo "<br>filter_phone_group_id be at least 1 characters in length\n";
+		}
+	else
+		{
+		$stmt="DELETE from vicidial_filter_phone_groups where filter_phone_group_id='$filter_phone_group_id' limit 1;";
+		$rslt=mysql_query($stmt, $link);
+
+		$stmtA="DELETE from vicidial_filter_phone_numbers where filter_phone_group_id='$filter_phone_group_id';";
+		$rslt=mysql_query($stmtA, $link);
+
+		### LOG INSERTION Admin Log Table ###
+		$SQL_log = "$stmt|$stmtA";
+		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = addslashes($SQL_log);
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='FILTERPHONEGROUPS', event_type='DELETE', record_id='$filter_phone_group_id', event_code='ADMIN DELETE FILTER PHONE GROUP', event_sql=\"$SQL_log\", event_notes='';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+
+		echo "<br><B>FILTER PHONE GROUP DELETION COMPLETED: $filter_phone_group_id</B>\n";
+		echo "<br><br>\n";
+		}
+
+	$ADD='1700';		# go to filter phone group list
 	}
 
 ######################
@@ -21184,7 +21587,7 @@ if ($ADD==3311)
 		$didSQL = "did_id='$did_id'";
 		if ( (strlen($did_id)<1) and (strlen($did_pattern)>0) )
 			{$didSQL = "did_pattern='$did_pattern'";}
-		$stmt="SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call from vicidial_inbound_dids where $didSQL;";
+		$stmt="SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number from vicidial_inbound_dids where $didSQL;";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
@@ -21209,6 +21612,26 @@ if ($ADD==3311)
 		$phone_code = 			$row[18];
 		$menu_id =				$row[19];
 		$record_call =			$row[20];
+		$filter_inbound_number = $row[21];
+		$filter_phone_group_id = $row[22];
+		$filter_url =			$row[23];
+		$filter_action =		$row[24];
+		$filter_extension =		$row[25];
+		$filter_exten_context = $row[26];
+		$filter_voicemail_ext = $row[27];
+		$filter_phone =			$row[28];
+		$filter_server_ip =		$row[29];
+		$filter_user =			$row[30];
+		$filter_user_unavailable_action = $row[31];
+		$filter_user_route_settings_ingroup = $row[32];
+		$filter_group_id =		$row[33];
+		$filter_call_handle_method = $row[34];
+		$filter_agent_search_method = $row[35];
+		$filter_list_id =		$row[36];
+		$filter_campaign_id =	$row[37];
+		$filter_phone_code =	$row[38];
+		$filter_menu_id =		$row[39];
+		$filter_clean_cid_number = $row[40];
 
 
 		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
@@ -21229,23 +21652,36 @@ if ($ADD==3311)
 		$Xgroups_to_print = mysql_num_rows($rslt);
 		$Xgroups_menu='';
 		$Xgroups_selected=0;
+		$FXgroups_menu='';
+		$FXgroups_selected=0;
 		$o=0;
 		while ($Xgroups_to_print > $o) 
 			{
 			$rowx=mysql_fetch_row($rslt);
 			$Xgroups_menu .= "<option ";
+			$FXgroups_menu .= "<option ";
 			if ($user_route_settings_ingroup == "$rowx[0]") 
 				{
 				$Xgroups_menu .= "SELECTED ";
 				$Xgroups_selected++;
 				}
+			if ($filter_user_route_settings_ingroup == "$rowx[0]") 
+				{
+				$FXgroups_menu .= "SELECTED ";
+				$FXgroups_selected++;
+				}
 			$Xgroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+			$FXgroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 			$o++;
 			}
 		if ($Xgroups_selected < 1) 
 			{$Xgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
 		else 
 			{$Xgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
+		if ($FXgroups_selected < 1) 
+			{$FXgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
+		else 
+			{$FXgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
 
 
 		##### get in-groups listings for dynamic pulldown
@@ -21254,23 +21690,36 @@ if ($ADD==3311)
 		$Dgroups_to_print = mysql_num_rows($rslt);
 		$Dgroups_menu='';
 		$Dgroups_selected=0;
+		$FDgroups_menu='';
+		$FDgroups_selected=0;
 		$o=0;
 		while ($Dgroups_to_print > $o) 
 			{
 			$rowx=mysql_fetch_row($rslt);
 			$Dgroups_menu .= "<option ";
+			$FDgroups_menu .= "<option ";
 			if ($group_id == "$rowx[0]") 
 				{
 				$Dgroups_menu .= "SELECTED ";
 				$Dgroups_selected++;
 				}
+			if ($filter_group_id == "$rowx[0]") 
+				{
+				$FDgroups_menu .= "SELECTED ";
+				$FDgroups_selected++;
+				}
 			$Dgroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+			$FDgroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 			$o++;
 			}
 		if ($Dgroups_selected < 1) 
 			{$Dgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
 		else 
 			{$Dgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
+		if ($FDgroups_selected < 1) 
+			{$FDgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
+		else 
+			{$FDgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
 
 
 		echo "<br>MODIFY A DID RECORD: $row[0]<form action=$PHP_SELF method=POST>\n";
@@ -21321,6 +21770,61 @@ if ($ADD==3311)
 		echo "<option SELECTED>$campaign_id</option>\n";
 		echo "</select>$NWB#vicidial_inbound_dids-campaign_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Phone Code: </td><td align=left><input type=text name=phone_code size=14 maxlength=14 value=\"$phone_code\">$NWB#vicidial_inbound_dids-phone_code$NWE</td></tr>\n";
+
+
+		echo "<tr bgcolor=#99FFCC><td align=right>Clean CID Number: </td><td align=left><input type=text name=filter_clean_cid_number size=20 maxlength=20 value=\"$filter_clean_cid_number\">$NWB#vicidial_inbound_dids-filter_clean_cid_number$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Inbound Number: </td><td align=left><select size=1 name=filter_inbound_number><option value=\"DISABLED\">DISABLED</option><option value=\"GROUP\">GROUP</option><option value=\"URL\">URL</option><option SELECTED>$filter_inbound_number</option></select>$NWB#vicidial_inbound_dids-filter_inbound_number$NWE</td></tr>\n";
+
+		$stmt="select filter_phone_group_id,filter_phone_group_name from vicidial_filter_phone_groups order by filter_phone_group_id;";
+		$rslt=mysql_query($stmt, $link);
+		$Fgroups_to_print = mysql_num_rows($rslt);
+		$Fgroups_list='';
+		$i=0;
+		while ($i < $Fgroups_to_print)
+			{
+			$row=mysql_fetch_row($rslt);
+			$Fgroups_list .= "<option value=\"$row[0]\">$row[0] - $row[1] - $row[2]</option>";
+			$i++;
+			}
+
+		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$filter_phone_group_id\">Filter Phone Group ID:</a> </td><td align=left><select size=1 name=filter_phone_group_id>$Fgroups_list<option SELECTED>$filter_phone_group_id</option></select>$NWB#vicidial_inbound_dids-filter_phone_group_id$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter URL: </td><td align=left><input type=text name=filter_url size=60 maxlength=1000 value=\"$filter_url\">$NWB#vicidial_inbound_dids-filter_url$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Action: </td><td align=left><select size=1 name=filter_action><option>AGENT</option><option>EXTEN</option><option>VOICEMAIL</option><option>PHONE</option><option>IN_GROUP</option><option>CALLMENU</option><option SELECTED>$filter_action</option></select>$NWB#vicidial_inbound_dids-filter_action$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Extension: </td><td align=left><input type=text name=filter_extension size=40 maxlength=50 value=\"$filter_extension\">$NWB#vicidial_inbound_dids-extension$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Extension Context: </td><td align=left><input type=text name=filter_exten_context size=40 maxlength=50 value=\"$filter_exten_context\">$NWB#vicidial_inbound_dids-exten_context$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Voicemail Box: </td><td align=left><input type=text name=filter_voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$filter_voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',100);\">voicemail chooser</a>$NWB#vicidial_inbound_dids-voicemail_ext$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Phone Extension: </td><td align=left><input type=text name=filter_phone size=20 maxlength=100 value=\"$filter_phone\">$NWB#vicidial_inbound_dids-phone$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Server IP: </td><td align=left><select size=1 name=filter_server_ip>\n";
+		echo "$servers_list";
+		echo "<option SELECTED>$filter_server_ip</option>\n";
+		echo "</select>$NWB#vicidial_inbound_dids-server_ip$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3511&menu_id=$menu_id\">Filter Call Menu:</a> </td><td align=left><select size=1 name=filter_menu_id>$menu_list<option SELECTED>$filter_menu_id</option></select>$NWB#vicidial_inbound_dids-menu_id$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter User Agent: </td><td align=left><input type=text name=filter_user size=20 maxlength=20 value=\"$filter_user\">$NWB#vicidial_inbound_dids-user$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter User Unavailable Action: </td><td align=left><select size=1 name=filter_user_unavailable_action><option>EXTEN</option><option>VOICEMAIL</option><option>PHONE</option><option>IN_GROUP</option><option SELECTED>$filter_user_unavailable_action</option></select>$NWB#vicidial_inbound_dids-user_unavailable_action$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter User Route Settings In-Group: </td><td align=left><select size=1 name=filter_user_route_settings_ingroup>";
+		echo "$FXgroups_menu";
+		echo "</select>$NWB#vicidial_inbound_dids-user_route_settings_ingroup$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3111&group_id=$group_id\">Filter In-Group ID</a>: </td><td align=left><select size=1 name=filter_group_id>";
+		echo "$FDgroups_menu";
+		echo "</select>$NWB#vicidial_inbound_dids-group_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group Call Handle Method: </td><td align=left><select size=1 name=filter_call_handle_method><option>CID</option><option>CIDLOOKUP</option><option>CIDLOOKUPRL</option><option>CIDLOOKUPRC</option><option>ANI</option><option>ANILOOKUP</option><option>ANILOOKUPRL</option><option>VIDPROMPT</option><option>VIDPROMPTLOOKUP</option><option>VIDPROMPTLOOKUPRL</option><option>VIDPROMPTLOOKUPRC</option><option>CLOSER</option><option>3DIGITID</option><option>4DIGITID</option><option>5DIGITID</option><option>10DIGITID</option><option SELECTED>$filter_call_handle_method</option></select>$NWB#vicidial_inbound_dids-call_handle_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group Agent Search Method: </td><td align=left><select size=1 name=filter_agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$filter_agent_search_method</option></select>$NWB#vicidial_inbound_dids-agent_search_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group List ID: </td><td align=left><input type=text name=filter_list_id size=14 maxlength=14 value=\"$filter_list_id\">$NWB#vicidial_inbound_dids-list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group Campaign ID: </td><td align=left><select size=1 name=filter_campaign_id>\n";
+		echo "$campaigns_list";
+		echo "<option SELECTED>$filter_campaign_id</option>\n";
+		echo "</select>$NWB#vicidial_inbound_dids-campaign_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group Phone Code: </td><td align=left><input type=text name=filter_phone_code size=14 maxlength=14 value=\"$filter_phone_code\">$NWB#vicidial_inbound_dids-phone_code$NWE</td></tr>\n";
+
+
+
+
+
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 		echo "</table>\n";
@@ -21734,6 +22238,58 @@ if ($ADD==31111)
 		if ($LOGuser_level >= 9)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=REMOTEAGENTS&stage=$remote_agent_id\">Click here to see Admin chages to this remote agent</FONT>\n";
+			}
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	}
+
+
+######################
+# ADD=3711 modify filter phone group info in the system
+######################
+
+if ($ADD==3711)
+	{
+	if ($LOGmodify_dids==1)
+		{
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		$stmt="SELECT filter_phone_group_id,filter_phone_group_name,filter_phone_group_description from vicidial_filter_phone_groups where filter_phone_group_id='$filter_phone_group_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$filter_phone_group_id =			$row[0];
+		$filter_phone_group_name =			$row[1];
+		$filter_phone_group_description =	$row[2];
+
+		echo "<br>Modify Filter Phone Group: $filter_phone_group_id<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=4711>\n";
+		echo "<input type=hidden name=filter_phone_group_id value=\"$filter_phone_group_id\">\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Filter Phone Group ID: </td><td align=left> <B>$filter_phone_group_id</B> $NWB#vicidial_filter_phone_groups-user_start$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Filter Phone Group Name: </td><td align=left><input type=text name=filter_phone_group_name size=40 maxlength=40 value=\"$filter_phone_group_name\"> $NWB#vicidial_filter_phone_groups-filter_phone_group_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Filter Phone Group Description: </td><td align=left><input type=text name=filter_phone_group_description size=60 maxlength=100 value=\"$filter_phone_group_description\"> $NWB#vicidial_filter_phone_groups-filter_phone_group_description$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+		echo "</TABLE></center>\n";
+
+		$stmt="SELECT count(*) from vicidial_filter_phone_numbers where filter_phone_group_id='$filter_phone_group_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		echo "<br><br>Numbers in this Filter Phone Group: $row[0]";
+
+		if ($LOGdelete_dids > 0)
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=5711&filter_phone_group_id=$filter_phone_group_id\">DELETE THIS FILTER PHONE GROUP</a>\n";
+			}
+		if ($LOGuser_level >= 9)
+			{
+			echo "<br><br><a href=\"./list_download.php?group_id=$filter_phone_group_id&download_type=fpgn\">Click here to download the numbers in this filter phone group</FONT>\n";
+
+			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=FILTERPHONEGROUPS&stage=$filter_phone_group_id\">Click here to see Admin chages to this filter phone group</FONT>\n";
 			}
 		}
 	else
@@ -24864,7 +25420,6 @@ if ($ADD==100)
 	}
 
 
-
 ######################
 # ADD=1000 display all inbound groups
 ######################
@@ -25009,6 +25564,69 @@ if ($ADD==1500)
 		echo "<td><font size=1> $menu_timeout[$o]</td>";
 		echo "<td><font size=1> $row[0]</td>";
 		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=3511&menu_id=$menu_id[$o]\">MODIFY</a></td></tr>\n";
+		$o++;
+		}
+
+	echo "</TABLE></center>\n";
+	}
+
+
+######################
+# ADD=1700 display all filter phone groups
+######################
+if ($ADD==1700)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	$stmt="SELECT vfpg.filter_phone_group_id,filter_phone_group_name,filter_phone_group_description,count(*) as tally from vicidial_filter_phone_groups vfpg,vicidial_filter_phone_numbers vfpn where vfpg.filter_phone_group_id=vfpn.filter_phone_group_id group by filter_phone_group_id order by filter_phone_group_id";
+	$rslt=mysql_query($stmt, $link);
+	$lists_to_print = mysql_num_rows($rslt);
+
+	echo "<br>FILTER PHONE GROUP LISTINGS:\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<TR BGCOLOR=BLACK>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>FPG ID</B></a></TD>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>FPG NAME</B></TD>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>DESCRIPTION</B></TD>\n";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>PHONES COUNT</B></a></TD>\n";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>MODIFY</TD>\n";
+	echo "</TR>\n";
+
+	$lists_printed = '';
+	$o=0;
+	while ($lists_to_print > $o)
+		{
+		$row=mysql_fetch_row($rslt);
+		if (eregi("1$|3$|5$|7$|9$", $o))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]\">$row[0]</a></td>";
+		echo "<td><font size=1> $row[1]</td>";
+		echo "<td><font size=1> $row[2]</td>";
+		echo "<td><font size=1> $row[3]</td>";
+		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]\">MODIFY</a></td></tr>\n";
+		$groups_printed .= "'$row[0]',";
+		$o++;
+		}
+
+	$stmt="SELECT filter_phone_group_id,filter_phone_group_name,filter_phone_group_description,0 from vicidial_filter_phone_groups where filter_phone_group_id NOT IN($groups_printed'') order by filter_phone_group_id;";
+	$rslt=mysql_query($stmt, $link);
+	$lists_to_print = mysql_num_rows($rslt);
+	$o=0;
+	while ($lists_to_print > $o)
+		{
+		$row=mysql_fetch_row($rslt);
+		if (eregi("1$|3$|5$|7$|9$", $o))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]\">$row[0]</a></td>";
+		echo "<td><font size=1> $row[1]</td>";
+		echo "<td><font size=1> $row[2]</td>";
+		echo "<td><font size=1> $row[3]</td>";
+		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]\">MODIFY</a></td></tr>\n";
 		$o++;
 		}
 
@@ -26409,40 +27027,41 @@ if ($ADD==999998)
 
 	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 	<TITLE>Administration: Admin</TITLE></HEAD><BODY BGCOLOR=WHITE>
-	<FONT SIZE=4><B>Administration</B></FONT><BR><BR>
+	<FONT SIZE=4><B>Administration</B></FONT><BR><BR><CENTER>
 	<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=0><TR><TD VALIGN=TOP>
-	<B><UL>
+	<UL>
 	<?php
 
-	echo "<LI><a href=\"$PHP_SELF?ADD=100000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Call Times </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=130000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Shifts </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=10000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Phones </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=130000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Templates </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=140000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Carriers </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=100000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Servers </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=1000000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Conferences </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=311111111111111\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> System Settings </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=321111111111111\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> System Statuses </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=170000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Voicemail </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=100000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> Call Times </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=130000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> Shifts </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=10000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> Phones </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=130000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> Templates </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=140000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> Carriers </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=100000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> Servers </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=1000000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> Conferences </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=311111111111111\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> System Settings </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=321111111111111\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> System Statuses </a>\n";
+	echo "<LI><a href=\"$PHP_SELF?ADD=170000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> Voicemail </a>\n";
 
 	if ( ($sounds_central_control_active > 0) or ($SSsounds_central_control_active > 0) )
 		{
-		echo "<LI><a href=\"audio_store.php\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Audio Store </a>\n";
-		echo "<LI><a href=\"$PHP_SELF?ADD=160000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Music On Hold </a>\n";
+		echo "<LI><a href=\"audio_store.php\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> Audio Store </a>\n";
+		echo "<LI><a href=\"$PHP_SELF?ADD=160000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> Music On Hold </a>\n";
 		}
 	if ($SSenable_tts_integration > 0)
 		{
-		echo "<LI><a href=\"$PHP_SELF?ADD=150000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> Text To Speech </a>\n";
+		echo "<LI><a href=\"$PHP_SELF?ADD=150000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> Text To Speech </a>\n";
 		}
 	if ($SScallcard_enabled > 0)
 		{
-		echo "<LI><a href=\"callcard_admin.php\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> CallCard Admin </a>\n";
+		echo "<LI><a href=\"callcard_admin.php\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> CallCard Admin </a>\n";
 		}
 
-	echo "</UL></B>\n";
+	echo "</UL>\n";
 	}
 
 
+echo "</TD><TD WIDTH=400> &nbsp; \n";
 echo "</TD></TR></TABLE></center>\n";
 echo "</TD></TR></TABLE></center>\n";
 

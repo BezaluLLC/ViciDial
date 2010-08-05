@@ -1577,6 +1577,26 @@ campaign_id VARCHAR(8),
 phone_code VARCHAR(10) default '1',
 menu_id VARCHAR(50) default '',
 record_call ENUM('Y','N','Y_QUEUESTOP') default 'N',
+filter_inbound_number ENUM('DISABLED','GROUP','URL') default 'DISABLED',
+filter_phone_group_id VARCHAR(20) default '',
+filter_url VARCHAR(1000) default '',
+filter_action ENUM('EXTEN','VOICEMAIL','AGENT','PHONE','IN_GROUP','CALLMENU') default 'EXTEN',
+filter_extension VARCHAR(50) default '9998811112',
+filter_exten_context VARCHAR(50) default 'default',
+filter_voicemail_ext VARCHAR(10),
+filter_phone VARCHAR(100),
+filter_server_ip VARCHAR(15),
+filter_user VARCHAR(20),
+filter_user_unavailable_action ENUM('IN_GROUP','EXTEN','VOICEMAIL','PHONE') default 'VOICEMAIL',
+filter_user_route_settings_ingroup VARCHAR(20) default 'AGENTDIRECT',
+filter_group_id VARCHAR(20),
+filter_call_handle_method VARCHAR(20) default 'CID',
+filter_agent_search_method ENUM('LO','LB','SO') default 'LB',
+filter_list_id BIGINT(14) UNSIGNED default '999',
+filter_campaign_id VARCHAR(8),
+filter_phone_code VARCHAR(10) default '1',
+filter_menu_id VARCHAR(50) default '',
+filter_clean_cid_number VARCHAR(20) default '',
 unique index (did_pattern),
 index (group_id)
 );
@@ -2153,6 +2173,19 @@ field_order SMALLINT(5) default '1'
 
 CREATE UNIQUE INDEX listfield on vicidial_lists_fields (list_id, field_label);
 
+CREATE TABLE vicidial_filter_phone_groups (
+filter_phone_group_id VARCHAR(20) NOT NULL,
+filter_phone_group_name VARCHAR(40) NOT NULL,
+filter_phone_group_description VARCHAR(100),
+index (filter_phone_group_id)
+);
+
+CREATE TABLE vicidial_filter_phone_numbers (
+phone_number VARCHAR(18) NOT NULL,
+filter_phone_group_id VARCHAR(20) NOT NULL,
+index (phone_number),
+unique index phonefilter (phone_number, filter_phone_group_id)
+);
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
@@ -2296,7 +2329,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1238',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1239',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
