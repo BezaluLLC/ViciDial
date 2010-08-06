@@ -347,6 +347,9 @@ Filter Phone Group Description||
 This is the description of the Filter Phone Group, it is purely for notation purposes only and is not a required field||
 Clean CID Number||
 This field allows you to specify a number of digits to restrict the incoming caller ID number to by putting an R in front of the number of digits, for example to restrict to the right 10 digits you would enter in R10. You can also use this feature to remove only a leading digit or digits by putting an L in front of the specific digits that you want to remove, for example to remove a 1 as the first digit you would enter in L1. Default is empty. If more than one rule is specified make sure you separate them with a space and the R will run before the L||
+must be an existing vicidial user||
+you must use a valid user as the user_start for remote agents||
+your number of lines overlaps with another remote agent||
 
 
 AST_VICIDIAL_ingrouplist.php

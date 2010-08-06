@@ -258,6 +258,10 @@ OTHER CHANGES:
 56. Added ability to download DNC numbers from the internal and campaign-
 	specific DNC lists, as well as the Filter Phone Groups
 
+57. Added validation for Remote Agents to ensure that the User Start is a valid
+	User in the system, also added validation that Remote Agents do not
+	overlap their number of lines into another Remote Agent
+
 
 
 

@@ -2461,11 +2461,12 @@ else
 #             - Added allowed_campaigns enforcement for Campaign listings
 # 100804-2313 - Added filter phone groups section for inbound call filtering by incoming phone number when it comes into a DID
 # 100805-1539 - Added option to clean up cid numbers when calls come into DIDs
+# 100806-0607 - Added validation for remote agents settings, user_start must be valid user, number of lines must not overlap
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-270';
-$build = '100805-1539';
+$admin_version = '2.4-271';
+$build = '100806-0607';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -8274,7 +8275,7 @@ if ($ADD==11111)
 		echo "<br>ADD NEW REMOTE AGENTS<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=21111>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>User ID Start: </td><td align=left><input type=text name=user_start size=9 maxlength=9> (numbers only, incremented)$NWB#vicidial_remote_agents-user_start$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>User ID Start: </td><td align=left><input type=text name=user_start size=9 maxlength=9> (numbers only, incremented, must be an existing vicidial user)$NWB#vicidial_remote_agents-user_start$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Number of Lines: </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3> (numbers only)$NWB#vicidial_remote_agents-number_of_lines$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left><select size=1 name=server_ip>\n";
 		echo "$servers_list";
@@ -10544,25 +10545,44 @@ if ($ADD==21111)
 		{echo "<br>REMOTE AGENTS NOT ADDED - there is already a remote agents entry starting with this userID\n";}
 	else
 		{
-		if ( (strlen($server_ip) < 2) or (strlen($user_start) < 2)  or (strlen($campaign_id) < 2) or (strlen($conf_exten) < 2) )
-			{
-			echo "<br>REMOTE AGENTS NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>User ID start and external extension must be at least 2 characters in length\n";
-			}
+		### check for a valid user that will be associated with this account
+		$stmt="SELECT count(*) from vicidial_users where user='$user_start';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>REMOTE AGENTS NOT ADDED - you must use a valid user as the user_start for remote agents\n";}
 		else
 			{
-			$stmt="INSERT INTO vicidial_remote_agents (user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns) values('$user_start','$number_of_lines','$server_ip','$conf_exten','$status','$campaign_id','$groups_value');";
+			### check for closest remote agents to this account to ensure no overlapping
+			$user_finish = ($user_start + $number_of_lines);
+			$stmt="SELECT count(*) from vicidial_remote_agents where user_start >= '$user_start' and user_start < '$user_finish';";
 			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{echo "<br>REMOTE AGENTS NOT ADDED - your number of lines overlaps with another remote agent\n";}
+			else
+				{
+				if ( (strlen($server_ip) < 2) or (strlen($user_start) < 2)  or (strlen($campaign_id) < 2) or (strlen($conf_exten) < 2) )
+					{
+					echo "<br>REMOTE AGENTS NOT ADDED - Please go back and look at the data you entered\n";
+					echo "<br>User ID start and external extension must be at least 2 characters in length\n";
+					}
+				else
+					{
+					$stmt="INSERT INTO vicidial_remote_agents (user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns) values('$user_start','$number_of_lines','$server_ip','$conf_exten','$status','$campaign_id','$groups_value');";
+					$rslt=mysql_query($stmt, $link);
 
-			echo "<br><B>REMOTE AGENTS ADDED: $user_start</B>\n";
+					echo "<br><B>REMOTE AGENTS ADDED: $user_start</B>\n";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='REMOTEAGENTS', event_type='ADD', record_id='$user_start', event_code='ADMIN ADD REMOTE AGENT', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='REMOTEAGENTS', event_type='ADD', record_id='$user_start', event_code='ADMIN ADD REMOTE AGENT', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
+				}
 			}
 		}
 	$ADD=10000;
@@ -13680,25 +13700,43 @@ if ($ADD==41111)
 		{
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		if ( (strlen($server_ip) < 2) or (strlen($user_start) < 2)  or (strlen($campaign_id) < 2) or (strlen($conf_exten) < 2) )
-			{
-			echo "<br>REMOTE AGENTS NOT MODIFIED - Please go back and look at the data you entered\n";
-			echo "<br>User ID Start and External Extension must be at least 2 characters in length\n";
-			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user_start';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>REMOTE AGENTS NOT MODIFIED - you must use a valid user as the user_start for remote agents\n";}
 		else
 			{
-			$stmt="UPDATE vicidial_remote_agents set user_start='$user_start', number_of_lines='$number_of_lines', server_ip='$server_ip', conf_exten='$conf_exten', status='$status', campaign_id='$campaign_id', closer_campaigns='$groups_value',extension_group='$extension_group' where remote_agent_id='$remote_agent_id';";
+			### check for closest remote agents to this account to ensure no overlapping
+			$user_finish = ($user_start + $number_of_lines);
+			$stmt="SELECT count(*) from vicidial_remote_agents where user_start > '$user_start' and user_start < '$user_finish';";
 			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{echo "<br>REMOTE AGENTS NOT MODIFIED - your number of lines overlaps with another remote agent\n";}
+			else
+				{
+				if ( (strlen($server_ip) < 2) or (strlen($user_start) < 2)  or (strlen($campaign_id) < 2) or (strlen($conf_exten) < 2) )
+					{
+					echo "<br>REMOTE AGENTS NOT MODIFIED - Please go back and look at the data you entered\n";
+					echo "<br>User ID Start and External Extension must be at least 2 characters in length\n";
+					}
+				else
+					{
+					$stmt="UPDATE vicidial_remote_agents set user_start='$user_start', number_of_lines='$number_of_lines', server_ip='$server_ip', conf_exten='$conf_exten', status='$status', campaign_id='$campaign_id', closer_campaigns='$groups_value',extension_group='$extension_group' where remote_agent_id='$remote_agent_id';";
+					$rslt=mysql_query($stmt, $link);
 
-			echo "<br><B>REMOTE AGENTS MODIFIED</B>\n";
+					echo "<br><B>REMOTE AGENTS MODIFIED</B>\n";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='REMOTEAGENTS', event_type='MODIFY', record_id='$remote_agent_id', event_code='ADMIN MODIFY REMOTE AGENT', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='REMOTEAGENTS', event_type='MODIFY', record_id='$remote_agent_id', event_code='ADMIN MODIFY REMOTE AGENT', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
+				}
 			}
 		}
 	else
@@ -22206,7 +22244,7 @@ if ($ADD==31111)
 		echo "<input type=hidden name=ADD value=41111>\n";
 		echo "<input type=hidden name=remote_agent_id value=\"$row[0]\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=3&user=$user_start\">User ID Start</a>: </td><td align=left><input type=text name=user_start size=9 maxlength=9 value=\"$user_start\"> (numbers only, incremented)$NWB#vicidial_remote_agents-user_start$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=3&user=$user_start\">User ID Start</a>: </td><td align=left><input type=text name=user_start size=9 maxlength=9 value=\"$user_start\"> (numbers only, incremented, must be an existing vicidial user)$NWB#vicidial_remote_agents-user_start$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Number of Lines: </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3 value=\"$number_of_lines\"> (numbers only)$NWB#vicidial_remote_agents-number_of_lines$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left><select size=1 name=server_ip>\n";
 		echo "$servers_list";
@@ -27012,7 +27050,7 @@ if ($ADD==999999)
 		exit;
 		}
 	}
-
+##### END report links #####
 
 
 ######################
@@ -27058,10 +27096,11 @@ if ($ADD==999998)
 		}
 
 	echo "</UL>\n";
+	echo "</TD><TD WIDTH=400> &nbsp; \n";
 	}
+##### END admin links #####
 
 
-echo "</TD><TD WIDTH=400> &nbsp; \n";
 echo "</TD></TR></TABLE></center>\n";
 echo "</TD></TR></TABLE></center>\n";
 
