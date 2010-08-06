@@ -250,10 +250,11 @@
 # 100624-1401 - Fix for dispo call url bug related to dialed number and label
 # 100625-0915 - Fix for auto-dial bug for presets and timer actions
 # 100712-1447 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
+# 100803-0822 - Added CAMPLISTS_ALL for manual_dial_filter(issue #369
 #
 
-$version = '2.4-157';
-$build = '100712-1447';
+$version = '2.4-158';
+$build = '100803-0822';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=333;
 $one_mysql_log=0;
@@ -1163,7 +1164,16 @@ if ($ACTION == 'manDiaLnextCaLL')
 					{
 					$rowx=mysql_fetch_row($rslt);
 					if (ereg("Y", $rowx[1])) {$active_lists++;   $camp_lists .= "'$rowx[0]',";}
-					if (ereg("N", $rowx[1])) {$inactive_lists++;}
+					if (ereg("ALL",$manual_dial_filter))
+						{
+						if (ereg("N", $rowx[1])) 
+							{$inactive_lists++; $camp_lists .= "'$rowx[0]',";}
+						}
+					else
+						{
+						if (ereg("N", $rowx[1])) 
+							{$inactive_lists++;}
+						}
 					$o++;
 					}
 				$camp_lists = eregi_replace(".$","",$camp_lists);
