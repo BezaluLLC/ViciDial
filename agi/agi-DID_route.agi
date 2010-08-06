@@ -424,6 +424,7 @@ if ($filter_inbound_number =~ /GROUP|URL/)
 			}
 		if ( (length($curlbin) > 4) && ($filter_url =~ /http/i) && (length($filter_url) > 8) )
 			{
+			$filter_url =~ s/^VAR//gi;
 			$filter_url =~ s/--A--phone_number--B--/$callerid/gi;
 			$filter_url =~ s/--A--did_pattern--B--/$callerid/gi;
 			$filter_url =~ s/&/\\&/gi;

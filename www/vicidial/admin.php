@@ -21828,7 +21828,7 @@ if ($ADD==3311)
 
 		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$filter_phone_group_id\">Filter Phone Group ID:</a> </td><td align=left><select size=1 name=filter_phone_group_id>$Fgroups_list<option SELECTED>$filter_phone_group_id</option></select>$NWB#vicidial_inbound_dids-filter_phone_group_id$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>Filter URL: </td><td align=left><input type=text name=filter_url size=60 maxlength=1000 value=\"$filter_url\">$NWB#vicidial_inbound_dids-filter_url$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter URL: </td><td align=left><input type=text name=filter_url size=80 maxlength=1000 value=\"$filter_url\">$NWB#vicidial_inbound_dids-filter_url$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Action: </td><td align=left><select size=1 name=filter_action><option>AGENT</option><option>EXTEN</option><option>VOICEMAIL</option><option>PHONE</option><option>IN_GROUP</option><option>CALLMENU</option><option SELECTED>$filter_action</option></select>$NWB#vicidial_inbound_dids-filter_action$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Extension: </td><td align=left><input type=text name=filter_extension size=40 maxlength=50 value=\"$filter_extension\">$NWB#vicidial_inbound_dids-extension$NWE</td></tr>\n";
