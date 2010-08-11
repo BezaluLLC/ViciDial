@@ -9,6 +9,17 @@ NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 
 ########## UPGRADING FROM 2.2.0 TO 2.4 ##########
 
+OPTIONAL STEPS(But highly recommended) - Backup existing system:
+
+1.  Run this for a 1-server system or server with database on it:  
+  (this may take hours on large system)
+   /usr/share/astguiclient/ADMIN_backup.pl --debugX
+
+2. Run this on dialer/Asterisk-only servers:
+  (do not run this if you only have one server):
+   /usr/share/astguiclient/ADMIN_backup.pl --debugX --without-db --without-web
+
+
 REQUIRED STEPS!!!
 
 1. upgrade the MySQL asterisk database:
@@ -261,6 +272,12 @@ OTHER CHANGES:
 57. Added validation for Remote Agents to ensure that the User Start is a valid
 	User in the system, also added validation that Remote Agents do not
 	overlap their number of lines into another Remote Agent
+
+58. Added ability to override the System Settings webphone URL per User Group
+
+59. Added Calculate Estimated Hold Seconds setting which can delay the 
+	Calculation and optionally the announcement of Estimated Hold Time
+	for X seconds.
 
 
 

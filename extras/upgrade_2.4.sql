@@ -488,3 +488,13 @@ ALTER TABLE vicidial_inbound_dids ADD filter_menu_id VARCHAR(50) default '';
 ALTER TABLE vicidial_inbound_dids ADD filter_clean_cid_number VARCHAR(20) default '';
 
 UPDATE system_settings SET db_schema_version='1239',db_schema_update_date=NOW();
+
+
+
+
+
+ALTER TABLE vicidial_user_groups ADD webphone_url_override VARCHAR(255) default '';
+
+ALTER TABLE vicidial_inbound_groups ADD calculate_estimated_hold_seconds SMALLINT(5) UNSIGNED default '0';
+
+UPDATE system_settings SET db_schema_version='1240',db_schema_update_date=NOW();

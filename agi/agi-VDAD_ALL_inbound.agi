@@ -138,6 +138,7 @@
 # 100616-1600 - Added VID filename and digit validation options
 # 100718-1822 - Added second hold time option and wait time options
 # 100805-1530 - Added FILTER from-did-route feature, changed active=n to go to after hours action
+# 100811-0751 -	Added calculate_estimated_hold_seconds option
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -577,7 +578,7 @@ $sthA->finish();
 
 ### Grab inbound groups values from the database
 $cbc=0;
-$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active FROM vicidial_inbound_groups where group_id = '$channel_group';";
+$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds FROM vicidial_inbound_groups where group_id = '$channel_group';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -653,6 +654,7 @@ while ($sthArows > $cbc)
 	$wait_time_option_no_block =		$aryA[58];
 	$wait_time_option_prompt_seconds =	$aryA[59];
 	$ingroup_active =					$aryA[60];
+	$calculate_estimated_hold_seconds = $aryA[61];
 
 	$custom_call_id='';
 	if ($uniqueid_status_display =~ /ENABLED/)
@@ -2815,7 +2817,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		}
 
 
-	if ( ($hold_message_counter > $prompt_interval) && ($prompt_interval > 0) )
+	if ( ( ($hold_message_counter > $prompt_interval) && ($prompt_interval > 0) ) || ( ($calculate_estimated_hold_seconds == $drop_timer) && ($calculate_estimated_hold_seconds > 3) ) )
 		{
 		$now_date_epoch = time();
 		$no_block_SQL = '';
@@ -2858,6 +2860,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			{
 			$AGI->stream_file('sip-silence'); # stop music-on-hold process
 			$AGI->stream_file('sip-silence'); # stop music-on-hold process
+			$AGI->stream_file('sip-silence'); # stop music-on-hold process
 			if ($onhold_prompt_filename =~ /\|/)
 				{
 				@onhold_prompt_filename_array = split(/\|/,$onhold_prompt_filename);
@@ -2887,9 +2890,12 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		$hold_message_counter = 0;
 		$start_moh=1;
 		$moh_delay=1;
+		if ($calculate_estimated_hold_seconds <= $drop_timer)
+			{
+			if ($play_estimate_hold_time =~ /Y/i) {$start_hold_estimate=1; $moh_delay=2;}
+			if ($hold_time_option_SETTING !~ /NONE/) {$start_hold_estimate=1; $moh_delay=2;}
+			}
 		if ($play_place_in_line =~ /Y/i) {$start_place_in_line=1; $moh_delay=2;}
-		if ($play_estimate_hold_time =~ /Y/i) {$start_hold_estimate=1; $moh_delay=2;}
-		if ($hold_time_option_SETTING !~ /NONE/) {$start_hold_estimate=1; $moh_delay=2;}
 		if ($drop_timer >= 2) {$drop_timer = ($drop_timer + 5);} # add prompt play time to total queue time
 		if ($wait_time_option !~ /NONE/) {$wait_in_queue=1; $moh_delay=2;}
 		}
@@ -3020,6 +3026,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 	##### play the hold time estimate to the caller if option is set
 		if ($play_estimate_hold_time =~ /Y/i) 
 			{
+			$AGI->stream_file('sip-silence'); # stop music-on-hold process
 			$AGI->stream_file('sip-silence'); # stop music-on-hold process
 			$AGI->stream_file('sip-silence'); # stop music-on-hold process
 

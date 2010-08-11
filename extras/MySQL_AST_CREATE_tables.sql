@@ -598,7 +598,8 @@ agent_xfer_blind_transfer ENUM('Y','N') default 'Y',
 agent_xfer_dial_with_customer ENUM('Y','N') default 'Y',
 agent_xfer_park_customer_dial ENUM('Y','N') default 'Y',
 agent_fullscreen ENUM('Y','N') default 'N',
-allowed_reports VARCHAR(2000) default 'ALL REPORTS'
+allowed_reports VARCHAR(2000) default 'ALL REPORTS',
+webphone_url_override VARCHAR(255) default ''
 );
 
 CREATE TABLE vicidial_campaigns (
@@ -931,7 +932,8 @@ wait_time_option_callback_list_id BIGINT(14) UNSIGNED default '999',
 wait_time_option_press_filename VARCHAR(255) default 'to-be-called-back|digits/1',
 wait_time_option_no_block ENUM('N','Y') default 'N',
 wait_time_option_prompt_seconds SMALLINT(5) default '10',
-timer_action_destination VARCHAR(30) default ''
+timer_action_destination VARCHAR(30) default '',
+calculate_estimated_hold_seconds SMALLINT(5) UNSIGNED default '0'
 );
 
 CREATE TABLE vicidial_stations (
@@ -2329,7 +2331,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1239',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1240',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

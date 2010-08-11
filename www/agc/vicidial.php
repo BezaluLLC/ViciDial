@@ -304,10 +304,11 @@
 # 100723-1522 - Added LOCKED options for quick transfer button feature
 # 100726-1233 - Added HANGUP, CALLMENU, EXTENSION, IN_GROUP timer actions
 # 100803-2324 - Cleanup of URLDecode (issue #375)
+# 100811-0810 - Added webphone_url_override option from user Groups
 #
 
-$version = '2.4-282';
-$build = '100803-2324';
+$version = '2.4-283';
+$build = '100811-0810';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -966,7 +967,7 @@ else
 			$AgentAlert_allowed = $VU_allow_alerts;
 
 			### Gather timeclock and shift enforcement restriction settings
-			$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial,agent_fullscreen from vicidial_user_groups where user_group='$VU_user_group';";
+			$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial,agent_fullscreen,webphone_url_override from vicidial_user_groups where user_group='$VU_user_group';";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01052',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysql_fetch_row($rslt);
@@ -1004,6 +1005,7 @@ else
 			if ($VU_agent_call_log_view_override == 'N')
 				{$agent_call_log_view=0;}
 			$agent_fullscreen =			$row[12];
+			$webphone_url =	$row[13];
 
 			### BEGIN - CHECK TO SEE IF AGENT IS LOGGED IN TO TIMECLOCK, IF NOT, OUTPUT ERROR
 			if ( (ereg('Y',$forced_timeclock_login)) or ( (ereg('ADMIN_EXEMPT',$forced_timeclock_login)) and ($VU_user_level < 8) ) )
@@ -2114,16 +2116,19 @@ else
 						$webphone_server_ip =$row[0];
 						}
 					}
-				##### find webphone_url in system_settings and generate IFRAME code for it #####
-				$stmt="SELECT webphone_url FROM system_settings LIMIT 1;";
-				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01066',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				if ($DB) {echo "$stmt\n";}
-				$wu_ct = mysql_num_rows($rslt);
-				if ($wu_ct > 0)
+				if (strlen($webphone_url) < 6)
 					{
-					$row=mysql_fetch_row($rslt);
-					$webphone_url =$row[0];
+					##### find webphone_url in system_settings and generate IFRAME code for it #####
+					$stmt="SELECT webphone_url FROM system_settings LIMIT 1;";
+					$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01066',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$wu_ct = mysql_num_rows($rslt);
+					if ($wu_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$webphone_url =$row[0];
+						}
 					}
 
 				### base64 encode variables

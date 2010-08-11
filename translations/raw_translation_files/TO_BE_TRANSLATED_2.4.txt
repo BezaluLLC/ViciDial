@@ -350,6 +350,10 @@ This field allows you to specify a number of digits to restrict the incoming cal
 must be an existing vicidial user||
 you must use a valid user as the user_start for remote agents||
 your number of lines overlaps with another remote agent||
+Webphone URL Override||
+This setting allows you to set an alternate webphone URL just for the members of one user group. Default is empty||
+Calculate Estimated Hold Seconds||
+This defines the number of seconds into the queue that the customer will wait before the Estimated Hold Time will be calculated and optionally played. Minimum is 3 seconds, even if set lower than 3. Default is 0||
 
 
 AST_VICIDIAL_ingrouplist.php
