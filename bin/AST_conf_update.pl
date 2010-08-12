@@ -14,12 +14,14 @@
 # 80914-1533 - Added kickall for leave-3way calls after one hour
 # 81008-0937 - Added kickall from vicidial_conferences if only one participant
 # 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
+# 100811-2054 - Added --no-vc-3way-check flag to use when AST_conf_update_3way.pl script is used
 #
 
 # constants
 $DB=0;  # Debug flag, set to 0 for no debug messages per minute
 $US='__';
 $MT[0]='';
+$no_vc_3way_check=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -33,7 +35,12 @@ if (length($ARGV[0])>1)
 
 	if ($args =~ /--help/i)
 		{
-		print "allowed run time options:\n  [-t] = test\n  [-debug] = verbose debug messages\n\n";
+		print "allowed run time options:\n";
+		print "  [-t] = test\n";
+		print "  [-debug] = verbose debug messages\n";
+		print "  [--no-vc-3way-check] = separate 3way script is running\n";
+		print "\n";
+		exit;
 		}
 	else
 		{
@@ -41,6 +48,11 @@ if (length($ARGV[0])>1)
 			{
 			$DB=1; # Debug flag
 			print "-- DEBUGGING ENABLED --\n\n";
+			}
+		if ($args =~ /-no-vc-3way-check/i)
+			{
+			$no_vc_3way_check=1; # no 3way check flag
+			if ($DB > 0) {print "-- NO VC 3way check flag ENABLED --\n\n";}
 			}
 		if ($args =~ /-t/i)
 			{
@@ -115,17 +127,17 @@ $rec_count=0;
 if ($sthArows > 0)
     {
 	@aryA = $sthA->fetchrow_array;
-	$DBtelnet_host	=			"$aryA[0]";
-	$DBtelnet_port	=			"$aryA[1]";
-	$DBASTmgrUSERNAME	=		"$aryA[2]";
-	$DBASTmgrSECRET	=			"$aryA[3]";
-	$DBASTmgrUSERNAMEupdate	=	"$aryA[4]";
-	$DBASTmgrUSERNAMElisten	=	"$aryA[5]";
-	$DBASTmgrUSERNAMEsend	=	"$aryA[6]";
-	$DBmax_vicidial_trunks	=	"$aryA[7]";
-	$DBanswer_transfer_agent=	"$aryA[8]";
-	$DBSERVER_GMT		=		"$aryA[9]";
-	$DBext_context	=			"$aryA[10]";
+	$DBtelnet_host	=			$aryA[0];
+	$DBtelnet_port	=			$aryA[1];
+	$DBASTmgrUSERNAME	=		$aryA[2];
+	$DBASTmgrSECRET	=			$aryA[3];
+	$DBASTmgrUSERNAMEupdate	=	$aryA[4];
+	$DBASTmgrUSERNAMElisten	=	$aryA[5];
+	$DBASTmgrUSERNAMEsend	=	$aryA[6];
+	$DBmax_vicidial_trunks	=	$aryA[7];
+	$DBanswer_transfer_agent=	$aryA[8];
+	$DBSERVER_GMT		=		$aryA[9];
+	$DBext_context	=			$aryA[10];
 	if ($DBtelnet_host)				{$telnet_host = $DBtelnet_host;}
 	if ($DBtelnet_port)				{$telnet_port = $DBtelnet_port;}
 	if ($DBASTmgrUSERNAME)			{$ASTmgrUSERNAME = $DBASTmgrUSERNAME;}
@@ -180,8 +192,8 @@ $rec_count=0;
 while ($sthArows > $rec_count)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$PT_conf_extens[$rec_count] =	 "$aryA[0]";
-	$PT_extensions[$rec_count] =	 "$aryA[0]";
+	$PT_conf_extens[$rec_count] =	 $aryA[0];
+	$PT_extensions[$rec_count] =	 $aryA[1];
 		if ($DB) {print "|$PT_conf_extens[$rec_count]|$PT_extensions[$rec_count]|\n";}
 	$rec_count++;
 	}
@@ -206,119 +218,122 @@ while ($k < $rec_count)
 
 
 
-
-######################################################################
-##### CHECK vicidial_conferences TABLE #####
-######################################################################
-@PTextensions=@MT; @PT_conf_extens=@MT; @PTmessages=@MT; @PTold_messages=@MT; @NEW_messages=@MT; @OLD_messages=@MT;
-$stmtA = "SELECT extension,conf_exten from vicidial_conferences where server_ip='$server_ip' and leave_3way='1';";
-if ($DB) {print "|$stmtA|\n";}
-$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-$sthArows=$sthA->rows;
-$rec_count=0;
-while ($sthArows > $rec_count)
-    {
-	@aryA = $sthA->fetchrow_array;
-	$PTextensions[$rec_count] =		 "$aryA[0]";
-	$PT_conf_extens[$rec_count] =	 "$aryA[1]";
-		if ($DB) {print "|$PT_conf_extens[$rec_count]|$PTextensions[$rec_count]|\n";}
-	$rec_count++;
-	}
-$sthA->finish(); 
-
-if (!$telnet_port) {$telnet_port = '5038';}
-
-### connect to asterisk manager through telnet
-$t = new Net::Telnet (Port => $telnet_port,
-					  Prompt => '/.*[\$%#>] $/',
-					  Output_record_separator => '',);
-#$fh = $t->dump_log("$telnetlog");  # uncomment for telnet log
-	if (length($ASTmgrUSERNAMEsend) > 3) {$telnet_login = $ASTmgrUSERNAMEsend;}
-	else {$telnet_login = $ASTmgrUSERNAME;}
-
-$t->open("$telnet_host"); 
-$t->waitfor('/[01]\n$/');			# print login
-$t->print("Action: Login\nUsername: $telnet_login\nSecret: $ASTmgrSECRET\n\n");
-$t->waitfor('/Authentication accepted/');		# waitfor auth accepted
-
-
-$i=0;
-foreach(@PTextensions)
+if ($no_vc_3way_check < 1)
 	{
-	@list_channels=@MT;
-	$t->buffer_empty;
-	$COMMAND = "Action: Command\nCommand: Meetme list $PT_conf_extens[$i]\n\nAction: Ping\n\n";
-	if ($DB) {print "|$PT_conf_extens[$i]|$COMMAND|\n";}
-	@list_channels = $t->cmd(String => "$COMMAND", Prompt => '/Response: Pong.*/'); 
-
-
-	$j=0;
-	$conf_empty[$i]=0;
-	$conf_users[$i]='';
-	foreach(@list_channels)
+	######################################################################
+	##### CHECK vicidial_conferences TABLE #####
+	######################################################################
+	@PTextensions=@MT; @PT_conf_extens=@MT; @PTmessages=@MT; @PTold_messages=@MT; @NEW_messages=@MT; @OLD_messages=@MT;
+	$stmtA = "SELECT extension,conf_exten from vicidial_conferences where server_ip='$server_ip' and leave_3way='1';";
+	if ($DB) {print "|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	$rec_count=0;
+	while ($sthArows > $rec_count)
 		{
-		if($DB){print "|$list_channels[$j]|\n";}
-		### mark all empty conferences and conferences with only one channel as empty
-		if ($list_channels[$j] =~ /No active conferences|No such conference/i)
-			{$conf_empty[$i]++;}
-		if ($list_channels[$j] =~ /1 users in that conference/i)
-			{$conf_empty[$i]++;}
-		$j++;
+		@aryA = $sthA->fetchrow_array;
+		$PTextensions[$rec_count] =		 $aryA[0];
+		$PT_conf_extens[$rec_count] =	 $aryA[1];
+			if ($DB) {print "|$PT_conf_extens[$rec_count]|$PTextensions[$rec_count]|\n";}
+		$rec_count++;
 		}
+	$sthA->finish(); 
 
-	if($DB){print "Meetme list $PT_conf_extens[$i]-  Exten:|$PTextensions[$i]| Empty:|$conf_empty[$i]|    ";}
-	if (!$conf_empty[$i])
+	if (!$telnet_port) {$telnet_port = '5038';}
+
+	### connect to asterisk manager through telnet
+	$t = new Net::Telnet (Port => $telnet_port,
+						  Prompt => '/.*[\$%#>] $/',
+						  Output_record_separator => '',);
+	#$fh = $t->dump_log("$telnetlog");  # uncomment for telnet log
+		if (length($ASTmgrUSERNAMEsend) > 3) {$telnet_login = $ASTmgrUSERNAMEsend;}
+		else {$telnet_login = $ASTmgrUSERNAME;}
+
+	$t->open("$telnet_host"); 
+	$t->waitfor('/[01]\n$/');			# print login
+	$t->print("Action: Login\nUsername: $telnet_login\nSecret: $ASTmgrSECRET\n\n");
+	$t->waitfor('/Authentication accepted/');		# waitfor auth accepted
+
+
+	$i=0;
+	foreach(@PTextensions)
 		{
-		if($DB){print "CONFERENCE STILL HAS PARTICIPANTS, DOING NOTHING FOR THIS CONFERENCE\n";}
-		if ($PTextensions[$i] =~ /Xtimeout\d$/i) 
+		@list_channels=@MT;
+		$t->buffer_empty;
+		$COMMAND = "Action: Command\nCommand: Meetme list $PT_conf_extens[$i]\n\nAction: Ping\n\n";
+		if ($DB) {print "|$PT_conf_extens[$i]|$COMMAND|\n";}
+		@list_channels = $t->cmd(String => "$COMMAND", Prompt => '/Response: Pong.*/'); 
+
+
+		$j=0;
+		$conf_empty[$i]=0;
+		$conf_users[$i]='';
+		foreach(@list_channels)
 			{
-			$PTextensions[$i] =~ s/Xtimeout\d$//gi;
-			$stmtA = "UPDATE vicidial_conferences set extension='$PTextensions[$i]' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
+			if($DB){print "|$list_channels[$j]|\n";}
+			### mark all empty conferences and conferences with only one channel as empty
+			if ($list_channels[$j] =~ /No active conferences|No such conference/i)
+				{$conf_empty[$i]++;}
+			if ($list_channels[$j] =~ /1 users in that conference/i)
+				{$conf_empty[$i]++;}
+			$j++;
+			}
+
+		if($DB){print "Meetme list $PT_conf_extens[$i]-  Exten:|$PTextensions[$i]| Empty:|$conf_empty[$i]|    ";}
+		if (!$conf_empty[$i])
+			{
+			if($DB){print "CONFERENCE STILL HAS PARTICIPANTS, DOING NOTHING FOR THIS CONFERENCE\n";}
+			if ($PTextensions[$i] =~ /Xtimeout\d$/i) 
+				{
+				$PTextensions[$i] =~ s/Xtimeout\d$//gi;
+				$stmtA = "UPDATE vicidial_conferences set extension='$PTextensions[$i]' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
+					if($DB){print STDERR "\n|$stmtA|\n";}
+				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
+				}
+			}
+		else
+			{
+			$NEWexten[$i] = $PTextensions[$i];
+			$leave_3waySQL='1';
+			if ($PTextensions[$i] =~ /Xtimeout3$/i) {$NEWexten[$i] =~ s/Xtimeout3$/Xtimeout2/gi;}
+			if ($PTextensions[$i] =~ /Xtimeout2$/i) {$NEWexten[$i] =~ s/Xtimeout2$/Xtimeout1/gi;}
+			if ($PTextensions[$i] =~ /Xtimeout1$/i) {$NEWexten[$i] = ''; $leave_3waySQL='0';}
+			if ( ($PTextensions[$i] !~ /Xtimeout\d$/i) and (length($PTextensions[$i])> 0) ) {$NEWexten[$i] .= 'Xtimeout3';}
+
+			if ($NEWexten[$i] =~ /Xtimeout1$/i)
+				{
+				### Kick all participants if there are any left in the conference so it can be reused
+				$local_DEF = 'Local/5555';
+				$local_AMP = '@';
+				$kick_local_channel = "$local_DEF$PT_conf_extens[$i]$local_AMP$ext_context";
+				$queryCID = "ULGC36$TDnum";
+
+				$stmtA="INSERT INTO vicidial_manager values('','','$now_date','NEW','N','$server_ip','','Originate','$queryCID','Channel: $kick_local_channel','Context: $ext_context','Exten: 8300','Priority: 1','Callerid: $queryCID','','','','','');";
+					$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
+				if($DB){print STDERR "\n|$affected_rows|$stmtA|\n";}
+				}
+
+			$stmtA = "UPDATE vicidial_conferences set extension='$NEWexten[$i]',leave_3way='$leave_3waySQL' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
 				if($DB){print STDERR "\n|$stmtA|\n";}
 			$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 			}
-		}
-	else
-		{
-		$NEWexten[$i] = $PTextensions[$i];
-		$leave_3waySQL='1';
-		if ($PTextensions[$i] =~ /Xtimeout3$/i) {$NEWexten[$i] =~ s/Xtimeout3$/Xtimeout2/gi;}
-		if ($PTextensions[$i] =~ /Xtimeout2$/i) {$NEWexten[$i] =~ s/Xtimeout2$/Xtimeout1/gi;}
-		if ($PTextensions[$i] =~ /Xtimeout1$/i) {$NEWexten[$i] = ''; $leave_3waySQL='0';}
-		if ( ($PTextensions[$i] !~ /Xtimeout\d$/i) and (length($PTextensions[$i])> 0) ) {$NEWexten[$i] .= 'Xtimeout3';}
 
-		if ($NEWexten[$i] =~ /Xtimeout1$/i)
-			{
-			### Kick all participants if there are any left in the conference so it can be reused
-			$local_DEF = 'Local/5555';
-			$local_AMP = '@';
-			$kick_local_channel = "$local_DEF$PT_conf_extens[$i]$local_AMP$ext_context";
-			$queryCID = "ULGC36$TDnum";
-
-			$stmtA="INSERT INTO vicidial_manager values('','','$now_date','NEW','N','$server_ip','','Originate','$queryCID','Channel: $kick_local_channel','Context: $ext_context','Exten: 8300','Priority: 1','Callerid: $queryCID','','','','','');";
-				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
-			if($DB){print STDERR "\n|$affected_rows|$stmtA|\n";}
-			}
-
-		$stmtA = "UPDATE vicidial_conferences set extension='$NEWexten[$i]',leave_3way='$leave_3waySQL' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
-			if($DB){print STDERR "\n|$stmtA|\n";}
-		$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
+		$i++;
+			### sleep for 10 hundredths of a second
+			usleep(1*100*1000);
 		}
 
-	$i++;
-		### sleep for 10 hundredths of a second
-		usleep(1*100*1000);
+	$t->buffer_empty;
+	@hangup = $t->cmd(String => "Action: Logoff\n\n", Prompt => "/.*/"); 
+	$t->buffer_empty;
+	$t->waitfor(Match => '/Message:.*\n\n/', Timeout => 10);
+	$ok = $t->close;
+
+
+	sleep(5);
 	}
 
-$t->buffer_empty;
-@hangup = $t->cmd(String => "Action: Logoff\n\n", Prompt => "/.*/"); 
-$t->buffer_empty;
-$t->waitfor(Match => '/Message:.*\n\n/', Timeout => 10);
-$ok = $t->close;
-
-
-sleep(5);
 
 
 
@@ -337,8 +352,8 @@ $rec_count=0;
 while ($sthArows > $rec_count)
     {
 	@aryA = $sthA->fetchrow_array;
-	$PTextensions[$rec_count] =		 "$aryA[0]";
-	$PT_conf_extens[$rec_count] =	 "$aryA[1]";
+	$PTextensions[$rec_count] =		 $aryA[0];
+	$PT_conf_extens[$rec_count] =	 $aryA[1];
 		if ($DB) {print "|$PT_conf_extens[$rec_count]|$PTextensions[$rec_count]|\n";}
 	$rec_count++;
 	}
@@ -363,57 +378,59 @@ $t->waitfor('/Authentication accepted/');		# waitfor auth accepted
 $i=0;
 foreach(@PTextensions)
 	{
-	@list_channels=@MT;
-	$t->buffer_empty;
-	$COMMAND = "Action: Command\nCommand: Meetme list $PT_conf_extens[$i]\n\nAction: Ping\n\n";
-	if ($DB) {print "|$PT_conf_extens[$i]|$COMMAND|\n";}
-	@list_channels = $t->cmd(String => "$COMMAND", Prompt => '/Response: Pong.*/'); 
-
-
-	$j=0;
-	$conf_empty[$i]=0;
-	$conf_users[$i]='';
-	foreach(@list_channels)
+	if (length($PT_conf_extens[$i]) > 0)
 		{
-		if($DB){print "|$list_channels[$j]|\n";}
-		if ($list_channels[$j] =~ /No active conferences|No such conference/i)
-			{$conf_empty[$i]++;}
-#		if ($list_channels[$j] =~ /^User /i)
-#			{
-#			$userx = '';
-#			$userx = $list_channels[$j];
-#			$userx =~ s/User \#: //gi;
-#			$conf_users[$i] .= "$userx|";
-#			}
-		$j++;
-		}
+		@list_channels=@MT;
+		$t->buffer_empty;
+		$COMMAND = "Action: Command\nCommand: Meetme list $PT_conf_extens[$i]\n\nAction: Ping\n\n";
+		if ($DB) {print "|$PT_conf_extens[$i]|$COMMAND|\n";}
+		@list_channels = $t->cmd(String => "$COMMAND", Prompt => '/Response: Pong.*/'); 
 
-	if($DB){print "Meetme list $PT_conf_extens[$i]-  Exten:|$PTextensions[$i]| Empty:|$conf_empty[$i]|    ";}
-	if (!$conf_empty[$i])
-		{
-		if($DB){print "CONFERENCE STILL HAS PARTICIPANTS, DOING NOTHING FOR THIS CONFERENCE\n";}
-		if ($PTextensions[$i] =~ /Xtimeout\d$/i) 
+
+		$j=0;
+		$conf_empty[$i]=0;
+		$conf_users[$i]='';
+		foreach(@list_channels)
 			{
-			$PTextensions[$i] =~ s/Xtimeout\d$//gi;
-			$stmtA = "UPDATE conferences set extension='$PTextensions[$i]' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
+			if($DB){print "|$list_channels[$j]|\n";}
+			if ($list_channels[$j] =~ /No active conferences|No such conference/i)
+				{$conf_empty[$i]++;}
+	#		if ($list_channels[$j] =~ /^User /i)
+	#			{
+	#			$userx = '';
+	#			$userx = $list_channels[$j];
+	#			$userx =~ s/User \#: //gi;
+	#			$conf_users[$i] .= "$userx|";
+	#			}
+			$j++;
+			}
+
+		if($DB){print "Meetme list $PT_conf_extens[$i]-  Exten:|$PTextensions[$i]| Empty:|$conf_empty[$i]|    ";}
+		if (!$conf_empty[$i])
+			{
+			if($DB){print "CONFERENCE STILL HAS PARTICIPANTS, DOING NOTHING FOR THIS CONFERENCE\n";}
+			if ($PTextensions[$i] =~ /Xtimeout\d$/i) 
+				{
+				$PTextensions[$i] =~ s/Xtimeout\d$//gi;
+				$stmtA = "UPDATE conferences set extension='$PTextensions[$i]' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
+					if($DB){print STDERR "\n|$stmtA|\n";}
+				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
+				}
+			}
+		else
+			{
+			$NEWexten[$i] = $PTextensions[$i];
+			if ($PTextensions[$i] =~ /Xtimeout3$/i) {$NEWexten[$i] =~ s/Xtimeout3$/Xtimeout2/gi;}
+			if ($PTextensions[$i] =~ /Xtimeout2$/i) {$NEWexten[$i] =~ s/Xtimeout2$/Xtimeout1/gi;}
+			if ($PTextensions[$i] =~ /Xtimeout1$/i) {$NEWexten[$i] = '';}
+			if ( ($PTextensions[$i] !~ /Xtimeout\d$/i) and (length($PTextensions[$i])> 0) ) {$NEWexten[$i] .= 'Xtimeout3';}
+
+
+			$stmtA = "UPDATE conferences set extension='$NEWexten[$i]' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
 				if($DB){print STDERR "\n|$stmtA|\n";}
 			$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 			}
 		}
-	else
-		{
-		$NEWexten[$i] = $PTextensions[$i];
-		if ($PTextensions[$i] =~ /Xtimeout3$/i) {$NEWexten[$i] =~ s/Xtimeout3$/Xtimeout2/gi;}
-		if ($PTextensions[$i] =~ /Xtimeout2$/i) {$NEWexten[$i] =~ s/Xtimeout2$/Xtimeout1/gi;}
-		if ($PTextensions[$i] =~ /Xtimeout1$/i) {$NEWexten[$i] = '';}
-		if ( ($PTextensions[$i] !~ /Xtimeout\d$/i) and (length($PTextensions[$i])> 0) ) {$NEWexten[$i] .= 'Xtimeout3';}
-
-
-		$stmtA = "UPDATE conferences set extension='$NEWexten[$i]' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
-			if($DB){print STDERR "\n|$stmtA|\n";}
-		$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
-		}
-
 	$i++;
 		### sleep for 10 hundredths of a second
 		usleep(1*100*1000);

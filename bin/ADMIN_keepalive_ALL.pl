@@ -53,11 +53,13 @@
 # 100424-2121 - Added codecs options for phones
 # 100616-2245 - Added VIDPROMPT options for call menus, changed INGROUP TIMECHECK routes to special extension like AGI
 # 100703-2137 - Added memory table reset nightly
+# 100811-2221 - Added --cu3way flag for new optional leave3way cleaning script
 #
 
 $DB=0; # Debug flag
 $MT[0]='';   $MT[1]='';
 @psline=@MT;
+$cu3way=0;
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 $year = ($year + 1900);
@@ -84,7 +86,14 @@ if (length($ARGV[0])>1)
 
 	if ($args =~ /--help/i)
 		{
-		print "allowed run time options:\n  [-t] = test\n  [-debug] = verbose debug messages\n[-debugX] = Extra-verbose debug messages\n\n";
+		print "allowed run time options:\n";
+		print "  [-t] = test\n";
+		print "  [-cu3way] = keepalive for the optional 3way conference checker\n";
+		print "  [-debug] = verbose debug messages\n";
+		print "  [-debugX] = Extra-verbose debug messages\n";
+		print "  [-debugXXX] = Triple-Extra-verbose debug messages\n";
+		print "\n";
+		exit;
 		}
 	else
 		{
@@ -92,15 +101,20 @@ if (length($ARGV[0])>1)
 			{
 			$DB=1; # Debug flag
 			}
-		if ($args =~ /--debugX/i)
+		if ($args =~ /-debugX/i)
 			{
 			$DBX=1;
 			print "\n----- SUPER-DUPER DEBUGGING -----\n\n";
 			}
-		if ($args =~ /--debugXXX/i)
+		if ($args =~ /-debugXXX/i)
 			{
 			$DBXXX=1;
 			print "\n----- TRIPLE DEBUGGING -----\n\n";
+			}
+		if ($args =~ /-cu3way/i)
+			{
+			$cu3way=1;
+			if ($DB > 0) {print "\n----- cu3way ENABLED -----\n\n";}
 			}
 		if ($args =~ /-t/i)
 			{
@@ -171,6 +185,8 @@ $runningAST_VDadapt=0;
 $runningFastAGI_log=0;
 $runningAST_VDauto_dial_FILL=0;
 $runningip_relay=0;
+$runningAST_conf_3way=0;
+$AST_conf_3way=0;
 
 if ($VARactive_keepalives =~ /1/) 
 	{
@@ -217,6 +233,12 @@ if ($VARactive_keepalives =~ /9/)
 	$timeclock_auto_logout=1;
 	if ($DB) {print "Check to see if Timeclock auto logout should run\n";}
 	}
+if ($cu3way > 0) 
+	{
+	$AST_conf_3way=1;
+	if ($DB) {print "AST_conf_3way set to keepalive\n";}
+	}
+
 
 $REGhome = $PATHhome;
 $REGhome =~ s/\//\\\//gi;
@@ -237,10 +259,10 @@ $REGhome =~ s/\//\\\//gi;
 
 $i=0;
 foreach (@psoutput)
-{
-chomp($psoutput[$i]);
-if ($DBX) {print "$i|$psoutput[$i]|     \n";}
-@psline = split(/\/usr\/bin\/perl /,$psoutput[$i]);
+	{
+	chomp($psoutput[$i]);
+	if ($DBX) {print "$i|$psoutput[$i]|     \n";}
+	@psline = split(/\/usr\/bin\/perl /,$psoutput[$i]);
 
 	if ($psline[1] =~ /$REGhome\/AST_update\.pl/) 
 		{
@@ -289,8 +311,14 @@ if ($DBX) {print "$i|$psoutput[$i]|     \n";}
 		$runningip_relay++;
 		if ($DB) {print "ip_relay RUNNING:                |$psoutput[$i]|\n";}
 		}
-$i++;
-}
+	if ($psline[1] =~ /$REGhome\/AST_conf_update_3way\.pl/) 
+		{
+		$runningAST_conf_3way++;
+		if ($DB) {print "AST_conf_3way RUNNING:           |$psline[1]|\n";}
+		}
+
+	$i++;
+	}
 
 
 
@@ -301,43 +329,43 @@ $i++;
 @psoutput=@MT;
 @listen_pid=@MT;
 if ($runningAST_listen > 1)
-{
-$runningAST_listen=0;
-
-	sleep(1);
-
-### you may have to use a different ps command if you're not using Slackware Linux
-#	@psoutput = `ps -f -C AST_update --no-headers`;
-#	@psoutput = `ps -f -C AST_updat* --no-headers`;
-#	@psoutput = `/bin/ps -f --no-headers -A`;
-#	@psoutput = `/bin/ps -o pid,args -A`; ### use this one for FreeBSD
-@psoutput = `/bin/ps -o "%p %a" --no-headers -A`;
-
-$i=0;
-foreach (@psoutput)
 	{
-		chomp($psoutput[$i]);
-	if ($DBX) {print "$i|$psoutput[$i]|     \n";}
-	@psline = split(/\/usr\/bin\/perl /,$psoutput[$i]);
-	$psoutput[$i] =~ s/^ *//gi;
-	$psoutput[$i] =~ s/ .*|\n|\r|\t| //gi;
+	$runningAST_listen=0;
 
-	if ($psline[1] =~ /AST_manager_li/) 
+		sleep(1);
+
+	### you may have to use a different ps command if you're not using Slackware Linux
+	#	@psoutput = `ps -f -C AST_update --no-headers`;
+	#	@psoutput = `ps -f -C AST_updat* --no-headers`;
+	#	@psoutput = `/bin/ps -f --no-headers -A`;
+	#	@psoutput = `/bin/ps -o pid,args -A`; ### use this one for FreeBSD
+	@psoutput = `/bin/ps -o "%p %a" --no-headers -A`;
+
+	$i=0;
+	foreach (@psoutput)
 		{
-		$listen_pid[$runningAST_listen] = $psoutput[$i];
-		if ($DB) {print "AST_listen RUNNING:              |$psline[1]|$listen_pid[$runningAST_listen]|\n";}
-		$runningAST_listen++;
+			chomp($psoutput[$i]);
+		if ($DBX) {print "$i|$psoutput[$i]|     \n";}
+		@psline = split(/\/usr\/bin\/perl /,$psoutput[$i]);
+		$psoutput[$i] =~ s/^ *//gi;
+		$psoutput[$i] =~ s/ .*|\n|\r|\t| //gi;
+
+		if ($psline[1] =~ /AST_manager_li/) 
+			{
+			$listen_pid[$runningAST_listen] = $psoutput[$i];
+			if ($DB) {print "AST_listen RUNNING:              |$psline[1]|$listen_pid[$runningAST_listen]|\n";}
+			$runningAST_listen++;
+			}
+
+		$i++;
 		}
 
-	$i++;
+	if ($runningAST_listen > 1)
+		{
+		if ($DB) {print "Killing AST_manager_listen... |$listen_pid[1]|\n";}
+		`/bin/kill -s 9 $listen_pid[1]`;
+		}
 	}
-
-if ($runningAST_listen > 1)
-	{
-	if ($DB) {print "Killing AST_manager_listen... |$listen_pid[1]|\n";}
-	`/bin/kill -s 9 $listen_pid[1]`;
-	}
-}
 
 
 
@@ -358,131 +386,144 @@ if (
 	( ($AST_VDadapt > 0) && ($runningAST_VDadapt < 1) ) ||
 	( ($FastAGI_log > 0) && ($runningFastAGI_log < 1) ) ||
 	( ($AST_VDauto_dial_FILL > 0) && ($runningAST_VDauto_dial_FILL < 1) ) ||
-	( ($ip_relay > 0) && ($runningip_relay < 1) )
+	( ($ip_relay > 0) && ($runningip_relay < 1) ) ||
+	( ($AST_conf_3way > 0) && ($runningAST_conf_3way < 1) )
    )
-{
-
-if ($DB) {print "double check that processes are not running...\n";}
-
-	sleep(1);
-
-`PERL5LIB="$PATHhome/libs"; export PERL5LIB`;
-### you may have to use a different ps command if you're not using Slackware Linux
-#	@psoutput = `ps -f -C AST_update --no-headers`;
-#	@psoutput = `ps -f -C AST_updat* --no-headers`;
-#	@psoutput = `/bin/ps -f --no-headers -A`;
-#	@psoutput = `/bin/ps -o pid,args -A`; ### use this one for FreeBSD
-@psoutput2 = `/bin/ps -o "%p %a" --no-headers -A`;
-$i=0;
-foreach (@psoutput2)
 	{
-		chomp($psoutput2[$i]);
-	if ($DBX) {print "$i|$psoutput2[$i]|     \n";}
-	@psline = split(/\/usr\/bin\/perl /,$psoutput2[$i]);
 
-	if ($psline[1] =~ /$REGhome\/AST_update\.pl/) 
+	if ($DB) {print "double check that processes are not running...\n";}
+
+		sleep(1);
+
+	`PERL5LIB="$PATHhome/libs"; export PERL5LIB`;
+	### you may have to use a different ps command if you're not using Slackware Linux
+	#	@psoutput = `ps -f -C AST_update --no-headers`;
+	#	@psoutput = `ps -f -C AST_updat* --no-headers`;
+	#	@psoutput = `/bin/ps -f --no-headers -A`;
+	#	@psoutput = `/bin/ps -o pid,args -A`; ### use this one for FreeBSD
+	@psoutput2 = `/bin/ps -o "%p %a" --no-headers -A`;
+	$i=0;
+	foreach (@psoutput2)
 		{
-		$runningAST_update++;
-		if ($DB) {print "AST_update RUNNING:              |$psline[1]|\n";}
+			chomp($psoutput2[$i]);
+		if ($DBX) {print "$i|$psoutput2[$i]|     \n";}
+		@psline = split(/\/usr\/bin\/perl /,$psoutput2[$i]);
+
+		if ($psline[1] =~ /$REGhome\/AST_update\.pl/) 
+			{
+			$runningAST_update++;
+			if ($DB) {print "AST_update RUNNING:              |$psline[1]|\n";}
+			}
+		if ($psline[1] =~ /AST_manager_se/) 
+			{
+			$runningAST_send++;
+			if ($DB) {print "AST_send RUNNING:                |$psline[1]|\n";}
+			}
+		if ($psline[1] =~ /AST_manager_li/) 
+			{
+			$runningAST_listen++;
+			if ($DB) {print "AST_listen RUNNING:              |$psline[1]|\n";}
+			}
+		if ($psline[1] =~ /$REGhome\/AST_VDauto_dial\.pl/) 
+			{
+			$runningAST_VDauto_dial++;
+			if ($DB) {print "AST_VDauto_dial RUNNING:         |$psline[1]|\n";}
+			}
+		if ($psline[1] =~ /$REGhome\/AST_VDremote_agents\.pl/) 
+			{
+			$runningAST_VDremote_agents++;
+			if ($DB) {print "AST_VDremote_agents RUNNING:     |$psline[1]|\n";}
+			}
+		if ($psline[1] =~ /$REGhome\/AST_VDadapt\.pl/) 
+			{
+			$runningAST_VDadapt++;
+			if ($DB) {print "AST_VDadapt RUNNING:             |$psline[1]|\n";}
+			}
+		if ($psline[1] =~ /$REGhome\/FastAGI_log\.pl/) 
+			{
+			$runningFastAGI_log++;
+			if ($DB) {print "FastAGI_log RUNNING:             |$psline[1]|\n";}
+			}
+		if ($psline[1] =~ /$REGhome\/AST_VDauto_dial_FILL\.pl/) 
+			{
+			$runningAST_VDauto_dial_FILL++;
+			if ($DB) {print "AST_VDauto_dial_FILL RUNNING:    |$psline[1]|\n";}
+			}
+		if ($psoutput2[$i] =~ / ip_relay /) 
+			{
+			$runningip_relay++;
+			if ($DB) {print "ip_relay RUNNING:                |$psoutput2[$i]|\n";}
+			}
+		if ($psline[1] =~ /$REGhome\/AST_conf_update_3way\.pl/) 
+			{
+			$runningAST_conf_3way++;
+			if ($DB) {print "AST_conf_3way RUNNING:           |$psline[1]|\n";}
+			}
+		$i++;
 		}
-	if ($psline[1] =~ /AST_manager_se/) 
-		{
-		$runningAST_send++;
-		if ($DB) {print "AST_send RUNNING:                |$psline[1]|\n";}
-		}
-	if ($psline[1] =~ /AST_manager_li/) 
-		{
-		$runningAST_listen++;
-		if ($DB) {print "AST_listen RUNNING:              |$psline[1]|\n";}
-		}
-	if ($psline[1] =~ /$REGhome\/AST_VDauto_dial\.pl/) 
-		{
-		$runningAST_VDauto_dial++;
-		if ($DB) {print "AST_VDauto_dial RUNNING:         |$psline[1]|\n";}
-		}
-	if ($psline[1] =~ /$REGhome\/AST_VDremote_agents\.pl/) 
-		{
-		$runningAST_VDremote_agents++;
-		if ($DB) {print "AST_VDremote_agents RUNNING:     |$psline[1]|\n";}
-		}
-	if ($psline[1] =~ /$REGhome\/AST_VDadapt\.pl/) 
-		{
-		$runningAST_VDadapt++;
-		if ($DB) {print "AST_VDadapt RUNNING:             |$psline[1]|\n";}
-		}
-	if ($psline[1] =~ /$REGhome\/FastAGI_log\.pl/) 
-		{
-		$runningFastAGI_log++;
-		if ($DB) {print "FastAGI_log RUNNING:             |$psline[1]|\n";}
-		}
-	if ($psline[1] =~ /$REGhome\/AST_VDauto_dial_FILL\.pl/) 
-		{
-		$runningAST_VDauto_dial_FILL++;
-		if ($DB) {print "AST_VDauto_dial_FILL RUNNING:    |$psline[1]|\n";}
-		}
-	if ($psoutput2[$i] =~ / ip_relay /) 
-		{
-		$runningip_relay++;
-		if ($DB) {print "ip_relay RUNNING:                |$psoutput2[$i]|\n";}
-		}
-	$i++;
-	}
 
 
-if ( ($AST_update > 0) && ($runningAST_update < 1) )
-	{ 
-	if ($DB) {print "starting AST_update...\n";}
-	# add a '-L' to the command below to activate logging
-	`/usr/bin/screen -d -m -S ASTupdate $PATHhome/AST_update.pl`;
+	if ( ($AST_update > 0) && ($runningAST_update < 1) )
+		{ 
+		if ($DB) {print "starting AST_update...\n";}
+		# add a '-L' to the command below to activate logging
+		`/usr/bin/screen -d -m -S ASTupdate $PATHhome/AST_update.pl`;
+		}
+	if ( ($AST_send_listen > 0) && ($runningAST_send < 1) )
+		{ 
+		if ($DB) {print "starting AST_manager_send...\n";}
+		# add a '-L' to the command below to activate logging
+		`/usr/bin/screen -d -m -S ASTsend $PATHhome/AST_manager_send.pl`;
+		}
+	if ( ($AST_send_listen > 0) && ($runningAST_listen < 1) )
+		{ 
+		if ($DB) {print "starting AST_manager_listen...\n";}
+		# add a '-L' to the command below to activate logging
+		`/usr/bin/screen -d -m -S ASTlisten $PATHhome/AST_manager_listen.pl`;
+		}
+	if ( ($AST_VDauto_dial > 0) && ($runningAST_VDauto_dial < 1) )
+		{ 
+		if ($DB) {print "starting AST_VDauto_dial...\n";}
+		# add a '-L' to the command below to activate logging
+		`/usr/bin/screen -d -m -S ASTVDauto $PATHhome/AST_VDauto_dial.pl`;
+		}
+	if ( ($AST_VDremote_agents > 0) && ($runningAST_VDremote_agents < 1) )
+		{ 
+		if ($DB) {print "starting AST_VDremote_agents...\n";}
+		# add a '-L' to the command below to activate logging
+		`/usr/bin/screen -d -m -S ASTVDremote $PATHhome/AST_VDremote_agents.pl --debug`;
+		}
+	if ( ($AST_VDadapt > 0) && ($runningAST_VDadapt < 1) )
+		{ 
+		if ($DB) {print "starting AST_VDadapt...\n";}
+		# add a '-L' to the command below to activate logging
+		`/usr/bin/screen -d -m -S ASTVDadapt $PATHhome/AST_VDadapt.pl --debug`;
+		}
+	if ( ($FastAGI_log > 0) && ($runningFastAGI_log < 1) )
+		{ 
+		if ($DB) {print "starting FastAGI_log...\n";}
+		# add a '-L' to the command below to activate logging
+		`/usr/bin/screen -d -m -S ASTfastlog $PATHhome/FastAGI_log.pl --debug`;
+		}
+	if ( ($AST_VDauto_dial_FILL > 0) && ($runningAST_VDauto_dial_FILL < 1) )
+		{ 
+		if ($DB) {print "starting AST_VDauto_dial_FILL...\n";}
+		# add a '-L' to the command below to activate logging
+		`/usr/bin/screen -d -m -S ASTVDautoFILL $PATHhome/AST_VDauto_dial_FILL.pl`;
+		}
+	if ( ($ip_relay > 0) && ($runningip_relay < 1) )
+		{ 
+		if ($DB) {print "starting ip_relay through relay_control...\n";}
+		`$PATHhome/ip_relay/relay_control start  2>/dev/null 1>&2`;
+		}
+	if ( ($AST_conf_3way > 0) && ($runningAST_conf_3way < 1) )
+		{ 
+		if ($DB) {print "starting AST_conf_3way...\n";}
+		# add a '-L' to the command below to activate logging
+		`/usr/bin/screen -d -m -S ASTconf3way $PATHhome/AST_conf_update_3way.pl --debug`;
+		}
+
 	}
-if ( ($AST_send_listen > 0) && ($runningAST_send < 1) )
-	{ 
-	if ($DB) {print "starting AST_manager_send...\n";}
-	# add a '-L' to the command below to activate logging
-	`/usr/bin/screen -d -m -S ASTsend $PATHhome/AST_manager_send.pl`;
-	}
-if ( ($AST_send_listen > 0) && ($runningAST_listen < 1) )
-	{ 
-	if ($DB) {print "starting AST_manager_listen...\n";}
-	# add a '-L' to the command below to activate logging
-	`/usr/bin/screen -d -m -S ASTlisten $PATHhome/AST_manager_listen.pl`;
-	}
-if ( ($AST_VDauto_dial > 0) && ($runningAST_VDauto_dial < 1) )
-	{ 
-	if ($DB) {print "starting AST_VDauto_dial...\n";}
-	# add a '-L' to the command below to activate logging
-	`/usr/bin/screen -d -m -S ASTVDauto $PATHhome/AST_VDauto_dial.pl`;
-	}
-if ( ($AST_VDremote_agents > 0) && ($runningAST_VDremote_agents < 1) )
-	{ 
-	if ($DB) {print "starting AST_VDremote_agents...\n";}
-	# add a '-L' to the command below to activate logging
-	`/usr/bin/screen -d -m -S ASTVDremote $PATHhome/AST_VDremote_agents.pl --debug`;
-	}
-if ( ($AST_VDadapt > 0) && ($runningAST_VDadapt < 1) )
-	{ 
-	if ($DB) {print "starting AST_VDadapt...\n";}
-	# add a '-L' to the command below to activate logging
-	`/usr/bin/screen -d -m -S ASTVDadapt $PATHhome/AST_VDadapt.pl --debug`;
-	}
-if ( ($FastAGI_log > 0) && ($runningFastAGI_log < 1) )
-	{ 
-	if ($DB) {print "starting FastAGI_log...\n";}
-	# add a '-L' to the command below to activate logging
-	`/usr/bin/screen -d -m -S ASTfastlog $PATHhome/FastAGI_log.pl --debug`;
-	}
-if ( ($AST_VDauto_dial_FILL > 0) && ($runningAST_VDauto_dial_FILL < 1) )
-	{ 
-	if ($DB) {print "starting AST_VDauto_dial_FILL...\n";}
-	# add a '-L' to the command below to activate logging
-	`/usr/bin/screen -d -m -S ASTVDautoFILL $PATHhome/AST_VDauto_dial_FILL.pl`;
-	}
-if ( ($ip_relay > 0) && ($runningip_relay < 1) )
-	{ 
-	if ($DB) {print "starting ip_relay through relay_control...\n";}
-	`$PATHhome/ip_relay/relay_control start  2>/dev/null 1>&2`;
-	}
-}
 
 
 

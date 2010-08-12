@@ -279,6 +279,9 @@ OTHER CHANGES:
 	Calculation and optionally the announcement of Estimated Hold Time
 	for X seconds.
 
+60. Added new beta script for faster checking of leave-3way conferences,
+	AST_conf_update_3way.pl, read the comments before using.
+
 
 
 
