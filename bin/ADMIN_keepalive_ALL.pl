@@ -54,6 +54,7 @@
 # 100616-2245 - Added VIDPROMPT options for call menus, changed INGROUP TIMECHECK routes to special extension like AGI
 # 100703-2137 - Added memory table reset nightly
 # 100811-2221 - Added --cu3way flag for new optional leave3way cleaning script
+# 100812-0515 - Added --cu3way-delay= flag for setting delay in the leave3way cleaning script
 #
 
 $DB=0; # Debug flag
@@ -72,7 +73,7 @@ if ($min < 10) {$min = "0$min";}
 if ($sec < 10) {$sec = "0$sec";}
 $now_date = "$year-$mon-$mday $hour:$min:$sec";
 $reset_test = "$hour$min";
-
+$cu3way_delay='';
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -89,6 +90,7 @@ if (length($ARGV[0])>1)
 		print "allowed run time options:\n";
 		print "  [-t] = test\n";
 		print "  [-cu3way] = keepalive for the optional 3way conference checker\n";
+		print "  [-cu3way-delay=X] = setting delay seconds on 3way conference checker\n";
 		print "  [-debug] = verbose debug messages\n";
 		print "  [-debugX] = Extra-verbose debug messages\n";
 		print "  [-debugXXX] = Triple-Extra-verbose debug messages\n";
@@ -115,6 +117,21 @@ if (length($ARGV[0])>1)
 			{
 			$cu3way=1;
 			if ($DB > 0) {print "\n----- cu3way ENABLED -----\n\n";}
+			}
+		if ($args =~ /-cu3way-delay=/i) # CLI defined delay
+			{
+			@CLIvarARY = split(/-cu3way-delay=/,$args);
+			@CLIvarARX = split(/ /,$CLIvarARY[1]);
+			if (length($CLIvarARX[0])>0)
+				{
+				$CLIdelay = $CLIvarARX[0];
+				$CLIdelay =~ s/\/$| |\r|\n|\t//gi;
+				$CLIdelay =~ s/\D//gi;
+				if ( ($CLIdelay > 0) && (length($CLIdelay)> 0) )	
+					{$cu3way_delay = "--delay=$CLIdelay";}
+				if ($DB > 0) {print "Delay set to $CLIdelay $cu3way_delay\n";}
+				}
+			@CLIvarARY=@MT;   @CLIvarARY=@MT;
 			}
 		if ($args =~ /-t/i)
 			{
@@ -520,7 +537,7 @@ if (
 		{ 
 		if ($DB) {print "starting AST_conf_3way...\n";}
 		# add a '-L' to the command below to activate logging
-		`/usr/bin/screen -d -m -S ASTconf3way $PATHhome/AST_conf_update_3way.pl --debug`;
+		`/usr/bin/screen -d -m -S ASTconf3way $PATHhome/AST_conf_update_3way.pl --debug $cu3way_delay`;
 		}
 
 	}

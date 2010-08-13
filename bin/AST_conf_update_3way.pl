@@ -61,19 +61,15 @@ if (length($ARGV[0])>1)
 			{
 			@CLIvarARY = split(/--delay=/,$args);
 			@CLIvarARX = split(/ /,$CLIvarARY[1]);
-			if (length($CLIvarARX[0])>2)
+			if (length($CLIvarARX[0])>0)
 				{
 				$CLIdelay = $CLIvarARX[0];
 				$CLIdelay =~ s/\/$| |\r|\n|\t//gi;
 				$CLIdelay =~ s/\D//gi;
 				if ($DB > 0) {print "Delay set to $CLIdelay\n";}
 				}
-			else
-				{$CLIdelay = '3';}
 			@CLIvarARY=@MT;   @CLIvarARY=@MT;
 			}
-		else
-			{$CLIdelay = '3';}
 
 		if ($args =~ /-t/i)
 			{
@@ -84,12 +80,11 @@ if (length($ARGV[0])>1)
 	}
 else
 	{
-	$CLIdelay = '3';
 	#	print "no command line options set\n";
 	}
 ### end parsing run-time options ###
 
-if ($CLIdelay < 1)		{$CLIdelay = '1';}
+if ( ($CLIdelay < 1) || (length($CLIdelay) < 1) )	{$CLIdelay = '1';}
 
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
