@@ -757,7 +757,8 @@ blind_monitor_filename VARCHAR(100) default '',
 inbound_queue_no_dial ENUM('DISABLED','ENABLED','ALL_SERVERS') default 'DISABLED',
 timer_action_destination VARCHAR(30) default '',
 enable_xfer_presets ENUM('DISABLED','ENABLED') default 'DISABLED',
-hide_xfer_number_to_dial ENUM('DISABLED','ENABLED') default 'DISABLED'
+hide_xfer_number_to_dial ENUM('DISABLED','ENABLED') default 'DISABLED',
+manual_dial_prefix VARCHAR(20) default ''
 );
 
 CREATE TABLE vicidial_lists (
@@ -2351,7 +2352,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1241',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1242',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

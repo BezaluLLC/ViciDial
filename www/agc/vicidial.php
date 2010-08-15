@@ -306,10 +306,11 @@
 # 100803-2324 - Cleanup of URLDecode (issue #375)
 # 100811-0810 - Added webphone_url_override option from user Groups
 # 100813-0554 - Added Campaign presets
+# 100815-1015 - Added manual_dial_prefix campaign option
 #
 
-$version = '2.4-284';
-$build = '100813-0554';
+$version = '2.4-285';
+$build = '100815-1015';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -1251,7 +1252,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1332,6 +1333,7 @@ else
 				$timer_action_destination =	$row[73];
 				$enable_xfer_presets =		$row[74];
 				$hide_xfer_number_to_dial =	$row[75];
+				$manual_dial_prefix =		$row[76];
 
 				if ($manual_dial_override == 'ALLOW_ALL')
 					{$agentcall_manual = 1;}
@@ -1468,8 +1470,10 @@ else
 					{$campaign_recording='NEVER';}
 				if ($VU_alter_custphone_override=='ALLOW_ALTER')
 					{$disable_alter_custphone='N';}
+				if (strlen($manual_dial_prefix) < 1)
+					{$manual_dial_prefix = $dial_prefix;}
 				if (strlen($three_way_dial_prefix) < 1)
-					{$three_way_dial_prefix = $dial_prefix ;}
+					{$three_way_dial_prefix = $dial_prefix;}
 				if ($alt_number_dialing=='Y')
 					{$alt_phone_dialing='1';}
 				else
@@ -2791,6 +2795,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var starting_dial_level = '<?php echo $auto_dial_level ?>';
 	var dial_timeout = '<?php echo $dial_timeout ?>';
 	var dial_prefix = '<?php echo $dial_prefix ?>';
+	var manual_dial_prefix = '<?php echo $manual_dial_prefix ?>';
 	var three_way_dial_prefix = '<?php echo $three_way_dial_prefix ?>';
 	var campaign_cid = '<?php echo $campaign_cid ?>';
 	var use_custom_cid = '<?php echo $use_custom_cid ?>';
@@ -5715,7 +5720,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			if (prefix_choice.length > 0)
 				{var call_prefix = prefix_choice;}
 			else
-				{var call_prefix = dial_prefix;}
+				{var call_prefix = manual_dial_prefix;}
 
 			manDiaLnext_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLnextCaLL&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&preview=" + man_preview + "&agent_log_id=" + agent_log_id + "&callback_id=" + mdnCBid + "&lead_id=" + mdnBDleadid + "&phone_code=" + mdnDiaLCodE + "&phone_number=" + mdnPhonENumbeR + "&list_id=" + mdnLisT_id + "&stage=" + mdnStagE  + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&omit_phone_code=" + omit_phone_code + "&manual_dial_filter=" + manual_dial_filter + "&vendor_lead_code=" + mdVendorid + "&usegroupalias=" + mdgroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&vtiger_callback_id=" + vtiger_callback_id + "&dial_method=" + dial_method;
 			//		alert(manual_dial_filter + "\n" +manDiaLnext_query);
@@ -6444,7 +6449,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			if (prefix_choice.length > 0)
 				{var call_prefix = prefix_choice;}
 			else
-				{var call_prefix = dial_prefix;}
+				{var call_prefix = manual_dial_prefix;}
 
 			manDiaLonly_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLonly&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&lead_id=" + document.vicidial_form.lead_id.value + "&phone_number=" + manDiaLonly_num + "&phone_code=" + document.vicidial_form.phone_code.value + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&omit_phone_code=" + omit_phone_code + "&usegroupalias=" + usegroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&dial_method=" + dial_method + "&agent_log_id=" + agent_log_id + "&security=" + document.vicidial_form.security_phrase.value;
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
@@ -12261,9 +12266,9 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
     <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> NEW MANUAL DIAL LEAD FOR <?php echo "$VD_login in campaign $VD_campaign" ?>:<BR><BR>Enter information below for the new lead you wish to call.
 	<BR>
 	<?php 
-	if (eregi("X",$dial_prefix))
+	if (!eregi("X",$manual_dial_prefix))
 		{
-		echo "Note: a dial prefix of $dial_prefix will be added to the beginning of this number<BR>\n";
+		echo "Note: a dial prefix of $manual_dial_prefix will be added to the beginning of this number<BR>\n";
 		}
 	?>
 	Note: all new manual dial leads will go into list <?php echo $manual_dial_list_id ?><BR><BR>

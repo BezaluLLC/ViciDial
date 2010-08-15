@@ -293,6 +293,9 @@ OTHER CHANGES:
 62. Added ability to hide the "Number to dial" field in the Transfer-conf frame
 	of the agent interface. This is a Campaign-level setting.
 
+63. Added Manual Dial Prefix to allow for a different dial path for manual dial
+	calls placed through the agent interface.
+
 
 
 

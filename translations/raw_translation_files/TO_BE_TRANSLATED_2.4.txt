@@ -377,6 +377,8 @@ CAMPAIGN PRESET LISTINGS||
 CAMPAIGN PRESET NOT DELETED||
 Show Presets Stats||
 AGENT DIAL PRESETS NAMES||
+Manual Dial Prefix||
+This optional field allows you to set the dial prefix to be used only when placing manual dial calls from the agent interface, such as using the MANUAL DIAL feature, or Dial Next Number when in the MANUAL dial method, or manual alt number dialing, or scheduled user-only callbacks. Default is empty for disabled, which will use the Dial Prefix defined in the field above. This option does not interfere with the 3way Dial Prefix option||
 
 
 AST_VICIDIAL_ingrouplist.php

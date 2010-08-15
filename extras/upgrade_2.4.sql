@@ -518,3 +518,7 @@ index (campaign_id)
 );
 
 UPDATE system_settings SET db_schema_version='1241',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD manual_dial_prefix VARCHAR(20) default '';
+
+UPDATE system_settings SET db_schema_version='1242',db_schema_update_date=NOW();
