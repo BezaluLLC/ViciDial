@@ -755,7 +755,9 @@ blind_monitor_warning ENUM('DISABLED','ALERT','NOTICE','AUDIO','ALERT_NOTICE','A
 blind_monitor_message VARCHAR(255) default 'Someone is blind monitoring your session',
 blind_monitor_filename VARCHAR(100) default '',
 inbound_queue_no_dial ENUM('DISABLED','ENABLED','ALL_SERVERS') default 'DISABLED',
-timer_action_destination VARCHAR(30) default ''
+timer_action_destination VARCHAR(30) default '',
+enable_xfer_presets ENUM('DISABLED','ENABLED') default 'DISABLED',
+hide_xfer_number_to_dial ENUM('DISABLED','ENABLED') default 'DISABLED'
 );
 
 CREATE TABLE vicidial_lists (
@@ -1707,6 +1709,8 @@ number_dialed VARCHAR(30),
 lead_id INT(9) UNSIGNED,
 callerid VARCHAR(20),
 group_alias_id VARCHAR(30),
+preset_name VARCHAR(40) default '',
+campaign_id VARCHAR(20) default '',
 index (user),
 index (call_date),
 index (group_alias_id)
@@ -2189,6 +2193,22 @@ index (phone_number),
 unique index phonefilter (phone_number, filter_phone_group_id)
 );
 
+CREATE TABLE vicidial_xfer_presets (
+campaign_id VARCHAR(20) NOT NULL,
+preset_name VARCHAR(40) NOT NULL,
+preset_number VARCHAR(50) NOT NULL,
+preset_dtmf VARCHAR(50) default '',
+preset_hide_number ENUM('Y','N') default 'N',
+index (preset_name)
+);
+
+CREATE TABLE vicidial_xfer_stats (
+campaign_id VARCHAR(20) NOT NULL,
+preset_name VARCHAR(40) NOT NULL,
+xfer_count SMALLINT(5) UNSIGNED default '0',
+index (campaign_id)
+);
+
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
 ALTER TABLE live_channels ENGINE=MEMORY;
@@ -2331,7 +2351,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1240',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1241',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

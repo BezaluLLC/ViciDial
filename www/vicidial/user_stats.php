@@ -869,9 +869,9 @@ if ($did < 1)
 
 	echo "<B>MANUAL OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)</B>\n";
 	echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-	echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2> CALL TYPE</td><td align=left><font size=2> SERVER</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> DIALED</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> CALLERID</td><td align=right><font size=2> ALIAS</td></tr>\n";
+	echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2> CALL TYPE</td><td align=left><font size=2> SERVER</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> DIALED</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> CALLERID</td><td align=right><font size=2> ALIAS</td><td align=right><font size=2> PRESET</td></tr>\n";
 
-	$stmt="select call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id from user_call_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by call_date desc limit 10000;";
+	$stmt="select call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id,preset_name from user_call_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by call_date desc limit 10000;";
 	$rslt=mysql_query($stmt, $link);
 	$logs_to_print = mysql_num_rows($rslt);
 
@@ -894,7 +894,8 @@ if ($did < 1)
 		echo "<td align=right><font size=2> $row[4] </td>\n";
 		echo "<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[5]\" target=\"_blank\">$row[5]</A> </td>\n";
 		echo "<td align=right><font size=2> $row[6] </td>\n";
-		echo "<td align=right><font size=2> $row[7] </td></tr>\n";
+		echo "<td align=right><font size=2> $row[7] </td>\n";
+		echo "<td align=right><font size=2> $row[8] </td></tr>\n";
 		}
 	echo "</TABLE><BR><BR>\n";
 	}

@@ -3709,7 +3709,9 @@ if ($stage == "end")
 				{
 				if (strlen($hangup_channels[$loop_count])>5)
 					{
-					$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Hangup','CH12346$StarTtime$loop_count','Channel: $hangup_channels[$loop_count]','','','','','','','','','');";
+					$variable = "Variable: ctuserserverconfleadphone=$loop_count$US$user$US$server_ip$US$conf_exten$US$lead_id$US$phone_number";
+
+					$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Hangup','CH12346$StarTtime$loop_count','Channel: $hangup_channels[$loop_count]','$variable','','','','','','','','');";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00096',$user,$server_ip,$session_name,$one_mysql_log);}

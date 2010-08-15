@@ -330,15 +330,21 @@ exten => 8300,1,Hangup
 
 ; astGUIclient conferences
 exten => _86000[0-4]X,1,Meetme,${EXTEN}|q
+exten => _86000[0-4]X,n,Hangup
 ; VICIDIAL conferences
 exten => _86000[5-9]X,1,Meetme,${EXTEN}|F
+exten => _86000[5-9]X,n,Hangup
 exten => _8600[1-2]XX,1,Meetme,${EXTEN}|F
+exten => _8600[1-2]XX,n,Hangup
 ; quiet entry and leaving conferences for VICIDIAL (inbound announce and SendDTMF)
 exten => _78600XXX,1,Meetme,${EXTEN:1}|Fq
+exten => _78600XXX,n,Hangup
 ; quiet monitor-only extensions for meetme rooms (for room managers)
 exten => _68600XXX,1,Meetme,${EXTEN:1}|Fmq
+exten => _68600XXX,n,Hangup
 ; quiet monitor-only entry and leaving conferences for VICIDIAL (recording)
 exten => _58600XXX,1,Meetme,${EXTEN:1}|Fmq
+exten => _58600XXX,n,Hangup
 
 ; voicelab exten
 exten => _86009XX,1,Meetme,${EXTEN}|Fmq

@@ -489,12 +489,32 @@ ALTER TABLE vicidial_inbound_dids ADD filter_clean_cid_number VARCHAR(20) defaul
 
 UPDATE system_settings SET db_schema_version='1239',db_schema_update_date=NOW();
 
-
-
-
-
 ALTER TABLE vicidial_user_groups ADD webphone_url_override VARCHAR(255) default '';
 
 ALTER TABLE vicidial_inbound_groups ADD calculate_estimated_hold_seconds SMALLINT(5) UNSIGNED default '0';
 
 UPDATE system_settings SET db_schema_version='1240',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD enable_xfer_presets ENUM('DISABLED','ENABLED') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD hide_xfer_number_to_dial ENUM('DISABLED','ENABLED') default 'DISABLED';
+
+CREATE TABLE vicidial_xfer_presets (
+campaign_id VARCHAR(20) NOT NULL,
+preset_name VARCHAR(40) NOT NULL,
+preset_number VARCHAR(50) NOT NULL,
+preset_dtmf VARCHAR(50) default '',
+preset_hide_number ENUM('Y','N') default 'N',
+index (preset_name)
+);
+
+ALTER TABLE user_call_log ADD preset_name VARCHAR(40) default '';
+ALTER TABLE user_call_log ADD campaign_id VARCHAR(20) default '';
+
+CREATE TABLE vicidial_xfer_stats (
+campaign_id VARCHAR(20) NOT NULL,
+preset_name VARCHAR(40) NOT NULL,
+xfer_count SMALLINT(5) UNSIGNED default '0',
+index (campaign_id)
+);
+
+UPDATE system_settings SET db_schema_version='1241',db_schema_update_date=NOW();

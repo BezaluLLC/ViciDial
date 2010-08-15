@@ -42,6 +42,7 @@
 #  - $agent_dialed_type - ('MANUAL_OVERRIDE','MANUAL_DIALNOW','MANUAL_PREVIEW',...)
 #  - $nodeletevdac - ('0','1')
 #  - $alertCID - ('0','1')
+#  - $preset_name = ('TESTING PRESET',...)
 #
 # CHANGELOG:
 # 50401-1002 - First build of script, Hangup function only
@@ -98,10 +99,11 @@
 # 100327-0846 - Fix for list_id override answering machine message
 # 100423-2304 - Added alertCID
 # 100527-1014 - Added SysCIDdtmfOriginate function
+# 100813-0833 - Added preset_name variable and logging
 #
 
-$version = '2.4-49';
-$build = '100527-1014';
+$version = '2.4-50';
+$build = '100813-0833';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -191,6 +193,9 @@ if (isset($_GET["nodeletevdac"]))				{$nodeletevdac=$_GET["nodeletevdac"];}
 	elseif (isset($_POST["nodeletevdac"]))		{$nodeletevdac=$_POST["nodeletevdac"];}
 if (isset($_GET["alertCID"]))				{$alertCID=$_GET["alertCID"];}
 	elseif (isset($_POST["alertCID"]))		{$alertCID=$_POST["alertCID"];}
+if (isset($_GET["preset_name"]))			{$preset_name=$_GET["preset_name"];}
+	elseif (isset($_POST["preset_name"]))	{$preset_name=$_POST["preset_name"];}
+
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -442,10 +447,31 @@ if ($ACTION=="Originate")
 
 		if ($agent_dialed_number > 0)
 			{
-			$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id) values('$user','$NOW_TIME','$agent_dialed_type','$server_ip','$exten','$channel','0','$outbound_cid','$RAWaccount')";
+			if (strlen($lead_id)<1) {$lead_id='0';}
+			$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id,preset_name,campaign_id) values('$user','$NOW_TIME','$agent_dialed_type','$server_ip','$exten','$channel','$lead_id','$outbound_cid','$RAWaccount','$preset_name','$campaign')";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00192',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			if (strlen($preset_name) > 0)
+				{
+				$stmt = "SELECT count(*) from vicidial_xfer_stats where campaign_id='$campaign' and preset_name='$preset_name';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysql_fetch_row($rslt);
+				if ($row[0] > 0)
+					{
+					$stmt = "UPDATE vicidial_xfer_stats SET xfer_count=(xfer_count+1) where campaign_id='$campaign' and preset_name='$preset_name';";
+					}
+				else
+					{
+					$stmt = "INSERT INTO vicidial_xfer_stats SET campaign_id='$campaign',preset_name='$preset_name',xfer_count='1';";
+					}
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
 			}
 		}
 	}
@@ -754,6 +780,32 @@ if ($ACTION=="RedirectVD")
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02024',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
+
+		if (strlen($preset_name) > 0)
+			{
+			$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,preset_name,campaign_id) values('$user','$NOW_TIME','BLIND_XFER','$server_ip','$exten','$channel','$lead_id','$preset_name','$campaign')";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			$stmt = "SELECT count(*) from vicidial_xfer_stats where campaign_id='$campaign' and preset_name='$preset_name';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "UPDATE vicidial_xfer_stats SET xfer_count=(xfer_count+1) where campaign_id='$campaign' and preset_name='$preset_name';";
+				}
+			else
+				{
+				$stmt = "INSERT INTO vicidial_xfer_stats SET campaign_id='$campaign',preset_name='$preset_name',xfer_count='1';";
+				}
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			}
+
 		$ACTION="Redirect";
 		}
 	}

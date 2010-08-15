@@ -1421,6 +1421,18 @@ if (isset($_GET["webphone_url_override"]))			{$webphone_url_override=$_GET["webp
 	elseif (isset($_POST["webphone_url_override"]))	{$webphone_url_override=$_POST["webphone_url_override"];}
 if (isset($_GET["calculate_estimated_hold_seconds"]))			{$calculate_estimated_hold_seconds=$_GET["calculate_estimated_hold_seconds"];}
 	elseif (isset($_POST["calculate_estimated_hold_seconds"]))	{$calculate_estimated_hold_seconds=$_POST["calculate_estimated_hold_seconds"];}
+if (isset($_GET["enable_xfer_presets"]))			{$enable_xfer_presets=$_GET["enable_xfer_presets"];}
+	elseif (isset($_POST["enable_xfer_presets"]))	{$enable_xfer_presets=$_POST["enable_xfer_presets"];}
+if (isset($_GET["hide_xfer_number_to_dial"]))			{$hide_xfer_number_to_dial=$_GET["hide_xfer_number_to_dial"];}
+	elseif (isset($_POST["hide_xfer_number_to_dial"]))	{$hide_xfer_number_to_dial=$_POST["hide_xfer_number_to_dial"];}
+if (isset($_GET["preset_name"]))			{$preset_name=$_GET["preset_name"];}
+	elseif (isset($_POST["preset_name"]))	{$preset_name=$_POST["preset_name"];}
+if (isset($_GET["preset_number"]))			{$preset_number=$_GET["preset_number"];}
+	elseif (isset($_POST["preset_number"]))	{$preset_number=$_POST["preset_number"];}
+if (isset($_GET["preset_dtmf"]))			{$preset_dtmf=$_GET["preset_dtmf"];}
+	elseif (isset($_POST["preset_dtmf"]))	{$preset_dtmf=$_POST["preset_dtmf"];}
+if (isset($_GET["preset_hide_number"]))				{$preset_hide_number=$_GET["preset_hide_number"];}
+	elseif (isset($_POST["preset_hide_number"]))	{$preset_hide_number=$_POST["preset_hide_number"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1725,6 +1737,7 @@ if ($non_latin < 1)
 	$onhold_prompt_no_block = ereg_replace("[^NY]","",$onhold_prompt_no_block);
 	$hold_time_option_no_block = ereg_replace("[^NY]","",$hold_time_option_no_block);
 	$wait_time_option_no_block = ereg_replace("[^NY]","",$wait_time_option_no_block);
+	$preset_hide_number = ereg_replace("[^NY]","",$preset_hide_number);
 
 	$qc_enabled = ereg_replace("[^0-9NY]","",$qc_enabled);
 	$active = ereg_replace("[^0-9NY]","",$active);
@@ -1777,6 +1790,9 @@ if ($non_latin < 1)
 	$queuemetrics_loginout = ereg_replace("[^0-9a-zA-Z]","",$queuemetrics_loginout);
 	$queuemetrics_callstatus = ereg_replace("[^0-9a-zA-Z]","",$queuemetrics_callstatus);
 	$filter_inbound_number = ereg_replace("[^0-9a-zA-Z]","",$filter_inbound_number);
+	$enable_xfer_presets = ereg_replace("[^0-9a-zA-Z]","",$enable_xfer_presets);
+	$hide_xfer_number_to_dial = ereg_replace("[^0-9a-zA-Z]","",$hide_xfer_number_to_dial);
+
 
 	### DIGITS and Dots
 	$server_ip = ereg_replace("[^\.0-9]","",$server_ip);
@@ -1803,6 +1819,8 @@ if ($non_latin < 1)
 	$survey_fourth_digit = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$survey_fourth_digit);
 	$survey_third_exten = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$survey_third_exten);
 	$survey_fourth_exten = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$survey_fourth_exten);
+	$preset_dtmf = ereg_replace("[^ \,\*\#0-9a-zA-Z]","",$preset_dtmf);
+
 
 	### ALPHACAPS-NUMERIC
 	$xferconf_a_number = ereg_replace("[^0-9A-Z]","",$xferconf_a_number);
@@ -1999,6 +2017,9 @@ if ($non_latin < 1)
 	$sounds_web_server = ereg_replace("[^\.0-9a-zA-Z]","",$sounds_web_server);
 	### ALPHA-NUMERIC and spaces
 	$lead_order = ereg_replace("[^ 0-9a-zA-Z]","",$lead_order);
+	### ALPHA-NUMERIC and spaces and dashes and underscores
+	$preset_name = ereg_replace("[^ -\_0-9a-zA-Z]","",$preset_name);
+
 	### ALPHA-NUMERIC and hash
 	$group_color = ereg_replace("[^\#0-9a-zA-Z]","",$group_color);
 	### ALPHA-NUMERIC and hash and star and dot and underscore
@@ -2011,6 +2032,8 @@ if ($non_latin < 1)
 	$filter_voicemail_ext = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$filter_voicemail_ext);
 	$filter_phone_code = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$filter_phone_code);
 	$filter_phone = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$filter_phone);
+	$preset_number = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$preset_number);
+
 
 	### ALPHA-NUMERIC and spaces dots, commas, dashes, underscores
 	$adaptive_dl_diff_target = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$adaptive_dl_diff_target);
@@ -2471,11 +2494,12 @@ else
 # 100805-1539 - Added option to clean up cid numbers when calls come into DIDs
 # 100806-0607 - Added validation for remote agents settings, user_start must be valid user, number of lines must not overlap
 # 100811-0827 - Added webphone_url_override to User Groups and calculate_estimated_hold_seconds to In-Groups
+# 100813-0544 - Added campaign presets and option to hide xfer number to dial
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-272';
-$build = '100811-0827';
+$admin_version = '2.4-273';
+$build = '100813-0544';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -2708,6 +2732,7 @@ if ($ADD==26)			{$hh='campaigns';	$sh='autoalt';	echo "New Auto Alt Dial Status"
 if ($ADD==27)			{$hh='campaigns';	$sh='pause';	echo "New Agent Pause Code";}
 if ($ADD==28)			{$hh='campaigns';	$sh='dialstat';	echo "Campaign Dial Status Added";}
 if ($ADD==29)			{$hh='campaigns';	$sh='listmix';	echo "Campaign List Mix Added";}
+if ($ADD==201)			{$hh='campaigns';	$sh='preset';	echo "Campaign Preset Added";}
 if ($ADD==211)			{$hh='lists';		echo "New List Addition";}
 if ($ADD==2111)			{$hh='ingroups';	echo "New In-Group Addition";}
 if ($ADD==2011)			{$hh='ingroups';	echo "New Copied In-Group Addition";}
@@ -2753,6 +2778,7 @@ if ($ADD==31)
 	if ($SUB==28)	{echo " - QC";}
 	if ($SUB==29)	{echo " - List Mixes";}
 	if ($SUB=='20A')	{echo " - Survey";}
+	if ($SUB==201)	{echo " - Presets";}
 	}
 if ($ADD==34)
 	{
@@ -2765,6 +2791,7 @@ if ($ADD==34)
 	if ($SUB==28)	{echo " - QC";}
 	if ($SUB==29)	{echo " - List Mixes";}
 	if ($SUB=='20A')	{echo " - Survey";}
+	if ($SUB==201)	{echo " - Presets";}
 	}
 if ($ADD==32)			{$hh='campaigns';	$sh='status';	echo "Campaign Statuses";}
 if ($ADD==33)			{$hh='campaigns';	$sh='hotkey';	echo "Campaign HotKeys";}
@@ -2773,6 +2800,7 @@ if ($ADD==36)			{$hh='campaigns';	$sh='autoalt';	echo "Campaign Auto Alt Dial St
 if ($ADD==37)			{$hh='campaigns';	$sh='pause';	echo "Campaign Agent Pause Codes";}
 if ($ADD==38)			{$hh='campaigns';	$sh='dialstat';	echo "Campaign Dial Statuses";}
 if ($ADD==39)			{$hh='campaigns';	$sh='listmix';	echo "Campaign List Mixes";}
+if ($ADD==301)			{$hh='campaigns';	$sh='preset';	echo "Campaign Presets";}
 if ($ADD==311)			{$hh='lists';		echo "Modify List";}
 if ($ADD==3111)			{$hh='ingroups';	echo "Modify In-Group";}
 if ($ADD==3311)			{$hh='ingroups';	echo "Modify DID";}
@@ -2813,6 +2841,7 @@ if ($ADD==45)			{$hh='campaigns';	$sh='recycle';	echo "Modify Campaign Lead Recy
 if ($ADD==47)			{$hh='campaigns';	$sh='pause';	echo "Modify Agent Pause Code";}
 if ($ADD==48)			{$hh='campaigns';	$sh='qc';	echo "Modify Campaign QC Settings";}
 if ($ADD==49)			{$hh='campaigns';	$sh='listmix';	echo "Modify Campaign List Mix";}
+if ($ADD==401)			{$hh='campaigns';	$sh='preset';	echo "Modify Campaign Preset";}
 if ($ADD=='40A')		{$hh='campaigns';	$sh='survey';	echo "Modify Campaign Survey";}
 if ($ADD==411)			{$hh='lists';		echo "Modify List";}
 if ($ADD==4111)			{$hh='ingroups';	echo "Modify In-Group";}
@@ -2880,6 +2909,7 @@ if ($ADD==66)			{$hh='campaigns';	$sh='autoalt';	echo "Delete Auto Alt Dial Stat
 if ($ADD==67)			{$hh='campaigns';	$sh='pause';	echo "Delete Agent Pause Code";}
 if ($ADD==68)			{$hh='campaigns';	$sh='dialstat';	echo "Campaign Dial Status Removed";}
 if ($ADD==69)			{$hh='campaigns';	$sh='listmix';	echo "Campaign List Mix Removed";}
+if ($ADD==601)			{$hh='campaigns';	$sh='preset';	echo "Campaign Preset Removed";}
 if ($ADD==611)			{$hh='lists';		echo "Delete List";}
 if ($ADD==6111)			{$hh='ingroups';	echo "Delete In-Group";}
 if ($ADD==6311)			{$hh='ingroups';	echo "Delete DID";}
@@ -4323,6 +4353,16 @@ if ($ADD==99999)
 	<B>PrePopulate Transfer Preset -</B> This option will fill in the Number to Dial field in the Transfer Conference frame of the agent screen if defined. Default is N for disabled.
 
 	<BR>
+	<A NAME="vicidial_campaigns-enable_xfer_presets">
+	<BR>
+	<B>Enable Transfer Presets -</B> This option will enable the Presets sub menu to appear at the top of the Campaign Modification page, and also you will have the ability to specify Preset dialing numbers for Agents to use in the Transfer-Conference frame of the agent interface. Default is DISABLED.
+
+	<BR>
+	<A NAME="vicidial_campaigns-hide_xfer_number_to_dial">
+	<BR>
+	<B>Hide Transfer Number to Dial -</B> This option will hide the Number to Dial field in the Transfer-Conference frame of the agent interface. Default is DISABLED.
+
+	<BR>
 	<A NAME="vicidial_campaigns-timer_action">
 	<BR>
 	<B>Timer Action -</B> This feature allows you to trigger actions after a certain amount of time. the D1 and D2 DIAL options will launch a call to the Transfer Conference Number presets and send them to the agent session, this is usually used for simple IVR validation AGI applications or just to play a pre-recorded message. WEBFORM will open the web form address. MESSAGE_ONLY will simply display the message that is in the field below. NONE will disable this feature and is the default. HANGUP will hang up the call when the timer is triggered, CALLMENU will send the call to the Call Menu specified in the Timer Action Destination field, EXTENSION will send the call to the Extension that is specified in the Timer Action Destination field, IN_GROUP will send the call to the In-Group specified in the Timer Action Destination field.
@@ -5509,6 +5549,17 @@ if ($ADD==99999)
 	<A NAME="vicidial_pause_codes">
 	<BR>
 	<B>If the Agent Pause Codes Active field is set to active then the agents will be able to select from these pause codes when they click on the PAUSE button on their screens. This data is then stored in the vicidial agent log. The Pause code must contain only letters and numbers and be less than 7 characters long. The pause code name can be no longer than 30 characters.</B>
+
+
+
+
+
+	<BR><BR><BR><BR>
+
+	<B><FONT SIZE=3>VICIDIAL CAMPAIGN PRESETS</FONT></B><BR><BR>
+	<A NAME="vicidial_xfer_presets">
+	<BR>
+	<B>If the Campaign setting for presets is set to ENABLED then you have the ability to define Transfer-Conference presets that will be available to the agent allowing them to 3-way call these presets or blind transfer calls to these preset numbers. These presets also have an option to hide the number associated with each preset from the agent.</B>
 
 
 
@@ -9826,7 +9877,7 @@ if ($ADD==20)
 				{
 				echo "<br><B>CAMPAIGN COPIED: $campaign_id copied from $source_campaign_id</B>\n";
 
-				$stmt="INSERT INTO vicidial_campaigns (campaign_name,campaign_id,active,dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,list_order_mix,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,qc_get_record_launch,qc_show_recording,qc_shift_id,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_fourth_digit,survey_third_audio_file,survey_fourth_audio_file,survey_third_status,survey_fourth_status,survey_third_exten,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,waitforsilence_options,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,queuemetrics_callstatus_override,extension_appended_cidname,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,inbound_queue_no_dial,timer_action_destination) SELECT \"$campaign_name\",\"$campaign_id\",\"N\",dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,\"DISABLED\",campaign_allow_inbound,manual_dial_list_id,default_xfer_group,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,qc_get_record_launch,qc_show_recording,qc_shift_id,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_fourth_digit,survey_third_audio_file,survey_fourth_audio_file,survey_third_status,survey_fourth_status,survey_third_exten,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,waitforsilence_options,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,queuemetrics_callstatus_override,extension_appended_cidname,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,inbound_queue_no_dial,timer_action_destination from vicidial_campaigns where campaign_id='$source_campaign_id';";
+				$stmt="INSERT INTO vicidial_campaigns (campaign_name,campaign_id,active,dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,list_order_mix,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,qc_get_record_launch,qc_show_recording,qc_shift_id,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_fourth_digit,survey_third_audio_file,survey_fourth_audio_file,survey_third_status,survey_fourth_status,survey_third_exten,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,waitforsilence_options,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,queuemetrics_callstatus_override,extension_appended_cidname,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,inbound_queue_no_dial,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial) SELECT \"$campaign_name\",\"$campaign_id\",\"N\",dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,\"DISABLED\",campaign_allow_inbound,manual_dial_list_id,default_xfer_group,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,qc_get_record_launch,qc_show_recording,qc_shift_id,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_fourth_digit,survey_third_audio_file,survey_fourth_audio_file,survey_third_status,survey_fourth_status,survey_third_exten,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,waitforsilence_options,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,queuemetrics_callstatus_override,extension_appended_cidname,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,inbound_queue_no_dial,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial from vicidial_campaigns where campaign_id='$source_campaign_id';";
 				$rslt=mysql_query($stmt, $link);
 
 				$stmtA="INSERT INTO vicidial_campaign_stats (campaign_id) values('$campaign_id');";
@@ -9842,6 +9893,12 @@ if ($ADD==20)
 				$rslt=mysql_query($stmtA, $link);
 
 				$stmtA="INSERT INTO vicidial_pause_codes (pause_code,pause_code_name,billable,campaign_id) SELECT pause_code,pause_code_name,billable,\"$campaign_id\" from vicidial_pause_codes where campaign_id='$source_campaign_id';";
+				$rslt=mysql_query($stmtA, $link);
+
+				$stmtA="INSERT INTO vicidial_xfer_presets (campaign_id,preset_name,preset_number,preset_dtmf,preset_hide_number) SELECT \"$campaign_id\",preset_name,preset_number,preset_dtmf,preset_hide_number from vicidial_xfer_presets where campaign_id='$source_campaign_id';";
+				$rslt=mysql_query($stmtA, $link);
+
+				$stmtA="INSERT INTO vicidial_xfer_stats (campaign_id,preset_name) SELECT \"$campaign_id\",preset_name from vicidial_xfer_presets where campaign_id='$source_campaign_id';";
 				$rslt=mysql_query($stmtA, $link);
 
 				### LOG INSERTION Admin Log Table ###
@@ -10125,6 +10182,49 @@ if ($ADD==28)
 			}
 		}
 	#$SUB=28;
+	$ADD=31;
+	}
+
+
+######################
+# ADD=201 adds new preset to the campaign presets
+######################
+if ($ADD==201)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	$stmt="SELECT count(*) from vicidial_xfer_presets where campaign_id='$campaign_id' and preset_name='$preset_name';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	if ($row[0] > 0)
+		{echo "<br>PRESET NOT ADDED - there is already an entry for this campaign with this preset\n";}
+	else
+		{
+		if ( (strlen($campaign_id) < 2) or (strlen($preset_name) < 1) or (strlen($preset_number) < 1) )
+			{
+			echo "<br>PRESET NOT ADDED - Please go back and look at the data you entered\n";
+			echo "<br>preset name must be between 1 and 40 characters in length\n";
+			echo "<br>preset number must be between 2 and 50 characters in length\n";
+			}
+		else
+			{
+			echo "<br><B>PRESET ADDED: $campaign_id - $preset_name - $preset_number</B>\n";
+
+			$stmt="INSERT INTO vicidial_xfer_presets(campaign_id,preset_name,preset_number,preset_dtmf,preset_hide_number) values('$campaign_id','$preset_name','$preset_number','$preset_dtmf','$preset_hide_number');";
+			$rslt=mysql_query($stmt, $link);
+
+			$stmt="INSERT INTO vicidial_xfer_stats(campaign_id,preset_name) values('$campaign_id','$preset_name');";
+			$rslt=mysql_query($stmt, $link);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_PRESET', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN PRESET', event_sql=\"$SQL_log\", event_notes='Preset: $preset_name - $preset_number';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
+		}
+	$SUB=201;
 	$ADD=31;
 	}
 
@@ -12599,7 +12699,7 @@ if ($ADD==41)
 				if ( (!ereg("DISABLED",$list_order_mix)) and ($hopper_level < 100) )
 					{$hopper_level='100';}
 
-				$stmtA="UPDATE vicidial_campaigns set campaign_name='$campaign_name',active='$active',dial_status_a='$dial_status_a',dial_status_b='$dial_status_b',dial_status_c='$dial_status_c',dial_status_d='$dial_status_d',dial_status_e='$dial_status_e',lead_order='$lead_order',allow_closers='$allow_closers',hopper_level='$hopper_level', $adlSQL next_agent_call='$next_agent_call', local_call_time='$local_call_time', voicemail_ext='$voicemail_ext', dial_timeout='$dial_timeout', dial_prefix='$dial_prefix', campaign_cid='$campaign_cid', campaign_vdad_exten='$campaign_vdad_exten', web_form_address='" . mysql_real_escape_string($web_form_address) . "', park_ext='$park_ext', park_file_name='$park_file_name', campaign_rec_exten='$campaign_rec_exten', campaign_recording='$campaign_recording', campaign_rec_filename='$campaign_rec_filename', campaign_script='$script_id', get_call_launch='$get_call_launch', am_message_exten='$am_message_exten', amd_send_to_vmx='$amd_send_to_vmx', xferconf_a_dtmf='$xferconf_a_dtmf',xferconf_a_number='$xferconf_a_number',xferconf_b_dtmf='$xferconf_b_dtmf',xferconf_b_number='$xferconf_b_number',lead_filter_id='$lead_filter_id',alt_number_dialing='$alt_number_dialing',scheduled_callbacks='$scheduled_callbacks',drop_action='$drop_action',drop_call_seconds='$drop_call_seconds',safe_harbor_exten='$safe_harbor_exten',wrapup_seconds='$wrapup_seconds',wrapup_message='$wrapup_message',closer_campaigns='$groups_value',use_internal_dnc='$use_internal_dnc',allcalls_delay='$allcalls_delay',omit_phone_code='$omit_phone_code',dial_method='$dial_method',available_only_ratio_tally='$available_only_ratio_tally',adaptive_dropped_percentage='$adaptive_dropped_percentage',adaptive_maximum_level='$adaptive_maximum_level',adaptive_latest_server_time='$adaptive_latest_server_time',adaptive_intensity='$adaptive_intensity',adaptive_dl_diff_target='$adaptive_dl_diff_target',concurrent_transfers='$concurrent_transfers',auto_alt_dial='$auto_alt_dial',agent_pause_codes_active='$agent_pause_codes_active',campaign_description='$campaign_description',campaign_changedate='$SQLdate',campaign_stats_refresh='$campaign_stats_refresh',disable_alter_custdata='$disable_alter_custdata',no_hopper_leads_logins='$no_hopper_leads_logins',list_order_mix='$list_order_mix',campaign_allow_inbound='$campaign_allow_inbound',manual_dial_list_id='$manual_dial_list_id',default_xfer_group='$default_xfer_group',xfer_groups='$XFERgroups_value',queue_priority='$queue_priority',drop_inbound_group='$drop_inbound_group',disable_alter_custphone='$disable_alter_custphone',display_queue_count='$display_queue_count',manual_dial_filter='$manual_dial_filter',agent_clipboard_copy='$agent_clipboard_copy',agent_extended_alt_dial='$agent_extended_alt_dial',use_campaign_dnc='$use_campaign_dnc',three_way_call_cid='$three_way_call_cid',three_way_dial_prefix='$three_way_dial_prefix',web_form_target='$web_form_target',vtiger_search_category='$vtiger_search_category',vtiger_create_call_record='$vtiger_create_call_record',vtiger_create_lead_record='$vtiger_create_lead_record',vtiger_screen_login='$vtiger_screen_login',cpd_amd_action='$cpd_amd_action',agent_allow_group_alias='$agent_allow_group_alias',default_group_alias='$default_group_alias',vtiger_search_dead='$vtiger_search_dead',vtiger_status_call='$vtiger_status_call',drop_lockout_time='$drop_lockout_time',quick_transfer_button='$quick_transfer_button',prepopulate_transfer_preset='$prepopulate_transfer_preset',drop_rate_group='$drop_rate_group',view_calls_in_queue='$view_calls_in_queue',view_calls_in_queue_launch='$view_calls_in_queue_launch',grab_calls_in_queue='$grab_calls_in_queue',call_requeue_button='$call_requeue_button',pause_after_each_call='$pause_after_each_call',no_hopper_dialing='$no_hopper_dialing',agent_dial_owner_only='$agent_dial_owner_only',agent_display_dialable_leads='$agent_display_dialable_leads',web_form_address_two='" . mysql_real_escape_string($web_form_address_two) . "',waitforsilence_options='$waitforsilence_options',agent_select_territories='$agent_select_territories',crm_popup_login='$crm_popup_login',crm_login_address='" . mysql_real_escape_string($crm_login_address) . "',timer_action='$timer_action',timer_action_message='$timer_action_message',timer_action_seconds='$timer_action_seconds',start_call_url='" . mysql_real_escape_string($start_call_url) . "',dispo_call_url='" . mysql_real_escape_string($dispo_call_url) . "',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',use_custom_cid='$use_custom_cid',scheduled_callbacks_alert='$scheduled_callbacks_alert',queuemetrics_callstatus_override='$queuemetrics_callstatus',extension_appended_cidname='$extension_appended_cidname',scheduled_callbacks_count='$scheduled_callbacks_count',manual_dial_override='$manual_dial_override',blind_monitor_warning='$blind_monitor_warning',blind_monitor_message='" . mysql_real_escape_string($blind_monitor_message) . "',blind_monitor_filename='$blind_monitor_filename',inbound_queue_no_dial='$inbound_queue_no_dial',timer_action_destination='$timer_action_destination' where campaign_id='$campaign_id';";
+				$stmtA="UPDATE vicidial_campaigns set campaign_name='$campaign_name',active='$active',dial_status_a='$dial_status_a',dial_status_b='$dial_status_b',dial_status_c='$dial_status_c',dial_status_d='$dial_status_d',dial_status_e='$dial_status_e',lead_order='$lead_order',allow_closers='$allow_closers',hopper_level='$hopper_level', $adlSQL next_agent_call='$next_agent_call', local_call_time='$local_call_time', voicemail_ext='$voicemail_ext', dial_timeout='$dial_timeout', dial_prefix='$dial_prefix', campaign_cid='$campaign_cid', campaign_vdad_exten='$campaign_vdad_exten', web_form_address='" . mysql_real_escape_string($web_form_address) . "', park_ext='$park_ext', park_file_name='$park_file_name', campaign_rec_exten='$campaign_rec_exten', campaign_recording='$campaign_recording', campaign_rec_filename='$campaign_rec_filename', campaign_script='$script_id', get_call_launch='$get_call_launch', am_message_exten='$am_message_exten', amd_send_to_vmx='$amd_send_to_vmx', xferconf_a_dtmf='$xferconf_a_dtmf',xferconf_a_number='$xferconf_a_number',xferconf_b_dtmf='$xferconf_b_dtmf',xferconf_b_number='$xferconf_b_number',lead_filter_id='$lead_filter_id',alt_number_dialing='$alt_number_dialing',scheduled_callbacks='$scheduled_callbacks',drop_action='$drop_action',drop_call_seconds='$drop_call_seconds',safe_harbor_exten='$safe_harbor_exten',wrapup_seconds='$wrapup_seconds',wrapup_message='$wrapup_message',closer_campaigns='$groups_value',use_internal_dnc='$use_internal_dnc',allcalls_delay='$allcalls_delay',omit_phone_code='$omit_phone_code',dial_method='$dial_method',available_only_ratio_tally='$available_only_ratio_tally',adaptive_dropped_percentage='$adaptive_dropped_percentage',adaptive_maximum_level='$adaptive_maximum_level',adaptive_latest_server_time='$adaptive_latest_server_time',adaptive_intensity='$adaptive_intensity',adaptive_dl_diff_target='$adaptive_dl_diff_target',concurrent_transfers='$concurrent_transfers',auto_alt_dial='$auto_alt_dial',agent_pause_codes_active='$agent_pause_codes_active',campaign_description='$campaign_description',campaign_changedate='$SQLdate',campaign_stats_refresh='$campaign_stats_refresh',disable_alter_custdata='$disable_alter_custdata',no_hopper_leads_logins='$no_hopper_leads_logins',list_order_mix='$list_order_mix',campaign_allow_inbound='$campaign_allow_inbound',manual_dial_list_id='$manual_dial_list_id',default_xfer_group='$default_xfer_group',xfer_groups='$XFERgroups_value',queue_priority='$queue_priority',drop_inbound_group='$drop_inbound_group',disable_alter_custphone='$disable_alter_custphone',display_queue_count='$display_queue_count',manual_dial_filter='$manual_dial_filter',agent_clipboard_copy='$agent_clipboard_copy',agent_extended_alt_dial='$agent_extended_alt_dial',use_campaign_dnc='$use_campaign_dnc',three_way_call_cid='$three_way_call_cid',three_way_dial_prefix='$three_way_dial_prefix',web_form_target='$web_form_target',vtiger_search_category='$vtiger_search_category',vtiger_create_call_record='$vtiger_create_call_record',vtiger_create_lead_record='$vtiger_create_lead_record',vtiger_screen_login='$vtiger_screen_login',cpd_amd_action='$cpd_amd_action',agent_allow_group_alias='$agent_allow_group_alias',default_group_alias='$default_group_alias',vtiger_search_dead='$vtiger_search_dead',vtiger_status_call='$vtiger_status_call',drop_lockout_time='$drop_lockout_time',quick_transfer_button='$quick_transfer_button',prepopulate_transfer_preset='$prepopulate_transfer_preset',drop_rate_group='$drop_rate_group',view_calls_in_queue='$view_calls_in_queue',view_calls_in_queue_launch='$view_calls_in_queue_launch',grab_calls_in_queue='$grab_calls_in_queue',call_requeue_button='$call_requeue_button',pause_after_each_call='$pause_after_each_call',no_hopper_dialing='$no_hopper_dialing',agent_dial_owner_only='$agent_dial_owner_only',agent_display_dialable_leads='$agent_display_dialable_leads',web_form_address_two='" . mysql_real_escape_string($web_form_address_two) . "',waitforsilence_options='$waitforsilence_options',agent_select_territories='$agent_select_territories',crm_popup_login='$crm_popup_login',crm_login_address='" . mysql_real_escape_string($crm_login_address) . "',timer_action='$timer_action',timer_action_message='$timer_action_message',timer_action_seconds='$timer_action_seconds',start_call_url='" . mysql_real_escape_string($start_call_url) . "',dispo_call_url='" . mysql_real_escape_string($dispo_call_url) . "',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',use_custom_cid='$use_custom_cid',scheduled_callbacks_alert='$scheduled_callbacks_alert',queuemetrics_callstatus_override='$queuemetrics_callstatus',extension_appended_cidname='$extension_appended_cidname',scheduled_callbacks_count='$scheduled_callbacks_count',manual_dial_override='$manual_dial_override',blind_monitor_warning='$blind_monitor_warning',blind_monitor_message='" . mysql_real_escape_string($blind_monitor_message) . "',blind_monitor_filename='$blind_monitor_filename',inbound_queue_no_dial='$inbound_queue_no_dial',timer_action_destination='$timer_action_destination',enable_xfer_presets='$enable_xfer_presets',hide_xfer_number_to_dial='$hide_xfer_number_to_dial' where campaign_id='$campaign_id';";
 				$rslt=mysql_query($stmtA, $link);
 
 				if ($reset_hopper == 'Y')
@@ -13328,6 +13428,48 @@ if ($ADD==49)
 		exit;
 		}
 	$SUB=29;
+	$ADD=31;	# go to campaign modification form below
+	}
+
+
+######################
+# ADD=401 modify campaign preset in the system
+######################
+
+if ($ADD==401)
+	{
+	if ($LOGmodify_campaigns==1)
+		{
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		if ( (strlen($campaign_id) < 2) or (strlen($preset_name) < 1) or (strlen($preset_number) < 1) )
+			{
+			echo "<br>PRESET NOT MODIFIED - Please go back and look at the data you entered\n";
+			echo "<br>preset name must be between 1 and 40 characters in length\n";
+			echo "<br>preset number must be between 2 and 50 characters in length\n";
+			}
+		else
+			{
+			echo "<br><B>PRESET MODIFIED: $campaign_id - $preset_name - $preset_number</B>\n";
+
+			$stmt="UPDATE vicidial_xfer_presets SET preset_dtmf='$preset_dtmf',preset_number='$preset_number',preset_hide_number='$preset_hide_number' where campaign_id='$campaign_id' and preset_name='$preset_name';";
+			$rslt=mysql_query($stmt, $link);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_PRESET', event_type='MODIFY', record_id='$campaign_id', event_code='ADMIN MODIFY CAMPAIGN PRESET', event_sql=\"$SQL_log\", event_notes='Preset: $preset_name - $preset_number';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	$SUB=201;
 	$ADD=31;	# go to campaign modification form below
 	}
 
@@ -15771,6 +15913,12 @@ if ($ADD==61)
 		$stmt="DELETE from vicidial_campaigns_list_mix where campaign_id='$campaign_id';";
 		$rslt=mysql_query($stmt, $link);
 
+		$stmt="DELETE from vicidial_xfer_presets where campaign_id='$campaign_id';";
+		$rslt=mysql_query($stmt, $link);
+
+		$stmt="DELETE from vicidial_xfer_stats where campaign_id='$campaign_id';";
+		$rslt=mysql_query($stmt, $link);		
+
 		echo "<br>REMOVING LIST HOPPER LEADS FROM OLD CAMPAIGN HOPPER ($campaign_id)\n";
 		$stmt="DELETE from vicidial_hopper where campaign_id='$campaign_id';";
 		$rslt=mysql_query($stmt, $link);
@@ -16239,6 +16387,51 @@ if ($ADD==68)
 	#$SUB=28;
 	$ADD=31;	# go to campaign modification form below
 	}
+
+
+######################
+# ADD=601 delete preset in the system
+######################
+
+if ($ADD==601)
+	{
+	if ($LOGmodify_campaigns==1)
+		{
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		if ( (strlen($campaign_id) < 2) or (strlen($preset_name) < 1) )
+			{
+			echo "<br>CAMPAIGN PRESET NOT DELETED - Please go back and look at the data you entered\n";
+			echo "<br>preset name must be between 1 and 40 characters in length\n";
+			}
+		else
+			{
+			echo "<br><B>CAMPAIGN PRESET DELETED: $campaign_id - $preset_name</B>\n";
+
+			$stmt="DELETE FROM vicidial_xfer_presets where campaign_id='$campaign_id' and preset_name='$preset_name';";
+			$rslt=mysql_query($stmt, $link);
+
+			$stmt="DELETE FROM vicidial_xfer_stats where campaign_id='$campaign_id' and preset_name='$preset_name';";
+			$rslt=mysql_query($stmt, $link);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_PRESETS', event_type='DELETE', record_id='$campaign_id', event_code='ADMIN DELETE CAMPAIGN PRESET', event_sql=\"$SQL_log\", event_notes='Preset: $preset_name';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	$SUB=201;
+	$ADD=31;	# go to campaign modification form below
+	}
+
 
 ######################
 # ADD=611 delete list record and all leads within it
@@ -17521,7 +17714,7 @@ if ($ADD==31)
 		$enable_vtiger_integration_LU =		$row[0];
 		$vtiger_url_LU =					$row[1];
 
-		$stmt="SELECT campaign_id,campaign_name,active,dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,list_order_mix,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_third_audio_file,survey_third_status,survey_third_exten,survey_fourth_digit,survey_fourth_audio_file,survey_fourth_status,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,waitforsilence_options,agent_select_territories,campaign_calldate,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,queuemetrics_callstatus_override,extension_appended_cidname,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,inbound_queue_no_dial,timer_action_destination from vicidial_campaigns where campaign_id='$campaign_id';";
+		$stmt="SELECT campaign_id,campaign_name,active,dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,list_order_mix,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_third_audio_file,survey_third_status,survey_third_exten,survey_fourth_digit,survey_fourth_audio_file,survey_fourth_status,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,waitforsilence_options,agent_select_territories,campaign_calldate,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,queuemetrics_callstatus_override,extension_appended_cidname,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,inbound_queue_no_dial,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial from vicidial_campaigns where campaign_id='$campaign_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$campaign_name = $row[1];
@@ -17673,6 +17866,8 @@ if ($ADD==31)
 		$blind_monitor_filename = $row[150];
 		$inbound_queue_no_dial = $row[151];
 		$timer_action_destination = $row[152];
+		$enable_xfer_presets = $row[153];
+		$hide_xfer_number_to_dial = $row[154];
 
 
 	if (ereg("DISABLED",$list_order_mix))
@@ -17862,6 +18057,8 @@ if ($ADD==31)
 		else		{$camp_listmix_color=$campaigns_color;}
 	if ($SUB=='20A')	{$camp_survey_color=$subcamp_color;}
 		else		{$camp_survey_color=$campaigns_color;}
+	if ($SUB==201)	{$camp_preset_color=$subcamp_color;}
+		else		{$camp_preset_color=$campaigns_color;}
 	echo "<TABLE WIDTH=$page_width CELLPADDING=2 CELLSPACING=0><TR BGCOLOR=\"$campaigns_color\">\n";
 	echo "<TD><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\"> <B>$row[0]</B>: </font></TD>";
 	echo "<TD><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">Basic </font></a></TD>";
@@ -17877,6 +18074,10 @@ if ($ADD==31)
 		echo "<TD BGCOLOR=\"$camp_survey_color\"><a href=\"$PHP_SELF?ADD=31&SUB=20A&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">Survey</font></a></TD>";
 		}
 	echo "<TD BGCOLOR=\"$camp_pause_color\"><a href=\"$PHP_SELF?ADD=31&SUB=27&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">Pause Codes</font></a></TD>";
+	if ($enable_xfer_presets == 'ENABLED')
+		{
+		echo "<TD BGCOLOR=\"$camp_preset_color\"><a href=\"$PHP_SELF?ADD=31&SUB=201&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">Presets</font></a></TD>";
+		}
 	if ($SSqc_features_active > 0)
 		{
 		echo "<TD BGCOLOR=\"$camp_qc_color\"><a href=\"$PHP_SELF?ADD=31&SUB=28&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">QC</font></a></TD>";
@@ -18328,6 +18529,10 @@ if ($ADD==31)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Transfer-Conf Number 4: </td><td align=left><input type=text name=xferconf_d_number size=20 maxlength=50 value=\"$xferconf_d_number\">$NWB#vicidial_campaigns-xferconf_a_dtmf$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Transfer-Conf Number 5: </td><td align=left><input type=text name=xferconf_e_number size=20 maxlength=50 value=\"$xferconf_e_number\">$NWB#vicidial_campaigns-xferconf_a_dtmf$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#8EBCFD><td align=right>Enable Transfer Presets: </td><td align=left><select size=1 name=enable_xfer_presets><option>DISABLED</option><option>ENABLED</option><option SELECTED>$enable_xfer_presets</option></select>$NWB#vicidial_campaigns-enable_xfer_presets$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#8EBCFD><td align=right>Hide Transfer Number to Dial: </td><td align=left><select size=1 name=hide_xfer_number_to_dial><option>DISABLED</option><option>ENABLED</option><option SELECTED>$hide_xfer_number_to_dial</option></select>$NWB#vicidial_campaigns-hide_xfer_number_to_dial$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Quick Transfer Button: </td><td align=left><select size=1 name=quick_transfer_button><option>N</option><option>IN_GROUP</option><option>PRESET_1</option><option>PRESET_2</option><option>PRESET_3</option><option>PRESET_4</option><option>PRESET_5</option><option SELECTED>$quick_transfer_button</option><option>LOCKED_IN_GROUP</option><option>LOCKED_PRESET_1</option><option>LOCKED_PRESET_2</option><option>LOCKED_PRESET_3</option><option>LOCKED_PRESET_4</option><option>LOCKED_PRESET_5</option></select>$NWB#vicidial_campaigns-quick_transfer_button$NWE</td></tr>\n";
 
@@ -19101,6 +19306,52 @@ if ($ADD==31)
 		echo "<BR></center></FORM><br>\n";
 		}
 
+
+	##### CAMPAIGN PRESETS #####
+	if ($SUB==201)
+		{
+		echo "<br><br><b>PRESETS FOR THIS CAMPAIGN: &nbsp; $NWB#vicidial_xfer_presets$NWE</b><br>\n";
+		echo "<center><TABLE width=700 cellspacing=3>\n";
+		echo "<tr><td>PRESET NAME</td><td>NUMBER</td><td>DTMF</td><td>HIDE</td><td>MODIFY</td><td>DELETE</td></tr>\n";
+
+		$stmt="SELECT preset_name,preset_number,preset_dtmf,preset_hide_number from vicidial_xfer_presets where campaign_id='$campaign_id' order by preset_name";
+		$rslt=mysql_query($stmt, $link);
+		$presets_to_print = mysql_num_rows($rslt);
+		$o=0;
+		while ($presets_to_print > $o) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$o++;
+
+			if (eregi("1$|3$|5$|7$|9$", $o))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+
+			echo "<tr $bgcolor><td><form action=$PHP_SELF method=POST><font size=2>$rowx[0]\n";
+			echo "<input type=hidden name=ADD value=401>\n";
+			echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
+			echo "<input type=hidden name=preset_name value=\"$rowx[0]\"> &nbsp;</td>\n";
+			echo "<td><input type=text size=20 maxlength=50 name=preset_number value=\"$rowx[1]\"></td>\n";
+			echo "<td><input type=text size=20 maxlength=50 name=preset_dtmf value=\"$rowx[2]\"></td>\n";
+			echo "<td><select size=1 name=preset_hide_number><option>Y</option><option>N</option><option SELECTED>$rowx[3]</option></select></td>\n";
+			echo "<td><font size=1><input type=submit name=submit value=MODIFY></form></td>\n";
+			echo "<td><font size=1><a href=\"$PHP_SELF?ADD=601&campaign_id=$campaign_id&preset_name=$rowx[0]\">DELETE</a></td></tr>\n";
+			}
+
+		echo "</table>\n";
+
+		echo "<br>ADD NEW PRESET<BR><form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=201>\n";
+		echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
+		echo "Preset Name: <input type=text size=20 maxlength=40 name=preset_name>\n";
+		echo "Preset Number: <input type=text size=20 maxlength=50 name=preset_number><BR>\n";
+		echo "Preset DTMF: <input type=text size=20 maxlength=50 name=preset_dtmf>\n";
+		echo " &nbsp; Hide Number: <select size=1 name=preset_hide_number><option>Y</option><option SELECTED>N</option></select>\n";
+		echo "<input type=submit name=submit value=ADD><BR>\n";
+
+		echo "</center></FORM><br>\n";
+		}
 
 	if ($SUB < 1)
 		{
@@ -19946,384 +20197,452 @@ if ( ($ADD==34) or ($ADD==31) )
 ######################
 
 if ($ADD==30)
-{
-echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-echo "You do not have permission to view campaign $campaign_id\n";
-}
+	{
+	echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "You do not have permission to view campaign $campaign_id\n";
+	}
 
 
 ######################
 # ADD=32 display all campaign statuses
 ######################
 if ($ADD==32)
-{
-echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	{
+	echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-echo "<br>CUSTOM CAMPAIGN STATUSES LISTINGS:\n";
-echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
-echo "<tr>\n";
-echo "<td><B>CAMPAIGN</B></td>\n";
-echo "<td><B>NAME</B></td>\n";
-echo "<td><B>STATUSES</B></td>\n";
-echo "<td><B>MODIFY</B></td>\n";
-echo "</tr>\n";
+	echo "<br>CUSTOM CAMPAIGN STATUSES LISTINGS:\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<tr>\n";
+	echo "<td><B>CAMPAIGN</B></td>\n";
+	echo "<td><B>NAME</B></td>\n";
+	echo "<td><B>STATUSES</B></td>\n";
+	echo "<td><B>MODIFY</B></td>\n";
+	echo "</tr>\n";
 
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
-	$rslt=mysql_query($stmt, $link);
-	$campaigns_to_print = mysql_num_rows($rslt);
-
-	$o=0;
-	while ($campaigns_to_print > $o) 
-		{
-		$row=mysql_fetch_row($rslt);
-		$campaigns_id_list[$o] = $row[0];
-		$campaigns_name_list[$o] = $row[1];
-		$o++;
-		}
-
-	$o=0;
-	while ($campaigns_to_print > $o) 
-		{
-		if (eregi("1$|3$|5$|7$|9$", $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=22&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
-		echo "<td><font size=1> $campaigns_name_list[$o] </td>";
-		echo "<td><font size=1> ";
-
-		$stmt="SELECT status from vicidial_campaign_statuses where campaign_id='$campaigns_id_list[$o]' order by status";
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 		$rslt=mysql_query($stmt, $link);
-		$campstatus_to_print = mysql_num_rows($rslt);
-		$p=0;
-		while ( ($campstatus_to_print > $p) and ($p < 10) )
+		$campaigns_to_print = mysql_num_rows($rslt);
+
+		$o=0;
+		while ($campaigns_to_print > $o) 
 			{
 			$row=mysql_fetch_row($rslt);
-			echo "$row[0] ";
-			$p++;
+			$campaigns_id_list[$o] = $row[0];
+			$campaigns_name_list[$o] = $row[1];
+			$o++;
 			}
-		if ($p<1) 
-			{echo "<font color=grey><DEL>NONE</DEL></font>";}
-		echo "</td>";
-		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=22&campaign_id=$campaigns_id_list[$o]\">MODIFY STATUSES</a></td></tr>\n";
-		$o++;
-		}
 
-echo "</TABLE></center>\n";
-}
+		$o=0;
+		while ($campaigns_to_print > $o) 
+			{
+			if (eregi("1$|3$|5$|7$|9$", $o))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=22&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
+			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
+			echo "<td><font size=1> ";
+
+			$stmt="SELECT status from vicidial_campaign_statuses where campaign_id='$campaigns_id_list[$o]' order by status";
+			$rslt=mysql_query($stmt, $link);
+			$campstatus_to_print = mysql_num_rows($rslt);
+			$p=0;
+			while ( ($campstatus_to_print > $p) and ($p < 10) )
+				{
+				$row=mysql_fetch_row($rslt);
+				echo "$row[0] ";
+				$p++;
+				}
+			if ($p<1) 
+				{echo "<font color=grey><DEL>NONE</DEL></font>";}
+			echo "</td>";
+			echo "<td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=22&campaign_id=$campaigns_id_list[$o]\">MODIFY STATUSES</a></td></tr>\n";
+			$o++;
+			}
+
+	echo "</TABLE></center>\n";
+	}
 
 
 ######################
 # ADD=33 display all campaign hotkeys
 ######################
 if ($ADD==33)
-{
-echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	{
+	echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-echo "<br>CAMPAIGN HOTKEYS LISTINGS:\n";
-echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
-echo "<tr>\n";
-echo "<td><B>CAMPAIGN</B></td>\n";
-echo "<td><B>NAME</B></td>\n";
-echo "<td><B>HOTKEYS</B></td>\n";
-echo "<td><B>MODIFY</B></td>\n";
-echo "</tr>\n";
+	echo "<br>CAMPAIGN HOTKEYS LISTINGS:\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<tr>\n";
+	echo "<td><B>CAMPAIGN</B></td>\n";
+	echo "<td><B>NAME</B></td>\n";
+	echo "<td><B>HOTKEYS</B></td>\n";
+	echo "<td><B>MODIFY</B></td>\n";
+	echo "</tr>\n";
 
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
-	$rslt=mysql_query($stmt, $link);
-	$campaigns_to_print = mysql_num_rows($rslt);
-
-	$o=0;
-	while ($campaigns_to_print > $o) 
-		{
-		$row=mysql_fetch_row($rslt);
-		$campaigns_id_list[$o] = $row[0];
-		$campaigns_name_list[$o] = $row[1];
-		$o++;
-		}
-
-	$o=0;
-	while ($campaigns_to_print > $o) 
-		{
-		if (eregi("1$|3$|5$|7$|9$", $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=23&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
-		echo "<td><font size=1> $campaigns_name_list[$o] </td>";
-		echo "<td><font size=1> ";
-
-		$stmt="SELECT status from vicidial_campaign_hotkeys where campaign_id='$campaigns_id_list[$o]' order by status";
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 		$rslt=mysql_query($stmt, $link);
-		$campstatus_to_print = mysql_num_rows($rslt);
-		$p=0;
-		while ( ($campstatus_to_print > $p) and ($p < 10) )
+		$campaigns_to_print = mysql_num_rows($rslt);
+
+		$o=0;
+		while ($campaigns_to_print > $o) 
 			{
 			$row=mysql_fetch_row($rslt);
-			echo "$row[0] ";
-			$p++;
+			$campaigns_id_list[$o] = $row[0];
+			$campaigns_name_list[$o] = $row[1];
+			$o++;
 			}
-		if ($p<1) 
-			{echo "<font color=grey><DEL>NONE</DEL></font>";}
-		echo "</td>";
-		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=23&campaign_id=$campaigns_id_list[$o]\">MODIFY HOTKEYS</a></td></tr>\n";
-		$o++;
-		}
 
-echo "</TABLE></center>\n";
-}
+		$o=0;
+		while ($campaigns_to_print > $o) 
+			{
+			if (eregi("1$|3$|5$|7$|9$", $o))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=23&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
+			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
+			echo "<td><font size=1> ";
+
+			$stmt="SELECT status from vicidial_campaign_hotkeys where campaign_id='$campaigns_id_list[$o]' order by status";
+			$rslt=mysql_query($stmt, $link);
+			$campstatus_to_print = mysql_num_rows($rslt);
+			$p=0;
+			while ( ($campstatus_to_print > $p) and ($p < 10) )
+				{
+				$row=mysql_fetch_row($rslt);
+				echo "$row[0] ";
+				$p++;
+				}
+			if ($p<1) 
+				{echo "<font color=grey><DEL>NONE</DEL></font>";}
+			echo "</td>";
+			echo "<td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=23&campaign_id=$campaigns_id_list[$o]\">MODIFY HOTKEYS</a></td></tr>\n";
+			$o++;
+			}
+
+	echo "</TABLE></center>\n";
+	}
 
 
 ######################
 # ADD=35 display all campaign lead recycle entries
 ######################
 if ($ADD==35)
-{
-echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	{
+	echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-echo "<br>CAMPAIGN LEAD RECYCLE LISTINGS:\n";
-echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
-echo "<tr>\n";
-echo "<td><B>CAMPAIGN</B></td>\n";
-echo "<td><B>NAME</B></td>\n";
-echo "<td><B>LEAD RECYCLES</B></td>\n";
-echo "<td><B>MODIFY</B></td>\n";
-echo "</tr>\n";
+	echo "<br>CAMPAIGN LEAD RECYCLE LISTINGS:\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<tr>\n";
+	echo "<td><B>CAMPAIGN</B></td>\n";
+	echo "<td><B>NAME</B></td>\n";
+	echo "<td><B>LEAD RECYCLES</B></td>\n";
+	echo "<td><B>MODIFY</B></td>\n";
+	echo "</tr>\n";
 
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
-	$rslt=mysql_query($stmt, $link);
-	$campaigns_to_print = mysql_num_rows($rslt);
-
-	$o=0;
-	while ($campaigns_to_print > $o) 
-		{
-		$row=mysql_fetch_row($rslt);
-		$campaigns_id_list[$o] = $row[0];
-		$campaigns_name_list[$o] = $row[1];
-		$o++;
-		}
-
-	$o=0;
-	while ($campaigns_to_print > $o) 
-		{
-		if (eregi("1$|3$|5$|7$|9$", $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=25&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
-		echo "<td><font size=1> $campaigns_name_list[$o] </td>";
-		echo "<td><font size=1> ";
-
-		$stmt="SELECT status from vicidial_lead_recycle where campaign_id='$campaigns_id_list[$o]' order by status";
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 		$rslt=mysql_query($stmt, $link);
-		$campstatus_to_print = mysql_num_rows($rslt);
-		$p=0;
-		while ( ($campstatus_to_print > $p) and ($p < 10) )
+		$campaigns_to_print = mysql_num_rows($rslt);
+
+		$o=0;
+		while ($campaigns_to_print > $o) 
 			{
 			$row=mysql_fetch_row($rslt);
-			echo "$row[0] ";
-			$p++;
+			$campaigns_id_list[$o] = $row[0];
+			$campaigns_name_list[$o] = $row[1];
+			$o++;
 			}
-		if ($p<1) 
-			{echo "<font color=grey><DEL>NONE</DEL></font>";}
-		echo "</td>";
-		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=25&campaign_id=$campaigns_id_list[$o]\">MODIFY LEAD RECYCLES</a></td></tr>\n";
-		$o++;
-		}
 
-echo "</TABLE></center>\n";
-}
+		$o=0;
+		while ($campaigns_to_print > $o) 
+			{
+			if (eregi("1$|3$|5$|7$|9$", $o))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=25&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
+			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
+			echo "<td><font size=1> ";
+
+			$stmt="SELECT status from vicidial_lead_recycle where campaign_id='$campaigns_id_list[$o]' order by status";
+			$rslt=mysql_query($stmt, $link);
+			$campstatus_to_print = mysql_num_rows($rslt);
+			$p=0;
+			while ( ($campstatus_to_print > $p) and ($p < 10) )
+				{
+				$row=mysql_fetch_row($rslt);
+				echo "$row[0] ";
+				$p++;
+				}
+			if ($p<1) 
+				{echo "<font color=grey><DEL>NONE</DEL></font>";}
+			echo "</td>";
+			echo "<td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=25&campaign_id=$campaigns_id_list[$o]\">MODIFY LEAD RECYCLES</a></td></tr>\n";
+			$o++;
+			}
+
+	echo "</TABLE></center>\n";
+	}
 
 
 ######################
 # ADD=36 display all campaign auto-alt dial entries
 ######################
 if ($ADD==36)
-{
-echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	{
+	echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-echo "<br>CAMPAIGN LEAD AUTO-ALT DIAL LISTINGS:\n";
-echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
-echo "<tr>\n";
-echo "<td><B>CAMPAIGN</B></td>\n";
-echo "<td><B>NAME</B></td>\n";
-echo "<td><B>AUTO-ALT DIAL</B></td>\n";
-echo "<td><B>MODIFY</B></td>\n";
-echo "</tr>\n";
+	echo "<br>CAMPAIGN LEAD AUTO-ALT DIAL LISTINGS:\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<tr>\n";
+	echo "<td><B>CAMPAIGN</B></td>\n";
+	echo "<td><B>NAME</B></td>\n";
+	echo "<td><B>AUTO-ALT DIAL</B></td>\n";
+	echo "<td><B>MODIFY</B></td>\n";
+	echo "</tr>\n";
 
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
-	$rslt=mysql_query($stmt, $link);
-	$campaigns_to_print = mysql_num_rows($rslt);
-
-	$o=0;
-	while ($campaigns_to_print > $o) 
-		{
-		$row=mysql_fetch_row($rslt);
-		$campaigns_id_list[$o] = $row[0];
-		$campaigns_name_list[$o] = $row[1];
-		$o++;
-		}
-
-	$o=0;
-	while ($campaigns_to_print > $o) 
-		{
-		if (eregi("1$|3$|5$|7$|9$", $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=26&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
-		echo "<td><font size=1> $campaigns_name_list[$o] </td>";
-		echo "<td><font size=1> ";
-
-		$stmt="SELECT auto_alt_dial_statuses from vicidial_campaigns where campaign_id='$campaigns_id_list[$o]';";
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 		$rslt=mysql_query($stmt, $link);
-		$campstatus_to_print = mysql_num_rows($rslt);
-		$p=0;
-		while ( ($campstatus_to_print > $p) and ($p < 10) )
+		$campaigns_to_print = mysql_num_rows($rslt);
+
+		$o=0;
+		while ($campaigns_to_print > $o) 
 			{
 			$row=mysql_fetch_row($rslt);
-			echo "$row[0] ";
-			$p++;
+			$campaigns_id_list[$o] = $row[0];
+			$campaigns_name_list[$o] = $row[1];
+			$o++;
 			}
-		if (strlen($row[0])<3) 
-			{echo "<font color=grey><DEL>NONE</DEL></font>";}
-		echo "</td>";
-		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=26&campaign_id=$campaigns_id_list[$o]\">MODIFY AUTO-ALT DIAL</a></td></tr>\n";
-		$o++;
-		}
 
-echo "</TABLE></center>\n";
-}
+		$o=0;
+		while ($campaigns_to_print > $o) 
+			{
+			if (eregi("1$|3$|5$|7$|9$", $o))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=26&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
+			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
+			echo "<td><font size=1> ";
+
+			$stmt="SELECT auto_alt_dial_statuses from vicidial_campaigns where campaign_id='$campaigns_id_list[$o]';";
+			$rslt=mysql_query($stmt, $link);
+			$campstatus_to_print = mysql_num_rows($rslt);
+			$p=0;
+			while ( ($campstatus_to_print > $p) and ($p < 10) )
+				{
+				$row=mysql_fetch_row($rslt);
+				echo "$row[0] ";
+				$p++;
+				}
+			if (strlen($row[0])<3) 
+				{echo "<font color=grey><DEL>NONE</DEL></font>";}
+			echo "</td>";
+			echo "<td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=26&campaign_id=$campaigns_id_list[$o]\">MODIFY AUTO-ALT DIAL</a></td></tr>\n";
+			$o++;
+			}
+
+	echo "</TABLE></center>\n";
+	}
 
 
 ######################
 # ADD=37 display all campaign agent pause codes
 ######################
 if ($ADD==37)
-{
-echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	{
+	echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-echo "<br>CAMPAIGN AGENT PAUSE CODE LISTINGS:\n";
-echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
-echo "<tr>\n";
-echo "<td><B>CAMPAIGN</B></td>\n";
-echo "<td><B>NAME</B></td>\n";
-echo "<td><B>PAUSE CODES</B></td>\n";
-echo "<td><B>MODIFY</B></td>\n";
-echo "</tr>\n";
+	echo "<br>CAMPAIGN AGENT PAUSE CODE LISTINGS:\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<tr>\n";
+	echo "<td><B>CAMPAIGN</B></td>\n";
+	echo "<td><B>NAME</B></td>\n";
+	echo "<td><B>PAUSE CODES</B></td>\n";
+	echo "<td><B>MODIFY</B></td>\n";
+	echo "</tr>\n";
 
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
-	$rslt=mysql_query($stmt, $link);
-	$campaigns_to_print = mysql_num_rows($rslt);
-
-	$o=0;
-	while ($campaigns_to_print > $o) 
-		{
-		$row=mysql_fetch_row($rslt);
-		$campaigns_id_list[$o] = $row[0];
-		$campaigns_name_list[$o] = $row[1];
-		$o++;
-		}
-
-	$o=0;
-	while ($campaigns_to_print > $o) 
-		{
-		if (eregi("1$|3$|5$|7$|9$", $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=27&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
-		echo "<td><font size=1> $campaigns_name_list[$o] </td>";
-		echo "<td><font size=1> ";
-
-		$stmt="SELECT pause_code from vicidial_pause_codes where campaign_id='$campaigns_id_list[$o]' order by pause_code;";
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 		$rslt=mysql_query($stmt, $link);
-		$campstatus_to_print = mysql_num_rows($rslt);
-		$p=0;
-		while ( ($campstatus_to_print > $p) and ($p < 10) )
+		$campaigns_to_print = mysql_num_rows($rslt);
+
+		$o=0;
+		while ($campaigns_to_print > $o) 
 			{
 			$row=mysql_fetch_row($rslt);
-			echo "$row[0] ";
-			$p++;
+			$campaigns_id_list[$o] = $row[0];
+			$campaigns_name_list[$o] = $row[1];
+			$o++;
 			}
-		if ($p<1) 
-			{echo "<font color=grey><DEL>NONE</DEL></font>";}
-		echo "</td>";
-		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=27&campaign_id=$campaigns_id_list[$o]\">MODIFY PAUSE CODES</a></td></tr>\n";
-		$o++;
-		}
 
-echo "</TABLE></center>\n";
-}
+		$o=0;
+		while ($campaigns_to_print > $o) 
+			{
+			if (eregi("1$|3$|5$|7$|9$", $o))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=27&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
+			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
+			echo "<td><font size=1> ";
+
+			$stmt="SELECT pause_code from vicidial_pause_codes where campaign_id='$campaigns_id_list[$o]' order by pause_code;";
+			$rslt=mysql_query($stmt, $link);
+			$campstatus_to_print = mysql_num_rows($rslt);
+			$p=0;
+			while ( ($campstatus_to_print > $p) and ($p < 10) )
+				{
+				$row=mysql_fetch_row($rslt);
+				echo "$row[0] ";
+				$p++;
+				}
+			if ($p<1) 
+				{echo "<font color=grey><DEL>NONE</DEL></font>";}
+			echo "</td>";
+			echo "<td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=27&campaign_id=$campaigns_id_list[$o]\">MODIFY PAUSE CODES</a></td></tr>\n";
+			$o++;
+			}
+
+	echo "</TABLE></center>\n";
+	}
 
 
 ######################
 # ADD=39 display all campaign list mixes
 ######################
 if ($ADD==39)
-{
-echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	{
+	echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-echo "<br>CAMPAIGN LIST MIX LISTINGS:\n";
-echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
-echo "<tr>\n";
-echo "<td><B>CAMPAIGN</B></td>\n";
-echo "<td><B>NAME</B></td>\n";
-echo "<td><B>LIST MIX</B></td>\n";
-echo "<td><B>MODIFY</B></td>\n";
-echo "</tr>\n";
+	echo "<br>CAMPAIGN LIST MIX LISTINGS:\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<tr>\n";
+	echo "<td><B>CAMPAIGN</B></td>\n";
+	echo "<td><B>NAME</B></td>\n";
+	echo "<td><B>LIST MIX</B></td>\n";
+	echo "<td><B>MODIFY</B></td>\n";
+	echo "</tr>\n";
 
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
-	$rslt=mysql_query($stmt, $link);
-	$campaigns_to_print = mysql_num_rows($rslt);
-
-	$o=0;
-	while ($campaigns_to_print > $o) 
-		{
-		$row=mysql_fetch_row($rslt);
-		$campaigns_id_list[$o] = $row[0];
-		$campaigns_name_list[$o] = $row[1];
-		$o++;
-		}
-
-	$o=0;
-	while ($campaigns_to_print > $o) 
-		{
-		if (eregi("1$|3$|5$|7$|9$", $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
-		echo "<td><font size=1> $campaigns_name_list[$o] </td>";
-		echo "<td><font size=1> ";
-
-		$stmt="SELECT vcl_id from vicidial_campaigns_list_mix where campaign_id='$campaigns_id_list[$o]' order by status,vcl_id;";
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 		$rslt=mysql_query($stmt, $link);
-		$campstatus_to_print = mysql_num_rows($rslt);
-		$p=0;
-		while ( ($campstatus_to_print > $p) and ($p < 10) )
+		$campaigns_to_print = mysql_num_rows($rslt);
+
+		$o=0;
+		while ($campaigns_to_print > $o) 
 			{
 			$row=mysql_fetch_row($rslt);
-			echo "$row[0] ";
-			$p++;
+			$campaigns_id_list[$o] = $row[0];
+			$campaigns_name_list[$o] = $row[1];
+			$o++;
 			}
-		if ($p<1) 
-			{echo "<font color=grey><DEL>NONE</DEL></font>";}
-		echo "</td>";
-		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaigns_id_list[$o]\">MODIFY LIST MIX</a></td></tr>\n";
-		$o++;
-		}
 
-echo "</TABLE></center>\n";
-}
+		$o=0;
+		while ($campaigns_to_print > $o) 
+			{
+			if (eregi("1$|3$|5$|7$|9$", $o))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
+			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
+			echo "<td><font size=1> ";
 
+			$stmt="SELECT vcl_id from vicidial_campaigns_list_mix where campaign_id='$campaigns_id_list[$o]' order by status,vcl_id;";
+			$rslt=mysql_query($stmt, $link);
+			$campstatus_to_print = mysql_num_rows($rslt);
+			$p=0;
+			while ( ($campstatus_to_print > $p) and ($p < 10) )
+				{
+				$row=mysql_fetch_row($rslt);
+				echo "$row[0] ";
+				$p++;
+				}
+			if ($p<1) 
+				{echo "<font color=grey><DEL>NONE</DEL></font>";}
+			echo "</td>";
+			echo "<td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaigns_id_list[$o]\">MODIFY LIST MIX</a></td></tr>\n";
+			$o++;
+			}
+
+	echo "</TABLE></center>\n";
+	}
+
+
+######################
+# ADD=301 display all campaign presets
+######################
+if ($ADD==301)
+	{
+	echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	echo "<br>CAMPAIGN PRESET LISTINGS:\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<tr>\n";
+	echo "<td><B>CAMPAIGN</B></td>\n";
+	echo "<td><B>NAME</B></td>\n";
+	echo "<td><B>PRESETS</B></td>\n";
+	echo "<td><B>MODIFY</B></td>\n";
+	echo "</tr>\n";
+
+		$stmt="SELECT campaign_id,campaign_name,enable_xfer_presets from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
+		$rslt=mysql_query($stmt, $link);
+		$campaigns_to_print = mysql_num_rows($rslt);
+
+		$o=0;
+		while ($campaigns_to_print > $o) 
+			{
+			$row=mysql_fetch_row($rslt);
+			$campaigns_id_list[$o] =		$row[0];
+			$campaigns_name_list[$o] =		$row[1];
+			$enable_xfer_presets_list[$o] = $row[2];
+			$o++;
+			}
+
+		$o=0;
+		$k=0;
+		while ($campaigns_to_print > $o) 
+			{
+			if ($enable_xfer_presets_list[$o] == 'ENABLED')
+				{
+				if (eregi("1$|3$|5$|7$|9$", $k))
+					{$bgcolor='bgcolor="#B9CBFD"';} 
+				else
+					{$bgcolor='bgcolor="#9BB9FB"';}
+				echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=27&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
+				echo "<td><font size=1> $campaigns_name_list[$o] </td>";
+				echo "<td><font size=1> ";
+
+				$stmt="SELECT preset_name from vicidial_xfer_presets where campaign_id='$campaigns_id_list[$o]' order by preset_name;";
+				$rslt=mysql_query($stmt, $link);
+				$campstatus_to_print = mysql_num_rows($rslt);
+				$p=0;
+				while ( ($campstatus_to_print > $p) and ($p < 10) )
+					{
+					$row=mysql_fetch_row($rslt);
+					echo "$row[0] ";
+					$p++;
+					}
+				if ($p<1) 
+					{echo "<font color=grey><DEL>NONE</DEL></font>";}
+				echo "</td>";
+				echo "<td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=201&campaign_id=$campaigns_id_list[$o]\">MODIFY PRESETS</a></td></tr>\n";
+
+				$k++;
+				}
+			$o++;
+			}
+
+	echo "</TABLE></center>\n";
+	}
 
 
 

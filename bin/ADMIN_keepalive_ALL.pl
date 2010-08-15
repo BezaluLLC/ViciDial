@@ -55,6 +55,7 @@
 # 100703-2137 - Added memory table reset nightly
 # 100811-2221 - Added --cu3way flag for new optional leave3way cleaning script
 # 100812-0515 - Added --cu3way-delay= flag for setting delay in the leave3way cleaning script
+# 100814-2206 - Added clearing and optimization for vicidial_xfer_stats table
 #
 
 $DB=0; # Debug flag
@@ -679,6 +680,20 @@ if ($timeclock_end_of_day_NOW > 0)
 	if ($Tmin < 10) {$Tmin = "0$Tmin";}
 	if ($Tsec < 10) {$Tsec = "0$Tsec";}
 	$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
+
+	$stmtA = "UPDATE vicidial_xfer_stats SET xfer_count='0';";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows vicidial_xfer_stats records reset|\n";}
+
+	$stmtA = "optimize table vicidial_xfer_stats;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
 
 	$stmtA = "UPDATE vicidial_campaign_stats SET dialable_leads='0', calls_today='0', answers_today='0', drops_today='0', drops_today_pct='0', drops_answers_today_pct='0', calls_hour='0', answers_hour='0', drops_hour='0', drops_hour_pct='0', calls_halfhour='0', answers_halfhour='0', drops_halfhour='0', drops_halfhour_pct='0', calls_fivemin='0', answers_fivemin='0', drops_fivemin='0', drops_fivemin_pct='0', calls_onemin='0', answers_onemin='0', drops_onemin='0', drops_onemin_pct='0', differential_onemin='0', agents_average_onemin='0', balance_trunk_fill='0', status_category_count_1='0', status_category_count_2='0', status_category_count_3='0', status_category_count_4='0';";
 	if($DBX){print STDERR "\n|$stmtA|\n";}

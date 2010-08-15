@@ -354,6 +354,29 @@ Webphone URL Override||
 This setting allows you to set an alternate webphone URL just for the members of one user group. Default is empty||
 Calculate Estimated Hold Seconds||
 This defines the number of seconds into the queue that the customer will wait before the Estimated Hold Time will be calculated and optionally played. Minimum is 3 seconds, even if set lower than 3. Default is 0||
+Campaign Preset Added||
+Campaign Presets||
+Modify Campaign Preset||
+Campaign Preset Removed||
+If the Campaign setting for presets is set to ENABLED then you have the ability to define Transfer-Conference presets that will be available to the agent allowing them to 3-way call these presets or blind transfer calls to these preset numbers. These presets also have an option to hide the number associated with each preset from the agent||
+PRESET NOT ADDED||
+there is already an entry for this campaign with this preset||
+PRESET NOT MODIFIED||
+>Presets<||
+Hide Transfer Number to Dial||
+Enable Transfer Presets||
+This option will enable the Presets sub menu to appear at the top of the Campaign Modification page, and also you will have the ability to specify Preset dialing numbers for Agents to use in the Transfer-Conference frame of the agent interface. Default is DISABLED||
+This option will hide the Number to Dial field in the Transfer-Conference frame of the agent interface. Default is DISABLED||
+PRESETS FOR THIS CAMPAIGN||
+ADD NEW PRESET||
+Hide Number||
+Preset Name||
+Preset Number||
+Preset DTMF||
+CAMPAIGN PRESET LISTINGS||
+CAMPAIGN PRESET NOT DELETED||
+Show Presets Stats||
+AGENT DIAL PRESETS NAMES||
 
 
 AST_VICIDIAL_ingrouplist.php
@@ -366,6 +389,9 @@ YOU MUST BE PAUSED TO VIEW YOUR CALL LOG||
 Close Info Box||
 No calls on this day||
 You are in ALT dial mode, you must finish the lead before logging out||
+Presets Button||
+SELECT A PRESET||
+
 
 
 ############################################################  MANAGER Manual

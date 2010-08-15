@@ -305,10 +305,11 @@
 # 100726-1233 - Added HANGUP, CALLMENU, EXTENSION, IN_GROUP timer actions
 # 100803-2324 - Cleanup of URLDecode (issue #375)
 # 100811-0810 - Added webphone_url_override option from user Groups
+# 100813-0554 - Added Campaign presets
 #
 
-$version = '2.4-283';
-$build = '100811-0810';
+$version = '2.4-284';
+$build = '100813-0554';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -1250,7 +1251,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1329,6 +1330,8 @@ else
 				$blind_monitor_message =	$row[71];
 				$blind_monitor_filename =	$row[72];
 				$timer_action_destination =	$row[73];
+				$enable_xfer_presets =		$row[74];
+				$hide_xfer_number_to_dial =	$row[75];
 
 				if ($manual_dial_override == 'ALLOW_ALL')
 					{$agentcall_manual = 1;}
@@ -1391,6 +1394,41 @@ else
 						{$preset_populate = $xferconf_d_number;}
 					if (preg_match("/PRESET_5/",$prepopulate_transfer_preset))
 						{$preset_populate = $xferconf_e_number;}
+					}
+
+				$VARpreset_names='';
+				$VARpreset_numbers='';
+				$VARpreset_dtmfs='';
+				$VARpreset_hide_numbers='';
+				if ($enable_xfer_presets == 'ENABLED')
+					{
+					##### grab the presets for this campaign
+					$stmt="SELECT preset_name,preset_number,preset_dtmf,preset_hide_number FROM vicidial_xfer_presets WHERE campaign_id='$VD_campaign' order by preset_name limit 500;";
+					$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$VD_presets = mysql_num_rows($rslt);
+					$j=0;
+					while ($j < $VD_presets)
+						{
+						$row=mysql_fetch_row($rslt);
+						$preset_names[$j] =			$row[0];
+						$preset_numbers[$j] =		$row[1];
+						$preset_dtmfs[$j] =			$row[2];
+						$preset_hide_numbers[$j] =	$row[3];
+						$VARpreset_names = "$VARpreset_names'$preset_names[$j]',";
+						$VARpreset_numbers = "$VARpreset_numbers'$preset_numbers[$j]',";
+						$VARpreset_dtmfs = "$VARpreset_dtmfs'$preset_dtmfs[$j]',";
+						$VARpreset_hide_numbers = "$VARpreset_hide_numbers'$preset_hide_numbers[$j]',";
+						$j++;
+						}
+					$VARpreset_names = substr("$VARpreset_names", 0, -1);
+					$VARpreset_numbers = substr("$VARpreset_numbers", 0, -1);
+					$VARpreset_dtmfs = substr("$VARpreset_dtmfs", 0, -1);
+					$VARpreset_hide_numbers = substr("$VARpreset_hide_numbers", 0, -1);
+					$VD_preset_names_ct = $j;
+					if ($j < 1)
+						{$enable_xfer_presets='DISABLED';}
 					}
 
 				$default_group_alias_cid='';
@@ -2448,6 +2486,7 @@ $SSwidth =  ($MASTERwidth + 176);	# 606 - scroll script
 $SDwidth =  ($MASTERwidth + 170);	# 600 - scroll script, customer data and calls-in-session
 $HKwidth =  ($MASTERwidth + 20);	# 450 - Hotkeys button
 $HSwidth =  ($MASTERwidth + 1);		# 431 - Header spacer
+$PBwidth =  ($MASTERwidth + 0);		# 430 - Presets list
 $CLwidth =  ($MASTERwidth - 160);	# 270 - Calls in queue link
 
 $WRheight =  ($MASTERheight + 160);	# 460 - Warning boxes
@@ -2639,6 +2678,11 @@ $CCAL_OUT .= "</table>";
 	VARpause_codes = new Array(<?php echo $VARpause_codes ?>);
 	VARpause_code_names = new Array(<?php echo $VARpause_code_names ?>);
 	var VD_pause_codes_ct = '<?php echo $VD_pause_codes_ct ?>';
+	VARpreset_names = new Array(<?php echo $VARpreset_names ?>);
+	VARpreset_numbers = new Array(<?php echo $VARpreset_numbers ?>);
+	VARpreset_dtmfs = new Array(<?php echo $VARpreset_dtmfs ?>);
+	VARpreset_hide_numbers = new Array(<?php echo $VARpreset_hide_numbers ?>);
+	var VD_preset_names_ct = '<?php echo $VD_preset_names_ct ?>';
 	VARstatuses = new Array(<?php echo $VARstatuses ?>);
 	VARstatusnames = new Array(<?php echo $VARstatusnames ?>);
 	var VD_statuses_ct = '<?php echo $VD_statuses_ct ?>';
@@ -3001,9 +3045,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var api_transferconf_override='';
 	var api_parkcustomer='';
 	var API_selected_xfergroup='';
-	var API_selected_callmenu=''
+	var API_selected_callmenu='';
 	var custom_fields_enabled='<?php echo $custom_fields_enabled ?>';
 	var form_contents_loaded=0;
+	var enable_xfer_presets='<?php echo $enable_xfer_presets ?>';
+	var hide_xfer_number_to_dial='<?php echo $hide_xfer_number_to_dial ?>';
+	var Presets_HTML='';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -3276,6 +3323,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			document.getElementById("ParkCustomerDial").innerHTML ="<IMG SRC=\"./images/vdc_XB_parkcustomerdial_OFF.gif\" border=0 alt=\"Park Customer Dial\" style=\"vertical-align:middle\"></a>";
 
 			var manual_number = document.vicidial_form.xfernumber.value;
+			var manual_number_hidden = document.vicidial_form.xfernumhidden.value;
+			if ( (manual_number.length < 1) && (manual_number_hidden.length > 0) )
+				{manual_number=manual_number_hidden;}
 			var manual_string = manual_number.toString();
 			var dial_conf_exten = session_id;
 			threeway_cid = '';
@@ -3319,17 +3369,18 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			else
 				{agent_dialed_type='XFER_OVERRIDE';}
 			}
+		var sending_preset_name = document.vicidial_form.xfername.value;
 		if (taskFromConf == 'YES')
-			{basic_originate_call(manual_string,'NO','YES',dial_conf_exten,'NO',taskFromConf,threeway_cid,sending_group_alias);}
+			{basic_originate_call(manual_string,'NO','YES',dial_conf_exten,'NO',taskFromConf,threeway_cid,sending_group_alias,'',sending_preset_name);}
 		else
-			{basic_originate_call(manual_string,'NO','NO','','','','1',sending_group_alias);}
+			{basic_originate_call(manual_string,'NO','NO','','','','1',sending_group_alias,sending_preset_name);}
 
 		MD_ring_secondS=0;
 		}
 
 // ################################################################################
 // Send Originate command to manager to place a phone call
-	function basic_originate_call(tasknum,taskprefix,taskreverse,taskdialvalue,tasknowait,taskconfxfer,taskcid,taskusegroupalias,taskalert) 
+	function basic_originate_call(tasknum,taskprefix,taskreverse,taskdialvalue,tasknowait,taskconfxfer,taskcid,taskusegroupalias,taskalert,taskpresetname) 
 		{
 		if (taskalert == '1')
 			{
@@ -3459,7 +3510,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					{var call_cid = campaign_cid;}
 				}
 
-			VMCoriginate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=Originate&format=text&channel=" + originatevalue + "&queryCID=" + queryCID + "&exten=" + call_prefix + "" + dialnum + "&ext_context=" + ext_context + "&ext_priority=1&outbound_cid=" + call_cid + "&usegroupalias=" + usegroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&" + alertquery;
+			VMCoriginate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=Originate&format=text&channel=" + originatevalue + "&queryCID=" + queryCID + "&exten=" + call_prefix + "" + dialnum + "&ext_context=" + ext_context + "&ext_priority=1&outbound_cid=" + call_cid + "&usegroupalias="+ usegroupalias + "&preset_name=" + taskpresetname + "&campaign=" + campaign + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&lead_id=" + document.vicidial_form.lead_id.value + "&" + alertquery;
 			xmlhttp.open('POST', 'manager_send.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(VMCoriginate_query); 
@@ -4250,6 +4301,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					{document.vicidial_form.xfernumber.value = quick_transfer_button_orig;}
 				var queryCID = "XBvdcW" + epoch_sec + user_abb;
 				var blindxferdialstring = document.vicidial_form.xfernumber.value;
+				var blindxferhiddendialstring = document.vicidial_form.xfernumhidden.value;
+				if ( (blindxferdialstring.length < 1) && (blindxferhiddendialstring.length > 0) )
+					{blindxferdialstring=blindxferhiddendialstring;}
 				var regXFvars = new RegExp("XFER","g");
 				if (blindxferdialstring.match(regXFvars))
 					{
@@ -4299,7 +4353,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					}
 				else
 					{
-					xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectVD&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + blindxferdialstring + "&ext_context=" + blindxfercontext + "&ext_priority=1&auto_dial_level=" + auto_dial_level + "&campaign=" + campaign + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&secondS=" + VD_live_call_secondS + "&session_id=" + session_id + "&nodeletevdac=" + no_delete_VDAC;
+					xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectVD&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + blindxferdialstring + "&ext_context=" + blindxfercontext + "&ext_priority=1&auto_dial_level=" + auto_dial_level + "&campaign=" + campaign + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&secondS=" + VD_live_call_secondS + "&session_id=" + session_id + "&nodeletevdac=" + no_delete_VDAC + "&preset_name=" + document.vicidial_form.xfername.value;
 					}
 				}
 			if (taskvar == 'XfeRINTERNAL') 
@@ -4315,6 +4369,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				{
 				CustomerData_update();
 
+				document.vicidial_form.xfername.value='';
 				var XfeRSelecT = document.getElementById("XfeRGrouP");
 				var XfeR_GrouP = XfeRSelecT.value;
 				if (API_selected_xfergroup.length > 1)
@@ -5071,7 +5126,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								XD_live_call_secondS = 0;
 								MD_channel_look=0;
 
-								document.getElementById("MainStatuSSpan").innerHTML = " Called 3rd party: " + document.vicidial_form.xfernumber.value + " UID: " + CIDcheck;
+								var called3rdparty = document.vicidial_form.xfernumber.value;
+								if (hide_xfer_number_to_dial=='ENABLED')
+									{called3rdparty=' ';}
+								document.getElementById("MainStatuSSpan").innerHTML = " Called 3rd party: " + called3rdparty + " UID: " + CIDcheck;
 
 								document.getElementById("Leave3WayCall").innerHTML ="<a href=\"#\" onclick=\"leave_3way_call('FIRST');return false;\"><IMG SRC=\"./images/vdc_XB_leave3waycall.gif\" border=0 alt=\"LEAVE 3-WAY CALL\" style=\"vertical-align:middle\"></a>";
 
@@ -5150,28 +5208,28 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								if (prepopulate_transfer_preset_enabled > 0)
 									{
 									if ( (prepopulate_transfer_preset == 'PRESET_1') || (prepopulate_transfer_preset == 'LOCKED_PRESET_1') )
-										{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
+										{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;   document.vicidial_form.xfername.value='D1';}
 									if ( (prepopulate_transfer_preset == 'PRESET_2') || (prepopulate_transfer_preset == 'LOCKED_PRESET_2') )
-										{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
+										{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;   document.vicidial_form.xfername.value='D2';}
 									if ( (prepopulate_transfer_preset == 'PRESET_3') || (prepopulate_transfer_preset == 'LOCKED_PRESET_3') )
-										{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;}
+										{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;   document.vicidial_form.xfername.value='D3';}
 									if ( (prepopulate_transfer_preset == 'PRESET_4') || (prepopulate_transfer_preset == 'LOCKED_PRESET_4') )
-										{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;}
+										{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;   document.vicidial_form.xfername.value='D4';}
 									if ( (prepopulate_transfer_preset == 'PRESET_5') || (prepopulate_transfer_preset == 'LOCKED_PRESET_5') )
-										{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;}
+										{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;   document.vicidial_form.xfername.value='D5';}
 									}
 								if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'PRESET_5') || (quick_transfer_button == 'LOCKED_PRESET_1') || (quick_transfer_button == 'LOCKED_PRESET_2') || (quick_transfer_button == 'LOCKED_PRESET_3') || (quick_transfer_button == 'LOCKED_PRESET_4') || (quick_transfer_button == 'LOCKED_PRESET_5') )
 									{
 									if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'LOCKED_PRESET_1') )
-										{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
+										{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;   document.vicidial_form.xfername.value='D1';}
 									if ( (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'LOCKED_PRESET_2') )
-										{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
+										{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;   document.vicidial_form.xfername.value='D2';}
 									if ( (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'LOCKED_PRESET_3') )
-										{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;}
+										{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;   document.vicidial_form.xfername.value='D3';}
 									if ( (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'LOCKED_PRESET_4') )
-										{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;}
+										{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;   document.vicidial_form.xfername.value='D4';}
 									if ( (quick_transfer_button == 'PRESET_5') || (quick_transfer_button == 'LOCKED_PRESET_5') )
-										{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;}
+										{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;   document.vicidial_form.xfername.value='D5';}
 									quick_transfer_button_orig='';
 									if (quick_transfer_button_locked > 0)
 										{quick_transfer_button_orig = document.vicidial_form.xfernumber.value;}
@@ -6552,7 +6610,6 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			agent_dialed_type='';
 			CalL_ScripT_id='';
 			}
-
 		}
 
 
@@ -7096,28 +7153,28 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							if (prepopulate_transfer_preset_enabled > 0)
 								{
 								if ( (prepopulate_transfer_preset == 'PRESET_1') || (prepopulate_transfer_preset == 'LOCKED_PRESET_1') )
-									{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
+									{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;   document.vicidial_form.xfername.value='D1';}
 								if ( (prepopulate_transfer_preset == 'PRESET_2') || (prepopulate_transfer_preset == 'LOCKED_PRESET_2') )
-									{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
+									{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;   document.vicidial_form.xfername.value='D2';}
 								if ( (prepopulate_transfer_preset == 'PRESET_3') || (prepopulate_transfer_preset == 'LOCKED_PRESET_3') )
-									{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;}
+									{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;   document.vicidial_form.xfername.value='D3';}
 								if ( (prepopulate_transfer_preset == 'PRESET_4') || (prepopulate_transfer_preset == 'LOCKED_PRESET_4') )
-									{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;}
+									{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;   document.vicidial_form.xfername.value='D4';}
 								if ( (prepopulate_transfer_preset == 'PRESET_5') || (prepopulate_transfer_preset == 'LOCKED_PRESET_5') )
-									{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;}
+									{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;   document.vicidial_form.xfername.value='D5';}
 								}
 							if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'PRESET_5') || (quick_transfer_button == 'LOCKED_PRESET_1') || (quick_transfer_button == 'LOCKED_PRESET_2') || (quick_transfer_button == 'LOCKED_PRESET_3') || (quick_transfer_button == 'LOCKED_PRESET_4') || (quick_transfer_button == 'LOCKED_PRESET_5') )
 								{
 								if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'LOCKED_PRESET_1') )
-									{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;}
+									{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;   document.vicidial_form.xfername.value='D1';}
 								if ( (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'LOCKED_PRESET_2') )
-									{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;}
+									{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;   document.vicidial_form.xfername.value='D2';}
 								if ( (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'LOCKED_PRESET_3') )
-									{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;}
+									{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;   document.vicidial_form.xfername.value='D3';}
 								if ( (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'LOCKED_PRESET_4') )
-									{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;}
+									{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;   document.vicidial_form.xfername.value='D4';}
 								if ( (quick_transfer_button == 'PRESET_5') || (quick_transfer_button == 'LOCKED_PRESET_5') )
-									{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;}
+									{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;   document.vicidial_form.xfername.value='D5';}
 								if (quick_transfer_button_locked > 0)
 									{quick_transfer_button_orig = document.vicidial_form.xfernumber.value;}
 
@@ -8386,6 +8443,86 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		}
 
+
+// ################################################################################
+// Generate the Presets Chooser span content
+	function generate_presets_pulldown()
+		{
+		showDiv('PresetsSelectBox');
+		Presets_HTML = '';
+		document.vicidial_form.PresetSelection.value = '';		
+		Presets_HTML = "<table cellpadding=5 cellspacing=5 width=400><tr><td bgcolor=\"#CCCCFF\" height=<?php echo $HTheight ?> width=400 valign=bottom><font class=\"log_text\">";
+		var loop_ct = 0;
+		while (loop_ct < VD_preset_names_ct)
+			{
+			Presets_HTML = Presets_HTML + "<font size=3 style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('" + VARpreset_names[loop_ct] + "','" + VARpreset_numbers[loop_ct] + "','" + VARpreset_dtmfs[loop_ct] + "','" + VARpreset_hide_numbers[loop_ct] + "');return false;\">" + VARpreset_names[loop_ct];
+			if (VARpreset_hide_numbers[loop_ct]=='N')
+				{Presets_HTML = Presets_HTML + " - " + VARpreset_numbers[loop_ct];}
+			Presets_HTML = Presets_HTML + "</a></b></font><BR>";
+			loop_ct++;
+			}
+
+		if ( (CalL_XC_a_NuMber.length > 0) || (CalL_XC_a_Dtmf.length > 0) )
+			{
+			Presets_HTML = Presets_HTML + "<font size=3 style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('D1','" + CalL_XC_a_NuMber + "','" + CalL_XC_a_Dtmf + "');return false;\">D1";
+			if (hide_xfer_number_to_dial=='DISABLED')
+				{Presets_HTML = Presets_HTML + " - " + CalL_XC_a_NuMber;}
+			Presets_HTML = Presets_HTML + "</a></b></font><BR>";
+			}
+		if ( (CalL_XC_b_NuMber.length > 0) || (CalL_XC_b_Dtmf.length > 0) )
+			{
+			Presets_HTML = Presets_HTML + "<font size=3 style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('D2','" + CalL_XC_b_NuMber + "','" + CalL_XC_b_Dtmf + "');return false;\">D2";
+			if (hide_xfer_number_to_dial=='DISABLED')
+				{Presets_HTML = Presets_HTML + " - " + CalL_XC_b_NuMber;}
+			Presets_HTML = Presets_HTML + "</a></b></font><BR>";
+			}
+		if (CalL_XC_c_NuMber.length > 0)
+			{
+			Presets_HTML = Presets_HTML + "<font size=3 style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('D3','" + CalL_XC_c_NuMber + "','');return false;\">D3";
+			if (hide_xfer_number_to_dial=='DISABLED')
+				{Presets_HTML = Presets_HTML + " - " + CalL_XC_c_NuMber;}
+			Presets_HTML = Presets_HTML + "</a></b></font><BR>";
+			}
+		if (CalL_XC_d_NuMber.length > 0)
+			{
+			Presets_HTML = Presets_HTML + "<font size=3 style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('D4','" + CalL_XC_d_NuMber + "','');return false;\">D4";
+			if (hide_xfer_number_to_dial=='DISABLED')
+				{Presets_HTML = Presets_HTML + " - " + CalL_XC_d_NuMber;}
+			Presets_HTML = Presets_HTML + "</a></b></font><BR>";
+			}
+		if (CalL_XC_e_NuMber.length > 0)
+			{
+			Presets_HTML = Presets_HTML + "<font size=3 style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('D5','" + CalL_XC_e_NuMber + "','');return false;\">D5";
+			if (hide_xfer_number_to_dial=='DISABLED')
+				{Presets_HTML = Presets_HTML + " - " + CalL_XC_e_NuMber;}
+			Presets_HTML = Presets_HTML + "</a></b></font><BR>";
+			}
+
+		Presets_HTML = Presets_HTML + "</td></tr></table><BR><BR><table cellpadding=0 cellspacing=0><tr><td width=330 align=left><font size=3 style=\"BACKGROUND-COLOR: #CCCCFF\"><b><a href=\"#\" onclick=\"hideDiv('PresetsSelectBox');return false;\">Close [X]</a></b></font></td></tr></table>";
+		document.getElementById("PresetsSelectBoxContent").innerHTML = Presets_HTML;
+		}
+
+
+// ################################################################################
+// Submit chosen Preset
+	function PresetSelect_submit(taskpresetname,taskpresetnumber,taskpresetdtmf,taskhidenumber)
+		{
+		hideDiv('PresetsSelectBox');
+		document.vicidial_form.conf_dtmf.value = taskpresetdtmf;
+		document.vicidial_form.xfername.value = taskpresetname;
+		if ( (taskhidenumber=='Y') && (hide_xfer_number_to_dial=='DISABLED') )
+			{
+			document.vicidial_form.xfernumhidden.value = taskpresetnumber;
+			document.vicidial_form.xfernumber.value='';
+			}
+		else
+			{
+			document.vicidial_form.xfernumhidden.value = '';
+			document.vicidial_form.xfernumber.value = taskpresetnumber;
+			}
+		}
+
+
 // ################################################################################
 // Generate the Group Alias Chooser panel
 	function GroupAliasSelectContent_create(task3way)
@@ -8591,6 +8728,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				timer_action_seconds='';
 				timer_action_mesage='';
 				timer_action_destination='';
+				document.vicidial_form.xfername.value='';
+				document.vicidial_form.xfernumhidden.value='';
 
 				if (manual_dial_in_progress==1)
 					{
@@ -8735,23 +8874,28 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		{
 		document.vicidial_form.conf_dtmf.value = CalL_XC_a_Dtmf;
 		document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;
+		document.vicidial_form.xfername.value = 'D1';
 		}
 	function DtMf_PreSet_b()
 		{
 		document.vicidial_form.conf_dtmf.value = CalL_XC_b_Dtmf;
 		document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;
+		document.vicidial_form.xfername.value = 'D2';
 		}
 	function DtMf_PreSet_c()
 		{
 		document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;
+		document.vicidial_form.xfername.value = 'D3';
 		}
 	function DtMf_PreSet_d()
 		{
 		document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;
+		document.vicidial_form.xfername.value = 'D4';
 		}
 	function DtMf_PreSet_e()
 		{
 		document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;
+		document.vicidial_form.xfername.value = 'D5';
 		}
 
 	function DtMf_PreSet_a_DiaL()
@@ -10122,6 +10266,7 @@ function phone_number_format(formatphone) {
 			AgentsViewOpen('AgentXferViewSelect','open');
 			refresh_agents_view('AgentXferViewSelect',agent_status_view)
 			xfer_select_agents_active=1;
+			document.vicidial_form.xfername.value='';
 			}
 		}
 
@@ -10603,6 +10748,7 @@ else
 			hideDiv('CallBacKsLisTBox');
 			hideDiv('NeWManuaLDiaLBox');
 			hideDiv('PauseCodeSelectBox');
+			hideDiv('PresetsSelectBox');
 			hideDiv('GroupAliasSelectBox');
 			hideDiv('AgentViewSpan');
 			hideDiv('AgentXferViewSpan');
@@ -11840,9 +11986,24 @@ if ($agent_display_dialable_leads > 0)
 	<TD ALIGN=LEFT COLSPAN=2>
 	<IMG SRC="./images/vdc_XB_number.gif" border=0 alt="Number to call" style="vertical-align:middle">
 	&nbsp; 
-	<input type=text size=20 name=xfernumber maxlength=25 class="cust_form" value="<?php echo $preset_populate ?>"> &nbsp; 
+	<?php
+	if ($hide_xfer_number_to_dial=='ENABLED')
+		{
+		?>
+		<input type=hidden name=xfernumber value="<?php echo $preset_populate ?>"> &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp; 
+		<?php
+		}
+	else
+		{
+		?>
+		<input type=text size=20 name=xfernumber maxlength=25 class="cust_form" value="<?php echo $preset_populate ?>"> &nbsp; 
+		<?php
+		}
+	?>
 	<span id=agentdirectlink><font class="body_small_bold"><a href="#" onclick="XferAgentSelectLaunch();return false;">AGENTS</a></font></span>
 	<input type=hidden name=xferuniqueid>
+	<input type=hidden name=xfername>
+	<input type=hidden name=xfernumhidden>
 	</TD>
 	<TD ALIGN=LEFT>
 	<span id=dialoverride_checkbox><input type=checkbox name=xferoverride size=1 value="0"><font class="body_tiny"> DIAL OVERRIDE</font></span>
@@ -11860,13 +12021,26 @@ if ($agent_display_dialable_leads > 0)
 	&nbsp;
 	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="ParkCustomerDial"><a href="#" onclick="xfer_park_dial();return false;"><IMG SRC="./images/vdc_XB_parkcustomerdial.gif" border=0 alt="Park Customer Dial" style="vertical-align:middle"></a></span> 
 	&nbsp;
-	<font class="body_tiny">
-	<a href="#" onclick="DtMf_PreSet_a();return false;">D1</a> 
-	<a href="#" onclick="DtMf_PreSet_b();return false;">D2</a>
-	<a href="#" onclick="DtMf_PreSet_c();return false;">D3</a>
-	<a href="#" onclick="DtMf_PreSet_d();return false;">D4</a>
-	<a href="#" onclick="DtMf_PreSet_e();return false;">D5</a>
-	</font>
+	<?php
+	if ($enable_xfer_presets=='ENABLED')
+		{
+		?>
+		<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="PresetPullDown"><a href="#" onclick="generate_presets_pulldown();return false;"><IMG SRC="./images/vdc_XB_presetsbutton.gif" border=0 alt="Presets Button" style="vertical-align:middle"></a></span>
+		<?php
+		}
+	else
+		{
+		?>
+		<font class="body_tiny">
+		<a href="#" onclick="DtMf_PreSet_a();return false;">D1</a> 
+		<a href="#" onclick="DtMf_PreSet_b();return false;">D2</a>
+		<a href="#" onclick="DtMf_PreSet_c();return false;">D3</a>
+		<a href="#" onclick="DtMf_PreSet_d();return false;">D4</a>
+		<a href="#" onclick="DtMf_PreSet_e();return false;">D5</a>
+		</font>
+		<?php
+		}
+	?>
 	&nbsp;
 	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="DialBlindVMail"><IMG SRC="./images/vdc_XB_ammessage_OFF.gif" border=0 alt="Blind Transfer VMail Message" style="vertical-align:middle"></span>
 	</TD>
@@ -12184,6 +12358,13 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 	<span id="PauseCodeSelectContent"> Pause Code Selection </span>
 	<input type=hidden name=PauseCodeSelection>
 	<BR><BR> &nbsp; 
+	</TD></TR></TABLE>
+</span>
+
+<span style="position:absolute;left:<?php echo $PBwidth ?>px;top:40px;z-index:<?php $zi++; echo $zi ?>;" id="PresetsSelectBox">
+    <TABLE border=0 bgcolor="#9999FF" width=400 height=<?php echo $HTheight ?>><TR><TD align=center VALIGN=top> SELECT A PRESET :<BR>
+	<span id="PresetsSelectBoxContent"> Presets Selection </span>
+	<input type=hidden name=PresetSelection> 
 	</TD></TR></TABLE>
 </span>
 

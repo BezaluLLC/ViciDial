@@ -28,6 +28,7 @@
 # 100216-0042 - Added popup date selector
 # 100712-1324 - Added system setting slave server option
 # 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
+# 100814-2307 - Added display of preset dials if presets are enabled in the campaign
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -1032,7 +1033,7 @@ else
 	if ( ($carrier_logging_active > 0) and ($carrier_stats == 'YES') )
 		{
 		##############################
-		#########  STATUS CATEGORY STATS
+		#########  CARRIER STATS
 
 		$OUToutput .= "\n";
 		$OUToutput .= "---------- CARRIER CALL STATUSES\n";
@@ -1064,6 +1065,55 @@ else
 		$OUToutput .= "+----------------------+------------+\n";
 		$OUToutput .= "| TOTAL                | $TOTCARcalls |\n";
 		$OUToutput .= "+----------------------+------------+\n";
+		}
+
+
+	## find if any selected campaigns have presets enabled
+	$presets_enabled=0;
+	$stmt="select count(*) from vicidial_campaigns where enable_xfer_presets='ENABLED' $group_SQLand;";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {$OUToutput .= "$stmt\n";}
+	$presets_enabled_count = mysql_num_rows($rslt);
+	if ($presets_enabled_count > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$presets_enabled = $row[0];
+		}
+
+	if ($presets_enabled > 0)
+		{
+		##############################
+		#########  PRESET DIAL STATS
+
+		$OUToutput .= "\n";
+		$OUToutput .= "---------- AGENT PRESET DIALS\n";
+		$OUToutput .= "+------------------------------------------+------------+\n";
+		$OUToutput .= "| PRESET NAME                              | CALLS      |\n";
+		$OUToutput .= "+------------------------------------------+------------+\n";
+
+		## get counts and time totals for all statuses in this campaign
+		$stmt="select preset_name,count(*) from user_call_log where call_date > \"$query_date_BEGIN\" and call_date < \"$query_date_END\" and preset_name!='' and preset_name is not NULL  $group_SQLand group by preset_name order by preset_name;";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {$OUToutput .= "$stmt\n";}
+		$carrierstatuses_to_print = mysql_num_rows($rslt);
+		$i=0;
+		while ($i < $carrierstatuses_to_print)
+			{
+			$row=mysql_fetch_row($rslt);
+			$TOTPREcalls = ($TOTPREcalls + $row[1]);
+			$PREstatus =	sprintf("%-40s", $row[0]); while(strlen($PREstatus)>40) {$PREstatus = substr("$PREstatus", 0, -1);}
+			$PREcount =		sprintf("%10s", $row[1]); while(strlen($PREcount)>10) {$PREcount = substr("$PREcount", 0, -1);}
+
+			$OUToutput .= "| $PREstatus | $PREcount |\n";
+
+			$i++;
+			}
+
+		$TOTPREcalls =	sprintf("%10s", $TOTPREcalls); while(strlen($TOTPREcalls)>10) {$TOTPREcalls = substr("$TOTPREcalls", 0, -1);}
+
+		$OUToutput .= "+------------------------------------------+------------+\n";
+		$OUToutput .= "| TOTAL                                    | $TOTPREcalls |\n";
+		$OUToutput .= "+------------------------------------------+------------+\n";
 		}
 
 

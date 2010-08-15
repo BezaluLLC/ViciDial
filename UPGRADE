@@ -282,6 +282,17 @@ OTHER CHANGES:
 60. Added new beta script for faster checking of leave-3way conferences,
 	AST_conf_update_3way.pl, read the comments before using.
 
+61. Added Transfer Presets to Campaigns allowing for unlimited dial presets for
+	agents to use in the transfer-conf frame of the agent interface. Also,
+	real-time and outbound report reporting have been added to show call
+	counts for these presets. Presets can optionally have their numbers
+	hidden from agents allowing agents only to select a preset name to
+	transfer or conference a call to. You must Enable Transfer Presets in a
+	campaign before you can define them in the Presets sub-menu.
+
+62. Added ability to hide the "Number to dial" field in the Transfer-conf frame
+	of the agent interface. This is a Campaign-level setting.
+
 
 
 
