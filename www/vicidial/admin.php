@@ -2498,11 +2498,12 @@ else
 # 100811-0827 - Added webphone_url_override to User Groups and calculate_estimated_hold_seconds to In-Groups
 # 100813-0544 - Added campaign presets and option to hide xfer number to dial
 # 100815-0802 - Added manual_dial_prefix campaign option
+# 100817-1243 - Added checking for reserved menu_id on creation of Call Menus
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-274';
-$build = '100815-0802';
+$admin_version = '2.4-275';
+$build = '100817-1243';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5318,7 +5319,7 @@ if ($ADD==99999)
 	<B><FONT SIZE=3>VICIDIAL_CALL MENU TABLE</FONT></B><BR><BR>
 	<A NAME="vicidial_call_menu-menu_id">
 	<BR>
-	<B>Menu ID -</B> This is the ID for this step of the call menu. This will also show up as the context that is used in the dialplan for this call menu.
+	<B>Menu ID -</B> This is the ID for this step of the call menu. This will also show up as the context that is used in the dialplan for this call menu. Here is a list of reserved phrases that cannot be used as menu IDs: vicidial, vicidial-auto, general, globals, default, trunkinbound, loopback-no-log, monitor_exit, monitor.
 
 	<BR>
 	<A NAME="vicidial_call_menu-menu_name">
@@ -10541,31 +10542,45 @@ if ($ADD==2511)
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	if ($row[0] > 0)
-		{echo "<br>CALL MENU NOT ADDED - there is already a CALL MENU in the system with this ID\n";}
+		{
+		echo "<br>CALL MENU NOT ADDED - there is already a CALL MENU in the system with this ID\n";
+		$ADD=1500;
+		}
 	else
 		{
-		if ( (strlen($menu_id) < 2) or (eregi(' ',$menu_id)) )
+		if ( (preg_match("/^vicidial$/i",$menu_id)) or (preg_match("/^vicidial-auto$/i",$menu_id)) or (preg_match("/^general$/i",$menu_id)) or (preg_match("/^globals$/i",$menu_id)) or (preg_match("/^default$/i",$menu_id)) or (preg_match("/^trunkinbound$/i",$menu_id)) or (preg_match("/^loopback-no-log$/i",$menu_id)) or (preg_match("/^monitor_exit$/i",$menu_id)) or (preg_match("/^monitor$/i",$menu_id)) )
 			{
 			echo "<br>CALL MENU NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>Call Menu ID must be between 2 and 50 characters in length and contain no ' '.\n";
+			echo "<br>Call Menu ID cannot use reserved words: vicidial, vicidial-auto, general, globals, default, trunkinbound, loopback-no-log, monitor_exit, monitor\n";
+			$ADD=1500;
 			}
 		else
 			{
-			$stmt="INSERT INTO vicidial_call_menu (menu_id,menu_name) values('$menu_id','$menu_name');";
-			$rslt=mysql_query($stmt, $link);
+			if ( (strlen($menu_id) < 2) or (eregi(' ',$menu_id)) )
+				{
+				echo "<br>CALL MENU NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>Call Menu ID must be between 2 and 50 characters in length and contain no ' '.\n";
+				$ADD=1500;
+				}
+			else
+				{
+				$stmt="INSERT INTO vicidial_call_menu (menu_id,menu_name) values('$menu_id','$menu_name');";
+				$rslt=mysql_query($stmt, $link);
 
-			echo "<br><B>CALL MENU ADDED: $menu_id $menu_name</B>\n";
+				echo "<br><B>CALL MENU ADDED: $menu_id $menu_name</B>\n";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLMENUS', event_type='ADD', record_id='$menu_id', event_code='ADMIN ADD CALL MENU', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLMENUS', event_type='ADD', record_id='$menu_id', event_code='ADMIN ADD CALL MENU', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+
+				$ADD=3511;
+				}
 			}
 		}
-	$ADD=3511;
 	}
 
 
@@ -10594,34 +10609,48 @@ if ($ADD==2611)
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	if ($row[0] > 0)
-		{echo "<br>CALL MENU NOT ADDED - there is already a CALL MENU in the system with this ID\n";}
+		{
+		echo "<br>CALL MENU NOT ADDED - there is already a CALL MENU in the system with this ID\n";
+		$ADD=1500;
+		}
 	else
 		{
-		if ( (strlen($menu_id) < 2) or (eregi(' ',$menu_id)) or  (strlen($source_menu) < 2) or (eregi(' ',$source_menu)) )
+		if ( (preg_match("/^vicidial$/i",$menu_id)) or (preg_match("/^vicidial-auto$/i",$menu_id)) or (preg_match("/^general$/i",$menu_id)) or (preg_match("/^globals$/i",$menu_id)) or (preg_match("/^default$/i",$menu_id)) or (preg_match("/^trunkinbound$/i",$menu_id)) or (preg_match("/^loopback-no-log$/i",$menu_id)) or (preg_match("/^monitor_exit$/i",$menu_id)) or (preg_match("/^monitor$/i",$menu_id)) )
 			{
 			echo "<br>CALL MENU NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>Call Menu ID must be between 2 and 50 characters in length and contain no ' '.\n";
+			echo "<br>Call Menu ID cannot use reserved words: vicidial, vicidial-auto, general, globals, default, trunkinbound, loopback-no-log, monitor_exit, monitor\n";
+			$ADD=1500;
 			}
 		else
 			{
-			$stmt="INSERT INTO vicidial_call_menu (menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group) SELECT \"$menu_id\",\"$menu_name\",menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group from vicidial_call_menu where menu_id=\"$source_menu\";";
-			$rslt=mysql_query($stmt, $link);
+			if ( (strlen($menu_id) < 2) or (eregi(' ',$menu_id)) or  (strlen($source_menu) < 2) or (eregi(' ',$source_menu)) )
+				{
+				echo "<br>CALL MENU NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>Call Menu ID must be between 2 and 50 characters in length and contain no ' '.\n";
+				$ADD=1500;
+				}
+			else
+				{
+				$stmt="INSERT INTO vicidial_call_menu (menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group) SELECT \"$menu_id\",\"$menu_name\",menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group from vicidial_call_menu where menu_id=\"$source_menu\";";
+				$rslt=mysql_query($stmt, $link);
 
-			$stmtA="INSERT INTO vicidial_call_menu_options (menu_id,option_value,option_description,option_route,option_route_value,option_route_value_context) SELECT \"$menu_id\",option_value,option_description,option_route,option_route_value,option_route_value_context from vicidial_call_menu_options where menu_id='$source_menu';";
-			$rslt=mysql_query($stmtA, $link);
+				$stmtA="INSERT INTO vicidial_call_menu_options (menu_id,option_value,option_description,option_route,option_route_value,option_route_value_context) SELECT \"$menu_id\",option_value,option_description,option_route,option_route_value,option_route_value_context from vicidial_call_menu_options where menu_id='$source_menu';";
+				$rslt=mysql_query($stmtA, $link);
 
-			echo "<br><B>CALL MENU ADDED: $menu_id     - $menu_name</B>\n";
+				echo "<br><B>CALL MENU ADDED: $menu_id     - $menu_name</B>\n";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|$stmtA";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLMENUS', event_type='COPY', record_id='$menu_id', event_code='ADMIN COPY MENU', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|$stmtA";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLMENUS', event_type='COPY', record_id='$menu_id', event_code='ADMIN COPY MENU', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+
+				$ADD=3511;
+				}
 			}
 		}
-	$ADD=3511;
 	}
 
 
