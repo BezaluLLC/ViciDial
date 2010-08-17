@@ -15,6 +15,7 @@
 # 80611-0549 - Added DB option to backup all tables except for log tables
 # 90620-1851 - Moved mysqldump bin lookup to database backup section
 # 100211-0910 - Added crontab backup and voicemail bacup option
+# 100817-1202 - Fixed test option bug
 #
 
 $secT = time();
@@ -56,7 +57,7 @@ if (length($ARGV[0])>1)
 		print "  [--ftp-transfer] = Transfer backup to FTP server\n";
 		print "  [--debugX] = super debug\n";
 		print "  [--debug] = debug\n";
-		print "  [-t] = test\n";
+		print "  [--test] = test\n";
 		exit;
 		}
 	else
@@ -71,7 +72,7 @@ if (length($ARGV[0])>1)
 			$DBX=1;
 			print "\n----- SUPER DEBUG -----\n\n";
 			}
-		if ($args =~ /-t/i)
+		if ($args =~ /--test/i)
 			{
 			$T=1;   $TEST=1;
 			print "\n-----TESTING -----\n\n";
