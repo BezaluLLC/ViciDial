@@ -13,6 +13,7 @@
 # 90518-2107 - Added force-upload option
 # 90831-1349 - Added music-on-hold sync
 # 100621-1018 - Added admin_web_directory variable use
+# 100824-0032 - Fixed issue with first MoH file being skipped when playing in non-random order
 #
 
 # constants
@@ -486,6 +487,9 @@ if ( ($force_moh_rebuild > 0) || ($new_file_moh_rebuild > 0) || ($rebuild_music_
 		@sounds= readdir(sounds); 
 		closedir(sounds);
 
+		if (!-e "$MoH_directory/0000_sip-silence.gsm")
+			{`cp $PATHsounds/sip-silence.gsm $MoH_directory/0000_sip-silence.gsm`;}
+
 		### copy over files that are not in place currently
 		$stmtA = "SELECT filename,rank FROM vicidial_music_on_hold_files where moh_id='$moh_id[$j]' order by rank;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -567,7 +571,7 @@ if ( ($force_moh_rebuild > 0) || ($new_file_moh_rebuild > 0) || ($rebuild_music_
 			$MoH_files_check[$d] =~ s/\..*$//gi;
 			if ($DBX)
 				{print "Checking file: $MoH_files[$d] $MoH_files_check[$d] $filelist_names\n";}
-			if ( (length($MoH_files[$d]) > 4) && (-f "$MoH_directory/$MoH_files[$d]") && ($filelist_names !~ /\|$MoH_files_check[$d]\|/) )
+			if ( (length($MoH_files[$d]) > 4) && (-f "$MoH_directory/$MoH_files[$d]") && ($filelist_names !~ /\|$MoH_files_check[$d]\|/) && ($MoH_files_check[$d] !~ /^0000_/) )
 				{
 				`rm -f $MoH_directory/$MoH_files[$d]`;
 				if ($DBX)
