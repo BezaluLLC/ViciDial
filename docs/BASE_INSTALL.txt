@@ -482,6 +482,9 @@ PHASE 6: ADDING CRONTAB ENTRIES FOR ASTGUICLIENT/VICIDIAL SCRIPTS
 29 0 * * * /usr/bin/find /var/log/asterisk -maxdepth 3 -type f -mtime +2 -print | xargs rm -f
 30 0 * * * /usr/bin/find / -maxdepth 1 -name "screenlog.0*" -mtime +4 -print | xargs rm -f
 
+### remove text to speech file more than 4 days old
+#20 0 * * * /usr/bin/find /var/lib/asterisk/sounds/tts/ -maxdepth 2 -type f -mtime +4 -print | xargs rm -f
+
 
 
    - once your system starts up you can attach to the screen running asterisk by 

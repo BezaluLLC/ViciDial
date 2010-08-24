@@ -12,10 +12,11 @@
 # 91211-1103 - Added user_custom_... variables
 # 100116-0702 - Added preset variables
 # 100127-1611 - Added ignore_list_script_override option
+# 100823-1644 - Added DID variables
 #
 
-$version = '2.2.0-6';
-$build = '100127-1611';
+$version = '2.4';
+$build = '100823-1644';
 
 require("dbconnect.php");
 
@@ -161,6 +162,14 @@ if (isset($_GET["preset_dtmf_a"]))	{$preset_dtmf_a=$_GET["preset_dtmf_a"];}
 	elseif (isset($_POST["preset_dtmf_a"]))	{$preset_dtmf_a=$_POST["preset_dtmf_a"];}
 if (isset($_GET["preset_dtmf_b"]))	{$preset_dtmf_b=$_GET["preset_dtmf_b"];}
 	elseif (isset($_POST["preset_dtmf_b"]))	{$preset_dtmf_b=$_POST["preset_dtmf_b"];}
+if (isset($_GET["did_id"]))				{$did_id=$_GET["did_id"];}
+	elseif (isset($_POST["did_id"]))	{$did_id=$_POST["did_id"];}
+if (isset($_GET["did_extension"]))			{$did_extension=$_GET["did_extension"];}
+	elseif (isset($_POST["did_extension"]))	{$did_extension=$_POST["did_extension"];}
+if (isset($_GET["did_pattern"]))			{$did_pattern=$_GET["did_pattern"];}
+	elseif (isset($_POST["did_pattern"]))	{$did_pattern=$_POST["did_pattern"];}
+if (isset($_GET["did_description"]))			{$did_description=$_GET["did_description"];}
+	elseif (isset($_POST["did_description"]))	{$did_description=$_POST["did_description"];}
 if (isset($_GET["ScrollDIV"]))	{$ScrollDIV=$_GET["ScrollDIV"];}
 	elseif (isset($_POST["ScrollDIV"]))	{$ScrollDIV=$_POST["ScrollDIV"];}
 if (isset($_GET["ignore_list_script"]))	{$ignore_list_script=$_GET["ignore_list_script"];}
@@ -363,6 +372,10 @@ if (eregi("iframe src",$script_text))
 	$preset_number_f = eregi_replace(' ','+',$preset_number_f);
 	$preset_dtmf_a = eregi_replace(' ','+',$preset_dtmf_a);
 	$preset_dtmf_b = eregi_replace(' ','+',$preset_dtmf_b);
+	$did_id = eregi_replace(' ','+',$did_id);
+	$did_extension = eregi_replace(' ','+',$did_extension);
+	$did_pattern = eregi_replace(' ','+',$did_pattern);
+	$did_description = eregi_replace(' ','+',$did_description);
 	}
 
 $script_text = eregi_replace('--A--lead_id--B--',"$lead_id",$script_text);
@@ -438,6 +451,10 @@ $script_text = eregi_replace('--A--preset_number_e--B--',"$preset_number_e",$scr
 $script_text = eregi_replace('--A--preset_number_f--B--',"$preset_number_f",$script_text);
 $script_text = eregi_replace('--A--preset_dtmf_a--B--',"$preset_dtmf_a",$script_text);
 $script_text = eregi_replace('--A--preset_dtmf_b--B--',"$preset_dtmf_b",$script_text);
+$script_text = eregi_replace('--A--did_id--B--',"$did_id",$script_text);
+$script_text = eregi_replace('--A--did_extension--B--',"$did_extension",$script_text);
+$script_text = eregi_replace('--A--did_pattern--B--',"$did_pattern",$script_text);
+$script_text = eregi_replace('--A--did_description--B--',"$did_description",$script_text);
 $script_text = eregi_replace("\n","<BR>",$script_text);
 $script_text = stripslashes($script_text);
 

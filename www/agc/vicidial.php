@@ -307,10 +307,11 @@
 # 100811-0810 - Added webphone_url_override option from user Groups
 # 100813-0554 - Added Campaign presets
 # 100815-1015 - Added manual_dial_prefix campaign option
+# 100823-1605 - Added DID variables for webform and scripting
 #
 
-$version = '2.4-285';
-$build = '100815-1015';
+$version = '2.4-286';
+$build = '100823-1605';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -3056,6 +3057,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var enable_xfer_presets='<?php echo $enable_xfer_presets ?>';
 	var hide_xfer_number_to_dial='<?php echo $hide_xfer_number_to_dial ?>';
 	var Presets_HTML='';
+	var did_pattern='';
+	var did_id='';
+	var did_extension='';
+	var did_description='';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -5516,6 +5521,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&preset_number_e=" + CalL_XC_e_NuMber + '' +
 							"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
 							"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
+							"&did_id=" + did_id + '' +
+							"&did_extension=" + did_extension + '' +
+							"&did_pattern=" + did_pattern + '' +
+							"&did_description=" + did_description + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -5615,6 +5624,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&preset_number_e=" + CalL_XC_e_NuMber + '' +
 							"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
 							"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
+							"&did_id=" + did_id + '' +
+							"&did_extension=" + did_extension + '' +
+							"&did_pattern=" + did_pattern + '' +
+							"&did_description=" + did_description + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -5942,6 +5955,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&preset_number_e=" + CalL_XC_e_NuMber + '' +
 							"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
 							"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
+							"&did_id=" + did_id + '' +
+							"&did_extension=" + did_extension + '' +
+							"&did_pattern=" + did_pattern + '' +
+							"&did_description=" + did_description + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -6041,6 +6058,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&preset_number_e=" + CalL_XC_e_NuMber + '' +
 							"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
 							"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
+							"&did_id=" + did_id + '' +
+							"&did_extension=" + did_extension + '' +
+							"&did_pattern=" + did_pattern + '' +
+							"&did_description=" + did_description + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -6163,6 +6184,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&preset_number_e=" + CalL_XC_e_NuMber + '' +
 								"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
 								"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
+								"&did_id=" + did_id + '' +
+								"&did_extension=" + did_extension + '' +
+								"&did_pattern=" + did_pattern + '' +
+								"&did_description=" + did_description + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -6561,6 +6586,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&preset_number_e=" + CalL_XC_e_NuMber + '' +
 							"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
 							"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
+							"&did_id=" + did_id + '' +
+							"&did_extension=" + did_extension + '' +
+							"&did_pattern=" + did_pattern + '' +
+							"&did_description=" + did_description + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -6991,6 +7020,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							CalL_XC_e_NuMber			= VDIC_data_VDIG[23];
 							uniqueid_status_display		= VDIC_data_VDIG[24];
 							uniqueid_status_prefix		= VDIC_data_VDIG[26];
+							did_id						= VDIC_data_VDIG[28];
+							did_extension				= VDIC_data_VDIG[29];
+							did_pattern					= VDIC_data_VDIG[30];
+							did_description				= VDIC_data_VDIG[31];
+
 							var VDIC_data_VDFR=check_VDIC_array[3].split("|");
 							if ( (VDIC_data_VDFR[1].length > 1) && (VDCL_fronter_display == 'Y') )
 								{VDIC_fronter = "  Fronter: " + VDIC_data_VDFR[0] + " - " + VDIC_data_VDFR[1];}
@@ -7318,6 +7352,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&preset_number_e=" + CalL_XC_e_NuMber + '' +
 								"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
 								"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
+								"&did_id=" + did_id + '' +
+								"&did_extension=" + did_extension + '' +
+								"&did_pattern=" + did_pattern + '' +
+								"&did_description=" + did_description + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -7417,6 +7455,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&preset_number_e=" + CalL_XC_e_NuMber + '' +
 								"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
 								"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
+								"&did_id=" + did_id + '' +
+								"&did_extension=" + did_extension + '' +
+								"&did_pattern=" + did_pattern + '' +
+								"&did_description=" + did_description + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -7522,6 +7564,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&preset_number_e=" + CalL_XC_e_NuMber + '' +
 								"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
 								"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
+								"&did_id=" + did_id + '' +
+								"&did_extension=" + did_extension + '' +
+								"&did_pattern=" + did_pattern + '' +
+								"&did_description=" + did_description + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -7710,6 +7756,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			"&preset_number_e=" + CalL_XC_e_NuMber + '' +
 			"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
 			"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
+			"&did_id=" + did_id + '' +
+			"&did_extension=" + did_extension + '' +
+			"&did_pattern=" + did_pattern + '' +
+			"&did_description=" + did_description + '' +
 			webform_session;
 			
 			var regWFspace = new RegExp(" ","ig");
@@ -7839,6 +7889,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			"&preset_number_e=" + CalL_XC_e_NuMber + '' +
 			"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +
 			"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +
+			"&did_id=" + did_id + '' +
+			"&did_extension=" + did_extension + '' +
+			"&did_pattern=" + did_pattern + '' +
+			"&did_description=" + did_description + '' +
 			webform_session;
 			
 			var regWFspace = new RegExp(" ","ig");
@@ -8682,7 +8736,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					var tmp_pn = document.getElementById("phone_numberDISP");
 					tmp_pn.innerHTML			= ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';
 					}
-				document.vicidial_form.phone_number.value	= '';
+				document.vicidial_form.phone_number.value	='';
 				document.vicidial_form.title.value			='';
 				document.vicidial_form.first_name.value		='';
 				document.vicidial_form.middle_initial.value	='';
@@ -8733,6 +8787,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				timer_action_seconds='';
 				timer_action_mesage='';
 				timer_action_destination='';
+				did_pattern='';
+				did_id='';
+				did_extension='';
+				did_description='';
 				document.vicidial_form.xfername.value='';
 				document.vicidial_form.xfernumhidden.value='';
 
@@ -9685,6 +9743,10 @@ else
 		var SCpreset_number_e = CalL_XC_e_NuMber;
 		var SCpreset_dtmf_a = CalL_XC_a_Dtmf;
 		var SCpreset_dtmf_b = CalL_XC_b_Dtmf;
+		var SCdid_id = did_id;
+		var SCdid_extension = did_extension;
+		var SCdid_pattern = did_pattern;
+		var SCdid_description = did_description;
 		var SCweb_vars = LIVE_web_vars;
 
 		if (encoded.match(RGiframe))
@@ -9752,6 +9814,10 @@ else
 			SCpreset_number_e = SCpreset_number_e.replace(RGplus,'+');
 			SCpreset_dtmf_a = SCpreset_dtmf_a.replace(RGplus,'+');
 			SCpreset_dtmf_b = SCpreset_dtmf_b.replace(RGplus,'+');
+			SCdid_id = SCdid_id.replace(RGplus,'+');
+			SCdid_extension = SCdid_extension.replace(RGplus,'+');
+			SCdid_pattern = SCdid_pattern.replace(RGplus,'+');
+			SCdid_description = SCdid_description.replace(RGplus,'+');
 			SCweb_vars = SCweb_vars.replace(RGplus,'+');
 			}
 
@@ -9820,6 +9886,10 @@ else
 		var RGpreset_number_e = new RegExp("--A--preset_number_e--B--","g");
 		var RGpreset_dtmf_a = new RegExp("--A--preset_dtmf_a--B--","g");
 		var RGpreset_dtmf_b = new RegExp("--A--preset_dtmf_b--B--","g");
+		var RGdid_id = new RegExp("--A--did_id--B--","g");
+		var RGdid_extension = new RegExp("--A--did_extension--B--","g");
+		var RGdid_pattern = new RegExp("--A--did_pattern--B--","g");
+		var RGdid_description = new RegExp("--A--did_description--B--","g");
 		var RGweb_vars = new RegExp("--A--web_vars--B--","g");
 
 		encoded = encoded.replace(RGvendor_lead_code, SCvendor_lead_code);
@@ -9887,6 +9957,10 @@ else
 		encoded = encoded.replace(RGpreset_number_e, SCpreset_number_e);
 		encoded = encoded.replace(RGpreset_dtmf_a, SCpreset_dtmf_a);
 		encoded = encoded.replace(RGpreset_dtmf_b, SCpreset_dtmf_b);
+		encoded = encoded.replace(RGdid_id, SCdid_id);
+		encoded = encoded.replace(RGdid_extension, SCdid_extension);
+		encoded = encoded.replace(RGdid_pattern, SCdid_pattern);
+		encoded = encoded.replace(RGdid_description, SCdid_description);
 		encoded = encoded.replace(RGweb_vars, SCweb_vars);
 		}
 	decoded=encoded; // simple no ?

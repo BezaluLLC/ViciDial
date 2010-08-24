@@ -296,6 +296,9 @@ OTHER CHANGES:
 63. Added Manual Dial Prefix to allow for a different dial path for manual dial
 	calls placed through the agent interface.
 
+64. Added did_id, did_extension, did_pattern and did_description as webform and
+	script variables in the agent screen.
+
 
 
 

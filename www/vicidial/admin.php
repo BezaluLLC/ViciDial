@@ -96,7 +96,7 @@ $PHP_SELF=$_SERVER['PHP_SELF'];
 
 $Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Fronter - Closer Report, Export Calls Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Perforrmance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List';
 
-$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Fronter - Closer Report, Export Calls Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Perforrmance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Custom Reports Links';
+$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Fronter - Closer Report, Export Calls Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Perforrmance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Custom Reports Links, CallCard Search';
 
 ######################################################################################################
 ######################################################################################################
@@ -2499,11 +2499,12 @@ else
 # 100813-0544 - Added campaign presets and option to hide xfer number to dial
 # 100815-0802 - Added manual_dial_prefix campaign option
 # 100817-1243 - Added checking for reserved menu_id on creation of Call Menus
+# 100823-1501 - Added CallCard search as an available User Group report option
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-275';
-$build = '100817-1243';
+$admin_version = '2.4-276';
+$build = '100823-1501';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -2551,7 +2552,7 @@ if ($force_logout)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan FROM system_settings;";
+$stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -2562,6 +2563,7 @@ if ($qm_conf_ct > 0)
 	$SSauto_dial_limit =			$row[1];
 	$SSuser_territories_active =	$row[2];
 	$SSallow_custom_dialplan =		$row[3];
+	$SScallcard_enabled =			$row[4];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -27342,6 +27344,12 @@ if ($ADD==999999)
 			{
 			echo "<LI><a href=\"./AST_LIST_UPDATEstats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>List Update Stats</a></FONT>\n";
 			}
+		if ($SScallcard_enabled > 0)
+			{
+			if ( (preg_match("/CallCard Search/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+				{echo "<LI><a href=\"callcard_admin.php?action=SEARCH\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>CallCard Search</a></FONT>\n";}
+			}
+
 		echo "</UL>\n";
 		echo "</TD></TR></TABLE>\n";
 

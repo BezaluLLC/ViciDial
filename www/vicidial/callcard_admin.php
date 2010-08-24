@@ -11,10 +11,11 @@
 # 100311-2325 - first build
 # 100525-1824 - Added generate option
 # 100616-0847 - Fixed batch issue
+# 100823-1342 - Added Search option and display for level 7 users, added pin number search
 #
 
-$version = '2.4-3';
-$build = '100616-0847';
+$version = '2.4-4';
+$build = '100823-1342';
 
 $MT[0]='';
 
@@ -37,6 +38,8 @@ if (isset($_GET["sequence"]))				{$sequence=$_GET["sequence"];}
 	elseif (isset($_POST["sequence"]))		{$sequence=$_POST["sequence"];}
 if (isset($_GET["card_id"]))				{$card_id=$_GET["card_id"];}
 	elseif (isset($_POST["card_id"]))		{$card_id=$_POST["card_id"];}
+if (isset($_GET["pin"]))					{$pin=$_GET["pin"];}
+	elseif (isset($_POST["pin"]))			{$pin=$_POST["pin"];}
 if (isset($_GET["status"]))					{$status=$_GET["status"];}
 	elseif (isset($_POST["status"]))		{$status=$_POST["status"];}
 if (isset($_GET["total"]))					{$total=$_GET["total"];}
@@ -72,6 +75,9 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
 header ("Pragma: no-cache");                          // HTTP/1.0
+
+$report_name = 'CallCard Search';
+$SEARCHONLY=0;
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -124,7 +130,7 @@ else
 	$USER = ereg_replace("[^0-9a-zA-Z]","",$USER);
 	$PASS = ereg_replace("[^0-9a-zA-Z]","",$PASS);
 
-	$stmt="SELECT count(*) from vicidial_users where user='$USER' and pass='$PASS' and user_level > 7 and callcard_admin='1'";
+	$stmt="SELECT count(*) from vicidial_users where user='$USER' and pass='$PASS' and user_level > 7 and callcard_admin='1' and active='Y';";
 	if ($DB) {echo "|$stmt|\n";}
 	if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
 	$rslt=mysql_query($stmt, $link);
@@ -133,13 +139,53 @@ else
 
 	if( (strlen($USER)<2) or (strlen($PASS)<2) or (!$auth))
 		{
-		Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-		Header("HTTP/1.0 401 Unauthorized");
-		echo "Invalid Username/Password: |$USER|$PASS|\n";
-		exit;
+		$stmt="SELECT count(*) from vicidial_users where user='$USER' and pass='$PASS' and user_level > 6 and view_reports='1' and active='Y';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$authreport=$row[0];
+
+		if ($authreport > 0)
+			{
+			$stmt="SELECT full_name,user_group from vicidial_users where user='$USER' and pass='$PASS';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$LOGfullname =		$row[0];
+			$LOGuser_group =	$row[1];
+
+			$stmt="SELECT allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$LOGallowed_reports =	$row[0];
+
+			if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+				{
+				Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+				Header("HTTP/1.0 401 Unauthorized");
+				echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+				exit;
+				}
+			else
+				{
+				$SEARCHONLY=1;
+				}
+			}
+		else
+			{
+			Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+			Header("HTTP/1.0 401 Unauthorized");
+			echo "Invalid Username/Password: |$USER|$PASS|\n";
+			exit;
+			}
 		}
 	}
 
+if ($SEARCHONLY > 0)
+	{
+	if ( ($action != 'SEARCH') and ($action != 'SEARCH_RESULTS') and ($action != 'CALLCARD_DETAIL') )
+		{$action = 'SEARCH';}
+	}
 
 if (strlen($action) < 1)
 	{$action = 'CALLCARD_SUMMARY';}
@@ -353,10 +399,13 @@ if ($action == "CALLCARD_DETAIL")
 		echo "</TABLE>\n";
 		echo "<BR><BR><BR>\n";
 
-		echo "<a href=\"$PHP_SELF?action=CALLCARD_STATUS&status=VOID&card_id=$card_id&DB=$DB\">Void This Card ID</a><BR><BR>\n";
-		echo "<a href=\"$PHP_SELF?action=CALLCARD_STATUS&status=ACTIVE&card_id=$card_id&DB=$DB\">Activate This Card ID</a><BR><BR>\n";
-		echo "<a href=\"$PHP_SELF?action=CALLCARD_STATUS&status=RESET&card_id=$card_id&DB=$DB\">Reset Minutes on This Card ID</a>\n";
-		echo "<BR><BR>\n";
+		if ($SEARCHONLY < 1)
+			{
+			echo "<a href=\"$PHP_SELF?action=CALLCARD_STATUS&status=VOID&card_id=$card_id&DB=$DB\">Void This Card ID</a><BR><BR>\n";
+			echo "<a href=\"$PHP_SELF?action=CALLCARD_STATUS&status=ACTIVE&card_id=$card_id&DB=$DB\">Activate This Card ID</a><BR><BR>\n";
+			echo "<a href=\"$PHP_SELF?action=CALLCARD_STATUS&status=RESET&card_id=$card_id&DB=$DB\">Reset Minutes on This Card ID</a>\n";
+			echo "<BR><BR>\n";
+			}
 
 		### call log
 		echo "<TABLE><TR><TD>\n";
@@ -403,7 +452,10 @@ if ($action == "CALLCARD_DETAIL")
 			}
 		echo "</TABLE><BR><BR>\n";
 
-		echo "<a href=\"admin.php?ADD=720000000000000&category=CALLCARD&stage=$card_id&DB=$DB\">Admin Log for this Card ID</a><BR><BR>\n";
+		if ($SEARCHONLY < 1)
+			{
+			echo "<a href=\"admin.php?ADD=720000000000000&category=CALLCARD&stage=$card_id&DB=$DB\">Admin Log for this Card ID</a><BR><BR>\n";
+			}
 		}
 	else
 		{
@@ -749,6 +801,20 @@ if ($action == "GENERATE")
 ### BEGIN search results
 if ($action == "SEARCH_RESULTS")
 	{
+	if (strlen($pin) > 1)
+		{
+		$searchSQL = "pin='$pin'";
+
+		$stmt = "SELECT card_id FROM callcard_accounts where $searchSQL;";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$vt_ct = mysql_num_rows($rslt);
+		if ($vt_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$card_id =			$row[0];
+			}
+		}
 	if (strlen($card_id) > 1)
 		{$searchSQL = "card_id='$card_id'";}
 	if (strlen($run) > 1)
@@ -851,6 +917,7 @@ if ($action == "SEARCH")
 	echo "<input type=hidden name=action value=SEARCH_RESULTS>\n";
 	echo "<input type=hidden name=DB value=$DB>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>PIN: </td><td align=left><input type=text name=pin size=20 maxlength=20></td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Card ID: </td><td align=left><input type=text name=card_id size=20 maxlength=20></td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Run: </td><td align=left><input type=text name=run size=5 maxlength=4></td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Batch: </td><td align=left><input type=text name=batch size=6 maxlength=5></td></tr>\n";
