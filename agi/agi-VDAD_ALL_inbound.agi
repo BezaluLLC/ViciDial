@@ -995,6 +995,11 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 				usleep(1*990*1000);
 				}
 
+			$AGI->stream_file('sip-silence');
+			$AGI->stream_file('sip-silence');
+			$AGI->stream_file('sip-silence');
+			$AGI->stream_file('sip-silence');
+
 			if ($AGILOG) {$agi_string = "exiting the VDAD app after hours, transferring call to $DROPexten";   &agi_output;}
 			print "SET CONTEXT $ext_context\n";
 				checkresult($result);
@@ -1215,6 +1220,11 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 					### sleep for 99 hundredths of a second
 					usleep(1*990*1000);
 					}
+
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
 
 				if ($AGILOG) {$agi_string = "exiting the VDAD app no agent no queue, transferring call to $DROPexten";   &agi_output;}
 				print "SET CONTEXT $ext_context\n";
@@ -2132,6 +2142,8 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 				$AGI->stream_file('sip-silence');
 				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
 
 				print "SET CONTEXT $ext_context\n";
 					checkresult($result);
@@ -2633,6 +2645,8 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 				$AGI->stream_file('sip-silence');
 				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
 
 				print "SET CONTEXT $ext_context\n";
 					checkresult($result);
@@ -2759,6 +2773,8 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				$dbhB->disconnect();
 				}
 
+			$AGI->stream_file('sip-silence');
+			$AGI->stream_file('sip-silence');
 			$AGI->stream_file('sip-silence');
 			$AGI->stream_file('sip-silence');
 
@@ -3407,6 +3423,9 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						{$AGI->stream_file("$wait_time_option_callback_filename");}
 					}
 
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+
 				if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $DROPexten";   &agi_output;}
 				print "SET CONTEXT $ext_context\n";
 					checkresult($result);
@@ -3790,6 +3809,9 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 								{$AGI->stream_file("$hold_time_option_callback_filename");}
 							}
 
+						$AGI->stream_file('sip-silence');
+						$AGI->stream_file('sip-silence');
+
 						if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $DROPexten";   &agi_output;}
 						print "SET CONTEXT $ext_context\n";
 							checkresult($result);
@@ -4055,6 +4077,8 @@ if ($drop_timer > $DROP_TIME)
 			usleep(1*990*1000);
 			}
 
+		$AGI->stream_file('sip-silence');
+		$AGI->stream_file('sip-silence');
 		$AGI->stream_file('sip-silence');
 		$AGI->stream_file('sip-silence');
 
