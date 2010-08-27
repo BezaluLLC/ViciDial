@@ -299,6 +299,9 @@ OTHER CHANGES:
 64. Added did_id, did_extension, did_pattern and did_description as webform and
 	script variables in the agent screen.
 
+65. Added webphone options for System Key and Dialpad, may not be compatible
+	with all webphones.
+
 
 
 

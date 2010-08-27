@@ -207,6 +207,10 @@ exten => _9119XXXXXXXX,1,Dial(${TRUNKblind}/9998819112,55,to)
 ; exten => _91XXXXXXXXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
 ; exten => _91XXXXXXXXXXXXX,n,Dial(${TRUNKloop}/8889990011112,,to)
 ; exten => _91XXXXXXXXXXXXX,n,Hangup
+; block calls to 555 numbers
+; exten => _91NXX555NXXX,1,AGI(agi://127.0.0.1:4577/call_log) 
+; exten => _91NXX555NXXX,n,Dial(${TRUNKloop}/8889990011112,,to) 
+; exten => _91NXX555NXXX,n,Hangup
 ; dial a USA long distance outbound number through the loopback-no-log context
 ; exten => _91NXXNXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
 ; exten => _91NXXNXXXXXX,2,Dial(${TRUNKloop}/888${EXTEN:2},55,o)

@@ -522,3 +522,12 @@ UPDATE system_settings SET db_schema_version='1241',db_schema_update_date=NOW();
 ALTER TABLE vicidial_campaigns ADD manual_dial_prefix VARCHAR(20) default '';
 
 UPDATE system_settings SET db_schema_version='1242',db_schema_update_date=NOW();
+
+ALTER TABLE system_settings ADD webphone_systemkey VARCHAR(100) default '';
+
+ALTER TABLE phones ADD webphone_dialpad ENUM('Y','N','TOGGLE') default 'Y';
+
+ALTER TABLE vicidial_user_groups ADD webphone_systemkey_override VARCHAR(100) default '';
+ALTER TABLE vicidial_user_groups ADD webphone_dialpad_override ENUM('DISABLED','Y','N','TOGGLE') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1243',db_schema_update_date=NOW();

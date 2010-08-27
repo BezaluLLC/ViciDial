@@ -10,10 +10,12 @@
 # $callerid - the callerid number
 # $protocol - IAX or SIP
 # $codecs - list of codecs to use
+# $system_key - key optionally used by the webphone service to validate the user
 #
 # CHANGELOG
 # 100130-2359 - First Build of VICIDIAL web client basic login process finished
 # 100424-2102 - Added codecs option and updated zoiperweb code reference
+# 100827-1417 - Added system_key variable
 #
 
 if (isset($_GET["DB"]))							{$DB=$_GET["DB"];}
@@ -30,6 +32,10 @@ if (isset($_GET["protocol"]))					{$protocol=$_GET["protocol"];}
         elseif (isset($_POST["protocol"]))		{$protocol=$_POST["protocol"];}
 if (isset($_GET["codecs"]))						{$codecs=$_GET["codecs"];}
         elseif (isset($_POST["codecs"]))		{$codecs=$_POST["codecs"];}
+if (isset($_GET["options"]))					{$options=$_GET["options"];}
+        elseif (isset($_POST["options"]))		{$options=$_POST["options"];}
+if (isset($_GET["system_key"]))					{$system_key=$_GET["system_key"];}
+        elseif (isset($_POST["system_key"]))	{$system_key=$_POST["system_key"];}
 
 $b64_phone_login =		base64_decode($phone_login);
 $b64_phone_pass =		base64_decode($phone_pass);
@@ -37,6 +43,8 @@ $b64_server_ip =		base64_decode($server_ip);
 $b64_callerid =			base64_decode($callerid);
 $b64_protocol =			base64_decode($protocol);
 $b64_codecs =			base64_decode($codecs);
+$b64_options =			base64_decode($options);
+$b64_system_key =		base64_decode($system_key);
 if ($b64_protocol != 'SIP')
 	{$b64_protocol = 'IAX';}
 
@@ -141,6 +149,15 @@ function OnZoiperReady(phone)
 	Contact.CellPhone   = "cell";
 	Contact.FaxNumber   = "fax";
 	Contact.Apply();
+
+
+	<?php
+	if (preg_match("/DIALPAD_Y|DIALPAD_TOGGLE/i",$b64_options))	
+		{echo "Zoiper.ShowDialPad(\"true\");\n";}
+	else
+		{echo "Zoiper.ShowDialPad(\"false\");\n";}
+	?>
+
 	}
 function OnZoiperCallFail(call)
 	{
@@ -192,6 +209,17 @@ function OnZoiperContactStatus(contact,status)
 	{
 	Status(contact.Name + " is " + status);
 	}
+function dialpad_inactive()
+	{
+	document.getElementById("Dialpad_toggle").innerHTML = "<a href=\"#\" onclick=\"dialpad_active();return false;\">DIALPAD +</a>\n";
+	Zoiper.ShowDialPad("false");
+	}
+function dialpad_active()
+	{ 
+	document.getElementById("Dialpad_toggle").innerHTML = "<a href=\"#\" onclick=\"dialpad_inactive();return false;\">DIALPAD -</a>\n";
+	Zoiper.ShowDialPad("true");
+	}      
+
 </script>
 
 <table>
@@ -220,7 +248,7 @@ function OnZoiperContactStatus(contact,status)
 
 <div id="supportedBrowsersScreen" style="display:block;">	   
         <!--CODEBASE="Activextest.ocx"    -->
-		<div style="background:url(http://www.zoiper.com/images/loader.gif) 50% 50% no-repeat;width:434px;height:236px;float:left;"> 
+		<div style="background:url(./loader.gif) 50% 50% no-repeat;width:434px;height:236px;float:left;"> 
 		<object id="ZoiperA" classid="clsid:BCCA9B64-41B3-4A20-8D8B-E69FE61F1F8B" align="center" width="434" height="236" CODEBASE="http://www.zoiper.com/webphone/InstallerWeb.cab#Version=1,17,0,6802">
 			<embed id="ZoiperN" type="application/x-zoiper-plugin" align="center" width="434" height="236" />
 		</object> 
@@ -233,5 +261,13 @@ function OnZoiperContactStatus(contact,status)
 </table>
 <BR>
 <span id="Status">Ready</span>
+
+<span id="Dialpad_toggle">
+<?php
+if (preg_match("/DIALPAD_TOGGLE/i",$b64_options))	
+	{echo "<a href=\"#\" onclick=\"dialpad_inactive();return false;\">DIALPAD -</a>\n";}
+?>
+</span>
+
 </body>
 </html>

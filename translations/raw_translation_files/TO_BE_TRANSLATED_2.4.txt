@@ -381,6 +381,14 @@ Manual Dial Prefix||
 This optional field allows you to set the dial prefix to be used only when placing manual dial calls from the agent interface, such as using the MANUAL DIAL feature, or Dial Next Number when in the MANUAL dial method, or manual alt number dialing, or scheduled user-only callbacks. Default is empty for disabled, which will use the Dial Prefix defined in the field above. This option does not interfere with the 3way Dial Prefix option||
 Here is a list of reserved phrases that cannot be used as menu IDs||
 Call Menu ID cannot use reserved words||
+Webphone System Key Override||
+This setting allows you to set an alternate webphone System Key just for the members of one user group. Default is empty||
+Webphone Dialpad Override||
+This setting allows you to activate or deactivate the dialpad on the webphone just for the members of one user group. Default is DISABLED. TOGGLE will allow the user to view and hide the dialpad by clicking a link||
+Webphone Dialpad||
+This setting allows you to activate or deactivate the dialpad for this webphone. Default is Y for enabled. TOGGLE will allow the user to view and hide the dialpad by clicking a link. This feature is not available on all webphone versions||
+Webphone System Key||
+If your system or provider requires it, this is where the System Key for the webphone should be entered in. Default is empty||
 
 
 AST_VICIDIAL_ingrouplist.php
