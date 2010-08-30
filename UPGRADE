@@ -302,6 +302,12 @@ OTHER CHANGES:
 65. Added webphone options for System Key and Dialpad, may not be compatible
 	with all webphones.
 
+66. Allow the changing of the queue priority of an inbound call while the call
+	is in queue.
+
+67. Changed the example iax.conf and sip.conf to default to context=trunkinbound
+	to prevent unauthenticated calls on insecure phone accounts
+
 
 
 

@@ -7,6 +7,7 @@ allow=all
 allow=gsm                      ; Always allow GSM, it's cool :)
 jitterbuffer=no
 tos=lowdelay
+context=trunkinbound
 
 #include iax-vicidial.conf
 

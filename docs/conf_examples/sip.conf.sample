@@ -1,5 +1,5 @@
 [general]
-context=default                 ; Default context for incoming calls
+context=trunkinbound            ; Default context for incoming calls
 ;allowguest=no                  ; Allow or reject guest calls (default is yes, this can also be set to 'osp'
 ;realm=mydomain.tld             ; Realm for digest authentication
 bindport=5060                   ; UDP Port to bind to (SIP standard port is 5060)

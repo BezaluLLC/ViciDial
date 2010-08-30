@@ -139,6 +139,7 @@
 # 100718-1822 - Added second hold time option and wait time options
 # 100805-1530 - Added FILTER from-did-route feature, changed active=n to go to after hours action
 # 100811-0751 -	Added calculate_estimated_hold_seconds option
+# 100830-1445 - Allow the changing of the queue priority of a call while the call is in queue
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -150,7 +151,7 @@ $wait_prompt_runs=0;
 $at='@';
 $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=149;
+$mysql_log_count=153;
 $one_mysql_log=0;
 
 
@@ -583,7 +584,7 @@ $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
 	$dbhP=$dbhA;   $mysql_count='02005';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-while ($sthArows > $cbc)
+if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
 	
@@ -661,7 +662,6 @@ while ($sthArows > $cbc)
 		{$custom_call_id = "$uniqueid";}
 	if ($uniqueid_status_display =~ /ENABLED_PREFIX/)
 		{$custom_call_id = "$uniqueid_status_prefix$uniqueid";}
-	$cbc++;
 	}
 $sthA->finish();
 
@@ -1711,7 +1711,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 	if ( ($agent_search_method =~ /^SO|^LO/) && ($skipLOSO < 1) )
 		{
 		### Get count of number of calls in this group that are ahead of this call
-		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and server_ip='$VARserver_ip' and campaign_id = '$channel_group' and call_time < \"$SQLdateBEGIN\" and lead_id != '$insert_lead_id';";
+		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and server_ip='$VARserver_ip' and campaign_id = '$channel_group' and call_time < \"$SQLdateBEGIN\" and lead_id != '$insert_lead_id' and queue_priority >= '$queue_priority';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -2199,7 +2199,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		$cbc=0;
 		$rec_countWAITrem=0;
 		### Get count of number of calls in this group that are ahead of this call
-		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and campaign_id = '$channel_group' and call_time < \"$SQLdateBEGIN\" and lead_id != '$insert_lead_id' $ADfindSQL;";
+		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and campaign_id = '$channel_group' and call_time < \"$SQLdateBEGIN\" and lead_id != '$insert_lead_id' and queue_priority >= '$queue_priority' $ADfindSQL;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -2899,7 +2899,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			{
 			$stmtA = "UPDATE vicidial_auto_calls set call_time='$ORIGINAL_call_time' where callerid='$callerid' order by call_time desc limit 1;";
 			$affected_rows = $dbhA->do($stmtA);
-				$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				$dbhP=$dbhA;   $mysql_count='02150';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			if ($AGILOG) {$agi_string = "--    No-Block Prompt Set: |$affected_rows|$ORIGINAL_call_time|$callerid|";   &agi_output;}
 			}
 
@@ -3155,7 +3155,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				{
 				$stmtA = "UPDATE vicidial_auto_calls set call_time='$ORIGINAL_call_time' where callerid='$callerid' order by call_time desc limit 1;";
 				$affected_rows = $dbhA->do($stmtA);
-					$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+					$dbhP=$dbhA;   $mysql_count='02151';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				if ($AGILOG) {$agi_string = "--    No-Block WTO Prompt Set: |$affected_rows|$ORIGINAL_call_time|$callerid|";   &agi_output;}
 				}
 
@@ -3541,7 +3541,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						{
 						$stmtA = "UPDATE vicidial_auto_calls set call_time='$ORIGINAL_call_time' where callerid='$callerid' order by call_time desc limit 1;";
 						$affected_rows = $dbhA->do($stmtA);
-							$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='02152';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 						if ($AGILOG) {$agi_string = "--    No-Block HTO Prompt Set: |$affected_rows|$ORIGINAL_call_time|$callerid|";   &agi_output;}
 						}
 
@@ -3864,7 +3864,26 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			}
 		}
 
-	$stmtA = "UPDATE vicidial_auto_calls set stage='LIVE-$drop_timer' where callerid='$callerid';";
+
+	### allow the changing of the queue priority of a call while the call is in queue
+	$VAC_qp_SQL='';
+	if ($drop_timer > 5)
+		{
+		$stmtA = "SELECT queue_priority FROM vicidial_inbound_groups where group_id = '$channel_group';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+			$dbhP=$dbhA;   $mysql_count='02153';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$queue_priority =	$aryA[0];
+			$VAC_qp_SQL = ", queue_priority='$queue_priority'";
+			}
+	#	if ($AGILOG) {$agi_string = "$sthArows|$stmtA|$VAC_qp_SQL|$queue_priority";   &agi_output;}
+		}
+
+	$stmtA = "UPDATE vicidial_auto_calls set stage='LIVE-$drop_timer'$VAC_qp_SQL where callerid='$callerid';";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02095';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	if ($affected_rows < 1)
