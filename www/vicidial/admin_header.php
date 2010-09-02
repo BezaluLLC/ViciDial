@@ -24,6 +24,7 @@
 # 100616-2350 - Added VIDPROMPT call menu options
 # 100728-0904 - Changed Lead Loader link to the new 3rd gen lead loader
 # 100802-2127 - Changed Admin to point to links page instead of Phones listings
+# 100831-2255 - Added password strength checking function
 #
 
 
@@ -325,34 +326,72 @@ if ( ( ($ADD==34) or ($ADD==31) or ($ADD==49) ) and ($SUB==29) and ($LOGmodify_c
 	<?php
 	}
 	?>
+	var weak = Image();
+	weak.src = "images/weak.png";
+	var medium = Image();
+	medium.src = "images/medium.png";
+	var strong = Image();
+	strong.src = "images/strong.png";
 
-	function openNewWindow(url) {
-	  window.open (url,"",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');
-	}
-	function scriptInsertField() {
+	function pwdChanged(pwd_field_str, pwd_img_str) 
+		{
+		var pwd_field = document.getElementById(pwd_field_str);
+		var pwd_img = document.getElementById(pwd_img_str);
+
+		var strong_regex = new RegExp( "^(?=.{8,})(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])", "g" );
+		var medium_regex = new RegExp( "^(?=.{6,})(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9]))).*$", "g" );
+
+		if (strong_regex.test(pwd_field.value) ) 
+			{
+			if (pwd_img.src != strong.src)
+				{pwd_img.src = strong.src;}
+			} 
+		else if (medium_regex.test( pwd_field.value) ) 
+			{
+			if (pwd_img.src != medium.src) 
+				{pwd_img.src = medium.src;}
+			}
+		else 
+			{
+			if (pwd_img.src != weak.src) 
+				{pwd_img.src = weak.src;}
+			}
+		}
+
+	function openNewWindow(url) 
+		{
+		window.open (url,"",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');
+		}
+	function scriptInsertField() 
+		{
 		openField = '--A--';
 		closeField = '--B--';
 		var textBox = document.scriptForm.script_text;
 		var scriptIndex = document.getElementById("selectedField").selectedIndex;
 		var insValue =  document.getElementById('selectedField').options[scriptIndex].value;
-	  if (document.selection) {
-		//IE
-		textBox = document.scriptForm.script_text;
-		insValue = document.scriptForm.selectedField.options[document.scriptForm.selectedField.selectedIndex].text;
-		textBox.focus();
-		sel = document.selection.createRange();
-		sel.text = openField + insValue + closeField;
-	  } else if (textBox.selectionStart || textBox.selectionStart == 0) {
-		//Mozilla
-		var startPos = textBox.selectionStart;
-		var endPos = textBox.selectionEnd;
-		textBox.value = textBox.value.substring(0, startPos)
-		+ openField + insValue + closeField
-		+ textBox.value.substring(endPos, textBox.value.length);
-	  } else {
-		textBox.value += openField + insValue + closeField;
-	  }
-	}
+		if (document.selection) 
+			{
+			//IE
+			textBox = document.scriptForm.script_text;
+			insValue = document.scriptForm.selectedField.options[document.scriptForm.selectedField.selectedIndex].text;
+			textBox.focus();
+			sel = document.selection.createRange();
+			sel.text = openField + insValue + closeField;
+			} 
+		else if (textBox.selectionStart || textBox.selectionStart == 0) 
+			{
+			//Mozilla
+			var startPos = textBox.selectionStart;
+			var endPos = textBox.selectionEnd;
+			textBox.value = textBox.value.substring(0, startPos)
+			+ openField + insValue + closeField
+			+ textBox.value.substring(endPos, textBox.value.length);
+			}
+		else 
+			{
+			textBox.value += openField + insValue + closeField;
+			}
+		}
 
 	<?php
 

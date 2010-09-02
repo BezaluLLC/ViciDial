@@ -1443,6 +1443,16 @@ if (isset($_GET["webphone_systemkey_override"]))			{$webphone_systemkey_override
 	elseif (isset($_POST["webphone_systemkey_override"]))	{$webphone_systemkey_override=$_POST["webphone_systemkey_override"];}
 if (isset($_GET["webphone_dialpad_override"]))			{$webphone_dialpad_override=$_GET["webphone_dialpad_override"];}
 	elseif (isset($_POST["webphone_dialpad_override"]))	{$webphone_dialpad_override=$_POST["webphone_dialpad_override"];}
+if (isset($_GET["force_change_password"]))			{$force_change_password=$_GET["force_change_password"];}
+	elseif (isset($_POST["force_change_password"]))	{$force_change_password=$_POST["force_change_password"];}
+if (isset($_GET["first_login_trigger"]))			{$first_login_trigger=$_GET["first_login_trigger"];}
+	elseif (isset($_POST["first_login_trigger"]))	{$first_login_trigger=$_POST["first_login_trigger"];}
+if (isset($_GET["default_phone_registration_password"]))			{$default_phone_registration_password=$_GET["default_phone_registration_password"];}
+	elseif (isset($_POST["default_phone_registration_password"]))	{$default_phone_registration_password=$_POST["default_phone_registration_password"];}
+if (isset($_GET["default_phone_login_password"]))			{$default_phone_login_password=$_GET["default_phone_login_password"];}
+	elseif (isset($_POST["default_phone_login_password"]))	{$default_phone_login_password=$_POST["default_phone_login_password"];}
+if (isset($_GET["default_server_password"]))			{$default_server_password=$_GET["default_server_password"];}
+	elseif (isset($_POST["default_server_password"]))	{$default_server_password=$_POST["default_server_password"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1456,27 +1466,33 @@ if (strlen($dial_status) > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =						$row[0];
-	$SSenable_queuemetrics_logging =	$row[1];
-	$SSenable_vtiger_integration =		$row[2];
-	$SSqc_features_active =				$row[3];
-	$SSoutbound_autodial_active =		$row[4];
-	$SSsounds_central_control_active =	$row[5];
-	$SSenable_second_webform =			$row[6];
-	$SSuser_territories_active =		$row[7];
-	$SScustom_fields_enabled =			$row[8];
-	$SSadmin_web_directory =			$row[9];
-	$SSwebphone_url =					$row[10];
+	$non_latin =							$row[0];
+	$SSenable_queuemetrics_logging =		$row[1];
+	$SSenable_vtiger_integration =			$row[2];
+	$SSqc_features_active =					$row[3];
+	$SSoutbound_autodial_active =			$row[4];
+	$SSsounds_central_control_active =		$row[5];
+	$SSenable_second_webform =				$row[6];
+	$SSuser_territories_active =			$row[7];
+	$SScustom_fields_enabled =				$row[8];
+	$SSadmin_web_directory =				$row[9];
+	$SSwebphone_url =						$row[10];
+	$SSfirst_login_trigger =				$row[11];
+	$SShosted_settings =					$row[12];
+	$SSdefault_phone_registration_password =$row[13];
+	$SSdefault_phone_login_password =		$row[14];
+	$SSdefault_server_password =			$row[15];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
 
 ######################################################################################################
 ######################################################################################################
@@ -1748,6 +1764,8 @@ if ($non_latin < 1)
 	$hold_time_option_no_block = ereg_replace("[^NY]","",$hold_time_option_no_block);
 	$wait_time_option_no_block = ereg_replace("[^NY]","",$wait_time_option_no_block);
 	$preset_hide_number = ereg_replace("[^NY]","",$preset_hide_number);
+	$force_change_password = ereg_replace("[^NY]","",$force_change_password);
+	$first_login_trigger = ereg_replace("[^NY]","",$first_login_trigger);
 
 	$qc_enabled = ereg_replace("[^0-9NY]","",$qc_enabled);
 	$active = ereg_replace("[^0-9NY]","",$active);
@@ -1993,6 +2011,9 @@ if ($non_latin < 1)
 	$webphone_dialpad = ereg_replace("[^-_0-9a-zA-Z]","",$webphone_dialpad);
 	$webphone_systemkey_override = ereg_replace("[^-_0-9a-zA-Z]","",$webphone_systemkey_override);
 	$webphone_dialpad_override = ereg_replace("[^-_0-9a-zA-Z]","",$webphone_dialpad_override);
+	$default_phone_registration_password = ereg_replace("[^-_0-9a-zA-Z]","",$default_phone_registration_password);
+	$default_phone_login_password = ereg_replace("[^-_0-9a-zA-Z]","",$default_phone_login_password);
+	$default_server_password = ereg_replace("[^-_0-9a-zA-Z]","",$default_server_password);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
@@ -2513,11 +2534,12 @@ else
 # 100817-1243 - Added checking for reserved menu_id on creation of Call Menus
 # 100823-1501 - Added CallCard search as an available User Group report option
 # 100827-1535 - Added webphone options for dialpad and systemkey
+# 100901-2055 - Added password strength grading, force password change, password default settings and first login screen
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-277';
-$build = '100827-1535';
+$admin_version = '2.4-278';
+$build = '100901-2055';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -2620,7 +2642,7 @@ if ( ($auth > 0) or ($reports_auth > 0) )
 	{
 	$office_no=strtoupper($PHP_AUTH_USER);
 	$password=strtoupper($PHP_AUTH_PW);
-	$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW';";
+	$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$LOGfull_name				=$row[3];
@@ -2656,7 +2678,8 @@ if ( ($auth > 0) or ($reports_auth > 0) )
 	$LOGmanager_shift_enforcement_override=$row[61];
 	$LOGexport_reports			=$row[64];
 	$LOGdelete_from_dnc			=$row[65];
-	$LOGcallcard_admin			=$row[66];
+	$LOGcallcard_admin			=$row[70];
+	$LOGforce_change_password	=$row[71];
 
 	$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
 	$rslt=mysql_query($stmt, $link);
@@ -2679,6 +2702,29 @@ if ( ($auth > 0) or ($reports_auth > 0) )
 		{
 		fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfull_name|\n");
 		fclose($fp);
+		}
+
+	$first_login_link=0;
+
+	if ($LOGforce_change_password=='Y')
+		{
+		$ADD=999997;
+		$reports_only_user=1;
+		}
+	if ($SSfirst_login_trigger=='Y')
+		{
+		
+		if ($ADD==999996)
+			{$reports_only_user=1;}
+		else
+			{
+			$ADD=999995;
+			$first_login_link=1;
+			}
+		}
+	if ($ADD==999995)
+		{
+		$reports_only_user=1;
 		}
 	}
 else
@@ -2997,6 +3043,9 @@ if ($ADD==661)			{$hh='users';		echo "SEARCH PHONES RESULTS";}
 if ($ADD==99999)		{$hh='users';		echo "HELP";}
 if ($ADD==999999)		{$hh='reports';		echo "REPORTS";}
 if ($ADD==999998)		{$hh='admin';		echo "ADMIN";}
+if ($ADD==999997)		{$hh='reports';		echo "CHANGE PASSWORD";}
+if ($ADD==999996)		{$hh='reports';		echo "INITIAL INSTALL WELCOME";}
+if ($ADD==999995)		{$hh='reports';		echo "COPYRIGHT TRADEMARK LICENSE";}
 
 
 if ( ($ADD>9) && ($ADD < 99998) )
@@ -3520,7 +3569,12 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_users-pass">
 	<BR>
-	<B>Password -</B> This field is where you put the VICIDIAL users password. Must be at least 2 characters in length.
+	<B>Password -</B> This field is where you put the VICIDIAL users password. Must be at least 2 characters in length. A strong user password should be at least 8 characters in length and have lower case and upper case letters as well as at least one number.
+
+	<BR>
+	<A NAME="vicidial_users-force_change_password">
+	<BR>
+	<B>Force Change Password -</B> If this option is set to Y then the user will be prompted to change their password the next time they log in to the administration webpage. Default is N.
 
 	<BR>
 	<A NAME="vicidial_users-full_name">
@@ -6006,7 +6060,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="phones-conf_secret">
 	<BR>
-	<B>Registration Password -</B> This is the secret, or password, for the phone in the iax or sip auto-generated conf file for this phone. Limit is 20 characters alphanumeric dash and underscore accepted. Default is test. Formerly called Conf File Secret.
+	<B>Registration Password -</B> This is the secret, or password, for the phone in the iax or sip auto-generated conf file for this phone. Limit is 20 characters alphanumeric dash and underscore accepted. Default is test. Formerly called Conf File Secret. A strong registration password should be at least 8 characters in length and have lower case and upper case letters as well as at least one number.
 
 	<BR>
 	<A NAME="phones-is_webphone">
@@ -6480,7 +6534,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="servers-conf_secret">
 	<BR>
-	<B>Conf File Secret -</B> This is the secret, or password, for the server in the iax auto-generated conf file for this server on other servers. Limit is 20 characters alphanumeric dash and underscore accepted. Default is test.
+	<B>Conf File Secret -</B> This is the secret, or password, for the server in the iax auto-generated conf file for this server on other servers. Limit is 20 characters alphanumeric dash and underscore accepted. Default is test. A strong conf file secret should be at least 8 characters in length and have lower case and upper case letters as well as at least one number.
 
 	<BR>
 	<A NAME="servers-local_gmt">
@@ -6880,6 +6934,26 @@ if ($ADD==99999)
 	<A NAME="settings-custom_fields_enabled">
 	<BR>
 	<B>Enable Custom List Fields -</B> This setting enables the custom list fields feature that allows for custom data fields to be defined in the administration web interface on a per-list basis and then have those fields available in a FORM tab to the agent in the agent web interface. Default is 0 for disabled.
+
+	<BR>
+	<A NAME="settings-first_login_trigger">
+	<BR>
+	<B>First Login Trigger -</B> This setting allows for the initial configuration of the server screen to be shown to the administrator when they first log into the system.
+
+	<BR>
+	<A NAME="settings-default_phone_registration_password">
+	<BR>
+	<B>Default Phone Registration Password -</B> This is the default registration password used when new phones are added to the system. Default is test.
+
+	<BR>
+	<A NAME="settings-default_phone_login_password">
+	<BR>
+	<B>Default Phone Login Password -</B> This is the default phone web login password used when new phones are added to the system. Default is test.
+
+	<BR>
+	<A NAME="settings-default_server_password">
+	<BR>
+	<B>Default Server Password -</B> This is the default server password used when new servers are added to the system. Default is test.
 
 	<BR>
 	<A NAME="settings-slave_db_server">
@@ -7414,7 +7488,9 @@ if ($ADD=="1")
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>User Number: </td><td align=left><input type=text name=user id=user size=20 maxlength=20> <input type=button name=auto_user value=\"AUTO-GENERATE\" onClick=\"user_auto()\"> $NWB#vicidial_users-user$NWE</td></tr>\n";
 			}
-		echo "<tr bgcolor=#B6D3FC><td align=right>Password: </td><td align=left><input type=text name=pass size=20 maxlength=20>$NWB#vicidial_users-pass$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_pass name=pass size=20 maxlength=20 onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\">$NWB#vicidial_users-pass$NWE &nbsp; &nbsp; Strength: <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
+
 		echo "<tr bgcolor=#B6D3FC><td align=right>Full Name: </td><td align=left><input type=text name=full_name size=20 maxlength=100>$NWB#vicidial_users-full_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>User Level: </td><td align=left><select size=1 name=user_level>";
 		$h=1;
@@ -7488,7 +7564,9 @@ if ($ADD=="1A")
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>User Number: </td><td align=left><input type=text name=user id=user size=20 maxlength=20> <input type=button name=auto_user value=\"AUTO-GENERATE\" onClick=\"user_auto()\"> $NWB#vicidial_users-user$NWE</td></tr>\n";
 			}
-		echo "<tr bgcolor=#B6D3FC><td align=right>Password: </td><td align=left><input type=text name=pass size=20 maxlength=20>$NWB#vicidial_users-pass$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_pass name=pass size=20 maxlength=20 onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\">$NWB#vicidial_users-pass$NWE &nbsp; &nbsp; Strength: <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
+
 		echo "<tr bgcolor=#B6D3FC><td align=right>Full Name: </td><td align=left><input type=text name=full_name size=20 maxlength=100>$NWB#vicidial_users-full_name$NWE</td></tr>\n";
 
 		if ($LOGuser_level==9) {$levelMAX=10;}
@@ -8814,8 +8892,8 @@ if ($ADD==11111111111)
 		echo "$servers_list";
 		echo "</select>$NWB#phones-server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Login: </td><td align=left><input type=text name=login size=15 maxlength=15>$NWB#phones-login$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Login Password: </td><td align=left><input type=text name=pass size=10 maxlength=10>$NWB#phones-pass$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Registration Password: </td><td align=left><input type=text name=conf_secret size=20 maxlength=20>$NWB#phones-conf_secret$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Login Password: </td><td align=left><input type=text name=pass size=10 maxlength=20 value=\"$SSdefault_phone_login_password\">$NWB#phones-pass$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Registration Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_pass name=conf_secret size=20 maxlength=20 value=\"$SSdefault_phone_registration_password\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\">$NWB#phones-conf_secret$NWE &nbsp; &nbsp; Strength: <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Status: </td><td align=left><select size=1 name=status><option SELECTED>ACTIVE</option><option>SUSPENDED</option><option>CLOSED</option><option>PENDING</option><option>ADMIN</option></select>$NWB#phones-status$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active Account: </td><td align=left><select size=1 name=active><option SELECTED>Y</option><option>N</option></select>$NWB#phones-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Phone Type: </td><td align=left><input type=text name=phone_type size=20 maxlength=50>$NWB#phones-phone_type$NWE</td></tr>\n";
@@ -9588,7 +9666,7 @@ if ($ADD=="2A")
 				$stmt="UPDATE system_settings SET auto_user_add_value='$user';";
 				$rslt=mysql_query($stmt, $link);
 				}
-			$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify) SELECT \"$user\",\"$pass\",\"$full_name\",user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify from vicidial_users where user=\"$source_user_id\";";
+			$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password) SELECT \"$user\",\"$pass\",\"$full_name\",user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password from vicidial_users where user=\"$source_user_id\";";
 			$rslt=mysql_query($stmt, $link);
 
 			$stmtA="INSERT INTO vicidial_inbound_group_agents (user,group_id,group_rank,group_weight,calls_today) SELECT \"$user\",group_id,group_rank,group_weight,\"0\" from vicidial_inbound_group_agents where user=\"$source_user_id\";";
@@ -11393,7 +11471,7 @@ if ($ADD==211111111111)
 			{
 			echo "<br>SERVER ADDED\n";
 
-			$stmt="INSERT INTO servers (server_id,server_description,server_ip,active,asterisk_version) values('$server_id','$server_description','$server_ip','$active','$asterisk_version');";
+			$stmt="INSERT INTO servers (server_id,server_description,server_ip,active,asterisk_version,conf_secret) values('$server_id','$server_description','$server_ip','$active','$asterisk_version','$SSdefault_server_password');";
 			$rslt=mysql_query($stmt, $link);
 
 			$stmtA="UPDATE servers SET rebuild_conf_files='Y',rebuild_music_on_hold='Y',sounds_update='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
@@ -11936,7 +12014,7 @@ if ($ADD=="4A")
 				}
 			echo "<br><B>USER MODIFIED - ADMIN: $user</B>\n";
 
-			$stmt="UPDATE vicidial_users set pass='$pass',full_name='$full_name',user_level='$user_level',user_group='$user_group',phone_login='$phone_login',phone_pass='$phone_pass',delete_users='$delete_users',delete_user_groups='$delete_user_groups',delete_lists='$delete_lists',delete_campaigns='$delete_campaigns',delete_ingroups='$delete_ingroups',delete_remote_agents='$delete_remote_agents',load_leads='$load_leads',campaign_detail='$campaign_detail',ast_admin_access='$ast_admin_access',ast_delete_phones='$ast_delete_phones',delete_scripts='$delete_scripts',modify_leads='$modify_leads',hotkeys_active='$hotkeys_active',change_agent_campaign='$change_agent_campaign',agent_choose_ingroups='$agent_choose_ingroups',closer_campaigns='$groups_value',scheduled_callbacks='$scheduled_callbacks',agentonly_callbacks='$agentonly_callbacks',agentcall_manual='$agentcall_manual',vicidial_recording='$vicidial_recording',vicidial_transfers='$vicidial_transfers',delete_filters='$delete_filters',alter_agent_interface_options='$alter_agent_interface_options',closer_default_blended='$closer_default_blended',delete_call_times='$delete_call_times',modify_call_times='$modify_call_times',modify_users='$modify_users',modify_campaigns='$modify_campaigns',modify_lists='$modify_lists',modify_scripts='$modify_scripts',modify_filters='$modify_filters',modify_ingroups='$modify_ingroups',modify_usergroups='$modify_usergroups',modify_remoteagents='$modify_remoteagents',modify_servers='$modify_servers',view_reports='$view_reports',vicidial_recording_override='$vicidial_recording_override',alter_custdata_override='$alter_custdata_override',qc_enabled='$qc_enabled',qc_user_level='$qc_user_level',qc_pass='$qc_pass',qc_finish='$qc_finish',qc_commit='$qc_commit',add_timeclock_log='$add_timeclock_log',modify_timeclock_log='$modify_timeclock_log',delete_timeclock_log='$delete_timeclock_log',alter_custphone_override='$alter_custphone_override',vdc_agent_api_access='$vdc_agent_api_access',modify_inbound_dids='$modify_inbound_dids',delete_inbound_dids='$delete_inbound_dids',active='$active',download_lists='$download_lists',agent_shift_enforcement_override='$agent_shift_enforcement_override',manager_shift_enforcement_override='$manager_shift_enforcement_override',export_reports='$export_reports',delete_from_dnc='$delete_from_dnc',email='$email',user_code='$user_code',territory='$territory',allow_alerts='$allow_alerts',agent_choose_territories='$agent_choose_territories',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five',voicemail_id='$voicemail_id',agent_call_log_view_override='$agent_call_log_view_override',callcard_admin='$callcard_admin',agent_choose_blended='$agent_choose_blended',realtime_block_user_info='$realtime_block_user_info',custom_fields_modify='$custom_fields_modify' where user='$user';";
+			$stmt="UPDATE vicidial_users set pass='$pass',full_name='$full_name',user_level='$user_level',user_group='$user_group',phone_login='$phone_login',phone_pass='$phone_pass',delete_users='$delete_users',delete_user_groups='$delete_user_groups',delete_lists='$delete_lists',delete_campaigns='$delete_campaigns',delete_ingroups='$delete_ingroups',delete_remote_agents='$delete_remote_agents',load_leads='$load_leads',campaign_detail='$campaign_detail',ast_admin_access='$ast_admin_access',ast_delete_phones='$ast_delete_phones',delete_scripts='$delete_scripts',modify_leads='$modify_leads',hotkeys_active='$hotkeys_active',change_agent_campaign='$change_agent_campaign',agent_choose_ingroups='$agent_choose_ingroups',closer_campaigns='$groups_value',scheduled_callbacks='$scheduled_callbacks',agentonly_callbacks='$agentonly_callbacks',agentcall_manual='$agentcall_manual',vicidial_recording='$vicidial_recording',vicidial_transfers='$vicidial_transfers',delete_filters='$delete_filters',alter_agent_interface_options='$alter_agent_interface_options',closer_default_blended='$closer_default_blended',delete_call_times='$delete_call_times',modify_call_times='$modify_call_times',modify_users='$modify_users',modify_campaigns='$modify_campaigns',modify_lists='$modify_lists',modify_scripts='$modify_scripts',modify_filters='$modify_filters',modify_ingroups='$modify_ingroups',modify_usergroups='$modify_usergroups',modify_remoteagents='$modify_remoteagents',modify_servers='$modify_servers',view_reports='$view_reports',vicidial_recording_override='$vicidial_recording_override',alter_custdata_override='$alter_custdata_override',qc_enabled='$qc_enabled',qc_user_level='$qc_user_level',qc_pass='$qc_pass',qc_finish='$qc_finish',qc_commit='$qc_commit',add_timeclock_log='$add_timeclock_log',modify_timeclock_log='$modify_timeclock_log',delete_timeclock_log='$delete_timeclock_log',alter_custphone_override='$alter_custphone_override',vdc_agent_api_access='$vdc_agent_api_access',modify_inbound_dids='$modify_inbound_dids',delete_inbound_dids='$delete_inbound_dids',active='$active',download_lists='$download_lists',agent_shift_enforcement_override='$agent_shift_enforcement_override',manager_shift_enforcement_override='$manager_shift_enforcement_override',export_reports='$export_reports',delete_from_dnc='$delete_from_dnc',email='$email',user_code='$user_code',territory='$territory',allow_alerts='$allow_alerts',agent_choose_territories='$agent_choose_territories',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five',voicemail_id='$voicemail_id',agent_call_log_view_override='$agent_call_log_view_override',callcard_admin='$callcard_admin',agent_choose_blended='$agent_choose_blended',realtime_block_user_info='$realtime_block_user_info',custom_fields_modify='$custom_fields_modify',force_change_password='$force_change_password' where user='$user';";
 			$rslt=mysql_query($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -15024,7 +15102,7 @@ if ($ADD==411111111111111)
 			}
 		$reports_use_slave_db = preg_replace("/,$/","",$new_field_value);
 
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysql_real_escape_string($webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db',webphone_systemkey='$webphone_systemkey';";
+		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysql_real_escape_string($webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db',webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password';";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -17450,7 +17528,7 @@ if ($ADD==3)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify from vicidial_users where user='$user';";
+		$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password from vicidial_users where user='$user';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$user_id =				$row[0];
@@ -17533,6 +17611,7 @@ if ($ADD==3)
 		$agent_choose_blended = $row[79];
 		$realtime_block_user_info = $row[80];
 		$custom_fields_modify =	$row[81];
+		$force_change_password = $row[82];
 
 		if ( ($user_level >= $LOGuser_level) and ($LOGuser_level < 9) )
 			{
@@ -17558,7 +17637,10 @@ if ($ADD==3)
 			echo "<input type=hidden name=user value=\"$user\">\n";
 			echo "<center><TABLE width=$section_width cellspacing=3>\n";
 			echo "<tr bgcolor=#B6D3FC><td align=right>User Number: </td><td align=left><b>$user</b>$NWB#vicidial_users-user$NWE</td></tr>\n";
-			echo "<tr bgcolor=#B6D3FC><td align=right>Password: </td><td align=left><input type=text name=pass size=20 maxlength=10 value=\"$pass\">$NWB#vicidial_users-pass$NWE</td></tr>\n";
+
+			echo "<tr bgcolor=#B6D3FC><td align=right>Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_pass name=pass size=20 maxlength=20 value=\"$pass\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\">$NWB#vicidial_users-pass$NWE &nbsp; &nbsp; Strength: <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
+
+			echo "<tr bgcolor=#B6D3FC><td align=right>Force Change Password: </td><td align=left><select size=1 name=force_change_password><option>Y</option><option>N</option><option SELECTED>$force_change_password</option></select>$NWB#vicidial_users-force_change_password$NWE</td></tr>\n";
 			echo "<tr bgcolor=#B6D3FC><td align=right>Full Name: </td><td align=left><input type=text name=full_name size=30 maxlength=30 value=\"$full_name\">$NWB#vicidial_users-full_name$NWE</td></tr>\n";
 			echo "<tr bgcolor=#B6D3FC><td align=right>User Level: </td><td align=left><select size=1 name=user_level>";
 			$h=1;
@@ -23737,7 +23819,7 @@ if ($ADD==31111111111)
 		echo "</select>$NWB#phones-server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Login: </td><td align=left><input type=text name=login size=15 maxlength=15 value=\"$row[6]\">$NWB#phones-login$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Login Password: </td><td align=left><input type=text name=pass size=10 maxlength=10 value=\"$row[7]\">$NWB#phones-pass$NWE</td></tr>\n";
-		echo "<tr bgcolor=#CCFFFF><td align=right>Registration Password: </td><td align=left><input type=text name=conf_secret size=20 maxlength=20 value=\"$row[72]\">$NWB#phones-conf_secret$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Registration Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_pass name=conf_secret size=20 maxlength=20 value=\"$row[72]\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\">$NWB#phones-conf_secret$NWE &nbsp; &nbsp; Strength: <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Set As Webphone: </td><td align=left><select size=1 name=is_webphone><option>Y</option><option>N</option><option selected>$row[74]</option></select>$NWB#phones-is_webphone$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Webphone Dialpad: </td><td align=left><select size=1 name=webphone_dialpad><option>Y</option><option>N</option><option>TOGGLE</option><option SELECTED>$row[78]</option></select>$NWB#phones-webphone_dialpad$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Use External Server IP: </td><td align=left><select size=1 name=use_external_server_ip><option>Y</option><option>N</option><option selected>$row[75]</option></select>$NWB#phones-use_external_server_ip$NWE</td></tr>\n";
@@ -24047,7 +24129,7 @@ if ($ADD==311111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Manager Update User: </td><td align=left><input type=text name=ASTmgrUSERNAMEupdate size=20 maxlength=20 value=\"$ASTmgrUSERNAMEupdate\">$NWB#servers-ASTmgrUSERNAMEupdate$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Manager Listen User: </td><td align=left><input type=text name=ASTmgrUSERNAMElisten size=20 maxlength=20 value=\"$ASTmgrUSERNAMElisten\">$NWB#servers-ASTmgrUSERNAMElisten$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Manager Send User: </td><td align=left><input type=text name=ASTmgrUSERNAMEsend size=20 maxlength=20 value=\"$ASTmgrUSERNAMEsend\">$NWB#servers-ASTmgrUSERNAMEsend$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Conf File Secret: </td><td align=left><input type=text name=conf_secret size=20 maxlength=20 value=\"$conf_secret\">$NWB#servers-conf_secret$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Conf File Secret: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_pass name=conf_secret size=20 maxlength=20 value=\"$conf_secret\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\">$NWB#servers-conf_secret$NWE &nbsp; &nbsp; Strength: <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Local GMT: </td><td align=left><select size=1 name=local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option><option selected>$local_gmt</option></select> (Do NOT Adjust for DST)$NWB#servers-local_gmt$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>VMail Dump Exten: </td><td align=left><input type=text name=voicemail_dump_exten size=20 maxlength=20 value=\"$voicemail_dump_exten\">$NWB#servers-voicemail_dump_exten$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>VICIDIAL AD extension: </td><td align=left><input type=text name=answer_transfer_agent size=20 maxlength=20 value=\"$answer_transfer_agent\">$NWB#servers-answer_transfer_agent$NWE</td></tr>\n";
@@ -24764,7 +24846,7 @@ if ($ADD==311111111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey from system_settings;";
+		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password from system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$version =						$row[0];
@@ -24844,7 +24926,12 @@ if ($ADD==311111111111111)
 		$custom_fields_enabled =		$row[74];
 		$slave_db_server =				$row[75];
 		$reports_use_slave_db =			$row[76];
-		$webphone_systemkey=			$row[77];
+		$webphone_systemkey =			$row[77];
+		$first_login_trigger =			$row[78];
+		$default_phone_registration_password =	$row[79];
+		$default_phone_login_password =	$row[80];
+		$default_server_password =		$row[81];
+
 
 		echo "<br>MODIFY VICIDIAL SYSTEM SETTINGS<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=411111111111111>\n";
@@ -24982,6 +25069,14 @@ if ($ADD==311111111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Enable CallCard: </td><td align=left><select size=1 name=callcard_enabled><option>1</option><option>0</option><option selected>$callcard_enabled</option></select>$NWB#settings-callcard_enabled$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Enable Custom List Fields: </td><td align=left><select size=1 name=custom_fields_enabled><option>1</option><option>0</option><option selected>$custom_fields_enabled</option></select>$NWB#settings-custom_fields_enabled$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>First Login Trigger: </td><td align=left><input type=hidden name=first_login_trigger value=\"$first_login_trigger\"> $first_login_trigger &nbsp; $NWB#settings-first_login_trigger$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Default Phone Registration Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_passX name=default_phone_registration_password size=20 maxlength=20 value=\"$default_phone_registration_password\" onkeyup=\"return pwdChanged('reg_passX','reg_pass_imgX');\">$NWB#settings-default_phone_registration_password$NWE &nbsp; &nbsp; Strength: <IMG id=reg_pass_imgX src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passX','reg_pass_imgX');\"></td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Default Phone Login Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_passY name=default_phone_login_password size=20 maxlength=20 value=\"$default_phone_login_password\" onkeyup=\"return pwdChanged('reg_passY','reg_pass_imgY');\">$NWB#settings-default_phone_login_password$NWE &nbsp; &nbsp; Strength: <IMG id=reg_pass_imgY src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passY','reg_pass_imgY');\"></td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Default Server Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_passZ name=default_server_password size=20 maxlength=20 value=\"$default_server_password\" onkeyup=\"return pwdChanged('reg_passZ','reg_pass_imgZ');\">$NWB#settings-default_server_password$NWE &nbsp; &nbsp; Strength: <IMG id=reg_pass_imgZ src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passZ','reg_pass_imgZ');\"></td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Slave Database Server: </td><td align=left><input type=text name=slave_db_server size=30 maxlength=50 value=\"$slave_db_server\">$NWB#settings-slave_db_server$NWE</td></tr>\n";
 
@@ -27546,6 +27641,195 @@ if ($ADD==999998)
 ##### END admin links #####
 
 
+######################
+# ADD=999997 - user force change password page
+######################
+if ($ADD==999997)
+	{
+	$show_form=1;
+	if ($stage=='SUBMIT')
+		{
+		if ( (strlen($pass) > 20) or (strlen($pass) < 2) or ($pass==$PHP_AUTH_PW) )
+			{echo "Password has not been changed, please try again |1|" . strlen($pass);}
+		else
+			{
+			$stmt="select count(*) from vicidial_users where user='$user' and pass='$PHP_AUTH_PW' and force_change_password='Y' and active='Y' and user_level > 6;";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$userpass_to_print = mysql_num_rows($rslt);
+			if ($userpass_to_print < 1)
+				{echo "Password has not been changed, please try again |2|$userpass_to_print";}
+			else
+				{
+				$row=mysql_fetch_row($rslt);
+				if ($row[0] < 1)
+					{echo "Password has not been changed, please try again |3|$row[0]";}
+				else
+					{
+					$show_form=0;
+
+					$stmt="UPDATE vicidial_users SET pass='$pass',force_change_password='N' where user='$user' and force_change_password='Y' and active='Y' and user_level > 6;";
+					$rslt=mysql_query($stmt, $link);
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$user', event_code='USER FORCE CHANGE PASSWORD', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+
+					echo "Password has been updated, you may now continue\n";
+					}
+				}
+			}
+		}
+	if ($show_form > 0)
+		{
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		echo "<br>CHANGE PASSWORD<form action=$PHP_SELF method=POST name=userform id=userform>\n";
+		echo "<input type=hidden name=ADD value=999997>\n";
+		echo "<input type=hidden name=DB value=\"$DB\">\n";
+		echo "<input type=hidden name=stage value=SUBMIT>\n";
+		echo "<input type=hidden name=user value=\"$PHP_AUTH_USER\">\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>New Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_pass name=pass size=20 maxlength=20 onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\"> &nbsp; &nbsp; Strength: <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=left colspan=2>You are required to change your password before you can continue on to Administration. A strong password has both lower case and upper case letters as well as at least one number. Your password must be from 2 to 20 characters in length and cannot contain any characters that are not letters or numbers. Be sure that this password is something that you can remember, because as soon as you make this change you will be prompted to enter your new password to log back in to Administration</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+		echo "</TABLE></center></form>\n";
+		}
+	}
+##### END user force change password page #####
+
+
+######################
+# ADD=999996 - initial install welcome page
+######################
+if ($ADD==999996)
+	{
+	if ($SSfirst_login_trigger=='Y')
+		{
+		$show_form=1;
+		if ($stage=='SUBMIT')
+			{
+			if ( (strlen($pass) > 20) or (strlen($pass) < 2) or ($pass==$PHP_AUTH_PW) )
+				{echo "Password has not been changed, please try again |1|" . strlen($pass);}
+			else
+				{
+				$stmt="select count(*) from vicidial_users where user='$user' and pass='$PHP_AUTH_PW' and active='Y' and user_level > 6;";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$userpass_to_print = mysql_num_rows($rslt);
+				if ($userpass_to_print < 1)
+					{echo "Password has not been changed, please try again |2|$userpass_to_print";}
+				else
+					{
+					$row=mysql_fetch_row($rslt);
+					if ($row[0] < 1)
+						{echo "Password has not been changed, please try again |3|$row[0]";}
+					else
+						{
+						$show_form=0;
+
+						if (strlen($default_phone_registration_password) < 2) {$default_phone_registration_password = $SSdefault_phone_registration_password;}
+						if (strlen($default_phone_login_password) < 2) {$default_phone_login_password = $SSdefault_phone_login_password;}
+						if (strlen($default_server_password) < 2) {$default_server_password = $SSdefault_server_password;}
+
+						$stmt="UPDATE vicidial_users SET pass='$pass',force_change_password='N' where user='$user' and active='Y' and user_level > 6;";
+						$rslt=mysql_query($stmt, $link);
+
+						$stmtA="UPDATE system_settings SET first_login_trigger='N',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password';";
+						$rslt=mysql_query($stmtA, $link);
+
+						$stmtB="UPDATE phones SET conf_secret='$default_phone_registration_password',pass='$default_phone_login_password';";
+						$rslt=mysql_query($stmtB, $link);
+
+						$stmtC="UPDATE servers SET conf_secret='$default_server_password',rebuild_conf_files='Y';";
+						$rslt=mysql_query($stmtC, $link);
+
+						### LOG INSERTION Admin Log Table ###
+						$SQL_log = "$stmt|$stmtA|$stmtB|$stmtC|";
+						$SQL_log = ereg_replace(';','',$SQL_log);
+						$SQL_log = addslashes($SQL_log);
+						$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$user', event_code='INITIAL SETTINGS UPDATE', event_sql=\"$SQL_log\", event_notes='';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_query($stmt, $link);
+
+						echo "Passwords have been updated, you may now continue on into Administration. <BR><BR>You may want to start by reading the ViciDial Manager Manual available at <a href=\"http://www.vicidial.org/store.php#MANAGER\" target=\"_blank\">vicidial.org</a> (there is a free version available)\n";
+						}
+					}
+				}
+			}
+		if ($show_form > 0)
+			{
+			echo "<TABLE><TR><TD>\n";
+			echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+			echo "<br><b>Welcome to ViciDial, initial setup screen</b><br><br><form action=$PHP_SELF method=POST name=userform id=userform>\n";
+			echo "<input type=hidden name=ADD value=999996>\n";
+			echo "<input type=hidden name=DB value=\"$DB\">\n";
+			echo "<input type=hidden name=stage value=SUBMIT>\n";
+			echo "<input type=hidden name=user value=\"$PHP_AUTH_USER\">\n";
+			echo "<center><TABLE width=$section_width cellspacing=3>\n";
+
+			echo "<tr bgcolor=#B6D3FC><td align=left colspan=2>You are required to change your password before you can continue on to Administration. A strong password has both lower case and upper case letters as well as at least one number. Your password must be from 2 to 20 characters in length and cannot contain any characters that are not letters or numbers. Be sure that this password is something that you can remember, because as soon as you complete this initial setup screen you will be prompted to enter your new password in again to log back in to Administration</td></tr>\n";
+
+			echo "<tr bgcolor=#B6D3FC><td align=right>New Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_pass name=pass size=20 maxlength=20 onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\"> &nbsp; &nbsp; Strength: <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
+
+			echo "<tr><td colspan=2> &nbsp; </td></tr>\n";
+
+			echo "<tr bgcolor=#B6D3FC><td align=left colspan=2>The next three default passwords are defined in the System Settings section, and you can change them after you define them here. It is a good idea to make these passwords strong so that no one can hack into your phone accounts and place phone calls without you knowing. The default registration password used when new phones are added to the system as the SIP or IAX VOIP phone password. The default phone web login password used when new phones are added to the system, as the phone password that an agent would use in the ViciDial Agent Interface. The default server password used when new servers are added to the system for servers to communicate with each other.</td></tr>\n";
+
+			echo "<tr bgcolor=#B6D3FC><td align=right>Default Phone Registration Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_passX name=default_phone_registration_password size=20 maxlength=20 value=\"$SSdefault_phone_registration_password\" onkeyup=\"return pwdChanged('reg_passX','reg_pass_imgX');\"> &nbsp; &nbsp; Strength: <IMG id=reg_pass_imgX src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passX','reg_pass_imgX');\"></td></tr>\n";
+
+			echo "<tr bgcolor=#B6D3FC><td align=right>Default Phone Login Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_passY name=default_phone_login_password size=20 maxlength=20 value=\"$SSdefault_phone_login_password\" onkeyup=\"return pwdChanged('reg_passY','reg_pass_imgY');\"> &nbsp; &nbsp; Strength: <IMG id=reg_pass_imgY src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passY','reg_pass_imgY');\"></td></tr>\n";
+
+			echo "<tr bgcolor=#B6D3FC><td align=right>Default Server Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_passZ name=default_server_password size=20 maxlength=20 value=\"$SSdefault_server_password\" onkeyup=\"return pwdChanged('reg_passZ','reg_pass_imgZ');\"> &nbsp; &nbsp; Strength: <IMG id=reg_pass_imgZ src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passZ','reg_pass_imgZ');\"></td></tr>\n";
+
+			echo "<tr><td colspan=2> &nbsp; </td></tr>\n";
+
+			echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+			echo "</TABLE></center></form>\n";
+			}
+		}
+	}
+##### END initial install welcome page #####
+
+
+######################
+# ADD=999995 - copyright trademark license page
+######################
+if ($ADD==999995)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	echo "<br><B> Welcome to ViciDial: copyright, trademark and license page</B><BR><BR>\n";
+	echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=right valign=top><B><font size=3>Copyright: </B></td><td align=left> &nbsp; The ViciDial Call Center Suite is maintained by the <a href=\"http://www.vicidial.com/\" target=\"_blank\">ViciDial Group</a>, &copy; 2010</td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=right valign=top><B><font size=3>Trademark: </B></td><td align=left> &nbsp; \"VICIDIAL\" is a registered trademark of the <a href=\"http://www.vicidial.com/\" target=\"_blank\">ViciDial Group</a>. Here is our <a href=\"http://www.vicidial.com/trademark.html\" target=\"_blank\">trademark use policy</a></td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=right valign=top><B><font size=3>License: </B></td><td align=left> &nbsp; The ViciDial Call Center Suite is released under the <a href=\"http://www.vicidial.com/agpl.html\" target=\"_blank\">AGPLv2 open source license</a></td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=right valign=top nowrap><B><font size=3>Source Code: </B></td><td align=left> &nbsp; The ViciDial Call Center Suite software is available for download, and for use, free of cost. You can download the easy to install <a href=\"http://www.vicibox.com/server/index.html\" target=\"_blank\">ViciBox CD ISO version</a>, or only the <a href=\"http://sourceforge.net/projects/astguiclient/files/\" target=\"_blank\">source code</a></td></tr>\n";
+
+	echo "</TABLE></center></form>\n";
+	if ($first_login_link > 0)
+		{
+		echo "<BR><BR>";
+		echo "<BR><center><a href=\"$PHP_SELF?ADD=999996\"><B><font size=4>Continue on to the Initial Setup</font></b></a></center><BR> &nbsp; \n";
+		}
+	}
+##### END copyright trademark license page #####
+
+
 echo "</TD></TR></TABLE></center>\n";
 echo "</TD></TR></TABLE></center>\n";
 
@@ -27557,8 +27841,10 @@ echo "</TD></TR>\n";
 echo "<TR><TD BGCOLOR=#015B91 ALIGN=CENTER>\n";
 echo "<font size=0 color=white><br><br><!-- RUNTIME: $RUNtime seconds<BR> -->";
 echo "VERSION: $admin_version<BR>";
-echo "BUILD: $build</font>\n";
-
+echo "BUILD: $build\n";
+if (!preg_match("/_BUILD_/",$SShosted_settings))
+	{echo "<BR><a href=\"$PHP_SELF?ADD=999995\"><font color=white>&copy; 2010 ViciDial Group</font></a><BR><img src=\"images/pixel.gif\">";}
+echo "</font>\n";
 ?>
 
 </TD><TD BGCOLOR=#D9E6FE>

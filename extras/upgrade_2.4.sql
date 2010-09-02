@@ -531,3 +531,13 @@ ALTER TABLE vicidial_user_groups ADD webphone_systemkey_override VARCHAR(100) de
 ALTER TABLE vicidial_user_groups ADD webphone_dialpad_override ENUM('DISABLED','Y','N','TOGGLE') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1243',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_users ADD force_change_password ENUM('Y','N') default 'N';
+
+ALTER TABLE system_settings ADD first_login_trigger ENUM('Y','N') default 'N';
+ALTER TABLE system_settings ADD hosted_settings VARCHAR(100) default '';
+ALTER TABLE system_settings ADD default_phone_registration_password VARCHAR(20) default 'test';
+ALTER TABLE system_settings ADD default_phone_login_password VARCHAR(20) default 'test';
+ALTER TABLE system_settings ADD default_server_password VARCHAR(20) default 'test';
+
+UPDATE system_settings SET db_schema_version='1244',db_schema_update_date=NOW();

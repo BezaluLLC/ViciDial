@@ -558,7 +558,8 @@ agent_call_log_view_override ENUM('DISABLED','Y','N') default 'DISABLED',
 callcard_admin ENUM('1','0') default '0',
 agent_choose_blended ENUM('0','1') default '1',
 realtime_block_user_info ENUM('0','1') default '0',
-custom_fields_modify ENUM('0','1') default '0'
+custom_fields_modify ENUM('0','1') default '0',
+force_change_password ENUM('Y','N') default 'N'
 );
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -1323,7 +1324,12 @@ label_email VARCHAR(40) default '',
 label_comments VARCHAR(40) default '',
 slave_db_server VARCHAR(50) default '',
 reports_use_slave_db VARCHAR(2000) default '',
-webphone_systemkey VARCHAR(100) default ''
+webphone_systemkey VARCHAR(100) default '',
+first_login_trigger ENUM('Y','N') default 'N',
+hosted_settings VARCHAR(100) default '',
+default_phone_registration_password VARCHAR(20) default 'test',
+default_phone_login_password VARCHAR(20) default 'test',
+default_server_password VARCHAR(20) default 'test'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2241,7 +2247,7 @@ INSERT INTO vicidial_inbound_groups(group_id,group_name,group_color,active,queue
 INSERT INTO vicidial_lists SET list_id='999',list_name='Default inbound list',campaign_id='TESTCAMP',active='N';
 INSERT INTO vicidial_lists SET list_id='998',list_name='Default Manual list',campaign_id='TESTCAMP',active='N';
 
-INSERT INTO system_settings (version,install_date) values('2.4b0.5', CURDATE());
+INSERT INTO system_settings (version,install_date,first_login_trigger) values('2.4b0.5', CURDATE(), 'Y');
 
 INSERT INTO vicidial_status_categories (vsc_id,vsc_name) values('UNDEFINED','Default Category');
 
@@ -2356,7 +2362,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1243',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1244',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

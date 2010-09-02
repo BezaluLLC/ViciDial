@@ -389,6 +389,50 @@ Webphone Dialpad||
 This setting allows you to activate or deactivate the dialpad for this webphone. Default is Y for enabled. TOGGLE will allow the user to view and hide the dialpad by clicking a link. This feature is not available on all webphone versions||
 Webphone System Key||
 If your system or provider requires it, this is where the System Key for the webphone should be entered in. Default is empty||
+ Strength||
+A strong registration password should be at least 8 characters in length and have lower case and upper case letters as well as at least one number||
+A strong conf file secret should be at least 8 characters in length and have lower case and upper case letters as well as at least one number||
+A strong user password should be at least 8 characters in length and have lower case and upper case letters as well as at least one number||
+Force Change Password||
+If this option is set to Y then the user will be prompted to change their password the next time they log in to the administration webpage. Default is N||
+First Login Trigger||
+This setting allows for the initial configuration of the server screen to be shown to the administrator when they first log into the system||
+Default Phone Registration Password||
+This is the default registration password used when new phones are added to the system. Default is test||
+Default Phone Login Password||
+This is the default phone web login password used when new phones are added to the system. Default is test||
+Default Server Password||
+This is the default server password used when new servers are added to the system. Default is test||
+CHANGE PASSWORD||
+INITIAL INSTALL WELCOME||
+COPYRIGHT TRADEMARK LICENSE||
+You are required to change your password before you can continue on to Administration. A strong password has both lower case and upper case letters as well as at least one number. Your password must be from 2 to 20 characters in length and cannot contain any characters that are not letters or numbers||
+Be sure that this password is something that you can remember, because as soon as you make this change you will be prompted to enter your new password to log back in to Administration||
+Password has not been changed, please try again||
+New Password||
+Password has been updated, you may now continue||
+Passwords have been updated, you may now continue on into Administration||
+You may want to start by reading the ViciDial Manager Manual available at||
+there is a free version available||
+Be sure that this password is something that you can remember, because as soon as you complete this initial setup screen you will be prompted to enter your new password in again to log back in to Administration||
+The next three default passwords are defined in the System Settings section, and you can change them after you define them here. It is a good idea to make these passwords strong so that no one can hack into your phone accounts and place phone calls without you knowing. The default registration password used when new phones are added to the system as the SIP or IAX VOIP phone password. The default phone web login password used when new phones are added to the system, as the phone password that an agent would use in the ViciDial Agent Interface. The default server password used when new servers are added to the system for servers to communicate with each other||
+Passwords have been updated, you may now continue on into Administration||
+You may want to start by reading the ViciDial Manager Manual available at||
+there is a free version available||
+Welcome to ViciDial||
+initial setup screen||
+copyright, trademark and license page||
+The ViciDial Call Center Suite is maintained by the||
+is a registered trademark of the||
+Here is our||
+trademark use policy||
+The ViciDial Call Center Suite is released under the||
+open source license||
+The ViciDial Call Center Suite software is available for download, and for use, free of cost. You can download the easy to install||
+ViciBox CD ISO version||
+or only the||
+source code||
+Continue on to the Initial Setup||
 
 
 AST_VICIDIAL_ingrouplist.php

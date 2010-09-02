@@ -308,6 +308,10 @@ OTHER CHANGES:
 67. Changed the example iax.conf and sip.conf to default to context=trunkinbound
 	to prevent unauthenticated calls on insecure phone accounts
 
+68. Added password strength grading for users, phones and servers. Added ability
+	to force a user password change on the next admin login. Added password 
+	default settings to System Settings and added a first login setup screen
+
 
 
 
