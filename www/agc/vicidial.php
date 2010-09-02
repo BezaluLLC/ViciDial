@@ -309,10 +309,11 @@
 # 100815-1015 - Added manual_dial_prefix campaign option
 # 100823-1605 - Added DID variables for webform and scripting
 # 100827-1436 - Added webphone dialpad options
+# 100902-0046 - Added initial loading screen
 #
 
-$version = '2.4-287';
-$build = '100827-1436';
+$version = '2.4-288';
+$build = '100902-0046';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -3090,6 +3091,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_manual_HTML = "<a href=\"#\" onclick=\"ManualDialNext('','','','','','0');\"><IMG SRC=\"./images/vdc_LB_dialnextnumber.gif\" border=0 alt=\"Dial Next Number\"></a>";
+	var image_loading = new Image();
+		image_loading.src="./images/loading.gif";
 	var image_blank = new Image();
 		image_blank.src="./images/blank.gif";
 	var image_livecall_OFF = new Image();
@@ -10989,6 +10992,7 @@ else
 
 			//	WebPhonEwin.blur();
 				}
+
 			VICIDiaL_closer_login_checked = 1;
 			}
 		else
@@ -11362,6 +11366,11 @@ else
 			document.getElementById("custdatetime").innerHTML = customer_local_time;
 			}
 		start_all_refresh();
+
+		if (check_n==2)
+			{
+			hideDiv('LoadingBox');
+			}
 		}
 	function pause()	// Pauses the refreshing of the lists
 		{active_display=2;  display_message="  - ACTIVE DISPLAY PAUSED - ";}
@@ -11731,6 +11740,21 @@ $zi=1;
 ?>
 <BODY onload="begin_all_refresh();"  onunload="BrowserCloseLogout();">
 <FORM name=vicidial_form>
+
+<span style="position:absolute;left:0px;top:0px;z-index:300;" id="LoadingBox">
+    <TABLE border=0 bgcolor="white" width=<?php echo $JS_browser_width ?> height=<?php echo $JS_browser_height ?>><TR><TD align=left valign=top>
+	<BR>
+	<BR>
+	<BR>
+	<BR>
+	<BR>
+	<BR>
+	&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <IMG SRC="./images/loading.gif" HEIGHT=90 WIDTH=545 ALT="Loading">
+	<BR>
+	<BR>
+	</TD></TR></TABLE>
+</span>
+
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="Header">
 	<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 BGCOLOR=white WIDTH=<?php echo $MNwidth ?> MARGINWIDTH=0 MARGINHEIGHT=0 LEFTMARGIN=0 TOPMARGIN=0 VALIGN=TOP ALIGN=LEFT>
