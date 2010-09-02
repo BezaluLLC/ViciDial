@@ -2,7 +2,7 @@
 #
 # ADMIN_area_code_populate.pl    version 2.2.0
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Description:
 # server application that allows load areacodes into to asterisk list database
@@ -17,6 +17,7 @@
 # 90131-0933 - Added purge-table option to clear out old records before adding new ones
 # 90204-0806 - Added duplicate check to nanpa list loading
 # 90317-2353 - Added city, state, postal_code, country to nanpa format
+# 100902-1536 - Move old data files if wgetting new ones
 #
 
 
@@ -283,6 +284,11 @@ else
 
 		print STDERR "Downloading latest phone codes tables\n";
 
+		# move old files
+		`mv -f $PATHhome/phone_codes_GMT-latest-220.txt $PATHhome/phone_codes_GMT-latest-220-old.txt`;
+		`mv -f $PATHhome/GMT_USA_zip-latest.txt $PATHhome/GMT_USA_zip-latest-old.txt`;
+
+		# get files
 		`wget $URL1`;
 		`wget $URL2`;
 		}
