@@ -541,3 +541,11 @@ ALTER TABLE system_settings ADD default_phone_login_password VARCHAR(20) default
 ALTER TABLE system_settings ADD default_server_password VARCHAR(20) default 'test';
 
 UPDATE system_settings SET db_schema_version='1244',db_schema_update_date=NOW();
+
+
+
+
+
+ALTER TABLE vicidial_lists_fields MODIFY field_name VARCHAR(5000);
+
+UPDATE system_settings SET db_schema_version='1245',db_schema_update_date=NOW();
