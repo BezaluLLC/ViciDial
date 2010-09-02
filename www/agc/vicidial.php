@@ -310,10 +310,11 @@
 # 100823-1605 - Added DID variables for webform and scripting
 # 100827-1436 - Added webphone dialpad options
 # 100902-0046 - Added initial loading screen
+# 100902-1349 - Added closecallid, xfercallid, agent_log_id as webform and script variables
 #
 
-$version = '2.4-288';
-$build = '100902-0046';
+$version = '2.4-289';
+$build = '100902-1349';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -3087,6 +3088,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var did_id='';
 	var did_extension='';
 	var did_description='';
+	var closecallid='';
+	var xfercallid='';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -5553,6 +5556,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&did_extension=" + did_extension + '' +
 							"&did_pattern=" + did_pattern + '' +
 							"&did_description=" + did_description + '' +
+							"&closecallid=" + closecallid + '' +
+							"&xfercallid=" + xfercallid + '' +
+							"&agent_log_id=" + agent_log_id + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -5656,6 +5662,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&did_extension=" + did_extension + '' +
 							"&did_pattern=" + did_pattern + '' +
 							"&did_description=" + did_description + '' +
+							"&closecallid=" + closecallid + '' +
+							"&xfercallid=" + xfercallid + '' +
+							"&agent_log_id=" + agent_log_id + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -5987,6 +5996,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&did_extension=" + did_extension + '' +
 							"&did_pattern=" + did_pattern + '' +
 							"&did_description=" + did_description + '' +
+							"&closecallid=" + closecallid + '' +
+							"&xfercallid=" + xfercallid + '' +
+							"&agent_log_id=" + agent_log_id + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -6090,6 +6102,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&did_extension=" + did_extension + '' +
 							"&did_pattern=" + did_pattern + '' +
 							"&did_description=" + did_description + '' +
+							"&closecallid=" + closecallid + '' +
+							"&xfercallid=" + xfercallid + '' +
+							"&agent_log_id=" + agent_log_id + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -6216,6 +6231,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&did_extension=" + did_extension + '' +
 								"&did_pattern=" + did_pattern + '' +
 								"&did_description=" + did_description + '' +
+								"&closecallid=" + closecallid + '' +
+								"&xfercallid=" + xfercallid + '' +
+								"&agent_log_id=" + agent_log_id + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -6618,6 +6636,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							"&did_extension=" + did_extension + '' +
 							"&did_pattern=" + did_pattern + '' +
 							"&did_description=" + did_description + '' +
+							"&closecallid=" + closecallid + '' +
+							"&xfercallid=" + xfercallid + '' +
+							"&agent_log_id=" + agent_log_id + '' +
 							webform_session;
 							
 							var regWFspace = new RegExp(" ","ig");
@@ -7052,6 +7073,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							did_extension				= VDIC_data_VDIG[29];
 							did_pattern					= VDIC_data_VDIG[30];
 							did_description				= VDIC_data_VDIG[31];
+							closecallid					= VDIC_data_VDIG[32];
+							xfercallid					= VDIC_data_VDIG[33];
 
 							var VDIC_data_VDFR=check_VDIC_array[3].split("|");
 							if ( (VDIC_data_VDFR[1].length > 1) && (VDCL_fronter_display == 'Y') )
@@ -7384,6 +7407,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&did_extension=" + did_extension + '' +
 								"&did_pattern=" + did_pattern + '' +
 								"&did_description=" + did_description + '' +
+								"&closecallid=" + closecallid + '' +
+								"&xfercallid=" + xfercallid + '' +
+								"&agent_log_id=" + agent_log_id + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -7487,6 +7513,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&did_extension=" + did_extension + '' +
 								"&did_pattern=" + did_pattern + '' +
 								"&did_description=" + did_description + '' +
+								"&closecallid=" + closecallid + '' +
+								"&xfercallid=" + xfercallid + '' +
+								"&agent_log_id=" + agent_log_id + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -7596,6 +7625,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 								"&did_extension=" + did_extension + '' +
 								"&did_pattern=" + did_pattern + '' +
 								"&did_description=" + did_description + '' +
+								"&closecallid=" + closecallid + '' +
+								"&xfercallid=" + xfercallid + '' +
+								"&agent_log_id=" + agent_log_id + '' +
 								webform_session;
 								
 								var regWFspace = new RegExp(" ","ig");
@@ -7788,6 +7820,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			"&did_extension=" + did_extension + '' +
 			"&did_pattern=" + did_pattern + '' +
 			"&did_description=" + did_description + '' +
+			"&closecallid=" + closecallid + '' +
+			"&xfercallid=" + xfercallid + '' +
+			"&agent_log_id=" + agent_log_id + '' +
 			webform_session;
 			
 			var regWFspace = new RegExp(" ","ig");
@@ -7921,6 +7956,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			"&did_extension=" + did_extension + '' +
 			"&did_pattern=" + did_pattern + '' +
 			"&did_description=" + did_description + '' +
+			"&closecallid=" + closecallid + '' +
+			"&xfercallid=" + xfercallid + '' +
+			"&agent_log_id=" + agent_log_id + '' +
 			webform_session;
 			
 			var regWFspace = new RegExp(" ","ig");
@@ -8819,6 +8857,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				did_id='';
 				did_extension='';
 				did_description='';
+				closecallid='';
+				xfercallid='';
 				document.vicidial_form.xfername.value='';
 				document.vicidial_form.xfernumhidden.value='';
 
@@ -9775,6 +9815,9 @@ else
 		var SCdid_extension = did_extension;
 		var SCdid_pattern = did_pattern;
 		var SCdid_description = did_description;
+		var SCclosecallid = closecallid;
+		var SCxfercallid = xfercallid;
+		var SCagent_log_id = agent_log_id;
 		var SCweb_vars = LIVE_web_vars;
 
 		if (encoded.match(RGiframe))
@@ -9918,6 +9961,9 @@ else
 		var RGdid_extension = new RegExp("--A--did_extension--B--","g");
 		var RGdid_pattern = new RegExp("--A--did_pattern--B--","g");
 		var RGdid_description = new RegExp("--A--did_description--B--","g");
+		var RGclosecallid = new RegExp("--A--closecallid--B--","g");
+		var RGxfercallid = new RegExp("--A--xfercallid--B--","g");
+		var RGagent_log_id = new RegExp("--A--agent_log_id--B--","g");
 		var RGweb_vars = new RegExp("--A--web_vars--B--","g");
 
 		encoded = encoded.replace(RGvendor_lead_code, SCvendor_lead_code);
@@ -9989,6 +10035,9 @@ else
 		encoded = encoded.replace(RGdid_extension, SCdid_extension);
 		encoded = encoded.replace(RGdid_pattern, SCdid_pattern);
 		encoded = encoded.replace(RGdid_description, SCdid_description);
+		encoded = encoded.replace(RGclosecallid, SCclosecallid);
+		encoded = encoded.replace(RGxfercallid, SCxfercallid);
+		encoded = encoded.replace(RGagent_log_id, SCagent_log_id);
 		encoded = encoded.replace(RGweb_vars, SCweb_vars);
 		}
 	decoded=encoded; // simple no ?

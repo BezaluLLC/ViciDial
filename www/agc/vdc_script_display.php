@@ -13,10 +13,11 @@
 # 100116-0702 - Added preset variables
 # 100127-1611 - Added ignore_list_script_override option
 # 100823-1644 - Added DID variables
+# 100902-1344 - Added closecallid, xfercallid, agent_log_id variables
 #
 
-$version = '2.4';
-$build = '100823-1644';
+$version = '2.4-8';
+$build = '100902-1344';
 
 require("dbconnect.php");
 
@@ -170,6 +171,12 @@ if (isset($_GET["did_pattern"]))			{$did_pattern=$_GET["did_pattern"];}
 	elseif (isset($_POST["did_pattern"]))	{$did_pattern=$_POST["did_pattern"];}
 if (isset($_GET["did_description"]))			{$did_description=$_GET["did_description"];}
 	elseif (isset($_POST["did_description"]))	{$did_description=$_POST["did_description"];}
+if (isset($_GET["closecallid"]))			{$closecallid=$_GET["closecallid"];}
+	elseif (isset($_POST["closecallid"]))	{$closecallid=$_POST["closecallid"];}
+if (isset($_GET["xfercallid"]))				{$xfercallid=$_GET["xfercallid"];}
+	elseif (isset($_POST["xfercallid"]))	{$xfercallid=$_POST["xfercallid"];}
+if (isset($_GET["agent_log_id"]))			{$agent_log_id=$_GET["agent_log_id"];}
+	elseif (isset($_POST["agent_log_id"]))	{$agent_log_id=$_POST["agent_log_id"];}
 if (isset($_GET["ScrollDIV"]))	{$ScrollDIV=$_GET["ScrollDIV"];}
 	elseif (isset($_POST["ScrollDIV"]))	{$ScrollDIV=$_POST["ScrollDIV"];}
 if (isset($_GET["ignore_list_script"]))	{$ignore_list_script=$_GET["ignore_list_script"];}
@@ -455,6 +462,9 @@ $script_text = eregi_replace('--A--did_id--B--',"$did_id",$script_text);
 $script_text = eregi_replace('--A--did_extension--B--',"$did_extension",$script_text);
 $script_text = eregi_replace('--A--did_pattern--B--',"$did_pattern",$script_text);
 $script_text = eregi_replace('--A--did_description--B--',"$did_description",$script_text);
+$script_text = eregi_replace('--A--closecallid--B--',"$closecallid",$script_text);
+$script_text = eregi_replace('--A--xfercallid--B--',"$xfercallid",$script_text);
+$script_text = eregi_replace('--A--agent_log_id--B--',"$agent_log_id",$script_text);
 $script_text = eregi_replace("\n","<BR>",$script_text);
 $script_text = stripslashes($script_text);
 

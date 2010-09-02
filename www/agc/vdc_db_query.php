@@ -252,10 +252,10 @@
 # 100712-1447 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
 # 100803-0822 - Added CAMPLISTS_ALL for manual_dial_filter(issue #369)
 # 100823-1612 - Added DID variables on inbound calls
-#
+# 100902-1348 - Added closecallid and xfercallid variables
 
-$version = '2.4-159';
-$build = '100823-1612';
+$version = '2.4-160';
+$build = '100902-1348';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=333;
 $one_mysql_log=0;
@@ -2752,9 +2752,12 @@ if ($stage == "start")
 	{
 	if ( (strlen($uniqueid)<1) || (strlen($lead_id)<1) || (strlen($list_id)<1) || (strlen($phone_number)<1) || (strlen($campaign)<1) )
 		{
-		$fp = fopen ("./vicidial_debug.txt", "a");
-		fwrite ($fp, "$NOW_TIME|VL_LOG_0|$uniqueid|$lead_id|$user|$list_id|$campaign|$start_epoch|$phone_number|$agent_log_id|\n");
-		fclose($fp);
+		if ($WeBRooTWritablE > 0)
+			{
+			$fp = fopen ("./vicidial_debug.txt", "a");
+			fwrite ($fp, "$NOW_TIME|VL_LOG_0|$uniqueid|$lead_id|$user|$list_id|$campaign|$start_epoch|$phone_number|$agent_log_id|\n");
+			fclose($fp);
+			}
 
 		echo "LOG NOT ENTERED\n";
 		echo "uniqueid $uniqueid or lead_id: $lead_id or list_id: $list_id or phone_number: $phone_number or campaign: $campaign is not valid\n";
@@ -3775,9 +3778,12 @@ if ($stage == "end")
 								if (!ereg('.',$VDvicidial_id))
 									{$vidSQL = ",vicidial_id='$VDvicidial_id'";}
 
-								$fp = fopen ("./vicidial_debug.txt", "a");
-								fwrite ($fp, "$NOW_TIME|INBND_LOG_3|$uniqueid|$lead_id|$user|$inOUT|$VLA_inOUT|$length_in_sec|$VDterm_reason|$VDvicidial_id|$vicidial_id|$start_epoch|$recording_id|\n");
-								fclose($fp);
+								if ($WeBRooTWritablE > 0)
+									{
+									$fp = fopen ("./vicidial_debug.txt", "a");
+									fwrite ($fp, "$NOW_TIME|INBND_LOG_3|$uniqueid|$lead_id|$user|$inOUT|$VLA_inOUT|$length_in_sec|$VDterm_reason|$VDvicidial_id|$vicidial_id|$start_epoch|$recording_id|\n");
+									fclose($fp);
+									}
 								}
 							}
 						$length_in_sec = ($StarTtime - $start_time);
@@ -3916,6 +3922,8 @@ if ($ACTION == 'VDADcheckINCOMING')
 	$alt_phone_note='';
 	$alt_phone_active='';
 	$alt_phone_count='';
+	$INclosecallid='';
+	$INxfercallid='';
 
 	if ( (strlen($campaign)<1) || (strlen($server_ip)<1) )
 		{
@@ -4143,7 +4151,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				else
 					{
 					$call_type = 'IN';
-					$stmt = "SELECT campaign_id from vicidial_closer_log where lead_id = '$lead_id' order by call_date desc limit 1;";
+					$stmt = "SELECT campaign_id,closecallid,xfercallid from vicidial_closer_log where lead_id = '$lead_id' order by call_date desc limit 1;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00183',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4151,13 +4159,15 @@ if ($ACTION == 'VDADcheckINCOMING')
 					if ($VDCL_mvac_ct > 0)
 						{
 						$row=mysql_fetch_row($rslt);
-						$VDADchannel_group	=$row[0];
+						$VDADchannel_group =	$row[0];
+						$INclosecallid =		$row[1];
+						$INxfercallid =			$row[2];
 						}
 					}
 				if ($WeBRooTWritablE > 0)
 					{
 					$fp = fopen ("./vicidial_debug.txt", "a");
-					fwrite ($fp, "$NOW_TIME|INBND|$callerid|$user|$user_group|$list_id|$lead_id|$phone_number|$uniqueid|$VDADchannel_group|$call_type|$dialed_number|$dialed_label\n");
+					fwrite ($fp, "$NOW_TIME|INBND|$callerid|$user|$user_group|$list_id|$lead_id|$phone_number|$uniqueid|$VDADchannel_group|$call_type|$dialed_number|$dialed_label|$INclosecallid|$INxfercallid|\n");
 					fclose($fp);
 					}
 				}
@@ -4233,7 +4243,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 						}
 					}
 
-				echo "|||||$VDCL_campaign_script|$VDCL_get_call_launch|$VDCL_xferconf_a_dtmf|$VDCL_xferconf_a_number|$VDCL_xferconf_b_dtmf|$VDCL_xferconf_b_number|$VDCL_default_xfer_group|X|X|||||$VDCL_timer_action|$VDCL_timer_action_message|$VDCL_timer_action_seconds|$VDCL_xferconf_c_number|$VDCL_xferconf_d_number|$VDCL_xferconf_e_number||||$VDCL_timer_action_destination|||||\n|\n";
+				echo "|||||$VDCL_campaign_script|$VDCL_get_call_launch|$VDCL_xferconf_a_dtmf|$VDCL_xferconf_a_number|$VDCL_xferconf_b_dtmf|$VDCL_xferconf_b_number|$VDCL_default_xfer_group|X|X|||||$VDCL_timer_action|$VDCL_timer_action_message|$VDCL_timer_action_seconds|$VDCL_xferconf_c_number|$VDCL_xferconf_d_number|$VDCL_xferconf_e_number||||$VDCL_timer_action_destination||||||\n|\n";
 				
 				if (ereg('X',$dialed_label))
 					{
@@ -4269,6 +4279,21 @@ if ($ACTION == 'VDADcheckINCOMING')
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00117',$user,$server_ip,$session_name,$one_mysql_log);}
+
+				if (strlen($closecallid)<1)
+					{
+					$stmt = "SELECT closecallid,xfercallid from vicidial_closer_log where lead_id='$lead_id' and user='$user' and list_id='$list_id' order by call_date desc limit 1;";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					$VDCL_mvac_ct = mysql_num_rows($rslt);
+					if ($VDCL_mvac_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$INclosecallid =		$row[0];
+						$INxfercallid =			$row[1];
+						}
+					}
 
 				$stmt = "select count(*) from vicidial_log where lead_id='$lead_id' and uniqueid='$uniqueid';";
 				if ($DB) {echo "$stmt\n";}
@@ -4539,8 +4564,8 @@ if ($ACTION == 'VDADcheckINCOMING')
 					}
 
 				### if web form is set then send on to vicidial.php for override of WEB_FORM address
-				if ( (strlen($VDCL_group_web)>5) or (strlen($VDCL_group_name)>0) ) {echo "$VDCL_group_web|$VDCL_group_name|$VDCL_group_color|$VDCL_fronter_display|$VDADchannel_group|$VDCL_ingroup_script|$VDCL_get_call_launch|$VDCL_xferconf_a_dtmf|$VDCL_xferconf_a_number|$VDCL_xferconf_b_dtmf|$VDCL_xferconf_b_number|$VDCL_default_xfer_group|$VDCL_ingroup_recording_override|$VDCL_ingroup_rec_filename|$VDCL_default_group_alias|$VDCL_caller_id_number|$VDCL_group_web_vars|$VDCL_group_web_two|$VDCL_timer_action|$VDCL_timer_action_message|$VDCL_timer_action_seconds|$VDCL_xferconf_c_number|$VDCL_xferconf_d_number|$VDCL_xferconf_e_number|$VDCL_uniqueid_status_display|$custom_call_id|$VDCL_uniqueid_status_prefix|$VDCL_timer_action_destination|$DID_id|$DID_extension|$DID_pattern|$DID_description|\n";}
-				else {echo "X|$VDCL_group_name|$VDCL_group_color|$VDCL_fronter_display|$VDADchannel_group|$VDCL_ingroup_script|$VDCL_get_call_launch|$VDCL_xferconf_a_dtmf|$VDCL_xferconf_a_number|$VDCL_xferconf_b_dtmf|$VDCL_xferconf_b_number|$VDCL_default_xfer_group|$VDCL_ingroup_recording_override|$VDCL_ingroup_rec_filename|$VDCL_default_group_alias|$VDCL_caller_id_number|$VDCL_group_web_vars|$VDCL_group_web_two|$VDCL_timer_action|$VDCL_timer_action_message|$VDCL_timer_action_seconds|$VDCL_xferconf_c_number|$VDCL_xferconf_d_number|$VDCL_xferconf_e_number|$VDCL_uniqueid_status_display|$custom_call_id|$VDCL_uniqueid_status_prefix|$VDCL_timer_action_destination|$DID_id|$DID_extension|$DID_pattern|$DID_description|\n";}
+				if ( (strlen($VDCL_group_web)>5) or (strlen($VDCL_group_name)>0) ) {echo "$VDCL_group_web|$VDCL_group_name|$VDCL_group_color|$VDCL_fronter_display|$VDADchannel_group|$VDCL_ingroup_script|$VDCL_get_call_launch|$VDCL_xferconf_a_dtmf|$VDCL_xferconf_a_number|$VDCL_xferconf_b_dtmf|$VDCL_xferconf_b_number|$VDCL_default_xfer_group|$VDCL_ingroup_recording_override|$VDCL_ingroup_rec_filename|$VDCL_default_group_alias|$VDCL_caller_id_number|$VDCL_group_web_vars|$VDCL_group_web_two|$VDCL_timer_action|$VDCL_timer_action_message|$VDCL_timer_action_seconds|$VDCL_xferconf_c_number|$VDCL_xferconf_d_number|$VDCL_xferconf_e_number|$VDCL_uniqueid_status_display|$custom_call_id|$VDCL_uniqueid_status_prefix|$VDCL_timer_action_destination|$DID_id|$DID_extension|$DID_pattern|$DID_description|$INclosecallid|$INxfercallid|\n";}
+				else {echo "X|$VDCL_group_name|$VDCL_group_color|$VDCL_fronter_display|$VDADchannel_group|$VDCL_ingroup_script|$VDCL_get_call_launch|$VDCL_xferconf_a_dtmf|$VDCL_xferconf_a_number|$VDCL_xferconf_b_dtmf|$VDCL_xferconf_b_number|$VDCL_default_xfer_group|$VDCL_ingroup_recording_override|$VDCL_ingroup_rec_filename|$VDCL_default_group_alias|$VDCL_caller_id_number|$VDCL_group_web_vars|$VDCL_group_web_two|$VDCL_timer_action|$VDCL_timer_action_message|$VDCL_timer_action_seconds|$VDCL_xferconf_c_number|$VDCL_xferconf_d_number|$VDCL_xferconf_e_number|$VDCL_uniqueid_status_display|$custom_call_id|$VDCL_uniqueid_status_prefix|$VDCL_timer_action_destination|$DID_id|$DID_extension|$DID_pattern|$DID_description|$INclosecallid|$INxfercallid|\n";}
 
 				$stmt = "SELECT full_name from vicidial_users where user='$tsr';";
 				if ($DB) {echo "$stmt\n";}
