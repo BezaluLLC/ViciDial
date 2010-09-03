@@ -28,6 +28,7 @@
 # 90729-0611 - Added vicidial_balance_rank option
 # 90924-1519 - Added List callerid override option
 # 100205-1245 - Added optional stagger sending of calls across all available servers in each rank
+# 100903-0041 - Changed lead_id max length to 10 digits
 #
 
 ### begin parsing run-time options ###
@@ -757,7 +758,7 @@ while($one_day_interval > 0)
 													if ( (length($RECprefix)>0) && ($called_count < $RECcount) )
 													   {$Local_out_prefix .= "$RECprefix";}
 													}
-												$PADlead_id = sprintf("%09s", $lead_id);	while (length($PADlead_id) > 9) {chop($PADlead_id);}
+												$PADlead_id = sprintf("%010s", $lead_id);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
 
 												if ($lists_update !~ /'$list_id'/) {$lists_update .= "'$list_id',"; $LUcount++;}
 
@@ -1100,9 +1101,10 @@ sub get_time_now	#get the current date and time and epoch for logging call lengt
 	$now_date_epoch = time();
 	$now_date = "$year-$mon-$mday $hour:$min:$sec";
 	$file_date = "$year-$mon-$mday";
-		$CIDdate = "$mon$mday$hour$min$sec";
-		$tsSQLdate = "$year$mon$mday$hour$min$sec";
-		$SQLdate = "$year-$mon-$mday $hour:$min:$sec";
+	$CIDdate = "$mon$mday$hour$min$sec";
+	$tsSQLdate = "$year$mon$mday$hour$min$sec";
+	$SQLdate = "$year-$mon-$mday $hour:$min:$sec";
+		while (length($CIDdate) > 9) {$CIDdate =~ s/^.//gi;} # 0902235959 changed to 902235959
 
 	$BDtarget = ($secX - 10);
 	($Bsec,$Bmin,$Bhour,$Bmday,$Bmon,$Byear,$Bwday,$Byday,$Bisdst) = localtime($BDtarget);

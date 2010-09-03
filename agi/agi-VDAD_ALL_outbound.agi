@@ -77,6 +77,7 @@
 # 100424-1341 - Added extended logging
 # 100623-1310 - Added queue_priority to queue processing
 # 100727-1653 - Fixes for queue priority feature
+# 100903-0041 - Changed lead_id max length to 10 digits
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -312,7 +313,7 @@ $VDADphone_code='';
 $callerid =~ s/\"//gi;
 $callerid =~ s/ .*//gi;
 $CIDlead_id = $callerid;
-$CIDlead_id = substr($CIDlead_id, 11, 9);
+$CIDlead_id = substr($CIDlead_id, 10, 10);
 $CIDlead_id = ($CIDlead_id + 0);
 
 if ($AGILOG) {$agi_string = "+++++ VDAD START : |$CIDlead_id|$now_date|$AST_ver|$priority|";   &agi_output;}

@@ -11,6 +11,7 @@
 # 90529-2041 - Added Realtime monitoring
 # 91012-0641 - Fixed to work with non-sequential time_ids in the queue_log
 # 100127-0603 - Added OpenSuSE install instructions
+# 100903-0041 - Changed lead_id max length to 10 digits
 #
 
 // $Id: xmlrpc_audio_server.php,v 1.3 2007/11/12 17:53:09 lenz Exp $
@@ -105,7 +106,7 @@ function find_file( $ServerID, $AsteriskID, $QMUserID, $QMUserName )
 			$time_id	= $row[0];
 			$time_id_end = ($time_id + 14400);
 
-			$lead_id = substr($AsteriskID, -9);
+			$lead_id = substr($AsteriskID, -10);
 			$lead_id = ($lead_id + 0);
 			$stmt = "SELECT start_epoch,length_in_sec,location from recording_log where start_epoch>=$time_id and start_epoch<=$time_id_end and lead_id='$lead_id' order by recording_id limit 1;";
 			$rslt=mysql_query($stmt, $link);

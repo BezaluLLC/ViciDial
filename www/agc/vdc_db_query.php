@@ -253,9 +253,11 @@
 # 100803-0822 - Added CAMPLISTS_ALL for manual_dial_filter(issue #369)
 # 100823-1612 - Added DID variables on inbound calls
 # 100902-1348 - Added closecallid and xfercallid variables
+# 100903-0041 - Changed lead_id max length to 10 digits
+#
 
-$version = '2.4-160';
-$build = '100902-1348';
+$version = '2.4-161';
+$build = '100903-0041';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=333;
 $one_mysql_log=0;
@@ -454,7 +456,7 @@ $ENTRYdate = date("YmdHis");
 $MT[0]='';
 $agents='@agents';
 $US='_';
-
+while (strlen($CIDdate) > 9) {$CIDdate = substr("$CIDdate", 1);}
 
 ##### Hangup Cause Dictionary #####
 $hangup_cause_dictionary = array(
@@ -1792,8 +1794,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 			if ( ($WeBRooTWritablE > 0) and ($enable_agc_xfer_log > 0) )
 				{
 				# generate callerID for unique identifier in xfer_log file
-				$PADlead_id = sprintf("%09s", $lead_id);
-					while (strlen($PADlead_id) > 9) {$PADlead_id = substr("$PADlead_id", 0, -1);}
+				$PADlead_id = sprintf("%010s", $lead_id);
+					while (strlen($PADlead_id) > 10) {$PADlead_id = substr("$PADlead_id", 1);}
 				# Create unique calleridname to track the call: MmmddhhmmssLLLLLLLLL
 					$MqueryCID = "M$CIDdate$PADlead_id";
 
@@ -1918,8 +1920,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 					}
 				if (eregi("x",$dial_prefix)) {$Local_out_prefix = '';}
 
-				$PADlead_id = sprintf("%09s", $lead_id);
-					while (strlen($PADlead_id) > 9) {$PADlead_id = substr("$PADlead_id", 0, -1);}
+				$PADlead_id = sprintf("%010s", $lead_id);
+					while (strlen($PADlead_id) > 10) {$PADlead_id = substr("$PADlead_id", 1);}
 
 				### check for extension append in campaign
 				$use_eac=0;
@@ -2411,8 +2413,8 @@ if ($ACTION == 'manDiaLonly')
 				{$CCID = "$temp_CID";   $CCID_on++;}
 			}
 
-		$PADlead_id = sprintf("%09s", $lead_id);
-			while (strlen($PADlead_id) > 9) {$PADlead_id = substr("$PADlead_id", 0, -1);}
+		$PADlead_id = sprintf("%010s", $lead_id);
+			while (strlen($PADlead_id) > 10) {$PADlead_id = substr("$PADlead_id", 1);}
 
 		# Create unique calleridname to track the call: MmmddhhmmssLLLLLLLLL
 			$MqueryCID = "M$CIDdate$PADlead_id";
@@ -5276,8 +5278,8 @@ if ($ACTION == 'updateDISPO')
 							{$VLphone_code =	"$phone_code";}
 						}
 
-					$PADlead_id = sprintf("%09s", $lead_id);
-						while (strlen($PADlead_id) > 9) {$PADlead_id = substr("$PADlead_id", 0, -1);}
+					$PADlead_id = sprintf("%010s", $lead_id);
+						while (strlen($PADlead_id) > 10) {$PADlead_id = substr("$PADlead_id", 1);}
 					$FAKEcall_id = "$StarTtime.$PADlead_id";
 					$stmt = "INSERT INTO vicidial_log set uniqueid='$FAKEcall_id',lead_id='$lead_id',list_id='$VLlist_id',campaign_id='$campaign',call_date='$NOW_TIME',start_epoch='$StarTtime',end_epoch='$StarTtime',length_in_sec='0',status='$dispo_choice',phone_code='$VLphone_code',phone_number='$VLphone_number',user='$user',comments='MANUAL',processed='N',user_group='$user_group',term_reason='AGENT',alt_dial='$VLalt';";
 					if ($DB) {echo "$stmt\n";}

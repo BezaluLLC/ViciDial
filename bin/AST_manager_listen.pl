@@ -34,6 +34,7 @@
 # 71129-2004 - Fixed SQL error
 # 100416-0635 - Added fix for extension append feature
 # 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
+# 100903-0041 - Changed lead_id max length to 10 digits
 #
 
 # constants
@@ -588,7 +589,7 @@ while($one_day_interval > 0)
 							$result =~ s/Result: |\s*$//gi;
 							if (length($result)>0)
 								{
-								$lead_id = substr($callid, 11, 9);
+								$lead_id = substr($callid, 10, 10);
 								$lead_id = ($lead_id + 0);
 								$stmtA = "INSERT INTO vicidial_cpd_log set channel='$channel', uniqueid='$uniqueid', callerid='$callid', server_ip='$server_ip', lead_id='$lead_id', event_date='$now_date', result='$result';";
 								print STDERR "|$stmtA|\n";

@@ -37,6 +37,7 @@
 # 100327-0819 - Fixed issue with Manual dial treansfers
 # 100430-1606 - Added list_id update to vicidial_log updates
 # 100823-0850 - Changed vac to UPDATE for Auto-alt-dial to function properly
+# 100903-0041 - Changed lead_id max length to 10 digits
 #
 
 $script = 'VD_amd.agi';
@@ -213,7 +214,7 @@ $VDADphone_code='';
 $callerid =~ s/\"//gi;
 $callerid =~ s/ .*//gi;
 $CIDlead_id = $callerid;
-$CIDlead_id = substr($CIDlead_id, 11, 9);
+$CIDlead_id = substr($CIDlead_id, 10, 10);
 $CIDlead_id = ($CIDlead_id + 0);
 if ( ($CLIlead_id > 0) && ($CIDlead_id < 1) ) {$CIDlead_id = $CLIlead_id;}
 $VD_lead_id = $CIDlead_id;

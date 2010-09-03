@@ -140,6 +140,7 @@
 # 100805-1530 - Added FILTER from-did-route feature, changed active=n to go to after hours action
 # 100811-0751 -	Added calculate_estimated_hold_seconds option
 # 100830-1445 - Allow the changing of the queue priority of a call while the call is in queue
+# 100903-0041 - Changed lead_id max length to 10 digits
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -172,11 +173,13 @@ $start_epoch = $now_date_epoch;
 $now_date = "$year-$mon-$mday $hour:$min:$sec";
 $CLInow_date = "$year-$mon-$mday\\ $hour:$min:$sec";
 $start_time=$now_date;
-	$CIDdate = "$mon$mday$hour$min$sec";
-	$tsSQLdate = "$year$mon$mday$hour$min$sec";
-	$SQLdate = "$year-$mon-$mday $hour:$min:$sec";
-	$SQLdateBEGIN = $SQLdate;
-	$ORIGINAL_call_time = $SQLdate;
+$CIDdate = "$mon$mday$hour$min$sec";
+$tsSQLdate = "$year$mon$mday$hour$min$sec";
+$SQLdate = "$year-$mon-$mday $hour:$min:$sec";
+$SQLdateBEGIN = $SQLdate;
+$ORIGINAL_call_time = $SQLdate;
+	while (length($CIDdate) > 9) {$CIDdate =~ s/^.//gi;} # 0902235959 changed to 902235959
+
 
 $BDtarget = ($now_date_epoch - 5);
 ($Bsec,$Bmin,$Bhour,$Bmday,$Bmon,$Byear,$Bwday,$Byday,$Bisdst) = localtime($BDtarget);
@@ -449,7 +452,7 @@ if ($call_handle_method =~ /^CLOSER/)
 		$CIDlead_id = $parked_by;
 		$fronter_call_seconds =	$EXT_vars[8];	# not currently used
 
-		$PADlead_id = sprintf("%09s", $parked_by);	while (length($PADlead_id) > 9) {chop($PADlead_id);}
+		$PADlead_id = sprintf("%010s", $parked_by);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
 		# JmmddhhmmssLLLLLLLLL
 		$JqueryCID = "J$CIDdate$PADlead_id";
 		$callerid = $JqueryCID;
@@ -1320,7 +1323,7 @@ $sthA->finish();
 
 if ($AGILOG) {$agi_string = "|$stmtA|$insert_lead_id|";   &agi_output;}
 
-$PADlead_id = sprintf("%09s", $insert_lead_id);	while (length($PADlead_id) > 9) {chop($PADlead_id);}
+$PADlead_id = sprintf("%010s", $insert_lead_id);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
 # YmmddhhmmssLLLLLLLLL
 $YqueryCID = "Y$CIDdate$PADlead_id";
 $callerid = $YqueryCID;

@@ -11,10 +11,11 @@
 #exten => 8352,2,Playback(85100001)
 #exten => 8352,3,Hangup
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 60918-1151 - First build
+# 100903-0041 - Changed lead_id max length to 10 digits
 #
 
 $script = 'agi-VDADselective_CID_hangup.agi';
@@ -135,7 +136,7 @@ while(<STDIN>)
 }
 
 $CIDlead_id = $calleridname;
-$CIDlead_id = substr($CIDlead_id, 11, 9);
+$CIDlead_id = substr($CIDlead_id, 10, 10);
 $CIDlead_id = ($CIDlead_id + 0);
 
 $stmtA = "SELECT phone_number FROM vicidial_list where lead_id = '$CIDlead_id' limit 1;";

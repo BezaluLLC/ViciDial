@@ -90,6 +90,7 @@
 # 91213-1856 - Added queue_position to queue_log ABANDON records
 # 100309-0551 - Added queuemetrics_loginout option
 # 100327-1359 - Fixed LAGGED issues
+# 100903-0041 - Changed lead_id max length to 10 digits
 #
 
 
@@ -1032,7 +1033,7 @@ while($one_day_interval > 0)
 										if ( (length($RECprefix)>0) && ($called_count < $RECcount) )
 										   {$Local_out_prefix .= "$RECprefix";}
 										}
-									$PADlead_id = sprintf("%09s", $lead_id);	while (length($PADlead_id) > 9) {chop($PADlead_id);}
+									$PADlead_id = sprintf("%010s", $lead_id);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
 
 									if ($lists_update !~ /'$list_id'/) {$lists_update .= "'$list_id',"; $LUcount++;}
 
@@ -1214,7 +1215,7 @@ while($one_day_interval > 0)
 				if ( (length($CLlead_id) < 1) || ($CLlead_id < 1) )
 					{
 					$CLlead_id = $KLcallerid[$kill_vac];
-					$CLlead_id = substr($CLlead_id, 11, 9);
+					$CLlead_id = substr($CLlead_id, 10, 10);
 					$CLlead_id = ($CLlead_id + 0);
 					}
 
@@ -2317,6 +2318,7 @@ sub get_time_now	#get the current date and time and epoch for logging call lengt
 	$CIDdate = "$mon$mday$hour$min$sec";
 	$tsSQLdate = "$year$mon$mday$hour$min$sec";
 	$SQLdate = "$year-$mon-$mday $hour:$min:$sec";
+		while (length($CIDdate) > 9) {$CIDdate =~ s/^.//gi;} # 0902235959 changed to 902235959
 
 	$BDtarget = ($secX - 10);
 	($Bsec,$Bmin,$Bhour,$Bmday,$Bmon,$Byear,$Bwday,$Byday,$Bisdst) = localtime($BDtarget);

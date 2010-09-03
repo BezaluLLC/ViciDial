@@ -55,6 +55,7 @@
 # 100108-2242 - Added answered_time to vicidial_carrier_log
 # 100123-1449 - Added double-log end logging
 # 100224-1229 - Fixed manual dial park call bug
+# 100903-0041 - Changed lead_id max length to 10 digits
 #
 
 # defaults for PreFork
@@ -501,7 +502,7 @@ sub process_request
 			$callerid =~ s/ .*//gi;
 			$callerid =~ s/\"//gi;
 			$CIDlead_id = $callerid;
-			$CIDlead_id = substr($CIDlead_id, 11, 9);
+			$CIDlead_id = substr($CIDlead_id, 10, 10);
 			$CIDlead_id = ($CIDlead_id + 0);
 
 			$park_abandon=0;

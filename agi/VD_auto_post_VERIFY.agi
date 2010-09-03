@@ -18,6 +18,7 @@
 #
 # changes:
 # 60915-1616 - first build
+# 100903-0041 - Changed lead_id max length to 10 digits
 #
 
 $script = 'VD_auto_post_VERIFY.agi';
@@ -220,7 +221,7 @@ $VDADphone_code='';
 $callerid =~ s/ .*//gi;
 $callerid =~ s/\"//gi;
 $CIDlead_id = $callerid;
-$CIDlead_id = substr($CIDlead_id, 11, 9);
+$CIDlead_id = substr($CIDlead_id, 10, 10);
 $CIDlead_id = ($CIDlead_id + 0);
 $VD_lead_id = $CIDlead_id;
 

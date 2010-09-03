@@ -313,6 +313,9 @@ OTHER CHANGES:
 	to force a user password change on the next admin login. Added password 
 	default settings to System Settings and added a first login setup screen
 
+69. Changed application limit for lead_id from 9 digits to 10 digits. This does 
+	not affect the database limit of lead_id: 4294967295
+
 
 
 
