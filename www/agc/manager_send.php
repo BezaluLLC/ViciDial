@@ -448,7 +448,10 @@ if ($ACTION=="Originate")
 		if ($agent_dialed_number > 0)
 			{
 			if (strlen($lead_id)<1) {$lead_id='0';}
-			$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id,preset_name,campaign_id) values('$user','$NOW_TIME','$agent_dialed_type','$server_ip','$exten','$channel','$lead_id','$outbound_cid','$RAWaccount','$preset_name','$campaign')";
+			$customer_hungup='';
+			if ( ($stage > 0) and (preg_match("/3WAY/",$agent_dialed_type)) ) 
+				{$customer_hungup = 'BEFORE_CALL';}
+			$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id,preset_name,campaign_id,customer_hungup) values('$user','$NOW_TIME','$agent_dialed_type','$server_ip','$exten','$channel','$lead_id','$outbound_cid','$RAWaccount','$preset_name','$campaign','$customer_hungup')";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00192',$user,$server_ip,$session_name,$one_mysql_log);}

@@ -316,6 +316,12 @@ OTHER CHANGES:
 69. Changed application limit for lead_id from 9 digits to 10 digits. This does 
 	not affect the database limit of lead_id: 4294967295
 
+70. Added customer 3way hangup logging options to campaigns which will log if 
+	and how far into the 3-way call a customer has hung-up, as well as if
+	the agent initiated the call after the customer hung up. There is also
+	an option to end the 3-way call and send the agent to the disposition
+	screen if the customer hangs up during the 3-way call.
+
 
 
 

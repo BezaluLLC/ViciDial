@@ -311,10 +311,11 @@
 # 100827-1436 - Added webphone dialpad options
 # 100902-0046 - Added initial loading screen
 # 100902-1349 - Added closecallid, xfercallid, agent_log_id as webform and script variables
+# 100908-0955 - Added customer 3way hangup 
 #
 
-$version = '2.4-289';
-$build = '100902-1349';
+$version = '2.4-290';
+$build = '100908-0955';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -1260,7 +1261,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1342,6 +1343,10 @@ else
 				$enable_xfer_presets =		$row[74];
 				$hide_xfer_number_to_dial =	$row[75];
 				$manual_dial_prefix =		$row[76];
+				$customer_3way_hangup_logging =	$row[77];
+				$customer_3way_hangup_seconds =	$row[78];
+				$customer_3way_hangup_action =	$row[79];
+
 
 				if ($manual_dial_override == 'ALLOW_ALL')
 					{$agentcall_manual = 1;}
@@ -2794,6 +2799,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var VD_live_call_secondS = 0;
 	var XD_live_customer_call = 0;
 	var XD_live_call_secondS = 0;
+	var xfer_in_call = 0;
 	var open_dispo_screen = 0;
 	var AgentDispoing = 0;
 	var logout_stop_timeouts = 0;
@@ -3090,6 +3096,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var did_description='';
 	var closecallid='';
 	var xfercallid='';
+	var customer_3way_hangup_logging='<?php echo $customer_3way_hangup_logging ?>';
+	var customer_3way_hangup_seconds='<?php echo $customer_3way_hangup_seconds ?>';
+	var customer_3way_hangup_action='<?php echo $customer_3way_hangup_action ?>';
+	var customer_3way_hangup_counter=0;
+	var customer_3way_hangup_counter_trigger=0;
+	var customer_3way_hangup_dispo_message='';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -3354,8 +3366,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		{
 		conf_dialed=1;
 		var sending_group_alias = 0;
+		// Dial With Customer button
 		if (taskFromConf == 'YES')
 			{
+			xfer_in_call=1;
 			agent_dialed_number='1';
 			agent_dialed_type='XFER_3WAY';
 
@@ -3551,7 +3565,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					{var call_cid = campaign_cid;}
 				}
 
-			VMCoriginate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=Originate&format=text&channel=" + originatevalue + "&queryCID=" + queryCID + "&exten=" + call_prefix + "" + dialnum + "&ext_context=" + ext_context + "&ext_priority=1&outbound_cid=" + call_cid + "&usegroupalias="+ usegroupalias + "&preset_name=" + taskpresetname + "&campaign=" + campaign + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&lead_id=" + document.vicidial_form.lead_id.value + "&" + alertquery;
+			VMCoriginate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=Originate&format=text&channel=" + originatevalue + "&queryCID=" + queryCID + "&exten=" + call_prefix + "" + dialnum + "&ext_context=" + ext_context + "&ext_priority=1&outbound_cid=" + call_cid + "&usegroupalias="+ usegroupalias + "&preset_name=" + taskpresetname + "&campaign=" + campaign + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&lead_id=" + document.vicidial_form.lead_id.value + "&stage=" + CheckDEADcallON + "&" + alertquery;
 			xmlhttp.open('POST', 'manager_send.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(VMCoriginate_query); 
@@ -3952,8 +3966,15 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							{
 							if (CheckDEADcallON < 1)
 								{
-								if( document.images ) { document.images['livecall'].src = image_livecall_DEAD.src;}
+								if( document.images ) 
+									{ document.images['livecall'].src = image_livecall_DEAD.src;}
 								CheckDEADcallON=1;
+
+								if ( (xfer_in_call > 0) && (customer_3way_hangup_logging=='ENABLED') )
+									{
+									customer_3way_hangup_counter_trigger=1;
+									customer_3way_hangup_counter=1;
+									}
 								}
 							}
 						if (InGroupChange > 0)
@@ -4990,7 +5011,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	function NeWManuaLDiaLCalLSubmiT(tempDiaLnow)
 		{
 		hideDiv('NeWManuaLDiaLBox');
-		document.getElementById("debugbottomspan").innerHTML = "TESTING NOW HERE" + document.vicidial_form.MDPhonENumbeR.value + "|" + active_group_alias;
+		document.getElementById("debugbottomspan").innerHTML = "DEBUG OUTPUT" + document.vicidial_form.MDPhonENumbeR.value + "|" + active_group_alias;
 
 		var sending_group_alias = 0;
 		var MDDiaLCodEform = document.vicidial_form.MDDiaLCodE.value;
@@ -8303,6 +8324,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		var xferchannel = document.vicidial_form.xferchannel.value;
 		var xfer_channel = lastxferchannel;
 		var process_post_hangup=0;
+		xfer_in_call=0;
 		if ( (MD_channel_look==1) && (leaving_threeway < 1) )
 			{
 			MD_channel_look=0;
@@ -8505,6 +8527,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // Generate the Call Disposition Chooser panel
 	function DispoSelectContent_create(taskDSgrp,taskDSstage)
 		{
+		if (customer_3way_hangup_dispo_message.length > 1)
+			{
+			document.getElementById("Dispo3wayMessage").innerHTML = "<BR><B><font color=red size=3>" + customer_3way_hangup_dispo_message + "</font></B><BR>";
+			}
 		HidEGenDerPulldown();
 		AgentDispoing = 1;
 		var VD_statuses_ct_half = parseInt(VD_statuses_ct / 2);
@@ -8729,6 +8755,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		leaving_threeway=0;
 		blind_transfer=0;
 		CheckDEADcallON=0;
+		customer_3way_hangup_counter=0;
+		customer_3way_hangup_counter_trigger=0;
 		document.getElementById("callchannel").innerHTML = '';
 		document.vicidial_form.callserverip.value = '';
 		document.vicidial_form.xferchannel.value = '';
@@ -8842,6 +8870,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				MDnextCID='';
 				XD_live_customer_call = 0;
 				XD_live_call_secondS = 0;
+				xfer_in_call=0;
 				MD_channel_look=0;
 				MD_ring_secondS=0;
 				uniqueid_status_display='';
@@ -8861,6 +8890,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				xfercallid='';
 				document.vicidial_form.xfername.value='';
 				document.vicidial_form.xfernumhidden.value='';
+				document.getElementById("debugbottomspan").innerHTML = '';
+				customer_3way_hangup_dispo_message='';
+				document.getElementById("Dispo3wayMessage").innerHTML = '';
 
 				if (manual_dial_in_progress==1)
 					{
@@ -10556,6 +10588,47 @@ function phone_number_format(formatphone) {
 		}
 
 
+// ################################################################################
+// Run the logging process for customer 3way hangup
+	function customer_3way_hangup_process(temp_hungup_time,temp_xfer_call_seconds)
+		{
+		var xmlhttp=false;
+		/*@cc_on @*/
+		/*@if (@_jscript_version >= 5)
+		// JScript gives us Conditional compilation, we can cope with old IE versions.
+		// and security blocked creation of the objects.
+		 try {
+		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+		 } catch (e) {
+		  try {
+		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		  } catch (E) {
+		   xmlhttp = false;
+		  }
+		 }
+		@end @*/
+		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+			{
+			xmlhttp = new XMLHttpRequest();
+			}
+		if (xmlhttp) 
+			{ 
+			CTHPview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=customer_3way_hangup_process&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&status=" + temp_hungup_time + "&stage=" + temp_xfer_call_seconds;
+			xmlhttp.open('POST', 'vdc_db_query.php'); 
+			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+			xmlhttp.send(CTHPview_query); 
+			xmlhttp.onreadystatechange = function() 
+				{ 
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+					{
+				//	alert(xmlhttp.responseText);
+					document.getElementById("debugbottomspan").innerHTML = "CUSTOMER 3WAY HANGUP " + xmlhttp.responseText;
+					}
+				}
+			delete xmlhttp;
+			}
+		}
+
 
 // ################################################################################
 // Refresh the FORM content
@@ -11152,6 +11225,28 @@ else
 					{
 					XD_live_call_secondS++;
 					document.vicidial_form.xferlength.value		= XD_live_call_secondS;
+					}
+				if (customer_3way_hangup_counter_trigger > 0)
+					{
+					if (customer_3way_hangup_counter > customer_3way_hangup_seconds)
+						{
+						var customer_3way_timer_seconds = (XD_live_call_secondS - customer_3way_hangup_counter);
+						customer_3way_hangup_process('DURING_CALL',customer_3way_timer_seconds);
+
+						customer_3way_hangup_counter=0;
+						customer_3way_hangup_counter_trigger=0;
+
+						if (customer_3way_hangup_action=='DISPO')
+							{
+							customer_3way_hangup_dispo_message='Customer Hung-up, 3-way Call Ended Automatically';
+							bothcall_send_hangup();
+							}
+						}
+					else
+						{
+						customer_3way_hangup_counter++;
+						document.getElementById("debugbottomspan").innerHTML = "CUSTOMER 3WAY HANGUP " + customer_3way_hangup_counter;
+						}
 					}
 				if ( (update_fields > 0) && (update_fields_data.length > 2) )
 					{
@@ -12359,6 +12454,7 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="DispoSelectBox">
     <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> DISPOSITION CALL :<span id="DispoSelectPhonE"></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectHAspan"><a href="#" onclick="DispoHanguPAgaiN()">Hangup Again</a></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectMaxMin"><a href="#" onclick="DispoMinimize()"> minimize </a></span><BR>
+	<span id="Dispo3wayMessage"></span>
 	<span id="DispoSelectContent"> End-of-call Disposition Selection </span>
 	<input type=hidden name=DispoSelection><BR>
 	<input type=checkbox name=DispoSelectStop size=1 value="0"> PAUSE AGENT DIALING <BR>

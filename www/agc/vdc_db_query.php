@@ -12,7 +12,7 @@
 #  - $pass
 # optional variables:
 #  - $format - ('text','debug')
-#  - $ACTION - ('regCLOSER','regTERRITORY','manDiaLnextCALL','manDiaLskip','manDiaLonly','manDiaLlookCaLL','manDiaLlogCALL','userLOGout','updateDISPO','updateLEAD','VDADpause','VDADready','VDADcheckINCOMING','UpdatEFavoritEs','CalLBacKLisT','CalLBacKCounT','PauseCodeSubmit','LogiNCamPaigns','alt_phone_change','AlertControl','AGENTSview','CALLSINQUEUEview','CALLSINQUEUEgrab','DiaLableLeaDsCounT','UpdateFields','CALLLOGview','LEADINFOview')
+#  - $ACTION - ('regCLOSER','regTERRITORY','manDiaLnextCALL','manDiaLskip','manDiaLonly','manDiaLlookCaLL','manDiaLlogCALL','userLOGout','updateDISPO','updateLEAD','VDADpause','VDADready','VDADcheckINCOMING','UpdatEFavoritEs','CalLBacKLisT','CalLBacKCounT','PauseCodeSubmit','LogiNCamPaigns','alt_phone_change','AlertControl','AGENTSview','CALLSINQUEUEview','CALLSINQUEUEgrab','DiaLableLeaDsCounT','UpdateFields','CALLLOGview','LEADINFOview','customer_3way_hangup_process')
 #  - $stage - ('start','finish','lookup','new')
 #  - $closer_choice - ('CL_TESTCAMP_L CL_OUT123_L -')
 #  - $conf_exten - ('8600011',...)
@@ -254,10 +254,11 @@
 # 100823-1612 - Added DID variables on inbound calls
 # 100902-1348 - Added closecallid and xfercallid variables
 # 100903-0041 - Changed lead_id max length to 10 digits
+# 100908-1102 - Added customer_3way_hangup_process function
 #
 
-$version = '2.4-161';
-$build = '100903-0041';
+$version = '2.4-162';
+$build = '100908-1102';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=333;
 $one_mysql_log=0;
@@ -7542,6 +7543,22 @@ if ($ACTION == 'CalLBacKCounT')
 	$cbcount_live=$row[0];
 
 	echo "$cbcount|$cbcount_live";
+	}
+
+
+
+
+################################################################################
+### customer_3way_hangup_process - send the count of the USERONLY callbacks for an agent
+################################################################################
+if ($ACTION == 'customer_3way_hangup_process')
+	{
+	$stmt="UPDATE user_call_log SET customer_hungup='$status',customer_hungup_seconds='$stage' where lead_id='$lead_id' and  user='$user' and call_type LIKE \"%3WAY%\" order by user_call_log_id desc limit 1;";
+		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
+	echo "DONE: $stage|$lead_id|$status";
 	}
 
 

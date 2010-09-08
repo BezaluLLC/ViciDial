@@ -542,10 +542,15 @@ ALTER TABLE system_settings ADD default_server_password VARCHAR(20) default 'tes
 
 UPDATE system_settings SET db_schema_version='1244',db_schema_update_date=NOW();
 
-
-
-
-
 ALTER TABLE vicidial_lists_fields MODIFY field_name VARCHAR(5000);
 
 UPDATE system_settings SET db_schema_version='1245',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD customer_3way_hangup_logging ENUM('DISABLED','ENABLED') default 'ENABLED';
+ALTER TABLE vicidial_campaigns ADD customer_3way_hangup_seconds SMALLINT(5) UNSIGNED default '5';
+ALTER TABLE vicidial_campaigns ADD customer_3way_hangup_action ENUM('NONE','DISPO') default 'NONE';
+
+ALTER TABLE user_call_log ADD customer_hungup ENUM('BEFORE_CALL','DURING_CALL','') default '';
+ALTER TABLE user_call_log ADD customer_hungup_seconds SMALLINT(5) UNSIGNED default '0';
+
+UPDATE system_settings SET db_schema_version='1246',db_schema_update_date=NOW();

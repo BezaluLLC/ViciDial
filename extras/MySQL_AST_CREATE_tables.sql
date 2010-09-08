@@ -762,7 +762,10 @@ inbound_queue_no_dial ENUM('DISABLED','ENABLED','ALL_SERVERS') default 'DISABLED
 timer_action_destination VARCHAR(30) default '',
 enable_xfer_presets ENUM('DISABLED','ENABLED') default 'DISABLED',
 hide_xfer_number_to_dial ENUM('DISABLED','ENABLED') default 'DISABLED',
-manual_dial_prefix VARCHAR(20) default ''
+manual_dial_prefix VARCHAR(20) default '',
+customer_3way_hangup_logging ENUM('DISABLED','ENABLED') default 'ENABLED',
+customer_3way_hangup_seconds SMALLINT(5) UNSIGNED default '5',
+customer_3way_hangup_action ENUM('NONE','DISPO') default 'NONE'
 );
 
 CREATE TABLE vicidial_lists (
@@ -1722,6 +1725,8 @@ callerid VARCHAR(20),
 group_alias_id VARCHAR(30),
 preset_name VARCHAR(40) default '',
 campaign_id VARCHAR(20) default '',
+customer_hungup ENUM('BEFORE_CALL','DURING_CALL','') default '',
+customer_hungup_seconds SMALLINT(5) UNSIGNED default '0',
 index (user),
 index (call_date),
 index (group_alias_id)
@@ -2362,7 +2367,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1245',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1246',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

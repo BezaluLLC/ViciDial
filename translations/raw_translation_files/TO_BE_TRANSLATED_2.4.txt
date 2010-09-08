@@ -433,6 +433,12 @@ ViciBox CD ISO version||
 or only the||
 source code||
 Continue on to the Initial Setup||
+Customer 3-Way Hangup Logging||
+If this option is ENABLED the user_call_log will log when a customer hangup up if they hang up during a 3-way call. Also, this can allow for the Customer 3-way hangup action if one is defineed below. Default is ENABLED||
+Customer 3-Way Hangup Seconds||
+If Customer 3-way logging is enabled, this option allows you to define the number of seconds after the customer hangup is detected before it is actually logged and the optional customer 3-way hangup action is executed. Default is 5 seconds||
+Customer 3-Way Hangup Action||
+If Customer 3-way logging is enabled, this option allows you to have the agent screen automatically hang up on the call and go to the DISPO screen if this option is set to DISPO. Default is NONE||
 
 
 AST_VICIDIAL_ingrouplist.php
@@ -447,7 +453,7 @@ No calls on this day||
 You are in ALT dial mode, you must finish the lead before logging out||
 Presets Button||
 SELECT A PRESET||
-
+Customer Hung-up, 3-way Call Ended Automatically||
 
 
 ############################################################  MANAGER Manual

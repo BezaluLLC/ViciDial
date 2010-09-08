@@ -26,6 +26,7 @@
 # 100425-0115 - Added more login data
 # 100712-1324 - Added system setting slave server option
 # 100802-2347 - Added User Group Allowed Reports option validation
+# 100908-1205 - Added customer 3way hangup flags to user calls display
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -869,9 +870,9 @@ if ($did < 1)
 
 	echo "<B>MANUAL OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)</B>\n";
 	echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-	echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2> CALL TYPE</td><td align=left><font size=2> SERVER</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> DIALED</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> CALLERID</td><td align=right><font size=2> ALIAS</td><td align=right><font size=2> PRESET</td></tr>\n";
+	echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2> CALL TYPE</td><td align=left><font size=2> SERVER</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> DIALED</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> CALLERID</td><td align=right><font size=2> ALIAS</td><td align=right><font size=2> PRESET</td><td align=right><font size=2>C3HU</td></tr>\n";
 
-	$stmt="select call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id,preset_name from user_call_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by call_date desc limit 10000;";
+	$stmt="select call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id,preset_name,customer_hungup,customer_hungup_seconds from user_call_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by call_date desc limit 10000;";
 	$rslt=mysql_query($stmt, $link);
 	$logs_to_print = mysql_num_rows($rslt);
 
@@ -884,6 +885,12 @@ if ($did < 1)
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
 
+		$C3HU='';
+		if ($row[9]=='BEFORE_CALL') {$row[9]='BC';}
+		if ($row[9]=='DURING_CALL') {$row[9]='DC';}
+		if (strlen($row[9]) > 1)
+			{$C3HU = "$row[9] $row[10]";}
+
 		$u++;
 		echo "<tr $bgcolor>";
 		echo "<td><font size=1>$u</td>";
@@ -895,7 +902,8 @@ if ($did < 1)
 		echo "<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[5]\" target=\"_blank\">$row[5]</A> </td>\n";
 		echo "<td align=right><font size=2> $row[6] </td>\n";
 		echo "<td align=right><font size=2> $row[7] </td>\n";
-		echo "<td align=right><font size=2> $row[8] </td></tr>\n";
+		echo "<td align=right><font size=2> $row[8] </td>\n";
+		echo "<td align=right NOWRAP><font size=2> $C3HU </td></tr>\n";
 		}
 	echo "</TABLE><BR><BR>\n";
 	}
