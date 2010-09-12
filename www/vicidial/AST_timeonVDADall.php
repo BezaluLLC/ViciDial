@@ -66,10 +66,11 @@
 # 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
 # 100805-0704 - Fixed minor bug in campaigns restrictions
 # 100815-0002 - Added optional display of preset dials if presets are enabled in the campaign
+# 100912-0839 - Changed several stats to limit to 2 or 3 decimal spaces
 #
 
-$version = '2.4-57';
-$build = '100815-0002';
+$version = '2.4-58';
+$build = '100912-0839';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -1525,6 +1526,10 @@ else
 			$DIALorder =	"List Mix: $row[0]";
 			}
 		}
+	$DIALlev = sprintf("%01.3f", $DIALlev);
+	$agentsONEMIN = sprintf("%01.2f", $agentsONEMIN);
+	$diffONEMIN = sprintf("%01.2f", $diffONEMIN);
+
 
 	echo "<BR><table cellpadding=0 cellspacing=0><TR>";
 	echo "<TD ALIGN=RIGHT><font size=2><B>DIAL LEVEL:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALlev&nbsp; &nbsp; </TD>";

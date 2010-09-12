@@ -38,7 +38,7 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
-$report_name = 'Server Perforrmance Report';
+$report_name = 'Server Performance Report';
 $db_source = 'M';
 
 #############################################

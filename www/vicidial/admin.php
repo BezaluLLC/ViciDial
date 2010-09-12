@@ -94,9 +94,9 @@ $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
 
-$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Fronter - Closer Report, Export Calls Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Perforrmance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List';
+$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Fronter - Closer Report, Export Calls Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List';
 
-$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Fronter - Closer Report, Export Calls Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Perforrmance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Custom Reports Links, CallCard Search';
+$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Fronter - Closer Report, Export Calls Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Custom Reports Links, CallCard Search';
 
 ######################################################################################################
 ######################################################################################################
@@ -2545,11 +2545,12 @@ else
 # 100827-1535 - Added webphone options for dialpad and systemkey
 # 100901-2055 - Added password strength grading, force password change, password default settings and first login screen
 # 100908-0926 - Added 3way hangup logging options to campaigns
+# 100912-0842 - Several small changes, removed Emergency VDAC clear since it does not do anything anymore
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-279';
-$build = '100908-0926';
+$admin_version = '2.4-280';
+$build = '100912-0842';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5788,10 +5789,10 @@ if ($ADD==99999)
 
 	<BR>
 	<A NAME="vicidial_scripts-script_text">
-	<B>Script Text -</B> This is where you place the content of a Vicidial Script. Minimum of 2 characters. You can have customer information be auto-populated in this script using "--A--field--B--" where field is one of the following fieldnames: vendor_lead_code, source_id, list_id, gmt_offset_now, called_since_last_reset, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, lead_id, campaign, phone_login, group, channel_group, SQLdate, epoch, uniqueid, customer_zap_channel, server_ip, SIPexten, session_id, dialed_number, dialed_label, rank, owner, camp_script, in_script, script_width, script_height, recording_filename, recording_id. For example, this sentence would print the persons name in it----<BR><BR>  Hello, can I speak with --A--first_name--B-- --A--last_name--B-- please? Well hello --A--title--B-- --A--last_name--B-- how are you today?<BR><BR> This would read----<BR><BR>Hello, can I speak with John Doe please? Well hello Mr. Doe how are you today?<BR><BR> You can also use an iframe to load a separate window within the SCRIPT tab, here is an example with prepopulated variables:
+	<B>Script Text -</B> This is where you place the content of a Vicidial Script. Minimum of 2 characters. You can have customer information be auto-populated in this script using "--A--field--B--" where field is one of the following fieldnames: vendor_lead_code, source_id, list_id, gmt_offset_now, called_since_last_reset, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, lead_id, campaign, phone_login, group, channel_group, SQLdate, epoch, uniqueid, customer_zap_channel, server_ip, SIPexten, session_id, dialed_number, dialed_label, rank, owner, camp_script, in_script, script_width, script_height, recording_filename, recording_id, user_custom_one, user_custom_two, user_custom_three, user_custom_four, user_custom_five, preset_number_a, preset_number_b, preset_number_c, preset_number_d, preset_number_e, preset_number_f, preset_dtmf_a, preset_dtmf_b, did_id, did_extension, did_pattern, did_description, closecallid, xfercallid, agent_log_id. For example, this sentence would print the persons name in it----<BR><BR>  Hello, can I speak with --A--first_name--B-- --A--last_name--B-- please? Well hello --A--title--B-- --A--last_name--B-- how are you today?<BR><BR> This would read----<BR><BR>Hello, can I speak with John Doe please? Well hello Mr. Doe how are you today?<BR><BR> You can also use an iframe to load a separate window within the SCRIPT tab, here is an example with prepopulated variables:
 
 	<DIV style="height:200px;width:400px;background:white;overflow:scroll;font-size:12px;font-family:sans-serif;" id=iframe_example>
-	&#60;iframe src="http://astguiclient.sf.net/test_VICIDIAL_output.php?lead_id=--A--lead_id--B--&#38;vendor_id=--A--vendor_lead_code--B--&#38;list_id=--A--list_id--B--&#38;gmt_offset_now=--A--gmt_offset_now--B--&#38;phone_code=--A--phone_code--B--&#38;phone_number=--A--phone_number--B--&#38;title=--A--title--B--&#38;first_name=--A--first_name--B--&#38;middle_initial=--A--middle_initial--B--&#38;last_name=--A--last_name--B--&#38;address1=--A--address1--B--&#38;address2=--A--address2--B--&#38;address3=--A--address3--B--&#38;city=--A--city--B--&#38;state=--A--state--B--&#38;province=--A--province--B--&#38;postal_code=--A--postal_code--B--&#38;country_code=--A--country_code--B--&#38;gender=--A--gender--B--&#38;date_of_birth=--A--date_of_birth--B--&#38;alt_phone=--A--alt_phone--B--&#38;email=--A--email--B--&#38;security_phrase=--A--security_phrase--B--&#38;comments=--A--comments--B--&#38;user=--A--user--B--&#38;campaign=--A--campaign--B--&#38;phone_login=--A--phone_login--B--&#38;fronter=--A--fronter--B--&#38;closer=--A--user--B--&#38;group=--A--group--B--&#38;channel_group=--A--group--B--&#38;SQLdate=--A--SQLdate--B--&#38;epoch=--A--epoch--B--&#38;uniqueid=--A--uniqueid--B--&#38;customer_zap_channel=--A--customer_zap_channel--B--&#38;server_ip=--A--server_ip--B--&#38;SIPexten=--A--SIPexten--B--&#38;session_id=--A--session_id--B--&#38;dialed_number=--A--dialed_number--B--&#38;dialed_label=--A--dialed_label--B--&#38;rank=--A--rank--B--&#38;owner=--A--owner--B--&#38;phone=--A--phone--B--&#38;camp_script=--A--camp_script--B--&#38;in_script=--A--in_script--B--&#38;script_width=--A--script_width--B--&#38;script_height=--A--script_height--B--&#38;recording_filename=--A--recording_filename--B--&#38;recording_id=--A--recording_id--B--&#38;" style="width:580;height:290;background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="popupFrame" name="popupFrame" width="460" height="290" STYLE="z-index:17"&#62;
+	&#60;iframe src="http://astguiclient.sf.net/test_VICIDIAL_output.php?lead_id=--A--lead_id--B--&#38;vendor_id=--A--vendor_lead_code--B--&#38;list_id=--A--list_id--B--&#38;gmt_offset_now=--A--gmt_offset_now--B--&#38;phone_code=--A--phone_code--B--&#38;phone_number=--A--phone_number--B--&#38;title=--A--title--B--&#38;first_name=--A--first_name--B--&#38;middle_initial=--A--middle_initial--B--&#38;last_name=--A--last_name--B--&#38;address1=--A--address1--B--&#38;address2=--A--address2--B--&#38;address3=--A--address3--B--&#38;city=--A--city--B--&#38;state=--A--state--B--&#38;province=--A--province--B--&#38;postal_code=--A--postal_code--B--&#38;country_code=--A--country_code--B--&#38;gender=--A--gender--B--&#38;date_of_birth=--A--date_of_birth--B--&#38;alt_phone=--A--alt_phone--B--&#38;email=--A--email--B--&#38;security_phrase=--A--security_phrase--B--&#38;comments=--A--comments--B--&#38;user=--A--user--B--&#38;campaign=--A--campaign--B--&#38;phone_login=--A--phone_login--B--&#38;fronter=--A--fronter--B--&#38;closer=--A--user--B--&#38;group=--A--group--B--&#38;channel_group=--A--group--B--&#38;SQLdate=--A--SQLdate--B--&#38;epoch=--A--epoch--B--&#38;uniqueid=--A--uniqueid--B--&#38;customer_zap_channel=--A--customer_zap_channel--B--&#38;server_ip=--A--server_ip--B--&#38;SIPexten=--A--SIPexten--B--&#38;session_id=--A--session_id--B--&#38;dialed_number=--A--dialed_number--B--&#38;dialed_label=--A--dialed_label--B--&#38;rank=--A--rank--B--&#38;owner=--A--owner--B--&#38;phone=--A--phone--B--&#38;camp_script=--A--camp_script--B--&#38;in_script=--A--in_script--B--&#38;script_width=--A--script_width--B--&#38;script_height=--A--script_height--B--&#38;recording_filename=--A--recording_filename--B--&#38;recording_id=--A--recording_id--B--&#38;user_custom_one=--A--user_custom_one--B--&#38;user_custom_two=--A--user_custom_two--B--&#38;user_custom_three=--A--user_custom_three--B--&#38;user_custom_four=--A--user_custom_four--B--&#38;user_custom_five=--A--user_custom_five--B--&#38;preset_number_a=--A--preset_number_a--B--&#38;preset_number_b=--A--preset_number_b--B--&#38;preset_number_c=--A--preset_number_c--B--&#38;preset_number_d=--A--preset_number_d--B--&#38;preset_number_e=--A--preset_number_e--B--&#38;preset_number_f=--A--preset_number_f--B--&#38;preset_dtmf_a=--A--preset_dtmf_a--B--&#38;preset_dtmf_b=--A--preset_dtmf_b--B--&#38;did_id=--A--did_id--B--&#38;did_extension=--A--did_extension--B--&#38;did_pattern=--A--did_pattern--B--&#38;did_description=--A--did_description--B--&#38;closecallid=--A--closecallid--B--&#38;xfercallid=--A--xfercallid--B--&#38;agent_log_id=--A--agent_log_id--B--&#38;" style="width:580;height:290;background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="popupFrame" name="popupFrame" width="460" height="290" STYLE="z-index:17"&#62;
 	&#60;/iframe&#62;
 	</DIV>
 
@@ -7307,6 +7308,13 @@ if ($ADD==7111111)
 	$preset_number_f = 'preset_f';
 	$preset_dtmf_a = 'preset_dtmf_a';
 	$preset_dtmf_b = 'preset_dtmf_b';
+	$did_id = 'did_id';
+	$did_extension = 'did_extension';
+	$did_pattern = 'did_pattern';
+	$did_description = 'did_description';
+	$closecallid = 'closecallid';
+	$xfercallid = 'xfercallid';
+	$agent_log_id = 'agent_log_id';
 
 	echo "</title>\n";
 	echo "</head>\n";
@@ -7383,6 +7391,7 @@ if ($ADD==7111111)
 		$preset_number_f = eregi_replace(' ','+',$preset_number_f);
 		$preset_dtmf_a = eregi_replace(' ','+',$preset_dtmf_a);
 		$preset_dtmf_b = eregi_replace(' ','+',$preset_dtmf_b);
+		$did_description = eregi_replace(' ','+',$did_description);
 		}
 
 	$script_text = eregi_replace('--A--vendor_lead_code--B--',"$vendor_lead_code",$script_text);
@@ -7448,6 +7457,13 @@ if ($ADD==7111111)
 	$script_text = eregi_replace('--A--preset_number_f--B--',"$preset_number_f",$script_text);
 	$script_text = eregi_replace('--A--preset_dtmf_a--B--',"$preset_dtmf_a",$script_text);
 	$script_text = eregi_replace('--A--preset_dtmf_b--B--',"$preset_dtmf_b",$script_text);
+	$script_text = eregi_replace('--A--did_id--B--',"$did_id",$script_text);
+	$script_text = eregi_replace('--A--did_extension--B--',"$did_extension",$script_text);
+	$script_text = eregi_replace('--A--did_pattern--B--',"$did_pattern",$script_text);
+	$script_text = eregi_replace('--A--did_description--B--',"$did_description",$script_text);
+	$script_text = eregi_replace('--A--closecallid--B--',"$closecallid",$script_text);
+	$script_text = eregi_replace('--A--xfercallid--B--',"$xfercallid",$script_text);
+	$script_text = eregi_replace('--A--agent_log_id--B--',"$agent_log_id",$script_text);
 	$script_text = eregi_replace("\n","<BR>",$script_text);
 
 
@@ -8709,6 +8725,13 @@ if ($ADD==1111111)
 		echo "<option>preset_number_f</option>";
 		echo "<option>preset_dtmf_a</option>";
 		echo "<option>preset_dtmf_b</option>";
+		echo "<option>did_id</option>";
+		echo "<option>did_extension</option>";
+		echo "<option>did_pattern</option>";
+		echo "<option>did_description</option>";
+		echo "<option>closecallid</option>";
+		echo "<option>xfercallid</option>";
+		echo "<option>agent_log_id</option>";
 		echo "</select>";
 		echo "<input type=\"button\" name=\"insertField\" value=\"Insert\" onClick=\"scriptInsertField();\"><BR>";
 		# END Insert Field
@@ -19077,7 +19100,7 @@ if ($ADD==31)
 		echo "<TABLE width=500 cellspacing=3>\n";
 		echo "<tr><td>STATUS</td><td>DESCRIPTION</td><td>SELECTABLE</td><td>HUMAN ANSWER</td><td>CATEGORY</td><td>MODIFY-DELETE</td></tr>\n";
 
-		$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where campaign_id='$campaign_id'";
+		$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status";
 		$rslt=mysql_query($stmt, $link);
 		$statuses_to_print = mysql_num_rows($rslt);
 		$o=0;
@@ -19546,7 +19569,7 @@ if ($ADD==31)
 		{
 		echo "<BR><BR>\n";
 		echo "<a href=\"$PHP_SELF?ADD=52&campaign_id=$campaign_id&DB=$DB\">LOG ALL AGENTS OUT OF THIS CAMPAIGN</a><BR><BR>\n";
-		echo "<a href=\"$PHP_SELF?ADD=53&campaign_id=$campaign_id&DB=$DB\">EMERGENCY VDAC CLEAR FOR THIS CAMPAIGN</a><BR><BR>\n";
+	#	echo "<a href=\"$PHP_SELF?ADD=53&campaign_id=$campaign_id&DB=$DB\">EMERGENCY VDAC CLEAR FOR THIS CAMPAIGN</a><BR><BR>\n";
 
 		if ($LOGdelete_campaigns > 0)
 			{
@@ -20496,7 +20519,7 @@ if ($ADD==33)
 			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 			echo "<td><font size=1> ";
 
-			$stmt="SELECT status from vicidial_campaign_hotkeys where campaign_id='$campaigns_id_list[$o]' order by status";
+			$stmt="SELECT status from vicidial_campaign_hotkeys where campaign_id='$campaigns_id_list[$o]' order by hotkey";
 			$rslt=mysql_query($stmt, $link);
 			$campstatus_to_print = mysql_num_rows($rslt);
 			$p=0;
@@ -22130,7 +22153,7 @@ if ($ADD==3111)
 
 		if ($LOGdelete_ingroups > 0)
 			{
-			echo "<br><br><a href=\"$PHP_SELF?ADD=53&campaign_id=$group_id&stage=IN\">EMERGENCY VDAC CLEAR FOR THIS IN-GROUP</a><BR><BR>\n";
+		#	echo "<br><br><a href=\"$PHP_SELF?ADD=53&campaign_id=$group_id&stage=IN\">EMERGENCY VDAC CLEAR FOR THIS IN-GROUP</a><BR><BR>\n";
 			echo "<br><br><a href=\"$PHP_SELF?ADD=5111&group_id=$group_id\">DELETE THIS IN-GROUP</a>\n";
 			}
 		if ($LOGuser_level >= 9)
@@ -23267,6 +23290,13 @@ if ($ADD==3111111)
 		echo "<option>preset_number_f</option>";
 		echo "<option>preset_dtmf_a</option>";
 		echo "<option>preset_dtmf_b</option>";
+		echo "<option>did_id</option>";
+		echo "<option>did_extension</option>";
+		echo "<option>did_pattern</option>";
+		echo "<option>did_description</option>";
+		echo "<option>closecallid</option>";
+		echo "<option>xfercallid</option>";
+		echo "<option>agent_log_id</option>";
 		echo "</select>";
 		echo "<input type=\"button\" name=\"insertField\" value=\"Insert\" onClick=\"scriptInsertField();\"><BR>";
 		# END Insert Field
@@ -27495,8 +27525,8 @@ if ($ADD==999999)
 		echo "</UL><BR>\n";
 		echo "<B>Other Reports and Links</B><BR>\n";
 		echo "<UL>\n";
-		if ( (preg_match("/Server Perforrmance Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
-			{echo "<LI><a href=\"AST_server_performance.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Server Perforrmance Report</a></FONT>\n";}
+		if ( (preg_match("/Server Performance Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_server_performance.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Server Performance Report</a></FONT>\n";}
 
 		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
