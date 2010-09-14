@@ -25,6 +25,7 @@
 # 100216-0042 - Added popup date selector
 # 100712-1324 - Added system setting slave server option
 # 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
+# 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 #
 
 require("dbconnect.php");
@@ -95,6 +96,12 @@ if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
+
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$reports_only_user=$row[0];
 
 if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{

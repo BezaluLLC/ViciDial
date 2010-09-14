@@ -311,11 +311,12 @@
 # 100827-1436 - Added webphone dialpad options
 # 100902-0046 - Added initial loading screen
 # 100902-1349 - Added closecallid, xfercallid, agent_log_id as webform and script variables
-# 100908-0955 - Added customer 3way hangup 
+# 100908-0955 - Added customer 3way hangup
+# 100912-1304 - Changed Dispo screen phone number display to dialed_number
 #
 
-$version = '2.4-290';
-$build = '100908-0955';
+$version = '2.4-291';
+$build = '100912-1304';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=66;
 $one_mysql_log=0;
@@ -11142,7 +11143,7 @@ else
 				LIVE_campaign_recording = campaign_recording;
 				LIVE_campaign_rec_filename = campaign_rec_filename;
 				if (disable_alter_custphone!='HIDE')
-					{document.getElementById("DispoSelectPhonE").innerHTML = document.vicidial_form.phone_number.value;}
+					{document.getElementById("DispoSelectPhonE").innerHTML = dialed_number;}
 				else
 					{document.getElementById("DispoSelectPhonE").innerHTML = '';}
 				if (auto_dial_level == 0)

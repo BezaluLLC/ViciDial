@@ -322,6 +322,9 @@ OTHER CHANGES:
 	an option to end the 3-way call and send the agent to the disposition
 	screen if the customer hangs up during the 3-way call.
 
+71. Added ability to view Inbound Report by selected DIDs instead of by 
+	in-groups. Link added to Reports page.
+
 
 
 

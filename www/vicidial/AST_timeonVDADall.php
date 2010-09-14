@@ -67,10 +67,11 @@
 # 100805-0704 - Fixed minor bug in campaigns restrictions
 # 100815-0002 - Added optional display of preset dials if presets are enabled in the campaign
 # 100912-0839 - Changed several stats to limit to 2 or 3 decimal spaces
+# 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 #
 
-$version = '2.4-58';
-$build = '100912-0839';
+$version = '2.4-59';
+$build = '100914-1326';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -263,6 +264,12 @@ if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
+
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$reports_only_user=$row[0];
 
 if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{

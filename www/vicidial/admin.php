@@ -27476,6 +27476,8 @@ if ($ADD==999999)
 		echo "<UL>\n";
 		if ( (preg_match("/Inbound Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 			{echo "<LI><a href=\"AST_CLOSERstats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound Report</a></FONT>\n";}
+		if ( ( (preg_match("/Inbound Report/",$LOGallowed_reports)) and (preg_match("/Inbound DID Report/",$LOGallowed_reports)) ) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_CLOSERstats.php?DID=Y\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound Report by DID</a></FONT>\n";}
 		if ( (preg_match("/Inbound Service Level Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 			{echo "<LI><a href=\"AST_CLOSER_service_level.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound Service Level Report</a></FONT>\n";}
 		if ( (preg_match("/Inbound Summary Hourly Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
@@ -28258,7 +28260,7 @@ if (isset($camp_lists))
 				}
 			else {$active_leads = '0';}
 
-			echo "|$DB|\n";
+			if ($DB > 0) {echo "|$DB|\n";}
 			echo "This campaign has $active_leads leads to be dialed in those lists\n";
 			}
 		else

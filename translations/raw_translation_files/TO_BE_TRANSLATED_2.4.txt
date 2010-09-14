@@ -439,6 +439,7 @@ Customer 3-Way Hangup Seconds||
 If Customer 3-way logging is enabled, this option allows you to define the number of seconds after the customer hangup is detected before it is actually logged and the optional customer 3-way hangup action is executed. Default is 5 seconds||
 Customer 3-Way Hangup Action||
 If Customer 3-way logging is enabled, this option allows you to have the agent screen automatically hang up on the call and go to the DISPO screen if this option is set to DISPO. Default is NONE||
+Inbound Report by DID||
 
 
 AST_VICIDIAL_ingrouplist.php

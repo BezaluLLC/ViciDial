@@ -25,6 +25,7 @@
 # 100728-0904 - Changed Lead Loader link to the new 3rd gen lead loader
 # 100802-2127 - Changed Admin to point to links page instead of Phones listings
 # 100831-2255 - Added password strength checking function
+# 100914-1311 - Removed other links for reports-only users
 #
 
 
@@ -34,6 +35,8 @@ if($short_header)
 	?>
 	<TABLE CELLPADDING=0 CELLSPACING=0 BGCOLOR="#015B91"><TR>
 	<TD><IMG SRC="vicidial_admin_web_logo_small.gif" WIDTH=71 HEIGHT=22> &nbsp; </TD>
+	<?php if ($reports_only_user < 1) {
+		?>
 	<TD> &nbsp; <A HREF="admin.php" ALT="Users"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Users</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10" ALT="Campaigns"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Campaigns</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=100" ALT="Lists"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Lists</B></A> &nbsp; </TD>
@@ -43,6 +46,12 @@ if($short_header)
 	<TD> &nbsp; <A HREF="admin.php?ADD=100000" ALT="User Groups"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>User Groups</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10000" ALT="Remote Agents"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Remote Agents</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=999998" ALT="Admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Admin</B></A> &nbsp; </TD>
+	<?php 
+		} 
+	else 
+		{ ?>
+	<TD width=600> &nbsp; &nbsp; </TD>
+	<?php } ?>
 	<TD> &nbsp; <A HREF="admin.php?ADD=999999" ALT="Reports"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Reports</B></A> &nbsp; </TD>
 	</TR>
 	</TABLE>
@@ -976,6 +985,8 @@ $SScustom_fields_enabled =	$row[3];
 <IMG SRC="./vicidial_admin_web_logo.gif" WIDTH=170 HEIGHT=45 ALT="VICIDIAL logo">
 <B><FONT FACE="ARIAL,HELVETICA" COLOR=white>ADMINISTRATION</FONT></B><BR>
 	<TABLE CELLPADDING=2 CELLSPACING=0 BGCOLOR=#015B91 WIDTH=160>
+	<?php if ($reports_only_user < 1) {
+		?>
 	<!-- USERS NAVIGATION -->
 	<TR WIDTH=160><TD <?php echo $users_hh ?> WIDTH=160>
 	<a href="<?php echo $ADMIN ?>?ADD=0"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $users_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $users_bold ?>Users</a>
@@ -1290,6 +1301,7 @@ $SScustom_fields_enabled =	$row[3];
 
 		<?php }
 			}
+		}
 	?>
 	<!-- REPORTS NAVIGATION -->
 	<TR><TD <?php echo $reports_hh ?>>
