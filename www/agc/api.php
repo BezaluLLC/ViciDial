@@ -48,10 +48,11 @@
 # 100318-0605 - Added close_window_link and language options
 # 100401-2357 - Added external_add_lead function (contributed by aouyar)
 # 100527-0926 - Added send_dtmf, transfer_conference and park_call functions
+# 100914-1538 - Fixed bug in change_ingroups function
 #
 
-$version = '2.4-15';
-$build = '100527-0926';
+$version = '2.4-16';
+$build = '100914-1538';
 
 require("dbconnect.php");
 
@@ -1146,6 +1147,41 @@ if ($function == 'change_ingroups')
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					$rslt=mysql_query($stmt, $link);
 
+					$stmtA="DELETE FROM vicidial_live_inbound_agents where user='$agent_user';";
+						if ($format=='debug') {echo "\n<!-- $stmtA -->";}
+					$rslt=mysql_query($stmtA, $link);
+
+					$in_groups_pre = preg_replace('/-$/','',$ingroup_choices);
+					$in_groups = explode(" ",$in_groups_pre);
+					$in_groups_ct = count($in_groups);
+					$k=1;
+					while ($k < $in_groups_ct)
+						{
+						if (strlen($in_groups[$k])>1)
+							{
+							$stmtB="SELECT group_weight,calls_today FROM vicidial_inbound_group_agents where user='$agent_user' and group_id='$in_groups[$k]';";
+							$rslt=mysql_query($stmtB, $link);
+							if ($DB) {echo "$stmtB\n";}
+							$viga_ct = mysql_num_rows($rslt);
+							if ($viga_ct > 0)
+								{
+								$row=mysql_fetch_row($rslt);
+								$group_weight = $row[0];
+								$calls_today =	$row[1];
+								}
+							else
+								{
+								$group_weight = 0;
+								$calls_today =	0;
+								}
+							$stmtB="INSERT INTO vicidial_live_inbound_agents set user='$agent_user',group_id='$in_groups[$k]',group_weight='$group_weight',calls_today='$calls_today',last_call_time='$NOW_TIME',last_call_finish='$NOW_TIME';";
+							$stmtBlog .= "$stmtB|";
+								if ($format=='debug') {echo "\n<!-- $stmtB -->";}
+							$rslt=mysql_query($stmtB, $link);
+							}
+						$k++;
+						}
+
 					$default_data = "";
 					if ($set_as_default == 'YES')
 						{
@@ -1156,7 +1192,7 @@ if ($function == 'change_ingroups')
 
 						### LOG INSERTION Admin Log Table ###
 						$ip = getenv("REMOTE_ADDR");
-						$SQL_log = "$stmt|";
+						$SQL_log = "$stmt|$stmtA|$stmtBlog";
 						$SQL_log = ereg_replace(';','',$SQL_log);
 						$SQL_log = addslashes($SQL_log);
 						$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$user', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$agent_user', event_code='API MODIFY USER', event_sql=\"$SQL_log\", event_notes='';";
