@@ -325,6 +325,14 @@ OTHER CHANGES:
 71. Added ability to view Inbound Report by selected DIDs instead of by 
 	in-groups. Link added to Reports page.
 
+72. Added dispo_move_list.php script which can be used in the Dispo Call URL
+	option for a campaign or in-group. This script can be used to move a
+	lead into a different list_id after the agent disposition depending on
+	the disposition that is selected. Optionally, the lead can also be reset
+	so that it can be dialed back immediately. See the code comments for 
+	more information.
+
+
 
 
 
