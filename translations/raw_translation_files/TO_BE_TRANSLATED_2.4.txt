@@ -440,8 +440,10 @@ If Customer 3-way logging is enabled, this option allows you to define the numbe
 Customer 3-Way Hangup Action||
 If Customer 3-way logging is enabled, this option allows you to have the agent screen automatically hang up on the call and go to the DISPO screen if this option is set to DISPO. Default is NONE||
 Inbound Report by DID||
+Lists Campaign Status Stats||
 
 
+AST_LISTS_campaign_stats.php
 AST_VICIDIAL_ingrouplist.php
 admin_lists_custom.php
 ############################################################ CLIENT

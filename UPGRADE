@@ -332,6 +332,9 @@ OTHER CHANGES:
 	so that it can be dialed back immediately. See the code comments for 
 	more information.
 
+73. Added the Lists Campaign Statuses Report which is a list inventory report, 
+	not a calling report. This report will show statistics for all of the 
+	lists in the selected campaigns.
 
 
 

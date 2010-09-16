@@ -94,9 +94,9 @@ $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
 
-$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Fronter - Closer Report, Export Calls Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List';
+$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Fronter - Closer Report, Lists Campaign Statuses Report, Export Calls Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List';
 
-$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Fronter - Closer Report, Export Calls Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Custom Reports Links, CallCard Search';
+$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Fronter - Closer Report, Lists Campaign Statuses Report, Export Calls Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Custom Reports Links, CallCard Search';
 
 ######################################################################################################
 ######################################################################################################
@@ -23980,6 +23980,10 @@ if ($ADD==31111111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=51111111111&extension=$extension&server_ip=$server_ip\">DELETE THIS PHONE</a>\n";
 			}
+		if ($LOGuser_level >= 9)
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=PHONES&stage=$extension\">Click here to see Admin chages to this phone</FONT>\n";
+			}
 		}
 	else
 		{
@@ -27492,6 +27496,8 @@ if ($ADD==999999)
 			{echo "<LI><a href=\"AST_OUTBOUNDsummary_interval.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Outbound Summary Interval Report</a></FONT>\n";}
 		if ( (preg_match("/Fronter - Closer Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 			{echo "<LI><a href=\"fcstats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Fronter - Closer Report</a></FONT>\n";}
+		if ( (preg_match("/Lists Campaign Statuses Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_LISTS_campaign_stats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Lists Campaign Statuses Report</a></FONT>\n";}
 				# echo "<LI><a href=\"vicidial_sales_viewer.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>AGENT SPREADSHEET PERFORMANCE</a></FONT>\n";
 		if ($LOGexport_reports >= 1)
 			{
