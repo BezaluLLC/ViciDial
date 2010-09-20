@@ -1856,7 +1856,7 @@ if ($function == 'update_lead')
 						{
 						$result = 'NOTICE';
 						$result_reason = "update_lead LEADS FOUND IN THE SYSTEM";
-						$data = "$lead_id|$vendor_lead_code|$phone_number";
+						$data = "$lead_id|$vendor_lead_code|$phone_number|$search_lead_list[0]|$search_entry_list[0]";
 						echo "$result: $result_reason: |$user|$data\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						}
