@@ -17,6 +17,7 @@
 # 100712-1324 - Added system setting slave server option
 # 100802-2347 - Added User Group Allowed Reports option validation
 # 100804-1745 - Added option to download DNC and FPGN lists
+# 100924-1609 - Added ALL-LISTS option for downloading everything
 #
 
 require("dbconnect.php");
@@ -225,6 +226,8 @@ else
 	##### list download validation #####
 	$event_code_type='LIST';
 	$stmt="select count(*) from vicidial_lists where list_id='$list_id' $LOGallowed_campaignsSQL;";
+	if ($list_id=='ALL-LISTS')
+		{$stmt="select count(*) from vicidial_lists where list_id > 0 $LOGallowed_campaignsSQL;";}
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$count_to_print = mysql_num_rows($rslt);
@@ -242,6 +245,8 @@ else
 		}
 
 	$stmt="select count(*) from vicidial_list where list_id='$list_id';";
+	if ($list_id=='ALL-LISTS')
+		{$stmt="select count(*) from vicidial_list where list_id > 0;";}
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$count_to_print = mysql_num_rows($rslt);
@@ -296,9 +301,15 @@ elseif ($download_type == 'fpgn')
 else
 	{
 	$TXTfilename = "LIST_$list_id$US$FILE_TIME.txt";
-	$header_row = "lead_id\tentry_date\tmodify_date\tstatus\tuser\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tcalled_since_last_reset\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tcalled_count\tlast_local_call_time\trank\towner";
-	$header_columns='';
+	$list_id_header='';
 	$stmt="select lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where list_id='$list_id';";
+	if ($list_id=='ALL-LISTS')
+		{
+		$list_id_header="list_id\t";   
+		$stmt="select list_id,lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where list_id > 0;";
+		}
+	$header_row = $list_id_header . "lead_id\tentry_date\tmodify_date\tstatus\tuser\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tcalled_since_last_reset\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tcalled_count\tlast_local_call_time\trank\towner";
+	$header_columns='';
 	}
 
 // We'll be outputting a TXT file
@@ -330,7 +341,14 @@ while ($i < $leads_to_print)
 		{
 		$row[29] = preg_replace("/\n|\r/",'!N',$row[29]);
 
-		$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]";
+		if ($list_id=='ALL-LISTS')
+			{
+			$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]";
+			}
+		else
+			{
+			$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]";
+			}
 		$export_lead_id[$i] = $row[0];
 		}
 	$i++;
