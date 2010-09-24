@@ -38,6 +38,7 @@
 # 100622-0945 - Added field labels
 # 100703-1122 - Added custom fields display/edit
 # 100712-1416 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
+# 100924-1431 - Added Called Count display
 #
 
 require("dbconnect.php");
@@ -587,7 +588,7 @@ else
 	echo "<input type=hidden name=parked_time value=\"$parked_time\">\n";
 	echo "<table cellpadding=1 cellspacing=0>\n";
 	echo "<tr><td colspan=2>$label_vendor_lead_code: $vendor_id &nbsp; &nbsp; Lead ID: $lead_id</td></tr>\n";
-	echo "<tr><td colspan=2>Fronter: <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; List ID: $list_id</td></tr>\n";
+	echo "<tr><td colspan=2>Fronter: <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; List ID: $list_id &nbsp; &nbsp; Called Count: $called_count</td></tr>\n";
 
 	echo "<tr><td align=right>$label_title: </td><td align=left><input type=text name=title size=4 maxlength=4 value=\"$title\"> &nbsp; \n";
 	echo "$label_first_name: <input type=text name=first_name size=15 maxlength=30 value=\"$first_name\"> </td></tr>\n";

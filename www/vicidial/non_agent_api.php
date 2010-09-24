@@ -36,10 +36,11 @@
 # 100718-0245 - Added update_lead function to update existing leads
 # 100723-1333 - Added no_update option to the update_lead function
 # 100728-1952 - Added delete_lead option to the update_lead function
+# 100924-1403 - Added called_count as an update_lead option
 #
 
-$version = '2.4-22';
-$build = '100728-1952';
+$version = '2.4-23';
+$build = '100924-1403';
 
 require("dbconnect.php");
 
@@ -156,6 +157,8 @@ if (isset($_GET["no_update"]))					{$no_update=$_GET["no_update"];}
 	elseif (isset($_POST["no_update"]))			{$no_update=$_POST["no_update"];}
 if (isset($_GET["delete_lead"]))				{$delete_lead=$_GET["delete_lead"];}
 	elseif (isset($_POST["delete_lead"]))		{$delete_lead=$_POST["delete_lead"];}
+if (isset($_GET["called_count"]))				{$called_count=$_GET["called_count"];}
+	elseif (isset($_POST["called_count"]))		{$called_count=$_POST["called_count"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -247,6 +250,7 @@ if ($non_latin < 1)
 	$lead_id = ereg_replace("[^0-9]","",$lead_id);
 	$no_update = ereg_replace("[^A-Z]","",$no_update);
 	$delete_lead = ereg_replace("[^A-Z]","",$delete_lead);
+	$called_count=ereg_replace("[^0-9]","",$called_count);
 	}
 else
 	{
@@ -1902,6 +1906,7 @@ if ($function == 'update_lead')
 						if (strlen($comments)>0)			{$VL_update_SQL .= "comments='$comments',";}
 						if (strlen($rank)>0)				{$VL_update_SQL .= "rank='$rank',";}
 						if (strlen($owner)>0)				{$VL_update_SQL .= "owner='$owner',";}
+						if (strlen($called_count)>0)		{$VL_update_SQL .= "called_count='$called_count',";}
 						$VL_update_SQL = preg_replace("/,$/","",$VL_update_SQL);
 						$VL_update_SQL = preg_replace("/'--BLANK--'/","''",$VL_update_SQL);
 						$VL_update_SQL = preg_replace("/\n/","!N",$VL_update_SQL);

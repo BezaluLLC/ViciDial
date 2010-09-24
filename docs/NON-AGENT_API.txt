@@ -41,6 +41,7 @@ Changes:
 100718-0245 - Added update_lead function to update existing leads
 100723-1333 - Added no_update option to the update_lead function
 100728-1952 - Added delete_lead option to the update_lead function
+100924-1403 - Added called_count as an update_lead option
 
 
 
@@ -365,6 +366,7 @@ security_phrase -	1-100 characters
 comments -		1-255 characters
 rank -			1-5 digits
 owner -			1-20 characters (user ID, Territory or user group)
+called_count -		digits only, the number of attempts dialing the lead
 NOTES: 
  - in order to set a field to empty('') set it equal to --BLANK--, i.e. "&province=--BLANK--"
  - please use no special characters like apostrophes, quotes or amphersands
