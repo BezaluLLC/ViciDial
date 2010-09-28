@@ -15,6 +15,7 @@
 # 81008-0937 - Added kickall from vicidial_conferences if only one participant
 # 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
 # 100811-2054 - Added --no-vc-3way-check flag to use when AST_conf_update_3way.pl script is used
+# 100928-1506 - Changed from hard-coded 60 minute limit to servers.vicidial_recording_limit
 #
 
 # constants
@@ -118,7 +119,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
  or die "Couldn't connect to database: " . DBI->errstr;
 
 ### Grab Server values from the database
-$stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context FROM servers where server_ip = '$server_ip';";
+$stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context,vicidial_recording_limit FROM servers where server_ip = '$server_ip';";
 if ($DB) {print "|$stmtA|\n";}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -138,6 +139,7 @@ if ($sthArows > 0)
 	$DBanswer_transfer_agent=	$aryA[8];
 	$DBSERVER_GMT		=		$aryA[9];
 	$DBext_context	=			$aryA[10];
+	$vicidial_recording_limit = $aryA[11];
 	if ($DBtelnet_host)				{$telnet_host = $DBtelnet_host;}
 	if ($DBtelnet_port)				{$telnet_port = $DBtelnet_port;}
 	if ($DBASTmgrUSERNAME)			{$ASTmgrUSERNAME = $DBASTmgrUSERNAME;}
@@ -149,6 +151,7 @@ if ($sthArows > 0)
 	if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
 	if ($DBSERVER_GMT)				{$SERVER_GMT = $DBSERVER_GMT;}
 	if ($DBext_context)				{$ext_context = $DBext_context;}
+	if ($vicidial_recording_limit < 60) {$vicidial_recording_limit=60;}
 	}
  $sthA->finish(); 
 
@@ -167,7 +170,7 @@ $now_date = "$year-$mon-$mday $hour:$min:$sec";
 
 ##### Find date-time one hour in the past
 $secX = time();
-$TDtarget = ($secX - 3600);
+$TDtarget = ($secX - ($vicidial_recording_limit * 60));
 ($Tsec,$Tmin,$Thour,$Tmday,$Tmon,$Tyear,$Twday,$Tyday,$Tisdst) = localtime($TDtarget);
 $Tyear = ($Tyear + 1900);
 $Tmon++;
