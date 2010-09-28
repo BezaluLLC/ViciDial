@@ -48,9 +48,10 @@
 # 100427-0434 - Added ability to create new list in system for each new loaded file
 # 100610-0756 - Added dccsv52 file format
 # 100624-2143 - Added dccsvref52 file format
+# 100928-1121 - Added file-prefix-filter option
 #
 
-$version = '100610-0756';
+$version = '100928-1121';
 
 $secX = time();
 $MT[0]='';
@@ -153,6 +154,7 @@ if (length($ARGV[0])>1)
 		print "  [--forcelistid=1234] = overrides the listID given in the file with the 1234\n";
 		print "  [--forcelistfilename] = overrides the listID using last number in filename: (XYZ_1234.txt = list ID 1234)\n";
 		print "  [--forcephonecode=44] = overrides the phone_code given in the lead with the 44\n";
+		print "  [--file-prefix-filter=WXYZ] = will only process lead files that begin with the characters you define\n";
 		print "  [--new-list-for-each-file] = creates a new list for each file loaded, listID = YYYYMMDDX where X is incremented\n";
 		print "  [--new-listid-prefix=X] = prefix for listID when creating new lists, must be only numbers, and 4 or less digits\n";
 		print "  [--new-listname-prefix=X] = prefix for list name when creating new lists, will be followed by filename\n";
@@ -266,6 +268,16 @@ if (length($ARGV[0])>1)
 			}
 		else
 			{$forcephonecode = '';}
+
+		if ($args =~ /--file-prefix-filter=/i)
+			{
+			@data_in = split(/--file-prefix-filter=/,$args);
+				$file_prefix_filter = $data_in[1];
+				$file_prefix_filter =~ s/ .*//gi;
+			if ($q < 1) {print "\n----- FILE PREFIX FILTER: $file_prefix_filter -----\n\n";}
+			}
+		else
+			{$file_prefix_filter = '';}
 
 		if ($args =~ /-duplicate-check/i)
 			{
@@ -446,8 +458,17 @@ if ($ftp_pull > 0)
 			@FILEDETAILS = split(/ \d\d:\d\d /, $FILES[$i]);
 			$FILES[$i] = "$FILEDETAILS[1]";
 			$FILES[$i] =~ s/ *$//gi;
-
-			if (length($FILES[$i]) > 4)
+			
+			$passed_file_filter=1;
+			if (length($file_prefix_filter)>0)
+				{
+				if ($FILES[$i] !~ /^$file_prefix_filter/)
+					{
+					if ($DB > 0) {print "SKIPPING FILE, NO FILTER MATCH: $FILES[$i]\n";}
+					$passed_file_filter=0;
+					}
+				}
+			if ( (length($FILES[$i]) > 4) && ($passed_file_filter > 0) )
 				{
 				$GOODfname = $FILES[$i];
 				$FILES[$i] =~ s/ /_/gi;
