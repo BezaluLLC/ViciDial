@@ -336,6 +336,9 @@ OTHER CHANGES:
 	not a calling report. This report will show statistics for all of the 
 	lists in the selected campaigns.
 
+74. Added ability to use Custom List Fields in Web Forms, Scripts and Dispo 
+	Call URL entries used by the agent interface.
+
 
 
 

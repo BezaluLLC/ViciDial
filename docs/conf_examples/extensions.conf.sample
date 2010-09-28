@@ -41,9 +41,6 @@ exten => _999XX11112,5,Hangup
 [default]
 include => vicidial-auto
 
-; VICI-GROUP DIRECT SUPPORT LINE (VICIHELP[84244357])
-exten => _84244XXX,1,Dial(IAX2/vicihelp/${EXTEN:5})
-
 ; Local agent alert extensions
 exten => _8600XXX*.,1,AGI(agi-VDADfixCXFER.agi)
 exten => _78600XXX*.,1,AGI(agi-VDADfixCXFER.agi)
@@ -68,31 +65,15 @@ exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG---
 
 
 ; Example phone extensions
-
-; Extension 2000 Sipura/Linksys ATA line 1
-exten => 2000,1,Dial(sip/spa2000,30,to)   ; Ring, 30 secs max
-exten => 2000,2,Voicemail,u2000           ; Send to voicemail...
-; Extension 2001 Sipura/Linksys ATA line 2
-exten => 2001,1,Dial(sip/spa2001,30,to)   ; Ring, 30 secs max
-exten => 2001,2,Voicemail,u2001           ; Send to voicemail...
-; Extension 2102 rings Grandstream phone
-exten => 2102,1,Dial(sip/gs102,30,to)    ; Ring, 30 secs max
-exten => 2102,2,Voicemail,u2102          ; Send to voicemail...
-; Extension 401 rings the firefly softphone
-exten => 401,1,Dial((IAX2/firefly01@firefly01/s||t)
-exten => 401,2,Hangup
-
-; 100-350 phone extensions now auto-generated
+; 100-350 phone extensions now auto-generated, so no need to uncommend them
 ; extensions for other SIP and IAX call center phones
 ;   cc100-cc150 SIP Phones
 ;exten => _1[0-5]X,1,Dial(sip/cc${EXTEN},20,to)
 ;   cc300-cc350 IAX Phones
 ;exten => _3[0-5]X,1,Dial(IAX2/cc${EXTEN},20,to)
-
 ; extensions if using a T1 channelbank
 ;exten => _19XX,1,Dial(Zap/${EXTEN:2},30,o)
 ;exten => _19XX,2,Hangup
-
 ; Extension 4001 rings Zap phone (this example for FXS on Zap port 1)
 ;exten => 4001,1,Dial(Zap/1,30,o)	; ring Zap device 1
 ;exten => 4001,2,Voicemail,u4001         ; Send to voicemail...

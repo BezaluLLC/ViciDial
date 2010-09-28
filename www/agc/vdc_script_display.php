@@ -177,10 +177,15 @@ if (isset($_GET["xfercallid"]))				{$xfercallid=$_GET["xfercallid"];}
 	elseif (isset($_POST["xfercallid"]))	{$xfercallid=$_POST["xfercallid"];}
 if (isset($_GET["agent_log_id"]))			{$agent_log_id=$_GET["agent_log_id"];}
 	elseif (isset($_POST["agent_log_id"]))	{$agent_log_id=$_POST["agent_log_id"];}
-if (isset($_GET["ScrollDIV"]))	{$ScrollDIV=$_GET["ScrollDIV"];}
+if (isset($_GET["ScrollDIV"]))			{$ScrollDIV=$_GET["ScrollDIV"];}
 	elseif (isset($_POST["ScrollDIV"]))	{$ScrollDIV=$_POST["ScrollDIV"];}
-if (isset($_GET["ignore_list_script"]))	{$ignore_list_script=$_GET["ignore_list_script"];}
+if (isset($_GET["ignore_list_script"]))				{$ignore_list_script=$_GET["ignore_list_script"];}
 	elseif (isset($_POST["ignore_list_script"]))	{$ignore_list_script=$_POST["ignore_list_script"];}
+if (isset($_GET["CF_uses_custom_fields"]))			{$CF_uses_custom_fields=$_GET["CF_uses_custom_fields"];}
+	elseif (isset($_POST["CF_uses_custom_fields"]))	{$CF_uses_custom_fields=$_POST["CF_uses_custom_fields"];}
+if (isset($_GET["entry_list_id"]))			{$entry_list_id=$_GET["entry_list_id"];}
+	elseif (isset($_POST["entry_list_id"]))	{$entry_list_id=$_POST["entry_list_id"];}
+
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -465,6 +470,29 @@ $script_text = eregi_replace('--A--did_description--B--',"$did_description",$scr
 $script_text = eregi_replace('--A--closecallid--B--',"$closecallid",$script_text);
 $script_text = eregi_replace('--A--xfercallid--B--',"$xfercallid",$script_text);
 $script_text = eregi_replace('--A--agent_log_id--B--',"$agent_log_id",$script_text);
+$script_text = eregi_replace('--A--entry_list_id--B--',"$entry_list_id",$script_text);
+
+if ($CF_uses_custom_fields=='Y')
+	{
+	### find the names of all custom fields, if any
+	$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$cffn_ct = mysql_num_rows($rslt);
+	$d=0;
+	while ($cffn_ct > $d)
+		{
+		$row=mysql_fetch_row($rslt);
+		$field_name_id = $row[0];
+		$field_name_tag = "--A--" . $field_name_id . "--B--";
+		if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
+			elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
+		$script_text = eregi_replace("$field_name_tag","$form_field_value",$script_text);
+			if ($DB) {echo "$d|$field_name_id|$field_name_tag|$form_field_value|<br>\n";}
+		$d++;
+		}
+	}
+
 $script_text = eregi_replace("\n","<BR>",$script_text);
 $script_text = stripslashes($script_text);
 

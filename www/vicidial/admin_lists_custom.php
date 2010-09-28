@@ -14,10 +14,11 @@
 # 100629-0200 - Added SCRIPT field type option
 # 100722-1313 - Added field validation for label and name
 # 100728-1724 - Added field validation for select lists and checkbox/radio buttons
+# 100916-1754 - Do not show help in example form if help is empty
 #
 
-$admin_version = '2.4-8';
-$build = '100728-1724';
+$admin_version = '2.4-9';
+$build = '100916-1754';
 
 
 require("dbconnect.php");
@@ -998,7 +999,12 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 			}
 		echo "<a href=\"#ANCHOR_$A_field_label[$o]\"><B>$A_field_name[$o]</B></a>";
 		if ($A_name_position[$o]=='TOP') 
-			{echo " &nbsp; <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> &nbsp; <a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">help+</a></span><BR>";}
+			{
+			$helpHTML = "<a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">help+</a>";
+			if (strlen($A_field_help[$o])<1)
+				{$helpHTML = '';}
+			echo " &nbsp; <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> &nbsp; $helpHTML</span><BR>";
+			}
 		else
 			{
 			if ($last_field_rank=="$A_field_rank[$o]")
@@ -1135,7 +1141,10 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 
 		if ($A_name_position[$o]=='LEFT') 
 			{
-			echo " $field_HTML <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> &nbsp; <a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">help+</a></span>";
+			$helpHTML = "<a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">help+</a>";
+			if (strlen($A_field_help[$o])<1)
+				{$helpHTML = '';}
+			echo " $field_HTML <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> &nbsp; $helpHTML</span>";
 			}
 		else
 			{

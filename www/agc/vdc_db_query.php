@@ -88,6 +88,7 @@
 #  - $alt_num_status - ('0','1')
 #  - $DiaL_SecondS - ('0','1','2',...)
 #  - $date - ('2010-02-19')
+#  - $custom_field_names - ('|start_date|finish_date|favorite_color|')
 #
 # CHANGELOG:
 # 50629-1044 - First build of script
@@ -255,12 +256,14 @@
 # 100902-1348 - Added closecallid and xfercallid variables
 # 100903-0041 - Changed lead_id max length to 10 digits
 # 100908-1102 - Added customer_3way_hangup_process function
+# 100916-2144 - Added custom list names export with lead data
+# 100927-1618 - Added ability to use custom fields in web form and dispo_call_url
 #
 
-$version = '2.4-162';
-$build = '100908-1102';
+$version = '2.4-164';
+$build = '100927-1618';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=333;
+$mysql_log_count=345;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -442,6 +445,8 @@ if (isset($_GET["DiaL_SecondS"]))				{$DiaL_SecondS=$_GET["DiaL_SecondS"];}
 	elseif (isset($_POST["DiaL_SecondS"]))		{$DiaL_SecondS=$_POST["DiaL_SecondS"];}
 if (isset($_GET["date"]))						{$date=$_GET["date"];}
 	elseif (isset($_POST["date"]))				{$date=$_POST["date"];}
+if (isset($_GET["custom_field_names"]))				{$FORMcustom_field_names=$_GET["custom_field_names"];}
+	elseif (isset($_POST["custom_field_names"]))	{$FORMcustom_field_names=$_POST["custom_field_names"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -1776,6 +1781,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$rank			= trim("$row[32]");
 				$owner			= trim("$row[33]");
 				$entry_list_id	= trim("$row[34]");
+					if ($entry_list_id < 100) {$entry_list_id = $list_id;}
 				}
 
 			$called_count++;
@@ -2156,6 +2162,50 @@ if ($ACTION == 'manDiaLnextCaLL')
 					if (strlen($row[4]) > 0)
 						{$VDCL_xferconf_e_number =	$row[4];}
 					}
+				
+				$custom_field_names='|';
+				$custom_field_names_SQL='';
+				$custom_field_values='----------';
+				$custom_field_types='|';
+				### find the names of all custom fields, if any
+				$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00334',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$cffn_ct = mysql_num_rows($rslt);
+				$d=0;
+				while ($cffn_ct > $d)
+					{
+					$row=mysql_fetch_row($rslt);
+					$custom_field_names .=	"$row[0]|";
+					$custom_field_names_SQL .=	"$row[0],";
+					$custom_field_types .=	"$row[1]|";
+					$custom_field_values .=	"----------";
+					$d++;
+					}
+				if ($cffn_ct > 0)
+					{
+					$custom_field_names_SQL = eregi_replace(".$","",$custom_field_names_SQL);
+					### find the values of the named custom fields
+					$stmt = "SELECT $custom_field_names_SQL FROM custom_$entry_list_id where lead_id='$lead_id' limit 1;";
+					$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00335',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$cffv_ct = mysql_num_rows($rslt);
+					if ($cffv_ct > 0)
+						{
+						$custom_field_values='----------';
+						$row=mysql_fetch_row($rslt);
+						$d=0;
+						while ($cffn_ct > $d)
+							{
+							$custom_field_values .=	"$row[$d]----------";
+							$d++;
+							}
+						$custom_field_values = preg_replace("/\n/"," ",$custom_field_values);
+						$custom_field_values = preg_replace("/\r/","",$custom_field_values);
+						}
+					}
 				}
 
 
@@ -2207,6 +2257,9 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$LeaD_InfO .=	$VDCL_xferconf_d_number . "\n";
 			$LeaD_InfO .=	$VDCL_xferconf_e_number . "\n";
 			$LeaD_InfO .=	$entry_list_id . "\n";
+			$LeaD_InfO .=	$custom_field_names . "\n";
+			$LeaD_InfO .=	$custom_field_values . "\n";
+			$LeaD_InfO .=	$custom_field_types . "\n";
 
 			echo $LeaD_InfO;
 			}
@@ -4032,6 +4085,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$rank			= trim("$row[32]");
 				$owner			= trim("$row[33]");
 				$entry_list_id	= trim("$row[34]");
+				if ($entry_list_id < 100) {$entry_list_id = $list_id;}
 				}
 
 			##### if lead is a callback, grab the callback comments
@@ -4288,7 +4342,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 					$stmt = "SELECT closecallid,xfercallid from vicidial_closer_log where lead_id='$lead_id' and user='$user' and list_id='$list_id' order by call_date desc limit 1;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00336',$user,$server_ip,$session_name,$one_mysql_log);}
 					$VDCL_mvac_ct = mysql_num_rows($rslt);
 					if ($VDCL_mvac_ct > 0)
 						{
@@ -4545,7 +4599,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$stmt = "SELECT did_id,extension from vicidial_did_log where uniqueid='$uniqueid' order by call_date desc limit 1;";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00337',$user,$server_ip,$session_name,$one_mysql_log);}
 				$VDIDL_ct = mysql_num_rows($rslt);
 				if ($VDIDL_ct > 0)
 					{
@@ -4556,7 +4610,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 					$stmt = "SELECT did_pattern,did_description from vicidial_inbound_dids where did_id='$DID_id' limit 1;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00338',$user,$server_ip,$session_name,$one_mysql_log);}
 					$VDIDL_ct = mysql_num_rows($rslt);
 					if ($VDIDL_ct > 0)
 						{
@@ -4610,6 +4664,51 @@ if ($ACTION == 'VDADcheckINCOMING')
 					}
 				}
 
+			$custom_field_names='|';
+			$custom_field_names_SQL='';
+			$custom_field_values='----------';
+			$custom_field_types='|';
+			### find the names of all custom fields, if any
+			$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00339',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$cffn_ct = mysql_num_rows($rslt);
+			$d=0;
+			while ($cffn_ct > $d)
+				{
+				$row=mysql_fetch_row($rslt);
+				$custom_field_names .=	"$row[0]|";
+				$custom_field_names_SQL .=	"$row[0],";
+				$custom_field_types .=	"$row[1]|";
+				$custom_field_values .=	"----------";
+				$d++;
+				}
+			if ($cffn_ct > 0)
+				{
+				$custom_field_names_SQL = eregi_replace(".$","",$custom_field_names_SQL);
+				### find the values of the named custom fields
+				$stmt = "SELECT $custom_field_names_SQL FROM custom_$entry_list_id where lead_id='$lead_id' limit 1;";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00340',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$cffv_ct = mysql_num_rows($rslt);
+				if ($cffv_ct > 0)
+					{
+					$custom_field_values='----------';
+					$row=mysql_fetch_row($rslt);
+					$d=0;
+					while ($cffn_ct > $d)
+						{
+						$custom_field_values .=	"$row[$d]----------";
+						$d++;
+						}
+					$custom_field_values = preg_replace("/\n/"," ",$custom_field_values);
+					$custom_field_values = preg_replace("/\r/","",$custom_field_values);
+					}
+				}
+
+
 			$comments = eregi_replace("\r",'',$comments);
 			$comments = eregi_replace("\n",'!N',$comments);
 
@@ -4657,6 +4756,9 @@ if ($ACTION == 'VDADcheckINCOMING')
 			$LeaD_InfO .=	$owner . "\n";
 			$LeaD_InfO .=	$script_recording_delay . "\n";
 			$LeaD_InfO .=	$entry_list_id . "\n";
+			$LeaD_InfO .=	$custom_field_names . "\n";
+			$LeaD_InfO .=	$custom_field_values . "\n";
+			$LeaD_InfO .=	$custom_field_types . "\n";
 
 			echo $LeaD_InfO;
 
@@ -4791,6 +4893,37 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$VDCL_start_call_url = eregi_replace('--A--user_custom_five--B--',urlencode(trim($user_custom_five)),$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--talk_time--B--',"0",$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--talk_time_min--B--',"0",$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--entry_list_id--B--',"$entry_list_id",$VDCL_start_call_url);
+
+				if (strlen($custom_field_names)>2)
+					{
+					$custom_field_names = preg_replace("/^\||\|$/",'',$custom_field_names);
+					$custom_field_names = preg_replace("/\|/",",",$custom_field_names);
+					$custom_field_names_ARY = explode(',',$custom_field_names);
+					$custom_field_names_ct = count($custom_field_names_ARY);
+					$custom_field_names_SQL = $custom_field_names;
+
+					##### BEGIN grab the data from custom table for the lead_id
+					$stmt="SELECT $custom_field_names_SQL FROM custom_$entry_list_id where lead_id='$lead_id' LIMIT 1;";
+					$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00344',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$list_lead_ct = mysql_num_rows($rslt);
+					if ($list_lead_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$o=0;
+						while ($custom_field_names_ct > $o) 
+							{
+							$form_field_value =		trim("$row[$o]");
+							$field_name_id =		$custom_field_names_ARY[$o];
+							$field_name_tag =		"--A--" . $field_name_id . "--B--";
+							$VDCL_start_call_url = eregi_replace("$field_name_tag","$form_field_value",$VDCL_start_call_url);
+							$o++;
+							}
+						}
+					}
+
 				if ($DB > 0) {echo "$VDCL_start_call_url<BR>\n";}
 				$SCUfile = file("$VDCL_start_call_url");
 				if ($DB > 0) {echo "$SCUfile[0]<BR>\n";}
@@ -6079,7 +6212,7 @@ if ($ACTION == 'updateDISPO')
 				$stmt = "SELECT phone_number,alt_dial from vicidial_log where uniqueid='$uniqueid';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00341',$user,$server_ip,$session_name,$one_mysql_log);}
 				$vl_dialed_ct = mysql_num_rows($rslt);
 				if ($vl_dialed_ct > 0)
 					{
@@ -6089,7 +6222,6 @@ if ($ACTION == 'updateDISPO')
 					}
 				}
 			}
-
 
 
 		##### grab the data from vicidial_list for the lead_id
@@ -6199,6 +6331,37 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_url = eregi_replace('--A--talk_time_ms--B--',"$talk_time_ms",$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--talk_time_min--B--',"$talk_time_min",$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--agent_log_id--B--',"$CALL_agent_log_id",$dispo_call_url);
+		$dispo_call_url = eregi_replace('--A--entry_list_id--B--',"$entry_list_id",$dispo_call_url);
+
+		if (strlen($FORMcustom_field_names)>2)
+			{
+			$custom_field_names = preg_replace("/^\||\|$/",'',$FORMcustom_field_names);
+			$custom_field_names = preg_replace("/\|/",",",$custom_field_names);
+			$custom_field_names_ARY = explode(',',$custom_field_names);
+			$custom_field_names_ct = count($custom_field_names_ARY);
+			$custom_field_names_SQL = $custom_field_names;
+
+			##### BEGIN grab the data from custom table for the lead_id
+			$stmt="SELECT $custom_field_names_SQL FROM custom_$entry_list_id where lead_id='$lead_id' LIMIT 1;";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00345',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$list_lead_ct = mysql_num_rows($rslt);
+			if ($list_lead_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$o=0;
+				while ($custom_field_names_ct > $o) 
+					{
+					$form_field_value =		trim("$row[$o]");
+					$field_name_id =		$custom_field_names_ARY[$o];
+					$field_name_tag =		"--A--" . $field_name_id . "--B--";
+					$dispo_call_url = eregi_replace("$field_name_tag","$form_field_value",$dispo_call_url);
+					$o++;
+					}
+				}
+			}
+
 		if ($DB > 0) {echo "$dispo_call_url<BR>\n";}
 		$SCUfile = file("$dispo_call_url");
 		if ($DB > 0) {echo "$SCUfile[0]<BR>\n";}
@@ -7556,7 +7719,7 @@ if ($ACTION == 'customer_3way_hangup_process')
 	$stmt="UPDATE user_call_log SET customer_hungup='$status',customer_hungup_seconds='$stage' where lead_id='$lead_id' and  user='$user' and call_type LIKE \"%3WAY%\" order by user_call_log_id desc limit 1;";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 	$rslt=mysql_query($stmt, $link);
-		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00342',$user,$server_ip,$session_name,$one_mysql_log);}
 
 	echo "DONE: $stage|$lead_id|$status";
 	}
@@ -7592,7 +7755,7 @@ if ($ACTION == 'Clear_API_Field')
 	$stmt="UPDATE vicidial_live_agents SET $comments='' where user='$user';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 	$rslt=mysql_query($stmt, $link);
-		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00343',$user,$server_ip,$session_name,$one_mysql_log);}
 
 	echo "DONE: $comments";
 	}

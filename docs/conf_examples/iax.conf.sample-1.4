@@ -42,25 +42,4 @@ context=trunkinbound
 
 #include iax-vicidial.conf
 
-;register => 1112223333:PASSWORD@iax.binfone.com
 ;ASTloop/ASTblind removed and now included in iax-vicidial.conf
-
-
-[vicihelp]
-host=67.134.219.20 			;voip.vicidial-group.com
-type=friend
-requirecalltoken=no
-context=opengateway
-disallow=all
-allow=gsm
-allow=ulaw
-permit=67.134.219.20/255.255.255.255
-insecure=very
-
-[1112223333]
-auth=md5
-type=friend
-username=1112223333
-secret=PASSWORD
-host=iax.binfone.com
-context=trunkinbound
