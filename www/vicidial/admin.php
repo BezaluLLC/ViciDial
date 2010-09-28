@@ -2547,11 +2547,12 @@ else
 # 100908-0926 - Added 3way hangup logging options to campaigns
 # 100912-0842 - Several small changes, removed Emergency VDAC clear since it does not do anything anymore
 # 100927-2321 - Added entry_list_id as a script, webform, dispo_call_url variable
+# 100928-1634 - Moved Realtime Block User Info user setting into the new ADMIN REPORT OPTIONS section
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-281';
-$build = '100927-2321';
+$admin_version = '2.4-282';
+$build = '100928-1634';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -17800,6 +17801,10 @@ if ($ADD==3)
 				}
 			if ($LOGuser_level > 8)
 				{
+				echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><B>ADMIN REPORT OPTIONS:</td></tr>\n";
+
+				echo "<tr bgcolor=#9BB9FB><td align=right>Realtime Block User Info: </td><td align=left><select size=1 name=realtime_block_user_info><option>0</option><option>1</option><option SELECTED>$realtime_block_user_info</option></select>$NWB#vicidial_users-realtime_block_user_info$NWE</td></tr>\n";
+
 				echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><B>ADMIN INTERFACE OPTIONS:</td></tr>\n";
 
 				#9BB9FB
@@ -17860,10 +17865,8 @@ if ($ADD==3)
 				echo "<tr bgcolor=#9BB9FB><td align=right>Delete Timeclock Log Record: </td><td align=left><select size=1 name=delete_timeclock_log><option>0</option><option>1</option><option SELECTED>$delete_timeclock_log</option></select>$NWB#vicidial_users-delete_timeclock_log$NWE</td></tr>\n";
 
 				echo "<tr bgcolor=#B9CBFD><td align=right>Manager Shift Enforcement Override: </td><td align=left><select size=1 name=manager_shift_enforcement_override><option>0</option><option>1</option><option SELECTED>$manager_shift_enforcement_override</option></select>$NWB#vicidial_users-manager_shift_enforcement_override$NWE</td></tr>\n";
-
-				echo "<tr bgcolor=#9BB9FB><td align=right>Realtime Block User Info: </td><td align=left><select size=1 name=realtime_block_user_info><option>0</option><option>1</option><option SELECTED>$realtime_block_user_info</option></select>$NWB#vicidial_users-realtime_block_user_info$NWE</td></tr>\n";
 				}
-			echo "<tr bgcolor=#B9CBFD><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+			echo "<tr bgcolor=#9BB9FB><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 			echo "</TABLE></center>\n";
 
 			if ($LOGdelete_users > 0)
