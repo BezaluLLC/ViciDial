@@ -38,6 +38,9 @@ REQUIRED STEPS!!!
 	page and set each one to "Rebuild conf files = Y" and click submit.
 	This will rebuild the conf files to ensure any changes are updated.
 
+4. On one server only, update your phone codes data:
+       /usr/share/astguiclient/ADMIN_area_code_populate.pl --purge-table --debug
+
 
 OTHER CHANGES:
 
