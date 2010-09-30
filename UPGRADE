@@ -342,6 +342,11 @@ OTHER CHANGES:
 74. Added ability to use Custom List Fields in Web Forms, Scripts and Dispo 
 	Call URL entries used by the agent interface.
 
+75. Added "Add Lead URL" feature to in-groups. Works like Dispo Call URL except
+	it will send a web get out as soon as a lead is created by the inbound
+	process. There is a more limited set of variables available for use with
+	this option, see the admin.php help for more details
+
 
 
 

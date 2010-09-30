@@ -441,6 +441,8 @@ Customer 3-Way Hangup Action||
 If Customer 3-way logging is enabled, this option allows you to have the agent screen automatically hang up on the call and go to the DISPO screen if this option is set to DISPO. Default is NONE||
 Inbound Report by DID||
 Lists Campaign Status Stats||
+Add Lead URL||
+This web URL address is not seen by the agent, but it is called every time a lead is added to the system through the inbound process. Default is blank. You must begin this URL with VAR if you want to use variables, and of course --A-- and --B-- around the actual variable in the URL where you want to use it. Here is the list of variables that are available for this function||
 
 
 AST_LISTS_campaign_stats.php

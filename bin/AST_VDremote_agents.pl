@@ -341,7 +341,7 @@ while($one_day_interval > 0)
 					}
 				$sthA->finish();
 
-				### This is where the call to the start_call_url launch will go
+				### This is where the call to the start_call_url launch goes
 
 				if (length($start_call_url) > 5) 
 					{
@@ -354,6 +354,7 @@ while($one_day_interval > 0)
 					$launch .= " --campaign=" . $QHcampaign_id[$w];
 					$launch .= " --uniqueid=" . $QHuniqueid[$w];
 					$launch .= " --alt_dial=" . $QHalt_dial[$w];
+					$launch .= " --function=REMOTE_AGENT_START_CALL_URL";
 
 					system($launch . ' &');
 

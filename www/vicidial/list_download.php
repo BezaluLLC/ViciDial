@@ -18,6 +18,7 @@
 # 100802-2347 - Added User Group Allowed Reports option validation
 # 100804-1745 - Added option to download DNC and FPGN lists
 # 100924-1609 - Added ALL-LISTS option for downloading everything
+# 100929-1919 - Fixed ALL-LISTS download option to include custom fields
 #
 
 require("dbconnect.php");
@@ -344,12 +345,15 @@ while ($i < $leads_to_print)
 		if ($list_id=='ALL-LISTS')
 			{
 			$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]";
+			$export_list_id[$i] = $row[0];
+			$export_lead_id[$i] = $row[1];
 			}
 		else
 			{
 			$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]";
+			$export_list_id[$i] = $list_id;
+			$export_lead_id[$i] = $row[0];
 			}
-		$export_lead_id[$i] = $row[0];
 		}
 	$i++;
 	}
@@ -357,33 +361,98 @@ while ($i < $leads_to_print)
 
 if ( ($custom_fields_enabled > 0) and ($event_code_type=='LIST') )
 	{
-	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-	if ($DB>0) {echo "$stmt";}
-	$rslt=mysql_query($stmt, $link);
-	$tablecount_to_print = mysql_num_rows($rslt);
-	if ($tablecount_to_print > 0) 
+	$valid_custom_table=0;
+	if ($list_id=='ALL-LISTS')
 		{
-		$stmtA = "describe custom_$list_id;";
+		$stmtA = "SELECT list_id from vicidial_lists;";
 		$rslt=mysql_query($stmtA, $link);
 		if ($DB) {echo "$stmtA\n";}
-		$columns_ct = mysql_num_rows($rslt);
+		$lists_ct = mysql_num_rows($rslt);
 		$u=0;
-		while ($columns_ct > $u)
+		while ($lists_ct > $u)
 			{
 			$row=mysql_fetch_row($rslt);
-			$column =	$row[0];
-			if ($u > 0)
-				{$header_columns .= "\t$column";}
+			$custom_list_id[$u] =	$row[0];
 			$u++;
 			}
-		if ($columns_ct > 1)
+		$u=0;
+		while ($lists_ct > $u)
 			{
-			$i=0;
-			while ($i < $leads_to_print)
+			$stmt="SHOW TABLES LIKE \"custom_$custom_list_id[$u]\";";
+			if ($DB>0) {echo "$stmt";}
+			$rslt=mysql_query($stmt, $link);
+			$tablecount_to_print = mysql_num_rows($rslt);
+			$custom_tablecount[$u] = $tablecount_to_print;
+			$u++;
+			}
+		$u=0;
+		while ($lists_ct > $u)
+			{
+			$custom_columns[$u]=0;
+			if ($custom_tablecount[$u] > 0)
 				{
-				$stmtA = "SELECT * from custom_$list_id where lead_id='$export_lead_id[$i]' limit 1;";
+				$stmtA = "describe custom_$custom_list_id[$u];";
 				$rslt=mysql_query($stmtA, $link);
 				if ($DB) {echo "$stmtA\n";}
+				$columns_ct = mysql_num_rows($rslt);
+				$custom_columns[$u] = $columns_ct;
+				}
+			if ($DB) {echo "$custom_list_id[$u]|$custom_tablecount[$u]|$custom_columns[$u]\n";}
+			$u++;
+			}
+		$valid_custom_table=1;
+		}
+	else
+		{
+		$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
+		if ($DB>0) {echo "$stmt";}
+		$rslt=mysql_query($stmt, $link);
+		$tablecount_to_print = mysql_num_rows($rslt);
+		if ($tablecount_to_print > 0) 
+			{
+			$stmtA = "describe custom_$list_id;";
+			$rslt=mysql_query($stmtA, $link);
+			if ($DB) {echo "$stmtA\n";}
+			$columns_ct = mysql_num_rows($rslt);
+			$u=0;
+			while ($columns_ct > $u)
+				{
+				$row=mysql_fetch_row($rslt);
+				$column =	$row[0];
+				if ($u > 0)
+					{$header_columns .= "\t$column";}
+				$u++;
+				}
+			if ($columns_ct > 1)
+				{
+				$valid_custom_table=1;
+				}
+			}
+		}
+	if ($valid_custom_table > 0)
+		{
+		$i=0;
+		while ($i < $leads_to_print)
+			{
+			if ($list_id=='ALL-LISTS')
+				{
+				$valid_custom_table=0;
+				$u=0;
+				while ($lists_ct > $u)
+					{
+					if ( ($export_list_id[$i] == "$custom_list_id[$u]") and ($custom_columns[$u] > 1) )
+						{
+						$valid_custom_table=1;
+						$columns_ct = $custom_columns[$u];
+						}
+					$u++;
+					}
+				}
+			if ($valid_custom_table > 0)
+				{
+				$stmtA = "SELECT * from custom_$export_list_id[$i] where lead_id='$export_lead_id[$i]' limit 1;";
+				$rslt=mysql_query($stmtA, $link);
+				if ($DB) {echo "$columns_ct|$stmtA\n";}
 				$customfield_ct = mysql_num_rows($rslt);
 				if ($customfield_ct > 0)
 					{
@@ -398,9 +467,8 @@ if ( ($custom_fields_enabled > 0) and ($event_code_type=='LIST') )
 
 				$custom_data[$i] = preg_replace("/\r\n/",'!N',$custom_data[$i]);
 				$custom_data[$i] = preg_replace("/\n/",'!N',$custom_data[$i]);
-
-				$i++;
 				}
+			$i++;
 			}
 		}
 	}

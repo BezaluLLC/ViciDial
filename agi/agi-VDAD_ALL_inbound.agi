@@ -141,6 +141,7 @@
 # 100811-0751 -	Added calculate_estimated_hold_seconds option
 # 100830-1445 - Allow the changing of the queue priority of a call while the call is in queue
 # 100903-0041 - Changed lead_id max length to 10 digits
+# 100929-1201 - Added add_lead_url feature
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -582,7 +583,7 @@ $sthA->finish();
 
 ### Grab inbound groups values from the database
 $cbc=0;
-$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds FROM vicidial_inbound_groups where group_id = '$channel_group';";
+$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds,add_lead_url FROM vicidial_inbound_groups where group_id = '$channel_group';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -659,6 +660,7 @@ if ($sthArows > 0)
 	$wait_time_option_prompt_seconds =	$aryA[59];
 	$ingroup_active =					$aryA[60];
 	$calculate_estimated_hold_seconds = $aryA[61];
+	$add_lead_url =						$aryA[62];
 
 	$custom_call_id='';
 	if ($uniqueid_status_display =~ /ENABLED/)
@@ -757,6 +759,25 @@ if ($call_handle_method =~ /LOOKUP/)
 			}
 		$sthA->finish();
 
+		### Start the Add-Lead-URL get proccess
+		if (length($add_lead_url) > 5)
+			{
+			$launch = $PATHhome . "/AST_send_URL.pl";
+			$launch .= " --SYSLOG" if ($SYSLOG);
+			$launch .= " --lead_id=" . $insert_lead_id;
+			$launch .= " --phone_number=" . $phone_number;
+			$launch .= " --user=";
+			$launch .= " --call_type=IN";
+			$launch .= " --campaign=" . $channel_group;
+			$launch .= " --uniqueid=" . $uniqueid;
+			$launch .= " --alt_dial=";
+			$launch .= " --function=INGROUP_ADD_LEAD_URL";
+
+			system($launch . ' &');
+
+			if ($AGILOG) {$agi_string = "$launch|";   &agi_output;}
+			}
+
 		if ($AGILOG) {$agi_string = "VDAD vicidial_list insert |$insert_lead_id|$stmtA|";   &agi_output;}
 		}
 	else
@@ -837,6 +858,25 @@ if ($call_handle_method =~ /LOOKUP/)
 				}
 			$sthA->finish();
 
+			### Start the Add-Lead-URL get proccess
+			if (length($add_lead_url) > 5)
+				{
+				$launch = $PATHhome . "/AST_send_URL.pl";
+				$launch .= " --SYSLOG" if ($SYSLOG);
+				$launch .= " --lead_id=" . $insert_lead_id;
+				$launch .= " --phone_number=" . $phone_number;
+				$launch .= " --user=";
+				$launch .= " --call_type=IN";
+				$launch .= " --campaign=" . $channel_group;
+				$launch .= " --uniqueid=" . $uniqueid;
+				$launch .= " --alt_dial=";
+				$launch .= " --function=INGROUP_ADD_LEAD_URL";
+
+				system($launch . ' &');
+
+				if ($AGILOG) {$agi_string = "$launch|";   &agi_output;}
+				}
+
 			if ($AGILOG) {$agi_string = "VDAD vicidial_list insert |$insert_lead_id|$stmtA|";   &agi_output;}
 			}
 		}
@@ -887,6 +927,25 @@ else
 			$cbc++; 
 			}
 		$sthA->finish();
+
+		### Start the Add-Lead-URL get proccess
+		if (length($add_lead_url) > 5)
+			{
+			$launch = $PATHhome . "/AST_send_URL.pl";
+			$launch .= " --SYSLOG" if ($SYSLOG);
+			$launch .= " --lead_id=" . $insert_lead_id;
+			$launch .= " --phone_number=" . $phone_number;
+			$launch .= " --user=";
+			$launch .= " --call_type=IN";
+			$launch .= " --campaign=" . $channel_group;
+			$launch .= " --uniqueid=" . $uniqueid;
+			$launch .= " --alt_dial=";
+			$launch .= " --function=INGROUP_ADD_LEAD_URL";
+
+			system($launch . ' &');
+
+			if ($AGILOG) {$agi_string = "$launch|";   &agi_output;}
+			}
 		}
 	}
 
@@ -3328,6 +3387,25 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					}
 				$sthA->finish();
 
+				### Start the Add-Lead-URL get proccess
+				if (length($add_lead_url) > 5)
+					{
+					$launch = $PATHhome . "/AST_send_URL.pl";
+					$launch .= " --SYSLOG" if ($SYSLOG);
+					$launch .= " --lead_id=" . $CALLBACK_insert_lead_id;
+					$launch .= " --phone_number=" . $phone_number;
+					$launch .= " --user=";
+					$launch .= " --call_type=IN";
+					$launch .= " --campaign=" . $channel_group;
+					$launch .= " --uniqueid=" . $uniqueid;
+					$launch .= " --alt_dial=";
+					$launch .= " --function=INGROUP_ADD_LEAD_URL";
+
+					system($launch . ' &');
+
+					if ($AGILOG) {$agi_string = "$launch|";   &agi_output;}
+					}
+
 				if ($AGILOG) {$agi_string = "VDAD vicidial_list insert |$CALLBACK_insert_lead_id|$stmtA|";   &agi_output;}
 
 				$DROPexten = "8300";
@@ -3714,6 +3792,25 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 							$CALLBACK_insert_lead_id = $aryA[0];
 							}
 						$sthA->finish();
+
+						### Start the Add-Lead-URL get proccess
+						if (length($add_lead_url) > 5)
+							{
+							$launch = $PATHhome . "/AST_send_URL.pl";
+							$launch .= " --SYSLOG" if ($SYSLOG);
+							$launch .= " --lead_id=" . $CALLBACK_insert_lead_id;
+							$launch .= " --phone_number=" . $phone_number;
+							$launch .= " --user=";
+							$launch .= " --call_type=IN";
+							$launch .= " --campaign=" . $channel_group;
+							$launch .= " --uniqueid=" . $uniqueid;
+							$launch .= " --alt_dial=";
+							$launch .= " --function=INGROUP_ADD_LEAD_URL";
+
+							system($launch . ' &');
+
+							if ($AGILOG) {$agi_string = "$launch|";   &agi_output;}
+							}
 
 						if ($AGILOG) {$agi_string = "VDAD vicidial_list insert |$CALLBACK_insert_lead_id|$stmtA|";   &agi_output;}
 

@@ -5,12 +5,13 @@
 # DESCRIPTION:
 # This script is spawned for remote agents when the Start Call URL is set in the
 # campaign or in-group that the call came from when sent to the remote agent.
-# 
+# This script is also used for the Add-Lead-URL feature in In-groups.
 #
 # Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 100622-0929 - First Build
+# 100929-0918 - Added function variable and new Add Lead URL function
 #
 
 $|++;
@@ -21,7 +22,7 @@ my $secX = time(); #Start time
 
 ### Initialize run-time variables ###
 my ($CLOhelp, $SYSLOG,$DB, $DBX);
-my ($campaign, $lead_id, $phone_number, $call_type, $user, $uniqueid, $alt_dial);
+my ($campaign, $lead_id, $phone_number, $call_type, $user, $uniqueid, $alt_dial, $function);
 my $FULL_LOG = 1;
 
 ### begin parsing run-time options ###
@@ -35,6 +36,7 @@ if (scalar @ARGV) {
 		'user=s' => \$user,
 		'uniqueid=s' => \$uniqueid,
 		'alt_dial=s' => \$alt_dial,
+		'function=s' => \$function,
 		'debug!' => \$DB,
 		'debugX!' => \$DBX,
 		'fulllog!' => \$FULL_LOG);
@@ -52,6 +54,7 @@ if (scalar @ARGV) {
 		print "  user:                  $user\n" if ($user);
 		print "  uniqueid:              $uniqueid\n" if ($uniqueid);
 		print "  alt_dial:              $alt_dial\n" if ($alt_dial);
+		print "  function:              $function\n" if ($function);
 		print "\n";
 		}
 	if ($CLOhelp) 
@@ -67,6 +70,9 @@ if (scalar @ARGV) {
 		print "  [--user] = remote user that received the call\n";
 		print "  [--uniqueid] = uniqueid of the call\n";
 		print "  [--alt_dial] = label of the phone number dialed\n";
+		print "  [--function] = which function is to be run, default is REMOTE_AGENT_START_CALL_URL\n";
+		print "      *REMOTE_AGENT_START_CALL_URL - performs a Start Call URL get for Remote Agent Calls\n";
+		print "      *INGROUP_ADD_LEAD_URL - performs an Add Lead URL get for In-Groups when a lead is added\n";
 		print "\n";
 		print "You may prefix an option with 'no' to disable it.\n";
 		print " ie. --noSYSLOG or --noFULLLOG\n";
@@ -119,7 +125,7 @@ if (length($lead_id) > 0)
 					else
 							{
 							print "Can't find wget binary! Exiting...\n";
-							exit
+							exit;
 							}
 					}
 			}
@@ -148,9 +154,9 @@ if (length($lead_id) > 0)
 	$sthA->finish();
 
 	if ($call_type =~ /IN/)
-		{$stmtG = "SELECT start_call_url FROM vicidial_inbound_groups where group_id='$campaign';";}
+		{$stmtG = "SELECT start_call_url,add_lead_url FROM vicidial_inbound_groups where group_id='$campaign';";}
 	else
-		{$stmtG = "SELECT start_call_url FROM vicidial_campaigns where campaign_id='$campaign';";}
+		{$stmtG = "SELECT start_call_url,8 FROM vicidial_campaigns where campaign_id='$campaign';";}
 	$sthA = $dbhA->prepare($stmtG) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtG ", $dbhA->errstr;
 	$start_url_ct=$sthA->rows;
@@ -158,6 +164,7 @@ if (length($lead_id) > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
 		$start_call_url =	$aryA[0];
+		$add_lead_url =		$aryA[1];
 		}
 	$sthA->finish();
 
@@ -170,111 +177,196 @@ if (length($lead_id) > 0)
 	$VAR_campaign_id =		$campaign;
 	$VAR_group =			$campaign;
 	$VAR_alt_dial =			$alt_dial;
+	$VAR_list_id =			'';
+	$VAR_phone_code =		'';
+	$VAR_vendor_lead_code =	'';
+	$VAR_did_id =			'';
+	$VAR_did_extension =	'';
+	$VAR_did_pattern =		'';
+	$VAR_did_description =	'';
+	$VAR_closecallid =		'';
 
-	$stmtA = "SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner FROM vicidial_list where lead_id='$lead_id';";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
+	if ($function=='INGROUP_ADD_LEAD_URL')
 		{
-		@aryA = $sthA->fetchrow_array;
-		$VAR_entry_date =		$aryA[1];
-		$VAR_modify_date =		$aryA[2];
-		$VAR_status =			$aryA[3];
-		$VAR_vendor_lead_code =	$aryA[5];
-		$VAR_source_id =		$aryA[6];
-		$VAR_list_id =			$aryA[7];
-		$VAR_title =			$aryA[9];
-		$VAR_first_name =		$aryA[10];
-		$VAR_middle_initial =	$aryA[11];
-		$VAR_last_name =		$aryA[12];
-		$VAR_address1 =			$aryA[13];
-		$VAR_address2 =			$aryA[14];
-		$VAR_address3 =			$aryA[15];
-		$VAR_city =				$aryA[16];
-		$VAR_state =			$aryA[17];
-		$VAR_province =			$aryA[18];
-		$VAR_postal_code =		$aryA[19];
-		$VAR_country_code =		$aryA[20];
-		$VAR_gender =			$aryA[21];
-		$VAR_date_of_birth =	$aryA[22];
-		$VAR_alt_phone =		$aryA[23];
-		$VAR_email =			$aryA[24];
-		$VAR_security_phrase =	$aryA[25];
-		$VAR_comments =			$aryA[26];
-		$VAR_called_count =		$aryA[27];
-		$VAR_last_local_call_time = $aryA[28];
-		$VAR_rank =				$aryA[29];
-		$VAR_owner =			$aryA[30];
-		}
-	$sthA->finish();
-
-	if ($start_call_url =~ /--A--user_custom_/)
-		{
-		$stmtA = "select custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_users where user='$user';;";
+		##### BEGIN Add Lead URL function #####
+		$stmtA = "SELECT list_id,phone_code,vendor_lead_code FROM vicidial_list where lead_id='$lead_id';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$VAR_user_custom_one =		$aryA[0];
-			$VAR_user_custom_two =		$aryA[1];
-			$VAR_user_custom_three =	$aryA[2];
-			$VAR_user_custom_four =		$aryA[3];
-			$VAR_user_custom_five =		$aryA[4];
+			$VAR_list_id =			$aryA[0];
+			$VAR_phone_code =		$aryA[1];
+			$VAR_vendor_lead_code =	$aryA[2];
 			}
+		$sthA->finish();
+
+		$stmtA = "SELECT did_id,extension FROM vicidial_did_log where uniqueid='$uniqueid';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$VAR_did_id =			$aryA[0];
+			$VAR_did_extension =	$aryA[1];
+			}
+		$sthA->finish();
+
+		$stmtA = "SELECT did_pattern,did_description FROM vicidial_inbound_dids where did_id='$VAR_did_id';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$VAR_did_pattern =		$aryA[0];
+			$VAR_did_description =	$aryA[1];
+			}
+		$sthA->finish();
+
+		$stmtA = "SELECT closecallid FROM vicidial_closer_log where uniqueid='$uniqueid' order by closecallid limit 1;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$VAR_closecallid =		$aryA[0];
+			}
+		$sthA->finish();
+
+		$add_lead_url =~ s/^VAR//gi;
+		$add_lead_url =~ s/--A--lead_id--B--/$VAR_lead_id/gi;
+		$add_lead_url =~ s/--A--vendor_id--B--/$VAR_vendor_lead_code/gi;
+		$add_lead_url =~ s/--A--vendor_lead_code--B--/$VAR_vendor_lead_code/gi;
+		$add_lead_url =~ s/--A--list_id--B--/$VAR_list_id/gi;
+		$add_lead_url =~ s/--A--phone_number--B--/$VAR_phone_number/gi;
+		$add_lead_url =~ s/--A--phone_code--B--/$VAR_phone_code/gi;
+		$add_lead_url =~ s/--A--did_id--B--/$VAR_did_id/gi;
+		$add_lead_url =~ s/--A--did_extension--B--/$VAR_did_extension/gi;
+		$add_lead_url =~ s/--A--did_pattern--B--/$VAR_did_pattern/gi;
+		$add_lead_url =~ s/--A--did_description--B--/$VAR_did_description/gi;
+		$add_lead_url =~ s/--A--closecallid--B--/$VAR_closecallid/gi;
+		$add_lead_url =~ s/--A--uniqueid--B--/$VAR_uniqueid/gi;
+		$add_lead_url =~ s/ /+/gi;
+		$add_lead_url =~ s/&/\\&/gi;
+
+		`$wgetbin -q --output-document=/tmp/ASUtmp $add_lead_url `;
+
+		$event_string="$function|$wgetbin -q --output-document=/tmp/ASUtmp $add_lead_url|";
+		&event_logger;
+		##### END Add Lead URL function #####
 		}
+	else
+		{
+		##### BEGIN Start Call URL function #####
+		$stmtA = "SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner FROM vicidial_list where lead_id='$lead_id';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$VAR_entry_date =		$aryA[1];
+			$VAR_modify_date =		$aryA[2];
+			$VAR_status =			$aryA[3];
+			$VAR_vendor_lead_code =	$aryA[5];
+			$VAR_source_id =		$aryA[6];
+			$VAR_list_id =			$aryA[7];
+			$VAR_title =			$aryA[9];
+			$VAR_first_name =		$aryA[10];
+			$VAR_middle_initial =	$aryA[11];
+			$VAR_last_name =		$aryA[12];
+			$VAR_address1 =			$aryA[13];
+			$VAR_address2 =			$aryA[14];
+			$VAR_address3 =			$aryA[15];
+			$VAR_city =				$aryA[16];
+			$VAR_state =			$aryA[17];
+			$VAR_province =			$aryA[18];
+			$VAR_postal_code =		$aryA[19];
+			$VAR_country_code =		$aryA[20];
+			$VAR_gender =			$aryA[21];
+			$VAR_date_of_birth =	$aryA[22];
+			$VAR_alt_phone =		$aryA[23];
+			$VAR_email =			$aryA[24];
+			$VAR_security_phrase =	$aryA[25];
+			$VAR_comments =			$aryA[26];
+			$VAR_called_count =		$aryA[27];
+			$VAR_last_local_call_time = $aryA[28];
+			$VAR_rank =				$aryA[29];
+			$VAR_owner =			$aryA[30];
+			}
+		$sthA->finish();
 
-	$start_call_url =~ s/^VAR//gi;
-	$start_call_url =~ s/--A--lead_id--B--/$VAR_lead_id/gi;
-	$start_call_url =~ s/--A--entry_date--B--/$VAR_entry_date/gi;
-	$start_call_url =~ s/--A--modify_date--B--/$VAR_modify_date/gi;
-	$start_call_url =~ s/--A--status--B--/$VAR_status/gi;
-	$start_call_url =~ s/--A--user--B--/$VAR_user/gi;
-	$start_call_url =~ s/--A--vendor_id--B--/$VAR_vendor_lead_code/gi;
-	$start_call_url =~ s/--A--vendor_lead_code--B--/$VAR_vendor_lead_code/gi;
-	$start_call_url =~ s/--A--source_id--B--/$VAR_source_id/gi;
-	$start_call_url =~ s/--A--list_id--B--/$VAR_list_id/gi;
-	$start_call_url =~ s/--A--phone_number--B--/$VAR_phone_number/gi;
-	$start_call_url =~ s/--A--title--B--/$VAR_title/gi;
-	$start_call_url =~ s/--A--first_name--B--/$VAR_first_name/gi;
-	$start_call_url =~ s/--A--middle_initial--B--/$VAR_middle_initial/gi;
-	$start_call_url =~ s/--A--last_name--B--/$VAR_last_name/gi;
-	$start_call_url =~ s/--A--address1--B--/$VAR_address1/gi;
-	$start_call_url =~ s/--A--address2--B--/$VAR_address2/gi;
-	$start_call_url =~ s/--A--address3--B--/$VAR_address3/gi;
-	$start_call_url =~ s/--A--city--B--/$VAR_city/gi;
-	$start_call_url =~ s/--A--state--B--/$VAR_state/gi;
-	$start_call_url =~ s/--A--province--B--/$VAR_province/gi;
-	$start_call_url =~ s/--A--postal_code--B--/$VAR_postal_code/gi;
-	$start_call_url =~ s/--A--country_code--B--/$VAR_country_code/gi;
-	$start_call_url =~ s/--A--gender--B--/$VAR_gender/gi;
-	$start_call_url =~ s/--A--date_of_birth--B--/$VAR_date_of_birth/gi;
-	$start_call_url =~ s/--A--alt_phone--B--/$VAR_alt_phone/gi;
-	$start_call_url =~ s/--A--email--B--/$VAR_email/gi;
-	$start_call_url =~ s/--A--security_phrase--B--/$VAR_security_phrase/gi;
-	$start_call_url =~ s/--A--comments--B--/$VAR_comments/gi;
-	$start_call_url =~ s/--A--called_count--B--/$VAR_called_count/gi;
-	$start_call_url =~ s/--A--last_local_call_time--B--/$VAR_last_local_call_time/gi;
-	$start_call_url =~ s/--A--rank--B--/$VAR_rank/gi;
-	$start_call_url =~ s/--A--owner--B--/$VAR_owner/gi;
-	$start_call_url =~ s/--A--dialed_number--B--/$VAR_phone_number/gi;
-	$start_call_url =~ s/--A--dialed_label--B--/$VAR_alt_dial/gi;
-	$start_call_url =~ s/--A--user_custom_one--B--/$VAR_user_custom_one/gi;
-	$start_call_url =~ s/--A--user_custom_two--B--/$VAR_user_custom_two/gi;
-	$start_call_url =~ s/--A--user_custom_three--B--/$VAR_user_custom_three/gi;
-	$start_call_url =~ s/--A--user_custom_four--B--/$VAR_user_custom_four/gi;
-	$start_call_url =~ s/--A--user_custom_five--B--/$VAR_user_custom_five/gi;
-	$start_call_url =~ s/ /+/gi;
-	$start_call_url =~ s/&/\\&/gi;
+		if ($start_call_url =~ /--A--user_custom_/)
+			{
+			$stmtA = "select custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_users where user='$user';;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$VAR_user_custom_one =		$aryA[0];
+				$VAR_user_custom_two =		$aryA[1];
+				$VAR_user_custom_three =	$aryA[2];
+				$VAR_user_custom_four =		$aryA[3];
+				$VAR_user_custom_five =		$aryA[4];
+				}
+			}
 
-	`$wgetbin -q --output-document=/tmp/ASUtmp $start_call_url `;
+		$start_call_url =~ s/^VAR//gi;
+		$start_call_url =~ s/--A--lead_id--B--/$VAR_lead_id/gi;
+		$start_call_url =~ s/--A--entry_date--B--/$VAR_entry_date/gi;
+		$start_call_url =~ s/--A--modify_date--B--/$VAR_modify_date/gi;
+		$start_call_url =~ s/--A--status--B--/$VAR_status/gi;
+		$start_call_url =~ s/--A--user--B--/$VAR_user/gi;
+		$start_call_url =~ s/--A--vendor_id--B--/$VAR_vendor_lead_code/gi;
+		$start_call_url =~ s/--A--vendor_lead_code--B--/$VAR_vendor_lead_code/gi;
+		$start_call_url =~ s/--A--source_id--B--/$VAR_source_id/gi;
+		$start_call_url =~ s/--A--list_id--B--/$VAR_list_id/gi;
+		$start_call_url =~ s/--A--phone_number--B--/$VAR_phone_number/gi;
+		$start_call_url =~ s/--A--title--B--/$VAR_title/gi;
+		$start_call_url =~ s/--A--first_name--B--/$VAR_first_name/gi;
+		$start_call_url =~ s/--A--middle_initial--B--/$VAR_middle_initial/gi;
+		$start_call_url =~ s/--A--last_name--B--/$VAR_last_name/gi;
+		$start_call_url =~ s/--A--address1--B--/$VAR_address1/gi;
+		$start_call_url =~ s/--A--address2--B--/$VAR_address2/gi;
+		$start_call_url =~ s/--A--address3--B--/$VAR_address3/gi;
+		$start_call_url =~ s/--A--city--B--/$VAR_city/gi;
+		$start_call_url =~ s/--A--state--B--/$VAR_state/gi;
+		$start_call_url =~ s/--A--province--B--/$VAR_province/gi;
+		$start_call_url =~ s/--A--postal_code--B--/$VAR_postal_code/gi;
+		$start_call_url =~ s/--A--country_code--B--/$VAR_country_code/gi;
+		$start_call_url =~ s/--A--gender--B--/$VAR_gender/gi;
+		$start_call_url =~ s/--A--date_of_birth--B--/$VAR_date_of_birth/gi;
+		$start_call_url =~ s/--A--alt_phone--B--/$VAR_alt_phone/gi;
+		$start_call_url =~ s/--A--email--B--/$VAR_email/gi;
+		$start_call_url =~ s/--A--security_phrase--B--/$VAR_security_phrase/gi;
+		$start_call_url =~ s/--A--comments--B--/$VAR_comments/gi;
+		$start_call_url =~ s/--A--called_count--B--/$VAR_called_count/gi;
+		$start_call_url =~ s/--A--last_local_call_time--B--/$VAR_last_local_call_time/gi;
+		$start_call_url =~ s/--A--rank--B--/$VAR_rank/gi;
+		$start_call_url =~ s/--A--owner--B--/$VAR_owner/gi;
+		$start_call_url =~ s/--A--dialed_number--B--/$VAR_phone_number/gi;
+		$start_call_url =~ s/--A--dialed_label--B--/$VAR_alt_dial/gi;
+		$start_call_url =~ s/--A--user_custom_one--B--/$VAR_user_custom_one/gi;
+		$start_call_url =~ s/--A--user_custom_two--B--/$VAR_user_custom_two/gi;
+		$start_call_url =~ s/--A--user_custom_three--B--/$VAR_user_custom_three/gi;
+		$start_call_url =~ s/--A--user_custom_four--B--/$VAR_user_custom_four/gi;
+		$start_call_url =~ s/--A--user_custom_five--B--/$VAR_user_custom_five/gi;
+		$start_call_url =~ s/ /+/gi;
+		$start_call_url =~ s/&/\\&/gi;
 
-	$event_string="$wgetbin -q --output-document=/tmp/ASUtmp $start_call_url|";
-	&event_logger;
+		`$wgetbin -q --output-document=/tmp/ASUtmp $start_call_url `;
+
+		$event_string="$function|$wgetbin -q --output-document=/tmp/ASUtmp $start_call_url|";
+		&event_logger;
+		##### END Start Call URL function #####
+		}
 	}
-
 
 my $secZ = time();
 my $script_time = ($secZ - $secX);

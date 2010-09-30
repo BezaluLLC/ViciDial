@@ -554,3 +554,7 @@ ALTER TABLE user_call_log ADD customer_hungup ENUM('BEFORE_CALL','DURING_CALL','
 ALTER TABLE user_call_log ADD customer_hungup_seconds SMALLINT(5) UNSIGNED default '0';
 
 UPDATE system_settings SET db_schema_version='1246',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_inbound_groups ADD add_lead_url TEXT;
+
+UPDATE system_settings SET db_schema_version='1247',db_schema_update_date=NOW();
