@@ -258,10 +258,11 @@
 # 100908-1102 - Added customer_3way_hangup_process function
 # 100916-2144 - Added custom list names export with lead data
 # 100927-1618 - Added ability to use custom fields in web form and dispo_call_url
+# 101001-1451 - Added full name display to Call Log functionality
 #
 
-$version = '2.4-164';
-$build = '100927-1618';
+$version = '2.4-165';
+$build = '101001-1451';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=345;
 $one_mysql_log=0;
@@ -7358,6 +7359,7 @@ if ($ACTION == 'CALLLOGview')
 	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; LENGTH &nbsp; </font></TD>";
 	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; STATUS &nbsp; </font></TD>";
 	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; PHONE &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; FULL NAME &nbsp; </font></TD>";
 	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; CAMPAIGN &nbsp; </font></TD>";
 	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; IN/OUT &nbsp; </font></TD>";
 	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; ALT &nbsp; </font></TD>";
@@ -7390,6 +7392,13 @@ if ($ACTION == 'CALLLOGview')
 		$ALLalt_dial[$g] =		$row[9];
 		$ALLin_out[$g] =		"OUT-AUTO";
 		if ($row[10] == 'MANUAL') {$ALLin_out[$g] = "OUT-MANUAL";}
+
+		$stmtA="SELECT first_name,last_name FROM vicidial_list WHERE lead_id='$ALLlead_id[$g]';";
+		$rsltA=mysql_query($stmtA, $link);
+		$rowA=mysql_fetch_row($rsltA);
+		$Allfirst_name[$g] =	$rowA[0];
+		$Alllast_name[$g] =		$rowA[1];
+
 		$g++;
 		$u++;
 		}
@@ -7416,6 +7425,13 @@ if ($ACTION == 'CALLLOGview')
 		$ALLhangup_reason[$g] =	$row[8];
 		$ALLalt_dial[$g] =		"MAIN";
 		$ALLin_out[$g] =		"IN";
+
+		$stmtA="SELECT first_name,last_name FROM vicidial_list WHERE lead_id='$ALLlead_id[$g]';";
+		$rsltA=mysql_query($stmtA, $link);
+		$rowA=mysql_fetch_row($rsltA);
+		$Allfirst_name[$g] =	$rowA[0];
+		$Alllast_name[$g] =		$rowA[1];
+
 		$g++;
 		$u++;
 		}
@@ -7443,6 +7459,7 @@ if ($ACTION == 'CALLLOGview')
 		echo "<td align=right><font size=2> $ALLlength_in_sec[$i]</td>\n";
 		echo "<td align=right><font size=2> $ALLstatus[$i]</td>\n";
 		echo "<td align=right><font size=2> $ALLphone_code[$i] $ALLphone_number[$i] </td>\n";
+		echo "<td align=right><font size=2> $Allfirst_name[$i] $Alllast_name[$i] </td>\n";
 		echo "<td align=right><font size=2> $ALLcampaign_id[$i] </td>\n";
 		echo "<td align=right><font size=2> $ALLin_out[$i] </td>\n";
 		echo "<td align=right><font size=2> $ALLalt_dial[$i] </td>\n";
