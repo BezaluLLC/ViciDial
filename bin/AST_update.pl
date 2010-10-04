@@ -59,9 +59,10 @@
 # 90307-1932 - Added servers table stats updating, reformatted code to match standard
 # 90604-1127 - Added support for DAHDI channels
 # 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
+# 101004-1042 - Updated parked_channels checking for changes to parked calls functions
 #
 
-$build = '100625-1220';
+$build = '101004-1042';
 
 # constants
 $SYSPERF=0;	# system performance logging to MySQL server_performance table every 5 seconds
@@ -1013,7 +1014,9 @@ while($one_day_interval > 0)
 			else
 				{
 				$no_channels_12_counter++;
-				$event_string="NO CHANNELS HERE|COUNTER: $no_channels_12_counter|$endless_loop|ONE DAY INTERVAL:$one_day_interval|$list_channels[1]";
+				$channel_response = $list_channels[1];
+				chomp($channel_response);
+				$event_string="NO CHANNELS HERE|COUNTER: $no_channels_12_counter|$endless_loop|ONE DAY INTERVAL:$one_day_interval|$channel_response";
 				&event_logger;
 
 				if($DBX) {print "*|EMPTY CHANNELS: $no_channels_12_counter|$#list_channels|$list_channels[1]";}
@@ -1024,7 +1027,7 @@ while($one_day_interval > 0)
 				if ($no_channels_12_counter == 3)
 					{
 					### there are no channels, delete all from live_channels, live_sip_channels
-					$event_string="NO CHANNELS HERE|COUNTER: $no_channels_12_counter|$endless_loop|ONE DAY INTERVAL:$one_day_interval|$list_channels[1]";
+					$event_string="NO CHANNELS HERE|COUNTER: $no_channels_12_counter|$endless_loop|ONE DAY INTERVAL:$one_day_interval|$channel_response";
 					&event_logger;
 					$stmtB = "DELETE FROM $live_sip_channels where server_ip='$server_ip'";
 						if( ($DB) or ($UD_bad_grab) ){print STDERR "\n|$stmtB|\n";}
@@ -1147,7 +1150,7 @@ sub validate_parked_channels
 		{
 		$parked_counter=0;
 		@ARchannel=@MT;   @ARextension=@MT;   @ARparked_time=@MT;   @ARparked_time_UNIX=@MT;   
-		$stmtA = "SELECT channel,extension,parked_time,UNIX_TIMESTAMP(parked_time) FROM $parked_channels where server_ip = '$server_ip' order by channel desc, parked_time desc;";
+		$stmtA = "SELECT channel,extension,parked_time,UNIX_TIMESTAMP(parked_time),channel_group FROM $parked_channels where server_ip = '$server_ip' order by channel desc, parked_time desc;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -1159,6 +1162,7 @@ sub validate_parked_channels
 			$PQextension =			$aryA[1];
 			$PQparked_time =		$aryA[2];
 			$PQparked_time_UNIX =	$aryA[3];
+			$PQchannel_group =		$aryA[4];
 			if($DB){print STDERR "\n|$PQchannel|$PQextension|$PQparked_time|$PQparked_time_UNIX|\n";}
 
 			$dbhC = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
@@ -1202,11 +1206,12 @@ sub validate_parked_channels
 				$event_string='LOGGED INTO MYSQL SERVER ON 2 CONNECTIONS TO VALIDATE PARKED CALLS|';
 				&event_logger;
 
-				$stmtB = "SELECT count(*) FROM $live_channels where server_ip='$server_ip' and channel='$PQchannel' and extension='$PQextension';";
+				$stmtB = "SELECT count(*) FROM $live_channels where server_ip='$server_ip' and channel='$PQchannel' and ( (extension='$PQextension') or (extension LIKE \"%.agi\") );";
 				$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 				$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 				$sthBrows=$sthB->rows;
 				$rec_countB=0;
+				$PQcount=0;
 				while ($sthBrows > $rec_countB)
 					{
 					@aryB = $sthB->fetchrow_array;
@@ -1226,10 +1231,15 @@ sub validate_parked_channels
 					### if the parked channel doesn't exist 6 times then delete it from table
 					if ($$DEL_chan_park_counter > 5)
 						{
-						if($DBX){print "          parked channel delete: |$PQchannel|$PQparked_time|\n";}
-						$stmtPQ = "DELETE FROM $parked_channels where server_ip='$server_ip' and channel='$PQchannel' and extension='$PQextension' limit 1";
-						if($DB){print STDERR "\n|$stmtPQ|$$DEL_chan_park_counter|$DEL_chan_park_counter|\n\n";}
-						$affected_rows = $dbhC->do($stmtPQ);
+						if($DBX){print "          parked channel delete: |$PQchannel|$PQparked_time|$PQchannel_group|\n";}
+						$stmtPQ = "DELETE FROM $parked_channels where server_ip='$server_ip' and channel='$PQchannel' and extension='$PQextension' limit 1;";
+						$affected_rowsPQ = $dbhC->do($stmtPQ);
+
+						$stmtACQ = "DELETE FROM vicidial_auto_calls where callerid='$PQchannel_group' limit 1;";
+						$affected_rowsACQ = $dbhC->do($stmtACQ);
+
+						$event_string="PARKED CHANNEL GONE, LOGGING: |$affected_rowsPQ|$affected_rowsACQ|$stmtPQ|$stmtACQ|$$DEL_chan_park_counter|$DEL_chan_park_counter|\n\n";
+						&event_logger;
 
 						$ARchannel[$rec_count] = '';
 						$ARextension[$rec_count] = '';

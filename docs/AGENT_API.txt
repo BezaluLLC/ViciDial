@@ -24,7 +24,7 @@ st_get_agent_active_lead - looks up active lead info for an agent and outputs le
 ra_call_control - remote agent call control: hangup/transfer calls being handled by remote agents
 send_dtmf - sends dtmf signal string to agent's session
 transfer_conference - sends several commands related to the agent transfer-conf frame
-park_call - sends command to park customer or grab customer from park
+park_call - sends command to park customer or grab customer from park or ivr
 
 
 New scripts:
@@ -482,10 +482,14 @@ VALUES:
   REQUIRED, choices are below
    PARK_CUSTOMER - send customer to the park extension as defined in the campaign the agent is logged into
    GRAB_CUSTOMER - grab customer from the park extension and send them to the agent session
+   PARK_IVR_CUSTOMER - send customer to the park ivr as defined in the campaign the agent is logged into, customer will come back after finishing IVR
+   GRAB_IVR_CUSTOMER - grab customer from the park ivr and send them to the agent session
 
 EXAMPLE URLS:
 http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=park_call&value=PARK_CUSTOMER
 http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=park_call&value=GRAB_CUSTOMER
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=park_call&value=PARK_IVR_CUSTOMER
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=park_call&value=GRAB_IVR_CUSTOMER
 
 RESPONSES:
 ERROR: park_call not valid - PARK_CUSTOMER|6666

@@ -443,6 +443,14 @@ Inbound Report by DID||
 Lists Campaign Status Stats||
 Add Lead URL||
 This web URL address is not seen by the agent, but it is called every time a lead is added to the system through the inbound process. Default is blank. You must begin this URL with VAR if you want to use variables, and of course --A-- and --B-- around the actual variable in the URL where you want to use it. Here is the list of variables that are available for this function||
+This utility allows you to upload audio files to the web server so that they can be distributed to all of the ViciDial servers in a multi-server cluster. An important note, only two audio file types will work, .wav files that are PCM Mono 16bit 8k and .gsm files that are 8bit 8k. Please verify that your files are properly formatted before uploading them here||
+We STRONGLY recommend uploading only 16bit Mono 8k PCM WAV audio files||
+Park Music-on-Hold||
+This is where you can define the on-hold music context for this campaign. Make sure you select a valid music on hold context from the select list and that the context that you have selected has valid files in it. Default is default||
+Park Call IVR||
+This option will allow an agent to park a call with a separate IVR PARK CALL button on their agent interface if this is ENABLED or ENABLED_PARK_ONLY. The ENABLED_PARK_ONLY option will allow the agent to send the call to park but not click to retrieve the call like the ENABLED option. The ENABLED_BUTTON_HIDDEN option allows the function through the API only. Default is DISABLED||
+Park Call IVR AGI||
+If the Park Call IVR field is not DISABLED, then this field is used as the AGI application string that the customer is sent to. This is a setting that should be set by your administrator if possible||
 
 
 AST_LISTS_campaign_stats.php

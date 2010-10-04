@@ -852,7 +852,7 @@ echo "<tr><td><font size=1># </td><td align=left><font size=2> LEAD</td><td><fon
 			{$locat = substr($location,0,27);  $locat = "$locat...";}
 		else
 			{$locat = $location;}
-		if (eregi("http",$location))
+		if ( (eregi("ftp",$location)) or (eregi("http",$location)) )
 			{$location = "<a href=\"$location\">$locat</a>";}
 		else
 			{$location = $locat;}

@@ -558,3 +558,9 @@ UPDATE system_settings SET db_schema_version='1246',db_schema_update_date=NOW();
 ALTER TABLE vicidial_inbound_groups ADD add_lead_url TEXT;
 
 UPDATE system_settings SET db_schema_version='1247',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns MODIFY park_file_name VARCHAR(100) default 'default';
+ALTER TABLE vicidial_campaigns ADD ivr_park_call ENUM('DISABLED','ENABLED','ENABLED_PARK_ONLY','ENABLED_BUTTON_HIDDEN') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD ivr_park_call_agi TEXT;
+
+UPDATE system_settings SET db_schema_version='1248',db_schema_update_date=NOW();

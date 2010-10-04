@@ -100,12 +100,13 @@
 # 100423-2304 - Added alertCID
 # 100527-1014 - Added SysCIDdtmfOriginate function
 # 100813-0833 - Added preset_name variable and logging
+# 101004-1345 - Added Ivr park functions
 #
 
-$version = '2.4-50';
-$build = '100813-0833';
+$version = '2.4-51';
+$build = '101004-1345';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=85;
+$mysql_log_count=97;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -308,7 +309,7 @@ if ($ACTION=="SysCIDdtmfOriginate")
 	$stmt="UPDATE vicidial_live_agents SET external_dtmf='' where user='$user';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 	$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02092',$user,$server_ip,$session_name,$one_mysql_log);}
 
 	$ACTION="SysCIDOriginate";
 	}
@@ -461,7 +462,7 @@ if ($ACTION=="Originate")
 				$stmt = "SELECT count(*) from vicidial_xfer_stats where campaign_id='$campaign' and preset_name='$preset_name';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02093',$user,$server_ip,$session_name,$one_mysql_log);}
 				$row=mysql_fetch_row($rslt);
 				if ($row[0] > 0)
 					{
@@ -473,7 +474,7 @@ if ($ACTION=="Originate")
 					}
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02094',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 			}
 		}
@@ -789,12 +790,12 @@ if ($ACTION=="RedirectVD")
 			$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,preset_name,campaign_id) values('$user','$NOW_TIME','BLIND_XFER','$server_ip','$exten','$channel','$lead_id','$preset_name','$campaign')";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02095',$user,$server_ip,$session_name,$one_mysql_log);}
 
 			$stmt = "SELECT count(*) from vicidial_xfer_stats where campaign_id='$campaign' and preset_name='$preset_name';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02096',$user,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysql_fetch_row($rslt);
 			if ($row[0] > 0)
 				{
@@ -806,7 +807,7 @@ if ($ACTION=="RedirectVD")
 				}
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02097',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
 
 		$ACTION="Redirect";
@@ -845,7 +846,7 @@ if ($ACTION=="RedirectToPark")
 	$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 	$rslt=mysql_query($stmt, $link);
-		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02086',$user,$server_ip,$session_name,$one_mysql_log);}
 	}
 
 if ($ACTION=="RedirectFromPark")
@@ -874,8 +875,83 @@ if ($ACTION=="RedirectFromPark")
 	$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 	$rslt=mysql_query($stmt, $link);
-		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02087',$user,$server_ip,$session_name,$one_mysql_log);}
 	}
+
+if ($ACTION=="RedirectToParkIVR")
+	{
+	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($extenName)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($parkedby)<1) )
+		{
+		$channel_live=0;
+		echo "One of these variables is not valid:\n";
+		echo "Channel $channel must be greater than 2 characters\n";
+		echo "queryCID $queryCID must be greater than 14 characters\n";
+		echo "exten $exten must be set\n";
+		echo "extenName $extenName must be set\n";
+		echo "ext_context $ext_context must be set\n";
+		echo "ext_priority $ext_priority must be set\n";
+		echo "parkedby $parkedby must be set\n";
+		echo "\nRedirectToPark Action not sent\n";
+		}
+	else
+		{
+		if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
+		$stmt = "INSERT INTO parked_channels values('$channel','$server_ip','$CalLCID','$extenName','$parkedby','$NOW_TIME');";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02025',$user,$server_ip,$session_name,$one_mysql_log);}
+		$ACTION="Redirect";
+
+		$stmt = "UPDATE vicidial_auto_calls SET extension='PARK_IVR' where callerid='$CalLCID' limit 1;";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02088',$user,$server_ip,$session_name,$one_mysql_log);}
+
+	#	$fp = fopen ("./vicidial_debug.txt", "a");
+	#	fwrite ($fp, "$NOW_TIME|MS_LOG_0|$queryCID|$stmt|\n");
+	#	fclose($fp);
+		}
+
+	$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
+		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02089',$user,$server_ip,$session_name,$one_mysql_log);}
+	}
+
+if ($ACTION=="RedirectFromParkIVR")
+	{
+	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) )
+		{
+		$channel_live=0;
+		echo "One of these variables is not valid:\n";
+		echo "Channel $channel must be greater than 2 characters\n";
+		echo "queryCID $queryCID must be greater than 14 characters\n";
+		echo "exten $exten must be set\n";
+		echo "ext_context $ext_context must be set\n";
+		echo "ext_priority $ext_priority must be set\n";
+		echo "\nRedirectFromPark Action not sent\n";
+		}
+	else
+		{
+		if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
+		$stmt = "DELETE FROM parked_channels where server_ip='$server_ip' and channel='$channel';";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02026',$user,$server_ip,$session_name,$one_mysql_log);}
+		$ACTION="Redirect";
+
+		$stmt = "UPDATE vicidial_auto_calls SET extension='' where callerid='$CalLCID' limit 1;";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02090',$user,$server_ip,$session_name,$one_mysql_log);}
+		}
+
+	$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
+		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02091',$user,$server_ip,$session_name,$one_mysql_log);}
+	}
+
 
 if ($ACTION=="RedirectName")
 	{
@@ -1735,7 +1811,7 @@ exit;
 function mysql_error_logging($NOW_TIME,$link,$mel,$stmt,$query_id,$user,$server_ip,$session_name,$one_mysql_log)
 	{
 	$NOW_TIME = date("Y-m-d H:i:s");
-	#	mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);
+	#	mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02001',$user,$server_ip,$session_name,$one_mysql_log);
 	$errno='';   $error='';
 	if ( ($mel > 0) or ($one_mysql_log > 0) )
 		{

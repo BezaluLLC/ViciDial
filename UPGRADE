@@ -347,6 +347,15 @@ OTHER CHANGES:
 	process. There is a more limited set of variables available for use with
 	this option, see the admin.php help for more details
 
+76. Changed the PARK CUSTOMER option in campaigns to use a Music-on-Hold context
+	instead of a difficult-to-configure filename and extension as before
+
+77. Added new IVR PARK CUSTOMER feature to campaigns allowing an agent to park
+	a customer to an AGI script as an IVR and have the customer enter in
+	digits unassisted and then be redirected back to the agent who parked
+	them when they are finished. Optional in-group redirect if customer 
+	does not enter valid input. See example park_call_IVR_example.agi script
+
 
 
 

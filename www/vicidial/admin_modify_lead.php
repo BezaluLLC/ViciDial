@@ -842,7 +842,7 @@ else
 			{$locat = substr($location,0,27);  $locat = "$locat...";}
 		else
 			{$locat = $location;}
-		if (eregi("http",$location))
+		if ( (eregi("ftp",$location)) or (eregi("http",$location)) )
 			{$location = "<a href=\"$location\">$locat</a>";}
 		else
 			{$location = $locat;}

@@ -326,7 +326,7 @@ if ($action == "MANUALUPLOAD")
   <tr><td align=left><font size=1> &nbsp; </font></td><td align=right><font size=1>Audio Store- &nbsp; &nbsp; VERSION: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
 </table>
 <BR><BR>
-<CENTER><B>We STRONGLY recommend uploading only 16bit 8k PCM WAV audio files(.wav)</B>
+<CENTER><B>We STRONGLY recommend uploading only 16bit Mono 8k PCM WAV audio files(.wav)</B>
 <BR><BR><font size=1>All spaces will be stripped from uploaded audio file names</font><BR><BR>
 <B><a href="javascript:launch_chooser('sample_prompt','date',30);">audio file list</a></CENTER>
 

@@ -617,7 +617,7 @@ dial_status_d VARCHAR(6),
 dial_status_e VARCHAR(6),
 lead_order VARCHAR(30),
 park_ext VARCHAR(10),
-park_file_name VARCHAR(10),
+park_file_name VARCHAR(100) default 'default',
 web_form_address TEXT,
 allow_closers ENUM('Y','N'),
 hopper_level INT(8) UNSIGNED default '1',
@@ -765,7 +765,9 @@ hide_xfer_number_to_dial ENUM('DISABLED','ENABLED') default 'DISABLED',
 manual_dial_prefix VARCHAR(20) default '',
 customer_3way_hangup_logging ENUM('DISABLED','ENABLED') default 'ENABLED',
 customer_3way_hangup_seconds SMALLINT(5) UNSIGNED default '5',
-customer_3way_hangup_action ENUM('NONE','DISPO') default 'NONE'
+customer_3way_hangup_action ENUM('NONE','DISPO') default 'NONE',
+ivr_park_call ENUM('DISABLED','ENABLED','ENABLED_PARK_ONLY','ENABLED_BUTTON_HIDDEN') default 'DISABLED',
+ivr_park_call_agi TEXT
 );
 
 CREATE TABLE vicidial_lists (
@@ -2368,7 +2370,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1247',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1248',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
