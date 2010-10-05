@@ -19,6 +19,7 @@
 # 100804-1745 - Added option to download DNC and FPGN lists
 # 100924-1609 - Added ALL-LISTS option for downloading everything
 # 100929-1919 - Fixed ALL-LISTS download option to include custom fields
+# 101004-2108 - Added generic custom column headers for custom fields
 #
 
 require("dbconnect.php");
@@ -358,7 +359,7 @@ while ($i < $leads_to_print)
 	$i++;
 	}
 
-
+$ch=0;
 if ( ($custom_fields_enabled > 0) and ($event_code_type=='LIST') )
 	{
 	$valid_custom_table=0;
@@ -458,9 +459,14 @@ if ( ($custom_fields_enabled > 0) and ($event_code_type=='LIST') )
 					{
 					$row=mysql_fetch_row($rslt);
 					$t=1;
-					while ($columns_ct > $t) 
+					while ($columns_ct > $t)
 						{
 						$custom_data[$i] .= "\t$row[$t]";
+						if ($ch <= $t)
+							{
+							$ch++;
+							$header_columns .= "\tcustom$ch";
+							}
 						$t++;
 						}
 					}
