@@ -1,0 +1,7 @@
+content   viciwebdial                 chrome/content/
+skin      viciwebdial   classic/1.0   chrome/skin/
+locale    viciwebdial   en-US         chrome/locale/en-US/
+
+
+overlay   chrome://browser/content/browser.xul   chrome://viciwebdial/content/vwd-overlay.xul
+style chrome://global/content/customizeToolbar.xul chrome://viciwebdial/skin/overlay.css

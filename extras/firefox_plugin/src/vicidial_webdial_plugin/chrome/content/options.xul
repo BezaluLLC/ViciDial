@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<!DOCTYPE prefwindow SYSTEM "chrome://viciwebdial/locale/options.dtd">
+<prefwindow id="viciwebdial-preferences" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" title="&prefwindow.title;" onload="ShowWarning();">
+<script type="application/javascript" src="options.js"/>
+
+  <prefpane id="pane1" label="&pane1.title;" image="chrome://viciwebdial/skin/connection_icon.jpg">
+
+    <preferences>
+      <preference id="viciwebdial_autoconnect1" name="extensions.viciwebdial.viciwebdial_autoconnect" type="bool"/>
+      <preference id="viciwebdial_URL1" name="extensions.viciwebdial.viciwebdial_URL" type="string"/>
+      <preference id="viciwebdial_AGC1" name="extensions.viciwebdial.viciwebdial_AGC" type="string"/>
+      <preference id="stringpref1" name="extensions.viciwebdial.stringpref" type="string"/> <!-- note that this is only an ASCII string - use unichar for unicode strings -->
+    </preferences>
+ 
+    <groupbox align="start">
+	    <grid>
+	      <rows>
+		<row>
+		  <separator class="thin"/>
+		</row>
+		<row align="start">
+		  <label control="textviciwebdial_URL">&viciwebdial_URL.label;</label><textbox id="textviciwebdial_URL" preference="viciwebdial_URL1" size="30" maxlength="100"/>
+		</row>
+		<row align="start">
+		  <label control="textviciwebdial_AGC">&viciwebdial_AGC.label;</label><textbox id="textviciwebdial_AGC" preference="viciwebdial_AGC1" size="30" maxlength="100"/>
+		</row>
+		<row align="start">
+		  <checkbox id="viciwebdial_autoconnect" preference="viciwebdial_autoconnect1" label="&viciwebdial_autoconnect.label;"/>
+		</row>
+		<row align="start">
+		  <label control="textviciwebdial_warning">&viciwebdial_acwarning.label;</label>
+		</row>
+	      </rows>
+	    </grid>
+    </groupbox>
+  </prefpane>
+
+  <prefpane id="viciwebdial_call_pane" label="&viciwebdial_call_pane.title;" image="chrome://viciwebdial/skin/phone_icon.jpg">
+    <preferences>
+      <preference id="viciwebdial_campaign1" name="extensions.viciwebdial.viciwebdial_campaign" type="string"/>
+      <preference id="viciwebdial_phonelogin1" name="extensions.viciwebdial.viciwebdial_phonelogin" type="string"/>
+      <preference id="viciwebdial_phonepwd1" name="extensions.viciwebdial.viciwebdial_phonepwd" type="string"/>
+      <preference id="viciwebdial_user1" name="extensions.viciwebdial.viciwebdial_user" type="string"/>
+      <preference id="viciwebdial_pwd1" name="extensions.viciwebdial.viciwebdial_pwd" type="string"/>
+    </preferences>
+
+    <groupbox align="start">
+	    <grid>
+	      <rows>
+		<row>
+		  <separator class="thin"/>
+		</row>
+		<row align="start">
+		  <label control="textviciwebdial_campaign">&viciwebdial_campaign.label;</label><textbox id="textviciwebdial_campaign" preference="viciwebdial_campaign1" size="15" maxlength="100"/>
+		</row>
+		<row align="start">
+		  <label control="textviciwebdial_phonelogin">&viciwebdial_phonelogin.label;</label><textbox id="textviciwebdial_phonelogin" preference="viciwebdial_phonelogin1" size="15"/>
+		</row>
+		<row align="start">
+		  <label control="textviciwebdial_phonepwd">&viciwebdial_phonepwd.label;</label><textbox id="textviciwebdial_phonepwd" preference="viciwebdial_phonepwd1" size="5" maxlength="10" type="password"/>
+		</row>
+		<row align="start">
+		  <label control="textviciwebdial_user">&viciwebdial_user.label;</label><textbox id="textviciwebdial_user" preference="viciwebdial_user1" size="10" maxlength="20"/>
+		</row>
+		<row align="start">
+		  <label control="textviciwebdial_pwd">&viciwebdial_pwd.label;</label><textbox id="textviciwebdial_pwd" preference="viciwebdial_pwd1" size="10" maxlength="20" type="password"/>
+		</row>
+	      </rows>
+	    </grid>
+    </groupbox>
+  </prefpane>
+
+</prefwindow>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://viciwebdial/skin/overlay.css" type="text/css"?>
+<!DOCTYPE overlay SYSTEM "chrome://viciwebdial/locale/overlay.dtd">
+<overlay id="viciwebdial-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="overlay.js"/>
+  <script src="vwd-overlay.js"/>
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="viciwebdial-strings" src="chrome://viciwebdial/locale/overlay.properties"/>
+  </stringbundleset>
+
+ 
+<!-- RIGHT-CLICK...VERY IMPORTANT! //-->
+  <popup id="contentAreaContextMenu">
+    <menuitem id="context-viciwebdial" label="&viciwebdialContext.label;"
+              accesskey="&viciwebdialContext.accesskey;"
+              insertafter="context-viewinfo"
+              oncommand="PlaceCall();"
+	      disabled="true"/>
+    <menuitem id="connect-viciwebdial" label="&vwdmenu.connect;"
+              insertafter="context-viciwebdial"
+	      style="color: #FF0000;"
+              oncommand="VWDConnect(this.label);"/>
+    <menuitem id="preferences-viciwebdial" label="&viciwebdialPreferences.label;"
+              accesskey="&viciwebdialContext.accesskey;"
+              insertafter="connect-viciwebdial"
+	      style="color: #FF0000;"
+              oncommand="openVWDOptionsWindow();"/>
+    <menuitem id="about-viciwebdial" label="&viciwebdialAbout.label;"
+              accesskey="&viciwebdialContext.accesskey;"
+              insertafter="preferences-viciwebdial"
+	      style="color: #FF0000;"
+              oncommand="openVWDAboutWindow();"/>
+  </popup>
+
+  <statusbar id="status-bar">
+    <statusbarpanel id="my-panel" label="&viciwebdialStatusbar.label;" tooltiptext="Status bar control panel for VICIWebDial">
+	<image id="viciwebdial-status-icon" src="chrome://viciwebdial/skin/vicidial_logo.png" tooltiptext="VICI Web Dial" 
+		onmousedown="openVWDOptionsWindow();" hidden="false" />
+	<textbox id="viciwebdial-phone-textbox" type="search" empty="true" emptytext="&viciwebdialPhoneField.label;" size="12" command="cmd_statusdial" searchbutton="false" hidden="false" />
+	<image id="viciwebdial-dial-button" src="chrome://viciwebdial/skin/dial_button.gif" tooltiptext="VICI Web Dial" 
+		onmousedown="VICIWebDialPlaceCall();" hidden="false"/>
+    </statusbarpanel>
+  </statusbar>
+
+
+  <toolbarpalette id="BrowserToolbarPalette">
+  <toolbarbutton id="viciwebdial-toolbar-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+    label="&viciwebdialToolbarButton.label;" tooltiptext="&viciwebdialToolbarButton.tooltip;"
+    oncommand="viciwebdial.onToolbarButtonCommand()"/>
+  </toolbarpalette>
+
+</overlay>
