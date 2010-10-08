@@ -356,6 +356,16 @@ OTHER CHANGES:
 	them when they are finished. Optional in-group redirect if customer 
 	does not enter valid input. See example park_call_IVR_example.agi script
 
+78. Added In-Group options for Estimated Hold Time Minimum, which can replace
+	the "15 seconds" minimum accouncement with an announcement of your 
+	choosing
+
+79. Added a campaign option for Manual Preview Dial, to enable or disable that
+	manual dial option, as well as allowing or disallowing for the SKIP
+	lead option.
+
+80. Added two new recording filename variable options: VENDORLEADCODE, LEADID
+
 
 
 

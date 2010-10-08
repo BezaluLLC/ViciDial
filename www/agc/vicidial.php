@@ -315,10 +315,12 @@
 # 100912-1304 - Changed Dispo screen phone number display to dialed_number
 # 100927-1616 - Added custom fields ability to web forms and optimized related code
 # 101004-1322 - Added "IVR Park Call" button in agent interface
+# 101006-1358 - Raised limits on several dynamic items from the database
+# 101008-0356 - Added manual_preview_dial and two new variables for recording filenames
 #
 
-$version = '2.4-293';
-$build = '101004-1322';
+$version = '2.4-295';
+$build = '101008-0356';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=68;
 $one_mysql_log=0;
@@ -1195,7 +1197,7 @@ else
 				$VARstatuses='';
 				$VARstatusnames='';
 				##### grab the statuses that can be used for dispositioning by an agent
-				$stmt="SELECT status,status_name FROM vicidial_statuses WHERE $selectableSQL status != 'NEW' order by status limit 50;";
+				$stmt="SELECT status,status_name FROM vicidial_statuses WHERE $selectableSQL status != 'NEW' order by status limit 300;";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01010',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1212,7 +1214,7 @@ else
 					}
 
 				##### grab the campaign-specific statuses that can be used for dispositioning by an agent
-				$stmt="SELECT status,status_name FROM vicidial_campaign_statuses WHERE $selectableSQL status != 'NEW' and campaign_id='$VD_campaign' order by status limit 80;";
+				$stmt="SELECT status,status_name FROM vicidial_campaign_statuses WHERE $selectableSQL status != 'NEW' and campaign_id='$VD_campaign' order by status limit 300;";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01011',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1264,7 +1266,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1350,8 +1352,11 @@ else
 				$customer_3way_hangup_seconds =	$row[78];
 				$customer_3way_hangup_action =	$row[79];
 				$ivr_park_call =			$row[80];
+				$manual_preview_dial =		$row[81];
 
 
+				if ($manual_preview_dial == 'DISABLED')
+					{$manual_dial_preview = 0;}
 				if ($manual_dial_override == 'ALLOW_ALL')
 					{$agentcall_manual = 1;}
 				if ($manual_dial_override == 'DISABLE_ALL')
@@ -1510,7 +1515,7 @@ else
 				if ( (ereg('Y',$agent_pause_codes_active)) or (ereg('FORCE',$agent_pause_codes_active)) )
 					{
 					##### grab the pause codes for this campaign
-					$stmt="SELECT pause_code,pause_code_name FROM vicidial_pause_codes WHERE campaign_id='$VD_campaign' order by pause_code limit 50;";
+					$stmt="SELECT pause_code,pause_code_name FROM vicidial_pause_codes WHERE campaign_id='$VD_campaign' order by pause_code limit 100;";
 					$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01014',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
@@ -1536,7 +1541,7 @@ else
 				if ( ($campaign_allow_inbound == 'Y') and ($dial_method != 'MANUAL') )
 					{
 					$VARingroups='';
-					$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and group_id IN($closer_campaigns) order by group_id limit 600;";
+					$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and group_id IN($closer_campaigns) order by group_id limit 800;";
 					$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01015',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
@@ -1583,7 +1588,7 @@ else
 				if ($allow_closers == 'Y')
 					{
 					$VARxfergroups='';
-					$stmt="select group_id,group_name from vicidial_inbound_groups where active = 'Y' and group_id IN($xfer_groups) order by group_id limit 600;";
+					$stmt="select group_id,group_name from vicidial_inbound_groups where active = 'Y' and group_id IN($xfer_groups) order by group_id limit 800;";
 					$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01016',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
@@ -2928,6 +2933,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var agentonly_callbacks = '<?php echo $agentonly_callbacks ?>';
 	var agentcall_manual = '<?php echo $agentcall_manual ?>';
 	var manual_dial_preview = '<?php echo $manual_dial_preview ?>';
+	var manual_preview_dial = '<?php echo $manual_preview_dial ?>';
 	var starting_alt_phone_dialing = '<?php echo $alt_phone_dialing ?>';
 	var alt_phone_dialing = '<?php echo $alt_phone_dialing ?>';
 	var DefaulTAlTDiaL = '<?php echo $DefaulTAlTDiaL ?>';
@@ -4249,15 +4255,22 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			{ 
 			if (taskconfrectype == 'MonitorConf')
 				{
+				var REGrecCLEANvlc = new RegExp(" ","g");
+				var recVendorLeadCode = document.vicidial_form.vendor_lead_code.value;
+				recVendorLeadCode = recVendorLeadCode.replace(REGrecCLEANvlc, '');
+				var recLeadID = document.vicidial_form.lead_id.value;
+
 				// 	var campaign_recording = '<?php echo $campaign_recording ?>';
 				//	var campaign_rec_filename = '<?php echo $campaign_rec_filename ?>';
-				//	CAMPAIGN CUSTPHONE FULLDATE TINYDATE EPOCH AGENT
+				//	CAMPAIGN CUSTPHONE FULLDATE TINYDATE EPOCH AGENT VENDORLEADCODE LEADID
 				var REGrecCAMPAIGN = new RegExp("CAMPAIGN","g");
 				var REGrecCUSTPHONE = new RegExp("CUSTPHONE","g");
 				var REGrecFULLDATE = new RegExp("FULLDATE","g");
 				var REGrecTINYDATE = new RegExp("TINYDATE","g");
 				var REGrecEPOCH = new RegExp("EPOCH","g");
 				var REGrecAGENT = new RegExp("AGENT","g");
+				var REGrecVENDORLEADCODE = new RegExp("VENDORLEADCODE","g");
+				var REGrecLEADID = new RegExp("LEADID","g");
 				filename = LIVE_campaign_rec_filename;
 				filename = filename.replace(REGrecCAMPAIGN, campaign);
 				filename = filename.replace(REGrecCUSTPHONE, lead_dial_number);
@@ -4265,6 +4278,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				filename = filename.replace(REGrecTINYDATE, tinydate);
 				filename = filename.replace(REGrecEPOCH, epoch_sec);
 				filename = filename.replace(REGrecAGENT, user);
+				filename = filename.replace(REGrecVENDORLEADCODE, recVendorLeadCode);
+				filename = filename.replace(REGrecLEADID, recLeadID);
 			//	filename = filedate + "_" + user_abb;
 				var query_recording_exten = recording_exten;
 				var channelrec = "Local/" + conf_silent_prefix + '' + taskconfrec + "@" + ext_context;
@@ -5642,6 +5657,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			reselect_preview_dial = 1;
 			var man_preview = 'YES';
 			var man_status = "Preview the Lead then <a href=\"#\" onclick=\"ManualDialOnly()\"><font class=\"preview_text\"> DIAL LEAD</font></a> or <a href=\"#\" onclick=\"ManualDialSkip()\"><font class=\"preview_text\">SKIP LEAD</font></a>"; 
+			if (manual_preview_dial=='PREVIEW_ONLY')
+				{
+				var man_status = "Preview the Lead then <a href=\"#\" onclick=\"ManualDialOnly()\"><font class=\"preview_text\"> DIAL LEAD</font></a>"; 
+				}
 			}
 		else
 			{

@@ -142,6 +142,7 @@
 # 100830-1445 - Allow the changing of the queue priority of a call while the call is in queue
 # 100903-0041 - Changed lead_id max length to 10 digits
 # 100929-1201 - Added add_lead_url feature
+# 101008-0410 - Added option for alternate Minimum Hold Time Message
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -583,7 +584,7 @@ $sthA->finish();
 
 ### Grab inbound groups values from the database
 $cbc=0;
-$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds,add_lead_url FROM vicidial_inbound_groups where group_id = '$channel_group';";
+$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds FROM vicidial_inbound_groups where group_id = '$channel_group';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -661,6 +662,9 @@ if ($sthArows > 0)
 	$ingroup_active =					$aryA[60];
 	$calculate_estimated_hold_seconds = $aryA[61];
 	$add_lead_url =						$aryA[62];
+	$eht_minimum_prompt_filename =		$aryA[63];
+	$eht_minimum_prompt_no_block =		$aryA[64];
+	$eht_minimum_prompt_seconds =		$aryA[65];
 
 	$custom_call_id='';
 	if ($uniqueid_status_display =~ /ENABLED/)
@@ -3113,20 +3117,93 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				$AGI->stream_file('queue-youarenext'); #  you are next in line
 				}
 			else 
-				{ 
-				$AGI->stream_file('queue-holdtime'); # the estimated hold time is currently
-				if ($holdtime_estimate > 0)
+				{
+				if ( ($holdtime_estimate_sec_diff <= 10) && (length($eht_minimum_prompt_filename)>0) )
 					{
-					$AGI->say_number("$holdtime_estimate");
-					$AGI->stream_file('queue-minutes'); # minutes
+					$now_date_epoch = time();
+					$no_block_SQL = '';
+
+					### if No-Block is enabled, then set the call time to right now
+					if ($eht_minimum_prompt_no_block =~ /Y/)
+						{
+						$NBDtarget = $now_date_epoch;
+						($NBsec,$NBmin,$NBhour,$NBmday,$NBmon,$NByear,$NBwday,$NByday,$NBisdst) = localtime($NBDtarget);
+						$NByear = ($NByear + 1900);
+						$NBmon++;
+						if ($NBmon < 10) {$NBmon = "0$NBmon";}
+						if ($NBmday < 10) {$NBmday = "0$NBmday";}
+						if ($NBhour < 10) {$NBhour = "0$NBhour";}
+						if ($NBmin < 10) {$NBmin = "0$NBmin";}
+						if ($NBsec < 10) {$NBsec = "0$NBsec";}
+							$NB_SQLdate = "$NByear-$NBmon-$NBmday $NBhour:$NBmin:$NBsec";
+						$no_block_SQL = ",call_time='$NB_SQLdate'";
+						}
+
+					if ($eht_minimum_prompt_seconds < 0) {$eht_minimum_prompt_seconds=0;}
+					if ($eht_minimum_prompt_seconds > 1000) {$eht_minimum_prompt_seconds=1000;}
+					$FDtarget = ($now_date_epoch + $eht_minimum_prompt_seconds);
+					($Fsec,$Fmin,$Fhour,$Fmday,$Fmon,$Fyear,$Fwday,$Fyday,$Fisdst) = localtime($FDtarget);
+					$Fyear = ($Fyear + 1900);
+					$Fmon++;
+					if ($Fmon < 10) {$Fmon = "0$Fmon";}
+					if ($Fmday < 10) {$Fmday = "0$Fmday";}
+					if ($Fhour < 10) {$Fhour = "0$Fhour";}
+					if ($Fmin < 10) {$Fmin = "0$Fmin";}
+					if ($Fsec < 10) {$Fsec = "0$Fsec";}
+						$FDtsSQLdate = "$Fyear$Fmon$Fmday$Fhour$Fmin$Fsec";
+
+					$stmtA = "UPDATE vicidial_auto_calls set last_update_time='$FDtsSQLdate' $no_block_SQL where callerid='$callerid' order by call_time desc limit 1;";
+					$affected_rows = $dbhA->do($stmtA);
+						$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+					if ($AGILOG) {$agi_string = "--    VDAC posttime record: |$affected_rows|$FDtsSQLdate|$callerid|$no_block_SQL|EHTM";   &agi_output;}
+
+					if ( (length($eht_minimum_prompt_filename) > 0) && ($eht_minimum_prompt_filename !~ /---NONE---/) )
+						{
+						$AGI->stream_file('sip-silence'); # stop music-on-hold process
+						$AGI->stream_file('sip-silence'); # stop music-on-hold process
+						$AGI->stream_file('sip-silence'); # stop music-on-hold process
+						if ($eht_minimum_prompt_filename =~ /\|/)
+							{
+							@eht_minimum_prompt_filename_array = split(/\|/,$eht_minimum_prompt_filename);
+							$w=0;
+							foreach(@eht_minimum_prompt_filename_array)
+								{
+								if (length($eht_minimum_prompt_filename_array[$w])>0)
+									{
+									$AGI->stream_file("$eht_minimum_prompt_filename_array[$w]");
+									}
+								$w++;
+								}
+							}
+						else
+							{$AGI->stream_file("$eht_minimum_prompt_filename");}
+						}
+
+					### if No-Block is enabled, then set the call time back to original call time
+					if ($eht_minimum_prompt_no_block =~ /Y/)
+						{
+						$stmtA = "UPDATE vicidial_auto_calls set call_time='$ORIGINAL_call_time' where callerid='$callerid' order by call_time desc limit 1;";
+						$affected_rows = $dbhA->do($stmtA);
+							$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+						if ($AGILOG) {$agi_string = "--    No-Block Prompt Set: |$affected_rows|$ORIGINAL_call_time|$callerid|EHTM";   &agi_output;}
+						}
 					}
-				if ($holdtime_estimate < 2) 
-					{ 
-					$roundto = 5; # sensible values 5, 10, 15, ( 20, 30) 
-					$rounded_time = $holdtime_estimate_sec_diff - ( $holdtime_estimate_sec_diff % $roundto ) + $roundto;
-					$rounded_time = ($rounded_time - ($holdtime_estimate * 60) );
-					$AGI->say_number("$rounded_time");
-					$AGI->stream_file('queue-seconds'); # seconds
+				else
+					{
+					$AGI->stream_file('queue-holdtime'); # the estimated hold time is currently
+					if ($holdtime_estimate > 0)
+						{
+						$AGI->say_number("$holdtime_estimate");
+						$AGI->stream_file('queue-minutes'); # minutes
+						}
+					if ($holdtime_estimate < 2) 
+						{ 
+						$roundto = 5; # sensible values 5, 10, 15, ( 20, 30) 
+						$rounded_time = $holdtime_estimate_sec_diff - ( $holdtime_estimate_sec_diff % $roundto ) + $roundto;
+						$rounded_time = ($rounded_time - ($holdtime_estimate * 60) );
+						$AGI->say_number("$rounded_time");
+						$AGI->stream_file('queue-seconds'); # seconds
+						}
 					}
 				} 
 			}

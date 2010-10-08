@@ -767,7 +767,8 @@ customer_3way_hangup_logging ENUM('DISABLED','ENABLED') default 'ENABLED',
 customer_3way_hangup_seconds SMALLINT(5) UNSIGNED default '5',
 customer_3way_hangup_action ENUM('NONE','DISPO') default 'NONE',
 ivr_park_call ENUM('DISABLED','ENABLED','ENABLED_PARK_ONLY','ENABLED_BUTTON_HIDDEN') default 'DISABLED',
-ivr_park_call_agi TEXT
+ivr_park_call_agi TEXT,
+manual_preview_dial ENUM('DISABLED','PREVIEW_AND_SKIP','PREVIEW_ONLY') default 'PREVIEW_AND_SKIP'
 );
 
 CREATE TABLE vicidial_lists (
@@ -946,7 +947,10 @@ wait_time_option_no_block ENUM('N','Y') default 'N',
 wait_time_option_prompt_seconds SMALLINT(5) default '10',
 timer_action_destination VARCHAR(30) default '',
 calculate_estimated_hold_seconds SMALLINT(5) UNSIGNED default '0',
-add_lead_url TEXT
+add_lead_url TEXT,
+eht_minimum_prompt_filename VARCHAR(255) default '',
+eht_minimum_prompt_no_block ENUM('N','Y') default 'N',
+eht_minimum_prompt_seconds SMALLINT(5) default '10'
 );
 
 CREATE TABLE vicidial_stations (
@@ -2370,7 +2374,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1248',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1249',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

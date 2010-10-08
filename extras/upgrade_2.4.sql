@@ -564,3 +564,11 @@ ALTER TABLE vicidial_campaigns ADD ivr_park_call ENUM('DISABLED','ENABLED','ENAB
 ALTER TABLE vicidial_campaigns ADD ivr_park_call_agi TEXT;
 
 UPDATE system_settings SET db_schema_version='1248',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD manual_preview_dial ENUM('DISABLED','PREVIEW_AND_SKIP','PREVIEW_ONLY') default 'PREVIEW_AND_SKIP';
+
+ALTER TABLE vicidial_inbound_groups ADD eht_minimum_prompt_filename VARCHAR(255) default '';
+ALTER TABLE vicidial_inbound_groups ADD eht_minimum_prompt_no_block ENUM('N','Y') default 'N';
+ALTER TABLE vicidial_inbound_groups ADD eht_minimum_prompt_seconds SMALLINT(5) default '10';
+
+UPDATE system_settings SET db_schema_version='1249',db_schema_update_date=NOW();
