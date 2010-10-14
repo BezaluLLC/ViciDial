@@ -1,6 +1,6 @@
-pref("extensions.viciwebdial.boolpref", false);
-pref("extensions.viciwebdial.intpref", 0);
-pref("extensions.viciwebdial.stringpref", "A string");
+pref("extensions.vicidial_webdial_plugin.boolpref", false);
+pref("extensions.vicidial_webdial_plugin.intpref", 0);
+pref("extensions.vicidial_webdial_plugin.stringpref", "A string");
 
 // https://developer.mozilla.org/en/Localizing_extension_descriptions
-pref("extensions.joejohn@viciwebdial.com.description", "chrome://viciwebdial/locale/overlay.properties");
+pref("extensions.joejohn@vicidial_webdial_plugin.com.description", "chrome://vicidial_webdial_plugin/locale/overlay.properties");

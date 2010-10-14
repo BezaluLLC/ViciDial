@@ -1,21 +1,21 @@
 <!ENTITY prefwindow.title "ViciDial-Web-Dial preferences">
 <!ENTITY pane1.title "Web connection info">
-<!ENTITY viciwebdial_call_pane.title "User connection info">
-<!ENTITY viciwebdial_autoconnect.label "Auto-connect">
-<!ENTITY viciwebdial_acwarning.label "(experts only)">
-<!ENTITY viciwebdial_autoconnect.accesskey "B">
-<!ENTITY viciwebdial_URL.label "ViciDial API URL: ">
-<!ENTITY viciwebdial_AGC.label "ViciDial AGC URL: ">
-<!ENTITY viciwebdial_campaign.label "Campaign: ">
-<!ENTITY viciwebdial_host.label "DB Host: ">
-<!ENTITY viciwebdial_port.label "DB Port: ">
-<!ENTITY viciwebdial_phonelogin.label "Phone login: ">
-<!ENTITY viciwebdial_phonepwd.label "Phone passwd: ">
-<!ENTITY viciwebdial_user.label "User: ">
-<!ENTITY viciwebdial_pwd.label "Passwd: ">
-<!ENTITY viciwebdial_port.accesskey "I">
-<!ENTITY viciwebdial_calloverride.label "Override codes if in database">
-<!ENTITY viciwebdial_phonecode.label "Phone prefix">
-<!ENTITY viciwebdial_countrycode.label "Country code">
+<!ENTITY vicidial_webdial_plugin_call_pane.title "User connection info">
+<!ENTITY vicidial_webdial_plugin_autoconnect.label "Auto-connect">
+<!ENTITY vicidial_webdial_plugin_acwarning.label "(experts only)">
+<!ENTITY vicidial_webdial_plugin_autoconnect.accesskey "B">
+<!ENTITY vicidial_webdial_plugin_URL.label "ViciDial API URL: ">
+<!ENTITY vicidial_webdial_plugin_AGC.label "ViciDial AGC URL: ">
+<!ENTITY vicidial_webdial_plugin_campaign.label "Campaign: ">
+<!ENTITY vicidial_webdial_plugin_host.label "DB Host: ">
+<!ENTITY vicidial_webdial_plugin_port.label "DB Port: ">
+<!ENTITY vicidial_webdial_plugin_phonelogin.label "Phone login: ">
+<!ENTITY vicidial_webdial_plugin_phonepwd.label "Phone passwd: ">
+<!ENTITY vicidial_webdial_plugin_user.label "User: ">
+<!ENTITY vicidial_webdial_plugin_pwd.label "Passwd: ">
+<!ENTITY vicidial_webdial_plugin_port.accesskey "I">
+<!ENTITY vicidial_webdial_plugin_calloverride.label "Override codes if in database">
+<!ENTITY vicidial_webdial_plugin_phonecode.label "Phone prefix">
+<!ENTITY vicidial_webdial_plugin_countrycode.label "Country code">
 <!ENTITY stringpref.label "A String Preference">
 <!ENTITY stringpref.accesskey "S">

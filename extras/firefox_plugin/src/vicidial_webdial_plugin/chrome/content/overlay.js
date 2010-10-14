@@ -1,7 +1,7 @@
-var viciwebdial = {
+var vicidial_webdial_plugin = {
   onLoad: function() {
     this.initialized = true;
-    this.strings = document.getElementById("viciwebdial-strings");
+    this.strings = document.getElementById("vicidial_webdial_plugin-strings");
   },
 
   onMenuItemCommand: function(e) {
@@ -12,6 +12,6 @@ var viciwebdial = {
   },
 
   onToolbarButtonCommand: function(e) {
-    viciwebdial.onMenuItemCommand(e);
+    vicidial_webdial_plugin.onMenuItemCommand(e);
   }
 };
