@@ -8,6 +8,7 @@
 # - manager_send.php: Sends manager actions to the DB for execution
 # - conf_exten_check.php: time sync and status updater, calls in queue
 # - vdc_script_display.php: displays script with variables
+# - vdc_form_display.php: display custom fields form
 #
 # CHANGELOG
 # 50607-1426 - First Build of VICIDIAL web client basic login process finished
@@ -317,10 +318,11 @@
 # 101004-1322 - Added "IVR Park Call" button in agent interface
 # 101006-1358 - Raised limits on several dynamic items from the database
 # 101008-0356 - Added manual_preview_dial and two new variables for recording filenames
+# 101012-1656 - Added scroll command at dispo submission to for scrolling to the top of the screen
 #
 
-$version = '2.4-295';
-$build = '101008-0356';
+$version = '2.4-296';
+$build = '101012-1656';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=68;
 $one_mysql_log=0;
@@ -8056,6 +8058,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					LogouT('SHIFT');
 					}
 				}
+			// scroll back to the top of the page
+			scroll(0,0);
 			}
 		}
 

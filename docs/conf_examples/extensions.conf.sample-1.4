@@ -15,7 +15,7 @@ SIPtrunk=SIP/1234:PASSWORD@sip.provider.net	; SIP trunk
 
 [trunkinbound]
 ; DID call routing process
-; exten => _X.,1,Set(CALLERID(num)=${CALLERID(num):1})   ; removes first leading character from inbound callerid
+; exten => _XXXXXXXXXX,1,AGI(agi-DID_route.agi)  ; use this one instead of the one below if you are having delay issues, and match to number of received digits
 exten => _X.,1,AGI(agi-DID_route.agi)
 
 ; FastAGI for VICIDIAL/astGUIclient call logging
