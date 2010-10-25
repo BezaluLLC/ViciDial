@@ -365,11 +365,11 @@ while ($master_loop<$CLIloops)
 
 	if ($CLIcampaign)
 		{
-		$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,UNIX_TIMESTAMP(campaign_changedate),campaign_stats_refresh,campaign_allow_inbound,drop_rate_group,UNIX_TIMESTAMP(campaign_calldate) from vicidial_campaigns where campaign_id='$CLIcampaign'";
+		$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,UNIX_TIMESTAMP(campaign_changedate),campaign_stats_refresh,campaign_allow_inbound,drop_rate_group,UNIX_TIMESTAMP(campaign_calldate),realtime_agent_time_stats from vicidial_campaigns where campaign_id='$CLIcampaign'";
 		}
 	else
 		{
-		$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,UNIX_TIMESTAMP(campaign_changedate),campaign_stats_refresh,campaign_allow_inbound,drop_rate_group,UNIX_TIMESTAMP(campaign_calldate) from vicidial_campaigns where ( (active='Y') or (campaign_stats_refresh='Y') )";
+		$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,UNIX_TIMESTAMP(campaign_changedate),campaign_stats_refresh,campaign_allow_inbound,drop_rate_group,UNIX_TIMESTAMP(campaign_calldate),realtime_agent_time_stats from vicidial_campaigns where ( (active='Y') or (campaign_stats_refresh='Y') )";
 		}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -400,6 +400,7 @@ while ($master_loop<$CLIloops)
 		$campaign_allow_inbound[$rec_count] =		$aryA[16];
 		$drop_rate_group[$rec_count] =				$aryA[17];
 		$campaign_calldate_epoch[$rec_count] =		$aryA[18];
+		$realtime_agent_time_stats[$rec_count] =	$aryA[19];
 
 		$rec_count++;
 		}
@@ -822,6 +823,11 @@ sub calculate_drops
 	$VCSdrops_one[$i]=0;
 	$VCSdrops_one_pct[$i]=0;
 	$VCSagent_nonpause_time[$i]=0;
+	$VCSagent_pause_today[$i]=0;
+	$VCSagent_wait_today[$i]=0;
+	$VCSagent_custtalk_today[$i]=0;
+	$VCSagent_acw_today[$i]=0;
+	$VCSagent_calls_today[$i]=0;
 
 	# LAST ONE MINUTE CALL AND DROP STATS
 	$stmtA = "SELECT count(*) from $vicidial_log where campaign_id='$campaign_id[$i]' and call_date > '$VDL_one';";
@@ -1137,12 +1143,43 @@ sub calculate_drops
 			{
 			@aryA = $sthA->fetchrow_array;
 			if ($DBX) {print "     DROP RATE GROUP USED: $drop_rate_group[$i]     $aryA[0]|$VCSdrops_answers_today_pct[$i]\n";}
-			$VCSdrops_answers_today_pct[$i] =	"$aryA[0]";
+			$VCSdrops_answers_today_pct[$i] =	$aryA[0];
 			}
 		$sthA->finish();
 		}
+	
+	# if campaign realtime agent time stats is enabled, gather those here
+	if ($realtime_agent_time_stats[$i] =~ /WAIT_CUST_ACW/)
+		{
+		$stmtA = "SELECT sum(pause_sec),sum(wait_sec),sum(talk_sec) - sum(dead_sec) as custtalk,sum(dispo_sec) + sum(dead_sec) as acw from vicidial_agent_log where event_time > '$VDL_date' and campaign_id='$campaign_id[$i]' and pause_sec < 65000 and wait_sec < 65000 and talk_sec < 65000 and dispo_sec < 65000 and dead_sec < 65000;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			if ($DBX) {print "     AGENT TIME STATS: $aryA[0] $aryA[1] $aryA[2] $aryA[3]|$stmtA\n";}
+			$VCSagent_pause_today[$i] =		$aryA[0];
+			$VCSagent_wait_today[$i] =		$aryA[1];
+			$VCSagent_custtalk_today[$i] =	$aryA[2];
+			$VCSagent_acw_today[$i] =		$aryA[3];
+			}
 
-	$stmtA = "UPDATE vicidial_campaign_stats SET calls_today='$VCScalls_today[$i]',answers_today='$VCSanswers_today[$i]',drops_today='$VCSdrops_today[$i]',drops_today_pct='$VCSdrops_today_pct[$i]',drops_answers_today_pct='$VCSdrops_answers_today_pct[$i]',calls_hour='$VCScalls_hour[$i]',answers_hour='$VCSanswers_hour[$i]',drops_hour='$VCSdrops_hour[$i]',drops_hour_pct='$VCSdrops_hour_pct[$i]',calls_halfhour='$VCScalls_halfhour[$i]',answers_halfhour='$VCSanswers_halfhour[$i]',drops_halfhour='$VCSdrops_halfhour[$i]',drops_halfhour_pct='$VCSdrops_halfhour_pct[$i]',calls_fivemin='$VCScalls_five[$i]',answers_fivemin='$VCSanswers_five[$i]',drops_fivemin='$VCSdrops_five[$i]',drops_fivemin_pct='$VCSdrops_five_pct[$i]',calls_onemin='$VCScalls_one[$i]',answers_onemin='$VCSanswers_one[$i]',drops_onemin='$VCSdrops_one[$i]',drops_onemin_pct='$VCSdrops_one_pct[$i]',agent_non_pause_sec='$VCSagent_nonpause_time[$i]',$VSCupdateSQL where campaign_id='$campaign_id[$i]';";
+		$stmtA = "SELECT count(*) from vicidial_agent_log where event_time > '$VDL_date' and campaign_id='$campaign_id[$i]' and lead_id > 0;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			if ($DBX) {print "     AGENT CALLS: $aryA[0]|$stmtA\n";}
+			$VCSagent_calls_today[$i] =		$aryA[0];
+			}
+
+		$sthA->finish();
+		}
+
+	$stmtA = "UPDATE vicidial_campaign_stats SET calls_today='$VCScalls_today[$i]',answers_today='$VCSanswers_today[$i]',drops_today='$VCSdrops_today[$i]',drops_today_pct='$VCSdrops_today_pct[$i]',drops_answers_today_pct='$VCSdrops_answers_today_pct[$i]',calls_hour='$VCScalls_hour[$i]',answers_hour='$VCSanswers_hour[$i]',drops_hour='$VCSdrops_hour[$i]',drops_hour_pct='$VCSdrops_hour_pct[$i]',calls_halfhour='$VCScalls_halfhour[$i]',answers_halfhour='$VCSanswers_halfhour[$i]',drops_halfhour='$VCSdrops_halfhour[$i]',drops_halfhour_pct='$VCSdrops_halfhour_pct[$i]',calls_fivemin='$VCScalls_five[$i]',answers_fivemin='$VCSanswers_five[$i]',drops_fivemin='$VCSdrops_five[$i]',drops_fivemin_pct='$VCSdrops_five_pct[$i]',calls_onemin='$VCScalls_one[$i]',answers_onemin='$VCSanswers_one[$i]',drops_onemin='$VCSdrops_one[$i]',drops_onemin_pct='$VCSdrops_one_pct[$i]',agent_non_pause_sec='$VCSagent_nonpause_time[$i]',agent_calls_today='$VCSagent_calls_today[$i]',agent_pause_today='$VCSagent_pause_today[$i]',agent_wait_today='$VCSagent_wait_today[$i]',agent_custtalk_today='$VCSagent_custtalk_today[$i]',agent_acw_today='$VCSagent_acw_today[$i]',$VSCupdateSQL where campaign_id='$campaign_id[$i]';";
 	$affected_rows = $dbhA->do($stmtA);
 	if ($DBX) {print "OUTBOUND $campaign_id[$i]|$affected_rows|$stmtA|\n";}
 	}

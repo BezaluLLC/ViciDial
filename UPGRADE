@@ -370,6 +370,15 @@ OTHER CHANGES:
 	click selection dialing of phone numbers on web pages to a logged-in
 	ViciDial Agent session. See "extras/firefox_plugin" for more info.
 
+82. Added ability to change users' in-group settings from the in-group 
+	modification screen in bulk.
+
+83. Added Agent Average time stats option to the real-time screen. Must enable
+	realtime_agent_time_stats option in campaign screen.
+
+84. Added customer park time counter to the agent screen when customer is on
+	park. Also, added logging of parked calls to park_log table
+
 
 
 

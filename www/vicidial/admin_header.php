@@ -26,6 +26,7 @@
 # 100802-2127 - Changed Admin to point to links page instead of Phones listings
 # 100831-2255 - Added password strength checking function
 # 100914-1311 - Removed other links for reports-only users
+# 101022-1323 - Added IGU_selectall function
 #
 
 
@@ -567,6 +568,31 @@ if ( ($ADD==131111111) or ($ADD==331111111) or ($ADD==431111111) )
 	//	alert(start_time_hour + '|' + start_time_min + '|' + end_time_hour + '|' + end_time_min + '|--|' + shift_hour + ':' + shift_minute + '|' + shift_length + '|');
 
 		length.value = shift_length;
+		}
+
+	<?php
+	}
+
+
+
+
+### Javascript for shift end-time calculation and display
+if ( ($ADD==3111) or ($ADD==4111) or ($ADD==5111) )
+	{
+	?>
+	function IGU_selectall(temp_count,temp_fields)
+		{
+		var fields_array=temp_fields.split('|');
+		var inc=0;
+		while (temp_count >= inc)
+			{
+			if (fields_array[inc].length > 0)
+				{
+				document.getElementById(fields_array[inc]).checked=true;
+			//	document.admin_form.fields_array[inc].checked=true;
+				}
+			inc++;
+			}
 		}
 
 	<?php

@@ -572,3 +572,20 @@ ALTER TABLE vicidial_inbound_groups ADD eht_minimum_prompt_no_block ENUM('N','Y'
 ALTER TABLE vicidial_inbound_groups ADD eht_minimum_prompt_seconds SMALLINT(5) default '10';
 
 UPDATE system_settings SET db_schema_version='1249',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD realtime_agent_time_stats ENUM('DISABLED','WAIT_CUST_ACW','WAIT_CUST_ACW_PAUSE','CALLS_WAIT_CUST_ACW_PAUSE') default 'CALLS_WAIT_CUST_ACW_PAUSE';
+
+ALTER TABLE vicidial_campaign_stats ADD agent_calls_today INT(9) UNSIGNED default '0';
+ALTER TABLE vicidial_campaign_stats ADD agent_wait_today BIGINT(14) UNSIGNED default '0';
+ALTER TABLE vicidial_campaign_stats ADD agent_custtalk_today BIGINT(14) UNSIGNED default '0';
+ALTER TABLE vicidial_campaign_stats ADD agent_acw_today BIGINT(14) UNSIGNED default '0';
+ALTER TABLE vicidial_campaign_stats ADD agent_pause_today BIGINT(14) UNSIGNED default '0';
+
+ALTER TABLE park_log MODIFY uniqueid VARCHAR(20) default '';
+ALTER TABLE park_log ADD lead_id INT(9) UNSIGNED default '0';
+ALTER TABLE park_log DROP PRIMARY KEY;
+ALTER TABLE park_log DROP KEY uniqueid;
+CREATE INDEX lead_id_park on park_log (lead_id);
+CREATE INDEX uniqueid_park on park_log (uniqueid);
+
+UPDATE system_settings SET db_schema_version='1250',db_schema_update_date=NOW();

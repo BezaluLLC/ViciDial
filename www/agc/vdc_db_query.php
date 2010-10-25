@@ -259,10 +259,11 @@
 # 100916-2144 - Added custom list names export with lead data
 # 100927-1618 - Added ability to use custom fields in web form and dispo_call_url
 # 101001-1451 - Added full name display to Call Log functionality
+# 101022-1243 - Fixed missing variables from start and dispo call urls
 #
 
-$version = '2.4-165';
-$build = '101001-1451';
+$version = '2.4-166';
+$build = '101022-1243';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=345;
 $one_mysql_log=0;
@@ -4866,8 +4867,8 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$VDCL_start_call_url = eregi_replace('--A--phone_pass--B--',urlencode(trim($phone_pass)),$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--fronter--B--',urlencode(trim($fronter)),$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--closer--B--',urlencode(trim($closer)),$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--group--B--',urlencode(trim($group)),$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--channel_group--B--',urlencode(trim($channel_group)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--group--B--',urlencode(trim($VDADchannel_group)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--channel_group--B--',urlencode(trim($VDADchannel_group)),$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--SQLdate--B--',urlencode(trim($SQLdate)),$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--epoch--B--',urlencode(trim($epoch)),$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--uniqueid--B--',urlencode(trim($uniqueid)),$VDCL_start_call_url);
@@ -4894,7 +4895,14 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$VDCL_start_call_url = eregi_replace('--A--user_custom_five--B--',urlencode(trim($user_custom_five)),$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--talk_time--B--',"0",$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--talk_time_min--B--',"0",$VDCL_start_call_url);
-				$VDCL_start_call_url = eregi_replace('--A--entry_list_id--B--',"$entry_list_id",$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--entry_list_id--B--',urlencode(trim($entry_list_id)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--did_id--B--',urlencode(trim($DID_id)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--did_extension--B--',urlencode(trim($DID_extension)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--did_pattern--B--',urlencode(trim($DID_pattern)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--did_description--B--',urlencode(trim($DID_description)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--closecallid--B--',urlencode(trim($INclosecallid)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--xfercallid--B--',urlencode(trim($INxfercallid)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--agent_log_id--B--',urlencode(trim($agent_log_id)),$VDCL_start_call_url);
 
 				if (strlen($custom_field_names)>2)
 					{
@@ -6224,6 +6232,56 @@ if ($ACTION == 'updateDISPO')
 				}
 			}
 
+		if (eregi('--A--did_',$dispo_call_url))
+			{
+			$DID_id='';
+			$DID_extension='';
+			$DID_pattern='';
+			$DID_description='';
+
+			$stmt = "SELECT did_id,extension from vicidial_did_log where uniqueid='$uniqueid' order by call_date desc limit 1;";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			$VDIDL_ct = mysql_num_rows($rslt);
+			if ($VDIDL_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$DID_id	=			$row[0];
+				$DID_extension	=	$row[1];
+
+				$stmt = "SELECT did_pattern,did_description from vicidial_inbound_dids where did_id='$DID_id' limit 1;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				$VDIDL_ct = mysql_num_rows($rslt);
+				if ($VDIDL_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$DID_pattern =		$row[0];
+					$DID_description =	$row[1];
+					}
+				}
+			}
+
+		if ((eregi('callid--B--',$dispo_call_url)) or (eregi('group--B--',$dispo_call_url)))
+			{
+			$INclosecallid='';
+			$INxfercallid='';
+			$VDADchannel_group=$campaign;
+			$stmt = "SELECT campaign_id,closecallid,xfercallid from vicidial_closer_log where uniqueid='$uniqueid' and user='$user' order by call_date desc limit 1;";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			$VDCL_mvac_ct = mysql_num_rows($rslt);
+			if ($VDCL_mvac_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$VDADchannel_group =	$row[0];
+				$INclosecallid =		$row[1];
+				$INxfercallid =			$row[2];
+				}
+			}
 
 		##### grab the data from vicidial_list for the lead_id
 		$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
@@ -6300,9 +6358,9 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_url = eregi_replace('--A--original_phone_login--B--',"$original_phone_login",$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--phone_pass--B--',"$phone_pass",$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--fronter--B--',"$fronter",$dispo_call_url);
-		$dispo_call_url = eregi_replace('--A--closer--B--',"$closer",$dispo_call_url);
-		$dispo_call_url = eregi_replace('--A--group--B--',"$group",$dispo_call_url);
-		$dispo_call_url = eregi_replace('--A--channel_group--B--',"$channel_group",$dispo_call_url);
+		$dispo_call_url = eregi_replace('--A--closer--B--',"$user",$dispo_call_url);
+		$dispo_call_url = eregi_replace('--A--group--B--',"$VDADchannel_group",$dispo_call_url);
+		$dispo_call_url = eregi_replace('--A--channel_group--B--',"$VDADchannel_group",$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--SQLdate--B--',"$SQLdate",$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--epoch--B--',"$epoch",$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--uniqueid--B--',"$uniqueid",$dispo_call_url);
@@ -6333,6 +6391,12 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_url = eregi_replace('--A--talk_time_min--B--',"$talk_time_min",$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--agent_log_id--B--',"$CALL_agent_log_id",$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--entry_list_id--B--',"$entry_list_id",$dispo_call_url);
+		$dispo_call_url = eregi_replace('--A--did_id--B--',urlencode(trim($DID_id)),$dispo_call_url);
+		$dispo_call_url = eregi_replace('--A--did_extension--B--',urlencode(trim($DID_extension)),$dispo_call_url);
+		$dispo_call_url = eregi_replace('--A--did_pattern--B--',urlencode(trim($DID_pattern)),$dispo_call_url);
+		$dispo_call_url = eregi_replace('--A--did_description--B--',urlencode(trim($DID_description)),$dispo_call_url);
+		$dispo_call_url = eregi_replace('--A--closecallid--B--',urlencode(trim($INclosecallid)),$dispo_call_url);
+		$dispo_call_url = eregi_replace('--A--xfercallid--B--',urlencode(trim($INxfercallid)),$dispo_call_url);
 
 		if (strlen($FORMcustom_field_names)>2)
 			{

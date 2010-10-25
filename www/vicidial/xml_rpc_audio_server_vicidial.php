@@ -106,7 +106,11 @@ function find_file( $ServerID, $AsteriskID, $QMUserID, $QMUserName )
 			$time_id	= $row[0];
 			$time_id_end = ($time_id + 14400);
 
-			$lead_id = substr($AsteriskID, -10);
+			$lead_id_test = substr($AsteriskID, -10,1);
+			if ($lead_id_test=='0')
+				{$lead_id = substr($AsteriskID, -10);}
+			else
+				{$lead_id = substr($AsteriskID, -9);}
 			$lead_id = ($lead_id + 0);
 			$stmt = "SELECT start_epoch,length_in_sec,location from recording_log where start_epoch>=$time_id and start_epoch<=$time_id_end and lead_id='$lead_id' order by recording_id limit 1;";
 			$rslt=mysql_query($stmt, $link);

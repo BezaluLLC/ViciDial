@@ -119,6 +119,9 @@ exten => _9119XXXXXXXX,1,Dial(${TRUNKblind}/9998819112,55,to)
 ;exten => _91866NXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
 ;exten => _91866NXXXXXX,2,Dial(${TRUNK}/${EXTEN:1},,To)
 ;exten => _91866NXXXXXX,3,Hangup
+;exten => _91855NXXXXXX,1,AGI(agi://127.0.0.1:4577/call_log)
+;exten => _91855NXXXXXX,2,Dial(${TRUNK}/${EXTEN:1},,To)
+;exten => _91855NXXXXXX,3,Hangup
 
 ; dial a long distance outbound number
 ; This 'o' Dial flag is VERY important for VICIDIAL on outbound calls

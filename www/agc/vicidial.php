@@ -319,10 +319,11 @@
 # 101006-1358 - Raised limits on several dynamic items from the database
 # 101008-0356 - Added manual_preview_dial and two new variables for recording filenames
 # 101012-1656 - Added scroll command at dispo submission to for scrolling to the top of the screen
+# 101024-1639 - Added parked call counter
 #
 
-$version = '2.4-296';
-$build = '101012-1656';
+$version = '2.4-297';
+$build = '101024-1639';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=68;
 $one_mysql_log=0;
@@ -2864,6 +2865,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var park_on_extension = '<?php echo $VICIDiaL_park_on_extension ?>';
 	var park_count=0;
 	var customerparked=0;
+	var customerparkedcounter=0;
 	var check_n = 0;
 	var conf_check_recheck = 0;
 	var lastconf='';
@@ -4538,7 +4540,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				var redirectdestination = taskxferconf;
 				var redirectdestserverip = taskserverip;
 				var parkedby = protocol + "/" + extension;
-				xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectToPark&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + park_on_extension + "&ext_context=" + ext_context + "&ext_priority=1&extenName=park&parkedby=" + parkedby + "&session_id=" + session_id + "&CalLCID=" + CalLCID;
+				xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectToPark&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + park_on_extension + "&ext_context=" + ext_context + "&ext_priority=1&extenName=park&parkedby=" + parkedby + "&session_id=" + session_id + "&CalLCID=" + CalLCID + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign;
 
 				document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('FROMParK','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_grabparkedcall.gif\" border=0 alt=\"Grab Parked Call\"></a>";
 				if ( (ivr_park_call=='ENABLED') || (ivr_park_call=='ENABLED_PARK_ONLY') )
@@ -4546,6 +4548,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					document.getElementById("ivrParkControl").innerHTML ="<IMG SRC=\"./images/vdc_LB_grabivrparkcall_OFF.gif\" border=0 alt=\"Grab IVR Parked Call\">";
 					}
 				customerparked=1;
+				customerparkedcounter=0;
 				}
 			if (taskvar == 'FROMParK')
 				{
@@ -4564,7 +4567,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						{var dest_dialstring = session_id;}
 					}
 
-				xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectFromPark&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + dest_dialstring + "&ext_context=" + ext_context + "&ext_priority=1" + "&session_id=" + session_id + "&CalLCID=" + CalLCID;
+				xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectFromPark&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + dest_dialstring + "&ext_context=" + ext_context + "&ext_priority=1" + "&session_id=" + session_id + "&CalLCID=" + CalLCID + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign;
 
 				document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_parkcall.gif\" border=0 alt=\"Park Call\"></a>";
 				if ( (ivr_park_call=='ENABLED') || (ivr_park_call=='ENABLED_PARK_ONLY') )
@@ -4572,6 +4575,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					document.getElementById("ivrParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParKivr','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_ivrparkcall.gif\" border=0 alt=\"IVR Park Call\"></a>";
 					}
 				customerparked=0;
+				customerparkedcounter=0;
 				}
 			if (taskvar == 'ParKivr')
 				{
@@ -4584,7 +4588,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				var redirectdestination = taskxferconf;
 				var redirectdestserverip = taskserverip;
 				var parkedby = protocol + "/" + extension;
-				xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectToParkIVR&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + park_on_extension + "&ext_context=" + ext_context + "&ext_priority=1&extenName=park&parkedby=" + parkedby + "&session_id=" + session_id + "&CalLCID=" + CalLCID;
+				xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectToParkIVR&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + park_on_extension + "&ext_context=" + ext_context + "&ext_priority=1&extenName=park&parkedby=" + parkedby + "&session_id=" + session_id + "&CalLCID=" + CalLCID + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign;
 
 				document.getElementById("ParkControl").innerHTML ="<IMG SRC=\"./images/vdc_LB_parkcall_OFF.gif\" border=0 alt=\"Grab Parked Call\">";
 				if (ivr_park_call=='ENABLED_PARK_ONLY')
@@ -4596,6 +4600,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					document.getElementById("ivrParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('FROMParKivr','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_grabivrparkcall.gif\" border=0 alt=\"Grab IVR Parked Call\"></a>";
 					}
 				customerparked=1;
+				customerparkedcounter=0;
 				}
 			if (taskvar == 'FROMParKivr')
 				{
@@ -4614,7 +4619,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						{var dest_dialstring = session_id;}
 					}
 
-				xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectFromParkIVR&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + dest_dialstring + "&ext_context=" + ext_context + "&ext_priority=1" + "&session_id=" + session_id + "&CalLCID=" + CalLCID;
+				xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectFromParkIVR&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + dest_dialstring + "&ext_context=" + ext_context + "&ext_priority=1" + "&session_id=" + session_id + "&CalLCID=" + CalLCID + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign;
 
 				document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_parkcall.gif\" border=0 alt=\"Park Call\"></a>";
 				if ( (ivr_park_call=='ENABLED') || (ivr_park_call=='ENABLED_PARK_ONLY') )
@@ -4622,6 +4627,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					document.getElementById("ivrParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParKivr','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><IMG SRC=\"./images/vdc_LB_ivrparkcall.gif\" border=0 alt=\"IVR Park Call\"></a>";
 					}
 				customerparked=0;
+				customerparkedcounter=0;
 				}
 
 			var XFRDop = '';
@@ -7989,6 +7995,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				custom_field_names='';
 				custom_field_values='';
 				custom_field_types='';
+				customerparked=0;
+				customerparkedcounter=0;
+				document.getElementById("ParkCounterSpan").innerHTML = '';
 				document.vicidial_form.xfername.value='';
 				document.vicidial_form.xfernumhidden.value='';
 				document.getElementById("debugbottomspan").innerHTML = '';
@@ -10569,6 +10578,16 @@ else
 					XD_live_call_secondS++;
 					document.vicidial_form.xferlength.value		= XD_live_call_secondS;
 					}
+				if (customerparked==1)
+					{
+					customerparkedcounter++;
+					var parked_mm = Math.floor(customerparkedcounter/60);  // The minutes
+					var parked_ss = customerparkedcounter % 60;              // The balance of seconds
+					if (parked_ss < 10)
+						{parked_ss = "0" + parked_ss;}
+					var parked_mmss = parked_mm + ":" + parked_ss;
+					document.getElementById("ParkCounterSpan").innerHTML = "Time On Park: " + parked_mmss;
+					}
 				if (customer_3way_hangup_counter_trigger > 0)
 					{
 					if (customer_3way_hangup_counter > customer_3way_hangup_seconds)
@@ -11310,7 +11329,7 @@ $zi=1;
 	if ($enable_second_webform > 0)
 		{echo "<span STYLE=\"background-color: #FFFFFF\" id=\"WebFormSpanTwo\"><IMG SRC=\"./images/vdc_LB_webform_two_OFF.gif\" border=0 alt=\"Web Form 2\"></span><BR>\n";}
 	?>
-	<span id="SpacerSpanB"><IMG SRC="./images/blank.gif" width=145 height=16 border=0></span><BR>
+	<font class="body_small_bold"><span id="ParkCounterSpan"> &nbsp; </span></font><BR>
 	<span STYLE="background-color: <?php echo $MAIN_COLOR ?>" id="ParkControl"><IMG SRC="./images/vdc_LB_parkcall_OFF.gif" border=0 alt="Park Call"></span><BR>
 	<?php
 	if ( ($ivr_park_call=='ENABLED') or ($ivr_park_call=='ENABLED_PARK_ONLY') )

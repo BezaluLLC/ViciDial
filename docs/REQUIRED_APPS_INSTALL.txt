@@ -635,3 +635,12 @@ Edit the following two lines:
 #> vim /etc/php5/conf.d/eaccelerator.ini
 Add the following line:
 	eaccelerator.allowed_admin_path = "/srv/www/htdocs/"
+
+
+
+!!!!! FOR REFERENCE ONLY, WE CURRENTLY DO NOT SUPPORT THESE VERSIONS OF ASTERISK !!!!!
+
+http://downloads.asterisk.org/pub/telephony/asterisk/releases/asterisk-1.4.36.tar.gz
+http://downloads.asterisk.org/pub/telephony/asterisk/releases/asterisk-1.6.2.13.tar.gz
+http://downloads.asterisk.org/pub/telephony/asterisk/releases/asterisk-1.8.0.tar.gz
+

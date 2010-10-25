@@ -261,6 +261,8 @@ else
 
 $USarea = 			substr($phone_number, 0, 3);
 if (strlen($hopper_priority)<1) {$hopper_priority=0;}
+if ($hopper_priority < -99) {$hopper_priority=-99;}
+if ($hopper_priority > 99) {$hopper_priority=99;}
 
 $StarTtime = date("U");
 $NOW_DATE = date("Y-m-d");

@@ -233,7 +233,7 @@ index (channel)
 );
 
 CREATE TABLE park_log (
-uniqueid VARCHAR(20) PRIMARY KEY NOT NULL,
+uniqueid VARCHAR(20) default '',
 status VARCHAR(10),
 channel VARCHAR(100),
 channel_group VARCHAR(30),
@@ -245,8 +245,12 @@ parked_sec INT(10),
 talked_sec INT(10),
 extension VARCHAR(100),
 user VARCHAR(20),
-index (parked_time)
+lead_id INT(9) UNSIGNED default '0',
+index (parked_time),
+index (lead_id)
 );
+
+CREATE INDEX uniqueid_park on park_log (uniqueid);
 
 CREATE TABLE vicidial_manager (
 man_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -768,7 +772,8 @@ customer_3way_hangup_seconds SMALLINT(5) UNSIGNED default '5',
 customer_3way_hangup_action ENUM('NONE','DISPO') default 'NONE',
 ivr_park_call ENUM('DISABLED','ENABLED','ENABLED_PARK_ONLY','ENABLED_BUTTON_HIDDEN') default 'DISABLED',
 ivr_park_call_agi TEXT,
-manual_preview_dial ENUM('DISABLED','PREVIEW_AND_SKIP','PREVIEW_ONLY') default 'PREVIEW_AND_SKIP'
+manual_preview_dial ENUM('DISABLED','PREVIEW_AND_SKIP','PREVIEW_ONLY') default 'PREVIEW_AND_SKIP',
+realtime_agent_time_stats ENUM('DISABLED','WAIT_CUST_ACW','WAIT_CUST_ACW_PAUSE','CALLS_WAIT_CUST_ACW_PAUSE') default 'CALLS_WAIT_CUST_ACW_PAUSE'
 );
 
 CREATE TABLE vicidial_lists (
@@ -1201,7 +1206,12 @@ hold_sec_stat_two MEDIUMINT(8) UNSIGNED default '0',
 agent_non_pause_sec MEDIUMINT(8) UNSIGNED default '0',
 hold_sec_answer_calls MEDIUMINT(8) UNSIGNED default '0',
 hold_sec_drop_calls MEDIUMINT(8) UNSIGNED default '0',
-hold_sec_queue_calls MEDIUMINT(8) UNSIGNED default '0'
+hold_sec_queue_calls MEDIUMINT(8) UNSIGNED default '0',
+agent_calls_today INT(9) UNSIGNED default '0',
+agent_wait_today BIGINT(14) UNSIGNED default '0',
+agent_custtalk_today BIGINT(14) UNSIGNED default '0',
+agent_acw_today BIGINT(14) UNSIGNED default '0',
+agent_pause_today BIGINT(14) UNSIGNED default '0'
 );
 
 CREATE TABLE vicidial_dnc (
@@ -2002,6 +2012,8 @@ comments VARCHAR(20),
 sub_status VARCHAR(6),
 dead_epoch INT(10) UNSIGNED,
 dead_sec SMALLINT(5) UNSIGNED default '0',
+processed ENUM('Y','N') default 'N',
+uniqueid VARCHAR(20) default '',
 index (lead_id),
 index (user),
 index (event_time)
@@ -2374,7 +2386,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1249',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1250',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

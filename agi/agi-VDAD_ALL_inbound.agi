@@ -796,7 +796,7 @@ if ($call_handle_method =~ /LOOKUP/)
 				### Grab all lists associated with Scampaign_id
 				$cbc=0;
 				$SlistsSQL='';
-				$stmtA = "SELECT list_id FROM vicidial_lists where campaign_id='$Scampaign_id' limit 100;";
+				$stmtA = "SELECT list_id FROM vicidial_lists where campaign_id='$Scampaign_id' limit 1000;";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;

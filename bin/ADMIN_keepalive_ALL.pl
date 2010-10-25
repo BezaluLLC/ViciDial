@@ -56,6 +56,7 @@
 # 100811-2221 - Added --cu3way flag for new optional leave3way cleaning script
 # 100812-0515 - Added --cu3way-delay= flag for setting delay in the leave3way cleaning script
 # 100814-2206 - Added clearing and optimization for vicidial_xfer_stats table
+# 101022-1655 - Added new variables to be cleared from vicidial_cacmpaign_stats table
 #
 
 $DB=0; # Debug flag
@@ -695,7 +696,7 @@ if ($timeclock_end_of_day_NOW > 0)
 	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
 	$sthA->finish();
 
-	$stmtA = "UPDATE vicidial_campaign_stats SET dialable_leads='0', calls_today='0', answers_today='0', drops_today='0', drops_today_pct='0', drops_answers_today_pct='0', calls_hour='0', answers_hour='0', drops_hour='0', drops_hour_pct='0', calls_halfhour='0', answers_halfhour='0', drops_halfhour='0', drops_halfhour_pct='0', calls_fivemin='0', answers_fivemin='0', drops_fivemin='0', drops_fivemin_pct='0', calls_onemin='0', answers_onemin='0', drops_onemin='0', drops_onemin_pct='0', differential_onemin='0', agents_average_onemin='0', balance_trunk_fill='0', status_category_count_1='0', status_category_count_2='0', status_category_count_3='0', status_category_count_4='0';";
+	$stmtA = "UPDATE vicidial_campaign_stats SET dialable_leads='0', calls_today='0', answers_today='0', drops_today='0', drops_today_pct='0', drops_answers_today_pct='0', calls_hour='0', answers_hour='0', drops_hour='0', drops_hour_pct='0', calls_halfhour='0', answers_halfhour='0', drops_halfhour='0', drops_halfhour_pct='0', calls_fivemin='0', answers_fivemin='0', drops_fivemin='0', drops_fivemin_pct='0', calls_onemin='0', answers_onemin='0', drops_onemin='0', drops_onemin_pct='0', differential_onemin='0', agents_average_onemin='0', balance_trunk_fill='0', status_category_count_1='0', status_category_count_2='0', status_category_count_3='0', status_category_count_4='0',agent_calls_today='0',agent_pause_today='0',agent_wait_today='0',agent_custtalk_today='0',agent_acw_today='0';";
 	if($DBX){print STDERR "\n|$stmtA|\n";}
 	$affected_rows = $dbhA->do($stmtA);
 	if($DB){print STDERR "\n|$affected_rows vicidial_campaign_stats records reset|\n";}
@@ -712,7 +713,7 @@ if ($timeclock_end_of_day_NOW > 0)
 	$stmtA = "UPDATE vicidial_drop_rate_groups SET calls_today='0', answers_today='0', drops_today='0', drops_today_pct='0', drops_answers_today_pct='0';";
 	if($DBX){print STDERR "\n|$stmtA|\n";}
 	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_campaign_stats records reset|\n";}
+	if($DB){print STDERR "\n|$affected_rows vicidial_drop_rate_groups records reset|\n";}
 
 	$stmtA = "optimize table vicidial_drop_rate_groups;";
 	if($DBX){print STDERR "\n|$stmtA|\n";}

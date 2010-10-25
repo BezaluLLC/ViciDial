@@ -101,10 +101,11 @@
 # 100527-1014 - Added SysCIDdtmfOriginate function
 # 100813-0833 - Added preset_name variable and logging
 # 101004-1345 - Added Ivr park functions
+# 101024-1638 - Added park_log logging for parked calls
 #
 
-$version = '2.4-51';
-$build = '101004-1345';
+$version = '2.4-52';
+$build = '101024-1638';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=97;
 $one_mysql_log=0;
@@ -838,6 +839,11 @@ if ($ACTION=="RedirectToPark")
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02025',$user,$server_ip,$session_name,$one_mysql_log);}
 		$ACTION="Redirect";
 
+		$stmt = "INSERT INTO park_log SET uniqueid='$uniqueid',status='PARKED',channel='$channel',channel_group='$campaign',server_ip='$server_ip',parked_time='$NOW_TIME',parked_sec=0,extension='$CalLCID',user='$user',lead_id='$lead_id';";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
 	#	$fp = fopen ("./vicidial_debug.txt", "a");
 	#	fwrite ($fp, "$NOW_TIME|MS_LOG_0|$queryCID|$stmt|\n");
 	#	fclose($fp);
@@ -870,6 +876,22 @@ if ($ACTION=="RedirectFromPark")
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02026',$user,$server_ip,$session_name,$one_mysql_log);}
 		$ACTION="Redirect";
+
+		$parked_sec=0;
+		$stmt = "SELECT UNIX_TIMESTAMP(parked_time) FROM park_log where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' and (parked_sec < 1 or grab_time is NULL) order by parked_time desc limit 1;";
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		$VAC_pl_ct = mysql_num_rows($rslt);
+		if ($VAC_pl_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$parked_sec	= ($StarTtime - $row[0]);
+
+			$stmt = "UPDATE park_log SET status='GRABBED',grab_time='$NOW_TIME',parked_sec='$parked_sec' where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' order by parked_time desc limit 1;";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			}
 		}
 
 	$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
@@ -906,6 +928,11 @@ if ($ACTION=="RedirectToParkIVR")
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02088',$user,$server_ip,$session_name,$one_mysql_log);}
+
+		$stmt = "INSERT INTO park_log SET uniqueid='$uniqueid',status='IVRPARKED',channel='$channel',channel_group='$campaign',server_ip='$server_ip',parked_time='$NOW_TIME',parked_sec=0,extension='$CalLCID',user='$user',lead_id='$lead_id';";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 
 	#	$fp = fopen ("./vicidial_debug.txt", "a");
 	#	fwrite ($fp, "$NOW_TIME|MS_LOG_0|$queryCID|$stmt|\n");
@@ -944,6 +971,22 @@ if ($ACTION=="RedirectFromParkIVR")
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02090',$user,$server_ip,$session_name,$one_mysql_log);}
+
+		$parked_sec=0;
+		$stmt = "SELECT UNIX_TIMESTAMP(parked_time) FROM park_log where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' and (parked_sec < 1 or grab_time is NULL) order by parked_time desc limit 1;";
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		$VAC_pl_ct = mysql_num_rows($rslt);
+		if ($VAC_pl_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$parked_sec	= ($StarTtime - $row[0]);
+
+			$stmt = "UPDATE park_log SET status='GRABBEDIVR',grab_time='$NOW_TIME',parked_sec='$parked_sec' where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' order by parked_time desc limit 1;";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			}
 		}
 
 	$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";

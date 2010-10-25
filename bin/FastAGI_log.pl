@@ -401,7 +401,7 @@ sub process_request
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
 				@aryA = $sthA->fetchrow_array;
-				$is_client_phone	 = "$aryA[0]";
+				$is_client_phone	 = $aryA[0];
 				$sthA->finish();
 
 				if ($is_client_phone < 1)
@@ -425,7 +425,7 @@ sub process_request
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
 				@aryA = $sthA->fetchrow_array;
-				$is_client_phone	 = "$aryA[0]";
+				$is_client_phone	 = $aryA[0];
 				$sthA->finish();
 
 				if ($is_client_phone < 1)
@@ -473,8 +473,8 @@ sub process_request
 				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$cmd_line_b	=	"$aryA[0]";
-					$cmd_line_d	=	"$aryA[1]";
+					$cmd_line_b	=	$aryA[0];
+					$cmd_line_d	=	$aryA[1];
 					$cmd_line_b =~ s/Exten: //gi;
 					$cmd_line_d =~ s/Channel: Local\/|@.*//gi;
 					$rec_count++;
@@ -702,7 +702,7 @@ sub process_request
 				$affected_rows = $dbhA->do($stmtA);
 
 			##### BEGIN Park Log entry check and update #####
-				$stmtA = "SELECT UNIX_TIMESTAMP(parked_time),UNIX_TIMESTAMP(grab_time) FROM park_log where uniqueid='$unique_id' and server_ip='$VARserver_ip' LIMIT 1;";
+				$stmtA = "SELECT UNIX_TIMESTAMP(parked_time),UNIX_TIMESTAMP(grab_time) FROM park_log where uniqueid='$unique_id' and server_ip='$VARserver_ip' and (parked_sec is null or parked_sec < 1) order by parked_time desc LIMIT 1;";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -710,8 +710,8 @@ sub process_request
 				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$parked_time	=			"$aryA[0]";
-					$grab_time	=			"$aryA[1]";
+					$parked_time	=		$aryA[0];
+					$grab_time	=			$aryA[1];
 					if ($AGILOG) {$agi_string = "|$aryA[0]|$aryA[1]|";   &agi_output;}
 					$rec_count++;
 					}
@@ -731,7 +731,7 @@ sub process_request
 						$parked_sec=($grab_time - $parked_time);
 						}
 
-					$stmtA = "UPDATE park_log set status='HUNGUP',hangup_time='$now_date',parked_sec='$parked_sec',talked_sec='$talked_sec' where uniqueid='$unique_id' and server_ip='$VARserver_ip'";
+					$stmtA = "UPDATE park_log set status='HUNGUP',hangup_time='$now_date',parked_sec='$parked_sec',talked_sec='$talked_sec' where uniqueid='$unique_id' and server_ip='$VARserver_ip' order by parked_time desc LIMIT 1";
 					$affected_rows = $dbhA->do($stmtA);
 					}
 			##### END Park Log entry check and update #####
@@ -779,7 +779,7 @@ sub process_request
 					if ($sthArows > 0)
 						{
 						@aryA = $sthA->fetchrow_array;
-						$cpd_result		= "$aryA[0]";
+						$cpd_result		= $aryA[0];
 						$sthA->finish();
 						if ($cpd_result =~ /Busy/i)					{$VDL_status='CPDB';	$VDAC_status='BUSY';   $CPDfound++;}
 						if ($cpd_result =~ /Unknown/i)				{$VDL_status='CPDUK';	$VDAC_status='NA';   $CPDfound++;}
@@ -1028,12 +1028,12 @@ sub process_request
 								if ($sthArows > 0)
 									{
 									@aryA = $sthA->fetchrow_array;
-									$VD_start_epoch	=	"$aryA[0]";
-									$VD_status =		"$aryA[1]";
-									$VD_user =			"$aryA[2]";
-									$VD_term_reason =	"$aryA[3]";
-									$VD_comments =		"$aryA[4]";
-									 $epc_countCUSTDATA++;
+									$VD_start_epoch	=	$aryA[0];
+									$VD_status =		$aryA[1];
+									$VD_user =			$aryA[2];
+									$VD_term_reason =	$aryA[3];
+									$VD_comments =		$aryA[4];
+									$epc_countCUSTDATA++;
 									}
 								$sthA->finish();
 								}
@@ -1064,14 +1064,14 @@ sub process_request
 								if ($sthArows > 0)
 									{
 									@aryA = $sthA->fetchrow_array;
-									$VD_start_epoch	=	"$aryA[0]";
-									$VD_status =		"$aryA[1]";
-									$VD_closecallid	=	"$aryA[2]";
-									$VD_user =			"$aryA[3]";
-									$VD_term_reason =	"$aryA[4]";
-									$VD_length_in_sec =	"$aryA[5]";
-									$VD_queue_seconds =	"$aryA[6]";
-									$VD_comments =		"$aryA[7]";
+									$VD_start_epoch	=	$aryA[0];
+									$VD_status =		$aryA[1];
+									$VD_closecallid	=	$aryA[2];
+									$VD_user =			$aryA[3];
+									$VD_term_reason =	$aryA[4];
+									$VD_length_in_sec =	$aryA[5];
+									$VD_queue_seconds =	$aryA[6];
+									$VD_comments =		$aryA[7];
 									 $epc_countCUSTDATA++;
 									}
 								$sthA->finish();

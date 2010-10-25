@@ -461,6 +461,8 @@ Estimated Hold Time Minimum Prompt Seconds||
 This field needs to be set to the number of seconds that the Estimated Hold Time Minimum Filename prompt plays for. Default is 10||
 This field allows you to customize the name of the recording when Campaign recording is ONDEMAND or ALLCALLS. The allowed variables are||
 The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this||
+Real-Time Agent Time Stats||
+Setting this to anything but DISABLED will enable the gathering of agent time stats for today for this campaign, that are viewable through the Real-Time report. CALLS are the average calls handled per agent, WAIT is the average agent wait time, CUST is the average customer talk time, ACW is the average After Call Work time, PAUSE is the average pause time. Default is DISABLED||
 
 
 AST_LISTS_campaign_stats.php

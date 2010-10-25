@@ -1,13 +1,13 @@
 #!/usr/bin/perl
 #
-# AST_VDsales_export.pl                version: 2.2.0
+# AST_VDsales_export.pl                version: 2.4
 #
 # This script is designed to gather sales for a VICIDIAL Outbound-only campaign and
 # post them to a directory
 #
 # /usr/share/astguiclient/AST_VDsales_export.pl --campaign=GOODB-GROUP1-GROUP3-GROUP4-SPECIALS-DNC_BEDS --output-format=fixed-as400 --sale-statuses=SALE --debug --filename=BEDSsaleMMDD.txt --date=yesterday --email-list=test@gmail.com --email-sender=test@test.com
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61219-1118 - First version
@@ -26,6 +26,7 @@
 # 90825-1249 - Added without-camp and without-in options 
 # 90902-0437 - Added outbound-calltime-ignore and ftp-norun options
 # 90909-2322 - Added totals-only option
+# 101022-1022 - Added hours minutes seconds to filename variables
 #
 
 $txt = '.txt';
@@ -105,7 +106,7 @@ if (length($ARGV[0])>1)
 		print "allowed run time options:\n";
 		print "  [--date=YYYY-MM-DD] = date override\n";
 		print "  [--hour-offset=X] = print datetime strings with this hour offset\n";
-		print "  [--filename=XXX] = Name to be used for file\n";
+		print "  [--filename=XXX] = Name to be used for file, variables: YYYY=year, MM=month, DD=day, HH=hour, II=minute, SS=second\n";
 		print "  [--campaign=XXX] = Campaign that sales will be pulled from\n";
 		print "  [--without-camp=XXX] = Campaign that will be excluded from ALL\n";
 		print "  [--sale-statuses=XXX-XXY] = Statuses that are deemed to be \"Sales\". Default SALE\n";
@@ -236,6 +237,9 @@ if (length($ARGV[0])>1)
 			$filename =~ s/YYYY/$year/gi;
 			$filename =~ s/MM/$mon/gi;
 			$filename =~ s/DD/$mday/gi;
+			$filename =~ s/HH/$hour/gi;
+			$filename =~ s/II/$min/gi;
+			$filename =~ s/SS/$sec/gi;
 			$filename_override=1;
 			}
 		if ($args =~ /--sale-statuses=/i)
