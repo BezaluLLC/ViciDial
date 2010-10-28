@@ -644,3 +644,6 @@ http://downloads.asterisk.org/pub/telephony/asterisk/releases/asterisk-1.4.36.ta
 http://downloads.asterisk.org/pub/telephony/asterisk/releases/asterisk-1.6.2.13.tar.gz
 http://downloads.asterisk.org/pub/telephony/asterisk/releases/asterisk-1.8.0.tar.gz
 
+http://downloads.asterisk.org/pub/telephony/asterisk/releases/asterisk-addons-1.4.12.tar.gz
+http://downloads.asterisk.org/pub/telephony/asterisk/releases/asterisk-addons-1.6.2.2.tar.gz
+

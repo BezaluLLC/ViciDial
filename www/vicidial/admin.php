@@ -22183,7 +22183,7 @@ if ($ADD==3111)
 		echo "<TABLE width=600 cellspacing=3>\n";
 		echo "<tr><td>USER</td><td>SELECTED</td><td> &nbsp; &nbsp; RANK</td><td> &nbsp; &nbsp; CALLS TODAY</td></tr>\n";
 
-		$stmt="SELECT vu.user,viga.group_rank,calls_today,full_name,closer_campaigns from vicidial_inbound_group_agents viga, vicidial_users vu where group_id='$group_id' and active='Y' and vu.user=viga.user;";
+		$stmt="SELECT user,full_name,closer_campaigns from vicidial_users where active='Y';";
 		$rsltx=mysql_query($stmt, $link);
 		$users_to_print = mysql_num_rows($rsltx);
 
@@ -22194,14 +22194,50 @@ if ($ADD==3111)
 			$o++;
 
 			$ARIG_user[$o] =	$rowx[0];
-			$ARIG_rank[$o] =	$rowx[1];
-			$ARIG_calls[$o] =	$rowx[2];
-			$ARIG_name[$o] =	$rowx[3];
-			$ARIG_close[$o] =	$rowx[4];
+			$ARIG_name[$o] =	$rowx[1];
+			$ARIG_close[$o] =	$rowx[2];
 			$ARIG_check[$o] =	'';
 			if (preg_match("/ $group_id /",$ARIG_close[$o]))
 				{$ARIG_check[$o] = ' CHECKED';}
 			}
+
+		$o=0;
+		$ARIG_changenotes='';
+		$stmtDlog='';
+		while ($users_to_print > $o) 
+			{
+			$o++;
+			$stmt="SELECT group_rank,calls_today from vicidial_inbound_group_agents where group_id='$group_id' and user='$ARIG_user[$o]';";
+			$rsltx=mysql_query($stmt, $link);
+			$viga_to_print = mysql_num_rows($rsltx);
+			if ($viga_to_print > 0) 
+				{
+				$rowx=mysql_fetch_row($rsltx);
+				$ARIG_rank[$o] =	$rowx[0];
+				$ARIG_calls[$o] =	$rowx[1];
+				}
+			else
+				{
+				$stmtD="INSERT INTO vicidial_inbound_group_agents set calls_today='0',group_rank='0',group_weight='0',user='$ARIG_user[$o]',group_id='$group_id';";
+				$rslt=mysql_query($stmtD, $link);
+				if ($DB > 0) {echo "|$stmtD|";}
+				$stmtDlog .= "$stmtD|";
+				$ARIG_changenotes .= "added missing user to viga table $ARIG_user[$o]|";
+				$ARIG_rank[$o] =	'0';
+				$ARIG_calls[$o] =	'0';
+				}
+			}
+		if (strlen($ARIG_changenotes) > 10)
+			{
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmtDlog|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='INGROUPS', event_type='MODIFY', record_id='$group_id', event_code='USER INGROUP VIGA ADD', event_sql=\"$SQL_log\", event_notes='$ARIG_changenotes';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
+
 
 		if ($stage=='SUBMIT')
 			{
