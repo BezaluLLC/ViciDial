@@ -202,6 +202,8 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			$Aagent_log_id='';
 			$Acallerid='';
 			$DEADcustomer=0;
+			$Astatus='';
+			$Acampaign_id='';
 
 			### see if the agent has a record in the vicidial_live_agents table
 			$stmt="SELECT count(*) from vicidial_live_agents where user='$user' and server_ip='$server_ip';";

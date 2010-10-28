@@ -96,12 +96,16 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 			$last_rank = $o;
 			$select_SQL = preg_replace("/.$/",'',$select_SQL);
 
-			##### BEGIN grab the data from custom table for the lead_id
-			$stmt="SELECT $select_SQL FROM custom_$list_id where lead_id='$lead_id' LIMIT 1;";
-			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05005',$user,$server_ip,$session_name,$one_mysql_log);}
-			if ($DB) {echo "$stmt\n";}
-			$list_lead_ct = mysql_num_rows($rslt);
+			$list_lead_ct=0;
+			if (strlen($select_SQL)>0)
+				{
+				##### BEGIN grab the data from custom table for the lead_id
+				$stmt="SELECT $select_SQL FROM custom_$list_id where lead_id='$lead_id' LIMIT 1;";
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05005',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$list_lead_ct = mysql_num_rows($rslt);
+				}
 			if ($list_lead_ct > 0)
 				{
 				$row=mysql_fetch_row($rslt);
@@ -457,6 +461,20 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 		$CFoutput = eregi_replace('--A--user_custom_three--B--',"$user_custom_three",$CFoutput);
 		$CFoutput = eregi_replace('--A--user_custom_four--B--',"$user_custom_four",$CFoutput);
 		$CFoutput = eregi_replace('--A--user_custom_five--B--',"$user_custom_five",$CFoutput);
+		$CFoutput = eregi_replace('--A--preset_number_a--B--',"$preset_number_a",$CFoutput);
+		$CFoutput = eregi_replace('--A--preset_number_b--B--',"$preset_number_b",$CFoutput);
+		$CFoutput = eregi_replace('--A--preset_number_c--B--',"$preset_number_c",$CFoutput);
+		$CFoutput = eregi_replace('--A--preset_number_d--B--',"$preset_number_d",$CFoutput);
+		$CFoutput = eregi_replace('--A--preset_number_e--B--',"$preset_number_e",$CFoutput);
+		$CFoutput = eregi_replace('--A--preset_dtmf_a--B--',"$preset_dtmf_a",$CFoutput);
+		$CFoutput = eregi_replace('--A--preset_dtmf_b--B--',"$preset_dtmf_b",$CFoutput);
+		$CFoutput = eregi_replace('--A--did_id--B--',"$did_id",$CFoutput);
+		$CFoutput = eregi_replace('--A--did_extension--B--',"$did_extension",$CFoutput);
+		$CFoutput = eregi_replace('--A--did_pattern--B--',"$did_pattern",$CFoutput);
+		$CFoutput = eregi_replace('--A--did_description--B--',"$did_description",$CFoutput);
+		$CFoutput = eregi_replace('--A--closecallid--B--',"$closecallid",$CFoutput);
+		$CFoutput = eregi_replace('--A--xfercallid--B--',"$xfercallid",$CFoutput);
+		$CFoutput = eregi_replace('--A--agent_log_id--B--',"$agent_log_id",$CFoutput);
 
 		# custom fields replacement
 		$o=0;

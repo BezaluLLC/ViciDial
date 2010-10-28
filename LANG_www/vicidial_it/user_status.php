@@ -1,7 +1,7 @@
 <?php
 # user_status.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -14,6 +14,7 @@
 # 91012-0536 - Added selected territories display
 # 91130-2039 - Added user closer log manager flag display
 # 91212-0656 - Added more complete logging of Emergency Logout process
+# 100309-0544 - Added queuemetrics_loginout option
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -338,7 +339,7 @@ if ($stage == "log_agent_out")
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "<BR>$stmt\n";}
 		$qm_conf_ct = mysql_num_rows($rslt);
@@ -351,11 +352,16 @@ if ($stage == "log_agent_out")
 			$queuemetrics_login	=			$row[3];
 			$queuemetrics_pass =			$row[4];
 			$queuemetrics_log_id =			$row[5];
+			$queuemetrics_loginout =		$row[6];
 			}
 		##### END QUEUEMETRICS LOGGING LOOKUP #####
 		###########################################
 		if ($enable_queuemetrics_logging > 0)
 			{
+			$QM_LOGOFF = 'AGENTLOGOFF';
+			if ($queuemetrics_loginout=='CALLBACK')
+				{$QM_LOGOFF = 'AGENTCALLBACKLOGOFF';}
+
 			$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
 			mysql_select_db("$queuemetrics_dbname", $linkB);
 
@@ -363,7 +369,7 @@ if ($stage == "log_agent_out")
 			$agent_logged_in='';
 			$time_logged_in='';
 
-			$stmtB = "SELECT agent,time_id FROM queue_log where agent='Agent/" . mysql_real_escape_string($user) . "' and verb='AGENTLOGIN' order by time_id desc limit 1;";
+			$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/" . mysql_real_escape_string($user) . "' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') order by time_id desc limit 1;";
 			$rsltB=mysql_query($stmtB, $linkB);
 			if ($DB) {echo "<BR>$stmtB\n";}
 			$qml_ct = mysql_num_rows($rsltB);
@@ -372,12 +378,13 @@ if ($stage == "log_agent_out")
 				$row=mysql_fetch_row($rsltB);
 				$agent_logged_in =	$row[0];
 				$time_logged_in =	$row[1];
+				$phone_logged_in =	$row[2];
 				}
 
 			$time_logged_in = ($now_date_epoch - $time_logged_in);
 			if ($time_logged_in > 1000000) {$time_logged_in=1;}
 
-			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='AGENTLOGOFF',serverid='$queuemetrics_log_id',data1='" . mysql_real_escape_string($user) . "$agents',data2='$time_logged_in';";
+			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
 			if ($DB) {echo "<BR>$stmtB\n";}
 			$rsltB=mysql_query($stmtB, $linkB);
 			}

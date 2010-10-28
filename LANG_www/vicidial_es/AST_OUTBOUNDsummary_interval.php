@@ -9,6 +9,9 @@
 # 091129-0017 - Added Sales-type and DNC-type tallies
 # 100214-1421 - Sort menu alphabetically
 # 100216-0042 - Added popup date selector
+# 100712-1324 - Added system setting slave server option
+# 100802-2347 - Added User Group Allowed Reports option validation
+# 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 #
 
 require("dbconnect.php");
@@ -50,9 +53,12 @@ $MT[0]='0';
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($include_rollover)<2) {$include_rollover='NO';}
 
+$report_name = 'Outbound Summary Interval Report';
+$db_source = 'M';
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -60,9 +66,21 @@ if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
+	$outbound_autodial_active =		$row[1];
+	$slave_db_server =				$row[2];
+	$reports_use_slave_db =			$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	}
 
 $stmt = "SELECT local_gmt FROM servers where active='Y' limit 1;";
 $rslt=mysql_query($stmt, $link);
@@ -91,6 +109,12 @@ if ($records_to_print > 0)
 	$auth++;
 	}
 
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$reports_only_user=$row[0];
+
 if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
@@ -101,27 +125,30 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
-if ($user_level < 9)
+$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$user_group';";
+$rslt=mysql_query($stmt, $link);
+$records_to_print = mysql_num_rows($rslt);
+if ($records_to_print > 0)
 	{
-	$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$user_group';";
-	$rslt=mysql_query($stmt, $link);
-	$records_to_print = mysql_num_rows($rslt);
-	if ($records_to_print > 0)
+	$row=mysql_fetch_row($rslt);
+	$LOGallowed_reports =	$row[1];
+	if ( (!eregi("ALL-CAMPAIGNS",$row[0])) )
 		{
-		$row=mysql_fetch_row($rslt);
-		if ( (!eregi("ALL-CAMPAIGNS",$row[0])) )
-			{
-			$rawLOGallowed_campaignsSQL = eregi_replace(' -','',$row[0]);
-			$rawLOGallowed_campaignsSQL = eregi_replace(' ',"','",$rawLOGallowed_campaignsSQL);
-			$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
-			$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
-			}
+		$rawLOGallowed_campaignsSQL = eregi_replace(' -','',$row[0]);
+		$rawLOGallowed_campaignsSQL = eregi_replace(' ',"','",$rawLOGallowed_campaignsSQL);
+		$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+		$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
 		}
-	else
+	if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 		{
-		echo "Campaigns Permissions Error: |$PHP_AUTH_USER|$user_group|\n";
+		echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
 		exit;
 		}
+	}
+else
+	{
+	echo "Campaigns Permissions Error: |$PHP_AUTH_USER|$user_group|\n";
+	exit;
 	}
 
 $NOW_DATE = date("Y-m-d");
@@ -163,10 +190,6 @@ $group_string='|';
 $group_ct = count($group);
 while($i < $group_ct)
 	{
-	$group_string .= "$group[$i]|";
-	$group_SQL .= "'$group[$i]',";
-	$groupQS .= "&group[]=$group[$i]";
-
 	$stmt="select campaign_name from vicidial_campaigns where campaign_id='$group[$i]' $LOGallowed_campaignsSQL;";
 	$rslt=mysql_query($stmt, $link);
 	$campaign_names_to_print = mysql_num_rows($rslt);
@@ -174,6 +197,9 @@ while($i < $group_ct)
 		{
 		$row=mysql_fetch_row($rslt);
 		$group_cname[$i] =	$row[0];
+		$group_string .= "$group[$i]|";
+		$group_SQL .= "'$group[$i]',";
+		$groupQS .= "&group[]=$group[$i]";
 		}
 
 	if (eregi("YES",$include_rollover))
@@ -336,7 +362,7 @@ echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>Outbound Summary Interval Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 if ($bareformat < 1)
 	{
@@ -1167,8 +1193,8 @@ else
 			$hTOTcalls_count =			sprintf("%6s", $hTOTcalls_count);
 			$hTOTsystem_count =			sprintf("%6s", $hTOTsystem_count);
 			$hTOTagent_count =			sprintf("%6s", $hTOTagent_count);
-			$hTOTptp_count =			sprintf("%6s", $hTOTrtp_count);
-			$hTOTrtp_count =			sprintf("%6s", $hTOTptp_count);
+			$hTOTptp_count =			sprintf("%6s", $hTOTptp_count);
+			$hTOTrtp_count =			sprintf("%6s", $hTOTrtp_count);
 			if ( ($hTOTcalls_count < 1) or ($hTOTna_count < 1) )
 				{$hTOTna_percent=0;}
 			else
@@ -1268,7 +1294,7 @@ else
 
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $STARTtime);
-	echo "\n\nRun Time: $RUNtime seconds\n";
+	echo "\n\nRun Time: $RUNtime seconds|$db_source\n";
 	}
 
 

@@ -616,7 +616,7 @@ if ($lead_search > 0)
 			if (!$rslt) {die('Could not execute: ' . mysql_error());}
 			
 			#Vtiger no longer use auto increment for vtiger_crmentity crmid, vtiger_crmentity_seq is used instead to list next aviable entity ID
-			# Get next aviable id to use as  crmid in vtiger_crmentity	
+			# Get next available id to use as  crmid in vtiger_crmentity	
 			$stmt="SELECT id from vtiger_crmentity_seq ;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $linkV);
@@ -624,7 +624,7 @@ if ($lead_search > 0)
 			$leadid = ($row[0] + 1);
 			if (!$rslt) {die('Could not execute: ' . mysql_error());}
 
-			# Increase 	next aviable crmid with 1 so next record gets proper id
+			# Increase 	next available crmid with 1 so next record gets proper id
 			$stmt="UPDATE vtiger_crmentity_seq SET id = '$leadid';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $linkV);
@@ -644,7 +644,7 @@ if ($lead_search > 0)
 			if (!$rslt) {die('Could not execute: ' . mysql_error());}
 
 			#Insert values into vtiger_leaddetails
-			$stmt = "INSERT INTO vtiger_leadaddress (leadaddressid,city,code,state,country,phone,mobile,lane) values('$leadid','$city','$postal_code','$province','$country','$phone','$alt_phone','$address1 $address2');";
+			$stmt = "INSERT INTO vtiger_leadaddress (leadaddressid,city,code,state,country,phone,mobile,lane) values('$leadid','$city','$postal_code','$state','$country','$phone','$alt_phone','$address1 $address2');";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $linkV);
 			if (!$rslt) {die('Could not execute: ' . mysql_error());}

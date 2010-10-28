@@ -1,17 +1,18 @@
 <?php
 # audio_store.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Central Audio Storage script
 # 
 # CHANGES
 # 90511-1325 - First build
 # 90618-0640 - Fix for users going through proxy or tunnel
+# 100401-1037 - remove spaces and special characters from filenames, admin log uploads
 #
 
-$version = '2.2.0-2';
-$build = '90618-0640';
+$version = '2.2.0-3';
+$build = '100401-1037';
 
 $MT[0]='';
 
@@ -191,8 +192,12 @@ if ($action == "LIST")
 # curl 'http://10.0.0.4/vicidial/audio_store.php?action=AUTOUPLOAD' -F "audiofile=@/var/lib/asterisk/sounds/beep.gsm"
 if ($action == "AUTOUPLOAD")
 	{
-	if ($audiofile) 
+	if ($audiofile)
 		{
+		$AF_path = preg_replace("/ /",'\ ',$AF_path);
+		$AF_path = preg_replace("/@/",'\@',$AF_path);
+		$audiofile_name = preg_replace("/ /",'',$audiofile_name);
+		$audiofile_name = preg_replace("/@/",'',$audiofile_name);
 		copy($AF_path, "$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
 		chmod("$WeBServeRRooT/$sounds_web_directory/$audiofile_name", 0766);
 
@@ -277,12 +282,24 @@ if ($action == "MANUALUPLOAD")
 	{
 	if ($audiofile) 
 		{
+		$AF_path = preg_replace("/ /",'\ ',$AF_path);
+		$AF_path = preg_replace("/@/",'\@',$AF_path);
+		$audiofile_name = preg_replace("/ /",'',$audiofile_name);
+		$audiofile_name = preg_replace("/@/",'',$audiofile_name);
 		copy($AF_path, "$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
 		chmod("$WeBServeRRooT/$sounds_web_directory/$audiofile_name", 0766);
 		
 		echo "SUCCESS: $audiofile_name uploaded     size:" . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "\n";
 
 		$stmt="UPDATE servers SET sounds_update='Y';";
+		$rslt=mysql_query($stmt, $link);
+
+		### LOG INSERTION Admin Log Table ###
+		$SQL_log = "$stmt|";
+		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = addslashes($SQL_log);
+		$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='AUDIOSTORE', event_type='LOAD', record_id='manualupload', event_code='$audiofile_name " . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "', event_sql=\"$SQL_log\", event_notes='$audiofile_name $AF_path $AF_orig';";
+		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
 		}
 	else
@@ -309,8 +326,18 @@ if ($action == "MANUALUPLOAD")
   <tr><td align=left><font size=1> &nbsp; </font></td><td align=right><font size=1>Audio Store- &nbsp; &nbsp; VERSION: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
 </table>
 <BR><BR>
-<CENTER><B>We STRONGLY recommend uploading only 16bit 8k PCM WAV audio files(.wav)
-<BR><BR>
-<a href="javascript:launch_chooser('sample_prompt','date',30);">audio file list</a></CENTER>
+<CENTER><B>We STRONGLY recommend uploading only 16bit Mono 8k PCM WAV audio files(.wav)</B>
+<BR><BR><font size=1>All spaces will be stripped from uploaded audio file names</font><BR><BR>
+<B><a href="javascript:launch_chooser('sample_prompt','date',30);">audio file list</a></CENTER>
+
+
+
+<?php
+
+echo "<BR><BR><BR><BR><BR><BR>\n";
+
+echo "</B></B><br><br><a href=\"admin.php?ADD=720000000000000&category=AUDIOSTORE&stage=manualupload\">Click here to see a log of the uploads to the audio store</FONT>\n";
+
+?>
 
 </TD></TR></TABLE>

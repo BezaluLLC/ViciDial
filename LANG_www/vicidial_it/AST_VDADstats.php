@@ -26,6 +26,10 @@
 # 100202-1034 - Added statuses to no-answer section
 # 100214-1421 - Sort menu alphabetically
 # 100216-0042 - Added popup date selector
+# 100712-1324 - Added system setting slave server option
+# 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
+# 100814-2307 - Added display of preset dials if presets are enabled in the campaign
+# 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -73,10 +77,12 @@ if (strlen($bottom_graph)<2) {$bottom_graph='NO';}
 if (strlen($carrier_stats)<2) {$carrier_stats='NO';}
 if (strlen($include_rollover)<2) {$include_rollover='NO';}
 
+$report_name = 'Outbound Calling Report';
+$db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -84,9 +90,21 @@ if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
+	$outbound_autodial_active =		$row[1];
+	$slave_db_server =				$row[2];
+	$reports_use_slave_db =			$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	}
 
 ##### SERVER CARRIER LOGGING LOOKUP #####
 $stmt = "SELECT count(*) FROM servers where carrier_logging_active='Y' and max_vicidial_trunks > 0;";
@@ -99,18 +117,45 @@ if ($srv_conf_ct > 0)
 	$carrier_logging_active =		$row[0];
 	}
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1';";
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1' and active='Y';";
 if ($DB) {echo "|$stmt|\n";}
 if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$reports_only_user=$row[0];
+
 if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "Utentename/Password non validi: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
+    exit;
+	}
+
+$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGuser_group =			$row[0];
+
+$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns = $row[0];
+$LOGallowed_reports =	$row[1];
+
+if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORT/",$LOGallowed_reports)) )
+	{
+    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("HTTP/1.0 401 Unauthorized");
+    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -130,7 +175,18 @@ while($i < $group_ct)
 	$i++;
 	}
 
-$stmt="select campaign_id,campaign_name from vicidial_campaigns order by campaign_id;";
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
+$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
+
+$stmt="select campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $campaigns_to_print = mysql_num_rows($rslt);
@@ -140,7 +196,7 @@ while ($i < $campaigns_to_print)
 	$row=mysql_fetch_row($rslt);
 	$groups[$i] =		$row[0];
 	$group_names[$i] =	$row[1];
-	if (ereg("--ALL",$group_string) )
+	if (ereg("-ALL",$group_string) )
 		{$group[$i] = $groups[$i];}
 	$i++;
 	}
@@ -151,13 +207,16 @@ $group_string='|';
 $group_ct = count($group);
 while($i < $group_ct)
 	{
-	$group_string .= "$group[$i]|";
-	$group_SQL .= "'$group[$i]',";
-	$groupQS .= "&group[]=$group[$i]";
+	if ( (preg_match("/ $group[$i] /",$regexLOGallowed_campaigns)) or (preg_match("/-ALL/",$LOGallowed_campaigns)) )
+		{
+		$group_string .= "$group[$i]|";
+		$group_SQL .= "'$group[$i]',";
+		$groupQS .= "&group[]=$group[$i]";
+		}
 
 	if (eregi("YES",$include_rollover))
 		{
-		$stmt="select drop_inbound_group from vicidial_campaigns where campaign_id='$group[$i]' and drop_inbound_group NOT LIKE \"%NONE%\" and drop_inbound_group is NOT NULL and drop_inbound_group != '';";
+		$stmt="select drop_inbound_group from vicidial_campaigns where campaign_id='$group[$i]' $LOGallowed_campaignsSQL and drop_inbound_group NOT LIKE \"%NONE%\" and drop_inbound_group is NOT NULL and drop_inbound_group != '';";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$in_groups_to_print = mysql_num_rows($rslt);
@@ -174,9 +233,9 @@ while($i < $group_ct)
 	}
 if (strlen($group_drop_SQL) < 2)
 	{$group_drop_SQL = "''";}
-if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) )
+if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) or (strlen($group_string) < 2) )
 	{
-	$group_SQL = "";
+	$group_SQL = "$LOGallowed_campaignsSQL";
 	$group_drop_SQL = "";
 	}
 else
@@ -252,7 +311,7 @@ echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>Outbound Stats</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
@@ -981,7 +1040,7 @@ else
 	if ( ($carrier_logging_active > 0) and ($carrier_stats == 'YES') )
 		{
 		##############################
-		#########  STATUS CATEGORIA STATS
+		#########  CARRIER STATS
 
 		$OUToutput .= "\n";
 		$OUToutput .= "---------- CARRIER CALL STATUSES\n";
@@ -1013,6 +1072,55 @@ else
 		$OUToutput .= "+----------------------+------------+\n";
 		$OUToutput .= "| TOTAL                | $TOTCARcalls |\n";
 		$OUToutput .= "+----------------------+------------+\n";
+		}
+
+
+	## find if any selected campaigns have presets enabled
+	$presets_enabled=0;
+	$stmt="select count(*) from vicidial_campaigns where enable_xfer_presets='ENABLED' $group_SQLand;";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {$OUToutput .= "$stmt\n";}
+	$presets_enabled_count = mysql_num_rows($rslt);
+	if ($presets_enabled_count > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$presets_enabled = $row[0];
+		}
+
+	if ($presets_enabled > 0)
+		{
+		##############################
+		#########  PRESET DIAL STATS
+
+		$OUToutput .= "\n";
+		$OUToutput .= "---------- AGENT PRESET DIALS\n";
+		$OUToutput .= "+------------------------------------------+------------+\n";
+		$OUToutput .= "| PRESET NAME                              | CALLS      |\n";
+		$OUToutput .= "+------------------------------------------+------------+\n";
+
+		## get counts and time totals for all statuses in this campaign
+		$stmt="select preset_name,count(*) from user_call_log where call_date > \"$query_date_BEGIN\" and call_date < \"$query_date_END\" and preset_name!='' and preset_name is not NULL  $group_SQLand group by preset_name order by preset_name;";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {$OUToutput .= "$stmt\n";}
+		$carrierstatuses_to_print = mysql_num_rows($rslt);
+		$i=0;
+		while ($i < $carrierstatuses_to_print)
+			{
+			$row=mysql_fetch_row($rslt);
+			$TOTPREcalls = ($TOTPREcalls + $row[1]);
+			$PREstatus =	sprintf("%-40s", $row[0]); while(strlen($PREstatus)>40) {$PREstatus = substr("$PREstatus", 0, -1);}
+			$PREcount =		sprintf("%10s", $row[1]); while(strlen($PREcount)>10) {$PREcount = substr("$PREcount", 0, -1);}
+
+			$OUToutput .= "| $PREstatus | $PREcount |\n";
+
+			$i++;
+			}
+
+		$TOTPREcalls =	sprintf("%10s", $TOTPREcalls); while(strlen($TOTPREcalls)>10) {$TOTPREcalls = substr("$TOTPREcalls", 0, -1);}
+
+		$OUToutput .= "+------------------------------------------+------------+\n";
+		$OUToutput .= "| TOTAL                                    | $TOTPREcalls |\n";
+		$OUToutput .= "+------------------------------------------+------------+\n";
 		}
 
 
@@ -1446,7 +1554,7 @@ else
 
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $STARTtime);
-	echo "\nRun Time: $RUNtime seconds\n";
+	echo "\nRun Time: $RUNtime seconds|$db_source\n";
 	}
 
 

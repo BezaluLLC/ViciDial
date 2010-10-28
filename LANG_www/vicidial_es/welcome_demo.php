@@ -2,7 +2,7 @@
 # welcome_demo.php - VICIDIAL welcome Demo page
 # 
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: GPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: GPLv2
 #
 header ("Content-type: text/html; charset=utf-8");
 
@@ -56,6 +56,9 @@ echo "<font size=3><b> &nbsp; <a href=\"../agc_nl/vicidial.php?relogin=YES&VD_lo
 echo "</TD></TR>\n";
 echo "<TR><TD ALIGN=LEFT >";
 echo "<font size=3><b> &nbsp; <a href=\"../agc_tw/vicidial.php?relogin=YES&VD_login=6666&VD_campaign=TESTCAMP&phone_login=phone&phone_pass=phone&VD_pass=1234\"><IMG SRC=\"../agc/images/tw.gif\" border=0> Chinese(T) Agent Login</a>";
+echo "</TD></TR>\n";
+echo "<TR><TD ALIGN=LEFT >";
+echo "<font size=3><b> &nbsp; <a href=\"../agc_se/vicidial.php?relogin=YES&VD_login=6666&VD_campaign=TESTCAMP&phone_login=phone&phone_pass=phone&VD_pass=1234\"><IMG SRC=\"../agc/images/se.gif\" border=0> Swedish Agent Login</a>";
 echo "</TD></TR></TABLE>\n";
 
 echo "</TD><TD VALIGN=TOP>\n";
@@ -78,6 +81,9 @@ echo "<font size=3><b> &nbsp; <a href=\"../vicidial_el/admin.php\"><IMG SRC=\"..
 echo "</TD></TR>\n";
 echo "<TR><TD ALIGN=LEFT >";
 echo "<font size=3><b> &nbsp; <a href=\"../vicidial_fr/admin.php\"><IMG SRC=\"../agc/images/fr.gif\" border=0> French Administration</a>";
+echo "</TD></TR>\n";
+echo "<TR><TD ALIGN=LEFT >";
+echo "<font size=3><b> &nbsp; <a href=\"../vicidial_br/admin.php\"><IMG SRC=\"../agc/images/br.gif\" border=0> Brazilian Portuguese Administration</a>";
 echo "</TD></TR></TABLE>\n";
 echo "<TR><TD ALIGN=LEFT ><font size=1> &nbsp; </TD></TR>\n";
 echo "</TABLE>\n";

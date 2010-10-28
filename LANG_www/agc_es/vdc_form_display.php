@@ -11,10 +11,11 @@
 # 100630-1119 - First build of script
 # 100703-1124 - Added submit_button,admin_submit fields, which will log to admin log
 # 100712-2322 - Added code to log vicidial_list.entry_list_id field if data altered
+# 100916-1749 - Added non-lead variable parsing
 #
 
-$version = '2.4-3';
-$build = '100712-2322';
+$version = '2.4-4';
+$build = '100916-1749';
 
 require("dbconnect.php");
 require("functions.php");
@@ -43,9 +44,107 @@ if (isset($_GET["admin_submit"]))			{$admin_submit=$_GET["admin_submit"];}
 if (isset($_GET["bgcolor"]))			{$bgcolor=$_GET["bgcolor"];}
 	elseif (isset($_POST["bgcolor"]))	{$bgcolor=$_POST["bgcolor"];}
 
+if (isset($_GET["campaign"]))	{$campaign=$_GET["campaign"];}
+	elseif (isset($_POST["campaign"]))	{$campaign=$_POST["campaign"];}
+if (isset($_GET["phone_login"]))	{$phone_login=$_GET["phone_login"];}
+	elseif (isset($_POST["phone_login"]))	{$phone_login=$_POST["phone_login"];}
+if (isset($_GET["original_phone_login"]))	{$original_phone_login=$_GET["original_phone_login"];}
+	elseif (isset($_POST["original_phone_login"]))	{$original_phone_login=$_POST["original_phone_login"];}
+if (isset($_GET["phone_pass"]))	{$phone_pass=$_GET["phone_pass"];}
+	elseif (isset($_POST["phone_pass"]))	{$phone_pass=$_POST["phone_pass"];}
+if (isset($_GET["fronter"]))	{$fronter=$_GET["fronter"];}
+	elseif (isset($_POST["fronter"]))	{$fronter=$_POST["fronter"];}
+if (isset($_GET["closer"]))	{$closer=$_GET["closer"];}
+	elseif (isset($_POST["closer"]))	{$closer=$_POST["closer"];}
+if (isset($_GET["group"]))	{$group=$_GET["group"];}
+	elseif (isset($_POST["group"]))	{$group=$_POST["group"];}
+if (isset($_GET["channel_group"]))	{$channel_group=$_GET["channel_group"];}
+	elseif (isset($_POST["channel_group"]))	{$channel_group=$_POST["channel_group"];}
+if (isset($_GET["SQLdate"]))	{$SQLdate=$_GET["SQLdate"];}
+	elseif (isset($_POST["SQLdate"]))	{$SQLdate=$_POST["SQLdate"];}
+if (isset($_GET["epoch"]))	{$epoch=$_GET["epoch"];}
+	elseif (isset($_POST["epoch"]))	{$epoch=$_POST["epoch"];}
+if (isset($_GET["uniqueid"]))	{$uniqueid=$_GET["uniqueid"];}
+	elseif (isset($_POST["uniqueid"]))	{$uniqueid=$_POST["uniqueid"];}
+if (isset($_GET["customer_zap_channel"]))	{$customer_zap_channel=$_GET["customer_zap_channel"];}
+	elseif (isset($_POST["customer_zap_channel"]))	{$customer_zap_channel=$_POST["customer_zap_channel"];}
+if (isset($_GET["customer_server_ip"]))	{$customer_server_ip=$_GET["customer_server_ip"];}
+	elseif (isset($_POST["customer_server_ip"]))	{$customer_server_ip=$_POST["customer_server_ip"];}
+if (isset($_GET["server_ip"]))	{$server_ip=$_GET["server_ip"];}
+	elseif (isset($_POST["server_ip"]))	{$server_ip=$_POST["server_ip"];}
+if (isset($_GET["SIPexten"]))	{$SIPexten=$_GET["SIPexten"];}
+	elseif (isset($_POST["SIPexten"]))	{$SIPexten=$_POST["SIPexten"];}
+if (isset($_GET["session_id"]))	{$session_id=$_GET["session_id"];}
+	elseif (isset($_POST["session_id"]))	{$session_id=$_POST["session_id"];}
+if (isset($_GET["phone"]))	{$phone=$_GET["phone"];}
+	elseif (isset($_POST["phone"]))	{$phone=$_POST["phone"];}
+if (isset($_GET["parked_by"]))	{$parked_by=$_GET["parked_by"];}
+	elseif (isset($_POST["parked_by"]))	{$parked_by=$_POST["parked_by"];}
+if (isset($_GET["dialed_number"]))	{$dialed_number=$_GET["dialed_number"];}
+	elseif (isset($_POST["dialed_number"]))	{$dialed_number=$_POST["dialed_number"];}
+if (isset($_GET["dialed_label"]))	{$dialed_label=$_GET["dialed_label"];}
+	elseif (isset($_POST["dialed_label"]))	{$dialed_label=$_POST["dialed_label"];}
+if (isset($_GET["camp_script"]))	{$camp_script=$_GET["camp_script"];}
+	elseif (isset($_POST["camp_script"]))	{$camp_script=$_POST["camp_script"];}
+if (isset($_GET["in_script"]))	{$in_script=$_GET["in_script"];}
+	elseif (isset($_POST["in_script"]))	{$in_script=$_POST["in_script"];}
+if (isset($_GET["script_width"]))	{$script_width=$_GET["script_width"];}
+	elseif (isset($_POST["script_width"]))	{$script_width=$_POST["script_width"];}
+if (isset($_GET["script_height"]))	{$script_height=$_GET["script_height"];}
+	elseif (isset($_POST["script_height"]))	{$script_height=$_POST["script_height"];}
+if (isset($_GET["fullname"]))	{$fullname=$_GET["fullname"];}
+	elseif (isset($_POST["fullname"]))	{$fullname=$_POST["fullname"];}
+if (isset($_GET["recording_filename"]))	{$recording_filename=$_GET["recording_filename"];}
+	elseif (isset($_POST["recording_filename"]))	{$recording_filename=$_POST["recording_filename"];}
+if (isset($_GET["recording_id"]))	{$recording_id=$_GET["recording_id"];}
+	elseif (isset($_POST["recording_id"]))	{$recording_id=$_POST["recording_id"];}
+if (isset($_GET["user_custom_one"]))	{$user_custom_one=$_GET["user_custom_one"];}
+	elseif (isset($_POST["user_custom_one"]))	{$user_custom_one=$_POST["user_custom_one"];}
+if (isset($_GET["user_custom_two"]))	{$user_custom_two=$_GET["user_custom_two"];}
+	elseif (isset($_POST["user_custom_two"]))	{$user_custom_two=$_POST["user_custom_two"];}
+if (isset($_GET["user_custom_three"]))	{$user_custom_three=$_GET["user_custom_three"];}
+	elseif (isset($_POST["user_custom_three"]))	{$user_custom_three=$_POST["user_custom_three"];}
+if (isset($_GET["user_custom_four"]))	{$user_custom_four=$_GET["user_custom_four"];}
+	elseif (isset($_POST["user_custom_four"]))	{$user_custom_four=$_POST["user_custom_four"];}
+if (isset($_GET["user_custom_five"]))	{$user_custom_five=$_GET["user_custom_five"];}
+	elseif (isset($_POST["user_custom_five"]))	{$user_custom_five=$_POST["user_custom_five"];}
+if (isset($_GET["preset_number_a"]))	{$preset_number_a=$_GET["preset_number_a"];}
+	elseif (isset($_POST["preset_number_a"]))	{$preset_number_a=$_POST["preset_number_a"];}
+if (isset($_GET["preset_number_b"]))	{$preset_number_b=$_GET["preset_number_b"];}
+	elseif (isset($_POST["preset_number_b"]))	{$preset_number_b=$_POST["preset_number_b"];}
+if (isset($_GET["preset_number_c"]))	{$preset_number_c=$_GET["preset_number_c"];}
+	elseif (isset($_POST["preset_number_c"]))	{$preset_number_c=$_POST["preset_number_c"];}
+if (isset($_GET["preset_number_d"]))	{$preset_number_d=$_GET["preset_number_d"];}
+	elseif (isset($_POST["preset_number_d"]))	{$preset_number_d=$_POST["preset_number_d"];}
+if (isset($_GET["preset_number_e"]))	{$preset_number_e=$_GET["preset_number_e"];}
+	elseif (isset($_POST["preset_number_e"]))	{$preset_number_e=$_POST["preset_number_e"];}
+if (isset($_GET["preset_number_f"]))	{$preset_number_f=$_GET["preset_number_f"];}
+	elseif (isset($_POST["preset_number_f"]))	{$preset_number_f=$_POST["preset_number_f"];}
+if (isset($_GET["preset_dtmf_a"]))	{$preset_dtmf_a=$_GET["preset_dtmf_a"];}
+	elseif (isset($_POST["preset_dtmf_a"]))	{$preset_dtmf_a=$_POST["preset_dtmf_a"];}
+if (isset($_GET["preset_dtmf_b"]))	{$preset_dtmf_b=$_GET["preset_dtmf_b"];}
+	elseif (isset($_POST["preset_dtmf_b"]))	{$preset_dtmf_b=$_POST["preset_dtmf_b"];}
+if (isset($_GET["did_id"]))				{$did_id=$_GET["did_id"];}
+	elseif (isset($_POST["did_id"]))	{$did_id=$_POST["did_id"];}
+if (isset($_GET["did_extension"]))			{$did_extension=$_GET["did_extension"];}
+	elseif (isset($_POST["did_extension"]))	{$did_extension=$_POST["did_extension"];}
+if (isset($_GET["did_pattern"]))			{$did_pattern=$_GET["did_pattern"];}
+	elseif (isset($_POST["did_pattern"]))	{$did_pattern=$_POST["did_pattern"];}
+if (isset($_GET["did_description"]))			{$did_description=$_GET["did_description"];}
+	elseif (isset($_POST["did_description"]))	{$did_description=$_POST["did_description"];}
+if (isset($_GET["closecallid"]))			{$closecallid=$_GET["closecallid"];}
+	elseif (isset($_POST["closecallid"]))	{$closecallid=$_POST["closecallid"];}
+if (isset($_GET["xfercallid"]))				{$xfercallid=$_GET["xfercallid"];}
+	elseif (isset($_POST["xfercallid"]))	{$xfercallid=$_POST["xfercallid"];}
+if (isset($_GET["agent_log_id"]))			{$agent_log_id=$_GET["agent_log_id"];}
+	elseif (isset($_POST["agent_log_id"]))	{$agent_log_id=$_POST["agent_log_id"];}
+
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
 header ("Pragma: no-cache");                          // HTTP/1.0
+
+if ($stage=='WELCOME')
+	{echo "FORM"; exit;}
 
 $txt = '.txt';
 $StarTtime = date("U");
@@ -328,7 +427,7 @@ else
 	echo "	</script>\n";
 	echo "	<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo "</head>\n";
-	echo '<BODY BGCOLOR="#' . $bgcolor . '" marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>';
+	echo "<BODY BGCOLOR=\"#" . $bgcolor . "\" marginheight=0 marginwidth=0 leftmargin=0 topmargin=0 onload=\"parent.document.getElementById('FORM_LOADED').value='1';\">";
 	echo "\n";
 	echo "<form action=./vdc_form_display.php method=POST name=form_custom_fields id=form_custom_fields>\n";
 	echo "<input type=hidden name=lead_id id=lead_id value=\"$lead_id\">\n";

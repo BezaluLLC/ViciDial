@@ -1,7 +1,7 @@
 <?php
 # admin_header.php - VICIDIAL administration header
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 # CHANGES
@@ -18,6 +18,15 @@
 # 90904-1534 - Added launch_moh_chooser
 # 90916-2334 - Added Voicemail options
 # 91223-1030 - Added VIDPROMPT options for in-group routing in Call Menus
+# 100311-2210 - Added callcard_enabled Admin element
+# 100428-1039 - Added custom fields display
+# 100507-1339 - Added copy carrier submenu
+# 100616-2350 - Added VIDPROMPT call menu options
+# 100728-0904 - Changed Lead Loader link to the new 3rd gen lead loader
+# 100802-2127 - Changed Admin to point to links page instead of Phones listings
+# 100831-2255 - Added password strength checking function
+# 100914-1311 - Removed other links for reports-only users
+# 101022-1323 - Added IGU_selectall function
 #
 
 
@@ -27,15 +36,23 @@ if($short_header)
 	?>
 	<TABLE CELLPADDING=0 CELLSPACING=0 BGCOLOR="#015B91"><TR>
 	<TD><IMG SRC="vicidial_admin_web_logo_small.gif" WIDTH=71 HEIGHT=22> &nbsp; </TD>
+	<?php if ($reports_only_user < 1) {
+		?>
 	<TD> &nbsp; <A HREF="admin.php" ALT="Usuarios"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Usuarios</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10" ALT="Campañas"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Campañas</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=100" ALT="Listas"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Listas</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=1000000" ALT="Escrituras"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Escrituras</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10000000" ALT="Filtros"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Filtros</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=1000" ALT="In-Groups"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>In-Groups</B></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=1000" ALT="Inbound"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Inbound</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=100000" ALT="Grupos De Usuario"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Grupos De Usuario</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10000" ALT="Agentes Remotos"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Agentes Remotos</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=10000000000" ALT="Admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Admin</B></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=999998" ALT="Admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Admin</B></A> &nbsp; </TD>
+	<?php 
+		} 
+	else 
+		{ ?>
+	<TD width=600> &nbsp; &nbsp; </TD>
+	<?php } ?>
 	<TD> &nbsp; <A HREF="admin.php?ADD=999999" ALT="Informes"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Informes</B></A> &nbsp; </TD>
 	</TR>
 	</TABLE>
@@ -319,34 +336,72 @@ if ( ( ($ADD==34) or ($ADD==31) or ($ADD==49) ) and ($SUB==29) and ($LOGmodify_c
 	<?php
 	}
 	?>
+	var weak = Image();
+	weak.src = "images/weak.png";
+	var medium = Image();
+	medium.src = "images/medium.png";
+	var strong = Image();
+	strong.src = "images/strong.png";
 
-	function openNewWindow(url) {
-	  window.open (url,"",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');
-	}
-	function scriptInsertField() {
+	function pwdChanged(pwd_field_str, pwd_img_str) 
+		{
+		var pwd_field = document.getElementById(pwd_field_str);
+		var pwd_img = document.getElementById(pwd_img_str);
+
+		var strong_regex = new RegExp( "^(?=.{8,})(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])", "g" );
+		var medium_regex = new RegExp( "^(?=.{6,})(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9]))).*$", "g" );
+
+		if (strong_regex.test(pwd_field.value) ) 
+			{
+			if (pwd_img.src != strong.src)
+				{pwd_img.src = strong.src;}
+			} 
+		else if (medium_regex.test( pwd_field.value) ) 
+			{
+			if (pwd_img.src != medium.src) 
+				{pwd_img.src = medium.src;}
+			}
+		else 
+			{
+			if (pwd_img.src != weak.src) 
+				{pwd_img.src = weak.src;}
+			}
+		}
+
+	function openNewWindow(url) 
+		{
+		window.open (url,"",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');
+		}
+	function scriptInsertField() 
+		{
 		openField = '--A--';
 		closeField = '--B--';
 		var textBox = document.scriptForm.script_text;
 		var scriptIndex = document.getElementById("selectedField").selectedIndex;
 		var insValue =  document.getElementById('selectedField').options[scriptIndex].value;
-	  if (document.selection) {
-		//IE
-		textBox = document.scriptForm.script_text;
-		insValue = document.scriptForm.selectedField.options[document.scriptForm.selectedField.selectedIndex].text;
-		textBox.focus();
-		sel = document.selection.createRange();
-		sel.text = openField + insValue + closeField;
-	  } else if (textBox.selectionStart || textBox.selectionStart == 0) {
-		//Mozilla
-		var startPos = textBox.selectionStart;
-		var endPos = textBox.selectionEnd;
-		textBox.value = textBox.value.substring(0, startPos)
-		+ openField + insValue + closeField
-		+ textBox.value.substring(endPos, textBox.value.length);
-	  } else {
-		textBox.value += openField + insValue + closeField;
-	  }
-	}
+		if (document.selection) 
+			{
+			//IE
+			textBox = document.scriptForm.script_text;
+			insValue = document.scriptForm.selectedField.options[document.scriptForm.selectedField.selectedIndex].text;
+			textBox.focus();
+			sel = document.selection.createRange();
+			sel.text = openField + insValue + closeField;
+			} 
+		else if (textBox.selectionStart || textBox.selectionStart == 0) 
+			{
+			//Mozilla
+			var startPos = textBox.selectionStart;
+			var endPos = textBox.selectionEnd;
+			textBox.value = textBox.value.substring(0, startPos)
+			+ openField + insValue + closeField
+			+ textBox.value.substring(endPos, textBox.value.length);
+			}
+		else 
+			{
+			textBox.value += openField + insValue + closeField;
+			}
+		}
 
 	<?php
 
@@ -519,6 +574,31 @@ if ( ($ADD==131111111) or ($ADD==331111111) or ($ADD==431111111) )
 	}
 
 
+
+
+### Javascript for shift end-time calculation and display
+if ( ($ADD==3111) or ($ADD==4111) or ($ADD==5111) )
+	{
+	?>
+	function IGU_selectall(temp_count,temp_fields)
+		{
+		var fields_array=temp_fields.split('|');
+		var inc=0;
+		while (temp_count >= inc)
+			{
+			if (fields_array[inc].length > 0)
+				{
+				document.getElementById(fields_array[inc]).checked=true;
+			//	document.admin_form.fields_array[inc].checked=true;
+				}
+			inc++;
+			}
+		}
+
+	<?php
+	}
+
+
 ### select list contents generation for dynamic route displays in call menu and in-group screens
 if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111) )
 	{
@@ -622,13 +702,17 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 		if (selected_route=='INGROUP')
 			{
 			if (value_context.length < 10)
-				{value_context = 'CID,LB,998,TESTCAMP,1';}
-			var value_context_split = value_context.split(",");
-			var IGhandle_method =	value_context_split[0];
-			var IGsearch_method =	value_context_split[1];
-			var IGlist_id =			value_context_split[2];
-			var IGcampaign_id =		value_context_split[3];
-			var IGphone_code =		value_context_split[4];
+				{value_context = 'CID,LB,998,TESTCAMP,1,,,,';}
+			var value_context_split =		value_context.split(",");
+			var IGhandle_method =			value_context_split[0];
+			var IGsearch_method =			value_context_split[1];
+			var IGlist_id =					value_context_split[2];
+			var IGcampaign_id =				value_context_split[3];
+			var IGphone_code =				value_context_split[4];
+			var IGvid_enter_filename =		value_context_split[5];
+			var IGvid_id_number_filename =	value_context_split[6];
+			var IGvid_confirm_filename =	value_context_split[7];
+			var IGvid_validate_digits =		value_context_split[8];
 
 			if (route == selected_route)
 				{
@@ -642,12 +726,17 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 			new_content = new_content + '' + ingroup_list + "\n" + selected_value + '</select>';
 			new_content = new_content + ' &nbsp; Handle Method: <select size=1 name=IGhandle_method_' + option + ' id=IGhandle_method_' + option + '>';
 			new_content = new_content + '' + IGhandle_method_list + "\n" + '<option SELECTED>' + IGhandle_method + '</select>';
+			new_content = new_content + ' &nbsp; <a href="javascript:openNewWindow(\'admin.php?ADD=99999#vicidial_call_menu-ingroup_settings\')"><IMG SRC="help.gif" WIDTH=20 HEIGHT=20 Border=0 ALT="AYUDA" ALIGN=TOP></a>';
 			new_content = new_content + '<BR>Search Method: <select size=1 name=IGsearch_method_' + option + ' id=IGsearch_method_' + option + '>';
 			new_content = new_content + '' + IGsearch_method_list + "\n" + '<option SELECTED>' + IGsearch_method + '</select>';
 			new_content = new_content + ' &nbsp; ID De la Lista: <input type=text size=5 maxlength=14 name=IGlist_id_' + option + ' id=IGlist_id_' + option + ' value="' + IGlist_id + '">';
 			new_content = new_content + '<BR>ID De la Campaña: <select size=1 name=IGcampaign_id_' + option + ' id=IGcampaign_id_' + option + '>';
 			new_content = new_content + '' + IGcampaign_id_list + "\n" + '<option SELECTED>' + IGcampaign_id + '</select>';
 			new_content = new_content + ' &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_' + option + ' id=IGphone_code_' + option + ' value="' + IGphone_code + '">';
+			new_content = new_content + "<BR> &nbsp; VID Enter Filename: <input type=text name=IGvid_enter_filename_" + option + " id=IGvid_enter_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_enter_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+			new_content = new_content + "<BR> &nbsp; VID ID Number Filename: <input type=text name=IGvid_id_number_filename_" + option + " id=IGvid_id_number_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_id_number_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+			new_content = new_content + "<BR> &nbsp; VID Confirm Filename: <input type=text name=IGvid_confirm_filename_" + option + " id=IGvid_confirm_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_confirm_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+			new_content = new_content + ' &nbsp; VID Digits: <input type=text size=3 maxlength=3 name=IGvid_validate_digits_' + option + ' id=IGvid_validate_digits_' + option + ' value="' + IGvid_validate_digits + '">';
 			}
 		if (selected_route=='DID')
 			{
@@ -782,14 +871,18 @@ if ( ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111
 		if (selected_route=='INGROUP')
 			{
 			if ( (route != selected_route) || (value.length < 10) )
-				{value = 'SALESLINE,CID,LB,998,TESTCAMP,1';}
+				{value = 'SALESLINE,CID,LB,998,TESTCAMP,1,,,,';}
 			var value_split = value.split(",");
-			var IGgroup_id =		value_split[0];
-			var IGhandle_method =	value_split[1];
-			var IGsearch_method =	value_split[2];
-			var IGlist_id =			value_split[3];
-			var IGcampaign_id =		value_split[4];
-			var IGphone_code =		value_split[5];
+			var IGgroup_id =				value_split[0];
+			var IGhandle_method =			value_split[1];
+			var IGsearch_method =			value_split[2];
+			var IGlist_id =					value_split[3];
+			var IGcampaign_id =				value_split[4];
+			var IGphone_code =				value_split[5];
+			var IGvid_enter_filename =		value_split[6];
+			var IGvid_id_number_filename =	value_split[7];
+			var IGvid_confirm_filename =	value_split[8];
+			var IGvid_validate_digits =		value_split[9];
 
 			if (route == selected_route)
 				{
@@ -807,6 +900,11 @@ if ( ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111
 			new_content = new_content + '<BR>ID De la Campaña: <select size=1 name=IGcampaign_id_' + option + ' id=IGcampaign_id_' + option + '>';
 			new_content = new_content + '' + IGcampaign_id_list + "\n" + '<option SELECTED>' + IGcampaign_id + '</select>';
 			new_content = new_content + ' &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_' + option + ' id=IGphone_code_' + option + ' value="' + IGphone_code + '">';
+		//	new_content = new_content + "<BR> &nbsp; VID Enter Filename: <input type=text name=IGvid_enter_filename_" + option + " id=IGvid_enter_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_enter_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+		//	new_content = new_content + "<BR> &nbsp; VID ID Number Filename: <input type=text name=IGvid_id_number_filename_" + option + " id=IGvid_id_number_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_id_number_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+		//	new_content = new_content + "<BR> &nbsp; VID Confirm Filename: <input type=text name=IGvid_confirm_filename_" + option + " id=IGvid_confirm_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_confirm_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+		//	new_content = new_content + ' &nbsp; VID Digits: <input type=text size=3 maxlength=3 name=IGvid_validate_digits_' + option + ' id=IGvid_validate_digits_' + option + ' value="' + IGvid_validate_digits + '">';
+
 			}
 		if (selected_route=='DID')
 			{
@@ -896,11 +994,13 @@ echo "</head>\n";
 echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../vicidial_en/admin.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../vicidial_es/admin.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Español <img src=\"../agc/images/es.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";
-$stmt="SELECT admin_home_url,enable_tts_integration from system_settings;";
+$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled from system_settings;";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
-$admin_home_url_LU =	$row[0];
+$admin_home_url_LU =		$row[0];
 $SSenable_tts_integration = $row[1];
+$SScallcard_enabled =		$row[2];
+$SScustom_fields_enabled =	$row[3];
 
 ?>
 <CENTER>
@@ -911,6 +1011,8 @@ $SSenable_tts_integration = $row[1];
 <IMG SRC="./vicidial_admin_web_logo.gif" WIDTH=170 HEIGHT=45 ALT="VICIDIAL logo">
 <B><FONT FACE="ARIAL,HELVETICA" COLOR=white>ADMINISTRATION</FONT></B><BR>
 	<TABLE CELLPADDING=2 CELLSPACING=0 BGCOLOR=#015B91 WIDTH=160>
+	<?php if ($reports_only_user < 1) {
+		?>
 	<!-- USUARIOS NAVIGATION -->
 	<TR WIDTH=160><TD <?php echo $users_hh ?> WIDTH=160>
 	<a href="<?php echo $ADMIN ?>?ADD=0"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $users_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $users_bold ?>Usuarios</a>
@@ -966,6 +1068,8 @@ $SSenable_tts_integration = $row[1];
 			else {$pause_sh=''; $pause_fc='BLACK';}
 		if ($sh=='listmix') {$listmix_sh="bgcolor=\"$subcamp_color\""; $listmix_fc="$subcamp_font";}
 			else {$listmix_sh=''; $listmix_fc='BLACK';}
+		if ($sh=='preset') {$preset_sh="bgcolor=\"$subcamp_color\""; $preset_fc="$subcamp_font";}
+			else {$preset_sh=''; $preset_fc='BLACK';}
 
 		?>
 		<TR BGCOLOR=<?php echo $campaigns_color ?>>
@@ -989,6 +1093,8 @@ $SSenable_tts_integration = $row[1];
 		?>
 		</TR><TR BGCOLOR=<?php echo $campaigns_color ?>>
 		<TD ALIGN=LEFT <?php echo $pause_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=37"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $pause_fc ?> SIZE=<?php echo $subcamp_font_size ?>>Pausa Códigos</a></TD>
+		</TR><TR BGCOLOR=<?php echo $campaigns_color ?>>
+		<TD ALIGN=LEFT <?php echo $preset_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=301"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $preset_fc ?> SIZE=<?php echo $subcamp_font_size ?>>Presets</a></TD>
 	<?php } 
 	?>
 	<!-- LISTAS NAVIGATION -->
@@ -998,22 +1104,35 @@ $SSenable_tts_integration = $row[1];
 		?>
 		<TR><TD ALIGN=LEFT <?php echo $lists_hh ?>><a href="<?php echo $ADMIN ?>?ADD=100"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $lists_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $lists_bold ?>Listas</a></TD></TR>
 		<?php
-		if (strlen($lists_hh) > 1) { 
-			if ($LOGdelete_from_dnc > 0) {$DNClink = 'Añadir-Supr Número de DNC';}
-			else {$DNClink = 'Add Number To DNC';}
+		if (strlen($lists_hh) > 1) 
+			{ 
+			if ($LOGdelete_from_dnc > 0) {$DNClink = 'Add-BorrarDNC Number';}
+			else {$DNClink = 'Add DNC Number';}
 			?>
-		<TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=100"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Demuestre Las Listas </a>
-		</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Agregue Una Nueva Lista </a>
-		</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="admin_search_lead.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Búsqueda Para Un Plomo </a>
-		</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=121"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo $DNClink ?> </a>
-		</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="./new_listloader_superL.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Nuevos Plomos De la Carga </a>
-		</TD></TR>
-		<?php } 
+			<TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+			<a href="<?php echo $ADMIN ?>?ADD=100"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Demuestre Las Listas </a>
+			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+			<a href="<?php echo $ADMIN ?>?ADD=111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Agregue Una Nueva Lista </a>
+			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+			<a href="admin_search_lead.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Búsqueda Para Un Plomo </a>
+			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+			<a href="<?php echo $ADMIN ?>?ADD=121"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo $DNClink ?> </a>
+			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+			<a href="./admin_listloader_third_gen.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Nuevos Plomos De la Carga </a>
+			<?php
+			if ($SScustom_fields_enabled > 0)
+				{
+				?>
+				</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+				<a href="./admin_lists_custom.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> List Custom Fields </a>
+				</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+				<a href="./admin_lists_custom.php?action=COPY_FIELDS_FORM"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> CopiarCustom Fields </a>
+				<?php
+				}
+			?>
+			</TD></TR>
+			<?php
+			}
 		}
 	?>
 	<!-- ESCRITURAS NAVIGATION -->
@@ -1051,11 +1170,13 @@ $SSenable_tts_integration = $row[1];
 	?>
 	<!-- INGROUPS NAVIGATION -->
 	<TR><TD <?php echo $ingroups_hh ?>>
-	<a href="<?php echo $ADMIN ?>?ADD=1000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $ingroups_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $ingroups_bold ?> En-Grupos </a>
+	<a href="<?php echo $ADMIN ?>?ADD=1000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $ingroups_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $ingroups_bold ?> Inbound </a>
 	</TD></TR>
 	<?php
 	if (strlen($ingroups_hh) > 1) 
-		{ 
+		{
+		if ($LOGdelete_from_dnc > 0) {$FPGlink = 'Add-BorrarFPG Number';}
+		else {$FPGlink = 'Add FPG Number';}
 		?>
 		<TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Demuestre A En-Grupos </a>
@@ -1074,7 +1195,13 @@ $SSenable_tts_integration = $row[1];
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1511"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Añadir un nuevo menú de llamadas </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1611"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copia de llamadas Menú </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1611"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copia de llamadas Menú </a><HR>
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=1700"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Filter Phone Groups </a>
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=1711"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add Filter Phone Group </a>
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=171"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo $FPGlink ?> </a>
 		</TD></TR>
 		<?php } 
 		?>
@@ -1109,12 +1236,16 @@ $SSenable_tts_integration = $row[1];
 		<a href="<?php echo $ADMIN ?>?ADD=10000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Demuestre Los Agentes Alejados </a>
 		</TR><TR BGCOLOR=<?php echo $remoteagent_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=11111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Agregue Los Agentes Alejados Nuevos </a>
+		</TR><TR BGCOLOR=<?php echo $remoteagent_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=12000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Extension Groups </a>
+		</TR><TR BGCOLOR=<?php echo $remoteagent_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=12111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add Extension Group </a>
 		</TD></TR>
 	<?php } 
 	?>
 	<!-- ADMIN NAVIGATION -->
 	<TR><TD <?php echo $admin_hh ?>>
-	<a href="<?php echo $ADMIN ?>?ADD=10000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $admin_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $admin_bold ?> Admin </a>
+	<a href="<?php echo $ADMIN ?>?ADD=999998"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $admin_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $admin_bold ?> Admin </a>
 	</TD></TR>
 	<?php
 	if (strlen($admin_hh) > 1) 
@@ -1145,6 +1276,8 @@ $SSenable_tts_integration = $row[1];
 			else {$vm_sh=''; $vm_fc='BLACK';}
 		if ($sh=='tts') {$tts_sh="bgcolor=\"$tts_color\""; $tts_fc="$tts_font";}
 			else {$tts_sh=''; $tts_fc='BLACK';}
+		if ($sh=='cc') {$cc_sh="bgcolor=\"$cc_color\""; $cc_fc="$cc_font";}
+			else {$cc_sh=''; $cc_fc='BLACK';}
 
 		?>
 		<TR BGCOLOR=<?php echo $admin_color ?>>
@@ -1186,7 +1319,15 @@ $SSenable_tts_integration = $row[1];
 			</TR>
 
 		<?php }
+		if ($SScallcard_enabled > 0)
+			{ ?>
+			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $cc_sh ?>> &nbsp; 
+			<a href="callcard_admin.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $cc_fc ?> SIZE=<?php echo $header_font_size ?>> CallCard Admin </a></TD>
+			</TR>
+
+		<?php }
 			}
+		}
 	?>
 	<!-- INFORMES NAVIGATION -->
 	<TR><TD <?php echo $reports_hh ?>>
@@ -1245,11 +1386,15 @@ $SSenable_tts_integration = $row[1];
 	<?php }
 	if ( (strlen($carriers_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $carriers_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Transportistas </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=141111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Carrier </a></TD></TR>
+	<TR BGCOLOR=<?php echo $carriers_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Transportistas </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=141111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Carrier </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> CopiarA Carrier </a></TD></TR>
 	<?php }
 	if ( (strlen($tts_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
 	<TR BGCOLOR=<?php echo $tts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=150000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Mostrar las entradas TTS </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=151111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Agregar una nueva entrada TTS </a></TD></TR>
+	<?php }
+	if ( (strlen($cc_sh) > 1) and (strlen($admin_hh) > 1) ) { 
+		?>
+	<TR BGCOLOR=<?php echo $cc_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="callcard_admin.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> CallCard Summary </a> &nbsp; | &nbsp; <a href="callcard_admin.php?action=CALLCARD_RUNS"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Runs </a> &nbsp; | &nbsp; <a href="callcard_admin.php?action=CALLCARD_BATCHES"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Batches </a> &nbsp; | &nbsp; <a href="callcard_admin.php?action=SEARCH"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> CallCard Search </a> &nbsp; | &nbsp; <a href="callcard_report_export.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> CallCard Log Export </a> &nbsp; | &nbsp; <a href="callcard_admin.php?action=GENERATE"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> CallCard Generate New Numbers </a></TD></TR>
 	<?php }
 	if ( (strlen($moh_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
