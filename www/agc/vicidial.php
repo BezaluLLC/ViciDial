@@ -320,12 +320,13 @@
 # 101008-0356 - Added manual_preview_dial and two new variables for recording filenames
 # 101012-1656 - Added scroll command at dispo submission to for scrolling to the top of the screen
 # 101024-1639 - Added parked call counter
+# 101108-0110 - Added ADDMEMBER option for queue_log
 #
 
-$version = '2.4-297';
-$build = '101024-1639';
+$version = '2.4-298';
+$build = '101108-0110';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=68;
+$mysql_log_count=69;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -2123,7 +2124,7 @@ else
 
 			#############################################
 			##### START SYSTEM_SETTINGS LOOKUP #####
-			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,vicidial_agent_disable,allow_sipsak_messages,queuemetrics_loginout FROM system_settings;";
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,vicidial_agent_disable,allow_sipsak_messages,queuemetrics_loginout,queuemetrics_addmember_enabled FROM system_settings;";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01040',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -2131,15 +2132,16 @@ else
 			if ($qm_conf_ct > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$enable_queuemetrics_logging =	$row[0];
-				$queuemetrics_server_ip	=		$row[1];
-				$queuemetrics_dbname =			$row[2];
-				$queuemetrics_login	=			$row[3];
-				$queuemetrics_pass =			$row[4];
-				$queuemetrics_log_id =			$row[5];
-				$vicidial_agent_disable =		$row[6];
-				$allow_sipsak_messages =		$row[7];
-				$queuemetrics_loginout =		$row[8];
+				$enable_queuemetrics_logging =		$row[0];
+				$queuemetrics_server_ip	=			$row[1];
+				$queuemetrics_dbname =				$row[2];
+				$queuemetrics_login	=				$row[3];
+				$queuemetrics_pass =				$row[4];
+				$queuemetrics_log_id =				$row[5];
+				$vicidial_agent_disable =			$row[6];
+				$allow_sipsak_messages =			$row[7];
+				$queuemetrics_loginout =			$row[8];
+				$queuemetrics_addmember_enabled =	$row[9];
 				}
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
 			###########################################
@@ -2294,6 +2296,16 @@ else
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01046',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 					$affected_rows = mysql_affected_rows($linkB);
 					echo "<!-- queue_log PAUSE entry added: $VD_login|$affected_rows -->\n";
+
+					if ($queuemetrics_addmember_enabled > 0)
+						{
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='$VD_campaign',agent='Agent/$VD_login',verb='ADDMEMBER2',data1='$QM_PHONE',serverid='$queuemetrics_log_id';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $linkB);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01069',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+						$affected_rows = mysql_affected_rows($linkB);
+						echo "<!-- queue_log ADDMEMBER2 entry added: $VD_login|$affected_rows -->\n";
+						}
 
 					mysql_close($linkB);
 					mysql_select_db("$VARDB_database", $link);
@@ -3121,6 +3133,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var customer_3way_hangup_counter_trigger=0;
 	var customer_3way_hangup_dispo_message='';
 	var ivr_park_call='<?php echo $ivr_park_call ?>';
+	var qm_phone='<?php echo $QM_PHONE ?>';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -8459,7 +8472,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		if (xmlhttp) 
 			{ 
-			CSCupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=regCLOSER&format=text&user=" + user + "&pass=" + pass + "&comments=" + VU_agent_choose_ingroups_DV + "&closer_blended=" + VICIDiaL_closer_blended + "&campaign=" + campaign + "&dial_method" + dial_method + "&closer_choice=" + CloserSelectChoices + "-";
+			CSCupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=regCLOSER&format=text&user=" + user + "&pass=" + pass + "&comments=" + VU_agent_choose_ingroups_DV + "&closer_blended=" + VICIDiaL_closer_blended + "&campaign=" + campaign + "&qm_phone=" + qm_phone + "&dial_method" + dial_method + "&closer_choice=" + CloserSelectChoices + "-";
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(CSCupdate_query); 

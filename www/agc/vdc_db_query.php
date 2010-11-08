@@ -260,12 +260,13 @@
 # 100927-1618 - Added ability to use custom fields in web form and dispo_call_url
 # 101001-1451 - Added full name display to Call Log functionality
 # 101022-1243 - Fixed missing variables from start and dispo call urls
+# 101108-0115 - Added ADDMEMBER option for queue_log
 #
 
-$version = '2.4-166';
-$build = '101022-1243';
+$version = '2.4-167';
+$build = '101108-0115';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=345;
+$mysql_log_count=352;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -449,6 +450,8 @@ if (isset($_GET["date"]))						{$date=$_GET["date"];}
 	elseif (isset($_POST["date"]))				{$date=$_POST["date"];}
 if (isset($_GET["custom_field_names"]))				{$FORMcustom_field_names=$_GET["custom_field_names"];}
 	elseif (isset($_POST["custom_field_names"]))	{$FORMcustom_field_names=$_POST["custom_field_names"];}
+if (isset($_GET["qm_phone"]))			{$qm_phone=$_GET["qm_phone"];}
+	elseif (isset($_POST["qm_phone"]))	{$qm_phone=$_POST["qm_phone"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -863,6 +866,34 @@ if ($ACTION == 'regCLOSER')
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00012',$user,$server_ip,$session_name,$one_mysql_log);}
 
+		#############################################
+		##### START QUEUEMETRICS LOGGING LOOKUP #####
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_addmember_enabled FROM system_settings;";
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00349',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
+		$qm_conf_ct = mysql_num_rows($rslt);
+		$i=0;
+		while ($i < $qm_conf_ct)
+			{
+			$row=mysql_fetch_row($rslt);
+			$enable_queuemetrics_logging =		$row[0];
+			$queuemetrics_server_ip	=			$row[1];
+			$queuemetrics_dbname =				$row[2];
+			$queuemetrics_login	=				$row[3];
+			$queuemetrics_pass =				$row[4];
+			$queuemetrics_log_id =				$row[5];
+			$queuemetrics_addmember_enabled =	$row[6];
+			$i++;
+			}
+		##### END QUEUEMETRICS LOGGING LOOKUP #####
+		###########################################
+		if ( ($enable_queuemetrics_logging > 0) and ($queuemetrics_addmember_enabled > 0) )
+			{
+			$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+			mysql_select_db("$queuemetrics_dbname", $linkB);
+			}
+
 		$in_groups_pre = preg_replace('/-$/','',$closer_choice);
 		$in_groups = explode(" ",$in_groups_pre);
 		$in_groups_ct = count($in_groups);
@@ -891,6 +922,16 @@ if ($ACTION == 'regCLOSER')
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00014',$user,$server_ip,$session_name,$one_mysql_log);}
+
+				if ( ($enable_queuemetrics_logging > 0) and ($queuemetrics_addmember_enabled > 0) )
+					{
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='$in_groups[$k]',agent='Agent/$user',verb='ADDMEMBER2',data1='$qm_phone',serverid='$queuemetrics_log_id';";
+					$rslt=mysql_query($stmt, $linkB);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'0350',$user,$server_ip,$session_name,$one_mysql_log);}
+					$affected_rows = mysql_affected_rows($linkB);
+					if ($format=='debug') {echo "\n<!-- $affected_rows|$stmt -->";}
+					}
+
 				}
 			$k++;
 			}
@@ -5156,7 +5197,7 @@ if ($ACTION == 'userLOGout')
 			{
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
-			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages,queuemetrics_loginout FROM system_settings;";
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages,queuemetrics_loginout,queuemetrics_addmember_enabled FROM system_settings;";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00138',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -5164,14 +5205,15 @@ if ($ACTION == 'userLOGout')
 			if ($qm_conf_ct > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$enable_queuemetrics_logging =	$row[0];
-				$queuemetrics_server_ip	=		$row[1];
-				$queuemetrics_dbname =			$row[2];
-				$queuemetrics_login	=			$row[3];
-				$queuemetrics_pass =			$row[4];
-				$queuemetrics_log_id =			$row[5];
-				$allow_sipsak_messages =		$row[6];
-				$queuemetrics_loginout =		$row[7];
+				$enable_queuemetrics_logging =		$row[0];
+				$queuemetrics_server_ip	=			$row[1];
+				$queuemetrics_dbname =				$row[2];
+				$queuemetrics_login	=				$row[3];
+				$queuemetrics_pass =				$row[4];
+				$queuemetrics_log_id =				$row[5];
+				$allow_sipsak_messages =			$row[6];
+				$queuemetrics_loginout =			$row[7];
+				$queuemetrics_addmember_enabled =	$row[8];
 				}
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
 			###########################################
@@ -5220,6 +5262,32 @@ if ($ACTION == 'userLOGout')
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00140',$user,$server_ip,$session_name,$one_mysql_log);}
 				$affected_rows = mysql_affected_rows($linkB);
 
+				if ($queuemetrics_addmember_enabled > 0)
+					{
+					$stmt = "SELECT distinct queue FROM queue_log where time_id >= $logintime and agent='Agent/$user' and verb IN('ADDMEMBER','ADDMEMBER2') order by time_id desc;";
+					$rslt=mysql_query($stmt, $linkB);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00351',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					echo "$stmt\n";
+					$amq_conf_ct = mysql_num_rows($rslt);
+					$i=0;
+					while ($i < $amq_conf_ct)
+						{
+						$row=mysql_fetch_row($rslt);
+						$AMqueue[$i] =	$row[0];
+						$i++;
+						}
+
+					$i=0;
+					while ($i < $amq_conf_ct)
+						{
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='$AMqueue[$i]',agent='Agent/$user',verb='REMOVEMEMBER',data1='$loginphone',serverid='$queuemetrics_log_id';";
+						$rslt=mysql_query($stmt, $linkB);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00352',$user,$server_ip,$session_name,$one_mysql_log);}
+						$affected_rows = mysql_affected_rows($linkB);
+						$i++;
+						}
+					}
 				mysql_close($linkB);
 				}
 			}
@@ -6242,7 +6310,7 @@ if ($ACTION == 'updateDISPO')
 			$stmt = "SELECT did_id,extension from vicidial_did_log where uniqueid='$uniqueid' order by call_date desc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00346',$user,$server_ip,$session_name,$one_mysql_log);}
 			$VDIDL_ct = mysql_num_rows($rslt);
 			if ($VDIDL_ct > 0)
 				{
@@ -6253,7 +6321,7 @@ if ($ACTION == 'updateDISPO')
 				$stmt = "SELECT did_pattern,did_description from vicidial_inbound_dids where did_id='$DID_id' limit 1;";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00347',$user,$server_ip,$session_name,$one_mysql_log);}
 				$VDIDL_ct = mysql_num_rows($rslt);
 				if ($VDIDL_ct > 0)
 					{
@@ -6272,7 +6340,7 @@ if ($ACTION == 'updateDISPO')
 			$stmt = "SELECT campaign_id,closecallid,xfercallid from vicidial_closer_log where uniqueid='$uniqueid' and user='$user' order by call_date desc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00348',$user,$server_ip,$session_name,$one_mysql_log);}
 			$VDCL_mvac_ct = mysql_num_rows($rslt);
 			if ($VDCL_mvac_ct > 0)
 				{

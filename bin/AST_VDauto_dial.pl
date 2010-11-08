@@ -245,21 +245,22 @@ $event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
 
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,outbound_autodial_active,queuemetrics_loginout FROM system_settings;";
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,outbound_autodial_active,queuemetrics_loginout,queuemetrics_addmember_enabled FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
 if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$enable_queuemetrics_logging =	$aryA[0];
-	$queuemetrics_server_ip	=		$aryA[1];
-	$queuemetrics_dbname =			$aryA[2];
-	$queuemetrics_login=			$aryA[3];
-	$queuemetrics_pass =			$aryA[4];
-	$queuemetrics_log_id =			$aryA[5];
-	$outbound_autodial_active =		$aryA[6];
-	$queuemetrics_loginout =		$aryA[7];
+	$enable_queuemetrics_logging =		$aryA[0];
+	$queuemetrics_server_ip	=			$aryA[1];
+	$queuemetrics_dbname =				$aryA[2];
+	$queuemetrics_login=				$aryA[3];
+	$queuemetrics_pass =				$aryA[4];
+	$queuemetrics_log_id =				$aryA[5];
+	$outbound_autodial_active =			$aryA[6];
+	$queuemetrics_loginout =			$aryA[7];
+	$queuemetrics_addmember_enabled =	$aryA[8];
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -1941,6 +1942,7 @@ while($one_day_interval > 0)
 							{
 							@aryB = $sthB->fetchrow_array;
 							$time_logged_in =		$aryB[0];
+							$RAWtime_logged_in =	$aryB[0];
 							$phone_logged_in =		$aryB[1];
 							}
 						$sthB->finish();
@@ -1951,6 +1953,30 @@ while($one_day_interval > 0)
 
 						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='NONE',agent='Agent/$VALOuser[$logrun]',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
 						$Baffected_rows = $dbhB->do($stmtB);
+
+						if ($queuemetrics_addmember_enabled > 0)
+							{
+							$stmtB = "SELECT distinct queue FROM queue_log where time_id >= $RAWtime_logged_in and agent='Agent/$VALOuser[$logrun]' and verb IN('ADDMEMBER','ADDMEMBER2') order by time_id desc;";
+							$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+							$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+							$sthBrows=$sthB->rows;
+							$rec_count=0;
+							while ($sthBrows > $rec_count)
+								{
+								@aryB = $sthB->fetchrow_array;
+								$AM_queue[$rec_count] =		$aryB[0];
+								$rec_count++;
+								}
+							$sthB->finish();
+
+							$rec_count=0;
+							while ($sthBrows > $rec_count)
+								{
+								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='$AM_queue[$rec_count]',agent='Agent/$VALOuser[$logrun]',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id';";
+								$Baffected_rows = $dbhB->do($stmtB);
+								$rec_count++;
+								}
+							}
 
 						$dbhB->disconnect();
 						}

@@ -57,6 +57,7 @@
 # 100812-0515 - Added --cu3way-delay= flag for setting delay in the leave3way cleaning script
 # 100814-2206 - Added clearing and optimization for vicidial_xfer_stats table
 # 101022-1655 - Added new variables to be cleared from vicidial_cacmpaign_stats table
+# 101107-2257 - Added cross-server phone dialplan extensions
 #
 
 $DB=0; # Debug flag
@@ -851,7 +852,7 @@ if ($timeclock_end_of_day_NOW > 0)
 ################################################################################
 
 ##### Get the settings from system_settings #####
-$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs FROM system_settings;";
+$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten FROM system_settings;";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -863,6 +864,7 @@ if ($sthArows > 0)
 	$active_voicemail_server =			$aryA[1];
 	$SScustom_dialplan_entry =			$aryA[2];
 	$SSdefault_codecs =					$aryA[3];
+	$SSgenerate_cross_server_exten =	$aryA[4];
 	}
 $sthA->finish();
 if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
@@ -1098,6 +1100,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
+	$active_server_ips='';
+	$active_dialplan_numbers='';
 	$i=0;
 	while ($sthArows > $i)
 		{
@@ -1105,6 +1109,9 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$server_ip[$i] =	$aryA[0];
 		$server_id[$i] =	$aryA[1];
 		$conf_secret[$i] =	$aryA[2];
+		if ($i > 0)
+			{$active_server_ips .= ",";}
+		$active_server_ips .= "'$aryA[0]'";
 
 		if( $server_ip[$i] =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
 			{
@@ -1357,7 +1364,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$codecs_with_template[$i] =		$aryA[16];
 		if ( (length($SSdefault_codecs) > 2) && (length($codecs_list[$i]) < 3) )
 			{$codecs_list[$i] = $SSdefault_codecs;}
-		
+		$active_dialplan_numbers .= "'$aryA[1]',";
+
 		$i++;
 		}
 	$sthA->finish();
@@ -1475,6 +1483,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$codecs_with_template[$i] =		$aryA[16];
 		if ( (length($SSdefault_codecs) > 2) && (length($codecs_list[$i]) < 3) )
 			{$codecs_list[$i] = $SSdefault_codecs;}
+		$active_dialplan_numbers .= "'$aryA[1]',";
 
 		$i++;
 		}
@@ -1560,6 +1569,48 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		}
 	##### END Generate the SIP phone entries #####
 
+
+
+	if ( ($SSgenerate_cross_server_exten > 0) and (length($active_server_ips) > 7) )
+		{
+		##### BEGIN Generate the CROSS SERVER IAX and SIP phone entries #####
+		$stmtA = "SELECT extension,dialplan_number,fullname,server_ip FROM phones where server_ip NOT IN('$server_ip') and server_ip IN($active_server_ips) and dialplan_number NOT IN($active_dialplan_numbers'') and protocol IN('SIP','IAX2') and active='Y' order by dialplan_number,server_ip;";
+		#	print "$stmtA\n";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$i=0;
+		while ($sthArows > $i)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$CXextension[$i] =				$aryA[0];
+			$CXdialplan[$i] =				$aryA[1];
+			$CXfullname[$i] =				$aryA[2];
+			$CXserver_ip[$i] =				$aryA[3];
+
+			$i++;
+			}
+		$sthA->finish();
+
+		$i=0;
+		while ($sthArows > $i)
+			{
+			$CXVARremDIALstr='';
+			if( $CXserver_ip[$i] =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
+				{
+				$a = leading_zero($1);
+				$b = leading_zero($2);
+				$c = leading_zero($3);
+				$d = leading_zero($4);
+				$CXVARremDIALstr = "$a$S$b$S$c$S$d$S";
+				}
+			$Pext .= "; Remote Phone Entry $i: $CXextension[$i] $CXserver_ip[$i] $CXfullname[$i]\n";
+			$Pext .= "exten => $CXdialplan[$i],1,Goto(default,$CXVARremDIALstr$CXdialplan[$i],1)\n";
+
+			$i++;
+			}
+		##### END Generate the CROSS SERVER IAX and SIP phone entries #####
+		}
 
 
 	##### BEGIN Generate the Call Menu entries #####

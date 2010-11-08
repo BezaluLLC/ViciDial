@@ -27,6 +27,7 @@
 # 100831-2255 - Added password strength checking function
 # 100914-1311 - Removed other links for reports-only users
 # 101022-1323 - Added IGU_selectall function
+# 101107-1133 - Added auto-refresh code
 #
 
 
@@ -336,11 +337,11 @@ if ( ( ($ADD==34) or ($ADD==31) or ($ADD==49) ) and ($SUB==29) and ($LOGmodify_c
 	<?php
 	}
 	?>
-	var weak = Image();
+	var weak = new Image();
 	weak.src = "images/weak.png";
-	var medium = Image();
+	var medium = new Image();
 	medium.src = "images/medium.png";
-	var strong = Image();
+	var strong = new Image();
 	strong.src = "images/strong.png";
 
 	function pwdChanged(pwd_field_str, pwd_img_str) 
@@ -406,9 +407,29 @@ if ( ( ($ADD==34) or ($ADD==31) or ($ADD==49) ) and ($SUB==29) and ($LOGmodify_c
 	<?php
 
 #### Javascript for auto-generate of user ID Button
+if ( ($SSadmin_modify_refresh > 1) and (preg_match("/^3|^4/",$ADD)) )
+	{
+	?>
+	var ar_seconds=<?php echo "$SSadmin_modify_refresh;"; ?>
+
+	function modify_refresh_display()
+		{
+		if (ar_seconds > 0)
+			{
+			ar_seconds = (ar_seconds - 1);
+			document.getElementById("refresh_countdown").innerHTML = "<font color=black> screen refresh in: " + ar_seconds + " seconds</font>";
+			setTimeout("modify_refresh_display()",1000);
+			}
+		}
+
+	<?php
+	}
+
+#### Javascript for auto-generate of user ID Button
 if ( ($ADD==1) or ($ADD=="1A") )
 	{
 	?>
+
 	function user_auto()
 		{
 		var user_toggle = document.getElementById("user_toggle");
@@ -991,7 +1012,15 @@ if ( ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111
 	}
 echo "</script>\n";
 echo "</head>\n";
-echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+if ( ($SSadmin_modify_refresh > 1) and (preg_match("/^3|^4/",$ADD)) )
+	{
+	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0 onLoad=\"modify_refresh_display();\">\n";
+	}
+else
+	{
+	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	}
+	
 echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 
 $stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled from system_settings;";

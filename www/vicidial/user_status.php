@@ -15,6 +15,7 @@
 # 91130-2039 - Added user closer log manager flag display
 # 91212-0656 - Added more complete logging of Emergency Logout process
 # 100309-0544 - Added queuemetrics_loginout option
+# 101108-0032 - Added ADDMEMBER queue_log code
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -339,20 +340,21 @@ if ($stage == "log_agent_out")
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout FROM system_settings;";
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout,queuemetrics_addmember_enabled FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "<BR>$stmt\n";}
 		$qm_conf_ct = mysql_num_rows($rslt);
 		if ($qm_conf_ct > 0)
 			{
 			$row=mysql_fetch_row($rslt);
-			$enable_queuemetrics_logging =	$row[0];
-			$queuemetrics_server_ip	=		$row[1];
-			$queuemetrics_dbname =			$row[2];
-			$queuemetrics_login	=			$row[3];
-			$queuemetrics_pass =			$row[4];
-			$queuemetrics_log_id =			$row[5];
-			$queuemetrics_loginout =		$row[6];
+			$enable_queuemetrics_logging =		$row[0];
+			$queuemetrics_server_ip	=			$row[1];
+			$queuemetrics_dbname =				$row[2];
+			$queuemetrics_login	=				$row[3];
+			$queuemetrics_pass =				$row[4];
+			$queuemetrics_log_id =				$row[5];
+			$queuemetrics_loginout =			$row[6];
+			$queuemetrics_addmember_enabled =	$row[7];
 			}
 		##### END QUEUEMETRICS LOGGING LOOKUP #####
 		###########################################
@@ -367,7 +369,7 @@ if ($stage == "log_agent_out")
 
 			$agents='@agents';
 			$agent_logged_in='';
-			$time_logged_in='';
+			$time_logged_in='0';
 
 			$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/" . mysql_real_escape_string($user) . "' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') order by time_id desc limit 1;";
 			$rsltB=mysql_query($stmtB, $linkB);
@@ -376,13 +378,38 @@ if ($stage == "log_agent_out")
 			if ($qml_ct > 0)
 				{
 				$row=mysql_fetch_row($rsltB);
-				$agent_logged_in =	$row[0];
-				$time_logged_in =	$row[1];
-				$phone_logged_in =	$row[2];
+				$agent_logged_in =		$row[0];
+				$time_logged_in =		$row[1];
+				$RAWtime_logged_in =	$row[1];
+				$phone_logged_in =		$row[2];
 				}
 
 			$time_logged_in = ($now_date_epoch - $time_logged_in);
 			if ($time_logged_in > 1000000) {$time_logged_in=1;}
+
+			if ($queuemetrics_addmember_enabled > 0)
+				{
+				$stmt = "SELECT distinct queue FROM queue_log where time_id >= $RAWtime_logged_in and agent='$agent_logged_in' and verb IN('ADDMEMBER','ADDMEMBER2') order by time_id desc;";
+				$rslt=mysql_query($stmt, $linkB);
+				if ($DB) {echo "$stmt\n";}
+				$amq_conf_ct = mysql_num_rows($rslt);
+				$i=0;
+				while ($i < $amq_conf_ct)
+					{
+					$row=mysql_fetch_row($rslt);
+					$AMqueue[$i] =	$row[0];
+					$i++;
+					}
+
+				$i=0;
+				while ($i < $amq_conf_ct)
+					{
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='$AMqueue[$i]',agent='$agent_logged_in',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id';";
+					$rslt=mysql_query($stmt, $linkB);
+					$affected_rows = mysql_affected_rows($linkB);
+					$i++;
+					}
+				}
 
 			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
 			if ($DB) {echo "<BR>$stmtB\n";}

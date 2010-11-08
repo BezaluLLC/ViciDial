@@ -463,6 +463,15 @@ This field allows you to customize the name of the recording when Campaign recor
 The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this||
 Real-Time Agent Time Stats||
 Setting this to anything but DISABLED will enable the gathering of agent time stats for today for this campaign, that are viewable through the Real-Time report. CALLS are the average calls handled per agent, WAIT is the average agent wait time, CUST is the average customer talk time, ACW is the average After Call Work time, PAUSE is the average pause time. Default is DISABLED||
+Add A Dial Status to Call||
+Admin Modify Auto-Refresh||
+This is the refresh interval in seconds of the modify screens in this admin interface. Setting this to 0 will disable it, setting it below 5 will mostly make the modify screens unusable because they will refresh too quickly to change fields. This option is useful in situations where more than one manager is controlling settings on an active campaign or in-group so that the settings are refreshed frequently. Default is 0||
+Admin No-Cache||
+Setting this to 1 will set all admin pages to web browser no-cache, so every screen has to be reloaded every time it is viewed, even if clicking back on the browser. Default is 0 for disabled||
+Generate Cross-Server Phone Extensions||
+This option if set to 1 will generate dialplan entries for every phone on a multi-server system. Default is 0 for inactive||
+QueueMetrics Addmember Enabled||
+This option if set to 1 will generate ADDMEMBER2 and REMOVEMEMBER entries in queue_log. Default is 0 for disabled||
 
 
 AST_LISTS_campaign_stats.php

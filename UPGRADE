@@ -379,6 +379,14 @@ OTHER CHANGES:
 84. Added customer park time counter to the agent screen when customer is on
 	park. Also, added logging of parked calls to park_log table
 
+85. Added ADDMEMBER queue_log logging option to System Settings, and added 
+	CALLERONHOLD entries to queue_log when customer is on park.
+
+86. Added admin no-cache and auto-refresh of modify screens to admin interface.
+	These are configurable in the System Settings
+
+87. Added option for cross-server phone dialplan extensions in System Settings.
+
 
 
 

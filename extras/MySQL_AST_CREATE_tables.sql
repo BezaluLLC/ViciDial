@@ -1349,7 +1349,11 @@ first_login_trigger ENUM('Y','N') default 'N',
 hosted_settings VARCHAR(100) default '',
 default_phone_registration_password VARCHAR(20) default 'test',
 default_phone_login_password VARCHAR(20) default 'test',
-default_server_password VARCHAR(20) default 'test'
+default_server_password VARCHAR(20) default 'test',
+admin_modify_refresh SMALLINT(5) UNSIGNED default '0',
+nocache_admin ENUM('0','1') default '1',
+generate_cross_server_exten ENUM('0','1') default '0',
+queuemetrics_addmember_enabled ENUM('0','1') default '0'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2386,7 +2390,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1250',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1251',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

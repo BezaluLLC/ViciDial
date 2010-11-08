@@ -589,3 +589,10 @@ CREATE INDEX lead_id_park on park_log (lead_id);
 CREATE INDEX uniqueid_park on park_log (uniqueid);
 
 UPDATE system_settings SET db_schema_version='1250',db_schema_update_date=NOW();
+
+ALTER TABLE system_settings ADD admin_modify_refresh SMALLINT(5) UNSIGNED default '0';
+ALTER TABLE system_settings ADD nocache_admin ENUM('0','1') default '1';
+ALTER TABLE system_settings ADD generate_cross_server_exten ENUM('0','1') default '0';
+ALTER TABLE system_settings ADD queuemetrics_addmember_enabled ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1251',db_schema_update_date=NOW();

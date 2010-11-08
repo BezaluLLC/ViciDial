@@ -93,6 +93,7 @@ $subcamp_color =	'#C6C6C6';
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
+$QUERY_STRING = getenv("QUERY_STRING");
 
 $Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Fronter - Closer Report, Lists Campaign Statuses Report, Export Calls Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List';
 
@@ -1475,6 +1476,18 @@ if (isset($_GET["eht_minimum_prompt_seconds"]))				{$eht_minimum_prompt_seconds=
 	elseif (isset($_POST["eht_minimum_prompt_seconds"]))	{$eht_minimum_prompt_seconds=$_POST["eht_minimum_prompt_seconds"];}
 if (isset($_GET["realtime_agent_time_stats"]))				{$realtime_agent_time_stats=$_GET["realtime_agent_time_stats"];}
 	elseif (isset($_POST["realtime_agent_time_stats"]))		{$realtime_agent_time_stats=$_POST["realtime_agent_time_stats"];}
+if (isset($_GET["admin_modify_refresh"]))			{$admin_modify_refresh=$_GET["admin_modify_refresh"];}
+	elseif (isset($_POST["admin_modify_refresh"]))	{$admin_modify_refresh=$_POST["admin_modify_refresh"];}
+if (isset($_GET["nocache_admin"]))			{$nocache_admin=$_GET["nocache_admin"];}
+	elseif (isset($_POST["nocache_admin"]))	{$nocache_admin=$_POST["nocache_admin"];}
+if (isset($_GET["generate_cross_server_exten"]))			{$generate_cross_server_exten=$_GET["generate_cross_server_exten"];}
+	elseif (isset($_POST["generate_cross_server_exten"]))	{$generate_cross_server_exten=$_POST["generate_cross_server_exten"];}
+if (isset($_GET["queuemetrics_addmember_enabled"]))				{$queuemetrics_addmember_enabled=$_GET["queuemetrics_addmember_enabled"];}
+	elseif (isset($_POST["queuemetrics_addmember_enabled"]))	{$queuemetrics_addmember_enabled=$_POST["queuemetrics_addmember_enabled"];}
+if (isset($_GET["modify_page"]))			{$modify_page=$_GET["modify_page"];}
+	elseif (isset($_POST["modify_page"]))	{$modify_page=$_POST["modify_page"];}
+if (isset($_GET["modify_url"]))				{$modify_url=$_GET["modify_url"];}
+	elseif (isset($_POST["modify_url"]))	{$modify_url=$_POST["modify_url"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1705,6 +1718,11 @@ if ($non_latin < 1)
 	$calculate_estimated_hold_seconds = ereg_replace("[^0-9]","",$calculate_estimated_hold_seconds);
 	$customer_3way_hangup_seconds = ereg_replace("[^0-9]","",$customer_3way_hangup_seconds);
 	$eht_minimum_prompt_seconds = ereg_replace("[^0-9]","",$eht_minimum_prompt_seconds);
+	$admin_modify_refresh = ereg_replace("[^0-9]","",$admin_modify_refresh);
+	$nocache_admin = ereg_replace("[^0-9]","",$nocache_admin);
+	$generate_cross_server_exten = ereg_replace("[^0-9]","",$generate_cross_server_exten);
+	$queuemetrics_addmember_enabled = ereg_replace("[^0-9]","",$queuemetrics_addmember_enabled);
+	$modify_page = ereg_replace("[^0-9]","",$modify_page);
 
 	$drop_call_seconds = ereg_replace("[^-0-9]","",$drop_call_seconds);
 
@@ -2246,7 +2264,10 @@ if ($non_latin < 1)
 	$blind_monitor_message = ereg_replace(";","",$blind_monitor_message);
 	$blind_monitor_message = ereg_replace("\r","",$blind_monitor_message);
 	$blind_monitor_message = ereg_replace("\"","",$blind_monitor_message);
-
+	$modify_url = ereg_replace("\\\\","",$modify_url);
+	$modify_url = ereg_replace(";","",$modify_url);
+	$modify_url = ereg_replace("\r","",$modify_url);
+	$modify_url = ereg_replace("\"","",$modify_url);
 	### VARIABLES TO BE mysql_real_escape_string ###
 	# $web_form_address
 	# $queuemetrics_url
@@ -2577,11 +2598,12 @@ else
 # 100929-1203 - Added add_lead_url feature to In-Groups
 # 101008-0349 - Added Estimated Hold Time Minimum options, Manual Dial Preview settings and two new variables for recording filenames
 # 101022-1427 - Added ability to change user in-group prefs from in-group mod screen, added realtime_agent_time_stats campaign option
+# 101106-1850 - Added admin refrech, no-cache, cross-server-exten, QM-addmember options
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-285';
-$build = '101022-1427';
+$admin_version = '2.4-286';
+$build = '101106-1850';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -2590,6 +2612,8 @@ $MT[0]='';
 $US='_';
 $active_lists=0;
 $inactive_lists=0;
+$modify_refresh_set=0;
+$modify_footer_refresh=0;
 
 $month_old = mktime(0, 0, 0, date("m")-1, date("d"),  date("Y"));
 $past_month_date = date("Y-m-d H:i:s",$month_old);
@@ -2629,7 +2653,7 @@ if ($force_logout)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled,admin_modify_refresh,nocache_admin FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -2641,6 +2665,8 @@ if ($qm_conf_ct > 0)
 	$SSuser_territories_active =	$row[2];
 	$SSallow_custom_dialplan =		$row[3];
 	$SScallcard_enabled =			$row[4];
+	$SSadmin_modify_refresh =		$row[5];
+	$SSnocache_admin =				$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -2787,9 +2813,29 @@ else
 
 
 header ("Content-type: text/html; charset=utf-8");
+if ($SSnocache_admin=='1')
+	{
+	header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
+	header ("Pragma: no-cache");                          // HTTP/1.0
+	}
 echo "<html>\n";
 echo "<head>\n";
 echo "<!-- VERSION: $admin_version   BUILD: $build   ADD: $ADD   PHP_SELF: $PHP_SELF-->\n";
+echo "<META NAME=\"ROBOTS\" CONTENT=\"NONE\">\n";
+echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2010 ViciDial Group\">\n";
+echo "<META NAME=\"AUTHOR\" CONTENT=\"ViciDial Group\">\n";
+if ($SSnocache_admin=='1')
+	{
+	echo "<META HTTP-EQUIV=\"Pragma\" CONTENT=\"no-cache\">\n";
+	echo "<META HTTP-EQUIV=\"Expires\" CONTENT=\"-1\">\n";
+	echo "<META HTTP-EQUIV=\"CACHE-CONTROL\" CONTENT=\"NO-CACHE\">\n";
+	}
+if ( ($SSadmin_modify_refresh > 1) and (preg_match("/^3/",$ADD)) )
+	{
+	$modify_refresh_set=1;
+	if (preg_match("/^3/",$ADD)) {$modify_url = "$PHP_SELF?$QUERY_STRING";}
+	echo "<META HTTP-EQUIV=\"REFRESH\" CONTENT=\"$SSadmin_modify_refresh;URL=$modify_url\">\n";
+	}
 echo "<title>ADMINISTRATION: ";
 
 if (!isset($ADD))   {$ADD=0;}
@@ -6895,6 +6941,16 @@ if ($ADD==99999)
 	<B>Admin Home URL -</B> This is the URL or web site address that you will go to if you click on the HOME link at the top of the admin.php page.
 
 	<BR>
+	<A NAME="settings-admin_modify_refresh">
+	<BR>
+	<B>Admin Modify Auto-Refresh -</B> This is the refresh interval in seconds of the modify screens in this admin interface. Setting this to 0 will disable it, setting it below 5 will mostly make the modify screens unusable because they will refresh too quickly to change fields. This option is useful in situations where more than one manager is controlling settings on an active campaign or in-group so that the settings are refreshed frequently. Default is 0.
+
+	<BR>
+	<A NAME="settings-nocache_admin">
+	<BR>
+	<B>Admin No-Cache -</B> Setting this to 1 will set all admin pages to web browser no-cache, so every screen has to be reloaded every time it is viewed, even if clicking back on the browser. Default is 0 for disabled.
+
+	<BR>
 	<A NAME="settings-enable_agc_xfer_log">
 	<BR>
 	<B>Enable Agent Transfer Logfile -</B> This option will log to a text logfile on the webserver every time a call is transferred to an agent. Default is 0, disabled.
@@ -7006,6 +7062,11 @@ if ($ADD==99999)
 	<A NAME="settings-allow_custom_dialplan">
 	<BR>
 	<B>Allow Custom Dialplan Entries -</B> This option allows you to enter custom dialplan lines into Call Menus, Servers and System Settings. Default is 0 for inactive.
+
+	<BR>
+	<A NAME="settings-generate_cross_server_exten">
+	<BR>
+	<B>Generate Cross-Server Phone Extensions -</B> This option if set to 1 will generate dialplan entries for every phone on a multi-server system. Default is 0 for inactive.
 
 	<BR>
 	<A NAME="settings-user_territories_active">
@@ -7151,6 +7212,11 @@ if ($ADD==99999)
 	<A NAME="settings-queuemetrics_callstatus">
 	<BR>
 	<B>QueueMetrics CallStatus -</B> This option if set to 0 will not put in the CALLSTATUS entry into queue_log when an agent dispositions a call. Default is 1 for enabled.
+
+	<BR>
+	<A NAME="settings-queuemetrics_addmember_enabled">
+	<BR>
+	<B>QueueMetrics Addmember Enabled -</B> This option if set to 1 will generate ADDMEMBER2 and REMOVEMEMBER entries in queue_log. Default is 0 for disabled.
 
 	<BR>
 	<A NAME="settings-enable_vtiger_integration">
@@ -7557,8 +7623,10 @@ if ($ADD==7111111)
 $ADMIN=$PHP_SELF;
 require("admin_header.php");
 
-
-
+if ( ($SSadmin_modify_refresh > 1) and (preg_match("/^3|^4/",$ADD)) )
+	{
+	echo "<span id=refresh_countdown></span><BR>";
+	}
 
 
 ######################################################################################################
@@ -15224,7 +15292,7 @@ if ($ADD==411111111111111)
 			}
 		$reports_use_slave_db = preg_replace("/,$/","",$new_field_value);
 
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysql_real_escape_string($webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db',webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password';";
+		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysql_real_escape_string($webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db',webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled';";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -16347,20 +16415,21 @@ if ($ADD==62)
 
 				#############################################
 				##### START QUEUEMETRICS LOGGING LOOKUP #####
-				$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout FROM system_settings;";
+				$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout,queuemetrics_addmember_enabled FROM system_settings;";
 				$rslt=mysql_query($stmt, $link);
 				if ($DB) {echo "<BR>$stmt\n";}
 				$qm_conf_ct = mysql_num_rows($rslt);
 				if ($qm_conf_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
-					$enable_queuemetrics_logging =	$row[0];
-					$queuemetrics_server_ip	=		$row[1];
-					$queuemetrics_dbname =			$row[2];
-					$queuemetrics_login	=			$row[3];
-					$queuemetrics_pass =			$row[4];
-					$queuemetrics_log_id =			$row[5];
-					$queuemetrics_loginout =		$row[6];
+					$enable_queuemetrics_logging =		$row[0];
+					$queuemetrics_server_ip	=			$row[1];
+					$queuemetrics_dbname =				$row[2];
+					$queuemetrics_login	=				$row[3];
+					$queuemetrics_pass =				$row[4];
+					$queuemetrics_log_id =				$row[5];
+					$queuemetrics_loginout =			$row[6];
+					$queuemetrics_addmember_enabled =	$row[7];
 					}
 				##### END QUEUEMETRICS LOGGING LOOKUP #####
 				###########################################
@@ -16375,7 +16444,7 @@ if ($ADD==62)
 
 					$agents='@agents';
 					$agent_logged_in='';
-					$time_logged_in='';
+					$time_logged_in='0';
 
 					$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/$VLA_user[$k]' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') order by time_id desc limit 1;";
 					$rsltB=mysql_query($stmtB, $linkB);
@@ -16384,13 +16453,38 @@ if ($ADD==62)
 					if ($qml_ct > 0)
 						{
 						$row=mysql_fetch_row($rsltB);
-						$agent_logged_in =	$row[0];
-						$time_logged_in =	$row[1];
-						$phone_logged_in =	$row[2];
+						$agent_logged_in =		$row[0];
+						$time_logged_in =		$row[1];
+						$RAWtime_logged_in =	$row[1];
+						$phone_logged_in =		$row[2];
 						}
 
 					$time_logged_in = ($now_date_epoch - $time_logged_in);
 					if ($time_logged_in > 1000000) {$time_logged_in=1;}
+
+					if ($queuemetrics_addmember_enabled > 0)
+						{
+						$stmt = "SELECT distinct queue FROM queue_log where time_id >= $RAWtime_logged_in and agent='$agent_logged_in' and verb IN('ADDMEMBER','ADDMEMBER2') order by time_id desc;";
+						$rslt=mysql_query($stmt, $linkB);
+						if ($DB) {echo "$stmt\n";}
+						$amq_conf_ct = mysql_num_rows($rslt);
+						$i=0;
+						while ($i < $amq_conf_ct)
+							{
+							$row=mysql_fetch_row($rslt);
+							$AMqueue[$i] =	$row[0];
+							$i++;
+							}
+
+						$i=0;
+						while ($i < $amq_conf_ct)
+							{
+							$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='$AMqueue[$i]',agent='$agent_logged_in',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id';";
+							$rslt=mysql_query($stmt, $linkB);
+							$affected_rows = mysql_affected_rows($linkB);
+							$i++;
+							}
+						}
 
 					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
 					if ($DB) {echo "<BR>$stmtB\n";}
@@ -17647,6 +17741,12 @@ if ($ADD==3)
 	{
 	if ($LOGmodify_users==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=3&user=$user";
+			$modify_footer_refresh=1;
+			}
+
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -17974,6 +18074,11 @@ if ($ADD==31)
 	{
 	if ($LOGmodify_campaigns==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=31&campaign_id=$campaign_id&SUB=$SUB";
+			$modify_footer_refresh=1;
+			}
 		if ($stage=='show_dialable')
 			{
 			$stmt="UPDATE vicidial_campaigns set display_dialable_count='Y' where campaign_id='$campaign_id';";
@@ -18426,7 +18531,7 @@ if ($ADD==31)
 					}
 				}
 
-			echo "<tr bgcolor=#8EBCFD><td align=right>Add A Dial Status: </td><td align=left><select size=1 name=dial_status $DEFlistDISABLE>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Add A Dial Status to Call: </td><td align=left><select size=1 name=dial_status $DEFlistDISABLE>\n";
 			echo "<option value=\"\"> - NONE - </option>\n";
 
 			echo "$dial_statuses_list";
@@ -19686,6 +19791,11 @@ if ($ADD==34)
 	{
 	if ($LOGmodify_campaigns==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=31&campaign_id=$campaign_id&SUB=$SUB";
+			$modify_footer_refresh=1;
+			}
 		if ($stage=='show_dialable')
 			{
 			$stmt="UPDATE vicidial_campaigns set display_dialable_count='Y' where campaign_id='$campaign_id';";
@@ -19875,7 +19985,7 @@ if ($ADD==34)
 					}
 				}
 
-			echo "<tr bgcolor=#8EBCFD><td align=right>Add A Dial Status: </td><td align=left><select size=1 name=dial_status $DEFlistDISABLE>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Add A Dial Status to Call: </td><td align=left><select size=1 name=dial_status $DEFlistDISABLE>\n";
 			echo "<option value=\"\"> - NONE - </option>\n";
 
 			echo "$dial_statuses_list";
@@ -20957,6 +21067,11 @@ if ($ADD==311)
 	{
 	if ($LOGmodify_lists==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=311&list_id=$list_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -21533,6 +21648,11 @@ if ($ADD==3111)
 	{
 	if ($LOGmodify_ingroups==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=3111&group_id=$group_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -22443,6 +22563,11 @@ if ($ADD==3311)
 	{
 	if ($LOGmodify_dids==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=3311&did_id=$did_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -22721,6 +22846,11 @@ if ($ADD==3511)
 	{
 	if ($LOGmodify_dids==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=3511&menu_id=$menu_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -23036,6 +23166,11 @@ if ($ADD==31111)
 	{
 	if ($LOGmodify_remoteagents==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=31111&remote_agent_id=$remote_agent_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -23118,6 +23253,11 @@ if ($ADD==3711)
 	{
 	if ($LOGmodify_dids==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=3711&filter_phone_group_id=$filter_phone_group_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -23170,6 +23310,11 @@ if ($ADD==32111)
 	{
 	if ($LOGmodify_remoteagents==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=32111&extension_id=$extension_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -23240,6 +23385,11 @@ if ($ADD==311111)
 	{
 	if ($LOGmodify_usergroups==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=311111&user_group=$user_group";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -23472,6 +23622,11 @@ if ($ADD==3111111)
 	{
 	if ($LOGmodify_scripts==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=3111111&script_id=$script_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -23488,6 +23643,7 @@ if ($ADD==3111111)
 		echo "<input type=hidden name=ADD value=4111111>\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<input type=hidden name=script_id value=\"$script_id\">\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Script ID: </td><td align=left><B>$script_id</B>$NWB#vicidial_scripts-script_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Script Name: </td><td align=left><input type=text name=script_name size=40 maxlength=50 value=\"$script_name\"> (title of the script)$NWB#vicidial_scripts-script_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Script Comments: </td><td align=left><input type=text name=script_comments size=50 maxlength=255 value=\"$script_comments\"> $NWB#vicidial_scripts-script_comments$NWE</td></tr>\n";
@@ -23495,6 +23651,7 @@ if ($ADD==3111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Script Text: <BR><BR><B><a href=\"javascript:openNewWindow('$PHP_SELF?ADD=7111111&script_id=$script_id')\">Preview Script</a></B> </td><td align=left>";
 		# BEGIN Insert Field
 		echo "<select id=\"selectedField\" name=\"selectedField\">";
+		echo "<option value=\"fullname\">Agent Name</option>";
 		echo "<option>vendor_lead_code</option>";
 		echo "<option>source_id</option>";
 		echo "<option>list_id</option>";
@@ -23617,9 +23774,6 @@ if ($ADD==3111111)
 			$o++;
 			}
 
-		echo "</TABLE>\n";
-
-
 		if ($LOGdelete_scripts > 0)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=5111111&script_id=$script_id\">DELETE THIS SCRIPT</a>\n";
@@ -23628,6 +23782,7 @@ if ($ADD==3111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=SCRIPTS&stage=$script_id\">Click here to see Admin chages to this script</FONT>\n";
 			}
+
 		}
 	else
 		{
@@ -23645,6 +23800,11 @@ if ($ADD==31111111)
 	{
 	if ($LOGmodify_filters==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=31111111&lead_filter_id=$lead_filter_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -23660,6 +23820,7 @@ if ($ADD==31111111)
 		echo "<input type=hidden name=ADD value=41111111>\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<input type=hidden name=lead_filter_id value=\"$lead_filter_id\">\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Filter ID: </td><td align=left><B>$lead_filter_id</B>$NWB#vicidial_lead_filters-lead_filter_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Filter Name: </td><td align=left><input type=text name=lead_filter_name size=40 maxlength=50 value=\"$lead_filter_name\"> (short description of the filter)$NWB#vicidial_lead_filters-lead_filter_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Filter Comments: </td><td align=left><input type=text name=lead_filter_comments size=50 maxlength=255 value=\"$lead_filter_comments\"> $NWB#vicidial_lead_filters-lead_filter_comments$NWE</td></tr>\n";
@@ -23716,6 +23877,11 @@ if ($ADD==321111111)
 	{
 	if ($LOGmodify_call_times==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=311111111&call_time_id=$call_time_id";
+			$modify_footer_refresh=1;
+			}
 		if ( ($stage=="ADD") and (strlen($state_rule)>0) )
 			{
 			$stmt="SELECT ct_state_call_times from vicidial_call_times where call_time_id='$call_time_id';";
@@ -23761,6 +23927,11 @@ if ($ADD==311111111)
 	{
 	if ($LOGmodify_call_times==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=311111111&call_time_id=$call_time_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -23801,6 +23972,7 @@ if ($ADD==311111111)
 		echo "<input type=hidden name=ADD value=411111111>\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<input type=hidden name=call_time_id value=\"$call_time_id\">\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Call Time ID: </td><td align=left colspan=3><B>$call_time_id</B>$NWB#vicidial_call_times-call_time_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Call Time Name: </td><td align=left colspan=3><input type=text name=call_time_name size=40 maxlength=50 value=\"$call_time_name\"> (short description of the call time)$NWB#vicidial_call_times-call_time_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Call Time Comments: </td><td align=left colspan=3><input type=text name=call_time_comments size=50 maxlength=255 value=\"$call_time_comments\"> $NWB#vicidial_call_times-call_time_comments$NWE</td></tr>\n";
@@ -23924,6 +24096,11 @@ if ($ADD==3111111111)
 	{
 	if ($LOGmodify_call_times==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=3111111111&call_time_id=$call_time_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -23956,6 +24133,7 @@ if ($ADD==3111111111)
 		echo "<input type=hidden name=ADD value=4111111111>\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<input type=hidden name=call_time_id value=\"$call_time_id\">\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Call Time ID: </td><td align=left colspan=3><B>$call_time_id</B>$NWB#vicidial_call_times-call_time_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>State Call Time State: </td><td align=left colspan=3><input type=text name=state_call_time_state size=4 maxlength=2 value=\"$state_call_time_state\"> $NWB#vicidial_call_times-state_call_time_state$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>State Call Time Name: </td><td align=left colspan=3><input type=text name=call_time_name size=40 maxlength=50 value=\"$call_time_name\"> (short description of the call time)$NWB#vicidial_call_times-call_time_name$NWE</td></tr>\n";
@@ -24008,6 +24186,11 @@ if ($ADD==331111111)
 	{
 	if ($LOGmodify_call_times==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=331111111&shift_id=$shift_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -24120,6 +24303,11 @@ if ($ADD==31111111111)
 	{
 	if ($LOGast_admin_access==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=31111111111&extension=$extension&server_ip=$server_ip";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -24267,6 +24455,11 @@ if ($ADD==32111111111)
 	{
 	if ($LOGast_admin_access==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=32111111111&alias_id=$alias_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -24338,6 +24531,11 @@ if ($ADD==33111111111)
 	{
 	if ($LOGast_admin_access==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=33111111111&group_alias_id=$group_alias_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -24383,6 +24581,11 @@ if ($ADD==311111111111)
 	{
 	if ($LOGmodify_servers==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=311111111111&server_id=$server_id&server_ip=$server_ip";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -24698,6 +24901,11 @@ if ($ADD==331111111111)
 	{
 	if ($LOGast_admin_access==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=331111111111&template_id=$template_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -24810,6 +25018,11 @@ if ($ADD==341111111111)
 	{
 	if ($LOGast_admin_access==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=341111111111&carrier_id=$carrier_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -24894,6 +25107,11 @@ if ($ADD==351111111111)
 	{
 	if ($LOGast_admin_access==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=351111111111&tts_id=$tts_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -24947,6 +25165,11 @@ if ($ADD==361111111111)
 	{
 	if ($LOGast_admin_access==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=361111111111&moh_id=$moh_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -25025,6 +25248,11 @@ if ($ADD==371111111111)
 	{
 	if ($LOGast_admin_access==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=371111111111&voicemail_id=$voicemail_id";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -25083,6 +25311,11 @@ if ($ADD==3111111111111)
 	{
 	if ($LOGast_admin_access==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=3111111111111&conf_exten=$conf_exten&server_ip=$server_ip";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -25129,6 +25362,11 @@ if ($ADD==31111111111111)
 	{
 	if ($LOGast_admin_access==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=31111111111111&conf_exten=$conf_exten&server_ip=$server_ip";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -25176,10 +25414,15 @@ if ($ADD==311111111111111)
 	{
 	if ($LOGmodify_servers==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=311111111111111";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password from system_settings;";
+		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled from system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$version =						$row[0];
@@ -25264,7 +25507,10 @@ if ($ADD==311111111111111)
 		$default_phone_registration_password =	$row[79];
 		$default_phone_login_password =	$row[80];
 		$default_server_password =		$row[81];
-
+		$admin_modify_refresh =			$row[82];
+		$nocache_admin =				$row[83];
+		$generate_cross_server_exten =	$row[84];
+		$queuemetrics_addmember_enabled =	$row[85];
 
 		echo "<br>MODIFY VICIDIAL SYSTEM SETTINGS<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=411111111111111>\n";
@@ -25286,6 +25532,8 @@ if ($ADD==311111111111111)
 		echo "</select>$NWB#settings-vicidial_agent_disable$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Allow SIPSAK Messages: </td><td align=left><select size=1 name=allow_sipsak_messages><option>1</option><option>0</option><option selected>$allow_sipsak_messages</option></select>$NWB#settings-allow_sipsak_messages$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Admin Home URL: </td><td align=left><input type=text name=admin_home_url size=50 maxlength=255 value=\"$admin_home_url\">$NWB#settings-admin_home_url$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Admin Modify Auto-Refresh: </td><td align=left><input type=text name=admin_modify_refresh size=6 maxlength=5 value=\"$admin_modify_refresh\">$NWB#settings-admin_modify_refresh$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Admin No-Cache: </td><td align=left><select size=1 name=nocache_admin><option>1</option><option>0</option><option selected>$nocache_admin</option></select>$NWB#settings-nocache_admin$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Enable Agent Transfer Logfile: </td><td align=left><select size=1 name=enable_agc_xfer_log><option>1</option><option>0</option><option selected>$enable_agc_xfer_log</option></select>$NWB#settings-enable_agc_xfer_log$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Enable Agent Disposition Logfile: </td><td align=left><select size=1 name=enable_agc_dispo_log><option>1</option><option>0</option><option selected>$enable_agc_dispo_log</option></select>$NWB#settings-enable_agc_dispo_log$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Timeclock End Of Day: </td><td align=left><input type=text name=timeclock_end_of_day size=5 maxlength=4 value=\"$timeclock_end_of_day\">$NWB#settings-timeclock_end_of_day$NWE</td></tr>\n";
@@ -25392,6 +25640,8 @@ if ($ADD==311111111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Max FILL Calls per Second: </td><td align=left><input type=text name=outbound_calls_per_second size=4 maxlength=3 value=\"$outbound_calls_per_second\">$NWB#settings-outbound_calls_per_second$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Allow Custom Dialplan Entries: </td><td align=left><select size=1 name=allow_custom_dialplan><option>1</option><option>0</option><option selected>$allow_custom_dialplan</option></select>$NWB#settings-allow_custom_dialplan$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Generate Cross-Server Phone Extensions: </td><td align=left><select size=1 name=generate_cross_server_exten><option>1</option><option>0</option><option selected>$generate_cross_server_exten</option></select>$NWB#settings-generate_cross_server_exten$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>User Territories Active: </td><td align=left><select size=1 name=user_territories_active><option>1</option><option>0</option><option selected>$user_territories_active</option></select>$NWB#settings-user_territories_active$NWE</td></tr>\n";
 
@@ -25510,7 +25760,7 @@ if ($ADD==311111111111111)
 		echo "<option selected value=\"$queuemetrics_loginout\">$queuemetrics_loginout</option>\n";
 		echo "</select>$NWB#settings-queuemetrics_loginout$NWE</td></tr>\n";
 		echo "<tr bgcolor=#99FFCC><td align=right>QueueMetrics CallStatus: </td><td align=left><select size=1 name=queuemetrics_callstatus><option>1</option><option>0</option><option selected>$queuemetrics_callstatus</option></select>$NWB#settings-queuemetrics_callstatus$NWE</td></tr>\n";
-
+		echo "<tr bgcolor=#99FFCC><td align=right>QueueMetrics Addmember Enabled: </td><td align=left><select size=1 name=queuemetrics_addmember_enabled><option>1</option><option>0</option><option selected>$queuemetrics_addmember_enabled</option></select>$NWB#settings-queuemetrics_addmember_enabled$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Enable Vtiger Integration: </td><td align=left><select size=1 name=enable_vtiger_integration><option>1</option><option>0</option><option selected>$enable_vtiger_integration</option></select>$NWB#settings-enable_vtiger_integration$NWE\n";
 		echo " &nbsp; <a href=\"./vtiger_user.php\" target=\"_blank\">Click here to Synchronize users with Vtiger</a>\n";
@@ -25550,6 +25800,11 @@ if ($ADD==321111111111111)
 	{
 	if ($LOGmodify_servers==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=321111111111111";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -25668,6 +25923,11 @@ if ($ADD==331111111111111)
 	{
 	if ($LOGmodify_servers==1)
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=331111111111111";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -25774,6 +26034,11 @@ if ($ADD==341111111111111)
 	{
 	if ( ($LOGmodify_servers==1) and ($SSqc_features_active > 0) )
 		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=341111111111111";
+			$modify_footer_refresh=1;
+			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -28187,9 +28452,26 @@ echo "</font>\n";
 </TD><TD BGCOLOR=#D9E6FE>
 </TD></TR><TABLE>
 </body>
-</html>
-
 <?php
+
+if ( ($SSnocache_admin=='1') or ( ($SSadmin_modify_refresh > 1) and ($modify_footer_refresh > 0) and (strlen($modify_url)>10) ) )
+	{
+	echo "<head>\n";
+	if ($SSnocache_admin=='1')
+		{
+		echo "<META HTTP-EQUIV=\"Pragma\" CONTENT=\"no-cache\">\n";
+		echo "<META HTTP-EQUIV=\"Expires\" CONTENT=\"-1\">\n";
+		echo "<META HTTP-EQUIV=\"CACHE-CONTROL\" CONTENT=\"NO-CACHE\">\n";
+		}
+	if ( ($SSadmin_modify_refresh > 1) and ($modify_footer_refresh > 0) and (strlen($modify_url)>10) )
+		{
+		echo "<META HTTP-EQUIV=\"REFRESH\" CONTENT=\"$SSadmin_modify_refresh;URL=$modify_url\">\n";
+		}
+	echo "</head>\n";
+	}
+
+echo "</html>\n";
+
 	
 exit;
 

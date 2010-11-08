@@ -195,6 +195,10 @@ agent actions - used by vicidial.php, vdc_db_query.php and AST_VDremote_agents.p
 	UNPAUSEALL
 	UNPAUSE
 	PAUSEREASON
+	ADDMEMBER2
+	REMOVEMEMBER
+	CALLERONHOLD
+	CALLEROFFHOLD
 
 call actions before going to agent - used by agi-VDAD_ALL_inbound/outbound scripts
 	ENTERQUEUE(url|callerid)
@@ -221,9 +225,9 @@ not used in vicidial -
 
 
 
-data1: call termination codes, DID, IVR context
+data1: call termination codes, DID, IVR context, hold reason, on-hold length in seconds, addmember2 extension
 
-data2: callerID or number called(sometimes prepended by DNIS) [3101-9015556189]
+data2: callerID or number called(sometimes prepended by DNIS) [3101-9015556189], off-hold reason
 	NOTE: the queuemetrics_eq_prepend field allows you to specify what
 	vicidial_list field you would like to prefend to the phone number on
 	ENTERQUEUE/CALLOUTBOUND events
@@ -233,6 +237,12 @@ data3: ??
 data4: ??
 
 serverid: number of the server the call came from [for VICIDIAL use the database system_settings.queuemetrics_log_id field]
+
+
+
+
+
+
 
 
 
