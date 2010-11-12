@@ -22339,7 +22339,7 @@ if ($ADD==3111)
 		echo "<TABLE width=600 cellspacing=3>\n";
 		echo "<tr><td>USER</td><td>SELECTED</td><td> &nbsp; &nbsp; RANK</td><td> &nbsp; &nbsp; CALLS TODAY</td></tr>\n";
 
-		$stmt="SELECT user,full_name,closer_campaigns from vicidial_users where active='Y';";
+		$stmt="SELECT user,full_name,closer_campaigns from vicidial_users where active='Y' order by user;";
 		$rsltx=mysql_query($stmt, $link);
 		$users_to_print = mysql_num_rows($rsltx);
 
