@@ -276,7 +276,7 @@ while ($i < $statha_to_print)
 	$customer_interactive_statuses .= "'$row[0]',";
 	$i++;
 	}
-$stmt="select status from vicidial_campaign_statuses where human_answered='Y';";
+$stmt="select status from vicidial_campaign_statuses where human_answered='Y' $group_SQLand;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $statha_to_print = mysql_num_rows($rslt);
