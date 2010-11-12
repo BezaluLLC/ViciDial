@@ -335,6 +335,7 @@ gmt_offset_now DECIMAL(4,2) DEFAULT '0.00',
 state VARCHAR(2) default '',
 alt_dial VARCHAR(6) default 'NONE',
 priority TINYINT(2) default '0',
+source VARCHAR(1) default '',
 index (lead_id)
 );
 
@@ -773,7 +774,11 @@ customer_3way_hangup_action ENUM('NONE','DISPO') default 'NONE',
 ivr_park_call ENUM('DISABLED','ENABLED','ENABLED_PARK_ONLY','ENABLED_BUTTON_HIDDEN') default 'DISABLED',
 ivr_park_call_agi TEXT,
 manual_preview_dial ENUM('DISABLED','PREVIEW_AND_SKIP','PREVIEW_ONLY') default 'PREVIEW_AND_SKIP',
-realtime_agent_time_stats ENUM('DISABLED','WAIT_CUST_ACW','WAIT_CUST_ACW_PAUSE','CALLS_WAIT_CUST_ACW_PAUSE') default 'CALLS_WAIT_CUST_ACW_PAUSE'
+realtime_agent_time_stats ENUM('DISABLED','WAIT_CUST_ACW','WAIT_CUST_ACW_PAUSE','CALLS_WAIT_CUST_ACW_PAUSE') default 'CALLS_WAIT_CUST_ACW_PAUSE',
+use_auto_hopper ENUM('Y','N') default 'Y',
+auto_hopper_multi VARCHAR(6) default '1',
+auto_hopper_level MEDIUMINT(8) UNSIGNED default '0',
+auto_trim_hopper ENUM('Y','N') default 'Y'
 );
 
 CREATE TABLE vicidial_lists (
@@ -2390,7 +2395,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1251',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1252',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

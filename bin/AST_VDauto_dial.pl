@@ -91,6 +91,7 @@
 # 100309-0551 - Added queuemetrics_loginout option
 # 100327-1359 - Fixed LAGGED issues
 # 100903-0041 - Changed lead_id max length to 10 digits
+# 101111-1556 - Added source to vicidial_hopper inserts
 #
 
 
@@ -1549,7 +1550,7 @@ while($one_day_interval > 0)
 											}
 										if ($VD_alt_dnc_count < 1)
 											{
-											$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ALT',user='',priority='25';";
+											$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ALT',user='',priority='25',source='A';";
 											$affected_rows = $dbhA->do($stmtA);
 											$event_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|";   &event_logger;
 											}
@@ -1627,7 +1628,7 @@ while($one_day_interval > 0)
 											}
 										if ($VD_alt_dnc_count < 1)
 											{
-											$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ADDR3',user='',priority='20';";
+											$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ADDR3',user='',priority='20',source='A';";
 											$affected_rows = $dbhA->do($stmtA);
 											$event_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|";   &event_logger;
 											}
@@ -1745,7 +1746,7 @@ while($one_day_interval > 0)
 												{
 												if ($alt_dial_phones_count == $Xlast) 
 													{$Xlast = 'LAST';}
-												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15';";
+												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15',source='A';";
 												$affected_rows = $dbhA->do($stmtA);
 												$event_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;
 												$Xlast=9999999999;
@@ -1756,7 +1757,7 @@ while($one_day_interval > 0)
 													{
 													if ($alt_dial_phones_count == $Xlast) 
 														{$Xlast = 'LAST';}
-													$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='DNC',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15';";
+													$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='DNC',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15',source='A';";
 													$affected_rows = $dbhA->do($stmtA);
 													$event_string = "--    VDH record DNC inserted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;
 													$Xlast=9999999999;

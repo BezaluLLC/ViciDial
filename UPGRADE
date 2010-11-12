@@ -387,6 +387,10 @@ OTHER CHANGES:
 
 87. Added option for cross-server phone dialplan extensions in System Settings.
 
+88. Added campaign feature to automatically adjust the hopper level to the 
+	dialing rate and the number of active agents, also added a trim feature
+	to make sure the hopper is not filled too much
+
 
 
 

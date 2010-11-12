@@ -56,6 +56,7 @@
 # 100123-1449 - Added double-log end logging
 # 100224-1229 - Fixed manual dial park call bug
 # 100903-0041 - Changed lead_id max length to 10 digits
+# 101111-1556 - Added source to vicidial_hopper inserts
 #
 
 # defaults for PreFork
@@ -1267,7 +1268,7 @@ sub process_request
 											}
 										if ($VD_alt_dnc_count < 1)
 											{
-											$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ALT',user='',priority='25';";
+											$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ALT',user='',priority='25',source='A';";
 											$affected_rows = $dbhA->do($stmtA);
 											if ($AGILOG) {$agi_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|";   &agi_output;}
 											}
@@ -1347,7 +1348,7 @@ sub process_request
 											}
 										if ($VD_alt_dnc_count < 1)
 											{
-											$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ADDR3',user='',priority='20';";
+											$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ADDR3',user='',priority='20',source='A';";
 											$affected_rows = $dbhA->do($stmtA);
 											if ($AGILOG) {$agi_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|";   &agi_output;}
 											}
@@ -1468,7 +1469,7 @@ sub process_request
 												{
 												if ($alt_dial_phones_count eq '$Xlast') 
 													{$Xlast = 'LAST';}
-												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15';";
+												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15',source='A';";
 												$affected_rows = $dbhA->do($stmtA);
 												if ($AGILOG) {$agi_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &agi_output;}
 												$Xlast=9999999999;
@@ -1479,7 +1480,7 @@ sub process_request
 													{
 													if ($alt_dial_phones_count eq '$Xlast') 
 														{$Xlast = 'LAST';}
-													$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='DNC',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15';";
+													$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='DNC',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15',source='A';";
 													$affected_rows = $dbhA->do($stmtA);
 													if ($AGILOG) {$agi_string = "--    VDH record DNC inserted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &agi_output;}
 													$Xlast=9999999999;

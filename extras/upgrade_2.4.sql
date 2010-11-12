@@ -596,3 +596,12 @@ ALTER TABLE system_settings ADD generate_cross_server_exten ENUM('0','1') defaul
 ALTER TABLE system_settings ADD queuemetrics_addmember_enabled ENUM('0','1') default '0';
 
 UPDATE system_settings SET db_schema_version='1251',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD use_auto_hopper ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_campaigns ADD auto_hopper_multi VARCHAR(6) default '1';
+ALTER TABLE vicidial_campaigns ADD auto_hopper_level MEDIUMINT(8) UNSIGNED default '0';
+ALTER TABLE vicidial_campaigns ADD auto_trim_hopper ENUM('Y','N') default 'N';
+
+ALTER TABLE vicidial_hopper ADD source VARCHAR(1) default '';
+
+UPDATE system_settings SET db_schema_version='1252',db_schema_update_date=NOW();

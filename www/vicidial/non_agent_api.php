@@ -37,10 +37,11 @@
 # 100723-1333 - Added no_update option to the update_lead function
 # 100728-1952 - Added delete_lead option to the update_lead function
 # 100924-1403 - Added called_count as an update_lead option
+# 101111-1536 - Added vicidial_hopper.source to vicidial_hopper inserts
 #
 
-$version = '2.4-23';
-$build = '100924-1403';
+$version = '2.4-24';
+$build = '101111-1536';
 
 require("dbconnect.php");
 
@@ -1653,7 +1654,7 @@ if ($function == 'add_lead')
 							### code to insert into hopper goes here
 
 							### insert record into vicidial_hopper for alt_phone call attempt
-							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$VD_campaign_id',status='READY',list_id='$list_id',gmt_offset_now='$gmt_offset',state='$state',user='',priority='$hopper_priority';";
+							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$VD_campaign_id',status='READY',list_id='$list_id',gmt_offset_now='$gmt_offset',state='$state',user='',priority='$hopper_priority',source='P';";
 							if ($DB>0) {echo "DEBUG: add_lead query - $stmt\n";}
 							$rslt=mysql_query($stmt, $link);
 							$Haffected_rows = mysql_affected_rows($link);

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDhopper.pl version 2.2.0
+# AST_VDhopper.pl version 2.4
 #
 # DESCRIPTION:
 # Updates the VICIDIAL leads hopper for the streamlined 
@@ -11,6 +11,15 @@
 # running every minute
 # 
 # It is recommended that you run this program on the local Asterisk machine
+#
+# hopper sources:
+#  - A = Auto-alt-dial
+#  - C = Scheduled Callbacks
+#  - N = Xth New lead order
+#  - P = Non-Agent API hopper load
+#  - Q = No-hopper queue insert
+#  - R = Recycled leads
+#  - S = Standard hopper load
 #
 # Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -54,6 +63,7 @@
 # 100427-0429 - Fix for list mix no-status-selected issue
 # 100529-0843 - Changed dialable leads to calculate every run for active campaigns
 # 100706-2332 - Added ability to purge only one campaign's leads in the hopper
+# 101108-1451 - Added ability for the hopper level to be set automatically and remove excess leads from the hopper (MikeC)
 #
 
 # constants
@@ -117,6 +127,15 @@ $Vmon++;
 if ($Vmon < 10) {$Vmon = "0$Vmon";}
 if ($Vmday < 10) {$Vmday = "0$Vmday";}
 $VDL_one = "$Vyear-$Vmon-$Vmday $Vhour:$Vmin:$Vsec";
+
+### get date-time of 10 seconds ago ###
+$VDL_tensec = ($secX - 10);
+($Vsec,$Vmin,$Vhour,$Vmday,$Vmon,$Vyear,$Vwday,$Vyday,$Visdst) = localtime($VDL_one);
+$Vyear = ($Vyear + 1900);
+$Vmon++;
+if ($Vmon < 10) {$Vmon = "0$Vmon";}
+if ($Vmday < 10) {$Vmday = "0$Vmday";}
+$VDL_tensec = "$Vyear-$Vmon-$Vmday $Vhour:$Vmin:$Vsec";
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -401,7 +420,7 @@ if ($CBHOLD_count > 0)
 			$event_string = "|CALLBACKS LISTACT|$affected_rows|";
 			&event_logger;
 
-			$stmtA = "INSERT INTO $vicidial_hopper SET lead_id='$CA_lead_id[$CAu]',campaign_id='$CA_campaign_id[$CAu]',list_id='$CA_list_id[$CAu]',gmt_offset_now='$CA_gmt_offset_now[$CAu]',user='',state='$CA_state[$CAu]',priority='50';";
+			$stmtA = "INSERT INTO $vicidial_hopper SET lead_id='$CA_lead_id[$CAu]',campaign_id='$CA_campaign_id[$CAu]',list_id='$CA_list_id[$CAu]',gmt_offset_now='$CA_gmt_offset_now[$CAu]',user='',state='$CA_state[$CAu]',priority='50',source='C';";
 			$affected_rows = $dbhA->do($stmtA);
 			if ($DB) {print "ANYONE Scheduled Callback Inserted into hopper:  $affected_rows|$CA_lead_id[$CAu]\n";}
 			$CAu++;
@@ -778,11 +797,11 @@ if ($hopper_dnc_count > 0)
 
 if ($CLIcampaign)
 	{
-	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses from vicidial_campaigns where campaign_id='$CLIcampaign';";
+	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper from vicidial_campaigns where campaign_id='$CLIcampaign';";
 	}
 else
 	{
-	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses from vicidial_campaigns where active='Y';";
+	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper from vicidial_campaigns where active='Y';";
 	}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -811,7 +830,100 @@ while ($sthArows > $rec_count)
 	$drop_lockout_time[$rec_count] =			$aryA[14];
 	$no_hopper_dialing[$rec_count] = 			$aryA[15];
 	$auto_alt_dial_statuses[$rec_count] = 		$aryA[16];
+	$dial_timeout[$rec_count] = 				$aryA[17];
+	$auto_hopper_multi[$rec_count] =			$aryA[18];
+	$use_auto_hopper[$rec_count] = 				$aryA[19];
+	$auto_trim_hopper[$rec_count] =				$aryA[20];
 
+	### Auto Hopper Level
+	if ( $use_auto_hopper[$rec_count] =~ /Y/) 
+		{
+		### Find the number of agents
+		$stmtB = "SELECT COUNT(*) FROM vicidial_live_agents WHERE campaign_id='$campaign_id[$rec_count]' and status IN ('READY','QUEUE','INCALL','CLOSER') and last_update_time >= '$VDL_tensec'";
+		$sthB = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+		$sthB->execute or die "executing: $stmtB ", $dbhA->errstr;
+		@aryAgent = $sthB->fetchrow_array;
+		$num_agents = $aryAgent[0];
+		$sthB->finish();
+
+		$stmtB = "SELECT COUNT(*) FROM vicidial_live_agents WHERE campaign_id='$campaign_id[$rec_count]' and status IN ('PAUSED') and last_update_time >= '$VDL_tensec' and last_state_change >= '$VDL_one'";
+		$sthB = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+		$sthB->execute or die "executing: $stmtB ", $dbhA->errstr;
+		@aryAgent = $sthB->fetchrow_array;
+		$num_paused_agents = $aryAgent[0];
+		$sthB->finish();
+
+		### Make sure the auto hopper multiplier is not set to something stupid
+		if ( $auto_hopper_multi[$rec_count] <= 0 ) { $auto_hopper_multi[$rec_count] = 0.1; }
+
+		### Save for debug info
+		$minimum_hopper_level = $hopper_level[$rec_count];
+
+		### Number of calls per minute
+		$dial_timeout_mult = 60 / $dial_timeout[$rec_count];
+
+		$auto_hopper_level = roundup( $auto_hopper_multi[$rec_count] * ( $num_agents + $num_paused_agents ) * $auto_dial_level[$rec_count] * $dial_timeout_mult );	
+
+		### Make sure we are greater than the minimum hopper level
+		if ( $auto_hopper_level >= $minimum_hopper_level )
+			{
+			$hopper_level[$rec_count] = $auto_hopper_level
+			}
+		else
+			{
+			$hopper_level[$rec_count] = $minimum_hopper_level;
+			}
+
+		if ($DB) 
+			{	
+			print "---------------Auto Hopper Level Enabled For $campaign_id[$rec_count]---------------------\n";
+			print "Number of Agents = $num_agents\n";
+			print "Number of Paused Agents = $num_paused_agents\n";
+			print "Auto Dial Level = $auto_dial_level[$rec_count]\n";
+			print "Dial Timeout = $dial_timeout[$rec_count]\n";
+			print "Dial Timeout Multiplier = $dial_timeout_mult\n";
+			print "Auto Hopper Multipier = $auto_hopper_multi[$rec_count]\n";
+			print "Minimum Hopper Level = $minimum_hopper_level\n";
+			print "Auto Hopper Level Adjustment = $auto_hopper_level\n";
+			print "Final Hopper Level = $hopper_level[$rec_count]\n\n";
+			}
+
+		$stmtB = "UPDATE vicidial_campaigns set auto_hopper_level = '$auto_hopper_level' where campaign_id='$campaign_id[$rec_count]'";
+		$affected_rows = $dbhA->do($stmtB);
+		}
+
+	### Auto Trim Hopper code
+	if ( $auto_trim_hopper[$rec_count] =~ /Y/) 
+		{
+		if ($DB) { print "---------------Auto Trim Hopper Enabled For $campaign_id[$rec_count]---------------------\n"; }
+	
+		$stmtB = "SELECT COUNT(*) FROM vicidial_hopper WHERE campaign_id='$campaign_id[$rec_count]' and status IN ('READY') and source IN('S','N');";
+		$sthB = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+		$sthB->execute or die "executing: $stmtB ", $dbhA->errstr;
+		@aryLead = $sthB->fetchrow_array;
+		$camp_leads = $aryLead[0];
+		$sthB->finish();
+
+		if ($DB) 
+			{ 
+			print "Leads in Hopper for this Campaign = $camp_leads\n";
+			print "Hopper Level for this Campaign = $hopper_level[$rec_count]\n";
+			}
+
+		if ( $camp_leads > ( 2 * $hopper_level[$rec_count] ) ) 
+			{
+			$num_to_delete = $camp_leads - 2 * $hopper_level[$rec_count];
+			$stmtB = "DELETE FROM vicidial_hopper WHERE campaign_id='$campaign_id[$rec_count]' AND source='S' AND status IN ('READY') LIMIT $num_to_delete";
+			$affected_rows = $dbhA->do($stmtB);
+			
+			if ($DB) 
+				{ 
+				print "TOO MANY LEADS IN THE HOPPER ( $camp_leads > 2 * $hopper_level[$rec_count] ). \n"; 
+				print "DELETING $num_to_delete LEADS FROM THE HOPPER.  |$affected_rows|\n";
+				}
+			}
+		if ($DB) { print "\n"; }
+		}	
 	$rec_count++;
 	}
 $sthA->finish();
@@ -1751,6 +1863,7 @@ foreach(@campaign_id)
 				@REC_status_to_hopper=@MT;
 				@REC_modify_to_hopper=@MT;
 				@REC_user_to_hopper=@MT;
+				@REC_source_to_hopper=@MT;
 				if ($rec_ct[$i] > 0)
 					{
 					if ($DB) {print "     looking for RECYCLE leads, maximum of $hopper_level[$i]\n";}
@@ -1773,6 +1886,7 @@ foreach(@campaign_id)
 						$REC_status_to_hopper[$REC_rec_countLEADS] =	$aryA[5];
 						$REC_modify_to_hopper[$REC_rec_countLEADS] =	$aryA[6];
 						$REC_user_to_hopper[$REC_rec_countLEADS] =		$aryA[7];
+						$REC_source_to_hopper[$REC_rec_countLEADS] =	'R';
 						if ($DB_show_offset) {print "LEAD_ADD: $aryA[2] $aryA[3] $aryA[4]\n";}
 						$REC_rec_countLEADS++;
 						}
@@ -1795,6 +1909,7 @@ foreach(@campaign_id)
 				@NEW_status_to_hopper=@MT;
 				@NEW_modify_to_hopper=@MT;
 				@NEW_user_to_hopper=@MT;
+				@NEW_source_to_hopper=@MT;
 				if ( ($NEW_count > 0) && ($list_order_mix[$i] =~ /DISABLED/) )
 					{
 					$NEW_level = int($hopper_level[$i] / $NEW_count);   
@@ -1817,6 +1932,7 @@ foreach(@campaign_id)
 						$NEW_status_to_hopper[$NEW_rec_countLEADS] =	$aryA[5];
 						$NEW_modify_to_hopper[$NEW_rec_countLEADS] =	$aryA[6];
 						$NEW_user_to_hopper[$NEW_rec_countLEADS] =		$aryA[7];
+						$NEW_source_to_hopper[$NEW_rec_countLEADS] =	'N';
 						if ($DB_show_offset) {print "LEAD_ADD: $aryA[2] $aryA[3] $aryA[4]\n";}
 						$NEW_rec_countLEADS++;
 						}
@@ -1838,6 +1954,7 @@ foreach(@campaign_id)
 				@status_to_hopper=@MT;
 				@modify_to_hopper=@MT;
 				@user_to_hopper=@MT;
+				@source_to_hopper=@MT;
 				if ($campaign_leads_to_call[$i] > 0)
 					{
 					if ($DB) {print "     lead call order:      $order_stmt\n";}
@@ -1869,6 +1986,7 @@ foreach(@campaign_id)
 									$status_to_hopper[$rec_countLEADS] =	$NEW_status_to_hopper[$NEW_in];
 									$modify_to_hopper[$rec_countLEADS] =	$NEW_modify_to_hopper[$NEW_in];
 									$user_to_hopper[$rec_countLEADS] =		$NEW_user_to_hopper[$NEW_in];
+									$source_to_hopper[$rec_countLEADS] =	$NEW_source_to_hopper[$NEW_in];
 									if ($DB_show_offset) {print "LEAD_ADD:    $NEW_leads_to_hopper[$NEW_in]   $NEW_phone_to_hopper[$NEW_in]\n";}
 									$rec_countLEADS++;
 									$NEW_in++;
@@ -1885,6 +2003,7 @@ foreach(@campaign_id)
 								$status_to_hopper[$rec_countLEADS] =	$REC_status_to_hopper[$REC_insert_count];
 								$modify_to_hopper[$rec_countLEADS] =	$REC_modify_to_hopper[$REC_insert_count];
 								$user_to_hopper[$rec_countLEADS] =		$REC_user_to_hopper[$REC_insert_count];
+								$source_to_hopper[$rec_countLEADS] =	$REC_source_to_hopper[$REC_insert_count];
 								$rec_countLEADS++;
 								$REC_insert_count++;
 								}
@@ -1896,6 +2015,7 @@ foreach(@campaign_id)
 							$status_to_hopper[$rec_countLEADS] =	$aryA[5];
 							$modify_to_hopper[$rec_countLEADS] =	$aryA[6];
 							$user_to_hopper[$rec_countLEADS] =		$aryA[7];
+							$source_to_hopper[$rec_countLEADS] =	'S';
 							if ($DB_show_offset) {print "LEAD_ADD: $aryA[2] $aryA[3] $aryA[4]\n";}
 							$rec_countLEADS++;
 							$rec_count++;
@@ -1983,6 +2103,7 @@ foreach(@campaign_id)
 								$status_to_hopper[$rec_countLEADS] =	$REC_status_to_hopper[$REC_insert_count];
 								$modify_to_hopper[$rec_countLEADS] =	$REC_modify_to_hopper[$REC_insert_count];
 								$user_to_hopper[$rec_countLEADS] =		$REC_user_to_hopper[$REC_insert_count];
+								$source_to_hopper[$rec_countLEADS] =	$REC_source_to_hopper[$REC_insert_count];
 								$rec_countLEADS++;
 								$REC_insert_count++;
 								}
@@ -1994,6 +2115,7 @@ foreach(@campaign_id)
 							$status_to_hopper[$rec_countLEADS] =	$aryA[6];
 							$modify_to_hopper[$rec_countLEADS] =	$aryA[7];
 							$user_to_hopper[$rec_countLEADS] =		$aryA[8];
+							$source_to_hopper[$rec_countLEADS] =	'S';
 							if ($DB_show_offset) {print "LEAD_ADD: $aryA[3] $aryA[4] $aryA[5]\n";}
 							if ($DBX) {print "     $w|$LM_results[$w]\n";}
 							$rec_countLEADS++;
@@ -2012,6 +2134,7 @@ foreach(@campaign_id)
 					$status_to_hopper[$rec_countLEADS] =	$REC_status_to_hopper[$REC_insert_count];
 					$modify_to_hopper[$rec_countLEADS] =	$REC_modify_to_hopper[$REC_insert_count];
 					$user_to_hopper[$rec_countLEADS] =		$REC_user_to_hopper[$REC_insert_count];
+					$source_to_hopper[$rec_countLEADS] =	$REC_source_to_hopper[$REC_insert_count];
 					$rec_countLEADS++;
 					$REC_insert_count++;
 					}
@@ -2118,12 +2241,12 @@ foreach(@campaign_id)
 							{
 							if ($DNClead == '0')
 								{
-								$stmtA = "INSERT INTO $vicidial_hopper (lead_id,campaign_id,status,user,list_id,gmt_offset_now,state,priority) values('$leads_to_hopper[$h]','$campaign_id[$i]','READY','','$lists_to_hopper[$h]','$gmt_to_hopper[$h]','$state_to_hopper[$h]','0');";
+								$stmtA = "INSERT INTO $vicidial_hopper (lead_id,campaign_id,status,user,list_id,gmt_offset_now,state,priority,source) values('$leads_to_hopper[$h]','$campaign_id[$i]','READY','','$lists_to_hopper[$h]','$gmt_to_hopper[$h]','$state_to_hopper[$h]','0','$source_to_hopper[$h]');";
 								$affected_rows = $dbhA->do($stmtA);
 								if ($DBX) {print "LEAD INSERTED: $affected_rows|$leads_to_hopper[$h]|\n";}
 								if ($DB_detail) 
 									{
-									$detail_string = "|$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|";
+									$detail_string = "|$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|$source_to_hopper[$h]|";
 									&detail_logger;
 									}
 								}
@@ -2132,12 +2255,12 @@ foreach(@campaign_id)
 								##### Auto-Alt-Dial if DNCC or DNCL are set to campaign auto-alt-dial statuses, insert lead into hopper as DNC status
 								if ( ( ($auto_alt_dial_statuses[$i] =~ / DNCC /) && ($DNCC > 0) ) || ( ($auto_alt_dial_statuses[$i] =~ / DNCL /) && ($DNCL > 0) ) )
 									{
-									$stmtA = "INSERT INTO $vicidial_hopper (lead_id,campaign_id,status,user,list_id,gmt_offset_now,state,priority) values('$leads_to_hopper[$h]','$campaign_id[$i]','DNC','','$lists_to_hopper[$h]','$gmt_to_hopper[$h]','$state_to_hopper[$h]','0');";
+									$stmtA = "INSERT INTO $vicidial_hopper (lead_id,campaign_id,status,user,list_id,gmt_offset_now,state,priority,source) values('$leads_to_hopper[$h]','$campaign_id[$i]','DNC','','$lists_to_hopper[$h]','$gmt_to_hopper[$h]','$state_to_hopper[$h]','0','$source_to_hopper[$h]');";
 									$affected_rows = $dbhA->do($stmtA);
 									if ($DBX) {print "LEAD INSERTED AS DNC: $affected_rows|$leads_to_hopper[$h]|\n";}
 									if ($DB_detail) 
 										{
-										$detail_string = "|$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|";
+										$detail_string = "|$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|$source_to_hopper[$h]|";
 										&detail_logger;
 										}
 									}
@@ -2199,4 +2322,10 @@ sub detail_logger
 		close(LDout);
 		}
 	$detail_string='';
+	}
+
+sub roundup 
+	{
+	my $n = shift;
+	return(($n == int($n)) ? $n : int($n + 1))
 	}

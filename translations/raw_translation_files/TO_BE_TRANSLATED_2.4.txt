@@ -472,6 +472,14 @@ Generate Cross-Server Phone Extensions||
 This option if set to 1 will generate dialplan entries for every phone on a multi-server system. Default is 0 for inactive||
 QueueMetrics Addmember Enabled||
 This option if set to 1 will generate ADDMEMBER2 and REMOVEMEMBER entries in queue_log. Default is 0 for disabled||
+Minimum Hopper Level||
+This is the minimum number of leads the VDhopper script tries to keep in the vicidial_hopper table for this campaign. If running VDhopper script every minute, make this slightly greater than the number of leads you go through in a minute||
+Automatic Hopper Level||
+Setting thing to Y will allow Vicidial to automatically adjust the hopper based off the settings you have in your campaign.  The formula it uses to do this is||
+Automatic Hopper Multiplier||
+This is multiplier for the Auto Hopper. Setting this less than 1 will cause the Auto Hopper algorithm to load less leads than it normally would.  Setting this greater than 1 will cause the Auto Hopper algorithm to load more leads than it normally would.  Default is 1||
+Auto Trim Hopper||
+Setting thing to Y will allow Vicidial to automatically remove excess leads from the hopper. Default is Y||
 
 
 AST_LISTS_campaign_stats.php

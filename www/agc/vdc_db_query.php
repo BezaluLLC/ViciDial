@@ -261,10 +261,11 @@
 # 101001-1451 - Added full name display to Call Log functionality
 # 101022-1243 - Fixed missing variables from start and dispo call urls
 # 101108-0115 - Added ADDMEMBER option for queue_log
+# 101111-1556 - Added source to vicidial_hopper inserts
 #
 
-$version = '2.4-167';
-$build = '101108-0115';
+$version = '2.4-168';
+$build = '101111-1556';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=352;
 $one_mysql_log=0;
@@ -1750,7 +1751,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 							$state =			$row[3];
 							$entry_list_id =	$row[4];
 
-							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='QUEUE',list_id='$list_id',gmt_offset_now='$gmt_offset_now',state='$state',alt_dial='MAIN',user='$user',priority='0';";
+							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='QUEUE',list_id='$list_id',gmt_offset_now='$gmt_offset_now',state='$state',alt_dial='MAIN',user='$user',priority='0',source='Q';";
 							if ($DB) {echo "$stmt\n";}
 							$rslt=mysql_query($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00244',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3198,7 +3199,7 @@ if ($stage == "end")
 						if ($VD_alt_dnc_count < 1)
 							{
 							### insert record into vicidial_hopper for alt_phone call attempt
-							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='HOLD',list_id='$list_id',gmt_offset_now='$gmt_offset_now',state='$state',alt_dial='ALT',user='',priority='25';";
+							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='HOLD',list_id='$list_id',gmt_offset_now='$gmt_offset_now',state='$state',alt_dial='ALT',user='',priority='25',source='A';";
 							if ($DB) {echo "$stmt\n";}
 							$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00068',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3275,7 +3276,7 @@ if ($stage == "end")
 						if ($VD_alt_dnc_count < 1)
 							{
 							### insert record into vicidial_hopper for address3 call attempt
-							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='HOLD',list_id='$list_id',gmt_offset_now='$gmt_offset_now',state='$state',alt_dial='ADDR3',user='',priority='20';";
+							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='HOLD',list_id='$list_id',gmt_offset_now='$gmt_offset_now',state='$state',alt_dial='ADDR3',user='',priority='20',source='A';";
 							if ($DB) {echo "$stmt\n";}
 							$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00072',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3391,7 +3392,7 @@ if ($stage == "end")
 								{
 								if ($alt_dial_phones_count == $Xlast) 
 									{$Xlast = 'LAST';}
-								$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='HOLD',list_id='$EA_list_id',gmt_offset_now='$EA_gmt_offset_now',state='$EA_state',alt_dial='X$Xlast',user='',priority='15';";
+								$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='HOLD',list_id='$EA_list_id',gmt_offset_now='$EA_gmt_offset_now',state='$EA_state',alt_dial='X$Xlast',user='',priority='15',source='A';";
 								if ($DB) {echo "$stmt\n";}
 								$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00078',$user,$server_ip,$session_name,$one_mysql_log);}
