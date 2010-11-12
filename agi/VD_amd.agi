@@ -38,6 +38,7 @@
 # 100430-1606 - Added list_id update to vicidial_log updates
 # 100823-0850 - Changed vac to UPDATE for Auto-alt-dial to function properly
 # 100903-0041 - Changed lead_id max length to 10 digits
+# 101111-1552 - Fixed minor bug in TTS filtering
 #
 
 $script = 'VD_amd.agi';
@@ -531,7 +532,7 @@ else
 				$TTS_text =~ s/--A--last_local_call_time--B--/$TTS_last_local_call_time/gi;
 				$TTS_text =~ s/--A--rank--B--/$TTS_rank/gi;
 				$TTS_text =~ s/--A--owner--B--/$TTS_owner/gi;
-				$TTS_text =~ s/[^,\.\<\>\'\/\=\_ 0-9a-zA-Z]//gi;
+				$TTS_text =~ s/[^,\.\<\>\'\/\=\_\-\: 0-9a-zA-Z]//gi;
 				$TTS_textRAW =	$TTS_text;
 				$TTS_text =~ s/ /\\ /gi;
 				$TTS_text =~ s/\./\\./gi;
