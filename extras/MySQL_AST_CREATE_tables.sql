@@ -665,7 +665,7 @@ adaptive_maximum_level VARCHAR(6) default '3.0',
 adaptive_latest_server_time VARCHAR(4) default '2100',
 adaptive_intensity VARCHAR(6) default '0',
 adaptive_dl_diff_target SMALLINT(3) default '0',
-concurrent_transfers ENUM('AUTO','1','2','3','4','5','6','7','8','9','10') default 'AUTO',
+concurrent_transfers ENUM('AUTO','1','2','3','4','5','6','7','8','9','10','15','20','25','30','40','50','60','80','100') default 'AUTO',
 auto_alt_dial ENUM('NONE','ALT_ONLY','ADDR3_ONLY','ALT_AND_ADDR3','ALT_AND_EXTENDED','ALT_AND_ADDR3_AND_EXTENDED','EXTENDED_ONLY') default 'NONE',
 auto_alt_dial_statuses VARCHAR(255) default ' B N NA DC -',
 agent_pause_codes_active ENUM('Y','N','FORCE') default 'N',
@@ -2395,7 +2395,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1252',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1253',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

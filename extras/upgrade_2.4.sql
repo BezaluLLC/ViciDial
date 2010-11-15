@@ -605,3 +605,7 @@ ALTER TABLE vicidial_campaigns ADD auto_trim_hopper ENUM('Y','N') default 'N';
 ALTER TABLE vicidial_hopper ADD source VARCHAR(1) default '';
 
 UPDATE system_settings SET db_schema_version='1252',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns MODIFY concurrent_transfers ENUM('AUTO','1','2','3','4','5','6','7','8','9','10','15','20','25','30','40','50','60','80','100') default 'AUTO';
+
+UPDATE system_settings SET db_schema_version='1253',db_schema_update_date=NOW();

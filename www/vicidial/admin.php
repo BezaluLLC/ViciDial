@@ -2609,11 +2609,12 @@ else
 # 101106-1850 - Added admin refrech, no-cache, cross-server-exten, QM-addmember options
 # 101109-1621 - Added Auto Hopper Level which allows Vicidial to adjust the hopper for a campaign as needed (MikeC)
 #             - Added Auto Trim Hopper which will allow Vicidial to remove excess leads from the hopper (MikeC)
-#
+# 101115-1355 - Added more options for the concurrent transfer limit campaign setting
+# 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-287';
-$build = '101109-1621';
+$admin_version = '2.4-288';
+$build = '101115-1355';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -18809,7 +18810,7 @@ if ($ADD==31)
 				}
 			echo "</select> $NWB#vicidial_campaigns-adaptive_dl_diff_target$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#BDFFBD><td align=right>Concurrent Transfers: </td><td align=left><select size=1 name=concurrent_transfers><option >AUTO</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option SELECTED>$concurrent_transfers</option></select>$NWB#vicidial_campaigns-concurrent_transfers$NWE</td></tr>\n";
+			echo "<tr bgcolor=#BDFFBD><td align=right>Concurrent Transfers: </td><td align=left><select size=1 name=concurrent_transfers><option >AUTO</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>15</option><option>20</option><option>25</option><option>30</option><option>40</option><option>50</option><option>60</option><option>80</option><option>100</option><option SELECTED>$concurrent_transfers</option></select>$NWB#vicidial_campaigns-concurrent_transfers$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#BDFFBD><td align=right>Queue Priority: </td><td align=left><select size=1 name=queue_priority>\n";
 			$n=99;
