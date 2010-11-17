@@ -38,10 +38,11 @@
 # 100728-1952 - Added delete_lead option to the update_lead function
 # 100924-1403 - Added called_count as an update_lead option
 # 101111-1536 - Added vicidial_hopper.source to vicidial_hopper inserts
+# 101117-1104 - Added callback and custom field entry delete to delete_lead option
 #
 
-$version = '2.4-24';
-$build = '101111-1536';
+$version = '2.4-25';
+$build = '101117-1104';
 
 require("dbconnect.php");
 
@@ -1919,12 +1920,18 @@ if ($function == 'update_lead')
 							{
 							$VLaffected_rows=0;
 							$CFaffected_rows=0;
+							$VCBaffected_rows=0;
 							if ( (strlen($VL_update_SQL)>6) or ($delete_lead=='Y') )
 								{
 								if ($delete_lead=='Y')
 									{
+									$stmt = "DELETE from vicidial_callbacks where lead_id='$search_lead_id[$n]';";
+									if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
+									$rslt=mysql_query($stmt, $link);
+									$VCBaffected_rows = mysql_affected_rows($link);
+
 									$stmt = "DELETE from vicidial_list where lead_id='$search_lead_id[$n]';";
-									$result_reason = "update_lead LEAD HAS BEEN DELETED";
+									$result_reason = "update_lead LEAD HAS BEEN DELETED $VCBaffected_rows";
 									}
 								else
 									{
@@ -1936,7 +1943,7 @@ if ($function == 'update_lead')
 								$VLaffected_rows = mysql_affected_rows($link);
 
 								$result = 'SUCCESS';
-								echo "$result: $result_reason - $user|$search_lead_id[$n]\n";
+								echo "$result: $result_reason - $user|$search_lead_id[$n]|$VLaffected_rows\n";
 								$data = "$phone_number|$list_id|$lead_id|$gmt_offset";
 								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 								}
@@ -1953,86 +1960,105 @@ if ($function == 'update_lead')
 								$tablecount_to_print = mysql_num_rows($rslt);
 								if ($tablecount_to_print > 0) 
 									{
-									$update_SQL='';
-									$VL_update_SQL='';
-									$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$lead_custom_list' order by field_rank,field_order,field_label;";
-									$rslt=mysql_query($stmt, $link);
-									$fields_to_print = mysql_num_rows($rslt);
-									$fields_list='';
-									$o=0;
-									while ($fields_to_print > $o) 
+									if ($delete_lead=='Y')
 										{
-										$new_field_value='';
-										$form_field_value='';
-										$rowx=mysql_fetch_row($rslt);
-										$A_field_id[$o] =			$rowx[0];
-										$A_field_label[$o] =		$rowx[1];
-										$A_field_name[$o] =			$rowx[2];
-										$A_field_type[$o] =			$rowx[6];
-										$A_field_size[$o] =			$rowx[8];
-										$A_field_max[$o] =			$rowx[9];
-										$A_field_required[$o] =		$rowx[12];
-										$A_field_value[$o] =		'';
-										$field_name_id =			$A_field_label[$o];
-
-										if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
-											elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
-
-										$A_field_value[$o] = $form_field_value;
-
-										if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
-											{
-											$A_field_value[$o]='----IGNORE----';
-											}
-										else
-											{
-											if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
-												{
-												$update_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
-												}
-											}
-										$o++;
-										}
-
-									$custom_update_count=0;
-									if (strlen($update_SQL)>3)
-										{
-										$custom_record_lead_count=0;
-										$stmt="SELECT count(*) from custom_$lead_custom_list where lead_id='$search_lead_id[$n]';";
-										if ($DB>0) {echo "$stmt";}
+										$stmt = "DELETE from custom_$lead_custom_list where lead_id='$search_lead_id[$n]';";
+										if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
 										$rslt=mysql_query($stmt, $link);
-										$fieldleadcount_to_print = mysql_num_rows($rslt);
-										if ($fieldleadcount_to_print > 0) 
+										$VCLDaffected_rows = mysql_affected_rows($link);
+
+										if ($VCLDaffected_rows > 0)
 											{
-											$rowx=mysql_fetch_row($rslt);
-											$custom_record_lead_count =	$rowx[0];
+											$result = 'NOTICE';
+											$result_reason = "update_lead CUSTOM FIELDS ENTRY DELETED";
+											echo "$result: $result_reason - $phone_number|$search_lead_id[$n]|$search_lead_list[$n]|$search_entry_list[$n]|$lead_custom_list|$custom_update_count\n";
+											$data = "$phone_number|$lead_id|$list_id|$VCLDaffected_rows";
+											api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 											}
-										$update_SQL = preg_replace("/,$/","",$update_SQL);
-										$custom_table_update_SQL = "INSERT INTO custom_$lead_custom_list SET lead_id='$search_lead_id[$n]',$update_SQL;";
-										if ($custom_record_lead_count > 0)
-											{$custom_table_update_SQL = "UPDATE custom_$lead_custom_list SET $update_SQL where lead_id='$search_lead_id[$n]';";}
-
-										$rslt=mysql_query($custom_table_update_SQL, $link);
-										$custom_update_count = mysql_affected_rows($link);
-										if ($DB) {echo "$custom_update_count|$custom_table_update_SQL\n";}
-										if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-										$result = 'NOTICE';
-										$result_reason = "update_lead CUSTOM FIELDS VALUES UPDATED";
-										echo "$result: $result_reason - $phone_number|$search_lead_id[$n]|$search_lead_list[$n]|$search_entry_list[$n]|$lead_custom_list|$custom_update_count\n";
-										$data = "$phone_number|$lead_id|$list_id";
-										api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-
-										$update_sent++;
 										}
-
-									if ($custom_update_count > 0)
+									else
 										{
-										$list_table_update_SQL = "UPDATE vicidial_list SET entry_list_id='$lead_custom_list' where lead_id='$search_lead_id[$n]';";
-										$rslt=mysql_query($list_table_update_SQL, $link);
-										$list_update_count = mysql_affected_rows($link);
-										if ($DB) {echo "$list_update_count|$list_table_update_SQL\n";}
-										if (!$rslt) {die('Could not execute: ' . mysql_error());}
+										$update_SQL='';
+										$VL_update_SQL='';
+										$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$lead_custom_list' order by field_rank,field_order,field_label;";
+										$rslt=mysql_query($stmt, $link);
+										$fields_to_print = mysql_num_rows($rslt);
+										$fields_list='';
+										$o=0;
+										while ($fields_to_print > $o) 
+											{
+											$new_field_value='';
+											$form_field_value='';
+											$rowx=mysql_fetch_row($rslt);
+											$A_field_id[$o] =			$rowx[0];
+											$A_field_label[$o] =		$rowx[1];
+											$A_field_name[$o] =			$rowx[2];
+											$A_field_type[$o] =			$rowx[6];
+											$A_field_size[$o] =			$rowx[8];
+											$A_field_max[$o] =			$rowx[9];
+											$A_field_required[$o] =		$rowx[12];
+											$A_field_value[$o] =		'';
+											$field_name_id =			$A_field_label[$o];
+
+											if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
+												elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
+
+											$A_field_value[$o] = $form_field_value;
+
+											if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
+												{
+												$A_field_value[$o]='----IGNORE----';
+												}
+											else
+												{
+												if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+													{
+													$update_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
+													}
+												}
+											$o++;
+											}
+
+										$custom_update_count=0;
+										if (strlen($update_SQL)>3)
+											{
+											$custom_record_lead_count=0;
+											$stmt="SELECT count(*) from custom_$lead_custom_list where lead_id='$search_lead_id[$n]';";
+											if ($DB>0) {echo "$stmt";}
+											$rslt=mysql_query($stmt, $link);
+											$fieldleadcount_to_print = mysql_num_rows($rslt);
+											if ($fieldleadcount_to_print > 0) 
+												{
+												$rowx=mysql_fetch_row($rslt);
+												$custom_record_lead_count =	$rowx[0];
+												}
+											$update_SQL = preg_replace("/,$/","",$update_SQL);
+											$custom_table_update_SQL = "INSERT INTO custom_$lead_custom_list SET lead_id='$search_lead_id[$n]',$update_SQL;";
+											if ($custom_record_lead_count > 0)
+												{$custom_table_update_SQL = "UPDATE custom_$lead_custom_list SET $update_SQL where lead_id='$search_lead_id[$n]';";}
+
+											$rslt=mysql_query($custom_table_update_SQL, $link);
+											$custom_update_count = mysql_affected_rows($link);
+											if ($DB) {echo "$custom_update_count|$custom_table_update_SQL\n";}
+											if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+											$result = 'NOTICE';
+											$result_reason = "update_lead CUSTOM FIELDS VALUES UPDATED";
+											echo "$result: $result_reason - $phone_number|$search_lead_id[$n]|$search_lead_list[$n]|$search_entry_list[$n]|$lead_custom_list|$custom_update_count\n";
+											$data = "$phone_number|$lead_id|$list_id";
+											api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+
+											$update_sent++;
+											}
+
+										if ($custom_update_count > 0)
+											{
+											$list_table_update_SQL = "UPDATE vicidial_list SET entry_list_id='$lead_custom_list' where lead_id='$search_lead_id[$n]';";
+											$rslt=mysql_query($list_table_update_SQL, $link);
+											$list_update_count = mysql_affected_rows($link);
+											if ($DB) {echo "$list_update_count|$list_table_update_SQL\n";}
+											if (!$rslt) {die('Could not execute: ' . mysql_error());}
+											}
 										}
 									}
 								else

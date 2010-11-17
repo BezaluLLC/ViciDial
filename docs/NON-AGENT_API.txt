@@ -42,6 +42,9 @@ Changes:
 100723-1333 - Added no_update option to the update_lead function
 100728-1952 - Added delete_lead option to the update_lead function
 100924-1403 - Added called_count as an update_lead option
+101111-1536 - Added vicidial_hopper.source to vicidial_hopper inserts
+101117-1104 - Added callback and custom field entry delete to delete_lead option
+
 
 
 
@@ -390,6 +393,8 @@ http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&functio
 
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_lead&lead_id=27&delete_lead=Y
 
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_lead&lead_id=27&delete_lead=Y&custom_fields=Y
+
 Example responses:
 SUCCESS: update_lead LEAD HAS BEEN UPDATED - 6666|193716
 NOTICE: update_lead CUSTOM FIELDS VALUES UPDATED - 7275551111|1234|101
@@ -401,6 +406,7 @@ NOTICE: update_lead NO MATCHES FOUND IN THE SYSTEM - 6666|4567|897654327|7275551
 SUCCESS: update_lead LEAD HAS BEEN ADDED - 7275551111|6666|999|193716|-4
 
 SUCCESS: update_lead LEAD HAS BEEN DELETED - 7275551111|6666|999|193716|-4
+NOTICE: update_lead CUSTOM FIELDS ENTRY DELETED 1 - 7275551111|6666|999|193716|-4
 
 NOTICE: update_lead LEADS FOUND IN THE SYSTEM - 6666|4567|897654327|7275551212|101|101
 
