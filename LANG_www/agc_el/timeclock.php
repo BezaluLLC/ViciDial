@@ -9,10 +9,11 @@
 # 80525-2351 - Added an audit log that is not to be editable
 # 80602-0641 - Fixed status update bug
 # 90508-0727 - Changed to PHP long tags
+# 100621-1023 - Added admin_web_directory variable
 #
 
-$version = '2.2.0-5';
-$build = '90508-0727';
+$version = '2.2.0-6';
+$build = '100621-1023';
 
 $StarTtimE = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -87,7 +88,7 @@ require("dbconnect.php");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,admin_home_url FROM system_settings;";
+$stmt = "SELECT use_non_latin,admin_home_url,admin_web_directory FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -95,8 +96,9 @@ $i=0;
 while ($i < $qm_conf_ct)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =	$row[0];
-	$welcomeURL =	$row[1];
+	$non_latin =			$row[0];
+	$welcomeURL =			$row[1];
+	$admin_web_directory =	$row[2];
 	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
@@ -338,7 +340,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			if ($referrer=='agent') 
 				{$BACKlink = "<A HREF=\"./vicidial.php?pl=$phone_login&pp=$phone_pass&VD_login=$user\"><font color=\"#003333\">ΕΠΙΣΤΡΟΦΗ στην οθόνη Συνδεσης του Χειριστή</font></A>";}
 			if ($referrer=='admin') 
-				{$BACKlink = "<A HREF=\"../vicidial/admin.php\"><font color=\"#003333\">ΕΠΙΣΤΡΟΦΗ στην Διαχείριση</font></A>";}
+				{$BACKlink = "<A HREF=\"/$admin_web_directory/admin.php\"><font color=\"#003333\">ΕΠΙΣΤΡΟΦΗ στην Διαχείριση</font></A>";}
 			if ($referrer=='welcome') 
 				{$BACKlink = "<A HREF=\"$welcomeURL\"><font color=\"#003333\">ΕΠΙΣΤΡΟΦΗ στην οθόνη υποδοχής</font></A>";}
 

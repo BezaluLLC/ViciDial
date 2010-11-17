@@ -1,7 +1,7 @@
 <?php
-# conf_exten_check.php    version 2.2.0
+# conf_exten_check.php    version 2.4
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to send whether the meetme conference has live channels connected and which they are
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -50,10 +50,12 @@
 # 91130-2022 - Added code for manager override of in-group selection
 # 91228-1341 - Added API fields update functions
 # 100109-1337 - Fixed Manual dial live call detection
+# 100527-0957 - Added send_dtmf, transfer_conference and park_call API functions
+# 100727-2209 - Added timer actions for hangup, extension, callmenu and ingroup as well as destination
 #
 
-$version = '2.2.0-25';
-$build = '100109-1337';
+$version = '2.4-27';
+$build = '100727-2209';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=32;
 $one_mysql_log=0;
@@ -135,12 +137,12 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
-  if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
+if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
     echo "Ακυρο Όνομα χρήστη/Κωδικός πρόσβασης: |$user|$pass|\n";
     exit;
 	}
-  else
+else
 	{
 
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
@@ -200,6 +202,8 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			$Aagent_log_id='';
 			$Acallerid='';
 			$DEADcustomer=0;
+			$Astatus='';
+			$Acampaign_id='';
 
 			### see if the agent has a record in the vicidial_live_agents table
 			$stmt="SELECT count(*) from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
@@ -387,7 +391,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 				}
 
 			### grab the API hangup and API dispo fields in vicidial_live_agents
-			$stmt="SELECT external_hangup,external_status,external_pause,external_dial,external_update_fields,external_update_fields_data,external_timer_action,external_timer_action_message,external_timer_action_seconds from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
+			$stmt="SELECT external_hangup,external_status,external_pause,external_dial,external_update_fields,external_update_fields_data,external_timer_action,external_timer_action_message,external_timer_action_seconds,external_dtmf,external_transferconf,external_park,external_timer_action_destination from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03010',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -401,6 +405,10 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			$timer_action =					$row[6];
 			$timer_action_message =			$row[7];
 			$timer_action_seconds =			$row[8];
+			$external_dtmf =				$row[9];
+			$external_transferconf =		$row[10];
+			$external_park =				$row[11];
+			$timer_action_destination =		$row[12];
 
 			if (strlen($external_status)<1) {$external_status = '::::::::::';}
 
@@ -570,7 +578,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			if ($Ashift_logout > 0)
 				{$Alogin='SHIFT_LOGOUT';}
 
-			echo 'DateTime: ' . $NOW_TIME . '|UnixTime: ' . $StarTtime . '|Logged-in: ' . $Alogin . '|CampCalls: ' . $RingCalls . '|Κατάσταση: ' . $Astatus . '|DiaLCalls: ' . $DiaLCalls . '|APIHanguP: ' . $external_hangup . '|APIStatuS: ' . $external_status . '|APIPausE: ' . $external_pause . '|APIDiaL: ' . $external_dial . '|DEADcall: ' . $DEADcustomer . '|InGroupChange: ' . $InGroupChangeDetails . '|APIFields: ' . $external_update_fields . '|APIFieldsData: ' . $external_update_fields_data . '|APITimerAction: ' . $timer_action . '|APITimerMessage: ' . $timer_action_message . '|APITimerSeconds: ' . $timer_action_seconds . "\n";
+			echo 'DateTime: ' . $NOW_TIME . '|UnixTime: ' . $StarTtime . '|Logged-in: ' . $Alogin . '|CampCalls: ' . $RingCalls . '|Κατάσταση: ' . $Astatus . '|DiaLCalls: ' . $DiaLCalls . '|APIHanguP: ' . $external_hangup . '|APIStatuS: ' . $external_status . '|APIPausE: ' . $external_pause . '|APIDiaL: ' . $external_dial . '|DEADcall: ' . $DEADcustomer . '|InGroupChange: ' . $InGroupChangeDetails . '|APIFields: ' . $external_update_fields . '|APIFieldsData: ' . $external_update_fields_data . '|APITimerAction: ' . $timer_action . '|APITimerMessage: ' . $timer_action_message . '|APITimerSeconds: ' . $timer_action_seconds . '|APIdtmf: ' . $external_dtmf . '|APItransferconf: ' . $external_transferconf . '|APIpark: ' . $external_park . '|APITimerDestination: ' . $timer_action_destination . "\n";
 
 			if (strlen($timer_action) > 3)
 				{
