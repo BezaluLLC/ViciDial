@@ -13954,8 +13954,34 @@ if ($ADD==4111)
 					elseif (isset($_POST["IGcampaign_id_no_agent_action"]))		{$IGcampaign_id=$_POST["IGcampaign_id_no_agent_action"];}
 				if (isset($_GET["IGphone_code_no_agent_action"]))				{$IGphone_code=$_GET["IGphone_code_no_agent_action"];}
 					elseif (isset($_POST["IGphone_code_no_agent_action"]))		{$IGphone_code=$_POST["IGphone_code_no_agent_action"];}
+				if (strlen($IGhandle_method)<1)
+					{
+					if (isset($_GET["IGhandle_method_"]))			{$IGhandle_method=$_GET["IGhandle_method_"];}
+						elseif (isset($_POST["IGhandle_method_"]))	{$IGhandle_method=$_POST["IGhandle_method_"];}
+					}
+				if (strlen($IGsearch_method)<1)
+					{
+					if (isset($_GET["IGsearch_method_"]))			{$IGsearch_method=$_GET["IGsearch_method_"];}
+						elseif (isset($_POST["IGsearch_method_"]))	{$IGsearch_method=$_POST["IGsearch_method_"];}
+					}
+				if (strlen($IGlist_id)<1)
+					{
+					if (isset($_GET["IGlist_id_"]))				{$IGlist_id=$_GET["IGlist_id_"];}
+						elseif (isset($_POST["IGlist_id_"]))	{$IGlist_id=$_POST["IGlist_id_"];}
+					}
+				if (strlen($IGcampaign_id)<1)
+					{
+					if (isset($_GET["IGcampaign_id_"]))				{$IGcampaign_id=$_GET["IGcampaign_id_"];}
+						elseif (isset($_POST["IGcampaign_id_"]))	{$IGcampaign_id=$_POST["IGcampaign_id_"];}
+					}
+				if (strlen($IGphone_code)<1)
+					{
+					if (isset($_GET["IGphone_code_"]))			{$IGphone_code=$_GET["IGphone_code_"];}
+						elseif (isset($_POST["IGphone_code_"]))	{$IGphone_code=$_POST["IGphone_code_"];}
+					}
 
 				$no_agent_action_value = "$IGgroup_id,$IGhandle_method,$IGsearch_method,$IGlist_id,$IGcampaign_id,$IGphone_code";
+				if ($DB) {echo "\nNANQUE:     |$no_agent_action_value|$no_agent_action|\n";}
 				}
 
 			if ($no_agent_action == "EXTENSION")
