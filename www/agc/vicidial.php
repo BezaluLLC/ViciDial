@@ -401,6 +401,8 @@ $month_old = mktime(11, 0, 0, date("m"), date("d")-2,  date("Y"));
 $past_month_date = date("Y-m-d H:i:s",$month_old);
 $minutes_old = mktime(date("H"), date("i")-2, date("s"), date("m"), date("d"),  date("Y"));
 $past_minutes_date = date("Y-m-d H:i:s",$minutes_old);
+$webphone_width = 460;
+$webphone_height = 500;
 
 
 $random = (rand(1000000, 9999999) + 10000000);
@@ -477,6 +479,8 @@ else
 	$stretch_dimensions		= '1';	# sets the vicidial screen to the size of the browser window
 	$BROWSER_HEIGHT			= 500;	# set to the minimum browser height, default=500
 	$BROWSER_WIDTH			= 770;	# set to the minimum browser width, default=770
+	$webphone_width			= 460;	# set the webphone frame width
+	$webphone_height		= 500;	# set the webphone frame height
 	$MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
 	$SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
 	$FORM_COLOR				= '#EFEFEF';
@@ -2230,7 +2234,7 @@ else
 				$b64_system_key =		base64_encode($system_key);
 
 				$WebPhonEurl = "$webphone_url?phone_login=$b64_phone_login&phone_login=$b64_phone_login&phone_pass=$b64_phone_pass&server_ip=$b64_server_ip&callerid=$b64_callerid&protocol=$b64_protocol&codecs=$b64_codecs&options=$b64_options&system_key=$b64_system_key";
-				$webphone_content = "<iframe src=\"$WebPhonEurl\" style=\"width:200;height:500;background-color:transparent;z-index:17;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"webphone\" name=\"webphone\" width=\"200\" height=\"500\"> </iframe>";
+				$webphone_content = "<iframe src=\"$WebPhonEurl\" style=\"width:" . $webphone_width . ";height:" . $webphone_height . ";background-color:transparent;z-index:17;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"webphone\" name=\"webphone\" width=\"" . $webphone_width . "\" height=\"" . $webphone_height . "\"> </iframe>";
 				}
 
 			##### grab the campaign_weight and number of calls today on that campaign for the agent
@@ -4940,7 +4944,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					var CBcounTtotal = xmlhttp.responseText;
 					var CBcounTtotal_array=CBcounTtotal.split("|");
 					var CBcounT = CBcounTtotal_array[0];
-					if (scheduled_callbacks_count='LIVE')
+					if (scheduled_callbacks_count=='LIVE')
 						{CBcounT = CBcounTtotal_array[1];}
 					if (CBcounT == 0) {var CBprint = "NO";}
 					else 

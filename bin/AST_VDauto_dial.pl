@@ -92,6 +92,7 @@
 # 100327-1359 - Fixed LAGGED issues
 # 100903-0041 - Changed lead_id max length to 10 digits
 # 101111-1556 - Added source to vicidial_hopper inserts
+# 101117-1656 - Added accounting for DEAD agent calls when in available-only-tally dialing
 #
 
 
@@ -288,6 +289,7 @@ while($one_day_interval > 0)
 		@DBlive_campaign=@MT;
 		@DBlive_conf_exten=@MT;
 		@DBlive_status=@MT;
+		@DBlive_call_id=@MT;
 		@DBcampaigns=@MT;
 		@DBIPaddress=@MT;
 		@DBIPcampaign=@MT;
@@ -296,6 +298,7 @@ while($one_day_interval > 0)
 		@DBIPcount=@MT;
 		@DBIPACTIVEcount=@MT;
 		@DBIPINCALLcount=@MT;
+		@DBIPDEADcount=@MT;
 		@DBIPadlevel=@MT;
 		@DBIPdialtimeout=@MT;
 		@DBIPdialprefix=@MT;
@@ -370,7 +373,7 @@ while($one_day_interval > 0)
 
 		##### Get a listing of the users that are active and ready to take calls
 		##### Also get a listing of the campaigns and campaigns/serverIP that will be used
-		$stmtA = "SELECT user,server_ip,campaign_id,conf_exten,status FROM vicidial_live_agents where status IN($active_agents) and outbound_autodial='Y' and server_ip='$server_ip' and last_update_time > '$BDtsSQLdate' order by last_call_time";
+		$stmtA = "SELECT user,server_ip,campaign_id,conf_exten,status,callerid FROM vicidial_live_agents where status IN($active_agents) and outbound_autodial='Y' and server_ip='$server_ip' and last_update_time > '$BDtsSQLdate' order by last_call_time";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -383,6 +386,7 @@ while($one_day_interval > 0)
 			$DBlive_campaign[$user_counter] =	$aryA[2];
 			$DBlive_conf_exten[$user_counter] =	$aryA[3];
 			$DBlive_status[$user_counter] =		$aryA[4];
+			$DBlive_call_id[$user_counter] =	$aryA[5];
 			
 			if ($user_campaigns !~ /\|$DBlive_campaign[$user_counter]\|/i)
 				{
@@ -437,13 +441,33 @@ while($one_day_interval > 0)
 					$DBIPcount[$user_CIPct]++;
 					$DBIPACTIVEcount[$user_CIPct] = ($DBIPACTIVEcount[$user_CIPct] + 0);
 					$DBIPINCALLcount[$user_CIPct] = ($DBIPINCALLcount[$user_CIPct] + 0);
+					$DBIPDEADcount[$user_CIPct] = ($DBIPDEADcount[$user_CIPct] + 0);
 					if ($DBlive_status[$user_counter] =~ /READY|DONE/) 
 						{
 						$DBIPACTIVEcount[$user_CIPct]++;
 						}
 					else
 						{
-						$DBIPINCALLcount[$user_CIPct]++;
+						$stmtA = "SELECT count(*) FROM vicidial_auto_calls where callerid='$DBlive_call_id[$user_counter]';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							if ($aryA[0] > 0)
+								{
+								$DBIPINCALLcount[$user_CIPct]++;
+								}
+							else
+								{
+								$DBIPDEADcount[$user_CIPct]++;
+								}
+							}
+						else
+							{
+							$DBIPINCALLcount[$user_CIPct]++;
+							}
 						}
 					}
 				$user_counter++;
@@ -541,6 +565,12 @@ while($one_day_interval > 0)
 					$DBIPcount[$user_CIPct] = $DBIPACTIVEcount[$user_CIPct];
 					$active_only=1;
 					}
+				else
+					{
+					$DBIPcount[$user_CIPct] = ($DBIPcount[$user_CIPct] - $DBIPDEADcount[$user_CIPct]);
+					if ($DBIPcount[$user_CIPct] < 0)
+						{$DBIPcount[$user_CIPct]=0;}
+					}
 				$DBIPautoaltdial[$user_CIPct] =		$aryA[10];
 				$DBIPcampaign_allow_inbound[$user_CIPct] =	$aryA[11];
 				$DBIPqueue_priority[$user_CIPct] =	$aryA[12];
@@ -573,7 +603,7 @@ while($one_day_interval > 0)
 			if ($DBIPactive[$user_CIPct] =~ /N/) {$DBIPgoalcalls[$user_CIPct] = 0;}
 			$DBIPgoalcalls[$user_CIPct] = sprintf("%.0f", $DBIPgoalcalls[$user_CIPct]);
 
-			$event_string="$DBIPcampaign[$user_CIPct] $DBIPaddress[$user_CIPct]: agents: $DBIPcount[$user_CIPct] (READY: $DBIPcampaign_ready_agents[$user_CIPct])    dial_level: $DBIPadlevel[$user_CIPct]";
+			$event_string="$DBIPcampaign[$user_CIPct] $DBIPaddress[$user_CIPct]: agents: $DBIPcount[$user_CIPct] (READY: $DBIPcampaign_ready_agents[$user_CIPct])    dial_level: $DBIPadlevel[$user_CIPct]     ($DBIPACTIVEcount[$user_CIPct]|$DBIPINCALLcount[$user_CIPct]|$DBIPDEADcount[$user_CIPct])";
 			&event_logger;
 
 

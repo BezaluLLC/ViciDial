@@ -44,6 +44,8 @@ $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
 $stretch_dimensions		= '1';	# sets the vicidial screen to the size of the browser window
 $BROWSER_HEIGHT			= 500;	# set to the minimum browser height, default=500
 $BROWSER_WIDTH			= 770;	# set to the minimum browser width, default=770
+$webphone_width			= 460;	# set the webphone frame width
+$webphone_height		= 500;	# set the webphone frame height
 $MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
 $SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
 $SIDEBAR_COLOR			= '#F6F6F6';
