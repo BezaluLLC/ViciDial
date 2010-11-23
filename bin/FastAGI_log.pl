@@ -57,6 +57,7 @@
 # 100224-1229 - Fixed manual dial park call bug
 # 100903-0041 - Changed lead_id max length to 10 digits
 # 101111-1556 - Added source to vicidial_hopper inserts
+# 101123-0443 - Fixed minor parked call manual dial bug
 #
 
 # defaults for PreFork
@@ -875,7 +876,7 @@ sub process_request
 						{
 						$PC_count=0;
 						$PLC_count=0;
-						$stmtA = "SELECT count(*) from parked_channels where channel_group='$callerid';";
+						$stmtA = "SELECT channel from parked_channels where channel_group='$callerid';";
 							if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -883,15 +884,15 @@ sub process_request
 						if ($PC_count_rows > 0)
 							{
 							@aryA = $sthA->fetchrow_array;
-							$PC_count = $aryA[0];
+							$PC_channel = $aryA[0];
 							}
 						$sthA->finish();
 
-						if ($PC_count > 0)
+						if ($PC_count_rows > 0)
 							{
 							sleep(1);
 
-							$stmtA = "SELECT count(*) from live_channels where channel='$channel';";
+							$stmtA = "SELECT count(*) from live_channels where channel='$PC_channel';";
 								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -905,7 +906,7 @@ sub process_request
 							}
 						if ($PLC_count > 0)
 							{
-							if ($AGILOG) {$agi_string = "VD hangup: VDAC record found with park record: $channel $uniqueid $calleridname";   &agi_output;}
+							if ($AGILOG) {$agi_string = "VD hangup: VDAC record found with park record: $channel $PC_channel $uniqueid $calleridname";   &agi_output;}
 							}
 						else
 							{
