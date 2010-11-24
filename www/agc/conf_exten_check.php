@@ -52,17 +52,21 @@
 # 100109-1337 - Fixed Manual dial live call detection
 # 100527-0957 - Added send_dtmf, transfer_conference and park_call API functions
 # 100727-2209 - Added timer actions for hangup, extension, callmenu and ingroup as well as destination
+# 101123-1105 - Added api manual dial queue feature to external_dial function
 #
 
-$version = '2.4-27';
-$build = '100727-2209';
+$version = '2.4-28';
+$build = '101123-1105';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=32;
+$mysql_log_count=36;
 $one_mysql_log=0;
+$DB=0;
 
 require("dbconnect.php");
 
 ### If you have globals turned off uncomment these lines
+if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
+	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
 	elseif (isset($_POST["user"]))			{$user=$_POST["user"];}
 if (isset($_GET["pass"]))					{$pass=$_GET["pass"];}
@@ -215,7 +219,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 
 			if ($Acount > 0)
 				{
-				$stmt="SELECT status,callerid,agent_log_id,campaign_id from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
+				$stmt="SELECT status,callerid,agent_log_id,campaign_id,lead_id from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
 				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03004',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -224,6 +228,17 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 				$Acallerid =		$row[1];
 				$Aagent_log_id =	$row[2];
 				$Acampaign_id =		$row[3];
+				$Alead_id =			$row[4];
+
+				$api_manual_dial='STANDARD';
+				$stmt = "SELECT api_manual_dial FROM vicidial_campaigns where campaign_id='$Acampaign_id';";
+				$rslt=mysql_query($stmt, $link);
+				$vcc_conf_ct = mysql_num_rows($rslt);
+				if ($vcc_conf_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$api_manual_dial =	$row[0];
+					}
 				}
 		#	### find out if external table shows agent should be disabled
 		#	$stmt="SELECT count(*) from another_table where user='$user' and status='DEAD';";
@@ -410,6 +425,52 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			$external_park =				$row[11];
 			$timer_action_destination =		$row[12];
 
+			$MDQ_count=0;
+			if ( ($api_manual_dial=='QUEUE') or ($api_manual_dial=='QUEUE_AND_AUTOCALL') )
+				{
+				$stmt="SELECT count(*) FROM vicidial_manual_dial_queue where user='$user' and status='READY';";
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03033',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$mdq_count_record_ct = mysql_num_rows($rslt);
+				if ($mdq_count_record_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$MDQ_count =			$row[0];
+					}
+
+				if ( ($MDQ_count > 0) and (strlen($external_dial) < 16) and ($Astatus=='PAUSED') and ($Alead_id < 1) )
+					{
+					$stmt="SELECT mdq_id,external_dial FROM vicidial_manual_dial_queue where user='$user' and status='READY' order by entry_time limit 1;";
+					$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03034',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$mdq_record_ct = mysql_num_rows($rslt);
+					if ($mdq_record_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$MDQ_mdq_id =			$row[0];
+						$MDQ_external_dial =	$row[1];
+						$external_dial = $MDQ_external_dial;
+
+						$stmt="UPDATE vicidial_manual_dial_queue SET status='QUEUE' where mdq_id='$MDQ_mdq_id';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03035',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+						$UMDQaffected_rows_update = mysql_affected_rows($link);
+
+						if ($UMDQaffected_rows_update > 0)
+							{
+							$stmt="UPDATE vicidial_live_agents SET external_dial='$MDQ_external_dial' where user='$user' and server_ip='$server_ip';";
+							if ($DB) {echo "$stmt\n";}
+							$rslt=mysql_query($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03036',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+							$VLAMDQaffected_rows_update = mysql_affected_rows($link);
+							}
+						}
+					}
+				}
+
 			if (strlen($external_status)<1) {$external_status = '::::::::::';}
 
 			$web_epoch = date("U");
@@ -578,7 +639,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			if ($Ashift_logout > 0)
 				{$Alogin='SHIFT_LOGOUT';}
 
-			echo 'DateTime: ' . $NOW_TIME . '|UnixTime: ' . $StarTtime . '|Logged-in: ' . $Alogin . '|CampCalls: ' . $RingCalls . '|Status: ' . $Astatus . '|DiaLCalls: ' . $DiaLCalls . '|APIHanguP: ' . $external_hangup . '|APIStatuS: ' . $external_status . '|APIPausE: ' . $external_pause . '|APIDiaL: ' . $external_dial . '|DEADcall: ' . $DEADcustomer . '|InGroupChange: ' . $InGroupChangeDetails . '|APIFields: ' . $external_update_fields . '|APIFieldsData: ' . $external_update_fields_data . '|APITimerAction: ' . $timer_action . '|APITimerMessage: ' . $timer_action_message . '|APITimerSeconds: ' . $timer_action_seconds . '|APIdtmf: ' . $external_dtmf . '|APItransferconf: ' . $external_transferconf . '|APIpark: ' . $external_park . '|APITimerDestination: ' . $timer_action_destination . "\n";
+			echo 'DateTime: ' . $NOW_TIME . '|UnixTime: ' . $StarTtime . '|Logged-in: ' . $Alogin . '|CampCalls: ' . $RingCalls . '|Status: ' . $Astatus . '|DiaLCalls: ' . $DiaLCalls . '|APIHanguP: ' . $external_hangup . '|APIStatuS: ' . $external_status . '|APIPausE: ' . $external_pause . '|APIDiaL: ' . $external_dial . '|DEADcall: ' . $DEADcustomer . '|InGroupChange: ' . $InGroupChangeDetails . '|APIFields: ' . $external_update_fields . '|APIFieldsData: ' . $external_update_fields_data . '|APITimerAction: ' . $timer_action . '|APITimerMessage: ' . $timer_action_message . '|APITimerSeconds: ' . $timer_action_seconds . '|APIdtmf: ' . $external_dtmf . '|APItransferconf: ' . $external_transferconf . '|APIpark: ' . $external_park . '|APITimerDestination: ' . $timer_action_destination . '|APIManualDialQueue: ' . $MDQ_count . "\n";
 
 			if (strlen($timer_action) > 3)
 				{

@@ -778,7 +778,9 @@ realtime_agent_time_stats ENUM('DISABLED','WAIT_CUST_ACW','WAIT_CUST_ACW_PAUSE',
 use_auto_hopper ENUM('Y','N') default 'Y',
 auto_hopper_multi VARCHAR(6) default '1',
 auto_hopper_level MEDIUMINT(8) UNSIGNED default '0',
-auto_trim_hopper ENUM('Y','N') default 'Y'
+auto_trim_hopper ENUM('Y','N') default 'Y',
+api_manual_dial ENUM('STANDARD','QUEUE','QUEUE_AND_AUTOCALL') default 'STANDARD',
+manual_dial_call_time_check ENUM('DISABLED','ENABLED') default 'DISABLED'
 );
 
 CREATE TABLE vicidial_lists (
@@ -2253,6 +2255,17 @@ xfer_count SMALLINT(5) UNSIGNED default '0',
 index (campaign_id)
 );
 
+CREATE TABLE vicidial_manual_dial_queue (
+mdq_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+user VARCHAR(20),
+phone_number VARCHAR(100) default '',
+entry_time DATETIME,
+status ENUM('READY','QUEUE') default 'READY',
+external_dial VARCHAR(100) default '',
+index (user)
+);
+
+
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
 ALTER TABLE live_channels ENGINE=MEMORY;
@@ -2395,7 +2408,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1253',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1254',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

@@ -391,6 +391,14 @@ OTHER CHANGES:
 	dialing rate and the number of active agents, also added a trim feature
 	to make sure the hopper is not filled too much
 
+89. Added the ability to filter manual dial calls to adhere to the call time
+	scheme selected for the campaign. Does not work with State Call Times.
+	Must be enabled in the Campaign Detail settings.
+
+90. Added the ability to queue multiple manual dial calls for a specific logged-
+	in agent using the Agent API. Feature must be enabled in the Campaign 
+	Detail settings.
+
 
 
 

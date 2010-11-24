@@ -609,3 +609,18 @@ UPDATE system_settings SET db_schema_version='1252',db_schema_update_date=NOW();
 ALTER TABLE vicidial_campaigns MODIFY concurrent_transfers ENUM('AUTO','1','2','3','4','5','6','7','8','9','10','15','20','25','30','40','50','60','80','100') default 'AUTO';
 
 UPDATE system_settings SET db_schema_version='1253',db_schema_update_date=NOW();
+
+CREATE TABLE vicidial_manual_dial_queue (
+mdq_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+user VARCHAR(20),
+phone_number VARCHAR(100) default '',
+entry_time DATETIME,
+status ENUM('READY','QUEUE') default 'READY',
+external_dial VARCHAR(100) default '',
+index (user)
+);
+
+ALTER TABLE vicidial_campaigns ADD api_manual_dial ENUM('STANDARD','QUEUE','QUEUE_AND_AUTOCALL') default 'STANDARD';
+ALTER TABLE vicidial_campaigns ADD manual_dial_call_time_check ENUM('DISABLED','ENABLED') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1254',db_schema_update_date=NOW();

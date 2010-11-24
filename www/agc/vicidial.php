@@ -321,10 +321,11 @@
 # 101012-1656 - Added scroll command at dispo submission to for scrolling to the top of the screen
 # 101024-1639 - Added parked call counter
 # 101108-0110 - Added ADDMEMBER option for queue_log
+# 101124-0436 - Added manual dial queue and manual dial call time check features
 #
 
-$version = '2.4-298';
-$build = '101108-0110';
+$version = '2.4-299';
+$build = '101124-0436';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=69;
 $one_mysql_log=0;
@@ -1274,7 +1275,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1361,7 +1362,17 @@ else
 				$customer_3way_hangup_action =	$row[79];
 				$ivr_park_call =			$row[80];
 				$manual_preview_dial =		$row[81];
+				$api_manual_dial =			$row[82];
+				$manual_dial_call_time_check = $row[83];
 
+
+				$AllowManualQueueCalls=1;
+				$AllowManualQueueCallsChoice=0;
+				if ($api_manual_dial == 'QUEUE')
+					{
+					$AllowManualQueueCalls=0;
+					$AllowManualQueueCallsChoice=1;
+					}
 
 				if ($manual_preview_dial == 'DISABLED')
 					{$manual_dial_preview = 0;}
@@ -3138,6 +3149,15 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var customer_3way_hangup_dispo_message='';
 	var ivr_park_call='<?php echo $ivr_park_call ?>';
 	var qm_phone='<?php echo $QM_PHONE ?>';
+	var APIManualDialQueue=0;
+	var APIManualDialQueue_last=0;
+	var api_manual_dial='<?php echo $api_manual_dial ?>';
+	var manual_dial_call_time_check='<?php echo $manual_dial_call_time_check ?>';
+	var CloserSelecting=0;
+	var TerritorySelecting=0;
+	var WaitingForNextStep=0;
+	var AllowManualQueueCalls='<?php echo $AllowManualQueueCalls ?>';
+	var AllowManualQueueCallsChoice='<?php echo $AllowManualQueueCallsChoice ?>';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -3816,6 +3836,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 						var APIPausE = APIPausE_array[1];
 						var APIDiaL_array = check_time_array[9].split("APIDiaL: ");
 						var APIDiaL = APIDiaL_array[1];
+						var APIManualDialQueue_array = check_time_array[24].split("APIManualDialQueue: ");
+						APIManualDialQueue = APIManualDialQueue_array[1];
 						var CheckDEADcall_array = check_time_array[10].split("DEADcall: ");
 						var CheckDEADcall = CheckDEADcall_array[1];
 						var InGroupChange_array = check_time_array[11].split("InGroupChange: ");
@@ -3973,7 +3995,16 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 									}
 								}
 							}
-						if (APIDiaL.length > 9)
+						if ( (APIDiaL.length > 9) && (AllowManualQueueCalls == '0') )
+							{
+							APIManualDialQueue++;
+							}
+						if (APIManualDialQueue != APIManualDialQueue_last)
+							{
+							APIManualDialQueue_last = APIManualDialQueue;
+							document.getElementById("ManualQueueNotice").innerHTML = "<B><font color=red size=3>Manual Queue: " + APIManualDialQueue + "</font></B><BR>";
+							}
+						if ( (APIDiaL.length > 9) && (WaitingForNextStep == '0') && (AllowManualQueueCalls == '1') && (check_n > 2) )
 							{
 							var APIDiaL_array_detail = APIDiaL.split("!");
 							if (APIDiaL_ID == APIDiaL_array_detail[6])
@@ -4006,6 +4037,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 									{NeWManuaLDiaLCalLSubmiT('NOW');}
 								}
 							}
+
 						if ( (CheckDEADcall > 0) && (VD_live_customer_call==1) )
 							{
 							if (CheckDEADcallON < 1)
@@ -5724,7 +5756,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			else
 				{var call_prefix = manual_dial_prefix;}
 
-			manDiaLnext_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLnextCaLL&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&preview=" + man_preview + "&agent_log_id=" + agent_log_id + "&callback_id=" + mdnCBid + "&lead_id=" + mdnBDleadid + "&phone_code=" + mdnDiaLCodE + "&phone_number=" + mdnPhonENumbeR + "&list_id=" + mdnLisT_id + "&stage=" + mdnStagE  + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&omit_phone_code=" + omit_phone_code + "&manual_dial_filter=" + manual_dial_filter + "&vendor_lead_code=" + mdVendorid + "&usegroupalias=" + mdgroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&vtiger_callback_id=" + vtiger_callback_id + "&dial_method=" + dial_method;
+			manDiaLnext_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLnextCaLL&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&preview=" + man_preview + "&agent_log_id=" + agent_log_id + "&callback_id=" + mdnCBid + "&lead_id=" + mdnBDleadid + "&phone_code=" + mdnDiaLCodE + "&phone_number=" + mdnPhonENumbeR + "&list_id=" + mdnLisT_id + "&stage=" + mdnStagE  + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&omit_phone_code=" + omit_phone_code + "&manual_dial_filter=" + manual_dial_filter + "&vendor_lead_code=" + mdVendorid + "&usegroupalias=" + mdgroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&vtiger_callback_id=" + vtiger_callback_id + "&dial_method=" + dial_method + "&manual_dial_call_time_check=" + manual_dial_call_time_check;
 			//		alert(manual_dial_filter + "\n" +manDiaLnext_query);
 			xmlhttp.open('POST', 'vdc_db_query.php');
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -5744,7 +5776,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					var regMNCvar = new RegExp("HOPPER EMPTY","ig");
 					var regMDFvarDNC = new RegExp("DNC","ig");
 					var regMDFvarCAMP = new RegExp("CAMPLISTS","ig");
-					if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarCAMP)) )
+					var regMDFvarTIME = new RegExp("OUTSIDE","ig");
+					if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarCAMP)) || (MDnextCID.match(regMDFvarTIME)) )
 						{
 						var alert_displayed=0;
 						alt_phone_dialing=starting_alt_phone_dialing;
@@ -5758,6 +5791,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 							{alert("This phone number is in the DNC list:\n" + mdnPhonENumbeR);   alert_displayed=1;}
 						if (MDnextCID.match(regMDFvarCAMP))
 							{alert("This phone number is not in the campaign lists:\n" + mdnPhonENumbeR);   alert_displayed=1;}
+						if (MDnextCID.match(regMDFvarTIME))
+							{alert("This phone number is outside of the local call time:\n" + mdnPhonENumbeR);   alert_displayed=1;}
 						if (alert_displayed==0)						
 							{alert("Unspecified error:\n" + mdnPhonENumbeR + "|" + MDnextCID);   alert_displayed=1;}
 
@@ -7652,6 +7687,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			{
 			document.getElementById("Dispo3wayMessage").innerHTML = "<BR><B><font color=red size=3>" + customer_3way_hangup_dispo_message + "</font></B><BR>";
 			}
+		if (APIManualDialQueue > 0)
+			{
+			document.getElementById("DispoManualQueueMessage").innerHTML = "<BR><B><font color=red size=3>Manual Dial Queue Calls Waiting: " + APIManualDialQueue + "</font></B><BR>";
+			}
 		HidEGenDerPulldown();
 		AgentDispoing = 1;
 		var VD_statuses_ct_half = parseInt(VD_statuses_ct / 2);
@@ -7689,29 +7728,36 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		else
 			{
-			HidEGenDerPulldown();
-			showDiv('PauseCodeSelectBox');
-			WaitingForNextStep=1;
-			PauseCode_HTML = '';
-			document.vicidial_form.PauseCodeSelection.value = '';		
-			var VD_pause_codes_ct_half = parseInt(VD_pause_codes_ct / 2);
-			PauseCode_HTML = "<table cellpadding=5 cellspacing=5 width=500><tr><td colspan=2><B> PAUSE CODE</B></td></tr><tr><td bgcolor=\"#99FF99\" height=300 width=240 valign=top><font class=\"log_text\"><span id=PauseCodeSelectA>";
-			var loop_ct = 0;
-			while (loop_ct < VD_pause_codes_ct)
+			if (APIManualDialQueue > 0)
 				{
-				PauseCode_HTML = PauseCode_HTML + "<font size=3 style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"PauseCodeSelect_submit('" + VARpause_codes[loop_ct] + "');return false;\">" + VARpause_codes[loop_ct] + " - " + VARpause_code_names[loop_ct] + "</a></b></font><BR><BR>";
-				loop_ct++;
-				if (loop_ct == VD_pause_codes_ct_half) 
-					{PauseCode_HTML = PauseCode_HTML + "</span></font></td><td bgcolor=\"#99FF99\" height=300 width=240 valign=top><font class=\"log_text\"><span id=PauseCodeSelectB>";}
+				PauseCodeSelect_submit('NXDIAL');
 				}
-
-			if (agent_pause_codes_active=='FORCE')
-				{var Go_BacK_LinK = '';}
 			else
-				{var Go_BacK_LinK = "<font size=3 style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"PauseCodeSelect_submit('');return false;\">Go Back</a>";}
+				{
+				HidEGenDerPulldown();
+				showDiv('PauseCodeSelectBox');
+				WaitingForNextStep=1;
+				PauseCode_HTML = '';
+				document.vicidial_form.PauseCodeSelection.value = '';		
+				var VD_pause_codes_ct_half = parseInt(VD_pause_codes_ct / 2);
+				PauseCode_HTML = "<table cellpadding=5 cellspacing=5 width=500><tr><td colspan=2><B> PAUSE CODE</B></td></tr><tr><td bgcolor=\"#99FF99\" height=300 width=240 valign=top><font class=\"log_text\"><span id=PauseCodeSelectA>";
+				var loop_ct = 0;
+				while (loop_ct < VD_pause_codes_ct)
+					{
+					PauseCode_HTML = PauseCode_HTML + "<font size=3 style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"PauseCodeSelect_submit('" + VARpause_codes[loop_ct] + "');return false;\">" + VARpause_codes[loop_ct] + " - " + VARpause_code_names[loop_ct] + "</a></b></font><BR><BR>";
+					loop_ct++;
+					if (loop_ct == VD_pause_codes_ct_half) 
+						{PauseCode_HTML = PauseCode_HTML + "</span></font></td><td bgcolor=\"#99FF99\" height=300 width=240 valign=top><font class=\"log_text\"><span id=PauseCodeSelectB>";}
+					}
 
-			PauseCode_HTML = PauseCode_HTML + "</span></font></td></tr></table><BR><BR>" + Go_BacK_LinK;
-			document.getElementById("PauseCodeSelectContent").innerHTML = PauseCode_HTML;
+				if (agent_pause_codes_active=='FORCE')
+					{var Go_BacK_LinK = '';}
+				else
+					{var Go_BacK_LinK = "<font size=3 style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"PauseCodeSelect_submit('');return false;\">Go Back</a>";}
+
+				PauseCode_HTML = PauseCode_HTML + "</span></font></td></tr></table><BR><BR>" + Go_BacK_LinK;
+				document.getElementById("PauseCodeSelectContent").innerHTML = PauseCode_HTML;
+				}
 			}
 		}
 
@@ -8020,6 +8066,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				document.getElementById("debugbottomspan").innerHTML = '';
 				customer_3way_hangup_dispo_message='';
 				document.getElementById("Dispo3wayMessage").innerHTML = '';
+				document.getElementById("DispoManualQueueMessage").innerHTML = '';
+				document.getElementById("ManualQueueNotice").innerHTML = '';
+				APIManualDialQueue_last=0;
 				document.vicidial_form.FORM_LOADED.value = '0';
 
 				if (manual_dial_in_progress==1)
@@ -8581,6 +8630,19 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			document.getElementById("TerritorySelectAdd").innerHTML = " &nbsp; <a href=\"#\" onclick=\"TerritorySelect_change('-----ADD-ALL-----','ADD');return false;\"><B>--- ADD ALL ---</B><BR>" + live_TERR_HTML_ADD;
 			document.getElementById("TerritorySelectDelete").innerHTML = " &nbsp; <a href=\"#\" onclick=\"TerritorySelect_change('-----DELETE-ALL-----','DELETE');return false;\"><B>--- DELETE ALL ---</B><BR>" + live_TERR_HTML_DELETE;
 			}
+		}
+
+// ################################################################################
+// Enable or Disable manual dial queue calls
+	function ManualQueueChoiceChange(task_amqc)
+		{
+		AllowManualQueueCalls = task_amqc;
+		var TerritorySelectChoices = document.vicidial_form.TerritorySelectList.value;
+
+		if (AllowManualQueueCalls == '0')
+			{document.getElementById("ManualQueueChoice").innerHTML = "<a href=\"#\" onclick=\"ManualQueueChoiceChange('1');return false;\">Manual Queue is Off</a><BR>";}
+		else
+			{document.getElementById("ManualQueueChoice").innerHTML = "<a href=\"#\" onclick=\"ManualQueueChoiceChange('0');return false;\">Manual Queue in On</a><BR>";}
 		}
 
 // ################################################################################
@@ -10391,6 +10453,9 @@ else
 				{hideDiv('DialWithCustomer');}
 			if (agent_xfer_park_customer_dial < 1)
 				{hideDiv('ParkCustomerDial');}
+			if (AllowManualQueueCallsChoice == '1')
+				{document.getElementById("ManualQueueChoice").innerHTML = "<a href=\"#\" onclick=\"ManualQueueChoiceChange('1');return false;\">Manual Queue is Off</a><BR>";}
+
 			document.vicidial_form.LeadLookuP.checked=true;
 
 			if ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') )
@@ -11324,6 +11389,8 @@ $zi=1;
 	<tr><td width=150 align=left valign=top>
 	<font class="body_text"><center>
 	<span STYLE="background-color: #CCFFCC" id="DiaLControl"><a href="#" onclick="ManualDialNext('','','','','','0');"><IMG SRC="./images/vdc_LB_dialnextnumber_OFF.gif" border=0 alt="Dial Next Number"></a></span><BR>
+	<span id="ManualQueueNotice"></span>
+	<span id="ManualQueueChoice"></span>
 	<span id="DiaLLeaDPrevieW"><font class="preview_text"> <input type=checkbox name=LeadPreview size=1 value="0"> LEAD PREVIEW<BR></font></span>
 	<span id="DiaLDiaLAltPhonE"><font class="preview_text"> <input type=checkbox name=DiaLAltPhonE size=1 value="0"> ALT PHONE DIAL<BR></font></span>
 	<!--
@@ -11842,6 +11909,7 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="DispoSelectBox">
     <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> DISPOSITION CALL :<span id="DispoSelectPhonE"></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectHAspan"><a href="#" onclick="DispoHanguPAgaiN()">Hangup Again</a></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectMaxMin"><a href="#" onclick="DispoMinimize()"> minimize </a></span><BR>
 	<span id="Dispo3wayMessage"></span>
+	<span id="DispoManualQueueMessage"></span>
 	<span id="DispoSelectContent"> End-of-call Disposition Selection </span>
 	<input type=hidden name=DispoSelection><BR>
 	<input type=checkbox name=DispoSelectStop size=1 value="0"> PAUSE AGENT DIALING <BR>

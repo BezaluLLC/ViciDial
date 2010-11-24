@@ -480,6 +480,10 @@ Automatic Hopper Multiplier||
 This is multiplier for the Auto Hopper. Setting this less than 1 will cause the Auto Hopper algorithm to load less leads than it normally would.  Setting this greater than 1 will cause the Auto Hopper algorithm to load more leads than it normally would.  Default is 1||
 Auto Trim Hopper||
 Setting thing to Y will allow Vicidial to automatically remove excess leads from the hopper. Default is Y||
+Manual Dial API||
+This option allows you to set the Agent API to make either one call at a time, STANDARD, or the ability to queue up manual dial calls and have them dial automatically once the agent goes on pause or is available to take their next call with the option to disable the automatic dialing of these calls, QUEUE, or QUEUE_AND_AUTOCALL which is the same as QUEUE but without the option to disable the automatic dialing of these calls. If an agent has more than one call queued up for them they will see the count of how many manual dial calls are in queue right below the Pause button, or Dial Next Number button. We suggest that if QUEUE is used that you send API actions using the preview=YES option so you are not repeatedly dialing calls for the agent without notice. Also, if using QUEUE and heavily using manual dial calls in a non MANUAL dial method, we would recommend setting the Agent Pause After Each Call option to Y. Default is STANDARD||
+Manual Call Time Check||
+If this option is enabled, it will check all manual dial calls to make sure they are within the call time settings set for the campaign. Default is DISABLED||
 
 
 AST_LISTS_campaign_stats.php
@@ -496,6 +500,11 @@ You are in ALT dial mode, you must finish the lead before logging out||
 Presets Button||
 SELECT A PRESET||
 Customer Hung-up, 3-way Call Ended Automatically||
+Manual Dial Queue Calls Waiting||
+Manual Queue||
+This phone number is outside of the local call time||
+Manual Queue is Off||
+Manual Queue is On||
 
 
 ############################################################  MANAGER Manual

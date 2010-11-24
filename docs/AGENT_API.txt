@@ -183,6 +183,7 @@ ERROR: agent_user is not allowed to place manual dial calls - 6666
 ERROR: caller_id_number from group_alias is not valid - 6666|TESTING|123
 ERROR: group_alias is not valid - 6666|TESTING
 ERROR: vtiger callback activity does not exist in vtiger system - 12345
+ERROR: phone_number is already in this agents manual dial queue - 6666|7275551211
 SUCCESS: external_dial function set - 7275551212|6666|1|YES|NO|YES|123456|1232020456|9|TESTING|7275551211
 
 

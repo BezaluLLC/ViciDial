@@ -49,10 +49,11 @@
 # 100401-2357 - Added external_add_lead function (contributed by aouyar)
 # 100527-0926 - Added send_dtmf, transfer_conference and park_call functions
 # 100914-1538 - Fixed bug in change_ingroups function
+# 101123-1050 - Added manual dial queue features to external_dial function
 #
 
-$version = '2.4-16';
-$build = '100914-1538';
+$version = '2.4-17';
+$build = '101123-1050';
 
 require("dbconnect.php");
 
@@ -618,11 +619,36 @@ if ($function == 'external_dial')
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
 			{
-			$stmt = "select count(*) from vicidial_live_agents where user='$agent_user' and status='PAUSED' and lead_id < 1;";
-			if ($DB) {echo "$stmt\n";}
+			$stmt = "SELECT campaign_id FROM vicidial_live_agents where user='$agent_user';";
 			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			if ($row[0] > 0)
+			$vlac_conf_ct = mysql_num_rows($rslt);
+			if ($vlac_conf_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$vac_campaign_id =	$row[0];
+				}
+			$stmt = "SELECT api_manual_dial FROM vicidial_campaigns where campaign_id='$vac_campaign_id';";
+			$rslt=mysql_query($stmt, $link);
+			$vcc_conf_ct = mysql_num_rows($rslt);
+			if ($vcc_conf_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$api_manual_dial =	$row[0];
+				}
+
+			if ($api_manual_dial=='STANDARD')
+				{
+				$stmt = "select count(*) from vicidial_live_agents where user='$agent_user' and status='PAUSED' and lead_id < 1;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$agent_ready = $row[0];
+				}
+			else
+				{
+				$agent_ready=1;
+				}
+			if ($agent_ready > 0)
 				{
 				$stmt = "select count(*) from vicidial_users where user='$agent_user' and agentcall_manual='1';";
 				if ($DB) {echo "$stmt\n";}
@@ -757,15 +783,42 @@ if ($function == 'external_dial')
 						}
 					####### End Vtiger CallBack Launching #######
 
+					$success=0;
 					### If no errors, run the update to place the call ###
-					$stmt="UPDATE vicidial_live_agents set external_dial='$value!$phone_code!$search!$preview!$focus!$vendor_id!$epoch!$dial_prefix!$group_alias!$caller_id_number!$vtiger_callback_id' where user='$agent_user';";
+					if ($api_manual_dial=='STANDARD')
+						{
+						$stmt="UPDATE vicidial_live_agents set external_dial='$value!$phone_code!$search!$preview!$focus!$vendor_id!$epoch!$dial_prefix!$group_alias!$caller_id_number!$vtiger_callback_id' where user='$agent_user';";
+						$success=1;
+						}
+					else
+						{
+						$stmt = "select count(*) from vicidial_manual_dial_queue where user='$agent_user' and phone_number='$value';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						if ($row[0] < 1)
+							{
+							$stmt="INSERT INTO vicidial_manual_dial_queue set user='$agent_user',phone_number='$value',entry_time=NOW(),status='READY',external_dial='$value!$phone_code!$search!$preview!$focus!$vendor_id!$epoch!$dial_prefix!$group_alias!$caller_id_number!$vtiger_callback_id';";
+							$success=1;
+							}
+						else
+							{
+							$result = 'ERROR';
+							$result_reason = "phone_number is already in this agents manual dial queue";
+							echo "$result: $result_reason - $agent_user|$value\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						}
+					if ($success > 0)
+						{
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
-					$rslt=mysql_query($stmt, $link);
-					$result = 'SUCCESS';
-					$result_reason = "external_dial function set";
-					$data = "$phone_code|$search|$preview|$focus|$vendor_id|$epoch|$dial_prefix|$group_alias|$caller_id_number";
-					echo "$result: $result_reason - $value|$agent_user|$data\n";
-					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						$rslt=mysql_query($stmt, $link);
+						$result = 'SUCCESS';
+						$result_reason = "external_dial function set";
+						$data = "$phone_code|$search|$preview|$focus|$vendor_id|$epoch|$dial_prefix|$group_alias|$caller_id_number";
+						echo "$result: $result_reason - $value|$agent_user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
 					}
 				else
 					{
