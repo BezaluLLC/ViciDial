@@ -17,6 +17,7 @@
 #
 # changes:
 # 101118-1409 - First build
+# 101125-2115 - Added parsing for 3-way calls
 #
 
 $script = 'agi-set_variables.agi';
@@ -151,7 +152,7 @@ if ( (length($callerid)>20) && ($callerid =~ /\"\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S
 	}
 if ( (
 (length($calleridname)>5) && ( (!$callerid) or ($callerid =~ /unknown|private|00000000/i) or ($callerid =~ /5551212/) )
-) or ( (length($calleridname)>17) && ($calleridname =~ /\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/) ) )
+) or ( (length($calleridname)>17) && ($calleridname =~ /\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/) ) or ( (length($calleridname)>17) && ($calleridname =~ /\d\d\d\d\d\dW\d\d\d\d\d\d\d\d\d\dW$/) ) )
 	{
 	$callerid = $calleridname;
 #	### set the callerid to the ACQS value(calleridname)
@@ -178,7 +179,15 @@ $VDADphone_code='';
 $callerid =~ s/\"//gi;
 $callerid =~ s/ .*//gi;
 $CIDlead_id = $callerid;
-$CIDlead_id = substr($CIDlead_id, 10, 10);
+if ($CIDlead_id =~ /W\d\d\d\d\d\d\d\d\d\dW$/)
+	{
+	@CIDlead_id_array = split(/W/, $CIDlead_id);
+	$CIDlead_id =		$CIDlead_id_array[1];
+	}
+else
+	{
+	$CIDlead_id = substr($CIDlead_id, 10, 10);
+	}
 $CIDlead_id = ($CIDlead_id + 0);
 if ( ($CLIlead_id > 0) && ($CIDlead_id < 1) ) {$CIDlead_id = $CLIlead_id;}
 $VD_lead_id = $CIDlead_id;

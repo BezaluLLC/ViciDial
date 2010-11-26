@@ -43,6 +43,7 @@
 #  - $nodeletevdac - ('0','1')
 #  - $alertCID - ('0','1')
 #  - $preset_name = ('TESTING PRESET',...)
+#  - $call_variables = ('Variable: vendor_lead_code=1234|campaign=TESTCAMP|...')
 #
 # CHANGELOG:
 # 50401-1002 - First build of script, Hangup function only
@@ -103,10 +104,10 @@
 # 101004-1345 - Added Ivr park functions
 # 101024-1638 - Added park_log logging for parked calls
 # 101107-2331 - Added CALLERONHOLD/CALLEROFFHOLD queue_log entries
-#
+# 101125-1018 - Added call_variables Originate variables
 
-$version = '2.4-53';
-$build = '101107-2331';
+$version = '2.4-54';
+$build = '101125-1018';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=115;
 $one_mysql_log=0;
@@ -198,6 +199,8 @@ if (isset($_GET["alertCID"]))				{$alertCID=$_GET["alertCID"];}
 	elseif (isset($_POST["alertCID"]))		{$alertCID=$_POST["alertCID"];}
 if (isset($_GET["preset_name"]))			{$preset_name=$_GET["preset_name"];}
 	elseif (isset($_POST["preset_name"]))	{$preset_name=$_POST["preset_name"];}
+if (isset($_GET["call_variables"]))				{$call_variables=$_GET["call_variables"];}
+	elseif (isset($_POST["call_variables"]))	{$call_variables=$_POST["call_variables"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -438,10 +441,12 @@ if ($ACTION=="Originate")
 			{
 			$RAWaccount = $account;
 			$account = "Account: $account";
-			$variable = "Variable: usegroupalias=1";
+			$variable = "Variable: _usegroupalias=1";
+			if (strlen($call_variables)>9)
+				{$variable = "Variable: _usegroupalias=1";}   # |$call_variables
 			}
 		else
-			{$account='';   $variable='';}
+			{$variable='';   $account="Variable: $call_variables";}
 		$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$queryCID','Channel: $channel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','Callerid: $outCID','$account','$variable','','','');";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);

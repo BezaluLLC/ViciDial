@@ -322,10 +322,11 @@
 # 101024-1639 - Added parked call counter
 # 101108-0110 - Added ADDMEMBER option for queue_log
 # 101124-0436 - Added manual dial queue and manual dial call time check features
+# 101125-2151 - Changed CIDname for 3way calls
 #
 
-$version = '2.4-299';
-$build = '101124-0436';
+$version = '2.4-300';
+$build = '101125-2151';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=69;
 $one_mysql_log=0;
@@ -3158,6 +3159,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var WaitingForNextStep=0;
 	var AllowManualQueueCalls='<?php echo $AllowManualQueueCalls ?>';
 	var AllowManualQueueCallsChoice='<?php echo $AllowManualQueueCallsChoice ?>';
+	var call_variables='';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -3483,19 +3485,21 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				}
 			else
 				{agent_dialed_type='XFER_OVERRIDE';}
+			// due to a bug in Asterisk, these call variables do not actually work
+			call_variables = '__vendor_lead_code=' + document.vicidial_form.vendor_lead_code.value + ',__lead_id=' + document.vicidial_form.lead_id.value;
 			}
 		var sending_preset_name = document.vicidial_form.xfername.value;
 		if (taskFromConf == 'YES')
-			{basic_originate_call(manual_string,'NO','YES',dial_conf_exten,'NO',taskFromConf,threeway_cid,sending_group_alias,'',sending_preset_name);}
+			{basic_originate_call(manual_string,'NO','YES',dial_conf_exten,'NO',taskFromConf,threeway_cid,sending_group_alias,'',sending_preset_name,call_variables);}
 		else
-			{basic_originate_call(manual_string,'NO','NO','','','','1',sending_group_alias,sending_preset_name);}
+			{basic_originate_call(manual_string,'NO','NO','','','','1',sending_group_alias,sending_preset_name,call_variables);}
 
 		MD_ring_secondS=0;
 		}
 
 // ################################################################################
 // Send Originate command to manager to place a phone call
-	function basic_originate_call(tasknum,taskprefix,taskreverse,taskdialvalue,tasknowait,taskconfxfer,taskcid,taskusegroupalias,taskalert,taskpresetname) 
+	function basic_originate_call(tasknum,taskprefix,taskreverse,taskdialvalue,tasknowait,taskconfxfer,taskcid,taskusegroupalias,taskalert,taskpresetname,taskvariables) 
 		{
 		if (taskalert == '1')
 			{
@@ -3602,10 +3606,22 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					}
 				var originatevalue = protodial + "/" + extendial;
 				}
+
+			var leadCID = document.vicidial_form.lead_id.value;
+			var epochCID = epoch_sec;
+			if (leadCID.length < 1)
+				{leadCID = user_abb;}
+			leadCID = set_length(leadCID,'10','left');
+			epochCID = set_length(epochCID,'6','right');
 			if (taskconfxfer == 'YES')
-				{var queryCID = "DCagcW" + epoch_sec + user_abb;}
+				{var queryCID = "DC" + epochCID + 'W' + leadCID + 'W';}
 			else
-				{var queryCID = "DVagcW" + epoch_sec + user_abb;}
+				{var queryCID = "DV" + epochCID + 'W' + leadCID + 'W';}
+
+	//		if (taskconfxfer == 'YES')
+	//			{var queryCID = "DCagcW" + epoch_sec + user_abb;}
+	//		else
+	//			{var queryCID = "DVagcW" + epoch_sec + user_abb;}
 
 			if (taskalert == '1')
 				{
@@ -3625,7 +3641,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					{var call_cid = campaign_cid;}
 				}
 
-			VMCoriginate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=Originate&format=text&channel=" + originatevalue + "&queryCID=" + queryCID + "&exten=" + call_prefix + "" + dialnum + "&ext_context=" + ext_context + "&ext_priority=1&outbound_cid=" + call_cid + "&usegroupalias="+ usegroupalias + "&preset_name=" + taskpresetname + "&campaign=" + campaign + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&lead_id=" + document.vicidial_form.lead_id.value + "&stage=" + CheckDEADcallON + "&" + alertquery;
+			VMCoriginate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=Originate&format=text&channel=" + originatevalue + "&queryCID=" + queryCID + "&exten=" + call_prefix + "" + dialnum + "&ext_context=" + ext_context + "&ext_priority=1&outbound_cid=" + call_cid + "&usegroupalias="+ usegroupalias + "&preset_name=" + taskpresetname + "&campaign=" + campaign + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&lead_id=" + document.vicidial_form.lead_id.value + "&stage=" + CheckDEADcallON + "&" + alertquery + "&call_variables=" + taskvariables;
 			xmlhttp.open('POST', 'manager_send.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(VMCoriginate_query); 
@@ -3660,8 +3676,39 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			agent_dialed_number='';
 			agent_dialed_type='';
 			CalL_ScripT_id='';
+			call_variables='';
 			}
 		}
+
+
+// ################################################################################
+// zero-pad numbers or chop them to get to the desired length
+function set_length(SLnumber,SLlength_goal,SLdirection)
+	{
+	var SLnumber = SLnumber + '';
+	var begin_point=0;
+	var number_length = SLnumber.length;
+	if (number_length > SLlength_goal)
+		{
+		if (SLdirection == 'right')
+			{
+			begin_point = (number_length - SLlength_goal);
+			SLnumber = SLnumber.substr(begin_point,SLlength_goal);
+			}
+		else
+			{
+			SLnumber = SLnumber.substr(0,SLlength_goal);
+			}
+		}
+//	alert(SLnumber + '|' + SLlength_goal + '|' + begin_point + '|' + SLdirection + '|' + SLnumber.length + '|' + number_length);
+	var result = SLnumber + '';
+	while(result.length < SLlength_goal)
+		{
+		result = "0" + result;
+		}
+	return result;
+	}
+
 
 // ################################################################################
 // filter conf_dtmf send string and pass on to originate call
