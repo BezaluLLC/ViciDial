@@ -39,6 +39,7 @@
 # 100703-1122 - Added custom fields display/edit
 # 100712-1416 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
 # 100924-1431 - Added Called Count display
+# 101127-1610 - Added ability to set a scheduled callback date and time
 #
 
 require("dbconnect.php");
@@ -128,6 +129,8 @@ if (isset($_GET["CBchangeUSERtoUSER"]))				{$CBchangeUSERtoUSER=$_GET["CBchangeU
 	elseif (isset($_POST["CBchangeUSERtoUSER"]))		{$CBchangeUSERtoUSER=$_POST["CBchangeUSERtoUSER"];}
 if (isset($_GET["CBchangeANYtoUSER"]))				{$CBchangeANYtoUSER=$_GET["CBchangeANYtoUSER"];}
 	elseif (isset($_POST["CBchangeANYtoUSER"]))		{$CBchangeANYtoUSER=$_POST["CBchangeANYtoUSER"];}
+if (isset($_GET["CBchangeDATE"]))				{$CBchangeDATE=$_GET["CBchangeDATE"];}
+	elseif (isset($_POST["CBchangeDATE"]))		{$CBchangeDATE=$_POST["CBchangeDATE"];}
 if (isset($_GET["callback_id"]))				{$callback_id=$_GET["callback_id"];}
 	elseif (isset($_POST["callback_id"]))		{$callback_id=$_POST["callback_id"];}
 if (isset($_GET["CBuser"]))				{$CBuser=$_GET["CBuser"];}
@@ -140,6 +143,10 @@ if (isset($_GET["modify_agent_logs"]))			{$modify_agent_logs=$_GET["modify_agent
 	elseif (isset($_POST["modify_agent_logs"]))	{$modify_agent_logs=$_POST["modify_agent_logs"];}
 if (isset($_GET["add_closer_record"]))			{$add_closer_record=$_GET["add_closer_record"];}
 	elseif (isset($_POST["add_closer_record"]))	{$add_closer_record=$_POST["add_closer_record"];}
+if (isset($_POST["appointment_date"]))			{$appointment_date=$_POST["appointment_date"];}
+	elseif (isset($_GET["appointment_date"]))	{$appointment_date=$_GET["appointment_date"];}
+if (isset($_POST["appointment_time"]))			{$appointment_time=$_POST["appointment_time"];}
+	elseif (isset($_GET["appointment_time"]))	{$appointment_time=$_GET["appointment_time"];}
 
 $PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -277,6 +284,8 @@ if (strlen($row[18])>0) {$label_comments =			$row[18];}
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <title>ADMINISTRATION: Lead record modification</title>
+<script language="JavaScript" src="calendar_db.js"></script>
+<link rel="stylesheet" href="calendar.css">
 </head>
 <BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 <CENTER><FONT FACE="Courier" COLOR=BLACK SIZE=3>
@@ -291,6 +300,7 @@ if ($end_call > 0)
 	$rslt=mysql_query($stmt, $link);
 
 	echo "information modified<BR><BR>\n";
+	echo "<a href=\"$PHP_SELF?lead_id=$lead_id&DB=$DB\">Go back to the lead modification page</a><BR><BR>\n";
 	echo "<form><input type=button value=\"Close This Window\" onClick=\"javascript:window.close();\"></form>\n";
 	
 	### LOG INSERTION Admin Log Table ###
@@ -319,6 +329,31 @@ if ($end_call > 0)
 
 		echo "<BR>vicidial_callback record inactivated: $lead_id<BR>\n";
 		}
+
+	if ( ($dispo != $status) and ($status == 'CBHOLD') )
+		{
+		### find any vicidial_callback records for this lead 
+		$stmt="select callback_id from vicidial_callbacks where lead_id='" . mysql_real_escape_string($lead_id) . "' and status IN('ACTIVE','LIVE') order by callback_id desc LIMIT 1;";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+		$CBM_to_print = mysql_num_rows($rslt);
+		if ($CBM_to_print > 0)
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$callback_id = $rowx[0];
+			}
+		else
+			{
+			$tomorrow = date("Y-m-d", mktime(date("H"),date("i"),date("s"),date("m"),date("d")+1,date("Y")));
+
+			$stmt="INSERT INTO vicidial_callbacks SET lead_id='" . mysql_real_escape_string($lead_id) . "',recipient='ANYONE',status='ACTIVE',user='$PHP_AUTH_USER',user_group='ADMIN',list_id='" . mysql_real_escape_string($list_id) . "',callback_time='$tomorrow 12:00:00',entry_time='$NOW_TIME',comments='',campaign_id='" . mysql_real_escape_string($campaign_id) . "';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+
+			echo "<BR>Scheduled Callback added: $lead_id - $phone_number<BR>\n";
+			}
+		}
+
 
 	if ( ($dispo != $status) and ($status == 'DNC') )
 		{
@@ -368,7 +403,7 @@ else
 
 	if ($CBchangeUSERtoANY == 'YES')
 		{
-		### inactivate vicidial_callbacks record for this lead 
+		### set vicidial_callbacks record to an ANYONE callback for this lead 
 		$stmt="UPDATE vicidial_callbacks set recipient='ANYONE' where callback_id='" . mysql_real_escape_string($callback_id) . "';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
@@ -377,7 +412,7 @@ else
 		}
 	if ($CBchangeUSERtoUSER == 'YES')
 		{
-		### inactivate vicidial_callbacks record for this lead 
+		### set vicidial_callbacks record to a different USERONLY callback record for this lead 
 		$stmt="UPDATE vicidial_callbacks set user='" . mysql_real_escape_string($CBuser) . "' where callback_id='" . mysql_real_escape_string($callback_id) . "';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
@@ -386,7 +421,7 @@ else
 		}	
 	if ($CBchangeANYtoUSER == 'YES')
 		{
-		### inactivate vicidial_callbacks record for this lead 
+		### set vicidial_callbacks record to an USERONLY callback for this lead 
 		$stmt="UPDATE vicidial_callbacks set user='" . mysql_real_escape_string($CBuser) . "',recipient='USERONLY' where callback_id='" . mysql_real_escape_string($callback_id) . "';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
@@ -394,7 +429,25 @@ else
 		echo "<BR>vicidial_callback record changed to USERONLY, user: $CBuser<BR>\n";
 		}	
 	
-	
+	if ($CBchangeDATE == 'YES')
+		{
+		### change date/time of vicidial_callbacks record for this lead 
+		$stmt="UPDATE vicidial_callbacks set callback_time='" . mysql_real_escape_string($appointment_date) . " " . mysql_real_escape_string($appointment_time) . "',comments='" . mysql_real_escape_string($comments) . "' where callback_id='" . mysql_real_escape_string($callback_id) . "';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+
+		echo "<BR>vicidial_callback record changed to $appointment_date $appointment_time<BR>\n";
+		}	
+
+
+
+
+
+
+
+
+
+
 
 	$stmt="SELECT count(*) from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
 	$rslt=mysql_query($stmt, $link);
@@ -647,6 +700,7 @@ else
 	$CAMPstatuses_to_print = mysql_num_rows($rslt);
 
 	$o=0;
+	$CBhold_set=0;
 	while ($CAMPstatuses_to_print > $o) 
 		{
 		$rowx=mysql_fetch_row($rslt);
@@ -654,11 +708,16 @@ else
 			{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
 		else
 			{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
+		if ($rowx[0] == 'CBHOLD') {$CBhold_set++;}
 		$o++;
 		}
 
+	if ($dispo == 'CBHOLD') {$CBhold_set++;}
 
-	if ($DS < 1) {$statuses_list .= "<option SELECTED value=\"$dispo\">$dispo</option>\n";}
+	if ($DS < 1) 
+		{$statuses_list .= "<option SELECTED value=\"$dispo\">$dispo</option>\n";}
+	if ($CBhold_set < 1)
+		{$statuses_list .= "<option value=\"CBHOLD\">CBHOLD - Scheduled Callback</option>\n";}
 	echo "$statuses_list";
 	echo "</select> <i>(with $list_campaign statuses)</i></td></tr>\n";
 
@@ -673,6 +732,8 @@ else
 	echo "</table></form>\n";
 	echo "<BR><BR><BR>\n";
 
+	echo "<TABLE BGCOLOR=#B6D3FC WIDTH=750><TR><TD>\n";
+	echo "Callback Details:<BR><CENTER>\n";
 	if ( ($dispo == 'CALLBK') or ($dispo == 'CBHOLD') )
 		{
 		### find any vicidial_callback records for this lead 
@@ -711,13 +772,134 @@ else
 				echo "New Callback Owner UserID: <input type=text name=CBuser size=8 maxlength=10 value=\"$rowx[8]\"> \n";
 				echo "<input type=submit name=submit value=\"CHANGE TO USERONLY CALLBACK\"></form><BR>\n";
 				}
+
+			$appointment_datetimeARRAY = explode(" ",$rowx[6]);
+			$appointment_date = $appointment_datetimeARRAY[0];
+			$appointment_timeARRAY = explode(":",$appointment_datetimeARRAY[1]);
+			$appointment_hour = $appointment_timeARRAY[0];
+			$appointment_min = $appointment_timeARRAY[1];
+
+
+			?>
+
+			<FORM METHOD=POST NAME=vsn ID=vsn ACTION="<?php echo $PHP_SELF ?>">
+			<BR>Change Scheduled Callback Date:<BR>
+
+			<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=2 WIDTH=700>
+			<TR><TD COLSPAN=2 ALIGN=CENTER>
+			<input type=hidden name=DB id=DB value=<?php echo $DB ?>>
+			<input type=hidden name=CBchangeDATE value="YES">
+			<input type=hidden name=lead_id id=lead_id value="<?php echo $lead_id ?>">
+			<input type=hidden name=callback_id value="<?php echo $rowx[0] ?>">
+
+			<TR BGCOLOR="#E6E6E6">
+			<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">CallBack Date/Time: </TD><TD ALIGN=LEFT><input type=text name=appointment_date id=appointment_date size=10 maxlength=10 value="<?php echo $appointment_date ?>">
+
+			<script language="JavaScript">
+			var o_cal = new tcal ({
+				// form name
+				'formname': 'vsn',
+				// input name
+				'controlname': 'appointment_date'
+			});
+			o_cal.a_tpl.yearscroll = false;
+			// o_cal.a_tpl.weekstart = 1; // Monday week start
+			</script>
+			&nbsp; &nbsp;  
+			<input type=hidden name=appointment_time id=appointment_time value="<?php echo $appointment_time ?>">
+			<SELECT name=appointment_hour id=appointment_hour>
+			<option>00</option>
+			<option>01</option>
+			<option>02</option>
+			<option>03</option>
+			<option>04</option>
+			<option>05</option>
+			<option>06</option>
+			<option>07</option>
+			<option>08</option>
+			<option>09</option>
+			<option>10</option>
+			<option>11</option>
+			<option>12</option>
+			<option>13</option>
+			<option>14</option>
+			<option>15</option>
+			<option>16</option>
+			<option>17</option>
+			<option>18</option>
+			<option>19</option>
+			<option>20</option>
+			<option>21</option>
+			<option>22</option>
+			<option>23</option>
+			<OPTION value="<?php echo $appointment_hour ?>" selected><?php echo $appointment_hour ?></OPTION>
+			</SELECT>:
+			<SELECT name=appointment_min id=appointment_min>
+			<option>00</option>
+			<option>05</option>
+			<option>10</option>
+			<option>15</option>
+			<option>20</option>
+			<option>25</option>
+			<option>30</option>
+			<option>35</option>
+			<option>40</option>
+			<option>45</option>
+			<option>50</option>
+			<option>55</option>
+			<OPTION value="<?php echo $appointment_min ?>" selected><?php echo $appointment_min ?></OPTION>
+			</SELECT>
+
+			</TD>
+			</TR>
+			<TR BGCOLOR="#E6E6E6">
+			<TD align=center colspan=2>
+			Comments: 
+
+			<TEXTAREA name=comments ROWS=3 COLS=65><?php echo $rowx[10] ?></TEXTAREA>
+			</TD>
+			</TR>
+
+			<TR BGCOLOR="#E6E6E6">
+			<TD align=center colspan=2>
+
+			<SCRIPT LANGUAGE="JavaScript">
+
+			function submit_form()
+				{
+				var appointment_hourFORM = document.getElementById('appointment_hour');
+				var appointment_hourVALUE = appointment_hourFORM[appointment_hourFORM.selectedIndex].text;
+				var appointment_minFORM = document.getElementById('appointment_min');
+				var appointment_minVALUE = appointment_minFORM[appointment_minFORM.selectedIndex].text;
+
+				document.vsn.appointment_time.value = appointment_hourVALUE + ":" + appointment_minVALUE + ":00";
+
+				document.vsn.submit();
+				}
+
+			</SCRIPT>
+
+			<input type=button value="SUBMIT" name=smt id=smt onClick="submit_form()">
+			</TD>
+			</TR>
+
+			</TABLE>
+
+			</FORM>
+
+			<?php
 			}
 		else
 			{
 			echo "<BR>No Callback records found<BR>\n";
 			}
-		}
 
+		}
+	else
+		{
+		echo "<BR>If you want to change this lead to a scheduled callback, first change the Disposition to CBHOLD, then submit and you will be able to set the callback date and time.<BR>\n";
+		}
+	echo "</TD></TR></TABLE>\n";
 
 	echo "<br><br>\n";
 

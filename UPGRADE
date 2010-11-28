@@ -399,6 +399,9 @@ OTHER CHANGES:
 	in agent using the Agent API. Feature must be enabled in the Campaign 
 	Detail settings.
 
+91. Added ability to modify scheduled callback dates and comments in the Admin 
+	Modify Lead screen.
+
 
 
 
