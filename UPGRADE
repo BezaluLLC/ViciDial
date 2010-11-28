@@ -402,6 +402,11 @@ OTHER CHANGES:
 91. Added ability to modify scheduled callback dates and comments in the Admin 
 	Modify Lead screen.
 
+92. Added List override options for webform fields
+
+93. Added script to purge all vicidial_callbacks records that are inactive or
+	are tied to deleted leads, AST_DB_dead_cb_purge.pl 
+
 
 
 

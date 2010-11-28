@@ -2618,12 +2618,13 @@ else
 #             - Added Auto Trim Hopper which will allow Vicidial to remove excess leads from the hopper (MikeC)
 # 101115-1355 - Added more options for the concurrent transfer limit campaign setting
 # 101123-2214 - Added api_manual_dial and manual_dial_call_time_check campaign options
+# 101127-2232 - Added webform override options to lists
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-289';
-$build = '101123-2214';
+$admin_version = '2.4-290';
+$build = '101127-2232';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4939,6 +4940,11 @@ if ($ADD==99999)
 	<A NAME="vicidial_lists-drop_inbound_group_override">
 	<BR>
 	<B>Drop Inbound Group Override -</B> If this field is set, this in-group will be used for outbound calls within this list that drop from the outbound campaign instead of the drop in-group set in the campaign detail screen. Default is not set.
+
+	<BR>
+	<A NAME="vicidial_lists-web_form_address">
+	<BR>
+	<B>Web Form Override -</B> This is the custom address that clicking on the WEB FORM button in VICIDIAL will take you to for calls that come in on this list.
 
 	<BR>
 	<A NAME="vicidial_lists-xferconf_a_dtmf">
@@ -13881,7 +13887,7 @@ if ($ADD==411)
 
 			echo "<br><B>LIST MODIFIED: $list_id</B>\n";
 
-			$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate',reset_time='$reset_time',agent_script_override='$agent_script_override',campaign_cid_override='$campaign_cid_override',am_message_exten_override='$am_message_exten_override',drop_inbound_group_override='$drop_inbound_group_override',xferconf_a_number='$xferconf_a_number',xferconf_b_number='$xferconf_b_number',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number' where list_id='$list_id';";
+			$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate',reset_time='$reset_time',agent_script_override='$agent_script_override',campaign_cid_override='$campaign_cid_override',am_message_exten_override='$am_message_exten_override',drop_inbound_group_override='$drop_inbound_group_override',xferconf_a_number='$xferconf_a_number',xferconf_b_number='$xferconf_b_number',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',web_form_address='" . mysql_real_escape_string($web_form_address) . "',web_form_address_two='" . mysql_real_escape_string($web_form_address_two) . "' where list_id='$list_id';";
 			$rslt=mysql_query($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -21162,7 +21168,7 @@ if ($ADD==311)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT list_id,list_name,campaign_id,active,list_description,list_changedate,list_lastcalldate,reset_time,agent_script_override,campaign_cid_override,am_message_exten_override,drop_inbound_group_override,xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number from vicidial_lists where list_id='$list_id';";
+		$stmt="SELECT list_id,list_name,campaign_id,active,list_description,list_changedate,list_lastcalldate,reset_time,agent_script_override,campaign_cid_override,am_message_exten_override,drop_inbound_group_override,xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two from vicidial_lists where list_id='$list_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$list_name =				$row[1];
@@ -21181,6 +21187,8 @@ if ($ADD==311)
 		$xferconf_c_number =		$row[14];
 		$xferconf_d_number =		$row[15];
 		$xferconf_e_number =		$row[16];
+		$web_form_address =			$row[17];
+		$web_form_address_two =		$row[18];
 
 		# grab names of global statuses and statuses in the selected campaign
 		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses order by status";
@@ -21289,6 +21297,12 @@ if ($ADD==311)
 		echo "<tr bgcolor=#8EBCFD><td align=right>Drop Inbound Group Override: </td><td align=left><select size=1 name=drop_inbound_group_override>";
 		echo "$Dgroups_menu";
 		echo "</select>$NWB#vicidial_lists-drop_inbound_group_override$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#8EBCFD><td align=right>Web Form: </td><td align=left><input type=text name=web_form_address size=70 maxlength=1055 value=\"$web_form_address\">$NWB#vicidial_lists-web_form_address$NWE</td></tr>\n";
+		if ($SSenable_second_webform > 0)
+			{
+			echo "<tr bgcolor=#8EBCFD><td align=right>Web Form Two: </td><td align=left><input type=text name=web_form_address_two size=70 maxlength=1055 value=\"$web_form_address_two\">$NWB#vicidial_lists-web_form_address$NWE</td></tr>\n";
+			}
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>Transfer-Conf Number 1 Override: </td><td align=left><input type=text name=xferconf_a_number size=20 maxlength=50 value=\"$xferconf_a_number\">$NWB#vicidial_lists-xferconf_a_dtmf$NWE</td></tr>\n";
 

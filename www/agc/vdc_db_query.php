@@ -263,10 +263,11 @@
 # 101108-0115 - Added ADDMEMBER option for queue_log
 # 101111-1556 - Added source to vicidial_hopper inserts
 # 101124-1033 - Added require for functions.php and manual dial call time check campaign option
+# 101128-0108 - Added list override for webforms
 #
 
-$version = '2.4-169';
-$build = '101124-1033';
+$version = '2.4-170';
+$build = '101128-0108';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=363;
 $one_mysql_log=0;
@@ -2046,6 +2047,26 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00032',$user,$server_ip,$session_name,$one_mysql_log);}
 		
+			$campaign_cid_override='';
+			$LISTweb_form_address='';
+			$LISTweb_form_address_two='';
+			### check if there is a list_id override
+			if (strlen($list_id) > 1)
+				{
+				$stmt = "SELECT campaign_cid_override,web_form_address,web_form_address_two FROM vicidial_lists where list_id='$list_id';";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00245',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$lio_ct = mysql_num_rows($rslt);
+				if ($lio_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$campaign_cid_override =	$row[0];
+					$LISTweb_form_address =		$row[1];
+					$LISTweb_form_address_two =	$row[2];
+					}
+				}
+
 			### if preview dialing, do not send the call	
 			if ( (strlen($preview)<1) || ($preview == 'NO') )
 				{
@@ -2061,21 +2082,6 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$Local_dial_timeout = ($Local_dial_timeout * 1000);
 				if (strlen($dial_prefix) > 0) {$Local_out_prefix = "$dial_prefix";}
 				if (strlen($campaign_cid) > 6) {$CCID = "$campaign_cid";   $CCID_on++;}
-				$campaign_cid_override='';
-				### check if there is a list_id override
-				if (strlen($list_id) > 1)
-					{
-					$stmt = "SELECT campaign_cid_override FROM vicidial_lists where list_id='$list_id';";
-					$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00245',$user,$server_ip,$session_name,$one_mysql_log);}
-					if ($DB) {echo "$stmt\n";}
-					$lio_ct = mysql_num_rows($rslt);
-					if ($lio_ct > 0)
-						{
-						$row=mysql_fetch_row($rslt);
-						$campaign_cid_override =	$row[0];
-						}
-					}
 				if (strlen($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
 				### check for custom cid use
 				$use_custom_cid=0;
@@ -2430,6 +2436,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$LeaD_InfO .=	$custom_field_names . "\n";
 			$LeaD_InfO .=	$custom_field_values . "\n";
 			$LeaD_InfO .=	$custom_field_types . "\n";
+			$LeaD_InfO .=	$LISTweb_form_address . "\n";
+			$LeaD_InfO .=	$LISTweb_form_address_two . "\n";
 
 			echo $LeaD_InfO;
 			}
@@ -2577,6 +2585,8 @@ if ($ACTION == 'manDiaLonly')
 
 		### prepare variables to place manual call from VICIDiaL
 		$CCID_on=0;   $CCID='';
+		$LISTweb_form_address='';
+		$LISTweb_form_address_two='';
 		$local_DEF = 'Local/';
 		$local_AMP = '@';
 		$Local_out_prefix = '9';
@@ -2604,7 +2614,7 @@ if ($ACTION == 'manDiaLonly')
 
 				if (strlen($list_id) > 1)
 					{
-					$stmt = "SELECT campaign_cid_override FROM vicidial_lists where list_id='$list_id';";
+					$stmt = "SELECT campaign_cid_override,web_form_address,web_form_address_two FROM vicidial_lists where list_id='$list_id';";
 					$rslt=mysql_query($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00247',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
@@ -2613,6 +2623,8 @@ if ($ACTION == 'manDiaLonly')
 						{
 						$row=mysql_fetch_row($rslt);
 						$campaign_cid_override =	$row[0];
+						$LISTweb_form_address =		$row[1];
+						$LISTweb_form_address_two =	$row[2];
 						}
 					}
 				}
@@ -4740,7 +4752,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				### Check for List ID override settings
 				if (strlen($list_id)>0)
 					{
-					$stmt = "select xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number from vicidial_lists where list_id='$list_id';";
+					$stmt = "select xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two from vicidial_lists where list_id='$list_id';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00282',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4758,6 +4770,10 @@ if ($ACTION == 'VDADcheckINCOMING')
 							{$VDCL_xferconf_d_number =	$row[3];}
 						if (strlen($row[4]) > 0)
 							{$VDCL_xferconf_e_number =	$row[4];}
+						if (strlen($row[5]) > 5)
+							{$VDCL_group_web =			$row[5];}
+						if (strlen($row[6]) > 5)
+							{$VDCL_group_web_two =		$row[6];}
 						}
 					}
 

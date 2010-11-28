@@ -800,7 +800,9 @@ xferconf_a_number VARCHAR(50) default '',
 xferconf_b_number VARCHAR(50) default '',
 xferconf_c_number VARCHAR(50) default '',
 xferconf_d_number VARCHAR(50) default '',
-xferconf_e_number VARCHAR(50) default ''
+xferconf_e_number VARCHAR(50) default '',
+web_form_address TEXT,
+web_form_address_two TEXT
 );
 
 CREATE TABLE vicidial_statuses (
@@ -2408,7 +2410,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1254',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1255',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

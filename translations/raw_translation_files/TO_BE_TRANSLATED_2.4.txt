@@ -485,6 +485,7 @@ This option allows you to set the Agent API to make either one call at a time, S
 Manual Call Time Check||
 If this option is enabled, it will check all manual dial calls to make sure they are within the call time settings set for the campaign. Default is DISABLED||
 If you want to change this lead to a scheduled callback, first change the Disposition to CBHOLD, then submit and you will be able to set the callback date and time||
+Web Form Override -</B> This is the custom address that clicking on the WEB FORM button in VICIDIAL will take you to for calls that come in on this list||
 
 
 AST_LISTS_campaign_stats.php

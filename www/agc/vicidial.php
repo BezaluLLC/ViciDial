@@ -323,10 +323,11 @@
 # 101108-0110 - Added ADDMEMBER option for queue_log
 # 101124-0436 - Added manual dial queue and manual dial call time check features
 # 101125-2151 - Changed CIDname for 3way calls
+# 101128-0102 - Added list webform override options
 #
 
-$version = '2.4-300';
-$build = '101125-2151';
+$version = '2.4-301';
+$build = '101128-0102';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=69;
 $one_mysql_log=0;
@@ -5925,6 +5926,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						custom_field_names								= MDnextResponse_array[45];
 						custom_field_values								= MDnextResponse_array[46];
 						custom_field_types								= MDnextResponse_array[47];
+						var list_webform								= MDnextResponse_array[48];
+						var list_webform_two							= MDnextResponse_array[49];
 
 						timer_action = campaign_timer_action;
 						timer_action_message = campaign_timer_action_message;
@@ -5950,6 +5953,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 						VDIC_web_form_address = VICIDiaL_web_form_address
 						VDIC_web_form_address_two = VICIDiaL_web_form_address_two
+						if (list_webform.length > 5) {VDIC_web_form_address=list_webform;}
+						if (list_webform_two.length > 5) {VDIC_web_form_address_two=list_webform_two;}
 
 						var regWFAcustom = new RegExp("^VAR","ig");
 						if (VDIC_web_form_address.match(regWFAcustom))

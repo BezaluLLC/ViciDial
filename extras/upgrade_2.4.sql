@@ -624,3 +624,8 @@ ALTER TABLE vicidial_campaigns ADD api_manual_dial ENUM('STANDARD','QUEUE','QUEU
 ALTER TABLE vicidial_campaigns ADD manual_dial_call_time_check ENUM('DISABLED','ENABLED') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1254',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_lists ADD web_form_address TEXT;
+ALTER TABLE vicidial_lists ADD web_form_address_two TEXT;
+
+UPDATE system_settings SET db_schema_version='1255',db_schema_update_date=NOW();
