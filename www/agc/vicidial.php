@@ -9146,13 +9146,13 @@ else
 		else
 			{web_form_varsX = '?' + web_form_varsX}
 
-		TEMP_VDIC_web_form_address = encoded + "" + web_form_varsX;
+		var TEMPX_VDIC_web_form_address = encoded + "" + web_form_varsX;
 
 		var regWFAqavars = new RegExp("\\?&","ig");
 		var regWFAaavars = new RegExp("&&","ig");
-		TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAqavars, '?');
-		TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAaavars, '&');
-		encoded = TEMP_VDIC_web_form_address;
+		TEMPX_VDIC_web_form_address = TEMPX_VDIC_web_form_address.replace(regWFAqavars, '?');
+		TEMPX_VDIC_web_form_address = TEMPX_VDIC_web_form_address.replace(regWFAaavars, '&');
+		encoded = TEMPX_VDIC_web_form_address;
 		}
 	if (scriptformat == 'YES')
 		{

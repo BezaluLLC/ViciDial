@@ -31,7 +31,7 @@ if (length($ARGV[0])>1)
 		print "  [-purge-non-cb] = delete callback records of leads with no CBHOLD/CALLBK status\n";
 		print "  [-t] = test\n";
 		print "  [-q] = quiet\n";
-		print "  [-debug] = verbose debug messages\n\n";
+		print "  [-debug] = verbose debug messages\n";
 		print "  [-debugX] = extra verbose debug messages\n\n";
 		exit;
 		}
