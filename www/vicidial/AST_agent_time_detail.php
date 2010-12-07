@@ -16,6 +16,7 @@
 # 100802-2347 - Added User Group Allowed Reports option validation
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 # 101207-1634 - Changed limits on seconds to 65000 from 30000 in vicidial_agent_log
+# 101207-1719 - Fixed download file formatting bugs(issue 394)
 #
 
 require("dbconnect.php");
@@ -609,12 +610,13 @@ else
 				{
 				if ( ($Suser[$m]=="$PCuser[$i]") and ($Sstatus=="$sub_status[$i]") )
 					{
-					$USERcodePAUSE_MS =		sec_convert($PCpause_sec[$i],'H'); 
+					$USERcodePAUSE_MS =		sec_convert($PCpause_sec[$i],'H');
+					if (strlen($USERcodePAUSE_MS)<1) {$USERcodePAUSE_MS='0';}
 					$pfUSERcodePAUSE_MS =	sprintf("%10s", $USERcodePAUSE_MS);
 
 					$SstatusTXT = sprintf("%10s", $pfUSERcodePAUSE_MS);
 					$SstatusesHTML .= " $SstatusTXT |";
-					$SstatusesFILE .= ",$pfUSERcodePAUSE_MS";
+					$SstatusesFILE .= ",$USERcodePAUSE_MS";
 					$status_found++;
 					}
 				$i++;
@@ -622,6 +624,7 @@ else
 			if ($status_found < 1)
 				{
 				$SstatusesHTML .= "       0:00 |";
+				$SstatusesFILE .= ",0:00";
 				}
 			### END loop through each stat line ###
 			$n++;
@@ -659,6 +662,13 @@ else
 			}
 		else
 			{
+			if (strlen($RAWtime)<1) {$RAWtime='0';}
+			if (strlen($RAWwait)<1) {$RAWwait='0';}
+			if (strlen($RAWtalk)<1) {$RAWtalk='0';}
+			if (strlen($RAWdispo)<1) {$RAWdispo='0';}
+			if (strlen($RAWpause)<1) {$RAWpause='0';}
+			if (strlen($RAWdead)<1) {$RAWdead='0';}
+			if (strlen($RAWcustomer)<1) {$RAWcustomer='0';}
 			$fileToutput = "$RAWname,$RAWuser,$RAWcalls,$RAWtimeTC,$RAWtime,$RAWwait,$RAWtalk,$RAWdispo,$RAWpause,$RAWdead,$RAWcustomer$SstatusesFILE\n";
 			}
 
@@ -704,7 +714,8 @@ else
 	##### END loop through each user formatting data for output
 
 
-	$TOT_AGENTS = sprintf("%4s", $m);
+	$TOT_AGENTS = $m;
+	$hTOT_AGENTS = sprintf("%4s", $TOT_AGENTS);
 	$k=$m;
 
 	if ($DB) {echo "Done analyzing...   $TOTwait|$TOTtalk|$TOTdispo|$TOTpause|$TOTdead|$TOTcustomer|$TOTALtime|$TOTcalls|$uc|<BR>\n";}
@@ -779,7 +790,7 @@ else
 
 			$SUMstatusTXT = sprintf("%10s", $pfUSERsumstatPAUSE_MS);
 			$SUMstatusesHTML .= "$SUMstatusTXT |";
-			$SUMstatusesFILE .= ",$pfUSERsumstatPAUSE_MS";
+			$SUMstatusesFILE .= ",$USERsumstatPAUSE_MS";
 			}
 		$n++;
 		}
@@ -795,15 +806,15 @@ else
 	$TOTALtime = sec_convert($TOTALtime,'H');
 	$TOTtimeTC = sec_convert($TOTtimeTC,'H');
 
-	$TOTcalls = sprintf("%8s", $TOTcalls);
-	$TOTwait =	sprintf("%11s", $TOTwait);
-	$TOTtalk =	sprintf("%11s", $TOTtalk);
-	$TOTdispo =	sprintf("%11s", $TOTdispo);
-	$TOTpause =	sprintf("%11s", $TOTpause);
-	$TOTdead =	sprintf("%11s", $TOTdead);
-	$TOTcustomer =	sprintf("%11s", $TOTcustomer);
-	$TOTALtime = sprintf("%11s", $TOTALtime);
-	$TOTtimeTC = sprintf("%11s", $TOTtimeTC);
+	$hTOTcalls = sprintf("%8s", $TOTcalls);
+	$hTOTwait =	sprintf("%11s", $TOTwait);
+	$hTOTtalk =	sprintf("%11s", $TOTtalk);
+	$hTOTdispo =	sprintf("%11s", $TOTdispo);
+	$hTOTpause =	sprintf("%11s", $TOTpause);
+	$hTOTdead =	sprintf("%11s", $TOTdead);
+	$hTOTcustomer =	sprintf("%11s", $TOTcustomer);
+	$hTOTALtime = sprintf("%11s", $TOTALtime);
+	$hTOTtimeTC = sprintf("%11s", $TOTtimeTC);
 	###### END LAST LINE TOTALS FORMATTING ##########
 
 
@@ -811,7 +822,7 @@ else
 	if ($file_download < 1)
 		{
 		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-		echo "|  TOTALS        AGENTS:$TOT_AGENTS | $TOTcalls |$TOTtimeTC |$TOTALtime |$TOTwait |$TOTtalk |$TOTdispo |$TOTpause |$TOTdead |$TOTcustomer |   |$SUMstatusesHTML\n";
+		echo "|  TOTALS        AGENTS:$hTOT_AGENTS | $hTOTcalls |$hTOTtimeTC |$hTOTALtime |$hTOTwait |$hTOTtalk |$hTOTdispo |$hTOTpause |$hTOTdead |$hTOTcustomer |   |$SUMstatusesHTML\n";
 		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 		if ($AUTOLOGOUTflag > 0)
 			{echo "     * denotes AUTOLOGOUT from timeclock\n";}
