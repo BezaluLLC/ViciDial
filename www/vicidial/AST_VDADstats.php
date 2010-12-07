@@ -30,6 +30,7 @@
 # 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
 # 100814-2307 - Added display of preset dials if presets are enabled in the campaign
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
+# 101207-1634 - Changed limits on seconds to 65000 from 36000 in vicidial_agent_log
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -698,7 +699,7 @@ else
 	$TOTALanswers = ($row[0] + $ANSWERcalls);
 
 
-	$stmt = "SELECT sum(wait_sec + talk_sec + dispo_sec) from vicidial_agent_log where event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' $group_SQLand;";
+	$stmt = "SELECT sum(wait_sec + talk_sec + dispo_sec) from vicidial_agent_log where event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQLand;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {$OUToutput .= "$stmt\n";}
 	$row=mysql_fetch_row($rslt);
@@ -818,7 +819,7 @@ else
 	if (eregi("YES",$include_rollover))
 		{$campaignSQL = "$both_group_SQLand";}
 	## Pull the count of agent seconds for the total tally
-	$stmt="SELECT sum(pause_sec + wait_sec + talk_sec + dispo_sec) from vicidial_agent_log where event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' $campaignSQL and pause_sec<36000 and wait_sec<36000 and talk_sec<36000 and dispo_sec<36000;";
+	$stmt="SELECT sum(pause_sec + wait_sec + talk_sec + dispo_sec) from vicidial_agent_log where event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' $campaignSQL and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000;";
 	$rslt=mysql_query($stmt, $link);
 	$Ctally_to_print = mysql_num_rows($rslt);
 	if ($Ctally_to_print > 0) 
@@ -1272,7 +1273,7 @@ else
 	$TOTtime =			sprintf("%8s", $TOTtime);
 	$TOTavg =			sprintf("%6s", $TOTavg);
 
-	$stmt="select avg(wait_sec) from vicidial_agent_log where event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' $group_SQLand;";
+	$stmt="select avg(wait_sec) from vicidial_agent_log where event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQLand;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {$OUToutput .= "$stmt\n";}
 	$row=mysql_fetch_row($rslt);

@@ -15,6 +15,7 @@
 # 100712-1324 - Added system setting slave server option
 # 100802-2347 - Added User Group Allowed Reports option validation
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
+# 101207-1634 - Changed limits on seconds to 65000 from 30000 in vicidial_agent_log
 #
 
 require("dbconnect.php");
@@ -369,7 +370,7 @@ else
 	$PCusersARY=$MT;
 	$PCuser_namesARY=$MT;
 	$user_count=0;
-	$stmt="select user,sum(pause_sec),sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 30000 $group_SQL $user_group_SQL group by user,sub_status order by user,sub_status desc limit 10000000;";
+	$stmt="select user,sum(pause_sec),sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 $group_SQL $user_group_SQL group by user,sub_status order by user,sub_status desc limit 10000000;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$subs_to_print = mysql_num_rows($rslt);
@@ -423,11 +424,11 @@ else
 		$lead =			$row[5];
 		$status =		$row[6];
 		$dead =			$row[7];
-		if ($wait > 30000) {$wait=0;}
-		if ($talk > 30000) {$talk=0;}
-		if ($dispo > 30000) {$dispo=0;}
-		if ($pause > 30000) {$pause=0;}
-		if ($dead > 30000) {$dead=0;}
+		if ($wait > 65000) {$wait=0;}
+		if ($talk > 65000) {$talk=0;}
+		if ($dispo > 65000) {$dispo=0;}
+		if ($pause > 65000) {$pause=0;}
+		if ($dead > 65000) {$dead=0;}
 		$customer =		($talk - $dead);
 		if ($customer < 1)
 			{$customer=0;}
