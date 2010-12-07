@@ -39,10 +39,11 @@
 # 100924-1403 - Added called_count as an update_lead option
 # 101111-1536 - Added vicidial_hopper.source to vicidial_hopper inserts
 # 101117-1104 - Added callback and custom field entry delete to delete_lead option
+# 101206-2126 - Added recording_lookup and did_log_export functions
 #
 
-$version = '2.4-25';
-$build = '101117-1104';
+$version = '2.4-26';
+$build = '101206-2126';
 
 require("dbconnect.php");
 
@@ -161,6 +162,10 @@ if (isset($_GET["delete_lead"]))				{$delete_lead=$_GET["delete_lead"];}
 	elseif (isset($_POST["delete_lead"]))		{$delete_lead=$_POST["delete_lead"];}
 if (isset($_GET["called_count"]))				{$called_count=$_GET["called_count"];}
 	elseif (isset($_POST["called_count"]))		{$called_count=$_POST["called_count"];}
+if (isset($_GET["date"]))						{$date=$_GET["date"];}
+	elseif (isset($_POST["date"]))				{$date=$_POST["date"];}
+if (isset($_GET["header"]))						{$header=$_GET["header"];}
+	elseif (isset($_POST["header"]))			{$header=$_POST["header"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -1042,6 +1047,274 @@ if ($function == 'agent_ingroup_info')
 ################################################################################
 ### END agent_ingroup_info
 ################################################################################
+
+
+
+
+
+################################################################################
+### recording_lookup - looks up recordings based upon user and date or lead_id
+################################################################################
+if ($function == 'recording_lookup')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6;";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "recording_lookup USER DOES NOT HAVE PERMISSION TO GET RECORDING INFO";
+			echo "$result: $result_reason: |$user|$allowed_user|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$search_SQL='';
+			$search_ready=0;
+			if ( (strlen($agent_user)>2) and (strlen($agent_user)<21) )
+				{
+				$search_SQL .= "user='$agent_user'";
+				$search_ready++;
+				}
+			if ( (strlen($lead_id)>0) and (strlen($lead_id)<11) )
+				{
+				if (strlen($search_SQL)>5)
+					{$search_SQL .= " and ";}
+				$search_SQL .= "lead_id='$lead_id'";
+				$search_ready++;
+				$search_ready++;
+				}
+			if ( (strlen($date)>9) and (strlen($date)<11) )
+				{
+				if (strlen($search_SQL)>5)
+					{$search_SQL .= " and ";}
+				$search_SQL .= "( (start_time >= \"$date 00:00:00\") and (start_time <= \"$date 23:59:59\") )";
+				$search_ready++;
+				}
+			if ($search_ready < 2)
+				{
+				$result = 'ERROR';
+				$result_reason = "recording_lookup INVALID SEARCH PARAMETERS";
+				$data = "$user|$agent_user|$lead_id|$date";
+				echo "$result: $result_reason: $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT start_time,user,recording_id,lead_id,location from recording_log where $search_SQL order by start_time limit 100000;";
+				$rslt=mysql_query($stmt, $link);
+				$rec_recs = mysql_num_rows($rslt);
+				if ($DB>0) {echo "DEBUG: recording_lookup query - $rec_recs|$stmt\n";}
+				if ($rec_recs < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "recording_lookup NO RECORDINGS FOUND";
+					$data = "$user|$agent_user|$lead_id|$date";
+					echo "$result: $result_reason - $data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$k=0;
+					$output='';
+					$DLset=0;
+					if ($stage == 'csv')
+						{$DL = ',';   $DLset++;}
+					if ($stage == 'tab')
+						{$DL = "\t";   $DLset++;}
+					if ($stage == 'pipe')
+						{$DL = '|';   $DLset++;}
+					if ($DLset < 1)
+						{$DL='pipe';}
+					if ($header == 'YES')
+						{$output .= 'start_time' . $DL . 'user' . $DL . 'recording_id' . $DL . 'lead_id' . $DL . "location\n";}
+
+					while ($rec_recs > $k)
+						{
+						$row=mysql_fetch_row($rslt);
+						$RLstart_time =		$row[0];
+						$RLuser =			$row[1];
+						$RLrecording_id =	$row[2];
+						$RLlead_id =		$row[3];
+						$RLlocation =		$row[4];
+
+						$output .= "$RLstart_time$DL$RLuser$DL$RLrecording_id$DL$RLlead_id$DL$RLlocation\n";
+	
+						$k++;
+						}
+
+					echo "$output";
+
+					$result = 'SUCCESS';
+					$data = "$user|$agent_user|$lead_id|$date|$stage";
+					$result_reason = "recording_lookup RECORDINGS FOUND: $rec_recs";
+
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END recording_lookup
+################################################################################
+
+
+
+
+
+################################################################################
+### did_log_export - exports all calls inbound to a DID for one day
+################################################################################
+if ($function == 'did_log_export')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6;";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "did_log_export USER DOES NOT HAVE PERMISSION TO GET DID INFO";
+			echo "$result: $result_reason: |$user|$allowed_user|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$search_SQL='';
+			$search_ready=0;
+			if ( (strlen($phone_number)>0) and (strlen($phone_number)<21) )
+				{
+				$search_SQL .= "extension='$phone_number'";
+				$search_ready++;
+				}
+			if ( (strlen($date)>9) and (strlen($date)<11) )
+				{
+				if (strlen($search_SQL)>5)
+					{$search_SQL .= " and ";}
+				$search_SQL .= "( (call_date >= \"$date 00:00:00\") and (call_date <= \"$date 23:59:59\") )";
+				$search_ready++;
+				}
+			if ($search_ready < 2)
+				{
+				$result = 'ERROR';
+				$result_reason = "did_log_export INVALID SEARCH PARAMETERS";
+				$data = "$user|$phone_number|$date";
+				echo "$result: $result_reason: $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT uniqueid,caller_id_number,call_date,UNIX_TIMESTAMP(call_date) from vicidial_did_log where $search_SQL order by call_date limit 100000;";
+				$rslt=mysql_query($stmt, $link);
+				$rec_recs = mysql_num_rows($rslt);
+				if ($DB>0) {echo "DEBUG: recording_lookup query - $rec_recs|$stmt\n";}
+				if ($rec_recs < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "did_log_export NO RECORDS FOUND";
+					$data = "$user|$agent_user|$lead_id|$date";
+					echo "$result: $result_reason - $data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$k=0;
+					$output='';
+					$DLset=0;
+					if ($stage == 'csv')
+						{$DL = ',';   $DLset++;}
+					if ($stage == 'tab')
+						{$DL = "\t";   $DLset++;}
+					if ($stage == 'pipe')
+						{$DL = '|';   $DLset++;}
+					if ($DLset < 1)
+						{$DL='pipe';}
+					if ($header == 'YES')
+						{$output .= 'did_number' . $DL . 'call_date' . $DL . 'caller_id_number' . $DL . "length_in_sec\n";}
+
+					while ($rec_recs > $k)
+						{
+						$row=mysql_fetch_row($rslt);
+						$DLuniqueid[$k] =			$row[0];
+						$DLcall_date[$k] =			$row[1];
+						$DLcaller_id_number[$k] =	$row[2];	
+						$DLepoch[$k] =				$row[3];	
+						$k++;
+						}
+
+					$k=0;
+					while ($rec_recs > $k)
+						{
+						$DLlength_in_sec[$k]=0;
+						$DLcloser_epoch[$k]=$DLepoch[$k];
+						$stmt="SELECT length_in_sec,UNIX_TIMESTAMP(call_date) from vicidial_closer_log where uniqueid='$DLuniqueid[$k]' order by call_date desc limit 1;";
+						$rslt=mysql_query($stmt, $link);
+						$vcl_recs = mysql_num_rows($rslt);
+						if ($DB>0) {echo "DEBUG: recording_lookup query - $vcl_recs|$stmt\n";}
+						if ($vcl_recs > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$DLlength_in_sec[$k] =		$row[0];
+							$DLcloser_epoch[$k] =		$row[1];
+							}
+
+						$total_sec = ( ($DLcloser_epoch[$k] + $DLlength_in_sec[$k]) - $DLepoch[$k]);
+
+						$output .= "$phone_number$DL$DLcall_date[$k]$DL$DLcaller_id_number[$k]$DL$total_sec\n";
+	
+						$k++;
+						}
+
+					echo "$output";
+
+					$result = 'SUCCESS';
+					$data = "$user|$agent_user|$lead_id|$date|$stage";
+					$result_reason = "did_log_export RECORDINGS FOUND: $rec_recs";
+
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END did_log_export
+################################################################################
+
 
 
 

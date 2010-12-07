@@ -78,12 +78,13 @@
 # 100623-1310 - Added queue_priority to queue processing
 # 100727-1653 - Fixes for queue priority feature
 # 100903-0041 - Changed lead_id max length to 10 digits
+# 101207-0713 - Added fix for rare VDAC-entry-missing issue
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
 $AGILOG = '0';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=69;
+$mysql_log_count=71;
 $one_mysql_log=0;
 
 
@@ -369,10 +370,48 @@ if ($dialplan_duplicate_count > 0)
 
 ### Grab call parameters from vicidial_auto_calls table
 $stmtA = "UPDATE vicidial_auto_calls set uniqueid='$unique_id', channel='$channel',status='LIVE',stage='LIVE-0' where callerid='$callerid' order by call_time desc limit 1;";
-$affected_rows = $dbhA->do($stmtA);
+$VDACaffected_rows = $dbhA->do($stmtA);
 	$dbhP=$dbhA;   $mysql_count='01004';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 if ($AGILOG) {$agi_string = "--    VDAD : |$affected_rows|update of vac table: $callerid\n|$stmtA|";   &agi_output;}
-if ($affected_rows > 0)
+if ($VDACaffected_rows < 1)
+	{
+	if ($AGILOG) {$agi_string = "--    NO VDAC FOUND!!!!!: $callerid";   &agi_output;}
+
+	$stmtA = "SELECT cmd_line_k,entry_date FROM vicidial_manager where callerid='$callerid' order by call_time desc limit 1;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+		$dbhP=$dbhA;   $mysql_count='01070';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$VDADnotes =			$aryA[0];
+		@notes_ARY = split(/VDACnote: /,$VDADnotes);
+		@VDAC_ARY = split(/\|/,$notes_ARY[1]);
+		$VDADcampaign =			$VDAC_ARY[0];
+		$VDADlead_id =			$VDAC_ARY[1];
+		$VDADphone_code	=		$VDAC_ARY[2];
+		$VDADphone	=			$VDAC_ARY[3];
+		$VDADorigin	=			$VDAC_ARY[4];
+		$VDADcall_time =		$aryA[1];
+		$VDADalt_dial =			$VDAC_ARY[5];
+		$VDADqueue_priority =	$VDAC_ARY[6];
+		$sthA->finish();
+		$VDACaffected_rows=1;
+
+		$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,uniqueid,callerid,channel,phone_code,phone_number,call_time,call_type,stage,queue_priority)  values('$VARserver_ip','$VDADcampaign','LIVE','$VDADlead_id','$uniqueid','$callerid','$channel','$VDADphone_code','$VDADphone','$VDADcall_time','$VDADorigin','LIVE-0','$VDADqueue_priority')";
+		$affected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='01071';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+			if ($AGILOG) {$agi_string = "$affected_rows|VDAC-reinsert|$stmtA|";   &agi_output;}
+
+		}
+	else
+		{
+		if ($AGILOG) {$agi_string = "--    NO VDM FOUND!!!!!!!!!!: $callerid";   &agi_output;}
+		}
+
+	}
+if ($VDACaffected_rows > 0)
 	{
 	# flag the lead as being Answered or Picked up
 	$stmtA = "UPDATE vicidial_list set status='PU' where lead_id='$CIDlead_id' and status NOT IN('CALLBK');";
@@ -386,8 +425,7 @@ if ($affected_rows > 0)
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
 		$dbhP=$dbhA;   $mysql_count='01006';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-	$rec_count=0;
-	while ($sthArows > $rec_count)
+	if ($sthArows > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
 		$VDADcampaign =			$aryA[0];
@@ -397,7 +435,6 @@ if ($affected_rows > 0)
 		$VDADcall_time =		$aryA[4];
 		$VDADalt_dial =			$aryA[5];
 		$VDADqueue_priority =	$aryA[6];
-		$rec_count++;
 		}
 	$sthA->finish();
 
@@ -432,7 +469,7 @@ if ($affected_rows > 0)
 		$survey_third_audio_file =		$aryA[16];
 		$survey_fourth_audio_file =		$aryA[17];
 		$extension_appended_cidname =	$aryA[18];
-		$queue_priority =				$aryA[19];
+		$VDADqueue_priority =			$aryA[19];
 		$closer_campaigns =				$aryA[20];
 		if (length($closer_campaigns) > 2)
 			{
@@ -2181,7 +2218,7 @@ while ($drop_timer <= $DROP_TIME)
 	$affected_rows = $dbhA->do($stmtA);
 	if ($affected_rows < 1)
 		{
-		$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,uniqueid,callerid,channel,phone_code,phone_number,call_time,call_type,stage,queue_priority)  values('$VARserver_ip','$channel_group','CLOSER','$CIDlead_id','$uniqueid','$callerid','$channel','$phone_code','$phone_number','$SQLdate','IN','CLOSER-$drop_timer','$queue_priority')";
+		$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,uniqueid,callerid,channel,phone_code,phone_number,call_time,call_type,stage,queue_priority)  values('$VARserver_ip','$VDADcampaign','LIVE','$CIDlead_id','$uniqueid','$callerid','$channel','$VDADphone_code','$VDADphone','$SQLdate','OUT','LIVE-$drop_timer','$VDADqueue_priority')";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='01047';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			if ($AGILOG) {$agi_string = "$affected_rows|VDAC-reinsert|$stmtA|";   &agi_output;}

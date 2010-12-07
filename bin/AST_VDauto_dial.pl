@@ -93,6 +93,7 @@
 # 100903-0041 - Changed lead_id max length to 10 digits
 # 101111-1556 - Added source to vicidial_hopper inserts
 # 101117-1656 - Added accounting for DEAD agent calls when in available-only-tally dialing
+# 101207-0713 - Added more info to Originate for rare VDAC issue
 #
 
 
@@ -1086,7 +1087,7 @@ while($one_day_interval > 0)
 									if ($CCID_on) {$CIDstring = "\"$VqueryCID\" <$CCID>";}
 									else {$CIDstring = "$VqueryCID";}
 									### insert a NEW record to the vicidial_manager table to be processed
-										$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$DBIPaddress[$user_CIPct]','','Originate','$VqueryCID','Exten: $VDAD_dial_exten','Context: $ext_context','Channel: $local_DEF$Ndialstring$local_AMP$ext_context','Priority: 1','Callerid: $CIDstring','Timeout: $Local_dial_timeout','','','','')";
+										$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$DBIPaddress[$user_CIPct]','','Originate','$VqueryCID','Exten: $VDAD_dial_exten','Context: $ext_context','Channel: $local_DEF$Ndialstring$local_AMP$ext_context','Priority: 1','Callerid: $CIDstring','Timeout: $Local_dial_timeout','','','','VDACnote: $DBIPcampaign[$user_CIPct]|$lead_id|$phone_code|$phone_number|OUT|$alt_dial|$DBIPqueue_priority[$user_CIPct]')";
 										$affected_rows = $dbhA->do($stmtA);
 
 										$event_string = "|     number call dialed|$DBIPcampaign[$user_CIPct]|$VqueryCID|$stmtA|$gmt_offset_now|$alt_dial|";

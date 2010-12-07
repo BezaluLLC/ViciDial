@@ -20,7 +20,8 @@ blind_monitor - calls user-defined phone and places them in session as blind mon
 add_lead - adds a new lead to the vicidial_list table with several fields and options
 update_lead - updates lead information in vicidial_list and associated custom table
 agent_ingroup_info - shows in-group and outbound auto-dial info for logged-in agent
-
+recording_lookup - looks up recordings based upon user and date or lead_id
+did_log_export - exports all calls inbound to a DID for one day
 
 
 New scripts:
@@ -44,6 +45,7 @@ Changes:
 100924-1403 - Added called_count as an update_lead option
 101111-1536 - Added vicidial_hopper.source to vicidial_hopper inserts
 101117-1104 - Added callback and custom field entry delete to delete_lead option
+101206-2126 - Added recording_lookup and did_log_export functions
 
 
 
@@ -190,6 +192,66 @@ http://server/vicidial/non_agent_api.php?source=test&function=agent_ingroup_info
 Example responses:
 ERROR: agent_ingroup_info USER DOES NOT HAVE PERMISSION TO GET AGENT INFO - 6666|0
 ERROR: agent_ingroup_info INVALID USER ID - 1255|6666
+
+
+
+
+--------------------------------------------------------------------------------
+recording_lookup - looks up recordings based upon user and date or lead_id
+
+REQUIRED FIELDS-
+agent_user -		2-20 characters
+lead_id -		1-10 digits
+date -			date of the calls to pull (must be in YYYY-MM-DD format)
+
+SETTINGS FIELDS-
+stage -			the format of the exported data: csv, tab, pipe(default)
+header -		include a header(YES) or not(NO). This is optional, default is not to include a header
+
+NOTES- 
+There is a hard limit of 100000 results
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&function=recording_lookup&stage=pipe&user=6666&pass=1234&agent_user=1000&date=2010-12-03
+
+Example responses:
+ERROR: recording_lookup USER DOES NOT HAVE PERMISSION TO GET RECORDING INFO - 6666|0
+ERROR: recording_lookup INVALID SEARCH PARAMETERS - 6666|1000||2010-12-03
+ERROR: recording_lookup NO RECORDINGS FOUND - 1255|6666||2010-12-03
+
+A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
+start_time|user|recording_id|lead_id|location
+2010-12-03 12:00:01|1000|534820|876409|http://server/path/to/recording/20101203_120000_1234567890_1000-all.wav
+
+
+
+
+
+--------------------------------------------------------------------------------
+did_log_export - exports all calls inbound to a DID for one day
+
+REQUIRED FIELDS-
+phone_number -		2-20 characters, the DID that you want to pull logs for
+date -			date of the calls to pull (must be in YYYY-MM-DD format)
+
+SETTINGS FIELDS-
+stage -			the format of the exported data: csv, tab, pipe(default)
+header -		include a header(YES) or not(NO). This is optional, default is not to include a header
+
+NOTES- 
+There is a hard limit of 100000 results
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&function=did_log_export&stage=pipe&user=6666&pass=1234&phone_number=3125551212&date=2010-12-03
+
+Example responses:
+ERROR: did_log_export USER DOES NOT HAVE PERMISSION TO GET DID INFO - 6666|0
+ERROR: did_log_export INVALID SEARCH PARAMETERS - 6666|3125551212|2010-12-03
+ERROR: did_log_export NO RECORDS FOUND - 1255|3125551212|2010-12-03
+
+A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
+did_number|call_date|caller_id_number|length_in_sec
+3125551212|2010-12-03 12:00:01|7275551212|123
 
 
 

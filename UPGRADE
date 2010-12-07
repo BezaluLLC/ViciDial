@@ -22,7 +22,11 @@ OPTIONAL STEPS(But highly recommended) - Backup existing system:
 
 REQUIRED STEPS!!!
 
-1. upgrade the MySQL asterisk database:
+1. upgrade the MySQL asterisk database(you have two options):
+    A. Running the upgrade file directly from Linux:
+	mysql -f --database=asterisk < /path/from/root/extras/upgrade_2.4.sql
+
+    B. Going into mysql and executing the upgrade sql file:
 	mysql
 	use asterisk
 	\. /path/from/root/extras/upgrade_2.4.sql
@@ -406,6 +410,8 @@ OTHER CHANGES:
 
 93. Added script to purge all vicidial_callbacks records that are inactive or
 	are tied to deleted leads, AST_DB_dead_cb_purge.pl 
+
+94. Added did_log_export and recording_lookup functions to the non-agent API
 
 
 
