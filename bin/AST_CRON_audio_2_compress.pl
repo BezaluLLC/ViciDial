@@ -26,12 +26,13 @@
 # 
 # This program assumes that recordings are saved by Asterisk as .wav
 # 
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 
 # 80302-1958 - First Build
 # 80731-2253 - Changed size comparisons for more efficiency
 # 90727-1417 - Added GSW format option
+# 101207-1024 - Change to GSW option because of SoX flag changes in 14.3.0
 #
 
 $GSM=0;   $MP3=0;   $OGG=0;   $GSW=0;
@@ -315,9 +316,12 @@ foreach(@FILES)
 				{
 				$GSWfile = $FILES[$i];
 
-				if ($DB) {print "|$recording_id|$ALLfile|$GSWfile|     |$SQLfile|$soxbin \"$dir2/$ALLfile\" -g -b \"$dir2/GSW/$GSWfile\"|\n";}
+				if ($DB) {print "|$recording_id|$ALLfile|$GSWfile|     |$SQLfile|$soxbin \"$dir2/$ALLfile\" -e gsm-full-rate \"$dir2/GSW/$GSWfile\"|\n";}
 
-				`$soxbin "$dir2/$ALLfile" -g -b "$dir2/GSW/$GSWfile"`;
+				# for SoX versions before 14.3.X
+			#	`$soxbin "$dir2/$ALLfile" -g -b "$dir2/GSW/$GSWfile"`;
+				# for SoX versions 14.3.0 and after
+				`$soxbin "$dir2/$ALLfile" -e gsm-full-rate "$dir2/GSW/$GSWfile"`;
 
 				$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/GSW/$GSWfile' where recording_id='$recording_id';";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
