@@ -377,7 +377,7 @@ if ($VDACaffected_rows < 1)
 	{
 	if ($AGILOG) {$agi_string = "--    NO VDAC FOUND!!!!!: $callerid";   &agi_output;}
 
-	$stmtA = "SELECT cmd_line_k,entry_date FROM vicidial_manager where callerid='$callerid' order by call_time desc limit 1;";
+	$stmtA = "SELECT cmd_line_k,entry_date FROM vicidial_manager where callerid='$callerid' order by entry_date desc limit 1;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
