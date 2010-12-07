@@ -324,10 +324,11 @@
 # 101124-0436 - Added manual dial queue and manual dial call time check features
 # 101125-2151 - Changed CIDname for 3way calls
 # 101128-0102 - Added list webform override options
+# 101207-1621 - Added scroll to the top after in-group, pause code, etc... selections, and added focus blur to several functions
 #
 
-$version = '2.4-301';
-$build = '101128-0102';
+$version = '2.4-302';
+$build = '101207-1621';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=69;
 $one_mysql_log=0;
@@ -7768,6 +7769,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		else {document.vicidial_form.DispoSelection.value = taskDSgrp;}
 		
 		document.getElementById("DispoSelectContent").innerHTML = dispo_HTML;
+		document.vicidial_form.inert_button.focus();
+		document.vicidial_form.inert_button.blur();
 		}
 
 // ################################################################################
@@ -7811,6 +7814,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				document.getElementById("PauseCodeSelectContent").innerHTML = PauseCode_HTML;
 				}
 			}
+		document.vicidial_form.inert_button.focus();
+		document.vicidial_form.inert_button.blur();
 		}
 
 
@@ -7890,6 +7895,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			document.vicidial_form.xfernumhidden.value = '';
 			document.vicidial_form.xfernumber.value = taskpresetnumber;
 			}
+		scroll(0,0);
 		}
 
 
@@ -7924,6 +7930,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 		GroupAlias_HTML = GroupAlias_HTML + "</span></font></td></tr></table><BR><BR>" + Go_BacK_LinK;
 		document.getElementById("GroupAliasSelectContent").innerHTML = GroupAlias_HTML;
+		document.vicidial_form.inert_button.focus();
+		document.vicidial_form.inert_button.blur();
 		}
 
 // ################################################################################
@@ -8241,6 +8249,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			delete xmlhttp;
 			}
 //		return agent_log_id;
+		scroll(0,0);
 		}
 
 
@@ -8259,6 +8268,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			document.getElementById("XfeRDiaLGrouPSelecteD").innerHTML = "<font size=1 face=\"Arial,Helvetica\">Group Alias: " + active_group_alias + "</font>";
 			}
 		cid_choice = newgroupcid;
+		scroll(0,0);
 		}
 
 
@@ -8472,6 +8482,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			document.vicidial_form.CloserSelectList.value = '';
 			document.getElementById("CloserSelectContent").innerHTML = live_CSC_HTML;
 			}
+		document.vicidial_form.inert_button.focus();
+		document.vicidial_form.inert_button.blur();
 		}
 
 // ################################################################################
@@ -8594,6 +8606,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		hideDiv('CloserSelectBox');
 		MainPanelToFront();
 		CloserSelecting = 0;
+		scroll(0,0);
 		}
 
 
@@ -8626,6 +8639,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				document.getElementById("TerritorySelectContent").innerHTML = live_TERR_HTML;
 				}
 			}
+		document.vicidial_form.inert_button.focus();
+		document.vicidial_form.inert_button.blur();
 		}
 
 // ################################################################################
@@ -8744,6 +8759,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		hideDiv('TerritorySelectBox');
 		MainPanelToFront();
 		TerritorySelecting = 0;
+		scroll(0,0);
 		}
 
 
