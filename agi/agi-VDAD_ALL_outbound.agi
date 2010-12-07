@@ -377,7 +377,7 @@ if ($VDACaffected_rows < 1)
 	{
 	if ($AGILOG) {$agi_string = "--    NO VDAC FOUND!!!!!: $callerid";   &agi_output;}
 
-	$stmtA = "SELECT cmd_line_k,entry_date FROM vicidial_manager where callerid='$callerid' order by entry_date desc limit 1;";
+	$stmtA = "SELECT cmd_line_k,entry_date,cmd_line_j FROM vicidial_manager where callerid='$callerid' and action='Originate' order by entry_date,cmd_line_k desc limit 1;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -385,9 +385,10 @@ if ($VDACaffected_rows < 1)
 	if ($sthArows > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
+		if ($AGILOG) {$agi_string = "VDAC-data|$aryA[0]|$aryA[1]|$aryA[2]|";   &agi_output;}
 		$VDADnotes =			$aryA[0];
-		@notes_ARY = split(/VDACnote: /,$VDADnotes);
-		@VDAC_ARY = split(/\|/,$notes_ARY[1]);
+		$VDADnotes =~ s/VDACnote: //gi;
+		@VDAC_ARY = split(/\|/,$VDADnotes);
 		$VDADcampaign =			$VDAC_ARY[0];
 		$VDADlead_id =			$VDAC_ARY[1];
 		$VDADphone_code	=		$VDAC_ARY[2];
