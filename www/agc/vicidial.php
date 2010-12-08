@@ -325,10 +325,11 @@
 # 101125-2151 - Changed CIDname for 3way calls
 # 101128-0102 - Added list webform override options
 # 101207-1621 - Added scroll to the top after in-group, pause code, etc... selections, and added focus blur to several functions
+# 101208-1210 - Fixed focus/blur coding to work after Dispo
 #
 
-$version = '2.4-302';
-$build = '101207-1621';
+$version = '2.4-303';
+$build = '101208-1210';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=69;
 $one_mysql_log=0;
@@ -2566,11 +2567,12 @@ $SDwidth =  ($MASTERwidth + 170);	# 600 - scroll script, customer data and calls
 $HKwidth =  ($MASTERwidth + 20);	# 450 - Hotkeys button
 $HSwidth =  ($MASTERwidth + 1);		# 431 - Header spacer
 $PBwidth =  ($MASTERwidth + 0);		# 430 - Presets list
-$CLwidth =  ($MASTERwidth - 160);	# 270 - Calls in queue link
+$CLwidth =  ($MASTERwidth - 120);	# 310 - Calls in queue link
 
 $WRheight =  ($MASTERheight + 160);	# 460 - Warning boxes
 $CQheight =  ($MASTERheight + 140);	# 440 - Calls in queue section
-$SLheight =  ($MASTERheight + 122);	# 422 - SideBar link, Calls in queue link
+$SLheight =  ($MASTERheight + 122);	# 422 - SideBar link, Agents view link
+$QLheight =  ($MASTERheight + 112);	# 412 - Calls in queue link
 $HKheight =  ($MASTERheight + 105);	# 405 - HotKey active Button
 $AMheight =  ($MASTERheight + 100);	# 400 - Agent mute and preset dial links
 $MBheight =  ($MASTERheight + 65);	# 365 - Manual Dial Buttons
@@ -7769,8 +7771,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		else {document.vicidial_form.DispoSelection.value = taskDSgrp;}
 		
 		document.getElementById("DispoSelectContent").innerHTML = dispo_HTML;
-		document.vicidial_form.inert_button.focus();
-		document.vicidial_form.inert_button.blur();
+		document.inert_form.inert_button.focus();
+		document.inert_form.inert_button.blur();
 		}
 
 // ################################################################################
@@ -7814,8 +7816,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				document.getElementById("PauseCodeSelectContent").innerHTML = PauseCode_HTML;
 				}
 			}
-		document.vicidial_form.inert_button.focus();
-		document.vicidial_form.inert_button.blur();
+		document.inert_form.inert_button.focus();
+		document.inert_form.inert_button.blur();
 		}
 
 
@@ -7930,8 +7932,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 		GroupAlias_HTML = GroupAlias_HTML + "</span></font></td></tr></table><BR><BR>" + Go_BacK_LinK;
 		document.getElementById("GroupAliasSelectContent").innerHTML = GroupAlias_HTML;
-		document.vicidial_form.inert_button.focus();
-		document.vicidial_form.inert_button.blur();
+		document.inert_form.inert_button.focus();
+		document.inert_form.inert_button.blur();
 		}
 
 // ################################################################################
@@ -8194,6 +8196,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					}
 				}
 			// scroll back to the top of the page
+			document.inert_form.inert_button.focus();
+			document.inert_form.inert_button.blur();
 			scroll(0,0);
 			}
 		}
@@ -8482,8 +8486,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			document.vicidial_form.CloserSelectList.value = '';
 			document.getElementById("CloserSelectContent").innerHTML = live_CSC_HTML;
 			}
-		document.vicidial_form.inert_button.focus();
-		document.vicidial_form.inert_button.blur();
+		document.inert_form.inert_button.focus();
+		document.inert_form.inert_button.blur();
 		}
 
 // ################################################################################
@@ -8639,8 +8643,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				document.getElementById("TerritorySelectContent").innerHTML = live_TERR_HTML;
 				}
 			}
-		document.vicidial_form.inert_button.focus();
-		document.vicidial_form.inert_button.blur();
+		document.inert_form.inert_button.focus();
+		document.inert_form.inert_button.blur();
 		}
 
 // ################################################################################
@@ -8976,8 +8980,8 @@ else
 			var HKdispo = hotkeys[String.fromCharCode(key)];
 			if (HKdispo) 
 				{
-				document.vicidial_form.inert_button.focus();
-				document.vicidial_form.inert_button.blur();
+				document.inert_form.inert_button.focus();
+				document.inert_form.inert_button.blur();
 				CustomerData_update();
 				var HKdispo_ary = HKdispo.split(" ----- ");
 				if ( (HKdispo_ary[0] == 'ALTPH2') || (HKdispo_ary[0] == 'ADDR3') )
@@ -10444,6 +10448,7 @@ else
 		if (VICIDiaL_closer_login_checked==0)
 			{
 			hideDiv('NothingBox');
+		//	hideDiv('NothingBox2');
 			hideDiv('CBcommentsBox');
 			hideDiv('EAcommentsBox');
 			hideDiv('EAcommentsMinBox');
@@ -11391,11 +11396,12 @@ else
 <?php
 echo "</head>\n";
 
-$zi=1;
+$zi=2;
 
 ?>
 <BODY onload="begin_all_refresh();"  onunload="BrowserCloseLogout();">
-<FORM name=vicidial_form>
+
+<FORM name=vicidial_form id=vicidial_form onsubmit="return false;">
 
 <span style="position:absolute;left:0px;top:0px;z-index:300;" id="LoadingBox">
     <TABLE border=0 bgcolor="white" width=<?php echo $JS_browser_width ?> height=<?php echo $JS_browser_height ?>><TR><TD align=left valign=top>
@@ -11633,7 +11639,7 @@ $zi=1;
 
 <span style="position:absolute;left:0px;top:<?php echo $HKheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="MaiNfooterspan">
 <span id="blind_monitor_notice_span"><B><FONT COLOR=RED> &nbsp; &nbsp; <span id="blind_monitor_notice_span_contents"></span></FONT></B></span>
-	<TABLE BGCOLOR="<?php echo $MAIN_COLOR ?>" id="MaiNfooter" width=<?php echo $MNwidth ?>><tr height=32><td height=32><font face="Arial,Helvetica" size=1>Agent web-client version: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Server: <?php echo $server_ip ?>  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</font><BR>
+	<TABLE BGCOLOR="<?php echo $MAIN_COLOR ?>" id="MaiNfooter" width=<?php echo $MNwidth ?>><tr height=32><td height=32><font face="Arial,Helvetica" size=1>VERSION: <?php echo $version ?> &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; Server: <?php echo $server_ip ?>  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</font><BR>
 	<font class="body_small">
 	<span id="busycallsdisplay"><a href="#"  onclick="conf_channels_detail('SHOW');">Show conference call channel information</a>
 	<BR><BR>&nbsp;</span></font></td><td align=right height=32>
@@ -11683,7 +11689,7 @@ Your Status: <span id="AgentStatusStatus"></span> <BR>Calls Dialing: <span id="A
 
 <span style="position:absolute;left:0px;top:<?php echo $CQheight ?>px;width:<?php echo $MNwidth ?>;overflow:scroll;z-index:<?php $zi++; echo $zi ?>;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="callsinqueuedisplay"><TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">Calls In Queue: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="callsinqueuelist">&nbsp;</span></TD></TR></TABLE></span>
 
-<font class="body_small"><span style="position:absolute;left:<?php echo $CLwidth ?>px;top:<?php echo $SLheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="callsinqueuelink">
+<font class="body_small"><span style="position:absolute;left:<?php echo $CLwidth ?>px;top:<?php echo $QLheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="callsinqueuelink">
 <?php 
 if ($view_calls_in_queue > 0)
 	{ 
@@ -12124,7 +12130,6 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="NothingBox">
-    <BUTTON Type=button name="inert_button"><img src="./images/blank.gif"></BUTTON>
 	<span id="DiaLLeaDPrevieWHide"> Channel</span>
 	<span id="DiaLDiaLAltPhonEHide"> Channel</span>
 	<?php
@@ -12185,6 +12190,16 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 <span style="position:absolute;left:0px;top:700px;z-index:<?php $zi++; echo $zi ?>;" id="debugbottomspan"></span>
 
 </FORM>
+
+<FORM name=inert_form id=inert_form onsubmit="return false;">
+
+<span style="position:absolute;left:0px;top:400px;z-index:1;" id="NothingBox2">
+<!--  <BUTTON Type=button name="inert_button" id="inert_button" onclick="return false;"><img src="./images/blank.gif"></BUTTON> -->
+<input type=checkbox name=inert_button id=inert_button size=1 value="0" onclick="return false;">
+</span>
+
+</FORM>
+
 
 </body>
 </html>
