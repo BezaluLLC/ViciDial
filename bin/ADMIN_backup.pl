@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# ADMIN_backup.pl    version 2.2.0
+# ADMIN_backup.pl    version 2.4
 #
 # DESCRIPTION:
 # Backs-up the asterisk database, conf/agi/sounds/bin files 
@@ -14,8 +14,9 @@
 # 80328-0135 - Do not attempt to archive /etc/my.cnf is --without-db flag is set
 # 80611-0549 - Added DB option to backup all tables except for log tables
 # 90620-1851 - Moved mysqldump bin lookup to database backup section
-# 100211-0910 - Added crontab backup and voicemail bacup option
+# 100211-0910 - Added crontab backup and voicemail backup option
 # 100817-1202 - Fixed test option bug
+# 101208-0452 - Added checks for zaptel and dahdi conf files
 #
 
 $secT = time();
@@ -302,8 +303,11 @@ if ( ($without_db < 1) && ($conf_only < 1) )
 if ( ($without_conf < 1) && ($db_only < 1) )
 	{
 	### BACKUP THE ASTERISK CONF FILES ON THE SERVER ###
-	if ($DBX) {print "$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$conf$wday$tar /etc/astguiclient.conf /etc/zaptel.conf /etc/asterisk\n";}
-	`$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$conf$wday$tar /etc/astguiclient.conf /etc/zaptel.conf /etc/asterisk`;
+	$zapdahdi='';
+	if (-e "/etc/zaptel.conf") {$zapdahdi .= " /etc/zaptel.conf";}
+	if (-e "/etc/dahdi/system.conf") {$zapdahdi .= " /etc/dahdi";}
+	if ($DBX) {print "$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$conf$wday$tar /etc/astguiclient.conf $zapdahdi /etc/asterisk\n";}
+	`$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$conf$wday$tar /etc/astguiclient.conf $zapdahdi /etc/asterisk`;
 
 
 	### BACKUP THE WANPIPE CONF FILES(if there are any) ###
