@@ -53,10 +53,11 @@
 # 100527-0957 - Added send_dtmf, transfer_conference and park_call API functions
 # 100727-2209 - Added timer actions for hangup, extension, callmenu and ingroup as well as destination
 # 101123-1105 - Added api manual dial queue feature to external_dial function
+# 101208-0308 - Moved the Calls in Queue count and other counts outside of the autodial section (issue 406)
 #
 
-$version = '2.4-28';
-$build = '101123-1105';
+$version = '2.4-29';
+$build = '101208-0308';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=36;
 $one_mysql_log=0;
@@ -247,6 +248,53 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 		#	$row=mysql_fetch_row($rslt);
 		#	$AexternalDEAD=$row[0];
 
+			##### BEGIN check on calls in queue, number of active calls in the campaign
+			if ($campagentstdisp == 'YES')
+				{
+				$ADsql='';
+				### grab the status of this agent to display
+				$stmt="SELECT status,campaign_id,closer_campaigns from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03006',$user,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysql_fetch_row($rslt);
+				$Alogin=$row[0];
+				$Acampaign=$row[1];
+				$AccampSQL=$row[2];
+				$AccampSQL = ereg_replace(' -','', $AccampSQL);
+				$AccampSQL = ereg_replace(' ',"','", $AccampSQL);
+				if (eregi('AGENTDIRECT', $AccampSQL))
+					{
+					$AccampSQL = ereg_replace('AGENTDIRECT','', $AccampSQL);
+					$ADsql = "or ( (campaign_id LIKE \"%AGENTDIRECT%\") and (agent_only='$user') )";
+					}
+
+				### grab the number of calls being placed from this server and campaign
+				$stmt="SELECT count(*) from vicidial_auto_calls where status IN('LIVE') and ( (campaign_id='$Acampaign') or (campaign_id IN('$AccampSQL')) $ADsql);";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03007',$user,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysql_fetch_row($rslt);
+				$RingCalls=$row[0];
+				if ($RingCalls > 0) {$RingCalls = "<font class=\"queue_text_red\">Calls in Queue: $RingCalls</font>";}
+				else {$RingCalls = "<font class=\"queue_text\">Calls in Queue: $RingCalls</font>";}
+
+				### grab the number of calls being placed from this server and campaign
+				$stmt="SELECT count(*) from vicidial_auto_calls where status NOT IN('XFER') and ( (campaign_id='$Acampaign') or (campaign_id IN('$AccampSQL')) );";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03008',$user,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysql_fetch_row($rslt);
+				$DiaLCalls=$row[0];
+				}
+			else
+				{
+				$Alogin='N';
+				$RingCalls='N';
+				$DiaLCalls='N';
+				}
+			##### END check on calls in queue, number of active calls in the campaign
+
 			if ($auto_dial_level > 0)
 				{
 				### update the vicidial_live_agents every second with a new random number so it is shown to be alive
@@ -300,59 +348,9 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 						}
 					}
 				##### END DEAD logging section #####
-
-				if ($campagentstdisp == 'YES')
-					{
-					$ADsql='';
-					### grab the status of this agent to display
-					$stmt="SELECT status,campaign_id,closer_campaigns from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
-					if ($DB) {echo "|$stmt|\n";}
-					$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03006',$user,$server_ip,$session_name,$one_mysql_log);}
-					$row=mysql_fetch_row($rslt);
-					$Alogin=$row[0];
-					$Acampaign=$row[1];
-					$AccampSQL=$row[2];
-					$AccampSQL = ereg_replace(' -','', $AccampSQL);
-					$AccampSQL = ereg_replace(' ',"','", $AccampSQL);
-					if (eregi('AGENTDIRECT', $AccampSQL))
-						{
-						$AccampSQL = ereg_replace('AGENTDIRECT','', $AccampSQL);
-						$ADsql = "or ( (campaign_id LIKE \"%AGENTDIRECT%\") and (agent_only='$user') )";
-						}
-
-					### grab the number of calls being placed from this server and campaign
-					$stmt="SELECT count(*) from vicidial_auto_calls where status IN('LIVE') and ( (campaign_id='$Acampaign') or (campaign_id IN('$AccampSQL')) $ADsql);";
-					if ($DB) {echo "|$stmt|\n";}
-					$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03007',$user,$server_ip,$session_name,$one_mysql_log);}
-					$row=mysql_fetch_row($rslt);
-					$RingCalls=$row[0];
-					if ($RingCalls > 0) {$RingCalls = "<font class=\"queue_text_red\">Calls in Queue: $RingCalls</font>";}
-					else {$RingCalls = "<font class=\"queue_text\">Calls in Queue: $RingCalls</font>";}
-
-					### grab the number of calls being placed from this server and campaign
-					$stmt="SELECT count(*) from vicidial_auto_calls where status NOT IN('XFER') and ( (campaign_id='$Acampaign') or (campaign_id IN('$AccampSQL')) );";
-					if ($DB) {echo "|$stmt|\n";}
-					$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03008',$user,$server_ip,$session_name,$one_mysql_log);}
-					$row=mysql_fetch_row($rslt);
-					$DiaLCalls=$row[0];
-
-					}
-				else
-					{
-					$Alogin='N';
-					$RingCalls='N';
-					$DiaLCalls='N';
-					}
 				}
 			else
 				{
-				$Alogin='N';
-				$RingCalls='N';
-				$DiaLCalls='N';
-
 				### update the vicidial_live_agents every second with a new random number so it is shown to be alive
 				$stmt="UPDATE vicidial_live_agents set random_id='$random' where user='$user' and server_ip='$server_ip';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
