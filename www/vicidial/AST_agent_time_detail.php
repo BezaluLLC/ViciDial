@@ -17,6 +17,7 @@
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 # 101207-1634 - Changed limits on seconds to 65000 from 30000 in vicidial_agent_log
 # 101207-1719 - Fixed download file formatting bugs(issue 394)
+# 101208-0320 - Fixed issue 404
 #
 
 require("dbconnect.php");
@@ -722,7 +723,7 @@ else
 
 
 	### BEGIN sort through output to display properly ###
-	if (ereg("NAME|ID|TIME|LEADS|TCLOCK",$stage))
+	if ( ($TOT_AGENTS > 0) and (ereg("NAME|ID|TIME|LEADS|TCLOCK",$stage)) )
 		{
 		if (ereg("ID",$stage))
 			{sort($TOPsort, SORT_NUMERIC);}
