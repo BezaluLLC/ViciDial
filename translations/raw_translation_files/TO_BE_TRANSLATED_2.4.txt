@@ -486,6 +486,10 @@ Manual Call Time Check||
 If this option is enabled, it will check all manual dial calls to make sure they are within the call time settings set for the campaign. Default is DISABLED||
 If you want to change this lead to a scheduled callback, first change the Disposition to CBHOLD, then submit and you will be able to set the callback date and time||
 Web Form Override -</B> This is the custom address that clicking on the WEB FORM button in VICIDIAL will take you to for calls that come in on this list||
+Agent Screen Login||
+The login used for the phone user to login to the client applications, like the ViciDial agent screen||
+Phone Extension||
+This field is where you put the phones name as it appears to Asterisk not including the protocol or slash at the beginning. For Example: for the SIP phone SIP/test101 the Phone extension would be test101. Also, for IAX2 phones: IAX2/IAXphone1@IAXphone1 would be IAXphone1. For Zap and Dahdi attached channelbank or FXS phones make sure you put the full channel number without the prefix: Zap/25-1 would be 25-1.  Another note, make sure you set the Protocol field below correctly for your type of phone||
 
 
 AST_LISTS_campaign_stats.php
