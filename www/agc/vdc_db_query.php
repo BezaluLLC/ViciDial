@@ -264,10 +264,11 @@
 # 101111-1556 - Added source to vicidial_hopper inserts
 # 101124-1033 - Added require for functions.php and manual dial call time check campaign option
 # 101128-0108 - Added list override for webforms
+# 101208-0414 - Fixed Call Log dial bug (issue 393)
 #
 
-$version = '2.4-170';
-$build = '101128-0108';
+$version = '2.4-171';
+$build = '101208-0414';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=363;
 $one_mysql_log=0;
@@ -7748,7 +7749,7 @@ if ($ACTION == 'CALLLOGview')
 		echo "<td align=right><font size=2> $ALLalt_dial[$i] </td>\n";
 		echo "<td align=right><font size=2> $ALLhangup_reason[$i] </td>\n";
 		echo "<td align=right><font size=2> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i]);return false;\">INFO</A> </td>\n";
-		echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$ALLphone_code[$i], $ALLphone_number[$i]);return false;\">DIAL</A> </td>\n";
+		echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG','$ALLphone_code[$i]','$ALLphone_number[$i]');return false;\">DIAL</A> </td>\n";
 		echo "</tr>\n";
 		}
 
