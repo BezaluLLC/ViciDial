@@ -780,7 +780,8 @@ auto_hopper_multi VARCHAR(6) default '1',
 auto_hopper_level MEDIUMINT(8) UNSIGNED default '0',
 auto_trim_hopper ENUM('Y','N') default 'Y',
 api_manual_dial ENUM('STANDARD','QUEUE','QUEUE_AND_AUTOCALL') default 'STANDARD',
-manual_dial_call_time_check ENUM('DISABLED','ENABLED') default 'DISABLED'
+manual_dial_call_time_check ENUM('DISABLED','ENABLED') default 'DISABLED',
+display_leads_count ENUM('Y','N') default 'N'
 );
 
 CREATE TABLE vicidial_lists (
@@ -2410,7 +2411,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1255',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1256',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

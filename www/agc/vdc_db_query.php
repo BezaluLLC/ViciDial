@@ -3991,7 +3991,7 @@ if ($stage == "end")
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00098',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				echo "REC_STOP|$rec_channels[$loop_count]|$filename[$loop_count]|";
-				if (strlen($filename)>2)
+				if (strlen($filename[$loop_count])>2)
 					{
 					$stmt="SELECT recording_id,start_epoch,vicidial_id,lead_id FROM recording_log where filename='$filename[$loop_count]'";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}

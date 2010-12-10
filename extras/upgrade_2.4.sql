@@ -629,3 +629,7 @@ ALTER TABLE vicidial_lists ADD web_form_address TEXT;
 ALTER TABLE vicidial_lists ADD web_form_address_two TEXT;
 
 UPDATE system_settings SET db_schema_version='1255',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD display_leads_count ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1256',db_schema_update_date=NOW();

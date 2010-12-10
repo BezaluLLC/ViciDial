@@ -413,6 +413,10 @@ OTHER CHANGES:
 
 94. Added did_log_export and recording_lookup functions to the non-agent API
 
+95. Added option to display statuses within the active lists of a campaign in
+	the campaign modification screen. Also includes called and not called
+	counts.
+
 
 
 
