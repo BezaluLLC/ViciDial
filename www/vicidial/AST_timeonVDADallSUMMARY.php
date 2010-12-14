@@ -19,6 +19,7 @@
 # 100709-1806 - Added system setting slave server option
 # 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
+# 101214-1142 - Added Agent time stats
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -247,25 +248,30 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $VDhop = $row[0];
 
-$stmt="select dialable_leads,calls_today,drops_today,drops_answers_today_pct,differential_onemin,agents_average_onemin,balance_trunk_fill,answers_today,status_category_1,status_category_count_1,status_category_2,status_category_count_2,status_category_3,status_category_count_3,status_category_4,status_category_count_4 from vicidial_campaign_stats where campaign_id='" . mysql_real_escape_string($group) . "';";
+$stmt="select dialable_leads,calls_today,drops_today,drops_answers_today_pct,differential_onemin,agents_average_onemin,balance_trunk_fill,answers_today,status_category_1,status_category_count_1,status_category_2,status_category_count_2,status_category_3,status_category_count_3,status_category_4,status_category_count_4,agent_calls_today,agent_wait_today,agent_custtalk_today,agent_acw_today,agent_pause_today from vicidial_campaign_stats where campaign_id='" . mysql_real_escape_string($group) . "';";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
-$DAleads =		$row[0];
-$callsTODAY =	$row[1];
-$dropsTODAY =	$row[2];
-$drpctTODAY =	$row[3];
-$diffONEMIN =	$row[4];
-$agentsONEMIN = $row[5];
-$balanceFILL =	$row[6];
-$answersTODAY = $row[7];
-$VSCcat1 =		$row[8];
-$VSCcat1tally = $row[9];
-$VSCcat2 =		$row[10];
-$VSCcat2tally = $row[11];
-$VSCcat3 =		$row[12];
-$VSCcat3tally = $row[13];
-$VSCcat4 =		$row[14];
-$VSCcat4tally = $row[15];
+$DAleads =			$row[0];
+$callsTODAY =		$row[1];
+$dropsTODAY =		$row[2];
+$drpctTODAY =		$row[3];
+$diffONEMIN =		$row[4];
+$agentsONEMIN =		$row[5];
+$balanceFILL =		$row[6];
+$answersTODAY =		$row[7];
+$VSCcat1 =			$row[8];
+$VSCcat1tally =		$row[9];
+$VSCcat2 =			$row[10];
+$VSCcat2tally =		$row[11];
+$VSCcat3 =			$row[12];
+$VSCcat3tally =		$row[13];
+$VSCcat4 =			$row[14];
+$VSCcat4tally =		$row[15];
+$VSCagentcalls =	$row[16];
+$VSCagentwait =		$row[17];
+$VSCagentcust =		$row[18];
+$VSCagentacw =		$row[19];
+$VSCagentpause =	$row[20];
 
 if ( ($diffONEMIN != 0) and ($agentsONEMIN > 0) )
 	{
@@ -341,6 +347,53 @@ if ( (!eregi('NULL',$VSCcat3)) and (strlen($VSCcat3)>0) )
 if ( (!eregi('NULL',$VSCcat4)) and (strlen($VSCcat4)>0) )
 	{echo "<font size=2><B>$VSCcat4:</B> &nbsp; $VSCcat4tally &nbsp;  &nbsp;  &nbsp; \n";}
 echo "</TD></TR>";
+
+if ($VSCagentcalls > 0)
+	{
+	if ( ($VSCagentcalls > 0) and ($VSCagentpause > 0) )
+		{
+		$avgpauseTODAY = ($VSCagentpause / $VSCagentcalls);
+		$avgpauseTODAY = round($avgpauseTODAY, 0);
+		$avgpauseTODAY = sprintf("%01.0f", $avgpauseTODAY);
+		}
+	else
+		{$avgpauseTODAY=0;}
+
+	if ( ($VSCagentcalls > 0) and ($VSCagentwait > 0) )
+		{
+		$avgwaitTODAY = ($VSCagentwait / $VSCagentcalls);
+		$avgwaitTODAY = round($avgwaitTODAY, 0);
+		$avgwaitTODAY = sprintf("%01.0f", $avgwaitTODAY);
+		}
+	else
+		{$avgwaitTODAY=0;}
+
+	if ( ($VSCagentcalls > 0) and ($VSCagentcust > 0) )
+		{
+		$avgcustTODAY = ($VSCagentcust / $VSCagentcalls);
+		$avgcustTODAY = round($avgcustTODAY, 0);
+		$avgcustTODAY = sprintf("%01.0f", $avgcustTODAY);
+		}
+	else
+		{$avgcustTODAY=0;}
+
+	if ( ($VSCagentcalls > 0) and ($VSCagentacw > 0) )
+		{
+		$avgacwTODAY = ($VSCagentacw / $VSCagentcalls);
+		$avgacwTODAY = round($avgacwTODAY, 0);
+		$avgacwTODAY = sprintf("%01.0f", $avgacwTODAY);
+		}
+	else
+		{$avgacwTODAY=0;}
+
+	echo "<TR>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>AGENT AVG WAIT:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgwaitTODAY &nbsp;</TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>AVG CUSTTIME:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgcustTODAY &nbsp;</TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>AVG ACW:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgacwTODAY &nbsp;</TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>AVG PAUSE:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgpauseTODAY &nbsp;</TD>";
+	echo "</TR>";
+	}
+
 echo "<TR>";
 echo "<TD ALIGN=LEFT COLSPAN=8>";
 
