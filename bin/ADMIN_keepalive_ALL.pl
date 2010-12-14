@@ -58,6 +58,7 @@
 # 100814-2206 - Added clearing and optimization for vicidial_xfer_stats table
 # 101022-1655 - Added new variables to be cleared from vicidial_cacmpaign_stats table
 # 101107-2257 - Added cross-server phone dialplan extensions
+# 101214-1507 - Changed list auto-reset to work with inactive lists
 #
 
 $DB=0; # Debug flag
@@ -2509,7 +2510,7 @@ if ($sthBrows > 0)
 ################################################################################
 #####  BEGIN  reset lists
 ################################################################################
-$stmtA = "SELECT list_id FROM vicidial_lists where active='Y' and reset_time LIKE \"%$reset_test%\";";
+$stmtA = "SELECT list_id FROM vicidial_lists where reset_time LIKE \"%$reset_test%\";";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthBrows=$sthA->rows;
