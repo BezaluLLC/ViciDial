@@ -417,6 +417,9 @@ OTHER CHANGES:
 	the campaign modification screen. Also includes called and not called
 	counts.
 
+96. Added rewritten AJAX/Javascript driven real-time report, able to support
+	webphones.
+
 
 
 
