@@ -2620,13 +2620,14 @@ else
 # 101123-2214 - Added api_manual_dial and manual_dial_call_time_check campaign options
 # 101127-2232 - Added webform override options to lists
 # 101208-0341 - Changed some descriptions and field names in Phones
-# 101209-2027 - Added display_leads_count option for campaign codificatino screens
+# 101209-2027 - Added display_leads_count option for campaign modification screens
+# 101216-1838 - Changed Realtime report links to go to new realtime_report
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-292';
-$build = '101209-2027';
+$admin_version = '2.4-293';
+$build = '101216-1838';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -7179,7 +7180,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="settings-default_field_labels">
 	<BR>
-	<B>Default Field Labels -</B> These 19 fields allow you to set the name as it will appear in the ViciDial agent interface as well as the administrative modify lead page. Default is empty which will use the hard-coded defaults in the agent interface. 
+	<B>Default Field Labels -</B> These 19 fields allow you to set the name as it will appear in the ViciDial agent interface as well as the administrative modify lead page. Default is empty which will use the hard-coded defaults in the agent interface. You can also set a label to ---HIDE--- to hide both the label and the field.
 
 	<BR>
 	<A NAME="settings-qc_features_active">
@@ -18572,7 +18573,7 @@ if ($ADD==31)
 		{
 		echo "<TD></TD><TD></TD><TD></TD><TD></TD>\n";
 		}
-	echo "<TD> <a href=\"./AST_timeonVDADall.php?RR=4&DB=0&group=$row[0]\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">Real-Time</font></a></TD>\n";
+	echo "<TD> <a href=\"./realtime_report.php?RR=4&DB=0&group=$row[0]\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">Real-Time</font></a></TD>\n";
 	echo "</TR></TABLE>\n";
 
 	echo "<TABLE><TR><TD>\n";
@@ -20167,7 +20168,7 @@ if ($ADD==34)
 		{
 		echo "<TD BGCOLOR=\"$camp_listmix_color\"> <a href=\"$PHP_SELF?ADD=34&SUB=29&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">List Mix</font></a> </TD>";
 		}
-	echo "<TD> <a href=\"./AST_timeonVDADall.php?RR=4&DB=0&group=$row[0]\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">Real-Time Screen</font></a></TD>\n";
+	echo "<TD> <a href=\"./realtime_report.php?RR=4&DB=0&group=$row[0]\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">Real-Time Screen</font></a></TD>\n";
 	echo "<TD WIDTH=300><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\"> &nbsp; </font></TD>\n";
 	if ($SSoutbound_autodial_active < 1)
 		{
@@ -28349,7 +28350,7 @@ if ($ADD==999999)
 		echo "<B>Real-Time Reports</B><BR>\n";
 		echo "<UL>\n";
 		if ( (preg_match("/Real-Time Main Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
-			{echo "<LI><a href=\"AST_timeonVDADall.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Real-Time Main Report</a></FONT>\n";}
+			{echo "<LI><a href=\"realtime_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Real-Time Main Report</a></FONT>\n";}
 				#	echo "<BR> &nbsp; Real-Time SIP: <a href=\"AST_timeonVDADall.php?SIPmonitorLINK=1\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Listen</a></FONT> - <a href=\"AST_timeonVDADall.php?SIPmonitorLINK=2\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Barge</a></FONT>\n";
 				#	echo "<BR> &nbsp; Real-Time IAX: <a href=\"AST_timeonVDADall.php?IAXmonitorLINK=1\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Listen</a></FONT> - <a href=\"AST_timeonVDADall.php?IAXmonitorLINK=2\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Barge</a></FONT><BR><BR>\n";
 		if ( (preg_match("/Real-Time Campaign Summary/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )

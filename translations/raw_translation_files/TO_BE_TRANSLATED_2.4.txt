@@ -494,6 +494,7 @@ STATUSES WITHIN THE ACTIVE LISTS FOR THIS CAMPAIGN||
 SHOW LEAD STATUSES IN THIS CAMPAIGN||
 RELOAD NOW||
 refresh||
+You can also set a label to ---HIDE--- to hide both the label and the field||
 
 
 AST_LISTS_campaign_stats.php

@@ -326,10 +326,11 @@
 # 101128-0102 - Added list webform override options
 # 101207-1621 - Added scroll to the top after in-group, pause code, etc... selections, and added focus blur to several functions
 # 101208-1210 - Fixed focus/blur coding to work after Dispo
+# 101216-1758 - Added the ability to hide fields if the label is set to ---HIDE--- in System Settings
 #
 
-$version = '2.4-303';
-$build = '101208-1210';
+$version = '2.4-304';
+$build = '101216-1758';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=69;
 $one_mysql_log=0;
@@ -11540,34 +11541,90 @@ $zi=2;
 	<td align=left colspan=2>
 
 	<TABLE width=550><tr>
-	<td align=right><font class="body_text"> <?php echo $label_title ?>: </td>
-	<td align=left colspan=5><font class="body_text"><input type=text size=4 name=title maxlength=4 class="cust_form" value="">&nbsp; <?php echo $label_first_name ?>: <input type=text size=17 name=first_name maxlength=30 class="cust_form" value="">&nbsp; <?php echo $label_middle_initial ?>: <input type=text size=1 name=middle_initial maxlength=1 class="cust_form" value="">&nbsp; <?php echo $label_last_name ?>: <input type=text size=23 name=last_name maxlength=30 class="cust_form" value=""></td>
-	</tr><tr>
-	<td align=right><font class="body_text"> <?php echo $label_address1 ?>: </td>
-	<td align=left colspan=5><font class="body_text"><input type=text size=85 name=address1 maxlength=100 class="cust_form" value=""></td>
-	</tr><tr>
-	<td align=right><font class="body_text"> <?php echo $label_address2 ?>: </td>
-	<td align=left><font class="body_text"><input type=text size=20 name=address2 maxlength=100 class="cust_form" value=""></td>
-	<td align=right><font class="body_text"><?php echo $label_address3 ?>: </td>
-	<td align=left colspan=3><font class="body_text"><input type=text size=45 name=address3 maxlength=100 class="cust_form" value=""></td>
-	</tr><tr>
-	<td align=right><font class="body_text"> <?php echo $label_city ?>: </td>
-	<td align=left><font class="body_text"><input type=text size=20 name=city maxlength=50 class="cust_form" value=""></td>
-	<td align=right><font class="body_text"><?php echo $label_state ?>: </td>
-	<td align=left><font class="body_text"><input type=text size=4 name=state maxlength=2 class="cust_form" value=""></td>
-	<td align=right><font class="body_text"><?php echo $label_postal_code ?>: </td>
-	<td align=left><font class="body_text"><input type=text size=14 name=postal_code maxlength=10 class="cust_form" value=""></td>
-	</tr><tr>
-	<td align=right><font class="body_text"> <?php echo $label_province ?>: </td>
-	<td align=left><font class="body_text"><input type=text size=20 name=province maxlength=50 class="cust_form" value=""></td>
-	<td align=right><font class="body_text"><?php echo $label_vendor_lead_code ?>: </td>
-	<td align=left><font class="body_text"><input type=text size=15 name=vendor_lead_code maxlength=20 class="cust_form" value=""></td>
-	<td align=right><font class="body_text"><?php echo $label_gender ?>: </td>
-	<td align=left><font class="body_text"><span id="GENDERhideFORie"><select size=1 name=gender_list class="cust_form" id=gender_list><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select></span></td>
-	</tr><tr>
-	<td align=right><font class="body_text"> <?php echo $label_phone_number ?>: </td>
-	<td align=left><font class="body_text">
-	<?php 
+	<td align=right><font class="body_text"> 
+	<?php
+
+	if ($label_title == '---HIDE---')
+		{echo "</td><td align=left colspan=5><input type=hidden name=title value=\"\">";}
+	else
+		{echo "$label_title: </td><td align=left colspan=5><font class=\"body_text\"><input type=text size=4 name=title maxlength=4 class=\"cust_form\" value=\"\">";}
+	if ($label_first_name == '---HIDE---')
+		{echo "&nbsp; <input type=hidden name=first_name value=\"\">";}
+	else
+		{echo "&nbsp; $label_first_name: <input type=text size=17 name=first_name maxlength=30 class=\"cust_form\" value=\"\">";}
+	if ($label_middle_initial == '---HIDE---')
+		{echo "&nbsp; <input type=hidden name=middle_initial value=\"\">";}
+	else
+		{echo "&nbsp; $label_middle_initial: <input type=text size=1 name=middle_initial maxlength=1 class=\"cust_form\" value=\"\">";}
+	if ($label_last_name == '---HIDE---')
+		{echo "&nbsp; <input type=hidden name=last_name value=\"\">";}
+	else
+		{echo "&nbsp; $label_last_name: <input type=text size=23 name=last_name maxlength=30 class=\"cust_form\" value=\"\">";}
+	
+	echo "</td></tr><tr><td align=right><font class=\"body_text\">";
+	
+	if ($label_address1 == '---HIDE---')
+		{echo " </td><td align=left colspan=5><input type=hidden name=address1 value=\"\">";}
+	else
+		{echo "$label_address1: </td><td align=left colspan=5><font class=\"body_text\"><input type=text size=85 name=address1 maxlength=100 class=\"cust_form\" value=\"\">";}
+	
+	echo "</td></tr><tr><td align=right><font class=\"body_text\">";
+
+	if ($label_address2 == '---HIDE---')
+		{echo " </td><td align=left><input type=hidden name=address2 value=\"\">";}
+	else
+		{echo "$label_address2: </td><td align=left><font class=\"body_text\"><input type=text size=20 name=address2 maxlength=100 class=\"cust_form\" value=\"\">";}
+
+	echo "</td><td align=right><font class=\"body_text\">";
+
+	if ($label_address3 == '---HIDE---')
+		{echo " </td><td align=left colspan=3><input type=hidden name=address3 value=\"\">";}
+	else
+		{echo "$label_address3: </td><td align=left colspan=3><font class=\"body_text\"><input type=text size=45 name=address3 maxlength=100 class=\"cust_form\" value=\"\">";}
+
+	echo "</td></tr><tr><td align=right><font class=\"body_text\">";
+
+	if ($label_city == '---HIDE---')
+		{echo " </td><td align=left><input type=hidden name=city value=\"\">";}
+	else
+		{echo "$label_city: </td><td align=left><font class=\"body_text\"><input type=text size=20 name=city maxlength=50 class=\"cust_form\" value=\"\">";}
+
+	echo "</td><td align=right><font class=\"body_text\">";
+
+	if ($label_state == '---HIDE---')
+		{echo " </td><td align=left><input type=hidden name=state value=\"\">";}
+	else
+		{echo "$label_state: </td><td align=left><font class=\"body_text\"><input type=text size=4 name=state maxlength=2 class=\"cust_form\" value=\"\">";}
+
+	echo "</td><td align=right><font class=\"body_text\">";
+
+	if ($label_postal_code == '---HIDE---')
+		{echo " </td><td align=left><input type=hidden name=postal_code value=\"\">";}
+	else
+		{echo "$label_postal_code: </td><td align=left><font class=\"body_text\"><input type=text size=14 name=postal_code maxlength=10 class=\"cust_form\" value=\"\">";}
+
+	echo "</td></tr><tr><td align=right><font class=\"body_text\">";
+
+	if ($label_province == '---HIDE---')
+		{echo " </td><td align=left><input type=hidden name=province value=\"\">";}
+	else
+		{echo "$label_province: </td><td align=left><font class=\"body_text\"><input type=text size=20 name=province maxlength=50 class=\"cust_form\" value=\"\">";}
+
+	echo "</td><td align=right><font class=\"body_text\">";
+
+	if ($label_vendor_lead_code == '---HIDE---')
+		{echo " </td><td align=left><input type=hidden name=vendor_lead_code value=\"\">";}
+	else
+		{echo "$label_vendor_lead_code: </td><td align=left><font class=\"body_text\"><input type=text size=15 name=vendor_lead_code maxlength=20 class=\"cust_form\" value=\"\">";}
+
+	echo "</td><td align=right><font class=\"body_text\">";
+
+	echo "$label_gender: </td><td align=left><font class=\"body_text\"><span id=\"GENDERhideFORie\"><select size=1 name=gender_list class=\"cust_form\" id=gender_list><option value=\"U\">U - Undefined</option><option value=\"M\">M - Male</option><option value=\"F\">F - Female</option></select></span>";
+
+	echo "</td></tr><tr><td align=right><font class=\"body_text\">";
+
+	echo "$label_phone_number: </td><td align=left><font class=\"body_text\">";
+
 	if ( (ereg('Y',$disable_alter_custphone)) or (ereg('HIDE',$disable_alter_custphone)) )
 		{
 		echo "<font class=\"body_text\"><span id=phone_numberDISP> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></font>";
@@ -11577,27 +11634,50 @@ $zi=2;
 		{
 		echo "<input type=text size=20 name=phone_number maxlength=16 class=\"cust_form\" value=\"\">";
 		}
-	?>
 
-	</td>
-	<td align=right><font class="body_text"><?php echo $label_phone_code ?>: </td>
-	<td align=left><font class="body_text"><input type=text size=4 name=phone_code maxlength=10 class="cust_form" value=""></td>
-	<td align=right><font class="body_text"><?php echo $label_alt_phone ?>: </td>
-	<td align=left><font class="body_text"><input type=text size=14 name=alt_phone maxlength=16 class="cust_form" value=""></td>
-	</tr><tr>
-	<td align=right><font class="body_text"> <?php echo $label_security_phrase ?>: </td>
-	<td align=left><font class="body_text"><input type=text size=20 name=security_phrase maxlength=100 class="cust_form" value=""></td>
-	<td align=right><font class="body_text"><?php echo $label_email ?>: </td>
-	<td align=left colspan=3><font class="body_text"><input type=text size=45 name=email maxlength=70 class="cust_form" value=""></td>
-	</tr><tr>
-	<td align=right valign=top><font class="body_text"> <?php echo $label_comments ?>: </td>
-	<td align=left colspan=5>
-	<font class="body_text">
-	<?php
-	if ( ($multi_line_comments) )
-		{echo "<TEXTAREA NAME=comments ROWS=2 COLS=85 class=\"cust_form_text\" value=\"\"></TEXTAREA>\n";}
+	echo "</td><td align=right><font class=\"body_text\">";
+
+	if ($label_phone_code == '---HIDE---')
+		{echo " </td><td align=left><input type=hidden name=phone_code value=\"\">";}
 	else
-		{echo "<input type=text size=65 name=comments maxlength=255 class=\"cust_form\" value=\"\">\n";}
+		{echo "$label_phone_code: </td><td align=left><font class=\"body_text\"><input type=text size=4 name=phone_code maxlength=10 class=\"cust_form\" value=\"\">";}
+
+	echo "</td><td align=right><font class=\"body_text\">";
+
+	if ($label_alt_phone == '---HIDE---')
+		{echo " </td><td align=left><input type=hidden name=alt_phone value=\"\">";}
+	else
+		{echo "$label_alt_phone: </td><td align=left><font class=\"body_text\"><input type=text size=14 name=alt_phone maxlength=16 class=\"cust_form\" value=\"\">";}
+
+	echo "</td></tr><tr><td align=right><font class=\"body_text\">";
+
+	if ($label_security_phrase == '---HIDE---')
+		{echo " </td><td align=left><input type=hidden name=security_phrase value=\"\">";}
+	else
+		{echo "$label_security_phrase: </td><td align=left><font class=\"body_text\"><input type=text size=20 name=security_phrase maxlength=100 class=\"cust_form\" value=\"\">";}
+
+	echo "</td><td align=right><font class=\"body_text\">";
+
+	if ($label_email == '---HIDE---')
+		{echo " </td><td align=left colspan=3><input type=hidden name=email value=\"\">";}
+	else
+		{echo "$label_email: </td><td align=left colspan=3><font class=\"body_text\"><input type=text size=45 name=email maxlength=70 class=\"cust_form\" value=\"\">";}
+
+	echo "</td></tr><tr><td align=right><font class=\"body_text\">";
+
+	if ($label_comments == '---HIDE---')
+		{
+		echo " </td><td align=left colspan=5><input type=hidden name=comments value=\"\">\n";
+		}
+	else
+		{
+		echo "$label_comments: </td><td align=left colspan=5><font class=\"body_text\">";
+		if ( ($multi_line_comments) )
+			{echo "<TEXTAREA NAME=comments ROWS=2 COLS=85 class=\"cust_form_text\" value=\"\"></TEXTAREA>\n";}
+		else
+			{echo "<input type=text size=65 name=comments maxlength=255 class=\"cust_form\" value=\"\">\n";}
+		}
+
 	?>
 	</font>
 	</td>

@@ -22,6 +22,7 @@
 # 91105-1359 - Added MIX directory to /var/spool/asterisk/monitor
 # 91123-0001 - Added FTP2 directory to /var/spool/asterisk/monitorDONE
 # 100428-0936 - Added DB custom user/pass fields
+# 101217-0520 - Added PREPROCESS directory
 #
 
 ############################################
@@ -2239,10 +2240,15 @@ if ($WEBONLY < 1)
 	{
 	print "Creating $PATHhome/LEADS_IN directories...\n";
 	if (!-e "$PATHhome/libs/Asterisk")	{`mkdir -p $PATHhome/libs/Asterisk`;}
-	if (!-e "$PATHhome/LEADS_IN/DONE")	
+	if (!-e "$PATHhome/LEADS_IN/DONE")
 		{
 		`mkdir -p $PATHhome/LEADS_IN/DONE`;
 		`chmod -R 0766 $PATHhome/LEADS_IN`;
+		}
+	if (!-e "$PATHhome/PREPROCESS/DONE")
+		{
+		`mkdir -p $PATHhome/PREPROCESS/DONE`;
+		`chmod -R 0766 $PATHhome/PREPROCESS`;
 		}
 	if (!-e "$PATHhome/VTIGER_IN/DONE")	
 		{

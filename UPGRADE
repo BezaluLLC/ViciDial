@@ -420,6 +420,12 @@ OTHER CHANGES:
 96. Added rewritten AJAX/Javascript driven real-time report, able to support
 	webphones.
 
+97. Added the ability to hide fields in the agent interface by entering 
+	---HIDE--- into the System Settings label option for the field
+
+98. Added preprocess leads in script to filter leads and generate standard
+	format lead files before being imported
+
 
 
 
