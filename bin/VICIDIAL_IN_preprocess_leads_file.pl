@@ -575,12 +575,45 @@ foreach(@FILES)
 					$b++;   $phone_found++;
 					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
 					}
-				if (length($m[24]) > 9) 
+				if (length($m[25]) > 9) 
 					{
-					$phone_number =			$m[24];
-					$city =					$m[25];	# phoneid
+					$phone_number =			$m[25];
+					$city =					$m[26];	# phoneid
 					$rank =					'8';
 					$owner =				'trigger2';
+
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$comments|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+				if (length($m[30]) > 9) 
+					{
+					$phone_number =			$m[30];
+					$city =					$m[31];	# phoneid
+					$rank =					'9';
+					$owner =				'skiphome';
+
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$comments|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+				if (length($m[32]) > 9) 
+					{
+					$phone_number =			$m[32];
+					$city =					$m[33];	# phoneid
+					$rank =					'10';
+					$owner =				'skipwork';
+
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$comments|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+				if (length($m[34]) > 9) 
+					{
+					$phone_number =			$m[34];
+					$city =					$m[35];	# phoneid
+					$rank =					'11';
+					$owner =				'skipcell';
 
 					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$comments|$called_count|$status|$entry_date|$rank|$owner|\n";
 					$b++;   $phone_found++;
@@ -740,12 +773,12 @@ if ( (length($Ealert)>5) && (length($email_list) > 3) )
 	use MIME::Base64;
 	use Mail::Sendmail;
 
-	$mailsubject = "VICIDIAL LEAD FILE LOAD $pulldate0";
+	$mailsubject = "VICIDIAL LEAD FILE PREPROCESS $pulldate0";
 
 	  %mail = ( To      => "$email_list",
 							From    => "$email_sender",
 							Subject => "$mailsubject",
-							Message => "VICIDIAL LEAD FILE LOAD $pulldate0\n\n$Ealert\n"
+							Message => "VICIDIAL LEAD FILE PREPROCESS $pulldate0\n\n$Ealert\n"
 					   );
 			sendmail(%mail) or die $mail::Sendmail::error;
 		   if ($q < 1) {print "ok. log says:\n", $mail::sendmail::log;}  ### print mail log for status
