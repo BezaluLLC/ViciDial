@@ -6,7 +6,7 @@
 # syncronizes audio between audio store and this server
 #
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 90513-0458 - First Build
@@ -14,6 +14,7 @@
 # 90831-1349 - Added music-on-hold sync
 # 100621-1018 - Added admin_web_directory variable use
 # 100824-0032 - Fixed issue with first MoH file being skipped when playing in non-random order
+# 101217-2137 - Small fix for admin directories not directly off of the webroot
 #
 
 # constants
@@ -174,6 +175,7 @@ if ($sthArows > 0)
 $sthA->finish();
 
 ### Grab system_settings values from the database
+$web_prefix='';
 $stmtA = "SELECT sounds_central_control_active,sounds_web_server,sounds_web_directory,admin_web_directory FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -185,6 +187,11 @@ if ($sthArows > 0)
 	$sounds_web_server =				$aryA[1];
 	$sounds_web_directory =				$aryA[2];
 	$admin_web_directory =				$aryA[3];
+	if ($admin_web_directory =~ /\//)
+			{
+			$web_prefix = $admin_web_directory;
+			$web_prefix =~ s/\/.*/\//gi;
+			}
 	}
 $sthA->finish();
 
@@ -286,7 +293,7 @@ while ($i <= $#list)
 
 	if ( ($found_file < 1) || ($force_download > 0) )
 		{
-		`$wgetbin -q --output-document=$PATHsounds/$filename http://$sounds_web_server/$sounds_web_directory/$filename`;
+		`$wgetbin -q --output-document=$PATHsounds/$filename http://$sounds_web_server/$web_prefix$sounds_web_directory/$filename`;
 		$event_string = "DOWNLOADING: $filename     $filesize";
 		if ($DB > 0) {print "          $event_string\n";}
 		&event_logger;

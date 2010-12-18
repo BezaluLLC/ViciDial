@@ -505,7 +505,7 @@ foreach(@FILES)
 					$rank =					'1';
 					$owner =				'home';
 
-					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$comments|$called_count|$status|$entry_date|$rank|$owner|\n";
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
 					$b++;   $phone_found++;
 					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
 					}
@@ -516,7 +516,7 @@ foreach(@FILES)
 					$rank =					'2';
 					$owner =				'work';
 
-					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$comments|$called_count|$status|$entry_date|$rank|$owner|\n";
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
 					$b++;   $phone_found++;
 					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
 					}
@@ -527,7 +527,7 @@ foreach(@FILES)
 					$rank =					'3';
 					$owner =				'cell';
 
-					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$comments|$called_count|$status|$entry_date|$rank|$owner|\n";
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
 					$b++;   $phone_found++;
 					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
 					}
@@ -538,7 +538,7 @@ foreach(@FILES)
 					$rank =					'4';
 					$owner =				'alt1';
 
-					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$comments|$called_count|$status|$entry_date|$rank|$owner|\n";
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
 					$b++;   $phone_found++;
 					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
 					}
@@ -549,7 +549,7 @@ foreach(@FILES)
 					$rank =					'5';
 					$owner =				'alt2';
 
-					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$comments|$called_count|$status|$entry_date|$rank|$owner|\n";
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
 					$b++;   $phone_found++;
 					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
 					}
@@ -560,7 +560,7 @@ foreach(@FILES)
 					$rank =					'6';
 					$owner =				'alt3';
 
-					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$comments|$called_count|$status|$entry_date|$rank|$owner|\n";
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
 					$b++;   $phone_found++;
 					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
 					}
@@ -571,7 +571,7 @@ foreach(@FILES)
 					$rank =					'7';
 					$owner =				'trigger1';
 
-					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$comments|$called_count|$status|$entry_date|$rank|$owner|\n";
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
 					$b++;   $phone_found++;
 					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
 					}
@@ -582,7 +582,7 @@ foreach(@FILES)
 					$rank =					'8';
 					$owner =				'trigger2';
 
-					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$comments|$called_count|$status|$entry_date|$rank|$owner|\n";
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
 					$b++;   $phone_found++;
 					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
 					}
@@ -593,7 +593,7 @@ foreach(@FILES)
 					$rank =					'9';
 					$owner =				'skiphome';
 
-					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$comments|$called_count|$status|$entry_date|$rank|$owner|\n";
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
 					$b++;   $phone_found++;
 					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
 					}
@@ -604,7 +604,7 @@ foreach(@FILES)
 					$rank =					'10';
 					$owner =				'skipwork';
 
-					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$comments|$called_count|$status|$entry_date|$rank|$owner|\n";
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
 					$b++;   $phone_found++;
 					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
 					}
@@ -615,7 +615,7 @@ foreach(@FILES)
 					$rank =					'11';
 					$owner =				'skipcell';
 
-					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$comments|$called_count|$status|$entry_date|$rank|$owner|\n";
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
 					$b++;   $phone_found++;
 					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
 					}
