@@ -12,10 +12,11 @@
 # 
 # CHANGELOG:
 # 101216-1355 - First Build
+# 101218-1520 - small time reload bug fix and formatting fixes
 #
 
-$version = '2.4-1';
-$build = '101215-0434';
+$version = '2.4-2';
+$build = '101218-1520';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -596,7 +597,7 @@ if (strlen($monitor_phone)>1)
 
 window.onload = startup;
 
-// function to detect the XY position on the page of the mouse
+// functions to detect the XY position on the page of the mouse
 function startup() 
 	{
 	hideDiv('webphone_content');
@@ -666,8 +667,8 @@ function hideDiv(divvar)
 		}
 	}
 
-// function to launch monitoring calls
 
+// function to launch monitoring calls
 function send_monitor(session_id,server_ip,stage)
 	{
 	//	alert(session_id + "|" + server_ip + "|" + monitor_phone + "|" + stage + "|" + user);
@@ -714,6 +715,7 @@ function send_monitor(session_id,server_ip,stage)
 		delete xmlhttp;
 		}
 	}
+
 
 // function to change in-groups selected for a specific agent
 function submit_ingroup_changes(temp_agent_user)
@@ -792,6 +794,7 @@ function submit_ingroup_changes(temp_agent_user)
 		}
 	}
 
+
 // function to display in-groups selected for a specific agent
 function ingroup_info(agent_user,count)
 	{
@@ -845,6 +848,7 @@ function ingroup_info(agent_user,count)
 		}
 	}
 
+
 // function to display in-groups selected for a specific agent
 function hide_ingroup_info()
 	{
@@ -879,6 +883,8 @@ function realtime_refresh_display()
 		}
 	}
 
+
+// function to gather calls and agents statistical content
 function gather_realtime_content()
 	{
 	var xmlhttp=false;
@@ -919,6 +925,8 @@ function gather_realtime_content()
 		}
 	}
 
+
+// function to update variables based upon on-page links and forms without reload page(in most cases)
 function update_variables(task_option,task_choice,force_reload)
 	{
 	if (task_option == 'SIPmonitorLINK')
@@ -1004,6 +1012,7 @@ function update_variables(task_option,task_choice,force_reload)
 		var RRFORM = document.getElementById('RR');
 		RR = RRFORM[RRFORM.selectedIndex].value;
 		ar_refresh=RR;
+		ar_seconds=RR;
 		var with_inboundFORM = document.getElementById('with_inbound');
 		with_inbound = with_inboundFORM[with_inboundFORM.selectedIndex].value;
 		var monitor_activeFORM = document.getElementById('monitor_active');
