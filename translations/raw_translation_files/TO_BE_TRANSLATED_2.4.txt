@@ -495,6 +495,7 @@ SHOW LEAD STATUSES IN THIS CAMPAIGN||
 RELOAD NOW||
 refresh||
 You can also set a label to ---HIDE--- to hide both the label and the field||
+For inbound only, you can also set the stop call time higher than 2400 if you want the call time to go beyond midnight. So if you want your call time to run from 6 am until 2 am the next day, you would put 0600 as the start time and 2600 as the stop time||
 
 
 AST_LISTS_campaign_stats.php

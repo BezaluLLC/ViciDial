@@ -6022,7 +6022,7 @@ if ($ADD==99999)
 
 	<BR>
 	<A NAME="vicidial_call_times-ct_default_start">
-	<B>Default Start and Stop Times -</B> This is the default time that calling will be allowed to be started or stopped within this call time definition if the day-of-the-week start time is not defined. 0 is midnight. To prevent calling completely set this field to 2400 and set the Default Stop time to 2400. To allow calling 24 hours a day set the start time to 0 and the stop time to 2400.
+	<B>Default Start and Stop Times -</B> This is the default time that calling will be allowed to be started or stopped within this call time definition if the day-of-the-week start time is not defined. 0 is midnight. To prevent calling completely set this field to 2400 and set the Default Stop time to 2400. To allow calling 24 hours a day set the start time to 0 and the stop time to 2400. For inbound only, you can also set the stop call time higher than 2400 if you want the call time to go beyond midnight. So if you want your call time to run from 6 am until 2 am the next day, you would put 0600 as the start time and 2600 as the stop time.
 
 	<BR>
 	<A NAME="vicidial_call_times-ct_sunday_start">

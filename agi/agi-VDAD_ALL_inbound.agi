@@ -143,6 +143,7 @@
 # 100903-0041 - Changed lead_id max length to 10 digits
 # 100929-1201 - Added add_lead_url feature
 # 101008-0410 - Added option for alternate Minimum Hold Time Message
+# 101219-2110 - Added call time overflow
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -956,7 +957,10 @@ else
 
 
 ##### BEGIN AFTER HOURS CHECK #####
-if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
+$ct_stop_overflow=0;   # allow for overflow time, past midnight
+if ($ct_default_stop > 2400)
+	{$ct_stop_overflow = ($ct_default_stop - 2400);}
+if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_stop_overflow) )
 	{
 	$VHqueryCID = "VA$CIDdate$hour$min$sec$sec";
 
@@ -975,7 +979,7 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 		$cbc++; 
 		}
 	$sthA->finish();
-	if ($AGILOG) {$agi_string = "--  AH VDCL vcl insert: |$affected_rows|$insert_lead_id|$insert_close_id|\n|$stmtA|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "--  AH VDCL vcl insert: |$affected_rows|$insert_lead_id|$insert_close_id|$hm|$ct_default_start|$ct_default_stop|$ct_stop_overflow\n|$stmtA|";   &agi_output;}
 
 	if ($VLEcount < 1)
 		{
@@ -1172,7 +1176,7 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 			$stmtA = "INSERT INTO vicidial_log_extended set uniqueid='$uniqueid',server_ip='$VARserver_ip',call_date='$now_date',lead_id = '$insert_lead_id',caller_code='$callerid',custom_call_id='$custom_call_id';";
 			$affected_rows = $dbhA->do($stmtA);
 				$dbhP=$dbhA;   $mysql_count='02146';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-			if ($AGILOG) {$agi_string = "--  AH VLE insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
+			if ($AGILOG) {$agi_string = "--  NANQUE VLE insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
 			$VLEcount++;
 			}
 
@@ -1582,7 +1586,7 @@ if ($VLEcount < 1)
 	$stmtA = "INSERT INTO vicidial_log_extended set uniqueid='$uniqueid',server_ip='$VARserver_ip',call_date='$now_date',lead_id = '$insert_lead_id',caller_code='$callerid',custom_call_id='$custom_call_id';";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02147';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-	if ($AGILOG) {$agi_string = "--  AH VLE insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "--  ENTER QUEUE VLE insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
 	$VLEcount++;
 	}
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_inbound_calltime_check.agi version 2.2.0
+# agi-VDAD_inbound_calltime_check.agi   version 2.4
 # 
 # Runs when a call comes in from an inbound call. This script will check the
 # settings of the defined calltime scheme in VICIDIAL and either send the call
@@ -26,7 +26,7 @@
 #exten => 1234,2,AGI(agi-VDAD_inbound_calltime_check.agi,INBOUND-----YES-----START-----24hours-----EXTENSION-----101-----default)
 #exten => 1234,3,Hangup
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 80525-0144 - First Build
@@ -36,6 +36,7 @@
 # 90504-1555 - Added call time scheme override
 # 90621-1130 - Fixed issue when no call time is specified
 # 91122-2353 - Added QueueMetrics logging as IVR INFO entries
+# 101219-2110 - Added call time overflow
 #
 
 $script = 'agi-VDAD_inbound_calltime_check.agi';
@@ -369,11 +370,11 @@ if ($sthArows > 0)
 $AGI->stream_file('sip-silence');
 $AGI->stream_file('sip-silence');
 
-
-
-
 ##### BEGIN AFTER HOURS CHECK #####
-if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
+$ct_stop_overflow=0;   # allow for overflow time, past midnight
+if ($ct_default_stop > 2400)
+	{$ct_stop_overflow = ($ct_default_stop - 2400);}
+if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_stop_overflow) )
 	{
 	$VHqueryCID = "VA$CIDdate$hour$min$sec$sec";
 
@@ -400,7 +401,7 @@ if ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) )
 
 			sleep(1);
 
-			if ($AGILOG) {$agi_string = "exiting the VDAD app after hours, transferring call to $DROPexten";   &agi_output;}
+			if ($AGILOG) {$agi_string = "exiting the VDAD app after hours, transferring call to $DROPexten   |$hm|$ct_default_start|$ct_default_stop|$ct_stop_overflow|";   &agi_output;}
 			print "SET CONTEXT $ext_context\n";
 				checkresult($result);
 			print "SET EXTENSION $DROPexten\n";
