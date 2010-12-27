@@ -2622,12 +2622,13 @@ else
 # 101208-0341 - Changed some descriptions and field names in Phones
 # 101209-2027 - Added display_leads_count option for campaign modification screens
 # 101216-1838 - Changed Realtime report links to go to new realtime_report
+# 101227-1320 - Added dialplan off toggle options
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-293';
-$build = '101216-1838';
+$admin_version = '2.4-294';
+$build = '101227-1320';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5919,7 +5920,7 @@ if ($ADD==99999)
 		<BR>
 		<A NAME="vicidial_user_groups-webphone_dialpad_override">
 		<BR>
-		<B>Webphone Dialpad Override -</B> This setting allows you to activate or deactivate the dialpad on the webphone just for the members of one user group. Default is DISABLED. TOGGLE will allow the user to view and hide the dialpad by clicking a link.
+		<B>Webphone Dialpad Override -</B> This setting allows you to activate or deactivate the dialpad on the webphone just for the members of one user group. Default is DISABLED. TOGGLE will allow the user to view and hide the dialpad by clicking a link. TOGGLE_OFF will default to not show the dialpad on first load, but will allow the user to show the dialpad by clicking on the dialpad link.
 
 		<?php
 		}
@@ -6267,7 +6268,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="phones-webphone_dialpad">
 	<BR>
-	<B>Webphone Dialpad -</B>  This setting allows you to activate or deactivate the dialpad for this webphone. Default is Y for enabled. TOGGLE will allow the user to view and hide the dialpad by clicking a link. This feature is not available on all webphone versions.
+	<B>Webphone Dialpad -</B>  This setting allows you to activate or deactivate the dialpad for this webphone. Default is Y for enabled. TOGGLE will allow the user to view and hide the dialpad by clicking a link. This feature is not available on all webphone versions. TOGGLE_OFF will default to not show the dialpad on first load, but will allow the user to show the dialpad by clicking on the dialpad link.
 
 	<BR>
 	<A NAME="phones-use_external_server_ip">
@@ -23886,7 +23887,7 @@ if ($ADD==311111)
 
 			echo "<tr bgcolor=#B6D3FC><td align=right>Webphone System Key Override: </td><td align=left><input type=text name=webphone_systemkey_override size=60 maxlength=100 value=\"$webphone_systemkey_override\"> $NWB#vicidial_user_groups-webphone_systemkey_override$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>Webphone Dialpad Override: </td><td align=left><select size=1 name=webphone_dialpad_override><option>DISABLED</option><option>Y</option><option>N</option><option>TOGGLE</option><option SELECTED>$webphone_dialpad_override</option></select>$NWB#vicidial_user_groups-webphone_dialpad_override$NWE</td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right>Webphone Dialpad Override: </td><td align=left><select size=1 name=webphone_dialpad_override><option>DISABLED</option><option>Y</option><option>N</option><option>TOGGLE</option><option>TOGGLE_OFF</option><option SELECTED>$webphone_dialpad_override</option></select>$NWB#vicidial_user_groups-webphone_dialpad_override$NWE</td></tr>\n";
 			}
 		else
 			{
@@ -24687,7 +24688,7 @@ if ($ADD==31111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Login Password: </td><td align=left><input type=text name=pass size=10 maxlength=10 value=\"$row[7]\">$NWB#phones-pass$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Registration Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_pass name=conf_secret size=20 maxlength=20 value=\"$row[72]\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\">$NWB#phones-conf_secret$NWE &nbsp; &nbsp; Strength: <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Set As Webphone: </td><td align=left><select size=1 name=is_webphone><option>Y</option><option>N</option><option selected>$row[74]</option></select>$NWB#phones-is_webphone$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Webphone Dialpad: </td><td align=left><select size=1 name=webphone_dialpad><option>Y</option><option>N</option><option>TOGGLE</option><option SELECTED>$row[78]</option></select>$NWB#phones-webphone_dialpad$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Webphone Dialpad: </td><td align=left><select size=1 name=webphone_dialpad><option>Y</option><option>N</option><option>TOGGLE</option><option>TOGGLE_OFF</option><option SELECTED>$row[78]</option></select>$NWB#phones-webphone_dialpad$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Use External Server IP: </td><td align=left><select size=1 name=use_external_server_ip><option>Y</option><option>N</option><option selected>$row[75]</option></select>$NWB#phones-use_external_server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Status: </td><td align=left><select size=1 name=status><option>ACTIVE</option><option>SUSPENDED</option><option>CLOSED</option><option>PENDING</option><option>ADMIN</option><option selected>$row[8]</option></select>$NWB#phones-status$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active Account: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option selected>$row[9]</option></select>$NWB#phones-active$NWE</td></tr>\n";

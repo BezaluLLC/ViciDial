@@ -633,3 +633,8 @@ UPDATE system_settings SET db_schema_version='1255',db_schema_update_date=NOW();
 ALTER TABLE vicidial_campaigns ADD display_leads_count ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1256',db_schema_update_date=NOW();
+
+ALTER TABLE phones MODIFY webphone_dialpad ENUM('Y','N','TOGGLE','TOGGLE_OFF') default 'Y';
+ALTER TABLE vicidial_user_groups MODIFY webphone_dialpad_override ENUM('DISABLED','Y','N','TOGGLE','TOGGLE_OFF') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1257',db_schema_update_date=NOW();

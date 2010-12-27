@@ -17,7 +17,7 @@ $webphone_top =		'27';
 $webphone_bufw =	'250';
 $webphone_bufh =	'1';
 $webphone_pad =		'10';
-$webphone_clpos =	'<BR>';
+$webphone_clpos =	"<BR>  &nbsp; <a href=\"#\" onclick=\"hideDiv('webphone_content');\">webphone -</a>";
 
 # example using thin webphone
 #$webphone_width =       '1135';

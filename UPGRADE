@@ -426,6 +426,10 @@ OTHER CHANGES:
 98. Added preprocess leads in script to filter leads and generate standard
 	format lead files before being imported
 
+99. Added the ability to have call times go beyond midnight for inbound calls.
+
+100. Added capability for agent interface to have webphone as a thin top bar
+
 
 
 

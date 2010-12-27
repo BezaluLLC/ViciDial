@@ -46,8 +46,16 @@ $BROWSER_HEIGHT			= 500;	# set to the minimum browser height, default=500
 $BROWSER_WIDTH			= 770;	# set to the minimum browser width, default=770
 $webphone_width			= 460;	# set the webphone frame width
 $webphone_height		= 500;	# set the webphone frame height
+$webphone_pad			= 0;	# set the table cellpadding for the webphone
+$webphone_location		= 'right';	# set the location on the agent screen 'right' or 'bar'
 $MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
 $SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
 $SIDEBAR_COLOR			= '#F6F6F6';
+
+# thin bar webphone settings:
+#	$webphone_width			= 1085;	# set the webphone frame width
+#	$webphone_height		= 36;	# set the webphone frame height
+#	$webphone_pad			= 0;	# set the table cellpadding for the webphone
+#	$webphone_location		= 'bar';	# set the location on the agent screen 'right' or 'bar'
 
 ?>

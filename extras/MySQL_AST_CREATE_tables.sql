@@ -77,7 +77,7 @@ is_webphone ENUM('Y','N') default 'N',
 use_external_server_ip ENUM('Y','N') default 'N',
 codecs_list VARCHAR(100) default '',
 codecs_with_template ENUM('0','1') default '0',
-webphone_dialpad ENUM('Y','N','TOGGLE') default 'Y',
+webphone_dialpad ENUM('Y','N','TOGGLE','TOGGLE_OFF') default 'Y',
 index (server_ip),
 unique index extenserver (extension, server_ip)
 );
@@ -608,7 +608,7 @@ agent_fullscreen ENUM('Y','N') default 'N',
 allowed_reports VARCHAR(2000) default 'ALL REPORTS',
 webphone_url_override VARCHAR(255) default '',
 webphone_systemkey_override VARCHAR(100) default '',
-webphone_dialpad_override ENUM('DISABLED','Y','N','TOGGLE') default 'DISABLED'
+webphone_dialpad_override ENUM('DISABLED','Y','N','TOGGLE','TOGGLE_OFF') default 'DISABLED'
 );
 
 CREATE TABLE vicidial_campaigns (
@@ -2411,7 +2411,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1256',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1257',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

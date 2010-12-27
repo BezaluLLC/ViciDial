@@ -327,10 +327,11 @@
 # 101207-1621 - Added scroll to the top after in-group, pause code, etc... selections, and added focus blur to several functions
 # 101208-1210 - Fixed focus/blur coding to work after Dispo
 # 101216-1758 - Added the ability to hide fields if the label is set to ---HIDE--- in System Settings
+# 101227-1645 - Added dialplan off toggle options, and settings and code changes for top bar webphone
 #
 
-$version = '2.4-304';
-$build = '101216-1758';
+$version = '2.4-305';
+$build = '101227-1645';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=69;
 $one_mysql_log=0;
@@ -444,53 +445,56 @@ if ($qm_conf_ct > 0)
 ##### DEFINABLE SETTINGS AND OPTIONS
 ###########################################
 
+# set defaults for hard-coded variables
+$conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
+$dtmf_silent_prefix		= '7';	# vicidial_conferences prefix to enter silently
+$HKuser_level			= '5';	# minimum vicidial user_level for HotKeys
+$campaign_login_list	= '1';	# show drop-down list of campaigns at login	
+$manual_dial_preview	= '1';	# allow preview lead option when manual dial
+$multi_line_comments	= '1';	# set to 1 to allow multi-line comment box
+$user_login_first		= '0';	# set to 1 to have the vicidial_user login before the phone login
+$view_scripts			= '1';	# set to 1 to show the SCRIPTS tab
+$dispo_check_all_pause	= '0';	# set to 1 to allow for persistent pause after dispo
+$callholdstatus			= '1';	# set to 1 to show calls on hold count
+$agentcallsstatus		= '0';	# set to 1 to show agent status and call dialed count
+   $campagentstatctmax	= '3';	# Number of seconds for campaign call and agent stats
+$show_campname_pulldown	= '1';	# set to 1 to show campaign name on login pulldown
+$webform_sessionname	= '1';	# set to 1 to include the session_name in webform URL
+$local_consult_xfers	= '1';	# set to 1 to send consultative transfers from original server
+$clientDST				= '1';	# set to 1 to check for DST on server for agent time
+$no_delete_sessions		= '1';	# set to 1 to not delete sessions at logout
+$volumecontrol_active	= '1';	# set to 1 to allow agents to alter volume of channels
+$PreseT_DiaL_LinKs		= '0';	# set to 1 to show a DIAL link for Dial Presets
+$LogiNAJAX				= '1';	# set to 1 to do lookups on campaigns for login
+$HidEMonitoRSessionS	= '1';	# set to 1 to hide remote monitoring channels from "session calls"
+$hangup_all_non_reserved= '1';	# set to 1 to force hangup all non-reserved channels upon Hangup Customer
+$LogouTKicKAlL			= '1';	# set to 1 to hangup all calls in session upon agent logout
+$PhonESComPIP			= '1';	# set to 1 to log computer IP to phone if blank, set to 2 to force log each login
+$DefaulTAlTDiaL			= '0';	# set to 1 to enable ALT DIAL by default if enabled for the campaign
+$AgentAlert_allowed		= '1';	# set to 1 to allow Agent alert option
+$disable_blended_checkbox='0';	# set to 1 to disable the BLENDED checkbox from the in-group chooser screen
+$hide_timeclock_link	= '0';	# set to 1 to hide the timeclock link on the agent login screen
+$conf_check_attempts	= '3';	# number of attempts to try before loosing webserver connection, for bad network setups
+
+$TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
+
+$stretch_dimensions		= '1';	# sets the vicidial screen to the size of the browser window
+$BROWSER_HEIGHT			= 500;	# set to the minimum browser height, default=500
+$BROWSER_WIDTH			= 770;	# set to the minimum browser width, default=770
+$webphone_width			= 460;	# set the webphone frame width
+$webphone_height		= 500;	# set the webphone frame height
+$webphone_pad			= 0;	# set the table cellpadding for the webphone
+$webphone_location		= 'right';	# set the location on the agent screen 'right' or 'bar'
+$MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
+$SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
+$FORM_COLOR				= '#EFEFEF';
+$SIDEBAR_COLOR			= '#F6F6F6';
+
+# if options file exists, use the override values for the above variables
+#   see the options-example.php file for more information
 if (file_exists('options.php'))
 	{
 	require('options.php');
-	}
-else
-	{
-	$conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
-	$dtmf_silent_prefix		= '7';	# vicidial_conferences prefix to enter silently
-	$HKuser_level			= '5';	# minimum vicidial user_level for HotKeys
-	$campaign_login_list	= '1';	# show drop-down list of campaigns at login	
-	$manual_dial_preview	= '1';	# allow preview lead option when manual dial
-	$multi_line_comments	= '1';	# set to 1 to allow multi-line comment box
-	$user_login_first		= '0';	# set to 1 to have the vicidial_user login before the phone login
-	$view_scripts			= '1';	# set to 1 to show the SCRIPTS tab
-	$dispo_check_all_pause	= '0';	# set to 1 to allow for persistent pause after dispo
-	$callholdstatus			= '1';	# set to 1 to show calls on hold count
-	$agentcallsstatus		= '0';	# set to 1 to show agent status and call dialed count
-	   $campagentstatctmax	= '3';	# Number of seconds for campaign call and agent stats
-	$show_campname_pulldown	= '1';	# set to 1 to show campaign name on login pulldown
-	$webform_sessionname	= '1';	# set to 1 to include the session_name in webform URL
-	$local_consult_xfers	= '1';	# set to 1 to send consultative transfers from original server
-	$clientDST				= '1';	# set to 1 to check for DST on server for agent time
-	$no_delete_sessions		= '1';	# set to 1 to not delete sessions at logout
-	$volumecontrol_active	= '1';	# set to 1 to allow agents to alter volume of channels
-	$PreseT_DiaL_LinKs		= '0';	# set to 1 to show a DIAL link for Dial Presets
-	$LogiNAJAX				= '1';	# set to 1 to do lookups on campaigns for login
-	$HidEMonitoRSessionS	= '1';	# set to 1 to hide remote monitoring channels from "session calls"
-	$hangup_all_non_reserved= '1';	# set to 1 to force hangup all non-reserved channels upon Hangup Customer
-	$LogouTKicKAlL			= '1';	# set to 1 to hangup all calls in session upon agent logout
-	$PhonESComPIP			= '1';	# set to 1 to log computer IP to phone if blank, set to 2 to force log each login
-	$DefaulTAlTDiaL			= '0';	# set to 1 to enable ALT DIAL by default if enabled for the campaign
-	$AgentAlert_allowed		= '1';	# set to 1 to allow Agent alert option
-	$disable_blended_checkbox='0';	# set to 1 to disable the BLENDED checkbox from the in-group chooser screen
-	$hide_timeclock_link	= '0';	# set to 1 to hide the timeclock link on the agent login screen
-	$conf_check_attempts	= '3';	# number of attempts to try before loosing webserver connection, for bad network setups
-
-	$TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
-
-	$stretch_dimensions		= '1';	# sets the vicidial screen to the size of the browser window
-	$BROWSER_HEIGHT			= 500;	# set to the minimum browser height, default=500
-	$BROWSER_WIDTH			= 770;	# set to the minimum browser width, default=770
-	$webphone_width			= 460;	# set the webphone frame width
-	$webphone_height		= 500;	# set the webphone frame height
-	$MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
-	$SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
-	$FORM_COLOR				= '#EFEFEF';
-	$SIDEBAR_COLOR			= '#F6F6F6';
 	}
 
 ### BEGIN find any custom field labels ###
@@ -2236,7 +2240,9 @@ else
 					}
 				$webphone_options='INITIAL_LOAD';
 				if ($webphone_dialpad == 'Y') {$webphone_options .= "--DIALPAD_Y";}
+				if ($webphone_dialpad == 'N') {$webphone_options .= "--DIALPAD_N";}
 				if ($webphone_dialpad == 'TOGGLE') {$webphone_options .= "--DIALPAD_TOGGLE";}
+				if ($webphone_dialpad == 'TOGGLE_OFF') {$webphone_options .= "--DIALPAD_OFF_TOGGLE";}
 
 				### base64 encode variables
 				$b64_phone_login =		base64_encode($extension);
@@ -2250,7 +2256,14 @@ else
 				$b64_system_key =		base64_encode($system_key);
 
 				$WebPhonEurl = "$webphone_url?phone_login=$b64_phone_login&phone_login=$b64_phone_login&phone_pass=$b64_phone_pass&server_ip=$b64_server_ip&callerid=$b64_callerid&protocol=$b64_protocol&codecs=$b64_codecs&options=$b64_options&system_key=$b64_system_key";
-				$webphone_content = "<iframe src=\"$WebPhonEurl\" style=\"width:" . $webphone_width . ";height:" . $webphone_height . ";background-color:transparent;z-index:17;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"webphone\" name=\"webphone\" width=\"" . $webphone_width . "\" height=\"" . $webphone_height . "\"> </iframe>";
+				if ($webphone_location == 'bar')
+					{
+					$webphone_content = "<iframe src=\"$WebPhonEurl\" style=\"width:" . $webphone_width . ";height:" . $webphone_height . ";background-color:transparent;z-index:17;\" scrolling=\"no\" frameborder=\"0\" allowtransparency=\"true\" id=\"webphone\" name=\"webphone\" width=\"" . $webphone_width . "\" height=\"" . $webphone_height . "\"> </iframe>";
+					}
+				else
+					{
+					$webphone_content = "<iframe src=\"$WebPhonEurl\" style=\"width:" . $webphone_width . ";height:" . $webphone_height . ";background-color:transparent;z-index:17;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"webphone\" name=\"webphone\" width=\"" . $webphone_width . "\" height=\"" . $webphone_height . "\"> </iframe>";
+					}
 				}
 
 			##### grab the campaign_weight and number of calls today on that campaign for the agent
@@ -2553,6 +2566,7 @@ $MASTERwidth=($BROWSER_WIDTH - 340);
 $MASTERheight=($BROWSER_HEIGHT - 200);
 if ($MASTERwidth < 430) {$MASTERwidth = '430';} 
 if ($MASTERheight < 300) {$MASTERheight = '300';} 
+if ($webphone_location == 'bar') {$MASTERwidth = ($MASTERwidth + $webphone_height);}
 
 $CAwidth =  ($MASTERwidth + 340);	# 770 - cover all (none-in-session, customer hunngup, etc...)
 $SBwidth =	($MASTERwidth + 331);	# 761 - SideBar starting point
@@ -2581,6 +2595,15 @@ $CBheight =  ($MASTERheight + 50);	# 350 - Agent Callback, pause code, volume co
 $SSheight =  ($MASTERheight + 31);	# 331 - script content
 $HTheight =  ($MASTERheight + 10);	# 310 - transfer frame, callback comments and hotkey
 $BPheight =  ($MASTERheight - 250);	# 50 - bottom buffer, Agent Xfer Span
+$SCheight =	 49;	# 49 - seconds on call display
+$SFheight =	 65;	# 65 - height of the script and form contents
+$SRheight =	 69;	# 69 - height of the script and form refrech links
+if ($webphone_location == 'bar') 
+	{
+	$SCheight = ($SCheight + $webphone_height);
+#	$SFheight = ($SFheight + $webphone_height);
+	$SRheight = ($SRheight + $webphone_height);
+	}
 $AVTheight = '0';
 if ($is_webphone) {$AVTheight = '20';}
 
@@ -11459,7 +11482,14 @@ $zi=2;
 <!-- BEGIN *********   Here is the main VICIDIAL display panel -->
 <span style="position:absolute;left:0px;top:46px;z-index:<?php $zi++; echo $zi ?>;" id="MainPanel">
 	<TABLE border=0 BGCOLOR="<?php echo $MAIN_COLOR ?>" width=<?php echo $MNwidth ?> id="MainTable">
-	<TR><TD colspan=3><font class="body_text"> STATUS: <span id="MainStatuSSpan"></span></font></TD></TR>
+	<TR><TD colspan=3>
+	<?php
+	if ($webphone_location == 'bar')
+		{
+		echo "<img src=\"images/pixel.gif\" width=1 height=$webphone_height><br>\n";
+		}
+	?>	
+	<font class="body_text"> STATUS: <span id="MainStatuSSpan"></span></font></TD></TR>
 	<tr><td colspan=3><span id="busycallsdebug"></span></td></tr>
 	<tr><td width=150 align=left valign=top>
 	<font class="body_text"><center>
@@ -11743,7 +11773,7 @@ $zi=2;
 <span style="position:absolute;left:<?php echo $HKwidth ?>px;top:<?php echo $HKheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="hotkeysdisplay"><a href="#" onMouseOver="HotKeys('ON')"><IMG SRC="./images/vdc_XB_hotkeysactive_OFF.gif" border=0 alt="HOT KEYS INACTIVE"></a></span>
 <?php } ?>
 
-<span style="position:absolute;left:<?php echo $SCwidth ?>px;top:49px;z-index:<?php $zi++; echo $zi ?>;" id="SecondSspan"><font class="body_text"> seconds: 
+<span style="position:absolute;left:<?php echo $SCwidth ?>px;top:<?php echo $SCheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="SecondSspan"><font class="body_text"> seconds: 
 <span id="SecondSDISP"> &nbsp; &nbsp; </span>
 </font></span>
 
@@ -11784,8 +11814,19 @@ if ($view_calls_in_queue > 0)
 <span style="position:absolute;left:<?php echo $SBwidth ?>px;top:<?php echo $AVTheight ?>px;height:500;overflow:scroll;z-index:<?php $zi++; echo $zi ?>;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentViewSpan"><TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">
 Other Agents Status: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="AgentViewStatus">&nbsp;</span></TD></TR></TABLE></span>
 
-<span style="position:absolute;left:<?php echo $SBwidth ?>px;top:15px;height:500;overflow:scroll;z-index:<?php $zi++; echo $zi ?>;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="webphoneSpan"><TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class="body_text">
-Web Phone: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id="webphonecontent"><?php echo $webphone_content ?></span></TD></TR></TABLE></span>
+<?php
+$zi++;
+if ($webphone_location == 'bar')
+	{
+	echo "<span style=\"position:absolute;left:0px;top:46px;height:$webphone_height;width=$webphone_width;overflow:hidden;z-index:$zi;background-color:$SIDEBAR_COLOR;\" id=\"webphoneSpan\"><span id=\"webphonecontent\" style=\"overflow:hidden;\">$webphone_content</span></span>\n";
+	}
+else
+	{
+	echo "<span style=\"position:absolute;left:" . $SBwidth . "px;top:15px;height:500;overflow:scroll;z-index:$zi;background-color:$SIDEBAR_COLOR;\" id=\"webphoneSpan\"><TABLE CELLPADDING=$webphone_pad CELLSPACING=0 BORDER=0><TR><TD width=5 ROWSPAN=2>&nbsp;</TD><TD ALIGN=CENTER><font class=\"body_text\">
+	Web Phone: &nbsp; </font></TD></TR><TR><TD ALIGN=CENTER><span id=\"webphonecontent\">$webphone_content</span></TD></TR></TABLE></span>\n";
+	}
+?>
+
 
 <span style="position:absolute;left:<?php echo $SCwidth ?>px;top:<?php echo $SLheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="AgentViewLinkSpan"><TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 WIDTH=91><TR><TD ALIGN=RIGHT><font class="body_small"><span id="AgentViewLink"><a href="#" onclick="AgentsViewOpen('AgentViewSpan','open');return false;">Agents View +</a></span></font></TD></TR></TABLE></span>
 
@@ -11811,19 +11852,27 @@ if ($agent_display_dialable_leads > 0)
 
 <span style="position:absolute;left:<?php echo $MUwidth ?>px;top:<?php echo $SLheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="AgentMuteSpan"></span>
 
-<span style="position:absolute;left:154px;top:65px;z-index:<?php $zi++; echo $zi ?>;" id="ScriptPanel">
+<span style="position:absolute;left:154px;top:<?php echo $SFheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="ScriptPanel">
+	<?php
+	if ($webphone_location == 'bar')
+		{echo "<img src=\"images/pixel.gif\" width=1 height=$webphone_height><br>\n";}
+	?>
     <TABLE border=0 bgcolor="<?php echo $SCRIPT_COLOR ?>" width=<?php echo $SSwidth ?> height=<?php echo $SSheight ?>><TR><TD align=left valign=top><font class="sb_text"><div class="noscroll_script" id="ScriptContents">AGENT SCRIPT</div></font></TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:<?php echo $AMwidth ?>px;top:69px;z-index:<?php $zi++; echo $zi ?>;" id="ScriptRefresH">
+<span style="position:absolute;left:<?php echo $AMwidth ?>px;top:<?php echo $SRheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="ScriptRefresH">
 <a href="#" onclick="RefresHScript()"><font class="body_small">refresh</font></a>
 </span>
 
-<span style="position:absolute;left:154px;top:65px;z-index:<?php $zi++; echo $zi ?>;" id="FormPanel">
+<span style="position:absolute;left:154px;top:<?php echo $SFheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="FormPanel">
+	<?php
+	if ($webphone_location == 'bar')
+		{echo "<img src=\"images/pixel.gif\" width=1 height=$webphone_height><br>\n";}
+	?>
     <TABLE border=0 bgcolor="<?php echo $SCRIPT_COLOR ?>" width=<?php echo $SSwidth ?> height=<?php echo $SSheight ?>><TR><TD align=left valign=top><font class="sb_text"><div class="noscroll_script" id="FormContents"><iframe src="./vdc_form_display.php?lead_id=&list_id=&stage=WELCOME" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="vcFormIFrame" name="vcFormIFrame" width="<?php echo $SDwidth ?>" height="<?php echo $SSheight ?>" STYLE="z-index:18"> </iframe></div></font></TD></TR></TABLE>
 </span>
 
-<span style="position:absolute;left:<?php echo $AMwidth ?>px;top:69px;z-index:<?php $zi++; echo $zi ?>;" id="FormRefresH">
+<span style="position:absolute;left:<?php echo $AMwidth ?>px;top:<?php echo $SRheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="FormRefresH">
 <a href="#" onclick="FormContentsLoad()"><font class="body_small">refresh</font></a>
 </span>
 
@@ -12062,6 +12111,10 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="DispoSelectBox">
     <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> DISPOSITION CALL :<span id="DispoSelectPhonE"></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectHAspan"><a href="#" onclick="DispoHanguPAgaiN()">Hangup Again</a></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectMaxMin"><a href="#" onclick="DispoMinimize()"> minimize </a></span><BR>
+	<?php
+	if ($webphone_location == 'bar')
+		{echo "<br><img src=\"images/pixel.gif\" width=1 height=$webphone_height><br>\n";}
+	?>
 	<span id="Dispo3wayMessage"></span>
 	<span id="DispoManualQueueMessage"></span>
 	<span id="DispoSelectContent"> End-of-call Disposition Selection </span>
@@ -12077,6 +12130,10 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="CallBackSelectBox">
     <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> Select a CallBack Date :<span id="CallBackDatE"></span><BR>
+	<?php
+	if ($webphone_location == 'bar')
+		{echo "<br><img src=\"images/pixel.gif\" width=1 height=$webphone_height><br>\n";}
+	?>
 	<input type=hidden name=CallBackDatESelectioN ID="CallBackDatESelectioN">
 	<input type=hidden name=CallBackTimESelectioN ID="CallBackTimESelectioN">
 	<span id="CallBackDatEPrinT">Select a Date Below</span> &nbsp;
@@ -12131,6 +12188,10 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="CallBacKsLisTBox">
     <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> CALLBACKS FOR AGENT <?php echo $VD_login ?>:<BR>Click on a callback below to call the customer back now. If you click on a record below to call it, it will be removed from the list.
 	<BR>
+	<?php
+	if ($webphone_location == 'bar')
+		{echo "<br><img src=\"images/pixel.gif\" width=1 height=$webphone_height><br>\n";}
+	?>
 	<div class="scroll_callback" id="CallBacKsLisT"></div>
 	<BR> &nbsp; 
 	<a href="#" onclick="CalLBacKsLisTCheck();return false;">Refresh</a>
@@ -12183,6 +12244,10 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="CloserSelectBox">
     <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> CLOSER INBOUND GROUP SELECTION <BR>
+	<?php
+	if ($webphone_location == 'bar')
+		{echo "<br><img src=\"images/pixel.gif\" width=1 height=$webphone_height><br>\n";}
+	?>
 	<span id="CloserSelectContent"> Closer Inbound Group Selection </span>
 	<input type=hidden name=CloserSelectList><BR>
 	<?php
@@ -12201,6 +12266,10 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="TerritorySelectBox">
     <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> TERRITORY SELECTION <BR>
+	<?php
+	if ($webphone_location == 'bar')
+		{echo "<br><img src=\"images/pixel.gif\" width=1 height=$webphone_height><br>\n";}
+	?>
 	<span id="TerritorySelectContent"> Territory Selection </span>
 	<input type=hidden name=TerritorySelectList><BR>
 	<a href="#" onclick="TerritorySelectContent_create();return false;"> RESET </a> | 
@@ -12222,6 +12291,10 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="CalLLoGDisplaYBox">
     <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> AGENT CALL LOG:<BR>
+	<?php
+	if ($webphone_location == 'bar')
+		{echo "<br><img src=\"images/pixel.gif\" width=1 height=$webphone_height><br>\n";}
+	?>
 	<div class="scroll_calllog" id="CallLogSpan"> Call log List </div>
 	<BR><BR> &nbsp; 
 	</TD></TR></TABLE>
@@ -12229,6 +12302,10 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="LeaDInfOBox">
     <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> Customer Information:<BR>
+	<?php
+	if ($webphone_location == 'bar')
+		{echo "<br><img src=\"images/pixel.gif\" width=1 height=$webphone_height><br>\n";}
+	?>
 	<span id="LeaDInfOSpan"> Lead Info </span>
 	<BR><BR> &nbsp; 
 	</TD></TR></TABLE>
@@ -12236,6 +12313,10 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="PauseCodeSelectBox">
     <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> SELECT A PAUSE CODE :<BR>
+	<?php
+	if ($webphone_location == 'bar')
+		{echo "<br><img src=\"images/pixel.gif\" width=1 height=$webphone_height><br>\n";}
+	?>
 	<span id="PauseCodeSelectContent"> Pause Code Selection </span>
 	<input type=hidden name=PauseCodeSelection>
 	<BR><BR> &nbsp; 
@@ -12244,6 +12325,10 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 
 <span style="position:absolute;left:<?php echo $PBwidth ?>px;top:40px;z-index:<?php $zi++; echo $zi ?>;" id="PresetsSelectBox">
     <TABLE border=0 bgcolor="#9999FF" width=400 height=<?php echo $HTheight ?>><TR><TD align=center VALIGN=top> SELECT A PRESET :<BR>
+	<?php
+	if ($webphone_location == 'bar')
+		{echo "<br><img src=\"images/pixel.gif\" width=1 height=$webphone_height><br>\n";}
+	?>
 	<span id="PresetsSelectBoxContent"> Presets Selection </span>
 	<input type=hidden name=PresetSelection> 
 	</TD></TR></TABLE>
@@ -12251,6 +12336,10 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></CENTER></font
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="GroupAliasSelectBox">
     <TABLE border=1 bgcolor="#CCFFCC" width=<?php echo $CAwidth ?> height=<?php echo $WRheight ?>><TR><TD align=center VALIGN=top> SELECT A GROUP ALIAS :<BR>
+	<?php
+	if ($webphone_location == 'bar')
+		{echo "<br><img src=\"images/pixel.gif\" width=1 height=$webphone_height><br>\n";}
+	?>
 	<span id="GroupAliasSelectContent"> Group Alias Selection </span>
 	<input type=hidden name=GroupAliasSelection>
 	<BR><BR> &nbsp; 

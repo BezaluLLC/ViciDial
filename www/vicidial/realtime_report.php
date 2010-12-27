@@ -161,7 +161,7 @@ $webphone_top =		'27';
 $webphone_bufw =	'250';
 $webphone_bufh =	'1';
 $webphone_pad =		'10';
-$webphone_clpos =	'<BR>';
+$webphone_clpos =	"<BR>  &nbsp; <a href=\"#\" onclick=\"hideDiv('webphone_content');\">webphone -</a>";
 
 if (file_exists('options.php'))
 	{
@@ -219,8 +219,6 @@ $LOGallowed_reports =			$row[1];
 $webphone_url =					$row[2];
 $webphone_dialpad_override =	$row[3];
 $system_key =					$row[4];
-if ( ($webphone_dialpad_override != 'DISABLED') and (strlen($webphone_dialpad_override) > 0) )
-	{$webphone_dialpad = $webphone_dialpad_override;}
 
 if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 	{
@@ -564,9 +562,14 @@ if (strlen($monitor_phone)>1)
 					$system_key =$row[0];
 					}
 				}
+		#	echo "<!-- debug: $webphone_dialpad|$webphone_dialpad_override|$monitor_phone|$extension -->";
+			if ( ($webphone_dialpad_override != 'DISABLED') and (strlen($webphone_dialpad_override) > 0) )
+				{$webphone_dialpad = $webphone_dialpad_override;}
 			$webphone_options='INITIAL_LOAD';
 			if ($webphone_dialpad == 'Y') {$webphone_options .= "--DIALPAD_Y";}
+			if ($webphone_dialpad == 'N') {$webphone_options .= "--DIALPAD_N";}
 			if ($webphone_dialpad == 'TOGGLE') {$webphone_options .= "--DIALPAD_TOGGLE";}
+			if ($webphone_dialpad == 'TOGGLE_OFF') {$webphone_options .= "--DIALPAD_OFF_TOGGLE";}
 			$session_name='RTS01234561234567890';
 
 			### base64 encode variables
@@ -667,6 +670,21 @@ function hideDiv(divvar)
 		}
 	}
 
+function ShowWebphone(divvis)
+	{
+	if (divvis == 'show')
+		{
+		divref = document.getElementById('webphone_content').style;
+		divref.visibility = 'visible';
+		document.getElementById("webphone_visibility").innerHTML = "<a href=\"#\" onclick=\"ShowWebphone('hide');\">webphone -</a>";
+		}
+	else
+		{
+		divref = document.getElementById('webphone_content').style;
+		divref.visibility = 'hidden';
+		document.getElementById("webphone_visibility").innerHTML = "<a href=\"#\" onclick=\"ShowWebphone('show');\">webphone +</a>";
+		}
+	}
 
 // function to launch monitoring calls
 function send_monitor(session_id,server_ip,stage)
@@ -1147,23 +1165,22 @@ echo "<INPUT TYPE=HIDDEN NAME=cursorY ID=cursorY>\n";
 #echo "<INPUT TYPE=HIDDEN NAME=AGENTtimeSTATS ID=AGENTtimeSTATS VALUE=\"$AGENTtimeSTATS\">\n";
 
 echo "Real-Time Report &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; \n";
-echo "<span style=\"position:absolute;left:160px;top:27px;z-index:19;\" id=campaign_select_list_link>\n";
+echo "<span style=\"position:absolute;left:160px;top:27px;z-index:20;\" id=campaign_select_list_link>\n";
 echo "<TABLE WIDTH=250 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#D9E6FE\"><TR><TD ALIGN=CENTER>\n";
 echo "<a href=\"#\" onclick=\"showDiv('campaign_select_list');\">Choose Report Display Options</a>";
 echo "</TD></TR></TABLE>\n";
 echo "</span>\n";
-echo "<span style=\"position:absolute;left:0px;top:27px;z-index:20;\" id=campaign_select_list>\n";
+echo "<span style=\"position:absolute;left:0px;top:27px;z-index:21;\" id=campaign_select_list>\n";
 echo "<TABLE WIDTH=250 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#D9E6FE\"><TR><TD ALIGN=CENTER>\n";
 echo "";
 echo "</TD></TR></TABLE>\n";
 echo "</span>\n";
 echo "<span style=\"position:absolute;left:" . $webphone_left . "px;top:" . $webphone_top . "px;z-index:18;\" id=webphone_content>\n";
-echo "<TABLE WIDTH=" . $webphone_bufw . " CELLPADDING=" . $webphone_pad . " CELLSPACING=0 BGCOLOR=\"#D9E6FE\"><TR><TD ALIGN=LEFT>\n";
+echo "<TABLE WIDTH=" . $webphone_bufw . " CELLPADDING=" . $webphone_pad . " CELLSPACING=0 BGCOLOR=\"white\"><TR><TD ALIGN=LEFT>\n";
 echo "$webphone_content\n$webphone_clpos\n";
-echo " &nbsp; <a href=\"#\" onclick=\"hideDiv('webphone_content');\">webphone -</a>";
 echo "</TD></TR></TABLE>\n";
 echo "</span>\n";
-echo "<span style=\"position:absolute;left:10px;top:120px;z-index:16;\" id=agent_ingroup_display>\n";
+echo "<span style=\"position:absolute;left:10px;top:120px;z-index:14;\" id=agent_ingroup_display>\n";
 echo " &nbsp; ";
 echo "</span>\n";
 echo "<a href=\"#\" onclick=\"update_variables('form_submit','','YES')\">RELOAD NOW</a>";
@@ -1178,9 +1195,9 @@ echo "<a href=\"./AST_timeonVDADallSUMMARY.php?RR=$RR&DB=$DB&adastats=$adastats\
 echo " &nbsp; &nbsp; &nbsp; refresh: <span id=refresh_countdown name=refresh_countdown></span>\n\n";
 
 if ($is_webphone == 'Y')
-	{echo " &nbsp; &nbsp; &nbsp; <span id=webphone name=webphone><a href=\"#\" onclick=\"showDiv('webphone_content');\">webphone +</a></span>\n\n";}
+	{echo " &nbsp; &nbsp; &nbsp; <span id=webphone_visibility name=webphone_visibility><a href=\"#\" onclick=\"ShowWebphone('show');\">webphone +</a></span>\n\n";}
 else
-	{echo " &nbsp; &nbsp; &nbsp; <span id=webphone name=webphone></span>\n\n";}
+	{echo " &nbsp; &nbsp; &nbsp; <span id=webphone_visibility name=webphone_visibility></span>\n\n";}
 
 if ($webphone_bufh > 10)
 	{echo "<BR><img src=\"images/pixel.gif\" width=1 height=$webphone_bufh>\n";}

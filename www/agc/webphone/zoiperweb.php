@@ -16,6 +16,7 @@
 # 100130-2359 - First Build of VICIDIAL web client basic login process finished
 # 100424-2102 - Added codecs option and updated zoiperweb code reference
 # 100827-1417 - Added system_key variable
+# 101227-1313 - Added DIALPLAN_OFF_TOGGLE option
 #
 
 if (isset($_GET["DB"]))							{$DB=$_GET["DB"];}
@@ -154,7 +155,7 @@ function OnZoiperReady(phone)
 	<?php
 	if (preg_match("/DIALPAD_Y|DIALPAD_TOGGLE/i",$b64_options))	
 		{echo "Zoiper.ShowDialPad(\"true\");\n";}
-	else
+	if (preg_match("/DIALPAD_N|DIALPAD_OFF_TOGGLE/i",$b64_options))	
 		{echo "Zoiper.ShowDialPad(\"false\");\n";}
 	?>
 
@@ -266,6 +267,8 @@ function dialpad_active()
 <?php
 if (preg_match("/DIALPAD_TOGGLE/i",$b64_options))	
 	{echo "<a href=\"#\" onclick=\"dialpad_inactive();return false;\">DIALPAD -</a>\n";}
+if (preg_match("/DIALPAD_OFF_TOGGLE/i",$b64_options))	
+	{echo "<a href=\"#\" onclick=\"dialpad_active();return false;\">DIALPAD +</a>\n";}
 ?>
 </span>
 
