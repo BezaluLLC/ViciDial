@@ -15,10 +15,11 @@
 # 100722-1313 - Added field validation for label and name
 # 100728-1724 - Added field validation for select lists and checkbox/radio buttons
 # 100916-1754 - Do not show help in example form if help is empty
+# 101228-2049 - Fixed missing PHP long tag
 #
 
-$admin_version = '2.4-9';
-$build = '100916-1754';
+$admin_version = '2.4-10';
+$build = '101228-2049';
 
 
 require("dbconnect.php");
@@ -1462,7 +1463,7 @@ echo "\n\n\n<br><br><br>\n<font size=1> runtime: $RUNtime seconds &nbsp; &nbsp; 
 </html>
 
 
-<?
+<?php
 ################################################################################
 ################################################################################
 ##### Functions
