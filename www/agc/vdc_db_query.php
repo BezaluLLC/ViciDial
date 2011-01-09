@@ -1,7 +1,7 @@
 <?php
 # vdc_db_query.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to exchange information between vicidial.php and the database server for various actions
 # 
@@ -265,12 +265,13 @@
 # 101124-1033 - Added require for functions.php and manual dial call time check campaign option
 # 101128-0108 - Added list override for webforms
 # 101208-0414 - Fixed Call Log dial bug (issue 393)
+# 110103-1343 - Added queuemetrics_loginout NONE option
 #
 
-$version = '2.4-171';
-$build = '101208-0414';
+$version = '2.4-172';
+$build = '110103-1343';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=363;
+$mysql_log_count=365;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -875,7 +876,7 @@ if ($ACTION == 'regCLOSER')
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_addmember_enabled FROM system_settings;";
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_addmember_enabled,queuemetrics_dispo_pause FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00349',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
@@ -891,6 +892,7 @@ if ($ACTION == 'regCLOSER')
 			$queuemetrics_pass =				$row[4];
 			$queuemetrics_log_id =				$row[5];
 			$queuemetrics_addmember_enabled =	$row[6];
+			$queuemetrics_dispo_pause =			$row[7];
 			$i++;
 			}
 		##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -1425,7 +1427,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 		else
 			{
 			##### gather no hopper dialing settings from campaign
-			$stmt="SELECT no_hopper_dialing,agent_dial_owner_only,local_call_time,dial_statuses,drop_lockout_time,lead_filter_id,lead_order FROM vicidial_campaigns where campaign_id='$campaign';";
+			$stmt="SELECT no_hopper_dialing,agent_dial_owner_only,local_call_time,dial_statuses,drop_lockout_time,lead_filter_id,lead_order,lead_order_randomize FROM vicidial_campaigns where campaign_id='$campaign';";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00236',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -1440,6 +1442,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$drop_lockout_time =		$row[4];
 				$lead_filter_id =			$row[5];
 				$lead_order =				$row[6];
+				$lead_order_randomize =		$row[7];
 				}
 			if (eregi("N",$no_hopper_dialing))
 				{
@@ -1838,24 +1841,27 @@ if ($ACTION == 'manDiaLnextCaLL')
 					if (eregi("TERRITORY",$agent_dial_owner_only)) {$adooSQL = "and owner IN('$territory')";}
 					if (eregi("USER_GROUP",$agent_dial_owner_only)) {$adooSQL = "and owner='$user_group'";}
 
+					if ($lead_order_randomize == 'Y') {$last_order = "RAND()";}
+					else {$last_order = "lead_id asc";}
+
 					$order_stmt = '';
 					if (eregi("DOWN",$lead_order)){$order_stmt = 'order by lead_id asc';}
 					if (eregi("UP",$lead_order)){$order_stmt = 'order by lead_id desc';}
-					if (eregi("UP LAST NAME",$lead_order)){$order_stmt = 'order by last_name desc, lead_id asc';}
-					if (eregi("DOWN LAST NAME",$lead_order)){$order_stmt = 'order by last_name, lead_id asc';}
-					if (eregi("UP PHONE",$lead_order)){$order_stmt = 'order by phone_number desc, lead_id asc';}
-					if (eregi("DOWN PHONE",$lead_order)){$order_stmt = 'order by phone_number, lead_id asc';}
-					if (eregi("UP COUNT",$lead_order)){$order_stmt = 'order by called_count desc, lead_id asc';}
-					if (eregi("DOWN COUNT",$lead_order)){$order_stmt = 'order by called_count, lead_id asc';}
-					if (eregi("UP LAST CALL TIME",$lead_order)){$order_stmt = 'order by last_local_call_time desc, lead_id asc';}
-					if (eregi("DOWN LAST CALL TIME",$lead_order)){$order_stmt = 'order by last_local_call_time, lead_id asc';}
+					if (eregi("UP LAST NAME",$lead_order)){$order_stmt = 'order by last_name desc, $last_order';}
+					if (eregi("DOWN LAST NAME",$lead_order)){$order_stmt = 'order by last_name, $last_order';}
+					if (eregi("UP PHONE",$lead_order)){$order_stmt = 'order by phone_number desc, $last_order';}
+					if (eregi("DOWN PHONE",$lead_order)){$order_stmt = 'order by phone_number, $last_order';}
+					if (eregi("UP COUNT",$lead_order)){$order_stmt = 'order by called_count desc, $last_order';}
+					if (eregi("DOWN COUNT",$lead_order)){$order_stmt = 'order by called_count, $last_order';}
+					if (eregi("UP LAST CALL TIME",$lead_order)){$order_stmt = 'order by last_local_call_time desc, $last_order';}
+					if (eregi("DOWN LAST CALL TIME",$lead_order)){$order_stmt = 'order by last_local_call_time, $last_order';}
 					if (eregi("RANDOM",$lead_order)){$order_stmt = 'order by RAND()';}
-					if (eregi("UP RANK",$lead_order)){$order_stmt = 'order by rank desc, lead_id asc';}
-					if (eregi("DOWN RANK",$lead_order)){$order_stmt = 'order by rank, lead_id asc';}
-					if (eregi("UP OWNER",$lead_order)){$order_stmt = 'order by owner desc, lead_id asc';}
-					if (eregi("DOWN OWNER",$lead_order)){$order_stmt = 'order by owner, lead_id asc';}
-					if (eregi("UP TIMEZONE",$lead_order)){$order_stmt = 'order by gmt_offset_now desc, lead_id asc';}
-					if (eregi("DOWN TIMEZONE",$lead_order)){$order_stmt = 'order by gmt_offset_now, lead_id asc';}
+					if (eregi("UP RANK",$lead_order)){$order_stmt = 'order by rank desc, $last_order';}
+					if (eregi("DOWN RANK",$lead_order)){$order_stmt = 'order by rank, $last_order';}
+					if (eregi("UP OWNER",$lead_order)){$order_stmt = 'order by owner desc, $last_order';}
+					if (eregi("DOWN OWNER",$lead_order)){$order_stmt = 'order by owner, $last_order';}
+					if (eregi("UP TIMEZONE",$lead_order)){$order_stmt = 'order by gmt_offset_now desc, $last_order';}
+					if (eregi("DOWN TIMEZONE",$lead_order)){$order_stmt = 'order by gmt_offset_now, $last_order';}
 
 					$stmt="UPDATE vicidial_list SET status='QUEUE',user='$user' where called_since_last_reset='N' and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) $DLTsql $fSQL $adooSQL $order_stmt LIMIT 1;";
 					if ($DB) {echo "$stmt\n";}
@@ -3212,7 +3218,7 @@ if ($stage == "end")
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_dispo_pause FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00063',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -3227,6 +3233,7 @@ if ($stage == "end")
 			$queuemetrics_login	=			$row[3];
 			$queuemetrics_pass =			$row[4];
 			$queuemetrics_log_id =			$row[5];
+			$queuemetrics_dispo_pause =		$row[6];
 
 			if ($enable_queuemetrics_logging > 0)
 				{
@@ -4098,6 +4105,16 @@ if ($stage == "end")
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00299',$user,$server_ip,$session_name,$one_mysql_log);}
+
+	### if queuemetrics_dispo_pause dispo tag is enabled, log it here
+	if (strlen($queuemetrics_dispo_pause) > 0)
+		{
+		$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='$queuemetrics_dispo_pause';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $linkB);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00364',$user,$server_ip,$session_name,$one_mysql_log);}
+		$affected_rows = mysql_affected_rows($linkB);
+		}
 	}
 }
 
@@ -5341,7 +5358,7 @@ if ($ACTION == 'userLOGout')
 			{
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
-			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages,queuemetrics_loginout,queuemetrics_addmember_enabled FROM system_settings;";
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_dispo_pause FROM system_settings;";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00138',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -5358,6 +5375,7 @@ if ($ACTION == 'userLOGout')
 				$allow_sipsak_messages =			$row[6];
 				$queuemetrics_loginout =			$row[7];
 				$queuemetrics_addmember_enabled =	$row[8];
+				$queuemetrics_dispo_pause =			$row[9];
 				}
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
 			###########################################
@@ -5382,6 +5400,7 @@ if ($ACTION == 'userLOGout')
 			#	$rslt=mysql_query($stmt, $linkB);
 			#	$affected_rows = mysql_affected_rows($linkB);
 
+				$logintime=0;
 				$stmt = "SELECT time_id,data1 FROM queue_log where agent='Agent/$user' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') order by time_id desc limit 1;";
 				$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00139',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -5400,14 +5419,31 @@ if ($ACTION == 'userLOGout')
 				$time_logged_in = ($StarTtime - $logintime);
 				if ($time_logged_in > 1000000) {$time_logged_in=1;}
 
-				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='$QM_LOGOFF',data1='$loginphone',data2='$time_logged_in',serverid='$queuemetrics_log_id';";
-				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $linkB);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00140',$user,$server_ip,$session_name,$one_mysql_log);}
-				$affected_rows = mysql_affected_rows($linkB);
+				if ($queuemetrics_loginout != 'NONE')
+					{
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='$QM_LOGOFF',data1='$loginphone',data2='$time_logged_in',serverid='$queuemetrics_log_id';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $linkB);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00140',$user,$server_ip,$session_name,$one_mysql_log);}
+					$affected_rows = mysql_affected_rows($linkB);
+					}
 
 				if ($queuemetrics_addmember_enabled > 0)
 					{
+					if ( ($logintime < 1) or ($queuemetrics_loginout == 'NONE') )
+						{
+						$stmtB = "SELECT time_id,data3 FROM queue_log where agent='Agent/$user' and verb='PAUSEREASON' and data1='LOGIN' order by time_id desc limit 1;";
+						$rsltB=mysql_query($stmtB, $linkB);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00365',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($DB) {echo "<BR>$stmtB\n";}
+						$qml_ct = mysql_num_rows($rsltB);
+						if ($qml_ct > 0)
+							{
+							$row=mysql_fetch_row($rsltB);
+							$logintime =		$row[0];
+							$loginphone =		$row[1];
+							}
+						}
 					$stmt = "SELECT distinct queue FROM queue_log where time_id >= $logintime and agent='Agent/$user' and verb IN('ADDMEMBER','ADDMEMBER2') order by time_id desc;";
 					$rslt=mysql_query($stmt, $linkB);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00351',$user,$server_ip,$session_name,$one_mysql_log);}

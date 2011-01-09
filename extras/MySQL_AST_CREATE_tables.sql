@@ -96,7 +96,7 @@ ASTmgrSECRET VARCHAR(20) NOT NULL default '1234',
 ASTmgrUSERNAMEupdate VARCHAR(20) NOT NULL default 'updatecron',
 ASTmgrUSERNAMElisten VARCHAR(20) NOT NULL default 'listencron',
 ASTmgrUSERNAMEsend VARCHAR(20) NOT NULL default 'sendcron',
-local_gmt VARCHAR(6) default '-5',
+local_gmt VARCHAR(6) default '-5.00',
 voicemail_dump_exten VARCHAR(20) NOT NULL default '85026666666666',
 answer_transfer_agent VARCHAR(20) NOT NULL default '8365',
 ext_context VARCHAR(20) NOT NULL default 'default',
@@ -781,7 +781,8 @@ auto_hopper_level MEDIUMINT(8) UNSIGNED default '0',
 auto_trim_hopper ENUM('Y','N') default 'Y',
 api_manual_dial ENUM('STANDARD','QUEUE','QUEUE_AND_AUTOCALL') default 'STANDARD',
 manual_dial_call_time_check ENUM('DISABLED','ENABLED') default 'DISABLED',
-display_leads_count ENUM('Y','N') default 'N'
+display_leads_count ENUM('Y','N') default 'N',
+lead_order_randomize ENUM('Y','N') default 'N'
 );
 
 CREATE TABLE vicidial_lists (
@@ -1327,7 +1328,7 @@ static_agent_url VARCHAR(255) default '',
 default_phone_code VARCHAR(8) default '1',
 enable_agc_dispo_log ENUM('0','1') default '0',
 custom_dialplan_entry TEXT,
-queuemetrics_loginout ENUM('STANDARD','CALLBACK') default 'STANDARD',
+queuemetrics_loginout ENUM('STANDARD','CALLBACK','NONE') default 'STANDARD',
 callcard_enabled ENUM('1','0') default '0',
 queuemetrics_callstatus ENUM('0','1') default '1',
 default_codecs VARCHAR(100) default '',
@@ -1363,7 +1364,8 @@ default_server_password VARCHAR(20) default 'test',
 admin_modify_refresh SMALLINT(5) UNSIGNED default '0',
 nocache_admin ENUM('0','1') default '1',
 generate_cross_server_exten ENUM('0','1') default '0',
-queuemetrics_addmember_enabled ENUM('0','1') default '0'
+queuemetrics_addmember_enabled ENUM('0','1') default '0',
+queuemetrics_dispo_pause VARCHAR(6) default ''
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2411,7 +2413,7 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1257',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1258',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

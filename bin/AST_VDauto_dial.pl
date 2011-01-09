@@ -25,7 +25,7 @@
 # It is good practice to keep this program running by placing the associated 
 # KEEPALIVE script running every minute to ensure this program is always running
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50125-1201 - Changed dial timeout to 120 seconds from 180 seconds
@@ -94,6 +94,7 @@
 # 101111-1556 - Added source to vicidial_hopper inserts
 # 101117-1656 - Added accounting for DEAD agent calls when in available-only-tally dialing
 # 101207-0713 - Added more info to Originate for rare VDAC issue
+# 110103-1227 - Added queuemetrics_loginout NONE option
 #
 
 
@@ -1916,7 +1917,7 @@ while($one_day_interval > 0)
 				{
 				@VALOuser=@MT; @VALOcampaign=@MT; @VALOtimelog=@MT; @VALOextension=@MT;
 				$logcount=0;
-				$stmtA = "SELECT user,campaign_id,last_update_time,extension FROM vicidial_live_agents where server_ip='$server_ip' and status = 'PAUSED' and random_id='10' order by last_update_time desc limit $affected_rows";
+				$stmtA = "SELECT user,campaign_id,last_update_time,extension FROM vicidial_live_agents where server_ip='$server_ip' and status='PAUSED' and random_id='10' order by last_update_time desc limit $affected_rows";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -1966,28 +1967,51 @@ while($one_day_interval > 0)
 
 						$agents='@agents';
 						$time_logged_in='';
-						$stmtB = "SELECT time_id,data1 FROM queue_log where agent='Agent/$VALOuser[$logrun]' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') order by time_id desc limit 1;";
-						$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
-						$sthB->execute or die "executing: $stmtA ", $dbhB->errstr;
-						$sthBrows=$sthB->rows;
-						if ($sthBrows > 0)
+						$RAWtime_logged_in=$TDtarget;
+						if ($queuemetrics_loginout !~ /NONE/)
 							{
-							@aryB = $sthB->fetchrow_array;
-							$time_logged_in =		$aryB[0];
-							$RAWtime_logged_in =	$aryB[0];
-							$phone_logged_in =		$aryB[1];
+							$stmtB = "SELECT time_id,data1 FROM queue_log where agent='Agent/$VALOuser[$logrun]' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') order by time_id desc limit 1;";
+							$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+							$sthB->execute or die "executing: $stmtA ", $dbhB->errstr;
+							$sthBrows=$sthB->rows;
+							if ($sthBrows > 0)
+								{
+								@aryB = $sthB->fetchrow_array;
+								$time_logged_in =		$aryB[0];
+								$RAWtime_logged_in =	$aryB[0];
+								$phone_logged_in =		$aryB[1];
+								}
+							$sthB->finish();
+
+							$time_logged_in = ($secX - $logintime);
+							if ($time_logged_in > 1000000) {$time_logged_in=1;}
+							$LOGOFFtime = ($secX + 1);
+
+							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='NONE',agent='Agent/$VALOuser[$logrun]',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
+							$Baffected_rows = $dbhB->do($stmtB);
 							}
-						$sthB->finish();
-
-						$time_logged_in = ($secX - $logintime);
-						if ($time_logged_in > 1000000) {$time_logged_in=1;}
-						$LOGOFFtime = ($secX + 1);
-
-						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='NONE',agent='Agent/$VALOuser[$logrun]',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
-						$Baffected_rows = $dbhB->do($stmtB);
 
 						if ($queuemetrics_addmember_enabled > 0)
 							{
+							if ( (length($time_logged_in) < 1) || ($queuemetrics_loginout =~ /NONE/) )
+								{
+								$stmtB = "SELECT time_id,data3 FROM queue_log where agent='Agent/$VALOuser[$logrun]' and verb='PAUSEREASON' and data1='LOGIN' order by time_id desc limit 1;";
+								$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+								$sthB->execute or die "executing: $stmtA ", $dbhB->errstr;
+								$sthBrows=$sthB->rows;
+								if ($sthBrows > 0)
+									{
+									@aryB = $sthB->fetchrow_array;
+									$time_logged_in =		$aryB[0];
+									$RAWtime_logged_in =	$aryB[0];
+									$phone_logged_in =		$aryB[1];
+									}
+								$sthB->finish();
+
+								$time_logged_in = ($secX - $logintime);
+								if ($time_logged_in > 1000000) {$time_logged_in=1;}
+								$LOGOFFtime = ($secX + 1);
+								}
 							$stmtB = "SELECT distinct queue FROM queue_log where time_id >= $RAWtime_logged_in and agent='Agent/$VALOuser[$logrun]' and verb IN('ADDMEMBER','ADDMEMBER2') order by time_id desc;";
 							$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 							$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;

@@ -430,6 +430,10 @@ OTHER CHANGES:
 
 100. Added capability for agent interface to have webphone as a thin top bar
 
+101. Added hopper loader randomization option in Campaign Detail screen, which
+	allows for the results to be randomized inside of the sorted results as
+	sorted by the List Order option
+
 
 
 

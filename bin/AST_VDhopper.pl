@@ -21,7 +21,7 @@
 #  - R = Recycled leads
 #  - S = Standard hopper load
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 50810-1613 - Added database server variable definitions lookup
@@ -64,6 +64,7 @@
 # 100529-0843 - Changed dialable leads to calculate every run for active campaigns
 # 100706-2332 - Added ability to purge only one campaign's leads in the hopper
 # 101108-1451 - Added ability for the hopper level to be set automatically and remove excess leads from the hopper (MikeC)
+# 110103-1118 - Added lead_order_randomize option
 #
 
 # constants
@@ -797,11 +798,11 @@ if ($hopper_dnc_count > 0)
 
 if ($CLIcampaign)
 	{
-	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper from vicidial_campaigns where campaign_id='$CLIcampaign';";
+	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize from vicidial_campaigns where campaign_id='$CLIcampaign';";
 	}
 else
 	{
-	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper from vicidial_campaigns where active='Y';";
+	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize from vicidial_campaigns where active='Y';";
 	}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -834,6 +835,7 @@ while ($sthArows > $rec_count)
 	$auto_hopper_multi[$rec_count] =			$aryA[18];
 	$use_auto_hopper[$rec_count] = 				$aryA[19];
 	$auto_trim_hopper[$rec_count] =				$aryA[20];
+	$lead_order_randomize[$rec_count] =			$aryA[21];
 
 	### Auto Hopper Level
 	if ( $use_auto_hopper[$rec_count] =~ /Y/) 
@@ -1591,7 +1593,7 @@ foreach(@campaign_id)
 			}
 		##### END lead recycling parsing and prep ###
 
-		if ($DB) {print "Starting hopper run for $campaign_id[$i] campaign- GMT: $local_call_time[$i]   HOPPER: $hopper_level[$i]   ORDER: $lead_order[$i]\n";}
+		if ($DB) {print "Starting hopper run for $campaign_id[$i] campaign- GMT: $local_call_time[$i]   HOPPER: $hopper_level[$i]   ORDER: $lead_order[$i]|$lead_order_randomize[$i]\n";}
 
 		### Delete the DONE leads if there are any
 		$stmtA = "DELETE from $vicidial_hopper where campaign_id='$campaign_id[$i]' and status IN('DONE');";
@@ -1829,29 +1831,34 @@ foreach(@campaign_id)
 				$order_stmt='';
 				$NEW_count = 0;
 				$NEW_level = 0;
-				$OTHER_level = $hopper_level[$i];   
-				if ($lead_order[$i] =~ /^DOWN/) {$order_stmt = 'order by lead_id asc';}
-				if ($lead_order[$i] =~ /^UP/) {$order_stmt = 'order by lead_id desc';}
-				if ($lead_order[$i] =~ /^UP LAST NAME/) {$order_stmt = 'order by last_name desc, lead_id asc';}
-				if ($lead_order[$i] =~ /^DOWN LAST NAME/) {$order_stmt = 'order by last_name, lead_id asc';}
-				if ($lead_order[$i] =~ /^UP PHONE/) {$order_stmt = 'order by phone_number desc, lead_id asc';}
-				if ($lead_order[$i] =~ /^DOWN PHONE/) {$order_stmt = 'order by phone_number, lead_id asc';}
-				if ($lead_order[$i] =~ /^UP COUNT/) {$order_stmt = 'order by called_count desc, lead_id asc';}
-				if ($lead_order[$i] =~ /^DOWN COUNT/) {$order_stmt = 'order by called_count, lead_id asc';}
-				if ($lead_order[$i] =~ /^UP LAST CALL TIME/) {$order_stmt = 'order by last_local_call_time desc, lead_id asc';}
-				if ($lead_order[$i] =~ /^DOWN LAST CALL TIME/) {$order_stmt = 'order by last_local_call_time, lead_id asc';}
-				if ($lead_order[$i] =~ /^RANDOM/) {$order_stmt = 'order by RAND()';}
-				if ($lead_order[$i] =~ /^UP RANK/) {$order_stmt = 'order by rank desc, lead_id asc';}
-				if ($lead_order[$i] =~ /^DOWN RANK/) {$order_stmt = 'order by rank, lead_id asc';}
-				if ($lead_order[$i] =~ /^UP OWNER/) {$order_stmt = 'order by owner desc, lead_id asc';}
-				if ($lead_order[$i] =~ /^DOWN OWNER/) {$order_stmt = 'order by owner, lead_id asc';}
-				if ($lead_order[$i] =~ /^UP TIMEZONE/) {$order_stmt = 'order by gmt_offset_now desc, lead_id asc';}
-				if ($lead_order[$i] =~ /^DOWN TIMEZONE/) {$order_stmt = 'order by gmt_offset_now, lead_id asc';}
+				$OTHER_level = $hopper_level[$i];
+
+				if ($lead_order_randomize[$i] =~ /Y/) {$last_order = "RAND()";}
+				else {$last_order = "lead_id asc";}
+
+				if ($lead_order[$i] =~ /^DOWN/) {$order_stmt = "order by lead_id asc";}
+				if ($lead_order[$i] =~ /^UP/) {$order_stmt = "order by lead_id desc";}
+				if ($lead_order[$i] =~ /^UP LAST NAME/) {$order_stmt = "order by last_name desc, $last_order";}
+				if ($lead_order[$i] =~ /^DOWN LAST NAME/) {$order_stmt = "order by last_name, $last_order";}
+				if ($lead_order[$i] =~ /^UP PHONE/) {$order_stmt = "order by phone_number desc, $last_order";}
+				if ($lead_order[$i] =~ /^DOWN PHONE/) {$order_stmt = "order by phone_number, $last_order";}
+				if ($lead_order[$i] =~ /^UP COUNT/) {$order_stmt = "order by called_count desc, $last_order";}
+				if ($lead_order[$i] =~ /^DOWN COUNT/) {$order_stmt = "order by called_count, $last_order";}
+				if ($lead_order[$i] =~ /^UP LAST CALL TIME/) {$order_stmt = "order by last_local_call_time desc, $last_order";}
+				if ($lead_order[$i] =~ /^DOWN LAST CALL TIME/) {$order_stmt = "order by last_local_call_time, $last_order";}
+				if ($lead_order[$i] =~ /^RANDOM/) {$order_stmt = "order by RAND()";}
+				if ($lead_order[$i] =~ /^UP RANK/) {$order_stmt = "order by rank desc, $last_order";}
+				if ($lead_order[$i] =~ /^DOWN RANK/) {$order_stmt = "order by rank, $last_order";}
+				if ($lead_order[$i] =~ /^UP OWNER/) {$order_stmt = "order by owner desc, $last_order";}
+				if ($lead_order[$i] =~ /^DOWN OWNER/) {$order_stmt = "order by owner, $last_order";}
+				if ($lead_order[$i] =~ /^UP TIMEZONE/) {$order_stmt = "order by gmt_offset_now desc, $last_order";}
+				if ($lead_order[$i] =~ /^DOWN TIMEZONE/) {$order_stmt = "order by gmt_offset_now, $last_order";}
 				if ($lead_order[$i] =~ / 2nd NEW$/) {$NEW_count = 2;}
 				if ($lead_order[$i] =~ / 3rd NEW$/) {$NEW_count = 3;}
 				if ($lead_order[$i] =~ / 4th NEW$/) {$NEW_count = 4;}
 				if ($lead_order[$i] =~ / 5th NEW$/) {$NEW_count = 5;}
 				if ($lead_order[$i] =~ / 6th NEW$/) {$NEW_count = 6;}
+
 
 			### BEGIN recycle grab leads ###
 				$REC_rec_countLEADS=0;

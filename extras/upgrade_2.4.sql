@@ -638,3 +638,10 @@ ALTER TABLE phones MODIFY webphone_dialpad ENUM('Y','N','TOGGLE','TOGGLE_OFF') d
 ALTER TABLE vicidial_user_groups MODIFY webphone_dialpad_override ENUM('DISABLED','Y','N','TOGGLE','TOGGLE_OFF') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1257',db_schema_update_date=NOW();
+
+ALTER TABLE system_settings MODIFY queuemetrics_loginout ENUM('STANDARD','CALLBACK','NONE') default 'STANDARD';
+ALTER TABLE system_settings ADD queuemetrics_dispo_pause VARCHAR(6) default '';
+
+ALTER TABLE vicidial_campaigns ADD lead_order_randomize ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1258',db_schema_update_date=NOW();

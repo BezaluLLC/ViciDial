@@ -11,7 +11,7 @@
 # agents that should appear to be logged in so that the calls can be transferred 
 # out to them properly.
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50215-0954 - First version of script
@@ -36,6 +36,7 @@
 # 100524-1542 - Fixed live call detection bug on multi-server systems
 # 100622-0917 - Added start_call_url function for remote agents, this launches a separate child script
 # 101108-0032 - Added ADDMEMBER queue_log code
+# 110103-1230 - Added queuemetrics_loginout NONE option
 #
 
 ### begin parsing run-time options ###
@@ -629,8 +630,11 @@ while($one_day_interval > 0)
 
 								if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$DBremote_campaign[$h]',agent='Agent/$DBremote_user[$h]',verb='$QM_LOGIN',data1='$DBremote_user[$h]$agents',serverid='$queuemetrics_log_id';";
-								$Baffected_rows = $dbhB->do($stmtB);
+								if ($queuemetrics_loginout !~ /NONE/)
+									{
+									$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$DBremote_campaign[$h]',agent='Agent/$DBremote_user[$h]',verb='$QM_LOGIN',data1='$DBremote_user[$h]$agents',serverid='$queuemetrics_log_id';";
+									$Baffected_rows = $dbhB->do($stmtB);
+									}
 
 								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$DBremote_campaign[$h]',agent='Agent/$DBremote_user[$h]',verb='UNPAUSE',serverid='$queuemetrics_log_id';";
 								$Baffected_rows = $dbhB->do($stmtB);
@@ -780,6 +784,7 @@ while($one_day_interval > 0)
 						{
 						if ($enable_queuemetrics_logging > 0)
 							{
+							$logintime=0;
 							$QM_LOGOFF = 'AGENTLOGOFF';
 							if ($queuemetrics_loginout =~ /CALLBACK/)
 								{$QM_LOGOFF = 'AGENTCALLBACKLOGOFF';}
@@ -812,6 +817,20 @@ while($one_day_interval > 0)
 
 							if ($queuemetrics_addmember_enabled > 0)
 								{
+								if ( (length($logintime) < 1) || ($queuemetrics_loginout =~ /NONE/) )
+									{
+									$stmtB = "SELECT time_id,data3 FROM queue_log where agent='Agent/$VD_user[$z]' and verb='PAUSEREASON' and data1='LOGIN' order by time_id desc limit 1;";
+									$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+									$sthB->execute or die "executing: $stmtA ", $dbhB->errstr;
+									$sthBrows=$sthB->rows;
+									if ($sthBrows > 0)
+										{
+										@aryB = $sthB->fetchrow_array;
+										$logintime =		$aryB[0];
+										$phone_logged_in =	$aryB[1];
+										}
+									$sthB->finish();
+									}
 								$stmtB = "SELECT distinct queue FROM queue_log where time_id >= $logintime and agent='Agent/$VD_user[$z]' and verb IN('ADDMEMBER','ADDMEMBER2') order by time_id desc;";
 								$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 								$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
@@ -834,8 +853,11 @@ while($one_day_interval > 0)
 									}
 								}
 
-							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$VD_campaign_id[$z]',agent='Agent/$VD_user[$z]',verb='$QM_LOGOFF',data1='$phone_logged_in',data2='$time_logged_in',serverid='$queuemetrics_log_id';";
-							$Baffected_rows = $dbhB->do($stmtB);
+							if ($queuemetrics_loginout !~ /NONE/)
+								{
+								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$VD_campaign_id[$z]',agent='Agent/$VD_user[$z]',verb='$QM_LOGOFF',data1='$phone_logged_in',data2='$time_logged_in',serverid='$queuemetrics_log_id';";
+								$Baffected_rows = $dbhB->do($stmtB);
+								}
 
 							$dbhB->disconnect();
 							}

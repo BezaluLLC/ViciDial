@@ -497,11 +497,19 @@ refresh||
 You can also set a label to ---HIDE--- to hide both the label and the field||
 For inbound only, you can also set the stop call time higher than 2400 if you want the call time to go beyond midnight. So if you want your call time to run from 6 am until 2 am the next day, you would put 0600 as the start time and 2600 as the stop time||
 TOGGLE_OFF will default to not show the dialpad on first load, but will allow the user to show the dialpad by clicking on the dialpad link||
+Add Multi-Server Phones Form||
+Phones Bulk Insert||
+List Order Randomize||
+This option allows you to randomize the order of the leads in the hopper load within the results defined by the criteria set above. For instance, the List Order will be preserved, but the results will be randomized within that sorting. Setting this option to Y will enable this feature. Default is N for disabled. NOTE, if you have a large number of leads this option may slow down the speed of the hopper loading script||
+NONE will not log any logins and logouts within queue_log||
+QueueMetrics Dispo Pause Code||
+This option, if populated, allows you to define whether a dispo pause code is entered into queue_log when an agent is in dispo status. Default is empty for disabled||
 
 
 AST_LISTS_campaign_stats.php
 AST_VICIDIAL_ingrouplist.php
 admin_lists_custom.php
+admin_phones_bulk_insert.php
 ############################################################ CLIENT
 VIEW CALL LOG||
 click to dial||
