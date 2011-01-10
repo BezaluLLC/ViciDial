@@ -1,7 +1,7 @@
 <?php 
 # AST_timeonVDADallSUMMARY.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Summary for all campaigns live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -20,6 +20,7 @@
 # 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 # 101214-1142 - Added Agent time stats
+# 110110-1327 - Changed campaign real-time link to the new realtime_report.php
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -209,7 +210,7 @@ $NFE = '</font></b>';
 $F=''; $FG=''; $B=''; $BG='';
 
 $group = $groups[$k];
-echo "<b><a href=\"./AST_timeonVDADall.php?group=$group&RR=$RR&DB=$DB&adastats=$adastats\">$group</a></b> &nbsp; - &nbsp; ";
+echo "<b><a href=\"./realtime_report.php?group=$group&RR=$RR&DB=$DB&adastats=$adastats\">$group</a></b> &nbsp; - &nbsp; ";
 echo "<a href=\"./admin.php?ADD=34&campaign_id=$group\">Modify</a>\n";
 
 
