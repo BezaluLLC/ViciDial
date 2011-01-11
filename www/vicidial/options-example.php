@@ -29,4 +29,19 @@ $webphone_clpos =	"<BR>  &nbsp; <a href=\"#\" onclick=\"hideDiv('webphone_conten
 #$webphone_pad =         '0';
 #$webphone_clpos =       ' ';
 
+# used by the realtime report
+$RS_DB =				0;		# 1=debug on, 0=debug off
+$RS_RR =				40;		# refresh rate
+$RS_group =				'ALL-ACTIVE';	# selected campaign(s)
+$RS_usergroup =			'';		# user group defined
+$RS_UGdisplay =			0;		# 0=no, 1=yes
+$RS_UidORname =			1;		# 0=id, 1=name
+$RS_orderby =			'timeup';
+$RS_SERVdisplay =		0;	# 0=no, 1=yes
+$RS_CALLSdisplay =		1;	# 0=no, 1=yes
+$RS_PHONEdisplay =		0;	# 0=no, 1=yes
+$RS_CUSTPHONEdisplay =	0;	# 0=no, 1=yes
+$RS_PAUSEcodes =		'N';
+$RS_with_inbound =		'Y';
+
 ?>

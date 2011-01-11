@@ -2630,12 +2630,13 @@ else
 # 101216-1838 - Changed Realtime report links to go to new realtime_report
 # 101227-1320 - Added dialplan off toggle options
 # 110103-1135 - Added queuemetrics_dispo_pause and lead_order_randomize features
+# 110111-1305 - Added sort by list name for list listings in list section and campaign screens
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-295';
-$build = '110103-1135';
+$admin_version = '2.4-296';
+$build = '110111-1305';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -19309,6 +19310,7 @@ if ($ADD==31)
 				echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 			$LISTlink='stage=LISTIDDOWN';
+			$NAMElink='stage=LISTNAMEDOWN';
 			$TALLYlink='stage=TALLYDOWN';
 			$ACTIVElink='stage=ACTIVEDOWN';
 			$CAMPAIGNlink='stage=CAMPAIGNDOWN';
@@ -19316,6 +19318,8 @@ if ($ADD==31)
 			$SQLorder='order by list_id';
 			if (eregi("LISTIDUP",$stage))		{$SQLorder='order by list_id asc';				$LISTlink='stage=LISTIDDOWN';}
 			if (eregi("LISTIDDOWN",$stage))		{$SQLorder='order by list_id desc';				$LISTlink='stage=LISTIDUP';}
+			if (eregi("LISTNAMEUP",$stage))		{$SQLorder='order by list_name asc';			$NAMElink='stage=LISTNAMEDOWN';}
+			if (eregi("LISTNAMEDOWN",$stage))	{$SQLorder='order by list_name desc';			$NAMElink='stage=LISTNAMEUP';}
 			if (eregi("TALLYUP",$stage))		{$SQLorder='order by tally asc';				$TALLYlink='stage=TALLYDOWN';}
 			if (eregi("TALLYDOWN",$stage))		{$SQLorder='order by tally desc';				$TALLYlink='stage=TALLYUP';}
 			if (eregi("ACTIVEUP",$stage))		{$SQLorder='order by active asc';				$ACTIVElink='stage=ACTIVEDOWN';}
@@ -19331,7 +19335,7 @@ if ($ADD==31)
 			echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 			echo "<TR BGCOLOR=BLACK>";
 			echo "<TD><a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id&$LISTlink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST ID</B></a></TD>";
-			echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST NAME</B></TD>";
+			echo "<TD><a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id&$NAMElink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST NAME</B></a></TD>";
 			echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>DESCRIPTION</B></TD>\n";
 			echo "<TD><a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id&$TALLYlink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LEADS COUNT</B></a></TD>\n";
 			echo "<TD COLSPAN=2><a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id&$ACTIVElink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>ACTIVE</B></a></TD>";
@@ -20487,6 +20491,7 @@ if ($ADD==34)
 			echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		$LISTlink='stage=LISTIDDOWN';
+		$NAMElink='stage=LISTNAMEDOWN';
 		$TALLYlink='stage=TALLYDOWN';
 		$ACTIVElink='stage=ACTIVEDOWN';
 		$CAMPAIGNlink='stage=CAMPAIGNDOWN';
@@ -20494,6 +20499,8 @@ if ($ADD==34)
 		$SQLorder='order by list_id';
 		if (eregi("LISTIDUP",$stage))		{$SQLorder='order by list_id asc';				$LISTlink='stage=LISTIDDOWN';}
 		if (eregi("LISTIDDOWN",$stage))		{$SQLorder='order by list_id desc';				$LISTlink='stage=LISTIDUP';}
+		if (eregi("LISTNAMEUP",$stage))		{$SQLorder='order by list_name asc';			$NAMElink='stage=LISTNAMEDOWN';}
+		if (eregi("LISTNAMEDOWN",$stage))	{$SQLorder='order by list_name desc';			$NAMElink='stage=LISTNAMEUP';}
 		if (eregi("TALLYUP",$stage))		{$SQLorder='order by tally asc';				$TALLYlink='stage=TALLYDOWN';}
 		if (eregi("TALLYDOWN",$stage))		{$SQLorder='order by tally desc';				$TALLYlink='stage=TALLYUP';}
 		if (eregi("ACTIVEUP",$stage))		{$SQLorder='order by active asc';				$ACTIVElink='stage=ACTIVEDOWN';}
@@ -20502,202 +20509,203 @@ if ($ADD==34)
 		if (eregi("CAMPAIGNDOWN",$stage))	{$SQLorder='order by campaign_id desc';			$CAMPAIGNlink='stage=CAMPAIGNUP';}
 		if (eregi("CALLDATEUP",$stage))		{$SQLorder='order by list_lastcalldate asc';	$CALLDATElink='stage=CALLDATEDOWN';}
 		if (eregi("CALLDATEDOWN",$stage))	{$SQLorder='order by list_lastcalldate desc';	$CALLDATElink='stage=CALLDATEUP';}
-			$stmt="SELECT vls.list_id,list_name,list_description,count(*) as tally,active,list_lastcalldate,campaign_id from vicidial_lists vls,vicidial_list vl where vls.list_id=vl.list_id and campaign_id='$campaign_id' group by list_id $SQLorder";
-			$rslt=mysql_query($stmt, $link);
-			$lists_to_print = mysql_num_rows($rslt);
+		$stmt="SELECT vls.list_id,list_name,list_description,count(*) as tally,active,list_lastcalldate,campaign_id from vicidial_lists vls,vicidial_list vl where vls.list_id=vl.list_id and campaign_id='$campaign_id' group by list_id $SQLorder";
+		$rslt=mysql_query($stmt, $link);
+		$lists_to_print = mysql_num_rows($rslt);
 
-			echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
-			echo "<TR BGCOLOR=BLACK>";
-			echo "<TD><a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id&$LISTlink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST ID</B></a></TD>";
-			echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST NAME</B></TD>";
-			echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>DESCRIPTION</B></TD>\n";
-			echo "<TD><a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id&$TALLYlink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LEADS COUNT</B></a></TD>\n";
-			echo "<TD COLSPAN=2><a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id&$ACTIVElink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>ACTIVE</B></a></TD>";
-			echo "<TD><a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id&$CALLDATElink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LAST CALL DATE</B></a></TD>";
-			echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>MODIFY</TD>\n";
-			echo "</TR>\n";
+		echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+		echo "<TR BGCOLOR=BLACK>";
+		echo "<TD><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id&$LISTlink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST ID</B></a></TD>";
+		echo "<TD><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id&$NAMElink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST NAME</B></a></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST NAME</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>DESCRIPTION</B></TD>\n";
+		echo "<TD><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id&$TALLYlink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LEADS COUNT</B></a></TD>\n";
+		echo "<TD COLSPAN=2><a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id&$ACTIVElink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>ACTIVE</B></a></TD>";
+		echo "<TD><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id&$CALLDATElink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LAST CALL DATE</B></a></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>MODIFY</TD>\n";
+		echo "</TR>\n";
+
+		$o=0;
+		while ($lists_to_print > $o)
+			{
+			$row=mysql_fetch_row($rslt);
+			if (eregi("1$|3$|5$|7$|9$", $o))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=311&list_id=$row[0]\">$row[0]</a></td>";
+			echo "<td><font size=1> $row[1]</td>";
+			echo "<td><font size=1> $row[2]</td>";
+			echo "<td><font size=1> $row[3]</td>";
+			echo "<td><font size=1> $row[4]</td>";
+			echo "<td>";
+
+			if (ereg('Y',$row[4]))
+				{
+				$active_lists++;
+				$camp_lists .= "'$row[0]',";
+				echo "<input type=\"checkbox\" name=\"list_active_change[]\" value=\"$row[0]\" CHECKED>";
+				}
+			else
+				{
+				$inactive_lists++;
+				echo "<input type=\"checkbox\" name=\"list_active_change[]\" value=\"$row[0]\"";
+				}
+
+			echo "</td>";
+			echo "<td><font size=1> $row[5]</td>";
+			echo "<td><font size=1><a href=\"$PHP_SELF?ADD=311&list_id=$row[0]\">MODIFY</a></td></tr>\n";
+
+			$o++;
+			}
+
+		echo "<TR><TD COLSPAN=7 ALIGN=CENTER><input type=submit value=\"SUBMIT ACTIVE LIST CHANGES\"></TD></TR>\n";
+		echo "</TABLE></center><BR></FORM>\n";
+		echo "<center><b>\n";
+
+		$filterSQL = $filtersql_list[$lead_filter_id];
+		$filterSQL = preg_replace("/\\\\/","",$filterSQL);
+		$filterSQL = eregi_replace("^and|and$|^or|or$","",$filterSQL);
+		if (strlen($filterSQL)>4)
+			{$fSQL = "and $filterSQL";}
+		else
+			{$fSQL = '';}
+
+			$camp_lists = eregi_replace(".$","",$camp_lists);
+		echo "This campaign has $active_lists active lists and $inactive_lists inactive lists<br><br>\n";
+
+
+		if ( ($display_leads_count == 'Y') and (strlen($camp_lists) > 3) )
+			{
+			# grab names of global statuses and statuses in the selected campaign
+			$stmt="SELECT status,status_name from vicidial_statuses order by status;";
+			$rslt=mysql_query($stmt, $link);
+			$statuses_to_print = mysql_num_rows($rslt);
 
 			$o=0;
-			while ($lists_to_print > $o)
+			while ($statuses_to_print > $o) 
 				{
-				$row=mysql_fetch_row($rslt);
-				if (eregi("1$|3$|5$|7$|9$", $o))
-					{$bgcolor='bgcolor="#B9CBFD"';} 
-				else
-					{$bgcolor='bgcolor="#9BB9FB"';}
-				echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=311&list_id=$row[0]\">$row[0]</a></td>";
-				echo "<td><font size=1> $row[1]</td>";
-				echo "<td><font size=1> $row[2]</td>";
-				echo "<td><font size=1> $row[3]</td>";
-				echo "<td><font size=1> $row[4]</td>";
-				echo "<td>";
-
-				if (ereg('Y',$row[4]))
-					{
-					$active_lists++;
-					$camp_lists .= "'$row[0]',";
-					echo "<input type=\"checkbox\" name=\"list_active_change[]\" value=\"$row[0]\" CHECKED>";
-					}
-				else
-					{
-					$inactive_lists++;
-					echo "<input type=\"checkbox\" name=\"list_active_change[]\" value=\"$row[0]\"";
-					}
-
-				echo "</td>";
-				echo "<td><font size=1> $row[5]</td>";
-				echo "<td><font size=1><a href=\"$PHP_SELF?ADD=311&list_id=$row[0]\">MODIFY</a></td></tr>\n";
-
+				$rowx=mysql_fetch_row($rslt);
+				$statuses_name_list["$rowx[0]"] = "$rowx[1]";
 				$o++;
 				}
 
-			echo "<TR><TD COLSPAN=7 ALIGN=CENTER><input type=submit value=\"SUBMIT ACTIVE LIST CHANGES\"></TD></TR>\n";
-			echo "</TABLE></center><BR></FORM>\n";
-			echo "<center><b>\n";
+			$stmt="SELECT status,status_name from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status;";
+			$rslt=mysql_query($stmt, $link);
+			$Cstatuses_to_print = mysql_num_rows($rslt);
 
-			$filterSQL = $filtersql_list[$lead_filter_id];
-			$filterSQL = preg_replace("/\\\\/","",$filterSQL);
-			$filterSQL = eregi_replace("^and|and$|^or|or$","",$filterSQL);
-			if (strlen($filterSQL)>4)
-				{$fSQL = "and $filterSQL";}
-			else
-				{$fSQL = '';}
-
-				$camp_lists = eregi_replace(".$","",$camp_lists);
-			echo "This campaign has $active_lists active lists and $inactive_lists inactive lists<br><br>\n";
-
-
-			if ( ($display_leads_count == 'Y') and (strlen($camp_lists) > 3) )
+			$o=0;
+			while ($Cstatuses_to_print > $o) 
 				{
-				# grab names of global statuses and statuses in the selected campaign
-				$stmt="SELECT status,status_name from vicidial_statuses order by status;";
-				$rslt=mysql_query($stmt, $link);
-				$statuses_to_print = mysql_num_rows($rslt);
-
-				$o=0;
-				while ($statuses_to_print > $o) 
-					{
-					$rowx=mysql_fetch_row($rslt);
-					$statuses_name_list["$rowx[0]"] = "$rowx[1]";
-					$o++;
-					}
-
-				$stmt="SELECT status,status_name from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status;";
-				$rslt=mysql_query($stmt, $link);
-				$Cstatuses_to_print = mysql_num_rows($rslt);
-
-				$o=0;
-				while ($Cstatuses_to_print > $o) 
-					{
-					$rowx=mysql_fetch_row($rslt);
-					$statuses_name_list["$rowx[0]"] = "$rowx[1]";
-					$o++;
-					}
-				# end grab status names
-
-				echo "<br><b>STATUSES WITHIN THE ACTIVE LISTS FOR THIS CAMPAIGN:</b>\n";
-				echo " - <font size=1><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id&stage=hide_leadscount\">HIDE</a></font><BR>";
-				echo "<TABLE width=500 cellspacing=3>\n";
-				echo "<tr><td>STATUS</td><td>STATUS NAME</td><td>CALLED</td><td>NOT CALLED</td></tr>\n";
-
-				$leads_in_list = 0;
-				$leads_in_list_N = 0;
-				$leads_in_list_Y = 0;
-				$stmt="SELECT status,called_since_last_reset,count(*) from vicidial_list where list_id IN($camp_lists) group by status,called_since_last_reset order by status,called_since_last_reset";
-				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $link);
-				$statuses_to_print = mysql_num_rows($rslt);
-
-				$o=0;
-				$lead_list['count'] = 0;
-				$lead_list['Y_count'] = 0;
-				$lead_list['N_count'] = 0;
-				while ($statuses_to_print > $o) 
-					{
-					$rowx=mysql_fetch_row($rslt);
-					
-					$lead_list['count'] = ($lead_list['count'] + $rowx[2]);
-					if ($rowx[1] == 'N') 
-						{
-						$since_reset = 'N';
-						$since_resetX = 'Y';
-						}
-					else 
-						{
-						$since_reset = 'Y';
-						$since_resetX = 'N';
-						} 
-					$lead_list[$since_reset][$rowx[0]] = ($lead_list[$since_reset][$rowx[0]] + $rowx[2]);
-					$lead_list[$since_reset.'_count'] = ($lead_list[$since_reset.'_count'] + $rowx[2]);
-					#If opposite side is not set, it may not in the future so give it a value of zero
-					if (!isset($lead_list[$since_resetX][$rowx[0]])) 
-						{
-						$lead_list[$since_resetX][$rowx[0]]=0;
-						}
-					$o++;
-					}
-			 
-				$o=0;
-				if ($lead_list['count'] > 0)
-					{
-					while (list($dispo,) = each($lead_list[$since_reset]))
-						{
-						if (eregi("1$|3$|5$|7$|9$", $o))
-							{$bgcolor='bgcolor="#B9CBFD"';} 
-						else
-							{$bgcolor='bgcolor="#9BB9FB"';}
-
-						if ($dispo == 'CBHOLD')
-							{
-							$CLB="<a href=\"$PHP_SELF?ADD=811&list_id=$list_id\">";
-							$CLE="</a>";
-							}
-						else
-							{
-							$CLB='';
-							$CLE='';
-							}
-
-						echo "<tr $bgcolor><td><font size=1>$CLB$dispo$CLE</td><td><font size=1>$statuses_name_list[$dispo]</td><td><font size=1>".$lead_list['Y'][$dispo]."</td><td><font size=1>".$lead_list['N'][$dispo]." </td></tr>\n";
-						$o++;
-						}
-					}
-
-				echo "<tr><td colspan=2><font size=1>SUBTOTALS</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td></tr>\n";
-				echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>TOTAL</td><td colspan=3 align=center><font size=1>$lead_list[count]</td></tr>\n";
-
-				echo "</table></center><br>\n";
-				unset($lead_list);				
-				}
-			else
-				{
-				echo "<font size=1><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id&stage=show_leadscount\">SHOW LEAD STATUSES IN THIS CAMPAIGN</a></font><BR><BR>";
-				}
-
-
-			if ($display_dialable_count == 'Y')
-				{
-				### call function to calculate and print dialable leads
-				dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$fSQL);
-				echo " - <font size=1><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id&stage=hide_dialable\">HIDE</a></font><BR><BR>";
-				}
-			else
-				{
-				echo "<a href=\"$PHP_SELF?ADD=73&campaign_id=$campaign_id\" target=\"_blank\">Popup Dialable Leads Count</a>";
-				echo " - <font size=1><a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id&stage=show_dialable\">SHOW</a></font><BR><BR>";
-				}
-
-
-
-				$stmt="SELECT count(*) FROM vicidial_hopper where campaign_id='$campaign_id' and status IN('READY')";
-				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $link);
 				$rowx=mysql_fetch_row($rslt);
-				$hopper_leads = "$rowx[0]";
+				$statuses_name_list["$rowx[0]"] = "$rowx[1]";
+				$o++;
+				}
+			# end grab status names
 
-			echo "This campaign has $hopper_leads leads in the dial hopper<br><br>\n";
-			echo "<a href=\"./AST_VICIDIAL_hopperlist.php?group=$campaign_id\">Click here to see what leads are in the hopper right now</a><br><br>\n";
-			echo "<a href=\"./AST_VDADstats.php?group=$campaign_id\">Click here to see a VDAD report for this campaign</a><BR><BR>\n";
+			echo "<br><b>STATUSES WITHIN THE ACTIVE LISTS FOR THIS CAMPAIGN:</b>\n";
+			echo " - <font size=1><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id&stage=hide_leadscount\">HIDE</a></font><BR>";
+			echo "<TABLE width=500 cellspacing=3>\n";
+			echo "<tr><td>STATUS</td><td>STATUS NAME</td><td>CALLED</td><td>NOT CALLED</td></tr>\n";
+
+			$leads_in_list = 0;
+			$leads_in_list_N = 0;
+			$leads_in_list_Y = 0;
+			$stmt="SELECT status,called_since_last_reset,count(*) from vicidial_list where list_id IN($camp_lists) group by status,called_since_last_reset order by status,called_since_last_reset";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$statuses_to_print = mysql_num_rows($rslt);
+
+			$o=0;
+			$lead_list['count'] = 0;
+			$lead_list['Y_count'] = 0;
+			$lead_list['N_count'] = 0;
+			while ($statuses_to_print > $o) 
+				{
+				$rowx=mysql_fetch_row($rslt);
+				
+				$lead_list['count'] = ($lead_list['count'] + $rowx[2]);
+				if ($rowx[1] == 'N') 
+					{
+					$since_reset = 'N';
+					$since_resetX = 'Y';
+					}
+				else 
+					{
+					$since_reset = 'Y';
+					$since_resetX = 'N';
+					} 
+				$lead_list[$since_reset][$rowx[0]] = ($lead_list[$since_reset][$rowx[0]] + $rowx[2]);
+				$lead_list[$since_reset.'_count'] = ($lead_list[$since_reset.'_count'] + $rowx[2]);
+				#If opposite side is not set, it may not in the future so give it a value of zero
+				if (!isset($lead_list[$since_resetX][$rowx[0]])) 
+					{
+					$lead_list[$since_resetX][$rowx[0]]=0;
+					}
+				$o++;
+				}
+		 
+			$o=0;
+			if ($lead_list['count'] > 0)
+				{
+				while (list($dispo,) = each($lead_list[$since_reset]))
+					{
+					if (eregi("1$|3$|5$|7$|9$", $o))
+						{$bgcolor='bgcolor="#B9CBFD"';} 
+					else
+						{$bgcolor='bgcolor="#9BB9FB"';}
+
+					if ($dispo == 'CBHOLD')
+						{
+						$CLB="<a href=\"$PHP_SELF?ADD=811&list_id=$list_id\">";
+						$CLE="</a>";
+						}
+					else
+						{
+						$CLB='';
+						$CLE='';
+						}
+
+					echo "<tr $bgcolor><td><font size=1>$CLB$dispo$CLE</td><td><font size=1>$statuses_name_list[$dispo]</td><td><font size=1>".$lead_list['Y'][$dispo]."</td><td><font size=1>".$lead_list['N'][$dispo]." </td></tr>\n";
+					$o++;
+					}
+				}
+
+			echo "<tr><td colspan=2><font size=1>SUBTOTALS</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td></tr>\n";
+			echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>TOTAL</td><td colspan=3 align=center><font size=1>$lead_list[count]</td></tr>\n";
+
+			echo "</table></center><br>\n";
+			unset($lead_list);				
+			}
+		else
+			{
+			echo "<font size=1><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id&stage=show_leadscount\">SHOW LEAD STATUSES IN THIS CAMPAIGN</a></font><BR><BR>";
+			}
+
+
+		if ($display_dialable_count == 'Y')
+			{
+			### call function to calculate and print dialable leads
+			dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$fSQL);
+			echo " - <font size=1><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id&stage=hide_dialable\">HIDE</a></font><BR><BR>";
+			}
+		else
+			{
+			echo "<a href=\"$PHP_SELF?ADD=73&campaign_id=$campaign_id\" target=\"_blank\">Popup Dialable Leads Count</a>";
+			echo " - <font size=1><a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id&stage=show_dialable\">SHOW</a></font><BR><BR>";
+			}
+
+
+
+			$stmt="SELECT count(*) FROM vicidial_hopper where campaign_id='$campaign_id' and status IN('READY')";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$rowx=mysql_fetch_row($rslt);
+			$hopper_leads = "$rowx[0]";
+
+		echo "This campaign has $hopper_leads leads in the dial hopper<br><br>\n";
+		echo "<a href=\"./AST_VICIDIAL_hopperlist.php?group=$campaign_id\">Click here to see what leads are in the hopper right now</a><br><br>\n";
+		echo "<a href=\"./AST_VDADstats.php?group=$campaign_id\">Click here to see a VDAD report for this campaign</a><BR><BR>\n";
 		}
 		echo "<a href=\"$PHP_SELF?ADD=81&campaign_id=$campaign_id\">Click here to see all CallBack Holds in this campaign</a><BR><BR>\n";
 		if ($LOGuser_level >= 9)
@@ -20715,14 +20723,15 @@ if ($ADD==34)
 		echo "<TABLE width=500 cellspacing=3>\n";
 		echo "<tr><td>USER</td><td> &nbsp; &nbsp; RANK</td><td> &nbsp; &nbsp; CALLS TODAY</td></tr>\n";
 
-			$stmt="SELECT vu.user,vca.campaign_rank,vca.calls_today,full_name from vicidial_campaign_agents vca, vicidial_users vu where campaign_id='$campaign_id' and active='Y' and vu.user=vca.user;";
-			$rsltx=mysql_query($stmt, $link);
-			$users_to_print = mysql_num_rows($rsltx);
+		$stmt="SELECT vu.user,vca.campaign_rank,vca.calls_today,full_name from vicidial_campaign_agents vca, vicidial_users vu where campaign_id='$campaign_id' and active='Y' and vu.user=vca.user;";
+		$rsltx=mysql_query($stmt, $link);
+		$users_to_print = mysql_num_rows($rsltx);
 
-			$o=0;
-			while ($users_to_print > $o) {
-				$rowx=mysql_fetch_row($rsltx);
-				$o++;
+		$o=0;
+		while ($users_to_print > $o) 
+			{
+			$rowx=mysql_fetch_row($rsltx);
+			$o++;
 
 			if (eregi("1$|3$|5$|7$|9$", $o))
 				{$bgcolor='bgcolor="#B9CBFD"';} 
@@ -26903,6 +26912,7 @@ if ($ADD==100)
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$LISTlink='stage=LISTIDDOWN';
+	$NAMElink='stage=LISTNAMEDOWN';
 	$TALLYlink='stage=TALLYDOWN';
 	$ACTIVElink='stage=ACTIVEDOWN';
 	$CAMPAIGNlink='stage=CAMPAIGNDOWN';
@@ -26910,6 +26920,8 @@ if ($ADD==100)
 	$SQLorder='order by list_id';
 	if (eregi("LISTIDUP",$stage))		{$SQLorder='order by list_id asc';				$LISTlink='stage=LISTIDDOWN';}
 	if (eregi("LISTIDDOWN",$stage))		{$SQLorder='order by list_id desc';				$LISTlink='stage=LISTIDUP';}
+	if (eregi("LISTNAMEUP",$stage))		{$SQLorder='order by list_name asc';			$NAMElink='stage=LISTNAMEDOWN';}
+	if (eregi("LISTNAMEDOWN",$stage))	{$SQLorder='order by list_name desc';			$NAMElink='stage=LISTNAMEUP';}
 	if (eregi("TALLYUP",$stage))		{$SQLorder='order by tally asc';				$TALLYlink='stage=TALLYDOWN';}
 	if (eregi("TALLYDOWN",$stage))		{$SQLorder='order by tally desc';				$TALLYlink='stage=TALLYUP';}
 	if (eregi("ACTIVEUP",$stage))		{$SQLorder='order by active asc';				$ACTIVElink='stage=ACTIVEDOWN';}
@@ -26926,7 +26938,7 @@ if ($ADD==100)
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<TR BGCOLOR=BLACK>";
 	echo "<TD><a href=\"$PHP_SELF?ADD=100&$LISTlink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST ID</B></a></TD>";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST NAME</B></TD>";
+	echo "<TD><a href=\"$PHP_SELF?ADD=100&$NAMElink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST NAME</B></a></TD>";
 	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>DESCRIPTION</B></TD>\n";
 	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>RTIME</B></TD>\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=100&$TALLYlink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LEADS COUNT</B></a></TD>\n";

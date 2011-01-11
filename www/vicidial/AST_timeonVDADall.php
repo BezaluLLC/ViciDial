@@ -2434,6 +2434,7 @@ $calls_to_list = mysql_num_rows($rslt);
 
 		$call_time_MS =		sec_convert($call_time_S,'M'); 
 		$call_time_MS =		sprintf("%7s", $call_time_MS);
+		$call_time_MS =		" $call_time_MS";
 		$G = '';		$EG = '';
 		if ( ($Lstatus=='INCALL') or ($Lstatus=='PARK') )
 			{
@@ -2523,7 +2524,7 @@ $calls_to_list = mysql_num_rows($rslt);
 		if ($UGdisplay > 0)	{$UGD = " $G$user_group$EG |";}
 		else	{$UGD = "";}
 
-		if ($SERVdisplay > 0)	{$SVD = "$G$server_ip$EG | $G$call_server_ip$EG | ";}
+		if ($SERVdisplay > 0)	{$SVD = " $G$server_ip$EG | $G$call_server_ip$EG |";}
 		else	{$SVD = "";}
 
 		if ($PHONEdisplay > 0)	{$phoneD = "$G$phone$EG | ";}
@@ -2553,11 +2554,11 @@ $calls_to_list = mysql_num_rows($rslt);
 
 		if ($realtime_block_user_info > 0)
 			{
-			$Aecho .= "|$UGD $G$sessionid$EG$L$R | $G$status$EG $CM $pausecode| $CP$SVD$G$call_time_MS$EG | $G$campaign_id$EG | $G$calls_today$EG |$INGRP\n";
+			$Aecho .= "|$UGD $G$sessionid$EG$L$R | $G$status$EG $CM $pausecode|$CP$SVD$G$call_time_MS$EG | $G$campaign_id$EG | $G$calls_today$EG |$INGRP\n";
 			}
 		if ($realtime_block_user_info < 1)
 			{
-			$Aecho .= "| $G$extension$EG |$phoneD<a href=\"./user_status.php?user=$Luser\" target=\"_blank\">$G$user$EG</a> <a href=\"javascript:ingroup_info('$Luser','$j');\">+</a> |$UGD $G$sessionid$EG$L$R | $G$status$EG $CM $pausecode| $CP$SVD$G$call_time_MS$EG | $G$campaign_id$EG | $G$calls_today$EG |$INGRP\n";
+			$Aecho .= "| $G$extension$EG |$phoneD<a href=\"./user_status.php?user=$Luser\" target=\"_blank\">$G$user$EG</a> <a href=\"javascript:ingroup_info('$Luser','$j');\">+</a> |$UGD $G$sessionid$EG$L$R | $G$status$EG $CM $pausecode|$CP$SVD$G$call_time_MS$EG | $G$campaign_id$EG | $G$calls_today$EG |$INGRP\n";
 			}
 		$j++;
 		}

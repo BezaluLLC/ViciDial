@@ -13,10 +13,11 @@
 # CHANGELOG:
 # 101216-1355 - First Build
 # 101218-1520 - small time reload bug fix and formatting fixes
+# 110111-1557 - Added options.php options, minor bug fixes
 #
 
-$version = '2.4-2';
-$build = '101218-1520';
+$version = '2.4-3';
+$build = '110111-1557';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -112,28 +113,94 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
-if (!isset($DB))			{$DB=0;}
-if (!isset($RR))			{$RR=40;}
-if (!isset($group))			{$group='ALL-ACTIVE';}
-if (!isset($usergroup))		{$usergroup='';}
-if (!isset($UGdisplay))		{$UGdisplay=0;}	# 0=no, 1=yes
-if (!isset($UidORname))		{$UidORname=1;}	# 0=id, 1=name
-if (!isset($orderby))		{$orderby='timeup';}
-if (!isset($SERVdisplay))	{$SERVdisplay=0;}	# 0=no, 1=yes
-if (!isset($CALLSdisplay))	{$CALLSdisplay=1;}	# 0=no, 1=yes
-if (!isset($PHONEdisplay))	{$PHONEdisplay=0;}	# 0=no, 1=yes
-if (!isset($CUSTPHONEdisplay))	{$CUSTPHONEdisplay=0;}	# 0=no, 1=yes
-if (!isset($PAUSEcodes))	{$PAUSEcodes='N';}  # 0=no, 1=yes
-if (!isset($with_inbound))	
+$webphone_width =	'460';
+$webphone_height =	'500';
+$webphone_left =	'600';
+$webphone_top =		'27';
+$webphone_bufw =	'250';
+$webphone_bufh =	'1';
+$webphone_pad =		'10';
+$webphone_clpos =	"<BR>  &nbsp; <a href=\"#\" onclick=\"hideDiv('webphone_content');\">webphone -</a>";
+
+if (file_exists('options.php'))
 	{
-	if ($outbound_autodial_active > 0)
-		{$with_inbound='Y';}  # N=no, Y=yes, O=only
-	else
-		{$with_inbound='O';}  # N=no, Y=yes, O=only
+	require('options.php');
+	}
+
+if (!isset($DB)) 
+	{
+	if (!isset($RS_DB)) {$DB=0;}
+	else {$DB = $RS_DB;}
+	}
+if (!isset($RR)) 
+	{
+	if (!isset($RS_RR)) {$RR=40;}
+	else {$RR = $RS_RR;}
+	}
+if (!isset($group)) 
+	{
+	if (!isset($RS_group)) {$group='ALL-ACTIVE';}
+	else {$group = $RS_group;}
+	}
+if (!isset($usergroup)) 
+	{
+	if (!isset($RS_usergroup)) {$usergroup='';}
+	else {$usergroup = $RS_usergroup;}
+	}
+if (!isset($UGdisplay)) 
+	{
+	if (!isset($RS_UGdisplay)) {$UGdisplay=0;}
+	else {$UGdisplay = $RS_UGdisplay;}
+	}
+if (!isset($UidORname)) 
+	{
+	if (!isset($RS_UidORname)) {$UidORname=1;}
+	else {$UidORname = $RS_UidORname;}
+	}
+if (!isset($orderby)) 
+	{
+	if (!isset($RS_orderby)) {$orderby='timeup';}
+	else {$orderby = $RS_orderby;}
+	}
+if (!isset($SERVdisplay)) 
+	{
+	if (!isset($RS_SERVdisplay)) {$SERVdisplay=0;}
+	else {$SERVdisplay = $RS_SERVdisplay;}
+	}
+if (!isset($CALLSdisplay)) 
+	{
+	if (!isset($RS_CALLSdisplay)) {$CALLSdisplay=1;}
+	else {$CALLSdisplay = $RS_CALLSdisplay;}
+	}
+if (!isset($PHONEdisplay)) 
+	{
+	if (!isset($RS_PHONEdisplay)) {$PHONEdisplay=0;}
+	else {$PHONEdisplay = $RS_PHONEdisplay;}
+	}
+if (!isset($CUSTPHONEdisplay)) 
+	{
+	if (!isset($RS_CUSTPHONEdisplay)) {$CUSTPHONEdisplay=0;}
+	else {$CUSTPHONEdisplay = $RS_CUSTPHONEdisplay;}
+	}
+if (!isset($PAUSEcodes)) 
+	{
+	if (!isset($RS_PAUSEcodes)) {$PAUSEcodes='N';}
+	else {$PAUSEcodes = $RS_PAUSEcodes;}
+	}
+if (!isset($with_inbound)) 
+	{
+	if (!isset($RS_with_inbound))	
+		{
+		if ($outbound_autodial_active > 0)
+			{$with_inbound='Y';}  # N=no, Y=yes, O=only
+		else
+			{$with_inbound='O';}  # N=no, Y=yes, O=only
+		}
+	else {$with_inbound = $RS_with_inbound;}
 	}
 $ingroup_detail='';
 
-if ( (strlen($group)>1) and (strlen($groups[0])<1) ) {$groups[0] = $group;  $RR=40;}
+if ( (strlen($group)>1) and (strlen($groups[0])<1) ) {$groups[0] = $group;}
 else {$group = $groups[0];}
 
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -153,22 +220,6 @@ $timeSIXhoursAGO = date("Y-m-d H:i:s",$epochSIXhoursAGO);
 $epochTWENTYFOURhoursAGO = ($STARTtime - 86400);
 $timeTWENTYFOURhoursAGO = date("Y-m-d H:i:s",$epochTWENTYFOURhoursAGO);
 $webphone_content='';
-
-$webphone_width =	'460';
-$webphone_height =	'500';
-$webphone_left =	'600';
-$webphone_top =		'27';
-$webphone_bufw =	'250';
-$webphone_bufh =	'1';
-$webphone_pad =		'10';
-$webphone_clpos =	"<BR>  &nbsp; <a href=\"#\" onclick=\"hideDiv('webphone_content');\">webphone -</a>";
-
-if (file_exists('options.php'))
-	{
-	require('options.php');
-	}
-
-
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -463,6 +514,10 @@ if ($presets_enabled > 0)
 		if ($PRESETstats=='1') {$select_list .= " selected";} 
 	$select_list .= ">YES</option>";
 	$select_list .= "</SELECT></TD></TR>";
+	}
+else
+	{
+	$select_list .= "<INPUT TYPE=HIDDEN NAME=PRESETstats ID=PRESETstats value=0>";
 	}
 
 $select_list .= "<TR><TD align=right>";
@@ -1041,8 +1096,17 @@ function update_variables(task_option,task_choice,force_reload)
 		NOLEADSalert = NOLEADSalertFORM[NOLEADSalertFORM.selectedIndex].value;
 		var CARRIERstatsFORM = document.getElementById('CARRIERstats');
 		CARRIERstats = CARRIERstatsFORM[CARRIERstatsFORM.selectedIndex].value;
+		<?php
+		if ($presets_enabled > 0)
+			{
+			?>
 		var PRESETstatsFORM = document.getElementById('PRESETstats');
 		PRESETstats = PRESETstatsFORM[PRESETstatsFORM.selectedIndex].value;
+			<?php
+			}
+		else
+			{echo "PRESETstats=0;\n";}
+		?>
 		var AGENTtimeSTATSFORM = document.getElementById('AGENTtimeSTATS');
 		AGENTtimeSTATS = AGENTtimeSTATSFORM[AGENTtimeSTATSFORM.selectedIndex].value;
 		var temp_monitor_phone = document.REALTIMEform.monitor_phone.value
