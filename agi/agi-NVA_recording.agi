@@ -150,8 +150,8 @@ if ( ($callerid =~ /\".*\"/) && ( (!$calleridname) or ($calleridname =~ /unknown
 	$calleridname =~ s/\"|\" //gi;
 	}
 
-	$callerid =~ s/\D//gi;
-	$calleridname =~ s/unknown//gi;
+$callerid =~ s/\D|\'//gi;
+$calleridname =~ s/unknown|\'//gi;
 if ( (!$callerid) or ($callerid =~ /unknown/) )
 	{$callerid = $calleridname;}
 
