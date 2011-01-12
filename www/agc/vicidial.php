@@ -329,10 +329,11 @@
 # 101216-1758 - Added the ability to hide fields if the label is set to ---HIDE--- in System Settings
 # 101227-1645 - Added dialplan off toggle options, and settings and code changes for top bar webphone
 # 110109-1205 - Added queuemetrics_loginout NONE option
+# 110112-1254 - Added options.php option for focus/blur/enter functions
 #
 
-$version = '2.4-306';
-$build = '110109-1205';
+$version = '2.4-307';
+$build = '110112-1254';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=69;
 $one_mysql_log=0;
@@ -476,7 +477,7 @@ $AgentAlert_allowed		= '1';	# set to 1 to allow Agent alert option
 $disable_blended_checkbox='0';	# set to 1 to disable the BLENDED checkbox from the in-group chooser screen
 $hide_timeclock_link	= '0';	# set to 1 to hide the timeclock link on the agent login screen
 $conf_check_attempts	= '3';	# number of attempts to try before loosing webserver connection, for bad network setups
-
+$focus_blur_enabled		= '1';	# set to 1 to enable the focus/blur enter key blocking(some IE instances have issues)
 $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
 
 $stretch_dimensions		= '1';	# sets the vicidial screen to the size of the browser window
@@ -3195,6 +3196,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var AllowManualQueueCalls='<?php echo $AllowManualQueueCalls ?>';
 	var AllowManualQueueCallsChoice='<?php echo $AllowManualQueueCallsChoice ?>';
 	var call_variables='';
+	var focus_blur_enabled='<?php echo $focus_blur_enabled ?>';
 	var DiaLControl_auto_HTML = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><IMG SRC=\"./images/vdc_LB_resume.gif\" border=0 alt=\"Resume\"></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><IMG SRC=\"./images/vdc_LB_pause.gif\" border=0 alt=\" Pause \"></a><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
 	var DiaLControl_auto_HTML_OFF = "<IMG SRC=\"./images/vdc_LB_pause_OFF.gif\" border=0 alt=\" Pause \"><IMG SRC=\"./images/vdc_LB_resume_OFF.gif\" border=0 alt=\"Resume\">";
@@ -7802,8 +7804,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		else {document.vicidial_form.DispoSelection.value = taskDSgrp;}
 		
 		document.getElementById("DispoSelectContent").innerHTML = dispo_HTML;
-		document.inert_form.inert_button.focus();
-		document.inert_form.inert_button.blur();
+		if (focus_blur_enabled==1)
+			{
+			document.inert_form.inert_button.focus();
+			document.inert_form.inert_button.blur();
+			}
 		}
 
 // ################################################################################
@@ -7847,8 +7852,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				document.getElementById("PauseCodeSelectContent").innerHTML = PauseCode_HTML;
 				}
 			}
-		document.inert_form.inert_button.focus();
-		document.inert_form.inert_button.blur();
+		if (focus_blur_enabled==1)
+			{
+			document.inert_form.inert_button.focus();
+			document.inert_form.inert_button.blur();
+			}
 		}
 
 
@@ -7963,8 +7971,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 		GroupAlias_HTML = GroupAlias_HTML + "</span></font></td></tr></table><BR><BR>" + Go_BacK_LinK;
 		document.getElementById("GroupAliasSelectContent").innerHTML = GroupAlias_HTML;
-		document.inert_form.inert_button.focus();
-		document.inert_form.inert_button.blur();
+		if (focus_blur_enabled==1)
+			{
+			document.inert_form.inert_button.focus();
+			document.inert_form.inert_button.blur();
+			}
 		}
 
 // ################################################################################
@@ -8227,8 +8238,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					}
 				}
 			// scroll back to the top of the page
-			document.inert_form.inert_button.focus();
-			document.inert_form.inert_button.blur();
+			if (focus_blur_enabled==1)
+				{
+				document.inert_form.inert_button.focus();
+				document.inert_form.inert_button.blur();
+				}
 			scroll(0,0);
 			}
 		}
@@ -8517,8 +8531,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			document.vicidial_form.CloserSelectList.value = '';
 			document.getElementById("CloserSelectContent").innerHTML = live_CSC_HTML;
 			}
-		document.inert_form.inert_button.focus();
-		document.inert_form.inert_button.blur();
+		if (focus_blur_enabled==1)
+			{
+			document.inert_form.inert_button.focus();
+			document.inert_form.inert_button.blur();
+			}
 		}
 
 // ################################################################################
@@ -8674,8 +8691,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				document.getElementById("TerritorySelectContent").innerHTML = live_TERR_HTML;
 				}
 			}
-		document.inert_form.inert_button.focus();
-		document.inert_form.inert_button.blur();
+		if (focus_blur_enabled==1)
+			{
+			document.inert_form.inert_button.focus();
+			document.inert_form.inert_button.blur();
+			}
 		}
 
 // ################################################################################
@@ -9011,8 +9031,11 @@ else
 			var HKdispo = hotkeys[String.fromCharCode(key)];
 			if (HKdispo) 
 				{
-				document.inert_form.inert_button.focus();
-				document.inert_form.inert_button.blur();
+				if (focus_blur_enabled==1)
+					{
+					document.inert_form.inert_button.focus();
+					document.inert_form.inert_button.blur();
+					}
 				CustomerData_update();
 				var HKdispo_ary = HKdispo.split(" ----- ");
 				if ( (HKdispo_ary[0] == 'ALTPH2') || (HKdispo_ary[0] == 'ADDR3') )

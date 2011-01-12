@@ -38,6 +38,7 @@ $AgentAlert_allowed		= '1';	# set to 1 to allow Agent alert option
 $disable_blended_checkbox='0';	# set to 1 to disable the BLENDED checkbox from the in-group chooser screen
 $hide_timeclock_link	= '0';	# set to 1 to hide the timeclock link on the agent login screen
 $conf_check_attempts	= '3';	# number of attempts to try before loosing webserver connection, for bad network setups
+$focus_blur_enabled		= '1';	# set to 1 to enable the focus/blur enter key blocking(some IE instances have issues)
 
 $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
 
