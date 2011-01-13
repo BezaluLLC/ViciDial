@@ -14,10 +14,11 @@
 # 101216-1355 - First Build
 # 101218-1520 - small time reload bug fix and formatting fixes
 # 110111-1557 - Added options.php options, minor bug fixes
+# 110113-1736 - Small fix
 #
 
-$version = '2.4-3';
-$build = '110111-1557';
+$version = '2.4-4';
+$build = '110113-1736';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -1109,7 +1110,7 @@ function update_variables(task_option,task_choice,force_reload)
 		?>
 		var AGENTtimeSTATSFORM = document.getElementById('AGENTtimeSTATS');
 		AGENTtimeSTATS = AGENTtimeSTATSFORM[AGENTtimeSTATSFORM.selectedIndex].value;
-		var temp_monitor_phone = document.REALTIMEform.monitor_phone.value
+		var temp_monitor_phone = document.REALTIMEform.monitor_phone.value;
 
 		var temp_camp_choices = '';
 		var selCampObj = document.getElementById('groups[]');
@@ -1137,6 +1138,8 @@ function update_variables(task_option,task_choice,force_reload)
 		//	alert('|' + temp_monitor_phone + '|' + monitor_phone + '|\n' + reload_url);
 			window.location.href = reload_url;
 			}
+
+		monitor_phone = document.REALTIMEform.monitor_phone.value;
 		}
 	gather_realtime_content();
 	}
