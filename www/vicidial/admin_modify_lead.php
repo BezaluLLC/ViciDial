@@ -1009,13 +1009,17 @@ else
 			
 			if ($rowx[0] > 0)
 				{
-				$stmt="select recording_web_link,alt_server_ip from servers where server_ip='$URLserver_ip';";
+				$stmt="select recording_web_link,alt_server_ip,external_server_ip from servers where server_ip='$URLserver_ip';";
 				$rsltx=mysql_query($stmt, $link);
 				$rowx=mysql_fetch_row($rsltx);
 				
 				if (eregi("ALT_IP",$rowx[0]))
 					{
 					$location = eregi_replace($URLserver_ip, $rowx[1], $location);
+					}
+				if (eregi("EXTERNAL_IP",$rowx[0]))
+					{
+					$location = eregi_replace($URLserver_ip, $rowx[2], $location);
 					}
 				}
 			}
