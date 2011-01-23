@@ -162,6 +162,7 @@ if (length($user) > 0)
 if ($record_call =~ /Y/)
 	{
 	$filename = "$filedate$US$accountcode$US$extension";
+	$filename =~ s/\"|\'//gi;
 	### code to record call goes here ###
 
 	$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$filename"); 

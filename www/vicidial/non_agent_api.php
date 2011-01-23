@@ -240,7 +240,7 @@ if ($non_latin < 1)
 	$multi_alt_phones = ereg_replace("[^- \+\!\:\_0-9a-zA-Z]","",$multi_alt_phones);
 		$multi_alt_phones = ereg_replace("\+"," ",$multi_alt_phones);
 	$source = ereg_replace("[^0-9a-zA-Z]","",$source);
-	$phone_login = ereg_replace("[^0-9a-zA-Z]","",$phone_login);
+	$phone_login = ereg_replace("[^-\_0-9a-zA-Z]","",$phone_login);
 	$session_id = ereg_replace("[^0-9]","",$session_id);
 	$server_ip = ereg_replace("[^\.0-9]","",$server_ip);
 	$stage = ereg_replace("[^a-zA-Z]","",$stage);

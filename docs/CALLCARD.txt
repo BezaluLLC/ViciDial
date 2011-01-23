@@ -23,7 +23,7 @@ Web scripts involved:
 
 
 For the calls to be properly logged, use these settings(or add to existing URLs) in the in-group that is handling these calls:
-- Start Call URL: "&minuteswarning=1&callcard=1"
+- Start Call URL: "&minuteswarning=1&callcard=1" or "&minuteswarning=1&callcard=1&nextstep=HANGUP&destination=8300&nextmessage=timeout_hangup&"
 - Dispo URL: "&callcard=--A--talk_time_min--B--"
 
 

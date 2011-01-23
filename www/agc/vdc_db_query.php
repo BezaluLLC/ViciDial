@@ -1847,21 +1847,21 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$order_stmt = '';
 					if (eregi("DOWN",$lead_order)){$order_stmt = 'order by lead_id asc';}
 					if (eregi("UP",$lead_order)){$order_stmt = 'order by lead_id desc';}
-					if (eregi("UP LAST NAME",$lead_order)){$order_stmt = 'order by last_name desc, $last_order';}
-					if (eregi("DOWN LAST NAME",$lead_order)){$order_stmt = 'order by last_name, $last_order';}
-					if (eregi("UP PHONE",$lead_order)){$order_stmt = 'order by phone_number desc, $last_order';}
-					if (eregi("DOWN PHONE",$lead_order)){$order_stmt = 'order by phone_number, $last_order';}
-					if (eregi("UP COUNT",$lead_order)){$order_stmt = 'order by called_count desc, $last_order';}
-					if (eregi("DOWN COUNT",$lead_order)){$order_stmt = 'order by called_count, $last_order';}
-					if (eregi("UP LAST CALL TIME",$lead_order)){$order_stmt = 'order by last_local_call_time desc, $last_order';}
-					if (eregi("DOWN LAST CALL TIME",$lead_order)){$order_stmt = 'order by last_local_call_time, $last_order';}
-					if (eregi("RANDOM",$lead_order)){$order_stmt = 'order by RAND()';}
-					if (eregi("UP RANK",$lead_order)){$order_stmt = 'order by rank desc, $last_order';}
-					if (eregi("DOWN RANK",$lead_order)){$order_stmt = 'order by rank, $last_order';}
-					if (eregi("UP OWNER",$lead_order)){$order_stmt = 'order by owner desc, $last_order';}
-					if (eregi("DOWN OWNER",$lead_order)){$order_stmt = 'order by owner, $last_order';}
-					if (eregi("UP TIMEZONE",$lead_order)){$order_stmt = 'order by gmt_offset_now desc, $last_order';}
-					if (eregi("DOWN TIMEZONE",$lead_order)){$order_stmt = 'order by gmt_offset_now, $last_order';}
+					if (eregi("UP LAST NAME",$lead_order)){$order_stmt = "order by last_name desc, $last_order";}
+					if (eregi("DOWN LAST NAME",$lead_order)){$order_stmt = "order by last_name, $last_order";}
+					if (eregi("UP PHONE",$lead_order)){$order_stmt = "order by phone_number desc, $last_order";}
+					if (eregi("DOWN PHONE",$lead_order)){$order_stmt = "order by phone_number, $last_order";}
+					if (eregi("UP COUNT",$lead_order)){$order_stmt = "order by called_count desc, $last_order";}
+					if (eregi("DOWN COUNT",$lead_order)){$order_stmt = "order by called_count, $last_order";}
+					if (eregi("UP LAST CALL TIME",$lead_order)){$order_stmt = "order by last_local_call_time desc, $last_order";}
+					if (eregi("DOWN LAST CALL TIME",$lead_order)){$order_stmt = "order by last_local_call_time, $last_order";}
+					if (eregi("RANDOM",$lead_order)){$order_stmt = "order by RAND()";}
+					if (eregi("UP RANK",$lead_order)){$order_stmt = "order by rank desc, $last_order";}
+					if (eregi("DOWN RANK",$lead_order)){$order_stmt = "order by rank, $last_order";}
+					if (eregi("UP OWNER",$lead_order)){$order_stmt = "order by owner desc, $last_order";}
+					if (eregi("DOWN OWNER",$lead_order)){$order_stmt = "order by owner, $last_order";}
+					if (eregi("UP TIMEZONE",$lead_order)){$order_stmt = "order by gmt_offset_now desc, $last_order";}
+					if (eregi("DOWN TIMEZONE",$lead_order)){$order_stmt = "order by gmt_offset_now, $last_order";}
 
 					$stmt="UPDATE vicidial_list SET status='QUEUE',user='$user' where called_since_last_reset='N' and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) $DLTsql $fSQL $adooSQL $order_stmt LIMIT 1;";
 					if ($DB) {echo "$stmt\n";}
