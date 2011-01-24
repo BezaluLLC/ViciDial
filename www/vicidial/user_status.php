@@ -1,7 +1,7 @@
 <?php
 # user_status.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -16,6 +16,7 @@
 # 91212-0656 - Added more complete logging of Emergency Logout process
 # 100309-0544 - Added queuemetrics_loginout option
 # 101108-0032 - Added ADDMEMBER queue_log code
+# 110124-1134 - Small query fix for large queue_log tables
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -66,6 +67,7 @@ $StarTtimE = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $ip = getenv("REMOTE_ADDR");
+$check_time = ($StarTtimE - 86400);
 
 if (!isset($begin_date)) {$begin_date = $TODAY;}
 if (!isset($end_date)) {$end_date = $TODAY;}
@@ -371,7 +373,7 @@ if ($stage == "log_agent_out")
 			$agent_logged_in='';
 			$time_logged_in='0';
 
-			$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/" . mysql_real_escape_string($user) . "' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') order by time_id desc limit 1;";
+			$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/" . mysql_real_escape_string($user) . "' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') and time_id > $check_time order by time_id desc limit 1;";
 			$rsltB=mysql_query($stmtB, $linkB);
 			if ($DB) {echo "<BR>$stmtB\n";}
 			$qml_ct = mysql_num_rows($rsltB);

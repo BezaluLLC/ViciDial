@@ -10,7 +10,7 @@
 #
 # This program only needs to be run by one server
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60711-0945 - Changed to DBI by Marin Blu
@@ -27,6 +27,7 @@
 # 100309-0555 - Added queuemetrics_loginout option
 # 100327-0926 - Added validation of four agent "sec" fields
 # 100331-0310 - Added one-day-ago and only-fix-old-lagged options, fixed validation process
+# 110124-1134 - Small query fix for large queue_log tables
 #
 
 # constants
@@ -1561,7 +1562,7 @@ if ($enable_queuemetrics_logging > 0)
 
 	#######################################################################
 	##### grab all queue_log entries with more than one COMPLETE verb to clean up
-	$stmtB = "SELECT call_id, count(*) FROM queue_log WHERE verb IN('COMPLETEAGENT','COMPLETECALLER','TRANSFER') and serverid='$queuemetrics_log_id' GROUP BY call_id HAVING count(*)>1 ORDER BY count(*) DESC;";
+	$stmtB = "SELECT call_id, count(*) FROM queue_log WHERE verb IN('COMPLETEAGENT','COMPLETECALLER','TRANSFER') and serverid='$queuemetrics_log_id' $QM_SQL_time_H GROUP BY call_id HAVING count(*)>1 ORDER BY count(*) DESC;";
 	$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 	$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 	$XC_records=$sthB->rows;
@@ -1589,7 +1590,7 @@ if ($enable_queuemetrics_logging > 0)
 
 	##########################################################################
 	##### grab all queue_log COMPLETEAGENT entries with negative call time to clean up
-	$stmtB = "SELECT call_id, time_id FROM queue_log WHERE verb IN('COMPLETEAGENT') and data2 < '0' and serverid='$queuemetrics_log_id';";
+	$stmtB = "SELECT call_id, time_id FROM queue_log WHERE verb IN('COMPLETEAGENT') and data2 < '0' and serverid='$queuemetrics_log_id' $QM_SQL_time_H;";
 	$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 	$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 	$XN_records=$sthB->rows;

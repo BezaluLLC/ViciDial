@@ -17,7 +17,7 @@
 # ; 7. audio filename for invalid user id re-enter prompt, agent not available
 # ; 8. number of retry attempts to enter a valid user ID
 # ;		this will only be enforced if "prompt for user ID" prompt is populated
-# ; 7. in-group to send the call to if there is no valid agent, if none is
+# ; 9. in-group to send the call to if there is no valid agent, if none is
 # ;		defined, then the call will be directed to 's' exten
 # ; 10. audio filename before sending call to no-agent route
 # ; 11. audio filename before sending call to no-agent route if agent active but

@@ -37,6 +37,7 @@
 # 100622-0917 - Added start_call_url function for remote agents, this launches a separate child script
 # 101108-0032 - Added ADDMEMBER queue_log code
 # 110103-1230 - Added queuemetrics_loginout NONE option
+# 110124-1134 - Small query fix for large queue_log tables
 #
 
 ### begin parsing run-time options ###
@@ -797,7 +798,7 @@ while($one_day_interval > 0)
 							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='NONE',agent='Agent/$VD_user[$z]',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
 							$Baffected_rows = $dbhB->do($stmtB);
 
-							$stmtB = "SELECT time_id,data1 FROM queue_log where agent='Agent/$VD_user[$z]' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') order by time_id desc limit 1;";
+							$stmtB = "SELECT time_id,data1 FROM queue_log where agent='Agent/$VD_user[$z]' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') and time_id > $check_time order by time_id desc limit 1;";
 							$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 							$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 							$sthBrows=$sthB->rows;
@@ -986,6 +987,7 @@ sub get_time_now	#get the current date and time and epoch for logging call lengt
 	$LOCAL_GMT_OFF = $SERVER_GMT;
 	$LOCAL_GMT_OFF_STD = $SERVER_GMT;
 	if ($isdst) {$LOCAL_GMT_OFF++;} 
+	$check_time = ($secX - 86400);
 
 	$GMT_now = ($secX - ($LOCAL_GMT_OFF * 3600));
 	($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($GMT_now);

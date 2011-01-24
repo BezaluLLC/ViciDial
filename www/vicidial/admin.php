@@ -2631,12 +2631,13 @@ else
 # 101227-1320 - Added dialplan off toggle options
 # 110103-1135 - Added queuemetrics_dispo_pause and lead_order_randomize features
 # 110111-1305 - Added sort by list name for list listings in list section and campaign screens
+# 110124-1134 - Small query fix for large queue_log tables
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-296';
-$build = '110111-1305';
+$admin_version = '2.4-297';
+$build = '110124-1134';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -2647,6 +2648,7 @@ $active_lists=0;
 $inactive_lists=0;
 $modify_refresh_set=0;
 $modify_footer_refresh=0;
+$check_time = ($STARTtime - 86400);
 
 $month_old = mktime(0, 0, 0, date("m")-1, date("d"),  date("Y"));
 $past_month_date = date("Y-m-d H:i:s",$month_old);
@@ -16549,7 +16551,7 @@ if ($ADD==62)
 					$agent_logged_in='';
 					$time_logged_in='0';
 
-					$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/$VLA_user[$k]' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') order by time_id desc limit 1;";
+					$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/$VLA_user[$k]' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') and time_id > $check_time order by time_id desc limit 1;";
 					$rsltB=mysql_query($stmtB, $linkB);
 					if ($DB) {echo "<BR>$stmtB\n";}
 					$qml_ct = mysql_num_rows($rsltB);

@@ -266,10 +266,11 @@
 # 101128-0108 - Added list override for webforms
 # 101208-0414 - Fixed Call Log dial bug (issue 393)
 # 110103-1343 - Added queuemetrics_loginout NONE option
+# 110124-1134 - Small query fix for large queue_log tables
 #
 
-$version = '2.4-172';
-$build = '110103-1343';
+$version = '2.4-173';
+$build = '110124-1134';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=365;
 $one_mysql_log=0;
@@ -476,6 +477,7 @@ $MT[0]='';
 $agents='@agents';
 $US='_';
 while (strlen($CIDdate) > 9) {$CIDdate = substr("$CIDdate", 1);}
+$check_time = ($StarTtime - 86400);
 
 ##### Hangup Cause Dictionary #####
 $hangup_cause_dictionary = array(
@@ -5401,7 +5403,7 @@ if ($ACTION == 'userLOGout')
 			#	$affected_rows = mysql_affected_rows($linkB);
 
 				$logintime=0;
-				$stmt = "SELECT time_id,data1 FROM queue_log where agent='Agent/$user' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') order by time_id desc limit 1;";
+				$stmt = "SELECT time_id,data1 FROM queue_log where agent='Agent/$user' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') and time_id > $check_time order by time_id desc limit 1;";
 				$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00139',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
