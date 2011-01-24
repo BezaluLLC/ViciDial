@@ -267,10 +267,11 @@
 # 101208-0414 - Fixed Call Log dial bug (issue 393)
 # 110103-1343 - Added queuemetrics_loginout NONE option
 # 110124-1134 - Small query fix for large queue_log tables
+# 110124-1456 - Fixed AREACODE DNC manual dial bug
 #
 
-$version = '2.4-173';
-$build = '110124-1134';
+$version = '2.4-174';
+$build = '110124-1456';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=365;
 $one_mysql_log=0;
@@ -1277,7 +1278,14 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 			if (ereg("DNC",$manual_dial_filter))
 				{
-				$stmt="SELECT count(*) FROM vicidial_dnc where phone_number='$phone_number';";
+				if (ereg("AREACODE",$use_internal_dnc))
+					{
+					$phone_number_areacode = substr($phone_number, 0, 3);
+					$phone_number_areacode .= "XXXXXXX";
+					$stmt="SELECT count(*) from vicidial_dnc where phone_number IN('$phone_number','$phone_number_areacode');";
+					}
+				else
+					{$stmt="SELECT count(*) FROM vicidial_dnc where phone_number='$phone_number';";}
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00017',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1300,7 +1308,14 @@ if ($ACTION == 'manDiaLnextCaLL')
 					echo "DNC NUMBER\n";
 					exit;
 					}
-				$stmt="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$phone_number' and campaign_id='$campaign';";
+				if (ereg("AREACODE",$use_campaign_dnc))
+					{
+					$phone_number_areacode = substr($phone_number, 0, 3);
+					$phone_number_areacode .= "XXXXXXX";
+					$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number IN('$phone_number','$phone_number_areacode') and campaign_id='$campaign';";
+					}
+				else
+					{$stmt="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$phone_number' and campaign_id='$campaign';";}
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00018',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
