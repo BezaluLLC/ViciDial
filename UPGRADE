@@ -434,6 +434,8 @@ OTHER CHANGES:
 	allows for the results to be randomized inside of the sorted results as
 	sorted by the List Order option
 
+102. Added add_user and add_phone non-agent API functions
+
 
 
 
