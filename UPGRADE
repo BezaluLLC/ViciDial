@@ -436,6 +436,8 @@ OTHER CHANGES:
 
 102. Added add_user and add_phone non-agent API functions
 
+103. Changed vicidial.php HTML formatting to be XHTML compliant
+
 
 
 
