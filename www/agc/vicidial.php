@@ -331,10 +331,11 @@
 # 110109-1205 - Added queuemetrics_loginout NONE option
 # 110112-1254 - Added options.php option for focus/blur/enter functions
 # 110129-1050 - Changed to XHTML compliant formatting, issue #444
+# 110208-1202 - Made scheduled callbacks notice move when on script/form tabs
 #
 
-$version = '2.4-308';
-$build = '110129-1050';
+$version = '2.4-309';
+$build = '110208-1202';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=69;
 $one_mysql_log=0;
@@ -2589,8 +2590,9 @@ $MNwidth =  ($MASTERwidth + 330);	# 760 - main frame
 $XFwidth =  ($MASTERwidth + 320);	# 750 - transfer/conference
 $HCwidth =  ($MASTERwidth + 310);	# 740 - hotkeys and callbacks
 $CQwidth =  ($MASTERwidth + 300);	# 730 - calls in queue listings
-$AMwidth =  ($MASTERwidth + 270);	# 700 - preset-dial links
+$AMwidth =  ($MASTERwidth + 270);	# 700 - refresh links
 $SCwidth =  ($MASTERwidth + 230);	# 670 - live call seconds counter, sidebar link
+$PDwidth =  ($MASTERwidth + 210);	# 650 - preset-dial links
 $MUwidth =  ($MASTERwidth + 180);	# 610 - agent mute
 $SSwidth =  ($MASTERwidth + 176);	# 606 - scroll script
 $SDwidth =  ($MASTERwidth + 170);	# 600 - scroll script, customer data and calls-in-session
@@ -3205,6 +3207,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var AllowManualQueueCallsChoice='<?php echo $AllowManualQueueCallsChoice ?>';
 	var call_variables='';
 	var focus_blur_enabled='<?php echo $focus_blur_enabled ?>';
+	var CBlinkCONTENT='';
     var DiaLControl_auto_HTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/vdc_LB_resume.gif\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/vdc_LB_pause.gif\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
@@ -5091,8 +5094,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
                             CBpost = '</blink></font></b>';
 							}
 						}
-
-					document.getElementById("CBstatusSpan").innerHTML ="<a href=\"#\" onclick=\"CalLBacKsLisTCheck();return false;\">" + CBpre + '' + CBprint + '' + " ACTIVE CALLBACKS" + CBpost + "</a>";	
+					CBlinkCONTENT ="<a href=\"#\" onclick=\"CalLBacKsLisTCheck();return false;\">" + CBpre + '' + CBprint + '' + " ACTIVE CALLBACKS" + CBpost + "</a>";	
+					document.getElementById("CBstatusSpan").innerHTML = CBlinkCONTENT;	
 					}
 				}
 			delete xmlhttp;
@@ -5736,7 +5739,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						var regUDowner = new RegExp("owner,","ig");
 						if (fields_list.match(regUDowner))
 							{document.vicidial_form.owner.value				= UDfieldsResponse_array[25];}
-
+						var regUDformreload = new RegExp("formreload,","ig");
+						if (fields_list.match(regUDformreload))
+							{FormContentsLoad();}
 
 						var regWFAcustom = new RegExp("^VAR","ig");
 						if (VDIC_web_form_address.match(regWFAcustom))
@@ -8193,7 +8198,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				hideDiv('DispoButtonHideA');
 				hideDiv('DispoButtonHideB');
 				hideDiv('DispoButtonHideC');
-				document.getElementById("DispoSelectBox").style.top = 1;  // Firefox error on this line for some reason
+				document.getElementById("DispoSelectBox").style.top = '1px';  // Firefox error on this line for some reason
 				document.getElementById("DispoSelectMaxMin").innerHTML = "<a href=\"#\" onclick=\"DispoMinimize()\"> minimize </a>";
 				document.getElementById("DispoSelectHAspan").innerHTML = "<a href=\"#\" onclick=\"DispoHanguPAgaiN()\">Hangup Again</a>";
 
@@ -11325,6 +11330,9 @@ else
 		{
 		document.getElementById("MainTable").style.backgroundColor="<?php echo $MAIN_COLOR ?>";
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $MAIN_COLOR ?>";
+		var CBMPheight = '<?php echo $CBheight ?>px';
+		document.getElementById("CallbacksButtons").style.top = CBMPheight;
+		document.getElementById("CallbacksButtons").style.left = '300px';
 		hideDiv('ScriptPanel');
 		hideDiv('ScriptRefresH');
 		hideDiv('FormPanel');
@@ -11373,6 +11381,9 @@ else
 
 	function ScriptPanelToFront()
 		{
+		var CBSPheight = '<?php echo $QLheight ?>px';
+		document.getElementById("CallbacksButtons").style.top = CBSPheight;
+		document.getElementById("CallbacksButtons").style.left = '360px';
 		showDiv('ScriptPanel');
 		showDiv('ScriptRefresH');
 		hideDiv('FormPanel');
@@ -11387,6 +11398,9 @@ else
 
 	function FormPanelToFront()
 		{
+		var CBFPheight = '<?php echo $QLheight ?>px';
+		document.getElementById("CallbacksButtons").style.top = CBFPheight;
+		document.getElementById("CallbacksButtons").style.left = '360px';
 		showDiv('FormPanel');
 		showDiv('FormRefresH');
 		document.getElementById("MainTable").style.backgroundColor="<?php echo $FORM_COLOR ?>";
@@ -11750,10 +11764,6 @@ $zi=2;
 <span id="MDstatusSpan"><a href="#" onclick="NeWManuaLDiaLCalL('NO');return false;">MANUAL DIAL</a></span> &nbsp; &nbsp; &nbsp; <a href="#" onclick="NeWManuaLDiaLCalL('FAST');return false;">FAST DIAL</a><br />
 </font></span>
 
-<span style="position:absolute;left:300px;top:<?php echo $CBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="CallbacksButtons"><font class="body_text">
-<span id="CBstatusSpan">X ACTIVE CALLBACKS</span> <br />
-</font></span>
-
 <span style="position:absolute;left:500px;top:<?php echo $CBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="PauseCodeButtons"><font class="body_text">
 <span id="PauseCodeLinkSpan"></span> <br />
 </font></span>
@@ -11762,7 +11772,7 @@ $zi=2;
 <span id="CallLogLinkSpan"><a href="#" onclick="VieWCalLLoG();return false;">VIEW CALL LOG</a></span> <br />
 </font></span>
 
-<span style="position:absolute;left:0px;top:<?php echo $HKheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="MaiNfooterspan">
+<span style="position:absolute;left:0px;top:<?php echo $PBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="MaiNfooterspan">
 <span id="blind_monitor_notice_span"><b><font color="red"> &nbsp; &nbsp; <span id="blind_monitor_notice_span_contents"></span></font></b></span>
     <table bgcolor="<?php echo $MAIN_COLOR ?>" id="MaiNfooter" width="<?php echo $MNwidth ?>px"><tr height="32px"><td height="32px"><font face="Arial,Helvetica" size="1">VERSION: <?php echo $version ?> &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; Server: <?php echo $server_ip ?>  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</font><br />
 	<font class="body_small">
@@ -11799,12 +11809,12 @@ $zi=2;
 Your Status: <span id="AgentStatusStatus"></span> <br />Calls Dialing: <span id="AgentStatusDiaLs"></span>
 </font></span>
 
-<span style="position:absolute;left:<?php echo $AMwidth ?>px;top:<?php echo $PBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="AgentMuteANDPreseTDiaL"><font class="body_text">
+<span style="position:absolute;left:<?php echo $PDwidth ?>px;top:<?php echo $AMheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="AgentMuteANDPreseTDiaL"><font class="body_text">
 	<?php
 	if ($PreseT_DiaL_LinKs)
 		{
 		echo "<a href=\"#\" onclick=\"DtMf_PreSet_a_DiaL();return false;\"><font class=\"body_tiny\">D1 - DIAL</font></a>\n";
-        echo "<br />\n";
+        echo " &nbsp; \n";
 		echo "<a href=\"#\" onclick=\"DtMf_PreSet_b_DiaL();return false;\"><font class=\"body_tiny\">D2 - DIAL</font></a>\n";
 		}
     else {echo "<br />\n";}
@@ -11825,6 +11835,10 @@ if ($view_calls_in_queue > 0)
 	}
 ?>
 </span></font>
+
+<span style="position:absolute;left:300px;top:<?php echo $CBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="CallbacksButtons"><font class="body_text">
+<span id="CBstatusSpan">X ACTIVE CALLBACKS</span> <br />
+</font></span>
 
 <span style="position:absolute;left:<?php echo $SBwidth ?>px;top:<?php echo $AVTheight ?>px;height:500px;overflow:scroll;z-index:<?php $zi++; echo $zi ?>;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentViewSpan"><table cellpadding="0" cellspacing="0" border="0"><tr><td width="5px" rowspan="2">&nbsp;</td><td align="center"><font class="body_text">
 Other Agents Status: &nbsp; </font></td></tr><tr><td align="center"><span id="AgentViewStatus">&nbsp;</span></td></tr></table></span>
@@ -12134,7 +12148,7 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></center></font
 	<span id="DispoManualQueueMessage"></span>
 	<span id="DispoSelectContent"> End-of-call Disposition Selection </span>
     <input type="hidden" name=DispoSelection /><br />
-    <input type=checkbox name=DispoSelectStop size="1" value="0" /> PAUSE AGENT DIALING <br />
+    <input type=checkbox name=DispoSelectStop id=DispoSelectStop size="1" value="0" /> PAUSE AGENT DIALING <br />
 	<a href="#" onclick="DispoSelectContent_create('','ReSET');return false;">CLEAR FORM</a> | 
 	<a href="#" onclick="DispoSelect_submit();return false;">SUBMIT</a>
     <br /><br />

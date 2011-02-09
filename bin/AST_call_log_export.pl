@@ -13,6 +13,7 @@
 #
 # CHANGES
 # 100310-0112 - First version
+# 110202-2214 - Added ncad14csv format
 #
 
 $txt = '.txt';
@@ -103,8 +104,9 @@ if (length($ARGV[0])>1)
 		print "   call_date  phone_number  vendor_id  status  user  first_name  last_name  lead_id  list_id  campaign_id  length_in_sec  source_id\n";
 		print "   pipe-basic:\n";
 		print "   call_date|phone_number|vendor_id|status|user|first_name|last_name|lead_id|list_id|campaign_id|length_in_sec|source_id|\n";
+		print "   ncad14csv:\n";
+		print "   vendor_lead_code,\"source_id\",\"last_name, first_name\",\"phone_number\",\"address2\",\"alt_phone\",\"postal_code\",\"address1\",\"address3\",\"\security_phrase\",\"status\",\"call_date\",\"email\",\"city\"\n";
 		print "\n";
-
 
 		exit;
 		}
@@ -315,6 +317,8 @@ if ($output_format =~ /^tab-basic$/)
 	{$DLT = "\t";   $txt='.txt';   if (!$Q) {print "---- tab-basic ----\n";}}
 if ($output_format =~ /^pipe-basic$/) 
 	{$DLT = "|";   $txt='.txt';   if (!$Q) {print "---- pipe-basic ----\n";}}
+if ($output_format =~ /^ncad14csv$/) 
+	{$DLT = ",";   $txt='.csv';   if (!$Q) {print "---- ncad14csv ----\n";}}
 
 if (length($campaignSQL) < 2)
 	{
@@ -563,6 +567,7 @@ if ($ftp_transfer > 0)
 	if (!$Q) {print "Sending File Over FTP: $outfile\n";}
 	$ftp = Net::FTP->new("$VARREPORT_host", Port => $VARREPORT_port, Debug => $DB);
 	$ftp->login("$VARREPORT_user","$VARREPORT_pass");
+#	$ftp->cwd("CALL_LOG");
 	$ftp->cwd("CALL_LOG");
 	$ftp->put("$PATHweb/vicidial/server_reports/$outfile", "$outfile");
 	$ftp->quit;
@@ -595,6 +600,20 @@ sub select_format_loop
 	if ($output_format =~ /^tab-basic$/) 
 		{
 		$str = "$call_date\t$phone_number\t$vendor_id\t$status\t$user\t$first_name\t$last_name\t$lead_id\t$list_id\t$campaign_id\t$length_in_sec\t$source_id\t\n";
+		}
+
+	if ($output_format =~ /^ncad14csv$/) 
+		{
+		if ($status =~ /^PU$/) {$status='HU';}
+		if ($status =~ /^PM$/) {$status='BM';}
+		if ($status =~ /^AL$/) {$status='BM';}
+		if ($status =~ /^A$/) {$status='AH';}
+		if ($status =~ /^AA$/) {$status='AH';}
+		if ($status =~ /^B$/) {$status='BS';}
+		if ($status =~ /^AB$/) {$status='BS';}
+		if ($status =~ /^DC$/) {$status='IP';}
+		
+		$str = "$vendor_lead_code,\"$source_id\",\"$last_name, $first_name\",\"$phone_number\",\"$address2\",\"$alt_phone\",\"$postal_code\",\"$address1\",\"$address3\",\"$security_phrase\",\"$status\",\"$call_date\",\"$email\",\"$city\"\n";
 		}
 
 

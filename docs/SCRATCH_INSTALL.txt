@@ -2429,6 +2429,9 @@ SUBPHASE 6.5: setting up astguiclient scripts for continuous running
 ## uncomment below if using QueueMetrics
 #*/5 * * * * /usr/share/astguiclient/AST_cleanup_agent_log.pl --only-qm-live-call-check
 
+# cleanup of the scheduled callback records
+25 0 * * * /usr/share/astguiclient/AST_DB_dead_cb_purge.pl --purge-non-cb -q
+
 ## uncomment below if using Vtiger
 #1 1 * * * /usr/share/astguiclient/Vtiger_optimize_all_tables.pl --quiet
 

@@ -409,7 +409,10 @@ OTHER CHANGES:
 92. Added List override options for webform fields
 
 93. Added script to purge all vicidial_callbacks records that are inactive or
-	are tied to deleted leads, AST_DB_dead_cb_purge.pl 
+	are tied to deleted leads, AST_DB_dead_cb_purge.pl
+	add to the crontab like this:
+	# cleanup of the scheduled callback records
+	25 0 * * * /usr/share/astguiclient/AST_DB_dead_cb_purge.pl --purge-non-cb -q
 
 94. Added did_log_export and recording_lookup functions to the non-agent API
 
@@ -437,6 +440,13 @@ OTHER CHANGES:
 102. Added add_user and add_phone non-agent API functions
 
 103. Changed vicidial.php HTML formatting to be XHTML compliant
+
+104. Added vdc_script_dispo_example.php script which can be customized to
+	require specific fields be filled in before submitting, as well as 
+	limiting this restriction to only specific dispositions. You can also
+	specify dispositions to be selectable that are set to non-selectable.
+	You use this script in an IFRAME for the campaign. It must be 
+	customized for your specific business rules.
 
 
 
