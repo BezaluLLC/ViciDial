@@ -8,7 +8,7 @@
 # just needs to enter the leadID and then they can view and modify the 
 # information in the record for that lead
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -40,6 +40,7 @@
 # 100712-1416 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
 # 100924-1431 - Added Called Count display
 # 101127-1610 - Added ability to set a scheduled callback date and time
+# 110212-2041 - Added compatibility with definable scheduled callback statuses
 #
 
 require("dbconnect.php");
@@ -147,6 +148,8 @@ if (isset($_POST["appointment_date"]))			{$appointment_date=$_POST["appointment_
 	elseif (isset($_GET["appointment_date"]))	{$appointment_date=$_GET["appointment_date"];}
 if (isset($_POST["appointment_time"]))			{$appointment_time=$_POST["appointment_time"];}
 	elseif (isset($_GET["appointment_time"]))	{$appointment_time=$_GET["appointment_time"];}
+if (isset($_GET["CBstatus"]))				{$CBstatus=$_GET["CBstatus"];}
+	elseif (isset($_POST["CBstatus"]))		{$CBstatus=$_POST["CBstatus"];}
 
 $PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -279,6 +282,26 @@ if (strlen($row[16])>0) {$label_security_phrase =	$row[16];}
 if (strlen($row[17])>0) {$label_email =				$row[17];}
 if (strlen($row[18])>0) {$label_comments =			$row[18];}
 
+
+### find out if status(dispo) is a scheduled callback status
+$scheduled_callback='';
+$stmt="SELECT scheduled_callback from vicidial_statuses where status='$dispo';";
+$rslt=mysql_query($stmt, $link);
+$scb_count_to_print = mysql_num_rows($rslt);
+if ($scb_count_to_print > 0) 
+	{
+	$row=mysql_fetch_row($rslt);
+	if (strlen($row[0])>0)	{$scheduled_callback =	$row[0];}
+	}
+$stmt="SELECT scheduled_callback from vicidial_campaign_statuses where status='$dispo';";
+$rslt=mysql_query($stmt, $link);
+$scb_count_to_print = mysql_num_rows($rslt);
+if ($scb_count_to_print > 0) 
+	{
+	$row=mysql_fetch_row($rslt);
+	if (strlen($row[0])>0)	{$scheduled_callback =	$row[0];}
+	}
+
 ?>
 <html>
 <head>
@@ -320,7 +343,7 @@ if ($end_call > 0)
 
 		echo "<BR>vicidial_callback record inactivated: $lead_id<BR>\n";
 		}
-	if ( ($dispo != $status) and ($dispo == 'CALLBK') )
+	if ( ($dispo != $status) and ( ($dispo == 'CALLBK') or ($scheduled_callback == 'Y') ) )
 		{
 		### inactivate vicidial_callbacks record for this lead 
 		$stmt="UPDATE vicidial_callbacks set status='INACTIVE' where lead_id='" . mysql_real_escape_string($lead_id) . "' and status IN('ACTIVE','LIVE');";
@@ -432,11 +455,11 @@ else
 	if ($CBchangeDATE == 'YES')
 		{
 		### change date/time of vicidial_callbacks record for this lead 
-		$stmt="UPDATE vicidial_callbacks set callback_time='" . mysql_real_escape_string($appointment_date) . " " . mysql_real_escape_string($appointment_time) . "',comments='" . mysql_real_escape_string($comments) . "' where callback_id='" . mysql_real_escape_string($callback_id) . "';";
+		$stmt="UPDATE vicidial_callbacks set callback_time='" . mysql_real_escape_string($appointment_date) . " " . mysql_real_escape_string($appointment_time) . "',comments='" . mysql_real_escape_string($comments) . "',lead_status='" . mysql_real_escape_string($CBstatus) . "' where callback_id='" . mysql_real_escape_string($callback_id) . "';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
 
-		echo "<BR>vicidial_callback record changed to $appointment_date $appointment_time<BR>\n";
+		echo "<BR>vicidial_callback record changed to $appointment_date $appointment_time $CBstatus<BR>\n";
 		}	
 
 
@@ -666,6 +689,24 @@ else
 	echo "<tr><td align=right>$label_comments : </td><td align=left><TEXTAREA name=comments ROWS=3 COLS=65>$comments</TEXTAREA></td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Disposition: </td><td align=left><select size=1 name=status>\n";
 
+	### find out if status(dispo) is a scheduled callback status
+	$scheduled_callback='';
+	$stmt="SELECT scheduled_callback from vicidial_statuses where status='$dispo';";
+	$rslt=mysql_query($stmt, $link);
+	$scb_count_to_print = mysql_num_rows($rslt);
+	if ($scb_count_to_print > 0) 
+		{
+		$row=mysql_fetch_row($rslt);
+		if (strlen($row[0])>0)	{$scheduled_callback =	$row[0];}
+		}
+	$stmt="SELECT scheduled_callback from vicidial_campaign_statuses where status='$dispo';";
+	$rslt=mysql_query($stmt, $link);
+	$scb_count_to_print = mysql_num_rows($rslt);
+	if ($scb_count_to_print > 0) 
+		{
+		$row=mysql_fetch_row($rslt);
+		if (strlen($row[0])>0)	{$scheduled_callback =	$row[0];}
+		}
 
 	$list_campaign='';
 	$stmt="SELECT campaign_id from vicidial_lists where list_id='$list_id'";
@@ -734,10 +775,10 @@ else
 
 	echo "<TABLE BGCOLOR=#B6D3FC WIDTH=750><TR><TD>\n";
 	echo "Callback Details:<BR><CENTER>\n";
-	if ( ($dispo == 'CALLBK') or ($dispo == 'CBHOLD') )
+	if ( ($dispo == 'CALLBK') or ($dispo == 'CBHOLD') or ($scheduled_callback == 'Y') )
 		{
 		### find any vicidial_callback records for this lead 
-		$stmt="select callback_id,lead_id,list_id,campaign_id,status,entry_time,callback_time,modify_date,user,recipient,comments,user_group from vicidial_callbacks where lead_id='" . mysql_real_escape_string($lead_id) . "' and status IN('ACTIVE','LIVE') order by callback_id desc LIMIT 1;";
+		$stmt="select callback_id,lead_id,list_id,campaign_id,status,entry_time,callback_time,modify_date,user,recipient,comments,user_group,lead_status from vicidial_callbacks where lead_id='" . mysql_real_escape_string($lead_id) . "' and status IN('ACTIVE','LIVE') order by callback_id desc LIMIT 1;";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
 		$CB_to_print = mysql_num_rows($rslt);
@@ -772,13 +813,52 @@ else
 				echo "New Callback Owner UserID: <input type=text name=CBuser size=8 maxlength=10 value=\"$rowx[8]\"> \n";
 				echo "<input type=submit name=submit value=\"CHANGE TO USERONLY CALLBACK\"></form><BR>\n";
 				}
-
+			$callback_id = $rowx[0];
+			$CBcomments = $rowx[10];
+			$lead_status = $rowx[12];
 			$appointment_datetimeARRAY = explode(" ",$rowx[6]);
 			$appointment_date = $appointment_datetimeARRAY[0];
 			$appointment_timeARRAY = explode(":",$appointment_datetimeARRAY[1]);
 			$appointment_hour = $appointment_timeARRAY[0];
 			$appointment_min = $appointment_timeARRAY[1];
 
+
+
+			$stmt="SELECT status,status_name from vicidial_statuses where scheduled_callback='Y' and selectable='Y' and status NOT IN('CBHOLD') order by status";
+			$rslt=mysql_query($stmt, $link);
+			$statuses_to_print = mysql_num_rows($rslt);
+			$statuses_list='';
+
+			$o=0;
+			$DS=0;
+			while ($statuses_to_print > $o) 
+				{
+				$rowx=mysql_fetch_row($rslt);
+				if ( (strlen($lead_status) == strlen($rowx[0])) and (eregi($lead_status,$rowx[0])) )
+					{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
+				else
+					{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
+				$o++;
+				}
+
+			$stmt="SELECT status,status_name from vicidial_campaign_statuses where scheduled_callback='Y' and selectable='Y' and status NOT IN('CBHOLD') and campaign_id='$list_campaign' order by status";
+			$rslt=mysql_query($stmt, $link);
+			$CAMPstatuses_to_print = mysql_num_rows($rslt);
+
+			$o=0;
+			$CBhold_set=0;
+			while ($CAMPstatuses_to_print > $o) 
+				{
+				$rowx=mysql_fetch_row($rslt);
+				if ( (strlen($lead_status) ==  strlen($rowx[0])) and (eregi($lead_status,$rowx[0])) )
+					{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
+				else
+					{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
+				$o++;
+				}
+
+			if ($DS < 1) 
+				{$statuses_list .= "<option SELECTED value=\"$lead_status\">$lead_status</option>\n";}
 
 			?>
 
@@ -790,7 +870,7 @@ else
 			<input type=hidden name=DB id=DB value=<?php echo $DB ?>>
 			<input type=hidden name=CBchangeDATE value="YES">
 			<input type=hidden name=lead_id id=lead_id value="<?php echo $lead_id ?>">
-			<input type=hidden name=callback_id value="<?php echo $rowx[0] ?>">
+			<input type=hidden name=callback_id value="<?php echo $callback_id ?>">
 
 			<TR BGCOLOR="#E6E6E6">
 			<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">CallBack Date/Time: </TD><TD ALIGN=LEFT><input type=text name=appointment_date id=appointment_date size=10 maxlength=10 value="<?php echo $appointment_date ?>">
@@ -854,9 +934,17 @@ else
 			</TR>
 			<TR BGCOLOR="#E6E6E6">
 			<TD align=center colspan=2>
-			Comments: 
+			<FONT FACE="ARIAL,HELVETICA">Callback Disposition: <select size=1 name=CBstatus>\n";
+			<?php echo "$statuses_list"; ?>
+			</select>
+			</TD>
+			</TR>
 
-			<TEXTAREA name=comments ROWS=3 COLS=65><?php echo $rowx[10] ?></TEXTAREA>
+			<TR BGCOLOR="#E6E6E6">
+			<TD align=center colspan=2>
+			<FONT FACE="ARIAL,HELVETICA">Comments: 
+
+			<TEXTAREA name=comments ROWS=3 COLS=65><?php echo $CBcomments ?></TEXTAREA>
 			</TD>
 			</TR>
 

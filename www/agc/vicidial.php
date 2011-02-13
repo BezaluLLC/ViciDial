@@ -332,10 +332,11 @@
 # 110112-1254 - Added options.php option for focus/blur/enter functions
 # 110129-1050 - Changed to XHTML compliant formatting, issue #444
 # 110208-1202 - Made scheduled callbacks notice move when on script/form tabs
+# 110212-2206 - Added scheduled callback custom statuses compatibility
 #
 
-$version = '2.4-309';
-$build = '110208-1202';
+$version = '2.4-310';
+$build = '110212-2206';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=69;
 $one_mysql_log=0;
@@ -1224,8 +1225,10 @@ else
 				else {$selectableSQL = "selectable='Y' and";}
 				$VARstatuses='';
 				$VARstatusnames='';
+				$VARCBstatuses='';
+				$VARCBstatusesLIST='';
 				##### grab the statuses that can be used for dispositioning by an agent
-				$stmt="SELECT status,status_name FROM vicidial_statuses WHERE $selectableSQL status != 'NEW' order by status limit 300;";
+				$stmt="SELECT status,status_name,scheduled_callback FROM vicidial_statuses WHERE $selectableSQL status != 'NEW' order by status limit 300;";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01010',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1236,13 +1239,17 @@ else
 					$row=mysql_fetch_row($rslt);
 					$statuses[$i] =$row[0];
 					$status_names[$i] =$row[1];
+					$CBstatuses[$i] =$row[2];
 					$VARstatuses = "$VARstatuses'$statuses[$i]',";
 					$VARstatusnames = "$VARstatusnames'$status_names[$i]',";
+					$VARCBstatuses = "$VARCBstatuses'$CBstatuses[$i]',";
+					if ($CBstatuses[$i] == 'Y')
+						{$VARCBstatusesLIST .= " $statuses[$i]";}
 					$i++;
 					}
 
 				##### grab the campaign-specific statuses that can be used for dispositioning by an agent
-				$stmt="SELECT status,status_name FROM vicidial_campaign_statuses WHERE $selectableSQL status != 'NEW' and campaign_id='$VD_campaign' order by status limit 300;";
+				$stmt="SELECT status,status_name,scheduled_callback FROM vicidial_campaign_statuses WHERE $selectableSQL status != 'NEW' and campaign_id='$VD_campaign' order by status limit 300;";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01011',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1253,14 +1260,20 @@ else
 					$row=mysql_fetch_row($rslt);
 					$statuses[$i] =$row[0];
 					$status_names[$i] =$row[1];
+					$CBstatuses[$i] =$row[2];
 					$VARstatuses = "$VARstatuses'$statuses[$i]',";
 					$VARstatusnames = "$VARstatusnames'$status_names[$i]',";
+					$VARCBstatuses = "$VARCBstatuses'$CBstatuses[$i]',";
+					if ($CBstatuses[$i] == 'Y')
+						{$VARCBstatusesLIST .= " $statuses[$i]";}
 					$i++;
 					$j++;
 					}
 				$VD_statuses_ct = ($VD_statuses_ct+$VD_statuses_camp);
-				$VARstatuses = substr("$VARstatuses", 0, -1); 
-				$VARstatusnames = substr("$VARstatusnames", 0, -1); 
+				$VARstatuses = substr("$VARstatuses", 0, -1);
+				$VARstatusnames = substr("$VARstatusnames", 0, -1);
+				$VARCBstatuses = substr("$VARCBstatuses", 0, -1);
+				$VARCBstatusesLIST .= " ";
 
 				##### grab the campaign-specific HotKey statuses that can be used for dispositioning by an agent
 				$stmt="SELECT hotkey,status,status_name FROM vicidial_campaign_hotkeys WHERE selectable='Y' and status != 'NEW' and campaign_id='$VD_campaign' order by hotkey limit 9;";
@@ -2787,6 +2800,7 @@ $CCAL_OUT .= "</table>";
 	var CallBackDatETimE = '';
 	var CallBackrecipient = '';
 	var CallBackCommenTs = '';
+	var CallBackLeadStatus = '';
 	var scheduled_callbacks = '<?php echo $scheduled_callbacks ?>';
 	var dispo_check_all_pause = '<?php echo $dispo_check_all_pause ?>';
 	var api_check_all_pause = '<?php echo $api_check_all_pause ?>';
@@ -2809,6 +2823,8 @@ $CCAL_OUT .= "</table>";
 	var VD_preset_names_ct = '<?php echo $VD_preset_names_ct ?>';
 	VARstatuses = new Array(<?php echo $VARstatuses ?>);
 	VARstatusnames = new Array(<?php echo $VARstatusnames ?>);
+	VARCBstatuses = new Array(<?php echo $VARCBstatuses ?>);
+	var VARCBstatusesLIST = '<?php echo $VARCBstatusesLIST ?>';
 	var VD_statuses_ct = '<?php echo $VD_statuses_ct ?>';
 	VARingroups = new Array(<?php echo $VARingroups ?>);
 	var INgroupCOUNT = '<?php echo $INgrpCT ?>';
@@ -6032,7 +6048,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
                             document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH();\"><img src=\"./images/vdc_LB_webform_two.gif\" border=\"0\" alt=\"Web Form 2\" /></a>\n";
 							}
 
-						if (LeaDPreVDispO == 'CALLBK')
+						if (CBentry_time.length > 2)
 							{
                             document.getElementById("CusTInfOSpaN").innerHTML = " <b> PREVIOUS CALLBACK </b>";
 							document.getElementById("CusTInfOSpaN").style.background = CusTCB_bgcolor;
@@ -6912,7 +6928,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 							document.getElementById("MainStatuSSpan").innerHTML = " Incoming: " + dial_display_number + " " + custom_call_id + " UID: " + CIDcheck + " &nbsp; " + VDIC_fronter; 
 
-							if (LeaDPreVDispO == 'CALLBK')
+							if (CBentry_time.length > 2)
 								{
                                 document.getElementById("CusTInfOSpaN").innerHTML = " <b> PREVIOUS CALLBACK </b>";
 								document.getElementById("CusTInfOSpaN").style.background = CusTCB_bgcolor;
@@ -7794,18 +7810,23 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			}
 		HidEGenDerPulldown();
 		AgentDispoing = 1;
+		var CBflag = '';
 		var VD_statuses_ct_half = parseInt(VD_statuses_ct / 2);
         var dispo_HTML = "<table cellpadding=\"5\" cellspacing=\"5\" width=\"500px\"><tr><td colspan=\"2\"><b> CALL DISPOSITION</b></td></tr><tr><td bgcolor=\"#99FF99\" height=\"300px\" width=\"240px\" valign=\"top\"><font class=\"log_text\"><span id=\"DispoSelectA\">";
 		var loop_ct = 0;
 		while (loop_ct < VD_statuses_ct)
 			{
+			if (VARCBstatuses[loop_ct] == 'Y')
+				{CBflag = '*';}
+			else
+				{CBflag = '';}
 			if (taskDSgrp == VARstatuses[loop_ct]) 
 				{
-                dispo_HTML = dispo_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"DispoSelect_submit();return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a></b></font><br /><br />";
+                dispo_HTML = dispo_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"DispoSelect_submit();return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "</b></font><br /><br />";
 				}
 			else
 				{
-                dispo_HTML = dispo_HTML + "<a href=\"#\" onclick=\"DispoSelectContent_create('" + VARstatuses[loop_ct] + "','ADD');return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a><br /><br />";
+                dispo_HTML = dispo_HTML + "<a href=\"#\" onclick=\"DispoSelectContent_create('" + VARstatuses[loop_ct] + "','ADD');return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "<br /><br />";
 				}
 			if (loop_ct == VD_statuses_ct_half) 
                 {dispo_HTML = dispo_HTML + "</span></font></td><td bgcolor=\"#99FF99\" height=\"300px\" width=\"240px\" valign=\"top\"><font class=\"log_text\"><span id=\"DispoSelectB\">";}
@@ -8055,8 +8076,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			{
 			document.getElementById("CusTInfOSpaN").innerHTML = "";
 			document.getElementById("CusTInfOSpaN").style.background = panel_bgcolor;
-
-			if ( (DispoChoice == 'CALLBK') && (scheduled_callbacks > 0) ) {showDiv('CallBackSelectBox');}
+			var regCBstatus = new RegExp(' ' + DispoChoice + ' ',"ig");
+			if ( (VARCBstatusesLIST.match(regCBstatus)) && (DispoChoice.length > 0) && (scheduled_callbacks > 0) && (DispoChoice != 'CBHOLD') ) {showDiv('CallBackSelectBox');}
 			else
 				{
 				var xmlhttp=false;
@@ -8080,7 +8101,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					}
 				if (xmlhttp) 
 					{ 
-					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&comments=" + CallBackCommenTs + "&custom_field_names=" + custom_field_names;
+					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&CallBackLeadStatus=" + CallBackLeadStatus + "&comments=" + CallBackCommenTs + "&custom_field_names=" + custom_field_names;
 					xmlhttp.open('POST', 'vdc_db_query.php');
 					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 					xmlhttp.send(DSupdate_query); 
@@ -8187,6 +8208,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				document.getElementById("ManualQueueNotice").innerHTML = '';
 				APIManualDialQueue_last=0;
 				document.vicidial_form.FORM_LOADED.value = '0';
+				CallBackLeadStatus = '';
 
 				if (manual_dial_in_progress==1)
 					{
@@ -8249,13 +8271,13 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					{
 					LogouT('SHIFT');
 					}
+				if (focus_blur_enabled==1)
+					{
+					document.inert_form.inert_button.focus();
+					document.inert_form.inert_button.blur();
+					}
 				}
 			// scroll back to the top of the page
-			if (focus_blur_enabled==1)
-				{
-				document.inert_form.inert_button.focus();
-				document.inert_form.inert_button.blur();
-				}
 			scroll(0,0);
 			}
 		}
@@ -10358,6 +10380,7 @@ else
 			CallBackTimEHouR = document.vicidial_form.CBT_hour.value;
 			CallBackTimEMinuteS = document.vicidial_form.CBT_minute.value;
 			CallBackTimEAmpM = document.vicidial_form.CBT_ampm.value;
+			CallBackLeadStatus = document.vicidial_form.DispoSelection.value;
 
 			document.vicidial_form.CBT_hour.value = '01';
 			document.vicidial_form.CBT_minute.value = '00';
@@ -10397,7 +10420,7 @@ else
 			document.vicidial_form.CallBackCommenTsField.value = '';
 
 		//	alert(CallBackDatETimE + "|" + CallBackCommenTs);
-
+			
 			document.vicidial_form.DispoSelection.value = 'CBHOLD';
 			hideDiv('CallBackSelectBox');
 			DispoSelect_submit();

@@ -448,6 +448,10 @@ OTHER CHANGES:
 	You use this script in an IFRAME for the campaign. It must be 
 	customized for your specific business rules.
 
+105. Added the ability to use custom statuses for scheduled callbacks. These
+	are configurable with the Scheduled Callbacks flag in the System
+	Statuses and Campaign Statuses administrative screens.
+
 
 
 

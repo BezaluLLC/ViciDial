@@ -65,6 +65,7 @@
 # 100706-2332 - Added ability to purge only one campaign's leads in the hopper
 # 101108-1451 - Added ability for the hopper level to be set automatically and remove excess leads from the hopper (MikeC)
 # 110103-1118 - Added lead_order_randomize option
+# 110212-2255 - Added scheduled callback custom statuses capability
 #
 
 # constants
@@ -374,7 +375,7 @@ if ($CBHOLD_count > 0)
 	$update_leads='';
 	$cbc=0;
 	$cba=0;
-	$stmtA = "SELECT vicidial_callbacks.lead_id,recipient,campaign_id,vicidial_callbacks.list_id,gmt_offset_now,state FROM vicidial_callbacks,vicidial_list where callback_time <= '$now_date' and vicidial_callbacks.status='ACTIVE' and vicidial_callbacks.lead_id=vicidial_list.lead_id;";
+	$stmtA = "SELECT vicidial_callbacks.lead_id,recipient,campaign_id,vicidial_callbacks.list_id,gmt_offset_now,state,vicidial_callbacks.lead_status FROM vicidial_callbacks,vicidial_list where callback_time <= '$now_date' and vicidial_callbacks.status='ACTIVE' and vicidial_callbacks.lead_id=vicidial_list.lead_id;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -391,6 +392,7 @@ if ($CBHOLD_count > 0)
 			$CA_list_id[$cba] =			$aryA[3];
 			$CA_gmt_offset_now[$cba] =	$aryA[4];
 			$CA_state[$cba] =			$aryA[5];
+			$CA_status[$cba] =			$aryA[6];
 			$cba++;
 			}
 		$cbc++;
@@ -415,7 +417,7 @@ if ($CBHOLD_count > 0)
 		$CAu=0;
 		foreach(@CA_lead_id)
 			{
-			$stmtA = "UPDATE vicidial_list set status='CALLBK', called_since_last_reset='N' where lead_id='$CA_lead_id[$CAu]';";
+			$stmtA = "UPDATE vicidial_list set status='$CA_status[$CAu]', called_since_last_reset='N' where lead_id='$CA_lead_id[$CAu]';";
 			$affected_rows = $dbhA->do($stmtA);
 			if ($DB) {print "Scheduled Callbacks Activated:  $affected_rows\n";}
 			$event_string = "|CALLBACKS LISTACT|$affected_rows|";

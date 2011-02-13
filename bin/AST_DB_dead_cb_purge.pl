@@ -9,10 +9,11 @@
 #
 # It is recommended that you run this program on the local Asterisk machine
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 101128-0149 - first build
+# 110212-2343 - added scheduled callback custom statuses capacity
 #
 
 ### begin parsing run-time options ###
@@ -121,6 +122,36 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 $deleted=0;
 
+### find list of callback statuses
+$SCstatuses=' CBHOLD';
+$stmtA = "select status from vicidial_statuses where scheduled_callback='Y' limit 10000000;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArowsSCS=$sthA->rows;
+$rec_count=0;
+while ($sthArowsSCS > $rec_count)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$SCstatuses .= 	" $aryA[0]";
+	$rec_count++;
+	}
+$sthA->finish();
+$stmtA = "select status from vicidial_campaign_statuses where scheduled_callback='Y' limit 10000000;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArowsSCS=$sthA->rows;
+$rec_count=0;
+while ($sthArowsSCS > $rec_count)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$SCstatuses .= 	" $aryA[0]";
+	$rec_count++;
+	}
+$sthA->finish();
+$SCstatuses .= 	" ";
+if($DB){print STDERR "\nScheduled Callback statuses: |$SCstatuses|\n";}
+
+
 
 $stmtA = "select lead_id,status,callback_id from vicidial_callbacks limit 10000000;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -157,8 +188,8 @@ while ($sthArowsCT > $rec_count)
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$callback_statuses[$rec_count] = $aryA[0];
-			if ( ($purge_non_cb > 0) && ($aryA[0] !~ /CBHOLD|CALLBK/) )
+			$callback_statuses[$rec_count] = " $aryA[0] ";
+			if ( ($purge_non_cb > 0) && ($SCstatuses !~ /$callback_statuses[$rec_count]/) )
 				{$delete_lead++;}
 			}
 		else

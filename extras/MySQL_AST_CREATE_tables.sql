@@ -817,7 +817,8 @@ sale ENUM('Y','N') default 'N',
 dnc ENUM('Y','N') default 'N',
 customer_contact ENUM('Y','N') default 'N',
 not_interested ENUM('Y','N') default 'N',
-unworkable ENUM('Y','N') default 'N'
+unworkable ENUM('Y','N') default 'N',
+scheduled_callback ENUM('Y','N') default 'N'
 );
 
 CREATE TABLE vicidial_campaign_statuses (
@@ -832,6 +833,7 @@ dnc ENUM('Y','N') default 'N',
 customer_contact ENUM('Y','N') default 'N',
 not_interested ENUM('Y','N') default 'N',
 unworkable ENUM('Y','N') default 'N',
+scheduled_callback ENUM('Y','N') default 'N',
 index (campaign_id)
 );
 
@@ -1096,6 +1098,7 @@ user VARCHAR(20),
 recipient ENUM('USERONLY','ANYONE'),	
 comments VARCHAR(255),
 user_group VARCHAR(20),
+lead_status VARCHAR(6) default 'CALLBK',
 index (lead_id),
 index (status),
 index (callback_time)
@@ -2413,7 +2416,10 @@ ALTER TABLE vicidial_agent_log_archive MODIFY agent_log_id INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 
-UPDATE system_settings SET db_schema_version='1258',db_schema_update_date=NOW();
+CREATE TABLE vicidial_call_notes_archive LIKE vicidial_call_notes; 
+ALTER TABLE vicidial_call_notes_archive MODIFY notesid INT(9) UNSIGNED NOT NULL;
+
+UPDATE system_settings SET db_schema_version='1259',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

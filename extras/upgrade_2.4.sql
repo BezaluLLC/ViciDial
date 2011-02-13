@@ -645,3 +645,15 @@ ALTER TABLE system_settings ADD queuemetrics_dispo_pause VARCHAR(6) default '';
 ALTER TABLE vicidial_campaigns ADD lead_order_randomize ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1258',db_schema_update_date=NOW();
+
+CREATE TABLE vicidial_call_notes_archive LIKE vicidial_call_notes; 
+ALTER TABLE vicidial_call_notes_archive MODIFY notesid INT(9) UNSIGNED NOT NULL;
+
+ALTER TABLE vicidial_statuses ADD scheduled_callback ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_campaign_statuses ADD scheduled_callback ENUM('Y','N') default 'N';
+UPDATE vicidial_statuses SET scheduled_callback='Y' where status='CALLBK';
+UPDATE vicidial_campaign_statuses SET scheduled_callback='Y' where status='CALLBK';
+
+ALTER TABLE vicidial_callbacks ADD lead_status VARCHAR(6) default 'CALLBK';
+
+UPDATE system_settings SET db_schema_version='1259',db_schema_update_date=NOW();

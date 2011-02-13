@@ -2632,12 +2632,13 @@ else
 # 110103-1135 - Added queuemetrics_dispo_pause and lead_order_randomize features
 # 110111-1305 - Added sort by list name for list listings in list section and campaign screens
 # 110124-1134 - Small query fix for large queue_log tables
+# 110212-2048 - Added Scheduled Callback as status flag to allow for custom scheduled callback statuses
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-297';
-$build = '110124-1134';
+$admin_version = '2.4-298';
+$build = '110212-2048';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -7329,7 +7330,7 @@ if ($ADD==99999)
 	<B><FONT SIZE=3>VICIDIAL_STATUSES TABLE</FONT></B><BR><BR>
 	<A NAME="vicidial_statuses">
 	<BR>
-	<B>Through the use of system statuses, you can have statuses that exist for campaign and in-group. The Status must be 1-6 characters in length, the description must be 2-30 characters in length and Selectable defines whether it shows up in VICIDIAL as an agent disposition. The human_answered field is used when calculating the drop percentage, or abandon rate. Setting human_answered to Y will use this status when counting the human-answered calls. The Category option allows you to group several statuses into a catogy that can be used for statistical analysis. There are also 5 additional settings that will define the kind of status: sale, dnc, customer contact, not interested, unworkable.</B>
+	<B>Through the use of system statuses, you can have statuses that exist for campaign and in-group. The Status must be 1-6 characters in length, the description must be 2-30 characters in length and Selectable defines whether it shows up in VICIDIAL as an agent disposition. The human_answered field is used when calculating the drop percentage, or abandon rate. Setting human_answered to Y will use this status when counting the human-answered calls. The Category option allows you to group several statuses into a catogy that can be used for statistical analysis. There are also 5 additional settings that will define the kind of status: sale, dnc, customer contact, not interested, unworkable, scheduled callback.</B>
 
 
 
@@ -10269,7 +10270,7 @@ if ($ADD==20)
 				$stmtA="INSERT INTO vicidial_campaign_stats (campaign_id) values('$campaign_id');";
 				$rslt=mysql_query($stmtA, $link);
 
-				$stmtA="INSERT INTO vicidial_campaign_statuses (status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable) SELECT status,status_name,selectable,\"$campaign_id\",human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where campaign_id='$source_campaign_id';";
+				$stmtA="INSERT INTO vicidial_campaign_statuses (status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback) SELECT status,status_name,selectable,\"$campaign_id\",human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback from vicidial_campaign_statuses where campaign_id='$source_campaign_id';";
 				$rslt=mysql_query($stmtA, $link);
 
 				$stmtA="INSERT INTO vicidial_campaign_hotkeys (status,hotkey,status_name,selectable,campaign_id) SELECT status,hotkey,status_name,selectable,\"$campaign_id\" from vicidial_campaign_hotkeys where campaign_id='$source_campaign_id';";
@@ -10331,7 +10332,7 @@ if ($ADD==22)
 				{
 				echo "<br><B>CAMPAIGN STATUS ADDED: $campaign_id - $status_id</B>\n";
 
-				$stmt="INSERT INTO vicidial_campaign_statuses (status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable) values('$status_id','$status_name','$selectable','$campaign_id','$human_answered','$category','$sale','$dnc','$customer_contact','$not_interested','$unworkable');";
+				$stmt="INSERT INTO vicidial_campaign_statuses (status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback) values('$status_id','$status_name','$selectable','$campaign_id','$human_answered','$category','$sale','$dnc','$customer_contact','$not_interested','$unworkable','$scheduled_callbacks');";
 				$rslt=mysql_query($stmt, $link);
 
 				### LOG INSERTION Admin Log Table ###
@@ -12138,7 +12139,7 @@ if ($ADD==221111111111111)
 				{
 				echo "<br><B>SYSTEM STATUS ADDED: $status_name - $status_id</B>\n";
 
-				$stmt="INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable) values('$status_id','$status_name','$selectable','$human_answered','$category','$sale','$dnc','$customer_contact','$not_interested','$unworkable');";
+				$stmt="INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback) values('$status_id','$status_name','$selectable','$human_answered','$category','$sale','$dnc','$customer_contact','$not_interested','$unworkable','$scheduled_callbacks');";
 				$rslt=mysql_query($stmt, $link);
 
 				### LOG INSERTION Admin Log Table ###
@@ -13194,7 +13195,7 @@ if ($ADD==42)
 				{
 				echo "<br><B>CUSTOM CAMPAIGN STATUS MODIFIED: $campaign_id - $status</B>\n";
 
-				$stmt="UPDATE vicidial_campaign_statuses SET status_name='$status_name',selectable='$selectable',human_answered='$human_answered',category='$category',sale='$sale',dnc='$dnc',customer_contact='$customer_contact',not_interested='$not_interested',unworkable='$unworkable' where campaign_id='$campaign_id' and status='$status';";
+				$stmt="UPDATE vicidial_campaign_statuses SET status_name='$status_name',selectable='$selectable',human_answered='$human_answered',category='$category',sale='$sale',dnc='$dnc',customer_contact='$customer_contact',not_interested='$not_interested',unworkable='$unworkable',scheduled_callback='$scheduled_callbacks' where campaign_id='$campaign_id' and status='$status';";
 				$rslt=mysql_query($stmt, $link);
 
 				### LOG INSERTION Admin Log Table ###
@@ -15465,7 +15466,7 @@ if ($ADD==421111111111111)
 				{
 				echo "<br><B>SYSTEM STATUS MODIFIED: $status</B>\n";
 
-				$stmt="UPDATE vicidial_statuses SET status_name='$status_name',selectable='$selectable',human_answered='$human_answered',category='$category',sale='$sale',dnc='$dnc',customer_contact='$customer_contact',not_interested='$not_interested',unworkable='$unworkable' where status='$status';";
+				$stmt="UPDATE vicidial_statuses SET status_name='$status_name',selectable='$selectable',human_answered='$human_answered',category='$category',sale='$sale',dnc='$dnc',customer_contact='$customer_contact',not_interested='$not_interested',unworkable='$unworkable',scheduled_callback='$scheduled_callbacks' where status='$status';";
 				$rslt=mysql_query($stmt, $link);
 
 				### LOG INSERTION Admin Log Table ###
@@ -18445,7 +18446,7 @@ if ($ADD==31)
 	$QCL_to_print = (count($QClists) -0);
 
 	##### get status listings for dynamic pulldown
-	$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses order by status";
+	$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback from vicidial_statuses order by status";
 	$rslt=mysql_query($stmt, $link);
 	$statuses_to_print = mysql_num_rows($rslt);
 	$statuses_list='';
@@ -18489,7 +18490,7 @@ if ($ADD==31)
 		$o++;
 		}
 
-	$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status";
+	$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status";
 	$rslt=mysql_query($stmt, $link);
 	$Cstatuses_to_print = mysql_num_rows($rslt);
 
@@ -19563,17 +19564,53 @@ if ($ADD==31)
 
 		echo "<center>\n";
 		echo "<br><b>CUSTOM STATUSES WITHIN THIS CAMPAIGN: &nbsp; $NWB#vicidial_campaign_statuses$NWE</b><br>\n";
-		echo "<TABLE width=500 cellspacing=3>\n";
-		echo "<tr><td>STATUS</td><td>DESCRIPTION</td><td>SELECTABLE</td><td>HUMAN ANSWER</td><td>CATEGORY</td><td>MODIFY-DELETE</td></tr>\n";
 
-		$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status";
+
+
+
+
+
+
+
+
+
+		echo "<TABLE width=700 cellspacing=3>\n";
+		echo "<tr><td align=center valign=bottom><font size=2><b>S<br>T<br>A<br>T<br>U<br>S</td>\n";
+		echo "<td align=center valign=bottom><font size=2><b>DESCRIPTION</td>\n";
+		echo "<td align=center valign=bottom><font size=2><b>CATEGORY</td>\n";
+		echo "<td align=center valign=bottom bgcolor=\"#ccffff\"><font size=2><b><br>A<br>G<br>E<br>N<br>T<br>&nbsp;<BR>S<br>E<br>L<br>E<br>C<br>T<br>A<br>B<br>L<br>E</td>\n";
+		echo "<td align=center valign=bottom bgcolor=\"#99ffcc\"><font size=2><b>H<br>U<br>M<br>A<br>N<br>&nbsp;<BR>A<br>N<br>S<br>W<br>E<br>R</td>\n";
+		echo "<td align=center valign=bottom bgcolor=\"#ccffff\"><font size=2><b>S<br>A<br>L<br>E</td>\n";
+		echo "<td align=center valign=bottom bgcolor=\"#99ffcc\"><font size=2><b>D<br>N<br>C</td>\n";
+		echo "<td align=center valign=bottom bgcolor=\"#ccffff\"><font size=2><b>C<br>U<br>S<br>T<br>O<br>M<br>E<br>R<br>&nbsp;<br>C<br>O<br>N<br>T<br>A<br>C<br>T</td>\n";
+		echo "<td align=center valign=bottom bgcolor=\"#99ffcc\"><font size=2><b>N<br>O<br>T<br>&nbsp;<br>I<br>N<br>T<br>E<br>R<br>E<br>S<br>T<br>E<br>D</td>\n";
+		echo "<td align=center valign=bottom bgcolor=\"#ccffff\"><font size=2><b>U<br>N<br>W<br>O<br>R<br>K<br>A<br>B<br>L<br>E</td>\n";
+		echo "<td align=center valign=bottom bgcolor=\"#99ffcc\"><font size=2><b>S<br>C<br>H<br>E<br>D<br>U<br>L<br>E<br>D<br>&nbsp;<br>C<br>A<br>L<br>L<br>B<br>A<br>C<br>K</td>\n";
+		echo "<td align=center valign=bottom><font size=2><b>MODIFY/DELETE</td></tr>\n";
+
+		##### get status category listings for dynamic pulldown
+		$stmt="SELECT vsc_id,vsc_name from vicidial_status_categories order by vsc_id desc";
+		$rslt=mysql_query($stmt, $link);
+		$cats_to_print = mysql_num_rows($rslt);
+		$cats_list="";
+
+		$o=0;
+		while ($cats_to_print > $o)
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$cats_list .= "<option value=\"$rowx[0]\">$rowx[0] - " . substr($rowx[1],0,20) . "</option>\n";
+			$catsname_list["$rowx[0]"] = substr($rowx[1],0,20);
+			$o++;
+			}
+
+		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status;";
 		$rslt=mysql_query($stmt, $link);
 		$statuses_to_print = mysql_num_rows($rslt);
 		$o=0;
 		while ($statuses_to_print > $o) 
 			{
 			$rowx=mysql_fetch_row($rslt);
-			$AScategory = $rowx[5];
+			$AScategory = $rowx[4];
 			$o++;
 
 			if (eregi("1$|3$|5$|7$|9$", $o))
@@ -19588,29 +19625,36 @@ if ($ADD==31)
 			echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
 			echo "<font size=2><B>$rowx[0]</B></td>\n";
 			echo "<td><input type=text name=status_name size=20 maxlength=30 value=\"$rowx[1]\"></td>\n";
-			echo "<td><select size=1 name=selectable><option>Y</option><option>N</option><option selected>$rowx[2]</option></select></td>\n";
-			echo "<td><select size=1 name=human_answered><option>Y</option><option>N</option><option selected>$rowx[4]</option></select></td>\n";
 			echo "<td>\n";
 			echo "<select size=1 name=category>\n";
 			echo "$cats_list";
 			echo "<option selected value=\"$AScategory\">$AScategory - $catsname_list[$AScategory]</option>\n";
 			echo "</select>\n";
-			echo "</td>\n";
-			echo "<td align=center nowrap><font size=1><input type=submit name=submit value=MODIFY> &nbsp; &nbsp; &nbsp; &nbsp; \n";
+			echo "\n";
+			echo "</td><td bgcolor=\"#ccffff\"><select size=1 name=selectable><option>Y</option><option>N</option><option selected>$rowx[2]</option></select>\n";
+			echo "</td><td bgcolor=\"#99ffcc\"><select size=1 name=human_answered><option>Y</option><option>N</option><option selected>$rowx[3]</option></select>\n";
+			echo "</td><td bgcolor=\"#ccffff\"><select size=1 name=sale><option>Y</option><option>N</option><option selected>$rowx[5]</option></select>\n";
+			echo "</td><td bgcolor=\"#99ffcc\"><select size=1 name=dnc><option>Y</option><option>N</option><option selected>$rowx[6]</option></select>\n";
+			echo "</td><td bgcolor=\"#ccffff\"><select size=1 name=customer_contact><option>Y</option><option>N</option><option selected>$rowx[7]</option></select>\n";
+			echo "</td><td bgcolor=\"#99ffcc\"><select size=1 name=not_interested><option>Y</option><option>N</option><option selected>$rowx[8]</option></select>\n";
+			echo "</td><td bgcolor=\"#ccffff\"><select size=1 name=unworkable><option>Y</option><option>N</option><option selected>$rowx[9]</option></select>\n";
+			echo "</td><td bgcolor=\"#99ffcc\"><select size=1 name=scheduled_callbacks><option>Y</option><option>N</option><option selected>$rowx[10]</option></select>\n";
+			echo "</td><td align=center nowrap><font size=1><input type=submit name=submit value=MODIFY> &nbsp; &nbsp; &nbsp; &nbsp; \n";
 			echo " &nbsp; \n";
-			echo "<a href=\"$PHP_SELF?ADD=42&campaign_id=$campaign_id&status=$rowx[0]&stage=delete\">DELETE</a>\n";
-			echo "</td></tr><tr $bgcolor><td colspan=6 align=center><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>\n";
-
-			echo "&nbsp; Sale: <select size=1 name=sale><option>Y</option><option>N</option><option selected>$rowx[6]</option></select> &nbsp; \n";
-			echo "&nbsp; DNC: <select size=1 name=dnc><option>Y</option><option>N</option><option selected>$rowx[7]</option></select> &nbsp; \n";
-			echo "&nbsp; Customer Contact: <select size=1 name=customer_contact><option>Y</option><option>N</option><option selected>$rowx[8]</option></select> &nbsp; \n";
-			echo "&nbsp; Not Interested: <select size=1 name=not_interested><option>Y</option><option>N</option><option selected>$rowx[9]</option></select> &nbsp; \n";
-			echo "&nbsp; Unworkable: <select size=1 name=unworkable><option>Y</option><option>N</option><option selected>$rowx[10]</option></select> &nbsp; \n";
-
+			
+			if (preg_match("/^B$|^NA$|^DNC$|^NA$|^DROP$|^INCALL$|^QUEUE$|^NEW$/i",$rowx[0]))
+				{
+				echo "<DEL>DELETE</DEL>\n";
+				}
+			else
+				{
+				echo "<a href=\"$PHP_SELF?ADD=42&campaign_id=$campaign_id&status=$rowx[0]&stage=delete\">DELETE</a>\n";
+				}
 			echo "</form></td></tr>\n";
 			}
 
 		echo "</table>\n";
+
 
 		echo "<br>ADD NEW CUSTOM CAMPAIGN STATUS<BR><form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=22>\n";
@@ -19624,6 +19668,7 @@ if ($ADD==31)
 		echo "Customer Contact: <select size=1 name=customer_contact><option>Y</option><option SELECTED>N</option></select> &nbsp; <BR>\n";
 		echo "Not Interested: <select size=1 name=not_interested><option>Y</option><option SELECTED>N</option></select> &nbsp; \n";
 		echo "Unworkable: <select size=1 name=unworkable><option>Y</option><option SELECTED>N</option></select> &nbsp; \n";
+		echo "Callback: <select size=1 name=scheduled_callbacks><option>Y</option><option SELECTED>N</option></select> &nbsp; \n";
 		echo "Category: \n";
 		echo "<select size=1 name=category>\n";
 		echo "$cats_list";
@@ -20130,7 +20175,7 @@ if ($ADD==34)
 	else
 		{$DEFlistDISABLE = 'disabled';	$DEFstatusDISABLED=1;}
 
-		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses order by status";
+		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback from vicidial_statuses order by status";
 		$rslt=mysql_query($stmt, $link);
 		$statuses_to_print = mysql_num_rows($rslt);
 		$statuses_list='';
@@ -20148,7 +20193,7 @@ if ($ADD==34)
 			$o++;
 			}
 
-		$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status";
+		$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status";
 		$rslt=mysql_query($stmt, $link);
 		$Cstatuses_to_print = mysql_num_rows($rslt);
 
@@ -21493,7 +21538,7 @@ if ($ADD==311)
 		$web_form_address_two =		$row[18];
 
 		# grab names of global statuses and statuses in the selected campaign
-		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses order by status";
+		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback from vicidial_statuses order by status";
 		$rslt=mysql_query($stmt, $link);
 		$statuses_to_print = mysql_num_rows($rslt);
 
@@ -21505,7 +21550,7 @@ if ($ADD==311)
 			$o++;
 			}
 
-		$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status";
+		$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status";
 		$rslt=mysql_query($stmt, $link);
 		$Cstatuses_to_print = mysql_num_rows($rslt);
 
@@ -22600,7 +22645,7 @@ if ($ADD==3111)
 			$qc_statuses = preg_replace("/^ | -$/","",$qc_statuses);
 			$QCstatuses = explode(" ", $qc_statuses);
 			$QCs_to_print = (count($QCstatuses) -0);
-			$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses where status NOT IN('QUEUE','INCALL') order by status";
+			$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback from vicidial_statuses where status NOT IN('QUEUE','INCALL') order by status";
 			$rslt=mysql_query($stmt, $link);
 			$statuses_to_print = mysql_num_rows($rslt);
 			$qc_statuses_list='';
@@ -26217,7 +26262,18 @@ if ($ADD==321111111111111)
 		echo "<br><center>\n";
 		echo "<b>VICIDIAL STATUSES WITHIN THIS SYSTEM: &nbsp; $NWB#vicidial_statuses$NWE</b><br>\n";
 		echo "<TABLE width=700 cellspacing=3>\n";
-		echo "<tr><td>STATUS</td><td>DESCRIPTION</td><td>SELECT-<BR>ABLE</td><td>HUMAN<BR>ANSWER</td><td>CATEGORY</td><td>MODIFY/DELETE</td></tr>\n";
+		echo "<tr><td align=center valign=bottom><font size=2><b>S<br>T<br>A<br>T<br>U<br>S</td>\n";
+		echo "<td align=center valign=bottom><font size=2><b>DESCRIPTION</td>\n";
+		echo "<td align=center valign=bottom><font size=2><b>CATEGORY</td>\n";
+		echo "<td align=center valign=bottom bgcolor=\"#ccffff\"><font size=2><b><br>A<br>G<br>E<br>N<br>T<br>&nbsp;<BR>S<br>E<br>L<br>E<br>C<br>T<br>A<br>B<br>L<br>E</td>\n";
+		echo "<td align=center valign=bottom bgcolor=\"#99ffcc\"><font size=2><b>H<br>U<br>M<br>A<br>N<br>&nbsp;<BR>A<br>N<br>S<br>W<br>E<br>R</td>\n";
+		echo "<td align=center valign=bottom bgcolor=\"#ccffff\"><font size=2><b>S<br>A<br>L<br>E</td>\n";
+		echo "<td align=center valign=bottom bgcolor=\"#99ffcc\"><font size=2><b>D<br>N<br>C</td>\n";
+		echo "<td align=center valign=bottom bgcolor=\"#ccffff\"><font size=2><b>C<br>U<br>S<br>T<br>O<br>M<br>E<br>R<br>&nbsp;<br>C<br>O<br>N<br>T<br>A<br>C<br>T</td>\n";
+		echo "<td align=center valign=bottom bgcolor=\"#99ffcc\"><font size=2><b>N<br>O<br>T<br>&nbsp;<br>I<br>N<br>T<br>E<br>R<br>E<br>S<br>T<br>E<br>D</td>\n";
+		echo "<td align=center valign=bottom bgcolor=\"#ccffff\"><font size=2><b>U<br>N<br>W<br>O<br>R<br>K<br>A<br>B<br>L<br>E</td>\n";
+		echo "<td align=center valign=bottom bgcolor=\"#99ffcc\"><font size=2><b>S<br>C<br>H<br>E<br>D<br>U<br>L<br>E<br>D<br>&nbsp;<br>C<br>A<br>L<br>L<br>B<br>A<br>C<br>K</td>\n";
+		echo "<td align=center valign=bottom><font size=2><b>MODIFY/DELETE</td></tr>\n";
 
 		##### get status category listings for dynamic pulldown
 		$stmt="SELECT vsc_id,vsc_name from vicidial_status_categories order by vsc_id desc";
@@ -26234,8 +26290,7 @@ if ($ADD==321111111111111)
 			$o++;
 			}
 
-
-		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses order by status;";
+		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback from vicidial_statuses order by status;";
 		$rslt=mysql_query($stmt, $link);
 		$statuses_to_print = mysql_num_rows($rslt);
 		$o=0;
@@ -26256,15 +26311,21 @@ if ($ADD==321111111111111)
 			echo "<input type=hidden name=status value=\"$rowx[0]\">\n";
 			echo "<font size=2><B>$rowx[0]</B></td>\n";
 			echo "<td><input type=text name=status_name size=20 maxlength=30 value=\"$rowx[1]\"></td>\n";
-			echo "<td><select size=1 name=selectable><option>Y</option><option>N</option><option selected>$rowx[2]</option></select></td>\n";
-			echo "<td><select size=1 name=human_answered><option>Y</option><option>N</option><option selected>$rowx[3]</option></select></td>\n";
 			echo "<td>\n";
 			echo "<select size=1 name=category>\n";
 			echo "$cats_list";
 			echo "<option selected value=\"$AScategory\">$AScategory - $catsname_list[$AScategory]</option>\n";
 			echo "</select>\n";
-			echo "</td>\n";
-			echo "<td align=center nowrap><font size=1><input type=submit name=submit value=MODIFY> &nbsp; &nbsp; &nbsp; &nbsp; \n";
+			echo "\n";
+			echo "</td><td bgcolor=\"#ccffff\"><select size=1 name=selectable><option>Y</option><option>N</option><option selected>$rowx[2]</option></select>\n";
+			echo "</td><td bgcolor=\"#99ffcc\"><select size=1 name=human_answered><option>Y</option><option>N</option><option selected>$rowx[3]</option></select>\n";
+			echo "</td><td bgcolor=\"#ccffff\"><select size=1 name=sale><option>Y</option><option>N</option><option selected>$rowx[5]</option></select>\n";
+			echo "</td><td bgcolor=\"#99ffcc\"><select size=1 name=dnc><option>Y</option><option>N</option><option selected>$rowx[6]</option></select>\n";
+			echo "</td><td bgcolor=\"#ccffff\"><select size=1 name=customer_contact><option>Y</option><option>N</option><option selected>$rowx[7]</option></select>\n";
+			echo "</td><td bgcolor=\"#99ffcc\"><select size=1 name=not_interested><option>Y</option><option>N</option><option selected>$rowx[8]</option></select>\n";
+			echo "</td><td bgcolor=\"#ccffff\"><select size=1 name=unworkable><option>Y</option><option>N</option><option selected>$rowx[9]</option></select>\n";
+			echo "</td><td bgcolor=\"#99ffcc\"><select size=1 name=scheduled_callbacks><option>Y</option><option>N</option><option selected>$rowx[10]</option></select>\n";
+			echo "</td><td align=center nowrap><font size=1><input type=submit name=submit value=MODIFY> &nbsp; &nbsp; &nbsp; &nbsp; \n";
 			echo " &nbsp; \n";
 			
 			if (preg_match("/^B$|^NA$|^DNC$|^NA$|^DROP$|^INCALL$|^QUEUE$|^NEW$/i",$rowx[0]))
@@ -26275,15 +26336,6 @@ if ($ADD==321111111111111)
 				{
 				echo "<a href=\"$PHP_SELF?ADD=421111111111111&status=$rowx[0]&stage=delete\">DELETE</a>\n";
 				}
-
-			echo "</td></tr><tr $bgcolor><td colspan=6 align=center><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>\n";
-
-			echo "&nbsp; Sale: <select size=1 name=sale><option>Y</option><option>N</option><option selected>$rowx[5]</option></select> &nbsp; \n";
-			echo "&nbsp; DNC: <select size=1 name=dnc><option>Y</option><option>N</option><option selected>$rowx[6]</option></select> &nbsp; \n";
-			echo "&nbsp; Customer Contact: <select size=1 name=customer_contact><option>Y</option><option>N</option><option selected>$rowx[7]</option></select> &nbsp; \n";
-			echo "&nbsp; Not Interested: <select size=1 name=not_interested><option>Y</option><option>N</option><option selected>$rowx[8]</option></select> &nbsp; \n";
-			echo "&nbsp; Unworkable: <select size=1 name=unworkable><option>Y</option><option>N</option><option selected>$rowx[9]</option></select> &nbsp; \n";
-
 			echo "</form></td></tr>\n";
 			}
 
@@ -26300,6 +26352,7 @@ if ($ADD==321111111111111)
 		echo "Customer Contact: <select size=1 name=customer_contact><option>Y</option><option SELECTED>N</option></select> &nbsp; <BR>\n";
 		echo "Not Interested: <select size=1 name=not_interested><option>Y</option><option SELECTED>N</option></select> &nbsp; \n";
 		echo "Unworkable: <select size=1 name=unworkable><option>Y</option><option SELECTED>N</option></select> &nbsp; \n";
+		echo "Callback: <select size=1 name=scheduled_callbacks><option>Y</option><option SELECTED>N</option></select> &nbsp; \n";
 		echo "Category: \n";
 		echo "<select size=1 name=category>\n";
 		echo "$cats_list";
