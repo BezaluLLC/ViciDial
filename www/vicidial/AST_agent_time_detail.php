@@ -76,7 +76,7 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	$use_slave_server=1;
 	$db_source = 'S';
 	require("dbconnect.php");
-	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+#	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
