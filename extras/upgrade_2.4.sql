@@ -657,3 +657,9 @@ UPDATE vicidial_campaign_statuses SET scheduled_callback='Y' where status='CALLB
 ALTER TABLE vicidial_callbacks ADD lead_status VARCHAR(6) default 'CALLBK';
 
 UPDATE system_settings SET db_schema_version='1259',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD lead_order_secondary ENUM('LEAD_ASCEND','LEAD_DESCEND','CALLTIME_ASCEND','CALLTIME_DESCEND') default 'LEAD_ASCEND';
+ALTER TABLE vicidial_campaigns ADD per_call_notes ENUM('ENABLED','DISABLED') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD my_callback_option ENUM('CHECKED','UNCHECKED') default 'UNCHECKED';
+
+UPDATE system_settings SET db_schema_version='1260',db_schema_update_date=NOW();

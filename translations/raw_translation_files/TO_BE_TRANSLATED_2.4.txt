@@ -504,6 +504,13 @@ This option allows you to randomize the order of the leads in the hopper load wi
 NONE will not log any logins and logouts within queue_log||
 QueueMetrics Dispo Pause Code||
 This option, if populated, allows you to define whether a dispo pause code is entered into queue_log when an agent is in dispo status. Default is empty for disabled||
+List Order Secondary||
+This option allows you to select the second sorting order of the leads in the hopper load after the List Order and within the results defined by the criteria set above. For instance, the List Order will be used for the first sort of the leads, but the results will be sorted a second time within that sorting across the same set of the first List Order. For example, if you have List Order set to DOWN COUNT and you only have leads that have been attempted 1 and 2 times, then if you have the List Order Secondary set to LEAD_ASCEND all of the attempt 1 leads will be sorted by the oldest leads first and will be put into the hopper that way. Default is LEAD_ASCEND. NOTE, if you have a large number of leads using one of the CALLTIME options may slow down the speed of the hopper loading script||
+My Callbacks Checkbox Default||
+This option allows you to pre-set the My Callback checkbox on the agent scheduled callback screen. CHECKED will check the checkbox automatically for every call. Default is UNCHECKED||
+Call Notes Per Call||
+Setting this option to ENABLED will allow agents to enter in notes for every call they handle in the agent interface. The notes entry field will appear below the Comments field in the agent interface. Also, if the Agent User Group is allowed to view Call Logs then the agent will be able to view past call notes for a lead at any time. Default is DISABLED||
+If List Order Randomize is enabled, this option will be ignored||
 
 
 AST_LISTS_campaign_stats.php
@@ -526,6 +533,12 @@ Manual Queue||
 This phone number is outside of the local call time||
 Manual Queue is Off||
 Manual Queue is On||
+Call Notes:||
+Call Notes List||
+view notes||
+CALL NOTES LOG||
+Close Call Notes||
+CALL LOG FOR THIS LEAD||
 
 
 ############################################################  MANAGER Manual

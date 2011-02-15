@@ -782,7 +782,10 @@ auto_trim_hopper ENUM('Y','N') default 'Y',
 api_manual_dial ENUM('STANDARD','QUEUE','QUEUE_AND_AUTOCALL') default 'STANDARD',
 manual_dial_call_time_check ENUM('DISABLED','ENABLED') default 'DISABLED',
 display_leads_count ENUM('Y','N') default 'N',
-lead_order_randomize ENUM('Y','N') default 'N'
+lead_order_randomize ENUM('Y','N') default 'N',
+lead_order_secondary ENUM('LEAD_ASCEND','LEAD_DESCEND','CALLTIME_ASCEND','CALLTIME_DESCEND') default 'LEAD_ASCEND',
+per_call_notes ENUM('ENABLED','DISABLED') default 'DISABLED',
+my_callback_option ENUM('CHECKED','UNCHECKED') default 'UNCHECKED'
 );
 
 CREATE TABLE vicidial_lists (
@@ -2419,7 +2422,7 @@ CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 CREATE TABLE vicidial_call_notes_archive LIKE vicidial_call_notes; 
 ALTER TABLE vicidial_call_notes_archive MODIFY notesid INT(9) UNSIGNED NOT NULL;
 
-UPDATE system_settings SET db_schema_version='1259',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1260',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

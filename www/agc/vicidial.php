@@ -333,10 +333,11 @@
 # 110129-1050 - Changed to XHTML compliant formatting, issue #444
 # 110208-1202 - Made scheduled callbacks notice move when on script/form tabs
 # 110212-2206 - Added scheduled callback custom statuses compatibility
+# 110215-1412 - Added my_callback_option and per_call_notes options
 #
 
-$version = '2.4-310';
-$build = '110212-2206';
+$version = '2.4-311';
+$build = '110215-1412';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=69;
 $one_mysql_log=0;
@@ -1307,7 +1308,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1396,6 +1397,8 @@ else
 				$manual_preview_dial =		$row[81];
 				$api_manual_dial =			$row[82];
 				$manual_dial_call_time_check = $row[83];
+				$my_callback_option =		$row[84];
+				$per_call_notes = 			$row[85];
 
 
 				$AllowManualQueueCalls=1;
@@ -3224,6 +3227,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var call_variables='';
 	var focus_blur_enabled='<?php echo $focus_blur_enabled ?>';
 	var CBlinkCONTENT='';
+	var my_callback_option='<?php echo $my_callback_option ?>';
+	var per_call_notes='<?php echo $per_call_notes ?>';
     var DiaLControl_auto_HTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/vdc_LB_resume.gif\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/vdc_LB_pause.gif\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
@@ -7808,6 +7813,18 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			{
             document.getElementById("DispoManualQueueMessage").innerHTML = "<br /><b><font color=\"red\" size=\"3\">Manual Dial Queue Calls Waiting: " + APIManualDialQueue + "</font></b><br />";
 			}
+		if (per_call_notes == 'ENABLED')
+			{
+			var test_notes = document.vicidial_form.call_notes_dispo.value;
+			if (test_notes.length > 0)
+				{document.vicidial_form.call_notes.value = document.vicidial_form.call_notes_dispo.value}
+            document.getElementById("PerCallNotesContent").innerHTML = "<br /><b><font size=\"3\">Call Notes: </font></b><br /><textarea name=\"call_notes_dispo\" id=\"call_notes_dispo\" rows=\"2\" cols=\"100\" class=\"cust_form_text\" value=\"\">" + document.vicidial_form.call_notes.value + "</textarea>";
+			}
+		else
+			{
+            document.getElementById("PerCallNotesContent").innerHTML = "<input type=\"hidden\" name=\"call_notes_dispo\" id=\"call_notes_dispo\" value=\"\" />";
+			}
+
 		HidEGenDerPulldown();
 		AgentDispoing = 1;
 		var CBflag = '';
@@ -7843,6 +7860,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			document.inert_form.inert_button.focus();
 			document.inert_form.inert_button.blur();
 			}
+		if (my_callback_option == 'CHECKED')
+			{document.vicidial_form.CallBackOnlyMe.checked=true;}
 		}
 
 // ################################################################################
@@ -8101,7 +8120,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					}
 				if (xmlhttp) 
 					{ 
-					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&CallBackLeadStatus=" + CallBackLeadStatus + "&comments=" + CallBackCommenTs + "&custom_field_names=" + custom_field_names;
+					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&CallBackLeadStatus=" + CallBackLeadStatus + "&comments=" + CallBackCommenTs + "&custom_field_names=" + custom_field_names + "&call_notes=" + document.vicidial_form.call_notes_dispo.value;
 					xmlhttp.open('POST', 'vdc_db_query.php');
 					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 					xmlhttp.send(DSupdate_query); 
@@ -8155,6 +8174,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				document.vicidial_form.security_phrase.value='';
 				document.vicidial_form.comments.value		='';
 				document.vicidial_form.called_count.value	='';
+				document.vicidial_form.call_notes.value		='';
+				document.vicidial_form.call_notes_dispo.value ='';
 				VDCL_group_id = '';
 				fronter = '';
 				inOUT = 'OUT';
@@ -10174,6 +10195,52 @@ function phone_number_format(formatphone) {
 		}
 
 
+
+// ################################################################################
+// Refresh the lead notes display
+	function VieWNotesLoG(logframe)
+		{
+		showDiv('CalLNotesDisplaYBox');
+
+		var xmlhttp=false;
+		/*@cc_on @*/
+		/*@if (@_jscript_version >= 5)
+		// JScript gives us Conditional compilation, we can cope with old IE versions.
+		// and security blocked creation of the objects.
+		 try {
+		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+		 } catch (e) {
+		  try {
+		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		  } catch (E) {
+		   xmlhttp = false;
+		  }
+		 }
+		@end @*/
+		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+			{
+			xmlhttp = new XMLHttpRequest();
+			}
+		if (xmlhttp) 
+			{ 
+			RAview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=CALLNOTESview&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&stage=<?php echo $HCwidth ?>";
+			xmlhttp.open('POST', 'vdc_db_query.php'); 
+			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+			xmlhttp.send(RAview_query); 
+			xmlhttp.onreadystatechange = function() 
+				{ 
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+					{
+				//	alert(xmlhttp.responseText);
+					document.getElementById('CallNotesSpan').innerHTML = xmlhttp.responseText + "\n";
+					}
+				}
+			delete xmlhttp;
+			}
+		}
+
+
+
 // ################################################################################
 // Run the logging process for customer 3way hangup
 	function customer_3way_hangup_process(temp_hungup_time,temp_xfer_call_seconds)
@@ -10416,6 +10483,8 @@ else
 				}
 			document.getElementById("CallBackDatEPrinT").innerHTML = "Select a Date Below";
 			document.vicidial_form.CallBackOnlyMe.checked=false;
+			if (my_callback_option == 'CHECKED')
+				{document.vicidial_form.CallBackOnlyMe.checked=true;}
 			document.vicidial_form.CallBackDatESelectioN.value = '';
 			document.vicidial_form.CallBackCommenTsField.value = '';
 
@@ -10571,6 +10640,7 @@ else
 			hideDiv('AgentXferViewSpan');
 			hideDiv('TimerSpan');
 			hideDiv('CalLLoGDisplaYBox');
+			hideDiv('CalLNotesDisplaYBox');
 			hideDiv('LeaDInfOBox');
 			hideDiv('agentdirectlink');
 			hideDiv('blind_monitor_notice_span');
@@ -10587,7 +10657,10 @@ else
 			if (agentcall_manual != '1')
 				{hideDiv('ManuaLDiaLButtons');}
 			if (agent_call_log_view != '1')
-				{hideDiv('CallLogButtons');}
+				{
+				hideDiv('CallNotesButtons');
+				hideDiv('CallLogButtons');
+				}
 			if (callholdstatus != '1')
 				{hideDiv('AgentStatusCalls');}
 			if (agentcallsstatus != '1')
@@ -11760,6 +11833,22 @@ $zi=2;
             {echo "<input type=\"text\" size=\"65\" name=\"comments\" maxlength=\"255\" class=\"cust_form\" value=\"\" />\n";}
 		}
 
+	echo "</font></td></tr><tr><td align=\"right\"><font class=\"body_text\">\n";
+
+	if ($per_call_notes == 'ENABLED')
+		{
+        echo "Call Notes: ";
+		if ($agent_call_log_view == '1')
+			{echo "<br /><span id=\"CallNotesButtons\"><a href=\"#\" onclick=\"VieWNotesLoG();return false;\">view notes</a></span> ";}
+        echo "</td><td align=\"left\" colspan=\"5\"><font class=\"body_text\">";
+		echo "<textarea name=\"call_notes\" id=\"call_notes\" rows=\"2\" cols=\"85\" class=\"cust_form_text\" value=\"\"></textarea>\n";
+		}
+	else
+		{
+        echo " </td><td align=\"left\" colspan=5><input type=\"hidden\" name=\"call_notes\" id=\"call_notes\" value=\"\" /><span id=\"CallNotesButtons\"></span>\n";
+		}
+
+
 	?>
 	</font>
 	</td>
@@ -12169,6 +12258,7 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></center></font
 	?>
 	<span id="Dispo3wayMessage"></span>
 	<span id="DispoManualQueueMessage"></span>
+	<span id="PerCallNotesContent"><input type="hidden" name="call_notes_dispo" id="call_notes_dispo" value="" /></span>
 	<span id="DispoSelectContent"> End-of-call Disposition Selection </span>
     <input type="hidden" name=DispoSelection /><br />
     <input type=checkbox name=DispoSelectStop id=DispoSelectStop size="1" value="0" /> PAUSE AGENT DIALING <br />
@@ -12348,6 +12438,17 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></center></font
         {echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<div class="scroll_calllog" id="CallLogSpan"> Call log List </div>
+    <br /><br /> &nbsp;
+    </td></tr></table>
+</span>
+
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="CalLNotesDisplaYBox">
+    <table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> CALL NOTES LOG:<br />
+	<?php
+	if ($webphone_location == 'bar')
+        {echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+	?>
+	<div class="scroll_calllog" id="CallNotesSpan"> Call Notes List </div>
     <br /><br /> &nbsp;
     </td></tr></table>
 </span>

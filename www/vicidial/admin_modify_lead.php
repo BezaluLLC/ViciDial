@@ -41,6 +41,7 @@
 # 100924-1431 - Added Called Count display
 # 101127-1610 - Added ability to set a scheduled callback date and time
 # 110212-2041 - Added compatibility with definable scheduled callback statuses
+# 110215-1411 - Added display of call notes to log records
 #
 
 require("dbconnect.php");
@@ -541,6 +542,21 @@ else
 		$call_log .= "<td align=right><font size=2> $row[15] </td>\n";
 		$call_log .= "<td align=right><font size=2>&nbsp; $row[10] </td></tr>\n";
 
+		$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='" . mysql_real_escape_string($lead_id) . "' and vicidial_id='$row[0]';";
+		$rsltA=mysql_query($stmtA, $link);
+		$out_notes_to_print = mysql_num_rows($rslt);
+		if ($out_notes_to_print > 0)
+			{
+			$rowA=mysql_fetch_row($rsltA);
+			if (strlen($rowA[0]) > 0)
+				{
+				$call_log .= "<TR>";
+				$call_log .= "<td></td>";
+				$call_log .= "<TD $bgcolor COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"> NOTES: &nbsp; $rowA[0] </font></TD>";
+				$call_log .= "</TR>";
+				}
+			}
+
 		$campaign_id = $row[3];
 		}
 
@@ -607,6 +623,21 @@ else
 		$closer_log .= "<td align=right><font size=2> $row[1] </td>\n";
 		$closer_log .= "<td align=right><font size=2> &nbsp; $row[14] </td>\n";
 		$closer_log .= "<td align=right><font size=2> &nbsp; $row[17] </td></tr>\n";
+
+		$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='" . mysql_real_escape_string($lead_id) . "' and vicidial_id='$row[0]';";
+		$rsltA=mysql_query($stmtA, $link);
+		$in_notes_to_print = mysql_num_rows($rslt);
+		if ($in_notes_to_print > 0)
+			{
+			$rowA=mysql_fetch_row($rsltA);
+			if (strlen($rowA[0]) > 0)
+				{
+				$closer_log .= "<TR>";
+				$closer_log .= "<td></td>";
+				$closer_log .= "<TD $bgcolor COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"> NOTES: &nbsp; $rowA[0] </font></TD>";
+				$closer_log .= "</TR>";
+				}
+			}
 
 		$campaign_id = $row[3];
 		}

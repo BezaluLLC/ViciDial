@@ -452,6 +452,16 @@ OTHER CHANGES:
 	are configurable with the Scheduled Callbacks flag in the System
 	Statuses and Campaign Statuses administrative screens.
 
+106. Added Secondary List Order which allows for further sorting of leads to be
+	dialed by a secondary sorting method
+
+107. Added Default Campaign setting for the My Callback agent interface option
+	so that the checkbox can be pre-selected or not on every call
+
+108. Added the campaign option for per-call call notes in the agent interface.
+	If the User Group also has Call Log enabled, the agent can also see 
+	the call notes from previous calls.
+
 
 
 

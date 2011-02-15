@@ -89,6 +89,7 @@
 #  - $DiaL_SecondS - ('0','1','2',...)
 #  - $date - ('2010-02-19')
 #  - $custom_field_names - ('|start_date|finish_date|favorite_color|')
+#  - $call_notes
 #
 # CHANGELOG:
 # 50629-1044 - First build of script
@@ -269,10 +270,12 @@
 # 110124-1134 - Small query fix for large queue_log tables
 # 110124-1456 - Fixed AREACODE DNC manual dial bug
 # 110212-2103 - Added support for custom scheduled callback statuses
+# 110214-2320 - Added support for lead_order_secondary option
+# 110215-1125 - Added support for call_notes
 #
 
-$version = '2.4-175';
-$build = '110212-2103';
+$version = '2.4-177';
+$build = '110215-1125';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=365;
 $one_mysql_log=0;
@@ -465,6 +468,8 @@ if (isset($_GET["manual_dial_call_time_check"]))			{$manual_dial_call_time_check
 	elseif (isset($_POST["manual_dial_call_time_check"]))	{$manual_dial_call_time_check=$_POST["manual_dial_call_time_check"];}
 if (isset($_GET["CallBackLeadStatus"]))				{$CallBackLeadStatus=$_GET["CallBackLeadStatus"];}
 	elseif (isset($_POST["CallBackLeadStatus"]))	{$CallBackLeadStatus=$_POST["CallBackLeadStatus"];}
+if (isset($_GET["call_notes"]))				{$call_notes=$_GET["call_notes"];}
+	elseif (isset($_POST["call_notes"]))	{$call_notes=$_POST["call_notes"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -1447,7 +1452,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 		else
 			{
 			##### gather no hopper dialing settings from campaign
-			$stmt="SELECT no_hopper_dialing,agent_dial_owner_only,local_call_time,dial_statuses,drop_lockout_time,lead_filter_id,lead_order,lead_order_randomize FROM vicidial_campaigns where campaign_id='$campaign';";
+			$stmt="SELECT no_hopper_dialing,agent_dial_owner_only,local_call_time,dial_statuses,drop_lockout_time,lead_filter_id,lead_order,lead_order_randomize,lead_order_secondary FROM vicidial_campaigns where campaign_id='$campaign';";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00236',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -1463,6 +1468,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$lead_filter_id =			$row[5];
 				$lead_order =				$row[6];
 				$lead_order_randomize =		$row[7];
+				$lead_order_secondary =		$row[8];
 				}
 			if (eregi("N",$no_hopper_dialing))
 				{
@@ -1862,7 +1868,14 @@ if ($ACTION == 'manDiaLnextCaLL')
 					if (eregi("USER_GROUP",$agent_dial_owner_only)) {$adooSQL = "and owner='$user_group'";}
 
 					if ($lead_order_randomize == 'Y') {$last_order = "RAND()";}
-					else {$last_order = "lead_id asc";}
+					else 
+						{
+						$last_order = "lead_id asc";
+						if ($lead_order_secondary == 'LEAD_ASCEND') {$last_order = "lead_id asc";}
+						if ($lead_order_secondary == 'LEAD_DESCEND') {$last_order = "lead_id desc";}
+						if ($lead_order_secondary == 'CALLTIME_ASCEND') {$last_order = "last_local_call_time asc";}
+						if ($lead_order_secondary == 'CALLTIME_DESCEND') {$last_order = "last_local_call_time desc";}
+						}
 
 					$order_stmt = '';
 					if (eregi("DOWN",$lead_order)){$order_stmt = 'order by lead_id asc';}
@@ -5945,6 +5958,34 @@ if ($ACTION == 'updateDISPO')
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00154',$user,$server_ip,$session_name,$one_mysql_log);}
 		}
 
+	### BEGIN Call Notes Logging ###
+	if (strlen($call_notes) > 1)
+		{
+		$VDADchannel_group=$campaign;
+		$stmt = "SELECT campaign_id,closecallid from vicidial_closer_log where uniqueid='$uniqueid' and user='$user' order by call_date desc limit 1;";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		$VDCL_cn_ct = mysql_num_rows($rslt);
+		if ($VDCL_cn_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$VDADchannel_group =	$row[0];
+			$vicidial_id =			$row[1];
+			}
+		else
+			{$vicidial_id = $uniqueid;}
+
+		# Insert into vicidial_call_notes
+		$stmt="INSERT INTO vicidial_call_notes set lead_id='$lead_id',vicidial_id='$vicidial_id',call_date='$NOW_TIME',call_notes='" . mysql_real_escape_string($call_notes) . "';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		$affected_rows = mysql_affected_rows($link);
+		$notesid = mysql_insert_id($link);
+		}
+	### END Call Notes Logging ###
+
 	$stmt="SELECT auto_alt_dial_statuses,use_internal_dnc,use_campaign_dnc,api_manual_dial from vicidial_campaigns where campaign_id='$campaign';";
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00155',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -7950,7 +7991,7 @@ if ($ACTION == 'LEADINFOview')
 		echo "<CENTER>\n";
 		echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=500>";
 
-		$stmt="select status,vendor_lead_code,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from vicidial_list where lead_id='$lead_id'limit 1;";
+		$stmt="select status,vendor_lead_code,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from vicidial_list where lead_id='$lead_id' limit 1;";
 		$rslt=mysql_query($stmt, $link);
 		$info_to_print = mysql_num_rows($rslt);
 		if ($format=='debug') {echo "|$out_logs_to_print|$stmt|";}
@@ -7991,9 +8032,336 @@ if ($ACTION == 'LEADINFOview')
 
 		echo "</TABLE>";
 		echo "<BR>";
+
+		echo "<CENTER>CALL LOG FOR THIS LEAD:<br>\n";
+		echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
+		echo "<TR>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> &nbsp; # &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; DATE/TIME &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; AGENT &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; LENGTH &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; STATUS &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; PHONE &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; CAMPAIGN &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; IN/OUT &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; ALT &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; HANGUP &nbsp; </font></TD>";
+	#	echo "</TR><TR>";
+	#	echo "<TD BGCOLOR=\"#CCCCCC\" COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; FULL NAME &nbsp; </font></TD>";
+		echo "</TR>";
+
+
+		$stmt="select start_epoch,call_date,campaign_id,length_in_sec,status,phone_code,phone_number,lead_id,term_reason,alt_dial,comments,uniqueid,user from vicidial_log where lead_id='$lead_id' order by call_date desc limit 10000;";
+		$rslt=mysql_query($stmt, $link);
+		$out_logs_to_print = mysql_num_rows($rslt);
+		if ($format=='debug') {echo "|$out_logs_to_print|$stmt|";}
+
+		$g=0;
+		$u=0;
+		while ($out_logs_to_print > $u) 
+			{
+			$row=mysql_fetch_row($rslt);
+			$ALLsort[$g] =			"$row[0]-----$g";
+			$ALLstart_epoch[$g] =	$row[0];
+			$ALLcall_date[$g] =		$row[1];
+			$ALLcampaign_id[$g] =	$row[2];
+			$ALLlength_in_sec[$g] =	$row[3];
+			$ALLstatus[$g] =		$row[4];
+			$ALLphone_code[$g] =	$row[5];
+			$ALLphone_number[$g] =	$row[6];
+			$ALLlead_id[$g] =		$row[7];
+			$ALLhangup_reason[$g] =	$row[8];
+			$ALLalt_dial[$g] =		$row[9];
+			$ALLuniqueid[$g] =		$row[11];
+			$ALLuser[$g] =			$row[12];
+			$ALLin_out[$g] =		"OUT-AUTO";
+			if ($row[10] == 'MANUAL') {$ALLin_out[$g] = "OUT-MANUAL";}
+
+			$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='$ALLlead_id[$g]' and vicidial_id='$ALLuniqueid[$g]';";
+			$rsltA=mysql_query($stmtA, $link);
+			$out_notes_to_print = mysql_num_rows($rslt);
+			if ($out_notes_to_print > 0)
+				{
+				$rowA=mysql_fetch_row($rsltA);
+				$Allcall_notes[$g] =	$rowA[0];
+				if (strlen($Allcall_notes[$g]) > 0)
+					{$Allcall_notes[$g] =	"<b>NOTES: </b> $Allcall_notes[$g]";}
+				}
+			$stmtA="SELECT full_name FROM vicidial_users WHERE user='$ALLuser[$g]';";
+			$rsltA=mysql_query($stmtA, $link);
+			$users_to_print = mysql_num_rows($rslt);
+			if ($users_to_print > 0)
+				{
+				$rowA=mysql_fetch_row($rsltA);
+				$ALLuser[$g] .=	" - $rowA[0]";
+				}
+
+			$Allcounter[$g] =		$g;
+
+			$g++;
+			$u++;
+			}
+
+		$stmt="select start_epoch,call_date,campaign_id,length_in_sec,status,phone_code,phone_number,lead_id,term_reason,queue_seconds,uniqueid,closecallid,user from vicidial_closer_log where lead_id='$lead_id' order by call_date desc limit 10000;";
+		$rslt=mysql_query($stmt, $link);
+		$in_logs_to_print = mysql_num_rows($rslt);
+		if ($format=='debug') {echo "|$in_logs_to_print|$stmt|";}
+
+		$u=0;
+		while ($in_logs_to_print > $u) 
+			{
+			$row=mysql_fetch_row($rslt);
+			$ALLsort[$g] =			"$row[0]-----$g";
+			$ALLstart_epoch[$g] =	$row[0];
+			$ALLcall_date[$g] =		$row[1];
+			$ALLcampaign_id[$g] =	$row[2];
+			$ALLlength_in_sec[$g] =	($row[3] - $row[9]);
+			if ($ALLlength_in_sec[$g] < 0) {$ALLlength_in_sec[$g]=0;}
+			$ALLstatus[$g] =		$row[4];
+			$ALLphone_code[$g] =	$row[5];
+			$ALLphone_number[$g] =	$row[6];
+			$ALLlead_id[$g] =		$row[7];
+			$ALLhangup_reason[$g] =	$row[8];
+			$ALLuniqueid[$g] =		$row[10];
+			$ALLclosecallid[$g] =	$row[11];
+			$ALLuser[$g] =			$row[12];
+			$ALLalt_dial[$g] =		"MAIN";
+			$ALLin_out[$g] =		"IN";
+
+			$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='$ALLlead_id[$g]' and vicidial_id='$ALLclosecallid[$g]';";
+			$rsltA=mysql_query($stmtA, $link);
+			$in_notes_to_print = mysql_num_rows($rslt);
+			if ($in_notes_to_print > 0)
+				{
+				$rowA=mysql_fetch_row($rsltA);
+				$Allcall_notes[$g] =	$rowA[0];
+				if (strlen($Allcall_notes[$g]) > 0)
+					{$Allcall_notes[$g] =	"<b>NOTES: </b> $Allcall_notes[$g]";}
+				}
+			$stmtA="SELECT full_name FROM vicidial_users WHERE user='$ALLuser[$g]';";
+			$rsltA=mysql_query($stmtA, $link);
+			$users_to_print = mysql_num_rows($rslt);
+			if ($users_to_print > 0)
+				{
+				$rowA=mysql_fetch_row($rsltA);
+				$ALLuser[$g] .=	" - $rowA[0]";
+				}
+
+			$Allcounter[$g] =		$g;
+
+			$g++;
+			$u++;
+			}
+
+		if ($g > 0)
+			{sort($ALLsort, SORT_NUMERIC);}
+		else
+			{echo "<tr bgcolor=white><td colspan=11 align=center>No calls on this day</td></tr>";}
+
+		$u=0;
+		while ($g > $u) 
+			{
+			$sort_split = explode("-----",$ALLsort[$u]);
+			$i = $sort_split[1];
+
+			if (eregi("1$|3$|5$|7$|9$", $u))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+
+			$u++;
+			echo "<tr $bgcolor>";
+			echo "<td><font size=1>$u</td>";
+			echo "<td align=right><font size=2>$ALLcall_date[$i]</td>";
+			echo "<td align=right><font size=2> $ALLuser[$i]</td>\n";
+			echo "<td align=right><font size=2> $ALLlength_in_sec[$i]</td>\n";
+			echo "<td align=right><font size=2> $ALLstatus[$i]</td>\n";
+			echo "<td align=right><font size=2> $ALLphone_code[$i] $ALLphone_number[$i] </td>\n";
+			echo "<td align=right><font size=2> $ALLcampaign_id[$i] </td>\n";
+			echo "<td align=right><font size=2> $ALLin_out[$i] </td>\n";
+			echo "<td align=right><font size=2> $ALLalt_dial[$i] </td>\n";
+			echo "<td align=right><font size=2> $ALLhangup_reason[$i] </td>\n";
+			echo "</TR><TR>";
+			echo "<td></td>";
+			echo "<TD $bgcolor COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"> $Allcall_notes[$i] </font></TD>";
+			echo "</tr>\n";
+			}
+
+		echo "</TABLE>";
+		echo "<BR>";
+
 		echo "<a href=\"#\" onclick=\"hideDiv('LeaDInfOBox');return false;\">Close Info Box</a>";
 		echo "</CENTER>";
 		}
+	}
+
+
+################################################################################
+### CALLNOTESview - display all notes for a specific lead
+################################################################################
+if ($ACTION == 'CALLNOTESview')
+	{
+	if (strlen($stage) < 3)
+		{$stage = '670';}
+
+	echo "<CENTER>\n";
+	echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
+	echo "<TR>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> &nbsp; # &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; DATE/TIME &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; AGENT &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; LENGTH &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; STATUS &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; PHONE &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; CAMPAIGN &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; IN/OUT &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; ALT &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; HANGUP &nbsp; </font></TD>";
+#	echo "</TR><TR>";
+#	echo "<TD BGCOLOR=\"#CCCCCC\" COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; FULL NAME &nbsp; </font></TD>";
+	echo "</TR>";
+
+
+	$stmt="select start_epoch,call_date,campaign_id,length_in_sec,status,phone_code,phone_number,lead_id,term_reason,alt_dial,comments,uniqueid,user from vicidial_log where lead_id='$lead_id' order by call_date desc limit 10000;";
+	$rslt=mysql_query($stmt, $link);
+	$out_logs_to_print = mysql_num_rows($rslt);
+	if ($format=='debug') {echo "|$out_logs_to_print|$stmt|";}
+
+	$g=0;
+	$u=0;
+	while ($out_logs_to_print > $u) 
+		{
+		$row=mysql_fetch_row($rslt);
+		$ALLsort[$g] =			"$row[0]-----$g";
+		$ALLstart_epoch[$g] =	$row[0];
+		$ALLcall_date[$g] =		$row[1];
+		$ALLcampaign_id[$g] =	$row[2];
+		$ALLlength_in_sec[$g] =	$row[3];
+		$ALLstatus[$g] =		$row[4];
+		$ALLphone_code[$g] =	$row[5];
+		$ALLphone_number[$g] =	$row[6];
+		$ALLlead_id[$g] =		$row[7];
+		$ALLhangup_reason[$g] =	$row[8];
+		$ALLalt_dial[$g] =		$row[9];
+		$ALLuniqueid[$g] =		$row[11];
+		$ALLuser[$g] =			$row[12];
+		$ALLin_out[$g] =		"OUT-AUTO";
+		if ($row[10] == 'MANUAL') {$ALLin_out[$g] = "OUT-MANUAL";}
+
+		$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='$ALLlead_id[$g]' and vicidial_id='$ALLuniqueid[$g]';";
+		$rsltA=mysql_query($stmtA, $link);
+		$out_notes_to_print = mysql_num_rows($rslt);
+		if ($out_notes_to_print > 0)
+			{
+			$rowA=mysql_fetch_row($rsltA);
+			$Allcall_notes[$g] =	$rowA[0];
+			if (strlen($Allcall_notes[$g]) > 0)
+				{$Allcall_notes[$g] =	"<b>NOTES: </b> $Allcall_notes[$g]";}
+			}
+		$stmtA="SELECT full_name FROM vicidial_users WHERE user='$ALLuser[$g]';";
+		$rsltA=mysql_query($stmtA, $link);
+		$users_to_print = mysql_num_rows($rslt);
+		if ($users_to_print > 0)
+			{
+			$rowA=mysql_fetch_row($rsltA);
+			$ALLuser[$g] .=	" - $rowA[0]";
+			}
+
+		$Allcounter[$g] =		$g;
+
+		$g++;
+		$u++;
+		}
+
+	$stmt="select start_epoch,call_date,campaign_id,length_in_sec,status,phone_code,phone_number,lead_id,term_reason,queue_seconds,uniqueid,closecallid,user from vicidial_closer_log where lead_id='$lead_id' order by call_date desc limit 10000;";
+	$rslt=mysql_query($stmt, $link);
+	$in_logs_to_print = mysql_num_rows($rslt);
+	if ($format=='debug') {echo "|$in_logs_to_print|$stmt|";}
+
+	$u=0;
+	while ($in_logs_to_print > $u) 
+		{
+		$row=mysql_fetch_row($rslt);
+		$ALLsort[$g] =			"$row[0]-----$g";
+		$ALLstart_epoch[$g] =	$row[0];
+		$ALLcall_date[$g] =		$row[1];
+		$ALLcampaign_id[$g] =	$row[2];
+		$ALLlength_in_sec[$g] =	($row[3] - $row[9]);
+		if ($ALLlength_in_sec[$g] < 0) {$ALLlength_in_sec[$g]=0;}
+		$ALLstatus[$g] =		$row[4];
+		$ALLphone_code[$g] =	$row[5];
+		$ALLphone_number[$g] =	$row[6];
+		$ALLlead_id[$g] =		$row[7];
+		$ALLhangup_reason[$g] =	$row[8];
+		$ALLuniqueid[$g] =		$row[10];
+		$ALLclosecallid[$g] =	$row[11];
+		$ALLuser[$g] =			$row[12];
+		$ALLalt_dial[$g] =		"MAIN";
+		$ALLin_out[$g] =		"IN";
+
+		$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='$ALLlead_id[$g]' and vicidial_id='$ALLclosecallid[$g]';";
+		$rsltA=mysql_query($stmtA, $link);
+		$in_notes_to_print = mysql_num_rows($rslt);
+		if ($in_notes_to_print > 0)
+			{
+			$rowA=mysql_fetch_row($rsltA);
+			$Allcall_notes[$g] =	$rowA[0];
+			if (strlen($Allcall_notes[$g]) > 0)
+				{$Allcall_notes[$g] =	"<b>NOTES: </b> $Allcall_notes[$g]";}
+			}
+		$stmtA="SELECT full_name FROM vicidial_users WHERE user='$ALLuser[$g]';";
+		$rsltA=mysql_query($stmtA, $link);
+		$users_to_print = mysql_num_rows($rslt);
+		if ($users_to_print > 0)
+			{
+			$rowA=mysql_fetch_row($rsltA);
+			$ALLuser[$g] .=	" - $rowA[0]";
+			}
+
+		$Allcounter[$g] =		$g;
+
+		$g++;
+		$u++;
+		}
+
+	if ($g > 0)
+		{sort($ALLsort, SORT_NUMERIC);}
+	else
+		{echo "<tr bgcolor=white><td colspan=11 align=center>No calls on this day</td></tr>";}
+
+	$u=0;
+	while ($g > $u) 
+		{
+		$sort_split = explode("-----",$ALLsort[$u]);
+		$i = $sort_split[1];
+
+		if (eregi("1$|3$|5$|7$|9$", $u))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+
+		$u++;
+		echo "<tr $bgcolor>";
+		echo "<td><font size=1>$u</td>";
+		echo "<td align=right><font size=2>$ALLcall_date[$i]</td>";
+		echo "<td align=right><font size=2> $ALLuser[$i]</td>\n";
+		echo "<td align=right><font size=2> $ALLlength_in_sec[$i]</td>\n";
+		echo "<td align=right><font size=2> $ALLstatus[$i]</td>\n";
+		echo "<td align=right><font size=2> $ALLphone_code[$i] $ALLphone_number[$i] </td>\n";
+		echo "<td align=right><font size=2> $ALLcampaign_id[$i] </td>\n";
+		echo "<td align=right><font size=2> $ALLin_out[$i] </td>\n";
+		echo "<td align=right><font size=2> $ALLalt_dial[$i] </td>\n";
+		echo "<td align=right><font size=2> $ALLhangup_reason[$i] </td>\n";
+		echo "</TR><TR>";
+		echo "<td></td>";
+		echo "<TD $bgcolor COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"> $Allcall_notes[$i] </font></TD>";
+		echo "</tr>\n";
+		}
+
+	echo "</TABLE>";
+	echo "<BR>";
+	echo "<a href=\"#\" onclick=\"hideDiv('CalLNotesDisplaYBox');return false;\">Close Call Notes</a>";
+	echo "</CENTER>";
 	}
 
 
