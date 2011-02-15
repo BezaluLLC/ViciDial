@@ -2643,12 +2643,13 @@ else
 # 110124-1134 - Small query fix for large queue_log tables
 # 110212-2048 - Added Scheduled Callback as status flag to allow for custom scheduled callback statuses
 # 110214-0001 - Added campaign settings for lead_order_secondary, per_call_notes and my_callback_option
+# 110215-1721 - Added add-a-new-lead link to the lists submenu
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-299';
-$build = '110214-0001';
+$admin_version = '2.4-300';
+$build = '110215-1721';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");

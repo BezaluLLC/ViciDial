@@ -511,6 +511,9 @@ This option allows you to pre-set the My Callback checkbox on the agent schedule
 Call Notes Per Call||
 Setting this option to ENABLED will allow agents to enter in notes for every call they handle in the agent interface. The notes entry field will appear below the Comments field in the agent interface. Also, if the Agent User Group is allowed to view Call Logs then the agent will be able to view past call notes for a lead at any time. Default is DISABLED||
 If List Order Randomize is enabled, this option will be ignored||
+ERROR: Lead not added, please go back and look at what you entered||
+Lead has been added||
+Add A New Lead||
 
 
 AST_LISTS_campaign_stats.php

@@ -42,6 +42,7 @@
 # 101127-1610 - Added ability to set a scheduled callback date and time
 # 110212-2041 - Added compatibility with definable scheduled callback statuses
 # 110215-1411 - Added display of call notes to log records
+# 110215-1717 - Changed empty lead_id behavior to be add-a-lead functionality
 #
 
 require("dbconnect.php");
@@ -316,10 +317,29 @@ if ($scb_count_to_print > 0)
 <?php 
 echo "<a href=\"./admin.php?ADD=100\">ADMINISTRATION</a>: Lead record modification<BR>\n";
 
+if ($lead_id == 'NEW')
+	{
+	$stmt="INSERT INTO vicidial_list set status='" . mysql_real_escape_string($status) . "',title='" . mysql_real_escape_string($title) . "',first_name='" . mysql_real_escape_string($first_name) . "',middle_initial='" . mysql_real_escape_string($middle_initial) . "',last_name='" . mysql_real_escape_string($last_name) . "',address1='" . mysql_real_escape_string($address1) . "',address2='" . mysql_real_escape_string($address2) . "',address3='" . mysql_real_escape_string($address3) . "',city='" . mysql_real_escape_string($city) . "',state='" . mysql_real_escape_string($state) . "',province='" . mysql_real_escape_string($province) . "',postal_code='" . mysql_real_escape_string($postal_code) . "',country_code='" . mysql_real_escape_string($country_code) . "',alt_phone='" . mysql_real_escape_string($alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysql_real_escape_string($email) . "',security_phrase='" . mysql_real_escape_string($security) . "',comments='" . mysql_real_escape_string($comments) . "',rank='" . mysql_real_escape_string($rank) . "',owner='" . mysql_real_escape_string($owner) . "',vendor_lead_code='" . mysql_real_escape_string($vendor_id) . "', list_id='" . mysql_real_escape_string($list_id) . "'";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_query($stmt, $link);
+	$affected_rows = mysql_affected_rows($link);
+	if ($affected_rows > 0)
+		{
+		$lead_id = mysql_insert_id($link);
+		echo "Lead has been added: $lead_id<BR><BR>\n";
+		$end_call=0;
+		}
+	else
+		{echo "ERROR: Lead not added, please go back and look at what you entered<BR><BR>\n";}
+	}
+
+if (strlen($lead_id) < 1)
+	{$lead_id = 'NEW';}
+
 if ($end_call > 0)
 	{
 	### update the lead record in the vicidial_list table 
-	$stmt="UPDATE vicidial_list set status='" . mysql_real_escape_string($status) . "',title='" . mysql_real_escape_string($title) . "',first_name='" . mysql_real_escape_string($first_name) . "',middle_initial='" . mysql_real_escape_string($middle_initial) . "',last_name='" . mysql_real_escape_string($last_name) . "',address1='" . mysql_real_escape_string($address1) . "',address2='" . mysql_real_escape_string($address2) . "',address3='" . mysql_real_escape_string($address3) . "',city='" . mysql_real_escape_string($city) . "',state='" . mysql_real_escape_string($state) . "',province='" . mysql_real_escape_string($province) . "',postal_code='" . mysql_real_escape_string($postal_code) . "',country_code='" . mysql_real_escape_string($country_code) . "',alt_phone='" . mysql_real_escape_string($alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysql_real_escape_string($email) . "',security_phrase='" . mysql_real_escape_string($security) . "',comments='" . mysql_real_escape_string($comments) . "',rank='" . mysql_real_escape_string($rank) . "',owner='" . mysql_real_escape_string($owner) . "' where lead_id='" . mysql_real_escape_string($lead_id) . "'";
+	$stmt="UPDATE vicidial_list set status='" . mysql_real_escape_string($status) . "',title='" . mysql_real_escape_string($title) . "',first_name='" . mysql_real_escape_string($first_name) . "',middle_initial='" . mysql_real_escape_string($middle_initial) . "',last_name='" . mysql_real_escape_string($last_name) . "',address1='" . mysql_real_escape_string($address1) . "',address2='" . mysql_real_escape_string($address2) . "',address3='" . mysql_real_escape_string($address3) . "',city='" . mysql_real_escape_string($city) . "',state='" . mysql_real_escape_string($state) . "',province='" . mysql_real_escape_string($province) . "',postal_code='" . mysql_real_escape_string($postal_code) . "',country_code='" . mysql_real_escape_string($country_code) . "',alt_phone='" . mysql_real_escape_string($alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysql_real_escape_string($email) . "',security_phrase='" . mysql_real_escape_string($security) . "',comments='" . mysql_real_escape_string($comments) . "',rank='" . mysql_real_escape_string($rank) . "',owner='" . mysql_real_escape_string($owner) . "',vendor_lead_code='" . mysql_real_escape_string($vendor_id) . "' where lead_id='" . mysql_real_escape_string($lead_id) . "'";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_query($stmt, $link);
 
@@ -462,15 +482,6 @@ else
 
 		echo "<BR>vicidial_callback record changed to $appointment_date $appointment_time $CBstatus<BR>\n";
 		}	
-
-
-
-
-
-
-
-
-
 
 
 	$stmt="SELECT count(*) from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
@@ -680,7 +691,34 @@ else
 	$owner				= $row[33];
 	$entry_list_id		= $row[34];
 
-	echo "<br>Call information: $first_name $last_name - $phone_number<br><br><form action=$PHP_SELF method=POST>\n";
+	if ($lead_id == 'NEW')
+		{
+		##### create a select list of lists if a NEW lead_id #####
+		$stmt="select list_id,campaign_id,list_name from vicidial_lists order by list_id limit 5000;";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$lists_to_print = mysql_num_rows($rslt);
+
+		$Lc=0;
+		$select_list = '<select size=1 name=list_id>';
+		while ($lists_to_print > $Lc) 
+			{
+			$row=mysql_fetch_row($rslt);
+			$select_list .= "<option value='$row[0]'>$row[0] - $row[1] - $row[2]</option>";
+
+			$Lc++;
+			}
+		$select_list .= "</select>";
+
+		$list_id=$select_list;
+		}
+
+	if ($lead_id == 'NEW')
+		{echo "<br><b>Add A New Lead</B>\n";}
+	else
+		{echo "<br>Call information: $first_name $last_name - $phone_number\n";}
+
+	echo "<br><br><form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=end_call value=1>\n";
 	echo "<input type=hidden name=DB value=\"$DB\">\n";
 	echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
@@ -694,8 +732,9 @@ else
 	echo "<input type=hidden name=call_began value=\"$call_began\">\n";
 	echo "<input type=hidden name=parked_time value=\"$parked_time\">\n";
 	echo "<table cellpadding=1 cellspacing=0>\n";
-	echo "<tr><td colspan=2>$label_vendor_lead_code: $vendor_id &nbsp; &nbsp; Lead ID: $lead_id</td></tr>\n";
-	echo "<tr><td colspan=2>Fronter: <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; List ID: $list_id &nbsp; &nbsp; Called Count: $called_count</td></tr>\n";
+	echo "<tr><td colspan=2>Lead ID: $lead_id &nbsp; &nbsp; List ID: $list_id</td></tr>\n";
+	echo "<tr><td colspan=2>Fronter: <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; Called Count: $called_count</td></tr>\n";
+	if ($lead_id == 'NEW') {$list_id='';}
 
 	echo "<tr><td align=right>$label_title: </td><td align=left><input type=text name=title size=4 maxlength=4 value=\"$title\"> &nbsp; \n";
 	echo "$label_first_name: <input type=text name=first_name size=15 maxlength=30 value=\"$first_name\"> </td></tr>\n";
@@ -715,474 +754,484 @@ else
 	echo "<tr><td align=right>$label_alt_phone : </td><td align=left><input type=text name=alt_phone size=20 maxlength=20 value=\"$alt_phone\"></td></tr>\n";
 	echo "<tr><td align=right>$label_email : </td><td align=left><input type=text name=email size=30 maxlength=50 value=\"$email\"></td></tr>\n";
 	echo "<tr><td align=right>$label_security_phrase : </td><td align=left><input type=text name=security size=30 maxlength=100 value=\"$security\"></td></tr>\n";
+	echo "<tr><td align=right>$label_vendor_lead_code : </td><td align=left><input type=text name=vendor_id size=30 maxlength=100 value=\"$vendor_id\"></td></tr>\n";
 	echo "<tr><td align=right>Rank : </td><td align=left><input type=text name=rank size=7 maxlength=5 value=\"$rank\"></td></tr>\n";
 	echo "<tr><td align=right>Owner : </td><td align=left><input type=text name=owner size=22 maxlength=20 value=\"$owner\"></td></tr>\n";
 	echo "<tr><td align=right>$label_comments : </td><td align=left><TEXTAREA name=comments ROWS=3 COLS=65>$comments</TEXTAREA></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Disposition: </td><td align=left><select size=1 name=status>\n";
 
-	### find out if status(dispo) is a scheduled callback status
-	$scheduled_callback='';
-	$stmt="SELECT scheduled_callback from vicidial_statuses where status='$dispo';";
-	$rslt=mysql_query($stmt, $link);
-	$scb_count_to_print = mysql_num_rows($rslt);
-	if ($scb_count_to_print > 0) 
+	if ($lead_id != 'NEW') 
 		{
-		$row=mysql_fetch_row($rslt);
-		if (strlen($row[0])>0)	{$scheduled_callback =	$row[0];}
+		echo "<tr bgcolor=#B6D3FC><td align=right>Disposition: </td><td align=left><select size=1 name=status>\n";
+
+		### find out if status(dispo) is a scheduled callback status
+		$scheduled_callback='';
+		$stmt="SELECT scheduled_callback from vicidial_statuses where status='$dispo';";
+		$rslt=mysql_query($stmt, $link);
+		$scb_count_to_print = mysql_num_rows($rslt);
+		if ($scb_count_to_print > 0) 
+			{
+			$row=mysql_fetch_row($rslt);
+			if (strlen($row[0])>0)	{$scheduled_callback =	$row[0];}
+			}
+		$stmt="SELECT scheduled_callback from vicidial_campaign_statuses where status='$dispo';";
+		$rslt=mysql_query($stmt, $link);
+		$scb_count_to_print = mysql_num_rows($rslt);
+		if ($scb_count_to_print > 0) 
+			{
+			$row=mysql_fetch_row($rslt);
+			if (strlen($row[0])>0)	{$scheduled_callback =	$row[0];}
+			}
+
+		$list_campaign='';
+		$stmt="SELECT campaign_id from vicidial_lists where list_id='$list_id'";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$Cstatuses_to_print = mysql_num_rows($rslt);
+		if ($Cstatuses_to_print > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$list_campaign = $row[0];
+			}
+
+		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses where selectable='Y' order by status";
+		$rslt=mysql_query($stmt, $link);
+		$statuses_to_print = mysql_num_rows($rslt);
+		$statuses_list='';
+
+		$o=0;
+		$DS=0;
+		while ($statuses_to_print > $o) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			if ( (strlen($dispo) ==  strlen($rowx[0])) and (eregi($dispo,$rowx[0])) )
+				{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
+			else
+				{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
+			$o++;
+			}
+
+		$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where selectable='Y' and campaign_id='$list_campaign' order by status";
+		$rslt=mysql_query($stmt, $link);
+		$CAMPstatuses_to_print = mysql_num_rows($rslt);
+
+		$o=0;
+		$CBhold_set=0;
+		while ($CAMPstatuses_to_print > $o) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			if ( (strlen($dispo) ==  strlen($rowx[0])) and (eregi($dispo,$rowx[0])) )
+				{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
+			else
+				{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
+			if ($rowx[0] == 'CBHOLD') {$CBhold_set++;}
+			$o++;
+			}
+
+		if ($dispo == 'CBHOLD') {$CBhold_set++;}
+
+		if ($DS < 1) 
+			{$statuses_list .= "<option SELECTED value=\"$dispo\">$dispo</option>\n";}
+		if ($CBhold_set < 1)
+			{$statuses_list .= "<option value=\"CBHOLD\">CBHOLD - Scheduled Callback</option>\n";}
+		echo "$statuses_list";
+		echo "</select> <i>(with $list_campaign statuses)</i></td></tr>\n";
+
+
+		echo "<tr bgcolor=#B6D3FC><td align=left>Modify vicidial log </td><td align=left><input type=checkbox name=modify_logs value=\"1\" CHECKED></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=left>Modify agent log </td><td align=left><input type=checkbox name=modify_agent_logs value=\"1\" CHECKED></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=left>Modify closer log </td><td align=left><input type=checkbox name=modify_closer_logs value=\"1\"></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=left>Add closer log record </td><td align=left><input type=checkbox name=add_closer_record value=\"1\"></td></tr>\n";
 		}
-	$stmt="SELECT scheduled_callback from vicidial_campaign_statuses where status='$dispo';";
-	$rslt=mysql_query($stmt, $link);
-	$scb_count_to_print = mysql_num_rows($rslt);
-	if ($scb_count_to_print > 0) 
+	else
 		{
-		$row=mysql_fetch_row($rslt);
-		if (strlen($row[0])>0)	{$scheduled_callback =	$row[0];}
+		echo "<input type=hidden name=status value=\"NEW\">\n";
 		}
-
-	$list_campaign='';
-	$stmt="SELECT campaign_id from vicidial_lists where list_id='$list_id'";
-	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$Cstatuses_to_print = mysql_num_rows($rslt);
-	if ($Cstatuses_to_print > 0)
-		{
-		$row=mysql_fetch_row($rslt);
-		$list_campaign = $row[0];
-		}
-
-	$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses where selectable='Y' order by status";
-	$rslt=mysql_query($stmt, $link);
-	$statuses_to_print = mysql_num_rows($rslt);
-	$statuses_list='';
-
-	$o=0;
-	$DS=0;
-	while ($statuses_to_print > $o) 
-		{
-		$rowx=mysql_fetch_row($rslt);
-		if ( (strlen($dispo) ==  strlen($rowx[0])) and (eregi($dispo,$rowx[0])) )
-			{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
-		else
-			{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
-		$o++;
-		}
-
-	$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where selectable='Y' and campaign_id='$list_campaign' order by status";
-	$rslt=mysql_query($stmt, $link);
-	$CAMPstatuses_to_print = mysql_num_rows($rslt);
-
-	$o=0;
-	$CBhold_set=0;
-	while ($CAMPstatuses_to_print > $o) 
-		{
-		$rowx=mysql_fetch_row($rslt);
-		if ( (strlen($dispo) ==  strlen($rowx[0])) and (eregi($dispo,$rowx[0])) )
-			{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
-		else
-			{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
-		if ($rowx[0] == 'CBHOLD') {$CBhold_set++;}
-		$o++;
-		}
-
-	if ($dispo == 'CBHOLD') {$CBhold_set++;}
-
-	if ($DS < 1) 
-		{$statuses_list .= "<option SELECTED value=\"$dispo\">$dispo</option>\n";}
-	if ($CBhold_set < 1)
-		{$statuses_list .= "<option value=\"CBHOLD\">CBHOLD - Scheduled Callback</option>\n";}
-	echo "$statuses_list";
-	echo "</select> <i>(with $list_campaign statuses)</i></td></tr>\n";
-
-
-	echo "<tr bgcolor=#B6D3FC><td align=left>Modify vicidial log </td><td align=left><input type=checkbox name=modify_logs value=\"1\" CHECKED></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=left>Modify agent log </td><td align=left><input type=checkbox name=modify_agent_logs value=\"1\" CHECKED></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=left>Modify closer log </td><td align=left><input type=checkbox name=modify_closer_logs value=\"1\"></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=left>Add closer log record </td><td align=left><input type=checkbox name=add_closer_record value=\"1\"></td></tr>\n";
-
 
 	echo "<tr><td colspan=2 align=center><input type=submit name=submit value=\"SUBMIT\"></td></tr>\n";
 	echo "</table></form>\n";
 	echo "<BR><BR><BR>\n";
 
-	echo "<TABLE BGCOLOR=#B6D3FC WIDTH=750><TR><TD>\n";
-	echo "Callback Details:<BR><CENTER>\n";
-	if ( ($dispo == 'CALLBK') or ($dispo == 'CBHOLD') or ($scheduled_callback == 'Y') )
+	if ($lead_id != 'NEW') 
 		{
-		### find any vicidial_callback records for this lead 
-		$stmt="select callback_id,lead_id,list_id,campaign_id,status,entry_time,callback_time,modify_date,user,recipient,comments,user_group,lead_status from vicidial_callbacks where lead_id='" . mysql_real_escape_string($lead_id) . "' and status IN('ACTIVE','LIVE') order by callback_id desc LIMIT 1;";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$CB_to_print = mysql_num_rows($rslt);
-		$rowx=mysql_fetch_row($rslt);
-
-		if ($CB_to_print>0)
+		echo "<TABLE BGCOLOR=#B6D3FC WIDTH=750><TR><TD>\n";
+		echo "Callback Details:<BR><CENTER>\n";
+		if ( ($dispo == 'CALLBK') or ($dispo == 'CBHOLD') or ($scheduled_callback == 'Y') )
 			{
-			if ($rowx[9] == 'USERONLY')
-				{
-				echo "<br><form action=$PHP_SELF method=POST>\n";
-				echo "<input type=hidden name=CBchangeUSERtoANY value=\"YES\">\n";
-				echo "<input type=hidden name=DB value=\"$DB\">\n";
-				echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
-				echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
-				echo "<input type=submit name=submit value=\"CHANGE TO ANYONE CALLBACK\"></form><BR>\n";
+			### find any vicidial_callback records for this lead 
+			$stmt="select callback_id,lead_id,list_id,campaign_id,status,entry_time,callback_time,modify_date,user,recipient,comments,user_group,lead_status from vicidial_callbacks where lead_id='" . mysql_real_escape_string($lead_id) . "' and status IN('ACTIVE','LIVE') order by callback_id desc LIMIT 1;";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			$CB_to_print = mysql_num_rows($rslt);
+			$rowx=mysql_fetch_row($rslt);
 
-				echo "<br><form action=$PHP_SELF method=POST>\n";
-				echo "<input type=hidden name=CBchangeUSERtoUSER value=\"YES\">\n";
-				echo "<input type=hidden name=DB value=\"$DB\">\n";
-				echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
-				echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
-				echo "New Callback Owner UserID: <input type=text name=CBuser size=8 maxlength=10 value=\"$rowx[8]\"> \n";
-				echo "<input type=submit name=submit value=\"CHANGE USERONLY CALLBACK USER\"></form><BR>\n";
+			if ($CB_to_print>0)
+				{
+				if ($rowx[9] == 'USERONLY')
+					{
+					echo "<br><form action=$PHP_SELF method=POST>\n";
+					echo "<input type=hidden name=CBchangeUSERtoANY value=\"YES\">\n";
+					echo "<input type=hidden name=DB value=\"$DB\">\n";
+					echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
+					echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
+					echo "<input type=submit name=submit value=\"CHANGE TO ANYONE CALLBACK\"></form><BR>\n";
+
+					echo "<br><form action=$PHP_SELF method=POST>\n";
+					echo "<input type=hidden name=CBchangeUSERtoUSER value=\"YES\">\n";
+					echo "<input type=hidden name=DB value=\"$DB\">\n";
+					echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
+					echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
+					echo "New Callback Owner UserID: <input type=text name=CBuser size=8 maxlength=10 value=\"$rowx[8]\"> \n";
+					echo "<input type=submit name=submit value=\"CHANGE USERONLY CALLBACK USER\"></form><BR>\n";
+					}
+				else
+					{
+					echo "<br><form action=$PHP_SELF method=POST>\n";
+					echo "<input type=hidden name=CBchangeANYtoUSER value=\"YES\">\n";
+					echo "<input type=hidden name=DB value=\"$DB\">\n";
+					echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
+					echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
+					echo "New Callback Owner UserID: <input type=text name=CBuser size=8 maxlength=10 value=\"$rowx[8]\"> \n";
+					echo "<input type=submit name=submit value=\"CHANGE TO USERONLY CALLBACK\"></form><BR>\n";
+					}
+				$callback_id = $rowx[0];
+				$CBcomments = $rowx[10];
+				$lead_status = $rowx[12];
+				$appointment_datetimeARRAY = explode(" ",$rowx[6]);
+				$appointment_date = $appointment_datetimeARRAY[0];
+				$appointment_timeARRAY = explode(":",$appointment_datetimeARRAY[1]);
+				$appointment_hour = $appointment_timeARRAY[0];
+				$appointment_min = $appointment_timeARRAY[1];
+
+
+
+				$stmt="SELECT status,status_name from vicidial_statuses where scheduled_callback='Y' and selectable='Y' and status NOT IN('CBHOLD') order by status";
+				$rslt=mysql_query($stmt, $link);
+				$statuses_to_print = mysql_num_rows($rslt);
+				$statuses_list='';
+
+				$o=0;
+				$DS=0;
+				while ($statuses_to_print > $o) 
+					{
+					$rowx=mysql_fetch_row($rslt);
+					if ( (strlen($lead_status) == strlen($rowx[0])) and (eregi($lead_status,$rowx[0])) )
+						{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
+					else
+						{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
+					$o++;
+					}
+
+				$stmt="SELECT status,status_name from vicidial_campaign_statuses where scheduled_callback='Y' and selectable='Y' and status NOT IN('CBHOLD') and campaign_id='$list_campaign' order by status";
+				$rslt=mysql_query($stmt, $link);
+				$CAMPstatuses_to_print = mysql_num_rows($rslt);
+
+				$o=0;
+				$CBhold_set=0;
+				while ($CAMPstatuses_to_print > $o) 
+					{
+					$rowx=mysql_fetch_row($rslt);
+					if ( (strlen($lead_status) ==  strlen($rowx[0])) and (eregi($lead_status,$rowx[0])) )
+						{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
+					else
+						{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
+					$o++;
+					}
+
+				if ($DS < 1) 
+					{$statuses_list .= "<option SELECTED value=\"$lead_status\">$lead_status</option>\n";}
+
+				?>
+
+				<FORM METHOD=POST NAME=vsn ID=vsn ACTION="<?php echo $PHP_SELF ?>">
+				<BR>Change Scheduled Callback Date:<BR>
+
+				<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=2 WIDTH=700>
+				<TR><TD COLSPAN=2 ALIGN=CENTER>
+				<input type=hidden name=DB id=DB value=<?php echo $DB ?>>
+				<input type=hidden name=CBchangeDATE value="YES">
+				<input type=hidden name=lead_id id=lead_id value="<?php echo $lead_id ?>">
+				<input type=hidden name=callback_id value="<?php echo $callback_id ?>">
+
+				<TR BGCOLOR="#E6E6E6">
+				<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">CallBack Date/Time: </TD><TD ALIGN=LEFT><input type=text name=appointment_date id=appointment_date size=10 maxlength=10 value="<?php echo $appointment_date ?>">
+
+				<script language="JavaScript">
+				var o_cal = new tcal ({
+					// form name
+					'formname': 'vsn',
+					// input name
+					'controlname': 'appointment_date'
+				});
+				o_cal.a_tpl.yearscroll = false;
+				// o_cal.a_tpl.weekstart = 1; // Monday week start
+				</script>
+				&nbsp; &nbsp;  
+				<input type=hidden name=appointment_time id=appointment_time value="<?php echo $appointment_time ?>">
+				<SELECT name=appointment_hour id=appointment_hour>
+				<option>00</option>
+				<option>01</option>
+				<option>02</option>
+				<option>03</option>
+				<option>04</option>
+				<option>05</option>
+				<option>06</option>
+				<option>07</option>
+				<option>08</option>
+				<option>09</option>
+				<option>10</option>
+				<option>11</option>
+				<option>12</option>
+				<option>13</option>
+				<option>14</option>
+				<option>15</option>
+				<option>16</option>
+				<option>17</option>
+				<option>18</option>
+				<option>19</option>
+				<option>20</option>
+				<option>21</option>
+				<option>22</option>
+				<option>23</option>
+				<OPTION value="<?php echo $appointment_hour ?>" selected><?php echo $appointment_hour ?></OPTION>
+				</SELECT>:
+				<SELECT name=appointment_min id=appointment_min>
+				<option>00</option>
+				<option>05</option>
+				<option>10</option>
+				<option>15</option>
+				<option>20</option>
+				<option>25</option>
+				<option>30</option>
+				<option>35</option>
+				<option>40</option>
+				<option>45</option>
+				<option>50</option>
+				<option>55</option>
+				<OPTION value="<?php echo $appointment_min ?>" selected><?php echo $appointment_min ?></OPTION>
+				</SELECT>
+
+				</TD>
+				</TR>
+				<TR BGCOLOR="#E6E6E6">
+				<TD align=center colspan=2>
+				<FONT FACE="ARIAL,HELVETICA">Callback Disposition: <select size=1 name=CBstatus>\n";
+				<?php echo "$statuses_list"; ?>
+				</select>
+				</TD>
+				</TR>
+
+				<TR BGCOLOR="#E6E6E6">
+				<TD align=center colspan=2>
+				<FONT FACE="ARIAL,HELVETICA">Comments: 
+
+				<TEXTAREA name=comments ROWS=3 COLS=65><?php echo $CBcomments ?></TEXTAREA>
+				</TD>
+				</TR>
+
+				<TR BGCOLOR="#E6E6E6">
+				<TD align=center colspan=2>
+
+				<SCRIPT LANGUAGE="JavaScript">
+
+				function submit_form()
+					{
+					var appointment_hourFORM = document.getElementById('appointment_hour');
+					var appointment_hourVALUE = appointment_hourFORM[appointment_hourFORM.selectedIndex].text;
+					var appointment_minFORM = document.getElementById('appointment_min');
+					var appointment_minVALUE = appointment_minFORM[appointment_minFORM.selectedIndex].text;
+
+					document.vsn.appointment_time.value = appointment_hourVALUE + ":" + appointment_minVALUE + ":00";
+
+					document.vsn.submit();
+					}
+
+				</SCRIPT>
+
+				<input type=button value="SUBMIT" name=smt id=smt onClick="submit_form()">
+				</TD>
+				</TR>
+
+				</TABLE>
+
+				</FORM>
+
+				<?php
 				}
 			else
 				{
-				echo "<br><form action=$PHP_SELF method=POST>\n";
-				echo "<input type=hidden name=CBchangeANYtoUSER value=\"YES\">\n";
-				echo "<input type=hidden name=DB value=\"$DB\">\n";
-				echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
-				echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
-				echo "New Callback Owner UserID: <input type=text name=CBuser size=8 maxlength=10 value=\"$rowx[8]\"> \n";
-				echo "<input type=submit name=submit value=\"CHANGE TO USERONLY CALLBACK\"></form><BR>\n";
-				}
-			$callback_id = $rowx[0];
-			$CBcomments = $rowx[10];
-			$lead_status = $rowx[12];
-			$appointment_datetimeARRAY = explode(" ",$rowx[6]);
-			$appointment_date = $appointment_datetimeARRAY[0];
-			$appointment_timeARRAY = explode(":",$appointment_datetimeARRAY[1]);
-			$appointment_hour = $appointment_timeARRAY[0];
-			$appointment_min = $appointment_timeARRAY[1];
-
-
-
-			$stmt="SELECT status,status_name from vicidial_statuses where scheduled_callback='Y' and selectable='Y' and status NOT IN('CBHOLD') order by status";
-			$rslt=mysql_query($stmt, $link);
-			$statuses_to_print = mysql_num_rows($rslt);
-			$statuses_list='';
-
-			$o=0;
-			$DS=0;
-			while ($statuses_to_print > $o) 
-				{
-				$rowx=mysql_fetch_row($rslt);
-				if ( (strlen($lead_status) == strlen($rowx[0])) and (eregi($lead_status,$rowx[0])) )
-					{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
-				else
-					{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
-				$o++;
+				echo "<BR>No Callback records found<BR>\n";
 				}
 
-			$stmt="SELECT status,status_name from vicidial_campaign_statuses where scheduled_callback='Y' and selectable='Y' and status NOT IN('CBHOLD') and campaign_id='$list_campaign' order by status";
-			$rslt=mysql_query($stmt, $link);
-			$CAMPstatuses_to_print = mysql_num_rows($rslt);
-
-			$o=0;
-			$CBhold_set=0;
-			while ($CAMPstatuses_to_print > $o) 
-				{
-				$rowx=mysql_fetch_row($rslt);
-				if ( (strlen($lead_status) ==  strlen($rowx[0])) and (eregi($lead_status,$rowx[0])) )
-					{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
-				else
-					{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
-				$o++;
-				}
-
-			if ($DS < 1) 
-				{$statuses_list .= "<option SELECTED value=\"$lead_status\">$lead_status</option>\n";}
-
-			?>
-
-			<FORM METHOD=POST NAME=vsn ID=vsn ACTION="<?php echo $PHP_SELF ?>">
-			<BR>Change Scheduled Callback Date:<BR>
-
-			<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=2 WIDTH=700>
-			<TR><TD COLSPAN=2 ALIGN=CENTER>
-			<input type=hidden name=DB id=DB value=<?php echo $DB ?>>
-			<input type=hidden name=CBchangeDATE value="YES">
-			<input type=hidden name=lead_id id=lead_id value="<?php echo $lead_id ?>">
-			<input type=hidden name=callback_id value="<?php echo $callback_id ?>">
-
-			<TR BGCOLOR="#E6E6E6">
-			<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">CallBack Date/Time: </TD><TD ALIGN=LEFT><input type=text name=appointment_date id=appointment_date size=10 maxlength=10 value="<?php echo $appointment_date ?>">
-
-			<script language="JavaScript">
-			var o_cal = new tcal ({
-				// form name
-				'formname': 'vsn',
-				// input name
-				'controlname': 'appointment_date'
-			});
-			o_cal.a_tpl.yearscroll = false;
-			// o_cal.a_tpl.weekstart = 1; // Monday week start
-			</script>
-			&nbsp; &nbsp;  
-			<input type=hidden name=appointment_time id=appointment_time value="<?php echo $appointment_time ?>">
-			<SELECT name=appointment_hour id=appointment_hour>
-			<option>00</option>
-			<option>01</option>
-			<option>02</option>
-			<option>03</option>
-			<option>04</option>
-			<option>05</option>
-			<option>06</option>
-			<option>07</option>
-			<option>08</option>
-			<option>09</option>
-			<option>10</option>
-			<option>11</option>
-			<option>12</option>
-			<option>13</option>
-			<option>14</option>
-			<option>15</option>
-			<option>16</option>
-			<option>17</option>
-			<option>18</option>
-			<option>19</option>
-			<option>20</option>
-			<option>21</option>
-			<option>22</option>
-			<option>23</option>
-			<OPTION value="<?php echo $appointment_hour ?>" selected><?php echo $appointment_hour ?></OPTION>
-			</SELECT>:
-			<SELECT name=appointment_min id=appointment_min>
-			<option>00</option>
-			<option>05</option>
-			<option>10</option>
-			<option>15</option>
-			<option>20</option>
-			<option>25</option>
-			<option>30</option>
-			<option>35</option>
-			<option>40</option>
-			<option>45</option>
-			<option>50</option>
-			<option>55</option>
-			<OPTION value="<?php echo $appointment_min ?>" selected><?php echo $appointment_min ?></OPTION>
-			</SELECT>
-
-			</TD>
-			</TR>
-			<TR BGCOLOR="#E6E6E6">
-			<TD align=center colspan=2>
-			<FONT FACE="ARIAL,HELVETICA">Callback Disposition: <select size=1 name=CBstatus>\n";
-			<?php echo "$statuses_list"; ?>
-			</select>
-			</TD>
-			</TR>
-
-			<TR BGCOLOR="#E6E6E6">
-			<TD align=center colspan=2>
-			<FONT FACE="ARIAL,HELVETICA">Comments: 
-
-			<TEXTAREA name=comments ROWS=3 COLS=65><?php echo $CBcomments ?></TEXTAREA>
-			</TD>
-			</TR>
-
-			<TR BGCOLOR="#E6E6E6">
-			<TD align=center colspan=2>
-
-			<SCRIPT LANGUAGE="JavaScript">
-
-			function submit_form()
-				{
-				var appointment_hourFORM = document.getElementById('appointment_hour');
-				var appointment_hourVALUE = appointment_hourFORM[appointment_hourFORM.selectedIndex].text;
-				var appointment_minFORM = document.getElementById('appointment_min');
-				var appointment_minVALUE = appointment_minFORM[appointment_minFORM.selectedIndex].text;
-
-				document.vsn.appointment_time.value = appointment_hourVALUE + ":" + appointment_minVALUE + ":00";
-
-				document.vsn.submit();
-				}
-
-			</SCRIPT>
-
-			<input type=button value="SUBMIT" name=smt id=smt onClick="submit_form()">
-			</TD>
-			</TR>
-
-			</TABLE>
-
-			</FORM>
-
-			<?php
 			}
 		else
 			{
-			echo "<BR>No Callback records found<BR>\n";
+			echo "<BR>If you want to change this lead to a scheduled callback, first change the Disposition to CBHOLD, then submit and you will be able to set the callback date and time.<BR>\n";
+			}
+		echo "</TD></TR></TABLE>\n";
+
+		echo "<br><br>\n";
+
+		echo "<center>\n";
+
+		if ($c > 0)
+			{
+			echo "<B>EXTENDED ALTERNATE PHONE NUMBERS FOR THIS LEAD:</B>\n";
+			echo "<TABLE width=550 cellspacing=0 cellpadding=1>\n";
+			echo "<tr><td><font size=1># </td><td><font size=2>ALT PHONE </td><td align=left><font size=2>ALT NOTE</td><td align=left><font size=2> ALT COUNT</td><td align=left><font size=2> ACTIVE</td></tr>\n";
+
+			echo "$alts_output\n";
+
+			echo "</TABLE>\n";
+			echo "<BR><BR>\n";
 			}
 
-		}
-	else
-		{
-		echo "<BR>If you want to change this lead to a scheduled callback, first change the Disposition to CBHOLD, then submit and you will be able to set the callback date and time.<BR>\n";
-		}
-	echo "</TD></TR></TABLE>\n";
 
-	echo "<br><br>\n";
 
-	echo "<center>\n";
+		### iframe for custom fields display/editing
+		if ($custom_fields_enabled > 0)
+			{
+			$CLlist_id = $list_id;
+			if (strlen($entry_list_id) > 2)
+				{$CLlist_id = $entry_list_id;}
+			$stmt="SHOW TABLES LIKE \"custom_$CLlist_id\";";
+			if ($DB>0) {echo "$stmt";}
+			$rslt=mysql_query($stmt, $link);
+			$tablecount_to_print = mysql_num_rows($rslt);
+			if ($tablecount_to_print > 0) 
+				{
+				$stmt="SELECT count(*) from custom_$CLlist_id where lead_id='$lead_id';";
+				if ($DB>0) {echo "$stmt";}
+				$rslt=mysql_query($stmt, $link);
+				$fieldscount_to_print = mysql_num_rows($rslt);
+				if ($fieldscount_to_print > 0) 
+					{
+					$rowx=mysql_fetch_row($rslt);
+					$custom_records_count =	$rowx[0];
 
-	if ($c > 0)
-		{
-		echo "<B>EXTENDED ALTERNATE PHONE NUMBERS FOR THIS LEAD:</B>\n";
-		echo "<TABLE width=550 cellspacing=0 cellpadding=1>\n";
-		echo "<tr><td><font size=1># </td><td><font size=2>ALT PHONE </td><td align=left><font size=2>ALT NOTE</td><td align=left><font size=2> ALT COUNT</td><td align=left><font size=2> ACTIVE</td></tr>\n";
+					echo "<B>CUSTOM FIELDS FOR THIS LEAD:</B><BR>\n";
+					echo "<iframe src=\"../agc/vdc_form_display.php?lead_id=$lead_id&list_id=$CLlist_id&stage=DISPLAY&submit_button=YES&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bgcolor=E6E6E6\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"2\" allowtransparency=\"true\" id=\"vcFormIFrame\" name=\"vcFormIFrame\" width=\"740\" height=\"300\" STYLE=\"z-index:18\"> </iframe>\n";
+					echo "<BR><BR>";
+					}
+				}
+			}
 
-		echo "$alts_output\n";
+
+		echo "<B>CALLS TO THIS LEAD:</B>\n";
+		echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
+		echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> TSR</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td><td align=right><font size=2> PHONE</td></tr>\n";
+
+		echo "$call_log\n";
 
 		echo "</TABLE>\n";
 		echo "<BR><BR>\n";
-		}
+
+		echo "<B>CLOSER RECORDS FOR THIS LEAD:</B>\n";
+		echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
+		echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> TSR</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> WAIT</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+
+		echo "$closer_log\n";
+
+		echo "</TABLE></center>\n";
+		echo "<BR><BR>\n";
 
 
+		echo "<B>AGENT LOG RECORDS FOR THIS LEAD:</B>\n";
+		echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
+		echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>CAMPAIGN</td><td align=left><font size=2> TSR</td><td align=left><font size=2> PAUSE</td><td align=right><font size=2> WAIT</td><td align=right><font size=2> TALK</td><td align=right><font size=2> DISPO</td><td align=right><font size=2> STATUS</td><td align=right><font size=2> GROUP</td><td align=right><font size=2> SUB</td></tr>\n";
 
-	### iframe for custom fields display/editing
-	if ($custom_fields_enabled > 0)
-		{
-		$CLlist_id = $list_id;
-		if (strlen($entry_list_id) > 2)
-			{$CLlist_id = $entry_list_id;}
-		$stmt="SHOW TABLES LIKE \"custom_$CLlist_id\";";
-		if ($DB>0) {echo "$stmt";}
+			echo "$agent_log\n";
+
+		echo "</TABLE>\n";
+		echo "<BR><BR>\n";
+
+
+		echo "<B>RECORDINGS FOR THIS LEAD:</B>\n";
+		echo "<TABLE width=750 cellspacing=1 cellpadding=1>\n";
+		echo "<tr><td><font size=1># </td><td align=left><font size=2> LEAD</td><td><font size=2>DATE/TIME </td><td align=left><font size=2>SECONDS </td><td align=left><font size=2> &nbsp; RECID</td><td align=center><font size=2>FILENAME</td><td align=left><font size=2>LOCATION</td><td align=left><font size=2>TSR</td></tr>\n";
+
+		$stmt="select recording_id,channel,server_ip,extension,start_time,start_epoch,end_time,end_epoch,length_in_sec,length_in_min,filename,location,lead_id,user,vicidial_id from recording_log where lead_id='" . mysql_real_escape_string($lead_id) . "' order by recording_id desc limit 500;";
 		$rslt=mysql_query($stmt, $link);
-		$tablecount_to_print = mysql_num_rows($rslt);
-		if ($tablecount_to_print > 0) 
+		$logs_to_print = mysql_num_rows($rslt);
+		if ($DB) {echo "$logs_to_print|$stmt|\n";}
+
+		$u=0;
+		while ($logs_to_print > $u) 
 			{
-			$stmt="SELECT count(*) from custom_$CLlist_id where lead_id='$lead_id';";
-			if ($DB>0) {echo "$stmt";}
-			$rslt=mysql_query($stmt, $link);
-			$fieldscount_to_print = mysql_num_rows($rslt);
-			if ($fieldscount_to_print > 0) 
+			$row=mysql_fetch_row($rslt);
+			if (eregi("1$|3$|5$|7$|9$", $u))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+
+			$location = $row[11];
+
+			if (strlen($location)>2)
 				{
-				$rowx=mysql_fetch_row($rslt);
-				$custom_records_count =	$rowx[0];
-
-				echo "<B>CUSTOM FIELDS FOR THIS LEAD:</B><BR>\n";
-				echo "<iframe src=\"../agc/vdc_form_display.php?lead_id=$lead_id&list_id=$CLlist_id&stage=DISPLAY&submit_button=YES&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bgcolor=E6E6E6\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"2\" allowtransparency=\"true\" id=\"vcFormIFrame\" name=\"vcFormIFrame\" width=\"740\" height=\"300\" STYLE=\"z-index:18\"> </iframe>\n";
-				echo "<BR><BR>";
-				}
-			}
-		}
-
-
-	echo "<B>CALLS TO THIS LEAD:</B>\n";
-	echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-	echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> TSR</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td><td align=right><font size=2> PHONE</td></tr>\n";
-
-	echo "$call_log\n";
-
-	echo "</TABLE>\n";
-	echo "<BR><BR>\n";
-
-	echo "<B>CLOSER RECORDS FOR THIS LEAD:</B>\n";
-	echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-	echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> TSR</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> WAIT</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
-
-	echo "$closer_log\n";
-
-	echo "</TABLE></center>\n";
-	echo "<BR><BR>\n";
-
-
-	echo "<B>AGENT LOG RECORDS FOR THIS LEAD:</B>\n";
-	echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-	echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>CAMPAIGN</td><td align=left><font size=2> TSR</td><td align=left><font size=2> PAUSE</td><td align=right><font size=2> WAIT</td><td align=right><font size=2> TALK</td><td align=right><font size=2> DISPO</td><td align=right><font size=2> STATUS</td><td align=right><font size=2> GROUP</td><td align=right><font size=2> SUB</td></tr>\n";
-
-		echo "$agent_log\n";
-
-	echo "</TABLE>\n";
-	echo "<BR><BR>\n";
-
-
-	echo "<B>RECORDINGS FOR THIS LEAD:</B>\n";
-	echo "<TABLE width=750 cellspacing=1 cellpadding=1>\n";
-	echo "<tr><td><font size=1># </td><td align=left><font size=2> LEAD</td><td><font size=2>DATE/TIME </td><td align=left><font size=2>SECONDS </td><td align=left><font size=2> &nbsp; RECID</td><td align=center><font size=2>FILENAME</td><td align=left><font size=2>LOCATION</td><td align=left><font size=2>TSR</td></tr>\n";
-
-	$stmt="select recording_id,channel,server_ip,extension,start_time,start_epoch,end_time,end_epoch,length_in_sec,length_in_min,filename,location,lead_id,user,vicidial_id from recording_log where lead_id='" . mysql_real_escape_string($lead_id) . "' order by recording_id desc limit 500;";
-	$rslt=mysql_query($stmt, $link);
-	$logs_to_print = mysql_num_rows($rslt);
-	if ($DB) {echo "$logs_to_print|$stmt|\n";}
-
-	$u=0;
-	while ($logs_to_print > $u) 
-		{
-		$row=mysql_fetch_row($rslt);
-		if (eregi("1$|3$|5$|7$|9$", $u))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-
-		$location = $row[11];
-
-		if (strlen($location)>2)
-			{
-			$URLserver_ip = $location;
-			$URLserver_ip = eregi_replace('http://','',$URLserver_ip);
-			$URLserver_ip = eregi_replace('https://','',$URLserver_ip);
-			$URLserver_ip = eregi_replace("\/.*",'',$URLserver_ip);
-			$stmt="select count(*) from servers where server_ip='$URLserver_ip';";
-			$rsltx=mysql_query($stmt, $link);
-			$rowx=mysql_fetch_row($rsltx);
-			
-			if ($rowx[0] > 0)
-				{
-				$stmt="select recording_web_link,alt_server_ip,external_server_ip from servers where server_ip='$URLserver_ip';";
+				$URLserver_ip = $location;
+				$URLserver_ip = eregi_replace('http://','',$URLserver_ip);
+				$URLserver_ip = eregi_replace('https://','',$URLserver_ip);
+				$URLserver_ip = eregi_replace("\/.*",'',$URLserver_ip);
+				$stmt="select count(*) from servers where server_ip='$URLserver_ip';";
 				$rsltx=mysql_query($stmt, $link);
 				$rowx=mysql_fetch_row($rsltx);
 				
-				if (eregi("ALT_IP",$rowx[0]))
+				if ($rowx[0] > 0)
 					{
-					$location = eregi_replace($URLserver_ip, $rowx[1], $location);
-					}
-				if (eregi("EXTERNAL_IP",$rowx[0]))
-					{
-					$location = eregi_replace($URLserver_ip, $rowx[2], $location);
+					$stmt="select recording_web_link,alt_server_ip,external_server_ip from servers where server_ip='$URLserver_ip';";
+					$rsltx=mysql_query($stmt, $link);
+					$rowx=mysql_fetch_row($rsltx);
+					
+					if (eregi("ALT_IP",$rowx[0]))
+						{
+						$location = eregi_replace($URLserver_ip, $rowx[1], $location);
+						}
+					if (eregi("EXTERNAL_IP",$rowx[0]))
+						{
+						$location = eregi_replace($URLserver_ip, $rowx[2], $location);
+						}
 					}
 				}
+
+			if (strlen($location)>30)
+				{$locat = substr($location,0,27);  $locat = "$locat...";}
+			else
+				{$locat = $location;}
+			if ( (eregi("ftp",$location)) or (eregi("http",$location)) )
+				{$location = "<a href=\"$location\">$locat</a>";}
+			else
+				{$location = $locat;}
+			$u++;
+			echo "<tr $bgcolor>";
+			echo "<td><font size=1>$u</td>";
+			echo "<td align=left><font size=2> $row[12] </td>";
+			echo "<td align=left><font size=1> $row[4] </td>\n";
+			echo "<td align=left><font size=2> $row[8] </td>\n";
+			echo "<td align=left><font size=2> $row[0] &nbsp;</td>\n";
+			echo "<td align=center><font size=1> $row[10] </td>\n";
+			echo "<td align=left><font size=2> $location </td>\n";
+			echo "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[13]\" target=\"_blank\">$row[13]</A> </td>";
+			echo "</tr>\n";
+
 			}
 
-		if (strlen($location)>30)
-			{$locat = substr($location,0,27);  $locat = "$locat...";}
-		else
-			{$locat = $location;}
-		if ( (eregi("ftp",$location)) or (eregi("http",$location)) )
-			{$location = "<a href=\"$location\">$locat</a>";}
-		else
-			{$location = $locat;}
-		$u++;
-		echo "<tr $bgcolor>";
-		echo "<td><font size=1>$u</td>";
-		echo "<td align=left><font size=2> $row[12] </td>";
-		echo "<td align=left><font size=1> $row[4] </td>\n";
-		echo "<td align=left><font size=2> $row[8] </td>\n";
-		echo "<td align=left><font size=2> $row[0] &nbsp;</td>\n";
-		echo "<td align=center><font size=1> $row[10] </td>\n";
-		echo "<td align=left><font size=2> $location </td>\n";
-		echo "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[13]\" target=\"_blank\">$row[13]</A> </td>";
-		echo "</tr>\n";
 
+		echo "</TABLE><BR><BR>\n";
+
+
+		$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 9 and modify_leads='1';";
+		if ($DB) {echo "|$stmt|\n";}
+		if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$admin_display=$row[0];
+		if ($admin_display > 0)
+			{
+			echo "<a href=\"./admin.php?ADD=720000000000000&stage=$lead_id&category=LEADS\">Click here to see Lead Modify changes to this lead</a>\n";
+			}
+
+		echo "</center>\n";
 		}
-
-
-	echo "</TABLE><BR><BR>\n";
-
-
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 9 and modify_leads='1';";
-	if ($DB) {echo "|$stmt|\n";}
-	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$admin_display=$row[0];
-	if ($admin_display > 0)
-		{
-		echo "<a href=\"./admin.php?ADD=720000000000000&stage=$lead_id&category=LEADS\">Click here to see Lead Modify changes to this lead</a>\n";
-		}
-
-	echo "</center>\n";
 	}
-
 
 $ENDtime = date("U");
 
