@@ -514,6 +514,13 @@ If List Order Randomize is enabled, this option will be ignored||
 ERROR: Lead not added, please go back and look at what you entered||
 Lead has been added||
 Add A New Lead||
+Agent Lead Search Override||
+This setting will override whatever the campaign has set for Agent Lead Search. NOT_ACTIVE will use the campaign setting. ENABLED will allow lead searching and DISABLED will not allow lead searching. Default is NOT_ACTIVE||
+Agent Lead Search||
+Setting this option to ENABLED will allow agents to search for leads and view lead information while paused in the agent interface. Also, if the Agent User Group is allowed to view Call Logs then the agent will be able to view past call notes for any lead that they are viewing information on. Default is DISABLED||
+Agent Lead Search Method||
+If Agent Lead Search is enabled, this setting defines where the agent will be allowed to search for leads. SYSTEM will search the entire system, CAMPAIGNLISTS will search inside all of the active lists within the campaign, CAMPLISTS_ALL will search inside all of the active and inactive lists within the campaign, LIST will search only within the Manual Dial List ID as defined in the campaign. Default is CAMPLISTS_ALL||
+LEAD SEARCHES FOR THIS TIME PERIOD||
 
 
 AST_LISTS_campaign_stats.php
@@ -542,6 +549,20 @@ view notes||
 CALL NOTES LOG||
 Close Call Notes||
 CALL LOG FOR THIS LEAD||
+SEARCH FOR A LEAD||
+SEARCH RESULTS||
+YOU MUST BE PAUSED TO SEARCH FOR A LEAD||
+Notes: when doing a search for a lead, the phone number, lead ID or||
+are the best fields to use||
+Using the other fields may be slower. Lead searching does not allow for wildcard or partial search terms||
+Lead search requests are all logged in the system||
+Main Phone Number||
+Alternate Phone Number||
+Address3 Phone Number||
+No results found||
+Results Found:||
+No calls found||
+reset form||
 
 
 ############################################################  MANAGER Manual

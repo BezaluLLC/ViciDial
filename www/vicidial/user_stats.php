@@ -1,7 +1,7 @@
 <?php
 # user_stats.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -28,6 +28,7 @@
 # 100802-2347 - Added User Group Allowed Reports option validation
 # 100908-1205 - Added customer 3way hangup flags to user calls display
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
+# 110218-1523 - Added searches display
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -915,6 +916,44 @@ if ($did < 1)
 		echo "<td align=right><font size=2> $row[7] </td>\n";
 		echo "<td align=right><font size=2> $row[8] </td>\n";
 		echo "<td align=right NOWRAP><font size=2> $C3HU </td></tr>\n";
+		}
+	echo "</TABLE><BR><BR>\n";
+	}
+
+if ($did < 1)
+	{
+	##### vicidial lead searches for this time period #####
+
+	echo "<B>LEAD SEARCHES FOR THIS TIME PERIOD: (10000 record limit)</B>\n";
+	echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
+	echo "<tr><td><font size=1># </td><td NOWRAP><font size=2>DATE/TIME &nbsp; </td><td align=left NOWRAP><font size=2> TYPE &nbsp; </td><td align=left NOWRAP><font size=2> RESULTS &nbsp; </td><td align=left NOWRAP><font size=2> SEC &nbsp; </td><td align=right NOWRAP><font size=2> QUERY</td></tr>\n";
+
+	$stmt="select event_date,source,results,seconds,search_query from vicidial_lead_search_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by event_date desc limit 10000;";
+	$rslt=mysql_query($stmt, $link);
+	$logs_to_print = mysql_num_rows($rslt);
+
+	$u=0;
+	while ($logs_to_print > $u) 
+		{
+		$row=mysql_fetch_row($rslt);
+		if (eregi("1$|3$|5$|7$|9$", $u))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+
+		$row[4] = preg_replace('/select count\(\*\) from vicidial_list where/','',$row[4]);
+ 		$row[4] = preg_replace('/SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where /','',$row[4]);
+
+		while (strlen($row[4]) > 100)
+			{$row[4] = preg_replace("/.$/",'',$row[4]);}
+		$u++;
+		echo "<tr $bgcolor>";
+		echo "<td><font size=1>$u</td>";
+		echo "<td><font size=2>$row[0]</td>";
+		echo "<td align=center><font size=2> $row[1] </td>\n";
+		echo "<td align=right><font size=2> $row[2] </td>\n";
+		echo "<td align=right><font size=2> $row[3] </td>\n";
+		echo "<td align=right><font size=2> $row[4] </td></tr>\n";
 		}
 	echo "</TABLE><BR><BR>\n";
 	}

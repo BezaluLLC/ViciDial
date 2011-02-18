@@ -1,7 +1,7 @@
 <?php
 # admin_search_lead.php   version 2.4
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # AST GUI database administration search for lead info
 # admin_modify_lead.php
@@ -24,6 +24,7 @@
 # 100224-1621 - Added first/last name search and changed format of the page
 # 100405-1331 - Added log search ability
 # 100622-0928 - Added field labels
+# 110218-1237 - Added vicidial_lead_search_log logging
 #
 
 require("dbconnect.php");
@@ -556,6 +557,16 @@ else
 		echo "\n\n$stmt\n\n";
 		}
 
+	### LOG INSERTION Search Log Table ###
+	$SQL_log = "$stmt|";
+	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = addslashes($SQL_log);
+	$stmtL="INSERT INTO vicidial_lead_search_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', source='admin', results='0', search_query=\"$SQL_log\";";
+	if ($DB) {echo "|$stmtL|\n";}
+	$rslt=mysql_query($stmtL, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+	$search_log_id = mysql_insert_id($link);
+
 	$rslt=mysql_query("$stmt", $link);
 	$results_to_print = mysql_num_rows($rslt);
 	if ( ($results_to_print < 1) and ($results_to_printX < 1) )
@@ -619,6 +630,13 @@ else
 	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='SEARCH', record_id='$search_lead', event_code='ADMIN SEARCH LEAD', event_sql=\"$SQL_log\", event_notes='';";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_query($stmt, $link);
+
+	$end_process_time = date("U");
+	$search_seconds = ($end_process_time - $STARTtime);
+
+	$stmtL="UPDATE vicidial_lead_search_log set results='$o', seconds='$search_seconds' where search_log_id='$search_log_id';";
+	if ($DB) {echo "|$stmtL|\n";}
+	$rslt=mysql_query($stmtL, $link);
 	}
 	##### END Lead search #####
 

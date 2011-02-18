@@ -564,7 +564,8 @@ callcard_admin ENUM('1','0') default '0',
 agent_choose_blended ENUM('0','1') default '1',
 realtime_block_user_info ENUM('0','1') default '0',
 custom_fields_modify ENUM('0','1') default '0',
-force_change_password ENUM('Y','N') default 'N'
+force_change_password ENUM('Y','N') default 'N',
+agent_lead_search_override ENUM('NOT_ACTIVE','ENABLED','DISABLED') default 'NOT_ACTIVE'
 );
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -785,7 +786,9 @@ display_leads_count ENUM('Y','N') default 'N',
 lead_order_randomize ENUM('Y','N') default 'N',
 lead_order_secondary ENUM('LEAD_ASCEND','LEAD_DESCEND','CALLTIME_ASCEND','CALLTIME_DESCEND') default 'LEAD_ASCEND',
 per_call_notes ENUM('ENABLED','DISABLED') default 'DISABLED',
-my_callback_option ENUM('CHECKED','UNCHECKED') default 'UNCHECKED'
+my_callback_option ENUM('CHECKED','UNCHECKED') default 'UNCHECKED',
+agent_lead_search ENUM('ENABLED','DISABLED') default 'DISABLED',
+agent_lead_search_method ENUM('SYSTEM','CAMPAIGNLISTS','CAMPLISTS_ALL','LIST') default 'CAMPLISTS_ALL'
 );
 
 CREATE TABLE vicidial_lists (
@@ -2276,6 +2279,18 @@ external_dial VARCHAR(100) default '',
 index (user)
 );
 
+CREATE TABLE vicidial_lead_search_log (
+search_log_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+user VARCHAR(20) NOT NULL,
+event_date DATETIME NOT NULL,
+source VARCHAR(10) default '',
+search_query TEXT,
+results INT(9) UNSIGNED default '0',
+seconds MEDIUMINT(7) UNSIGNED default '0',
+index (user),
+index (event_date)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
@@ -2422,7 +2437,10 @@ CREATE TABLE vicidial_carrier_log_archive LIKE vicidial_carrier_log;
 CREATE TABLE vicidial_call_notes_archive LIKE vicidial_call_notes; 
 ALTER TABLE vicidial_call_notes_archive MODIFY notesid INT(9) UNSIGNED NOT NULL;
 
-UPDATE system_settings SET db_schema_version='1260',db_schema_update_date=NOW();
+CREATE TABLE vicidial_lead_search_log_archive LIKE vicidial_lead_search_log; 
+ALTER TABLE vicidial_lead_search_log_archive MODIFY search_log_id INT(9) UNSIGNED NOT NULL;
+
+UPDATE system_settings SET db_schema_version='1261',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

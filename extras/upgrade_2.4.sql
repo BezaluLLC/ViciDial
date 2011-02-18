@@ -663,3 +663,26 @@ ALTER TABLE vicidial_campaigns ADD per_call_notes ENUM('ENABLED','DISABLED') def
 ALTER TABLE vicidial_campaigns ADD my_callback_option ENUM('CHECKED','UNCHECKED') default 'UNCHECKED';
 
 UPDATE system_settings SET db_schema_version='1260',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD agent_lead_search ENUM('ENABLED','DISABLED') default 'DISABLED';
+ALTER TABLE vicidial_campaigns MODIFY agent_lead_search_method ENUM('SYSTEM','CAMPAIGNLISTS','CAMPLISTS_ALL','LIST') default 'CAMPLISTS_ALL';
+
+ALTER TABLE vicidial_users ADD agent_lead_search_override ENUM('NOT_ACTIVE','ENABLED','DISABLED') default 'NOT_ACTIVE';
+
+CREATE TABLE vicidial_lead_search_log (
+search_log_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+user VARCHAR(20) NOT NULL,
+event_date DATETIME NOT NULL,
+source VARCHAR(10) default '',
+search_query TEXT,
+results INT(9) UNSIGNED default '0',
+seconds MEDIUMINT(7) UNSIGNED default '0',
+index (user),
+index (event_date)
+);
+
+CREATE TABLE vicidial_lead_search_log_archive LIKE vicidial_lead_search_log; 
+ALTER TABLE vicidial_lead_search_log_archive MODIFY search_log_id INT(9) UNSIGNED NOT NULL;
+
+UPDATE system_settings SET db_schema_version='1261',db_schema_update_date=NOW();
+

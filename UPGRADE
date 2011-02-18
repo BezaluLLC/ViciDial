@@ -464,6 +464,11 @@ OTHER CHANGES:
 
 109. Added the add-a-new-lead link to the admin interface
 
+110. Added ability for an agent to search for a lead in the agent interface 
+	while paused. This feature can be enabled per campaign and per user. 
+	Searches can optionally be restricted to campaign lists or only one 
+	list. All search queries are logged.
+
 
 
 

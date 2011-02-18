@@ -71,10 +71,11 @@
 # 101024-0832 - Added Agent time stats option and agents-in-dispo counter
 # 101109-1448 - Added Auto Hopper Level display (MikeC)
 # 101216-1358 - Added functions to work with new realtime_report.php script
+# 110218-1037 - Fixed query that was causing load spikes on systems with millions of log entries
 #
 
-$version = '2.4-62';
-$build = '101216-1358';
+$version = '2.4-63';
+$build = '110218-1037';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -2475,7 +2476,8 @@ $calls_to_list = mysql_num_rows($rslt);
 			{
 			if (!ereg("N",$agent_pause_codes_active))
 				{
-				$stmtC="select sub_status from vicidial_agent_log where user='$Luser' order by agent_log_id desc limit 1;";
+				$twentyfour_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-24,date("i"),date("s"),date("m"),date("d"),date("Y")));
+				$stmtC="select sub_status from vicidial_agent_log where event_time > \"$twentyfour_hours_ago\" and user='$Luser' order by agent_log_id desc limit 1;";
 				$rsltC=mysql_query($stmtC,$link);
 				$rowC=mysql_fetch_row($rsltC);
 				$pausecode = sprintf("%-6s", $rowC[0]);
