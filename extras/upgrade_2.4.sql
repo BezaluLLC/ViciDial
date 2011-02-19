@@ -665,7 +665,7 @@ ALTER TABLE vicidial_campaigns ADD my_callback_option ENUM('CHECKED','UNCHECKED'
 UPDATE system_settings SET db_schema_version='1260',db_schema_update_date=NOW();
 
 ALTER TABLE vicidial_campaigns ADD agent_lead_search ENUM('ENABLED','DISABLED') default 'DISABLED';
-ALTER TABLE vicidial_campaigns MODIFY agent_lead_search_method ENUM('SYSTEM','CAMPAIGNLISTS','CAMPLISTS_ALL','LIST') default 'CAMPLISTS_ALL';
+ALTER TABLE vicidial_campaigns ADD agent_lead_search_method ENUM('SYSTEM','CAMPAIGNLISTS','CAMPLISTS_ALL','LIST') default 'CAMPLISTS_ALL';
 
 ALTER TABLE vicidial_users ADD agent_lead_search_override ENUM('NOT_ACTIVE','ENABLED','DISABLED') default 'NOT_ACTIVE';
 
