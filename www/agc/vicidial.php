@@ -335,10 +335,11 @@
 # 110212-2206 - Added scheduled callback custom statuses compatibility
 # 110215-1412 - Added my_callback_option and per_call_notes options
 # 110218-1522 - Added agent_lead_search feature
+# 110221-1251 - Changed statuses display to keep track of non-selectable statuses
 #
 
-$version = '2.4-312';
-$build = '110218-1522';
+$version = '2.4-313';
+$build = '110221-1251';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=69;
 $one_mysql_log=0;
@@ -1224,14 +1225,14 @@ else
 			$CAMPactive=$row[0];
 			if($CAMPactive>0)
 				{
-				if ($TEST_all_statuses > 0) {$selectableSQL = '';}
-				else {$selectableSQL = "selectable='Y' and";}
 				$VARstatuses='';
 				$VARstatusnames='';
+				$VARSELstatuses='';
+				$VARSELstatuses_ct=0;
 				$VARCBstatuses='';
 				$VARCBstatusesLIST='';
 				##### grab the statuses that can be used for dispositioning by an agent
-				$stmt="SELECT status,status_name,scheduled_callback FROM vicidial_statuses WHERE $selectableSQL status != 'NEW' order by status limit 300;";
+				$stmt="SELECT status,status_name,scheduled_callback,selectable FROM vicidial_statuses WHERE status != 'NEW' order by status limit 500;";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01010',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1243,16 +1244,21 @@ else
 					$statuses[$i] =$row[0];
 					$status_names[$i] =$row[1];
 					$CBstatuses[$i] =$row[2];
+					$SELstatuses[$i] =$row[3];
+					if ($TEST_all_statuses > 0) {$SELstatuses[$i]='Y';}
 					$VARstatuses = "$VARstatuses'$statuses[$i]',";
 					$VARstatusnames = "$VARstatusnames'$status_names[$i]',";
+					$VARSELstatuses = "$VARSELstatuses'$SELstatuses[$i]',";
 					$VARCBstatuses = "$VARCBstatuses'$CBstatuses[$i]',";
 					if ($CBstatuses[$i] == 'Y')
 						{$VARCBstatusesLIST .= " $statuses[$i]";}
+					if ($SELstatuses[$i] == 'Y')
+						{$VARSELstatuses_ct++;}
 					$i++;
 					}
 
 				##### grab the campaign-specific statuses that can be used for dispositioning by an agent
-				$stmt="SELECT status,status_name,scheduled_callback FROM vicidial_campaign_statuses WHERE $selectableSQL status != 'NEW' and campaign_id='$VD_campaign' order by status limit 300;";
+				$stmt="SELECT status,status_name,scheduled_callback,selectable FROM vicidial_campaign_statuses WHERE status != 'NEW' and campaign_id='$VD_campaign' order by status limit 500;";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01011',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1264,17 +1270,23 @@ else
 					$statuses[$i] =$row[0];
 					$status_names[$i] =$row[1];
 					$CBstatuses[$i] =$row[2];
+					$SELstatuses[$i] =$row[3];
+					if ($TEST_all_statuses > 0) {$SELstatuses[$i]='Y';}
 					$VARstatuses = "$VARstatuses'$statuses[$i]',";
 					$VARstatusnames = "$VARstatusnames'$status_names[$i]',";
+					$VARSELstatuses = "$VARSELstatuses'$SELstatuses[$i]',";
 					$VARCBstatuses = "$VARCBstatuses'$CBstatuses[$i]',";
 					if ($CBstatuses[$i] == 'Y')
 						{$VARCBstatusesLIST .= " $statuses[$i]";}
+					if ($SELstatuses[$i] == 'Y')
+						{$VARSELstatuses_ct++;}
 					$i++;
 					$j++;
 					}
 				$VD_statuses_ct = ($VD_statuses_ct+$VD_statuses_camp);
 				$VARstatuses = substr("$VARstatuses", 0, -1);
 				$VARstatusnames = substr("$VARstatusnames", 0, -1);
+				$VARSELstatuses = substr("$VARSELstatuses", 0, -1);
 				$VARCBstatuses = substr("$VARCBstatuses", 0, -1);
 				$VARCBstatusesLIST .= " ";
 
@@ -2830,9 +2842,11 @@ $CCAL_OUT .= "</table>";
 	var VD_preset_names_ct = '<?php echo $VD_preset_names_ct ?>';
 	VARstatuses = new Array(<?php echo $VARstatuses ?>);
 	VARstatusnames = new Array(<?php echo $VARstatusnames ?>);
+	VARSELstatuses = new Array(<?php echo $VARSELstatuses ?>);
 	VARCBstatuses = new Array(<?php echo $VARCBstatuses ?>);
 	var VARCBstatusesLIST = '<?php echo $VARCBstatusesLIST ?>';
 	var VD_statuses_ct = '<?php echo $VD_statuses_ct ?>';
+	var VARSELstatuses_ct = '<?php echo $VARSELstatuses_ct ?>';
 	VARingroups = new Array(<?php echo $VARingroups ?>);
 	var INgroupCOUNT = '<?php echo $INgrpCT ?>';
 	VARterritories = new Array(<?php echo $VARterritories ?>);
@@ -7866,25 +7880,30 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		HidEGenDerPulldown();
 		AgentDispoing = 1;
 		var CBflag = '';
-		var VD_statuses_ct_half = parseInt(VD_statuses_ct / 2);
+		var VD_statuses_ct_half = parseInt(VARSELstatuses_ct / 2);
         var dispo_HTML = "<table cellpadding=\"5\" cellspacing=\"5\" width=\"500px\"><tr><td colspan=\"2\"><b> CALL DISPOSITION</b></td></tr><tr><td bgcolor=\"#99FF99\" height=\"300px\" width=\"240px\" valign=\"top\"><font class=\"log_text\"><span id=\"DispoSelectA\">";
 		var loop_ct = 0;
+		var print_ct = 0;
 		while (loop_ct < VD_statuses_ct)
 			{
-			if (VARCBstatuses[loop_ct] == 'Y')
-				{CBflag = '*';}
-			else
-				{CBflag = '';}
-			if (taskDSgrp == VARstatuses[loop_ct]) 
+			if (VARSELstatuses[loop_ct] == 'Y')
 				{
-                dispo_HTML = dispo_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"DispoSelect_submit();return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "</b></font><br /><br />";
+				if (VARCBstatuses[loop_ct] == 'Y')
+					{CBflag = '*';}
+				else
+					{CBflag = '';}
+				if (taskDSgrp == VARstatuses[loop_ct]) 
+					{
+					dispo_HTML = dispo_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"DispoSelect_submit();return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "</b></font><br /><br />";
+					}
+				else
+					{
+					dispo_HTML = dispo_HTML + "<a href=\"#\" onclick=\"DispoSelectContent_create('" + VARstatuses[loop_ct] + "','ADD');return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "<br /><br />";
+					}
+				if (print_ct == VD_statuses_ct_half) 
+					{dispo_HTML = dispo_HTML + "</span></font></td><td bgcolor=\"#99FF99\" height=\"300px\" width=\"240px\" valign=\"top\"><font class=\"log_text\"><span id=\"DispoSelectB\">";}
+				print_ct++;
 				}
-			else
-				{
-                dispo_HTML = dispo_HTML + "<a href=\"#\" onclick=\"DispoSelectContent_create('" + VARstatuses[loop_ct] + "','ADD');return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "<br /><br />";
-				}
-			if (loop_ct == VD_statuses_ct_half) 
-                {dispo_HTML = dispo_HTML + "</span></font></td><td bgcolor=\"#99FF99\" height=\"300px\" width=\"240px\" valign=\"top\"><font class=\"log_text\"><span id=\"DispoSelectB\">";}
 			loop_ct++;
 			}
 		dispo_HTML = dispo_HTML + "</span></font></td></tr></table>";

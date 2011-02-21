@@ -9,14 +9,15 @@
 #       The default of this script assumes 2 custom fields('question' and 'answer')
 #
 # Example of a ViciDial agent SCRIPT using this script(you must customize this for your custom fields!):
-# <iframe src="./vdc_script_dispo_example.php?lead_id=--A--lead_id--B--&vendor_id=--A--vendor_lead_code--B--&list_id=--A--list_id--B--&gmt_offset_now=--A--gmt_offset_now--B--&phone_code=--A--phone_code--B--&phone_number=--A--phone_number--B--&title=--A--title--B--&first_name=--A--first_name--B--&middle_initial=--A--middle_initial--B--&last_name=--A--last_name--B--&address1=--A--address1--B--&address2=--A--address2--B--&address3=--A--address3--B--&city=--A--city--B--&state=--A--state--B--&province=--A--province--B--&postal_code=--A--postal_code--B--&country_code=--A--country_code--B--&gender=--A--gender--B--&date_of_birth=--A--date_of_birth--B--&alt_phone=--A--alt_phone--B--&email=--A--email--B--&security_phrase=--A--security_phrase--B--&comments=--A--comments--B--&user=--A--user--B--&pass=--A--pass--B--&campaign=--A--campaign--B--&phone_login=--A--phone_login--B--&fronter=--A--fronter--B--&closer=--A--user--B--&group=--A--group--B--&channel_group=--A--group--B--&SQLdate=--A--SQLdate--B--&epoch=--A--epoch--B--&uniqueid=--A--uniqueid--B--&rank=--A--rank--B--&owner=--A--owner--B--&customer_zap_channel=--A--customer_zap_channel--B--&server_ip=--A--server_ip--B--&SIPexten=--A--SIPexten--B--&session_id=--A--session_id--B--&entry_list_id=--A--entry_list_id--B--&question=--A--question--B--&answer=--A--answer--B--" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="popupFrame" name="popupFrame"  width="--A--script_width--B--" height="--A--script_height--B--" STYLE="z-index:17"> </iframe> 
+# <iframe src="./vdc_script_dispo_example.php?lead_id=--A--lead_id--B--&vendor_id=--A--vendor_lead_code--B--&list_id=--A--list_id--B--&gmt_offset_now=--A--gmt_offset_now--B--&phone_code=--A--phone_code--B--&phone_number=--A--phone_number--B--&title=--A--title--B--&first_name=--A--first_name--B--&middle_initial=--A--middle_initial--B--&last_name=--A--last_name--B--&address1=--A--address1--B--&address2=--A--address2--B--&address3=--A--address3--B--&city=--A--city--B--&state=--A--state--B--&province=--A--province--B--&postal_code=--A--postal_code--B--&country_code=--A--country_code--B--&gender=--A--gender--B--&date_of_birth=--A--date_of_birth--B--&alt_phone=--A--alt_phone--B--&email=--A--email--B--&security_phrase=--A--security_phrase--B--&comments=--A--comments--B--&user=--A--user--B--&pass=--A--pass--B--&campaign=--A--campaign--B--&phone_login=--A--phone_login--B--&fronter=--A--fronter--B--&closer=--A--user--B--&group=--A--group--B--&channel_group=--A--group--B--&SQLdate=--A--SQLdate--B--&epoch=--A--epoch--B--&uniqueid=--A--uniqueid--B--&rank=--A--rank--B--&owner=--A--owner--B--&customer_zap_channel=--A--customer_zap_channel--B--&server_ip=--A--server_ip--B--&SIPexten=--A--SIPexten--B--&session_id=--A--session_id--B--&entry_list_id=--A--entry_list_id--B--&closecallid=--A--closecallid--B--&fullname=--A--fullname--B--&question=--A--question--B--&answer=--A--answer--B--" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="popupFrame" name="popupFrame"  width="--A--script_width--B--" height="--A--script_height--B--" STYLE="z-index:17"> </iframe> 
 #
 # CHANGELOG:
 # 110208-1239 - First build of script based upon vdc_script_notes.php
+# 110221-1252 - Added missing variables, accounted for call notes on manual dial calls
 #
 
-$version = '2.4-1';
-$build = '110208-1239';
+$version = '2.4-2';
+$build = '110221-1252';
 
 require("dbconnect.php");
 
@@ -185,13 +186,14 @@ if (isset($_POST["status"]))			{$status=$_POST["status"];}
 	elseif (isset($_GET["status"]))		{$status=$_GET["status"];}
 if (isset($_POST["pause"]))				{$pause=$_POST["pause"];}
 	elseif (isset($_GET["pause"]))		{$pause=$_GET["pause"];}
-
 if (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
 	elseif (isset($_GET["DB"]))		{$DB=$_GET["DB"];}
 if (isset($_POST["process"]))			{$process=$_POST["process"];}
 	elseif (isset($_GET["process"]))	{$process=$_GET["process"];}
 if (isset($_POST["vicidial_id"]))			{$vicidial_id=$_POST["vicidial_id"];}
 	elseif (isset($_GET["vicidial_id"]))	{$vicidial_id=$_GET["vicidial_id"];}
+if (isset($_POST["closecallid"]))			{$closecallid=$_POST["closecallid"];}
+	elseif (isset($_GET["closecallid"]))	{$closecallid=$_GET["closecallid"];}
 
 ##### BEGIN Put custom fields parsing and input here #####
 if (isset($_POST["question"]))			{$question=$_POST["question"];}
@@ -213,6 +215,7 @@ if (isset($_POST["notesid"]))			{$notesid=$_POST["notesid"];}
 	elseif (isset($_GET["notesid"]))	{$notesid=$_GET["notesid"];}
 if ($notesid < 100)
 	{$notesid=0;}
+$vicidial_id = $closecallid;
 if (strlen($vicidial_id) < 1)
 	{$vicidial_id = $uniqueid;}
 if (strlen($appointment_time) < 1)
@@ -384,6 +387,19 @@ if ($process > 0)
 
 	if ($notesid < 100)
 		{
+		if (strlen($vicidial_id) < 1)
+			{
+			$four_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-4,date("i"),date("s"),date("m"),date("d"),date("Y")));
+			$stmt = "SELECT uniqueid FROM vicidial_log where call_date > \"$four_hours_ago\" and user='$user' and lead_id='$lead_id' order by call_date desc limit 1;";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$vid_ct = mysql_num_rows($rslt);
+			if ($vid_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$vicidial_id =	$row[0];
+				}
+			}
 		# Insert into vicidial_call_notes
 		$stmt="INSERT INTO vicidial_call_notes set lead_id='$lead_id',vicidial_id='$vicidial_id',call_date='$call_date',call_notes='$call_notes';";
 		if ($DB) {echo "$stmt\n";}
