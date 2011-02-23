@@ -273,12 +273,13 @@
 # 110214-2320 - Added support for lead_order_secondary option
 # 110215-1125 - Added support for call_notes
 # 110218-1519 - Added support for agent lead search
+# 110222-2228 - Added owner restriction to agent lead search
 #
 
-$version = '2.4-178';
-$build = '110218-1519';
+$version = '2.4-179';
+$build = '110222-2228';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=385;
+$mysql_log_count=387;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -8050,13 +8051,46 @@ if ($ACTION == 'SEARCHRESULTSview')
 			exit;
 			}
 
+		$searchownerSQL='';
+		### limit results to specified search method
+		# USER_, GROUP_, TERRITORY_
+		if (preg_match('/USER_/',$agent_lead_search_method))
+			{$searchownerSQL=" and owner='$user'";}
+		if (preg_match('/GROUP_/',$agent_lead_search_method))
+			{
+			$stmt="SELECT user_group from vicidial_users where user='$user';";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00386',$user,$server_ip,$session_name,$one_mysql_log);}
+			$groups_to_parse = mysql_num_rows($rslt);
+			if ($groups_to_parse > 0) 
+				{
+				$rowx=mysql_fetch_row($rslt);
+				$searchownerSQL=" and owner='$rowx[0]'";
+				}
+			}
+		if (preg_match('/TERRITORY_/',$agent_lead_search_method))
+			{
+			$stmt="SELECT agent_territories from vicidial_live_agents where user='$user';";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00387',$user,$server_ip,$session_name,$one_mysql_log);}
+			$terrs_to_parse = mysql_num_rows($rslt);
+			if ($terrs_to_parse > 0) 
+				{
+				$rowx=mysql_fetch_row($rslt);
+				$agent_territories = $rowx[0];
+				$agent_territories = preg_replace("/ -$|^ /",'',$agent_territories);
+				$agent_territories = preg_replace("/ /","','",$agent_territories);
+				$searchownerSQL=" and owner IN('$agent_territories')";
+				}
+			}
+
 		### limit results to specified search method
 		# 'SYSTEM','CAMPAIGNLISTS','CAMPLISTS_ALL','LIST'
-		if ($agent_lead_search_method == 'SYSTEM')
+		if (preg_match('/SYSTEM/',$agent_lead_search_method))
 			{$searchmethodSQL='';}
-		if ($agent_lead_search_method == 'LIST')
+		if (preg_match('/LIST/',$agent_lead_search_method))
 			{$searchmethodSQL=" and list_id='$manual_dial_list_id'";}
-		if ($agent_lead_search_method == 'CAMPLISTS_ALL')
+		if (preg_match('/CAMPLISTS_ALL/',$agent_lead_search_method))
 			{
 			$stmt="SELECT list_id from vicidial_lists where campaign_id='$campaign';";
 			$rslt=mysql_query($stmt, $link);
@@ -8073,7 +8107,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 			$camp_lists = eregi_replace(".$","",$camp_lists);
 			$searchmethodSQL=" and list_id IN($camp_lists)";
 			}
-		if ($agent_lead_search_method == 'CAMPAIGNLISTS')
+		if (preg_match('/CAMPAIGNLISTS/',$agent_lead_search_method))
 			{
 			$stmt="SELECT list_id,active from vicidial_lists where campaign_id='$campaign' and active='Y';";
 			$rslt=mysql_query($stmt, $link);
@@ -8093,7 +8127,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 
 
 		##### BEGIN search queries and output #####
-		$stmt="select count(*) from vicidial_list where $searchSQL $searchmethodSQL;";
+		$stmt="select count(*) from vicidial_list where $searchSQL $searchownerSQL $searchmethodSQL;";
 
 		### LOG INSERTION Search Log Table ###
 		$SQL_log = "$stmt|";
@@ -8143,7 +8177,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 
 			if ($search_result_count)
 				{
-				$stmt="select first_name,last_name,phone_code,phone_number,status,last_local_call_time,lead_id,city,state,postal_code from vicidial_list where $searchSQL $searchmethodSQL order by last_local_call_time desc limit 1000;";
+				$stmt="select first_name,last_name,phone_code,phone_number,status,last_local_call_time,lead_id,city,state,postal_code from vicidial_list where $searchSQL $searchownerSQL $searchmethodSQL order by last_local_call_time desc limit 1000;";
 				$rslt=mysql_query($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00380',$user,$server_ip,$session_name,$one_mysql_log);}
 				$out_logs_to_print = mysql_num_rows($rslt);

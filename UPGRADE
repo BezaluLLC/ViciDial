@@ -469,6 +469,9 @@ OTHER CHANGES:
 	Searches can optionally be restricted to campaign lists or only one 
 	list. All search queries are logged.
 
+111. Added options to restrict agent lead search to the owner field equal to
+	the user, user group or selected territories for the agent.
+
 
 
 

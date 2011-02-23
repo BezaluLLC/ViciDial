@@ -788,7 +788,7 @@ lead_order_secondary ENUM('LEAD_ASCEND','LEAD_DESCEND','CALLTIME_ASCEND','CALLTI
 per_call_notes ENUM('ENABLED','DISABLED') default 'DISABLED',
 my_callback_option ENUM('CHECKED','UNCHECKED') default 'UNCHECKED',
 agent_lead_search ENUM('ENABLED','DISABLED') default 'DISABLED',
-agent_lead_search_method ENUM('SYSTEM','CAMPAIGNLISTS','CAMPLISTS_ALL','LIST') default 'CAMPLISTS_ALL'
+agent_lead_search_method VARCHAR(30) default 'CAMPLISTS_ALL'
 );
 
 CREATE TABLE vicidial_lists (
@@ -2440,7 +2440,7 @@ ALTER TABLE vicidial_call_notes_archive MODIFY notesid INT(9) UNSIGNED NOT NULL;
 CREATE TABLE vicidial_lead_search_log_archive LIKE vicidial_lead_search_log; 
 ALTER TABLE vicidial_lead_search_log_archive MODIFY search_log_id INT(9) UNSIGNED NOT NULL;
 
-UPDATE system_settings SET db_schema_version='1261',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1262',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

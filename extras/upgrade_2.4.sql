@@ -686,3 +686,7 @@ ALTER TABLE vicidial_lead_search_log_archive MODIFY search_log_id INT(9) UNSIGNE
 
 UPDATE system_settings SET db_schema_version='1261',db_schema_update_date=NOW();
 
+ALTER TABLE vicidial_campaigns MODIFY agent_lead_search_method VARCHAR(30) default 'CAMPLISTS_ALL';
+
+UPDATE system_settings SET db_schema_version='1262',db_schema_update_date=NOW();
+

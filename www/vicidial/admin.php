@@ -2651,12 +2651,13 @@ else
 # 110214-0001 - Added campaign settings for lead_order_secondary, per_call_notes and my_callback_option
 # 110215-1721 - Added add-a-new-lead link to the lists submenu
 # 110215-2135 - Added agent_lead_search options to user and campaign
+# 110222-2039 - Added USER, GROUP and TERRITORY restrictions to agent lead search
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-301';
-$build = '110215-2135';
+$admin_version = '2.4-302';
+$build = '110222-2039';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4315,14 +4316,16 @@ if ($ADD==99999)
 		<BR>
 		<A NAME="vicidial_campaigns-campaign_vdad_exten">
 		<BR>
-		<B>Campaign VDAD extension -</B> This field allows for a custom VDAD transfer extension. This allows you to use different call handling methods depending upon your campaign. 
-	  - 8364 - same as 8368
-	  - 8365 - Will send the call only to an agent on the same server as the call is on
-	  - 8366 - Used for press-1 and survey campaigns
-	  - 8367 - Will try to first send the call to an agent on the local server, then it will look on other servers
-	  - 8368 - DEFAULT – Will send the call to the next available agent no matter what server they are on
-	  - 8369 - Used for Answering Machine Detection after that, same behavior as 8368
-	  - 8373 - Used for Answering Machine Detection after that same behavior as 8366
+		<B>Routing Extension -</B> This field allows for a custom outbound routing extension. This allows you to use different call handling methods depending upon how you want to route calls through your outbound campaign. Formerly called Campaign VDAD extension. 
+		<BR>- 8364 - same as 8368
+		<BR>- 8365 - Will send the call only to an agent on the same server as the call is placed on
+		<BR>- 8366 - Used for press-1, broadcast and survey campaigns
+		<BR>- 8367 - Will try to first send the call to an agent on the local server, then it will look on other servers
+		<BR>- 8368 - DEFAULT - Will send the call to the next available agent no matter what server they are on
+		<BR>- 8369 - Used for Answering Machine Detection after that, same behavior as 8368
+		<BR>- 8373 - Used for Answering Machine Detection after that same behavior as 8366
+		<BR>- 8374 - Used for press-1, broadcast and survey campaigns with Cepstral Text-to-speech
+		<BR>- 8375 - Used for Answering Machine Detection then press-1, broadcast and survey campaigns with Cepstral Text-to-speech
 
 		<BR>
 		<A NAME="vicidial_campaigns-am_message_exten">
@@ -4595,7 +4598,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_campaigns-agent_lead_search_method">
 	<BR>
-	<B>Agent Lead Search Method -</B> If Agent Lead Search is enabled, this setting defines where the agent will be allowed to search for leads. SYSTEM will search the entire system, CAMPAIGNLISTS will search inside all of the active lists within the campaign, CAMPLISTS_ALL will search inside all of the active and inactive lists within the campaign, LIST will search only within the Manual Dial List ID as defined in the campaign. Default is CAMPLISTS_ALL.
+	<B>Agent Lead Search Method -</B> If Agent Lead Search is enabled, this setting defines where the agent will be allowed to search for leads. SYSTEM will search the entire system, CAMPAIGNLISTS will search inside all of the active lists within the campaign, CAMPLISTS_ALL will search inside all of the active and inactive lists within the campaign, LIST will search only within the Manual Dial List ID as defined in the campaign. Default is CAMPLISTS_ALL. One of these options with USER_ in front will only search within leads that have the owner field matching the user ID of the agent, the options with GROUP_ in front will only search within leads that have the owner field matching the user group that the user is a member of, the options with TERRITORY_ in front will only search within leads that have the owner field matching the territories that the agent has selected.
 
 	<BR>
 	<A NAME="vicidial_campaigns-campaign_script">
@@ -19073,7 +19076,7 @@ if ($ADD==31)
 
 		if ($SSoutbound_autodial_active > 0)
 			{
-			echo "<tr bgcolor=#8EBCFD><td align=right>Campaign VDAD exten: </td><td align=left><input type=text name=campaign_vdad_exten size=10 maxlength=20 value=\"$campaign_vdad_exten\">$NWB#vicidial_campaigns-campaign_vdad_exten$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Routing Extension: </td><td align=left><input type=text name=campaign_vdad_exten size=10 maxlength=20 value=\"$campaign_vdad_exten\">$NWB#vicidial_campaigns-campaign_vdad_exten$NWE</td></tr>\n";
 			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Rec exten: </td><td align=left><input type=text name=campaign_rec_exten size=10 maxlength=10 value=\"$campaign_rec_exten\">$NWB#vicidial_campaigns-campaign_rec_exten$NWE</td></tr>\n";
 
@@ -19087,7 +19090,7 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Lead Search: </td><td align=left><select size=1 name=agent_lead_search><option>ENABLED</option><option>DISABLED</option><option SELECTED>$agent_lead_search</option></select>$NWB#vicidial_campaigns-agent_lead_search$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Lead Search Method: </td><td align=left><select size=1 name=agent_lead_search_method><option>SYSTEM</option><option>CAMPAIGNLISTS</option><option>CAMPLISTS_ALL</option><option>LIST</option><option SELECTED>$agent_lead_search_method</option></select>$NWB#vicidial_campaigns-agent_lead_search_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Lead Search Method: </td><td align=left><select size=1 name=agent_lead_search_method><option>SYSTEM</option><option>CAMPAIGNLISTS</option><option>CAMPLISTS_ALL</option><option>LIST</option>USER_CAMPAIGNLISTS</option><option>USER_CAMPLISTS_ALL</option><option>USER_LIST</option><option>GROUP_SYSTEM</option><option>GROUP_CAMPAIGNLISTS</option><option>GROUP_CAMPLISTS_ALL</option><option>GROUP_LIST</option><option>TERRITORY_SYSTEM</option><option>TERRITORY_CAMPAIGNLISTS</option><option>TERRITORY_CAMPLISTS_ALL</option><option>TERRITORY_LIST<option SELECTED>$agent_lead_search_method</option></select>$NWB#vicidial_campaigns-agent_lead_search_method$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=3111111&script_id=$script_id\">Script</a>: </td><td align=left><select size=1 name=script_id>\n";
 		echo "$scripts_list";
