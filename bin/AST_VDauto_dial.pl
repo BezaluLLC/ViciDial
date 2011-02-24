@@ -96,6 +96,7 @@
 # 101207-0713 - Added more info to Originate for rare VDAC issue
 # 110103-1227 - Added queuemetrics_loginout NONE option
 # 110124-1134 - Small query fix for large queue_log tables
+# 110224-1408 - Fixed trunk reservation bug
 #
 
 
@@ -696,20 +697,18 @@ while($one_day_interval > 0)
 				$DBIPtrunk_shortage[$user_CIPct] = ($active_line_goal - $max_vicidial_trunks);
 				if ($DBIPtrunk_shortage[$user_CIPct] > $DBIPmakecallsGOAL) 
 					{$DBIPtrunk_shortage[$user_CIPct] = $DBIPmakecallsGOAL}
-				$MVT_msg = "     MVT override: $max_vicidial_trunks |$DBIPmakecalls[$user_CIPct] $DBIPtrunk_shortage[$user_CIPct]|";
+				$MVT_msg .= "     MVT override: $max_vicidial_trunks |$DBIPmakecalls[$user_CIPct] $DBIPtrunk_shortage[$user_CIPct]|";
 				}
 			if (length($DBIPserver_trunks_limit[$user_CIPct])>0) 
 				{
-				if ($DBIPserver_trunks_limit[$user_CIPct] < $active_line_goal)
+				if ($DBIPserver_trunks_limit[$user_CIPct] < $DBIPgoalcalls[$user_CIPct])
 					{
 					$MVT_msg .= "     TRUNK LIMIT override: $DBIPserver_trunks_limit[$user_CIPct]";
-					$DBIPtrunk_shortage[$user_CIPct] = ($active_line_goal - $DBIPserver_trunks_limit[$user_CIPct]);
+					$DBIPtrunk_shortage[$user_CIPct] = ($DBIPgoalcalls[$user_CIPct] - $DBIPserver_trunks_limit[$user_CIPct]);
+					$DBIPmakecalls[$user_CIPct] = ($DBIPserver_trunks_limit[$user_CIPct] - $DBIPexistcalls[$user_CIPct]);
 					if ($DBIPtrunk_shortage[$user_CIPct] > $DBIPmakecallsGOAL) 
 						{$DBIPtrunk_shortage[$user_CIPct] = $DBIPmakecallsGOAL}
 					$active_line_goal = $DBIPserver_trunks_limit[$user_CIPct];
-					$NEWmakecallsgoal = ($active_line_goal - $active_line_counter);
-					if ($DBIPmakecalls[$user_CIPct] > $NEWmakecallsgoal)
-						{$DBIPmakecalls[$user_CIPct] = $NEWmakecallsgoal;}
 					}
 				}
 			else
