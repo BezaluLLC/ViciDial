@@ -5,7 +5,7 @@
 # and/or vicidial_closer_log information by status, list_id and date range. 
 # downloads to a flat text file that is tab delimited
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -25,6 +25,7 @@
 # 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 #               Allow level 7 users to view this report
+# 110224-1135 - Added call_notes export option
 #
 
 require("dbconnect.php");
@@ -56,6 +57,8 @@ if (isset($_GET["rec_fields"]))				{$rec_fields=$_GET["rec_fields"];}
 	elseif (isset($_POST["rec_fields"]))	{$rec_fields=$_POST["rec_fields"];}
 if (isset($_GET["custom_fields"]))			{$custom_fields=$_GET["custom_fields"];}
 	elseif (isset($_POST["custom_fields"]))	{$custom_fields=$_POST["custom_fields"];}
+if (isset($_GET["call_notes"]))				{$call_notes=$_GET["call_notes"];}
+	elseif (isset($_POST["call_notes"]))	{$call_notes=$_POST["call_notes"];}
 if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
@@ -378,10 +381,9 @@ if ($run_export > 0)
 
 		if ($header_row=='YES')
 			{
-			$CFheader = '';
 			$RFheader = '';
-			if ( ($custom_fields_enabled > 0) and ($custom_fields=='YES') )
-				{$CFheader = "\tcustom_fields";}
+			$NFheader = '';
+			$CFheader = '';
 			if ($rec_fields=='ID')
 				{$RFheader = "\trecording_id";}
 			if ($rec_fields=='FILENAME')
@@ -390,8 +392,12 @@ if ($run_export > 0)
 				{$RFheader = "\trecording_location";}
 			if ($rec_fields=='ALL')
 				{$RFheader = "\trecording_id\trecording_filename\trecording_location";}
+			if ($call_notes=='YES')
+				{$NFheader = "\tcall_notes";}
+			if ( ($custom_fields_enabled > 0) and ($custom_fields=='YES') )
+				{$CFheader = "\tcustom_fields";}
 
-			echo "call_date\tphone_number\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id\tlist_name\tlist_description\tstatus_name$RFheader$CFheader\r\n";
+			echo "call_date\tphone_number\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id\tlist_name\tlist_description\tstatus_name$RFheader$NFheader$CFheader\r\n";
 			}
 
 		$i=0;
@@ -468,6 +474,26 @@ if ($run_export > 0)
 					{$rec_data = "\t$rec_id\t$rec_filename\t$rec_location";}
 				}
 
+			$notes_data='';
+			if ($call_notes=='YES')
+				{
+				if (strlen($export_vicidial_id[$i]) > 0)
+					{
+					$stmt = "SELECT call_notes from vicidial_call_notes where vicidial_id='$export_vicidial_id[$i]' LIMIT 1;";
+					$rslt=mysql_query($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$notes_ct = mysql_num_rows($rslt);
+					if ($notes_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$notes_data =	$row[0];
+						}
+					$notes_data = preg_replace("/\r\n/",' ',$notes_data);
+					$notes_data = preg_replace("/\n/",' ',$notes_data);
+					}
+				$notes_data =	"\t$notes_data";
+				}
+
 			if ( ($custom_fields_enabled > 0) and ($custom_fields=='YES') )
 				{
 				$CF_list_id = $export_list_id[$i];
@@ -512,7 +538,7 @@ if ($run_export > 0)
 					}
 				}
 
-			echo "$export_rows[$i]$ex_list_name\t$ex_list_description\t$ex_status_name$rec_data$custom_data\r\n";
+			echo "$export_rows[$i]$ex_list_name\t$ex_list_description\t$ex_status_name$rec_data$notes_data$custom_data\r\n";
 			$i++;
 			}
 		}
@@ -716,9 +742,14 @@ else
 		echo "<select size=1 name=custom_fields><option>YES</option><option selected>NO</option></select>\n";
 		}
 
+	echo "<BR><BR>\n";
+
+	echo "Per Call Notes:<BR>\n";
+	echo "<select size=1 name=call_notes><option>YES</option><option selected>NO</option></select>\n";
+
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=2>\n";
 	echo "<font class=\"select_bold\"><B>Campaigns:</B></font><BR><CENTER>\n";
-	echo "<SELECT SIZE=15 NAME=campaign[] multiple>\n";
+	echo "<SELECT SIZE=18 NAME=campaign[] multiple>\n";
 		$o=0;
 		while ($campaigns_to_print > $o)
 		{
@@ -732,7 +763,7 @@ else
 
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
 	echo "<font class=\"select_bold\"><B>Inbound Groups:</B></font><BR><CENTER>\n";
-	echo "<SELECT SIZE=15 NAME=group[] multiple>\n";
+	echo "<SELECT SIZE=18 NAME=group[] multiple>\n";
 		$o=0;
 		while ($groups_to_print > $o)
 		{
@@ -745,7 +776,7 @@ else
 	echo "</SELECT>\n";
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
 	echo "<font class=\"select_bold\"><B>Lists:</B></font><BR><CENTER>\n";
-	echo "<SELECT SIZE=15 NAME=list_id[] multiple>\n";
+	echo "<SELECT SIZE=18 NAME=list_id[] multiple>\n";
 		$o=0;
 		while ($lists_to_print > $o)
 		{
@@ -758,7 +789,7 @@ else
 	echo "</SELECT>\n";
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
 	echo "<font class=\"select_bold\"><B>Statuses:</B></font><BR><CENTER>\n";
-	echo "<SELECT SIZE=15 NAME=status[] multiple>\n";
+	echo "<SELECT SIZE=18 NAME=status[] multiple>\n";
 		$o=0;
 		while ($statuses_to_print > $o)
 		{
@@ -771,7 +802,7 @@ else
 	echo "</SELECT>\n";
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
 	echo "<font class=\"select_bold\"><B>User Groups:</B></font><BR><CENTER>\n";
-	echo "<SELECT SIZE=15 NAME=user_group[] multiple>\n";
+	echo "<SELECT SIZE=18 NAME=user_group[] multiple>\n";
 		$o=0;
 		while ($user_groups_to_print > $o)
 		{
@@ -783,9 +814,9 @@ else
 		}
 	echo "</SELECT>\n";
 
-	echo "</TD></TR><TR></TD><TD ALIGN=LEFT VALIGN=TOP COLSPAN=2>\n";
+	echo "</TD></TR><TR></TD><TD ALIGN=LEFT VALIGN=TOP COLSPAN=2> &nbsp; \n";
 
-	echo "</TD></TR><TR></TD><TD ALIGN=LEFT VALIGN=TOP COLSPAN=3>\n";
+	echo "</TD></TR><TR></TD><TD ALIGN=CENTER VALIGN=TOP COLSPAN=5>\n";
 	echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
 	echo "</TD></TR></TABLE>\n";
 	echo "</FORM>\n\n";
