@@ -275,12 +275,13 @@
 # 110218-1519 - Added support for agent lead search
 # 110222-2228 - Added owner restriction to agent lead search
 # 110224-1712 - Added compatibility with QM phone environment logging and QM pause code last call logging
+# 110225-1237 - Added scheduled callback lead info display to the lead info view function
 #
 
-$version = '2.4-180';
-$build = '110224-1712';
+$version = '2.4-181';
+$build = '110225-1237';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=396;
+$mysql_log_count=398;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -8390,6 +8391,31 @@ if ($ACTION == 'LEADINFOview')
 		{echo "ERROR: no Lead ID";}
 	else
 		{
+		$hide_dial_links=0;
+		echo "<CENTER>\n";
+
+		$callback_id = preg_replace('/\D/','',$callback_id);
+		if (strlen($callback_id) > 0)
+			{
+			$stmt="select status,entry_time,callback_time,modify_date,user,recipient,comments,lead_status from vicidial_callbacks where lead_id='$lead_id' and callback_id='$callback_id' limit 1;";
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00397',$user,$server_ip,$session_name,$one_mysql_log);}
+			$cb_to_print = mysql_num_rows($rslt);
+			if ($format=='debug') {echo "|$cb_to_print|$stmt|";}
+			if ($cb_to_print > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=500>";
+				echo "<tr bgcolor=white><td ALIGN=right><font size=2>Callback Status: &nbsp; </td><td ALIGN=left><font size=2>$row[0]</td></tr>";
+				echo "<tr bgcolor=white><td ALIGN=right><font size=2>Callback Lead Status: &nbsp; </td><td ALIGN=left><font size=2>$row[7]</td></tr>";
+				echo "<tr bgcolor=white><td ALIGN=right><font size=2>Callback Entry Time: &nbsp; </td><td ALIGN=left><font size=2>$row[1]</td></tr>";
+				echo "<tr bgcolor=white><td ALIGN=right><font size=2>Callback Trigger Time: &nbsp; </td><td ALIGN=left><font size=2>$row[2]</td></tr>";
+				echo "<tr bgcolor=white><td ALIGN=right><font size=2>Callback Comments: &nbsp; </td><td ALIGN=left><font size=2>$row[6]</td></tr>";
+				echo "</TABLE>";
+				echo "<BR>";
+				$hide_dial_links++;
+				}
+			}
 		### BEGIN find any custom field labels ###
 		$label_title =				'Title';
 		$label_first_name =			'First';
@@ -8435,11 +8461,11 @@ if ($ACTION == 'LEADINFOview')
 		if (strlen($row[18])>0) {$label_comments =			$row[18];}
 		### END find any custom field labels ###
 
-		echo "<CENTER>\n";
 		echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=500>";
 
 		$stmt="select status,vendor_lead_code,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from vicidial_list where lead_id='$lead_id' limit 1;";
 		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00398',$user,$server_ip,$session_name,$one_mysql_log);}
 		$info_to_print = mysql_num_rows($rslt);
 		if ($format=='debug') {echo "|$out_logs_to_print|$stmt|";}
 
@@ -8452,7 +8478,10 @@ if ($ACTION == 'LEADINFOview')
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Timezone: &nbsp; </td><td ALIGN=left><font size=2>$row[3]</td></tr>";
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Called Since Last Reset: &nbsp; </td><td ALIGN=left><font size=2>$row[4]</td></tr>";
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_code: &nbsp; </td><td ALIGN=left><font size=2>$row[5]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_number: &nbsp; </td><td ALIGN=left><font size=2>$row[6] - &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\">DIAL</A></td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_number: &nbsp; </td><td ALIGN=left><font size=2>$row[6] - &nbsp; &nbsp; &nbsp; &nbsp; ";
+			if ($hide_dial_links < 1)
+				{echo "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\">DIAL</a>";}
+			echo "</td></tr>";
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_title: &nbsp; </td><td ALIGN=left><font size=2>$row[7]</td></tr>";
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_first_name: &nbsp; </td><td ALIGN=left><font size=2>$row[8]</td></tr>";
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_middle_initial: &nbsp; </td><td ALIGN=left><font size=2>$row[9]</td></tr>";
@@ -8466,7 +8495,10 @@ if ($ACTION == 'LEADINFOview')
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_postal_code: &nbsp; </td><td ALIGN=left><font size=2>$row[17]</td></tr>";
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>Country: &nbsp; </td><td ALIGN=left><font size=2>$row[18]</td></tr>";
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_gender: &nbsp; </td><td ALIGN=left><font size=2>$row[19]</td></tr>";
-			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_alt_phone: &nbsp; </td><td ALIGN=left><font size=2>$row[20] - &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20], $lead_id, 'ALT');return false;\">DIAL</A></td></tr>";
+			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_alt_phone: &nbsp; </td><td ALIGN=left><font size=2>$row[20] - &nbsp; &nbsp; &nbsp; &nbsp; ";
+			if ($hide_dial_links < 1)
+				{echo "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20], $lead_id, 'ALT');return false;\">DIAL</a>";}
+			echo "</td></tr>";
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_email: &nbsp; </td><td ALIGN=left><font size=2>$row[21]</td></tr>";
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_security_phrase: &nbsp; </td><td ALIGN=left><font size=2>$row[22]</td></tr>";
 			echo "<tr bgcolor=white><td ALIGN=right><font size=2>$label_comments: &nbsp; </td><td ALIGN=left><font size=2>$row[23]</td></tr>";

@@ -579,6 +579,12 @@ No results found||
 Results Found:||
 No calls found||
 reset form||
+Callback Status||
+Callback Lead Status||
+Callback Entry Time||
+Callback Trigger Time||
+Callback Comments||
+To see information on one of the callbacks below, click on the INFO link. To call the customer back now, click on the DIAL link. If you click on a record below to dial it, it will be removed from the list||
 
 
 ############################################################  MANAGER Manual

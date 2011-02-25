@@ -475,6 +475,10 @@ OTHER CHANGES:
 112. Added option for phone load balanced logins server twin checking on 
 	systems that have servers installed in pairs
 
+113. Changed scheduled callbacks display in the agent interface to show all
+	callback and lead information, including call history and call notes,
+	without having to dial the lead.
+
 
 
 

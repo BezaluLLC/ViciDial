@@ -337,10 +337,11 @@
 # 110218-1522 - Added agent_lead_search feature
 # 110221-1251 - Changed statuses display to keep track of non-selectable statuses
 # 110224-1713 - Added compatibility with QM phone environment logging, QM pause code last call logging and active server twin check
+# 110225-1231 - Changed scheduled callbacks list to allow clicking to see lead info without dialing, and separate dial link
 #
 
-$version = '2.4-314c';
-$build = '110224-1713';
+$version = '2.4-315c';
+$build = '110225-1231';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=71;
 $one_mysql_log=0;
@@ -5214,7 +5215,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						var CB_calls = all_CBs_array[0];
 						var loop_ct=0;
 						var conv_start=0;
-                        var CB_HTML = "<table width=\"<?php echo $HCwidth ?>px\"><tr bgcolor=\"<?php echo $SCRIPT_COLOR ?>\"><td><font class=\"log_title\">#</font></td><td><font class=\"log_title\"> CALLBACK DATE/TIME</font></td><td><font class=\"log_title\">NUMBER</font></td><td><font class=\"log_title\">NAME</font></td><td><font class=\"log_title\">  STATUS</font></td><td align=\"right\"><font class=\"log_title\">CAMPAIGN</font></td><td><font class=\"log_title\">LAST CALL DATE/TIME</font></td><td align=\"left\"><font class=\"log_title\"> COMMENTS</font></td></tr>"
+                        var CB_HTML = "<table width=\"<?php echo $HCwidth ?>px\"><tr bgcolor=\"<?php echo $SCRIPT_COLOR ?>\"><td><font class=\"log_title\">#</font></td><td align=\"center\"><font class=\"log_title\"> CALLBACK DATE/TIME</font></td><td align=\"center\"><font class=\"log_title\">NUMBER</font></td><td align=\"center\"><font class=\"log_title\">NAME</font></td><td align=\"center\"><font class=\"log_title\">  STATUS</font></td><td align=\"center\"><font class=\"log_title\">CAMPAIGN</font></td><td align=\"center\"><font class=\"log_title\">LAST CALL DATE/TIME</font></td><td align=\"center\"><font class=\"log_title\"> DIAL</font></td></tr>"
 						while (loop_ct < CB_calls)
 							{
 							loop_ct++;
@@ -5234,8 +5235,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							var CB_lastcall_time = call_array[7];
 							var CB_callback_time = call_array[8];
 							var CB_comments = call_array[9];
-                            CB_HTML = CB_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</font></td><td><font class=\"log_text\">" + CB_callback_time + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"new_callback_call('" + CB_id + "','" + CB_lead_id + "');return false;\">" + CB_phone + "</a></font></td><td><font class=\"log_text\">" + CB_name + "</font></td><td><font class=\"log_text\">" + CB_status + "</font></td><td><font class=\"log_text\">" + CB_campaign + "</font></td><td align=\"right\"><font class=\"log_text\">" + CB_lastcall_time + "&nbsp;</font></td><td align=\"right\"><font class=\"log_text\">" + CB_comments + "&nbsp;</font></td></tr>";
-					
+                            CB_HTML = CB_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</font></td><td align=\"right\"><font class=\"log_text\">" + CB_callback_time + "</td><td align=\"right\"><font class=\"log_text\">" + CB_phone + " - <a href=\"#\" onclick=\"VieWLeaDInfO('" + CB_lead_id + "','" + CB_id + "');return false;\">INFO</a></font></td><td align=\"right\"><font class=\"log_text\">" + CB_name + "</font></td><td align=\"right\"><font class=\"log_text\">" + CB_status + "</font></td><td align=\"right\"><font class=\"log_text\">" + CB_campaign + "</font></td><td align=\"right\"><font class=\"log_text\">" + CB_lastcall_time + "&nbsp;</font></td><td align=\"right\"><font class=\"log_text\"><a href=\"#\" onclick=\"new_callback_call('" + CB_id + "','" + CB_lead_id + "');return false;\">DIAL</a>&nbsp;</font></td></tr>";
 							}
 						CB_HTML = CB_HTML + "</table>";
 						document.getElementById("CallBacKsLisT").innerHTML = CB_HTML;
@@ -10210,7 +10210,7 @@ function phone_number_format(formatphone) {
 
 // ################################################################################
 // View Customer lead information
-	function VieWLeaDInfO(VLI_lead_id)
+	function VieWLeaDInfO(VLI_lead_id,VLI_cb_id)
 		{
 		showDiv('LeaDInfOBox');
 
@@ -10235,7 +10235,7 @@ function phone_number_format(formatphone) {
 			}
 		if (xmlhttp) 
 			{ 
-			RAview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=LEADINFOview&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&lead_id=" + VLI_lead_id + "&campaign=" + campaign + "&stage=<?php echo $HCwidth ?>";
+			RAview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=LEADINFOview&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&lead_id=" + VLI_lead_id + "&campaign=" + campaign + "&callback_id=" + VLI_cb_id + "&stage=<?php echo $HCwidth ?>";
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(RAview_query); 
@@ -12534,7 +12534,7 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></center></font
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="CallBacKsLisTBox">
-    <table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> CALLBACKS FOR AGENT <?php echo $VD_login ?>:<br />Click on a callback below to call the customer back now. If you click on a record below to call it, it will be removed from the list.
+    <table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> CALLBACKS FOR AGENT <?php echo $VD_login ?>:<br />To see information on one of the callbacks below, click on the INFO link. To call the customer back now, click on the DIAL link. If you click on a record below to dial it, it will be removed from the list.
  <br />
 	<?php
 	if ($webphone_location == 'bar')
