@@ -336,12 +336,13 @@
 # 110215-1412 - Added my_callback_option and per_call_notes options
 # 110218-1522 - Added agent_lead_search feature
 # 110221-1251 - Changed statuses display to keep track of non-selectable statuses
+# 110224-1713 - Added compatibility with QM phone environment logging, QM pause code last call logging and active server twin check
 #
 
-$version = '2.4-313';
-$build = '110221-1251';
+$version = '2.4-314c';
+$build = '110224-1713';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=69;
+$mysql_log_count=71;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -1322,7 +1323,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1415,6 +1416,7 @@ else
 				$per_call_notes = 			$row[85];
 				$agent_lead_search =		$row[86];
 				$agent_lead_search_method = $row[87];
+				$qm_phone_environment = $row[88];
 
 				if ( ($VU_agent_lead_search_override == 'ENABLED') or ($VU_agent_lead_search_override == 'DISABLED') )
 					{$agent_lead_search = $VU_agent_lead_search_override;}
@@ -1893,6 +1895,24 @@ else
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01023',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$rowy=mysql_fetch_row($rslt);
 
+				### find out if this server has a twin
+				$twin_not_live=0;
+				$stmt="SELECT active_twin_server_ip from servers where server_ip = '$rowx[0]';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01070',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$rowyy=mysql_fetch_row($rslt);
+				if (strlen($rowyy[0]) > 4)
+					{
+					### find out whether the twin server_updater is running
+					$stmt="SELECT count(*) from server_updater where server_ip = '$rowyy[0]' and last_update > '$past_minutes_date';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01071',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					$rowyz=mysql_fetch_row($rslt);
+					if ($rowyz[0] < 1) {$twin_not_live=1;}
+					}
+
 				### find out whether the server_updater is running
 				$stmt="SELECT count(*) from server_updater where server_ip = '$rowx[0]' and last_update > '$past_minutes_date';";
 				if ($DB) {echo "|$stmt|\n";}
@@ -1900,11 +1920,11 @@ else
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01024',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$rowz=mysql_fetch_row($rslt);
 
-				$pb_log .= "$phones_auto[$pb]|$rowx[0]|$row[0]|$rowy[0]|$rowz[0]|  ";
+				$pb_log .= "$phones_auto[$pb]|$rowx[0]|$row[0]|$rowy[0]|$rowz[0]|$twin_not_live|   ";
 
-				if ( ($rowy[0] > 0) && ($rowz[0] > 0) )
+				if ( ($rowy[0] > 0) and ($rowz[0] > 0) and ($twin_not_live < 1) )
 					{
-					if ( ($pb_count >= $row[0]) || (strlen($pb_server_ip) < 4) )
+					if ( ($pb_count >= $row[0]) or (strlen($pb_server_ip) < 4) )
 						{
 						$pb_count=$row[0];
 						$pb_server_ip=$rowx[0];
@@ -2360,7 +2380,7 @@ else
 
 					if ($queuemetrics_loginout!='NONE')
 						{
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='$QM_LOGIN',data1='$QM_PHONE',serverid='$queuemetrics_log_id';";
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='$QM_LOGIN',data1='$QM_PHONE',serverid='$queuemetrics_log_id',data4='$qm_phone_environment';";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_query($stmt, $linkB);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01045',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -2368,7 +2388,7 @@ else
 						echo "<!-- queue_log $QM_LOGIN entry added: $VD_login|$affected_rows|$QM_PHONE -->\n";
 						}
 
-					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id',data4='$qm_phone_environment';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01046',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -2377,7 +2397,7 @@ else
 
 					if ($queuemetrics_addmember_enabled > 0)
 						{
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='$VD_campaign',agent='Agent/$VD_login',verb='ADDMEMBER2',data1='$QM_PHONE',serverid='$queuemetrics_log_id';";
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='$VD_campaign',agent='Agent/$VD_login',verb='ADDMEMBER2',data1='$QM_PHONE',serverid='$queuemetrics_log_id',data4='$qm_phone_environment';";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_query($stmt, $linkB);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01069',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -2420,7 +2440,7 @@ else
 
 					if ($queuemetrics_loginout!='NONE')
 						{
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='$VD_campaign',agent='Agent/$VD_login',verb='$QM_LOGIN',data1='$QM_PHONE',serverid='$queuemetrics_log_id';";
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='$VD_campaign',agent='Agent/$VD_login',verb='$QM_LOGIN',data1='$QM_PHONE',serverid='$queuemetrics_log_id',data4='$qm_phone_environment';";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_query($stmt, $linkB);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01048',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -2428,7 +2448,7 @@ else
 						echo "<!-- queue_log $QM_LOGIN entry added: $VD_login|$affected_rows|$QM_PHONE -->\n";
 						}
 
-					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id',data4='$qm_phone_environment';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01049',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -3249,6 +3269,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var per_call_notes='<?php echo $per_call_notes ?>';
 	var agent_lead_search='<?php echo $agent_lead_search ?>';
 	var agent_lead_search_method='<?php echo $agent_lead_search_method ?>';
+	var qm_phone_environment='<?php echo $qm_phone_environment ?>';
+	var LastCallCID='';
     var DiaLControl_auto_HTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/vdc_LB_resume.gif\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/vdc_LB_pause.gif\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
@@ -3341,7 +3363,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			{ 
 			var queryCID = "HLagcW" + epoch_sec + user_abb;
 			var hangupvalue = taskvar;
-			livehangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=Hangup&format=text&channel=" + hangupvalue + "&queryCID=" + queryCID;
+			livehangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=Hangup&format=text&channel=" + hangupvalue + "&queryCID=" + queryCID + "&log_campaign=" + campaign;
 			xmlhttp.open('POST', 'manager_send.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(livehangup_query); 
@@ -5942,6 +5964,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 					var MDnextResponse_array=MDnextResponse.split("\n");
 					MDnextCID = MDnextResponse_array[0];
+					LastCallCID = MDnextResponse_array[0];
 
 					var regMNCvar = new RegExp("HOPPER EMPTY","ig");
 					var regMDFvarDNC = new RegExp("DNC","ig");
@@ -6427,6 +6450,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 					var MDOnextResponse_array=MDOnextResponse.split("\n");
 					MDnextCID =		MDOnextResponse_array[0];
+					LastCallCID =	MDOnextResponse_array[0];
 					agent_log_id =	MDOnextResponse_array[1];
 					if (MDnextCID == " CALL NOT PLACED")
 						{
@@ -6892,6 +6916,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							document.vicidial_form.uniqueid.value		= VDIC_data_VDAC[1];
 							CIDcheck									= VDIC_data_VDAC[2];
 							CalLCID										= VDIC_data_VDAC[2];
+							LastCallCID									= VDIC_data_VDAC[2];
 							document.getElementById("callchannel").innerHTML	= VDIC_data_VDAC[3];
 							lastcustchannel = VDIC_data_VDAC[3];
 							document.vicidial_form.callserverip.value	= VDIC_data_VDAC[4];
@@ -7440,7 +7465,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				var queryCID = "HLvdcW" + epoch_sec + user_abb;
 				var hangupvalue = customer_channel;
 				//		alert(auto_dial_level + "|" + CalLCID + "|" + customer_server_ip + "|" + hangupvalue + "|" + VD_live_call_secondS);
-				custhangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=Hangup&format=text&user=" + user + "&pass=" + pass + "&channel=" + hangupvalue + "&call_server_ip=" + customer_server_ip + "&queryCID=" + queryCID + "&auto_dial_level=" + auto_dial_level + "&CalLCID=" + CalLCID + "&secondS=" + VD_live_call_secondS + "&exten=" + session_id + "&campaign=" + group + "&stage=CALLHANGUP&nodeletevdac=" + nodeletevdac;
+				custhangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=Hangup&format=text&user=" + user + "&pass=" + pass + "&channel=" + hangupvalue + "&call_server_ip=" + customer_server_ip + "&queryCID=" + queryCID + "&auto_dial_level=" + auto_dial_level + "&CalLCID=" + CalLCID + "&secondS=" + VD_live_call_secondS + "&exten=" + session_id + "&campaign=" + group + "&stage=CALLHANGUP&nodeletevdac=" + nodeletevdac + "&log_campaign=" + campaign;
 				xmlhttp.open('POST', 'manager_send.php'); 
 				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 				xmlhttp.send(custhangup_query); 
@@ -7685,7 +7710,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				{ 
 				var queryCID = "HXvdcW" + epoch_sec + user_abb;
 				var hangupvalue = xfer_channel;
-				custhangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=Hangup&format=text&user=" + user + "&pass=" + pass + "&channel=" + hangupvalue + "&queryCID=" + queryCID;
+				custhangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=Hangup&format=text&user=" + user + "&pass=" + pass + "&channel=" + hangupvalue + "&queryCID=" + queryCID + "&log_campaign=" + campaign;
 				xmlhttp.open('POST', 'manager_send.php'); 
 				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 				xmlhttp.send(custhangup_query); 
@@ -7759,7 +7784,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if (xmlhttp) 
 			{ 
 			var queryCID = "HTvdcW" + epoch_sec + user_abb;
-			custhangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=HangupConfDial&format=text&user=" + user + "&pass=" + pass + "&exten=" + session_id + "&ext_context=" + ext_context + "&queryCID=" + queryCID;
+			custhangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=HangupConfDial&format=text&user=" + user + "&pass=" + pass + "&exten=" + session_id + "&ext_context=" + ext_context + "&queryCID=" + queryCID + "&log_campaign=" + campaign;
 			xmlhttp.open('POST', 'manager_send.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(custhangup_query); 
@@ -8418,7 +8443,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			}
 		if (xmlhttp) 
 			{ 
-			VMCpausecode_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass  + "&ACTION=PauseCodeSubmit&format=text&status=" + newpausecode + "&agent_log_id=" + agent_log_id + "&campaign=" + campaign + "&extension=" + extension + "&protocol=" + protocol + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&stage=" + pause_code_counter;
+			VMCpausecode_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass  + "&ACTION=PauseCodeSubmit&format=text&status=" + newpausecode + "&agent_log_id=" + agent_log_id + "&campaign=" + campaign + "&extension=" + extension + "&protocol=" + protocol + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&stage=" + pause_code_counter + "&campaign_cid=" + LastCallCID;
 			pause_code_counter++;
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -8432,12 +8457,14 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					var check_PC_array=check_pause_code.split("\n");
 					if (check_PC_array[1] == 'Next agent_log_id:')
 						{agent_log_id = check_PC_array[2];}
+				//	alert(VMCpausecode_query);
 				//	alert(xmlhttp.responseText + "\n|" + check_PC_array[1] + "\n|" + check_PC_array[2] + "|" + agent_log_id + "|" + pause_code_counter);
 					}
 				}
 			delete xmlhttp;
 			}
 //		return agent_log_id;
+		LastCallCID='';
 		scroll(0,0);
 		}
 

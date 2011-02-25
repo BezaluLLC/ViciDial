@@ -25,7 +25,7 @@
 # exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
 # 
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 61010-1007 - First test build
@@ -58,6 +58,7 @@
 # 100903-0041 - Changed lead_id max length to 10 digits
 # 101111-1556 - Added source to vicidial_hopper inserts
 # 101123-0443 - Fixed minor parked call manual dial bug
+# 110224-1854 - Added compatibility with QM phone environment logging
 #
 
 # defaults for PreFork
@@ -935,6 +936,7 @@ sub process_request
 							###########################################
 							if ( ($enable_queuemetrics_logging > 0) && ($VD_status !~ /IVR/) )
 								{
+								$data_four='';
 								$VD_agent='NONE';
 								$secX = time();
 								$VD_call_length = ($secX - $VD_start_epoch);
@@ -945,19 +947,6 @@ sub process_request
 								 or die "Couldn't connect to database: " . DBI->errstr;
 
 								if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
-
-								$stmtB = "SELECT agent from queue_log where call_id='$VD_callerid' and verb='CONNECT';";
-								$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
-								$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
-								$sthBrows=$sthB->rows;
-								$rec_count=0;
-								while ($sthBrows > $rec_count)
-									{
-									@aryB = $sthB->fetchrow_array;
-									$VD_agent =	"$aryB[0]";
-									$rec_count++;
-									}
-								$sthB->finish();
 
 								$secX = time();
 								$Rtarget = ($secX - 21600);	# look for VDCL entry within last 6 hours
@@ -985,6 +974,21 @@ sub process_request
 									}
 								$sthA->finish();
 
+								$stmtB = "SELECT agent,data4 from queue_log where call_id='$VD_callerid' and verb='CONNECT' order by time_id desc limit 1;";
+								$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+								$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+								$sthBrows=$sthB->rows;
+								$rec_count=0;
+								if ($sthBrows > 0)
+									{
+									@aryB = $sthB->fetchrow_array;
+									$VD_agent =		$aryB[0];
+									$data_four =	$aryB[1];
+									$rec_count++;
+									}
+								$sthB->finish();
+								if ($AGILOG) {$agi_string = "$VD_agent|$data_four|$stmtB|";   &agi_output;}
+
 								if ($rec_count < 1)
 									{
 									### find current number of calls in this queue to find position when channel hung up
@@ -1000,14 +1004,16 @@ sub process_request
 										}
 									$sthA->finish();
 
-									$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$VD_callerid',queue='$VD_campaign_id',agent='$VD_agent',verb='ABANDON',data1='$current_position',data2='$queue_position',data3='$VD_stage',serverid='$queuemetrics_log_id';";
+									$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$VD_callerid',queue='$VD_campaign_id',agent='$VD_agent',verb='ABANDON',data1='$current_position',data2='$queue_position',data3='$VD_stage',serverid='$queuemetrics_log_id',data4='$data_four';";
 									$Baffected_rows = $dbhB->do($stmtB);
 									}
 								else
 									{
-									$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$VD_callerid',queue='$VD_campaign_id',agent='$VD_agent',verb='COMPLETECALLER',data1='$VD_stage',data2='$VD_call_length',data3='$queue_position',serverid='$queuemetrics_log_id';";
+									$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$VD_callerid',queue='$VD_campaign_id',agent='$VD_agent',verb='COMPLETECALLER',data1='$VD_stage',data2='$VD_call_length',data3='$queue_position',serverid='$queuemetrics_log_id',data4='$data_four';";
 									$Baffected_rows = $dbhB->do($stmtB);
 									}
+
+								if ($AGILOG) {$agi_string = "|$stmtB|";   &agi_output;}
 
 								$dbhB->disconnect();
 								}

@@ -472,6 +472,9 @@ OTHER CHANGES:
 111. Added options to restrict agent lead search to the owner field equal to
 	the user, user group or selected territories for the agent.
 
+112. Added option for phone load balanced logins server twin checking on 
+	systems that have servers installed in pairs
+
 
 
 

@@ -97,6 +97,7 @@
 # 110103-1227 - Added queuemetrics_loginout NONE option
 # 110124-1134 - Small query fix for large queue_log tables
 # 110224-1408 - Fixed trunk reservation bug
+# 110224-1859 - Added compatibility with QM phone environment logging
 #
 
 
@@ -1967,10 +1968,11 @@ while($one_day_interval > 0)
 
 						$agents='@agents';
 						$time_logged_in='';
+						$data4='';
 						$RAWtime_logged_in=$TDtarget;
 						if ($queuemetrics_loginout !~ /NONE/)
 							{
-							$stmtB = "SELECT time_id,data1 FROM queue_log where agent='Agent/$VALOuser[$logrun]' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') and time_id > $check_time order by time_id desc limit 1;";
+							$stmtB = "SELECT time_id,data1,data4 FROM queue_log where agent='Agent/$VALOuser[$logrun]' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') and time_id > $check_time order by time_id desc limit 1;";
 							$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 							$sthB->execute or die "executing: $stmtA ", $dbhB->errstr;
 							$sthBrows=$sthB->rows;
@@ -1980,6 +1982,7 @@ while($one_day_interval > 0)
 								$time_logged_in =		$aryB[0];
 								$RAWtime_logged_in =	$aryB[0];
 								$phone_logged_in =		$aryB[1];
+								$data4 =				$aryB[2];
 								}
 							$sthB->finish();
 
@@ -1987,7 +1990,7 @@ while($one_day_interval > 0)
 							if ($time_logged_in > 1000000) {$time_logged_in=1;}
 							$LOGOFFtime = ($secX + 1);
 
-							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='NONE',agent='Agent/$VALOuser[$logrun]',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
+							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='NONE',agent='Agent/$VALOuser[$logrun]',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in',data4='$data4';";
 							$Baffected_rows = $dbhB->do($stmtB);
 							}
 
@@ -1995,7 +1998,7 @@ while($one_day_interval > 0)
 							{
 							if ( (length($time_logged_in) < 1) || ($queuemetrics_loginout =~ /NONE/) )
 								{
-								$stmtB = "SELECT time_id,data3 FROM queue_log where agent='Agent/$VALOuser[$logrun]' and verb='PAUSEREASON' and data1='LOGIN' order by time_id desc limit 1;";
+								$stmtB = "SELECT time_id,data3,data4 FROM queue_log where agent='Agent/$VALOuser[$logrun]' and verb='PAUSEREASON' and data1='LOGIN' order by time_id desc limit 1;";
 								$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 								$sthB->execute or die "executing: $stmtA ", $dbhB->errstr;
 								$sthBrows=$sthB->rows;
@@ -2005,6 +2008,7 @@ while($one_day_interval > 0)
 									$time_logged_in =		$aryB[0];
 									$RAWtime_logged_in =	$aryB[0];
 									$phone_logged_in =		$aryB[1];
+									$data4 =				$aryB[2];
 									}
 								$sthB->finish();
 
@@ -2012,7 +2016,12 @@ while($one_day_interval > 0)
 								if ($time_logged_in > 1000000) {$time_logged_in=1;}
 								$LOGOFFtime = ($secX + 1);
 								}
-							$stmtB = "SELECT distinct queue FROM queue_log where time_id >= $RAWtime_logged_in and agent='Agent/$VALOuser[$logrun]' and verb IN('ADDMEMBER','ADDMEMBER2') order by time_id desc;";
+							if ($queuemetrics_loginout =~ /NONE/)
+								{
+								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='NONE',agent='Agent/$VALOuser[$logrun]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF';";
+								$Baffected_rows = $dbhB->do($stmtB);
+								}
+							$stmtB = "SELECT distinct queue FROM queue_log where time_id >= $RAWtime_logged_in and agent='Agent/$VALOuser[$logrun]' and verb IN('ADDMEMBER','ADDMEMBER2') and queue != '$VALOcampaign[$logrun]' order by time_id desc;";
 							$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 							$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 							$sthBrows=$sthB->rows;
@@ -2025,10 +2034,14 @@ while($one_day_interval > 0)
 								}
 							$sthB->finish();
 
+							$AM_queue[$rec_count] =	$VALOcampaign[$logrun];
+							$rec_count++;
+							$sthBrows++;
+
 							$rec_count=0;
 							while ($sthBrows > $rec_count)
 								{
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='$AM_queue[$rec_count]',agent='Agent/$VALOuser[$logrun]',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id';";
+								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='$AM_queue[$rec_count]',agent='Agent/$VALOuser[$logrun]',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id',data4='$data4';";
 								$Baffected_rows = $dbhB->do($stmtB);
 								$rec_count++;
 								}

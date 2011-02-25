@@ -46,7 +46,7 @@
 #exten => 8366,4,AGI(agi-VDAD_ALL_outbound.agi,SURVEY-----LB-----US_pol_survey_hello-----1238-----8-----US_pol_survey_transfer-----US_thanks_no_contact-----OPTOUT-----DNC)
 #exten => 8366,5,Hangup
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 80218-2027 - First Build
@@ -80,6 +80,7 @@
 # 100903-0041 - Changed lead_id max length to 10 digits
 # 101207-0713 - Added fix for rare VDAC-entry-missing issue
 # 110213-0008 - Added scheduled callbacks custom statuses compatibility
+# 110224-1733 - Added compatibility with QM phone environment logging
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -469,7 +470,7 @@ if ($VDACaffected_rows > 0)
 	$sthA->finish();
 
 	### Grab campaign values from the database
-	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname,queue_priority,closer_campaigns FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
+	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname,queue_priority,closer_campaigns,queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -501,6 +502,7 @@ if ($VDACaffected_rows > 0)
 		$extension_appended_cidname =	$aryA[18];
 		$VDADqueue_priority =			$aryA[19];
 		$closer_campaigns =				$aryA[20];
+		$queuemetrics_phone_environment = $aryA[21];
 		if (length($closer_campaigns) > 2)
 			{
 			$closer_campaigns =~ s/^ | -$//gi;
@@ -1794,7 +1796,7 @@ while ($drop_timer <= $DROP_TIME)
 
 					if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='Agent/$VDADuser',verb='CONNECT',data1='$drop_timer',serverid='$queuemetrics_log_id';";
+					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='Agent/$VDADuser',verb='CONNECT',data1='$drop_timer',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment';";
 					$Baffected_rows = $dbhB->do($stmtB);
 						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01039';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
@@ -2185,7 +2187,7 @@ while ($drop_timer <= $DROP_TIME)
 
 					if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='Agent/$VDADuser',verb='CONNECT',data1='$drop_timer',serverid='$queuemetrics_log_id';";
+					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='Agent/$VDADuser',verb='CONNECT',data1='$drop_timer',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment';";
 					$Baffected_rows = $dbhB->do($stmtB);
 						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01046';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 

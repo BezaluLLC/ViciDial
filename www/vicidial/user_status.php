@@ -17,6 +17,7 @@
 # 100309-0544 - Added queuemetrics_loginout option
 # 101108-0032 - Added ADDMEMBER queue_log code
 # 110124-1134 - Small query fix for large queue_log tables
+# 110224-2350 - Small QM logout fix
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -373,6 +374,14 @@ if ($stage == "log_agent_out")
 			$agent_logged_in='';
 			$time_logged_in='0';
 
+			if ($queuemetrics_loginout == 'NONE')
+				{
+				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='Agent/" . mysql_real_escape_string($user) . "',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $linkB);
+				$affected_rows = mysql_affected_rows($linkB);
+				}
+
 			$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/" . mysql_real_escape_string($user) . "' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') and time_id > $check_time order by time_id desc limit 1;";
 			$rsltB=mysql_query($stmtB, $linkB);
 			if ($DB) {echo "<BR>$stmtB\n";}
@@ -391,7 +400,18 @@ if ($stage == "log_agent_out")
 
 			if ($queuemetrics_addmember_enabled > 0)
 				{
-				$stmt = "SELECT distinct queue FROM queue_log where time_id >= $RAWtime_logged_in and agent='$agent_logged_in' and verb IN('ADDMEMBER','ADDMEMBER2') order by time_id desc;";
+				$queuemetrics_phone_environment='';
+				$stmt = "SELECT queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id='$VLA_campaign_id';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "<BR>$stmt\n";}
+				$cqpe_ct = mysql_num_rows($rslt);
+				if ($cqpe_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$queuemetrics_phone_environment =	$row[0];
+					}
+
+				$stmt = "SELECT distinct queue FROM queue_log where time_id >= $RAWtime_logged_in and agent='$agent_logged_in' and verb IN('ADDMEMBER','ADDMEMBER2') and queue != '$VLA_campaign_id' order by time_id desc;";
 				$rslt=mysql_query($stmt, $linkB);
 				if ($DB) {echo "$stmt\n";}
 				$amq_conf_ct = mysql_num_rows($rslt);
@@ -403,19 +423,27 @@ if ($stage == "log_agent_out")
 					$i++;
 					}
 
+				### add the logged-in campaign as well
+				$AMqueue[$i] = $VLA_campaign_id;
+				$i++;
+				$amq_conf_ct++;
+
 				$i=0;
 				while ($i < $amq_conf_ct)
 					{
-					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='$AMqueue[$i]',agent='$agent_logged_in',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id';";
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='$AMqueue[$i]',agent='$agent_logged_in',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment';";
 					$rslt=mysql_query($stmt, $linkB);
 					$affected_rows = mysql_affected_rows($linkB);
 					$i++;
 					}
 				}
 
-			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
-			if ($DB) {echo "<BR>$stmtB\n";}
-			$rsltB=mysql_query($stmtB, $linkB);
+			if ($queuemetrics_loginout != 'NONE')
+				{
+				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
+				if ($DB) {echo "<BR>$stmtB\n";}
+				$rsltB=mysql_query($stmtB, $linkB);
+				}
 			}
 
 		echo "Agent $user - $full_name has been emergency logged out, make sure they close their web browser<BR>\n";

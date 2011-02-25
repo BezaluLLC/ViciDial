@@ -28,6 +28,7 @@
 # 100327-0926 - Added validation of four agent "sec" fields
 # 100331-0310 - Added one-day-ago and only-fix-old-lagged options, fixed validation process
 # 110124-1134 - Small query fix for large queue_log tables
+# 110224-1916 - Added compatibility with QM phone environment logging
 #
 
 # constants
@@ -1251,19 +1252,20 @@ if ($enable_queuemetrics_logging > 0)
 			if ( ($CQ_records > 0) && ($Ctime_id[$h] > 1000) )
 				{
 				##### find the CALLSTATUS details for calls that were dispositioned by an agent
-				$stmtB = "SELECT time_id,call_id,queue,agent,verb,serverid FROM queue_log where verb='CALLSTATUS' and call_id='$call_id[$h]' and agent='$Cagent[$h]';";
+				$stmtB = "SELECT time_id,call_id,queue,agent,verb,serverid,data4 FROM queue_log where verb='CALLSTATUS' and call_id='$call_id[$h]' and agent='$Cagent[$h]';";
 				$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 				$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 				$SQ_records=$sthB->rows;
 				if ($SQ_records > 0)
 					{
 					@aryB = $sthB->fetchrow_array;
-					$Stime_id[$h] =		"$aryB[0]";
-					$Scall_id[$h] =		"$aryB[1]";
-					$Squeue[$h] =		"$aryB[2]";
-					$Sagent[$h] =		"$aryB[3]";
-					$Sverb[$h] =		"$aryB[4]";
-					$Sserverid[$h] =	"$aryB[5]";
+					$Stime_id[$h] =		$aryB[0];
+					$Scall_id[$h] =		$aryB[1];
+					$Squeue[$h] =		$aryB[2];
+					$Sagent[$h] =		$aryB[3];
+					$Sverb[$h] =		$aryB[4];
+					$Sserverid[$h] =	$aryB[5];
+					$Sdata4[$h] =		$aryB[6];
 					$Slead_id[$h] = substr($Scall_id[$h], 11, 9);
 					$Slead_id[$h] = ($Slead_id[$h] + 0);
 					}
@@ -1337,7 +1339,7 @@ if ($enable_queuemetrics_logging > 0)
 
 						##### insert a COMPLETEAGENT record for this call into the queue_log
 						$CALLtime[$h] = ($Stime_id[$h] - $time_id[$h]);
-						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$Stime_id[$h]',call_id='$Scall_id[$h]',queue='$Squeue[$h]',agent='$Sagent[$h]',verb='COMPLETEAGENT',data1='$Cdata1[$h]',data2='$CALLtime[$h]',data3='$queue_position',serverid='$Sserverid[$h]';";
+						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$Stime_id[$h]',call_id='$Scall_id[$h]',queue='$Squeue[$h]',agent='$Sagent[$h]',verb='COMPLETEAGENT',data1='$Cdata1[$h]',data2='$CALLtime[$h]',data3='$queue_position',serverid='$Sserverid[$h]',data4='$Sdata4[$h]';";
 						if ($TEST < 1)
 							{
 							$Baffected_rows = $dbhB->do($stmtB);
@@ -1351,19 +1353,20 @@ if ($enable_queuemetrics_logging > 0)
 					if ($DB) {print "NO CALLSTATUS: $Ctime_id[$h]|$Ccall_id[$h]|$Cagent[$h]   \n";}
 					$noCALLSTATUS++;
 					##### find the COMPLETE details for calls that were connected to an agent
-					$stmtB = "SELECT time_id,call_id,queue,agent,verb,serverid FROM queue_log where verb IN('COMPLETEAGENT','COMPLETECALLER') and call_id='$call_id[$h]' and agent='$Cagent[$h]';";
+					$stmtB = "SELECT time_id,call_id,queue,agent,verb,serverid,data4 FROM queue_log where verb IN('COMPLETEAGENT','COMPLETECALLER') and call_id='$call_id[$h]' and agent='$Cagent[$h]';";
 					$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 					$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 					$SQ_records=$sthB->rows;
 					if ($SQ_records > 0)
 						{
 						@aryB = $sthB->fetchrow_array;
-						$Stime_id[$h] =		"$aryB[0]";
-						$Scall_id[$h] =		"$aryB[1]";
-						$Squeue[$h] =		"$aryB[2]";
-						$Sagent[$h] =		"$aryB[3]";
-						$Sverb[$h] =		"$aryB[4]";
-						$Sserverid[$h] =	"$aryB[5]";
+						$Stime_id[$h] =		$aryB[0];
+						$Scall_id[$h] =		$aryB[1];
+						$Squeue[$h] =		$aryB[2];
+						$Sagent[$h] =		$aryB[3];
+						$Sverb[$h] =		$aryB[4];
+						$Sserverid[$h] =	$aryB[5];
+						$Sdata4[$h] =		$aryB[6];
 						}
 					$sthB->finish();
 
@@ -1451,7 +1454,7 @@ if ($enable_queuemetrics_logging > 0)
 
 								##### insert a COMPLETEAGENT record for this call into the queue_log
 								$CALLtime[$h] = ($Stime_id[$h] - $time_id[$h]);
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$Stime_id[$h]',call_id='$Ccall_id[$h]',queue='$Cqueue[$h]',agent='$Cagent[$h]',verb='COMPLETEAGENT',data1='$Cdata1[$h]',data2='$CALLtime[$h]',data3='$queue_position',serverid='$Cserverid[$h]';";
+								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$Stime_id[$h]',call_id='$Ccall_id[$h]',queue='$Cqueue[$h]',agent='$Cagent[$h]',verb='COMPLETEAGENT',data1='$Cdata1[$h]',data2='$CALLtime[$h]',data3='$queue_position',serverid='$Cserverid[$h]',data4='$Sdata4[$h]';";
 								if ($TEST < 1)
 									{
 									$Baffected_rows = $dbhB->do($stmtB) or die "ERROR: $stmtB" . DBI->errstr;
@@ -1510,7 +1513,7 @@ if ($enable_queuemetrics_logging > 0)
 
 	##############################################################
 	##### grab all queue_log entries for COMPLETEAGENT verb to validate queue
-	$stmtB = "SELECT time_id,call_id,queue,agent,serverid FROM queue_log where verb='COMPLETEAGENT' and serverid='$queuemetrics_log_id' $QM_SQL_time order by time_id;";
+	$stmtB = "SELECT time_id,call_id,queue,agent,serverid,data4 FROM queue_log where verb='COMPLETEAGENT' and serverid='$queuemetrics_log_id' $QM_SQL_time order by time_id;";
 	$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 	$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 	$EQ_records=$sthB->rows;
@@ -1519,11 +1522,12 @@ if ($enable_queuemetrics_logging > 0)
 	while ($EQ_records > $h)
 		{
 		@aryB = $sthB->fetchrow_array;
-		$time_id[$h] =	"$aryB[0]";
-		$call_id[$h] =	"$aryB[1]";
-		$queue[$h] =	"$aryB[2]";
-		$agent[$h] =	"$aryB[3]";
-		$serverid[$h] =	"$aryB[4]";
+		$time_id[$h] =	$aryB[0];
+		$call_id[$h] =	$aryB[1];
+		$queue[$h] =	$aryB[2];
+		$agent[$h] =	$aryB[3];
+		$serverid[$h] =	$aryB[4];
+		$data4[$h] =	$aryB[5];
 		$h++;
 		}
 	$sthB->finish();

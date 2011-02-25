@@ -123,7 +123,8 @@ rebuild_music_on_hold ENUM('Y','N') default 'Y',
 active_agent_login_server ENUM('Y','N') default 'Y',
 conf_secret VARCHAR(20) default 'test',
 external_server_ip VARCHAR(100) default '',
-custom_dialplan_entry TEXT
+custom_dialplan_entry TEXT,
+active_twin_server_ip VARCHAR(15) default ''
 );
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -788,7 +789,8 @@ lead_order_secondary ENUM('LEAD_ASCEND','LEAD_DESCEND','CALLTIME_ASCEND','CALLTI
 per_call_notes ENUM('ENABLED','DISABLED') default 'DISABLED',
 my_callback_option ENUM('CHECKED','UNCHECKED') default 'UNCHECKED',
 agent_lead_search ENUM('ENABLED','DISABLED') default 'DISABLED',
-agent_lead_search_method VARCHAR(30) default 'CAMPLISTS_ALL'
+agent_lead_search_method VARCHAR(30) default 'CAMPLISTS_ALL',
+queuemetrics_phone_environment VARCHAR(20) default ''
 );
 
 CREATE TABLE vicidial_lists (
@@ -2440,7 +2442,7 @@ ALTER TABLE vicidial_call_notes_archive MODIFY notesid INT(9) UNSIGNED NOT NULL;
 CREATE TABLE vicidial_lead_search_log_archive LIKE vicidial_lead_search_log; 
 ALTER TABLE vicidial_lead_search_log_archive MODIFY search_log_id INT(9) UNSIGNED NOT NULL;
 
-UPDATE system_settings SET db_schema_version='1262',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1263',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

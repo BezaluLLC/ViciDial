@@ -1,7 +1,7 @@
 <?php
 # api.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with the VICIDIAL Agent screen
@@ -50,10 +50,11 @@
 # 100527-0926 - Added send_dtmf, transfer_conference and park_call functions
 # 100914-1538 - Fixed bug in change_ingroups function
 # 101123-1050 - Added manual dial queue features to external_dial function
+# 110224-1711 - Added compatibility with QM phone environment logging
 #
 
-$version = '2.4-17';
-$build = '101123-1050';
+$version = '2.4-18';
+$build = '110224-1711';
 
 require("dbconnect.php");
 
@@ -1991,7 +1992,18 @@ if ($function == 'ra_call_control')
 						$ra_stage = preg_replace("/XFER|CLOSER|-/",'',$ra_stage);
 						if ($ra_stage < 0.25) {$ra_stage=0;}
 
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$value',queue='$campaign_id',agent='Agent/$ra_user',verb='COMPLETEAGENT',data1='$ra_stage',data2='$ra_length',data3='$queue_position',serverid='$queuemetrics_log_id';";
+						$data4SQL='';
+						$stmt="SELECT queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id='$campaign_id' and queuemetrics_phone_environment!='';";
+						$rslt=mysql_query($stmt, $link);
+						if ($DB) {echo "$stmt\n";}
+						$cqpe_ct = mysql_num_rows($rslt);
+						if ($cqpe_ct > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$data4SQL = ",data4='$row[0]'";
+							}
+
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$value',queue='$campaign_id',agent='Agent/$ra_user',verb='COMPLETEAGENT',data1='$ra_stage',data2='$ra_length',data3='$queue_position',serverid='$queuemetrics_log_id' $data4SQL;";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_query($stmt, $linkB);
 
@@ -1999,11 +2011,11 @@ if ($function == 'ra_call_control')
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_query($stmt, $linkB);
 
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$ra_user',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$ra_user',verb='PAUSEALL',serverid='$queuemetrics_log_id' $data4SQL;";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_query($stmt, $linkB);
 
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$ra_user',verb='UNPAUSEALL',serverid='$queuemetrics_log_id';";
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$ra_user',verb='UNPAUSEALL',serverid='$queuemetrics_log_id' $data4SQL;";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_query($stmt, $linkB);
 						}

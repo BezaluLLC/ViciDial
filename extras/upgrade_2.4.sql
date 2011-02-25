@@ -690,3 +690,9 @@ ALTER TABLE vicidial_campaigns MODIFY agent_lead_search_method VARCHAR(30) defau
 
 UPDATE system_settings SET db_schema_version='1262',db_schema_update_date=NOW();
 
+ALTER TABLE vicidial_campaigns ADD queuemetrics_phone_environment VARCHAR(20) default '';
+
+ALTER TABLE servers ADD active_twin_server_ip VARCHAR(15) default '';
+
+UPDATE system_settings SET db_schema_version='1263',db_schema_update_date=NOW();
+

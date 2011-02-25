@@ -1,7 +1,7 @@
 <?php
 # manager_send.php    version 2.4
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to insert records into the vicidial_manager table to signal Actions to an asterisk server
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -44,6 +44,7 @@
 #  - $alertCID - ('0','1')
 #  - $preset_name = ('TESTING PRESET',...)
 #  - $call_variables = ('Variable: vendor_lead_code=1234|campaign=TESTCAMP|...')
+#  - $log_campaign
 #
 # CHANGELOG:
 # 50401-1002 - First build of script, Hangup function only
@@ -105,11 +106,13 @@
 # 101024-1638 - Added park_log logging for parked calls
 # 101107-2331 - Added CALLERONHOLD/CALLEROFFHOLD queue_log entries
 # 101125-1018 - Added call_variables Originate variables
+# 110224-1710 - Added compatibility with QM phone environment logging
+#
 
-$version = '2.4-54';
-$build = '101125-1018';
+$version = '2.4-55';
+$build = '110224-1710';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=115;
+$mysql_log_count=116;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -201,6 +204,8 @@ if (isset($_GET["preset_name"]))			{$preset_name=$_GET["preset_name"];}
 	elseif (isset($_POST["preset_name"]))	{$preset_name=$_POST["preset_name"];}
 if (isset($_GET["call_variables"]))				{$call_variables=$_GET["call_variables"];}
 	elseif (isset($_POST["call_variables"]))	{$call_variables=$_POST["call_variables"];}
+if (isset($_GET["log_campaign"]))			{$log_campaign=$_GET["log_campaign"];}
+	elseif (isset($_POST["log_campaign"]))	{$log_campaign=$_POST["log_campaign"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -718,8 +723,20 @@ if ($ACTION=="Hangup")
 								if ($time_id > 100000) 
 									{$secondS = ($StarTtime - $time_id);}
 
+								$data4SQL='';
+								$stmt="SELECT queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id='$log_campaign' and queuemetrics_phone_environment!='';";
+								$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02116',$user,$server_ip,$session_name,$one_mysql_log);}
+								if ($DB) {echo "$stmt\n";}
+								$cqpe_ct = mysql_num_rows($rslt);
+								if ($cqpe_ct > 0)
+									{
+									$row=mysql_fetch_row($rslt);
+									$data4SQL = ",data4='$row[0]'";
+									}
+
 								if ($format=='debug') {echo "\n<!-- $caller_complete|$stmt -->";}
-								$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$CLcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$secondS',data3='$CLqueue_position',serverid='$queuemetrics_log_id';";
+								$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$CLcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$secondS',data3='$CLqueue_position',serverid='$queuemetrics_log_id' $data4SQL;";
 								$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02019',$user,$server_ip,$session_name,$one_mysql_log);}
 								$affected_rows = mysql_affected_rows($linkB);

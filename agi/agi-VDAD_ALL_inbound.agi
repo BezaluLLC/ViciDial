@@ -73,7 +73,7 @@
 #exten => _99909*.,2,AGI(agi-VDAD_ALL_inbound.agi)
 #exten => _99909*.,3,Hangup
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 70828-0924 - First Build
@@ -144,6 +144,7 @@
 # 100929-1201 - Added add_lead_url feature
 # 101008-0410 - Added option for alternate Minimum Hold Time Message
 # 101219-2110 - Added call time overflow
+# 110224-1735 - Added compatibility with QM phone environment logging
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -155,7 +156,7 @@ $wait_prompt_runs=0;
 $at='@';
 $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=153;
+$mysql_log_count=157;
 $one_mysql_log=0;
 
 
@@ -1881,7 +1882,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				else
 					{$vlia_users="''";}
 
-				$stmtA = "SELECT vicidial_live_agents.conf_exten,vicidial_live_agents.user,vicidial_live_agents.extension,vicidial_live_agents.server_ip,vicidial_live_inbound_agents.group_weight,ra_user from vicidial_live_agents, vicidial_live_inbound_agents WHERE vicidial_live_agents.user=vicidial_live_inbound_agents.user and status IN('CLOSER','READY') and lead_id<1 and server_ip='$VARserver_ip' $ADUfindSQL and vicidial_live_inbound_agents.group_id='$channel_group' and last_update_time > '$BDtsSQLdate' and vicidial_live_agents.user NOT IN($vlia_users) $qp_groupWAIT_camp_SQL $agent_call_order limit 1;";
+				$stmtA = "SELECT vicidial_live_agents.conf_exten,vicidial_live_agents.user,vicidial_live_agents.extension,vicidial_live_agents.server_ip,vicidial_live_inbound_agents.group_weight,ra_user,vicidial_live_agents.campaign_id from vicidial_live_agents, vicidial_live_inbound_agents WHERE vicidial_live_agents.user=vicidial_live_inbound_agents.user and status IN('CLOSER','READY') and lead_id<1 and server_ip='$VARserver_ip' $ADUfindSQL and vicidial_live_inbound_agents.group_id='$channel_group' and last_update_time > '$BDtsSQLdate' and vicidial_live_agents.user NOT IN($vlia_users) $qp_groupWAIT_camp_SQL $agent_call_order limit 1;";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -1896,13 +1897,14 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$VDADserver_ip =	$aryA[3];
 					$VDADgroup_weight = $aryA[4];
 					$ra_user =			$aryA[5];
+					$log_campaign =		$aryA[6];
 					}
 				$sthA->finish();
 					if ($AGILOG) {$agi_string = "$VDADuser|$VDADgroup_weight|$stmtA|";   &agi_output;}
 
 				if ($AGENTgrab > 0)
 					{
-					$stmtA = "SELECT conf_exten,extension,server_ip,ra_user from vicidial_live_agents WHERE user='$AGENTuser';";
+					$stmtA = "SELECT conf_exten,extension,server_ip,ra_user,campaign_id from vicidial_live_agents WHERE user='$AGENTuser';";
 						if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1916,6 +1918,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						$VDADuser =			$AGENTuser;
 						$VDADserver_ip =	$aryA[2];
 						$ra_user =			$aryA[3];
+						$log_campaign =		$aryA[4];
 						}
 					$sthA->finish();
 					}
@@ -1948,7 +1951,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				if ($aco_sub<1)
 					{
 					$cbc=0;	
-					$stmtA = "SELECT conf_exten,user,extension,ra_user FROM vicidial_live_agents where status IN('QUEUE','INCALL') and server_ip='$VARserver_ip' and campaign_id IN($INBOUNDcampsSQL) and callerid='$callerid' and channel='$channel' order by last_call_time limit 1;";
+					$stmtA = "SELECT conf_exten,user,extension,ra_user,campaign_id FROM vicidial_live_agents where status IN('QUEUE','INCALL') and server_ip='$VARserver_ip' and campaign_id IN($INBOUNDcampsSQL) and callerid='$callerid' and channel='$channel' order by last_call_time limit 1;";
 						if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1962,6 +1965,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						$VDADuser	=		$aryA[1];
 						$VDADextension	=	$aryA[2];
 						$ra_user	=		$aryA[3];
+						$log_campaign =		$aryA[4];
 					
 						$cbc++;
 						}
@@ -1993,13 +1997,27 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 				if ($enable_queuemetrics_logging > 0)
 					{
+					$dataSQL='';	
+					$stmtA = "SELECT queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id='$log_campaign' and queuemetrics_phone_environment!='';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArowsCQPE=$sthA->rows;
+						$dbhP=$dbhA;   $mysql_count='02154';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+					if ($sthArowsCQPE > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$dataSQL = ",data4='$aryA[0]'";
+						}
+					$sthA->finish();
+						if ($AGILOG) {$agi_string = "$sthArowsCQPE|$dataSQL|$stmtA|";   &agi_output;}
+
 					$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
 					 or die "Couldn't connect to database: " . DBI->errstr;
 
 					if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 					$now_date_epoch = time();
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='Agent/$VDADuser',verb='CONNECT',data1='$drop_timer',serverid='$queuemetrics_log_id';";
+					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='Agent/$VDADuser',verb='CONNECT',data1='$drop_timer',serverid='$queuemetrics_log_id' $data4SQL;";
 					$Baffected_rows = $dbhB->do($stmtB);
 						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02045';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
@@ -2369,7 +2387,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				else
 					{$vlia_users="''";}
 
-				$stmtA = "SELECT vicidial_live_agents.conf_exten,vicidial_live_agents.user,vicidial_live_agents.extension,vicidial_live_agents.server_ip,vicidial_live_inbound_agents.group_weight,ra_user from vicidial_live_agents, vicidial_live_inbound_agents WHERE vicidial_live_agents.user=vicidial_live_inbound_agents.user and status IN('CLOSER','READY') and lead_id<1 $ADUfindSQL and vicidial_live_inbound_agents.group_id='$channel_group' and last_update_time > '$BDtsSQLdate' and vicidial_live_agents.user NOT IN($vlia_users) $qp_groupWAIT_camp_SQL $agent_call_order limit 1;";
+				$stmtA = "SELECT vicidial_live_agents.conf_exten,vicidial_live_agents.user,vicidial_live_agents.extension,vicidial_live_agents.server_ip,vicidial_live_inbound_agents.group_weight,ra_user,vicidial_live_agents.campaign_id from vicidial_live_agents, vicidial_live_inbound_agents WHERE vicidial_live_agents.user=vicidial_live_inbound_agents.user and status IN('CLOSER','READY') and lead_id<1 $ADUfindSQL and vicidial_live_inbound_agents.group_id='$channel_group' and last_update_time > '$BDtsSQLdate' and vicidial_live_agents.user NOT IN($vlia_users) $qp_groupWAIT_camp_SQL $agent_call_order limit 1;";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -2385,13 +2403,14 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$VDADserver_ip =	$aryA[3];
 					$VDADgroup_weight = $aryA[4];
 					$ra_user =			$aryA[5];
+					$log_campaign =		$aryA[6];
 					}
 				$sthA->finish();
 				if ($AGILOG) {$agi_string = "$VDADuser|$VDADgroup_weight|$stmtA|";   &agi_output;}
 
 				if ($AGENTgrab > 0)
 					{
-					$stmtA = "SELECT conf_exten,extension,server_ip,ra_user from vicidial_live_agents WHERE user='$AGENTuser';";
+					$stmtA = "SELECT conf_exten,extension,server_ip,ra_user,campaign_id from vicidial_live_agents WHERE user='$AGENTuser';";
 						if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2405,6 +2424,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						$VDADuser =			$AGENTuser;
 						$VDADserver_ip =	$aryA[2];
 						$ra_user	=		$aryA[3];
+						$log_campaign =		$aryA[4];
 						}
 					$sthA->finish();
 					}
@@ -2438,7 +2458,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				if ($aco_sub<1)
 					{
 					$cbc=0;	
-					$stmtA = "SELECT conf_exten,user,extension,server_ip,last_call_time,ra_user FROM vicidial_live_agents where status IN('QUEUE','INCALL') and campaign_id IN($INBOUNDcampsSQL) and callerid='$callerid' and channel='$channel' order by last_call_time limit 1;";
+					$stmtA = "SELECT conf_exten,user,extension,server_ip,last_call_time,ra_user,campaign_id FROM vicidial_live_agents where status IN('QUEUE','INCALL') and campaign_id IN($INBOUNDcampsSQL) and callerid='$callerid' and channel='$channel' order by last_call_time limit 1;";
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 					$sthArows=$sthA->rows;
@@ -2453,6 +2473,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						$VDADserver_ip =		$aryA[3];
 						$VDADlast_call_time =	$aryA[4];
 						$ra_user =				$aryA[5];
+						$log_campaign =			$aryA[6];
 						$cbc++;
 						}
 					$sthA->finish();
@@ -2489,7 +2510,21 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 					$now_date_epoch = time();
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='Agent/$VDADuser',verb='CONNECT',data1='$drop_timer',serverid='$queuemetrics_log_id';";
+					$dataSQL='';	
+					$stmtA = "SELECT queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id='$log_campaign' and queuemetrics_phone_environment!='';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArowsCQPE=$sthA->rows;
+						$dbhP=$dbhA;   $mysql_count='02155';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+					if ($sthArowsCQPE > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$dataSQL = ",data4='$aryA[0]'";
+						}
+					$sthA->finish();
+						if ($AGILOG) {$agi_string = "$sthArowsCQPE|$dataSQL|$stmtA|";   &agi_output;}
+
+					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='Agent/$VDADuser',verb='CONNECT',data1='$drop_timer',serverid='$queuemetrics_log_id' $dataSQL;";
 					$Baffected_rows = $dbhB->do($stmtB);
 						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02065';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
@@ -3158,7 +3193,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 					$stmtA = "UPDATE vicidial_auto_calls set last_update_time='$FDtsSQLdate' $no_block_SQL where callerid='$callerid' order by call_time desc limit 1;";
 					$affected_rows = $dbhA->do($stmtA);
-						$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+						$dbhP=$dbhA;   $mysql_count='02156';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 					if ($AGILOG) {$agi_string = "--    VDAC posttime record: |$affected_rows|$FDtsSQLdate|$callerid|$no_block_SQL|EHTM";   &agi_output;}
 
 					if ( (length($eht_minimum_prompt_filename) > 0) && ($eht_minimum_prompt_filename !~ /---NONE---/) )
@@ -3188,7 +3223,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						{
 						$stmtA = "UPDATE vicidial_auto_calls set call_time='$ORIGINAL_call_time' where callerid='$callerid' order by call_time desc limit 1;";
 						$affected_rows = $dbhA->do($stmtA);
-							$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='02157';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 						if ($AGILOG) {$agi_string = "--    No-Block Prompt Set: |$affected_rows|$ORIGINAL_call_time|$callerid|EHTM";   &agi_output;}
 						}
 					}

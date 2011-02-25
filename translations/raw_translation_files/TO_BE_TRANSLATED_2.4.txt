@@ -533,6 +533,10 @@ Used for Answering Machine Detection after that same behavior as||
 Used for press-1, broadcast and survey campaigns with Cepstral Text-to-speech||
 Used for Answering Machine Detection then press-1, broadcast and survey campaigns with Cepstral Text-to-speech||
 One of these options with USER_ in front will only search within leads that have the owner field matching the user ID of the agent, the options with GROUP_ in front will only search within leads that have the owner field matching the user group that the user is a member of, the options with TERRITORY_ in front will only search within leads that have the owner field matching the territories that the agent has selected||
+QM Phone Environment||
+If QueueMetrics integration is enabled in the system settings then this setting allow the insertion of this data value in the data4 field of the queue_log for agent activity records. Default is empty for disabled||
+Active Twin Server IP||
+Some vicidial systems require setting up vicidial servers in pairs. This setting is where you can put the server IP of another vicidial server that this server is twinned with. Default is empty for disabled||
 
 
 AST_LISTS_campaign_stats.php
