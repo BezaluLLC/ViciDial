@@ -2666,12 +2666,13 @@ else
 # 110222-2039 - Added USER, GROUP and TERRITORY restrictions to agent lead search
 # 110224-1427 - Added queuemetrics_phone_environment and active_twin_server_ip options
 # 110301-1206 - Added options for ring-all in-group next-agent-call
+# 110304-1651 - Added DEFER options to the scheduled callbacks alert campaign feature
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-304a';
-$build = '110301-1206';
+$admin_version = '2.4-305a';
+$build = '110304-1651';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4687,7 +4688,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_campaigns-scheduled_callbacks_alert">
 	<BR>
-	<B>Scheduled Callbacks Alert -</B> This option allows the callbacks status line in the agent interface to be red, blink or blink red when there are AGENTONLY scheduled callbacks that have hit their trigger time and date. Default is NONE for standard status line.
+	<B>Scheduled Callbacks Alert -</B> This option allows the callbacks status line in the agent interface to be red, blink or blink red when there are AGENTONLY scheduled callbacks that have hit their trigger time and date. Default is NONE for standard status line. The DEFER options will stop blinking and-or displaying in red when you check the callbacks, until the number of callbacks changes.
 
 	<BR>
 	<A NAME="vicidial_campaigns-scheduled_callbacks_count">
@@ -19237,7 +19238,7 @@ if ($ADD==31)
 			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Scheduled Callbacks: </td><td align=left><select size=1 name=scheduled_callbacks><option>Y</option><option>N</option><option SELECTED>$scheduled_callbacks</option></select>$NWB#vicidial_campaigns-scheduled_callbacks$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Scheduled Callbacks Alert: </td><td align=left><select size=1 name=scheduled_callbacks_alert><option>NONE</option><option>BLINK</option><option>RED</option><option>BLINK_RED</option><option SELECTED>$scheduled_callbacks_alert</option></select>$NWB#vicidial_campaigns-scheduled_callbacks_alert$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Scheduled Callbacks Alert: </td><td align=left><select size=1 name=scheduled_callbacks_alert><option>NONE</option><option>BLINK</option><option>RED</option><option>BLINK_RED</option><option>BLINK_DEFER</option><option>RED_DEFER</option><option>BLINK_RED_DEFER</option><option SELECTED>$scheduled_callbacks_alert</option></select>$NWB#vicidial_campaigns-scheduled_callbacks_alert$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Scheduled Callbacks Count: </td><td align=left><select size=1 name=scheduled_callbacks_count><option>LIVE</option><option>ALL_ACTIVE</option><option SELECTED>$scheduled_callbacks_count</option></select>$NWB#vicidial_campaigns-scheduled_callbacks_count$NWE</td></tr>\n";
 

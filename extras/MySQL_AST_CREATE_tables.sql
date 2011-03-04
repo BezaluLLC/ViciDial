@@ -762,7 +762,7 @@ xferconf_c_number VARCHAR(50) default '',
 xferconf_d_number VARCHAR(50) default '',
 xferconf_e_number VARCHAR(50) default '',
 use_custom_cid ENUM('Y','N') default 'N',
-scheduled_callbacks_alert ENUM('NONE','BLINK','RED','BLINK_RED') default 'NONE',
+scheduled_callbacks_alert ENUM('NONE','BLINK','RED','BLINK_RED','BLINK_DEFER','RED_DEFER','BLINK_RED_DEFER') default 'NONE',
 queuemetrics_callstatus_override ENUM('DISABLED','NO','YES') default 'DISABLED',
 extension_appended_cidname ENUM('Y','N') default 'N',
 scheduled_callbacks_count ENUM('LIVE','ALL_ACTIVE') default 'ALL_ACTIVE',
@@ -2450,7 +2450,7 @@ ALTER TABLE vicidial_call_notes_archive MODIFY notesid INT(9) UNSIGNED NOT NULL;
 CREATE TABLE vicidial_lead_search_log_archive LIKE vicidial_lead_search_log; 
 ALTER TABLE vicidial_lead_search_log_archive MODIFY search_log_id INT(9) UNSIGNED NOT NULL;
 
-UPDATE system_settings SET db_schema_version='1264',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1265',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

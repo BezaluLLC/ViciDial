@@ -711,3 +711,7 @@ ALTER TABLE vicidial_remote_agents ADD on_hook_ring_time SMALLINT(5) default '15
 ALTER TABLE vicidial_auto_calls ADD agent_grab_extension VARCHAR(100) default '';
 
 UPDATE system_settings SET db_schema_version='1264',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns MODIFY scheduled_callbacks_alert ENUM('NONE','BLINK','RED','BLINK_RED','BLINK_DEFER','RED_DEFER','BLINK_RED_DEFER') default 'NONE';
+
+UPDATE system_settings SET db_schema_version='1265',db_schema_update_date=NOW();

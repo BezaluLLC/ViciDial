@@ -339,10 +339,11 @@
 # 110224-1713 - Added compatibility with QM phone environment logging, QM pause code last call logging and active server twin check
 # 110225-1231 - Changed scheduled callbacks list to allow clicking to see lead info without dialing, and separate dial link
 # 110303-2321 - Added notice of on-hook phone use, and ability to click 'ring' to call into session, minor queue_log fix
+# 110304-1623 - Added callback count notification defer options
 #
 
-$version = '2.4-316c';
-$build = '110303-2321';
+$version = '2.4-317c';
+$build = '110304-1623';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=72;
 $one_mysql_log=0;
@@ -3287,6 +3288,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var agent_lead_search_method='<?php echo $agent_lead_search_method ?>';
 	var qm_phone_environment='<?php echo $qm_phone_environment ?>';
 	var LastCallCID='';
+	var LastCallbackCount=0;
+	var LastCallbackViewed=0;
     var DiaLControl_auto_HTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/vdc_LB_resume.gif\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/vdc_LB_pause.gif\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
@@ -5145,6 +5148,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					{
 					var CBpre = '';
 					var CBpost = '';
+					var Defer=0;
 
 				//	alert(xmlhttp.responseText);
 					var CBcounTtotal = xmlhttp.responseText;
@@ -5156,21 +5160,34 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					else 
 						{
 						var CBprint = CBcounT;
+						if ( (LastCallbackCount < CBcounT) || (LastCallbackCount > CBcounT) )
+							{
+							LastCallbackCount = CBcounT;
+							LastCallbackViewed=0;
+							}
 
-						if (scheduled_callbacks_alert == 'BLINK')
+						if ( (scheduled_callbacks_alert == 'RED_DEFER') || (scheduled_callbacks_alert == 'BLINK_DEFER') || (scheduled_callbacks_alert == 'BLINK_RED_DEFER') )
+							{Defer=1;}
+
+						if ( (LastCallbackViewed > 0) && (Defer > 0) )
+							{var do_nothing=1;}
+						else
 							{
-                            CBpre = '<blink>';
-                            CBpost = '</blink>';
-							}
-						if (scheduled_callbacks_alert == 'RED')
-							{
-                            CBpre = '<b><font color="red">';
-							CBpost = '</font></b>';
-							}
-						if (scheduled_callbacks_alert == 'BLINK_RED')
-							{
-                            CBpre = '<b><font color="red"><blink>';
-                            CBpost = '</blink></font></b>';
+							if ( (scheduled_callbacks_alert == 'BLINK') || (scheduled_callbacks_alert == 'BLINK_DEFER') )
+								{
+								CBpre = '<blink>';
+								CBpost = '</blink>';
+								}
+							if ( (scheduled_callbacks_alert == 'RED') || (scheduled_callbacks_alert == 'RED_DEFER') )
+								{
+								CBpre = '<b><font color="red">';
+								CBpost = '</font></b>';
+								}
+							if ( (scheduled_callbacks_alert == 'BLINK_RED') || (scheduled_callbacks_alert == 'BLINK_RED_DEFER') )
+								{
+								CBpre = '<b><font color="red"><blink>';
+								CBpost = '</blink></font></b>';
+								}
 							}
 						}
 					CBlinkCONTENT ="<a href=\"#\" onclick=\"CalLBacKsLisTCheck();return false;\">" + CBpre + '' + CBprint + '' + " ACTIVE CALLBACKS" + CBpost + "</a>";	
@@ -5192,6 +5209,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			}
 		else
 			{
+			LastCallbackViewed=1;
+
 			showDiv('CallBacKsLisTBox');
 
 			var xmlhttp=false;
@@ -5263,10 +5282,21 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 
 // ################################################################################
+// closes callback list screen
+	function CalLBacKsLisTClose()
+		{
+		hideDiv('CallBacKsLisTBox');
+		CalLBacKsCounTCheck();
+		}
+
+
+// ################################################################################
 // Open up a callback customer record as manual dial preview mode
 	function new_callback_call(taskCBid,taskLEADid)
 		{
 	//	alt_phone_dialing=1;
+		LastCallbackViewed=1;
+		LastCallbackCount = (LastCallbackCount - 1);
 		auto_dial_level=0;
 		manual_dial_in_progress=1;
 		MainPanelToFront();
@@ -12564,7 +12594,7 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></center></font
     <br /> &nbsp;
 	<a href="#" onclick="CalLBacKsLisTCheck();return false;">Refresh</a>
 	 &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp; 
-	<a href="#" onclick="hideDiv('CallBacKsLisTBox');return false;">Go Back</a>
+	<a href="#" onclick="CalLBacKsLisTClose();return false;">Go Back</a>
     </td></tr></table>
 </span>
 

@@ -596,6 +596,7 @@ On-Hook Agent Login||
 This option is only used for inbound calls going to an agent logged in with this phone. This feature will call the agent and will not send the customer to the agents session until the line is answered. Default is N for disabled||
 This is a Phone On-Hook Agent||
 Maximum Ring Time||
+The DEFER options will stop blinking and-or displaying in red when you check the callbacks, until the number of callbacks changes||
 
 
 ############################################################  MANAGER Manual

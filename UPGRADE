@@ -499,6 +499,11 @@ OTHER CHANGES:
 	receiving the call. It is not recommended to use this on high-volume 
 	systems or systems with many agents available.
 
+116. Added DEFER options to the Scheduled Callbacks Alert campaign feature. 
+	These allow you to stop the blinking of the alert in the agent screen
+	after you have viewed the callbacks, but if the number of callbacks 
+	changes the red and/or blink will start again.
+
 
 
 
