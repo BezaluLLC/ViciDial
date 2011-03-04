@@ -277,12 +277,13 @@
 # 110224-1712 - Added compatibility with QM phone environment logging and QM pause code last call logging
 # 110225-1237 - Added scheduled callback lead info display to the lead info view function
 # 110303-1616 - Added vicidial_log_extended logging for manual dial calls
+# 110304-1207 - Changed lead search with territory restriction to work with agents that cannot select territories
 #
 
-$version = '2.4-182';
-$build = '110303-1616';
+$version = '2.4-183';
+$build = '110304-1207';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=403;
+$mysql_log_count=408;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -1843,7 +1844,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 					if ($filtersql_ct > 0)
 						{
 						$row=mysql_fetch_row($rslt);
-						$fSQL =		$row[0];
+						$fSQL = "and $row[0]";
+						$fSQL = preg_replace('/\\\\/','',$fSQL);
 						}
 
 					$stmt="SELECT list_id FROM vicidial_lists where campaign_id='$campaign' and active='Y';";
@@ -1874,27 +1876,58 @@ if ($ACTION == 'manDiaLnextCaLL')
 						$territory =	$row[1];
 						}
 
-					$agent_territories='';
-					$stmt="SELECT agent_territories FROM vicidial_live_agents where user='$user';";
-					$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00258',$user,$server_ip,$session_name,$one_mysql_log);}
-					$userterrVLA_ct = mysql_num_rows($rslt);
-					if ($DB) {echo "$userterrVLA_ct|$stmt\n";}
-					if ($userterrVLA_ct > 0)
-						{
-						$row=mysql_fetch_row($rslt);
-						$agent_territories =	$row[0];
-						}
-					if (strlen($agent_territories) > 3)
-						{
-						$agent_territoriesSQL = preg_replace('/-$/','',$agent_territories);
-						$agent_territoriesSQL = preg_replace('/ $|^ /','',$agent_territoriesSQL);
-						$territory = preg_replace('/ /',"','",$agent_territoriesSQL);
-						}
-
 					$adooSQL = '';
+					if (eregi("TERRITORY",$agent_dial_owner_only)) 
+						{
+						$agent_territories='';
+						$agent_choose_territories=0;
+						$stmt="SELECT agent_choose_territories from vicidial_users where user='$user';";
+						$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00406',$user,$server_ip,$session_name,$one_mysql_log);}
+						$Uterrs_to_parse = mysql_num_rows($rslt);
+						if ($Uterrs_to_parse > 0) 
+							{
+							$rowx=mysql_fetch_row($rslt);
+							$agent_choose_territories = $rowx[0];
+							}
+
+						if ($agent_choose_territories < 1)
+							{
+							$stmt="SELECT territory from vicidial_user_territories where user='$user';";
+							$rslt=mysql_query($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00407',$user,$server_ip,$session_name,$one_mysql_log);}
+							$vuts_to_parse = mysql_num_rows($rslt);
+							$o=0;
+							while ($vuts_to_parse > $o) 
+								{
+								$rowx=mysql_fetch_row($rslt);
+								$agent_territories .= "'$rowx[0]',";
+								$o++;
+								}
+							$agent_territories = preg_replace("/\,$/",'',$agent_territories);
+							$searchownerSQL=" and owner IN($agent_territories)";
+							if ($vuts_to_parse < 1)
+								{$searchownerSQL=" and lead_id < 0";}
+							}
+						else
+							{
+							$stmt="SELECT agent_territories from vicidial_live_agents where user='$user';";
+							$rslt=mysql_query($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00408',$user,$server_ip,$session_name,$one_mysql_log);}
+							$terrs_to_parse = mysql_num_rows($rslt);
+							if ($terrs_to_parse > 0) 
+								{
+								$rowx=mysql_fetch_row($rslt);
+								$agent_territories = $rowx[0];
+								$agent_territories = preg_replace("/ -$|^ /",'',$agent_territories);
+								$agent_territories = preg_replace("/ /","','",$agent_territories);
+								$searchownerSQL=" and owner IN('$agent_territories')";
+								}
+							}
+
+						$adooSQL = $searchownerSQL;
+						}
 					if (eregi("USER",$agent_dial_owner_only)) {$adooSQL = "and owner='$user'";}
-					if (eregi("TERRITORY",$agent_dial_owner_only)) {$adooSQL = "and owner IN('$territory')";}
 					if (eregi("USER_GROUP",$agent_dial_owner_only)) {$adooSQL = "and owner='$user_group'";}
 
 					if ($lead_order_randomize == 'Y') {$last_order = "RAND()";}
@@ -8217,17 +8250,50 @@ if ($ACTION == 'SEARCHRESULTSview')
 			}
 		if (preg_match('/TERRITORY_/',$agent_lead_search_method))
 			{
-			$stmt="SELECT agent_territories from vicidial_live_agents where user='$user';";
+			$agent_territories='';
+			$agent_choose_territories=0;
+			$stmt="SELECT agent_choose_territories from vicidial_users where user='$user';";
 			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00387',$user,$server_ip,$session_name,$one_mysql_log);}
-			$terrs_to_parse = mysql_num_rows($rslt);
-			if ($terrs_to_parse > 0) 
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00404',$user,$server_ip,$session_name,$one_mysql_log);}
+			$Uterrs_to_parse = mysql_num_rows($rslt);
+			if ($Uterrs_to_parse > 0) 
 				{
 				$rowx=mysql_fetch_row($rslt);
-				$agent_territories = $rowx[0];
-				$agent_territories = preg_replace("/ -$|^ /",'',$agent_territories);
-				$agent_territories = preg_replace("/ /","','",$agent_territories);
-				$searchownerSQL=" and owner IN('$agent_territories')";
+				$agent_choose_territories = $rowx[0];
+				}
+
+			if ($agent_choose_territories < 1)
+				{
+				$stmt="SELECT territory from vicidial_user_territories where user='$user';";
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00405',$user,$server_ip,$session_name,$one_mysql_log);}
+				$vuts_to_parse = mysql_num_rows($rslt);
+				$o=0;
+				while ($vuts_to_parse > $o) 
+					{
+					$rowx=mysql_fetch_row($rslt);
+					$agent_territories .= "'$rowx[0]',";
+					$o++;
+					}
+				$agent_territories = preg_replace("/\,$/",'',$agent_territories);
+				$searchownerSQL=" and owner IN($agent_territories)";
+				if ($vuts_to_parse < 1)
+					{$searchownerSQL=" and lead_id < 0";}
+				}
+			else
+				{
+				$stmt="SELECT agent_territories from vicidial_live_agents where user='$user';";
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00387',$user,$server_ip,$session_name,$one_mysql_log);}
+				$terrs_to_parse = mysql_num_rows($rslt);
+				if ($terrs_to_parse > 0) 
+					{
+					$rowx=mysql_fetch_row($rslt);
+					$agent_territories = $rowx[0];
+					$agent_territories = preg_replace("/ -$|^ /",'',$agent_territories);
+					$agent_territories = preg_replace("/ /","','",$agent_territories);
+					$searchownerSQL=" and owner IN('$agent_territories')";
+					}
 				}
 			}
 
