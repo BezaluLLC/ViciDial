@@ -1,7 +1,7 @@
 <?php 
 # AST_timeonVDADall.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -72,10 +72,11 @@
 # 101109-1448 - Added Auto Hopper Level display (MikeC)
 # 101216-1358 - Added functions to work with new realtime_report.php script
 # 110218-1037 - Fixed query that was causing load spikes on systems with millions of log entries
+# 110303-2125 - Added agent on-hook phone indication and RING status and color
 #
 
-$version = '2.4-63';
-$build = '110218-1037';
+$version = '2.4-64';
+$build = '110303-2125';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -824,6 +825,7 @@ else
 		.khaki {color: black; background-color: #F0E68C}
 		.orange {color: black; background-color: orange}
 		.black {color: white; background-color: black}
+		.salmon {color: white; background-color: #FA8072}
 
 		.r1 {color: black; background-color: #FFCCCC}
 		.r2 {color: black; background-color: #FF9999}
@@ -2167,7 +2169,8 @@ else {$UgroupSQL = " and vicidial_live_agents.campaign_id IN($group_SQL)";}
 if (strlen($usergroup)<1) {$usergroupSQL = '';}
 else {$usergroupSQL = " and user_group='" . mysql_real_escape_string($usergroup) . "'";}
 
-$stmt="select extension,vicidial_live_agents.user,conf_exten,vicidial_live_agents.status,vicidial_live_agents.server_ip,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish),call_server_ip,vicidial_live_agents.campaign_id,vicidial_users.user_group,vicidial_users.full_name,vicidial_live_agents.comments,vicidial_live_agents.calls_today,vicidial_live_agents.callerid,lead_id,UNIX_TIMESTAMP(last_state_change) from vicidial_live_agents,vicidial_users where vicidial_live_agents.user=vicidial_users.user $UgroupSQL $usergroupSQL order by $orderSQL;";
+$ring_agents=0;
+$stmt="select extension,vicidial_live_agents.user,conf_exten,vicidial_live_agents.status,vicidial_live_agents.server_ip,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish),call_server_ip,vicidial_live_agents.campaign_id,vicidial_users.user_group,vicidial_users.full_name,vicidial_live_agents.comments,vicidial_live_agents.calls_today,vicidial_live_agents.callerid,lead_id,UNIX_TIMESTAMP(last_state_change),on_hook_agent,ring_callerid from vicidial_live_agents,vicidial_users where vicidial_live_agents.user=vicidial_users.user $UgroupSQL $usergroupSQL order by $orderSQL;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $talking_to_print = mysql_num_rows($rslt);
@@ -2194,6 +2197,18 @@ $talking_to_print = mysql_num_rows($rslt);
 		$Acallerid[$i] =		$row[13];
 		$Alead_id[$i] =			$row[14];
 		$Astate_change[$i] =	$row[15];
+		$Aon_hook_agent[$i] =	$row[16];
+		$Aring_callerid[$i] =	$row[17];
+		$Aring_note[$i] =		' ';
+
+		if ($Aon_hook_agent[$i] == 'Y')
+			{
+			$Aring_note[$i] = '*';
+			$ring_agents++;
+			if (strlen($Aring_callerid[$i]) > 18)
+				{$Astatus[$i]="RING";}
+			}
+
 
 		### 3-WAY Check ###
 		if ($Alead_id[$i]!=0) 
@@ -2212,26 +2227,26 @@ $talking_to_print = mysql_num_rows($rslt);
 		$i++;
 		}
 
-$callerids='';
-$pausecode='';
-$stmt="select callerid,lead_id,phone_number from vicidial_auto_calls;";
-$rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
-$calls_to_list = mysql_num_rows($rslt);
+	$callerids='';
+	$pausecode='';
+	$stmt="select callerid,lead_id,phone_number from vicidial_auto_calls;";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$calls_to_list = mysql_num_rows($rslt);
 	if ($calls_to_list > 0)
-	{
-	$i=0;
-	while ($i < $calls_to_list)
 		{
-		$row=mysql_fetch_row($rslt);
-		$callerids .=	"$row[0]|";
-		$VAClead_ids[$i] =	$row[1];
-		$VACphones[$i] =	$row[2];
-		$i++;
+		$i=0;
+		while ($i < $calls_to_list)
+			{
+			$row=mysql_fetch_row($rslt);
+			$callerids .=	"$row[0]|";
+			$VAClead_ids[$i] =	$row[1];
+			$VACphones[$i] =	$row[2];
+			$i++;
+			}
 		}
-	}
 
-### Lookup phone logins
+	### Lookup phone logins
 	$i=0;
 	while ($i < $talking_to_print)
 		{
@@ -2509,6 +2524,13 @@ $calls_to_list = mysql_num_rows($rslt);
 			if ($call_time_S >= 300) {$G='<SPAN class="midnightblue"><B>'; $EG='</B></SPAN>';}
 			}
 
+		if ($Astatus[$i] == 'RING')
+			{
+			$agent_total++;
+			$G=''; $EG='';
+			if ($call_time_S >= 0) {$G='<SPAN class="salmon"><B>'; $EG='</B></SPAN>';}
+			}
+
 		$L='';
 		$R='';
 		if ($SIPmonitorLINK>0) {$L=" <a href=\"sip:0$Lsessionid@$server_ip\">LISTEN</a>";   $R='';}
@@ -2556,11 +2578,11 @@ $calls_to_list = mysql_num_rows($rslt);
 
 		if ($realtime_block_user_info > 0)
 			{
-			$Aecho .= "|$UGD $G$sessionid$EG$L$R | $G$status$EG $CM $pausecode|$CP$SVD$G$call_time_MS$EG | $G$campaign_id$EG | $G$calls_today$EG |$INGRP\n";
+			$Aecho .= "|$UGD $G$sessionid$EG$L$R$Aring_note[$i]| $G$status$EG $CM $pausecode|$CP$SVD$G$call_time_MS$EG | $G$campaign_id$EG | $G$calls_today$EG |$INGRP\n";
 			}
 		if ($realtime_block_user_info < 1)
 			{
-			$Aecho .= "| $G$extension$EG |$phoneD<a href=\"./user_status.php?user=$Luser\" target=\"_blank\">$G$user$EG</a> <a href=\"javascript:ingroup_info('$Luser','$j');\">+</a> |$UGD $G$sessionid$EG$L$R | $G$status$EG $CM $pausecode|$CP$SVD$G$call_time_MS$EG | $G$campaign_id$EG | $G$calls_today$EG |$INGRP\n";
+			$Aecho .= "| $G$extension$EG$Aring_note[$i]|$phoneD<a href=\"./user_status.php?user=$Luser\" target=\"_blank\">$G$user$EG</a> <a href=\"javascript:ingroup_info('$Luser','$j');\">+</a> |$UGD $G$sessionid$EG$L$R | $G$status$EG $CM $pausecode|$CP$SVD$G$call_time_MS$EG | $G$campaign_id$EG | $G$calls_today$EG |$INGRP\n";
 			}
 		$j++;
 		}
@@ -2581,6 +2603,12 @@ $calls_to_list = mysql_num_rows($rslt);
 		$Aecho .= "  <SPAN class=\"olive\"><B>          </SPAN> - Agent Paused > 5 minutes</B>\n";
 		$Aecho .= "  <SPAN class=\"lime\"><B>          </SPAN> - Agent in 3-WAY > 10 seconds</B>\n";
 		$Aecho .= "  <SPAN class=\"black\"><B>          </SPAN> - Agent on a dead call</B>\n";
+
+		if ($ring_agents > 0)
+			{
+			$Aecho .= "  <SPAN class=\"salmon\"><B>          </SPAN> - Agent phone ringing</B>\n";
+			$Aecho .= "  <SPAN><B>* Denotes on-hook agent</B></SPAN>\n";
+			}
 
 		if ($agent_ready > 0) {$B='<FONT class="b1">'; $BG='</FONT>';}
 		if ($agent_ready > 4) {$B='<FONT class="b2">'; $BG='</FONT>';}

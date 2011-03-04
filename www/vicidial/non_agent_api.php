@@ -41,10 +41,11 @@
 # 101117-1104 - Added callback and custom field entry delete to delete_lead option
 # 101206-2126 - Added recording_lookup and did_log_export functions
 # 110127-2245 - Added add_user and add_phone functions
+# 110303-2122 - Added information on agent-on-hook phone to real-time report popup
 #
 
-$version = '2.4-27';
-$build = '110127-2245';
+$version = '2.4-28';
+$build = '110303-2122';
 
 require("dbconnect.php");
 
@@ -884,7 +885,7 @@ if ($function == 'agent_ingroup_info')
 				}
 			else
 				{
-				$stmt="SELECT campaign_id,closer_campaigns,outbound_autodial,manager_ingroup_set,external_igb_set_user from vicidial_live_agents where user='$agent_user';";
+				$stmt="SELECT campaign_id,closer_campaigns,outbound_autodial,manager_ingroup_set,external_igb_set_user,on_hook_agent,on_hook_ring_time from vicidial_live_agents where user='$agent_user';";
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
 				$campaign_id =				$row[0];
@@ -892,6 +893,8 @@ if ($function == 'agent_ingroup_info')
 				$blended =					$row[2];
 				$manager_ingroup_set =		$row[3];
 				$external_igb_set_user =	$row[4];
+				$on_hook_agent =			$row[5];
+				$on_hook_ring_time =		$row[6];
 
 				$stmt="SELECT full_name from vicidial_users where user='$agent_user';";
 				$rslt=mysql_query($stmt, $link);
@@ -974,6 +977,10 @@ if ($function == 'agent_ingroup_info')
 					if ( ($allowed_user_change_ingroups > 0) and ($stage == 'change') )
 						{
 						$output .= "<TABLE CELLPADDING=0 CELLSPACING=3 BORDER=0>\n";
+						if ($on_hook_agent == 'Y')
+							{
+							$output .= "<TR><TD ALIGN=CENTER VALIGN=TOP COLSPAN=2><B>This is a Phone On-Hook Agent</B> &nbsp; Maximum Ring Time:  $on_hook_ring_time</TD></TR>\n";
+							}
 						$output .= "<TR><TD ALIGN=RIGHT VALIGN=TOP>Selected In-Groups: </TD><TD ALIGN=LEFT>\n";
 						$output .= "<INPUT TYPE=HIDDEN NAME=agent_user ID=agent_user value=\"$agent_user\">\n";
 						$output .= "<SELECT SIZE=10 NAME=ingroup_new_selections ID=ingroup_new_selections multiple>\n";

@@ -2035,6 +2035,10 @@ if ($function == 'ra_call_control')
 					$stmt = "DELETE from vicidial_auto_calls where callerid='$value';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					$rslt=mysql_query($stmt, $link);
+
+					$stmt = "UPDATE vicidial_live_agents set ring_callerid='' where ring_callerid='$value';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_query($stmt, $link);
 					}
 				}
 			else

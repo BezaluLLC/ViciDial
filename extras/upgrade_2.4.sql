@@ -696,3 +696,18 @@ ALTER TABLE servers ADD active_twin_server_ip VARCHAR(15) default '';
 
 UPDATE system_settings SET db_schema_version='1263',db_schema_update_date=NOW();
 
+ALTER TABLE vicidial_inbound_groups ADD on_hook_ring_time SMALLINT(5) default '15';
+ALTER TABLE vicidial_inbound_groups MODIFY next_agent_call ENUM('random','oldest_call_start','oldest_call_finish','overall_user_level','inbound_group_rank','campaign_rank','fewest_calls','fewest_calls_campaign','longest_wait_time','ring_all') default 'longest_wait_time';
+
+ALTER TABLE vicidial_live_agents ADD on_hook_agent ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_live_agents ADD on_hook_ring_time SMALLINT(5) default '15';
+ALTER TABLE vicidial_live_agents ADD ring_callerid VARCHAR(20) default '';
+
+ALTER TABLE phones ADD on_hook_agent ENUM('Y','N') default 'N';
+
+ALTER TABLE vicidial_remote_agents ADD on_hook_agent ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_remote_agents ADD on_hook_ring_time SMALLINT(5) default '15';
+
+ALTER TABLE vicidial_auto_calls ADD agent_grab_extension VARCHAR(100) default '';
+
+UPDATE system_settings SET db_schema_version='1264',db_schema_update_date=NOW();

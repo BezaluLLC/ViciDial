@@ -585,6 +585,17 @@ Callback Entry Time||
 Callback Trigger Time||
 Callback Comments||
 To see information on one of the callbacks below, click on the INFO link. To call the customer back now, click on the DIAL link. If you click on a record below to dial it, it will be removed from the list||
+rings all available agents until one picks up the phone||
+NOTES: For ring_all, the agents that are using phones that have On Hook Agent enabled will have their phones ring and the first one to answer will receive the call and the information on the agent screen. Since ring_all ignores agent wait time and ranking and will call every agent that is available for the queue, we do not recommend using this method for large queues. When using ring_all, agents logged with phones that have the On Hook Agent disabled will have to use the Calls In Queue panel and click on the TAKE CALL link to take calls in queue. The amount of time the agents phone will ring for ring_all is set to the On-Hook Ring Time setting or the shortest ring time of the phones that will be called. We do not recommend using ring_all on high call volume queues, or queues with many agents. The ring_all method is intended to be used with only a few agents and on low call volume in-groups||
+This option is only used for agents that are logged in with phones that have the agent-on-hook feature enabled. This is the number of seconds that each call attempt to the agent will ring for until the system will wait one second and start ringing the available agent phones again. This field can be overridden if the agent phones are set to a lower ring time which may be necessary to prevent calls from being sent one phones voicemail. Default is 15||
+On-Hook Agent||
+On-Hook Ring Time||
+This option is only used for inbound calls going to this remote agent. This feature will call the remote agent and will not send the customer to the remote agent until the line is answered. Default is N for disabled||
+This option is only used when the On-Hook Agent field above is set to Y and then only for inbound calls coming to this remote agent. This is the number of seconds that each call attempt will ring to try to get an answer. It is recommended that you set this to a few seconds less than it takes for a call to be sent to voicemail. Default is 15||
+On-Hook Agent Login||
+This option is only used for inbound calls going to an agent logged in with this phone. This feature will call the agent and will not send the customer to the agents session until the line is answered. Default is N for disabled||
+This is a Phone On-Hook Agent||
+Maximum Ring Time||
 
 
 ############################################################  MANAGER Manual

@@ -276,12 +276,13 @@
 # 110222-2228 - Added owner restriction to agent lead search
 # 110224-1712 - Added compatibility with QM phone environment logging and QM pause code last call logging
 # 110225-1237 - Added scheduled callback lead info display to the lead info view function
+# 110303-1616 - Added vicidial_log_extended logging for manual dial calls
 #
 
-$version = '2.4-181';
-$build = '110225-1237';
+$version = '2.4-182';
+$build = '110303-1616';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=398;
+$mysql_log_count=403;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -3054,6 +3055,11 @@ if ($ACTION == 'manDiaLlookCaLL')
 							if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_query($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00293',$user,$server_ip,$session_name,$one_mysql_log);}
+
+						$stmt="UPDATE vicidial_live_agents set ring_callerid='' where ring_callerid='$MDnextCID';";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00399',$user,$server_ip,$session_name,$one_mysql_log);}
 						}
 					}
 				}
@@ -3139,6 +3145,13 @@ if ($stage == "start")
 			$row=mysql_fetch_row($rslt);
 			$user_group =		trim("$row[0]");
 			}
+
+		##### insert log into vicidial_log_extended for manual VICIDiaL call
+		$stmt="INSERT IGNORE INTO vicidial_log_extended SET uniqueid='$uniqueid',server_ip='$server_ip',call_date='$NOW_TIME',lead_id='$lead_id',caller_code='$MDnextCID',custom_call_id='' ON DUPLICATE KEY UPDATE server_ip='$server_ip',call_date='$NOW_TIME',lead_id='$lead_id',caller_code='$MDnextCID';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00400',$user,$server_ip,$session_name,$one_mysql_log);}
+		$affected_rowsX = mysql_affected_rows($link);
 
 		$manualVLexists=0;
 		$beginUNIQUEID = preg_replace("/\..*/","",$uniqueid);
@@ -3876,6 +3889,13 @@ if ($stage == "end")
 					$SQLterm = "term_reason='AGENT',";
 					}
 				}
+
+			##### insert log into vicidial_log_extended for manual VICIDiaL call
+			$stmt="INSERT IGNORE INTO vicidial_log_extended SET uniqueid='$uniqueid',server_ip='$server_ip',call_date='$NOW_TIME',lead_id='$lead_id',caller_code='$MDnextCID',custom_call_id='' ON DUPLICATE KEY UPDATE server_ip='$server_ip',call_date='$NOW_TIME',lead_id='$lead_id',caller_code='$MDnextCID';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00401',$user,$server_ip,$session_name,$one_mysql_log);}
+			$affected_rowsX = mysql_affected_rows($link);
 
 			### check to see if the vicidial_log record exists, if not, insert it
 			$manualVLexists=0;
@@ -5908,6 +5928,13 @@ if ($ACTION == 'updateDISPO')
 					$rslt=mysql_query($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00215',$user,$server_ip,$session_name,$one_mysql_log);}
 
+					##### insert log into vicidial_log_extended for manual VICIDiaL call
+					$stmt="INSERT IGNORE INTO vicidial_log_extended SET uniqueid='$FAKEcall_id',server_ip='$server_ip',call_date='$NOW_TIME',lead_id='$lead_id',caller_code='$MDnextCID',custom_call_id='' ON DUPLICATE KEY UPDATE server_ip='$server_ip',call_date='$NOW_TIME',lead_id='$lead_id',caller_code='$MDnextCID';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00402',$user,$server_ip,$session_name,$one_mysql_log);}
+					$affected_rowsX = mysql_affected_rows($link);
+
 					$MAN_vl_insert++;
 					}
 
@@ -5915,6 +5942,11 @@ if ($ACTION == 'updateDISPO')
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_query($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00219',$user,$server_ip,$session_name,$one_mysql_log);}
+
+				$stmt="UPDATE vicidial_live_agents set ring_callerid='' where ring_callerid='$MDnextCID';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00403',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 			else
 				{
@@ -7193,7 +7225,9 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 			$vla_lead_wipeSQL='';
 			if ($ACTION == 'VDADready')
 				{$vla_lead_wipeSQL = ",lead_id=0";}
-			$stmt="UPDATE vicidial_live_agents set status='$stage' $vla_lead_wipeSQL where user='$user' and server_ip='$server_ip';";
+			if ($ACTION == 'VDADpause')
+				{$vla_ring_resetSQL = ",ring_callerid=''";}
+			$stmt="UPDATE vicidial_live_agents set status='$stage' $vla_lead_wipeSQL $vla_ring_resetSQL where user='$user' and server_ip='$server_ip';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00166',$user,$server_ip,$session_name,$one_mysql_log);}

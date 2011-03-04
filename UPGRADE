@@ -479,6 +479,26 @@ OTHER CHANGES:
 	callback and lead information, including call history and call notes,
 	without having to dial the lead.
 
+114. Added on-hook agent phone feature. This feature allows inbound calls from
+	customers to ring on an on-hook agent phone, but not be transferred to 
+	that agent until the agent's phone is answered. If the call times out 
+	then the call will go on to the next agent. This is defined in the 
+	Phones record and allows the agent using the vicidial.php agent screen 
+	to not have to stay on the phone at all times when they are logged in. 
+	You will need to add the following lines to the default context in your 
+	extensions.conf file:
+		; these are used for the ring_all function in VICIDIAL
+		exten => _8331*.,1,Playback(sip-silence)
+		exten => _8331*.,n,AGI(agi-VDAD_RINGALL.agi,${EXTEN})
+		exten => _8331*.,n,AGI(agi-VDAD_RINGALL.agi,${EXTEN})
+		exten => _8331*.,n,Hangup
+
+115. Added ring_all Next Agent Call option for in-groups. This works with on-
+	hook agent phones to allow all available agents to have their phones
+	ring at the same time, with the first agent to pick up their phone 
+	receiving the call. It is not recommended to use this on high-volume 
+	systems or systems with many agents available.
+
 
 
 

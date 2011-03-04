@@ -329,7 +329,7 @@ exten => _86000[5-9]X,1,Meetme,${EXTEN}|F
 exten => _86000[5-9]X,n,Hangup
 exten => _8600[1-2]XX,1,Meetme,${EXTEN}|F
 exten => _8600[1-2]XX,n,Hangup
-; quiet entry and leaving conferences for VICIDIAL (inbound announce and SendDTMF)
+; quiet entry and leaving conferences for VICIDIAL (inbound announce, SendDTMF and ring-agent)
 exten => _78600XXX,1,Meetme,${EXTEN:1}|Fq
 exten => _78600XXX,n,Hangup
 ; quiet monitor-only extensions for meetme rooms (for room managers)
@@ -381,6 +381,13 @@ exten => 8320,1,AGI(VD_amd.agi,${EXTEN}-----YES)
 exten => 8320,2,Hangup
 exten => _8320*.,1,AGI(VD_amd.agi,${EXTEN}-----YES)
 exten => _8320*.,2,Hangup
+
+; these are used for the ring_all function in VICIDIAL
+exten => _8331*.,1,Playback(sip-silence)
+exten => _8331*.,n,AGI(agi-VDAD_RINGALL.agi,${EXTEN})
+exten => _8331*.,n,AGI(agi-VDAD_RINGALL.agi,${EXTEN})
+exten => _8331*.,n,Hangup
+
 
 ; use for selective CallerID hangup by area code(hard-coded)
 exten => 8352,1,AGI(agi-VDADselective_CID_hangup.agi,${EXTEN})

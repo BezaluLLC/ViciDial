@@ -59,6 +59,7 @@
 # 101111-1556 - Added source to vicidial_hopper inserts
 # 101123-0443 - Fixed minor parked call manual dial bug
 # 110224-1854 - Added compatibility with QM phone environment logging
+# 110304-0005 - Small changes for CPD and on-hook agent features
 #
 
 # defaults for PreFork
@@ -771,40 +772,46 @@ sub process_request
 				if ($channel =~ /^Local/)
 					{
 					$CPDfound=0;
-					##############################################################
-					### BEGIN - CPD Look for result for B/DC calls
-					##############################################################
-					$stmtA = "SELECT result FROM vicidial_cpd_log where callerid='$callerid' and result NOT IN('Voice','Unknown','???','') order by cpd_id desc limit 1;";
-						if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-					$sthArows=$sthA->rows;
-					if ($sthArows > 0)
-						{
-						@aryA = $sthA->fetchrow_array;
-						$cpd_result		= $aryA[0];
-						$sthA->finish();
-						if ($cpd_result =~ /Busy/i)					{$VDL_status='CPDB';	$VDAC_status='BUSY';   $CPDfound++;}
-						if ($cpd_result =~ /Unknown/i)				{$VDL_status='CPDUK';	$VDAC_status='NA';   $CPDfound++;}
-						if ($cpd_result =~ /All-Trunks-Busy/i)		{$VDL_status='CPDATB';	$VDAC_status='CONGESTION';   $CPDfound++;}
-						if ($cpd_result =~ /No-Answer/i)			{$VDL_status='CPDNA';	$VDAC_status='NA';   $CPDfound++;}
-						if ($cpd_result =~ /Reject/i)				{$VDL_status='CPDREJ';	$VDAC_status='DISCONNECT';   $CPDfound++;}
-						if ($cpd_result =~ /Invalid-Number/i)		{$VDL_status='CPDINV';	$VDAC_status='DISCONNECT';   $CPDfound++;}
-						if ($cpd_result =~ /Service-Unavailable/i)	{$VDL_status='CPDSUA';	$VDAC_status='CONGESTION';   $CPDfound++;}
-						if ($cpd_result =~ /Sit-Intercept/i)		{$VDL_status='CPDSI';	$VDAC_status='DISCONNECT';   $CPDfound++;}
-						if ($cpd_result =~ /Sit-No-Circuit/i)		{$VDL_status='CPDSNC';	$VDAC_status='CONGESTION';   $CPDfound++;}
-						if ($cpd_result =~ /Sit-Reorder/i)			{$VDL_status='CPDSR';	$VDAC_status='CONGESTION';   $CPDfound++;}
-						if ($cpd_result =~ /Sit-Unknown/i)			{$VDL_status='CPDSUK';	$VDAC_status='CONGESTION';   $CPDfound++;}
-						if ($cpd_result =~ /Sit-Vacant/i)			{$VDL_status='CPDSV';	$VDAC_status='CONGESTION';   $CPDfound++;}
-						if ($cpd_result =~ /\?\?\?/i)				{$VDL_status='CPDERR';	$VDAC_status='NA';   $CPDfound++;}
-						if ($cpd_result =~ /Fax|Modem/i)			{$VDL_status='AFAX';	$VDAC_status='FAX';   $CPDfound++;}
-						if ($cpd_result =~ /Answering-Machine/i)	{$VDL_status='AA';		$VDAC_status='AMD';   $CPDfound++;}
-						}
-					$sthA->finish();
-					##############################################################
-					### END - CPD Look for result for B/DC calls
-					##############################################################
 
+					# V2251502010052435563
+					if ($callerid =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
+						{
+						##############################################################
+						### BEGIN - CPD Look for result for B/DC calls
+						##############################################################
+						sleep(1);
+
+						$stmtA = "SELECT result FROM vicidial_cpd_log where callerid='$callerid' and result NOT IN('Voice','Unknown','???','') order by cpd_id desc limit 1;";
+							if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$cpd_result		= $aryA[0];
+							$sthA->finish();
+							if ($cpd_result =~ /Busy/i)					{$VDL_status='CPDB';	$VDAC_status='BUSY';   $CPDfound++;}
+							if ($cpd_result =~ /Unknown/i)				{$VDL_status='CPDUK';	$VDAC_status='NA';   $CPDfound++;}
+							if ($cpd_result =~ /All-Trunks-Busy/i)		{$VDL_status='CPDATB';	$VDAC_status='CONGESTION';   $CPDfound++;}
+							if ($cpd_result =~ /No-Answer/i)			{$VDL_status='CPDNA';	$VDAC_status='NA';   $CPDfound++;}
+							if ($cpd_result =~ /Reject/i)				{$VDL_status='CPDREJ';	$VDAC_status='DISCONNECT';   $CPDfound++;}
+							if ($cpd_result =~ /Invalid-Number/i)		{$VDL_status='CPDINV';	$VDAC_status='DISCONNECT';   $CPDfound++;}
+							if ($cpd_result =~ /Service-Unavailable/i)	{$VDL_status='CPDSUA';	$VDAC_status='CONGESTION';   $CPDfound++;}
+							if ($cpd_result =~ /Sit-Intercept/i)		{$VDL_status='CPDSI';	$VDAC_status='DISCONNECT';   $CPDfound++;}
+							if ($cpd_result =~ /Sit-No-Circuit/i)		{$VDL_status='CPDSNC';	$VDAC_status='CONGESTION';   $CPDfound++;}
+							if ($cpd_result =~ /Sit-Reorder/i)			{$VDL_status='CPDSR';	$VDAC_status='CONGESTION';   $CPDfound++;}
+							if ($cpd_result =~ /Sit-Unknown/i)			{$VDL_status='CPDSUK';	$VDAC_status='CONGESTION';   $CPDfound++;}
+							if ($cpd_result =~ /Sit-Vacant/i)			{$VDL_status='CPDSV';	$VDAC_status='CONGESTION';   $CPDfound++;}
+							if ($cpd_result =~ /\?\?\?/i)				{$VDL_status='CPDERR';	$VDAC_status='NA';   $CPDfound++;}
+							if ($cpd_result =~ /Fax|Modem/i)			{$VDL_status='AFAX';	$VDAC_status='FAX';   $CPDfound++;}
+							if ($cpd_result =~ /Answering-Machine/i)	{$VDL_status='AA';		$VDAC_status='AMD';   $CPDfound++;}
+							}
+						$sthA->finish();
+						##############################################################
+						### END - CPD Look for result for B/DC calls
+						##############################################################
+						}
 					if ( ($PRI =~ /^PRI$/) && ($callerid =~ /\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/) && ( ( ($dialstatus =~ /BUSY/) || ( ($dialstatus =~ /CHANUNAVAIL/) && ($hangup_cause =~ /^1$|^28$/) ) ) || ($CPDfound > 0) ))
 						{
 						if ($CPDfound < 1) 
@@ -829,12 +836,10 @@ sub process_request
 							if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 						$VDLaffected_rows = $dbhA->do($stmtA);
 						if ($AGILOG) {$agi_string = "--    VDAD vicidial_log update: |$VDLaffected_rows|$uniqueid|$VDACuniqueid|";   &agi_output;}
-
-						sleep(1);
 						}
 					else
 						{
-						if ($AGILOG) {$agi_string = "--    VD_hangup Local DEBUG: |$PRI|$callerid|$dialstatus|$hangup_cause|";   &agi_output;}
+						if ($AGILOG) {$agi_string = "--    VD_hangup Local DEBUG: |$PRI|$callerid|$dialstatus|$hangup_cause|$CPDfound|$VDL_status|";   &agi_output;}
 						}
 
 					if ($AGILOG) {$agi_string = "+++++ VDAD START LOCAL CHANNEL: EXITING- $priority";   &agi_output;}
@@ -914,6 +919,9 @@ sub process_request
 							$stmtA = "DELETE FROM vicidial_auto_calls where ( ( (status!='IVR') and (uniqueid='$uniqueid' or callerid = '$callerid') ) or ( (status='IVR') and (uniqueid='$uniqueid') ) ) order by call_time desc limit 1;";
 							$VACaffected_rows = $dbhA->do($stmtA);
 							if ($AGILOG) {$agi_string = "--    VDAC record deleted: |$VACaffected_rows|   |$VD_lead_id|$uniqueid|$VD_uniqueid|$VD_callerid|$VARserver_ip|$VD_status|";   &agi_output;}
+
+							$stmtA = "UPDATE vicidial_live_agents SET ring_callerid='' where ring_callerid='$callerid';";
+							$VLACaffected_rows = $dbhA->do($stmtA);
 
 							#############################################
 							##### START QUEUEMETRICS LOGGING LOOKUP #####

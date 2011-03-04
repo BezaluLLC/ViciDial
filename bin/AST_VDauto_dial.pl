@@ -98,6 +98,7 @@
 # 110124-1134 - Small query fix for large queue_log tables
 # 110224-1408 - Fixed trunk reservation bug
 # 110224-1859 - Added compatibility with QM phone environment logging
+# 110303-1710 - Added clearing of ring_callerid when vicidial_auto_calls deleted
 #
 
 
@@ -1215,7 +1216,7 @@ while($one_day_interval > 0)
 
 				$CLlead_id=''; $auto_call_id=''; $CLstatus=''; $CLcampaign_id=''; $CLphone_number=''; $CLphone_code='';
 
-				$stmtA = "SELECT auto_call_id,lead_id,phone_number,status,campaign_id,phone_code,alt_dial,stage,call_type,UNIX_TIMESTAMP(last_update_time) FROM vicidial_auto_calls where callerid='$KLcallerid[$kill_vac]'";
+				$stmtA = "SELECT auto_call_id,lead_id,phone_number,status,campaign_id,phone_code,alt_dial,stage,call_type,UNIX_TIMESTAMP(last_update_time) FROM vicidial_auto_calls where callerid='$KLcallerid[$kill_vac]';";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -1291,7 +1292,10 @@ while($one_day_interval > 0)
 							$stmtA = "DELETE from vicidial_auto_calls where auto_call_id='$auto_call_id'";
 							$affected_rows = $dbhA->do($stmtA);
 
-							$event_string = "|     dead call vac deleted|$auto_call_id|$CLlead_id|$KLcallerid[$kill_vac]|$end_epoch|$affected_rows|$KLchannel[$kill_vac]|$CLcall_type|$CLdial_timeout|$CLdrop_call_seconds|$call_timeout|$dialtime_log|$dialtime_catch|";
+							$stmtA = "UPDATE vicidial_live_agents set ring_callerid='' where ring_callerid='$KLcallerid[$kill_vac]';";
+							$affected_rowsX = $dbhA->do($stmtA);
+
+							$event_string = "|     dead call vac deleted|$auto_call_id|$CLlead_id|$KLcallerid[$kill_vac]|$end_epoch|$affected_rows|$KLchannel[$kill_vac]|$CLcall_type|$CLdial_timeout|$CLdrop_call_seconds|$call_timeout|$dialtime_log|$dialtime_catch|$affected_rowsX|";
 							 &event_logger;
 
 							$CLstage =~ s/LIVE|-//gi;
@@ -1817,7 +1821,10 @@ while($one_day_interval > 0)
 								$stmtA = "DELETE from vicidial_auto_calls where auto_call_id='$auto_call_id'";
 								$affected_rows = $dbhA->do($stmtA);
 
-								$event_string = "|   M dead call vac deleted|$auto_call_id|$CLlead_id|$KLcallerid[$kill_vac]|$end_epoch|$affected_rows|$KLchannel[$kill_vac]|$CLcall_type|$CLlast_update_time < $XDtarget|";
+								$stmtA = "UPDATE vicidial_live_agents set ring_callerid='' where ring_callerid='$KLcallerid[$kill_vac]';";
+								$affected_rowsX = $dbhA->do($stmtA);
+
+								$event_string = "|   M dead call vac deleted|$auto_call_id|$CLlead_id|$KLcallerid[$kill_vac]|$end_epoch|$affected_rows|$KLchannel[$kill_vac]|$CLcall_type|$CLlast_update_time < $XDtarget|$affected_rowsX|";
 								 &event_logger;
 
 								}
@@ -2116,10 +2123,13 @@ while($one_day_interval > 0)
 		$rec_count=0;
 		while ($sthArows > $rec_count)
 			{
-			$stmtA = "DELETE from vicidial_auto_calls where auto_call_id='$auto_call_id'";
+			$stmtA = "DELETE from vicidial_auto_calls where auto_call_id='$auto_call_id';";
 			$affected_rows = $dbhA->do($stmtA);
 
-			$event_string = "|     lagged call vdac call DELETED $affected_rows|$BDtsSQLdate|$auto_call_id|$CLcallerid|$CLuniqueid|$CLphone_number|$CLstatus|";
+			$stmtA = "UPDATE vicidial_live_agents set ring_callerid='' where ring_callerid='$CLcallerid';";
+			$affected_rowsX = $dbhA->do($stmtA);
+
+			$event_string = "|     lagged call vdac call DELETED $affected_rows|$affected_rowsX|$BDtsSQLdate|$auto_call_id|$CLcallerid|$CLuniqueid|$CLphone_number|$CLstatus|";
 			 &event_logger;
 
 			if ( ($affected_rows > 0) && ($CLlead_id > 0) )

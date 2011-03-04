@@ -39,6 +39,7 @@
 # 110103-1230 - Added queuemetrics_loginout NONE option
 # 110124-1134 - Small query fix for large queue_log tables
 # 110224-1903 - Added compatibility with QM phone environment logging
+# 110304-0007 - Added agent on-hook compatibility
 #
 
 ### begin parsing run-time options ###
@@ -410,6 +411,8 @@ while($one_day_interval > 0)
 		@DBremote_conf_exten=@MT;
 		@DBremote_closer=@MT;
 		@DBremote_random=@MT;
+		@DBon_hook_agent=@MT;
+		@DBon_hook_ring_time=@MT;
 		@loginexistsRANDOM=@MT;
 		@loginexistsALL=@MT;
 		@VD_user=@MT;
@@ -424,7 +427,7 @@ while($one_day_interval > 0)
 		###############################################################################
 		###### first, grab all of the ACTIVE remote agents information from the database
 		###############################################################################
-		$stmtA = "SELECT remote_agent_id,user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns FROM vicidial_remote_agents where status IN('ACTIVE') and server_ip='$server_ip' order by user_start;";
+		$stmtA = "SELECT remote_agent_id,user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns,on_hook_agent,on_hook_ring_time FROM vicidial_remote_agents where status IN('ACTIVE') and server_ip='$server_ip' order by user_start;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -438,6 +441,8 @@ while($one_day_interval > 0)
 			$conf_exten =				$aryA[4];
 			$campaign_id =				$aryA[6];
 			$closer_campaigns =			$aryA[7];
+			$on_hook_agent =			$aryA[8];
+			$on_hook_ring_time =		$aryA[9];
 
 			$y=0;
 			while ($y < $number_of_lines)
@@ -456,6 +461,8 @@ while($one_day_interval > 0)
 					}
 				$DBremote_closer[$user_counter] =		$closer_campaigns;
 				$DBremote_random[$user_counter] =		$random;
+				$DBon_hook_agent[$user_counter] =		$on_hook_agent;
+				$DBon_hook_ring_time[$user_counter] =	$on_hook_ring_time;
 				
 				$y++;
 				$user_counter++;
@@ -520,9 +527,12 @@ while($one_day_interval > 0)
 						{$CAMPAIGN_autodial[$h] = 'N';}
 					}
 				$sthA->finish();
-				
+
+				$DBon_hook_agent[$user_counter] =		$on_hook_agent;
+				$DBon_hook_ring_time[$user_counter] =	$on_hook_ring_time;
+
 				### check to see if the record exists and only needs random number update
-				$stmtA = "SELECT count(*) FROM vicidial_live_agents where user='$DBremote_user[$h]' and server_ip='$server_ip' and campaign_id='$DBremote_campaign[$h]' and conf_exten='$DBremote_conf_exten[$h]' and closer_campaigns='$DBremote_closer[$h]' and outbound_autodial='$CAMPAIGN_autodial[$h]';";
+				$stmtA = "SELECT count(*) FROM vicidial_live_agents where user='$DBremote_user[$h]' and server_ip='$server_ip' and campaign_id='$DBremote_campaign[$h]' and conf_exten='$DBremote_conf_exten[$h]' and closer_campaigns='$DBremote_closer[$h]' and outbound_autodial='$CAMPAIGN_autodial[$h]' and on_hook_agent='$DBon_hook_agent[$h]' and on_hook_ring_time='$DBon_hook_ring_time[$h]';";
 					if ($DBX) {print STDERR "|$stmtA|\n";}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -557,7 +567,7 @@ while($one_day_interval > 0)
 
 					if ($loginexistsALL[$h] > 0)
 						{
-						$stmtA = "UPDATE vicidial_live_agents set random_id='$DBremote_random[$h]',campaign_id='$DBremote_campaign[$h]',conf_exten='$DBremote_conf_exten[$h]',closer_campaigns='$DBremote_closer[$h]',status='READY',last_state_change='$SQLdate',outbound_autodial='$CAMPAIGN_autodial[$h]' where user='$DBremote_user[$h]' and server_ip='$server_ip';";
+						$stmtA = "UPDATE vicidial_live_agents set random_id='$DBremote_random[$h]',campaign_id='$DBremote_campaign[$h]',conf_exten='$DBremote_conf_exten[$h]',closer_campaigns='$DBremote_closer[$h]',status='READY',last_state_change='$SQLdate',outbound_autodial='$CAMPAIGN_autodial[$h]',on_hook_agent='$DBon_hook_agent[$h]',on_hook_ring_time='$DBon_hook_ring_time[$h]' where user='$DBremote_user[$h]' and server_ip='$server_ip';";
 						$affected_rows = $dbhA->do($stmtA);
 						if ($DBX) {print STDERR "$DBremote_user[$h] ALL UPDATE: $affected_rows\n";}
 			#			if ($affected_rows>0) 
@@ -596,7 +606,7 @@ while($one_day_interval > 0)
 							}
 						$sthA->finish();
 
-						$stmtA = "INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,campaign_id,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,channel,uniqueid,callerid,user_level,comments,last_state_change,outbound_autodial,ra_user) values('$DBremote_user[$h]','$server_ip','$DBremote_conf_exten[$h]','R/$DBremote_user[$h]','READY','$DBremote_campaign[$h]','$DBremote_random[$h]','$SQLdate','$FDtsSQLdate','$SQLdate','$DBremote_closer[$h]','','','','$DBuser_level[$h]','REMOTE','$SQLdate','$CAMPAIGN_autodial[$h]','$DBuser_start[$h]');";
+						$stmtA = "INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,campaign_id,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,channel,uniqueid,callerid,user_level,comments,last_state_change,outbound_autodial,ra_user,on_hook_agent,on_hook_ring_time) values('$DBremote_user[$h]','$server_ip','$DBremote_conf_exten[$h]','R/$DBremote_user[$h]','READY','$DBremote_campaign[$h]','$DBremote_random[$h]','$SQLdate','$FDtsSQLdate','$SQLdate','$DBremote_closer[$h]','','','','$DBuser_level[$h]','REMOTE','$SQLdate','$CAMPAIGN_autodial[$h]','$DBuser_start[$h]','$DBon_hook_agent[$h]','$DBon_hook_ring_time[$h]');";
 						$affected_rows = $dbhA->do($stmtA);
 						if ($DBX) {print STDERR "$DBremote_user[$h] NEW INSERT\n";}
 						if ($TESTrun > 0)

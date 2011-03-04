@@ -338,12 +338,13 @@
 # 110221-1251 - Changed statuses display to keep track of non-selectable statuses
 # 110224-1713 - Added compatibility with QM phone environment logging, QM pause code last call logging and active server twin check
 # 110225-1231 - Changed scheduled callbacks list to allow clicking to see lead info without dialing, and separate dial link
+# 110303-2321 - Added notice of on-hook phone use, and ability to click 'ring' to call into session, minor queue_log fix
 #
 
-$version = '2.4-315c';
-$build = '110225-1231';
+$version = '2.4-316c';
+$build = '110303-2321';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=71;
+$mysql_log_count=72;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -1937,7 +1938,7 @@ else
 			echo "<!-- Phones balance selection: $phone_login|$pb_server_ip|$past_minutes_date|     |$pb_log -->\n";
 			}
 		echo "<title>Agent web client</title>\n";
-		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,is_webphone,use_external_server_ip,codecs_list,webphone_dialpad from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
+		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,is_webphone,use_external_server_ip,codecs_list,webphone_dialpad,phone_ring_timeout,on_hook_agent from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01025',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -2009,9 +2010,11 @@ else
 		$use_external_server_ip=$row[74];
 		$codecs_list=$row[75];
 		$webphone_dialpad=$row[76];
+		$phone_ring_timeout=$row[77];
+		$on_hook_agent=$row[78];
 
 		$no_empty_session_warnings=0;
-		if ($phone_login == 'nophone')
+		if ( ($phone_login == 'nophone') or ($on_hook_agent == 'Y') )
 			{
 			$no_empty_session_warnings=1;
 			}
@@ -2244,8 +2247,11 @@ else
 			$webphone_content='';
 			if ($is_webphone != 'Y')
 				{
+				$TEMP_SIP_user_DiaL = $SIP_user_DiaL;
+				if ($on_hook_agent == 'Y')
+					{$TEMP_SIP_user_DiaL = 'Local/8300@default';}
 				### insert a NEW record to the vicidial_manager table to be processed
-				$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$SIqueryCID','Channel: $SIP_user_DiaL','Context: $ext_context','Exten: $session_id','Priority: 1','Callerid: \"$SIqueryCID\" <$campaign_cid>','','','','','');";
+				$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$SIqueryCID','Channel: $TEMP_SIP_user_DiaL','Context: $ext_context','Exten: $session_id','Priority: 1','Callerid: \"$SIqueryCID\" <$campaign_cid>','','','','','');";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01041',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -2358,9 +2364,8 @@ else
 				{
 				echo "<!-- campaign is set to auto_dial_level: $auto_dial_level -->\n";
 
-
 				$closer_chooser_string='';
-				$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial,manager_ingroup_set) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$closer_chooser_string','$user_level','$campaign_weight','$calls_today','$NOW_TIME','Y','N');";
+				$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial,manager_ingroup_set,on_hook_ring_time,on_hook_agent) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$closer_chooser_string','$user_level','$campaign_weight','$calls_today','$NOW_TIME','Y','N','$phone_ring_timeout','$on_hook_agent');";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01044',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -2420,7 +2425,7 @@ else
 				{
 				print "<!-- campaign is set to manual dial: $auto_dial_level -->\n";
 
-				$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial,manager_ingroup_set) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$user_level', '$campaign_weight', '$calls_today','$NOW_TIME','N','N');";
+				$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial,manager_ingroup_set,on_hook_ring_time,on_hook_agent) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$user_level', '$campaign_weight', '$calls_today','$NOW_TIME','N','N','$phone_ring_timeout','$on_hook_agent');";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01047',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -2455,6 +2460,16 @@ else
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01049',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 					$affected_rows = mysql_affected_rows($linkB);
 					echo "<!-- queue_log PAUSE entry added: $VD_login|$affected_rows -->\n";
+
+					if ($queuemetrics_addmember_enabled > 0)
+						{
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='$VD_campaign',agent='Agent/$VD_login',verb='ADDMEMBER2',data1='$QM_PHONE',serverid='$queuemetrics_log_id',data4='$qm_phone_environment';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $linkB);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01072',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+						$affected_rows = mysql_affected_rows($linkB);
+						echo "<!-- queue_log ADDMEMBER2 entry added: $VD_login|$affected_rows -->\n";
+						}
 
 					mysql_close($linkB);
 					mysql_select_db("$VARDB_database", $link);
@@ -11776,7 +11791,12 @@ $zi=2;
     <input type="hidden" name="FORM_LOADED" id="FORM_LOADED" value="0" />
 	<font class="queue_text">
 	<a href="#" onclick="start_all_refresh();"><font class="queue_text">Logged in as User</font></a>
-	<?php echo ": $VD_login on Phone: $SIP_user to campaign: $VD_campaign&nbsp; \n"; ?>
+	<?php 
+	echo ": $VD_login on Phone: $SIP_user"; 
+	if ($on_hook_agent == 'Y')
+		{echo "(<a href=\"#\" onclick=\"NoneInSessionCalL();return false;\">ring</a>)";}
+	echo "&nbsp; to campaign: $VD_campaign&nbsp; \n"; 
+	?>
 	 &nbsp; &nbsp; <span id="agentchannelSPAN"></span></font>
     </td><td colspan="3" valign="top" align="right"><font class="body_text">
 	<?php if ($territoryCT > 0) {echo "<a href=\"#\" onclick=\"OpeNTerritorYSelectioN();return false;\">TERRITORIES</a> &nbsp; &nbsp; \n";} ?>

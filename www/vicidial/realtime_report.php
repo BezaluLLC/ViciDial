@@ -1,7 +1,7 @@
 <?php 
 # realtime_report.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -12,13 +12,14 @@
 # 
 # CHANGELOG:
 # 101216-1355 - First Build
-# 101218-1520 - small time reload bug fix and formatting fixes
+# 101218-1520 - Small time reload bug fix and formatting fixes
 # 110111-1557 - Added options.php options, minor bug fixes
 # 110113-1736 - Small fix
+# 110303-2124 - Added agent on-hook phone indication and RING status and color
 #
 
-$version = '2.4-4';
-$build = '110113-1736';
+$version = '2.4-5';
+$build = '110303-2124';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -1163,6 +1164,7 @@ function update_variables(task_option,task_choice,force_reload)
 	.khaki {color: black; background-color: #F0E68C}
 	.orange {color: black; background-color: orange}
 	.black {color: white; background-color: black}
+	.salmon {color: white; background-color: #FA8072}
 
 	.r1 {color: black; background-color: #FFCCCC}
 	.r2 {color: black; background-color: #FF9999}

@@ -78,6 +78,7 @@ use_external_server_ip ENUM('Y','N') default 'N',
 codecs_list VARCHAR(100) default '',
 codecs_with_template ENUM('0','1') default '0',
 webphone_dialpad ENUM('Y','N','TOGGLE','TOGGLE_OFF') default 'Y',
+on_hook_agent ENUM('Y','N') default 'N',
 index (server_ip),
 unique index extenserver (extension, server_ip)
 );
@@ -388,7 +389,10 @@ external_timer_action_destination VARCHAR(100) default '',
 index (random_id),
 index (last_call_time),
 index (last_update_time),
-index (last_call_finish)
+index (last_call_finish),
+on_hook_agent ENUM('Y','N') default 'N',
+on_hook_ring_time SMALLINT(5) default '15',
+ring_callerid VARCHAR(20) default ''
 );
 
 CREATE TABLE vicidial_auto_calls (
@@ -412,6 +416,7 @@ agent_only VARCHAR(20) default '',
 agent_grab VARCHAR(20) default '',
 queue_position SMALLINT(4) UNSIGNED default '1',
 extension VARCHAR(100) default '',
+agent_grab_extension VARCHAR(100) default '',
 index (uniqueid),
 index (callerid),
 index (call_time),
@@ -882,7 +887,7 @@ group_color VARCHAR(7),
 active ENUM('Y','N'),
 web_form_address TEXT,
 voicemail_ext VARCHAR(10),
-next_agent_call ENUM('random','oldest_call_start','oldest_call_finish','overall_user_level','inbound_group_rank','campaign_rank','fewest_calls','fewest_calls_campaign','longest_wait_time') default 'longest_wait_time',
+next_agent_call ENUM('random','oldest_call_start','oldest_call_finish','overall_user_level','inbound_group_rank','campaign_rank','fewest_calls','fewest_calls_campaign','longest_wait_time','ring_all') default 'longest_wait_time',
 fronter_display ENUM('Y','N') default 'Y',
 ingroup_script VARCHAR(10),
 get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','FORM') default 'NONE',
@@ -976,7 +981,8 @@ calculate_estimated_hold_seconds SMALLINT(5) UNSIGNED default '0',
 add_lead_url TEXT,
 eht_minimum_prompt_filename VARCHAR(255) default '',
 eht_minimum_prompt_no_block ENUM('N','Y') default 'N',
-eht_minimum_prompt_seconds SMALLINT(5) default '10'
+eht_minimum_prompt_seconds SMALLINT(5) default '10',
+on_hook_ring_time SMALLINT(5) default '15'
 );
 
 CREATE TABLE vicidial_stations (
@@ -1000,7 +1006,9 @@ status ENUM('ACTIVE','INACTIVE') default 'INACTIVE',
 campaign_id VARCHAR(8),
 closer_campaigns TEXT,
 extension_group VARCHAR(20) default 'NONE',
-extension_group_order VARCHAR(20) default 'NONE'
+extension_group_order VARCHAR(20) default 'NONE',
+on_hook_agent ENUM('Y','N') default 'N',
+on_hook_ring_time SMALLINT(5) default '15'
 );
 
 CREATE TABLE live_inbound_log (
@@ -2442,7 +2450,7 @@ ALTER TABLE vicidial_call_notes_archive MODIFY notesid INT(9) UNSIGNED NOT NULL;
 CREATE TABLE vicidial_lead_search_log_archive LIKE vicidial_lead_search_log; 
 ALTER TABLE vicidial_lead_search_log_archive MODIFY search_log_id INT(9) UNSIGNED NOT NULL;
 
-UPDATE system_settings SET db_schema_version='1263',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1264',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
