@@ -1,7 +1,7 @@
 <?php
 # non_agent_api.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with all non-agent-screen VICIDIAL functions
@@ -9,7 +9,7 @@
 # required variables:
 #  - $user
 #  - $pass
-#  - $function - ('add_lead','update_lead','version','sounds_list','moh_list','vm_list','blind_monitor','agent_ingroup_info')
+#  - $function - ('add_lead','update_lead','version','sounds_list','moh_list','vm_list','blind_monitor','agent_ingroup_info','add_list',etc...)
 #  - $source - ('vtiger','webform','adminweb')
 #  - $format - ('text','debug')
 
@@ -42,10 +42,11 @@
 # 101206-2126 - Added recording_lookup and did_log_export functions
 # 110127-2245 - Added add_user and add_phone functions
 # 110303-2122 - Added information on agent-on-hook phone to real-time report popup
+# 110306-1044 - Added add_list and update_list functions
 #
 
-$version = '2.4-28';
-$build = '110303-2122';
+$version = '2.4-29';
+$build = '110306-1044';
 
 require("dbconnect.php");
 
@@ -210,6 +211,26 @@ if (isset($_GET["outbound_cid"]))			{$outbound_cid=$_GET["outbound_cid"];}
 	elseif (isset($_POST["outbound_cid"]))	{$outbound_cid=$_POST["outbound_cid"];}
 if (isset($_GET["phone_context"]))			{$phone_context=$_GET["phone_context"];}
 	elseif (isset($_POST["phone_context"]))	{$phone_context=$_POST["phone_context"];}
+if (isset($_GET["list_name"]))			{$list_name=$_GET["list_name"];}
+	elseif (isset($_POST["list_name"]))	{$list_name=$_POST["list_name"];}
+if (isset($_GET["active"]))				{$active=$_GET["active"];}
+	elseif (isset($_POST["active"]))	{$active=$_POST["active"];}
+if (isset($_GET["script"]))				{$script=$_GET["script"];}
+	elseif (isset($_POST["script"]))	{$script=$_POST["script"];}
+if (isset($_GET["am_message"]))				{$am_message=$_GET["am_message"];}
+	elseif (isset($_POST["am_message"]))	{$am_message=$_POST["am_message"];}
+if (isset($_GET["drop_inbound_group"]))				{$drop_inbound_group=$_GET["drop_inbound_group"];}
+	elseif (isset($_POST["drop_inbound_group"]))	{$drop_inbound_group=$_POST["drop_inbound_group"];}
+if (isset($_GET["web_form_address"]))			{$web_form_address=$_GET["web_form_address"];}
+	elseif (isset($_POST["web_form_address"]))	{$web_form_address=$_POST["web_form_address"];}
+if (isset($_GET["web_form_address_two"]))			{$web_form_address_two=$_GET["web_form_address_two"];}
+	elseif (isset($_POST["web_form_address_two"]))	{$web_form_address_two=$_POST["web_form_address_two"];}
+if (isset($_GET["reset_list"]))				{$reset_list=$_GET["reset_list"];}
+	elseif (isset($_POST["reset_list"]))	{$reset_list=$_POST["reset_list"];}
+if (isset($_GET["delete_list"]))			{$delete_list=$_GET["delete_list"];}
+	elseif (isset($_POST["delete_list"]))	{$delete_list=$_POST["delete_list"];}
+if (isset($_GET["delete_leads"]))			{$delete_leads=$_GET["delete_leads"];}
+	elseif (isset($_POST["delete_leads"]))	{$delete_leads=$_POST["delete_leads"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -323,6 +344,16 @@ if ($non_latin < 1)
 	$local_gmt=ereg_replace("[^-\.0-9]","",$local_gmt);
 	$outbound_cid=ereg_replace("[^0-9]","",$outbound_cid);
 	$phone_context=ereg_replace("[^-_0-9a-zA-Z]","",$phone_context);
+	$list_name=ereg_replace("[^- \+\.\:\/\@\?\&\_0-9a-zA-Z]","",$list_name);
+	$active=ereg_replace("[^A-Z]","",$active);
+	$script=ereg_replace("[^-_0-9a-zA-Z]","",$script);
+	$am_message=ereg_replace("[^-_0-9a-zA-Z]","",$am_message);
+	$drop_inbound_group=ereg_replace("[^-_0-9a-zA-Z]","",$drop_inbound_group);
+	$web_form_address=ereg_replace("[^- \+\.\:\/\@\?\&\_0-9a-zA-Z]","",$web_form_address);
+	$web_form_address_two=ereg_replace("[^- \+\.\:\/\@\?\&\_0-9a-zA-Z]","",$web_form_address_two);
+	$reset_list=ereg_replace("[^A-Z]","",$reset_list);
+	$delete_list=ereg_replace("[^A-Z]","",$delete_list);
+	$delete_leads=ereg_replace("[^A-Z]","",$delete_leads);
 	}
 else
 	{
@@ -1412,6 +1443,545 @@ if ($function == 'add_phone')
 	}
 ################################################################################
 ### END add_phone
+################################################################################
+
+
+
+
+
+################################################################################
+### update_list - updates list information in the vicidial_lists table and other functions
+################################################################################
+if ($function == 'update_list')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_lists='1' and user_level >= 8;";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "update_list USER DOES NOT HAVE PERMISSION TO UPDATE LISTS";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($list_id)<2) or (strlen($list_id)>14) )
+				{
+				$result = 'ERROR';
+				$result_reason = "update_list YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$list_id|$list_name|$campaign_id";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT count(*) from vicidial_lists where list_id='$list_id';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$list_exists=$row[0];
+				if ($list_exists < 1)
+					{
+					if ($insert_if_not_found == 'Y')
+						{
+						$result = 'NOTICE';
+						$result_reason = "update_list LIST DOES NOT EXIST, SENDING TO add_list FUNCTION";
+						$data = "$list_id";
+						echo "$result: $result_reason: |$user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						
+						$function = 'add_list';
+						}
+					else
+						{
+						$result = 'ERROR';
+						$result_reason = "update_list LIST DOES NOT EXIST";
+						$data = "$list_id";
+						echo "$result: $result_reason: |$user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				else
+					{
+					$campaignSQL='';
+					$scriptSQL='';
+					$dropingroupSQL='';
+					$listnameSQL='';
+					$activeSQL='';
+					$outboundcidSQL='';
+					$ammessageSQL='';
+					$webformSQL='';
+					$webformtwoSQL='';
+					if (strlen($campaign_id) > 0)
+						{
+						$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$campaign_exists=$row[0];
+						if ($campaign_exists < 1)
+							{
+							$result = 'ERROR';
+							$result_reason = "update_list CAMPAIGN DOES NOT EXIST, THIS IS AN OPTIONAL FIELD";
+							$data = "$campaign_id";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$campaignSQL = " ,campaign_id='$campaign_id'";}
+						}
+					if (strlen($script) > 0)
+						{
+						if ($script == '--BLANK--')
+							{$scriptSQL = " ,agent_script_override=''";}
+						else
+							{
+							$stmt="SELECT count(*) from vicidial_scripts where script_id='$script';";
+							$rslt=mysql_query($stmt, $link);
+							$row=mysql_fetch_row($rslt);
+							$script_exists=$row[0];
+							if ($script_exists < 1)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_list SCRIPT DOES NOT EXIST, THIS IS AN OPTIONAL FIELD";
+								$data = "$script";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$scriptSQL = " ,agent_script_override='$script'";}
+							}
+						}
+					if (strlen($drop_inbound_group) > 0)
+						{
+						if ($drop_inbound_group == '--BLANK--')
+							{$dropingroupSQL = " ,drop_inbound_group_override=''";}
+						else
+							{
+							$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$drop_inbound_group';";
+							$rslt=mysql_query($stmt, $link);
+							$row=mysql_fetch_row($rslt);
+							$script_exists=$row[0];
+							if ($script_exists < 1)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_list IN-GROUP DOES NOT EXIST, THIS IS AN OPTIONAL FIELD";
+								$data = "$drop_inbound_group";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$dropingroupSQL = " ,drop_inbound_group_override='$drop_inbound_group'";}
+							}
+						}
+					if (strlen($list_name) > 0)
+						{
+						if ( (strlen($list_name) > 30) or (strlen($list_name) < 6) )
+							{
+							$result = 'ERROR';
+							$result_reason = "update_list LIST NAME MUST BE FROM 6 TO 30 CHARACTERS, THIS IS AN OPTIONAL FIELD";
+							$data = "$list_name";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$listnameSQL = " ,list_name='$list_name'";}
+						}
+					if (strlen($active) > 0)
+						{
+						if ( ($active != 'Y') and ($active != 'N') )
+							{
+							$result = 'ERROR';
+							$result_reason = "update_list ACTIVE MUST BE Y OR N, THIS IS AN OPTIONAL FIELD";
+							$data = "$active";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$activeSQL = " ,active='$active'";}
+						}
+					if (strlen($outbound_cid) > 0)
+						{
+						if ($outbound_cid == '--BLANK--')
+							{$outboundcidSQL = " ,campaign_cid_override=''";}
+						else
+							{
+							if ( (strlen($outbound_cid) > 18) or (strlen($outbound_cid) < 6) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_list OUTBOUND CID MUST BE FROM 6 TO 18 DIGITS, THIS IS AN OPTIONAL FIELD";
+								$data = "$outbound_cid";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$outboundcidSQL = " ,campaign_cid_override='$outbound_cid'";}
+							}
+						}
+					if (strlen($am_message) > 0)
+						{
+						if ($am_message == '--BLANK--')
+							{$ammessageSQL = " ,am_message_exten_override=''";}
+						else
+							{
+							if (strlen($am_message) > 100)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_list ANSWERING MACHINE MESSAGE MUST LESS THAN 101 DIGITS, THIS IS AN OPTIONAL FIELD";
+								$data = "$am_message";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$ammessageSQL = " ,am_message_exten_override='$am_message'";}
+							}
+						}
+					if (strlen($web_form_address) > 0)
+						{
+						if ($web_form_address == '--BLANK--')
+							{$webformSQL = " ,web_form_address=''";}
+						else
+							{$webformSQL = " ,web_form_address='$web_form_address'";}
+						}
+					if (strlen($web_form_address_two) > 0)
+						{
+						if ($web_form_address_two == '--BLANK--')
+							{$webformtwoSQL = " ,web_form_address_two=''";}
+						else
+							{$webformtwoSQL = " ,web_form_address_two='$web_form_address_two'";}
+						}
+
+					$updateSQL = "$webformtwoSQL$webformSQL$ammessageSQL$outboundcidSQL$activeSQL$listnameSQL$campaignSQL$scriptSQL$dropingroupSQL";
+
+					if (strlen($updateSQL)< 3)
+						{
+						$result = 'NOTICE';
+						$result_reason = "update_list NO UPDATES DEFINED";
+						$data = "$updateSQL";
+						echo "$result: $result_reason: |$user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					else
+						{
+						if (strlen($campaignSQL) > 3)
+							{
+							$stmt="SELECT campaign_id from vicidial_lists where list_id='$list_id';";
+							$rslt=mysql_query($stmt, $link);
+							$row=mysql_fetch_row($rslt);
+							$old_campaign_id=$row[0];
+							if ($campaign_id != "$old_campaign_id")
+								{
+								$stmt="DELETE from vicidial_hopper where list_id='$list_id' and campaign_id='$old_campaign_id';";
+								$rslt=mysql_query($stmt, $link);
+								if ($DB) {echo "|$stmt|\n";}
+								}
+							}
+
+						$stmt="UPDATE vicidial_lists SET list_changedate='$NOW_TIME' $updateSQL WHERE list_id='$list_id';";
+						$rslt=mysql_query($stmt, $link);
+						if ($DB) {echo "|$stmt|\n";}
+
+						### LOG INSERTION Admin Log Table ###
+						$SQL_log = "$stmt|";
+						$SQL_log = ereg_replace(';','',$SQL_log);
+						$SQL_log = addslashes($SQL_log);
+						$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LISTS', event_type='MODIFY', record_id='$list_id', event_code='ADMIN API UPDATE LIST', event_sql=\"$SQL_log\", event_notes='list: $list_id';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_query($stmt, $link);
+
+						$result = 'SUCCESS';
+						$result_reason = "update_list LIST HAS BEEN UPDATED";
+						$data = "$list_id";
+						echo "$result: $result_reason - $user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+
+					if ($reset_list == 'Y')
+						{
+						$stmt="UPDATE vicidial_lists SET list_changedate='$NOW_TIME' WHERE list_id='$list_id';";
+						$rslt=mysql_query($stmt, $link);
+						if ($DB) {echo "|$stmt|\n";}
+
+						$stmt="UPDATE vicidial_list SET called_since_last_reset='N' WHERE list_id='$list_id';";
+						$rslt=mysql_query($stmt, $link);
+						$affected_rows = mysql_affected_rows($link);
+						if ($DB) {echo "|$stmt|\n";}
+
+						### LOG INSERTION Admin Log Table ###
+						$SQL_log = "$stmt|";
+						$SQL_log = ereg_replace(';','',$SQL_log);
+						$SQL_log = addslashes($SQL_log);
+						$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LISTS', event_type='RESET', record_id='$list_id', event_code='ADMIN API RESET LIST', event_sql=\"$SQL_log\", event_notes='list: $list_id';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_query($stmt, $link);
+
+						$result = 'NOTICE';
+						$result_reason = "update_list LEADS IN LIST HAVE BEEN RESET";
+						$data = "$list_id|$affected_rows";
+						echo "$result: $result_reason - $user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+
+					if ($delete_list == 'Y')
+						{
+						$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_lists='1' and delete_lists='1' and user_level >= 8;";
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$allowed_user=$row[0];
+						if ($allowed_user < 1)
+							{
+							$result = 'NOTICE';
+							$result_reason = "update_list USER DOES NOT HAVE PERMISSION TO DELETE LISTS";
+							$data = "$allowed_user";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{
+							$stmt="DELETE FROM vicidial_lists WHERE list_id='$list_id';";
+							$rslt=mysql_query($stmt, $link);
+							$affected_rows = mysql_affected_rows($link);
+							if ($DB) {echo "|$stmt|\n";}
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = ereg_replace(';','',$SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LISTS', event_type='DELETE', record_id='$list_id', event_code='ADMIN API DELETE LIST', event_sql=\"$SQL_log\", event_notes='list: $list_id';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_query($stmt, $link);
+
+							$result = 'NOTICE';
+							$result_reason = "update_list LIST HAS BEEN DELETED";
+							$data = "$list_id|$affected_rows";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						}
+
+					if ($delete_leads == 'Y')
+						{
+						$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_lists='1' and delete_lists='1' and modify_leads='1' and user_level >= 8;";
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$allowed_user=$row[0];
+						if ($allowed_user < 1)
+							{
+							$result = 'NOTICE';
+							$result_reason = "update_list USER DOES NOT HAVE PERMISSION TO DELETE LEADS";
+							$data = "$allowed_user";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{
+							$stmt="DELETE FROM vicidial_list WHERE list_id='$list_id';";
+							$rslt=mysql_query($stmt, $link);
+							$affected_rows = mysql_affected_rows($link);
+							if ($DB) {echo "|$stmt|\n";}
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = ereg_replace(';','',$SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LISTS', event_type='DELETE', record_id='$list_id', event_code='ADMIN API DELETE LEADS', event_sql=\"$SQL_log\", event_notes='list: $list_id';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_query($stmt, $link);
+
+							$result = 'NOTICE';
+							$result_reason = "update_list LEADS IN LIST HAVE BEEN DELETED";
+							$data = "$list_id|$affected_rows";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						}
+					}
+				}
+			}
+		}
+	if ($function != 'add_list')
+		{exit;}
+	}
+################################################################################
+### END update_list
+################################################################################
+
+
+
+
+
+################################################################################
+### add_list - adds list to the vicidial_lists table
+################################################################################
+if ($function == 'add_list')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_lists='1' and user_level >= 8;";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "add_list USER DOES NOT HAVE PERMISSION TO ADD LISTS";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($list_id)<2) or (strlen($list_id)>14) or (strlen($campaign_id)<1) or (strlen($campaign_id)>8) or (strlen($list_name)<6) or (strlen($list_name)>30) )
+				{
+				$result = 'ERROR';
+				$result_reason = "add_list YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$list_id|$list_name|$campaign_id";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$campaign_exists=$row[0];
+				if ($campaign_exists < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "add_list CAMPAIGN DOES NOT EXIST";
+					$data = "$campaign_id";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$stmt="SELECT count(*) from vicidial_lists where list_id='$list_id';";
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$list_exists=$row[0];
+					if ($list_exists > 0)
+						{
+						$result = 'ERROR';
+						$result_reason = "add_list LIST ALREADY EXISTS";
+						$data = "$list_id";
+						echo "$result: $result_reason: |$user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					else
+						{
+						$stmt="SELECT count(*) from phones where login='$phone_login';";
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$phone_exists=$row[0];
+						if ($phone_exists > 0)
+							{
+							$result = 'ERROR';
+							$result_reason = "add_phone PHONE LOGIN ALREADY EXISTS";
+							$data = "$phone_login";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{
+							if (strlen($script) > 0)
+								{
+								$stmt="SELECT count(*) from vicidial_scripts where script_id='$script';";
+								$rslt=mysql_query($stmt, $link);
+								$row=mysql_fetch_row($rslt);
+								$script_exists=$row[0];
+								if ($script_exists < 1)
+									{
+									$result = 'ERROR';
+									$result_reason = "add_list SCRIPT DOES NOT EXIST, THIS IS AN OPTIONAL FIELD";
+									$data = "$script";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								}
+							if (strlen($drop_inbound_group) > 0)
+								{
+								$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$drop_inbound_group';";
+								$rslt=mysql_query($stmt, $link);
+								$row=mysql_fetch_row($rslt);
+								$script_exists=$row[0];
+								if ($script_exists < 1)
+									{
+									$result = 'ERROR';
+									$result_reason = "add_list IN-GROUP DOES NOT EXIST, THIS IS AN OPTIONAL FIELD";
+									$data = "$drop_inbound_group";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								}
+							if (strlen($active)<1) {$active='N';}
+
+							$stmt="INSERT INTO vicidial_lists SET list_id='$list_id', list_name='$list_name', campaign_id='$campaign_id', active='$active', campaign_cid_override='$outbound_cid', agent_script_override='$script', am_message_exten_override='$am_message', drop_inbound_group_override='$drop_inbound_group', web_form_address='$web_form_address', web_form_address_two='$web_form_address_two';";
+							$rslt=mysql_query($stmt, $link);
+							if ($DB) {echo "|$stmt|\n";}
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = ereg_replace(';','',$SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LISTS', event_type='ADD', record_id='$list_id', event_code='ADMIN API ADD LIST', event_sql=\"$SQL_log\", event_notes='list: $list_id|$campaign_id';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_query($stmt, $link);
+
+							$result = 'SUCCESS';
+							$result_reason = "add_list LIST HAS BEEN ADDED";
+							$data = "$list_id|$list_name|$campaign_id";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						}
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END add_list
 ################################################################################
 
 

@@ -504,6 +504,11 @@ OTHER CHANGES:
 	after you have viewed the callbacks, but if the number of callbacks 
 	changes the red and/or blink will start again.
 
+117. Added add_list and update_list functions to the Non-Agent API, allowing
+	you to add, modify and delete lists, as well as reset leads in a list,
+	change a list to active or inactive, change the campaign of a list and
+	delete the leads inside of a list.
+
 
 
 
