@@ -1996,7 +1996,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					}
 				if ($sthArows > 0)
 					{
-					if ( ($VDADon_hook_agent == 'Y') && ($AGENTgrab < 1) )
+					if ( ($VDADon_hook_agent =~ /Y/) && ($AGENTgrab < 1) )
 						{
 						$Faffected_rows = 0;
 						$RING_agent++;
@@ -2004,7 +2004,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						$RAFaffected_rows = $dbhA->do($stmtA);
 							$dbhP=$dbhA;   $mysql_count='02160';   $MEL_aff_rows=$RAFaffected_rows;   &mysql_error_logging;
 
-						if ($AGILOG) {$agi_string = "ON-HOOK-AGENT UPDATE: |$stmtA|$RING_agent|";   &agi_output;}
+						if ($AGILOG) {$agi_string = "ON-HOOK-AGENT UPDATE: |$stmtA|$RING_agent|$VDADon_hook_agent|$AGENTgrab";   &agi_output;}
 
 						$ring_no_answer_agents .= "'$VDADuser',";   # do not send calls to this agent again, unless no others available
 						}
@@ -2527,7 +2527,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			}
 		else
 			{
-			if ( ($rec_countWAITrem == '1') && ($drop_timer > 2) && ($AGILOG) )
+			if ( ($rec_countWAITrem > 0) && ($drop_timer > 2) && ($AGILOG) )
 				{
 				$stmtA = "SELECT call_time,campaign_id,last_update_time,callerid,status,channel FROM vicidial_auto_calls where status = 'LIVE' and campaign_id = '$channel_group' and call_time < \"$SQLdateBEGIN\" and lead_id != '$insert_lead_id';";
 					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
