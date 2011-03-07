@@ -4,7 +4,7 @@
 # Pulls time stats per agent selectable by campaign or user group
 # should be most accurate agent stats of all of the reports
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 90522-0723 - First build
@@ -18,6 +18,7 @@
 # 101207-1634 - Changed limits on seconds to 65000 from 30000 in vicidial_agent_log
 # 101207-1719 - Fixed download file formatting bugs(issue 394)
 # 101208-0320 - Fixed issue 404
+# 110307-1057 - Added user_case setting in options.php
 #
 
 require("dbconnect.php");
@@ -52,6 +53,18 @@ if (strlen($stage)<2) {$stage='NAME';}
 
 $report_name = 'Agent Time Detail';
 $db_source = 'M';
+
+$user_case = '';
+if (file_exists('options.php'))
+	{
+	require('options.php');
+	}
+if ($user_case == '1')
+	{$userSQL = 'ucase(user)';}
+if ($user_case == '2')
+	{$userSQL = 'lcase(user)';}
+if (strlen($userSQL)<2)
+	{$userSQL = 'user';}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -329,7 +342,7 @@ else
 	############################################################################
 
 	### BEGIN gather user IDs and names for matching up later
-	$stmt="select full_name,user from vicidial_users order by user limit 100000;";
+	$stmt="select full_name,$userSQL from vicidial_users order by user limit 100000;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$users_to_print = mysql_num_rows($rslt);
@@ -345,7 +358,7 @@ else
 
 
 	### BEGIN gather timeclock records per agent
-	$stmt="select user,sum(login_sec) from vicidial_timeclock_log where event IN('LOGIN','START') and event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END' $TCuser_group_SQL group by user limit 10000000;";
+	$stmt="select $userSQL,sum(login_sec) from vicidial_timeclock_log where event IN('LOGIN','START') and event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END' $TCuser_group_SQL group by user limit 10000000;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$punches_to_print = mysql_num_rows($rslt);
@@ -372,7 +385,7 @@ else
 	$PCusersARY=$MT;
 	$PCuser_namesARY=$MT;
 	$user_count=0;
-	$stmt="select user,sum(pause_sec),sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 $group_SQL $user_group_SQL group by user,sub_status order by user,sub_status desc limit 10000000;";
+	$stmt="select $userSQL,sum(pause_sec),sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 $group_SQL $user_group_SQL group by user,sub_status order by user,sub_status desc limit 10000000;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$subs_to_print = mysql_num_rows($rslt);
@@ -407,7 +420,7 @@ else
 
 
 	##### BEGIN Gather all agent time records and parse through them in PHP to save on DB load
-	$stmt="select user,wait_sec,talk_sec,dispo_sec,pause_sec,lead_id,status,dead_sec from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $group_SQL $user_group_SQL limit 10000000;";
+	$stmt="select $userSQL,wait_sec,talk_sec,dispo_sec,pause_sec,lead_id,status,dead_sec from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $group_SQL $user_group_SQL limit 10000000;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$rows_to_print = mysql_num_rows($rslt);

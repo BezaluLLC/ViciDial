@@ -1,12 +1,13 @@
 <?php
 # options.php - manually defined options for vicidial admin scripts
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # rename this file to options.php for the settings here to go into effect
 #
 # CHANGELOG
 # 101216-1043 - First Build 
+# 110307-1039 - Added upper-case/lower-case user setting
 #
 
 # used by the realtime_report.php script
@@ -43,5 +44,8 @@ $RS_PHONEdisplay =		0;	# 0=no, 1=yes
 $RS_CUSTPHONEdisplay =	0;	# 0=no, 1=yes
 $RS_PAUSEcodes =		'N';
 $RS_with_inbound =		'Y';
+
+# used by agent reports
+$user_case =			0;		# 1=upper-case, 2-lower-case, 0-no-case-change
 
 ?>
