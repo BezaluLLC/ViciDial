@@ -2510,38 +2510,41 @@ if ($sthBrows > 0)
 ################################################################################
 #####  BEGIN  reset lists
 ################################################################################
-$stmtA = "SELECT list_id FROM vicidial_lists where reset_time LIKE \"%$reset_test%\";";
-$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-$sthBrows=$sthA->rows;
-$i=0;
-while ($sthBrows > $i)
+if ($AST_VDadapt > 0)
 	{
-	@aryA = $sthA->fetchrow_array;
-	$list_id[$i] = "$aryA[0]";
-	$i++;
-	}
-$sthA->finish();
+	$stmtA = "SELECT list_id FROM vicidial_lists where reset_time LIKE \"%$reset_test%\";";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthBrows=$sthA->rows;
+	$i=0;
+	while ($sthBrows > $i)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$list_id[$i] = "$aryA[0]";
+		$i++;
+		}
+	$sthA->finish();
 
-if ($DBX) {print "RESET LIST:   $i|$reset_test";}
+	if ($DBX) {print "RESET LIST:   $i|$reset_test";}
 
-$i=0;
-while ($sthBrows > $i)
-	{
-	$stmtA="UPDATE vicidial_list set called_since_last_reset='N' where list_id='$list_id[$i]';";
-	$affected_rows = $dbhA->do($stmtA);
+	$i=0;
+	while ($sthBrows > $i)
+		{
+		$stmtA="UPDATE vicidial_list set called_since_last_reset='N' where list_id='$list_id[$i]';";
+		$affected_rows = $dbhA->do($stmtA);
 
-	$SQL_log = "$stmtA|";
-	$SQL_log =~ s/;|\\|\'|\"//gi;
+		$SQL_log = "$stmtA|";
+		$SQL_log =~ s/;|\\|\'|\"//gi;
 
-	if ($DB) {print "DONE\n";}
-	if ($DB) {print "$trigger_results\n";}
+		if ($DB) {print "DONE\n";}
+		if ($DB) {print "$trigger_results\n";}
 
-	$stmtA="INSERT INTO vicidial_admin_log set event_date='$now_date', user='VDAD', ip_address='1.1.1.1', event_section='LISTS', event_type='RESET', record_id='$list_id[$i]', event_code='ADMIN RESET LIST', event_sql=\"$SQL_log\", event_notes='$affected_rows leads reset';";
-	$Iaffected_rows = $dbhA->do($stmtA);
-	if ($DB) {print "FINISHED:   $affected_rows|$Iaffected_rows|$stmtA";}
+		$stmtA="INSERT INTO vicidial_admin_log set event_date='$now_date', user='VDAD', ip_address='1.1.1.1', event_section='LISTS', event_type='RESET', record_id='$list_id[$i]', event_code='ADMIN RESET LIST', event_sql=\"$SQL_log\", event_notes='$affected_rows leads reset';";
+		$Iaffected_rows = $dbhA->do($stmtA);
+		if ($DB) {print "FINISHED:   $affected_rows|$Iaffected_rows|$stmtA";}
 
-	$i++;
+		$i++;
+		}
 	}
 ################################################################################
 #####  END  reset lists
