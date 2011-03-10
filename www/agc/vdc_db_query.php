@@ -278,10 +278,11 @@
 # 110225-1237 - Added scheduled callback lead info display to the lead info view function
 # 110303-1616 - Added vicidial_log_extended logging for manual dial calls
 # 110304-1207 - Changed lead search with territory restriction to work with agents that cannot select territories
+# 110310-0546 - Added ability to set a pause code at the same time of a pause
 #
 
-$version = '2.4-183';
-$build = '110304-1207';
+$version = '2.4-184';
+$build = '110310-0546';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=408;
 $one_mysql_log=0;
@@ -478,6 +479,8 @@ if (isset($_GET["call_notes"]))				{$call_notes=$_GET["call_notes"];}
 	elseif (isset($_POST["call_notes"]))	{$call_notes=$_POST["call_notes"];}
 if (isset($_GET["search"]))				{$search=$_GET["search"];}
 	elseif (isset($_POST["search"]))	{$search=$_POST["search"];}
+if (isset($_GET["sub_status"]))				{$sub_status=$_GET["sub_status"];}
+	elseif (isset($_POST["sub_status"]))	{$sub_status=$_POST["sub_status"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -1964,6 +1967,10 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$rslt=mysql_query($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00242',$user,$server_ip,$session_name,$one_mysql_log);}
 					$affected_rows = mysql_affected_rows($link);
+
+				#	$fp = fopen ("./DNNdebug_log.txt", "a");
+				#	fwrite ($fp, "$NOW_TIME|$campaign|$lead_id|$agent_dialed_number|$user|M|$MqueryCID||$province|$affected_rows|$stmt|\n");
+				#	fclose($fp);
 
 					if ($affected_rows > 0)
 						{
@@ -7428,7 +7435,17 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 			$VLAaffected_rows_update = mysql_affected_rows($link);
 			}
 		}
-	echo 'Agent ' . $user . ' is now in status ' . $stage . "\nNext agent_log_id:\n$agent_log_id\n";
+	if (strlen($sub_status) > 0)
+		{
+		### if a pause code(sub_status) is sent with this pause request, continue on to that action without printing output
+		$stage = 0;
+		$status = $sub_status;
+		$ACTION = 'PauseCodeSubmit';
+		}
+	else
+		{
+		echo 'Agent ' . $user . ' is now in status ' . $stage . "\nNext agent_log_id:\n$agent_log_id\n";
+		}
 	}
 
 
@@ -8131,7 +8148,7 @@ if ($ACTION == 'CALLLOGview')
 
 	echo "</TABLE>";
 	echo "<BR>";
-	echo "<a href=\"#\" onclick=\"hideDiv('CalLLoGDisplaYBox');return false;\">Close Call Log</a>";
+	echo "<a href=\"#\" onclick=\"CalLLoGVieWClose();return false;\">Close Call Log</a>";
 	echo "</CENTER>";
 	}
 

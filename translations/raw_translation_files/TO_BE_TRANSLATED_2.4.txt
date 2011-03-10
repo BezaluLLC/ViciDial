@@ -597,6 +597,12 @@ This option is only used for inbound calls going to an agent logged in with this
 This is a Phone On-Hook Agent||
 Maximum Ring Time||
 The DEFER options will stop blinking and-or displaying in red when you check the callbacks, until the number of callbacks changes||
+Auto Pause Pre-Call Work||
+In auto-dial mode, this setting if enabled will set the agent to paused automatically when the agent clicks on any of the following functions that requires them to be paused- Manual Dial, Fast Dial, Lead Search, Call Log View, Callbacks Check, Enter Pause Code. Default is N for inactive||
+Auto Resume Pre-Call Work||
+In auto-dial mode, this setting if enabled will set the agent to active automatically when the agent clicks out of, or cancels, on any of the following functions that requires them to be paused- Manual Dial, Fast Dial, Lead Search, Call Log View, Callbacks Check, Enter Pause Code. Default is N for inactive||
+Auto Pause Pre-Call Code||
+If the Auto Pause Pre-Call Work function above is active, and Agent Pause Codes is active, this setting will be the pause code that is used when the agent is paused for these activities. Default is PRECAL||
 
 
 ############################################################  MANAGER Manual

@@ -509,6 +509,11 @@ OTHER CHANGES:
 	change a list to active or inactive, change the campaign of a list and
 	delete the leads inside of a list.
 
+118. Added Campaign option to auto-pause agents when they go into several 
+	pre-call functions like Manual Dial, Lead Search, Callbacks Check, etc.
+	Also added an option to auto-resume the agent when leaving those 
+	funtions.
+
 
 
 
