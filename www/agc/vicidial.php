@@ -341,10 +341,11 @@
 # 110303-2321 - Added notice of on-hook phone use, and ability to click 'ring' to call into session, minor queue_log fix
 # 110304-1623 - Added callback count notification defer options
 # 110310-0331 - Added auto-pause/resume functions in auto-dial mode for pre-call work
+# 110310-1627 - Changed most browser alerts to HTML alerts, other bug fixes
 #
 
-$version = '2.4-318c';
-$build = '110310-0331';
+$version = '2.4-319c';
+$build = '110310-1627';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=72;
 $one_mysql_log=0;
@@ -2678,6 +2679,9 @@ $HSwidth =  ($MASTERwidth + 1);		# 431 - Header spacer
 $PBwidth =  ($MASTERwidth + 0);		# 430 - Presets list
 $CLwidth =  ($MASTERwidth - 120);	# 310 - Calls in queue link
 
+
+$GHheight =  ($MASTERheight + 1260);# 1560 - Gender Hide span
+$DBheight =  ($MASTERheight + 260);	# 560 - Debug span
 $WRheight =  ($MASTERheight + 160);	# 460 - Warning boxes
 $CQheight =  ($MASTERheight + 140);	# 440 - Calls in queue section
 $SLheight =  ($MASTERheight + 122);	# 422 - SideBar link, Agents view link
@@ -3085,6 +3089,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var manual_dial_in_progress = 0;
 	var auto_dial_alt_dial = 0;
 	var reselect_preview_dial = 0;
+	var in_lead_preview_state = 0;
 	var reselect_alt_dial = 0;
 	var alt_dial_active = 0;
 	var alt_dial_status_display = 0;
@@ -3404,7 +3409,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					{
 					Nactiveext = null;
 					Nactiveext = xmlhttp.responseText;
-					alert(xmlhttp.responseText);
+					alert_box(xmlhttp.responseText);
 					}
 				}
 			delete xmlhttp;
@@ -3798,7 +3803,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					var BOresponse = xmlhttp.responseText;
 					if (BOresponse.match(regBOerr))
 						{
-						alert(BOresponse);
+						alert_box(BOresponse);
 						}
 
 					if ((taskdialvalue.length > 0) && (tasknowait != 'YES'))
@@ -4009,7 +4014,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 							if (PausENotifYCounTer > 10)
 								{
-								alert('Your session has been paused');
+								alert_box('Your session has been paused');
 								AutoDial_ReSume_PauSe('VDADpause');
 								PausENotifYCounTer=0;
 								}
@@ -4219,7 +4224,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								else
 									{document.vicidial_form.LeadLookuP.checked=false;}
 								if (APIDiaL_array_detail[4] == 'YES')  // focus on vicidial agent screen
-									{window.focus();   alert("Placing call to:" + APIDiaL_array_detail[1] + " " + APIDiaL_array_detail[0]);}
+									{window.focus();   alert_box("Placing call to:" + APIDiaL_array_detail[1] + " " + APIDiaL_array_detail[0]);}
 								if (APIDiaL_array_detail[3] == 'YES')  // call preview
 									{NeWManuaLDiaLCalLSubmiT('PREVIEW');}
 								else
@@ -4685,7 +4690,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					{
 					xferredirect_query='';
 					taskvar = 'NOTHING';
-					alert("Transfer number must have at least 1 digit:" + blindxferdialstring);
+					alert_box("Transfer number must have at least 1 digit:" + blindxferdialstring);
 					}
 				else
 					{
@@ -5216,16 +5221,16 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 	function CalLBacKsLisTCheck()
 		{
 		var move_on=1;
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) || (in_lead_preview_state==1) )
 			{
-			if ( (auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) )
+			if ( (auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) && (in_lead_preview_state!=1) )
 				{
 				agent_log_id = AutoDial_ReSume_PauSe("VDADpause",'','','','','1',auto_pause_precall_code);
 				}
 			else
 				{
 				move_on=0;
-				alert("YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE");
+				alert_box("YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE");
 				}
 			}
 		if (move_on == 1)
@@ -5304,6 +5309,18 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 // ################################################################################
 // closes callback list screen
+	function alert_box(temp_message)
+		{
+		document.getElementById("AlertBoxContent").innerHTML = temp_message;
+
+		showDiv('AlertBox');
+
+		document.alert_form.alert_button.focus();
+		}
+
+
+// ################################################################################
+// closes callback list screen
 	function CalLBacKsLisTClose()
 		{
 		if (auto_resume_precall == 'Y')
@@ -5376,16 +5393,16 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 	function NeWManuaLDiaLCalL(TVfast,TVphone_code,TVphone_number,TVlead_id,TVtype)
 		{
 		var move_on=1;
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) || (in_lead_preview_state==1) )
 			{
-			if ((auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) )
+			if ((auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) && (in_lead_preview_state!=1) )
 				{
 				agent_log_id = AutoDial_ReSume_PauSe("VDADpause",'','','','','1',auto_pause_precall_code);
 				}
 			else
 				{
 				move_on=0;
-				alert("YOU MUST BE PAUSED TO MANUAL DIAL A NEW LEAD IN AUTO-DIAL MODE");
+				alert_box("YOU MUST BE PAUSED TO MANUAL DIAL A NEW LEAD IN AUTO-DIAL MODE");
 				}
 			}
 		if (move_on == 1)
@@ -5509,7 +5526,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 		if ( (MDDiaLCodEform.length < 1) || (MDPhonENumbeRform.length < 5) )
 			{
-			alert("YOU MUST ENTER A PHONE NUMBER AND DIAL CODE TO USE FAST DIAL");
+			alert_box("YOU MUST ENTER A PHONE NUMBER AND DIAL CODE TO USE FAST DIAL");
 			}
 		else
 			{
@@ -5782,7 +5799,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			{
 			MD_channel_look=0;
 			MD_ring_secondS=0;
-			alert("Dial timed out, contact your system administrator\n");
+			alert_box("Dial timed out, contact your system administrator\n");
 			}
 
 		}
@@ -5965,7 +5982,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						}
 					else
 						{
-						alert("Update Fields Error!: " + xmlhttp.responseText);
+						alert_box("Update Fields Error!: " + xmlhttp.responseText);
 						}
 					}
 				}
@@ -6002,6 +6019,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if (document.vicidial_form.LeadPreview.checked==true)
 			{
 			reselect_preview_dial = 1;
+			in_lead_preview_state = 1;
 			var man_preview = 'YES';
 			var man_status = "Preview the Lead then <a href=\"#\" onclick=\"ManualDialOnly()\"><font class=\"preview_text\"> DIAL LEAD</font></a> or <a href=\"#\" onclick=\"ManualDialSkip()\"><font class=\"preview_text\">SKIP LEAD</font></a>"; 
 			if (manual_preview_dial=='PREVIEW_ONLY')
@@ -6083,15 +6101,15 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						CalLBacKsCounTCheck();
 
 						if (MDnextCID.match(regMNCvar))
-							{alert("No more leads in the hopper for campaign:\n" + campaign);   alert_displayed=1;}
+							{alert_box("No more leads in the hopper for campaign:\n" + campaign);   alert_displayed=1;}
 						if (MDnextCID.match(regMDFvarDNC))
-							{alert("This phone number is in the DNC list:\n" + mdnPhonENumbeR);   alert_displayed=1;}
+							{alert_box("This phone number is in the DNC list:\n" + mdnPhonENumbeR);   alert_displayed=1;}
 						if (MDnextCID.match(regMDFvarCAMP))
-							{alert("This phone number is not in the campaign lists:\n" + mdnPhonENumbeR);   alert_displayed=1;}
+							{alert_box("This phone number is not in the campaign lists:\n" + mdnPhonENumbeR);   alert_displayed=1;}
 						if (MDnextCID.match(regMDFvarTIME))
-							{alert("This phone number is outside of the local call time:\n" + mdnPhonENumbeR);   alert_displayed=1;}
+							{alert_box("This phone number is outside of the local call time:\n" + mdnPhonENumbeR);   alert_displayed=1;}
 						if (alert_displayed==0)						
-							{alert("Unspecified error:\n" + mdnPhonENumbeR + "|" + MDnextCID);   alert_displayed=1;}
+							{alert_box("Unspecified error:\n" + mdnPhonENumbeR + "|" + MDnextCID);   alert_displayed=1;}
 
 						if (starting_dial_level == 0)
 							{
@@ -6327,10 +6345,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		{
 		if (manual_dial_in_progress==1)
 			{
-			alert('YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD');
+			alert_box('YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD');
 			}
 		else
 			{
+			in_lead_preview_state=0;
 			if (dial_method == "INBOUND_MAN")
 				{
 				auto_dial_level=starting_dial_level;
@@ -6380,7 +6399,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						MDSnextCID = MDSnextResponse_array[0];
 						if (MDSnextCID == "LEAD NOT REVERTED")
 							{
-							alert("Lead was not reverted, there was an error:\n" + MDSnextResponse);
+							alert_box("Lead was not reverted, there was an error:\n" + MDSnextResponse);
 							}
 						else
 							{
@@ -6452,6 +6471,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 // Send the Manual Dial Only - dial the previewed lead
 	function ManualDialOnly(taskaltnum)
 		{
+		in_lead_preview_state=0;
 		inOUT = 'OUT';
 		alt_dial_status_display = 0;
 		all_record = 'NO';
@@ -6558,7 +6578,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					agent_log_id =	MDOnextResponse_array[1];
 					if (MDnextCID == " CALL NOT PLACED")
 						{
-						alert("call was not placed, there was an error:\n" + MDOnextResponse);
+						alert_box("call was not placed, there was an error:\n" + MDOnextResponse);
 						}
 					else
 						{
@@ -8060,16 +8080,16 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 	function PauseCodeSelectContent_create()
 		{
 		var move_on=1;
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) || (in_lead_preview_state==1) )
 			{
-			if ((auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) )
+			if ((auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) && (in_lead_preview_state!=1) )
 				{
 				agent_log_id = AutoDial_ReSume_PauSe("VDADpause",'','','','','1','');
 				}
 			else
 				{
 				move_on=0;
-				alert("YOU MUST BE PAUSED TO ENTER A PAUSE CODE IN AUTO-DIAL MODE");
+				alert_box("YOU MUST BE PAUSED TO ENTER A PAUSE CODE IN AUTO-DIAL MODE");
 				}
 			}
 		if (move_on == 1)
@@ -8117,16 +8137,16 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 	function OpeNSearcHForMDisplaYBox()
 		{
 		var move_on=1;
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) || (in_lead_preview_state==1) )
 			{
-			if ((auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) )
+			if ((auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) && (in_lead_preview_state!=1) )
 				{
 				agent_log_id = AutoDial_ReSume_PauSe("VDADpause",'','','','','1',auto_pause_precall_code);
 				}
 			else
 				{
 				move_on=0;
-				alert("YOU MUST BE PAUSED TO SEARCH FOR A LEAD");
+				alert_box("YOU MUST BE PAUSED TO SEARCH FOR A LEAD");
 				}
 			}
 		if (move_on == 1)
@@ -8270,7 +8290,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 		var DispoChoice = document.vicidial_form.DispoSelection.value;
 
-		if (DispoChoice.length < 1) {alert("You Must Select a Disposition");}
+		if (DispoChoice.length < 1) {alert_box("You Must Select a Disposition");}
 		else
 			{
 			document.getElementById("CusTInfOSpaN").innerHTML = "";
@@ -8314,7 +8334,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
  
 		var DispoChoice = document.vicidial_form.DispoSelection.value;
 
-		if (DispoChoice.length < 1) {alert("You Must Select a Disposition");}
+		if (DispoChoice.length < 1) {alert_box("You Must Select a Disposition");}
 		else
 			{
 			document.getElementById("CusTInfOSpaN").innerHTML = "";
@@ -10093,16 +10113,16 @@ function phone_number_format(formatphone) {
 		if (CQauto_call_id > 0)
 			{
 			var move_on=1;
-			if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
+			if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) || (in_lead_preview_state==1) )
 				{
-				if ((auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) )
+				if ((auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) && (in_lead_preview_state!=1) )
 					{
 					agent_log_id = AutoDial_ReSume_PauSe("VDADpause",'','','','','1','GRABCL');
 					}
 				else
 					{
 					move_on=0;
-					alert("YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE");
+					alert_box("YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE");
 					}
 				}
 			if (move_on == 1)
@@ -10140,7 +10160,7 @@ function phone_number_format(formatphone) {
 							var regCQerror = new RegExp("ERROR","ig");
 							if (CQgrabresponse.match(regCQerror))
 								{
-								alert(CQgrabresponse);
+								alert_box(CQgrabresponse);
 								}
 							else
 								{
@@ -10393,16 +10413,16 @@ function phone_number_format(formatphone) {
 	function VieWCalLLoG(logdate,formdate)
 		{
 		var move_on=1;
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) || (in_lead_preview_state==1) )
 			{
-			if ((auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) )
+			if ((auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) && (in_lead_preview_state!=1) )
 				{
 				agent_log_id = AutoDial_ReSume_PauSe("VDADpause",'','','','','1',auto_pause_precall_code);
 				}
 			else
 				{
 				move_on=0;
-				alert("YOU MUST BE PAUSED TO VIEW YOUR CALL LOG");
+				alert_box("YOU MUST BE PAUSED TO VIEW YOUR CALL LOG");
 				}
 			}
 		if (move_on == 1)
@@ -10456,9 +10476,9 @@ function phone_number_format(formatphone) {
 // Gather and display lead search data
 	function LeadSearchSubmit()
 		{
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) || (in_lead_preview_state==1) )
 			{
-			alert("YOU MUST BE PAUSED TO SEARCH FOR A LEAD");
+			alert_box("YOU MUST BE PAUSED TO SEARCH FOR A LEAD");
 			}
 		else
 			{
@@ -10571,7 +10591,7 @@ function phone_number_format(formatphone) {
 			}
 		if (xmlhttp) 
 			{ 
-			RAview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=CALLNOTESview&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&stage=<?php echo $HCwidth ?>";
+			RAview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=LEADINFOview&search=logfirst&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&stage=<?php echo $HCwidth ?>";
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(RAview_query); 
@@ -10673,23 +10693,23 @@ function phone_number_format(formatphone) {
 	function OpeNGrouPSelectioN()
 		{
 		var move_on=1;
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) || (in_lead_preview_state==1) )
 			{
-			if ((auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) )
+			if ((auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) && (in_lead_preview_state!=1) )
 				{
 				agent_log_id = AutoDial_ReSume_PauSe("VDADpause",'','','','','1',auto_pause_precall_code);
 				}
 			else
 				{
 				move_on=0;
-				alert("YOU MUST BE PAUSED TO CHANGE GROUPS");
+				alert_box("YOU MUST BE PAUSED TO CHANGE GROUPS");
 				}
 			}
 		if (move_on == 1)
 			{
 			if (manager_ingroups_set > 0)
 				{
-				alert("Manager " + external_igb_set_name + " has selected your in-group choices");
+				alert_box("Manager " + external_igb_set_name + " has selected your in-group choices");
 				}
 			else
 				{
@@ -10705,16 +10725,16 @@ function phone_number_format(formatphone) {
 	function OpeNTerritorYSelectioN()
 		{
 		var move_on=1;
-		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) )
+		if ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) || (in_lead_preview_state==1) )
 			{
-			if ((auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) )
+			if ((auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) && (in_lead_preview_state!=1) )
 				{
 				agent_log_id = AutoDial_ReSume_PauSe("VDADpause",'','','','','1',auto_pause_precall_code);
 				}
 			else
 				{
 				move_on=0;
-				alert("YOU MUST BE PAUSED TO CHANGE TERRITORIES");
+				alert_box("YOU MUST BE PAUSED TO CHANGE TERRITORIES");
 				}
 			}
 		if (move_on == 1)
@@ -10777,7 +10797,7 @@ function phone_number_format(formatphone) {
 		CallBackDatEForM = document.vicidial_form.CallBackDatESelectioN.value;
 		CallBackCommenTs = document.vicidial_form.CallBackCommenTsField.value;
 		if (CallBackDatEForM.length < 2)
-			{alert("You must choose a date");}
+			{alert_box("You must choose a date");}
 		else
 			{
 
@@ -10975,6 +10995,7 @@ function phone_number_format(formatphone) {
 		if (VICIDiaL_closer_login_checked==0)
 			{
 			hideDiv('NothingBox');
+			hideDiv('AlertBox');
 		//	hideDiv('NothingBox2');
 			hideDiv('CBcommentsBox');
 			hideDiv('EAcommentsBox');
@@ -11793,7 +11814,7 @@ function phone_number_format(formatphone) {
 			{
 			if (showxfervar != 'OFF')
 				{
-				alert('YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS');
+				alert_box('YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS');
 				}
 			}
 		}
@@ -12257,6 +12278,7 @@ $zi=2;
 </span>
 <!-- END *********   Here is the main VICIDIAL display panel -->
 
+<span style="position:absolute;left:0px;top:<?php echo $DBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="debugbottomspan"></span>
 
 <span style="position:absolute;left:300px;top:<?php echo $MBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="ManuaLDiaLButtons"><font class="body_text">
 <span id="MDstatusSpan"><a href="#" onclick="NeWManuaLDiaLCalL('NO');return false;">MANUAL DIAL</a></span> &nbsp; &nbsp; &nbsp; <a href="#" onclick="NeWManuaLDiaLCalL('FAST');return false;">FAST DIAL</a><br />
@@ -12900,6 +12922,7 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></center></font
 	?>
 	<div class="scroll_calllog" id="CallNotesSpan"> Call Notes List </div>
 	<br /><br /> &nbsp;
+	<a href="#" onclick="hideDiv('CalLNotesDisplaYBox');return false;">Close Info Box</a>
 	</td></tr></table>
 </span>
 
@@ -12912,6 +12935,7 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></center></font
 	?>
 	<span id="LeaDInfOSpan"> Lead Info </span>
 	<br /><br /> &nbsp;
+	<a href="#" onclick="hideDiv('LeaDInfOBox');return false;">Close Info Box</a>
 	</td></tr></table>
 </span>
 
@@ -12958,17 +12982,50 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></center></font
 </span>
 
 
-<span style="position:absolute;left:0px;top:1500px;z-index:<?php $zi++; echo $zi ?>;" id="GENDERhideFORieALT"></span>
-
-<span style="position:absolute;left:0px;top:700px;z-index:<?php $zi++; echo $zi ?>;" id="debugbottomspan"></span>
+<span style="position:absolute;left:0px;top:<?php echo $GHheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="GENDERhideFORieALT"></span>
 
 </form>
+
 
 <form name="inert_form" id="inert_form" onsubmit="return false;">
 
 <span style="position:absolute;left:0px;top:400px;z-index:1;" id="NothingBox2">
 <!--  <BUTTON Type=button name="inert_button" id="inert_button" onclick="return false;"><img src="./images/blank.gif" /></BUTTON> -->
 <input type="checkbox" name="inert_button" id="inert_button" size="1" value="0" onclick="return false;" />
+</span>
+
+</form>
+
+<form name="alert_form" id="alert_form" onsubmit="return false;">
+
+<span style="position:absolute;left:200px;top:200px;z-index:<?php $zi++; echo $zi ?>;" id="AlertBox">
+<table border="2" bgcolor="#666666" cellpadding="2" cellspacing="1">
+<tr><td bgcolor="#f0f0f0" align="left">
+<font face="arial,helvetica" size="2"><b> &nbsp; Agent Alert!</b></font>
+</td></tr>
+<tr><td bgcolor="#E6E6E6">
+<table border="0" bgcolor="#E3E3E3" width="400">
+<tr>
+<td align="center" valign="top" width="50"> &nbsp; 
+<br /><br />
+<img src="./images/alert.gif" alt="alert" border="0">
+</td>
+<td align="center" valign="top"> &nbsp; 
+<br /><br />
+<font face="arial,helvetica" size="2">
+<span id="AlertBoxContent"> Alert Box </span>
+</font>
+<br /><br />
+</td>
+</tr><tr>
+<td align="center" valign="top" colspan="2">
+<button type="button" name="alert_button" id="alert_button" onclick="hideDiv('AlertBox');return false;">OK</BUTTON>
+<br /> &nbsp;
+<!-- <a href="#" onclick="document.alert_form.alert_button.focus();">focus</a> -->
+</td></tr>
+</table>
+</td></tr>
+</table>
 </span>
 
 </form>

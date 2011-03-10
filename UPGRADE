@@ -514,6 +514,12 @@ OTHER CHANGES:
 	Also added an option to auto-resume the agent when leaving those 
 	funtions.
 
+119. Changed almost all of the browser alerts to HTML alerts. These are the 
+	messages that tell you for example that you cannot do this when paused.
+	The reason for the change is that browser alerts are blocking and will
+	halt executiong of javascript on the agent workstation. This change
+	should require no alterations to any configurations.
+
 
 
 

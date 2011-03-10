@@ -1245,7 +1245,7 @@ while($one_day_interval > 0)
 				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$CLuser	= "$aryA[0]";
+					$CLuser	= $aryA[0];
 					}
 				$sthA->finish();
 				if ( (length($CLlead_id) < 1) || ($CLlead_id < 1) )
