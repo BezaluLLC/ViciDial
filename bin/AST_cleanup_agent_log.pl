@@ -29,6 +29,7 @@
 # 100331-0310 - Added one-day-ago and only-fix-old-lagged options, fixed validation process
 # 110124-1134 - Small query fix for large queue_log tables
 # 110224-1916 - Added compatibility with QM phone environment logging
+# 110310-2259 - Added check for PAUSEREASON if no COMPLETE record
 #
 
 # constants
@@ -332,7 +333,7 @@ or die "Couldn't connect to database: " . DBI->errstr;
 
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_loginout FROM system_settings;";
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_loginout,queuemetrics_dispo_pause FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -347,6 +348,7 @@ if ($sthArows > 0)
 	$queuemetrics_log_id =		$aryA[5];
 	$queuemetrics_eq_prepend =	$aryA[6];
 	$queuemetrics_loginout =	$aryA[7];
+	$queuemetrics_dispo_pause = $aryA[8];
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -1310,6 +1312,20 @@ if ($enable_queuemetrics_logging > 0)
 						}
 					else
 						{
+						$DPRdebug='';
+						##### find a DISPO PAUSEREASON for this call if there is one
+						$stmtB = "SELECT time_id FROM queue_log where call_id='$call_id[$h]' and verb='PAUSEREASON' and data1='$queuemetrics_dispo_pause' and agent='$Cagent[$h]';";
+						$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+						$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+						$DPR_records=$sthB->rows;
+						if ($DPR_records > 0)
+							{
+							@aryB = $sthB->fetchrow_array;
+							$Stime_id[$h] =		$aryB[0];
+							$DPRdebug = "DISPO TIME";
+							}
+						$sthB->finish();
+
 						$secX = time();
 						$Rtarget = ($secX - 21600);	# look for VDCL entry within last 6 hours
 						($Rsec,$Rmin,$Rhour,$Rmday,$Rmon,$Ryear,$Rwday,$Ryday,$Risdst) = localtime($Rtarget);
@@ -1344,7 +1360,7 @@ if ($enable_queuemetrics_logging > 0)
 							{
 							$Baffected_rows = $dbhB->do($stmtB);
 							}
-						if ($DB) {print "MCRI: $Baffected_rows|$stmtB|\n";}
+						if ($DB) {print "MCRI: $Baffected_rows|$DPRdebug|$stmtB|\n";}
 						$COMPLETEinsert++;
 						}
 					}
