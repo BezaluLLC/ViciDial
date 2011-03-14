@@ -73,10 +73,11 @@
 # 101216-1358 - Added functions to work with new realtime_report.php script
 # 110218-1037 - Fixed query that was causing load spikes on systems with millions of log entries
 # 110303-2125 - Added agent on-hook phone indication and RING status and color
+# 110314-1735 - Fixed another query that was causing load spikes on systems with millions of log entries
 #
 
-$version = '2.4-64';
-$build = '110303-2125';
+$version = '2.4-65';
+$build = '110314-1735';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -2170,7 +2171,7 @@ if (strlen($usergroup)<1) {$usergroupSQL = '';}
 else {$usergroupSQL = " and user_group='" . mysql_real_escape_string($usergroup) . "'";}
 
 $ring_agents=0;
-$stmt="select extension,vicidial_live_agents.user,conf_exten,vicidial_live_agents.status,vicidial_live_agents.server_ip,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish),call_server_ip,vicidial_live_agents.campaign_id,vicidial_users.user_group,vicidial_users.full_name,vicidial_live_agents.comments,vicidial_live_agents.calls_today,vicidial_live_agents.callerid,lead_id,UNIX_TIMESTAMP(last_state_change),on_hook_agent,ring_callerid from vicidial_live_agents,vicidial_users where vicidial_live_agents.user=vicidial_users.user $UgroupSQL $usergroupSQL order by $orderSQL;";
+$stmt="select extension,vicidial_live_agents.user,conf_exten,vicidial_live_agents.status,vicidial_live_agents.server_ip,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish),call_server_ip,vicidial_live_agents.campaign_id,vicidial_users.user_group,vicidial_users.full_name,vicidial_live_agents.comments,vicidial_live_agents.calls_today,vicidial_live_agents.callerid,lead_id,UNIX_TIMESTAMP(last_state_change),on_hook_agent,ring_callerid,agent_log_id from vicidial_live_agents,vicidial_users where vicidial_live_agents.user=vicidial_users.user $UgroupSQL $usergroupSQL order by $orderSQL;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $talking_to_print = mysql_num_rows($rslt);
@@ -2199,6 +2200,7 @@ $talking_to_print = mysql_num_rows($rslt);
 		$Astate_change[$i] =	$row[15];
 		$Aon_hook_agent[$i] =	$row[16];
 		$Aring_callerid[$i] =	$row[17];
+		$Aagent_log_id[$i] =	$row[18];
 		$Aring_note[$i] =		' ';
 
 		if ($Aon_hook_agent[$i] == 'Y')
@@ -2492,7 +2494,7 @@ $talking_to_print = mysql_num_rows($rslt);
 			if (!ereg("N",$agent_pause_codes_active))
 				{
 				$twentyfour_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-24,date("i"),date("s"),date("m"),date("d"),date("Y")));
-				$stmtC="select sub_status from vicidial_agent_log where event_time > \"$twentyfour_hours_ago\" and user='$Luser' order by agent_log_id desc limit 1;";
+				$stmtC="select sub_status from vicidial_agent_log where agent_log_id >= \"$Aagent_log_id[$i]\" and user='$Luser' order by agent_log_id desc limit 1;";
 				$rsltC=mysql_query($stmtC,$link);
 				$rowC=mysql_fetch_row($rsltC);
 				$pausecode = sprintf("%-6s", $rowC[0]);
