@@ -16,10 +16,11 @@
 # 110111-1557 - Added options.php options, minor bug fixes
 # 110113-1736 - Small fix
 # 110303-2124 - Added agent on-hook phone indication and RING status and color
+# 110316-2216 - Added Agent, Carrier and Preset options.php settings
 #
 
-$version = '2.4-5';
-$build = '110303-2124';
+$version = '2.4-6';
+$build = '110316-2216';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -200,6 +201,22 @@ if (!isset($with_inbound))
 		}
 	else {$with_inbound = $RS_with_inbound;}
 	}
+if (!isset($CARRIERstats)) 
+	{
+	if (!isset($RS_CARRIERstats)) {$CARRIERstats='0';}
+	else {$CARRIERstats = $RS_CARRIERstats;}
+	}
+if (!isset($PRESETstats)) 
+	{
+	if (!isset($RS_PRESETstats)) {$PRESETstats='0';}
+	else {$PRESETstats = $RS_PRESETstats;}
+	}
+if (!isset($AGENTtimeSTATS)) 
+	{
+	if (!isset($RS_AGENTtimeSTATS)) {$AGENTtimeSTATS='0';}
+	else {$AGENTtimeSTATS = $RS_AGENTtimeSTATS;}
+	}
+
 $ingroup_detail='';
 
 if ( (strlen($group)>1) and (strlen($groups[0])<1) ) {$groups[0] = $group;}

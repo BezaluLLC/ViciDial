@@ -44,6 +44,9 @@ $RS_PHONEdisplay =		0;	# 0=no, 1=yes
 $RS_CUSTPHONEdisplay =	0;	# 0=no, 1=yes
 $RS_PAUSEcodes =		'N';
 $RS_with_inbound =		'Y';
+$RS_CARRIERstats =		0;	# 0=no, 1=yes
+$RS_PRESETstats =		0;	# 0=no, 1=yes
+$RS_AGENTtimeSTATS =	0;	# 0=no, 1=yes
 
 # used by agent reports
 $user_case =			0;		# 1=upper-case, 2-lower-case, 0-no-case-change
