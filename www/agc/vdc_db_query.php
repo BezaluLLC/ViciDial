@@ -279,13 +279,14 @@
 # 110303-1616 - Added vicidial_log_extended logging for manual dial calls
 # 110304-1207 - Changed lead search with territory restriction to work with agents that cannot select territories
 # 110310-0546 - Added ability to set a pause code at the same time of a pause
-# 100310-1628 - removed callslogview, extended lead info function to be used instead
+# 110310-1628 - removed callslogview, extended lead info function to be used instead
+# 110317-0222 - Logging bug fixes
 #
 
-$version = '2.4-185';
-$build = '100310-1628';
+$version = '2.4-186';
+$build = '110317-0222';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=408;
+$mysql_log_count=413;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -3340,7 +3341,7 @@ if ($stage == "end")
 				fclose($fp);
 
 				##### start epoch in the vicidial_log table, couldn't find one in vicidial_closer_log
-				$stmt="SELECT start_epoch,term_reason,campaign_id FROM vicidial_log where uniqueid='$uniqueid' and lead_id='$lead_id' order by call_date desc limit 1;";
+				$stmt="SELECT start_epoch,term_reason,campaign_id,status FROM vicidial_log where uniqueid='$uniqueid' and lead_id='$lead_id' order by call_date desc limit 1;";
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00061',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -3351,6 +3352,7 @@ if ($stage == "end")
 					$start_epoch =		$row[0];
 					$VDterm_reason =	$row[1];
 					$VDcampaign_id =	$row[2];
+					$VDstatus =			$row[3];
 					$length_in_sec = ($StarTtime - $start_epoch);
 					}
 				else
@@ -3912,15 +3914,16 @@ if ($stage == "end")
 			if ( (ereg("NONE",$term_reason)) or (ereg("NONE",$VDterm_reason)) or (strlen($VDterm_reason) < 1) )
 				{
 				### check to see if lead should be alt_dialed
-				$stmt="SELECT term_reason,uniqueid from vicidial_log where uniqueid='$uniqueid' and lead_id='$lead_id' order by call_date desc limit 1;";
+				$stmt="SELECT term_reason,uniqueid,status from vicidial_log where uniqueid='$uniqueid' and lead_id='$lead_id' order by call_date desc limit 1;";
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00089',$user,$server_ip,$session_name,$one_mysql_log);}
 				$VAC_qm_ct = mysql_num_rows($rslt);
 				if ($VAC_qm_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
-					$VDterm_reason	= $row[0];
-					$VDvicidial_id	= $row[1];
+					$VDterm_reason =	$row[0];
+					$VDvicidial_id =	$row[1];
+					$VDstatus =			$row[2];
 					$VDIDselect =		"VDL_UIDLID $uniqueid $lead_id";
 					}
 				if (ereg("CALLER",$VDterm_reason))
@@ -3943,15 +3946,15 @@ if ($stage == "end")
 			### check to see if the vicidial_log record exists, if not, insert it
 			$manualVLexists=0;
 			$beginUNIQUEID = preg_replace("/\..*/","",$uniqueid);
-			$stmt="SELECT count(*) from vicidial_log where lead_id='$lead_id' and user='$user' and phone_number='$phone_number' and uniqueid LIKE \"$beginUNIQUEID%\";";
+			$stmt="SELECT status from vicidial_log where lead_id='$lead_id' and user='$user' and phone_number='$phone_number' and uniqueid LIKE \"$beginUNIQUEID%\";";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00223',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
-			$VL_exists_ct = mysql_num_rows($rslt);
-			if ($VL_exists_ct > 0)
+			$manualVLexists = mysql_num_rows($rslt);
+			if ($manualVLexists > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$manualVLexists =		$row[0];
+				$VDstatus =		$row[0];
 				}
 
 			if ($manualVLexists < 1)
@@ -3983,7 +3986,8 @@ if ($stage == "end")
 				}
 
 			##### update the duration and end time in the vicidial_log table
-			$stmt="UPDATE vicidial_log set $SQLterm end_epoch='$StarTtime', length_in_sec='$length_in_sec', status='$status_dispo' where uniqueid='$uniqueid' and lead_id='$lead_id' and user='$user' order by call_date desc limit 1;";
+			if ($VDstatus == 'INCALL') {$vl_statusSQL = ",status='$status_dispo'";}
+			$stmt="UPDATE vicidial_log set $SQLterm end_epoch='$StarTtime', length_in_sec='$length_in_sec' $vl_statusSQL where uniqueid='$uniqueid' and lead_id='$lead_id' and user='$user' order by call_date desc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00090',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -6682,7 +6686,7 @@ if ($ACTION == 'updateDISPO')
 
 	#############################################
 	##### START QUEUEMETRICS LOGGING LOOKUP #####
-	$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_callstatus FROM system_settings;";
+	$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_callstatus,queuemetrics_dispo_pause FROM system_settings;";
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00159',$user,$server_ip,$session_name,$one_mysql_log);}
 	if ($DB) {echo "$stmt\n";}
@@ -6697,6 +6701,7 @@ if ($ACTION == 'updateDISPO')
 		$queuemetrics_pass =			$row[4];
 		$queuemetrics_log_id =			$row[5];
 		$queuemetrics_callstatus =		$row[6];
+		$queuemetrics_dispo_pause =		$row[7];
 		}
 	##### END QUEUEMETRICS LOGGING LOOKUP #####
 	###########################################
@@ -6713,6 +6718,83 @@ if ($ACTION == 'updateDISPO')
 		$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00160',$user,$server_ip,$session_name,$one_mysql_log);}
 		$affected_rows = mysql_affected_rows($linkB);
+
+		### check to make sure a COMPLETE record is present for this call
+		$QLcomplete_records=0;
+		$stmt = "SELECT count(*) FROM queue_log where verb IN('COMPLETEAGENT','COMPLETECALLER') and call_id='$MDnextCID' and agent='Agent/$user' and queue='$stage';";
+		$rslt=mysql_query($stmt, $linkB);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00409',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		echo "$stmt\n";
+		$comp_ct = mysql_num_rows($rslt);
+		if ($comp_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$QLcomplete_records =	$row[0];
+			}
+
+		### if there are no complete records, look up information to insert one for this call
+		if ($QLcomplete_records < 1)
+			{
+			$QLconnect_time=$StarTtime;
+			$QLcomplete_time=$StarTtime;
+			$QLconnect_one='';
+			$QLconnect_four='';
+			$QLcomplete_position=1;
+
+			$stmt = "SELECT time_id,data1,data4 FROM queue_log where verb='CONNECT' and call_id='$MDnextCID' and agent='Agent/$user' and queue='$stage' order by time_id desc limit 1;";
+			$rslt=mysql_query($stmt, $linkB);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00410',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			echo "$stmt\n";
+			$connect_ct = mysql_num_rows($rslt);
+			if ($connect_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$QLconnect_time =	$row[0];
+				$QLconnect_one =	$row[1];
+				$QLconnect_four =	$row[2];
+				}
+
+			$stmt = "SELECT time_id FROM queue_log where verb='PAUSEREASON' and call_id='$MDnextCID' and agent='Agent/$user' and data1='$queuemetrics_dispo_pause' order by time_id desc limit 1;";
+			$rslt=mysql_query($stmt, $linkB);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00411',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			echo "$stmt\n";
+			$pausereason_ct = mysql_num_rows($rslt);
+			if ($pausereason_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$QLcomplete_time =	$row[0];
+				}
+
+			$QLcomplete_length = ($QLcomplete_time - $QLconnect_time);
+			if ($QLcomplete_length < 0) {$QLcomplete_length=0;}
+			if ($QLcomplete_length > 86400) {$QLcomplete_length=1;}
+
+			## if inbound, check for initial queue position
+			if (preg_match("/^Y/",$MDnextCID))
+				{
+				$four_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-4,date("i"),date("s"),date("m"),date("d"),date("Y")));
+
+				$stmt = "SELECT queue_position FROM vicidial_closer_log where lead_id='$lead_id' and campaign_id='$stage' and call_date > \"$four_hours_ago\" order by closecallid desc limit 1;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00412',$user,$server_ip,$session_name,$one_mysql_log);}
+				$vcl_ct = mysql_num_rows($rslt);
+				if ($vcl_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$QLcomplete_position =		$row[0];
+					}
+				}
+
+			$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$QLcomplete_time',call_id='$MDnextCID',queue='$stage',agent='Agent/$user',verb='COMPLETEAGENT',data1='$QLconnect_one',data2='$QLcomplete_length',data3='$QLcomplete_position',serverid='$queuemetrics_log_id',data4='$QLconnect_four';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $linkB);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00413',$user,$server_ip,$session_name,$one_mysql_log);}
+			$affected_rows = mysql_affected_rows($linkB);
+			}
 
 		mysql_close($linkB);
 		}
