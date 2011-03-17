@@ -53,7 +53,7 @@ Changes:
 101206-2126 - Added recording_lookup and did_log_export functions
 110127-2245 - Added add_user and add_phone functions
 110306-1044 - Added add_list and update_list functions
-
+110316-2035 - Added reset_time variable and NAMEPHONE dup search
 
 
 
@@ -292,6 +292,9 @@ duplicate_check -	Check for duplicate records in the system, can select more tha
 				DUPTITLEALTPHONELIST - check for duplicate title and alt_phone in same list
 				DUPTITLEALTPHONECAMP - check for duplicate title and alt_phone in all lists for this list's campaign
 				DUPTITLEALTPHONESYS - check for duplicate title and alt_phone in entire system
+				DUPNAMEPHONELIST - check for duplicate first_name, last_name and phone_number in same list
+				DUPNAMEPHONECAMP - check for duplicate first_name, last_name and phone_number in all lists for this list's campaign
+				DUPNAMEPHONESYS - check for duplicate first_name, last_name and phone_number in entire system
 custom_fields -		Y or N, default is N. Defines whether the API will accept custom field data when inserting leads into the vicidial_list table
 			For custom fields to be inserted, just add the field label as a variable to the URL string
 			For example, if the field_label is "favorite_color" you would add "&favorite_color=blue"
@@ -341,7 +344,7 @@ http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&functio
 
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=add_lead&phone_number=7275551111&phone_code=1&list_id=999&dnc_check=N&campaign_dnc_check=Y&campaign_id=TESTCAMP&first_name=Bob&last_name=Wilson&address1=1234+Main+St.&city=Chicago+Heights&state=IL&add_to_hopper=Y&hopper_local_call_time_check=Y&multi_alt_phones=7275551212_1_work!7275551213_1_sister+house!1234567890_1_neighbor
 
-http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=add_lead&phone_number=7275551212&phone_code=1&list_id=999&dnc_check=N&first_name=Bob&last_name=Wilson&duplicate_check=DUPLIST-DUPTITLEALTPHONELIST
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=add_lead&phone_number=7275551212&phone_code=1&list_id=999&dnc_check=N&first_name=Bob&last_name=Wilson&duplicate_check=DUPLIST-DUPNAMEPHONELIST
 
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=add_lead&phone_number=7275551212&phone_code=1&list_id=999&custom_fields=Y&favorite_color=blue
 
@@ -583,6 +586,7 @@ am_message -		2-100 characters
 drop_inbound_group -	1-10 characters, must be a valid in-group
 web_form_address -	6-100 characters
 web_form_address_two -	6-100 characters
+reset_time -		4-100 characters, must be in valid 4-digit groups of 24-hour time (i.e. 0900-1700-2359)
 
 
 Example URL strings for API calls:
@@ -596,6 +600,7 @@ ERROR: add_list CAMPAIGN DOES NOT EXIST - 6666|TESTCIMP
 ERROR: add_list LIST ALREADY EXISTS - 6666|1101
 ERROR: add_list SCRIPT DOES NOT EXIST, THIS IS AN OPTIONAL FIELD - 6666|TESTSCRIPT
 ERROR: add_list IN-GROUP DOES NOT EXIST, THIS IS AN OPTIONAL FIELD - 6666|TEST_IN8
+ERROR: add_list RESET TIME IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|012
 SUCCESS: add_list LIST HAS BEEN ADDED - 6666|1101|TESTCAMP
 
 
@@ -627,6 +632,7 @@ am_message -		2-100 characters
 drop_inbound_group -	1-10 characters, must be a valid in-group
 web_form_address -	6-100 characters
 web_form_address_two -	6-100 characters
+reset_time -		4-100 characters, must be in valid 4-digit groups of 24-hour time (i.e. 0900-1700-2359)
 NOTES: 
  - in order to set a field to empty('') set it equal to --BLANK--, i.e. "&drop_inbound_group=--BLANK--"
  - please use no special characters like apostrophes, quotes or amphersands
@@ -652,6 +658,7 @@ ERROR: update_list LIST NAME MUST BE FROM 6 TO 30 CHARACTERS, THIS IS AN OPTIONA
 ERROR: update_list ACTIVE MUST BE Y OR N, THIS IS AN OPTIONAL FIELD - 6666|U
 ERROR: update_list OUTBOUND CID MUST BE FROM 6 TO 18 DIGITS, THIS IS AN OPTIONAL FIELD - 6666|12345
 ERROR: update_list ANSWERING MACHINE MESSAGE MUST LESS THAN 101 DIGITS, THIS IS AN OPTIONAL FIELD - 6666|123...
+ERROR: update_list RESET TIME IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|012
 NOTICE: update_list NO UPDATES DEFINED - 6666|
 SUCCESS: update_list LIST HAS BEEN UPDATED - 6666|1101
 NOTICE: update_list LEADS IN LIST HAVE BEEN RESET - 6666|1101|324

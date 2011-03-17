@@ -43,10 +43,11 @@
 # 110127-2245 - Added add_user and add_phone functions
 # 110303-2122 - Added information on agent-on-hook phone to real-time report popup
 # 110306-1044 - Added add_list and update_list functions
+# 110316-2035 - Added reset_time variable and NAMEPHONE dup search
 #
 
-$version = '2.4-29';
-$build = '110306-1044';
+$version = '2.4-30';
+$build = '110316-2035';
 
 require("dbconnect.php");
 
@@ -231,6 +232,8 @@ if (isset($_GET["delete_list"]))			{$delete_list=$_GET["delete_list"];}
 	elseif (isset($_POST["delete_list"]))	{$delete_list=$_POST["delete_list"];}
 if (isset($_GET["delete_leads"]))			{$delete_leads=$_GET["delete_leads"];}
 	elseif (isset($_POST["delete_leads"]))	{$delete_leads=$_POST["delete_leads"];}
+if (isset($_GET["reset_time"]))				{$reset_time=$_GET["reset_time"];}
+	elseif (isset($_POST["reset_time"]))	{$reset_time=$_POST["reset_time"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -354,6 +357,7 @@ if ($non_latin < 1)
 	$reset_list=ereg_replace("[^A-Z]","",$reset_list);
 	$delete_list=ereg_replace("[^A-Z]","",$delete_list);
 	$delete_leads=ereg_replace("[^A-Z]","",$delete_leads);
+	$reset_time=ereg_replace("[^-_0-9]","",$reset_time);
 	}
 else
 	{
@@ -1528,6 +1532,7 @@ if ($function == 'update_list')
 					$ammessageSQL='';
 					$webformSQL='';
 					$webformtwoSQL='';
+					$resettimeSQL='';
 					if (strlen($campaign_id) > 0)
 						{
 						$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
@@ -1658,6 +1663,25 @@ if ($function == 'update_list')
 								{$ammessageSQL = " ,am_message_exten_override='$am_message'";}
 							}
 						}
+					if (strlen($reset_time) > 0)
+						{
+						if ($reset_time == '--BLANK--')
+							{$resettimeSQL = " ,reset_time=''";}
+						else
+							{
+							if (strlen($reset_time) < 4)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_list RESET TIME IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$reset_time";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$resettimeSQL = " ,reset_time='$reset_time'";}
+							}
+						}
 					if (strlen($web_form_address) > 0)
 						{
 						if ($web_form_address == '--BLANK--')
@@ -1673,7 +1697,7 @@ if ($function == 'update_list')
 							{$webformtwoSQL = " ,web_form_address_two='$web_form_address_two'";}
 						}
 
-					$updateSQL = "$webformtwoSQL$webformSQL$ammessageSQL$outboundcidSQL$activeSQL$listnameSQL$campaignSQL$scriptSQL$dropingroupSQL";
+					$updateSQL = "$webformtwoSQL$webformSQL$ammessageSQL$outboundcidSQL$activeSQL$listnameSQL$campaignSQL$scriptSQL$dropingroupSQL$resettimeSQL";
 
 					if (strlen($updateSQL)< 3)
 						{
@@ -1953,9 +1977,18 @@ if ($function == 'add_list')
 									exit;
 									}
 								}
+							if ( (strlen($reset_time) > 0) and (strlen($reset_time) < 4) )
+								{
+								$result = 'ERROR';
+								$result_reason = "add_list RESET TIME IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$reset_time";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
 							if (strlen($active)<1) {$active='N';}
 
-							$stmt="INSERT INTO vicidial_lists SET list_id='$list_id', list_name='$list_name', campaign_id='$campaign_id', active='$active', campaign_cid_override='$outbound_cid', agent_script_override='$script', am_message_exten_override='$am_message', drop_inbound_group_override='$drop_inbound_group', web_form_address='$web_form_address', web_form_address_two='$web_form_address_two';";
+							$stmt="INSERT INTO vicidial_lists SET list_id='$list_id', list_name='$list_name', campaign_id='$campaign_id', active='$active', campaign_cid_override='$outbound_cid', agent_script_override='$script', am_message_exten_override='$am_message', drop_inbound_group_override='$drop_inbound_group', web_form_address='$web_form_address', web_form_address_two='$web_form_address_two', reset_time='$reset_time';";
 							$rslt=mysql_query($stmt, $link);
 							if ($DB) {echo "|$stmt|\n";}
 
@@ -2663,6 +2696,81 @@ if ($function == 'add_lead')
 						{
 						$result = 'ERROR';
 						$result_reason = "add_lead DUPLICATE TITLE ALT_PHONE IN SYSTEM";
+						$data = "$title|$alt_phone|$list_id|$duplicate_lead_id|$duplicate_lead_list";
+						echo "$result: $result_reason - $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				if (eregi("DUPNAMEPHONELIST",$duplicate_check)) # duplicate name/phone check within list
+					{
+					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPNAMEPHONELIST\n";}
+					$duplicate_found=0;
+					$stmt="SELECT lead_id,list_id from vicidial_list where first_name='$first_name' and last_name='$last_name' and phone_number='$phone_number' and list_id='$list_id' limit 1;";
+					$rslt=mysql_query($stmt, $link);
+					$pc_recs = mysql_num_rows($rslt);
+					if ($pc_recs > 0)
+						{
+						$duplicate_found=1;
+						$row=mysql_fetch_row($rslt);
+						$duplicate_lead_id =	$row[0];
+						$duplicate_lead_list =	$row[1];
+						}
+
+					if ($duplicate_found > 0) 
+						{
+						$result = 'ERROR';
+						$result_reason = "add_lead DUPLICATE NAME PHONE IN LIST";
+						$data = "$title|$alt_phone|$list_id|$duplicate_lead_id";
+						echo "$result: $result_reason - $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				if (eregi("DUPNAMEPHONECAMP",$duplicate_check)) # duplicate name/phone check within campaign lists
+					{
+					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPNAMEPHONECAMP\n";}
+					$duplicate_found=0;
+					$stmt="SELECT lead_id,list_id from vicidial_list where first_name='$first_name' and last_name='$last_name' and phone_number='$phone_number' and list_id IN($duplicate_lists) limit 1;";
+					$rslt=mysql_query($stmt, $link);
+					$pc_recs = mysql_num_rows($rslt);
+					if ($pc_recs > 0)
+						{
+						$duplicate_found=1;
+						$row=mysql_fetch_row($rslt);
+						$duplicate_lead_id =	$row[0];
+						$duplicate_lead_list =	$row[1];
+						}
+
+					if ($duplicate_found > 0) 
+						{
+						$result = 'ERROR';
+						$result_reason = "add_lead DUPLICATE NAME PHONE IN CAMPAIGN LISTS";
+						$data = "$title|$alt_phone|$list_id|$duplicate_lead_id|$duplicate_lead_list";
+						echo "$result: $result_reason - $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				if (eregi("DUPNAMEPHONESYS",$duplicate_check)) # duplicate name/phone check within entire system
+					{
+					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPNAMEPHONESYS\n";}
+					$duplicate_found=0;
+					$stmt="SELECT lead_id,list_id from vicidial_list where first_name='$first_name' and last_name='$last_name' and phone_number='$phone_number' limit 1;";
+					$rslt=mysql_query($stmt, $link);
+					$pc_recs = mysql_num_rows($rslt);
+					if ($pc_recs > 0)
+						{
+						$duplicate_found=1;
+						$row=mysql_fetch_row($rslt);
+						$duplicate_lead_id =	$row[0];
+						$duplicate_lead_list =	$row[1];
+						}
+
+					if ($duplicate_found > 0) 
+						{
+						$result = 'ERROR';
+						$result_reason = "add_lead DUPLICATE NAME PHONE IN SYSTEM";
 						$data = "$title|$alt_phone|$list_id|$duplicate_lead_id|$duplicate_lead_list";
 						echo "$result: $result_reason - $data\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);

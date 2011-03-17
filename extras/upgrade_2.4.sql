@@ -721,3 +721,10 @@ ALTER TABLE vicidial_campaigns ADD auto_pause_precall_code VARCHAR(6) default 'P
 ALTER TABLE vicidial_campaigns ADD auto_resume_precall ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1266',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_postal_codes MODIFY GMT_offset VARCHAR(6) default '';
+
+ALTER TABLE vicidial_phone_codes MODIFY GMT_offset VARCHAR(6) default '';
+
+UPDATE system_settings SET db_schema_version='1267',db_schema_update_date=NOW();
+

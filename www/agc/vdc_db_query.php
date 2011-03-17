@@ -2158,6 +2158,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 				{
 				$row=mysql_fetch_row($rslt);
 				$local_gmt =	$row[0];
+				$isdst = date("I");
+				if ($isdst) {$local_gmt++;}
 				}
 			$LLCT_DATE_offset = ($local_gmt - $gmt_offset_now);
 			$LLCT_DATE = date("Y-m-d H:i:s", mktime(date("H")-$LLCT_DATE_offset,date("i"),date("s"),date("m"),date("d"),date("Y")));
