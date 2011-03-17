@@ -2721,7 +2721,7 @@ if ($function == 'add_lead')
 						{
 						$result = 'ERROR';
 						$result_reason = "add_lead DUPLICATE NAME PHONE IN LIST";
-						$data = "$title|$alt_phone|$list_id|$duplicate_lead_id";
+						$data = "$first_name|$last_name|$phone_number|$list_id|$duplicate_lead_id";
 						echo "$result: $result_reason - $data\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						exit;
@@ -2746,7 +2746,7 @@ if ($function == 'add_lead')
 						{
 						$result = 'ERROR';
 						$result_reason = "add_lead DUPLICATE NAME PHONE IN CAMPAIGN LISTS";
-						$data = "$title|$alt_phone|$list_id|$duplicate_lead_id|$duplicate_lead_list";
+						$data = "$first_name|$last_name|$phone_number|$list_id|$duplicate_lead_id|$duplicate_lead_list";
 						echo "$result: $result_reason - $data\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						exit;
@@ -2771,7 +2771,7 @@ if ($function == 'add_lead')
 						{
 						$result = 'ERROR';
 						$result_reason = "add_lead DUPLICATE NAME PHONE IN SYSTEM";
-						$data = "$title|$alt_phone|$list_id|$duplicate_lead_id|$duplicate_lead_list";
+						$data = "$first_name|$last_name|$phone_number|$list_id|$duplicate_lead_id|$duplicate_lead_list";
 						echo "$result: $result_reason - $data\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						exit;
