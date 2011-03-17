@@ -26,6 +26,7 @@
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 #               Allow level 7 users to view this report
 # 110224-1135 - Added call_notes export option
+# 110316-2121 - Added export_fields option
 #
 
 require("dbconnect.php");
@@ -59,6 +60,8 @@ if (isset($_GET["custom_fields"]))			{$custom_fields=$_GET["custom_fields"];}
 	elseif (isset($_POST["custom_fields"]))	{$custom_fields=$_POST["custom_fields"];}
 if (isset($_GET["call_notes"]))				{$call_notes=$_GET["call_notes"];}
 	elseif (isset($_POST["call_notes"]))	{$call_notes=$_POST["call_notes"];}
+if (isset($_GET["export_fields"]))			{$export_fields=$_GET["export_fields"];}
+	elseif (isset($_POST["export_fields"]))	{$export_fields=$_POST["export_fields"];}
 if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
@@ -271,6 +274,14 @@ if ($run_export > 0)
 		$status_SQL = "and vl.status IN($status_SQL)";
 		}
 
+	$export_fields_SQL='';
+	$EFheader='';
+	if ($export_fields == 'EXTENDED')
+		{
+		$export_fields_SQL = ",entry_date,called_count,last_local_call_time";
+		$EFheader = "\tentry_date\tcalled_count\tlast_local_call_time";
+		}
+
 
 	if ($DB > 0)
 		{
@@ -292,7 +303,7 @@ if ($run_export > 0)
 	$k=0;
 	if ($RUNcampaign > 0)
 		{
-		$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid,vi.entry_list_id from vicidial_users vu,vicidial_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+		$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid,vi.entry_list_id$export_fields_SQL from vicidial_users vu,vicidial_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$outbound_to_print = mysql_num_rows($rslt);
@@ -315,7 +326,10 @@ if ($run_export > 0)
 				$export_lead_id[$k] =		$row[35];
 				$export_vicidial_id[$k] =	$row[36];
 				$export_entry_list_id[$k] =	$row[37];
-				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t";
+				$export_fieldsDATA='';
+				if ($export_fields == 'EXTENDED')
+					{$export_fieldsDATA = "$row[38]\t$row[39]\t$row[40]\t";}
+				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t$export_fieldsDATA";
 				$i++;
 				$k++;
 				$outbound_calls++;
@@ -325,7 +339,7 @@ if ($run_export > 0)
 
 	if ($RUNgroup > 0)
 		{
-		$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id from vicidial_users vu,vicidial_closer_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+		$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id$export_fields_SQL from vicidial_users vu,vicidial_closer_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 		$rslt=mysql_query($stmtA, $link);
 		if ($DB) {echo "$stmt\n";}
 		$inbound_to_print = mysql_num_rows($rslt);
@@ -348,7 +362,10 @@ if ($run_export > 0)
 				$export_lead_id[$k] =		$row[35];
 				$export_vicidial_id[$k] =	$row[36];
 				$export_entry_list_id[$k] =	$row[37];
-				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t";
+				$export_fieldsDATA='';
+				if ($export_fields == 'EXTENDED')
+					{$export_fieldsDATA = "$row[38]\t$row[39]\t$row[40]\t";}
+				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t$export_fieldsDATA";
 				$i++;
 				$k++;
 				}
@@ -397,7 +414,7 @@ if ($run_export > 0)
 			if ( ($custom_fields_enabled > 0) and ($custom_fields=='YES') )
 				{$CFheader = "\tcustom_fields";}
 
-			echo "call_date\tphone_number\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id\tlist_name\tlist_description\tstatus_name$RFheader$NFheader$CFheader\r\n";
+			echo "call_date\tphone_number\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id$EFheader\tlist_name\tlist_description\tstatus_name$RFheader$NFheader$CFheader\r\n";
 			}
 
 		$i=0;
@@ -720,12 +737,12 @@ else
 
 	echo "<BR><BR>\n";
 
-	echo "Header Row:<BR>\n";
+	echo "<B>Header Row:</B><BR>\n";
 	echo "<select size=1 name=header_row><option selected>YES</option><option>NO</option></select>\n";
 
 	echo "<BR><BR>\n";
 
-	echo "Recording Fields:<BR>\n";
+	echo "<B>Recording Fields:</B><BR>\n";
 	echo "<select size=1 name=rec_fields>";
 	echo "<option>ID</option>";
 	echo "<option>FILENAME</option>";
@@ -738,18 +755,25 @@ else
 		{
 		echo "<BR><BR>\n";
 
-		echo "Custom Fields:<BR>\n";
+		echo "<B>Custom Fields:</B><BR>\n";
 		echo "<select size=1 name=custom_fields><option>YES</option><option selected>NO</option></select>\n";
 		}
 
 	echo "<BR><BR>\n";
 
-	echo "Per Call Notes:<BR>\n";
+	echo "<B>Per Call Notes:</B><BR>\n";
 	echo "<select size=1 name=call_notes><option>YES</option><option selected>NO</option></select>\n";
+
+	echo "<BR><BR>\n";
+
+	echo "<B>Export Fields:</B><BR>\n";
+	echo "<select size=1 name=export_fields><option selected>STANDARD</option><option>EXTENDED</option></select>\n";
+
+	### bottom of first column
 
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=2>\n";
 	echo "<font class=\"select_bold\"><B>Campaigns:</B></font><BR><CENTER>\n";
-	echo "<SELECT SIZE=18 NAME=campaign[] multiple>\n";
+	echo "<SELECT SIZE=20 NAME=campaign[] multiple>\n";
 		$o=0;
 		while ($campaigns_to_print > $o)
 		{
@@ -763,7 +787,7 @@ else
 
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
 	echo "<font class=\"select_bold\"><B>Inbound Groups:</B></font><BR><CENTER>\n";
-	echo "<SELECT SIZE=18 NAME=group[] multiple>\n";
+	echo "<SELECT SIZE=20 NAME=group[] multiple>\n";
 		$o=0;
 		while ($groups_to_print > $o)
 		{
@@ -776,7 +800,7 @@ else
 	echo "</SELECT>\n";
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
 	echo "<font class=\"select_bold\"><B>Lists:</B></font><BR><CENTER>\n";
-	echo "<SELECT SIZE=18 NAME=list_id[] multiple>\n";
+	echo "<SELECT SIZE=20 NAME=list_id[] multiple>\n";
 		$o=0;
 		while ($lists_to_print > $o)
 		{
@@ -789,7 +813,7 @@ else
 	echo "</SELECT>\n";
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
 	echo "<font class=\"select_bold\"><B>Statuses:</B></font><BR><CENTER>\n";
-	echo "<SELECT SIZE=18 NAME=status[] multiple>\n";
+	echo "<SELECT SIZE=20 NAME=status[] multiple>\n";
 		$o=0;
 		while ($statuses_to_print > $o)
 		{
@@ -802,7 +826,7 @@ else
 	echo "</SELECT>\n";
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
 	echo "<font class=\"select_bold\"><B>User Groups:</B></font><BR><CENTER>\n";
-	echo "<SELECT SIZE=18 NAME=user_group[] multiple>\n";
+	echo "<SELECT SIZE=20 NAME=user_group[] multiple>\n";
 		$o=0;
 		while ($user_groups_to_print > $o)
 		{
