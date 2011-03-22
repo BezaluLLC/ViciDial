@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_manager_kill_hung_congested.pl    version 2.0.5
+# AST_manager_kill_hung_congested.pl    version 2.2.4
 #
 # Part of the Asterisk Central Queue System (ACQS)
 #
@@ -11,13 +11,14 @@
 # 
 # put this in the cron to run every minute
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 50823-1525 - Added commandline debug options with debug printouts
 # 60717-1247 - changed to DBI by Marin Blu
 # 60717-1536 - changed to use /etc/astguiclient.conf for configs
 # 60814-1706 - added option for no logging to file
+# 110318-1940 - fixed issue #441
 #
 
 # constants
@@ -132,6 +133,9 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 		}
 	$sthA->finish();
 
+$event_string = "SUBRT|killing_congest|KC|START|";
+&event_logger;
+
 $stmtA = "SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and extension = 'CONGEST' and channel LIKE \"Local%\" limit 99";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -164,7 +168,7 @@ foreach(@congest_kill)
 		$stmtA = "INSERT INTO vicidial_manager values('','','$now_date','NEW','N','$server_ip','','Hangup','$KCqueryCID','Channel: $congest_kill[$i]','','','','','','','','','')";
 
 			$event_string = "SUBRT|killing_congest|KC|$KCqueryCID|$congest_kill[$i]|$stmtA|";
-		 event_logger;
+		 &event_logger;
 
 		if ($DB) {print "KILLING $congest_kill[$i]\n";}
 		$affected_rows = $dbhA->do($stmtA); 
@@ -213,7 +217,7 @@ foreach(@congest_kill)
 		$stmtA = "INSERT INTO vicidial_manager values('','','$now_date','NEW','N','$server_ip','','Hangup','$KCqueryCID','Channel: $congest_kill[$i]','','','','','','','','','')";
 
 			$event_string = "SUBRT|killing_congest|KC|$KCqueryCID|$congest_kill[$i]|$stmtA|";
-		 event_logger;
+		 &event_logger;
 		
 		if ($DB) {print "KILLING $congest_kill[$i]\n";}
 		$affected_rows = $dbhA->do($stmtA);  # or die  "Couldn't execute query:\n";
@@ -263,7 +267,7 @@ foreach(@congest_kill)
 		$stmtA = "INSERT INTO vicidial_manager values('','','$now_date','NEW','N','$server_ip','','Hangup','$KCqueryCID','Channel: $congest_kill[$i]','','','','','','','','','')";
 
 			$event_string = "SUBRT|killing_congest|KC|$KCqueryCID|$congest_kill[$i]|$stmtA|";
-		 event_logger;
+		 &event_logger;
 		
 		if ($DB) {print "KILLING $congest_kill[$i]\n";}
 		$affected_rows = $dbhA->do($stmtA);  # or die  "Couldn't execute query:\n";
@@ -315,7 +319,7 @@ foreach(@congest_kill)
 		$stmtA = "INSERT INTO vicidial_manager values('','','$now_date','NEW','N','$server_ip','','Hangup','$KCqueryCID','Channel: $congest_kill[$i]','','','','','','','','','')";
 
 			$event_string = "SUBRT|killing_congest|KC|$KCqueryCID|$congest_kill[$i]|$stmtA|";
-		 event_logger;
+		 &event_logger;
 		
 		if ($DB) {print "KILLING $congest_kill[$i]\n";}
 			$affected_rows = $dbhA->do($stmtA);  # or die  "Couldn't execute query:\n";

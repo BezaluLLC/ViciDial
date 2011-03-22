@@ -342,10 +342,11 @@
 # 110304-1623 - Added callback count notification defer options
 # 110310-0331 - Added auto-pause/resume functions in auto-dial mode for pre-call work
 # 110310-1627 - Changed most browser alerts to HTML alerts, other bug fixes
+# 110322-0923 - Allowed hiding of gender pulldown
 #
 
-$version = '2.4-319c';
-$build = '110310-1627';
+$version = '2.4-320c';
+$build = '110322-0923';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=72;
 $one_mysql_log=0;
@@ -555,6 +556,10 @@ if (strlen($row[16])>0) {$label_security_phrase =	$row[16];}
 if (strlen($row[17])>0) {$label_email =				$row[17];}
 if (strlen($row[18])>0) {$label_comments =			$row[18];}
 ### END find any custom field labels ###
+
+$hide_gender=0;
+if ($label_gender == '---HIDE---')
+	{$hide_gender=1;}
 
 $US='_';
 $CL=':';
@@ -3307,6 +3312,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var auto_pause_precall_code='<?php echo $auto_pause_precall_code ?>';
 	var auto_resume_precall='<?php echo $auto_resume_precall ?>';
 	var trigger_ready=0;
+	var hide_gender='<?php echo $hide_gender ?>';
     var DiaLControl_auto_HTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/vdc_LB_resume.gif\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/vdc_LB_pause.gif\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
@@ -5916,13 +5922,20 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						if (fields_list.match(regUDgender))
 							{
 							document.vicidial_form.gender.value				= UDfieldsResponse_array[18];
-							var gIndex = 0;
-							if (document.vicidial_form.gender.value == 'M') {var gIndex = 1;}
-							if (document.vicidial_form.gender.value == 'F') {var gIndex = 2;}
-							document.getElementById("gender_list").selectedIndex = gIndex;
-							var genderIndex = document.getElementById("gender_list").selectedIndex;
-							var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
-							document.vicidial_form.gender.value = genderValue;
+							if (hide_gender > 0)
+								{
+								document.vicidial_form.gender_list.value		= UDfieldsResponse_array[18];
+								}
+							else
+								{
+								var gIndex = 0;
+								if (document.vicidial_form.gender.value == 'M') {var gIndex = 1;}
+								if (document.vicidial_form.gender.value == 'F') {var gIndex = 2;}
+								document.getElementById("gender_list").selectedIndex = gIndex;
+								var genderIndex = document.getElementById("gender_list").selectedIndex;
+								var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
+								document.vicidial_form.gender.value = genderValue;
+								}
 							}
 						var regUDdate_of_birth = new RegExp("date_of_birth,","ig");
 						if (fields_list.match(regUDdate_of_birth))
@@ -6208,14 +6221,21 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						document.getElementById("MainStatuSSpan").innerHTML = " Calling: " + status_display_number + " UID: " + MDnextCID + " &nbsp; " + man_status;
 						if ( (dialed_label.length < 2) || (dialed_label=='NONE') ) {dialed_label='MAIN';}
 
-						var gIndex = 0;
-						if (document.vicidial_form.gender.value == 'M') {var gIndex = 1;}
-						if (document.vicidial_form.gender.value == 'F') {var gIndex = 2;}
-						document.getElementById("gender_list").selectedIndex = gIndex;
+						if (hide_gender > 0)
+							{
+							document.vicidial_form.gender_list.value		= MDnextResponse_array[21];
+							}
+						else
+							{
+							var gIndex = 0;
+							if (document.vicidial_form.gender.value == 'M') {var gIndex = 1;}
+							if (document.vicidial_form.gender.value == 'F') {var gIndex = 2;}
+							document.getElementById("gender_list").selectedIndex = gIndex;
+							var genderIndex = document.getElementById("gender_list").selectedIndex;
+							var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
+							document.vicidial_form.gender.value = genderValue;
+							}
 
-						var genderIndex = document.getElementById("gender_list").selectedIndex;
-						var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
-						document.vicidial_form.gender.value = genderValue;
 						LeaDDispO='';
 
 						VDIC_web_form_address = VICIDiaL_web_form_address
@@ -7126,10 +7146,18 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							custom_field_values								= check_VDIC_array[49];
 							custom_field_types								= check_VDIC_array[50];
 
-							var gIndex = 0;
-							if (document.vicidial_form.gender.value == 'M') {var gIndex = 1;}
-							if (document.vicidial_form.gender.value == 'F') {var gIndex = 2;}
-							document.getElementById("gender_list").selectedIndex = gIndex;
+
+							if (hide_gender > 0)
+								{
+								document.vicidial_form.gender_list.value	= check_VDIC_array[25];
+								}
+							else
+								{
+								var gIndex = 0;
+								if (document.vicidial_form.gender.value == 'M') {var gIndex = 1;}
+								if (document.vicidial_form.gender.value == 'F') {var gIndex = 2;}
+								document.getElementById("gender_list").selectedIndex = gIndex;
+								}
 
 							lead_dial_number = document.vicidial_form.phone_number.value;
 							var dispnum = document.vicidial_form.phone_number.value;
@@ -7289,9 +7317,13 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								{var group = campaign;}
 							if ( (dialed_label.length < 2) || (dialed_label=='NONE') ) {dialed_label='MAIN';}
 
-							var genderIndex = document.getElementById("gender_list").selectedIndex;
-							var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
-							document.vicidial_form.gender.value = genderValue;
+							if (hide_gender < 1)
+								{
+								var genderIndex = document.getElementById("gender_list").selectedIndex;
+								var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
+								document.vicidial_form.gender.value = genderValue;
+								}
+
 							LeaDDispO='';
 
 							var regWFAcustom = new RegExp("^VAR","ig");
@@ -7433,9 +7465,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 		if (submittask != 'YES')
 			{
-			var genderIndex = document.getElementById("gender_list").selectedIndex;
-			var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
-			document.vicidial_form.gender.value = genderValue;
+			if (hide_gender < 1)
+				{
+				var genderIndex = document.getElementById("gender_list").selectedIndex;
+				var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
+				document.vicidial_form.gender.value = genderValue;
+				}
 			}
 
 		var regWFAcustom = new RegExp("^VAR","ig");
@@ -7475,9 +7510,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 		if (submittask != 'YES')
 			{
-			var genderIndex = document.getElementById("gender_list").selectedIndex;
-			var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
-			document.vicidial_form.gender.value = genderValue;
+			if (hide_gender < 1)
+				{
+				var genderIndex = document.getElementById("gender_list").selectedIndex;
+				var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
+				document.vicidial_form.gender.value = genderValue;
+				}
 			}
 
 		var regWFAcustom = new RegExp("^VAR","ig");
@@ -7973,10 +8011,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			}
 		if (xmlhttp) 
 			{ 
-
-			var genderIndex = document.getElementById("gender_list").selectedIndex;
-			var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
-			document.vicidial_form.gender.value = genderValue;
+			if (hide_gender < 1)
+				{
+				var genderIndex = document.getElementById("gender_list").selectedIndex;
+				var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
+				document.vicidial_form.gender.value = genderValue;
+				}
 
 			VLupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&campaign=" + campaign +  "&ACTION=updateLEAD&format=text&user=" + user + "&pass=" + pass + 
 			"&lead_id=" + document.vicidial_form.lead_id.value + 
@@ -8499,8 +8539,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					{
 					manual_dial_finished();
 					}
-				document.getElementById("GENDERhideFORieALT").innerHTML = '';
-                document.getElementById("GENDERhideFORie").innerHTML = '<select size="1" name="gender_list" class="cust_form" id="gender_list"><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
+				if (hide_gender < 1)
+					{
+					document.getElementById("GENDERhideFORieALT").innerHTML = '';
+					document.getElementById("GENDERhideFORie").innerHTML = '<select size="1" name="gender_list" class="cust_form" id="gender_list"><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
+					}
 				hideDiv('DispoSelectBox');
 				hideDiv('DispoButtonHideA');
 				hideDiv('DispoButtonHideB');
@@ -11201,8 +11244,11 @@ function phone_number_format(formatphone) {
 					wrapup_waiting=1;
 					}
 				CustomerData_update();
-				document.getElementById("GENDERhideFORie").innerHTML = '';
-                document.getElementById("GENDERhideFORieALT").innerHTML = '<select size="1" name="gender_list" class="cust_form" id="gender_list"><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
+				if (hide_gender < 1)
+					{
+					document.getElementById("GENDERhideFORie").innerHTML = '';
+					document.getElementById("GENDERhideFORieALT").innerHTML = '<select size="1" name="gender_list" class="cust_form" id="gender_list"><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
+					}
 				showDiv('DispoSelectBox');
 				DispoSelectContent_create('','ReSET');
 				WaitingForNextStep=1;
@@ -11914,26 +11960,32 @@ function phone_number_format(formatphone) {
 
 	function HidEGenDerPulldown()
 		{
-		var gIndex = 0;
-		var genderIndex = document.getElementById("gender_list").selectedIndex;
-		var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
-		if (genderValue == 'M') {var gIndex = 1;}
-		if (genderValue == 'F') {var gIndex = 2;}
-        document.getElementById("GENDERhideFORieALT").innerHTML = '<select size="1" name="gender_list" class="cust_form" id="gender_list"><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
-		document.getElementById("GENDERhideFORie").innerHTML = '';
-		document.getElementById("gender_list").selectedIndex = gIndex;
+		if (hide_gender < 1)
+			{
+			var gIndex = 0;
+			var genderIndex = document.getElementById("gender_list").selectedIndex;
+			var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
+			if (genderValue == 'M') {var gIndex = 1;}
+			if (genderValue == 'F') {var gIndex = 2;}
+			document.getElementById("GENDERhideFORieALT").innerHTML = '<select size="1" name="gender_list" class="cust_form" id="gender_list"><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
+			document.getElementById("GENDERhideFORie").innerHTML = '';
+			document.getElementById("gender_list").selectedIndex = gIndex;
+			}
 		}
 
 	function ShoWGenDerPulldown()
 		{
-		var gIndex = 0;
-		var genderIndex = document.getElementById("gender_list").selectedIndex;
-		var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
-		if (genderValue == 'M') {var gIndex = 1;}
-		if (genderValue == 'F') {var gIndex = 2;}
-        document.getElementById("GENDERhideFORie").innerHTML = '<select size="1" name="gender_list" class="cust_form" id="gender_list"><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
-		document.getElementById("GENDERhideFORieALT").innerHTML = '';
-		document.getElementById("gender_list").selectedIndex = gIndex;
+		if (hide_gender < 1)
+			{
+			var gIndex = 0;
+			var genderIndex = document.getElementById("gender_list").selectedIndex;
+			var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
+			if (genderValue == 'M') {var gIndex = 1;}
+			if (genderValue == 'F') {var gIndex = 2;}
+			document.getElementById("GENDERhideFORie").innerHTML = '<select size="1" name="gender_list" class="cust_form" id="gender_list"><option value="U">U - Undefined</option><option value="M">M - Male</option><option value="F">F - Female</option></select>';
+			document.getElementById("GENDERhideFORieALT").innerHTML = '';
+			document.getElementById("gender_list").selectedIndex = gIndex;
+			}
 		}
 
 	</script>
@@ -12189,7 +12241,14 @@ $zi=2;
 
     echo "</td><td align=\"right\"><font class=\"body_text\">";
 
-    echo "$label_gender: </td><td align=\"left\"><font class=\"body_text\"><span id=\"GENDERhideFORie\"><select size=\"1\" name=\"gender_list\" class=\"cust_form\" id=\"gender_list\"><option value=\"U\">U - Undefined</option><option value=\"M\">M - Male</option><option value=\"F\">F - Female</option></select></span>";
+	if ($label_gender == '---HIDE---')
+		{
+		echo "</td><td align=\"left\"><font class=\"body_text\"><span id=\"GENDERhideFORie\"><input type=\"hidden\" name=\"gender_list\" id=\"gender_list\" value=\"\" /></span>";
+		}
+	else
+        {
+		echo "$label_gender: </td><td align=\"left\"><font class=\"body_text\"><span id=\"GENDERhideFORie\"><select size=\"1\" name=\"gender_list\" class=\"cust_form\" id=\"gender_list\"><option value=\"U\">U - Undefined</option><option value=\"M\">M - Male</option><option value=\"F\">F - Female</option></select></span>";
+		}
 
     echo "</td></tr><tr><td align=\"right\"><font class=\"body_text\">";
 

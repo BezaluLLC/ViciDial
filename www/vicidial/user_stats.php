@@ -382,7 +382,7 @@ if ($did < 1)
 	echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
 	echo "<tr><td><font size=2>EVENT </td><td align=right><font size=2> DATE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MM:SS</td><td align=right><font size=2>SESSION</td><td align=right><font size=2>SERVER</td><td align=right><font size=2>PHONE</td><td align=right><font size=2>COMPUTER</td></tr>\n";
 
-		$stmt="SELECT event,event_epoch,event_date,campaign_id,user_group,session_id,server_ip,extension,computer_ip from vicidial_user_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59'";
+		$stmt="SELECT event,event_epoch,event_date,campaign_id,user_group,session_id,server_ip,extension,computer_ip from vicidial_user_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by event_date;";
 		$rslt=mysql_query($stmt, $link);
 		$events_to_print = mysql_num_rows($rslt);
 

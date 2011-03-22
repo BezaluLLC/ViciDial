@@ -416,7 +416,8 @@ if (
 
 		sleep(1);
 
-	`PERL5LIB="$PATHhome/libs"; export PERL5LIB`;
+	#`PERL5LIB="$PATHhome/libs"; export PERL5LIB`; # issue #457
+	$ENV{'PERL5LIB'} = "$PATHhome/libs";
 	### you may have to use a different ps command if you're not using Slackware Linux
 	#	@psoutput = `ps -f -C AST_update --no-headers`;
 	#	@psoutput = `ps -f -C AST_updat* --no-headers`;
