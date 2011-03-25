@@ -146,6 +146,7 @@
 # 101219-2110 - Added call time overflow
 # 110224-1735 - Added compatibility with QM phone environment logging
 # 110303-2338 - Added on-hook agent compatibility and rewrote a few sections
+# 110324-2330 - Added recording of remote agent calls, per in-group and campaign recording settings
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -587,7 +588,7 @@ $sthA->finish();
 
 ### Grab inbound groups values from the database
 $cbc=0;
-$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time FROM vicidial_inbound_groups where group_id = '$channel_group';";
+$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,ingroup_recording_override,ingroup_rec_filename FROM vicidial_inbound_groups where group_id = '$channel_group';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -669,7 +670,8 @@ if ($sthArows > 0)
 	$eht_minimum_prompt_no_block =		$aryA[64];
 	$eht_minimum_prompt_seconds =		$aryA[65];
 	$on_hook_ring_time =				$aryA[66];
-
+	$ingroup_recording_override =		$aryA[67];
+	$campaign_rec_filename =			$aryA[68];
 	$custom_call_id='';
 	if ($uniqueid_status_display =~ /ENABLED/)
 		{$custom_call_id = "$uniqueid";}
@@ -2392,6 +2394,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				### BEGIN REMOTE AGENT SECTION
 				if ( ($VDADextension =~ /^R\//) && (length($AGENTextension) < 2) )
 					{
+					$extension_campaign_id='';
 					### set the callerid to the ACQS value(calleridname)
 					## use these two lines for Asterisk 1.2 tree
 					$newcallerid = "\"$callerid <$phone_number>\"";
@@ -2408,7 +2411,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					if (length($ra_user) > 0)
 						{
 						$extension_group='';
-						$stmtA = "SELECT extension_group,extension_group_order FROM vicidial_remote_agents where user_start='$ra_user';";
+						$stmtA = "SELECT extension_group,extension_group_order,campaign_id FROM vicidial_remote_agents where user_start='$ra_user';";
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
@@ -2418,6 +2421,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 							@aryA = $sthA->fetchrow_array;
 							$extension_group =			$aryA[0];
 							$extension_group_order =	$aryA[1];
+							$extension_campaign_id =	$aryA[2];
 							}
 						$sthA->finish();
 						if ( (length($extension_group) > 0) and ($extension_group !~ /^NONE/) )
@@ -2466,6 +2470,72 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$RALaffected_rows = $dbhA->do($stmtA);
 						$dbhP=$dbhA;   $mysql_count='01138';   $MEL_aff_rows=$RALaffected_rows;   &mysql_error_logging;
 					if ($AGILOG) {$agi_string = "--    REMOTE EXTEN LOG : |$RALaffected_rows|CID changed: \"$callerid\" \<$phone_number\>\n|$stmtA|";   &agi_output;}
+
+					if ( (length($extension_campaign_id) > 0) && ($ingroup_recording_override =~ /DISABLED/) )
+						{
+						$stmtA = "SELECT campaign_recording,campaign_rec_filename FROM vicidial_campaigns where campaign_id='$extension_campaign_id';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='01134';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$ingroup_recording_override =	$aryA[0];
+							$campaign_rec_filename =		$aryA[1];
+							}
+						$sthA->finish();
+						}
+
+					### if recording is enabled then start recording on this call before sending to a remote agent
+					if ($ingroup_recording_override =~ /ALLCALLS|ALLFORCE/)
+						{
+						$stmtA = "SELECT vendor_lead_code FROM vicidial_list where lead_id='$insert_lead_id';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$vendor_lead_code =	$aryA[0];
+							}
+						$sthA->finish();
+
+						# get date/time
+						($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+						$year = ($year + 1900);
+						$Tyear = ($year - 2000);
+						$mon++;
+						if ($mon < 10)	{$mon = "0$mon";}
+						if ($mday < 10) {$mday = "0$mday";}
+						if ($hour < 10) {$hour = "0$hour";}
+						if ($min < 10)	{$min = "0$min";}
+						if ($sec < 10)	{$sec = "0$sec";}
+
+						$now_date_epoch = time();
+						$now_date = "$year-$mon-$mday $hour:$min:$sec";
+						$recdate = "$year$mon$mday-$hour$min$sec";
+						$tinydate = "$Tyear$mon$mday$hour$min$sec";
+
+						$campaign_rec_filename =~ s/CAMPAIGN/$VDADcampaign/gi;
+						$campaign_rec_filename =~ s/CUSTPHONE/$phone_number/gi;
+						$campaign_rec_filename =~ s/FULLDATE/$recdate/gi;
+						$campaign_rec_filename =~ s/TINYDATE/$tinydate/gi;
+						$campaign_rec_filename =~ s/EPOCH/$now_date_epoch/gi;
+						$campaign_rec_filename =~ s/AGENT/$VDADuser/gi;
+						$campaign_rec_filename =~ s/VENDORLEADCODE/$vendor_lead_code/gi;
+						$campaign_rec_filename =~ s/LEADID/$insert_lead_id/gi;
+						$campaign_rec_filename =~ s/\"|\'//gi;
+
+						$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$campaign_rec_filename"); 
+
+						### insert record into recording_log table ###
+						$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$phone_number','$now_date','$now_date_epoch','0','$campaign_rec_filename','$insert_lead_id','$VDADuser','$campaign_rec_filename','$uniqueid');";
+						$RLRAaffected_rows = $dbhA->do($stmtA);
+							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$RLRAaffected_rows;   &mysql_error_logging;
+						if ($AGILOG) {$agi_string = "--    REMOTE RECORDING STARTED : |$RLRAaffected_rows|$campaign_rec_filename|$stmtA|";   &agi_output;}
+						}
 					}
 				### END REMOTE AGENT SECTION
 				else

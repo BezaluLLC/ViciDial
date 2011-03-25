@@ -520,6 +520,11 @@ OTHER CHANGES:
 	halt executiong of javascript on the agent workstation. This change
 	should require no alterations to any configurations.
 
+120. Added recording of Remote Agents calls per recording settings in campaigns.
+	If recording is set to ALLCALLS or ALLFORCE then a recording will be 
+	initiated for the call upon routing to the Remote Agent and will be tied
+	to the R/ user and the lead_id. Also works with on-hook enabled.
+
 
 
 

@@ -728,3 +728,6 @@ ALTER TABLE vicidial_phone_codes MODIFY GMT_offset VARCHAR(6) default '';
 
 UPDATE system_settings SET db_schema_version='1267',db_schema_update_date=NOW();
 
+ALTER TABLE vicidial_campaigns MODIFY auto_alt_dial ENUM('NONE','ALT_ONLY','ADDR3_ONLY','ALT_AND_ADDR3','ALT_AND_EXTENDED','ALT_AND_ADDR3_AND_EXTENDED','EXTENDED_ONLY','MULTI_LEAD') default 'NONE';
+
+UPDATE system_settings SET db_schema_version='1268',db_schema_update_date=NOW();

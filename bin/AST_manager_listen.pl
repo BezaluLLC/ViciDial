@@ -589,12 +589,28 @@ while($one_day_interval > 0)
 							$result =~ s/Result: |\s*$//gi;
 							if (length($result)>0)
 								{
+								# 2011-03-22 13:22:12.123   (1277187888 123 456)
+								# ALTER TABLE vicidial_cpd_log ADD hires_time VARCHAR(26) default '';
+							#	($s_hires, $usec) = gettimeofday();   # get seconds and microseconds since the epoch
+							#	$usec = sprintf("%06s", $usec);
+							#	$HRmsec = substr($usec, -6);
+							#	($HRsec,$HRmin,$HRhour,$HRmday,$HRmon,$HRyear,$HRwday,$HRyday,$HRisdst) = localtime($s_hires);
+							#	$HRyear = ($HRyear + 1900);
+							#	$HRmon++;
+							#	if ($HRmon < 10) {$HRmon = "0$HRmon";}
+							#	if ($HRmday < 10) {$HRmday = "0$HRmday";}
+							#	if ($HRhour < 10) {$HRFhour = "0$HRhour";}
+							#	if ($HRmin < 10) {$HRmin = "0$HRmin";}
+							#	if ($HRsec < 10) {$HRsec = "0$HRsec";}
+							#	$HRnow_date = "$HRyear-$HRmon-$HRmday $HRhour:$HRmin:$HRsec.$HRmsec";
+
 								$lead_id = substr($callid, 10, 10);
 								$lead_id = ($lead_id + 0);
+							#	$stmtA = "INSERT INTO vicidial_cpd_log set channel='$channel', uniqueid='$uniqueid', callerid='$callid', server_ip='$server_ip', lead_id='$lead_id', event_date='$now_date', result='$result', hires_time='$HRnow_date';";
 								$stmtA = "INSERT INTO vicidial_cpd_log set channel='$channel', uniqueid='$uniqueid', callerid='$callid', server_ip='$server_ip', lead_id='$lead_id', event_date='$now_date', result='$result';";
 								print STDERR "|$stmtA|\n";
 								my $affected_rows = $dbhA->do($stmtA);
-								if($DB){print "|$affected_rows CPD_log inserted|\n";}
+								if($DB){print "|$affected_rows CPD_log inserted|$HRnow_date|$s_hires|$usec|\n";}
 								}
 							}
 						}

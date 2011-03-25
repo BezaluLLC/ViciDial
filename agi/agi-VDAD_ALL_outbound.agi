@@ -82,6 +82,7 @@
 # 110213-0008 - Added scheduled callbacks custom statuses compatibility
 # 110224-1733 - Added compatibility with QM phone environment logging
 # 110303-2316 - Added condition that would not allow calls to be sent to agent with ringing inbound call
+# 110324-2326 - Added recording of remote agent calls, per in-group and campaign recording settings
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -98,6 +99,7 @@ $US='_';
 # get date/time
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 $year = ($year + 1900);
+$Tyear = ($year - 2000);
 $mon++;
 if ($mon < 10)	{$mon = "0$mon";}
 if ($mday < 10) {$mday = "0$mday";}
@@ -113,6 +115,8 @@ $start_time=$now_date;
 $CIDdate = "$mon$mday$hour$min$sec";
 $tsSQLdate = "$year$mon$mday$hour$min$sec";
 $filedate = "$US$year-$mon-$mday$US$hour$min$sec";
+$recdate = "$year$mon$mday-$hour$min$sec";
+$tinydate = "$Tyear$mon$mday$hour$min$sec";
 $SQLdate = "$year-$mon-$mday $hour:$min:$sec";
 $SQLdateBEGIN = $SQLdate;
 
@@ -374,8 +378,8 @@ if ($dialplan_duplicate_count > 0)
 ### Grab call parameters from vicidial_auto_calls table
 $stmtA = "UPDATE vicidial_auto_calls set uniqueid='$unique_id', channel='$channel',status='LIVE',stage='LIVE-0' where callerid='$callerid' order by call_time desc limit 1;";
 $VDACaffected_rows = $dbhA->do($stmtA);
-	$dbhP=$dbhA;   $mysql_count='01004';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-if ($AGILOG) {$agi_string = "--    VDAD : |$affected_rows|update of vac table: $callerid\n|$stmtA|";   &agi_output;}
+	$dbhP=$dbhA;   $mysql_count='01004';   $MEL_aff_rows=$VDACaffected_rows;   &mysql_error_logging;
+if ($AGILOG) {$agi_string = "--    VDAD : |$VDACaffected_rows|update of vac table: $callerid\n|$stmtA|";   &agi_output;}
 if ($VDACaffected_rows < 1)
 	{
 	if ($AGILOG) {$agi_string = "--    NO VDAC FOUND!!!!!: $callerid";   &agi_output;}
@@ -471,7 +475,7 @@ if ($VDACaffected_rows > 0)
 	$sthA->finish();
 
 	### Grab campaign values from the database
-	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname,queue_priority,closer_campaigns,queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
+	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname,queue_priority,closer_campaigns,queuemetrics_phone_environment,campaign_recording,campaign_rec_filename FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -504,6 +508,8 @@ if ($VDACaffected_rows > 0)
 		$VDADqueue_priority =			$aryA[19];
 		$closer_campaigns =				$aryA[20];
 		$queuemetrics_phone_environment = $aryA[21];
+		$campaign_recording =			$aryA[22];
+		$campaign_rec_filename =		$aryA[23];
 		if (length($closer_campaigns) > 2)
 			{
 			$closer_campaigns =~ s/^ | -$//gi;
@@ -1751,6 +1757,56 @@ while ($drop_timer <= $DROP_TIME)
 					$RALaffected_rows = $dbhA->do($stmtA);
 						$dbhP=$dbhA;   $mysql_count='01064';   $MEL_aff_rows=$RALaffected_rows;   &mysql_error_logging;
 					if ($AGILOG) {$agi_string = "--    REMOTE EXTEN LOG : |$RALaffected_rows|CID changed: \"$callerid\" \<$VDADphone\>\n|$stmtA|";   &agi_output;}
+
+					### if recording is enabled then start recording on this call before sending to a remote agent
+					if ($campaign_recording =~ /ALLCALLS|ALLFORCE/)
+						{
+						$stmtA = "SELECT vendor_lead_code FROM vicidial_list where lead_id='$CIDlead_id';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$vendor_lead_code =	$aryA[0];
+							}
+						$sthA->finish();
+
+						# get date/time
+						($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+						$year = ($year + 1900);
+						$Tyear = ($year - 2000);
+						$mon++;
+						if ($mon < 10)	{$mon = "0$mon";}
+						if ($mday < 10) {$mday = "0$mday";}
+						if ($hour < 10) {$hour = "0$hour";}
+						if ($min < 10)	{$min = "0$min";}
+						if ($sec < 10)	{$sec = "0$sec";}
+
+						$now_date_epoch = time();
+						$now_date = "$year-$mon-$mday $hour:$min:$sec";
+						$recdate = "$year$mon$mday-$hour$min$sec";
+						$tinydate = "$Tyear$mon$mday$hour$min$sec";
+
+						$campaign_rec_filename =~ s/CAMPAIGN/$VDADcampaign/gi;
+						$campaign_rec_filename =~ s/CUSTPHONE/$VDADphone/gi;
+						$campaign_rec_filename =~ s/FULLDATE/$recdate/gi;
+						$campaign_rec_filename =~ s/TINYDATE/$tinydate/gi;
+						$campaign_rec_filename =~ s/EPOCH/$now_date_epoch/gi;
+						$campaign_rec_filename =~ s/AGENT/$VDADuser/gi;
+						$campaign_rec_filename =~ s/VENDORLEADCODE/$vendor_lead_code/gi;
+						$campaign_rec_filename =~ s/LEADID/$CIDlead_id/gi;
+						$campaign_rec_filename =~ s/\"|\'//gi;
+
+						$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$campaign_rec_filename"); 
+
+						### insert record into recording_log table ###
+						$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$VDADphone','$now_date','$now_date_epoch','0','$campaign_rec_filename','$CIDlead_id','$VDADuser','$campaign_rec_filename','$uniqueid');";
+						$RLRAaffected_rows = $dbhA->do($stmtA);
+							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$RLRAaffected_rows;   &mysql_error_logging;
+						if ($AGILOG) {$agi_string = "--    REMOTE RECORDING STARTED : |$RLRAaffected_rows|$campaign_rec_filename|$stmtA|";   &agi_output;}
+						}
 					}
 				### END REMOTE AGENT SECTION
 				else
@@ -2140,6 +2196,56 @@ while ($drop_timer <= $DROP_TIME)
 					$RALaffected_rows = $dbhA->do($stmtA);
 						$dbhP=$dbhA;   $mysql_count='01065';   $MEL_aff_rows=$RALaffected_rows;   &mysql_error_logging;
 					if ($AGILOG) {$agi_string = "--    REMOTE EXTEN LOG : |$RALaffected_rows|CID changed: \"$callerid\" \<$VDADphone\>\n|$stmtA|";   &agi_output;}
+
+					### if recording is enabled then start recording on this call before sending to a remote agent
+					if ($campaign_recording =~ /ALLCALLS|ALLFORCE/)
+						{
+						$stmtA = "SELECT vendor_lead_code FROM vicidial_list where lead_id='$CIDlead_id';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$vendor_lead_code =	$aryA[0];
+							}
+						$sthA->finish();
+
+						# get date/time
+						($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+						$year = ($year + 1900);
+						$Tyear = ($year - 2000);
+						$mon++;
+						if ($mon < 10)	{$mon = "0$mon";}
+						if ($mday < 10) {$mday = "0$mday";}
+						if ($hour < 10) {$hour = "0$hour";}
+						if ($min < 10)	{$min = "0$min";}
+						if ($sec < 10)	{$sec = "0$sec";}
+
+						$now_date_epoch = time();
+						$now_date = "$year-$mon-$mday $hour:$min:$sec";
+						$recdate = "$year$mon$mday-$hour$min$sec";
+						$tinydate = "$Tyear$mon$mday$hour$min$sec";
+
+						$campaign_rec_filename =~ s/CAMPAIGN/$VDADcampaign/gi;
+						$campaign_rec_filename =~ s/CUSTPHONE/$VDADphone/gi;
+						$campaign_rec_filename =~ s/FULLDATE/$recdate/gi;
+						$campaign_rec_filename =~ s/TINYDATE/$tinydate/gi;
+						$campaign_rec_filename =~ s/EPOCH/$now_date_epoch/gi;
+						$campaign_rec_filename =~ s/AGENT/$VDADuser/gi;
+						$campaign_rec_filename =~ s/VENDORLEADCODE/$vendor_lead_code/gi;
+						$campaign_rec_filename =~ s/LEADID/$CIDlead_id/gi;
+						$campaign_rec_filename =~ s/\"|\'//gi;
+
+						$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$campaign_rec_filename"); 
+
+						### insert record into recording_log table ###
+						$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$VDADphone','$now_date','$now_date_epoch','0','$campaign_rec_filename','$CIDlead_id','$VDADuser','$campaign_rec_filename','$uniqueid');";
+						$RLRAaffected_rows = $dbhA->do($stmtA);
+							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$RLRAaffected_rows;   &mysql_error_logging;
+						if ($AGILOG) {$agi_string = "--    REMOTE RECORDING STARTED : |$RLRAaffected_rows|$campaign_rec_filename|$stmtA|";   &agi_output;}
+						}
 					}
 				### END REMOTE AGENT SECTION
 				else

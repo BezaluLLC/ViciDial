@@ -16,6 +16,7 @@
 #
 # changes:
 # 110303-2325 - First build
+# 110324-2328 - Added recording of remote agent calls, per in-group and campaign recording settings
 #
 
 $script = 'agi-VDAD_RINGALL.agi';
@@ -247,7 +248,6 @@ if ($NAGcount > 0)
 					$AVCaffected_rows = $dbhA->do($stmtA);  
 					if ($AVCaffected_rows)
 						{
-
 						$stmtA="SELECT conf_exten from vicidial_conferences where server_ip='$VLAserver_ip' and extension='3WAY_$dial_user' and leave_3way_datetime='$now_date' and conf_exten != '$VLAconf_exten';";
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -258,6 +258,69 @@ if ($NAGcount > 0)
 							$VLAconf_exten =	$aryA[0];
 							$sthA->finish();
 							if ($AGILOG) {$agi_string = "--    AVC Session Reserved: |$callerid|$auto_call_id|$dial_user|3WAY_$dial_user|$now_date|$VLAconf_exten|";   &agi_output;}
+
+							if (length($VLAcampaign_id) > 0)
+								{
+								$stmtA = "SELECT campaign_recording,campaign_rec_filename FROM vicidial_campaigns where campaign_id='$VLAcampaign_id';";
+								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+								$VCRcount=$sthA->rows;
+								if ($VCRcount > 0)
+									{
+									@aryA = $sthA->fetchrow_array;
+									$campaign_recording =		$aryA[0];
+									$campaign_rec_filename =	$aryA[1];
+									}
+								$sthA->finish();
+								}
+
+							### if recording is enabled then start recording on this call before sending to a remote agent
+							if ($campaign_recording =~ /ALLCALLS|ALLFORCE/)
+								{
+								$stmtA = "SELECT vendor_lead_code FROM vicidial_list where lead_id='$VAC_lead_id';";
+								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+								$sthArows=$sthA->rows;
+								if ($sthArows > 0)
+									{
+									@aryA = $sthA->fetchrow_array;
+									$vendor_lead_code =	$aryA[0];
+									}
+								$sthA->finish();
+
+								# get date/time
+								($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+								$year = ($year + 1900);
+								$Tyear = ($year - 2000);
+								$mon++;
+								if ($mon < 10)	{$mon = "0$mon";}
+								if ($mday < 10) {$mday = "0$mday";}
+								if ($hour < 10) {$hour = "0$hour";}
+								if ($min < 10)	{$min = "0$min";}
+								if ($sec < 10)	{$sec = "0$sec";}
+
+								$now_date_epoch = time();
+								$now_date = "$year-$mon-$mday $hour:$min:$sec";
+								$recdate = "$year$mon$mday-$hour$min$sec";
+								$tinydate = "$Tyear$mon$mday$hour$min$sec";
+
+								$campaign_rec_filename =~ s/CAMPAIGN/$VLAcampaign_id/gi;
+								$campaign_rec_filename =~ s/CUSTPHONE/$VAC_phone_number/gi;
+								$campaign_rec_filename =~ s/FULLDATE/$recdate/gi;
+								$campaign_rec_filename =~ s/TINYDATE/$tinydate/gi;
+								$campaign_rec_filename =~ s/EPOCH/$now_date_epoch/gi;
+								$campaign_rec_filename =~ s/AGENT/$dial_user/gi;
+								$campaign_rec_filename =~ s/VENDORLEADCODE/$vendor_lead_code/gi;
+								$campaign_rec_filename =~ s/LEADID/$VAC_lead_id/gi;
+								$campaign_rec_filename =~ s/\"|\'//gi;
+
+								$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$campaign_rec_filename"); 
+
+								### insert record into recording_log table ###
+								$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$VAC_phone_number','$now_date','$now_date_epoch','0','$campaign_rec_filename','$VAC_lead_id','$dial_user','$campaign_rec_filename','$uniqueid');";
+								$RLRAaffected_rows = $dbhA->do($stmtA);
+								if ($AGILOG) {$agi_string = "--    REMOTE RECORDING STARTED : |$RLRAaffected_rows|$campaign_rec_filename|$stmtA|";   &agi_output;}
+								}
 							}
 						else
 							{

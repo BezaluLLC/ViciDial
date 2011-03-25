@@ -355,3 +355,4 @@ INSERT INTO vicidial_statuses values('RQXFER','Re-Queue','N','Y','UNDEFINED','N'
 INSERT INTO vicidial_statuses values('TIMEOT','Inbound Queue Timeout Drop','N','Y','UNDEFINED','N','N','N','N','N','N');
 INSERT INTO vicidial_statuses values('AFTHRS','Inbound After Hours Drop','N','Y','UNDEFINED','N','N','N','N','N','N');
 INSERT INTO vicidial_statuses values('NANQUE','Inbound No Agent No Queue Drop','N','Y','UNDEFINED','N','N','N','N','N','N');
+INSERT INTO vicidial_statuses values('PDROP','Outbound Pre-Routing Drop','N','Y','UNDEFINED','N','N','N','N','N','N');

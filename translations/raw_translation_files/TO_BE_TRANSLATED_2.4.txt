@@ -604,6 +604,8 @@ Callback Comments||
 To see information on one of the callbacks below, click on the INFO link. To call the customer back now, click on the DIAL link. If you click on a record below to dial it, it will be removed from the list||
 rings all available agents until one picks up the phone||
 No calls for this lead||
+ADMINISTRATION: Campaign Multi-Alt-Leads||
+Multi-Lead Auto Alt Dialing Settings Form||
 
 
 ############################################################  MANAGER Manual

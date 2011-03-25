@@ -21,7 +21,7 @@
 # exten => _8320*.,1,AGI(VD_amd.agi,${EXTEN}-----YES)
 # exten => _8320*.,2,Hangup
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 60206-1434 first build
@@ -39,6 +39,7 @@
 # 100823-0850 - Changed vac to UPDATE for Auto-alt-dial to function properly
 # 100903-0041 - Changed lead_id max length to 10 digits
 # 101111-1552 - Fixed minor bug in TTS filtering
+# 110324-2334 - Logging changes made
 #
 
 $script = 'VD_amd.agi';
@@ -341,19 +342,32 @@ else
 	if ($AGILOG) {$agi_string = "--    VDAC record updated: |$affected_rows|   |$VD_lead_id|$uniqueid|$VD_callerid";   &agi_output;}
 
 	########## FIND AND UPDATE vicidial_log ##########
-	$stmtA = "SELECT start_epoch FROM vicidial_log where uniqueid='$uniqueid' and  lead_id='$VD_lead_id' order by call_date desc limit 1;";
+	$Euniqueid=$uniqueid;
+	$Euniqueid =~ s/\.\d+$//gi;
+	$stmtA = "SELECT start_epoch,uniqueid FROM vicidial_log where lead_id='$VD_lead_id' and uniqueid LIKE \"$Euniqueid%\" order by call_date desc limit 10;";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
 	$epc_countCUSTDATA=0;
+	$first_uniqueid='';
 	while ($sthArows > $epc_countCUSTDATA)
 		{
 		@aryA = $sthA->fetchrow_array;
 		$VD_start_epoch		= $aryA[0];
+		$uniqueid			= $aryA[1];
+		if ($epc_countCUSTDATA < 1) {$first_uniqueid = $aryA[1];}
 		$epc_countCUSTDATA++;
 		}
 	$sthA->finish();
+
+	if ($epc_countCUSTDATA > 1)
+		{
+		$stmtA = "DELETE from vicidial_log where uniqueid='$first_uniqueid' and lead_id='$VD_lead_id' limit 1;";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rows = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    VDAD vicidial_log duplicate delete: |$affected_rows|$uniqueid|$first_uniqueid|$VD_lead_id|";   &agi_output;}
+		}
 
 	if (!$epc_countCUSTDATA)
 		{
@@ -583,7 +597,7 @@ else
 			{$AGI->stream_file("$DB_am_message_exten");}
 
 
-		$stmtA = "UPDATE vicidial_log set status='AL' where lead_id='$VD_lead_id' order by call_date desc limit 1;";
+		$stmtA = "UPDATE vicidial_log set status='AL' where uniqueid='$uniqueid' and lead_id='$VD_lead_id' order by call_date desc limit 1;";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$affected_rows = $dbhA->do($stmtA);
 		if ($AGILOG) {$agi_string = "--    VDAD vicidial_log AL update: |$affected_rows|$uniqueid|";   &agi_output;}
