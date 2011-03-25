@@ -1,7 +1,7 @@
 <?php
 # manager_send.php    version 2.4
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to insert records into the vicidial_manager table to signal Actions to an asterisk server
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -43,6 +43,8 @@
 #  - $nodeletevdac - ('0','1')
 #  - $alertCID - ('0','1')
 #  - $preset_name = ('TESTING PRESET',...)
+#  - $call_variables = ('Variable: vendor_lead_code=1234|campaign=TESTCAMP|...')
+#  - $log_campaign
 #
 # CHANGELOG:
 # 50401-1002 - First build of script, Hangup function only
@@ -102,12 +104,15 @@
 # 100813-0833 - Added preset_name variable and logging
 # 101004-1345 - Added Ivr park functions
 # 101024-1638 - Added park_log logging for parked calls
+# 101107-2331 - Added CALLERONHOLD/CALLEROFFHOLD queue_log entries
+# 101125-1018 - Added call_variables Originate variables
+# 110224-1710 - Added compatibility with QM phone environment logging
 #
 
-$version = '2.4-52';
-$build = '101024-1638';
+$version = '2.4-55';
+$build = '110224-1710';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=97;
+$mysql_log_count=116;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -197,6 +202,10 @@ if (isset($_GET["alertCID"]))				{$alertCID=$_GET["alertCID"];}
 	elseif (isset($_POST["alertCID"]))		{$alertCID=$_POST["alertCID"];}
 if (isset($_GET["preset_name"]))			{$preset_name=$_GET["preset_name"];}
 	elseif (isset($_POST["preset_name"]))	{$preset_name=$_POST["preset_name"];}
+if (isset($_GET["call_variables"]))				{$call_variables=$_GET["call_variables"];}
+	elseif (isset($_POST["call_variables"]))	{$call_variables=$_POST["call_variables"];}
+if (isset($_GET["log_campaign"]))			{$log_campaign=$_GET["log_campaign"];}
+	elseif (isset($_POST["log_campaign"]))	{$log_campaign=$_POST["log_campaign"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -437,10 +446,12 @@ if ($ACTION=="Originate")
 			{
 			$RAWaccount = $account;
 			$account = "Account: $account";
-			$variable = "Variable: usegroupalias=1";
+			$variable = "Variable: _usegroupalias=1";
+			if (strlen($call_variables)>9)
+				{$variable = "Variable: _usegroupalias=1";}   # |$call_variables
 			}
 		else
-			{$account='';   $variable='';}
+			{$variable='';   $account="Variable: $call_variables";}
 		$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$queryCID','Channel: $channel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','Callerid: $outCID','$account','$variable','','','');";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
@@ -712,8 +723,20 @@ if ($ACTION=="Hangup")
 								if ($time_id > 100000) 
 									{$secondS = ($StarTtime - $time_id);}
 
+								$data4SQL='';
+								$stmt="SELECT queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id='$log_campaign' and queuemetrics_phone_environment!='';";
+								$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02116',$user,$server_ip,$session_name,$one_mysql_log);}
+								if ($DB) {echo "$stmt\n";}
+								$cqpe_ct = mysql_num_rows($rslt);
+								if ($cqpe_ct > 0)
+									{
+									$row=mysql_fetch_row($rslt);
+									$data4SQL = ",data4='$row[0]'";
+									}
+
 								if ($format=='debug') {echo "\n<!-- $caller_complete|$stmt -->";}
-								$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$CLcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$secondS',data3='$CLqueue_position',serverid='$queuemetrics_log_id';";
+								$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$CLcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$secondS',data3='$CLqueue_position',serverid='$queuemetrics_log_id' $data4SQL;";
 								$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02019',$user,$server_ip,$session_name,$one_mysql_log);}
 								$affected_rows = mysql_affected_rows($linkB);
@@ -842,7 +865,60 @@ if ($ACTION=="RedirectToPark")
 		$stmt = "INSERT INTO park_log SET uniqueid='$uniqueid',status='PARKINGED',channel='$channel',channel_group='$campaign',server_ip='$server_ip',parked_time='$NOW_TIME',parked_sec=0,extension='$CalLCID',user='$user',lead_id='$lead_id';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02098',$user,$server_ip,$session_name,$one_mysql_log);}
+
+
+		#############################################
+		##### START QUEUEMETRICS LOGGING LOOKUP #####
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02099',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
+		$qm_conf_ct = mysql_num_rows($rslt);
+		$i=0;
+		while ($i < $qm_conf_ct)
+			{
+			$row=mysql_fetch_row($rslt);
+			$enable_queuemetrics_logging =	$row[0];
+			$queuemetrics_server_ip	=		$row[1];
+			$queuemetrics_dbname =			$row[2];
+			$queuemetrics_login	=			$row[3];
+			$queuemetrics_pass =			$row[4];
+			$queuemetrics_log_id =			$row[5];
+			$i++;
+			}
+		##### END QUEUEMETRICS LOGGING LOOKUP #####
+		###########################################
+		if ($enable_queuemetrics_logging > 0)
+			{
+			$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+			mysql_select_db("$queuemetrics_dbname", $linkB);
+
+			$time_id=0;
+			$stmt="SELECT time_id,queue,agent from queue_log where call_id='$CalLCID' and verb='CONNECT' order by time_id desc limit 1;";
+			$rslt=mysql_query($stmt, $linkB);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02100',$user,$server_ip,$session_name,$one_mysql_log);}
+			$VAC_eq_ct = mysql_num_rows($rslt);
+			if ($VAC_eq_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$time_id =	$row[0];
+				$queue =	$row[1];
+				$agent =	$row[2];
+				}
+			$StarTtime = date("U");
+			if ($time_id > 100000) 
+				{$secondS = ($StarTtime - $time_id);}
+
+			if ($VAC_eq_ct > 0)
+				{
+				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLERONHOLD',data1='PARKING',serverid='$queuemetrics_log_id';";
+				$rslt=mysql_query($stmt, $linkB);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02101',$user,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rows = mysql_affected_rows($linkB);
+				if ($format=='debug') {echo "\n<!-- $affected_rows|$stmt -->";}
+				}
+			}
 
 	#	$fp = fopen ("./vicidial_debug.txt", "a");
 	#	fwrite ($fp, "$NOW_TIME|MS_LOG_0|$queryCID|$stmt|\n");
@@ -880,7 +956,7 @@ if ($ACTION=="RedirectFromPark")
 		$parked_sec=0;
 		$stmt = "SELECT UNIX_TIMESTAMP(parked_time) FROM park_log where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' and (parked_sec < 1 or grab_time is NULL) order by parked_time desc limit 1;";
 		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02102',$user,$server_ip,$session_name,$one_mysql_log);}
 		$VAC_pl_ct = mysql_num_rows($rslt);
 		if ($VAC_pl_ct > 0)
 			{
@@ -890,7 +966,59 @@ if ($ACTION=="RedirectFromPark")
 			$stmt = "UPDATE park_log SET status='GRABBED',grab_time='$NOW_TIME',parked_sec='$parked_sec' where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' order by parked_time desc limit 1;";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02103',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			#############################################
+			##### START QUEUEMETRICS LOGGING LOOKUP #####
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02104',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
+			$qm_conf_ct = mysql_num_rows($rslt);
+			$i=0;
+			while ($i < $qm_conf_ct)
+				{
+				$row=mysql_fetch_row($rslt);
+				$enable_queuemetrics_logging =	$row[0];
+				$queuemetrics_server_ip	=		$row[1];
+				$queuemetrics_dbname =			$row[2];
+				$queuemetrics_login	=			$row[3];
+				$queuemetrics_pass =			$row[4];
+				$queuemetrics_log_id =			$row[5];
+				$i++;
+				}
+			##### END QUEUEMETRICS LOGGING LOOKUP #####
+			###########################################
+			if ($enable_queuemetrics_logging > 0)
+				{
+				$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+				mysql_select_db("$queuemetrics_dbname", $linkB);
+
+				$time_id=0;
+				$stmt="SELECT time_id,queue,agent from queue_log where call_id='$CalLCID' and verb='CONNECT' order by time_id desc limit 1;";
+				$rslt=mysql_query($stmt, $linkB);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02105',$user,$server_ip,$session_name,$one_mysql_log);}
+				$VAC_eq_ct = mysql_num_rows($rslt);
+				if ($VAC_eq_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$time_id =	$row[0];
+					$queue =	$row[1];
+					$agent =	$row[2];
+					}
+				$StarTtime = date("U");
+				if ($time_id > 100000) 
+					{$secondS = ($StarTtime - $time_id);}
+
+				if ($VAC_eq_ct > 0)
+					{
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLEROFFHOLD',data1='$parked_sec',data2='PARKING',serverid='$queuemetrics_log_id';";
+					$rslt=mysql_query($stmt, $linkB);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02106',$user,$server_ip,$session_name,$one_mysql_log);}
+					$affected_rows = mysql_affected_rows($linkB);
+					if ($format=='debug') {echo "\n<!-- $affected_rows|$stmt -->";}
+					}
+				}
 			}
 		}
 
@@ -932,8 +1060,59 @@ if ($ACTION=="RedirectToParkIVR")
 		$stmt = "INSERT INTO park_log SET uniqueid='$uniqueid',status='IVRPARKINGED',channel='$channel',channel_group='$campaign',server_ip='$server_ip',parked_time='$NOW_TIME',parked_sec=0,extension='$CalLCID',user='$user',lead_id='$lead_id';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02107',$user,$server_ip,$session_name,$one_mysql_log);}
 
+		#############################################
+		##### START QUEUEMETRICS LOGGING LOOKUP #####
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02108',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
+		$qm_conf_ct = mysql_num_rows($rslt);
+		$i=0;
+		while ($i < $qm_conf_ct)
+			{
+			$row=mysql_fetch_row($rslt);
+			$enable_queuemetrics_logging =	$row[0];
+			$queuemetrics_server_ip	=		$row[1];
+			$queuemetrics_dbname =			$row[2];
+			$queuemetrics_login	=			$row[3];
+			$queuemetrics_pass =			$row[4];
+			$queuemetrics_log_id =			$row[5];
+			$i++;
+			}
+		##### END QUEUEMETRICS LOGGING LOOKUP #####
+		###########################################
+		if ($enable_queuemetrics_logging > 0)
+			{
+			$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+			mysql_select_db("$queuemetrics_dbname", $linkB);
+
+			$time_id=0;
+			$stmt="SELECT time_id,queue,agent from queue_log where call_id='$CalLCID' and verb='CONNECT' order by time_id desc limit 1;";
+			$rslt=mysql_query($stmt, $linkB);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02109',$user,$server_ip,$session_name,$one_mysql_log);}
+			$VAC_eq_ct = mysql_num_rows($rslt);
+			if ($VAC_eq_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$time_id =	$row[0];
+				$queue =	$row[1];
+				$agent =	$row[2];
+				}
+			$StarTtime = date("U");
+			if ($time_id > 100000) 
+				{$secondS = ($StarTtime - $time_id);}
+
+			if ($VAC_eq_ct > 0)
+				{
+				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLERONHOLD',data1='IVRPARKING',serverid='$queuemetrics_log_id';";
+				$rslt=mysql_query($stmt, $linkB);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02110',$user,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rows = mysql_affected_rows($linkB);
+				if ($format=='debug') {echo "\n<!-- $affected_rows|$stmt -->";}
+				}
+			}
 	#	$fp = fopen ("./vicidial_debug.txt", "a");
 	#	fwrite ($fp, "$NOW_TIME|MS_LOG_0|$queryCID|$stmt|\n");
 	#	fclose($fp);
@@ -975,7 +1154,7 @@ if ($ACTION=="RedirectFromParkIVR")
 		$parked_sec=0;
 		$stmt = "SELECT UNIX_TIMESTAMP(parked_time) FROM park_log where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' and (parked_sec < 1 or grab_time is NULL) order by parked_time desc limit 1;";
 		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02111',$user,$server_ip,$session_name,$one_mysql_log);}
 		$VAC_pl_ct = mysql_num_rows($rslt);
 		if ($VAC_pl_ct > 0)
 			{
@@ -985,7 +1164,59 @@ if ($ACTION=="RedirectFromParkIVR")
 			$stmt = "UPDATE park_log SET status='GRABBEDIVR',grab_time='$NOW_TIME',parked_sec='$parked_sec' where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' order by parked_time desc limit 1;";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02112',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			#############################################
+			##### START QUEUEMETRICS LOGGING LOOKUP #####
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02113',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
+			$qm_conf_ct = mysql_num_rows($rslt);
+			$i=0;
+			while ($i < $qm_conf_ct)
+				{
+				$row=mysql_fetch_row($rslt);
+				$enable_queuemetrics_logging =	$row[0];
+				$queuemetrics_server_ip	=		$row[1];
+				$queuemetrics_dbname =			$row[2];
+				$queuemetrics_login	=			$row[3];
+				$queuemetrics_pass =			$row[4];
+				$queuemetrics_log_id =			$row[5];
+				$i++;
+				}
+			##### END QUEUEMETRICS LOGGING LOOKUP #####
+			###########################################
+			if ($enable_queuemetrics_logging > 0)
+				{
+				$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+				mysql_select_db("$queuemetrics_dbname", $linkB);
+
+				$time_id=0;
+				$stmt="SELECT time_id,queue,agent from queue_log where call_id='$CalLCID' and verb='CONNECT' order by time_id desc limit 1;";
+				$rslt=mysql_query($stmt, $linkB);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02114',$user,$server_ip,$session_name,$one_mysql_log);}
+				$VAC_eq_ct = mysql_num_rows($rslt);
+				if ($VAC_eq_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$time_id =	$row[0];
+					$queue =	$row[1];
+					$agent =	$row[2];
+					}
+				$StarTtime = date("U");
+				if ($time_id > 100000) 
+					{$secondS = ($StarTtime - $time_id);}
+
+				if ($VAC_eq_ct > 0)
+					{
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLEROFFHOLD',data1='$parked_sec',data2='IVRPARKING',serverid='$queuemetrics_log_id';";
+					$rslt=mysql_query($stmt, $linkB);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02115',$user,$server_ip,$session_name,$one_mysql_log);}
+					$affected_rows = mysql_affected_rows($linkB);
+					if ($format=='debug') {echo "\n<!-- $affected_rows|$stmt -->";}
+					}
+				}
 			}
 		}
 
