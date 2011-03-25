@@ -83,12 +83,13 @@
 # 110224-1733 - Added compatibility with QM phone environment logging
 # 110303-2316 - Added condition that would not allow calls to be sent to agent with ringing inbound call
 # 110324-2326 - Added recording of remote agent calls, per in-group and campaign recording settings
+# 110325-1410 - Added user recording override settings checking for remote agent recording
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
 $AGILOG = '0';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=71;
+$mysql_log_count=76;
 $one_mysql_log=0;
 
 
@@ -1758,6 +1759,26 @@ while ($drop_timer <= $DROP_TIME)
 						$dbhP=$dbhA;   $mysql_count='01064';   $MEL_aff_rows=$RALaffected_rows;   &mysql_error_logging;
 					if ($AGILOG) {$agi_string = "--    REMOTE EXTEN LOG : |$RALaffected_rows|CID changed: \"$callerid\" \<$VDADphone\>\n|$stmtA|";   &agi_output;}
 
+
+					### look for the recording settings for the start user of this remote agent
+					if (length($ra_user) > 0)
+						{
+						$stmtA = "SELECT vicidial_recording_override,vicidial_recording FROM vicidial_users where user='$ra_user';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArowsVUrec=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='01072';   $MEL_aff_rows=$sthArowsVUrec;   &mysql_error_logging;
+						if ($sthArowsVUrec > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							if ($aryA[0] !~ /DISABLED/)
+								{$campaign_recording =	$aryA[0];}
+							if ($aryA[1] < 1)
+								{$campaign_recording =	'NONE';}
+							}
+						$sthA->finish();
+						}
+
 					### if recording is enabled then start recording on this call before sending to a remote agent
 					if ($campaign_recording =~ /ALLCALLS|ALLFORCE/)
 						{
@@ -1765,7 +1786,7 @@ while ($drop_timer <= $DROP_TIME)
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
-							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='01073';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 						if ($sthArows > 0)
 							{
 							@aryA = $sthA->fetchrow_array;
@@ -1804,7 +1825,7 @@ while ($drop_timer <= $DROP_TIME)
 						### insert record into recording_log table ###
 						$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$VDADphone','$now_date','$now_date_epoch','0','$campaign_rec_filename','$CIDlead_id','$VDADuser','$campaign_rec_filename','$uniqueid');";
 						$RLRAaffected_rows = $dbhA->do($stmtA);
-							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$RLRAaffected_rows;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='01074';   $MEL_aff_rows=$RLRAaffected_rows;   &mysql_error_logging;
 						if ($AGILOG) {$agi_string = "--    REMOTE RECORDING STARTED : |$RLRAaffected_rows|$campaign_rec_filename|$stmtA|";   &agi_output;}
 						}
 					}
@@ -2197,6 +2218,26 @@ while ($drop_timer <= $DROP_TIME)
 						$dbhP=$dbhA;   $mysql_count='01065';   $MEL_aff_rows=$RALaffected_rows;   &mysql_error_logging;
 					if ($AGILOG) {$agi_string = "--    REMOTE EXTEN LOG : |$RALaffected_rows|CID changed: \"$callerid\" \<$VDADphone\>\n|$stmtA|";   &agi_output;}
 
+
+					### look for the recording settings for the start user of this remote agent
+					if (length($ra_user) > 0)
+						{
+						$stmtA = "SELECT vicidial_recording_override,vicidial_recording FROM vicidial_users where user='$ra_user';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArowsVUrec=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='01072';   $MEL_aff_rows=$sthArowsVUrec;   &mysql_error_logging;
+						if ($sthArowsVUrec > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							if ($aryA[0] !~ /DISABLED/)
+								{$campaign_recording =	$aryA[0];}
+							if ($aryA[1] < 1)
+								{$campaign_recording =	'NONE';}
+							}
+						$sthA->finish();
+						}
+
 					### if recording is enabled then start recording on this call before sending to a remote agent
 					if ($campaign_recording =~ /ALLCALLS|ALLFORCE/)
 						{
@@ -2204,7 +2245,7 @@ while ($drop_timer <= $DROP_TIME)
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
-							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='01075';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 						if ($sthArows > 0)
 							{
 							@aryA = $sthA->fetchrow_array;
@@ -2243,7 +2284,7 @@ while ($drop_timer <= $DROP_TIME)
 						### insert record into recording_log table ###
 						$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$VDADphone','$now_date','$now_date_epoch','0','$campaign_rec_filename','$CIDlead_id','$VDADuser','$campaign_rec_filename','$uniqueid');";
 						$RLRAaffected_rows = $dbhA->do($stmtA);
-							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$RLRAaffected_rows;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='01076';   $MEL_aff_rows=$RLRAaffected_rows;   &mysql_error_logging;
 						if ($AGILOG) {$agi_string = "--    REMOTE RECORDING STARTED : |$RLRAaffected_rows|$campaign_rec_filename|$stmtA|";   &agi_output;}
 						}
 					}

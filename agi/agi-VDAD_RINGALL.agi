@@ -17,6 +17,7 @@
 # changes:
 # 110303-2325 - First build
 # 110324-2328 - Added recording of remote agent calls, per in-group and campaign recording settings
+# 110325-1411 - Added user recording override settings checking for remote agent recording
 #
 
 $script = 'agi-VDAD_RINGALL.agi';
@@ -259,6 +260,7 @@ if ($NAGcount > 0)
 							$sthA->finish();
 							if ($AGILOG) {$agi_string = "--    AVC Session Reserved: |$callerid|$auto_call_id|$dial_user|3WAY_$dial_user|$now_date|$VLAconf_exten|";   &agi_output;}
 
+							### get the recording settings for the campaign that this remote agent is logged into
 							if (length($VLAcampaign_id) > 0)
 								{
 								$stmtA = "SELECT campaign_recording,campaign_rec_filename FROM vicidial_campaigns where campaign_id='$VLAcampaign_id';";
@@ -270,6 +272,24 @@ if ($NAGcount > 0)
 									@aryA = $sthA->fetchrow_array;
 									$campaign_recording =		$aryA[0];
 									$campaign_rec_filename =	$aryA[1];
+									}
+								$sthA->finish();
+								}
+
+							### look for the recording settings for the start user of this remote agent
+							if (length($VLAra_user) > 0)
+								{
+								$stmtA = "SELECT vicidial_recording_override,vicidial_recording FROM vicidial_users where user='$VLAra_user';";
+								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+								$sthArowsVUrec=$sthA->rows;
+								if ($sthArowsVUrec > 0)
+									{
+									@aryA = $sthA->fetchrow_array;
+									if ($aryA[0] !~ /DISABLED/)
+										{$campaign_recording =	$aryA[0];}
+									if ($aryA[1] < 1)
+										{$campaign_recording =	'NONE';}
 									}
 								$sthA->finish();
 								}
