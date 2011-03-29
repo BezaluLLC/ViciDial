@@ -27,6 +27,7 @@
 #               Allow level 7 users to view this report
 # 110224-1135 - Added call_notes export option
 # 110316-2121 - Added export_fields option
+# 110329-1330 - Added more fields to EXTENDED option
 #
 
 require("dbconnect.php");
@@ -278,8 +279,8 @@ if ($run_export > 0)
 	$EFheader='';
 	if ($export_fields == 'EXTENDED')
 		{
-		$export_fields_SQL = ",entry_date,called_count,last_local_call_time";
-		$EFheader = "\tentry_date\tcalled_count\tlast_local_call_time";
+		$export_fields_SQL = ",entry_date,called_count,last_local_call_time,modify_date,called_since_last_reset";
+		$EFheader = "\tentry_date\tcalled_count\tlast_local_call_time\tmodify_date\tcalled_since_last_reset";
 		}
 
 
@@ -324,11 +325,12 @@ if ($run_export > 0)
 				$export_status[$k] =		$row[2];
 				$export_list_id[$k] =		$row[8];
 				$export_lead_id[$k] =		$row[35];
+				$export_uniqueid[$k] =		$row[36];
 				$export_vicidial_id[$k] =	$row[36];
 				$export_entry_list_id[$k] =	$row[37];
 				$export_fieldsDATA='';
 				if ($export_fields == 'EXTENDED')
-					{$export_fieldsDATA = "$row[38]\t$row[39]\t$row[40]\t";}
+					{$export_fieldsDATA = "$row[38]\t$row[39]\t$row[40]\t$row[41]\t$row[42]\t";}
 				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t$export_fieldsDATA";
 				$i++;
 				$k++;
@@ -339,7 +341,7 @@ if ($run_export > 0)
 
 	if ($RUNgroup > 0)
 		{
-		$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id$export_fields_SQL from vicidial_users vu,vicidial_closer_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+		$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid$export_fields_SQL from vicidial_users vu,vicidial_closer_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 		$rslt=mysql_query($stmtA, $link);
 		if ($DB) {echo "$stmt\n";}
 		$inbound_to_print = mysql_num_rows($rslt);
@@ -362,9 +364,10 @@ if ($run_export > 0)
 				$export_lead_id[$k] =		$row[35];
 				$export_vicidial_id[$k] =	$row[36];
 				$export_entry_list_id[$k] =	$row[37];
+				$export_uniqueid[$k] =		$row[38];
 				$export_fieldsDATA='';
 				if ($export_fields == 'EXTENDED')
-					{$export_fieldsDATA = "$row[38]\t$row[39]\t$row[40]\t";}
+					{$export_fieldsDATA = "$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t";}
 				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t$export_fieldsDATA";
 				$i++;
 				$k++;
@@ -401,6 +404,7 @@ if ($run_export > 0)
 			$RFheader = '';
 			$NFheader = '';
 			$CFheader = '';
+			$EXheader = '';
 			if ($rec_fields=='ID')
 				{$RFheader = "\trecording_id";}
 			if ($rec_fields=='FILENAME')
@@ -409,12 +413,14 @@ if ($run_export > 0)
 				{$RFheader = "\trecording_location";}
 			if ($rec_fields=='ALL')
 				{$RFheader = "\trecording_id\trecording_filename\trecording_location";}
+			if ($export_fields=='EXTENDED')
+				{$EXheader = "\tuniqueid\tcaller_code\tserver_ip\thangup_cause\tdialstatus\tchannel\tdial_time\tanswered_time\tcpd_result";}
 			if ($call_notes=='YES')
 				{$NFheader = "\tcall_notes";}
 			if ( ($custom_fields_enabled > 0) and ($custom_fields=='YES') )
 				{$CFheader = "\tcustom_fields";}
 
-			echo "call_date\tphone_number\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id$EFheader\tlist_name\tlist_description\tstatus_name$RFheader$NFheader$CFheader\r\n";
+			echo "call_date\tphone_number\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id$EFheader\tlist_name\tlist_description\tstatus_name$RFheader$EXheader$NFheader$CFheader\r\n";
 			}
 
 		$i=0;
@@ -491,6 +497,57 @@ if ($run_export > 0)
 					{$rec_data = "\t$rec_id\t$rec_filename\t$rec_location";}
 				}
 
+			$extended_data_a='';
+			$extended_data_b='';
+			$extended_data_c='';
+			if ($export_fields=='EXTENDED')
+				{
+				$extended_data = "\t$export_uniqueid[$i]";
+				if (strlen($export_uniqueid[$i]) > 0)
+					{
+					$uniqueidTEST = $export_uniqueid[$i];
+					$uniqueidTEST = preg_replace('/\..*$/','',$uniqueidTEST);
+					$stmt = "SELECT caller_code,server_ip from vicidial_log_extended where uniqueid LIKE \"$uniqueidTEST%\" and lead_id='$export_lead_id[$i]' LIMIT 1;";
+					$rslt=mysql_query($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$vle_ct = mysql_num_rows($rslt);
+					if ($vle_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$extended_data_a =	"\t$row[0]\t$row[1]";
+						$export_call_id[$i] = $row[0];
+						}
+
+					$stmt = "SELECT hangup_cause,dialstatus,channel,dial_time,answered_time from vicidial_carrier_log where uniqueid LIKE \"$uniqueidTEST%\" and lead_id='$export_lead_id[$i]' LIMIT 1;";
+					$rslt=mysql_query($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$vcarl_ct = mysql_num_rows($rslt);
+					if ($vcarl_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$extended_data_b =	"\t$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]";
+						}
+
+					$stmt = "SELECT result from vicidial_cpd_log where callerid='$export_call_id[$i]' LIMIT 1;";
+					$rslt=mysql_query($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$vcpdl_ct = mysql_num_rows($rslt);
+					if ($vcpdl_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$extended_data_c =	"\t$row[0]";
+						}
+
+					}
+				if (strlen($extended_data_a)<1)
+					{$extended_data_a =	"\t\t";}
+				if (strlen($extended_data_b)<1)
+					{$extended_data_b =	"\t\t\t\t\t";}
+				if (strlen($extended_data_c)<1)
+					{$extended_data_c =	"\t";}
+				$extended_data .= "$extended_data_a$extended_data_b$extended_data_c";
+				}
+
 			$notes_data='';
 			if ($call_notes=='YES')
 				{
@@ -555,7 +612,7 @@ if ($run_export > 0)
 					}
 				}
 
-			echo "$export_rows[$i]$ex_list_name\t$ex_list_description\t$ex_status_name$rec_data$notes_data$custom_data\r\n";
+			echo "$export_rows[$i]$ex_list_name\t$ex_list_description\t$ex_status_name$rec_data$extended_data$notes_data$custom_data\r\n";
 			$i++;
 			}
 		}
