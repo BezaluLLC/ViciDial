@@ -44,10 +44,11 @@
 # 110303-2122 - Added information on agent-on-hook phone to real-time report popup
 # 110306-1044 - Added add_list and update_list functions
 # 110316-2035 - Added reset_time variable and NAMEPHONE dup search
+# 110404-1356 - Added uniqueid search parameter to recording_lookup function
 #
 
-$version = '2.4-30';
-$build = '110316-2035';
+$version = '2.4-31';
+$build = '110404-1356';
 
 require("dbconnect.php");
 
@@ -234,6 +235,8 @@ if (isset($_GET["delete_leads"]))			{$delete_leads=$_GET["delete_leads"];}
 	elseif (isset($_POST["delete_leads"]))	{$delete_leads=$_POST["delete_leads"];}
 if (isset($_GET["reset_time"]))				{$reset_time=$_GET["reset_time"];}
 	elseif (isset($_POST["reset_time"]))	{$reset_time=$_POST["reset_time"];}
+if (isset($_GET["uniqueid"]))			{$uniqueid=$_GET["uniqueid"];}
+	elseif (isset($_POST["uniqueid"]))	{$uniqueid=$_POST["uniqueid"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -358,6 +361,7 @@ if ($non_latin < 1)
 	$delete_list=ereg_replace("[^A-Z]","",$delete_list);
 	$delete_leads=ereg_replace("[^A-Z]","",$delete_leads);
 	$reset_time=ereg_replace("[^-_0-9]","",$reset_time);
+	$uniqueid=ereg_replace("[^- \.\_0-9a-zA-Z]","",$uniqueid);
 	}
 else
 	{
@@ -2054,8 +2058,52 @@ if ($function == 'recording_lookup')
 			{
 			$search_SQL='';
 			$search_ready=0;
+			if (strlen($uniqueid)>8)
+				{
+				$uniqueid_search_SQL='';
+				$uniqueidTEST = $uniqueid;
+				$uniqueidTEST = preg_replace('/\..*$/','',$uniqueid);
+				$stmt="select count(*) from vicidial_log where uniqueid LIKE \"$uniqueidTEST%\";";
+				$rslt=mysql_query($stmt, $link);
+				$vlec_recs = mysql_num_rows($rslt);
+				if ($vlec_recs > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$VLfound_ct  =	$row[0];
+					if ($VLfound_ct > 0)
+						{
+						$uniqueid_search_SQL .= "vicidial_id LIKE \"$uniqueidTEST%\"";
+						}
+					}
+				$stmt="select closecallid from vicidial_closer_log where uniqueid LIKE \"$uniqueidTEST%\";";
+				$rslt=mysql_query($stmt, $link);
+				$vclec_recs = mysql_num_rows($rslt);
+				if ($vclec_recs > 0)
+					{
+					$L=0;
+					while ($vclec_recs > $L)
+						{
+						$row=mysql_fetch_row($rslt);
+						$search_ids .=	"'$row[0]',";
+						$L++;
+						}
+					$search_ids = preg_replace('/,$/','',$search_ids);
+					if (strlen($uniqueid_search_SQL)>5)
+						{$uniqueid_search_SQL .= " or ";}
+					$uniqueid_search_SQL .= "vicidial_id IN($search_ids)";
+					}
+
+				if (strlen($uniqueid_search_SQL)>5)
+					{
+					$search_SQL .= "($uniqueid_search_SQL)";
+					$search_ready++;
+					$search_ready++;
+					}
+				}
 			if ( (strlen($agent_user)>2) and (strlen($agent_user)<21) )
 				{
+				if (strlen($search_SQL)>5)
+					{$search_SQL .= " and ";}
 				$search_SQL .= "user='$agent_user'";
 				$search_ready++;
 				}
@@ -2078,7 +2126,7 @@ if ($function == 'recording_lookup')
 				{
 				$result = 'ERROR';
 				$result_reason = "recording_lookup INVALID SEARCH PARAMETERS";
-				$data = "$user|$agent_user|$lead_id|$date";
+				$data = "$user|$agent_user|$lead_id|$date|$uniqueid";
 				echo "$result: $result_reason: $data\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				exit;
@@ -2093,7 +2141,7 @@ if ($function == 'recording_lookup')
 					{
 					$result = 'ERROR';
 					$result_reason = "recording_lookup NO RECORDINGS FOUND";
-					$data = "$user|$agent_user|$lead_id|$date";
+					$data = "$user|$agent_user|$lead_id|$date|$uniqueid";
 					echo "$result: $result_reason - $data\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					exit;
@@ -2131,7 +2179,7 @@ if ($function == 'recording_lookup')
 					echo "$output";
 
 					$result = 'SUCCESS';
-					$data = "$user|$agent_user|$lead_id|$date|$stage";
+					$data = "$user|$agent_user|$lead_id|$date|$uniqueid|$stage";
 					$result_reason = "recording_lookup RECORDINGS FOUND: $rec_recs";
 
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -2208,7 +2256,7 @@ if ($function == 'did_log_export')
 				$stmt="SELECT uniqueid,caller_id_number,call_date,UNIX_TIMESTAMP(call_date) from vicidial_did_log where $search_SQL order by call_date limit 100000;";
 				$rslt=mysql_query($stmt, $link);
 				$rec_recs = mysql_num_rows($rslt);
-				if ($DB>0) {echo "DEBUG: recording_lookup query - $rec_recs|$stmt\n";}
+				if ($DB>0) {echo "DEBUG: did_log_export query - $rec_recs|$stmt\n";}
 				if ($rec_recs < 1)
 					{
 					$result = 'ERROR';
@@ -2252,7 +2300,7 @@ if ($function == 'did_log_export')
 						$stmt="SELECT length_in_sec,UNIX_TIMESTAMP(call_date) from vicidial_closer_log where uniqueid='$DLuniqueid[$k]' order by call_date desc limit 1;";
 						$rslt=mysql_query($stmt, $link);
 						$vcl_recs = mysql_num_rows($rslt);
-						if ($DB>0) {echo "DEBUG: recording_lookup query - $vcl_recs|$stmt\n";}
+						if ($DB>0) {echo "DEBUG: did_log_export query - $vcl_recs|$stmt\n";}
 						if ($vcl_recs > 0)
 							{
 							$row=mysql_fetch_row($rslt);

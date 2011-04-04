@@ -54,6 +54,7 @@ Changes:
 110127-2245 - Added add_user and add_phone functions
 110306-1044 - Added add_list and update_list functions
 110316-2035 - Added reset_time variable and NAMEPHONE dup search
+110404-1356 - Added uniqueid search parameter to recording_lookup function
 
 
 
@@ -210,6 +211,7 @@ REQUIRED FIELDS-
 agent_user -		2-20 characters
 lead_id -		1-10 digits
 date -			date of the calls to pull (must be in YYYY-MM-DD format)
+uniqueid -		uniqueid of the call, works best included with another search field
 
 SETTINGS FIELDS-
 stage -			the format of the exported data: csv, tab, pipe(default)
@@ -223,8 +225,8 @@ http://server/vicidial/non_agent_api.php?source=test&function=recording_lookup&s
 
 Example responses:
 ERROR: recording_lookup USER DOES NOT HAVE PERMISSION TO GET RECORDING INFO - 6666|0
-ERROR: recording_lookup INVALID SEARCH PARAMETERS - 6666|1000||2010-12-03
-ERROR: recording_lookup NO RECORDINGS FOUND - 1255|6666||2010-12-03
+ERROR: recording_lookup INVALID SEARCH PARAMETERS - 6666|1000||2010-12-03|
+ERROR: recording_lookup NO RECORDINGS FOUND - 1255|6666||2010-12-03|
 
 A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
 start_time|user|recording_id|lead_id|location
