@@ -382,6 +382,7 @@ exten => _8320*.,2,Hangup
 exten => _8331*.,1,Playback(sip-silence)
 exten => _8331*.,n,AGI(agi-VDAD_RINGALL.agi,${EXTEN})
 exten => _8331*.,n,AGI(agi-VDAD_RINGALL.agi,${EXTEN})
+exten => _8331*.,n,AGI(agi-VDAD_RINGALL.agi,${EXTEN})
 exten => _8331*.,n,Hangup
 
 

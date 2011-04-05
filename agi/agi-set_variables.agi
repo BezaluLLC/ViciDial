@@ -13,11 +13,12 @@
 # exten => _91NXXNXXXXXX,n,Dial(${TESTSIPTRUNK}/${EXTEN:2},,tTor)
 # exten => _91NXXNXXXXXX,n,Hangup
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 101118-1409 - First build
 # 101125-2115 - Added parsing for 3-way calls
+# 110404-1604 - Added dial_timeout and cpd_amd_action variables
 #
 
 $script = 'agi-set_variables.agi';
@@ -175,6 +176,8 @@ if ($AGILOG) {$agi_string = "AGI Variables: |$unique_id|$channel|$extension|$typ
 $VDADcampaign='';
 $VDADphone='';
 $VDADphone_code='';
+$auto_dial_timeout='60';
+$cpd_amd_action='DISABLED';
 
 $callerid =~ s/\"//gi;
 $callerid =~ s/ .*//gi;
@@ -206,6 +209,23 @@ if ($sthArows > 0)
 	@aryA = $sthA->fetchrow_array;
 	$campaign_id =		$aryA[0];
 	$dialed_number = 	$aryA[1];
+	$sthA->finish();
+	}
+
+$stmtA = "SELECT dial_timeout,cpd_amd_action FROM vicidial_campaigns where campaign_id='$campaign_id' limit 1;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($AGILOG) {$agi_string = "$sthArows|$stmtA|";   &agi_output;}
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$auto_dial_timeout =	$aryA[0];
+	# only set if auto-dial call
+	if ($callerid =~ /^V/)
+		{
+		$cpd_amd_action =	$aryA[1];
+		}
 	$sthA->finish();
 	}
 
@@ -317,7 +337,8 @@ $AGI->exec("EXEC Set(_rank=$rank)");
 $AGI->exec("EXEC Set(_owner=$owner)");
 $AGI->exec("EXEC Set(_campaign_id=$campaign_id)");
 $AGI->exec("EXEC Set(_dialed_number=$dialed_number)");
-
+$AGI->exec("EXEC Set(_auto_dial_timeout=$auto_dial_timeout)");
+$AGI->exec("EXEC Set(_cpd_amd_action=$cpd_amd_action)");
 
 
 $dbhA->disconnect();
