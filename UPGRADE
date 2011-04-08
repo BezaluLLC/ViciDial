@@ -527,6 +527,16 @@ OTHER CHANGES:
 	level recording settings for the start user of the remote agent will 
 	also be followed.
 
+121. Added MULTI_LEAD option for Auto-Alt-Dialing. Using MULTI_LEAD allows you 
+	to use a separate lead for each number on a customer account that all 
+	share a common vendor_lead_code, and the type of phone number for each 
+	is defined with a label in the Owner field. This option will disable 
+	some options on the Modify Campaign screen and show a link to the 
+	Multi-Alt Settings page which allows you to set which phone number types
+	, defined by the label of each lead, will be dialed and in what order. 
+	This will create a special lead filter and will alter the Rank field of 
+	all of the leads inside the lists set to this campaign in order to call 
+	them in the order you have specified.
 
 
 

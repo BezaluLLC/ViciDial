@@ -554,8 +554,14 @@ Auto Resume Pre-Call Work||
 In auto-dial mode, this setting if enabled will set the agent to active automatically when the agent clicks out of, or cancels, on any of the following functions that requires them to be paused- Manual Dial, Fast Dial, Lead Search, Call Log View, Callbacks Check, Enter Pause Code. Default is N for inactive||
 Auto Pause Pre-Call Code||
 If the Auto Pause Pre-Call Work function above is active, and Agent Pause Codes is active, this setting will be the pause code that is used when the agent is paused for these activities. Default is PRECAL||
+This campaign is not set to Auto-Alt-Dial||
+Multi-Alt-Settings||
+Reload Dialplan On Servers||
+This option allows you to force a reload of the dialplan on all Asterisk servers in the cluster. If you made changes in the Custom Dialplan Entry above you should set this to 1 and submit to have those changes go into effect on the servers||
+Using MULTI_LEAD allows you to use a separate lead for each number on a customer account that all share a common vendor_lead_code, and the type of phone number for each is defined with a label in the Owner field. This option will disable some options on the Modify Campaign screen and show a link to the Multi-Alt Settings page which allows you to set which phone number types, defined by the label of each lead, will be dialed and in what order. This will create a special lead filter and will alter the Rank field of all of the leads inside the lists set to this campaign in order to call them in the order you have specified||
 
 
+admin_campaign_multi_alt.php
 AST_LISTS_campaign_stats.php
 AST_VICIDIAL_ingrouplist.php
 admin_lists_custom.php
