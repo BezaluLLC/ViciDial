@@ -491,6 +491,7 @@ OTHER CHANGES:
 		exten => _8331*.,1,Playback(sip-silence)
 		exten => _8331*.,n,AGI(agi-VDAD_RINGALL.agi,${EXTEN})
 		exten => _8331*.,n,AGI(agi-VDAD_RINGALL.agi,${EXTEN})
+		exten => _8331*.,n,AGI(agi-VDAD_RINGALL.agi,${EXTEN})
 		exten => _8331*.,n,Hangup
 
 115. Added ring_all Next Agent Call option for in-groups. This works with on-

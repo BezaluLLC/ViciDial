@@ -51,10 +51,13 @@
 # 100914-1538 - Fixed bug in change_ingroups function
 # 101123-1050 - Added manual dial queue features to external_dial function
 # 110224-1711 - Added compatibility with QM phone environment logging
+# 110409-0821 - Added run_time logging of API functions
 #
 
-$version = '2.4-18';
-$build = '110224-1711';
+$version = '2.4-19';
+$build = '110409-0821';
+
+$startMS = microtime();
 
 require("dbconnect.php");
 
@@ -2435,8 +2438,16 @@ function api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$val
 	{
 	if ($api_logging > 0)
 		{
+		global $startMS;
+		$endMS = microtime();
+		$startMSary = explode(" ",$startMS);
+		$endMSary = explode(" ",$endMS);
+		$runS = ($endMSary[0] - $startMSary[0]);
+		$runM = ($endMSary[1] - $startMSary[1]);
+		$TOTALrun = ($runS + $runM);
+
 		$NOW_TIME = date("Y-m-d H:i:s");
-		$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$agent_user',function='$function',value='$value',result='$result',result_reason='$result_reason',source='$source',data='$data',api_date='$NOW_TIME',api_script='$api_script';";
+		$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$agent_user',function='$function',value='$value',result='$result',result_reason='$result_reason',source='$source',data='$data',api_date='$NOW_TIME',api_script='$api_script',run_time='$TOTALrun';";
 		$rslt=mysql_query($stmt, $link);
 		}
 	return 1;

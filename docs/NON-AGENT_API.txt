@@ -55,6 +55,7 @@ Changes:
 110306-1044 - Added add_list and update_list functions
 110316-2035 - Added reset_time variable and NAMEPHONE dup search
 110404-1356 - Added uniqueid search parameter to recording_lookup function
+110409-0822 - Added run_time logging of API functions
 
 
 

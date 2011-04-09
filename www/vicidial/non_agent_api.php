@@ -45,10 +45,13 @@
 # 110306-1044 - Added add_list and update_list functions
 # 110316-2035 - Added reset_time variable and NAMEPHONE dup search
 # 110404-1356 - Added uniqueid search parameter to recording_lookup function
+# 110409-0822 - Added run_time logging of API functions
 #
 
-$version = '2.4-31';
-$build = '110404-1356';
+$version = '2.4-32';
+$build = '110409-0822';
+
+$startMS = microtime();
 
 require("dbconnect.php");
 
@@ -4737,9 +4740,17 @@ function api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$val
 	{
 	if ($api_logging > 0)
 		{
+		global $startMS;
+		$endMS = microtime();
+		$startMSary = explode(" ",$startMS);
+		$endMSary = explode(" ",$endMS);
+		$runS = ($endMSary[0] - $startMSary[0]);
+		$runM = ($endMSary[1] - $startMSary[1]);
+		$TOTALrun = ($runS + $runM);
+
 		$NOW_TIME = date("Y-m-d H:i:s");
 	#	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
-		$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$agent_user',function='$function',value='$value',result='$result',result_reason='$result_reason',source='$source',data='$data',api_date='$NOW_TIME',api_script='$api_script';";
+		$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$agent_user',function='$function',value='$value',result='$result',result_reason='$result_reason',source='$source',data='$data',api_date='$NOW_TIME',api_script='$api_script',run_time='$TOTALrun';";
 		$rslt=mysql_query($stmt, $link);
 		}
 	return 1;
