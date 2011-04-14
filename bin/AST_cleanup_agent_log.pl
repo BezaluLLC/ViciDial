@@ -30,6 +30,7 @@
 # 110124-1134 - Small query fix for large queue_log tables
 # 110224-1916 - Added compatibility with QM phone environment logging
 # 110310-2259 - Added check for PAUSEREASON if no COMPLETE record
+# 110414-0200 - Added queue_log CONNECT and PAUSEALL/UNPAUSEALL validation and fixing
 #
 
 # constants
@@ -698,6 +699,64 @@ if ($enable_queuemetrics_logging > 0)
 
 		$h++;
 		}
+
+
+	@time_id=@MT;
+	@agent=@MT;
+
+	##############################################################
+	##### grab all queue_log entries with a verb of CONNECT to validate
+	$stmtB = "SELECT time_id,agent FROM queue_log where verb IN('CONNECT') $QM_SQL_time_H order by time_id;";
+	$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+	$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+	$A_connect_records=$sthB->rows;
+	if ($DB) {print "CONNECT Records: $A_connect_records|$stmtB|\n\n";}
+	$h=0;
+	while ($A_connect_records > $h)
+		{
+		@aryB = $sthB->fetchrow_array;
+		$time_id[$h] =	$aryB[0];
+		$agent[$h] =	$aryB[1];
+		$h++;
+		}
+	$sthB->finish();
+
+	$h=0;
+	while ($A_connect_records > $h)
+		{
+		$samecount=0;
+		##### find the next queue_log record after the PAUSEREASON record
+		$stmtB = "SELECT count(*) FROM queue_log where agent='$agent[$h]' and time_id='$time_id[$h]' and verb IN('PAUSEALL','UNPAUSEALL');";
+		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+		$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+		$PAU_records=$sthB->rows;
+		if ($PAU_records > 0)
+			{
+			@aryB = $sthB->fetchrow_array;
+			$samecount =	$aryB[0];
+			}
+		$sthB->finish();
+
+		if ($samecount >= 2)
+			{
+			$NEXTtime = ($time_id[$h] + 1);
+			if ($DB) {print "CONNECT-PAUSE SAME TIME: $h|$time_id[$h]|$agent[$h]|$NEXTtime|$samecount|\n";}
+
+			##### update the CONNECT and UNPAUSEALL records in the queue_log to one second after the PAUSEALL
+			$stmtB = "UPDATE queue_log SET time_id='$NEXTtime' where agent='$agent[$h]' and time_id='$time_id[$h]' and verb IN('CONNECT','UNPAUSEALL') limit 2;";
+			if ($TEST < 1)
+				{
+				$Baffected_rows = $dbhB->do($stmtB);
+				}
+			if ($DB) {print "     CONNECT-PAUSE records updated: $Baffected_rows|$stmtB|\n";}
+
+			$event_string = "CONNECT-PAUSE SAME TIME: $h|$time_id[$h]|$agent[$h]|$NEXTtime|$samecount|$Baffected_rows|$stmtB";
+			&event_logger;
+			}
+
+		$h++;
+		}
+
 
 	if ($qm_live_call_check > 0)
 		{

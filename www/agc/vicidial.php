@@ -343,10 +343,11 @@
 # 110310-0331 - Added auto-pause/resume functions in auto-dial mode for pre-call work
 # 110310-1627 - Changed most browser alerts to HTML alerts, other bug fixes
 # 110322-0923 - Allowed hiding of gender pulldown
+# 110413-1244 - Added ALT dialing from scheduled callback list, and other formatting changes
 #
 
-$version = '2.4-320c';
-$build = '110322-0923';
+$version = '2.4-321c';
+$build = '110413-1244';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=72;
 $one_mysql_log=0;
@@ -5281,7 +5282,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						var CB_calls = all_CBs_array[0];
 						var loop_ct=0;
 						var conv_start=0;
-                        var CB_HTML = "<table width=\"<?php echo $HCwidth ?>px\"><tr bgcolor=\"<?php echo $SCRIPT_COLOR ?>\"><td><font class=\"log_title\">#</font></td><td align=\"center\"><font class=\"log_title\"> CALLBACK DATE/TIME</font></td><td align=\"center\"><font class=\"log_title\">NUMBER</font></td><td align=\"center\"><font class=\"log_title\">NAME</font></td><td align=\"center\"><font class=\"log_title\">  STATUS</font></td><td align=\"center\"><font class=\"log_title\">CAMPAIGN</font></td><td align=\"center\"><font class=\"log_title\">LAST CALL DATE/TIME</font></td><td align=\"center\"><font class=\"log_title\"> DIAL</font></td></tr>"
+                        var CB_HTML = "<table width=\"<?php echo $HCwidth ?>px\"><tr bgcolor=\"<?php echo $SCRIPT_COLOR ?>\"><td><font class=\"log_title\">#</font></td><td align=\"center\"><font class=\"log_title\"> CALLBACK DATE/TIME</font></td><td align=\"center\"><font class=\"log_title\">NUMBER</font></td><td align=\"center\"><font class=\"log_title\">INFO</font></td><td align=\"center\"><font class=\"log_title\">NAME</font></td><td align=\"center\"><font class=\"log_title\">  STATUS</font></td><td align=\"center\"><font class=\"log_title\">CAMPAIGN</font></td><td align=\"center\"><font class=\"log_title\">LAST CALL DATE/TIME</font></td><td align=\"center\"><font class=\"log_title\"> DIAL</font></td><td align=\"center\"><font class=\"log_title\"> ALT</font></td></tr>"
 						while (loop_ct < CB_calls)
 							{
 							loop_ct++;
@@ -5301,7 +5302,13 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							var CB_lastcall_time = call_array[7];
 							var CB_callback_time = call_array[8];
 							var CB_comments = call_array[9];
-                            CB_HTML = CB_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</font></td><td align=\"right\"><font class=\"log_text\">" + CB_callback_time + "</td><td align=\"right\"><font class=\"log_text\">" + CB_phone + " - <a href=\"#\" onclick=\"VieWLeaDInfO('" + CB_lead_id + "','" + CB_id + "');return false;\">INFO</a></font></td><td align=\"right\"><font class=\"log_text\">" + CB_name + "</font></td><td align=\"right\"><font class=\"log_text\">" + CB_status + "</font></td><td align=\"right\"><font class=\"log_text\">" + CB_campaign + "</font></td><td align=\"right\"><font class=\"log_text\">" + CB_lastcall_time + "&nbsp;</font></td><td align=\"right\"><font class=\"log_text\"><a href=\"#\" onclick=\"new_callback_call('" + CB_id + "','" + CB_lead_id + "');return false;\">DIAL</a>&nbsp;</font></td></tr>";
+							var CB_comments_ten = CB_comments;
+							if (CB_comments_ten.length > 10)
+								{
+								CB_comments_ten = CB_comments_ten.substr(0,10);
+								CB_comments_ten = CB_comments_ten + '...';
+								}
+                            CB_HTML = CB_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</font></td><td align=\"right\"><font class=\"log_text\">" + CB_callback_time + "</td><td align=\"right\"><font class=\"log_text\">" + CB_phone + "</td><td align=\"right\"><font class=\"log_text\">" + CB_comments_ten + " - <a href=\"#\" onclick=\"VieWLeaDInfO('" + CB_lead_id + "','" + CB_id + "');return false;\">INFO</a></font></td><td align=\"right\"><font class=\"log_text\">" + CB_name + "</font></td><td align=\"right\"><font class=\"log_text\">" + CB_status + "</font></td><td align=\"right\"><font class=\"log_text\">" + CB_campaign + "</font></td><td align=\"right\"><font class=\"log_text\">" + CB_lastcall_time + "&nbsp;</font></td><td align=\"right\"><font class=\"log_text\"><a href=\"#\" onclick=\"new_callback_call('" + CB_id + "','" + CB_lead_id + "','MAIN');return false;\">DIAL</a>&nbsp;</font></td><td align=\"right\"><font class=\"log_text\"><a href=\"#\" onclick=\"new_callback_call('" + CB_id + "','" + CB_lead_id + "','ALT');return false;\">ALT</a>&nbsp;</font></td></tr>";
 							}
 						CB_HTML = CB_HTML + "</table>";
 						document.getElementById("CallBacKsLisT").innerHTML = CB_HTML;
@@ -5364,7 +5371,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 // ################################################################################
 // Open up a callback customer record as manual dial preview mode
-	function new_callback_call(taskCBid,taskLEADid)
+	function new_callback_call(taskCBid,taskLEADid,taskCBalt)
 		{
 	//	alt_phone_dialing=1;
 		LastCallbackViewed=1;
@@ -5378,7 +5385,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		document.vicidial_form.LeadPreview.checked=true;
 	//	document.vicidial_form.DiaLAltPhonE.checked=true;
 		hideDiv('CallBacKsLisTBox');
-		ManualDialNext(taskCBid,taskLEADid,'','','','0');
+		ManualDialNext(taskCBid,taskLEADid,'','','','0','',taskCBalt);
 		}
 
 
@@ -6029,15 +6036,25 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			{
             document.getElementById("DiaLControl").innerHTML = "<img src=\"./images/vdc_LB_dialnextnumber_OFF.gif\" border=\"0\" alt=\"Dial Next Number\" />";
 			}
+		var manual_dial_only_type_flag = '';
+		if ( (mdtype == 'ALT') || (mdtype == 'ADDR3') )
+			{
+			agent_dialed_type = mdtype;
+			agent_dialed_number = mdnPhonENumbeR;
+			if (mdtype == 'ALT')
+				{manual_dial_only_type_flag = 'ALTPhonE';}
+			if (mdtype == 'ADDR3')
+				{manual_dial_only_type_flag = 'AddresS3';}
+			}
 		if (document.vicidial_form.LeadPreview.checked==true)
 			{
 			reselect_preview_dial = 1;
 			in_lead_preview_state = 1;
 			var man_preview = 'YES';
-			var man_status = "Preview the Lead then <a href=\"#\" onclick=\"ManualDialOnly()\"><font class=\"preview_text\"> DIAL LEAD</font></a> or <a href=\"#\" onclick=\"ManualDialSkip()\"><font class=\"preview_text\">SKIP LEAD</font></a>"; 
+			var man_status = "Preview the Lead then <a href=\"#\" onclick=\"ManualDialOnly('" + manual_dial_only_type_flag + "')\"><font class=\"preview_text\"> DIAL LEAD</font></a> or <a href=\"#\" onclick=\"ManualDialSkip()\"><font class=\"preview_text\">SKIP LEAD</font></a>"; 
 			if (manual_preview_dial=='PREVIEW_ONLY')
 				{
-				var man_status = "Preview the Lead then <a href=\"#\" onclick=\"ManualDialOnly()\"><font class=\"preview_text\"> DIAL LEAD</font></a>"; 
+				var man_status = "Preview the Lead then <a href=\"#\" onclick=\"ManualDialOnly('" + manual_dial_only_type_flag + "')\"><font class=\"preview_text\"> DIAL LEAD</font></a>"; 
 				}
 			}
 		else
@@ -6047,11 +6064,6 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			var man_status = "Waiting for Ring..."; 
 			}
 
-		if ( (mdtype == 'ALT') || (mdtype == 'ADDR3') )
-			{
-			agent_dialed_type = mdtype;
-			agent_dialed_number = mdnPhonENumbeR;
-			}
 		var xmlhttp=false;
 		/*@cc_on @*/
 		/*@if (@_jscript_version >= 5)
@@ -6092,8 +6104,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
 					{
 					var MDnextResponse = null;
-			//		alert(manDiaLnext_query);
-			//		alert(xmlhttp.responseText);
+				//	alert(manDiaLnext_query);
+				//	alert(xmlhttp.responseText);
 					MDnextResponse = xmlhttp.responseText;
 
 					var MDnextResponse_array=MDnextResponse.split("\n");

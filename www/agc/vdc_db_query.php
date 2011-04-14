@@ -281,10 +281,11 @@
 # 110310-0546 - Added ability to set a pause code at the same time of a pause
 # 110310-1628 - removed callslogview, extended lead info function to be used instead
 # 110317-0222 - Logging bug fixes
+# 110413-1245 - Added ALT dialing from scheduled callback list
 #
 
-$version = '2.4-186';
-$build = '110317-0222';
+$version = '2.4-187';
+$build = '110413-1245';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=413;
 $one_mysql_log=0;
@@ -2074,6 +2075,13 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$agent_dialed_number = $phone_number;
 				if (strlen($agent_dialed_type) < 3)
 					{$agent_dialed_type = 'MAIN';}
+				}
+			if ( (strlen($callback_id)>0) and (strlen($lead_id)>0) )
+				{
+				if ($agent_dialed_type=='ALT')
+					{$agent_dialed_number = $alt_phone;}
+				if ($agent_dialed_type=='ADDR3')
+					{$agent_dialed_number = $address3;}
 				}
 
 			##### check if system is set to generate logfile for transfers
