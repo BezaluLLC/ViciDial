@@ -16,6 +16,7 @@
 # CHANGES
 # 101217-0515 - First build
 # 110418-0604 - Added dccsv52 format
+# 110420-0944 - Fixed file prefix issue with multiple processes running
 #
 
 $version = '110418-0604';
@@ -332,11 +333,14 @@ if ($ftp_pull > 0)
 			$passed_file_filter=1;
 			if (length($file_prefix_filter)>0)
 				{
+				$passed_file_filter=0;
+
 				if ($FILES[$i] !~ /^$file_prefix_filter/)
 					{
 					if ($DB > 0) {print "SKIPPING FILE, NO FILTER MATCH: $FILES[$i]\n";}
-					$passed_file_filter=0;
 					}
+				else
+					{$passed_file_filter=1;}
 				}
 			if ( (length($FILES[$i]) > 4) && ($passed_file_filter > 0) )
 				{
@@ -387,7 +391,20 @@ foreach(@FILES)
 		$size2 = (-s "$dir1/$FILES[$i]");
 		if (!$q) {print "$FILES[$i] $size2\n\n";}
 
-		if ( ($FILES[$i] !~ /^TRANSFERRED/i) && ($size1 eq $size2) && (length($FILES[$i]) > 4))
+		$passed_file_filter=1;
+		if (length($file_prefix_filter)>0)
+			{
+			$passed_file_filter=0;
+
+			if ($FILES[$i] !~ /^$file_prefix_filter/)
+				{
+				if ($DB > 0) {print "SKIPPING FILE, NO FILTER MATCH: $FILES[$i]\n";}
+				}
+			else
+				{$passed_file_filter=1;}
+			}
+
+		if ( ($FILES[$i] !~ /^TRANSFERRED/i) && ($size1 eq $size2) && (length($FILES[$i]) > 4) && ($passed_file_filter > 0) )
 			{
 			$GOODfname = $FILES[$i];
 			$FILES[$i] =~ s/ /_/gi;
@@ -443,6 +460,30 @@ foreach(@FILES)
 
 		# This is the format for the ncacsv39 lead files <multi-lead insert format>
 		#5200556,"00052555570016383767","SERVERS JR,JIM M","2915551802",1121.31,"627555120","77380","HSBC","SCRIPT4","6205554433","No Message","2915551802","16383767","","","","","","","","","","","","","","","6001","DLR3","549","","","","","","","","",""
+
+		# field mappings:
+		#	$vendor_lead_code =		1  - acctid
+		#	$source_id =			2  - uniqueid
+		#	$first_name =			3  - first_name
+		#	$middle_initial =		 <blank>
+		#	$last_name =			3  - last_name
+		#	$province =				4  - acct main phone
+		#	$address2 =				5  - balance
+		#	$alt_phone =			6  - ssn
+		#	$postal_code =			7  - zip
+		#	$address1 =				8  - descrip
+		#	$address3 =				9  - script
+		#	$security_phrase =		10 - cid
+		#	$email =				37 - collectorid
+		#	$title =				29 - folderid
+		#	$state =				 <blank>
+		#	$country =				 <blank>
+		#	$gender =				 <blank>
+		#	$date_of_birth =		 <blank>
+		#	$comments =				 <blank>
+		#	$rank =					 <assigned by phone number type>
+		#	$owner =				 <assigned by phone number type>
+		#	$city =					 <assigned by phone number id>
 
 			if ( ($format =~ /ncacsv39/) && ($format_set < 1) )
 				{
@@ -633,6 +674,30 @@ foreach(@FILES)
 		# This is the format for the dccsv52 lead files <multi-lead insert format>
 		#"BFRAME","RECORD_TYPE","LAST_NAME","FIRST_NAME","ADDR1","ADDR2","CITY","STATE","ZIP","ZIP4","ADDR_STATUS","DATE_PLACED","DATE_ADDED","DOB","LAST_LETTER","LAST_LETTER_DATE","LAST_WORKED","NEXT_ACTION_DATE","CAPTURE_CODE","CUR_CATEGORY","TIMES_DIALED","LAST_DIALED","TOTAL_PAID","DATE_LAST_PAID","NMBR_CALLS","NMBR_CONTACTS","NMBR_TIMES_WRKD","NMBR_LETTERS","STATUS_CODE","STATUS_DATE","SCORE","TIMES_TO_SERVICER","1ST-PMT-DEFAULT","TIME_ZONE","ORIG_CREDITOR","BALANCE","HOME_PHONE","WORK_PHONE","OTHER_PHONE","ACCT_OTHTEL2","ACCT_OTHTEL3","ACCT_OTHTEL4","ACCT_OTHTEL5","REF-NAME","REF-AD1","REF-AD2","REF-CITY","REF-ST","REF-POSTAL","REF-TEL1","REF-TEL2","SSN"
 		#"II ACCT/1103566666  ","P","SMITH           ","        SAMMY","7838 W 109TH ST APT 12        ","                              ","OVERLAND PARK       ","KS","66212","0000","G","20091110","20091110","19661216","NOLTTR","00000000","20091214","20091219","1000","03","000","00000000","000000000.00 ","00000000","0004","0003","0004","000","ACTIVE","20091110","0648","00"," ","C","HSBC                          ","000000692.09 ","9135551212","0000000000","0000000000","0000000000","0000000000","0000000000","0000000000","","","","","  ","          ","          ","          ","578888888"
+
+		# field mappings:
+		#	$vendor_lead_code =		1  - BFRAME (number only)
+		#	$source_id =			1  - BFRAME
+		#	$first_name =			4  - FIRST_NAME
+		#	$middle_initial =		 <blank>
+		#	$last_name =			3  - LAST_NAME
+		#	$province =				36 - BALANCE
+		#	$address1 =				5  - ADDR1
+		#	$address2 =				6  - ADDR2
+		#	$city =					7  - CITY
+		#	$state =				8  - STATE
+		#	$postal_code =			9  - ZIP
+		#	$address3 =				35 - ORIG_CREDITOR
+		#	$date_of_birth =		14 - DOB
+		#	$alt_phone =			27&29  - NMBR_TIMES_WRKD & STATUS_CODE
+		#	$email =				52 - SSN
+		#	$title =				26 - NMBR_CONTACTS
+		#	$security_phrase =		 <assigned by state lookup>
+		#	$comments =				44 - REF-NAME
+		#	$country =				 <blank>
+		#	$gender =				 <blank>
+		#	$rank =					 <assigned by phone number type>
+		#	$owner =				 <assigned by phone number type>
 
 			if ( ($format =~ /dccsv52/) && ($format_set < 1) )
 				{

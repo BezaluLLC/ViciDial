@@ -10,7 +10,7 @@
 #
 # NOTE: the machine this is run on must have a servers entry in the database
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES
@@ -49,9 +49,10 @@
 # 100610-0756 - Added dccsv52 file format
 # 100624-2143 - Added dccsvref52 file format
 # 100928-1121 - Added file-prefix-filter option
+# 110420-0944 - Fixed file prefix issue with multiple processes running
 #
 
-$version = '100928-1121';
+$version = '110420-0944';
 
 $secX = time();
 $MT[0]='';
@@ -462,11 +463,14 @@ if ($ftp_pull > 0)
 			$passed_file_filter=1;
 			if (length($file_prefix_filter)>0)
 				{
+				$passed_file_filter=0;
+
 				if ($FILES[$i] !~ /^$file_prefix_filter/)
 					{
 					if ($DB > 0) {print "SKIPPING FILE, NO FILTER MATCH: $FILES[$i]\n";}
-					$passed_file_filter=0;
 					}
+				else
+					{$passed_file_filter=1;}
 				}
 			if ( (length($FILES[$i]) > 4) && ($passed_file_filter > 0) )
 				{
@@ -516,7 +520,20 @@ foreach(@FILES)
 		$size2 = (-s "$dir1/$FILES[$i]");
 		if (!$q) {print "$FILES[$i] $size2\n\n";}
 
-		if ( ($FILES[$i] !~ /^TRANSFERRED/i) && ($size1 eq $size2) && (length($FILES[$i]) > 4))
+		$passed_file_filter=1;
+		if (length($file_prefix_filter)>0)
+			{
+			$passed_file_filter=0;
+
+			if ($FILES[$i] !~ /^$file_prefix_filter/)
+				{
+				if ($DB > 0) {print "SKIPPING FILE, NO FILTER MATCH: $FILES[$i]\n";}
+				}
+			else
+				{$passed_file_filter=1;}
+			}
+
+		if ( ($FILES[$i] !~ /^TRANSFERRED/i) && ($size1 eq $size2) && (length($FILES[$i]) > 4) && ($passed_file_filter > 0) )
 			{
 			$GOODfname = $FILES[$i];
 			$FILES[$i] =~ s/ /_/gi;
