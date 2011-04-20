@@ -1,7 +1,7 @@
 <?php
 # vdc_script_display.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display the contents of the SCRIPT tab in the agent interface
 #
@@ -14,10 +14,11 @@
 # 100127-1611 - Added ignore_list_script_override option
 # 100823-1644 - Added DID variables
 # 100902-1344 - Added closecallid, xfercallid, agent_log_id variables
+# 110420-1201 - Added web_vars variable
 #
 
-$version = '2.4-8';
-$build = '100902-1344';
+$version = '2.4-9';
+$build = '110420-1201';
 
 require("dbconnect.php");
 
@@ -185,6 +186,8 @@ if (isset($_GET["CF_uses_custom_fields"]))			{$CF_uses_custom_fields=$_GET["CF_u
 	elseif (isset($_POST["CF_uses_custom_fields"]))	{$CF_uses_custom_fields=$_POST["CF_uses_custom_fields"];}
 if (isset($_GET["entry_list_id"]))			{$entry_list_id=$_GET["entry_list_id"];}
 	elseif (isset($_POST["entry_list_id"]))	{$entry_list_id=$_POST["entry_list_id"];}
+if (isset($_GET["web_vars"]))			{$web_vars=$_GET["web_vars"];}
+	elseif (isset($_POST["web_vars"]))	{$web_vars=$_POST["web_vars"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -388,6 +391,7 @@ if (eregi("iframe src",$script_text))
 	$did_extension = eregi_replace(' ','+',$did_extension);
 	$did_pattern = eregi_replace(' ','+',$did_pattern);
 	$did_description = eregi_replace(' ','+',$did_description);
+	$web_vars = eregi_replace(' ','+',$web_vars);
 	}
 
 $script_text = eregi_replace('--A--lead_id--B--',"$lead_id",$script_text);
@@ -471,6 +475,7 @@ $script_text = eregi_replace('--A--closecallid--B--',"$closecallid",$script_text
 $script_text = eregi_replace('--A--xfercallid--B--',"$xfercallid",$script_text);
 $script_text = eregi_replace('--A--agent_log_id--B--',"$agent_log_id",$script_text);
 $script_text = eregi_replace('--A--entry_list_id--B--',"$entry_list_id",$script_text);
+$script_text = eregi_replace('--A--web_vars--B--',"$web_vars",$script_text);
 
 if ($CF_uses_custom_fields=='Y')
 	{

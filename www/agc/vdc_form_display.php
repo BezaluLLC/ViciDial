@@ -138,6 +138,9 @@ if (isset($_GET["xfercallid"]))				{$xfercallid=$_GET["xfercallid"];}
 	elseif (isset($_POST["xfercallid"]))	{$xfercallid=$_POST["xfercallid"];}
 if (isset($_GET["agent_log_id"]))			{$agent_log_id=$_GET["agent_log_id"];}
 	elseif (isset($_POST["agent_log_id"]))	{$agent_log_id=$_POST["agent_log_id"];}
+if (isset($_GET["web_vars"]))			{$web_vars=$_GET["web_vars"];}
+	elseif (isset($_POST["web_vars"]))	{$web_vars=$_POST["web_vars"];}
+
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
