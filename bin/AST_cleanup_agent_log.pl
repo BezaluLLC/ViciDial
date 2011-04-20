@@ -31,6 +31,7 @@
 # 110224-1916 - Added compatibility with QM phone environment logging
 # 110310-2259 - Added check for PAUSEREASON if no COMPLETE record
 # 110414-0200 - Added queue_log CONNECT and PAUSEALL/UNPAUSEALL validation and fixing
+# 110415-1442 - Added one minute run option
 #
 
 # constants
@@ -56,6 +57,7 @@ if (length($ARGV[0])>1)
 		print "  [-more-than-24hours] = will clean up logs older than 24 hours only\n";
 		print "  [-last-30days] = will clean up logs for the last 30 days only\n";
 		print "  [-one-day-ago] = will clean up logs for the last 24-48 hours ago only\n";
+		print "  [-one-minute-run] = short settings for running every minute\n";
 		print "  [-skip-queue-log-inserts] = will skip only the queue_log missing record checks\n";
 		print "  [-skip-agent-log-validation] = will skip only the vicidial_agent_log validation\n";
 		print "  [-only-check-agent-login-lags] = will only fix queue_log missing PAUSEREASON records\n";
@@ -122,6 +124,12 @@ if (length($ARGV[0])>1)
 			$VAL_validate=1;
 			$THIRTY_DAYS=1;
 			if ($Q < 1) {print "\n----- LAST 30 DAYS ONLY -----\n\n";}
+			}
+		if ($args =~ /-one-minute-run/i)
+			{
+			$VAL_validate=1;
+			$ONE_MINUTE=1;
+			if ($Q < 1) {print "\n----- ONE MINUTE RUN -----\n\n";}
 			}
 		if ($args =~ /-more-than-24hours/i)
 			{
@@ -197,6 +205,24 @@ if ($ALL_TIME > 0)
 	$VDAD_SQL_time = "";
 	$VDCL_SQL_time = "";
 	$QM_SQL_time = "";
+	}
+if ($ONE_MINUTE > 0)
+	{
+	$MDtarget = ($secX - 60); # 1 minute in the past
+	($Msec,$Mmin,$Mhour,$Mmday,$Mmon,$Myear,$Mwday,$Myday,$Misdst) = localtime($MDtarget);
+	$Myear = ($Myear + 1900);
+	$Mmon++;
+	if ($Mmon < 10) {$Mmon = "0$Mmon";}
+	if ($Mmday < 10) {$Mmday = "0$Mmday";}
+	if ($Mhour < 10) {$Mhour = "0$Mhour";}
+	if ($Mmin < 10) {$Mmin = "0$Mmin";}
+	if ($Msec < 10) {$Msec = "0$Msec";}
+		$MDSQLdate = "$Myear-$Mmon-$Mmday $Mhour:$Mmin:$Msec";
+
+	$VDAD_SQL_time = "and event_time < \"$MDSQLdate\" and event_time > \"$TDSQLdate\"";
+	$VDCL_SQL_time = "and call_date < \"$MDSQLdate\" and call_date > \"$TDSQLdate\"";
+	$QM_SQL_time = "and time_id < $MDtarget and time_id > $TDtarget";
+	$QM_SQL_time_H = "and time_id < $MDtarget and time_id > $TDtarget";
 	}
 if ($TWENTYFOUR_HOURS > 0)
 	{

@@ -18,6 +18,7 @@
 # 101108-0032 - Added ADDMEMBER queue_log code
 # 110124-1134 - Small query fix for large queue_log tables
 # 110224-2350 - Small QM logout fix
+# 110420-0344 - Added DEAD/PARK agent statuses
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -137,6 +138,7 @@ else
 		$Aextension =				$row[4];
 		$Astatus =					$row[5];
 		$Acampaign =				$row[7];
+		$Acallerid =				$row[9];
 		$Alast_call =				$row[14];
 		$Acl_campaigns =			$row[15];
 		$agent_territories = 		$row[27];
@@ -159,6 +161,30 @@ else
 		$i++;
 		}
 
+	if ($Astatus == 'INCALL')
+		{
+		$stmtP="select count(*) from parked_channels where channel_group='$Acallerid';";
+		$rsltP=mysql_query($stmtP,$link);
+		$rowP=mysql_fetch_row($rsltP);
+		$parked_channel = $rowP[0];
+
+		if ($parked_channel > 0)
+			{
+			$Astatus =	'PARK';
+			}
+		else
+			{
+			$stmtP="select count(*) from vicidial_auto_calls where callerid='$Acallerid';";
+			$rsltP=mysql_query($stmtP,$link);
+			$rowP=mysql_fetch_row($rsltP);
+			$live_channel = $rowP[0];
+
+			if ($live_channel < 1)
+				{
+				$Astatus =	'DEAD';
+				}
+			}
+		}
 	}
 
 $stmt="select campaign_id from vicidial_campaigns;";
