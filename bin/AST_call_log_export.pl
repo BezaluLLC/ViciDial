@@ -9,11 +9,12 @@
 #
 # /usr/share/astguiclient/AST_call_log_export.pl --campaign=GOODB-GROUP1-GROUP3-GROUP4-SPECIALS-DNC_BEDS --output-format=tab-basic --debug --filename=BEDSsaleDATETIME.txt --email-list=test@gmail.com --email-sender=test@test.com
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 100310-0112 - First version
 # 110202-2214 - Added ncad14csv format
+# 110423-0350 - Do not die on email issue
 #
 
 $txt = '.txt';
@@ -543,7 +544,7 @@ if ( (length($Ealert)>5) && (length($email_list) > 3) )
 	$mail{body} .= "$boundary";
 	$mail{body} .= "--\n";
 
-	sendmail(%mail) or die $mail::Sendmail::error;
+	sendmail(%mail); # or die $mail::Sendmail::error;
 	if (!$Q) {print "ok. log says:\n", $mail::sendmail::log;}  ### print mail log for status
 
 	}

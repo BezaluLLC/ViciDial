@@ -27,6 +27,7 @@
 # 91129-2155 - Replaced SELECT STAR queries with field lists, formatting fixes
 # 100117-2122 - Added force-date option and activated FSO-FSA and LSS-FSA
 # 110406-0652 - Added omitlistid option
+# 110424-0834 - Added ownertimezone option
 #
 
 use Time::Local;
@@ -61,6 +62,7 @@ if (length($ARGV[0])>1)
 		print "  [--nanpa-prefix-gmt] = Attempt nanpa prefix lookup for timezones\n";
 		print "  [--singlelistid=XXX] = Only lookup and alter leads in one list_id\n";
 		print "  [--omitlistid=XXX-YYY-ZZZ] = Skip these list_ids, separated by dash\n";
+		print "  [--ownertimezone] = Check the owner field for time zone abbreviation: (EST,CST,etc...)\n";
 		print "  [--force-date=YYYY-MM-DD] = Force this date as date to run\n";
 		print "\n";
 
@@ -96,6 +98,11 @@ if (length($ARGV[0])>1)
 			{
 			$searchNANPA=1;
 			if ($q < 1) {print "\n----- DO NANPA PREFIX LOOKUP -----\n\n";}
+			}
+		if ($args =~ /--ownertimezone/i)
+			{
+			$ownertimezone=1;
+			if ($q < 1) {print "\n----- OWNER TIMEZONE CHECK -----\n\n";}
 			}
 		if ($args =~ /-singlelistid=/i)
 			{
@@ -243,6 +250,7 @@ if (length($omitlistidSQL)> 0)
 		{$omitlistidSQL = "where list_id NOT IN('$omitlistidSQL')";}
 	}
 else {$XomitlistidSQL='';   $omitlistidSQL='';}
+
 $stmtA = "select distinct phone_code from vicidial_list $listSQL $omitlistidSQL;";
 if($DBX){print STDERR "\n|$stmtA|\n";}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -250,7 +258,7 @@ $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
 $rec_countY=0;
 @phone_codes=@MT;
-$phone_codes_list='|';
+$phone_codes_list="'";
 
 while ($sthArows > $rec_countY)
 	{
@@ -260,20 +268,46 @@ while ($sthArows > $rec_countY)
 	$phone_codes_ORIG[$rec_countY] = $aryA[0];
 	$phone_codes[$rec_countY] =~ s/011|0011| |\t|\r|\n//gi;
 
-	#	if ( ($phone_codes_list !~ /\|$phone_codes[$rec_countY]\|/) && (length($phone_codes[$rec_countY]) > 0) )
-	#		{
-	#		$phone_codes_list .= "$phone_codes[$rec_countY]|";
-	#		}
+	$phone_codes_list .= "$aryA[0]'";
 
 	if ($DBX) {print "|",$aryA[0],"|","\n";}
 	$rec_countY++;
 	}
 $sthA->finish();
 if ($DB) {print " - Unique Country dial codes found: $rec_countY\n";}
+if (length($phone_codes_list)<2) {$phone_codes_list="''";}
 
+if ($ownertimezone > 0)
+	{
+	$stmtA = "select distinct tz_code,GMT_offset,country_code from vicidial_phone_codes where country_code IN($phone_codes_list);";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	$rec_countC=0;
+	@tz_codes=@MT;
+	@tz_offset=@MT;
+	@tz_country=@MT;
+	$tz_codes_list='|';
+
+	while ($sthArows > $rec_countC)
+		{
+		@aryA = $sthA->fetchrow_array;
+
+		$tz_codes[$rec_countC] =	$aryA[0];
+		$tz_offset[$rec_countC] =	$aryA[1];
+		$tz_country[$rec_countC] =	$aryA[2];
+
+		$tz_codes_list .= "$aryA[0]|";
+
+		$rec_countC++;
+		}
+	$sthA->finish();
+	if ($DB) {print " - Unique time zone codes found: $rec_countC     $tz_codes_list\n";}
+	}
 
 ##### Put all country/area code records into an array for speed
-$stmtA = "select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes;";
+$stmtA = "select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description,tz_code from vicidial_phone_codes;";
 if($DBX){print STDERR "\n|$stmtA|\n";}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -283,7 +317,7 @@ $rec_countZ=0;
 while ($sthArows > $rec_countZ)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$codefile[$rec_countZ] = "$aryA[0]\t$aryA[1]\t$aryA[2]\t$aryA[3]\t$aryA[4]\t$aryA[5]\t$aryA[6]\t$aryA[7]\n";
+	$codefile[$rec_countZ] = "$aryA[0]\t$aryA[1]\t$aryA[2]\t$aryA[3]\t$aryA[4]\t$aryA[5]\t$aryA[6]\t$aryA[7]\t$aryA[8]\n";
 	$rec_countZ++;
 	}
 
@@ -887,6 +921,188 @@ foreach (@phone_codes)
 	$TOTALnanpa_updated_count = ($TOTALnanpa_updated_count + $nanpa_updated_count);
 
 
+
+
+
+	##### START RUN LOOP FOR EACH TIME ZONE CODE RECORD #####
+	$tzcode_updated_count=0;
+	if ($ownertimezone > 0)
+		{
+		if ($DB) {print "TIME ZONE CODE RUN START...\n";}
+		$e=0;
+		foreach (@tz_codes)
+			{
+			$area_GMT_method='';
+			$area_GMT = $tz_offset[$e];
+			$area_GMT =~ s/\+//gi;
+			$area_GMT = ($area_GMT + 0);
+
+			$stmtA = "select distinct DST_range from vicidial_phone_codes where tz_code='$tz_codes[$e]' and country_code='$tz_country[$e]' order by DST_range desc limit 1;";
+			if($DBX){print STDERR "\n|$stmtA|\n";}
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			@aryA = $sthA->fetchrow_array;
+			$area_GMT_method = $aryA[0];
+			$sthA->finish();
+
+			if ($DBX) {print "PROCESSING THIS TIME ZONE CODE: $tz_codes[$e]|$tz_country[$e]|$area_GMT|$area_GMT_method\n";}
+			
+			$stmtA = "select count(*) from vicidial_list where owner='$tz_codes[$e]' and phone_code='$tz_country[$e]' $XlistSQL $XomitlistidSQL;";
+			if($DBX){print STDERR "\n|$stmtA|\n";}
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			$rec_countZ=0;
+			@aryA = $sthA->fetchrow_array;
+			$rec_countZ = $aryA[0];
+			$sthA->finish();
+			
+			if (!$rec_countZ)
+				{
+		#		if ($DB) {print "   IGNORING: $tzcodefile[$e]\n";}
+				$ei++;
+				}
+			else
+				{
+				$AC_GMT_diff = ($area_GMT - $LOCAL_GMT_OFF_STD);
+				$AC_localtime = ($time + (3600 * $AC_GMT_diff));
+				($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($AC_localtime);
+				$year = ($year + 1900);
+				$mon++;
+				if ($mon < 10) {$mon = "0$mon";}
+				if ($mday < 10) {$mday = "0$mday";}
+				if ($hour < 10) {$hour = "0$hour";}
+				if ($min < 10) {$min = "0$min";}
+				if ($sec < 10) {$sec = "0$sec";}
+				$dsec = ( ( ($hour * 3600) + ($min * 60) ) + $sec );
+				
+				$AC_processed=0;
+
+				if ( (!$AC_processed) && ($area_GMT_method =~ /SSM-FSN/) )
+					{
+					if ($DBX) {print "     Second Sunday March to First Sunday November\n";}
+					&USACAN_dstcalc;
+					if ($DBX) {print "     DST: $USACAN_DST\n";}
+					if ($USACAN_DST) {$area_GMT++;}
+					$AC_processed++;
+					}
+				if ( (!$AC_processed) && ($area_GMT_method =~ /FSA-LSO/) )
+					{
+					if ($DBX) {print "     First Sunday April to Last Sunday October\n";}
+					&NA_dstcalc;
+					if ($DBX) {print "     DST: $NA_DST\n";}
+					if ($NA_DST) {$area_GMT++;}
+					$AC_processed++;
+					}
+				if ( (!$AC_processed) && ($area_GMT_method =~ /LSM-LSO/) )
+					{
+					if ($DBX) {print "     Last Sunday March to Last Sunday October\n";}
+					&GBR_dstcalc;
+					if ($DBX) {print "     DST: $GBR_DST\n";}
+					if ($GBR_DST) {$area_GMT++;}
+					$AC_processed++;
+					}
+				if ( (!$AC_processed) && ($area_GMT_method =~ /LSO-LSM/) )
+					{
+					if ($DBX) {print "     Last Sunday October to Last Sunday March\n";}
+					&AUS_dstcalc;
+					if ($DBX) {print "     DST: $AUS_DST\n";}
+					if ($AUS_DST) {$area_GMT++;}
+					$AC_processed++;
+					}
+				if ( (!$AC_processed) && ($area_GMT_method =~ /FSO-LSM/) )
+					{
+					if ($DBX) {print "     First Sunday October to Last Sunday March\n";}
+					&AUST_dstcalc;
+					if ($DBX) {print "     DST: $AUST_DST\n";}
+					if ($AUST_DST) {$area_GMT++;}
+					$AC_processed++;
+					}
+				if ( (!$AC_processed) && ($area_GMT_method =~ /FSO-FSA/) )
+					{
+					if ($DBX) {print "     First Sunday October to First Sunday April\n";}
+					&AUSE_dstcalc;
+					if ($DBX) {print "     DST: $AUSE_DST\n";}
+					if ($AUSE_DST) {$area_GMT++;}
+					$AC_processed++;
+					}
+				if ( (!$AC_processed) && ($area_GMT_method =~ /FSO-TSM/) )
+					{
+					if ($DBX) {print "     First Sunday October to Third Sunday March\n";}
+					&NZL_dstcalc;
+					if ($DBX) {print "     DST: $NZL_DST\n";}
+					if ($NZL_DST) {$area_GMT++;}
+					$AC_processed++;
+					}
+				if ( (!$AC_processed) && ($area_GMT_method =~ /LSS-FSA/) )
+					{
+					if ($DBX) {print "     Last Sunday September to First Sunday April\n";}
+					&NZLN_dstcalc;
+					if ($DBX) {print "     DST: $NZLN_DST\n";}
+					if ($NZLN_DST) {$area_GMT++;}
+					$AC_processed++;
+					}
+				if ( (!$AC_processed) && ($area_GMT_method =~ /TSO-LSF/) )
+					{
+					if ($DBX) {print "     Third Sunday October to Last Sunday February\n";}
+					&BZL_dstcalc;
+					if ($DBX) {print "     DST: $BZL_DST\n";}
+					if ($BZL_DST) {$area_GMT++;}
+					$AC_processed++;
+					}
+				if (!$AC_processed)
+					{
+					if ($DBX) {print "     No DST Method Found\n";}
+					if ($DBX) {print "     DST: 0\n";}
+					$AC_processed++;
+					}
+
+
+				if ($AC_processed)
+					{
+					$stmtA = "select count(*) from vicidial_list where owner='$tz_codes[$e]' and phone_code='$tz_country[$e]' and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL;";
+					if($DBX){print STDERR "\n|$stmtA|\n";}
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					$rec_countW=0;
+					@aryA = $sthA->fetchrow_array;
+					$rec_countW = $aryA[0];
+					$sthA->finish();
+						
+					if (!$rec_countW)
+						{
+						if ($DBX) {print "   ALL GMT ALREADY CORRECT FOR : $tz_codes[$e]  $tz_country[$e]   $area_GMT\n";}
+						$ei++;
+						}
+					else
+						{
+						$stmtA = "UPDATE vicidial_list set gmt_offset_now='$area_GMT' where owner='$tz_codes[$e]' and phone_code='$tz_country[$e]' and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL;";
+						if($DBX){print STDERR "\n|$stmtA|\n";}
+						if (!$T) 
+							{
+							$affected_rows = $dbhA->do($stmtA);
+							$tzcode_updated_count = ($tzcode_updated_count + $affected_rows);
+							}
+						$Prec_countW = sprintf("%8s", $rec_countW);
+						if ($DB) {print " $Prec_countW records in $tz_codes[$e]  $tz_country[$e]  updated to $area_GMT\n";}
+						$ee++;
+				#		sleep(1);
+						}
+					}
+				}
+			
+			$ep++;
+			$e++;
+			}
+		}
+	##### STOP RUN LOOP FOR EACH TIME ZONE CODE RECORD #####
+	if($DB){print "Time Zone Code Updates:     $tzcode_updated_count\n";}
+	$TOTALtzcode_updated_count = ($TOTALtzcode_updated_count + $tzcode_updated_count);
+
+
+
 	$d++;
 	}
 
@@ -898,6 +1114,7 @@ if($DB){print "\nGRAND TOTALS:\n";}
 if($DB){print "Postal Updates:    $TOTALpostal_updated_count\n";}
 if($DB){print "Area Code Updates: $TOTALarea_updated_count\n";}
 if($DB){print "NANPA Updates:     $TOTALnanpa_updated_count\n";}
+if($DB){print "TIME ZONE Updates: $TOTALtzcode_updated_count\n";}
 if($DB){print "\nDONE\n";}
 $secy = time();		$secz = ($secy - $secX);		$minz = ($secz/60);		# calculate script runtime so far
 if ($q < 1) {print "     - process runtime      ($secz sec) ($minz minutes)\n";}

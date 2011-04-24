@@ -735,3 +735,7 @@ UPDATE system_settings SET db_schema_version='1268',db_schema_update_date=NOW();
 ALTER TABLE vicidial_api_log ADD run_time VARCHAR(20) default '0';
 
 UPDATE system_settings SET db_schema_version='1269',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_phone_codes ADD tz_code VARCHAR(4) default '';
+
+UPDATE system_settings SET db_schema_version='1270',db_schema_update_date=NOW();

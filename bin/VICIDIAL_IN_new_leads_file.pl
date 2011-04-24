@@ -50,9 +50,10 @@
 # 100624-2143 - Added dccsvref52 file format
 # 100928-1121 - Added file-prefix-filter option
 # 110420-0944 - Fixed file prefix issue with multiple processes running
+# 110424-0948 - Added time-zone-code-gmt option to use time zone code from the owner field
 #
 
-$version = '110420-0944';
+$version = '110424-0948';
 
 $secX = time();
 $MT[0]='';
@@ -166,6 +167,7 @@ if (length($ARGV[0])>1)
 		print "  [--duplicate-tap-list-check] = checks for the same title/alt-number in the same list ID before inserting lead\n";
 		print "  [--duplicate-tap-system-check] = checks for the same title/alt-number in the entire system before inserting lead\n";
 		print "  [--postal-code-gmt] = checks for the time zone based on the postal code given where available\n";
+		print "  [--time-zone-code-gmt] = checks for the time zone based on the owner field time zone code given where available\n";
 		print "  [--ftp-pull] = grabs lead files from a remote FTP server, uses REPORTS FTP login information\n";
 		print "  [--ftp-dir=leads_in] = remote FTP server directory to grab files from, should have a DONE sub-directory\n";
 		print "  [--email-list=test@test.com:test2@test.com] = send email results for each file to these addresses\n";
@@ -309,6 +311,11 @@ if (length($ARGV[0])>1)
 			{
 			$postalgmt=1;
 			if ($q < 1) {print "\n----- POSTAL CODE TIMEZONE -----\n\n";}
+			}
+		if ($args =~ /-time-zone-code-gmt/i)
+			{
+			$tzcodegmt=1;
+			if ($q < 1) {print "\n----- TZ CODE TIMEZONE -----\n\n";}
 			}
 
 		if ($args =~ /-new-list-for-each-file/i)
@@ -1753,6 +1760,40 @@ foreach(@FILES)
 								}
 							$sthA->finish();
 							}
+						}
+					if ( ($tzcodegmt > 0) && (length($owner)>1) )
+						{
+						$dst_range='';
+						$dst='N';
+						$gmt_offset=0;
+
+						$stmtA="select GMT_offset from vicidial_phone_codes where tz_code='$owner' and country_code='$phone_code' limit 1;";
+							if($DBX){print STDERR "\n|$stmtA|\n";}
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$gmt_offset =	$aryA[0];  $gmt_offset =~ s/\+| //gi;
+							$PC_processed++;
+							$postalgmt_found++;
+							}
+						$sthA->finish();
+
+						$stmtA = "select distinct DST_range from vicidial_phone_codes where tz_code='$owner' and country_code='$phone_code' order by DST_range desc limit 1;";
+							if($DBX){print STDERR "\n|$stmtA|\n";}
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$dst_range =	$aryA[0];
+							if (length($dst_range)>2) {$dst = 'Y';}
+							if ($DBX) {print "     TZcode GMT record found for $owner: |$gmt_offset|$dst|$dst_range|\n";}
+							}
+						$sthA->finish();
 						}
 					if ($postalgmt_found < 1)
 						{

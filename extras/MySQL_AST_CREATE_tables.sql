@@ -880,7 +880,8 @@ state VARCHAR(4),
 GMT_offset VARCHAR(6),
 DST enum('Y','N'),
 DST_range VARCHAR(8),
-geographic_description VARCHAR(30)
+geographic_description VARCHAR(30),
+tz_code VARCHAR(4) default ''
 );
 
 CREATE TABLE vicidial_inbound_groups (
@@ -2454,7 +2455,7 @@ ALTER TABLE vicidial_call_notes_archive MODIFY notesid INT(9) UNSIGNED NOT NULL;
 CREATE TABLE vicidial_lead_search_log_archive LIKE vicidial_lead_search_log; 
 ALTER TABLE vicidial_lead_search_log_archive MODIFY search_log_id INT(9) UNSIGNED NOT NULL;
 
-UPDATE system_settings SET db_schema_version='1269',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1270',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

@@ -147,7 +147,7 @@ use DBI;
 $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
  or die "Couldn't connect to database: " . DBI->errstr;
 
-##### change Pacific Mountain	
+##### change call time
 
 $stmtA = "UPDATE vicidial_call_times set call_time_comments='auto-modified $timestamp' $startSQL $stopSQL where call_time_id='$calltime';";
 if($DB){print STDERR "\n|$stmtA|\n";}

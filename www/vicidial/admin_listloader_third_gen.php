@@ -2,7 +2,7 @@
 # admin_listloader_third_gen.php - version 2.4
 #  (based upon - new_listloader_superL.php script)
 # 
-# Copyright (C) 2010  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # ViciDial web-based lead loader from formatted file
 # 
@@ -40,10 +40,11 @@
 # 100707-1156 - Made it so you cannot submit with no lead file selected. Also fixed Start Over Link <mikec>
 # 100712-1416 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
 # 100728-0900 - Filtered uploaded filenames for unsupported characters
+# 110424-0926 - Added option for time zone code in the owner field
 #
 
-$version = '2.4-39';
-$build = '100728-0900';
+$version = '2.4-40';
+$build = '110424-0926';
 
 
 require("dbconnect.php");
@@ -439,7 +440,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard") ) )
 		  </tr>
 		  <tr>
 			<td align=right width="25%"><font face="arial, helvetica" size=2>Lead Time Zone Lookup: </font></td>
-			<td align=left width="75%"><font face="arial, helvetica" size=1><select size=1 name=postalgmt><option selected value="AREA">COUNTRY CODE AND AREA CODE ONLY</option><option value="POSTAL">POSTAL CODE FIRST</option></select></td>
+			<td align=left width="75%"><font face="arial, helvetica" size=1><select size=1 name=postalgmt><option selected value="AREA">COUNTRY CODE AND AREA CODE ONLY</option><option value="POSTAL">POSTAL CODE FIRST</option><option value="TZCODE">OWNER TIME ZONE CODE FIRST</option></select></td>
 		  </tr>
 		<tr>
 			<td align=center colspan=2><input type=submit value="SUBMIT" name='submit_file'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button onClick="javascript:document.location='admin_listloader_third_gen.php'" value="START OVER" name='reload_page'></td>
@@ -824,7 +825,7 @@ if ($OK_to_process)
 					else
 						{$phone_list .= "$phone_number$US$list_id|";}
 
-					$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
+					$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code,$owner);
 
 					if (strlen($custom_SQL)>3)
 						{
@@ -1204,7 +1205,7 @@ if (($leadfile) && ($LF_path))
 						else
 							{$phone_list .= "$phone_number$US$list_id|";}
 
-						$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
+						$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code,$owner);
 
 						if ($multi_insert_counter > 8) 
 							{
@@ -1450,7 +1451,7 @@ exit;
 
 
 
-function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code)
+function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code,$owner)
 	{
 	global $link;
 
@@ -1474,6 +1475,35 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 				}
 			}
 		}
+	if ( ($postalgmt=="TZCODE") && (strlen($owner)>1) )
+		{
+		$dst_range='';
+		$dst='N';
+		$gmt_offset=0;
+
+		$stmt="select GMT_offset from vicidial_phone_codes where tz_code='$owner' and country_code='$phone_code' limit 1;";
+		$rslt=mysql_query($stmt, $link);
+		$pc_recs = mysql_num_rows($rslt);
+		if ($pc_recs > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$gmt_offset =	$row[0];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+			$PC_processed++;
+			$postalgmt_found++;
+			$post++;
+			}
+
+		$stmt = "select distinct DST_range from vicidial_phone_codes where tz_code='$owner' and country_code='$phone_code' order by DST_range desc limit 1;";
+		$rslt=mysql_query($stmt, $link);
+		$pc_recs = mysql_num_rows($rslt);
+		if ($pc_recs > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$dst_range =	$row[0];
+			if (strlen($dst_range)>2) {$dst = 'Y';}
+			}
+		}
+
 	if ($postalgmt_found < 1)
 		{
 		$PC_processed=0;

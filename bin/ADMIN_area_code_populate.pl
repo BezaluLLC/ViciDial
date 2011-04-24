@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 #
-# ADMIN_area_code_populate.pl    version 2.2.0
+# ADMIN_area_code_populate.pl    version 2.4
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Description:
 # server application that allows load areacodes into to asterisk list database
@@ -18,6 +18,7 @@
 # 90204-0806 - Added duplicate check to nanpa list loading
 # 90317-2353 - Added city, state, postal_code, country to nanpa format
 # 100902-1536 - Move old data files if wgetting new ones
+# 110424-0735 - Added timezone abbreviation column
 #
 
 
@@ -25,7 +26,7 @@
 $PATHconf =		"/etc/astguiclient.conf";
 $domain   =		"http://phonecodes.vicidial.com";
 #$URL1     =		"$domain/phone_codes_GMT-latest.txt";
-$URL1     =		"$domain/phone_codes_GMT-latest-220.txt";
+$URL1     =		"$domain/phone_codes_GMT-latest-24.txt";
 $URL2     =		"$domain/GMT_USA_zip-latest.txt";
 
 
@@ -285,7 +286,7 @@ else
 		print STDERR "Downloading latest phone codes tables\n";
 
 		# move old files
-		`mv -f $PATHhome/phone_codes_GMT-latest-220.txt $PATHhome/phone_codes_GMT-latest-220-old.txt`;
+		`mv -f $PATHhome/phone_codes_GMT-latest-24.txt $PATHhome/phone_codes_GMT-latest-24-old.txt`;
 		`mv -f $PATHhome/GMT_USA_zip-latest.txt $PATHhome/GMT_USA_zip-latest-old.txt`;
 
 		# get files
@@ -293,8 +294,8 @@ else
 		`wget $URL2`;
 		}
 
-	#### BEGIN vicidial_phone_codes population from phone_codes_GMT-latest-220.txt file ####
-	open(codefile, "$PATHhome/phone_codes_GMT-latest-220.txt") || die "can't open $PATHhome/phone_codes_GMT-latest-220.txt: $!\n";
+	#### BEGIN vicidial_phone_codes population from phone_codes_GMT-latest-24.txt file ####
+	open(codefile, "$PATHhome/phone_codes_GMT-latest-24.txt") || die "can't open $PATHhome/phone_codes_GMT-latest-24.txt: $!\n";
 	@codefile = <codefile>;
 	close(codefile);
 	if ( ($purge_table > 0) && ($#codefile > 10) )
@@ -316,6 +317,7 @@ else
 		if ($codefile[$pc] !~ /GEOGRAPHIC DESCRIPTION/)
 			{
 			$pc++;
+			$row[8] =~ s/\r|\n|\t| $//gi;
 			$row[7] =~ s/\r|\n|\t| $//gi;
 			$row[6] =~ s/\r|\n|\t| $//gi;
 			$row[5] =~ s/\r|\n|\t| $//gi;
@@ -324,7 +326,7 @@ else
 			$row[2] =~ s/\r|\n|\t| $//gi;
 			$row[1] =~ s/\r|\n|\t| $//gi;
 			$row[0] =~ s/\r|\n|\t| $//gi;
-			$ins_stmt.="('$row[0]', '$row[1]', '$row[2]', '$row[3]', '$row[4]', '$row[5]', '$row[6]', '$row[7]'), ";
+			$ins_stmt.="('$row[0]', '$row[1]', '$row[2]', '$row[3]', '$row[4]', '$row[5]', '$row[6]', '$row[7]', '$row[8]'), ";
 			if ($pc =~ /00$/) 
 				{
 				chop($ins_stmt);

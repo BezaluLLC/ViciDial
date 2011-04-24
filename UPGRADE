@@ -539,6 +539,11 @@ OTHER CHANGES:
 	all of the leads inside the lists set to this campaign in order to call 
 	them in the order you have specified.
 
+122. Added option to use the owner field to define a time zone abbreviation code
+	Works across web/api/cli lead loading methods. There is also an option
+	in the time zone updating script to use this method.
+
+
 
 
 

@@ -56,6 +56,7 @@ Changes:
 110316-2035 - Added reset_time variable and NAMEPHONE dup search
 110404-1356 - Added uniqueid search parameter to recording_lookup function
 110409-0822 - Added run_time logging of API functions
+110424-0854 - Added option for time zone code lookups using owner field in add_lead function
 
 
 
@@ -301,6 +302,9 @@ duplicate_check -	Check for duplicate records in the system, can select more tha
 custom_fields -		Y or N, default is N. Defines whether the API will accept custom field data when inserting leads into the vicidial_list table
 			For custom fields to be inserted, just add the field label as a variable to the URL string
 			For example, if the field_label is "favorite_color" you would add "&favorite_color=blue"
+tz_method -		<empty>, POSTAL or TZCODE, default is <empty> which will use the country code and areacode for time zone lookups
+				POSTAL relies on the postal_code field
+				TZCODE relies on the owner field being populated with a proper time zone code
 
 (for fields with spaces in the values, you can replace the space with a plus + sign[address, city, first_name, etc...])
 OPTIONAL FIELDS- 

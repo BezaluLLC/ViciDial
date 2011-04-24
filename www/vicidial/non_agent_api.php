@@ -46,10 +46,11 @@
 # 110316-2035 - Added reset_time variable and NAMEPHONE dup search
 # 110404-1356 - Added uniqueid search parameter to recording_lookup function
 # 110409-0822 - Added run_time logging of API functions
+# 110424-0854 - Added option for time zone code lookups using owner field
 #
 
-$version = '2.4-32';
-$build = '110409-0822';
+$version = '2.4-33';
+$build = '110424-0854';
 
 $startMS = microtime();
 
@@ -240,6 +241,8 @@ if (isset($_GET["reset_time"]))				{$reset_time=$_GET["reset_time"];}
 	elseif (isset($_POST["reset_time"]))	{$reset_time=$_POST["reset_time"];}
 if (isset($_GET["uniqueid"]))			{$uniqueid=$_GET["uniqueid"];}
 	elseif (isset($_POST["uniqueid"]))	{$uniqueid=$_POST["uniqueid"];}
+if (isset($_GET["tz_method"]))			{$tz_method=$_GET["tz_method"];}
+	elseif (isset($_POST["tz_method"]))	{$tz_method=$_POST["tz_method"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -365,6 +368,7 @@ if ($non_latin < 1)
 	$delete_leads=ereg_replace("[^A-Z]","",$delete_leads);
 	$reset_time=ereg_replace("[^-_0-9]","",$reset_time);
 	$uniqueid=ereg_replace("[^- \.\_0-9a-zA-Z]","",$uniqueid);
+	$tz_method = ereg_replace("[^-\_0-9a-zA-Z]","",$tz_method);
 	}
 else
 	{
@@ -385,7 +389,6 @@ $CIDdate = date("mdHis");
 $ENTRYdate = date("YmdHis");
 $ip = getenv("REMOTE_ADDR");
 $MT[0]='';
-$postalgmt='';
 $api_script = 'non-agent';
 $api_logging = 1;
 
@@ -2832,7 +2835,7 @@ if ($function == 'add_lead')
 
 				
 				### get current gmt_offset of the phone_number
-				$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
+				$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner);
 
 
 				### insert a new lead in the system with this phone number
@@ -3472,7 +3475,7 @@ if ($function == 'update_lead')
 							else
 								{
 								### get current gmt_offset of the phone_number
-								$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
+								$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner);
 
 								if (strlen($status)<1)
 									{$status='NEW';}
@@ -3688,12 +3691,12 @@ exit;
 
 ##### LOOKUP GMT, FINDS THE CURRENT GMT OFFSET FOR A PHONE NUMBER #####
 
-function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code)
+function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner)
 {
 require("dbconnect.php");
 
 $postalgmt_found=0;
-if ( (eregi("POSTAL",$postalgmt)) && (strlen($postal_code)>4) )
+if ( (eregi("POSTAL",$tz_method)) && (strlen($postal_code)>4) )
 	{
 	if (preg_match('/^1$/', $phone_code))
 		{
@@ -3710,6 +3713,34 @@ if ( (eregi("POSTAL",$postalgmt)) && (strlen($postal_code)>4) )
 			$postalgmt_found++;
 			$post++;
 			}
+		}
+	}
+if ( ($tz_method=="TZCODE") && (strlen($owner)>1) )
+	{
+	$dst_range='';
+	$dst='N';
+	$gmt_offset=0;
+
+	$stmt="select GMT_offset from vicidial_phone_codes where tz_code='$owner' and country_code='$phone_code' limit 1;";
+	$rslt=mysql_query($stmt, $link);
+	$pc_recs = mysql_num_rows($rslt);
+	if ($pc_recs > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$gmt_offset =	$row[0];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+		$PC_processed++;
+		$postalgmt_found++;
+		$post++;
+		}
+
+	$stmt = "select distinct DST_range from vicidial_phone_codes where tz_code='$owner' and country_code='$phone_code' order by DST_range desc limit 1;";
+	$rslt=mysql_query($stmt, $link);
+	$pc_recs = mysql_num_rows($rslt);
+	if ($pc_recs > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$dst_range =	$row[0];
+		if (strlen($dst_range)>2) {$dst = 'Y';}
 		}
 	}
 if ($postalgmt_found < 1)
