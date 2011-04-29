@@ -10750,7 +10750,7 @@ function phone_number_format(formatphone) {
 		showDiv('DispoButtonHideA');
 		showDiv('DispoButtonHideB');
 		showDiv('DispoButtonHideC');
-		document.getElementById("DispoSelectBox").style.top = 340;
+		document.getElementById("DispoSelectBox").style.top = '340px';
 		document.getElementById("DispoSelectMaxMin").innerHTML = "<a href=\"#\" onclick=\"DispoMaximize()\"> maximize </a>";
 		}
 
@@ -10759,7 +10759,7 @@ function phone_number_format(formatphone) {
 // Move the Dispo frame to the top and change the link to minimize
 	function DispoMaximize()
 		{
-		document.getElementById("DispoSelectBox").style.top = 1;
+		document.getElementById("DispoSelectBox").style.top = '1px';
 		document.getElementById("DispoSelectMaxMin").innerHTML = "<a href=\"#\" onclick=\"DispoMinimize()\"> minimize </a>";
 		hideDiv('DispoButtonHideA');
 		hideDiv('DispoButtonHideB');
