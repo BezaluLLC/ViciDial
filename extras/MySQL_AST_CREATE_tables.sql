@@ -798,7 +798,8 @@ agent_lead_search_method VARCHAR(30) default 'CAMPLISTS_ALL',
 queuemetrics_phone_environment VARCHAR(20) default '',
 auto_pause_precall ENUM('Y','N') default 'N',
 auto_pause_precall_code VARCHAR(6) default 'PRECAL',
-auto_resume_precall ENUM('Y','N') default 'N'
+auto_resume_precall ENUM('Y','N') default 'N',
+manual_dial_cid ENUM('CAMPAIGN','AGENT_PHONE') default 'CAMPAIGN'
 );
 
 CREATE TABLE vicidial_lists (
@@ -2455,7 +2456,7 @@ ALTER TABLE vicidial_call_notes_archive MODIFY notesid INT(9) UNSIGNED NOT NULL;
 CREATE TABLE vicidial_lead_search_log_archive LIKE vicidial_lead_search_log; 
 ALTER TABLE vicidial_lead_search_log_archive MODIFY search_log_id INT(9) UNSIGNED NOT NULL;
 
-UPDATE system_settings SET db_schema_version='1270',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1271',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

@@ -32,6 +32,7 @@
 # 110310-2259 - Added check for PAUSEREASON if no COMPLETE record
 # 110414-0200 - Added queue_log CONNECT and PAUSEALL/UNPAUSEALL validation and fixing
 # 110415-1442 - Added one minute run option
+# 110425-1345 - Added check-complete-pauses option
 #
 
 # constants
@@ -58,6 +59,7 @@ if (length($ARGV[0])>1)
 		print "  [-last-30days] = will clean up logs for the last 30 days only\n";
 		print "  [-one-day-ago] = will clean up logs for the last 24-48 hours ago only\n";
 		print "  [-one-minute-run] = short settings for running every minute\n";
+		print "  [-check-complete-pauses] = make sure every complete with a pause has a pausereason\n";
 		print "  [-skip-queue-log-inserts] = will skip only the queue_log missing record checks\n";
 		print "  [-skip-agent-log-validation] = will skip only the vicidial_agent_log validation\n";
 		print "  [-only-check-agent-login-lags] = will only fix queue_log missing PAUSEREASON records\n";
@@ -130,6 +132,11 @@ if (length($ARGV[0])>1)
 			$VAL_validate=1;
 			$ONE_MINUTE=1;
 			if ($Q < 1) {print "\n----- ONE MINUTE RUN -----\n\n";}
+			}
+		if ($args =~ /-check-complete-pauses/i)
+			{
+			$check_complete_pauses=1;
+			if ($Q < 1) {print "\n----- CHECK COMPLETE PAUSES -----\n\n";}
 			}
 		if ($args =~ /-more-than-24hours/i)
 			{
@@ -1759,6 +1766,78 @@ if ($enable_queuemetrics_logging > 0)
 		$h++;
 		}
 
+
+	$PRadded=0;
+	if ($check_complete_pauses > 0)
+		{
+		##############################################################
+		##### grab all queue_log entries for COMPLETECALLER verb to validate a pausereason is present
+		$stmtB = "SELECT time_id,call_id,queue,agent,serverid,data4 FROM queue_log where verb='COMPLETECALLER' and serverid='$queuemetrics_log_id' $QM_SQL_time order by time_id;";
+		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+		$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+		$CCP_records=$sthB->rows;
+		if ($DB) {print "COMPLETECALLER Records: $EQ_records|$stmtB|\n\n";}
+		$h=0;
+		while ($CCP_records > $h)
+			{
+			@aryB = $sthB->fetchrow_array;
+			$time_id[$h] =	$aryB[0];
+			$call_id[$h] =	$aryB[1];
+			$queue[$h] =	$aryB[2];
+			$agent[$h] =	$aryB[3];
+			$serverid[$h] =	$aryB[4];
+			$data4[$h] =	$aryB[5];
+			$h++;
+			}
+		$sthB->finish();
+
+		$h=0;
+		while ($CCP_records > $h)
+			{
+			$unpause_time_id[$h] = ($time_id[$h] + 1);
+			$pausereason_count[$h] = 0;
+
+			##### find time_id of the next unpauseall event
+			$stmtB = "SELECT time_id FROM queue_log WHERE verb='UNPAUSEALL' and serverid='$queuemetrics_log_id' and agent='$agent[$h]' and time_id >= $time_id[$h] order by time_id limit 1;";
+			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+			$MXC_records=$sthB->rows;
+			if ($MXC_records > 0)
+				{
+				@aryB = $sthB->fetchrow_array;
+				$unpause_time_id[$h] =	$aryB[0];
+				}
+			$sthB->finish();
+
+			##### find if there is a pausereason record during the pause time
+			$stmtB = "SELECT count(*) FROM queue_log WHERE verb='PAUSEREASON' and serverid='$queuemetrics_log_id' and agent='$agent[$h]' and time_id >= $time_id[$h] and  time_id <= $unpause_time_id[$h];";
+			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+			$MXD_records=$sthB->rows;
+			if ($MXD_records > 0)
+				{
+				@aryB = $sthB->fetchrow_array;
+				$pausereason_count[$h] =	$aryB[0];
+				}
+			$sthB->finish();
+
+			if ($pausereason_count[$h] < 1)
+				{
+				##### add new PAUSEREASON record
+				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$time_id[$h]',call_id='$call_id[$h]',queue='NONE',agent='$agent[$h]',verb='PAUSEREASON',data1='$queuemetrics_dispo_pause',serverid='$Cserverid[$h]';";
+				if ($TEST < 1)	
+					{
+					$Baffected_rows = $dbhB->do($stmtB);
+					$PRadded = ($PRadded + $Baffected_rows);
+					}
+				if ($DB) {print "PAUSEREASON Record Added: $Baffected_rows|$PRadded|$stmtB|\n\n";}
+				}
+
+			$h++;
+			}
+
+		if ($DB) {print "COMPLETECALLER pause reason validation records: $PRadded\n";}
+		}
 
 	$dbhB->disconnect();
 	}

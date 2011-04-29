@@ -559,6 +559,9 @@ Multi-Alt-Settings||
 Reload Dialplan On Servers||
 This option allows you to force a reload of the dialplan on all Asterisk servers in the cluster. If you made changes in the Custom Dialplan Entry above you should set this to 1 and submit to have those changes go into effect on the servers||
 Using MULTI_LEAD allows you to use a separate lead for each number on a customer account that all share a common vendor_lead_code, and the type of phone number for each is defined with a label in the Owner field. This option will disable some options on the Modify Campaign screen and show a link to the Multi-Alt Settings page which allows you to set which phone number types, defined by the label of each lead, will be dialed and in what order. This will create a special lead filter and will alter the Rank field of all of the leads inside the lists set to this campaign in order to call them in the order you have specified||
+Manual Dial CID||
+This defines whether an agent making manual dial calls will have the campaign callerID settings used, or their agent phone callerID settings used. Default is CAMPAIGN||
+If the Use Custom CID campaign option is enabled or the list Campaign CID Override setting is used, this setting will be ignored||
 
 
 admin_campaign_multi_alt.php
