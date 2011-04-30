@@ -29,6 +29,7 @@
 # 100109-1018 - Added vicidial_carrier_log archiving
 # 100328-1008 - Added --months CLI option
 # 110218-1200 - Added notes and search log archiving
+# 110430-1442 - Added queue-log and closer-log options, changed quiet to --quiet flag
 #
 
 ### begin parsing run-time options ###
@@ -45,13 +46,15 @@ if (length($ARGV[0])>1)
 		{
 		print "allowed run time options:\n";
 		print "  [--months=XX] = number of months to archive past, must be 12 or less, default is 2\n";
-		print "  [-q] = quiet\n";
+		print "  [--closer-log] = archive vicidial_closer_log records\n";
+		print "  [--queue-log] = archive QM queue_log records\n";
+		print "  [--quiet] = quiet\n";
 		print "  [-t] = test\n\n";
 		exit;
 		}
 	else
 		{
-		if ($args =~ /-q/i)
+		if ($args =~ /-quiet/i)
 			{
 			$q=1;   $Q=1;
 			}
@@ -70,6 +73,18 @@ if (length($ARGV[0])>1)
 				{$CLImonths=12;}
 			if ($Q < 1) 
 				{print "\n----- MONTHS OVERRIDE: $CLImonths -----\n\n";}
+			}
+		if ($args =~ /--closer-log/i)
+			{
+			$closer_log=1;
+			if ($Q < 1) 
+				{print "\n----- CLOSER LOG ARCHIVE -----\n\n";}
+			}
+		if ($args =~ /--queue-log/i)
+			{
+			$queue_log=1;
+			if ($Q < 1) 
+				{print "\n----- QUEUE LOG ARCHIVE -----\n\n";}
 			}
 		}
 	}
@@ -96,12 +111,16 @@ if ($mday < 10) {$mday = "0$mday";}
 
 $del_time = "$year-$mon-$mday 01:00:00";
 
+use Time::Local;
+
+$del_epoch = timelocal(0,0,2,$mday,$mon,$year);
+
 if (!$Q) {print "\n\n-- ADMIN_archive_log_tables.pl --\n\n";}
 if (!$Q) {print "This program is designed to put all records from  call_log, vicidial_log,\n";}
 if (!$Q) {print "server_performance, vicidial_agent_log, vicidial_carrier_log, \n";}
 if (!$Q) {print "vicidial_call_notes and vicidial_lead_search_log in relevant\n";}
 if (!$Q) {print "_archive tables and delete records in original tables older than\n";}
-if (!$Q) {print "$CLImonths months ( $del_time ) from current date \n\n";}
+if (!$Q) {print "$CLImonths months ( $del_time|$del_epoch ) from current date \n\n";}
 
 
 # default path to astguiclient configuration file:
@@ -149,8 +168,85 @@ use DBI;
 $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
  or die "Couldn't connect to database: " . DBI->errstr;
 
+
 if (!$T) 
 	{
+	if ($queue_log > 0)
+		{
+		#############################################
+		##### START QUEUEMETRICS LOGGING LOOKUP #####
+		$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_loginout,queuemetrics_dispo_pause FROM system_settings;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$enable_queuemetrics_logging =	$aryA[0];
+			$queuemetrics_server_ip	=	$aryA[1];
+			$queuemetrics_dbname =		$aryA[2];
+			$queuemetrics_login=		$aryA[3];
+			$queuemetrics_pass =		$aryA[4];
+			$queuemetrics_log_id =		$aryA[5];
+			$queuemetrics_eq_prepend =	$aryA[6];
+			$queuemetrics_loginout =	$aryA[7];
+			$queuemetrics_dispo_pause = $aryA[8];
+			}
+		$sthA->finish();
+		##### END QUEUEMETRICS LOGGING LOOKUP #####
+		###########################################
+
+		$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+		 or die "Couldn't connect to database: " . DBI->errstr;
+
+		if ($DBX) {print "CONNECTED TO QM DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+		##### queue_log
+		$stmtB = "SELECT count(*) from queue_log;";
+		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+		$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+		$sthBrows=$sthB->rows;
+		if ($sthBrows > 0)
+			{
+			@aryB = $sthB->fetchrow_array;
+			$queue_log_count =	$aryB[0];
+			}
+		$sthB->finish();
+
+		$stmtB = "SELECT count(*) from queue_log_archive;";
+		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+		$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+		$sthBrows=$sthB->rows;
+		if ($sthBrows > 0)
+			{
+			@aryB = $sthB->fetchrow_array;
+			$queue_log_archive_count =	$aryB[0];
+			}
+		$sthB->finish();
+
+		if (!$Q) {print "\nProcessing queue_log table...  ($queue_log_count|$queue_log_archive_count)\n";}
+		$stmtB = "INSERT IGNORE INTO queue_log_archive SELECT * from queue_log;";
+		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+		$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+		$sthBrows = $sthB->rows;
+		if (!$Q) {print "$sthBrows rows inserted into queue_log_archive table\n";}
+		
+		$rv = $sthB->err();
+		if (!$rv)
+			{
+			$stmtB = "DELETE FROM queue_log WHERE time_id < $del_epoch;";
+			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+			$sthBrows = $sthB->rows;
+			if (!$Q) {print "$sthBrows rows deleted from queue_log table \n";}
+
+			$stmtB = "optimize table queue_log;";
+			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+			}
+		}
+
+
 	##### call_log
 	$stmtA = "SELECT count(*) from call_log;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -206,7 +302,6 @@ if (!$T)
 		}
 
 
-
 	##### vicidial_log
 	$stmtA = "SELECT count(*) from vicidial_log;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -256,6 +351,55 @@ if (!$T)
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		}
 
+
+	##### vicidial_closer_log
+	$stmtA = "SELECT count(*) from vicidial_closer_log;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$vicidial_closer_log_count =	$aryA[0];
+		}
+	$sthA->finish();
+
+	$stmtA = "SELECT count(*) from vicidial_closer_log_archive;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$vicidial_closer_log_archive_count =	$aryA[0];
+		}
+	$sthA->finish();
+
+	if (!$Q) {print "\nProcessing vicidial_closer_log table...  ($vicidial_closer_log_count|$vicidial_closer_log_archive_count)\n";}
+	$stmtA = "INSERT IGNORE INTO vicidial_closer_log_archive SELECT * from vicidial_closer_log;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	
+	$sthArows = $sthA->rows;
+	if (!$Q) {print "$sthArows rows inserted into vicidial_closer_log_archive table \n";}
+	
+	$rv = $sthA->err();
+	if (!$rv) 
+		{	
+		$stmtA = "DELETE FROM vicidial_closer_log WHERE call_date < '$del_time';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows = $sthA->rows;
+		if (!$Q) {print "$sthArows rows deleted from vicidial_closer_log table \n";}
+
+		$stmtA = "optimize table vicidial_closer_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+
+		$stmtA = "optimize table vicidial_closer_log_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		}
 
 
 	##### server_performance
