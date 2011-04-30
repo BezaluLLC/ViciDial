@@ -743,3 +743,8 @@ UPDATE system_settings SET db_schema_version='1270',db_schema_update_date=NOW();
 ALTER TABLE vicidial_campaigns ADD manual_dial_cid ENUM('CAMPAIGN','AGENT_PHONE') default 'CAMPAIGN';
 
 UPDATE system_settings SET db_schema_version='1271',db_schema_update_date=NOW();
+
+CREATE TABLE vicidial_closer_log_archive LIKE vicidial_closer_log; 
+ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT NULL;
+
+UPDATE system_settings SET db_schema_version='1272',db_schema_update_date=NOW();

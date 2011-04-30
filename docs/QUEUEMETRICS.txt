@@ -396,6 +396,9 @@ How to install Queue Metrics on OpenSuSE v.11.1 (32 or 64 bit) with a system tha
 
 
 
+If you want to use the ADMIN_archive_log_tables.pl script with the --queue-log option you will need to run the following query in the QM database:
+
+CREATE TABLE queue_log_archive LIKE queue_log; 
 
 
 
