@@ -346,10 +346,11 @@
 # 110413-1244 - Added ALT dialing from scheduled callback list, and other formatting changes
 # 110420-1211 - Added web_vars variable
 # 110428-1549 - Added use of manual_dial_cid setting
+# 110430-1126 - Added ability to use external_dial API function with lead_id and alt_dial options
 #
 
-$version = '2.4-323c';
-$build = '110428-1549';
+$version = '2.4-324c';
+$build = '110430-1126';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=72;
 $one_mysql_log=0;
@@ -4230,6 +4231,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								active_group_alias = APIDiaL_array_detail[8];
 								cid_choice = APIDiaL_array_detail[9];
 								vtiger_callback_id = APIDiaL_array_detail[10];
+								document.vicidial_form.MDLeadID.value = APIDiaL_array_detail[11];
+								document.vicidial_form.MDType.value = APIDiaL_array_detail[12];
 
 							//	alert(APIDiaL_array_detail[1] + "-----" + APIDiaL + "-----" + document.vicidial_form.MDDiaLCodE.value + "-----" + document.vicidial_form.phone_code.value);
 

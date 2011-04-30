@@ -543,6 +543,8 @@ OTHER CHANGES:
 	Works across web/api/cli lead loading methods. There is also an option
 	in the time zone updating script to use this method.
 
+123. Added ability to use external_dial Agent API function with a defined 
+	lead_id and optional alt_dial setting
 
 
 

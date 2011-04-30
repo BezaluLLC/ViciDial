@@ -31,6 +31,7 @@
 #  - $status
 #  - $close_window_link
 #  - $language
+#  - $alt_dial - ('','MAIN','ALT','ADDR3')
 
 # CHANGELOG:
 # 80703-2225 - First build of script
@@ -52,10 +53,11 @@
 # 101123-1050 - Added manual dial queue features to external_dial function
 # 110224-1711 - Added compatibility with QM phone environment logging
 # 110409-0821 - Added run_time logging of API functions
+# 110430-0953 - Added option to external_dial by lead_id with alt_dial option
 #
 
-$version = '2.4-19';
-$build = '110409-0821';
+$version = '2.4-20';
+$build = '110430-0953';
 
 $startMS = microtime();
 
@@ -168,6 +170,8 @@ if (isset($_GET["dial_override"]))				{$dial_override=$_GET["dial_override"];}
 	elseif (isset($_POST["dial_override"]))		{$dial_override=$_POST["dial_override"];}
 if (isset($_GET["consultative"]))				{$consultative=$_GET["consultative"];}
 	elseif (isset($_POST["consultative"]))		{$consultative=$_POST["consultative"];}
+if (isset($_GET["alt_dial"]))					{$alt_dial=$_GET["alt_dial"];}
+	elseif (isset($_POST["alt_dial"]))			{$alt_dial=$_POST["alt_dial"];}
 if (isset($_GET["DB"]))							{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))				{$DB=$_POST["DB"];}
 
@@ -212,6 +216,7 @@ if ($non_latin < 1)
 	$source = ereg_replace("[^0-9a-zA-Z]","",$source);
 	$format = ereg_replace("[^0-9a-zA-Z]","",$format);
 	$vtiger_callback = ereg_replace("[^A-Z]","",$vtiger_callback);
+	$alt_dial = ereg_replace("[^0-9A-Z]","",$alt_dial);
 	$blended = ereg_replace("[^A-Z]","",$blended);
 	$ingroup_choices = ereg_replace("[^ -\_0-9a-zA-Z]","",$ingroup_choices);
 	$set_as_default = ereg_replace("[^A-Z]","",$set_as_default);
@@ -585,11 +590,11 @@ if ($function == 'external_dial')
 	{
 	$value = ereg_replace("[^0-9]","",$value);
 
-	if ( (strlen($value)<2) or ( (strlen($agent_user)<2) and (strlen($alt_user)<2) ) or (strlen($search)<2) or (strlen($preview)<2) or (strlen($focus)<2) )
+	if ( ( (strlen($value)<2) and (strlen($lead_id)<1) ) or ( (strlen($agent_user)<2) and (strlen($alt_user)<2) ) or (strlen($search)<2) or (strlen($preview)<2) or (strlen($focus)<2) )
 		{
 		$result = 'ERROR';
 		$result_reason = "external_dial not valid";
-		$data = "$phone_code|$search|$preview|$focus";
+		$data = "$phone_code|$search|$preview|$focus|$lead_id";
 		echo "$result: $result_reason - $value|$data|$agent_user|$alt_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		}
@@ -787,11 +792,52 @@ if ($function == 'external_dial')
 						}
 					####### End Vtiger CallBack Launching #######
 
+					### If lead_id is populated, check for it and adjust variables accordingly
+					if (strlen($lead_id) > 0)
+						{
+						$value='';
+						$phone_code='';
+						if ($alt_dial=='ALT')
+							{$stmtPF = "select alt_phone,phone_code from vicidial_list where lead_id='$lead_id';";}
+						if ($alt_dial=='ADDR3')
+							{$stmtPF = "select address3,phone_code from vicidial_list where lead_id='$lead_id';";}
+						if (strlen($stmtPF)<20)
+							{$stmtPF = "select phone_number,phone_code from vicidial_list where lead_id='$lead_id';";}
+						if ($DB) {echo "$stmtPF\n";}
+						$rslt=mysql_query($stmtPF, $link);
+						$VL_lead_id_ct = mysql_num_rows($rslt);
+						if ($VL_lead_id_ct > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$value	=		$row[0];
+							$phone_code	=	$row[1];
+							$value = ereg_replace("[^0-9]","",$value);
+							if (strlen($value)<2)
+								{
+								$result = 'ERROR';
+								$result_reason = "phone number is not valid";
+								$data = "$value|$lead_id|$alt_dial";
+								echo "$result: $result_reason - $agent_user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							}
+						else
+							{
+							$result = 'ERROR';
+							$result_reason = "lead_id is not valid";
+							$data = "$lead_id";
+							echo "$result: $result_reason - $agent_user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						}
+
 					$success=0;
 					### If no errors, run the update to place the call ###
 					if ($api_manual_dial=='STANDARD')
 						{
-						$stmt="UPDATE vicidial_live_agents set external_dial='$value!$phone_code!$search!$preview!$focus!$vendor_id!$epoch!$dial_prefix!$group_alias!$caller_id_number!$vtiger_callback_id' where user='$agent_user';";
+						$stmt="UPDATE vicidial_live_agents set external_dial='$value!$phone_code!$search!$preview!$focus!$vendor_id!$epoch!$dial_prefix!$group_alias!$caller_id_number!$vtiger_callback_id!$lead_id!$alt_dial' where user='$agent_user';";
 						$success=1;
 						}
 					else
@@ -802,7 +848,7 @@ if ($function == 'external_dial')
 						$row=mysql_fetch_row($rslt);
 						if ($row[0] < 1)
 							{
-							$stmt="INSERT INTO vicidial_manual_dial_queue set user='$agent_user',phone_number='$value',entry_time=NOW(),status='READY',external_dial='$value!$phone_code!$search!$preview!$focus!$vendor_id!$epoch!$dial_prefix!$group_alias!$caller_id_number!$vtiger_callback_id';";
+							$stmt="INSERT INTO vicidial_manual_dial_queue set user='$agent_user',phone_number='$value',entry_time=NOW(),status='READY',external_dial='$value!$phone_code!$search!$preview!$focus!$vendor_id!$epoch!$dial_prefix!$group_alias!$caller_id_number!$vtiger_callback_id!$lead_id!$alt_dial';";
 							$success=1;
 							}
 						else
@@ -819,7 +865,7 @@ if ($function == 'external_dial')
 						$rslt=mysql_query($stmt, $link);
 						$result = 'SUCCESS';
 						$result_reason = "external_dial function set";
-						$data = "$phone_code|$search|$preview|$focus|$vendor_id|$epoch|$dial_prefix|$group_alias|$caller_id_number";
+						$data = "$phone_code|$search|$preview|$focus|$vendor_id|$epoch|$dial_prefix|$group_alias|$caller_id_number|$alt_dial";
 						echo "$result: $result_reason - $value|$agent_user|$data\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						}

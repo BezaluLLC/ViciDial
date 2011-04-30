@@ -149,6 +149,8 @@ Places a manual dial phone call on the agent screen, you can define whether to s
 VALUES:
 value - 
  Any valid phone number (7275551212)
+lead_id -
+ Any valid lead_id from the system(either value or lead_id are required) if both are defined, lead_id will override value
 phone_code -
  Any valid phone country code (1 for USA/Canada, 44 for UK, etc...)
 search -
@@ -170,6 +172,8 @@ vtiger_callback -
  OPTIONAL, YES or NO, will lookup the phone number and Vtiger account ID from the provided Event ID
 alt_user -
  OPTIONAL, instead of agent_user, this is to lookup the agent_user using the vicidial_users.custom_three field
+alt_dial -
+ OPTIONAL, if using lead_id you can set this flag to dial the ALT number or the ADDR3 number
 
 EXAMPLE URLS:
 http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_dial&value=7275551212&phone_code=1&search=YES&preview=NO&focus=YES
@@ -184,7 +188,9 @@ ERROR: caller_id_number from group_alias is not valid - 6666|TESTING|123
 ERROR: group_alias is not valid - 6666|TESTING
 ERROR: vtiger callback activity does not exist in vtiger system - 12345
 ERROR: phone_number is already in this agents manual dial queue - 6666|7275551211
-SUCCESS: external_dial function set - 7275551212|6666|1|YES|NO|YES|123456|1232020456|9|TESTING|7275551211
+ERROR: lead_id is not valid - 6666|1234567
+ERROR: phone number is not valid - 6666||1234567|
+SUCCESS: external_dial function set - 7275551212|6666|1|YES|NO|YES|123456|1232020456|9|TESTING|7275551211|
 
 
 
