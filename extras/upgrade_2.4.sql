@@ -748,3 +748,7 @@ CREATE TABLE vicidial_closer_log_archive LIKE vicidial_closer_log;
 ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT NULL;
 
 UPDATE system_settings SET db_schema_version='1272',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD post_phone_time_diff_alert VARCHAR(30) default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1273',db_schema_update_date=NOW();

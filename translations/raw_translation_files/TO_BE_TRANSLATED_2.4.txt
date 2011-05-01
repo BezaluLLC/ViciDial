@@ -562,6 +562,8 @@ Using MULTI_LEAD allows you to use a separate lead for each number on a customer
 Manual Dial CID||
 This defines whether an agent making manual dial calls will have the campaign callerID settings used, or their agent phone callerID settings used. Default is CAMPAIGN||
 If the Use Custom CID campaign option is enabled or the list Campaign CID Override setting is used, this setting will be ignored||
+Phone Post Time Difference Alert||
+This manual-dial-only feature, if enabled, will display an alert if the time zone for the lead postal code, or zip code, is different from the time zone of the area code of the phone number for the lead. The OUTSIDE_CALLTIME_ONLY option will only show the alert if the two time zones are different and one of the time zones is outside of the call time selected for the campaign. OUTSIDE_CALLTIME_PHONE will only check the time zone of the phone number of the lead and alert if it is outside of the local call time. OUTSIDE_CALLTIME_POSTAL will only check the time zone of the postal code of the lead and alert if it is outside of the local call time. OUTSIDE_CALLTIME_BOTH will check the postal code and phone number for being within the local call time, even if they are in the same time zone. These alerts will show in the call log info, callbacks list info, search results info, when a lead is dialed and when a lead is previewed. Default is DISABLED||
 
 
 admin_campaign_multi_alt.php
@@ -615,6 +617,9 @@ rings all available agents until one picks up the phone||
 No calls for this lead||
 ADMINISTRATION: Campaign Multi-Alt-Leads||
 Multi-Lead Auto Alt Dialing Settings Form||
+Time Zone Warning||
+Phone Area Code Outside Dialable Zone||
+Postal Code Outside Dialable Zone||
 
 
 ############################################################  MANAGER Manual

@@ -546,6 +546,13 @@ OTHER CHANGES:
 123. Added ability to use external_dial Agent API function with a defined 
 	lead_id and optional alt_dial setting
 
+124. Added feature to give an alert on manual dial campaigns if the phone number
+	area code and the postal code are in different time zones, or if either
+	of them are outside of the local call time for the campaign. Viewable in
+	preview mode as well as lead info viewing from the callbacks list, the 
+	call log and search results in the agent interface.
+
+
 
 
 

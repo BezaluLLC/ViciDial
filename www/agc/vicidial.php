@@ -347,10 +347,11 @@
 # 110420-1211 - Added web_vars variable
 # 110428-1549 - Added use of manual_dial_cid setting
 # 110430-1126 - Added ability to use external_dial API function with lead_id and alt_dial options
+# 110430-1924 - Added post_phone_time_diff_alert campaign feature
 #
 
-$version = '2.4-324c';
-$build = '110430-1126';
+$version = '2.4-325c';
+$build = '110430-1924';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=72;
 $one_mysql_log=0;
@@ -3319,6 +3320,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var trigger_ready=0;
 	var hide_gender='<?php echo $hide_gender ?>';
 	var manual_dial_cid='<?php echo $manual_dial_cid ?>';
+	var post_phone_time_diff_alert_message='';
     var DiaLControl_auto_HTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/vdc_LB_resume.gif\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/vdc_LB_pause.gif\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
@@ -6234,6 +6236,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						custom_field_types								= MDnextResponse_array[47];
 						var list_webform								= MDnextResponse_array[48];
 						var list_webform_two							= MDnextResponse_array[49];
+						post_phone_time_diff_alert_message				= MDnextResponse_array[50];
 
 						timer_action = campaign_timer_action;
 						timer_action_message = campaign_timer_action_message;
@@ -6305,6 +6308,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							document.getElementById("CBcommentsBoxC").innerHTML = "<b>Agent: </b>" + CBuser;
                             document.getElementById("CBcommentsBoxD").innerHTML = "<b>Comments: </b><br />" + CBcomments;
 							showDiv('CBcommentsBox');
+							}
+
+						if (post_phone_time_diff_alert_message.length > 10)
+							{
+							document.getElementById("post_phone_time_diff_span_contents").innerHTML = " &nbsp; &nbsp; " + post_phone_time_diff_alert_message + "<br />";
+							showDiv('post_phone_time_diff_span');
 							}
 
 						if (document.vicidial_form.LeadPreview.checked==false)
@@ -6487,6 +6496,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							previous_called_count = '';
 							previous_dispo = '';
 							custchannellive=1;
+
+							if (post_phone_time_diff_alert_message.length > 10)
+								{
+								document.getElementById("post_phone_time_diff_span_contents").innerHTML = "";
+								hideDiv('post_phone_time_diff_span');
+								}
 
 							document.getElementById("MainStatuSSpan").innerHTML = " Lead skipped, go on to next lead";
 
@@ -7750,6 +7765,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			lastcustchannel='';
 			lastcustserverip='';
 			MDchannel='';
+			if (post_phone_time_diff_alert_message.length > 10)
+				{
+				document.getElementById("post_phone_time_diff_span_contents").innerHTML = "";
+				hideDiv('post_phone_time_diff_span');
+				post_phone_time_diff_alert_message='';
+				}
 
 			if( document.images ) { document.images['livecall'].src = image_livecall_OFF.src;}
             document.getElementById("WebFormSpan").innerHTML = "<img src=\"./images/vdc_LB_webform_OFF.gif\" border=\"0\" alt=\"Web Form\" />";
@@ -8564,6 +8585,13 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				document.vicidial_form.MDDiaLOverridE.value = '';
 				document.vicidial_form.MDLeadID.value = '';
 				document.vicidial_form.MDType.value = '';
+
+				if (post_phone_time_diff_alert_message.length > 10)
+					{
+					document.getElementById("post_phone_time_diff_span_contents").innerHTML = "";
+					hideDiv('post_phone_time_diff_span');
+					post_phone_time_diff_alert_message='';
+					}
 
 				if (manual_dial_in_progress==1)
 					{
@@ -11117,6 +11145,7 @@ function phone_number_format(formatphone) {
 			hideDiv('LeaDInfOBox');
 			hideDiv('agentdirectlink');
 			hideDiv('blind_monitor_notice_span');
+			hideDiv('post_phone_time_diff_span');
 			hideDiv('ivrParkControl');
 			if (is_webphone!='Y')
 				{hideDiv('webphoneSpan');}
@@ -12107,6 +12136,7 @@ $zi=2;
         echo "<img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";
 		}
 	?>	
+	<span id="post_phone_time_diff_span"><b><font color="red"><span id="post_phone_time_diff_span_contents"></span></font></b></span>
     <font class="body_text"> STATUS: <span id="MainStatuSSpan"></span></font></td></tr>
     <tr><td colspan="3"><span id="busycallsdebug"></span></td></tr>
     <tr><td width="150px" align="left" valign="top">
