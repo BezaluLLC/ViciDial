@@ -33,6 +33,7 @@
 # 110414-0200 - Added queue_log CONNECT and PAUSEALL/UNPAUSEALL validation and fixing
 # 110415-1442 - Added one minute run option
 # 110425-1345 - Added check-complete-pauses option
+# 110504-0737 - Small bug fix in agent log corrections
 #
 
 # constants
@@ -1251,6 +1252,7 @@ if ( ($skip_agent_log_validation < 1) && ($VAL_validate > 0) )
 				$corrections++;
 				$total_dead++;
 				$corrections_LOG .= "DEAD:$NVtalk_sec!$Vdead_sec[$r]|";
+				$corrections_SQL .= "dead_sec='$NVtalk_sec',";
 				}
 
 			if ($corrections > 0)
