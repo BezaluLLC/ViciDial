@@ -148,6 +148,7 @@
 # 110303-2338 - Added on-hook agent compatibility and rewrote a few sections
 # 110324-2330 - Added recording of remote agent calls, per in-group and campaign recording settings
 # 110325-1409 - Added user recording override settings checking for remote agent recording
+# 110505-1620 - Fixed minor voicemail issue
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -4027,21 +4028,27 @@ if ($drop_timer > $DROP_TIME)
 			$drop_action = $user_unavailable_action;
 			$drop_inbound_group = $did_in_group;
 			}
-		$VDADvoicemail_ext = $did_voicemail_ext;
 		if (length($did_voicemail_ext) < 1)
 			{
-			### Grab user's voicemail ID from the database
-			$stmtA = "SELECT voicemail_id FROM vicidial_users where user='$agent_only';";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			$sthArows=$sthA->rows;
-				$dbhP=$dbhA;   $mysql_count='02130';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-			if ($sthArows > 0)
+			if ($VDADvoicemail_ext =~ /AGENTVMAIL/)
 				{
-				@aryA = $sthA->fetchrow_array;
-				$VDADvoicemail_ext = 	$aryA[0];
+				### Grab user's voicemail ID from the database
+				$stmtA = "SELECT voicemail_id FROM vicidial_users where user='$agent_only';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					$dbhP=$dbhA;   $mysql_count='02130';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$VDADvoicemail_ext = 	$aryA[0];
+					}
+				$sthA->finish();
 				}
-			$sthA->finish();
+			}
+		else
+			{
+			$VDADvoicemail_ext = $did_voicemail_ext;
 			}
 		}
 
