@@ -552,6 +552,9 @@ OTHER CHANGES:
 	preview mode as well as lead info viewing from the callbacks list, the 
 	call log and search results in the agent interface.
 
+125. Added utility to synchronize users, remote agents, dids, call menus, 
+	in-groups and campaigns with entries in QM: ADMIN_qm_sync.pl
+
 
 
 
