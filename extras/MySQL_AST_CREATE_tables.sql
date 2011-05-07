@@ -800,7 +800,8 @@ auto_pause_precall ENUM('Y','N') default 'N',
 auto_pause_precall_code VARCHAR(6) default 'PRECAL',
 auto_resume_precall ENUM('Y','N') default 'N',
 manual_dial_cid ENUM('CAMPAIGN','AGENT_PHONE') default 'CAMPAIGN',
-post_phone_time_diff_alert VARCHAR(30) default 'DISABLED'
+post_phone_time_diff_alert VARCHAR(30) default 'DISABLED',
+custom_3way_button_transfer VARCHAR(30) default 'DISABLED'
 );
 
 CREATE TABLE vicidial_lists (
@@ -2460,7 +2461,7 @@ ALTER TABLE vicidial_lead_search_log_archive MODIFY search_log_id INT(9) UNSIGNE
 CREATE TABLE vicidial_closer_log_archive LIKE vicidial_closer_log; 
 ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT NULL;
 
-UPDATE system_settings SET db_schema_version='1273',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1274',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

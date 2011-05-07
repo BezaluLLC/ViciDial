@@ -555,6 +555,12 @@ OTHER CHANGES:
 125. Added utility to synchronize users, remote agents, dids, call menus, 
 	in-groups and campaigns with entries in QM: ADMIN_qm_sync.pl
 
+126. Added Custom 3-Way Button Transfer feature which allows for 3-way calls to
+	be placed using one of several lead fields or campaign presets, as well 
+	as the customer optionally being put on park, and the transfer - conf
+	frame being brought up, all at the click of one button on the main agent
+	screen.
+
 
 
 

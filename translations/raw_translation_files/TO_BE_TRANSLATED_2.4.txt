@@ -286,10 +286,10 @@ Wait Time Option Callback List ID||
 If Wait Time Option is set to PRESS_CID_CALLBACK, this is the List ID the call is added to as a new lead if the customer presses the option key when presented with the option||
 Wait Hold Option Priority||
 If both Estimated Hold Time options and Wait Time options are active, this setting will define whether one, the other or both of these features are active. For example, if the Estimated Hold Time Option is set to 360, the Wait Time option is set to 120 and the customer has been waiting for 120 seconds and there are still 400 seconds estimated hold time, then they are both active at the same time and this setting will be checked to see what options will be offered. Default is WAIT only||
-The LOCKED options are used to lock the value to the Quick Transfer Button even if the agent uses the transfer conference features during a cacll before using the Quick Transfer Button||
+The LOCKED options are used to lock the value to the Quick Transfer Button even if the agent uses the transfer conference features during a call before using the Quick Transfer Button||
 HANGUP will hang up the call when the timer is triggered, CALLMENU will send the call to the Call Menu specified in the Timer Action Destination field, EXTENSION will send the call to the Extension that is specified in the Timer Action Destination field, IN_GROUP will send the call to the In-Group specified in the Timer Action Destination field||
 Timer Action Destination||
-This field is where you specify the Call Menu, Extension or In-Group that you want the cacll sent to if the Time Action is set to CALLMENU, EXTENSION or IN_GROUP. Default is empty||
+This field is where you specify the Call Menu, Extension or In-Group that you want the call sent to if the Time Action is set to CALLMENU, EXTENSION or IN_GROUP. Default is empty||
 You must enter field options when adding a||
 You must enter field options when updating a||
 Allowed Reports||
@@ -339,7 +339,7 @@ Filter Inbound Number||
 This option if enabled allows you to filter calls coming into this DID and send them to an alternative action if they match a phone number that is in the filter phone group or a URL response if you have configured one. Default is DISABLED. GROUP will search in a Filter Phone Group. URL will send a URL and will match if a 1 is sent back||
 If the Filter Inbound Number field is set to GROUP then this is the ID of the Filter Phone Group that will have its numbers searched looking for a match to the caller ID number of the incoming call||
 Filter URL||
-If the Filter Inbound Number field is set to URL then this is the web address of a script that will search a remote system and return a 1 for a match and a 0 for no match. Only two variables are available in the address if you use the VAR prefix like with webform addresses in campaigns, --A--phone_number--B-- and --A--did_pattern--B-- can be used in the URL to indicate the caller ID of the caller and the DID that the customer caclled in on||
+If the Filter Inbound Number field is set to URL then this is the web address of a script that will search a remote system and return a 1 for a match and a 0 for no match. Only two variables are available in the address if you use the VAR prefix like with webform addresses in campaigns, --A--phone_number--B-- and --A--did_pattern--B-- can be used in the URL to indicate the caller ID of the caller and the DID that the customer called in on||
 Filter Action||
 If Filter Inbound Number is activated and a match is found then this is the action that is to be taken. This is the same as the Route that you select for a DID, and the settings below function just like they do for a standard routing||
 This is the ID of the Filter Phone Group that is the container for a group of phone numbers that you can have automatically searched through when a call comes into a DID and send to an alternate route if there is a match. This field should be between 2 and 20 characters and have no punctuation except for underscore||
@@ -564,6 +564,8 @@ This defines whether an agent making manual dial calls will have the campaign ca
 If the Use Custom CID campaign option is enabled or the list Campaign CID Override setting is used, this setting will be ignored||
 Phone Post Time Difference Alert||
 This manual-dial-only feature, if enabled, will display an alert if the time zone for the lead postal code, or zip code, is different from the time zone of the area code of the phone number for the lead. The OUTSIDE_CALLTIME_ONLY option will only show the alert if the two time zones are different and one of the time zones is outside of the call time selected for the campaign. OUTSIDE_CALLTIME_PHONE will only check the time zone of the phone number of the lead and alert if it is outside of the local call time. OUTSIDE_CALLTIME_POSTAL will only check the time zone of the postal code of the lead and alert if it is outside of the local call time. OUTSIDE_CALLTIME_BOTH will check the postal code and phone number for being within the local call time, even if they are in the same time zone. These alerts will show in the call log info, callbacks list info, search results info, when a lead is dialed and when a lead is previewed. Default is DISABLED||
+Custom 3-Way Button Transfer||
+This option will add a Custom Transfer button to the agent screen below the Transfer-Conf button that will allow one click three way calls using the selected preset or field. The PRESET_ options will place calls using the defined preset value. The FIELD_ options will place calls using the number in the selected field from the lead. DISABLED will not show the button on the agent screen. The PARK_ options will park the customer before dialing. Default is DISABLED||
 
 
 admin_campaign_multi_alt.php
@@ -620,6 +622,7 @@ Multi-Lead Auto Alt Dialing Settings Form||
 Time Zone Warning||
 Phone Area Code Outside Dialable Zone||
 Postal Code Outside Dialable Zone||
+Custom Transfer||
 
 
 ############################################################  MANAGER Manual

@@ -752,3 +752,7 @@ UPDATE system_settings SET db_schema_version='1272',db_schema_update_date=NOW();
 ALTER TABLE vicidial_campaigns ADD post_phone_time_diff_alert VARCHAR(30) default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1273',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD custom_3way_button_transfer VARCHAR(30) default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1274',db_schema_update_date=NOW();
