@@ -349,10 +349,11 @@
 # 110430-1126 - Added ability to use external_dial API function with lead_id and alt_dial options
 # 110430-1924 - Added post_phone_time_diff_alert campaign feature
 # 110506-1612 - Added custom_3way_button_transfer button feature
+# 110510-1637 - Added number validation to custom_3way_button_transfer function
 #
 
-$version = '2.4-326c';
-$build = '110506-1612';
+$version = '2.4-327c';
+$build = '110510-1637';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=72;
 $one_mysql_log=0;
@@ -3586,13 +3587,22 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		if ( (custom_3way_button_transfer == 'FIELD_owner') || (custom_3way_button_transfer == 'PARK_FIELD_owner') )
 			{document.vicidial_form.xfernumber.value = document.vicidial_form.owner.value;}
 
-		if (custom_3way_button_transfer_park > 0)
+		var temp_xfernumber = document.vicidial_form.xfernumber.value;
+		if (temp_xfernumber.length < 3)
 			{
-			xfer_park_dial();
+			alert_box("Number to Dial invalid: " + temp_xfernumber);
+			ShoWTransferMain('OFF','YES');
 			}
 		else
 			{
-			SendManualDial('YES');
+			if (custom_3way_button_transfer_park > 0)
+				{
+				xfer_park_dial();
+				}
+			else
+				{
+				SendManualDial('YES');
+				}
 			}
 		}
 
