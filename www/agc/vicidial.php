@@ -1872,7 +1872,7 @@ else
         echo "<form name=\"vicidial_form\" id=\"vicidial_form\" action=\"$agcPAGE\" method=\"post\">\n";
         echo "<input type=\"hidden\" name=\"DB\" value=\"$DB\">\n";
         echo "<input type=\"hidden\" name=\"JS_browser_height\" value=\"\" />\n";
-        echo "<input type=\"hidden\" name=J\"S_browser_width\" value=\"\" />\n";
+        echo "<input type=\"hidden\" name=\"JS_browser_width\" value=\"\" />\n";
         echo "<input type=\"hidden\" name=\"VD_login\" value=\"$VD_login\" />\n";
         echo "<input type=\"hidden\" name=\"VD_pass\" value=\"$VD_pass\" />\n";
         echo "<input type=\"hidden\" name=\"VD_campaign\" value=\"$VD_campaign\" />\n";

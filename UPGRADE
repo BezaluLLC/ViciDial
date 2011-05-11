@@ -561,6 +561,10 @@ OTHER CHANGES:
 	frame being brought up, all at the click of one button on the main agent
 	screen.
 
+127. Added the agc/phone_only.php script, a web-based web-phone-only client 
+	application that allows full phone usage without needing to login as an
+	agent
+
 
 
 
