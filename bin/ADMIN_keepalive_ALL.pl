@@ -14,7 +14,7 @@
 #  - Runs trigger processes at defined times
 #  - Auto reset lists at defined times
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61011-1348 - First build
@@ -59,6 +59,7 @@
 # 101022-1655 - Added new variables to be cleared from vicidial_cacmpaign_stats table
 # 101107-2257 - Added cross-server phone dialplan extensions
 # 101214-1507 - Changed list auto-reset to work with inactive lists
+# 110512-2112 - Added vicidial_campaign_stats_debug to table cleaning
 #
 
 $DB=0; # Debug flag
@@ -733,6 +734,20 @@ if ($timeclock_end_of_day_NOW > 0)
 	if($DB){print STDERR "\n|$affected_rows vicidial_campaign_server_stats records deleted|\n";}
 
 	$stmtA = "optimize table vicidial_campaign_server_stats;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+
+	$stmtA = "delete from vicidial_campaign_stats_debug;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows vicidial_campaign_stats_debug records deleted|\n";}
+
+	$stmtA = "optimize table vicidial_campaign_stats_debug;";
 	if($DBX){print STDERR "\n|$stmtA|\n";}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;

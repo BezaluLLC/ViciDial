@@ -99,6 +99,7 @@
 # 110224-1408 - Fixed trunk reservation bug
 # 110224-1859 - Added compatibility with QM phone environment logging
 # 110303-1710 - Added clearing of ring_callerid when vicidial_auto_calls deleted
+# 110513-1745 - Added double-check for dial level difference target, and dial level and avail-only-tally features
 #
 
 
@@ -114,7 +115,12 @@ if (length($ARGV[0])>1)
 
 	if ($args =~ /--help/i)
 		{
-		print "allowed run time options:\n  [-t] = test\n  [-debug] = verbose debug messages\n  [--delay=XXX] = delay of XXX seconds per loop, default 2.5 seconds\n\n";
+		print "allowed run time options:\n";
+		print "  [-t] = test\n";
+		print "  [-debug] = verbose debug messages\n";
+		print "  [--delay=XXX] = delay of XXX seconds per loop, default 2.5 seconds\n";
+		print "\n";
+		exit;
 		}
 	else
 		{
@@ -330,6 +336,12 @@ while($one_day_interval > 0)
 		@DBIPdial_method=@MT;
 		@DBIPuse_custom_cid=@MT;
 		@DBIPinbound_queue_no_dial=@MT;
+		@DBIPavailable_only_tally=@MT;
+		@DBIPavailable_only_tally_threshold=@MT;
+		@DBIPavailable_only_tally_threshold_agents=@MT;
+		@DBIPdial_level_threshold=@MT;
+		@DBIPdial_level_threshold_agents=@MT;
+		@DBIPadaptive_dl_diff_target=@MT;
 
 		$active_line_counter=0;
 		$user_counter=0;
@@ -439,6 +451,8 @@ while($one_day_interval > 0)
 		$user_CIPct = 0;
 		foreach(@DBIPcampaign)
 			{
+
+			$debug_string='';
 			$user_counter=0;
 			foreach(@DBlive_campaign)
 				{
@@ -510,6 +524,7 @@ while($one_day_interval > 0)
 				$DBIPold_trunk_shortage[$user_CIPct]=0;
 
 				$event_string="VCSS ENTRY INSERTED: $affected_rows";
+				$debug_string .= "$event_string\n";
 				&event_logger;
 				}
 
@@ -545,7 +560,7 @@ while($one_day_interval > 0)
 
 			### grab the dial_level and multiply by active agents to get your goalcalls
 			$DBIPadlevel[$user_CIPct]=0;
-			$stmtA = "SELECT auto_dial_level,local_call_time,dial_timeout,dial_prefix,campaign_cid,active,campaign_vdad_exten,closer_campaigns,omit_phone_code,available_only_ratio_tally,auto_alt_dial,campaign_allow_inbound,queue_priority,dial_method,use_custom_cid,inbound_queue_no_dial FROM vicidial_campaigns where campaign_id='$DBIPcampaign[$user_CIPct]'";
+			$stmtA = "SELECT auto_dial_level,local_call_time,dial_timeout,dial_prefix,campaign_cid,active,campaign_vdad_exten,closer_campaigns,omit_phone_code,available_only_ratio_tally,auto_alt_dial,campaign_allow_inbound,queue_priority,dial_method,use_custom_cid,inbound_queue_no_dial,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,adaptive_dl_diff_target FROM vicidial_campaigns where campaign_id='$DBIPcampaign[$user_CIPct]'";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -565,28 +580,77 @@ while($one_day_interval > 0)
 				$omit_phone_code =					$aryA[8];
 				if ($omit_phone_code =~ /Y/) {$DBIPomitcode[$user_CIPct] = 1;}
 				else {$DBIPomitcode[$user_CIPct] = 0;}
-				$available_only_ratio_tally =		$aryA[9];
-				if ($available_only_ratio_tally =~ /Y/) 
+				$DBIPavailable_only_tally[$user_CIPct] =		$aryA[9];
+				$DBIPautoaltdial[$user_CIPct] =					$aryA[10];
+				$DBIPcampaign_allow_inbound[$user_CIPct] =		$aryA[11];
+				$DBIPqueue_priority[$user_CIPct] =				$aryA[12];
+				$DBIPdial_method[$user_CIPct] =					$aryA[13];
+				$DBIPuse_custom_cid[$user_CIPct] =				$aryA[14];
+				$DBIPinbound_queue_no_dial[$user_CIPct] =		$aryA[15];
+				$DBIPavailable_only_tally_threshold[$user_CIPct] = $aryA[16];
+				$DBIPavailable_only_tally_threshold_agents[$user_CIPct] = $aryA[17];
+				$DBIPdial_level_threshold[$user_CIPct] =		$aryA[18];
+				$DBIPdial_level_threshold_agents[$user_CIPct] = $aryA[19];
+				$DBIPadaptive_dl_diff_target[$user_CIPct] =		$aryA[20];
+				if ($DBIPavailable_only_tally[$user_CIPct] =~ /Y/) 
 					{
 					$DBIPcount[$user_CIPct] = $DBIPACTIVEcount[$user_CIPct];
 					$active_only=1;
 					}
 				else
 					{
-					$DBIPcount[$user_CIPct] = ($DBIPcount[$user_CIPct] - $DBIPDEADcount[$user_CIPct]);
+					### Check for available only tally threshold ###
+					if ( ($DBIPavailable_only_tally_threshold[$user_CIPct] =~ /LOGGED-IN_AGENTS/) && ($DBIPavailable_only_tally_threshold_agents[$user_CIPct] > $user_counter) )
+						{
+						$debug_string .= "   !! AVAILABLE ONLY TALLY THRESHOLD triggered for LOGGED-IN_AGENTS: ($DBIPavailable_only_tally_threshold_agents[$user_CIPct] > $user_counter)\n";
+						$active_only=1;
+						}
+					if ( ($DBIPavailable_only_tally_threshold[$user_CIPct] =~ /NON-PAUSED_AGENTS/) && ($DBIPavailable_only_tally_threshold_agents[$user_CIPct] > $DBIPcount[$user_CIPct]) )
+						{
+						$debug_string .= "   !! AVAILABLE ONLY TALLY THRESHOLD triggered for NON-PAUSED_AGENTS: ($DBIPavailable_only_tally_threshold_agents[$user_CIPct] > $DBIPcount[$user_CIPct])\n";
+						$active_only=1;
+						}
+					if ( ($DBIPavailable_only_tally_threshold[$user_CIPct] =~ /WAITING_AGENTS/) && ($DBIPavailable_only_tally_threshold_agents[$user_CIPct] > $DBIPACTIVEcount[$user_CIPct]) )
+						{
+						$debug_string .= "   !! AVAILABLE ONLY TALLY THRESHOLD triggered for WAITING_AGENTS: ($DBIPavailable_only_tally_threshold_agents[$user_CIPct] > $DBIPACTIVEcount[$user_CIPct])\n";
+						$active_only=1;
+						}
+
+					if ($active_only > 0) 
+						{$DBIPcount[$user_CIPct] = $DBIPACTIVEcount[$user_CIPct];}
+					else
+						{$DBIPcount[$user_CIPct] = ($DBIPcount[$user_CIPct] - $DBIPDEADcount[$user_CIPct]);}
+
 					if ($DBIPcount[$user_CIPct] < 0)
 						{$DBIPcount[$user_CIPct]=0;}
 					}
-				$DBIPautoaltdial[$user_CIPct] =		$aryA[10];
-				$DBIPcampaign_allow_inbound[$user_CIPct] =	$aryA[11];
-				$DBIPqueue_priority[$user_CIPct] =	$aryA[12];
-				$DBIPdial_method[$user_CIPct] =		$aryA[13];
-				$DBIPuse_custom_cid[$user_CIPct] =	$aryA[14];
-				$DBIPinbound_queue_no_dial[$user_CIPct] = $aryA[15];
 
 				$rec_count++;
 				}
 			$sthA->finish();
+
+			### Check for dial level threshold ###
+			$nonpause_agents_temp = ($DBIPACTIVEcount[$user_CIPct] + $DBIPINCALLcount[$user_CIPct]);
+			if ( ($DBIPdial_level_threshold[$user_CIPct] =~ /LOGGED-IN_AGENTS/) && ($DBIPdial_level_threshold_agents[$user_CIPct] > $user_counter) )
+				{
+				$debug_string .= "   !! DIAL LEVEL THRESHOLD triggered for LOGGED-IN_AGENTS: ($DBIPdial_level_threshold_agents[$user_CIPct] > $user_counter)\n";
+				$DBIPadlevel[$user_CIPct]=1;
+				}
+			if ( ($DBIPdial_level_threshold[$user_CIPct] =~ /NON-PAUSED_AGENTS/) && ($DBIPdial_level_threshold_agents[$user_CIPct] > $nonpause_agents_temp) )
+				{
+				$debug_string .= "   !! DIAL LEVEL THRESHOLD triggered for NON-PAUSED_AGENTS: ($DBIPdial_level_threshold_agents[$user_CIPct] > $nonpause_agents_temp)\n";
+				$DBIPadlevel[$user_CIPct]=1;
+				}
+			if ( ($DBIPdial_level_threshold[$user_CIPct] =~ /WAITING_AGENTS/) && ($DBIPdial_level_threshold_agents[$user_CIPct] > $DBIPACTIVEcount[$user_CIPct]) )
+				{
+				$debug_string .= "   !! DIAL LEVEL THRESHOLD triggered for WAITING_AGENTS: ($DBIPdial_level_threshold_agents[$user_CIPct] > $DBIPACTIVEcount[$user_CIPct])\n";
+				$DBIPadlevel[$user_CIPct]=1;
+				}
+
+			### apply dial level difference target ###
+			$DBIPcount[$user_CIPct] = ($DBIPcount[$user_CIPct] + $DBIPadaptive_dl_diff_target[$user_CIPct]);
+			if ($DBIPcount[$user_CIPct] < 0)
+				{$DBIPcount[$user_CIPct]=0;}
 
 			$DBIPgoalcalls[$user_CIPct] = ($DBIPadlevel[$user_CIPct] * $DBIPcount[$user_CIPct]);
 			if ($active_only > 0) 
@@ -609,7 +673,8 @@ while($one_day_interval > 0)
 			if ($DBIPactive[$user_CIPct] =~ /N/) {$DBIPgoalcalls[$user_CIPct] = 0;}
 			$DBIPgoalcalls[$user_CIPct] = sprintf("%.0f", $DBIPgoalcalls[$user_CIPct]);
 
-			$event_string="$DBIPcampaign[$user_CIPct] $DBIPaddress[$user_CIPct]: agents: $DBIPcount[$user_CIPct] (READY: $DBIPcampaign_ready_agents[$user_CIPct])    dial_level: $DBIPadlevel[$user_CIPct]     ($DBIPACTIVEcount[$user_CIPct]|$DBIPINCALLcount[$user_CIPct]|$DBIPDEADcount[$user_CIPct])";
+			$event_string="$DBIPcampaign[$user_CIPct] $DBIPaddress[$user_CIPct]: agents: $DBIPcount[$user_CIPct] (READY: $DBIPcampaign_ready_agents[$user_CIPct])    dial_level: $DBIPadlevel[$user_CIPct]     ($DBIPACTIVEcount[$user_CIPct]|$DBIPINCALLcount[$user_CIPct]|$DBIPDEADcount[$user_CIPct])   $DBIPadaptive_dl_diff_target[$user_CIPct]";
+			$debug_string .= "$event_string\n";
 			&event_logger;
 
 
@@ -680,6 +745,7 @@ while($one_day_interval > 0)
 			if ( ($DBIPcampaign_ready_agents[$user_CIPct] > 0) && ($DBIPexistcalls_IN[$user_CIPct] > 0) )
 				{
 				$event_string="     BLENDED-OUTBOUND-AGENTS-WAITING OVERRIDE: $DBIPcampaign[$user_CIPct] $DBIPexistcalls[$user_CIPct] [$DBIPexistcalls_IN[$user_CIPct] + $DBIPexistcalls_OUT[$user_CIPct]])";
+				$debug_string .= "$event_string\n";
 				&event_logger;
 
 				$DBIPexistcalls[$user_CIPct] = $DBIPexistcalls_OUT[$user_CIPct];
@@ -732,6 +798,7 @@ while($one_day_interval > 0)
 				{$active_line_counter = ($DBIPmakecalls[$user_CIPct] + $active_line_counter);}
 
 			$event_string="$DBIPcampaign[$user_CIPct] $DBIPaddress[$user_CIPct]: Calls to place: $DBIPmakecalls[$user_CIPct] ($DBIPgoalcalls[$user_CIPct] - $DBIPexistcalls[$user_CIPct] [$DBIPexistcalls_IN[$user_CIPct] + $DBIPexistcalls_OUT[$user_CIPct]|$DBIPexistcalls_IN_ALL[$user_CIPct]|$DBIPexistcalls_IN_LIVE[$user_CIPct]]) $active_line_counter $MVT_msg";
+			$debug_string .= "$event_string\n";
 			&event_logger;
 
 			### Calculate campaign-wide agent waiting and calls waiting differential
@@ -831,6 +898,7 @@ while($one_day_interval > 0)
 			$stat_differential = ($ready_diff_avg - $waiting_diff_avg);
 
 			$event_string="CAMPAIGN DIFFERENTIAL: $total_agents_avg   $stat_differential   ($ready_diff_avg - $waiting_diff_avg)";
+			$debug_string .= "$event_string\n";
 			&event_logger;
 
 			$stmtA = "UPDATE vicidial_campaign_stats SET differential_onemin='$stat_differential', agents_average_onemin='$total_agents_avg' where campaign_id='$DBIPcampaign[$user_CIPct]';";
@@ -842,6 +910,7 @@ while($one_day_interval > 0)
 					{
 					$event_string="Manual Dial Override for Shortage |$DBIPadlevel[$user_CIPct]|$DBIPtrunk_shortage[$user_CIPct]|";
 					&event_logger;
+					$debug_string .= "$event_string\n";
 					$DBIPtrunk_shortage[$user_CIPct] = 0;
 					}
 				$stmtA = "UPDATE vicidial_campaign_server_stats SET local_trunk_shortage='$DBIPtrunk_shortage[$user_CIPct]',update_time='$now_date' where server_ip='$server_ip' and campaign_id='$DBIPcampaign[$user_CIPct]';";
@@ -849,7 +918,11 @@ while($one_day_interval > 0)
 				}
 
 			$event_string="LOCAL TRUNK SHORTAGE: $DBIPtrunk_shortage[$user_CIPct]|$DBIPold_trunk_shortage[$user_CIPct]  ($active_line_goal - $max_vicidial_trunks)";
+			$debug_string .= "$event_string\n";
 			&event_logger;
+
+			$stmtA="INSERT IGNORE INTO vicidial_campaign_stats_debug SET server_ip='$server_ip',campaign_id='$DBIPcampaign[$user_CIPct]',entry_time='$now_date',debug_output='$debug_string' ON DUPLICATE KEY UPDATE entry_time='$now_date',debug_output='$debug_string';";
+			$affected_rows = $dbhA->do($stmtA);
 
 			$user_CIPct++;
 			}

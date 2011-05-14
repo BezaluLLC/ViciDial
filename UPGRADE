@@ -565,6 +565,37 @@ OTHER CHANGES:
 	application that allows full phone usage without needing to login as an
 	agent
 
+128. Added option to Lists to allow you to choose in the List Modification 
+	screen the method of time zone adjustment that happens nightly on a per
+	list basis. COUNTRY_AND_AREA_CODE is the default, and will use the 
+	country code and area code of the phone number to determine the time 
+	zone of the lead. POSTAL_CODE will use the postal code if available to 
+	determine the time zone of the lead. NANPA_PREFIX works only in the USA 
+	and will use the area code and prefix of the phone number to determine 
+	the time zone of the lead, but this is not enabled by default in the 
+	system, so please be sure you have the NANPA prefix data loaded onto 
+	your system before selecting this option. OWNER_TIME_ZONE_CODE will use 
+	a standard time zone abbraviation loaded into the owner field of the 
+	lead to determine the time zone, in the USA examples are AST, EST, CST, 
+	MST, PST, AKST, HST. This feature does NOT affect the time zone used at
+	the moment leads are loaded, that needs to be selected when you are 
+	loading leads. This feature must be enabled in the crontab for the GMT 
+	adjust script:
+	/usr/share/astguiclient/ADMIN_adjust_GMTnow_on_leads.pl --list-settings
+
+129. Added Available Only Tally Threshold campaign option which allows you to 
+	set the number of agents below which Available Only Tally will be 
+	temporarily enabled
+
+130. Added Auto Dial Level Threshold campaign option which allows you to set a 
+	minimum number agents that the predictive algorithm will work at. If the 
+	number of agents falls below the number that you have set, then the 
+	dial level will go to 1.0 until more agents log in or go into the 
+	selected state
+
+131. Change Dial Level Difference Target to work properly with all RATIO and
+	ADAPT dial method outbound campaigns.
+
 
 
 

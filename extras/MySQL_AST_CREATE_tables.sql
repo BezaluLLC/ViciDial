@@ -801,7 +801,11 @@ auto_pause_precall_code VARCHAR(6) default 'PRECAL',
 auto_resume_precall ENUM('Y','N') default 'N',
 manual_dial_cid ENUM('CAMPAIGN','AGENT_PHONE') default 'CAMPAIGN',
 post_phone_time_diff_alert VARCHAR(30) default 'DISABLED',
-custom_3way_button_transfer VARCHAR(30) default 'DISABLED'
+custom_3way_button_transfer VARCHAR(30) default 'DISABLED',
+available_only_tally_threshold ENUM('DISABLED','LOGGED-IN_AGENTS','NON-PAUSED_AGENTS','WAITING_AGENTS') default 'DISABLED',
+available_only_tally_threshold_agents SMALLINT(5) UNSIGNED default '0',
+dial_level_threshold ENUM('DISABLED','LOGGED-IN_AGENTS','NON-PAUSED_AGENTS','WAITING_AGENTS') default 'DISABLED',
+dial_level_threshold_agents SMALLINT(5) UNSIGNED default '0'
 );
 
 CREATE TABLE vicidial_lists (
@@ -823,7 +827,8 @@ xferconf_c_number VARCHAR(50) default '',
 xferconf_d_number VARCHAR(50) default '',
 xferconf_e_number VARCHAR(50) default '',
 web_form_address TEXT,
-web_form_address_two TEXT
+web_form_address_two TEXT,
+time_zone_setting ENUM('COUNTRY_AND_AREA_CODE','POSTAL_CODE','NANPA_PREFIX','OWNER_TIME_ZONE_CODE') default 'COUNTRY_AND_AREA_CODE'
 );
 
 CREATE TABLE vicidial_statuses (
@@ -2309,6 +2314,17 @@ index (user),
 index (event_date)
 );
 
+CREATE TABLE vicidial_campaign_stats_debug (
+campaign_id VARCHAR(20) NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+entry_time DATETIME,
+update_time TIMESTAMP,
+debug_output TEXT,
+adapt_output TEXT,
+index (campaign_id),
+unique index campserver (campaign_id, server_ip)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
@@ -2461,7 +2477,7 @@ ALTER TABLE vicidial_lead_search_log_archive MODIFY search_log_id INT(9) UNSIGNE
 CREATE TABLE vicidial_closer_log_archive LIKE vicidial_closer_log; 
 ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT NULL;
 
-UPDATE system_settings SET db_schema_version='1274',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1275',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

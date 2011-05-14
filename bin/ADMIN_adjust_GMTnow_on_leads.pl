@@ -28,6 +28,7 @@
 # 100117-2122 - Added force-date option and activated FSO-FSA and LSS-FSA
 # 110406-0652 - Added omitlistid option
 # 110424-0834 - Added ownertimezone option
+# 110513-1444 - Added list-settings option to use settings from the vicidial_lists table
 #
 
 use Time::Local;
@@ -63,6 +64,7 @@ if (length($ARGV[0])>1)
 		print "  [--singlelistid=XXX] = Only lookup and alter leads in one list_id\n";
 		print "  [--omitlistid=XXX-YYY-ZZZ] = Skip these list_ids, separated by dash\n";
 		print "  [--ownertimezone] = Check the owner field for time zone abbreviation: (EST,CST,etc...)\n";
+		print "  [--list-settings] = Will use the time zone settings as defined in each list\n";
 		print "  [--force-date=YYYY-MM-DD] = Force this date as date to run\n";
 		print "\n";
 
@@ -116,6 +118,11 @@ if (length($ARGV[0])>1)
 			$omitlistidSQL = $data_in[1];
 			if ($q < 1) {print "\n----- OMIT LISTID OVERRIDE: $omitlistidSQL -----\n\n";}
 			$omitlistidSQL =~ s/-/','/gi;
+			}
+		if ($args =~ /--list-settings/i)
+			{
+			$use_list_settings=1;
+			if ($q < 1) {print "\n----- USE LIST SETTINGS -----\n\n";}
 			}
 		if ($args =~ /-force-date=/i)
 			{
@@ -239,6 +246,101 @@ $LOCAL_GMT_OFF_STD = $SERVER_GMT;
 if ($isdst) {$LOCAL_GMT_OFF++;} 
 if ($DB) {print "SEED TIME  $time      :   $year-$mon-$mday $hour:$min:$sec  LOCAL GMT OFFSET NOW: $LOCAL_GMT_OFF\n";}
 
+$CAAC_codes_list='';
+$POST_codes_list='';
+$NPFX_codes_list='';
+$OWTZ_codes_list='';
+$rec_countCAAC=0;
+$rec_countPOST=0;
+$rec_countNPFX=0;
+$rec_countOWTZ=0;
+
+if ($use_list_settings > 0)
+	{
+	##### COUNTRY_AND_AREA_CODE lists gather #####
+	$stmtA = "select list_id from vicidial_lists where time_zone_setting='COUNTRY_AND_AREA_CODE';";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	while ($sthArows > $rec_countCAAC)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$CAAC_codes_list .=	"'$aryA[0]',";
+		$rec_countCAAC++;
+		}
+	$sthA->finish();
+	chop($CAAC_codes_list);
+	if ($rec_countCAAC > 0)
+		{$CAAC_codes_list = "and list_id IN($CAAC_codes_list)";}
+	else 
+		{$rec_countCAAC=-1;}
+	if ($DB) {print " - COUNTRY_AND_AREA_CODE lists found: $rec_countCAAC     $CAAC_codes_list\n";}
+
+
+	##### POSTAL_CODE lists gather #####
+	$stmtA = "select list_id from vicidial_lists where time_zone_setting='POSTAL_CODE';";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	while ($sthArows > $rec_countPOST)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$POST_codes_list .=	"'$aryA[0]',";
+		$rec_countPOST++;
+		}
+	$sthA->finish();
+	chop($POST_codes_list);
+	if ($rec_countPOST > 0)
+		{$POST_codes_list = "and list_id IN($POST_codes_list)";}
+	else 
+		{$rec_countPOST=-1;}
+	if ($DB) {print " - POSTAL_CODE lists found: $rec_countPOST     $POST_codes_list\n";}
+
+
+	##### NANPA_PREFIX lists gather #####
+	$stmtA = "select list_id from vicidial_lists where time_zone_setting='NANPA_PREFIX';";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	while ($sthArows > $rec_countNPFX)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$NPFX_codes_list .=	"'$aryA[0]',";
+		$rec_countNPFX++;
+		}
+	$sthA->finish();
+	chop($NPFX_codes_list);
+	if ($rec_countNPFX > 0)
+		{$NPFX_codes_list = "and list_id IN($NPFX_codes_list)";}
+	else 
+		{$rec_countNPFX=-1;}
+	if ($DB) {print " - NANPA_PREFIX lists found: $rec_countNPFX     $NPFX_codes_list\n";}
+
+
+	##### OWNER_TIME_ZONE_CODE lists gather #####
+	$stmtA = "select list_id from vicidial_lists where time_zone_setting='OWNER_TIME_ZONE_CODE';";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	while ($sthArows > $rec_countOWTZ)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$OWTZ_codes_list .=	"'$aryA[0]',";
+		$rec_countOWTZ++;
+		}
+	$sthA->finish();
+	chop($OWTZ_codes_list);
+	if ($rec_countOWTZ > 0)
+		{$OWTZ_codes_list = "and list_id IN($OWTZ_codes_list)";}
+	else 
+		{$rec_countOWTZ=-1;}
+	if ($DB) {print " - OWNER_TIME_ZONE_CODE lists found: $rec_countOWTZ     $OWTZ_codes_list\n";}
+	}
+
 if (length($singlelistid)> 0) {$listSQL = "where list_id='$singlelistid'";  $XlistSQL=" and list_id='$singlelistid' ";}
 else {$listSQL = '';  $XlistSQL='';}
 if (length($omitlistidSQL)> 0) 
@@ -251,6 +353,7 @@ if (length($omitlistidSQL)> 0)
 	}
 else {$XomitlistidSQL='';   $omitlistidSQL='';}
 
+
 $stmtA = "select distinct phone_code from vicidial_list $listSQL $omitlistidSQL;";
 if($DBX){print STDERR "\n|$stmtA|\n";}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -258,7 +361,7 @@ $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
 $rec_countY=0;
 @phone_codes=@MT;
-$phone_codes_list="'";
+$phone_codes_list='';
 
 while ($sthArows > $rec_countY)
 	{
@@ -268,16 +371,18 @@ while ($sthArows > $rec_countY)
 	$phone_codes_ORIG[$rec_countY] = $aryA[0];
 	$phone_codes[$rec_countY] =~ s/011|0011| |\t|\r|\n//gi;
 
-	$phone_codes_list .= "$aryA[0]'";
+	$phone_codes_list .= "'$aryA[0]',";
 
 	if ($DBX) {print "|",$aryA[0],"|","\n";}
 	$rec_countY++;
 	}
 $sthA->finish();
+chop($phone_codes_list);
 if ($DB) {print " - Unique Country dial codes found: $rec_countY\n";}
 if (length($phone_codes_list)<2) {$phone_codes_list="''";}
 
-if ($ownertimezone > 0)
+##### Owner time zone abbreviation lookup #####
+if ( ( ($ownertimezone > 0) || ($rec_countOWTZ > 0) ) && ($rec_countOWTZ > -1) )
 	{
 	$stmtA = "select distinct tz_code,GMT_offset,country_code from vicidial_phone_codes where country_code IN($phone_codes_list);";
 	if($DBX){print STDERR "\n|$stmtA|\n";}
@@ -321,7 +426,7 @@ while ($sthArows > $rec_countZ)
 	$rec_countZ++;
 	}
 
-if ($searchPOST > 0)
+if ( ( ($searchPOST > 0) || ($rec_countPOST > 0) ) && ($rec_countPOST > -1) )
 	{
 	##### Put all postal code records into an array for speed
 	$stmtA = "select postal_code,state,GMT_offset,DST,DST_range,country,country_code from vicidial_postal_codes;";
@@ -341,7 +446,7 @@ if ($searchPOST > 0)
 	if ($DB) {print " - GMT postal codes records: $rec_countT\n";}
 	}
 
-if ($searchNANPA > 0)
+if ( ( ($searchNANPA > 0) || ($rec_countNPFX > 0) ) && ($rec_countNPFX > -1) )
 	{
 	##### Put all nanpa prefix records into an array for speed
 	$stmtA = "select areacode,prefix,GMT_offset,DST from vicidial_nanpa_prefix_codes;";
@@ -401,7 +506,7 @@ foreach (@phone_codes)
 				else {$AC_match = " and phone_number LIKE \"$area_code%\"";}
 				}
 			if ($DBX) {print "PROCESSING THIS LINE: $codefile[$e]\n";}
-			
+
 			$stmtA = "select count(*) from vicidial_list where phone_code='$match_code_ORIG' $AC_match $XlistSQL $XomitlistidSQL;";
 			if($DBX){print STDERR "\n|$stmtA|\n";}
 			
@@ -513,7 +618,6 @@ foreach (@phone_codes)
 					$AC_processed++;
 					}
 
-
 				if ($AC_processed)
 					{
 					$stmtA = "select count(*) from vicidial_list where phone_code='$match_code_ORIG' $AC_match and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL;";
@@ -533,7 +637,7 @@ foreach (@phone_codes)
 						}
 					else
 						{
-						$stmtA = "update vicidial_list set gmt_offset_now='$area_GMT' where phone_code='$match_code_ORIG' $AC_match and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL;";
+						$stmtA = "update vicidial_list set gmt_offset_now='$area_GMT',modify_date=modify_date where phone_code='$match_code_ORIG' $AC_match and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL;";
 						if($DBX){print STDERR "\n|$stmtA|\n";}
 						if (!$T) 
 							{
@@ -567,7 +671,7 @@ foreach (@phone_codes)
 
 	##### BEGIN RUN LOOP FOR EACH POSTAL CODE RECORD THAT IS INSIDE THIS COUNTRY CODE #####
 	$postal_updated_count=0;
-	if ($searchPOST > 0)
+	if ( ( ($searchPOST > 0) || ($rec_countPOST > 0) ) && ($rec_countPOST > -1) )
 		{
 		if ($DB) {print "POSTAL CODE RUN START...\n";}
 		$e=0;
@@ -584,7 +688,7 @@ foreach (@phone_codes)
 				$AC_match = " and postal_code LIKE \"$postal_code%\"";
 				if ($DBX) {print "PROCESSING THIS LINE: $postalfile[$e]\n";}
 				
-				$stmtA = "select count(*) from vicidial_list where phone_code='$match_code_ORIG' $AC_match $XlistSQL $XomitlistidSQL;";
+				$stmtA = "select count(*) from vicidial_list where phone_code='$match_code_ORIG' $AC_match $XlistSQL $XomitlistidSQL $POST_codes_list;";
 				if($DBX){print STDERR "\n|$stmtA|\n";}
 				
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -698,7 +802,7 @@ foreach (@phone_codes)
 
 					if ($AC_processed)
 						{
-						$stmtA = "select count(*) from vicidial_list where phone_code='$match_code_ORIG' $AC_match and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL;";
+						$stmtA = "select count(*) from vicidial_list where phone_code='$match_code_ORIG' $AC_match and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL $POST_codes_list;";
 						if($DBX){print STDERR "\n|$stmtA|\n";}
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -715,7 +819,7 @@ foreach (@phone_codes)
 							}
 						else
 							{
-							$stmtA = "update vicidial_list set gmt_offset_now='$area_GMT' where phone_code='$match_code_ORIG' $AC_match and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL;";
+							$stmtA = "update vicidial_list set gmt_offset_now='$area_GMT',modify_date=modify_date where phone_code='$match_code_ORIG' $AC_match and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL $POST_codes_list;";
 							if($DBX){print STDERR "\n|$stmtA|\n";}
 							if (!$T) 
 								{
@@ -751,7 +855,7 @@ foreach (@phone_codes)
 	##### START RUN LOOP FOR EACH NANPA PREFIX RECORD #####
 	# areacode,prefix,GMT_offset,DST,SSM-FSN
 	$nanpa_updated_count=0;
-	if ( ($searchNANPA > 0) && ($match_code =~ /^1$/) )
+	if ( ( ( ($searchNANPA > 0) && ($match_code =~ /^1$/) ) || ($rec_countNPFX > 0) ) && ($rec_countNPFX > -1) )
 		{
 		if ($DB) {print "NANPA PREFIX RUN START...\n";}
 		$e=0;
@@ -766,7 +870,7 @@ foreach (@phone_codes)
 			$AC_match = " and phone_number LIKE \"$nanpa_areacode$nanpa_prefix%\"";
 			if ($DBX) {print "PROCESSING THIS LINE: $nanpafile[$e]\n";}
 			
-			$stmtA = "select count(*) from vicidial_list where phone_code='$match_code_ORIG' $AC_match $XlistSQL $XomitlistidSQL;";
+			$stmtA = "select count(*) from vicidial_list where phone_code='$match_code_ORIG' $AC_match $XlistSQL $XomitlistidSQL $NPFX_codes_list;";
 			if($DBX){print STDERR "\n|$stmtA|\n";}
 			
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -880,7 +984,7 @@ foreach (@phone_codes)
 
 				if ($AC_processed)
 					{
-					$stmtA = "select count(*) from vicidial_list where phone_code='$match_code_ORIG' $AC_match and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL;";
+					$stmtA = "select count(*) from vicidial_list where phone_code='$match_code_ORIG' $AC_match and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL $NPFX_codes_list;";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -897,7 +1001,7 @@ foreach (@phone_codes)
 						}
 					else
 						{
-						$stmtA = "update vicidial_list set gmt_offset_now='$area_GMT' where phone_code='$match_code_ORIG' $AC_match and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL;";
+						$stmtA = "update vicidial_list set gmt_offset_now='$area_GMT',modify_date=modify_date where phone_code='$match_code_ORIG' $AC_match and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL $NPFX_codes_list;";
 						if($DBX){print STDERR "\n|$stmtA|\n";}
 						if (!$T) 
 							{
@@ -926,7 +1030,7 @@ foreach (@phone_codes)
 
 	##### START RUN LOOP FOR EACH TIME ZONE CODE RECORD #####
 	$tzcode_updated_count=0;
-	if ($ownertimezone > 0)
+	if ( ( ($ownertimezone > 0) || ($rec_countOWTZ > 0) ) && ($rec_countOWTZ > -1) )
 		{
 		if ($DB) {print "TIME ZONE CODE RUN START...\n";}
 		$e=0;
@@ -948,7 +1052,7 @@ foreach (@phone_codes)
 
 			if ($DBX) {print "PROCESSING THIS TIME ZONE CODE: $tz_codes[$e]|$tz_country[$e]|$area_GMT|$area_GMT_method\n";}
 			
-			$stmtA = "select count(*) from vicidial_list where owner='$tz_codes[$e]' and phone_code='$tz_country[$e]' $XlistSQL $XomitlistidSQL;";
+			$stmtA = "select count(*) from vicidial_list where owner='$tz_codes[$e]' and phone_code='$tz_country[$e]' $XlistSQL $XomitlistidSQL $OWTZ_codes_list;";
 			if($DBX){print STDERR "\n|$stmtA|\n";}
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1061,7 +1165,7 @@ foreach (@phone_codes)
 
 				if ($AC_processed)
 					{
-					$stmtA = "select count(*) from vicidial_list where owner='$tz_codes[$e]' and phone_code='$tz_country[$e]' and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL;";
+					$stmtA = "select count(*) from vicidial_list where owner='$tz_codes[$e]' and phone_code='$tz_country[$e]' and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL $OWTZ_codes_list;";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1078,7 +1182,7 @@ foreach (@phone_codes)
 						}
 					else
 						{
-						$stmtA = "UPDATE vicidial_list set gmt_offset_now='$area_GMT' where owner='$tz_codes[$e]' and phone_code='$tz_country[$e]' and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL;";
+						$stmtA = "UPDATE vicidial_list set gmt_offset_now='$area_GMT',modify_date=modify_date where owner='$tz_codes[$e]' and phone_code='$tz_country[$e]' and (gmt_offset_now != '$area_GMT' or gmt_offset_now IS NULL) $XlistSQL $XomitlistidSQL $OWTZ_codes_list;";
 						if($DBX){print STDERR "\n|$stmtA|\n";}
 						if (!$T) 
 							{

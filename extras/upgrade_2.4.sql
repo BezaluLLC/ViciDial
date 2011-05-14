@@ -756,3 +756,23 @@ UPDATE system_settings SET db_schema_version='1273',db_schema_update_date=NOW();
 ALTER TABLE vicidial_campaigns ADD custom_3way_button_transfer VARCHAR(30) default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1274',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns ADD available_only_tally_threshold ENUM('DISABLED','LOGGED-IN_AGENTS','NON-PAUSED_AGENTS','WAITING_AGENTS') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD available_only_tally_threshold_agents SMALLINT(5) UNSIGNED default '0';
+ALTER TABLE vicidial_campaigns ADD dial_level_threshold ENUM('DISABLED','LOGGED-IN_AGENTS','NON-PAUSED_AGENTS','WAITING_AGENTS') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD dial_level_threshold_agents SMALLINT(5) UNSIGNED default '0';
+
+ALTER TABLE vicidial_lists ADD time_zone_setting ENUM('COUNTRY_AND_AREA_CODE','POSTAL_CODE','NANPA_PREFIX','OWNER_TIME_ZONE_CODE') default 'COUNTRY_AND_AREA_CODE';
+
+CREATE TABLE vicidial_campaign_stats_debug (
+campaign_id VARCHAR(20) NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+entry_time DATETIME,
+update_time TIMESTAMP,
+debug_output TEXT,
+adapt_output TEXT,
+index (campaign_id),
+unique index campserver (campaign_id, server_ip)
+);
+
+UPDATE system_settings SET db_schema_version='1275',db_schema_update_date=NOW();
