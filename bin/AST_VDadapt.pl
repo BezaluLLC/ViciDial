@@ -1215,6 +1215,7 @@ sub calculate_drops
 	$affected_rows = $dbhA->do($stmtA);
 	if ($DBX) {print "OUTBOUND $campaign_id[$i]|$affected_rows|$stmtA|\n";}
 
+	$debug_camp_output =~ s/;|\\\\|\/|\'//gi;
 	$stmtA = "UPDATE vicidial_campaign_stats_debug SET entry_time='$now_date',debug_output='$debug_camp_output' where campaign_id='$campaign_id[$i]' and server_ip='ADAPT';";
 	$affected_rows = $dbhA->do($stmtA);
 	$debug_camp_output='';
