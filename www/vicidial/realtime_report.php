@@ -17,10 +17,11 @@
 # 110113-1736 - Small fix
 # 110303-2124 - Added agent on-hook phone indication and RING status and color
 # 110316-2216 - Added Agent, Carrier and Preset options.php settings
+# 110516-2128 - IE fix
 #
 
-$version = '2.4-6';
-$build = '110316-2216';
+$version = '2.4-7';
+$build = '110516-2128';
 
 header ("Content-type: text/html; charset=utf-8");
 

@@ -21,6 +21,7 @@
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 # 101214-1142 - Added Agent time stats
 # 110110-1327 - Changed campaign real-time link to the new realtime_report.php
+# 110517-0059 - Added campaign type display option
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -36,12 +37,15 @@ if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 if (isset($_GET["adastats"]))			{$adastats=$_GET["adastats"];}
 	elseif (isset($_POST["adastats"]))	{$adastats=$_POST["adastats"];}
+if (isset($_GET["types"]))				{$types=$_GET["types"];}
+	elseif (isset($_POST["types"]))		{$types=$_POST["types"];}
 if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))	{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 
 if (!isset($RR))			{$gRRroup=4;}
+if (!isset($types))			{$types='SHOW ALL CAMPAIGNS';}
 
 $report_name = 'Real-Time Campaign Summary';
 $db_source = 'M';
@@ -130,7 +134,12 @@ if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
 	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
 	}
 
-$stmt="select campaign_id from vicidial_campaigns where active='Y' $LOGallowed_campaignsSQL order by campaign_id;";
+$campaign_typeSQL='';
+if ($types == 'AUTO-DIAL ONLY')			{$campaign_typeSQL="and dial_method IN('RATIO','ADAPT_HARD_LIMIT','ADAPT_TAPERED','ADAPT_AVERAGE')";} 
+if ($types == 'MANUAL ONLY')			{$campaign_typeSQL="and dial_method IN('MANUAL','INBOUND_MAN')";} 
+if ($types == 'INBOUND ONLY')			{$campaign_typeSQL="and campaign_allow_inbound='Y'";} 
+
+$stmt="select campaign_id from vicidial_campaigns where active='Y' $LOGallowed_campaignsSQL $campaign_typeSQL order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
 if (!isset($DB))   {$DB=0;}
 if ($DB) {echo "$stmt\n";}
@@ -177,29 +186,49 @@ if (!isset($RR))   {$RR=4;}
 
 <?php 
 
-echo"<META HTTP-EQUIV=Refresh CONTENT=\"$RR; URL=$PHP_SELF?RR=$RR&DB=$DB&adastats=$adastats\">\n";
+echo"<META HTTP-EQUIV=Refresh CONTENT=\"$RR; URL=$PHP_SELF?RR=$RR&DB=$DB&adastats=$adastats&types=$types\">\n";
 echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
 	require("admin_header.php");
 
-echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+echo "<FORM action=$PHP_SELF method=POST><TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
-echo "<b>Real-Time All Campaigns Summary</b> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; \n";
-echo "<a href=\"$PHP_SELF?group=$group&RR=4000&DB=$DB&adastats=$adastats\">STOP</a> | ";
-echo "<a href=\"$PHP_SELF?group=$group&RR=40&DB=$DB&adastats=$adastats\">SLOW</a> | ";
-echo "<a href=\"$PHP_SELF?group=$group&RR=4&DB=$DB&adastats=$adastats\">GO</a> ";
-echo " &nbsp; &nbsp; &nbsp; </FONT>\n";
+echo "<b>Real-Time All Campaigns Summary</b> &nbsp; &nbsp; &nbsp; \n";
+echo "<a href=\"$PHP_SELF?group=$group&RR=4000&DB=$DB&adastats=$adastats&types=$types\">STOP</a> | ";
+echo "<a href=\"$PHP_SELF?group=$group&RR=40&DB=$DB&adastats=$adastats&types=$types\">SLOW</a> | ";
+echo "<a href=\"$PHP_SELF?group=$group&RR=4&DB=$DB&adastats=$adastats&types=$types\">GO</a> ";
+echo " &nbsp; &nbsp; </FONT>\n";
 if ($adastats<2)
 	{
-	echo "<a href=\"$PHP_SELF?group=$group&RR=$RR&DB=$DB&adastats=2\"><font size=1>+ VIEW MORE SETTINGS</font></a>";
+	echo "<a href=\"$PHP_SELF?group=$group&RR=$RR&DB=$DB&adastats=2&types=$types\"><font size=1>+ VIEW MORE SETTINGS</font></a>";
 	}
 else
 	{
-	echo "<a href=\"$PHP_SELF?group=$group&RR=$RR&DB=$DB&adastats=1\"><font size=1>- VIEW LESS SETTINGS</font></a>";
+	echo "<a href=\"$PHP_SELF?group=$group&RR=$RR&DB=$DB&adastats=1&types=$types\"><font size=1>- VIEW LESS SETTINGS</font></a>";
 	}
-echo " &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=999999\">REPORTS</a>";
+echo " &nbsp; &nbsp;";
+echo "\n";
+echo "<input type=hidden name=RR value=$RR>\n";
+echo "<input type=hidden name=DB value=$DB>\n";
+echo "<input type=hidden name=adastats value=$adastats>\n";
+echo "<select size=1 name=types>\n";
+echo "<option value=\"SHOW ALL CAMPAIGNS\"";
+	if ($types == 'SHOW ALL CAMPAIGNS') {echo " selected";} 
+echo ">SHOW ALL CAMPAIGNS</option>";
+echo "<option value=\"AUTO-DIAL ONLY\"";
+	if ($types == 'AUTO-DIAL ONLY') {echo " selected";} 
+echo ">AUTO-DIAL ONLY</option>";
+echo "<option value=\"MANUAL ONLY\"";
+	if ($types == 'MANUAL ONLY') {echo " selected";} 
+echo ">MANUAL ONLY</option>";
+echo "<option value=\"INBOUND ONLY\"";
+	if ($types == 'INBOUND ONLY') {echo " selected";} 
+echo ">INBOUND ONLY</option>";
+echo "</select> \n";
+echo "<input type=submit name=submit value='SUBMIT'>\n";
+
 echo "<BR><BR>\n\n";
 
 $k=0;
