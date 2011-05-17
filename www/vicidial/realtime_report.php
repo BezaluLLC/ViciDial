@@ -733,6 +733,10 @@ function showDiv(divvar)
 		{
 		divref = document.getElementById(divvar).style;
 		divref.visibility = 'visible';
+		if (divvar=="campaign_select_list") 
+			{
+			document.getElementById(divvar).style.zIndex=21;
+			}
 		}
 	}
 function hideDiv(divvar)
@@ -741,6 +745,10 @@ function hideDiv(divvar)
 		{
 		divref = document.getElementById(divvar).style;
 		divref.visibility = 'hidden';
+		if (divvar=="campaign_select_list") 
+			{
+			document.getElementById(divvar).style.zIndex=-1;
+			}
 		}
 	}
 
@@ -1257,7 +1265,7 @@ echo "<a href=\"#\" onclick=\"showDiv('campaign_select_list');\">Choose Report D
 echo "</TD></TR></TABLE>\n";
 echo "</span>\n";
 echo "<span style=\"position:absolute;left:0px;top:27px;z-index:21;\" id=campaign_select_list>\n";
-echo "<TABLE WIDTH=250 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#D9E6FE\"><TR><TD ALIGN=CENTER>\n";
+echo "<TABLE WIDTH=0 HEIGHT=0 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#D9E6FE\"><TR><TD ALIGN=CENTER>\n";
 echo "";
 echo "</TD></TR></TABLE>\n";
 echo "</span>\n";
