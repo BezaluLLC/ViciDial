@@ -26,10 +26,11 @@
 # 
 # This program assumes that recordings are saved by Asterisk as .wav
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 
 # 91123-0005 - First Build
+# 110524-1052 - Added run-check concurrency check option
 #
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -71,6 +72,7 @@ if (length($ARGV[0])>1)
 		print "  [--help] = this screen\n";
 		print "  [--debug] = debug\n";
 		print "  [--debugX] = super debug\n";
+		print "  [--run-check] = concurrency check, die if another instance is running\n";
 		print "  [--transfer-limit=XXX] = number of files to transfer before exiting\n";
 		print "  [--list-limit=XXX] = number of files to list in the directory before moving on\n";
 		print "  [--ftp-server=XXX] = FTP server\n";
@@ -103,6 +105,11 @@ if (length($ARGV[0])>1)
 			{
 			$NODATEDIR=1;
 			if ($DB) {print "\n----- NO DATE DIRECTORIES -----\n\n";}
+			}
+		if ($args =~ /--run-check/i)
+			{
+			$run_check=1;
+			if ($DB) {print "\n----- CONCURRENCY CHECK -----\n\n";}
 			}
 		if ($args =~ /--transfer-limit=/i) 
 			{
@@ -213,6 +220,20 @@ foreach(@conf)
 	if ( ($line =~ /^VARHTTP_path/) && ($CLIHTTP_path < 1) )
 		{$VARHTTP_path = $line;   $VARHTTP_path =~ s/.*=//gi;}
 	$i++;
+	}
+
+
+### concurrency check
+if ($run_check > 0)
+	{
+	my $grepout = `/bin/ps ax | grep $0 | grep -v grep`;
+	my $grepnum=0;
+	$grepnum++ while ($grepout =~ m/\n/g);
+	if ($grepnum > 1) 
+		{
+		if ($DB) {print "I am not alone! Another $0 is running! Exiting...\n";}
+		exit;
+		}
 	}
 
 # Customized Variables

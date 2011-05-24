@@ -26,13 +26,14 @@
 # 
 # This program assumes that recordings are saved by Asterisk as .wav
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 
 # 80302-1958 - First Build
 # 80731-2253 - Changed size comparisons for more efficiency
 # 90727-1417 - Added GSW format option
 # 101207-1024 - Change to GSW option because of SoX flag changes in 14.3.0
+# 110524-1059 - Added run-check concurrency check option
 #
 
 $GSM=0;   $MP3=0;   $OGG=0;   $GSW=0;
@@ -57,7 +58,8 @@ if (length($ARGV[0])>1)
 		print "  [--GSM] = compress into GSM codec\n";
 		print "  [--MP3] = compress into MPEG-Layer-3 codec\n";
 		print "  [--OGG] = compress into OGG Vorbis codec\n";
-		print "  [--GSW] = compress into GSM codec with RIFF headers and .wav extension\n\n";
+		print "  [--GSW] = compress into GSM codec with RIFF headers and .wav extension\n";
+		print "  [--run-check] = concurrency check, die if another instance is running\n\n";
 		exit;
 		}
 	else
@@ -76,6 +78,11 @@ if (length($ARGV[0])>1)
 			{
 			$T=1;   $TEST=1;
 			print "\n-----TESTING -----\n\n";
+			}
+		if ($args =~ /--run-check/i)
+			{
+			$run_check=1;
+			if ($DB) {print "\n----- CONCURRENCY CHECK -----\n\n";}
 			}
 		if ($args =~ /--GSM/i)
 			{
@@ -166,6 +173,20 @@ foreach(@conf)
 		{$VARHTTP_path = $line;   $VARHTTP_path =~ s/.*=//gi;}
 	$i++;
 	}
+
+### concurrency check
+if ($run_check > 0)
+	{
+	my $grepout = `/bin/ps ax | grep $0 | grep -v grep`;
+	my $grepnum=0;
+	$grepnum++ while ($grepout =~ m/\n/g);
+	if ($grepnum > 1) 
+		{
+		if ($DB) {print "I am not alone! Another $0 is running! Exiting...\n";}
+		exit;
+		}
+	}
+
 
 # Customized Variables
 $server_ip = $VARserver_ip;		# Asterisk server IP

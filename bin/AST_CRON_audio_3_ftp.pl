@@ -32,7 +32,7 @@
 # 
 # This program assumes that recordings are saved by Asterisk as .wav
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 
 # 80302-1958 - First Build
@@ -44,6 +44,7 @@
 # 90818-1017 - Added a transfer limit and list limit options. 
 # 90827-2013 - Fixed list limit option
 # 91123-0037 - Added FTP CLI options
+# 110524-1049 - Added run-check concurrency check option
 #
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -95,6 +96,7 @@ if (length($ARGV[0])>1)
 		print "  [--WAV] = copy WAV files\n";
 		print "  [--GSW] = copy GSM with RIFF headers and .wav extension files\n";
 		print "  [--nodatedir] = do not put into dated directories\n";
+		print "  [--run-check] = concurrency check, die if another instance is running\n";
 		print "  [--ftp-server=XXX] = FTP server\n";
 		print "  [--ftp-login=XXX] = FTP server login account\n";
 		print "  [--ftp-pass=XXX] = FTP server password\n";
@@ -122,6 +124,11 @@ if (length($ARGV[0])>1)
 			{
 			$NODATEDIR=1;
 			if ($DB) {print "\n----- NO DATE DIRECTORIES -----\n\n";}
+			}
+		if ($args =~ /--run-check/i)
+			{
+			$run_check=1;
+			if ($DB) {print "\n----- CONCURRENCY CHECK -----\n\n";}
 			}
 		if ($args =~ /--transfer-limit=/i) 
 			{
@@ -270,6 +277,20 @@ foreach(@conf)
 		{$VARHTTP_path = $line;   $VARHTTP_path =~ s/.*=//gi;}
 	$i++;
 	}
+
+### concurrency check
+if ($run_check > 0)
+	{
+	my $grepout = `/bin/ps ax | grep $0 | grep -v grep`;
+	my $grepnum=0;
+	$grepnum++ while ($grepout =~ m/\n/g);
+	if ($grepnum > 1) 
+		{
+		if ($DB) {print "I am not alone! Another $0 is running! Exiting...\n";}
+		exit;
+		}
+	}
+
 
 # Customized Variables
 $server_ip = $VARserver_ip;		# Asterisk server IP

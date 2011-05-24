@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# AST_CRON_audio_3_newftp.pl version 2.2.0
+# AST_CRON_audio_3_newftp.pl   version 2.4
 #
 # This is a STEP-3 program in the audio archival process. Normally you can run it 
 # every 3 minutes and copies the recording files to an FTP server.
@@ -52,10 +52,12 @@
 #    --ftp-host="10.10.10.15" --ftp-port=21 --ftp-user="username" --ftp-pass="password" --ftp-dir="RECORDINGS" \
 #    --url-path="http://10.10.10.15/RECORDINGS" --transfer-limit=50 --list-limit=200 --campaign_id="TESTCAMP1-TESTCAMP2"
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 90930-1405 - mikec - first build
+# 110524-1054 - Added run-check concurrency check option
+#
 
 use 5.008;
 use strict;
@@ -72,6 +74,7 @@ use Time::HiRes ('gettimeofday','usleep','sleep');  # necessary to have perl sle
 my $debug = 0;
 my $debugX = 0;
 my $test = 0;
+my $run_check = 0;
 
 my $pingtype	= "tcp";
 my $pingtimeout = 5;
@@ -192,6 +195,7 @@ if (length($ARGV[0])>1) {
 		print "  [--transfer-limit=XXX] = the number of files to transfer before giving up. Default is 1000\n";
 		print "  [--list-limit=XXX]     = number of files to list in the directory before moving on\n";
 		print "  [--no-date-dir]        = does not put the files in a dated directory.\n";
+		print "  [--run-check]          = concurrency check, die if another instance is running\n";
 		print "  [--campaign_id]        = which OUTBOUND campaigns to transfer files for in a '-' delimited list \n";
 		print "                         (this only works for outbound calls, not inbound or transfers)\n"; 
 		print "  [--ingroup_id]         = which ingroups to transfer files for in a '-' delimited list\n";
@@ -217,6 +221,12 @@ if (length($ARGV[0])>1) {
 				print "\n----- NO DATE DIRECTORIES -----\n\n";
 			}
 		}
+		if ($args =~ /--run-check/i)
+			{
+			$run_check=1;
+			if ($debug) {print "\n----- CONCURRENCY CHECK -----\n\n";}
+			}
+
 		if ($args =~ /--ping-type=/i) {
 			my @data_in = split(/--ping-type=/,$args);
 			$pingtype = $data_in[1];
@@ -368,6 +378,21 @@ if ($camp_check) {
 if ($ingrp_check) {
 	@ingrp_array = split(/-/,$ingroups);
 }
+
+
+### concurrency check
+if ($run_check > 0)
+	{
+	my $grepout = `/bin/ps ax | grep $0 | grep -v grep`;
+	my $grepnum=0;
+	$grepnum++ while ($grepout =~ m/\n/g);
+	if ($grepnum > 1) 
+		{
+		if ($debug) {print "I am not alone! Another $0 is running! Exiting...\n";}
+		exit;
+		}
+	}
+
 
 #### connect to the db ####
 my $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
