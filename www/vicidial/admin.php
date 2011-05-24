@@ -2709,12 +2709,13 @@ else
 # 110430-1642 - Added post_phone_time_diff_alert campaign option
 # 110506-1537 - Added custom_3way_button_transfer campaign option
 # 110514-1351 - Added dial level and available only tally threshold campaign settings, and time zone list setting
+# 110524-1401 - Small help text fix, issue #486
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-311a';
-$build = '110514-1351';
+$admin_version = '2.4-312a';
+$build = '110524-1401';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4324,7 +4325,7 @@ if ($ADD==99999)
 		<BR>
 		<A NAME="vicidial_campaigns-available_only_tally_threshold">
 		<BR>
-		<B>Available Only Tally Threshold -</B> This setting only works with an ADAPT or RATIO Dial Method, Available Only Tally must be set to N, this setting must be set to something other than DISABLED and the number of agents setting must be above 0. This feature allows you to set the number of agents below which Available Only Tally will be enabled. If the number of agents falls below the number that you have set, then the dial level will go to 1.0 until more agents log in or go into the selected state. LOGGED-IN_AGENTS will count all agents logged into the campaign, NON-PAUSED_AGENTS will only count agents that are waiting or talking, and WAITING_AGENTS will only count agents that are waiting for a call. Default is DISABLED.
+		<B>Available Only Tally Threshold -</B> This setting only works with an ADAPT or RATIO Dial Method, Available Only Tally must be set to N, this setting must be set to something other than DISABLED and the number of agents setting must be above 0. This feature allows you to set the number of agents below which Available Only Tally will be enabled. If the number of agents falls below the number that you have set, then the Available Only Tally setting with go to Y temporarily until more agents log in or go into the selected state. LOGGED-IN_AGENTS will count all agents logged into the campaign, NON-PAUSED_AGENTS will only count agents that are waiting or talking, and WAITING_AGENTS will only count agents that are waiting for a call. Default is DISABLED.
 
 		<BR>
 		<A NAME="vicidial_campaigns-adaptive_dropped_percentage">

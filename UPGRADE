@@ -575,7 +575,7 @@ OTHER CHANGES:
 	the time zone of the lead, but this is not enabled by default in the 
 	system, so please be sure you have the NANPA prefix data loaded onto 
 	your system before selecting this option. OWNER_TIME_ZONE_CODE will use 
-	a standard time zone abbraviation loaded into the owner field of the 
+	a standard time zone abbreviation loaded into the owner field of the 
 	lead to determine the time zone, in the USA examples are AST, EST, CST, 
 	MST, PST, AKST, HST. This feature does NOT affect the time zone used at
 	the moment leads are loaded, that needs to be selected when you are 
