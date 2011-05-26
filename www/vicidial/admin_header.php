@@ -622,21 +622,21 @@ if ( ($ADD==3111) or ($ADD==4111) or ($ADD==5111) )
 	}
 
 
+$stmt="select menu_id,menu_name from vicidial_call_menu order by menu_id limit 10000;";
+$rslt=mysql_query($stmt, $link);
+$menus_to_print = mysql_num_rows($rslt);
+$call_menu_list='';
+$i=0;
+while ($i < $menus_to_print)
+	{
+	$row=mysql_fetch_row($rslt);
+	$call_menu_list .= "<option value=\"$row[0]\">$row[0] - $row[1]</option>";
+	$i++;
+	}
+
 ### select list contents generation for dynamic route displays in call menu and in-group screens
 if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111) )
 	{
-	$stmt="select menu_id,menu_name from vicidial_call_menu order by menu_id;";
-	$rslt=mysql_query($stmt, $link);
-	$menus_to_print = mysql_num_rows($rslt);
-	$call_menu_list='';
-	$i=0;
-	while ($i < $menus_to_print)
-		{
-		$row=mysql_fetch_row($rslt);
-		$call_menu_list .= "<option value=\"$row[0]\">$row[0] - $row[1]</option>";
-		$i++;
-		}
-
 	$stmt="select did_pattern,did_description,did_route from vicidial_inbound_dids where did_active='Y' order by did_pattern;";
 	$rslt=mysql_query($stmt, $link);
 	$dids_to_print = mysql_num_rows($rslt);

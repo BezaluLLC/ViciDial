@@ -60,6 +60,7 @@
 # 101107-2257 - Added cross-server phone dialplan extensions
 # 101214-1507 - Changed list auto-reset to work with inactive lists
 # 110512-2112 - Added vicidial_campaign_stats_debug to table cleaning
+# 110525-2334 - Added cm.agi optional logging to call menus
 #
 
 $DB=0; # Debug flag
@@ -1631,7 +1632,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the Call Menu entries #####
-	$stmtA = "SELECT menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group FROM vicidial_call_menu order by menu_id;";
+	$stmtA = "SELECT menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log FROM vicidial_call_menu order by menu_id;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1640,18 +1641,19 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	while ($sthArows > $i)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$menu_id[$i] =				"$aryA[0]";
-		$menu_name[$i] =			"$aryA[1]";
-		$menu_prompt[$i] =			"$aryA[2]";
-		$menu_timeout[$i] =			"$aryA[3]";
-		$menu_timeout_prompt[$i] =	"$aryA[4]";
-		$menu_invalid_prompt[$i] =	"$aryA[5]";
-		$menu_repeat[$i] =			"$aryA[6]";
-		$menu_time_check[$i] =		"$aryA[7]";
-		$call_time_id[$i] =			"$aryA[8]";
-		$track_in_vdac[$i] =		"$aryA[9]";
-		$custom_dialplan_entry[$i]= "$aryA[10]";
-		$tracking_group[$i] =		"$aryA[11]";
+		$menu_id[$i] =				$aryA[0];
+		$menu_name[$i] =			$aryA[1];
+		$menu_prompt[$i] =			$aryA[2];
+		$menu_timeout[$i] =			$aryA[3];
+		$menu_timeout_prompt[$i] =	$aryA[4];
+		$menu_invalid_prompt[$i] =	$aryA[5];
+		$menu_repeat[$i] =			$aryA[6];
+		$menu_time_check[$i] =		$aryA[7];
+		$call_time_id[$i] =			$aryA[8];
+		$track_in_vdac[$i] =		$aryA[9];
+		$custom_dialplan_entry[$i]= $aryA[10];
+		$tracking_group[$i] =		$aryA[11];
+		$dtmf_log[$i] =				$aryA[12];
 
 		if ($track_in_vdac[$i] > 0)
 			{$track_in_vdac[$i] = 'YES'}
@@ -1683,11 +1685,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		while ($sthArowsJ > $j)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$option_value[$j] =					"$aryA[0]";
-			$option_description[$j] =			"$aryA[1]";
-			$option_route[$j] =					"$aryA[2]";
-			$option_route_value[$j] =			"$aryA[3]";
-			$option_route_value_context[$j] =	"$aryA[4]";
+			$option_value[$j] =					$aryA[0];
+			$option_description[$j] =			$aryA[1];
+			$option_route[$j] =					$aryA[2];
+			$option_route_value[$j] =			$aryA[3];
+			$option_route_value_context[$j] =	$aryA[4];
 			if ($option_value[$j] =~ /STAR/) {$option_value[$j] = '*';}
 			if ($option_value[$j] =~ /HASH/) {$option_value[$j] = '#';}
 			$j++;
@@ -1787,14 +1789,20 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 					}
 				if ($option_route[$j] =~ /AGI/)
 					{
+					if ($dtmf_log[$i] > 0) 
+						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j])\n";   $PRI++;}
 					$call_menu_line .= "exten => $option_value[$j],$PRI,AGI($option_route_value[$j])\n";
 					}
 				if ($option_route[$j] =~ /CALLMENU/)
 					{
+					if ($dtmf_log[$i] > 0) 
+						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j])\n";   $PRI++;}
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto($option_route_value[$j],s,1)\n";
 					}
 				if ($option_route[$j] =~ /DID/)
 					{
+					if ($dtmf_log[$i] > 0) 
+						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j])\n";   $PRI++;}
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(trunkinbound,$option_route_value[$j],1)\n";
 					}
 				if ($option_route[$j] =~ /INGROUP/)
@@ -1810,15 +1818,21 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 					$IGvid_confirm_filename =	$IGoption_route_value_context[7];
 					$IGvid_validate_digits =	$IGoption_route_value_context[8];
 
+					if ($dtmf_log[$i] > 0) 
+						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j])\n";   $PRI++;}
 					$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(agi-VDAD_ALL_inbound.agi,$IGhandle_method-----$IGsearch_method-----$option_route_value[$j]-----$menu_id[$i]--------------------$IGlist_id-----$IGphone_code-----$IGcampaign_id---------------$IGvid_enter_filename-----$IGvid_id_number_filename-----$IGvid_confirm_filename-----$IGvid_validate_digits)\n";
 					}
 				if ($option_route[$j] =~ /EXTENSION/)
 					{
+					if ($dtmf_log[$i] > 0) 
+						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j])\n";   $PRI++;}
 					if (length($option_route_value_context[$j])>0) {$option_route_value_context[$j] = "$option_route_value_context[$j],";}
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto($option_route_value_context[$j]$option_route_value[$j],1)\n";
 					}
 				if ($option_route[$j] =~ /VOICEMAIL/)
 					{
+					if ($dtmf_log[$i] > 0) 
+						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j])\n";   $PRI++;}
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(default,85026666666666$option_route_value[$j],1)\n";
 					}
 				if ($option_route[$j] =~ /HANGUP/)
@@ -1847,10 +1861,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 							}
 
 						$call_menu_line .= "$hangup_prompt_ext";
+						if ($dtmf_log[$i] > 0) 
+							{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j])\n";   $PRI++;}
 						$call_menu_line .= "exten => $option_value[$j],n,Hangup\n";
 						}
 					else
 						{
+						if ($dtmf_log[$i] > 0) 
+							{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j])\n";   $PRI++;}
 						$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup\n";
 						}
 					}
@@ -1877,6 +1895,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 							$d = leading_zero($4);
 							$DIALstring = "$a$S$b$S$c$S$d$S";
 							}
+						if ($dtmf_log[$i] > 0) 
+							{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j])\n";   $PRI++;}
 						$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(default,$DIALstring$Pdialplan,1)\n";
 						}
 					$sthA->finish();

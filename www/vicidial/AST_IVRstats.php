@@ -1,7 +1,7 @@
 <?php 
 # AST_IVRstats.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 81026-2026 - First build
@@ -16,6 +16,7 @@
 # 100712-1324 - Added system setting slave server option
 # 100802-2347 - Added User Group Allowed Reports option validation
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
+# 110525-1907 - Added support for outbound log analysis
 #
 
 require("dbconnect.php");
@@ -31,6 +32,8 @@ if (isset($_GET["end_date"]))			{$end_date=$_GET["end_date"];}
 	elseif (isset($_POST["end_date"]))	{$end_date=$_POST["end_date"];}
 if (isset($_GET["shift"]))				{$shift=$_GET["shift"];}
 	elseif (isset($_POST["shift"]))		{$shift=$_POST["shift"];}
+if (isset($_GET["type"]))				{$type=$_GET["type"];}
+	elseif (isset($_POST["type"]))		{$type=$_POST["type"];}
 if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))	{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
@@ -42,8 +45,12 @@ $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
 if (strlen($shift)<2) {$shift='ALL';}
+if (strlen($type)<2) {$type='inbound';}
 
-$report_name = 'Inbound IVR Report';
+if ($type == 'inbound')
+	{$report_name = 'Inbound IVR Report';}
+else
+	{$report_name = 'Outbound IVR Report';}
 $db_source = 'M';
 
 #############################################
@@ -106,6 +113,16 @@ $row=mysql_fetch_row($rslt);
 $LOGallowed_campaigns = $row[0];
 $LOGallowed_reports =	$row[1];
 
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
+
 if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
@@ -121,11 +138,16 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = "$NOW_DATE 00:00:00";}
 if (!isset($end_date)) {$end_date = "$NOW_DATE 23:23:59";}
 
-$stmt="select group_id,group_name from vicidial_inbound_groups order by group_id;";
+if ($type == 'inbound')
+	{$stmt="select group_id,group_name from vicidial_inbound_groups order by group_id;";}
+else
+	{$stmt="select campaign_id,campaign_name from vicidial_campaigns order by campaign_id $whereLOGallowed_campaignsSQL;";}
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
 $i=0;
+if ($type == 'inbound')
+	{
 	$LISTgroups[$i]='CALLMENU';
 	$LISTgroups_names[$i]='IVR';
 	$i++;
@@ -134,6 +156,7 @@ $i=0;
 	$LISTgroups_names[$i]='Dynamic Application';
 	$i++;
 	$groups_to_print++;
+	}
 while ($i < $groups_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
@@ -262,6 +285,7 @@ if ($DB > 0)
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 echo "<TABLE BORDER=0><TR><TD VALIGN=TOP>\n";
 echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+echo "<INPUT TYPE=HIDDEN NAME=type VALUE=\"$type\">\n";
 echo "Date Range:<BR>\n";
 
 echo "<INPUT TYPE=hidden NAME=query_date ID=query_date VALUE=\"$query_date\">\n";
@@ -302,25 +326,51 @@ echo " &nbsp; <INPUT TYPE=TEXT NAME=end_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$end_d
 
 
 echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
-echo "Inbound Groups: \n";
-echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
-echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
-$o=0;
-	while ($groups_to_print > $o)
+
+if ($type == 'inbound')
 	{
-	if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
-		{echo "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroups_names[$o]</option>\n";}
-	else
-		{echo "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroups_names[$o]</option>\n";}
-	$o++;
+	echo "Inbound Groups: \n";
+	echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
+	echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
+	$o=0;
+		while ($groups_to_print > $o)
+		{
+		if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
+			{echo "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroups_names[$o]</option>\n";}
+		else
+			{echo "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroups_names[$o]</option>\n";}
+		$o++;
+		}
+	echo "</SELECT>\n";
+	echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
+	echo "<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">MODIFY</a> | ";
+	echo "<a href=\"./admin.php?ADD=999999\">REPORTS</a> | ";
+	echo "<a href=\"./AST_CLOSERstats.php?query_date=$query_date&end_date=$end_date&shift=$shift$groupQS\">CLOSER REPORT</a> \n";
+	echo "</FONT>\n";
 	}
-echo "</SELECT>\n";
-echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
-echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
-echo "<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">MODIFY</a> | ";
-echo "<a href=\"./admin.php?ADD=999999\">REPORTS</a> | ";
-echo "<a href=\"./AST_CLOSERstats.php?query_date=$query_date&end_date=$end_date&shift=$shift$groupQS\">CLOSER REPORT</a> \n";
-echo "</FONT>\n";
+else
+	{
+	echo "Campaigns: \n";
+	echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
+	echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
+	$o=0;
+		while ($groups_to_print > $o)
+		{
+		if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
+			{echo "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroups_names[$o]</option>\n";}
+		else
+			{echo "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroups_names[$o]</option>\n";}
+		$o++;
+		}
+	echo "</SELECT>\n";
+	echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
+	echo "<a href=\"./admin.php?ADD=31&campaign_id=$group[0]\">MODIFY</a> | ";
+	echo "<a href=\"./admin.php?ADD=999999\">REPORTS</a> | ";
+	echo "<a href=\"./AST_VDADstats.php?query_date=$query_date&end_date=$end_date&shift=$shift$groupQS\">OUTBOUND REPORT</a> \n";
+	echo "</FONT>\n";
+	}
 
 echo "</TD></TR>\n";
 echo "<TR><TD>\n";
@@ -383,7 +433,14 @@ else
 	$totFLOWtotal_time=0;
 
 	##### Grab all records for the IVR for the specified time period
-	$stmt="select uniqueid,extension,start_time,comment_a,comment_b,comment_d,UNIX_TIMESTAMP(start_time),phone_ext from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a IN($group_SQL) order by uniqueid,start_time;";
+	if ($type == 'inbound')
+		{
+		$stmt="select uniqueid,extension,start_time,comment_a,comment_b,comment_d,UNIX_TIMESTAMP(start_time),phone_ext from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a IN($group_SQL) order by uniqueid,start_time;";
+		}
+	else
+		{
+		$stmt="select uniqueid,caller_code,event_date,campaign_id,menu_id,menu_action,UNIX_TIMESTAMP(event_date),caller_code from vicidial_outbound_ivr_log where event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END' and campaign_id IN($group_SQL) order by uniqueid,event_date,menu_action desc;";
+		}
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$logs_to_print = mysql_num_rows($rslt);
@@ -538,21 +595,24 @@ else
 		$FLOWunique_calls_list[$s] = preg_replace("/,$/","",$FLOWunique_calls_list[$s]);
 
 
-		##### Grab all records for the IVR for the specified time period
-		$stmt="select status,length_in_sec from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and uniqueid IN($FLOWunique_calls_list[$s]);";
-		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
-		$vcl_statuses_to_print = mysql_num_rows($rslt);
-		$w=0;
-		while ($w < $vcl_statuses_to_print)
+		if ($type == 'inbound')
 			{
-			$row=mysql_fetch_row($rslt);
-			$vcl_statuses[$w] =		$row[0];
-			if ( (ereg("DROP",$vcl_statuses[$w])) or (ereg("XDROP",$vcl_statuses[$w])) )
-				{$FLOWdrop[$s]++;}
-			$FLOWclose_time[$s] = ($FLOWclose_time[$s] + $row[1]);
-			$FLOWtotal[$s]++;
-			$w++;
+			##### Grab all records for the IVR for the specified time period
+			$stmt="select status,length_in_sec from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and uniqueid IN($FLOWunique_calls_list[$s]);";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$vcl_statuses_to_print = mysql_num_rows($rslt);
+			$w=0;
+			while ($w < $vcl_statuses_to_print)
+				{
+				$row=mysql_fetch_row($rslt);
+				$vcl_statuses[$w] =		$row[0];
+				if ( (ereg("DROP",$vcl_statuses[$w])) or (ereg("XDROP",$vcl_statuses[$w])) )
+					{$FLOWdrop[$s]++;}
+				$FLOWclose_time[$s] = ($FLOWclose_time[$s] + $row[1]);
+				$FLOWtotal[$s]++;
+				$w++;
+				}
 			}
 		if ( ($FLOWtotal[$s] > 0) and ($FLOWdrop[$s] > 0) )
 			{
@@ -621,7 +681,14 @@ else
 	$h=0;
 	while ($i <= 96)
 		{
-		$stmt="select count(*) from live_inbound_log where start_time >= '$query_date $h:00:00' and start_time <= '$query_date $h:14:59' and comment_a IN($group_SQL) and comment_b='START';";
+		if ($type == 'inbound')
+			{
+			$stmt="select count(*) from live_inbound_log where start_time >= '$query_date $h:00:00' and start_time <= '$query_date $h:14:59' and comment_a IN($group_SQL) and comment_b='START';";
+			}
+		else
+			{
+			$stmt="select count(*) from vicidial_outbound_ivr_log where event_date >= '$query_date $h:00:00' and event_date <= '$query_date $h:14:59' and campaign_id IN($group_SQL) and menu_action='';";
+			}
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$row=mysql_fetch_row($rslt);
@@ -631,7 +698,14 @@ else
 		$i++;
 
 
-		$stmt="select count(*) from live_inbound_log where start_time >= '$query_date $h:15:00' and start_time <= '$query_date $h:29:59' and comment_a IN($group_SQL) and comment_b='START';";
+		if ($type == 'inbound')
+			{
+			$stmt="select count(*) from live_inbound_log where start_time >= '$query_date $h:15:00' and start_time <= '$query_date $h:29:59' and comment_a IN($group_SQL) and comment_b='START';";
+			}
+		else
+			{
+			$stmt="select count(*) from vicidial_outbound_ivr_log where event_date >= '$query_date $h:15:00' and event_date <= '$query_date $h:29:59' and campaign_id IN($group_SQL) and menu_action='';";
+			}
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$row=mysql_fetch_row($rslt);
@@ -640,7 +714,14 @@ else
 		if ($hour_count[$i] > 0) {$last_full_record = $i;}
 		$i++;
 
-		$stmt="select count(*) from live_inbound_log where start_time >= '$query_date $h:30:00' and start_time <= '$query_date $h:44:59' and comment_a IN($group_SQL) and comment_b='START';";
+		if ($type == 'inbound')
+			{
+			$stmt="select count(*) from live_inbound_log where start_time >= '$query_date $h:30:00' and start_time <= '$query_date $h:44:59' and comment_a IN($group_SQL) and comment_b='START';";
+			}
+		else
+			{
+			$stmt="select count(*) from vicidial_outbound_ivr_log where event_date >= '$query_date $h:30:00' and event_date <= '$query_date $h:44:59' and campaign_id IN($group_SQL) and menu_action='';";
+			}
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$row=mysql_fetch_row($rslt);
@@ -649,7 +730,14 @@ else
 		if ($hour_count[$i] > 0) {$last_full_record = $i;}
 		$i++;
 
-		$stmt="select count(*) from live_inbound_log where start_time >= '$query_date $h:45:00' and start_time <= '$query_date $h:59:59' and comment_a IN($group_SQL) and comment_b='START';";
+		if ($type == 'inbound')
+			{
+			$stmt="select count(*) from live_inbound_log where start_time >= '$query_date $h:45:00' and start_time <= '$query_date $h:59:59' and comment_a IN($group_SQL) and comment_b='START';";
+			}
+		else
+			{
+			$stmt="select count(*) from vicidial_outbound_ivr_log where event_date >= '$query_date $h:45:00' and event_date <= '$query_date $h:59:59' and campaign_id IN($group_SQL) and menu_action='';";
+			}
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$row=mysql_fetch_row($rslt);

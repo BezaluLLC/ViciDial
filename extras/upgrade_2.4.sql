@@ -776,3 +776,28 @@ unique index campserver (campaign_id, server_ip)
 );
 
 UPDATE system_settings SET db_schema_version='1275',db_schema_update_date=NOW();
+
+ALTER TABLE vicidial_campaigns MODIFY drop_action ENUM('HANGUP','MESSAGE','VOICEMAIL','IN_GROUP','AUDIO','CALLMENU') default 'AUDIO';
+ALTER TABLE vicidial_campaigns ADD safe_harbor_audio VARCHAR(100) default 'buzz';
+ALTER TABLE vicidial_campaigns ADD safe_harbor_menu_id VARCHAR(50) default '';
+
+CREATE TABLE vicidial_outbound_ivr_log (
+uniqueid VARCHAR(50) NOT NULL,
+caller_code VARCHAR(30) NOT NULL,
+event_date DATETIME,
+campaign_id VARCHAR(20) default '',
+lead_id INT(9) UNSIGNED,
+menu_id VARCHAR(50) default '',
+menu_action VARCHAR(50) default '',
+index (event_date),
+index (lead_id),
+index (campaign_id),
+unique index campserver (event_date, lead_id, menu_id)
+);
+
+CREATE TABLE vicidial_outbound_ivr_log_archive LIKE vicidial_outbound_ivr_log;
+
+ALTER TABLE vicidial_call_menu ADD dtmf_log ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1276',db_schema_update_date=NOW() where db_schema_version < 1276;
+

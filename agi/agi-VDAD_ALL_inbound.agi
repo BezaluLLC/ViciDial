@@ -14,7 +14,7 @@
 # ; 	- CIDLOOKUP - 	Lookup CID to find record in whole system
 # ; 	- CIDLOOKUPRL -	Restrict lookup to one list
 # ; 	- CIDLOOKUPRC -	Restrict lookup to one campaign's lists
-# ;     - CLOSER -      Closer calls from VICIDIAL fronters
+# ;     - CLOSER -      Closer calls from VICIDIAL fronters(and previous in-group calls)
 # ; 	- ANI - 	ANI received, add record with phone number (based on RBS T1s)
 # ; 	- ANILOOKUP - 	Lookup ANI to find record in whole system
 # ; 	- ANILOOKUPRL -	Restrict lookup to one list
@@ -149,6 +149,7 @@
 # 110324-2330 - Added recording of remote agent calls, per in-group and campaign recording settings
 # 110325-1409 - Added user recording override settings checking for remote agent recording
 # 110505-1620 - Fixed minor voicemail issue
+# 110525-1555 - Added CLOSER compatibility with outbound and in-group calls that went through Call Menu
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -328,6 +329,9 @@ while(<STDIN>)
 	}
 
 
+if ($calleridname =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d|^Y\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
+	{$callerid = $calleridname;}
+
 if ( ($callerid =~ /\".*\"/) && ( (!$calleridname) or ($calleridname =~ /unknown/) ) )
 	{
 	$calleridname = $callerid;
@@ -335,10 +339,13 @@ if ( ($callerid =~ /\".*\"/) && ( (!$calleridname) or ($calleridname =~ /unknown
 	$calleridname =~ s/\"|\" //gi;
 	}
 
-$callerid =~ s/\D|\'//gi;
-$calleridname =~ s/unknown|\'//gi;
-if ( (!$callerid) or ($callerid =~ /unknown/) )
-	{$callerid = $calleridname;}
+if ($callerid !~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d|^Y\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
+	{
+	$callerid =~ s/\D|\'//gi;
+	$calleridname =~ s/unknown|\'//gi;
+	if ( (!$callerid) or ($callerid =~ /unknown/) )
+		{$callerid = $calleridname;}
+	}
 
 ##### find out if this call is already in the vicidial_log_extended table
 $VLEcount=0;
@@ -469,6 +476,15 @@ if ($call_handle_method =~ /^CLOSER/)
 		$Jnewcallerid = "\"$JqueryCID <$phone_number>\"";
 		$AGI->set_callerid($Jnewcallerid);
 		if ($AGILOG) {$agi_string = "callerID changed: $Jnewcallerid";   &agi_output;}
+		}
+	### allow for outbound auto-dial calls or previous in-group calls passed through call menus
+	if ($callerid =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d|^Y\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
+		{
+		$CIDlead_id = substr($callerid, 10, 10);
+		$CIDlead_id = ($CIDlead_id + 0);
+		$VCcallerid = $callerid;
+		$insert_lead_id = $CIDlead_id;
+		if ($AGILOG) {$agi_string = "Lead ID found: $insert_lead_id";   &agi_output;}
 		}
 	}
 

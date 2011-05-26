@@ -656,7 +656,7 @@ alt_number_dialing ENUM('Y','N') default 'N',
 scheduled_callbacks ENUM('Y','N') default 'N',
 lead_filter_id VARCHAR(10) default 'NONE',
 drop_call_seconds TINYINT(3) default '5',
-drop_action ENUM('HANGUP','MESSAGE','VOICEMAIL','IN_GROUP') default 'MESSAGE',
+drop_action ENUM('HANGUP','MESSAGE','VOICEMAIL','IN_GROUP','AUDIO','CALLMENU') default 'AUDIO',
 safe_harbor_exten VARCHAR(20)  default '8307',
 display_dialable_count ENUM('Y','N') default 'Y',
 wrapup_seconds SMALLINT(3) UNSIGNED default '0',
@@ -805,7 +805,9 @@ custom_3way_button_transfer VARCHAR(30) default 'DISABLED',
 available_only_tally_threshold ENUM('DISABLED','LOGGED-IN_AGENTS','NON-PAUSED_AGENTS','WAITING_AGENTS') default 'DISABLED',
 available_only_tally_threshold_agents SMALLINT(5) UNSIGNED default '0',
 dial_level_threshold ENUM('DISABLED','LOGGED-IN_AGENTS','NON-PAUSED_AGENTS','WAITING_AGENTS') default 'DISABLED',
-dial_level_threshold_agents SMALLINT(5) UNSIGNED default '0'
+dial_level_threshold_agents SMALLINT(5) UNSIGNED default '0',
+safe_harbor_audio VARCHAR(100) default 'buzz',
+safe_harbor_menu_id VARCHAR(50) default ''
 );
 
 CREATE TABLE vicidial_lists (
@@ -1817,7 +1819,8 @@ menu_time_check ENUM('0','1') default '0',
 call_time_id VARCHAR(20) default '',
 track_in_vdac ENUM('0','1') default '1',
 custom_dialplan_entry TEXT,
-tracking_group VARCHAR(20) default 'CALLMENU'
+tracking_group VARCHAR(20) default 'CALLMENU',
+dtmf_log ENUM('0','1') default '0'
 );
 
 CREATE TABLE vicidial_call_menu_options (
@@ -2325,6 +2328,19 @@ index (campaign_id),
 unique index campserver (campaign_id, server_ip)
 );
 
+CREATE TABLE vicidial_outbound_ivr_log (
+uniqueid VARCHAR(50) NOT NULL,
+caller_code VARCHAR(30) NOT NULL,
+event_date DATETIME,
+campaign_id VARCHAR(20) default '',
+lead_id INT(9) UNSIGNED,
+menu_id VARCHAR(50) default '',
+menu_action VARCHAR(50) default '',
+index (event_date),
+index (lead_id),
+index (campaign_id),
+unique index campserver (event_date, lead_id, menu_id)
+);
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
@@ -2477,7 +2493,9 @@ ALTER TABLE vicidial_lead_search_log_archive MODIFY search_log_id INT(9) UNSIGNE
 CREATE TABLE vicidial_closer_log_archive LIKE vicidial_closer_log; 
 ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT NULL;
 
-UPDATE system_settings SET db_schema_version='1275',db_schema_update_date=NOW();
+CREATE TABLE vicidial_outbound_ivr_log_archive LIKE vicidial_outbound_ivr_log;
+
+UPDATE system_settings SET db_schema_version='1276',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

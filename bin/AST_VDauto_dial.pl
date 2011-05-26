@@ -100,6 +100,7 @@
 # 110224-1859 - Added compatibility with QM phone environment logging
 # 110303-1710 - Added clearing of ring_callerid when vicidial_auto_calls deleted
 # 110513-1745 - Added double-check for dial level difference target, and dial level and avail-only-tally features
+# 110525-1940 - Allow for auto-dial IVR transfers
 #
 
 
@@ -1358,7 +1359,7 @@ while($one_day_interval > 0)
 
 				if ( ( ($dialtime_log >= $call_timeout) || ($dialtime_catch >= $call_timeout) || ($CLstatus =~ /BUSY|DISCONNECT|XFER|CLOSER/) ) && ($PARKchannel < 1) )
 					{
-					if ($CLcall_type !~ /IN/)
+					if ( ($CLcall_type !~ /IN/) && ($CLstatus !~ /IVR/) )
 						{
 						if ($CLstatus !~ /XFER|CLOSER/)
 							{

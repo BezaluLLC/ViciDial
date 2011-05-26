@@ -26,7 +26,7 @@
 #exten => 1234,2,AGI(agi-VDAD_inbound_calltime_check.agi,INBOUND-----YES-----START-----24hours-----EXTENSION-----101-----default)
 #exten => 1234,3,Hangup
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 80525-0144 - First Build
@@ -37,6 +37,7 @@
 # 90621-1130 - Fixed issue when no call time is specified
 # 91122-2353 - Added QueueMetrics logging as IVR INFO entries
 # 101219-2110 - Added call time overflow
+# 110525-1347 - Added compatibility for outbound IVR logging
 #
 
 $script = 'agi-VDAD_inbound_calltime_check.agi';
@@ -210,24 +211,50 @@ while(<STDIN>)
 	if (/^agi_calleridname\:\s+(.*)$/)	{$calleridname = $1;}
 	}
 
-
-if ( ($callerid =~ /\".*\"/) && ( (!$calleridname) or ($calleridname =~ /unknown/) ) )
+$outboundIVR=0;
+$ingroupIVR=0;
+if ($calleridname =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d|^Y\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
 	{
-	$calleridname = $callerid;
-	$calleridname =~ s/\<\d\d\d\d\d\d\d\d\d\d\>//gi;
-	$calleridname =~ s/\"|\" //gi;
+	$callerid = $calleridname;
+
+	$stmtA = "SELECT campaign_id,lead_id FROM vicidial_auto_calls where callerid='$callerid';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$campaign_id =	$aryA[0];
+		$lead_id =		$aryA[1];
+		}
+	$sthA->finish();
+
+	if ($calleridname =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
+		{$outboundIVR=1;}
+	if ($calleridname =~ /^Y\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
+		{$ingroupIVR=1;}
 	}
+else
+	{
+	if ( ($callerid =~ /\".*\"/) && ( (!$calleridname) or ($calleridname =~ /unknown/) ) )
+		{
+		$calleridname = $callerid;
+		$calleridname =~ s/\<\d\d\d\d\d\d\d\d\d\d\>//gi;
+		$calleridname =~ s/\"|\" //gi;
+		}
 
-$callerid =~ s/\D|\'//gi;
-$calleridname =~ s/unknown|\'//gi;
-if ( (!$callerid) or ($callerid =~ /unknown/) )
-	{$callerid = $calleridname;}
+	$callerid =~ s/\D|\'//gi;
+	$calleridname =~ s/unknown|\'//gi;
+	if ( (!$callerid) or ($callerid =~ /unknown/) )
+		{$callerid = $calleridname;}
 
 
-if (length($callerid)>0) {$phone_number = $callerid;}
-   else {$phone_number = '';}
-if (length($calleridname)>0) {$VLcomments = $calleridname;}
-   else {$VLcomments = '';}
+	if (length($callerid)>0) {$phone_number = $callerid;}
+	   else {$phone_number = '';}
+	if (length($calleridname)>0) {$VLcomments = $calleridname;}
+	   else {$VLcomments = '';}
+   }
+
 if (length($callerid)<8) {$callerid = $parked_by;}
 if (length($pin)>0) {$callerid = $pin;}
 
@@ -378,6 +405,43 @@ if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_st
 	{
 	$VHqueryCID = "VA$CIDdate$hour$min$sec$sec";
 
+	if ($outboundIVR > 0)
+		{
+		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and campaign_id='$campaign_id' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
+		$affected_rows = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    AH VDAC vac record deleted: |$affected_rows|$campaign_id|$callerid|";   &agi_output;}
+
+		$stmtA = "INSERT INTO vicidial_outbound_ivr_log (uniqueid,caller_code,event_date,campaign_id,lead_id,menu_id,menu_action) values('$uniqueid','$callerid','$SQLdate','$campaign_id','$lead_id','$context','AFTERHOURSDROP')";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rowsL = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    VOIL insert: |$affected_rowsL|$uniqueid|$callerid|$campaign_id|$lead_id|$context|";   &agi_output;}
+		}
+	else
+		{
+		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and uniqueid='$uniqueid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
+		$affected_rows = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    AH VDAC vac record deleted: |$affected_rows|$uniqueid|$callerid|";   &agi_output;}
+
+		$stmtA = "INSERT INTO live_inbound_log (uniqueid,channel,server_ip,caller_id,extension,phone_ext,start_time,comment_a,comment_b,comment_c,comment_d,comment_e) values('$uniqueid','$channel','$VARserver_ip','$callerid','$extension','$phone_number','$SQLdate','$channel_group','$note','AFTERHOURSDROP','$context','$priority')";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rowsL = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    AH LIL insert: |$affected_rowsL|$uniqueid|$callerid|$extension|";   &agi_output;}
+		}
+
+	### QueueMetrics logging if enabled
+	if ($enable_queuemetrics_logging > 0)
+		{
+		$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+		 or die "Couldn't connect to database: " . DBI->errstr;
+
+		if ($DBX) {print "CONNECTED TO QueueMetrics DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+		$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVR',data2='$context',serverid='$queuemetrics_log_id';";
+			if ($AGILOG) {$agi_string = "|$stmtB|";   &agi_output;}
+		$Baffected_rows = $dbhB->do($stmtB);
+		$dbhB->disconnect();
+		}
+
 	if ($after_hours_action =~ /EXTENSION|VOICEMAIL|IN_GROUP/)
 		{
 		if ($after_hours_action =~ /EXTENSION/)
@@ -410,28 +474,6 @@ if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_st
 				checkresult($result);
 			}
 		}
-	$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and uniqueid='$uniqueid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
-	$affected_rows = $dbhA->do($stmtA);
-	if ($AGILOG) {$agi_string = "--    AH VDCL vac record deleted: |$affected_rows| $uniqueid|$callerid|";   &agi_output;}
-
-	$stmtA = "INSERT INTO live_inbound_log (uniqueid,channel,server_ip,caller_id,extension,phone_ext,start_time,comment_a,comment_b,comment_c,comment_d,comment_e) values('$uniqueid','$channel','$VARserver_ip','$callerid','$extension','$phone_number','$SQLdate','$channel_group','$note','AFTERHOURSDROP','$context','$priority')";
-		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-	$affected_rowsL = $dbhA->do($stmtA);
-	if ($AGILOG) {$agi_string = "--    AH LIL : |$affected_rowsL|$uniqueid|$callerid|$extension|";   &agi_output;}
-
-	### QueueMetrics logging if enabled
-	if ($enable_queuemetrics_logging > 0)
-		{
-		$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
-		 or die "Couldn't connect to database: " . DBI->errstr;
-
-		if ($DBX) {print "CONNECTED TO QueueMetrics DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
-
-		$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVR',data2='$context',serverid='$queuemetrics_log_id';";
-			if ($AGILOG) {$agi_string = "|$stmtB|";   &agi_output;}
-		$Baffected_rows = $dbhB->do($stmtB);
-		$dbhB->disconnect();
-		}
 
 	if ($after_hours_action =~ /MESSAGE|HANGUP/)
 		{
@@ -455,23 +497,47 @@ if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_st
 
 
 ### insert an IVR record to the vicidial_auto_calls table
-if ($log_to_vac =~ /YES/)
+if ($outboundIVR > 0)
 	{
-	$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and uniqueid='$uniqueid' and server_ip='$VARserver_ip';";
-	$affected_rows = $dbhA->do($stmtA);
-	if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $uniqueid|$callerid|";   &agi_output;}
+	$stmtA = "INSERT INTO vicidial_outbound_ivr_log (uniqueid,caller_code,event_date,campaign_id,lead_id,menu_id,menu_action) values('$uniqueid','$callerid','$SQLdate','$campaign_id','$lead_id','$context','')";
+		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+	$affected_rowsL = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "--    VOIL insert: |$affected_rowsL|$uniqueid|$callerid|$campaign_id|$lead_id|$context|";   &agi_output;}
 
-	$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,lead_id,status,uniqueid,callerid,channel,phone_code,phone_number,call_time,call_type,stage,queue_priority,last_update_time) values('$VARserver_ip','$channel_group','0','IVR','$uniqueid','$callerid','$channel','$phone_code','$phone_number','$SQLdate','IN','IVR-0','$queue_priority','$last_update_time')";
+	$stmtA = "UPDATE vicidial_auto_calls SET last_update_time='$last_update_time',status='IVR' where callerid='$callerid';";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$affected_rowsV = $dbhA->do($stmtA);
-	if ($AGILOG) {$agi_string = "--    VAC : |$affected_rowsV|$uniqueid|$callerid|$extension|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "--    VAC update: |$affected_rowsV|$uniqueid|$callerid|$last_update_time|";   &agi_output;}
 	}
+else
+	{
+	if ($log_to_vac =~ /YES/)
+		{
+		if ($ingroupIVR > 0)
+			{
+			$stmtA = "UPDATE vicidial_auto_calls SET last_update_time='$last_update_time',status='IVR' where callerid='$callerid';";
+				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+			$affected_rowsV = $dbhA->do($stmtA);
+			if ($AGILOG) {$agi_string = "--    VAC update: |$affected_rowsV|$uniqueid|$callerid|$last_update_time|";   &agi_output;}
+			}
+		else
+			{
+			$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and uniqueid='$uniqueid' and server_ip='$VARserver_ip';";
+			$affected_rows = $dbhA->do($stmtA);
+			if ($AGILOG) {$agi_string = "--    VDAC vac record deleted: |$affected_rows| $uniqueid|$callerid|";   &agi_output;}
 
-$stmtA = "INSERT INTO live_inbound_log (uniqueid,channel,server_ip,caller_id,extension,phone_ext,start_time,comment_a,comment_b,comment_d,comment_e) values('$uniqueid','$channel','$VARserver_ip','$callerid','$extension','$phone_number','$SQLdate','$channel_group','$note','$context','$priority')";
-	if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-$affected_rowsL = $dbhA->do($stmtA);
-if ($AGILOG) {$agi_string = "--    LIL : |$affected_rowsL|$uniqueid|$callerid|$extension|";   &agi_output;}
+			$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,lead_id,status,uniqueid,callerid,channel,phone_code,phone_number,call_time,call_type,stage,queue_priority,last_update_time) values('$VARserver_ip','$channel_group','0','IVR','$uniqueid','$callerid','$channel','$phone_code','$phone_number','$SQLdate','IN','IVR-0','$queue_priority','$last_update_time')";
+				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+			$affected_rowsV = $dbhA->do($stmtA);
+			if ($AGILOG) {$agi_string = "--    VAC insert: |$affected_rowsV|$uniqueid|$callerid|$extension|";   &agi_output;}
+			}
+		}
 
+	$stmtA = "INSERT INTO live_inbound_log (uniqueid,channel,server_ip,caller_id,extension,phone_ext,start_time,comment_a,comment_b,comment_d,comment_e) values('$uniqueid','$channel','$VARserver_ip','$callerid','$extension','$phone_number','$SQLdate','$channel_group','$note','$context','$priority')";
+		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+	$affected_rowsL = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "--    LIL insert: |$affected_rowsL|$uniqueid|$callerid|$extension|";   &agi_output;}
+	}
 
 ### QueueMetrics logging if enabled
 if ($enable_queuemetrics_logging > 0)
@@ -480,6 +546,9 @@ if ($enable_queuemetrics_logging > 0)
 	 or die "Couldn't connect to database: " . DBI->errstr;
 
 	if ($DBX) {print "CONNECTED TO QueueMetrics DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+	if ($outboundIVR > 0)
+		{$uniqueid = $caller_id;}
 
 	$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVR',data2='$context',serverid='$queuemetrics_log_id';";
 		if ($AGILOG) {$agi_string = "|$stmtB|";   &agi_output;}

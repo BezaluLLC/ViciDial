@@ -84,6 +84,7 @@
 # 110303-2316 - Added condition that would not allow calls to be sent to agent with ringing inbound call
 # 110324-2326 - Added recording of remote agent calls, per in-group and campaign recording settings
 # 110325-1410 - Added user recording override settings checking for remote agent recording
+# 110525-1530 - Added AUDIO and CALLMENU drop options
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -476,7 +477,7 @@ if ($VDACaffected_rows > 0)
 	$sthA->finish();
 
 	### Grab campaign values from the database
-	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname,queue_priority,closer_campaigns,queuemetrics_phone_environment,campaign_recording,campaign_rec_filename FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
+	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname,queue_priority,closer_campaigns,queuemetrics_phone_environment,campaign_recording,campaign_rec_filename,safe_harbor_audio,safe_harbor_menu_id FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -511,6 +512,8 @@ if ($VDACaffected_rows > 0)
 		$queuemetrics_phone_environment = $aryA[21];
 		$campaign_recording =			$aryA[22];
 		$campaign_rec_filename =		$aryA[23];
+		$safe_harbor_audio =			$aryA[24];
+		$safe_harbor_menu_id =			$aryA[25];
 		if (length($closer_campaigns) > 2)
 			{
 			$closer_campaigns =~ s/^ | -$//gi;
@@ -2427,24 +2430,8 @@ if ($drop_timer > $DROP_TIME)
 	$CIDdate = "$mon$mday$hour$min$sec";
 	$tsSQLdate = "$year$mon$mday$hour$min$sec";
 	$SQLdate = "$year-$mon-$mday $hour:$min:$sec";
-
-	if ($enable_queuemetrics_logging > 0)
-		{
-		$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
-		 or die "Couldn't connect to database: " . DBI->errstr;
-
-		if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
-
-		$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='EXITWITHTIMEOUT',data1='1',serverid='$queuemetrics_log_id';";
-		$Baffected_rows = $dbhB->do($stmtB);
-			$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01048';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
-
-		$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='CALLSTATUS',data1='DROP',serverid='$queuemetrics_log_id';";
-		$Baffected_rows = $dbhB->do($stmtB);
-			$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01049';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
-
-		$dbhB->disconnect();
-		}
+	$Euniqueid=$uniqueid;
+	$Euniqueid =~ s/\.\d+//gi;
 
 	if ($drop_seconds < 1) 
 		{
@@ -2494,39 +2481,118 @@ if ($drop_timer > $DROP_TIME)
 		$S='*';
 		$DROPexten = "90009*$drop_inbound_group$S$S$CIDlead_id$S$S$VDADphone$S$fronter$S";
 		}
+	if ($drop_action =~ /CALLMENU/)
+		{
+		$DROPexten = 's';
+		$ext_context = $safe_harbor_menu_id;
+		if (length($ext_context)<1)
+			{$DROPexten = '';}
 
+		if ($enable_queuemetrics_logging > 0)
+			{
+			$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+			 or die "Couldn't connect to database: " . DBI->errstr;
 
-	$Euniqueid=$uniqueid;
-	$Euniqueid =~ s/\.\d+//gi;
-	$stmtA = "UPDATE vicidial_log FORCE INDEX(lead_id) set status='DROP',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',term_reason='QUEUETIMEOUT' where lead_id = '$CIDlead_id' and uniqueid LIKE \"$Euniqueid%\";";
-		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-	$affected_rows = $dbhA->do($stmtA);
-		$dbhP=$dbhA;   $mysql_count='01050';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-	if ($AGILOG) {$agi_string = "--    VDAD vicidial_log update: |$affected_rows|$uniqueid";   &agi_output;}
+			if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-	$stmtA = "UPDATE vicidial_list set status='DROP' where lead_id = '$CIDlead_id';";
-		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-	$affected_rows = $dbhA->do($stmtA);
-		$dbhP=$dbhA;   $mysql_count='01051';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-	if ($AGILOG) {$agi_string = "--    VDAD vicidial_list update: |$affected_rows|$CIDlead_id";   &agi_output;}
+			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='EXITWITHTIMEOUT',data1='1',serverid='$queuemetrics_log_id';";
+			$Baffected_rows = $dbhB->do($stmtB);
+				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
-	$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' order by call_time desc limit 1;";
-	$affected_rows = $dbhA->do($stmtA);
-		$dbhP=$dbhA;   $mysql_count='01052';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-	if ($AGILOG) {$agi_string = "--    VDAD vac record deleted: |$affected_rows|$VDADcampaign|";   &agi_output;}
+			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='CALLSTATUS',data1='IVRXFR',serverid='$queuemetrics_log_id';";
+			$Baffected_rows = $dbhB->do($stmtB);
+				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
+			$dbhB->disconnect();
+			}
 
-	### use STDOUT to send call to proper DROP location
-	$VHqueryCID = "VH$CIDdate$VDADconf_exten";
+		$stmtA = "UPDATE vicidial_log FORCE INDEX(lead_id) set status='IVRXFR',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',term_reason='CALLMENUXFER' where lead_id = '$CIDlead_id' and uniqueid LIKE \"$Euniqueid%\";";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "--    VDAD vicidial_log update: |$affected_rows|$uniqueid";   &agi_output;}
+
+		$stmtA = "UPDATE vicidial_list set status='IVRXFR' where lead_id = '$CIDlead_id';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "--    VDAD vicidial_list update: |$affected_rows|$CIDlead_id";   &agi_output;}
+		}
+	else
+		{
+		if ($enable_queuemetrics_logging > 0)
+			{
+			$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+			 or die "Couldn't connect to database: " . DBI->errstr;
+
+			if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='EXITWITHTIMEOUT',data1='1',serverid='$queuemetrics_log_id';";
+			$Baffected_rows = $dbhB->do($stmtB);
+				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01048';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+
+			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='CALLSTATUS',data1='DROP',serverid='$queuemetrics_log_id';";
+			$Baffected_rows = $dbhB->do($stmtB);
+				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01049';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+
+			$dbhB->disconnect();
+			}
+
+		$stmtA = "UPDATE vicidial_log FORCE INDEX(lead_id) set status='DROP',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',term_reason='QUEUETIMEOUT' where lead_id = '$CIDlead_id' and uniqueid LIKE \"$Euniqueid%\";";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='01050';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "--    VDAD vicidial_log update: |$affected_rows|$uniqueid";   &agi_output;}
+
+		$stmtA = "UPDATE vicidial_list set status='DROP' where lead_id = '$CIDlead_id';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='01051';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "--    VDAD vicidial_list update: |$affected_rows|$CIDlead_id";   &agi_output;}
+
+		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' order by call_time desc limit 1;";
+		$affected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='01052';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "--    VDAD vac record deleted: |$affected_rows|$VDADcampaign|";   &agi_output;}
+		}
+
+	if ($drop_action =~ /AUDIO/)
+		{
+		$DROPexten='';
+		if ($AGILOG) {$agi_string = "playing drop message: $safe_harbor_audio";   &agi_output;}
+
+		if (length($safe_harbor_audio) > 0)
+			{
+			$AGI->stream_file('sip-silence');
+			$AGI->stream_file('sip-silence');
+			if ($safe_harbor_audio =~ /\|/)
+				{
+				@safe_harbor_audio_array = split(/\|/,$safe_harbor_audio);
+				$w=0;
+				foreach(@safe_harbor_audio_array)
+					{
+					if (length($safe_harbor_audio_array[$w])>0)
+						{
+						$AGI->stream_file("$safe_harbor_audio_array[$w]");
+						}
+					$w++;
+					}
+				}
+			else
+				{$AGI->stream_file("$safe_harbor_audio");}
+			}
+		}
+
 
 	if (length($DROPexten)>0)
-		{	### if DROP extension is defined then send the dropped call there instead of hangup
+		{	
+		### if DROP extension is defined then send the dropped call there instead of hangup
 
 		$AGI->stream_file('ding'); # stop music-on-hold process
 
 		sleep(1);
 
-		if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $DROPexten";   &agi_output;}
+		if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $DROPexten $ext_context";   &agi_output;}
 		print "SET CONTEXT $ext_context\n";
 			checkresult($result);
 		print "SET EXTENSION $DROPexten\n";
@@ -2536,6 +2602,9 @@ if ($drop_timer > $DROP_TIME)
 		}
 	else
 		{
+		### use STDOUT to send call to proper DROP location
+		$VHqueryCID = "VH$CIDdate$VDADconf_exten";
+
 		### insert a NEW record to the vicidial_manager table to be processed
 		$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$VARserver_ip','','Hangup','$VHqueryCID','Channel: $channel','','','','','','','','','')";
 		$affected_rows = $dbhA->do($stmtA);  

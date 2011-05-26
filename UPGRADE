@@ -596,6 +596,12 @@ OTHER CHANGES:
 131. Change Dial Level Difference Target to work properly with all RATIO and
 	ADAPT dial method outbound campaigns.
 
+132. Added ability to have outbound auto-dial campaigns drop to an audio prompt
+	or a call menu. Outbound IVR Report added. Added optional logging of 
+	call menu caller key presses. Lead ID can now be preserved on calls 
+	coming from auto-dial or in-groups that go through call menus and back
+	into an in-group.
+
 
 
 

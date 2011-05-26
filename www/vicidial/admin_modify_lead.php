@@ -43,6 +43,7 @@
 # 110212-2041 - Added compatibility with definable scheduled callback statuses
 # 110215-1411 - Added display of call notes to log records
 # 110215-1717 - Changed empty lead_id behavior to be add-a-lead functionality
+# 110525-1827 - Added ivr log records display
 #
 
 require("dbconnect.php");
@@ -1145,6 +1146,37 @@ else
 		echo "<BR><BR>\n";
 
 
+		echo "<B>IVR LOGS FOR THIS LEAD:</B>\n";
+		echo "<TABLE width=750 cellspacing=1 cellpadding=1>\n";
+		echo "<tr><td><font size=1># </td><td align=left><font size=2> CAMPAIGN</td><td><font size=2>DATE/TIME </td><td align=left><font size=2>CALL MENU </td><td align=left><font size=2> &nbsp; ACTION</td></tr>\n";
+
+		$stmt="select campaign_id,event_date,menu_id,menu_action from vicidial_outbound_ivr_log where lead_id='" . mysql_real_escape_string($lead_id) . "' order by uniqueid,event_date,menu_action desc limit 500;";
+		$rslt=mysql_query($stmt, $link);
+		$logs_to_print = mysql_num_rows($rslt);
+		if ($DB) {echo "$logs_to_print|$stmt|\n";}
+
+		$u=0;
+		while ($logs_to_print > $u) 
+			{
+			$row=mysql_fetch_row($rslt);
+			if (eregi("1$|3$|5$|7$|9$", $u))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+
+			$u++;
+			echo "<tr $bgcolor>";
+			echo "<td><font size=1>$u</td>";
+			echo "<td align=left><font size=2> $row[0] </td>";
+			echo "<td align=left><font size=1> $row[1] </td>\n";
+			echo "<td align=left><font size=2> $row[2] </td>\n";
+			echo "<td align=left><font size=2> $row[3] &nbsp;</td>\n";
+			echo "</tr>\n";
+			}
+
+		echo "</TABLE><BR><BR>\n";
+
+
 		echo "<B>RECORDINGS FOR THIS LEAD:</B>\n";
 		echo "<TABLE width=750 cellspacing=1 cellpadding=1>\n";
 		echo "<tr><td><font size=1># </td><td align=left><font size=2> LEAD</td><td><font size=2>DATE/TIME </td><td align=left><font size=2>SECONDS </td><td align=left><font size=2> &nbsp; RECID</td><td align=center><font size=2>FILENAME</td><td align=left><font size=2>LOCATION</td><td align=left><font size=2>TSR</td></tr>\n";
@@ -1213,7 +1245,6 @@ else
 			echo "</tr>\n";
 
 			}
-
 
 		echo "</TABLE><BR><BR>\n";
 

@@ -581,6 +581,14 @@ Campaign Debug Page||
 Bulk Phone Insert Page||
 Send a Call With Custom CID Page||
 Speech Voice Lab Page||
+Safe Harbor Audio||
+This is the audio prompt file that is played if the Drop Action is set to AUDIO. Default is buzz||
+Safe Harbor Call Menu||
+This is the call menu that a call is sent to if the Drop Action is set to CALLMENU||
+Log Key Press||
+This option if enabled will log the DTMF key press by the caller in this Call Menu. Default is 0 for disabled||
+No DTMF Logging||
+DTMF Logging Enabled||
 
 
 admin_campaign_multi_alt.php
