@@ -18,10 +18,11 @@
 # 110303-2124 - Added agent on-hook phone indication and RING status and color
 # 110316-2216 - Added Agent, Carrier and Preset options.php settings
 # 110516-2128 - IE fix
+# 110526-1807 - Added webphone_auto_answer option
 #
 
-$version = '2.4-7';
-$build = '110516-2128';
+$version = '2.4-8';
+$build = '110526-1807';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -568,7 +569,7 @@ $open_list = "<TABLE WIDTH=250 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#D9E6FE\"><
 
 if (strlen($monitor_phone)>1)
 	{
-	$stmt="SELECT extension,dialplan_number,server_ip,login,pass,protocol,conf_secret,is_webphone,use_external_server_ip,codecs_list,webphone_dialpad,outbound_cid from phones where login='$monitor_phone' and active = 'Y';";
+	$stmt="SELECT extension,dialplan_number,server_ip,login,pass,protocol,conf_secret,is_webphone,use_external_server_ip,codecs_list,webphone_dialpad,outbound_cid,webphone_auto_answer from phones where login='$monitor_phone' and active = 'Y';";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_query($stmt, $link);
 	$Mph_ct = mysql_num_rows($rslt);
@@ -587,6 +588,7 @@ if (strlen($monitor_phone)>1)
 		$codecs_list =				$row[9];
 		$webphone_dialpad =			$row[10];
 		$outbound_cid =				$row[11];
+		$webphone_auto_answer =		$row[12];
 
 		if ($is_webphone == 'Y')
 			{
@@ -645,6 +647,9 @@ if (strlen($monitor_phone)>1)
 			if ($webphone_dialpad == 'N') {$webphone_options .= "--DIALPAD_N";}
 			if ($webphone_dialpad == 'TOGGLE') {$webphone_options .= "--DIALPAD_TOGGLE";}
 			if ($webphone_dialpad == 'TOGGLE_OFF') {$webphone_options .= "--DIALPAD_OFF_TOGGLE";}
+			if ($webphone_auto_answer == 'Y') {$webphone_options .= "--AUTOANSWER_Y";}
+			if ($webphone_auto_answer == 'N') {$webphone_options .= "--AUTOANSWER_N";}
+
 			$session_name='RTS01234561234567890';
 
 			### base64 encode variables

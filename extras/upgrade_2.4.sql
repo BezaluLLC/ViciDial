@@ -801,3 +801,6 @@ ALTER TABLE vicidial_call_menu ADD dtmf_log ENUM('0','1') default '0';
 
 UPDATE system_settings SET db_schema_version='1276',db_schema_update_date=NOW() where db_schema_version < 1276;
 
+ALTER TABLE phones ADD webphone_auto_answer ENUM('Y','N') default 'Y';
+
+UPDATE system_settings SET db_schema_version='1277',db_schema_update_date=NOW() where db_schema_version < 1277;

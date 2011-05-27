@@ -1,7 +1,7 @@
 <?php
 # zoiperweb.php - the web-based Zoiper softphone 
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # variables sent to this script:
 # $phone_login - phone login
@@ -10,6 +10,7 @@
 # $callerid - the callerid number
 # $protocol - IAX or SIP
 # $codecs - list of codecs to use
+# $options - optional webphone settings
 # $system_key - key optionally used by the webphone service to validate the user
 #
 # CHANGELOG
@@ -17,6 +18,7 @@
 # 100424-2102 - Added codecs option and updated zoiperweb code reference
 # 100827-1417 - Added system_key variable
 # 101227-1313 - Added DIALPLAN_OFF_TOGGLE option
+# 110526-1726 - Added AUTOANSWER option
 #
 
 if (isset($_GET["DB"]))							{$DB=$_GET["DB"];}
@@ -191,8 +193,13 @@ function OnZoiperCallReject(call)
 function OnZoiperCallIncoming(call)
 	{
 	Status(call.Phone + " incoming");
-	call.Accept();
-	ActiveCall = call;
+	<?php
+	if (preg_match("/AUTOANSWER_N/i",$b64_options))	
+		{echo "// autoanswer disabled;\n";}
+	else
+		{echo "call.Accept();\n\tActiveCall = call;\n";}
+	?>
+
 	}
 function OnZoiperAccountRegister(account)
 	{

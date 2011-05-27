@@ -589,6 +589,8 @@ Log Key Press||
 This option if enabled will log the DTMF key press by the caller in this Call Menu. Default is 0 for disabled||
 No DTMF Logging||
 DTMF Logging Enabled||
+Webphone Auto-Answer||
+This setting allows the web phone to be set to automatically answer calls that come in by setting it to Y, or to have calls ring by setting it to N. Default is Y||
 
 
 admin_campaign_multi_alt.php

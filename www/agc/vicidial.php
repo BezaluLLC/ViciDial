@@ -350,10 +350,11 @@
 # 110430-1924 - Added post_phone_time_diff_alert campaign feature
 # 110506-1612 - Added custom_3way_button_transfer button feature
 # 110510-1637 - Added number validation to custom_3way_button_transfer function
+# 110526-1723 - Added webphone_auto_answer option
 #
 
-$version = '2.4-327c';
-$build = '110510-1637';
+$version = '2.4-328c';
+$build = '110526-1723';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=72;
 $one_mysql_log=0;
@@ -1969,7 +1970,7 @@ else
 			echo "<!-- Phones balance selection: $phone_login|$pb_server_ip|$past_minutes_date|     |$pb_log -->\n";
 			}
 		echo "<title>Agent web client</title>\n";
-		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,is_webphone,use_external_server_ip,codecs_list,webphone_dialpad,phone_ring_timeout,on_hook_agent from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
+		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,is_webphone,use_external_server_ip,codecs_list,webphone_dialpad,phone_ring_timeout,on_hook_agent,webphone_auto_answer from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01025',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -2043,6 +2044,7 @@ else
 		$webphone_dialpad=$row[76];
 		$phone_ring_timeout=$row[77];
 		$on_hook_agent=$row[78];
+		$webphone_auto_answer=$row[79];
 
 		$no_empty_session_warnings=0;
 		if ( ($phone_login == 'nophone') or ($on_hook_agent == 'Y') )
@@ -2343,6 +2345,8 @@ else
 				if ($webphone_dialpad == 'N') {$webphone_options .= "--DIALPAD_N";}
 				if ($webphone_dialpad == 'TOGGLE') {$webphone_options .= "--DIALPAD_TOGGLE";}
 				if ($webphone_dialpad == 'TOGGLE_OFF') {$webphone_options .= "--DIALPAD_OFF_TOGGLE";}
+				if ($webphone_auto_answer == 'Y') {$webphone_options .= "--AUTOANSWER_Y";}
+				if ($webphone_auto_answer == 'N') {$webphone_options .= "--AUTOANSWER_N";}
 
 				### base64 encode variables
 				$b64_phone_login =		base64_encode($extension);
@@ -2738,6 +2742,8 @@ $Cyear = $CdayARY['year'];
 $CTODAY = date("Y-m");
 $CTODAYmday = date("j");
 $CINC=0;
+$live_days=0;
+$limit_days=999;
 
 $Cmonths = Array('January','February','March','April','May','June',
 				'July','August','September','October','November','December');
@@ -2748,106 +2754,117 @@ $CCAL_OUT = '';
 $CCAL_OUT .= "<table border=\"0\" cellpadding=\"2\" cellspacing=\"2\">";
 
 while ($CINC < 12)
-{
-if ( ($CINC == 0) || ($CINC == 4) ||($CINC == 8) )
-	{$CCAL_OUT .= "<tr>";}
-
-$CCAL_OUT .= "<td valign=\"top\">";
-
-$CYyear = $Cyear;
-$Cmonth=	($Cmon + $CINC);
-if ($Cmonth > 12)
 	{
-	$Cmonth = ($Cmonth - 12);
-	$CYyear++;
-	}
-$Cstart= mktime(11,0,0,$Cmonth,1,$CYyear);
-$CfirstdayARY = getdate($Cstart);
-#echo "|$Cmon|$Cmonth|$CINC|\n";
-$CPRNTDAY = date("Y-m", $Cstart);
+	if ( ($CINC == 0) || ($CINC == 4) ||($CINC == 8) )
+		{$CCAL_OUT .= "<tr>";}
 
-$CCAL_OUT .= "<table border=\"1\" cellpadding=\"1\" bordercolor=\"000000\" cellspacing=\"0\" bgcolor=\"white\">";
-$CCAL_OUT .= "<tr>";
-$CCAL_OUT .= "<td colspan=\"7\" bordercolor=\"#ffffff\" bgcolor=\"#FFFFCC\">";
-$CCAL_OUT .= "<div align=\"center\"><font color=\"#000066\"><b><font face=\"Arial, Helvetica, sans-serif\" size=\"2\">";
-$CCAL_OUT .= "$CfirstdayARY[month] $CfirstdayARY[year]";
-$CCAL_OUT .= "</font></b></font></div>";
-$CCAL_OUT .= "</td>";
-$CCAL_OUT .= "</tr>";
+	$CCAL_OUT .= "<td valign=\"top\">";
 
-foreach($Cdays as $Cday)
-{
-	$CDCLR="#ffffff";
-$CCAL_OUT .= "<td bordercolor=\"$CDCLR\">";
-$CCAL_OUT .= "<div align=\"center\"><font color=\"#000066\"><b><font face=\"Arial, Helvetica, sans-serif\" size=\"1\">";
-$CCAL_OUT .= "$Cday";
-$CCAL_OUT .= "</font></b></font></div>";
-$CCAL_OUT .= "</td>";
-}
-
-for( $Ccount=0;$Ccount<(6*7);$Ccount++)
-{
-	$Cdayarray = getdate($Cstart);
-	if((($Ccount) % 7) == 0)
-	{
-		if($Cdayarray['mon'] != $CfirstdayARY['mon'])
-			break;
-		$CCAL_OUT .= "</tr><tr>";
-	}
-	if($Ccount < $CfirstdayARY['wday'] || $Cdayarray['mon'] != $Cmonth)
-	{
-		$CCAL_OUT .= "<td bordercolor=\"#ffffff\"><font color=\"#000066\"><b><font face=\"Arial, Helvetica, sans-serif\" size=\"1\">&nbsp;</font></b></font></td>";
-	}
-	else
-	{
-		if( ($Cdayarray['mday'] == $CTODAYmday) and ($CPRNTDAY == $CTODAY) )
+	$CYyear = $Cyear;
+	$Cmonth=	($Cmon + $CINC);
+	if ($Cmonth > 12)
 		{
-		$CPRNTmday = $Cdayarray['mday'];
-		if ($CPRNTmday < 10) {$CPRNTmday = "0$CPRNTmday";}
-		$CBL = "<a href=\"#\" onclick=\"CB_date_pick('$CPRNTDAY-$CPRNTmday');return false;\">";
-		$CEL = "</a>";
-
-		$CCAL_OUT .= "<td bgcolor=\"#FFCCCC\" bordercolor=\"#FFCCCC\">";
-        $CCAL_OUT .= "<div align=\"center\"><font face=\"Arial, Helvetica, sans-serif\" size=\"1\">";
-		$CCAL_OUT .= "$CBL$Cdayarray[mday]$CEL";
-		$CCAL_OUT .= "</font></div>";
-		$CCAL_OUT .= "</td>";
-			$Cstart += ADAY;
+		$Cmonth = ($Cmonth - 12);
+		$CYyear++;
 		}
-		else
-		{
-	$CDCLR="#ffffff";
-	if ( ($Cdayarray['mday'] < $CTODAYmday) and ($CPRNTDAY == $CTODAY) )
-		{
-		$CDCLR="$MAIN_COLOR";
-		$CBL = '';
-		$CEL = '';
-		}
-	else
-		{
-		$CPRNTmday = $Cdayarray['mday'];
-		if ($CPRNTmday < 10) {$CPRNTmday = "0$CPRNTmday";}
-		$CBL = "<a href=\"#\" onclick=\"CB_date_pick('$CPRNTDAY-$CPRNTmday');return false;\">";
-		$CEL = "</a>";
-		}
+	$Cstart= mktime(11,0,0,$Cmonth,1,$CYyear);
+	$CfirstdayARY = getdate($Cstart);
+	#echo "|$Cmon|$Cmonth|$CINC|\n";
+	$CPRNTDAY = date("Y-m", $Cstart);
 
-	$CCAL_OUT .= "<td bgcolor=\"$CDCLR\" bordercolor=\"#ffffff\">";
-    $CCAL_OUT .= "<div align=\"center\"><font face=\"Arial, Helvetica, sans-serif\" size=1>";
-	$CCAL_OUT .= "$CBL$Cdayarray[mday]$CEL";
-	$CCAL_OUT .= "</font></div>";
+	$CCAL_OUT .= "<table border=\"1\" cellpadding=\"1\" bordercolor=\"000000\" cellspacing=\"0\" bgcolor=\"white\">";
+	$CCAL_OUT .= "<tr>";
+	$CCAL_OUT .= "<td colspan=\"7\" bordercolor=\"#ffffff\" bgcolor=\"#FFFFCC\">";
+	$CCAL_OUT .= "<div align=\"center\"><font color=\"#000066\"><b><font face=\"Arial, Helvetica, sans-serif\" size=\"2\">";
+	$CCAL_OUT .= "$CfirstdayARY[month] $CfirstdayARY[year]";
+	$CCAL_OUT .= "</font></b></font></div>";
 	$CCAL_OUT .= "</td>";
-		$Cstart += ADAY;
-		}
-	}
-}
-$CCAL_OUT .= "</tr>";
-$CCAL_OUT .= "</table>";
-$CCAL_OUT .= "</td>";
+	$CCAL_OUT .= "</tr>";
 
-if ( ($CINC == 3) || ($CINC == 7) ||($CINC == 11) )
-	{$CCAL_OUT .= "</tr>";}
-$CINC++;
-}
+	foreach($Cdays as $Cday)
+		{
+		$CDCLR="#ffffff";
+		$CCAL_OUT .= "<td bordercolor=\"$CDCLR\">";
+		$CCAL_OUT .= "<div align=\"center\"><font color=\"#000066\"><b><font face=\"Arial, Helvetica, sans-serif\" size=\"1\">";
+		$CCAL_OUT .= "$Cday";
+		$CCAL_OUT .= "</font></b></font></div>";
+		$CCAL_OUT .= "</td>";
+		}
+
+	for( $Ccount=0;$Ccount<(6*7);$Ccount++)
+		{
+		$Cdayarray = getdate($Cstart);
+		if((($Ccount) % 7) == 0)
+			{
+			if($Cdayarray['mon'] != $CfirstdayARY['mon'])
+				break;
+			$CCAL_OUT .= "</tr><tr>";
+			}
+		if($Ccount < $CfirstdayARY['wday'] || $Cdayarray['mon'] != $Cmonth)
+			{
+			$CCAL_OUT .= "<td bordercolor=\"#ffffff\"><font color=\"#000066\"><b><font face=\"Arial, Helvetica, sans-serif\" size=\"1\">&nbsp;</font></b></font></td>";
+			}
+		else
+			{
+			if( ($Cdayarray['mday'] == $CTODAYmday) and ($CPRNTDAY == $CTODAY) )
+				{
+				$CPRNTmday = $Cdayarray['mday'];
+				if ($CPRNTmday < 10) {$CPRNTmday = "0$CPRNTmday";}
+				if ($limit_days > $live_days)
+					{
+					$CBL = "<a href=\"#\" onclick=\"CB_date_pick('$CPRNTDAY-$CPRNTmday');return false;\">";
+					$CEL = "</a>";
+					}
+				else
+					{$CBL='';   $CEL='';}
+				$CCAL_OUT .= "<td bgcolor=\"#FFCCCC\" bordercolor=\"#FFCCCC\">";
+				$CCAL_OUT .= "<div align=\"center\"><font face=\"Arial, Helvetica, sans-serif\" size=\"1\">";
+				$CCAL_OUT .= "$CBL$Cdayarray[mday]$CEL";
+				$CCAL_OUT .= "</font></div>";
+				$CCAL_OUT .= "</td>";
+				$Cstart += ADAY;
+				$live_days++;
+				}
+			else
+				{
+				$CDCLR="#ffffff";
+				if ( ($Cdayarray['mday'] < $CTODAYmday) and ($CPRNTDAY == $CTODAY) )
+					{
+					$CDCLR="$MAIN_COLOR";
+					$CBL = '';
+					$CEL = '';
+					}
+				else
+					{
+					$CPRNTmday = $Cdayarray['mday'];
+					if ($CPRNTmday < 10) {$CPRNTmday = "0$CPRNTmday";}
+					if ($limit_days > $live_days)
+						{
+						$CBL = "<a href=\"#\" onclick=\"CB_date_pick('$CPRNTDAY-$CPRNTmday');return false;\">";
+						$CEL = "</a>";
+						}
+					else
+						{$CBL='';   $CEL='';}
+					$live_days++;
+					}
+
+				$CCAL_OUT .= "<td bgcolor=\"$CDCLR\" bordercolor=\"#ffffff\">";
+				$CCAL_OUT .= "<div align=\"center\"><font face=\"Arial, Helvetica, sans-serif\" size=1>";
+				$CCAL_OUT .= "$CBL$Cdayarray[mday]$CEL";
+				$CCAL_OUT .= "</font></div>";
+				$CCAL_OUT .= "</td>";
+				$Cstart += ADAY;
+				}
+			}
+		}
+	$CCAL_OUT .= "</tr>";
+	$CCAL_OUT .= "</table>";
+	$CCAL_OUT .= "</td>";
+
+	if ( ($CINC == 3) || ($CINC == 7) ||($CINC == 11) )
+		{$CCAL_OUT .= "</tr>";}
+	$CINC++;
+	}
 
 $CCAL_OUT .= "</table>";
 

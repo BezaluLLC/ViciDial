@@ -79,6 +79,7 @@ codecs_list VARCHAR(100) default '',
 codecs_with_template ENUM('0','1') default '0',
 webphone_dialpad ENUM('Y','N','TOGGLE','TOGGLE_OFF') default 'Y',
 on_hook_agent ENUM('Y','N') default 'N',
+webphone_auto_answer ENUM('Y','N') default 'Y',
 index (server_ip),
 unique index extenserver (extension, server_ip)
 );
@@ -2495,7 +2496,7 @@ ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_outbound_ivr_log_archive LIKE vicidial_outbound_ivr_log;
 
-UPDATE system_settings SET db_schema_version='1276',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1277',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
