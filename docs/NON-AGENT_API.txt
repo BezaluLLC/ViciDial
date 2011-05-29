@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT					Started: 2008-07-24
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2011-05-29
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -57,6 +57,7 @@ Changes:
 110404-1356 - Added uniqueid search parameter to recording_lookup function
 110409-0822 - Added run_time logging of API functions
 110424-0854 - Added option for time zone code lookups using owner field in add_lead function
+110529-1220 - Added time zone information output to version function
 
 
 
@@ -70,13 +71,13 @@ valid api-enabled vicidial_users account to execute actions.
 
 
 --------------------------------------------------------------------------------
-version - shows version and build of the API, along with the date/time
+version - shows version and build of the API, along with the date/time and timezone
 
 Example URL strings for API calls:
 http://server/vicidial/non_agent_api.php?function=version
 
 Example responses:
-VERSION: 2.0.5-4|BUILD: 80910-0020|DATE: 2008-09-10 00:26:43|EPOCH: 1221020803 
+VERSION: 2.4-34|BUILD: 110424-0854|DATE: 2011-05-29 12:19:22|EPOCH: 1306685962|DST: 1|TZ: -5|TZNOW: -4| 
 
 
 

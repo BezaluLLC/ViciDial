@@ -47,10 +47,11 @@
 # 110404-1356 - Added uniqueid search parameter to recording_lookup function
 # 110409-0822 - Added run_time logging of API functions
 # 110424-0854 - Added option for time zone code lookups using owner field
+# 110529-1220 - Added time zone information output to version function
 #
 
-$version = '2.4-33';
-$build = '110424-0854';
+$version = '2.4-34';
+$build = '110529-1220';
 
 $startMS = microtime();
 
@@ -420,7 +421,7 @@ $gmt_recs = mysql_num_rows($rslt);
 if ($gmt_recs > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$DBSERVER_GMT		=		"$row[0]";
+	$DBSERVER_GMT		=		$row[0];
 	if (strlen($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
 	if ($isdst) {$SERVER_GMT++;} 
 	}
@@ -440,11 +441,11 @@ $LOCAL_GMT_OFF_STD = $SERVER_GMT;
 
 
 ################################################################################
-### version - show version and date information for the API
+### version - show version, date, time and time zone information for the API
 ################################################################################
 if ($function == 'version')
 	{
-	$data = "VERSION: $version|BUILD: $build|DATE: $NOW_TIME|EPOCH: $StarTtime";
+	$data = "VERSION: $version|BUILD: $build|DATE: $NOW_TIME|EPOCH: $StarTtime|DST: $isdst|TZ: $DBSERVER_GMT|TZNOW: $SERVER_GMT|";
 	$result = 'SUCCESS';
 	echo "$data\n";
 	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
