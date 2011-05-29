@@ -600,7 +600,7 @@ OTHER CHANGES:
 	or a call menu. Outbound IVR Report added. Added optional logging of 
 	call menu caller key presses. Lead ID can now be preserved on calls 
 	coming from auto-dial or in-groups that go through call menus and back
-	into an in-group.
+	into an in-group. Call Menu transfer also works from an Outbound Survey.
 
 133. Added new agent interface alert where manual dial calls will not be allowed
 	if the disposition process has not completed. Usually a rare problem on 

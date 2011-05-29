@@ -804,3 +804,8 @@ UPDATE system_settings SET db_schema_version='1276',db_schema_update_date=NOW() 
 ALTER TABLE phones ADD webphone_auto_answer ENUM('Y','N') default 'Y';
 
 UPDATE system_settings SET db_schema_version='1277',db_schema_update_date=NOW() where db_schema_version < 1277;
+
+ALTER TABLE vicidial_campaigns MODIFY survey_method ENUM('AGENT_XFER','VOICEMAIL','EXTENSION','HANGUP','CAMPREC_60_WAV','CALLMENU') default 'AGENT_XFER';
+ALTER TABLE vicidial_campaigns ADD survey_menu_id VARCHAR(50) default '';
+
+UPDATE system_settings SET db_schema_version='1278',db_schema_update_date=NOW() where db_schema_version < 1278;

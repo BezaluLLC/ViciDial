@@ -704,7 +704,7 @@ survey_dtmf_digits VARCHAR(16) default '1238',
 survey_ni_digit VARCHAR(1) default '8',
 survey_opt_in_audio_file VARCHAR(50) default 'US_pol_survey_transfer',
 survey_ni_audio_file VARCHAR(50) default 'US_thanks_no_contact',
-survey_method ENUM('AGENT_XFER','VOICEMAIL','EXTENSION','HANGUP','CAMPREC_60_WAV') default 'AGENT_XFER',
+survey_method ENUM('AGENT_XFER','VOICEMAIL','EXTENSION','HANGUP','CAMPREC_60_WAV','CALLMENU') default 'AGENT_XFER',
 survey_no_response_action ENUM('OPTIN','OPTOUT') default 'OPTIN',
 survey_ni_status VARCHAR(6) default 'NI',
 survey_response_digit_map VARCHAR(255) default '1-DEMOCRAT|2-REPUBLICAN|3-INDEPENDANT|8-OPTOUT|X-NO RESPONSE|',
@@ -808,7 +808,8 @@ available_only_tally_threshold_agents SMALLINT(5) UNSIGNED default '0',
 dial_level_threshold ENUM('DISABLED','LOGGED-IN_AGENTS','NON-PAUSED_AGENTS','WAITING_AGENTS') default 'DISABLED',
 dial_level_threshold_agents SMALLINT(5) UNSIGNED default '0',
 safe_harbor_audio VARCHAR(100) default 'buzz',
-safe_harbor_menu_id VARCHAR(50) default ''
+safe_harbor_menu_id VARCHAR(50) default '',
+survey_menu_id VARCHAR(50) default ''
 );
 
 CREATE TABLE vicidial_lists (
@@ -2496,7 +2497,7 @@ ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_outbound_ivr_log_archive LIKE vicidial_outbound_ivr_log;
 
-UPDATE system_settings SET db_schema_version='1277',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1278',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

@@ -591,6 +591,9 @@ No DTMF Logging||
 DTMF Logging Enabled||
 Webphone Auto-Answer||
 This setting allows the web phone to be set to automatically answer calls that come in by setting it to Y, or to have calls ring by setting it to N. Default is Y||
+CALLMENU will send the customer to the Call Menu defined in the select list below||
+Survey Call Menu||
+If the method is set to CALLMENU, this is the Call Menu that the customer is sent to if they opt-in||
 
 
 admin_campaign_multi_alt.php

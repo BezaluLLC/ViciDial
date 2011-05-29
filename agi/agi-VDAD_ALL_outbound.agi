@@ -85,6 +85,7 @@
 # 110324-2326 - Added recording of remote agent calls, per in-group and campaign recording settings
 # 110325-1410 - Added user recording override settings checking for remote agent recording
 # 110525-1530 - Added AUDIO and CALLMENU drop options
+# 110528-2326 - Added CALLMENU survey method
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -877,7 +878,7 @@ if ($call_handle_method =~ /SURVEY/)
 	### check to see if the SURVEY settings should be pulled from the campaign settings in the database
 	if ($call_handle_method =~ /SURVEYCAMP/)
 		{
-		$stmtA = "SELECT survey_dtmf_digits,survey_ni_digit,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,survey_third_digit,survey_third_status,survey_third_exten,survey_fourth_digit,survey_fourth_status,survey_fourth_exten FROM vicidial_campaigns where campaign_id='$VDADcampaign';";
+		$stmtA = "SELECT survey_dtmf_digits,survey_ni_digit,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,survey_third_digit,survey_third_status,survey_third_exten,survey_fourth_digit,survey_fourth_status,survey_fourth_exten,survey_menu_id FROM vicidial_campaigns where campaign_id='$VDADcampaign';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -899,6 +900,7 @@ if ($call_handle_method =~ /SURVEY/)
 			$survey_fourth_digit =			$aryA[11];
 			$survey_fourth_status =			$aryA[12];
 			$survey_fourth_exten =			$aryA[13];
+			$survey_menu_id =				$aryA[14];
 
 			@digit_map = split(/\|/,$survey_response_digit_map);
 
@@ -1195,7 +1197,7 @@ if ($call_handle_method =~ /SURVEY/)
 			$AGI->stream_file($survey_opt_in_audio_file);
 			}
 
-		if ($survey_method =~ /VOICEMAIL|EXTENSION|HANGUP/)
+		if ($survey_method =~ /VOICEMAIL|EXTENSION|HANGUP|CALLMENU/)
 			{
 			$DROPexten='';
 			if ($survey_method =~ /VOICEMAIL/)
@@ -1227,6 +1229,15 @@ if ($call_handle_method =~ /SURVEY/)
 						}
 					}
 				}
+			if ($survey_method =~ /CALLMENU/)
+				{
+				$survey_status='SVYCLM';
+				if (length($survey_menu_id)>0)
+					{
+					$DROPexten = 's';
+					$ext_context = $survey_menu_id;
+					}
+				}
 			if ($survey_method =~ /HANGUP/)
 				{
 				$survey_status='SVYHU';
@@ -1256,6 +1267,24 @@ if ($call_handle_method =~ /SURVEY/)
 				&agi_output;
 				}
 
+			if ($enable_queuemetrics_logging > 0)
+				{
+				$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+				 or die "Couldn't connect to database: " . DBI->errstr;
+
+				if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='EXITWITHTIMEOUT',data1='1',serverid='$queuemetrics_log_id';";
+				$Baffected_rows = $dbhB->do($stmtB);
+					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+
+				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='CALLSTATUS',data1='$survey_status',serverid='$queuemetrics_log_id';";
+				$Baffected_rows = $dbhB->do($stmtB);
+					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+
+				$dbhB->disconnect();
+				}
+
 			if (length($DROPexten) > 0)
 				{
 				$stmtA = "UPDATE vicidial_auto_calls set status='XFER',stage='XFER-0' where callerid='$callerid' order by call_time desc limit 1;";
@@ -1263,7 +1292,7 @@ if ($call_handle_method =~ /SURVEY/)
 					$dbhP=$dbhA;   $mysql_count='01025';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				if ($AGILOG) {$agi_string = "--    VDAC XFER status: |$affected_rows|$FDtsSQLdate|$callerid|";   &agi_output;}
 
-				if ($AGILOG) {$agi_string = "exiting the VDAD SURVEY app, transferring call to $DROPexten";   &agi_output;}
+				if ($AGILOG) {$agi_string = "exiting the VDAD SURVEY app, transferring call to $DROPexten $ext_context";   &agi_output;}
 				print "SET CONTEXT $ext_context\n";
 					checkresult($result);
 				print "SET EXTENSION $DROPexten\n";
