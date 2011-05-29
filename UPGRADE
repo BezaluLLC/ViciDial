@@ -602,6 +602,10 @@ OTHER CHANGES:
 	coming from auto-dial or in-groups that go through call menus and back
 	into an in-group.
 
+133. Added new agent interface alert where manual dial calls will not be allowed
+	if the disposition process has not completed. Usually a rare problem on 
+	systems with networking issues.
+
 
 
 

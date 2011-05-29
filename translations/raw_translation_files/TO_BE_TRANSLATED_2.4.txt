@@ -649,6 +649,7 @@ Time Zone Warning||
 Phone Area Code Outside Dialable Zone||
 Postal Code Outside Dialable Zone||
 Custom Transfer||
+System Delay, Please try again||
 
 
 ############################################################  MANAGER Manual

@@ -5762,7 +5762,6 @@ if ($ACTION == 'userLOGout')
 				$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00139',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
-				echo "$stmt\n";
 				$li_conf_ct = mysql_num_rows($rslt);
 				$i=0;
 				while ($i < $li_conf_ct)
@@ -5825,7 +5824,6 @@ if ($ACTION == 'userLOGout')
 					$rslt=mysql_query($stmt, $linkB);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00351',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
-					echo "$stmt\n";
 					$amq_conf_ct = mysql_num_rows($rslt);
 					$i=0;
 					while ($i < $amq_conf_ct)
@@ -6811,7 +6809,6 @@ if ($ACTION == 'updateDISPO')
 		$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00409',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
-		echo "$stmt\n";
 		$comp_ct = mysql_num_rows($rslt);
 		if ($comp_ct > 0)
 			{
@@ -6832,7 +6829,6 @@ if ($ACTION == 'updateDISPO')
 			$rslt=mysql_query($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00410',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
-			echo "$stmt\n";
 			$connect_ct = mysql_num_rows($rslt);
 			if ($connect_ct > 0)
 				{
@@ -6846,7 +6842,6 @@ if ($ACTION == 'updateDISPO')
 			$rslt=mysql_query($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00411',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
-			echo "$stmt\n";
 			$pausereason_ct = mysql_num_rows($rslt);
 			if ($pausereason_ct > 0)
 				{
@@ -7291,6 +7286,9 @@ if ($ACTION == 'updateDISPO')
 		fwrite ($fp, "$NOW_TIME|$campaign|$lead_id|$phone_number|$user|D|$MDnextCID||$province|$talk_sec|\n");
 		fclose($fp);
 		}
+
+	# debug testing sleep
+	# sleep(5);
 
 	echo 'Lead ' . $lead_id . ' has been changed to ' . $dispo_choice . " Status\nNext agent_log_id:\n" . $agent_log_id . "\n";
 	}
