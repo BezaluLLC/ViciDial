@@ -28,6 +28,7 @@
 # 110224-1135 - Added call_notes export option
 # 110316-2121 - Added export_fields option
 # 110329-1330 - Added more fields to EXTENDED option
+# 110531-1945 - Changed first phone_number field to phone_number_dialed, issue #495
 #
 
 require("dbconnect.php");
@@ -420,7 +421,7 @@ if ($run_export > 0)
 			if ( ($custom_fields_enabled > 0) and ($custom_fields=='YES') )
 				{$CFheader = "\tcustom_fields";}
 
-			echo "call_date\tphone_number\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id$EFheader\tlist_name\tlist_description\tstatus_name$RFheader$EXheader$NFheader$CFheader\r\n";
+			echo "call_date\tphone_number_dialed\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id$EFheader\tlist_name\tlist_description\tstatus_name$RFheader$EXheader$NFheader$CFheader\r\n";
 			}
 
 		$i=0;
