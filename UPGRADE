@@ -606,6 +606,9 @@ OTHER CHANGES:
 	if the disposition process has not completed. Usually a rare problem on 
 	systems with networking issues.
 
+134. Added Callback Days Limit campaign option to allow scheduled callbacks to 
+	be scheduled only a set number of days from today.
+
 
 
 

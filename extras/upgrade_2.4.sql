@@ -809,3 +809,7 @@ ALTER TABLE vicidial_campaigns MODIFY survey_method ENUM('AGENT_XFER','VOICEMAIL
 ALTER TABLE vicidial_campaigns ADD survey_menu_id VARCHAR(50) default '';
 
 UPDATE system_settings SET db_schema_version='1278',db_schema_update_date=NOW() where db_schema_version < 1278;
+
+ALTER TABLE vicidial_campaigns ADD callback_days_limit SMALLINT(3) default '0';
+
+UPDATE system_settings SET db_schema_version='1279',db_schema_update_date=NOW() where db_schema_version < 1279;

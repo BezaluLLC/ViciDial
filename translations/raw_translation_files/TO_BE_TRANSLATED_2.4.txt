@@ -594,6 +594,8 @@ This setting allows the web phone to be set to automatically answer calls that c
 CALLMENU will send the customer to the Call Menu defined in the select list below||
 Survey Call Menu||
 If the method is set to CALLMENU, this is the Call Menu that the customer is sent to if they opt-in||
+Scheduled Callbacks Days Limit||
+This option allows you to reduce the agent scheduled callbacks calendar to a selectable number of days from today, the full 12 month calendar will still be displayed, but only the set number of days will be selectable. Default is 0 for unlimited||
 
 
 admin_campaign_multi_alt.php
