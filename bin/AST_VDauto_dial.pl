@@ -101,6 +101,7 @@
 # 110303-1710 - Added clearing of ring_callerid when vicidial_auto_calls deleted
 # 110513-1745 - Added double-check for dial level difference target, and dial level and avail-only-tally features
 # 110525-1940 - Allow for auto-dial IVR transfers
+# 110602-0953 - Added dl_diff_target_method option
 #
 
 
@@ -343,6 +344,7 @@ while($one_day_interval > 0)
 		@DBIPdial_level_threshold=@MT;
 		@DBIPdial_level_threshold_agents=@MT;
 		@DBIPadaptive_dl_diff_target=@MT;
+		@DBIPdl_diff_target_method=@MT;
 
 		$active_line_counter=0;
 		$user_counter=0;
@@ -561,7 +563,7 @@ while($one_day_interval > 0)
 
 			### grab the dial_level and multiply by active agents to get your goalcalls
 			$DBIPadlevel[$user_CIPct]=0;
-			$stmtA = "SELECT auto_dial_level,local_call_time,dial_timeout,dial_prefix,campaign_cid,active,campaign_vdad_exten,closer_campaigns,omit_phone_code,available_only_ratio_tally,auto_alt_dial,campaign_allow_inbound,queue_priority,dial_method,use_custom_cid,inbound_queue_no_dial,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,adaptive_dl_diff_target FROM vicidial_campaigns where campaign_id='$DBIPcampaign[$user_CIPct]'";
+			$stmtA = "SELECT auto_dial_level,local_call_time,dial_timeout,dial_prefix,campaign_cid,active,campaign_vdad_exten,closer_campaigns,omit_phone_code,available_only_ratio_tally,auto_alt_dial,campaign_allow_inbound,queue_priority,dial_method,use_custom_cid,inbound_queue_no_dial,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,adaptive_dl_diff_target,dl_diff_target_method FROM vicidial_campaigns where campaign_id='$DBIPcampaign[$user_CIPct]'";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -593,6 +595,15 @@ while($one_day_interval > 0)
 				$DBIPdial_level_threshold[$user_CIPct] =		$aryA[18];
 				$DBIPdial_level_threshold_agents[$user_CIPct] = $aryA[19];
 				$DBIPadaptive_dl_diff_target[$user_CIPct] =		$aryA[20];
+				$DBIPdl_diff_target_method[$user_CIPct] =		$aryA[21];
+				if ($DBIPdl_diff_target_method[$user_CIPct] =~ /ADAPT_CALC_ONLY/)
+					{
+					if ( ($DBIPadaptive_dl_diff_target[$user_CIPct] < 0) || ($DBIPadaptive_dl_diff_target[$user_CIPct] > 0) )
+						{
+						$debug_string .= "   !! DL DIFF TARGET SET TO 0, CALC-ONLY MODE: $DBIPdl_diff_target_method[$user_CIPct]|$DBIPadaptive_dl_diff_target[$user_CIPct]\n";
+						}
+					$DBIPadaptive_dl_diff_target[$user_CIPct] = 0;
+					}
 				if ($DBIPavailable_only_tally[$user_CIPct] =~ /Y/) 
 					{
 					$DBIPcount[$user_CIPct] = $DBIPACTIVEcount[$user_CIPct];

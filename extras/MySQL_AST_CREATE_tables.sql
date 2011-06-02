@@ -810,7 +810,8 @@ dial_level_threshold_agents SMALLINT(5) UNSIGNED default '0',
 safe_harbor_audio VARCHAR(100) default 'buzz',
 safe_harbor_menu_id VARCHAR(50) default '',
 survey_menu_id VARCHAR(50) default '',
-callback_days_limit SMALLINT(3) default '0'
+callback_days_limit SMALLINT(3) default '0',
+dl_diff_target_method ENUM('ADAPT_CALC_ONLY','CALLS_PLACED') default 'ADAPT_CALC_ONLY'
 );
 
 CREATE TABLE vicidial_lists (
@@ -2498,7 +2499,7 @@ ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_outbound_ivr_log_archive LIKE vicidial_outbound_ivr_log;
 
-UPDATE system_settings SET db_schema_version='1279',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1280',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

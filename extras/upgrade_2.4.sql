@@ -813,3 +813,7 @@ UPDATE system_settings SET db_schema_version='1278',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD callback_days_limit SMALLINT(3) default '0';
 
 UPDATE system_settings SET db_schema_version='1279',db_schema_update_date=NOW() where db_schema_version < 1279;
+
+ALTER TABLE vicidial_campaigns ADD dl_diff_target_method ENUM('ADAPT_CALC_ONLY','CALLS_PLACED') default 'ADAPT_CALC_ONLY';
+
+UPDATE system_settings SET db_schema_version='1280',db_schema_update_date=NOW() where db_schema_version < 1280;

@@ -594,7 +594,9 @@ OTHER CHANGES:
 	selected state
 
 131. Change Dial Level Difference Target to work properly with all RATIO and
-	ADAPT dial method outbound campaigns.
+	ADAPT dial method outbound campaigns. Added a Method option to restrict
+	this feature to only calculation of dial level or to affect the calls 
+	dialed on each dialing engine.
 
 132. Added ability to have outbound auto-dial campaigns drop to an audio prompt
 	or a call menu. Outbound IVR Report added. Added optional logging of 
