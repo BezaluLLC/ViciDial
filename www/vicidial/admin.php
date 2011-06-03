@@ -4225,7 +4225,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_campaigns-web_form_address">
 	<BR>
-	<B>Web Form -</B> This is where you can set the custom web page that will be opened when the user clicks on the WEB FORM button. To customize the query string after the web form, simply begin the web form with VAR and then the URL that you want to use, replacing the variables with the variable names that you want to use --A--phone_number--B-- just like in the SCRIPTS tab section.
+	<B>Web Form -</B> This is where you can set the custom web page that will be opened when the user clicks on the WEB FORM button. To customize the query string after the web form, simply begin the web form with VAR and then the URL that you want to use, replacing the variables with the variable names that you want to use --A--phone_number--B-- just like in the SCRIPTS tab section. If you want to use custom fields in a web form address, you need to add &CF_uses_custom_fields=Y as part of your URL.
 
 	<BR>
 	<A NAME="vicidial_campaigns-web_form_target">
@@ -5173,7 +5173,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_lists-web_form_address">
 	<BR>
-	<B>Web Form Override -</B> This is the custom address that clicking on the WEB FORM button in VICIDIAL will take you to for calls that come in on this list.
+	<B>Web Form Override -</B> This is the custom address that clicking on the WEB FORM button in VICIDIAL will take you to for calls that come in on this list. If you want to use custom fields in a web form address, you need to add &CF_uses_custom_fields=Y as part of your URL.
 
 	<BR>
 	<A NAME="vicidial_lists-xferconf_a_dtmf">
@@ -5218,7 +5218,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_inbound_groups-web_form_address">
 	<BR>
-	<B>Web Form -</B> This is the custom address that clicking on the WEB FORM button in VICIDIAL will take you to for calls that come in on this group.
+	<B>Web Form -</B> This is the custom address that clicking on the WEB FORM button in VICIDIAL will take you to for calls that come in on this group. If you want to use custom fields in a web form address, you need to add &CF_uses_custom_fields=Y as part of your URL.
 
 	<BR>
 	<A NAME="vicidial_inbound_groups-next_agent_call">
