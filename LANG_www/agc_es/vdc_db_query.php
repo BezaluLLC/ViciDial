@@ -281,12 +281,14 @@
 # 110310-0546 - Added ability to set a pause code at the same time of a pause
 # 110310-1628 - removed callslogview, extended lead info function to be used instead
 # 110317-0222 - Logging bug fixes
+# 110413-1245 - Added ALT dialing from scheduled callback list
+# 110430-1925 - Added post_phone_time_diff_alert campaign feature
 #
 
-$version = '2.4-186';
-$build = '110317-0222';
+$version = '2.4-188';
+$build = '110430-1925';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=413;
+$mysql_log_count=415;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -500,6 +502,43 @@ $agents='@agents';
 $US='_';
 while (strlen($CIDdate) > 9) {$CIDdate = substr("$CIDdate", 1);}
 $check_time = ($StarTtime - 86400);
+
+$secX = date("U");
+$hour = date("H");
+$min = date("i");
+$sec = date("s");
+$mon = date("m");
+$mday = date("d");
+$year = date("Y");
+$isdst = date("I");
+$Shour = date("H");
+$Smin = date("i");
+$Ssec = date("s");
+$Smon = date("m");
+$Smday = date("d");
+$Syear = date("Y");
+
+### Grab Server GMT value from the database
+$stmt="SELECT local_gmt FROM servers where active='Y' limit 1;";
+$rslt=mysql_query($stmt, $link);
+$gmt_recs = mysql_num_rows($rslt);
+if ($gmt_recs > 0)
+	{
+	$row=mysql_fetch_row($rslt);
+	$DBSERVER_GMT		=		$row[0];
+	if (strlen($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
+	if ($isdst) {$SERVER_GMT++;} 
+	}
+else
+	{
+	$SERVER_GMT = date("O");
+	$SERVER_GMT = eregi_replace("\+","",$SERVER_GMT);
+	$SERVER_GMT = ($SERVER_GMT + 0);
+	$SERVER_GMT = ($SERVER_GMT / 100);
+	}
+
+$LOCAL_GMT_OFF = $SERVER_GMT;
+$LOCAL_GMT_OFF_STD = $SERVER_GMT;
 
 ##### Hangup Cause Dictionary #####
 $hangup_cause_dictionary = array(
@@ -1255,27 +1294,6 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$inSD = $pulldate0;
 				$dsec = ( ( ($hour * 3600) + ($min * 60) ) + $sec );
 
-				### Grab Servidor GMT value from the database
-				$stmt="SELECT local_gmt FROM servers where active='Y' limit 1;";
-				$rslt=mysql_query($stmt, $link);
-				$gmt_recs = mysql_num_rows($rslt);
-				if ($gmt_recs > 0)
-					{
-					$row=mysql_fetch_row($rslt);
-					$DBSERVER_GMT		=		$row[0];
-					if (strlen($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
-					if ($isdst) {$SERVER_GMT++;} 
-					}
-				else
-					{
-					$SERVER_GMT = date("O");
-					$SERVER_GMT = eregi_replace("\+","",$SERVER_GMT);
-					$SERVER_GMT = ($SERVER_GMT + 0);
-					$SERVER_GMT = ($SERVER_GMT / 100);
-					}
-
-				$LOCAL_GMT_OFF = $SERVER_GMT;
-				$LOCAL_GMT_OFF_STD = $SERVER_GMT;
 				$postalgmt='';
 				$postal_code='';
 				$state='';
@@ -1296,6 +1314,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					}
 
 				### get current gmt_offset of the phone_number
+				$USarea = substr($phone_number, 0, 3);
 				$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
 
 				$dialable = dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state);
@@ -2075,6 +2094,72 @@ if ($ACTION == 'manDiaLnextCaLL')
 				if (strlen($agent_dialed_type) < 3)
 					{$agent_dialed_type = 'MAIN';}
 				}
+			if ( (strlen($callback_id)>0) and (strlen($lead_id)>0) )
+				{
+				if ($agent_dialed_type=='ALT')
+					{$agent_dialed_number = $alt_phone;}
+				if ($agent_dialed_type=='ADDR3')
+					{$agent_dialed_number = $address3;}
+				}
+
+
+			##### BEGIN check for postal_code and phone time zones if alert enabled
+			$post_phone_time_diff_alert_message='';
+			$stmt="SELECT post_phone_time_diff_alert,local_call_time FROM vicidial_campaigns where campaign_id='$campaign';";
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00414',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$camp_pptda_ct = mysql_num_rows($rslt);
+			if ($camp_pptda_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$post_phone_time_diff_alert =	$row[0];
+				$local_call_time =				$row[1];
+				}
+			if ( ($post_phone_time_diff_alert == 'ENABLED') or (preg_match("/OUTSIDE_CALLTIME/",$post_phone_time_diff_alert)) )
+				{
+				### get current gmt_offset of the phone_number
+				$postalgmtNOW = '';
+				$USarea = substr($agent_dialed_number, 0, 3);
+				$PHONEgmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmtNOW,$postal_code);
+				$PHONEdialable = dialable_gmt($DB,$link,$local_call_time,$PHONEgmt_offset,$state);
+
+				$postalgmtNOW = 'POSTAL';
+				$POSTgmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmtNOW,$postal_code);
+				$POSTdialable = dialable_gmt($DB,$link,$local_call_time,$POSTgmt_offset,$state);
+
+			#	$post_phone_time_diff_alert_message = "$POSTgmt_offset|$POSTdialable   ---   $PHONEgmt_offset|$PHONEdialable|$USarea";
+				$post_phone_time_diff_alert_message = '';
+
+				if ($PHONEgmt_offset != $POSTgmt_offset)
+					{
+					$post_phone_time_diff_alert_message .= "Teléfono and Post Code Time Zone Mismatch! ";
+
+					if ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_ONLY')
+						{
+						$post_phone_time_diff_alert_message='';
+						if ($PHONEdialable < 1)
+							{$post_phone_time_diff_alert_message .= " Teléfono Area Code Outside Dialable Zone $PHONEgmt_offset ";}
+						if ($POSTdialable < 1)
+							{$post_phone_time_diff_alert_message .= " Postal Code Outside Dialable Zone $POSTgmt_offset";}
+						}
+					}
+				if ( ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_PHONE') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_POSTAL') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_BOTH') )
+					{$post_phone_time_diff_alert_message = '';}
+
+				if ( ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_PHONE') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_BOTH') )
+					{
+					if ($PHONEdialable < 1)
+						{$post_phone_time_diff_alert_message .= " Teléfono Area Code Outside Dialable Zone $PHONEgmt_offset ";}
+					}
+				if ( ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_POSTAL') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_BOTH') )
+					{
+					if ($POSTdialable < 1)
+						{$post_phone_time_diff_alert_message .= " Postal Code Outside Dialable Zone $POSTgmt_offset ";}
+					}
+				}
+			##### END check for postal_code and phone time zones if alert enabled
+
 
 			##### check if system is set to generate logfile for transfers
 			$stmt="SELECT enable_agc_xfer_log FROM system_settings;";
@@ -2596,6 +2681,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$LeaD_InfO .=	$custom_field_types . "\n";
 			$LeaD_InfO .=	$LISTweb_form_address . "\n";
 			$LeaD_InfO .=	$LISTweb_form_address_two . "\n";
+			$LeaD_InfO .=	$post_phone_time_diff_alert_message . "\n";
 
 			echo $LeaD_InfO;
 			}
@@ -5676,7 +5762,6 @@ if ($ACTION == 'userLOGout')
 				$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00139',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
-				echo "$stmt\n";
 				$li_conf_ct = mysql_num_rows($rslt);
 				$i=0;
 				while ($i < $li_conf_ct)
@@ -5739,7 +5824,6 @@ if ($ACTION == 'userLOGout')
 					$rslt=mysql_query($stmt, $linkB);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00351',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
-					echo "$stmt\n";
 					$amq_conf_ct = mysql_num_rows($rslt);
 					$i=0;
 					while ($i < $amq_conf_ct)
@@ -6725,7 +6809,6 @@ if ($ACTION == 'updateDISPO')
 		$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00409',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
-		echo "$stmt\n";
 		$comp_ct = mysql_num_rows($rslt);
 		if ($comp_ct > 0)
 			{
@@ -6746,7 +6829,6 @@ if ($ACTION == 'updateDISPO')
 			$rslt=mysql_query($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00410',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
-			echo "$stmt\n";
 			$connect_ct = mysql_num_rows($rslt);
 			if ($connect_ct > 0)
 				{
@@ -6760,7 +6842,6 @@ if ($ACTION == 'updateDISPO')
 			$rslt=mysql_query($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00411',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
-			echo "$stmt\n";
 			$pausereason_ct = mysql_num_rows($rslt);
 			if ($pausereason_ct > 0)
 				{
@@ -7205,6 +7286,9 @@ if ($ACTION == 'updateDISPO')
 		fwrite ($fp, "$NOW_TIME|$campaign|$lead_id|$phone_number|$user|D|$MDnextCID||$province|$talk_sec|\n");
 		fclose($fp);
 		}
+
+	# debug testing sleep
+	# sleep(5);
 
 	echo 'Lead ' . $lead_id . ' se ha cambiado a ' . $dispo_choice . " Estado\nNext agent_log_id:\n" . $agent_log_id . "\n";
 	}
@@ -8673,6 +8757,7 @@ if ($ACTION == 'LEADINFOview')
 		if (strlen($row[18])>0) {$label_comments =			$row[18];}
 		### END find any custom field labels ###
 
+
 		$INFOout .= "<TABLE CELLPADDING=0 CELLSPACING=1 Border=0 WIDTH=500>";
 
 		$stmt="select status,vendor_lead_code,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from vicidial_list where lead_id='$lead_id' limit 1;";
@@ -8684,6 +8769,71 @@ if ($ACTION == 'LEADINFOview')
 		if ($info_to_print > 0)
 			{
 			$row=mysql_fetch_row($rslt);
+
+			##### BEGIN check for postal_code and phone time zones if alert enabled
+			$post_phone_time_diff_alert_message='';
+			$stmt="SELECT post_phone_time_diff_alert,local_call_time FROM vicidial_campaigns where campaign_id='$campaign';";
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00415',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$camp_pptda_ct = mysql_num_rows($rslt);
+			if ($camp_pptda_ct > 0)
+				{
+				$rowx=mysql_fetch_row($rslt);
+				$post_phone_time_diff_alert =	$rowx[0];
+				$local_call_time =				$rowx[1];
+				}
+			if ( ($post_phone_time_diff_alert == 'ENABLED') or (preg_match("/OUTSIDE_CALLTIME/",$post_phone_time_diff_alert)) )
+				{
+				$postal_code = $row[17];
+				$phone_code = $row[5];
+				$phone_number = $row[6];
+				$state = $row[15];
+				### get current gmt_offset of the phone_number
+				$postalgmtNOW = '';
+				$USarea = substr($phone_number, 0, 3);
+				$PHONEgmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmtNOW,$postal_code);
+				$PHONEdialable = dialable_gmt($DB,$link,$local_call_time,$PHONEgmt_offset,$state);
+
+				$postalgmtNOW = 'POSTAL';
+				$POSTgmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmtNOW,$postal_code);
+				$POSTdialable = dialable_gmt($DB,$link,$local_call_time,$POSTgmt_offset,$state);
+
+			#	$post_phone_time_diff_alert_message = "$POSTgmt_offset|$POSTdialable|$postal_code   ---   $PHONEgmt_offset|$PHONEdialable|$USarea";
+				$post_phone_time_diff_alert_message = '';
+
+				if ($PHONEgmt_offset != $POSTgmt_offset)
+					{
+					$post_phone_time_diff_alert_message .= "Teléfono and Post Code Time Zone Mismatch! ";
+
+					if ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_ONLY')
+						{
+						$post_phone_time_diff_alert_message='';
+						if ($PHONEdialable < 1)
+							{$post_phone_time_diff_alert_message .= " Teléfono Area Code Outside Dialable Zone $PHONEgmt_offset &nbsp; &nbsp; &nbsp; ";}
+						if ($POSTdialable < 1)
+							{$post_phone_time_diff_alert_message .= " Postal Code Outside Dialable Zone $POSTgmt_offset";}
+						}
+					}
+				if ( ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_PHONE') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_POSTAL') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_BOTH') )
+					{$post_phone_time_diff_alert_message = '';}
+
+				if ( ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_PHONE') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_BOTH') )
+					{
+					if ($PHONEdialable < 1)
+						{$post_phone_time_diff_alert_message .= " Teléfono Area Code Outside Dialable Zone $PHONEgmt_offset &nbsp; &nbsp; &nbsp; ";}
+					}
+				if ( ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_POSTAL') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_BOTH') )
+					{
+					if ($POSTdialable < 1)
+						{$post_phone_time_diff_alert_message .= " Postal Code Outside Dialable Zone $POSTgmt_offset ";}
+					}
+
+				if (strlen($post_phone_time_diff_alert_message)>5)
+					{$INFOout .= "<tr bgcolor=white><td colspan=2 align=center><font size=2 color=red><b>$post_phone_time_diff_alert_message</b></font></td></tr>";}
+				}
+			##### END check for postal_code and phone time zones if alert enabled
+
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Estado: &nbsp; </td><td ALIGN=left><font size=2>$row[0]</td></tr>";
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_vendor_lead_code: &nbsp; </td><td ALIGN=left><font size=2>$row[1]</td></tr>";
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>List ID: &nbsp; </td><td ALIGN=left><font size=2>$row[2]</td></tr>";
