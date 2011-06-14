@@ -598,6 +598,8 @@ Scheduled Callbacks Days Limit||
 This option allows you to reduce the agent scheduled callbacks calendar to a selectable number of days from today, the full 12 month calendar will still be displayed, but only the set number of days will be selectable. Default is 0 for unlimited||
 Dial Level Difference Target Method||
 This option allows you to define whether the dial level difference target setting is applied only to the calculation of the dial level or also to the actual dialing on each dialing server. If you are running a small campaign with agents logged in on many servers you may want to use the ADAPT_CALC_ONLY option, because the CALLS_PLACED option may result in fewer calls being placed than deisred. This option is only active if Dial Level Difference Target is set to something other than 0. Default is ADAPT_CALC_ONLY||
+If you want to use custom fields in a web form address, you need to add||
+as part of your URL||
 
 
 admin_campaign_multi_alt.php

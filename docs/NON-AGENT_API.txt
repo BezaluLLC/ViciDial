@@ -58,7 +58,7 @@ Changes:
 110409-0822 - Added run_time logging of API functions
 110424-0854 - Added option for time zone code lookups using owner field in add_lead function
 110529-1220 - Added time zone information output to version function
-
+110614-0726 - Added reset_lead option to update_lead function(issue #502)
 
 
 
@@ -423,6 +423,7 @@ custom_fields -		Y or N, default is N. Defines whether the API will accept custo
 no_update -		Y or N, Setting this to Y will not perform any updates, but will instead only tell
 			you if a lead exists that matches the search criteria, default is N.
 delete_lead -		Y or N, Setting this to Y will delete the lead from the vicidial_list table, default is N.
+reset_lead -		Y or N, Setting this to Y will reset the called-since-last-reset flag of the lead, default is N.
 
 EDITABLE FIELDS- 
 user_field -		1-20 characters, this updates the 'user' field in the vicidial_list table

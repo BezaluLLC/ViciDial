@@ -48,10 +48,11 @@
 # 110409-0822 - Added run_time logging of API functions
 # 110424-0854 - Added option for time zone code lookups using owner field
 # 110529-1220 - Added time zone information output to version function
+# 110614-0726 - Added reset_lead option to update_lead function(issue #502)
 #
 
-$version = '2.4-34';
-$build = '110529-1220';
+$version = '2.4-35';
+$build = '110614-0726';
 
 $startMS = microtime();
 
@@ -244,6 +245,8 @@ if (isset($_GET["uniqueid"]))			{$uniqueid=$_GET["uniqueid"];}
 	elseif (isset($_POST["uniqueid"]))	{$uniqueid=$_POST["uniqueid"];}
 if (isset($_GET["tz_method"]))			{$tz_method=$_GET["tz_method"];}
 	elseif (isset($_POST["tz_method"]))	{$tz_method=$_POST["tz_method"];}
+if (isset($_GET["reset_lead"]))			{$reset_lead=$_GET["reset_lead"];}
+	elseif (isset($_POST["reset_lead"]))	{$reset_lead=$_POST["reset_lead"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -370,6 +373,7 @@ if ($non_latin < 1)
 	$reset_time=ereg_replace("[^-_0-9]","",$reset_time);
 	$uniqueid=ereg_replace("[^- \.\_0-9a-zA-Z]","",$uniqueid);
 	$tz_method = ereg_replace("[^-\_0-9a-zA-Z]","",$tz_method);
+	$reset_lead = ereg_replace("[^A-Z]","",$reset_lead);
 	}
 else
 	{
@@ -3283,6 +3287,7 @@ if ($function == 'update_lead')
 						if (strlen($rank)>0)				{$VL_update_SQL .= "rank='$rank',";}
 						if (strlen($owner)>0)				{$VL_update_SQL .= "owner='$owner',";}
 						if (strlen($called_count)>0)		{$VL_update_SQL .= "called_count='$called_count',";}
+						if ( (strlen($reset_lead) > 0 && $reset_lead == 'Y') )	{$VL_update_SQL .= "called_since_last_reset='N',";}
 						$VL_update_SQL = preg_replace("/,$/","",$VL_update_SQL);
 						$VL_update_SQL = preg_replace("/'--BLANK--'/","''",$VL_update_SQL);
 						$VL_update_SQL = preg_replace("/\n/","!N",$VL_update_SQL);
