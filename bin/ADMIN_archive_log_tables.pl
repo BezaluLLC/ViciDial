@@ -105,16 +105,16 @@ if ($mon < 0)
 	{		
 	$mon = ($mon + 12);
 	$year = ($year - 1);		
-	}	
+	}
+
+use Time::Local;
+$del_epoch = timelocal(0,0,2,$mday,$mon,$year);
+
 $mon++;	
 if ($mon < 10) {$mon = "0$mon";}	
 if ($mday < 10) {$mday = "0$mday";}	
 
 $del_time = "$year-$mon-$mday 01:00:00";
-
-use Time::Local;
-
-$del_epoch = timelocal(0,0,2,$mday,$mon,$year);
 
 if (!$Q) {print "\n\n-- ADMIN_archive_log_tables.pl --\n\n";}
 if (!$Q) {print "This program is designed to put all records from  call_log, vicidial_log,\n";}
