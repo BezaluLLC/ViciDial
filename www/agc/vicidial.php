@@ -7962,6 +7962,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							if (hotkeysused == 'YES')
 								{
 								alt_dial_active = 0;
+								alt_dial_status_display = 0;
 								reselect_alt_dial = 0;
 								manual_auto_hotkey = 1;
 								}
@@ -7973,6 +7974,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					if (hotkeysused == 'YES')
 						{
 						alt_dial_active = 0;
+						alt_dial_status_display = 0;
 						manual_auto_hotkey = 1;
 						}
 					else
@@ -8003,6 +8005,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								{
 								manual_auto_hotkey = 1;
 								alt_dial_active=0;
+								alt_dial_status_display = 0;
 
 								document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
 								document.getElementById("MainStatuSSpan").innerHTML = '';
@@ -8592,6 +8595,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				{
 				var man_status = ""; 
 				document.getElementById("MainStatuSSpan").innerHTML = man_status;
+				alt_dial_status_display = 0;
 				}
 			document.getElementById("CusTInfOSpaN").innerHTML = "";
 			document.getElementById("CusTInfOSpaN").style.background = panel_bgcolor;
@@ -10698,7 +10702,7 @@ function phone_number_format(formatphone) {
 				{
 				move_on=0;
 				alert_box("YOU MUST BE PAUSED TO VIEW YOUR CALL LOG");
-				alert("debug: " + AutoDialWaiting + "|" + VD_live_customer_call + "|" + alt_dial_active + "|" + MD_channel_look + "|" + in_lead_preview_state);
+			//	alert("debug: " + AutoDialWaiting + "|" + VD_live_customer_call + "|" + alt_dial_active + "|" + MD_channel_look + "|" + in_lead_preview_state);
 				}
 			}
 		if (move_on == 1)
