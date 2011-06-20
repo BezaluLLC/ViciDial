@@ -611,6 +611,8 @@ OTHER CHANGES:
 134. Added Callback Days Limit campaign option to allow scheduled callbacks to 
 	be scheduled only a set number of days from today.
 
+135. Added ability to disable the Disposition screen on the agent interface.
+
 
 
 

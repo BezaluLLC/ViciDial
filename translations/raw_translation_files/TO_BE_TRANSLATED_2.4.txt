@@ -600,6 +600,10 @@ Dial Level Difference Target Method||
 This option allows you to define whether the dial level difference target setting is applied only to the calculation of the dial level or also to the actual dialing on each dialing server. If you are running a small campaign with agents logged in on many servers you may want to use the ADAPT_CALC_ONLY option, because the CALLS_PLACED option may result in fewer calls being placed than deisred. This option is only active if Dial Level Difference Target is set to something other than 0. Default is ADAPT_CALC_ONLY||
 If you want to use custom fields in a web form address, you need to add||
 as part of your URL||
+Disable Dispo Screen||
+This option allows you to disable the disposition screen in the agent interface. The Disable Dispo Status field below must be filled in for this option to work. Default is||
+Disable Dispo Status||
+If the Disable Dispo Screen option is set to DISPO_DISABLED, then this field must be filled in. You can use any disposition you want for this field as long as it is 1 to 6 characters in length with only letters and numbers||
 
 
 admin_campaign_multi_alt.php

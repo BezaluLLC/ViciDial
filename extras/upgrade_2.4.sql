@@ -817,3 +817,8 @@ UPDATE system_settings SET db_schema_version='1279',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD dl_diff_target_method ENUM('ADAPT_CALC_ONLY','CALLS_PLACED') default 'ADAPT_CALC_ONLY';
 
 UPDATE system_settings SET db_schema_version='1280',db_schema_update_date=NOW() where db_schema_version < 1280;
+
+ALTER TABLE vicidial_campaigns ADD disable_dispo_screen ENUM('DISPO_ENABLED','DISPO_DISABLED') default 'DISPO_ENABLED';
+ALTER TABLE vicidial_campaigns ADD disable_dispo_status VARCHAR(6) default '';
+
+UPDATE system_settings SET db_schema_version='1281',db_schema_update_date=NOW() where db_schema_version < 1281;

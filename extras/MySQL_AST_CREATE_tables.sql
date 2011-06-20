@@ -811,7 +811,9 @@ safe_harbor_audio VARCHAR(100) default 'buzz',
 safe_harbor_menu_id VARCHAR(50) default '',
 survey_menu_id VARCHAR(50) default '',
 callback_days_limit SMALLINT(3) default '0',
-dl_diff_target_method ENUM('ADAPT_CALC_ONLY','CALLS_PLACED') default 'ADAPT_CALC_ONLY'
+dl_diff_target_method ENUM('ADAPT_CALC_ONLY','CALLS_PLACED') default 'ADAPT_CALC_ONLY',
+disable_dispo_screen ENUM('DISPO_ENABLED','DISPO_DISABLED') default 'DISPO_ENABLED',
+disable_dispo_status VARCHAR(6) default ''
 );
 
 CREATE TABLE vicidial_lists (
@@ -2499,7 +2501,7 @@ ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_outbound_ivr_log_archive LIKE vicidial_outbound_ivr_log;
 
-UPDATE system_settings SET db_schema_version='1280',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1281',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

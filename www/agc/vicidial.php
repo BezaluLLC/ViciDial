@@ -353,10 +353,11 @@
 # 110526-1723 - Added webphone_auto_answer option
 # 110528-1033 - Added waiting_on_dispo manual dial check
 # 110531-2158 - Added callback_days_limit campaign feature
+# 110619-2005 - Added disable_dispo_ options
 #
 
-$version = '2.4-330c';
-$build = '110531-2158';
+$version = '2.4-331c';
+$build = '110619-2005';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=72;
 $one_mysql_log=0;
@@ -1347,7 +1348,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1447,7 +1448,17 @@ else
 				$manual_dial_cid =			$row[92];
 				$custom_3way_button_transfer =	$row[93];
 				$callback_days_limit =		$row[94];
+				$disable_dispo_screen =		$row[95];
+				$disable_dispo_status =		$row[96];
 
+				if ( ($disable_dispo_screen == 'DISPO_ENABLED') or (strlen($disable_dispo_status) < 1) )
+					{
+					$disable_dispo_screen=0;
+					$disable_dispo_status='';
+					}
+				if ( ($disable_dispo_screen == 'DISPO_DISABLED') and (strlen($disable_dispo_status) > 0) )
+					{$disable_dispo_screen=1;}
+				
 				if ( ($VU_agent_lead_search_override == 'ENABLED') or ($VU_agent_lead_search_override == 'DISABLED') )
 					{$agent_lead_search = $VU_agent_lead_search_override;}
 				$AllowManualQueueCalls=1;
@@ -3358,6 +3369,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var custom_3way_button_transfer_enabled='<?php echo $custom_3way_button_transfer_enabled ?>';
 	var custom_3way_button_transfer_park='<?php echo $custom_3way_button_transfer_park ?>';
 	var waiting_on_dispo=0;
+	var disable_dispo_screen='<?php echo $disable_dispo_screen ?>';
+	var disable_dispo_status='<?php echo $disable_dispo_status ?>';
     var DiaLControl_auto_HTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/vdc_LB_resume.gif\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/vdc_LB_pause.gif\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
@@ -7948,6 +7961,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 							if (hotkeysused == 'YES')
 								{
+								alt_dial_active = 0;
 								reselect_alt_dial = 0;
 								manual_auto_hotkey = 1;
 								}
@@ -7958,6 +7972,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					{
 					if (hotkeysused == 'YES')
 						{
+						alt_dial_active = 0;
 						manual_auto_hotkey = 1;
 						}
 					else
@@ -8238,68 +8253,76 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 // Generate the Call Disposition Chooser panel
 	function DispoSelectContent_create(taskDSgrp,taskDSstage)
 		{
-		if (customer_3way_hangup_dispo_message.length > 1)
+		if (disable_dispo_screen > 0)
 			{
-            document.getElementById("Dispo3wayMessage").innerHTML = "<br /><b><font color=\"red\" size=\"3\">" + customer_3way_hangup_dispo_message + "</font></b><br />";
-			}
-		if (APIManualDialQueue > 0)
-			{
-            document.getElementById("DispoManualQueueMessage").innerHTML = "<br /><b><font color=\"red\" size=\"3\">Manual Dial Queue Calls Waiting: " + APIManualDialQueue + "</font></b><br />";
-			}
-		if (per_call_notes == 'ENABLED')
-			{
-			var test_notes = document.vicidial_form.call_notes_dispo.value;
-			if (test_notes.length > 0)
-				{document.vicidial_form.call_notes.value = document.vicidial_form.call_notes_dispo.value}
-            document.getElementById("PerCallNotesContent").innerHTML = "<br /><b><font size=\"3\">Call Notes: </font></b><br /><textarea name=\"call_notes_dispo\" id=\"call_notes_dispo\" rows=\"2\" cols=\"100\" class=\"cust_form_text\" value=\"\">" + document.vicidial_form.call_notes.value + "</textarea>";
+			document.vicidial_form.DispoSelection.value = disable_dispo_status;
+			DispoSelect_submit();
 			}
 		else
 			{
-            document.getElementById("PerCallNotesContent").innerHTML = "<input type=\"hidden\" name=\"call_notes_dispo\" id=\"call_notes_dispo\" value=\"\" />";
-			}
-
-		HidEGenDerPulldown();
-		AgentDispoing = 1;
-		var CBflag = '';
-		var VD_statuses_ct_half = parseInt(VARSELstatuses_ct / 2);
-        var dispo_HTML = "<table cellpadding=\"5\" cellspacing=\"5\" width=\"500px\"><tr><td colspan=\"2\"><b> CALL DISPOSITION</b></td></tr><tr><td bgcolor=\"#99FF99\" height=\"300px\" width=\"240px\" valign=\"top\"><font class=\"log_text\"><span id=\"DispoSelectA\">";
-		var loop_ct = 0;
-		var print_ct = 0;
-		while (loop_ct < VD_statuses_ct)
-			{
-			if (VARSELstatuses[loop_ct] == 'Y')
+			if (customer_3way_hangup_dispo_message.length > 1)
 				{
-				if (VARCBstatuses[loop_ct] == 'Y')
-					{CBflag = '*';}
-				else
-					{CBflag = '';}
-				if (taskDSgrp == VARstatuses[loop_ct]) 
-					{
-					dispo_HTML = dispo_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"DispoSelect_submit();return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "</b></font><br /><br />";
-					}
-				else
-					{
-					dispo_HTML = dispo_HTML + "<a href=\"#\" onclick=\"DispoSelectContent_create('" + VARstatuses[loop_ct] + "','ADD');return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "<br /><br />";
-					}
-				if (print_ct == VD_statuses_ct_half) 
-					{dispo_HTML = dispo_HTML + "</span></font></td><td bgcolor=\"#99FF99\" height=\"300px\" width=\"240px\" valign=\"top\"><font class=\"log_text\"><span id=\"DispoSelectB\">";}
-				print_ct++;
+				document.getElementById("Dispo3wayMessage").innerHTML = "<br /><b><font color=\"red\" size=\"3\">" + customer_3way_hangup_dispo_message + "</font></b><br />";
 				}
-			loop_ct++;
-			}
-		dispo_HTML = dispo_HTML + "</span></font></td></tr></table>";
+			if (APIManualDialQueue > 0)
+				{
+				document.getElementById("DispoManualQueueMessage").innerHTML = "<br /><b><font color=\"red\" size=\"3\">Manual Dial Queue Calls Waiting: " + APIManualDialQueue + "</font></b><br />";
+				}
+			if (per_call_notes == 'ENABLED')
+				{
+				var test_notes = document.vicidial_form.call_notes_dispo.value;
+				if (test_notes.length > 0)
+					{document.vicidial_form.call_notes.value = document.vicidial_form.call_notes_dispo.value}
+				document.getElementById("PerCallNotesContent").innerHTML = "<br /><b><font size=\"3\">Call Notes: </font></b><br /><textarea name=\"call_notes_dispo\" id=\"call_notes_dispo\" rows=\"2\" cols=\"100\" class=\"cust_form_text\" value=\"\">" + document.vicidial_form.call_notes.value + "</textarea>";
+				}
+			else
+				{
+				document.getElementById("PerCallNotesContent").innerHTML = "<input type=\"hidden\" name=\"call_notes_dispo\" id=\"call_notes_dispo\" value=\"\" />";
+				}
 
-		if (taskDSstage == 'ReSET') {document.vicidial_form.DispoSelection.value = '';}
-		else {document.vicidial_form.DispoSelection.value = taskDSgrp;}
-		
-		document.getElementById("DispoSelectContent").innerHTML = dispo_HTML;
-		if (focus_blur_enabled==1)
-			{
-			document.inert_form.inert_button.focus();
-			document.inert_form.inert_button.blur();
+			HidEGenDerPulldown();
+			AgentDispoing = 1;
+			var CBflag = '';
+			var VD_statuses_ct_half = parseInt(VARSELstatuses_ct / 2);
+			var dispo_HTML = "<table cellpadding=\"5\" cellspacing=\"5\" width=\"500px\"><tr><td colspan=\"2\"><b> CALL DISPOSITION</b></td></tr><tr><td bgcolor=\"#99FF99\" height=\"300px\" width=\"240px\" valign=\"top\"><font class=\"log_text\"><span id=\"DispoSelectA\">";
+			var loop_ct = 0;
+			var print_ct = 0;
+			while (loop_ct < VD_statuses_ct)
+				{
+				if (VARSELstatuses[loop_ct] == 'Y')
+					{
+					if (VARCBstatuses[loop_ct] == 'Y')
+						{CBflag = '*';}
+					else
+						{CBflag = '';}
+					if (taskDSgrp == VARstatuses[loop_ct]) 
+						{
+						dispo_HTML = dispo_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"DispoSelect_submit();return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "</b></font><br /><br />";
+						}
+					else
+						{
+						dispo_HTML = dispo_HTML + "<a href=\"#\" onclick=\"DispoSelectContent_create('" + VARstatuses[loop_ct] + "','ADD');return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "<br /><br />";
+						}
+					if (print_ct == VD_statuses_ct_half) 
+						{dispo_HTML = dispo_HTML + "</span></font></td><td bgcolor=\"#99FF99\" height=\"300px\" width=\"240px\" valign=\"top\"><font class=\"log_text\"><span id=\"DispoSelectB\">";}
+					print_ct++;
+					}
+				loop_ct++;
+				}
+			dispo_HTML = dispo_HTML + "</span></font></td></tr></table>";
+
+			if (taskDSstage == 'ReSET') {document.vicidial_form.DispoSelection.value = '';}
+			else {document.vicidial_form.DispoSelection.value = taskDSgrp;}
+			
+			document.getElementById("DispoSelectContent").innerHTML = dispo_HTML;
+			if (focus_blur_enabled==1)
+				{
+				document.inert_form.inert_button.focus();
+				document.inert_form.inert_button.blur();
+				}
+			if (my_callback_option == 'CHECKED')
+				{document.vicidial_form.CallBackOnlyMe.checked=true;}
 			}
-		if (my_callback_option == 'CHECKED')
-			{document.vicidial_form.CallBackOnlyMe.checked=true;}
 		}
 
 // ################################################################################
@@ -8565,6 +8588,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if (DispoChoice.length < 1) {alert_box("You Must Select a Disposition");}
 		else
 			{
+			if (document.vicidial_form.DiaLAltPhonE.checked==true)
+				{
+				var man_status = ""; 
+				document.getElementById("MainStatuSSpan").innerHTML = man_status;
+				}
 			document.getElementById("CusTInfOSpaN").innerHTML = "";
 			document.getElementById("CusTInfOSpaN").style.background = panel_bgcolor;
 			var regCBstatus = new RegExp(' ' + DispoChoice + ' ',"ig");
@@ -9550,6 +9578,9 @@ if ($useIE > 0)
 					{
 					HKdispo_display = 4;
 					HKfinish=1;
+					alt_phone_dialing=starting_alt_phone_dialing;
+					alt_dial_active = 0;
+					alt_dial_status_display = 0;
 					document.getElementById("HotKeyDispo").innerHTML = HKdispo_ary[0] + " - " + HKdispo_ary[1];
 					showDiv('HotKeyActionBox');
 					hideDiv('HotKeyEntriesBox');
@@ -9607,6 +9638,9 @@ else
 					showDiv('HotKeyActionBox');
 					hideDiv('HotKeyEntriesBox');
 					document.vicidial_form.DispoSelection.value = HKdispo_ary[0];
+					alt_phone_dialing=starting_alt_phone_dialing;
+					alt_dial_active = 0;
+					alt_dial_status_display = 0;
 					dialedcall_send_hangup('NO', 'YES', HKdispo_ary[0]);
 					if (custom_fields_enabled > 0)
 						{
@@ -10664,6 +10698,7 @@ function phone_number_format(formatphone) {
 				{
 				move_on=0;
 				alert_box("YOU MUST BE PAUSED TO VIEW YOUR CALL LOG");
+				alert("debug: " + AutoDialWaiting + "|" + VD_live_customer_call + "|" + alt_dial_active + "|" + MD_channel_look + "|" + in_lead_preview_state);
 				}
 			}
 		if (move_on == 1)
