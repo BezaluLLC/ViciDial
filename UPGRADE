@@ -613,6 +613,9 @@ OTHER CHANGES:
 
 135. Added ability to disable the Disposition screen on the agent interface.
 
+136. Added install.pl options to define conf file and copy web language
+	translation files.
+
 
 
 

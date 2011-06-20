@@ -2,7 +2,7 @@
 
 # install.pl version 2.4
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 
 # CHANGES
@@ -23,6 +23,7 @@
 # 91123-0001 - Added FTP2 directory to /var/spool/asterisk/monitorDONE
 # 100428-0936 - Added DB custom user/pass fields
 # 101217-0520 - Added PREPROCESS directory
+# 110619-2153 - Added languages install and conf file specify options
 #
 
 ############################################
@@ -31,7 +32,8 @@
 # default paths.
 #
 # default path to astguiclient configuration file:
-$PATHconf =		'/etc/astguiclient.conf';
+$defaultPATHconf =		'/etc/astguiclient.conf';
+$PATHconf =		$defaultPATHconf;
 # default path to home directory:
 $PATHhome =		'/usr/share/astguiclient';
 # default path to astguiclient logs directory: 
@@ -146,7 +148,7 @@ if (length($ARGV[0])>1)
 	if ($args =~ /--help/i)
 		{
 		print "install.pl - installs astGUIclient server files in the proper places, this\n";
-		print "script will look for an /etc/astguiclient.conf file for existing settings, and\n";
+		print "script will look for a configuration file for existing settings, and\n";
 		print "if not present will prompt for proper information then copy files.\n";
 		print "\n";
 		print "installation options:\n";
@@ -157,6 +159,7 @@ if (length($ARGV[0])>1)
 		print "  [--web-only] = only copy files/directories for web server install\n";
 		print "  [--without-web] = do not copy web files/directories\n\n";
 		print "configuration options:\n";
+		print "  [--conffile=/path/from/root] = define configuration file path from root at runtime\n";
 		print "  [--home=/path/from/root] = define home path from root at runtime\n";
 		print "  [--logs=/path/from/root] = define logs path from root at runtime\n";
 		print "  [--agi=/path/from/root] = define agi-bin path from root at runtime\n";
@@ -185,6 +188,7 @@ if (length($ARGV[0])>1)
 		print "     9 - Timeclock auto-logout\n";
 		print "  [--asterisk_version] = set the asterisk version you want to install for\n";
 		print "  [--copy_sample_conf_files] = copies the sample conf files to /etc/asterisk/\n";
+		print "  [--web-languages] = copy language translations (WARNING! may not work on trunk installs)\n";
 		print "  [--FTP_host=192.168.0.2] = define recording archive server IP address at runtime\n";
 		print "  [--FTP_user=cron] = define archive server name at runtime\n";
 		print "  [--FTP_pass=test] = define archive server user login at runtime\n";
@@ -223,6 +227,18 @@ if (length($ARGV[0])>1)
 			{$NOWEB=0;}
 		if ($args =~ /--no-prompt/i) # do not ask questions
 			{$NOPROMPT=1;}
+		if ($args =~ /--conffile=/i) # CLI defined conffile path
+			{
+			@CLIconffileARY = split(/--conffile=/,$args);
+			@CLIconffileARX = split(/ /,$CLIconffileARY[1]);
+			if (length($CLIconffileARX[0])>2)
+				{
+				$PATHconf = $CLIconffileARX[0];
+				$PATHconf =~ s/\/$| |\r|\n|\t//gi;
+				$CLIconffile=1;
+				print "  CLI defined conffile path:  $PATHconf\n";
+				}
+			}
 		if ($args =~ /--home=/i) # CLI defined home path
 			{
 			@CLIhomeARY = split(/--home=/,$args);
@@ -570,6 +586,16 @@ if (length($ARGV[0])>1)
 			$CLIcopy_conf_files='n';
 			}
 
+		if ($args =~ /--web-languages/i) # web languages flag
+			{
+			$CLIcopy_web_lang='y';
+			print "  CLI copy web lang files:    YES\n";
+			}
+		else
+			{
+			$CLIcopy_web_lang='n';
+			}
+
 		if ($args =~ /--fastagi_log_min_servers=/i) # CLI defined fastagi min servers
 			{
 			@CLIDB_minserARY = split(/--fastagi_log_min_servers=/,$args);
@@ -661,7 +687,7 @@ if (length($ARGV[0])>1)
 			print "  CLI multiserver conf gen:   YES\n";
 
 			# default path to astguiclient configuration file:
-			$PATHconf =		'/etc/astguiclient.conf';
+		#	$PATHconf =		'/etc/astguiclient.conf';
 
 			open(conf, "$PATHconf") || die "can't open $PATHconf: $!\n";
 			@conf = <conf>;
@@ -825,7 +851,7 @@ if (length($ARGV[0])>1)
 			print "  CLI phones conf gen:        YES\n";
 
 			# default path to astguiclient configuration file:
-			$PATHconf =		'/etc/astguiclient.conf';
+		#	$PATHconf =		'/etc/astguiclient.conf';
 
 			open(conf, "$PATHconf") || die "can't open $PATHconf: $!\n";
 			@conf = <conf>;
@@ -1058,6 +1084,111 @@ else
 	while ($config_finished =~/NO/)
 		{
 		print "\nSTARTING ASTGUICLIENT MANUAL CONFIGURATION PHASE...\n";
+		##### BEGIN astguiclient conf file prompting and existence check #####
+		$continue='NO';
+		while ($continue =~/NO/)
+			{
+			print("\nastguiclient configuration file or press enter for default: [$PATHconf] ");
+			$PROMPTconf = <STDIN>;
+			chomp($PROMPTconf);
+			if (length($PROMPTconf)>2)
+				{
+				$PROMPTconf =~ s/ |\n|\r|\t|\/$//gi;
+				$PATHconf=$PROMPTconf;
+				$continue='YES';
+				}
+			else
+				{
+				$continue='YES';
+				}
+			}
+		if (-e "$PATHconf") 
+			{
+			print "Previous astGUIclient configuration file found at: $PATHconf\n";
+			open(conf, "$PATHconf") || die "can't open $PATHconf: $!\n";
+			@conf = <conf>;
+			close(conf);
+			$i=0;
+			foreach(@conf)
+				{
+				$line = $conf[$i];
+				$line =~ s/ |>|\n|\r|\t|\#.*|;.*//gi;
+				if ( ($line =~ /^PATHhome/) && ($CLIhome < 1) )
+					{$PATHhome = $line;   $PATHhome =~ s/.*=//gi;}
+				if ( ($line =~ /^PATHlogs/) && ($CLIlogs < 1) )
+					{$PATHlogs = $line;   $PATHlogs =~ s/.*=//gi;}
+				if ( ($line =~ /^PATHagi/) && ($CLIagi < 1) )
+					{$PATHagi = $line;   $PATHagi =~ s/.*=//gi;}
+				if ( ($line =~ /^PATHweb/) && ($CLIweb < 1) )
+					{$PATHweb = $line;   $PATHweb =~ s/.*=//gi;}
+				if ( ($line =~ /^PATHsounds/) && ($CLIsounds < 1) )
+					{$PATHsounds = $line;   $PATHsounds =~ s/.*=//gi;}
+				if ( ($line =~ /^PATHmonitor/) && ($CLImonitor < 1) )
+					{$PATHmonitor = $line;   $PATHmonitor =~ s/.*=//gi;}
+				if ( ($line =~ /^PATHDONEmonitor/) && ($CLIDONEmonitor < 1) )
+					{$PATHDONEmonitor = $line;   $PATHDONEmonitor =~ s/.*=//gi;}
+				if ( ($line =~ /^VARserver_ip/) && ($CLIserver_ip < 1) )
+					{$VARserver_ip = $line;   $VARserver_ip =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_server/) && ($CLIDB_server < 1) )
+					{$VARDB_server = $line;   $VARDB_server =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_database/) && ($CLIDB_database < 1) )
+					{$VARDB_database = $line;   $VARDB_database =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_user/) && ($CLIDB_user < 1) )
+					{$VARDB_user = $line;   $VARDB_user =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_pass/) && ($CLIDB_pass < 1) )
+					{$VARDB_pass = $line;   $VARDB_pass =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_custom_user/) && ($CLIDB_custom_user < 1) )
+					{$VARDB_custom_user = $line;   $VARDB_custom_user =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_custom_pass/) && ($CLIDB_custom_pass < 1) )
+					{$VARDB_custom_pass = $line;   $VARDB_custom_pass =~ s/.*=//gi;}
+				if ( ($line =~ /^VARDB_port/) && ($CLIDB_port < 1) )
+					{$VARDB_port = $line;   $VARDB_port =~ s/.*=//gi;}
+				if ( ($line =~ /^VARactive_keepalives/) && ($CLIactive_keepalives < 1) )
+					{$VARactive_keepalives = $line;   $VARactive_keepalives =~ s/.*=//gi;}
+				if ( ($line =~ /^VARasterisk_version/) && ($CLIasterisk_version < 1) )
+					{$VARasterisk_version = $line;   $VARasterisk_version =~ s/.*=//gi;}
+				if ( ($line =~ /^VARFTP_host/) && ($CLIFTP_host < 1) )
+					{$VARFTP_host = $line;   $VARFTP_host =~ s/.*=//gi;}
+				if ( ($line =~ /^VARFTP_user/) && ($CLIFTP_user < 1) )
+					{$VARFTP_user = $line;   $VARFTP_user =~ s/.*=//gi;}
+				if ( ($line =~ /^VARFTP_pass/) && ($CLIFTP_pass < 1) )
+					{$VARFTP_pass = $line;   $VARFTP_pass =~ s/.*=//gi;}
+				if ( ($line =~ /^VARFTP_port/) && ($CLIFTP_port < 1) )
+					{$VARFTP_port = $line;   $VARFTP_port =~ s/.*=//gi;}
+				if ( ($line =~ /^VARFTP_dir/) && ($CLIFTP_dir < 1) )
+					{$VARFTP_dir = $line;   $VARFTP_dir =~ s/.*=//gi;}
+				if ( ($line =~ /^VARHTTP_path/) && ($CLIHTTP_path < 1) )
+					{$VARHTTP_path = $line;   $VARHTTP_path =~ s/.*=//gi;}
+				if ( ($line =~ /^VARREPORT_host/) && ($CLIREPORT_host < 1) )
+					{$VARREPORT_host = $line;   $VARREPORT_host =~ s/.*=//gi;}
+				if ( ($line =~ /^VARREPORT_user/) && ($CLIREPORT_user < 1) )
+					{$VARREPORT_user = $line;   $VARREPORT_user =~ s/.*=//gi;}
+				if ( ($line =~ /^VARREPORT_pass/) && ($CLIREPORT_pass < 1) )
+					{$VARREPORT_pass = $line;   $VARREPORT_pass =~ s/.*=//gi;}
+				if ( ($line =~ /^VARREPORT_port/) && ($CLIREPORT_port < 1) )
+					{$VARREPORT_port = $line;   $VARREPORT_port =~ s/.*=//gi;}
+				if ( ($line =~ /^VARREPORT_dir/) && ($CLIREPORT_dir < 1) )
+					{$VARREPORT_dir = $line;   $VARREPORT_dir =~ s/.*=//gi;}
+				if ( ($line =~ /^VARfastagi_log_min_servers/) && ($CLIVARfastagi_log_min_servers < 1) )
+					{$VARfastagi_log_min_servers = $line;   $VARfastagi_log_min_servers =~ s/.*=//gi;}
+				if ( ($line =~ /^VARfastagi_log_max_servers/) && ($CLIVARfastagi_log_max_servers < 1) )
+					{$VARfastagi_log_max_servers = $line;   $VARfastagi_log_max_servers =~ s/.*=//gi;}
+				if ( ($line =~ /^VARfastagi_log_min_spare_servers/) && ($CLIVARfastagi_log_min_spare_servers < 1) )
+					{$VARfastagi_log_min_spare_servers = $line;   $VARfastagi_log_min_spare_servers =~ s/.*=//gi;}
+				if ( ($line =~ /^VARfastagi_log_max_spare_servers/) && ($CLIVARfastagi_log_max_spare_servers < 1) )
+					{$VARfastagi_log_max_spare_servers = $line;   $VARfastagi_log_max_spare_servers =~ s/.*=//gi;}
+				if ( ($line =~ /^VARfastagi_log_max_requests/) && ($CLIVARfastagi_log_max_requests < 1) )
+					{$VARfastagi_log_max_requests = $line;   $VARfastagi_log_max_requests =~ s/.*=//gi;}
+				if ( ($line =~ /^VARfastagi_log_checkfordead/) && ($CLIVARfastagi_log_checkfordead < 1) )
+					{$VARfastagi_log_checkfordead = $line;   $VARfastagi_log_checkfordead =~ s/.*=//gi;}
+				if ( ($line =~ /^VARfastagi_log_checkforwait/) && ($CLIVARfastagi_log_checkforwait < 1) )
+					{$VARfastagi_log_checkforwait = $line;   $VARfastagi_log_checkforwait =~ s/.*=//gi;}
+				$i++;
+				}
+			}
+		##### END astguiclient conf file prompting and existence check #####
+
+
 		##### BEGIN astguiclient home directory prompting and existence check #####
 		$continue='NO';
 		while ($continue =~/NO/)
@@ -1745,6 +1876,45 @@ else
 			}
 		##### END copy asterisk sample conf files prompt #####
 
+		##### BEGIN copy web language translation files prompt #####
+		$continue='NO';
+		while ($continue =~/NO/)
+			{
+			print("\nCopy web language translation files to webroot ? [$CLIcopy_web_lang] ");
+			$PROMPTcopy_web_lang = <STDIN>;
+			chomp($PROMPTcopy_web_lang);
+			if (length($PROMPTcopy_web_lang)<1)
+				{$PROMPTcopy_web_lang = $CLIcopy_web_lang;}
+			if ($PROMPTcopy_web_lang =~ /y/i)
+				{
+				if (!-e "$PATHweb")
+					{
+					print("$PATHweb does not exist, would you like me to create it?(y/n) [y] ");
+					$createPATHweb = <STDIN>;
+					chomp($createPATHweb);
+					if ($createPATHweb =~ /n/i)
+						{
+						$continue='NO';
+						}
+					else
+						{
+						`mkdir -p $PATHweb`;
+						print "     $PATHweb directory created\n";
+						$continue='YES';
+						}
+					}
+				else
+					{
+					$continue='YES';
+					}
+				}
+			else
+				{
+				$continue='YES';
+				}
+			}
+		##### END copy web language translation files prompt #####
+
 		##### BEGIN FTP_host prompting and check #####
 		if (length($VARFTP_host)<7)
 			{	
@@ -2115,6 +2285,7 @@ else
 
 
 		print "\n";
+		print "  defined conf file:        $PATHconf\n";
 		print "  defined home path:        $PATHhome\n";
 		print "  defined logs path:        $PATHlogs\n";
 		print "  defined agi-bin path:     $PATHagi\n";
@@ -2133,6 +2304,7 @@ else
 		print "  defined active_keepalives:     $VARactive_keepalives\n";
 		print "  defined asterisk_version:      $VARasterisk_version\n";
 		print "  defined copying conf files:    $PROMPTcopy_conf_files\n";
+		print "  defined copying weblang files: $PROMPTcopy_web_lang\n";
 		print "  defined FTP_host:         $VARFTP_host\n";
 		print "  defined FTP_user:         $VARFTP_user\n";
 		print "  defined FTP_pass:         $VARFTP_pass\n";
@@ -2163,10 +2335,10 @@ else
 		}
 	}
 
-print "Writing to astguiclient.conf file: $PATHconf\n";
+print "Writing to configuration file: $PATHconf\n";
 
 open(conf, ">$PATHconf") || die "can't open $PATHconf: $!\n";
-print conf "# astguiclient.conf - configuration elements for the astguiclient package\n";
+print conf "# $PATHconf - configuration elements for the astguiclient/vicidial package\n";
 print conf "# this is the astguiclient configuration file \n";
 print conf "# all comments will be lost if you run install.pl again\n";
 print conf "\n";
@@ -2328,7 +2500,6 @@ if ($NOWEB < 1)
 	print "Creating $PATHweb web directories...\n";
 
 	if (!-e "$PATHweb/agc/")						{`mkdir -p $PATHweb/agc/`;}
-	if (!-e "$PATHweb/astguiclient/")				{`mkdir -p $PATHweb/astguiclient/`;}
 	if (!-e "$PATHweb/vicidial/")					{`mkdir -p $PATHweb/vicidial/`;}
 	if (!-e "$PATHweb/vicidial/ploticus/")			{`mkdir -p $PATHweb/vicidial/ploticus/`;}
 	if (!-e "$PATHweb/vicidial/agent_reports/")		{`mkdir -p $PATHweb/vicidial/agent_reports/`;}
@@ -2340,14 +2511,131 @@ if ($NOWEB < 1)
 	print "setting web scripts to executable...\n";
 	`chmod 0777 $PATHweb/`;
 	`chmod -R 0755 $PATHweb/agc/`;
-	`chmod -R 0755 $PATHweb/astguiclient/`;
 	`chmod -R 0755 $PATHweb/vicidial/`;
 	`chmod 0777 $PATHweb/agc/`;
-	`chmod 0777 $PATHweb/astguiclient/`;
 	`chmod 0777 $PATHweb/vicidial/`;
 	`chmod 0777 $PATHweb/vicidial/ploticus/`;
 	`chmod 0777 $PATHweb/vicidial/agent_reports/`;
 	`chmod 0777 $PATHweb/vicidial/server_reports/`;
+	}
+
+if ( ($PROMPTcopy_web_lang =~ /y/i) || ($CLIcopy_web_lang =~ /y/i) )
+	{
+	print "Copying web language translation files to $PATHweb...\n";
+	if (!-e "$PATHweb/agc_br/")						{`mkdir -p $PATHweb/agc_br/`;}
+	if (!-e "$PATHweb/agc_de/")						{`mkdir -p $PATHweb/agc_de/`;}
+	if (!-e "$PATHweb/agc_el/")						{`mkdir -p $PATHweb/agc_el/`;}
+	if (!-e "$PATHweb/agc_en/")						{`mkdir -p $PATHweb/agc_en/`;}
+	if (!-e "$PATHweb/agc_es/")						{`mkdir -p $PATHweb/agc_es/`;}
+	if (!-e "$PATHweb/agc_fr/")						{`mkdir -p $PATHweb/agc_fr/`;}
+	if (!-e "$PATHweb/agc_it/")						{`mkdir -p $PATHweb/agc_it/`;}
+	if (!-e "$PATHweb/agc_nl/")						{`mkdir -p $PATHweb/agc_nl/`;}
+	if (!-e "$PATHweb/agc_pl/")						{`mkdir -p $PATHweb/agc_pl/`;}
+	if (!-e "$PATHweb/agc_pt/")						{`mkdir -p $PATHweb/agc_pt/`;}
+	if (!-e "$PATHweb/agc_ru/")						{`mkdir -p $PATHweb/agc_ru/`;}
+	if (!-e "$PATHweb/agc_se/")						{`mkdir -p $PATHweb/agc_se/`;}
+	if (!-e "$PATHweb/agc_sk/")						{`mkdir -p $PATHweb/agc_sk/`;}
+	if (!-e "$PATHweb/agc_tw/")						{`mkdir -p $PATHweb/agc_tw/`;}
+	if (!-e "$PATHweb/vicidial_br/")				{`mkdir -p $PATHweb/vicidial_br/`;}
+	if (!-e "$PATHweb/vicidial_de/")				{`mkdir -p $PATHweb/vicidial_de/`;}
+	if (!-e "$PATHweb/vicidial_el/")				{`mkdir -p $PATHweb/vicidial_el/`;}
+	if (!-e "$PATHweb/vicidial_en/")				{`mkdir -p $PATHweb/vicidial_en/`;}
+	if (!-e "$PATHweb/vicidial_es/")				{`mkdir -p $PATHweb/vicidial_es/`;}
+	if (!-e "$PATHweb/vicidial_fr/")				{`mkdir -p $PATHweb/vicidial_fr/`;}
+	if (!-e "$PATHweb/vicidial_it/")				{`mkdir -p $PATHweb/vicidial_it/`;}
+
+	print "Copying web files...\n";
+	`cp -f -R ./LANG_www/* $PATHweb/`;
+
+	print "setting web lang scripts to executable...\n";
+	`chmod 0777 $PATHweb/`;
+	`chmod -R 0755 $PATHweb/agc_br/`;
+	`chmod -R 0755 $PATHweb/agc_de/`;
+	`chmod -R 0755 $PATHweb/agc_el/`;
+	`chmod -R 0755 $PATHweb/agc_en/`;
+	`chmod -R 0755 $PATHweb/agc_es/`;
+	`chmod -R 0755 $PATHweb/agc_fr/`;
+	`chmod -R 0755 $PATHweb/agc_it/`;
+	`chmod -R 0755 $PATHweb/agc_nl/`;
+	`chmod -R 0755 $PATHweb/agc_pl/`;
+	`chmod -R 0755 $PATHweb/agc_pt/`;
+	`chmod -R 0755 $PATHweb/agc_ru/`;
+	`chmod -R 0755 $PATHweb/agc_se/`;
+	`chmod -R 0755 $PATHweb/agc_sk/`;
+	`chmod -R 0755 $PATHweb/agc_tw/`;
+	`chmod -R 0755 $PATHweb/vicidial_br/`;
+	`chmod -R 0755 $PATHweb/vicidial_de/`;
+	`chmod -R 0755 $PATHweb/vicidial_el/`;
+	`chmod -R 0755 $PATHweb/vicidial_en/`;
+	`chmod -R 0755 $PATHweb/vicidial_es/`;
+	`chmod -R 0755 $PATHweb/vicidial_fr/`;
+	`chmod -R 0755 $PATHweb/vicidial_it/`;
+	`chmod 0777 $PATHweb/agc_br/`;
+	`chmod 0777 $PATHweb/agc_de/`;
+	`chmod 0777 $PATHweb/agc_el/`;
+	`chmod 0777 $PATHweb/agc_en/`;
+	`chmod 0777 $PATHweb/agc_es/`;
+	`chmod 0777 $PATHweb/agc_fr/`;
+	`chmod 0777 $PATHweb/agc_it/`;
+	`chmod 0777 $PATHweb/agc_nl/`;
+	`chmod 0777 $PATHweb/agc_pl/`;
+	`chmod 0777 $PATHweb/agc_pt/`;
+	`chmod 0777 $PATHweb/agc_ru/`;
+	`chmod 0777 $PATHweb/agc_se/`;
+	`chmod 0777 $PATHweb/agc_sk/`;
+	`chmod 0777 $PATHweb/agc_tw/`;
+	`chmod 0777 $PATHweb/vicidial_br/`;
+	`chmod 0777 $PATHweb/vicidial_de/`;
+	`chmod 0777 $PATHweb/vicidial_el/`;
+	`chmod 0777 $PATHweb/vicidial_en/`;
+	`chmod 0777 $PATHweb/vicidial_es/`;
+	`chmod 0777 $PATHweb/vicidial_fr/`;
+	`chmod 0777 $PATHweb/vicidial_it/`;
+	}
+
+if ($PATHconf !~ /\/etc\/astguiclient.conf/)
+	{
+	print "Using non-default conf file, adjusting hard-coded paths...\n";
+
+	$PATHconfEREG = $PATHconf;
+	$PATHconfEREG =~ s/\//\\\//gi;
+	$PATHconfDEFAULT = $defaultPATHconf;
+	$PATHconfDEFAULT =~ s/\//\\\//gi;
+#	print "$PATHconfEREG\n$PATHconfDEFAULT\n";
+
+	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHhome/* `;
+	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHagi/* `;
+	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc/dbconnect.php `;
+	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/dbconnect.php `;
+	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/listloader.pl `;
+	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/listloader_super.pl `;
+	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/listloader_rowdisplay.pl `;
+	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/spreadsheet_sales_viewer.pl `;
+
+	if ( ($PROMPTcopy_web_lang =~ /y/i) || ($CLIcopy_web_lang =~ /y/i) )
+		{
+		print "Adjusting hard-coded paths in web language translation files...\n";
+
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_br/dbconnect.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_de/dbconnect.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_el/dbconnect.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_es/dbconnect.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_fr/dbconnect.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_it/dbconnect.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_nl/dbconnect.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_pl/dbconnect.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_pt/dbconnect.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_ru/dbconnect.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_se/dbconnect.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_sk/dbconnect.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_tw/dbconnect.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial_br/* `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial_de/* `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial_el/* `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial_es/* `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial_fr/* `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial_it/* `;
+		}
 	}
 
 if ( ($PROMPTcopy_conf_files =~ /y/i) || ($CLIcopy_conf_files =~ /y/i) )
@@ -2399,7 +2687,7 @@ if( $VARserver_ip =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
 #	print "exten => _8600XXX*.,1,AGI(agi-VDADfixCXFER.agi)\n";
 #	print "exten => _78600XXX*.,1,AGI(agi-VDADfixCXFER.agi)\n";
 
-print "\nASTGUICLIENT INSTALLATION FINISHED!     ENJOY!\n";
+print "\nASTGUICLIENT VICIDIAL INSTALLATION FINISHED!     ENJOY!\n";
 
 $secy = time();		$secz = ($secy - $secX);		$minz = ($secz/60);		# calculate script runtime so far
 print "\n     - process runtime      ($secz sec) ($minz minutes)\n";
