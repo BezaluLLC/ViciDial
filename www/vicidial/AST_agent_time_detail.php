@@ -19,6 +19,7 @@
 # 101207-1719 - Fixed download file formatting bugs(issue 394)
 # 101208-0320 - Fixed issue 404
 # 110307-1057 - Added user_case setting in options.php
+# 110623-0728 - Fixed user group selection bug
 #
 
 require("dbconnect.php");
@@ -229,8 +230,8 @@ if ( (ereg("--ALL--",$user_group_string) ) or ($user_group_ct < 1) )
 else
 	{
 	$user_group_SQL = eregi_replace(",$",'',$user_group_SQL);
+	$TCuser_group_SQL = $user_group_SQL;
 	$user_group_SQL = "and vicidial_agent_log.user_group IN($user_group_SQL)";
-	$TCuser_group_SQL = eregi_replace(",$",'',$TCuser_group_SQL);
 	$TCuser_group_SQL = "and user_group IN($TCuser_group_SQL)";
 	}
 
