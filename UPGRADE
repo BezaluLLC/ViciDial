@@ -616,6 +616,8 @@ OTHER CHANGES:
 136. Added install.pl options to define conf file and copy web language
 	translation files.
 
+137. Added Export Leads Report similar to Export Calls Report, but a lead is 
+	only exported once and with the current status.
 
 
 

@@ -604,8 +604,12 @@ Disable Dispo Screen||
 This option allows you to disable the disposition screen in the agent interface. The Disable Dispo Status field below must be filled in for this option to work. Default is||
 Disable Dispo Status||
 If the Disable Dispo Screen option is set to DISPO_DISABLED, then this field must be filled in. You can use any disposition you want for this field as long as it is 1 to 6 characters in length with only letters and numbers||
+This setting if set to 1 will allow a manager to access the export call and lead reports on the REPORTS screen. Default is 0. For the Export Calls and Leads Reports, the following field order is used for exports||
+This report pulls lead information for calls dialed in the selected date range. A lead is only exported once no matter how many calls were handled. The current lead status is used.||
+Export Leads Report||
 
 
+lead_report_export.php
 admin_campaign_multi_alt.php
 AST_LISTS_campaign_stats.php
 AST_VICIDIAL_ingrouplist.php
