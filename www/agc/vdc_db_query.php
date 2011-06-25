@@ -283,12 +283,13 @@
 # 110317-0222 - Logging bug fixes
 # 110413-1245 - Added ALT dialing from scheduled callback list
 # 110430-1925 - Added post_phone_time_diff_alert campaign feature
+# 110625-0814 - Added screen_labels and label hide functions
 #
 
-$version = '2.4-188';
-$build = '110430-1925';
+$version = '2.4-189';
+$build = '110625-0814';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=415;
+$mysql_log_count=418;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -8709,6 +8710,17 @@ if ($ACTION == 'LEADINFOview')
 			}
 		### END Display callback information ###
 
+		### find the screen_label for this campaign
+		$stmt="select screen_labels from vicidial_campaigns where campaign_id='$campaign';";
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00416',$user,$server_ip,$session_name,$one_mysql_log);}
+		$csl_to_print = mysql_num_rows($rslt);
+		if ($format=='debug') {echo "|$csl_to_print|$stmt|";}
+		if ($csl_to_print > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$screen_labels = $row[0];
+			}
 
 		### BEGIN Display lead info and custom fields ###
 		### BEGIN find any custom field labels ###
@@ -8733,8 +8745,9 @@ if ($ACTION == 'LEADINFOview')
 		$label_email =				'Email';
 		$label_comments =			'Comments';
 
-		$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
+		$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,label_hide_field_logs from system_settings;";
 		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00417',$user,$server_ip,$session_name,$one_mysql_log);}
 		$row=mysql_fetch_row($rslt);
 		if (strlen($row[0])>0)	{$label_title =				$row[0];}
 		if (strlen($row[1])>0)	{$label_first_name =		$row[1];}
@@ -8755,8 +8768,44 @@ if ($ACTION == 'LEADINFOview')
 		if (strlen($row[16])>0) {$label_security_phrase =	$row[16];}
 		if (strlen($row[17])>0) {$label_email =				$row[17];}
 		if (strlen($row[18])>0) {$label_comments =			$row[18];}
-		### END find any custom field labels ###
+		$label_hide_field_logs =	$row[19];
 
+		if ( ($screen_labels != '--SYSTEM-SETTINGS--') and (strlen($screen_labels)>1) )
+			{
+			$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,label_hide_field_logs from vicidial_screen_labels where label_id='$screen_labels' and active='Y' limit 1;";
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00418',$user,$server_ip,$session_name,$one_mysql_log);}
+			$screenlabels_count = mysql_num_rows($rslt);
+			if ($screenlabels_count > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				if (strlen($row[0])>0)	{$label_title =				$row[0];}
+				if (strlen($row[1])>0)	{$label_first_name =		$row[1];}
+				if (strlen($row[2])>0)	{$label_middle_initial =	$row[2];}
+				if (strlen($row[3])>0)	{$label_last_name =			$row[3];}
+				if (strlen($row[4])>0)	{$label_address1 =			$row[4];}
+				if (strlen($row[5])>0)	{$label_address2 =			$row[5];}
+				if (strlen($row[6])>0)	{$label_address3 =			$row[6];}
+				if (strlen($row[7])>0)	{$label_city =				$row[7];}
+				if (strlen($row[8])>0)	{$label_state =				$row[8];}
+				if (strlen($row[9])>0)	{$label_province =			$row[9];}
+				if (strlen($row[10])>0) {$label_postal_code =		$row[10];}
+				if (strlen($row[11])>0) {$label_vendor_lead_code =	$row[11];}
+				if (strlen($row[12])>0) {$label_gender =			$row[12];}
+				if (strlen($row[13])>0) {$label_phone_number =		$row[13];}
+				if (strlen($row[14])>0) {$label_phone_code =		$row[14];}
+				if (strlen($row[15])>0) {$label_alt_phone =			$row[15];}
+				if (strlen($row[16])>0) {$label_security_phrase =	$row[16];}
+				if (strlen($row[17])>0) {$label_email =				$row[17];}
+				if (strlen($row[18])>0) {$label_comments =			$row[18];}
+				$label_hide_field_logs =	$row[19];
+				### END find any custom field labels ###
+				$hide_gender=0;
+				if ($label_gender == '---HIDE---')
+					{$hide_gender=1;}
+				}
+			}
+		### END find any custom field labels ###
 
 		$INFOout .= "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=500>";
 
@@ -8835,35 +8884,58 @@ if ($ACTION == 'LEADINFOview')
 			##### END check for postal_code and phone time zones if alert enabled
 
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Status: &nbsp; </td><td ALIGN=left><font size=2>$row[0]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_vendor_lead_code: &nbsp; </td><td ALIGN=left><font size=2>$row[1]</td></tr>";
+			if ( ($label_vendor_lead_code!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_vendor_lead_code: &nbsp; </td><td ALIGN=left><font size=2>$row[1]</td></tr>";}
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>List ID: &nbsp; </td><td ALIGN=left><font size=2>$row[2]</td></tr>";
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Timezone: &nbsp; </td><td ALIGN=left><font size=2>$row[3]</td></tr>";
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Called Since Last Reset: &nbsp; </td><td ALIGN=left><font size=2>$row[4]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_code: &nbsp; </td><td ALIGN=left><font size=2>$row[5]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_number: &nbsp; </td><td ALIGN=left><font size=2>$row[6] - &nbsp; &nbsp; &nbsp; &nbsp; ";
-			if ($hide_dial_links < 1)
-				{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\">DIAL</a>";}
+			if ( ($label_phone_code!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_code: &nbsp; </td><td ALIGN=left><font size=2>$row[5]</td></tr>";}
+			if ( ($label_phone_number!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{
+				$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_number: &nbsp; </td><td ALIGN=left><font size=2>$row[6] - &nbsp; &nbsp; &nbsp; &nbsp; ";
+				if ($hide_dial_links < 1)
+					{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\">DIAL</a>";}
+				}
 			$INFOout .= "</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_title: &nbsp; </td><td ALIGN=left><font size=2>$row[7]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_first_name: &nbsp; </td><td ALIGN=left><font size=2>$row[8]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_middle_initial: &nbsp; </td><td ALIGN=left><font size=2>$row[9]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_last_name: &nbsp; </td><td ALIGN=left><font size=2>$row[10]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address1: &nbsp; </td><td ALIGN=left><font size=2>$row[11]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address2: &nbsp; </td><td ALIGN=left><font size=2>$row[12]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address3: &nbsp; </td><td ALIGN=left><font size=2>$row[13]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_city: &nbsp; </td><td ALIGN=left><font size=2>$row[14]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_state: &nbsp; </td><td ALIGN=left><font size=2>$row[15]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_province: &nbsp; </td><td ALIGN=left><font size=2>$row[16]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_postal_code: &nbsp; </td><td ALIGN=left><font size=2>$row[17]</td></tr>";
+			if ( ($label_title!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_title: &nbsp; </td><td ALIGN=left><font size=2>$row[7]</td></tr>";}
+			if ( ($label_first_name!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_first_name: &nbsp; </td><td ALIGN=left><font size=2>$row[8]</td></tr>";}
+			if ( ($label_middle_initial!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_middle_initial: &nbsp; </td><td ALIGN=left><font size=2>$row[9]</td></tr>";}
+			if ( ($label_last_name!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_last_name: &nbsp; </td><td ALIGN=left><font size=2>$row[10]</td></tr>";}
+			if ( ($label_address1!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address1: &nbsp; </td><td ALIGN=left><font size=2>$row[11]</td></tr>";}
+			if ( ($label_address2!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address2: &nbsp; </td><td ALIGN=left><font size=2>$row[12]</td></tr>";}
+			if ( ($label_address3!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address3: &nbsp; </td><td ALIGN=left><font size=2>$row[13]</td></tr>";}
+			if ( ($label_city!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_city: &nbsp; </td><td ALIGN=left><font size=2>$row[14]</td></tr>";}
+			if ( ($label_state!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_state: &nbsp; </td><td ALIGN=left><font size=2>$row[15]</td></tr>";}
+			if ( ($label_province!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_province: &nbsp; </td><td ALIGN=left><font size=2>$row[16]</td></tr>";}
+			if ( ($label_postal_code!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_postal_code: &nbsp; </td><td ALIGN=left><font size=2>$row[17]</td></tr>";}
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Country: &nbsp; </td><td ALIGN=left><font size=2>$row[18]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_gender: &nbsp; </td><td ALIGN=left><font size=2>$row[19]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_alt_phone: &nbsp; </td><td ALIGN=left><font size=2>$row[20] - &nbsp; &nbsp; &nbsp; &nbsp; ";
-			if ($hide_dial_links < 1)
-				{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20], $lead_id, 'ALT');return false;\">DIAL</a>";}
+			if ( ($label_gender!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_gender: &nbsp; </td><td ALIGN=left><font size=2>$row[19]</td></tr>";}
+			if ( ($label_alt_phone!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{
+				$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_alt_phone: &nbsp; </td><td ALIGN=left><font size=2>$row[20] - &nbsp; &nbsp; &nbsp; &nbsp; ";
+				if ($hide_dial_links < 1)
+					{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20], $lead_id, 'ALT');return false;\">DIAL</a>";}
+				}
 			$INFOout .= "</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_email: &nbsp; </td><td ALIGN=left><font size=2>$row[21]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_security_phrase: &nbsp; </td><td ALIGN=left><font size=2>$row[22]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_comments: &nbsp; </td><td ALIGN=left><font size=2>$row[23]</td></tr>";
+			if ( ($label_email!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_email: &nbsp; </td><td ALIGN=left><font size=2>$row[21]</td></tr>";}
+			if ( ($label_security_phrase!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_security_phrase: &nbsp; </td><td ALIGN=left><font size=2>$row[22]</td></tr>";}
+			if ( ($label_comments!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_comments: &nbsp; </td><td ALIGN=left><font size=2>$row[23]</td></tr>";}
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Called Count: &nbsp; </td><td ALIGN=left><font size=2>$row[24]</td></tr>";
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Last Local Call Time: &nbsp; </td><td ALIGN=left><font size=2>$row[25]</td></tr>";
 	#		$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Rank: &nbsp; </td><td ALIGN=left><font size=2>$row[26]</td></tr>";

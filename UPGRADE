@@ -619,6 +619,14 @@ OTHER CHANGES:
 137. Added Export Leads Report similar to Export Calls Report, but a lead is 
 	only exported once and with the current status.
 
+138. Added Agent Screen Labels sub-section of the Admin functions. Allows for
+	each campaign to use a different set of labels for the fields on the 
+	default agent screen.
+
+139. Added ability to define the agent screen status fields shown to the agent:
+	Call ID, Lead ID and List ID
+
+
 
 
 

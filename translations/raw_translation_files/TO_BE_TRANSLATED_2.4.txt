@@ -607,6 +607,35 @@ If the Disable Dispo Screen option is set to DISPO_DISABLED, then this field mus
 This setting if set to 1 will allow a manager to access the export call and lead reports on the REPORTS screen. Default is 0. For the Export Calls and Leads Reports, the following field order is used for exports||
 This report pulls lead information for calls dialed in the selected date range. A lead is only exported once no matter how many calls were handled. The current lead status is used.||
 Export Leads Report||
+Screen Labels||
+Add A Screen Label||
+ADD NEW SCREEN LABEL||
+ADDING NEW SCREEN LABEL||
+MODIFY SCREEN LABEL||
+DELETE SCREEN LABEL||
+SCREEN LABELS LIST||
+Screen Label ID||
+Screen Label Name||
+SCREEN LABEL NOT ADDED||
+there is already a label in the system with this ID||
+SCREEN LABEL ADDED||
+SCREEN LABEL NOT DELETED||
+SCREEN LABEL DELETION CONFIRMATION||
+Click here to delete screen label||
+SCREEN LABEL DELETION COMPLETED||
+DELETE THIS SCREEN LABEL||
+Click here to see Admin changes to this screen label||
+Hide Label in Call Logs||
+If a label is set to ---HIDE--- then the agent call logs, if enabled on the campaign, will still show the field and data unless this option is set to Y. Default is N||
+SCREEN LABEL NOT MODIFIED||
+SCREEN LABEL MODIFIED||
+This field needs to be at least 2 characters in length and no more than 20 characters in length, no spaces or special characters. This is the ID that will be used to identify the screen label throughout the system||
+This is the descriptive name of the screen label entry||
+Agent Screen Labels||
+You can select a set of agent screen labels to use with this option. Default is --SYSTEM-SETTINGS-- for the default labels||
+Status Display Fields||
+You can select which variables for calls will be displayed in the status line of the agent screen. CALLID will display the 20 character unique call ID, LEADID will display the system lead ID, LISTID will display the list ID. Default is CALLID
+CAMPAIGNS USING THIS SCREEN LABEL||
 
 
 lead_report_export.php

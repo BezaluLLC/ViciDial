@@ -30,6 +30,7 @@
 # 101107-1133 - Added auto-refresh code
 # 110215-1720 - Added the Add a new lead link
 # 110322-1228 - Added user ID logged in as next to Logout link
+# 110624-1439 - Added Screen Labels sub-section to Admin
 #
 
 
@@ -1299,6 +1300,8 @@ $SScustom_fields_enabled =	$row[3];
 			else {$conference_sh=''; $conference_fc='BLACK';}
 		if ($sh=='settings') {$settings_sh="bgcolor=\"$settings_color\""; $settings_fc="$settings_font";}
 			else {$settings_sh=''; $settings_fc='BLACK';}
+		if ($sh=='label') {$label_sh="bgcolor=\"$label_color\""; $label_fc="$label_font";}
+			else {$label_sh=''; $label_fc='BLACK';}
 		if ($sh=='status') {$status_sh="bgcolor=\"$status_color\""; $status_fc="$status_font";}
 			else {$status_sh=''; $status_fc='BLACK';}
 		if ($sh=='audio') {$audio_sh="bgcolor=\"$audio_color\""; $audio_fc="$audio_font";}
@@ -1330,6 +1333,8 @@ $SScustom_fields_enabled =	$row[3];
 		<a href="<?php echo $ADMIN ?>?ADD=1000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $conference_fc ?> SIZE=<?php echo $header_font_size ?>> Conferences </a></TD>
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $settings_sh ?>> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=311111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $settings_fc ?> SIZE=<?php echo $header_font_size ?>> System Settings </a></TD>
+		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $label_sh ?>> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=180000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $label_fc ?> SIZE=<?php echo $header_font_size ?>> Screen Labels </a></TD>
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $status_sh ?>> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=321111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $status_fc ?> SIZE=<?php echo $header_font_size ?>> System Statuses </a></TD>
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $vm_sh ?>> &nbsp; 
@@ -1440,6 +1445,10 @@ $SScustom_fields_enabled =	$row[3];
 	if (strlen($settings_sh) > 1) { 
 		?>
 	<TR BGCOLOR=<?php echo $settings_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=311111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> System Settings </a></TD></TR>
+	<?php }
+	if (strlen($label_sh) > 1) { 
+		?>
+	<TR BGCOLOR=<?php echo $label_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=180000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Screen Labels </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=181111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A Screen Label </a></TD></TR>
 	<?php }
 	if ( (strlen($status_sh) > 1) and (!eregi('campaign',$hh) ) ) { 
 		?>

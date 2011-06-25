@@ -813,7 +813,9 @@ survey_menu_id VARCHAR(50) default '',
 callback_days_limit SMALLINT(3) default '0',
 dl_diff_target_method ENUM('ADAPT_CALC_ONLY','CALLS_PLACED') default 'ADAPT_CALC_ONLY',
 disable_dispo_screen ENUM('DISPO_ENABLED','DISPO_DISABLED') default 'DISPO_ENABLED',
-disable_dispo_status VARCHAR(6) default ''
+disable_dispo_status VARCHAR(6) default '',
+screen_labels VARCHAR(20) default '--SYSTEM-SETTINGS--',
+status_display_fields VARCHAR(30) default 'CALLID'
 );
 
 CREATE TABLE vicidial_lists (
@@ -1404,7 +1406,8 @@ admin_modify_refresh SMALLINT(5) UNSIGNED default '0',
 nocache_admin ENUM('0','1') default '1',
 generate_cross_server_exten ENUM('0','1') default '0',
 queuemetrics_addmember_enabled ENUM('0','1') default '0',
-queuemetrics_dispo_pause VARCHAR(6) default ''
+queuemetrics_dispo_pause VARCHAR(6) default '',
+label_hide_field_logs VARCHAR(6) default 'Y'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2348,6 +2351,32 @@ index (campaign_id),
 unique index campserver (event_date, lead_id, menu_id)
 );
 
+CREATE TABLE vicidial_screen_labels (
+label_id VARCHAR(20) PRIMARY KEY NOT NULL,
+label_name VARCHAR(100),
+active ENUM('Y','N') default 'N',
+label_hide_field_logs VARCHAR(6) default 'Y',
+label_title VARCHAR(40) default '',
+label_first_name VARCHAR(40) default '',
+label_middle_initial VARCHAR(40) default '',
+label_last_name VARCHAR(40) default '',
+label_address1 VARCHAR(40) default '',
+label_address2 VARCHAR(40) default '',
+label_address3 VARCHAR(40) default '',
+label_city VARCHAR(40) default '',
+label_state VARCHAR(40) default '',
+label_province VARCHAR(40) default '',
+label_postal_code VARCHAR(40) default '',
+label_vendor_lead_code VARCHAR(40) default '',
+label_gender VARCHAR(40) default '',
+label_phone_number VARCHAR(40) default '',
+label_phone_code VARCHAR(40) default '',
+label_alt_phone VARCHAR(40) default '',
+label_security_phrase VARCHAR(40) default '',
+label_email VARCHAR(40) default '',
+label_comments VARCHAR(40) default ''
+);
+
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
 ALTER TABLE live_channels ENGINE=MEMORY;
@@ -2501,7 +2530,7 @@ ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_outbound_ivr_log_archive LIKE vicidial_outbound_ivr_log;
 
-UPDATE system_settings SET db_schema_version='1281',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1282',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

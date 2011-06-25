@@ -822,3 +822,37 @@ ALTER TABLE vicidial_campaigns ADD disable_dispo_screen ENUM('DISPO_ENABLED','DI
 ALTER TABLE vicidial_campaigns ADD disable_dispo_status VARCHAR(6) default '';
 
 UPDATE system_settings SET db_schema_version='1281',db_schema_update_date=NOW() where db_schema_version < 1281;
+
+ALTER TABLE vicidial_campaigns ADD screen_labels VARCHAR(20) default '--SYSTEM-SETTINGS--';
+ALTER TABLE vicidial_campaigns ADD status_display_fields VARCHAR(30) default 'CALLID';
+
+ALTER TABLE system_settings ADD label_hide_field_logs VARCHAR(6) default 'Y';
+
+CREATE TABLE vicidial_screen_labels (
+label_id VARCHAR(20) PRIMARY KEY NOT NULL,
+label_name VARCHAR(100),
+active ENUM('Y','N') default 'N',
+label_hide_field_logs VARCHAR(6) default 'Y',
+label_title VARCHAR(40) default '',
+label_first_name VARCHAR(40) default '',
+label_middle_initial VARCHAR(40) default '',
+label_last_name VARCHAR(40) default '',
+label_address1 VARCHAR(40) default '',
+label_address2 VARCHAR(40) default '',
+label_address3 VARCHAR(40) default '',
+label_city VARCHAR(40) default '',
+label_state VARCHAR(40) default '',
+label_province VARCHAR(40) default '',
+label_postal_code VARCHAR(40) default '',
+label_vendor_lead_code VARCHAR(40) default '',
+label_gender VARCHAR(40) default '',
+label_phone_number VARCHAR(40) default '',
+label_phone_code VARCHAR(40) default '',
+label_alt_phone VARCHAR(40) default '',
+label_security_phrase VARCHAR(40) default '',
+label_email VARCHAR(40) default '',
+label_comments VARCHAR(40) default ''
+);
+
+UPDATE system_settings SET db_schema_version='1282',db_schema_update_date=NOW() where db_schema_version < 1282;
+

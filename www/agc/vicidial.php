@@ -354,12 +354,13 @@
 # 110528-1033 - Added waiting_on_dispo manual dial check
 # 110531-2158 - Added callback_days_limit campaign feature
 # 110619-2005 - Added disable_dispo_ options
+# 110624-2311 - Added screen labels option and status display fields option
 #
 
-$version = '2.4-331c';
-$build = '110619-2005';
+$version = '2.4-332c';
+$build = '110624-2311';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=72;
+$mysql_log_count=73;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -1348,7 +1349,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1450,6 +1451,53 @@ else
 				$callback_days_limit =		$row[94];
 				$disable_dispo_screen =		$row[95];
 				$disable_dispo_status =		$row[96];
+				$screen_labels =			$row[97];
+				$status_display_fields =	$row[98];
+
+				$status_display_CALLID=0;
+				$status_display_LEADID=0;
+				$status_display_LISTID=0;
+				if (preg_match("/CALLID/",$status_display_fields))
+					{$status_display_CALLID=1;}
+				if (preg_match("/LEADID/",$status_display_fields))
+					{$status_display_LEADID=1;}
+				if (preg_match("/LISTID/",$status_display_fields))
+					{$status_display_LISTID=1;}
+
+				if ( ($screen_labels != '--SYSTEM-SETTINGS--') and (strlen($screen_labels)>1) )
+					{
+					$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from vicidial_screen_labels where label_id='$screen_labels' and active='Y' limit 1;";
+					$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01073',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					$screenlabels_count = mysql_num_rows($rslt);
+					if ($screenlabels_count > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						if (strlen($row[0])>0)	{$label_title =				$row[0];}
+						if (strlen($row[1])>0)	{$label_first_name =		$row[1];}
+						if (strlen($row[2])>0)	{$label_middle_initial =	$row[2];}
+						if (strlen($row[3])>0)	{$label_last_name =			$row[3];}
+						if (strlen($row[4])>0)	{$label_address1 =			$row[4];}
+						if (strlen($row[5])>0)	{$label_address2 =			$row[5];}
+						if (strlen($row[6])>0)	{$label_address3 =			$row[6];}
+						if (strlen($row[7])>0)	{$label_city =				$row[7];}
+						if (strlen($row[8])>0)	{$label_state =				$row[8];}
+						if (strlen($row[9])>0)	{$label_province =			$row[9];}
+						if (strlen($row[10])>0) {$label_postal_code =		$row[10];}
+						if (strlen($row[11])>0) {$label_vendor_lead_code =	$row[11];}
+						if (strlen($row[12])>0) {$label_gender =			$row[12];}
+						if (strlen($row[13])>0) {$label_phone_number =		$row[13];}
+						if (strlen($row[14])>0) {$label_phone_code =		$row[14];}
+						if (strlen($row[15])>0) {$label_alt_phone =			$row[15];}
+						if (strlen($row[16])>0) {$label_security_phrase =	$row[16];}
+						if (strlen($row[17])>0) {$label_email =				$row[17];}
+						if (strlen($row[18])>0) {$label_comments =			$row[18];}
+						### END find any custom field labels ###
+						$hide_gender=0;
+						if ($label_gender == '---HIDE---')
+							{$hide_gender=1;}
+						}
+					}
 
 				if ( ($disable_dispo_screen == 'DISPO_ENABLED') or (strlen($disable_dispo_status) < 1) )
 					{
@@ -3371,6 +3419,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var waiting_on_dispo=0;
 	var disable_dispo_screen='<?php echo $disable_dispo_screen ?>';
 	var disable_dispo_status='<?php echo $disable_dispo_status ?>';
+	var status_display_CALLID='<?php echo $status_display_CALLID ?>';
+	var status_display_LEADID='<?php echo $status_display_LEADID ?>';
+	var status_display_LISTID='<?php echo $status_display_LISTID ?>';
     var DiaLControl_auto_HTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/vdc_LB_resume.gif\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/vdc_LB_pause.gif\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
@@ -5108,11 +5159,15 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				{
 				if (document.vicidial_form.DiaLAltPhonE.checked==true)
 					{
+					var status_display_content='';
+					if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+					if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
+
 					alt_num_status = 1;
 					reselect_alt_dial = 1;
 					alt_dial_active = 1;
 					alt_dial_status_display = 1;
-					var man_status = "Dial Alt Phone Number: <a href=\"#\" onclick=\"ManualDialOnly('MaiNPhonE')\"><font class=\"preview_text\">MAIN PHONE</font></a> or <a href=\"#\" onclick=\"ManualDialOnly('ALTPhonE')\"><font class=\"preview_text\">ALT PHONE</font></a> or <a href=\"#\" onclick=\"ManualDialOnly('AddresS3')\"><font class=\"preview_text\">ADDRESS3</font></a> or <a href=\"#\" onclick=\"ManualDialAltDonE()\"><font class=\"preview_text_red\">FINISH LEAD</font></a>"; 
+					var man_status = "Dial Alt Phone Number: <a href=\"#\" onclick=\"ManualDialOnly('MaiNPhonE')\"><font class=\"preview_text\">MAIN PHONE</font></a> or <a href=\"#\" onclick=\"ManualDialOnly('ALTPhonE')\"><font class=\"preview_text\">ALT PHONE</font></a> or <a href=\"#\" onclick=\"ManualDialOnly('AddresS3')\"><font class=\"preview_text\">ADDRESS3</font></a> or <a href=\"#\" onclick=\"ManualDialAltDonE()\"><font class=\"preview_text_red\">FINISH LEAD</font></a>" + status_display_content; 
 					document.getElementById("MainStatuSSpan").innerHTML = man_status;
 					}
 				}
@@ -5749,8 +5804,13 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 						if (alt_dial_status_display=='0')
 							{
+							var status_display_content='';
+							if (status_display_CALLID > 0) {status_display_content = status_display_content + " UID: " + CIDcheck;}
+							if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+							if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
+
 					//		alert(document.getElementById("MainStatuSSpan").innerHTML);
-							document.getElementById("MainStatuSSpan").innerHTML = " Calling: " + status_display_number + " UID: " + CIDcheck + " &nbsp; Waiting for Ring... " + MD_ring_secondS + " seconds";
+							document.getElementById("MainStatuSSpan").innerHTML = " Calling: " + status_display_number + " " + status_display_content + " &nbsp; Waiting for Ring... " + MD_ring_secondS + " seconds";
 					//		alert("channel not found yet:\n" + campaign);
 							}
 						}
@@ -5787,7 +5847,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								var called3rdparty = document.vicidial_form.xfernumber.value;
 								if (hide_xfer_number_to_dial=='ENABLED')
 									{called3rdparty=' ';}
-								document.getElementById("MainStatuSSpan").innerHTML = " Called 3rd party: " + called3rdparty + " UID: " + CIDcheck;
+								var status_display_content='';
+								if (status_display_CALLID > 0) {status_display_content = status_display_content + " UID: " + CIDcheck;}
+								if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+								if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
+
+								document.getElementById("MainStatuSSpan").innerHTML = " Called 3rd party: " + called3rdparty + " " + status_display_content;
 
                                 document.getElementById("Leave3WayCall").innerHTML ="<a href=\"#\" onclick=\"leave_3way_call('FIRST');return false;\"><img src=\"./images/vdc_XB_leave3waycall.gif\" border=\"0\" alt=\"LEAVE 3-WAY CALL\" style=\"vertical-align:middle\" /></a>";
 
@@ -5837,8 +5902,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								MD_channel_look=0;
 								var dispnum = lead_dial_number;
 								var status_display_number = phone_number_format(dispnum);
+								var status_display_content='';
+								if (status_display_CALLID > 0) {status_display_content = status_display_content + " UID: " + CIDcheck;}
+								if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+								if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
 
-								document.getElementById("MainStatuSSpan").innerHTML = " Called: " + status_display_number + " UID: " + CIDcheck + " &nbsp;"; 
+								document.getElementById("MainStatuSSpan").innerHTML = " Called: " + status_display_number + " " + status_display_content + " &nbsp;"; 
 
                                 document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><img src=\"./images/vdc_LB_parkcall.gif\" border=\"0\" alt=\"Park Call\" /></a>";
 								if ( (ivr_park_call=='ENABLED') || (ivr_park_call=='ENABLED_PARK_ONLY') )
@@ -6376,8 +6445,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							lead_dial_number = dialed_number;
 							var dispnum = dialed_number;
 							var status_display_number = phone_number_format(dispnum);
+							var status_display_content='';
+							if (status_display_CALLID > 0) {status_display_content = status_display_content + " UID: " + MDnextCID;}
+							if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+							if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
 
-							document.getElementById("MainStatuSSpan").innerHTML = " Calling: " + status_display_number + " UID: " + MDnextCID + " &nbsp; " + man_status;
+							document.getElementById("MainStatuSSpan").innerHTML = " Calling: " + status_display_number + " " + status_display_content + " &nbsp; " + man_status;
 							if ( (dialed_label.length < 2) || (dialed_label=='NONE') ) {dialed_label='MAIN';}
 
 							if (hide_gender > 0)
@@ -6787,7 +6860,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 						if (alt_dial_status_display=='0')
 							{
-							document.getElementById("MainStatuSSpan").innerHTML = " Calling: " + status_display_number + " UID: " + MDnextCID + " &nbsp; Waiting for Ring...";
+							var status_display_content='';
+							if (status_display_CALLID > 0) {status_display_content = status_display_content + " UID: " + MDnextCID;}
+							if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+							if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
+
+							document.getElementById("MainStatuSSpan").innerHTML = " Calling: " + status_display_number + " " + status_display_content + " &nbsp; Waiting for Ring...";
 							
                             document.getElementById("HangupControl").innerHTML = "<a href=\"#\" onclick=\"dialedcall_send_hangup();\"><img src=\"./images/vdc_LB_hangupcustomer.gif\" border=\"0\" alt=\"Hangup Customer\" /></a>";
 							}
@@ -7342,7 +7420,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							var callnum = dialed_number;
 							var dial_display_number = phone_number_format(callnum);
 
-							document.getElementById("MainStatuSSpan").innerHTML = " Incoming: " + dial_display_number + " " + custom_call_id + " UID: " + CIDcheck + " &nbsp; " + VDIC_fronter; 
+							var status_display_content='';
+							if (status_display_CALLID > 0) {status_display_content = status_display_content + " UID: " + LasTCID;}
+							if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+							if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
+
+							document.getElementById("MainStatuSSpan").innerHTML = " Incoming: " + dial_display_number + " " + custom_call_id + " " + status_display_content + " &nbsp; " + VDIC_fronter; 
 
 							if (CBentry_time.length > 2)
 								{
@@ -7388,7 +7471,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								var callnum = dialed_number;
 								var dial_display_number = phone_number_format(callnum);
 
-								document.getElementById("MainStatuSSpan").innerHTML = " Incoming: " + dial_display_number + " " + custom_call_id + " Group- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter; 
+								var status_display_content='';
+								if (status_display_CALLID > 0) {status_display_content = status_display_content + " UID: " + CIDcheck;}
+								if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+								if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
+
+								document.getElementById("MainStatuSSpan").innerHTML = " Incoming: " + dial_display_number + " " + custom_call_id + " Group- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter + " " + status_display_content; 
 								}
 
                             document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><img src=\"./images/vdc_LB_parkcall.gif\" border=\"0\" alt=\"Park Call\" /></a>";
