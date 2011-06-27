@@ -150,6 +150,7 @@
 # 110325-1409 - Added user recording override settings checking for remote agent recording
 # 110505-1620 - Fixed minor voicemail issue
 # 110525-1555 - Added CLOSER compatibility with outbound and in-group calls that went through Call Menu
+# 110626-2343 - Added queuemetrics_pe_phone_append
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -1455,7 +1456,7 @@ if ($call_handle_method =~ /CLOSER|DIGITID$/)
 
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend FROM system_settings;";
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_pe_phone_append FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -1464,12 +1465,13 @@ if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
 	$enable_queuemetrics_logging =	$aryA[0];
-	$queuemetrics_server_ip	=	$aryA[1];
-	$queuemetrics_dbname =		$aryA[2];
-	$queuemetrics_login=		$aryA[3];
-	$queuemetrics_pass =		$aryA[4];
-	$queuemetrics_log_id =		$aryA[5];
-	$queuemetrics_eq_prepend =	$aryA[6];
+	$queuemetrics_server_ip	=		$aryA[1];
+	$queuemetrics_dbname =			$aryA[2];
+	$queuemetrics_login=			$aryA[3];
+	$queuemetrics_pass =			$aryA[4];
+	$queuemetrics_log_id =			$aryA[5];
+	$queuemetrics_eq_prepend =		$aryA[6];
+	$queuemetrics_pe_phone_append = $aryA[7];
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -2289,7 +2291,13 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					if ($sthArowsCQPE > 0)
 						{
 						@aryA = $sthA->fetchrow_array;
-						$dataSQL = ",data4='$aryA[0]'";
+						$pe_append='';
+						if ( ($queuemetrics_pe_phone_append > 0) && (length($aryA[0])>0) )
+							{
+							@qm_extension = split(/\//,$VDADextension);
+							$pe_append = "-$qm_extension[1]";
+							}
+						$dataSQL = ",data4='$aryA[0]$pe_append'";
 						}
 					$sthA->finish();
 						if ($AGILOG) {$agi_string = "$sthArowsCQPE|$dataSQL|$stmtA|";   &agi_output;}

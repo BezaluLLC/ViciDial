@@ -40,6 +40,7 @@
 # 110124-1134 - Small query fix for large queue_log tables
 # 110224-1903 - Added compatibility with QM phone environment logging
 # 110304-0007 - Added agent on-hook compatibility
+# 110626-0030 - Added queuemetrics_pe_phone_append
 #
 
 ### begin parsing run-time options ###
@@ -212,7 +213,7 @@ while($one_day_interval > 0)
 
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
-			$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout,queuemetrics_addmember_enabled FROM system_settings;";
+			$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pe_phone_append FROM system_settings;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -227,6 +228,7 @@ while($one_day_interval > 0)
 				$queuemetrics_log_id =				$aryA[5];
 				$queuemetrics_loginout =			$aryA[6];
 				$queuemetrics_addmember_enabled =	$aryA[7];
+				$queuemetrics_pe_phone_append =		$aryA[8];
 				}
 			$sthA->finish();
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -644,18 +646,22 @@ while($one_day_interval > 0)
 
 								if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
+								$pe_append='';
+								if ( ($queuemetrics_pe_phone_append > 0) && (length($CAMPAIGN_queuemetrics_phone_environment[$h])>0) )
+									{$pe_append = "-$DBremote_conf_exten[$h]";}
+
 								if ($queuemetrics_loginout !~ /NONE/)
 									{
-									$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$DBremote_campaign[$h]',agent='Agent/$DBremote_user[$h]',verb='$QM_LOGIN',data1='$DBremote_user[$h]$agents',serverid='$queuemetrics_log_id',data4='$CAMPAIGN_queuemetrics_phone_environment[$h]';";
+									$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$DBremote_campaign[$h]',agent='Agent/$DBremote_user[$h]',verb='$QM_LOGIN',data1='$DBremote_user[$h]$agents',serverid='$queuemetrics_log_id',data4='$CAMPAIGN_queuemetrics_phone_environment[$h]$pe_append';";
 									$Baffected_rows = $dbhB->do($stmtB);
 									}
 
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$DBremote_campaign[$h]',agent='Agent/$DBremote_user[$h]',verb='UNPAUSE',serverid='$queuemetrics_log_id',data4='$CAMPAIGN_queuemetrics_phone_environment[$h]';";
+								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$DBremote_campaign[$h]',agent='Agent/$DBremote_user[$h]',verb='UNPAUSE',serverid='$queuemetrics_log_id',data4='$CAMPAIGN_queuemetrics_phone_environment[$h]$pe_append';";
 								$Baffected_rows = $dbhB->do($stmtB);
 
 								if ($queuemetrics_addmember_enabled > 0)
 									{
-									$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$DBremote_campaign[$h]',agent='Agent/$DBremote_user[$h]',verb='ADDMEMBER2',data1='$DBremote_user[$h]$agents',serverid='$queuemetrics_log_id',data4='$CAMPAIGN_queuemetrics_phone_environment[$h]';";
+									$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$DBremote_campaign[$h]',agent='Agent/$DBremote_user[$h]',verb='ADDMEMBER2',data1='$DBremote_user[$h]$agents',serverid='$queuemetrics_log_id',data4='$CAMPAIGN_queuemetrics_phone_environment[$h]$pe_append';";
 									$Baffected_rows = $dbhB->do($stmtB);
 									}
 
@@ -710,6 +716,10 @@ while($one_day_interval > 0)
 								}
 							$sthA->finish();
 
+							$pe_append='';
+							if ( ($queuemetrics_pe_phone_append > 0) && (length($CAMPAIGN_queuemetrics_phone_environment[$h])>0) )
+								{$pe_append = "-$DBremote_conf_exten[$h]";}
+
 							if ($TEMPexistsVLIA < 1)
 								{
 								$stmtA = "INSERT IGNORE INTO vicidial_live_inbound_agents SET user='$DBremote_user[$h]', group_id='$TEMPingroups[$s]', group_weight='$TEMPagentWEIGHT', calls_today='$TEMPagentCALLS', last_call_time='$SQLdate', last_call_finish='$SQLdate' ON DUPLICATE KEY UPDATE group_weight='$TEMPagentWEIGHT';";
@@ -718,7 +728,7 @@ while($one_day_interval > 0)
 
 								if ( ($enable_queuemetrics_logging > 0) && ($queuemetrics_addmember_enabled > 0) )
 									{
-									$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$TEMPingroups[$s]',agent='Agent/$DBremote_user[$h]',verb='ADDMEMBER2',data1='$DBremote_user[$h]$agents',serverid='$queuemetrics_log_id',data4='$CAMPAIGN_queuemetrics_phone_environment[$h]';";
+									$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$TEMPingroups[$s]',agent='Agent/$DBremote_user[$h]',verb='ADDMEMBER2',data1='$DBremote_user[$h]$agents',serverid='$queuemetrics_log_id',data4='$CAMPAIGN_queuemetrics_phone_environment[$h]$pe_append';";
 									$Baffected_rows = $dbhB->do($stmtB);
 									}
 								}
@@ -801,6 +811,10 @@ while($one_day_interval > 0)
 			
 			if ($autocallexists[$z] < 1)
 				{
+				$pe_append='';
+				if ( ($queuemetrics_pe_phone_append > 0) && (length($USER_queuemetrics_phone_environment[$z])>0) )
+					{$pe_append = "-$VD_extension[$z]";}
+
 				if ($DELusers =~ /R\/$VD_user[$z]\|/)
 					{
 					$stmtA = "UPDATE vicidial_live_agents set random_id='$VD_random[$z]',status='PAUSED', last_call_finish='$SQLdate',lead_id='',uniqueid='',callerid='',channel='',last_state_change='$SQLdate' where user='$VD_user[$z]' and server_ip='$server_ip';";
@@ -820,7 +834,7 @@ while($one_day_interval > 0)
 
 							if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='NONE',agent='Agent/$VD_user[$z]',verb='PAUSEALL',serverid='$queuemetrics_log_id',data4='$USER_queuemetrics_phone_environment[$z]';";
+							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='NONE',agent='Agent/$VD_user[$z]',verb='PAUSEALL',serverid='$queuemetrics_log_id',data4='$USER_queuemetrics_phone_environment[$z]$pe_append';";
 							$Baffected_rows = $dbhB->do($stmtB);
 
 							$stmtB = "SELECT time_id,data1 FROM queue_log where agent='Agent/$VD_user[$z]' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') and time_id > $check_time order by time_id desc limit 1;";
@@ -882,7 +896,7 @@ while($one_day_interval > 0)
 								$rec_count=0;
 								while ($sthBrows > $rec_count)
 									{
-									$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$AM_queue[$rec_count]',agent='Agent/$VD_user[$z]',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id',data4='$USER_queuemetrics_phone_environment[$z]';";
+									$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$AM_queue[$rec_count]',agent='Agent/$VD_user[$z]',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id',data4='$USER_queuemetrics_phone_environment[$z]$pe_append';";
 									$Baffected_rows = $dbhB->do($stmtB);
 									$rec_count++;
 									}
@@ -890,7 +904,7 @@ while($one_day_interval > 0)
 
 							if ($queuemetrics_loginout !~ /NONE/)
 								{
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$VD_campaign_id[$z]',agent='Agent/$VD_user[$z]',verb='$QM_LOGOFF',data1='$phone_logged_in',data2='$time_logged_in',serverid='$queuemetrics_log_id',data4='$USER_queuemetrics_phone_environment[$z]';";
+								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='$VD_campaign_id[$z]',agent='Agent/$VD_user[$z]',verb='$QM_LOGOFF',data1='$phone_logged_in',data2='$time_logged_in',serverid='$queuemetrics_log_id',data4='$USER_queuemetrics_phone_environment[$z]$pe_append';";
 								$Baffected_rows = $dbhB->do($stmtB);
 								}
 
@@ -917,10 +931,10 @@ while($one_day_interval > 0)
 
 							if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='NONE',agent='Agent/$VD_user[$z]',verb='PAUSEALL',serverid='$queuemetrics_log_id',data4='$USER_queuemetrics_phone_environment[$z]';";
+							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='NONE',agent='Agent/$VD_user[$z]',verb='PAUSEALL',serverid='$queuemetrics_log_id',data4='$USER_queuemetrics_phone_environment[$z]$pe_append';";
 							$Baffected_rows = $dbhB->do($stmtB);
 
-							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='NONE',agent='Agent/$VD_user[$z]',verb='UNPAUSEALL',serverid='$queuemetrics_log_id',data4='$USER_queuemetrics_phone_environment[$z]';";
+							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='NONE',agent='Agent/$VD_user[$z]',verb='UNPAUSEALL',serverid='$queuemetrics_log_id',data4='$USER_queuemetrics_phone_environment[$z]$pe_append';";
 							$Baffected_rows = $dbhB->do($stmtB);
 
 							$dbhB->disconnect();

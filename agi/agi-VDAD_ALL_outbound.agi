@@ -86,6 +86,7 @@
 # 110325-1410 - Added user recording override settings checking for remote agent recording
 # 110525-1530 - Added AUDIO and CALLMENU drop options
 # 110528-2326 - Added CALLMENU survey method
+# 110626-2342 - Added queuemetrics_pe_phone_append
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -730,7 +731,7 @@ if ($VDACaffected_rows > 0)
 
 	#############################################
 	##### START QUEUEMETRICS LOGGING LOOKUP #####
-	$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend FROM system_settings;";
+	$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_pe_phone_append FROM system_settings;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -746,6 +747,7 @@ if ($VDACaffected_rows > 0)
 		$queuemetrics_pass =			$aryA[4];
 		$queuemetrics_log_id =			$aryA[5];
 		$queuemetrics_eq_prepend =		$aryA[6];
+		$queuemetrics_pe_phone_append = $aryA[7];
 		$rec_count++;
 		}
 	$sthA->finish();
@@ -1906,7 +1908,13 @@ while ($drop_timer <= $DROP_TIME)
 
 					if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='Agent/$VDADuser',verb='CONNECT',data1='$drop_timer',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment';";
+					$pe_append='';
+					if ( ($queuemetrics_pe_phone_append > 0) && (length($queuemetrics_phone_environment)>0) )
+						{
+						@qm_extension = split(/\//,$VDADextension);
+						$pe_append = "-$qm_extension[1]";
+						}
+					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='Agent/$VDADuser',verb='CONNECT',data1='$drop_timer',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment$pe_append';";
 					$Baffected_rows = $dbhB->do($stmtB);
 						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01039';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
@@ -2367,7 +2375,13 @@ while ($drop_timer <= $DROP_TIME)
 
 					if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='Agent/$VDADuser',verb='CONNECT',data1='$drop_timer',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment';";
+					$pe_append='';
+					if ( ($queuemetrics_pe_phone_append > 0) && (length($queuemetrics_phone_environment)>0) )
+						{
+						@qm_extension = split(/\//,$VDADextension);
+						$pe_append = "-$qm_extension[1]";
+						}
+					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='Agent/$VDADuser',verb='CONNECT',data1='$drop_timer',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment$pe_append';";
 					$Baffected_rows = $dbhB->do($stmtB);
 						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01046';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 

@@ -1858,12 +1858,13 @@ if ($function == 'ra_call_control')
 				$ra_stage =		$row[7];
 				$queue_position =	$row[8];
 
-				$stmt = "select server_ip,user from vicidial_live_agents where callerid='$value';";
+				$stmt = "select server_ip,user,extension from vicidial_live_agents where callerid='$value';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
 				$ra_server_ip = $row[0];
 				$ra_user =		$row[1];
+				$ra_extension =	$row[2];
 
 				$processed=0;
 				if ($stage=='HANGUP')
@@ -2006,7 +2007,7 @@ if ($function == 'ra_call_control')
 
 					#############################################
 					##### START QUEUEMETRICS LOGGING LOOKUP #####
-					$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+					$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append FROM system_settings;";
 					$rslt=mysql_query($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
 					$qm_conf_ct = mysql_num_rows($rslt);
@@ -2019,6 +2020,7 @@ if ($function == 'ra_call_control')
 						$queuemetrics_login	=			$row[3];
 						$queuemetrics_pass =			$row[4];
 						$queuemetrics_log_id =			$row[5];
+						$queuemetrics_pe_phone_append =	$row[6];
 						}
 					##### END QUEUEMETRICS LOGGING LOOKUP #####
 					###########################################
@@ -2049,7 +2051,13 @@ if ($function == 'ra_call_control')
 						if ($cqpe_ct > 0)
 							{
 							$row=mysql_fetch_row($rslt);
-							$data4SQL = ",data4='$row[0]'";
+							$pe_append='';
+							if ( ($queuemetrics_pe_phone_append > 0) && (strlen($row[0])>0) )
+								{
+								$qm_extension = explode('/',$ra_extension);
+								$pe_append = "-$qm_extension[1]";
+								}
+							$data4SQL = ",data4='$row[0]$pe_append'";
 							}
 
 						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$value',queue='$campaign_id',agent='Agent/$ra_user',verb='COMPLETEAGENT',data1='$ra_stage',data2='$ra_length',data3='$queue_position',serverid='$queuemetrics_log_id' $data4SQL;";

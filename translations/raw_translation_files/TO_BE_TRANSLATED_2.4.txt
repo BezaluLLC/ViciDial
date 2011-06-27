@@ -636,6 +636,8 @@ You can select a set of agent screen labels to use with this option. Default is 
 Status Display Fields||
 You can select which variables for calls will be displayed in the status line of the agent screen. CALLID will display the 20 character unique call ID, LEADID will display the system lead ID, LISTID will display the list ID. Default is CALLID
 CAMPAIGNS USING THIS SCREEN LABEL||
+QueueMetrics Phone Environment Phone Append||
+This option, if enabled, will append the agent phone login to the data4 record in the queue log table if the Campaign Phone Environment field is populated. Default is 0 for disabled||
 
 
 lead_report_export.php

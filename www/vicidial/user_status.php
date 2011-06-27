@@ -301,7 +301,7 @@ if ($stage == "log_agent_out")
 
 				if ($DB) {echo "\n<BR>VAL VALUES: $VAL_agent_log_id|$VAL_status|$VAL_lead_id\n";}
 
-				if ( ($VAL_wait_epoch < 1) || ( ($VAL_status == 'PAUSE') && ($VAL_dispo_epoch < 1) ) )
+				if ( ($VAL_wait_epoch < 1) or ( ($VAL_status == 'PAUSE') and ($VAL_dispo_epoch < 1) ) )
 					{
 					$VAL_pause_sec = ( ($now_date_epoch - $VAL_pause_epoch) + $VAL_pause_sec);
 					$stmt = "UPDATE vicidial_agent_log SET wait_epoch='$now_date_epoch', pause_sec='$VAL_pause_sec' where agent_log_id='$VAL_agent_log_id';";
@@ -369,7 +369,7 @@ if ($stage == "log_agent_out")
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout,queuemetrics_addmember_enabled FROM system_settings;";
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pe_phone_append FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "<BR>$stmt\n";}
 		$qm_conf_ct = mysql_num_rows($rslt);
@@ -384,6 +384,7 @@ if ($stage == "log_agent_out")
 			$queuemetrics_log_id =				$row[5];
 			$queuemetrics_loginout =			$row[6];
 			$queuemetrics_addmember_enabled =	$row[7];
+			$queuemetrics_pe_phone_append =		$row[8];
 			}
 		##### END QUEUEMETRICS LOGGING LOOKUP #####
 		###########################################
@@ -457,7 +458,13 @@ if ($stage == "log_agent_out")
 				$i=0;
 				while ($i < $amq_conf_ct)
 					{
-					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='$AMqueue[$i]',agent='$agent_logged_in',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment';";
+					$pe_append='';
+					if ( ($queuemetrics_pe_phone_append > 0) and (strlen($queuemetrics_phone_environment)>0) )
+						{
+						$qm_extension = explode('/',$phone_logged_in);
+						$pe_append = "-$qm_extension[1]";
+						}
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='$AMqueue[$i]',agent='$agent_logged_in',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment$pe_append';";
 					$rslt=mysql_query($stmt, $linkB);
 					$affected_rows = mysql_affected_rows($linkB);
 					$i++;

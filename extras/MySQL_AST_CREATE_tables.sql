@@ -1407,7 +1407,8 @@ nocache_admin ENUM('0','1') default '1',
 generate_cross_server_exten ENUM('0','1') default '0',
 queuemetrics_addmember_enabled ENUM('0','1') default '0',
 queuemetrics_dispo_pause VARCHAR(6) default '',
-label_hide_field_logs VARCHAR(6) default 'Y'
+label_hide_field_logs VARCHAR(6) default 'Y',
+queuemetrics_pe_phone_append ENUM('0','1') default '0'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2530,7 +2531,7 @@ ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_outbound_ivr_log_archive LIKE vicidial_outbound_ivr_log;
 
-UPDATE system_settings SET db_schema_version='1282',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1283',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

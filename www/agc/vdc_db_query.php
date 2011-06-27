@@ -284,10 +284,11 @@
 # 110413-1245 - Added ALT dialing from scheduled callback list
 # 110430-1925 - Added post_phone_time_diff_alert campaign feature
 # 110625-0814 - Added screen_labels and label hide functions
+# 110626-0127 - Added queuemetrics_pe_phone_append
 #
 
-$version = '2.4-189';
-$build = '110625-0814';
+$version = '2.4-190';
+$build = '110626-0127';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=418;
 $one_mysql_log=0;
@@ -486,6 +487,8 @@ if (isset($_GET["search"]))				{$search=$_GET["search"];}
 	elseif (isset($_POST["search"]))	{$search=$_POST["search"];}
 if (isset($_GET["sub_status"]))				{$sub_status=$_GET["sub_status"];}
 	elseif (isset($_POST["sub_status"]))	{$sub_status=$_POST["sub_status"];}
+if (isset($_GET["qm_extension"]))			{$qm_extension=$_GET["qm_extension"];}
+	elseif (isset($_POST["qm_extension"]))	{$qm_extension=$_POST["qm_extension"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -626,6 +629,8 @@ else
 	$pass = ereg_replace("'|\"|\\\\|;","",$pass);
 	}
 
+$session_name = ereg_replace("'|\"|\\\\|;","",$session_name);
+$server_ip = ereg_replace("'|\"|\\\\|;","",$server_ip);
 
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
@@ -940,7 +945,7 @@ if ($ACTION == 'regCLOSER')
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_addmember_enabled,queuemetrics_dispo_pause FROM system_settings;";
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,queuemetrics_pe_phone_append FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00349',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
@@ -957,6 +962,7 @@ if ($ACTION == 'regCLOSER')
 			$queuemetrics_log_id =				$row[5];
 			$queuemetrics_addmember_enabled =	$row[6];
 			$queuemetrics_dispo_pause =			$row[7];
+			$queuemetrics_pe_phone_append =		$row[8];
 			$i++;
 			}
 		##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -1007,7 +1013,10 @@ if ($ACTION == 'regCLOSER')
 					if ($cqpe_ct > 0)
 						{
 						$row=mysql_fetch_row($rslt);
-						$data4SQL = ",data4='$row[0]'";
+						$pe_append='';
+						if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+							{$pe_append = "-$qm_extension";}
+						$data4SQL = ",data4='$row[0]$pe_append'";
 						}
 
 					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='$in_groups[$k]',agent='Agent/$user',verb='ADDMEMBER2',data1='$qm_phone',serverid='$queuemetrics_log_id' $data4SQL;";
@@ -2454,7 +2463,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 				#############################################
 				##### START QUEUEMETRICS LOGGING LOOKUP #####
-				$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+				$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append FROM system_settings;";
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00037',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -2468,6 +2477,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$queuemetrics_login	=			$row[3];
 					$queuemetrics_pass =			$row[4];
 					$queuemetrics_log_id =			$row[5];
+					$queuemetrics_pe_phone_append = $row[6];
 					}
 				##### END QUEUEMETRICS LOGGING LOOKUP #####
 				###########################################
@@ -2482,7 +2492,10 @@ if ($ACTION == 'manDiaLnextCaLL')
 					if ($cqpe_ct > 0)
 						{
 						$row=mysql_fetch_row($rslt);
-						$data4SQL = ",data4='$row[0]'";
+						$pe_append='';
+						if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+							{$pe_append = "-$qm_extension";}
+						$data4SQL = ",data4='$row[0]$pe_append'";
 						}
 
 					$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
@@ -3053,7 +3066,7 @@ if ($ACTION == 'manDiaLonly')
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00048',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -3067,6 +3080,7 @@ if ($ACTION == 'manDiaLonly')
 			$queuemetrics_login	=			$row[3];
 			$queuemetrics_pass =			$row[4];
 			$queuemetrics_log_id =			$row[5];
+			$queuemetrics_pe_phone_append = $row[6];
 			}
 		##### END QUEUEMETRICS LOGGING LOOKUP #####
 		###########################################
@@ -3081,7 +3095,10 @@ if ($ACTION == 'manDiaLonly')
 			if ($cqpe_ct > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$data4SQL = ",data4='$row[0]'";
+				$pe_append='';
+				if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+					{$pe_append = "-$qm_extension";}
+				$data4SQL = ",data4='$row[0]$pe_append'";
 				}
 
 			$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
@@ -3481,7 +3498,7 @@ if ($stage == "end")
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_dispo_pause FROM system_settings;";
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_dispo_pause,queuemetrics_pe_phone_append FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00063',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -3497,6 +3514,7 @@ if ($stage == "end")
 			$queuemetrics_pass =			$row[4];
 			$queuemetrics_log_id =			$row[5];
 			$queuemetrics_dispo_pause =		$row[6];
+			$queuemetrics_pe_phone_append = $row[7];
 
 			if ($enable_queuemetrics_logging > 0)
 				{
@@ -3897,7 +3915,10 @@ if ($stage == "end")
 					if ($cqpe_ct > 0)
 						{
 						$row=mysql_fetch_row($rslt);
-						$data4SQL = ",data4='$row[0]'";
+						$pe_append='';
+						if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+							{$pe_append = "-$qm_extension";}
+						$data4SQL = ",data4='$row[0]$pe_append'";
 						}
 
 					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='PAUSEALL',serverid='$queuemetrics_log_id' $data4SQL;";
@@ -3947,7 +3968,10 @@ if ($stage == "end")
 				if ($cqpe_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
-					$data4SQL = ",data4='$row[0]'";
+					$pe_append='';
+					if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+						{$pe_append = "-$qm_extension";}
+					$data4SQL = ",data4='$row[0]$pe_append'";
 					}
 
 				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$MDnextCID',queue='$VDcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$length_in_sec',data3='$CLqueue_position',serverid='$queuemetrics_log_id' $data4SQL;";
@@ -4171,7 +4195,10 @@ if ($stage == "end")
 						if ($cqpe_ct > 0)
 							{
 							$row=mysql_fetch_row($rslt);
-							$data4SQL = ",data4='$row[0]'";
+							$pe_append='';
+							if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+								{$pe_append = "-$qm_extension";}
+							$data4SQL = ",data4='$row[0]$pe_append'";
 							}
 
 						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$MDnextCID',queue='$VDcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$length_in_sec',data3='$VDqueue_position',serverid='$queuemetrics_log_id' $data4SQL;";
@@ -5716,7 +5743,7 @@ if ($ACTION == 'userLOGout')
 			{
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
-			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_dispo_pause FROM system_settings;";
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,queuemetrics_pe_phone_append FROM system_settings;";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00138',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -5734,6 +5761,7 @@ if ($ACTION == 'userLOGout')
 				$queuemetrics_loginout =			$row[7];
 				$queuemetrics_addmember_enabled =	$row[8];
 				$queuemetrics_dispo_pause =			$row[9];
+				$queuemetrics_pe_phone_append =		$row[10];
 				}
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
 			###########################################
@@ -5782,7 +5810,10 @@ if ($ACTION == 'userLOGout')
 				if ($cqpe_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
-					$data4SQL = ",data4='$row[0]'";
+					$pe_append='';
+					if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+						{$pe_append = "-$qm_extension";}
+					$data4SQL = ",data4='$row[0]$pe_append'";
 					}
 
 				$time_logged_in = ($StarTtime - $logintime);
@@ -6771,7 +6802,7 @@ if ($ACTION == 'updateDISPO')
 
 	#############################################
 	##### START QUEUEMETRICS LOGGING LOOKUP #####
-	$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_callstatus,queuemetrics_dispo_pause FROM system_settings;";
+	$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_callstatus,queuemetrics_dispo_pause,queuemetrics_pe_phone_append FROM system_settings;";
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00159',$user,$server_ip,$session_name,$one_mysql_log);}
 	if ($DB) {echo "$stmt\n";}
@@ -6787,6 +6818,7 @@ if ($ACTION == 'updateDISPO')
 		$queuemetrics_log_id =			$row[5];
 		$queuemetrics_callstatus =		$row[6];
 		$queuemetrics_dispo_pause =		$row[7];
+		$queuemetrics_pe_phone_append = $row[8];
 		}
 	##### END QUEUEMETRICS LOGGING LOOKUP #####
 	###########################################
@@ -7456,7 +7488,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 			{
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
-			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append FROM system_settings;";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00167',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -7471,6 +7503,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 				$queuemetrics_login	=			$row[3];
 				$queuemetrics_pass =			$row[4];
 				$queuemetrics_log_id =			$row[5];
+				$queuemetrics_pe_phone_append =	$row[6];
 				$i++;
 				}
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -7503,7 +7536,10 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 				if ($cqpe_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
-					$data4SQL = ",data4='$row[0]'";
+					$pe_append='';
+					if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+						{$pe_append = "-$qm_extension";}
+					$data4SQL = ",data4='$row[0]$pe_append'";
 					}
 
 				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='$QMstatus',serverid='$queuemetrics_log_id' $data4SQL;";
@@ -7730,7 +7766,7 @@ if ($ACTION == 'PauseCodeSubmit')
 			{
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
-			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages FROM system_settings;";
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages,queuemetrics_pe_phone_append FROM system_settings;";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00176',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -7746,6 +7782,7 @@ if ($ACTION == 'PauseCodeSubmit')
 				$queuemetrics_pass =			$row[4];
 				$queuemetrics_log_id =			$row[5];
 				$allow_sipsak_messages =		$row[6];
+				$queuemetrics_pe_phone_append = $row[7];
 				$i++;
 				}
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
