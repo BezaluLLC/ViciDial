@@ -23003,20 +23003,30 @@ if ($ADD==3111)
 		$Xmenus_to_print = mysql_num_rows($rslt);
 		$o=0;
 		$Xmenuslist='';
+		$Wmenuslist='';
 		while ($Xmenus_to_print > $o) 
 			{
 			$rowx=mysql_fetch_row($rslt);
 			$Xmenuslist .= "<option ";
+			$Wmenuslist .= "<option ";
 			if ($hold_time_option_callmenu == "$rowx[0]") 
 				{
 				$Xmenuslist .= "SELECTED ";
 				$Xmenus_selected++;
 				}
+			if ($wait_time_option_callmenu == "$rowx[0]") 
+				{
+				$Wmenuslist .= "SELECTED ";
+				$Wmenus_selected++;
+				}
 			$Xmenuslist .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+			$Wmenuslist .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 			$o++;
 			}
 		if ($Xmenus_selected < 1) 
 			{$Xmenuslist .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
+		if ($Wmenus_selected < 1) 
+			{$Wmenuslist .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
 
 
 		##### get in-groups listings for dynamic pulldown
@@ -23031,6 +23041,8 @@ if ($ADD==3111)
 		$Agroups_selected=0;
 		$Hgroups_menu='';
 		$Hgroups_selected=0;
+		$Wgroups_menu='';
+		$Wgroups_selected=0;
 		$Tgroups_menu='';
 		$Tgroups_selected=0;
 		$o=0;
@@ -23041,6 +23053,7 @@ if ($ADD==3111)
 			$Dgroups_menu .= "<option ";
 			$Agroups_menu .= "<option ";
 			$Tgroups_menu .= "<option ";
+			$Wgroups_menu .= "<option ";
 			$Hgroups_menu .= "<option ";
 			if ($default_xfer_group == "$rowx[0]") 
 				{
@@ -23062,6 +23075,11 @@ if ($ADD==3111)
 				$Tgroups_menu .= "SELECTED ";
 				$Tgroups_selected++;
 				}
+			if ($wait_time_option_xfer_group == "$rowx[0]") 
+				{
+				$Wgroups_menu .= "SELECTED ";
+				$Wgroups_selected++;
+				}
 			if ($hold_recall_xfer_group == "$rowx[0]") 
 				{
 				$Hgroups_menu .= "SELECTED ";
@@ -23073,6 +23091,7 @@ if ($ADD==3111)
 				{
 				$Agroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 				$Tgroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+				$Wgroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 				$Hgroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 				}
 			$o++;
@@ -23093,6 +23112,10 @@ if ($ADD==3111)
 			{$Tgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
 		else 
 			{$Tgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
+		if ($Wgroups_selected < 1) 
+			{$Wgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
+		else 
+			{$Wgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
 		if ($Hgroups_selected < 1) 
 			{$Hgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
 		else 
@@ -23311,13 +23334,13 @@ if ($ADD==3111)
 		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Extension: </td><td align=left><input type=text name=wait_time_option_exten size=20 maxlength=20 value=\"$wait_time_option_exten\">$NWB#vicidial_inbound_groups-wait_time_option_exten$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right><a href=\"$PHP_SELF?ADD=3511&menu_id=$wait_time_option_callmenu\">Wait Time Option Callmenu</a>: </td><td align=left><select size=1 name=wait_time_option_callmenu>\n";
-		echo "$Xmenuslist";
+		echo "$Wmenuslist";
 		echo "</select>$NWB#vicidial_inbound_groups-wait_time_option_callmenu$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Voicemail: </td><td align=left><input type=text name=wait_time_option_voicemail id=wait_time_option_voicemail size=12 maxlength=10 value=\"$wait_time_option_voicemail\"> <a href=\"javascript:launch_vm_chooser('wait_time_option_voicemail','vm',1100);\">voicemail chooser</a> $NWB#vicidial_inbound_groups-wait_time_option_voicemail$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Transfer In-Group: </td><td align=left><select size=1 name=wait_time_option_xfer_group>";
-		echo "$Tgroups_menu";
+		echo "$Wgroups_menu";
 		echo "</select>$NWB#vicidial_inbound_groups-wait_time_option_xfer_group$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Press Filename: </td><td align=left><input type=text name=wait_time_option_press_filename id=wait_time_option_press_filename size=50 maxlength=255 value=\"$wait_time_option_press_filename\"> <a href=\"javascript:launch_chooser('wait_time_option_press_filename','date',1200);\">audio chooser</a> $NWB#vicidial_inbound_groups-wait_time_option_press_filename$NWE</td></tr>\n";
@@ -23719,7 +23742,7 @@ if ($ADD==3111)
 
 		echo "</table></center><br></FORM>\n";
 
-		echo "</table></center><br>\n";
+#		echo "</table></center><br>\n";
 
 		echo "<a href=\"./AST_CLOSERstats.php?group[]=$group_id\">Click here to see a report for this inbound group</a><BR><BR>\n";
 
@@ -23788,6 +23811,7 @@ if ($ADD==3111)
 		echo "You do not have permission to view this page\n";
 		exit;
 		}
+
 	}
 
 
