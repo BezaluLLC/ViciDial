@@ -244,7 +244,13 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 					{
 					if (strlen($A_field_value[$o]) < 1) {$A_field_value[$o] = $A_field_default[$o];}
 					if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
-					$field_HTML .= "$A_field_value[$o]\n";
+					$field_HTML .= "<input type=hidden name=$A_field_label[$o] id=$A_field_label[$o] value=\"$A_field_value[$o]\"> $A_field_value[$o]\n";
+					}
+				if ($A_field_type[$o]=='HIDDEN')
+					{
+					if (strlen($A_field_value[$o]) < 1) {$A_field_value[$o] = $A_field_default[$o];}
+					if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
+					$field_HTML .= "<input type=hidden name=$A_field_label[$o] id=$A_field_label[$o] value=\"$A_field_value[$o]\">\n";
 					}
 				if ($A_field_type[$o]=='SCRIPT')
 					{
