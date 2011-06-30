@@ -626,6 +626,8 @@ OTHER CHANGES:
 139. Added ability to define the agent screen status fields shown to the agent:
 	Call ID, Lead ID and List ID
 
+140. Added HIDDEN and READONLY field types for custom list fields.
+
 
 
 

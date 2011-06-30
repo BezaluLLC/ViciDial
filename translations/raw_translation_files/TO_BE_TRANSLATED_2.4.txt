@@ -139,7 +139,7 @@ For the SELECT, MULTI, RADIO and CHECKBOX field types, you must define the optio
 Field Size||
 This setting will mean different things depending on what the field type is. For TEXT fields, the size is the number of characters that will show in the field. For AREA fields, the size is the width of the text box in characters. For MULTI fields, this setting defines the number of options to be shown in the multi select list. For SELECT, RADIO, CHECKBOX, DATE and TIME this setting is ignored||
 Field Max||
-This setting will mean different things depending on what the field type is. For TEXT fields, the size is the maximum number of characters that are allowed in the field. For AREA fields, this field defines the number of rows of text visible in the text box. For MULTI, SELECT, RADIO, CHECKBOX, DATE and TIME this setting is ignored||
+This setting will mean different things depending on what the field type is. For TEXT, HIDDEN and READONLY fields, the size is the maximum number of characters that are allowed in the field. For AREA fields, this field defines the number of rows of text visible in the text box. For MULTI, SELECT, RADIO, CHECKBOX, DATE and TIME this setting is ignored||
 Field Cost||
 This read only field tells you what the cost of this field is in the custom field table for this list. There is no hard limit for the number of custom fields you can have in a list, but the total of the cost of all fields for the list must be below 65000. This typically allows for hundreds of fields, but if you specify several TEXT fields that are hundreds or thousands of characters in length then you may hit this limit quickly. If you need that much text in a field you should choose an AREA type, which are stored differently and do not use as much table space||
 Field Required||
@@ -638,6 +638,7 @@ You can select which variables for calls will be displayed in the status line of
 CAMPAIGNS USING THIS SCREEN LABEL||
 QueueMetrics Phone Environment Phone Append||
 This option, if enabled, will append the agent phone login to the data4 record in the queue log table if the Campaign Phone Environment field is populated. Default is 0 for disabled||
+HIDDEN will not show the agent the field, but will allow the field to have data imported into it and exported from it, as well as have it available to the script tab and web form address. READONLY will display the value of the data in the field, but will not allow the agent to alter the data||
 
 
 lead_report_export.php

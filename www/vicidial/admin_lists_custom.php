@@ -1,7 +1,7 @@
 <?php
 # admin_lists_custom.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen manages the custom lists fields in ViciDial
 #
@@ -16,10 +16,11 @@
 # 100728-1724 - Added field validation for select lists and checkbox/radio buttons
 # 100916-1754 - Do not show help in example form if help is empty
 # 101228-2049 - Fixed missing PHP long tag
+# 110629-1438 - Fixed change from DISPLAY or SCRIPT to other field type error, added HIDDEN and READONLY field types
 #
 
-$admin_version = '2.4-10';
-$build = '101228-2049';
+$admin_version = '2.4-11';
+$build = '110629-1438';
 
 
 require("dbconnect.php");
@@ -277,7 +278,7 @@ if ($action == "HELP")
 
 	<A NAME="vicidial_lists_fields-field_type">
 	<BR>
-	 <B>Field Type -</B> This option defines the type of field that will be displayed. TEXT is a standard single-line entry form, AREA is a multi-line text box, SELECT is a single-selection pull-down menu, MULTI is a multiple-select box, RADIO is a list of radio buttons where only one option can be selected, CHECKBOX is a list of checkboxes where multiple options can be selected, DATE is a year month day calendar popup where the agent can select the date and TIME is a time selection box. The default is TEXT. For the SELECT, MULTI, RADIO and CHECKBOX options you must define the option values below in the Field Options box. DISPLAY will display only and not allow for modification by the agent. SCRIPT will also display only, but you are able to use script variables just like in the Scripts feature. SCRIPT fields will also only display the content in the Options, and not the field name like the DISPLAY type does.
+	 <B>Field Type -</B> This option defines the type of field that will be displayed. TEXT is a standard single-line entry form, AREA is a multi-line text box, SELECT is a single-selection pull-down menu, MULTI is a multiple-select box, RADIO is a list of radio buttons where only one option can be selected, CHECKBOX is a list of checkboxes where multiple options can be selected, DATE is a year month day calendar popup where the agent can select the date and TIME is a time selection box. The default is TEXT. For the SELECT, MULTI, RADIO and CHECKBOX options you must define the option values below in the Field Options box. DISPLAY will display only and not allow for modification by the agent. SCRIPT will also display only, but you are able to use script variables just like in the Scripts feature. SCRIPT fields will also only display the content in the Options, and not the field name like the DISPLAY type does. HIDDEN will not show the agent the field, but will allow the field to have data imported into it and exported from it, as well as have it available to the script tab and web form address. READONLY will display the value of the data in the field, but will not allow the agent to alter the data.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_options">
@@ -297,7 +298,7 @@ if ($action == "HELP")
 
 	<A NAME="vicidial_lists_fields-field_max">
 	<BR>
-	 <B>Field Max -</B> This setting will mean different things depending on what the field type is. For TEXT fields, the size is the maximum number of characters that are allowed in the field. For AREA fields, this field defines the number of rows of text visible in the text box. For MULTI, SELECT, RADIO, CHECKBOX, DATE and TIME this setting is ignored.
+	 <B>Field Max -</B> This setting will mean different things depending on what the field type is. For TEXT, HIDDEN and READONLY fields, the size is the maximum number of characters that are allowed in the field. For AREA fields, this field defines the number of rows of text visible in the text box. For MULTI, SELECT, RADIO, CHECKBOX, DATE and TIME this setting is ignored.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_default">
@@ -1068,7 +1069,17 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		if ($A_field_type[$o]=='DISPLAY')
 			{
 			if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
+			$field_HTML .= "\n";
+			}
+		if ($A_field_type[$o]=='READONLY')
+			{
+			if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
 			$field_HTML .= "$A_field_default[$o]\n";
+			}
+		if ($A_field_type[$o]=='HIDDEN')
+			{
+			if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
+			$field_HTML .= "-- HIDDEN --\n";
 			}
 		if ($A_field_type[$o]=='SCRIPT')
 			{
@@ -1213,6 +1224,8 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<option>TIME</option>\n";
 		echo "<option>DISPLAY</option>\n";
 		echo "<option>SCRIPT</option>\n";
+		echo "<option>HIDDEN</option>\n";
+		echo "<option>READONLY</option>\n";
 		echo "<option selected>$A_field_type[$o]</option>\n";
 		echo "</select>  $NWB#vicidial_lists_fields-field_type$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Field Options $A_field_rank[$o]: </td><td align=left><textarea name=field_options ROWS=5 COLS=60>$A_field_options[$o]</textarea>  $NWB#vicidial_lists_fields-field_options$NWE </td></tr>\n";
@@ -1276,6 +1289,8 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "<option>TIME</option>\n";
 	echo "<option>DISPLAY</option>\n";
 	echo "<option>SCRIPT</option>\n";
+	echo "<option>HIDDEN</option>\n";
+	echo "<option>READONLY</option>\n";
 	echo "<option selected>TEXT</option>\n";
 	echo "</select>  $NWB#vicidial_lists_fields-field_type$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Field Options: </td><td align=left><textarea name=field_options ROWS=5 COLS=60></textarea>  $NWB#vicidial_lists_fields-field_options$NWE </td></tr>\n";
@@ -1529,7 +1544,7 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 		if ($field_cost < 1) {$field_cost=1;};
 		$field_sql .= "VARCHAR($field_cost) ";
 		}
-	if ($field_type=='TEXT') 
+	if ( ($field_type=='TEXT') or ($field_type=='HIDDEN') or ($field_type=='READONLY') )
 		{
 		if ($field_max < 1) {$field_max=1;};
 		$field_sql .= "VARCHAR($field_max) ";
@@ -1597,7 +1612,21 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 ##### BEGIN modify field function
 function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields)
 	{
-	$field_sql = "ALTER TABLE custom_$list_id MODIFY $field_label ";
+	$field_db_exists=0;
+	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or (preg_match("/\|$field_label\|/",$vicidial_list_fields)) )
+		{$field_db_exists=1;}
+	else
+		{
+		$stmt="SHOW COLUMNS from custom_$list_id LIKE '$field_label';";
+		if ($DB>0) {echo "$stmt";}
+		$rslt=mysql_query($stmt, $link);
+		$field_db_exists = mysql_num_rows($rslt);
+		}
+	if ($field_db_exists > 0)
+		{$field_sql = "ALTER TABLE custom_$list_id MODIFY $field_label ";}
+	else
+		{$field_sql = "ALTER TABLE custom_$list_id ADD $field_label ";}
+
 	$field_options_ENUM='';
 	$field_cost=1;
 	if ( ($field_type=='SELECT') or ($field_type=='RADIO') )
@@ -1636,7 +1665,7 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 		$field_cost = strlen($field_options_ENUM);
 		$field_sql .= "VARCHAR($field_cost) ";
 		}
-	if ($field_type=='TEXT') 
+	if ( ($field_type=='TEXT') or ($field_type=='HIDDEN') or ($field_type=='READONLY') )
 		{
 		$field_sql .= "VARCHAR($field_max) ";
 		$field_cost = ($field_max + $field_cost);

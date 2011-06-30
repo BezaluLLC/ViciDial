@@ -306,7 +306,7 @@ if ($stage=='SUBMIT')
 
 			$A_field_value[$o] = $form_field_value;
 
-			if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
+			if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') or ($A_field_type[$o]=='HIDDEN') or ($A_field_type[$o]=='READONLY') )
 				{
 				$A_field_value[$o]='----IGNORE----';
 				}
