@@ -1,7 +1,7 @@
 <?php
 # dispo_move_list.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to be used in the "Dispo URL" field of a campaign
 # or in-group. It should take in the lead_id to check for the same lead_id
@@ -16,11 +16,19 @@
 # not run if the search field of the lead is empty.
 #
 # Example of what to put in the Dispo URL field:
-# VARhttp://192.168.1.1/agc/dispo_move_list.php?lead_id=--A--lead_id--B--&new_list_id=10411099&dispo=--A--dispo--B--&user=--A--user--B--&pass=--A--pass--B--&sale_status=SALE---SSALE---XSALE&reset_dialed=Y&log_to_file=1
+# VARhttp://192.168.1.1/agc/dispo_move_list.php?lead_id=--A--lead_id--B--&dispo=--A--dispo--B--&user=--A--user--B--&pass=--A--pass--B--&new_list_id=10411099&sale_status=SALE---SSALE---XSALE&reset_dialed=Y&log_to_file=1
 # 
+# Definable Fields: (other fields should be left as they are)
+# - log_to_file -	(0,1) if set to 1, will create a log file in the agc directory
+# - sale_status -	(SALE---XSALE) a triple-dash "---" delimited list of the statuses that are to be moved
+# - new_list_id -	(999,etc...) the list_id that you want the matching status leads to be moved to
+# - reset_dialed -	(Y,N) if set to Y, will reset the called_since_last_reset flag on the lead
+#    Multiple sets of statuses:
+# - sale_status_1, new_list_id_1, reset_dialed_1 - adding an underscore and number(1-99) will allow for another set of statuses to check for and what to do with them
 #
 # CHANGES
 # 100915-1600 - First Build
+# 110702-2020 - Added multiple sets of options
 #
 
 $api_script = 'deactivate';
@@ -64,10 +72,46 @@ $STARTtime = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
 $sale_status = "$TD$sale_status$TD";
 $search_value='';
+$match_found=0;
+$k=0;
 
 if ($DB>0) {echo "$lead_id|$search_field|$campaign_check|$sale_status|$dispo|$new_status|$user|$pass|$DB|$log_to_file|\n";}
 
 if (preg_match("/$TD$dispo$TD/",$sale_status))
+	{$match_found=1;}
+else
+	{
+	$sale_status='';
+	$new_list_id='';
+	$reset_dialed='';
+	while( ($match_found < 1) and ($k < 99) )
+		{
+		$k++;
+		$sale_status='';
+		$statusfield = "sale_status_$k";
+		if (isset($_GET["$statusfield"]))			{$sale_status=$_GET["$statusfield"];}
+			elseif (isset($_POST["$statusfield"]))	{$sale_status=$_POST["$statusfield"];}
+		$sale_status = "$TD$sale_status$TD";
+
+		if ($DB) {echo "MULTI_MATCH CHECK: $k|$sale_status|$statusfield|\n";}
+
+		if (strlen($sale_status)>0)
+			{
+			if (preg_match("/$TD$dispo$TD/",$sale_status))
+				{
+				$match_found=1;
+				$newlistfield = "new_list_id_$k";
+				$resetfield = "reset_dialed_$k";
+				if (isset($_GET["$newlistfield"]))			{$new_list_id=$_GET["$newlistfield"];}
+					elseif (isset($_POST["$newlistfield"]))	{$new_list_id=$_POST["$newlistfield"];}
+				if (isset($_GET["$resetfield"]))			{$reset_dialed=$_GET["$resetfield"];}
+					elseif (isset($_POST["$resetfield"]))	{$reset_dialed=$_POST["$resetfield"];}
+				if ($DB) {echo "MULTI_MATCH: $k|$sale_status|$new_list_id|$reset_dialed\n";}
+				}
+			}
+		}
+	}
+if ($match_found > 0)
 	{
 	#############################################
 	##### START SYSTEM_SETTINGS INFO LOOKUP #####
@@ -165,6 +209,6 @@ else
 if ($log_to_file > 0)
 	{
 	$fp = fopen ("./dispo_move_list.txt", "a");
-	fwrite ($fp, "$NOW_TIME|$lead_id|$new_list_id|$sale_status|$dispo|$user|$pass|$DB|$log_to_file|$MESSAGE|\n");
+	fwrite ($fp, "$NOW_TIME|$k|$lead_id|$new_list_id|$sale_status|$dispo|$user|$pass|$DB|$log_to_file|$MESSAGE|\n");
 	fclose($fp);
 	}
