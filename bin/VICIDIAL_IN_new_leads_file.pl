@@ -51,9 +51,10 @@
 # 100928-1121 - Added file-prefix-filter option
 # 110420-0944 - Fixed file prefix issue with multiple processes running
 # 110424-0948 - Added time-zone-code-gmt option to use time zone code from the owner field
+# 110705-1913 - Added options for USACAN prefix(no 0 or 1) and valid areacode filtering
 #
 
-$version = '110424-0948';
+$version = '110705-1913';
 
 $secX = time();
 $MT[0]='';
@@ -161,6 +162,8 @@ if (length($ARGV[0])>1)
 		print "  [--new-listid-prefix=X] = prefix for listID when creating new lists, must be only numbers, and 4 or less digits\n";
 		print "  [--new-listname-prefix=X] = prefix for list name when creating new lists, will be followed by filename\n";
 		print "  [--new-list-campaign=X] = campaign that the new list will be assigned to\n";
+		print "  [--USACAN-prefix-check] = check for the 4th digit 2-9, USA and Canada validation\n";
+		print "  [--USACAN-areacode-check] = check for the valid phone code 1 areacodes, USA and Canada validation\n";
 		print "  [--duplicate-check] = checks for the same phone number in the same list id before inserting lead\n";
 		print "  [--duplicate-campaign-check] = checks for the same phone number in the same campaign before inserting lead\n";
 		print "  [--duplicate-system-check] = checks for the same phone number in the entire system before inserting lead\n";
@@ -282,6 +285,16 @@ if (length($ARGV[0])>1)
 		else
 			{$file_prefix_filter = '';}
 
+		if ($args =~ /--USACAN-prefix-check/i)
+			{
+			$usacan_prefix_check=1;
+			if ($q < 1) {print "\n----- USACAN PREFIX CHECK -----\n\n";}
+			}
+		if ($args =~ /--USACAN-areacode-check/i)
+			{
+			$usacan_areacode_check=1;
+			if ($q < 1) {print "\n----- USACAN AREACODE CHECK -----\n\n";}
+			}
 		if ($args =~ /-duplicate-check/i)
 			{
 			$dupcheck=1;
@@ -622,6 +635,7 @@ foreach(@FILES)
 		$e=0;	### status of 'ERROR' counter ###
 		$f=0;	### number of 'DUPLICATE' counter ###
 		$g=0;	### number of leads with multi-alt-entries
+		$h=0;	### number of 'INVALID' counter ###
 
 		$multi_insert_counter=0;
 		$multistmt='';
@@ -1572,6 +1586,40 @@ foreach(@FILES)
 
 			if ($DBX) {print "$a|$phone_number\n";}
 
+
+			$valid_lead=1;
+			##### Check for valid USA and Canada prefix #####
+			if ($usacan_prefix_check > 0)
+				{
+				$USprefix = 			substr($phone_number, 3, 1);
+				if ($USprefix < 2)
+					{
+					$valid_lead = '0';
+					if ($DBX) {print "     Invalid USACAN prefix 4th digit: |$USprefix|$phone_number|\n";}
+					}
+				}
+
+			##### Check for valid USA and Canada areacodes #####
+			if ( ($usacan_areacode_check > 0) && ($valid_lead > 0) )
+				{
+				$USarea = 			substr($phone_number, 0, 3);
+				$stmtA = "select count(*) from vicidial_phone_codes where areacode='$USarea' and country_code='1';";
+					if($DBX){print STDERR "\n|$stmtA|\n";}
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$valid_lead = $aryA[0];
+					if ($valid_lead < 1)
+						{
+						if ($DBX) {print "     Invalid USACAN areacode: |$USprefix|$phone_number|\n";}
+						}
+					}
+				$sthA->finish();
+				}
+
 			##### Check for duplicate phone numbers in vicidial_list table entire database #####
 			if ($dupchecksys > 0)
 				{
@@ -1718,7 +1766,7 @@ foreach(@FILES)
 					}
 				}
 
-			if ( (length($phone_number)>6) && ($dup_lead < 1) )
+			if ( (length($phone_number)>6) && ($dup_lead < 1) && ($valid_lead > 0) )
 				{
 				if ( ($duptapchecklist > 0) || ($duptapchecksys > 0) )
 					{$phone_list .= "$alt_phone$title$US$list_id|";}
@@ -2019,10 +2067,15 @@ foreach(@FILES)
 				}
 			else
 				{
-				if ($dup_lead > 0)
-					{if ($q < 1) {print "DUPLICATE: $phone_number|$list_id|$dup_lead_list|$a|$title $alt_phone\n";}   $f++;}
+				if ($valid_lead < 1)
+					{if ($q < 1) {print "INVALID: $phone_number|$list_id|$dup_lead_list|$a|$title $alt_phone\n";}   $h++;}
 				else
-					{if ($q < 1) {print "BAD Home_Phone: $phone_number|$vendor_id|$a\n";}   $e++;}
+					{
+					if ($dup_lead > 0)
+						{if ($q < 1) {print "DUPLICATE: $phone_number|$list_id|$dup_lead_list|$a|$title $alt_phone\n";}   $f++;}
+					else
+						{if ($q < 1) {print "BAD Home_Phone: $phone_number|$vendor_id|$a\n";}   $e++;}
+					}
 				}
 			
 			$a++;
@@ -2038,7 +2091,7 @@ foreach(@FILES)
 				if ($a =~ /700$/i) {print STDERR "|     $a\r";}
 				if ($a =~ /800$/i) {print STDERR "+     $a\r";}
 				if ($a =~ /900$/i) {print STDERR "0     $a\r";}
-				if ($a =~ /000$/i) {print "$a|$b|$c|$d|$e|$f|$g|$phone_number|\n";}
+				if ($a =~ /000$/i) {print "$a|$b|$c|$d|$e|$f|$g|$h|$phone_number|\n";}
 				}
 
 			}
@@ -2073,6 +2126,8 @@ foreach(@FILES)
 			$Falert .= "MULTI-ALT-PHONE:    $g\n";
 			if ($f > 0)
 				{$Falert .= "DUPLICATES:         $f\n";}
+			if ($h > 0)
+				{$Falert .= "INVALID PHONES:     $h\n";}
 
 			if ($q < 1) {print "$Falert";}
 			print Sout "$Falert";

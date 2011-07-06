@@ -61,6 +61,7 @@
 # 101214-1507 - Changed list auto-reset to work with inactive lists
 # 110512-2112 - Added vicidial_campaign_stats_debug to table cleaning
 # 110525-2334 - Added cm.agi optional logging to call menus
+# 110705-2023 - Added agents_calls_reset option
 #
 
 $DB=0; # Debug flag
@@ -631,6 +632,18 @@ $timeclock_end_of_day_NOW=0;
 
 if ($timeclock_end_of_day_NOW > 0)
 	{
+	$stmtA = "SELECT agents_calls_reset from system_settings;";
+	if ($DB) {print "|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$SSsel_ct=$sthA->rows;
+	if ($SSsel_ct > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$agents_calls_reset =	 $aryA[0];
+		}
+	$sthA->finish();
+
 	if ($DB) {print "Starting clear out non-used vicidial_conferences sessions process...\n";}
 
 	$stmtA = "SELECT conf_exten,extension from vicidial_conferences where server_ip='$server_ip' and leave_3way='0';";
@@ -785,15 +798,28 @@ if ($timeclock_end_of_day_NOW > 0)
 	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
 	$sthA->finish();
 
-	$stmtA = "delete from vicidial_live_inbound_agents where last_call_finish < \"$TDSQLdate\";";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_live_inbound_agents old records deleted|\n";}
-
 	$stmtA = "update vicidial_live_inbound_agents SET calls_today=0;";
 	if($DBX){print STDERR "\n|$stmtA|\n";}
 	$affected_rows = $dbhA->do($stmtA);
 	if($DB){print STDERR "\n|$affected_rows vicidial_live_inbound_agents call counts reset|\n";}
+
+	if ($agents_calls_reset > 0)
+		{
+		$stmtA = "delete from vicidial_live_inbound_agents where last_call_finish < \"$TDSQLdate\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_live_inbound_agents old records deleted|\n";}
+
+		$stmtA = "delete from vicidial_live_agents where last_state_change < \"$TDSQLdate\" and extension NOT LIKE \"R/%\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_live_agents old records deleted|\n";}
+
+		$stmtA = "delete from vicidial_auto_calls where last_update_time < \"$TDSQLdate\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_auto_calls old records deleted|\n";}
+		}
 
 	$stmtA = "optimize table vicidial_live_inbound_agents;";
 	if($DBX){print STDERR "\n|$stmtA|\n";}
@@ -804,11 +830,6 @@ if ($timeclock_end_of_day_NOW > 0)
 	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
 	$sthA->finish();
 
-	$stmtA = "delete from vicidial_live_agents where last_state_change < \"$TDSQLdate\" and extension NOT LIKE \"R/%\";";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_live_agents old records deleted|\n";}
-
 	$stmtA = "optimize table vicidial_live_agents;";
 	if($DBX){print STDERR "\n|$stmtA|\n";}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -817,11 +838,6 @@ if ($timeclock_end_of_day_NOW > 0)
 	@aryA = $sthA->fetchrow_array;
 	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
 	$sthA->finish();
-
-	$stmtA = "delete from vicidial_auto_calls where last_update_time < \"$TDSQLdate\";";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_auto_calls old records deleted|\n";}
 
 	$stmtA = "optimize table vicidial_auto_calls;";
 	if($DBX){print STDERR "\n|$stmtA|\n";}

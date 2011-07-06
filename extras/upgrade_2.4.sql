@@ -863,3 +863,8 @@ UPDATE system_settings SET db_schema_version='1283',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_lists_fields MODIFY field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY') default 'TEXT';
 
 UPDATE system_settings SET db_schema_version='1284',db_schema_update_date=NOW() where db_schema_version < 1284;
+
+ALTER TABLE system_settings ADD test_campaign_calls ENUM('0','1') default '0';
+ALTER TABLE system_settings ADD agents_calls_reset ENUM('0','1') default '1';
+
+UPDATE system_settings SET db_schema_version='1285',db_schema_update_date=NOW() where db_schema_version < 1285;

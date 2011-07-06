@@ -628,6 +628,13 @@ OTHER CHANGES:
 
 140. Added HIDDEN and READONLY field types for custom list fields.
 
+141. Added Outbound Campaign Test Call feature to allow you to place a call from
+	the Campaign Detail screen that will go out as if it were an auto-dial 
+	call. Must be enabled in System Settings.
+
+142. Added ability to check for USA and Canada valid prefix and areacodes when
+	loading leads into the web/cli/api lead loaders
+
 
 
 

@@ -639,6 +639,13 @@ CAMPAIGNS USING THIS SCREEN LABEL||
 QueueMetrics Phone Environment Phone Append||
 This option, if enabled, will append the agent phone login to the data4 record in the queue log table if the Campaign Phone Environment field is populated. Default is 0 for disabled||
 HIDDEN will not show the agent the field, but will allow the field to have data imported into it and exported from it, as well as have it available to the script tab and web form address. READONLY will display the value of the data in the field, but will not allow the agent to alter the data||
+Enable Campaign Test Calls||
+This setting enables the ability to enter a phone code and phone number into fields at the bottom of the Campaign Detail screen and place a phone call to that number as if it were a lead being auto-dialed in the system. The phone number will be stored as a new lead in the manual dial list ID list. The campaign must be active for this feature to be enabled, and it is recommended that the lists assigned to the campaign all be set to inactive. The dial prefix, dial timeout and all other dialing related features, except for DNC and call time options, will affect the dialing of the test number. The phone call will be placed on the server selected as the voicemail server in the system settings. Default is 0 for disabled||
+Test calling disabled||
+PLACE TEST CALL||
+Test Outbound Call||
+Agents Calls Reset||
+This setting defines whether the logged-in agents and active phone calls records are to be reset at the timeclock end of day. Default is 1 for enabled||
 
 
 lead_report_export.php

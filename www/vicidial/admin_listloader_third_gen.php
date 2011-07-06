@@ -41,10 +41,11 @@
 # 100712-1416 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
 # 100728-0900 - Filtered uploaded filenames for unsupported characters
 # 110424-0926 - Added option for time zone code in the owner field
+# 110705-1947 - Added USACAN check for prefix and areacode
 #
 
-$version = '2.4-40';
-$build = '110424-0926';
+$version = '2.4-41';
+$build = '110705-1947';
 
 
 require("dbconnect.php");
@@ -135,6 +136,9 @@ if (isset($_GET["phone_code_override"]))			{$phone_code_override=$_GET["phone_co
 	$phone_code_override = (preg_replace("/\D/","",$phone_code_override));
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
+if (isset($_GET["usacan_check"]))			{$usacan_check=$_GET["usacan_check"];}
+	elseif (isset($_POST["usacan_check"]))	{$usacan_check=$_POST["usacan_check"];}
+
 
 # if the didnt select an over ride wipe out in_file
 if ( $list_id_override == "in_file" ) { $list_id_override = ""; }
@@ -334,10 +338,10 @@ function openNewWindow(url)
 	{
 	window.open (url,"",'width=700,height=300,scrollbars=yes,menubar=yes,address=yes');
 	}
-function ShowProgress(good, bad, total, dup, post) 
+function ShowProgress(good, bad, total, dup, inv, post) 
 	{
 	parent.lead_count.document.open();
-	parent.lead_count.document.write('<html><body><table border=0 width=200 cellpadding=10 cellspacing=0 align=center valign=top><tr bgcolor="#000000"><th colspan=2><font face="arial, helvetica" size=3 color=white>Current file status:</font></th></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B>Good:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+good+'</B></font></td></tr><tr bgcolor="#990000"><td align=right><font face="arial, helvetica" size=2 color=white><B>Bad:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+bad+'</B></font></td></tr><tr bgcolor="#000099"><td align=right><font face="arial, helvetica" size=2 color=white><B>Total:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+total+'</B></font></td></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B> &nbsp; </B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B> &nbsp; </B></font></td></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B>Duplicate:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+dup+'</B></font></td></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B>Postal Match:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+post+'</B></font></td></tr></table><body></html>');
+	parent.lead_count.document.write('<html><body><table border=0 width=200 cellpadding=10 cellspacing=0 align=center valign=top><tr bgcolor="#000000"><th colspan=2><font face="arial, helvetica" size=3 color=white>Current file status:</font></th></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B>Good:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+good+'</B></font></td></tr><tr bgcolor="#990000"><td align=right><font face="arial, helvetica" size=2 color=white><B>Bad:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+bad+'</B></font></td></tr><tr bgcolor="#000099"><td align=right><font face="arial, helvetica" size=2 color=white><B>Total:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+total+'</B></font></td></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B> &nbsp; </B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B> &nbsp; </B></font></td></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B>Duplicate:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+dup+'</B></font></td></tr></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B>Invalid:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+inv+'</B></font></td></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B>Postal Match:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+post+'</B></font></td></tr></table><body></html>');
 	parent.lead_count.document.close();
 	}
 function ParseFileName() 
@@ -427,7 +431,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard") ) )
 			<td align=right><B><font face="arial, helvetica" size=2>File layout to use:</font></B></td>
 			<td align=left><font face="arial, helvetica" size=2><input type=radio name="file_layout" value="standard" checked>Standard Format&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="custom">Custom layout</td>
 		  </tr>
-			<tr>
+		  <tr>
 			<td align=right width="25%"><font face="arial, helvetica" size=2>Lead Duplicate Check: </font></td>
 			<td align=left width="75%"><font face="arial, helvetica" size=1><select size=1 name=dupcheck>
 			<option selected value="NONE">NO DUPLICATE CHECK</option>
@@ -436,6 +440,15 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard") ) )
 			<option value="DUPSYS">CHECK FOR DUPLICATES BY PHONE IN ENTIRE SYSTEM</option>
 			<option value="DUPTITLEALTPHONELIST">CHECK FOR DUPLICATES BY TITLE/ALT-PHONE IN LIST ID</option>
 			<option value="DUPTITLEALTPHONESYS">CHECK FOR DUPLICATES BY TITLE/ALT-PHONE IN ENTIRE SYSTEM</option>
+			</select></td>
+		  </tr>
+		  <tr>
+			<td align=right width="25%"><font face="arial, helvetica" size=2>USA-Canada Check: </font></td>
+			<td align=left width="75%"><font face="arial, helvetica" size=1><select size=1 name=usacan_check>
+			<option selected value="NONE">NO USACAN VALID CHECK</option>
+			<option value="PREFIX">CHECK FOR VALID PREFIX</option>
+			<option value="AREACODE">CHECK FOR VALID AREACODE</option>
+			<option value="PREFIX_AREACODE">CHECK FOR VALID PREFIX and AREACODE</option>
 			</select></td>
 		  </tr>
 		  <tr>
@@ -466,6 +479,10 @@ else
 	<tr>
 	<td align=right width="35%"><B><font face="arial, helvetica" size=2>Phone Code Override:</font></B></td>
 	<td align=left width="75%"><font face="arial, helvetica" size=2><?php echo $phone_code_override ?></font></td>
+	</tr>
+	<tr>
+	<td align=right width="35%"><B><font face="arial, helvetica" size=2>USA-Canada Check:</font></B></td>
+	<td align=left width="75%"><font face="arial, helvetica" size=2><?php echo $usacan_check ?></font></td>
 	</tr>
 	<tr>
 	<td align=right width="35%"><B><font face="arial, helvetica" size=2>Lead Duplicate Check:</font></B></td>
@@ -815,8 +832,37 @@ if ($OK_to_process)
 						}
 					}
 
+				$valid_number=1;
+				if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )
+					{
+					$valid_number=0;
+					$invalid_reason = "INVALID PHONE NUMBER LENGTH";
+					}
+				if ( (preg_match("/PREFIX/",$usacan_check)) and ($valid_number > 0) )
+					{
+					$USprefix = 	substr($phone_number, 3, 1);
+					if ($DB>0) {echo "DEBUG: usacan prefix check - $USprefix|$phone_number\n";}
+					if ($USprefix < 2)
+						{
+						$valid_number=0;
+						$invalid_reason = "INVALID PHONE NUMBER PREFIX";
+						}
+					}
+				if ( (preg_match("/AREACODE/",$usacan_check)) and ($valid_number > 0) )
+					{
+					$phone_areacode = substr($phone_number, 0, 3);
+					$stmt = "select count(*) from vicidial_phone_codes where areacode='$phone_areacode' and country_code='1';";
+					if ($DB>0) {echo "DEBUG: usacan areacode query - $stmt\n";}
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$valid_number=$row[0];
+					if ($valid_number < 1)
+						{
+						$invalid_reason = "INVALID PHONE NUMBER AREACODE";
+						}
+					}
 
-				if ( (strlen($phone_number)>6) and ($dup_lead<1) and ($list_id >= 100 ))
+				if ( ($valid_number>0) and ($dup_lead<1) and ($list_id >= 100 ))
 					{
 					if (strlen($phone_code)<1) {$phone_code = '1';}
 
@@ -873,7 +919,14 @@ if ($OK_to_process)
 							}
 						else
 							{
-							print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";
+							if ($valid_number < 1)
+								{
+								print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INV: $phone_number</font><b>\n";
+								}
+							else
+								{
+								print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";
+								}
 							}
 						}
 					$bad++;
@@ -881,7 +934,7 @@ if ($OK_to_process)
 				$total++;
 				if ($total%100==0) 
 					{
-					print "<script language='JavaScript1.2'>ShowProgress($good, $bad, $total, $dup, $post)</script>";
+					print "<script language='JavaScript1.2'>ShowProgress($good, $bad, $total, $dup, $inv, $post)</script>";
 					usleep(1000);
 					flush();
 					}
@@ -1196,7 +1249,37 @@ if (($leadfile) && ($LF_path))
 							}
 						}
 
-					if ( (strlen($phone_number)>6) and ($dup_lead<1) and ($list_id >= 100 ))
+					$valid_number=1;
+					if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )
+						{
+						$valid_number=0;
+						$invalid_reason = "INVALID PHONE NUMBER LENGTH";
+						}
+					if ( (preg_match("/PREFIX/",$usacan_check)) and ($valid_number > 0) )
+						{
+						$USprefix = 	substr($phone_number, 3, 1);
+						if ($DB>0) {echo "DEBUG: usacan prefix check - $USprefix|$phone_number\n";}
+						if ($USprefix < 2)
+							{
+							$valid_number=0;
+							$invalid_reason = "INVALID PHONE NUMBER PREFIX";
+							}
+						}
+					if ( (preg_match("/AREACODE/",$usacan_check)) and ($valid_number > 0) )
+						{
+						$phone_areacode = substr($phone_number, 0, 3);
+						$stmt = "select count(*) from vicidial_phone_codes where areacode='$phone_areacode' and country_code='1';";
+						if ($DB>0) {echo "DEBUG: usacan areacode query - $stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$valid_number=$row[0];
+						if ($valid_number < 1)
+							{
+							$invalid_reason = "INVALID PHONE NUMBER AREACODE";
+							}
+						}
+
+					if ( ($valid_number>0) and ($dup_lead<1) and ($list_id >= 100 ))
 						{
 						if (strlen($phone_code)<1) {$phone_code = '1';}
 
@@ -1234,7 +1317,14 @@ if (($leadfile) && ($LF_path))
 								}
 							else
 								{
-								print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";
+								if ($valid_number < 1)
+									{
+									print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INV: $phone_number</font><b>\n";
+									}
+								else
+									{
+									print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";
+									}
 								}
 							}
 						$bad++;
@@ -1242,7 +1332,7 @@ if (($leadfile) && ($LF_path))
 					$total++;
 					if ($total%100==0) 
 						{
-						print "<script language='JavaScript1.2'>ShowProgress($good, $bad, $total, $dup, $post)</script>";
+						print "<script language='JavaScript1.2'>ShowProgress($good, $bad, $total, $dup, $inv, $post)</script>";
 						usleep(1000);
 						flush();
 						}
@@ -1422,6 +1512,7 @@ if (($leadfile) && ($LF_path))
 			}
 		print "  <tr bgcolor='#330099'>\r\n";
 		print "  <input type=hidden name=dupcheck value=\"$dupcheck\">\r\n";
+		print "  <input type=hidden name=usacan_check value=\"$usacan_check\">\r\n";
 		print "  <input type=hidden name=postalgmt value=\"$postalgmt\">\r\n";
 		print "  <input type=hidden name=lead_file value=\"$lead_file\">\r\n";
 		print "  <input type=hidden name=list_id_override value=\"$list_id_override\">\r\n";

@@ -387,13 +387,13 @@ external_dtmf VARCHAR(100) default '',
 external_transferconf VARCHAR(100) default '',
 external_park VARCHAR(40) default '',
 external_timer_action_destination VARCHAR(100) default '',
+on_hook_agent ENUM('Y','N') default 'N',
+on_hook_ring_time SMALLINT(5) default '15',
+ring_callerid VARCHAR(20) default ''
 index (random_id),
 index (last_call_time),
 index (last_update_time),
 index (last_call_finish),
-on_hook_agent ENUM('Y','N') default 'N',
-on_hook_ring_time SMALLINT(5) default '15',
-ring_callerid VARCHAR(20) default ''
 );
 
 CREATE TABLE vicidial_auto_calls (
@@ -1408,7 +1408,9 @@ generate_cross_server_exten ENUM('0','1') default '0',
 queuemetrics_addmember_enabled ENUM('0','1') default '0',
 queuemetrics_dispo_pause VARCHAR(6) default '',
 label_hide_field_logs VARCHAR(6) default 'Y',
-queuemetrics_pe_phone_append ENUM('0','1') default '0'
+queuemetrics_pe_phone_append ENUM('0','1') default '0',
+test_campaign_calls ENUM('0','1') default '0',
+agents_calls_reset ENUM('0','1') default '1'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2531,7 +2533,7 @@ ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_outbound_ivr_log_archive LIKE vicidial_outbound_ivr_log;
 
-UPDATE system_settings SET db_schema_version='1284',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1285',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

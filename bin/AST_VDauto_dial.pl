@@ -1170,7 +1170,7 @@ while($one_day_interval > 0)
 
 									if (length($ext_context) < 1) {$ext_context='default';}
 									### use manager middleware-app to connect the next call to the meetme room
-									# VmmddhhmmssLLLLLLLLL
+									# VmddhhmmssLLLLLLLLLL
 										$VqueryCID = "V$CIDdate$PADlead_id";
 									if ($CCID_on) {$CIDstring = "\"$VqueryCID\" <$CCID>";}
 									else {$CIDstring = "$VqueryCID";}

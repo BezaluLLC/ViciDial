@@ -49,10 +49,11 @@
 # 110424-0854 - Added option for time zone code lookups using owner field
 # 110529-1220 - Added time zone information output to version function
 # 110614-0726 - Added reset_lead option to update_lead function(issue #502)
+# 110705-1928 - Added options for USACAN 4th digit prefix(no 0 or 1) and valid areacode filtering to add_lead
 #
 
-$version = '2.4-35';
-$build = '110614-0726';
+$version = '2.4-36';
+$build = '110705-1928';
 
 $startMS = microtime();
 
@@ -245,8 +246,12 @@ if (isset($_GET["uniqueid"]))			{$uniqueid=$_GET["uniqueid"];}
 	elseif (isset($_POST["uniqueid"]))	{$uniqueid=$_POST["uniqueid"];}
 if (isset($_GET["tz_method"]))			{$tz_method=$_GET["tz_method"];}
 	elseif (isset($_POST["tz_method"]))	{$tz_method=$_POST["tz_method"];}
-if (isset($_GET["reset_lead"]))			{$reset_lead=$_GET["reset_lead"];}
+if (isset($_GET["reset_lead"]))				{$reset_lead=$_GET["reset_lead"];}
 	elseif (isset($_POST["reset_lead"]))	{$reset_lead=$_POST["reset_lead"];}
+if (isset($_GET["usacan_areacode_check"]))			{$usacan_areacode_check=$_GET["usacan_areacode_check"];}
+	elseif (isset($_POST["usacan_areacode_check"]))	{$usacan_areacode_check=$_POST["usacan_areacode_check"];}
+if (isset($_GET["usacan_prefix_check"]))			{$usacan_prefix_check=$_GET["usacan_prefix_check"];}
+	elseif (isset($_POST["usacan_prefix_check"]))	{$usacan_prefix_check=$_POST["usacan_prefix_check"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -374,6 +379,8 @@ if ($non_latin < 1)
 	$uniqueid=ereg_replace("[^- \.\_0-9a-zA-Z]","",$uniqueid);
 	$tz_method = ereg_replace("[^-\_0-9a-zA-Z]","",$tz_method);
 	$reset_lead = ereg_replace("[^A-Z]","",$reset_lead);
+	$usacan_areacode_check = ereg_replace("[^A-Z]","",$usacan_areacode_check);
+	$usacan_prefix_check = ereg_replace("[^A-Z]","",$usacan_prefix_check);
 	}
 else
 	{
@@ -2517,10 +2524,38 @@ if ($function == 'add_lead')
 			if (strlen($list_id)<3) {$list_id='999';}
 			if (strlen($phone_code)<1) {$phone_code='1';}
 
+			$valid_number=1;
 			if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )
 				{
+				$valid_number=0;
+				$result_reason = "add_lead INVALID PHONE NUMBER LENGTH";
+				}
+			if ( ($usacan_prefix_check=='Y') and ($valid_number > 0) )
+				{
+				$USprefix = 	substr($phone_number, 3, 1);
+				if ($DB>0) {echo "DEBUG: add_lead prefix check - $USprefix|$phone_number\n";}
+				if ($USprefix < 2)
+					{
+					$valid_number=0;
+					$result_reason = "add_lead INVALID PHONE NUMBER PREFIX";
+					}
+				}
+			if ( ($usacan_areacode_check=='Y') and ($valid_number > 0) )
+				{
+				$phone_areacode = substr($phone_number, 0, 3);
+				$stmt = "select count(*) from vicidial_phone_codes where areacode='$phone_areacode' and country_code='1';";
+				if ($DB>0) {echo "DEBUG: add_lead areacode check query - $stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$valid_number=$row[0];
+				if ($valid_number < 1)
+					{
+					$result_reason = "add_lead INVALID PHONE NUMBER AREACODE";
+					}
+				}
+			if ($valid_number < 1)
+				{
 				$result = 'ERROR';
-				$result_reason = "add_lead INVALID PHONE NUMBER";
 				echo "$result: $result_reason - $phone_number|$user\n";
 				$data = "$phone_number";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);

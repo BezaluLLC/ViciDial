@@ -1,4 +1,4 @@
-AGENT API DOCUMENT					Started: 2008-07-03
+AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2011-04-30
 
 This document describes the functions of an API(Application Programming Interface)
 for the VICIDIAL Agent screen. This functionality will be rather limited at first

@@ -2188,7 +2188,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				# generate callerID for unique identifier in xfer_log file
 				$PADlead_id = sprintf("%010s", $lead_id);
 					while (strlen($PADlead_id) > 10) {$PADlead_id = substr("$PADlead_id", 1);}
-				# Create unique calleridname to track the call: MmmddhhmmssLLLLLLLLL
+				# Create unique calleridname to track the call: MmddhhmmssLLLLLLLLLL
 					$MqueryCID = "M$CIDdate$PADlead_id";
 
 				#	DATETIME|campaign|lead_id|phone_number|user|type
@@ -2360,7 +2360,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$use_eac =	$row[0];
 					}
 
-				# Create unique calleridname to track the call: MmmddhhmmssLLLLLLLLL
+				# Create unique calleridname to track the call: MmddhhmmssLLLLLLLLLL
 					$MqueryCID = "M$CIDdate$PADlead_id";
 				$EAC='';
 				if ($use_eac > 0)
@@ -2910,7 +2910,7 @@ if ($ACTION == 'manDiaLonly')
 		$PADlead_id = sprintf("%010s", $lead_id);
 			while (strlen($PADlead_id) > 10) {$PADlead_id = substr("$PADlead_id", 1);}
 
-		# Create unique calleridname to track the call: MmmddhhmmssLLLLLLLLL
+		# Create unique calleridname to track the call: MmddhhmmssLLLLLLLLLL
 			$MqueryCID = "M$CIDdate$PADlead_id";
 		$EAC='';
 		if ($use_eac > 0)

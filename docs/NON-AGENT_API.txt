@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2011-05-29
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2011-07-05
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -59,7 +59,7 @@ Changes:
 110424-0854 - Added option for time zone code lookups using owner field in add_lead function
 110529-1220 - Added time zone information output to version function
 110614-0726 - Added reset_lead option to update_lead function(issue #502)
-
+110705-1928 - Added options for USACAN 4th digit prefix(no 0 or 1) and valid areacode filtering to add_lead
 
 
 
@@ -300,6 +300,8 @@ duplicate_check -	Check for duplicate records in the system, can select more tha
 				DUPNAMEPHONELIST - check for duplicate first_name, last_name and phone_number in same list
 				DUPNAMEPHONECAMP - check for duplicate first_name, last_name and phone_number in all lists for this list's campaign
 				DUPNAMEPHONESYS - check for duplicate first_name, last_name and phone_number in entire system
+usacan_prefix_check -	Y or N, default is N. Check for a valid 4th digit for USA and Canada phone numbers (cannot be 0 or 1)
+usacan_areacode_check -	Y or N, default is N. Check for a valid areacode for USA and Canada phone numbers
 custom_fields -		Y or N, default is N. Defines whether the API will accept custom field data when inserting leads into the vicidial_list table
 			For custom fields to be inserted, just add the field label as a variable to the URL string
 			For example, if the field_label is "favorite_color" you would add "&favorite_color=blue"
@@ -369,7 +371,9 @@ NOTICE: add_lead CUSTOM FIELDS NOT ADDED, NO FIELDS DEFINED - 7275551111|1234|10
 NOTICE: add_lead MULTI-ALT-PHONE NUMBERS LOADED - 3|6666|193716
 NOTICE: add_lead NOT ADDED TO HOPPER, OUTSIDE OF LOCAL TIME - 7275551111|6666|193716|-4|0
 
-ERROR: add_lead INVALID PHONE NUMBER - 72755|6666 
+ERROR: add_lead INVALID PHONE NUMBER LENGTH - 72755|6666 
+ERROR: add_lead INVALID PHONE NUMBER PREFIX - 72755|6666 
+ERROR: add_lead INVALID PHONE NUMBER AREACODE - 72755|6666 
 
 ERROR: add_lead USER DOES NOT HAVE PERMISSION TO ADD LEADS TO THE SYSTEM - 6666|0 
 
