@@ -650,6 +650,8 @@ The Custom 5 field can be used as a field to define a dialplan number to send a 
 For AGENTDIRECT in-groups, if the user is unavailable, you can put AGENTEXT in this field and the system will look up the user custom five field and send the call to that dialplan number||
 For AGENTDIRECT in-groups, you can put AGENTEXT in this field and the system will look up the user custom five field and send the call to that dialplan number||
 You can also put AGENTEXT in this field if it is set to EXTENSION and the system will look up the user custom five field and send the call to that dialplan number||
+orders by the last time an agent was sent an inbound call. Results in agents receiving about the same number of calls overall||
+orders by the last time an agent finished an inbound call. AKA agent waiting longest receives first call||
 
 
 lead_report_export.php

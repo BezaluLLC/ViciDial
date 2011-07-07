@@ -868,3 +868,11 @@ ALTER TABLE system_settings ADD test_campaign_calls ENUM('0','1') default '0';
 ALTER TABLE system_settings ADD agents_calls_reset ENUM('0','1') default '1';
 
 UPDATE system_settings SET db_schema_version='1285',db_schema_update_date=NOW() where db_schema_version < 1285;
+
+ALTER TABLE vicidial_live_agents ADD last_inbound_call_time DATETIME;
+ALTER TABLE vicidial_live_agents ADD last_inbound_call_finish DATETIME;
+
+ALTER TABLE vicidial_inbound_groups MODIFY next_agent_call VARCHAR(30) default 'longest_wait_time';
+
+UPDATE system_settings SET db_schema_version='1286',db_schema_update_date=NOW() where db_schema_version < 1286;
+

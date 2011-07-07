@@ -389,7 +389,9 @@ external_park VARCHAR(40) default '',
 external_timer_action_destination VARCHAR(100) default '',
 on_hook_agent ENUM('Y','N') default 'N',
 on_hook_ring_time SMALLINT(5) default '15',
-ring_callerid VARCHAR(20) default ''
+ring_callerid VARCHAR(20) default '',
+last_inbound_call_time DATETIME,
+last_inbound_call_finish DATETIME,
 index (random_id),
 index (last_call_time),
 index (last_update_time),
@@ -909,7 +911,7 @@ group_color VARCHAR(7),
 active ENUM('Y','N'),
 web_form_address TEXT,
 voicemail_ext VARCHAR(10),
-next_agent_call ENUM('random','oldest_call_start','oldest_call_finish','overall_user_level','inbound_group_rank','campaign_rank','fewest_calls','fewest_calls_campaign','longest_wait_time','ring_all') default 'longest_wait_time',
+next_agent_call VARCHAR(30) default 'longest_wait_time',
 fronter_display ENUM('Y','N') default 'Y',
 ingroup_script VARCHAR(10),
 get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','FORM') default 'NONE',
@@ -2533,7 +2535,7 @@ ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_outbound_ivr_log_archive LIKE vicidial_outbound_ivr_log;
 
-UPDATE system_settings SET db_schema_version='1285',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1286',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

@@ -639,6 +639,9 @@ OTHER CHANGES:
 	dropped, no-agent-no-queue and other transferred calls to a specific
 	dialplan number per-user defined in the User Custom Five field.
 
+144. Added last_inbound_call_time and last_inbound_call_finish Next Agent Call 
+	routing options to in-groups.
+
 
 
 
