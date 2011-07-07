@@ -635,6 +635,10 @@ OTHER CHANGES:
 142. Added ability to check for USA and Canada valid prefix and areacodes when
 	loading leads into the web/cli/api lead loaders
 
+143. Added ability to use AGENTEXT in AGENTDIRECT in-groups as a way to send 
+	dropped, no-agent-no-queue and other transferred calls to a specific
+	dialplan number per-user defined in the User Custom Five field.
+
 
 
 

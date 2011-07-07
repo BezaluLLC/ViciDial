@@ -151,6 +151,7 @@
 # 110505-1620 - Fixed minor voicemail issue
 # 110525-1555 - Added CLOSER compatibility with outbound and in-group calls that went through Call Menu
 # 110626-2343 - Added queuemetrics_pe_phone_append
+# 110707-0646 - Added AGENTEXT option in drop message to send to extension(user_custom_five) field
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -1028,7 +1029,6 @@ if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_st
 		{
 		if ($after_hours_action =~ /EXTENSION/)
 			{
-			$DROPexten = "$after_hours_exten";
 			$CIDcampaign_cid='0000000000';
 			### Grab ID values from the database
 			$stmtA = "SELECT campaign_id,campaign_cid FROM vicidial_campaigns where closer_campaigns LIKE \"% $channel_group %\" and active='Y';";
@@ -1043,6 +1043,23 @@ if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_st
 				$CIDcampaign_cid = 			$aryA[1];
 				}
 			$sthA->finish();
+
+			if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($after_hours_exten =~ /AGENTEXT/) )
+				{
+				### Grab user's custom_five field from the database
+				$stmtA = "SELECT custom_five FROM vicidial_users where user='$agent_only';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$after_hours_exten = 	$aryA[0];
+					}
+				$sthA->finish();
+				}
+			$DROPexten = "$after_hours_exten";
 
 			$newcallerid = "\"$callerid <$CIDcampaign_cid>\"";
 			$AGI->set_callerid($newcallerid);
@@ -1172,6 +1189,7 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 		$group_agents_count	= $aryA[0];
 		}
 	$sthA->finish();
+	if ($AGILOG) {$agi_string = "--  NANQUE Check: |$group_agents_count|$stmtA";   &agi_output;}
 
 	if ($group_agents_count < 1)
 		{
@@ -1222,6 +1240,22 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 				@EXno_agent_action_value = split(/,/,$no_agent_action_value);
 				$DROPexten =	$EXno_agent_action_value[0];
 				$ext_context =	$EXno_agent_action_value[1];
+
+				if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($DROPexten =~ /AGENTEXT/) )
+					{
+					### Grab user's custom_five field from the database
+					$stmtA = "SELECT custom_five FROM vicidial_users where user='$agent_only';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+						$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$DROPexten = 	$aryA[0];
+						}
+					$sthA->finish();
+					}
 
 				$CIDcampaign_cid='0000000000';
 				### Grab ID values from the database
@@ -3283,6 +3317,22 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				{
 				$DROPexten = "$wait_time_option_exten";
 
+				if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($DROPexten =~ /AGENTEXT/) )
+					{
+					### Grab user's custom_five field from the database
+					$stmtA = "SELECT custom_five FROM vicidial_users where user='$agent_only';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+						$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$DROPexten = 	$aryA[0];
+						}
+					$sthA->finish();
+					}
+
 				$CIDcampaign_cid='0000000000';
 				### Grab ID values from the database
 				$stmtA = "SELECT campaign_id,campaign_cid FROM vicidial_campaigns where closer_campaigns LIKE \"% $channel_group %\" and active='Y';";
@@ -3689,6 +3739,22 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						{
 						$DROPexten = "$hold_time_option_exten";
 
+						if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($DROPexten =~ /AGENTEXT/) )
+							{
+							### Grab user's custom_five field from the database
+							$stmtA = "SELECT custom_five FROM vicidial_users where user='$agent_only';";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+								$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$DROPexten = 	$aryA[0];
+								}
+							$sthA->finish();
+							}
+
 						$CIDcampaign_cid='0000000000';
 						### Grab ID values from the database
 						$stmtA = "SELECT campaign_id,campaign_cid FROM vicidial_campaigns where closer_campaigns LIKE \"% $channel_group %\" and active='Y';";
@@ -4080,6 +4146,21 @@ if ($drop_timer > $DROP_TIME)
 		{
 		if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && (length($user_unavailable_action) > 1) )
 			{
+			if ($drop_exten =~ /AGENTEXT/)
+				{
+				### Grab user's custom_five field from the database
+				$stmtA = "SELECT custom_five FROM vicidial_users where user='$agent_only';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$did_extension = 	$aryA[0];
+					}
+				$sthA->finish();
+				}
 			$drop_exten = $did_extension;
 			$ext_context = $did_exten_context;
 			}

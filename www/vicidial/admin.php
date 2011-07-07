@@ -2779,12 +2779,13 @@ else
 # 110624-2246 - Added Screen Labels subsection for Admin and status_display_fields feature
 # 110625-2338 - Added queuemetrics_pe_phone_append option
 # 110703-1400 - Added test_campaign_calls and agents_calls_reset features
+# 110707-0725 - Added AGENTEXT notes for in-groups settings
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-322a';
-$build = '110703-1400';
+$admin_version = '2.4-323a';
+$build = '110707-0725';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4008,7 +4009,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_users-custom_one">
 	<BR>
-	<B>Custom User Fields -</B> These five fields can be used for various purposes, and they can be populated in the web form addresses and scripts as user_custom_one and so on.
+	<B>Custom User Fields -</B> These five fields can be used for various purposes, and they can be populated in the web form addresses and scripts as user_custom_one and so on. The Custom 5 field can be used as a field to define a dialplan number to send a call to from an AGENTDIRECT in-group if the user is unavailable, you just need to put AGENTEXT in the MESSAGE or EXTENSION field in the AGENTDIRECT in-group and the system will look up the custom five field and send the call to that dialplan number.
 
 	<BR>
 	<A NAME="vicidial_users-alter_agent_interface_options">
@@ -5375,7 +5376,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_inbound_groups-drop_exten">
 	<BR>
-	<B>Drop Exten -</B> If Drop Action is set to MESSAGE, this is the dial plan extension that the call will be sent to if it reaches Drop Call Seconds.
+	<B>Drop Exten -</B> If Drop Action is set to MESSAGE, this is the dial plan extension that the call will be sent to if it reaches Drop Call Seconds. For AGENTDIRECT in-groups, if the user is unavailable, you can put AGENTEXT in this field and the system will look up the user custom five field and send the call to that dialplan number.
 
 	<BR>
 	<A NAME="vicidial_inbound_groups-voicemail_ext">
@@ -5405,7 +5406,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_inbound_groups-after_hours_exten">
 	<BR>
-	<B>After Hours Extension -</B> The dialplan extension to send the call to if the Action is set to EXTENSION. Default is 8300.
+	<B>After Hours Extension -</B> The dialplan extension to send the call to if the Action is set to EXTENSION. Default is 8300. For AGENTDIRECT in-groups, you can put AGENTEXT in this field and the system will look up the user custom five field and send the call to that dialplan number.
 
 	<BR>
 	<A NAME="vicidial_inbound_groups-after_hours_voicemail">
@@ -5420,7 +5421,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_inbound_groups-no_agent_no_queue">
 	<BR>
-	<B>No Agents No Queueing -</B> If this field is set to Y or NO_PAUSED then no calls will be put into the queue for this in-group if there are no agents logged in and the calls will go to the No Agent No Queue Action. The NO_PAUSED option will also not send the callers into the queue if there are only paused agents in the in-group. Default is N. In an AGENTDIRECT in-group, setting this to AGENTVMAIL will select the User voicemail ID to use.
+	<B>No Agents No Queueing -</B> If this field is set to Y or NO_PAUSED then no calls will be put into the queue for this in-group if there are no agents logged in and the calls will go to the No Agent No Queue Action. The NO_PAUSED option will also not send the callers into the queue if there are only paused agents in the in-group. Default is N. In an AGENTDIRECT in-group, setting this to AGENTVMAIL will select the User voicemail ID to use. You can also put AGENTEXT in this field if it is set to EXTENSION and the system will look up the user custom five field and send the call to that dialplan number.
 
 	<BR>
 	<A NAME="vicidial_inbound_groups-no_agent_action">
@@ -5520,7 +5521,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_inbound_groups-wait_time_option_exten">
 	<BR>
-	<B>Wait Time Option Extension -</B> If Wait Time Option is set to PRESS_EXTEN, this is the dialplan extension that the call will be sent to if the customer presses the option key when presented with the option.
+	<B>Wait Time Option Extension -</B> If Wait Time Option is set to PRESS_EXTEN, this is the dialplan extension that the call will be sent to if the customer presses the option key when presented with the option. For AGENTDIRECT in-groups, you can put AGENTEXT in this field and the system will look up the user custom five field and send the call to that dialplan number.
 
 	<BR>
 	<A NAME="vicidial_inbound_groups-wait_time_option_callmenu">
@@ -5595,7 +5596,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_inbound_groups-hold_time_option_exten">
 	<BR>
-	<B>Hold Time Option Extension -</B> If Hold Time Option is set to EXTENSION, this is the dialplan extension that the call will be sent to if the estimated hold time exceeds the Hold Time Option Seconds.
+	<B>Hold Time Option Extension -</B> If Hold Time Option is set to EXTENSION, this is the dialplan extension that the call will be sent to if the estimated hold time exceeds the Hold Time Option Seconds. For AGENTDIRECT in-groups, you can put AGENTEXT in this field and the system will look up the user custom five field and send the call to that dialplan number.
 
 	<BR>
 	<A NAME="vicidial_inbound_groups-hold_time_option_callmenu">

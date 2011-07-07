@@ -646,6 +646,10 @@ PLACE TEST CALL||
 Test Outbound Call||
 Agents Calls Reset||
 This setting defines whether the logged-in agents and active phone calls records are to be reset at the timeclock end of day. Default is 1 for enabled||
+The Custom 5 field can be used as a field to define a dialplan number to send a call to from an AGENTDIRECT in-group if the user is unavailable, you just need to put AGENTEXT in the MESSAGE or EXTENSION field in the AGENTDIRECT in-group and the system will look up the custom five field and send the call to that dialplan number||
+For AGENTDIRECT in-groups, if the user is unavailable, you can put AGENTEXT in this field and the system will look up the user custom five field and send the call to that dialplan number||
+For AGENTDIRECT in-groups, you can put AGENTEXT in this field and the system will look up the user custom five field and send the call to that dialplan number||
+You can also put AGENTEXT in this field if it is set to EXTENSION and the system will look up the user custom five field and send the call to that dialplan number||
 
 
 lead_report_export.php
