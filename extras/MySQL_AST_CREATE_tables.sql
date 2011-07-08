@@ -395,7 +395,7 @@ last_inbound_call_finish DATETIME,
 index (random_id),
 index (last_call_time),
 index (last_update_time),
-index (last_call_finish),
+index (last_call_finish)
 );
 
 CREATE TABLE vicidial_auto_calls (
