@@ -1,14 +1,15 @@
 <?php
 # 
-# functions.php    version 2.2.0
+# functions.php    version 2.4
 #
 # functions for administrative scripts and reports
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES:
 # 90524-1503 - First Build
+# 110708-1723 - Added HF precision option
 #
 
 ##### reformat seconds into HH:MM:SS or MM:SS #####
@@ -18,11 +19,19 @@ function sec_convert($sec,$precision)
 
 	if ($sec < 1)
 		{
-		return "0:00";
+		if ($precision == 'HF')
+			{return "0:00:00";}
+		else
+			{return "0:00";}
 		}
 	else
 		{
-		if ($sec < 3600) {$precision='M';}
+		if ($precision == 'HF')
+			{$precision='H';}
+		else
+			{
+			if ( ($sec < 3600) and ($precision != 'S') ) {$precision='M';}
+			}
 
 		if ($precision == 'H')
 			{

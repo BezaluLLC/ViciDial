@@ -20,6 +20,7 @@
 # 101208-0320 - Fixed issue 404
 # 110307-1057 - Added user_case setting in options.php
 # 110623-0728 - Fixed user group selection bug
+# 110708-1727 - Added options.php setting for time precision
 #
 
 require("dbconnect.php");
@@ -56,6 +57,7 @@ $report_name = 'Agent Time Detail';
 $db_source = 'M';
 
 $user_case = '';
+$TIME_agenttimedetail = '';
 if (file_exists('options.php'))
 	{
 	require('options.php');
@@ -66,6 +68,8 @@ if ($user_case == '2')
 	{$userSQL = 'lcase(user)';}
 if (strlen($userSQL)<2)
 	{$userSQL = 'user';}
+if (strlen($TIME_agenttimedetail)<1)
+	{$TIME_agenttimedetail = 'H';}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -540,13 +544,13 @@ else
 		$RAWcalls = $Scalls[$m];
 		$RAWtimeSEC = $Stime[$m];
 
-		$Swait[$m]=		sec_convert($Swait[$m],'H'); 
-		$Stalk[$m]=		sec_convert($Stalk[$m],'H'); 
-		$Sdispo[$m]=	sec_convert($Sdispo[$m],'H'); 
-		$Spause[$m]=	sec_convert($Spause[$m],'H'); 
-		$Sdead[$m]=	sec_convert($Sdead[$m],'H'); 
-		$Scustomer[$m]=	sec_convert($Scustomer[$m],'H'); 
-		$Stime[$m]=		sec_convert($Stime[$m],'H'); 
+		$Swait[$m]=		sec_convert($Swait[$m],$TIME_agenttimedetail);
+		$Stalk[$m]=		sec_convert($Stalk[$m],$TIME_agenttimedetail);
+		$Sdispo[$m]=	sec_convert($Sdispo[$m],$TIME_agenttimedetail);
+		$Spause[$m]=	sec_convert($Spause[$m],$TIME_agenttimedetail);
+		$Sdead[$m]=	sec_convert($Sdead[$m],$TIME_agenttimedetail);
+		$Scustomer[$m]=	sec_convert($Scustomer[$m],$TIME_agenttimedetail);
+		$Stime[$m]=		sec_convert($Stime[$m],$TIME_agenttimedetail);
 
 		$RAWtime = $Stime[$m];
 		$RAWwait = $Swait[$m];
@@ -583,7 +587,7 @@ else
 				$punches_found++;
 				$RAWtimeTCsec =		$TCtime[$n];
 				$TOTtimeTC =		($TOTtimeTC + $TCtime[$n]);
-				$StimeTC[$m]=		sec_convert($TCtime[$n],'H'); 
+				$StimeTC[$m]=		sec_convert($TCtime[$n],$TIME_agenttimedetail);
 				$RAWtimeTC =		$StimeTC[$m];
 				$StimeTC[$m] =		sprintf("%10s", $StimeTC[$m]);
 				}
@@ -592,7 +596,9 @@ else
 		if ($punches_found < 1)
 			{
 			$RAWtimeTCsec =		"0";
-			$StimeTC[$m]=		"0:00"; 
+			$StimeTC[$m] =		"0:00"; 
+			if ($TIME_agenttimedetail == 'HF')
+				{$StimeTC[$m] =		"0:00:00";}
 			$RAWtimeTC =		$StimeTC[$m];
 			$StimeTC[$m] =		sprintf("%10s", $StimeTC[$m]);
 			}
@@ -625,7 +631,7 @@ else
 				{
 				if ( ($Suser[$m]=="$PCuser[$i]") and ($Sstatus=="$sub_status[$i]") )
 					{
-					$USERcodePAUSE_MS =		sec_convert($PCpause_sec[$i],'H');
+					$USERcodePAUSE_MS =		sec_convert($PCpause_sec[$i],$TIME_agenttimedetail);
 					if (strlen($USERcodePAUSE_MS)<1) {$USERcodePAUSE_MS='0';}
 					$pfUSERcodePAUSE_MS =	sprintf("%10s", $USERcodePAUSE_MS);
 
@@ -638,8 +644,16 @@ else
 				}
 			if ($status_found < 1)
 				{
-				$SstatusesHTML .= "       0:00 |";
-				$SstatusesFILE .= ",0:00";
+				if ($TIME_agenttimedetail == 'HF')
+					{
+					$SstatusesHTML .= "    0:00:00 |";
+					$SstatusesFILE .= ",0:00:00";
+					}
+				else
+					{
+					$SstatusesHTML .= "       0:00 |";
+					$SstatusesFILE .= ",0:00";
+					}
 				}
 			### END loop through each stat line ###
 			$n++;
@@ -800,7 +814,7 @@ else
 			{
 			$TOTtotPAUSE = ($TOTtotPAUSE + $Scalls);
 
-			$USERsumstatPAUSE_MS =		sec_convert($Scalls,'H'); 
+			$USERsumstatPAUSE_MS =		sec_convert($Scalls,$TIME_agenttimedetail);
 			$pfUSERsumstatPAUSE_MS =	sprintf("%11s", $USERsumstatPAUSE_MS);
 
 			$SUMstatusTXT = sprintf("%10s", $pfUSERsumstatPAUSE_MS);
@@ -812,14 +826,14 @@ else
 	### END loop through each status ###
 
 	### call function to calculate and print dialable leads
-	$TOTwait = sec_convert($TOTwait,'H');
-	$TOTtalk = sec_convert($TOTtalk,'H');
-	$TOTdispo = sec_convert($TOTdispo,'H');
-	$TOTpause = sec_convert($TOTpause,'H');
-	$TOTdead = sec_convert($TOTdead,'H');
-	$TOTcustomer = sec_convert($TOTcustomer,'H');
-	$TOTALtime = sec_convert($TOTALtime,'H');
-	$TOTtimeTC = sec_convert($TOTtimeTC,'H');
+	$TOTwait = sec_convert($TOTwait,$TIME_agenttimedetail);
+	$TOTtalk = sec_convert($TOTtalk,$TIME_agenttimedetail);
+	$TOTdispo = sec_convert($TOTdispo,$TIME_agenttimedetail);
+	$TOTpause = sec_convert($TOTpause,$TIME_agenttimedetail);
+	$TOTdead = sec_convert($TOTdead,$TIME_agenttimedetail);
+	$TOTcustomer = sec_convert($TOTcustomer,$TIME_agenttimedetail);
+	$TOTALtime = sec_convert($TOTALtime,$TIME_agenttimedetail);
+	$TOTtimeTC = sec_convert($TOTtimeTC,$TIME_agenttimedetail);
 
 	$hTOTcalls = sprintf("%8s", $TOTcalls);
 	$hTOTwait =	sprintf("%11s", $TOTwait);

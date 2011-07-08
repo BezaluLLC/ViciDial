@@ -8,6 +8,7 @@
 # CHANGELOG
 # 101216-1043 - First Build 
 # 110307-1039 - Added upper-case/lower-case user setting
+# 110708-1730 - Added precision time setting
 #
 
 # used by the realtime_report.php script
@@ -50,5 +51,9 @@ $RS_AGENTtimeSTATS =	0;	# 0=no, 1=yes
 
 # used by agent reports
 $user_case =			0;		# 1=upper-case, 2-lower-case, 0-no-case-change
+
+# force time precision for reports
+$TIME_agenttimedetail = 'H';	# H=hour, M=minute, S=second, HF=force hour
+
 
 ?>
