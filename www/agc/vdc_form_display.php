@@ -18,7 +18,7 @@ $version = '2.4-4';
 $build = '100916-1749';
 
 require("dbconnect.php");
-require("functions.php");
+require_once("functions.php");
 
 
 if (isset($_GET["lead_id"]))			{$lead_id=$_GET["lead_id"];}
@@ -440,7 +440,7 @@ else
 	echo "\n";
 
 
-	require("functions.php");
+	require_once("functions.php");
 
 	$CFoutput = custom_list_fields_values($lead_id,$list_id,$uniqueid,$user);
 
