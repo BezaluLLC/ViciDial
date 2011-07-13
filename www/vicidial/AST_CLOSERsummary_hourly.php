@@ -1,7 +1,7 @@
 <?php 
 # AST_CLOSERsummary_hourly.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -12,6 +12,7 @@
 # 100712-1324 - Added system setting slave server option
 # 100802-2347 - Added User Group Allowed Reports option validation
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
+# 110703-1806 - Added download option
 #
 
 require("dbconnect.php");
@@ -47,6 +48,8 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
+if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
+	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -62,7 +65,7 @@ $db_source = 'M';
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -81,12 +84,12 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	$use_slave_server=1;
 	$db_source = 'S';
 	require("dbconnect.php");
-	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt = "SELECT local_gmt FROM servers where active='Y' limit 1;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $gmt_conf_ct = mysql_num_rows($rslt);
 $dst = date("I");
 if ($gmt_conf_ct > 0)
@@ -97,14 +100,14 @@ if ($gmt_conf_ct > 0)
 	}
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $reports_only_user=$row[0];
@@ -118,13 +121,13 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LOGallowed_campaigns = $row[0];
@@ -150,7 +153,7 @@ if (eregi("YES",$exclude_rollover))
 	{$exclude_rolloverSQL = " where group_id NOT IN(SELECT drop_inbound_group from vicidial_campaigns)";}
 $stmt="select group_id,group_name from vicidial_inbound_groups $exclude_rolloverSQL order by group_id;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
 $i=0;
 #$LISTgroups[$i]='---NONE---';
@@ -188,7 +191,7 @@ else
 
 $stmt="select vsc_id,vsc_name from vicidial_status_categories;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $statcats_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $statcats_to_print)
@@ -202,7 +205,7 @@ while ($i < $statcats_to_print)
 
 $stmt="select call_time_id,call_time_name from vicidial_call_times order by call_time_id;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $times_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $times_to_print)
@@ -213,134 +216,129 @@ while ($i < $times_to_print)
 	$i++;
 	}
 
-?>
 
-<HTML>
-<HEAD>
-<STYLE type="text/css">
-<!--
-   .green {color: white; background-color: green}
-   .red {color: white; background-color: red}
-   .blue {color: white; background-color: blue}
-   .purple {color: white; background-color: purple}
--->
- </STYLE>
+$HEADER.="<HTML>\n";
+$HEADER.="<HEAD>\n";
+$HEADER.="<STYLE type=\"text/css\">\n";
+$HEADER.="<!--\n";
+$HEADER.="   .green {color: white; background-color: green}\n";
+$HEADER.="   .red {color: white; background-color: red}\n";
+$HEADER.="   .blue {color: white; background-color: blue}\n";
+$HEADER.="   .purple {color: white; background-color: purple}\n";
+$HEADER.="-->\n";
+$HEADER.="</STYLE>\n";
 
-<?php 
 
-echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
-echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+$HEADER.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
+$HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 
-echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
+$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 if ($bareformat < 1)
 	{
 	$short_header=1;
 
-	require("admin_header.php");
+	# require("admin_header.php");
 
-	echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+	$MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
 	if ($DB > 0)
 		{
-		echo "<BR>\n";
-		echo "$group_ct|$group_string|$group_SQL\n";
-		echo "<BR>\n";
-		echo "$shift|$query_date|$end_date\n";
-		echo "<BR>\n";
+		$MAIN.="<BR>\n";
+		$MAIN.="$group_ct|$group_string|$group_SQL\n";
+		$MAIN.="<BR>\n";
+		$MAIN.="$shift|$query_date|$end_date\n";
+		$MAIN.="<BR>\n";
 		}
 
-	echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-	echo "<TABLE BORDER=0><TR><TD VALIGN=TOP>\n";
-	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-	echo "<INPUT TYPE=HIDDEN NAME=inbound_rate VALUE=\"$inbound_rate\">\n";
-	echo "<INPUT TYPE=HIDDEN NAME=outbound_rate VALUE=\"$outbound_rate\">\n";
-	echo "<INPUT TYPE=HIDDEN NAME=costformat VALUE=\"$costformat\">\n";
-	echo "<INPUT TYPE=HIDDEN NAME=print_calls VALUE=\"$print_calls\">\n";
-	echo "Date Range:<BR>\n";
-	echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
+	$MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
+	$MAIN.="<TABLE BORDER=0><TR><TD VALIGN=TOP>\n";
+	$MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+	$MAIN.="<INPUT TYPE=HIDDEN NAME=inbound_rate VALUE=\"$inbound_rate\">\n";
+	$MAIN.="<INPUT TYPE=HIDDEN NAME=outbound_rate VALUE=\"$outbound_rate\">\n";
+	$MAIN.="<INPUT TYPE=HIDDEN NAME=costformat VALUE=\"$costformat\">\n";
+	$MAIN.="<INPUT TYPE=HIDDEN NAME=print_calls VALUE=\"$print_calls\">\n";
+	$MAIN.="Date Range:<BR>\n";
+	$MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
-	?>
-	<script language="JavaScript">
-	var o_cal = new tcal ({
-		// form name
-		'formname': 'vicidial_report',
-		// input name
-		'controlname': 'query_date'
-	});
-	o_cal.a_tpl.yearscroll = false;
-	// o_cal.a_tpl.weekstart = 1; // Monday week start
-	</script>
-	<?php
+	$MAIN.="	<script language=\"JavaScript\">\n";
+	$MAIN.="	var o_cal = new tcal ({\n";
+	$MAIN.="		// form name\n";
+	$MAIN.="		'formname': 'vicidial_report',\n";
+	$MAIN.="		// input name\n";
+	$MAIN.="		'controlname': 'query_date'\n";
+	$MAIN.="	});\n";
+	$MAIN.="	o_cal.a_tpl.yearscroll = false;\n";
+	$MAIN.="	// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
+	$MAIN.="	</script>\n";
 
-	echo " to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+	$MAIN.=" to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
-	?>
-	<script language="JavaScript">
-	var o_cal = new tcal ({
-		// form name
-		'formname': 'vicidial_report',
-		// input name
-		'controlname': 'end_date'
-	});
-	o_cal.a_tpl.yearscroll = false;
-	// o_cal.a_tpl.weekstart = 1; // Monday week start
-	</script>
-	<?php
+	$MAIN.="	<script language=\"JavaScript\">\n";
+	$MAIN.="	var o_cal = new tcal ({\n";
+	$MAIN.="		// form name\n";
+	$MAIN.="		'formname': 'vicidial_report',\n";
+	$MAIN.="		// input name\n";
+	$MAIN.="		'controlname': 'end_date'\n";
+	$MAIN.="	});\n";
+	$MAIN.="	o_cal.a_tpl.yearscroll = false;\n";
+	$MAIN.="	// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
+	$MAIN.="	</script>\n";
 
-	echo "</TD><TD VALIGN=TOP> &nbsp; \n";
-	echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
-	echo "Inbound Groups: <BR>\n";
-	echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
+	$MAIN.="</TD><TD VALIGN=TOP> &nbsp; \n";
+	$MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
+	$MAIN.="Inbound Groups: <BR>\n";
+	$MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 	$o=0;
 	while ($groups_to_print > $o)
 		{
 		if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
-			{echo "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
+			{$MAIN.="<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
 		else
-			{echo "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
+			{$MAIN.="<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
 		$o++;
 		}
-	echo "</SELECT>\n";
-	echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
-	echo "<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">MODIFY</a> | ";
-	echo "<a href=\"./admin.php?ADD=999999\">REPORTS</a>";
-	echo "</FONT><BR><BR>\n";
-	echo " &nbsp; Exclude Outbound Drop Groups: <BR>";
-	echo " &nbsp; <SELECT SIZE=1 NAME=exclude_rollover>\n";
-	echo "<option selected value=\"$exclude_rollover\">$exclude_rollover</option>\n";
-	echo "<option value=\"YES\">YES</option>\n";
-	echo "<option value=\"NO\">NO</option>\n";
-	echo "</SELECT>\n";
-	echo "<BR> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
-	echo "<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
+	$MAIN.="</SELECT>\n";
+	$MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
+	$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
+	$MAIN.="<a href=\"$PHP_SELF?DB=$DB&inbound_rate=$inbound_rate&outbound_rate=$outbound_rate$groupQS&costformat=$costformat&print_calls=$print_calls&query_date=$query_date&end_date=$end_date&exclude_rollover=$exclude_rollover&SUBMIT=$SUBMIT&shift=$shift&file_download=1\">DOWNLOAD</a> | ";
+	$MAIN.="<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">MODIFY</a> | ";
+	$MAIN.="<a href=\"./admin.php?ADD=999999\">REPORTS</a>";
+	$MAIN.="</FONT><BR><BR>\n";
+	$MAIN.=" &nbsp; Exclude Outbound Drop Groups: <BR>";
+	$MAIN.=" &nbsp; <SELECT SIZE=1 NAME=exclude_rollover>\n";
+	$MAIN.="<option selected value=\"$exclude_rollover\">$exclude_rollover</option>\n";
+	$MAIN.="<option value=\"YES\">YES</option>\n";
+	$MAIN.="<option value=\"NO\">NO</option>\n";
+	$MAIN.="</SELECT>\n";
+	$MAIN.="<BR> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
+	$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
 
-	echo "</TD></TR>\n";
-	echo "<TR><TD>\n";
+	$MAIN.="</TD></TR>\n";
+	$MAIN.="<TR><TD>\n";
 
-	echo "Call Time:<BR>\n";
-	echo "<SELECT SIZE=1 NAME=shift>\n";
+	$MAIN.="Call Time:<BR>\n";
+	$MAIN.="<SELECT SIZE=1 NAME=shift>\n";
 	$o=0;
 	while ($times_to_print > $o)
 		{
-		if ($call_times[$o] == $shift) {echo "<option selected value=\"$call_times[$o]\">$call_times[$o] - $call_time_names[$o]</option>\n";}
-		else {echo "<option value=\"$call_times[$o]\">$call_times[$o] - $call_time_names[$o]</option>\n";}
+		if ($call_times[$o] == $shift) {$MAIN.="<option selected value=\"$call_times[$o]\">$call_times[$o] - $call_time_names[$o]</option>\n";}
+		else {$MAIN.="<option value=\"$call_times[$o]\">$call_times[$o] - $call_time_names[$o]</option>\n";}
 		$o++;
 		}
-	echo "</SELECT>\n";
-	echo "</TD><TD>\n";
-	echo "</TD></TR></TABLE>\n";
-	echo "</FORM>\n\n";
+	$MAIN.="</SELECT>\n";
+	$MAIN.="</TD><TD>\n";
+	$MAIN.="</TD></TR></TABLE>\n";
+	$MAIN.="</FORM>\n\n";
 
-	echo "<PRE><FONT SIZE=2>\n\n";
+	$MAIN.="<PRE><FONT SIZE=2>\n\n";
 	}
 
 if ($groups_to_print < 1)
 	{
-	echo "\n\n";
-	echo "PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT\n";
+	$MAIN.="\n\n";
+	$MAIN.="PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT\n";
 	}
 
 else
@@ -354,7 +352,7 @@ else
 		{
 		$stmt="SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times FROM vicidial_call_times where call_time_id='$shift';";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$calltimes_to_print = mysql_num_rows($rslt);
 		if ($calltimes_to_print > 0)
 			{
@@ -398,6 +396,7 @@ else
 
 
 	$MAIN .= "Inbound Summary Hourly Report: $group_string          $NOW_TIME\n";
+	$CSV_main.="Inbound Summary Hourly Report:,$NOW_TIME\n";
 
 
 	if ($group_ct > 0)
@@ -409,6 +408,10 @@ else
 		$MAIN .= "|                                          | TOTAL  | TOTAL  | TOTAL     | AVERAGE | QUEUE     | QUEUE   | QUEUE   | ABANDON|\n";
 		$MAIN .= "| IN-GROUP                                 | CALLS  | ANSWER | TALK      | TALK    | TIME      | TIME    | TIME    | CALLS  |\n";
 		$MAIN .= "+------------------------------------------+--------+--------+-----------+---------+-----------+---------+---------+--------+\n";
+
+		$CSV_main.="\"MULTI-GROUP BREAKDOWN:\"\n";
+		$CSV_main.="\"IN-GROUP\",\"TOTAL CALLS\",\"TOTAL ANSWER\",\" TOTAL TALK\",\" AVERAGE TALK\",\" TOTAL QUEUE TIME\",\" AVERAGE QUEUE TIME\",\" MAXIMUM QUEUE TIME\",\" TOTAL ABANDON CALLS\"\n";
+		$CSV_subreports="";
 
 		$i=0;
 		$TOTcalls_count=0;
@@ -425,7 +428,7 @@ else
 			{
 			$stmt="select group_name,agent_alert_delay from vicidial_inbound_groups where group_id='$group[$i]';";
 			$rslt=mysql_query($stmt, $link);
-			if ($DB) {echo "$stmt\n";}
+			if ($DB) {$MAIN.="$stmt\n";}
 			$row=mysql_fetch_row($rslt);
 			$group_name[$i] =			$row[0];
 			$agent_alert_delay[$i] =	round($row[1] / 1000);
@@ -465,7 +468,7 @@ else
 
 			$stmt = "SELECT status,length_in_sec,queue_seconds,call_date,UNIX_TIMESTAMP(call_date),phone_number,campaign_id from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='$group[$i]';";
 			$rslt=mysql_query($stmt, $link);
-			if ($DB) {echo "$stmt\n";}
+			if ($DB) {$MAIN.="$stmt\n";}
 			$calls_to_parse = mysql_num_rows($rslt);
 			$p=0;
 			while ($p < $calls_to_parse)
@@ -524,7 +527,7 @@ else
 
 					if ($print_calls > 0)
 						{
-						echo "$row[5]\t$row[6]\t$TEMPtalk\n";
+						$MAIN.="$row[5]\t$row[6]\t$TEMPtalk\n";
 						$PCtemptalk = ($PCtemptalk + $TEMPtalk);
 						}
 					$q++;
@@ -532,7 +535,7 @@ else
 				else
 					{$out_of_call_time++;}
 				if ($DB)
-					{echo "$call_time > $CTstart | $call_time < $CTstop | $Cwday | $Chour | $Hcalltime[$Chour] | $talk_sec[$i]\n";}
+					{$MAIN.="$call_time > $CTstart | $call_time < $CTstop | $Cwday | $Chour | $Hcalltime[$Chour] | $talk_sec[$i]\n";}
 				$p++;
 				}
 			if ( ($answer_count[$i] > 0) and ($talk_sec[$i] > 0) )
@@ -547,7 +550,7 @@ else
 			if ($print_calls > 0)
 				{
 				$PCtemptalkmin = ($PCtemptalk  / 60);
-				echo "$q\t$PCtemptalk\t$PCtemptalkmin\n";
+				$MAIN.="$q\t$PCtemptalk\t$PCtemptalkmin\n";
 				}
 
 			$TOTcalls_count =			($TOTcalls_count + $calls_count[$i]);
@@ -577,6 +580,7 @@ else
 			while(strlen($groupDISPLAY)>40) {$groupDISPLAY = substr("$groupDISPLAY", 0, -1);}
 
 			$MAIN .= "| $groupDISPLAY | $gTOTALcalls | $gANSWERcalls | $gSUMtalk | $gAVGtalk | $gSUMqueue | $gAVGqueue | $gMAXqueue | $gDROPcalls |";
+			$CSV_main.="\"$groupDISPLAY\",\"$gTOTALcalls\",\"$gANSWERcalls\",\"$gSUMtalk\",\"$gAVGtalk\",\"$gSUMqueue\",\"$gAVGqueue\",\"$gMAXqueue\",\"$gDROPcalls\"\n";
 			$MAIN .= "<!-- OUT OF CALLTIME: $out_of_call_time -->\n";
 
 			### hour by hour sumaries
@@ -586,6 +590,9 @@ else
 			$SUBoutput .= "|      | TOTAL  | TOTAL  | TOTAL     | AVERAGE | QUEUE     | QUEUE   | QUEUE   | ABANDON|\n";
 			$SUBoutput .= "| HOUR | CALLS  | ANSWER | TALK      | TALK    | TIME      | TIME    | TIME    | CALLS  |\n";
 			$SUBoutput .= "+------+--------+--------+-----------+---------+-----------+---------+---------+--------+\n";
+
+			$CSV_subreports.="\n\n\"$group[$i] - $group_name[$i]\"\n\"HOURLY BREAKDOWN:\"\n";
+			$CSV_subreports.="\"HOUR\",\"TOTAL CALLS\",\"TOTAL ANSWER\",\" TOTAL TALK\",\" AVERAGE TALK\",\" TOTAL QUEUE TIME\",\" AVERAGE QUEUE TIME\",\" MAXIMUM QUEUE TIME\",\" TOTAL ABANDON CALLS\"\n";
 
 			$h=0;
 			while ($h < 24)
@@ -633,6 +640,7 @@ else
 					$hPRINT =		sprintf("%2s", $h);
 
 					$SUBoutput .= "| $hPRINT   | $hTOTALcalls | $hANSWERcalls | $hSUMtalk | $hAVGtalk | $hSUMqueue | $hAVGqueue | $hMAXqueue | $hDROPcalls |\n";
+					$CSV_subreports.="\"$hPRINT\",\"$hTOTALcalls\",\"$hANSWERcalls\",\"$hSUMtalk\",\"$hAVGtalk\",\"$hSUMqueue\",\"$hAVGqueue\",\"$hMAXqueue\",\"$hDROPcalls\"\n";
 					}
 
 				$h++;
@@ -665,6 +673,8 @@ else
 			$SUBoutput .= "+------+--------+--------+-----------+---------+-----------+---------+---------+--------+\n";
 			$SUBoutput .= "|TOTALS| $hTOTcalls_count | $hTOTanswer_count | $hTOTtalk_sec | $hTOTtalk_avg | $hTOTqueue_seconds | $hTOTqueue_avg | $hTOTmax_queue_seconds | $hTOTdrop_count |\n";
 			$SUBoutput .= "+------+--------+--------+-----------+---------+-----------+---------+---------+--------+\n";
+
+			$CSV_subreports.="\"TOTALS\",\"$hTOTcalls_count\",\"$hTOTanswer_count\",\"$hTOTtalk_sec\",\"$hTOTtalk_avg\",\"$hTOTqueue_seconds\",\"$hTOTqueue_avg\",\"$hTOTmax_queue_seconds\",\"$hTOTdrop_count\"\n";
 
 			$i++;
 			}
@@ -700,20 +710,48 @@ else
 		$MAIN .= "+------------------------------------------+--------+--------+-----------+---------+-----------+---------+---------+--------+\n";
 		$MAIN .= "| TOTALS       In-Groups: $i             | $TOTcalls_count | $TOTanswer_count | $TOTtalk_sec | $TOTtalk_avg | $TOTqueue_seconds | $TOTqueue_avg | $TOTmax_queue_seconds | $TOTdrop_count |\n";
 		$MAIN .= "+------------------------------------------+--------+--------+-----------+---------+-----------+---------+---------+--------+\n";
+		$CSV_main.="\"TOTALS       In-Groups: $i\",\"$TOTcalls_count\",\"$TOTanswer_count\",\"$TOTtalk_sec\",\"$TOTtalk_avg\",\"$TOTqueue_seconds\",\"$TOTqueue_avg\",\"$TOTmax_queue_seconds\",\"$TOTdrop_count\"\n";
 		}
 
 	if ($costformat > 0)
 		{
-		echo "</PRE>\n<B>";
+		$MAIN.="</PRE>\n<B>";
 		$inbound_cost = ($rawTOTtalk_min * $inbound_rate);
 		$inbound_cost =		sprintf("%8.2f", $inbound_cost);
 
-		echo "INBOUND $query_date to $end_date, &nbsp; $rawTOTtalk_min minutes at \$$inbound_rate = \$$inbound_cost\n";
+		$MAIN.="INBOUND $query_date to $end_date, &nbsp; $rawTOTtalk_min minutes at \$$inbound_rate = \$$inbound_cost\n";
 
 		exit;
 		}
 
 
+if ($file_download > 0)
+	{
+	$FILE_TIME = date("Ymd-His");
+	$CSVfilename = "AST_CLOSERsummary_hourly_$US$FILE_TIME.csv";
+	$CSV_text=$CSV_main.$CSV_subreports;
+	$CSV_text=preg_replace('/ +\"/', '"', $CSV_text);
+	$CSV_text=preg_replace('/\" +/', '"', $CSV_text);
+	// We'll be outputting a TXT file
+	header('Content-type: application/octet-stream');
+
+	// It will be called LIST_101_20090209-121212.txt
+	header("Content-Disposition: attachment; filename=\"$CSVfilename\"");
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Pragma: public');
+	ob_clean();
+	flush();
+
+	echo "$CSV_text";
+
+	exit;
+	}
+	else 
+	{
+
+	echo "$HEADER";
+	require("admin_header.php");
 	echo "$MAIN";
 	echo "$SUBoutput";
 
@@ -722,13 +760,14 @@ else
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $STARTtime);
 	echo "\n\nRun Time: $RUNtime seconds|$db_source\n";
+	echo "</PRE>";
+	echo "</TD></TR></TABLE>";
+
+	echo "</BODY></HTML>";
+
+	}
+
 	}
 
 
-
-
 ?>
-</PRE>
-</TD></TR></TABLE>
-
-</BODY></HTML>

@@ -1,13 +1,14 @@
 <?php 
 # AST_LISTS_campaign_stats.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This is a list inventory report, not a calling report. This report will show
 # statistics for all of the lists in the selected campaigns
 #
 # CHANGES
 # 100916-0928 - First build
+# 110703-1815 - Added download option
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -26,6 +27,8 @@ if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))	{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
+if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
+	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -37,7 +40,7 @@ $db_source = 'M';
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -56,18 +59,18 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	$use_slave_server=1;
 	$db_source = 'S';
 	require("dbconnect.php");
-	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $reports_only_user=$row[0];
@@ -81,13 +84,13 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LOGallowed_campaigns = $row[0];
@@ -128,7 +131,7 @@ $regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 
 $stmt="select campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $campaigns_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $campaigns_to_print)
@@ -172,7 +175,7 @@ else
 
 $stmt="select vsc_id,vsc_name from vicidial_status_categories;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $statcats_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $statcats_to_print)
@@ -196,7 +199,7 @@ $not_interested_statuses='';
 $unworkable_statuses='';
 $stmt="select status,human_answered,sale,dnc,customer_contact,not_interested,unworkable,status_name from vicidial_statuses;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $statha_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $statha_to_print)
@@ -214,7 +217,7 @@ while ($i < $statha_to_print)
 	}
 $stmt="select status,human_answered,sale,dnc,customer_contact,not_interested,unworkable,status_name from vicidial_campaign_statuses where selectable IN('Y','N') $group_SQLand;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $statha_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $statha_to_print)
@@ -243,73 +246,67 @@ else {$not_interested_statuses="''";}
 if (strlen($unworkable_statuses)>2)			{$unworkable_statuses = substr("$unworkable_statuses", 0, -1);}
 else {$unworkable_statuses="''";}
 
-?>
+$HEADER.="<HTML>\n";
+$HEADER.="<HEAD>\n";
+$HEADER.="<STYLE type=\"text/css\">\n";
+$HEADER.="<!--\n";
+$HEADER.="   .green {color: white; background-color: green}\n";
+$HEADER.="   .red {color: white; background-color: red}\n";
+$HEADER.="   .blue {color: white; background-color: blue}\n";
+$HEADER.="   .purple {color: white; background-color: purple}\n";
+$HEADER.="-->\n";
+$HEADER.=" </STYLE>\n";
 
-<HTML>
-<HEAD>
-<STYLE type="text/css">
-<!--
-   .green {color: white; background-color: green}
-   .red {color: white; background-color: red}
-   .blue {color: white; background-color: blue}
-   .purple {color: white; background-color: purple}
--->
- </STYLE>
-
-<?php 
-
-echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
+$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
-require("admin_header.php");
+$MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
-echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
+$MAIN.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP>";
+$MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 
-echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP>";
-echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-
-echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
-echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
+$MAIN.="</TD><TD VALIGN=TOP> Campaigns:<BR>";
+$MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 if  (eregi("--ALL--",$group_string))
-	{echo "<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
 else
-	{echo "<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 	{
-	if (eregi("$groups[$o]\|",$group_string)) {echo "<option selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
-	  else {echo "<option value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
+	if (eregi("$groups[$o]\|",$group_string)) {$MAIN.="<option selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
+	  else {$MAIN.="<option value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
 	$o++;
 	}
-echo "</SELECT>\n";
-echo "</TD><TD VALIGN=TOP><BR>";
-echo "<BR><BR>\n";
-echo "<INPUT type=submit NAME=SUBMIT VALUE=SUBMIT>\n";
-echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
-echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+$MAIN.="</SELECT>\n";
+$MAIN.="</TD><TD VALIGN=TOP><BR>";
+$MAIN.="<BR><BR>\n";
+$MAIN.="<INPUT type=submit NAME=SUBMIT VALUE=SUBMIT>\n";
+$MAIN.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
+$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 if (strlen($group[0]) > 1)
 	{
-	echo " <a href=\"./admin.php?ADD=34&campaign_id=$group[0]\">MODIFY</a> | \n";
-	echo " <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+	$MAIN.=" <a href=\"./admin.php?ADD=34&campaign_id=$group[0]\">MODIFY</a> | \n";
+	$MAIN.=" <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
 	}
 else
 	{
-	echo " <a href=\"./admin.php?ADD=10\">CAMPAIGNS</a> | \n";
-	echo " <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+	$MAIN.=" <a href=\"./admin.php?ADD=10\">CAMPAIGNS</a> | \n";
+	$MAIN.=" <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
 	}
-echo "</TD></TR></TABLE>";
-echo "</FORM>\n\n";
+$MAIN.="</TD></TR></TABLE>";
+$MAIN.="</FORM>\n\n";
 
-echo "<PRE><FONT SIZE=2>\n\n";
+$MAIN.="<PRE><FONT SIZE=2>\n\n";
 
 
 if (strlen($group[0]) < 1)
 	{
-	echo "\n\n";
-	echo "PLEASE SELECT A CAMPAIGN AND DATE ABOVE AND CLICK SUBMIT\n";
+	$MAIN.="\n\n";
+	$MAIN.="PLEASE SELECT A CAMPAIGN AND DATE ABOVE AND CLICK SUBMIT\n";
 	}
 
 else
@@ -325,14 +322,17 @@ else
 	$TOTALleads = 0;
 
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- LIST ID SUMMARY\n";
+	$OUToutput .= "---------- LIST ID SUMMARY     <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a>\n";
 	$OUToutput .= "+------------------------------------------+------------+----------+\n";
 	$OUToutput .= "| LIST                                     | LEADS      | ACTIVE   |\n";
 	$OUToutput .= "+------------------------------------------+------------+----------+\n";
 
+	$CSV_text1.="\"LIST ID SUMMARY\"\n";
+	$CSV_text1.="\"LIST\",\"LEADS\",\"ACTIVE\"\n";
+
 	$stmt="select count(*),list_id from vicidial_list where list_id IN( SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand) group by list_id;";
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
+	if ($DB) {$MAIN.="$stmt\n";}
 	$listids_to_print = mysql_num_rows($rslt);
 	$i=0;
 	while ($i < $listids_to_print)
@@ -351,7 +351,7 @@ else
 		{
 		$stmt="select list_name,active from vicidial_lists where list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$list_name_to_print = mysql_num_rows($rslt);
 		if ($list_name_to_print > 0)
 			{
@@ -369,6 +369,7 @@ else
 		$LISTIDname =	sprintf("%-40s", "$LISTIDlists[$i] - $LISTIDlist_names[$i]");while(strlen($LISTIDname)>40) {$LISTIDname = substr("$LISTIDname", 0, -1);}
 
 		$OUToutput .= "| $LISTIDname | $LISTIDcount | $LISTIDlist_active[$i] |\n";
+		$CSV_text1.="\"$LISTIDname\",\"$LISTIDcount\",\"$LISTIDlist_active[$i]\"\n";
 
 		$i++;
 		}
@@ -378,6 +379,7 @@ else
 	$OUToutput .= "+------------------------------------------+------------+----------+\n";
 	$OUToutput .= "| TOTAL:                                   | $TOTALleads |\n";
 	$OUToutput .= "+------------------------------------------+------------+\n";
+	$CSV_text1.="\"TOTAL\",\"$TOTALleads\"\n";
 
 
 	##############################
@@ -398,7 +400,7 @@ else
 
 	$stmt="select count(*) from vicidial_list where status IN($human_answered_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
+	if ($DB) {$MAIN.="$stmt\n";}
 	$HA_results = mysql_num_rows($rslt);
 	if ($HA_results > 0)
 		{
@@ -411,7 +413,7 @@ else
 		}
 	$stmt="select count(*) from vicidial_list where status IN($sale_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
+	if ($DB) {$MAIN.="$stmt\n";}
 	$SALE_results = mysql_num_rows($rslt);
 	if ($SALE_results > 0)
 		{
@@ -424,7 +426,7 @@ else
 		}
 	$stmt="select count(*) from vicidial_list where status IN($dnc_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
+	if ($DB) {$MAIN.="$stmt\n";}
 	$DNC_results = mysql_num_rows($rslt);
 	if ($DNC_results > 0)
 		{
@@ -437,7 +439,7 @@ else
 		}
 	$stmt="select count(*) from vicidial_list where status IN($customer_contact_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
+	if ($DB) {$MAIN.="$stmt\n";}
 	$CC_results = mysql_num_rows($rslt);
 	if ($CC_results > 0)
 		{
@@ -450,7 +452,7 @@ else
 		}
 	$stmt="select count(*) from vicidial_list where status IN($not_interested_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
+	if ($DB) {$MAIN.="$stmt\n";}
 	$NI_results = mysql_num_rows($rslt);
 	if ($NI_results > 0)
 		{
@@ -463,7 +465,7 @@ else
 		}
 	$stmt="select count(*) from vicidial_list where status IN($unworkable_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
+	if ($DB) {$MAIN.="$stmt\n";}
 	$UW_results = mysql_num_rows($rslt);
 	if ($UW_results > 0)
 		{
@@ -491,7 +493,7 @@ else
 
 	$OUToutput .= "\n";
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- STATUS FLAGS SUMMARY:    (and % of leads in selected lists)\n";
+	$OUToutput .= "---------- STATUS FLAGS SUMMARY:    (and % of leads in selected lists)     <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=2\">DOWNLOAD</a>\n";
 	$OUToutput .= "+------------------+------------+----------+\n";
 	$OUToutput .= "| Human Answer     | $HA_count |  $HA_percent% |\n";
 	$OUToutput .= "| Sale             | $SALE_count |  $SALE_percent% |\n";
@@ -502,16 +504,26 @@ else
 	$OUToutput .= "+------------------+------------+----------+\n";
 	$OUToutput .= "\n";
 
+	$CSV_text2.="\"STATUS FLAGS SUMMARY:\"\n";
+	$CSV_text2 .= "\"Human Answer\",\"$HA_count\",\"$HA_percent%\"\n";
+	$CSV_text2 .= "\"Sale\",\"$SALE_count\",\"$SALE_percent%\"\n";
+	$CSV_text2 .= "\"DNC\",\"$DNC_count\",\"$DNC_percent%\"\n";
+	$CSV_text2 .= "\"Customer Contact\",\"$CC_count\",\"$CC_percent%\"\n";
+	$CSV_text2 .= "\"Not Interested\",\"$NI_count\",\"$NI_percent%\"\n";
+	$CSV_text2 .= "\"Unworkable\",\"$UW_count\",\"$UW_percent%\"\n";
+
 
 	##############################
 	#########  STATUS CATEGORY STATS
 
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- CUSTOM STATUS CATEGORY STATS\n";
+	$OUToutput .= "---------- CUSTOM STATUS CATEGORY STATS     <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=3\">DOWNLOAD</a>\n";
 	$OUToutput .= "+----------------------+------------+--------------------------------+\n";
 	$OUToutput .= "| CATEGORY             | CALLS      | DESCRIPTION                    |\n";
 	$OUToutput .= "+----------------------+------------+--------------------------------+\n";
 
+	$CSV_text3.="\"CUSTOM STATUS CATEGORY STATS\"\n";
+	$CSV_text3.="\"CATEGORY\",\"CALLS\",\"DESCRIPTION\"\n";
 
 	$TOTCATcalls=0;
 	$r=0;
@@ -525,6 +537,7 @@ else
 			$CATname =	sprintf("%-30s", $vsc_name[$r]); while(strlen($CATname)>30) {$CATname = substr("$CATname", 0, -1);}
 
 			$OUToutput .= "| $category | $CATcount | $CATname |\n";
+			$CSV_text3.="\"$category\",\"$CATcount\",\"$CATname\"\n";
 			}
 		$r++;
 		}
@@ -534,6 +547,7 @@ else
 	$OUToutput .= "+----------------------+------------+--------------------------------+\n";
 	$OUToutput .= "| TOTAL                | $TOTCATcalls |\n";
 	$OUToutput .= "+----------------------+------------+\n";
+	$CSV_text3.="\"TOTAL\",\"$TOTCATcalls\"\n";
 
 
 
@@ -543,8 +557,10 @@ else
 
 	$TOTALleads = 0;
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- PER LIST DETAIL STATS\n";
+	$OUToutput .= "---------- PER LIST DETAIL STATS     <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=4\">DOWNLOAD</a>\n";
 	$OUToutput .= "\n";
+
+	$CSV_text4.="\"PER LIST DETAIL STATS\"\n\n";
 
 	$i=0;
 	while ($i < $listids_to_print)
@@ -559,6 +575,9 @@ else
 		$OUToutput .= "| $header_list_id $LISTIDlist_active[$i] |\n";
 		$OUToutput .= "|    TOTAL LEADS: $header_list_count                                   |\n";
 		$OUToutput .= "+--------------------------------------------------------------+\n";
+
+		$CSV_text4.="\"LIST ID: $LISTIDlists[$i]\",\"$LISTIDlist_names[$i]\",\"$LISTIDlist_active[$i]\"\n";
+		$CSV_text4.="\"TOTAL LEADS:\",\"$header_list_count\"\n\n";
 
 		$HA_count=0;
 		$HA_percent=0;
@@ -575,7 +594,7 @@ else
 
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($human_answered_statuses);";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$HA_results = mysql_num_rows($rslt);
 		if ($HA_results > 0)
 			{
@@ -588,7 +607,7 @@ else
 			}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($sale_statuses);";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$SALE_results = mysql_num_rows($rslt);
 		if ($SALE_results > 0)
 			{
@@ -601,7 +620,7 @@ else
 			}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($dnc_statuses);";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$DNC_results = mysql_num_rows($rslt);
 		if ($DNC_results > 0)
 			{
@@ -614,7 +633,7 @@ else
 			}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($customer_contact_statuses);";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$CC_results = mysql_num_rows($rslt);
 		if ($CC_results > 0)
 			{
@@ -627,7 +646,7 @@ else
 			}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($not_interested_statuses);";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$NI_results = mysql_num_rows($rslt);
 		if ($NI_results > 0)
 			{
@@ -640,7 +659,7 @@ else
 			}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($unworkable_statuses);";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$UW_results = mysql_num_rows($rslt);
 		if ($UW_results > 0)
 			{
@@ -678,11 +697,18 @@ else
 		$OUToutput .= "     +--------+-----------------------------------+------------+\n";
 
 
-
+		$CSV_text4.="\"STATUS FLAGS BREAKDOWN:\",\"(and % of total leads in the list)\"\n";
+		$CSV_text4.="\"Human Answer:\",\"$HA_count\",\"$HA_percent%\"\n";
+		$CSV_text4.="\"Sale:\",\"$SALE_count\",\"$SALE_percent%\"\n";
+		$CSV_text4.="\"DNC:\",\"$DNC_count\",\"$DNC_percent%\"\n";
+		$CSV_text4.="\"Customer Contact:\",\"$CC_count\",\"$CC_percent%\"\n";
+		$CSV_text4.="\"Not Interested:\",\"$NI_count\",\"$NI_percent%\"\n";
+		$CSV_text4.="\"Unworkable:\",\"$UW_count\",\"$UW_percent%\"\n\n";
+		$CSV_text4.="\"STATUS BREAKDOWN:\",\"\",\"COUNT\"\n";
 
 		$stmt="select status,count(*) from vicidial_list where list_id='$LISTIDlists[$i]' group by status order by status;";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$liststatussum_to_print = mysql_num_rows($rslt);
 		$r=0;
 		while ($r < $liststatussum_to_print)
@@ -690,7 +716,7 @@ else
 			$row=mysql_fetch_row($rslt);
 			$LISTIDstatus[$r] =	$row[0];
 			$LISTIDcounts[$r] =	$row[1];
-				if ($DB) {echo "$r|$LISTIDstatus[$r]|$LISTIDcounts[$r]|    |$row[0]|$row[1]|<BR>\n";}
+				if ($DB) {$MAIN.="$r|$LISTIDstatus[$r]|$LISTIDcounts[$r]|    |$row[0]|$row[1]|<BR>\n";}
 			$r++;
 			}
 
@@ -705,7 +731,7 @@ else
 			$LISTIDname =	sprintf("%-42s", "$LIDstatus_format | $statname_list[$LIDstatus]"); while(strlen($LISTIDname)>42) {$LISTIDname = substr("$LISTIDname", 0, -1);}
 
 			$OUToutput .= "     | $LISTIDname | $LISTID_status_count |\n";
-
+			$CSV_text4.="\"".trim($LIDstatus_format)."\",\"$statname_list[$LIDstatus]\",\"$LISTID_status_count\"\n";
 			$r++;
 			}
 		$TOTALleads =		sprintf("%10s", $TOTALleads);
@@ -713,6 +739,8 @@ else
 		$OUToutput .= "     +--------+-----------------------------------+------------+\n";
 		$OUToutput .= "     | TOTAL:                                     | $TOTALleads |\n";
 		$OUToutput .= "     +--------------------------------------------+------------+\n";
+
+		$CSV_text4.="\"TOTAL:\",\"\",\"$TOTALleads\"\n\n\n";
 
 		$i++;
 		}
@@ -723,17 +751,45 @@ else
 
 
 
-	echo "$OUToutput";
+	$MAIN.="$OUToutput";
 
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $STARTtime);
-	echo "\nRun Time: $RUNtime seconds|$db_source\n";
+	$MAIN.="\nRun Time: $RUNtime seconds|$db_source\n";
+	$MAIN.="</PRE>\n";
+	$MAIN.="</TD></TR></TABLE>\n";
+	$MAIN.="</BODY></HTML>\n";
+
+	}
+
+	if ($file_download>0) {
+		$FILE_TIME = date("Ymd-His");
+		$CSVfilename = "AST_LISTS_campaign_stats_$US$FILE_TIME.csv";
+		$CSV_var="CSV_text".$file_download;
+		$CSV_text=preg_replace('/^ +/', '', $$CSV_var);
+		$CSV_text=preg_replace('/\n +,/', ',', $CSV_text);
+		$CSV_text=preg_replace('/ +\"/', '"', $CSV_text);
+		$CSV_text=preg_replace('/\" +/', '"', $CSV_text);
+		// We'll be outputting a TXT file
+		header('Content-type: application/octet-stream');
+
+		// It will be called LIST_101_20090209-121212.txt
+		header("Content-Disposition: attachment; filename=\"$CSVfilename\"");
+		header('Expires: 0');
+		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+		header('Pragma: public');
+		ob_clean();
+		flush();
+
+		echo "$CSV_text";
+
+		exit;
+	} else {
+		echo $HEADER;
+		require("admin_header.php");
+		echo $MAIN;
 	}
 
 
 
 ?>
-</PRE>
-</TD></TR></TABLE>
-
-</BODY></HTML>

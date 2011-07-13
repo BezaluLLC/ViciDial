@@ -1,7 +1,7 @@
 <?php 
 # AST_agent_performance_detail.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -26,6 +26,7 @@
 # 100712-1324 - Added system setting slave server option
 # 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
+# 110703-1739 - Added file download option
 #
 
 require("dbconnect.php");
@@ -52,11 +53,11 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
+if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
+	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 
 
 if (strlen($shift)<2) {$shift='ALL';}
-
-$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date&group=$group&user_group=$user_group&shift=$shift&DB=$DB";
 
 $report_name = 'Agent Performance Detail';
 $db_source = 'M';
@@ -65,7 +66,7 @@ $db_source = 'M';
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$HTML_text.="$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -84,21 +85,21 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	$use_slave_server=1;
 	$db_source = 'S';
 	require("dbconnect.php");
-	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	$HTML_text.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$HTML_text.="|$stmt|\n";}
 if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$HTML_text.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $reports_only_user=$row[0];
@@ -112,13 +113,13 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$HTML_text.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$HTML_text.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LOGallowed_campaigns = $row[0];
@@ -163,7 +164,7 @@ while($i < $group_ct)
 
 $stmt="select campaign_id from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$HTML_text.="$stmt\n";}
 $campaigns_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $campaigns_to_print)
@@ -176,7 +177,7 @@ while ($i < $campaigns_to_print)
 	}
 $stmt="select user_group from vicidial_user_groups order by user_group;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$HTML_text.="$stmt\n";}
 $user_groups_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $user_groups_to_print)
@@ -225,123 +226,120 @@ else
 	$user_group_SQL = "and vicidial_agent_log.user_group IN($user_group_SQL)";
 	}
 
-if ($DB) {echo "$user_group_string|$user_group_ct|$user_groupQS|$i<BR>";}
-?>
+if ($DB) {$HTML_text.="$user_group_string|$user_group_ct|$user_groupQS|$i<BR>";}
 
-<HTML>
-<HEAD>
-<STYLE type="text/css">
-<!--
-   .green {color: white; background-color: green}
-   .red {color: white; background-color: red}
-   .blue {color: white; background-color: blue}
-   .purple {color: white; background-color: purple}
--->
- </STYLE>
+$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&DB=$DB";
 
-<?php 
 
-echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
-echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+$HTML_head.="<HTML>\n";
+$HTML_head.="<HEAD>\n";
+$HTML_head.="<STYLE type=\"text/css\">\n";
+$HTML_head.="<!--\n";
+$HTML_head.="   .green {color: white; background-color: green}\n";
+$HTML_head.="   .red {color: white; background-color: red}\n";
+$HTML_head.="   .blue {color: white; background-color: blue}\n";
+$HTML_head.="   .purple {color: white; background-color: purple}\n";
+$HTML_head.="-->\n";
+$HTML_head.=" </STYLE>\n";
 
-echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+
+$HTML_head.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
+$HTML_head.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+
+$HTML_head.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
+$HTML_head.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
-	require("admin_header.php");
+#	require("admin_header.php");
 
-echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$HTML_text.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
-echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Dates:<BR>";
-echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
-echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
+$HTML_text.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
+$HTML_text.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Dates:<BR>";
+$HTML_text.="<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
+$HTML_text.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
-?>
-<script language="JavaScript">
-var o_cal = new tcal ({
-	// form name
-	'formname': 'vicidial_report',
-	// input name
-	'controlname': 'query_date'
-});
-o_cal.a_tpl.yearscroll = false;
-// o_cal.a_tpl.weekstart = 1; // Monday week start
-</script>
-<?php
+$HTML_text.="<script language=\"JavaScript\">\n";
+$HTML_text.="var o_cal = new tcal ({\n";
+$HTML_text.="	// form name\n";
+$HTML_text.="	'formname': 'vicidial_report',\n";
+$HTML_text.="	// input name\n";
+$HTML_text.="	'controlname': 'query_date'\n";
+$HTML_text.="});\n";
+$HTML_text.="o_cal.a_tpl.yearscroll = false;\n";
+$HTML_text.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
+$HTML_text.="</script>\n";
 
-echo "<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+$HTML_text.="<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
-?>
-<script language="JavaScript">
-var o_cal = new tcal ({
-	// form name
-	'formname': 'vicidial_report',
-	// input name
-	'controlname': 'end_date'
-});
-o_cal.a_tpl.yearscroll = false;
-// o_cal.a_tpl.weekstart = 1; // Monday week start
-</script>
-<?php
+$HTML_text.="<script language=\"JavaScript\">\n";
+$HTML_text.="var o_cal = new tcal ({\n";
+$HTML_text.="	// form name\n";
+$HTML_text.="	'formname': 'vicidial_report',\n";
+$HTML_text.="	// input name\n";
+$HTML_text.="	'controlname': 'end_date'\n";
+$HTML_text.="});\n";
+$HTML_text.="o_cal.a_tpl.yearscroll = false;\n";
+$HTML_text.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
+$HTML_text.="</script>\n";
 
-echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
-echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
+$HTML_text.="</TD><TD VALIGN=TOP> Campaigns:<BR>";
+$HTML_text.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 if  (eregi("--ALL--",$group_string))
-	{echo "<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
 else
-	{echo "<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 {
-	if (eregi("$groups[$o]\|",$group_string)) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
-	  else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
+	if (eregi("$groups[$o]\|",$group_string)) {$HTML_text.="<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
+	  else {$HTML_text.="<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
 	$o++;
 }
-echo "</SELECT>\n";
-echo "</TD><TD VALIGN=TOP>User Groups:<BR>";
-echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";
+$HTML_text.="</SELECT>\n";
+$HTML_text.="</TD><TD VALIGN=TOP>User Groups:<BR>";
+$HTML_text.="<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 
 if  (eregi("--ALL--",$user_group_string))
-	{echo "<option value=\"--ALL--\" selected>-- ALL USER GROUPS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\" selected>-- ALL USER GROUPS --</option>\n";}
 else
-	{echo "<option value=\"--ALL--\">-- ALL USER GROUPS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\">-- ALL USER GROUPS --</option>\n";}
 $o=0;
 while ($user_groups_to_print > $o)
 	{
-	if  (eregi("$user_groups[$o]\|",$user_group_string)) {echo "<option selected value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
-	  else {echo "<option value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
+	if  (eregi("$user_groups[$o]\|",$user_group_string)) {$HTML_text.="<option selected value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
+	  else {$HTML_text.="<option value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
 	$o++;
 	}
-echo "</SELECT>\n";
-echo "</TD><TD VALIGN=TOP>Shift:<BR>";
-echo "<SELECT SIZE=1 NAME=shift>\n";
-echo "<option selected value=\"$shift\">$shift</option>\n";
-echo "<option value=\"\">--</option>\n";
-echo "<option value=\"AM\">AM</option>\n";
-echo "<option value=\"PM\">PM</option>\n";
-echo "<option value=\"ALL\">ALL</option>\n";
-echo "</SELECT><BR><BR>\n";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
-echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
+$HTML_text.="</SELECT>\n";
+$HTML_text.="</TD><TD VALIGN=TOP>Shift:<BR>";
+$HTML_text.="<SELECT SIZE=1 NAME=shift>\n";
+$HTML_text.="<option selected value=\"$shift\">$shift</option>\n";
+$HTML_text.="<option value=\"\">--</option>\n";
+$HTML_text.="<option value=\"AM\">AM</option>\n";
+$HTML_text.="<option value=\"PM\">PM</option>\n";
+$HTML_text.="<option value=\"ALL\">ALL</option>\n";
+$HTML_text.="</SELECT><BR><BR>\n";
+$HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
+$HTML_text.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
-echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
-echo " <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
-echo "</FONT>\n";
-echo "</TD></TR></TABLE>";
+$HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
+$HTML_text.=" <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+$HTML_text.="</FONT>\n";
+$HTML_text.="</TD></TR></TABLE>";
 
-echo "</FORM>\n\n";
+$HTML_text.="</FORM>\n\n";
 
 
-echo "<PRE><FONT SIZE=2>\n";
+$HTML_text.="<PRE><FONT SIZE=2>\n";
 
 
 if (!$group)
 {
-echo "\n";
-echo "PLEASE SELECT A CAMPAIGN AND DATE-TIME ABOVE AND CLICK SUBMIT\n";
-echo " NOTE: stats taken from shift specified\n";
+$HTML_text.="\n";
+$HTML_text.="PLEASE SELECT A CAMPAIGN AND DATE-TIME ABOVE AND CLICK SUBMIT\n";
+$HTML_text.=" NOTE: stats taken from shift specified\n";
 }
 
 else
@@ -371,10 +369,10 @@ $query_date_END = "$end_date $time_END";
 if (strlen($user_group)>0) {$ugSQL="and vicidial_agent_log.user_group='$user_group'";}
 else {$ugSQL='';}
 
-echo "Agent Performance Detail                        $NOW_TIME\n";
+$HTML_text.="Agent Performance Detail                        $NOW_TIME\n";
 
-echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
-echo "---------- AGENTS Details -------------\n\n";
+$HTML_text.="Time range: $query_date_BEGIN to $query_date_END\n\n";
+$HTML_text.="---------- AGENTS Details -------------\n\n";
 
 
 
@@ -383,6 +381,12 @@ echo "---------- AGENTS Details -------------\n\n";
 $statuses='-';
 $statusesTXT='';
 $statusesHEAD='';
+
+$CSV_header="\"Agent Performance Detail                        $NOW_TIME\"\n";
+$CSV_header.="\"Time range: $query_date_BEGIN to $query_date_END\"\n\n";
+$CSV_header.="\"---------- AGENTS Details -------------\"\n";
+$CSV_header.='"USER NAME","ID","CALLS","TIME","PAUSE","PAUSAVG","WAIT","WAITAVG","TALK","TALKAVG","DISPO","DISPAVG","DEAD","DEADAVG","CUSTOMER","CUSTAVG"';
+
 $statusesHTML='';
 $statusesARY[0]='';
 $j=0;
@@ -393,7 +397,7 @@ $k=0;
 
 $stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec) from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_SQL group by user,full_name,status order by full_name,user,status desc limit 500000;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$HTML_text.="$stmt\n";}
 $rows_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $rows_to_print)
@@ -418,6 +422,9 @@ while ($i < $rows_to_print)
 		$statusesTXT = sprintf("%8s", $status[$i]);
 		$statusesHEAD .= "----------+";
 		$statusesHTML .= " $statusesTXT |";
+
+		$CSV_header.=",\"$status[$i]\"";
+
 		$statuses .= "$status[$i]-";
 		$statusesARY[$j] = $status[$i];
 		$j++;
@@ -433,10 +440,13 @@ while ($i < $rows_to_print)
 	$i++;
 	}
 
-echo "CALL STATS BREAKDOWN: (Statistics related to handling of calls only)\n";
-echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-echo "| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG | DEAD     |DEADAVG | CUSTOMER |CUSTAVG |$statusesHTML\n";
-echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+$CSV_header.="\n";
+$CSV_lines='';
+
+$HTML_text.="CALL STATS BREAKDOWN: (Statistics related to handling of calls only)     <a href=\"$LINKbase&stage=$stage&file_download=1\">[DOWNLOAD]</a>\n";
+$HTML_text.="+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+$HTML_text.="| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG | DEAD     |DEADAVG | CUSTOMER |CUSTAVG |$statusesHTML\n";
+$HTML_text.="+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
 
 
 ### BEGIN loop through each user ###
@@ -454,6 +464,7 @@ while ($m < $k)
 	$Sdead_sec=0;
 	$Scustomer_sec=0;
 	$SstatusesHTML='';
+	$CSVstatuses='';
 
 	### BEGIN loop through each status ###
 	$n=0;
@@ -476,6 +487,9 @@ while ($m < $k)
 				$Scustomer_sec =	($Scustomer_sec + $customer_sec[$i]);
 				$SstatusTXT = sprintf("%8s", $calls[$i]);
 				$SstatusesHTML .= " $SstatusTXT |";
+
+				$CSVstatuses.=",\"$calls[$i]\"";
+
 				$status_found++;
 				}
 			$i++;
@@ -483,6 +497,7 @@ while ($m < $k)
 		if ($status_found < 1)
 			{
 			$SstatusesHTML .= "        0 |";
+			$CSVstatuses.=",\"0\"";
 			}
 		### END loop through each stat line ###
 		$n++;
@@ -561,6 +576,10 @@ while ($m < $k)
 
 	$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERavgDEAD_MS | $pfUSERtotCUSTOMER_MS | $pfUSERavgCUSTOMER_MS |$SstatusesHTML\n";
 
+
+	$CSV_lines.="\"$Sfull_name\",";
+	$CSV_lines.=eregi_replace(" ", "", "\"$Suser\",\"$Scalls\",\"$pfUSERtime_MS\",\"$pfUSERtotPAUSE_MS\",\"$pfUSERavgPAUSE_MS\",\"$pfUSERtotWAIT_MS\",\"$pfUSERavgWAIT_MS\",\"$pfUSERtotTALK_MS\",\"$pfUSERavgTALK_MS\",\"$pfUSERtotDISPO_MS\",\"$pfUSERavgDISPO_MS\",\"$pfUSERtotDEAD_MS\",\"$pfUSERavgDEAD_MS\",\"$pfUSERtotCUSTOMER_MS\",\"$pfUSERavgCUSTOMER_MS\"$CSVstatuses\n");
+
 	$TOPsorted_output[$m] = $Toutput;
 
 	if ($stage == 'ID')
@@ -570,7 +589,7 @@ while ($m < $k)
 	if ($stage == 'TIME')
 		{$TOPsort[$m] =	'' . sprintf("%08s", $Stime) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);}
 	if (!ereg("ID|TIME|LEADS",$stage))
-		{echo "$Toutput";}
+		{$HTML_text.="$Toutput";}
 
 	$m++;
 	}
@@ -592,7 +611,7 @@ if (ereg("ID|TIME|LEADS",$stage))
 		$sort_split = explode("-----",$TOPsort[$m]);
 		$i = $sort_split[1];
 		$sort_order[$m] = "$i";
-		echo "$TOPsorted_output[$i]";
+		$HTML_text.="$TOPsorted_output[$i]";
 		$m++;
 		}
 	}
@@ -603,6 +622,7 @@ if (ereg("ID|TIME|LEADS",$stage))
 ###### LAST LINE FORMATTING ##########
 ### BEGIN loop through each status ###
 $SUMstatusesHTML='';
+$CSVSUMstatuses='';
 $n=0;
 while ($n < $j)
 	{
@@ -629,6 +649,7 @@ while ($n < $j)
 		{
 		$SUMstatusTXT = sprintf("%8s", $Scalls);
 		$SUMstatusesHTML .= " $SUMstatusTXT |";
+		$CSVSUMstatuses.=",\"$Scalls\"";
 		}
 	$n++;
 	}
@@ -693,11 +714,40 @@ while(strlen($TOTavgWAIT_MS)>6) {$TOTavgWAIT_MS = substr("$TOTavgWAIT_MS", 0, -1
 while(strlen($TOTavgCUSTOMER_MS)>6) {$TOTavgCUSTOMER_MS = substr("$TOTavgCUSTOMER_MS", 0, -1);}
 
 
-echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-echo "|  TOTALS        AGENTS:$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
-echo "+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+$HTML_text.="+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+$HTML_text.="|  TOTALS        AGENTS:$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
+$HTML_text.="+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
 
-echo "\n\n";
+$CSV_total=eregi_replace(" ", "", "\"TOTALS\",\"AGENTS:$TOT_AGENTS\",\"$TOTcalls\",\"$TOTtime_MS\",\"$TOTtotPAUSE_MS\",\"$TOTavgPAUSE_MS\",\"$TOTtotWAIT_MS\",\"$TOTavgWAIT_MS\",\"$TOTtotTALK_MS\",\"$TOTavgTALK_MS\",\"$TOTtotDISPO_MS\",\"$TOTavgDISPO_MS\",\"$TOTtotDEAD_MS\",\"$TOTavgDEAD_MS\",\"$TOTtotCUSTOMER_MS\",\"$TOTavgCUSTOMER_MS\"$CSVSUMstatuses");
+
+if ($file_download == 1)
+	{
+	$FILE_TIME = date("Ymd-His");
+	$CSVfilename = "AGENT_PERFORMACE_DETAIL$US$FILE_TIME.csv";
+
+	// We'll be outputting a TXT file
+	header('Content-type: application/octet-stream');
+
+	// It will be called LIST_101_20090209-121212.txt
+	header("Content-Disposition: attachment; filename=\"$CSVfilename\"");
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Pragma: public');
+	ob_clean();
+	flush();
+
+	echo "$CSV_header$CSV_lines$CSV_total";
+
+	exit;
+	}
+
+$CSV_report=fopen("AST_agent_performance_detail.csv", "w");
+fwrite($CSV_report, $CSV_header);
+fwrite($CSV_report, $CSV_lines);
+fwrite($CSV_report, $CSV_total);
+
+
+$HTML_text.="\n\n";
 
 
 
@@ -717,6 +767,7 @@ $sub_statuses='-';
 $sub_statusesTXT='';
 $sub_statusesHEAD='';
 $sub_statusesHTML='';
+$CSV_statuses='';
 $sub_statusesARY=$MT;
 $j=0;
 $PCusers='-';
@@ -725,7 +776,7 @@ $PCuser_namesARY=$MT;
 $k=0;
 $stmt="select full_name,vicidial_users.user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec) from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 $group_SQL $user_group_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$HTML_text.="$stmt\n";}
 $subs_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $subs_to_print)
@@ -746,6 +797,7 @@ while ($i < $subs_to_print)
 		$sub_statusesHTML .= " $sub_statusesTXT |";
 		$sub_statuses .= "$sub_status[$i]-";
 		$sub_statusesARY[$j] = $sub_status[$i];
+		$CSV_statuses.=",\"$sub_status[$i]\"";
 		$j++;
 		}
 	if (!eregi("-$PCuser[$i]-", $PCusers))
@@ -759,17 +811,22 @@ while ($i < $subs_to_print)
 	$i++;
 	}
 
-echo "PAUSE CODE BREAKDOWN:\n";
-echo "+-----------------+----------+----------+----------+----------+  +$sub_statusesHEAD\n";
-echo "| USER NAME       | ID       | TOTAL    | NONPAUSE | PAUSE    |  |$sub_statusesHTML\n";
-echo "+-----------------+----------+----------+----------+----------+  +$sub_statusesHEAD\n";
+$HTML_text.="PAUSE CODE BREAKDOWN:     <a href=\"$LINKbase&stage=$stage&file_download=2\">[DOWNLOAD]</a>\n\n";
+$HTML_text.="+-----------------+----------+----------+----------+----------+  +$sub_statusesHEAD\n";
+$HTML_text.="| USER NAME       | ID       | TOTAL    | NONPAUSE | PAUSE    |  |$sub_statusesHTML\n";
+$HTML_text.="+-----------------+----------+----------+----------+----------+  +$sub_statusesHEAD\n";
 
+$CSV_header="\"Agent Performance Detail                        $NOW_TIME\"\n";
+$CSV_header.="\"Time range: $query_date_BEGIN to $query_date_END\"\n\n";
+$CSV_header.="\"PAUSE CODE BREAKDOWN:\"\n";
+$CSV_header.="\"USER NAME\",\"ID\",\"TOTAL\",\"NONPAUSE\",\"PAUSE\",$CSV_statuses\n";
 
 ### BEGIN loop through each user ###
 $m=0;
 $Suser_ct = count($usersARY);
 $TOTtotNONPAUSE = 0;
 $TOTtotTOTAL = 0;
+$CSV_lines="";
 
 while ($m < $k)
 	{
@@ -786,6 +843,7 @@ while ($m < $k)
 	$Snon_pause_sec=0;
 	$Stotal_sec=0;
 	$SstatusesHTML='';
+	$CSV_statuses="";
 
 	### BEGIN loop through each status ###
 	$n=0;
@@ -808,6 +866,7 @@ while ($m < $k)
 
 				$SstatusTXT = sprintf("%8s", $pfUSERcodePAUSE_MS);
 				$SstatusesHTML .= " $SstatusTXT |";
+				$CSV_statuses.=",\"$USERcodePAUSE_MS\"";
 				$status_found++;
 				}
 			$i++;
@@ -815,6 +874,7 @@ while ($m < $k)
 		if ($status_found < 1)
 			{
 			$SstatusesHTML .= "        0 |";
+			$CSV_statuses.=",\"0\"";
 			}
 		### END loop through each stat line ###
 		$n++;
@@ -852,8 +912,8 @@ while ($m < $k)
 
 	$BOTTOMsorted_output[$m] = $BOTTOMoutput;
 
-	echo "$BOTTOMoutput";
-
+	$HTML_text.="$BOTTOMoutput";
+	$CSV_lines.="\"$Sfull_name\"".eregi_replace(" ", "", ",\"$Suser\",\"$pfUSERtotTOTAL_MS\",\"$pfUSERtotNONPAUSE_MS\",\"$pfUSERtotPAUSE_MS\",$CSV_statuses\n");
 	$m++;
 	}
 ### END loop through each user ###
@@ -878,6 +938,7 @@ while ($m < $k)
 ###### LAST LINE FORMATTING ##########
 ### BEGIN loop through each status ###
 $SUMstatusesHTML='';
+$CSVSUMstatuses='';
 $TOTtotPAUSE=0;
 $n=0;
 while ($n < $j)
@@ -910,6 +971,7 @@ while ($n < $j)
 
 		$SUMstatusTXT = sprintf("%8s", $pfUSERsumstatPAUSE_MS);
 		$SUMstatusesHTML .= " $SUMstatusTXT |";
+		$CSVSUMstatuses.=",\"$USERsumstatPAUSE_MS\"";
 		}
 	$n++;
 	}
@@ -930,17 +992,51 @@ while ($n < $j)
 	while(strlen($TOTtotTOTAL_MS)>10) {$TOTtotTOTAL_MS = substr("$TOTtotTOTAL_MS", 0, -1);}
 
 
-echo "+-----------------+----------+----------+----------+----------+  +$sub_statusesHEAD\n";
-echo "|  TOTALS        AGENTS:$TOT_AGENTS |$TOTtotTOTAL_MS|$TOTtotNONPAUSE_MS|$TOTtotPAUSE_MS|  |$SUMstatusesHTML\n";
-echo "+----------------------------+----------+----------+----------+  +$sub_statusesHEAD\n";
+$HTML_text.="+-----------------+----------+----------+----------+----------+  +$sub_statusesHEAD\n";
+$HTML_text.="|  TOTALS        AGENTS:$TOT_AGENTS |$TOTtotTOTAL_MS|$TOTtotNONPAUSE_MS|$TOTtotPAUSE_MS|  |$SUMstatusesHTML\n";
+$HTML_text.="+----------------------------+----------+----------+----------+  +$sub_statusesHEAD\n";
 
-echo "\n\n<BR>$db_source";
+$CSV_total=eregi_replace(" ", "", "\"TOTALS\",\"AGENTS:$TOT_AGENTS\",\"$TOTtotTOTAL_MS\",\"$TOTtotNONPAUSE_MS\",\"$TOTtotPAUSE_MS\",$CSVSUMstatuses");
 
+if ($file_download == 2)
+	{
+	$FILE_TIME = date("Ymd-His");
+	$CSVfilename = "AST_PAUSE_CODE_BREAKDOWN$US$FILE_TIME.csv";
+
+	// We'll be outputting a TXT file
+	header('Content-type: application/octet-stream');
+
+	// It will be called LIST_101_20090209-121212.txt
+	header("Content-Disposition: attachment; filename=\"$CSVfilename\"");
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Pragma: public');
+	ob_clean();
+	flush();
+
+	echo "$CSV_header$CSV_lines$CSV_total";
+
+	exit;
+	}
+$CSV_report=fopen("AST_pause_code_breakdown.csv", "w");
+fwrite($CSV_report, $CSV_header);
+fwrite($CSV_report, $CSV_lines);
+fwrite($CSV_report, $CSV_total);
+
+
+$HTML_text.="\n\n<BR>$db_source";
+$HTML_text.="</TD></TR></TABLE>";
+
+$HTML_text.="</BODY></HTML>";
+
+
+}
+if ($file_download == 0 || !$file_download) {
+	echo $HTML_head;
+	require("admin_header.php");
+	echo $HTML_text;
 }
 
 
 ?>
 
-</TD></TR></TABLE>
-
-</BODY></HTML>

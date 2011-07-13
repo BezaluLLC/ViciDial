@@ -1,7 +1,7 @@
 <?php 
 # AST_CLOSER_service_level.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -17,6 +17,7 @@
 # 100712-1324 - Added system setting slave server option
 # 100802-2347 - Added User Group Allowed Reports option validation
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
+# 110703-1756 - Added download option
 #
 
 require("dbconnect.php");
@@ -36,6 +37,8 @@ if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
+if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
+	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -49,7 +52,7 @@ $db_source = 'M';
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -68,18 +71,18 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	$use_slave_server=1;
 	$db_source = 'S';
 	require("dbconnect.php");
-	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $reports_only_user=$row[0];
@@ -93,13 +96,13 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LOGallowed_campaigns = $row[0];
@@ -122,7 +125,7 @@ if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
 $stmt="select group_id,group_name from vicidial_inbound_groups order by group_id;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $groups_to_print)
@@ -132,95 +135,92 @@ while ($i < $groups_to_print)
 	$group_names[$i] =	$row[1];
 	$i++;
 	}
-?>
 
-<HTML>
-<HEAD>
-<STYLE type="text/css">
-<!--
-   .green {color: black; background-color: #99FF99}
-   .red {color: black; background-color: #FF9999}
-   .orange {color: black; background-color: #FFCC99}
--->
- </STYLE>
+$HEADER.="<HTML>\n";
+$HEADER.="<HEAD>\n";
+$HEADER.="<STYLE type=\"text/css\">\n";
+$HEADER.="<!--\n";
+$HEADER.="   .green {color: black; background-color: #99FF99}\n";
+$HEADER.="   .red {color: black; background-color: #FF9999}\n";
+$HEADER.="   .orange {color: black; background-color: #FFCC99}\n";
+$HEADER.="-->\n";
+$HEADER.=" </STYLE>\n";
 
-<?php 
 
-echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
-echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+$HEADER.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
+$HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 
-echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
+$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
-require("admin_header.php");
+# require("admin_header.php");
 
-echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
-echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
+$MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
+$MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
-?>
-<script language="JavaScript">
-var o_cal = new tcal ({
-	// form name
-	'formname': 'vicidial_report',
-	// input name
-	'controlname': 'query_date'
-});
-o_cal.a_tpl.yearscroll = false;
-// o_cal.a_tpl.weekstart = 1; // Monday week start
-</script>
-<?php
+$MAIN.="<script language=\"JavaScript\">\n";
+$MAIN.="var o_cal = new tcal ({\n";
+$MAIN.="	// form name\n";
+$MAIN.="	'formname': 'vicidial_report',\n";
+$MAIN.="	// input name\n";
+$MAIN.="	'controlname': 'query_date'\n";
+$MAIN.="});\n";
+$MAIN.="o_cal.a_tpl.yearscroll = false;\n";
+$MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
+$MAIN.="</script>\n";
 
-echo " to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+$MAIN.=" to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
-?>
-<script language="JavaScript">
-var o_cal = new tcal ({
-	// form name
-	'formname': 'vicidial_report',
-	// input name
-	'controlname': 'end_date'
-});
-o_cal.a_tpl.yearscroll = false;
-// o_cal.a_tpl.weekstart = 1; // Monday week start
-</script>
-<?php
+$MAIN.="<script language=\"JavaScript\">\n";
+$MAIN.="var o_cal = new tcal ({\n";
+$MAIN.="	// form name\n";
+$MAIN.="	'formname': 'vicidial_report',\n";
+$MAIN.="	// input name\n";
+$MAIN.="	'controlname': 'end_date'\n";
+$MAIN.="});\n";
+$MAIN.="o_cal.a_tpl.yearscroll = false;\n";
+$MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
+$MAIN.="</script>\n";
 
-echo "<SELECT SIZE=1 NAME=group>\n";
+$MAIN.="<SELECT SIZE=1 NAME=group>\n";
 	$o=0;
 while ($groups_to_print > $o)
 	{
-	if ($groups[$o] == $group) {echo "<option selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
-	else {echo "<option value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
+	if ($groups[$o] == $group) {$MAIN.="<option selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
+	else {$MAIN.="<option value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
 	$o++;
 	}
-echo "</SELECT>\n";
-echo "<SELECT SIZE=1 NAME=shift>\n";
-echo "<option selected value=\"$shift\">$shift</option>\n";
-echo "<option value=\"\">--</option>\n";
-echo "<option value=\"AM\">AM</option>\n";
-echo "<option value=\"PM\">PM</option>\n";
-echo "<option value=\"ALL\">ALL</option>\n";
-echo "<option value=\"DAYTIME\">DAYTIME</option>\n";
-echo "<option value=\"10AM-6PM\">10AM-6PM</option>\n";
-echo "<option value=\"9AM-1AM\">9AM-1AM</option>\n";
-echo "<option value=\"845-1745\">845-1745</option>\n";
-echo "<option value=\"1745-100\">1745-100</option>\n";
-echo "</SELECT>\n";
-echo "<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
-echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=3111&group_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
-echo "</FORM>\n\n";
+$MAIN.="</SELECT>\n";
+$MAIN.="<SELECT SIZE=1 NAME=shift>\n";
+$MAIN.="<option selected value=\"$shift\">$shift</option>\n";
+$MAIN.="<option value=\"\">--</option>\n";
+$MAIN.="<option value=\"AM\">AM</option>\n";
+$MAIN.="<option value=\"PM\">PM</option>\n";
+$MAIN.="<option value=\"ALL\">ALL</option>\n";
+$MAIN.="<option value=\"DAYTIME\">DAYTIME</option>\n";
+$MAIN.="<option value=\"10AM-6PM\">10AM-6PM</option>\n";
+$MAIN.="<option value=\"9AM-1AM\">9AM-1AM</option>\n";
+$MAIN.="<option value=\"845-1745\">845-1745</option>\n";
+$MAIN.="<option value=\"1745-100\">1745-100</option>\n";
+$MAIN.="</SELECT>\n";
+$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
+$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&group=$group&shift=$shift&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+$MAIN.="</FORM>\n\n";
 
-echo "<PRE><FONT SIZE=2>\n\n";
+$MAIN.="<PRE><FONT SIZE=2>\n\n";
 
 
 if (!$group)
 	{
-	echo "\n\n";
-	echo "PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT\n";
+	$MAIN.="\n\n";
+	$MAIN.="PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT\n";
+	echo "$HEADER";
+	require("admin_header.php");
+	echo "$MAIN";
 	}
 
 else
@@ -305,10 +305,13 @@ if ( ($EQsec < $SQsec) and ($DURATIONday < 1) )
 	$DURATIONday++;
 	}
 
-echo "Inbound Service Level Report                      $NOW_TIME\n";
-echo "\n";
-echo "Time range $DURATIONday days: $query_date_BEGIN to $query_date_END\n\n";
+$MAIN.="Inbound Service Level Report                      $NOW_TIME\n";
+$MAIN.="\n";
+$MAIN.="Time range $DURATIONday days: $query_date_BEGIN to $query_date_END\n\n";
 #echo "Time range day sec: $SQsec - $EQsec   Day range in epoch: $SQepoch - $EQepoch   Start: $SQepochDAY\n";
+$CSV_text.="\"Inbound Service Level Report\",\"$NOW_TIME\"\n";
+$CSV_text.="\n";
+$CSV_text.="\"Time range $DURATIONday days:\",\"$query_date_BEGIN to $query_date_END\"\n\n";
 
 $d=0;
 while ($d < $DURATIONday)
@@ -414,7 +417,7 @@ $TOTintervals = $j;
 ### GRAB ALL RECORDS WITHIN RANGE FROM THE DATABASE ###
 $stmt="select queue_seconds,UNIX_TIMESTAMP(call_date),length_in_sec,status from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysql_real_escape_string($group) . "';";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $records_to_grab = mysql_num_rows($rslt);
 $i=0;
 while ($i < $records_to_grab)
@@ -533,11 +536,12 @@ while ($j < $TOTintervals)
 
 ###################################################
 ### TOTALS SUMMARY SECTION ###
-echo "+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
-echo "|                                           |        |        |        |        |        |  AVG   |  AVG   |        |  TOTAL   |  AVG   |\n";
-echo "| SHIFT                                     |        |        |  AVG   |        |        | HOLD(s)| HOLD(s)|        | CALLTIME |CALLTIME|\n";
-echo "| DATE-TIME RANGE                           | DROPS  | DROP % | DROP(s)| HOLD   | HOLD % |  HOLD  | TOTAL  | CALLS  | MIN:SEC  |SECONDS |\n";
-echo "+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
+$MAIN.="+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
+$MAIN.="|                                           |        |        |        |        |        |  AVG   |  AVG   |        |  TOTAL   |  AVG   |\n";
+$MAIN.="| SHIFT                                     |        |        |  AVG   |        |        | HOLD(s)| HOLD(s)|        | CALLTIME |CALLTIME|\n";
+$MAIN.="| DATE-TIME RANGE                           | DROPS  | DROP % | DROP(s)| HOLD   | HOLD % |  HOLD  | TOTAL  | CALLS  | MIN:SEC  |SECONDS |\n";
+$MAIN.="+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
+$CSV_text.="\"SHIFT DATE-TIME RANGE\",\"DROPS\",\" DROP %\",\" AVG DROP(s)\",\" HOLD\",\" HOLD %\",\" AVG HOLD(S) HOLD\",\" AVG HOLD(S) TOTAL\",\" CALLS\",\" TOTAL CALLTIME MIN:SEC\",\" AVG CALLTIME SECONDS\"\n";
 
 $d=0;
 while ($d < $DURATIONday)
@@ -595,7 +599,8 @@ while ($d < $DURATIONday)
 	$totQUEUEdate[$d] =	sprintf("%6s", $totQUEUEdate[$d]);
 	$totCALLSdate[$d] =	sprintf("%6s", $totCALLSdate[$d]);
 
-	echo "| $daySTART[$d] - $dayEND[$d] | $totDROPSdate[$d] | $totDROPSpctDATE[$d]%|$totDROPSavgDATE[$d] | $totQUEUEdate[$d] | $totQUEUEpctDATE[$d]%|$totQUEUEavgDATE[$d] |$totQUEUEtotDATE[$d] | $totCALLSdate[$d] | $totTIME_MS | $totCALLSavgDATE[$d] |\n";
+	$MAIN.="| $daySTART[$d] - $dayEND[$d] | $totDROPSdate[$d] | $totDROPSpctDATE[$d]%|$totDROPSavgDATE[$d] | $totQUEUEdate[$d] | $totQUEUEpctDATE[$d]%|$totQUEUEavgDATE[$d] |$totQUEUEtotDATE[$d] | $totCALLSdate[$d] | $totTIME_MS | $totCALLSavgDATE[$d] |\n";
+	$CSV_text.="\"$daySTART[$d] - $dayEND[$d]\",\"$totDROPSdate[$d]\",\"$totDROPSpctDATE[$d]%\",\"$totDROPSavgDATE[$d]\",\"$totQUEUEdate[$d]\",\"$totQUEUEpctDATE[$d]%\",\"$totQUEUEavgDATE[$d]\",\"$totQUEUEtotDATE[$d]\",\"$totCALLSdate[$d]\",\"$totTIME_MS\",\"$totCALLSavgDATE[$d]\"\n";
 	$d++;
 	}
 
@@ -649,10 +654,10 @@ else
 	$FtotQUEUE =	sprintf("%6s", $totQUEUE);
 	$FtotCALLS =	sprintf("%6s", $totCALLS);
 
-echo "+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
-echo "|                                    TOTALS | $FtotDROPS | $FtotDROPSpct%|$FtotDROPSavg | $FtotQUEUE | $FtotQUEUEpct%|$FtotQUEUEavg |$FtotQUEUEtot | $FtotCALLS |$totTIME_MS | $FtotCALLSavg |\n";
-echo "+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
-
+$MAIN.="+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
+$MAIN.="|                                    TOTALS | $FtotDROPS | $FtotDROPSpct%|$FtotDROPSavg | $FtotQUEUE | $FtotQUEUEpct%|$FtotQUEUEavg |$FtotQUEUEtot | $FtotCALLS |$totTIME_MS | $FtotCALLSavg |\n";
+$MAIN.="+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
+$CSV_text.="\"TOTALS\",\"$FtotDROPS\",\"$FtotDROPSpct%\",\"$FtotDROPSavg\",\"$FtotQUEUE\",\"$FtotQUEUEpct%\",\"$FtotQUEUEavg\",\"$FtotQUEUEtot\",\"$FtotCALLS\",\"$totTIME_MS\",\"$FtotCALLSavg\"\n";
 
 	## FORMAT OUTPUT ##
 	$i=0;
@@ -698,15 +703,17 @@ else
 ###################################################################
 #########  HOLD TIME, CALL AND DROP STATS 15-MINUTE INCREMENTS ####
 
-echo "\n";
-echo "---------- HOLD TIME, CALL AND DROP STATS\n";
+$MAIN.="\n";
+$MAIN.="---------- HOLD TIME, CALL AND DROP STATS\n";
 
-echo "<FONT SIZE=0>";
+$MAIN.="<FONT SIZE=0>";
 
-echo "<!-- HICOUNT CALLS: $hi_hour_count|$hour_multiplier -->";
-echo "<!-- HICOUNT HOLD:  $hi_hold_count|$hold_multiplier -->\n";
-echo "GRAPH IN 15 MINUTE INCREMENTS OF AVERAGE HOLD TIME FOR CALLS TAKEN INTO THIS IN-GROUP\n";
+$MAIN.="<!-- HICOUNT CALLS: $hi_hour_count|$hour_multiplier -->";
+$MAIN.="<!-- HICOUNT HOLD:  $hi_hold_count|$hold_multiplier -->\n";
+$MAIN.="GRAPH IN 15 MINUTE INCREMENTS OF AVERAGE HOLD TIME FOR CALLS TAKEN INTO THIS IN-GROUP\n";
 
+$CSV_text.="\n\n\"HOLD TIME; CALL AND DROP STATS\"\n";
+$CSV_text.="\"GRAPH IN 15 MINUTE INCREMENTS\"\n\"OF AVERAGE HOLD TIME FOR CALLS\"\n\"TAKEN INTO THIS IN-GROUP\"\n";
 
 $k=1;
 $Mk=0;
@@ -768,10 +775,12 @@ while ($k <= 22)
 	}
 
 
-echo "+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
-echo "|    TIME     |  AVG HOLD TIME (sec)  | (in seconds)  |  |    CALLS HANDLED      |       |       |\n";
-echo "| 15 MIN INT  |$hold_scale| AVG   | MAX   |  |$call_scale| DROPS | TOTAL |\n";
-echo "+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
+$MAIN.="+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
+$MAIN.="|    TIME     |  AVG HOLD TIME (sec)  | (in seconds)  |  |    CALLS HANDLED      |       |       |\n";
+$MAIN.="| 15 MIN INT  |$hold_scale| AVG   | MAX   |  |$call_scale| DROPS | TOTAL |\n";
+$MAIN.="+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
+
+$CSV_text.="\"TIME - 15 MIN INT\",\"AVG SECS\",\"MAX SECS\",\"\",\"DROPS\",\"TOTAL\"\n";
 
 $i=0;
 while ($i < $TOTintervals)
@@ -793,9 +802,9 @@ while ($i < $TOTintervals)
 			$TOT_lines++;
 			$qrtQUEUEavg[$i] =	sprintf("%5s", $qrtQUEUEavg[$i]);
 			$qrtQUEUEmax[$i] =	sprintf("%5s", $qrtQUEUEmax[$i]);
-			echo "|$HMdisplay[$i]|";
-			$k=0;   while ($k <= 22) {echo " ";   $k++;}
-			echo "| $qrtQUEUEavg[$i] | $qrtQUEUEmax[$i] |";
+			$MAIN.="|$HMdisplay[$i]|";
+			$k=0;   while ($k <= 22) {$MAIN.=" ";   $k++;}
+			$MAIN.="| $qrtQUEUEavg[$i] | $qrtQUEUEmax[$i] |";
 			}
 		}
 	else
@@ -808,13 +817,13 @@ while ($i < $TOTintervals)
 		$qrtQUEUEavg[$i] =	sprintf("%5s", $qrtQUEUEavg[$i]);
 		$qrtQUEUEmax[$i] =	sprintf("%5s", $qrtQUEUEmax[$i]);
 
-		echo "|$HMdisplay[$i]|<SPAN class=\"orange\">";
-		$k=0;   while ($k <= $Xavg_hold) {echo "*";   $k++;   $char_counter++;}
-		if ($char_counter >= 22) {echo "H</SPAN>";   $char_counter++;}
-		else {echo "*H</SPAN>";   $char_counter++;   $char_counter++;}
-		$k=0;   while ($k <= $Yavg_hold) {echo " ";   $k++;   $char_counter++;}
-			while ($char_counter <= 22) {echo " ";   $char_counter++;}
-		echo "| $qrtQUEUEavg[$i] | $qrtQUEUEmax[$i] |";
+		$MAIN.="|$HMdisplay[$i]|<SPAN class=\"orange\">";
+		$k=0;   while ($k <= $Xavg_hold) {$MAIN.="*";   $k++;   $char_counter++;}
+		if ($char_counter >= 22) {$MAIN.="H</SPAN>";   $char_counter++;}
+		else {$MAIN.="*H</SPAN>";   $char_counter++;   $char_counter++;}
+		$k=0;   while ($k <= $Yavg_hold) {$MAIN.=" ";   $k++;   $char_counter++;}
+			while ($char_counter <= 22) {$MAIN.=" ";   $char_counter++;}
+		$MAIN.="| $qrtQUEUEavg[$i] | $qrtQUEUEmax[$i] |";
 		}
 	### END HOLD TIME TOTALS GRAPH ###
 
@@ -830,9 +839,9 @@ while ($i < $TOTintervals)
 		else
 			{
 			$qrtCALLS[$i] =	sprintf("%5s", $qrtCALLS[$i]);
-			echo "  |";
-			$k=0;   while ($k <= 22) {echo " ";   $k++;}
-			echo "| $qrtCALLS[$i] |     0 |\n";
+			$MAIN.="  |";
+			$k=0;   while ($k <= 22) {$MAIN.=" ";   $k++;}
+			$MAIN.="| $qrtCALLS[$i] |     0 |\n";
 			}
 		}
 	else
@@ -846,13 +855,13 @@ while ($i < $TOTintervals)
 			{
 			$qrtCALLS[$i] =	sprintf("%5s", $qrtCALLS[$i]);
 
-			echo "  |<SPAN class=\"green\">";
-			$k=0;   while ($k <= $Xhour_count) {echo "*";   $k++;   $char_counter++;}
-			if ($char_counter > 21) {echo "C</SPAN>";   $char_counter++;}
-			else {echo "*C</SPAN>";   $char_counter++;   $char_counter++;}
-			$k=0;   while ($k <= $Yhour_count) {echo " ";   $k++;   $char_counter++;}
-				while ($char_counter <= 22) {echo " ";   $char_counter++;}
-			echo "|     0 | $qrtCALLS[$i] |\n";
+			$MAIN.="  |<SPAN class=\"green\">";
+			$k=0;   while ($k <= $Xhour_count) {$MAIN.="*";   $k++;   $char_counter++;}
+			if ($char_counter > 21) {$MAIN.="C</SPAN>";   $char_counter++;}
+			else {$MAIN.="*C</SPAN>";   $char_counter++;   $char_counter++;}
+			$k=0;   while ($k <= $Yhour_count) {$MAIN.=" ";   $k++;   $char_counter++;}
+				while ($char_counter <= 22) {$MAIN.=" ";   $char_counter++;}
+			$MAIN.="|     0 | $qrtCALLS[$i] |\n";
 			}
 		else
 			{
@@ -865,17 +874,18 @@ while ($i < $TOTintervals)
 			$qrtCALLS[$i] =	sprintf("%5s", $qrtCALLS[$i]);
 			$qrtDROPS[$i] =	sprintf("%5s", $qrtDROPS[$i]);
 
-			echo "  |<SPAN class=\"red\">";
-			$k=0;   while ($k <= $Xdrop_count) {echo ">";   $k++;   $char_counter++;}
-			echo "D</SPAN><SPAN class=\"green\">";   $char_counter++;
-			$k=0;   while ($k <= $XXhour_count) {echo "*";   $k++;   $char_counter++;}
-			echo "C</SPAN>";   $char_counter++;
-			$k=0;   while ($k <= $Yhour_count) {echo " ";   $k++;   $char_counter++;}
-				while ($char_counter <= 22) {echo " ";   $char_counter++;}
-			echo "| $qrtDROPS[$i] | $qrtCALLS[$i] |\n";
+			$MAIN.="  |<SPAN class=\"red\">";
+			$k=0;   while ($k <= $Xdrop_count) {$MAIN.=">";   $k++;   $char_counter++;}
+			$MAIN.="D</SPAN><SPAN class=\"green\">";   $char_counter++;
+			$k=0;   while ($k <= $XXhour_count) {$MAIN.="*";   $k++;   $char_counter++;}
+			$MAIN.="C</SPAN>";   $char_counter++;
+			$k=0;   while ($k <= $Yhour_count) {$MAIN.=" ";   $k++;   $char_counter++;}
+				while ($char_counter <= 22) {$MAIN.=" ";   $char_counter++;}
+			$MAIN.="| $qrtDROPS[$i] | $qrtCALLS[$i] |\n";
 			}
 		}
 	### END CALLS TOTALS GRAPH ###
+	$CSV_text.="\"$HMdisplay[$i]\",\"$qrtQUEUEavg[$i]\",\"$qrtQUEUEmax[$i]\",\"\",\"$qrtDROPS[$i]\",\"$qrtCALLS[$i]\"\n";
 
 	$i++;
 	}
@@ -893,9 +903,10 @@ $totDROPS =	sprintf("%5s", $totDROPS);
 $totCALLS =	sprintf("%5s", $totCALLS);
 
 
-echo "+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
-echo "| TOTAL                               | $totQUEUEavg | $totQUEUEmax |  |                       | $totDROPS | $totCALLS |\n";
-echo "+-------------------------------------+-------+-------+  +-----------------------+-------+-------+\n";
+$MAIN.="+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
+$MAIN.="| TOTAL                               | $totQUEUEavg | $totQUEUEmax |  |                       | $totDROPS | $totCALLS |\n";
+$MAIN.="+-------------------------------------+-------+-------+  +-----------------------+-------+-------+\n";
+$CSV_text.="\"TOTAL\",\"$totQUEUEavg\",\"$totQUEUEmax\",\"\",\"$totDROPS\",\"$totCALLS\"\n\n";
 
 
 
@@ -904,12 +915,15 @@ echo "+-------------------------------------+-------+-------+  +----------------
 #########  CALL HOLD TIME BREAKDOWN IN SECONDS, 15-MINUTE INCREMENT
 
 
-echo "\n";
-echo "---------- CALL HOLD TIME BREAKDOWN IN SECONDS\n";
-echo "+-------------+-------+-----------------------------------------+ +------+--------------------------------+\n";
-echo "|    TIME     |       |  % OF CALLS GROUPED BY HOLD TIME (SEC)  | |   AVERAGE TIME BEFORE ANSWER (SEC)    |\n";
-echo "| 15 MIN INT  | CALLS |    0   20   40   60   80  100  120 120+ | | AVG  |0   20   40   60   80  100  120 |\n";
-echo "+-------------+-------+-----------------------------------------+ +------+--------------------------------+\n";
+$MAIN.="\n";
+$MAIN.="---------- CALL HOLD TIME BREAKDOWN IN SECONDS\n";
+$MAIN.="+-------------+-------+-----------------------------------------+ +------+--------------------------------+\n";
+$MAIN.="|    TIME     |       |  % OF CALLS GROUPED BY HOLD TIME (SEC)  | |   AVERAGE TIME BEFORE ANSWER (SEC)    |\n";
+$MAIN.="| 15 MIN INT  | CALLS |    0   20   40   60   80  100  120 120+ | | AVG  |0   20   40   60   80  100  120 |\n";
+$MAIN.="+-------------+-------+-----------------------------------------+ +------+--------------------------------+\n";
+
+$CSV_text.="\"CALL HOLD TIME BREAKDOWN IN SECONDS\"\n";
+$CSV_text.="\"TIME 15-MIN INT\",\"CALLS\",\"0 (seconds)\",\"20\",\"40\",\"60\",\"80\",\"100\",\"120\",\"120+\",\"AVG TIME BEFORE ANSWER(SEC)\"\n";
 
 $APhd__0=0; $APhd_20=0; $APhd_40=0; $APhd_60=0; $APhd_80=0; $APhd100=0; $APhd120=0; $APhd121=0;
 $h=0;
@@ -991,8 +1005,8 @@ while ($h < $TOTintervals)
 	$Aavg_hold[$h] = sprintf("%4s", $Aavg_hold[$h]);
 	while (strlen($Aavg_hold[$h])>4) {$Aavg_hold[$h] = ereg_replace("^.",'',$Aavg_hold[$h]);}
 
-	echo "|$HMdisplay[$h]| $qrtCALLS[$h] | $Phd__0[$h] $Phd_20[$h] $Phd_40[$h] $Phd_60[$h] $Phd_80[$h] $Phd100[$h] $Phd120[$h] $Phd121[$h] | | $Aavg_hold[$h] |$qrtQUEUEavg_scale[$h]|\n";
-	
+	$MAIN.="|$HMdisplay[$h]| $qrtCALLS[$h] | $Phd__0[$h] $Phd_20[$h] $Phd_40[$h] $Phd_60[$h] $Phd_80[$h] $Phd100[$h] $Phd120[$h] $Phd121[$h] | | $Aavg_hold[$h] |$qrtQUEUEavg_scale[$h]|\n";
+	$CSV_text.="\"$HMdisplay[$h]\",\"$qrtCALLS[$h]\",\"$Phd__0[$h]\",\"$Phd_20[$h]\",\"$Phd_40[$h]\",\"$Phd_60[$h]\",\"$Phd_80[$h]\",\"$Phd100[$h]\",\"$Phd120[$h]\",\"$Phd121[$h]\",\"$Aavg_hold[$h]\"\n";
 	$h++;
 	}
 
@@ -1017,19 +1031,48 @@ $APhd121 =	sprintf("%4s", $APhd121);
 
 	while (strlen($totQUEUEavg)>4) {$totQUEUEavg = ereg_replace(".$",'',$totQUEUEavg);}
 
-echo "+-------------+-------+-----------------------------------------+ +------+--------------------------------+\n";
-echo "| TOTAL       | $ALLcalls | $APhd__0 $APhd_20 $APhd_40 $APhd_60 $APhd_80 $APhd100 $APhd120 $APhd121 | | $totQUEUEavg |\n";
-echo "+-------------+-------+-----------------------------------------+ +------+\n";
+$MAIN.="+-------------+-------+-----------------------------------------+ +------+--------------------------------+\n";
+$MAIN.="| TOTAL       | $ALLcalls | $APhd__0 $APhd_20 $APhd_40 $APhd_60 $APhd_80 $APhd100 $APhd120 $APhd121 | | $totQUEUEavg |\n";
+$MAIN.="+-------------+-------+-----------------------------------------+ +------+\n";
+$CSV_text.="\" TOTAL\",\"$ALLcalls\",$APhd__0\",\"$APhd_20\",\"$APhd_40\",\"$APhd_60\",\"$APhd_80\",\"$APhd100\",\"$APhd120\",\"$APhd121\",\"$totQUEUEavg\"\n";
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
-echo "\nRun Time: $RUNtime seconds|$db_source\n";
+$MAIN.="\nRun Time: $RUNtime seconds|$db_source\n";
+$MAIN.="</PRE>\n";
+$MAIN.="</TD></TR></TABLE>\n";
+$MAIN.="</BODY></HTML>\n";
+
+if ($file_download > 0)
+	{
+	$FILE_TIME = date("Ymd-His");
+	$CSVfilename = "AST_CLOSER_service_level_$US$FILE_TIME.csv";
+	$CSV_text=preg_replace('/ +\"/', '"', $CSV_text);
+	$CSV_text=preg_replace('/\" +/', '"', $CSV_text);
+	// We'll be outputting a TXT file
+	header('Content-type: application/octet-stream');
+
+	// It will be called LIST_101_20090209-121212.txt
+	header("Content-Disposition: attachment; filename=\"$CSVfilename\"");
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Pragma: public');
+	ob_clean();
+	flush();
+
+	echo "$CSV_text";
+
+	exit;
+	}
+	else 
+	{
+
+	echo "$HEADER";
+	require("admin_header.php");
+	echo "$MAIN";
+	}
 }
 
 
 
 ?>
-</PRE>
-</TD></TR></TABLE>
-
-</BODY></HTML>

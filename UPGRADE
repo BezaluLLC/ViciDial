@@ -642,6 +642,8 @@ OTHER CHANGES:
 144. Added last_inbound_call_time and last_inbound_call_finish Next Agent Call 
 	routing options to in-groups.
 
+145. Added CSV download option to almost all reports.
+
 
 
 

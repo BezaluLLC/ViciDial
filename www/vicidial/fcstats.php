@@ -1,7 +1,7 @@
 <?php 
 # fcstats.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -17,6 +17,7 @@
 # 100712-1324 - Added system setting slave server option
 # 100802-2347 - Added User Group Allowed Reports option validation
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
+# 110703-1828 - Added download option
 #
 
 require("dbconnect.php");
@@ -36,6 +37,8 @@ if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
+if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
+	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -50,7 +53,7 @@ $db_source = 'M';
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$HTML_text.="$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -73,13 +76,13 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	}
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$HTML_text.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$HTML_text.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $reports_only_user=$row[0];
@@ -93,13 +96,13 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$HTML_text.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$HTML_text.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LOGallowed_campaigns = $row[0];
@@ -121,7 +124,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 $stmt="select group_id from vicidial_inbound_groups order by group_id;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$HTML_text.="$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $groups_to_print)
@@ -130,76 +133,72 @@ while ($i < $groups_to_print)
 	$groups[$i] =$row[0];
 	$i++;
 	}
-?>
 
-<HTML>
-<HEAD>
-<STYLE type="text/css">
-<!--
-   .green {color: white; background-color: green}
-   .red {color: white; background-color: red}
-   .blue {color: white; background-color: blue}
-   .purple {color: white; background-color: purple}
--->
- </STYLE>
+$HTML_head.="<HTML>\n";
+$HTML_head.="<HEAD>\n";
+$HTML_head.="<STYLE type=\"text/css\">\n";
+$HTML_head.="<!--\n";
+$HTML_head.="   .green {color: white; background-color: green}\n";
+$HTML_head.="   .red {color: white; background-color: red}\n";
+$HTML_head.="   .blue {color: white; background-color: blue}\n";
+$HTML_head.="   .purple {color: white; background-color: purple}\n";
+$HTML_head.="-->\n";
+$HTML_head.=" </STYLE>\n";
+$HTML_head.="\n";
+$HTML_head.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
+$HTML_head.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 
-<script language="JavaScript" src="calendar_db.js"></script>
-<link rel="stylesheet" href="calendar.css">
-
-<?php 
-echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HTML_head.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
+$HTML_head.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
-	require("admin_header.php");
+#	require("admin_header.php");
 
-echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$HTML_text.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
-echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
+$HTML_text.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
+$HTML_text.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
-?>
-<script language="JavaScript">
-var o_cal = new tcal ({
-	// form name
-	'formname': 'vicidial_report',
-	// input name
-	'controlname': 'query_date'
-});
-o_cal.a_tpl.yearscroll = false;
-// o_cal.a_tpl.weekstart = 1; // Monday week start
-</script>
-<?php
+$HTML_text.="<script language=\"JavaScript\">\n";
+$HTML_text.="var o_cal = new tcal ({\n";
+$HTML_text.="	// form name\n";
+$HTML_text.="	'formname': 'vicidial_report',\n";
+$HTML_text.="	// input name\n";
+$HTML_text.="	'controlname': 'query_date'\n";
+$HTML_text.="});\n";
+$HTML_text.="o_cal.a_tpl.yearscroll = false;\n";
+$HTML_text.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
+$HTML_text.="</script>\n";
 
-echo "<SELECT SIZE=1 NAME=group>\n";
+$HTML_text.="<SELECT SIZE=1 NAME=group>\n";
 	$o=0;
 	while ($groups_to_print > $o)
 	{
-		if ($groups[$o] == $group) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
-		  else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
+		if ($groups[$o] == $group) {$HTML_text.="<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
+		  else {$HTML_text.="<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
 		$o++;
 	}
-echo "</SELECT>\n";
-echo "<SELECT SIZE=1 NAME=shift>\n";
-echo "<option selected value=\"$shift\">$shift</option>\n";
-echo "<option value=\"\">--</option>\n";
-echo "<option value=\"AM\">AM</option>\n";
-echo "<option value=\"PM\">PM</option>\n";
-echo "<option value=\"ALL\">ALL</option>\n";
-echo "</SELECT>\n";
-echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
-echo "<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
-echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=3111&group_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
-echo "</FORM>\n\n";
+$HTML_text.="</SELECT>\n";
+$HTML_text.="<SELECT SIZE=1 NAME=shift>\n";
+$HTML_text.="<option selected value=\"$shift\">$shift</option>\n";
+$HTML_text.="<option value=\"\">--</option>\n";
+$HTML_text.="<option value=\"AM\">AM</option>\n";
+$HTML_text.="<option value=\"PM\">PM</option>\n";
+$HTML_text.="<option value=\"ALL\">ALL</option>\n";
+$HTML_text.="</SELECT>\n";
+$HTML_text.="<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
+$HTML_text.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
+$HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  <a href=\"$PHP_SELF?query_date=$query_date&group=$group&shift=$shift&file_download=1\">DOWNLOAD</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+$HTML_text.="</FORM>\n\n";
 
-echo "<PRE><FONT SIZE=2>\n\n";
+$HTML_text.="<PRE><FONT SIZE=2>\n\n";
 
 
 if (!$group)
 {
-echo "\n\n";
-echo "PLEASE SELECT AN IN-GROUP AND DATE ABOVE THEN CLICK SUBMIT\n";
+$HTML_text.="\n\n";
+$HTML_text.="PLEASE SELECT AN IN-GROUP AND DATE ABOVE THEN CLICK SUBMIT\n";
 }
 
 else
@@ -227,14 +226,14 @@ if ($shift == 'ALL')
 	$query_date_END = date("Y-m-d H:i:s", mktime(24, 59, 59, $Cqdate[1], $Cqdate[2], $Cqdate[0]));
 	}
 
-echo "In-Group Fronter-Closer Stats Report                      $NOW_TIME\n";
+$HTML_text.="In-Group Fronter-Closer Stats Report                      $NOW_TIME\n";
 
-echo "\n";
-echo "---------- TOTALS FOR $query_date_BEGIN to $query_date_END\n";
+$HTML_text.="\n";
+$HTML_text.="---------- TOTALS FOR $query_date_BEGIN to $query_date_END\n";
 
 $stmt="select count(*) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='" . mysql_real_escape_string($group) . "' and status = 'SALE';";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$HTML_text.="$stmt\n";}
 $row=mysql_fetch_row($rslt);
 $A1_points = ($row[0] * 1);
 $A1_points =	sprintf("%10s", $A1_points);
@@ -245,10 +244,10 @@ $TOT_points = ($A1_points + $A2_points + $A3_points + $A4_points);
 $TOT_tally =	sprintf("%10s", $TOT_tally);
 $TOT_points =	sprintf("%10s", $TOT_points);
 
-echo "STATUS   CUSTOMERS\n";
-echo "SALES:   $A1_tally\n";
+$HTML_text.="STATUS   CUSTOMERS\n";
+$HTML_text.="SALES:   $A1_tally\n";
 
-echo "\n";
+$HTML_text.="\n";
 
 
 
@@ -276,17 +275,25 @@ $totA9=0;
 $totDROP=0;
 $totOTHER=0;
 
-echo "\n";
-echo "---------- FRONTER STATS\n";
-echo "+--------------------------+-------+--------+--------+------+------+------+\n";
-echo "| AGENT                    |SUCCESS| XFERS  |SUCCESS%| SALE | DROP |OTHER |\n";
-echo "+--------------------------+-------+--------+--------+------+------+------+\n";
+$CSV_fronter_header="\"TOTALS FOR $query_date_BEGIN to $query_date_END\"\n";
+$CSV_fronter_header.="\"STATUS   CUSTOMERS\"\n";
+$CSV_fronter_header.="\"SALES:   $A1_tally\"\n\n";
+$CSV_fronter_header.="\"FRONTER STATS\"\n";
+$CSV_fronter_header.="\"AGENT\",\"SUCCESS\",\"XFERS\",\"SUCCESS%\",\"SALE\",\"DROP\",\"OTHER\"\n";
+$CSV_fronter_lines="";
+$CSV_fronter_footer="";
+
+$HTML_text.="\n";
+$HTML_text.="---------- FRONTER STATS\n";
+$HTML_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
+$HTML_text.="| AGENT                    |SUCCESS| XFERS  |SUCCESS%| SALE | DROP |OTHER |\n";
+$HTML_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
 
 #$stmt="select vicidial_xfer_log.user,full_name,count(*) from vicidial_xfer_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysql_real_escape_string($group) . "' and vicidial_xfer_log.user is not null and vicidial_xfer_log.user=vicidial_users.user group by vicidial_xfer_log.user;";
 $stmt="select user,count(distinct lead_id) from vicidial_xfer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysql_real_escape_string($group) . "' and user is not null group by user;";
 if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$HTML_text.="$stmt\n";}
 $users_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $users_to_print)
@@ -309,7 +316,7 @@ while ($i < $users_to_print)
 	$stmt="select full_name from vicidial_users where user='$userRAW[$i]';";
 	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
+	if ($DB) {$HTML_text.="$stmt\n";}
 	$names_to_print = mysql_num_rows($rslt);
 	if ($names_to_print > 0)
 		{
@@ -330,7 +337,7 @@ while ($i < $users_to_print)
 	$stmt="select vc.status,count(distinct vc.lead_id) from vicidial_xfer_log vx, vicidial_closer_log vc where vx.call_date >= '$query_date_BEGIN' and vx.call_date <= '$query_date_END' and vc.call_date >= '$query_date_BEGIN' and vc.call_date <= '$query_date_END' and  vc.campaign_id='" . mysql_real_escape_string($group) . "' and vx.campaign_id='" . mysql_real_escape_string($group) . "' and vx.user='$userRAW[$i]' and vc.lead_id=vx.lead_id and vc.xfercallid=vx.xfercallid group by vc.status;";
 	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
+	if ($DB) {$HTML_text.="$stmt\n";}
 	$lead_ids_to_print = mysql_num_rows($rslt);
 	$j=0;
 	while ($j < $lead_ids_to_print)
@@ -384,7 +391,8 @@ while ($i < $users_to_print)
 	$sales =	sprintf("%5s", $sales);
 	$Spct =	sprintf("%6s", $Spct);
 
-	echo "| $user[$i] - $full_name[$i] | $sales | $USERcalls[$i] | $Spct%| $A1 | $DROP | $OTHER |\n";
+	$HTML_text.="| $user[$i] - $full_name[$i] | $sales | $USERcalls[$i] | $Spct%| $A1 | $DROP | $OTHER |\n";
+	$CSV_fronter_lines.="\"$user[$i] - $full_name[$i]\",\"$sales\",\"$USERcalls[$i]\",\"$Spct%\",\"$A1\",\"$DROP\",\"$OTHER\"\n";
 
 	$i++;
 	}
@@ -414,7 +422,7 @@ $totOTHER =		sprintf("%5s", $totOTHER);
 
 $stmt="select avg(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='" . mysql_real_escape_string($group) . "';";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$HTML_text.="$stmt\n";}
 $row=mysql_fetch_row($rslt);
 
 $AVGwait = $row[0];
@@ -429,13 +437,14 @@ $AVGwait_MS = "$AVGwait_M_int:$AVGwait_S";
 $AVGwait =		sprintf("%6s", $AVGwait_MS);
 
 
-echo "+--------------------------+-------+--------+--------+------+------+------+\n";
-echo "| TOTAL FRONTERS: $TOTagents   | $TOTsales | $TOTcalls | $totSpct%|$totA1 |$totDROP |$totOTHER |\n";
-echo "+--------------------------+-------+--------+--------+------+------+------+\n";
-echo "|                          Average time in Queue for customers:    $AVGwait |\n";
-echo "+--------------------------+-------+--------+--------+------+------+------+\n";
+$HTML_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
+$HTML_text.="| TOTAL FRONTERS: $TOTagents   | $TOTsales | $TOTcalls | $totSpct%|$totA1 |$totDROP |$totOTHER |\n";
+$HTML_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
+$HTML_text.="|                          Average time in Queue for customers:    $AVGwait |\n";
+$HTML_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
 
-
+$CSV_fronter_footer.="\"TOTAL FRONTERS: $TOTagents\",\"$TOTsales\",\"$TOTcalls\",\"$totSpct%\",\"$totA1\",\"$totDROP\",\"$totOTHER\"\n";
+$CSV_fronter_footer.="\"Average time in Queue for customers:    $AVGwait\"\n\n\n";
 
 
 
@@ -457,16 +466,24 @@ $totDROP=0;
 $totOTHER=0;
 $TOTsales=0;
 
-echo "\n";
-echo "---------- CLOSER STATS\n";
-echo "+--------------------------+--------+------+------+------+------+-------+\n";
-echo "| AGENT                    | CALLS  | SALE | DROP |OTHER | SALE | CONV %|\n";
-echo "+--------------------------+--------+------+------+------+------+-------+\n";
+$CSV_closer_header="";
+$CSV_closer_lines="";
+$CSV_closer_footer="";
+
+$HTML_text.="\n";
+$HTML_text.="---------- CLOSER STATS\n";
+$HTML_text.="+--------------------------+--------+------+------+------+------+-------+\n";
+$HTML_text.="| AGENT                    | CALLS  | SALE | DROP |OTHER | SALE | CONV %|\n";
+$HTML_text.="+--------------------------+--------+------+------+------+------+-------+\n";
+
+$CSV_closer_header="\"CLOSER STATS\"\n";
+$CSV_closer_header.="\"AGENT\",\"CALLS\",\"SALE\",\"DROP\",\"OTHER\",\"SALE\",\"CONV %\"\n";
+
 
 $stmt="select user,count(*) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysql_real_escape_string($group) . "' and user is not null group by user;";
 if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$HTML_text.="$stmt\n";}
 $users_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $users_to_print)
@@ -488,7 +505,7 @@ while ($i < $users_to_print)
 	$stmt="select full_name from vicidial_users where user='$userRAW[$i]';";
 	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
+	if ($DB) {$HTML_text.="$stmt\n";}
 	$names_to_print = mysql_num_rows($rslt);
 	if ($names_to_print > 0)
 		{
@@ -509,7 +526,7 @@ while ($i < $users_to_print)
 	$stmt="select status,count(*) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysql_real_escape_string($group) . "' and user='$userRAW[$i]' group by status;";
 	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
+	if ($DB) {$HTML_text.="$stmt\n";}
 	$lead_ids_to_print = mysql_num_rows($rslt);
 	$j=0;
 	while ($j < $lead_ids_to_print)
@@ -606,7 +623,8 @@ while ($i < $users_to_print)
 	$OTHER =	sprintf("%4s", $OTHER);
 	$sales =	sprintf("%4s", $sales);
 
-	echo "| $user[$i] - $full_name[$i] | $USERcalls[$i] | $A1 | $DROP | $OTHER | $sales |$Cpct%|\n";
+	$HTML_text.="| $user[$i] - $full_name[$i] | $USERcalls[$i] | $A1 | $DROP | $OTHER | $sales |$Cpct%|\n";
+	$CSV_closer_lines.="\"$user[$i] - $full_name[$i]\",\"$USERcalls[$i]\",\"$A1\",\"$DROP\",\"$OTHER\",\"$sales\",\"$Cpct%\"\n";
 
 	$i++;
 	}
@@ -651,21 +669,58 @@ $totDROP =		sprintf("%5s", $totDROP);
 $totOTHER =		sprintf("%5s", $totOTHER);
 $TOTsales =		sprintf("%5s", $TOTsales);
 
-echo "+--------------------------+--------+------+------+------+------+-------+\n";
-echo "| TOTAL CLOSERS:  $TOTagents   | $TOTcalls |$totA1 |$totDROP |$totOTHER |$TOTsales |$totCpct%|\n";
-echo "+--------------------------+--------+------+------+------+------+-------+\n";
+$HTML_text.="+--------------------------+--------+------+------+------+------+-------+\n";
+$HTML_text.="| TOTAL CLOSERS:  $TOTagents   | $TOTcalls |$totA1 |$totDROP |$totOTHER |$TOTsales |$totCpct%|\n";
+$HTML_text.="+--------------------------+--------+------+------+------+------+-------+\n";
 
-
-
-
-
-
-
-
+$CSV_closer_footer.="\"TOTAL CLOSERS:  $TOTagents\",\"$TOTcalls\",\"$totA1\",\"$totDROP\",\"$totOTHER\",\"$TOTsales\",\"$totCpct%\"\n";
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
-if ($DB) {echo "\nRun Time: $RUNtime seconds|$db_source\n";}
+if ($DB) {$HTML_text.="\nRun Time: $RUNtime seconds|$db_source\n";}
+
+$HTML_text.="</PRE>\n";
+$HTML_text.="</TD></TR></TABLE>\n";
+
+$HTML_text.="</BODY></HTML>\n";
+
+if ($file_download > 0)
+	{
+	$FILE_TIME = date("Ymd-His");
+	$CSVfilename = "FCSTATS_$US$FILE_TIME.csv";
+	$CSV_text=$CSV_fronter_header.$CSV_fronter_lines.$CSV_fronter_footer.$CSV_closer_header.$CSV_closer_lines.$CSV_closer_footer;
+	$CSV_text=preg_replace('/ +\"/', '"', $CSV_text);
+	$CSV_text=preg_replace('/\" +/', '"', $CSV_text);
+	// We'll be outputting a TXT file
+	header('Content-type: application/octet-stream');
+
+	// It will be called LIST_101_20090209-121212.txt
+	header("Content-Disposition: attachment; filename=\"$CSVfilename\"");
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Pragma: public');
+	ob_clean();
+	flush();
+
+	echo "$CSV_text";
+
+	exit;
+	}
+	else 
+	{
+	echo $HTML_head;
+	require("admin_header.php");
+	echo $HTML_text;
+	}
+
+#$CSV_report=fopen("fcstats.csv", "w");
+#$CSV_head=preg_replace('/\s+,/', ',', $CSV_fronter_header.$CSV_fronter_lines.$CSV_fronter_footer.$CSV_closer_header.$CSV_closer_lines.$CSV_closer_footer);
+#fwrite($CSV_report, $CSV_head);
+#fclose($CSV_report);
+
+
+
+
 }
 
 
@@ -673,8 +728,3 @@ if ($DB) {echo "\nRun Time: $RUNtime seconds|$db_source\n";}
 
 
 ?>
-</PRE>
-</TD></TR></TABLE>
-
-</BODY></HTML>
-

@@ -1,7 +1,7 @@
 <?php 
 # AST_CLOSERstats.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -31,6 +31,7 @@
 # 100802-2347 - Added User Group Allowed Reports option validation
 # 100913-1634 - Added DID option to select by DIDs instead of In-groups
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
+# 110703-1759 - Added download option
 #
 
 require("dbconnect.php");
@@ -55,6 +56,8 @@ if (isset($_GET["DID"]))				{$DID=$_GET["DID"];}
 	elseif (isset($_POST["DID"]))		{$DID=$_POST["DID"];}
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
+if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
+	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -69,7 +72,7 @@ $db_source = 'M';
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -88,13 +91,13 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	$use_slave_server=1;
 	$db_source = 'S';
 	require("dbconnect.php");
-	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 
 $stmt = "SELECT local_gmt FROM servers where active='Y' limit 1;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $gmt_conf_ct = mysql_num_rows($rslt);
 $dst = date("I");
 if ($gmt_conf_ct > 0)
@@ -105,14 +108,14 @@ if ($gmt_conf_ct > 0)
 	}
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $reports_only_user=$row[0];
@@ -126,13 +129,13 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LOGallowed_campaigns = $row[0];
@@ -157,7 +160,7 @@ $stmt="select group_id,group_name,8 from vicidial_inbound_groups order by group_
 if ($DID=='Y')
 	{$stmt="select did_pattern,did_description,did_id from vicidial_inbound_dids order by did_pattern;";}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
 $i=0;
 $LISTgroups[$i]='---NONE---';
@@ -196,7 +199,7 @@ else
 
 $stmt="select vsc_id,vsc_name from vicidial_status_categories;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $statcats_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $statcats_to_print)
@@ -207,137 +210,131 @@ while ($i < $statcats_to_print)
 	$vsc_count[$i] = 0;
 	$i++;
 	}
-?>
 
-<HTML>
-<HEAD>
-<STYLE type="text/css">
-<!--
-   .green {color: white; background-color: green}
-   .red {color: white; background-color: red}
-   .blue {color: white; background-color: blue}
-   .purple {color: white; background-color: purple}
--->
- </STYLE>
+$HEADER.="<HTML>\n";
+$HEADER.="<HEAD>\n";
+$HEADER.="<STYLE type=\"text/css\">\n";
+$HEADER.="<!--\n";
+$HEADER.="   .green {color: white; background-color: green}\n";
+$HEADER.="   .red {color: white; background-color: red}\n";
+$HEADER.="   .blue {color: white; background-color: blue}\n";
+$HEADER.="   .purple {color: white; background-color: purple}\n";
+$HEADER.="-->\n";
+$HEADER.=" </STYLE>\n";
 
-<?php 
 
-echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
-echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+$HEADER.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
+$HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 
-echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
+$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
-require("admin_header.php");
+#require("admin_header.php");
 
-echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
 if ($DB > 0)
 	{
-	echo "<BR>\n";
-	echo "$group_ct|$group_string|$group_SQL\n";
-	echo "<BR>\n";
-	echo "$shift|$query_date|$end_date\n";
-	echo "<BR>\n";
+	$MAIN.="<BR>\n";
+	$MAIN.="$group_ct|$group_string|$group_SQL\n";
+	$MAIN.="<BR>\n";
+	$MAIN.="$shift|$query_date|$end_date\n";
+	$MAIN.="<BR>\n";
 	}
 
-echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-echo "<TABLE BORDER=0><TR><TD VALIGN=TOP>\n";
-echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-echo "<INPUT TYPE=HIDDEN NAME=DID VALUE=\"$DID\">\n";
-echo "Date Range:<BR>\n";
-echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
+$MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
+$MAIN.="<TABLE BORDER=0><TR><TD VALIGN=TOP>\n";
+$MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+$MAIN.="<INPUT TYPE=HIDDEN NAME=DID VALUE=\"$DID\">\n";
+$MAIN.="Date Range:<BR>\n";
+$MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
-?>
-<script language="JavaScript">
-var o_cal = new tcal ({
-	// form name
-	'formname': 'vicidial_report',
-	// input name
-	'controlname': 'query_date'
-});
-o_cal.a_tpl.yearscroll = false;
-// o_cal.a_tpl.weekstart = 1; // Monday week start
-</script>
-<?php
+$MAIN.="<script language=\"JavaScript\">\n";
+$MAIN.="var o_cal = new tcal ({\n";
+$MAIN.="	// form name\n";
+$MAIN.="	'formname': 'vicidial_report',\n";
+$MAIN.="	// input name\n";
+$MAIN.="	'controlname': 'query_date'\n";
+$MAIN.="});\n";
+$MAIN.="o_cal.a_tpl.yearscroll = false;\n";
+$MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
+$MAIN.="</script>\n";
 
-echo " to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+$MAIN.=" to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
-?>
-<script language="JavaScript">
-var o_cal = new tcal ({
-	// form name
-	'formname': 'vicidial_report',
-	// input name
-	'controlname': 'end_date'
-});
-o_cal.a_tpl.yearscroll = false;
-// o_cal.a_tpl.weekstart = 1; // Monday week start
-</script>
-<?php
+$MAIN.="<script language=\"JavaScript\">\n";
+$MAIN.="var o_cal = new tcal ({\n";
+$MAIN.="	// form name\n";
+$MAIN.="	'formname': 'vicidial_report',\n";
+$MAIN.="	// input name\n";
+$MAIN.="	'controlname': 'end_date'\n";
+$MAIN.="});\n";
+$MAIN.="o_cal.a_tpl.yearscroll = false;\n";
+$MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
+$MAIN.="</script>\n";
 
-echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
+$MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 if ($DID=='Y')
-	{echo "Inbound DIDs: \n";}
+	{$MAIN.="Inbound DIDs: \n";}
 else
-	{echo "Inbound Groups: \n";}
-echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
-echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
+	{$MAIN.="Inbound Groups: \n";}
+$MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
+$MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 $o=0;
 while ($groups_to_print > $o)
 	{
 	if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
-		{echo "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
+		{$MAIN.="<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
 	else
-		{echo "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
+		{$MAIN.="<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
 	$o++;
 	}
-echo "</SELECT>\n";
-echo "</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
-echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
+$MAIN.="</SELECT>\n";
+$MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
+$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
 if ($DID!='Y')
 	{
-	echo "<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">MODIFY</a> | ";
-	echo "<a href=\"./AST_IVRstats.php?query_date=$query_date&end_date=$end_date&shift=$shift$groupQS\">IVR REPORT</a> | \n";
+	$MAIN.="<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">MODIFY</a> | ";
+	$MAIN.="<a href=\"./AST_IVRstats.php?query_date=$query_date&end_date=$end_date&shift=$shift$groupQS\">IVR REPORT</a> | \n";
 	}
-echo "<a href=\"./admin.php?ADD=999999\">REPORTS</a> | ";
-echo "</FONT>\n";
+$MAIN.="<a href=\"./admin.php?ADD=999999\">REPORTS</a> | ";
+$MAIN.="</FONT>\n";
 
-echo "</TD></TR>\n";
-echo "<TR><TD>\n";
+$MAIN.="</TD></TR>\n";
+$MAIN.="<TR><TD>\n";
 
-#echo "<SELECT SIZE=1 NAME=group>\n";
+#$MAIN.="<SELECT SIZE=1 NAME=group>\n";
 #	$o=0;
 #	while ($groups_to_print > $o)
 #	{
-#		if ($groups[$o] == $group) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
-#		  else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
+#		if ($groups[$o] == $group) {$MAIN.="<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
+#		  else {$MAIN.="<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
 #		$o++;
 #	}
-#echo "</SELECT>\n";
-echo "Shift: <SELECT SIZE=1 NAME=shift>\n";
-echo "<option selected value=\"$shift\">$shift</option>\n";
-echo "<option value=\"\">--</option>\n";
-echo "<option value=\"AM\">AM</option>\n";
-echo "<option value=\"PM\">PM</option>\n";
-echo "<option value=\"ALL\">ALL</option>\n";
-echo "</SELECT>\n";
-echo " &nbsp; <INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
-echo "</TD></TR></TABLE>\n";
-echo "</FORM>\n\n";
+#$MAIN.="</SELECT>\n";
+$MAIN.="Shift: <SELECT SIZE=1 NAME=shift>\n";
+$MAIN.="<option selected value=\"$shift\">$shift</option>\n";
+$MAIN.="<option value=\"\">--</option>\n";
+$MAIN.="<option value=\"AM\">AM</option>\n";
+$MAIN.="<option value=\"PM\">PM</option>\n";
+$MAIN.="<option value=\"ALL\">ALL</option>\n";
+$MAIN.="</SELECT>\n";
+$MAIN.=" &nbsp; <INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
+$MAIN.="</TD></TR></TABLE>\n";
+$MAIN.="</FORM>\n\n";
 
-echo "<PRE><FONT SIZE=2>\n\n";
+$MAIN.="<PRE><FONT SIZE=2>\n\n";
 
 
 if ($groups_to_print < 1)
 	{
-	echo "\n\n";
+	$MAIN.="\n\n";
 	if ($DID=='Y')
-		{echo "PLEASE SELECT A DID AND DATE RANGE ABOVE AND CLICK SUBMIT\n";}
+		{$MAIN.="PLEASE SELECT A DID AND DATE RANGE ABOVE AND CLICK SUBMIT\n";}
 	else
-		{echo "PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT\n";}
+		{$MAIN.="PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT\n";}
 	}
 
 else
@@ -366,16 +363,16 @@ $query_date_END = "$end_date $time_END";
 
 
 
-echo "Inbound Call Stats: $group_string          $NOW_TIME\n";
+$MAIN.="Inbound Call Stats: $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a>\n";
 
-
+$CSV_text1.="\"Inbound Call Stats:\",\"$group_string\",\"$NOW_TIME\"\n";
 
 
 if ($DID=='Y')
 	{
 	$stmt="select did_id from vicidial_inbound_dids where did_pattern IN($group_SQL);";
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
+	if ($DB) {$MAIN.="$stmt\n";}
 	$dids_to_print = mysql_num_rows($rslt);
 	$i=0;
 	while ($i < $dids_to_print)
@@ -390,7 +387,7 @@ if ($DID=='Y')
 
 	$stmt="select uniqueid from vicidial_did_log where did_id IN($did_SQL);";
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
+	if ($DB) {$MAIN.="$stmt\n";}
 	$unids_to_print = mysql_num_rows($rslt);
 	$i=0;
 	while ($i < $unids_to_print)
@@ -403,25 +400,30 @@ if ($DID=='Y')
 	if (strlen($unid_SQL)<3) {$unid_SQL="''";}
 
 	if ($DB > 0)
-		{echo "|$did_SQL|$unid_SQL|\n";}
+		{$MAIN.="|$did_SQL|$unid_SQL|\n";}
 
 	}
 
 if ($group_ct > 1)
 	{
-	echo "\n";
-	echo "---------- MULTI-GROUP BREAKDOWN:\n";
+	$MAIN.="\n";
+	$MAIN.="---------- MULTI-GROUP BREAKDOWN:\n";
+
+	$CSV_text1.="\n\"MULTI-GROUP BREAKDOWN:\"\n";
+
 	if ($DID=='Y')
 		{
-		echo "+----------------------+---------+---------+---------+---------+\n";
-		echo "| DID                  | CALLS   | DROPS   | DROP %  | IVR     |\n";
-		echo "+----------------------+---------+---------+---------+---------+\n";
+		$MAIN.="+----------------------+---------+---------+---------+---------+\n";
+		$MAIN.="| DID                  | CALLS   | DROPS   | DROP %  | IVR     |\n";
+		$MAIN.="+----------------------+---------+---------+---------+---------+\n";
+		$CSV_text1.="\"DID\",\"CALLS\",\"DROPS\",\"DROP %\",\"IVR\"\n";
 		}
 	else
 		{
-		echo "+----------------------+---------+---------+---------+---------+\n";
-		echo "| IN-GROUP             | CALLS   | DROPS   | DROP %  | IVR     |\n";
-		echo "+----------------------+---------+---------+---------+---------+\n";
+		$MAIN.="+----------------------+---------+---------+---------+---------+\n";
+		$MAIN.="| IN-GROUP             | CALLS   | DROPS   | DROP %  | IVR     |\n";
+		$MAIN.="+----------------------+---------+---------+---------+---------+\n";
+		$CSV_text1.="\"IN-GROUP\",\"CALLS\",\"DROPS\",\"DROP %\",\"IVR\"\n";
 		}
 
 	$i=0;
@@ -431,7 +433,7 @@ if ($group_ct > 1)
 		$DIDunid_SQL='';
 		$stmt="select did_id from vicidial_inbound_dids where did_pattern='$group[$i]';";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$Sdids_to_print = mysql_num_rows($rslt);
 		if ($Sdids_to_print > 0)
 			{
@@ -441,7 +443,7 @@ if ($group_ct > 1)
 
 		$stmt="select uniqueid from vicidial_did_log where did_id='$did_id[$i]';";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$DIDunids_to_print = mysql_num_rows($rslt);
 		$k=0;
 		while ($k < $DIDunids_to_print)
@@ -459,7 +461,7 @@ if ($group_ct > 1)
 			$stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($DIDunid_SQL);";
 			}
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$row=mysql_fetch_row($rslt);
 
 		$stmt="select count(*) from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='$group[$i]' and comment_b='START';";
@@ -468,7 +470,7 @@ if ($group_ct > 1)
 			$stmt="select count(*) from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and uniqueid IN($DIDunid_SQL);";
 			}
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$rowx=mysql_fetch_row($rslt);
 
 		$stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='$group[$i]' and status IN('DROP','XDROP') and (length_in_sec <= 49999 or length_in_sec is null);";
@@ -477,7 +479,7 @@ if ($group_ct > 1)
 			$stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status IN('DROP','XDROP') and (length_in_sec <= 49999 or length_in_sec is null) and uniqueid IN($DIDunid_SQL);";
 			}
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$rowy=mysql_fetch_row($rslt);
 
 		$groupDISPLAY =	sprintf("%20s", $group[$i]);
@@ -493,19 +495,21 @@ if ($group_ct > 1)
 			}
 		$gDROPpercent =	sprintf("%6s", $gDROPpercent);
 
-		echo "| $groupDISPLAY | $gTOTALcalls | $gDROPcalls | $gDROPpercent% | $gIVRcalls |\n";
+		$MAIN.="| $groupDISPLAY | $gTOTALcalls | $gDROPcalls | $gDROPpercent% | $gIVRcalls |\n";
+		$CSV_text1.="\"$groupDISPLAY\",\"$gTOTALcalls\",\"$gDROPcalls\",\"$gDROPpercent%\",\"$gIVRcalls\"\n";
 		$i++;
 		}
 
-	echo "+----------------------+---------+---------+---------+---------+\n";
+	$MAIN.="+----------------------+---------+---------+---------+---------+\n";
 
 	}
 
 
-echo "\n";
-echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
-echo "---------- TOTALS\n";
+$MAIN.="\n";
+$MAIN.="Time range: $query_date_BEGIN to $query_date_END\n\n";
+$MAIN.="---------- TOTALS\n";
 
+$CSV_text1.="\n\"Time range:\",\"$query_date_BEGIN\",\"to\",\"$query_date_END\"\n\n";
 
 $stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL);";
 if ($DID=='Y')
@@ -513,7 +517,7 @@ if ($DID=='Y')
 	$stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL);";
 	}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $row=mysql_fetch_row($rslt);
 
 $stmt="select count(*),sum(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND');";
@@ -522,7 +526,7 @@ if ($DID=='Y')
 	$stmt="select count(*),sum(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND') and uniqueid IN($unid_SQL);";
 	}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $rowy=mysql_fetch_row($rslt);
 
 $stmt="select count(*) from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a IN($group_SQL) and comment_b='START';";
@@ -531,7 +535,7 @@ if ($DID=='Y')
 	$stmt="select count(*) from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and uniqueid IN($unid_SQL);";
 	}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $rowx=mysql_fetch_row($rslt);
 
 $TOTALcalls =	sprintf("%10s", $row[0]);
@@ -563,15 +567,22 @@ else
 	}
 
 
-echo "Total calls taken in to this In-Group:        $TOTALcalls\n";
-echo "Average Call Length for all Calls:            $average_call_seconds seconds\n";
-echo "Answered Calls:                               $ANSWEREDcalls  $ANSWEREDpercent%\n";
-echo "Average queue time for Answered Calls:        $average_answer_seconds seconds\n";
-echo "Calls taken into the IVR for this In-Group:   $IVRcalls\n";
+$MAIN.="Total calls taken in to this In-Group:        $TOTALcalls\n";
+$MAIN.="Average Call Length for all Calls:            $average_call_seconds seconds\n";
+$MAIN.="Answered Calls:                               $ANSWEREDcalls  $ANSWEREDpercent%\n";
+$MAIN.="Average queue time for Answered Calls:        $average_answer_seconds seconds\n";
+$MAIN.="Calls taken into the IVR for this In-Group:   $IVRcalls\n";
 
+$CSV_text1.="\"Total calls taken in to this In-Group:\",\"$TOTALcalls\"\n";
+$CSV_text1.="\"Average Call Length for all Calls:\",\"$average_call_seconds seconds\"\n";
+$CSV_text1.="\"Answered Calls:\",\"$ANSWEREDcalls\",\"$ANSWEREDpercent%\"\n";
+$CSV_text1.="\"Average queue time for Answered Calls:\",\"$average_answer_seconds seconds\"\n";
+$CSV_text1.="\"Calls taken into the IVR for this In-Group:\",\"$IVRcalls\"\n";
 
-echo "\n";
-echo "---------- DROPS\n";
+$MAIN.="\n";
+$MAIN.="---------- DROPS\n";
+
+$CSV_text1.="\n\"DROPS\"\n";
 
 $stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status IN('DROP','XDROP') and (length_in_sec <= 49999 or length_in_sec is null);";
 if ($DID=='Y')
@@ -579,7 +590,7 @@ if ($DID=='Y')
 	$stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status IN('DROP','XDROP') and (length_in_sec <= 49999 or length_in_sec is null) and uniqueid IN($unid_SQL);";
 	}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $row=mysql_fetch_row($rslt);
 
 $DROPcalls =	sprintf("%10s", $row[0]);
@@ -609,10 +620,11 @@ else
 	$DROP_ANSWEREDpercent = round($DROP_ANSWEREDpercent, 0);
 	}
 
-echo "Total DROP Calls:                             $DROPcalls  $DROPpercent%               drop/answered: $DROP_ANSWEREDpercent%\n";
-echo "Average hold time for DROP Calls:             $average_hold_seconds seconds\n";
+$MAIN.="Total DROP Calls:                             $DROPcalls  $DROPpercent%               drop/answered: $DROP_ANSWEREDpercent%\n";
+$MAIN.="Average hold time for DROP Calls:             $average_hold_seconds seconds\n";
 
-
+$CSV_text1.="\"Total DROP Calls:\",\"$DROPcalls\",\"$DROPpercent%\",\"drop/answered:\",\"$DROP_ANSWEREDpercent%\"\n";
+$CSV_text1.="\"Average hold time for DROP Calls:\",\"$average_hold_seconds seconds\"\n";
 
 
 if (strlen($group_SQL)>3)
@@ -621,20 +633,20 @@ if (strlen($group_SQL)>3)
 		{
 		$stmt = "SELECT answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two from vicidial_inbound_groups where group_id IN($group_SQL) order by answer_sec_pct_rt_stat_one desc limit 1;";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$row=mysql_fetch_row($rslt);
 		$Sanswer_sec_pct_rt_stat_one = $row[0];
 		$Sanswer_sec_pct_rt_stat_two = $row[1];
 
 		$stmt = "SELECT count(*) from vicidial_closer_log where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and queue_seconds <= $Sanswer_sec_pct_rt_stat_one and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND');";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$row=mysql_fetch_row($rslt);
 		$answer_sec_pct_rt_stat_one = $row[0];
 
 		$stmt = "SELECT count(*) from vicidial_closer_log where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and queue_seconds <= $Sanswer_sec_pct_rt_stat_two and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND');";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$MAIN.="$stmt\n";}
 		$row=mysql_fetch_row($rslt);
 		$answer_sec_pct_rt_stat_two = $row[0];
 
@@ -649,14 +661,21 @@ if (strlen($group_SQL)>3)
 			}
 		}
 	}
-echo "\n";
-echo "---------- CUSTOM INDICATORS\n";
-echo "GDE (Answered/Total calls taken in to this In-Group):  $ANSWEREDpercent%\n";
-echo "ACR (Dropped/Answered):                                $DROP_ANSWEREDpercent%\n";
+$MAIN.="\n";
+$MAIN.="---------- CUSTOM INDICATORS\n";
+$MAIN.="GDE (Answered/Total calls taken in to this In-Group):  $ANSWEREDpercent%\n";
+$MAIN.="ACR (Dropped/Answered):                                $DROP_ANSWEREDpercent%\n";
+
+$CSV_text1.="\n\"CUSTOM INDICATORS\"\n";
+$CSV_text1.="\"GDE (Answered/Total calls taken in to this In-Group):\",\"$ANSWEREDpercent%\"\n";
+$CSV_text1.="\"ACR (Dropped/Answered):\",\"$DROP_ANSWEREDpercent%\"\n";
+
 if ($DID!='Y')
 	{
-	echo "TMR1 (Answered within $Sanswer_sec_pct_rt_stat_one seconds/Answered):            $PCTanswer_sec_pct_rt_stat_one%\n";
-	echo "TMR2 (Answered within $Sanswer_sec_pct_rt_stat_two seconds/Answered):            $PCTanswer_sec_pct_rt_stat_two%\n";
+	$MAIN.="TMR1 (Answered within $Sanswer_sec_pct_rt_stat_one seconds/Answered):            $PCTanswer_sec_pct_rt_stat_one%\n";
+	$MAIN.="TMR2 (Answered within $Sanswer_sec_pct_rt_stat_two seconds/Answered):            $PCTanswer_sec_pct_rt_stat_two%\n";
+	$CSV_text1.="\"TMR1 (Answered within $Sanswer_sec_pct_rt_stat_one seconds/Answered):\",\"$PCTanswer_sec_pct_rt_stat_one%\"\n";
+	$CSV_text1.="\"TMR2 (Answered within $Sanswer_sec_pct_rt_stat_two seconds/Answered):\",\"$PCTanswer_sec_pct_rt_stat_two%\"\n";
 	}
 
 
@@ -664,7 +683,7 @@ if ($DID!='Y')
 $q=0;
 $stmt = "SELECT status,status_name,human_answered,category from vicidial_statuses;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $statuses_to_print = mysql_num_rows($rslt);
 $p=0;
 while ($p < $statuses_to_print)
@@ -681,7 +700,7 @@ while ($p < $statuses_to_print)
 	}
 $stmt = "SELECT status,status_name,human_answered,category from vicidial_campaign_statuses;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $statuses_to_print = mysql_num_rows($rslt);
 $p=0;
 while ($p < $statuses_to_print)
@@ -699,8 +718,10 @@ while ($p < $statuses_to_print)
 
 ##############################
 #########  CALL QUEUE STATS
-echo "\n";
-echo "---------- QUEUE STATS\n";
+$MAIN.="\n";
+$MAIN.="---------- QUEUE STATS\n";
+
+$CSV_text1.="\n\"QUEUE STATS\"\n";
 
 $stmt="select count(*),sum(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and (queue_seconds > 0);";
 if ($DID=='Y')
@@ -708,7 +729,7 @@ if ($DID=='Y')
 	$stmt="select count(*),sum(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and (queue_seconds > 0) and uniqueid IN($unid_SQL);";
 	}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $row=mysql_fetch_row($rslt);
 
 $QUEUEcalls =	sprintf("%10s", $row[0]);
@@ -738,9 +759,13 @@ else
 	$average_total_queue_seconds = sprintf("%10.2f", $average_total_queue_seconds);
 	}
 
-echo "Total Calls That entered Queue:               $QUEUEcalls  $QUEUEpercent%\n";
-echo "Average QUEUE Length for queue calls:         $average_queue_seconds seconds\n";
-echo "Average QUEUE Length across all calls:        $average_total_queue_seconds seconds\n";
+$MAIN.="Total Calls That entered Queue:               $QUEUEcalls  $QUEUEpercent%\n";
+$MAIN.="Average QUEUE Length for queue calls:         $average_queue_seconds seconds\n";
+$MAIN.="Average QUEUE Length across all calls:        $average_total_queue_seconds seconds\n";
+
+$CSV_text1.="\"Total Calls That entered Queue:\",\"$QUEUEcalls\",\"$QUEUEpercent%\"\n";
+$CSV_text1.="\"Average QUEUE Length for queue calls:\",\"$average_queue_seconds seconds\"\n";
+$CSV_text1.="\"Average QUEUE Length across all calls:\",\"$average_total_queue_seconds seconds\"\n";
 
 
 
@@ -749,11 +774,15 @@ echo "Average QUEUE Length across all calls:        $average_total_queue_seconds
 
 $TOTALcalls = 0;
 
-echo "\n";
-echo "---------- CALL HOLD TIME BREAKDOWN IN SECONDS\n";
-echo "+-------------------------------------------------------------------------------------------+------------+\n";
-echo "|     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
-echo "+-------------------------------------------------------------------------------------------+------------+\n";
+$MAIN.="\n";
+$MAIN.="---------- CALL HOLD TIME BREAKDOWN IN SECONDS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=2\">DOWNLOAD</a>\n";
+$MAIN.="+-------------------------------------------------------------------------------------------+------------+\n";
+$MAIN.="|     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
+$MAIN.="+-------------------------------------------------------------------------------------------+------------+\n";
+
+$CSV_text2.="\n\"CALL HOLD TIME BREAKDOWN IN SECONDS\"\n";
+$CSV_text2.="\"\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\"TOTAL\"\n";
+
 
 $stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) group by queue_seconds;";
 if ($DID=='Y')
@@ -761,9 +790,11 @@ if ($DID=='Y')
 	$stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by queue_seconds;";
 	}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $reasons_to_print = mysql_num_rows($rslt);
 $i=0;
+$hd_5=0; $hd10=0; $hd15=0; $hd20=0; $hd25=0; $hd30=0; $hd35=0; $hd40=0; $hd45=0; $hd50=0; $hd55=0; $hd60=0; $hd90=0; $hd99=0;
+
 while ($i < $reasons_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
@@ -806,9 +837,10 @@ $hd99 =	sprintf("%5s", $hd99);
 
 $TOTALcalls =		sprintf("%10s", $TOTALcalls);
 
-echo "| $hd_0 $hd_5 $hd10 $hd15 $hd20 $hd25 $hd30 $hd35 $hd40 $hd45 $hd50 $hd55 $hd60 $hd90 $hd99 | $TOTALcalls |\n";
-echo "+-------------------------------------------------------------------------------------------+------------+\n";
+$MAIN.="| $hd_0 $hd_5 $hd10 $hd15 $hd20 $hd25 $hd30 $hd35 $hd40 $hd45 $hd50 $hd55 $hd60 $hd90 $hd99 | $TOTALcalls |\n";
+$MAIN.="+-------------------------------------------------------------------------------------------+------------+\n";
 
+$CSV_text2.="\"\",\"$hd_0\",\"$hd_5\",\"$hd10\",\"$hd15\",\"$hd20\",\"$hd25\",\"$hd30\",\"$hd35\",\"$hd40\",\"$hd45\",\"$hd50\",\"$hd55\",\"$hd60\",\"$hd90\",\"$hd99\",\"$TOTALcalls\"\n";
 
 
 ##############################
@@ -816,11 +848,14 @@ echo "+-------------------------------------------------------------------------
 
 $BDdropCALLS = 0;
 
-echo "\n";
-echo "---------- CALL DROP TIME BREAKDOWN IN SECONDS\n";
-echo "+-------------------------------------------------------------------------------------------+------------+\n";
-echo "|     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
-echo "+-------------------------------------------------------------------------------------------+------------+\n";
+$MAIN.="\n";
+$MAIN.="---------- CALL DROP TIME BREAKDOWN IN SECONDS\n";
+$MAIN.="+-------------------------------------------------------------------------------------------+------------+\n";
+$MAIN.="|     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
+$MAIN.="+-------------------------------------------------------------------------------------------+------------+\n";
+
+$CSV_text2.="\n\"CALL DROP TIME BREAKDOWN IN SECONDS\"\n";
+$CSV_text2.="\"\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\"TOTAL\"\n";
 
 $stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and status IN('DROP','XDROP') group by queue_seconds;";
 if ($DID=='Y')
@@ -828,9 +863,11 @@ if ($DID=='Y')
 	$stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status IN('DROP','XDROP') group by queue_seconds;";
 	}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $reasons_to_print = mysql_num_rows($rslt);
 $i=0;
+$dd_0=0; $dd_5=0; $dd10=0; $dd15=0; $dd20=0; $dd25=0; $dd30=0; $dd35=0; $dd40=0; $dd45=0; $dd50=0; $dd55=0; $dd60=0; $dd90=0; $dd99=0;
+
 while ($i < $reasons_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
@@ -873,10 +910,11 @@ $dd99 =	sprintf("%5s", $dd99);
 
 $BDdropCALLS =		sprintf("%10s", $BDdropCALLS);
 
-echo "| $dd_0 $dd_5 $dd10 $dd15 $dd20 $dd25 $dd30 $dd35 $dd40 $dd45 $dd50 $dd55 $dd60 $dd90 $dd99 | $BDdropCALLS |\n";
-echo "+-------------------------------------------------------------------------------------------+------------+\n";
+$MAIN.="| $dd_0 $dd_5 $dd10 $dd15 $dd20 $dd25 $dd30 $dd35 $dd40 $dd45 $dd50 $dd55 $dd60 $dd90 $dd99 | $BDdropCALLS |\n";
+$MAIN.="+-------------------------------------------------------------------------------------------+------------+\n";
 
 
+$CSV_text2.="\"\",\"$dd_0\",\"$dd_5\",\"$dd10\",\"$dd15\",\"$dd20\",\"$dd25\",\"$dd30\",\"$dd35\",\"$dd40\",\"$dd45\",\"$dd50\",\"$dd55\",\"$dd60\",\"$dd90\",\"$dd99\",\"$BDdropCALLS\"\n";
 
 
 ##############################
@@ -884,11 +922,14 @@ echo "+-------------------------------------------------------------------------
 
 $BDansweredCALLS = 0;
 
-echo "\n";
-echo "           CALL ANSWERED TIME AND PERCENT BREAKDOWN IN SECONDS\n";
-echo "          +-------------------------------------------------------------------------------------------+------------+\n";
-echo "          |     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
-echo "----------+-------------------------------------------------------------------------------------------+------------+\n";
+$MAIN.="\n";
+$MAIN.="           CALL ANSWERED TIME AND PERCENT BREAKDOWN IN SECONDS\n";
+$MAIN.="          +-------------------------------------------------------------------------------------------+------------+\n";
+$MAIN.="          |     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
+$MAIN.="----------+-------------------------------------------------------------------------------------------+------------+\n";
+
+$CSV_text2.="\n\"CALL ANSWERED TIME AND PERCENT BREAKDOWN IN SECONDS\"\n";
+$CSV_text2.="\"\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\"TOTAL\"\n";
 
 $stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND') group by queue_seconds;";
 if ($DID=='Y')
@@ -896,7 +937,7 @@ if ($DID=='Y')
 	$stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND') group by queue_seconds;";
 	}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $reasons_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $reasons_to_print)
@@ -1080,14 +1121,19 @@ $answeredCUMULATIVE = "$Cad_0 $Cad_5 $Cad10 $Cad15 $Cad20 $Cad25 $Cad30 $Cad35 $
 $answeredINT_PERCENT = "$pad_0 $pad_5 $pad10 $pad15 $pad20 $pad25 $pad30 $pad35 $pad40 $pad45 $pad50 $pad55 $pad60 $pad90 $pad99 |            |";
 $answeredCUM_PERCENT = "$pCad_0 $pCad_5 $pCad10 $pCad15 $pCad20 $pCad25 $pCad30 $pCad35 $pCad40 $pCad45 $pCad50 $pCad55 $pCad60 $pCad90 $pCad99 |            |";
 $answeredCUM_ANS_PERCENT = "$ApCad_0 $ApCad_5 $ApCad10 $ApCad15 $ApCad20 $ApCad25 $ApCad30 $ApCad35 $ApCad40 $ApCad45 $ApCad50 $ApCad55 $ApCad60 $ApCad90 $ApCad99 |            |";
-echo "INTERVAL  | $answeredTOTALs\n";
-echo "INT %     | $answeredINT_PERCENT\n";
-echo "CUMULATIVE| $answeredCUMULATIVE\n";
-echo "CUM %     | $answeredCUM_PERCENT\n";
-echo "CUM ANS % | $answeredCUM_ANS_PERCENT\n";
-echo "----------+-------------------------------------------------------------------------------------------+------------+\n";
+$MAIN.="INTERVAL  | $answeredTOTALs\n";
+$MAIN.="INT %     | $answeredINT_PERCENT\n";
+$MAIN.="CUMULATIVE| $answeredCUMULATIVE\n";
+$MAIN.="CUM %     | $answeredCUM_PERCENT\n";
+$MAIN.="CUM ANS % | $answeredCUM_ANS_PERCENT\n";
+$MAIN.="----------+-------------------------------------------------------------------------------------------+------------+\n";
 
 
+$CSV_text2.="\"INTERVAL\",\"$ad_0\",\"$ad_5\",\"$ad10\",\"$ad15\",\"$ad20\",\"$ad25\",\"$ad30\",\"$ad35\",\"$ad40\",\"$ad45\",\"$ad50\",\"$ad55\",\"$ad60\",\"$ad90\",\"$ad99\",\"$BDansweredCALLS\"\n";
+$CSV_text2.="\"INT %\",\"$pad_0\",\"$pad_5\",\"$pad10\",\"$pad15\",\"$pad20\",\"$pad25\",\"$pad30\",\"$pad35\",\"$pad40\",\"$pad45\",\"$pad50\",\"$pad55\",\"$pad60\",\"$pad90\",\"$pad99\"\n";
+$CSV_text2.="\"CUMULATIVE\",\"$Cad_0\",\"$Cad_5\",\"$Cad10\",\"$Cad15\",\"$Cad20\",\"$Cad25\",\"$Cad30\",\"$Cad35\",\"$Cad40\",\"$Cad45\",\"$Cad50\",\"$Cad55\",\"$Cad60\",\"$Cad90\",\"$Cad99\",\"$BDansweredCALLS\"\n";
+$CSV_text2.="\"CUM %\",\"$pCad_0\",\"$pCad_5\",\"$pCad10\",\"$pCad15\",\"$pCad20\",\"$pCad25\",\"$pCad30\",\"$pCad35\",\"$pCad40\",\"$pCad45\",\"$pCad50\",\"$pCad55\",\"$pCad60\",\"$pCad90\",\"$pCad99\"\n";
+$CSV_text2.="\"CUM ANS %\",\"$ApCad_0\",\"$ApCad_5\",\"$ApCad10\",\"$ApCad15\",\"$ApCad20\",\"$ApCad25\",\"$ApCad30\",\"$ApCad35\",\"$ApCad40\",\"$ApCad45\",\"$ApCad50\",\"$ApCad55\",\"$ApCad60\",\"$ApCad90\",\"$ApCad99\"\n";
 
 
 
@@ -1096,11 +1142,14 @@ echo "----------+---------------------------------------------------------------
 
 $TOTALcalls = 0;
 
-echo "\n";
-echo "---------- CALL HANGUP REASON STATS\n";
-echo "+----------------------+------------+\n";
-echo "| HANGUP REASON        | CALLS      |\n";
-echo "+----------------------+------------+\n";
+$MAIN.="\n";
+$MAIN.="---------- CALL HANGUP REASON STATS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=3\">DOWNLOAD</a>\n";
+$MAIN.="+----------------------+------------+\n";
+$MAIN.="| HANGUP REASON        | CALLS      |\n";
+$MAIN.="+----------------------+------------+\n";
+
+$CSV_text3.="\n\"CALL HANGUP REASON STATS\"\n";
+$CSV_text3.="\"HANGUP REASON\",\"CALLS\"\n";
 
 $stmt="select count(*),term_reason from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) group by term_reason;";
 if ($DID=='Y')
@@ -1108,7 +1157,7 @@ if ($DID=='Y')
 	$stmt="select count(*),term_reason from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by term_reason;";
 	}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $reasons_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $reasons_to_print)
@@ -1121,17 +1170,19 @@ while ($i < $reasons_to_print)
 	$reason =	sprintf("%-20s", $row[1]);while(strlen($reason)>20) {$reason = substr("$reason", 0, -1);}
 #	if (ereg("NONE",$reason)) {$reason = 'NO ANSWER           ';}
 
-	echo "| $reason | $REASONcount |\n";
+	$MAIN.="| $reason | $REASONcount |\n";
+	$CSV_text3.="\"$reason\",\"$REASONcount\"\n";
 
 	$i++;
 	}
 
 $TOTALcalls =		sprintf("%10s", $TOTALcalls);
 
-echo "+----------------------+------------+\n";
-echo "| TOTAL:               | $TOTALcalls |\n";
-echo "+----------------------+------------+\n";
+$MAIN.="+----------------------+------------+\n";
+$MAIN.="| TOTAL:               | $TOTALcalls |\n";
+$MAIN.="+----------------------+------------+\n";
 
+$CSV_text3.="\"TOTAL:\",\"$TOTALcalls\"\n";
 
 
 
@@ -1140,11 +1191,15 @@ echo "+----------------------+------------+\n";
 
 $TOTALcalls = 0;
 
-echo "\n";
-echo "---------- CALL STATUS STATS\n";
-echo "+--------+----------------------+----------------------+------------+------------+----------+----------+\n";
-echo "| STATUS | DESCRIPTION          | CATEGORY             | CALLS      | TOTAL TIME | AVG TIME |CALLS/HOUR|\n";
-echo "+--------+----------------------+----------------------+------------+------------+----------+----------+\n";
+$MAIN.="\n";
+$MAIN.="---------- CALL STATUS STATS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=4\">DOWNLOAD</a>\n";
+$MAIN.="+--------+----------------------+----------------------+------------+------------+----------+----------+\n";
+$MAIN.="| STATUS | DESCRIPTION          | CATEGORY             | CALLS      | TOTAL TIME | AVG TIME |CALLS/HOUR|\n";
+$MAIN.="+--------+----------------------+----------------------+------------+------------+----------+----------+\n";
+
+$CSV_text4.="\n\"CALL STATUS STATS\"\n";
+$CSV_text4.="\"STATUS\",\"DESCRIPTION\",\"CATEGORY\",\"CALLS\",\"TOTAL TIME\",\"AVG TIME\",\"CALLS/HOUR\"\n";
+
 
 
 ## get counts and time totals for all statuses in this campaign
@@ -1154,7 +1209,7 @@ if ($DID=='Y')
 	$stmt="select count(*),status,sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by status;";
 	}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $statuses_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $statuses_to_print)
@@ -1206,7 +1261,8 @@ while ($i < $statuses_to_print)
 		}
 
 
-	echo "| $status | $status_name | $statcat | $STATUScount | $STATUShours | $STATUSavg | $STATUSrate |\n";
+	$MAIN.="| $status | $status_name | $statcat | $STATUScount | $STATUShours | $STATUSavg | $STATUSrate |\n";
+	$CSV_text4.="\"$status\",\"$status_name\",\"$statcat\",\"$STATUScount\",\"$STATUShours\",\"$STATUSavg\",\"$STATUSrate\"\n";
 
 	$i++;
 	}
@@ -1234,19 +1290,24 @@ $TOTALhours =	sprintf("%10s", $TOTALhours);while(strlen($TOTALhours)>10) {$TOTAL
 $TOTALavg =	sprintf("%8s", $TOTALavg);while(strlen($TOTALavg)>8) {$TOTALavg = substr("$TOTALavg", 0, -1);}
 $TOTALrate =	sprintf("%8s", $TOTALrate);while(strlen($TOTALrate)>8) {$TOTALrate = substr("$TOTALrate", 0, -1);}
 
-echo "+--------+----------------------+----------------------+------------+------------+----------+----------+\n";
-echo "| TOTAL:                                               | $TOTALcalls | $TOTALhours | $TOTALavg | $TOTALrate |\n";
-echo "+------------------------------------------------------+------------+------------+----------+----------+\n";
+$MAIN.="+--------+----------------------+----------------------+------------+------------+----------+----------+\n";
+$MAIN.="| TOTAL:                                               | $TOTALcalls | $TOTALhours | $TOTALavg | $TOTALrate |\n";
+$MAIN.="+------------------------------------------------------+------------+------------+----------+----------+\n";
+
+$CSV_text4.="\"TOTAL:\",\"\",\"\",\"$TOTALcalls\",\"$TOTALhours\",\"$TOTALavg\",\"$TOTALrate\"\n";
 
 
 ##############################
 #########  STATUS CATEGORY STATS
 
-echo "\n";
-echo "---------- CUSTOM STATUS CATEGORY STATS\n";
-echo "+----------------------+------------+--------------------------------+\n";
-echo "| CATEGORY             | CALLS      | DESCRIPTION                    |\n";
-echo "+----------------------+------------+--------------------------------+\n";
+$MAIN.="\n";
+$MAIN.="---------- CUSTOM STATUS CATEGORY STATS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=5\">DOWNLOAD</a>\n";
+$MAIN.="+----------------------+------------+--------------------------------+\n";
+$MAIN.="| CATEGORY             | CALLS      | DESCRIPTION                    |\n";
+$MAIN.="+----------------------+------------+--------------------------------+\n";
+
+$CSV_text5.="\n\"CUSTOM STATUS CATEGORY STATS\"\n";
+$CSV_text5.="\"CATEGORY\",\"CALLS\",\"DESCRIPTION\"\n";
 
 $TOTCATcalls=0;
 $r=0;
@@ -1259,7 +1320,8 @@ while ($r < $statcats_to_print)
 		$CATcount =	sprintf("%10s", $vsc_count[$r]); while(strlen($CATcount)>10) {$CATcount = substr("$CATcount", 0, -1);}
 		$CATname =	sprintf("%-30s", $vsc_name[$r]); while(strlen($CATname)>30) {$CATname = substr("$CATname", 0, -1);}
 
-		echo "| $category | $CATcount | $CATname |\n";
+		$MAIN.="| $category | $CATcount | $CATname |\n";
+		$CSV_text5.="\"$category\",\"$CATcount\",\"$CATname\"\n";
 		}
 
 	$r++;
@@ -1267,21 +1329,26 @@ while ($r < $statcats_to_print)
 
 $TOTCATcalls =	sprintf("%10s", $TOTCATcalls); while(strlen($TOTCATcalls)>10) {$TOTCATcalls = substr("$TOTCATcalls", 0, -1);}
 
-echo "+----------------------+------------+--------------------------------+\n";
-echo "| TOTAL                | $TOTCATcalls |\n";
-echo "+----------------------+------------+\n";
+$MAIN.="+----------------------+------------+--------------------------------+\n";
+$MAIN.="| TOTAL                | $TOTCATcalls |\n";
+$MAIN.="+----------------------+------------+\n";
 
+$CSV_text5.="\"TOTAL\",\"$TOTCATcalls\"\n";
 
 ##############################
 #########  CALL INITIAL QUEUE POSITION BREAKDOWN
 
 $TOTALcalls = 0;
 
-echo "\n";
-echo "---------- CALL INITIAL QUEUE POSITION BREAKDOWN\n";
-echo "+-------------------------------------------------------------------------------------+------------+\n";
-echo "|     1     2     3     4     5     6     7     8     9    10    15    20    25   +25 | TOTAL      |\n";
-echo "+-------------------------------------------------------------------------------------+------------+\n";
+$MAIN.="\n";
+$MAIN.="---------- CALL INITIAL QUEUE POSITION BREAKDOWN       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=6\">DOWNLOAD</a>\n";
+$MAIN.="+-------------------------------------------------------------------------------------+------------+\n";
+$MAIN.="|     1     2     3     4     5     6     7     8     9    10    15    20    25   +25 | TOTAL      |\n";
+$MAIN.="+-------------------------------------------------------------------------------------+------------+\n";
+
+$CSV_text6.="\n\"CALL INITIAL QUEUE POSITION BREAKDOWN\"\n";
+$CSV_text6.="\"\",\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\",\"8\",\"9\",\"10\",\"15\",\"20\",\"25\",\"+25\",\"TOTAL\"\n";
+
 
 $stmt="select count(*),queue_position from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) group by queue_position;";
 if ($DID=='Y')
@@ -1289,7 +1356,7 @@ if ($DID=='Y')
 	$stmt="select count(*),queue_position from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by queue_position;";
 	}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $positions_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $positions_to_print)
@@ -1332,9 +1399,10 @@ $qp99 =	sprintf("%5s", $qp99);
 
 $TOTALcalls =		sprintf("%10s", $TOTALcalls);
 
-echo "| $qp_1 $qp_2 $qp_3 $qp_4 $qp_5 $qp_6 $qp_7 $qp_8 $qp_9 $qp10 $qp15 $qp20 $qp25 $qp99 | $TOTALcalls |\n";
-echo "+-------------------------------------------------------------------------------------+------------+\n";
+$MAIN.="| $qp_1 $qp_2 $qp_3 $qp_4 $qp_5 $qp_6 $qp_7 $qp_8 $qp_9 $qp10 $qp15 $qp20 $qp25 $qp99 | $TOTALcalls |\n";
+$MAIN.="+-------------------------------------------------------------------------------------+------------+\n";
 
+$CSV_text6.="\"\",\"$qp_1\",\"$qp_2\",\"$qp_3\",\"$qp_4\",\"$qp_5\",\"$qp_6\",\"$qp_7\",\"$qp_8\",\"$qp_9\",\"$qp10\",\"$qp15\",\"$qp20\",\"$qp25\",\"$qp99\",\"$TOTALcalls\"\n";
 
 
 ##############################
@@ -1345,11 +1413,14 @@ $TOTcalls=0;
 $TOTtime=0;
 $TOTavg=0;
 
-echo "\n";
-echo "---------- AGENT STATS\n";
-echo "+--------------------------+------------+------------+--------+\n";
-echo "| AGENT                    | CALLS      | TIME H:M:S |AVERAGE |\n";
-echo "+--------------------------+------------+------------+--------+\n";
+$MAIN.="\n";
+$MAIN.="---------- AGENT STATS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=7\">DOWNLOAD</a>\n";
+$MAIN.="+--------------------------+------------+------------+--------+\n";
+$MAIN.="| AGENT                    | CALLS      | TIME H:M:S |AVERAGE |\n";
+$MAIN.="+--------------------------+------------+------------+--------+\n";
+
+$CSV_text7.="\n\"AGENT STATS\"\n";
+$CSV_text7.="\"AGENT\",\"CALLS\",\"TIME H:M:S\",\"AVERAGE\"\n";
 
 $stmt="select vicidial_closer_log.user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from vicidial_closer_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and vicidial_closer_log.user is not null and length_in_sec is not null and length_in_sec > 0 and vicidial_closer_log.user=vicidial_users.user group by vicidial_closer_log.user;";
 if ($DID=='Y')
@@ -1357,7 +1428,7 @@ if ($DID=='Y')
 	$stmt="select vicidial_closer_log.user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from vicidial_closer_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and vicidial_closer_log.user is not null and length_in_sec is not null and length_in_sec > 0 and vicidial_closer_log.user=vicidial_users.user group by vicidial_closer_log.user;";
 	}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $users_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $users_to_print)
@@ -1386,7 +1457,8 @@ while ($i < $users_to_print)
 	$USERtotTALK_MS =	sprintf("%9s", $USERtotTALK_MS);
 	$USERavgTALK_MS =	sprintf("%6s", $USERavgTALK_MS);
 
-	echo "| $user - $full_name | $USERcalls |  $USERtotTALK_MS | $USERavgTALK_MS |\n";
+	$MAIN.="| $user - $full_name | $USERcalls |  $USERtotTALK_MS | $USERavgTALK_MS |\n";
+	$CSV_text7.="\"$user - $full_name\",\"$USERcalls\",\"$USERtotTALK_MS\",\"$USERavgTALK_MS\"\n";
 
 	$i++;
 	}
@@ -1407,18 +1479,21 @@ $TOTcalls =			sprintf("%10s", $TOTcalls);
 $TOTtime =			sprintf("%8s", $TOTtime);
 $TOTavg =			sprintf("%6s", $TOTavg);
 
-echo "+--------------------------+------------+------------+--------+\n";
-echo "| TOTAL Agents: $TOTagents | $TOTcalls | $TOTtime | $TOTavg |\n";
-echo "+--------------------------+------------+------------+--------+\n";
+$MAIN.="+--------------------------+------------+------------+--------+\n";
+$MAIN.="| TOTAL Agents: $TOTagents | $TOTcalls | $TOTtime | $TOTavg |\n";
+$MAIN.="+--------------------------+------------+------------+--------+\n";
 
+$CSV_text7.="\"TOTAL Agents: $TOTagents\",\"$TOTcalls\",\"$TOTtime\",\"$TOTavg\"\n";
 
 ##############################
 #########  TIME STATS
 
-echo "\n";
-echo "---------- TIME STATS\n";
+$MAIN.="\n";
+$MAIN.="---------- TIME STATS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=9\">DOWNLOAD</a>\n";
 
-echo "<FONT SIZE=0>\n";
+$CSV_text9.="\"TIME STATS\"\n\n";
+
+$MAIN.="<FONT SIZE=0>\n";
 
 
 ##############################
@@ -1430,7 +1505,7 @@ if ($DID=='Y')
 	$stmt="SELECT status,queue_seconds,UNIX_TIMESTAMP(call_date),call_date from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL);";
 	}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $calls_to_print = mysql_num_rows($rslt);
 $j=0;
 while ($j < $calls_to_print)
@@ -1441,7 +1516,7 @@ while ($j < $calls_to_print)
 	$Cepoch[$j] =	$row[2];
 	$Cdate[$j] =	$row[3];
 	$Crem[$j] = ( ($Cepoch[$j] + $epoch_offset) % 86400); # find the remainder(Modulus) of seconds since start of the day
-#	echo "|$Cepoch[$j]|$Crem[$j]|$Cdate[$j]|\n";
+#	$MAIN.="|$Cepoch[$j]|$Crem[$j]|$Cdate[$j]|\n";
 	$j++;
 	}
 
@@ -1514,8 +1589,8 @@ else
 	#$hour_multiplier = round($hour_multiplier, 0);
 	}
 
-echo "<!-- HICOUNT: $hi_hour_count|$hour_multiplier -->\n";
-echo "GRAPH IN 15 MINUTE INCREMENTS OF TOTAL CALLS TAKEN INTO THIS IN-GROUP\n";
+$MAIN.="<!-- HICOUNT: $hi_hour_count|$hour_multiplier -->\n";
+$MAIN.="GRAPH IN 15 MINUTE INCREMENTS OF TOTAL CALLS TAKEN INTO THIS IN-GROUP\n";
 
 $k=1;
 $Mk=0;
@@ -1544,10 +1619,13 @@ while ($k <= 102)
 	}
 
 
-echo "+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
-#echo "| HOUR | GRAPH IN 15 MINUTE INCREMENTS OF TOTAL INCOMING CALLS FOR THIS GROUP                                  | DROPS | TOTAL |\n";
-echo "| HOUR |$call_scale| DROPS | TOTAL |\n";
-echo "+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
+$MAIN.="+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
+#$MAIN.="| HOUR | GRAPH IN 15 MINUTE INCREMENTS OF TOTAL INCOMING CALLS FOR THIS GROUP                                  | DROPS | TOTAL |\n";
+$MAIN.="| HOUR |$call_scale| DROPS | TOTAL |\n";
+$MAIN.="+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
+
+$CSV_text9.="\"HOUR\",\"DROPS\",\"TOTAL\"\n";
+
 
 $ZZ = '00';
 $i=0;
@@ -1565,6 +1643,7 @@ while ($i <= 96)
 		$h=0;
 		if ($hour < 10) {$hour = "0$hour";}
 		$time = "+$hour$ZZ+";
+		#$CSV_text9.="$hour$ZZ,";
 		}
 	if ($h == 1) {$time = "   15 ";}
 	if ($h == 2) {$time = "   30 ";}
@@ -1579,9 +1658,11 @@ while ($i <= 96)
 		else
 			{
 			$hour_count[$i] =	sprintf("%-5s", $hour_count[$i]);
-			echo "|$time|";
-			$k=0;   while ($k <= 102) {echo " ";   $k++;}
-			echo "| $hour_count[$i] |\n";
+			$MAIN.="|$time|";
+			$CSV_text9.="\"$time\",";
+			$k=0;   while ($k <= 102) {$MAIN.=" ";   $k++;}
+			$MAIN.="| $hour_count[$i] |\n";
+			$CSV_text9.="\"0\",\"0\"\n";
 			}
 		}
 	else
@@ -1595,12 +1676,14 @@ while ($i <= 96)
 			{
 			$hour_count[$i] =	sprintf("%-5s", $hour_count[$i]);
 
-			echo "|$time|<SPAN class=\"green\">";
-			$k=0;   while ($k <= $Xhour_count) {echo "*";   $k++;   $char_counter++;}
-			echo "*X</SPAN>";   $char_counter++;
-			$k=0;   while ($k <= $Yhour_count) {echo " ";   $k++;   $char_counter++;}
-				while ($char_counter <= 101) {echo " ";   $char_counter++;}
-			echo "| 0     | $hour_count[$i] |\n";
+			$MAIN.="|$time|<SPAN class=\"green\">";
+			$CSV_text9.="\"$time\",";
+			$k=0;   while ($k <= $Xhour_count) {$MAIN.="*";   $k++;   $char_counter++;}
+			$MAIN.="*X</SPAN>";   $char_counter++;
+			$k=0;   while ($k <= $Yhour_count) {$MAIN.=" ";   $k++;   $char_counter++;}
+				while ($char_counter <= 101) {$MAIN.=" ";   $char_counter++;}
+			$MAIN.="| 0     | $hour_count[$i] |\n";
+			$CSV_text9.="\"0\",\"$hour_count[$i]\"\n";
 
 			}
 		else
@@ -1611,17 +1694,22 @@ while ($i <= 96)
 
 			$XXhour_count = ( ($Xhour_count - $Xdrop_count) - 1 );
 
+			$hour_count[$i]+=0;
+			$drop_count[$i]+=0;
+
 			$hour_count[$i] =	sprintf("%-5s", $hour_count[$i]);
 			$drop_count[$i] =	sprintf("%-5s", $drop_count[$i]);
 
-			echo "|$time|<SPAN class=\"red\">";
-			$k=0;   while ($k <= $Xdrop_count) {echo ">";   $k++;   $char_counter++;}
-			echo "D</SPAN><SPAN class=\"green\">";   $char_counter++;
-			$k=0;   while ($k <= $XXhour_count) {echo "*";   $k++;   $char_counter++;}
-			echo "X</SPAN>";   $char_counter++;
-			$k=0;   while ($k <= $Yhour_count) {echo " ";   $k++;   $char_counter++;}
-				while ($char_counter <= 102) {echo " ";   $char_counter++;}
-			echo "| $drop_count[$i] | $hour_count[$i] |\n";
+			$MAIN.="|$time|<SPAN class=\"red\">";
+			$CSV_text9.="\"$time\",\"\"";
+			$k=0;   while ($k <= $Xdrop_count) {$MAIN.=">";   $k++;   $char_counter++;}
+			$MAIN.="D</SPAN><SPAN class=\"green\">";   $char_counter++;
+			$k=0;   while ($k <= $XXhour_count) {$MAIN.="*";   $k++;   $char_counter++;}
+			$MAIN.="X</SPAN>";   $char_counter++;
+			$k=0;   while ($k <= $Yhour_count) {$MAIN.=" ";   $k++;   $char_counter++;}
+				while ($char_counter <= 102) {$MAIN.=" ";   $char_counter++;}
+			$MAIN.="| $drop_count[$i] | $hour_count[$i] |\n";
+			$CSV_text9.="\"$drop_count[$i]\",\"$hour_count[$i]\"\n";
 			}
 		}
 	
@@ -1630,7 +1718,7 @@ while ($i <= 96)
 	$h++;
 	}
 
-echo "+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n\n";
+$MAIN.="+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n\n";
 
 
 
@@ -1638,11 +1726,14 @@ echo "+------+------------------------------------------------------------------
 
 
 ##### Answered wait time breakdown
-echo "\n";
-echo "---------- CALL ANSWERED TIME BREAKDOWN IN SECONDS\n";
-echo "+------+-------------------------------------------------------------------------------------------+------------+\n";
-echo "| HOUR |     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
-echo "+------+-------------------------------------------------------------------------------------------+------------+\n";
+$MAIN.="\n";
+$MAIN.="---------- CALL ANSWERED TIME BREAKDOWN IN SECONDS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=8\">DOWNLOAD</a>\n";
+$MAIN.="+------+-------------------------------------------------------------------------------------------+------------+\n";
+$MAIN.="| HOUR |     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
+$MAIN.="+------+-------------------------------------------------------------------------------------------+------------+\n";
+
+$CSV_text8.="\n\"CALL ANSWERED TIME BREAKDOWN IN SECONDS\"\n";
+$CSV_text8.="\"HOUR\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\"TOTAL\"\n";
 
 $ZZ = '00';
 $i=0;
@@ -1709,7 +1800,8 @@ while ($i <= 96)
 	$adB99[$i] = sprintf("%5s", $adB99[$i]);
 	$Fanswer[$i] = sprintf("%10s", $Fanswer[$i]);
 
-	echo "|$time| $adB_0[$i] $adB_5[$i] $adB10[$i] $adB15[$i] $adB20[$i] $adB25[$i] $adB30[$i] $adB35[$i] $adB40[$i] $adB45[$i] $adB50[$i] $adB55[$i] $adB60[$i] $adB90[$i] $adB99[$i] | $Fanswer[$i] |\n";
+	$MAIN.="|$time| $adB_0[$i] $adB_5[$i] $adB10[$i] $adB15[$i] $adB20[$i] $adB25[$i] $adB30[$i] $adB35[$i] $adB40[$i] $adB45[$i] $adB50[$i] $adB55[$i] $adB60[$i] $adB90[$i] $adB99[$i] | $Fanswer[$i] |\n";
+	$CSV_text8.="\"$time\",\"$adB_0[$i]\",\"$adB_5[$i]\",\"$adB10[$i]\",\"$adB15[$i]\",\"$adB20[$i]\",\"$adB25[$i]\",\"$adB30[$i]\",\"$adB35[$i]\",\"$adB40[$i]\",\"$adB45[$i]\",\"$adB50[$i]\",\"$adB55[$i]\",\"$adB60[$i]\",\"$adB90[$i]\",\"$adB99[$i]\",\"$Fanswer[$i]\"\n";
 
 	$i++;
 	$h++;
@@ -1717,22 +1809,51 @@ while ($i <= 96)
 
 $BDansweredCALLS =		sprintf("%10s", $BDansweredCALLS);
 
-echo "+------+-------------------------------------------------------------------------------------------+------------+\n";
-echo "|TOTALS|                                                                                           | $BDansweredCALLS |\n";
-echo "+------+-------------------------------------------------------------------------------------------+------------+\n";
+$MAIN.="+------+-------------------------------------------------------------------------------------------+------------+\n";
+$MAIN.="|TOTALS|                                                                                           | $BDansweredCALLS |\n";
+$MAIN.="+------+-------------------------------------------------------------------------------------------+------------+\n";
 
+$CSV_text8.="\"TOTALS\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"$BDansweredCALLS\"\n";
 
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
-echo "\nRun Time: $RUNtime seconds|$db_source\n";
+$MAIN.="\nRun Time: $RUNtime seconds|$db_source\n";
+$MAIN.="</PRE>";
+$MAIN.="</TD></TR></TABLE>";
+
+$MAIN.="</BODY></HTML>";
+
+if ($file_download>0) {
+	$FILE_TIME = date("Ymd-His");
+	$CSVfilename = "AST_CLOSERstats_$US$FILE_TIME.csv";
+	$CSV_var="CSV_text".$file_download;
+	$CSV_text=preg_replace('/^\s+/', '', $$CSV_var);
+	$CSV_text=preg_replace('/ +\"/', '"', $CSV_text);
+	$CSV_text=preg_replace('/\" +/', '"', $CSV_text);
+	// We'll be outputting a TXT file
+	header('Content-type: application/octet-stream');
+
+	// It will be called LIST_101_20090209-121212.txt
+	header("Content-Disposition: attachment; filename=\"$CSVfilename\"");
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Pragma: public');
+	ob_clean();
+	flush();
+
+	echo "$CSV_text";
+
+	exit;
+} else {
+	echo $HEADER;
+	require("admin_header.php");
+	echo $MAIN;
+}
+
 }
 
 
 
 
 ?>
-</PRE>
-</TD></TR></TABLE>
-
-</BODY></HTML>
