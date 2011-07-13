@@ -357,10 +357,11 @@
 # 110624-2311 - Added screen labels option and status display fields option
 # 110626-2234 - Added queuemetrics_pe_phone_append
 # 110707-1412 - Added last_inbound_call_time and finish compatibility
+# 110713-0048 - Allow for full hiding of the phone number field label
 #
 
-$version = '2.4-334c';
-$build = '110707-1412';
+$version = '2.4-335c';
+$build = '110713-0048';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=73;
 $one_mysql_log=0;
@@ -12593,16 +12594,24 @@ $zi=2;
 
     echo "</td></tr><tr><td align=\"right\"><font class=\"body_text\">";
 
-    echo "$label_phone_number: </td><td align=\"left\"><font class=\"body_text\">";
-
-	if ( (ereg('Y',$disable_alter_custphone)) or (ereg('HIDE',$disable_alter_custphone)) )
-		{
-        echo "<font class=\"body_text\"><span id=\"phone_numberDISP\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></font>";
-        echo "<input type=\"hidden\" name=\"phone_number\" id=\"phone_number\" value=\"\" />";
+	if ($label_phone_number == '---HIDE---')
+        {
+		echo " </td><td align=\"left\"><input type=\"hidden\" name=\"phone_number\" id=\"phone_number\" value=\"\" />";
+		echo "<font class=\"body_text\"><span id=\"phone_numberDISP\"> &nbsp; </span></font>";
 		}
 	else
-		{
-        echo "<input type=\"text\" size=\"20\" name=\"phone_number\" id=\"phone_number\" maxlength=\"16\" class=\"cust_form\" value=\"\" />";
+        {
+		echo "$label_phone_number: </td><td align=\"left\"><font class=\"body_text\">";
+
+		if ( (ereg('Y',$disable_alter_custphone)) or (ereg('HIDE',$disable_alter_custphone)) )
+			{
+			echo "<font class=\"body_text\"><span id=\"phone_numberDISP\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></font>";
+			echo "<input type=\"hidden\" name=\"phone_number\" id=\"phone_number\" value=\"\" />";
+			}
+		else
+			{
+			echo "<input type=\"text\" size=\"20\" name=\"phone_number\" id=\"phone_number\" maxlength=\"16\" class=\"cust_form\" value=\"\" />";
+			}
 		}
 
     echo "</td><td align=\"right\"><font class=\"body_text\">";

@@ -8937,6 +8937,10 @@ if ($ACTION == 'LEADINFOview')
 				if ($hide_dial_links < 1)
 					{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\">DIAL</a>";}
 				}
+			if ( ($label_phone_number=='---HIDE---') and ($hide_dial_links < 1) )
+				{
+				$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Dial Link: &nbsp; </td><td ALIGN=left><font size=2><a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\">DIAL</a>";
+				}
 			$INFOout .= "</td></tr>";
 			if ( ($label_title!='---HIDE---') or ($label_hide_field_logs=='N') )
 				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_title: &nbsp; </td><td ALIGN=left><font size=2>$row[7]</td></tr>";}
