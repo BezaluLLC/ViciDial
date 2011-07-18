@@ -285,12 +285,13 @@
 # 110430-1925 - Added post_phone_time_diff_alert campaign feature
 # 110625-0814 - Added screen_labels and label hide functions
 # 110626-0127 - Added queuemetrics_pe_phone_append
+# 110718-1158 - Added logging of skipped leads
 #
 
-$version = '2.4-190';
-$build = '110626-0127';
+$version = '2.4-191';
+$build = '110718-1158';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=418;
+$mysql_log_count=419;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -2782,12 +2783,17 @@ if ($ACTION == 'manDiaLskip')
 	else
 		{
 		$called_count = ($called_count - 1);
-		### flag the lead as called and change it's status to INCALL
+		### set the lead back to previous status and called_count
 		$stmt = "UPDATE vicidial_list set status='$stage', called_count='$called_count',user='$user' where lead_id='$lead_id';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00042',$user,$server_ip,$session_name,$one_mysql_log);}
 
+		### log the skip event
+		$stmt = "INSERT INTO vicidial_agent_skip_log set campaign_id='$campaign', previous_status='$stage', previous_called_count='$called_count',user='$user', lead_id='$lead_id', event_date=NOW();";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00419',$user,$server_ip,$session_name,$one_mysql_log);}
 
 		echo "LEAD REVERTED\n";
 		}

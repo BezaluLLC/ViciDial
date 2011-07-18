@@ -876,3 +876,17 @@ ALTER TABLE vicidial_inbound_groups MODIFY next_agent_call VARCHAR(30) default '
 
 UPDATE system_settings SET db_schema_version='1286',db_schema_update_date=NOW() where db_schema_version < 1286;
 
+CREATE TABLE vicidial_agent_skip_log (
+user_skip_log_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+user VARCHAR(20),
+event_date DATETIME,
+lead_id INT(9) UNSIGNED,
+campaign_id VARCHAR(20) default '',
+previous_status VARCHAR(6) default '',
+previous_called_count SMALLINT(5) UNSIGNED default '0',
+index (user),
+index (event_date),
+index (campaign_id)
+);
+
+UPDATE system_settings SET db_schema_version='1287',db_schema_update_date=NOW() where db_schema_version < 1287;

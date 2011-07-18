@@ -652,6 +652,22 @@ For AGENTDIRECT in-groups, you can put AGENTEXT in this field and the system wil
 You can also put AGENTEXT in this field if it is set to EXTENSION and the system will look up the user custom five field and send the call to that dialplan number||
 orders by the last time an agent was sent an inbound call. Results in agents receiving about the same number of calls overall||
 orders by the last time an agent finished an inbound call. AKA agent waiting longest receives first call||
+Servers||
+This is a list of the server IP addresses of existing servers in the system that you want the phone entries to be populated across. These must be valid IP addresses, they must be active in the system and you must put one per line in this text area input box||
+Phones||
+This is a list of the phone extensions that you want to be created on all of the servers listed above. The phone extensions should be letters and numbers only, with no special characters and you must put one per line in this text area box||
+Registration Password||
+This is the registration password that will be used for all of the phones that are created. For SIP and IAX2 protocol you should use a complex password for secutiry reasons||
+Login Password||
+This is the agent screen login password that will be used for all of the phones that are created||
+Create Alias Entries||
+Setting this option to YES will create a phones alias entry for each of the extensions listed above that will tie all of the same extension entries on each server together allowing phone login load balancing to work in the agent interface||
+Alias Suffix||
+This is the suffix that will be added to the extension to form the phone alias id. For example, if the extension is cc100 and the alias suffix is x, then the phone alias id used for that would be cc100x||
+Client Protocol||
+This is the phone protocol that will be used for all phones created when submitted. SIP and IAX2 are VOIP protocols that will create conf file entries to allow those phoens to register on the servers||
+Local GMT||
+This is the time zone that all of the phones will be created with||
 
 
 lead_report_export.php

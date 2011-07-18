@@ -30,6 +30,7 @@
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 # 110218-1523 - Added searches display
 # 110703-1836 - Added download option
+# 110718-1204 - Added skipped manual dial leads display
 #
 
 
@@ -989,6 +990,42 @@ if ($did < 1)
 	$MAIN.="</TABLE><BR><BR>\n";
 	}
 
+if ($did < 1)
+	{
+	##### vicidial agent manual dial lead preview skips for this time period #####
+
+	$MAIN.="<B>PREVIEW LEAD SKIPS FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=11'>[DOWNLOAD]</a></B>\n";
+	$MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
+	$MAIN.="<tr><td><font size=1># </td><td NOWRAP><font size=2>DATE/TIME &nbsp; </td><td align=right NOWRAP><font size=2> LEAD ID &nbsp; </td><td align=right NOWRAP><font size=2> STATUS &nbsp; </td><td align=right NOWRAP><font size=2> COUNT &nbsp; </td><td align=right NOWRAP><font size=2> CAMPAIGN</td></tr>\n";
+	$CSV_text11.="\"PREVIEW LEAD SKIPS FOR THIS TIME PERIOD: (10000 record limit)\"\n";
+	$CSV_text11.="\"\",\"#\",\"DATE/TIME\",\"LEAD ID\",\"STATUS\",\"COUNT\",\"CAMPAIGN\"\n";
+
+	$stmt="select user,event_date,lead_id,campaign_id,previous_status,previous_called_count from vicidial_agent_skip_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by event_date desc limit 10000;";
+	$rslt=mysql_query($stmt, $link);
+	$logs_to_print = mysql_num_rows($rslt);
+
+	$u=0;
+	while ($logs_to_print > $u) 
+		{
+		$row=mysql_fetch_row($rslt);
+		if (eregi("1$|3$|5$|7$|9$", $u))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+
+		$u++;
+		$MAIN.="<tr $bgcolor>";
+		$MAIN.="<td><font size=1>$u</td>";
+		$MAIN.="<td><font size=2>$row[1]</td>";
+		$MAIN.="<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[2]\" target=\"_blank\">$row[2]</A> </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[4] </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[5] </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[3] </td></tr>\n";
+		$CSV_text11.="\"\",\"$u\",\"$row[1]\",\"$row[2]\",\"$row[4]\",\"$row[5]\",\"$row[3]\"\n";
+		}
+	$MAIN.="</TABLE><BR><BR>\n";
+	}
+
 
 $ENDtime = date("U");
 
@@ -1004,34 +1041,37 @@ $MAIN.="</body>";
 $MAIN.="</html>";
 
 
-	if ($file_download>0) {
-		$FILE_TIME = date("Ymd-His");
-		$CSVfilename = "user_stats_$US$FILE_TIME.csv";
-		$CSV_var="CSV_text".$file_download;
-		$CSV_text=preg_replace('/^\s+/', '', $$CSV_var);
-		$CSV_text=preg_replace('/\n\s+,/', ',', $CSV_text);
-		$CSV_text=preg_replace('/ +\"/', '"', $CSV_text);
-		$CSV_text=preg_replace('/\" +/', '"', $CSV_text);
-		// We'll be outputting a TXT file
-		header('Content-type: application/octet-stream');
+if ($file_download>0) 
+	{
+	$FILE_TIME = date("Ymd-His");
+	$CSVfilename = "user_stats_$US$FILE_TIME.csv";
+	$CSV_var="CSV_text".$file_download;
+	$CSV_text=preg_replace('/^\s+/', '', $$CSV_var);
+	$CSV_text=preg_replace('/\n\s+,/', ',', $CSV_text);
+	$CSV_text=preg_replace('/ +\"/', '"', $CSV_text);
+	$CSV_text=preg_replace('/\" +/', '"', $CSV_text);
+	// We'll be outputting a TXT file
+	header('Content-type: application/octet-stream');
 
-		// It will be called LIST_101_20090209-121212.txt
-		header("Content-Disposition: attachment; filename=\"$CSVfilename\"");
-		header('Expires: 0');
-		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-		header('Pragma: public');
-		ob_clean();
-		flush();
+	// It will be called LIST_101_20090209-121212.txt
+	header("Content-Disposition: attachment; filename=\"$CSVfilename\"");
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Pragma: public');
+	ob_clean();
+	flush();
 
-		echo "$CSV_text";
+	echo "$CSV_text";
 
-		exit;
-	} else {
-		header ("Content-type: text/html; charset=utf-8");
-		echo $HEADER;
-		require("admin_header.php");
-		echo $MAIN;
-		exit; 
+	exit;
+	}
+else
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo $HEADER;
+	require("admin_header.php");
+	echo $MAIN;
+	exit; 
 	}
 
 	

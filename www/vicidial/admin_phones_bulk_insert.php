@@ -1,16 +1,17 @@
 <?php
 # admin_phones_bulk_insert.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen will insert phones into your multi-server system with aliases
 #
 # changes:
 # 101230-0501 - First Build
+# 110712-0932 - Added extension suffix exception for non-SIP/IAX phones, added HELP
 #
 
-$admin_version = '2.4-1';
-$build = '101230-0501';
+$admin_version = '2.4-2';
+$build = '110712-0932';
 
 
 require("dbconnect.php");
@@ -147,6 +148,69 @@ else
 <title>ADMINISTRATION: Phones Bulk Insert
 <?php 
 
+################################################################################
+##### BEGIN help section
+if ($action == "HELP")
+	{
+	?>
+	</title>
+	</head>
+	<body bgcolor=white>
+	<center>
+	<TABLE WIDTH=98% BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=4><TR><TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>
+	<BR>
+	<B>Bulk Phones Insert Help</B>
+	<BR><BR>
+
+	<A NAME="servers">
+	<BR>
+	 <B>Servers -</B> This is a list of the server IP addresses of existing servers in the system that you want the phone entries to be populated across. These must be valid IP addresses, they must be active in the system and you must put one per line in this text area input box.
+	<BR><BR>
+
+	<A NAME="phones">
+	<BR>
+	 <B>Phones -</B> This is a list of the phone extensions that you want to be created on all of the servers listed above. The phone extensions should be letters and numbers only, with no special characters and you must put one per line in this text area box.
+	<BR><BR>
+
+	<A NAME="registration_password">
+	<BR>
+	 <B>Registration Password -</B> This is the registration password that will be used for all of the phones that are created. For SIP and IAX2 protocol you should use a complex password for secutiry reasons.
+	<BR><BR>
+
+	<A NAME="login_password">
+	<BR>
+	 <B>Login Password -</B> This is the agent screen login password that will be used for all of the phones that are created.
+	<BR><BR>
+
+	<A NAME="create_alias">
+	<BR>
+	 <B>Create Alias Entries -</B> Setting this option to YES will create a phones alias entry for each of the extensions listed above that will tie all of the same extension entries on each server together allowing phone login load balancing to work in the agent interface.
+	<BR><BR>
+
+	<A NAME="alias_suffix">
+	<BR>
+	 <B>Alias Suffix -</B> This is the suffix that will be added to the extension to form the phone alias id. For example, if the extension is cc100 and the alias suffix is x, then the phone alias id used for that would be cc100x.
+	<BR><BR>
+
+	<A NAME="protocol">
+	<BR>
+	 <B>Client Protocol -</B> This is the phone protocol that will be used for all phones created when submitted. SIP and IAX2 are VOIP protocols that will create conf file entries to allow those phoens to register on the servers.
+	<BR><BR>
+
+	<A NAME="gmt">
+	<BR>
+	 <B>Local GMT -</B> This is the time zone that all of the phones will be created with.
+	<BR><BR>
+
+	</TD></TR></TABLE>
+	</BODY>
+	</HTML>
+	<?php
+	exit;
+	}
+### END help section
+
+
 
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'999998';
@@ -181,6 +245,8 @@ if ($DB > 0)
 echo "$DB,$action,$servers,$phones,$conf_secret,$pass,$alias_option,$protocol,$logal_gmt,$alias_suffix\n<BR>";
 }
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('$PHP_SELF?action=HELP";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 
 
@@ -195,17 +261,17 @@ if ($action == "BLANK")
 	echo "<input type=hidden name=DB value=\"$DB\">\n";
 	echo "<input type=hidden name=action value=ADD_PHONES_SUBMIT>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Servers: <BR><BR> (one server_ip per line only)<BR></td><td align=left><TEXTAREA name=servers ROWS=10 COLS=20></TEXTAREA></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Phones: <BR><BR> (one extension per line only)<BR></td><td align=left><TEXTAREA name=phones ROWS=20 COLS=20></TEXTAREA></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Registration Password: </td><td align=left><input type=text name=conf_secret size=20 maxlength=20></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Login Password: </td><td align=left><input type=text name=pass size=20 maxlength=20></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Servers: <BR><BR> (one server_ip per line only)<BR></td><td align=left><TEXTAREA name=servers ROWS=10 COLS=20></TEXTAREA> $NWB#servers$NWE </td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Phones: <BR><BR> (one extension per line only)<BR></td><td align=left><TEXTAREA name=phones ROWS=20 COLS=20></TEXTAREA> $NWB#phones$NWE </td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Registration Password: </td><td align=left><input type=text name=conf_secret size=20 maxlength=20> $NWB#registration_password$NWE </td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Login Password: </td><td align=left><input type=text name=pass size=20 maxlength=20> $NWB#login_password$NWE </td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Create Alias Entries: </td><td align=left><select size=1 name=alias_option>\n";
 	echo "<option selected>YES</option>";
 	echo "<option>NO</option>";
-	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Alias Suffix: </td><td align=left><input type=text name=alias_suffix size=2 maxlength=4></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Client Protocol: </td><td align=left><select size=1 name=protocol><option>SIP</option><option>Zap</option><option>IAX2</option><option>EXTERNAL</option></select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Local GMT: </td><td align=left><select size=1 name=local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option selected>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option></select> (Do NOT Adjust for DST)</td></tr>\n";
+	echo "</select> $NWB#create_alias$NWE </td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Alias Suffix: </td><td align=left><input type=text name=alias_suffix size=2 maxlength=4> $NWB#alias_suffix$NWE </td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Client Protocol: </td><td align=left><select size=1 name=protocol><option>SIP</option><option>Zap</option><option>IAX2</option><option>EXTERNAL</option></select> $NWB#protocol$NWE </td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Local GMT: </td><td align=left><select size=1 name=local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option selected>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option></select> (Do NOT Adjust for DST) $NWB#gmt$NWE </td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 	echo "</TABLE></center>\n";
 	echo "</TD></TR></TABLE>\n";
@@ -316,7 +382,11 @@ if ($action == "ADD_PHONES_SUBMIT")
 							if ($s >= 49) {$login_suffix = 'ax';}
 
 							$extension =		$PN[$p];
-							$dialplan_number =	"$dialplan_prefix$PN[$p]";	$dialplan_number = preg_replace('/\D/', '', $dialplan_number);
+							if ( ($protocol == 'SIP') or ($protocol == 'IAX2') )
+								{$dialplan_number =	"$dialplan_prefix$PN[$p]";}
+							else
+								{$dialplan_number =	"$PN[$p]";}
+							$dialplan_number = preg_replace('/\D/', '', $dialplan_number);
 							$voicemail_id =		$PN[$p];	$voicemail_id = preg_replace('/\D/', '', $voicemail_id);
 							$phone_server_ip =	$SN[$s];
 							$login =			"$PN[$p]$login_suffix";

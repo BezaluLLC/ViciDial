@@ -2382,6 +2382,20 @@ label_email VARCHAR(40) default '',
 label_comments VARCHAR(40) default ''
 );
 
+CREATE TABLE vicidial_agent_skip_log (
+user_skip_log_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+user VARCHAR(20),
+event_date DATETIME,
+lead_id INT(9) UNSIGNED,
+campaign_id VARCHAR(20) default '',
+previous_status VARCHAR(6) default '',
+previous_called_count SMALLINT(5) UNSIGNED default '0',
+index (user),
+index (event_date),
+index (campaign_id)
+);
+
+
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
 ALTER TABLE live_channels ENGINE=MEMORY;
@@ -2535,7 +2549,7 @@ ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_outbound_ivr_log_archive LIKE vicidial_outbound_ivr_log;
 
-UPDATE system_settings SET db_schema_version='1286',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1287',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

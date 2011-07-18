@@ -422,68 +422,304 @@ foreach(@FILES)
 			open(Pout, ">$dir2/$FILEname$pipe")
 					|| die "Can't open $dir2/$FILEname$pipe: $!\n";
 
-		$a=0;	### each line of input file counter ###
-		$b=0;	### new records counter ###
-		$c=0;	### no-phone counter ###
-		$d=0;	###
-		$e=0;	###
-		$f=0;	###
-		$g=0;	###
+			$a=0;	### each line of input file counter ###
+			$b=0;	### new records counter ###
+			$c=0;	### no-phone counter ###
+			$d=0;	###
+			$e=0;	###
+			$f=0;	###
+			$g=0;	###
 
-		$rank='';
-		$owner='';
+			$rank='';
+			$owner='';
 
-		#if ($DB)
-		while (<infile>)
-		{
-		@m=@MT;
-	#		print "$a| $number\n";
-			$number = $_;
-			$raw_number = $number;
-			chomp($number);
-	#		$number =~ s/,/\|/gi;
-			$number =~ s/\t/\|/gi;
-			$number =~ s/\'|\t|\r|\n|\l//gi;
-			$number =~ s/\'|\t|\r|\n|\l//gi;
-			$number =~ s/\",,,,,,,\"/\|\|\|\|\|\|\|/gi;
-			$number =~ s/\",,,,,,\"/\|\|\|\|\|\|/gi;
-			$number =~ s/\",,,,,\"/\|\|\|\|\|/gi;
-			$number =~ s/\",,,,\"/\|\|\|\|/gi;
-			$number =~ s/\",,,\"/\|\|\|/gi;
-			$number =~ s/\",,\"/\|\|/gi;
-			$number =~ s/\",\"/\|/gi;
-			$number =~ s/\"//gi;
-		@m = split(/\|/, $number);
+			#if ($DB)
+			while (<infile>)
+			{
+			@m=@MT;
+		#		print "$a| $number\n";
+				$number = $_;
+				$raw_number = $number;
+				chomp($number);
+		#		$number =~ s/,/\|/gi;
+				$number =~ s/\t/\|/gi;
+				$number =~ s/\'|\t|\r|\n|\l//gi;
+				$number =~ s/\'|\t|\r|\n|\l//gi;
+				$number =~ s/\",,,,,,,\"/\|\|\|\|\|\|\|/gi;
+				$number =~ s/\",,,,,,\"/\|\|\|\|\|\|/gi;
+				$number =~ s/\",,,,,\"/\|\|\|\|\|/gi;
+				$number =~ s/\",,,,\"/\|\|\|\|/gi;
+				$number =~ s/\",,,\"/\|\|\|/gi;
+				$number =~ s/\",,\"/\|\|/gi;
+				$number =~ s/\",\"/\|/gi;
+				$number =~ s/\"//gi;
+			@m = split(/\|/, $number);
 
-		$format_set=0;
+			$format_set=0;
 
 
-		# This is the format for the ncacsv39 lead files <multi-lead insert format>
-		#5200556,"00052555570016383767","SERVERS JR,JIM M","2915551802",1121.31,"627555120","77380","HSBC","SCRIPT4","6205554433","No Message","2915551802","16383767","","","","","","","","","","","","","","","6001","DLR3","549","","","","","","","","",""
+			##### BEGIN ncacsv31 format #####
+			# This is the format for the ncacsv39x lead files <multi-lead insert format>
+			#5200556,"00052555570016383767","SERVERS JR,JIM M","2915551802",1121.31,"627555120","77380","HSBC","SCRIPT4","6205554433","No Message","2915551802","16383767","","","","","","","","","","","","","","","6001","DLR3","549","","","","","","","","",""
 
-		# field mappings:
-		#	$vendor_lead_code =		1  - acctid
-		#	$source_id =			2  - uniqueid
-		#	$first_name =			3  - first_name
-		#	$middle_initial =		 <blank>
-		#	$last_name =			3  - last_name
-		#	$province =				4  - acct main phone
-		#	$address2 =				5  - balance
-		#	$alt_phone =			6  - ssn
-		#	$postal_code =			7  - zip
-		#	$address1 =				8  - descrip
-		#	$address3 =				9  - script
-		#	$security_phrase =		10 - cid
-		#	$email =				37 - collectorid
-		#	$title =				29 - folderid
-		#	$state =				 <blank>
-		#	$country =				 <blank>
-		#	$gender =				 <blank>
-		#	$date_of_birth =		 <blank>
-		#	$comments =				 <blank>
-		#	$rank =					 <assigned by phone number type>
-		#	$owner =				 <assigned by phone number type>
-		#	$city =					 <assigned by phone number id>
+			# field mappings:
+			#	$vendor_lead_code =		1  - acctid
+			#	$source_id =			2  - uniqueid
+			#	$first_name =			3  - first_name
+			#	$middle_initial =		 <blank>
+			#	$last_name =			3  - last_name
+			#	$province =				 <blank>
+			#	$address2 =				29 - collectorid
+			#	$address3 =				8 - account description
+			#	$alt_phone =			5 - balance
+			#	$postal_code =			7  - zip
+			#	$address1 =				 <blank>
+			#	$city =					9  - script
+			#	$security_phrase =		 <assigned by state lookup>
+			#	$email =				6  - ssn
+			#	$title =				27 - folderid
+			#	$state =				 <assigned by phone number areacode lookup>
+			#	$country =				 <blank>
+			#	$gender =				 <blank>
+			#	$date_of_birth =		 <blank>
+			#	$comments =				 <blank>
+			#	$rank =					 <assigned by phone number type>
+			#	$owner =				 <assigned by phone number type>
+
+			if ( ($format =~ /ncacsv31/) && ($format_set < 1) )
+				{
+				$number = $raw_number;
+				chomp($number);
+				$number =~ s/\t/\|/gi;
+				$number =~ s/\'|\t|\r|\n|\l//gi;
+				$number =~ s/\'|\t|\r|\n|\l//gi;
+				$number =~ s/\",,,,,,,\"/\|\|\|\|\|\|\|/gi;
+				$number =~ s/\",,,,,,\"/\|\|\|\|\|\|/gi;
+				$number =~ s/\",,,,,\"/\|\|\|\|\|/gi;
+				$number =~ s/\",,,,\"/\|\|\|\|/gi;
+				$number =~ s/\",,,\"/\|\|\|/gi;
+				$number =~ s/\",,\"/\|\|/gi;
+				$number =~ s/\",\"/\|/gi;
+				$number =~ s/,\"/\|/gi;
+				$number =~ s/\",/\|/gi;
+				$number =~ s/,/\|/gi;
+				$number =~ s/\"//gi;
+				@m = split(/\|/, $number);
+
+				if ($DBX) {print "ncacsv31($a) -   $number\n";}
+
+				$vendor_lead_code =		$m[0];		chomp($vendor_lead_code);	# acctid
+				$source_id =			$m[1];		chomp($source_id);	# uniqueid
+				$list_id =				'939';
+				$phone_code =			'1';
+				$full_name =			$m[2];		@name = split(/,/, $full_name);
+				$first_name =			$name[1];		chomp($first_name);
+				$middle_initial =		'';
+				$last_name =			$name[0];		chomp($last_name);
+				$province =				$m[3];	# acct main phone
+				$address2 =				$m[4];	# balance
+				$alt_phone =			$m[5];		chomp($alt_phone);	$alt_phone =~ s/\D//gi;	# ssn
+				$postal_code =			$m[6];		chomp($postal_code);	$postal_code =~ s/\D//gi;	# zip
+				$address1 =				$m[7];	# descrip
+				$address3 =				$m[8];	# script
+				$security_phrase =		$m[9];		chomp($security_phrase);	$security_phrase =~ s/\D//gi;	# cid
+				$email =				$m[36];	# collectorid
+				$title =				$m[28];	# folderid
+				$phone_number =			$m[3];
+					$USarea = 			substr($phone_number, 0, 3);
+				$state =				'';
+				$country =				'';
+				$gender =				'';
+				$date_of_birth =		'';
+				$comments =				'';
+				$called_count =			'0';
+				$status =				'NEW';
+				$insert_date =			$pulldate0;
+				$rank =					'';
+				$owner =				'';
+				$entry_date =			'';
+				$multi_alt_phones =		'';
+				$phone_found=0;
+
+
+				if (length($m[11]) > 9) 
+					{
+					$phone_number =			$m[11];
+					$rank =					'1';
+					$owner =				'home';
+						&cid_state_areacode;		# lookup areacode-state-based CID
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+				if (length($m[12]) > 9) 
+					{
+					$phone_number =			$m[12];
+					$rank =					'2';
+					$owner =				'home2';
+						&cid_state_areacode;		# lookup areacode-state-based CID
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+				if (length($m[13]) > 9) 
+					{
+					$phone_number =			$m[13];
+					$rank =					'3';
+					$owner =				'work';
+						&cid_state_areacode;		# lookup areacode-state-based CID
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+				if (length($m[14]) > 9) 
+					{
+					$phone_number =			$m[14];
+					$rank =					'4';
+					$owner =				'work2';
+						&cid_state_areacode;		# lookup areacode-state-based CID
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+				if (length($m[15]) > 9) 
+					{
+					$phone_number =			$m[15];
+					$rank =					'5';
+					$owner =				'cell';
+						&cid_state_areacode;		# lookup areacode-state-based CID
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+				if (length($m[16]) > 9) 
+					{
+					$phone_number =			$m[16];
+					$rank =					'6';
+					$owner =				'cell2';
+						&cid_state_areacode;		# lookup areacode-state-based CID
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+				if (length($m[17]) > 9) 
+					{
+					$phone_number =			$m[17];
+					$rank =					'7';
+					$owner =				'alt1';
+						&cid_state_areacode;		# lookup areacode-state-based CID
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+				if (length($m[18]) > 9) 
+					{
+					$phone_number =			$m[18];
+					$rank =					'8';
+					$owner =				'alt2';
+						&cid_state_areacode;		# lookup areacode-state-based CID
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+				if (length($m[19]) > 9) 
+					{
+					$phone_number =			$m[19];
+					$rank =					'9';
+					$owner =				'alt3';
+						&cid_state_areacode;		# lookup areacode-state-based CID
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+				if (length($m[20]) > 9) 
+					{
+					$phone_number =			$m[20];
+					$rank =					'10';
+					$owner =				'trigger1';
+						&cid_state_areacode;		# lookup areacode-state-based CID
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+				if (length($m[21]) > 9) 
+					{
+					$phone_number =			$m[21];
+					$rank =					'11';
+					$owner =				'trigger2';
+						&cid_state_areacode;		# lookup areacode-state-based CID
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+				if (length($m[22]) > 9) 
+					{
+					$phone_number =			$m[22];
+					$rank =					'12';
+					$owner =				'skiphome';
+						&cid_state_areacode;		# lookup areacode-state-based CID
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+				if (length($m[23]) > 9) 
+					{
+					$phone_number =			$m[23];
+					$rank =					'13';
+					$owner =				'skipwork';
+						&cid_state_areacode;		# lookup areacode-state-based CID
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+				if (length($m[24]) > 9) 
+					{
+					$phone_number =			$m[24];
+					$rank =					'14';
+					$owner =				'skipcell';
+						&cid_state_areacode;		# lookup areacode-state-based CID
+					print Pout "$vendor_lead_code|$source_id|$list_id|$phone_code|$phone_number|$title|$first_name|$middle|$last_name|$address1|$address2|$address3|$city|$state|$province|$postal_code|$country|$gender|$date_of_birth|$alt_phone|$email|$security_phrase|$owner|$called_count|$status|$entry_date|$rank|$owner|\n";
+					$b++;   $phone_found++;
+					if ($DBX) {print "     $b|$phone_found -   $a|$phone_number|$city|$rank|$owner|$vendor_lead_code|$source_id\n";}
+					}
+
+				if ($phone_found < 1) 
+					{
+					if ($DB) {print "No-Phone entry: $a|$vendor_lead_code|$source_id\n";}
+					$c++;
+					}
+				$format_set++;
+				}
+			##### END ncacsv31 format #####
+
+
+			##### BEGIN ncacsv39 format #####
+			# This is the format for the ncacsv39 lead files <multi-lead insert format>
+			#5200556,"00052555570016383767","SERVERS JR,JIM M","2915551802",1121.31,"627555120","77380","HSBC","SCRIPT4","6205554433","No Message","2915551802","16383767","","","","","","","","","","","","","","","6001","DLR3","549","","","","","","","","",""
+
+			# field mappings:
+			#	$vendor_lead_code =		1  - acctid
+			#	$source_id =			2  - uniqueid
+			#	$first_name =			3  - first_name
+			#	$middle_initial =		 <blank>
+			#	$last_name =			3  - last_name
+			#	$province =				4  - acct main phone
+			#	$address2 =				5  - balance
+			#	$alt_phone =			6  - ssn
+			#	$postal_code =			7  - zip
+			#	$address1 =				8  - descrip
+			#	$address3 =				9  - script
+			#	$security_phrase =		10 - cid
+			#	$email =				37 - collectorid
+			#	$title =				29 - folderid
+			#	$state =				 <blank>
+			#	$country =				 <blank>
+			#	$gender =				 <blank>
+			#	$date_of_birth =		 <blank>
+			#	$comments =				 <blank>
+			#	$rank =					 <assigned by phone number type>
+			#	$owner =				 <assigned by phone number type>
+			#	$city =					 <assigned by phone number id>
 
 			if ( ($format =~ /ncacsv39/) && ($format_set < 1) )
 				{
@@ -669,35 +905,37 @@ foreach(@FILES)
 					}
 				$format_set++;
 				}
+			##### END ncacsv39 format #####
 
 
-		# This is the format for the dccsv52 lead files <multi-lead insert format>
-		#"BFRAME","RECORD_TYPE","LAST_NAME","FIRST_NAME","ADDR1","ADDR2","CITY","STATE","ZIP","ZIP4","ADDR_STATUS","DATE_PLACED","DATE_ADDED","DOB","LAST_LETTER","LAST_LETTER_DATE","LAST_WORKED","NEXT_ACTION_DATE","CAPTURE_CODE","CUR_CATEGORY","TIMES_DIALED","LAST_DIALED","TOTAL_PAID","DATE_LAST_PAID","NMBR_CALLS","NMBR_CONTACTS","NMBR_TIMES_WRKD","NMBR_LETTERS","STATUS_CODE","STATUS_DATE","SCORE","TIMES_TO_SERVICER","1ST-PMT-DEFAULT","TIME_ZONE","ORIG_CREDITOR","BALANCE","HOME_PHONE","WORK_PHONE","OTHER_PHONE","ACCT_OTHTEL2","ACCT_OTHTEL3","ACCT_OTHTEL4","ACCT_OTHTEL5","REF-NAME","REF-AD1","REF-AD2","REF-CITY","REF-ST","REF-POSTAL","REF-TEL1","REF-TEL2","SSN"
-		#"II ACCT/1103566666  ","P","SMITH           ","        SAMMY","7838 W 109TH ST APT 12        ","                              ","OVERLAND PARK       ","KS","66212","0000","G","20091110","20091110","19661216","NOLTTR","00000000","20091214","20091219","1000","03","000","00000000","000000000.00 ","00000000","0004","0003","0004","000","ACTIVE","20091110","0648","00"," ","C","HSBC                          ","000000692.09 ","9135551212","0000000000","0000000000","0000000000","0000000000","0000000000","0000000000","","","","","  ","          ","          ","          ","578888888"
+			##### BEGIN dccsv52 format #####
+			# This is the format for the dccsv52 lead files <multi-lead insert format>
+			#"BFRAME","RECORD_TYPE","LAST_NAME","FIRST_NAME","ADDR1","ADDR2","CITY","STATE","ZIP","ZIP4","ADDR_STATUS","DATE_PLACED","DATE_ADDED","DOB","LAST_LETTER","LAST_LETTER_DATE","LAST_WORKED","NEXT_ACTION_DATE","CAPTURE_CODE","CUR_CATEGORY","TIMES_DIALED","LAST_DIALED","TOTAL_PAID","DATE_LAST_PAID","NMBR_CALLS","NMBR_CONTACTS","NMBR_TIMES_WRKD","NMBR_LETTERS","STATUS_CODE","STATUS_DATE","SCORE","TIMES_TO_SERVICER","1ST-PMT-DEFAULT","TIME_ZONE","ORIG_CREDITOR","BALANCE","HOME_PHONE","WORK_PHONE","OTHER_PHONE","ACCT_OTHTEL2","ACCT_OTHTEL3","ACCT_OTHTEL4","ACCT_OTHTEL5","REF-NAME","REF-AD1","REF-AD2","REF-CITY","REF-ST","REF-POSTAL","REF-TEL1","REF-TEL2","SSN"
+			#"II ACCT/1103566666  ","P","SMITH           ","        SAMMY","7838 W 109TH ST APT 12        ","                              ","OVERLAND PARK       ","KS","66212","0000","G","20091110","20091110","19661216","NOLTTR","00000000","20091214","20091219","1000","03","000","00000000","000000000.00 ","00000000","0004","0003","0004","000","ACTIVE","20091110","0648","00"," ","C","HSBC                          ","000000692.09 ","9135551212","0000000000","0000000000","0000000000","0000000000","0000000000","0000000000","","","","","  ","          ","          ","          ","578888888"
 
-		# field mappings:
-		#	$vendor_lead_code =		1  - BFRAME (number only)
-		#	$source_id =			1  - BFRAME
-		#	$first_name =			4  - FIRST_NAME
-		#	$middle_initial =		 <blank>
-		#	$last_name =			3  - LAST_NAME
-		#	$province =				36 - BALANCE
-		#	$address1 =				5  - ADDR1
-		#	$address2 =				6  - ADDR2
-		#	$city =					7  - CITY
-		#	$state =				8  - STATE
-		#	$postal_code =			9  - ZIP
-		#	$address3 =				35 - ORIG_CREDITOR
-		#	$date_of_birth =		14 - DOB
-		#	$alt_phone =			27&29  - NMBR_TIMES_WRKD & STATUS_CODE
-		#	$email =				52 - SSN
-		#	$title =				26 - NMBR_CONTACTS
-		#	$security_phrase =		 <assigned by state lookup>
-		#	$comments =				44 - REF-NAME
-		#	$country =				 <blank>
-		#	$gender =				 <blank>
-		#	$rank =					 <assigned by phone number type>
-		#	$owner =				 <assigned by phone number type>
+			# field mappings:
+			#	$vendor_lead_code =		1  - BFRAME (number only)
+			#	$source_id =			1  - BFRAME
+			#	$first_name =			4  - FIRST_NAME
+			#	$middle_initial =		 <blank>
+			#	$last_name =			3  - LAST_NAME
+			#	$province =				36 - BALANCE
+			#	$address1 =				5  - ADDR1
+			#	$address2 =				6  - ADDR2
+			#	$city =					7  - CITY
+			#	$state =				8  - STATE
+			#	$postal_code =			9  - ZIP
+			#	$address3 =				35 - ORIG_CREDITOR
+			#	$date_of_birth =		14 - DOB
+			#	$alt_phone =			27&29  - NMBR_TIMES_WRKD & STATUS_CODE
+			#	$email =				52 - SSN
+			#	$title =				26 - NMBR_CONTACTS
+			#	$security_phrase =		 <assigned by state lookup>
+			#	$comments =				44 - REF-NAME
+			#	$country =				 <blank>
+			#	$gender =				 <blank>
+			#	$rank =					 <assigned by phone number type>
+			#	$owner =				 <assigned by phone number type>
 
 			if ( ($format =~ /dccsv52/) && ($format_set < 1) )
 				{
@@ -876,6 +1114,7 @@ foreach(@FILES)
 					}
 				$format_set++;
 				}
+			##### END dccsv52 format #####
 
 
 		# This is the format for the standard lead files
@@ -1041,18 +1280,51 @@ exit;
 
 ##### SUBROUTINES #####
 
-sub cid_state {
-### look up the custom CID to use for this state
-$stmtA = "select cid from vicidial_custom_cid where state='$state';";
-$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-$sthArows=$sthA->rows;
-	if($DBX){print STDERR "\n$sthArows|$stmtA|\n";}
-if ($sthArows > 0)
+sub cid_state 
 	{
-	@aryA = $sthA->fetchrow_array;
-	$security_phrase = $aryA[0];
+	### look up the custom CID to use for this state
+	$stmtA = "select cid from vicidial_custom_cid where state='$state';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+		if($DBX){print STDERR "\n$sthArows|$stmtA|\n";}
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$security_phrase = $aryA[0];
+		}
+	$sthA->finish();
 	}
-$sthA->finish();
-}
+
+
+sub cid_state_areacode
+	{
+	### look up the custom CID to use for this areacode's state
+	$USarea = 	substr($phone_number, 0, 3);
+	$state='';
+
+	$stmtA = "select state from vicidial_phone_codes where areacode='$USarea' and country_code='1';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+		if($DBX){print STDERR "\n$sthArows|$stmtA|\n";}
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$state = $aryA[0];
+		}
+	$sthA->finish();
+
+	$stmtA = "select cid from vicidial_custom_cid where state='$state';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+		if($DBX){print STDERR "\n$sthArows|$stmtA|\n";}
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$security_phrase = $aryA[0];
+		}
+	$sthA->finish();
+	}
 

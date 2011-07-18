@@ -358,10 +358,11 @@
 # 110626-2234 - Added queuemetrics_pe_phone_append
 # 110707-1412 - Added last_inbound_call_time and finish compatibility
 # 110713-0048 - Allow for full hiding of the phone number field label
+# 110718-1159 - Added logging of skipped leads
 #
 
-$version = '2.4-335c';
-$build = '110713-0048';
+$version = '2.4-336c';
+$build = '110718-1159';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=73;
 $one_mysql_log=0;
@@ -6654,7 +6655,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				}
 			if (xmlhttp) 
 				{ 
-				manDiaLskip_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLskip&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&lead_id=" + document.vicidial_form.lead_id.value + "&stage=" + previous_dispo + "&called_count=" + previous_called_count;
+				manDiaLskip_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLskip&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&lead_id=" + document.vicidial_form.lead_id.value + "&stage=" + previous_dispo + "&called_count=" + previous_called_count + "&campaign=" + campaign;
 				xmlhttp.open('POST', 'vdc_db_query.php'); 
 				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 				xmlhttp.send(manDiaLskip_query); 
