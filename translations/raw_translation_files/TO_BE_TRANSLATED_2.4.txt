@@ -668,6 +668,7 @@ Client Protocol||
 This is the phone protocol that will be used for all phones created when submitted. SIP and IAX2 are VOIP protocols that will create conf file entries to allow those phoens to register on the servers||
 Local GMT||
 This is the time zone that all of the phones will be created with||
+HIDEBLOB is similar to HIDDEN except the data storage type on the database is a BLOB type, suitable for binary data or data that needs to be secured||
 
 
 lead_report_export.php

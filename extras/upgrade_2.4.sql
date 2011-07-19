@@ -890,3 +890,8 @@ index (campaign_id)
 );
 
 UPDATE system_settings SET db_schema_version='1287',db_schema_update_date=NOW() where db_schema_version < 1287;
+
+ALTER TABLE vicidial_lists_fields MODIFY field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY','HIDEBLOB') default 'TEXT';
+
+UPDATE system_settings SET db_schema_version='1288',db_schema_update_date=NOW() where db_schema_version < 1288;
+

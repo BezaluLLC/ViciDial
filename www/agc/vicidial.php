@@ -359,10 +359,11 @@
 # 110707-1412 - Added last_inbound_call_time and finish compatibility
 # 110713-0048 - Allow for full hiding of the phone number field label
 # 110718-1159 - Added logging of skipped leads
+# 110719-0854 - Removed debug output and small display alignment changes
 #
 
-$version = '2.4-336c';
-$build = '110718-1159';
+$version = '2.4-337c';
+$build = '110719-0854';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=73;
 $one_mysql_log=0;
@@ -2760,6 +2761,10 @@ $MASTERwidth=($BROWSER_WIDTH - 340);
 $MASTERheight=($BROWSER_HEIGHT - 200);
 if ($MASTERwidth < 430) {$MASTERwidth = '430';} 
 if ($MASTERheight < 300) {$MASTERheight = '300';} 
+if ($per_call_notes == 'ENABLED')
+	{
+	if ($MASTERheight < 340) {$MASTERheight = '340';} 
+	}
 if ($webphone_location == 'bar') {$MASTERwidth = ($MASTERwidth + $webphone_height);}
 
 $CAwidth =  ($MASTERwidth + 340);	# 770 - cover all (none-in-session, customer hunngup, etc...)
@@ -5664,7 +5669,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		else
 			{
 			hideDiv('NeWManuaLDiaLBox');
-			document.getElementById("debugbottomspan").innerHTML = "DEBUG OUTPUT" + document.vicidial_form.MDPhonENumbeR.value + "|" + active_group_alias;
+		//	document.getElementById("debugbottomspan").innerHTML = "DEBUG OUTPUT" + document.vicidial_form.MDPhonENumbeR.value + "|" + active_group_alias;
 
 			var sending_group_alias = 0;
 			var MDDiaLCodEform = document.vicidial_form.MDDiaLCodE.value;
@@ -10013,7 +10018,7 @@ else
 					}
 				CFN_tick++;
 				}
-			document.getElementById("debugbottomspan").innerHTML = CFN_debug;
+//			document.getElementById("debugbottomspan").innerHTML = CFN_debug;
 			}
 
 		if (webformnumber == '1')

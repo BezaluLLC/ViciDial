@@ -2265,7 +2265,7 @@ field_name VARCHAR(5000),
 field_description VARCHAR(100),
 field_rank SMALLINT(5),
 field_help VARCHAR(1000),
-field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY') default 'TEXT',
+field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY','HIDEBLOB') default 'TEXT',
 field_options VARCHAR(5000),
 field_size SMALLINT(5),
 field_max SMALLINT(5),
@@ -2549,7 +2549,7 @@ ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_outbound_ivr_log_archive LIKE vicidial_outbound_ivr_log;
 
-UPDATE system_settings SET db_schema_version='1287',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1288',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

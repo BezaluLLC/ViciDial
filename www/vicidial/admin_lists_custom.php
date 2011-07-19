@@ -17,10 +17,11 @@
 # 100916-1754 - Do not show help in example form if help is empty
 # 101228-2049 - Fixed missing PHP long tag
 # 110629-1438 - Fixed change from DISPLAY or SCRIPT to other field type error, added HIDDEN and READONLY field types
+# 110719-0910 - Added HIDEBLOB field type
 #
 
-$admin_version = '2.4-11';
-$build = '110629-1438';
+$admin_version = '2.4-12';
+$build = '110719-0910';
 
 
 require("dbconnect.php");
@@ -278,7 +279,7 @@ if ($action == "HELP")
 
 	<A NAME="vicidial_lists_fields-field_type">
 	<BR>
-	 <B>Field Type -</B> This option defines the type of field that will be displayed. TEXT is a standard single-line entry form, AREA is a multi-line text box, SELECT is a single-selection pull-down menu, MULTI is a multiple-select box, RADIO is a list of radio buttons where only one option can be selected, CHECKBOX is a list of checkboxes where multiple options can be selected, DATE is a year month day calendar popup where the agent can select the date and TIME is a time selection box. The default is TEXT. For the SELECT, MULTI, RADIO and CHECKBOX options you must define the option values below in the Field Options box. DISPLAY will display only and not allow for modification by the agent. SCRIPT will also display only, but you are able to use script variables just like in the Scripts feature. SCRIPT fields will also only display the content in the Options, and not the field name like the DISPLAY type does. HIDDEN will not show the agent the field, but will allow the field to have data imported into it and exported from it, as well as have it available to the script tab and web form address. READONLY will display the value of the data in the field, but will not allow the agent to alter the data.
+	 <B>Field Type -</B> This option defines the type of field that will be displayed. TEXT is a standard single-line entry form, AREA is a multi-line text box, SELECT is a single-selection pull-down menu, MULTI is a multiple-select box, RADIO is a list of radio buttons where only one option can be selected, CHECKBOX is a list of checkboxes where multiple options can be selected, DATE is a year month day calendar popup where the agent can select the date and TIME is a time selection box. The default is TEXT. For the SELECT, MULTI, RADIO and CHECKBOX options you must define the option values below in the Field Options box. DISPLAY will display only and not allow for modification by the agent. SCRIPT will also display only, but you are able to use script variables just like in the Scripts feature. SCRIPT fields will also only display the content in the Options, and not the field name like the DISPLAY type does. HIDDEN will not show the agent the field, but will allow the field to have data imported into it and exported from it, as well as have it available to the script tab and web form address. READONLY will display the value of the data in the field, but will not allow the agent to alter the data. HIDEBLOB is similar to HIDDEN except the data storage type on the database is a BLOB type, suitable for binary data or data that needs to be secured.
 	<BR><BR>
 
 	<A NAME="vicidial_lists_fields-field_options">
@@ -1081,6 +1082,11 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 			if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
 			$field_HTML .= "-- HIDDEN --\n";
 			}
+		if ($A_field_type[$o]=='HIDEBLOB')
+			{
+			if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
+			$field_HTML .= "-- HIDDEN --\n";
+			}
 		if ($A_field_type[$o]=='SCRIPT')
 			{
 			if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
@@ -1225,6 +1231,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<option>DISPLAY</option>\n";
 		echo "<option>SCRIPT</option>\n";
 		echo "<option>HIDDEN</option>\n";
+		echo "<option>HIDEBLOB</option>\n";
 		echo "<option>READONLY</option>\n";
 		echo "<option selected>$A_field_type[$o]</option>\n";
 		echo "</select>  $NWB#vicidial_lists_fields-field_type$NWE </td></tr>\n";
@@ -1290,6 +1297,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "<option>DISPLAY</option>\n";
 	echo "<option>SCRIPT</option>\n";
 	echo "<option>HIDDEN</option>\n";
+	echo "<option>HIDEBLOB</option>\n";
 	echo "<option>READONLY</option>\n";
 	echo "<option selected>TEXT</option>\n";
 	echo "</select>  $NWB#vicidial_lists_fields-field_type$NWE </td></tr>\n";
@@ -1550,6 +1558,11 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 		$field_sql .= "VARCHAR($field_max) ";
 		$field_cost = ($field_max + $field_cost);
 		}
+	if ($field_type=='HIDEBLOB')
+		{
+		$field_sql .= "BLOB ";
+		$field_cost = 15;
+		}
 	if ($field_type=='AREA') 
 		{
 		$field_sql .= "TEXT ";
@@ -1669,6 +1682,11 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 		{
 		$field_sql .= "VARCHAR($field_max) ";
 		$field_cost = ($field_max + $field_cost);
+		}
+	if ($field_type=='HIDEBLOB')
+		{
+		$field_sql .= "BLOB ";
+		$field_cost = 15;
 		}
 	if ($field_type=='AREA') 
 		{

@@ -646,6 +646,8 @@ OTHER CHANGES:
 
 146. Added manual dial agent skip lead logging to the user stats page
 
+147. Added HIDEBLOB field type for custom list fields
+
 
 
 

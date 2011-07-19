@@ -12,10 +12,11 @@
 # 100703-1124 - Added submit_button,admin_submit fields, which will log to admin log
 # 100712-2322 - Added code to log vicidial_list.entry_list_id field if data altered
 # 100916-1749 - Added non-lead variable parsing
+# 110719-0856 - Added HIDEBLOB type
 #
 
-$version = '2.4-4';
-$build = '100916-1749';
+$version = '2.4-5';
+$build = '110719-0856';
 
 require("dbconnect.php");
 require_once("functions.php");
@@ -306,7 +307,7 @@ if ($stage=='SUBMIT')
 
 			$A_field_value[$o] = $form_field_value;
 
-			if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') or ($A_field_type[$o]=='HIDDEN') or ($A_field_type[$o]=='READONLY') )
+			if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') or ($A_field_type[$o]=='HIDDEN') or ($A_field_type[$o]=='HIDEBLOB') or ($A_field_type[$o]=='READONLY') )
 				{
 				$A_field_value[$o]='----IGNORE----';
 				}
