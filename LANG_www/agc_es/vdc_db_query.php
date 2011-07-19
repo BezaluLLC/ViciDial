@@ -283,12 +283,15 @@
 # 110317-0222 - Logging bug fixes
 # 110413-1245 - Added ALT dialing from scheduled callback list
 # 110430-1925 - Added post_phone_time_diff_alert campaign feature
+# 110625-0814 - Added screen_labels and label hide functions
+# 110626-0127 - Added queuemetrics_pe_phone_append
+# 110718-1158 - Added logging of skipped leads
 #
 
-$version = '2.4-188';
-$build = '110430-1925';
+$version = '2.4-191';
+$build = '110718-1158';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=415;
+$mysql_log_count=419;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -485,6 +488,8 @@ if (isset($_GET["search"]))				{$search=$_GET["search"];}
 	elseif (isset($_POST["search"]))	{$search=$_POST["search"];}
 if (isset($_GET["sub_status"]))				{$sub_status=$_GET["sub_status"];}
 	elseif (isset($_POST["sub_status"]))	{$sub_status=$_POST["sub_status"];}
+if (isset($_GET["qm_extension"]))			{$qm_extension=$_GET["qm_extension"];}
+	elseif (isset($_POST["qm_extension"]))	{$qm_extension=$_POST["qm_extension"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -625,6 +630,8 @@ else
 	$pass = ereg_replace("'|\"|\\\\|;","",$pass);
 	}
 
+$session_name = ereg_replace("'|\"|\\\\|;","",$session_name);
+$server_ip = ereg_replace("'|\"|\\\\|;","",$server_ip);
 
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
@@ -939,7 +946,7 @@ if ($ACTION == 'regCLOSER')
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_addmember_enabled,queuemetrics_dispo_pause FROM system_settings;";
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,queuemetrics_pe_phone_append FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00349',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
@@ -956,6 +963,7 @@ if ($ACTION == 'regCLOSER')
 			$queuemetrics_log_id =				$row[5];
 			$queuemetrics_addmember_enabled =	$row[6];
 			$queuemetrics_dispo_pause =			$row[7];
+			$queuemetrics_pe_phone_append =		$row[8];
 			$i++;
 			}
 		##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -1006,7 +1014,10 @@ if ($ACTION == 'regCLOSER')
 					if ($cqpe_ct > 0)
 						{
 						$row=mysql_fetch_row($rslt);
-						$data4SQL = ",data4='$row[0]'";
+						$pe_append='';
+						if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+							{$pe_append = "-$qm_extension";}
+						$data4SQL = ",data4='$row[0]$pe_append'";
 						}
 
 					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='$in_groups[$k]',agent='Agent/$user',verb='ADDMEMBER2',data1='$qm_phone',serverid='$queuemetrics_log_id' $data4SQL;";
@@ -1983,7 +1994,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					if (eregi("UP TIMEZONE",$lead_order)){$order_stmt = "order by gmt_offset_now desc, $last_order";}
 					if (eregi("DOWN TIMEZONE",$lead_order)){$order_stmt = "order by gmt_offset_now, $last_order";}
 
-					$stmt="UPDATE vicidial_list SET status='QUEUE',user='$user' where called_since_last_reset='N' and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) $DLTsql $fSQL $adooSQL $order_stmt LIMIT 1;";
+					$stmt="UPDATE vicidial_list SET user='QUEUE$user' where called_since_last_reset='N' and user NOT LIKE \"QUEUE%\" and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) $DLTsql $fSQL $adooSQL $order_stmt LIMIT 1;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00242',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -1995,7 +2006,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 					if ($affected_rows > 0)
 						{
-						$stmt="SELECT lead_id,list_id,gmt_offset_now,state,entry_list_id FROM vicidial_list where status='QUEUE' and user='$user' order by modify_date desc LIMIT 1;";
+						$stmt="SELECT lead_id,list_id,gmt_offset_now,state,entry_list_id FROM vicidial_list where user='QUEUE$user' order by modify_date desc LIMIT 1;";
 						$rslt=mysql_query($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00243',$user,$server_ip,$session_name,$one_mysql_log);}
 						if ($DB) {echo "$stmt\n";}
@@ -2178,7 +2189,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				# generate callerID for unique identifier in xfer_log file
 				$PADlead_id = sprintf("%010s", $lead_id);
 					while (strlen($PADlead_id) > 10) {$PADlead_id = substr("$PADlead_id", 1);}
-				# Create unique calleridname to track the call: MmmddhhmmssLLLLLLLLL
+				# Create unique calleridname to track the call: MmddhhmmssLLLLLLLLLL
 					$MqueryCID = "M$CIDdate$PADlead_id";
 
 				#	DATETIME|campaign|lead_id|phone_number|user|type
@@ -2350,7 +2361,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$use_eac =	$row[0];
 					}
 
-				# Create unique calleridname to track the call: MmmddhhmmssLLLLLLLLL
+				# Create unique calleridname to track the call: MmddhhmmssLLLLLLLLLL
 					$MqueryCID = "M$CIDdate$PADlead_id";
 				$EAC='';
 				if ($use_eac > 0)
@@ -2453,7 +2464,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 				#############################################
 				##### START QUEUEMETRICS LOGGING LOOKUP #####
-				$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+				$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append FROM system_settings;";
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00037',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -2467,6 +2478,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$queuemetrics_login	=			$row[3];
 					$queuemetrics_pass =			$row[4];
 					$queuemetrics_log_id =			$row[5];
+					$queuemetrics_pe_phone_append = $row[6];
 					}
 				##### END QUEUEMETRICS LOGGING LOOKUP #####
 				###########################################
@@ -2481,7 +2493,10 @@ if ($ACTION == 'manDiaLnextCaLL')
 					if ($cqpe_ct > 0)
 						{
 						$row=mysql_fetch_row($rslt);
-						$data4SQL = ",data4='$row[0]'";
+						$pe_append='';
+						if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+							{$pe_append = "-$qm_extension";}
+						$data4SQL = ",data4='$row[0]$pe_append'";
 						}
 
 					$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
@@ -2768,12 +2783,17 @@ if ($ACTION == 'manDiaLskip')
 	else
 		{
 		$called_count = ($called_count - 1);
-		### flag the lead as called and change it's status to INCALL
+		### set the lead back to previous status and called_count
 		$stmt = "UPDATE vicidial_list set status='$stage', called_count='$called_count',user='$user' where lead_id='$lead_id';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00042',$user,$server_ip,$session_name,$one_mysql_log);}
 
+		### log the skip event
+		$stmt = "INSERT INTO vicidial_agent_skip_log set campaign_id='$campaign', previous_status='$stage', previous_called_count='$called_count',user='$user', lead_id='$lead_id', event_date=NOW();";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00419',$user,$server_ip,$session_name,$one_mysql_log);}
 
 		echo "LEAD REVERTED\n";
 		}
@@ -2896,7 +2916,7 @@ if ($ACTION == 'manDiaLonly')
 		$PADlead_id = sprintf("%010s", $lead_id);
 			while (strlen($PADlead_id) > 10) {$PADlead_id = substr("$PADlead_id", 1);}
 
-		# Create unique calleridname to track the call: MmmddhhmmssLLLLLLLLL
+		# Create unique calleridname to track the call: MmddhhmmssLLLLLLLLLL
 			$MqueryCID = "M$CIDdate$PADlead_id";
 		$EAC='';
 		if ($use_eac > 0)
@@ -3052,7 +3072,7 @@ if ($ACTION == 'manDiaLonly')
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00048',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -3066,6 +3086,7 @@ if ($ACTION == 'manDiaLonly')
 			$queuemetrics_login	=			$row[3];
 			$queuemetrics_pass =			$row[4];
 			$queuemetrics_log_id =			$row[5];
+			$queuemetrics_pe_phone_append = $row[6];
 			}
 		##### END QUEUEMETRICS LOGGING LOOKUP #####
 		###########################################
@@ -3080,7 +3101,10 @@ if ($ACTION == 'manDiaLonly')
 			if ($cqpe_ct > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$data4SQL = ",data4='$row[0]'";
+				$pe_append='';
+				if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+					{$pe_append = "-$qm_extension";}
+				$data4SQL = ",data4='$row[0]$pe_append'";
 				}
 
 			$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
@@ -3480,7 +3504,7 @@ if ($stage == "end")
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_dispo_pause FROM system_settings;";
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_dispo_pause,queuemetrics_pe_phone_append FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00063',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -3496,6 +3520,7 @@ if ($stage == "end")
 			$queuemetrics_pass =			$row[4];
 			$queuemetrics_log_id =			$row[5];
 			$queuemetrics_dispo_pause =		$row[6];
+			$queuemetrics_pe_phone_append = $row[7];
 
 			if ($enable_queuemetrics_logging > 0)
 				{
@@ -3868,7 +3893,10 @@ if ($stage == "end")
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00081',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 
-			$stmt = "UPDATE vicidial_live_agents set status='PAUSED',uniqueid=0,callerid='',channel='',call_server_ip='',last_call_finish='$NOW_TIME',comments='',last_state_change='$NOW_TIME' where user='$user' and server_ip='$server_ip';";
+			$licf_SQL = '';
+			if ($VLA_inOUT == 'INBOUND')
+				{$licf_SQL = ",last_inbound_call_finish='$NOW_TIME'";}
+			$stmt = "UPDATE vicidial_live_agents set status='PAUSED',uniqueid=0,callerid='',channel='',call_server_ip='',last_call_finish='$NOW_TIME',comments='',last_state_change='$NOW_TIME' $licf_SQL where user='$user' and server_ip='$server_ip';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00082',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3896,7 +3924,10 @@ if ($stage == "end")
 					if ($cqpe_ct > 0)
 						{
 						$row=mysql_fetch_row($rslt);
-						$data4SQL = ",data4='$row[0]'";
+						$pe_append='';
+						if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+							{$pe_append = "-$qm_extension";}
+						$data4SQL = ",data4='$row[0]$pe_append'";
 						}
 
 					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='PAUSEALL',serverid='$queuemetrics_log_id' $data4SQL;";
@@ -3946,7 +3977,10 @@ if ($stage == "end")
 				if ($cqpe_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
-					$data4SQL = ",data4='$row[0]'";
+					$pe_append='';
+					if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+						{$pe_append = "-$qm_extension";}
+					$data4SQL = ",data4='$row[0]$pe_append'";
 					}
 
 				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$MDnextCID',queue='$VDcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$length_in_sec',data3='$CLqueue_position',serverid='$queuemetrics_log_id' $data4SQL;";
@@ -4170,7 +4204,10 @@ if ($stage == "end")
 						if ($cqpe_ct > 0)
 							{
 							$row=mysql_fetch_row($rslt);
-							$data4SQL = ",data4='$row[0]'";
+							$pe_append='';
+							if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+								{$pe_append = "-$qm_extension";}
+							$data4SQL = ",data4='$row[0]$pe_append'";
 							}
 
 						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$MDnextCID',queue='$VDcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$length_in_sec',data3='$VDqueue_position',serverid='$queuemetrics_log_id' $data4SQL;";
@@ -5024,7 +5061,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 						}
 
 					### update the comments in vicidial_live_agents record
-					$stmt = "UPDATE vicidial_live_agents set comments='INBOUND' where user='$user' and server_ip='$server_ip';";
+					$stmt = "UPDATE vicidial_live_agents set comments='INBOUND',last_inbound_call_time='$NOW_TIME' where user='$user' and server_ip='$server_ip';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00120',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -5715,7 +5752,7 @@ if ($ACTION == 'userLOGout')
 			{
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
-			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_dispo_pause FROM system_settings;";
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,queuemetrics_pe_phone_append FROM system_settings;";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00138',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -5733,6 +5770,7 @@ if ($ACTION == 'userLOGout')
 				$queuemetrics_loginout =			$row[7];
 				$queuemetrics_addmember_enabled =	$row[8];
 				$queuemetrics_dispo_pause =			$row[9];
+				$queuemetrics_pe_phone_append =		$row[10];
 				}
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
 			###########################################
@@ -5781,7 +5819,10 @@ if ($ACTION == 'userLOGout')
 				if ($cqpe_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
-					$data4SQL = ",data4='$row[0]'";
+					$pe_append='';
+					if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+						{$pe_append = "-$qm_extension";}
+					$data4SQL = ",data4='$row[0]$pe_append'";
 					}
 
 				$time_logged_in = ($StarTtime - $logintime);
@@ -6770,7 +6811,7 @@ if ($ACTION == 'updateDISPO')
 
 	#############################################
 	##### START QUEUEMETRICS LOGGING LOOKUP #####
-	$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_callstatus,queuemetrics_dispo_pause FROM system_settings;";
+	$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_callstatus,queuemetrics_dispo_pause,queuemetrics_pe_phone_append FROM system_settings;";
 	$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00159',$user,$server_ip,$session_name,$one_mysql_log);}
 	if ($DB) {echo "$stmt\n";}
@@ -6786,6 +6827,7 @@ if ($ACTION == 'updateDISPO')
 		$queuemetrics_log_id =			$row[5];
 		$queuemetrics_callstatus =		$row[6];
 		$queuemetrics_dispo_pause =		$row[7];
+		$queuemetrics_pe_phone_append = $row[8];
 		}
 	##### END QUEUEMETRICS LOGGING LOOKUP #####
 	###########################################
@@ -7455,7 +7497,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 			{
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
-			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append FROM system_settings;";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00167',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -7470,6 +7512,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 				$queuemetrics_login	=			$row[3];
 				$queuemetrics_pass =			$row[4];
 				$queuemetrics_log_id =			$row[5];
+				$queuemetrics_pe_phone_append =	$row[6];
 				$i++;
 				}
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -7502,7 +7545,10 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 				if ($cqpe_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
-					$data4SQL = ",data4='$row[0]'";
+					$pe_append='';
+					if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+						{$pe_append = "-$qm_extension";}
+					$data4SQL = ",data4='$row[0]$pe_append'";
 					}
 
 				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='$QMstatus',serverid='$queuemetrics_log_id' $data4SQL;";
@@ -7729,7 +7775,7 @@ if ($ACTION == 'PauseCodeSubmit')
 			{
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
-			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages FROM system_settings;";
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages,queuemetrics_pe_phone_append FROM system_settings;";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00176',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -7745,6 +7791,7 @@ if ($ACTION == 'PauseCodeSubmit')
 				$queuemetrics_pass =			$row[4];
 				$queuemetrics_log_id =			$row[5];
 				$allow_sipsak_messages =		$row[6];
+				$queuemetrics_pe_phone_append = $row[7];
 				$i++;
 				}
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -8709,6 +8756,17 @@ if ($ACTION == 'LEADINFOview')
 			}
 		### END Display callback information ###
 
+		### find the screen_label for this campaign
+		$stmt="select screen_labels from vicidial_campaigns where campaign_id='$campaign';";
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00416',$user,$server_ip,$session_name,$one_mysql_log);}
+		$csl_to_print = mysql_num_rows($rslt);
+		if ($format=='debug') {echo "|$csl_to_print|$stmt|";}
+		if ($csl_to_print > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$screen_labels = $row[0];
+			}
 
 		### BEGIN Display lead info and custom fields ###
 		### BEGIN find any custom field labels ###
@@ -8733,8 +8791,9 @@ if ($ACTION == 'LEADINFOview')
 		$label_email =				'Email';
 		$label_comments =			'Comentarios';
 
-		$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
+		$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,label_hide_field_logs from system_settings;";
 		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00417',$user,$server_ip,$session_name,$one_mysql_log);}
 		$row=mysql_fetch_row($rslt);
 		if (strlen($row[0])>0)	{$label_title =				$row[0];}
 		if (strlen($row[1])>0)	{$label_first_name =		$row[1];}
@@ -8755,8 +8814,44 @@ if ($ACTION == 'LEADINFOview')
 		if (strlen($row[16])>0) {$label_security_phrase =	$row[16];}
 		if (strlen($row[17])>0) {$label_email =				$row[17];}
 		if (strlen($row[18])>0) {$label_comments =			$row[18];}
-		### END find any custom field labels ###
+		$label_hide_field_logs =	$row[19];
 
+		if ( ($screen_labels != '--SYSTEM-SETTINGS--') and (strlen($screen_labels)>1) )
+			{
+			$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,label_hide_field_logs from vicidial_screen_labels where label_id='$screen_labels' and active='Y' limit 1;";
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00418',$user,$server_ip,$session_name,$one_mysql_log);}
+			$screenlabels_count = mysql_num_rows($rslt);
+			if ($screenlabels_count > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				if (strlen($row[0])>0)	{$label_title =				$row[0];}
+				if (strlen($row[1])>0)	{$label_first_name =		$row[1];}
+				if (strlen($row[2])>0)	{$label_middle_initial =	$row[2];}
+				if (strlen($row[3])>0)	{$label_last_name =			$row[3];}
+				if (strlen($row[4])>0)	{$label_address1 =			$row[4];}
+				if (strlen($row[5])>0)	{$label_address2 =			$row[5];}
+				if (strlen($row[6])>0)	{$label_address3 =			$row[6];}
+				if (strlen($row[7])>0)	{$label_city =				$row[7];}
+				if (strlen($row[8])>0)	{$label_state =				$row[8];}
+				if (strlen($row[9])>0)	{$label_province =			$row[9];}
+				if (strlen($row[10])>0) {$label_postal_code =		$row[10];}
+				if (strlen($row[11])>0) {$label_vendor_lead_code =	$row[11];}
+				if (strlen($row[12])>0) {$label_gender =			$row[12];}
+				if (strlen($row[13])>0) {$label_phone_number =		$row[13];}
+				if (strlen($row[14])>0) {$label_phone_code =		$row[14];}
+				if (strlen($row[15])>0) {$label_alt_phone =			$row[15];}
+				if (strlen($row[16])>0) {$label_security_phrase =	$row[16];}
+				if (strlen($row[17])>0) {$label_email =				$row[17];}
+				if (strlen($row[18])>0) {$label_comments =			$row[18];}
+				$label_hide_field_logs =	$row[19];
+				### END find any custom field labels ###
+				$hide_gender=0;
+				if ($label_gender == '---HIDE---')
+					{$hide_gender=1;}
+				}
+			}
+		### END find any custom field labels ###
 
 		$INFOout .= "<TABLE CELLPADDING=0 CELLSPACING=1 Border=0 WIDTH=500>";
 
@@ -8835,35 +8930,62 @@ if ($ACTION == 'LEADINFOview')
 			##### END check for postal_code and phone time zones if alert enabled
 
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Estado: &nbsp; </td><td ALIGN=left><font size=2>$row[0]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_vendor_lead_code: &nbsp; </td><td ALIGN=left><font size=2>$row[1]</td></tr>";
+			if ( ($label_vendor_lead_code!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_vendor_lead_code: &nbsp; </td><td ALIGN=left><font size=2>$row[1]</td></tr>";}
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>List ID: &nbsp; </td><td ALIGN=left><font size=2>$row[2]</td></tr>";
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Timezone: &nbsp; </td><td ALIGN=left><font size=2>$row[3]</td></tr>";
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Llamado Since Último Reset: &nbsp; </td><td ALIGN=left><font size=2>$row[4]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_code: &nbsp; </td><td ALIGN=left><font size=2>$row[5]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_number: &nbsp; </td><td ALIGN=left><font size=2>$row[6] - &nbsp; &nbsp; &nbsp; &nbsp; ";
-			if ($hide_dial_links < 1)
-				{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\">DIAL</a>";}
+			if ( ($label_phone_code!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_code: &nbsp; </td><td ALIGN=left><font size=2>$row[5]</td></tr>";}
+			if ( ($label_phone_number!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{
+				$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_number: &nbsp; </td><td ALIGN=left><font size=2>$row[6] - &nbsp; &nbsp; &nbsp; &nbsp; ";
+				if ($hide_dial_links < 1)
+					{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\">DIAL</a>";}
+				}
+			if ( ($label_phone_number=='---HIDE---') and ($hide_dial_links < 1) )
+				{
+				$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Dial Link: &nbsp; </td><td ALIGN=left><font size=2><a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\">DIAL</a>";
+				}
 			$INFOout .= "</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_title: &nbsp; </td><td ALIGN=left><font size=2>$row[7]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_first_name: &nbsp; </td><td ALIGN=left><font size=2>$row[8]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_middle_initial: &nbsp; </td><td ALIGN=left><font size=2>$row[9]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_last_name: &nbsp; </td><td ALIGN=left><font size=2>$row[10]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address1: &nbsp; </td><td ALIGN=left><font size=2>$row[11]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address2: &nbsp; </td><td ALIGN=left><font size=2>$row[12]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address3: &nbsp; </td><td ALIGN=left><font size=2>$row[13]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_city: &nbsp; </td><td ALIGN=left><font size=2>$row[14]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_state: &nbsp; </td><td ALIGN=left><font size=2>$row[15]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_province: &nbsp; </td><td ALIGN=left><font size=2>$row[16]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_postal_code: &nbsp; </td><td ALIGN=left><font size=2>$row[17]</td></tr>";
+			if ( ($label_title!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_title: &nbsp; </td><td ALIGN=left><font size=2>$row[7]</td></tr>";}
+			if ( ($label_first_name!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_first_name: &nbsp; </td><td ALIGN=left><font size=2>$row[8]</td></tr>";}
+			if ( ($label_middle_initial!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_middle_initial: &nbsp; </td><td ALIGN=left><font size=2>$row[9]</td></tr>";}
+			if ( ($label_last_name!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_last_name: &nbsp; </td><td ALIGN=left><font size=2>$row[10]</td></tr>";}
+			if ( ($label_address1!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address1: &nbsp; </td><td ALIGN=left><font size=2>$row[11]</td></tr>";}
+			if ( ($label_address2!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address2: &nbsp; </td><td ALIGN=left><font size=2>$row[12]</td></tr>";}
+			if ( ($label_address3!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address3: &nbsp; </td><td ALIGN=left><font size=2>$row[13]</td></tr>";}
+			if ( ($label_city!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_city: &nbsp; </td><td ALIGN=left><font size=2>$row[14]</td></tr>";}
+			if ( ($label_state!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_state: &nbsp; </td><td ALIGN=left><font size=2>$row[15]</td></tr>";}
+			if ( ($label_province!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_province: &nbsp; </td><td ALIGN=left><font size=2>$row[16]</td></tr>";}
+			if ( ($label_postal_code!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_postal_code: &nbsp; </td><td ALIGN=left><font size=2>$row[17]</td></tr>";}
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Country: &nbsp; </td><td ALIGN=left><font size=2>$row[18]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_gender: &nbsp; </td><td ALIGN=left><font size=2>$row[19]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_alt_phone: &nbsp; </td><td ALIGN=left><font size=2>$row[20] - &nbsp; &nbsp; &nbsp; &nbsp; ";
-			if ($hide_dial_links < 1)
-				{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20], $lead_id, 'ALT');return false;\">DIAL</a>";}
+			if ( ($label_gender!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_gender: &nbsp; </td><td ALIGN=left><font size=2>$row[19]</td></tr>";}
+			if ( ($label_alt_phone!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{
+				$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_alt_phone: &nbsp; </td><td ALIGN=left><font size=2>$row[20] - &nbsp; &nbsp; &nbsp; &nbsp; ";
+				if ($hide_dial_links < 1)
+					{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20], $lead_id, 'ALT');return false;\">DIAL</a>";}
+				}
 			$INFOout .= "</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_email: &nbsp; </td><td ALIGN=left><font size=2>$row[21]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_security_phrase: &nbsp; </td><td ALIGN=left><font size=2>$row[22]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_comments: &nbsp; </td><td ALIGN=left><font size=2>$row[23]</td></tr>";
+			if ( ($label_email!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_email: &nbsp; </td><td ALIGN=left><font size=2>$row[21]</td></tr>";}
+			if ( ($label_security_phrase!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_security_phrase: &nbsp; </td><td ALIGN=left><font size=2>$row[22]</td></tr>";}
+			if ( ($label_comments!='---HIDE---') or ($label_hide_field_logs=='N') )
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_comments: &nbsp; </td><td ALIGN=left><font size=2>$row[23]</td></tr>";}
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Llamado Count: &nbsp; </td><td ALIGN=left><font size=2>$row[24]</td></tr>";
 			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Último Local Call Time: &nbsp; </td><td ALIGN=left><font size=2>$row[25]</td></tr>";
 	#		$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Rank: &nbsp; </td><td ALIGN=left><font size=2>$row[26]</td></tr>";

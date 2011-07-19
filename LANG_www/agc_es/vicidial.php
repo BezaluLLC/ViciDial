@@ -354,12 +354,17 @@
 # 110528-1033 - Added waiting_on_dispo manual dial check
 # 110531-2158 - Added callback_days_limit campaign feature
 # 110619-2005 - Added disable_dispo_ options
+# 110624-2311 - Added screen labels option and status display fields option
+# 110626-2234 - Added queuemetrics_pe_phone_append
+# 110707-1412 - Added last_inbound_call_time and finish compatibility
+# 110713-0048 - Allow for full hiding of the phone number field label
+# 110718-1159 - Added logging of skipped leads
 #
 
-$version = '2.4-331c';
-$build = '110619-2005';
+$version = '2.4-336c';
+$build = '110718-1159';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=72;
+$mysql_log_count=73;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -1348,7 +1353,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1450,6 +1455,56 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 				$callback_days_limit =		$row[94];
 				$disable_dispo_screen =		$row[95];
 				$disable_dispo_status =		$row[96];
+				$screen_labels =			$row[97];
+				$status_display_fields =	$row[98];
+
+				if ( ($queuemetrics_pe_phone_append > 0) and (strlen($qm_phone_environment)>0) )
+					{$qm_phone_environment .= "-$qm_extension";}
+
+				$status_display_CALLID=0;
+				$status_display_LEADID=0;
+				$status_display_LISTID=0;
+				if (preg_match("/CALLID/",$status_display_fields))
+					{$status_display_CALLID=1;}
+				if (preg_match("/LEADID/",$status_display_fields))
+					{$status_display_LEADID=1;}
+				if (preg_match("/LISTID/",$status_display_fields))
+					{$status_display_LISTID=1;}
+
+				if ( ($screen_labels != '--SYSTEM-SETTINGS--') and (strlen($screen_labels)>1) )
+					{
+					$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from vicidial_screen_labels where label_id='$screen_labels' and active='Y' limit 1;";
+					$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01073',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					$screenlabels_count = mysql_num_rows($rslt);
+					if ($screenlabels_count > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						if (strlen($row[0])>0)	{$label_title =				$row[0];}
+						if (strlen($row[1])>0)	{$label_first_name =		$row[1];}
+						if (strlen($row[2])>0)	{$label_middle_initial =	$row[2];}
+						if (strlen($row[3])>0)	{$label_last_name =			$row[3];}
+						if (strlen($row[4])>0)	{$label_address1 =			$row[4];}
+						if (strlen($row[5])>0)	{$label_address2 =			$row[5];}
+						if (strlen($row[6])>0)	{$label_address3 =			$row[6];}
+						if (strlen($row[7])>0)	{$label_city =				$row[7];}
+						if (strlen($row[8])>0)	{$label_state =				$row[8];}
+						if (strlen($row[9])>0)	{$label_province =			$row[9];}
+						if (strlen($row[10])>0) {$label_postal_code =		$row[10];}
+						if (strlen($row[11])>0) {$label_vendor_lead_code =	$row[11];}
+						if (strlen($row[12])>0) {$label_gender =			$row[12];}
+						if (strlen($row[13])>0) {$label_phone_number =		$row[13];}
+						if (strlen($row[14])>0) {$label_phone_code =		$row[14];}
+						if (strlen($row[15])>0) {$label_alt_phone =			$row[15];}
+						if (strlen($row[16])>0) {$label_security_phrase =	$row[16];}
+						if (strlen($row[17])>0) {$label_email =				$row[17];}
+						if (strlen($row[18])>0) {$label_comments =			$row[18];}
+						### END find any custom field labels ###
+						$hide_gender=0;
+						if ($label_gender == '---HIDE---')
+							{$hide_gender=1;}
+						}
+					}
 
 				if ( ($disable_dispo_screen == 'DISPO_ENABLED') or (strlen($disable_dispo_status) < 1) )
 					{
@@ -2093,9 +2148,11 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 			}
 		$SIP_user = "$protocol/$extension";
 		$SIP_user_DiaL = "$protocol/$extension";
+		$qm_extension = "$extension";
 		if ( (ereg('8300',$dialplan_number)) and (strlen($dialplan_number)<5) and ($protocol == 'Local') )
 			{
 			$SIP_user = "$protocol/$extension$VD_login";
+			$qm_extension = "$extension$VD_login";
 			}
 
 		$stmt="SELECT asterisk_version from servers where server_ip='$server_ip';";
@@ -2261,7 +2318,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 
 			#############################################
 			##### START SYSTEM_SETTINGS LOOKUP #####
-			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,vicidial_agent_disable,allow_sipsak_messages,queuemetrics_loginout,queuemetrics_addmember_enabled FROM system_settings;";
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,vicidial_agent_disable,allow_sipsak_messages,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pe_phone_append FROM system_settings;";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01040',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -2279,6 +2336,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 				$allow_sipsak_messages =			$row[7];
 				$queuemetrics_loginout =			$row[8];
 				$queuemetrics_addmember_enabled =	$row[9];
+				$queuemetrics_pe_phone_append =		$row[10];
 				}
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
 			###########################################
@@ -2414,7 +2472,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 				echo "<!-- la campaña se fija al auto_dial_level: $auto_dial_level -->\n";
 
 				$closer_chooser_string='';
-				$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial,manager_ingroup_set,on_hook_ring_time,on_hook_agent) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$closer_chooser_string','$user_level','$campaign_weight','$calls_today','$NOW_TIME','Y','N','$phone_ring_timeout','$on_hook_agent');";
+				$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial,manager_ingroup_set,on_hook_ring_time,on_hook_agent,last_inbound_call_time,last_inbound_call_finish) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$closer_chooser_string','$user_level','$campaign_weight','$calls_today','$NOW_TIME','Y','N','$phone_ring_timeout','$on_hook_agent','$NOW_TIME','$NOW_TIME');";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01044',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -2432,6 +2490,9 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/vicidial.
 						}
 					$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
 					mysql_select_db("$queuemetrics_dbname", $linkB);
+
+					if ( ($queuemetrics_pe_phone_append > 0) and (strlen($qm_phone_environment)>0) )
+						{$qm_phone_environment .= "-$qm_extension";}
 
 					if ($queuemetrics_loginout!='NONE')
 						{
@@ -3371,6 +3432,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var waiting_on_dispo=0;
 	var disable_dispo_screen='<?php echo $disable_dispo_screen ?>';
 	var disable_dispo_status='<?php echo $disable_dispo_status ?>';
+	var status_display_CALLID='<?php echo $status_display_CALLID ?>';
+	var status_display_LEADID='<?php echo $status_display_LEADID ?>';
+	var status_display_LISTID='<?php echo $status_display_LISTID ?>';
+	var qm_extension='<?php echo $qm_extension ?>';
     var DiaLControl_auto_HTML = "<img src=\"../agc/images/vdc_LB_pause_OFF_es.gif\" border=\"0\" alt=\" Pausa \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"../agc/images/vdc_LB_resume_es.gif\" border=\"0\" alt=\"Comienzo\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"../agc/images/vdc_LB_pause_es.gif\" border=\"0\" alt=\" Pausa \" /></a><img src=\"../agc/images/vdc_LB_resume_OFF_es.gif\" border=\"0\" alt=\"Comienzo\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"../agc/images/vdc_LB_pause_OFF_es.gif\" border=\"0\" alt=\" Pausa \" /><img src=\"../agc/images/vdc_LB_resume_OFF_es.gif\" border=\"0\" alt=\"Comienzo\" />";
@@ -3463,7 +3528,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			{ 
 			var queryCID = "HLagcW" + epoch_sec + user_abb;
 			var hangupvalue = taskvar;
-			livehangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=Hangup&format=text&channel=" + hangupvalue + "&queryCID=" + queryCID + "&log_campaign=" + campaign;
+			livehangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=Hangup&format=text&channel=" + hangupvalue + "&queryCID=" + queryCID + "&log_campaign=" + campaign + "&qm_extension=" + qm_extension;
 			xmlhttp.open('POST', 'manager_send.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(livehangup_query); 
@@ -5108,11 +5173,15 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				{
 				if (document.vicidial_form.DiaLAltPhonE.checked==true)
 					{
+					var status_display_content='';
+					if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+					if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
+
 					alt_num_status = 1;
 					reselect_alt_dial = 1;
 					alt_dial_active = 1;
 					alt_dial_status_display = 1;
-					var man_status = "Marcar Número de teléfono Alt: <a href=\"#\" onclick=\"ManualDialOnly('MaiNPhonE')\"><font class=\"preview_text\">TELÉFONO PRINCIPAL</font></a> or <a href=\"#\" onclick=\"ManualDialOnly('ALTPhonE')\"><font class=\"preview_text\">TELÉFONO ALT</font></a> or <a href=\"#\" onclick=\"ManualDialOnly('AddresS3')\"><font class=\"preview_text\">DIRECCIÓN3</font></a> or <a href=\"#\" onclick=\"ManualDialAltDonE()\"><font class=\"preview_text_red\">ACABAR LEAD</font></a>"; 
+					var man_status = "Marcar Número de teléfono Alt: <a href=\"#\" onclick=\"ManualDialOnly('MaiNPhonE')\"><font class=\"preview_text\">TELÉFONO PRINCIPAL</font></a> or <a href=\"#\" onclick=\"ManualDialOnly('ALTPhonE')\"><font class=\"preview_text\">TELÉFONO ALT</font></a> or <a href=\"#\" onclick=\"ManualDialOnly('AddresS3')\"><font class=\"preview_text\">DIRECCIÓN3</font></a> or <a href=\"#\" onclick=\"ManualDialAltDonE()\"><font class=\"preview_text_red\">ACABAR LEAD</font></a>" + status_display_content; 
 					document.getElementById("MainStatuSSpan").innerHTML = man_status;
 					}
 				}
@@ -5144,7 +5213,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			"&list_id=" + document.vicidial_form.list_id.value + 
 			"&length_in_sec=0&phone_code=" + document.vicidial_form.phone_code.value + 
 			"&phone_number=" + lead_dial_number + 
-			"&exten=" + extension + "&channel=" + lastcustchannel + "&start_epoch=" + MDlogEPOCH + "&auto_dial_level=" + auto_dial_level + "&VDstop_rec_after_each_call=" + VDstop_rec_after_each_call + "&conf_silent_prefix=" + conf_silent_prefix + "&protocol=" + protocol + "&extension=" + extension + "&ext_context=" + ext_context + "&conf_exten=" + session_id + "&user_abb=" + user_abb + "&agent_log_id=" + agent_log_id + "&MDnextCID=" + LasTCID + "&inOUT=" + inOUT + "&alt_dial=" + dialed_label + "&DB=0" + "&agentchannel=" + agentchannel + "&conf_dialed=" + conf_dialed + "&leaving_threeway=" + leaving_threeway + "&hangup_all_non_reserved=" + hangup_all_non_reserved + "&blind_transfer=" + blind_transfer + "&dial_method" + dial_method + "&nodeletevdac=" + nodeletevdac + "&alt_num_status=" + alt_num_status;
+			"&exten=" + extension + "&channel=" + lastcustchannel + "&start_epoch=" + MDlogEPOCH + "&auto_dial_level=" + auto_dial_level + "&VDstop_rec_after_each_call=" + VDstop_rec_after_each_call + "&conf_silent_prefix=" + conf_silent_prefix + "&protocol=" + protocol + "&extension=" + extension + "&ext_context=" + ext_context + "&conf_exten=" + session_id + "&user_abb=" + user_abb + "&agent_log_id=" + agent_log_id + "&MDnextCID=" + LasTCID + "&inOUT=" + inOUT + "&alt_dial=" + dialed_label + "&DB=0" + "&agentchannel=" + agentchannel + "&conf_dialed=" + conf_dialed + "&leaving_threeway=" + leaving_threeway + "&hangup_all_non_reserved=" + hangup_all_non_reserved + "&blind_transfer=" + blind_transfer + "&dial_method" + dial_method + "&nodeletevdac=" + nodeletevdac + "&alt_num_status=" + alt_num_status + "&qm_extension=" + qm_extension;
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		//		document.getElementById("busycallsdebug").innerHTML = "vdc_db_query.php?" + manDiaLlog_query;
@@ -5749,8 +5818,13 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 						if (alt_dial_status_display=='0')
 							{
+							var status_display_content='';
+							if (status_display_CALLID > 0) {status_display_content = status_display_content + " UID: " + CIDcheck;}
+							if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+							if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
+
 					//		alert(document.getElementById("MainStatuSSpan").innerHTML);
-							document.getElementById("MainStatuSSpan").innerHTML = " Llamando: " + status_display_number + " UID: " + CIDcheck + " &nbsp; Espeerar al Ring... " + MD_ring_secondS + " segundos";
+							document.getElementById("MainStatuSSpan").innerHTML = " Llamando: " + status_display_number + " " + status_display_content + " &nbsp; Espeerar al Ring... " + MD_ring_secondS + " segundos";
 					//		alert("channel not found yet:\n" + campaign);
 							}
 						}
@@ -5787,7 +5861,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								var called3rdparty = document.vicidial_form.xfernumber.value;
 								if (hide_xfer_number_to_dial=='ENABLED')
 									{called3rdparty=' ';}
-								document.getElementById("MainStatuSSpan").innerHTML = " Terceros llamados: " + called3rdparty + " UID: " + CIDcheck;
+								var status_display_content='';
+								if (status_display_CALLID > 0) {status_display_content = status_display_content + " UID: " + CIDcheck;}
+								if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+								if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
+
+								document.getElementById("MainStatuSSpan").innerHTML = " Terceros llamados: " + called3rdparty + " " + status_display_content;
 
                                 document.getElementById("Leave3WayCall").innerHTML ="<a href=\"#\" onclick=\"leave_3way_call('FIRST');return false;\"><img src=\"../agc/images/vdc_XB_leave3waycall_es.gif\" border=\"0\" alt=\"ABANDONAR LLAMADA 3-WAY\" style=\"vertical-align:middle\" /></a>";
 
@@ -5837,8 +5916,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								MD_channel_look=0;
 								var dispnum = lead_dial_number;
 								var status_display_number = phone_number_format(dispnum);
+								var status_display_content='';
+								if (status_display_CALLID > 0) {status_display_content = status_display_content + " UID: " + CIDcheck;}
+								if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+								if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
 
-								document.getElementById("MainStatuSSpan").innerHTML = " Llamado: " + status_display_number + " UID: " + CIDcheck + " &nbsp;"; 
+								document.getElementById("MainStatuSSpan").innerHTML = " Llamado: " + status_display_number + " " + status_display_content + " &nbsp;"; 
 
                                 document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><img src=\"../agc/images/vdc_LB_parkcall_es.gif\" border=\"0\" alt=\"Aparcar llamada\" /></a>";
 								if ( (ivr_park_call=='ENABLED') || (ivr_park_call=='ENABLED_PARKING_ONLY') )
@@ -6240,7 +6323,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				else
 					{var call_prefix = manual_dial_prefix;}
 
-				manDiaLnext_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLnextCaLL&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&preview=" + man_preview + "&agent_log_id=" + agent_log_id + "&callback_id=" + mdnCBid + "&lead_id=" + mdnBDleadid + "&phone_code=" + mdnDiaLCodE + "&phone_number=" + mdnPhonENumbeR + "&list_id=" + mdnLisT_id + "&stage=" + mdnStagE  + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&omit_phone_code=" + omit_phone_code + "&manual_dial_filter=" + manual_dial_filter + "&vendor_lead_code=" + mdVendorid + "&usegroupalias=" + mdgroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&vtiger_callback_id=" + vtiger_callback_id + "&dial_method=" + dial_method + "&manual_dial_call_time_check=" + manual_dial_call_time_check;
+				manDiaLnext_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLnextCaLL&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&preview=" + man_preview + "&agent_log_id=" + agent_log_id + "&callback_id=" + mdnCBid + "&lead_id=" + mdnBDleadid + "&phone_code=" + mdnDiaLCodE + "&phone_number=" + mdnPhonENumbeR + "&list_id=" + mdnLisT_id + "&stage=" + mdnStagE  + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&omit_phone_code=" + omit_phone_code + "&manual_dial_filter=" + manual_dial_filter + "&vendor_lead_code=" + mdVendorid + "&usegroupalias=" + mdgroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&vtiger_callback_id=" + vtiger_callback_id + "&dial_method=" + dial_method + "&manual_dial_call_time_check=" + manual_dial_call_time_check + "&qm_extension=" + qm_extension;
 				//		alert(manual_dial_filter + "\n" +manDiaLnext_query);
 				xmlhttp.open('POST', 'vdc_db_query.php');
 				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -6376,8 +6459,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							lead_dial_number = dialed_number;
 							var dispnum = dialed_number;
 							var status_display_number = phone_number_format(dispnum);
+							var status_display_content='';
+							if (status_display_CALLID > 0) {status_display_content = status_display_content + " UID: " + MDnextCID;}
+							if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+							if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
 
-							document.getElementById("MainStatuSSpan").innerHTML = " Llamando: " + status_display_number + " UID: " + MDnextCID + " &nbsp; " + man_status;
+							document.getElementById("MainStatuSSpan").innerHTML = " Llamando: " + status_display_number + " " + status_display_content + " &nbsp; " + man_status;
 							if ( (dialed_label.length < 2) || (dialed_label=='NONE') ) {dialed_label='MAIN';}
 
 							if (hide_gender > 0)
@@ -6568,7 +6655,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				}
 			if (xmlhttp) 
 				{ 
-				manDiaLskip_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLskip&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&lead_id=" + document.vicidial_form.lead_id.value + "&stage=" + previous_dispo + "&called_count=" + previous_called_count;
+				manDiaLskip_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLskip&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&lead_id=" + document.vicidial_form.lead_id.value + "&stage=" + previous_dispo + "&called_count=" + previous_called_count + "&campaign=" + campaign;
 				xmlhttp.open('POST', 'vdc_db_query.php'); 
 				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 				xmlhttp.send(manDiaLskip_query); 
@@ -6755,7 +6842,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			else
 				{var call_prefix = manual_dial_prefix;}
 
-			manDiaLonly_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLonly&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&lead_id=" + document.vicidial_form.lead_id.value + "&phone_number=" + manDiaLonly_num + "&phone_code=" + document.vicidial_form.phone_code.value + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&omit_phone_code=" + omit_phone_code + "&usegroupalias=" + usegroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&dial_method=" + dial_method + "&agent_log_id=" + agent_log_id + "&security=" + document.vicidial_form.security_phrase.value;
+			manDiaLonly_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLonly&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&lead_id=" + document.vicidial_form.lead_id.value + "&phone_number=" + manDiaLonly_num + "&phone_code=" + document.vicidial_form.phone_code.value + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&omit_phone_code=" + omit_phone_code + "&usegroupalias=" + usegroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&dial_method=" + dial_method + "&agent_log_id=" + agent_log_id + "&security=" + document.vicidial_form.security_phrase.value + "&qm_extension=" + qm_extension;
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(manDiaLonly_query);
@@ -6787,7 +6874,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 						if (alt_dial_status_display=='0')
 							{
-							document.getElementById("MainStatuSSpan").innerHTML = " Llamando: " + status_display_number + " UID: " + MDnextCID + " &nbsp; Espeerar al Ring...";
+							var status_display_content='';
+							if (status_display_CALLID > 0) {status_display_content = status_display_content + " UID: " + MDnextCID;}
+							if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+							if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
+
+							document.getElementById("MainStatuSSpan").innerHTML = " Llamando: " + status_display_number + " " + status_display_content + " &nbsp; Espeerar al Ring...";
 							
                             document.getElementById("HangupControl").innerHTML = "<a href=\"#\" onclick=\"dialedcall_send_hangup();\"><img src=\"../agc/images/vdc_LB_hangupcustomer_es.gif\" border=\"0\" alt=\"Colgar al Cliente\" /></a>";
 							}
@@ -6924,7 +7016,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			}
 		if (xmlhttp) 
 			{ 
-			autoDiaLready_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=" + taskaction + "&user=" + user + "&pass=" + pass + "&stage=" + VDRP_stage + "&agent_log_id=" + agent_log_id + "&agent_log=" + taskagentlog + "&wrapup=" + taskwrapup + "&campaign=" + campaign + "&dial_method" + dial_method + "&comments=" + taskstatuschange + add_pause_code;
+			autoDiaLready_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=" + taskaction + "&user=" + user + "&pass=" + pass + "&stage=" + VDRP_stage + "&agent_log_id=" + agent_log_id + "&agent_log=" + taskagentlog + "&wrapup=" + taskwrapup + "&campaign=" + campaign + "&dial_method" + dial_method + "&comments=" + taskstatuschange + add_pause_code + "&qm_extension=" + qm_extension;
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(autoDiaLready_query); 
@@ -7342,7 +7434,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							var callnum = dialed_number;
 							var dial_display_number = phone_number_format(callnum);
 
-							document.getElementById("MainStatuSSpan").innerHTML = " Entrante: " + dial_display_number + " " + custom_call_id + " UID: " + CIDcheck + " &nbsp; " + VDIC_fronter; 
+							var status_display_content='';
+							if (status_display_CALLID > 0) {status_display_content = status_display_content + " UID: " + LasTCID;}
+							if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+							if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
+
+							document.getElementById("MainStatuSSpan").innerHTML = " Entrante: " + dial_display_number + " " + custom_call_id + " " + status_display_content + " &nbsp; " + VDIC_fronter; 
 
 							if (CBentry_time.length > 2)
 								{
@@ -7388,7 +7485,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								var callnum = dialed_number;
 								var dial_display_number = phone_number_format(callnum);
 
-								document.getElementById("MainStatuSSpan").innerHTML = " Entrante: " + dial_display_number + " " + custom_call_id + " Group- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter; 
+								var status_display_content='';
+								if (status_display_CALLID > 0) {status_display_content = status_display_content + " UID: " + CIDcheck;}
+								if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+								if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
+
+								document.getElementById("MainStatuSSpan").innerHTML = " Entrante: " + dial_display_number + " " + custom_call_id + " Group- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter + " " + status_display_content; 
 								}
 
                             document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><img src=\"../agc/images/vdc_LB_parkcall_es.gif\" border=\"0\" alt=\"Aparcar llamada\" /></a>";
@@ -7823,7 +7925,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				var queryCID = "HLvdcW" + epoch_sec + user_abb;
 				var hangupvalue = customer_channel;
 				//		alert(auto_dial_level + "|" + CalLCID + "|" + customer_server_ip + "|" + hangupvalue + "|" + VD_live_call_secondS);
-				custhangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=Hangup&format=text&user=" + user + "&pass=" + pass + "&channel=" + hangupvalue + "&call_server_ip=" + customer_server_ip + "&queryCID=" + queryCID + "&auto_dial_level=" + auto_dial_level + "&CalLCID=" + CalLCID + "&secondS=" + VD_live_call_secondS + "&exten=" + session_id + "&campaign=" + group + "&stage=CALLHANGUP&nodeletevdac=" + nodeletevdac + "&log_campaign=" + campaign;
+				custhangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=Hangup&format=text&user=" + user + "&pass=" + pass + "&channel=" + hangupvalue + "&call_server_ip=" + customer_server_ip + "&queryCID=" + queryCID + "&auto_dial_level=" + auto_dial_level + "&CalLCID=" + CalLCID + "&secondS=" + VD_live_call_secondS + "&exten=" + session_id + "&campaign=" + group + "&stage=CALLHANGUP&nodeletevdac=" + nodeletevdac + "&log_campaign=" + campaign + "&qm_extension=" + qm_extension;
 				xmlhttp.open('POST', 'manager_send.php'); 
 				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 				xmlhttp.send(custhangup_query); 
@@ -8082,7 +8184,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				{ 
 				var queryCID = "HXvdcW" + epoch_sec + user_abb;
 				var hangupvalue = xfer_channel;
-				custhangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=Hangup&format=text&user=" + user + "&pass=" + pass + "&channel=" + hangupvalue + "&queryCID=" + queryCID + "&log_campaign=" + campaign;
+				custhangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=Hangup&format=text&user=" + user + "&pass=" + pass + "&channel=" + hangupvalue + "&queryCID=" + queryCID + "&log_campaign=" + campaign + "&qm_extension=" + qm_extension;
 				xmlhttp.open('POST', 'manager_send.php'); 
 				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 				xmlhttp.send(custhangup_query); 
@@ -8156,7 +8258,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if (xmlhttp) 
 			{ 
 			var queryCID = "HTvdcW" + epoch_sec + user_abb;
-			custhangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=HangupConfDial&format=text&user=" + user + "&pass=" + pass + "&exten=" + session_id + "&ext_context=" + ext_context + "&queryCID=" + queryCID + "&log_campaign=" + campaign;
+			custhangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=HangupConfDial&format=text&user=" + user + "&pass=" + pass + "&exten=" + session_id + "&ext_context=" + ext_context + "&queryCID=" + queryCID + "&log_campaign=" + campaign + "&qm_extension=" + qm_extension;
 			xmlhttp.open('POST', 'manager_send.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(custhangup_query); 
@@ -9227,7 +9329,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			}
 		if (xmlhttp) 
 			{ 
-			CSCupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=regCLOSER&format=text&user=" + user + "&pass=" + pass + "&comments=" + VU_agent_choose_ingroups_DV + "&closer_blended=" + VICIDiaL_closer_blended + "&campaign=" + campaign + "&qm_phone=" + qm_phone + "&dial_method" + dial_method + "&closer_choice=" + CloserSelectChoices + "-";
+			CSCupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=regCLOSER&format=text&user=" + user + "&pass=" + pass + "&comments=" + VU_agent_choose_ingroups_DV + "&closer_blended=" + VICIDiaL_closer_blended + "&campaign=" + campaign + "&qm_phone=" + qm_phone + "&qm_extension=" + qm_extension + "&dial_method" + dial_method + "&closer_choice=" + CloserSelectChoices + "-";
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(CSCupdate_query); 
@@ -9517,7 +9619,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						}
 					if (xmlhttp) 
 						{ 
-						VDlogout_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=userLOGout&format=text&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&agent_log_id=" + agent_log_id + "&no_delete_sessions=" + no_delete_sessions + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&LogouTKicKAlL=" + LogouTKicKAlL + "&ext_context=" + ext_context;
+						VDlogout_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=userLOGout&format=text&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&agent_log_id=" + agent_log_id + "&no_delete_sessions=" + no_delete_sessions + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&LogouTKicKAlL=" + LogouTKicKAlL + "&ext_context=" + ext_context + "&qm_extension=" + qm_extension;
 						xmlhttp.open('POST', 'vdc_db_query.php'); 
 						xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 						xmlhttp.send(VDlogout_query); 
@@ -12493,16 +12595,24 @@ $zi=2;
 
     echo "</td></tr><tr><td align=\"right\"><font class=\"body_text\">";
 
-    echo "$label_phone_number: </td><td align=\"left\"><font class=\"body_text\">";
-
-	if ( (ereg('Y',$disable_alter_custphone)) or (ereg('HIDE',$disable_alter_custphone)) )
-		{
-        echo "<font class=\"body_text\"><span id=\"phone_numberDISP\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></font>";
-        echo "<input type=\"hidden\" name=\"phone_number\" id=\"phone_number\" value=\"\" />";
+	if ($label_phone_number == '---HIDE---')
+        {
+		echo " </td><td align=\"left\"><input type=\"hidden\" name=\"phone_number\" id=\"phone_number\" value=\"\" />";
+		echo "<font class=\"body_text\"><span id=\"phone_numberDISP\"> &nbsp; </span></font>";
 		}
 	else
-		{
-        echo "<input type=\"text\" size=\"20\" name=\"phone_number\" id=\"phone_number\" maxlength=\"16\" class=\"cust_form\" value=\"\" />";
+        {
+		echo "$label_phone_number: </td><td align=\"left\"><font class=\"body_text\">";
+
+		if ( (ereg('Y',$disable_alter_custphone)) or (ereg('HIDE',$disable_alter_custphone)) )
+			{
+			echo "<font class=\"body_text\"><span id=\"phone_numberDISP\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></font>";
+			echo "<input type=\"hidden\" name=\"phone_number\" id=\"phone_number\" value=\"\" />";
+			}
+		else
+			{
+			echo "<input type=\"text\" size=\"20\" name=\"phone_number\" id=\"phone_number\" maxlength=\"16\" class=\"cust_form\" value=\"\" />";
+			}
 		}
 
     echo "</td><td align=\"right\"><font class=\"body_text\">";

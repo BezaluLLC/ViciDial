@@ -45,6 +45,7 @@
 #  - $preset_name = ('TESTING PRESET',...)
 #  - $call_variables = ('Variable: vendor_lead_code=1234|campaign=TESTCAMP|...')
 #  - $log_campaign
+#  - $qm_extension
 #
 # CHANGELOG:
 # 50401-1002 - First build of script, Hangup function only
@@ -107,10 +108,10 @@
 # 101107-2331 - Added CALLERONHOLD/CALLEROFFHOLD queue_log entries
 # 101125-1018 - Added call_variables Originate variables
 # 110224-1710 - Added compatibility with QM phone environment logging
-#
+# 110626-2320 - Added qm_extension
 
-$version = '2.4-55';
-$build = '110224-1710';
+$version = '2.4-56';
+$build = '110626-2320';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=116;
 $one_mysql_log=0;
@@ -206,6 +207,8 @@ if (isset($_GET["call_variables"]))				{$call_variables=$_GET["call_variables"];
 	elseif (isset($_POST["call_variables"]))	{$call_variables=$_POST["call_variables"];}
 if (isset($_GET["log_campaign"]))			{$log_campaign=$_GET["log_campaign"];}
 	elseif (isset($_POST["log_campaign"]))	{$log_campaign=$_POST["log_campaign"];}
+if (isset($_GET["qm_extension"]))			{$qm_extension=$_GET["qm_extension"];}
+	elseif (isset($_POST["qm_extension"]))	{$qm_extension=$_POST["qm_extension"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -426,7 +429,7 @@ if ($ACTION=="OriginateVDRelogin")
 
 if ($ACTION=="Originate")
 	{
-	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($ext_context)<1) or ( (strlen($queryCID)<10) && ($alertCID < 1) ) )
+	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($ext_context)<1) or ( (strlen($queryCID)<10) and ($alertCID < 1) ) )
 		{
 		echo "ERROR Exten $exten No es válido or queryCID $queryCID No es válido, Originate comando no insertado\n";
 		}
@@ -634,7 +637,7 @@ if ($ACTION=="Hangup")
 					{
 					#############################################
 					##### START QUEUEMETRICS LOGGING LOOKUP #####
-					$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+					$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append FROM system_settings;";
 					$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02014',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
@@ -649,6 +652,7 @@ if ($ACTION=="Hangup")
 						$queuemetrics_login	=			$row[3];
 						$queuemetrics_pass =			$row[4];
 						$queuemetrics_log_id =			$row[5];
+						$queuemetrics_pe_phone_append = $row[6];
 						$i++;
 						}
 					##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -732,7 +736,10 @@ if ($ACTION=="Hangup")
 								if ($cqpe_ct > 0)
 									{
 									$row=mysql_fetch_row($rslt);
-									$data4SQL = ",data4='$row[0]'";
+									$pe_append='';
+									if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+										{$pe_append = "-$qm_extension";}
+									$data4SQL = ",data4='$row[0]$pe_append'";
 									}
 
 								if ($format=='debug') {echo "\n<!-- $caller_complete|$stmt -->";}
@@ -1433,7 +1440,7 @@ if ($ACTION=="RedirectXtraCXNeW")
 				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel no está activo en $server_ip";}
 				}	
 			}
-		if ( ($channel_liveX==1) && ($channel_liveY==1) )
+		if ( ($channel_liveX==1) and ($channel_liveY==1) )
 			{
 			$stmt="SELECT count(*) FROM vicidial_live_agents where lead_id='$lead_id' and user!='$user';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
@@ -1617,7 +1624,7 @@ if ($ACTION=="RedirectXtraNeW")
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02053',$user,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysql_fetch_row($rslt);
-			if ( ($row[0]==0) && (!ereg("SECOND",$filename)) )
+			if ( ($row[0]==0) and (!ereg("SECOND",$filename)) )
 				{
 				$stmt="SELECT count(*) FROM live_sip_channels where server_ip = '$call_server_ip' and channel='$channel';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
@@ -1636,7 +1643,7 @@ if ($ACTION=="RedirectXtraNeW")
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02055',$user,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysql_fetch_row($rslt);
-			if ( ($row[0]==0) && (!ereg("SECOND",$filename)) )
+			if ( ($row[0]==0) and (!ereg("SECOND",$filename)) )
 				{
 				$stmt="SELECT count(*) FROM live_sip_channels where server_ip = '$server_ip' and channel='$extrachannel';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
@@ -1650,7 +1657,7 @@ if ($ACTION=="RedirectXtraNeW")
 					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel no está activo en $server_ip";}
 					}	
 				}
-			if ( ($channel_liveX==1) && ($channel_liveY==1) )
+			if ( ($channel_liveX==1) and ($channel_liveY==1) )
 				{
 				if ( ($server_ip=="$call_server_ip") or (strlen($call_server_ip)<7) )
 					{

@@ -1994,7 +1994,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					if (eregi("UP TIMEZONE",$lead_order)){$order_stmt = "order by gmt_offset_now desc, $last_order";}
 					if (eregi("DOWN TIMEZONE",$lead_order)){$order_stmt = "order by gmt_offset_now, $last_order";}
 
-					$stmt="UPDATE vicidial_list SET status='QUEUE',user='$user' where called_since_last_reset='N' and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) $DLTsql $fSQL $adooSQL $order_stmt LIMIT 1;";
+					$stmt="UPDATE vicidial_list SET user='QUEUE$user' where called_since_last_reset='N' and user NOT LIKE \"QUEUE%\" and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) $DLTsql $fSQL $adooSQL $order_stmt LIMIT 1;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00242',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -2006,7 +2006,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 					if ($affected_rows > 0)
 						{
-						$stmt="SELECT lead_id,list_id,gmt_offset_now,state,entry_list_id FROM vicidial_list where status='QUEUE' and user='$user' order by modify_date desc LIMIT 1;";
+						$stmt="SELECT lead_id,list_id,gmt_offset_now,state,entry_list_id FROM vicidial_list where user='QUEUE$user' order by modify_date desc LIMIT 1;";
 						$rslt=mysql_query($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00243',$user,$server_ip,$session_name,$one_mysql_log);}
 						if ($DB) {echo "$stmt\n";}

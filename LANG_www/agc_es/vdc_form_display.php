@@ -18,7 +18,7 @@ $version = '2.4-4';
 $build = '100916-1749';
 
 require("dbconnect.php");
-require("functions.php");
+require_once("functions.php");
 
 
 if (isset($_GET["lead_id"]))			{$lead_id=$_GET["lead_id"];}
@@ -306,7 +306,7 @@ if ($stage=='SUBMIT')
 
 			$A_field_value[$o] = $form_field_value;
 
-			if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
+			if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') or ($A_field_type[$o]=='HIDDEN') or ($A_field_type[$o]=='READONLY') )
 				{
 				$A_field_value[$o]='----IGNORE----';
 				}
@@ -440,7 +440,7 @@ else
 	echo "\n";
 
 
-	require("functions.php");
+	require_once("functions.php");
 
 	$CFoutput = custom_list_fields_values($lead_id,$list_id,$uniqueid,$user);
 
