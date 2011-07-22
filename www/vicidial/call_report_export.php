@@ -29,6 +29,7 @@
 # 110316-2121 - Added export_fields option
 # 110329-1330 - Added more fields to EXTENDED option
 # 110531-1945 - Changed first phone_number field to phone_number_dialed, issue #495
+# 110721-2027 - Added IVR export options
 #
 
 require("dbconnect.php");
@@ -64,6 +65,8 @@ if (isset($_GET["call_notes"]))				{$call_notes=$_GET["call_notes"];}
 	elseif (isset($_POST["call_notes"]))	{$call_notes=$_POST["call_notes"];}
 if (isset($_GET["export_fields"]))			{$export_fields=$_GET["export_fields"];}
 	elseif (isset($_POST["export_fields"]))	{$export_fields=$_POST["export_fields"];}
+if (isset($_GET["ivr_export"]))				{$ivr_export=$_GET["ivr_export"];}
+	elseif (isset($_POST["ivr_export"]))	{$ivr_export=$_POST["ivr_export"];}
 if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
@@ -405,6 +408,7 @@ if ($run_export > 0)
 			$RFheader = '';
 			$NFheader = '';
 			$CFheader = '';
+			$IVRheader = '';
 			$EXheader = '';
 			if ($rec_fields=='ID')
 				{$RFheader = "\trecording_id";}
@@ -418,10 +422,12 @@ if ($run_export > 0)
 				{$EXheader = "\tuniqueid\tcaller_code\tserver_ip\thangup_cause\tdialstatus\tchannel\tdial_time\tanswered_time\tcpd_result";}
 			if ($call_notes=='YES')
 				{$NFheader = "\tcall_notes";}
+			if ($ivr_export=='YES')
+				{$IVRheader = "\tivr_path";}
 			if ( ($custom_fields_enabled > 0) and ($custom_fields=='YES') )
 				{$CFheader = "\tcustom_fields";}
 
-			echo "call_date\tphone_number_dialed\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id$EFheader\tlist_name\tlist_description\tstatus_name$RFheader$EXheader$NFheader$CFheader\r\n";
+			echo "call_date\tphone_number_dialed\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id$EFheader\tlist_name\tlist_description\tstatus_name$RFheader$EXheader$NFheader$IVRheader$CFheader\r\n";
 			}
 
 		$i=0;
@@ -569,6 +575,29 @@ if ($run_export > 0)
 				$notes_data =	"\t$notes_data";
 				}
 
+			$ivr_data='';
+			if ($ivr_export=='YES')
+				{
+				$ivr_path='';
+				if (strlen($export_uniqueid[$i]) > 0)
+					{
+					$stmt="select menu_id,UNIX_TIMESTAMP(event_date) from vicidial_outbound_ivr_log where event_date >= '$query_date 00:00:00' and event_date <= '$end_date 23:59:59' and uniqueid='$export_uniqueid[$i]' order by event_date,menu_action desc;";
+					$rslt=mysql_query($stmt, $link);
+				#	$ivr_path = "$stmt|$export_uniqueid[$i]|";
+					if ($DB) {$MAIN.="$stmt\n";}
+					$logs_to_print = mysql_num_rows($rslt);
+					$u=0;
+					while ($u < $logs_to_print)
+						{
+						$row=mysql_fetch_row($rslt);
+						$ivr_path .= "$row[0]|";
+						$u++;
+						}
+					$ivr_path = preg_replace("/\|$/",'',$ivr_path);
+					}
+				$ivr_data =	"\t$ivr_path";
+				}
+
 			if ( ($custom_fields_enabled > 0) and ($custom_fields=='YES') )
 				{
 				$CF_list_id = $export_list_id[$i];
@@ -613,7 +642,7 @@ if ($run_export > 0)
 					}
 				}
 
-			echo "$export_rows[$i]$ex_list_name\t$ex_list_description\t$ex_status_name$rec_data$extended_data$notes_data$custom_data\r\n";
+			echo "$export_rows[$i]$ex_list_name\t$ex_list_description\t$ex_status_name$rec_data$extended_data$notes_data$ivr_data$custom_data\r\n";
 			$i++;
 			}
 		}
@@ -731,6 +760,8 @@ else
 
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo "<TITLE>ADMINISTRATION: $report_name";
+	if ($ivr_export == 'YES')
+		{echo " IVR";}
 
 	##### BEGIN Set variables to make header show properly #####
 	$ADD =					'100';
@@ -755,10 +786,14 @@ else
 
 
 	echo "<CENTER><BR>\n";
-	echo "<FONT SIZE=3 FACE=\"Arial,Helvetica\"><B>Export Calls Report</B></FONT><BR><BR>\n";
+	echo "<FONT SIZE=3 FACE=\"Arial,Helvetica\"><B>Export Calls Report";
+	if ($ivr_export == 'YES')
+		{echo " IVR";}
+	echo "</B></FONT><BR><BR>\n";
 	echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">";
 	echo "<INPUT TYPE=HIDDEN NAME=run_export VALUE=\"1\">";
+	echo "<INPUT TYPE=HIDDEN NAME=ivr_export VALUE=\"$ivr_export\">";
 	echo "<TABLE BORDER=0 CELLSPACING=8><TR><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
 
 	echo "<font class=\"select_bold\"><B>Date Range:</B></font><BR><CENTER>\n";
@@ -843,19 +878,22 @@ else
 		}
 	echo "</SELECT>\n";
 
-	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
-	echo "<font class=\"select_bold\"><B>Inbound Groups:</B></font><BR><CENTER>\n";
-	echo "<SELECT SIZE=20 NAME=group[] multiple>\n";
-		$o=0;
-		while ($groups_to_print > $o)
+	if ($ivr_export != 'YES')
 		{
-			if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
-				{echo "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o]</option>\n";}
-			else
-				{echo "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o]</option>\n";}
-			$o++;
+		echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
+		echo "<font class=\"select_bold\"><B>Inbound Groups:</B></font><BR><CENTER>\n";
+		echo "<SELECT SIZE=20 NAME=group[] multiple>\n";
+			$o=0;
+			while ($groups_to_print > $o)
+			{
+				if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
+					{echo "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o]</option>\n";}
+				else
+					{echo "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o]</option>\n";}
+				$o++;
+			}
+		echo "</SELECT>\n";
 		}
-	echo "</SELECT>\n";
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
 	echo "<font class=\"select_bold\"><B>Lists:</B></font><BR><CENTER>\n";
 	echo "<SELECT SIZE=20 NAME=list_id[] multiple>\n";
@@ -882,20 +920,22 @@ else
 			$o++;
 		}
 	echo "</SELECT>\n";
-	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
-	echo "<font class=\"select_bold\"><B>User Groups:</B></font><BR><CENTER>\n";
-	echo "<SELECT SIZE=20 NAME=user_group[] multiple>\n";
-		$o=0;
-		while ($user_groups_to_print > $o)
+	if ($ivr_export != 'YES')
 		{
-			if (ereg("\|$LISTuser_groups[$o]\|",$user_group_string)) 
-				{echo "<option selected value=\"$LISTuser_groups[$o]\">$LISTuser_groups[$o]</option>\n";}
-			else 
-				{echo "<option value=\"$LISTuser_groups[$o]\">$LISTuser_groups[$o]</option>\n";}
-			$o++;
+		echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
+		echo "<font class=\"select_bold\"><B>User Groups:</B></font><BR><CENTER>\n";
+		echo "<SELECT SIZE=20 NAME=user_group[] multiple>\n";
+			$o=0;
+			while ($user_groups_to_print > $o)
+			{
+				if (ereg("\|$LISTuser_groups[$o]\|",$user_group_string)) 
+					{echo "<option selected value=\"$LISTuser_groups[$o]\">$LISTuser_groups[$o]</option>\n";}
+				else 
+					{echo "<option value=\"$LISTuser_groups[$o]\">$LISTuser_groups[$o]</option>\n";}
+				$o++;
+			}
+		echo "</SELECT>\n";
 		}
-	echo "</SELECT>\n";
-
 	echo "</TD></TR><TR></TD><TD ALIGN=LEFT VALIGN=TOP COLSPAN=2> &nbsp; \n";
 
 	echo "</TD></TR><TR></TD><TD ALIGN=CENTER VALIGN=TOP COLSPAN=5>\n";

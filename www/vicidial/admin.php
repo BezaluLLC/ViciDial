@@ -29644,7 +29644,15 @@ if ($ADD==999999)
 		if ( (preg_match("/Outbound Summary Interval Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 			{echo "<LI><a href=\"AST_OUTBOUNDsummary_interval.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Outbound Summary Interval Report</a></FONT>\n";}
 		if ( (preg_match("/Outbound IVR Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
-			{echo "<LI><a href=\"AST_IVRstats.php?type=outbound\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Outbound IVR Report</a></FONT>\n";}
+			{
+			echo "<LI><a href=\"AST_IVRstats.php?type=outbound\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Outbound IVR Report</a>";
+			if ($LOGexport_reports >= 1)
+				{
+				if ( (preg_match("/Export Calls Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+					{echo " - <a href=\"call_report_export.php?ivr_export=YES\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Export</a>";}
+				}
+			echo "</FONT>\n";
+			}
 		if ( (preg_match("/Fronter - Closer Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 			{echo "<LI><a href=\"fcstats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Fronter - Closer Report</a></FONT>\n";}
 		if ( (preg_match("/Lists Campaign Statuses Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )

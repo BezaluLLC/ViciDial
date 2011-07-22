@@ -63,7 +63,7 @@ mysql_select_db("$VARDB_database");
 $local_DEF = 'Local/';
 $conf_silent_prefix = '7';
 $local_AMP = '@';
-$ext_context = 'demo';
+$ext_context = 'default';
 $recording_exten = '8309';
 $WeBRooTWritablE = '1';
 $non_latin = '0';	# set to 1 for UTF rules
