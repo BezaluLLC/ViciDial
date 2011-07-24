@@ -360,10 +360,11 @@
 # 110713-0048 - Allow for full hiding of the phone number field label
 # 110718-1159 - Added logging of skipped leads
 # 110719-0854 - Removed debug output and small display alignment changes
+# 110723-2308 - Complete hiding of phone numbers in logs when alter phone is set to HIDE
 #
 
-$version = '2.4-337c';
-$build = '110719-0854';
+$version = '2.4-338c';
+$build = '110723-2308';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=73;
 $one_mysql_log=0;
@@ -4795,6 +4796,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		var consultativexfer_checked = 0;
 		if (document.vicidial_form.consultativexfer.checked==true)
 			{consultativexfer_checked = 1;}
+		if (taskvar == 'XfeRLOCAL')
+			{consultativexfer_checked = 0;}
 
 	//	conf_dialed=1;
 		if (auto_dial_level == 0) {RedirecTxFEr = 1;}
@@ -5625,8 +5628,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					hideDiv('LeaDInfOBox');
 					document.vicidial_form.MDDiaLCodE.value = TVphone_code;
 					document.vicidial_form.MDPhonENumbeR.value = TVphone_number;
+					document.vicidial_form.MDPhonENumbeRHiddeN = TVphone_number;
 					document.vicidial_form.MDLeadID.value = TVlead_id;
 					document.vicidial_form.MDType.value = TVtype;
+					if (disable_alter_custphone == 'HIDE')
+						{document.vicidial_form.MDPhonENumbeR.value = 'XXXXXXXXXX';}
 					}
 				if (TVfast=='LEADSEARCH')
 					{
@@ -5682,6 +5688,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			if (document.vicidial_form.LeadLookuP.checked==true)
 				{MDLookuPLeaD = 'lookup';}
 
+			if (MDPhonENumbeRform == 'XXXXXXXXXX')
+				{MDPhonENumbeRform = document.vicidial_form.MDPhonENumbeRHiddeN.value;}
+
 			if (MDDiaLCodEform.length < 1)
 				{MDDiaLCodEform = document.vicidial_form.phone_code.value;}
 
@@ -5724,6 +5733,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			document.vicidial_form.MDDiaLOverridE.value = '';
 			document.vicidial_form.MDLeadID.value = '';
 			document.vicidial_form.MDType.value = '';
+			document.vicidial_form.MDPhonENumbeRHiddeN = '';
 			}
 		}
 
@@ -8857,6 +8867,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				document.vicidial_form.MDDiaLOverridE.value = '';
 				document.vicidial_form.MDLeadID.value = '';
 				document.vicidial_form.MDType.value = '';
+				document.vicidial_form.MDPhonENumbeRHiddeN = '';
 
 				if (post_phone_time_diff_alert_message.length > 10)
 					{
@@ -10777,7 +10788,7 @@ function phone_number_format(formatphone) {
 			}
 		if (xmlhttp) 
 			{ 
-			RAview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=LEADINFOview&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&lead_id=" + VLI_lead_id + "&campaign=" + campaign + "&callback_id=" + VLI_cb_id + "&stage=<?php echo $HCwidth ?>";
+			RAview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=LEADINFOview&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&lead_id=" + VLI_lead_id + "&disable_alter_custphone=" + disable_alter_custphone + "&campaign=" + campaign + "&callback_id=" + VLI_cb_id + "&stage=<?php echo $HCwidth ?>";
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(RAview_query); 
@@ -10840,7 +10851,7 @@ function phone_number_format(formatphone) {
 				}
 			if (xmlhttp) 
 				{ 
-				RAview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=CALLLOGview&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&date=" + logdate + "&campaign=" + campaign + "&stage=<?php echo $HCwidth ?>";
+				RAview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=CALLLOGview&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&date=" + logdate + "&disable_alter_custphone=" + disable_alter_custphone +"&campaign=" + campaign + "&stage=<?php echo $HCwidth ?>";
 				xmlhttp.open('POST', 'vdc_db_query.php'); 
 				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 				xmlhttp.send(RAview_query); 
@@ -10948,6 +10959,7 @@ function phone_number_format(formatphone) {
 		document.vicidial_form.MDDiaLOverridE.value = '';
 		document.vicidial_form.MDLeadID.value = '';
 		document.vicidial_form.MDType.value = '';
+		document.vicidial_form.MDPhonENumbeRHiddeN = '';
 		}
 
 
@@ -13190,8 +13202,9 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></center></font
     <td align="right"><font class="body_text"> Phone Number: </font></td>
     <td align="left"><font class="body_text">
     <input type="text" size="14" maxlength="18" name="MDPhonENumbeR" id="MDPhonENumbeR" class="cust_form" value="" />&nbsp; (digits only)</font>
+	<input type="hidden" name="MDPhonENumbeRHiddeN" id="MDPhonENumbeRHiddeN" value="" />
 	<input type="hidden" name="MDLeadID" id="MDLeadID" value="" />
-	<input type="hidden" name="MDType" id="MDLeadID" value="" />
+	<input type="hidden" name="MDType" id="MDType" value="" />
 	</td>
 	</tr><tr>
     <td align="right"><font class="body_text"> Search Existing Leads: </font></td>

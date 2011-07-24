@@ -102,6 +102,7 @@
 # 110513-1745 - Added double-check for dial level difference target, and dial level and avail-only-tally features
 # 110525-1940 - Allow for auto-dial IVR transfers
 # 110602-0953 - Added dl_diff_target_method option
+# 110723-1256 - Added extra debug for vac deletes and fix for long ring/drop time
 #
 
 
@@ -1182,7 +1183,7 @@ while($one_day_interval > 0)
 										 &event_logger;
 
 									### insert a SENT record to the vicidial_auto_calls table 
-										$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,callerid,phone_code,phone_number,call_time,call_type,alt_dial,queue_priority) values('$DBIPaddress[$user_CIPct]','$DBIPcampaign[$user_CIPct]','SENT','$lead_id','$VqueryCID','$phone_code','$phone_number','$SQLdate','OUT','$alt_dial','$DBIPqueue_priority[$user_CIPct]')";
+										$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,callerid,phone_code,phone_number,call_time,call_type,alt_dial,queue_priority,last_update_time) values('$DBIPaddress[$user_CIPct]','$DBIPcampaign[$user_CIPct]','SENT','$lead_id','$VqueryCID','$phone_code','$phone_number','$SQLdate','OUT','$alt_dial','$DBIPqueue_priority[$user_CIPct]','$SQLdate')";
 										$affected_rows = $dbhA->do($stmtA);
 
 										### sleep for a five hundredths of a second to not flood the server with new calls
@@ -1214,9 +1215,12 @@ while($one_day_interval > 0)
 		@KLcallerid = @MT;
 		@KLserver_ip = @MT;
 		@KLchannel = @MT;
+		@KLuniqueid = @MT;
+		@KLstatus = @MT;
+		@KLcalltime = @MT;
 		$kill_vac=0;
 
-		$stmtA = "SELECT callerid,server_ip,channel,uniqueid,status FROM vicidial_auto_calls where server_ip='$server_ip' order by call_time;";
+		$stmtA = "SELECT callerid,server_ip,channel,uniqueid,status,call_time FROM vicidial_auto_calls where server_ip='$server_ip' order by call_time;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -1231,6 +1235,7 @@ while($one_day_interval > 0)
 			$KLchannel[$kill_vac]		= $aryA[2];
 			$KLuniqueid[$kill_vac]		= $aryA[3];
 			$KLstatus[$kill_vac]		= $aryA[4];
+			$KLcalltime[$kill_vac]		= $aryA[5];
 			$kill_vac++;
 			$rec_count++;
 			}
@@ -1367,6 +1372,10 @@ while($one_day_interval > 0)
 				if ($dialtime_catch > 100000) {$dialtime_catch=0;}
 				$call_timeout = ($CLdial_timeout + $CLdrop_call_seconds);
 				if ($CLstage =~ /SURVEY|REMIND/) {$call_timeout = ($call_timeout + 120);}
+				if ( ($CLstage =~ /SENT/) && ($call_timeout > 110) ) {$call_timeout = 110;}
+
+		#		$event_string = "|     vac test: |$auto_call_id|$CLstatus|$KLcalltime[$kill_vac]|$CLlead_id|$KLcallerid[$kill_vac]|$end_epoch|$KLchannel[$kill_vac]|$CLcall_type|$CLdial_timeout|$CLdrop_call_seconds|$call_timeout|$dialtime_log|$dialtime_catch|$PARKchannel|";
+		#		&event_logger;
 
 				if ( ( ($dialtime_log >= $call_timeout) || ($dialtime_catch >= $call_timeout) || ($CLstatus =~ /BUSY|DISCONNECT|XFER|CLOSER/) ) && ($PARKchannel < 1) )
 					{
@@ -1380,7 +1389,7 @@ while($one_day_interval > 0)
 							$stmtA = "UPDATE vicidial_live_agents set ring_callerid='' where ring_callerid='$KLcallerid[$kill_vac]';";
 							$affected_rowsX = $dbhA->do($stmtA);
 
-							$event_string = "|     dead call vac deleted|$auto_call_id|$CLlead_id|$KLcallerid[$kill_vac]|$end_epoch|$affected_rows|$KLchannel[$kill_vac]|$CLcall_type|$CLdial_timeout|$CLdrop_call_seconds|$call_timeout|$dialtime_log|$dialtime_catch|$affected_rowsX|";
+							$event_string = "|     dead call vac deleted|$auto_call_id|$CLstatus|$CLlead_id|$KLcallerid[$kill_vac]|$end_epoch|$affected_rows|$KLchannel[$kill_vac]|$CLcall_type|$CLdial_timeout|$CLdrop_call_seconds|$call_timeout|$dialtime_log|$dialtime_catch|$affected_rowsX|";
 							 &event_logger;
 
 							$CLstage =~ s/LIVE|-//gi;
@@ -2151,22 +2160,37 @@ while($one_day_interval > 0)
 			}
 
 
-
-		### delete call records that are SENT for over 2 minutes
-		$stmtA = "DELETE FROM vicidial_auto_calls where server_ip='$server_ip' and call_time < '$XDSQLdate' and status NOT IN('XFER','CLOSER','LIVE','IVR')";
-		$VACaffected_rows = $dbhA->do($stmtA);
-
-		if ($VACaffected_rows > 0)
+		### display and delete call records that are SENT for over 2 minutes
+		$stmtA = "SELECT status,lead_id,last_update_time FROM vicidial_auto_calls where server_ip='$server_ip' and call_time < '$XDSQLdate' and status NOT IN('XFER','CLOSER','LIVE','IVR');";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$dead_delete_string='';
+		$dead_delete_ct=0;
+		while ($sthArows > $dead_delete_ct)
 			{
-			$event_string = "|     lagged call vac agent DELETED $VACaffected_rows|$XDSQLdate|";
-			 &event_logger;
+			@aryA = $sthA->fetchrow_array;
+			$dead_delete_string .= "$dead_delete_ct-$aryA[0]-$aryA[1]-$aryA[2]|";
+			$dead_delete_ct++;
 			}
+		$sthA->finish();
 
+		if ($dead_delete_ct > 0)
+			{
+			$stmtA = "DELETE FROM vicidial_auto_calls where server_ip='$server_ip' and call_time < '$XDSQLdate' and status NOT IN('XFER','CLOSER','LIVE','IVR');";
+			$VACaffected_rows = $dbhA->do($stmtA);
+
+			if ($VACaffected_rows > 0)
+				{
+				$event_string = "|     lagged call vac 2-minutes DELETED $VACaffected_rows|$XDSQLdate|$dead_delete_string";
+				&event_logger;
+				}
+			}
 
 		### For debugging purposes, try to grab Jammed calls and log them to jam logfile
 		if ($useJAMdebugFILE)
 			{
-			$stmtA = "SELECT auto_call_id,server_ip,campaign_id,status,lead_id,uniqueid,callerid,channel,phone_code,phone_number,call_time,call_type,stage,last_update_time,alt_dial,queue_priority,agent_only,agent_grab FROM vicidial_auto_calls where server_ip='$server_ip' and last_update_time < '$BDtsSQLdate' and status IN('LIVE')";
+			$stmtA = "SELECT auto_call_id,server_ip,campaign_id,status,lead_id,uniqueid,callerid,channel,phone_code,phone_number,call_time,call_type,stage,last_update_time,alt_dial,queue_priority,agent_only,agent_grab FROM vicidial_auto_calls where server_ip='$server_ip' and last_update_time < '$BDtsSQLdate' and status IN('LIVE');";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -2381,12 +2405,30 @@ while($one_day_interval > 0)
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
 			###########################################
 
-			### delete call records that are LIVE for over 100 minutes
-			$stmtA = "DELETE FROM vicidial_auto_calls where server_ip='$server_ip' and call_time < '$TDSQLdate' and status NOT IN('XFER','CLOSER')";
-			$affected_rows = $dbhA->do($stmtA);
+			### display and delete call records that are LIVE but not updated for over 100 minutes
+			$stmtA = "SELECT status,lead_id,call_time FROM vicidial_auto_calls where server_ip='$server_ip' and call_time < '$TDSQLdate' and status NOT IN('XFER','CLOSER');";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			$dead_delete_string='';
+			$dead_delete_ct=0;
+			while ($sthArows > $dead_delete_ct)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$dead_delete_string .= "$dead_delete_ct-$aryA[0]-$aryA[1]-$aryA[2]|";
+				$dead_delete_ct++;
+				}
+			$sthA->finish();
 
-			$event_string = "|     lagged call vac agent DELETED $affected_rows|$TDSQLdate|LIVE|";
-			 &event_logger;
+			if ($dead_delete_ct > 0)
+				{
+				### delete call records that are LIVE but not updated for over 100 minutes
+				$stmtA = "DELETE FROM vicidial_auto_calls where server_ip='$server_ip' and call_time < '$TDSQLdate' and status NOT IN('XFER','CLOSER');";
+				$affected_rows = $dbhA->do($stmtA);
+
+				$event_string = "|     lagged call vac 100-minutes DELETED $affected_rows|$TDSQLdate|LIVE|$dead_delete_string";
+				&event_logger;
+				}
 
 			### Grab Server values from the database in case they've changed
 			$stmtA = "SELECT max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context FROM servers where server_ip = '$server_ip';";

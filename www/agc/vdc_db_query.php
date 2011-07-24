@@ -90,6 +90,7 @@
 #  - $date - ('2010-02-19')
 #  - $custom_field_names - ('|start_date|finish_date|favorite_color|')
 #  - $call_notes
+#  - $disable_alter_custphone = ('N','Y','HIDE')
 #
 # CHANGELOG:
 # 50629-1044 - First build of script
@@ -286,6 +287,7 @@
 # 110625-0814 - Added screen_labels and label hide functions
 # 110626-0127 - Added queuemetrics_pe_phone_append
 # 110718-1158 - Added logging of skipped leads
+# 110723-2256 - Added disable_alter_custphone HIDE option for call logs display
 #
 
 $version = '2.4-191';
@@ -490,6 +492,8 @@ if (isset($_GET["sub_status"]))				{$sub_status=$_GET["sub_status"];}
 	elseif (isset($_POST["sub_status"]))	{$sub_status=$_POST["sub_status"];}
 if (isset($_GET["qm_extension"]))			{$qm_extension=$_GET["qm_extension"];}
 	elseif (isset($_POST["qm_extension"]))	{$qm_extension=$_POST["qm_extension"];}
+if (isset($_GET["disable_alter_custphone"]))			{$disable_alter_custphone=$_GET["disable_alter_custphone"];}
+	elseif (isset($_POST["disable_alter_custphone"]))	{$disable_alter_custphone=$_POST["disable_alter_custphone"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -8345,13 +8349,16 @@ if ($ACTION == 'CALLLOGview')
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
 
+		$phone_number_display = $ALLphone_number[$i];
+		if ($disable_alter_custphone == 'HIDE')
+			{$phone_number_display = 'XXXXXXXXXX';}
 		$u++;
 		echo "<tr $bgcolor>";
 		echo "<td><font size=1>$u</td>";
 		echo "<td align=right><font size=2>$ALLcall_date[$i]</td>";
 		echo "<td align=right><font size=2> $ALLlength_in_sec[$i]</td>\n";
 		echo "<td align=right><font size=2> $ALLstatus[$i]</td>\n";
-		echo "<td align=right><font size=2> $ALLphone_code[$i] $ALLphone_number[$i] </td>\n";
+		echo "<td align=right><font size=2> $ALLphone_code[$i] $phone_number_display </td>\n";
 		echo "<td align=right><font size=2> $Allfirst_name[$i] $Alllast_name[$i] </td>\n";
 		echo "<td align=right><font size=2> $ALLcampaign_id[$i] </td>\n";
 		echo "<td align=right><font size=2> $ALLin_out[$i] </td>\n";
@@ -9195,6 +9202,10 @@ if ($ACTION == 'LEADINFOview')
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}
 
+			$phone_number_display = $ALLphone_number[$i];
+			if ($disable_alter_custphone == 'HIDE')
+				{$phone_number_display = 'XXXXXXXXXX';}
+
 			$u++;
 			$NOTESout .= "<tr $bgcolor>";
 			$NOTESout .= "<td><font size=1>$u</td>";
@@ -9202,7 +9213,7 @@ if ($ACTION == 'LEADINFOview')
 			$NOTESout .= "<td align=right><font size=2> $ALLuser[$i]</td>\n";
 			$NOTESout .= "<td align=right><font size=2> $ALLlength_in_sec[$i]</td>\n";
 			$NOTESout .= "<td align=right><font size=2> $ALLstatus[$i]</td>\n";
-			$NOTESout .= "<td align=right><font size=2> $ALLphone_code[$i] $ALLphone_number[$i] </td>\n";
+			$NOTESout .= "<td align=right><font size=2> $ALLphone_code[$i] $phone_number_display </td>\n";
 			$NOTESout .= "<td align=right><font size=2> $ALLcampaign_id[$i] </td>\n";
 			$NOTESout .= "<td align=right><font size=2> $ALLin_out[$i] </td>\n";
 			$NOTESout .= "<td align=right><font size=2> $ALLalt_dial[$i] </td>\n";

@@ -87,6 +87,7 @@
 # 110525-1530 - Added AUDIO and CALLMENU drop options
 # 110528-2326 - Added CALLMENU survey method
 # 110626-2342 - Added queuemetrics_pe_phone_append
+# 110723-2330 - Set CID to customer phone number and caller code when transferring to CALLMENU
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -1227,12 +1228,17 @@ if ($call_handle_method =~ /SURVEY/)
 
 						print STDERR "Setting CID \"$newcallerid\"\n";
 						checkresult($result);
-						if ($AGILOG) {$agi_string = "callerID changed: \"$calleridname\" \<$VDADphone\>";   &agi_output;}
+						if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 						}
 					}
 				}
 			if ($survey_method =~ /CALLMENU/)
 				{
+				$newcallerid = "\"$callerid <$VDADphone>\"";
+				$AGI->set_callerid($newcallerid);
+				print STDERR "Setting CID \"$newcallerid\"\n";
+				checkresult($result);
+				if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 				$survey_status='SVYCLM';
 				if (length($survey_menu_id)>0)
 					{
@@ -2526,6 +2532,11 @@ if ($drop_timer > $DROP_TIME)
 		}
 	if ($drop_action =~ /CALLMENU/)
 		{
+		$newcallerid = "\"$callerid <$VDADphone>\"";
+		$AGI->set_callerid($newcallerid);
+		print STDERR "Setting CID \"$newcallerid\"\n";
+		checkresult($result);
+		if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 		$DROPexten = 's';
 		$ext_context = $safe_harbor_menu_id;
 		if (length($ext_context)<1)
