@@ -5628,7 +5628,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					hideDiv('LeaDInfOBox');
 					document.vicidial_form.MDDiaLCodE.value = TVphone_code;
 					document.vicidial_form.MDPhonENumbeR.value = TVphone_number;
-					document.vicidial_form.MDPhonENumbeRHiddeN = TVphone_number;
+					document.vicidial_form.MDPhonENumbeRHiddeN.value = TVphone_number;
 					document.vicidial_form.MDLeadID.value = TVlead_id;
 					document.vicidial_form.MDType.value = TVtype;
 					if (disable_alter_custphone == 'HIDE')
@@ -5733,7 +5733,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			document.vicidial_form.MDDiaLOverridE.value = '';
 			document.vicidial_form.MDLeadID.value = '';
 			document.vicidial_form.MDType.value = '';
-			document.vicidial_form.MDPhonENumbeRHiddeN = '';
+			document.vicidial_form.MDPhonENumbeRHiddeN.value = '';
 			}
 		}
 
@@ -8867,7 +8867,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				document.vicidial_form.MDDiaLOverridE.value = '';
 				document.vicidial_form.MDLeadID.value = '';
 				document.vicidial_form.MDType.value = '';
-				document.vicidial_form.MDPhonENumbeRHiddeN = '';
+				document.vicidial_form.MDPhonENumbeRHiddeN.value = '';
 
 				if (post_phone_time_diff_alert_message.length > 10)
 					{
@@ -10959,7 +10959,7 @@ function phone_number_format(formatphone) {
 		document.vicidial_form.MDDiaLOverridE.value = '';
 		document.vicidial_form.MDLeadID.value = '';
 		document.vicidial_form.MDType.value = '';
-		document.vicidial_form.MDPhonENumbeRHiddeN = '';
+		document.vicidial_form.MDPhonENumbeRHiddeN.value = '';
 		}
 
 
