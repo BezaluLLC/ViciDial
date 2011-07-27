@@ -648,6 +648,11 @@ OTHER CHANGES:
 
 147. Added HIDEBLOB field type for custom list fields
 
+148. Added options to set the voicemail zone and extra voicemail options for 
+	each voicemail box in phones and extra voicemail boxes. Also added 
+	default voicemail zone and timezone settings in the system settings.
+	**	**** NOTE **** You might want to add the new zones in the new 
+	**	voicemail.conf.sample file to your voicemail.conf file
 
 
 

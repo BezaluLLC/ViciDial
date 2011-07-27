@@ -1581,8 +1581,16 @@ if (isset($_GET["queuemetrics_pe_phone_append"]))			{$queuemetrics_pe_phone_appe
 	elseif (isset($_POST["queuemetrics_pe_phone_append"]))	{$queuemetrics_pe_phone_append=$_POST["queuemetrics_pe_phone_append"];}
 if (isset($_GET["test_campaign_calls"]))			{$test_campaign_calls=$_GET["test_campaign_calls"];}
 	elseif (isset($_POST["test_campaign_calls"]))	{$test_campaign_calls=$_POST["test_campaign_calls"];}
-if (isset($_GET["agents_calls_reset"]))			{$agents_calls_reset=$_GET["agents_calls_reset"];}
+if (isset($_GET["agents_calls_reset"]))				{$agents_calls_reset=$_GET["agents_calls_reset"];}
 	elseif (isset($_POST["agents_calls_reset"]))	{$agents_calls_reset=$_POST["agents_calls_reset"];}
+if (isset($_GET["voicemail_timezone"]))				{$voicemail_timezone=$_GET["voicemail_timezone"];}
+	elseif (isset($_POST["voicemail_timezone"]))	{$voicemail_timezone=$_POST["voicemail_timezone"];}
+if (isset($_GET["voicemail_options"]))			{$voicemail_options=$_GET["voicemail_options"];}
+	elseif (isset($_POST["voicemail_options"]))	{$voicemail_options=$_POST["voicemail_options"];}
+if (isset($_GET["default_voicemail_timezone"]))				{$default_voicemail_timezone=$_GET["default_voicemail_timezone"];}
+	elseif (isset($_POST["default_voicemail_timezone"]))	{$default_voicemail_timezone=$_POST["default_voicemail_timezone"];}
+if (isset($_GET["default_local_gmt"]))			{$default_local_gmt=$_GET["default_local_gmt"];}
+	elseif (isset($_POST["default_local_gmt"]))	{$default_local_gmt=$_POST["default_local_gmt"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1596,7 +1604,7 @@ if (strlen($dial_status) > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -1621,6 +1629,9 @@ if ($qm_conf_ct > 0)
 	$SSdefault_server_password =			$row[15];
 	$SStest_campaign_calls =				$row[16];
 	$SSactive_voicemail_server =			$row[17];
+	$SSvoicemail_timezones =				$row[18];
+	$SSdefault_voicemail_timezone =			$row[19];
+	$SSdefault_local_gmt =					$row[20];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -2201,6 +2212,8 @@ if ($non_latin < 1)
 	$label_hide_field_logs = ereg_replace("[^-_0-9a-zA-Z]","",$label_hide_field_logs);
 	$label_id = ereg_replace("[^-_0-9a-zA-Z]","",$label_id);
 	$status_display_fields = ereg_replace("[^-_0-9a-zA-Z]","",$status_display_fields);
+	$voicemail_timezone = ereg_replace("[^-_0-9a-zA-Z]","",$voicemail_timezone);
+	$default_voicemail_timezone = ereg_replace("[^-_0-9a-zA-Z]","",$default_voicemail_timezone);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
@@ -2334,6 +2347,7 @@ if ($non_latin < 1)
 	$filter_phone_group_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$filter_phone_group_description);
 	$filter_clean_cid_number = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$filter_clean_cid_number);
 	$label_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_name);
+	$default_local_gmt = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$default_local_gmt);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
 	$call_out_number_group = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$call_out_number_group);
@@ -2364,6 +2378,9 @@ if ($non_latin < 1)
 
 	### ALPHA-NUMERIC and space and underscore and dash and slash and at and dot and pound and star and pipe and comma
 	$ivr_park_call_agi = ereg_replace("[^ -\*\#\.\,\:\/\|\@\_0-9a-zA-Z]","",$ivr_park_call_agi);
+
+	### ALPHA-NUMERIC and space and underscore and dash and slash and at and dot and pound and star and pipe and comma and equal
+	$voicemail_options = ereg_replace("[^ -\=\*\#\.\,\:\/\|\@\_0-9a-zA-Z]","",$voicemail_options);
 
 	### NUMERIC and comma and pipe
 	$waitforsilence_options = ereg_replace("[^\|\,0-9]","",$waitforsilence_options);
@@ -2781,12 +2798,13 @@ else
 # 110703-1400 - Added test_campaign_calls and agents_calls_reset features
 # 110707-0725 - Added AGENTEXT notes for in-groups settings
 # 110707-1402 - Added last_inbound_call_time and finish to next agent call options for in-groups
+# 110727-0130 - Added more voicemail box options and default timezone and voicemail zone to system settings
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-324a';
-$build = '110707-1402';
+$admin_version = '2.4-325a';
+$build = '110727-0130';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6483,8 +6501,13 @@ if ($ADD==99999)
 	<A NAME="vicidial_voicemail-delete_vm_after_email">
 	<B>Delete Voicemail After Email -</B> This optional setting allows you to have the voicemail messages deleted from the system after they have been emailed out. Default is N.
 
+	<BR>
+	<A NAME="vicidial_voicemail-voicemail_timezone">
+	<B>Voicemail Zone -</B> This setting allows you to set the zone that this voicemail box will be set to when the time is logged for a message. Default is set in the System Settings.
 
-
+	<BR>
+	<A NAME="vicidial_voicemail-voicemail_options">
+	<B>Voicemail Options -</B> This optional setting allows you to define additional voicemail settings. It is recommended that you leave this blank unless you know what you are doing.
 
 	<?php
 	if ($SSoutbound_autodial_active > 0)
@@ -6551,6 +6574,14 @@ if ($ADD==99999)
 	<A NAME="phones-voicemail_id">
 	<BR>
 	<B>Voicemail Box -</B> This field is for the voicemail box that the messages go to for the user of this phone. We use this to check for voicemail messages and for the user to be able to use the VOICEMAIL button on astGUIclient app.
+
+	<BR>
+	<A NAME="phones-voicemail_timezone">
+	<B>Voicemail Zone -</B> This setting allows you to set the zone that this voicemail box will be set to when the time is logged for a message. Default is set in the System Settings.
+
+	<BR>
+	<A NAME="phones-voicemail_options">
+	<B>Voicemail Options -</B> This optional setting allows you to define additional voicemail settings. It is recommended that you leave this blank unless you know what you are doing.
 
 	<BR>
 	<A NAME="phones-outbound_cid">
@@ -7361,6 +7392,16 @@ if ($ADD==99999)
 	<A NAME="settings-timeclock_end_of_day">
 	<BR>
 	<B>Timeclock End Of Day -</B> This setting defines when all users are to be auto logged out of the timeclock system. Only runs once a day. must be only 4 digits 2 digit hour and 2 digit minutes in 24 hour time. Default is 0000.
+
+	<BR>
+	<A NAME="settings-default_local_gmt">
+	<BR>
+	<B>Default Local GMT -</B> This setting defines what will be used by default when new phones and servers are added using this admin web interface. Default is -5.
+
+	<BR>
+	<A NAME="settings-default_voicemail_timezone">
+	<BR>
+	<B>Default Voicemail Zone -</B> This setting defines what zone will be used by default when new phones and voicemail boxes are created. The list of available zones is directly taken from the voicemail.conf file. Default is eastern.
 
 	<BR>
 	<A NAME="settings-agents_calls_reset">
@@ -9546,7 +9587,7 @@ if ($ADD==11111111111)
 #		echo "<tr bgcolor=#B6D3FC><td align=right>Company: </td><td align=left><input type=text name=company size=10 maxlength=10>$NWB#phones-company$NWE</td></tr>\n";
 #		echo "<tr bgcolor=#B6D3FC><td align=right>Picture: </td><td align=left><input type=text name=picture size=20 maxlength=19>$NWB#phones-picture$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Client Protocol: </td><td align=left><select size=1 name=protocol><option SELECTED>SIP</option><option>Zap</option><option>IAX2</option><option>EXTERNAL</option></select>$NWB#phones-protocol$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Local GMT: </td><td align=left><select size=1 name=local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option SELECTED>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option></select> (Do NOT Adjust for DST)$NWB#phones-local_gmt$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Local GMT: </td><td align=left><select size=1 name=local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option><option SELECTED>$SSdefault_local_gmt</option></select> (Do NOT Adjust for DST)$NWB#phones-local_gmt$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE=SUBMIT></td></tr>\n";
 		echo "</TABLE></center>\n";
 		}
@@ -12033,7 +12074,7 @@ if ($ADD==21111111111)
 						{
 						echo "<br>PHONE ADDED\n";
 
-						$stmt="INSERT INTO phones (extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,protocol,local_gmt,outbound_cid,conf_secret) values('$extension','$dialplan_number','$voicemail_id','$phone_ip','$computer_ip','$server_ip','$login','$pass','$status','$active','$phone_type','$fullname','$company','$picture','$protocol','$local_gmt','$outbound_cid','$conf_secret');";
+						$stmt="INSERT INTO phones (extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,protocol,local_gmt,outbound_cid,conf_secret,voicemail_timezone) values('$extension','$dialplan_number','$voicemail_id','$phone_ip','$computer_ip','$server_ip','$login','$pass','$status','$active','$phone_type','$fullname','$company','$picture','$protocol','$local_gmt','$outbound_cid','$conf_secret','$SSdefault_voicemail_timezone');";
 						$rslt=mysql_query($stmt, $link);
 
 						$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
@@ -12160,7 +12201,7 @@ if ($ADD==211111111111)
 			{
 			echo "<br>SERVER ADDED\n";
 
-			$stmt="INSERT INTO servers (server_id,server_description,server_ip,active,asterisk_version,conf_secret) values('$server_id','$server_description','$server_ip','$active','$asterisk_version','$SSdefault_server_password');";
+			$stmt="INSERT INTO servers (server_id,server_description,server_ip,active,asterisk_version,conf_secret,local_gmt) values('$server_id','$server_description','$server_ip','$active','$asterisk_version','$SSdefault_server_password','$SSdefault_local_gmt');";
 			$rslt=mysql_query($stmt, $link);
 
 			$stmtA="UPDATE servers SET rebuild_conf_files='Y',rebuild_music_on_hold='Y',sounds_update='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
@@ -12450,7 +12491,7 @@ if ($ADD==271111111111)
 				{
 				echo "<br>VOICEMAIL BOX ADDED\n";
 
-				$stmt="INSERT INTO vicidial_voicemail SET voicemail_id='$voicemail_id',pass='$pass',email='$email',fullname='$fullname',active='$active';";
+				$stmt="INSERT INTO vicidial_voicemail SET voicemail_id='$voicemail_id',pass='$pass',email='$email',fullname='$fullname',active='$active',voicemail_timezone='$SSdefault_voicemail_timezone';";
 				$rslt=mysql_query($stmt, $link);
 
 				$stmt="SELECT active_voicemail_server from system_settings;";
@@ -15406,7 +15447,7 @@ if ($ADD==41111111111)
 				{
 				echo "<br>PHONE MODIFIED: $extension\n";
 
-				$stmt="UPDATE phones set extension='$extension', dialplan_number='$dialplan_number', voicemail_id='$voicemail_id', phone_ip='$phone_ip', computer_ip='$computer_ip', server_ip='$server_ip', login='$login', pass='$pass', status='$status', active='$active', phone_type='$phone_type', fullname='$fullname', company='$company', picture='$picture', protocol='$protocol', local_gmt='$local_gmt', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', login_user='$login_user', login_pass='$login_pass', login_campaign='$login_campaign', park_on_extension='$park_on_extension', conf_on_extension='$conf_on_extension', VICIDIAL_park_on_extension='$VICIDIAL_park_on_extension', VICIDIAL_park_on_filename='$VICIDIAL_park_on_filename', monitor_prefix='$monitor_prefix', recording_exten='$recording_exten', voicemail_exten='$voicemail_exten', voicemail_dump_exten='$voicemail_dump_exten', ext_context='$ext_context', dtmf_send_extension='$dtmf_send_extension', call_out_number_group='$call_out_number_group', client_browser='$client_browser', install_directory='$install_directory', local_web_callerID_URL='" . mysql_real_escape_string($local_web_callerID_URL) . "', VICIDIAL_web_URL='" . mysql_real_escape_string($VICIDIAL_web_URL) . "', AGI_call_logging_enabled='$AGI_call_logging_enabled', user_switching_enabled='$user_switching_enabled', conferencing_enabled='$conferencing_enabled', admin_hangup_enabled='$admin_hangup_enabled', admin_hijack_enabled='$admin_hijack_enabled', admin_monitor_enabled='$admin_monitor_enabled', call_parking_enabled='$call_parking_enabled', updater_check_enabled='$updater_check_enabled', AFLogging_enabled='$AFLogging_enabled', QUEUE_ACTION_enabled='$QUEUE_ACTION_enabled', CallerID_popup_enabled='$CallerID_popup_enabled', voicemail_button_enabled='$voicemail_button_enabled', enable_fast_refresh='$enable_fast_refresh', fast_refresh_rate='$fast_refresh_rate', enable_persistant_mysql='$enable_persistant_mysql', auto_dial_next_number='$auto_dial_next_number', VDstop_rec_after_each_call='$VDstop_rec_after_each_call', DBX_server='$DBX_server', DBX_database='$DBX_database', DBX_user='$DBX_user', DBX_pass='$DBX_pass', DBX_port='$DBX_port', DBY_server='$DBY_server', DBY_database='$DBY_database', DBY_user='$DBY_user', DBY_pass='$DBY_pass', DBY_port='$DBY_port', outbound_cid='$outbound_cid', enable_sipsak_messages='$enable_sipsak_messages', email='$email', template_id='$template_id', conf_override='$conf_override',phone_context='$phone_context',phone_ring_timeout='$phone_ring_timeout',conf_secret='$conf_secret', delete_vm_after_email='$delete_vm_after_email',is_webphone='$is_webphone',use_external_server_ip='$use_external_server_ip',codecs_list='$codecs_list',codecs_with_template='$codecs_with_template',webphone_dialpad='$webphone_dialpad',on_hook_agent='$on_hook_agent',webphone_auto_answer='$webphone_auto_answer' where extension='$old_extension' and server_ip='$old_server_ip';";
+				$stmt="UPDATE phones set extension='$extension', dialplan_number='$dialplan_number', voicemail_id='$voicemail_id', phone_ip='$phone_ip', computer_ip='$computer_ip', server_ip='$server_ip', login='$login', pass='$pass', status='$status', active='$active', phone_type='$phone_type', fullname='$fullname', company='$company', picture='$picture', protocol='$protocol', local_gmt='$local_gmt', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', login_user='$login_user', login_pass='$login_pass', login_campaign='$login_campaign', park_on_extension='$park_on_extension', conf_on_extension='$conf_on_extension', VICIDIAL_park_on_extension='$VICIDIAL_park_on_extension', VICIDIAL_park_on_filename='$VICIDIAL_park_on_filename', monitor_prefix='$monitor_prefix', recording_exten='$recording_exten', voicemail_exten='$voicemail_exten', voicemail_dump_exten='$voicemail_dump_exten', ext_context='$ext_context', dtmf_send_extension='$dtmf_send_extension', call_out_number_group='$call_out_number_group', client_browser='$client_browser', install_directory='$install_directory', local_web_callerID_URL='" . mysql_real_escape_string($local_web_callerID_URL) . "', VICIDIAL_web_URL='" . mysql_real_escape_string($VICIDIAL_web_URL) . "', AGI_call_logging_enabled='$AGI_call_logging_enabled', user_switching_enabled='$user_switching_enabled', conferencing_enabled='$conferencing_enabled', admin_hangup_enabled='$admin_hangup_enabled', admin_hijack_enabled='$admin_hijack_enabled', admin_monitor_enabled='$admin_monitor_enabled', call_parking_enabled='$call_parking_enabled', updater_check_enabled='$updater_check_enabled', AFLogging_enabled='$AFLogging_enabled', QUEUE_ACTION_enabled='$QUEUE_ACTION_enabled', CallerID_popup_enabled='$CallerID_popup_enabled', voicemail_button_enabled='$voicemail_button_enabled', enable_fast_refresh='$enable_fast_refresh', fast_refresh_rate='$fast_refresh_rate', enable_persistant_mysql='$enable_persistant_mysql', auto_dial_next_number='$auto_dial_next_number', VDstop_rec_after_each_call='$VDstop_rec_after_each_call', DBX_server='$DBX_server', DBX_database='$DBX_database', DBX_user='$DBX_user', DBX_pass='$DBX_pass', DBX_port='$DBX_port', DBY_server='$DBY_server', DBY_database='$DBY_database', DBY_user='$DBY_user', DBY_pass='$DBY_pass', DBY_port='$DBY_port', outbound_cid='$outbound_cid', enable_sipsak_messages='$enable_sipsak_messages', email='$email', template_id='$template_id', conf_override='$conf_override',phone_context='$phone_context',phone_ring_timeout='$phone_ring_timeout',conf_secret='$conf_secret', delete_vm_after_email='$delete_vm_after_email',is_webphone='$is_webphone',use_external_server_ip='$use_external_server_ip',codecs_list='$codecs_list',codecs_with_template='$codecs_with_template',webphone_dialpad='$webphone_dialpad',on_hook_agent='$on_hook_agent',webphone_auto_answer='$webphone_auto_answer',voicemail_timezone='$voicemail_timezone',voicemail_options='$voicemail_options' where extension='$old_extension' and server_ip='$old_server_ip';";
 				$rslt=mysql_query($stmt, $link);
 
 				$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
@@ -15857,7 +15898,7 @@ if ($ADD==471111111111)
 			{echo "<br>VOICEMAIL BOX NOT MODIFIED - Please go back and look at the data you entered\n";}
 		else
 			{
-			$stmt="UPDATE vicidial_voicemail set fullname='$fullname',active='$active',pass='$pass',email='$email',delete_vm_after_email='$delete_vm_after_email' where voicemail_id='$voicemail_id';";
+			$stmt="UPDATE vicidial_voicemail set fullname='$fullname',active='$active',pass='$pass',email='$email',delete_vm_after_email='$delete_vm_after_email',voicemail_timezone='$voicemail_timezone',voicemail_options='$voicemail_options' where voicemail_id='$voicemail_id';";
 			$rslt=mysql_query($stmt, $link);
 
 			$stmt="SELECT active_voicemail_server from system_settings;";
@@ -16022,7 +16063,7 @@ if ($ADD==411111111111111)
 			}
 		$reports_use_slave_db = preg_replace("/,$/","",$new_field_value);
 
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysql_real_escape_string($webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db',webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset';";
+		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysql_real_escape_string($webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db',webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt';";
 		$rslt=mysql_query($stmt, $link);
 
 		if ($reload_dialplan_on_servers > 0)
@@ -25723,7 +25764,7 @@ if ($ADD==31111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,is_webphone,use_external_server_ip,codecs_list,codecs_with_template,webphone_dialpad,on_hook_agent,webphone_auto_answer from phones where extension='$extension' and server_ip='$server_ip';";
+		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,is_webphone,use_external_server_ip,codecs_list,codecs_with_template,webphone_dialpad,on_hook_agent,webphone_auto_answer,voicemail_timezone,voicemail_options from phones where extension='$extension' and server_ip='$server_ip';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 
@@ -25759,6 +25800,24 @@ if ($ADD==31111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Full Name: </td><td align=left><input type=text name=fullname size=20 maxlength=50 value=\"$row[11]\">$NWB#phones-fullname$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Email: </td><td align=left><input type=text name=email size=50 maxlength=100 value=\"$row[67]\"> $NWB#phones-email$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Delete Voicemail After Email: </td><td align=left><select size=1 name=delete_vm_after_email><option>Y</option><option>N</option><option selected>$row[73]</option></select>$NWB#phones-delete_vm_after_email$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail Zone: </td><td align=left><select size=1 name=voicemail_timezone>";
+		$vm_zones = explode("\n",$SSvoicemail_timezones);
+		$z=0;
+		$vm_zones_ct = count($vm_zones);
+		while($vm_zones_ct > $z)
+			{
+			if (strlen($vm_zones[$z]) > 5)
+				{
+				$vm_specs = explode("=",$vm_zones[$z]);
+				$vm_abb = $vm_specs[0];
+				$vm_details = explode('|',$vm_specs[1]);
+				$vm_location = 	$vm_details[0];
+				echo "<option value=\"$vm_abb\">$vm_abb - $vm_location</option>\n";
+				}
+			$z++;
+			}
+		echo "<option selected>$row[81]</option></select> $NWB#phones-voicemail_timezone$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail Options: </td><td align=left><input type=text name=voicemail_options size=50 maxlength=100 value=\"$row[82]\">$NWB#phones-voicemail_options$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Company: </td><td align=left><input type=text name=company size=10 maxlength=10 value=\"$row[12]\">$NWB#phones-company$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Picture: </td><td align=left><input type=text name=picture size=20 maxlength=19 value=\"$row[13]\">$NWB#phones-picture$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>New Messages: </td><td align=left><b>$row[14]</b>$NWB#phones-messages$NWE</td></tr>\n";
@@ -25900,15 +25959,16 @@ if ($ADD==32111111111)
 		echo "<TABLE width=600 cellspacing=3>\n";
 		echo "<tr><td>LOGIN</td><td>EXTENSION</td><td>SERVER</td><td>PROTOCOL</td><td>IP</td></tr>\n";
 
-			$stmt="SELECT login,extension,server_ip,protocol,phone_ip from phones where login IN ('$phone_alias_SQL');";
-			if ($DB) {echo "|$stmt|";}
-			$rsltx=mysql_query($stmt, $link);
-			$lists_to_print = mysql_num_rows($rsltx);
+		$stmt="SELECT login,extension,server_ip,protocol,phone_ip from phones where login IN ('$phone_alias_SQL');";
+		if ($DB) {echo "|$stmt|";}
+		$rsltx=mysql_query($stmt, $link);
+		$lists_to_print = mysql_num_rows($rsltx);
 
-			$o=0;
-			while ($lists_to_print > $o) {
-				$rowx=mysql_fetch_row($rsltx);
-				$o++;
+		$o=0;
+		while ($lists_to_print > $o) 
+			{
+			$rowx=mysql_fetch_row($rsltx);
+			$o++;
 
 			if (eregi("1$|3$|5$|7$|9$", $o))
 				{$bgcolor='bgcolor="#B9CBFD"';} 
@@ -26672,7 +26732,7 @@ if ($ADD==371111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT voicemail_id,pass,fullname,active,email,messages,old_messages,delete_vm_after_email from vicidial_voicemail where voicemail_id='$voicemail_id';";
+		$stmt="SELECT voicemail_id,pass,fullname,active,email,messages,old_messages,delete_vm_after_email,voicemail_timezone,voicemail_options from vicidial_voicemail where voicemail_id='$voicemail_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$voicemail_id =				$row[0];
@@ -26683,6 +26743,8 @@ if ($ADD==371111111111)
 		$messages =					$row[5];
 		$old_messages =				$row[6];
 		$delete_vm_after_email =	$row[7];
+		$voicemail_timezone =		$row[8];
+		$voicemail_options =		$row[9];
 
 		echo "<br>MODIFY A VOICEMAIL BOX: $tts_id<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=471111111111>\n";
@@ -26695,6 +26757,24 @@ if ($ADD==371111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Email: </td><td align=left><input type=text name=email size=50 maxlength=100 value=\"$email\">$NWB#vicidial_voicemail-email$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>N</option><option>Y</option><option SELECTED>$active</option></select>$NWB#vicidial_voicemail-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Delete Voicemail After Email: </td><td align=left><select size=1 name=delete_vm_after_email><option>Y</option><option>N</option><option selected>$delete_vm_after_email</option></select>$NWB#vicidial_voicemail-delete_vm_after_email$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail Zone: </td><td align=left><select size=1 name=voicemail_timezone>";
+		$vm_zones = explode("\n",$SSvoicemail_timezones);
+		$z=0;
+		$vm_zones_ct = count($vm_zones);
+		while($vm_zones_ct > $z)
+			{
+			if (strlen($vm_zones[$z]) > 5)
+				{
+				$vm_specs = explode("=",$vm_zones[$z]);
+				$vm_abb = $vm_specs[0];
+				$vm_details = explode('|',$vm_specs[1]);
+				$vm_location = 	$vm_details[0];
+				echo "<option value=\"$vm_abb\">$vm_abb - $vm_location</option>\n";
+				}
+			$z++;
+			}
+		echo "<option selected>$voicemail_timezone</option></select> $NWB#vicidial_voicemail-voicemail_timezone$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail Options: </td><td align=left><input type=text name=voicemail_options size=50 maxlength=100 value=\"$voicemail_options\">$NWB#vicidial_voicemail-voicemail_options$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>New Messages: </td><td align=left><B>$messages</B></td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Old Messages: </td><td align=left><B>$old_messages</B></td></tr>\n";
 
@@ -26971,7 +27051,7 @@ if ($ADD==311111111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset from system_settings;";
+		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt from system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$version =						$row[0];
@@ -27065,6 +27145,8 @@ if ($ADD==311111111111111)
 		$queuemetrics_pe_phone_append = $row[88];
 		$test_campaign_calls =			$row[89];
 		$agents_calls_reset =			$row[90];
+		$default_voicemail_timezone =	$row[91];
+		$default_local_gmt =			$row[92];
 
 		echo "<br>MODIFY VICIDIAL SYSTEM SETTINGS<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=411111111111111>\n";
@@ -27091,6 +27173,27 @@ if ($ADD==311111111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Enable Agent Transfer Logfile: </td><td align=left><select size=1 name=enable_agc_xfer_log><option>1</option><option>0</option><option selected>$enable_agc_xfer_log</option></select>$NWB#settings-enable_agc_xfer_log$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Enable Agent Disposition Logfile: </td><td align=left><select size=1 name=enable_agc_dispo_log><option>1</option><option>0</option><option selected>$enable_agc_dispo_log</option></select>$NWB#settings-enable_agc_dispo_log$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Timeclock End Of Day: </td><td align=left><input type=text name=timeclock_end_of_day size=5 maxlength=4 value=\"$timeclock_end_of_day\">$NWB#settings-timeclock_end_of_day$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Default Local GMT: </td><td align=left><select size=1 name=default_local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option><option selected>$default_local_gmt</option></select> (Do NOT Adjust for DST)$NWB#settings-default_local_gmt$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Default Voicemail Zone: </td><td align=left><select size=1 name=default_voicemail_timezone>";
+		$vm_zones = explode("\n",$SSvoicemail_timezones);
+		$z=0;
+		$vm_zones_ct = count($vm_zones);
+		while($vm_zones_ct > $z)
+			{
+			if (strlen($vm_zones[$z]) > 5)
+				{
+				$vm_specs = explode("=",$vm_zones[$z]);
+				$vm_abb = $vm_specs[0];
+				$vm_details = explode('|',$vm_specs[1]);
+				$vm_location = 	$vm_details[0];
+				echo "<option value=\"$vm_abb\">$vm_abb - $vm_location</option>\n";
+				}
+			$z++;
+			}
+		echo "<option selected>$default_voicemail_timezone</option></select> $NWB#settings-default_voicemail_timezone$NWE</td></tr>\n";
+
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agents Calls Reset: </td><td align=left><select size=1 name=agents_calls_reset><option>1</option><option>0</option><option selected>$agents_calls_reset</option></select>$NWB#settings-agents_calls_reset$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Timeclock Last Auto Logout: </td><td align=left> $timeclock_last_reset_date</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Screen Header Date Format: </td><td align=left><select size=1 name=vdc_header_date_format>\n";
@@ -29978,14 +30081,16 @@ if ($ADD==999996)
 						if (strlen($default_phone_registration_password) < 2) {$default_phone_registration_password = $SSdefault_phone_registration_password;}
 						if (strlen($default_phone_login_password) < 2) {$default_phone_login_password = $SSdefault_phone_login_password;}
 						if (strlen($default_server_password) < 2) {$default_server_password = $SSdefault_server_password;}
+						if (strlen($default_local_gmt) < 2) {$default_local_gmt = $SSdefault_local_gmt;}
+						if (strlen($default_voicemail_timezone) < 2) {$default_voicemail_timezone = $SSdefault_voicemail_timezone;}
 
 						$stmt="UPDATE vicidial_users SET pass='$pass',force_change_password='N' where user='$user' and active='Y' and user_level > 6;";
 						$rslt=mysql_query($stmt, $link);
 
-						$stmtA="UPDATE system_settings SET first_login_trigger='N',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password';";
+						$stmtA="UPDATE system_settings SET first_login_trigger='N',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',default_local_gmt='$default_local_gmt',default_voicemail_timezone='$default_voicemail_timezone';";
 						$rslt=mysql_query($stmtA, $link);
 
-						$stmtB="UPDATE phones SET conf_secret='$default_phone_registration_password',pass='$default_phone_login_password';";
+						$stmtB="UPDATE phones SET conf_secret='$default_phone_registration_password',pass='$default_phone_login_password',local_gmt='$default_local_gmt',voicemail_timezone='$default_voicemail_timezone';";
 						$rslt=mysql_query($stmtB, $link);
 
 						$stmtC="UPDATE servers SET conf_secret='$default_server_password',rebuild_conf_files='Y';";
@@ -30029,6 +30134,30 @@ if ($ADD==999996)
 			echo "<tr bgcolor=#B6D3FC><td align=right>Default Phone Login Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_passY name=default_phone_login_password size=20 maxlength=20 value=\"$SSdefault_phone_login_password\" onkeyup=\"return pwdChanged('reg_passY','reg_pass_imgY');\"> &nbsp; &nbsp; Strength: <IMG id=reg_pass_imgY src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passY','reg_pass_imgY');\"></td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=right>Default Server Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_passZ name=default_server_password size=20 maxlength=20 value=\"$SSdefault_server_password\" onkeyup=\"return pwdChanged('reg_passZ','reg_pass_imgZ');\"> &nbsp; &nbsp; Strength: <IMG id=reg_pass_imgZ src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passZ','reg_pass_imgZ');\"></td></tr>\n";
+
+			echo "<tr><td colspan=2> &nbsp; </td></tr>\n";
+
+			echo "<tr bgcolor=#B6D3FC><td align=left colspan=2>The next two settings are also defined in the System Settings section, and you can change them after you define them here. You should set the Default Local GMT to the timezone that your agents want to be in. The Voicemail zone is the listing of voicemail timezones that voicemail messages will be time logged with when new messages are left.</td></tr>\n";
+
+			echo "<tr bgcolor=#B6D3FC><td align=right>Default Local GMT: </td><td align=left><select size=1 name=default_local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option><option selected>$SSdefault_local_gmt</option></select> (Do NOT Adjust for DST)$NWB#settings-default_local_gmt$NWE</td></tr>\n";
+
+			echo "<tr bgcolor=#B6D3FC><td align=right>Default Voicemail Zone: </td><td align=left><select size=1 name=default_voicemail_timezone>";
+			$vm_zones = explode("\n",$SSvoicemail_timezones);
+			$z=0;
+			$vm_zones_ct = count($vm_zones);
+			while($vm_zones_ct > $z)
+				{
+				if (strlen($vm_zones[$z]) > 5)
+					{
+					$vm_specs = explode("=",$vm_zones[$z]);
+					$vm_abb = $vm_specs[0];
+					$vm_details = explode('|',$vm_specs[1]);
+					$vm_location = 	$vm_details[0];
+					echo "<option value=\"$vm_abb\">$vm_abb - $vm_location</option>\n";
+					}
+				$z++;
+				}
+			echo "<option selected>$SSdefault_voicemail_timezone</option></select> $NWB#settings-default_voicemail_timezone$NWE</td></tr>\n";
 
 			echo "<tr><td colspan=2> &nbsp; </td></tr>\n";
 

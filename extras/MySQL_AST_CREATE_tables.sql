@@ -80,6 +80,8 @@ codecs_with_template ENUM('0','1') default '0',
 webphone_dialpad ENUM('Y','N','TOGGLE','TOGGLE_OFF') default 'Y',
 on_hook_agent ENUM('Y','N') default 'N',
 webphone_auto_answer ENUM('Y','N') default 'Y',
+voicemail_timezone VARCHAR(30) default 'eastern',
+voicemail_options VARCHAR(255) default '',
 index (server_ip),
 unique index extenserver (extension, server_ip)
 );
@@ -1412,7 +1414,10 @@ queuemetrics_dispo_pause VARCHAR(6) default '',
 label_hide_field_logs VARCHAR(6) default 'Y',
 queuemetrics_pe_phone_append ENUM('0','1') default '0',
 test_campaign_calls ENUM('0','1') default '0',
-agents_calls_reset ENUM('0','1') default '1'
+agents_calls_reset ENUM('0','1') default '1',
+voicemail_timezones TEXT,
+default_voicemail_timezone VARCHAR(30) default 'eastern',
+default_local_gmt VARCHAR(6) default '-5.00'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2107,7 +2112,9 @@ fullname VARCHAR(100) NOT NULL,
 messages INT(4) default '0',
 old_messages INT(4) default '0',
 email VARCHAR(100),
-delete_vm_after_email ENUM('N','Y') default 'N'
+delete_vm_after_email ENUM('N','Y') default 'N',
+voicemail_timezone VARCHAR(30) default 'eastern',
+voicemail_options VARCHAR(255) default ''
 );
 
 CREATE TABLE vicidial_user_territory_log (
@@ -2511,6 +2518,8 @@ INSERT INTO vicidial_scripts (script_id,script_name,script_comments,active,scrip
 
 UPDATE system_settings SET qc_last_pull_time=NOW();
 
+UPDATE system_settings SET voicemail_timezones="newzealand=Pacific/Auckland\naustraliaeast=Australia/Sydney\naustraliacentral=Australia/Adelaide\naustraliawest=Australia/Perth\njapan=Asia/Tokyo\nphilippines=Asia/Manila\nchina=Asia/Shanghai\nmalaysia=Asia/Kuala_Lumpur\nthailand=Asia/Bangkok\nindia=Asia/Calcutta\npakistan=Asia/Karachi\nrussiaeast=Europe/Moscow\nkenya=Africa/Nairobi\neuropeaneast=Europe/Kiev\nsouthafrica=Africa/Johannesburg\neuropean=Europe/Copenhagen\nnigeria=Africa/Lagos\nuk=Europe/London\nbrazil=America/Sao_Paulo\nnewfoundland=Canada/Newfoundland\ncarribeaneast=America/Santo_Domingo\natlantic=Canada/Atlantic\nchile=America/Santiago\neastern=America/New_York\nperu=America/Lima\ncentral=America/Chicago\nmexicocity=America/Mexico_City\nmountain=America/Denver\narizona=America/Phoenix\nsaskatchewan=America/Saskatchewan\npacific=America/Los_Angeles\nalaska=America/Anchorage\nhawaii=Pacific/Honolulu\neastern24=America/New_York\ncentral24=America/Chicago\nmountain24=America/Denver\npacific24=America/Los_Angeles\nmilitary=Zulu\n";
+
 CREATE INDEX country_postal_code on vicidial_postal_codes (country_code,postal_code);
 CREATE INDEX country_area_code on vicidial_phone_codes (country_code,areacode);
 CREATE INDEX country_state on vicidial_phone_codes (country_code,state);
@@ -2549,7 +2558,7 @@ ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_outbound_ivr_log_archive LIKE vicidial_outbound_ivr_log;
 
-UPDATE system_settings SET db_schema_version='1288',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1289',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

@@ -669,6 +669,15 @@ This is the phone protocol that will be used for all phones created when submitt
 Local GMT||
 This is the time zone that all of the phones will be created with||
 HIDEBLOB is similar to HIDDEN except the data storage type on the database is a BLOB type, suitable for binary data or data that needs to be secured||
+Default Local GMT||
+This setting defines what will be used by default when new phones and servers are added using this admin web interface. Default is -5||
+Default Voicemail Zone||
+This setting defines what zone will be used by default when new phones and voicemail boxes are created. The list of available zones is directly taken from the voicemail.conf file. Default is eastern||
+Voicemail Zone||
+This setting allows you to set the zone that this voicemail box will be set to when the time is logged for a message. Default is set in the System Settings||
+Voicemail Options||
+This optional setting allows you to define additional voicemail settings. It is recommended that you leave this blank unless you know what you are doing||
+The next two settings are also defined in the System Settings section, and you can change them after you define them here. You should set the Default Local GMT to the timezone that your agents want to be in. The Voicemail zone is the listing of voicemail timezones that voicemail messages will be time logged with when new messages are left||
 
 
 lead_report_export.php

@@ -62,6 +62,7 @@
 # 110512-2112 - Added vicidial_campaign_stats_debug to table cleaning
 # 110525-2334 - Added cm.agi optional logging to call menus
 # 110705-2023 - Added agents_calls_reset option
+# 110725-2356 - Added new voicemail time zone option and menu gather
 #
 
 $DB=0; # Debug flag
@@ -886,7 +887,7 @@ if ($timeclock_end_of_day_NOW > 0)
 ################################################################################
 
 ##### Get the settings from system_settings #####
-$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten FROM system_settings;";
+$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone FROM system_settings;";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -899,6 +900,8 @@ if ($sthArows > 0)
 	$SScustom_dialplan_entry =			$aryA[2];
 	$SSdefault_codecs =					$aryA[3];
 	$SSgenerate_cross_server_exten =	$aryA[4];
+	$SSvoicemail_timezones =			$aryA[5];
+	$SSdefault_voicemail_timezone =		$aryA[6];	
 	}
 $sthA->finish();
 if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
@@ -913,6 +916,7 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 	$vmCMP =  compare("/etc/asterisk/BUILDvoicemail-vicidial.conf","/etc/asterisk/voicemail.conf");
 	if ($vmCMP > 0)
 		{
+		if ($DB) {print "starting voicemail configuration check\n";}
 		################################################################################
 		#####  START Parsing of the voicemail.conf file
 		################################################################################
@@ -924,22 +928,49 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 		close(vmc);
 		$i=0;
 		$vm_header_content='';
+		$vm_zones_content='';
 		$boxes=9999999;
+		$zones=9999;
+		$zonesend=9999;
 		$otherboxes=9999999;
 		foreach(@vmc)
 			{
 			$line = $vmc[$i];
 			$line =~ s/\n|\r//gi;
+			if ( ($zones > 0) && ($i > $zones) && ($line =~ /\[/) )
+				{
+				$zonesend = $i;
+				if ($DBXXX > 0) {print "voicemail zones end:     $zonesend\n";}
+				}
+			if ($line =~ /\[zonemessages\]/)
+				{
+				$zones = $i;
+				if ($DBXXX > 0) {print "voicemail zones begin:   $zones\n";}
+				}
 			if ($line =~ /\[default\]/)
 				{$boxes = $i;}
 			if ($line =~ /^; Other Voicemail Entries/)
 				{$otherboxes = $i;}
-			### parse through voicemail boxes and update DB with any changed settings
+			### BEGIN parse through voicemail zonemessages
+			if ( ($i > $zones) && ($i < $zonesend) )
+				{
+				if ( ($line !~ /^;/) && (length($line) > 5) )
+					{
+					$templine = $line;
+					$templine =~ s/\|.*//gi;
+					$vm_zones_content .= "$templine\n";
+					if ($DBXXX > 0) {print "voicemail zones content:   $line\n";}
+					}
+				}
+			### END parse through voicemail zonemessages
+
+			### BEGIN parse through voicemail boxes and update DB with any changed settings
 			if ($i > $boxes)
 				{
 				if ( ($line !~ /^;/) && (length($line) > 5) )
 					{
 					# 102 => 102,102a Mailbox,test@vicidial.com,,|delete=yes
+					chomp($line);
 					@parse_line = split(/ => /,$line);
 					$mailbox = $parse_line[0];
 					$mboptions = $parse_line[1];
@@ -947,13 +978,23 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 					$vmc_pass = $options_line[0];
 					$vmc_email = $options_line[2];
 					$vmc_delete_vm_after_email='N';
+					$vmc_voicemail_timezone="$SSdefault_voicemail_timezone";
+					$vmc_voicemail_options='';
 					if ($mboptions =~ /delete=yes/)
 						{$vmc_delete_vm_after_email='Y';}
+					if ($mboptions =~ /tz=/)
+						{
+						@options_sgmt = split(/tz=/,$mboptions);
+						@tz_sgmt = split(/\|/,$options_sgmt[1]);
+						$vmc_voicemail_timezone = $tz_sgmt[0];
+						@options_sgmt = split(/tz=$vmc_voicemail_timezone\|/,$mboptions);
+						$vmc_voicemail_options = $options_sgmt[1];
+						}
 					$sthArows=0;
 
 					if ($i < $otherboxes)
 						{
-						$stmtA = "SELECT voicemail_id,pass,email,delete_vm_after_email FROM phones where voicemail_id='$mailbox' and active='Y' order by extension limit 1;";
+						$stmtA = "SELECT voicemail_id,pass,email,delete_vm_after_email,voicemail_timezone,voicemail_options FROM phones where voicemail_id='$mailbox' and active='Y' order by extension limit 1;";
 						#	print "$stmtA\n";
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -965,13 +1006,15 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 							$mb_pass =					$aryA[1];
 							$mb_email =					$aryA[2];
 							$mb_delete_vm_after_email =	$aryA[3];
+							$mb_voicemail_timezone =	$aryA[4];
+							$mb_voicemail_options =		$aryA[5];
 
-							if ( ( ($mb_pass !~ /$vmc_pass/) || (length($mb_pass) != length($vmc_pass)) ) || ( ($mb_email !~ /$vmc_email/) || (length($mb_email) != length($vmc_email)) ) || ( ($mb_delete_vm_after_email !~ /$vmc_delete_vm_after_email/) || (length($mb_delete_vm_after_email) != length($vmc_delete_vm_after_email)) ) )
+							if ( ( ($mb_pass !~ /$vmc_pass/) || (length($mb_pass) != length($vmc_pass)) ) || ( ($mb_email !~ /$vmc_email/) || (length($mb_email) != length($vmc_email)) ) || ( ($mb_delete_vm_after_email !~ /$vmc_delete_vm_after_email/) || (length($mb_delete_vm_after_email) != length($vmc_delete_vm_after_email)) ) || ( ($mb_voicemail_timezone !~ /$vmc_voicemail_timezone/) || (length($mb_voicemail_timezone) != length($vmc_voicemail_timezone)) ) || ( ($mb_voicemail_options !~ /$vmc_voicemail_options/) || (length($mb_voicemail_options) != length($vmc_voicemail_options)) ) )
 								{
-								$stmtA="UPDATE phones SET pass='$vmc_pass',email='$vmc_email',delete_vm_after_email='$vmc_delete_vm_after_email' where voicemail_id='$mailbox' and active='Y' order by extension limit 1;";
+								$stmtA="UPDATE phones SET pass='$vmc_pass',email='$vmc_email',delete_vm_after_email='$vmc_delete_vm_after_email',voicemail_timezone='$vmc_voicemail_timezone',voicemail_options='$vmc_voicemail_options' where voicemail_id='$mailbox' and active='Y' order by extension limit 1;";
 								$affected_rows = $dbhA->do($stmtA);
 
-								$stmtA="UPDATE servers SET rebuild_conf_files='Y' where server_ip='$server_ip'";
+								$stmtA="UPDATE servers SET rebuild_conf_files='Y' where server_ip='$server_ip';";
 								$affected_rows = $dbhA->do($stmtA);
 								}
 							}
@@ -979,7 +1022,7 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 						}
 					else
 						{
-						$stmtA = "SELECT voicemail_id,pass,email,delete_vm_after_email FROM vicidial_voicemail WHERE voicemail_id='$mailbox' and active='Y' limit 1;";
+						$stmtA = "SELECT voicemail_id,pass,email,delete_vm_after_email,voicemail_timezone,voicemail_options FROM vicidial_voicemail WHERE voicemail_id='$mailbox' and active='Y' limit 1;";
 						#	print "$stmtA\n";
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -991,13 +1034,15 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 							$mb_pass =					$aryA[1];
 							$mb_email =					$aryA[2];
 							$mb_delete_vm_after_email =	$aryA[3];
+							$mb_voicemail_timezone =	$aryA[4];
+							$mb_voicemail_options =		$aryA[5];
 
-							if ( ( ($mb_pass !~ /$vmc_pass/) || (length($mb_pass) != length($vmc_pass)) ) || ( ($mb_email !~ /$vmc_email/) || (length($mb_email) != length($vmc_email)) ) || ( ($mb_delete_vm_after_email !~ /$vmc_delete_vm_after_email/) || (length($mb_delete_vm_after_email) != length($vmc_delete_vm_after_email)) ) )
+							if ( ( ($mb_pass !~ /$vmc_pass/) || (length($mb_pass) != length($vmc_pass)) ) || ( ($mb_email !~ /$vmc_email/) || (length($mb_email) != length($vmc_email)) ) || ( ($mb_delete_vm_after_email !~ /$vmc_delete_vm_after_email/) || (length($mb_delete_vm_after_email) != length($vmc_delete_vm_after_email)) ) || ( ($mb_voicemail_timezone !~ /$vmc_voicemail_timezone/) || (length($mb_voicemail_timezone) != length($vmc_voicemail_timezone)) ) || ( ($mb_voicemail_options !~ /$vmc_voicemail_options/) || (length($mb_voicemail_options) != length($vmc_voicemail_options)) ) )
 								{
-								$stmtA="UPDATE vicidial_voicemail SET pass='$vmc_pass',email='$vmc_email',delete_vm_after_email='$vmc_delete_vm_after_email' where voicemail_id='$mailbox' and active='Y' limit 1;";
+								$stmtA="UPDATE vicidial_voicemail SET pass='$vmc_pass',email='$vmc_email',delete_vm_after_email='$vmc_delete_vm_after_email',voicemail_timezone='$vmc_voicemail_timezone',voicemail_options='$vmc_voicemail_options' where voicemail_id='$mailbox' and active='Y' limit 1;";
 								$affected_rows = $dbhA->do($stmtA);
 
-								$stmtA="UPDATE servers SET rebuild_conf_files='Y' where server_ip='$server_ip'";
+								$stmtA="UPDATE servers SET rebuild_conf_files='Y' where server_ip='$server_ip';";
 								$affected_rows = $dbhA->do($stmtA);
 								}
 							}
@@ -1005,15 +1050,22 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 						}
 					if ($sthArows < 1) 
 						{
-						if ($DB) {print "Mailbox not found: $mailbox     it will be removed from voicemail.conf";}
+						if ($DB) {print "Mailbox not found: $mailbox     it will be removed from voicemail.conf\n";}
 						}
 					}
+				### END parse through voicemail boxes and update DB with any changed settings
 				}
 			else
 				{
 				$vm_header_content .= "$line\n";
 				}
 			$i++;
+			}
+		if (length($SSvoicemail_timezones) != length($vm_zones_content)) 
+			{
+			$stmtA="UPDATE system_settings SET voicemail_timezones='$vm_zones_content';";
+			$affected_rows = $dbhA->do($stmtA);
+			if ($DB) {print "voicemail zones updated\n";}
 			}
 		################################################################################
 		#####  END Parsing of the voicemail.conf file
@@ -1370,7 +1422,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the IAX phone entries #####
-	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,codecs_list,codecs_with_template FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
+	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,codecs_list,codecs_with_template,voicemail_timezone,voicemail_options FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1396,6 +1448,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$delete_vm_after_email[$i] =	$aryA[14];
 		$codecs_list[$i] =				$aryA[15];
 		$codecs_with_template[$i] =		$aryA[16];
+		$voicemail_timezone[$i] =		$aryA[17];
+		$voicemail_options[$i] =		$aryA[18];
 		if ( (length($SSdefault_codecs) > 2) && (length($codecs_list[$i]) < 3) )
 			{$codecs_list[$i] = $SSdefault_codecs;}
 		$active_dialplan_numbers .= "'$aryA[1]',";
@@ -1478,9 +1532,9 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
 
 		if ($delete_vm_after_email[$i] =~ /Y/)
-			{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i],,|delete=yes\n";}
+			{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i],,|delete=yes|tz=$voicemail_timezone[$i]|$voicemail_options[$i]\n";}
 		else
-			{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i]\n";}
+			{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i],,|delete=no|tz=$voicemail_timezone[$i]|$voicemail_options[$i]\n";}
 
 		$i++;
 		}
@@ -1489,7 +1543,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the SIP phone entries #####
-	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,codecs_list,codecs_with_template FROM phones where server_ip='$server_ip' and protocol='SIP' and active='Y' order by extension;";
+	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,codecs_list,codecs_with_template,voicemail_timezone,voicemail_options FROM phones where server_ip='$server_ip' and protocol='SIP' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1515,6 +1569,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$delete_vm_after_email[$i] =	$aryA[14];
 		$codecs_list[$i] =				$aryA[15];
 		$codecs_with_template[$i] =		$aryA[16];
+		$voicemail_timezone[$i] =		$aryA[17];
+		$voicemail_options[$i] =		$aryA[18];
 		if ( (length($SSdefault_codecs) > 2) && (length($codecs_list[$i]) < 3) )
 			{$codecs_list[$i] = $SSdefault_codecs;}
 		$active_dialplan_numbers .= "'$aryA[1]',";
@@ -1595,9 +1651,9 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
 
 		if ($delete_vm_after_email[$i] =~ /Y/)
-			{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i],,|delete=yes\n";}
+			{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i],,|delete=yes|tz=$voicemail_timezone[$i]|$voicemail_options[$i]\n";}
 		else
-			{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i]\n";}
+			{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i],,|delete=no|tz=$voicemail_timezone[$i]|$voicemail_options[$i]\n";}
 
 		$i++;
 		}
@@ -2055,7 +2111,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		while ($sthArows > $i)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$voicemail[$i] =			"$aryA[0]";
+			$voicemail[$i] =	$aryA[0];
 			$i++;
 			}
 		$sthA->finish();
@@ -2064,7 +2120,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		while ($sthArows > $i)
 			{
 			##### Get the distinct phone entries #####
-			$stmtA = "SELECT extension,pass,email,delete_vm_after_email FROM phones where active='Y' and voicemail_id='$voicemail[$i]';";
+			$stmtA = "SELECT extension,pass,email,delete_vm_after_email,voicemail_timezone,voicemail_options FROM phones where active='Y' and voicemail_id='$voicemail[$i]';";
 			#	print "$stmtA\n";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2076,19 +2132,21 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				$pass[$i] =						$aryA[1];
 				$email[$i] =					$aryA[2];
 				$delete_vm_after_email[$i] =	$aryA[3];
+				$voicemail_timezone[$i] =		$aryA[4];
+				$voicemail_options[$i] =		$aryA[5];
+
+				if ($delete_vm_after_email[$i] =~ /Y/)
+					{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i],,|delete=yes|tz=$voicemail_timezone[$i]|$voicemail_options[$i]\n";}
+				else
+					{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i],,|delete=no|tz=$voicemail_timezone[$i]|$voicemail_options[$i]\n";}
 				}
 			$sthA->finish();
-
-			if ($delete_vm_after_email[$i] =~ /Y/)
-				{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i],,|delete=yes\n";}
-			else
-				{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i]\n";}
 
 			$i++;
 			}
 
 		##### Get the other voicemail box entries #####
-		$stmtA = "SELECT voicemail_id,fullname,pass,email,delete_vm_after_email FROM vicidial_voicemail where active='Y';";
+		$stmtA = "SELECT voicemail_id,fullname,pass,email,delete_vm_after_email,voicemail_timezone,voicemail_options FROM vicidial_voicemail where active='Y';";
 		#	print "$stmtA\n";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2107,11 +2165,13 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$pass[$i] =						$aryA[2];
 			$email[$i] =					$aryA[3];
 			$delete_vm_after_email[$i] =	$aryA[4];
+			$voicemail_timezone[$i] =		$aryA[5];
+			$voicemail_options[$i] =		$aryA[6];
 
 			if ($delete_vm_after_email[$i] =~ /Y/)
-				{$vm  .= "$voicemail_id[$i] => $pass[$i],$fullname[$i],$email[$i],,|delete=yes\n";}
+				{$vm  .= "$voicemail_id[$i] => $pass[$i],$fullname[$i],$email[$i],,|delete=yes|tz=$voicemail_timezone[$i]|$voicemail_options[$i]\n";}
 			else
-				{$vm  .= "$voicemail_id[$i] => $pass[$i],$fullname[$i],$email[$i]\n";}
+				{$vm  .= "$voicemail_id[$i] => $pass[$i],$fullname[$i],$email[$i],,|delete=no|tz=$voicemail_timezone[$i]|$voicemail_options[$i]\n";}
 
 			$i++;
 			}

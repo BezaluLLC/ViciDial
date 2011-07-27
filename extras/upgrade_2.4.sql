@@ -895,3 +895,14 @@ ALTER TABLE vicidial_lists_fields MODIFY field_type ENUM('TEXT','AREA','SELECT',
 
 UPDATE system_settings SET db_schema_version='1288',db_schema_update_date=NOW() where db_schema_version < 1288;
 
+ALTER TABLE vicidial_voicemail ADD voicemail_timezone VARCHAR(30) default 'eastern';
+ALTER TABLE vicidial_voicemail ADD voicemail_options VARCHAR(255) default '';
+
+ALTER TABLE phones ADD voicemail_timezone VARCHAR(30) default 'eastern';
+ALTER TABLE phones ADD voicemail_options VARCHAR(255) default '';
+
+ALTER TABLE system_settings ADD voicemail_timezones TEXT;
+ALTER TABLE system_settings ADD default_voicemail_timezone VARCHAR(30) default 'eastern';
+ALTER TABLE system_settings ADD default_local_gmt VARCHAR(6) default '-5.00';
+
+UPDATE system_settings SET db_schema_version='1289',db_schema_update_date=NOW() where db_schema_version < 1289;
