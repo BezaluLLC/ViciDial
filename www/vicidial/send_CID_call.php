@@ -70,7 +70,7 @@ $STARTtime = date("U");
 -->
  </STYLE>
 
-<? 
+<?php
 $stmt="select server_ip,server_id from servers;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}

@@ -653,6 +653,9 @@ OTHER CHANGES:
 	default voicemail zone and timezone settings in the system settings.
 	**	**** NOTE **** You might want to add the new zones in the new 
 	**	voicemail.conf.sample file to your voicemail.conf file
+   You must delete the BUILD voicemail file for this feature to work:
+	rm -f /etc/asterisk/BUILDvoicemail-vicidial.conf
+
 
 
 
