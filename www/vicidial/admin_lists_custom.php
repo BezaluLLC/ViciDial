@@ -18,10 +18,11 @@
 # 101228-2049 - Fixed missing PHP long tag
 # 110629-1438 - Fixed change from DISPLAY or SCRIPT to other field type error, added HIDDEN and READONLY field types
 # 110719-0910 - Added HIDEBLOB field type
+# 110730-1106 - Added mysql reserved words check for add-field action
 #
 
-$admin_version = '2.4-12';
-$build = '110719-0910';
+$admin_version = '2.4-13';
+$build = '110730-1106';
 
 
 require("dbconnect.php");
@@ -130,6 +131,9 @@ $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 
 $vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|status|entry_date|entry_list_id|modify_date|user|';
+
+$mysql_reserved_words =
+'|accessible|action|add|all|alter|analyze|and|as|asc|asensitive|before|between|bigint|binary|bit|blob|both|by|call|cascade|case|change|char|character|check|collate|column|condition|constraint|continue|convert|create|cross|current_date|current_time|current_timestamp|current_user|cursor|database|databases|date|day_hour|day_microsecond|day_minute|day_second|dec|decimal|declare|default|delayed|delete|desc|describe|deterministic|distinct|distinctrow|div|double|drop|dual|each|else|elseif|enclosed|enum|escaped|exists|exit|explain|false|fetch|float|float4|float8|for|force|foreign|from|fulltext|grant|group|having|high_priority|hour_microsecond|hour_minute|hour_second|if|ignore|in|index|infile|inner|inout|insensitive|insert|int|int1|int2|int3|int4|int8|integer|interval|into|is|iterate|join|key|keys|kill|leading|leave|left|like|limit|linear|lines|load|localtime|localtimestamp|lock|long|longblob|longtext|loop|low_priority|master_ssl_verify_server_cert|match|mediumblob|mediumint|mediumtext|middleint|minute_microsecond|minute_second|mod|modifies|mysql|natural|no|no_write_to_binlog|not|null|numeric|on|optimize|option|optionally|or|order|out|outer|outfile|precision|primary|procedure|purge|range|read|read_only|read_write|reads|real|references|regexp|release|remove|rename|repeat|replace|require|restrict|return|revoke|right|rlike|schema|schemas|second_microsecond|select|sensitive|separator|set|show|smallint|spatial|specific|sql|sql_big_result|sql_calc_found_rows|sql_small_result|sqlexception|sqlstate|sqlwarning|ssl|starting|straight_join|table|terminated|text|then|time|timestamp|tinyblob|tinyint|tinytext|to|trailing|trigger|true|undo|union|unique|unlock|unsigned|update|usage|use|using|utc_date|utc_time|utc_timestamp|values|varbinary|varchar|varcharacter|varying|when|where|while|with|write|xor|year_month|zerofill|';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -556,7 +560,7 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 					if ($new_field_exists < 1)
 						{
 						### add field function
-						add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$A_field_id[$o],$list_id,$A_field_label[$o],$A_field_name[$o],$A_field_description[$o],$A_field_rank[$o],$A_field_help[$o],$A_field_type[$o],$A_field_options[$o],$A_field_size[$o],$A_field_max[$o],$A_field_default[$o],$A_field_required[$o],$A_field_cost[$o],$A_multi_position[$o],$A_name_position[$o],$A_field_order[$o],$vicidial_list_fields);
+						add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$A_field_id[$o],$list_id,$A_field_label[$o],$A_field_name[$o],$A_field_description[$o],$A_field_rank[$o],$A_field_help[$o],$A_field_type[$o],$A_field_options[$o],$A_field_size[$o],$A_field_max[$o],$A_field_default[$o],$A_field_required[$o],$A_field_cost[$o],$A_multi_position[$o],$A_name_position[$o],$A_field_order[$o],$vicidial_list_fields,$mysql_reserved_words);
 
 						echo "SUCCESS: Custom Field Added - $list_id|$A_field_label[$o]\n<BR>";
 
@@ -738,53 +742,57 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 		{echo "ERROR: You must enter a field label, field name and field size - $list_id|$field_label|$field_name|$field_size\n<BR>";}
 	else
 		{
-		$TEST_valid_options=0;
-		if ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') )
-			{
-			$TESTfield_options_array = explode("\n",$field_options);
-			$TESTfield_options_count = count($TESTfield_options_array);
-			$te=0;
-			while ($te < $TESTfield_options_count)
-				{
-				if (preg_match("/,/",$TESTfield_options_array[$te]))
-					{
-					$TESTfield_options_value_array = explode(",",$TESTfield_options_array[$te]);
-					if ( (strlen($TESTfield_options_value_array[0]) > 0) and (strlen($TESTfield_options_value_array[1]) > 0) )
-						{$TEST_valid_options++;}
-					}
-				$te++;
-				}
-			$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
-			}
-
-		if ( ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') ) and ( (!preg_match("/,/",$field_options)) or (!preg_match("/\n/",$field_options)) or (strlen($field_options)<6) or ($TEST_valid_options < 1) ) )
-			{echo "ERROR: You must enter field options when adding a SELECT, MULTI, RADIO or CHECKBOX field type  - $list_id|$field_label|$field_type|$field_options\n<BR>";}
+		if (preg_match("/\|$field_label\|/",$mysql_reserved_words))
+			{echo "ERROR: You cannot use reserved words for field labels - $list_id|$field_label|$field_name|$field_size\n<BR>";}
 		else
 			{
-			if ($field_exists > 0)
-				{echo "ERROR: Field already exists for this list - $list_id|$field_label\n<BR>";}
+			$TEST_valid_options=0;
+			if ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') )
+				{
+				$TESTfield_options_array = explode("\n",$field_options);
+				$TESTfield_options_count = count($TESTfield_options_array);
+				$te=0;
+				while ($te < $TESTfield_options_count)
+					{
+					if (preg_match("/,/",$TESTfield_options_array[$te]))
+						{
+						$TESTfield_options_value_array = explode(",",$TESTfield_options_array[$te]);
+						if ( (strlen($TESTfield_options_value_array[0]) > 0) and (strlen($TESTfield_options_value_array[1]) > 0) )
+							{$TEST_valid_options++;}
+						}
+					$te++;
+					}
+				$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
+				}
+
+			if ( ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') ) and ( (!preg_match("/,/",$field_options)) or (!preg_match("/\n/",$field_options)) or (strlen($field_options)<6) or ($TEST_valid_options < 1) ) )
+				{echo "ERROR: You must enter field options when adding a SELECT, MULTI, RADIO or CHECKBOX field type  - $list_id|$field_label|$field_type|$field_options\n<BR>";}
 			else
 				{
-				$table_exists=0;
-				$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
-				if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
-				mysql_select_db("$VARDB_database", $linkCUSTOM);
+				if ($field_exists > 0)
+					{echo "ERROR: Field already exists for this list - $list_id|$field_label\n<BR>";}
+				else
+					{
+					$table_exists=0;
+					$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
+					if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
+					mysql_select_db("$VARDB_database", $linkCUSTOM);
 
-				$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-				$rslt=mysql_query($stmt, $link);
-				$tablecount_to_print = mysql_num_rows($rslt);
-				if ($tablecount_to_print > 0) 
-					{$table_exists =	1;}
-				if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
-			
-				### add field function
-				add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields);
+					$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
+					$rslt=mysql_query($stmt, $link);
+					$tablecount_to_print = mysql_num_rows($rslt);
+					if ($tablecount_to_print > 0) 
+						{$table_exists =	1;}
+					if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
+				
+					### add field function
+					add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields,$mysql_reserved_words);
 
-				echo "SUCCESS: Custom Field Added - $list_id|$field_label\n<BR>";
+					echo "SUCCESS: Custom Field Added - $list_id|$field_label\n<BR>";
+					}
 				}
 			}
 		}
-
 	$action = "MODIFY_CUSTOM_FIELDS";
 	}
 ### END add new custom field
@@ -1498,7 +1506,7 @@ echo "\n\n\n<br><br><br>\n<font size=1> runtime: $RUNtime seconds &nbsp; &nbsp; 
 
 ################################################################################
 ##### BEGIN add field function
-function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields)
+function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields,$mysql_reserved_words)
 	{
 	$table_exists=0;
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";

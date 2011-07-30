@@ -678,6 +678,7 @@ This setting allows you to set the zone that this voicemail box will be set to w
 Voicemail Options||
 This optional setting allows you to define additional voicemail settings. It is recommended that you leave this blank unless you know what you are doing||
 The next two settings are also defined in the System Settings section, and you can change them after you define them here. You should set the Default Local GMT to the timezone that your agents want to be in. The Voicemail zone is the listing of voicemail timezones that voicemail messages will be time logged with when new messages are left||
+ERROR: You cannot use reserved words for field labels||
 
 
 lead_report_export.php
