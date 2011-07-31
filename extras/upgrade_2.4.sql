@@ -906,3 +906,7 @@ ALTER TABLE system_settings ADD default_voicemail_timezone VARCHAR(30) default '
 ALTER TABLE system_settings ADD default_local_gmt VARCHAR(6) default '-5.00';
 
 UPDATE system_settings SET db_schema_version='1289',db_schema_update_date=NOW() where db_schema_version < 1289;
+
+ALTER TABLE vicidial_campaigns MODIFY disable_dispo_screen ENUM('DISPO_ENABLED','DISPO_DISABLED','DISPO_SELECT_DISABLED') default 'DISPO_ENABLED';
+
+UPDATE system_settings SET db_schema_version='1290',db_schema_update_date=NOW() where db_schema_version < 1290;

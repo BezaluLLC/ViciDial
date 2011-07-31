@@ -679,6 +679,7 @@ Voicemail Options||
 This optional setting allows you to define additional voicemail settings. It is recommended that you leave this blank unless you know what you are doing||
 The next two settings are also defined in the System Settings section, and you can change them after you define them here. You should set the Default Local GMT to the timezone that your agents want to be in. The Voicemail zone is the listing of voicemail timezones that voicemail messages will be time logged with when new messages are left||
 ERROR: You cannot use reserved words for field labels||
+The DISPO_SELECT_DISABLED option will not disable the dispo screen completely, but will display the dispo screen without any dispositions, this option should only be used if you want to force your agents to use your CRM software which will send the status to the system through the API||
 
 
 lead_report_export.php
@@ -739,6 +740,7 @@ Phone Area Code Outside Dialable Zone||
 Postal Code Outside Dialable Zone||
 Custom Transfer||
 System Delay, Please try again||
+Disposition Status List Hidden||
 
 
 ############################################################  MANAGER Manual

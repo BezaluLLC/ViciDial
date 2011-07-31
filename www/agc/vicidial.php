@@ -361,10 +361,11 @@
 # 110718-1159 - Added logging of skipped leads
 # 110719-0854 - Removed debug output and small display alignment changes
 # 110723-2308 - Complete hiding of phone numbers in logs when alter phone is set to HIDE
+# 110730-2240 - Added option to hide dispo statuses, only to be used with API
 #
 
-$version = '2.4-338c';
-$build = '110723-2308';
+$version = '2.4-339c';
+$build = '110730-2240';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=73;
 $one_mysql_log=0;
@@ -1508,8 +1509,11 @@ else
 						}
 					}
 
-				if ( ($disable_dispo_screen == 'DISPO_ENABLED') or (strlen($disable_dispo_status) < 1) )
+				$hide_dispo_list=0;
+				if ( ($disable_dispo_screen == 'DISPO_ENABLED') or ($disable_dispo_screen == 'DISPO_SELECT_DISABLED') or (strlen($disable_dispo_status) < 1) )
 					{
+					if ($disable_dispo_screen == 'DISPO_SELECT_DISABLED')
+						{$hide_dispo_list=1;}
 					$disable_dispo_screen=0;
 					$disable_dispo_status='';
 					}
@@ -3442,6 +3446,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var status_display_LEADID='<?php echo $status_display_LEADID ?>';
 	var status_display_LISTID='<?php echo $status_display_LISTID ?>';
 	var qm_extension='<?php echo $qm_extension ?>';
+	var hide_dispo_list='<?php echo $hide_dispo_list ?>';
     var DiaLControl_auto_HTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/vdc_LB_resume.gif\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/vdc_LB_pause.gif\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
@@ -8407,27 +8412,34 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			var dispo_HTML = "<table cellpadding=\"5\" cellspacing=\"5\" width=\"500px\"><tr><td colspan=\"2\"><b> CALL DISPOSITION</b></td></tr><tr><td bgcolor=\"#99FF99\" height=\"300px\" width=\"240px\" valign=\"top\"><font class=\"log_text\"><span id=\"DispoSelectA\">";
 			var loop_ct = 0;
 			var print_ct = 0;
-			while (loop_ct < VD_statuses_ct)
+			if (hide_dispo_list < 1)
 				{
-				if (VARSELstatuses[loop_ct] == 'Y')
+				while (loop_ct < VD_statuses_ct)
 					{
-					if (VARCBstatuses[loop_ct] == 'Y')
-						{CBflag = '*';}
-					else
-						{CBflag = '';}
-					if (taskDSgrp == VARstatuses[loop_ct]) 
+					if (VARSELstatuses[loop_ct] == 'Y')
 						{
-						dispo_HTML = dispo_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"DispoSelect_submit();return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "</b></font><br /><br />";
+						if (VARCBstatuses[loop_ct] == 'Y')
+							{CBflag = '*';}
+						else
+							{CBflag = '';}
+						if (taskDSgrp == VARstatuses[loop_ct]) 
+							{
+							dispo_HTML = dispo_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"DispoSelect_submit();return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "</b></font><br /><br />";
+							}
+						else
+							{
+							dispo_HTML = dispo_HTML + "<a href=\"#\" onclick=\"DispoSelectContent_create('" + VARstatuses[loop_ct] + "','ADD');return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "<br /><br />";
+							}
+						if (print_ct == VD_statuses_ct_half) 
+							{dispo_HTML = dispo_HTML + "</span></font></td><td bgcolor=\"#99FF99\" height=\"300px\" width=\"240px\" valign=\"top\"><font class=\"log_text\"><span id=\"DispoSelectB\">";}
+						print_ct++;
 						}
-					else
-						{
-						dispo_HTML = dispo_HTML + "<a href=\"#\" onclick=\"DispoSelectContent_create('" + VARstatuses[loop_ct] + "','ADD');return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "<br /><br />";
-						}
-					if (print_ct == VD_statuses_ct_half) 
-						{dispo_HTML = dispo_HTML + "</span></font></td><td bgcolor=\"#99FF99\" height=\"300px\" width=\"240px\" valign=\"top\"><font class=\"log_text\"><span id=\"DispoSelectB\">";}
-					print_ct++;
+					loop_ct++;
 					}
-				loop_ct++;
+				}
+			else
+				{
+				dispo_HTML = dispo_HTML + "Disposition Status List Hidden<br /><br />";
 				}
 			dispo_HTML = dispo_HTML + "</span></font></td></tr></table>";
 

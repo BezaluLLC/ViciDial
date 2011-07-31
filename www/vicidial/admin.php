@@ -2799,12 +2799,13 @@ else
 # 110707-0725 - Added AGENTEXT notes for in-groups settings
 # 110707-1402 - Added last_inbound_call_time and finish to next agent call options for in-groups
 # 110727-0130 - Added more voicemail box options and default timezone and voicemail zone to system settings
+# 110730-2249 - Added DISPO_SELECT_DISABLED option for the Dispo Disable setting in campaigns
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-325a';
-$build = '110727-0130';
+$admin_version = '2.4-326a';
+$build = '110730-2249';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4897,7 +4898,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_campaigns-disable_dispo_screen">
 	<BR>
-	<B>Disable Dispo Screen -</B> This option allows you to disable the disposition screen in the agent interface. The Disable Dispo Status field below must be filled in for this option to work. Default is DISPO_ENABLED.
+	<B>Disable Dispo Screen -</B> This option allows you to disable the disposition screen in the agent interface. The Disable Dispo Status field below must be filled in for this option to work. Default is DISPO_ENABLED. The DISPO_SELECT_DISABLED option will not disable the dispo screen completely, but will display the dispo screen without any dispositions, this option should only be used if you want to force your agents to use your CRM software which will send the status to the system through the API.
 
 	<BR>
 	<A NAME="vicidial_campaigns-disable_dispo_status">
@@ -20004,7 +20005,7 @@ if ($ADD==31)
 				{echo " <font color=red>LIST OVERRIDE ACTIVE</font>";}
 			echo "</td></tr>\n";
 			}
-		echo "<tr bgcolor=#B6D3FC><td align=right>Disable Dispo Screen: </td><td align=left><select size=1 name=disable_dispo_screen><option>DISPO_ENABLED</option><option>DISPO_DISABLED</option><option SELECTED>$disable_dispo_screen</option></select>$NWB#vicidial_campaigns-disable_dispo_screen$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Disable Dispo Screen: </td><td align=left><select size=1 name=disable_dispo_screen><option>DISPO_ENABLED</option><option>DISPO_DISABLED</option><option>DISPO_SELECT_DISABLED</option><option SELECTED>$disable_dispo_screen</option></select>$NWB#vicidial_campaigns-disable_dispo_screen$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Disable Dispo Status: </td><td align=left><input type=text name=disable_dispo_status size=7 maxlength=6 value=\"$disable_dispo_status\">$NWB#vicidial_campaigns-disable_dispo_status$NWE</td></tr>\n";
 
