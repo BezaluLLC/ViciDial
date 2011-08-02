@@ -656,6 +656,20 @@ OTHER CHANGES:
    You must delete the BUILD voicemail file for this feature to work:
 	rm -f /etc/asterisk/BUILDvoicemail-vicidial.conf
 
+149. Added ability to chose the type of callerid sent for inbound ring-agent
+	calls in the in-group: GENERIC, INGROUP, CUSTOMER PHONE and a couple
+	of combinations of those.
+
+150. Added NA Call URL feature to campaigns and in-groups. This works like
+	dispo call url, but it works only for non-agent handled calls, like
+	dropped calls, No Answers, Busy, etc... 
+
+151. Changed MULTI_LEAD Auto-Alt-Dial to use the Auto-Alt-Dial Statuses as set
+	in the campaign automatically. If you are using MULTI_LEAD you may need
+	to add statuses like DROP, PDROP and others to your campaign's auto-alt
+	dial statuses so that the other leads tied by vendor_lead_code in the 
+	campaign's lists are not deactivated.
+
 
 
 

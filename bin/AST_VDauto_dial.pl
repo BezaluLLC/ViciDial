@@ -103,6 +103,7 @@
 # 110525-1940 - Allow for auto-dial IVR transfers
 # 110602-0953 - Added dl_diff_target_method option
 # 110723-1256 - Added extra debug for vac deletes and fix for long ring/drop time
+# 110731-2127 - Added sections for handling MULTI_LEAD auto-alt-dial and na-call-url functions
 #
 
 
@@ -1479,7 +1480,10 @@ while($one_day_interval > 0)
 										if($M){print STDERR "\n|$stmtA|\n";}
 									$affected_rows = $dbhA->do($stmtA);
 
-									$event_string = "|     dead NA call added to log $CLuniqueid|$CLlead_id|$CLphone_number|$CLstatus|$CLnew_status|$affected_rows|$insertVLcount";
+									$stmtB = "INSERT INTO vicidial_log_extended set uniqueid='$CLuniqueid',server_ip='$server_ip',call_date='$SQLdate',lead_id = '$CLlead_id',caller_code='$KLcallerid[$kill_vac]',custom_call_id='';";
+									$affected_rowsB = $dbhA->do($stmtB);
+
+									$event_string = "|     dead NA call added to log $CLuniqueid|$CLlead_id|$CLphone_number|$CLstatus|$CLnew_status|$affected_rows|$affected_rowsB|$insertVLcount";
 									 &event_logger;
 									}
 								else
@@ -2267,7 +2271,10 @@ while($one_day_interval > 0)
 					if($M){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA);
 
-				$event_string = "|     dead NA call added to log $CLuniqueid|$CLlead_id|$CLphone_number|$CLstatus|DROP|$affected_rows|";
+				$stmtB = "INSERT INTO vicidial_log_extended set uniqueid='$CLuniqueid',server_ip='$server_ip',call_date='$SQLdate',lead_id = '$CLlead_id',caller_code='$CLcallerid',custom_call_id='';";
+				$affected_rowsB = $dbhA->do($stmtB);
+
+				$event_string = "|     dead NA call added to logs $CLuniqueid|$CLlead_id|$CLphone_number|$CLstatus|DROP|$affected_rows|$affected_rowsB|";
 				 &event_logger;
 
 				if ($enable_queuemetrics_logging > 0)
@@ -2345,6 +2352,510 @@ while($one_day_interval > 0)
 			$affected_rows = $dbhA->do($stmtA);
 			$event_string = "|     logindate UPDATED $affected_rows|$campaigns_update|";
 			 &event_logger;
+			}
+
+
+	&get_time_now;
+
+	###############################################################################
+	###### fourth we will check to see if any campaign is running MULTI_LEAD
+	######    auto-alt-dial. if yes, then go through the unprocessed extended 
+	######    log entries for this server_ip and process them.
+	###############################################################################
+		
+		$MLincall='|INCALL|QUEUE|DISPO|';
+		$multi_alt_count=0;
+		$stmtA = "SELECT count(*) FROM vicidial_campaigns where auto_alt_dial='MULTI_LEAD' and dial_method NOT IN('MANUAL','INBOUND_MAN') and campaign_calldate > \"$RMSQLdate\";";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$multi_alt_count	= $aryA[0];
+			}
+
+		if ($multi_alt_count > 0)
+			{
+			@MLcamp_id = @MT;
+			@MLaad_statuses = @MT;
+			@MLlists = @MT;
+
+			$MLcampaigns='|';
+			$stmtA = "SELECT campaign_id,auto_alt_dial_statuses FROM vicidial_campaigns where auto_alt_dial='MULTI_LEAD' and dial_method NOT IN('MANUAL','INBOUND_MAN') and campaign_calldate > \"$RMSQLdate\";";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			$MLcamp_count=0;
+			while ($sthArows > $MLcamp_count)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$MLcampaigns	.= "$aryA[0]|";
+				$MLcamp_id[$MLcamp_count]		= $aryA[0];
+				$MLaad_statuses[$MLcamp_count]	= $aryA[1];
+				$MLcamp_count++;
+				}
+
+			$MLcamp_count=0;
+			foreach(@MLcamp_id)
+				{
+				$MLlists[$MLcamp_count]='';
+				$stmtA = "SELECT list_id FROM vicidial_lists where campaign_id='$MLcamp_id[$MLcamp_count]';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				$MLlist_count=0;
+				while ($sthArows > $MLlist_count)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$MLlists[$MLcamp_count]		.= "'$aryA[0]',";
+					$MLlist_count++;
+					}
+				$MLlists[$MLcamp_count] =~ s/,$//gi;
+				if (length($MLlists[$MLcamp_count]) < 2)
+					{$MLlists[$MLcamp_count]="''";}
+				$MLcamp_count++;
+				}
+
+			$event_string = "     MULTI_LEAD auto-alt-dial check:   $multi_alt_count active, checking unprocessed calls...";
+			 &event_logger;
+
+			@MLuniqueid = @MT;
+			@MLleadid = @MT;
+			@MLcalldate = @MT;
+			@MLcallerid = @MT;
+			@MLflag = @MT;
+			@MLcampaign = @MT;
+			@MLstatus = @MT;
+
+			$stmtA = "SELECT uniqueid,lead_id,call_date,caller_code FROM vicidial_log_extended where server_ip='$server_ip' and call_date > \"$RMSQLdate\" and multi_alt_processed='N' order by call_date,lead_id limit 100000;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			$vle_count=0;
+			$vle_auto_count=0;
+			while ($sthArows > $vle_count)
+				{
+				$MLflag[$vle_count]	= 0;
+				@aryA = $sthA->fetchrow_array;
+				if ($aryA[3] =~ /^V/)
+					{
+					$vle_auto_count++;
+					$MLflag[$vle_count]	= 1;
+					}
+				$MLuniqueid[$vle_count]	= $aryA[0];
+				$MLleadid[$vle_count]	= $aryA[1];
+				$MLcalldate[$vle_count]	= $aryA[2];
+				$MLcallerid[$vle_count]	= $aryA[3];
+				$vle_count++;
+				}
+			$sthA->finish();
+
+			$event_string = "     MULTI_LEAD auto-alt-dial vle records count:   $vle_count|$vle_auto_count";
+			 &event_logger;
+
+			$vle_count=0;
+			foreach(@MLuniqueid)
+				{
+				if ($MLflag[$vle_count] > 0)
+					{
+					$vac_count=0;
+					$stmtA = "SELECT count(*) FROM vicidial_auto_calls where callerid='$MLcallerid[$vle_count]' and lead_id='$MLleadid[$vle_count]';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$vac_count	= $aryA[0];
+						}
+
+					if ($vac_count < 1)
+						{
+						$stmtA = "SELECT campaign_id,status FROM vicidial_log where uniqueid='$MLuniqueid[$vle_count]' and lead_id='$MLleadid[$vle_count]' and call_date > \"$RMSQLdate\";";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$MLcampaign[$vle_count]	= $aryA[0];
+							$MLstatus[$vle_count]	= $aryA[1];
+
+							if ($MLcampaigns =~ /\|$MLcampaign[$vle_count]\|/i)
+								{
+								if ($MLincall !~ /\|$MLstatus[$vle_count]\|/i)
+									{
+									$MLaads_value='';
+									$MLlists_value="''";
+									$MLcamp_match=0;
+									$MLcamp_loop=0;
+									while ( ($MLcamp_match < 1) && ($MLcamp_loop <= $MLcamp_count) )
+										{
+										if ( ($MLcampaign[$vle_count] =~ /$MLcamp_id[$MLcamp_loop]/i) && (length($MLcampaign[$vle_count]) == length($MLcamp_id[$MLcamp_loop])) )
+											{
+											$MLcamp_match++;
+											$MLaads_value = $MLaad_statuses[$MLcamp_loop];
+											$MLlists_value = $MLlists[$MLcamp_loop];
+											}
+										$MLcamp_loop++;
+										}
+									if ($MLaads_value !~ / $MLstatus[$vle_count] /i)
+										{
+										$event_string = "        ML status non-match, looking for matching accounts:   $MLcallerid[$vle_count]|$MLstatus[$vle_count]";
+										 &event_logger;
+
+										$MLnonmatch_output='';
+										$MLnonmatch_leadids='';
+										$MLvendor_lead_code='';
+										$stmtA = "SELECT vendor_lead_code FROM vicidial_list where lead_id='$MLleadid[$vle_count]';";
+										$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+										$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+										$sthArows=$sthA->rows;
+										if ($sthArows > 0)
+											{
+											@aryA = $sthA->fetchrow_array;
+											$MLvlc[$vle_count]	= $aryA[0];
+											}
+										
+										if (length($MLvlc[$vle_count]) > 1)
+											{
+											$stmtA = "SELECT lead_id,status FROM vicidial_list where vendor_lead_code='$MLvlc[$vle_count]' and list_id IN($MLlists_value) and lead_id!='$MLleadid[$vle_count]';";
+											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+											$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+											$sthArows=$sthA->rows;
+											$MLnm_count=0;
+											while ($sthArows > $MLnm_count)
+												{
+												@aryA = $sthA->fetchrow_array;
+												$MLnonmatch_output	.= "$aryA[0]-$aryA[1]|";
+												$MLnonmatch_leadids	.= "'$aryA[0]',";
+												$MLnm_count++;
+												}
+											if ($MLnm_count > 0)
+												{
+												chop($MLnonmatch_leadids);
+												if (length($MLnonmatch_leadids)<2)
+													{$MLnonmatch_leadids="''";}
+												
+												$event_string = "        ML status non-match, $MLnm_count matching accounts found:   $MLcallerid[$vle_count]|$MLvlc[$vle_count]\n          $MLnonmatch_output";
+												 &event_logger;
+												
+												$stmtA = "UPDATE vicidial_list SET status='MLINAT' where lead_id IN($MLnonmatch_leadids);";
+												$affected_rows = $dbhA->do($stmtA);
+
+												$event_string = "        ML status non-match accounts inactivated:   $MLnonmatch_leadids|$affected_rows|MLINAT";
+												 &event_logger;
+												}
+
+											### set multi-lead status non-match record to Y for processed
+											$stmtA = "UPDATE vicidial_log_extended SET multi_alt_processed='Y' where uniqueid='$MLuniqueid[$vle_count]' and call_date='$MLcalldate[$vle_count]' and lead_id='$MLleadid[$vle_count]';";
+											$affected_rows = $dbhA->do($stmtA);
+
+											$event_string = "        ML status non-match, log processed:   $MLcallerid[$vle_count]|$affected_rows";
+											 &event_logger;
+											}
+										else
+											{
+											### set multi-lead status non-match, no vendor_lead_code record to Y for processed
+											$stmtA = "UPDATE vicidial_log_extended SET multi_alt_processed='Y' where uniqueid='$MLuniqueid[$vle_count]' and call_date='$MLcalldate[$vle_count]' and lead_id='$MLleadid[$vle_count]';";
+											$affected_rows = $dbhA->do($stmtA);
+
+											$event_string = "        ML status non-match, no vlc, log processed:   $MLcallerid[$vle_count]|$MLvlc[$vle_count]|$affected_rows";
+											 &event_logger;
+											}
+										}
+									else
+										{
+										### set multi-lead status match record to Y for processed
+										$stmtA = "UPDATE vicidial_log_extended SET multi_alt_processed='Y' where uniqueid='$MLuniqueid[$vle_count]' and call_date='$MLcalldate[$vle_count]' and lead_id='$MLleadid[$vle_count]';";
+										$affected_rows = $dbhA->do($stmtA);
+
+										$event_string = "        ML match, log processed:   $MLcallerid[$vle_count]|$affected_rows";
+										 &event_logger;
+										}
+									}
+								else
+									{
+									$event_string = "        ML status in-call, do nothing:   $MLcallerid[$vle_count]|$MLuniqueid[$vle_count]|$MLstatus[$vle_count]";
+									 &event_logger;
+									}
+								}
+							else
+								{
+								### set non-multi-lead campaign record to U for unqualified for MULTI_LEAD processing
+								$stmtA = "UPDATE vicidial_log_extended SET multi_alt_processed='U' where uniqueid='$MLuniqueid[$vle_count]' and call_date='$MLcalldate[$vle_count]' and lead_id='$MLleadid[$vle_count]';";
+								$affected_rows = $dbhA->do($stmtA);
+								}
+							}
+						else
+							{
+							$event_string = "        ML no log entry, do nothing:   $MLcallerid[$vle_count]|$MLuniqueid[$vle_count]";
+							 &event_logger;
+							}
+						}
+					else
+						{
+						$event_string = "        ML active call, do nothing:   $MLcallerid[$vle_count]";
+						 &event_logger;
+						}
+					}
+				else
+					{
+					### set non-auto-dial record to U for unqualified for MULTI_LEAD processing
+					$stmtA = "UPDATE vicidial_log_extended SET multi_alt_processed='U' where uniqueid='$MLuniqueid[$vle_count]' and call_date='$MLcalldate[$vle_count]' and lead_id='$MLleadid[$vle_count]';";
+					$affected_rows = $dbhA->do($stmtA);
+					}
+				$vle_count++;
+				}
+			}
+
+
+	###############################################################################
+	###### fifth we will check to see if any campaign or in-group has na_call_url
+	######    populated. if yes, then go through the unprocessed extended log
+	######    entries for this server_ip and process them.
+	###############################################################################
+		$NCUincall='|INCALL|QUEUE|DISPO|';
+		$ncu_count=0;
+		$ncu_in_count=0;
+		$stmtA = "SELECT count(*) FROM vicidial_campaigns where na_call_url IS NOT NULL and na_call_url!='' and campaign_calldate > \"$RMSQLdate\";";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$ncu_count	= $aryA[0];
+			}
+		$stmtA = "SELECT count(*) FROM vicidial_inbound_groups where na_call_url IS NOT NULL and na_call_url!='' and group_calldate > \"$RMSQLdate\";";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$ncu_in_count	= $aryA[0];
+			}
+
+		if ( ($ncu_count > 0) || ($ncu_in_count > 0) )
+			{
+			@NCUcamp_id = @MT;
+			@NCUncurl = @MT;
+			$ncu_total_count=0;
+			$NCUcampaigns='|';
+
+			if ($ncu_count > 0)
+				{
+				$stmtA = "SELECT campaign_id,na_call_url FROM vicidial_campaigns where na_call_url IS NOT NULL and na_call_url!='' and campaign_calldate > \"$RMSQLdate\";";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				$NCUcamp_count=0;
+				while ($sthArows > $NCUcamp_count)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$NCUcampaigns	.= "$aryA[0]|";
+					$NCUcamp_id[$ncu_total_count] = $aryA[0];
+					$NCUncurl[$ncu_total_count]	=	$aryA[1];
+					$NCUcamp_count++;
+					$ncu_total_count++;
+					}
+				}
+			if ($ncu_in_count > 0)
+				{
+				$stmtA = "SELECT group_id,na_call_url FROM vicidial_inbound_groups where na_call_url IS NOT NULL and na_call_url!='' and group_calldate > \"$RMSQLdate\";";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				$NCUig_count=0;
+				while ($sthArows > $NCUig_count)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$NCUcampaigns	.= "$aryA[0]|";
+					$NCUcamp_id[$ncu_total_count] = $aryA[0];
+					$NCUncurl[$ncu_total_count]	=	$aryA[1];
+					$NCUig_count++;
+					$ncu_total_count++;
+					}
+				}
+			$event_string = "     NA-CALL-URL check:   $ncu_total_count active, checking unprocessed calls...";
+			 &event_logger;
+
+			@NCUuniqueid = @MT;
+			@NCUleadid = @MT;
+			@NCUcalldate = @MT;
+			@NCUcallerid = @MT;
+			@NCUcampaign = @MT;
+			@NCUstatus = @MT;
+			@NCUuser = @MT;
+			@NCUphone = @MT;
+			@NCUaltdial = @MT;
+			@NCUcalltype = @MT;
+
+			$stmtA = "SELECT uniqueid,lead_id,call_date,caller_code FROM vicidial_log_extended where server_ip='$server_ip' and call_date > \"$RMSQLdate\" and dispo_url_processed='N' order by call_date,lead_id limit 100000;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			$vle_count=0;
+			$vle_auto_count=0;
+			while ($sthArows > $vle_count)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$NCUuniqueid[$vle_count] =	$aryA[0];
+				$NCUleadid[$vle_count] =	$aryA[1];
+				$NCUcalldate[$vle_count] =	$aryA[2];
+				$NCUcallerid[$vle_count] =	$aryA[3];
+				$vle_count++;
+				}
+			$sthA->finish();
+
+			$event_string = "     NA-CALL-URL vle records count:   $vle_count|$vle_auto_count";
+			 &event_logger;
+
+			$vle_count=0;
+			if (length($NCUuniqueid[0]) > 5) 
+				{
+				foreach(@NCUuniqueid)
+					{
+					if ( (length($NCUcallerid[$vle_count]) > 10) && ($NCUcallerid[$vle_count] !~ /^M/) && ($NCUcallerid[$vle_count] =~ /^V|^Y/) )
+						{
+						$vac_count=0;
+						$stmtA = "SELECT count(*) FROM vicidial_auto_calls where callerid='$NCUcallerid[$vle_count]' and lead_id='$NCUleadid[$vle_count]';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$vac_count	= $aryA[0];
+							}
+
+						if ($vac_count < 1)
+							{
+							if ($NCUcallerid[$vle_count] =~ /^Y/) 
+								{
+								$stmtA = "SELECT campaign_id,status,user,phone_number,'MAIN' FROM vicidial_closer_log where uniqueid='$NCUuniqueid[$vle_count]' and lead_id='$NCUleadid[$vle_count]' and call_date='$NCUcalldate[$vle_count]';";
+								$NCUcalltype[$vle_count] = 'IN';
+								}
+							else
+								{
+								$stmtA = "SELECT campaign_id,status,user,phone_number,alt_dial FROM vicidial_log where uniqueid='$NCUuniqueid[$vle_count]' and lead_id='$NCUleadid[$vle_count]' and call_date > \"$RMSQLdate\";";
+								$NCUcalltype[$vle_count] = 'OUT';
+								}
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$NCUcampaign[$vle_count] =	$aryA[0];
+								$NCUstatus[$vle_count] =	$aryA[1];
+								$NCUuser[$vle_count] =		$aryA[2];
+								$NCUphone[$vle_count] =		$aryA[3];
+								$NCUaltdial[$vle_count] =	$aryA[4];
+
+								if ($NCUcampaigns =~ /\|$NCUcampaign[$vle_count]\|/i)
+									{
+									if ($NCUincall !~ /\|$NCUstatus[$vle_count]\|/i)
+										{
+										if ($NCUuser[$vle_count] =~ /VDAD|VDCL/i)
+											{
+											$NCUncurl_value='';
+											$NCUcamp_match=0;
+											$NCUcamp_loop=0;
+											while ( ($NCUcamp_match < 1) && ($NCUcamp_loop <= $NCUcamp_count) )
+												{
+												if ( ($NCUcampaign[$vle_count] =~ /$NCUcamp_id[$NCUcamp_loop]/i) && (length($NCUcampaign[$vle_count]) == length($NCUcamp_id[$NCUcamp_loop])) )
+													{
+													$NCUcamp_match++;
+													$NCUncurl_value = $NCUncurl[$NCUcamp_loop];
+													}
+												$NCUcamp_loop++;
+												}
+											if (length($NCUncurl_value) > 10)
+												{
+												$event_string = "        NCU url defined, launching web GET:   $NCUcallerid[$vle_count]|$NCUstatus[$vle_count]";
+												 &event_logger;
+
+												### set dispo_url_processed match record to Y for processed and sent
+												$stmtA = "UPDATE vicidial_log_extended SET dispo_url_processed='XY' where uniqueid='$NCUuniqueid[$vle_count]' and call_date='$NCUcalldate[$vle_count]' and lead_id='$NCUleadid[$vle_count]';";
+												$affected_rows = $dbhA->do($stmtA);
+
+												$launch = $PATHhome . "/AST_send_URL.pl";
+												$launch .= " --SYSLOG" if ($SYSLOG);
+												$launch .= " --lead_id=" . $NCUleadid[$vle_count];
+												$launch .= " --phone_number=" . $NCUphone[$vle_count];
+												$launch .= " --user=" . $NCUuser[$vle_count];
+												$launch .= " --call_type=" . $NCUcalltype[$vle_count];
+												$launch .= " --campaign=" . $NCUcampaign[$vle_count];
+												$launch .= " --uniqueid=" . $NCUuniqueid[$vle_count];
+												$launch .= " --alt_dial=" . $NCUaltdial[$vle_count];
+												$launch .= " --call_id=" . $NCUcallerid[$vle_count];
+												$launch .= " --function=NA_CALL_URL";
+
+												system($launch . ' &');
+
+												$event_string = "        NCU url sent processed:   $NCUcallerid[$vle_count]|$NCUcampaign[$vle_count]|$NCUuser[$vle_count]";
+												 &event_logger;
+												}
+											else
+												{
+												### set dispo_url_processed match record to Y for processed but not sent, invalid url
+												$stmtA = "UPDATE vicidial_log_extended SET dispo_url_processed='XY' where uniqueid='$NCUuniqueid[$vle_count]' and call_date='$NCUcalldate[$vle_count]' and lead_id='$NCUleadid[$vle_count]';";
+												$affected_rows = $dbhA->do($stmtA);
+
+												$event_string = "        NCU invalid url defined, log processed:   $NCUcallerid[$vle_count]|$affected_rows|$NCUcampaign[$vle_count]";
+												 &event_logger;
+												}
+											}
+										else
+											{
+											### set dispo_url_processed record to U for unqualified processing because call sent to agent
+											$stmtA = "UPDATE vicidial_log_extended SET dispo_url_processed='XY' where uniqueid='$NCUuniqueid[$vle_count]' and call_date='$NCUcalldate[$vle_count]' and lead_id='$NCUleadid[$vle_count]';";
+											$affected_rows = $dbhA->do($stmtA);
+
+											$event_string = "        NCU call sent to agent, log processed:   $NCUcallerid[$vle_count]|$affected_rows|$NCUuser[$vle_count]";
+											 &event_logger;
+											}
+										}
+									else
+										{
+										$event_string = "        NCU status in-call, do nothing:   $NCUcallerid[$vle_count]|$NCUuniqueid[$vle_count]|$NCUstatus[$vle_count]";
+										 &event_logger;
+										}
+									}
+								else
+									{
+									### set dispo_url_processed record to XU for unqualified processing because no url defined
+									$stmtA = "UPDATE vicidial_log_extended SET dispo_url_processed='XU' where uniqueid='$NCUuniqueid[$vle_count]' and call_date='$NCUcalldate[$vle_count]' and lead_id='$NCUleadid[$vle_count]';";
+									$affected_rows = $dbhA->do($stmtA);
+									}
+								}
+							else
+								{
+								$event_string = "        NCU no log entry, do nothing:   $NCUcallerid[$vle_count]|$NCUuniqueid[$vle_count]";
+								 &event_logger;
+								}
+							}
+						else
+							{
+							$event_string = "        NCU active call, do nothing:   $NCUcallerid[$vle_count]";
+							 &event_logger;
+							}
+						}
+					else
+						{
+						### set log extended record to XU for invalid callid or manual dial call
+						$stmtA = "UPDATE vicidial_log_extended SET dispo_url_processed='XU' where uniqueid='$NCUuniqueid[$vle_count]' and call_date='$NCUcalldate[$vle_count]' and lead_id='$NCUleadid[$vle_count]';";
+						$affected_rows = $dbhA->do($stmtA);
+
+						$event_string = "        NCU invalid call, mark as XU:   $NCUcallerid[$vle_count]|$NCUuniqueid[$vle_count]";
+						 &event_logger;
+						}
+					$vle_count++;
+					}
+				}
 			}
 
 
@@ -2598,6 +3109,17 @@ sub get_time_now	#get the current date and time and epoch for logging call lengt
 	if ($Tsec < 10) {$Tsec = "0$Tsec";}
 	$TDtsSQLdate = "$Tyear$Tmon$Tmday$Thour$Tmin$Tsec";
 	$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
+
+	$RMtarget = ($secX - 21600);	# 6 hours ago
+	($RMsec,$RMmin,$RMhour,$RMmday,$RMmon,$RMyear,$RMwday,$RMyday,$RMisdst) = localtime($RMtarget);
+	$RMyear = ($RMyear + 1900);
+	$RMmon++;
+	if ($RMmon < 10) {$RMmon = "0$RMmon";}
+	if ($RMmday < 10) {$RMmday = "0$RMmday";}
+	if ($RMhour < 10) {$RMhour = "0$RMhour";}
+	if ($RMmin < 10) {$RMmin = "0$RMmin";}
+	if ($RMsec < 10) {$RMsec = "0$RMsec";}
+	$RMSQLdate = "$RMyear-$RMmon-$RMmday $RMhour:$RMmin:$RMsec";
 	}
 
 

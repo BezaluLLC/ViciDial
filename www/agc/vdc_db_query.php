@@ -288,12 +288,13 @@
 # 110626-0127 - Added queuemetrics_pe_phone_append
 # 110718-1158 - Added logging of skipped leads
 # 110723-2256 - Added disable_alter_custphone HIDE option for call logs display
+# 110731-2318 - Added dispo/start call url logging to DB table
 #
 
-$version = '2.4-191';
-$build = '110718-1158';
+$version = '2.4-192';
+$build = '110731-2318';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=419;
+$mysql_log_count=425;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -5503,6 +5504,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$VDCL_start_call_url = eregi_replace('--A--closecallid--B--',urlencode(trim($INclosecallid)),$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--xfercallid--B--',urlencode(trim($INxfercallid)),$VDCL_start_call_url);
 				$VDCL_start_call_url = eregi_replace('--A--agent_log_id--B--',urlencode(trim($agent_log_id)),$VDCL_start_call_url);
+				$VDCL_start_call_url = eregi_replace('--A--call_id--B--',urlencode(trim($callerid)),$VDCL_start_call_url);
 
 				if (strlen($custom_field_names)>2)
 					{
@@ -5533,9 +5535,41 @@ if ($ACTION == 'VDADcheckINCOMING')
 						}
 					}
 
+				$stmt="UPDATE vicidial_log_extended set start_url_processed='Y' where uniqueid='$uniqueid';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00420',$user,$server_ip,$session_name,$one_mysql_log);}
+				$vle_update = mysql_affected_rows($link);
+
+				### insert a new url log entry
+				$SQL_log = "$VDCL_start_call_url";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt = "INSERT INTO vicidial_url_log SET uniqueid='$uniqueid',url_date='$NOW_TIME',url_type='start',url='$SQL_log',url_response='';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00421',$user,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rows = mysql_affected_rows($link);
+				$url_id = mysql_insert_id($link);
+
+				$URLstart_sec = date("U");
+
+				### grab the call_start_url ###
 				if ($DB > 0) {echo "$VDCL_start_call_url<BR>\n";}
 				$SCUfile = file("$VDCL_start_call_url");
 				if ($DB > 0) {echo "$SCUfile[0]<BR>\n";}
+
+				### update url log entry
+				$URLend_sec = date("U");
+				$URLdiff_sec = ($URLend_sec - $URLstart_sec);
+				$SCUfile_contents = implode("", $SCUfile);
+				$SCUfile_contents = ereg_replace(';','',$SCUfile_contents);
+				$SCUfile_contents = addslashes($SCUfile_contents);
+				$stmt = "UPDATE vicidial_url_log SET response_sec='$URLdiff_sec',url_response='$SCUfile_contents' where url_log_id='$url_id';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00422',$user,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rows = mysql_affected_rows($link);
 
 				##### BEGIN special filtering and response for Vtiger account balance function #####
 				# http://vtiger/vicidial/api.php?mode=callxfer&contactwsid=--A--vendor_lead_code--B--&minuteswarning=3
@@ -7196,6 +7230,7 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_url = eregi_replace('--A--did_description--B--',urlencode(trim($DID_description)),$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--closecallid--B--',urlencode(trim($INclosecallid)),$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--xfercallid--B--',urlencode(trim($INxfercallid)),$dispo_call_url);
+		$dispo_call_url = eregi_replace('--A--call_id--B--',urlencode(trim($MDnextCID)),$dispo_call_url);
 
 		if (strlen($FORMcustom_field_names)>2)
 			{
@@ -7226,9 +7261,42 @@ if ($ACTION == 'updateDISPO')
 				}
 			}
 
+		$stmt="UPDATE vicidial_log_extended set dispo_url_processed='Y' where uniqueid='$uniqueid';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00423',$user,$server_ip,$session_name,$one_mysql_log);}
+		$vle_update = mysql_affected_rows($link);
+
+		### insert a new url log entry
+		$SQL_log = "$dispo_call_url";
+		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = addslashes($SQL_log);
+		$stmt = "INSERT INTO vicidial_url_log SET uniqueid='$uniqueid',url_date='$NOW_TIME',url_type='dispo',url='$SQL_log',url_response='';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00424',$user,$server_ip,$session_name,$one_mysql_log);}
+		$affected_rows = mysql_affected_rows($link);
+		$url_id = mysql_insert_id($link);
+
+		$URLstart_sec = date("U");
+
+		### send dispo_call_url ###
 		if ($DB > 0) {echo "$dispo_call_url<BR>\n";}
 		$SCUfile = file("$dispo_call_url");
 		if ($DB > 0) {echo "$SCUfile[0]<BR>\n";}
+
+		### update url log entry
+		$URLend_sec = date("U");
+		$URLdiff_sec = ($URLend_sec - $URLstart_sec);
+		$SCUfile_contents = implode("", $SCUfile);
+		$SCUfile_contents = ereg_replace(';','',$SCUfile_contents);
+		$SCUfile_contents = addslashes($SCUfile_contents);
+		$stmt = "UPDATE vicidial_url_log SET response_sec='$URLdiff_sec',url_response='$SCUfile_contents' where url_log_id='$url_id';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00425',$user,$server_ip,$session_name,$one_mysql_log);}
+		$affected_rows = mysql_affected_rows($link);
+
 
 		$stmt = "SELECT enable_vtiger_integration FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);

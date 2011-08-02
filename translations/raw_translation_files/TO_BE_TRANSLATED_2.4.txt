@@ -680,6 +680,13 @@ This optional setting allows you to define additional voicemail settings. It is 
 The next two settings are also defined in the System Settings section, and you can change them after you define them here. You should set the Default Local GMT to the timezone that your agents want to be in. The Voicemail zone is the listing of voicemail timezones that voicemail messages will be time logged with when new messages are left||
 ERROR: You cannot use reserved words for field labels||
 The DISPO_SELECT_DISABLED option will not disable the dispo screen completely, but will display the dispo screen without any dispositions, this option should only be used if you want to force your agents to use your CRM software which will send the status to the system through the API||
+No Agent Call URL||
+This web URL address is not seen by the agent, but if it is populated it is called every time a call that is not handled by an agent is hung up or transferred. Uses the same variables as the web form fields and scripts. dispo can be used to retrieve the system-defined disposition for the call. This URL can NOT be a relative path. Default is blank||
+On-Hook CID||
+This option is only used for agents that are logged in with phones that have the agent-on-hook feature enabled. This is the caller ID that will show up on their agent phones when the calls are ringing. GENERIC is a generic RINGAGENT00000000001 type of notification. INGROUP will show only the in-group the call came from. CUSTOMER_PHONE will show only the customer phone number. CUSTOMER_PHONE_RINGAGENT will show RINGAGENT_3125551212 with the RINGAGENT as part of the CID with the customer phone number. CUSTOMER_PHONE_INGROUP will show the first 10 characters of the in-group followed by the customer phone number||
+Please wait for the whole page to load before submitting the form||
+In-Group Calldate||
+This is the last date and time that a call was directed to this inbound group||
 
 
 lead_report_export.php

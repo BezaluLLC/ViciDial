@@ -13,10 +13,11 @@
 # 100712-2322 - Added code to log vicidial_list.entry_list_id field if data altered
 # 100916-1749 - Added non-lead variable parsing
 # 110719-0856 - Added HIDEBLOB type
+# 110730-2335 - Added call_id variable
 #
 
-$version = '2.4-5';
-$build = '110719-0856';
+$version = '2.4-6';
+$build = '110730-2335';
 
 require("dbconnect.php");
 require_once("functions.php");
@@ -139,6 +140,8 @@ if (isset($_GET["xfercallid"]))				{$xfercallid=$_GET["xfercallid"];}
 	elseif (isset($_POST["xfercallid"]))	{$xfercallid=$_POST["xfercallid"];}
 if (isset($_GET["agent_log_id"]))			{$agent_log_id=$_GET["agent_log_id"];}
 	elseif (isset($_POST["agent_log_id"]))	{$agent_log_id=$_POST["agent_log_id"];}
+if (isset($_GET["call_id"]))			{$call_id=$_GET["call_id"];}
+	elseif (isset($_POST["call_id"]))	{$call_id=$_POST["call_id"];}
 if (isset($_GET["web_vars"]))			{$web_vars=$_GET["web_vars"];}
 	elseif (isset($_POST["web_vars"]))	{$web_vars=$_POST["web_vars"];}
 

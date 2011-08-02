@@ -12,8 +12,8 @@
 # 101124-0625 - Added lookup_gmt and dialable_gmt functions
 # 110630-0026 - Added HIDDEN and READONLY field types
 # 110719-0858 - Added HIDEBLOB field type
+# 110730-2336 - Added call_id variable
 #
-
 
 
 ##### BEGIN gather values for display of custom list fields for a lead #####
@@ -490,6 +490,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 		$CFoutput = eregi_replace('--A--closecallid--B--',"$closecallid",$CFoutput);
 		$CFoutput = eregi_replace('--A--xfercallid--B--',"$xfercallid",$CFoutput);
 		$CFoutput = eregi_replace('--A--agent_log_id--B--',"$agent_log_id",$CFoutput);
+		$CFoutput = eregi_replace('--A--call_id--B--',"$call_id",$CFoutput);
 
 		# custom fields replacement
 		$o=0;

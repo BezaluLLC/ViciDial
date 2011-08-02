@@ -284,7 +284,7 @@ while($one_day_interval > 0)
 			@QHphone_number=@MT;
 			@QHalt_dial=@MT;
 			##### grab number of QUEUE calls right now and update
-			$stmtA = "SELECT vla.live_agent_id,vla.lead_id,vla.uniqueid,vla.user,vac.call_type,vac.campaign_id,vac.phone_number,vac.alt_dial FROM vicidial_live_agents vla,vicidial_auto_calls vac where vla.server_ip='$server_ip' and vla.status IN('QUEUE') and vla.extension LIKE \"R/%\" and vla.uniqueid=vac.uniqueid and vla.channel=vac.channel;";
+			$stmtA = "SELECT vla.live_agent_id,vla.lead_id,vla.uniqueid,vla.user,vac.call_type,vac.campaign_id,vac.phone_number,vac.alt_dial,vac.callerid FROM vicidial_live_agents vla,vicidial_auto_calls vac where vla.server_ip='$server_ip' and vla.status IN('QUEUE') and vla.extension LIKE \"R/%\" and vla.uniqueid=vac.uniqueid and vla.channel=vac.channel;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$vla_qh_ct=$sthA->rows;
@@ -300,6 +300,7 @@ while($one_day_interval > 0)
 				$QHcampaign_id[$w] =	$aryA[5];
 				$QHphone_number[$w] =	$aryA[6];
 				$QHalt_dial[$w] =		$aryA[7];
+				$QHcall_id[$w] =		$aryA[8];
 				if (length($QHalt_dial[$w]) < 1) {$QHalt_dial[$w] = 'MAIN';}
 				$w++;
 				}
@@ -366,6 +367,7 @@ while($one_day_interval > 0)
 					$launch .= " --campaign=" . $QHcampaign_id[$w];
 					$launch .= " --uniqueid=" . $QHuniqueid[$w];
 					$launch .= " --alt_dial=" . $QHalt_dial[$w];
+					$launch .= " --call_id=" . $QHcall_id[$w];
 					$launch .= " --function=REMOTE_AGENT_START_CALL_URL";
 
 					system($launch . ' &');

@@ -59,3 +59,4 @@ WAITTO - Wait time option call termination on inbound call
 PDROP - Pre-routing dropped call, call hung up the instant the Answer signal is received
 IVRXFR - Outbound drop to Call Menu
 SVYCLM - Survey sent to Call Menu - Survey outbound campaign status only
+MLINAT - Multi-Lead auto-alt-dial lead set to inactive

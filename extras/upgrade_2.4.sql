@@ -910,3 +910,30 @@ UPDATE system_settings SET db_schema_version='1289',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns MODIFY disable_dispo_screen ENUM('DISPO_ENABLED','DISPO_DISABLED','DISPO_SELECT_DISABLED') default 'DISPO_ENABLED';
 
 UPDATE system_settings SET db_schema_version='1290',db_schema_update_date=NOW() where db_schema_version < 1290;
+
+ALTER TABLE vicidial_log_extended ADD start_url_processed ENUM('N','Y','U') default 'N';
+ALTER TABLE vicidial_log_extended ADD dispo_url_processed ENUM('N','Y','U','XY','XU') default 'N';
+ALTER TABLE vicidial_log_extended ADD multi_alt_processed ENUM('N','Y','U') default 'N';
+CREATE INDEX call_date on vicidial_log_extended (call_date);
+
+ALTER TABLE vicidial_campaigns ADD na_call_url TEXT;
+
+ALTER TABLE vicidial_inbound_groups ADD na_call_url TEXT;
+ALTER TABLE vicidial_inbound_groups ADD on_hook_cid VARCHAR(30) default 'GENERIC';
+ALTER TABLE vicidial_inbound_groups ADD group_calldate DATETIME;
+
+CREATE TABLE vicidial_url_log (
+url_log_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+uniqueid VARCHAR(50) NOT NULL,
+url_date DATETIME,
+url_type VARCHAR(10) default '',
+response_sec SMALLINT(5) UNSIGNED default '0',
+url TEXT,
+url_response TEXT,
+index (uniqueid)
+);
+
+CREATE TABLE vicidial_log_extended_archive LIKE vicidial_log_extended;
+CREATE UNIQUE INDEX vlea on vicidial_log_extended_archive (uniqueid,call_date,lead_id);
+
+UPDATE system_settings SET db_schema_version='1291',db_schema_update_date=NOW() where db_schema_version < 1291;

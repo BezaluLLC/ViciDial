@@ -819,7 +819,8 @@ dl_diff_target_method ENUM('ADAPT_CALC_ONLY','CALLS_PLACED') default 'ADAPT_CALC
 disable_dispo_screen ENUM('DISPO_ENABLED','DISPO_DISABLED','DISPO_SELECT_DISABLED') default 'DISPO_ENABLED',
 disable_dispo_status VARCHAR(6) default '',
 screen_labels VARCHAR(20) default '--SYSTEM-SETTINGS--',
-status_display_fields VARCHAR(30) default 'CALLID'
+status_display_fields VARCHAR(30) default 'CALLID',
+na_call_url TEXT
 );
 
 CREATE TABLE vicidial_lists (
@@ -1008,7 +1009,10 @@ add_lead_url TEXT,
 eht_minimum_prompt_filename VARCHAR(255) default '',
 eht_minimum_prompt_no_block ENUM('N','Y') default 'N',
 eht_minimum_prompt_seconds SMALLINT(5) default '10',
-on_hook_ring_time SMALLINT(5) default '15'
+on_hook_ring_time SMALLINT(5) default '15',
+na_call_url TEXT,
+on_hook_cid VARCHAR(30) default 'GENERIC',
+group_calldate DATETIME
 );
 
 CREATE TABLE vicidial_stations (
@@ -2261,8 +2265,13 @@ server_ip VARCHAR(15),
 call_date DATETIME,
 lead_id INT(9) UNSIGNED,
 caller_code VARCHAR(30) NOT NULL,
-custom_call_id VARCHAR(100)
+custom_call_id VARCHAR(100),
+start_url_processed ENUM('N','Y','U') default 'N',
+dispo_url_processed ENUM('N','Y','U','XY','XU') default 'N',
+multi_alt_processed ENUM('N','Y','U') default 'N'
 );
+
+CREATE INDEX call_date on vicidial_log_extended (call_date);
 
 CREATE TABLE vicidial_lists_fields (
 field_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -2400,6 +2409,17 @@ previous_called_count SMALLINT(5) UNSIGNED default '0',
 index (user),
 index (event_date),
 index (campaign_id)
+);
+
+CREATE TABLE vicidial_url_log (
+url_log_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+uniqueid VARCHAR(50) NOT NULL,
+url_date DATETIME,
+url_type VARCHAR(10) default '',
+response_sec SMALLINT(5) UNSIGNED default '0',
+url TEXT,
+url_response TEXT,
+index (uniqueid)
 );
 
 
@@ -2558,7 +2578,10 @@ ALTER TABLE vicidial_closer_log_archive MODIFY closecallid INT(9) UNSIGNED NOT N
 
 CREATE TABLE vicidial_outbound_ivr_log_archive LIKE vicidial_outbound_ivr_log;
 
-UPDATE system_settings SET db_schema_version='1290',db_schema_update_date=NOW();
+CREATE TABLE vicidial_log_extended_archive LIKE vicidial_log_extended;
+CREATE UNIQUE INDEX vlea on vicidial_log_extended_archive (uniqueid,call_date,lead_id);
+
+UPDATE system_settings SET db_schema_version='1291',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
@@ -2567,3 +2590,4 @@ GRANT ALTER,CREATE on asterisk.* TO custom@'%' IDENTIFIED BY 'custom1234';
 GRANT ALTER,CREATE on asterisk.* TO custom@localhost IDENTIFIED BY 'custom1234';
 
 flush privileges;
+

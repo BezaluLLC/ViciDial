@@ -153,6 +153,8 @@
 # 110626-2343 - Added queuemetrics_pe_phone_append
 # 110707-0646 - Added AGENTEXT option in drop message to send to extension(user_custom_five) field
 # 110707-1302 - Added last_inbound_call_time and finish to next agent call options
+# 110731-0141 - Added call_id variable to add_lead_url function calls
+# 110801-0841 - Added on_hook_cid option and group_calldate field
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -164,7 +166,7 @@ $wait_prompt_runs=0;
 $at='@';
 $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=178;
+$mysql_log_count=179;
 $one_mysql_log=0;
 
 
@@ -351,18 +353,18 @@ if ($callerid !~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d|^Y\d\d\d\d\d\d\d\d\d\
 	}
 
 ##### find out if this call is already in the vicidial_log_extended table
-$VLEcount=0;
-$stmtA = "SELECT count(*) FROM vicidial_log_extended where uniqueid='$uniqueid';";
-$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-$sthArows=$sthA->rows;
-	$dbhP=$dbhA;   $mysql_count='02144';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-if ($sthArows > 0)
-	{
-	@aryA = $sthA->fetchrow_array;
-	$VLEcount = 			$aryA[0];
-	}
-$sthA->finish();
+#$VLEcount=0;
+#$stmtA = "SELECT count(*) FROM vicidial_log_extended where uniqueid='$uniqueid';";
+#$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+#$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+#$sthArows=$sthA->rows;
+#	$dbhP=$dbhA;   $mysql_count='02144';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+#if ($sthArows > 0)
+#	{
+#	@aryA = $sthA->fetchrow_array;
+#	$VLEcount = 			$aryA[0];
+#	}
+#$sthA->finish();
 
 $user_unavailable_action='';
 ##### special processing for DID forwarded calls  "99909*1***DID"
@@ -606,10 +608,14 @@ while ($sthArows > $cbc)
 $sthA->finish();
 
 
+### Update calldate on the in-group record
+$stmtA = "UPDATE vicidial_inbound_groups SET group_calldate='$SQLdate' where group_id='$channel_group';";
+$affected_rows = $dbhA->do($stmtA);  
+	$dbhP=$dbhA;   $mysql_count='02179';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 
 ### Grab inbound groups values from the database
 $cbc=0;
-$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,ingroup_recording_override,ingroup_rec_filename FROM vicidial_inbound_groups where group_id = '$channel_group';";
+$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,ingroup_recording_override,ingroup_rec_filename,on_hook_cid FROM vicidial_inbound_groups where group_id = '$channel_group';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -693,6 +699,7 @@ if ($sthArows > 0)
 	$on_hook_ring_time =				$aryA[66];
 	$ingroup_recording_override =		$aryA[67];
 	$campaign_rec_filename =			$aryA[68];
+	$on_hook_cid =						$aryA[69];
 	$custom_call_id='';
 	if ($uniqueid_status_display =~ /ENABLED/)
 		{$custom_call_id = "$uniqueid";}
@@ -777,12 +784,12 @@ if ($call_handle_method =~ /LOOKUP/)
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02007';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		$cbc=0;
-		$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+		$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
 		$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
 			$dbhP=$dbhA;   $stmtA=$stmtB;   $mysql_count='02008';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-		while ($sthArows > $cbc)
+		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
 			$insert_lead_id = $aryA[0];
@@ -793,6 +800,9 @@ if ($call_handle_method =~ /LOOKUP/)
 		### Start the Add-Lead-URL get proccess
 		if (length($add_lead_url) > 5)
 			{
+			$PADlead_id = sprintf("%010s", $insert_lead_id);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
+			$XXqueryCID = "Y$CIDdate$PADlead_id";
+
 			$launch = $PATHhome . "/AST_send_URL.pl";
 			$launch .= " --SYSLOG" if ($SYSLOG);
 			$launch .= " --lead_id=" . $insert_lead_id;
@@ -802,6 +812,7 @@ if ($call_handle_method =~ /LOOKUP/)
 			$launch .= " --campaign=" . $channel_group;
 			$launch .= " --uniqueid=" . $uniqueid;
 			$launch .= " --alt_dial=";
+			$launch .= " --call_id=" . $XXqueryCID;
 			$launch .= " --function=INGROUP_ADD_LEAD_URL";
 
 			system($launch . ' &');
@@ -875,12 +886,12 @@ if ($call_handle_method =~ /LOOKUP/)
  			$affected_rows = $dbhA->do($stmtA);
 				$dbhP=$dbhA;   $mysql_count='02011';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			$cbc=0;
-			$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+			$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
 			$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
 				$dbhP=$dbhA;   $stmtA=$stmtB;   $mysql_count='02012';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-			while ($sthArows > $cbc)
+			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
 				$insert_lead_id = $aryA[0];
@@ -891,6 +902,9 @@ if ($call_handle_method =~ /LOOKUP/)
 			### Start the Add-Lead-URL get proccess
 			if (length($add_lead_url) > 5)
 				{
+				$PADlead_id = sprintf("%010s", $insert_lead_id);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
+				$XXqueryCID = "Y$CIDdate$PADlead_id";
+
 				$launch = $PATHhome . "/AST_send_URL.pl";
 				$launch .= " --SYSLOG" if ($SYSLOG);
 				$launch .= " --lead_id=" . $insert_lead_id;
@@ -900,6 +914,7 @@ if ($call_handle_method =~ /LOOKUP/)
 				$launch .= " --campaign=" . $channel_group;
 				$launch .= " --uniqueid=" . $uniqueid;
 				$launch .= " --alt_dial=";
+				$launch .= " --call_id=" . $XXqueryCID;
 				$launch .= " --function=INGROUP_ADD_LEAD_URL";
 
 				system($launch . ' &');
@@ -945,12 +960,12 @@ else
  		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02014';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		$cbc=0;
-		$stmtA = "select LAST_INSERT_ID() LIMIT 1;";
+		$stmtA = "SELECT LAST_INSERT_ID() LIMIT 1;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
 			$dbhP=$dbhA;   $mysql_count='02015';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-		while ($sthArows > $cbc)
+		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
 			$insert_lead_id = $aryA[0];
@@ -961,6 +976,9 @@ else
 		### Start the Add-Lead-URL get proccess
 		if (length($add_lead_url) > 5)
 			{
+			$PADlead_id = sprintf("%010s", $insert_lead_id);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
+			$XXqueryCID = "Y$CIDdate$PADlead_id";
+
 			$launch = $PATHhome . "/AST_send_URL.pl";
 			$launch .= " --SYSLOG" if ($SYSLOG);
 			$launch .= " --lead_id=" . $insert_lead_id;
@@ -970,6 +988,7 @@ else
 			$launch .= " --campaign=" . $channel_group;
 			$launch .= " --uniqueid=" . $uniqueid;
 			$launch .= " --alt_dial=";
+			$launch .= " --call_id=" . $XXqueryCID;
 			$launch .= " --function=INGROUP_ADD_LEAD_URL";
 
 			system($launch . ' &');
@@ -992,7 +1011,7 @@ if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_st
 	$stmtA = "INSERT INTO vicidial_closer_log set status='AFTHRS',start_epoch='$now_date_epoch',end_epoch='$now_date_epoch',length_in_sec='1',queue_seconds='0',lead_id = '$insert_lead_id',campaign_id='$channel_group',user='VDCL',list_id='$list_id',call_date='$now_date',phone_code='$phone_code',phone_number='$phone_number',comments='AFTER HOURS DROP',term_reason='AFTERHOURS',uniqueid='$uniqueid';";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02016';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-	$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+	$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
 	$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtB ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -1199,7 +1218,7 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 		$stmtA = "INSERT INTO vicidial_closer_log set status='NANQUE',start_epoch='$now_date_epoch',end_epoch='$now_date_epoch',length_in_sec='1',queue_seconds='0',lead_id = '$insert_lead_id',campaign_id='$channel_group',user='VDCL',list_id='$list_id',call_date='$now_date',phone_code='$phone_code',phone_number='$phone_number',comments='NO AGENT DROP',term_reason='NOAGENT',uniqueid='$uniqueid';";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02105';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-		$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+		$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
 		$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtB ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -1473,7 +1492,7 @@ if ($call_handle_method =~ /CLOSER|DIGITID$/)
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02024';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-	$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+	$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
 	$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtB ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -1552,7 +1571,7 @@ if ($channel_group =~ /AGENTDIRECT/)
 
 ### check for an IVR status record in vicidial_auto_calls
 $Uaffected_rows=0;
-$stmtA = "select auto_call_id from vicidial_auto_calls where uniqueid='$uniqueid' and server_ip='$VARserver_ip';";
+$stmtA = "SELECT auto_call_id from vicidial_auto_calls where uniqueid='$uniqueid' and server_ip='$VARserver_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -1578,7 +1597,7 @@ if ($Uaffected_rows < 1)
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02030';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-	$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+	$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
 	$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtB ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -1626,7 +1645,7 @@ $stmtA = "INSERT INTO vicidial_closer_log SET lead_id='$insert_lead_id', campaig
 	if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 $affected_rows = $dbhA->do($stmtA);
 	$dbhP=$dbhA;   $mysql_count='02031';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
 $sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtB ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -2252,6 +2271,17 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 							$PADauto_call_id = sprintf("%011s", $auto_call_id);	while (length($PADauto_call_id) > 11) {chop($PADauto_call_id);}
 							$RINGALLqueryCID = "RINGAGENT$PADauto_call_id";
+							if ($on_hook_cid =~ /INGROUP/)
+								{$RINGALLqueryCID = "$channel_group";}
+							if ($on_hook_cid =~ /CUSTOMER_PHONE/)
+								{$RINGALLqueryCID = "$phone_number";}
+							if ($on_hook_cid =~ /CUSTOMER_PHONE_RINGAGENT/)
+								{$RINGALLqueryCID = "RINGAGENT_$phone_number";}
+							if ($on_hook_cid =~ /CUSTOMER_PHONE_INGROUP/)
+								{
+								$RA_channel_group = $channel_group;	while (length($RA_channel_group) > 10) {chop($RA_channel_group);}
+								$RINGALLqueryCID = "$RA_channel_group$phone_number";
+								}
 							$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$VARserver_ip','','Originate','$RINGALLqueryCID','Exten: $RINGALLexten','Context: default','Channel: $ring_all_DIALstr[$ragp]','Priority: 1','Callerid: $RINGALLqueryCID','Timeout: $commandTEMPon_hook_ring_time','','','','')";
 							$affected_rows = $dbhA->do($stmtA);
 								$dbhP=$dbhA;   $mysql_count='02168';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
@@ -2297,7 +2327,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$stmtA = "INSERT INTO vicidial_auto_calls SET server_ip='$VARserver_ip',campaign_id='$channel_group',status='CLOSER',lead_id='$insert_lead_id',uniqueid='$uniqueid',callerid='$callerid',channel='$channel',phone_code='$phone_code',phone_number='$phone_number',call_time='$SQLdate',call_type='IN',stage='CLOSER-$drop_timer',queue_priority='$queue_priority' $adSQL;";
 					$affected_rows = $dbhA->do($stmtA);
 						$dbhP=$dbhA;   $mysql_count='02064';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-					$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+					$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
 					$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtB ", $dbhA->errstr;
 					$sthArows=$sthA->rows;
@@ -3412,7 +3442,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$wait_time_option_callback_list_id','N','$phone_code','$phone_number','$channel_group','1','$local_gmt','$VLcomments');";
 				$affected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02089';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-				$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+				$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
 				$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -3435,6 +3465,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$launch .= " --call_type=IN";
 					$launch .= " --campaign=" . $channel_group;
 					$launch .= " --uniqueid=" . $uniqueid;
+					$launch .= " --call_id=" . $callerid;
 					$launch .= " --alt_dial=";
 					$launch .= " --function=INGROUP_ADD_LEAD_URL";
 
@@ -3834,7 +3865,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 						$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$hold_time_option_callback_list_id','N','$phone_code','$phone_number','$channel_group','1','$local_gmt','$VLcomments');";
 						$affected_rows = $dbhA->do($stmtA);
 							$dbhP=$dbhA;   $mysql_count='02089';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-						$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+						$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
 						$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
@@ -3858,6 +3889,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 							$launch .= " --campaign=" . $channel_group;
 							$launch .= " --uniqueid=" . $uniqueid;
 							$launch .= " --alt_dial=";
+							$launch .= " --call_id=" . $callerid;
 							$launch .= " --function=INGROUP_ADD_LEAD_URL";
 
 							system($launch . ' &');
@@ -4044,7 +4076,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 		$stmtA = "INSERT INTO vicidial_auto_calls SET server_ip='$VARserver_ip',campaign_id='$channel_group',status='LIVE',lead_id='$insert_lead_id',uniqueid='$uniqueid',callerid='$callerid',channel='$channel',phone_code='$phone_code',phone_number='$phone_number',call_time='$SQLdate',call_type='IN',stage='LIVE-$drop_timer',queue_priority='$queue_priority' $adSQL;";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02096';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-		$stmtB = "select LAST_INSERT_ID() LIMIT 1;";
+		$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
 		$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtB ", $dbhA->errstr;
 		$sthArows=$sthA->rows;

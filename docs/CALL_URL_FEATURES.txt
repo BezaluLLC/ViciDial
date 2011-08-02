@@ -40,8 +40,12 @@ is blank. You must begin this URL with VAR if you want to use variables, and of
 course --A-- and --B-- around the actual variable in the URL where you want to
 use it. Here is the list of variables that are available for this function: 
 lead_id, vendor_lead_code, list_id, phone_number, phone_code, did_id, 
-did_extension, did_pattern, did_description, uniqueid. This feature is only
-available for In-Groups.
+did_extension, did_pattern, did_description, uniqueid, call_id. This feature is
+only available for In-Groups.
+
+No Agent Call URL - This is similar to Dispo Call URL, but it is for calls
+that are not sent to agents such as DROPs, No Answers, Busys and timeouts. This 
+option is available for Campaigns and In-Groups
 
 
 
@@ -64,7 +68,7 @@ user_custom_three, user_custom_four, user_custom_five,
 preset_number_a, preset_number_b, preset_number_c, preset_number_d,
 preset_number_e, preset_number_f, preset_dtmf_a, preset_dtmf_b,
 did_id, did_extension, did_pattern, did_description, closecallid,
-xfercallid, agent_log_id, entry_list_id.
+xfercallid, agent_log_id, entry_list_id, call_id.
 
 
 For examples(and sample result URL):
