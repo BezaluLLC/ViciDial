@@ -27,13 +27,6 @@ agent-defined disposition for the call and the actual talk time in
 seconds of the call. This URL can NOT be a relative path. Default is
 blank.
 
-CRM Popup Login - If set to Y, the CRM Popup Address is used to open a new 
-window on agent login to this campaign. Default is N.
-
-CRM Popup Address - The web address of a CRM login page, it can have variables 
-populated just like the web form address, with the VAR in the front and using 
---A--user_custom_one--B-- to define variables. 
-
 Add Lead URL -  This web URL address is not seen by the agent, but it is called
 every time a lead is added to the system through the inbound process. Default 
 is blank. You must begin this URL with VAR if you want to use variables, and of
@@ -45,7 +38,17 @@ only available for In-Groups.
 
 No Agent Call URL - This is similar to Dispo Call URL, but it is for calls
 that are not sent to agents such as DROPs, No Answers, Busys and timeouts. This 
-option is available for Campaigns and In-Groups
+option is available for Campaigns and In-Groups. This feature will only work for
+auto-dial and inbound calls, not manual dial calls. For inbound calls, the 
+specific in-group that a call was sent to needs to have the No Agent Call URL 
+field filled in or this function will not run for that call.
+
+CRM Popup Login - If set to Y, the CRM Popup Address is used to open a new 
+window on agent login to this campaign. Default is N.
+
+CRM Popup Address - The web address of a CRM login page, it can have variables 
+populated just like the web form address, with the VAR in the front and using 
+--A--user_custom_one--B-- to define variables. 
 
 
 
