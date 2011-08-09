@@ -32,6 +32,7 @@
 # 110430-1442 - Added queue-log and closer-log options, changed quiet to --quiet flag
 # 110525-1040 - Added vicidial_outbound_ivr_log archiving
 # 110801-2140 - Added vicidial_url_log table purging and vicidial_log_extended to rolling processes
+# 110808-0055 - Added vicidial_log_noanswer process
 #
 
 ### begin parsing run-time options ###
@@ -404,6 +405,7 @@ if (!$T)
 		}
 
 
+
 	##### vicidial_log_extended
 	$stmtA = "SELECT count(*) from vicidial_log_extended;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -452,6 +454,58 @@ if (!$T)
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		}
+
+
+
+	##### vicidial_log_noanswer
+	$stmtA = "SELECT count(*) from vicidial_log_noanswer;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$vicidial_log_noanswer_count =	$aryA[0];
+		}
+	$sthA->finish();
+
+	$stmtA = "SELECT count(*) from vicidial_log_noanswer_archive;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$vicidial_log_noanswer_archive_count =	$aryA[0];
+		}
+	$sthA->finish();
+
+	if (!$Q) {print "\nProcessing vicidial_log_noanswer table...  ($vicidial_log_noanswer_count|$vicidial_log_noanswer_archive_count)\n";}
+	$stmtA = "INSERT IGNORE INTO vicidial_log_noanswer_archive SELECT * from vicidial_log_noanswer;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	
+	$sthArows = $sthA->rows;
+	if (!$Q) {print "$sthArows rows inserted into vicidial_log_noanswer_archive table \n";}
+	
+	$rv = $sthA->err();
+	if (!$rv) 
+		{	
+		$stmtA = "DELETE FROM vicidial_log_noanswer WHERE call_date < '$del_time';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows = $sthA->rows;
+		if (!$Q) {print "$sthArows rows deleted from vicidial_log_noanswer table \n";}
+
+		$stmtA = "optimize table vicidial_log_noanswer;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+
+		$stmtA = "optimize table vicidial_log_noanswer_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		}
+
 
 
 	##### server_performance

@@ -104,6 +104,7 @@
 # 110602-0953 - Added dl_diff_target_method option
 # 110723-1256 - Added extra debug for vac deletes and fix for long ring/drop time
 # 110731-2127 - Added sections for handling MULTI_LEAD auto-alt-dial and na-call-url functions
+# 110809-1516 - Added section for noanswer logging
 #
 
 
@@ -381,9 +382,12 @@ while($one_day_interval > 0)
 		$event_string="SERVER CALLS PER SECOND MAXIMUM SET TO: $outbound_calls_per_second |$per_call_delay|";
 		&event_logger;
 
+
+
+
 		#############################################
 		##### Check if auto-dialing is enabled
-		$stmtA = "SELECT outbound_autodial_active FROM system_settings;";
+		$stmtA = "SELECT outbound_autodial_active,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db FROM system_settings;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -391,6 +395,12 @@ while($one_day_interval > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
 			$outbound_autodial_active =		$aryA[0];
+			$noanswer_log =					$aryA[1];
+			$alt_log_server_ip =			$aryA[2];
+			$alt_log_dbname =				$aryA[3];
+			$alt_log_login =				$aryA[4];
+			$alt_log_pass =					$aryA[5];
+			$tables_use_alt_log_db =		$aryA[6];
 			}
 		$sthA->finish();
 
@@ -2544,7 +2554,10 @@ while($one_day_interval > 0)
 												$stmtA = "UPDATE vicidial_list SET status='MLINAT' where lead_id IN($MLnonmatch_leadids);";
 												$affected_rows = $dbhA->do($stmtA);
 
-												$event_string = "        ML status non-match accounts inactivated:   $MLnonmatch_leadids|$affected_rows|MLINAT";
+												$stmtB = "DELETE FROM vicidial_hopper where lead_id IN($MLnonmatch_leadids);";
+												$affected_rowsH = $dbhA->do($stmtB);
+
+												$event_string = "        ML status non-match accounts inactivated:   $MLnonmatch_leadids|$affected_rows|$affected_rowsH|MLINAT";
 												 &event_logger;
 												}
 
@@ -2857,6 +2870,162 @@ while($one_day_interval > 0)
 					}
 				}
 			}
+
+
+	###############################################################################
+	###### sixth, if noanswer_log is enabled in the system settings then look for
+	######    unprocessed entries for this server_ip and process them.
+	###############################################################################
+		$MLincall='|INCALL|QUEUE|DISPO|';
+		$MLnoanswer='|NA|B|AB|DC|ADC|CPDATB|CPDB|CPDNA|CPDREJ|CPDINV|CPDSUA|CPDSI|CPDSNC|CPDSR|CPDSUK|CPDSV|CPDUK|CPDERR|';
+
+		if ($noanswer_log =~ /Y/)
+			{
+			$event_string = "     NO-ANSWER log check:   $noanswer_log, active, checking unprocessed calls...";
+			 &event_logger;
+
+			@MLuniqueid = @MT;
+			@MLleadid = @MT;
+			@MLcalldate = @MT;
+			@MLcallerid = @MT;
+			@MLflag = @MT;
+			@MLcampaign = @MT;
+			@MLstatus = @MT;
+
+			$stmtA = "SELECT uniqueid,lead_id,call_date,caller_code FROM vicidial_log_extended where server_ip='$server_ip' and call_date > \"$RMSQLdate\" and noanswer_processed='N' order by call_date,lead_id limit 100000;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			$vle_count=0;
+			$vle_auto_count=0;
+			while ($sthArows > $vle_count)
+				{
+				$MLflag[$vle_count]	= 0;
+				@aryA = $sthA->fetchrow_array;
+				if ($aryA[3] =~ /^V/)
+					{
+					$vle_auto_count++;
+					$MLflag[$vle_count]	= 1;
+					}
+				$MLuniqueid[$vle_count]	= $aryA[0];
+				$MLleadid[$vle_count]	= $aryA[1];
+				$MLcalldate[$vle_count]	= $aryA[2];
+				$MLcallerid[$vle_count]	= $aryA[3];
+				$vle_count++;
+				}
+			$sthA->finish();
+
+			$event_string = "     NO-ANSWER log vle records count:   $vle_count|$vle_auto_count";
+			 &event_logger;
+
+			$vle_count=0;
+			foreach(@MLuniqueid)
+				{
+				if ($MLflag[$vle_count] > 0)
+					{
+					$vac_count=0;
+					$stmtA = "SELECT count(*) FROM vicidial_auto_calls where callerid='$MLcallerid[$vle_count]' and lead_id='$MLleadid[$vle_count]';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$vac_count	= $aryA[0];
+						}
+					if ($vac_count < 1)
+						{
+						$stmtA = "SELECT status FROM vicidial_log where uniqueid='$MLuniqueid[$vle_count]' and lead_id='$MLleadid[$vle_count]' and call_date > \"$RMSQLdate\";";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$MLstatus[$vle_count]	= $aryA[0];
+
+							if ($MLincall !~ /\|$MLstatus[$vle_count]\|/i)
+								{
+								if ($MLnoanswer =~ /\|$MLstatus[$vle_count]\|/i)
+									{
+									if ( ($tables_use_alt_log_db =~ / vicidial_log_noanswer /i) && (length($alt_log_server_ip)>4) && (length($alt_log_dbname)>4) )
+										{
+										$stmtA = "SELECT uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial FROM vicidial_log where uniqueid='$MLuniqueid[$vle_count]' and lead_id='$MLleadid[$vle_count]' and call_date > \"$RMSQLdate\";";
+										$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+										$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+										$sthArows=$sthA->rows;
+										if ($sthArows > 0)
+											{
+											@aryA = $sthA->fetchrow_array;
+
+											$dbhD = DBI->connect("DBI:mysql:$alt_log_dbname:$alt_log_server_ip:3306", "$alt_log_login", "$alt_log_pass")
+											 or die "Couldn't connect to database: " . DBI->errstr;
+
+											if ($DB) {print "CONNECTED TO ALT-LOG DATABASE:  $alt_log_server_ip|$alt_log_dbname\n";}
+
+											$stmtD = "INSERT INTO vicidial_log_noanswer SET uniqueid='$aryA[0]',lead_id='$aryA[1]',list_id='$aryA[2]',campaign_id='$aryA[3]',call_date='$aryA[4]',start_epoch='$aryA[5]',end_epoch='$aryA[6]',length_in_sec='$aryA[7]',status='$aryA[8]',phone_code='$aryA[9]',phone_number='$aryA[10]',user='$aryA[11]',comments='$aryA[12]',processed='$aryA[13]',user_group='$aryA[14]',term_reason='$aryA[15]',alt_dial='$aryA[16]',caller_code='$MLcallerid[$vle_count]';";
+											$affected_rows = $dbhD->do($stmtD);
+
+											$dbhD->disconnect();
+											}
+										else
+											{
+											$event_string = "        VNA ERROR:   $MLcallerid[$vle_count]|$MLuniqueid[$vle_count]|$MLleadid[$vle_count]";
+											 &event_logger;
+											}
+										}
+									else
+										{
+										### insert vicidial_log_noanswer entry
+										$stmtA = "INSERT INTO vicidial_log_noanswer SELECT uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial,\"$MLcallerid[$vle_count]\" from vicidial_log where uniqueid='$MLuniqueid[$vle_count]' and lead_id='$MLleadid[$vle_count]' LIMIT 1;";
+										$affected_rows = $dbhA->do($stmtA);
+										}
+
+									### set noanswer to Y for processed
+									$stmtB = "UPDATE vicidial_log_extended SET noanswer_processed='Y' where uniqueid='$MLuniqueid[$vle_count]' and call_date='$MLcalldate[$vle_count]' and lead_id='$MLleadid[$vle_count]';";
+									$affected_rowsB = $dbhA->do($stmtB);
+
+									$event_string = "        VNA match, log processed:   $MLcallerid[$vle_count]|$affected_rows|$affected_rowsB";
+									 &event_logger;
+									}
+								else
+									{
+									### set noanswer record to U for unqualified for noanswer logging
+									$stmtA = "UPDATE vicidial_log_extended SET noanswer_processed='U' where uniqueid='$MLuniqueid[$vle_count]' and call_date='$MLcalldate[$vle_count]' and lead_id='$MLleadid[$vle_count]';";
+									$affected_rows = $dbhA->do($stmtA);
+
+									$event_string = "        VNA no-match, log processed:   $MLcallerid[$vle_count]|$affected_rows";
+									 &event_logger;
+									}
+								}
+							else
+								{
+								$event_string = "        VNA status in-call, do nothing:   $MLcallerid[$vle_count]|$MLuniqueid[$vle_count]|$MLstatus[$vle_count]";
+								 &event_logger;
+								}
+							}
+						else
+							{
+							$event_string = "        VNA status no vicidial_log record, do nothing:   $MLcallerid[$vle_count]|$MLuniqueid[$vle_count]|$MLstatus[$vle_count]";
+							 &event_logger;
+							}
+						}
+					else
+						{
+						$event_string = "        VNA active call, do nothing:   $MLcallerid[$vle_count]";
+						 &event_logger;
+						}
+					}
+				else
+					{
+					### set noanswer record to U for unqualified for noanswer logging
+					$stmtA = "UPDATE vicidial_log_extended SET noanswer_processed='U' where uniqueid='$MLuniqueid[$vle_count]' and call_date='$MLcalldate[$vle_count]' and lead_id='$MLleadid[$vle_count]';";
+					$affected_rows = $dbhA->do($stmtA);
+					}
+				$vle_count++;
+				}
+			}
+
 
 
 	###############################################################################

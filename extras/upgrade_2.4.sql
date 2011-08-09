@@ -937,3 +937,42 @@ CREATE TABLE vicidial_log_extended_archive LIKE vicidial_log_extended;
 CREATE UNIQUE INDEX vlea on vicidial_log_extended_archive (uniqueid,call_date,lead_id);
 
 UPDATE system_settings SET db_schema_version='1291',db_schema_update_date=NOW() where db_schema_version < 1291;
+
+CREATE UNIQUE INDEX vicidial_campaign_statuses_key on vicidial_campaign_statuses(status, campaign_id);
+
+ALTER TABLE system_settings ADD noanswer_log ENUM('Y','N') default 'N';
+ALTER TABLE system_settings ADD alt_log_server_ip VARCHAR(50) default '';
+ALTER TABLE system_settings ADD alt_log_dbname VARCHAR(50) default '';
+ALTER TABLE system_settings ADD alt_log_login VARCHAR(50) default '';
+ALTER TABLE system_settings ADD alt_log_pass VARCHAR(50) default '';
+ALTER TABLE system_settings ADD tables_use_alt_log_db VARCHAR(2000) default '';
+
+CREATE TABLE vicidial_log_noanswer (
+uniqueid VARCHAR(20) PRIMARY KEY NOT NULL,
+lead_id INT(9) UNSIGNED NOT NULL,
+list_id BIGINT(14) UNSIGNED,
+campaign_id VARCHAR(8),
+call_date DATETIME,
+start_epoch INT(10) UNSIGNED,
+end_epoch INT(10) UNSIGNED,
+length_in_sec INT(10),
+status VARCHAR(6),
+phone_code VARCHAR(10),
+phone_number VARCHAR(18),
+user VARCHAR(20),
+comments VARCHAR(255),
+processed ENUM('Y','N'),
+user_group VARCHAR(20),
+term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','NONE') default 'NONE',
+alt_dial VARCHAR(6) default 'NONE',
+caller_code VARCHAR(30) NOT NULL,
+index (lead_id),
+index (call_date)
+);
+
+CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer; 
+
+ALTER TABLE vicidial_log_extended ADD noanswer_processed ENUM('N','Y','U') default 'N';
+
+UPDATE system_settings SET db_schema_version='1292',db_schema_update_date=NOW() where db_schema_version < 1292;
+

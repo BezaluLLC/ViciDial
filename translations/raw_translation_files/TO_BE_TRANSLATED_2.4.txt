@@ -687,6 +687,12 @@ This option is only used for agents that are logged in with phones that have the
 Please wait for the whole page to load before submitting the form||
 In-Group Calldate||
 This is the last date and time that a call was directed to this inbound group||
+No-Answer Log||
+This option will log the auto-dial calls that are not answered to a separate table. Default is N||
+Alt-Log DB Server||
+This is the alternate log database server. This is optional, and allows some logs to be written to a separate database. Default is empty||
+Alt-Log Tables||
+These are the tables that are available for logging on the alternate log database server. Default is blank||
 
 
 lead_report_export.php

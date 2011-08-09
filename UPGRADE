@@ -670,6 +670,13 @@ OTHER CHANGES:
 	dial statuses so that the other leads tied by vendor_lead_code in the 
 	campaign's lists are not deactivated.
 
+152. Added noanswer logging feature to System Settings, will log only auto-dial
+	calls that are not answered to a separate table
+
+153. Added new Team Performance Detail report to the Reports page. This is a 
+	fairly detailed and database-intensive report that summarizes several
+	user-grouped statistics
+
 
 
 

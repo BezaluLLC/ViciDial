@@ -194,7 +194,9 @@ if (length($ARGV[0])>1)
 					$time = timelocal(0,0,2,$cli_date[2],$cli_date[1],$cli_date[0]);
 					}
 				}
-			if (!$Q) {print "\n----- DATE OVERRIDE: $shipdate -----\n\n";}
+			$start_date = $shipdate;
+			$start_date =~ s/-//gi;
+			if (!$Q) {print "\n----- DATE OVERRIDE: $shipdate($start_date) -----\n\n";}
 			}
 		else
 			{

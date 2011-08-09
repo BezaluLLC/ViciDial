@@ -1421,7 +1421,13 @@ test_campaign_calls ENUM('0','1') default '0',
 agents_calls_reset ENUM('0','1') default '1',
 voicemail_timezones TEXT,
 default_voicemail_timezone VARCHAR(30) default 'eastern',
-default_local_gmt VARCHAR(6) default '-5.00'
+default_local_gmt VARCHAR(6) default '-5.00',
+noanswer_log ENUM('Y','N') default 'N',
+alt_log_server_ip VARCHAR(50) default '',
+alt_log_dbname VARCHAR(50) default '',
+alt_log_login VARCHAR(50) default '',
+alt_log_pass VARCHAR(50) default '',
+tables_use_alt_log_db VARCHAR(2000) default ''
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2422,6 +2428,29 @@ url_response TEXT,
 index (uniqueid)
 );
 
+CREATE TABLE vicidial_log_noanswer (
+uniqueid VARCHAR(20) PRIMARY KEY NOT NULL,
+lead_id INT(9) UNSIGNED NOT NULL,
+list_id BIGINT(14) UNSIGNED,
+campaign_id VARCHAR(8),
+call_date DATETIME,
+start_epoch INT(10) UNSIGNED,
+end_epoch INT(10) UNSIGNED,
+length_in_sec INT(10),
+status VARCHAR(6),
+phone_code VARCHAR(10),
+phone_number VARCHAR(18),
+user VARCHAR(20),
+comments VARCHAR(255),
+processed ENUM('Y','N'),
+user_group VARCHAR(20),
+term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','NONE') default 'NONE',
+alt_dial VARCHAR(6) default 'NONE',
+caller_code VARCHAR(30) NOT NULL,
+index (lead_id),
+index (call_date)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
@@ -2557,6 +2586,7 @@ CREATE INDEX phone_number on vicidial_xfer_log (phone_number);
 CREATE INDEX phone_number on vicidial_closer_log (phone_number);
 CREATE INDEX date_user on vicidial_closer_log (call_date,user);
 CREATE INDEX comment_a on live_inbound_log (comment_a);
+CREATE UNIQUE INDEX vicidial_campaign_statuses_key on vicidial_campaign_statuses(status, campaign_id);
 
 CREATE TABLE call_log_archive LIKE call_log; 
 
@@ -2581,7 +2611,9 @@ CREATE TABLE vicidial_outbound_ivr_log_archive LIKE vicidial_outbound_ivr_log;
 CREATE TABLE vicidial_log_extended_archive LIKE vicidial_log_extended;
 CREATE UNIQUE INDEX vlea on vicidial_log_extended_archive (uniqueid,call_date,lead_id);
 
-UPDATE system_settings SET db_schema_version='1291',db_schema_update_date=NOW();
+CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer; 
+
+UPDATE system_settings SET db_schema_version='1292',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
