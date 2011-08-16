@@ -40,12 +40,14 @@
 # 100903-0041 - Changed lead_id max length to 10 digits
 # 101111-1552 - Fixed minor bug in TTS filtering
 # 110324-2334 - Logging changes made
+# 110812-1515 - Added static tts file parsing and replacement
 #
 
 $script = 'VD_amd.agi';
 
 $A = 1;		# set to 1 for AMD output messages mode
 $AMD_LOG = 1;	# set to 1 for logfile
+$wav='.wav';
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 $year = ($year + 1900);
@@ -515,6 +517,7 @@ else
 				@aryA = $sthA->fetchrow_array;
 				$TTS_voice =	$aryA[1];
 				$TTS_text =		$aryA[0];
+				### BEGIN replace variables with record values ###
 				$TTS_text =~ s/--A--lead_id--B--/$TTS_lead_id/gi;
 				$TTS_text =~ s/--A--entry_date--B--/$TTS_entry_date/gi;
 				$TTS_text =~ s/--A--modify_date--B--/$TTS_modify_date/gi;
@@ -546,6 +549,62 @@ else
 				$TTS_text =~ s/--A--last_local_call_time--B--/$TTS_last_local_call_time/gi;
 				$TTS_text =~ s/--A--rank--B--/$TTS_rank/gi;
 				$TTS_text =~ s/--A--owner--B--/$TTS_owner/gi;
+				### END replace variables with record values ###
+
+				### BEGIN check for --C-- and --D-- tags for static file replacement
+				if ( ($TTS_text =~ /--C--/) || ($TTS_text =~ /--D--/) )
+					{
+					$Cdash='--C--';
+					$Ddash='--D--';
+					@static_check = split(/--C--/,$TTS_text);
+					$sc=0;
+					$sr=0;
+					foreach(@static_check)
+						{
+						if ($sc > 0)
+							{
+							$static_check[$sc] =~ s/--D-.*//gi;
+							$static_check_lc = lc($static_check[$sc]);
+							print STDERR "     Checking For Static Replacement: $static_check[$sc]|$static_check_lc$wav\n";
+							$static_found=0;
+							if (-e "/var/lib/asterisk/sounds/tts_static/$static_check_lc$wav")
+								{
+								$CDstatic = "<audio src='/var/lib/asterisk/sounds/tts_static/$static_check_lc$wav' /> ";
+								$static_found++;
+								}
+							else
+								{
+								if (-e "/var/lib/asterisk/sounds/$static_check_lc$wav")
+									{
+									$CDstatic = "<audio src='/var/lib/asterisk/sounds/$static_check_lc$wav' /> ";
+									$static_found++;
+									}
+								else
+									{
+									$firsttwo = substr($static_check_lc, 0, 2);
+									if (-e "/var/lib/asterisk/sounds/tts_static/$firsttwo/$static_check_lc$wav")
+										{
+										$CDstatic = "<audio src='/var/lib/asterisk/sounds/tts_static/$firsttwo/$static_check_lc$wav' /> ";
+										$static_found++;
+										}
+									}
+								}
+							if ($static_found > 0)
+								{
+								$CDmatch = "$Cdash$static_check[$sc]$Ddash";
+								$TTS_text =~ s/$CDmatch/$CDstatic/gi;
+								print STDERR "       Static Replacement Found: $CDmatch|$CDstatic\n";
+								$sr++;
+								}
+							}
+						$sc++;
+						}
+					$TTS_text =~ s/--C--|--D--//gi;
+					print STDERR "\nStatic Replacements Found: $sc|$sr\n";
+					}
+				### END check for --C-- and --D-- tags for static file replacement
+
+				### filter input for CLI-safe characters
 				$TTS_text =~ s/[^,\.\<\>\'\/\=\_\-\: 0-9a-zA-Z]//gi;
 				$TTS_textRAW =	$TTS_text;
 				$TTS_text =~ s/ /\\ /gi;
@@ -555,8 +614,10 @@ else
 				$TTS_text =~ s/\>/\\>/gi;
 				$TTS_text =~ s/\//\\\//gi;
 				$TTS_text =~ s/\'/\\'/gi;
-			#	$voice = 'Allison-8kHz';
+				#	$voice = 'Allison-8kHz';	# override the voice to Allison-8k
 				print STDERR "\nGenerating: $TTS_text - $TTS_voice\n";
+
+				### send command to generate cepstral TTS audio file
 				`$PATHagi/cepstral_generate.pl --debug --voice=$TTS_voice --dialog=$TTS_text >> $CEPLOGfile `;
 
 				use Digest::MD5 qw(md5_hex);

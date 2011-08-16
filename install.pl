@@ -24,6 +24,7 @@
 # 100428-0936 - Added DB custom user/pass fields
 # 101217-0520 - Added PREPROCESS directory
 # 110619-2153 - Added languages install and conf file specify options
+# 110812-1510 - Added tts sound directories creation
 #
 
 ############################################
@@ -2481,6 +2482,10 @@ if ($WEBONLY < 1)
 
 	print "Copying sounds to $PATHsounds...\n";
 	`cp -fR ./sounds/* $PATHsounds/`;
+
+	print "Creating sound tts directories...\n";
+	if (!-e "$PATHsounds/tts/")						{`mkdir -p $PATHsounds/tts/`;}
+	if (!-e "$PATHsounds/tts_static/")				{`mkdir -p $PATHsounds/tts_static/`;}
 
 	print "Copying ip_relay scripts to $PATHhome...\n";
 	`cp -fR ./extras/ip_relay $PATHhome/`;

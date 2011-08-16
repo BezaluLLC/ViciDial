@@ -677,6 +677,9 @@ OTHER CHANGES:
 	fairly detailed and database-intensive report that summarizes several
 	user-grouped statistics
 
+154. Added ability to use static audio from dynamic fields in Survey and
+	Answering machine messages when using Cepstral TTS
+
 
 
 

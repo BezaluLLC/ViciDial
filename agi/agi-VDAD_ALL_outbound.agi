@@ -88,6 +88,7 @@
 # 110528-2326 - Added CALLMENU survey method
 # 110626-2342 - Added queuemetrics_pe_phone_append
 # 110723-2330 - Set CID to customer phone number and caller code when transferring to CALLMENU
+# 110812-1514 - Added static tts file parsing and replacement
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -100,6 +101,7 @@ $one_mysql_log=0;
 $DROP_TIME = 9;	### default number of seconds to wait until you drop a waiting call
 $at='@';
 $US='_';
+$wav='.wav';
 
 # get date/time
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -629,6 +631,7 @@ if ($VDACaffected_rows > 0)
 					@aryA = $sthA->fetchrow_array;
 					$TTS_voice =	$aryA[1];
 					$TTS_text[$s] =	$aryA[0];
+					### BEGIN replace variables with record values ###
 					$TTS_text[$s] =~ s/--A--lead_id--B--/$TTS_lead_id/gi;
 					$TTS_text[$s] =~ s/--A--entry_date--B--/$TTS_entry_date/gi;
 					$TTS_text[$s] =~ s/--A--modify_date--B--/$TTS_modify_date/gi;
@@ -660,6 +663,62 @@ if ($VDACaffected_rows > 0)
 					$TTS_text[$s] =~ s/--A--last_local_call_time--B--/$TTS_last_local_call_time/gi;
 					$TTS_text[$s] =~ s/--A--rank--B--/$TTS_rank/gi;
 					$TTS_text[$s] =~ s/--A--owner--B--/$TTS_owner/gi;
+					### END replace variables with record values ###
+
+					### BEGIN check for --C-- and --D-- tags for static file replacement
+					if ( ($TTS_text[$s] =~ /--C--/) || ($TTS_text[$s] =~ /--D--/) )
+						{
+						$Cdash='--C--';
+						$Ddash='--D--';
+						@static_check = split(/--C--/,$TTS_text[$s]);
+						$sc=0;
+						$sr=0;
+						foreach(@static_check)
+							{
+							if ($sc > 0)
+								{
+								$static_check[$sc] =~ s/--D-.*//gi;
+								$static_check_lc = lc($static_check[$sc]);
+								print STDERR "     Checking For Static Replacement: $static_check[$sc]|$static_check_lc$wav\n";
+								$static_found=0;
+								if (-e "/var/lib/asterisk/sounds/tts_static/$static_check_lc$wav")
+									{
+									$CDstatic = "<audio src='/var/lib/asterisk/sounds/tts_static/$static_check_lc$wav' /> ";
+									$static_found++;
+									}
+								else
+									{
+									if (-e "/var/lib/asterisk/sounds/$static_check_lc$wav")
+										{
+										$CDstatic = "<audio src='/var/lib/asterisk/sounds/$static_check_lc$wav' /> ";
+										$static_found++;
+										}
+									else
+										{
+										$firsttwo = substr($static_check_lc, 0, 2);
+										if (-e "/var/lib/asterisk/sounds/tts_static/$firsttwo/$static_check_lc$wav")
+											{
+											$CDstatic = "<audio src='/var/lib/asterisk/sounds/tts_static/$firsttwo/$static_check_lc$wav' /> ";
+											$static_found++;
+											}
+										}
+									}
+								if ($static_found > 0)
+									{
+									$CDmatch = "$Cdash$static_check[$sc]$Ddash";
+									$TTS_text[$s] =~ s/$CDmatch/$CDstatic/gi;
+									print STDERR "       Static Replacement Found: $CDmatch|$CDstatic\n";
+									$sr++;
+									}
+								}
+							$sc++;
+							}
+						$TTS_text[$s] =~ s/--C--|--D--//gi;
+						print STDERR "\nStatic Replacements Found: $sc|$sr\n";
+						}
+					### END check for --C-- and --D-- tags for static file replacement
+
+					### filter input for CLI-safe characters
 					$TTS_text[$s] =~ s/[^,\.\<\>\'\/\=\_\-\: 0-9a-zA-Z]//gi;
 					$TTS_textRAW[$s] =	$TTS_text[$s];
 					$TTS_text[$s] =~ s/ /\\ /gi;
@@ -669,8 +728,10 @@ if ($VDACaffected_rows > 0)
 					$TTS_text[$s] =~ s/\>/\\>/gi;
 					$TTS_text[$s] =~ s/\//\\\//gi;
 					$TTS_text[$s] =~ s/\'/\\'/gi;
-				#	$voice = 'Allison-8kHz';
+					#	$voice = 'Allison-8kHz';	# override the voice to Allison-8k
 					print STDERR "\nGenerating: $TTS_text[$s] - $TTS_voice\n";
+
+					### send command to generate cepstral TTS audio file
 					`$PATHagi/cepstral_generate.pl --debug --voice=$TTS_voice --dialog=$TTS_text[$s] >> $CEPLOGfile $hideCLI`;
 
 					use Digest::MD5 qw(md5_hex);
