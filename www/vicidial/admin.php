@@ -102,7 +102,7 @@ $Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound R
 
 $UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report , Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Custom Reports Links, CallCard Search';
 
-$Vtables = 'NONE,vicidial_log_noanswer';
+$Vtables = 'NONE,log_noanswer';
 
 ######################################################################################################
 ######################################################################################################
@@ -6053,7 +6053,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_call_menu-ingroup_settings">
 	<BR>
-	<B>Call Menu In-Group Settings -</B> If the route is set to INGROUP then there are many options that you can set to define how the call is sent to into the queue. In-Group is the inbound group that you want the call to go to. Handle Method is the way you want the call to be handled, <a href="#vicidial_inbound_dids-call_handle_method">Click here to see a list of the available handle methods</a>. Search Method defines how the queue will find the next agent, recommend leave this on LB. List ID is the list that the new lead is inserted into, also if the Method is not a LOOKUP method and the lead is not found. Campaign ID is the campaign to search lists through if one of the RC methods is used. Phone Code is the phone_code field entry for the lead that is inserted with. VID Enter Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played to ask the customer to enter their ID. VID ID Number Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played after customer enters their ID, something like YOU HAVE ENTERED. VID Confirm Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played to confirm their ID, something like PRESS 1 TO CONFIRM AND 2 TO REENTER. VID Digits is used if the Method is set to one of the VIDPROMPT methods, if it is set to a number it is the number of digits that must be ebtered by the customer when prompted for their ID, if set to empty or X then the customer will have to press pound or hash to finish their entry of their ID.
+	<B>Call Menu In-Group Settings -</B> If the route is set to INGROUP then there are many options that you can set to define how the call is sent to into the queue. In-Group is the inbound group that you want the call to go to. Handle Method is the way you want the call to be handled, <a href="#vicidial_inbound_dids-call_handle_method">Click here to see a list of the available handle methods</a>. Search Method defines how the queue will find the next agent, recommend leave this on LB. List ID is the list that the new lead is inserted into, also if the Method is not a LOOKUP method and the lead is not found. Campaign ID is the campaign to search lists through if one of the RC methods is used. Phone Code is the phone_code field entry for the lead that is inserted with. VID Enter Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played to ask the customer to enter their ID. VID ID Number Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played after customer enters their ID, something like YOU HAVE ENTERED. VID Confirm Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played to confirm their ID, something like PRESS 1 TO CONFIRM AND 2 TO REENTER. VID Digits is used if the Method is set to one of the VIDPROMPT methods, if it is set to a number it is the number of digits that must be entered by the customer when prompted for their ID, if set to empty or X then the customer will have to press pound or hash to finish their entry of their ID.
 
 	<BR>
 	<A NAME="vicidial_call_menu-custom_dialplan_entry">
@@ -29679,7 +29679,7 @@ if ($ADD==720000000000000)
 
 		$sectionSQL = "event_section='$category'";
 		if (preg_match("/CAMPAIGNS/",$category))
-			{$sectionSQL = "event_section IN('CAMPAIGNS','CAMPAIGN_SURVEY','CAMPAIGN_LISTMIX','CAMPAIGN_PRESET','CAMPAIGN_QC','CAMPAIGN_PAUSECODE','CAMPAIGN_RECYCLE','CAMPAIGN_HOTKEY','CAMPAIGN_STATUS')";}
+			{$sectionSQL = "event_section IN('CAMPAIGNS','CAMPAIGN_SURVEY','CAMPAIGN_LISTMIX','CAMPAIGN_PRESET','CAMPAIGN_QC','CAMPAIGN_PAUSECODE','CAMPAIGN_RECYCLE','CAMPAIGN_HOTKEY','CAMPAIGN_STATUS','CAMPAIGN_DIALSTATUSES','CAMPAIGN_DIALSTATUS')";}
 
 		$stmt="SELECT admin_log_id,event_date,user,ip_address,event_section,event_type,record_id,event_code from vicidial_admin_log where $sectionSQL and record_id='$stage' order by event_date desc limit 10000;";
 		$rslt=mysql_query($stmt, $link);

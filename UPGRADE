@@ -683,6 +683,9 @@ OTHER CHANGES:
 155. Added the Campaign Status List Report which shows calls broken down by
 	status within each list_id for a campaign.
 
+156. Added update_phone, add_phone_alias, update_phone_alias functions to the
+	Non-Agent API.
+
 
 
 

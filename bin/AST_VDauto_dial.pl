@@ -2948,7 +2948,7 @@ while($one_day_interval > 0)
 								{
 								if ($MLnoanswer =~ /\|$MLstatus[$vle_count]\|/i)
 									{
-									if ( ($tables_use_alt_log_db =~ /vicidial_log_noanswer/i) && (length($alt_log_server_ip)>4) && (length($alt_log_dbname)>0) )
+									if ( ($tables_use_alt_log_db =~ /log_noanswer/i) && (length($alt_log_server_ip)>4) && (length($alt_log_dbname)>0) )
 										{
 										$stmtA = "SELECT uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial FROM vicidial_log where uniqueid='$MLuniqueid[$vle_count]' and lead_id='$MLleadid[$vle_count]' and call_date > \"$RMSQLdate\";";
 										$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;

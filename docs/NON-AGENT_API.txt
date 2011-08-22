@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2011-07-05
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2011-08-21
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -24,6 +24,9 @@ recording_lookup - looks up recordings based upon user and date or lead_id
 did_log_export - exports all calls inbound to a DID for one day
 add_user - adds a user to the system
 add_phone - adds a phone to the system
+update_phone - updates or deletes an existing phone record in the system
+add_phone_alias - adds a phone alias record to the system
+update_phone_alias - updates or deletes an existing phone alias record in the system
 add_list - adds a list to the system
 update_list - updates list settings in the system, reset leads in list, delete list
 
@@ -60,6 +63,8 @@ Changes:
 110529-1220 - Added time zone information output to version function
 110614-0726 - Added reset_lead option to update_lead function(issue #502)
 110705-1928 - Added options for USACAN 4th digit prefix(no 0 or 1) and valid areacode filtering to add_lead
+110821-2318 - Added update_phone, add_phone_alias, update_phone_alias functions
+
 
 
 
@@ -187,6 +192,7 @@ ERROR: NO FUNCTION SPECIFIED
 
 
 
+
 --------------------------------------------------------------------------------
 agent_ingroup_info - shows in-group and outbound auto-dial info for logged-in agent
 
@@ -203,6 +209,7 @@ http://server/vicidial/non_agent_api.php?source=test&function=agent_ingroup_info
 Example responses:
 ERROR: agent_ingroup_info USER DOES NOT HAVE PERMISSION TO GET AGENT INFO - 6666|0
 ERROR: agent_ingroup_info INVALID USER ID - 1255|6666
+
 
 
 
@@ -388,6 +395,7 @@ ERROR: add_lead DUPLICATE TITLE ALT_PHONE IN SYSTEM - 1234|7275551111|101|876544
 ERROR: add_lead DUPLICATE NAME PHONE IN LIST - Bob|Smith|7275551113|101|8765444|101
 ERROR: add_lead DUPLICATE NAME PHONE IN CAMPAIGN LISTS - Bob|Smith|7275551113|101|8765444|101
 ERROR: add_lead DUPLICATE NAME PHONE IN SYSTEM - Bob|Smith|7275551113|101|8765444|101
+
 
 
 
@@ -586,6 +594,106 @@ SUCCESS: add_phone PHONE HAS BEEN ADDED - 6666|cc100|10.0.9.8|SIP|100
 
 
 --------------------------------------------------------------------------------
+update_phone - updates or deletes a phone entry already in the system
+
+REQUIRED FIELDS-
+extension -		2-100 characters
+server_ip -		7-15 characters, must be a valid server_ip
+
+SETTINGS FIELDS-
+delete_phone -		Y or N, Setting this to Y will delete the phone from the system, default is N.
+
+EDITABLE FIELDS- 
+dialplan_number -	1-20 digits
+voicemail_id -		1-10 digits
+phone_login -		1-20 characters
+phone_pass -		1-20 characters
+protocol -		Must be one of these: 'IAX2','SIP','Zap','EXTERNAL'
+registration_password -	1-20 characters
+phone_full_name -	1-50 characters
+local_gmt -		timezone setting, not adjusting for DST, default: '-5.00'
+outbound_cid -		1-20 digits
+phone_context -		a phone context, default is 'default'
+email -			1-100 characters
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&function=update_phone&user=6666&pass=1234&extension=55000&dialplan_number=55000&voicemail_id=55000&phone_login=55000&phone_pass=test&server_ip=192.168.198.5&protocol=SIP&registration_password=test&phone_full_name=Extension+55000&local_gmt=-5.00&outbound_cid=7275551212
+http://server/vicidial/non_agent_api.php?source=test&function=update_phone&user=6666&pass=1234&extension=55000&dialplan_number=55000&voicemail_id=55000&phone_login=55000&phone_pass=test&server_ip=192.168.198.5&protocol=SIP&registration_password=test&phone_full_name=Extension+55000&local_gmt=-5.00&outbound_cid=7275551212&phone_context=default&email=test@test.com
+http://server/vicidial/non_agent_api.php?source=test&function=update_phone&user=6666&pass=1234&extension=55000&server_ip=192.168.198.5&delete_phone=Y
+
+Example responses:
+ERROR: update_phone USER DOES NOT HAVE PERMISSION TO UPDATE PHONES - 6666|0
+ERROR: update_phone YOU MUST USE ALL REQUIRED FIELDS - 6666||
+ERROR: update_phone SERVER DOES NOT EXIST - 6666|10.0.9.9
+ERROR: update_phone PHONE DOES NOT EXIST ON THIS SERVER - 6666|10.0.9.8|cc101
+ERROR: update_phone LOGIN ALREADY EXISTS - 6666|x101
+ERROR: update_phone YOU MUST USE A VALID TIMEZONE - 6666|-99
+ERROR: update_phone YOU MUST USE A VALID DIALPLAN NUMBER - 6666|0
+ERROR: update_phone YOU MUST USE A VALID VOICEMAIL NUMBER - 6666|0
+ERROR: update_phone YOU MUST USE A VALID PHONE PASSWORD - 6666|0
+ERROR: update_phone YOU MUST USE A VALID REGISTRATION PASSWORD - 6666|0
+ERROR: update_phone YOU MUST USE A VALID PROTOCOL - 6666|0
+ERROR: update_phone YOU MUST USE A VALID PHONE NAME - 6666|0
+ERROR: update_phone YOU MUST USE A VALID PHONE CONTEXT - 6666|0
+ERROR: update_phone NO UPDATES DEFINED - 6666|0
+SUCCESS: update_phone PHONE HAS BEEN UPDATED - 6666|cc100|10.0.9.8|SIP|100
+SUCCESS: update_phone PHONE HAS BEEN DELETED - 6666|cc100|10.0.9.8|
+
+
+
+
+
+--------------------------------------------------------------------------------
+add_phone_alias - adds a phone alias entry to the system
+
+REQUIRED FIELDS-
+alias_id -		2-20 characters
+phone_logins -		2-255 characters (phone logins separated by commas)
+alias_name -		1-50 characters
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&function=add_phone_alias&user=6666&pass=1234&alias_id=xyz100&alias_name=XYZ+testing&phone_logins=100a,100b
+
+Example responses:
+ERROR: add_phone_alias USER DOES NOT HAVE PERMISSION TO ADD PHONE ALIASES - 6666|0
+ERROR: add_phone_alias YOU MUST USE ALL REQUIRED FIELDS - 6666||||
+ERROR: add_phone_alias PHONE ALIAS ALREADY EXISTS - 6666|x101
+ERROR: add_phone_alias PHONE DOES NOT EXIST - 6666|cc100
+SUCCESS: add_phone_alias PHONE ALIAS HAS BEEN ADDED - 6666|x100|testing_x100|cc100,bb100
+
+
+
+
+
+--------------------------------------------------------------------------------
+update_phone_alias - updates or deletes a phone alias entry already in the system
+
+REQUIRED FIELDS-
+alias_id -		2-20 characters
+phone_logins -	2-255 characters (phone logins separated by commas)
+alias_name -		1-50 characters
+
+SETTINGS FIELDS-
+delete_alias -		Y or N, Setting this to Y will delete the phone alias from the system, default is N.
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&function=update_phone_alias&user=6666&pass=1234&alias_id=xyz100&alias_name=XYZ+testing+X&phone_logins=100a,100b
+http://server/vicidial/non_agent_api.php?source=test&function=update_phone_alias&user=6666&pass=1234&alias_id=xyz100&delete_alias=Y
+
+Example responses:
+ERROR: update_phone_alias USER DOES NOT HAVE PERMISSION TO UPDATE PHONE ALIASES - 6666|0
+ERROR: update_phone_alias YOU MUST USE ALL REQUIRED FIELDS - 6666||||
+ERROR: update_phone_alias PHONE ALIAS DOES NOT EXIST - 6666|x101
+ERROR: update_phone_alias YOU MUST USE A VALID ALIAS NAME - 6666|x
+ERROR: update_phone_alias PHONE DOES NOT EXIST - 6666|cc100
+SUCCESS: update_phone_alias PHONE ALIAS HAS BEEN UPDATED - 6666|x100|
+SUCCESS: update_phone_alias PHONE ALIAS HAS BEEN DELETED - 6666|x100|
+
+
+
+
+
+--------------------------------------------------------------------------------
 add_list - adds a list to the system
 
 REQUIRED FIELDS-
@@ -617,7 +725,6 @@ ERROR: add_list SCRIPT DOES NOT EXIST, THIS IS AN OPTIONAL FIELD - 6666|TESTSCRI
 ERROR: add_list IN-GROUP DOES NOT EXIST, THIS IS AN OPTIONAL FIELD - 6666|TEST_IN8
 ERROR: add_list RESET TIME IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|012
 SUCCESS: add_list LIST HAS BEEN ADDED - 6666|1101|TESTCAMP
-
 
 
 
@@ -683,5 +790,4 @@ NOTICE: update_list USER DOES NOT HAVE PERMISSION TO DELETE LEADS - 6666|0
 NOTICE: update_list LEADS IN LIST HAVE BEEN DELETED - 6666|1101|324
 
 ERROR: NO FUNCTION SPECIFIED
-
 

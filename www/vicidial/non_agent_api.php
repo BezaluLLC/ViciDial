@@ -50,10 +50,11 @@
 # 110529-1220 - Added time zone information output to version function
 # 110614-0726 - Added reset_lead option to update_lead function(issue #502)
 # 110705-1928 - Added options for USACAN 4th digit prefix(no 0 or 1) and valid areacode filtering to add_lead
+# 110821-2318 - Added update_phone, add_phone_alias, update_phone_alias functions
 #
 
-$version = '2.4-36';
-$build = '110705-1928';
+$version = '2.4-37';
+$build = '110821-2318';
 
 $startMS = microtime();
 
@@ -252,6 +253,16 @@ if (isset($_GET["usacan_areacode_check"]))			{$usacan_areacode_check=$_GET["usac
 	elseif (isset($_POST["usacan_areacode_check"]))	{$usacan_areacode_check=$_POST["usacan_areacode_check"];}
 if (isset($_GET["usacan_prefix_check"]))			{$usacan_prefix_check=$_GET["usacan_prefix_check"];}
 	elseif (isset($_POST["usacan_prefix_check"]))	{$usacan_prefix_check=$_POST["usacan_prefix_check"];}
+if (isset($_GET["delete_phone"]))			{$delete_phone=$_GET["delete_phone"];}
+	elseif (isset($_POST["delete_phone"]))	{$delete_phone=$_POST["delete_phone"];}
+if (isset($_GET["alias_id"]))			{$alias_id=$_GET["alias_id"];}
+	elseif (isset($_POST["alias_id"]))	{$alias_id=$_POST["alias_id"];}
+if (isset($_GET["phone_logins"]))			{$phone_logins=$_GET["phone_logins"];}
+	elseif (isset($_POST["phone_logins"]))	{$phone_logins=$_POST["phone_logins"];}
+if (isset($_GET["alias_name"]))				{$alias_name=$_GET["alias_name"];}
+	elseif (isset($_POST["alias_name"]))	{$alias_name=$_POST["alias_name"];}
+if (isset($_GET["delete_alias"]))			{$delete_alias=$_GET["delete_alias"];}
+	elseif (isset($_POST["delete_alias"]))	{$delete_alias=$_POST["delete_alias"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -381,6 +392,11 @@ if ($non_latin < 1)
 	$reset_lead = ereg_replace("[^A-Z]","",$reset_lead);
 	$usacan_areacode_check = ereg_replace("[^A-Z]","",$usacan_areacode_check);
 	$usacan_prefix_check = ereg_replace("[^A-Z]","",$usacan_prefix_check);
+	$delete_phone = ereg_replace("[^A-Z]","",$delete_phone);
+	$alias_id = ereg_replace("[^-\_0-9a-zA-Z]","",$alias_id);
+	$phone_logins = ereg_replace("[^-\,\_0-9a-zA-Z]","",$phone_logins);
+	$alias_name = ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$alias_name);
+	$delete_alias = ereg_replace("[^A-Z]","",$delete_alias);
 	}
 else
 	{
@@ -1471,6 +1487,676 @@ if ($function == 'add_phone')
 ### END add_phone
 ################################################################################
 
+
+
+
+
+
+################################################################################
+### update_phone - updates phone entry already in the system
+################################################################################
+if ($function == 'update_phone')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8;";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "update_phone USER DOES NOT HAVE PERMISSION TO ADD PHONES";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($extension)<2) or (strlen($server_ip)<1) )
+				{
+				$result = 'ERROR';
+				$result_reason = "update_phone YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$extension|$server_ip";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT count(*) from servers where server_ip='$server_ip';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$server_exists=$row[0];
+				if ($server_exists < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "update_phone SERVER DOES NOT EXIST";
+					$data = "$server_ip";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$stmt="SELECT count(*) from phones where extension='$extension' and server_ip='$server_ip';";
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$phone_exists=$row[0];
+					if ($phone_exists < 1)
+						{
+						$result = 'ERROR';
+						$result_reason = "update_phone PHONE DOES NOT EXIST ON THIS SERVER";
+						$data = "$server_ip|$extension";
+						echo "$result: $result_reason: |$user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					else
+						{
+						if ($delete_phone == 'Y')
+							{
+							$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_delete_phones='1' and user_level >= 8;";
+							$rslt=mysql_query($stmt, $link);
+							$row=mysql_fetch_row($rslt);
+							$allowed_user=$row[0];
+							if ($allowed_user < 1)
+								{
+								$result = 'NOTICE';
+								$result_reason = "update_phone USER DOES NOT HAVE PERMISSION TO DELETE PHONES";
+								$data = "$allowed_user";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{
+								$stmt="DELETE FROM phones WHERE extension='$extension' and server_ip='$server_ip';";
+								$rslt=mysql_query($stmt, $link);
+								$affected_rows = mysql_affected_rows($link);
+								if ($DB) {echo "|$stmt|\n";}
+
+								### LOG INSERTION Admin Log Table ###
+								$SQL_log = "$stmt|";
+								$SQL_log = ereg_replace(';','',$SQL_log);
+								$SQL_log = addslashes($SQL_log);
+								$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='PHONES', event_type='DELETE', record_id='$extension', event_code='ADMIN API DELETE PHONE', event_sql=\"$SQL_log\", event_notes='phone: $extension|$server_ip';";
+								if ($DB) {echo "|$stmt|\n";}
+								$rslt=mysql_query($stmt, $link);
+
+								$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
+								$rslt=mysql_query($stmtA, $link);
+
+								$result = 'SUCCESS';
+								$result_reason = "update_phone PHONE HAS BEEN DELETED";
+								$data = "$extension|$server_ip|";
+								echo "$result: $result_reason - $user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								}
+							exit;
+							}
+
+						$dialplan_numberSQL='';
+						$activeSQL='';
+						$outboundcidSQL='';
+						$voicemail_idSQL='';
+						$phone_loginSQL='';
+						$phone_passSQL='';
+						$protocolSQL='';
+						$registration_passwordSQL='';
+						$phone_full_nameSQL='';
+						$phone_contextSQL='';
+						$emailSQL='';
+						$local_gmtSQL='';
+
+						if (strlen($local_gmt) > 0)
+							{
+							if ( ($local_gmt != '12.75') and ($local_gmt != '12.00') and ($local_gmt != '11.00') and ($local_gmt != '10.00') and ($local_gmt != '9.50') and ($local_gmt != '9.00') and ($local_gmt != '8.00') and ($local_gmt != '7.00') and ($local_gmt != '6.50') and ($local_gmt != '6.00') and ($local_gmt != '5.75') and ($local_gmt != '5.50') and ($local_gmt != '5.00') and ($local_gmt != '4.50') and ($local_gmt != '4.00') and ($local_gmt != '3.50') and ($local_gmt != '3.00') and ($local_gmt != '2.00') and ($local_gmt != '1.00') and ($local_gmt != '0.00') and ($local_gmt != '-1.00') and ($local_gmt != '-2.00') and ($local_gmt != '-3.00') and ($local_gmt != '-3.50') and ($local_gmt != '-4.00') and ($local_gmt != '-5.00') and ($local_gmt != '-6.00') and ($local_gmt != '-7.00') and ($local_gmt != '-8.00') and ($local_gmt != '-9.00') and ($local_gmt != '-10.00') and ($local_gmt != '-11.00') and ($local_gmt != '-12.00') )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_phone YOU MUST USE A VALID TIMEZONE";
+								$data = "$local_gmt";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$local_gmtSQL = " ,local_gmt='$local_gmt'";}
+							}
+						if (strlen($email) > 0)
+							{
+							if ($email == '--BLANK--')
+								{$emailSQL = " ,email=''";}
+							else
+								{
+								if ( (strlen($email) > 300) or (strlen($email) < 4) )
+									{
+									$result = 'ERROR';
+									$result_reason = "update_phone YOU MUST USE A VALID EMAIL";
+									$data = "$email";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$emailSQL = " ,email='$email'";}
+								}
+							}
+						if (strlen($phone_context) > 0)
+							{
+							if ($phone_context == '--BLANK--')
+								{$phone_contextSQL = " ,phone_context=''";}
+							else
+								{
+								if ( (strlen($phone_context) > 30) or (strlen($phone_context) < 2) )
+									{
+									$result = 'ERROR';
+									$result_reason = "update_phone YOU MUST USE A VALID PHONE CONTEXT";
+									$data = "$phone_context";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$phone_contextSQL = " ,phone_context='$phone_context'";}
+								}
+							}
+						if (strlen($phone_full_name) > 0)
+							{
+							if ($phone_full_name == '--BLANK--')
+								{$phone_full_nameSQL = " ,fullname=''";}
+							else
+								{
+								if ( (strlen($phone_full_name) > 30) or (strlen($phone_full_name) < 2) )
+									{
+									$result = 'ERROR';
+									$result_reason = "update_phone YOU MUST USE A VALID PHONE NAME";
+									$data = "$phone_full_name";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$phone_full_nameSQL = " ,fullname='$phone_full_name'";}
+								}
+							}
+						if (strlen($registration_password) > 0)
+							{
+							if ($registration_password == '--BLANK--')
+								{$registration_passwordSQL = " ,conf_secret=''";}
+							else
+								{
+								if ( (strlen($registration_password) > 30) or (strlen($registration_password) < 2) )
+									{
+									$result = 'ERROR';
+									$result_reason = "update_phone YOU MUST USE A VALID REGISTRATION PASSWORD";
+									$data = "$registration_password";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$registration_passwordSQL = " ,conf_secret='$registration_password'";}
+								}
+							}
+						if (strlen($protocol) > 0)
+							{
+							if ( ($protocol != 'IAX2') and ($protocol != 'SIP') and ($protocol != 'Zap') and ($protocol != 'EXTERNAL') )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_phone YOU MUST USE A VALID PROTOCOL";
+								$data = "$protocol";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$protocolSQL = " ,protocol='$protocol'";}
+							}
+						if (strlen($phone_pass) > 0)
+							{
+							if ( (strlen($phone_pass) > 30) or (strlen($phone_pass) < 2) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_phone YOU MUST USE A VALID PHONE PASSWORD";
+								$data = "$phone_pass";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$phone_passSQL = " ,pass='$phone_pass'";}
+							}
+						if (strlen($phone_login) > 0)
+							{
+							$stmt="SELECT count(*) from phones where login='$phone_login' and extension != '$extension' and server_ip != '$server_ip';";
+							$rslt=mysql_query($stmt, $link);
+							$row=mysql_fetch_row($rslt);
+							$login_exists=$row[0];
+							if ($login_exists > 0)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_phone LOGIN ALREADY EXISTS";
+								$data = "$phone_login";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$phone_loginSQL = " ,login='$phone_login'";}
+							}
+						if (strlen($voicemail_id) > 0)
+							{
+							if ($voicemail_id == '--BLANK--')
+								{$voicemail_idSQL = " ,voicemail_id=''";}
+							else
+								{
+								if ( (strlen($voicemail_id) > 30) or (strlen($voicemail_id) < 2) )
+									{
+									$result = 'ERROR';
+									$result_reason = "update_phone YOU MUST USE A VALID VOICEMAIL NUMBER";
+									$data = "$voicemail_id";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$voicemail_idSQL = " ,voicemail_id='$voicemail_id'";}
+								}
+							}
+						if (strlen($dialplan_number) > 0)
+							{
+							if ( (strlen($dialplan_number) > 30) or (strlen($dialplan_number) < 3) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_phone YOU MUST USE A VALID DIALPLAN NUMBER";
+								$data = "$dialplan_number";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$dialplan_numberSQL = " ,dialplan_number='$dialplan_number'";}
+							}
+						if (strlen($active) > 0)
+							{
+							if ( ($active != 'Y') and ($active != 'N') )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_phone ACTIVE MUST BE Y OR N, THIS IS AN OPTIONAL FIELD";
+								$data = "$active";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$activeSQL = " ,active='$active'";}
+							}
+						if (strlen($outbound_cid) > 0)
+							{
+							if ( (strlen($outbound_cid) > 18) or (strlen($outbound_cid) < 6) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_phone OUTBOUND CID MUST BE FROM 6 TO 18 DIGITS, THIS IS AN OPTIONAL FIELD";
+								$data = "$outbound_cid";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$outboundcidSQL = " ,outbound_cid='$outbound_cid'";}
+							}
+
+
+						$updateSQL = "$dialplan_numberSQL$activeSQL$outboundcidSQL$voicemail_idSQL$phone_loginSQL$phone_passSQL$protocolSQL$registration_passwordSQL$phone_full_nameSQL$phone_contextSQL$emailSQL$local_gmtSQL";
+
+
+						if (strlen($updateSQL)< 3)
+							{
+							$result = 'NOTICE';
+							$result_reason = "update_phone NO UPDATES DEFINED";
+							$data = "$updateSQL";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						else
+							{
+							$stmt="UPDATE phones SET install_directory='' $updateSQL WHERE extension='$extension' and server_ip='$server_ip';";
+							$rslt=mysql_query($stmt, $link);
+							if ($DB) {echo "|$stmt|\n";}
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = ereg_replace(';','',$SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='PHONES', event_type='MODIFY', record_id='$extension', event_code='ADMIN API UPDATE PHONE', event_sql=\"$SQL_log\", event_notes='phone: $extension|$server_ip';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_query($stmt, $link);
+
+							$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
+							$rslt=mysql_query($stmtA, $link);
+
+							$result = 'SUCCESS';
+							$result_reason = "update_phone PHONE HAS BEEN UPDATED";
+							$data = "$extension|$server_ip|";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						}
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END update_phone
+################################################################################
+
+
+
+
+
+################################################################################
+### add_phone_alias - adds phone alias to the system
+################################################################################
+if ($function == 'add_phone_alias')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8;";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "add_phone_alias USER DOES NOT HAVE PERMISSION TO ADD PHONE ALIASES";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($alias_id)<2) or (strlen($phone_logins)<2) or (strlen($alias_name)<1) )
+				{
+				$result = 'ERROR';
+				$result_reason = "add_phone_alias YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$alias_id|$alias_name|$phone_logins";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT count(*) from phones_alias where alias_id='$alias_id';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$alias_exists=$row[0];
+				if ($alias_exists > 0)
+					{
+					$result = 'ERROR';
+					$result_reason = "add_phone_alias PHONE ALIAS ALREADY EXISTS";
+					$data = "$alias_id";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$phone_loginsX = explode(",",$phone_logins);
+					$phone_logins_ct = count($phone_loginsX);
+					$k=0;
+					while ($k < $phone_logins_ct)
+						{
+						$phone_check = $phone_loginsX[$k];
+						$stmt="SELECT count(*) from phones where login='$phone_check';";
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$phone_exists=$row[0];
+						if ($phone_exists < 1)
+							{
+							$result = 'ERROR';
+							$result_reason = "add_phone_alias PHONE DOES NOT EXIST";
+							$data = "$phone_check";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						$k++;
+						}
+
+					$stmt="INSERT INTO phones_alias (alias_id,alias_name,logins_list) values('$alias_id','$alias_name','$phone_logins');";
+					$rslt=mysql_query($stmt, $link);
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='PHONEALIASES', event_type='ADD', record_id='$alias_id', event_code='ADMIN API ADD PHONE ALIAS', event_sql=\"$SQL_log\", event_notes='phones: $phone_logins';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+
+					$result = 'SUCCESS';
+					$result_reason = "add_phone_alias PHONE ALIAS HAS BEEN ADDED";
+					$data = "$alias_id|$alias_name|$phone_logins";
+					echo "$result: $result_reason - $user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END add_phone_alias
+################################################################################
+
+
+
+
+
+################################################################################
+### update_phone_alias - updates phone entry already in the system
+################################################################################
+if ($function == 'update_phone_alias')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8;";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "update_phone_alias USER DOES NOT HAVE PERMISSION TO UPDATE PHONE ALIASES";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($alias_id)<2) or ( (strlen($phone_logins)<2) and (strlen($alias_name)<1) and (strlen($delete_alias)<1) ) )
+				{
+				$result = 'ERROR';
+				$result_reason = "update_phone_alias YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$alias_id|$alias_name|$phone_logins";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT count(*) from phones_alias where alias_id='$alias_id';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$alias_exists=$row[0];
+				if ($alias_exists < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "update_phone_alias PHONE ALIAS DOES NOT EXIST";
+					$data = "$alias_id";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					if ($delete_alias == 'Y')
+						{
+						$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_delete_phones='1' and user_level >= 8;";
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$allowed_user=$row[0];
+						if ($allowed_user < 1)
+							{
+							$result = 'NOTICE';
+							$result_reason = "update_phone_alias USER DOES NOT HAVE PERMISSION TO DELETE PHONE ALIASES";
+							$data = "$allowed_user";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{
+							$stmt="DELETE FROM phones_alias where alias_id='$alias_id';";
+							$rslt=mysql_query($stmt, $link);
+							$affected_rows = mysql_affected_rows($link);
+							if ($DB) {echo "|$stmt|\n";}
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = ereg_replace(';','',$SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='PHONEALIASES', event_type='DELETE', record_id='$alias_id', event_code='ADMIN API DELETE PHONE ALIAS', event_sql=\"$SQL_log\", event_notes='';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_query($stmt, $link);
+
+							$result = 'SUCCESS';
+							$result_reason = "update_phone_alias PHONE ALIAS HAS BEEN DELETED";
+							$data = "$alias_id";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						exit;
+						}
+
+					$phone_loginsSQL='';
+					$alias_nameSQL='';
+
+					if (strlen($alias_name) > 0)
+						{
+						if ( (strlen($alias_name) > 50) or (strlen($alias_name) < 2) )
+							{
+							$result = 'ERROR';
+							$result_reason = "update_phone_alias YOU MUST USE A VALID ALIAS NAME";
+							$data = "$alias_name";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$alias_nameSQL = "alias_name='$alias_name',";}
+						}
+					if (strlen($phone_logins) > 1)
+						{
+						$phone_loginsX = explode(",",$phone_logins);
+						$phone_logins_ct = count($phone_loginsX);
+						$k=0;
+						while ($k < $phone_logins_ct)
+							{
+							$phone_check = $phone_loginsX[$k];
+							$stmt="SELECT count(*) from phones where login='$phone_check';";
+							$rslt=mysql_query($stmt, $link);
+							$row=mysql_fetch_row($rslt);
+							$phone_exists=$row[0];
+							if ($phone_exists < 1)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_phone_alias PHONE DOES NOT EXIST";
+								$data = "$phone_check";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							$k++;
+							}
+						$phone_loginsSQL = "logins_list='$phone_logins',";
+						}
+
+
+					$updateSQL = "$phone_loginsSQL$alias_nameSQL";
+					$updateSQL = preg_replace("/\,$/","",$updateSQL);
+
+
+					if (strlen($updateSQL)< 3)
+						{
+						$result = 'NOTICE';
+						$result_reason = "update_phone_alias NO UPDATES DEFINED";
+						$data = "$updateSQL";
+						echo "$result: $result_reason: |$user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					else
+						{
+						$stmt="UPDATE phones_alias SET $updateSQL WHERE alias_id='$alias_id';";
+						$rslt=mysql_query($stmt, $link);
+						if ($DB) {echo "|$stmt|\n";}
+
+						### LOG INSERTION Admin Log Table ###
+						$SQL_log = "$stmt|";
+						$SQL_log = ereg_replace(';','',$SQL_log);
+						$SQL_log = addslashes($SQL_log);
+						$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='PHONEALIASES', event_type='MODIFY', record_id='$alias_id', event_code='ADMIN API UPDATE PHONE', event_sql=\"$SQL_log\", event_notes='phones: $phone_logins';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_query($stmt, $link);
+
+						$result = 'SUCCESS';
+						$result_reason = "update_phone_alias PHONE ALIAS HAS BEEN UPDATED";
+						$data = "$alias_id|";
+						echo "$result: $result_reason - $user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END update_phone_alias
+################################################################################
 
 
 
