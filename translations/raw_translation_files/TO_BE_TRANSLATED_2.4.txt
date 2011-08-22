@@ -697,6 +697,9 @@ This is the actual Text To Speech data field that is sent to Cepstral for creati
 for a 1 second break. You can also use several variables such as first name, last name and title as ViciDial variables just like you do in a Script: --A--first_name--B--||
 If you have static audio files that you want to use based upon the value of one of the fields you can use those as well with C and D tags. The file names must be all lower case and they must be 8k 16bit pcm wav files. The field name must be the same but without the .wav in the filename. For example --C----A--address3--B----D-- would first find the value for address3, then it would try to find an audio file matching that value to put it into the prompt||
 Here is a list of the available variables||
+DID Agent Log||
+This option will log the inbound DID calls along with an in-group and user ID, if applicable, to a separate table. Default is N||
+
 
 lead_report_export.php
 admin_campaign_multi_alt.php

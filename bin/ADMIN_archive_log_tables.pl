@@ -33,6 +33,7 @@
 # 110525-1040 - Added vicidial_outbound_ivr_log archiving
 # 110801-2140 - Added vicidial_url_log table purging and vicidial_log_extended to rolling processes
 # 110808-0055 - Added vicidial_log_noanswer process
+# 110822-1257 - Added did_agent_log process
 #
 
 ### begin parsing run-time options ###
@@ -502,6 +503,57 @@ if (!$T)
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 
 		$stmtA = "optimize table vicidial_log_noanswer_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		}
+
+
+
+	##### vicidial_did_agent_log
+	$stmtA = "SELECT count(*) from vicidial_did_agent_log;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$vicidial_did_agent_log_count =	$aryA[0];
+		}
+	$sthA->finish();
+
+	$stmtA = "SELECT count(*) from vicidial_did_agent_log_archive;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$vicidial_did_agent_log_archive_count =	$aryA[0];
+		}
+	$sthA->finish();
+
+	if (!$Q) {print "\nProcessing vicidial_did_agent_log table...  ($vicidial_did_agent_log_count|$vicidial_did_agent_log_archive_count)\n";}
+	$stmtA = "INSERT IGNORE INTO vicidial_did_agent_log_archive SELECT * from vicidial_did_agent_log;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	
+	$sthArows = $sthA->rows;
+	if (!$Q) {print "$sthArows rows inserted into vicidial_did_agent_log_archive table \n";}
+	
+	$rv = $sthA->err();
+	if (!$rv) 
+		{	
+		$stmtA = "DELETE FROM vicidial_did_agent_log WHERE call_date < '$del_time';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows = $sthA->rows;
+		if (!$Q) {print "$sthArows rows deleted from vicidial_did_agent_log table \n";}
+
+		$stmtA = "optimize table vicidial_did_agent_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+
+		$stmtA = "optimize table vicidial_did_agent_log_archive;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		}

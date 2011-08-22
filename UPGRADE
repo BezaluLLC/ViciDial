@@ -686,6 +686,10 @@ OTHER CHANGES:
 156. Added update_phone, add_phone_alias, update_phone_alias functions to the
 	Non-Agent API.
 
+157. Added optional DID Agent logging as System Settings option. This logs calls
+	that come into DIDs in a separate table that includes the in-group and
+	user that the call was sent to, if applicable
+
 
 
 

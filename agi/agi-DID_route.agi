@@ -13,7 +13,7 @@
 # ;inbound DID catch-all:
 #exten => _X.,1,AGI(agi-DID_route.agi)
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 81007-0324 - First Build
@@ -26,6 +26,7 @@
 # 100116-0631 - Logging bug fixes
 # 100123-1423 - Added record call DID option
 # 100805-0943 - Added Filter Phone Group alternate routing feature and CID number cleanup
+# 110822-1210 - Added did_agent_log optional logging
 #
 
 $script = 'agi-DID_route.agi';
@@ -124,8 +125,8 @@ if ($sthArows > 0)
 $sthA->finish();
 
 #############################################
-##### START QUEUEMETRICS LOGGING LOOKUP #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend FROM system_settings;";
+##### START SYSTEM SETTINGS LOOKUP      #####
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,did_agent_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -133,15 +134,21 @@ if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
 	$enable_queuemetrics_logging =	$aryA[0];
-	$queuemetrics_server_ip	=	$aryA[1];
-	$queuemetrics_dbname =		$aryA[2];
-	$queuemetrics_login=		$aryA[3];
-	$queuemetrics_pass =		$aryA[4];
-	$queuemetrics_log_id =		$aryA[5];
-	$queuemetrics_eq_prepend =	$aryA[6];
+	$queuemetrics_server_ip	=		$aryA[1];
+	$queuemetrics_dbname =			$aryA[2];
+	$queuemetrics_login=			$aryA[3];
+	$queuemetrics_pass =			$aryA[4];
+	$queuemetrics_log_id =			$aryA[5];
+	$queuemetrics_eq_prepend =		$aryA[6];
+	$did_agent_log =				$aryA[7];
+	$alt_log_server_ip =			$aryA[8];
+	$alt_log_dbname =				$aryA[9];
+	$alt_log_login =				$aryA[10];
+	$alt_log_pass =					$aryA[11];
+	$tables_use_alt_log_db =		$aryA[12];
 	}
 $sthA->finish();
-##### END QUEUEMETRICS LOGGING LOOKUP #####
+##### END SYSTEM SETTINGS LOOKUP      #####
 ###########################################
 
 
@@ -182,7 +189,7 @@ if ( (!$callerid) or ($callerid =~ /unknown/) )
 
 ### Grab DID values from the database
 $DIDs_in_system=0;
-$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number FROM vicidial_inbound_dids where did_pattern = '$extension' and did_active='Y';";
+$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,group_id FROM vicidial_inbound_dids where did_pattern = '$extension' and did_active='Y';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -224,6 +231,7 @@ if ($sthArows > 0)
 	$filter_phone_code =			$aryA[32];
 	$filter_menu_id =				$aryA[33];
 	$filter_clean_cid_number =		$aryA[34];
+	$group_id =						$aryA[35];
 
 	$DIDs_in_system++;
 	}
@@ -232,7 +240,7 @@ $sthA->finish();
 if ($sthArows < 1)
 	{
 	### Grab DID values from the database for a default DID pattern if there is one
-	$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number FROM vicidial_inbound_dids where did_pattern = 'default' and did_active='Y';";
+	$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,group_id FROM vicidial_inbound_dids where did_pattern = 'default' and did_active='Y';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$DIDs_in_system=$sthA->rows;
@@ -274,6 +282,7 @@ if ($sthArows < 1)
 		$filter_phone_code =			$aryA[32];
 		$filter_menu_id =				$aryA[33];
 		$filter_clean_cid_number =		$aryA[34];
+		$group_id =						$aryA[35];
 		}
 	$sthA->finish();
 	}
@@ -290,6 +299,30 @@ $affected_rowsC = $dbhA->do($stmtA);
 if ($AGILOG) {$agi_string = "--    CALL LOG : |$affected_rowsC|$stmtA|";   &agi_output;}
 
 if ($AGILOG) {$did_string = "$SQLdate|$uniqueid|$channel|$extension|$callerid|$calleridname|$did_id|$did_route|";   &did_output;}
+
+if ($did_agent_log =~ /Y/)
+	{
+	if ($did_route !~ /IN_GROUP/) 
+		{$group_id='';}
+	$stmtA = "INSERT INTO vicidial_did_agent_log SET uniqueid='$uniqueid',server_ip='$VARserver_ip',caller_id_number='$callerid',caller_id_name='$calleridname',extension='$extension',call_date='$SQLdate',did_id='$did_id',did_route='$did_route',user='VDCL',group_id='$group_id',did_description='$did_description';";
+
+	if ( ($tables_use_alt_log_db =~ /did_agent_log/i) && (length($alt_log_server_ip)>4) && (length($alt_log_dbname)>0) )
+		{
+		$dbhD = DBI->connect("DBI:mysql:$alt_log_dbname:$alt_log_server_ip:3306", "$alt_log_login", "$alt_log_pass")
+		 or die "Couldn't connect to database: " . DBI->errstr;
+
+		if ($AGILOG) {$agi_string = "CONNECTED TO ALT-LOG DATABASE:  $alt_log_server_ip|$alt_log_dbname|$uniqueid";   &agi_output;}
+
+		$affected_rowsAL = $dbhD->do($stmtA);
+
+		$dbhD->disconnect();
+		}
+	else
+		{
+		$affected_rowsAL = $dbhA->do($stmtA);
+		}
+	if ($AGILOG) {$agi_string = "--    DID AGENT LOG : |$affected_rowsAL|$stmtA|";   &agi_output;}
+	}
 
 if ($DIDs_in_system < 1)
 	{

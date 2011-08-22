@@ -155,6 +155,7 @@
 # 110707-1302 - Added last_inbound_call_time and finish to next agent call options
 # 110731-0141 - Added call_id variable to add_lead_url function calls
 # 110801-0841 - Added on_hook_cid option and group_calldate field
+# 110822-1256 - Added optional did_agent_log logging
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -1509,8 +1510,8 @@ if ($call_handle_method =~ /CLOSER|DIGITID$/)
 	}
 
 #############################################
-##### START QUEUEMETRICS LOGGING LOOKUP #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_pe_phone_append FROM system_settings;";
+##### START SYSTEM SETTINGS LOOKUP      #####
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_pe_phone_append,did_agent_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -1526,9 +1527,15 @@ if ($sthArows > 0)
 	$queuemetrics_log_id =			$aryA[5];
 	$queuemetrics_eq_prepend =		$aryA[6];
 	$queuemetrics_pe_phone_append = $aryA[7];
+	$did_agent_log =				$aryA[8];
+	$alt_log_server_ip =			$aryA[9];
+	$alt_log_dbname =				$aryA[10];
+	$alt_log_login =				$aryA[11];
+	$alt_log_pass =					$aryA[12];
+	$tables_use_alt_log_db =		$aryA[13];
 	}
 $sthA->finish();
-##### END QUEUEMETRICS LOGGING LOOKUP #####
+##### END SYSTEM SETTINGS LOOKUP      #####
 ###########################################
 if ($enable_queuemetrics_logging > 0)
 	{
@@ -2419,6 +2426,32 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 				$alertVDADremDIALstr = "$VDADremDIALstr";
 				$alertVDADremDIALstr .= "$dtmf_silent_prefix$VDADconf_exten";
 				$VDADremDIALstr .= "$VDADconf_exten";
+
+
+				### BEGIN if did agent log is active, update the user ###
+				if ($did_agent_log =~ /Y/)
+					{
+					$stmtA = "UPDATE vicidial_did_agent_log SET user='$VDADuser' where uniqueid='$uniqueid' and user='VDCL' order by call_date desc limit 1;";
+
+					if ( ($tables_use_alt_log_db =~ /did_agent_log/i) && (length($alt_log_server_ip)>4) && (length($alt_log_dbname)>0) )
+						{
+						$dbhD = DBI->connect("DBI:mysql:$alt_log_dbname:$alt_log_server_ip:3306", "$alt_log_login", "$alt_log_pass")
+						 or die "Couldn't connect to database: " . DBI->errstr;
+
+						if ($AGILOG) {$agi_string = "CONNECTED TO ALT-LOG DATABASE:  $alt_log_server_ip|$alt_log_dbname|$uniqueid";   &agi_output;}
+
+						$affected_rowsAL = $dbhD->do($stmtA);
+
+						$dbhD->disconnect();
+						}
+					else
+						{
+						$affected_rowsAL = $dbhA->do($stmtA);
+						}
+					if ($AGILOG) {$agi_string = "--    DID AGENT LOG UPDATE: |$affected_rowsAL|$stmtA|";   &agi_output;}
+					}
+				### END if did agent log is active, update the user ###
+
 
 				### if agent alert exten is not disabled, then trigger the alert and wait
 				if ( ($agent_alert_exten !~ /^X$/i) && (length($agent_alert_exten)>0) && ($no_delay_call_route !~ /Y/i) && ($VDADextension !~ /^R\//) )

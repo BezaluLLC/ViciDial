@@ -1427,7 +1427,8 @@ alt_log_server_ip VARCHAR(50) default '',
 alt_log_dbname VARCHAR(50) default '',
 alt_log_login VARCHAR(50) default '',
 alt_log_pass VARCHAR(50) default '',
-tables_use_alt_log_db VARCHAR(2000) default ''
+tables_use_alt_log_db VARCHAR(2000) default '',
+did_agent_log ENUM('Y','N') default 'N'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2451,6 +2452,24 @@ index (lead_id),
 index (call_date)
 );
 
+CREATE TABLE vicidial_did_agent_log (
+uniqueid VARCHAR(20) NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+caller_id_number VARCHAR(18),
+caller_id_name VARCHAR(20),
+extension VARCHAR(100),
+call_date DATETIME,
+did_id VARCHAR(9) default '',
+did_description VARCHAR(50) default '',
+did_route VARCHAR(9) default '',
+group_id VARCHAR(20) default '',
+user VARCHAR(20) default 'VDCL',
+index (uniqueid),
+index (caller_id_number),
+index (extension),
+index (call_date)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
@@ -2613,7 +2632,10 @@ CREATE UNIQUE INDEX vlea on vicidial_log_extended_archive (uniqueid,call_date,le
 
 CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer; 
 
-UPDATE system_settings SET db_schema_version='1292',db_schema_update_date=NOW();
+CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
+CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
+
+UPDATE system_settings SET db_schema_version='1293',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
