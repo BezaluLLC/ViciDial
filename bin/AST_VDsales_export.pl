@@ -7,7 +7,7 @@
 #
 # /usr/share/astguiclient/AST_VDsales_export.pl --campaign=GOODB-GROUP1-GROUP3-GROUP4-SPECIALS-DNC_BEDS --output-format=fixed-as400 --sale-statuses=SALE --debug --filename=BEDSsaleMMDD.txt --date=yesterday --email-list=test@gmail.com --email-sender=test@test.com
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61219-1118 - First version
@@ -27,6 +27,7 @@
 # 90902-0437 - Added outbound-calltime-ignore and ftp-norun options
 # 90909-2322 - Added totals-only option
 # 101022-1022 - Added hours minutes seconds to filename variables
+# 110829-1045 - Changed recording lookup to try to find by vicidial_id first
 #
 
 $txt = '.txt';
@@ -928,7 +929,7 @@ sub select_format_loop
 			$ivr_id = '0';
 			$ivr_filename = '';
 
-			$stmtB = "select recording_id,filename,location from recording_log where lead_id='$lead_id' and start_time > '$shipdate 00:00:01' and start_time < '$shipdate 23:59:59' order by length_in_sec desc limit 1;";
+			$stmtB = "select recording_id,filename,location from recording_log where lead_id='$lead_id' and vicidial_id='$vicidial_id' and start_time > '$shipdate 00:00:01' and start_time < '$shipdate 23:59:59' order by start_time desc limit 1;";
 			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 			$sthBrows=$sthB->rows;
@@ -942,6 +943,24 @@ sub select_format_loop
 				$rec_countB++;
 				}
 			$sthB->finish();
+
+			if ($sthBrows < 1)
+				{
+				$stmtB = "select recording_id,filename,location from recording_log where lead_id='$lead_id' and start_time > '$shipdate 00:00:01' and start_time < '$shipdate 23:59:59' order by length_in_sec desc limit 1;";
+				$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+				$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+				$sthBrows=$sthB->rows;
+				$rec_countB=0;
+				while ($sthBrows > $rec_countB)
+					{
+					@aryB = $sthB->fetchrow_array;
+					$ivr_id =		$aryB[0];
+					$ivr_filename = $aryB[1];
+					$ivr_location = $aryB[2];
+					$rec_countB++;
+					}
+				$sthB->finish();
+				}
 
 			if (length($ivr_id)<3) 
 				{

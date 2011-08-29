@@ -63,6 +63,7 @@
 # 110525-2334 - Added cm.agi optional logging to call menus
 # 110705-2023 - Added agents_calls_reset option
 # 110725-2356 - Added new voicemail time zone option and menu gather
+# 110829-1601 - Added multiple invalid option to Call Menus
 #
 
 $DB=0; # Debug flag
@@ -1753,6 +1754,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$call_menu_timeout_ext = '';
 		$call_menu_invalid_ext = '';
 		$call_menu_options_ext = '';
+		$cm_invalid_set=0;
+		$cm_timeout_set=0;
 		if ($DBX>0) {print "$sthArowsJ|$stmtA\n";}
 		while ($sthArowsJ > $j)
 			{
@@ -1828,13 +1831,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 							}
 
 						$call_menu_line .= "$menu_timeout_prompt_ext";
+						$cm_timeout_set++;
 						}
 					}
 				if ($option_value[$j] =~ /INVALID/)
 					{
+					$menu_invalid_prompt_ext='';
 					if ( (length($menu_invalid_prompt[$i])>0) && ($menu_invalid_prompt[$i] !~ /NONE/) )
 						{
-						$menu_invalid_prompt_ext='';
 						if ($menu_invalid_prompt[$i] =~ /\|/)
 							{
 							@menu_invalid_prompts_array = split(/\|/,$menu_invalid_prompt[$i]);
@@ -1855,8 +1859,22 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 							$PRI++;
 							}
 
-						$call_menu_line .= "$menu_invalid_prompt_ext";
 						}
+					if ( ($option_value[$j] =~ /INVALID_2ND/) && ($cm_invalid_set < 1) )
+						{
+						$menu_invalid_prompt_ext .= "exten => i,$PRI,Set(INVCOUNT=\$[\$\{INVCOUNT\} + 1]) \n";   $PRI++;
+						$menu_invalid_prompt_ext .= "exten => i,$PRI,NoOp(\$\{INVCOUNT\}) \n";   $PRI++;
+						$menu_invalid_prompt_ext .= "exten => i,$PRI,Gotoif(\$[0\$\{INVCOUNT\} < 2]?" . $menu_id[$i] . ",s,3) \n";   $PRI++;
+						}
+					if ( ($option_value[$j] =~ /INVALID_3RD/) && ($cm_invalid_set < 1) )
+						{
+						$menu_invalid_prompt_ext .= "exten => i,$PRI,Set(INVCOUNT=\$[\$\{INVCOUNT\} + 1]) \n";   $PRI++;
+						$menu_invalid_prompt_ext .= "exten => i,$PRI,NoOp(\${INVCOUNT}) \n";   $PRI++;
+						$menu_invalid_prompt_ext .= "exten => i,$PRI,Gotoif(\$[0\$\{INVCOUNT\} < 3]?" . $menu_id[$i] . ",s,3) \n";   $PRI++;
+						}
+
+					$call_menu_line .= "$menu_invalid_prompt_ext";
+					$cm_invalid_set++;
 					$option_value[$j] = 'i';
 					}
 				if ($option_route[$j] =~ /AGI/)
@@ -1928,7 +1946,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 							}
 						else
 							{
-							$hangup_prompt_ext .= "exten => $option_value[$j],1,Playback($option_route_value[$j])\n";
+							$hangup_prompt_ext .= "exten => $option_value[$j],$PRI,Playback($option_route_value[$j])\n";
 							$PRI++;
 							}
 
@@ -1980,7 +1998,10 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 					}
 				if ($option_value[$j] =~ /i/)
 					{
-					$call_menu_invalid_ext = "$call_menu_line";
+					if ($cm_invalid_set > 1) 
+						{$call_menu_invalid_ext .= "; COMMENTED OUT...\n";}
+					else
+						{$call_menu_invalid_ext = "$call_menu_line";}
 					}
 				if ($option_value[$j] !~ /i|t/)
 					{
@@ -2029,6 +2050,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$call_menu_ext .= "; $menu_name[$i]\n";
 		$call_menu_ext .= "[$menu_id[$i]]\n";
 		$call_menu_ext .= "exten => s,1,AGI(agi-VDAD_inbound_calltime_check.agi,$tracking_group[$i]-----$track_in_vdac[$i]-----$menu_id[$i]-----$time_check_scheme-----$time_check_route-----$time_check_route_value-----$time_check_route_context)\n";
+		$call_menu_ext .= "exten => s,n,Set(INVCOUNT=0) \n";
 		$call_menu_ext .= "$menu_prompt_ext";
 		if ($menu_timeout[$i] > 0)
 			{$call_menu_ext .= "exten => s,n,WaitExten($menu_timeout[$i])\n";}
@@ -2050,11 +2072,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			if ( (length($menu_timeout_prompt[$i])>0)  && ($menu_timeout_prompt[$i] !~ /NONE/) )
 				{
 				$call_menu_ext .= "exten => t,1,Playback($menu_timeout_prompt[$i])\n";
-				$call_menu_ext .= "exten => t,n,Goto(s,2)\n";
+				$call_menu_ext .= "exten => t,n,Goto(s,3)\n";
 				}
 			else
 				{
-				$call_menu_ext .= "exten => t,1,Goto(s,2)\n";
+				$call_menu_ext .= "exten => t,1,Goto(s,3)\n";
 				}
 			}
 		else
@@ -2066,18 +2088,17 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			if ( (length($menu_invalid_prompt[$i])>0) && ($menu_invalid_prompt[$i] !~ /NONE/) )
 				{
 				$call_menu_ext .= "exten => i,1,Playback($menu_invalid_prompt[$i])\n";
-				$call_menu_ext .= "exten => i,n,Goto(s,2)\n";
+				$call_menu_ext .= "exten => i,n,Goto(s,3)\n";
 				}
 			else
 				{
-				$call_menu_ext .= "exten => i,1,Goto(s,2)\n";
+				$call_menu_ext .= "exten => i,1,Goto(s,3)\n";
 				}
 			}
 		else
 			{
 			$call_menu_ext .= "$call_menu_invalid_ext";
 			}
-
 		$call_menu_ext .= "; hangup\n";
 		$call_menu_ext .= 'exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
 

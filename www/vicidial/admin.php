@@ -2835,12 +2835,13 @@ else
 # 110809-1547 - Added no-answer log and alt-log server system settings
 # 110815-2155 - Added the Campaign Status List Report
 # 110822-1204 - Added did_agent_log System Settings option
+# 110829-1600 - Added multiple invalid option to Call Menus
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-331a';
-$build = '110822-1204';
+$admin_version = '2.4-332a';
+$build = '110829-1600';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -2862,25 +2863,27 @@ $past_month_date = date("Y-m-d H:i:s",$month_old);
 $week_old = mktime(0, 0, 0, date("m"), date("d")-7,  date("Y"));
 $past_week_date = date("Y-m-d H:i:s",$week_old);
 
-$dtmf[0]='0';			$dtmf_key[0]='0';
-$dtmf[1]='1';			$dtmf_key[1]='1';
-$dtmf[2]='2';			$dtmf_key[2]='2';
-$dtmf[3]='3';			$dtmf_key[3]='3';
-$dtmf[4]='4';			$dtmf_key[4]='4';
-$dtmf[5]='5';			$dtmf_key[5]='5';
-$dtmf[6]='6';			$dtmf_key[6]='6';
-$dtmf[7]='7';			$dtmf_key[7]='7';
-$dtmf[8]='8';			$dtmf_key[8]='8';
-$dtmf[9]='9';			$dtmf_key[9]='9';
-$dtmf[10]='HASH';		$dtmf_key[10]='#';
-$dtmf[11]='STAR';		$dtmf_key[11]='*';
-$dtmf[12]='A';			$dtmf_key[12]='A';
-$dtmf[13]='B';			$dtmf_key[13]='B';
-$dtmf[14]='C';			$dtmf_key[14]='C';
-$dtmf[15]='D';			$dtmf_key[15]='D';
-$dtmf[16]='TIMECHECK';	$dtmf_key[16]='TIMECHECK';
-$dtmf[17]='TIMEOUT';	$dtmf_key[17]='TIMEOUT';
-$dtmf[18]='INVALID';	$dtmf_key[18]='INVALID';
+$dtmf[0]='0';				$dtmf_key[0]='0';
+$dtmf[1]='1';				$dtmf_key[1]='1';
+$dtmf[2]='2';				$dtmf_key[2]='2';
+$dtmf[3]='3';				$dtmf_key[3]='3';
+$dtmf[4]='4';				$dtmf_key[4]='4';
+$dtmf[5]='5';				$dtmf_key[5]='5';
+$dtmf[6]='6';				$dtmf_key[6]='6';
+$dtmf[7]='7';				$dtmf_key[7]='7';
+$dtmf[8]='8';				$dtmf_key[8]='8';
+$dtmf[9]='9';				$dtmf_key[9]='9';
+$dtmf[10]='HASH';			$dtmf_key[10]='#';
+$dtmf[11]='STAR';			$dtmf_key[11]='*';
+$dtmf[12]='A';				$dtmf_key[12]='A';
+$dtmf[13]='B';				$dtmf_key[13]='B';
+$dtmf[14]='C';				$dtmf_key[14]='C';
+$dtmf[15]='D';				$dtmf_key[15]='D';
+$dtmf[16]='TIMECHECK';		$dtmf_key[16]='TIMECHECK';
+$dtmf[17]='TIMEOUT';		$dtmf_key[17]='TIMEOUT';
+$dtmf[18]='INVALID';		$dtmf_key[18]='INVALID';
+$dtmf[19]='INVALID_2ND';	$dtmf_key[19]='INVALID_2ND';
+$dtmf[20]='INVALID_3RD';	$dtmf_key[20]='INVALID_3RD';
 
 if ($force_logout)
 	{
@@ -6032,7 +6035,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_call_menu-option_value">
 	<BR>
-	<B>Option Value -</B> This field is where you define the menu option, possible choices are: 0,1,2,3,4,5,6,7,8,9,*,#,A,B,C,D,TIMECHECK. The special option TIMECHECK can be used only if you have Menu Time Check enabled and there is a Call Time defined for the Menu. To delete an Option, just set the Route to REMOVE and the option will be deleted when you click the SUBMIT button.
+	<B>Option Value -</B> This field is where you define the menu option, possible choices are: 0,1,2,3,4,5,6,7,8,9,*,#,A,B,C,D,TIMECHECK. The special option TIMECHECK can be used only if you have Menu Time Check enabled and there is a Call Time defined for the Menu. To delete an Option, just set the Route to REMOVE and the option will be deleted when you click the SUBMIT button. TIMEOUT will allow you to set what happens to the call when it times out with no input from the caller. INVALID will allow you to set what happens when the caller enters an invalid option. INVALID_2ND and 3RD can only be active if INVALID is not used, it will wait until the second or third invalid entry by the caller before it executes the option.
 
 	<BR>
 	<A NAME="vicidial_call_menu-option_description">
@@ -14857,7 +14860,7 @@ if ($ADD==4511)
 
 			$h=0;
 			$option_value_list='|';
-			while ($h <= 18)
+			while ($h <= 20)
 				{
 				$option_value=''; $option_description=''; $option_route=''; $option_route_value=''; $option_route_value_context='';
 
@@ -14900,7 +14903,7 @@ if ($ADD==4511)
 					{
 					$option_value = ereg_replace("[^-\_0-9A-Z]","",$option_value);
 					$option_description = ereg_replace("[^- \:\/\_0-9a-zA-Z]","",$option_description);
-					$option_route = ereg_replace("[^-_0-9a-zA-Z]","",$option_route);
+					$option_route = ereg_replace("[^-\_0-9a-zA-Z]","",$option_route);
 					$option_route_value = ereg_replace("[^-\/\|\_\#\*\,\.\_0-9a-zA-Z]","",$option_route_value);
 					$option_route_value_context = ereg_replace("[^,-_0-9a-zA-Z]","",$option_route_value_context);
 					}
@@ -14943,7 +14946,7 @@ if ($ADD==4511)
 				$h++;
 				}
 			## delete existing database records that were not in the submit
-			while ($h <= 18)
+			while ($h <= 20)
 				{
 				if (!preg_match("/\|$dtmf[$h]\|/i",$option_value_list))
 					{
@@ -24509,7 +24512,7 @@ if ($ADD==3511)
 
 			$dtmf_list = "<select size=1 name=option_value_$j>";
 			$h=0;
-			while ($h <= 18)
+			while ($h <= 20)
 				{
 				$dtmf_list .= "<option";
 				if ( (preg_match("/$dtmf[$h]/",$option_value) and (strlen($option_value) == strlen($dtmf[$h])) ) )
@@ -24621,12 +24624,12 @@ if ($ADD==3511)
 			$j++;
 			}
 
-		while ($j <= 18)
+		while ($j <= 20)
 			{
 			$choose_height = (($j * 40) + 400);
 			$dtmf_list = "<select size=1 name=option_value_$j><option value=\"\"></option>";
 			$h=0;
-			while ($h <= 18)
+			while ($h <= 20)
 				{
 				$dtmf_list .= "<option value=\"$dtmf[$h]\"> $dtmf_key[$h]</option>";
 				$h++;
