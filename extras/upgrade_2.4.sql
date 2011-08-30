@@ -1002,3 +1002,7 @@ CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,
 ALTER TABLE system_settings ADD did_agent_log ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1293',db_schema_update_date=NOW() where db_schema_version < 1293;
+
+ALTER TABLE vicidial_campaigns ADD survey_recording ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1294',db_schema_update_date=NOW() where db_schema_version < 1294;

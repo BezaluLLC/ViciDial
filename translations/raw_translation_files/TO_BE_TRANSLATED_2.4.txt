@@ -700,6 +700,8 @@ Here is a list of the available variables||
 DID Agent Log||
 This option will log the inbound DID calls along with an in-group and user ID, if applicable, to a separate table. Default is N||
 TIMEOUT will allow you to set what happens to the call when it times out with no input from the caller. INVALID will allow you to set what happens when the caller enters an invalid option. INVALID_2ND and 3RD can only be active if INVALID is not used, it will wait until the second or third invalid entry by the caller before it executes the option||
+Survey Recording||
+If enabled, this will start recording when the call is answered. Only recommended if the method is not set to transfer to an agent. Default is N for disabled||
 
 
 lead_report_export.php

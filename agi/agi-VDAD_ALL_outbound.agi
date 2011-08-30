@@ -89,6 +89,7 @@
 # 110626-2342 - Added queuemetrics_pe_phone_append
 # 110723-2330 - Set CID to customer phone number and caller code when transferring to CALLMENU
 # 110812-1514 - Added static tts file parsing and replacement
+# 110829-2324 - Added survey_recording option
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -482,7 +483,7 @@ if ($VDACaffected_rows > 0)
 	$sthA->finish();
 
 	### Grab campaign values from the database
-	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname,queue_priority,closer_campaigns,queuemetrics_phone_environment,campaign_recording,campaign_rec_filename,safe_harbor_audio,safe_harbor_menu_id FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
+	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname,queue_priority,closer_campaigns,queuemetrics_phone_environment,campaign_recording,campaign_rec_filename,safe_harbor_audio,safe_harbor_menu_id,survey_recording FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -519,6 +520,7 @@ if ($VDACaffected_rows > 0)
 		$campaign_rec_filename =		$aryA[23];
 		$safe_harbor_audio =			$aryA[24];
 		$safe_harbor_menu_id =			$aryA[25];
+		$survey_recording =				$aryA[26];
 		if (length($closer_campaigns) > 2)
 			{
 			$closer_campaigns =~ s/^ | -$//gi;
@@ -528,6 +530,59 @@ if ($VDACaffected_rows > 0)
 		else {$closer_campaigns="''";}
 		}
 	$sthA->finish();
+
+
+	### start recording if survey recording is enabled
+	if ( ($call_handle_method =~ /SURVEY/) && ($survey_recording =~ /Y/) )
+		{
+		$stmtA = "SELECT vendor_lead_code FROM vicidial_list where lead_id='$CIDlead_id';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vendor_lead_code =	$aryA[0];
+			}
+		$sthA->finish();
+
+		# get date/time
+		($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+		$year = ($year + 1900);
+		$Tyear = ($year - 2000);
+		$mon++;
+		if ($mon < 10)	{$mon = "0$mon";}
+		if ($mday < 10) {$mday = "0$mday";}
+		if ($hour < 10) {$hour = "0$hour";}
+		if ($min < 10)	{$min = "0$min";}
+		if ($sec < 10)	{$sec = "0$sec";}
+
+		$now_date_epoch = time();
+		$now_date = "$year-$mon-$mday $hour:$min:$sec";
+		$recdate = "$year$mon$mday-$hour$min$sec";
+		$tinydate = "$Tyear$mon$mday$hour$min$sec";
+
+		$campaign_rec_filename =~ s/CAMPAIGN/$VDADcampaign/gi;
+		$campaign_rec_filename =~ s/CUSTPHONE/$VDADphone/gi;
+		$campaign_rec_filename =~ s/FULLDATE/$recdate/gi;
+		$campaign_rec_filename =~ s/TINYDATE/$tinydate/gi;
+		$campaign_rec_filename =~ s/EPOCH/$now_date_epoch/gi;
+		$campaign_rec_filename =~ s/AGENT/VDAD/gi;
+		$campaign_rec_filename =~ s/VENDORLEADCODE/$vendor_lead_code/gi;
+		$campaign_rec_filename =~ s/LEADID/$CIDlead_id/gi;
+		$campaign_rec_filename =~ s/\"|\'//gi;
+		$campaign_rec_filename =~ s/ //gi;
+
+		$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$campaign_rec_filename"); 
+
+		### insert record into recording_log table ###
+		$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$VDADphone','$now_date','$now_date_epoch','0','$campaign_rec_filename','$CIDlead_id','VDAD','$campaign_rec_filename','$uniqueid');";
+		$SRaffected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$SRaffected_rows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "--    SURVEY RECORDING STARTED : |$SRaffected_rows|$campaign_rec_filename|$stmtA|";   &agi_output;}
+		}
+
 
 	### pre-generate Cepstral first and last name as an audio file
 	if ($call_handle_method =~ /SURVEYCAMPCEP/)
@@ -2769,7 +2824,7 @@ sub enter_pin_number
 	while ( ($digit_loop_counter < $digits_to_collect) )
 		{
 		$digit = chr($AGI->wait_for_digit('10000'));  # wait 10 seconds for input or until the pound key is pressed
-		if ($digit =~ /\d/)
+		if ( ($digit =~ /\d/) && ($survey_dtmf_digits =~ /$digit/) )
 			{
 			$totalDTMF = "$totalDTMF$digit";
 			if ($AGILOG) {$agi_string = "digit |$digit|     TotalDTMF |$totalDTMF|";   &agi_output;}
