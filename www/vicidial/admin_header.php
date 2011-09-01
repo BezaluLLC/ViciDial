@@ -31,6 +31,7 @@
 # 110215-1720 - Added the Add a new lead link
 # 110322-1228 - Added user ID logged in as next to Logout link
 # 110624-1439 - Added Screen Labels sub-section to Admin
+# 110831-2048 - Added AC-CID to campaign submenu
 #
 
 
@@ -1102,6 +1103,8 @@ $SScustom_fields_enabled =	$row[3];
 			else {$listmix_sh=''; $listmix_fc='BLACK';}
 		if ($sh=='preset') {$preset_sh="bgcolor=\"$subcamp_color\""; $preset_fc="$subcamp_font";}
 			else {$preset_sh=''; $preset_fc='BLACK';}
+		if ($sh=='accid') {$accid_sh="bgcolor=\"$subcamp_color\""; $accid_fc="$subcamp_font";}
+			else {$accid_sh=''; $accid_fc='BLACK';}
 
 		?>
 		<TR BGCOLOR=<?php echo $campaigns_color ?>>
@@ -1127,7 +1130,15 @@ $SScustom_fields_enabled =	$row[3];
 		<TD ALIGN=LEFT <?php echo $pause_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=37"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $pause_fc ?> SIZE=<?php echo $subcamp_font_size ?>>Pause Codes</a></TD>
 		</TR><TR BGCOLOR=<?php echo $campaigns_color ?>>
 		<TD ALIGN=LEFT <?php echo $preset_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=301"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $preset_fc ?> SIZE=<?php echo $subcamp_font_size ?>>Presets</a></TD>
-	<?php } 
+		<?php
+		if ($SScampaign_cid_areacodes_enabled > 0)
+			{
+			?>
+			</TR><TR BGCOLOR=<?php echo $campaigns_color ?>>
+			<TD ALIGN=LEFT <?php echo $accid_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=302"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $accid_fc ?> SIZE=<?php echo $subcamp_font_size ?>>AC-CID</a></TD>
+			<?php
+			}
+		 } 
 	?>
 	<!-- LISTS NAVIGATION -->
 	<?php

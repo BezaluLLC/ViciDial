@@ -766,7 +766,7 @@ dispo_call_url TEXT,
 xferconf_c_number VARCHAR(50) default '',
 xferconf_d_number VARCHAR(50) default '',
 xferconf_e_number VARCHAR(50) default '',
-use_custom_cid ENUM('Y','N') default 'N',
+use_custom_cid ENUM('Y','N','AREACODE') default 'N',
 scheduled_callbacks_alert ENUM('NONE','BLINK','RED','BLINK_RED','BLINK_DEFER','RED_DEFER','BLINK_RED_DEFER') default 'NONE',
 queuemetrics_callstatus_override ENUM('DISABLED','NO','YES') default 'DISABLED',
 extension_appended_cidname ENUM('Y','N') default 'N',
@@ -1429,7 +1429,8 @@ alt_log_dbname VARCHAR(50) default '',
 alt_log_login VARCHAR(50) default '',
 alt_log_pass VARCHAR(50) default '',
 tables_use_alt_log_db VARCHAR(2000) default '',
-did_agent_log ENUM('Y','N') default 'N'
+did_agent_log ENUM('Y','N') default 'N',
+campaign_cid_areacodes_enabled ENUM('0','1') default '1'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2471,6 +2472,19 @@ index (extension),
 index (call_date)
 );
 
+CREATE TABLE vicidial_campaign_cid_areacodes (
+campaign_id VARCHAR(8) NOT NULL,
+areacode VARCHAR(5) NOT NULL,
+outbound_cid VARCHAR(20),
+active ENUM('Y','N','') default '',
+cid_description VARCHAR(50),
+call_count_today MEDIUMINT(7) default '0',
+index (campaign_id),
+index (areacode)
+);
+
+CREATE UNIQUE INDEX campareacode on vicidial_campaign_cid_areacodes (campaign_id, areacode, outbound_cid);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
@@ -2636,7 +2650,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1294',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1295',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

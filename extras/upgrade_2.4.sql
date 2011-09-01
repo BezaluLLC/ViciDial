@@ -1006,3 +1006,22 @@ UPDATE system_settings SET db_schema_version='1293',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD survey_recording ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1294',db_schema_update_date=NOW() where db_schema_version < 1294;
+
+ALTER TABLE system_settings ADD campaign_cid_areacodes_enabled ENUM('0','1') default '1';
+
+ALTER TABLE vicidial_campaigns MODIFY use_custom_cid ENUM('Y','N','AREACODE') default 'N';
+
+CREATE TABLE vicidial_campaign_cid_areacodes (
+campaign_id VARCHAR(8) NOT NULL,
+areacode VARCHAR(5) NOT NULL,
+outbound_cid VARCHAR(20),
+active ENUM('Y','N','') default '',
+cid_description VARCHAR(50),
+call_count_today MEDIUMINT(7) default '0',
+index (campaign_id),
+index (areacode)
+);
+
+CREATE UNIQUE INDEX campareacode on vicidial_campaign_cid_areacodes (campaign_id, areacode, outbound_cid);
+
+UPDATE system_settings SET db_schema_version='1295',db_schema_update_date=NOW() where db_schema_version < 1295;

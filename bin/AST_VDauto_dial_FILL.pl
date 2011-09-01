@@ -12,7 +12,7 @@
 #
 # Should only be run on one server in a multi-server Asterisk/VICIDIAL cluster
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 61115-1246 - First build, framework setup, non-functional
@@ -30,6 +30,7 @@
 # 100205-1245 - Added optional stagger sending of calls across all available servers in each rank
 # 100903-0041 - Changed lead_id max length to 10 digits
 # 101207-0713 - Added more info to Originate for rare VDAC issue
+# 110901-1127 - Added campaign areacode cid function
 #
 
 ### begin parsing run-time options ###
@@ -752,6 +753,30 @@ while($one_day_interval > 0)
 													if (length($temp_CID) > 6) 
 														{$CCID = "$temp_CID";   $CCID_on++;}
 													}
+												if ($DBIPuse_custom_cid[$camp_CIPct] =~ /AREACODE/) 
+													{
+													$temp_CID='';
+													$temp_vcca='';
+													$temp_ac = substr("$phone_number", 0, 3);
+													$stmtA = "SELECT outbound_cid FROM vicidial_campaign_cid_areacodes where campaign_id='$DBfill_campaign[$camp_CIPct]' and areacode='$temp_ac' and active='Y' order by call_count_today limit 1;";
+													$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+													$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+													$sthArows=$sthA->rows;
+													if ($sthArows > 0)
+														{
+														@aryA = $sthA->fetchrow_array;
+														$temp_vcca	=	$aryA[0];
+														$sthA->finish();
+
+														$stmtA="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$DBfill_campaign[$camp_CIPct]' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
+														$affected_rows = $dbhA->do($stmtA);
+														}
+													$temp_CID = $temp_vcca;
+													$temp_CID =~ s/\D//gi;
+													if (length($temp_CID) > 6) 
+														{$CCID = "$temp_CID";   $CCID_on++;}
+													}
+
 												if ($DBIPdialprefix[$camp_CIPct] =~ /x/i) {$Local_out_prefix = '';}
 
 												if ($RECcount)

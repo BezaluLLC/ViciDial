@@ -105,6 +105,7 @@
 # 110723-1256 - Added extra debug for vac deletes and fix for long ring/drop time
 # 110731-2127 - Added sections for handling MULTI_LEAD auto-alt-dial and na-call-url functions
 # 110809-1516 - Added section for noanswer logging
+# 110901-1125 - Added campaign areacode cid function
 #
 
 
@@ -1158,7 +1159,30 @@ while($one_day_interval > 0)
 										if (length($temp_CID) > 6) 
 											{$CCID = "$temp_CID";   $CCID_on++;}
 										}
-									
+									if ($DBIPuse_custom_cid[$user_CIPct] =~ /AREACODE/) 
+										{
+										$temp_CID='';
+										$temp_vcca='';
+										$temp_ac = substr("$phone_number", 0, 3);
+										$stmtA = "SELECT outbound_cid FROM vicidial_campaign_cid_areacodes where campaign_id='$DBIPcampaign[$user_CIPct]' and areacode='$temp_ac' and active='Y' order by call_count_today limit 1;";
+										$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+										$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+										$sthArows=$sthA->rows;
+										if ($sthArows > 0)
+											{
+											@aryA = $sthA->fetchrow_array;
+											$temp_vcca	=	$aryA[0];
+											$sthA->finish();
+
+											$stmtA="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$DBIPcampaign[$user_CIPct]' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
+											$affected_rows = $dbhA->do($stmtA);
+											}
+										$temp_CID = $temp_vcca;
+										$temp_CID =~ s/\D//gi;
+										if (length($temp_CID) > 6) 
+											{$CCID = "$temp_CID";   $CCID_on++;}
+										}
+
 									if ($DBIPdialprefix[$user_CIPct] =~ /x/i) {$Local_out_prefix = '';}
 
 									if ($RECcount)

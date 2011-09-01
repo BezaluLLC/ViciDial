@@ -289,10 +289,11 @@
 # 110718-1158 - Added logging of skipped leads
 # 110723-2256 - Added disable_alter_custphone HIDE option for call logs display
 # 110731-2318 - Added dispo/start call url logging to DB table
+# 110901-1117 - Added areacode custom cid function
 #
 
-$version = '2.4-192';
-$build = '110731-2318';
+$version = '2.4-193';
+$build = '110901-1117';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=425;
 $one_mysql_log=0;
@@ -2332,7 +2333,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				if (strlen($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
 				### check for custom cid use
 				$use_custom_cid=0;
-				$stmt = "SELECT count(*) FROM vicidial_campaigns where use_custom_cid='Y' and campaign_id='$campaign';";
+				$stmt = "SELECT use_custom_cid FROM vicidial_campaigns where campaign_id='$campaign';";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00313',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -2341,13 +2342,32 @@ if ($ACTION == 'manDiaLnextCaLL')
 					{
 					$row=mysql_fetch_row($rslt);
 					$use_custom_cid =	$row[0];
-					}
-				if ($use_custom_cid > 0)
-					{
-					$temp_CID = preg_replace("/\D/",'',$security);
+					if ($use_custom_cid == 'AREACODE')
+						{
+						$temp_ac = substr("$agent_dialed_number", 0, 3);
+						$stmt = "SELECT outbound_cid FROM vicidial_campaign_cid_areacodes where campaign_id='$campaign' and areacode='$temp_ac' and active='Y' order by call_count_today limit 1;";
+						$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($DB) {echo "$stmt\n";}
+						$vcca_ct = mysql_num_rows($rslt);
+						if ($vcca_ct > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$temp_vcca =	$row[0];
+
+							$stmt="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$campaign' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
+								if ($format=='debug') {echo "\n<!-- $stmt -->";}
+							$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+							}
+						$temp_CID = preg_replace("/\D/",'',$temp_vcca);
+						}
+					if ($use_custom_cid == 'Y')
+						{$temp_CID = preg_replace("/\D/",'',$security);}
 					if (strlen($temp_CID) > 6) 
 						{$CCID = "$temp_CID";   $CCID_on++;}
 					}
+
 				if (eregi("x",$dial_prefix)) {$Local_out_prefix = '';}
 
 				$PADlead_id = sprintf("%010s", $lead_id);
@@ -2901,7 +2921,7 @@ if ($ACTION == 'manDiaLonly')
 		if (strlen($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
 		### check for custom cid use
 		$use_custom_cid=0;
-		$stmt = "SELECT count(*) FROM vicidial_campaigns where use_custom_cid='Y' and campaign_id='$campaign';";
+		$stmt = "SELECT use_custom_cid FROM vicidial_campaigns where campaign_id='$campaign';";
 		$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00314',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -2910,10 +2930,28 @@ if ($ACTION == 'manDiaLonly')
 			{
 			$row=mysql_fetch_row($rslt);
 			$use_custom_cid =	$row[0];
-			}
-		if ($use_custom_cid > 0)
-			{
-			$temp_CID = preg_replace("/\D/",'',$security);
+			if ($use_custom_cid == 'AREACODE')
+				{
+				$temp_ac = substr("$phone_number", 0, 3);
+				$stmt = "SELECT outbound_cid FROM vicidial_campaign_cid_areacodes where campaign_id='$campaign' and areacode='$temp_ac' and active='Y' order by call_count_today limit 1;";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$vcca_ct = mysql_num_rows($rslt);
+				if ($vcca_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$temp_vcca =	$row[0];
+
+					$stmt="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$campaign' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					}
+				$temp_CID = preg_replace("/\D/",'',$temp_vcca);
+				}
+			if ($use_custom_cid == 'Y')
+				{$temp_CID = preg_replace("/\D/",'',$security);}
 			if (strlen($temp_CID) > 6) 
 				{$CCID = "$temp_CID";   $CCID_on++;}
 			}

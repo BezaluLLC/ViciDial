@@ -693,6 +693,9 @@ OTHER CHANGES:
 158. Added options in Call Menus to allow for invalid action on second or third
 	invalid selection by the caller instead of just the first.
 
+159. Added ability to set custom callerID numbers per campaign for outbound 
+	calls by areacode. You can even set multiple callerIDs per areacode.
+
 
 
 

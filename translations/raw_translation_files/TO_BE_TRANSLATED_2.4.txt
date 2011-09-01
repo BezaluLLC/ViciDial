@@ -702,6 +702,24 @@ This option will log the inbound DID calls along with an in-group and user ID, i
 TIMEOUT will allow you to set what happens to the call when it times out with no input from the caller. INVALID will allow you to set what happens when the caller enters an invalid option. INVALID_2ND and 3RD can only be active if INVALID is not used, it will wait until the second or third invalid entry by the caller before it executes the option||
 Survey Recording||
 If enabled, this will start recording when the call is answered. Only recommended if the method is not set to transfer to an agent. Default is N for disabled||
+Campaign Areacode CID||
+AREACODE CIDS FOR THIS CAMPAIGN||
+ADD NEW AREACODE CID||
+AREACODE||
+SUBMIT CHANGES||
+AREACODE CID NOT ADDED||
+there is already an entry for this campaign with this CID||
+AREACODE CID ADDED||
+AREACODE CID NOT DELETED||
+this entry does not exist||
+AREACODE CID DELETED||
+AREACODE CID MODIFIED||
+Campaign Areacode CID Modify||
+CAMPAIGN AREACODE CID LISTINGS||
+When set to AREACODE you have the ability to go into the AC-CID submenu and define multiple callerids to be used per areacode||
+Enable Campaign Areacode CID||
+This setting enables the ability to set specific outbound callerid numbers to be used per campaign. Default is 1 for enabled||
+If the System Setting for Areacode CIDs is enabled and the Campaign setting for Use Custom CallerID is set to AREACODE then you have the ability to define Areacode CIDs that will be used when outbound calling to leads in this specific campaign. You can add multiple callerIDs per areacode and you can activate and deactivate them each in real time. If more than one callerID is active for a specific areacode then the system will use the callerid that has been used the least number of times today. If no callerIDs are active for the areacode then the campaign CallerID or list override CallerID will be used||
 
 
 lead_report_export.php
