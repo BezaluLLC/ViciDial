@@ -2277,7 +2277,8 @@ caller_code VARCHAR(30) NOT NULL,
 custom_call_id VARCHAR(100),
 start_url_processed ENUM('N','Y','U') default 'N',
 dispo_url_processed ENUM('N','Y','U','XY','XU') default 'N',
-multi_alt_processed ENUM('N','Y','U') default 'N'
+multi_alt_processed ENUM('N','Y','U') default 'N',
+noanswer_processed ENUM('N','Y','U') default 'N'
 );
 
 CREATE INDEX call_date on vicidial_log_extended (call_date);
