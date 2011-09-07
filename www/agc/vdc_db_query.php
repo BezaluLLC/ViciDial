@@ -8524,8 +8524,10 @@ if ($ACTION == 'SEARCHRESULTSview')
 		elseif ( (strlen($phone_number) >= 6) and (strlen($search) > 2) )
 			{
 			### phone number entered, search by this
+			if (preg_match('/MAIN|ALT|ADDR3/',$search))
+				{$searchSQL = "(";}
 			if (preg_match('/MAIN/',$search))
-				{$searchSQL = "phone_number='$phone_number'";}
+				{$searchSQL .= "phone_number='$phone_number'";}
 			if (preg_match('/ALT/',$search))
 				{
 				if (strlen($searchSQL) > 10)
@@ -8538,6 +8540,8 @@ if ($ACTION == 'SEARCHRESULTSview')
 					{$searchSQL .= " or ";}
 				$searchSQL .= "address3='$phone_number'";
 				}
+			if (strlen($searchSQL) > 10)
+				{$searchSQL .= ")";}
 			}
 		elseif (strlen($last_name) > 0)
 			{
