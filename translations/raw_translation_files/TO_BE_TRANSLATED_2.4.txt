@@ -781,6 +781,7 @@ Postal Code Outside Dialable Zone||
 Custom Transfer||
 System Delay, Please try again||
 Disposition Status List Hidden||
+The system has received a command to log you out, you have been logged out of your session||
 
 
 ############################################################  MANAGER Manual

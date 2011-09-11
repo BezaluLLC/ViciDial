@@ -1,4 +1,4 @@
-AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2011-04-30
+AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2011-09-11
 
 This document describes the functions of an API(Application Programming Interface)
 for the VICIDIAL Agent screen. This functionality will be rather limited at first
@@ -25,6 +25,7 @@ ra_call_control - remote agent call control: hangup/transfer calls being handled
 send_dtmf - sends dtmf signal string to agent's session
 transfer_conference - sends several commands related to the agent transfer-conf frame
 park_call - sends command to park customer or grab customer from park or ivr
+logout - logs the agent out of the agent interface
 
 
 New scripts:
@@ -137,6 +138,27 @@ ERROR: external_pause not valid - PAUSE|6666
 ERROR: no user found - 6666
 ERROR: agent_user is not logged in - 6666
 SUCCESS: external_pause function set - PAUSE|1232020456|6666
+
+
+
+--------------------------------------------------------------------------------
+logout - 
+
+DESCRIPTION:
+Logs the agent out of the agent interface. If the agent is on a live call, will logout after the live call is dispositioned
+
+VALUES: (value)
+LOGOUT  - Logout the agent session
+
+
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=logout&value=LOGOUT
+
+RESPONSES:
+ERROR: logout not valid - PAUSE|6666
+ERROR: no user found - 6666
+ERROR: agent_user is not logged in - 6666
+SUCCESS: logout function set - LOGOUT|1232020456|6666
 
 
 

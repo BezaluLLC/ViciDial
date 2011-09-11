@@ -363,10 +363,11 @@
 # 110723-2308 - Complete hiding of phone numbers in logs when alter phone is set to HIDE
 # 110730-2240 - Added option to hide dispo statuses, only to be used with API
 # 110802-0122 - Added call_id variable
+# 110911-1604 - Added API logout function
 #
 
-$version = '2.4-330c';
-$build = '110802-0122';
+$version = '2.4-331c';
+$build = '110911-1604';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=73;
 $one_mysql_log=0;
@@ -3300,6 +3301,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var alert_enabled = '<?php echo $VU_alert_enabled ?>';
 	var allow_alerts = '<?php echo $VU_allow_alerts ?>';
 	var shift_logout_flag = 0;
+	var api_logout_flag = 0;
 	var vtiger_callback_id = 0;
 	var agent_status_view = '<?php echo $agent_status_view ?>';
 	var agent_status_view_time = '<?php echo $agent_status_view_time ?>';
@@ -4198,6 +4200,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							if (AGLogiN == 'SHIFT_LOGOUT')
 								{
 								shift_logout_flag=1;
+								}
+							if (AGLogiN == 'API_LOGOUT')
+								{
+								api_logout_flag=1;
+								if ( (MD_channel_look < 1) && (VD_live_customer_call < 1) && (alt_dial_status_display < 1) )
+									{LogouT('API');}
 								}
 							}
 						var VLAStatuS_array = check_time_array[4].split("Status: ");
@@ -8911,7 +8919,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 				AgentDispoing = 0;
 
-				if (shift_logout_flag < 1)
+				if ( (shift_logout_flag < 1) && (api_logout_flag < 1) )
 					{
 					if (wrapup_waiting == 0)
 						{
@@ -8949,7 +8957,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					}
 				else
 					{
-					LogouT('SHIFT');
+					if (shift_logout_flag > 0)
+						{LogouT('SHIFT');}
+					else
+						{LogouT('API');}
 					}
 				if (focus_blur_enabled==1)
 					{
@@ -9667,6 +9678,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					var logout_content='';
 					if (tempreason=='SHIFT')
                         {logout_content='Your Shift is over or has changed, you have been logged out of your session<br /><br />';}
+					if (tempreason=='API')
+                        {logout_content='The system has received a command to log you out, you have been logged out of your session<br /><br />';}
 
 					document.getElementById("LogouTBoxLink").innerHTML = logout_content + "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + original_phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + pass + "\">CLICK HERE TO LOG IN AGAIN</a>\n";
 

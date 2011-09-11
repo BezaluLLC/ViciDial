@@ -54,10 +54,11 @@
 # 110224-1711 - Added compatibility with QM phone environment logging
 # 110409-0821 - Added run_time logging of API functions
 # 110430-0953 - Added option to external_dial by lead_id with alt_dial option
+# 110911-1555 - Added logout function
 #
 
-$version = '2.4-20';
-$build = '110430-0953';
+$version = '2.4-21';
+$build = '110911-1555';
 
 $startMS = microtime();
 
@@ -578,6 +579,75 @@ if ($function == 'external_pause')
 ################################################################################
 ### END - external_pause
 ################################################################################
+
+
+
+
+
+################################################################################
+### BEGIN - logout - log the agent out of the system
+################################################################################
+if ($function == 'logout')
+	{
+	if ( (strlen($value)<1) or ( (strlen($agent_user)<1) and (strlen($alt_user)<1) ) or (!ereg("LOGOUT",$value)) )
+		{
+		$result = 'ERROR';
+		$result_reason = "logout not valid";
+		echo "$result: $result_reason - $value|$agent_user\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		}
+	else
+		{
+		if (strlen($alt_user)>1)
+			{
+			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$agent_user = $row[0];
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "no user found";
+				echo "$result: $result_reason - $alt_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt="UPDATE vicidial_live_agents set external_pause='$value' where user='$agent_user';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+			$result = 'SUCCESS';
+			$result_reason = "logout function set";
+			echo "$result: $result_reason - $value|$epoch|$agent_user\n";
+			$data = "$epoch";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - logout
+################################################################################
+
 
 
 

@@ -696,6 +696,7 @@ OTHER CHANGES:
 159. Added ability to set custom callerID numbers per campaign for outbound 
 	calls by areacode. You can even set multiple callerIDs per areacode.
 
+160. Added Agent API function logout to log an agent out of their session
 
 
 
