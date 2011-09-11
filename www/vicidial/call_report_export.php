@@ -30,6 +30,7 @@
 # 110329-1330 - Added more fields to EXTENDED option
 # 110531-1945 - Changed first phone_number field to phone_number_dialed, issue #495
 # 110721-2027 - Added IVR export options
+# 110911-1445 - Added did fields to the EXTENDED format 
 #
 
 require("dbconnect.php");
@@ -419,7 +420,7 @@ if ($run_export > 0)
 			if ($rec_fields=='ALL')
 				{$RFheader = "\trecording_id\trecording_filename\trecording_location";}
 			if ($export_fields=='EXTENDED')
-				{$EXheader = "\tuniqueid\tcaller_code\tserver_ip\thangup_cause\tdialstatus\tchannel\tdial_time\tanswered_time\tcpd_result";}
+				{$EXheader = "\tuniqueid\tcaller_code\tserver_ip\thangup_cause\tdialstatus\tchannel\tdial_time\tanswered_time\tcpd_result\tdid_pattern\tdid_id\tdid_description";}
 			if ($call_notes=='YES')
 				{$NFheader = "\tcall_notes";}
 			if ($ivr_export=='YES')
@@ -545,6 +546,28 @@ if ($run_export > 0)
 						$extended_data_c =	"\t$row[0]";
 						}
 
+					$stmt = "SELECT extension,did_id from vicidial_did_log where uniqueid='$export_uniqueid[$i]' LIMIT 1;";
+					$rslt=mysql_query($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$vcdid_ct = mysql_num_rows($rslt);
+					if ($vcdid_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$extended_data_d =	"\t$row[0]\t$row[1]";
+
+						$stmt = "SELECT did_description from vicidial_inbound_dids where did_id='$row[1]' LIMIT 1;";
+						$rslt=mysql_query($stmt, $link);
+						if ($DB) {echo "$stmt\n";}
+						$vcdidx_ct = mysql_num_rows($rslt);
+						if ($vcdidx_ct > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$extended_data_d .=	"\t$row[0]";
+							}
+						else
+							{$extended_data_d .= "\t";}
+						}
+
 					}
 				if (strlen($extended_data_a)<1)
 					{$extended_data_a =	"\t\t";}
@@ -552,7 +575,9 @@ if ($run_export > 0)
 					{$extended_data_b =	"\t\t\t\t\t";}
 				if (strlen($extended_data_c)<1)
 					{$extended_data_c =	"\t";}
-				$extended_data .= "$extended_data_a$extended_data_b$extended_data_c";
+				if (strlen($extended_data_d)<1)
+					{$extended_data_d =	"\t\t\t";}
+				$extended_data .= "$extended_data_a$extended_data_b$extended_data_c$extended_data_d";
 				}
 
 			$notes_data='';

@@ -2547,19 +2547,6 @@ INSERT INTO vicidial_state_call_times SET state_call_time_id='wyoming',state_cal
 
 INSERT INTO vicidial_shifts SET shift_id='24HRMIDNIGHT',shift_name='24 hours 7 days a week',shift_start_time='0000',shift_length='24:00',shift_weekdays='0123456';
 
-INSERT INTO vicidial_phone_codes (country_code, country, areacode, state, GMT_offset, DST, DST_range, geographic_description) VALUES ('1','USA','227','MD','-5','Y','SSM-FSN','');
-INSERT INTO vicidial_phone_codes (country_code, country, areacode, state, GMT_offset, DST, DST_range, geographic_description) VALUES ('1','CAN','343','ON','-5','Y','SSM-FSN','');
-INSERT INTO vicidial_phone_codes (country_code, country, areacode, state, GMT_offset, DST, DST_range, geographic_description) VALUES ('1','USA','364','KY','-6','Y','SSM-FSN','');
-INSERT INTO vicidial_phone_codes (country_code, country, areacode, state, GMT_offset, DST, DST_range, geographic_description) VALUES ('1','USA','447','IL','-6','Y','SSM-FSN','');
-INSERT INTO vicidial_phone_codes (country_code, country, areacode, state, GMT_offset, DST, DST_range, geographic_description) VALUES ('1','USA','575','NM','-7','Y','SSM-FSN','');
-INSERT INTO vicidial_phone_codes (country_code, country, areacode, state, GMT_offset, DST, DST_range, geographic_description) VALUES ('1','CAN','581','QC','-5','Y','SSM-FSN','');
-INSERT INTO vicidial_phone_codes (country_code, country, areacode, state, GMT_offset, DST, DST_range, geographic_description) VALUES ('1','CAN','587','AB','-7','Y','SSM-FSN','');
-INSERT INTO vicidial_phone_codes (country_code, country, areacode, state, GMT_offset, DST, DST_range, geographic_description) VALUES ('1','USA','659','AL','-6','Y','SSM-FSN','');
-INSERT INTO vicidial_phone_codes (country_code, country, areacode, state, GMT_offset, DST, DST_range, geographic_description) VALUES ('1','USA','667','MD','-5','Y','SSM-FSN','');
-INSERT INTO vicidial_phone_codes (country_code, country, areacode, state, GMT_offset, DST, DST_range, geographic_description) VALUES ('1','USA','681','WV','-5','Y','SSM-FSN','');
-INSERT INTO vicidial_phone_codes (country_code, country, areacode, state, GMT_offset, DST, DST_range, geographic_description) VALUES ('1','USA','730','IL','-6','Y','SSM-FSN','');
-INSERT INTO vicidial_phone_codes (country_code, country, areacode, state, GMT_offset, DST, DST_range, geographic_description) VALUES ('1','DOM','829','','-4','N','','Dominican Republic');
-
 INSERT INTO vicidial_conf_templates SET template_id='SIP_generic',template_name='SIP phone generic',template_contents="type=friend\nhost=dynamic\ncanreinvite=no\ncontext=default";
 INSERT INTO vicidial_conf_templates SET template_id='IAX_generic',template_name='IAX phone generic',template_contents="type=friend\nhost=dynamic\nmaxauthreq=10\nauth=md5,plaintext,rsa\ncontext=default";
 
