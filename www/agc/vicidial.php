@@ -364,10 +364,11 @@
 # 110730-2240 - Added option to hide dispo statuses, only to be used with API
 # 110802-0122 - Added call_id variable
 # 110911-1604 - Added API logout function
+# 110916-1514 - Fixed dial timeout to check for dial_timeout setting and greater than 49 seconds
 #
 
-$version = '2.4-331c';
-$build = '110911-1604';
+$version = '2.4-332c';
+$build = '110916-1514';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=73;
 $one_mysql_log=0;
@@ -6056,7 +6057,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			delete xmlhttp;
 			}
 
-		if (MD_ring_secondS > 49) 
+		if ( (MD_ring_secondS > 49) && (MD_ring_secondS > dial_timeout) )
 			{
 			MD_channel_look=0;
 			MD_ring_secondS=0;
