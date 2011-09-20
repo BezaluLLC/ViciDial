@@ -821,7 +821,9 @@ disable_dispo_status VARCHAR(6) default '',
 screen_labels VARCHAR(20) default '--SYSTEM-SETTINGS--',
 status_display_fields VARCHAR(30) default 'CALLID',
 na_call_url TEXT,
-survey_recording ENUM('Y','N') default 'N'
+survey_recording ENUM('Y','N') default 'N',
+pllb_grouping ENUM('DISABLED','ONE_SERVER_ONLY','CASCADING') default 'DISABLED',
+pllb_grouping_limit SMALLINT(5) default '50'
 );
 
 CREATE TABLE vicidial_lists (
@@ -1430,7 +1432,8 @@ alt_log_login VARCHAR(50) default '',
 alt_log_pass VARCHAR(50) default '',
 tables_use_alt_log_db VARCHAR(2000) default '',
 did_agent_log ENUM('Y','N') default 'N',
-campaign_cid_areacodes_enabled ENUM('0','1') default '1'
+campaign_cid_areacodes_enabled ENUM('0','1') default '1',
+pllb_grouping_limit SMALLINT(5) default '100'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2638,7 +2641,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1295',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1296',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

@@ -156,6 +156,7 @@
 # 110731-0141 - Added call_id variable to add_lead_url function calls
 # 110801-0841 - Added on_hook_cid option and group_calldate field
 # 110822-1256 - Added optional did_agent_log logging
+# 110920-1426 - Small fix for rare remote agent recording issue
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -2599,7 +2600,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 
 					### get the recording settings for the campaign that this remote agent is logged into
-					if ( (length($extension_campaign_id) > 0) && ($ingroup_recording_override =~ /DISABLED/) )
+					if ( (length($extension_campaign_id) > 0) && ( ($ingroup_recording_override =~ /DISABLED/) || (length($campaign_rec_filename) < 8) ) )
 						{
 						$stmtA = "SELECT campaign_recording,campaign_rec_filename FROM vicidial_campaigns where campaign_id='$extension_campaign_id';";
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;

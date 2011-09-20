@@ -720,6 +720,11 @@ When set to AREACODE you have the ability to go into the AC-CID submenu and defi
 Enable Campaign Areacode CID||
 This setting enables the ability to set specific outbound callerid numbers to be used per campaign. Default is 1 for enabled||
 If the System Setting for Areacode CIDs is enabled and the Campaign setting for Use Custom CallerID is set to AREACODE then you have the ability to define Areacode CIDs that will be used when outbound calling to leads in this specific campaign. You can add multiple callerIDs per areacode and you can activate and deactivate them each in real time. If more than one callerID is active for a specific areacode then the system will use the callerid that has been used the least number of times today. If no callerIDs are active for the areacode then the campaign CallerID or list override CallerID will be used||
+PLLB Grouping||
+Phone Login Load Balancing Grouping, only allowed if there are multiple agent servers and phone aliases are present on the system. If set to ONE_SERVER_ONLY it will force all agents for this campaign to login to the same server. If set to CASCADING it will group logged in agents on the same server until PLLB Grouping Limit number of agents are reached, then the next agent will login to the next server with the least number of agents. If set to DISABLED the standard Phone Aliases behavior of each agent finding the server with the least number of non-remote agents logged into it will be used. Default is DISABLED||
+PLLB Grouping Limit||
+Phone Login Load Balancing Grouping Limit. If PLLB Grouping is set to CASCADING then this setting will determine the number of agents acceptable in each server for this campaign. Default is 50||
+Phone Login Load Balancing Grouping Limit. If PLLB Grouping is set to CASCADING at the campaign level then this setting will determine the number of agents acceptable on each server across all campaigns. Default is 100||
 
 
 lead_report_export.php

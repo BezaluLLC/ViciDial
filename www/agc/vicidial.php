@@ -365,12 +365,13 @@
 # 110802-0122 - Added call_id variable
 # 110911-1604 - Added API logout function
 # 110916-1514 - Fixed dial timeout to check for dial_timeout setting and greater than 49 seconds
+# 110919-1603 - Added Phone login load balancing grouping options
 #
 
-$version = '2.4-332c';
-$build = '110916-1514';
+$version = '2.4-333c';
+$build = '110919-1603';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=73;
+$mysql_log_count=75;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -453,7 +454,7 @@ $random = (rand(1000000, 9999999) + 10000000);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -474,6 +475,7 @@ if ($qm_conf_ct > 0)
 	$user_territories_active =		$row[10];
 	$static_agent_url =				$row[11];
 	$custom_fields_enabled =		$row[12];
+	$SSpllb_grouping_limit =		$row[13];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -1206,8 +1208,7 @@ else
                     $VDdisplayMESSAGE.= "<input type=\"submit\" name=\"submit\" value=\"Submit\" /></form>\n";
 					}
 				}
-				### END - CHECK TO SEE IF SHIFT ENFORCEMENT IS ENABLED AND AGENT IS OUTSIDE OF THEIR SHIFTS, IF SO, OUTPUT ERROR
-
+			### END - CHECK TO SEE IF SHIFT ENFORCEMENT IS ENABLED AND AGENT IS OUTSIDE OF THEIR SHIFTS, IF SO, OUTPUT ERROR
 
 
 			if ($WeBRooTWritablE > 0)
@@ -1359,7 +1360,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1463,6 +1464,8 @@ else
 				$disable_dispo_status =		$row[96];
 				$screen_labels =			$row[97];
 				$status_display_fields =	$row[98];
+				$pllb_grouping =			$row[99];
+				$pllb_grouping_limit =		$row[100];
 
 				if ( ($queuemetrics_pe_phone_append > 0) and (strlen($qm_phone_environment)>0) )
 					{$qm_phone_environment .= "-$qm_extension";}
@@ -1896,7 +1899,7 @@ else
 	if ($alias_ct > 0)
 		{
 		$row=mysql_fetch_row($rslt);
-		$alias_found = "$row[0]";
+		$alias_found = $row[0];
 		}
 	if ($alias_found > 0)
 		{
@@ -1907,8 +1910,8 @@ else
 		if ($alias_ct > 0)
 			{
 			$row=mysql_fetch_row($rslt);
-			$alias_name = "$row[0]";
-			$phone_login = "$row[1]";
+			$alias_name = $row[0];
+			$phone_login = $row[1];
 			}
 		}
 
@@ -1974,8 +1977,9 @@ else
 		}
 	else
 		{
-	### go through the entered phones to figure out which server has fewest agents
-	### logged in and use that phone login account
+		##### BEGIN phone login load balancing functions #####
+		### go through the phones logins list to figure out which server has 
+		### fewest non-remote agents logged in and use that phone login account
 		if ($pa > 0)
 			{
 			$pb=0;
@@ -1983,7 +1987,9 @@ else
 			$pb_server_ip='';
 			$pb_count=0;
 			$pb_log='';
-			while($pb < $phones_auto_ct)
+			$pb_valid_server_ips='';
+			$pb_force_set=0;
+			while ( ($pb < $phones_auto_ct) and ($pb_force_set < 1) )
 				{
 				### find the server_ip of each phone_login
 				$stmtx="SELECT server_ip from phones where login = '$phones_auto[$pb]';";
@@ -1994,7 +2000,7 @@ else
 				$rowx=mysql_fetch_row($rslt);
 
 				### get number of agents logged in to each server
-				$stmt="SELECT count(*) from vicidial_live_agents where server_ip = '$rowx[0]';";
+				$stmt="SELECT count(*) from vicidial_live_agents where server_ip = '$rowx[0]' and extension NOT LIKE \"R%\";";
 				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01022',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -2036,22 +2042,75 @@ else
 
 				if ( ($rowy[0] > 0) and ($rowz[0] > 0) and ($twin_not_live < 1) )
 					{
-					if ( ($pb_count >= $row[0]) or (strlen($pb_server_ip) < 4) )
+					if ( ($pllb_grouping == 'ONE_SERVER_ONLY') or ($pllb_grouping == 'CASCADING') )
 						{
-						$pb_count=$row[0];
-						$pb_server_ip=$rowx[0];
-						$phone_login=$phones_auto[$pb];
+						if ($pllb_grouping == 'ONE_SERVER_ONLY')
+							{
+							### one-server-only plib check
+							### get number of agents logged in to each server
+							$stmt="SELECT count(*) from vicidial_live_agents where server_ip = '$rowx[0]' and campaign_id='$VD_campaign' and extension NOT LIKE \"R%\";";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01074',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+							$rowG=mysql_fetch_row($rslt);
+							
+							if ($rowG[0] > 0)
+								{
+								$pb_count=$row[0];
+								$pb_server_ip=$rowx[0];
+								$phone_login=$phones_auto[$pb];
+								$pb_force_set++;
+								echo "<!--      PLLB: ONE_SERVER_ONLY|$pb_server_ip|$pb_count| -->\n";
+								}
+							}
+						else
+							{
+							### cascading plib check
+							### get number of agents logged in to each server
+							$stmt="SELECT count(*) from vicidial_live_agents where server_ip = '$rowx[0]' and campaign_id='$VD_campaign' and extension NOT LIKE \"R%\";";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01075',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+							$rowG=mysql_fetch_row($rslt);
+							
+							echo "<!--      PLLB CASCADING CHECK: |$pllb_grouping|$rowx[0]|$rowG[0]|$pllb_grouping_limit|   |$row[0]|$SSpllb_grouping_limit| -->\n";
+							if ( ($rowG[0] > 0) and ($rowG[0] < $pllb_grouping_limit) and ($row[0] < $SSpllb_grouping_limit) )
+								{
+								$pb_count=$row[0];
+								$pb_server_ip=$rowx[0];
+								$phone_login=$phones_auto[$pb];
+								$pb_force_set++;
+								echo "<!--      PLLB: CASCADING|$pb_server_ip|$pb_count| -->\n";
+								}
+							}
+						}
+					if ($pb_force_set < 1)
+						{
+						if ( ($pb_count >= $row[0]) or (strlen($pb_server_ip) < 4) )
+							{
+							$pb_count=$row[0];
+							$pb_server_ip=$rowx[0];
+							$phone_login=$phones_auto[$pb];
+							}
 						}
 					}
 				$pb++;
 				}
+
+
+
+
+
+
 			echo "<!-- Phones balance selection: $phone_login|$pb_server_ip|$past_minutes_date|     |$pb_log -->\n";
 			}
+		##### END phone login load balancing functions #####
+
 		echo "<title>Agent web client</title>\n";
 		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,is_webphone,use_external_server_ip,codecs_list,webphone_dialpad,phone_ring_timeout,on_hook_agent,webphone_auto_answer from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01025',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01025',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$row=mysql_fetch_row($rslt);
 		$extension=$row[0];
 		$dialplan_number=$row[1];

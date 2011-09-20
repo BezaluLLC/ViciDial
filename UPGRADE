@@ -698,6 +698,12 @@ OTHER CHANGES:
 
 160. Added Agent API function logout to log an agent out of their session
 
+161. Added Phone Login Load Balancing Grouping campaign settings to allow 
+	smaller campaigns to have their agents on the same server to allow for
+	more efficient dialing on outbound campaigns. Must have more than one
+	agent server and phone aliases enabled for this feature to work.
+
+
 
 
 

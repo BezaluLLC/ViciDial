@@ -1025,3 +1025,10 @@ index (areacode)
 CREATE UNIQUE INDEX campareacode on vicidial_campaign_cid_areacodes (campaign_id, areacode, outbound_cid);
 
 UPDATE system_settings SET db_schema_version='1295',db_schema_update_date=NOW() where db_schema_version < 1295;
+
+ALTER TABLE system_settings ADD pllb_grouping_limit SMALLINT(5) default '100';
+
+ALTER TABLE vicidial_campaigns ADD pllb_grouping ENUM('DISABLED','ONE_SERVER_ONLY','CASCADING') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD pllb_grouping_limit SMALLINT(5) default '50';
+
+UPDATE system_settings SET db_schema_version='1296',db_schema_update_date=NOW() where db_schema_version < 1296;
