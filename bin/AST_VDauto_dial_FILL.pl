@@ -31,6 +31,7 @@
 # 100903-0041 - Changed lead_id max length to 10 digits
 # 101207-0713 - Added more info to Originate for rare VDAC issue
 # 110901-1127 - Added campaign areacode cid function
+# 110922-1203 - Added logging of last calltime to campaign
 #
 
 ### begin parsing run-time options ###
@@ -312,6 +313,7 @@ while($one_day_interval > 0)
 			$camp_CIPct = 0;
 			foreach(@DBfill_campaign)
 				{
+				$calls_placed=0;
 				$camp_counter=0;
 				$DB_balance_fill=0;
 				$VAC_balance_fill=0;
@@ -817,6 +819,7 @@ while($one_day_interval > 0)
 												### insert a SENT record to the vicidial_auto_calls table 
 													$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,callerid,phone_code,phone_number,call_time,call_type,alt_dial,queue_priority) values('$DB_camp_server_server_ip[$server_CIPct]','$DBfill_campaign[$camp_CIPct]','SENT','$lead_id','$VqueryCID','$phone_code','$phone_number','$SQLdate','OUTBALANCE','$alt_dial','$DBIPqueue_priority[$camp_CIPct]')";
 													$affected_rows = $dbhA->do($stmtA);
+													$calls_placed++;
 													}
 												else
 													{
@@ -827,6 +830,7 @@ while($one_day_interval > 0)
 
 													$st_logged[$staggered_ct] = "$phone_number|$DBfill_campaign[$camp_CIPct]|$VqueryCID|$gmt_offset_now|$alt_dial|";
 
+													$calls_placed++;
 													$staggered_ct++;
 													}
 
@@ -969,6 +973,13 @@ while($one_day_interval > 0)
 				if ($DB) {print "CURRENT FILL: $temp_balance_total = ($DBfill_current_balance[$camp_CIPct] + $DBfill_tally[$camp_CIPct])\n";}
 				$stmtA = "UPDATE vicidial_campaign_stats SET balance_trunk_fill='$temp_balance_total' where campaign_id='$DBfill_campaign[$camp_CIPct]';";
 				$affected_rows = $dbhA->do($stmtA);
+
+				if ($calls_placed > 0)
+					{
+					$stmtA="UPDATE vicidial_campaigns SET campaign_calldate='$now_date' where campaign_id='$DBfill_campaign[$camp_CIPct]';";
+					$affected_rows = $dbhA->do($stmtA);
+					$calls_placed=0;
+					}
 
 				$camp_CIPct++;
 				}

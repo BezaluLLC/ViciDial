@@ -106,6 +106,7 @@
 # 110731-2127 - Added sections for handling MULTI_LEAD auto-alt-dial and na-call-url functions
 # 110809-1516 - Added section for noanswer logging
 # 110901-1125 - Added campaign areacode cid function
+# 110922-1202 - Added logging of last calltime to campaign
 #
 
 
@@ -467,7 +468,6 @@ while($one_day_interval > 0)
 		$user_CIPct = 0;
 		foreach(@DBIPcampaign)
 			{
-
 			$debug_string='';
 			$user_counter=0;
 			foreach(@DBlive_campaign)
@@ -960,6 +960,7 @@ while($one_day_interval > 0)
 		$user_CIPct = 0;
 		foreach(@DBIPcampaign)
 			{
+			$calls_placed=0;
 			if ( ($DBIPdial_method[$user_CIPct] =~ /MANUAL|INBOUND_MAN/) || ($outbound_autodial_active < 1) )
 				{
 				$event_string="$DBIPcampaign[$user_CIPct] $DBIPaddress[$user_CIPct]: MANUAL DIAL CAMPAIGN, NO DIALING";
@@ -1224,6 +1225,7 @@ while($one_day_interval > 0)
 										### sleep for a five hundredths of a second to not flood the server with new calls
 									#	usleep(1*50*1000);
 										usleep(1*$per_call_delay*1000);
+										$calls_placed++;
 										}
 									}
 								$call_CMPIPct++;
@@ -1231,6 +1233,12 @@ while($one_day_interval > 0)
 							}
 						}
 					}
+				}
+			if ($calls_placed > 0)
+				{
+				$stmtA="UPDATE vicidial_campaigns SET campaign_calldate='$now_date' where campaign_id='$DBIPcampaign[$user_CIPct]';";
+				$affected_rows = $dbhA->do($stmtA);
+				$calls_placed=0;
 				}
 			$user_CIPct++;
 			}
