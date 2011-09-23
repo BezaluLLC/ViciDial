@@ -65,6 +65,7 @@
 # 110725-2356 - Added new voicemail time zone option and menu gather
 # 110829-1601 - Added multiple invalid option to Call Menus
 # 110911-1452 - Added resets for extension groups and areacode cid tables
+# 110922-2148 - Added reset for vicidial_did_ra_extensions
 #
 
 $DB=0; # Debug flag
@@ -793,6 +794,20 @@ if ($timeclock_end_of_day_NOW > 0)
 	if($DB){print STDERR "\n|$affected_rows vicidial_campaign_cid_areacodes call counts reset|\n";}
 
 	$stmtA = "optimize table vicidial_campaign_cid_areacodes;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+
+	$stmtA = "update vicidial_did_ra_extensions SET call_count_today=0;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows vicidial_did_ra_extensions call counts reset|\n";}
+
+	$stmtA = "optimize table vicidial_did_ra_extensions;";
 	if($DBX){print STDERR "\n|$stmtA|\n";}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;

@@ -1032,3 +1032,30 @@ ALTER TABLE vicidial_campaigns ADD pllb_grouping ENUM('DISABLED','ONE_SERVER_ONL
 ALTER TABLE vicidial_campaigns ADD pllb_grouping_limit SMALLINT(5) default '50';
 
 UPDATE system_settings SET db_schema_version='1296',db_schema_update_date=NOW() where db_schema_version < 1296;
+
+CREATE TABLE vicidial_did_ra_extensions (
+did_id INT(9) UNSIGNED NOT NULL,
+user_start VARCHAR(20),
+extension VARCHAR(50) default '',
+description VARCHAR(50),
+active ENUM('Y','N','') default '',
+call_count_today MEDIUMINT(7) default '0',
+index (did_id),
+index (user_start)
+);
+
+CREATE UNIQUE INDEX didraexten on vicidial_did_ra_extensions (did_id, user_start, extension);
+
+ALTER TABLE system_settings ADD did_ra_extensions_enabled ENUM('0','1') default '0';
+
+ALTER TABLE vicidial_users ADD modify_shifts ENUM('1','0') default '0';
+ALTER TABLE vicidial_users ADD modify_phones ENUM('1','0') default '0';
+ALTER TABLE vicidial_users ADD modify_carriers ENUM('1','0') default '0';
+ALTER TABLE vicidial_users ADD modify_labels ENUM('1','0') default '0';
+ALTER TABLE vicidial_users ADD modify_statuses ENUM('1','0') default '0';
+ALTER TABLE vicidial_users ADD modify_voicemail ENUM('1','0') default '0';
+ALTER TABLE vicidial_users ADD modify_audiostore ENUM('1','0') default '0';
+ALTER TABLE vicidial_users ADD modify_moh ENUM('1','0') default '0';
+ALTER TABLE vicidial_users ADD modify_tts ENUM('1','0') default '0';
+
+UPDATE system_settings SET db_schema_version='1297',db_schema_update_date=NOW() where db_schema_version < 1297;

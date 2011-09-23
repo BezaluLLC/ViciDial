@@ -157,6 +157,7 @@
 # 110801-0841 - Added on_hook_cid option and group_calldate field
 # 110822-1256 - Added optional did_agent_log logging
 # 110920-1426 - Small fix for rare remote agent recording issue
+# 110922-2149 - Added compatibility with DID remote agent extension overrides
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -1512,7 +1513,7 @@ if ($call_handle_method =~ /CLOSER|DIGITID$/)
 
 #############################################
 ##### START SYSTEM SETTINGS LOOKUP      #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_pe_phone_append,did_agent_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db FROM system_settings;";
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_pe_phone_append,did_agent_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_ra_extensions_enabled FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -1534,6 +1535,7 @@ if ($sthArows > 0)
 	$alt_log_login =				$aryA[11];
 	$alt_log_pass =					$aryA[12];
 	$tables_use_alt_log_db =		$aryA[13];
+	$did_ra_extensions_enabled =	$aryA[14];
 	}
 $sthA->finish();
 ##### END SYSTEM SETTINGS LOOKUP      #####
@@ -2199,7 +2201,48 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 									$extension_group_order =	$aryA[1];
 									}
 								$sthA->finish();
-								if ( (length($extension_group) > 0) and ($extension_group !~ /^NONE/) )
+
+								### BEGIN check for did remote agent extension override ###
+								$DRAE_did_id='';
+								$DRAE_extension='';
+								if ($did_ra_extensions_enabled > 0)
+									{
+									$stmtA = "SELECT did_id FROM vicidial_did_log where uniqueid='$uniqueid' order by call_date desc limit 1;";
+									$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+									$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+									$sthArows=$sthA->rows;
+										$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+									if ($sthArows > 0)
+										{
+										@aryA = $sthA->fetchrow_array;
+										$DRAE_did_id =	$aryA[0];
+										$sthA->finish();
+										if ($AGILOG) {$agi_string = "--    ORIGINAL DID FOUND : |$DRAE_did_id|$uniqueid|";   &agi_output;}
+
+										$stmtA = "SELECT extension FROM vicidial_did_ra_extensions where did_id='$DRAE_did_id' and user_start IN('$ARra_user[$ragp]','---ALL---') and active='Y' order by call_count_today limit 1;";
+										$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+										$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+										$sthArows=$sthA->rows;
+											$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+										if ($sthArows > 0)
+											{
+											@aryA = $sthA->fetchrow_array;
+											$DRAE_extension =	$aryA[0];
+											$sthA->finish();
+											if ($AGILOG) {$agi_string = "--    DRAE EXTENSION FOUND : |$DRAE_extension|$ARra_user[$ragp]|";   &agi_output;}
+
+											$stmtA = "UPDATE vicidial_did_ra_extensions set call_count_today=(call_count_today + 1) where extension='$DRAE_extension' and did_id='$DRAE_did_id' and user_start IN('$ARra_user[$ragp]','---ALL---') limit 1;";
+											$DRAEaffected_rows = $dbhA->do($stmtA);
+												$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$DRAEaffected_rows;   &mysql_error_logging;
+
+											$ARconf_exten[$ragp] =			$DRAE_extension;
+											$ARdialplan_number[$ragp] =		$DRAE_extension;
+											}
+										}
+									}
+								### END check for did remote agent extension override ###
+
+								if ( (length($extension_group) > 0) and ($extension_group !~ /^NONE/) and (length($DRAE_extension) < 1) )
 									{
 									$extension_group_orderSQL = 'order by last_call_time';
 									if ($extension_group_order =~ /RANK/)
@@ -2551,7 +2594,47 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 							$extension_campaign_id =	$aryA[2];
 							}
 						$sthA->finish();
-						if ( (length($extension_group) > 0) and ($extension_group !~ /^NONE/) )
+
+						### BEGIN check for did remote agent extension override ###
+						$DRAE_did_id='';
+						$DRAE_extension='';
+						if ($did_ra_extensions_enabled > 0)
+							{
+							$stmtA = "SELECT did_id FROM vicidial_did_log where uniqueid='$uniqueid' order by call_date desc limit 1;";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+								$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$DRAE_did_id =	$aryA[0];
+								$sthA->finish();
+								if ($AGILOG) {$agi_string = "--    ORIGINAL DID FOUND : |$DRAE_did_id|$uniqueid|";   &agi_output;}
+
+								$stmtA = "SELECT extension FROM vicidial_did_ra_extensions where did_id='$DRAE_did_id' and user_start IN('$ra_user','---ALL---') and active='Y' order by call_count_today limit 1;";
+								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+								$sthArows=$sthA->rows;
+									$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+								if ($sthArows > 0)
+									{
+									@aryA = $sthA->fetchrow_array;
+									$DRAE_extension =	$aryA[0];
+									$sthA->finish();
+									if ($AGILOG) {$agi_string = "--    DRAE EXTENSION FOUND : |$DRAE_extension|$ra_user|";   &agi_output;}
+
+									$stmtA = "UPDATE vicidial_did_ra_extensions set call_count_today=(call_count_today + 1) where extension='$DRAE_extension' and did_id='$DRAE_did_id' and user_start IN('$ra_user','---ALL---') limit 1;";
+									$DRAEaffected_rows = $dbhA->do($stmtA);
+										$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$DRAEaffected_rows;   &mysql_error_logging;
+
+									$VDADconf_exten =		$DRAE_extension;
+									}
+								}
+							}
+						### END check for did remote agent extension override ###
+
+						if ( (length($extension_group) > 0) and ($extension_group !~ /^NONE/) and (length($DRAE_extension) < 1) )
 							{
 							$extension_group_orderSQL = 'order by last_call_time';
 							if ($extension_group_order =~ /RANK/)

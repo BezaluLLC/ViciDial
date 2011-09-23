@@ -725,6 +725,19 @@ Phone Login Load Balancing Grouping, only allowed if there are multiple agent se
 PLLB Grouping Limit||
 Phone Login Load Balancing Grouping Limit. If PLLB Grouping is set to CASCADING then this setting will determine the number of agents acceptable in each server for this campaign. Default is 50||
 Phone Login Load Balancing Grouping Limit. If PLLB Grouping is set to CASCADING at the campaign level then this setting will determine the number of agents acceptable on each server across all campaigns. Default is 100||
+Modify DID RA Extension Overrides||
+DID REMOTE AGENT EXTENSION OVERRIDE NOT ADDED||
+there is already an entry for this DID with this RA EXTENSION||
+DID REMOTE AGENT EXTENSION OVERRIDE ADDED||
+DID REMOTE AGENT EXTENSION OVERRIDE NOT DELETED||
+DID REMOTE AGENT EXTENSION OVERRIDE MODIFIED||
+MODIFY THIS DID||
+Enable Remote Agent Extension Overrides||
+This setting enables DIDs to have extension overrides for remote agent routed calls through in-groups. Default is 0 for disabled||
+REMOTE AGENT EXTENSION OVERRIDES FOR THIS DID||
+REMOTE AGENT EXTENSION OVERRIDE LISTINGS||
+DID Remote Agent Extension Overrides||
+This section allows you to enable DIDs to have extension overrides for remote agent routed calls through in-groups. The User Start must be a valid Remote Agent User Start or if you want the Extension Override entry to work for all calls then you can use ---ALL--- in the User Start field. If there are multiple entries for the same DID and User Start then the active entries will be used in a round robin method||
 
 
 lead_report_export.php

@@ -703,6 +703,15 @@ OTHER CHANGES:
 	more efficient dialing on outbound campaigns. Must have more than one
 	agent server and phone aliases enabled for this feature to work.
 
+162. Added DID remote agent extension override entries allowing for inbound
+	calls that are routed to remote agents being able to have DID-specific
+	extensions that a call would be routed to instead of the remote agent
+	extension. Multiple entries allowed per DID/Remote-Agent as well as 
+	per DID for all agents(---ALL---). Must be enabled in System Settings.
+
+163. Added 9 new User permissions to allow access to specific Admin sections
+	like Vociemail Music-on-hold and 7 others individually.
+
 
 
 

@@ -32,6 +32,7 @@
 # 110322-1228 - Added user ID logged in as next to Logout link
 # 110624-1439 - Added Screen Labels sub-section to Admin
 # 110831-2048 - Added AC-CID to campaign submenu
+# 110922-1707 - Added RA-EXTEN to campaign submenu
 #
 
 
@@ -1228,19 +1229,31 @@ $SScustom_fields_enabled =	$row[3];
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New In-Group </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1211"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy In-Group </a><HR>
+		<a href="<?php echo $ADMIN ?>?ADD=1211"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy In-Group </a>
+		<HR>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1300"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show DIDs </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1311"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New DID </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1411"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy DID </a><HR>
+		<a href="<?php echo $ADMIN ?>?ADD=1411"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy DID </a>
+		<?php
+		if ($SSdid_ra_extensions_enabled > 0)
+			{
+			?>
+			</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+			<a href="<?php echo $ADMIN ?>?ADD=1320"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>RA Extensions</a>
+			<?php
+			}
+		?>
+		<HR>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1500"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Call Menus </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1511"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Call Menu </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1611"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy Call Menu </a><HR>
+		<a href="<?php echo $ADMIN ?>?ADD=1611"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy Call Menu </a>
+		<HR>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1700"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Filter Phone Groups </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 

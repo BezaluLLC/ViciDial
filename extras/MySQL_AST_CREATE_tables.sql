@@ -576,7 +576,16 @@ agent_choose_blended ENUM('0','1') default '1',
 realtime_block_user_info ENUM('0','1') default '0',
 custom_fields_modify ENUM('0','1') default '0',
 force_change_password ENUM('Y','N') default 'N',
-agent_lead_search_override ENUM('NOT_ACTIVE','ENABLED','DISABLED') default 'NOT_ACTIVE'
+agent_lead_search_override ENUM('NOT_ACTIVE','ENABLED','DISABLED') default 'NOT_ACTIVE',
+modify_shifts ENUM('1','0') default '0',
+modify_phones ENUM('1','0') default '0',
+modify_carriers ENUM('1','0') default '0',
+modify_labels ENUM('1','0') default '0',
+modify_statuses ENUM('1','0') default '0',
+modify_voicemail ENUM('1','0') default '0',
+modify_audiostore ENUM('1','0') default '0',
+modify_moh ENUM('1','0') default '0',
+modify_tts ENUM('1','0') default '0'
 );
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -1433,7 +1442,8 @@ alt_log_pass VARCHAR(50) default '',
 tables_use_alt_log_db VARCHAR(2000) default '',
 did_agent_log ENUM('Y','N') default 'N',
 campaign_cid_areacodes_enabled ENUM('0','1') default '1',
-pllb_grouping_limit SMALLINT(5) default '100'
+pllb_grouping_limit SMALLINT(5) default '100',
+did_ra_extensions_enabled ENUM('0','1') default '0'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2489,6 +2499,19 @@ index (areacode)
 
 CREATE UNIQUE INDEX campareacode on vicidial_campaign_cid_areacodes (campaign_id, areacode, outbound_cid);
 
+CREATE TABLE vicidial_did_ra_extensions (
+did_id INT(9) UNSIGNED NOT NULL,
+user_start VARCHAR(20),
+extension VARCHAR(50) default '',
+description VARCHAR(50),
+active ENUM('Y','N','') default '',
+call_count_today MEDIUMINT(7) default '0',
+index (did_id),
+index (user_start)
+);
+
+CREATE UNIQUE INDEX didraexten on vicidial_did_ra_extensions (did_id, user_start, extension);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
@@ -2641,7 +2664,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1296',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1297',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
