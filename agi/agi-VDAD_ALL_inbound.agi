@@ -158,6 +158,7 @@
 # 110822-1256 - Added optional did_agent_log logging
 # 110920-1426 - Small fix for rare remote agent recording issue
 # 110922-2149 - Added compatibility with DID remote agent extension overrides
+# 110923-1133 - Added drop and after-hours to callmenu, and added action transfer cid setting
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -169,7 +170,7 @@ $wait_prompt_runs=0;
 $at='@';
 $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=179;
+$mysql_log_count=186;
 $one_mysql_log=0;
 
 
@@ -474,6 +475,7 @@ if ($call_handle_method =~ /^CLOSER/)
 			}
 		$CIDlead_id = $parked_by;
 		$fronter_call_seconds =	$EXT_vars[8];	# not currently used
+		$originalCID = $phone_number;
 
 		$PADlead_id = sprintf("%010s", $parked_by);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
 		# JmmddhhmmssLLLLLLLLL
@@ -492,7 +494,28 @@ if ($call_handle_method =~ /^CLOSER/)
 		$CIDlead_id = ($CIDlead_id + 0);
 		$VCcallerid = $callerid;
 		$insert_lead_id = $CIDlead_id;
-		if ($AGILOG) {$agi_string = "Lead ID found: $insert_lead_id";   &agi_output;}
+
+		$stmtA= "SELECT phone_number from vicidial_list where lead_id='$insert_lead_id';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+			$dbhP=$dbhA;   $mysql_count='02180';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$phone_number = $aryA[0];
+			$originalCID = $phone_number;
+			} 
+		$sthA->finish();
+
+		### set the call callerid to track the call
+		# YmmddhhmmssLLLLLLLLL
+	#	$PADlead_id = sprintf("%010s", $insert_lead_id);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
+	#	$YqueryCID = "Y$CIDdate$PADlead_id";
+		$Jnewcallerid = "\"$callerid <$phone_number>\"";
+		$AGI->set_callerid($Jnewcallerid);
+
+		if ($AGILOG) {$agi_string = "Lead ID found: $insert_lead_id|$phone_number|   |$Jnewcallerid|";   &agi_output;}
 		}
 	}
 
@@ -618,7 +641,7 @@ $affected_rows = $dbhA->do($stmtA);
 
 ### Grab inbound groups values from the database
 $cbc=0;
-$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,ingroup_recording_override,ingroup_rec_filename,on_hook_cid FROM vicidial_inbound_groups where group_id = '$channel_group';";
+$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,ingroup_recording_override,ingroup_rec_filename,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu FROM vicidial_inbound_groups where group_id = '$channel_group';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -703,6 +726,10 @@ if ($sthArows > 0)
 	$ingroup_recording_override =		$aryA[67];
 	$campaign_rec_filename =			$aryA[68];
 	$on_hook_cid =						$aryA[69];
+	$action_xfer_cid =					$aryA[70];
+	$drop_callmenu =					$aryA[71];
+	$after_hours_callmenu =				$aryA[72];
+
 	$custom_call_id='';
 	if ($uniqueid_status_display =~ /ENABLED/)
 		{$custom_call_id = "$uniqueid";}
@@ -1002,6 +1029,41 @@ else
 	}
 
 
+### BEGIN Check for Action transfer cid setting ###
+$transfer_cid = $originalCID;
+if (length($action_xfer_cid) > 4)
+	{
+	if ($action_xfer_cid =~ /CAMPAIGN/)
+		{
+		$CIDcampaign_cid='0000000000';
+		### Grab ID values from the database
+		$stmtA = "SELECT campaign_id,campaign_cid FROM vicidial_campaigns where closer_campaigns LIKE \"% $channel_group %\" and active='Y';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+			$dbhP=$dbhA;   $mysql_count='02113';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$CIDcampaign_id = 			$aryA[0];
+			$CIDcampaign_cid = 			$aryA[1];
+			$transfer_cid = $CIDcampaign_cid;
+			if ($AGILOG) {$agi_string = "--  CAMPAIGN CID Chosen for Transfer CID: |$CIDcampaign_cid|$CIDcampaign_id|";   &agi_output;}
+			}
+		$sthA->finish();
+		}
+	elsif ($action_xfer_cid =~ /CUSTOMER/)
+		{
+		$transfer_cid = $originalCID;
+		}
+	else
+		{
+		$transfer_cid = $action_xfer_cid;
+		}
+	}
+### END Check for Action transfer cid setting ###
+
+
 
 ##### BEGIN AFTER HOURS CHECK #####
 $ct_stop_overflow=0;   # allow for overflow time, past midnight
@@ -1048,25 +1110,20 @@ if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_st
 	if ($AGILOG) {$agi_string = "--  AH VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
 	if ($AGILOG) {$agi_string = "--  AH action: |$after_hours_action|$after_hours_exten|$after_hours_message_filename|$after_hours_voicemail|";   &agi_output;}
 
-	if ($after_hours_action =~ /EXTENSION|VOICEMAIL|IN_GROUP/)
+	if ($after_hours_action =~ /EXTENSION|VOICEMAIL|IN_GROUP|CALLMENU/)
 		{
+		if ($after_hours_action =~ /CALLMENU/)
+			{
+			$newcallerid = "\"$VCcallerid <$transfer_cid>\"";
+			$AGI->set_callerid($newcallerid);
+			print STDERR "Setting CID \"$newcallerid\"\n";
+			checkresult($result);
+			if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
+			$DROPexten =	's';
+			$ext_context =	$after_hours_callmenu;
+			}
 		if ($after_hours_action =~ /EXTENSION/)
 			{
-			$CIDcampaign_cid='0000000000';
-			### Grab ID values from the database
-			$stmtA = "SELECT campaign_id,campaign_cid FROM vicidial_campaigns where closer_campaigns LIKE \"% $channel_group %\" and active='Y';";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			$sthArows=$sthA->rows;
-				$dbhP=$dbhA;   $mysql_count='02113';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-			if ($sthArows > 0)
-				{
-				@aryA = $sthA->fetchrow_array;
-				$CIDcampaign_id = 			$aryA[0];
-				$CIDcampaign_cid = 			$aryA[1];
-				}
-			$sthA->finish();
-
 			if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($after_hours_exten =~ /AGENTEXT/) )
 				{
 				### Grab user's custom_five field from the database
@@ -1084,11 +1141,11 @@ if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_st
 				}
 			$DROPexten = "$after_hours_exten";
 
-			$newcallerid = "\"$callerid <$CIDcampaign_cid>\"";
+			$newcallerid = "\"$callerid <$transfer_cid>\"";
 			$AGI->set_callerid($newcallerid);
 			print STDERR "Setting CID \"$newcallerid\"\n";
 			checkresult($result);
-			if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$CIDcampaign_cid\> from $CIDcampaign_id";   &agi_output;}
+			if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$transfer_cid\>";   &agi_output;}
 			}
 		if ($after_hours_action =~ /VOICEMAIL/)
 			{
@@ -1107,7 +1164,7 @@ if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_st
 					}
 				$sthA->finish();
 				}
-			$newcallerid = "\"$VCcallerid <$originalCID>\"";
+			$newcallerid = "\"$VCcallerid <$transfer_cid>\"";
 			$AGI->set_callerid($newcallerid);
 			print STDERR "Setting CID \"$newcallerid\"\n";
 			checkresult($result);
@@ -1280,30 +1337,15 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 					$sthA->finish();
 					}
 
-				$CIDcampaign_cid='0000000000';
-				### Grab ID values from the database
-				$stmtA = "SELECT campaign_id,campaign_cid FROM vicidial_campaigns where closer_campaigns LIKE \"% $channel_group %\" and active='Y';";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				$sthArows=$sthA->rows;
-					$dbhP=$dbhA;   $mysql_count='02114';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-				if ($sthArows > 0)
-					{
-					@aryA = $sthA->fetchrow_array;
-					$CIDcampaign_id = 			$aryA[0];
-					$CIDcampaign_cid = 			$aryA[1];
-					}
-				$sthA->finish();
-
-				$newcallerid = "\"$callerid <$CIDcampaign_cid>\"";
+				$newcallerid = "\"$callerid <$transfer_cid>\"";
 				$AGI->set_callerid($newcallerid);
 				print STDERR "Setting CID \"$newcallerid\"\n";
 				checkresult($result);
-				if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$CIDcampaign_cid\> from $CIDcampaign_id";   &agi_output;}
+				if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$transfer_cid\> from $CIDcampaign_id";   &agi_output;}
 				}
 			if ($no_agent_action =~ /DID/)
 				{
-				$newcallerid = "\"$VCcallerid <$originalCID>\"";
+				$newcallerid = "\"$VCcallerid <$transfer_cid>\"";
 				$AGI->set_callerid($newcallerid);
 				print STDERR "Setting CID \"$newcallerid\"\n";
 				checkresult($result);
@@ -1315,7 +1357,7 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 				}
 			if ($no_agent_action =~ /CALLMENU/)
 				{
-				$newcallerid = "\"$VCcallerid <$originalCID>\"";
+				$newcallerid = "\"$VCcallerid <$transfer_cid>\"";
 				$AGI->set_callerid($newcallerid);
 				print STDERR "Setting CID \"$newcallerid\"\n";
 				checkresult($result);
@@ -1340,7 +1382,7 @@ if ($no_agent_no_queue =~ /Y|NO_PAUSED/)
 						}
 					$sthA->finish();
 					}
-				$newcallerid = "\"$VCcallerid <$originalCID>\"";
+				$newcallerid = "\"$VCcallerid <$transfer_cid>\"";
 				$AGI->set_callerid($newcallerid);
 				print STDERR "Setting CID \"$newcallerid\"\n";
 				checkresult($result);
@@ -2211,7 +2253,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 									$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 									$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 									$sthArows=$sthA->rows;
-										$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+										$dbhP=$dbhA;   $mysql_count='02181';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 									if ($sthArows > 0)
 										{
 										@aryA = $sthA->fetchrow_array;
@@ -2223,7 +2265,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 										$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 										$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 										$sthArows=$sthA->rows;
-											$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+											$dbhP=$dbhA;   $mysql_count='02182';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 										if ($sthArows > 0)
 											{
 											@aryA = $sthA->fetchrow_array;
@@ -2233,7 +2275,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 											$stmtA = "UPDATE vicidial_did_ra_extensions set call_count_today=(call_count_today + 1) where extension='$DRAE_extension' and did_id='$DRAE_did_id' and user_start IN('$ARra_user[$ragp]','---ALL---') limit 1;";
 											$DRAEaffected_rows = $dbhA->do($stmtA);
-												$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$DRAEaffected_rows;   &mysql_error_logging;
+												$dbhP=$dbhA;   $mysql_count='02183';   $MEL_aff_rows=$DRAEaffected_rows;   &mysql_error_logging;
 
 											$ARconf_exten[$ragp] =			$DRAE_extension;
 											$ARdialplan_number[$ragp] =		$DRAE_extension;
@@ -2604,7 +2646,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
-								$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+								$dbhP=$dbhA;   $mysql_count='02184';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 							if ($sthArows > 0)
 								{
 								@aryA = $sthA->fetchrow_array;
@@ -2616,7 +2658,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 								$sthArows=$sthA->rows;
-									$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+									$dbhP=$dbhA;   $mysql_count='02185';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 								if ($sthArows > 0)
 									{
 									@aryA = $sthA->fetchrow_array;
@@ -2626,7 +2668,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 
 									$stmtA = "UPDATE vicidial_did_ra_extensions set call_count_today=(call_count_today + 1) where extension='$DRAE_extension' and did_id='$DRAE_did_id' and user_start IN('$ra_user','---ALL---') limit 1;";
 									$DRAEaffected_rows = $dbhA->do($stmtA);
-										$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$DRAEaffected_rows;   &mysql_error_logging;
+										$dbhP=$dbhA;   $mysql_count='02186';   $MEL_aff_rows=$DRAEaffected_rows;   &mysql_error_logging;
 
 									$VDADconf_exten =		$DRAE_extension;
 									}
@@ -3483,26 +3525,11 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					$sthA->finish();
 					}
 
-				$CIDcampaign_cid='0000000000';
-				### Grab ID values from the database
-				$stmtA = "SELECT campaign_id,campaign_cid FROM vicidial_campaigns where closer_campaigns LIKE \"% $channel_group %\" and active='Y';";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				$sthArows=$sthA->rows;
-					$dbhP=$dbhA;   $mysql_count='02119';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-				if ($sthArows > 0)
-					{
-					@aryA = $sthA->fetchrow_array;
-					$CIDcampaign_id = 			$aryA[0];
-					$CIDcampaign_cid = 			$aryA[1];
-					}
-				$sthA->finish();
-
-				$newcallerid = "\"$callerid <$CIDcampaign_cid>\"";
+				$newcallerid = "\"$callerid <$transfer_cid>\"";
 				$AGI->set_callerid($newcallerid);
 				print STDERR "Setting CID \"$newcallerid\"\n";
 				checkresult($result);
-				if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$CIDcampaign_cid\> from $CIDcampaign_id";   &agi_output;}
+				if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$transfer_cid\>";   &agi_output;}
 				}
 			}
 
@@ -3523,7 +3550,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					}
 				$sthA->finish();
 				}
-			$newcallerid = "\"$VCcallerid <$originalCID>\"";
+			$newcallerid = "\"$VCcallerid <$transfer_cid>\"";
 			$AGI->set_callerid($newcallerid);
 			print STDERR "Setting CID \"$newcallerid\"\n";
 			checkresult($result);
@@ -3533,7 +3560,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 			}
 		if ($wait_time_option =~ /CALL_MENU/)
 			{
-			$newcallerid = "\"$VCcallerid <$originalCID>\"";
+			$newcallerid = "\"$VCcallerid <$transfer_cid>\"";
 			$AGI->set_callerid($newcallerid);
 			print STDERR "Setting CID \"$newcallerid\"\n";
 			checkresult($result);
@@ -3906,26 +3933,11 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 							$sthA->finish();
 							}
 
-						$CIDcampaign_cid='0000000000';
-						### Grab ID values from the database
-						$stmtA = "SELECT campaign_id,campaign_cid FROM vicidial_campaigns where closer_campaigns LIKE \"% $channel_group %\" and active='Y';";
-						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-						$sthArows=$sthA->rows;
-							$dbhP=$dbhA;   $mysql_count='02119';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-						if ($sthArows > 0)
-							{
-							@aryA = $sthA->fetchrow_array;
-							$CIDcampaign_id = 			$aryA[0];
-							$CIDcampaign_cid = 			$aryA[1];
-							}
-						$sthA->finish();
-
-						$newcallerid = "\"$callerid <$CIDcampaign_cid>\"";
+						$newcallerid = "\"$callerid <$transfer_cid>\"";
 						$AGI->set_callerid($newcallerid);
 						print STDERR "Setting CID \"$newcallerid\"\n";
 						checkresult($result);
-						if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$CIDcampaign_cid\> from $CIDcampaign_id";   &agi_output;}
+						if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$transfer_cid\>";   &agi_output;}
 						}
 					}
 
@@ -3946,7 +3958,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 							}
 						$sthA->finish();
 						}
-					$newcallerid = "\"$VCcallerid <$originalCID>\"";
+					$newcallerid = "\"$VCcallerid <$transfer_cid>\"";
 					$AGI->set_callerid($newcallerid);
 					print STDERR "Setting CID \"$newcallerid\"\n";
 					checkresult($result);
@@ -3956,7 +3968,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) )
 					}
 				if ($hold_time_option =~ /CALL_MENU/)
 					{
-					$newcallerid = "\"$VCcallerid <$originalCID>\"";
+					$newcallerid = "\"$VCcallerid <$transfer_cid>\"";
 					$AGI->set_callerid($newcallerid);
 					print STDERR "Setting CID \"$newcallerid\"\n";
 					checkresult($result);
@@ -4318,33 +4330,18 @@ if ($drop_timer > $DROP_TIME)
 			}
 		else
 			{
-			$CIDcampaign_cid='0000000000';
-			### Grab ID values from the database
-			$stmtA = "SELECT campaign_id,campaign_cid FROM vicidial_campaigns where closer_campaigns LIKE \"% $channel_group %\" and active='Y';";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			$sthArows=$sthA->rows;
-				$dbhP=$dbhA;   $mysql_count='02118';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-			if ($sthArows > 0)
-				{
-				@aryA = $sthA->fetchrow_array;
-				$CIDcampaign_id = 			$aryA[0];
-				$CIDcampaign_cid = 			$aryA[1];
-				}
-			$sthA->finish();
-
-			$newcallerid = "\"$callerid <$CIDcampaign_cid>\"";
+			$newcallerid = "\"$callerid <$transfer_cid>\"";
 			$AGI->set_callerid($newcallerid);
 			print STDERR "Setting CID \"$newcallerid\"\n";
 			checkresult($result);
-			if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$CIDcampaign_cid\> from $CIDcampaign_id";   &agi_output;}
+			if ($AGILOG) {$agi_string = "callerID changed: \"$callerid\" \<$transfer_cid\>";   &agi_output;}
 			}
 		if (length($drop_exten)>0)
 			{$DROPexten = "$drop_exten";}
 		}
 	if ($drop_action =~ /VOICEMAIL/)
 		{
-		$newcallerid = "\"$VCcallerid <$originalCID>\"";
+		$newcallerid = "\"$VCcallerid <$transfer_cid>\"";
 		$AGI->set_callerid($newcallerid);
 		print STDERR "Setting CID \"$newcallerid\"\n";
 		checkresult($result);
@@ -4352,13 +4349,23 @@ if ($drop_timer > $DROP_TIME)
 		if (length($VDADvoicemail_ext)>0)
 			{$DROPexten = "$voicemail_dump_exten$VDADvoicemail_ext";}
 		}
+	if ($drop_action =~ /CALLMENU/)
+		{
+		$newcallerid = "\"$VCcallerid <$transfer_cid>\"";
+		$AGI->set_callerid($newcallerid);
+		print STDERR "Setting CID \"$newcallerid\"\n";
+		checkresult($result);
+		if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
+		$DROPexten =	's';
+		$ext_context =	$drop_callmenu;
+		}
 	if ($drop_action =~ /IN_GROUP/)
 		{ # 90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*"
 		$DROPexten = "90009*$drop_inbound_group$S$S$insert_lead_id$S$S$phone_number$S$fronter$S";
 		}
 	if ($drop_action =~ /PHONE/)
 		{
-		$newcallerid = "\"$VCcallerid <$originalCID>\"";
+		$newcallerid = "\"$VCcallerid <$transfer_cid>\"";
 		$AGI->set_callerid($newcallerid);
 		print STDERR "Setting CID \"$newcallerid\"\n";
 		checkresult($result);
@@ -4388,7 +4395,7 @@ if ($drop_timer > $DROP_TIME)
 		$DROPexten = "$DIDphoneDIALstr$did_phone_dialplan_number";
 		}
 
-	if ($AGILOG) {$agi_string = "--    VDCL DROP: |$drop_action|$DROPexten|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "--    VDCL DROP: |$drop_action|$DROPexten|$ext_context|";   &agi_output;}
 
 	$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
 	$affected_rows = $dbhA->do($stmtA);

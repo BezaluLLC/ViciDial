@@ -935,10 +935,10 @@ xferconf_a_number VARCHAR(50),
 xferconf_b_dtmf VARCHAR(50),
 xferconf_b_number VARCHAR(50),
 drop_call_seconds SMALLINT(4) unsigned default '360',
-drop_action ENUM('HANGUP','MESSAGE','VOICEMAIL','IN_GROUP') default 'MESSAGE',
+drop_action ENUM('HANGUP','MESSAGE','VOICEMAIL','IN_GROUP','CALLMENU') default 'MESSAGE',
 drop_exten VARCHAR(20)  default '8307',
 call_time_id VARCHAR(20) default '24hours',
-after_hours_action ENUM('HANGUP','MESSAGE','EXTENSION','VOICEMAIL','IN_GROUP') default 'MESSAGE',
+after_hours_action ENUM('HANGUP','MESSAGE','EXTENSION','VOICEMAIL','IN_GROUP','CALLMENU') default 'MESSAGE',
 after_hours_message_filename VARCHAR(255) default 'vm-goodbye',
 after_hours_exten VARCHAR(20) default '8300',
 after_hours_voicemail VARCHAR(20),
@@ -1024,7 +1024,10 @@ eht_minimum_prompt_seconds SMALLINT(5) default '10',
 on_hook_ring_time SMALLINT(5) default '15',
 na_call_url TEXT,
 on_hook_cid VARCHAR(30) default 'GENERIC',
-group_calldate DATETIME
+group_calldate DATETIME,
+action_xfer_cid VARCHAR(18) default 'CUSTOMER',
+drop_callmenu VARCHAR(50) default '',
+after_hours_callmenu VARCHAR(50) default ''
 );
 
 CREATE TABLE vicidial_stations (
@@ -2664,7 +2667,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1297',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1298',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

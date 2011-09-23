@@ -1059,3 +1059,11 @@ ALTER TABLE vicidial_users ADD modify_moh ENUM('1','0') default '0';
 ALTER TABLE vicidial_users ADD modify_tts ENUM('1','0') default '0';
 
 UPDATE system_settings SET db_schema_version='1297',db_schema_update_date=NOW() where db_schema_version < 1297;
+
+ALTER TABLE vicidial_inbound_groups MODIFY drop_action ENUM('HANGUP','MESSAGE','VOICEMAIL','IN_GROUP','CALLMENU') default 'MESSAGE';
+ALTER TABLE vicidial_inbound_groups MODIFY after_hours_action ENUM('HANGUP','MESSAGE','EXTENSION','VOICEMAIL','IN_GROUP','CALLMENU') default 'MESSAGE';
+ALTER TABLE vicidial_inbound_groups ADD action_xfer_cid VARCHAR(18) default 'CUSTOMER';
+ALTER TABLE vicidial_inbound_groups ADD drop_callmenu VARCHAR(50) default '';
+ALTER TABLE vicidial_inbound_groups ADD after_hours_callmenu VARCHAR(50) default '';
+
+UPDATE system_settings SET db_schema_version='1298',db_schema_update_date=NOW() where db_schema_version < 1298;

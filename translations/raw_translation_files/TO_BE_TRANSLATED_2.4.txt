@@ -738,6 +738,15 @@ REMOTE AGENT EXTENSION OVERRIDES FOR THIS DID||
 REMOTE AGENT EXTENSION OVERRIDE LISTINGS||
 DID Remote Agent Extension Overrides||
 This section allows you to enable DIDs to have extension overrides for remote agent routed calls through in-groups. The User Start must be a valid Remote Agent User Start or if you want the Extension Override entry to work for all calls then you can use ---ALL--- in the User Start field. If there are multiple entries for the same DID and User Start then the active entries will be used in a round robin method||
+SEE DID REMOTE AGENT EXTENSION OVERRIDES FOR THIS DID||
+THERE ARE||
+DID REMOTE AGENT EXTENSION OVERRIDES FOR THIS REMOTE AGENT||
+Action Transfer CID||
+Used for Drop, After-hours and No-agent-no-queue actions. This is the caller ID number that the call uses before it is transferred to extensions, messages, voicemail or call menus. You can use CUSTOMER in this field to use the customer phone number, or CAMPAIGN to use the first allowed campaign caller id number. Default is CUSTOMER||
+After Hours Call Menu||
+If After Hours Action is set to CALLMENU, the call will be sent to this Call Menu if it enters the in-group outside of the call time scheme defined for the in-group||
+Drop Call Menu||
+If Drop Action is set to CALLMENU, the call will be sent to this call menu if it reaches Drop Call Seconds||
 
 
 lead_report_export.php
