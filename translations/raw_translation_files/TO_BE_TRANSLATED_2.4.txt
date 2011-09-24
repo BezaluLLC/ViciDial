@@ -747,6 +747,7 @@ After Hours Call Menu||
 If After Hours Action is set to CALLMENU, the call will be sent to this Call Menu if it enters the in-group outside of the call time scheme defined for the in-group||
 Drop Call Menu||
 If Drop Action is set to CALLMENU, the call will be sent to this call menu if it reaches Drop Call Seconds||
+Custom DID Fields -</B> These five fields can be used for various purposes, mostly relating to custom programming and reports||
 
 
 lead_report_export.php

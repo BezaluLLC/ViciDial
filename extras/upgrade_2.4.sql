@@ -1067,3 +1067,11 @@ ALTER TABLE vicidial_inbound_groups ADD drop_callmenu VARCHAR(50) default '';
 ALTER TABLE vicidial_inbound_groups ADD after_hours_callmenu VARCHAR(50) default '';
 
 UPDATE system_settings SET db_schema_version='1298',db_schema_update_date=NOW() where db_schema_version < 1298;
+
+ALTER TABLE vicidial_inbound_dids ADD custom_one VARCHAR(100) default '';
+ALTER TABLE vicidial_inbound_dids ADD custom_two VARCHAR(100) default '';
+ALTER TABLE vicidial_inbound_dids ADD custom_three VARCHAR(100) default '';
+ALTER TABLE vicidial_inbound_dids ADD custom_four VARCHAR(100) default '';
+ALTER TABLE vicidial_inbound_dids ADD custom_five VARCHAR(100) default '';
+
+UPDATE system_settings SET db_schema_version='1299',db_schema_update_date=NOW() where db_schema_version < 1299;

@@ -2904,12 +2904,13 @@ else
 # 110920-1344 - Added pllb_grouping_limit settings
 # 110922-1218 - Added new User admin permissions, Added DID Remote Agent extension override section
 # 110923-0834 - Added option for in-group action transfer cid, and CALLMENU as drop and after-hours action options
+# 110923-2043 - Added custom DID fields
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-337a';
-$build = '110923-0834';
+$admin_version = '2.4-338a';
+$build = '110923-2043';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3437,6 +3438,7 @@ if ($ADD==10)			{$hh='campaigns';	$sh='list';		echo "Campaigns";}
 if ($ADD==100)			{$hh='lists';		echo "Lists";}
 if ($ADD==1000)			{$hh='ingroups';	echo "In-Groups";}
 if ($ADD==1300)			{$hh='ingroups';	echo "DIDs";}
+if ($ADD==1320)			{$hh='ingroups';	echo "Modify DID RA Extension Overrides";}
 if ($ADD==1500)			{$hh='ingroups';	echo "Call Menus";}
 if ($ADD==1700)			{$hh='ingroups';	echo "Filter Phone Groups";}
 if ($ADD==10000)		{$hh='remoteagent';	echo "Remote Agents";}
@@ -6079,6 +6081,10 @@ if ($ADD==99999)
 	<BR>
 	<B>Filter Action -</B> If Filter Inbound Number is activated and a match is found then this is the action that is to be taken. This is the same as the Route that you select for a DID, and the settings below function just like they do for a standard routing.
 
+	<BR>
+	<A NAME="vicidial_inbound_dids-custom_one">
+	<BR>
+	<B>Custom DID Fields -</B> These five fields can be used for various purposes, mostly relating to custom programming and reports.
 
 
 
@@ -11693,7 +11699,7 @@ if ($ADD==2411)
 			}
 		else
 			{
-			$stmt="INSERT INTO vicidial_inbound_dids (did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number) SELECT \"$did_pattern\",\"$did_description\",did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number from vicidial_inbound_dids where did_id=\"$source_did\";";
+			$stmt="INSERT INTO vicidial_inbound_dids (did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five) SELECT \"$did_pattern\",\"$did_description\",did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_inbound_dids where did_id=\"$source_did\";";
 			$rslt=mysql_query($stmt, $link);
 
 			$stmt="SELECT did_id from vicidial_inbound_dids where did_pattern='$did_pattern';";
@@ -15089,7 +15095,7 @@ if ($ADD==4311)
 			{
 			echo "<br><B>DID MODIFIED: $did_pattern</B>\n";
 
-			$stmt="UPDATE vicidial_inbound_dids set did_pattern='$did_pattern',did_description='$did_description',did_active='$did_active',did_route='$did_route',extension='$extension',exten_context='$exten_context',voicemail_ext='$voicemail_ext',phone='$phone',server_ip='$server_ip',user='$user',user_unavailable_action='$user_unavailable_action',user_route_settings_ingroup='$user_route_settings_ingroup',group_id='$group_id',call_handle_method='$call_handle_method',agent_search_method='$agent_search_method',list_id='$list_id',campaign_id='$campaign_id',phone_code='$phone_code',menu_id='$menu_id',record_call='$record_call',filter_inbound_number='$filter_inbound_number',filter_phone_group_id='$filter_phone_group_id',filter_url='$filter_url',filter_action='$filter_action',filter_extension='$filter_extension',filter_exten_context='$filter_exten_context',filter_voicemail_ext='$filter_voicemail_ext',filter_phone='$filter_phone',filter_server_ip='$filter_server_ip',filter_user='$filter_user',filter_user_unavailable_action='$filter_user_unavailable_action',filter_user_route_settings_ingroup='$filter_user_route_settings_ingroup',filter_group_id='$filter_group_id',filter_call_handle_method='$filter_call_handle_method',filter_agent_search_method='$filter_agent_search_method',filter_list_id='$filter_list_id',filter_campaign_id='$filter_campaign_id',filter_phone_code='$filter_phone_code',filter_menu_id='$filter_menu_id',filter_clean_cid_number='$filter_clean_cid_number' where did_id='$did_id';";
+			$stmt="UPDATE vicidial_inbound_dids set did_pattern='$did_pattern',did_description='$did_description',did_active='$did_active',did_route='$did_route',extension='$extension',exten_context='$exten_context',voicemail_ext='$voicemail_ext',phone='$phone',server_ip='$server_ip',user='$user',user_unavailable_action='$user_unavailable_action',user_route_settings_ingroup='$user_route_settings_ingroup',group_id='$group_id',call_handle_method='$call_handle_method',agent_search_method='$agent_search_method',list_id='$list_id',campaign_id='$campaign_id',phone_code='$phone_code',menu_id='$menu_id',record_call='$record_call',filter_inbound_number='$filter_inbound_number',filter_phone_group_id='$filter_phone_group_id',filter_url='$filter_url',filter_action='$filter_action',filter_extension='$filter_extension',filter_exten_context='$filter_exten_context',filter_voicemail_ext='$filter_voicemail_ext',filter_phone='$filter_phone',filter_server_ip='$filter_server_ip',filter_user='$filter_user',filter_user_unavailable_action='$filter_user_unavailable_action',filter_user_route_settings_ingroup='$filter_user_route_settings_ingroup',filter_group_id='$filter_group_id',filter_call_handle_method='$filter_call_handle_method',filter_agent_search_method='$filter_agent_search_method',filter_list_id='$filter_list_id',filter_campaign_id='$filter_campaign_id',filter_phone_code='$filter_phone_code',filter_menu_id='$filter_menu_id',filter_clean_cid_number='$filter_clean_cid_number',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five' where did_id='$did_id';";
 			$rslt=mysql_query($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -21401,13 +21407,25 @@ if ($ADD==31)
 	##### CAMPAIGN PRESETS #####
 	if ($SUB==201)
 		{
-		echo "<br><br><b>PRESETS FOR THIS CAMPAIGN: &nbsp; $NWB#vicidial_xfer_presets$NWE</b><br>\n";
-		echo "<center><TABLE width=700 cellspacing=3>\n";
-		echo "<tr><td>PRESET NAME</td><td>NUMBER</td><td>DTMF</td><td>HIDE</td><td>MODIFY</td><td>DELETE</td></tr>\n";
-
 		$stmt="SELECT preset_name,preset_number,preset_dtmf,preset_hide_number from vicidial_xfer_presets where campaign_id='$campaign_id' order by preset_name";
 		$rslt=mysql_query($stmt, $link);
 		$presets_to_print = mysql_num_rows($rslt);
+
+		echo "<br><br><b>$presets_to_print PRESETS FOR THIS CAMPAIGN: &nbsp; $NWB#vicidial_xfer_presets$NWE</b><br>\n";
+
+		echo "<br>ADD NEW PRESET -<BR><form action=$PHP_SELF method=POST><font size=2>\n";
+		echo "<input type=hidden name=ADD value=201>\n";
+		echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
+		echo "Preset Name: <input type=text size=20 maxlength=40 name=preset_name style=\"font-family: sans-serif; font-size: 10px;\">\n";
+		echo " Number: <input type=text size=18 maxlength=50 name=preset_number style=\"font-family: sans-serif; font-size: 10px;\">\n";
+		echo " DTMF: <input type=text size=5 maxlength=50 name=preset_dtmf style=\"font-family: sans-serif; font-size: 10px;\">\n";
+		echo " &nbsp; Hide Number: <select size=1 name=preset_hide_number style=\"font-family: sans-serif; font-size: 10px;\"><option>Y</option><option SELECTED>N</option></select> &nbsp;\n";
+		echo "<input type=submit name=submit value=ADD style=\"font-family: sans-serif; font-size: 10px;\"><BR>\n";
+		echo "</font></center></FORM><br>\n";
+
+		echo "<center><table width=700 cellspacing=3>\n";
+		echo "<tr><td># </td><td>PRESET NAME</td><td>NUMBER</td><td>DTMF</td><td>HIDE</td><td>MODIFY</td><td>DELETE</td></tr>\n";
+
 		$o=0;
 		while ($presets_to_print > $o) 
 			{
@@ -21419,29 +21437,20 @@ if ($ADD==31)
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}
 
-			echo "<tr $bgcolor><td><form action=$PHP_SELF method=POST><font size=2>$rowx[0]\n";
+			echo "<form action=$PHP_SELF method=POST><tr $bgcolor>\n";
+			echo "<td><font size=2>$o </td>\n";
+			echo "<td><font size=2>$rowx[0]\n";
 			echo "<input type=hidden name=ADD value=401>\n";
 			echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
 			echo "<input type=hidden name=preset_name value=\"$rowx[0]\"> &nbsp;</td>\n";
-			echo "<td><input type=text size=20 maxlength=50 name=preset_number value=\"$rowx[1]\"></td>\n";
-			echo "<td><input type=text size=20 maxlength=50 name=preset_dtmf value=\"$rowx[2]\"></td>\n";
-			echo "<td><select size=1 name=preset_hide_number><option>Y</option><option>N</option><option SELECTED>$rowx[3]</option></select></td>\n";
-			echo "<td><font size=1><input type=submit name=submit value=MODIFY></form></td>\n";
-			echo "<td><font size=1><a href=\"$PHP_SELF?ADD=601&campaign_id=$campaign_id&preset_name=$rowx[0]\">DELETE</a></td></tr>\n";
+			echo "<td><input type=text size=20 maxlength=50 name=preset_number value=\"$rowx[1]\" style=\"font-family: sans-serif; font-size: 10px;\"></td>\n";
+			echo "<td><input type=text size=20 maxlength=50 name=preset_dtmf value=\"$rowx[2]\" style=\"font-family: sans-serif; font-size: 10px;\"></td>\n";
+			echo "<td><select size=1 name=preset_hide_number style=\"font-family: sans-serif; font-size: 10px;\"><option>Y</option><option>N</option><option SELECTED>$rowx[3]</option></select></td>\n";
+			echo "<td><font size=1><input type=submit name=submit value=MODIFY style=\"font-family: sans-serif; font-size: 10px;\"></td>\n";
+			echo "<td><font size=1><a href=\"$PHP_SELF?ADD=601&campaign_id=$campaign_id&preset_name=$rowx[0]\">DELETE</a></td></tr></form>\n";
 			}
 
 		echo "</table>\n";
-
-		echo "<br>ADD NEW PRESET<BR><form action=$PHP_SELF method=POST>\n";
-		echo "<input type=hidden name=ADD value=201>\n";
-		echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
-		echo "Preset Name: <input type=text size=20 maxlength=40 name=preset_name>\n";
-		echo "Preset Number: <input type=text size=20 maxlength=50 name=preset_number><BR>\n";
-		echo "Preset DTMF: <input type=text size=20 maxlength=50 name=preset_dtmf>\n";
-		echo " &nbsp; Hide Number: <select size=1 name=preset_hide_number><option>Y</option><option SELECTED>N</option></select>\n";
-		echo "<input type=submit name=submit value=ADD><BR>\n";
-
-		echo "</center></FORM><br>\n";
 		}
 
 
@@ -24621,7 +24630,7 @@ if ($ADD==3311)
 		$didSQL = "did_id='$did_id'";
 		if ( (strlen($did_id)<1) and (strlen($did_pattern)>0) )
 			{$didSQL = "did_pattern='$did_pattern'";}
-		$stmt="SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number from vicidial_inbound_dids where $didSQL;";
+		$stmt="SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_inbound_dids where $didSQL;";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
@@ -24666,6 +24675,11 @@ if ($ADD==3311)
 		$filter_phone_code =	$row[38];
 		$filter_menu_id =		$row[39];
 		$filter_clean_cid_number = $row[40];
+		$custom_one =			$row[41];
+		$custom_two =			$row[42];
+		$custom_three =			$row[43];
+		$custom_four =			$row[44];
+		$custom_five =			$row[45];
 
 
 		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
@@ -24854,6 +24868,12 @@ if ($ADD==3311)
 		echo "<option SELECTED>$filter_campaign_id</option>\n";
 		echo "</select>$NWB#vicidial_inbound_dids-campaign_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group Phone Code: </td><td align=left><input type=text name=filter_phone_code size=14 maxlength=14 value=\"$filter_phone_code\">$NWB#vicidial_inbound_dids-phone_code$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Custom 1: </td><td align=left><input type=text name=custom_one size=50 maxlength=100 value=\"$custom_one\">$NWB#vicidial_inbound_dids-custom_one$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Custom 2: </td><td align=left><input type=text name=custom_two size=50 maxlength=100 value=\"$custom_two\">$NWB#vicidial_inbound_dids-custom_one$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Custom 3: </td><td align=left><input type=text name=custom_three size=50 maxlength=100 value=\"$custom_three\">$NWB#vicidial_inbound_dids-custom_one$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Custom 4: </td><td align=left><input type=text name=custom_four size=50 maxlength=100 value=\"$custom_four\">$NWB#vicidial_inbound_dids-custom_one$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Custom 5: </td><td align=left><input type=text name=custom_five size=50 maxlength=100 value=\"$custom_five\">$NWB#vicidial_inbound_dids-custom_one$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 		echo "</table>\n";
