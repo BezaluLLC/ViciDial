@@ -1075,3 +1075,7 @@ ALTER TABLE vicidial_inbound_dids ADD custom_four VARCHAR(100) default '';
 ALTER TABLE vicidial_inbound_dids ADD custom_five VARCHAR(100) default '';
 
 UPDATE system_settings SET db_schema_version='1299',db_schema_update_date=NOW() where db_schema_version < 1299;
+
+ALTER TABLE vicidial_campaigns MODIFY survey_recording ENUM('Y','N','Y_WITH_AMD') default 'N';
+
+UPDATE system_settings SET db_schema_version='1300',db_schema_update_date=NOW() where db_schema_version < 1300;

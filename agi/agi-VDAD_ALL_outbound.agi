@@ -90,12 +90,13 @@
 # 110723-2330 - Set CID to customer phone number and caller code when transferring to CALLMENU
 # 110812-1514 - Added static tts file parsing and replacement
 # 110829-2324 - Added survey_recording option
+# 110926-1929 - Small fixes
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
 $AGILOG = '0';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=76;
+$mysql_log_count=84;
 $one_mysql_log=0;
 
 
@@ -539,7 +540,7 @@ if ($VDACaffected_rows > 0)
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
-			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='01077';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
@@ -579,7 +580,7 @@ if ($VDACaffected_rows > 0)
 		### insert record into recording_log table ###
 		$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$VDADphone','$now_date','$now_date_epoch','0','$campaign_rec_filename','$CIDlead_id','VDAD','$campaign_rec_filename','$uniqueid');";
 		$SRaffected_rows = $dbhA->do($stmtA);
-			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$SRaffected_rows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='01078';   $MEL_aff_rows=$SRaffected_rows;   &mysql_error_logging;
 		if ($AGILOG) {$agi_string = "--    SURVEY RECORDING STARTED : |$SRaffected_rows|$campaign_rec_filename|$stmtA|";   &agi_output;}
 		}
 
@@ -1400,11 +1401,11 @@ if ($call_handle_method =~ /SURVEY/)
 
 				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='EXITWITHTIMEOUT',data1='1',serverid='$queuemetrics_log_id';";
 				$Baffected_rows = $dbhB->do($stmtB);
-					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01079';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
 				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='CALLSTATUS',data1='$survey_status',serverid='$queuemetrics_log_id';";
 				$Baffected_rows = $dbhB->do($stmtB);
-					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01080';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
 				$dbhB->disconnect();
 				}
@@ -2667,11 +2668,11 @@ if ($drop_timer > $DROP_TIME)
 
 			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='EXITWITHTIMEOUT',data1='1',serverid='$queuemetrics_log_id';";
 			$Baffected_rows = $dbhB->do($stmtB);
-				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01081';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
 			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='CALLSTATUS',data1='IVRXFR',serverid='$queuemetrics_log_id';";
 			$Baffected_rows = $dbhB->do($stmtB);
-				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01082';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
 			$dbhB->disconnect();
 			}
@@ -2679,13 +2680,13 @@ if ($drop_timer > $DROP_TIME)
 		$stmtA = "UPDATE vicidial_log FORCE INDEX(lead_id) set status='IVRXFR',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',term_reason='CALLMENUXFER' where lead_id = '$CIDlead_id' and uniqueid LIKE \"$Euniqueid%\";";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$affected_rows = $dbhA->do($stmtA);
-			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='01083';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		if ($AGILOG) {$agi_string = "--    VDAD vicidial_log update: |$affected_rows|$uniqueid";   &agi_output;}
 
 		$stmtA = "UPDATE vicidial_list set status='IVRXFR' where lead_id = '$CIDlead_id';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$affected_rows = $dbhA->do($stmtA);
-			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='01084';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		if ($AGILOG) {$agi_string = "--    VDAD vicidial_list update: |$affected_rows|$CIDlead_id";   &agi_output;}
 		}
 	else
@@ -3038,9 +3039,11 @@ sub cpd_end_call
 
 	if (length($DROPexten)>0)
 		{	### if DROP extension is defined then send the dropped call there instead of hangup
-		$AGI->stream_file('ding'); # stop music-on-hold process
-
-		sleep(1);
+		$AGI->stream_file('sip-silence');
+		$AGI->stream_file('sip-silence');
+		$AGI->stream_file('sip-silence');
+	#	$AGI->stream_file('ding'); # stop music-on-hold process
+	#	sleep(1);
 
 		if ($AGILOG) {$agi_string = "exiting the VDAD app, CPD transferring call to $DROPexten";   &agi_output;}
 		print "SET CONTEXT $ext_context\n";

@@ -2012,7 +2012,6 @@ if ($non_latin < 1)
 	$webphone_auto_answer = ereg_replace("[^NY]","",$webphone_auto_answer);
 	$noanswer_log = ereg_replace("[^NY]","",$noanswer_log);
 	$did_agent_log = ereg_replace("[^NY]","",$did_agent_log);
-	$survey_recording = ereg_replace("[^NY]","",$survey_recording);
 
 	$qc_enabled = ereg_replace("[^0-9NY]","",$qc_enabled);
 	$active = ereg_replace("[^0-9NY]","",$active);
@@ -2300,6 +2299,7 @@ if ($non_latin < 1)
 	$user_start = ereg_replace("[^-_0-9a-zA-Z]","",$user_start);
 	$drop_callmenu = ereg_replace("[^-_0-9a-zA-Z]","",$drop_callmenu);
 	$after_hours_callmenu = ereg_replace("[^-_0-9a-zA-Z]","",$after_hours_callmenu);
+	$survey_recording = ereg_replace("[^-_0-9a-zA-Z]","",$survey_recording);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
@@ -2475,7 +2475,7 @@ if ($non_latin < 1)
 	$voicemail_options = ereg_replace("[^ -\=\*\#\.\,\:\/\|\@\_0-9a-zA-Z]","",$voicemail_options);
 
 	### NUMERIC and comma and pipe
-	$waitforsilence_options = ereg_replace("[^\|\,0-9]","",$waitforsilence_options);
+	$waitforsilence_options = ereg_replace("[^\|\,0-9a-zA-Z]","",$waitforsilence_options);
 
 	### value cleaning
 	$no_agent_action_value = ereg_replace("[^-\/\|\_\#\*\,\.\_0-9a-zA-Z]","",$no_agent_action_value);
@@ -4835,7 +4835,7 @@ if ($ADD==99999)
 		<BR>
 		<A NAME="vicidial_campaigns-survey_recording">
 		<BR>
-		<B>Survey Recording -</B> If enabled, this will start recording when the call is answered. Only recommended if the method is not set to transfer to an agent. Default is N for disabled.
+		<B>Survey Recording -</B> If enabled, this will start recording when the call is answered. Only recommended if the method is not set to transfer to an agent. Default is N for disabled. If set to Y_WITH_AMD even answering machine detected message calls will be recorded.
 
 		<?php
 		}
@@ -20345,7 +20345,7 @@ if ($ADD==31)
 			{$cfwHTML = '<option>FORM</option>';}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Get Call Launch: </td><td align=left><select size=1 name=get_call_launch><option selected>NONE</option><option>SCRIPT</option><option>WEBFORM</option>$eswHTML$cfwHTML<option selected>$get_call_launch</option></select>$NWB#vicidial_campaigns-get_call_launch$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#8EBCFD><td align=right>Answering Machine Message: </td><td><input type=text size=50 maxlength=100 name=am_message_exten id=am_message_exten value=\"$am_message_exten\"> <a href=\"javascript:launch_chooser('am_message_exten','date',1200);\">audio chooser</a>  $NWB#vicidial_campaigns-am_message_exten$NWE\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Answering Machine Message: </td><td><input type=text size=50 maxlength=100 name=am_message_exten id=am_message_exten value=\"$am_message_exten\"> <a href=\"javascript:launch_chooser('am_message_exten','date',2000);\">audio chooser</a>  $NWB#vicidial_campaigns-am_message_exten$NWE\n";
 		$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and am_message_exten_override != '' and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$rowx=mysql_fetch_row($rslt);
@@ -21396,7 +21396,7 @@ if ($ADD==31)
 		echo "<tr bgcolor=#B9CBFD><td align=right>Voicemail: </td><td><input type=text size=12 maxlength=10 name=voicemail_ext id=voicemail_ext value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',300);\">voicemail chooser</a> $NWB#vicidial_campaigns-voicemail_ext$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Call Menu: </td><td align=left><select size=1 name=survey_menu_id id=survey_menu_id>$call_menu_list<option SELECTED>$survey_menu_id</option></select>$NWB#vicidial_campaigns-survey_menu_id$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Recording: </td><td align=left><select size=1 name=survey_recording id=survey_recording><option>Y</option><option>N</option><option SELECTED>$survey_recording</option></select>$NWB#vicidial_campaigns-survey_recording$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Recording: </td><td align=left><select size=1 name=survey_recording id=survey_recording><option>Y</option><option>N</option><option>Y_WITH_AMD</option><option SELECTED>$survey_recording</option></select>$NWB#vicidial_campaigns-survey_recording$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B9CBFD><td align=center colspan=2><input type=submit name=submit value=SUBMIT></td></tr>\n";
 		echo "</table>\n";

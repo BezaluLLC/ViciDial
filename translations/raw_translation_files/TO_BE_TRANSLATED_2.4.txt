@@ -748,6 +748,7 @@ If After Hours Action is set to CALLMENU, the call will be sent to this Call Men
 Drop Call Menu||
 If Drop Action is set to CALLMENU, the call will be sent to this call menu if it reaches Drop Call Seconds||
 Custom DID Fields -</B> These five fields can be used for various purposes, mostly relating to custom programming and reports||
+If set to Y_WITH_AMD even answering machine detected message calls will be recorded||
 
 
 lead_report_export.php

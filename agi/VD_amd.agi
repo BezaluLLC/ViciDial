@@ -24,9 +24,9 @@
 # Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
-# 60206-1434 first build
-# 60207-1205 added database records entries/modifications
-# 60207-1507 added ability to send AMs to campaign-defined message to leave
+# 60206-1434 - first build
+# 60207-1205 - added database records entries/modifications
+# 60207-1507 - added ability to send AMs to campaign-defined message to leave
 # 60731-1407 - changed to use DBI-DBD::mysql
 #            - changed to use /etc/astguiclient.conf for configs
 # 60815-1310 - added output options check from database
@@ -41,6 +41,7 @@
 # 101111-1552 - Fixed minor bug in TTS filtering
 # 110324-2334 - Logging changes made
 # 110812-1515 - Added static tts file parsing and replacement
+# 110926-1902 - Added extended logging and additional waitforsilence options
 #
 
 $script = 'VD_amd.agi';
@@ -388,9 +389,8 @@ else
 		if ($AGILOG) {$agi_string = "--    VDAD vicidial_log update: |$affected_rows|$uniqueid|";   &agi_output;}
 		}
 
-
 	### Grab vmail forward message values from the database
-	$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options FROM vicidial_campaigns where campaign_id = '$VD_campaign_id' limit 1;";
+	$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename FROM vicidial_campaigns where campaign_id = '$VD_campaign_id' limit 1;";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -401,13 +401,15 @@ else
 		$DB_am_message_exten	= $aryA[0];
 		$DB_amd_send_to_vmx		= $aryA[1];
 		$waitforsilence_options = $aryA[2];
+		$survey_recording		= $aryA[3];
+		$campaign_rec_filename	= $aryA[4];
 		$sthA->finish();
 		}
 	else
 		{
 		$sthA->finish();
 		### Grab vmail forward message values from the database
-		$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options FROM vicidial_campaigns where closer_campaigns LIKE \"% $VD_campaign_id %\" order by campaign_id limit 1;";
+		$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename FROM vicidial_campaigns where closer_campaigns LIKE \"% $VD_campaign_id %\" order by campaign_id limit 1;";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -418,11 +420,88 @@ else
 			$DB_am_message_exten	= $aryA[0];
 			$DB_amd_send_to_vmx		= $aryA[1];
 			$waitforsilence_options = $aryA[2];
+			$survey_recording		= $aryA[3];
+			$campaign_rec_filename	= $aryA[4];
 			$sthA->finish();
 			}
 		else
 			{$sthA->finish();}
 		}
+
+	### if not a CPD message, log to the extended log and check for amd recording setting
+	if ($AMDSTATUS !~ /CPD/)
+		{
+		$VLEcount=0;
+		$stmtA = "SELECT count(*) FROM vicidial_log_extended where uniqueid='$uniqueid';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$VLEcount	= $aryA[0];
+			$sthA->finish();
+			}
+		if ($AGILOG) {$agi_string = "$VLEcount|$stmtA|";   &agi_output;}
+
+		if ($VLEcount < 1)
+			{
+			$stmtA = "INSERT INTO vicidial_log_extended set uniqueid='$uniqueid',server_ip='$VARserver_ip',call_date='$now_date',lead_id = '$VD_lead_id',caller_code='$callerid',custom_call_id='';";
+			$affected_rows = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+			if ($AGILOG) {$agi_string = "--  VDAD vicidial_log_extended insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
+			}
+
+		if ($survey_recording =~ /Y_WITH_AMD/)
+			{
+			$stmtA = "SELECT vendor_lead_code FROM vicidial_list where lead_id='$VD_lead_id';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$vendor_lead_code =	$aryA[0];
+				}
+			$sthA->finish();
+
+			# get date/time
+			($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+			$year = ($year + 1900);
+			$Tyear = ($year - 2000);
+			$mon++;
+			if ($mon < 10)	{$mon = "0$mon";}
+			if ($mday < 10) {$mday = "0$mday";}
+			if ($hour < 10) {$hour = "0$hour";}
+			if ($min < 10)	{$min = "0$min";}
+			if ($sec < 10)	{$sec = "0$sec";}
+
+			$now_date_epoch = time();
+			$now_date = "$year-$mon-$mday $hour:$min:$sec";
+			$recdate = "$year$mon$mday-$hour$min$sec";
+			$tinydate = "$Tyear$mon$mday$hour$min$sec";
+
+			$campaign_rec_filename =~ s/CAMPAIGN/$VD_campaign_id/gi;
+			$campaign_rec_filename =~ s/CUSTPHONE/$VD_phone_number/gi;
+			$campaign_rec_filename =~ s/FULLDATE/$recdate/gi;
+			$campaign_rec_filename =~ s/TINYDATE/$tinydate/gi;
+			$campaign_rec_filename =~ s/EPOCH/$now_date_epoch/gi;
+			$campaign_rec_filename =~ s/AGENT/VDAD/gi;
+			$campaign_rec_filename =~ s/VENDORLEADCODE/$vendor_lead_code/gi;
+			$campaign_rec_filename =~ s/LEADID/$VD_lead_id/gi;
+			$campaign_rec_filename =~ s/\"|\'//gi;
+			$campaign_rec_filename =~ s/ //gi;
+
+			$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$campaign_rec_filename"); 
+
+			### insert record into recording_log table ###
+			$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$VD_phone_number','$now_date','$now_date_epoch','0','$campaign_rec_filename','$VD_lead_id','VDAD','$campaign_rec_filename','$uniqueid');";
+			$SRaffected_rows = $dbhA->do($stmtA);
+			if ($AGILOG) {$agi_string = "--    AMD RECORDING STARTED : |$SRaffected_rows|$campaign_rec_filename|$stmtA|";   &agi_output;}
+			}
+		}
+
 
 	### check for list_id override
 	if ( ($DB_amd_send_to_vmx =~ /Y/) || ($AMDSTATUS =~ /CPD/) )
@@ -635,9 +714,21 @@ else
 
 
 		### run waitforsilence if enabled
-		if (length($waitforsilence_options) > 0)
+		if ( (length($waitforsilence_options) > 0) && ($waitforsilence_options !~ /NONE|X/i) )
 			{
+			if ($AGILOG) {$agi_string = "WaitForSilence launched: |$waitforsilence_options|";   &agi_output;}
 			$AGI->exec("WaitForSilence","$waitforsilence_options");
+			}
+		if ($waitforsilence_options =~ /X/i)
+			{
+			$waitforsilence_seconds = $waitforsilence_options;
+			$waitforsilence_seconds =~ s/\D//gi;
+			if (length($waitforsilence_seconds) < 1)
+				{$waitforsilence_seconds = '1';}
+			if ($waitforsilence_seconds > 20)
+				{$waitforsilence_seconds = '20';}
+			if ($AGILOG) {$agi_string = "Wait time seconds in WaitForSilence field: |$waitforsilence_seconds|$waitforsilence_options|";   &agi_output;}
+			sleep($waitforsilence_seconds);
 			}
 
 		### play messages
