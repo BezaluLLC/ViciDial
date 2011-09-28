@@ -58,12 +58,13 @@ exten => _851XXXXX,1,Answer
 exten => _851XXXXX,2,Playback(${EXTEN})
 exten => _851XXXXX,3,Hangup
 
-; this is used for playing a message to an answering machine forwarded from AMD in VICIDIAL
-exten => _7851XXXXX,1,WaitForSilence(2000,2) ; AMD got machine.  leave message after recording
-exten => _7851XXXXX,2,Playback(${EXTEN:1})
-exten => _7851XXXXX,3,AGI(VD_amd_post.agi,${EXTEN:1})
-exten => _7851XXXXX,4,Hangup
-
+; this is used for playing a phone-recorded 851XXXXX audio file with waitforsilence
+exten => _6851XXXXX,1,Answer()
+exten => _6851XXXXX,n,WaitForSilence(2000,1,90)
+exten => _6851XXXXX,n,Playback(sip-silence)
+exten => _6851XXXXX,n,Playback(${EXTEN:1})
+exten => _6851XXXXX,n,Hangup
+exten => _7851XXXXX,1,Goto(default,6${EXTEN:1},1)
 
 ; FastAGI for VICIDIAL/astGUIclient call logging
 exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})

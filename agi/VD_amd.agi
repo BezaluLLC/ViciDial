@@ -428,7 +428,7 @@ else
 			{$sthA->finish();}
 		}
 
-	### if not a CPD message, log to the extended log and check for amd recording setting
+	### if not a CPD message, log to the extended log
 	if ($AMDSTATUS !~ /CPD/)
 		{
 		$VLEcount=0;
@@ -451,21 +451,27 @@ else
 				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 			if ($AGILOG) {$agi_string = "--  VDAD vicidial_log_extended insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
 			}
+		}
 
-		if ($survey_recording =~ /Y_WITH_AMD/)
+	if ($survey_recording =~ /Y_WITH_AMD/)
+		{
+		$RLcount=0;
+		if ($AMDSTATUS =~ /CPD/)
 			{
-			$stmtA = "SELECT vendor_lead_code FROM vicidial_list where lead_id='$VD_lead_id';";
+			$stmtA = "SELECT count(*) FROM recording_log where vicidial_id='$uniqueid' and lead_id='$VD_lead_id' and user='VDAD';";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
-				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$vendor_lead_code =	$aryA[0];
+				$RLcount	= $aryA[0];
 				}
 			$sthA->finish();
-
+			if ($AGILOG) {$agi_string = "$RLcount|$stmtA|";   &agi_output;}
+			}
+		if ($RLcount < 1)
+			{
 			# get date/time
 			($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 			$year = ($year + 1900);
@@ -481,6 +487,21 @@ else
 			$now_date = "$year-$mon-$mday $hour:$min:$sec";
 			$recdate = "$year$mon$mday-$hour$min$sec";
 			$tinydate = "$Tyear$mon$mday$hour$min$sec";
+
+			if ($campaign_rec_filename =~ /VENDORLEADCODE/) 
+				{
+				$stmtA = "SELECT vendor_lead_code FROM vicidial_list where lead_id='$VD_lead_id';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$vendor_lead_code =	$aryA[0];
+					}
+				$sthA->finish();
+				}
 
 			$campaign_rec_filename =~ s/CAMPAIGN/$VD_campaign_id/gi;
 			$campaign_rec_filename =~ s/CUSTPHONE/$VD_phone_number/gi;
@@ -501,7 +522,6 @@ else
 			if ($AGILOG) {$agi_string = "--    AMD RECORDING STARTED : |$SRaffected_rows|$campaign_rec_filename|$stmtA|";   &agi_output;}
 			}
 		}
-
 
 	### check for list_id override
 	if ( ($DB_amd_send_to_vmx =~ /Y/) || ($AMDSTATUS =~ /CPD/) )
