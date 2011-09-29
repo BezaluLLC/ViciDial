@@ -719,6 +719,9 @@ OTHER CHANGES:
 
 165. Added ability to drop or after-hours to a call menu in in-groups.
 
+166. Added ability to set scheduled callbacks through the non-agent-api in the
+	add_lead and update_lead functions.
+
 
 
 

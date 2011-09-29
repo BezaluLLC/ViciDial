@@ -12,6 +12,13 @@
 #  - $function - ('add_lead','update_lead','version','sounds_list','moh_list','vm_list','blind_monitor','agent_ingroup_info','add_list',etc...)
 #  - $source - ('vtiger','webform','adminweb')
 #  - $format - ('text','debug')
+# optional callback variables for add_lead/update_lead
+#  - $callback -	('Y,'N','REMOVE')
+#  - $callback_status -	('CALLBK','CBXYZ',...)
+#  - $callback_datetime -	('YYYY-MM-DD+HH:MM:SS','NOW')
+#  - $callback_type -	('USERONLY','ANYONE')
+#  - $callback_user -	('6666','1001',...)
+#  - $callback_comments - ('Comments go here',...)
 
 # CHANGELOG:
 # 80724-0021 - First build of script
@@ -51,10 +58,11 @@
 # 110614-0726 - Added reset_lead option to update_lead function(issue #502)
 # 110705-1928 - Added options for USACAN 4th digit prefix(no 0 or 1) and valid areacode filtering to add_lead
 # 110821-2318 - Added update_phone, add_phone_alias, update_phone_alias functions
+# 110928-2110 - Added callback options to add_lead and update_lead
 #
 
-$version = '2.4-37';
-$build = '110821-2318';
+$version = '2.4-38';
+$build = '110928-2110';
 
 $startMS = microtime();
 
@@ -263,6 +271,18 @@ if (isset($_GET["alias_name"]))				{$alias_name=$_GET["alias_name"];}
 	elseif (isset($_POST["alias_name"]))	{$alias_name=$_POST["alias_name"];}
 if (isset($_GET["delete_alias"]))			{$delete_alias=$_GET["delete_alias"];}
 	elseif (isset($_POST["delete_alias"]))	{$delete_alias=$_POST["delete_alias"];}
+if (isset($_GET["callback"]))			{$callback=$_GET["callback"];}
+	elseif (isset($_POST["callback"]))	{$callback=$_POST["callback"];}
+if (isset($_GET["callback_status"]))			{$callback_status=$_GET["callback_status"];}
+	elseif (isset($_POST["callback_status"]))	{$callback_status=$_POST["callback_status"];}
+if (isset($_GET["callback_datetime"]))			{$callback_datetime=$_GET["callback_datetime"];}
+	elseif (isset($_POST["callback_datetime"]))	{$callback_datetime=$_POST["callback_datetime"];}
+if (isset($_GET["callback_type"]))			{$callback_type=$_GET["callback_type"];}
+	elseif (isset($_POST["callback_type"]))	{$callback_type=$_POST["callback_type"];}
+if (isset($_GET["callback_user"]))			{$callback_user=$_GET["callback_user"];}
+	elseif (isset($_POST["callback_user"]))	{$callback_user=$_POST["callback_user"];}
+if (isset($_GET["callback_comments"]))			{$callback_comments=$_GET["callback_comments"];}
+	elseif (isset($_POST["callback_comments"]))	{$callback_comments=$_POST["callback_comments"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -397,6 +417,12 @@ if ($non_latin < 1)
 	$phone_logins = ereg_replace("[^-\,\_0-9a-zA-Z]","",$phone_logins);
 	$alias_name = ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$alias_name);
 	$delete_alias = ereg_replace("[^A-Z]","",$delete_alias);
+	$callback = ereg_replace("[^A-Z]","",$callback);
+	$callback_status = ereg_replace("[^-\_0-9a-zA-Z]","",$callback_status);
+	$callback_datetime = ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$callback_datetime);
+	$callback_type = ereg_replace("[^A-Z]","",$callback_type);
+	$callback_user = ereg_replace("[^-\_0-9a-zA-Z]","",$callback_user);
+	$callback_comments = ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$callback_comments);
 	}
 else
 	{
@@ -3563,9 +3589,12 @@ if ($function == 'add_lead')
 				### get current gmt_offset of the phone_number
 				$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner);
 
+				$new_status='NEW';
+				if ($callback == 'Y')
+					{$new_status='CBHOLD';}
 
 				### insert a new lead in the system with this phone number
-				$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$list_id',status='NEW',user='$user',vendor_lead_code='$vendor_lead_code',source_id='$source_id',gmt_offset_now='$gmt_offset',title='$title',first_name='$first_name',middle_initial='$middle_initial',last_name='$last_name',address1='$address1',address2='$address2',address3='$address3',city='$city',state='$state',province='$province',postal_code='$postal_code',country_code='$country_code',gender='$gender',date_of_birth='$date_of_birth',alt_phone='$alt_phone',email='$email',security_phrase='$security_phrase',comments='$comments',called_since_last_reset='N',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME',rank='$rank',owner='$owner',entry_list_id='0';";
+				$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$list_id',status='$new_status',user='$user',vendor_lead_code='$vendor_lead_code',source_id='$source_id',gmt_offset_now='$gmt_offset',title='$title',first_name='$first_name',middle_initial='$middle_initial',last_name='$last_name',address1='$address1',address2='$address2',address3='$address3',city='$city',state='$state',province='$province',postal_code='$postal_code',country_code='$country_code',gender='$gender',date_of_birth='$date_of_birth',alt_phone='$alt_phone',email='$email',security_phrase='$security_phrase',comments='$comments',called_since_last_reset='N',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME',rank='$rank',owner='$owner',entry_list_id='0';";
 				if ($DB>0) {echo "DEBUG: add_lead query - $stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				$affected_rows = mysql_affected_rows($link);
@@ -3724,6 +3753,7 @@ if ($function == 'add_lead')
 						}
 					### END custom fields insert section ###
 
+					### BEGIN add to hopper section ###
 					if ($add_to_hopper == 'Y')
 						{
 						$dialable=1;
@@ -3776,6 +3806,77 @@ if ($function == 'add_lead')
 								}
 							}
 						}
+					### END add to hopper section ###
+
+					### BEGIN scheduled callback section ###
+					if ($callback == 'Y')
+						{
+						$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
+						$rslt=mysql_query($stmt, $link);
+						$camp_recs = mysql_num_rows($rslt);
+						if ($camp_recs > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$camp_count =	$row[0];
+							}
+						if ($camp_count > 0)
+							{
+							$valid_callback=0;
+							$user_group='';
+							if ($callback_type == 'USERONLY')
+								{
+								$stmt="SELECT user_group from vicidial_users where user='$callback_user';";
+								$rslt=mysql_query($stmt, $link);
+								$user_recs = mysql_num_rows($rslt);
+								if ($user_recs > 0)
+									{
+									$row=mysql_fetch_row($rslt);
+									$user_group =	$row[0];
+									$valid_callback++;
+									}
+								else
+									{
+									$result = 'NOTICE';
+									$result_reason = "add_lead SCHEDULED CALLBACK NOT ADDED, USER NOT VALID";
+									$data = "$lead_id|$campaign_id|$callback_user|$callback_type";
+									echo "$result: $result_reason - $data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									}
+								}
+							else
+								{
+								$callback_user='';
+								$valid_callback++;
+								}
+							if ($valid_callback > 0)
+								{
+								if ($callback_datetime == 'NOW') 
+									{$callback_datetime=$NOW_TIME;}
+								if (strlen($callback_status)<1) 
+									{$callback_status='CALLBK';}
+
+								$stmt="INSERT INTO vicidial_callbacks (lead_id,list_id,campaign_id,status,entry_time,callback_time,user,recipient,comments,user_group,lead_status) values('$lead_id','$list_id','$campaign_id','ACTIVE','$NOW_TIME','$callback_datetime','$callback_user','$callback_type','$callback_comments','$user_group','$callback_status');";
+								if ($DB>0) {echo "DEBUG: add_lead query - $stmt\n";}
+								$rslt=mysql_query($stmt, $link);
+								$CBaffected_rows = mysql_affected_rows($link);
+
+								$result = 'NOTICE';
+								$result_reason = "add_lead SCHEDULED CALLBACK ADDED";
+								$data = "$lead_id|$campaign_id|$callback_datetime|$callback_type|$callback_user|$callback_status";
+								echo "$result: $result_reason - $data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								}
+							}
+						else
+							{
+							$result = 'NOTICE';
+							$result_reason = "add_lead SCHEDULED CALLBACK NOT ADDED, CAMPAIGN NOT VALID";
+							$data = "$lead_id|$campaign_id";
+							echo "$result: $result_reason - $data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						}
+					### END scheduled callback section ###
 					}
 				else
 					{
@@ -4045,6 +4146,149 @@ if ($function == 'update_lead')
 								$data = "$phone_number|$list_id|$lead_id|$gmt_offset";
 								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 								}
+							##### BEGIN scheduled callback section #####
+							if ($callback == 'Y')
+								{
+								$cb_count=0;
+								$stmt="SELECT callback_id from vicidial_callbacks where lead_id='$search_lead_id[$n]';";
+								$rslt=mysql_query($stmt, $link);
+								$lead_recs = mysql_num_rows($rslt);
+								if ($lead_recs > 0)
+									{
+									$row=mysql_fetch_row($rslt);
+									$callback_id =	$row[0];
+									}
+								if ($lead_recs > 0)
+									{
+									### Update existing scheduled callback
+									if (strlen($callback_datetime)>0) 
+										{
+										if ($callback_datetime == 'NOW') 
+											{$callback_datetime=$NOW_TIME;}
+										$callback_datetimeSQL=",callback_time='$callback_datetime'";
+										}
+									if (strlen($campaign_id)>0) 
+										{$campaign_idSQL=",campaign_id='$campaign_id'";}
+									if (strlen($list_id_field)>0) 
+										{$list_idSQL=",list_id='$list_id_field'";}
+									if (strlen($callback_status)>0) 
+										{$callback_statusSQL=",lead_status='$callback_status'";}
+									if (strlen($callback_comments)>0) 
+										{$callback_commentsSQL=",comments='$callback_comments'";}
+									if (strlen($callback_type)>0) 
+										{$callback_typeSQL=",recipient='$callback_type'";}
+									if (strlen($callback_user)>0) 
+										{$callback_userSQL=",user='$callback_user'";}
+
+									$CBupdateSQL = "$callback_datetimeSQL$callback_statusSQL$campaign_idSQL$list_idSQL$callback_typeSQL$callback_commentsSQL$callback_userSQL";
+
+									if (strlen($CBupdateSQL)>3)
+										{
+										$stmt="UPDATE vicidial_callbacks SET status='ACTIVE',entry_time='$NOW_TIME'$CBupdateSQL where callback_id='$callback_id';";
+										if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
+										$rslt=mysql_query($stmt, $link);
+										$CBaffected_rows = mysql_affected_rows($link);
+
+										$result = 'NOTICE';
+										$result_reason = "update_lead SCHEDULED CALLBACK UPDATED";
+										$data = "$lead_id|$campaign_id|$callback_datetime|$callback_type|$callback_user|$callback_status";
+										echo "$result: $result_reason - $data\n";
+										api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+										}
+									else
+										{
+										$result = 'NOTICE';
+										$result_reason = "update_lead SCHEDULED CALLBACK NOT UPDATED, NO FIELDS SPECIFIED";
+										$data = "$lead_id|$CBupdateSQL";
+										echo "$result: $result_reason - $data\n";
+										api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+										}
+									}
+								else
+									{
+									### Add new scheduled callback
+									$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
+									$rslt=mysql_query($stmt, $link);
+									$camp_recs = mysql_num_rows($rslt);
+									if ($camp_recs > 0)
+										{
+										$row=mysql_fetch_row($rslt);
+										$camp_count =	$row[0];
+										}
+									if ($camp_count > 0)
+										{
+
+										$valid_callback=0;
+										$user_group='';
+										if ($callback_type == 'USERONLY')
+											{
+											$stmt="SELECT user_group from vicidial_users where user='$callback_user';";
+											$rslt=mysql_query($stmt, $link);
+											$user_recs = mysql_num_rows($rslt);
+											if ($user_recs > 0)
+												{
+												$row=mysql_fetch_row($rslt);
+												$user_group =	$row[0];
+												$valid_callback++;
+												}
+											else
+												{
+												$result = 'NOTICE';
+												$result_reason = "update_lead SCHEDULED CALLBACK NOT ADDED, USER NOT VALID";
+												$data = "$lead_id|$campaign_id|$callback_user|$callback_type";
+												echo "$result: $result_reason - $data\n";
+												api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+												}
+											}
+										else
+											{
+											$callback_user='';
+											$valid_callback++;
+											}
+										if ($valid_callback > 0)
+											{
+											if ($callback_datetime == 'NOW') 
+												{$callback_datetime=$NOW_TIME;}
+											if (strlen($callback_status)<1) 
+												{$callback_status='CALLBK';}
+
+											$stmt="INSERT INTO vicidial_callbacks (lead_id,list_id,campaign_id,status,entry_time,callback_time,user,recipient,comments,user_group,lead_status) values('$lead_id','$list_id','$campaign_id','ACTIVE','$NOW_TIME','$callback_datetime','$callback_user','$callback_type','$callback_comments','$user_group','$callback_status');";
+											if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
+											$rslt=mysql_query($stmt, $link);
+											$CBaffected_rows = mysql_affected_rows($link);
+
+											$result = 'NOTICE';
+											$result_reason = "update_lead SCHEDULED CALLBACK ADDED";
+											$data = "$lead_id|$campaign_id|$callback_datetime|$callback_type|$callback_user|$callback_status";
+											echo "$result: $result_reason - $data\n";
+											api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+											}
+										}
+									else
+										{
+										$result = 'NOTICE';
+										$result_reason = "update_lead SCHEDULED CALLBACK NOT ADDED, CAMPAIGN NOT VALID";
+										$data = "$lead_id|$campaign_id";
+										echo "$result: $result_reason - $data\n";
+										api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+										}
+									}
+								}
+							if ($callback == 'REMOVE')
+								{
+								$stmt = "DELETE from vicidial_callbacks where lead_id='$search_lead_id[$n]';";
+								if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
+								$rslt=mysql_query($stmt, $link);
+								$VCBaffected_rows = mysql_affected_rows($link);
+
+								$result = 'NOTICE';
+								$result_reason = "update_lead SCHEDULED CALLBACK DELETED";
+								$data = "$user|$search_lead_id[$n]|$VCBaffected_rows";
+								echo "$result: $result_reason - $data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								}
+							##### END scheduled callback section #####
+
 							##### BEGIN custom fields update query build #####
 							if ($custom_fields=='Y')
 								{
