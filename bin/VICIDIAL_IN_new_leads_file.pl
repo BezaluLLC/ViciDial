@@ -52,9 +52,10 @@
 # 110420-0944 - Fixed file prefix issue with multiple processes running
 # 110424-0948 - Added time-zone-code-gmt option to use time zone code from the owner field
 # 110705-1913 - Added options for USACAN prefix(no 0 or 1) and valid areacode filtering
+# 110929-1423 - Added new format for abbreviated timezone in owner(pipe30tz) and list creation options
 #
 
-$version = '110705-1913';
+$version = '110929-1423';
 
 $secX = time();
 $MT[0]='';
@@ -148,8 +149,8 @@ if (length($ARGV[0])>1)
 	if ($args =~ /--help|-h/i)
 		{
 		print "allowed run time options:\n";
-		print "  [-q] = quiet\n";
-		print "  [-t] = test\n";
+		print "  [--quiet] = quiet\n";
+		print "  [--test] = test\n";
 		print "  [--version] = version\n";
 		print "  [--forcegmt] = forces gmt value of column after comments column\n";
 		print "  [--debug] = debug output\n";
@@ -162,6 +163,9 @@ if (length($ARGV[0])>1)
 		print "  [--new-listid-prefix=X] = prefix for listID when creating new lists, must be only numbers, and 4 or less digits\n";
 		print "  [--new-listname-prefix=X] = prefix for list name when creating new lists, will be followed by filename\n";
 		print "  [--new-list-campaign=X] = campaign that the new list will be assigned to\n";
+		print "  [--new-list-active=X] = Y or N, if list is to be set as active when created, default N\n";
+		print "  [--new-list-reset-times=X] = reset times(4 digits each dash separated) default is blank\n";
+		print "  [--new-list-tz-setting=X] = COUNTRY_AND_AREA_CODE|POSTAL_CODE|NANPA_PREFIX|OWNER_TIME_ZONE_CODE default COUNTRY_AND_AREA_CODE\n";
 		print "  [--USACAN-prefix-check] = check for the 4th digit 2-9, USA and Canada validation\n";
 		print "  [--USACAN-areacode-check] = check for the valid phone code 1 areacodes, USA and Canada validation\n";
 		print "  [--duplicate-check] = checks for the same phone number in the same list id before inserting lead\n";
@@ -202,6 +206,8 @@ if (length($ARGV[0])>1)
 		print "dccsv10:\n";
 		print "VENDOR_ID,FIRST_NAME,LAST_NAME,PHONE_1,PHONE_2,PHONE_3,PHONE_4,PHONE_5,PHONE_6,PHONE_7\n";
 		print "\"100998\",\"ANGELA    \",\"SMITH     \",\"3145551212\",\"3145551213\",\"3145551214\",\"0\",\"3145551215\",\"3145551216\",\"0\",\n\n";
+		print "pipe30tz:\n";
+		print "TEST01||09292011|1|5125554727||Mike||Frank|||||||||||||||||C|2145559922|TESTSURVEY|TESTSURVEY|111\n";
 		print "dccsv43, dccsvref51, dccsv52 and dccsvref52:\n";
 		print "---format too confusing to list in the help screen---\n\n";
 
@@ -209,7 +215,7 @@ if (length($ARGV[0])>1)
 		}
 	else
 		{
-		if ($args =~ /-q/i)
+		if ($args =~ /--quiet/i)
 			{
 			$q=1;
 			$DB=0;
@@ -228,7 +234,7 @@ if (length($ARGV[0])>1)
 			}
 		else {$DBX=0;}
 
-		if ($args =~ /-t/i)
+		if ($args =~ /--test/i)
 			{
 			$T=1;
 			$TEST=1;
@@ -363,6 +369,33 @@ if (length($ARGV[0])>1)
 			}
 		else
 			{$list_campaign = '';}
+		if ($args =~ /--new-list-active=/i)
+			{
+			@data_in = split(/--new-list-active=/,$args);
+				$active_list = $data_in[1];
+				$active_list =~ s/ .*//gi;
+			if ($q < 1) {print "\n----- NEW LIST ACTIVE: $active_list -----\n\n";}
+			}
+		else
+			{$active_list = 'N';}
+		if ($args =~ /--new-list-reset-times=/i)
+			{
+			@data_in = split(/--new-list-reset-times=/,$args);
+				$reset_time = $data_in[1];
+				$reset_time =~ s/ .*//gi;
+			if ($q < 1) {print "\n----- NEW LIST RESET TIMES: $reset_time -----\n\n";}
+			}
+		else
+			{$reset_time = '';}
+		if ($args =~ /--new-list-tz-setting=/i)
+			{
+			@data_in = split(/--new-list-tz-setting=/,$args);
+				$time_zone_setting = $data_in[1];
+				$time_zone_setting =~ s/ .*//gi;
+			if ($q < 1) {print "\n----- NEW LIST TZ SETTING: $time_zone_setting -----\n\n";}
+			}
+		else
+			{$time_zone_setting = 'COUNTRY_AND_AREA_CODE';}
 
 		if ($args =~ /-ftp-pull/i)
 			{
@@ -600,8 +633,9 @@ foreach(@FILES)
 					$xloop++;
 					}
 
+
 				$forcelistfilename_listid = $new_list_id;
-				$stmtZ = "INSERT INTO vicidial_lists (list_id,list_name,list_description,campaign_id,active,list_changedate) values('$new_list_id','$list_name_prefix $FILES[$i]','Created: $insert_date','$list_campaign','N','$insert_date');";
+				$stmtZ = "INSERT INTO vicidial_lists (list_id,list_name,list_description,campaign_id,active,list_changedate,time_zone_setting,reset_time) values('$new_list_id','$list_name_prefix $FILES[$i]','Created: $insert_date','$list_campaign','$active_list','$insert_date','$time_zone_setting','$reset_time');";
 					if (!$T) {$affected_rows = $dbhA->do($stmtZ); } #  or die  "Couldn't execute query: |$stmtZ|\n";
 				if ($DB > 0) {print "LIST CREATED: $new_list_id|$affected_rows|$stmtZ\n";}
 				}
@@ -1498,7 +1532,51 @@ foreach(@FILES)
 				$format_set++;
 				}
 
+			# This is the format for the pipe30tz lead files
+			# TEST01||09292011|1|5125554727||Mike||Frank|||||||||||||||||C|2145559922|TESTSURVEY|TESTSURVEY|111
+			if ( ($format =~ /pipe30tz/) && ($format_set < 1) )
+				{
+				$source_id =			$m[0];		chomp($source_id);
+				$vendor_lead_code =		$m[2];		chomp($vendor_lead_code);
+				$phone_code =			$m[3];		chomp($phone_code);	$phone_code =~ s/\D//gi;
+				$phone_number =			$m[4];		chomp($phone_number);	$phone_number =~ s/\D//gi;
+					$USarea = 			substr($phone_number, 0, 3);
+				$title =				$m[5];		chomp($title);
+				$first_name =			$m[6];		chomp($first_name);
+				$middle_initial =		$m[7];		chomp($middle_initial);
+				$last_name =			$m[8];		chomp($last_name);
+		#		$address1 =				$m[9];		chomp($address1);
+		#		$address2 =				$m[10];		chomp($address2);
+		#		$address3 =				$m[11];		chomp($address3);
+		#		$city =					$m[12];		chomp($city);
+		#		$state =				$m[13];		chomp($state);
+		#		$province =				$m[14];		chomp($province);
+		#		$postal_code =			$m[15];		chomp($postal_code);
+		#		$country =				$m[16];		chomp($country);
+		#		$gender =				$m[17];
+		#		$date_of_birth =		$m[18];
+		#		$alt_phone =			$m[19];		chomp($alt_phone);	$alt_phone =~ s/\D//gi;
+		#		$email =				$m[20];
+		#		$security_phrase =		$m[21];
+		#		$comments =				$m[22];
+				$owner =				$m[25];
+					if ($owner =~ /E/) {$owner='EST';}
+					if ($owner =~ /C/) {$owner='CST';}
+					if ($owner =~ /M/) {$owner='MST';}
+					if ($owner =~ /P/) {$owner='PST';}
+				$security_phrase =		$m[26];
+				$province =				$m[27];
+				$address3 =				$m[28];
+				$alt_phone =			$m[29];
 
+				$list_id=$new_list_id;
+				$called_count=0;
+				$status='NEW';
+				$insert_date=$pulldate0;
+				$map_count=0;
+
+				$format_set++;
+				}
 
 
 		# This is the format for the standard lead files

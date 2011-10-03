@@ -30,7 +30,6 @@
 #
 
 # disable when not debugging
-#use 5.010;
 #use strict;
 #use warnings;
 
@@ -96,264 +95,267 @@ chomp $exten_file;
 # break the file up into its parts
 my ($dir, $name, $ext) = fileparse($exten_file, @exts);
 
-given ($ext) {
-	# if we are a csv file
-	when ('.csv') {
-		open( IN, $infile ) or die "can't open $infile: $!\n";
-		open( TMPFILE , ">$tempfile" ) or die $!;
+# if we are a csv file
 
-		my $cur_loop_time = time();
-		my $old_loop_time = time();
-		my $loop_time = 0;
-		my $loop_sleep = 0;
+if ($ext eq '.csv') 
+	{
+	open( IN, $infile ) or die "can't open $infile: $!\n";
+	open( TMPFILE , ">$tempfile" ) or die $!;
 
-		my $loop_count = 0;
+	my $cur_loop_time = time();
+	my $old_loop_time = time();
+	my $loop_time = 0;
+	my $loop_sleep = 0;
 
-		# loop through the file and process it in chunks
-		while( <IN> )
+	my $loop_count = 0;
+
+	# loop through the file and process it in chunks
+	while( <IN> )
+		{
+		$loop_count++;
+
+		print TMPFILE $_;
+		if ($debug) { print STDERR "csv line = '$_'\n"; };
+
+		# break
+		if ( $loop_count % $csv_chuck_size == 0 )
 			{
-			$loop_count++;
 
-			print TMPFILE $_;
-			if ($debug) { print STDERR "csv line = '$_'\n"; };
+			# close the temp file
+			close( TMPFILE );
 
-			# break
-			if ( $loop_count % $csv_chuck_size == 0 )
+			# process the temp file
+			my $parser = ReadData ( "$tempfile" );
+
+			my $maxCol = $parser->[1]{maxcol};
+			my $maxRow = $parser->[1]{maxrow};
+
+			# Something is not right if they have 0 or over 100 columns in their lead file.
+			if (( $maxCol >= 100 ) || ( $maxCol == 0 ))
 				{
+				print STDERR "ERROR: Improperly formatted lead file.\n";
+				print OUTFILE "BAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\t\n";
+				exit;
+				}
 
-				# close the temp file
-				close( TMPFILE );
+			if ($debug) { print STDERR "maxCol = '$maxCol'\n"; };
+			if ($debug) { print STDERR "maxRow = '$maxRow'\n"; };
 
-				# process the temp file
-				my $parser = ReadData ( "$tempfile" );
-
-				my $maxCol = $parser->[1]{maxcol};
-				my $maxRow = $parser->[1]{maxrow};
-
-				# Something is not right if they have 0 or over 100 columns in their lead file.
-				if (( $maxCol >= 100 ) || ( $maxCol == 0 ))
+			# loop through the rows
+			for ( $rowPos = 1; $rowPos <= $maxRow; $rowPos++  )
+				{
+				# loop through the cols
+				for ( $colPos = 1; $colPos <= $maxCol; $colPos++  )
 					{
-					print STDERR "ERROR: Improperly formatted lead file.\n";
-					print OUTFILE "BAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\t\n";
-					exit;
-					}
+					my $cell = cr2cell( $colPos, $rowPos );
 
-				if ($debug) { print STDERR "maxCol = '$maxCol'\n"; };
-				if ($debug) { print STDERR "maxRow = '$maxRow'\n"; };
+					if ($debug) { print STDERR "cell = '$cell'\n"; };
 
-				# loop through the rows
-				for ( $rowPos = 1; $rowPos <= $maxRow; $rowPos++  )
-					{
-					# loop through the cols
-					for ( $colPos = 1; $colPos <= $maxCol; $colPos++  )
+					my $field;
+
+					# make sure the field has a value
+					if ( $parser->[1]{$cell} )
 						{
-						my $cell = cr2cell( $colPos, $rowPos );
+						$field = $parser->[1]{$cell};
+						}
+					else
+						{
+						$field = "";
+						}
 
-						if ($debug) { print STDERR "cell = '$cell'\n"; };
+					if ($debug) { print STDERR "field = '$field'\n"; };
 
-						my $field;
+					$field = scrub_lead_field( $field );
 
-						# make sure the field has a value
-						if ( $parser->[1]{$cell} )
-							{
-							$field = $parser->[1]{$cell};
-							}
-						else
-							{
-							$field = "";
-							}
+					print OUTFILE $field;
 
-						if ($debug) { print STDERR "field = '$field'\n"; };
-
-						$field = scrub_lead_field( $field );
-
-						print OUTFILE $field;
-
-						if ( $colPos < $maxCol )
-							{
-							print OUTFILE $out_delim;
-							}
-						else
-							{
-							print OUTFILE "\n";
-							}
+					if ( $colPos < $maxCol )
+						{
+						print OUTFILE $out_delim;
+						}
+					else
+						{
+						print OUTFILE "\n";
 						}
 					}
+				}
 
 
-				# delete the TMPFILE
-				unlink( $tempfile ) or die $!;
+			# delete the TMPFILE
+			unlink( $tempfile ) or die $!;
 
-				# repopn the TMPFILE
-				open( TMPFILE , ">$tempfile" ) or die $!;
+			# repopn the TMPFILE
+			open( TMPFILE , ">$tempfile" ) or die $!;
 				
 
-				# figure out how long it took to loop
-				$old_loop_time = $cur_loop_time;
-				$cur_loop_time = time();
-				$loop_time = $cur_loop_time - $old_loop_time;
+			# figure out how long it took to loop
+			$old_loop_time = $cur_loop_time;
+			$cur_loop_time = time();
 
-				#print STDERR "loop_count = '$loop_count' $loop_time $loop_sleep\n";
+			$loop_time = $cur_loop_time - $old_loop_time;
 
-				if ( $loop_time > $crap_loop_time ) 
+			#print STDERR "loop_count = '$loop_count' $loop_time $loop_sleep\n";
+
+			if ( $loop_time > $crap_loop_time ) 
+				{
+				# this should not take this long to run through a loop.
+				# sleep for a bit to let the CPU recover.
+				$loop_sleep = $loop_sleep + $loop_time;
+
+				# they have waited 60 seconds lets just kill this and get it over with
+				if ( $loop_sleep > 60 ) 
 					{
-					# this should not take this long to run through a loop.
-					# sleep for a bit to let the CPU recover.
-					$loop_sleep = $loop_sleep + $loop_time;
+					close( TMPFILE );
+					close( IN );
 
-					# they have waited 60 seconds lets just kill this and get it over with
-					if ( $loop_sleep > 60 ) {
-						close( TMPFILE );
-						close( IN );
-
-						# delete the TMPFILE
-						unlink( $tempfile ) or die $!;
-
-						open( ERRFILE, ">>$error_log" );
-
-						print ERRFILE "$cur_loop_time: Sheet2tab.pl aborting. Penalized them long enough for their junk leads in $infile \n\n";
-
-						close( ERRFILE );
-
-						exit;
-					}
-
-					sleep($loop_sleep);
+					# delete the TMPFILE
+					unlink( $tempfile ) or die $!;
 
 					open( ERRFILE, ">>$error_log" );
 
-					print ERRFILE "$cur_loop_time: Sheet2tab.pl took $loop_time to process $csv_chuck_size leads from the $infile lead file. Making them sleep $loop_sleep so we can recover.\n\n";
+					print ERRFILE "$cur_loop_time: Sheet2tab.pl aborting. Penalized them long enough for their junk leads in $infile \n\n";
 
 					close( ERRFILE );
 
-					# do not penalize the next loop through because we forced them to sleep
-					$cur_loop_time = time();
+					exit;
 					}
+
+				sleep($loop_sleep);
+
+				open( ERRFILE, ">>$error_log" );
+
+				print ERRFILE "$cur_loop_time: Sheet2tab.pl took $loop_time to process $csv_chuck_size leads from the $infile lead file. Making them sleep $loop_sleep so we can recover.\n\n";
+
+				close( ERRFILE );
+
+				# do not penalize the next loop through because we forced them to sleep
+				$cur_loop_time = time();
 				}
 			}
-		
-		# close the temp and In files
-		close( TMPFILE );
-		close( IN );
-
-		# see if we have any left overs
-		my $temp_file_size = -s $tempfile;
-
-		# if not exit
-		if ( $temp_file_size == 0 ) {
-			# delete the TMPFILE
-			unlink( $tempfile ) or die $!;
-			exit;
 		}
+		
+	# close the temp and In files
+	close( TMPFILE );
+	close( IN );
 
-		# other wise parse the last temp file
-		my $parser = ReadData ( "$tempfile" );
+	# see if we have any left overs
+	my $temp_file_size = -s $tempfile;
 
-		my $maxCol = $parser->[1]{maxcol};
-		my $maxRow = $parser->[1]{maxrow};
-
-		if (( $maxCol >= 100 ) || ( $maxCol == 0 ))
-			{
-			print STDERR "ERROR: Improperly formatted lead file.\n";
-			print OUTFILE "BAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\t\n";
-			exit;
-			}
-
-		if ($debug) { print STDERR "maxCol = '$maxCol'\n"; };
-		if ($debug) { print STDERR "maxRow = '$maxRow'\n"; };
-
-		# loop through the rows
-		for ( $rowPos = 1; $rowPos <= $maxRow; $rowPos++  )
-			{
-			# loop through the cols
-			for ( $colPos = 1; $colPos <= $maxCol; $colPos++  )
-				{
-				my $cell = cr2cell( $colPos, $rowPos );
-
-				if ($debug) { print STDERR "cell = '$cell'\n"; };
-
-				my $field;
-
-				# make sure the field has a value
-				if ( $parser->[1]{$cell} )
-					{
-					$field = $parser->[1]{$cell};
-					}
-				else
-					{
-					$field = "";
-					}
-
-				if ($debug) { print STDERR "field = '$field'\n"; };
-
-				$field = scrub_lead_field( $field );
-
-				print OUTFILE $field;
-
-				if ( $colPos < $maxCol )
-					{
-					print OUTFILE $out_delim;
-					}
-				else
-					{
-					print OUTFILE "\n";
-					}
-				}
-			}
-
+	# if not exit
+	if ( $temp_file_size == 0 ) 
+		{
 		# delete the TMPFILE
 		unlink( $tempfile ) or die $!;
-
+		exit;
 		}
 
-	# not a CSV file
-	default	{
-		# parse the file
-		my $parser = ReadData ( "$infile" );
-	
-		my $maxCol = $parser->[1]{maxcol};
-		my $maxRow = $parser->[1]{maxrow};
+	# other wise parse the last temp file
+	my $parser = ReadData ( "$tempfile" );
 
+	my $maxCol = $parser->[1]{maxcol};
+	my $maxRow = $parser->[1]{maxrow};
 
-		if ($debug) { print STDERR "maxCol = '$maxCol'\n"; };
-		if ($debug) { print STDERR "maxRow = '$maxRow'\n"; };
+	if (( $maxCol >= 100 ) || ( $maxCol == 0 ))
+		{
+		print STDERR "ERROR: Improperly formatted lead file.\n";
+		print OUTFILE "BAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\tBAD_LEAD_FILE\t\n";
+		exit;
+		}
 
-		# loop through the rows
-		for ( $rowPos = 1; $rowPos <= $maxRow; $rowPos++  ) 
+	if ($debug) { print STDERR "maxCol = '$maxCol'\n"; };
+	if ($debug) { print STDERR "maxRow = '$maxRow'\n"; };
+
+	# loop through the rows
+	for ( $rowPos = 1; $rowPos <= $maxRow; $rowPos++  )
+		{
+		# loop through the cols
+		for ( $colPos = 1; $colPos <= $maxCol; $colPos++  )
 			{
-			# loop through the cols
-			for ( $colPos = 1; $colPos <= $maxCol; $colPos++  ) 
+			my $cell = cr2cell( $colPos, $rowPos );
+
+			if ($debug) { print STDERR "cell = '$cell'\n"; };
+
+			my $field;
+
+			# make sure the field has a value
+			if ( $parser->[1]{$cell} )
 				{
-				my $cell = cr2cell( $colPos, $rowPos );
+				$field = $parser->[1]{$cell};
+				}
+			else
+				{
+				$field = "";
+				}
+
+			if ($debug) { print STDERR "field = '$field'\n"; };
+
+			$field = scrub_lead_field( $field );
+
+			print OUTFILE $field;
+
+			if ( $colPos < $maxCol )
+				{
+				print OUTFILE $out_delim;
+				}
+			else
+				{
+				print OUTFILE "\n";
+				}
+			}
+		}
+
+	# delete the TMPFILE
+	unlink( $tempfile ) or die $!;
+
+	}
+else
+	# not a CSV file
+	{
+	# parse the file
+	my $parser = ReadData ( "$infile" );
 	
-				if ($debug) { print STDERR "cell = '$cell'\n"; };
+	my $maxCol = $parser->[1]{maxcol};
+	my $maxRow = $parser->[1]{maxrow};
 
-				my $field;
 
-				# make sure the field has a value
-				if ( $parser->[1]{$cell} ) 
-					{
-					$field = $parser->[1]{$cell};
-					} 
-				else 
-					{
-					$field = "";
-					}
+	if ($debug) { print STDERR "maxCol = '$maxCol'\n"; };
+	if ($debug) { print STDERR "maxRow = '$maxRow'\n"; };
 
-				if ($debug) { print STDERR "field = '$field'\n"; };
+	# loop through the rows
+	for ( $rowPos = 1; $rowPos <= $maxRow; $rowPos++  ) 
+		{
+		# loop through the cols
+		for ( $colPos = 1; $colPos <= $maxCol; $colPos++  ) 
+			{
+			my $cell = cr2cell( $colPos, $rowPos );
+	
+			if ($debug) { print STDERR "cell = '$cell'\n"; };
 
-				$field = scrub_lead_field( $field );
+			my $field;
 
-				print OUTFILE $field;
+			# make sure the field has a value
+			if ( $parser->[1]{$cell} ) 
+				{
+				$field = $parser->[1]{$cell};
+				} 
+			else 
+				{
+				$field = "";
+				}
 
-				if ( $colPos < $maxCol ) 
-					{
-					print OUTFILE $out_delim;
-					} 
-				else 
-					{
-					print OUTFILE "\n";
-					}
+			if ($debug) { print STDERR "field = '$field'\n"; };
+
+			$field = scrub_lead_field( $field );
+
+			print OUTFILE $field;
+
+			if ( $colPos < $maxCol ) 
+				{
+				print OUTFILE $out_delim;
+				} 
+			else 
+				{
+				print OUTFILE "\n";
 				}
 			}
 		}
