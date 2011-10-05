@@ -180,7 +180,18 @@ if ($match_found > 0)
 			$rslt=mysql_query($stmt, $link);
 			$affected_rows = mysql_affected_rows($link);
 
-			$stmtB="UPDATE vicidial_callbacks SET list_id='$new_list_id' where lead_id='$lead_id' limit 1;";
+			$campaign_idSQL='';
+			$stmtA = "SELECT campaign_id FROM vicidial_lists where list_id='$new_list_id';";
+			$rslt=mysql_query($stmtA, $link);
+			if ($DB) {echo "$stmtA\n";}
+			$vlc_ct = mysql_num_rows($rslt);
+			if ($vlc_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$campaign_idSQL = ",campaign_id='$row[0]'";
+				}
+
+			$stmtB="UPDATE vicidial_callbacks SET list_id='$new_list_id' $campaign_idSQL where lead_id='$lead_id' limit 1;";
 			if ($DB) {echo "$stmtB\n";}
 			$rslt=mysql_query($stmtB, $link);
 			$CBaffected_rows = mysql_affected_rows($link);
