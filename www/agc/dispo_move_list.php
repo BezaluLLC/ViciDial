@@ -29,6 +29,7 @@
 # CHANGES
 # 100915-1600 - First Build
 # 110702-2020 - Added multiple sets of options
+# 111005-1102 - Added check and update for scheduled callback entry
 #
 
 $api_script = 'deactivate';
@@ -179,7 +180,12 @@ if ($match_found > 0)
 			$rslt=mysql_query($stmt, $link);
 			$affected_rows = mysql_affected_rows($link);
 
-			$SQL_log = "$stmt|";
+			$stmtB="UPDATE vicidial_callbacks SET list_id='$new_list_id' where lead_id='$lead_id' limit 1;";
+			if ($DB) {echo "$stmtB\n";}
+			$rslt=mysql_query($stmtB, $link);
+			$CBaffected_rows = mysql_affected_rows($link);
+
+			$SQL_log = "$stmt|$stmtB|$CBaffected_rows|";
 			$SQL_log = ereg_replace(';','',$SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$user',function='deactivate_lead',value='$lead_id',result='$affected_rows',result_reason='$lead_id',source='vdc',data='$SQL_log',api_date='$NOW_TIME',api_script='$api_script';";
