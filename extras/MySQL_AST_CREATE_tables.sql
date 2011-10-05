@@ -1873,7 +1873,8 @@ call_time_id VARCHAR(20) default '',
 track_in_vdac ENUM('0','1') default '1',
 custom_dialplan_entry TEXT,
 tracking_group VARCHAR(20) default 'CALLMENU',
-dtmf_log ENUM('0','1') default '0'
+dtmf_log ENUM('0','1') default '0',
+dtmf_field VARCHAR(50) default 'NONE'
 );
 
 CREATE TABLE vicidial_call_menu_options (
@@ -2672,7 +2673,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1300',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1301',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

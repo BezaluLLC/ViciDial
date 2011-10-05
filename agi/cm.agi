@@ -9,15 +9,17 @@
 # ; Below are the parameters needed for the script to be run properly
 # ; 1. the in-group to take settings from
 # ; 2. digit pressed
+# ; 3. field(in vicidial_list) to update with DTMF pressed (only if lead_id populated)
 # ;
 # ;inbound calls check calltime:
-#exten => 1,1,AGI(cm.agi,INBOUND-----1)
+#exten => 1,1,AGI(cm.agi,INBOUND-----1-----province)
 #exten => 1,2,...
 #
 # Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 110525-2100 - First Build
+# 111003-2150 - Added field to update
 #
 
 $script = 'cm.agi';
@@ -33,6 +35,8 @@ if ($sec < 10) {$sec = "0$sec";}
 
 $now_date_epoch = time();
 $now_date = "$year-$mon-$mday $hour:$min:$sec";
+
+$vicidial_list_fields = '|vendor_lead_code|source_id|phone_code|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|alt_phone|email|security_phrase|comments|rank|owner|status|user|';
 
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
@@ -138,6 +142,7 @@ if (length($ARGV[0])>1)
 
 	$channel_group = 	$ARGV_vars[0];
 	$dtmf =				$ARGV_vars[1];
+	$field =			$ARGV_vars[2];
 	}
 
 $|=1;
@@ -164,6 +169,7 @@ while(<STDIN>)
 	}
 
 $outboundIVR=0;
+$fieldUPDATE=0;
 if ($calleridname =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
 	{
 	$callerid = $calleridname;
@@ -180,6 +186,17 @@ if ($calleridname =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
 		$lead_id =		$aryA[1];
 		}
 	$sthA->finish();
+	}
+elsif ($calleridname =~ /^Y\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
+	{
+	$lead_id = substr($calleridname, 10, 10);
+	$lead_id = ($lead_id + 0);
+	$callerid = $calleridname;
+
+	if ( (length($field)>2) && ($vicidial_list_fields =~ /\|$field\|/) )
+		{
+		$fieldUPDATE=1;
+		}
 	}
 else
 	{
@@ -232,14 +249,21 @@ if ($channel =~ /Local/i)
 ### insert an IVR record to the vicidial_auto_calls table
 if ($outboundIVR > 0)
 	{
-	$stmtA = "INSERT INTO vicidial_outbound_ivr_log (uniqueid,caller_code,event_date,campaign_id,lead_id,menu_id,menu_action) values('$uniqueid','$callerid','$now_date','$campaign_id','$lead_id','$context>$dtmf','$dtmf')";
+	$stmtA = "INSERT INTO vicidial_outbound_ivr_log (uniqueid,caller_code,event_date,campaign_id,lead_id,menu_id,menu_action) values('$uniqueid','$callerid','$now_date','$campaign_id','$lead_id','$context>$dtmf','$dtmf');";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$affected_rowsL = $dbhA->do($stmtA);
 	if ($AGILOG) {$agi_string = "--    VOIL insert: |$affected_rowsL|$uniqueid|$callerid|$campaign_id|$lead_id|$context|";   &agi_output;}
 	}
+elsif ($fieldUPDATE > 0)
+	{
+	$stmtA = "UPDATE vicidial_list SET $field='$dtmf' where lead_id='$lead_id';";
+		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+	$affected_rowsL = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "--    VL update: |$affected_rowsL|$field|$dtmf|$lead_id|$context|";   &agi_output;}
+	}
 else
 	{
-	$stmtA = "INSERT INTO live_inbound_log (uniqueid,channel,server_ip,caller_id,extension,phone_ext,start_time,comment_a,comment_b,comment_d,comment_e) values('$uniqueid','$channel','$VARserver_ip','$callerid','$extension','$phone_number','$now_date','$channel_group','$dtmf','$context>$dtmf','$priority')";
+	$stmtA = "INSERT INTO live_inbound_log (uniqueid,channel,server_ip,caller_id,extension,phone_ext,start_time,comment_a,comment_b,comment_d,comment_e) values('$uniqueid','$channel','$VARserver_ip','$callerid','$extension','$phone_number','$now_date','$channel_group','$dtmf','$context>$dtmf','$priority');";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$affected_rowsL = $dbhA->do($stmtA);
 	if ($AGILOG) {$agi_string = "--    LIL insert: |$affected_rowsL|$uniqueid|$callerid|$extension|";   &agi_output;}

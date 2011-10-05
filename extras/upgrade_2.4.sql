@@ -1079,3 +1079,7 @@ UPDATE system_settings SET db_schema_version='1299',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns MODIFY survey_recording ENUM('Y','N','Y_WITH_AMD') default 'N';
 
 UPDATE system_settings SET db_schema_version='1300',db_schema_update_date=NOW() where db_schema_version < 1300;
+
+ALTER TABLE vicidial_call_menu ADD dtmf_field VARCHAR(50) default 'NONE';
+
+UPDATE system_settings SET db_schema_version='1301',db_schema_update_date=NOW() where db_schema_version < 1301;

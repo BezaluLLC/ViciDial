@@ -722,6 +722,11 @@ OTHER CHANGES:
 166. Added ability to set scheduled callbacks through the non-agent-api in the
 	add_lead and update_lead functions.
 
+167. Added new cm_lookup.agi script to allow for account lookups within a 
+	Call Menu without having to go into an in-group. Also new Call Menu
+	option added to allow for vicidial_list field logging of responses
+	inside of a call menu.
+
 
 
 

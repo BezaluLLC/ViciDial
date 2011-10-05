@@ -1653,6 +1653,8 @@ if (isset($_GET["drop_callmenu"]))			{$drop_callmenu=$_GET["drop_callmenu"];}
 	elseif (isset($_POST["drop_callmenu"]))	{$drop_callmenu=$_POST["drop_callmenu"];}
 if (isset($_GET["after_hours_callmenu"]))			{$after_hours_callmenu=$_GET["after_hours_callmenu"];}
 	elseif (isset($_POST["after_hours_callmenu"]))	{$after_hours_callmenu=$_POST["after_hours_callmenu"];}
+if (isset($_GET["dtmf_field"]))			{$dtmf_field=$_GET["dtmf_field"];}
+	elseif (isset($_POST["dtmf_field"]))	{$dtmf_field=$_POST["dtmf_field"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2300,6 +2302,7 @@ if ($non_latin < 1)
 	$drop_callmenu = ereg_replace("[^-_0-9a-zA-Z]","",$drop_callmenu);
 	$after_hours_callmenu = ereg_replace("[^-_0-9a-zA-Z]","",$after_hours_callmenu);
 	$survey_recording = ereg_replace("[^-_0-9a-zA-Z]","",$survey_recording);
+	$dtmf_field = ereg_replace("[^-_0-9a-zA-Z]","",$dtmf_field);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
@@ -2905,12 +2908,13 @@ else
 # 110922-1218 - Added new User admin permissions, Added DID Remote Agent extension override section
 # 110923-0834 - Added option for in-group action transfer cid, and CALLMENU as drop and after-hours action options
 # 110923-2043 - Added custom DID fields
+# 111004-1539 - Added dtmf_field call menu option
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-338a';
-$build = '110923-2043';
+$admin_version = '2.4-339a';
+$build = '111004-1539';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6158,6 +6162,11 @@ if ($ADD==99999)
 	<A NAME="vicidial_call_menu-dtmf_log">
 	<BR>
 	<B>Log Key Press -</B> This option if enabled will log the DTMF key press by the caller in this Call Menu. Default is 0 for disabled.
+
+	<BR>
+	<A NAME="vicidial_call_menu-dtmf_field">
+	<BR>
+	<B>Log Field -</B> If the Log Key Press option is enabled, this optional setting can allow the response to also be stored in this list field. vendor_lead_code, source_id, phone_code, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, alt_phone, email, security_phrase, comments, rank, owner, status, user. Default is NONE for disabled.
 
 	<BR>
 	<A NAME="vicidial_call_menu-option_value">
@@ -11836,7 +11845,7 @@ if ($ADD==2611)
 				}
 			else
 				{
-				$stmt="INSERT INTO vicidial_call_menu (menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log) SELECT \"$menu_id\",\"$menu_name\",menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log from vicidial_call_menu where menu_id=\"$source_menu\";";
+				$stmt="INSERT INTO vicidial_call_menu (menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field) SELECT \"$menu_id\",\"$menu_name\",menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field from vicidial_call_menu where menu_id=\"$source_menu\";";
 				$rslt=mysql_query($stmt, $link);
 
 				$stmtA="INSERT INTO vicidial_call_menu_options (menu_id,option_value,option_description,option_route,option_route_value,option_route_value_context) SELECT \"$menu_id\",option_value,option_description,option_route,option_route_value,option_route_value_context from vicidial_call_menu_options where menu_id='$source_menu';";
@@ -15135,7 +15144,7 @@ if ($ADD==4511)
 			{
 			echo "<br><B>CALL MENU MODIFIED: $menu_id</B>\n";
 
-			$stmt="UPDATE vicidial_call_menu set menu_name='$menu_name',menu_prompt='$menu_prompt',menu_timeout='$menu_timeout',menu_timeout_prompt='$menu_timeout_prompt',menu_invalid_prompt='$menu_invalid_prompt',menu_repeat='$menu_repeat',menu_time_check='$menu_time_check',call_time_id='$call_time_id',track_in_vdac='$track_in_vdac',custom_dialplan_entry='$custom_dialplan_entry',tracking_group='$tracking_group',dtmf_log='$dtmf_log' where menu_id='$menu_id';";
+			$stmt="UPDATE vicidial_call_menu set menu_name='$menu_name',menu_prompt='$menu_prompt',menu_timeout='$menu_timeout',menu_timeout_prompt='$menu_timeout_prompt',menu_invalid_prompt='$menu_invalid_prompt',menu_repeat='$menu_repeat',menu_time_check='$menu_time_check',call_time_id='$call_time_id',track_in_vdac='$track_in_vdac',custom_dialplan_entry='$custom_dialplan_entry',tracking_group='$tracking_group',dtmf_log='$dtmf_log',dtmf_field='$dtmf_field' where menu_id='$menu_id';";
 			$rslt=mysql_query($stmt, $link);
 
 			$h=0;
@@ -25220,7 +25229,7 @@ if ($ADD==3511)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log from vicidial_call_menu where menu_id='$menu_id';";
+		$stmt="SELECT menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field from vicidial_call_menu where menu_id='$menu_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$menu_name =			$row[0];
@@ -25235,6 +25244,7 @@ if ($ADD==3511)
 		$custom_dialplan_entry= $row[9];
 		$tracking_group =		$row[10];
 		$dtmf_log =				$row[11];
+		$dtmf_field =			$row[12];
 
 
 		echo "<br>MODIFY A CALL MENU RECORD: $menu_id<form action=$PHP_SELF method=POST name=admin_form id=admin_form>\n";
@@ -25288,7 +25298,8 @@ if ($ADD==3511)
 			{
 			echo "<option selected value=\"0\">0 - No DTMF Logging</option><option value=\"1\">1 - DTMF Logging Enabled</option>\n";
 			}
-		echo "</select>$NWB#vicidial_call_menu-dtmf_log$NWE</td></tr>\n";
+		echo "</select>$NWB#vicidial_call_menu-dtmf_log$NWE &nbsp; &nbsp; Log Field: \n";
+		echo "<select size=1 name=dtmf_field><option>NONE</option><option>vendor_lead_code</option><option>source_id</option><option>phone_code</option><option>title</option><option>first_name</option><option>middle_initial</option><option>last_name</option><option>address1</option><option>address2</option><option>address3</option><option>city</option><option>state</option><option>province</option><option>postal_code</option><option>country_code</option><option>alt_phone</option><option>email</option><option>security_phrase</option><option>comments</option><option>rank</option><option>owner</option><option>status</option><option>user</option><option SELECTED>$dtmf_field</option></select>$NWB#vicidial_call_menu-dtmf_field$NWE</td></tr>\n";
 
 		echo "<tr><td align=center colspan=2> <input type=submit name=SUBMIT value=SUBMIT> </td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=CENTER colspan=2> Call Menu Options: </td></tr>\n";
