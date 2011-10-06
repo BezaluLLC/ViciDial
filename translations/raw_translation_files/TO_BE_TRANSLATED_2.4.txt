@@ -752,6 +752,16 @@ If set to Y_WITH_AMD even answering machine detected message calls will be recor
 Log Field||
 If the Log Key Press option is enabled, this optional setting can allow the response to also be stored in this list field||
 Default is NONE for disabled||
+Call Count Limit||
+This enforces a limit on the number of call attempts for the leads dialed in this campaign. A lead may go over this limit slightly if Lead Recycling or Auto-Alt-Dialing is enabled. Default is 0 for no limit||
+Call Count Target||
+This option is only used for reporting purposes and has no effect on leads dialed. Default is 3||
+Enable Expanded List Stats||
+This setting enables two additional columns to be displayed on most of the List status breakdown tables on the list modification and campaign modification pages. Penetration is defined as the percent of leads that are at or above the campaign Call Count Limit and-or the status is marked as Completed. Default is 1 for enabled||
+Report Option||
+This option allows this specific shift to show up in selected reports that support this option||
+There are||
+completed leads in those lists||
 
 
 lead_report_export.php

@@ -1083,3 +1083,15 @@ UPDATE system_settings SET db_schema_version='1300',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_call_menu ADD dtmf_field VARCHAR(50) default 'NONE';
 
 UPDATE system_settings SET db_schema_version='1301',db_schema_update_date=NOW() where db_schema_version < 1301;
+
+ALTER TABLE vicidial_campaigns ADD call_count_limit SMALLINT(5) UNSIGNED default '0';
+ALTER TABLE vicidial_campaigns ADD call_count_target SMALLINT(5) UNSIGNED default '3';
+
+ALTER TABLE vicidial_statuses ADD completed ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_campaign_statuses ADD completed ENUM('Y','N') default 'N';
+
+ALTER TABLE system_settings ADD expanded_list_stats ENUM('0','1') default '1';
+
+ALTER TABLE vicidial_shifts ADD report_option ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1302',db_schema_update_date=NOW() where db_schema_version < 1302;

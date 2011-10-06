@@ -832,7 +832,9 @@ status_display_fields VARCHAR(30) default 'CALLID',
 na_call_url TEXT,
 survey_recording ENUM('Y','N','Y_WITH_AMD') default 'N',
 pllb_grouping ENUM('DISABLED','ONE_SERVER_ONLY','CASCADING') default 'DISABLED',
-pllb_grouping_limit SMALLINT(5) default '50'
+pllb_grouping_limit SMALLINT(5) default '50',
+call_count_limit SMALLINT(5) UNSIGNED default '0',
+call_count_target SMALLINT(5) UNSIGNED default '3'
 );
 
 CREATE TABLE vicidial_lists (
@@ -869,7 +871,8 @@ dnc ENUM('Y','N') default 'N',
 customer_contact ENUM('Y','N') default 'N',
 not_interested ENUM('Y','N') default 'N',
 unworkable ENUM('Y','N') default 'N',
-scheduled_callback ENUM('Y','N') default 'N'
+scheduled_callback ENUM('Y','N') default 'N',
+completed ENUM('Y','N') default 'N'
 );
 
 CREATE TABLE vicidial_campaign_statuses (
@@ -885,6 +888,7 @@ customer_contact ENUM('Y','N') default 'N',
 not_interested ENUM('Y','N') default 'N',
 unworkable ENUM('Y','N') default 'N',
 scheduled_callback ENUM('Y','N') default 'N',
+completed ENUM('Y','N') default 'N',
 index (campaign_id)
 );
 
@@ -1446,7 +1450,8 @@ tables_use_alt_log_db VARCHAR(2000) default '',
 did_agent_log ENUM('Y','N') default 'N',
 campaign_cid_areacodes_enabled ENUM('0','1') default '1',
 pllb_grouping_limit SMALLINT(5) default '100',
-did_ra_extensions_enabled ENUM('0','1') default '0'
+did_ra_extensions_enabled ENUM('0','1') default '0',
+expanded_list_stats ENUM('0','1') default '1'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -1604,6 +1609,7 @@ shift_name VARCHAR(50),
 shift_start_time VARCHAR(4) default '0900',
 shift_length VARCHAR(5) default '16:00',
 shift_weekdays VARCHAR(7) default '0123456',
+report_option ENUM('Y','N') default 'N',
 index (shift_id)
 );
 
@@ -2673,7 +2679,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1301',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1302',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

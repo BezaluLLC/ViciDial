@@ -67,6 +67,7 @@
 # 110103-1118 - Added lead_order_randomize option
 # 110212-2255 - Added scheduled callback custom statuses capability
 # 110214-2319 - Added lead_order_secondary option
+# 111006-1416 - Added call_count_limit option
 #
 
 # constants
@@ -801,11 +802,11 @@ if ($hopper_dnc_count > 0)
 
 if ($CLIcampaign)
 	{
-	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize,lead_order_secondary from vicidial_campaigns where campaign_id='$CLIcampaign';";
+	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize,lead_order_secondary,call_count_limit from vicidial_campaigns where campaign_id='$CLIcampaign';";
 	}
 else
 	{
-	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize,lead_order_secondary from vicidial_campaigns where active='Y';";
+	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize,lead_order_secondary,call_count_limit from vicidial_campaigns where active='Y';";
 	}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -840,6 +841,7 @@ while ($sthArows > $rec_count)
 	$auto_trim_hopper[$rec_count] =				$aryA[20];
 	$lead_order_randomize[$rec_count] =			$aryA[21];
 	$lead_order_secondary[$rec_count] =			$aryA[22];
+	$call_count_limit[$rec_count] =				$aryA[23];
 
 	### Auto Hopper Level
 	if ( $use_auto_hopper[$rec_count] =~ /Y/) 
@@ -1727,11 +1729,19 @@ foreach(@campaign_id)
 			if ($DB) {print "     drop lockout time $drop_lockout_time[$i]($DLseconds[$i]) defined for $campaign_id[$i]\n";}
 			if ($DBX) {print "     |$DLTsql[$i]|\n";}
 			}
-		
+
+		$CCLsql[$i]='';
+		if ($call_count_limit[$i] > 0)
+			{
+			$CCLsql[$i] = "and (called_count < $call_count_limit[$i])";
+			if ($DB) {print "     call count limit $call_count_limit[$i] defined for $campaign_id[$i]\n";}
+			if ($DBX) {print "     |$CCLsql[$i]|\n";}
+			}
+
 		##### Get count of leads that are dialable #####
 		if ($list_order_mix[$i] =~ /DISABLED/)
 			{
-			$stmtA = "SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and status IN($STATUSsql[$i]) and list_id IN($camp_lists[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
+			$stmtA = "SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and status IN($STATUSsql[$i]) and list_id IN($camp_lists[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i] $CCLsql[$i];";
 			}
 		else
 			{

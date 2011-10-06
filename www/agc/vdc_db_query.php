@@ -290,10 +290,11 @@
 # 110723-2256 - Added disable_alter_custphone HIDE option for call logs display
 # 110731-2318 - Added dispo/start call url logging to DB table
 # 110901-1117 - Added areacode custom cid function
+# 111006-1425 - Added call_count_limit campaign option
 #
 
-$version = '2.4-193';
-$build = '110901-1117';
+$version = '2.4-194';
+$build = '111006-1425';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=425;
 $one_mysql_log=0;
@@ -1524,7 +1525,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 		else
 			{
 			##### gather no hopper dialing settings from campaign
-			$stmt="SELECT no_hopper_dialing,agent_dial_owner_only,local_call_time,dial_statuses,drop_lockout_time,lead_filter_id,lead_order,lead_order_randomize,lead_order_secondary FROM vicidial_campaigns where campaign_id='$campaign';";
+			$stmt="SELECT no_hopper_dialing,agent_dial_owner_only,local_call_time,dial_statuses,drop_lockout_time,lead_filter_id,lead_order,lead_order_randomize,lead_order_secondary,call_count_limit FROM vicidial_campaigns where campaign_id='$campaign';";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00236',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -1541,6 +1542,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$lead_order =				$row[6];
 				$lead_order_randomize =		$row[7];
 				$lead_order_secondary =		$row[8];
+				$call_count_limit =			$row[9];
 				}
 			if (eregi("N",$no_hopper_dialing))
 				{
@@ -1877,6 +1879,12 @@ if ($ACTION == 'manDiaLnextCaLL')
 						$DLTsql = "and ( ( (status IN('DROP','XDROP')) and (last_local_call_time < CONCAT(DATE_ADD(NOW(), INTERVAL -$DLseconds SECOND),' ',CURTIME()) ) ) or (status NOT IN('DROP','XDROP')) )";
 						}
 
+					$CCLsql='';
+					if ($call_count_limit > 0)
+						{
+						$CCLsql = "and (called_count < $call_count_limit)";
+						}
+
 					$stmt="SELECT lead_filter_sql FROM vicidial_lead_filters where lead_filter_id='$lead_filter_id';";
 					$rslt=mysql_query($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00239',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -2000,7 +2008,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					if (eregi("UP TIMEZONE",$lead_order)){$order_stmt = "order by gmt_offset_now desc, $last_order";}
 					if (eregi("DOWN TIMEZONE",$lead_order)){$order_stmt = "order by gmt_offset_now, $last_order";}
 
-					$stmt="UPDATE vicidial_list SET user='QUEUE$user' where called_since_last_reset='N' and user NOT LIKE \"QUEUE%\" and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) $DLTsql $fSQL $adooSQL $order_stmt LIMIT 1;";
+					$stmt="UPDATE vicidial_list SET user='QUEUE$user' where called_since_last_reset='N' and user NOT LIKE \"QUEUE%\" and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) $CCLsql $DLTsql $fSQL $adooSQL $order_stmt LIMIT 1;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00242',$user,$server_ip,$session_name,$one_mysql_log);}
