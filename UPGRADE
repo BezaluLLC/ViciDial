@@ -732,9 +732,9 @@ OTHER CHANGES:
 	Previously you had to use a filter to achieve this functionality.
 
 167. Added new Complete flag for statuses and campaign statuses. Used by the 
-	new colums mentioned below as well as for future reports.
+	new columns mentioned below as well as for future reports.
 
-168. Added Dialable and Penetration colums to the Statuses Within This List/
+168. Added Dialable and Penetration columns to the Statuses Within This List/
 	Campaign tables on the list and campaign screens, showing the DIALABLE
 	count for each status as well as the complete-flag and call-count-limit
 	percentage as PENETRATION.

@@ -27,6 +27,7 @@
 # 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 # 110703-1739 - Added file download option
+# 111007-0709 - Changed user and fullname to use non-truncated for output file
 #
 
 require("dbconnect.php");
@@ -529,6 +530,8 @@ while ($m < $k)
 	$RAWuser = $Suser;
 	$RAWcalls = $Scalls;
 	$Scalls =	sprintf("%6s", $Scalls);
+	$Sfull_nameRAW = $Sfull_name;
+	$SuserRAW = $Suser;
 
 	if ($non_latin < 1)
 		{
@@ -577,8 +580,8 @@ while ($m < $k)
 	$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERavgDEAD_MS | $pfUSERtotCUSTOMER_MS | $pfUSERavgCUSTOMER_MS |$SstatusesHTML\n";
 
 
-	$CSV_lines.="\"$Sfull_name\",";
-	$CSV_lines.=eregi_replace(" ", "", "\"$Suser\",\"$Scalls\",\"$pfUSERtime_MS\",\"$pfUSERtotPAUSE_MS\",\"$pfUSERavgPAUSE_MS\",\"$pfUSERtotWAIT_MS\",\"$pfUSERavgWAIT_MS\",\"$pfUSERtotTALK_MS\",\"$pfUSERavgTALK_MS\",\"$pfUSERtotDISPO_MS\",\"$pfUSERavgDISPO_MS\",\"$pfUSERtotDEAD_MS\",\"$pfUSERavgDEAD_MS\",\"$pfUSERtotCUSTOMER_MS\",\"$pfUSERavgCUSTOMER_MS\"$CSVstatuses\n");
+	$CSV_lines.="\"$Sfull_nameRAW\",";
+	$CSV_lines.=eregi_replace(" ", "", "\"$SuserRAW\",\"$Scalls\",\"$pfUSERtime_MS\",\"$pfUSERtotPAUSE_MS\",\"$pfUSERavgPAUSE_MS\",\"$pfUSERtotWAIT_MS\",\"$pfUSERavgWAIT_MS\",\"$pfUSERtotTALK_MS\",\"$pfUSERavgTALK_MS\",\"$pfUSERtotDISPO_MS\",\"$pfUSERavgDISPO_MS\",\"$pfUSERtotDEAD_MS\",\"$pfUSERavgDEAD_MS\",\"$pfUSERtotCUSTOMER_MS\",\"$pfUSERavgCUSTOMER_MS\"$CSVstatuses\n");
 
 	$TOPsorted_output[$m] = $Toutput;
 
@@ -881,6 +884,8 @@ while ($m < $k)
 		}
 	### END loop through each status ###
 	$TOTtotPAUSE=($TOTtotPAUSE + $Spause_sec);
+	$Sfull_nameRAW = $Sfull_name;
+	$SuserRAW = $Suser;
 
 	if ($non_latin < 1)
 		{
@@ -913,7 +918,7 @@ while ($m < $k)
 	$BOTTOMsorted_output[$m] = $BOTTOMoutput;
 
 	$HTML_text.="$BOTTOMoutput";
-	$CSV_lines.="\"$Sfull_name\"".eregi_replace(" ", "", ",\"$Suser\",\"$pfUSERtotTOTAL_MS\",\"$pfUSERtotNONPAUSE_MS\",\"$pfUSERtotPAUSE_MS\",$CSV_statuses\n");
+	$CSV_lines.="\"$Sfull_nameRAW\"".eregi_replace(" ", "", ",\"$SuserRAW\",\"$pfUSERtotTOTAL_MS\",\"$pfUSERtotNONPAUSE_MS\",\"$pfUSERtotPAUSE_MS\",$CSV_statuses\n");
 	$m++;
 	}
 ### END loop through each user ###
