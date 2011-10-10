@@ -1095,3 +1095,7 @@ ALTER TABLE system_settings ADD expanded_list_stats ENUM('0','1') default '1';
 ALTER TABLE vicidial_shifts ADD report_option ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1302',db_schema_update_date=NOW() where db_schema_version < 1302;
+
+CREATE UNIQUE INDEX viga_user_group_id on vicidial_inbound_group_agents (user, group_id);
+
+UPDATE system_settings SET db_schema_version='1303',db_schema_update_date=NOW() where db_schema_version < 1303;

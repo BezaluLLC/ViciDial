@@ -2200,9 +2200,6 @@ if ($non_latin < 1)
 	$alias_id = ereg_replace("[^-_0-9a-zA-Z]","",$alias_id);
 	$shift_id = ereg_replace("[^-_0-9a-zA-Z]","",$shift_id);
 	$qc_shift_id = ereg_replace("[^-_0-9a-zA-Z]","",$qc_shift_id);
-	$survey_first_audio_file = ereg_replace("[^-_0-9a-zA-Z]","",$survey_first_audio_file);
-	$survey_opt_in_audio_file = ereg_replace("[^-_0-9a-zA-Z]","",$survey_opt_in_audio_file);
-	$survey_ni_audio_file = ereg_replace("[^-_0-9a-zA-Z]","",$survey_ni_audio_file);
 	$survey_method = ereg_replace("[^-_0-9a-zA-Z]","",$survey_method);
 	$alter_custphone_override = ereg_replace("[^-_0-9a-zA-Z]","",$alter_custphone_override);
 	$manual_dial_filter = ereg_replace("[^-_0-9a-zA-Z]","",$manual_dial_filter);
@@ -2232,8 +2229,6 @@ if ($non_latin < 1)
 	$group_alias_id = ereg_replace("[^-_0-9a-zA-Z]","",$group_alias_id);
 	$default_group_alias = ereg_replace("[^-_0-9a-zA-Z]","",$default_group_alias);
 	$vtiger_search_dead = ereg_replace("[^-_0-9a-zA-Z]","",$vtiger_search_dead);
-	$survey_third_audio_file = ereg_replace("[^-_0-9a-zA-Z]","",$survey_third_audio_file);
-	$survey_fourth_audio_file = ereg_replace("[^-_0-9a-zA-Z]","",$survey_fourth_audio_file);
 	$menu_id = ereg_replace("[^-_0-9a-zA-Z]","",$menu_id);
 	$source_menu = ereg_replace("[^-_0-9a-zA-Z]","",$source_menu);
 	$call_time_id = ereg_replace("[^-_0-9a-zA-Z]","",$call_time_id);
@@ -2355,6 +2350,11 @@ if ($non_latin < 1)
 	$alt_log_dbname = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$alt_log_dbname);
 	$alt_log_login = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$alt_log_login);
 	$alt_log_pass = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$alt_log_pass);
+	$survey_first_audio_file = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$survey_first_audio_file);
+	$survey_opt_in_audio_file = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$survey_opt_in_audio_file);
+	$survey_ni_audio_file = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$survey_ni_audio_file);
+	$survey_third_audio_file = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$survey_third_audio_file);
+	$survey_fourth_audio_file = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$survey_fourth_audio_file);
 
 	### ALPHA-NUMERIC and underscore and dash and comma
 	$logins_list = ereg_replace("[^-\,\_0-9a-zA-Z]","",$logins_list);

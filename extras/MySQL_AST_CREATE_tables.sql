@@ -1540,7 +1540,8 @@ group_weight TINYINT(1) default '0',
 calls_today SMALLINT(5) UNSIGNED default '0',
 group_web_vars VARCHAR(255) default '',
 index (group_id),
-index (user)
+index (user),
+unique index viga_user_group_id (user, group_id)
 );
 
 CREATE TABLE vicidial_live_inbound_agents (
@@ -2679,7 +2680,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1302',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1303',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

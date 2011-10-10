@@ -325,10 +325,10 @@ while($one_day_interval > 0)
 					$stmtC = "UPDATE vicidial_closer_log set status='XFER',user='$QHuser[$w]',comments='REMOTE' where lead_id='$QHlead_id[$w]' and uniqueid='$QHuniqueid[$w]' and campaign_id='$QHcampaign_id[$w]' limit 1;";
 					$Caffected_rows = $dbhA->do($stmtC);
 
-					$stmtD = "UPDATE vicidial_live_inbound_agents set calls_today=(calls_today + 1),last_call_time='$SQLdate' where user='$QHuser[$w]' and group_id='$QHcampaign_id[$w]';";
+					$stmtD = "INSERT IGNORE INTO vicidial_live_inbound_agents SET calls_today='1',last_call_time='$SQLdate' where user='$QHuser[$w]' and group_id='$QHcampaign_id[$w]' ON DUPLICATE KEY UPDATE calls_today=(calls_today + 1),last_call_time='$SQLdate';";
 					$Daffected_rows = $dbhA->do($stmtD);
 
-					$stmtE = "UPDATE vicidial_inbound_group_agents set calls_today=(calls_today + 1) where user='$QHuser[$w]' and group_id='$QHcampaign_id[$w]';";
+					$stmtE = "INSERT IGNORE INTO vicidial_inbound_group_agents set calls_today=1 where user='$QHuser[$w]' and group_id='$QHcampaign_id[$w]' ON DUPLICATE KEY UPDATE calls_today=(calls_today + 1);";
 					$Eaffected_rows = $dbhA->do($stmtE);
 
 					$stmtG = "SELECT start_call_url FROM vicidial_inbound_groups where group_id='$QHcampaign_id[$w]';";

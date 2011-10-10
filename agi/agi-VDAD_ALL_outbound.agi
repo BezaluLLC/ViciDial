@@ -954,7 +954,24 @@ if ($call_handle_method =~ /REMIND/)
 		$dbhP=$dbhA;   $mysql_count='01013';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	if ($AGILOG) {$agi_string = "--    VDAC posttime record: |$affected_rows|$FDtsSQLdate|$callerid|REMIND|";   &agi_output;}
 
-	$AGI->stream_file("$survey_first_audio_file");
+	if ( $survey_first_audio_file ne "") 
+		{
+		if ($survey_first_audio_file =~ /\|/)
+			{
+			@survey_first_audio_file_array = split(/\|/,$survey_first_audio_file);
+			$w=0;
+			foreach(@survey_first_audio_file_array)
+				{
+				if (length($survey_first_audio_file_array[$w])>0)
+					{
+					$AGI->stream_file("$survey_first_audio_file_array[$w]");
+					}
+				$w++;
+				}
+			}
+		else
+			{$AGI->stream_file("$survey_first_audio_file");}
+		}
 	}
 
 
@@ -1061,7 +1078,21 @@ if ($call_handle_method =~ /SURVEY/)
 		{
 		if ( $survey_ni_audio_file ne "") 
 			{
-			$AGI->stream_file($survey_ni_audio_file);
+			if ($survey_ni_audio_file =~ /\|/)
+				{
+				@survey_ni_audio_file_array = split(/\|/,$survey_ni_audio_file);
+				$w=0;
+				foreach(@survey_ni_audio_file_array)
+					{
+					if (length($survey_ni_audio_file_array[$w])>0)
+						{
+						$AGI->stream_file("$survey_ni_audio_file_array[$w]");
+						}
+					$w++;
+					}
+				}
+			else
+				{$AGI->stream_file("$survey_ni_audio_file");}
 			}
 
 		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' order by call_time desc limit 1;";
@@ -1132,7 +1163,21 @@ if ($call_handle_method =~ /SURVEY/)
 		{
 		if ( $survey_third_audio_file ne "") 
 			{
-			$AGI->stream_file($survey_third_audio_file);
+			if ($survey_third_audio_file =~ /\|/)
+				{
+				@survey_third_audio_file_array = split(/\|/,$survey_third_audio_file);
+				$w=0;
+				foreach(@survey_third_audio_file_array)
+					{
+					if (length($survey_third_audio_file_array[$w])>0)
+						{
+						$AGI->stream_file("$survey_third_audio_file_array[$w]");
+						}
+					$w++;
+					}
+				}
+			else
+				{$AGI->stream_file("$survey_third_audio_file");}
 			}
 
 		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' order by call_time desc limit 1;";
@@ -1215,7 +1260,21 @@ if ($call_handle_method =~ /SURVEY/)
 		{
 		if ( $survey_fourth_audio_file ne "") 
 			{
-			$AGI->stream_file($survey_fourth_audio_file);
+			if ($survey_fourth_audio_file =~ /\|/)
+				{
+				@survey_fourth_audio_file_array = split(/\|/,$survey_fourth_audio_file);
+				$w=0;
+				foreach(@survey_fourth_audio_file_array)
+					{
+					if (length($survey_fourth_audio_file_array[$w])>0)
+						{
+						$AGI->stream_file("$survey_fourth_audio_file_array[$w]");
+						}
+					$w++;
+					}
+				}
+			else
+				{$AGI->stream_file("$survey_fourth_audio_file");}
 			}
 
 		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' order by call_time desc limit 1;";
@@ -1314,7 +1373,21 @@ if ($call_handle_method =~ /SURVEY/)
 
 		if ( $survey_opt_in_audio_file ne "") 
 			{
-			$AGI->stream_file($survey_opt_in_audio_file);
+			if ($survey_opt_in_audio_file =~ /\|/)
+				{
+				@survey_opt_in_audio_file_array = split(/\|/,$survey_opt_in_audio_file);
+				$w=0;
+				foreach(@survey_opt_in_audio_file_array)
+					{
+					if (length($survey_opt_in_audio_file_array[$w])>0)
+						{
+						$AGI->stream_file("$survey_opt_in_audio_file_array[$w]");
+						}
+					$w++;
+					}
+				}
+			else
+				{$AGI->stream_file("$survey_opt_in_audio_file");}
 			}
 
 		if ($survey_method =~ /VOICEMAIL|EXTENSION|HANGUP|CALLMENU/)
