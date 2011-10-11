@@ -31,6 +31,7 @@
 # 110531-1945 - Changed first phone_number field to phone_number_dialed, issue #495
 # 110721-2027 - Added IVR export options
 # 110911-1445 - Added did fields to the EXTENDED format 
+# 111010-1930 - Added ALTERNATE_1 format
 #
 
 require("dbconnect.php");
@@ -287,7 +288,11 @@ if ($run_export > 0)
 		$export_fields_SQL = ",entry_date,called_count,last_local_call_time,modify_date,called_since_last_reset";
 		$EFheader = "\tentry_date\tcalled_count\tlast_local_call_time\tmodify_date\tcalled_since_last_reset";
 		}
-
+	if ($export_fields == 'ALTERNATE_1')
+		{
+		$export_fields_SQL = ",last_local_call_time,called_count";
+		$EFheader = "\tlast_local_call_time\tcalled_count";
+		}
 
 	if ($DB > 0)
 		{
@@ -334,9 +339,21 @@ if ($run_export > 0)
 				$export_vicidial_id[$k] =	$row[36];
 				$export_entry_list_id[$k] =	$row[37];
 				$export_fieldsDATA='';
-				if ($export_fields == 'EXTENDED')
-					{$export_fieldsDATA = "$row[38]\t$row[39]\t$row[40]\t$row[41]\t$row[42]\t";}
-				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t$export_fieldsDATA";
+				if ($export_fields == 'ALTERNATE_1')
+					{
+					$ALTcall_date = $row[0];
+					$LASTcall_date = $row[38];
+					$ALTcall_date = preg_replace("/-| |:|\d\d$/",'',$ALTcall_date);
+					$LASTcall_date = preg_replace("/-| |:|\d\d$/",'',$LASTcall_date);
+					$export_fieldsDATA = "$LASTcall_date\t$row[39]\t";
+					$export_rows[$k] = "$ALTcall_date\t$row[1]\t$row[2]\t$row[5]\t$row[6]\t$row[7]\t$row[13]\t$row[15]\t$row[30]\t$export_fieldsDATA";
+					}
+				else
+					{
+					if ($export_fields == 'EXTENDED')
+						{$export_fieldsDATA = "$row[38]\t$row[39]\t$row[40]\t$row[41]\t$row[42]\t";}
+					$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t$export_fieldsDATA";
+					}
 				$i++;
 				$k++;
 				$outbound_calls++;
@@ -371,9 +388,21 @@ if ($run_export > 0)
 				$export_entry_list_id[$k] =	$row[37];
 				$export_uniqueid[$k] =		$row[38];
 				$export_fieldsDATA='';
-				if ($export_fields == 'EXTENDED')
-					{$export_fieldsDATA = "$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t";}
-				$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t$export_fieldsDATA";
+				if ($export_fields == 'ALTERNATE_1')
+					{
+					$ALTcall_date = $row[0];
+					$LASTcall_date = $row[39];
+					$ALTcall_date = preg_replace("/-| |:|\d\d$/",'',$ALTcall_date);
+					$LASTcall_date = preg_replace("/-| |:|\d\d$/",'',$LASTcall_date);
+					$export_fieldsDATA = "$LASTcall_date\t$row[40]\t";
+					$export_rows[$k] = "$ALTcall_date\t$row[1]\t$row[2]\t$row[5]\t$row[6]\t$row[7]\t$row[13]\t$row[15]\t$row[30]\t$export_fieldsDATA";
+					}
+				else
+					{
+					if ($export_fields == 'EXTENDED')
+						{$export_fieldsDATA = "$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t";}
+					$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t$export_fieldsDATA";
+					}
 				$i++;
 				$k++;
 				}
@@ -421,6 +450,8 @@ if ($run_export > 0)
 				{$RFheader = "\trecording_id\trecording_filename\trecording_location";}
 			if ($export_fields=='EXTENDED')
 				{$EXheader = "\tuniqueid\tcaller_code\tserver_ip\thangup_cause\tdialstatus\tchannel\tdial_time\tanswered_time\tcpd_result\tdid_pattern\tdid_id\tdid_description";}
+			if ($export_fields == 'ALTERNATE_1')
+				{$EXheader = "\tcaller_code";}
 			if ($call_notes=='YES')
 				{$NFheader = "\tcall_notes";}
 			if ($ivr_export=='YES')
@@ -428,7 +459,14 @@ if ($run_export > 0)
 			if ( ($custom_fields_enabled > 0) and ($custom_fields=='YES') )
 				{$CFheader = "\tcustom_fields";}
 
-			echo "call_date\tphone_number_dialed\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id$EFheader\tlist_name\tlist_description\tstatus_name$RFheader$EXheader$NFheader$IVRheader$CFheader\r\n";
+			if ($export_fields == 'ALTERNATE_1')
+				{
+				echo "call_date\tphone_number_dialed\tstatus\tcampaign_id\tvendor_lead_code\tsource_id\tfirst_name\tlast_name\tlength_in_sec$EFheader$RFheader$EXheader$NFheader$IVRheader$CFheader\r\n";
+				}
+			else
+				{
+				echo "call_date\tphone_number_dialed\tstatus\tuser\tfull_name\tcampaign_id\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tlength_in_sec\tuser_group\talt_dial\trank\towner\tlead_id$EFheader\tlist_name\tlist_description\tstatus_name$RFheader$EXheader$NFheader$IVRheader$CFheader\r\n";
+				}
 			}
 
 		$i=0;
@@ -508,6 +546,28 @@ if ($run_export > 0)
 			$extended_data_a='';
 			$extended_data_b='';
 			$extended_data_c='';
+			if ($export_fields=='ALTERNATE_1')
+				{
+				$extended_data = '';
+				if (strlen($export_uniqueid[$i]) > 0)
+					{
+					$uniqueidTEST = $export_uniqueid[$i];
+					$uniqueidTEST = preg_replace('/\..*$/','',$uniqueidTEST);
+					$stmt = "SELECT caller_code,server_ip from vicidial_log_extended where uniqueid LIKE \"$uniqueidTEST%\" and lead_id='$export_lead_id[$i]' LIMIT 1;";
+					$rslt=mysql_query($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$vle_ct = mysql_num_rows($rslt);
+					if ($vle_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$extended_data_a =	"$row[0]";
+						$export_call_id[$i] = $row[0];
+						}
+					}
+				if (strlen($extended_data_a)<1)
+					{$extended_data_a =	"\t";}
+				$extended_data .= "$extended_data_a";
+				}
 			if ($export_fields=='EXTENDED')
 				{
 				$extended_data = "\t$export_uniqueid[$i]";
@@ -606,6 +666,9 @@ if ($run_export > 0)
 				$ivr_path='';
 				if (strlen($export_uniqueid[$i]) > 0)
 					{
+					$IVRdelimiter='|';
+					if ($export_fields=='ALTERNATE_1')
+						{$IVRdelimiter='^';}
 					$stmt="select menu_id,UNIX_TIMESTAMP(event_date) from vicidial_outbound_ivr_log where event_date >= '$query_date 00:00:00' and event_date <= '$end_date 23:59:59' and uniqueid='$export_uniqueid[$i]' order by event_date,menu_action desc;";
 					$rslt=mysql_query($stmt, $link);
 				#	$ivr_path = "$stmt|$export_uniqueid[$i]|";
@@ -615,10 +678,10 @@ if ($run_export > 0)
 					while ($u < $logs_to_print)
 						{
 						$row=mysql_fetch_row($rslt);
-						$ivr_path .= "$row[0]|";
+						$ivr_path .= "$row[0]$IVRdelimiter";
 						$u++;
 						}
-					$ivr_path = preg_replace("/\|$/",'',$ivr_path);
+					$ivr_path = preg_replace("/\|$|\^$/",'',$ivr_path);
 					}
 				$ivr_data =	"\t$ivr_path";
 				}
@@ -667,7 +730,14 @@ if ($run_export > 0)
 					}
 				}
 
-			echo "$export_rows[$i]$ex_list_name\t$ex_list_description\t$ex_status_name$rec_data$extended_data$notes_data$ivr_data$custom_data\r\n";
+			if ($export_fields=='ALTERNATE_1')
+				{
+				echo "$export_rows[$i]$rec_data$extended_data$notes_data$ivr_data$custom_data\r\n";
+				}
+			else
+				{
+				echo "$export_rows[$i]$ex_list_name\t$ex_list_description\t$ex_status_name$rec_data$extended_data$notes_data$ivr_data$custom_data\r\n";
+				}
 			$i++;
 			}
 		}
@@ -885,7 +955,7 @@ else
 	echo "<BR><BR>\n";
 
 	echo "<B>Export Fields:</B><BR>\n";
-	echo "<select size=1 name=export_fields><option selected>STANDARD</option><option>EXTENDED</option></select>\n";
+	echo "<select size=1 name=export_fields><option selected>STANDARD</option><option>EXTENDED</option><option>ALTERNATE_1</option></select>\n";
 
 	### bottom of first column
 
