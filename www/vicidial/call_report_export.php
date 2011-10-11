@@ -290,8 +290,8 @@ if ($run_export > 0)
 		}
 	if ($export_fields == 'ALTERNATE_1')
 		{
-		$export_fields_SQL = ",last_local_call_time,called_count";
-		$EFheader = "\tlast_local_call_time\tcalled_count";
+		$export_fields_SQL = ",called_count,last_local_call_time";
+		$EFheader = "|called_count|last_local_call_time";
 		}
 
 	if ($DB > 0)
@@ -342,11 +342,11 @@ if ($run_export > 0)
 				if ($export_fields == 'ALTERNATE_1')
 					{
 					$ALTcall_date = $row[0];
-					$LASTcall_date = $row[38];
+					$LASTcall_date = $row[39];
 					$ALTcall_date = preg_replace("/-| |:|\d\d$/",'',$ALTcall_date);
 					$LASTcall_date = preg_replace("/-| |:|\d\d$/",'',$LASTcall_date);
-					$export_fieldsDATA = "$LASTcall_date\t$row[39]\t";
-					$export_rows[$k] = "$ALTcall_date\t$row[1]\t$row[2]\t$row[5]\t$row[6]\t$row[7]\t$row[13]\t$row[15]\t$row[30]\t$export_fieldsDATA";
+					$export_fieldsDATA = "$row[38]|$LASTcall_date|";
+					$export_rows[$k] = "$ALTcall_date|$row[1]|$row[2]|$row[5]|$row[6]|$row[7]|$row[13]|$row[15]|$row[30]|$export_fieldsDATA";
 					}
 				else
 					{
@@ -391,11 +391,11 @@ if ($run_export > 0)
 				if ($export_fields == 'ALTERNATE_1')
 					{
 					$ALTcall_date = $row[0];
-					$LASTcall_date = $row[39];
+					$LASTcall_date = $row[40];
 					$ALTcall_date = preg_replace("/-| |:|\d\d$/",'',$ALTcall_date);
 					$LASTcall_date = preg_replace("/-| |:|\d\d$/",'',$LASTcall_date);
-					$export_fieldsDATA = "$LASTcall_date\t$row[40]\t";
-					$export_rows[$k] = "$ALTcall_date\t$row[1]\t$row[2]\t$row[5]\t$row[6]\t$row[7]\t$row[13]\t$row[15]\t$row[30]\t$export_fieldsDATA";
+					$export_fieldsDATA = "$row[39]|$LASTcall_date|";
+					$export_rows[$k] = "$ALTcall_date|$row[1]|$row[2]|$row[5]|$row[6]|$row[7]|$row[13]|$row[15]|$row[30]|$export_fieldsDATA";
 					}
 				else
 					{
@@ -451,17 +451,21 @@ if ($run_export > 0)
 			if ($export_fields=='EXTENDED')
 				{$EXheader = "\tuniqueid\tcaller_code\tserver_ip\thangup_cause\tdialstatus\tchannel\tdial_time\tanswered_time\tcpd_result\tdid_pattern\tdid_id\tdid_description";}
 			if ($export_fields == 'ALTERNATE_1')
-				{$EXheader = "\tcaller_code";}
+				{$EXheader = "|caller_code";}
 			if ($call_notes=='YES')
 				{$NFheader = "\tcall_notes";}
 			if ($ivr_export=='YES')
-				{$IVRheader = "\tivr_path";}
+				{
+				$IVRheader = "\tivr_path";
+				if ($export_fields == 'ALTERNATE_1')
+					{$IVRheader = "|ivr_path";}
+				}
 			if ( ($custom_fields_enabled > 0) and ($custom_fields=='YES') )
 				{$CFheader = "\tcustom_fields";}
 
 			if ($export_fields == 'ALTERNATE_1')
 				{
-				echo "call_date\tphone_number_dialed\tstatus\tcampaign_id\tvendor_lead_code\tsource_id\tfirst_name\tlast_name\tlength_in_sec$EFheader$RFheader$EXheader$NFheader$IVRheader$CFheader\r\n";
+				echo "call_date|phone_number_dialed|status|campaign_id|vendor_lead_code|source_id|first_name|last_name|length_in_sec$EFheader$RFheader$EXheader$NFheader$IVRheader$CFheader\r\n";
 				}
 			else
 				{
@@ -565,7 +569,7 @@ if ($run_export > 0)
 						}
 					}
 				if (strlen($extended_data_a)<1)
-					{$extended_data_a =	"\t";}
+					{$extended_data_a =	"";}
 				$extended_data .= "$extended_data_a";
 				}
 			if ($export_fields=='EXTENDED')
@@ -684,6 +688,8 @@ if ($run_export > 0)
 					$ivr_path = preg_replace("/\|$|\^$/",'',$ivr_path);
 					}
 				$ivr_data =	"\t$ivr_path";
+				if ($export_fields=='ALTERNATE_1')
+					{$ivr_data =	"|$ivr_path";}
 				}
 
 			if ( ($custom_fields_enabled > 0) and ($custom_fields=='YES') )
