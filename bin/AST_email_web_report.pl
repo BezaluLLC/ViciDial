@@ -14,6 +14,7 @@
 # CHANGES
 # 90225-1247 - First version
 # 111004-1057 - Added ftp options
+# 111012-2220 - Added optional begin date flag
 #
 
 $txt = '.txt';
@@ -38,7 +39,7 @@ $ABIfiledate = "$mon-$mday-$year$us$hour$min$sec";
 $shipdate = "$year-$mon-$mday";
 $start_date = "$year$mon$mday";
 $datestamp = "$year/$mon/$mday $hour:$min";
-
+$hms = "$hour$min$sec";
 
 use Time::Local;
 
@@ -46,6 +47,12 @@ use Time::Local;
 $TWOAMsec = ( ($secX - ($sec + ($min * 60) + ($hour * 3600) ) ) + 7200);
 ### find epoch of 2AM yesterday
 $TWOAMsecY = ($TWOAMsec - 86400);
+### find epoch of 2AM 6 days ago
+$TWOAMsecF = ($TWOAMsec - 518400);
+### find epoch of 2AM 7 days ago
+$TWOAMsecG = ($TWOAMsec - 604800);
+### find epoch of 2AM 30 days ago
+$TWOAMsecH = ($TWOAMsec - 2592000);
 
 ($Tsec,$Tmin,$Thour,$Tmday,$Tmon,$Tyear,$Twday,$Tyday,$Tisdst) = localtime($TWOAMsecY);
 $Tyear = ($Tyear + 1900);
@@ -55,6 +62,33 @@ if ($Tmday < 10) {$Tmday = "0$Tmday";}
 if ($Thour < 10) {$Thour = "0$Thour";}
 if ($Tmin < 10) {$Tmin = "0$Tmin";}
 if ($Tsec < 10) {$Tsec = "0$Tsec";}
+
+($Fsec,$Fmin,$Fhour,$Fmday,$Fmon,$Fyear,$Fwday,$Fyday,$Fisdst) = localtime($TWOAMsecF);
+$Fyear = ($Fyear + 1900);
+$Fmon++;
+if ($Fmon < 10) {$Fmon = "0$Fmon";}
+if ($Fmday < 10) {$Fmday = "0$Fmday";}
+if ($Fhour < 10) {$Fhour = "0$Fhour";}
+if ($Fmin < 10) {$Fmin = "0$Fmin";}
+if ($Fsec < 10) {$Fsec = "0$Fsec";}
+
+($Gsec,$Gmin,$Ghour,$Gmday,$Gmon,$Gyear,$Gwday,$Gyday,$Gisdst) = localtime($TWOAMsecG);
+$Gyear = ($Gyear + 1900);
+$Gmon++;
+if ($Gmon < 10) {$Gmon = "0$Gmon";}
+if ($Gmday < 10) {$Gmday = "0$Gmday";}
+if ($Ghour < 10) {$Ghour = "0$Ghour";}
+if ($Gmin < 10) {$Gmin = "0$Gmin";}
+if ($Gsec < 10) {$Gsec = "0$Gsec";}
+
+($Hsec,$Hmin,$Hhour,$Hmday,$Hmon,$Hyear,$Hwday,$Hyday,$Hisdst) = localtime($TWOAMsecH);
+$Hyear = ($Hyear + 1900);
+$Hmon++;
+if ($Hmon < 10) {$Hmon = "0$Hmon";}
+if ($Hmday < 10) {$Hmday = "0$Hmday";}
+if ($Hhour < 10) {$Hhour = "0$Hhour";}
+if ($Hmin < 10) {$Hmin = "0$Hmin";}
+if ($Hsec < 10) {$Hsec = "0$Hsec";}
 
 
 ### begin parsing run-time options ###
@@ -77,6 +111,7 @@ if (length($ARGV[0])>1)
 		print "  [--email-list=test@test.com:test2@test.com] = send email results to these addresses\n";
 		print "  [--email-sender=vicidial@localhost] = sender for the email results\n";
 		print "  [--date=YYYY-MM-DD] = date override, can also use 'today' and 'yesterday'\n";
+		print "  [--begin-date=YYYY-MM-DD] = begin date override, can also use '6days', '7days' and '30days', if not filled in will only use the --date\n";
 		print "  [--ftp-server=XXXXXXXX] = FTP server to send file to\n";
 		print "  [--ftp-login=XXXXXXXX] = FTP user\n";
 		print "  [--ftp-pass=XXXXXXXX] = FTP pass\n";
@@ -205,6 +240,54 @@ if (length($ARGV[0])>1)
 			{
 			$time=$TWOAMsec;
 			}
+		if ($args =~ /--begin-date=/i)
+			{
+			@data_in = split(/--begin-date=/,$args);
+			$begindate = $data_in[1];
+			$begindate =~ s/ .*//gi;
+			if ($begindate =~ /6days/)
+				{
+				$begindate="$Fyear-$Fmon-$Fmday";
+				$Byear = $Fyear;
+				$Bmon =	$Fmon;
+				$Bmday = $Fmday;
+				$Btime=$TWOAMsecF;
+				}
+			else
+				{
+				if ($begindate =~ /7days/)
+					{
+					$begindate="$Gyear-$Gmon-$Gmday";
+					$Byear = $Gyear;
+					$Bmon =	$Gmon;
+					$Bmday = $Gmday;
+					$Btime=$TWOAMsecG;
+					}
+				else
+					{
+					if ($begindate =~ /30days/)
+						{
+						$begindate="$Hyear-$Hmon-$Hmday";
+						$Byear = $Hyear;
+						$Bmon =	$Hmon;
+						$Bmday = $Hmday;
+						$Btime=$TWOAMsecH;
+						}
+					else
+						{
+						@cli_date = split("-",$begindate);
+						$Byear = $cli_date[0];
+						$Bmon =	$cli_date[1];
+						$Bmday = $cli_date[2];
+						$cli_date[1] = ($cli_date[1] - 1);
+						$Btime = timelocal(0,0,2,$cli_date[2],$cli_date[1],$cli_date[0]);
+						}
+					}
+				}
+			$Bstart_date = $begindate;
+			$Bstart_date =~ s/-//gi;
+			if (!$Q) {print "\n----- DATE OVERRIDE: $begindate($Bstart_date) -----\n\n";}
+			}
 		}
 	}
 else
@@ -212,6 +295,11 @@ else
 	print "no command line options set, using defaults.\n";
 	}
 ### end parsing run-time options ###
+
+if (length($Bstart_date) < 8)
+	{$Bstart_date = $start_date;}
+if (length($begindate) < 8) 
+	{$begindate = $shipdate;}
 
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
@@ -283,7 +371,7 @@ $HTMLfile = "DISCH_SURVEY_$start_date$txt";
 #$location = "http://8888:8888\@127.0.0.1/vicidial/AST_VDADstats.php?query_date=$shipdate\\&end_date=$shipdate\\&group[]=--ALL--\\&shift=ALL";
 
 # Outbound IVR Export Report:
-$location = "http://127.0.0.1/vicidial/call_report_export.php?query_date=$shipdate\\&end_date=$shipdate\\&list_id[]=--ALL--\\&status[]=--ALL--\\&campaign[]=RSIDESVY\\&run_export=1\\&ivr_export=YES\\&export_fields=EXTENDED\\&header_row=NO\\&rec_fields=NONE\\&custom_fields=NO\\&call_notes=NO";
+$location = "http://127.0.0.1/vicidial/call_report_export.php?query_date=$begindate\\&end_date=$shipdate\\&list_id[]=--ALL--\\&status[]=--ALL--\\&campaign[]=RSIDESVY\\&run_export=1\\&ivr_export=YES\\&export_fields=EXTENDED\\&header_row=NO\\&rec_fields=NONE\\&custom_fields=NO\\&call_notes=NO";
 
 ######################################################
 ######################################################

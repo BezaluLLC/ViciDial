@@ -33,6 +33,7 @@
 # 110624-1439 - Added Screen Labels sub-section to Admin
 # 110831-2048 - Added AC-CID to campaign submenu
 # 110922-1707 - Added RA-EXTEN to campaign submenu
+# 111015-2305 - Added Contacts menu to Admin
 #
 
 
@@ -1338,6 +1339,8 @@ $SScustom_fields_enabled =	$row[3];
 			else {$tts_sh=''; $tts_fc='BLACK';}
 		if ($sh=='cc') {$cc_sh="bgcolor=\"$cc_color\""; $cc_fc="$cc_font";}
 			else {$cc_sh=''; $cc_fc='BLACK';}
+		if ($sh=='cts') {$cts_sh="bgcolor=\"$cts_color\""; $cts_fc="$cc_font";}
+			else {$cts_sh=''; $cts_fc='BLACK';}
 
 		?>
 		<TR BGCOLOR=<?php echo $admin_color ?>>
@@ -1388,6 +1391,14 @@ $SScustom_fields_enabled =	$row[3];
 			</TR>
 
 		<?php }
+		if ($SScontacts_enabled > 0)
+			{ ?>
+			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $cts_sh ?>> &nbsp; 
+			<a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $cts_fc ?> SIZE=<?php echo $header_font_size ?>> Contacts </a></TD>
+			</TR>
+
+		<?php }
+
 			}
 		}
 	?>
@@ -1473,6 +1484,10 @@ $SScustom_fields_enabled =	$row[3];
 	if (strlen($label_sh) > 1) { 
 		?>
 	<TR BGCOLOR=<?php echo $label_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=180000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Screen Labels </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=181111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A Screen Label </a></TD></TR>
+	<?php }
+	if (strlen($cts_sh) > 1) { 
+		?>
+	<TR BGCOLOR=<?php echo $cts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Contacts </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=191111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A Contact </a></TD></TR>
 	<?php }
 	if ( (strlen($status_sh) > 1) and (!eregi('campaign',$hh) ) ) { 
 		?>

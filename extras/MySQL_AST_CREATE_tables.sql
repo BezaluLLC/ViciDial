@@ -585,7 +585,9 @@ modify_statuses ENUM('1','0') default '0',
 modify_voicemail ENUM('1','0') default '0',
 modify_audiostore ENUM('1','0') default '0',
 modify_moh ENUM('1','0') default '0',
-modify_tts ENUM('1','0') default '0'
+modify_tts ENUM('1','0') default '0',
+preset_contact_search ENUM('NOT_ACTIVE','ENABLED','DISABLED') default 'NOT_ACTIVE',
+modify_contacts ENUM('1','0') default '0'
 );
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -786,7 +788,7 @@ blind_monitor_message VARCHAR(255) default 'Someone is blind monitoring your ses
 blind_monitor_filename VARCHAR(100) default '',
 inbound_queue_no_dial ENUM('DISABLED','ENABLED','ALL_SERVERS') default 'DISABLED',
 timer_action_destination VARCHAR(30) default '',
-enable_xfer_presets ENUM('DISABLED','ENABLED') default 'DISABLED',
+enable_xfer_presets ENUM('DISABLED','ENABLED','CONTACTS') default 'DISABLED',
 hide_xfer_number_to_dial ENUM('DISABLED','ENABLED') default 'DISABLED',
 manual_dial_prefix VARCHAR(20) default '',
 customer_3way_hangup_logging ENUM('DISABLED','ENABLED') default 'ENABLED',
@@ -863,7 +865,7 @@ time_zone_setting ENUM('COUNTRY_AND_AREA_CODE','POSTAL_CODE','NANPA_PREFIX','OWN
 CREATE TABLE vicidial_statuses (
 status VARCHAR(6) PRIMARY KEY NOT NULL,
 status_name VARCHAR(30),
-selectable ENUM('Y','N'),
+selectable ENUM('Y','N') default 'N',
 human_answered ENUM('Y','N') default 'N',
 category VARCHAR(20) default 'UNDEFINED',
 sale ENUM('Y','N') default 'N',
@@ -1451,7 +1453,8 @@ did_agent_log ENUM('Y','N') default 'N',
 campaign_cid_areacodes_enabled ENUM('0','1') default '1',
 pllb_grouping_limit SMALLINT(5) default '100',
 did_ra_extensions_enabled ENUM('0','1') default '0',
-expanded_list_stats ENUM('0','1') default '1'
+expanded_list_stats ENUM('0','1') default '1',
+contacts_enabled ENUM('0','1') default '0'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2528,6 +2531,19 @@ index (user_start)
 
 CREATE UNIQUE INDEX didraexten on vicidial_did_ra_extensions (did_id, user_start, extension);
 
+CREATE TABLE contact_information (
+contact_id  INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+first_name VARCHAR(50) default '',
+last_name VARCHAR(50) default '',
+office_num VARCHAR(20) default '',
+cell_num VARCHAR(20) default '',
+other_num1 VARCHAR(20) default '',
+other_num2 VARCHAR(20) default ''
+);
+
+CREATE INDEX ci_first_name on contact_information (first_name);
+CREATE INDEX ci_last_name on contact_information (last_name);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
@@ -2680,7 +2696,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1303',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1304',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

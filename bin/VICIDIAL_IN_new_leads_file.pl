@@ -1536,8 +1536,8 @@ foreach(@FILES)
 			# TEST01||09292011|1|5125554727||Mike||Frank|||||||||||||||||C|2145559922|TESTSURVEY|TESTSURVEY|111
 			if ( ($format =~ /pipe30tz/) && ($format_set < 1) )
 				{
-				$source_id =			$m[0];		chomp($source_id);
-				$vendor_lead_code =		$m[2];		chomp($vendor_lead_code);
+				$vendor_lead_code =		$m[0];		chomp($vendor_lead_code);
+				$source_id =			$m[2];		chomp($source_id);
 				$phone_code =			$m[3];		chomp($phone_code);	$phone_code =~ s/\D//gi;
 				$phone_number =			$m[4];		chomp($phone_number);	$phone_number =~ s/\D//gi;
 					$USarea = 			substr($phone_number, 0, 3);

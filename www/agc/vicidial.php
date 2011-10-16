@@ -366,10 +366,11 @@
 # 110911-1604 - Added API logout function
 # 110916-1514 - Fixed dial timeout to check for dial_timeout setting and greater than 49 seconds
 # 110919-1603 - Added Phone login load balancing grouping options
+# 111015-2037 - Added contact search functions
 #
 
-$version = '2.4-333c';
-$build = '110919-1603';
+$version = '2.4-334c';
+$build = '111015-2037';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=75;
 $one_mysql_log=0;
@@ -1013,7 +1014,7 @@ else
 			$login=strtoupper($VD_login);
 			$password=strtoupper($VD_pass);
 			##### grab the full name of the agent
-			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override from vicidial_users where user='$VD_login' and pass='$VD_pass'";
+			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override,preset_contact_search from vicidial_users where user='$VD_login' and pass='$VD_pass'";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01007',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysql_fetch_row($rslt);
@@ -1044,6 +1045,7 @@ else
 			$VU_agent_call_log_view_override =		$row[24];
 			$VU_agent_choose_blended =				$row[25];
 			$VU_agent_lead_search_override =		$row[26];
+			$VU_preset_contact_search =				$row[27];
 
 
 			if ( ($VU_alert_enabled > 0) and ($VU_allow_alerts > 0) ) {$VU_alert_enabled = 'ON';}
@@ -1585,10 +1587,16 @@ else
 
 				$custom_3way_button_transfer_enabled=0;
 				$custom_3way_button_transfer_park=0;
+				$custom_3way_button_transfer_view=0;
+				$custom_3way_button_transfer_contacts=0;
 				if (preg_match("/PRESET_|FIELD_/",$custom_3way_button_transfer))
 					{$custom_3way_button_transfer_enabled=1;}
 				if (preg_match("/PARK_/",$custom_3way_button_transfer))
-					{$custom_3way_button_transfer_park=1;}
+					{$custom_3way_button_transfer_park=1;   $custom_3way_button_transfer_enabled=1;}
+				if (preg_match("/VIEW_PRESET/",$custom_3way_button_transfer))
+					{$custom_3way_button_transfer_view=1;   $custom_3way_button_transfer_enabled=1;}
+				if ( (preg_match("/VIEW_CONTACTS/",$custom_3way_button_transfer)) and ($enable_xfer_presets == 'CONTACTS') and ($VU_preset_contact_search != 'DISABLED') )
+					{$custom_3way_button_transfer_contacts=1;   $custom_3way_button_transfer_enabled=1;}
 
 				$preset_populate='';
 				$prepopulate_transfer_preset_enabled=0;
@@ -3502,6 +3510,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var custom_3way_button_transfer='<?php echo $custom_3way_button_transfer ?>';
 	var custom_3way_button_transfer_enabled='<?php echo $custom_3way_button_transfer_enabled ?>';
 	var custom_3way_button_transfer_park='<?php echo $custom_3way_button_transfer_park ?>';
+	var custom_3way_button_transfer_view='<?php echo $custom_3way_button_transfer_view ?>';
+	var custom_3way_button_transfer_contacts='<?php echo $custom_3way_button_transfer_contacts ?>';
 	var waiting_on_dispo=0;
 	var disable_dispo_screen='<?php echo $disable_dispo_screen ?>';
 	var disable_dispo_status='<?php echo $disable_dispo_status ?>';
@@ -3739,45 +3749,58 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	function custom_button_transfer()
 		{
 		ShoWTransferMain('ON');
-
-		if ( (custom_3way_button_transfer == 'PRESET_1') || (custom_3way_button_transfer == 'PARK_PRESET_1') )
-			{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;   document.vicidial_form.xfername.value='D1';}
-		if ( (custom_3way_button_transfer == 'PRESET_2') || (custom_3way_button_transfer == 'PARK_PRESET_2') )
-			{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;   document.vicidial_form.xfername.value='D2';}
-		if ( (custom_3way_button_transfer == 'PRESET_3') || (custom_3way_button_transfer == 'PARK_PRESET_3') )
-			{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;   document.vicidial_form.xfername.value='D3';}
-		if ( (custom_3way_button_transfer == 'PRESET_4') || (custom_3way_button_transfer == 'PARK_PRESET_4') )
-			{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;   document.vicidial_form.xfername.value='D4';}
-		if ( (custom_3way_button_transfer == 'PRESET_5') || (custom_3way_button_transfer == 'PARK_PRESET_5') )
-			{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;   document.vicidial_form.xfername.value='D5';}
-		if ( (custom_3way_button_transfer == 'FIELD_address3') || (custom_3way_button_transfer == 'PARK_FIELD_address3') )
-			{document.vicidial_form.xfernumber.value = document.vicidial_form.address3.value;}
-		if ( (custom_3way_button_transfer == 'FIELD_province') || (custom_3way_button_transfer == 'PARK_FIELD_province') )
-			{document.vicidial_form.xfernumber.value = document.vicidial_form.province.value;}
-		if ( (custom_3way_button_transfer == 'FIELD_security_phrase') || (custom_3way_button_transfer == 'PARK_FIELD_security_phrase') )
-			{document.vicidial_form.xfernumber.value = document.vicidial_form.security_phrase.value;}
-		if ( (custom_3way_button_transfer == 'FIELD_vendor_lead_code') || (custom_3way_button_transfer == 'PARK_FIELD_vendor_lead_code') )
-			{document.vicidial_form.xfernumber.value = document.vicidial_form.vendor_lead_code.value;}
-		if ( (custom_3way_button_transfer == 'FIELD_email') || (custom_3way_button_transfer == 'PARK_FIELD_email') )
-			{document.vicidial_form.xfernumber.value = document.vicidial_form.email.value;}
-		if ( (custom_3way_button_transfer == 'FIELD_owner') || (custom_3way_button_transfer == 'PARK_FIELD_owner') )
-			{document.vicidial_form.xfernumber.value = document.vicidial_form.owner.value;}
-
-		var temp_xfernumber = document.vicidial_form.xfernumber.value;
-		if (temp_xfernumber.length < 3)
+		if (custom_3way_button_transfer_contacts > 0)
 			{
-			alert_box("Number to Dial invalid: " + temp_xfernumber);
-			ShoWTransferMain('OFF','YES');
+			generate_contacts_search();
 			}
 		else
 			{
-			if (custom_3way_button_transfer_park > 0)
+			if (custom_3way_button_transfer_view > 0)
 				{
-				xfer_park_dial();
+				generate_presets_pulldown();
 				}
 			else
 				{
-				SendManualDial('YES');
+				if ( (custom_3way_button_transfer == 'PRESET_1') || (custom_3way_button_transfer == 'PARK_PRESET_1') )
+					{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;   document.vicidial_form.xfername.value='D1';}
+				if ( (custom_3way_button_transfer == 'PRESET_2') || (custom_3way_button_transfer == 'PARK_PRESET_2') )
+					{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;   document.vicidial_form.xfername.value='D2';}
+				if ( (custom_3way_button_transfer == 'PRESET_3') || (custom_3way_button_transfer == 'PARK_PRESET_3') )
+					{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;   document.vicidial_form.xfername.value='D3';}
+				if ( (custom_3way_button_transfer == 'PRESET_4') || (custom_3way_button_transfer == 'PARK_PRESET_4') )
+					{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;   document.vicidial_form.xfername.value='D4';}
+				if ( (custom_3way_button_transfer == 'PRESET_5') || (custom_3way_button_transfer == 'PARK_PRESET_5') )
+					{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;   document.vicidial_form.xfername.value='D5';}
+				if ( (custom_3way_button_transfer == 'FIELD_address3') || (custom_3way_button_transfer == 'PARK_FIELD_address3') )
+					{document.vicidial_form.xfernumber.value = document.vicidial_form.address3.value;}
+				if ( (custom_3way_button_transfer == 'FIELD_province') || (custom_3way_button_transfer == 'PARK_FIELD_province') )
+					{document.vicidial_form.xfernumber.value = document.vicidial_form.province.value;}
+				if ( (custom_3way_button_transfer == 'FIELD_security_phrase') || (custom_3way_button_transfer == 'PARK_FIELD_security_phrase') )
+					{document.vicidial_form.xfernumber.value = document.vicidial_form.security_phrase.value;}
+				if ( (custom_3way_button_transfer == 'FIELD_vendor_lead_code') || (custom_3way_button_transfer == 'PARK_FIELD_vendor_lead_code') )
+					{document.vicidial_form.xfernumber.value = document.vicidial_form.vendor_lead_code.value;}
+				if ( (custom_3way_button_transfer == 'FIELD_email') || (custom_3way_button_transfer == 'PARK_FIELD_email') )
+					{document.vicidial_form.xfernumber.value = document.vicidial_form.email.value;}
+				if ( (custom_3way_button_transfer == 'FIELD_owner') || (custom_3way_button_transfer == 'PARK_FIELD_owner') )
+					{document.vicidial_form.xfernumber.value = document.vicidial_form.owner.value;}
+
+				var temp_xfernumber = document.vicidial_form.xfernumber.value;
+				if (temp_xfernumber.length < 3)
+					{
+					alert_box("Number to Dial invalid: " + temp_xfernumber);
+					ShoWTransferMain('OFF','YES');
+					}
+				else
+					{
+					if (custom_3way_button_transfer_park > 0)
+						{
+						xfer_park_dial();
+						}
+					else
+						{
+						SendManualDial('YES');
+						}
+					}
 				}
 			}
 		}
@@ -5626,7 +5649,17 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			{
 			AutoDial_ReSume_PauSe("VDADready");
 			}
+		ShoWGenDerPulldown();
 		hideDiv('SearcHForMDisplaYBox');
+		}
+
+
+// ################################################################################
+// closes contacts search screen
+	function ContactSearcHVieWClose()
+		{
+		ShoWGenDerPulldown();
+		hideDiv('SearcHContactsDisplaYBox');
 		}
 
 
@@ -8608,6 +8641,16 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			}
 		}
 
+
+// ################################################################################
+// Generate the Contacts Search span content
+	function generate_contacts_search()
+		{
+		HidEGenDerPulldown();
+		showDiv('SearcHContactsDisplaYBox');
+		}
+
+
 // ################################################################################
 // Generate the Presets Chooser span content
 	function generate_presets_pulldown()
@@ -8619,7 +8662,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		var loop_ct = 0;
 		while (loop_ct < VD_preset_names_ct)
 			{
-            Presets_HTML = Presets_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('" + VARpreset_names[loop_ct] + "','" + VARpreset_numbers[loop_ct] + "','" + VARpreset_dtmfs[loop_ct] + "','" + VARpreset_hide_numbers[loop_ct] + "');return false;\">" + VARpreset_names[loop_ct];
+            Presets_HTML = Presets_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('" + VARpreset_names[loop_ct] + "','" + VARpreset_numbers[loop_ct] + "','" + VARpreset_dtmfs[loop_ct] + "','" + VARpreset_hide_numbers[loop_ct] + "','N');return false;\">" + VARpreset_names[loop_ct];
 			if (VARpreset_hide_numbers[loop_ct]=='N')
 				{Presets_HTML = Presets_HTML + " - " + VARpreset_numbers[loop_ct];}
             Presets_HTML = Presets_HTML + "</a></b></font><br />";
@@ -8628,35 +8671,35 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 		if ( (CalL_XC_a_NuMber.length > 0) || (CalL_XC_a_Dtmf.length > 0) )
 			{
-            Presets_HTML = Presets_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('D1','" + CalL_XC_a_NuMber + "','" + CalL_XC_a_Dtmf + "');return false;\">D1";
+            Presets_HTML = Presets_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('D1','" + CalL_XC_a_NuMber + "','" + CalL_XC_a_Dtmf + "','N','N');return false;\">D1";
 			if (hide_xfer_number_to_dial=='DISABLED')
 				{Presets_HTML = Presets_HTML + " - " + CalL_XC_a_NuMber;}
             Presets_HTML = Presets_HTML + "</a></b></font><br />";
 			}
 		if ( (CalL_XC_b_NuMber.length > 0) || (CalL_XC_b_Dtmf.length > 0) )
 			{
-            Presets_HTML = Presets_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('D2','" + CalL_XC_b_NuMber + "','" + CalL_XC_b_Dtmf + "');return false;\">D2";
+            Presets_HTML = Presets_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('D2','" + CalL_XC_b_NuMber + "','" + CalL_XC_b_Dtmf + "','N','N');return false;\">D2";
 			if (hide_xfer_number_to_dial=='DISABLED')
 				{Presets_HTML = Presets_HTML + " - " + CalL_XC_b_NuMber;}
             Presets_HTML = Presets_HTML + "</a></b></font><br />";
 			}
 		if (CalL_XC_c_NuMber.length > 0)
 			{
-            Presets_HTML = Presets_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('D3','" + CalL_XC_c_NuMber + "','');return false;\">D3";
+            Presets_HTML = Presets_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('D3','" + CalL_XC_c_NuMber + "','','N','N');return false;\">D3";
 			if (hide_xfer_number_to_dial=='DISABLED')
 				{Presets_HTML = Presets_HTML + " - " + CalL_XC_c_NuMber;}
             Presets_HTML = Presets_HTML + "</a></b></font><br />";
 			}
 		if (CalL_XC_d_NuMber.length > 0)
 			{
-            Presets_HTML = Presets_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('D4','" + CalL_XC_d_NuMber + "','');return false;\">D4";
+            Presets_HTML = Presets_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('D4','" + CalL_XC_d_NuMber + "','','N','N');return false;\">D4";
 			if (hide_xfer_number_to_dial=='DISABLED')
 				{Presets_HTML = Presets_HTML + " - " + CalL_XC_d_NuMber;}
             Presets_HTML = Presets_HTML + "</a></b></font><br />";
 			}
 		if (CalL_XC_e_NuMber.length > 0)
 			{
-            Presets_HTML = Presets_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('D5','" + CalL_XC_e_NuMber + "','');return false;\">D5";
+            Presets_HTML = Presets_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFFF\"><b><a href=\"#\" onclick=\"PresetSelect_submit('D5','" + CalL_XC_e_NuMber + "','','N','N');return false;\">D5";
 			if (hide_xfer_number_to_dial=='DISABLED')
 				{Presets_HTML = Presets_HTML + " - " + CalL_XC_e_NuMber;}
             Presets_HTML = Presets_HTML + "</a></b></font><br />";
@@ -8669,8 +8712,13 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 // ################################################################################
 // Submit chosen Preset
-	function PresetSelect_submit(taskpresetname,taskpresetnumber,taskpresetdtmf,taskhidenumber)
+	function PresetSelect_submit(taskpresetname,taskpresetnumber,taskpresetdtmf,taskhidenumber,taskclosesearch)
 		{
+		if (taskclosesearch=='Y')
+			{
+			hideDiv('SearcHResultSContactsBox');
+			hideDiv('SearcHContactsDisplaYBox');
+			}
 		hideDiv('PresetsSelectBox');
 		document.vicidial_form.conf_dtmf.value = taskpresetdtmf;
 		document.vicidial_form.xfername.value = taskpresetname;
@@ -8976,6 +9024,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 				CBcommentsBoxhide();
 				EAcommentsBoxhide();
+				ContactSearchReset();
 
 				AgentDispoing = 0;
 
@@ -10960,6 +11009,61 @@ function phone_number_format(formatphone) {
 		}
 
 
+// ################################################################################
+// Gather and display contacts search data
+	function ContactSearchSubmit()
+		{
+		showDiv('SearcHResultSContactsBox');
+
+		document.getElementById('SearcHResultSContactsSpan').innerHTML = "Searching...\n";
+
+		var xmlhttp=false;
+		/*@cc_on @*/
+		/*@if (@_jscript_version >= 5)
+		// JScript gives us Conditional compilation, we can cope with old IE versions.
+		// and security blocked creation of the objects.
+		 try {
+		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+		 } catch (e) {
+		  try {
+		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		  } catch (E) {
+		   xmlhttp = false;
+		  }
+		 }
+		@end @*/
+		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+			{
+			xmlhttp = new XMLHttpRequest();
+			}
+		if (xmlhttp)
+			{ 
+			LSview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=SEARCHCONTACTSRESULTSview&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&phone_number=" + document.vicidial_form.contacts_phone_number.value + "&first_name=" + document.vicidial_form.contacts_first_name.value + "&last_name=" + document.vicidial_form.contacts_last_name.value + "&campaign=" + campaign + "&stage=<?php echo $HCwidth ?>";
+			xmlhttp.open('POST', 'vdc_db_query.php'); 
+			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+			xmlhttp.send(LSview_query); 
+			xmlhttp.onreadystatechange = function() 
+				{ 
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+					{
+				//	alert(xmlhttp.responseText);
+					document.getElementById('SearcHResultSContactsSpan').innerHTML = xmlhttp.responseText + "\n";
+					}
+				}
+			delete xmlhttp;
+			}
+		}
+
+
+// ################################################################################
+// Reset contact search form
+	function ContactSearchReset()
+		{
+		document.vicidial_form.contacts_phone_number.value='';
+		document.vicidial_form.contacts_first_name.value='';
+		document.vicidial_form.contacts_last_name.value='';
+		}
+
 
 // ################################################################################
 // Gather and display lead search data
@@ -11522,6 +11626,8 @@ function phone_number_format(formatphone) {
 			hideDiv('CalLNotesDisplaYBox');
 			hideDiv('SearcHForMDisplaYBox');
 			hideDiv('SearcHResultSDisplaYBox');
+			hideDiv('SearcHContactsDisplaYBox');
+			hideDiv('SearcHResultSContactsBox');
 			hideDiv('LeaDInfOBox');
 			hideDiv('agentdirectlink');
 			hideDiv('blind_monitor_notice_span');
@@ -13034,15 +13140,24 @@ if ($agent_display_dialable_leads > 0)
 		}
 	else
 		{
-		?>
-		<font class="body_tiny">
-		<a href="#" onclick="DtMf_PreSet_a();return false;">D1</a> 
-		<a href="#" onclick="DtMf_PreSet_b();return false;">D2</a>
-		<a href="#" onclick="DtMf_PreSet_c();return false;">D3</a>
-		<a href="#" onclick="DtMf_PreSet_d();return false;">D4</a>
-		<a href="#" onclick="DtMf_PreSet_e();return false;">D5</a>
-		</font>
-		<?php
+		if ( ($enable_xfer_presets=='CONTACTS') and ($VU_preset_contact_search != 'DISABLED') )
+			{
+			?>
+			<span style="background-color: <?php echo $MAIN_COLOR ?>" id="ContactPullDown"><a href="#" onclick="generate_contacts_search();return false;"><img src="./images/vdc_XB_contactsbutton.gif" border="0" alt="Contacts Button" style="vertical-align:middle" /></a></span>
+			<?php
+			}
+		else
+			{
+			?>
+			<font class="body_tiny">
+			<a href="#" onclick="DtMf_PreSet_a();return false;">D1</a> 
+			<a href="#" onclick="DtMf_PreSet_b();return false;">D2</a>
+			<a href="#" onclick="DtMf_PreSet_c();return false;">D3</a>
+			<a href="#" onclick="DtMf_PreSet_d();return false;">D4</a>
+			<a href="#" onclick="DtMf_PreSet_e();return false;">D5</a>
+			</font>
+			<?php
+			}
 		}
 	?>
 	&nbsp;
@@ -13375,6 +13490,45 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></center></font
 		{echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<div class="scroll_calllog" id="CallLogSpan"> Call log List </div>
+	<br /><br /> &nbsp;
+	</td></tr></table>
+</span>
+
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="SearcHContactsDisplaYBox">
+	<table border="1" bgcolor="#CCFFFF" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> &nbsp; &nbsp; &nbsp; SEARCH FOR A CONTACT: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="#" onclick="ContactSearcHVieWClose();return false;">close [X]</a><br />
+	<?php
+	if ($webphone_location == 'bar')
+		{echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+	?>
+	<br /><br />
+	Notes: when doing a search for a contact, wildcard or partial search terms are not allowed. <br />Contact search requests are all logged in the system.
+	<br /><br />
+	<center>
+	<table border="0">
+	<tr>
+	<td align="right"> Office Number: </td><td align="left"><input type="text" size="18" maxlength="20" name="contacts_phone_number" id="contacts_phone_number"></td>
+	</tr>
+	<tr>
+	<td align="right"> First Name: </td><td align="left"><input type="text" size="18" maxlength="20" name="contacts_first_name" id="contacts_first_name"></td>
+	</tr>
+	<tr>
+	<td align="right"> Last Name: </td><td align="left"><input type="text" size="18" maxlength="20" name="contacts_last_name" id="contacts_last_name"></td>
+	</tr>
+	<tr>
+	<td align="center" colspan="2"><br /> <a href="#" onclick="ContactSearchSubmit();return false;">SUBMIT SEARCH</a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="#" onclick="ContactSearchReset();return false;">reset form</a></td>
+	</tr>
+	</table>
+	<br /><br /> &nbsp;
+	</td></tr></table>
+</span>
+
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="SearcHResultSContactsBox">
+	<table border="1" bgcolor="#CCFFFF" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> &nbsp; &nbsp; &nbsp; CONTACTS SEARCH RESULTS: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="#" onclick="hideDiv('SearcHResultSContactsBox');return false;">close [X]</a><br />
+	<?php
+	if ($webphone_location == 'bar')
+		{echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+	?>
+	<div class="scroll_calllog" id="SearcHResultSContactsSpan"> Search Results </div>
 	<br /><br /> &nbsp;
 	</td></tr></table>
 </span>

@@ -291,10 +291,11 @@
 # 110731-2318 - Added dispo/start call url logging to DB table
 # 110901-1117 - Added areacode custom cid function
 # 111006-1425 - Added call_count_limit campaign option
+# 111015-2104 - Added SEARCHCONTACTSRESULTSview function
 #
 
-$version = '2.4-194';
-$build = '111006-1425';
+$version = '2.4-195';
+$build = '111015-2104';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=425;
 $one_mysql_log=0;
@@ -608,7 +609,7 @@ $hangup_cause_dictionary = array(
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock FROM system_settings;";
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -619,6 +620,11 @@ if ($qm_conf_ct > 0)
 	$non_latin =							$row[0];
 	$timeclock_end_of_day =					$row[1];
 	$agentonly_callback_campaign_lock =		$row[2];
+	$alt_log_server_ip =					$row[3];
+	$alt_log_dbname =						$row[4];
+	$alt_log_login =						$row[5];
+	$alt_log_pass =							$row[6];
+	$tables_use_alt_log_db =				$row[7];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -8834,6 +8840,200 @@ if ($ACTION == 'SEARCHRESULTSview')
 		echo "ERROR: Campaign not found\n";
 		echo "<BR><BR>";
 		echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">Go Back</a>";
+		echo "</CENTER>";
+		exit;
+		}
+	}
+
+
+
+################################################################################
+### SEARCHCONTACTSRESULTSview - display search results for contacts search
+################################################################################
+if ($ACTION == 'SEARCHCONTACTSRESULTSview')
+	{
+	if (strlen($stage) < 3)
+		{$stage = '670';}
+
+	$stmt="select agent_lead_search_method,manual_dial_list_id from vicidial_campaigns where campaign_id='$campaign';";
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+	$rslt=mysql_query($stmt, $link);
+	$camps_to_print = mysql_num_rows($rslt);
+	if ($camps_to_print > 0) 
+		{
+		$row=mysql_fetch_row($rslt);
+		$agent_lead_search_method =		$row[0];
+		$manual_dial_list_id =			$row[1];
+
+		$searchSQL='';
+		$searchmethodSQL='';
+
+		$last_name = ereg_replace("'|\"|\\\\|;","",$last_name);
+		$first_name = ereg_replace("'|\"|\\\\|;","",$first_name);
+		$phone_number = ereg_replace("'|\"|\\\\|;","",$phone_number);
+
+		if (strlen($phone_number) >= 2)
+			{
+			$searchSQL .= "office_num='$phone_number'";
+			}
+		elseif (strlen($last_name) > 0)
+			{
+			$searchSQL = "last_name='$last_name'";
+			if (strlen($first_name) > 0)
+				{
+				if (strlen($searchSQL) > 10)
+					{$searchSQL .= " and ";}
+				$searchSQL .= "first_name='$first_name'";
+				}
+			}
+		elseif (strlen($first_name) > 0)
+			{
+			$searchSQL = "first_name='$first_name'";
+			}
+		else
+			{
+			echo "ERROR: You must enter in search terms, one of these must be populated: office number, last name, first name\n";
+			echo "<BR><BR>";
+			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">Go Back</a>";
+			echo "</CENTER>";
+			exit;
+			}
+
+		##### BEGIN search queries and output #####
+		$stmt="select count(*) from contact_information where $searchSQL;";
+
+		### LOG INSERTION Search Log Table ###
+		$SQL_log = "$stmt|";
+		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = addslashes($SQL_log);
+		$stmtL="INSERT INTO vicidial_lead_search_log set event_date='$NOW_TIME', user='$user', source='agent', results='0', search_query=\"$SQL_log\";";
+		if ($DB) {echo "|$stmtL|\n";}
+		$rslt=mysql_query($stmtL, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		$search_log_id = mysql_insert_id($link);
+
+		if ( (preg_match("/contact_information/",$tables_use_alt_log_db)) and (strlen($alt_log_server_ip)>4) and (strlen($alt_log_dbname)>0) )
+			{
+			$linkALT=mysql_connect("$alt_log_server_ip", "$alt_log_login", "$alt_log_pass");
+			mysql_select_db("$alt_log_dbname", $linkALT);
+			}
+		else
+			{$linkALT = $link;}
+
+		$rsltALT=mysql_query($stmt, $linkALT);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkALT,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		$counts_to_print = mysql_num_rows($rsltALT);
+		if ($counts_to_print > 0)
+			{
+			$row=mysql_fetch_row($rsltALT);
+			$search_result_count =		$row[0];
+
+			$end_process_time = date("U");
+			$search_seconds = ($end_process_time - $StarTtime);
+
+			$stmtL="UPDATE vicidial_lead_search_log set results='$search_result_count',seconds='$search_seconds' where search_log_id='$search_log_id';";
+			if ($DB) {echo "|$stmtL|\n";}
+			$rslt=mysql_query($stmtL, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			echo "<CENTER>\n";
+			echo "<font style=\"font-size:14px;font-family:sans-serif;\"><B>";
+			echo "Results Found: $search_result_count";
+			echo "</B></font>\n";
+			echo "<BR>\n";
+			echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
+			echo "<TR>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> &nbsp; # &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; FIRST NAME &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; LAST NAME &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; OFFICE &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; MOBILE &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; OTHER 1 &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; OTHER 2 &nbsp; </font></TD>";
+			echo "</TR>";
+
+			if ($search_result_count)
+				{
+				$stmt="SELECT first_name,last_name,office_num,cell_num,other_num1,other_num2 from contact_information where $searchSQL order by first_name,last_name desc limit 1000;";
+				$rsltALT=mysql_query($stmt, $linkALT);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkALT,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				$out_logs_to_print = mysql_num_rows($rsltALT);
+				if ($format=='debug') {echo "|$out_logs_to_print|$stmt|";}
+
+				$g=0;
+				$u=0;
+				while ($out_logs_to_print > $u) 
+					{
+					$row=mysql_fetch_row($rsltALT);
+					$ALLsort[$g] =			"$row[0]-----$g";
+					$ALLfirst[$g] =			$row[0];
+					$ALLlast[$g] =			$row[1];
+					$ALLoffice_num[$g] =	$row[2];
+					$ALLcell_num[$g] =		$row[3];
+					$ALLother_num1[$g] =	$row[4];
+					$ALLother_num2[$g] =	$row[5];
+
+					$g++;
+					$u++;
+					}
+
+				if ($g < 1)
+					{echo "<tr bgcolor=white><td colspan=10 align=center>No results found</td></tr>";}
+
+				$u=0;
+				while ($g > $u) 
+					{
+					$sort_split = explode("-----",$ALLsort[$u]);
+					$i = $sort_split[1];
+
+					if (eregi("1$|3$|5$|7$|9$", $u))
+						{$bgcolor='bgcolor="#B9CBFD"';} 
+					else
+						{$bgcolor='bgcolor="#9BB9FB"';}
+
+					$u++;
+					echo "<tr $bgcolor>";
+					echo "<td><font size=1>$u</td>";
+					echo "<td align=right><font size=2>$ALLfirst[$i] </td>\n";
+					echo "<td align=right><font size=2>$ALLlast[$i] </td>\n";
+					echo "<td align=right><font size=2> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLoffice_num[$i]','','N','Y');return false;\">$ALLoffice_num[$i]</a> </td>\n";
+					echo "<td align=right><font size=2> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLcell_num[$i]','','N','Y');return false;\">$ALLcell_num[$i]</a> </td>\n";
+					echo "<td align=right><font size=2> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLother_num1[$i]','','N','Y');return false;\">$ALLother_num1[$i]</a> </td>\n";
+					echo "<td align=right><font size=2> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLother_num2[$i]','','N','Y');return false;\">$ALLother_num2[$i]</a> </td>\n";
+					echo "</tr>\n";
+					}
+
+				$end_process_time = date("U");
+				$search_seconds = ($end_process_time - $StarTtime);
+
+				$stmtL="UPDATE vicidial_lead_search_log set seconds='$search_seconds' where search_log_id='$search_log_id';";
+				if ($DB) {echo "|$stmtL|\n";}
+				$rslt=mysql_query($stmtL, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
+			else
+				{echo "<tr bgcolor=white><td colspan=10 align=center>No results found</td></tr>";}
+
+			echo "</TABLE>";
+			echo "<BR>";
+			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">Go Back</a>";
+			echo "</CENTER>";
+			}
+		else
+			{
+			echo "ERROR: There was a problem with your search terms\n";
+			echo "<BR><BR>";
+			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">Go Back</a>";
+			echo "</CENTER>";
+			exit;
+			}
+		##### END search queries and output #####
+		}
+	else
+		{
+		echo "ERROR: Campaign not found\n";
+		echo "<BR><BR>";
+		echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">Go Back</a>";
 		echo "</CENTER>";
 		exit;
 		}

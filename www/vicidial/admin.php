@@ -42,6 +42,8 @@ $reports_color =	'#99FF33';
 	$moh_color = 		'#FF33FF';
 	$vm_color = 		'#FF33FF';
 	$tts_color = 		'#FF33FF';
+	$cc_color = 		'#FF33FF';
+	$cts_color = 		'#FF33FF';
 $subcamp_color =	'#FF9933';
 $users_font =		'BLACK';
 $campaigns_font =	'BLACK';
@@ -63,6 +65,8 @@ $reports_font =		'BLACK';
 	$moh_font = 	'BLACK';
 	$vm_font = 		'BLACK';
 	$tts_font = 	'BLACK';
+	$cc_font =		'BLACK';
+	$cts_font = 	'BLACK';
 $subcamp_font =		'BLACK';
 
 ### comment this section out for colorful section headings
@@ -89,6 +93,8 @@ $reports_color =	'#E6E6E6';
 	$moh_color = 		'#C6C6C6';
 	$vm_color = 		'#C6C6C6';
 	$tts_color = 		'#C6C6C6';
+	$cc_color = 		'#C6C6C6';
+	$cts_color = 		'#C6C6C6';
 $subcamp_color =	'#C6C6C6';
 ###
 
@@ -102,7 +108,7 @@ $Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound R
 
 $UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report , Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Custom Reports Links, CallCard Search';
 
-$Vtables = 'NONE,log_noanswer,did_agent_log';
+$Vtables = 'NONE,log_noanswer,did_agent_log,contact_information';
 
 ######################################################################################################
 ######################################################################################################
@@ -1665,6 +1671,26 @@ if (isset($_GET["expanded_list_stats"]))			{$expanded_list_stats=$_GET["expanded
 	elseif (isset($_POST["expanded_list_stats"]))	{$expanded_list_stats=$_POST["expanded_list_stats"];}
 if (isset($_GET["report_option"]))			{$report_option=$_GET["report_option"];}
 	elseif (isset($_POST["report_option"]))	{$report_option=$_POST["report_option"];}
+if (isset($_GET["preset_contact_search"]))			{$preset_contact_search=$_GET["preset_contact_search"];}
+	elseif (isset($_POST["preset_contact_search"]))	{$preset_contact_search=$_POST["preset_contact_search"];}
+if (isset($_GET["contacts_enabled"]))			{$contacts_enabled=$_GET["contacts_enabled"];}
+	elseif (isset($_POST["contacts_enabled"]))	{$contacts_enabled=$_POST["contacts_enabled"];}
+if (isset($_GET["contact_id"]))				{$contact_id=$_GET["contact_id"];}
+	elseif (isset($_POST["contact_id"]))	{$contact_id=$_POST["contact_id"];}
+if (isset($_GET["first_name"]))				{$first_name=$_GET["first_name"];}
+	elseif (isset($_POST["first_name"]))	{$first_name=$_POST["first_name"];}
+if (isset($_GET["last_name"]))				{$last_name=$_GET["last_name"];}
+	elseif (isset($_POST["last_name"]))		{$last_name=$_POST["last_name"];}
+if (isset($_GET["office_num"]))				{$office_num=$_GET["office_num"];}
+	elseif (isset($_POST["office_num"]))	{$office_num=$_POST["office_num"];}
+if (isset($_GET["cell_num"]))				{$cell_num=$_GET["cell_num"];}
+	elseif (isset($_POST["cell_num"]))		{$cell_num=$_POST["cell_num"];}
+if (isset($_GET["other_num1"]))				{$other_num1=$_GET["other_num1"];}
+	elseif (isset($_POST["other_num1"]))	{$other_num1=$_POST["other_num1"];}
+if (isset($_GET["other_num2"]))				{$other_num2=$_GET["other_num2"];}
+	elseif (isset($_POST["other_num2"]))	{$other_num2=$_POST["other_num2"];}
+if (isset($_GET["modify_contacts"]))			{$modify_contacts=$_GET["modify_contacts"];}
+	elseif (isset($_POST["modify_contacts"]))	{$modify_contacts=$_POST["modify_contacts"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1678,7 +1704,7 @@ if (strlen($dial_status) > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -1710,6 +1736,12 @@ if ($qm_conf_ct > 0)
 	$SSpllb_grouping_limit =				$row[22];
 	$SSdid_ra_extensions_enabled =			$row[23];
 	$SSexpanded_list_stats =				$row[24];
+	$SScontacts_enabled =					$row[25];
+	$SSalt_log_server_ip =					$row[26];
+	$SSalt_log_dbname =						$row[27];
+	$SSalt_log_login =						$row[28];
+	$SSalt_log_pass =						$row[29];
+	$SStables_use_alt_log_db =				$row[30];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -1933,6 +1965,13 @@ if ($non_latin < 1)
 	$call_count_limit = ereg_replace("[^0-9]","",$call_count_limit);
 	$call_count_target = ereg_replace("[^0-9]","",$call_count_target);
 	$expanded_list_stats = ereg_replace("[^0-9]","",$expanded_list_stats);
+	$contacts_enabled = ereg_replace("[^0-9]","",$contacts_enabled);
+	$contact_id = ereg_replace("[^0-9]","",$contact_id);
+	$office_num = ereg_replace("[^0-9]","",$office_num);
+	$cell_num = ereg_replace("[^0-9]","",$cell_num);
+	$other_num1 = ereg_replace("[^0-9]","",$other_num1);
+	$other_num2 = ereg_replace("[^0-9]","",$other_num2);
+	$modify_contacts = ereg_replace("[^0-9]","",$modify_contacts);
 
 	$drop_call_seconds = ereg_replace("[^-0-9]","",$drop_call_seconds);
 
@@ -2314,6 +2353,7 @@ if ($non_latin < 1)
 	$after_hours_callmenu = ereg_replace("[^-_0-9a-zA-Z]","",$after_hours_callmenu);
 	$survey_recording = ereg_replace("[^-_0-9a-zA-Z]","",$survey_recording);
 	$dtmf_field = ereg_replace("[^-_0-9a-zA-Z]","",$dtmf_field);
+	$preset_contact_search = ereg_replace("[^-_0-9a-zA-Z]","",$preset_contact_search);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
@@ -2459,6 +2499,8 @@ if ($non_latin < 1)
 	$default_local_gmt = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$default_local_gmt);
 	$cid_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$cid_description);
 	$description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$description);
+	$first_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$first_name);
+	$last_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$last_name);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
 	$call_out_number_group = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$call_out_number_group);
@@ -2926,12 +2968,13 @@ else
 # 110923-2043 - Added custom DID fields
 # 111004-1539 - Added dtmf_field call menu option
 # 111006-1403 - Added several new campaign and other options, call_count_limit, status flag, shift report flag, etc...
+# 111015-1914 - Added Preset Contact Search options
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-340a';
-$build = '111006-1403';
+$admin_version = '2.4-341a';
+$build = '111015-1914';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3045,7 +3088,7 @@ if ( ($auth > 0) or ($reports_auth > 0) )
 	{
 	$office_no=strtoupper($PHP_AUTH_USER);
 	$password=strtoupper($PHP_AUTH_PW);
-	$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW';";
+	$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,modify_contacts from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$LOGfull_name				=$row[3];
@@ -3092,6 +3135,7 @@ if ( ($auth > 0) or ($reports_auth > 0) )
 	$LOGmodify_audiostore		=$row[78];
 	$LOGmodify_moh				=$row[79];
 	$LOGmodify_tts				=$row[80];
+	$LOGmodify_contacts			=$row[81];
 
 
 	$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
@@ -3218,6 +3262,7 @@ if ($ADD==151111111111)	{$hh='admin';	$sh='tts';	echo "ADD NEW TTS ENTRY";}
 if ($ADD==161111111111)	{$hh='admin';	$sh='moh';	echo "ADD NEW MUSIC ON HOLD ENTRY";}
 if ($ADD==171111111111)	{$hh='admin';	$sh='vm';	echo "ADD NEW VOICEMAIL BOX";}
 if ($ADD==181111111111)	{$hh='admin';	$sh='label';	echo "ADD NEW SCREEN LABEL";}
+if ($ADD==191111111111)	{$hh='admin';	$sh='cts';	echo "ADD NEW CONTACT";}
 if ($ADD==1111111111111)	{$hh='admin';	$sh='conference';	echo "ADD NEW CONFERENCE";}
 if ($ADD==11111111111111)	{$hh='admin';	$sh='conference';	echo "ADD NEW VICIDIAL CONFERENCE";}
 if ($ADD=='2')			{$hh='users';		echo "New User Addition";}
@@ -3261,6 +3306,7 @@ if ($ADD==251111111111)	{$hh='admin';	$sh='tts';	echo "ADDING NEW TTS ENTRY";}
 if ($ADD==261111111111)	{$hh='admin';	$sh='moh';	echo "ADDING NEW MUSIC ON HOLD ENTRY";}
 if ($ADD==271111111111)	{$hh='admin';	$sh='vm';	echo "ADDING NEW VOICEMAIL BOX";}
 if ($ADD==281111111111)	{$hh='admin';	$sh='label';	echo "ADDING NEW SCREEN LABEL";}
+if ($ADD==291111111111)	{$hh='admin';	$sh='cts';	echo "ADDING NEW CONTACT";}
 if ($ADD==2111111111111)	{$hh='admin';	$sh='conference';	echo "ADDING NEW CONFERENCE";}
 if ($ADD==21111111111111)	{$hh='admin';	$sh='conference';	echo "ADDING NEW VICIDIAL CONFERENCE";}
 if ($ADD==221111111111111)	{$hh='admin';	$sh='status';	echo "ADDING VICIDIAL SYSTEM STATUSES";}
@@ -3330,6 +3376,7 @@ if ($ADD==351111111111)	{$hh='admin';	$sh='tts';	echo "MODIFY TTS ENTRY";}
 if ($ADD==361111111111)	{$hh='admin';	$sh='moh';	echo "MODIFY MUSIC ON HOLD ENTRY";}
 if ($ADD==371111111111)	{$hh='admin';	$sh='vm';	echo "MODIFY VOICEMAIL BOX";}
 if ($ADD==381111111111)	{$hh='admin';	$sh='label';	echo "MODIFY SCREEN LABEL";}
+if ($ADD==391111111111)	{$hh='admin';	$sh='cts';	echo "MODIFY CONTACT";}
 if ($ADD==3111111111111)	{$hh='admin';	$sh='conference';	echo "MODIFY CONFERENCE";}
 if ($ADD==31111111111111)	{$hh='admin';	$sh='conference';	echo "MODIFY VICIDIAL CONFERENCE";}
 if ($ADD==311111111111111)	{$hh='admin';	$sh='settings';	echo "MODIFY VICIDIAL SYSTEM SETTINGS";}
@@ -3373,6 +3420,7 @@ if ($ADD==451111111111)	{$hh='admin';	$sh='tts';	echo "MODIFY TTS ENTRY";}
 if ($ADD==461111111111)	{$hh='admin';	$sh='moh';	echo "MODIFY MUSIC ON HOLD ENTRY";}
 if ($ADD==471111111111)	{$hh='admin';	$sh='vm';	echo "MODIFY VOICEMAIL BOX";}
 if ($ADD==481111111111)	{$hh='admin';	$sh='label';	echo "MODIFY SCREEN LABEL";}
+if ($ADD==491111111111)	{$hh='admin';	$sh='cts';	echo "MODIFY CONTACT";}
 if ($ADD==4111111111111)	{$hh='admin';	$sh='conference';	echo "MODIFY CONFERENCE";}
 if ($ADD==41111111111111)	{$hh='admin';	$sh='conference';	echo "MODIFY VICIDIAL CONFERENCE";}
 if ($ADD==411111111111111)	{$hh='admin';	$sh='settings';	echo "MODIFY VICIDIAL SYSTEM SETTINGS";}
@@ -3406,6 +3454,7 @@ if ($ADD==551111111111)	{$hh='admin';	$sh='tts';	echo "DELETE TTS ENTRY";}
 if ($ADD==561111111111)	{$hh='admin';	$sh='moh';	echo "DELETE MUSIC ON HOLD ENTRY";}
 if ($ADD==571111111111)	{$hh='admin';	$sh='vm';	echo "DELETE VOICEMAIL BOX";}
 if ($ADD==581111111111)	{$hh='admin';	$sh='label';	echo "DELETE SCREEN LABEL";}
+if ($ADD==591111111111)	{$hh='admin';	$sh='cts';	echo "DELETE CONTACT";}
 if ($ADD==5111111111111)	{$hh='admin';	$sh='conference';	echo "DELETE CONFERENCE";}
 if ($ADD==51111111111111)	{$hh='admin';	$sh='conference';	echo "DELETE VICIDIAL CONFERENCE";}
 if ($ADD==6)			{$hh='users';		echo "Delete User";}
@@ -3442,6 +3491,7 @@ if ($ADD==651111111111)	{$hh='admin';	$sh='tts';	echo "DELETE TTS ENTRY";}
 if ($ADD==661111111111)	{$hh='admin';	$sh='moh';	echo "DELETE MUSIC ON HOLD ENTRY";}
 if ($ADD==671111111111)	{$hh='admin';	$sh='vm';	echo "DELETE VOICEMAIL BOX";}
 if ($ADD==681111111111)	{$hh='admin';	$sh='label';	echo "DELETE SCREEN LABEL";}
+if ($ADD==691111111111)	{$hh='admin';	$sh='cts';	echo "DELETE CONTACT";}
 if ($ADD==6111111111111)	{$hh='admin';	$sh='conference';	echo "DELETE CONFERENCE";}
 if ($ADD==61111111111111)	{$hh='admin';	$sh='conference';	echo "DELETE VICIDIAL CONFERENCE";}
 if ($ADD==73)			{$hh='campaigns';	echo "Dialable Lead Count";}
@@ -3480,6 +3530,7 @@ if ($ADD==150000000000)	{$hh='admin';	$sh='tts';	echo "TTS ENTRY LIST";}
 if ($ADD==160000000000)	{$hh='admin';	$sh='moh';	echo "MUSIC ON HOLD ENTRY LIST";}
 if ($ADD==170000000000)	{$hh='admin';	$sh='vm';	echo "VOICEMAIL BOXES LIST";}
 if ($ADD==180000000000)	{$hh='admin';	$sh='label';	echo "SCREEN LABELS LIST";}
+if ($ADD==190000000000)	{$hh='admin';	$sh='cts';	echo "CONTACTS LIST";}
 if ($ADD==1000000000000)	{$hh='admin';	$sh='conference';	echo "CONFERENCE LIST";}
 if ($ADD==10000000000000)	{$hh='admin';	$sh='conference';	echo "VICIDIAL CONFERENCE LIST";}
 if ($ADD==550)			{$hh='users';		echo "Search Form";}
@@ -4149,6 +4200,11 @@ if ($ADD==99999)
 	<A NAME="vicidial_users-allow_alerts">
 	<BR>
 	<B>Allow Alerts -</B> This field gives you the ability to allow agent browser alerts to be enabled by the agent for when calls come into their vicidial.php session. Default is 0 for NO.
+
+	<BR>
+	<A NAME="vicidial_users-preset_contact_search">
+	<BR>
+	<B>Preset Contact Search -</B> If the user is logged into a campaign that has Transfer Presets set to CONTACTS, then this setting can disable contact searching for this user only. Default is NOT_ACTIVE which will use whatever the campaign setting is.
 
 	<BR>
 	<A NAME="vicidial_users-vicidial_users-campaign_ranks">
@@ -4972,7 +5028,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_campaigns-custom_3way_button_transfer">
 	<BR>
-	<B>Custom 3-Way Button Transfer -</B> This option will add a Custom Transfer button to the agent screen below the Transfer-Conf button that will allow one click three way calls using the selected preset or field. The PRESET_ options will place calls using the defined preset value. The FIELD_ options will place calls using the number in the selected field from the lead. DISABLED will not show the button on the agent screen. The PARK_ options will park the customer before dialing. Default is DISABLED.
+	<B>Custom 3-Way Button Transfer -</B> This option will add a Custom Transfer button to the agent screen below the Transfer-Conf button that will allow one click three way calls using the selected preset or field. The PRESET_ options will place calls using the defined preset value. The FIELD_ options will place calls using the number in the selected field from the lead. DISABLED will not show the button on the agent screen. The PARK_ options will park the customer before dialing. Default is DISABLED. The VIEW_PRESET option will simply open the transfer frame and the preset frame. The VIEW_CONTACTS option will open a contacts search window, this will only work if Enable Presets is set to CONTACTS.
 
 	<BR>
 	<A NAME="vicidial_campaigns-prepopulate_transfer_preset">
@@ -4982,7 +5038,12 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_campaigns-enable_xfer_presets">
 	<BR>
-	<B>Enable Transfer Presets -</B> This option will enable the Presets sub menu to appear at the top of the Campaign Modification page, and also you will have the ability to specify Preset dialing numbers for Agents to use in the Transfer-Conference frame of the agent interface. Default is DISABLED.
+	<B>Enable Transfer Presets -</B> This option will enable the Presets sub menu to appear at the top of the Campaign Modification page, and also you will have the ability to specify Preset dialing numbers for Agents to use in the Transfer-Conference frame of the agent interface. Default is DISABLED. CONTACTS is an option only if contact_information is enabled on your system, that is a custom feature.
+
+	<BR>
+	<A NAME="vicidial_campaigns-enable_xfer_presets">
+	<BR>
+	<B>Enable Transfer Presets -</B> This option will enable the Presets sub menu to appear at the top of the Campaign Modification page, and also you will have the ability to specify Preset dialing numbers for Agents to use in the Transfer-Conference frame of the agent interface. Default is DISABLED. CONTACTS is an option only if contact_information is enabled on your system, that is a custom feature.
 
 	<BR>
 	<A NAME="vicidial_campaigns-hide_xfer_number_to_dial">
@@ -7798,6 +7859,12 @@ if ($ADD==99999)
 	<B>Enable Remote Agent Extension Overrides -</B> This setting enables DIDs to have extension overrides for remote agent routed calls through in-groups. Default is 0 for disabled.
 
 	<BR>
+	<A NAME="contact_information">
+	<A NAME="settings-contacts_enabled">
+	<BR>
+	<B>Contacts Enabled -</B> This setting enables the Contacts sub-section in Admin which allows a manager to add modify or delete contacts in the system that can be used as part of a Custom Transfer in a campaign where an agent can search for contacts by first name last name or office number and then select one of many numbers associated with that contact. This feature is often used by operators or in switchboard functions where the user would need to transfer a call to a non-agent phone. Default is 0 for disabled.
+
+	<BR>
 	<A NAME="settings-first_login_trigger">
 	<BR>
 	<B>First Login Trigger -</B> This setting allows for the initial configuration of the server screen to be shown to the administrator when they first log into the system.
@@ -10234,6 +10301,39 @@ if ($ADD==181111111111)
 
 
 ######################
+# ADD=191111111111 display the ADD NEW CONTACT SCREEN
+######################
+
+if ($ADD==191111111111)
+	{
+	if ( ($LOGmodify_servers==1) or ($LOGmodify_contacts==1) )
+		{
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		echo "<br>ADD NEW SCREEN LABEL<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=291111111111>\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>First Name: </td><td align=left><input type=text name=first_name size=50 maxlength=50>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Last Name: </td><td align=left><input type=text name=last_name size=50 maxlength=50>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Office Number: </td><td align=left><input type=text name=office_num size=20 maxlength=20>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Cell Number: </td><td align=left><input type=text name=cell_num size=20 maxlength=20>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Other Number 1: </td><td align=left><input type=text name=other_num1 size=20 maxlength=20>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Other Number 2: </td><td align=left><input type=text name=other_num2 size=20 maxlength=20>$NWB#contact_information$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE=SUBMIT></td></tr>\n";
+		echo "</TABLE></center>\n";
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	}
+
+
+######################
 # ADD=1111111111111 display the ADD NEW CONFERENCE SCREEN
 ######################
 
@@ -10665,7 +10765,7 @@ if ($ADD=="2A")
 				$stmt="UPDATE system_settings SET auto_user_add_value='$user';";
 				$rslt=mysql_query($stmt, $link);
 				}
-			$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts) SELECT \"$user\",\"$pass\",\"$full_name\",user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts from vicidial_users where user=\"$source_user_id\";";
+			$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts) SELECT \"$user\",\"$pass\",\"$full_name\",user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts from vicidial_users where user=\"$source_user_id\";";
 			$rslt=mysql_query($stmt, $link);
 
 			$stmtA="INSERT INTO vicidial_inbound_group_agents (user,group_id,group_rank,group_weight,calls_today) SELECT \"$user\",group_id,group_rank,group_weight,\"0\" from vicidial_inbound_group_agents where user=\"$source_user_id\";";
@@ -12964,6 +13064,50 @@ if ($ADD==281111111111)
 
 
 ######################
+# ADD=291111111111 adds new contact to the system
+######################
+
+if ($ADD==291111111111)
+	{
+	if ( (preg_match("/contact_information/",$SStables_use_alt_log_db)) and (strlen($SSalt_log_server_ip)>4) and (strlen($SSalt_log_dbname)>0) )
+		{
+		$linkALT=mysql_connect("$SSalt_log_server_ip", "$SSalt_log_login", "$SSalt_log_pass");
+		mysql_select_db("$SSalt_log_dbname", $linkALT);
+		}
+	else
+		{$linkALT = $link;}
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	$stmt="SELECT count(*) from contact_information where first_name='$first_name' and last_name='$last_name' and office_num='$office_num';";
+	$rslt=mysql_query($stmt, $linkALT);
+	$row=mysql_fetch_row($rslt);
+	if ($row[0] > 0)
+		{echo "<br>CONTACT NOT ADDED - there is already a contact in the system with this name and number\n";}
+	else
+		{
+		if (strlen($last_name) < 2)
+			{echo "<br>CONTACT NOT ADDED - Please go back and look at the data you entered\n";}
+		else
+			{
+			echo "<br>CONTACT ADDED\n";
+
+			$stmt="INSERT INTO contact_information SET first_name='$first_name',last_name='$last_name',office_num='$office_num',cell_num='$cell_num',other_num1='$other_num1',other_num2='$other_num2';";
+			$rslt=mysql_query($stmt, $linkALT);
+			$contact_id = mysql_insert_id($linkALT);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONTACTS', event_type='ADD', record_id='$contact_id', event_code='ADMIN ADD CONTACT', event_sql=\"$SQL_log\", event_notes='$first_name $last_name $office_num';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
+		}
+	$ADD=391111111111;
+	}
+
+
+######################
 # ADD=2111111111111 adds new conference to the system
 ######################
 
@@ -13191,7 +13335,7 @@ if ($ADD=="4A")
 				}
 			echo "<br><B>USER MODIFIED - ADMIN: $user</B>\n";
 
-			$stmt="UPDATE vicidial_users set pass='$pass',full_name='$full_name',user_level='$user_level',user_group='$user_group',phone_login='$phone_login',phone_pass='$phone_pass',delete_users='$delete_users',delete_user_groups='$delete_user_groups',delete_lists='$delete_lists',delete_campaigns='$delete_campaigns',delete_ingroups='$delete_ingroups',delete_remote_agents='$delete_remote_agents',load_leads='$load_leads',campaign_detail='$campaign_detail',ast_admin_access='$ast_admin_access',ast_delete_phones='$ast_delete_phones',delete_scripts='$delete_scripts',modify_leads='$modify_leads',hotkeys_active='$hotkeys_active',change_agent_campaign='$change_agent_campaign',agent_choose_ingroups='$agent_choose_ingroups',closer_campaigns='$groups_value',scheduled_callbacks='$scheduled_callbacks',agentonly_callbacks='$agentonly_callbacks',agentcall_manual='$agentcall_manual',vicidial_recording='$vicidial_recording',vicidial_transfers='$vicidial_transfers',delete_filters='$delete_filters',alter_agent_interface_options='$alter_agent_interface_options',closer_default_blended='$closer_default_blended',delete_call_times='$delete_call_times',modify_call_times='$modify_call_times',modify_users='$modify_users',modify_campaigns='$modify_campaigns',modify_lists='$modify_lists',modify_scripts='$modify_scripts',modify_filters='$modify_filters',modify_ingroups='$modify_ingroups',modify_usergroups='$modify_usergroups',modify_remoteagents='$modify_remoteagents',modify_servers='$modify_servers',view_reports='$view_reports',vicidial_recording_override='$vicidial_recording_override',alter_custdata_override='$alter_custdata_override',qc_enabled='$qc_enabled',qc_user_level='$qc_user_level',qc_pass='$qc_pass',qc_finish='$qc_finish',qc_commit='$qc_commit',add_timeclock_log='$add_timeclock_log',modify_timeclock_log='$modify_timeclock_log',delete_timeclock_log='$delete_timeclock_log',alter_custphone_override='$alter_custphone_override',vdc_agent_api_access='$vdc_agent_api_access',modify_inbound_dids='$modify_inbound_dids',delete_inbound_dids='$delete_inbound_dids',active='$active',download_lists='$download_lists',agent_shift_enforcement_override='$agent_shift_enforcement_override',manager_shift_enforcement_override='$manager_shift_enforcement_override',export_reports='$export_reports',delete_from_dnc='$delete_from_dnc',email='$email',user_code='$user_code',territory='$territory',allow_alerts='$allow_alerts',agent_choose_territories='$agent_choose_territories',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five',voicemail_id='$voicemail_id',agent_call_log_view_override='$agent_call_log_view_override',callcard_admin='$callcard_admin',agent_choose_blended='$agent_choose_blended',realtime_block_user_info='$realtime_block_user_info',custom_fields_modify='$custom_fields_modify',force_change_password='$force_change_password',agent_lead_search_override='$agent_lead_search',modify_shifts='$modify_shifts',modify_phones='$modify_phones',modify_carriers='$modify_carriers',modify_labels='$modify_labels',modify_statuses='$modify_statuses',modify_voicemail='$modify_voicemail',modify_audiostore='$modify_audiostore',modify_moh='$modify_moh',modify_tts='$modify_tts' where user='$user';";
+			$stmt="UPDATE vicidial_users set pass='$pass',full_name='$full_name',user_level='$user_level',user_group='$user_group',phone_login='$phone_login',phone_pass='$phone_pass',delete_users='$delete_users',delete_user_groups='$delete_user_groups',delete_lists='$delete_lists',delete_campaigns='$delete_campaigns',delete_ingroups='$delete_ingroups',delete_remote_agents='$delete_remote_agents',load_leads='$load_leads',campaign_detail='$campaign_detail',ast_admin_access='$ast_admin_access',ast_delete_phones='$ast_delete_phones',delete_scripts='$delete_scripts',modify_leads='$modify_leads',hotkeys_active='$hotkeys_active',change_agent_campaign='$change_agent_campaign',agent_choose_ingroups='$agent_choose_ingroups',closer_campaigns='$groups_value',scheduled_callbacks='$scheduled_callbacks',agentonly_callbacks='$agentonly_callbacks',agentcall_manual='$agentcall_manual',vicidial_recording='$vicidial_recording',vicidial_transfers='$vicidial_transfers',delete_filters='$delete_filters',alter_agent_interface_options='$alter_agent_interface_options',closer_default_blended='$closer_default_blended',delete_call_times='$delete_call_times',modify_call_times='$modify_call_times',modify_users='$modify_users',modify_campaigns='$modify_campaigns',modify_lists='$modify_lists',modify_scripts='$modify_scripts',modify_filters='$modify_filters',modify_ingroups='$modify_ingroups',modify_usergroups='$modify_usergroups',modify_remoteagents='$modify_remoteagents',modify_servers='$modify_servers',view_reports='$view_reports',vicidial_recording_override='$vicidial_recording_override',alter_custdata_override='$alter_custdata_override',qc_enabled='$qc_enabled',qc_user_level='$qc_user_level',qc_pass='$qc_pass',qc_finish='$qc_finish',qc_commit='$qc_commit',add_timeclock_log='$add_timeclock_log',modify_timeclock_log='$modify_timeclock_log',delete_timeclock_log='$delete_timeclock_log',alter_custphone_override='$alter_custphone_override',vdc_agent_api_access='$vdc_agent_api_access',modify_inbound_dids='$modify_inbound_dids',delete_inbound_dids='$delete_inbound_dids',active='$active',download_lists='$download_lists',agent_shift_enforcement_override='$agent_shift_enforcement_override',manager_shift_enforcement_override='$manager_shift_enforcement_override',export_reports='$export_reports',delete_from_dnc='$delete_from_dnc',email='$email',user_code='$user_code',territory='$territory',allow_alerts='$allow_alerts',agent_choose_territories='$agent_choose_territories',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five',voicemail_id='$voicemail_id',agent_call_log_view_override='$agent_call_log_view_override',callcard_admin='$callcard_admin',agent_choose_blended='$agent_choose_blended',realtime_block_user_info='$realtime_block_user_info',custom_fields_modify='$custom_fields_modify',force_change_password='$force_change_password',agent_lead_search_override='$agent_lead_search',modify_shifts='$modify_shifts',modify_phones='$modify_phones',modify_carriers='$modify_carriers',modify_labels='$modify_labels',modify_statuses='$modify_statuses',modify_voicemail='$modify_voicemail',modify_audiostore='$modify_audiostore',modify_moh='$modify_moh',modify_tts='$modify_tts',preset_contact_search='$preset_contact_search',modify_contacts='$modify_contacts' where user='$user';";
 			$rslt=mysql_query($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -13434,7 +13578,7 @@ if ($ADD=="4B")
 				}
 			echo "<br><B>USER MODIFIED - ADMIN: $user</B>\n";
 
-			$stmt="UPDATE vicidial_users set pass='$pass',full_name='$full_name',user_level='$user_level',user_group='$user_group',phone_login='$phone_login',phone_pass='$phone_pass',hotkeys_active='$hotkeys_active',agent_choose_ingroups='$agent_choose_ingroups',closer_campaigns='$groups_value',scheduled_callbacks='$scheduled_callbacks',agentonly_callbacks='$agentonly_callbacks',agentcall_manual='$agentcall_manual',vicidial_recording='$vicidial_recording',vicidial_transfers='$vicidial_transfers',closer_default_blended='$closer_default_blended',vicidial_recording_override='$vicidial_recording_override',alter_custdata_override='$alter_custdata_override',qc_enabled='$qc_enabled',qc_user_level='$qc_user_level',qc_pass='$qc_pass',qc_finish='$qc_finish',qc_commit='$qc_commit',alter_custphone_override='$alter_custphone_override',active='$active',agent_shift_enforcement_override='$agent_shift_enforcement_override',email='$email',user_code='$user_code',territory='$territory',allow_alerts='$allow_alerts',agent_choose_territories='$agent_choose_territories',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five',voicemail_id='$voicemail_id',agent_call_log_view_override='$agent_call_log_view_override',agent_choose_blended='$agent_choose_blended',agent_lead_search_override='$agent_lead_search' where user='$user';";
+			$stmt="UPDATE vicidial_users set pass='$pass',full_name='$full_name',user_level='$user_level',user_group='$user_group',phone_login='$phone_login',phone_pass='$phone_pass',hotkeys_active='$hotkeys_active',agent_choose_ingroups='$agent_choose_ingroups',closer_campaigns='$groups_value',scheduled_callbacks='$scheduled_callbacks',agentonly_callbacks='$agentonly_callbacks',agentcall_manual='$agentcall_manual',vicidial_recording='$vicidial_recording',vicidial_transfers='$vicidial_transfers',closer_default_blended='$closer_default_blended',vicidial_recording_override='$vicidial_recording_override',alter_custdata_override='$alter_custdata_override',qc_enabled='$qc_enabled',qc_user_level='$qc_user_level',qc_pass='$qc_pass',qc_finish='$qc_finish',qc_commit='$qc_commit',alter_custphone_override='$alter_custphone_override',active='$active',agent_shift_enforcement_override='$agent_shift_enforcement_override',email='$email',user_code='$user_code',territory='$territory',allow_alerts='$allow_alerts',agent_choose_territories='$agent_choose_territories',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five',voicemail_id='$voicemail_id',agent_call_log_view_override='$agent_call_log_view_override',agent_choose_blended='$agent_choose_blended',agent_lead_search_override='$agent_lead_search',preset_contact_search='$preset_contact_search' where user='$user';";
 			$rslt=mysql_query($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -16394,6 +16538,50 @@ if ($ADD==481111111111)
 
 
 ######################
+# ADD=491111111111 modify contact record in the system
+######################
+
+if ($ADD==491111111111)
+	{
+	if ( ($LOGmodify_servers==1) or ($LOGmodify_contacts==1) )
+		{
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		if (strlen($contact_id) < 1)
+			{echo "<br>CONTACT NOT MODIFIED - Please go back and look at the data you entered\n";}
+		else
+			{
+			if ( (preg_match("/contact_information/",$SStables_use_alt_log_db)) and (strlen($SSalt_log_server_ip)>4) and (strlen($SSalt_log_dbname)>0) )
+				{
+				$linkALT=mysql_connect("$SSalt_log_server_ip", "$SSalt_log_login", "$SSalt_log_pass");
+				mysql_select_db("$SSalt_log_dbname", $linkALT);
+				}
+			else
+				{$linkALT = $link;}
+			$stmt="UPDATE contact_information set first_name='$first_name',last_name='$last_name',office_num='$office_num',cell_num='$cell_num',other_num1='$other_num1',other_num2='$other_num2' where contact_id='$contact_id';";
+			$rslt=mysql_query($stmt, $linkALT);
+
+			echo "<br>CONTACT MODIFIED: $contact_id\n";
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONTACTS', event_type='MODIFY', record_id='$contact_id', event_code='ADMIN MODIFY CONTACT', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	$ADD=391111111111;	# go to contact entry modification form below
+	}
+
+
+######################
 # ADD=4111111111111 modify conference record in the system
 ######################
 
@@ -16500,7 +16688,7 @@ if ($ADD==411111111111111)
 			}
 		$tables_use_alt_log_db = preg_replace("/,$/","",$new_altlog_value);
 
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysql_real_escape_string($webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db',webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt',noanswer_log='$noanswer_log',alt_log_server_ip='$alt_log_server_ip',alt_log_dbname='$alt_log_dbname',alt_log_login='$alt_log_login',alt_log_pass='$alt_log_pass',tables_use_alt_log_db='$tables_use_alt_log_db',did_agent_log='$did_agent_log',campaign_cid_areacodes_enabled='$campaign_cid_areacodes_enabled',pllb_grouping_limit='$pllb_grouping_limit',did_ra_extensions_enabled='$did_ra_extensions_enabled',expanded_list_stats='$expanded_list_stats';";
+		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysql_real_escape_string($webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db',webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt',noanswer_log='$noanswer_log',alt_log_server_ip='$alt_log_server_ip',alt_log_dbname='$alt_log_dbname',alt_log_login='$alt_log_login',alt_log_pass='$alt_log_pass',tables_use_alt_log_db='$tables_use_alt_log_db',did_agent_log='$did_agent_log',campaign_cid_areacodes_enabled='$campaign_cid_areacodes_enabled',pllb_grouping_limit='$pllb_grouping_limit',did_ra_extensions_enabled='$did_ra_extensions_enabled',expanded_list_stats='$expanded_list_stats',contacts_enabled='$contacts_enabled';";
 		$rslt=mysql_query($stmt, $link);
 
 		if ($reload_dialplan_on_servers > 0)
@@ -17341,6 +17529,28 @@ if ($ADD==581111111111)
 		echo "<br><br><a href=\"$PHP_SELF?ADD=681111111111&label_id=$label_id&CoNfIrM=YES\">Click here to delete screen label $label_id - $label_name</a><br><br><br>\n";
 		}
 	$ADD='381111111111';		# go to screen label entry modification below
+	}
+
+
+######################
+# ADD=591111111111 confirmation before deletion of contact record
+######################
+
+if ($ADD==591111111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if (strlen($contact_id) < 1)
+		{
+		echo "<br>CONTACT NOT DELETED - Please go back and look at the data you entered\n";
+		echo "<br>Contact ID must be at least 1 character in length\n";
+		}
+	else
+		{
+		echo "<br><B>CONTACT DELETION CONFIRMATION: $contact_id - $first_name - $last_name</B>\n";
+		echo "<br><br><a href=\"$PHP_SELF?ADD=691111111111&contact_id=$contact_id&CoNfIrM=YES\">Click here to delete contact $contact_id - $first_name - $last_name</a><br><br><br>\n";
+		}
+	$ADD='391111111111';		# go to contact entry modification below
 	}
 
 
@@ -18982,6 +19192,46 @@ if ($ADD==681111111111)
 
 
 ######################
+# ADD=691111111111 delete contact record
+######################
+
+if ($ADD==691111111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( (strlen($contact_id) < 1) or ($CoNfIrM != 'YES') )
+		{
+		echo "<br>CONTACT NOT DELETED - Please go back and look at the data you entered\n";
+		echo "<br>Contact ID be at least 1 character in length\n";
+		}
+	else
+		{
+		if ( (preg_match("/contact_information/",$SStables_use_alt_log_db)) and (strlen($SSalt_log_server_ip)>4) and (strlen($SSalt_log_dbname)>0) )
+			{
+			$linkALT=mysql_connect("$SSalt_log_server_ip", "$SSalt_log_login", "$SSalt_log_pass");
+			mysql_select_db("$SSalt_log_dbname", $linkALT);
+			}
+		else
+			{$linkALT = $link;}
+		$stmt="DELETE from contact_information where contact_id='$contact_id';";
+		$rslt=mysql_query($stmt, $linkALT);
+
+		### LOG INSERTION Admin Log Table ###
+		$SQL_log = "$stmt|";
+		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = addslashes($SQL_log);
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONTACTS', event_type='DELETE', record_id='$contact_id', event_code='ADMIN DELETE CONTACT', event_sql=\"$SQL_log\", event_notes='';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+
+		echo "<br><B>CONTACT DELETION COMPLETED: $contact_id</B>\n";
+		echo "<br><br>\n";
+		}
+	$ADD='190000000000';		# go to contacts entry list
+	}
+
+
+######################
 # ADD=6111111111111 delete conference record
 ######################
 
@@ -19078,7 +19328,7 @@ if ($ADD==3)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts from vicidial_users where user='$user';";
+		$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts from vicidial_users where user='$user';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$user_id =				$row[0];
@@ -19172,7 +19422,8 @@ if ($ADD==3)
 		$modify_audiostore =	$row[90];
 		$modify_moh =			$row[91];
 		$modify_tts =			$row[92];
-
+		$preset_contact_search =	$row[93];
+		$modify_contacts =		$row[94];
 
 		if ( ($user_level >= $LOGuser_level) and ($LOGuser_level < 9) )
 			{
@@ -19282,6 +19533,8 @@ if ($ADD==3)
 
 				echo "<tr bgcolor=#B6D3FC><td align=right>Allow Alerts: </td><td align=left><select size=1 name=allow_alerts><option>0</option><option>1</option><option SELECTED>$allow_alerts</option></select>$NWB#vicidial_users-allow_alerts$NWE</td></tr>\n";
 
+				echo "<tr bgcolor=#B6D3FC><td align=right>Preset Contact Search: </td><td align=left><select size=1 name=preset_contact_search><option>NOT_ACTIVE</option><option>DISABLED</option><option SELECTED>$preset_contact_search</option></select>$NWB#vicidial_users-preset_contact_search$NWE</td></tr>\n";
+
 				echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>Campaign Ranks: $NWB#vicidial_users-campaign_ranks$NWE<BR>\n";
 				echo "<table border=0>\n";
 				echo "$RANKcampaigns_list";
@@ -19376,6 +19629,7 @@ if ($ADD==3)
 				echo "<tr bgcolor=#B9CBFD><td align=right>Modify Audio Store: </td><td align=left><select size=1 name=modify_audiostore><option>0</option><option>1</option><option SELECTED>$modify_audiostore</option></select>$NWB#vicidial_users-modify_sections$NWE</td></tr>\n";
 				echo "<tr bgcolor=#B9CBFD><td align=right>Modify Music On Hold: </td><td align=left><select size=1 name=modify_moh><option>0</option><option>1</option><option SELECTED>$modify_moh</option></select>$NWB#vicidial_users-modify_sections$NWE</td></tr>\n";
 				echo "<tr bgcolor=#B9CBFD><td align=right>Modify TTS: </td><td align=left><select size=1 name=modify_tts><option>0</option><option>1</option><option SELECTED>$modify_tts</option></select>$NWB#vicidial_users-modify_sections$NWE</td></tr>\n";
+				echo "<tr bgcolor=#B9CBFD><td align=right>Modify Contacts: </td><td align=left><select size=1 name=modify_contacts><option>0</option><option>1</option><option SELECTED>$modify_contacts</option></select>$NWB#vicidial_users-modify_sections$NWE</td></tr>\n";
 
 				echo "<tr bgcolor=#B9CBFD><td align=right>CallCard Access: </td><td align=left><select size=1 name=callcard_admin><option>0</option><option>1</option><option SELECTED>$callcard_admin</option></select>$NWB#vicidial_users-modify_sections$NWE</td></tr>\n";
 				echo "<tr bgcolor=#B9CBFD><td align=right>Agent API Access: </td><td align=left><select size=1 name=vdc_agent_api_access><option>0</option><option>1</option><option SELECTED>$vdc_agent_api_access</option></select>$NWB#vicidial_users-vdc_agent_api_access$NWE</td></tr>\n";
@@ -20431,13 +20685,13 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Transfer-Conf Number 5: </td><td align=left><input type=text name=xferconf_e_number size=20 maxlength=50 value=\"$xferconf_e_number\">$NWB#vicidial_campaigns-xferconf_a_dtmf$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Enable Transfer Presets: </td><td align=left><select size=1 name=enable_xfer_presets><option>DISABLED</option><option>ENABLED</option><option SELECTED>$enable_xfer_presets</option></select>$NWB#vicidial_campaigns-enable_xfer_presets$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Enable Transfer Presets: </td><td align=left><select size=1 name=enable_xfer_presets><option>DISABLED</option><option>ENABLED</option><option>CONTACTS</option><option SELECTED>$enable_xfer_presets</option></select>$NWB#vicidial_campaigns-enable_xfer_presets$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Hide Transfer Number to Dial: </td><td align=left><select size=1 name=hide_xfer_number_to_dial><option>DISABLED</option><option>ENABLED</option><option SELECTED>$hide_xfer_number_to_dial</option></select>$NWB#vicidial_campaigns-hide_xfer_number_to_dial$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Quick Transfer Button: </td><td align=left><select size=1 name=quick_transfer_button><option>N</option><option>IN_GROUP</option><option>PRESET_1</option><option>PRESET_2</option><option>PRESET_3</option><option>PRESET_4</option><option>PRESET_5</option><option SELECTED>$quick_transfer_button</option><option>LOCKED_IN_GROUP</option><option>LOCKED_PRESET_1</option><option>LOCKED_PRESET_2</option><option>LOCKED_PRESET_3</option><option>LOCKED_PRESET_4</option><option>LOCKED_PRESET_5</option></select>$NWB#vicidial_campaigns-quick_transfer_button$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Custom 3-Way Button Transfer: </td><td align=left><select size=1 name=custom_3way_button_transfer><option>DISABLED</option><option>PRESET_1</option><option>PRESET_2</option><option>PRESET_3</option><option>PRESET_4</option><option>PRESET_5</option><option>FIELD_address3</option><option>FIELD_province</option><option>FIELD_security_phrase</option><option>FIELD_vendor_lead_code</option><option>FIELD_email</option><option>FIELD_owner</option><option>PARK_PRESET_1</option><option>PARK_PRESET_2</option><option>PARK_PRESET_3</option><option>PARK_PRESET_4</option><option>PARK_PRESET_5</option><option>PARK_FIELD_address3</option><option>PARK_FIELD_province</option><option>PARK_FIELD_security_phrase</option><option>PARK_FIELD_vendor_lead_code</option><option>PARK_FIELD_email</option><option>PARK_FIELD_owner</option><option SELECTED>$custom_3way_button_transfer</option></select>$NWB#vicidial_campaigns-custom_3way_button_transfer$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Custom 3-Way Button Transfer: </td><td align=left><select size=1 name=custom_3way_button_transfer><option>DISABLED</option><option>PRESET_1</option><option>PRESET_2</option><option>PRESET_3</option><option>PRESET_4</option><option>PRESET_5</option><option>FIELD_address3</option><option>FIELD_province</option><option>FIELD_security_phrase</option><option>FIELD_vendor_lead_code</option><option>FIELD_email</option><option>FIELD_owner</option><option>PARK_PRESET_1</option><option>PARK_PRESET_2</option><option>PARK_PRESET_3</option><option>PARK_PRESET_4</option><option>PARK_PRESET_5</option><option>PARK_FIELD_address3</option><option>PARK_FIELD_province</option><option>PARK_FIELD_security_phrase</option><option>PARK_FIELD_vendor_lead_code</option><option>PARK_FIELD_email</option><option>PARK_FIELD_owner</option><option>VIEW_PRESET</option><option>VIEW_CONTACTS</option><option SELECTED>$custom_3way_button_transfer</option></select>$NWB#vicidial_campaigns-custom_3way_button_transfer$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>PrePopulate Transfer Preset: </td><td align=left><select size=1 name=prepopulate_transfer_preset><option>N</option><option>PRESET_1</option><option>PRESET_2</option><option>PRESET_3</option><option>PRESET_4</option><option>PRESET_5</option><option SELECTED>$prepopulate_transfer_preset</option></select>$NWB#vicidial_campaigns-prepopulate_transfer_preset$NWE</td></tr>\n";
 
@@ -28068,6 +28322,75 @@ if ($ADD==381111111111)
 	}
 
 
+
+######################
+# ADD=391111111111 modify contact in the system
+######################
+if ($ADD==391111111111)
+	{
+	if ( ($LOGast_admin_access==1) or ($LOGmodify_contacts==1) )
+		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=391111111111&contact_id=$contact_id";
+			$modify_footer_refresh=1;
+			}
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		if ( (preg_match("/contact_information/",$SStables_use_alt_log_db)) and (strlen($SSalt_log_server_ip)>4) and (strlen($SSalt_log_dbname)>0) )
+			{
+			$linkALT=mysql_connect("$SSalt_log_server_ip", "$SSalt_log_login", "$SSalt_log_pass");
+			mysql_select_db("$SSalt_log_dbname", $linkALT);
+			}
+		else
+			{$linkALT = $link;}
+		$stmt="SELECT first_name,last_name,office_num,cell_num,other_num1,other_num2 from contact_information where contact_id='$contact_id';";
+		$rslt=mysql_query($stmt, $linkALT);
+		$row=mysql_fetch_row($rslt);
+		$first_name =	$row[0];
+		$last_name =	$row[1];
+		$office_num =	$row[2];
+		$cell_num =		$row[3];
+		$other_num1 =	$row[4];
+		$other_num2 =	$row[5];
+
+		echo "<br>MODIFY CONTACT: $tts_id<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=491111111111>\n";
+		echo "<input type=hidden name=contact_id value=\"$contact_id\">\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>First Name: </td><td align=left><input type=text name=first_name value=\"$first_name\" size=50 maxlength=50>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Last Name: </td><td align=left><input type=text name=last_name value=\"$last_name\" size=50 maxlength=50>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Office Number: </td><td align=left><input type=text name=office_num value=\"$office_num\" size=20 maxlength=20>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Cell Number: </td><td align=left><input type=text name=cell_num value=\"$cell_num\" size=20 maxlength=20>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Other Number 1: </td><td align=left><input type=text name=other_num1 value=\"$other_num1\" size=20 maxlength=20>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Other Number 2: </td><td align=left><input type=text name=other_num2 value=\"$other_num2\" size=20 maxlength=20>$NWB#contact_information$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE=SUBMIT></td></tr>\n";
+		echo "</TABLE></center>\n";
+
+		echo "<center><b>\n";
+
+
+		if ($LOGast_delete_phones > 0)
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=591111111111&contact_id=$contact_id&first_name=$first_name&last_name=$last_name\">DELETE THIS CONTACT</a>\n";
+			}
+		if ($LOGuser_level >= 9)
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=CONTACTS&stage=$contact_id\">Click here to see Admin changes to this contact</FONT>\n";
+			}
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	}
+
+
+
+
 ######################
 # ADD=3111111111111 modify conference record in the system
 ######################
@@ -28202,7 +28525,7 @@ if ($ADD==311111111111111)
 		$row=mysql_fetch_row($rslt);
 		$vicidial_nanpa_prefix_codes_count =	$row[0];
 
-		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats from system_settings;";
+		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled from system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$version =						$row[0];
@@ -28309,6 +28632,7 @@ if ($ADD==311111111111111)
 		$pllb_grouping_limit =			$row[101];
 		$did_ra_extensions_enabled =	$row[102];
 		$expanded_list_stats =			$row[103];
+		$contacts_enabled =				$row[104];
 
 		echo "<br>MODIFY VICIDIAL SYSTEM SETTINGS<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=411111111111111>\n";
@@ -28485,6 +28809,8 @@ if ($ADD==311111111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Enable Campaign Areacode CID: </td><td align=left><select size=1 name=campaign_cid_areacodes_enabled><option>1</option><option>0</option><option selected>$campaign_cid_areacodes_enabled</option></select>$NWB#settings-campaign_cid_areacodes_enabled$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Enable Remote Agent Extension Overrides: </td><td align=left><select size=1 name=did_ra_extensions_enabled><option>1</option><option>0</option><option selected>$did_ra_extensions_enabled</option></select>$NWB#settings-did_ra_extensions_enabled$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Enable Contacts: </td><td align=left><select size=1 name=contacts_enabled><option>1</option><option>0</option><option selected>$contacts_enabled</option></select>$NWB#settings-contacts_enabled$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>First Login Trigger: </td><td align=left><input type=hidden name=first_login_trigger value=\"$first_login_trigger\"> $first_login_trigger &nbsp; $NWB#settings-first_login_trigger$NWE</td></tr>\n";
 
@@ -30458,6 +30784,51 @@ if ($ADD==180000000000)
 
 
 ######################
+# ADD=190000000000 display all contacts entries
+######################
+if ($ADD==190000000000)
+	{
+	echo "<CENTER><TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( (preg_match("/contact_information/",$SStables_use_alt_log_db)) and (strlen($SSalt_log_server_ip)>4) and (strlen($SSalt_log_dbname)>0) )
+		{
+		$linkALT=mysql_connect("$SSalt_log_server_ip", "$SSalt_log_login", "$SSalt_log_pass");
+		mysql_select_db("$SSalt_log_dbname", $linkALT);
+		}
+	else
+		{$linkALT = $link;}
+	$stmt="SELECT contact_id,first_name,last_name,office_num from contact_information order by first_name,last_name,office_num limit 20000;";
+	$rslt=mysql_query($stmt, $linkALT);
+	$lb_to_print = mysql_num_rows($rslt);
+
+	echo "<br>Contacts:\n";
+	echo "<center><TABLE width=400 cellspacing=0 cellpadding=1>\n";
+	echo "<tr bgcolor=black>";
+	echo "<td><font size=1 color=white align=left><B>NAME</B></td>";
+	echo "<td><font size=1 color=white><B>Office Number</B></td>";
+	echo "<td align=center><font size=1 color=white><B>MODIFY</B></td></tr>\n";
+
+	$o=0;
+	while ($lb_to_print > $o) 
+		{
+		$row=mysql_fetch_row($rslt);
+
+		if (eregi("1$|3$|5$|7$|9$", $o))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=391111111111&contact_id=$row[0]\">$row[1] $row[2]</a></td>";
+		echo "<td><font size=1>$row[3]</td>";
+		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=391111111111&contact_id=$row[0]\">MODIFY</a></td></tr>\n";
+		$o++;
+		}
+
+	echo "</TABLE></center>\n";
+	}
+
+
+######################
 # ADD=1000000000000 display all conferences
 ######################
 if ($ADD==1000000000000)
@@ -31178,6 +31549,10 @@ if ($ADD==999998)
 	if ($SScallcard_enabled > 0)
 		{
 		echo "<LI><a href=\"callcard_admin.php\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> CallCard Admin </a>\n";
+		}
+	if ($SScontacts_enabled > 0)
+		{
+		echo "<LI><a href=\"$PHP_SELF?ADD=190000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> Contacts </a>\n";
 		}
 
 	echo "</UL>\n";

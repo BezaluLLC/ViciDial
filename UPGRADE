@@ -739,6 +739,14 @@ OTHER CHANGES:
 	count for each status as well as the complete-flag and call-count-limit
 	percentage as PENETRATION.
 
+169. Added Admin -> Contacts section(must be enabled in System Settings) which
+	allows for system-wide transfer contacts to be used in conjunction with
+	Custom Transfer being set to VIEW_CONTACTS and Enable Transfer Presets
+	set to CONTACTS. Able to be disabled per user. Also can be accessed from
+	a separate database by using the Alt Log settings in System Settings.
+	The purpose of this feature is to be used for a receptionist or operator
+	that needs to transfer calls to non-agents.
+
 
 
 

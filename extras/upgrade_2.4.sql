@@ -1099,3 +1099,26 @@ UPDATE system_settings SET db_schema_version='1302',db_schema_update_date=NOW() 
 CREATE UNIQUE INDEX viga_user_group_id on vicidial_inbound_group_agents (user, group_id);
 
 UPDATE system_settings SET db_schema_version='1303',db_schema_update_date=NOW() where db_schema_version < 1303;
+
+ALTER TABLE vicidial_campaigns MODIFY enable_xfer_presets ENUM('DISABLED','ENABLED','CONTACTS') default 'DISABLED';
+
+ALTER TABLE vicidial_users ADD preset_contact_search ENUM('NOT_ACTIVE','ENABLED','DISABLED') default 'NOT_ACTIVE';
+ALTER TABLE vicidial_users ADD modify_contacts ENUM('1','0') default '0';
+
+ALTER TABLE system_settings ADD contacts_enabled ENUM('0','1') default '0';
+
+CREATE TABLE contact_information (
+contact_id  INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+first_name VARCHAR(50) default '',
+last_name VARCHAR(50) default '',
+office_num VARCHAR(20) default '',
+cell_num VARCHAR(20) default '',
+other_num1 VARCHAR(20) default '',
+other_num2 VARCHAR(20) default ''
+);
+
+CREATE INDEX ci_first_name on contact_information (first_name);
+CREATE INDEX ci_last_name on contact_information (last_name);
+
+UPDATE system_settings SET db_schema_version='1304',db_schema_update_date=NOW() where db_schema_version < 1304;
+

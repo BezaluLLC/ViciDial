@@ -762,6 +762,30 @@ Report Option||
 This option allows this specific shift to show up in selected reports that support this option||
 There are||
 completed leads in those lists||
+The VIEW_PRESET option will simply open the transfer frame and the preset frame||
+CONTACTS is an option only if contact_information is enabled on your system, that is a custom feature||
+Preset Contact Search||
+If the user is logged into a campaign that has Transfer Presets set to CONTACTS, then this setting can disable contact searching for this user only. Default is NOT_ACTIVE which will use whatever the campaign setting is||
+The VIEW_CONTACTS option will open a contacts search window, this will only work if Enable Presets is set to CONTACTS||
+Contacts Enabled||
+This setting enables the Contacts sub-section in Admin which allows a manager to add modify or delete contacts in the system that can be used as part of a Custom Transfer in a campaign where an agent can search for contacts by first name last name or office number and then select one of many numbers associated with that contact. This feature is often used by operators or in switchboard functions where the user would need to transfer a call to a non-agent phone. Default is 0 for disabled||
+CONTACTS LIST||
+Add A Contact||
+ADD NEW CONTACT||
+ADDING NEW CONTACT||
+MODIFY CONTACT||
+CONTACT NOT ADDED||
+there is already a contact in the system with this name and number||
+CONTACT ADDED||
+DELETE THIS CONTACT||
+Click here to see Admin changes to this contact||
+DELETE CONTACT||
+CONTACT NOT DELETED||
+CONTACT DELETION CONFIRMATION||
+Office Number||
+Cell Number||
+Other Number||
+CONTACT NOT MODIFIED||
 
 
 lead_report_export.php
@@ -824,6 +848,10 @@ Custom Transfer||
 System Delay, Please try again||
 Disposition Status List Hidden||
 The system has received a command to log you out, you have been logged out of your session||
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed||
+Contact search requests are all logged in the system||
+SEARCH FOR A CONTACT||
+CONTACTS SEARCH RESULTS||
 
 
 ############################################################  MANAGER Manual
