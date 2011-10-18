@@ -1691,6 +1691,14 @@ if (isset($_GET["other_num2"]))				{$other_num2=$_GET["other_num2"];}
 	elseif (isset($_POST["other_num2"]))	{$other_num2=$_POST["other_num2"];}
 if (isset($_GET["modify_contacts"]))			{$modify_contacts=$_GET["modify_contacts"];}
 	elseif (isset($_POST["modify_contacts"]))	{$modify_contacts=$_POST["modify_contacts"];}
+if (isset($_GET["bu_name"]))			{$bu_name=$_GET["bu_name"];}
+	elseif (isset($_POST["bu_name"]))	{$bu_name=$_POST["bu_name"];}
+if (isset($_GET["department"]))				{$department=$_GET["department"];}
+	elseif (isset($_POST["department"]))	{$department=$_POST["department"];}
+if (isset($_GET["job_title"]))			{$job_title=$_GET["job_title"];}
+	elseif (isset($_POST["job_title"]))	{$job_title=$_POST["job_title"];}
+if (isset($_GET["location"]))			{$location=$_GET["location"];}
+	elseif (isset($_POST["location"]))	{$location=$_POST["location"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2501,6 +2509,11 @@ if ($non_latin < 1)
 	$description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$description);
 	$first_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$first_name);
 	$last_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$last_name);
+	$bu_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$bu_name);
+	$department = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$department);
+	$group = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$group);
+	$job_title = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$job_title);
+	$location = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$location);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
 	$call_out_number_group = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$call_out_number_group);
@@ -2969,12 +2982,13 @@ else
 # 111004-1539 - Added dtmf_field call menu option
 # 111006-1403 - Added several new campaign and other options, call_count_limit, status flag, shift report flag, etc...
 # 111015-1914 - Added Preset Contact Search options
+# 111018-1535 - Added more contact fields
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-341a';
-$build = '111015-1914';
+$admin_version = '2.4-342a';
+$build = '111018-1535';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -8663,7 +8677,7 @@ if ($ADD==11)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Description: </td><td align=left><input type=text name=campaign_description size=30 maxlength=255>$NWB#vicidial_campaigns-campaign_description$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option></select>$NWB#vicidial_campaigns-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Park Music-on-Hold: </td><td align=left><input type=text name=park_file_name id=park_file_name size=20 maxlength=100> <a href=\"javascript:launch_moh_chooser('park_file_name','moh',200);\">moh chooser</a> $NWB#vicidial_campaigns-park_ext$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Web Form: </td><td align=left><input type=text name=web_form_address size=70 maxlength=1055>$NWB#vicidial_campaigns-web_form_address$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Web Form: </td><td align=left><input type=text name=web_form_address size=70 maxlength=9999>$NWB#vicidial_campaigns-web_form_address$NWE</td></tr>\n";
 		if ($SSoutbound_autodial_active > 0)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>Allow Closers: </td><td align=left><select size=1 name=allow_closers><option>Y</option><option>N</option></select>$NWB#vicidial_campaigns-allow_closers$NWE</td></tr>\n";
@@ -9189,7 +9203,7 @@ if ($ADD==1111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Group Name: </td><td align=left><input type=text name=group_name size=30 maxlength=30>$NWB#vicidial_inbound_groups-group_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Group Color: </td><td align=left id=\"group_color_td\"><input type=text name=group_color size=7 maxlength=7>$NWB#vicidial_inbound_groups-group_color$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option SELECTED>Y</option><option>N</option></select>$NWB#vicidial_inbound_groups-active$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Web Form: </td><td align=left><input type=text name=web_form_address size=70 maxlength=1055 value=\"$web_form_address\">$NWB#vicidial_inbound_groups-web_form_address$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Web Form: </td><td align=left><input type=text name=web_form_address size=70 maxlength=9999 value=\"$web_form_address\">$NWB#vicidial_inbound_groups-web_form_address$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail: </td><td align=left><input type=text name=voicemail_ext size=10 maxlength=10 value=\"$voicemail_ext\">$NWB#vicidial_inbound_groups-voicemail_ext$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Next Agent Call: </td><td align=left><select size=1 name=next_agent_call><option >random</option><option>oldest_call_start</option><option>oldest_call_finish</option><option>oldest_inbound_call_start</option><option>oldest_inbound_call_finish</option><option>overall_user_level</option><option>inbound_group_rank</option><option>campaign_rank</option><option>fewest_calls</option><option>fewest_calls_campaign</option><option>longest_wait_time</option><option>ring_all</option></select>$NWB#vicidial_inbound_groups-next_agent_call$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Fronter Display: </td><td align=left><select size=1 name=fronter_display><option SELECTED>Y</option><option>N</option></select>$NWB#vicidial_inbound_groups-fronter_display$NWE</td></tr>\n";
@@ -10321,6 +10335,11 @@ if ($ADD==191111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Cell Number: </td><td align=left><input type=text name=cell_num size=20 maxlength=20>$NWB#contact_information$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Other Number 1: </td><td align=left><input type=text name=other_num1 size=20 maxlength=20>$NWB#contact_information$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Other Number 2: </td><td align=left><input type=text name=other_num2 size=20 maxlength=20>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>BU Name: </td><td align=left><input type=text name=bu_name size=50 maxlength=100>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Department: </td><td align=left><input type=text name=department size=50 maxlength=100>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Group: </td><td align=left><input type=text name=group_name size=50 maxlength=100>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Job Title: </td><td align=left><input type=text name=job_title size=50 maxlength=100>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Location: </td><td align=left><input type=text name=location size=50 maxlength=100>$NWB#contact_information$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE=SUBMIT></td></tr>\n";
 		echo "</TABLE></center>\n";
@@ -13090,7 +13109,7 @@ if ($ADD==291111111111)
 			{
 			echo "<br>CONTACT ADDED\n";
 
-			$stmt="INSERT INTO contact_information SET first_name='$first_name',last_name='$last_name',office_num='$office_num',cell_num='$cell_num',other_num1='$other_num1',other_num2='$other_num2';";
+			$stmt="INSERT INTO contact_information SET first_name='$first_name',last_name='$last_name',office_num='$office_num',cell_num='$cell_num',other_num1='$other_num1',other_num2='$other_num2',bu_name='$bu_name',department='$department',group_name='$group_name',job_title='$job_title',location='$location';";
 			$rslt=mysql_query($stmt, $linkALT);
 			$contact_id = mysql_insert_id($linkALT);
 
@@ -16558,7 +16577,7 @@ if ($ADD==491111111111)
 				}
 			else
 				{$linkALT = $link;}
-			$stmt="UPDATE contact_information set first_name='$first_name',last_name='$last_name',office_num='$office_num',cell_num='$cell_num',other_num1='$other_num1',other_num2='$other_num2' where contact_id='$contact_id';";
+			$stmt="UPDATE contact_information set first_name='$first_name',last_name='$last_name',office_num='$office_num',cell_num='$cell_num',other_num1='$other_num1',other_num2='$other_num2',bu_name='$bu_name',department='$department',group_name='$group_name',job_title='$job_title',location='$location' where contact_id='$contact_id';";
 			$rslt=mysql_query($stmt, $linkALT);
 
 			echo "<br>CONTACT MODIFIED: $contact_id\n";
@@ -20190,10 +20209,10 @@ if ($ADD==31)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Call Date: </td><td align=left>$campaign_calldate &nbsp; $NWB#vicidial_campaigns-campaign_calldate$NWE</td></tr>\n";
 		echo "<tr bgcolor=#8EBCFD><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option SELECTED>$campaign_active</option></select>$NWB#vicidial_campaigns-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Park Music-on-Hold: </td><td align=left><input type=text name=park_file_name id=park_file_name size=20 maxlength=100 value=\"$row[10]\"> <a href=\"javascript:launch_moh_chooser('park_file_name','moh',200);\">moh chooser</a> $NWB#vicidial_campaigns-park_ext$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Web Form: </td><td align=left><input type=text name=web_form_address size=70 maxlength=1055 value=\"$web_form_address\">$NWB#vicidial_campaigns-web_form_address$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Web Form: </td><td align=left><input type=text name=web_form_address size=70 maxlength=9999 value=\"$web_form_address\">$NWB#vicidial_campaigns-web_form_address$NWE</td></tr>\n";
 		if ($SSenable_second_webform > 0)
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>Web Form Two: </td><td align=left><input type=text name=web_form_address_two size=70 maxlength=1055 value=\"$web_form_address_two\">$NWB#vicidial_campaigns-web_form_address$NWE</td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right>Web Form Two: </td><td align=left><input type=text name=web_form_address_two size=70 maxlength=9999 value=\"$web_form_address_two\">$NWB#vicidial_campaigns-web_form_address$NWE</td></tr>\n";
 			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Web Form Target: </td><td align=left><input type=text name=web_form_target size=25 maxlength=255 value=\"$web_form_target\">$NWB#vicidial_campaigns-web_form_target$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Allow Closers: </td><td align=left><select size=1 name=allow_closers><option>Y</option><option>N</option><option SELECTED>$allow_closers</option></select>$NWB#vicidial_campaigns-allow_closers$NWE</td></tr>\n";
@@ -23578,10 +23597,10 @@ if ($ADD==311)
 		echo "$Dgroups_menu";
 		echo "</select>$NWB#vicidial_lists-drop_inbound_group_override$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#8EBCFD><td align=right>Web Form: </td><td align=left><input type=text name=web_form_address size=70 maxlength=1055 value=\"$web_form_address\">$NWB#vicidial_lists-web_form_address$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Web Form: </td><td align=left><input type=text name=web_form_address size=70 maxlength=9999 value=\"$web_form_address\">$NWB#vicidial_lists-web_form_address$NWE</td></tr>\n";
 		if ($SSenable_second_webform > 0)
 			{
-			echo "<tr bgcolor=#8EBCFD><td align=right>Web Form Two: </td><td align=left><input type=text name=web_form_address_two size=70 maxlength=1055 value=\"$web_form_address_two\">$NWB#vicidial_lists-web_form_address$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Web Form Two: </td><td align=left><input type=text name=web_form_address_two size=70 maxlength=9999 value=\"$web_form_address_two\">$NWB#vicidial_lists-web_form_address$NWE</td></tr>\n";
 			}
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>Transfer-Conf Number 1 Override: </td><td align=left><input type=text name=xferconf_a_number size=20 maxlength=50 value=\"$xferconf_a_number\">$NWB#vicidial_lists-xferconf_a_dtmf$NWE</td></tr>\n";
@@ -24357,10 +24376,10 @@ if ($ADD==3111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Group Color: </td><td align=left bgcolor=\"$row[2]\" id=\"group_color_td\"><input type=text name=group_color size=7 maxlength=7 value=\"$row[2]\">$NWB#vicidial_inbound_groups-group_color$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option SELECTED>$active</option></select>$NWB#vicidial_inbound_groups-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Calldate: </td><td align=left>$group_calldate$NWB#vicidial_inbound_groups-group_calldate$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Web Form: </td><td align=left><input type=text name=web_form_address size=70 maxlength=1055 value=\"$web_form_address\">$NWB#vicidial_inbound_groups-web_form_address$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Web Form: </td><td align=left><input type=text name=web_form_address size=70 maxlength=9999 value=\"$web_form_address\">$NWB#vicidial_inbound_groups-web_form_address$NWE</td></tr>\n";
 		if ($SSenable_second_webform > 0)
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>Web Form Two: </td><td align=left><input type=text name=web_form_address_two size=70 maxlength=1055 value=\"$web_form_address_two\">$NWB#vicidial_inbound_groups-web_form_address$NWE</td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right>Web Form Two: </td><td align=left><input type=text name=web_form_address_two size=70 maxlength=9999 value=\"$web_form_address_two\">$NWB#vicidial_inbound_groups-web_form_address$NWE</td></tr>\n";
 			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Next Agent Call: </td><td align=left><select size=1 name=next_agent_call><option >random</option><option>oldest_call_start</option><option>oldest_call_finish</option><option>oldest_inbound_call_start</option><option>oldest_inbound_call_finish</option><option>overall_user_level</option><option>inbound_group_rank</option><option>campaign_rank</option><option>fewest_calls</option><option>fewest_calls_campaign</option><option>longest_wait_time</option><option>ring_all</option><option SELECTED>$next_agent_call</option></select>$NWB#vicidial_inbound_groups-next_agent_call$NWE</td></tr>\n";
 
@@ -28345,7 +28364,7 @@ if ($ADD==391111111111)
 			}
 		else
 			{$linkALT = $link;}
-		$stmt="SELECT first_name,last_name,office_num,cell_num,other_num1,other_num2 from contact_information where contact_id='$contact_id';";
+		$stmt="SELECT first_name,last_name,office_num,cell_num,other_num1,other_num2,bu_name,department,group_name,job_title,location from contact_information where contact_id='$contact_id';";
 		$rslt=mysql_query($stmt, $linkALT);
 		$row=mysql_fetch_row($rslt);
 		$first_name =	$row[0];
@@ -28354,6 +28373,11 @@ if ($ADD==391111111111)
 		$cell_num =		$row[3];
 		$other_num1 =	$row[4];
 		$other_num2 =	$row[5];
+		$bu_name =		$row[6];
+		$department =	$row[7];
+		$group_name =	$row[8];
+		$job_title =	$row[9];
+		$location =		$row[10];
 
 		echo "<br>MODIFY CONTACT: $tts_id<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=491111111111>\n";
@@ -28365,12 +28389,16 @@ if ($ADD==391111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Cell Number: </td><td align=left><input type=text name=cell_num value=\"$cell_num\" size=20 maxlength=20>$NWB#contact_information$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Other Number 1: </td><td align=left><input type=text name=other_num1 value=\"$other_num1\" size=20 maxlength=20>$NWB#contact_information$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Other Number 2: </td><td align=left><input type=text name=other_num2 value=\"$other_num2\" size=20 maxlength=20>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>BU Name: </td><td align=left><input type=text name=bu_name value=\"$bu_name\" size=50 maxlength=100>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Department: </td><td align=left><input type=text name=department value=\"$department\" size=50 maxlength=100>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Group: </td><td align=left><input type=text name=group_name value=\"$group_name\" size=50 maxlength=100>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Job Title: </td><td align=left><input type=text name=job_title value=\"$job_title\" size=50 maxlength=100>$NWB#contact_information$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Location: </td><td align=left><input type=text name=location value=\"$location\" size=50 maxlength=100>$NWB#contact_information$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE=SUBMIT></td></tr>\n";
 		echo "</TABLE></center>\n";
 
 		echo "<center><b>\n";
-
 
 		if ($LOGast_delete_phones > 0)
 			{
@@ -30798,21 +30826,31 @@ if ($ADD==190000000000)
 		}
 	else
 		{$linkALT = $link;}
-	$stmt="SELECT contact_id,first_name,last_name,office_num from contact_information order by first_name,last_name,office_num limit 20000;";
+	$stmt="SELECT contact_id,first_name,last_name,office_num,bu_name,department,group_name,job_title,location from contact_information order by first_name,last_name,office_num limit 20000;";
 	$rslt=mysql_query($stmt, $linkALT);
 	$lb_to_print = mysql_num_rows($rslt);
 
 	echo "<br>Contacts:\n";
-	echo "<center><TABLE width=400 cellspacing=0 cellpadding=1>\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<tr bgcolor=black>";
 	echo "<td><font size=1 color=white align=left><B>NAME</B></td>";
 	echo "<td><font size=1 color=white><B>Office Number</B></td>";
+	echo "<td><font size=1 color=white><B>BU Name</B></td>";
+	echo "<td><font size=1 color=white><B>Department</B></td>";
+	echo "<td><font size=1 color=white><B>Group</B></td>";
+	echo "<td><font size=1 color=white><B>Job Title</B></td>";
+	echo "<td><font size=1 color=white><B>Location</B></td>";
 	echo "<td align=center><font size=1 color=white><B>MODIFY</B></td></tr>\n";
 
 	$o=0;
 	while ($lb_to_print > $o) 
 		{
 		$row=mysql_fetch_row($rslt);
+		while (strlen($row[4])>20) {$row[4] = preg_replace("/.$/","",$row[4]);}
+		while (strlen($row[5])>20) {$row[5] = preg_replace("/.$/","",$row[5]);}
+		while (strlen($row[6])>20) {$row[6] = preg_replace("/.$/","",$row[6]);}
+		while (strlen($row[7])>20) {$row[7] = preg_replace("/.$/","",$row[7]);}
+		while (strlen($row[8])>20) {$row[8] = preg_replace("/.$/","",$row[8]);}
 
 		if (eregi("1$|3$|5$|7$|9$", $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
@@ -30820,6 +30858,11 @@ if ($ADD==190000000000)
 			{$bgcolor='bgcolor="#9BB9FB"';}
 		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=391111111111&contact_id=$row[0]\">$row[1] $row[2]</a></td>";
 		echo "<td><font size=1>$row[3]</td>";
+		echo "<td><font size=1>$row[4]</td>";
+		echo "<td><font size=1>$row[5]</td>";
+		echo "<td><font size=1>$row[6]</td>";
+		echo "<td><font size=1>$row[7]</td>";
+		echo "<td><font size=1>$row[8]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=391111111111&contact_id=$row[0]\">MODIFY</a></td></tr>\n";
 		$o++;
 		}

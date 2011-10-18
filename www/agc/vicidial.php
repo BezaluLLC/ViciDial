@@ -367,10 +367,11 @@
 # 110916-1514 - Fixed dial timeout to check for dial_timeout setting and greater than 49 seconds
 # 110919-1603 - Added Phone login load balancing grouping options
 # 111015-2037 - Added contact search functions
+# 111018-1528 - Added more contact fields, added code to prevent API transfer duplicates
 #
 
-$version = '2.4-334c';
-$build = '111015-2037';
+$version = '2.4-335c';
+$build = '111018-1528';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=75;
 $one_mysql_log=0;
@@ -3520,6 +3521,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var status_display_LISTID='<?php echo $status_display_LISTID ?>';
 	var qm_extension='<?php echo $qm_extension ?>';
 	var hide_dispo_list='<?php echo $hide_dispo_list ?>';
+	var external_transferconf_count=0;
     var DiaLControl_auto_HTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/vdc_LB_resume.gif\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/vdc_LB_pause.gif\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
@@ -4361,35 +4363,39 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								document.vicidial_form.xfernumber.value = api_transferconf_number;
 								mainxfer_send_redirect('XfeRBLIND',lastcustchannel,lastcustserverip);
 								}
-							if (api_transferconf_function == 'LOCAL_CLOSER')
+							if (external_transferconf_count < 1)
 								{
-								API_selected_xfergroup = api_transferconf_group;
-								document.vicidial_form.xfernumber.value = api_transferconf_number;
-								mainxfer_send_redirect('XfeRLOCAL',lastcustchannel,lastcustserverip);
-								}
-							if (api_transferconf_function == 'DIAL_WITH_CUSTOMER')
-								{
-								if (api_transferconf_consultative=='YES')
-									{document.vicidial_form.consultativexfer.checked=true;}
-								if (api_transferconf_consultative=='NO')
-									{document.vicidial_form.consultativexfer.checked=false;}
-								if (api_transferconf_override=='YES')
-									{document.vicidial_form.xferoverride.checked=true;}
-								API_selected_xfergroup = api_transferconf_group;
-								document.vicidial_form.xfernumber.value = api_transferconf_number;
-								SendManualDial('YES');
-								}
-							if (api_transferconf_function == 'PARK_CUSTOMER_DIAL')
-								{
-								if (api_transferconf_consultative=='YES')
-									{document.vicidial_form.consultativexfer.checked=true;}
-								if (api_transferconf_consultative=='NO')
-									{document.vicidial_form.consultativexfer.checked=false;}
-								if (api_transferconf_override=='YES')
-									{document.vicidial_form.xferoverride.checked=true;}
-								API_selected_xfergroup = api_transferconf_group;
-								document.vicidial_form.xfernumber.value = api_transferconf_number;
-								xfer_park_dial();
+								if (api_transferconf_function == 'LOCAL_CLOSER')
+									{
+									API_selected_xfergroup = api_transferconf_group;
+									document.vicidial_form.xfernumber.value = api_transferconf_number;
+									mainxfer_send_redirect('XfeRLOCAL',lastcustchannel,lastcustserverip);
+									}
+								if (api_transferconf_function == 'DIAL_WITH_CUSTOMER')
+									{
+									if (api_transferconf_consultative=='YES')
+										{document.vicidial_form.consultativexfer.checked=true;}
+									if (api_transferconf_consultative=='NO')
+										{document.vicidial_form.consultativexfer.checked=false;}
+									if (api_transferconf_override=='YES')
+										{document.vicidial_form.xferoverride.checked=true;}
+									API_selected_xfergroup = api_transferconf_group;
+									document.vicidial_form.xfernumber.value = api_transferconf_number;
+									SendManualDial('YES');
+									}
+								if (api_transferconf_function == 'PARK_CUSTOMER_DIAL')
+									{
+									if (api_transferconf_consultative=='YES')
+										{document.vicidial_form.consultativexfer.checked=true;}
+									if (api_transferconf_consultative=='NO')
+										{document.vicidial_form.consultativexfer.checked=false;}
+									if (api_transferconf_override=='YES')
+										{document.vicidial_form.xferoverride.checked=true;}
+									API_selected_xfergroup = api_transferconf_group;
+									document.vicidial_form.xfernumber.value = api_transferconf_number;
+									xfer_park_dial();
+									}
+								external_transferconf_count=3;
 								}
 							Clear_API_Field('external_transferconf');
 							}
@@ -11038,7 +11044,7 @@ function phone_number_format(formatphone) {
 			}
 		if (xmlhttp)
 			{ 
-			LSview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=SEARCHCONTACTSRESULTSview&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&phone_number=" + document.vicidial_form.contacts_phone_number.value + "&first_name=" + document.vicidial_form.contacts_first_name.value + "&last_name=" + document.vicidial_form.contacts_last_name.value + "&campaign=" + campaign + "&stage=<?php echo $HCwidth ?>";
+			LSview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=SEARCHCONTACTSRESULTSview&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&phone_number=" + document.vicidial_form.contacts_phone_number.value + "&first_name=" + document.vicidial_form.contacts_first_name.value + "&last_name=" + document.vicidial_form.contacts_last_name.value + "&bu_name=" + document.vicidial_form.contacts_bu_name.value + "&department=" + document.vicidial_form.contacts_department.value + "&group_name=" + document.vicidial_form.contacts_group_name.value + "&job_title=" + document.vicidial_form.contacts_job_title.value + "&location=" + document.vicidial_form.contacts_location.value + "&campaign=" + campaign + "&stage=<?php echo $HCwidth ?>";
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(LSview_query); 
@@ -11055,6 +11061,7 @@ function phone_number_format(formatphone) {
 		}
 
 
+
 // ################################################################################
 // Reset contact search form
 	function ContactSearchReset()
@@ -11062,6 +11069,11 @@ function phone_number_format(formatphone) {
 		document.vicidial_form.contacts_phone_number.value='';
 		document.vicidial_form.contacts_first_name.value='';
 		document.vicidial_form.contacts_last_name.value='';
+		document.vicidial_form.contacts_bu_name.value='';
+		document.vicidial_form.contacts_department.value='';
+		document.vicidial_form.contacts_group_name.value='';
+		document.vicidial_form.contacts_job_title.value='';
+		document.vicidial_form.contacts_location.value='';
 		}
 
 
@@ -11777,7 +11789,6 @@ function phone_number_format(formatphone) {
 			}
 		else
 			{
-
 			var WaitingForNextStep=0;
 			if ( (CloserSelecting==1) || (TerritorySelecting==1) )	{WaitingForNextStep=1;}
 			if (open_dispo_screen==1)
@@ -11838,6 +11849,7 @@ function phone_number_format(formatphone) {
 			if ( (custchannellive < -30) && (lastcustchannel.length > 3) && (no_empty_session_warnings < 1) ) {CustomerChanneLGone();}
 			if ( (custchannellive < -10) && (lastcustchannel.length > 3) ) {ReChecKCustoMerChaN();}
 			if ( (nochannelinsession > 16) && (check_n > 15) && (no_empty_session_warnings < 1) ) {NoneInSession();}
+			if (external_transferconf_count > 0) {external_transferconf_count = (external_transferconf_count - 1);}
 			if (WaitingForNextStep==0)
 				{
 				if (trigger_ready > 0)
@@ -13513,6 +13525,21 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></center></font
 	</tr>
 	<tr>
 	<td align="right"> Last Name: </td><td align="left"><input type="text" size="18" maxlength="20" name="contacts_last_name" id="contacts_last_name"></td>
+	</tr>
+	<tr>
+	<td align="right"> BU Name: </td><td align="left"><input type="text" size="18" maxlength="20" name="contacts_bu_name" id="contacts_bu_name"></td>
+	</tr>
+	<tr>
+	<td align="right"> Department: </td><td align="left"><input type="text" size="18" maxlength="20" name="contacts_department" id="contacts_department"></td>
+	</tr>
+	<tr>
+	<td align="right"> Group Name: </td><td align="left"><input type="text" size="18" maxlength="20" name="contacts_group_name" id="contacts_group_name"></td>
+	</tr>
+	<tr>
+	<td align="right"> Job Title: </td><td align="left"><input type="text" size="18" maxlength="20" name="contacts_job_title" id="contacts_job_title"></td>
+	</tr>
+	<tr>
+	<td align="right"> Location: </td><td align="left"><input type="text" size="18" maxlength="20" name="contacts_location" id="contacts_location"></td>
 	</tr>
 	<tr>
 	<td align="center" colspan="2"><br /> <a href="#" onclick="ContactSearchSubmit();return false;">SUBMIT SEARCH</a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="#" onclick="ContactSearchReset();return false;">reset form</a></td>

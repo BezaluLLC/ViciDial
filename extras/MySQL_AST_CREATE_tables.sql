@@ -2538,7 +2538,12 @@ last_name VARCHAR(50) default '',
 office_num VARCHAR(20) default '',
 cell_num VARCHAR(20) default '',
 other_num1 VARCHAR(20) default '',
-other_num2 VARCHAR(20) default ''
+other_num2 VARCHAR(20) default '',
+bu_name VARCHAR(100) default '',
+department VARCHAR(100) default '',
+group_name VARCHAR(100) default '',
+job_title VARCHAR(100) default '',
+location VARCHAR(100) default ''
 );
 
 CREATE INDEX ci_first_name on contact_information (first_name);
@@ -2696,7 +2701,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1304',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1305',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

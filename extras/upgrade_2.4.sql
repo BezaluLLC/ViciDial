@@ -1122,3 +1122,10 @@ CREATE INDEX ci_last_name on contact_information (last_name);
 
 UPDATE system_settings SET db_schema_version='1304',db_schema_update_date=NOW() where db_schema_version < 1304;
 
+ALTER TABLE contact_information ADD bu_name VARCHAR(100) default '';
+ALTER TABLE contact_information ADD department VARCHAR(100) default '';
+ALTER TABLE contact_information ADD group_name VARCHAR(100) default '';
+ALTER TABLE contact_information ADD job_title VARCHAR(100) default '';
+ALTER TABLE contact_information ADD location VARCHAR(100) default '';
+
+UPDATE system_settings SET db_schema_version='1305',db_schema_update_date=NOW() where db_schema_version < 1305;

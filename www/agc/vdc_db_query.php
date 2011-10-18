@@ -292,10 +292,11 @@
 # 110901-1117 - Added areacode custom cid function
 # 111006-1425 - Added call_count_limit campaign option
 # 111015-2104 - Added SEARCHCONTACTSRESULTSview function
+# 111018-1529 - Added more fields to contact search
 #
 
-$version = '2.4-195';
-$build = '111015-2104';
+$version = '2.4-196';
+$build = '111018-1529';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=425;
 $one_mysql_log=0;
@@ -498,6 +499,16 @@ if (isset($_GET["qm_extension"]))			{$qm_extension=$_GET["qm_extension"];}
 	elseif (isset($_POST["qm_extension"]))	{$qm_extension=$_POST["qm_extension"];}
 if (isset($_GET["disable_alter_custphone"]))			{$disable_alter_custphone=$_GET["disable_alter_custphone"];}
 	elseif (isset($_POST["disable_alter_custphone"]))	{$disable_alter_custphone=$_POST["disable_alter_custphone"];}
+if (isset($_GET["bu_name"]))			{$bu_name=$_GET["bu_name"];}
+	elseif (isset($_POST["bu_name"]))	{$bu_name=$_POST["bu_name"];}
+if (isset($_GET["department"]))				{$department=$_GET["department"];}
+	elseif (isset($_POST["department"]))	{$department=$_POST["department"];}
+if (isset($_GET["group_name"]))				{$group_name=$_GET["group_name"];}
+	elseif (isset($_POST["group_name"]))	{$group_name=$_POST["group_name"];}
+if (isset($_GET["job_title"]))			{$job_title=$_GET["job_title"];}
+	elseif (isset($_POST["job_title"]))	{$job_title=$_POST["job_title"];}
+if (isset($_GET["location"]))			{$location=$_GET["location"];}
+	elseif (isset($_POST["location"]))	{$location=$_POST["location"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -8871,6 +8882,11 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 		$last_name = ereg_replace("'|\"|\\\\|;","",$last_name);
 		$first_name = ereg_replace("'|\"|\\\\|;","",$first_name);
 		$phone_number = ereg_replace("'|\"|\\\\|;","",$phone_number);
+		$bu_name = ereg_replace("'|\"|\\\\|;","",$bu_name);
+		$department = ereg_replace("'|\"|\\\\|;","",$department);
+		$group_name = ereg_replace("'|\"|\\\\|;","",$group_name);
+		$job_title = ereg_replace("'|\"|\\\\|;","",$job_title);
+		$location = ereg_replace("'|\"|\\\\|;","",$location);
 
 		if (strlen($phone_number) >= 2)
 			{
@@ -8881,14 +8897,133 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 			$searchSQL = "last_name='$last_name'";
 			if (strlen($first_name) > 0)
 				{
-				if (strlen($searchSQL) > 10)
-					{$searchSQL .= " and ";}
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
 				$searchSQL .= "first_name='$first_name'";
+				}
+			if (strlen($bu_name) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "bu_name='$bu_name'";
+				}
+			if (strlen($department) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "department='$department'";
+				}
+			if (strlen($group_name) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "group_name='$group_name'";
+				}
+			if (strlen($job_title) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "job_title='$job_title'";
+				}
+			if (strlen($location) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "location='$location'";
 				}
 			}
 		elseif (strlen($first_name) > 0)
 			{
 			$searchSQL = "first_name='$first_name'";
+			if (strlen($bu_name) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "bu_name='$bu_name'";
+				}
+			if (strlen($department) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "department='$department'";
+				}
+			if (strlen($group_name) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "group_name='$group_name'";
+				}
+			if (strlen($job_title) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "job_title='$job_title'";
+				}
+			if (strlen($location) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "location='$location'";
+				}
+			}
+		elseif (strlen($bu_name) > 0)
+			{
+			$searchSQL = "bu_name='$bu_name'";
+			if (strlen($department) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "department='$department'";
+				}
+			if (strlen($group_name) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "group_name='$group_name'";
+				}
+			if (strlen($job_title) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "job_title='$job_title'";
+				}
+			if (strlen($location) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "location='$location'";
+				}
+			}
+		elseif (strlen($department) > 0)
+			{
+			$searchSQL = "department='$department'";
+			if (strlen($group_name) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "group_name='$group_name'";
+				}
+			if (strlen($job_title) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "job_title='$job_title'";
+				}
+			if (strlen($location) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "location='$location'";
+				}
+			}
+		elseif (strlen($group_name) > 0)
+			{
+			$searchSQL = "group_name='$group_name'";
+			if (strlen($job_title) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "job_title='$job_title'";
+				}
+			if (strlen($location) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "location='$location'";
+				}
+			}
+		elseif (strlen($job_title) > 0)
+			{
+			$searchSQL = "job_title='$job_title'";
+			if (strlen($location) > 0)
+				{
+				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
+				$searchSQL .= "location='$location'";
+				}
+			}
+		elseif (strlen($location) > 0)
+			{
+			$searchSQL = "location='$location'";
 			}
 		else
 			{
@@ -8950,11 +9085,12 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; MOBILE &nbsp; </font></TD>";
 			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; OTHER 1 &nbsp; </font></TD>";
 			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; OTHER 2 &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; BU NAME &nbsp; </font></TD>";
 			echo "</TR>";
 
 			if ($search_result_count)
 				{
-				$stmt="SELECT first_name,last_name,office_num,cell_num,other_num1,other_num2 from contact_information where $searchSQL order by first_name,last_name desc limit 1000;";
+				$stmt="SELECT first_name,last_name,office_num,cell_num,other_num1,other_num2,bu_name,department,group_name,job_title,location from contact_information where $searchSQL order by first_name,last_name desc limit 1000;";
 				$rsltALT=mysql_query($stmt, $linkALT);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkALT,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 				$out_logs_to_print = mysql_num_rows($rsltALT);
@@ -8972,6 +9108,11 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 					$ALLcell_num[$g] =		$row[3];
 					$ALLother_num1[$g] =	$row[4];
 					$ALLother_num2[$g] =	$row[5];
+					$ALLbu_name[$g] =		$row[6];
+					$ALLdepartment[$g] =	$row[7];
+					$ALLgroup_name[$g] =	$row[8];
+					$ALLjob_title[$g] =		$row[9];
+					$ALLlocation[$g] =		$row[10];
 
 					$g++;
 					$u++;
@@ -8993,13 +9134,17 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 
 					$u++;
 					echo "<tr $bgcolor>";
-					echo "<td><font size=1>$u</td>";
-					echo "<td align=right><font size=2>$ALLfirst[$i] </td>\n";
-					echo "<td align=right><font size=2>$ALLlast[$i] </td>\n";
-					echo "<td align=right><font size=2> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLoffice_num[$i]','','N','Y');return false;\">$ALLoffice_num[$i]</a> </td>\n";
-					echo "<td align=right><font size=2> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLcell_num[$i]','','N','Y');return false;\">$ALLcell_num[$i]</a> </td>\n";
-					echo "<td align=right><font size=2> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLother_num1[$i]','','N','Y');return false;\">$ALLother_num1[$i]</a> </td>\n";
-					echo "<td align=right><font size=2> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLother_num2[$i]','','N','Y');return false;\">$ALLother_num2[$i]</a> </td>\n";
+					echo "<td><font size=1>$u </td>";
+					echo "<td align=left> <font size=3>$ALLfirst[$i] </td>\n";
+					echo "<td align=left> <font size=3>$ALLlast[$i] </td>\n";
+					echo "<td align=left> <font size=3> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLoffice_num[$i]','','N','Y');return false;\">$ALLoffice_num[$i]</a> </td>\n";
+					echo "<td align=left> <font size=3> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLcell_num[$i]','','N','Y');return false;\">$ALLcell_num[$i]</a> </td>\n";
+					echo "<td align=left> <font size=3> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLother_num1[$i]','','N','Y');return false;\">$ALLother_num1[$i]</a> </td>\n";
+					echo "<td align=left> <font size=3> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLother_num2[$i]','','N','Y');return false;\">$ALLother_num2[$i]</a> </td>\n";
+					echo "<td align=left> <font size=3>$ALLbu_name[$i] </td>\n";
+					echo "</tr>\n";
+					echo "<tr $bgcolor>";
+					echo "<td colspan=8><font size=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <B>Dept:</B> $ALLdepartment[$i] &nbsp; &nbsp; &nbsp; <B>Group:</B> $ALLgroup_name[$i] &nbsp; &nbsp; &nbsp; <B>Job:</B> $ALLjob_title[$i] &nbsp; &nbsp; &nbsp; <B>Location:</B> $ALLlocation[$i]</td>";
 					echo "</tr>\n";
 					}
 
