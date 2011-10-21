@@ -91,6 +91,8 @@
 #  - $custom_field_names - ('|start_date|finish_date|favorite_color|')
 #  - $call_notes
 #  - $disable_alter_custphone = ('N','Y','HIDE')
+#  - $old_CID = ('M06301413000000002',...)
+#
 #
 # CHANGELOG:
 # 50629-1044 - First build of script
@@ -293,12 +295,13 @@
 # 111006-1425 - Added call_count_limit campaign option
 # 111015-2104 - Added SEARCHCONTACTSRESULTSview function
 # 111018-1529 - Added more fields to contact search
+# 111021-1549 - Added old_CID variable to help clear alt-dial-old calls
 #
 
-$version = '2.4-196';
-$build = '111018-1529';
+$version = '2.4-197';
+$build = '111021-1549';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=425;
+$mysql_log_count=436;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -509,6 +512,8 @@ if (isset($_GET["job_title"]))			{$job_title=$_GET["job_title"];}
 	elseif (isset($_POST["job_title"]))	{$job_title=$_POST["job_title"];}
 if (isset($_GET["location"]))			{$location=$_GET["location"];}
 	elseif (isset($_POST["location"]))	{$location=$_POST["location"];}
+if (isset($_GET["old_CID"]))			{$old_CID=$_GET["old_CID"];}
+	elseif (isset($_POST["old_CID"]))	{$old_CID=$_POST["old_CID"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -2372,7 +2377,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						$temp_ac = substr("$agent_dialed_number", 0, 3);
 						$stmt = "SELECT outbound_cid FROM vicidial_campaign_cid_areacodes where campaign_id='$campaign' and areacode='$temp_ac' and active='Y' order by call_count_today limit 1;";
 						$rslt=mysql_query($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00426',$user,$server_ip,$session_name,$one_mysql_log);}
 						if ($DB) {echo "$stmt\n";}
 						$vcca_ct = mysql_num_rows($rslt);
 						if ($vcca_ct > 0)
@@ -2383,7 +2388,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 							$stmt="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$campaign' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
 								if ($format=='debug') {echo "\n<!-- $stmt -->";}
 							$rslt=mysql_query($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00427',$user,$server_ip,$session_name,$one_mysql_log);}
 							}
 						$temp_CID = preg_replace("/\D/",'',$temp_vcca);
 						}
@@ -2868,6 +2873,20 @@ if ($ACTION == 'manDiaLonly')
 		}
 	else
 		{
+		##### clear out last call to same lead if exists #####
+		if (strlen($old_CID) > 16)
+			{
+			$old_lead_id = substr($old_CID, -10);
+			$old_lead_id = ($old_lead_id + 0);
+			if ($lead_id == "$old_lead_id")
+				{
+				$stmt="DELETE FROM vicidial_auto_calls where callerid='$old_CID' and lead_id='$old_lead_id';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00428',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
+			}
+
 		##### grab number of calls today in this campaign and increment
 		$stmt="SELECT calls_today,extension FROM vicidial_live_agents WHERE user='$user' and campaign_id='$campaign';";
 		$rslt=mysql_query($stmt, $link);
@@ -2960,7 +2979,7 @@ if ($ACTION == 'manDiaLonly')
 				$temp_ac = substr("$phone_number", 0, 3);
 				$stmt = "SELECT outbound_cid FROM vicidial_campaign_cid_areacodes where campaign_id='$campaign' and areacode='$temp_ac' and active='Y' order by call_count_today limit 1;";
 				$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00429',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$vcca_ct = mysql_num_rows($rslt);
 				if ($vcca_ct > 0)
@@ -2971,7 +2990,7 @@ if ($ACTION == 'manDiaLonly')
 					$stmt="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$campaign' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00430',$user,$server_ip,$session_name,$one_mysql_log);}
 					}
 				$temp_CID = preg_replace("/\D/",'',$temp_vcca);
 				}
@@ -8867,7 +8886,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 		{$stage = '670';}
 
 	$stmt="select agent_lead_search_method,manual_dial_list_id from vicidial_campaigns where campaign_id='$campaign';";
-		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00431',$user,$server_ip,$session_name,$one_mysql_log);}
 	$rslt=mysql_query($stmt, $link);
 	$camps_to_print = mysql_num_rows($rslt);
 	if ($camps_to_print > 0) 
@@ -9044,7 +9063,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 		$stmtL="INSERT INTO vicidial_lead_search_log set event_date='$NOW_TIME', user='$user', source='agent', results='0', search_query=\"$SQL_log\";";
 		if ($DB) {echo "|$stmtL|\n";}
 		$rslt=mysql_query($stmtL, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00432',$user,$server_ip,$session_name,$one_mysql_log);}
 		$search_log_id = mysql_insert_id($link);
 
 		if ( (preg_match("/contact_information/",$tables_use_alt_log_db)) and (strlen($alt_log_server_ip)>4) and (strlen($alt_log_dbname)>0) )
@@ -9056,7 +9075,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 			{$linkALT = $link;}
 
 		$rsltALT=mysql_query($stmt, $linkALT);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkALT,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkALT,$mel,$stmt,'00433',$user,$server_ip,$session_name,$one_mysql_log);}
 		$counts_to_print = mysql_num_rows($rsltALT);
 		if ($counts_to_print > 0)
 			{
@@ -9069,7 +9088,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 			$stmtL="UPDATE vicidial_lead_search_log set results='$search_result_count',seconds='$search_seconds' where search_log_id='$search_log_id';";
 			if ($DB) {echo "|$stmtL|\n";}
 			$rslt=mysql_query($stmtL, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00434',$user,$server_ip,$session_name,$one_mysql_log);}
 
 			echo "<CENTER>\n";
 			echo "<font style=\"font-size:14px;font-family:sans-serif;\"><B>";
@@ -9092,7 +9111,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 				{
 				$stmt="SELECT first_name,last_name,office_num,cell_num,other_num1,other_num2,bu_name,department,group_name,job_title,location from contact_information where $searchSQL order by first_name,last_name desc limit 1000;";
 				$rsltALT=mysql_query($stmt, $linkALT);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkALT,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkALT,$mel,$stmt,'00435',$user,$server_ip,$session_name,$one_mysql_log);}
 				$out_logs_to_print = mysql_num_rows($rsltALT);
 				if ($format=='debug') {echo "|$out_logs_to_print|$stmt|";}
 
@@ -9154,7 +9173,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 				$stmtL="UPDATE vicidial_lead_search_log set seconds='$search_seconds' where search_log_id='$search_log_id';";
 				if ($DB) {echo "|$stmtL|\n";}
 				$rslt=mysql_query($stmtL, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00436',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 			else
 				{echo "<tr bgcolor=white><td colspan=10 align=center>No results found</td></tr>";}

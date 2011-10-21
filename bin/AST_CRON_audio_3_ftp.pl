@@ -89,7 +89,7 @@ if (length($ARGV[0])>1)
 		print "  [--transfer-limit=XXX] = number of files to transfer before exiting\n";
 		print "  [--list-limit=XXX] = number of files to list in the directory before moving on\n";
 		print "  [--debugX] = super debug\n";
-		print "  [-t] = test\n";
+		print "  [--test] = test\n";
 		print "  [--GSM] = copy GSM files\n";
 		print "  [--MP3] = copy MPEG-Layer-3 files\n";
 		print "  [--OGG] = copy OGG Vorbis files\n";
@@ -115,7 +115,7 @@ if (length($ARGV[0])>1)
 			$DBX=1;
 			print "\n----- SUPER DEBUG -----\n\n";
 			}
-		if ($args =~ /-t/i)
+		if ($args =~ /--test/i)
 			{
 			$T=1;   $TEST=1;
 			print "\n----- TESTING -----\n\n";

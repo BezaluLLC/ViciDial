@@ -80,7 +80,7 @@ if (length($ARGV[0])>1)
 		print "  [--ftp-pass=XXX] = FTP server password\n";
 		print "  [--ftp-dir=XXX] = FTP server directory\n";
 		print "  [--debugX] = super debug\n";
-		print "  [-t] = test\n";
+		print "  [--test] = test\n";
 		print "  [--nodatedir] = do not put into dated directories\n\n";
 		exit;
 		}
@@ -96,7 +96,7 @@ if (length($ARGV[0])>1)
 			$DBX=1;
 			print "\n----- SUPER DEBUG -----\n\n";
 			}
-		if ($args =~ /-t/i)
+		if ($args =~ /--test/i)
 			{
 			$T=1;   $TEST=1;
 			print "\n----- TESTING -----\n\n";
