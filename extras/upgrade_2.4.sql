@@ -1129,3 +1129,7 @@ ALTER TABLE contact_information ADD job_title VARCHAR(100) default '';
 ALTER TABLE contact_information ADD location VARCHAR(100) default '';
 
 UPDATE system_settings SET db_schema_version='1305',db_schema_update_date=NOW() where db_schema_version < 1305;
+
+ALTER TABLE vicidial_campaigns ADD callback_hours_block TINYINT(2) default '0';
+
+UPDATE system_settings SET db_schema_version='1306',db_schema_update_date=NOW() where db_schema_version < 1306;

@@ -747,6 +747,10 @@ OTHER CHANGES:
 	The purpose of this feature is to be used for a receptionist or operator
 	that needs to transfer calls to non-agents.
 
+170. Added Scheduled Callback Hours Block feature to block USERONLY callbacks
+	from being displayed to an agent within a set number of hours since the
+	callback was set.
+
 
 
 

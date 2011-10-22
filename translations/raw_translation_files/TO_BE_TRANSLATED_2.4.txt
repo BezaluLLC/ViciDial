@@ -786,6 +786,8 @@ Office Number||
 Cell Number||
 Other Number||
 CONTACT NOT MODIFIED||
+Scheduled Callbacks Hours Block||
+This option allows you to restrict a USERONLY scheduled callback from being displayed on the agent callback list until X hours after it has been set. Default is 0 for no block||
 
 
 lead_report_export.php

@@ -296,12 +296,13 @@
 # 111015-2104 - Added SEARCHCONTACTSRESULTSview function
 # 111018-1529 - Added more fields to contact search
 # 111021-1549 - Added old_CID variable to help clear alt-dial-old calls
+# 111021-1707 - Added callback_hours_block feature
 #
 
-$version = '2.4-197';
-$build = '111021-1549';
+$version = '2.4-198';
+$build = '111021-1707';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=436;
+$mysql_log_count=438;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -9802,11 +9803,26 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 ################################################################################
 if ($ACTION == 'CalLBacKLisT')
 	{
+	$campaignCBhoursSQL = '';
+	$stmt = "select callback_hours_block from vicidial_campaigns where campaign_id='$campaign';";
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00437',$user,$server_ip,$session_name,$one_mysql_log);}
+	if ($rslt) {$camp_count = mysql_num_rows($rslt);}
+	if ($camp_count > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$callback_hours_block = $row[0];
+		if ($callback_hours_block > 0)
+			{
+			$x_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-$callback_hours_block,date("i"),date("s"),date("m"),date("d"),date("Y")));
+			$campaignCBhoursSQL = "and entry_time < \"$x_hours_ago\"";
+			}
+		}
+	$campaignCBsql = '';
 	if ($agentonly_callback_campaign_lock > 0)
 		{$campaignCBsql = "and campaign_id='$campaign'";}
-	else
-		{$campaignCBsql = '';}
-	$stmt = "select callback_id,lead_id,campaign_id,status,entry_time,callback_time,comments from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql and status NOT IN('INACTIVE','DEAD') order by callback_time;";
+
+	$stmt = "select callback_id,lead_id,campaign_id,status,entry_time,callback_time,comments from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql $campaignCBhoursSQL and status NOT IN('INACTIVE','DEAD') order by callback_time;";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00178',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -9846,18 +9862,33 @@ if ($ACTION == 'CalLBacKLisT')
 ################################################################################
 if ($ACTION == 'CalLBacKCounT')
 	{
+	$campaignCBhoursSQL = '';
+	$stmt = "select callback_hours_block from vicidial_campaigns where campaign_id='$campaign';";
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00438',$user,$server_ip,$session_name,$one_mysql_log);}
+	if ($rslt) {$camp_count = mysql_num_rows($rslt);}
+	if ($camp_count > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$callback_hours_block = $row[0];
+		if ($callback_hours_block > 0)
+			{
+			$x_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-$callback_hours_block,date("i"),date("s"),date("m"),date("d"),date("Y")));
+			$campaignCBhoursSQL = "and entry_time < \"$x_hours_ago\"";
+			}
+		}
+	$campaignCBsql = '';
 	if ($agentonly_callback_campaign_lock > 0)
 		{$campaignCBsql = "and campaign_id='$campaign'";}
-	else
-		{$campaignCBsql = '';}
-	$stmt = "select count(*) from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql and status NOT IN('INACTIVE','DEAD');";
+
+	$stmt = "select count(*) from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql $campaignCBhoursSQL and status NOT IN('INACTIVE','DEAD');";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00180',$user,$server_ip,$session_name,$one_mysql_log);}
 	$row=mysql_fetch_row($rslt);
 	$cbcount=$row[0];
 
-	$stmt = "select count(*) from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql and status IN('LIVE');";
+	$stmt = "select count(*) from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql $campaignCBhoursSQL and status IN('LIVE');";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00332',$user,$server_ip,$session_name,$one_mysql_log);}
