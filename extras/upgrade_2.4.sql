@@ -1133,3 +1133,7 @@ UPDATE system_settings SET db_schema_version='1305',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD callback_hours_block TINYINT(2) default '0';
 
 UPDATE system_settings SET db_schema_version='1306',db_schema_update_date=NOW() where db_schema_version < 1306;
+
+ALTER TABLE vicidial_campaigns ADD callback_list_calltime ENUM('ENABLED','DISABLED') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1307',db_schema_update_date=NOW() where db_schema_version < 1307;

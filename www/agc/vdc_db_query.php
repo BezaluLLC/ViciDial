@@ -297,10 +297,11 @@
 # 111018-1529 - Added more fields to contact search
 # 111021-1549 - Added old_CID variable to help clear alt-dial-old calls
 # 111021-1707 - Added callback_hours_block feature
+# 111024-1238 - Added callback_list_calltime option
 #
 
-$version = '2.4-198';
-$build = '111021-1707';
+$version = '2.4-199';
+$build = '111024-1238';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=438;
 $one_mysql_log=0;
@@ -9804,14 +9805,16 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 if ($ACTION == 'CalLBacKLisT')
 	{
 	$campaignCBhoursSQL = '';
-	$stmt = "select callback_hours_block from vicidial_campaigns where campaign_id='$campaign';";
+	$stmt = "select callback_hours_block,callback_list_calltime,local_call_time from vicidial_campaigns where campaign_id='$campaign';";
 	$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00437',$user,$server_ip,$session_name,$one_mysql_log);}
 	if ($rslt) {$camp_count = mysql_num_rows($rslt);}
 	if ($camp_count > 0)
 		{
 		$row=mysql_fetch_row($rslt);
-		$callback_hours_block = $row[0];
+		$callback_hours_block =		$row[0];
+		$callback_list_calltime =	$row[1];
+		$local_call_time =			$row[2];
 		if ($callback_hours_block > 0)
 			{
 			$x_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-$callback_hours_block,date("i"),date("s"),date("m"),date("d"),date("Y")));
@@ -9844,13 +9847,18 @@ if ($ACTION == 'CalLBacKLisT')
 	$loop_count=0;
 	while ($callbacks_count>$loop_count)
 		{
-		$stmt = "select first_name,last_name,phone_number from vicidial_list where lead_id='$lead_id[$loop_count]';";
+		$stmt = "select first_name,last_name,phone_number,gmt_offset_now,state from vicidial_list where lead_id='$lead_id[$loop_count]';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00179',$user,$server_ip,$session_name,$one_mysql_log);}
 		$row=mysql_fetch_row($rslt);
 
-		echo "$row[0] ~$row[1] ~$row[2] ~$callback_id[$loop_count] ~$lead_id[$loop_count] ~$campaign_id[$loop_count] ~$status[$loop_count] ~$entry_time[$loop_count] ~$callback_time[$loop_count] ~$comments[$loop_count]\n";
+		$PHONEdialable=1;
+		if ($callback_list_calltime == 'ENABLED')
+			{
+			$PHONEdialable = dialable_gmt($DB,$link,$local_call_time,$row[3],$row[4]);
+			}
+		echo "$row[0] ~$row[1] ~$row[2] ~$callback_id[$loop_count] ~$lead_id[$loop_count] ~$campaign_id[$loop_count] ~$status[$loop_count] ~$entry_time[$loop_count] ~$callback_time[$loop_count] ~$comments[$loop_count] ~$PHONEdialable\n";
 		$loop_count++;
 		}
 

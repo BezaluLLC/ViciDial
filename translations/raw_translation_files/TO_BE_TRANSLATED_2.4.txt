@@ -788,6 +788,8 @@ Other Number||
 CONTACT NOT MODIFIED||
 Scheduled Callbacks Hours Block||
 This option allows you to restrict a USERONLY scheduled callback from being displayed on the agent callback list until X hours after it has been set. Default is 0 for no block||
+Scheduled Callbacks Calltime Block||
+This option if enabled will prevent the scheduled callback in the agent callback list from being dialed if it is outside of the scheduled calltime for the campaign. Default is DISABLED||
 
 
 lead_report_export.php

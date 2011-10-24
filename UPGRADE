@@ -749,7 +749,9 @@ OTHER CHANGES:
 
 170. Added Scheduled Callback Hours Block feature to block USERONLY callbacks
 	from being displayed to an agent within a set number of hours since the
-	callback was set.
+	callback was set. Also, added Calltime Block feature which will remove 
+	DIAL links from callback list if the lead is outside of the campaign
+	selected call time.
 
 
 
