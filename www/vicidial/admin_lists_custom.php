@@ -19,10 +19,11 @@
 # 110629-1438 - Fixed change from DISPLAY or SCRIPT to other field type error, added HIDDEN and READONLY field types
 # 110719-0910 - Added HIDEBLOB field type
 # 110730-1106 - Added mysql reserved words check for add-field action
+# 111025-1432 - Fixed case sensitivity on list fields
 #
 
-$admin_version = '2.4-13';
-$build = '110730-1106';
+$admin_version = '2.4-14';
+$build = '111025-1432';
 
 
 require("dbconnect.php");
@@ -742,7 +743,7 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 		{echo "ERROR: You must enter a field label, field name and field size - $list_id|$field_label|$field_name|$field_size\n<BR>";}
 	else
 		{
-		if (preg_match("/\|$field_label\|/",$mysql_reserved_words))
+		if (preg_match("/\|$field_label\|/i",$mysql_reserved_words))
 			{echo "ERROR: You cannot use reserved words for field labels - $list_id|$field_label|$field_name|$field_size\n<BR>";}
 		else
 			{
@@ -953,7 +954,8 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	while ($fields_to_print > $o) 
 		{
 		$LcolorB='';   $LcolorE='';
-		if (preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+		$reserved_test = $A_field_label[$o];
+		if (preg_match("/\|$reserved_test\|/i",$vicidial_list_fields))
 			{
 			$LcolorB='<font color=red>';
 			$LcolorE='</font>';
@@ -1189,7 +1191,8 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	while ($fields_to_print > $o) 
 		{
 		$LcolorB='';   $LcolorE='';
-		if (preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+		$reserved_test = $A_field_label[$o];
+		if (preg_match("/\|$reserved_test\|/i",$vicidial_list_fields))
 			{
 			$LcolorB='<font color=red>';
 			$LcolorE='</font>';
@@ -1596,7 +1599,7 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 	else
 		{$field_sql .= ";";}
 
-	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or (preg_match("/\|$field_label\|/",$vicidial_list_fields)) )
+	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or (preg_match("/\|$field_label\|/i",$vicidial_list_fields)) )
 		{
 		if ($DB) {echo "Non-DB $field_type field type, $field_label\n";} 
 		}
@@ -1634,7 +1637,7 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields)
 	{
 	$field_db_exists=0;
-	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or (preg_match("/\|$field_label\|/",$vicidial_list_fields)) )
+	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or (preg_match("/\|$field_label\|/i",$vicidial_list_fields)) )
 		{$field_db_exists=1;}
 	else
 		{
@@ -1718,7 +1721,7 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 	else
 		{$field_sql .= "default '$field_default';";}
 
-	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or (preg_match("/\|$field_label\|/",$vicidial_list_fields)) )
+	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or (preg_match("/\|$field_label\|/i",$vicidial_list_fields)) )
 		{
 		if ($DB) {echo "Non-DB $field_type field type, $field_label\n";} 
 		}
@@ -1755,7 +1758,7 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 ##### BEGIN delete field function
 function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields)
 	{
-	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or (preg_match("/\|$field_label\|/",$vicidial_list_fields)) )
+	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or (preg_match("/\|$field_label\|/i",$vicidial_list_fields)) )
 		{
 		if ($DB) {echo "Non-DB $field_type field type, $field_label\n";} 
 		}
