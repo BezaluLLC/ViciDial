@@ -14,10 +14,11 @@
 # 100916-1749 - Added non-lead variable parsing
 # 110719-0856 - Added HIDEBLOB type
 # 110730-2335 - Added call_id variable
+# 111025-1433 - Fixed case sensitivity on list fields
 #
 
-$version = '2.4-6';
-$build = '110730-2335';
+$version = '2.4-7';
+$build = '111025-1433';
 
 require("dbconnect.php");
 require_once("functions.php");
@@ -316,7 +317,7 @@ if ($stage=='SUBMIT')
 				}
 			else
 				{
-				if (preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+				if (preg_match("/\|$A_field_label[$o]\|/i",$vicidial_list_fields))
 					{
 					$VL_update_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
 					}

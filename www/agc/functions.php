@@ -73,7 +73,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 				$A_field_order[$o] =		$rowx[15];
 				$A_field_value[$o] =		'';
 
-				if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+				if (!preg_match("/\|$A_field_label[$o]\|/i",$vicidial_list_fields))
 					{
 					if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
 						{
@@ -118,7 +118,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 					$A_field_value[$o]		= trim("$row[$o]");
 					if ($A_field_select[$o]=='----EMPTY----')
 						{$A_field_value[$o]='';}
-					if (preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+					if (preg_match("/\|$A_field_label[$o]\|/i",$vicidial_list_fields))
 						{$A_field_value[$o] = '--A--' . $A_field_label[$o] . '--B--';}
 					$o++;
 					}
