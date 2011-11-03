@@ -790,6 +790,33 @@ Scheduled Callbacks Hours Block||
 This option allows you to restrict a USERONLY scheduled callback from being displayed on the agent callback list until X hours after it has been set. Default is 0 for no block||
 Scheduled Callbacks Calltime Block||
 This option if enabled will prevent the scheduled callback in the agent callback list from being dialed if it is outside of the scheduled calltime for the campaign. Default is DISABLED||
+Modify Same User Level||
+This setting only applies to level 9 users. If enabled it allows the level 9 user to modify their own settings as well as other level 9 users. Default is 1 for enabled||
+Admin Hide Lead Data||
+This setting only applies to level 7, 8 and 9 users. If enabled it replaces the customer lead data in the many reports and screens in the system with Xs. Default is 0 for disabled||
+Admin Hide Phone Data||
+This setting only applies to level 7, 8 and 9 users. If enabled it replaces the customer phone numbers in the many reports and screens in the system with Xs. The DIGITS settings will show only the last X digits of the phone number. Default is 0 for disabled||
+Allowed User Groups||
+This is a selectable list of User Groups to which members of this user group can view and possibly edit. User Groups can restrict access to almost all aspects of the system, from inbound DIDs to phones to voicemail boxes. The --ALL-- option allows the users in this group to see and log in to any record on the system if their user permissions allow for it||
+Allowed Call Times||
+This is a selectable list of Call Times to which members of this user group can use in campaigns, in-groups and call menus. The --ALL-- option allows the users in this group to use all call times in the system||
+All call times in the system||
+You are not allowed to edit your own user group||
+You are not allowed to edit your own user||
+Admin User Group||
+All Admin User Groups||
+This is the administrative user group for this campaign, this allows admin viewing of this campaign as well as the lists assigned to this campaign to be restricted by user group. Default is --ALL-- which allows any admin user with user group campaign permissions to view this campaign||
+This is the administrative user group for this inbound group, this allows admin viewing of this in-group restricted by user group. Default is --ALL-- which allows any admin user to view this in-group||
+This is the administrative user group for this did, this allows admin viewing of this did restricted by user group. Default is --ALL-- which allows any admin user to view this did||
+This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record||
+User Start for this remote agent does not exist||
+ADMIN GROUP||
+Max Calls Method||
+This option can enable the maximum concurrent calls feature for this in-group. If set to TOTAL, then the total number of calls being handled by agents and in queue in this in-group will not be allowed to exceed the Max Calls Count number of lines as defined below. If set to IN_QUEUE, then if the number of calls in queue waiting for agents will not be allowed to exceed the Max Calls Count no matter how many calls are with agents for this in-group. Default is DISABLED||
+Max Calls Count||
+This option must be set higher than 0 if you want to use the Max Calls Method feature. Default is 0||
+Max Calls Action||
+This is the action to be taken if the Max Calls Method is enabled and the number of calls exceeds what is set above in the Max Calls Count setting. The calls above that amount will be sent to either the DROP action, the AFTERHOURS action or the NO_AGENT_NO_QUEUE action and will be logged as a MAXCAL status with a MAXCALLS hangup reason. Default is NO_AGENT_NO_QUEUE||
 
 
 lead_report_export.php

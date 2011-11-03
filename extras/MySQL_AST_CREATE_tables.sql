@@ -82,6 +82,7 @@ on_hook_agent ENUM('Y','N') default 'N',
 webphone_auto_answer ENUM('Y','N') default 'Y',
 voicemail_timezone VARCHAR(30) default 'eastern',
 voicemail_options VARCHAR(255) default '',
+user_group VARCHAR(20) default '---ALL---',
 index (server_ip),
 unique index extenserver (extension, server_ip)
 );
@@ -128,7 +129,8 @@ active_agent_login_server ENUM('Y','N') default 'Y',
 conf_secret VARCHAR(20) default 'test',
 external_server_ip VARCHAR(100) default '',
 custom_dialplan_entry TEXT,
-active_twin_server_ip VARCHAR(15) default ''
+active_twin_server_ip VARCHAR(15) default '',
+user_group VARCHAR(20) default '---ALL---'
 );
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -362,7 +364,7 @@ last_update_time TIMESTAMP,
 last_call_finish DATETIME,
 closer_campaigns TEXT,
 call_server_ip VARCHAR(15),
-user_level INT(2) default '0',
+user_level TINYINT(3) UNSIGNED default '0',
 comments VARCHAR(20),
 campaign_weight TINYINT(1) default '0',
 calls_today SMALLINT(5) UNSIGNED default '0',
@@ -468,7 +470,7 @@ processed ENUM('Y','N'),
 queue_seconds DECIMAL(7,2) default '0',
 user_group VARCHAR(20),
 xfercallid INT(9) UNSIGNED,
-term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','HOLDRECALLXFER','HOLDTIME','NOAGENT','NONE') default 'NONE',
+term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','HOLDRECALLXFER','HOLDTIME','NOAGENT','NONE','MAXCALLS') default 'NONE',
 uniqueid VARCHAR(20) NOT NULL default '',
 agent_only VARCHAR(20) default '',
 queue_position SMALLINT(4) UNSIGNED default '1',
@@ -497,7 +499,7 @@ user_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
 user VARCHAR(20) NOT NULL,
 pass VARCHAR(20) NOT NULL,
 full_name VARCHAR(50),
-user_level TINYINT(2) default '1',
+user_level TINYINT(3) UNSIGNED default '1',
 user_group VARCHAR(20),
 phone_login VARCHAR(20),
 phone_pass VARCHAR(20),
@@ -587,7 +589,10 @@ modify_audiostore ENUM('1','0') default '0',
 modify_moh ENUM('1','0') default '0',
 modify_tts ENUM('1','0') default '0',
 preset_contact_search ENUM('NOT_ACTIVE','ENABLED','DISABLED') default 'NOT_ACTIVE',
-modify_contacts ENUM('1','0') default '0'
+modify_contacts ENUM('1','0') default '0',
+modify_same_user_level ENUM('0','1') default '1',
+admin_hide_lead_data ENUM('0','1') default '0',
+admin_hide_phone_data ENUM('0','1','2_DIGITS','3_DIGITS','4_DIGITS') default '0'
 );
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -631,7 +636,9 @@ agent_fullscreen ENUM('Y','N') default 'N',
 allowed_reports VARCHAR(2000) default 'ALL REPORTS',
 webphone_url_override VARCHAR(255) default '',
 webphone_systemkey_override VARCHAR(100) default '',
-webphone_dialpad_override ENUM('DISABLED','Y','N','TOGGLE','TOGGLE_OFF') default 'DISABLED'
+webphone_dialpad_override ENUM('DISABLED','Y','N','TOGGLE','TOGGLE_OFF') default 'DISABLED',
+admin_viewable_groups TEXT,
+admin_viewable_call_times TEXT
 );
 
 CREATE TABLE vicidial_campaigns (
@@ -838,7 +845,8 @@ pllb_grouping_limit SMALLINT(5) default '50',
 call_count_limit SMALLINT(5) UNSIGNED default '0',
 call_count_target SMALLINT(5) UNSIGNED default '3',
 callback_hours_block TINYINT(2) default '0',
-callback_list_calltime ENUM('ENABLED','DISABLED') default 'DISABLED'
+callback_list_calltime ENUM('ENABLED','DISABLED') default 'DISABLED',
+user_group VARCHAR(20) default '---ALL---'
 );
 
 CREATE TABLE vicidial_lists (
@@ -1035,7 +1043,11 @@ on_hook_cid VARCHAR(30) default 'GENERIC',
 group_calldate DATETIME,
 action_xfer_cid VARCHAR(18) default 'CUSTOMER',
 drop_callmenu VARCHAR(50) default '',
-after_hours_callmenu VARCHAR(50) default ''
+after_hours_callmenu VARCHAR(50) default '',
+user_group VARCHAR(20) default '---ALL---',
+max_calls_method ENUM('TOTAL','IN_QUEUE','DISABLED') default 'DISABLED',
+max_calls_count SMALLINT(5) default '0',
+max_calls_action ENUM('DROP','AFTERHOURS','NO_AGENT_NO_QUEUE') default 'NO_AGENT_NO_QUEUE'
 );
 
 CREATE TABLE vicidial_stations (
@@ -1145,7 +1157,8 @@ script_id VARCHAR(10) PRIMARY KEY NOT NULL,
 script_name VARCHAR(50),
 script_comments VARCHAR(255),
 script_text TEXT,
-active ENUM('Y','N')
+active ENUM('Y','N'),
+user_group VARCHAR(20) default '---ALL---'
 );
 
 CREATE TABLE phone_favorites (
@@ -1191,7 +1204,8 @@ CREATE TABLE vicidial_lead_filters (
 lead_filter_id VARCHAR(10) PRIMARY KEY NOT NULL,
 lead_filter_name VARCHAR(30) NOT NULL,
 lead_filter_comments VARCHAR(255),
-lead_filter_sql TEXT
+lead_filter_sql TEXT,
+user_group VARCHAR(20) default '---ALL---'
 );
 
 CREATE TABLE vicidial_call_times (
@@ -1222,7 +1236,8 @@ tuesday_afterhours_filename_override VARCHAR(255) default '',
 wednesday_afterhours_filename_override VARCHAR(255) default '',
 thursday_afterhours_filename_override VARCHAR(255) default '',
 friday_afterhours_filename_override VARCHAR(255) default '',
-saturday_afterhours_filename_override VARCHAR(255) default ''
+saturday_afterhours_filename_override VARCHAR(255) default '',
+user_group VARCHAR(20) default '---ALL---'
 );
 
 CREATE TABLE vicidial_state_call_times (
@@ -1245,7 +1260,8 @@ sct_thursday_stop SMALLINT(4) unsigned default '0',
 sct_friday_start SMALLINT(4) unsigned default '0',
 sct_friday_stop SMALLINT(4) unsigned default '0',
 sct_saturday_start SMALLINT(4) unsigned default '0',
-sct_saturday_stop SMALLINT(4) unsigned default '0'
+sct_saturday_stop SMALLINT(4) unsigned default '0',
+user_group VARCHAR(20) default '---ALL---'
 );
 
 CREATE TABLE vicidial_campaign_stats (
@@ -1606,7 +1622,8 @@ index (stat_date)
 CREATE TABLE phones_alias (
 alias_id VARCHAR(20) NOT NULL UNIQUE PRIMARY KEY,
 alias_name VARCHAR(50),
-logins_list VARCHAR(255)
+logins_list VARCHAR(255),
+user_group VARCHAR(20) default '---ALL---'
 );
 
 CREATE TABLE vicidial_shifts (
@@ -1616,6 +1633,7 @@ shift_start_time VARCHAR(4) default '0900',
 shift_length VARCHAR(5) default '16:00',
 shift_weekdays VARCHAR(7) default '0123456',
 report_option ENUM('Y','N') default 'N',
+user_group VARCHAR(20) default '---ALL---',
 index (shift_id)
 );
 
@@ -1675,6 +1693,7 @@ record_id VARCHAR(50) NOT NULL,
 event_code VARCHAR(255) NOT NULL,
 event_sql TEXT,
 event_notes TEXT,
+user_group VARCHAR(20) default '---ALL---',
 index (user),
 index (event_section),
 index (record_id)
@@ -1746,6 +1765,7 @@ custom_two VARCHAR(100) default '',
 custom_three VARCHAR(100) default '',
 custom_four VARCHAR(100) default '',
 custom_five VARCHAR(100) default '',
+user_group VARCHAR(20) default '---ALL---',
 unique index (did_pattern),
 index (group_id)
 );
@@ -1817,6 +1837,7 @@ CREATE TABLE vicidial_conf_templates (
 template_id VARCHAR(15) NOT NULL,
 template_name VARCHAR(50) NOT NULL,
 template_contents TEXT,
+user_group VARCHAR(20) default '---ALL---',
 unique index (template_id)
 );
 
@@ -1832,6 +1853,7 @@ dialplan_entry TEXT,
 server_ip VARCHAR(15) NOT NULL,
 active ENUM('Y','N') default 'Y',
 carrier_description VARCHAR(255),
+user_group VARCHAR(20) default '---ALL---',
 unique index(carrier_id),
 index (server_ip)
 );
@@ -1841,7 +1863,8 @@ group_alias_id VARCHAR(30) NOT NULL UNIQUE PRIMARY KEY,
 group_alias_name VARCHAR(50),
 caller_id_number VARCHAR(20),
 caller_id_name VARCHAR(20),
-active ENUM('Y','N') default 'N'
+active ENUM('Y','N') default 'N',
+user_group VARCHAR(20) default '---ALL---'
 );
 
 CREATE TABLE user_call_log (
@@ -1869,7 +1892,8 @@ tts_id VARCHAR(50) PRIMARY KEY NOT NULL,
 tts_name VARCHAR(100),
 active ENUM('Y','N'),
 tts_text TEXT,
-tts_voice VARCHAR(100) default 'Allison-8kHz'
+tts_voice VARCHAR(100) default 'Allison-8kHz',
+user_group VARCHAR(20) default '---ALL---'
 );
 
 CREATE TABLE vicidial_call_menu (
@@ -1886,7 +1910,8 @@ track_in_vdac ENUM('0','1') default '1',
 custom_dialplan_entry TEXT,
 tracking_group VARCHAR(20) default 'CALLMENU',
 dtmf_log ENUM('0','1') default '0',
-dtmf_field VARCHAR(50) default 'NONE'
+dtmf_field VARCHAR(50) default 'NONE',
+user_group VARCHAR(20) default '---ALL---'
 );
 
 CREATE TABLE vicidial_call_menu_options (
@@ -2141,7 +2166,8 @@ moh_id VARCHAR(100) PRIMARY KEY NOT NULL,
 moh_name VARCHAR(255),
 active ENUM('Y','N') default 'N',
 random ENUM('Y','N') default 'N',
-remove ENUM('Y','N') default 'N'
+remove ENUM('Y','N') default 'N',
+user_group VARCHAR(20) default '---ALL---'
 );
 
 CREATE TABLE vicidial_music_on_hold_files (
@@ -2161,7 +2187,8 @@ old_messages INT(4) default '0',
 email VARCHAR(100),
 delete_vm_after_email ENUM('N','Y') default 'N',
 voicemail_timezone VARCHAR(30) default 'eastern',
-voicemail_options VARCHAR(255) default ''
+voicemail_options VARCHAR(255) default '',
+user_group VARCHAR(20) default '---ALL---'
 );
 
 CREATE TABLE vicidial_user_territory_log (
@@ -2343,6 +2370,7 @@ CREATE TABLE vicidial_filter_phone_groups (
 filter_phone_group_id VARCHAR(20) NOT NULL,
 filter_phone_group_name VARCHAR(40) NOT NULL,
 filter_phone_group_description VARCHAR(100),
+user_group VARCHAR(20) default '---ALL---',
 index (filter_phone_group_id)
 );
 
@@ -2439,7 +2467,8 @@ label_phone_code VARCHAR(40) default '',
 label_alt_phone VARCHAR(40) default '',
 label_security_phrase VARCHAR(40) default '',
 label_email VARCHAR(40) default '',
-label_comments VARCHAR(40) default ''
+label_comments VARCHAR(40) default '',
+user_group VARCHAR(20) default '---ALL---'
 );
 
 CREATE TABLE vicidial_agent_skip_log (
@@ -2703,7 +2732,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1307',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1308',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

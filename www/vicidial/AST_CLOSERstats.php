@@ -32,6 +32,7 @@
 # 100913-1634 - Added DID option to select by DIDs instead of In-groups
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 # 110703-1759 - Added download option
+# 111103-0632 - Added MAXCAL as a drop status
 #
 
 require("dbconnect.php");
@@ -520,10 +521,10 @@ $rslt=mysql_query($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $row=mysql_fetch_row($rslt);
 
-$stmt="select count(*),sum(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND');";
+$stmt="select count(*),sum(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL');";
 if ($DID=='Y')
 	{
-	$stmt="select count(*),sum(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND') and uniqueid IN($unid_SQL);";
+	$stmt="select count(*),sum(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') and uniqueid IN($unid_SQL);";
 	}
 $rslt=mysql_query($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
@@ -638,13 +639,13 @@ if (strlen($group_SQL)>3)
 		$Sanswer_sec_pct_rt_stat_one = $row[0];
 		$Sanswer_sec_pct_rt_stat_two = $row[1];
 
-		$stmt = "SELECT count(*) from vicidial_closer_log where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and queue_seconds <= $Sanswer_sec_pct_rt_stat_one and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND');";
+		$stmt = "SELECT count(*) from vicidial_closer_log where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and queue_seconds <= $Sanswer_sec_pct_rt_stat_one and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL');";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$row=mysql_fetch_row($rslt);
 		$answer_sec_pct_rt_stat_one = $row[0];
 
-		$stmt = "SELECT count(*) from vicidial_closer_log where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and queue_seconds <= $Sanswer_sec_pct_rt_stat_two and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND');";
+		$stmt = "SELECT count(*) from vicidial_closer_log where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and queue_seconds <= $Sanswer_sec_pct_rt_stat_two and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL');";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$row=mysql_fetch_row($rslt);
@@ -931,10 +932,10 @@ $MAIN.="----------+-------------------------------------------------------------
 $CSV_text2.="\n\"CALL ANSWERED TIME AND PERCENT BREAKDOWN IN SECONDS\"\n";
 $CSV_text2.="\"\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\"TOTAL\"\n";
 
-$stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND') group by queue_seconds;";
+$stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by queue_seconds;";
 if ($DID=='Y')
 	{
-	$stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND') group by queue_seconds;";
+	$stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by queue_seconds;";
 	}
 $rslt=mysql_query($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
@@ -1531,7 +1532,7 @@ while ($j < $calls_to_print)
 			{
 			$Ftotal[$i]++;
 			if (ereg("DROP",$Cstatus[$j])) {$Fdrop[$i]++;}
-			if (!ereg("DROP|XDROP|HXFER|QVMAIL|HOLDTO|LIVE|QUEUE|TIMEOT|AFTHRS|NANQUE|INBND",$Cstatus[$j]))
+			if (!ereg("DROP|XDROP|HXFER|QVMAIL|HOLDTO|LIVE|QUEUE|TIMEOT|AFTHRS|NANQUE|INBND|MAXCAL",$Cstatus[$j]))
 				{
 				$BDansweredCALLS++;
 				$Fanswer[$i]++;

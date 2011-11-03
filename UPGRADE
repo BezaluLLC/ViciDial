@@ -753,6 +753,13 @@ OTHER CHANGES:
 	DIAL links from callback list if the lead is outside of the campaign
 	selected call time.
 
+171. Added "Admin User Group" setting to just about every section of the admin
+	web interface, allowing for more complete administrative access 
+	segmentation for different divisions within the same company.
+
+172. Added Max Calls settings to in-groups, allowing for a cap on concurrent 
+	calls being handled by each in-group, either in total or in queue.
+
 
 
 

@@ -1137,3 +1137,44 @@ UPDATE system_settings SET db_schema_version='1306',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD callback_list_calltime ENUM('ENABLED','DISABLED') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1307',db_schema_update_date=NOW() where db_schema_version < 1307;
+
+ALTER TABLE vicidial_live_agents MODIFY user_level TINYINT(3) UNSIGNED default '0';
+
+ALTER TABLE vicidial_users MODIFY user_level TINYINT(3) UNSIGNED default '1';
+ALTER TABLE vicidial_users ADD modify_same_user_level ENUM('0','1') default '1';
+ALTER TABLE vicidial_users ADD admin_hide_lead_data ENUM('0','1') default '0';
+ALTER TABLE vicidial_users ADD admin_hide_phone_data ENUM('0','1','2_DIGITS','3_DIGITS','4_DIGITS') default '0';
+
+ALTER TABLE vicidial_user_groups ADD admin_viewable_groups TEXT;
+ALTER TABLE vicidial_user_groups ADD admin_viewable_call_times TEXT;
+
+ALTER TABLE vicidial_campaigns ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE vicidial_scripts ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE vicidial_lead_filters ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE vicidial_inbound_groups ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE vicidial_inbound_dids ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE vicidial_call_menu ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE vicidial_filter_phone_groups ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE vicidial_call_times ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE vicidial_state_call_times ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE vicidial_shifts ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE phones ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE phones_alias ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE groups_alias ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE vicidial_conf_templates ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE vicidial_server_carriers ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE servers ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE vicidial_screen_labels ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE vicidial_voicemail ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE vicidial_music_on_hold ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE vicidial_tts_prompts ADD user_group VARCHAR(20) default '---ALL---';
+ALTER TABLE vicidial_admin_log ADD user_group VARCHAR(20) default '---ALL---';
+
+ALTER TABLE vicidial_inbound_groups ADD max_calls_method ENUM('TOTAL','IN_QUEUE','DISABLED') default 'DISABLED';
+ALTER TABLE vicidial_inbound_groups ADD max_calls_count SMALLINT(5) default '0';
+ALTER TABLE vicidial_inbound_groups ADD max_calls_action ENUM('DROP','AFTERHOURS','NO_AGENT_NO_QUEUE') default 'NO_AGENT_NO_QUEUE';
+
+ALTER TABLE vicidial_closer_log MODIFY term_reason ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','HOLDRECALLXFER','HOLDTIME','NOAGENT','NONE','MAXCALLS') default 'NONE';
+ALTER TABLE vicidial_closer_log_archive MODIFY term_reason ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','HOLDRECALLXFER','HOLDTIME','NOAGENT','NONE','MAXCALLS') default 'NONE';
+
+UPDATE system_settings SET db_schema_version='1308',db_schema_update_date=NOW() where db_schema_version < 1308;
