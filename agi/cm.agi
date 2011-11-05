@@ -253,6 +253,14 @@ if ($outboundIVR > 0)
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$affected_rowsL = $dbhA->do($stmtA);
 	if ($AGILOG) {$agi_string = "--    VOIL insert: |$affected_rowsL|$uniqueid|$callerid|$campaign_id|$lead_id|$context|";   &agi_output;}
+
+	if ( (length($field)>2) && ($vicidial_list_fields =~ /\|$field\|/) )
+		{
+		$stmtA = "UPDATE vicidial_list SET $field='$dtmf' where lead_id='$lead_id';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rowsL = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    VL update: |$affected_rowsL|$field|$dtmf|$lead_id|$context|";   &agi_output;}
+		}
 	}
 elsif ($fieldUPDATE > 0)
 	{
