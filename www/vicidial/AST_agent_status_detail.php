@@ -1,7 +1,7 @@
 <?php 
 # AST_agent_status_detail.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -15,6 +15,7 @@
 # 100712-1324 - Added system setting slave server option
 # 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
+# 111104-1249 - Added user_group restrictions for selecting in-groups
 #
 
 
@@ -105,12 +106,14 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
-$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
-$LOGallowed_campaigns = $row[0];
-$LOGallowed_reports =	$row[1];
+$LOGallowed_campaigns =			$row[0];
+$LOGallowed_reports =			$row[1];
+$LOGadmin_viewable_groups =		$row[2];
+$LOGadmin_viewable_call_times =	$row[3];
 
 if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 	{
@@ -131,6 +134,25 @@ if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
 	}
 $regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 
+$LOGadmin_viewable_groupsSQL='';
+$whereLOGadmin_viewable_groupsSQL='';
+if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+	{
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+	$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	}
+
+$LOGadmin_viewable_call_timesSQL='';
+$whereLOGadmin_viewable_call_timesSQL='';
+if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+	{
+	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
+	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
+	$LOGadmin_viewable_call_timesSQL = "and call_time_id IN('---ALL---','$rawLOGadmin_viewable_call_timesSQL')";
+	$whereLOGadmin_viewable_call_timesSQL = "where call_time_id IN('---ALL---','$rawLOGadmin_viewable_call_timesSQL')";
+	}
 
 $MT[0]='';
 $NOW_DATE = date("Y-m-d");
@@ -163,7 +185,7 @@ while ($i < $campaigns_to_print)
 		{$group[$i] = $groups[$i];}
 	$i++;
 	}
-$stmt="select user_group from vicidial_user_groups order by user_group;";
+$stmt="select user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $user_groups_to_print = mysql_num_rows($rslt);
@@ -242,7 +264,7 @@ while ($i < $statha_to_print)
 	$customer_interactive_statuses .= "|$row[0]";
 	$i++;
 	}
-$stmt="select status from vicidial_campaign_statuses where human_answered='Y';";
+$stmt="select status from vicidial_campaign_statuses where human_answered='Y' $LOGallowed_campaignsSQL;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $statha_to_print = mysql_num_rows($rslt);
@@ -606,7 +628,9 @@ else
 
 	$TOTcalls = sprintf("%7s", $TOTcalls);
 	$CIScountTOT = sprintf("%7s", $CIScountTOT);
-	$DNCcountPCT = ( ($DNCcountTOT / $CIScountTOT) * 100);
+	$DNCcountPCT = 0;
+	if ( ($DNCcountTOT > 0) and ($CIScountTOT > 0) )
+		{$DNCcountPCT = ( ($DNCcountTOT / $CIScountTOT) * 100);}
 	$DNCcountPCT = round($DNCcountPCT,2);
 	$DNCcountPCT = sprintf("%3.2f", $DNCcountPCT);
 	if ( ($DNCcountTOT < 1) or ($CIScountTOT < 1) )

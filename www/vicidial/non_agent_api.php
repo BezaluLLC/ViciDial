@@ -59,10 +59,11 @@
 # 110705-1928 - Added options for USACAN 4th digit prefix(no 0 or 1) and valid areacode filtering to add_lead
 # 110821-2318 - Added update_phone, add_phone_alias, update_phone_alias functions
 # 110928-2110 - Added callback options to add_lead and update_lead
+# 111106-0959 - Added user_group restrictions to some functions
 #
 
-$version = '2.4-38';
-$build = '110928-2110';
+$version = '2.4-39';
+$build = '111106-0959';
 
 $startMS = microtime();
 
@@ -283,6 +284,8 @@ if (isset($_GET["callback_user"]))			{$callback_user=$_GET["callback_user"];}
 	elseif (isset($_POST["callback_user"]))	{$callback_user=$_POST["callback_user"];}
 if (isset($_GET["callback_comments"]))			{$callback_comments=$_GET["callback_comments"];}
 	elseif (isset($_POST["callback_comments"]))	{$callback_comments=$_POST["callback_comments"];}
+if (isset($_GET["admin_user_group"]))			{$admin_user_group=$_GET["admin_user_group"];}
+	elseif (isset($_POST["admin_user_group"]))	{$admin_user_group=$_POST["admin_user_group"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -423,6 +426,7 @@ if ($non_latin < 1)
 	$callback_type = ereg_replace("[^A-Z]","",$callback_type);
 	$callback_user = ereg_replace("[^-\_0-9a-zA-Z]","",$callback_user);
 	$callback_comments = ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$callback_comments);
+	$admin_user_group = ereg_replace("[^-\_0-9a-zA-Z]","",$admin_user_group);
 	}
 else
 	{
@@ -729,6 +733,29 @@ if ($function == 'moh_list')
 			}
 		else
 			{
+			$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level > 6;";
+			if ($DB>0) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$LOGuser_group =			$row[0];
+
+			$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+			if ($DB>0) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$LOGallowed_campaigns =			$row[0];
+			$LOGadmin_viewable_groups =		$row[1];
+
+			$LOGadmin_viewable_groupsSQL='';
+			$whereLOGadmin_viewable_groupsSQL='';
+			if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+				{
+				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+				$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+				$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+				}
+
 			echo "\n";
 			echo "<HTML><head><title>NON-AGENT API</title>\n";
 			echo "<script language=\"Javascript\">\n";
@@ -761,7 +788,7 @@ if ($function == 'moh_list')
 			echo "<td>Random</td>\n";
 			echo "</tr>\n";
 
-			$stmt="SELECT moh_id,moh_name,random from vicidial_music_on_hold where active='Y' order by moh_id";
+			$stmt="SELECT moh_id,moh_name,random from vicidial_music_on_hold where active='Y' $LOGadmin_viewable_groupsSQL order by moh_id";
 			$rslt=mysql_query($stmt, $link);
 			$moh_to_print = mysql_num_rows($rslt);
 			$k=0;
@@ -839,6 +866,29 @@ if ($function == 'vm_list')
 		}
 	else
 		{
+		$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level > 6;";
+		if ($DB>0) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$LOGuser_group =			$row[0];
+
+		$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+		if ($DB>0) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$LOGallowed_campaigns =			$row[0];
+		$LOGadmin_viewable_groups =		$row[1];
+
+		$LOGadmin_viewable_groupsSQL='';
+		$whereLOGadmin_viewable_groupsSQL='';
+		if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+			{
+			$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+			$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+			$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+			$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+			}
+
 		$server_name = getenv("SERVER_NAME");
 		$server_port = getenv("SERVER_PORT");
 		if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
@@ -877,7 +927,7 @@ if ($function == 'vm_list')
 		echo "<td>Email</td>\n";
 		echo "</tr>\n";
 
-		$stmt="SELECT voicemail_id,fullname,email from vicidial_voicemail where active='Y' order by voicemail_id";
+		$stmt="SELECT voicemail_id,fullname,email from vicidial_voicemail where active='Y' $LOGadmin_viewable_groupsSQL order by voicemail_id";
 		$rslt=mysql_query($stmt, $link);
 		$vm_to_print = mysql_num_rows($rslt);
 		$k=0;
@@ -901,7 +951,7 @@ if ($function == 'vm_list')
 			$k++;
 			}
 
-		$stmt="SELECT voicemail_id,fullname,email,extension from phones where active='Y' order by voicemail_id";
+		$stmt="SELECT voicemail_id,fullname,email,extension from phones where active='Y' $LOGadmin_viewable_groupsSQL order by voicemail_id";
 		$rslt=mysql_query($stmt, $link);
 		$vm_to_print = mysql_num_rows($rslt);
 		$k=0;
@@ -968,12 +1018,35 @@ if ($function == 'agent_ingroup_info')
 			}
 		else
 			{
-			$stmt="SELECT count(*) from vicidial_live_agents where user='$agent_user';";
+			$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level > 6;";
+			if ($DB>0) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			$row=mysql_fetch_row($rslt);
-			$session_exists=$row[0];
+			$LOGuser_group =			$row[0];
 
-			if ($session_exists < 1)
+			$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+			if ($DB>0) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$LOGallowed_campaigns =			$row[0];
+			$LOGadmin_viewable_groups =		$row[1];
+
+			$LOGadmin_viewable_groupsSQL='';
+			$whereLOGadmin_viewable_groupsSQL='';
+			if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+				{
+				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+				$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+				$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+				}
+
+			$stmt="SELECT count(*) from vicidial_users where user='$agent_user' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$admin_permission=$row[0];
+
+			if ($admin_permission < 1)
 				{
 				$result = 'ERROR';
 				$result_reason = "agent_ingroup_info INVALID USER ID";
@@ -984,232 +1057,249 @@ if ($function == 'agent_ingroup_info')
 				}
 			else
 				{
-				$stmt="SELECT campaign_id,closer_campaigns,outbound_autodial,manager_ingroup_set,external_igb_set_user,on_hook_agent,on_hook_ring_time from vicidial_live_agents where user='$agent_user';";
+				$stmt="SELECT count(*) from vicidial_live_agents where user='$agent_user';";
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
-				$campaign_id =				$row[0];
-				$closer_campaigns =			$row[1];
-				$blended =					$row[2];
-				$manager_ingroup_set =		$row[3];
-				$external_igb_set_user =	$row[4];
-				$on_hook_agent =			$row[5];
-				$on_hook_ring_time =		$row[6];
+				$session_exists=$row[0];
 
-				$stmt="SELECT full_name from vicidial_users where user='$agent_user';";
-				$rslt=mysql_query($stmt, $link);
-				$row=mysql_fetch_row($rslt);
-				$full_name =				$row[0];
-
-				$stmt = "select count(*) from vicidial_campaigns where campaign_id='$campaign_id' and campaign_allow_inbound='Y' and dial_method NOT IN('MANUAL');";
-				$rslt=mysql_query($stmt, $link);
-				$row=mysql_fetch_row($rslt);
-				$allowed_campaign_inbound=$row[0];
-
-				$stmt = "select count(*) from vicidial_campaigns where campaign_id='$campaign_id' and dial_method NOT IN('MANUAL','INBOUND_MAN');";
-				$rslt=mysql_query($stmt, $link);
-				$row=mysql_fetch_row($rslt);
-				$allowed_campaign_autodial=$row[0];
-
-				$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and change_agent_campaign='1';";
-				$rslt=mysql_query($stmt, $link);
-				$row=mysql_fetch_row($rslt);
-				$allowed_user_change_ingroups=$row[0];
-
-				$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and modify_users='1';";
-				$rslt=mysql_query($stmt, $link);
-				$row=mysql_fetch_row($rslt);
-				$allowed_user_modify_user=$row[0];
-
-
-				$result = 'SUCCESS';
-				$result_reason = "";
-				$data = "$agent_user|$stage";
-
-				if ($stage == 'text')
+				if ($session_exists < 1)
 					{
-					$output .= "SELECTED INGROUPS: $closer_campaigns\n";
-					$output .= "OUTBOUND AUTODIAL: $blended\n";
-					$output .= "MANAGER OVERRIDE: $manager_ingroup_set\n";
-					$output .= "MANAGER: $external_igb_set_user\n";
-					echo "$result: $result_reason - $data\n$output\n";
+					$result = 'ERROR';
+					$result_reason = "agent_ingroup_info INVALID USER ID";
+					echo "$result: $result_reason - $agent_user|$user\n";
+					$data = "$session_id";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
 					}
 				else
 					{
-					$output  = '';
-					$output .= "<TABLE WIDTH=680 CELLPADDING=0 CELLSPACING=5 BGCOLOR=\"#D9E6FE\"><TR><TD ALIGN=LEFT>\n";
-					$output .= "Agent: $agent_user - $full_name </TD><TD>\n";
-					$output .= " &nbsp; Campaign: $campaign_id</TD><TD>\n";
-					$output .= "<a href=\"#\" onclick=\"hide_ingroup_info();\">Close</a></TD></TR><TR><TD COLSPAN=3 BGCOLOR=\"#CCCCFF\">\n";
-
-					$stmt="SELECT closer_campaigns from vicidial_campaigns where campaign_id='$campaign_id';";
+					$stmt="SELECT campaign_id,closer_campaigns,outbound_autodial,manager_ingroup_set,external_igb_set_user,on_hook_agent,on_hook_ring_time from vicidial_live_agents where user='$agent_user';";
 					$rslt=mysql_query($stmt, $link);
 					$row=mysql_fetch_row($rslt);
-					if ($allowed_campaign_inbound < 1)
-						{$row[0]='';}
-					$closer_groups_pre = preg_replace('/-$/','',$row[0]);
-					$closer_groups = explode(" ",$closer_groups_pre);
-					$closer_groups_ct = count($closer_groups);
+					$campaign_id =				$row[0];
+					$closer_campaigns =			$row[1];
+					$blended =					$row[2];
+					$manager_ingroup_set =		$row[3];
+					$external_igb_set_user =	$row[4];
+					$on_hook_agent =			$row[5];
+					$on_hook_ring_time =		$row[6];
 
-					$in_groups_pre = preg_replace('/-$/','',$closer_campaigns);
-					$in_groups = explode(" ",$in_groups_pre);
-					$in_groups_ct = count($in_groups);
-					$k=1;
-					while ($k < $closer_groups_ct)
+					$stmt="SELECT full_name from vicidial_users where user='$agent_user';";
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$full_name =				$row[0];
+
+					$stmt = "select count(*) from vicidial_campaigns where campaign_id='$campaign_id' and campaign_allow_inbound='Y' and dial_method NOT IN('MANUAL');";
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$allowed_campaign_inbound=$row[0];
+
+					$stmt = "select count(*) from vicidial_campaigns where campaign_id='$campaign_id' and dial_method NOT IN('MANUAL','INBOUND_MAN');";
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$allowed_campaign_autodial=$row[0];
+
+					$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and change_agent_campaign='1';";
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$allowed_user_change_ingroups=$row[0];
+
+					$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and modify_users='1';";
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$allowed_user_modify_user=$row[0];
+
+
+					$result = 'SUCCESS';
+					$result_reason = "";
+					$data = "$agent_user|$stage";
+
+					if ($stage == 'text')
 						{
-						$closer_select[$k]=0;
-						if (strlen($closer_groups[$k])>1)
-							{
-							$m=0;
-							while ($m < $in_groups_ct)
-								{
-								if (strlen($in_groups[$m])>1)
-									{
-									if ($closer_groups[$k] == $in_groups[$m])
-										{$closer_select[$k]++;}
-									}
-								$m++;
-								}
-							}
-						$k++;
-						}
-
-					if ( ($allowed_user_change_ingroups > 0) and ($stage == 'change') )
-						{
-						$output .= "<TABLE CELLPADDING=0 CELLSPACING=3 BORDER=0>\n";
-						if ($on_hook_agent == 'Y')
-							{
-							$output .= "<TR><TD ALIGN=CENTER VALIGN=TOP COLSPAN=2><B>This is a Phone On-Hook Agent</B> &nbsp; Maximum Ring Time:  $on_hook_ring_time</TD></TR>\n";
-							}
-						$output .= "<TR><TD ALIGN=RIGHT VALIGN=TOP>Selected In-Groups: </TD><TD ALIGN=LEFT>\n";
-						$output .= "<INPUT TYPE=HIDDEN NAME=agent_user ID=agent_user value=\"$agent_user\">\n";
-						$output .= "<SELECT SIZE=10 NAME=ingroup_new_selections ID=ingroup_new_selections multiple>\n";
-						
-						$m=0;
-						$m_printed=0;
-						while ($m < $closer_groups_ct)
-							{
-							if (strlen($closer_groups[$m])>1)
-								{
-								$stmt="SELECT group_name from vicidial_inbound_groups where group_id='$closer_groups[$m]';";
-								$rslt=mysql_query($stmt, $link);
-								$row=mysql_fetch_row($rslt);
-
-								$output .= "<option value=\"$closer_groups[$m]\"";
-
-								if ($closer_select[$m] > 0)
-									{$output .= " SELECTED";}
-								$output .= ">$closer_groups[$m] - $row[0]</option>\n";
-								$m_printed++;
-								}
-							$m++;
-							}
-
-						if ($m_printed < 1)
-							{$output .= "<option value=\"\">No In-Groups Allowed</option>\n";}
-
-						$output .= "</SELECT><BR></TD></TR>\n";
-
-						$output .= "<TR><TD ALIGN=RIGHT>Change, Add, Remove:\n";
-						$output .= "</TD><TD ALIGN=LEFT>\n";
-						$output .= "<SELECT SIZE=1 NAME=ingroup_add_remove_change ID=ingroup_add_remove_change>\n";
-						$output .= "<option value=\"CHANGE\">CHANGE - Set in-groups to those selected above</option>\n";
-						$output .= "<option value=\"ADD\">ADD - Add in-groups selected above to agent selected</option>\n";
-						$output .= "<option value=\"REMOVE\">REMOVE - Remove in-groups selected above from agent selected</option>\n";
-						$output .= "</SELECT>\n";
-						$output .= "</TD></TR>\n";
-
-						$output .= "<TR><TD ALIGN=RIGHT>Blended Outbound Autodial:\n";
-						$output .= "</TD><TD ALIGN=LEFT>\n";
-						$output .= "<SELECT SIZE=1 NAME=blended ID=blended";
-						if ($allowed_campaign_autodial < 1)
-							{
-							$output .= " DISABLED";
-							$blended = 'N';
-							}
-						$output .= ">\n";
-						$output .= "<option value=\"YES\"";
-						if ($blended == 'Y')
-							{$output .= " SELECTED";}
-						$output .= ">Yes</option>\n";
-						$output .= "<option value=\"NO\"";
-						if ($blended == 'N')
-							{$output .= " SELECTED";}
-						$output .= ">No</option>\n";
-						$output .= "</SELECT>\n";
-						$output .= "</TD></TR>\n";
-
-						$output .= "<TR><TD ALIGN=RIGHT>Set As User Default:\n";
-						$output .= "</TD><TD ALIGN=LEFT>\n";
-						$output .= "<SELECT SIZE=1 NAME=set_as_default ID=set_as_default";
-						if ($allowed_user_modify_user < 1)
-							{$output .= " DISABLED";}
-						$output .= ">\n";
-						$output .= "<option value=\"YES\">Yes</option>\n";
-						$output .= "<option value=\"NO\" SELECTED>No</option>\n";
-						$output .= "</SELECT>\n";
-						$output .= "</TD></TR>\n";
-
-						if ( ($manager_ingroup_set == 'SET') or ($manager_ingroup_set == 'Y') )
-							{
-							$stmt="SELECT full_name from vicidial_users where user='$external_igb_set_user';";
-							$rslt=mysql_query($stmt, $link);
-							$row=mysql_fetch_row($rslt);
-							$Mfull_name =				$row[0];
-
-							$output .= "<TR><TD ALIGN=RIGHT>Manager In-Group Override:\n";
-							$output .= "</TD><TD ALIGN=LEFT>\n";
-							$output .= "$manager_ingroup_set - $external_igb_set_user - $Mfull_name\n";
-							$output .= "</TD></TR>\n";
-							}
-
-						$output .= "<TR><TD ALIGN=CENTER COLSPAN=2>\n";
-						$output .= "<INPUT TYPE=BUTTON NAME=SUBMIT ID=SUBMIT VALUE=\"Submit Changes\" onclick=\"submit_ingroup_changes('$agent_user')\">\n";
-						$output .= "</TD></TR>\n";
-
-						$output .= "</TABLE>\n";
-						$output .= "</TD></TR></TABLE>\n";
+						$output .= "SELECTED INGROUPS: $closer_campaigns\n";
+						$output .= "OUTBOUND AUTODIAL: $blended\n";
+						$output .= "MANAGER OVERRIDE: $manager_ingroup_set\n";
+						$output .= "MANAGER: $external_igb_set_user\n";
+						echo "$result: $result_reason - $data\n$output\n";
 						}
 					else
 						{
-						$output .= "<TABLE CELLPADDING=0 CELLSPACING=3 BORDER=0>\n";
-						
-						$m=0;
-						$m_printed=0;
-						while ($m < $closer_groups_ct)
+						$output  = '';
+						$output .= "<TABLE WIDTH=680 CELLPADDING=0 CELLSPACING=5 BGCOLOR=\"#D9E6FE\"><TR><TD ALIGN=LEFT>\n";
+						$output .= "Agent: $agent_user - $full_name </TD><TD>\n";
+						$output .= " &nbsp; Campaign: $campaign_id</TD><TD>\n";
+						$output .= "<a href=\"#\" onclick=\"hide_ingroup_info();\">Close</a></TD></TR><TR><TD COLSPAN=3 BGCOLOR=\"#CCCCFF\">\n";
+
+						$stmt="SELECT closer_campaigns from vicidial_campaigns where campaign_id='$campaign_id';";
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						if ($allowed_campaign_inbound < 1)
+							{$row[0]='';}
+						$closer_groups_pre = preg_replace('/-$/','',$row[0]);
+						$closer_groups = explode(" ",$closer_groups_pre);
+						$closer_groups_ct = count($closer_groups);
+
+						$in_groups_pre = preg_replace('/-$/','',$closer_campaigns);
+						$in_groups = explode(" ",$in_groups_pre);
+						$in_groups_ct = count($in_groups);
+						$k=1;
+						while ($k < $closer_groups_ct)
 							{
-							if (strlen($closer_groups[$m])>1)
+							$closer_select[$k]=0;
+							if (strlen($closer_groups[$k])>1)
 								{
-								$stmt="SELECT group_name from vicidial_inbound_groups where group_id='$closer_groups[$m]';";
-								$rslt=mysql_query($stmt, $link);
-								$row=mysql_fetch_row($rslt);
-
-								$output .= "<TR><TD>$closer_groups[$m]";
-
-								if ($closer_select[$m] > 0)
-									{$output .= " *";}
-								$output .= "</TD><TD>$row[0]</TD></TR>\n";
-								$m_printed++;
+								$m=0;
+								while ($m < $in_groups_ct)
+									{
+									if (strlen($in_groups[$m])>1)
+										{
+										if ($closer_groups[$k] == $in_groups[$m])
+											{$closer_select[$k]++;}
+										}
+									$m++;
+									}
 								}
-							$m++;
+							$k++;
 							}
 
-						if ($m_printed < 1)
-							{$output .= "<TR><TD>No In-Groups Allowed</TD></TR>\n";}
+						if ( ($allowed_user_change_ingroups > 0) and ($stage == 'change') )
+							{
+							$output .= "<TABLE CELLPADDING=0 CELLSPACING=3 BORDER=0>\n";
+							if ($on_hook_agent == 'Y')
+								{
+								$output .= "<TR><TD ALIGN=CENTER VALIGN=TOP COLSPAN=2><B>This is a Phone On-Hook Agent</B> &nbsp; Maximum Ring Time:  $on_hook_ring_time</TD></TR>\n";
+								}
+							$output .= "<TR><TD ALIGN=RIGHT VALIGN=TOP>Selected In-Groups: </TD><TD ALIGN=LEFT>\n";
+							$output .= "<INPUT TYPE=HIDDEN NAME=agent_user ID=agent_user value=\"$agent_user\">\n";
+							$output .= "<SELECT SIZE=10 NAME=ingroup_new_selections ID=ingroup_new_selections multiple>\n";
+							
+							$m=0;
+							$m_printed=0;
+							while ($m < $closer_groups_ct)
+								{
+								if (strlen($closer_groups[$m])>1)
+									{
+									$stmt="SELECT group_name from vicidial_inbound_groups where group_id='$closer_groups[$m]';";
+									$rslt=mysql_query($stmt, $link);
+									$row=mysql_fetch_row($rslt);
 
-						$output .= "</TABLE><BR>\n";
+									$output .= "<option value=\"$closer_groups[$m]\"";
 
-						$output .= "SELECTED INGROUPS: $closer_campaigns<BR>\n";
-						$output .= "OUTBOUND AUTODIAL: $blended<BR>\n";
-						$output .= "MANAGER OVERRIDE: $manager_ingroup_set<BR>\n";
-						$output .= "MANAGER: $external_igb_set_user<BR>\n";
-						$output .= "\n";
-						$output .= "</TD></TR></TABLE>\n";
+									if ($closer_select[$m] > 0)
+										{$output .= " SELECTED";}
+									$output .= ">$closer_groups[$m] - $row[0]</option>\n";
+									$m_printed++;
+									}
+								$m++;
+								}
+
+							if ($m_printed < 1)
+								{$output .= "<option value=\"\">No In-Groups Allowed</option>\n";}
+
+							$output .= "</SELECT><BR></TD></TR>\n";
+
+							$output .= "<TR><TD ALIGN=RIGHT>Change, Add, Remove:\n";
+							$output .= "</TD><TD ALIGN=LEFT>\n";
+							$output .= "<SELECT SIZE=1 NAME=ingroup_add_remove_change ID=ingroup_add_remove_change>\n";
+							$output .= "<option value=\"CHANGE\">CHANGE - Set in-groups to those selected above</option>\n";
+							$output .= "<option value=\"ADD\">ADD - Add in-groups selected above to agent selected</option>\n";
+							$output .= "<option value=\"REMOVE\">REMOVE - Remove in-groups selected above from agent selected</option>\n";
+							$output .= "</SELECT>\n";
+							$output .= "</TD></TR>\n";
+
+							$output .= "<TR><TD ALIGN=RIGHT>Blended Outbound Autodial:\n";
+							$output .= "</TD><TD ALIGN=LEFT>\n";
+							$output .= "<SELECT SIZE=1 NAME=blended ID=blended";
+							if ($allowed_campaign_autodial < 1)
+								{
+								$output .= " DISABLED";
+								$blended = 'N';
+								}
+							$output .= ">\n";
+							$output .= "<option value=\"YES\"";
+							if ($blended == 'Y')
+								{$output .= " SELECTED";}
+							$output .= ">Yes</option>\n";
+							$output .= "<option value=\"NO\"";
+							if ($blended == 'N')
+								{$output .= " SELECTED";}
+							$output .= ">No</option>\n";
+							$output .= "</SELECT>\n";
+							$output .= "</TD></TR>\n";
+
+							$output .= "<TR><TD ALIGN=RIGHT>Set As User Default:\n";
+							$output .= "</TD><TD ALIGN=LEFT>\n";
+							$output .= "<SELECT SIZE=1 NAME=set_as_default ID=set_as_default";
+							if ($allowed_user_modify_user < 1)
+								{$output .= " DISABLED";}
+							$output .= ">\n";
+							$output .= "<option value=\"YES\">Yes</option>\n";
+							$output .= "<option value=\"NO\" SELECTED>No</option>\n";
+							$output .= "</SELECT>\n";
+							$output .= "</TD></TR>\n";
+
+							if ( ($manager_ingroup_set == 'SET') or ($manager_ingroup_set == 'Y') )
+								{
+								$stmt="SELECT full_name from vicidial_users where user='$external_igb_set_user';";
+								$rslt=mysql_query($stmt, $link);
+								$row=mysql_fetch_row($rslt);
+								$Mfull_name =				$row[0];
+
+								$output .= "<TR><TD ALIGN=RIGHT>Manager In-Group Override:\n";
+								$output .= "</TD><TD ALIGN=LEFT>\n";
+								$output .= "$manager_ingroup_set - $external_igb_set_user - $Mfull_name\n";
+								$output .= "</TD></TR>\n";
+								}
+
+							$output .= "<TR><TD ALIGN=CENTER COLSPAN=2>\n";
+							$output .= "<INPUT TYPE=BUTTON NAME=SUBMIT ID=SUBMIT VALUE=\"Submit Changes\" onclick=\"submit_ingroup_changes('$agent_user')\">\n";
+							$output .= "</TD></TR>\n";
+
+							$output .= "</TABLE>\n";
+							$output .= "</TD></TR></TABLE>\n";
+							}
+						else
+							{
+							$output .= "<TABLE CELLPADDING=0 CELLSPACING=3 BORDER=0>\n";
+							
+							$m=0;
+							$m_printed=0;
+							while ($m < $closer_groups_ct)
+								{
+								if (strlen($closer_groups[$m])>1)
+									{
+									$stmt="SELECT group_name from vicidial_inbound_groups where group_id='$closer_groups[$m]';";
+									$rslt=mysql_query($stmt, $link);
+									$row=mysql_fetch_row($rslt);
+
+									$output .= "<TR><TD>$closer_groups[$m]";
+
+									if ($closer_select[$m] > 0)
+										{$output .= " *";}
+									$output .= "</TD><TD>$row[0]</TD></TR>\n";
+									$m_printed++;
+									}
+								$m++;
+								}
+
+							if ($m_printed < 1)
+								{$output .= "<TR><TD>No In-Groups Allowed</TD></TR>\n";}
+
+							$output .= "</TABLE><BR>\n";
+
+							$output .= "SELECTED INGROUPS: $closer_campaigns<BR>\n";
+							$output .= "OUTBOUND AUTODIAL: $blended<BR>\n";
+							$output .= "MANAGER OVERRIDE: $manager_ingroup_set<BR>\n";
+							$output .= "MANAGER: $external_igb_set_user<BR>\n";
+							$output .= "\n";
+							$output .= "</TD></TR></TABLE>\n";
+							}
+
+						echo "$output";
 						}
 
-					echo "$output";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
-
-				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			}
 		}
@@ -1265,11 +1355,30 @@ if ($function == 'add_user')
 				}
 			else
 				{
-				$stmt="SELECT user_level from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_users='1' and user_level >= 8;";
+				$stmt="SELECT user_level,user_group,modify_same_user_level from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_users='1' and user_level >= 8;";
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
-				$user_level=$row[0];
-				if ( ($user_level < 9) and ($user_level <= $agent_user_level) )
+				$user_level =				$row[0];
+				$LOGuser_group =			$row[1];
+				$modify_same_user_level =	$row[2];
+
+				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+				$LOGadmin_viewable_groups =		$row[1];
+
+				$LOGadmin_viewable_groupsSQL='';
+				$whereLOGadmin_viewable_groupsSQL='';
+				if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+					{
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+					$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					}
+
+				if ( ( ($user_level < 9) and ($user_level <= $agent_user_level) ) or ( ($modify_same_user_level < 1) and ($user_level >= 9) and ($user_level==$agent_user_level) ) )
 					{
 					$result = 'ERROR';
 					$result_reason = "add_user USER DOES NOT HAVE PERMISSION TO ADD USERS IN THIS USER LEVEL";
@@ -1280,7 +1389,7 @@ if ($function == 'add_user')
 					}
 				else
 					{
-					$stmt="SELECT count(*) from vicidial_user_groups where user_group='$agent_user_group';";
+					$stmt="SELECT count(*) from vicidial_user_groups where user_group='$agent_user_group' $LOGadmin_viewable_groupsSQL;";
 					$rslt=mysql_query($stmt, $link);
 					$row=mysql_fetch_row($rslt);
 					$group_exists=$row[0];
@@ -1480,8 +1589,9 @@ if ($function == 'add_phone')
 							else
 								{
 								if (strlen($phone_context)<1) {$phone_context='default';}
+								if (strlen($admin_user_group)<1) {$admin_user_group='---ALL---';}
 
-								$stmt="INSERT INTO phones SET  extension='$extension', dialplan_number='$dialplan_number', voicemail_id='$voicemail_id', login='$phone_login', pass='$phone_pass', server_ip='$server_ip', protocol='$protocol', conf_secret='$registration_password', fullname='$phone_full_name', local_gmt='$local_gmt', outbound_cid='$outbound_cid', phone_context='$phone_context', email='$email', active='Y', status='ACTIVE';";
+								$stmt="INSERT INTO phones SET  extension='$extension', dialplan_number='$dialplan_number', voicemail_id='$voicemail_id', login='$phone_login', pass='$phone_pass', server_ip='$server_ip', protocol='$protocol', conf_secret='$registration_password', fullname='$phone_full_name', local_gmt='$local_gmt', outbound_cid='$outbound_cid', phone_context='$phone_context', email='$email', active='Y', status='ACTIVE', user_group='$admin_user_group';";
 								$rslt=mysql_query($stmt, $link);
 
 								### LOG INSERTION Admin Log Table ###
@@ -1541,7 +1651,7 @@ if ($function == 'update_phone')
 		if ($allowed_user < 1)
 			{
 			$result = 'ERROR';
-			$result_reason = "update_phone USER DOES NOT HAVE PERMISSION TO ADD PHONES";
+			$result_reason = "update_phone USER DOES NOT HAVE PERMISSION TO UPDATE PHONES";
 			$data = "$allowed_user";
 			echo "$result: $result_reason: |$user|$data\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1560,6 +1670,29 @@ if ($function == 'update_phone')
 				}
 			else
 				{
+				$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level >= 8;";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGuser_group =			$row[0];
+
+				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+				$LOGadmin_viewable_groups =		$row[1];
+
+				$LOGadmin_viewable_groupsSQL='';
+				$whereLOGadmin_viewable_groupsSQL='';
+				if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+					{
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+					$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					}
+
 				$stmt="SELECT count(*) from servers where server_ip='$server_ip';";
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
@@ -1575,7 +1708,7 @@ if ($function == 'update_phone')
 					}
 				else
 					{
-					$stmt="SELECT count(*) from phones where extension='$extension' and server_ip='$server_ip';";
+					$stmt="SELECT count(*) from phones where extension='$extension' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL;";
 					$rslt=mysql_query($stmt, $link);
 					$row=mysql_fetch_row($rslt);
 					$phone_exists=$row[0];
@@ -1644,6 +1777,7 @@ if ($function == 'update_phone')
 						$phone_contextSQL='';
 						$emailSQL='';
 						$local_gmtSQL='';
+						$admin_user_groupSQL='';
 
 						if (strlen($local_gmt) > 0)
 							{
@@ -1842,9 +1976,23 @@ if ($function == 'update_phone')
 							else
 								{$outboundcidSQL = " ,outbound_cid='$outbound_cid'";}
 							}
+						if (strlen($admin_user_group) > 0)
+							{
+							if ( (strlen($admin_user_group) > 20) or (strlen($admin_user_group) < 2) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_phone USER GROUP MUST BE FROM 2 TO 20 CHARACTERS, THIS IS AN OPTIONAL FIELD";
+								$data = "$admin_user_group";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$admin_user_groupSQL = " ,user_group='$admin_user_group'";}
+							}
 
 
-						$updateSQL = "$dialplan_numberSQL$activeSQL$outboundcidSQL$voicemail_idSQL$phone_loginSQL$phone_passSQL$protocolSQL$registration_passwordSQL$phone_full_nameSQL$phone_contextSQL$emailSQL$local_gmtSQL";
+						$updateSQL = "$dialplan_numberSQL$activeSQL$outboundcidSQL$voicemail_idSQL$phone_loginSQL$phone_passSQL$protocolSQL$registration_passwordSQL$phone_full_nameSQL$phone_contextSQL$emailSQL$local_gmtSQL$admin_user_groupSQL";
 
 
 						if (strlen($updateSQL)< 3)
@@ -2229,7 +2377,30 @@ if ($function == 'update_list')
 				}
 			else
 				{
-				$stmt="SELECT count(*) from vicidial_lists where list_id='$list_id';";
+				$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level >= 8;";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGuser_group =			$row[0];
+
+				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+				$LOGadmin_viewable_groups =		$row[1];
+
+				$LOGallowed_campaignsSQL='';
+				$whereLOGallowed_campaignsSQL='';
+				if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+					{
+					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+					$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					}
+
+				$stmt="SELECT count(*) from vicidial_lists where list_id='$list_id' $LOGallowed_campaignsSQL;";
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
 				$list_exists=$row[0];
@@ -2634,7 +2805,30 @@ if ($function == 'add_list')
 				}
 			else
 				{
-				$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
+				$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level >= 8;";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGuser_group =			$row[0];
+
+				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+				$LOGadmin_viewable_groups =		$row[1];
+
+				$LOGallowed_campaignsSQL='';
+				$whereLOGallowed_campaignsSQL='';
+				if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+					{
+					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+					$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					}
+
+				$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
 				$campaign_exists=$row[0];
@@ -2664,15 +2858,15 @@ if ($function == 'add_list')
 						}
 					else
 						{
-						$stmt="SELECT count(*) from phones where login='$phone_login';";
+						$stmt="SELECT count(*) from vicidial_lists where list_id='$list_id';";
 						$rslt=mysql_query($stmt, $link);
 						$row=mysql_fetch_row($rslt);
-						$phone_exists=$row[0];
-						if ($phone_exists > 0)
+						$list_exists=$row[0];
+						if ($list_exists > 0)
 							{
 							$result = 'ERROR';
-							$result_reason = "add_phone PHONE LOGIN ALREADY EXISTS";
-							$data = "$phone_login";
+							$result_reason = "add_list LIST ALREADY EXISTS";
+							$data = "$list_id";
 							echo "$result: $result_reason: |$user|$data\n";
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 							exit;

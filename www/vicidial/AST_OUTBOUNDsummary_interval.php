@@ -13,6 +13,7 @@
 # 100802-2347 - Added User Group Allowed Reports option validation
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 # 110703-1825 - Added download option
+# 111104-1205 - Added user_group and calltime restrictions
 #
 
 require("dbconnect.php");
@@ -128,13 +129,14 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
-$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$user_group';";
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_call_times from vicidial_user_groups where user_group='$user_group';";
 $rslt=mysql_query($stmt, $link);
 $records_to_print = mysql_num_rows($rslt);
 if ($records_to_print > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$LOGallowed_reports =	$row[1];
+	$LOGadmin_viewable_call_times =	$row[2];
 	if ( (!eregi("ALL-CAMPAIGNS",$row[0])) )
 		{
 		$rawLOGallowed_campaignsSQL = eregi_replace(' -','',$row[0]);
@@ -152,6 +154,16 @@ else
 	{
 	echo "Campaigns Permissions Error: |$PHP_AUTH_USER|$user_group|\n";
 	exit;
+	}
+
+$LOGadmin_viewable_call_timesSQL='';
+$whereLOGadmin_viewable_call_timesSQL='';
+if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+	{
+	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
+	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
+	$LOGadmin_viewable_call_timesSQL = "and call_time_id IN('---ALL---','$rawLOGadmin_viewable_call_timesSQL')";
+	$whereLOGadmin_viewable_call_timesSQL = "where call_time_id IN('---ALL---','$rawLOGadmin_viewable_call_timesSQL')";
 	}
 
 $NOW_DATE = date("Y-m-d");
@@ -253,7 +265,7 @@ while ($i < $statcats_to_print)
 	$i++;
 	}
 
-$stmt="select call_time_id,call_time_name from vicidial_call_times order by call_time_id;";
+$stmt="select call_time_id,call_time_name from vicidial_call_times $whereLOGadmin_viewable_call_timesSQL order by call_time_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $times_to_print = mysql_num_rows($rslt);

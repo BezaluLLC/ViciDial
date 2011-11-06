@@ -34,6 +34,7 @@
 # 110831-2048 - Added AC-CID to campaign submenu
 # 110922-1707 - Added RA-EXTEN to campaign submenu
 # 111015-2305 - Added Contacts menu to Admin
+# 111106-0939 - Changes for user group restrictions
 #
 
 
@@ -626,7 +627,7 @@ if ( ($ADD==3111) or ($ADD==4111) or ($ADD==5111) )
 	}
 
 
-$stmt="select menu_id,menu_name from vicidial_call_menu order by menu_id limit 10000;";
+$stmt="SELECT menu_id,menu_name from vicidial_call_menu $whereLOGadmin_viewable_groupsSQL order by menu_id limit 10000;";
 $rslt=mysql_query($stmt, $link);
 $menus_to_print = mysql_num_rows($rslt);
 $call_menu_list='';
@@ -641,7 +642,7 @@ while ($i < $menus_to_print)
 ### select list contents generation for dynamic route displays in call menu and in-group screens
 if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111) )
 	{
-	$stmt="select did_pattern,did_description,did_route from vicidial_inbound_dids where did_active='Y' order by did_pattern;";
+	$stmt="SELECT did_pattern,did_description,did_route from vicidial_inbound_dids where did_active='Y' $LOGadmin_viewable_groupsSQL order by did_pattern;";
 	$rslt=mysql_query($stmt, $link);
 	$dids_to_print = mysql_num_rows($rslt);
 	$did_list='';
@@ -653,7 +654,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 		$i++;
 		}
 
-	$stmt="select group_id,group_name from vicidial_inbound_groups where active='Y' and group_id NOT LIKE \"AGENTDIRECT%\" order by group_id;";
+	$stmt="SELECT group_id,group_name from vicidial_inbound_groups where active='Y' and group_id NOT LIKE \"AGENTDIRECT%\" $LOGadmin_viewable_groupsSQL order by group_id;";
 	$rslt=mysql_query($stmt, $link);
 	$ingroups_to_print = mysql_num_rows($rslt);
 	$ingroup_list='';
@@ -665,7 +666,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 		$i++;
 		}
 
-	$stmt="select campaign_id,campaign_name from vicidial_campaigns where active='Y' order by campaign_id;";
+	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where active='Y' $LOGallowed_campaignsSQL order by campaign_id;";
 	$rslt=mysql_query($stmt, $link);
 	$IGcampaigns_to_print = mysql_num_rows($rslt);
 	$IGcampaign_id_list='';
@@ -681,7 +682,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 
 	$IGsearch_method_list = '<option value="LB">LB - Load Balanced</option><option value="LO">LO - Load Balanced Overflow</option><option value="SO">SO - Server Only</option>';
 
-	$stmt="select login,server_ip,extension,dialplan_number from phones where active='Y' order by login,server_ip;";
+	$stmt="SELECT login,server_ip,extension,dialplan_number from phones where active='Y' $LOGadmin_viewable_groupsSQL order by login,server_ip;";
 	$rslt=mysql_query($stmt, $link);
 	$phones_to_print = mysql_num_rows($rslt);
 	$phone_list='';

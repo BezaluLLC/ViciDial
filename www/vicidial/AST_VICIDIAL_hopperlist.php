@@ -13,6 +13,7 @@
 # 90508-0644 - Changed to PHP long tags
 # 91023-1540 - Changed to only show hopper status of READY
 # 101111-1253 - Added source field
+# 111103-1207 - Added admin_hide_phone_data and admin_hide_lead_data options
 #
 
 require("dbconnect.php");
@@ -45,6 +46,14 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
 	}
+
+$stmt="SELECT full_name,user_group,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGfullname =				$row[0];
+$LOGuser_group =			$row[1];
+$LOGadmin_hide_lead_data =	$row[2];
+$LOGadmin_hide_phone_data =	$row[3];
 
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -144,6 +153,29 @@ else
 	while ($i < $users_to_print)
 		{
 		$row=mysql_fetch_row($rslt);
+
+		if ($LOGadmin_hide_phone_data != '0')
+			{
+			if ($DB > 0) {echo "HIDEPHONEDATA|$row[1]|$LOGadmin_hide_phone_data|\n";}
+			$phone_temp = $row[1];
+			if (strlen($phone_temp) > 0)
+				{
+				if ($LOGadmin_hide_phone_data == '4_DIGITS')
+					{$row[1] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+				elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+					{$row[1] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+				elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+					{$row[1] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+				else
+					{$row[1] = preg_replace("/./",'X',$phone_temp);}
+				}
+			}
+		if ($LOGadmin_hide_lead_data != '0')
+			{
+			if ($DB > 0) {echo "HIDELEADDATA|$row[2]|$LOGadmin_hide_lead_data|\n";}
+			if (strlen($row[2]) > 0)
+				{$state_temp = $row[2];   $row[2] = preg_replace("/./",'X',$state_temp);}
+			}
 
 		$FMT_i =		sprintf("%-4s", $i);
 		$lead_id =		sprintf("%-9s", $row[0]);

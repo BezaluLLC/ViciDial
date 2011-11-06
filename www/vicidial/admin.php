@@ -3015,12 +3015,13 @@ else
 # 111024-1234 - Added callback_list_calltime option
 # 111025-0728 - Added user group to all sections, more user settings
 # 111102-1930 - Added in-group max_calls_ options
+# 111106-1116 - Many fixes for user_group restrictions
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-346a';
-$build = '111102-1930';
+$admin_version = '2.4-347a';
+$build = '111106-1116';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3863,7 +3864,7 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 		$groups = explode(" ", $closer_campaigns);
 		}
 
-	$stmt="SELECT group_id,group_name from vicidial_inbound_groups $LOGadmin_viewable_groupsSQL order by group_id;";
+	$stmt="SELECT group_id,group_name from vicidial_inbound_groups $whereLOGadmin_viewable_groupsSQL order by group_id;";
 #	$stmt="SELECT group_id,group_name from vicidial_inbound_groups where group_id NOT IN('AGENTDIRECT') order by group_id";
 	$rslt=mysql_query($stmt, $link);
 	$groups_to_print = mysql_num_rows($rslt);
@@ -8753,7 +8754,10 @@ if ($ADD=="1")
 		echo "<tr bgcolor=#B6D3FC><td align=right>Full Name: </td><td align=left><input type=text name=full_name size=20 maxlength=100>$NWB#vicidial_users-full_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>User Level: </td><td align=left><select size=1 name=user_level>";
 		$h=1;
-		while ($h<=$LOGuser_level)
+		$count_user_level=$LOGuser_level;
+		if ( ($LOGmodify_same_user_level < 1) and ($LOGuser_level > 8) )
+			{$count_user_level=($LOGuser_level - 1);}
+		while ($h<=$count_user_level)
 			{
 			echo "<option>$h</option>";
 			$h++;
@@ -8761,7 +8765,6 @@ if ($ADD=="1")
 		echo "</select>$NWB#vicidial_users-user_level$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>User Group: </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
-		echo "<option SELECTED value=\"---ALL---\">All Admin User Groups</option>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Phone Login: </td><td align=left><input type=text name=phone_login size=20 maxlength=20>$NWB#vicidial_users-phone_login$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Phone Pass: </td><td align=left><input type=text name=phone_pass size=20 maxlength=20>$NWB#vicidial_users-phone_pass$NWE</td></tr>\n";
 		echo "</select>$NWB#vicidial_users-user_group$NWE</td></tr>\n";
@@ -11338,6 +11341,21 @@ if ($ADD==21)
 				{
 				echo "<br><B>CAMPAIGN ADDED: $campaign_id</B>\n";
 
+				# if admin user's user group does not have -ALL-CAMPAIGNS- then add this new campaign to their user group's allowable campaigns
+				if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+					{
+					$UPDATEallowed_campaigns =	$LOGallowed_campaigns;
+					$UPDATEallowed_campaigns = preg_replace("/ -$/"," $campaign_id -",$UPDATEallowed_campaigns);
+					$LOGallowed_campaigns = $UPDATEallowed_campaigns;
+					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+					$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
+					$stmt="UPDATE vicidial_user_groups SET allowed_campaigns='$UPDATEallowed_campaigns' where user_group='$LOGuser_group';";
+					$rslt=mysql_query($stmt, $link);
+					}
+
 				$stmt="INSERT INTO vicidial_campaigns (campaign_id,campaign_name,campaign_description,active,dial_status_a,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,campaign_script,get_call_launch,campaign_changedate,campaign_stats_refresh,list_order_mix,web_form_address_two,start_call_url,dispo_call_url,na_call_url,user_group) values('$campaign_id','$campaign_name','$campaign_description','$active','NEW','DOWN','$park_ext','$park_file_name','" . mysql_real_escape_string($web_form_address) . "','$allow_closers','$hopper_level','$auto_dial_level','$next_agent_call','$local_call_time','$voicemail_ext','$script_id','$get_call_launch','$SQLdate','Y','DISABLED','','','','','$user_group');";
 				$rslt=mysql_query($stmt, $link);
 
@@ -11404,6 +11422,21 @@ if ($ADD==20)
 			else
 				{
 				echo "<br><B>CAMPAIGN COPIED: $campaign_id copied from $source_campaign_id</B>\n";
+
+				# if admin user's user group does not have -ALL-CAMPAIGNS- then add this new campaign to their user group's allowable campaigns
+				if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+					{
+					$UPDATEallowed_campaigns =	$LOGallowed_campaigns;
+					$UPDATEallowed_campaigns = preg_replace("/ -$/"," $campaign_id -",$UPDATEallowed_campaigns);
+					$LOGallowed_campaigns = $UPDATEallowed_campaigns;
+					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+					$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
+					$stmt="UPDATE vicidial_user_groups SET allowed_campaigns='$UPDATEallowed_campaigns' where user_group='$LOGuser_group';";
+					$rslt=mysql_query($stmt, $link);
+					}
 
 				$stmt="INSERT INTO vicidial_campaigns (campaign_name,campaign_id,active,dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,list_order_mix,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,qc_get_record_launch,qc_show_recording,qc_shift_id,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_fourth_digit,survey_third_audio_file,survey_fourth_audio_file,survey_third_status,survey_fourth_status,survey_third_exten,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,waitforsilence_options,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,queuemetrics_callstatus_override,extension_appended_cidname,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,inbound_queue_no_dial,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,ivr_park_call_agi,manual_preview_dial,realtime_agent_time_stats,use_auto_hopper,auto_hopper_multi,auto_trim_hopper,api_manual_dial,manual_dial_call_time_check,display_leads_count,lead_order_randomize,lead_order_secondary,per_call_notes,my_callback_option,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_resume_precall,auto_pause_precall_code,manual_dial_cid,post_phone_time_diff_alert,custom_3way_button_transfer,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,safe_harbor_audio,safe_harbor_menu_id,survey_menu_id,callback_days_limit,dl_diff_target_method,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,na_call_url,survey_recording,pllb_grouping,pllb_grouping_limit,call_count_limit,call_count_target,callback_hours_block,callback_list_calltime,user_group) SELECT \"$campaign_name\",\"$campaign_id\",\"N\",dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,\"DISABLED\",campaign_allow_inbound,manual_dial_list_id,default_xfer_group,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,qc_get_record_launch,qc_show_recording,qc_shift_id,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_fourth_digit,survey_third_audio_file,survey_fourth_audio_file,survey_third_status,survey_fourth_status,survey_third_exten,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,waitforsilence_options,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,queuemetrics_callstatus_override,extension_appended_cidname,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,inbound_queue_no_dial,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,ivr_park_call_agi,manual_preview_dial,realtime_agent_time_stats,use_auto_hopper,auto_hopper_multi,auto_trim_hopper,api_manual_dial,manual_dial_call_time_check,display_leads_count,lead_order_randomize,lead_order_secondary,per_call_notes,my_callback_option,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_resume_precall,auto_pause_precall_code,manual_dial_cid,post_phone_time_diff_alert,custom_3way_button_transfer,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,safe_harbor_audio,safe_harbor_menu_id,survey_menu_id,callback_days_limit,dl_diff_target_method,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,na_call_url,survey_recording,pllb_grouping,pllb_grouping_limit,call_count_limit,call_count_target,callback_hours_block,callback_list_calltime,user_group from vicidial_campaigns where campaign_id='$source_campaign_id';";
 				$rslt=mysql_query($stmt, $link);
@@ -12495,11 +12528,17 @@ if ($ADD==211111)
 				{
 				$UPDATEadmin_viewable_groups =	$LOGadmin_viewable_groups;
 				$UPDATEadmin_viewable_groups = preg_replace("/ $/"," $user_group ",$UPDATEadmin_viewable_groups);
+				$LOGadmin_viewable_groups = $UPDATEadmin_viewable_groups;
 
 				$stmt="UPDATE vicidial_user_groups SET admin_viewable_groups='$UPDATEadmin_viewable_groups' where user_group='$LOGuser_group';";
 				$rslt=mysql_query($stmt, $link);
 
 				$allowed_user_group_insert_SQL = " $user_group -";
+
+				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+				$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+				$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
 				}
 			if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
 				{
@@ -18019,53 +18058,53 @@ if ($ADD==61)
 		}
 	else
 		{
-		$stmtA="DELETE from vicidial_campaigns where campaign_id='$campaign_id' limit 1;";
+		$stmtA="DELETE from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL limit 1;";
 		$rslt=mysql_query($stmtA, $link);
 
-		$stmt="DELETE from vicidial_campaign_agents where campaign_id='$campaign_id';";
+		$stmt="DELETE from vicidial_campaign_agents where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
-		$stmt="DELETE from vicidial_live_agents where campaign_id='$campaign_id';";
+		$stmt="DELETE from vicidial_live_agents where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
-		$stmt="DELETE from vicidial_campaign_statuses where campaign_id='$campaign_id';";
+		$stmt="DELETE from vicidial_campaign_statuses where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
-		$stmt="DELETE from vicidial_campaign_hotkeys where campaign_id='$campaign_id';";
+		$stmt="DELETE from vicidial_campaign_hotkeys where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
-		$stmt="DELETE from vicidial_callbacks where campaign_id='$campaign_id';";
+		$stmt="DELETE from vicidial_callbacks where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
-		$stmt="DELETE from vicidial_campaign_stats where campaign_id='$campaign_id';";
+		$stmt="DELETE from vicidial_campaign_stats where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
-		$stmt="DELETE from vicidial_campaign_stats_debug where campaign_id='$campaign_id';";
+		$stmt="DELETE from vicidial_campaign_stats_debug where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
-		$stmt="DELETE from vicidial_lead_recycle where campaign_id='$campaign_id';";
+		$stmt="DELETE from vicidial_lead_recycle where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
-		$stmt="DELETE from vicidial_campaign_server_stats where campaign_id='$campaign_id';";
+		$stmt="DELETE from vicidial_campaign_server_stats where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
-		$stmt="DELETE from vicidial_server_trunks where campaign_id='$campaign_id';";
+		$stmt="DELETE from vicidial_server_trunks where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
-		$stmt="DELETE from vicidial_pause_codes where campaign_id='$campaign_id';";
+		$stmt="DELETE from vicidial_pause_codes where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
-		$stmt="DELETE from vicidial_campaigns_list_mix where campaign_id='$campaign_id';";
+		$stmt="DELETE from vicidial_campaigns_list_mix where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
-		$stmt="DELETE from vicidial_xfer_presets where campaign_id='$campaign_id';";
+		$stmt="DELETE from vicidial_xfer_presets where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
-		$stmt="DELETE from vicidial_xfer_stats where campaign_id='$campaign_id';";
+		$stmt="DELETE from vicidial_xfer_stats where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);		
 
 		echo "<br>REMOVING LIST HOPPER LEADS FROM OLD CAMPAIGN HOPPER ($campaign_id)\n";
-		$stmt="DELETE from vicidial_hopper where campaign_id='$campaign_id';";
+		$stmt="DELETE from vicidial_hopper where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -18103,7 +18142,7 @@ if ($ADD==62)
 			{
 			$now_date_epoch = date('U');
 			$inactive_epoch = ($now_date_epoch - 60);
-			$stmt = "SELECT user,campaign_id,UNIX_TIMESTAMP(last_update_time),extension from vicidial_live_agents where campaign_id='$campaign_id';";
+			$stmt = "SELECT user,campaign_id,UNIX_TIMESTAMP(last_update_time),extension from vicidial_live_agents where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 			$rslt=mysql_query($stmt, $link);
 			if ($DB) {echo "<BR>$stmt\n";}
 			$vla_ct = mysql_num_rows($rslt);
@@ -18395,7 +18434,7 @@ if ($ADD==63)
 			}
 		else
 			{
-			$stmt="DELETE from vicidial_auto_calls where status='LIVE' and campaign_id='$campaign_id' order by call_time limit 1;";
+			$stmt="DELETE from vicidial_auto_calls where status='LIVE' and campaign_id='$campaign_id' $LOGallowed_campaignsSQL order by call_time limit 1;";
 			$rslt=mysql_query($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -18444,7 +18483,7 @@ if ($ADD==65)
 			{
 			echo "<br><B>CAMPAIGN LEAD RECYCLE DELETED: $campaign_id - $status - $attempt_delay</B>\n";
 
-			$stmt="DELETE FROM vicidial_lead_recycle where campaign_id='$campaign_id' and status='$status';";
+			$stmt="DELETE FROM vicidial_lead_recycle where campaign_id='$campaign_id' and status='$status' $LOGallowed_campaignsSQL;";
 			$rslt=mysql_query($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -18496,7 +18535,7 @@ if ($ADD==66)
 				$row=mysql_fetch_row($rslt);
 
 				$auto_alt_dial_statuses = eregi_replace(" $status "," ",$row[0]);
-				$stmt="UPDATE vicidial_campaigns set auto_alt_dial_statuses='$auto_alt_dial_statuses' where campaign_id='$campaign_id';";
+				$stmt="UPDATE vicidial_campaigns set auto_alt_dial_statuses='$auto_alt_dial_statuses' where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 				$rslt=mysql_query($stmt, $link);
 
 				### LOG INSERTION Admin Log Table ###
@@ -18538,7 +18577,7 @@ if ($ADD==67)
 			{
 			echo "<br><B>CAMPAIGN PAUSE CODE DELETED: $campaign_id - $pause_code</B>\n";
 
-			$stmt="DELETE FROM vicidial_pause_codes where campaign_id='$campaign_id' and pause_code='$pause_code';";
+			$stmt="DELETE FROM vicidial_pause_codes where campaign_id='$campaign_id' and pause_code='$pause_code' $LOGallowed_campaignsSQL;";
 			$rslt=mysql_query($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -18590,7 +18629,7 @@ if ($ADD==68)
 				$row=mysql_fetch_row($rslt);
 
 				$dial_statuses = eregi_replace(" $status "," ",$row[0]);
-				$stmt="UPDATE vicidial_campaigns set dial_statuses='$dial_statuses' where campaign_id='$campaign_id';";
+				$stmt="UPDATE vicidial_campaigns set dial_statuses='$dial_statuses' where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 				$rslt=mysql_query($stmt, $link);
 
 				### LOG INSERTION Admin Log Table ###
@@ -18632,10 +18671,10 @@ if ($ADD==601)
 			{
 			echo "<br><B>CAMPAIGN PRESET DELETED: $campaign_id - $preset_name</B>\n";
 
-			$stmt="DELETE FROM vicidial_xfer_presets where campaign_id='$campaign_id' and preset_name='$preset_name';";
+			$stmt="DELETE FROM vicidial_xfer_presets where campaign_id='$campaign_id' and preset_name='$preset_name' $LOGallowed_campaignsSQL;";
 			$rslt=mysql_query($stmt, $link);
 
-			$stmt="DELETE FROM vicidial_xfer_stats where campaign_id='$campaign_id' and preset_name='$preset_name';";
+			$stmt="DELETE FROM vicidial_xfer_stats where campaign_id='$campaign_id' and preset_name='$preset_name' $LOGallowed_campaignsSQL;";
 			$rslt=mysql_query($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -18672,11 +18711,11 @@ if ($ADD==611)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_lists where list_id='$list_id' limit 1;";
+		$stmt="DELETE from vicidial_lists where list_id='$list_id' $LOGallowed_campaignsSQL limit 1;";
 		$rslt=mysql_query($stmt, $link);
 
 		echo "<br>REMOVING LIST HOPPER LEADS FROM OLD CAMPAIGN HOPPER ($list_id)\n";
-		$stmt="DELETE from vicidial_hopper where list_id='$list_id';";
+		$stmt="DELETE from vicidial_hopper where list_id='$list_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
 		echo "<br>REMOVING LIST LEADS FROM VICIDIAL_LIST TABLE\n";
@@ -18713,7 +18752,7 @@ if ($ADD==6111)
 		}
 	else
 		{
-		$stmtA="DELETE from vicidial_inbound_groups where group_id='$group_id' and group_id NOT IN('AGENTDIRECT') limit 1;";
+		$stmtA="DELETE from vicidial_inbound_groups where group_id='$group_id' and group_id NOT IN('AGENTDIRECT') $LOGadmin_viewable_groupsSQL limit 1;";
 		$rslt=mysql_query($stmtA, $link);
 
 		$stmt="DELETE from vicidial_inbound_group_agents where group_id='$group_id';";
@@ -18759,7 +18798,7 @@ if ($ADD==6311)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_inbound_dids where did_id='$did_id' limit 1;";
+		$stmt="DELETE from vicidial_inbound_dids where did_id='$did_id' $LOGadmin_viewable_groupsSQL limit 1;";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -18792,7 +18831,7 @@ if ($ADD==6511)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_call_menu where menu_id='$menu_id' limit 1;";
+		$stmt="DELETE from vicidial_call_menu where menu_id='$menu_id' $LOGadmin_viewable_groupsSQL limit 1;";
 		$rslt=mysql_query($stmt, $link);
 
 		$stmtA="DELETE from vicidial_call_menu_options where menu_id='$menu_id' limit 17;";
@@ -18828,7 +18867,7 @@ if ($ADD==6711)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_filter_phone_groups where filter_phone_group_id='$filter_phone_group_id' limit 1;";
+		$stmt="DELETE from vicidial_filter_phone_groups where filter_phone_group_id='$filter_phone_group_id' $LOGadmin_viewable_groupsSQL limit 1;";
 		$rslt=mysql_query($stmt, $link);
 
 		$stmtA="DELETE from vicidial_filter_phone_numbers where filter_phone_group_id='$filter_phone_group_id';";
@@ -18972,7 +19011,7 @@ if ($ADD==6111111)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_scripts where script_id='$script_id' limit 1;";
+		$stmt="DELETE from vicidial_scripts where script_id='$script_id' $LOGadmin_viewable_groupsSQL limit 1;";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -19006,7 +19045,7 @@ if ($ADD==61111111)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_lead_filters where lead_filter_id='$lead_filter_id' limit 1;";
+		$stmt="DELETE from vicidial_lead_filters where lead_filter_id='$lead_filter_id' $LOGadmin_viewable_groupsSQL limit 1;";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -19040,7 +19079,7 @@ if ($ADD==611111111)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_call_times where call_time_id='$call_time_id' limit 1;";
+		$stmt="DELETE from vicidial_call_times where call_time_id='$call_time_id' $LOGadmin_viewable_groupsSQL limit 1;";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -19074,7 +19113,7 @@ if ($ADD==6111111111)
 		}
 	else
 		{
-		$stmtA="DELETE from vicidial_state_call_times where state_call_time_id='$call_time_id' limit 1;";
+		$stmtA="DELETE from vicidial_state_call_times where state_call_time_id='$call_time_id' $LOGadmin_viewable_groupsSQL limit 1;";
 		$rslt=mysql_query($stmtA, $link);
 
 		$stmt="SELECT call_time_id,ct_state_call_times from vicidial_call_times where ct_state_call_times LIKE \"%|$call_time_id|%\" order by call_time_id;";
@@ -19132,7 +19171,7 @@ if ($ADD==631111111)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_shifts where shift_id='$shift_id' limit 1;";
+		$stmt="DELETE from vicidial_shifts where shift_id='$shift_id' $LOGadmin_viewable_groupsSQL limit 1;";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -19167,7 +19206,7 @@ if ($ADD==61111111111)
 		}
 	else
 		{
-		$stmt="DELETE from phones where extension='$extension' and server_ip='$server_ip' limit 1;";
+		$stmt="DELETE from phones where extension='$extension' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL limit 1;";
 		$rslt=mysql_query($stmt, $link);
 
 		$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
@@ -19203,7 +19242,7 @@ if ($ADD==62111111111)
 		}
 	else
 		{
-		$stmt="DELETE from phones_alias where alias_id='$alias_id' limit 1;";
+		$stmt="DELETE from phones_alias where alias_id='$alias_id' $LOGadmin_viewable_groupsSQL limit 1;";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -19236,7 +19275,7 @@ if ($ADD==63111111111)
 		}
 	else
 		{
-		$stmt="DELETE from groups_alias where group_alias_id='$group_alias_id' limit 1;";
+		$stmt="DELETE from groups_alias where group_alias_id='$group_alias_id' $LOGadmin_viewable_groupsSQL limit 1;";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -19270,7 +19309,7 @@ if ($ADD==611111111111)
 		}
 	else
 		{
-		$stmt="DELETE from servers where server_id='$server_id' and server_ip='$server_ip' limit 1;";
+		$stmt="DELETE from servers where server_id='$server_id' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL limit 1;";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -19353,7 +19392,7 @@ if ($ADD==631111111111)
 		$stmt="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";
 		$rslt=mysql_query($stmt, $link);
 
-		$stmt="DELETE from vicidial_conf_templates where template_id='$template_id';";
+		$stmt="DELETE from vicidial_conf_templates where template_id='$template_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -19427,7 +19466,7 @@ if ($ADD==651111111111)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_tts_prompts where tts_id='$tts_id';";
+		$stmt="DELETE from vicidial_tts_prompts where tts_id='$tts_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -19463,7 +19502,7 @@ if ($ADD==661111111111)
 		$stmt="UPDATE vicidial_music_on_hold SET remove='Y' where moh_id='$moh_id';";
 		$rslt=mysql_query($stmt, $link);
 
-		$stmtA="DELETE from vicidial_music_on_hold_files where moh_id='$moh_id';";
+		$stmtA="DELETE from vicidial_music_on_hold_files where moh_id='$moh_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_query($stmtA, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -19496,7 +19535,7 @@ if ($ADD==671111111111)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_voicemail where voicemail_id='$voicemail_id';";
+		$stmt="DELETE from vicidial_voicemail where voicemail_id='$voicemail_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
 		$stmt="SELECT active_voicemail_server from system_settings;";
@@ -19537,7 +19576,7 @@ if ($ADD==681111111111)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_screen_labels where label_id='$label_id';";
+		$stmt="DELETE from vicidial_screen_labels where label_id='$label_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_query($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
@@ -20446,9 +20485,11 @@ if ($ADD==31)
 	else 
 		{$Dgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
 
-
+	$nxLOGadmin_viewable_groupsSQL = $LOGadmin_viewable_groupsSQL;
+	if (strlen($xfer_groupsSQL) < 6)
+			{$nxLOGadmin_viewable_groupsSQL = $whereLOGadmin_viewable_groupsSQL;}
 	##### get in-groups listings for dynamic transfer group pulldown list menu
-	$stmt="SELECT group_id,group_name from vicidial_inbound_groups $xfer_groupsSQL $LOGadmin_viewable_groupsSQL order by group_id;";
+	$stmt="SELECT group_id,group_name from vicidial_inbound_groups $xfer_groupsSQL $nxLOGadmin_viewable_groupsSQL order by group_id;";
 	$rslt=mysql_query($stmt, $link);
 	$Xgroups_to_print = mysql_num_rows($rslt);
 	$Xgroups_menu='';
@@ -20490,7 +20531,7 @@ if ($ADD==31)
 	$row=mysql_fetch_row($rslt);
 	$agent_servers_count=$row[0];
 
-	$stmt="SELECT count(*) from phones_alias $LOGadmin_viewable_groupsSQL;";
+	$stmt="SELECT count(*) from phones_alias $whereLOGadmin_viewable_groupsSQL;";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
@@ -20999,7 +21040,7 @@ if ($ADD==31)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Omit Phone Code: </td><td align=left><select size=1 name=omit_phone_code><option>Y</option><option>N</option><option SELECTED>$omit_phone_code</option></select>$NWB#vicidial_campaigns-omit_phone_code$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>Campaign CallerID: </td><td align=left><input type=text name=campaign_cid size=20 maxlength=20 value=\"$campaign_cid\">$NWB#vicidial_campaigns-campaign_cid$NWE\n";
-		$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and campaign_cid_override != '' and active='Y' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and campaign_cid_override != '' and active='Y' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 		$rowx=mysql_fetch_row($rslt);
 		if ($rowx[0] > 0) 
@@ -21030,7 +21071,7 @@ if ($ADD==31)
 		echo "$scripts_list";
 		echo "<option selected value=\"$script_id\">$script_id - $scriptname_list[$script_id]</option>\n";
 		echo "</select>$NWB#vicidial_campaigns-campaign_script$NWE\n";
-		$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and agent_script_override != '' and active='Y' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and agent_script_override != '' and active='Y' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 		$rowx=mysql_fetch_row($rslt);
 		if ($rowx[0] > 0) 
@@ -21045,7 +21086,7 @@ if ($ADD==31)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Get Call Launch: </td><td align=left><select size=1 name=get_call_launch><option selected>NONE</option><option>SCRIPT</option><option>WEBFORM</option>$eswHTML$cfwHTML<option selected>$get_call_launch</option></select>$NWB#vicidial_campaigns-get_call_launch$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>Answering Machine Message: </td><td><input type=text size=50 maxlength=100 name=am_message_exten id=am_message_exten value=\"$am_message_exten\"> <a href=\"javascript:launch_chooser('am_message_exten','date',2000);\">audio chooser</a>  $NWB#vicidial_campaigns-am_message_exten$NWE\n";
-		$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and am_message_exten_override != '' and active='Y' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and am_message_exten_override != '' and active='Y' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 		$rowx=mysql_fetch_row($rslt);
 		if ($rowx[0] > 0) 
@@ -21131,7 +21172,7 @@ if ($ADD==31)
 			echo "<tr bgcolor=#8EBCFD><td align=right>Drop Transfer Group: </td><td align=left><select size=1 name=drop_inbound_group>";
 			echo "$Dgroups_menu";
 			echo "</select>$NWB#vicidial_campaigns-drop_inbound_group$NWE\n";
-			$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and drop_inbound_group_override != '' and active='Y' $LOGadmin_viewable_groupsSQL;";
+			$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and drop_inbound_group_override != '' and active='Y' $LOGallowed_campaignsSQL;";
 			$rslt=mysql_query($stmt, $link);
 			$rowx=mysql_fetch_row($rslt);
 			if ($rowx[0] > 0) 
@@ -28494,7 +28535,7 @@ if ($ADD==341111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Registration String: </td><td align=left><input type=text name=registration_string size=50 maxlength=255 value=\"$registration_string\">$NWB#vicidial_server_carriers-registration_string$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=331111111111&template_id=$template_id\">Template ID</a>: </td><td align=left><select size=1 name=template_id>\n";
-		$stmt="SELECT template_id,template_name from vicidial_conf_templates order by template_id $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT template_id,template_name from vicidial_conf_templates $whereLOGadmin_viewable_groupsSQL order by template_id;";
 		$rslt=mysql_query($stmt, $link);
 		$templates_to_print = mysql_num_rows($rslt);
 		$templates_list='<option SELECTED>--NONE--</option>';

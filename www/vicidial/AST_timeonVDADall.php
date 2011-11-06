@@ -74,10 +74,11 @@
 # 110218-1037 - Fixed query that was causing load spikes on systems with millions of log entries
 # 110303-2125 - Added agent on-hook phone indication and RING status and color
 # 110314-1735 - Fixed another query that was causing load spikes on systems with millions of log entries
+# 111103-1220 - Added admin_hide_phone_data and admin_hide_lead_data options
 #
 
-$version = '2.4-65';
-$build = '110314-1735';
+$version = '2.4-66';
+$build = '111103-1220';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -302,12 +303,14 @@ if ( (!isset($monitor_phone)) or (strlen($monitor_phone)<1) )
 	$monitor_phone = $row[0];
 	}
 
-$stmt="SELECT realtime_block_user_info,user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+$stmt="SELECT realtime_block_user_info,user_group,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $realtime_block_user_info = $row[0];
 $LOGuser_group =			$row[1];
+$LOGadmin_hide_lead_data =	$row[2];
+$LOGadmin_hide_phone_data =	$row[3];
 
 $stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}
@@ -1861,6 +1864,22 @@ $parked_to_print = mysql_num_rows($rslt);
 	while ($i < $parked_to_print)
 		{
 		$row=mysql_fetch_row($rslt);
+		if ($LOGadmin_hide_phone_data != '0')
+			{
+			$phone_temp = $row[2];
+			if ($DB > 0) {echo "HIDEPHONEDATA|$row[2]|$LOGadmin_hide_phone_data|\n";}
+			if (strlen($phone_temp) > 0)
+				{
+				if ($LOGadmin_hide_phone_data == '4_DIGITS')
+					{$row[2] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+				elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+					{$row[2] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+				elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+					{$row[2] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+				else
+					{$row[2] = preg_replace("/./",'X',$phone_temp);}
+				}
+			}
 
 		if (eregi("LIVE",$row[0])) 
 			{
@@ -2241,6 +2260,22 @@ $talking_to_print = mysql_num_rows($rslt);
 		while ($i < $calls_to_list)
 			{
 			$row=mysql_fetch_row($rslt);
+			if ($LOGadmin_hide_phone_data != '0')
+				{
+				if ($DB > 0) {echo "HIDEPHONEDATA|$row[2]|$LOGadmin_hide_phone_data|\n";}
+				$phone_temp = $row[2];
+				if (strlen($phone_temp) > 0)
+					{
+					if ($LOGadmin_hide_phone_data == '4_DIGITS')
+						{$row[2] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+					elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+						{$row[2] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+					elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+						{$row[2] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+					else
+						{$row[2] = preg_replace("/./",'X',$phone_temp);}
+					}
+				}
 			$callerids .=	"$row[0]|";
 			$VAClead_ids[$i] =	$row[1];
 			$VACphones[$i] =	$row[2];

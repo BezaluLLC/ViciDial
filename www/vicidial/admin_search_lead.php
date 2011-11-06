@@ -25,6 +25,7 @@
 # 100405-1331 - Added log search ability
 # 100622-0928 - Added field labels
 # 110218-1237 - Added vicidial_lead_search_log logging
+# 111103-1239 - Added admin_hide_phone_data and admin_hide_lead_data options
 #
 
 require("dbconnect.php");
@@ -98,11 +99,13 @@ else
 		{
 		$office_no=strtoupper($PHP_AUTH_USER);
 		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT full_name,modify_leads from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+		$stmt="SELECT full_name,modify_leads,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
-		$LOGfullname =		$row[0];
-		$LOGmodify_leads =	$row[1];
+		$LOGfullname =				$row[0];
+		$LOGmodify_leads =			$row[1];
+		$LOGadmin_hide_lead_data =	$row[2];
+		$LOGadmin_hide_phone_data =	$row[3];
 
 		if ($WeBRooTWritablE > 0)
 			{
@@ -316,6 +319,22 @@ else
 			while ($results_to_print > $o)
 				{
 				$row=mysql_fetch_row($rslt);
+				if ($LOGadmin_hide_phone_data != '0')
+					{
+					if ($DB > 0) {echo "HIDEPHONEDATA|$row[1]|$LOGadmin_hide_phone_data|\n";}
+					$phone_temp = $row[1];
+					if (strlen($phone_temp) > 0)
+						{
+						if ($LOGadmin_hide_phone_data == '4_DIGITS')
+							{$row[1] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+						elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+							{$row[1] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+						elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+							{$row[1] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+						else
+							{$row[1] = preg_replace("/./",'X',$phone_temp);}
+						}
+					}
 				$o++;
 				$search_lead = $row[0];
 				if (eregi("1$|3$|5$|7$|9$", $o))
@@ -365,6 +384,22 @@ else
 			while ($results_to_print > $o)
 				{
 				$row=mysql_fetch_row($rslt);
+				if ($LOGadmin_hide_phone_data != '0')
+					{
+					if ($DB > 0) {echo "HIDEPHONEDATA|$row[1]|$LOGadmin_hide_phone_data|\n";}
+					$phone_temp = $row[1];
+					if (strlen($phone_temp) > 0)
+						{
+						if ($LOGadmin_hide_phone_data == '4_DIGITS')
+							{$row[1] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+						elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+							{$row[1] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+						elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+							{$row[1] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+						else
+							{$row[1] = preg_replace("/./",'X',$phone_temp);}
+						}
+					}
 				$o++;
 				$search_lead = $row[0];
 				if (eregi("1$|3$|5$|7$|9$", $o))
@@ -411,6 +446,22 @@ else
 				while ($results_to_print > $o)
 					{
 					$row=mysql_fetch_row($rslt);
+					if ($LOGadmin_hide_phone_data != '0')
+						{
+						if ($DB > 0) {echo "HIDEPHONEDATA|$row[1]|$LOGadmin_hide_phone_data|\n";}
+						$phone_temp = $row[1];
+						if (strlen($phone_temp) > 0)
+							{
+							if ($LOGadmin_hide_phone_data == '4_DIGITS')
+								{$row[1] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+							elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+								{$row[1] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+							elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+								{$row[1] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+							else
+								{$row[1] = preg_replace("/./",'X',$phone_temp);}
+							}
+						}
 					$o++;
 					$search_lead = $row[0];
 					if (eregi("1$|3$|5$|7$|9$", $o))
@@ -600,6 +651,59 @@ else
 		while ($results_to_print > $o)
 			{
 			$row=mysql_fetch_row($rslt);
+			if ($LOGadmin_hide_phone_data != '0')
+				{
+				if ($DB > 0) {echo "HIDEPHONEDATA|$row[11]|$LOGadmin_hide_phone_data|\n";}
+				$phone_temp = $row[11];
+				if (strlen($phone_temp) > 0)
+					{
+					if ($LOGadmin_hide_phone_data == '4_DIGITS')
+						{$row[11] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+					elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+						{$row[11] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+					elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+						{$row[11] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+					else
+						{$row[11] = preg_replace("/./",'X',$phone_temp);}
+					}
+				}
+			if ($LOGadmin_hide_lead_data != '0')
+				{
+				if ($DB > 0) {echo "HIDELEADDATA|$row[5]|$row[6]|$row[12]|$row[13]|$row[14]|$row[15]|$row[16]|$row[17]|$row[18]|$row[19]|$row[20]|$row[21]|$row[22]|$row[26]|$row[27]|$row[28]|$LOGadmin_hide_lead_data|\n";}
+				if (strlen($row[5]) > 0)
+					{$data_temp = $row[5];   $row[5] = preg_replace("/./",'X',$data_temp);}
+				if (strlen($row[6]) > 0)
+					{$data_temp = $row[6];   $row[6] = preg_replace("/./",'X',$data_temp);}
+				if (strlen($row[12]) > 0)
+					{$data_temp = $row[12];   $row[12] = preg_replace("/./",'X',$data_temp);}
+				if (strlen($row[13]) > 0)
+					{$data_temp = $row[13];   $row[13] = preg_replace("/./",'X',$data_temp);}
+				if (strlen($row[14]) > 0)
+					{$data_temp = $row[14];   $row[14] = preg_replace("/./",'X',$data_temp);}
+				if (strlen($row[15]) > 0)
+					{$data_temp = $row[15];   $row[15] = preg_replace("/./",'X',$data_temp);}
+				if (strlen($row[16]) > 0)
+					{$data_temp = $row[16];   $row[16] = preg_replace("/./",'X',$data_temp);}
+				if (strlen($row[17]) > 0)
+					{$data_temp = $row[17];   $row[17] = preg_replace("/./",'X',$data_temp);}
+				if (strlen($row[18]) > 0)
+					{$data_temp = $row[18];   $row[18] = preg_replace("/./",'X',$data_temp);}
+				if (strlen($row[19]) > 0)
+					{$data_temp = $row[19];   $row[19] = preg_replace("/./",'X',$data_temp);}
+				if (strlen($row[20]) > 0)
+					{$data_temp = $row[20];   $row[20] = preg_replace("/./",'X',$data_temp);}
+				if (strlen($row[21]) > 0)
+					{$data_temp = $row[21];   $row[21] = preg_replace("/./",'X',$data_temp);}
+				if (strlen($row[22]) > 0)
+					{$data_temp = $row[22];   $row[22] = preg_replace("/./",'X',$data_temp);}
+				if (strlen($row[26]) > 0)
+					{$data_temp = $row[26];   $row[26] = preg_replace("/./",'X',$data_temp);}
+				if (strlen($row[27]) > 0)
+					{$data_temp = $row[27];   $row[27] = preg_replace("/./",'X',$data_temp);}
+				if (strlen($row[28]) > 0)
+					{$data_temp = $row[28];   $row[28] = preg_replace("/./",'X',$data_temp);}
+				}
+
 			$o++;
 			$search_lead = $row[0];
 			if (eregi("1$|3$|5$|7$|9$", $o))

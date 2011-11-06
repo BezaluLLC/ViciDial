@@ -44,6 +44,7 @@
 # 110215-1411 - Added display of call notes to log records
 # 110215-1717 - Changed empty lead_id behavior to be add-a-lead functionality
 # 110525-1827 - Added ivr log records display
+# 111103-1533 - Added admin_hide_phone_data and admin_hide_lead_data options
 #
 
 require("dbconnect.php");
@@ -216,14 +217,15 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	}
 else
 	{
-
 	if($auth>0)
 		{
-		$stmt="SELECT full_name,modify_leads from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+		$stmt="SELECT full_name,modify_leads,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
-		$LOGfullname				=$row[0];
-		$LOGmodify_leads			=$row[1];
+		$LOGfullname =				$row[0];
+		$LOGmodify_leads =			$row[1];
+		$LOGadmin_hide_lead_data =	$row[2];
+		$LOGadmin_hide_phone_data =	$row[3];
 
 		if ($WeBRooTWritablE > 0)
 			{
@@ -659,6 +661,60 @@ else
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$row=mysql_fetch_row($rslt);
+
+	if ($LOGadmin_hide_phone_data != '0')
+		{
+		if ($DB > 0) {echo "HIDEPHONEDATA|$row[11]|$LOGadmin_hide_phone_data|\n";}
+		$phone_temp = $row[11];
+		if (strlen($phone_temp) > 0)
+			{
+			if ($LOGadmin_hide_phone_data == '4_DIGITS')
+				{$row[11] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+			elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+				{$row[11] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+			elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+				{$row[11] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+			else
+				{$row[11] = preg_replace("/./",'X',$phone_temp);}
+			}
+		}
+	if ($LOGadmin_hide_lead_data != '0')
+		{
+		if ($DB > 0) {echo "HIDELEADDATA|$row[5]|$row[6]|$row[12]|$row[13]|$row[14]|$row[15]|$row[16]|$row[17]|$row[18]|$row[19]|$row[20]|$row[21]|$row[22]|$row[26]|$row[27]|$row[28]|$LOGadmin_hide_lead_data|\n";}
+		if (strlen($row[5]) > 0)
+			{$data_temp = $row[5];   $row[5] = preg_replace("/./",'X',$data_temp);}
+		if (strlen($row[6]) > 0)
+			{$data_temp = $row[6];   $row[6] = preg_replace("/./",'X',$data_temp);}
+		if (strlen($row[12]) > 0)
+			{$data_temp = $row[12];   $row[12] = preg_replace("/./",'X',$data_temp);}
+		if (strlen($row[13]) > 0)
+			{$data_temp = $row[13];   $row[13] = preg_replace("/./",'X',$data_temp);}
+		if (strlen($row[14]) > 0)
+			{$data_temp = $row[14];   $row[14] = preg_replace("/./",'X',$data_temp);}
+		if (strlen($row[15]) > 0)
+			{$data_temp = $row[15];   $row[15] = preg_replace("/./",'X',$data_temp);}
+		if (strlen($row[16]) > 0)
+			{$data_temp = $row[16];   $row[16] = preg_replace("/./",'X',$data_temp);}
+		if (strlen($row[17]) > 0)
+			{$data_temp = $row[17];   $row[17] = preg_replace("/./",'X',$data_temp);}
+		if (strlen($row[18]) > 0)
+			{$data_temp = $row[18];   $row[18] = preg_replace("/./",'X',$data_temp);}
+		if (strlen($row[19]) > 0)
+			{$data_temp = $row[19];   $row[19] = preg_replace("/./",'X',$data_temp);}
+		if (strlen($row[20]) > 0)
+			{$data_temp = $row[20];   $row[20] = preg_replace("/./",'X',$data_temp);}
+		if (strlen($row[21]) > 0)
+			{$data_temp = $row[21];   $row[21] = preg_replace("/./",'X',$data_temp);}
+		if (strlen($row[22]) > 0)
+			{$data_temp = $row[22];   $row[22] = preg_replace("/./",'X',$data_temp);}
+		if (strlen($row[26]) > 0)
+			{$data_temp = $row[26];   $row[26] = preg_replace("/./",'X',$data_temp);}
+		if (strlen($row[27]) > 0)
+			{$data_temp = $row[27];   $row[27] = preg_replace("/./",'X',$data_temp);}
+		if (strlen($row[28]) > 0)
+			{$data_temp = $row[28];   $row[28] = preg_replace("/./",'X',$data_temp);}
+		}
+
 	if (strlen($row[0]) > 0)
 		{$lead_id		= $row[0];}
 	$dispo				= $row[3];
@@ -702,7 +758,7 @@ else
 
 		$Lc=0;
 		$select_list = '<select size=1 name=list_id>';
-		while ($lists_to_print > $Lc) 
+		while ($lists_to_print > $Lc)
 			{
 			$row=mysql_fetch_row($rslt);
 			$select_list .= "<option value='$row[0]'>$row[0] - $row[1] - $row[2]</option>";
@@ -737,28 +793,56 @@ else
 	echo "<tr><td colspan=2>Fronter: <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; Called Count: $called_count</td></tr>\n";
 	if ($lead_id == 'NEW') {$list_id='';}
 
-	echo "<tr><td align=right>$label_title: </td><td align=left><input type=text name=title size=4 maxlength=4 value=\"$title\"> &nbsp; \n";
-	echo "$label_first_name: <input type=text name=first_name size=15 maxlength=30 value=\"$first_name\"> </td></tr>\n";
-	echo "<tr><td align=right>$label_middle_initial:  </td><td align=left><input type=text name=middle_initial size=4 maxlength=1 value=\"$middle_initial\"> &nbsp; \n";
-	echo " $label_last_name: <input type=text name=last_name size=15 maxlength=30 value=\"$last_name\"> </td></tr>\n";
-	echo "<tr><td align=right>$label_address1 : </td><td align=left><input type=text name=address1 size=30 maxlength=30 value=\"$address1\"></td></tr>\n";
-	echo "<tr><td align=right>$label_address2 : </td><td align=left><input type=text name=address2 size=30 maxlength=30 value=\"$address2\"></td></tr>\n";
-	echo "<tr><td align=right>$label_address3 : </td><td align=left><input type=text name=address3 size=30 maxlength=30 value=\"$address3\"></td></tr>\n";
-	echo "<tr><td align=right>$label_city : </td><td align=left><input type=text name=city size=30 maxlength=30 value=\"$city\"></td></tr>\n";
-	echo "<tr><td align=right>$label_state: </td><td align=left><input type=text name=state size=2 maxlength=2 value=\"$state\"> &nbsp; \n";
-	echo " $label_postal_code: <input type=text name=postal_code size=10 maxlength=10 value=\"$postal_code\"> </td></tr>\n";
+	if ($LOGadmin_hide_lead_data != '0')
+		{
+		echo "<tr><td align=right>$label_title: </td><td align=left>$title &nbsp; \n";
+		echo "$label_first_name: $first_name </td></tr>\n";
+		echo "<tr><td align=right>$label_middle_initial:  </td><td align=left>$middle_initial &nbsp; \n";
+		echo " $label_last_name: $last_name </td></tr>\n";
+		echo "<tr><td align=right>$label_address1 : </td><td align=left>$address1</td></tr>\n";
+		echo "<tr><td align=right>$label_address2 : </td><td align=left>$address2</td></tr>\n";
+		echo "<tr><td align=right>$label_address3 : </td><td align=left>$address3</td></tr>\n";
+		echo "<tr><td align=right>$label_city : </td><td align=left>$city</td></tr>\n";
+		echo "<tr><td align=right>$label_state: </td><td align=left>$state &nbsp; \n";
+		echo " $label_postal_code: $postal_code </td></tr>\n";
 
-	echo "<tr><td align=right>$label_province : </td><td align=left><input type=text name=province size=30 maxlength=30 value=\"$province\"></td></tr>\n";
-	echo "<tr><td align=right>Country : </td><td align=left><input type=text name=country_code size=3 maxlength=3 value=\"$country_code\"></td></tr>\n";
-	echo "<tr><td align=right>$label_phone_number : </td><td align=left><input type=text name=phone_number size=20 maxlength=20 value=\"$phone_number\"></td></tr>\n";
-	echo "<tr><td align=right>$label_phone_code : </td><td align=left><input type=text name=phone_code size=10 maxlength=10 value=\"$phone_code\"></td></tr>\n";
-	echo "<tr><td align=right>$label_alt_phone : </td><td align=left><input type=text name=alt_phone size=20 maxlength=20 value=\"$alt_phone\"></td></tr>\n";
-	echo "<tr><td align=right>$label_email : </td><td align=left><input type=text name=email size=30 maxlength=50 value=\"$email\"></td></tr>\n";
-	echo "<tr><td align=right>$label_security_phrase : </td><td align=left><input type=text name=security size=30 maxlength=100 value=\"$security\"></td></tr>\n";
-	echo "<tr><td align=right>$label_vendor_lead_code : </td><td align=left><input type=text name=vendor_id size=30 maxlength=100 value=\"$vendor_id\"></td></tr>\n";
-	echo "<tr><td align=right>Rank : </td><td align=left><input type=text name=rank size=7 maxlength=5 value=\"$rank\"></td></tr>\n";
-	echo "<tr><td align=right>Owner : </td><td align=left><input type=text name=owner size=22 maxlength=20 value=\"$owner\"></td></tr>\n";
-	echo "<tr><td align=right>$label_comments : </td><td align=left><TEXTAREA name=comments ROWS=3 COLS=65>$comments</TEXTAREA></td></tr>\n";
+		echo "<tr><td align=right>$label_province : </td><td align=left>$province</td></tr>\n";
+		echo "<tr><td align=right>Country : </td><td align=left>$country_code</td></tr>\n";
+		echo "<tr><td align=right>$label_phone_number : </td><td align=left>$phone_number</td></tr>\n";
+		echo "<tr><td align=right>$label_phone_code : </td><td align=left>$phone_code</td></tr>\n";
+		echo "<tr><td align=right>$label_alt_phone : </td><td align=left>$alt_phone</td></tr>\n";
+		echo "<tr><td align=right>$label_email : </td><td align=left>$email</td></tr>\n";
+		echo "<tr><td align=right>$label_security_phrase : </td><td align=left>$security</td></tr>\n";
+		echo "<tr><td align=right>$label_vendor_lead_code : </td><td align=left>$vendor_id></td></tr>\n";
+		echo "<tr><td align=right>Rank : </td><td align=left>$rank</td></tr>\n";
+		echo "<tr><td align=right>Owner : </td><td align=left>$owner</td></tr>\n";
+		echo "<tr><td align=right>$label_comments : </td><td align=left>$comments</td></tr>\n";
+		}
+	else
+		{
+		echo "<tr><td align=right>$label_title: </td><td align=left><input type=text name=title size=4 maxlength=4 value=\"$title\"> &nbsp; \n";
+		echo "$label_first_name: <input type=text name=first_name size=15 maxlength=30 value=\"$first_name\"> </td></tr>\n";
+		echo "<tr><td align=right>$label_middle_initial:  </td><td align=left><input type=text name=middle_initial size=4 maxlength=1 value=\"$middle_initial\"> &nbsp; \n";
+		echo " $label_last_name: <input type=text name=last_name size=15 maxlength=30 value=\"$last_name\"> </td></tr>\n";
+		echo "<tr><td align=right>$label_address1 : </td><td align=left><input type=text name=address1 size=30 maxlength=30 value=\"$address1\"></td></tr>\n";
+		echo "<tr><td align=right>$label_address2 : </td><td align=left><input type=text name=address2 size=30 maxlength=30 value=\"$address2\"></td></tr>\n";
+		echo "<tr><td align=right>$label_address3 : </td><td align=left><input type=text name=address3 size=30 maxlength=30 value=\"$address3\"></td></tr>\n";
+		echo "<tr><td align=right>$label_city : </td><td align=left><input type=text name=city size=30 maxlength=30 value=\"$city\"></td></tr>\n";
+		echo "<tr><td align=right>$label_state: </td><td align=left><input type=text name=state size=2 maxlength=2 value=\"$state\"> &nbsp; \n";
+		echo " $label_postal_code: <input type=text name=postal_code size=10 maxlength=10 value=\"$postal_code\"> </td></tr>\n";
+
+		echo "<tr><td align=right>$label_province : </td><td align=left><input type=text name=province size=30 maxlength=30 value=\"$province\"></td></tr>\n";
+		echo "<tr><td align=right>Country : </td><td align=left><input type=text name=country_code size=3 maxlength=3 value=\"$country_code\"></td></tr>\n";
+		echo "<tr><td align=right>$label_phone_number : </td><td align=left><input type=text name=phone_number size=20 maxlength=20 value=\"$phone_number\"></td></tr>\n";
+		echo "<tr><td align=right>$label_phone_code : </td><td align=left><input type=text name=phone_code size=10 maxlength=10 value=\"$phone_code\"></td></tr>\n";
+		echo "<tr><td align=right>$label_alt_phone : </td><td align=left><input type=text name=alt_phone size=20 maxlength=20 value=\"$alt_phone\"></td></tr>\n";
+		echo "<tr><td align=right>$label_email : </td><td align=left><input type=text name=email size=30 maxlength=50 value=\"$email\"></td></tr>\n";
+		echo "<tr><td align=right>$label_security_phrase : </td><td align=left><input type=text name=security size=30 maxlength=100 value=\"$security\"></td></tr>\n";
+		echo "<tr><td align=right>$label_vendor_lead_code : </td><td align=left><input type=text name=vendor_id size=30 maxlength=100 value=\"$vendor_id\"></td></tr>\n";
+		echo "<tr><td align=right>Rank : </td><td align=left><input type=text name=rank size=7 maxlength=5 value=\"$rank\"></td></tr>\n";
+		echo "<tr><td align=right>Owner : </td><td align=left><input type=text name=owner size=22 maxlength=20 value=\"$owner\"></td></tr>\n";
+		echo "<tr><td align=right>$label_comments : </td><td align=left><TEXTAREA name=comments ROWS=3 COLS=65>$comments</TEXTAREA></td></tr>\n";
+		}
 
 	if ($lead_id != 'NEW') 
 		{
@@ -848,7 +932,10 @@ else
 		echo "<input type=hidden name=status value=\"NEW\">\n";
 		}
 
-	echo "<tr><td colspan=2 align=center><input type=submit name=submit value=\"SUBMIT\"></td></tr>\n";
+	if ( ($LOGadmin_hide_lead_data == '0') or ($lead_id == 'NEW') )
+		{
+		echo "<tr><td colspan=2 align=center><input type=submit name=submit value=\"SUBMIT\"></td></tr>\n";
+		}
 	echo "</table></form>\n";
 	echo "<BR><BR><BR>\n";
 

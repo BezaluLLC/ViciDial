@@ -31,6 +31,8 @@
 # 110218-1523 - Added searches display
 # 110703-1836 - Added download option
 # 110718-1204 - Added skipped manual dial leads display
+# 111103-1050 - Added admin_hide_phone_data and admin_hide_lead_data options
+# 111106-1105 - Added user_group restrictions
 #
 
 
@@ -126,21 +128,60 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     exit;
 	}
 
-$stmt="SELECT full_name,user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+$stmt="SELECT full_name,user_group,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
-$LOGfullname =		$row[0];
-$LOGuser_group =	$row[1];
+$LOGfullname =				$row[0];
+$LOGuser_group =			$row[1];
+$LOGadmin_hide_lead_data =	$row[2];
+$LOGadmin_hide_phone_data =	$row[3];
 
 fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
 fclose($fp);
 
-$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {$MAIN.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
-$LOGallowed_campaigns = $row[0];
-$LOGallowed_reports =	$row[1];
+$LOGallowed_campaigns =		$row[0];
+$LOGallowed_reports =		$row[1];
+$LOGadmin_viewable_groups =	$row[2];
+
+$LOGadmin_viewable_groupsSQL='';
+$vuLOGadmin_viewable_groupsSQL='';
+$whereLOGadmin_viewable_groupsSQL='';
+if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+	{
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+	$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$vuLOGadmin_viewable_groupsSQL = "and vicidial_users.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+
+	if (strlen($user) > 0)
+		{
+		if ($did > 0)
+			{
+			$stmt="SELECT count(*) from vicidial_inbound_dids where did_pattern='$user' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$allowed_count = $row[0];
+			}
+		else
+			{
+			$stmt="SELECT count(*) from vicidial_users where user='$user' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$allowed_count = $row[0];
+			}
+
+		if ($allowed_count < 1)
+			{
+			echo "This user does not exist: |$PHP_AUTH_USER|$user|\n";
+			exit;
+			}
+		}
+	}
 
 if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 	{
@@ -152,14 +193,14 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 
 if ($did > 0)
 	{
-	$stmt="SELECT did_description from vicidial_inbound_dids where did_pattern='$user';";
+	$stmt="SELECT did_description from vicidial_inbound_dids where did_pattern='$user' $LOGadmin_viewable_groupsSQL;";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$full_name = $row[0];
 	}
 else
 	{
-	$stmt="SELECT full_name from vicidial_users where user='$user';";
+	$stmt="SELECT full_name from vicidial_users where user='$user' $LOGadmin_viewable_groupsSQL;";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$full_name = $row[0];
@@ -614,6 +655,23 @@ if ($did < 1)
 			{$bgcolor='bgcolor="#9BB9FB"';}
 
 		$u++;
+
+		if ($LOGadmin_hide_phone_data != '0')
+			{
+			if ($DB > 0) {echo "HIDEPHONEDATA|$row[10]|$LOGadmin_hide_phone_data|\n";}
+			$phone_temp = $row[10];
+			if (strlen($phone_temp) > 0)
+				{
+				if ($LOGadmin_hide_phone_data == '4_DIGITS')
+					{$row[10] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+				elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+					{$row[10] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+				elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+					{$row[10] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+				else
+					{$row[10] = preg_replace("/./",'X',$phone_temp);}
+				}
+			}
 		$MAIN.="<tr $bgcolor>";
 		$MAIN.="<td><font size=1>$u</td>";
 		$MAIN.="<td><font size=2>$row[4]</td>";
@@ -675,6 +733,23 @@ while ($logs_to_print > $u)
 		{$AGENTseconds=0;}
 
 	$TOTALagentSECONDS = ($TOTALagentSECONDS + $AGENTseconds);
+
+	if ($LOGadmin_hide_phone_data != '0')
+		{
+		if ($DB > 0) {echo "HIDEPHONEDATA|$row[10]|$LOGadmin_hide_phone_data|\n";}
+		$phone_temp = $row[3];
+		if (strlen($phone_temp) > 0)
+			{
+			if ($LOGadmin_hide_phone_data == '4_DIGITS')
+				{$row[3] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+			elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+				{$row[3] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+			elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+				{$row[3] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+			else
+				{$row[3] = preg_replace("/./",'X',$phone_temp);}
+			}
+		}
 
 	$u++;
 	$MAIN.="<tr $bgcolor>";
@@ -930,6 +1005,41 @@ if ($did < 1)
 		if ($row[9]=='DURING_CALL') {$row[9]='DC';}
 		if (strlen($row[9]) > 1)
 			{$C3HU = "$row[9] $row[10]";}
+
+	if ($LOGadmin_hide_phone_data != '0')
+		{
+		if ($DB > 0) {echo "HIDEPHONEDATA|$row[10]|$LOGadmin_hide_phone_data|\n";}
+		$phone_temp = $row[3];
+		$dialed_temp = $row[4];
+		if ($LOGadmin_hide_phone_data == '4_DIGITS')
+			{
+			if (strlen($phone_temp) > 0)
+				{$row[3] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+			if (strlen($dialed_temp) > 0)
+				{$row[4] = str_repeat("X", (strlen($dialed_temp) - 4)) . substr($dialed_temp,-4,4);}
+			}
+		elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+			{
+			if (strlen($phone_temp) > 0)
+				{$row[3] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+			if (strlen($dialed_temp) > 0)
+				{$row[4] = str_repeat("X", (strlen($dialed_temp) - 3)) . substr($dialed_temp,-3,3);}
+			}
+		elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+			{
+			if (strlen($phone_temp) > 0)
+				{$row[3] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+			if (strlen($dialed_temp) > 0)
+				{$row[4] = str_repeat("X", (strlen($dialed_temp) - 2)) . substr($dialed_temp,-2,2);}
+			}
+		else
+			{
+			if (strlen($phone_temp) > 0)
+				{$row[3] = preg_replace("/./",'X',$phone_temp);}
+			if (strlen($dialed_temp) > 0)
+				{$row[4] = preg_replace("/./",'X',$dialed_temp);}
+			}
+		}
 
 		$u++;
 		$MAIN.="<tr $bgcolor>";

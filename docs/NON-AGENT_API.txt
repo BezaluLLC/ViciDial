@@ -65,6 +65,8 @@ Changes:
 110705-1928 - Added options for USACAN 4th digit prefix(no 0 or 1) and valid areacode filtering to add_lead
 110821-2318 - Added update_phone, add_phone_alias, update_phone_alias functions
 110928-2110 - Added callback options to add_lead and update_lead
+111106-0959 - Added user_group restrictions to some functions
+
 
 
 
@@ -600,7 +602,7 @@ outbound_cid -		1-20 digits
 OPTIONAL FIELDS-
 phone_context -		a phone context, default is 'default'
 email -			1-100 characters
-
+admin_user_group -	a valid user group or '---ALL---'
 
 Example URL strings for API calls:
 http://server/vicidial/non_agent_api.php?source=test&function=add_phone&user=6666&pass=1234&extension=55000&dialplan_number=55000&voicemail_id=55000&phone_login=55000&phone_pass=test&server_ip=192.168.198.5&protocol=SIP&registration_password=test&phone_full_name=Extension+55000&local_gmt=-5.00&outbound_cid=7275551212
@@ -641,6 +643,7 @@ local_gmt -		timezone setting, not adjusting for DST, default: '-5.00'
 outbound_cid -		1-20 digits
 phone_context -		a phone context, default is 'default'
 email -			1-100 characters
+admin_user_group -	a valid user group or '---ALL---'
 
 Example URL strings for API calls:
 http://server/vicidial/non_agent_api.php?source=test&function=update_phone&user=6666&pass=1234&extension=55000&dialplan_number=55000&voicemail_id=55000&phone_login=55000&phone_pass=test&server_ip=192.168.198.5&protocol=SIP&registration_password=test&phone_full_name=Extension+55000&local_gmt=-5.00&outbound_cid=7275551212
