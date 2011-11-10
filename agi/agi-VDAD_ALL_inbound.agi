@@ -2625,12 +2625,13 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					if ($agent_alert_exten =~ /^8304$/)
 						{$agent_alert_exten = 'ding';}
 					$VHqueryCID = "VH$CIDdate$VDADconf_exten";
+					$alertCIDstring = "\"$agent_alert_exten\" <$agent_alert_exten>";
 
 					### insert a NEW record to the vicidial_manager table to play the alert message to the agent
-					$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$VDADserver_ip','','Originate','$VHqueryCID','Exten: 83047777777777','Context: vicidial-auto','Channel: Local/$alertVDADremDIALstr$at$ext_context','Priority: 1','Callerid: $agent_alert_exten','Timeout: 10','','','','')";
+					$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$VDADserver_ip','','Originate','$VHqueryCID','Exten: 83047777777777','Context: vicidial-auto','Channel: Local/$alertVDADremDIALstr$at$ext_context','Priority: 1','Callerid: $alertCIDstring','Timeout: 10','','','','')";
 					$affected_rows = $dbhA->do($stmtA);  
 						$dbhP=$dbhA;   $mysql_count='02068';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-					if ($AGILOG) {$agi_string = "--    VDCL agent alert: |$VHqueryCID|$alertVDADremDIALstr|$agent_alert_exten|$channel|insert to vicidial_manager";   &agi_output;}
+					if ($AGILOG) {$agi_string = "--    VDCL agent alert: |$VHqueryCID|$alertVDADremDIALstr|$agent_alert_exten|$alertCIDstring|$channel|insert to vicidial_manager";   &agi_output;}
 
 					usleep(1 * $agent_alert_delay * 1000);
 					}
