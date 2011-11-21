@@ -817,6 +817,7 @@ Max Calls Count||
 This option must be set higher than 0 if you want to use the Max Calls Method feature. Default is 0||
 Max Calls Action||
 This is the action to be taken if the Max Calls Method is enabled and the number of calls exceeds what is set above in the Max Calls Count setting. The calls above that amount will be sent to either the DROP action, the AFTERHOURS action or the NO_AGENT_NO_QUEUE action and will be logged as a MAXCAL status with a MAXCALLS hangup reason. Default is NO_AGENT_NO_QUEUE||
+If a CIDLOOKUP method is used with ALT, it will search the alt_phone field for the phone number if no matches are found for the main phone number. If a CIDLOOKUP method is used with ADDR3, it will search the address3 field for the phone number if no matches are found for the main phone number and optionally the alt_phone field||
 
 
 lead_report_export.php

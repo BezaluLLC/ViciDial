@@ -370,10 +370,11 @@
 # 111018-1528 - Added more contact fields, added code to prevent API transfer duplicates
 # 111021-1623 - Fix for rare stuck vac issue with manual alt dial
 # 111024-1237 - Added callback_list_calltime option
+# 111114-0039 - Added scheduled callback and qm-dispo-code fields to API
 #
 
-$version = '2.4-337c';
-$build = '111024-1237';
+$version = '2.4-338c';
+$build = '111114-0039';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=75;
 $one_mysql_log=0;
@@ -3067,6 +3068,7 @@ $CCAL_OUT .= "</table>";
 	var CallBackrecipient = '';
 	var CallBackCommenTs = '';
 	var CallBackLeadStatus = '';
+	var DispoQMcsCODE = '';
 	var scheduled_callbacks = '<?php echo $scheduled_callbacks ?>';
 	var dispo_check_all_pause = '<?php echo $dispo_check_all_pause ?>';
 	var api_check_all_pause = '<?php echo $api_check_all_pause ?>';
@@ -4437,10 +4439,42 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 							dialedcall_send_hangup();
 							}
-						if ( (APIStatuS.length < 10) && (APIStatuS.length > 0) && (AgentDispoing > 1) )
+						if ( (APIStatuS.length < 1000) && (APIStatuS.length > 0) && (AgentDispoing > 1) && (APIStatuS != '::::::::::') )
 							{
-							document.vicidial_form.DispoSelection.value = APIStatuS;
-							DispoSelect_submit();
+							var regCBmatch = new RegExp('!',"g");
+							if (APIStatuS.match(regCBmatch))
+								{
+								var APIcbSTATUS_array = APIStatuS.split("!");
+								var APIcbSTATUS =		APIcbSTATUS_array[0];
+								var APIcbDATETIME =		APIcbSTATUS_array[1];
+								var APIcbTYPE =			APIcbSTATUS_array[2];
+								var APIcbCOMMENTS =		APIcbSTATUS_array[3];
+								var APIqmCScode =		APIcbSTATUS_array[4];
+
+								if ( (APIcbDATETIME.length > 10) && (APIcbTYPE.length > 5) )
+									{
+									CallBackDatETimE =		APIcbDATETIME;
+									CallBackrecipient =		APIcbTYPE;
+									CallBackLeadStatus =	APIcbSTATUS;
+									CallBackCommenTs =		APIcbCOMMENTS;
+									hideDiv('CallBackSelectBox');
+									document.vicidial_form.DispoSelection.value = 'CBHOLD';
+									}
+								else
+									{document.vicidial_form.DispoSelection.value = APIcbSTATUS;}
+								if (APIqmCScode.length > 0)
+									{
+									DispoQMcsCODE =			APIqmCScode;
+									}
+								// ZZZZZZZZZZZZZZZZZZZZZZZ API callback
+							//	alert("CBdata: " + CallBackDatETimE + "|" + CallBackrecipient + "|" + CallBackLeadStatus + "|" + CallBackCommenTs + "|" + DispoQMcsCODE + "|");
+								DispoSelect_submit();
+								}
+							else
+								{
+								document.vicidial_form.DispoSelection.value = APIStatuS;
+								DispoSelect_submit();
+								}
 							}
 						if (APIPausE.length > 4)
 							{
@@ -8886,7 +8920,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					}
 				if (xmlhttp) 
 					{ 
-					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&CallBackLeadStatus=" + CallBackLeadStatus + "&comments=" + CallBackCommenTs + "&custom_field_names=" + custom_field_names + "&call_notes=" + document.vicidial_form.call_notes_dispo.value;
+					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&CallBackLeadStatus=" + CallBackLeadStatus + "&comments=" + CallBackCommenTs + "&custom_field_names=" + custom_field_names + "&call_notes=" + document.vicidial_form.call_notes_dispo.value + "&qm_dispo_code=" + DispoQMcsCODE;
 					xmlhttp.open('POST', 'vdc_db_query.php');
 					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 					xmlhttp.send(DSupdate_query); 
@@ -9000,6 +9034,13 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				APIManualDialQueue_last=0;
 				document.vicidial_form.FORM_LOADED.value = '0';
 				CallBackLeadStatus = '';
+				CallBackDatETimE='';
+				CallBackrecipient='';
+				CallBackCommenTs='';
+				DispoQMcsCODE='';
+				document.vicidial_form.CallBackDatESelectioN.value = '';
+				document.vicidial_form.CallBackCommenTsField.value = '';
+
 				document.vicidial_form.search_phone_number.value='';
 				document.vicidial_form.search_lead_id.value='';
 				document.vicidial_form.search_vendor_lead_code.value='';

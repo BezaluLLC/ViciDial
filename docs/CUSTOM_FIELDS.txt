@@ -15,7 +15,7 @@ Development Stages:
 1. Create admin interface to manage dynamic fields per list_id 
 2. Create display of custom fields within the ViciDial agent interface, including variables to be used in web forms and scripts 
 3. Add exporting of custom tables to list download feature as well as the calls export report 
-4. Create list loading interface to put leads into the vicidial_list table and the custom fields, includes reusable template definitions(field mapping) 
+4. Create list loading interface to put leads into the vicidial_list table and the custom fields, includes reusable template definitions(field mapping pending) 
 
 Limitations: 
 - You could not dial leads sorted by any custom fields 

@@ -232,7 +232,7 @@ data2: callerID or number called(sometimes prepended by DNIS) [3101-9015556189],
 	vicidial_list field you would like to prefend to the phone number on
 	ENTERQUEUE/CALLOUTBOUND events
 
-data3: ??
+data3: optional qm_dispo_code variable for CALLSTATUS verbs, submitted through the agent-API external_status function
 
 data4: ??
 

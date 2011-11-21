@@ -369,7 +369,7 @@ comments VARCHAR(20),
 campaign_weight TINYINT(1) default '0',
 calls_today SMALLINT(5) UNSIGNED default '0',
 external_hangup VARCHAR(1) default '',
-external_status VARCHAR(6) default '',
+external_status VARCHAR(255) default '',
 external_pause VARCHAR(20) default '',
 external_dial VARCHAR(100) default '',
 external_ingroups TEXT,
@@ -1472,7 +1472,8 @@ campaign_cid_areacodes_enabled ENUM('0','1') default '1',
 pllb_grouping_limit SMALLINT(5) default '100',
 did_ra_extensions_enabled ENUM('0','1') default '0',
 expanded_list_stats ENUM('0','1') default '1',
-contacts_enabled ENUM('0','1') default '0'
+contacts_enabled ENUM('0','1') default '0',
+svn_version VARCHAR(100) default ''
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2580,6 +2581,27 @@ location VARCHAR(100) default ''
 CREATE INDEX ci_first_name on contact_information (first_name);
 CREATE INDEX ci_last_name on contact_information (last_name);
 
+CREATE TABLE dialable_inventory_snapshots (
+snapshot_id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+snapshot_time DATETIME default NULL,
+list_id BIGINT(14) unsigned default NULL,
+list_name VARCHAR(30) default NULL,
+campaign_id VARCHAR(8) default NULL,
+list_lastcalldate VARCHAR(20) default NULL,
+list_start_inv mediumint(8) unsigned default NULL,
+dialable_count mediumint(8) unsigned default NULL,
+dialable_count_nofilter mediumint(8) unsigned default NULL,
+dialable_count_oneoff mediumint(8) unsigned default NULL,
+dialable_count_inactive mediumint(8) unsigned default NULL,
+average_call_count decimal(3,1) default NULL,
+penetration decimal(5,2) default NULL,
+shift_data TEXT,
+time_setting ENUM('LOCAL','SERVER') default NULL,
+UNIQUE KEY snapshot_date_list_key
+(snapshot_time,list_id,time_setting),
+KEY snapshot_date_key (snapshot_time)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
@@ -2732,7 +2754,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1308',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1309',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

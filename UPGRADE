@@ -763,6 +763,12 @@ OTHER CHANGES:
 173. Added ability to block customer information and hide portions of customer
 	phone numbers within the admin interface on a per admin-user basis.
 
+174. Added ability to set scheduled callbacks with Agent API.
+
+175. Added alt_phone and address3 field searches to DID and Call Menu in-group
+	call routing, to allow searching first by phone number, then optionally
+	by alt_phone and address3.
+
 
 
 

@@ -1,11 +1,11 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2011-09-28
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2011-11-06
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
 This functionality will be rather limited at first and will be built upon as 
 critical functions are identified and programmed into it.
 
-There is also an agent API script, for more information on that, please read
+There is also an Agent API script, for more information on that, please read
 the AGENT_API.txt document.
 
 

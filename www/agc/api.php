@@ -55,10 +55,11 @@
 # 110409-0821 - Added run_time logging of API functions
 # 110430-0953 - Added option to external_dial by lead_id with alt_dial option
 # 110911-1555 - Added logout function
+# 111114-0037 - Added scheduled callback and qm-dispo-code fields to external_status function
 #
 
-$version = '2.4-21';
-$build = '110911-1555';
+$version = '2.4-22';
+$build = '111114-0037';
 
 $startMS = microtime();
 
@@ -175,6 +176,14 @@ if (isset($_GET["alt_dial"]))					{$alt_dial=$_GET["alt_dial"];}
 	elseif (isset($_POST["alt_dial"]))			{$alt_dial=$_POST["alt_dial"];}
 if (isset($_GET["DB"]))							{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))				{$DB=$_POST["DB"];}
+if (isset($_GET["callback_datetime"]))			{$callback_datetime=$_GET["callback_datetime"];}
+	elseif (isset($_POST["callback_datetime"]))	{$callback_datetime=$_POST["callback_datetime"];}
+if (isset($_GET["callback_type"]))			{$callback_type=$_GET["callback_type"];}
+	elseif (isset($_POST["callback_type"]))	{$callback_type=$_POST["callback_type"];}
+if (isset($_GET["callback_comments"]))			{$callback_comments=$_GET["callback_comments"];}
+	elseif (isset($_POST["callback_comments"]))	{$callback_comments=$_POST["callback_comments"];}
+if (isset($_GET["qm_dispo_code"]))			{$qm_dispo_code=$_GET["qm_dispo_code"];}
+	elseif (isset($_POST["qm_dispo_code"]))	{$qm_dispo_code=$_POST["qm_dispo_code"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -247,6 +256,12 @@ if ($non_latin < 1)
 	$owner = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$owner);
 	$dial_override = ereg_replace("[^A-Z]","",$dial_override);
 	$consultative = ereg_replace("[^A-Z]","",$consultative);
+		$callback_datetime = ereg_replace("\+"," ",$callback_datetime);
+	$callback_datetime = ereg_replace("[^ -\.\_0-9a-zA-Z]","",$callback_datetime);
+	$callback_type = ereg_replace("[^A-Z]","",$callback_type);
+		$callback_comments = ereg_replace("\+"," ",$callback_comments);
+	$callback_comments = ereg_replace("[^ -\.\_0-9a-zA-Z]","",$callback_comments);
+	$qm_dispo_code = ereg_replace("[^-\.\_0-9a-zA-Z]","",$qm_dispo_code);
 	}
 else
 	{
@@ -476,6 +491,49 @@ if ($function == 'external_status')
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
 			{
+			$CB_status_found=0;
+			if (strlen($callback_datetime) > 12)
+				{
+				$callback_status = $value;
+
+				$stmt = "select count(*) from vicidial_statuses where status='$callback_status' and scheduled_callback='Y';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				if ($row[0] > 0)
+					{$CB_status_found++;}
+				else
+					{
+					$stmt = "select campaign_id from vicidial_live_agents where user='$agent_user';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$campaign_id = $row[0];
+
+					$stmt = "select count(*) from vicidial_campaign_statuses where campaign_id='$campaign_id' and status='$callback_status' and scheduled_callback='Y';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					if ($row[0] > 0)
+						{$CB_status_found++;}
+					}
+
+				if ($CB_status_found > 0)
+					{
+					if (strlen($callback_type) < 4)
+						{$callback_type='ANYONE';}
+					while (strlen($callback_comments) > 200) {$callback_comments = preg_replace("/.$/",'',$callback_comments);}
+					$value = "$callback_status!$callback_datetime!$callback_type!$callback_comments!";
+					}
+				}
+			if (strlen($qm_dispo_code) > 0)
+				{
+				if ($CB_status_found < 1)
+					{$value = "$value!!!!$qm_dispo_code";}
+				else
+					{$value = "$value$qm_dispo_code";}
+				}
+
 			$stmt="UPDATE vicidial_live_agents set external_status='$value' where user='$agent_user';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);

@@ -3016,12 +3016,13 @@ else
 # 111025-0728 - Added user group to all sections, more user settings
 # 111102-1930 - Added in-group max_calls_ options
 # 111106-1116 - Many fixes for user_group restrictions
+# 111116-0207 - Added ALT and ADDR3 in-group handle methods
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-347a';
-$build = '111106-1116';
+$admin_version = '2.4-348a';
+$build = '111116-0207';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6279,7 +6280,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_inbound_dids-call_handle_method">
 	<BR>
-	<B>In-Group Call Handle Method -</B> If IN_GROUP is selected as the DID Route, then this is the call handling method used for these calls. CID will add a new lead record with every call using the CallerID as the phone number, CIDLOOKUP will attempt to lookup the phone number by the CallerID in the entire system, CIDLOOKUPRL will attempt to lookup the phone number by the CallerID in only one specified list, CIDLOOKUPRC will attempt to lookup the phone number by the CallerID in all of the lists that belong to the specified campaign, CLOSER is specified for VICIDIAL Closer calls, ANI will add a new lead record with every call using the ANI as the phone number, ANILOOKUP will attempt to lookup the phone number by the ANI in the entire system, ANILOOKUPRL will attempt to lookup the phone number by the ANI in only one specified list, XDIGITID will prompt the caller for an X digit code before the call will be put into the queue, VIDPROMPT will prompt the caller for their ID number and will create a new lead record with the CallerID as the phone number and the ID as the Vendor ID, VIDPROMPTLOOKUP will attempt to lookup the ID in the entire system, VIDPROMPTLOOKUPRL will attempt to lookup the vendor ID by the ID in only one specified list, VIDPROMPTLOOKUPRC will attempt to lookup the vendor ID by the ID in all of the lists that belong to the specified campaign. Default is CID.
+	<B>In-Group Call Handle Method -</B> If IN_GROUP is selected as the DID Route, then this is the call handling method used for these calls. CID will add a new lead record with every call using the CallerID as the phone number, CIDLOOKUP will attempt to lookup the phone number by the CallerID in the entire system, CIDLOOKUPRL will attempt to lookup the phone number by the CallerID in only one specified list, CIDLOOKUPRC will attempt to lookup the phone number by the CallerID in all of the lists that belong to the specified campaign, CLOSER is specified for VICIDIAL Closer calls, ANI will add a new lead record with every call using the ANI as the phone number, ANILOOKUP will attempt to lookup the phone number by the ANI in the entire system, ANILOOKUPRL will attempt to lookup the phone number by the ANI in only one specified list, XDIGITID will prompt the caller for an X digit code before the call will be put into the queue, VIDPROMPT will prompt the caller for their ID number and will create a new lead record with the CallerID as the phone number and the ID as the Vendor ID, VIDPROMPTLOOKUP will attempt to lookup the ID in the entire system, VIDPROMPTLOOKUPRL will attempt to lookup the vendor ID by the ID in only one specified list, VIDPROMPTLOOKUPRC will attempt to lookup the vendor ID by the ID in all of the lists that belong to the specified campaign. Default is CID. If a CIDLOOKUP method is used with ALT, it will search the alt_phone field for the phone number if no matches are found for the main phone number. If a CIDLOOKUP method is used with ADDR3, it will search the address3 field for the phone number if no matches are found for the main phone number and optionally the alt_phone field.
 
 	<BR>
 	<A NAME="vicidial_inbound_dids-agent_search_method">
@@ -25706,7 +25707,7 @@ if ($ADD==3311)
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=3111&group_id=$group_id\">In-Group ID</a>: </td><td align=left><select size=1 name=group_id>";
 		echo "$Dgroups_menu";
 		echo "</select>$NWB#vicidial_inbound_dids-group_id$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Call Handle Method: </td><td align=left><select size=1 name=call_handle_method><option>CID</option><option>CIDLOOKUP</option><option>CIDLOOKUPRL</option><option>CIDLOOKUPRC</option><option>ANI</option><option>ANILOOKUP</option><option>ANILOOKUPRL</option><option>VIDPROMPT</option><option>VIDPROMPTLOOKUP</option><option>VIDPROMPTLOOKUPRL</option><option>VIDPROMPTLOOKUPRC</option><option>CLOSER</option><option>3DIGITID</option><option>4DIGITID</option><option>5DIGITID</option><option>10DIGITID</option><option SELECTED>$call_handle_method</option></select>$NWB#vicidial_inbound_dids-call_handle_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Call Handle Method: </td><td align=left><select size=1 name=call_handle_method><option>CID</option><option>CIDLOOKUP</option><option>CIDLOOKUPRL</option><option>CIDLOOKUPRC</option><option>CIDLOOKUPALT</option><option>CIDLOOKUPRLALT</option><option>CIDLOOKUPRCALT</option><option>CIDLOOKUPADDR3</option><option>CIDLOOKUPRLADDR3</option><option>CIDLOOKUPRCADDR3</option><option>CIDLOOKUPALTADDR3</option><option>CIDLOOKUPRLALTADDR3</option><option>CIDLOOKUPRCALTADDR3</option><option>ANI</option><option>ANILOOKUP</option><option>ANILOOKUPRL</option><option>VIDPROMPT</option><option>VIDPROMPTLOOKUP</option><option>VIDPROMPTLOOKUPRL</option><option>VIDPROMPTLOOKUPRC</option><option>CLOSER</option><option>3DIGITID</option><option>4DIGITID</option><option>5DIGITID</option><option>10DIGITID</option><option SELECTED>$call_handle_method</option></select>$NWB#vicidial_inbound_dids-call_handle_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Agent Search Method: </td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#vicidial_inbound_dids-agent_search_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group List ID: </td><td align=left><input type=text name=list_id size=14 maxlength=14 value=\"$list_id\">$NWB#vicidial_inbound_dids-list_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Campaign ID: </td><td align=left><select size=1 name=campaign_id>\n";
@@ -25756,7 +25757,7 @@ if ($ADD==3311)
 		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3111&group_id=$group_id\">Filter In-Group ID</a>: </td><td align=left><select size=1 name=filter_group_id>";
 		echo "$FDgroups_menu";
 		echo "</select>$NWB#vicidial_inbound_dids-group_id$NWE</td></tr>\n";
-		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group Call Handle Method: </td><td align=left><select size=1 name=filter_call_handle_method><option>CID</option><option>CIDLOOKUP</option><option>CIDLOOKUPRL</option><option>CIDLOOKUPRC</option><option>ANI</option><option>ANILOOKUP</option><option>ANILOOKUPRL</option><option>VIDPROMPT</option><option>VIDPROMPTLOOKUP</option><option>VIDPROMPTLOOKUPRL</option><option>VIDPROMPTLOOKUPRC</option><option>CLOSER</option><option>3DIGITID</option><option>4DIGITID</option><option>5DIGITID</option><option>10DIGITID</option><option SELECTED>$filter_call_handle_method</option></select>$NWB#vicidial_inbound_dids-call_handle_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group Call Handle Method: </td><td align=left><select size=1 name=filter_call_handle_method><option>CID</option><option>CIDLOOKUP</option><option>CIDLOOKUPRL</option><option>CIDLOOKUPRC</option><option>CIDLOOKUPALT</option><option>CIDLOOKUPRLALT</option><option>CIDLOOKUPRCALT</option><option>CIDLOOKUPADDR3</option><option>CIDLOOKUPRLADDR3</option><option>CIDLOOKUPRCADDR3</option><option>CIDLOOKUPALTADDR3</option><option>CIDLOOKUPRLALTADDR3</option><option>CIDLOOKUPRCALTADDR3</option><option>ANI</option><option>ANILOOKUP</option><option>ANILOOKUPRL</option><option>VIDPROMPT</option><option>VIDPROMPTLOOKUP</option><option>VIDPROMPTLOOKUPRL</option><option>VIDPROMPTLOOKUPRC</option><option>CLOSER</option><option>3DIGITID</option><option>4DIGITID</option><option>5DIGITID</option><option>10DIGITID</option><option SELECTED>$filter_call_handle_method</option></select>$NWB#vicidial_inbound_dids-call_handle_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group Agent Search Method: </td><td align=left><select size=1 name=filter_agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$filter_agent_search_method</option></select>$NWB#vicidial_inbound_dids-agent_search_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group List ID: </td><td align=left><input type=text name=filter_list_id size=14 maxlength=14 value=\"$filter_list_id\">$NWB#vicidial_inbound_dids-list_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group Campaign ID: </td><td align=left><select size=1 name=filter_campaign_id>\n";
@@ -31916,7 +31917,8 @@ if ($ADD==730000000000000)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT admin_log_id,event_date,val.user,ip_address,event_section,event_type,record_id,event_code,event_notes,event_sql,full_name,user_group from vicidial_admin_log val, vicidial_users vu where admin_log_id='$stage' and val.user=vu.user $valLOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT admin_log_id,event_date,val.user,ip_address,event_section,event_type,record_id,event_code,event_notes,event_sql,full_name,val.user_group from vicidial_admin_log val, vicidial_users vu where admin_log_id='$stage' and val.user=vu.user $valLOGadmin_viewable_groupsSQL;";
+		if ($DB > 0) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 		$logs_to_print = mysql_num_rows($rslt);
 

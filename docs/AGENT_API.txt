@@ -1,4 +1,4 @@
-AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2011-09-11
+AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2011-11-14
 
 This document describes the functions of an API(Application Programming Interface)
 for the VICIDIAL Agent screen. This functionality will be rather limited at first
@@ -106,7 +106,16 @@ DESCRIPTION:
 Sets the status of the current customer call on the agent dispotion screen
 
 VALUES: (value)
-Any valid status in the VICIDIAL system will work for this function
+value - 
+ Any valid status in the VICIDIAL system will work for this function
+callback_datetime -
+ YYYY-MM-DD+HH:MM:SS, date and time of scheduled callback. REQUIRED if callback is set and status is flagged as a scheduled callback
+callback_type -	
+ USERONLY or ANYONE, default is ANYONE
+callback_comments -
+ Optional comments to appear when the callback is called back, must be less than 200 characters in length
+qm_dispo_code - 
+ Option callstatus code used if QM is enabled
 
 EXAMPLE URL:
 http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_status&value=A

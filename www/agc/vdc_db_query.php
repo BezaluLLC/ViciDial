@@ -92,6 +92,7 @@
 #  - $call_notes
 #  - $disable_alter_custphone = ('N','Y','HIDE')
 #  - $old_CID = ('M06301413000000002',...)
+#  - $qm_dispo_code
 #
 #
 # CHANGELOG:
@@ -298,10 +299,11 @@
 # 111021-1549 - Added old_CID variable to help clear alt-dial-old calls
 # 111021-1707 - Added callback_hours_block feature
 # 111024-1238 - Added callback_list_calltime option
+# 111114-0035 - Added qm-dispo-code field to updatedispo function
 #
 
-$version = '2.4-199';
-$build = '111024-1238';
+$version = '2.4-200';
+$build = '111114-0035';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=438;
 $one_mysql_log=0;
@@ -516,6 +518,8 @@ if (isset($_GET["location"]))			{$location=$_GET["location"];}
 	elseif (isset($_POST["location"]))	{$location=$_POST["location"];}
 if (isset($_GET["old_CID"]))			{$old_CID=$_GET["old_CID"];}
 	elseif (isset($_POST["old_CID"]))	{$old_CID=$_POST["old_CID"];}
+if (isset($_GET["qm_dispo_code"]))			{$qm_dispo_code=$_GET["qm_dispo_code"];}
+	elseif (isset($_POST["qm_dispo_code"]))	{$qm_dispo_code=$_POST["qm_dispo_code"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -6960,8 +6964,10 @@ if ($ACTION == 'updateDISPO')
 
 		if (strlen($stage) < 2) 
 			{$stage = $campaign;}
-
-		$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$MDnextCID',queue='$stage',agent='Agent/$user',verb='CALLSTATUS',data1='$log_dispo_choice',serverid='$queuemetrics_log_id';";
+		$qm_dispo_codeSQL='';
+		if (strlen($qm_dispo_code) > 0)
+			{$qm_dispo_codeSQL = ",data3='$qm_dispo_code'";}
+		$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$MDnextCID',queue='$stage',agent='Agent/$user',verb='CALLSTATUS',data1='$log_dispo_choice',serverid='$queuemetrics_log_id' $qm_dispo_codeSQL;";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00160',$user,$server_ip,$session_name,$one_mysql_log);}

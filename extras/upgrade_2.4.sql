@@ -1178,3 +1178,30 @@ ALTER TABLE vicidial_closer_log MODIFY term_reason ENUM('CALLER','AGENT','QUEUET
 ALTER TABLE vicidial_closer_log_archive MODIFY term_reason ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','HOLDRECALLXFER','HOLDTIME','NOAGENT','NONE','MAXCALLS') default 'NONE';
 
 UPDATE system_settings SET db_schema_version='1308',db_schema_update_date=NOW() where db_schema_version < 1308;
+
+CREATE TABLE dialable_inventory_snapshots (
+snapshot_id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+snapshot_time DATETIME default NULL,
+list_id BIGINT(14) unsigned default NULL,
+list_name VARCHAR(30) default NULL,
+campaign_id VARCHAR(8) default NULL,
+list_lastcalldate VARCHAR(20) default NULL,
+list_start_inv mediumint(8) unsigned default NULL,
+dialable_count mediumint(8) unsigned default NULL,
+dialable_count_nofilter mediumint(8) unsigned default NULL,
+dialable_count_oneoff mediumint(8) unsigned default NULL,
+dialable_count_inactive mediumint(8) unsigned default NULL,
+average_call_count decimal(3,1) default NULL,
+penetration decimal(5,2) default NULL,
+shift_data TEXT,
+time_setting ENUM('LOCAL','SERVER') default NULL,
+UNIQUE KEY snapshot_date_list_key
+(snapshot_time,list_id,time_setting),
+KEY snapshot_date_key (snapshot_time)
+);
+
+ALTER TABLE vicidial_live_agents MODIFY external_status VARCHAR(255) default '';
+
+ALTER TABLE system_settings ADD svn_version VARCHAR(100) default '';
+
+UPDATE system_settings SET db_schema_version='1309',db_schema_update_date=NOW() where db_schema_version < 1309;

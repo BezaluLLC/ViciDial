@@ -14,6 +14,15 @@
 # ; 	- CIDLOOKUP - 	Lookup CID to find record in whole system
 # ; 	- CIDLOOKUPRL -	Restrict lookup to one list
 # ; 	- CIDLOOKUPRC -	Restrict lookup to one campaign's lists
+# ; 	- CIDLOOKUPALT - 	Lookup CID to find record in whole system by phone number then alt_phone
+# ; 	- CIDLOOKUPRLALT -	Restrict lookup to one list by phone number then alt_phone
+# ; 	- CIDLOOKUPRCALT -	Restrict lookup to one campaign's lists by phone number then alt_phone
+# ; 	- CIDLOOKUPADDR3 - 	Lookup CID to find record in whole system by phone number then address3
+# ; 	- CIDLOOKUPRLADDR3 -	Restrict lookup to one list by phone number then address3
+# ; 	- CIDLOOKUPRCADDR3 -	Restrict lookup to one campaign's lists by phone number then address3
+# ; 	- CIDLOOKUPALTADDR3 - 	Lookup CID to find record in whole system by phone number then alt_phone then address3
+# ; 	- CIDLOOKUPRLALTADDR3 -	Restrict lookup to one list by phone number then alt_phone then address3
+# ; 	- CIDLOOKUPRCALTADDR3 -	Restrict lookup to one campaign's lists by phone number then alt_phone then address3
 # ;     - CLOSER -      Closer calls from VICIDIAL fronters(and previous in-group calls)
 # ; 	- ANI - 	ANI received, add record with phone number (based on RBS T1s)
 # ; 	- ANILOOKUP - 	Lookup ANI to find record in whole system
@@ -160,6 +169,7 @@
 # 110922-2149 - Added compatibility with DID remote agent extension overrides
 # 110923-1133 - Added drop and after-hours to callmenu, and added action transfer cid setting
 # 111102-2014 - Added in-group max_calls_ feature
+# 111116-0157 - Added ALT and ADDR3 methods for CIDLOOKUP
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -171,7 +181,7 @@ $wait_prompt_runs=0;
 $at='@';
 $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=187;
+$mysql_log_count=189;
 $one_mysql_log=0;
 
 
@@ -915,48 +925,86 @@ if ($call_handle_method =~ /LOOKUP/)
 			} 
 		else 
 			{
- 			### insert a record into the vicidial_list table 
-			$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','1','$local_gmt','$VLcomments');";
- 			$affected_rows = $dbhA->do($stmtA);
-				$dbhP=$dbhA;   $mysql_count='02011';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-			$cbc=0;
-			$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
-			$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			$sthArows=$sthA->rows;
-				$dbhP=$dbhA;   $stmtA=$stmtB;   $mysql_count='02012';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-			if ($sthArows > 0)
+			$VLfound=0;
+			if ($call_handle_method =~ /ALT/) 
 				{
-				@aryA = $sthA->fetchrow_array;
-				$insert_lead_id = $aryA[0];
-				$cbc++; 
+				$stmtA= "SELECT lead_id from vicidial_list where alt_phone='$phone_number' $listSQL order by last_local_call_time desc limit 1;";
+					if ($AGILOG) {$agi_string = "VDAD vicidial_list ALT search |$phone_number|$stmtA|";   &agi_output;}
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					$dbhP=$dbhA;   $mysql_count='02188';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$insert_lead_id = $aryA[0];
+					$VLfound++;
+					$sthA->finish();
+					if ($AGILOG) {$agi_string = "VDAD vicidial_list ALT found |$insert_lead_id|$stmtA|";   &agi_output;}
+					}
 				}
-			$sthA->finish();
-
-			### Start the Add-Lead-URL get proccess
-			if (length($add_lead_url) > 5)
+			if ( ($call_handle_method =~ /ADDR3/) && ($VLfound < 1) )
 				{
-				$PADlead_id = sprintf("%010s", $insert_lead_id);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
-				$XXqueryCID = "Y$CIDdate$PADlead_id";
-
-				$launch = $PATHhome . "/AST_send_URL.pl";
-				$launch .= " --SYSLOG" if ($SYSLOG);
-				$launch .= " --lead_id=" . $insert_lead_id;
-				$launch .= " --phone_number=" . $phone_number;
-				$launch .= " --user=";
-				$launch .= " --call_type=IN";
-				$launch .= " --campaign=" . $channel_group;
-				$launch .= " --uniqueid=" . $uniqueid;
-				$launch .= " --alt_dial=";
-				$launch .= " --call_id=" . $XXqueryCID;
-				$launch .= " --function=INGROUP_ADD_LEAD_URL";
-
-				system($launch . ' &');
-
-				if ($AGILOG) {$agi_string = "$launch|";   &agi_output;}
+				$stmtA= "SELECT lead_id from vicidial_list where address3='$phone_number' $listSQL order by last_local_call_time desc limit 1;";
+					if ($AGILOG) {$agi_string = "VDAD vicidial_list ADDR3 search |$phone_number|$stmtA|";   &agi_output;}
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					$dbhP=$dbhA;   $mysql_count='02189';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$insert_lead_id = $aryA[0];
+					$VLfound++;
+					$sthA->finish();
+					if ($AGILOG) {$agi_string = "VDAD vicidial_list ADDR3 found |$insert_lead_id|$stmtA|";   &agi_output;}
+					}
 				}
+			if ($VLfound < 1)
+				{
+				### insert a record into the vicidial_list table 
+				$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','1','$local_gmt','$VLcomments');";
+				$affected_rows = $dbhA->do($stmtA);
+					$dbhP=$dbhA;   $mysql_count='02011';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				$cbc=0;
+				$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
+				$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					$dbhP=$dbhA;   $stmtA=$stmtB;   $mysql_count='02012';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$insert_lead_id = $aryA[0];
+					$cbc++; 
+					}
+				$sthA->finish();
 
-			if ($AGILOG) {$agi_string = "VDAD vicidial_list insert |$insert_lead_id|$stmtA|";   &agi_output;}
+				### Start the Add-Lead-URL get proccess
+				if (length($add_lead_url) > 5)
+					{
+					$PADlead_id = sprintf("%010s", $insert_lead_id);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
+					$XXqueryCID = "Y$CIDdate$PADlead_id";
+
+					$launch = $PATHhome . "/AST_send_URL.pl";
+					$launch .= " --SYSLOG" if ($SYSLOG);
+					$launch .= " --lead_id=" . $insert_lead_id;
+					$launch .= " --phone_number=" . $phone_number;
+					$launch .= " --user=";
+					$launch .= " --call_type=IN";
+					$launch .= " --campaign=" . $channel_group;
+					$launch .= " --uniqueid=" . $uniqueid;
+					$launch .= " --alt_dial=";
+					$launch .= " --call_id=" . $XXqueryCID;
+					$launch .= " --function=INGROUP_ADD_LEAD_URL";
+
+					system($launch . ' &');
+
+					if ($AGILOG) {$agi_string = "$launch|";   &agi_output;}
+					}
+
+				if ($AGILOG) {$agi_string = "VDAD vicidial_list insert |$insert_lead_id|$stmtA|";   &agi_output;}
+				}
 			}
 		}
 	}
