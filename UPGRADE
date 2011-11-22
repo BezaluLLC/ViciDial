@@ -769,6 +769,8 @@ OTHER CHANGES:
 	call routing, to allow searching first by phone number, then optionally
 	by alt_phone and address3.
 
+176. Added new Inbound Daily Report.
+
 
 
 

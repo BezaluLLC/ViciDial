@@ -10,10 +10,11 @@
 # 90618-0640 - Fix for users going through proxy or tunnel
 # 100401-1037 - remove spaces and special characters from filenames, admin log uploads
 # 110922-2331 - Added modify_audiostore user option for access
+# 111122-1332 - Added more filename filtering
 #
 
-$version = '2.4-4';
-$build = '110922-2331';
+$version = '2.4-5';
+$build = '111122-1332';
 
 $MT[0]='';
 
@@ -197,8 +198,24 @@ if ($action == "AUTOUPLOAD")
 		{
 		$AF_path = preg_replace("/ /",'\ ',$AF_path);
 		$AF_path = preg_replace("/@/",'\@',$AF_path);
+		$AF_path = preg_replace("/\(/",'\(',$AF_path);
+		$AF_path = preg_replace("/\)/",'\)',$AF_path);
+		$AF_path = preg_replace("/\#/",'\#',$AF_path);
+		$AF_path = preg_replace("/\&/",'\&',$AF_path);
+		$AF_path = preg_replace("/\*/",'\*',$AF_path);
+		$AF_path = preg_replace("/\!/",'\!',$AF_path);
+		$AF_path = preg_replace("/\%/",'\%',$AF_path);
+		$AF_path = preg_replace("/\^/",'\^',$AF_path);
 		$audiofile_name = preg_replace("/ /",'',$audiofile_name);
 		$audiofile_name = preg_replace("/@/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\(/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\)/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\#/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\&/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\*/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\!/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\%/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\^/",'',$audiofile_name);
 		copy($AF_path, "$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
 		chmod("$WeBServeRRooT/$sounds_web_directory/$audiofile_name", 0766);
 
@@ -285,8 +302,24 @@ if ($action == "MANUALUPLOAD")
 		{
 		$AF_path = preg_replace("/ /",'\ ',$AF_path);
 		$AF_path = preg_replace("/@/",'\@',$AF_path);
+		$AF_path = preg_replace("/\(/",'\(',$AF_path);
+		$AF_path = preg_replace("/\)/",'\)',$AF_path);
+		$AF_path = preg_replace("/\#/",'\#',$AF_path);
+		$AF_path = preg_replace("/\&/",'\&',$AF_path);
+		$AF_path = preg_replace("/\*/",'\*',$AF_path);
+		$AF_path = preg_replace("/\!/",'\!',$AF_path);
+		$AF_path = preg_replace("/\%/",'\%',$AF_path);
+		$AF_path = preg_replace("/\^/",'\^',$AF_path);
 		$audiofile_name = preg_replace("/ /",'',$audiofile_name);
 		$audiofile_name = preg_replace("/@/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\(/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\)/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\#/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\&/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\*/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\!/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\%/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\^/",'',$audiofile_name);
 		copy($AF_path, "$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
 		chmod("$WeBServeRRooT/$sounds_web_directory/$audiofile_name", 0766);
 		
