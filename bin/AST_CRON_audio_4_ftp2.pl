@@ -31,6 +31,7 @@
 # 
 # 91123-0005 - First Build
 # 110524-1052 - Added run-check concurrency check option
+# 111128-1617 - Added Ftp persistence option
 #
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -55,6 +56,7 @@ $VARHTTP_path = 'http://10.0.0.4';
 
 $file_limit = 1000;
 $list_limit = 1000;
+$FTPpersistent=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -72,16 +74,18 @@ if (length($ARGV[0])>1)
 		print "  [--help] = this screen\n";
 		print "  [--debug] = debug\n";
 		print "  [--debugX] = super debug\n";
+		print "  [--test] = test\n";
 		print "  [--run-check] = concurrency check, die if another instance is running\n";
 		print "  [--transfer-limit=XXX] = number of files to transfer before exiting\n";
 		print "  [--list-limit=XXX] = number of files to list in the directory before moving on\n";
+		print "  [--debugX] = super debug\n";
+		print "  [--nodatedir] = do not put into dated directories\n\n";
 		print "  [--ftp-server=XXX] = FTP server\n";
 		print "  [--ftp-login=XXX] = FTP server login account\n";
 		print "  [--ftp-pass=XXX] = FTP server password\n";
 		print "  [--ftp-dir=XXX] = FTP server directory\n";
-		print "  [--debugX] = super debug\n";
-		print "  [--test] = test\n";
-		print "  [--nodatedir] = do not put into dated directories\n\n";
+		print "  [--ftp-persistent] = Does not log out between every file transmission\n";
+		print "\n";
 		exit;
 		}
 	else
@@ -160,6 +164,12 @@ if (length($ARGV[0])>1)
 			$CLIFTP_dir=1;
 			if ($DB > 0) 
 				{print "\n----- FTP DIRECTORY: $VARFTP_dir -----\n\n";}
+			}
+		if ($args =~ /--ftp-persistent/i) 
+			{
+			$FTPpersistent=1;
+			if ($DB > 0) 
+				{print "\n----- FTP PERSISTENT: $FTPpersistent -----\n\n";}
 			}
 		}
 	}
@@ -321,8 +331,13 @@ foreach(@FILES)
 			if ($DB) {print "|$recording_id|$start_date|$ALLfile|     |$SQLfile|\n";}
 
 	### BEGIN Remote file transfer
-			$p = Net::Ping->new();
-			$ping_good = $p->ping("$VARFTP_host");
+			if ( ($FTPpersistent > 0) && ($ping_good > 0) )
+				{$ping_good=1;}
+			else
+				{
+				$p = Net::Ping->new();
+				$ping_good = $p->ping("$VARFTP_host");
+				}
 
 			if (!$ping_good)
 				{
@@ -337,9 +352,20 @@ foreach(@FILES)
 				$start_date_PATH='';
 				$FTPdb=0;
 				if ($DBX>0) {$FTPdb=1;}
-				$ftp = Net::FTP->new("$VARFTP_host", Port => $VARFTP_port, Debug => $FTPdb);
-				$ftp->login("$VARFTP_user","$VARFTP_pass");
-				$ftp->cwd("$VARFTP_dir");
+				if ( ($FTPpersistent > 0) && ($transfered_files > 1) )
+					{
+					if($DBX){print STDERR "FTP PERSISTENT, skipping login\n";}
+					if ($NODATEDIR < 1)
+						{
+						$ftp->cwd("../");
+						}
+					}
+				else
+					{
+					$ftp = Net::FTP->new("$VARFTP_host", Port => $VARFTP_port, Debug => $FTPdb);
+					$ftp->login("$VARFTP_user","$VARFTP_pass");
+					$ftp->cwd("$VARFTP_dir");
+					}
 				if ($NODATEDIR < 1)
 					{
 					$ftp->mkdir("$start_date");
@@ -348,7 +374,10 @@ foreach(@FILES)
 					}
 				$ftp->binary();
 				$ftp->put("$dir2/$ALLfile", "$ALLfile");
-				$ftp->quit;
+				if ($FTPpersistent < 1)
+					{
+					$ftp->quit;
+					}
 
 			# FTP2 scripts do not alter the URL of the recording
 			#	$stmtA = "UPDATE recording_log set location='$VARHTTP_path/$start_date_PATH$ALLfile' where recording_id='$recording_id';";
