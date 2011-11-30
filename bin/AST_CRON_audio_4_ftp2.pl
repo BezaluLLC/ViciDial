@@ -32,6 +32,7 @@
 # 91123-0005 - First Build
 # 110524-1052 - Added run-check concurrency check option
 # 111128-1617 - Added Ftp persistence option
+# 111130-1801 - Added Ftp validate option
 #
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -57,6 +58,7 @@ $VARHTTP_path = 'http://10.0.0.4';
 $file_limit = 1000;
 $list_limit = 1000;
 $FTPpersistent=0;
+$FTPvalidate=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -85,6 +87,7 @@ if (length($ARGV[0])>1)
 		print "  [--ftp-pass=XXX] = FTP server password\n";
 		print "  [--ftp-dir=XXX] = FTP server directory\n";
 		print "  [--ftp-persistent] = Does not log out between every file transmission\n";
+		print "  [--ftp-validate] = Checks for a file size on the file after transmission\n";
 		print "\n";
 		exit;
 		}
@@ -170,6 +173,12 @@ if (length($ARGV[0])>1)
 			$FTPpersistent=1;
 			if ($DB > 0) 
 				{print "\n----- FTP PERSISTENT: $FTPpersistent -----\n\n";}
+			}
+		if ($args =~ /--ftp-validate/i) 
+			{
+			$FTPvalidate=1;
+			if ($DB > 0) 
+				{print "\n----- FTP VALIDATE: $FTPvalidate -----\n\n";}
 			}
 		}
 	}
@@ -300,9 +309,10 @@ foreach(@FILES)
 		$FILEsize2[$i] = (-s "$dir2/$FILES[$i]");
 		if ($DBX) {print "$dir2/$FILES[$i] $FILEsize2[$i]\n\n";}
 		
-		if ($FILEsize1[$i] ne $FILEsize2[$i]) {
+		if ($FILEsize1[$i] ne $FILEsize2[$i]) 
+			{
 			if ($DBX) {print "not transfering $dir2/$FILES[$i]. File size mismatch $FILEsize2[$i] != $FILEsize1[$i]\n\n";}
-		}
+			}
 
 		if ( ($FILES[$i] !~ /out\.|in\.|lost\+found/i) && ($FILEsize1[$i] eq $FILEsize2[$i]) && (length($FILES[$i]) > 4))
 			{
@@ -374,6 +384,17 @@ foreach(@FILES)
 					}
 				$ftp->binary();
 				$ftp->put("$dir2/$ALLfile", "$ALLfile");
+				if ($FTPvalidate > 0)
+					{
+					$FTPfilesize = $ftp->size("$ALLfile");
+					if($DBX){print STDERR "FTP FILESIZE:   $FTPfilesize/$FILEsize1[$i] | $ALLfile\n";}
+
+					if ( ($FILEsize1[$i] > 100) && ($FTPfilesize < 100) )
+						{
+						print "ERROR! File did not transfer, exiting:   $FTPfilesize/$FILEsize1[$i] | $ALLfile\n";
+						exit;
+						}
+					}
 				if ($FTPpersistent < 1)
 					{
 					$ftp->quit;
