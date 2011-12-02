@@ -91,12 +91,13 @@
 # 110812-1514 - Added static tts file parsing and replacement
 # 110829-2324 - Added survey_recording option
 # 110926-1929 - Small fixes
+# 111201-1751 - Added grade-random next-agent-call option
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
 $AGILOG = '0';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=84;
+$mysql_log_count=92;
 $one_mysql_log=0;
 
 
@@ -1696,6 +1697,7 @@ while ($drop_timer <= $DROP_TIME)
 	if ($CAMP_callorder =~ /random/i)				{$agent_call_order = 'order by random_id';}
 	if ($CAMP_callorder =~ /campaign_rank/i)		{$agent_call_order = 'order by campaign_weight desc,last_call_finish';}
 	if ($CAMP_callorder =~ /fewest_calls/i)			{$aco_sub=1;	$agent_call_order = 'order by calls_today';}
+	if ($CAMP_callorder =~ /campaign_grade_random/i) {$aco_sub=1;	$agent_call_order = 'order by random_id';}
 
 
 	##### Attempt to send call to an agent on this server only #####
@@ -1846,10 +1848,68 @@ while ($drop_timer <= $DROP_TIME)
 		$rec_countWAIT = ($rec_countWAITOUT + $rec_countWAITIN);
 		if ($rec_countWAIT < $concurrent_transfers)
 			{
-			$stmtA = "UPDATE vicidial_live_agents set status='QUEUE',lead_id='$CIDlead_id',uniqueid='$unique_id', channel='$channel', call_server_ip='$VARserver_ip', callerid='$callerid',comments='AUTO' where status = 'READY' and lead_id<1 and server_ip='$VARserver_ip' and ring_callerid='' and campaign_id='$VDADcampaign' and last_update_time > '$BDtsSQLdate' $agent_call_order limit 1;";
-			$affected_rows = $dbhA->do($stmtA);
-				$dbhP=$dbhA;   $mysql_count='01035';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+			### BEGIN grade random next-agent-call routing ###
+			if ($CAMP_callorder =~ /grade/)
+				{
+				$stmtA = "LOCK TABLES vicidial_live_agents WRITE;";
+				my $LOCKaffected_rows = $dbhA->do($stmtA);
+					$dbhP=$dbhA;   $mysql_count='01085';   $MEL_aff_rows=$LOCKaffected_rows;   &mysql_error_logging;
 
+				@GRADEuser=@MT;
+				@GRADEgrade=@MT;
+				@userGRADEarray=@MT;
+				$stmtA = "SELECT user,campaign_grade from vicidial_live_agents WHERE status='READY' and lead_id<1 and ring_callerid='' and server_ip='$VARserver_ip' and campaign_id='$VDADcampaign' and last_update_time > '$BDtsSQLdate' limit 1000;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					$dbhP=$dbhA;   $mysql_count='01086';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				$gg=0;
+				$ga=0;
+				while ($gg < $sthArows)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$GRADEuser[$gg] =	$aryA[0];
+					$GRADEgrade[$gg] =	$aryA[1];
+					if ($GRADEgrade[$gg] < 1)
+						{$GRADEgrade[$gg] =	1;}
+					$gi=0;
+					while ($gi < $GRADEgrade[$gg]) 
+						{
+						$userGRADEarray[$ga] =	$GRADEuser[$gg];
+					#	print STDERR "     GRADE ENTRY: $userGRADEarray[$ga]|$ga|$gi|$GRADEgrade[$gg]\n";
+						$gi++;
+						$ga++;
+						}
+					$gg++;
+					}
+				$sthA->finish();
+
+				$sthArows=0;
+				$affected_rows=0;
+				if ($ga > 0)
+					{
+					$GRADErandom = int( rand($ga));
+					$userGRADEchosen = $userGRADEarray[$GRADErandom];
+
+					if ($AGILOG) {$agi_string = "GRADE RANDOM: $userGRADEchosen|$GRADErandom|$CAMP_callorder|$gg|$ga|$callerid";   &agi_output;}
+
+					$stmtA = "UPDATE vicidial_live_agents set status='QUEUE',lead_id='$CIDlead_id',uniqueid='$unique_id', channel='$channel', call_server_ip='$VARserver_ip', callerid='$callerid',comments='AUTO' where status='READY' and lead_id<1 and ring_callerid='' and server_ip='$VARserver_ip' and campaign_id='$VDADcampaign' and last_update_time > '$BDtsSQLdate' and user='$userGRADEchosen' limit 1;";
+					$affected_rows = $dbhA->do($stmtA);
+						$dbhP=$dbhA;   $mysql_count='01087';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+					}
+				if ($AGILOG) {$agi_string = "$VDADuser|$VDADgroup_weight|$stmtA|";   &agi_output;}
+
+				$stmtA = "UNLOCK TABLES;";
+				my $LOCKaffected_rows = $dbhA->do($stmtA);
+					$dbhP=$dbhA;   $mysql_count='01088';   $MEL_aff_rows=$LOCKaffected_rows;   &mysql_error_logging;
+				}
+			### END grade random next-agent-call routing ###
+			else
+				{
+				$stmtA = "UPDATE vicidial_live_agents set status='QUEUE',lead_id='$CIDlead_id',uniqueid='$unique_id', channel='$channel', call_server_ip='$VARserver_ip', callerid='$callerid',comments='AUTO' where status = 'READY' and lead_id<1 and server_ip='$VARserver_ip' and ring_callerid='' and campaign_id='$VDADcampaign' and last_update_time > '$BDtsSQLdate' $agent_call_order limit 1;";
+				$affected_rows = $dbhA->do($stmtA);
+					$dbhP=$dbhA;   $mysql_count='01035';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				}
 			if ($AGILOG) {$agi_string = "--    VDAD get agent: |$affected_rows|update of vla table: $VDADcampaign|$VARserver_ip\n|$stmtA|";   &agi_output;}
 			if ($affected_rows > 0)
 				{
@@ -2297,9 +2357,68 @@ while ($drop_timer <= $DROP_TIME)
 		$rec_countWAITrem = ($rec_countWAITremOUT + $rec_countWAITremIN);
 		if ($rec_countWAITrem < $concurrent_transfers)
 			{
-			$stmtA = "UPDATE vicidial_live_agents set status='QUEUE',lead_id='$CIDlead_id',uniqueid='$unique_id', channel='$channel', call_server_ip='$VARserver_ip', callerid='$callerid',comments='AUTO' where status = 'READY' and lead_id<1 and ring_callerid='' and campaign_id='$VDADcampaign' and last_update_time > '$BDtsSQLdate' $agent_call_order limit 1;";
-			$affected_rows = $dbhA->do($stmtA);
-				$dbhP=$dbhA;   $mysql_count='01042';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+			### BEGIN grade random next-agent-call routing ###
+			if ($CAMP_callorder =~ /grade/)
+				{
+				$stmtA = "LOCK TABLES vicidial_live_agents WRITE;";
+				my $LOCKaffected_rows = $dbhA->do($stmtA);
+					$dbhP=$dbhA;   $mysql_count='01089';   $MEL_aff_rows=$LOCKaffected_rows;   &mysql_error_logging;
+
+				@GRADEuser=@MT;
+				@GRADEgrade=@MT;
+				@userGRADEarray=@MT;
+				$stmtA = "SELECT user,campaign_grade from vicidial_live_agents WHERE status='READY' and lead_id<1 and ring_callerid='' and campaign_id='$VDADcampaign' and last_update_time > '$BDtsSQLdate' limit 1000;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					$dbhP=$dbhA;   $mysql_count='01090';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				$gg=0;
+				$ga=0;
+				while ($gg < $sthArows)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$GRADEuser[$gg] =	$aryA[0];
+					$GRADEgrade[$gg] =	$aryA[1];
+					if ($GRADEgrade[$gg] < 1)
+						{$GRADEgrade[$gg] =	1;}
+					$gi=0;
+					while ($gi < $GRADEgrade[$gg]) 
+						{
+						$userGRADEarray[$ga] =	$GRADEuser[$gg];
+					#	print STDERR "     GRADE ENTRY: $userGRADEarray[$ga]|$ga|$gi|$GRADEgrade[$gg]\n";
+						$gi++;
+						$ga++;
+						}
+					$gg++;
+					}
+				$sthA->finish();
+
+				$sthArows=0;
+				$affected_rows=0;
+				if ($ga > 0)
+					{
+					$GRADErandom = int( rand($ga));
+					$userGRADEchosen = $userGRADEarray[$GRADErandom];
+
+					if ($AGILOG) {$agi_string = "GRADE RANDOM: $userGRADEchosen|$GRADErandom|$CAMP_callorder|$gg|$ga|$callerid";   &agi_output;}
+
+					$stmtA = "UPDATE vicidial_live_agents set status='QUEUE',lead_id='$CIDlead_id',uniqueid='$unique_id', channel='$channel', call_server_ip='$VARserver_ip', callerid='$callerid',comments='AUTO' where status='READY' and lead_id<1 and ring_callerid='' and campaign_id='$VDADcampaign' and last_update_time > '$BDtsSQLdate' and user='$userGRADEchosen' limit 1;";
+					$affected_rows = $dbhA->do($stmtA);
+						$dbhP=$dbhA;   $mysql_count='01091';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+					}
+				if ($AGILOG) {$agi_string = "$VDADuser|$VDADgroup_weight|$stmtA|";   &agi_output;}
+
+				$stmtA = "UNLOCK TABLES;";
+				my $LOCKaffected_rows = $dbhA->do($stmtA);
+					$dbhP=$dbhA;   $mysql_count='01092';   $MEL_aff_rows=$LOCKaffected_rows;   &mysql_error_logging;
+				}
+			### END grade random next-agent-call routing ###
+			else
+				{
+				$stmtA = "UPDATE vicidial_live_agents set status='QUEUE',lead_id='$CIDlead_id',uniqueid='$unique_id', channel='$channel', call_server_ip='$VARserver_ip', callerid='$callerid',comments='AUTO' where status='READY' and lead_id<1 and ring_callerid='' and campaign_id='$VDADcampaign' and last_update_time > '$BDtsSQLdate' $agent_call_order limit 1;";
+				$affected_rows = $dbhA->do($stmtA);
+					$dbhP=$dbhA;   $mysql_count='01042';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				}
 
 			if ($AGILOG) {$agi_string = "--    VDAD get agent: |$affected_rows|update of vla table: $VDADcampaign|$VARserver_ip\n|$stmtA|";   &agi_output;}
 			if ($affected_rows > 0)

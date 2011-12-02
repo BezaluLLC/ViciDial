@@ -42,6 +42,7 @@
 # 110304-0007 - Added agent on-hook compatibility
 # 110626-0030 - Added queuemetrics_pe_phone_append
 # 110707-1342 - Added last_inbound_call_time to next agent call options for inbound
+# 111201-1428 - Added grade-random next-agent-call option for inbound
 #
 
 ### begin parsing run-time options ###
@@ -676,7 +677,7 @@ while($one_day_interval > 0)
 							}
 						}
 					}
-				##### If there are selected inbound/closer groups, gather in-group rankings and insert/update if needed
+				##### If there are selected inbound/closer groups, gather in-group rankings/gradings and insert/update if needed
 				@TEMPingroups=@MT;
 				$TEMPagentINGROUPS='';
 				if (length($DBremote_closer[$h]) > 1)
@@ -699,7 +700,7 @@ while($one_day_interval > 0)
 							$TEMPexistsVLIA=0;
 							# grab the group weight and calls today of the agent in each in-group
 							$DBuser_level[$h]='1';
-							$stmtA = "SELECT group_weight,calls_today FROM vicidial_inbound_group_agents where user='$DBuser_start[$h]' and group_id='$TEMPingroups[$s]';";
+							$stmtA = "SELECT group_weight,calls_today,group_grade FROM vicidial_inbound_group_agents where user='$DBuser_start[$h]' and group_id='$TEMPingroups[$s]';";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArowsVIGA=$sthA->rows;
@@ -708,10 +709,11 @@ while($one_day_interval > 0)
 								@aryA = $sthA->fetchrow_array;
 								$TEMPagentWEIGHT =	$aryA[0];
 								$TEMPagentCALLS =	$aryA[1];
+								$TEMPagentGRADE =	$aryA[2];
 								}
 							$sthA->finish();
 
-							$stmtA = "SELECT count(*) FROM vicidial_live_inbound_agents where user='$DBremote_user[$h]' and group_id='$TEMPingroups[$s]' and group_weight='$TEMPagentWEIGHT';";
+							$stmtA = "SELECT count(*) FROM vicidial_live_inbound_agents where user='$DBremote_user[$h]' and group_id='$TEMPingroups[$s]' and group_weight='$TEMPagentWEIGHT' and group_grade='$TEMPagentGRADE';";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArowsVLIA=$sthA->rows;
@@ -728,7 +730,7 @@ while($one_day_interval > 0)
 
 							if ($TEMPexistsVLIA < 1)
 								{
-								$stmtA = "INSERT IGNORE INTO vicidial_live_inbound_agents SET user='$DBremote_user[$h]', group_id='$TEMPingroups[$s]', group_weight='$TEMPagentWEIGHT', calls_today='$TEMPagentCALLS', last_call_time='$SQLdate', last_call_finish='$SQLdate' ON DUPLICATE KEY UPDATE group_weight='$TEMPagentWEIGHT';";
+								$stmtA = "INSERT IGNORE INTO vicidial_live_inbound_agents SET user='$DBremote_user[$h]', group_id='$TEMPingroups[$s]', group_weight='$TEMPagentWEIGHT', calls_today='$TEMPagentCALLS', last_call_time='$SQLdate', last_call_finish='$SQLdate', group_grade='$TEMPagentGRADE' ON DUPLICATE KEY UPDATE group_weight='$TEMPagentWEIGHT',group_grade='$TEMPagentGRADE';";
 								$affected_rows = $dbhA->do($stmtA);
 								if ( ($DBX) && ($affected_rows > 0) ) {print STDERR "$DBremote_user[$h] VLIA UPDATE: $affected_rows|$TEMPingroups[$s]|$TEMPagentWEIGHT\n";}
 

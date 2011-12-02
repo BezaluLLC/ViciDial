@@ -170,6 +170,7 @@
 # 110923-1133 - Added drop and after-hours to callmenu, and added action transfer cid setting
 # 111102-2014 - Added in-group max_calls_ feature
 # 111116-0157 - Added ALT and ADDR3 methods for CIDLOOKUP
+# 111201-1457 - Added grade-random next-agent-call option for inbound
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -181,7 +182,7 @@ $wait_prompt_runs=0;
 $at='@';
 $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=189;
+$mysql_log_count=191;
 $one_mysql_log=0;
 
 
@@ -2002,6 +2003,8 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 	if ($CAMP_callorder =~ /campaign_rank/i)		{$agent_call_order = 'order by campaign_weight desc,last_call_finish';}
 	if ($CAMP_callorder =~ /fewest_calls_campaign/i) {$agent_call_order = 'order by vicidial_live_agents.calls_today,vicidial_live_agents.last_call_finish';}
 	if ($CAMP_callorder =~ /inbound_group_rank/i)	{$aco_sub=1;	$agent_call_order = 'order by group_weight desc,vicidial_live_inbound_agents.last_call_finish';}
+	if ($CAMP_callorder =~ /ingroup_grade_random/i)	{$aco_sub=1;	$agent_call_order = 'order by random_id';}
+	if ($CAMP_callorder =~ /campaign_grade_random/i) {$aco_sub=1;	$agent_call_order = 'order by random_id';}
 	if ($CAMP_callorder =~ /fewest_calls$/i)		{$aco_sub=1;	$agent_call_order = 'order by vicidial_live_inbound_agents.calls_today,vicidial_live_inbound_agents.last_call_finish';}
 	if ($CAMP_callorder =~ /ring_all$/i)			{$aco_sub=0;	$agent_call_order = 'order by vicidial_live_agents.last_state_change';}
 
@@ -2164,26 +2167,99 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						{$sthArows=0;}
 					else
 						{
-						$stmtA = "SELECT vicidial_live_agents.conf_exten,vicidial_live_agents.user,vicidial_live_agents.extension,vicidial_live_agents.server_ip,vicidial_live_inbound_agents.group_weight,ra_user,vicidial_live_agents.campaign_id,on_hook_agent,on_hook_ring_time from vicidial_live_agents, vicidial_live_inbound_agents WHERE vicidial_live_agents.user=vicidial_live_inbound_agents.user and status IN('CLOSER','READY') and lead_id<1 $ADUfindSQL and vicidial_live_inbound_agents.group_id='$channel_group' and last_update_time > '$BDtsSQLdate' and vicidial_live_agents.user NOT IN($ring_no_answer_agents$vlia_users) and ring_callerid='' $qp_groupWAIT_camp_SQL $agent_call_order limit 1;";
-						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-						$sthArows=$sthA->rows;
-							$dbhP=$dbhA;   $mysql_count='02058';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-						if ($sthArows > 0)
+						### BEGIN grade random next-agent-call routing ###
+						if ($CAMP_callorder =~ /grade/)
 							{
-							@aryA = $sthA->fetchrow_array;
-							$VDADconf_exten =			$aryA[0];
-							$VDADuser =					$aryA[1];
-							$VDADextension =			$aryA[2];
-							$VDADserver_ip =			$aryA[3];
-							$VDADgroup_weight =			$aryA[4];
-							$ra_user =					$aryA[5];
-							$log_campaign =				$aryA[6];
-							$VDADon_hook_agent =		$aryA[7];
-							$VDADon_hook_ring_time =	$aryA[8];
+							@GRADEuser=@MT;
+							@GRADEgrade=@MT;
+							@userGRADEarray=@MT;
+							$stmtA = "SELECT vicidial_live_agents.user,vicidial_live_inbound_agents.group_grade,vicidial_live_agents.campaign_grade from vicidial_live_agents, vicidial_live_inbound_agents WHERE vicidial_live_agents.user=vicidial_live_inbound_agents.user and status IN('CLOSER','READY') and lead_id<1 $ADUfindSQL and vicidial_live_inbound_agents.group_id='$channel_group' and last_update_time > '$BDtsSQLdate' and vicidial_live_agents.user NOT IN($ring_no_answer_agents$vlia_users) and ring_callerid='' $qp_groupWAIT_camp_SQL limit 1000;";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+								$dbhP=$dbhA;   $mysql_count='02190';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+							$gg=0;
+							$ga=0;
+							while ($gg < $sthArows)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$GRADEuser[$gg] =	$aryA[0];
+								if ($CAMP_callorder =~ /ingroup_grade_random/)
+									{$GRADEgrade[$gg] =		$aryA[1];}
+								else
+									{$GRADEgrade[$gg] =		$aryA[2];}
+								if ($GRADEgrade[$gg] < 1)
+									{$GRADEgrade[$gg] =	1;}
+								$gi=0;
+								while ($gi < $GRADEgrade[$gg]) 
+									{
+									$userGRADEarray[$ga] =	$GRADEuser[$gg];
+								#	print STDERR "     GRADE ENTRY: $userGRADEarray[$ga]|$ga|$gi|$GRADEgrade[$gg]\n";
+									$gi++;
+									$ga++;
+									}
+								$gg++;
+								}
+							$sthA->finish();
+
+							$sthArows=0;
+							if ($ga > 0)
+								{
+								$GRADErandom = int( rand($ga));
+								$userGRADEchosen = $userGRADEarray[$GRADErandom];
+
+								if ($AGILOG) {$agi_string = "GRADE RANDOM: $userGRADEchosen|$GRADErandom|$CAMP_callorder|$gg|$ga|$callerid";   &agi_output;}
+
+								$stmtA = "SELECT vicidial_live_agents.conf_exten,vicidial_live_agents.user,vicidial_live_agents.extension,vicidial_live_agents.server_ip,vicidial_live_inbound_agents.group_weight,ra_user,vicidial_live_agents.campaign_id,on_hook_agent,on_hook_ring_time,vicidial_live_inbound_agents.group_grade,vicidial_live_agents.campaign_grade from vicidial_live_agents, vicidial_live_inbound_agents WHERE vicidial_live_agents.user='$userGRADEchosen' limit 1;";
+								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+								$sthArows=$sthA->rows;
+									$dbhP=$dbhA;   $mysql_count='02191';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+								if ($sthArows > 0)
+									{
+									@aryA = $sthA->fetchrow_array;
+									$VDADconf_exten =			$aryA[0];
+									$VDADuser =					$aryA[1];
+									$VDADextension =			$aryA[2];
+									$VDADserver_ip =			$aryA[3];
+									$VDADgroup_weight =			$aryA[4];
+									$ra_user =					$aryA[5];
+									$log_campaign =				$aryA[6];
+									$VDADon_hook_agent =		$aryA[7];
+									$VDADon_hook_ring_time =	$aryA[8];
+									$group_grade =				$aryA[9];
+									$campaign_grade =			$aryA[10];
+									}
+								$sthA->finish();
+								}
+							if ($AGILOG) {$agi_string = "$VDADuser|$VDADgroup_weight|$stmtA|";   &agi_output;}
 							}
-						$sthA->finish();
-						if ($AGILOG) {$agi_string = "$VDADuser|$VDADgroup_weight|$stmtA|";   &agi_output;}
+						### END grade random next-agent-call routing ###
+						else
+							{
+							$stmtA = "SELECT vicidial_live_agents.conf_exten,vicidial_live_agents.user,vicidial_live_agents.extension,vicidial_live_agents.server_ip,vicidial_live_inbound_agents.group_weight,ra_user,vicidial_live_agents.campaign_id,on_hook_agent,on_hook_ring_time,vicidial_live_inbound_agents.group_grade,vicidial_live_agents.campaign_grade from vicidial_live_agents, vicidial_live_inbound_agents WHERE vicidial_live_agents.user=vicidial_live_inbound_agents.user and status IN('CLOSER','READY') and lead_id<1 $ADUfindSQL and vicidial_live_inbound_agents.group_id='$channel_group' and last_update_time > '$BDtsSQLdate' and vicidial_live_agents.user NOT IN($ring_no_answer_agents$vlia_users) and ring_callerid='' $qp_groupWAIT_camp_SQL $agent_call_order limit 1;";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+								$dbhP=$dbhA;   $mysql_count='02058';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$VDADconf_exten =			$aryA[0];
+								$VDADuser =					$aryA[1];
+								$VDADextension =			$aryA[2];
+								$VDADserver_ip =			$aryA[3];
+								$VDADgroup_weight =			$aryA[4];
+								$ra_user =					$aryA[5];
+								$log_campaign =				$aryA[6];
+								$VDADon_hook_agent =		$aryA[7];
+								$VDADon_hook_ring_time =	$aryA[8];
+								$group_grade =				$aryA[9];
+								$campaign_grade =			$aryA[10];
+								}
+							$sthA->finish();
+							if ($AGILOG) {$agi_string = "$VDADuser|$VDADgroup_weight|$stmtA|";   &agi_output;}
+							}
 						}
 					### END in-group-rank-based next-agent-call processing ###
 					}

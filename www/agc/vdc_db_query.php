@@ -300,10 +300,11 @@
 # 111021-1707 - Added callback_hours_block feature
 # 111024-1238 - Added callback_list_calltime option
 # 111114-0035 - Added qm-dispo-code field to updatedispo function
+# 111201-1443 - Added group_grade option
 #
 
-$version = '2.4-200';
-$build = '111114-0035';
+$version = '2.4-201';
+$build = '111201-1443';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=438;
 $one_mysql_log=0;
@@ -1017,7 +1018,7 @@ if ($ACTION == 'regCLOSER')
 			{
 			if (strlen($in_groups[$k])>1)
 				{
-				$stmt="SELECT group_weight,calls_today FROM vicidial_inbound_group_agents where user='$user' and group_id='$in_groups[$k]';";
+				$stmt="SELECT group_weight,calls_today,group_grade FROM vicidial_inbound_group_agents where user='$user' and group_id='$in_groups[$k]';";
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00013',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1025,15 +1026,17 @@ if ($ACTION == 'regCLOSER')
 				if ($viga_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
-					$group_weight = $row[0];
+					$group_weight =	$row[0];
 					$calls_today =	$row[1];
+					$group_grade =	$row[2];
 					}
 				else
 					{
 					$group_weight = 0;
 					$calls_today =	0;
+					$group_grade = 1;
 					}
-				$stmt="INSERT INTO vicidial_live_inbound_agents set user='$user',group_id='$in_groups[$k]',group_weight='$group_weight',calls_today='$calls_today',last_call_time='$NOW_TIME',last_call_finish='$NOW_TIME';";
+				$stmt="INSERT INTO vicidial_live_inbound_agents set user='$user',group_id='$in_groups[$k]',group_weight='$group_weight',calls_today='$calls_today',last_call_time='$NOW_TIME',last_call_finish='$NOW_TIME',group_grade='$group_grade';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00014',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -5850,7 +5853,7 @@ if ($ACTION == 'userLOGout')
 		$vla_delete = mysql_affected_rows($link);
 
 		##### Delete the vicidial_live_inbound_agents records for this session
-		$stmt="DELETE from vicidial_live_inbound_agents where user ='$user';";
+		$stmt="DELETE from vicidial_live_inbound_agents where user='$user';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00131',$user,$server_ip,$session_name,$one_mysql_log);}

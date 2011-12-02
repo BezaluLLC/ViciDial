@@ -1205,3 +1205,15 @@ ALTER TABLE vicidial_live_agents MODIFY external_status VARCHAR(255) default '';
 ALTER TABLE system_settings ADD svn_version VARCHAR(100) default '';
 
 UPDATE system_settings SET db_schema_version='1309',db_schema_update_date=NOW() where db_schema_version < 1309;
+
+ALTER TABLE vicidial_live_agents ADD campaign_grade TINYINT(2) UNSIGNED default '1';
+
+ALTER TABLE vicidial_inbound_group_agents ADD group_grade TINYINT(2) UNSIGNED default '1';
+
+ALTER TABLE vicidial_live_inbound_agents ADD group_grade TINYINT(2) UNSIGNED default '1';
+
+ALTER TABLE vicidial_campaign_agents ADD campaign_grade TINYINT(2) UNSIGNED default '1';
+
+ALTER TABLE vicidial_campaigns MODIFY next_agent_call ENUM('random','oldest_call_start','oldest_call_finish','campaign_rank','overall_user_level','fewest_calls','longest_wait_time','campaign_grade_random') default 'longest_wait_time';
+
+UPDATE system_settings SET db_schema_version='1310',db_schema_update_date=NOW() where db_schema_version < 1310;

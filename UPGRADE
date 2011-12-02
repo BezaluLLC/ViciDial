@@ -771,6 +771,10 @@ OTHER CHANGES:
 
 176. Added new Inbound Daily Report.
 
+177. Added new Grade-Random Next-Agent-Call methods that allow for agents to 
+	have a higher or lower probability of receiving the next call depending
+	on their grade for a specific in-group or campaign.
+
 
 
 

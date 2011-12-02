@@ -3018,12 +3018,13 @@ else
 # 111106-1116 - Many fixes for user_group restrictions
 # 111116-0207 - Added ALT and ADDR3 in-group handle methods
 # 111122-1333 - Added Inbound Daily Report
+# 111201-0939 - Added graded-random next-agent-call option
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-349a';
-$build = '111122-1333';
+$admin_version = '2.4-350a';
+$build = '111201-0939';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3698,7 +3699,7 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 	$campaigns_to_print = mysql_num_rows($rslt);
 	$campaigns_list='';
 	$campaigns_value='';
-	$RANKcampaigns_list="<tr><td>CAMPAIGN</td><td> &nbsp; &nbsp; RANK</td><td> &nbsp; &nbsp; CALLS</td><td ALIGN=CENTER>WEB VARS</td></tr>\n";
+	$RANKcampaigns_list="<tr><td>CAMPAIGN</td><td> &nbsp; &nbsp; RANK</td><td> &nbsp; &nbsp; GRADE</td><td> &nbsp; &nbsp; CALLS</td><td ALIGN=CENTER>WEB VARS</td></tr>\n";
 
 	$o=0;
 	while ($campaigns_to_print > $o)
@@ -3715,18 +3716,19 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 		{
 		$group_web_vars='';
 		$campaign_web='';
-		$stmt="SELECT campaign_rank,calls_today,group_web_vars from vicidial_campaign_agents where user='$user' and campaign_id='$campaign_id_values[$o]' $LOGallowed_campaignsSQL;";
+		$stmt="SELECT campaign_rank,calls_today,group_web_vars,campaign_grade from vicidial_campaign_agents where user='$user' and campaign_id='$campaign_id_values[$o]' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 		$ranks_to_print = mysql_num_rows($rslt);
 		if ($ranks_to_print > 0)
 			{
 			$row=mysql_fetch_row($rslt);
-			$SELECT_campaign_rank = $row[0];
-			$calls_today =			$row[1];
-			$group_web_vars =		$row[2];
+			$SELECT_campaign_rank =		$row[0];
+			$calls_today =				$row[1];
+			$group_web_vars =			$row[2];
+			$SELECT_campaign_grade =	$row[3];
 			}
 		else
-			{$calls_today=0;   $SELECT_campaign_rank=0;   $group_web_vars='';}
+			{$calls_today=0;   $SELECT_campaign_rank=0;   $SELECT_campaign_grade=1;   $group_web_vars='';}
 		if ( ($ADD=="4A") or ($ADD=="4B") )
 			{
 			$stmt_grp_values='';
@@ -3734,30 +3736,37 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 				elseif (isset($_POST["RANK_$campaign_id_values[$o]"]))	{$campaign_rank=$_POST["RANK_$campaign_id_values[$o]"];}
 			if (isset($_GET["WEB_$campaign_id_values[$o]"]))			{$campaign_web=$_GET["WEB_$campaign_id_values[$o]"];}
 				elseif (isset($_POST["WEB_$campaign_id_values[$o]"]))	{$campaign_web=$_POST["WEB_$campaign_id_values[$o]"];}
+			if (isset($_GET["GRADE_$campaign_id_values[$o]"]))			{$campaign_grade=$_GET["GRADE_$campaign_id_values[$o]"];}
+				elseif (isset($_POST["GRADE_$campaign_id_values[$o]"]))	{$campaign_grade=$_POST["GRADE_$campaign_id_values[$o]"];}
 			if ($non_latin < 1)
 				{
 				$campaign_rank = ereg_replace("[^-\_0-9]","",$campaign_rank);
 				$campaign_web = preg_replace("/;|\"|\'/","",$campaign_web);
+				$campaign_grade = ereg_replace("[^-\_0-9]","",$campaign_grade);
 				}
 
 			if ($ranks_to_print > 0)
 				{
-				$stmt="UPDATE vicidial_campaign_agents set campaign_rank='$campaign_rank', campaign_weight='$campaign_rank', group_web_vars='$campaign_web' where campaign_id='$campaign_id_values[$o]' and user='$user';";
+				$stmt="UPDATE vicidial_campaign_agents set campaign_rank='$campaign_rank', campaign_weight='$campaign_rank', group_web_vars='$campaign_web',campaign_grade='$campaign_grade' where campaign_id='$campaign_id_values[$o]' and user='$user';";
 				$rslt=mysql_query($stmt, $link);
 				$stmt_grp_values .= "$stmt|";
 				}
 			else
 				{
-				$stmt="INSERT INTO vicidial_campaign_agents set campaign_rank='$campaign_rank', campaign_weight='$campaign_rank', campaign_id='$campaign_id_values[$o]', user='$user', group_web_vars='$campaign_web';";
+				$stmt="INSERT INTO vicidial_campaign_agents set campaign_rank='$campaign_rank', campaign_weight='$campaign_rank', campaign_id='$campaign_id_values[$o]', user='$user', group_web_vars='$campaign_web',campaign_grade='$campaign_grade';";
 				$rslt=mysql_query($stmt, $link);
 				$stmt_grp_values .= "$stmt|";
 				}
 
-			$stmt="UPDATE vicidial_live_agents set campaign_weight='$campaign_rank' where campaign_id='$campaign_id_values[$o]' and user='$user';";
+			$stmt="UPDATE vicidial_live_agents set campaign_weight='$campaign_rank',campaign_grade='$campaign_grade' where campaign_id='$campaign_id_values[$o]' and user='$user';";
 			$rslt=mysql_query($stmt, $link);
 			$stmt_grp_values .= "$stmt|";
 			}
-		else {$campaign_rank = $SELECT_campaign_rank;}
+		else 
+			{
+			$campaign_rank = $SELECT_campaign_rank;
+			$campaign_grade = $SELECT_campaign_grade;
+			}
 
 		if (eregi("1$|3$|5$|7$|9$", $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
@@ -3777,16 +3786,16 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 		$allowed_campaigns = preg_replace("/ -$/","",$allowed_campaigns);
 		$UGcampaigns = explode(" ", $allowed_campaigns);
 
-		$p=0;   $RANK_camp_active=0;   $CR_disabled = '';
+		$p=0;   $RANK_camp_active=0;   $GRADE_camp_active=0;   $CR_disabled = '';
 		if (eregi('-ALL-CAMPAIGNS-',$allowed_campaigns))
-			{$RANK_camp_active++;}
+			{$RANK_camp_active++;   $GRADE_camp_active++;}
 		else
 			{
 			$UGcampaign_ct = count($UGcampaigns);
 			while ($p < $UGcampaign_ct)
 				{
 				if ($campaign_id_values[$o] == $UGcampaigns[$p]) 
-					{$RANK_camp_active++;}
+					{$RANK_camp_active++;   $GRADE_camp_active++;}
 				$p++;
 				}
 			}
@@ -3795,12 +3804,25 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 		$RANKcampaigns_list .= "<tr $bgcolor><td>";
 		$campaigns_list .= "<a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id_values[$o]\">$campaign_id_values[$o]</a> - $campaign_name_values[$o] <BR>\n";
 		$RANKcampaigns_list .= "<a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id_values[$o]\">$campaign_id_values[$o]</a> - $campaign_name_values[$o] </td>";
-		$RANKcampaigns_list .= "<td> &nbsp; &nbsp; <select size=1 name=RANK_$campaign_id_values[$o] $CR_disabled>\n";
+		$RANKcampaigns_list .= "<td> &nbsp; <select size=1 name=RANK_$campaign_id_values[$o] $CR_disabled>\n";
 		$h="9";
 		while ($h>=-9)
 			{
 			$RANKcampaigns_list .= "<option value=\"$h\"";
 			if ($h==$campaign_rank)
+				{$RANKcampaigns_list .= " SELECTED";}
+			$RANKcampaigns_list .= ">$h</option>";
+			$h--;
+			}
+		if ( (strlen($campaign_web) < 1) and (strlen($group_web_vars) > 0) )
+			{$campaign_web=$group_web_vars;}
+		$RANKcampaigns_list .= "</select></td>\n";
+		$RANKcampaigns_list .= "<td> &nbsp; <select size=1 name=GRADE_$campaign_id_values[$o] $CR_disabled>\n";
+		$h="10";
+		while ($h>=1)
+			{
+			$RANKcampaigns_list .= "<option value=\"$h\"";
+			if ($h==$campaign_grade)
 				{$RANKcampaigns_list .= " SELECTED";}
 			$RANKcampaigns_list .= ">$h</option>";
 			$h--;
@@ -3873,7 +3895,7 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 	$groups_list='';
 	$groups_value='';
 	$XFERgroups_list='';
-	$RANKgroups_list="<tr><td>INBOUND GROUP</td><td> &nbsp; &nbsp; RANK</td><td> &nbsp; &nbsp; CALLS</td><td ALIGN=CENTER>WEB VARS</td></tr>\n";
+	$RANKgroups_list="<tr><td>INBOUND GROUP</td><td> &nbsp; &nbsp; RANK</td><td> &nbsp; &nbsp; GRADE</td><td> &nbsp; &nbsp; CALLS</td><td ALIGN=CENTER>WEB VARS</td></tr>\n";
 
 	$o=0;
 	while ($groups_to_print > $o)
@@ -3889,7 +3911,7 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 		{
 		$group_web_vars='';
 		$group_web='';
-		$stmt="SELECT group_rank,calls_today,group_web_vars from vicidial_inbound_group_agents where user='$user' and group_id='$group_id_values[$o]';";
+		$stmt="SELECT group_rank,calls_today,group_web_vars,group_grade from vicidial_inbound_group_agents where user='$user' and group_id='$group_id_values[$o]';";
 		$rslt=mysql_query($stmt, $link);
 		$ranks_to_print = mysql_num_rows($rslt);
 		if ($ranks_to_print > 0)
@@ -3898,40 +3920,48 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 			$SELECT_group_rank =	$row[0];
 			$calls_today =			$row[1];
 			$group_web_vars =		$row[2];
+			$SELECT_group_grade =	$row[3];
 			}
 		else
-			{$calls_today=0;   $SELECT_group_rank=0;}
+			{$calls_today=0;   $SELECT_group_rank=0;   $SELECT_group_grade=1;}
 		if ( ($ADD=="4A") or ($ADD=="4B") )
 			{
 			if (isset($_GET["RANK_$group_id_values[$o]"]))			{$group_rank=$_GET["RANK_$group_id_values[$o]"];}
 				elseif (isset($_POST["RANK_$group_id_values[$o]"]))	{$group_rank=$_POST["RANK_$group_id_values[$o]"];}
 			if (isset($_GET["WEB_$group_id_values[$o]"]))			{$group_web=$_GET["WEB_$group_id_values[$o]"];}
 				elseif (isset($_POST["WEB_$group_id_values[$o]"]))	{$group_web=$_POST["WEB_$group_id_values[$o]"];}
+			if (isset($_GET["GRADE_$group_id_values[$o]"]))				{$group_grade=$_GET["GRADE_$group_id_values[$o]"];}
+				elseif (isset($_POST["GRADE_$group_id_values[$o]"]))	{$group_grade=$_POST["GRADE_$group_id_values[$o]"];}
 
 			if ($non_latin < 1)
 				{
 				$group_rank = ereg_replace("[^-\_0-9]","",$group_rank);
 				$group_web = preg_replace("/;|\"|\'/","",$group_web);
+				$group_grade = ereg_replace("[^-\_0-9]","",$group_grade);
 				}
 
 			if ($ranks_to_print > 0)
 				{
-				$stmt="UPDATE vicidial_inbound_group_agents set group_rank='$group_rank', group_weight='$group_rank', group_web_vars='$group_web' where group_id='$group_id_values[$o]' and user='$user';";
+				$stmt="UPDATE vicidial_inbound_group_agents set group_rank='$group_rank', group_weight='$group_rank', group_web_vars='$group_web', group_grade='$group_grade' where group_id='$group_id_values[$o]' and user='$user';";
 				$rslt=mysql_query($stmt, $link);
 				$stmt_grp_values .= "$stmt|";
 				}
 			else
 				{
-				$stmt="INSERT INTO vicidial_inbound_group_agents set group_rank='$group_rank', group_weight='$group_rank', group_id='$group_id_values[$o]', user='$user', group_web_vars='$group_web';";
+				$stmt="INSERT INTO vicidial_inbound_group_agents set group_rank='$group_rank', group_weight='$group_rank', group_id='$group_id_values[$o]', user='$user', group_web_vars='$group_web', group_grade='$group_grade';";
 				$rslt=mysql_query($stmt, $link);
 				$stmt_grp_values .= "$stmt|";
 				}
 
-			$stmt="UPDATE vicidial_live_inbound_agents set group_weight='$group_rank' where group_id='$group_id_values[$o]' and user='$user';";
+			$stmt="UPDATE vicidial_live_inbound_agents set group_weight='$group_rank', group_grade='$group_grade' where group_id='$group_id_values[$o]' and user='$user';";
 			$rslt=mysql_query($stmt, $link);
 			$stmt_grp_values .= "$stmt|";
 			}
-		else {$group_rank = $SELECT_group_rank;}
+		else 
+			{
+			$group_rank = $SELECT_group_rank;
+			$group_grade = $SELECT_group_grade;
+			}
 
 		if (eregi("1$|3$|5$|7$|9$", $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
@@ -3972,12 +4002,25 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 		$groups_list .= "> <a href=\"$PHP_SELF?ADD=3111&group_id=$group_id_values[$o]\">$group_id_values[$o]</a> - $group_name_values[$o] - $VIG_priority <BR>\n";
 		$XFERgroups_list .= "> <a href=\"$PHP_SELF?ADD=3111&group_id=$group_id_values[$o]\">$group_id_values[$o]</a> - $group_name_values[$o] <BR>\n";
 		$RANKgroups_list .= "> <a href=\"$PHP_SELF?ADD=3111&group_id=$group_id_values[$o]\">$group_id_values[$o]</a> - $group_name_values[$o] </td>";
-		$RANKgroups_list .= "<td> &nbsp; &nbsp; <select size=1 name=RANK_$group_id_values[$o]>\n";
+		$RANKgroups_list .= "<td> &nbsp; <select size=1 name=RANK_$group_id_values[$o]>\n";
 		$h="9";
 		while ($h>=-9)
 			{
 			$RANKgroups_list .= "<option value=\"$h\"";
 			if ($h==$group_rank)
+				{$RANKgroups_list .= " SELECTED";}
+			$RANKgroups_list .= ">$h</option>";
+			$h--;
+			}
+		if ( (strlen($group_web) < 1) and (strlen($group_web_vars) > 0) )
+			{$group_web=$group_web_vars;}
+		$RANKgroups_list .= "</select></td>\n";
+		$RANKgroups_list .= "<td> &nbsp; <select size=1 name=GRADE_$group_id_values[$o]>\n";
+		$h="10";
+		while ($h>=1)
+			{
+			$RANKgroups_list .= "<option value=\"$h\"";
+			if ($h==$group_grade)
 				{$RANKgroups_list .= " SELECTED";}
 			$RANKgroups_list .= ">$h</option>";
 			$h--;
@@ -4306,9 +4349,9 @@ if ($ADD==99999)
 	<B>Preset Contact Search -</B> If the user is logged into a campaign that has Transfer Presets set to CONTACTS, then this setting can disable contact searching for this user only. Default is NOT_ACTIVE which will use whatever the campaign setting is.
 
 	<BR>
-	<A NAME="vicidial_users-vicidial_users-campaign_ranks">
+	<A NAME="vicidial_users-campaign_ranks">
 	<BR>
-	<B>Campaign Ranks -</B> In this section you can define the rank an agent will have for each campaign. These ranks can be used to allow for preferred call routing when Next Agent Call is set to campaign_rank. Also in this section are the WEB VARs for each campaign. These allow each agent to have a different variable string that can be added to the WEB FORM or SCRIPT tab URLs by simply putting --A--web_vars--B-- as you would put any other field.
+	<B>Campaign Ranks -</B> In this section you can define the rank an agent will have for each campaign. These ranks can be used to allow for preferred call routing when Next Agent Call is set to campaign_rank. Also in this section are the WEB VARs for each campaign. These allow each agent to have a different variable string that can be added to the WEB FORM or SCRIPT tab URLs by simply putting --A--web_vars--B-- as you would put any other field. Another field in this section is GRADE, which allows for the campaign_grade_random Next Agent Call setting to be used. This grade setting will increase or decrease the probability that the agent will receive the call.
 
 	<BR>
 	<A NAME="vicidial_users-closer_campaigns">
@@ -5057,6 +5100,7 @@ if ($ADD==99999)
 	 <BR> &nbsp; - oldest_call_finish: orders by the last time an agent finished a call. AKA agent waiting longest receives first call.
 	 <BR> &nbsp; - overall_user_level: orders by the user_level of the agent as defined in the vicidial_users table a higher user_level will receive more calls.
 	 <BR> &nbsp; - campaign_rank: orders by the rank given to the agent for the campaign. Highest to Lowest.
+	 <BR> &nbsp; - campaign_grade_random: gives a higher probability of getting a call to the higher graded agents.
 	 <BR> &nbsp; - fewest_calls: orders by the number of calls received by an agent for that specific inbound group. Least calls first.
 	 <BR> &nbsp; - longest_wait_time: orders by the amount of time agent has been actively waiting for a call.
 
@@ -5698,8 +5742,10 @@ if ($ADD==99999)
 	 <BR> &nbsp; - oldest_inbound_call_finish: orders by the last time an agent finished an inbound call. AKA agent waiting longest receives first call.
 	 <BR> &nbsp; - overall_user_level: orders by the user_level of the agent as defined in the vicidial_users table a higher user_level will receive more calls.
 	 <BR> &nbsp; - inbound_group_rank: orders by the rank given to the agent for the specific inbound group. Highest to Lowest.
-	 <BR> &nbsp; - fewest_calls: orders by the number of calls received by an agent for that specific inbound group. Least calls first.
 	 <BR> &nbsp; - campaign_rank: orders by the rank given to the agent for the campaign. Highest to Lowest.
+	 <BR> &nbsp; - ingroup_grade_random: gives a higher probability of getting a call to the higher graded agents by in-group.
+	 <BR> &nbsp; - campaign_grade_random: gives a higher probability of getting a call to the higher graded agents by campaign.
+	 <BR> &nbsp; - fewest_calls: orders by the number of calls received by an agent for that specific inbound group. Least calls first.
 	 <BR> &nbsp; - fewest_calls_campaign: orders by the number of calls received by an agent for the campaign. Least calls first.
 	 <BR> &nbsp; - longest_wait_time: orders by the amount of time agent has been actively waiting for a call.
 	 <BR> &nbsp; - ring_all: rings all available agents until one picks up the phone.
@@ -8954,7 +9000,7 @@ if ($ADD==11)
 				}
 			echo "<option>$adl</option></select>(0 = off)$NWB#vicidial_campaigns-auto_dial_level$NWE</td></tr>\n";
 			}
-		echo "<tr bgcolor=#B6D3FC><td align=right>Next Agent Call: </td><td align=left><select size=1 name=next_agent_call><option >random</option><option>oldest_call_start</option><option>oldest_call_finish</option><option>overall_user_level</option><option>campaign_rank</option><option>fewest_calls</option><option>longest_wait_time</option></select>$NWB#vicidial_campaigns-next_agent_call$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Next Agent Call: </td><td align=left><select size=1 name=next_agent_call><option >random</option><option>oldest_call_start</option><option>oldest_call_finish</option><option>overall_user_level</option><option>campaign_rank</option><option>campaign_grade_random</option><option>fewest_calls</option><option>longest_wait_time</option></select>$NWB#vicidial_campaigns-next_agent_call$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Local Call Time: </td><td align=left><select size=1 name=local_call_time>";
 		echo "$call_times_list";
 		echo "</select>$NWB#vicidial_campaigns-local_call_time$NWE</td></tr>\n";
@@ -9424,7 +9470,7 @@ if ($ADD==1111)
 		echo "</select>$NWB#vicidial_inbound_groups-user_group$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Web Form: </td><td align=left><input type=text name=web_form_address size=70 maxlength=9999 value=\"$web_form_address\">$NWB#vicidial_inbound_groups-web_form_address$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail: </td><td align=left><input type=text name=voicemail_ext size=10 maxlength=10 value=\"$voicemail_ext\">$NWB#vicidial_inbound_groups-voicemail_ext$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Next Agent Call: </td><td align=left><select size=1 name=next_agent_call><option >random</option><option>oldest_call_start</option><option>oldest_call_finish</option><option>oldest_inbound_call_start</option><option>oldest_inbound_call_finish</option><option>overall_user_level</option><option>inbound_group_rank</option><option>campaign_rank</option><option>fewest_calls</option><option>fewest_calls_campaign</option><option>longest_wait_time</option><option>ring_all</option></select>$NWB#vicidial_inbound_groups-next_agent_call$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Next Agent Call: </td><td align=left><select size=1 name=next_agent_call><option >random</option><option>oldest_call_start</option><option>oldest_call_finish</option><option>oldest_inbound_call_start</option><option>oldest_inbound_call_finish</option><option>overall_user_level</option><option>inbound_group_rank</option><option>campaign_rank</option><option>ingroup_grade_random</option><option>campaign_grade_random</option><option>fewest_calls</option><option>fewest_calls_campaign</option><option>longest_wait_time</option><option>ring_all</option></select>$NWB#vicidial_inbound_groups-next_agent_call$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Fronter Display: </td><td align=left><select size=1 name=fronter_display><option SELECTED>Y</option><option>N</option></select>$NWB#vicidial_inbound_groups-fronter_display$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Script: </td><td align=left><select size=1 name=script_id>\n";
 		echo "$scripts_list";
@@ -19947,12 +19993,12 @@ if ($ADD==3)
 				echo "<tr bgcolor=#B6D3FC><td align=right>Preset Contact Search: </td><td align=left><select size=1 name=preset_contact_search><option>NOT_ACTIVE</option><option>DISABLED</option><option SELECTED>$preset_contact_search</option></select>$NWB#vicidial_users-preset_contact_search$NWE</td></tr>\n";
 
 				echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>Campaign Ranks: $NWB#vicidial_users-campaign_ranks$NWE<BR>\n";
-				echo "<table border=0>\n";
+				echo "<table border=0 width=850>\n";
 				echo "$RANKcampaigns_list";
 				echo "</table>\n";
 				echo "</td></tr>\n";
 				echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>Inbound Groups: $NWB#vicidial_users-closer_campaigns$NWE<BR>\n";
-				echo "<table border=0>\n";
+				echo "<table border=0 width=850>\n";
 				echo "$RANKgroups_list";
 				echo "</table>\n";
 				echo "</td></tr>\n";
@@ -21024,7 +21070,7 @@ if ($ADD==31)
 			echo "<tr bgcolor=#B6D3FC><td align=right>Auto Alt-Number Dialing: </td><td align=left><select size=1 name=auto_alt_dial><option >NONE</option><option>ALT_ONLY</option><option>ADDR3_ONLY</option><option>ALT_AND_ADDR3</option><option>ALT_AND_EXTENDED</option><option>ALT_AND_ADDR3_AND_EXTENDED</option><option>EXTENDED_ONLY</option><option>MULTI_LEAD</option><option SELECTED>$auto_alt_dial</option></select>$NWB#vicidial_campaigns-auto_alt_dial$NWE $ALTmultiLINK</td></tr>\n";
 			}
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Next Agent Call: </td><td align=left><select size=1 name=next_agent_call><option >random</option><option>oldest_call_start</option><option>oldest_call_finish</option><option>overall_user_level</option><option>campaign_rank</option><option>fewest_calls</option><option>longest_wait_time</option><option SELECTED>$next_agent_call</option></select>$NWB#vicidial_campaigns-next_agent_call$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Next Agent Call: </td><td align=left><select size=1 name=next_agent_call><option >random</option><option>oldest_call_start</option><option>oldest_call_finish</option><option>overall_user_level</option><option>campaign_rank</option><option>campaign_grade_random</option><option>fewest_calls</option><option>longest_wait_time</option><option SELECTED>$next_agent_call</option></select>$NWB#vicidial_campaigns-next_agent_call$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=311111111&call_time_id=$local_call_time\">Local Call Time: </a></td><td align=left><select size=1 name=local_call_time>\n";
 		echo "$call_times_list";
@@ -23072,10 +23118,10 @@ if ($ADD==34)
 		### list of agent rank or skill-level for this campaign
 		echo "<center>\n";
 		echo "<br><b>AGENT RANKS FOR THIS CAMPAIGN:</b><br>\n";
-		echo "<TABLE width=500 cellspacing=3>\n";
-		echo "<tr><td>USER</td><td> &nbsp; &nbsp; RANK</td><td> &nbsp; &nbsp; CALLS TODAY</td></tr>\n";
+		echo "<TABLE width=600 cellspacing=3>\n";
+		echo "<tr><td>USER</td><td> &nbsp; &nbsp; RANK</td><td> &nbsp; &nbsp; GRADE</td><td> &nbsp; &nbsp; CALLS TODAY</td></tr>\n";
 
-		$stmt="SELECT vu.user,vca.campaign_rank,vca.calls_today,full_name from vicidial_campaign_agents vca, vicidial_users vu where campaign_id='$campaign_id' and active='Y' and vu.user=vca.user $LOGadmin_viewable_groupsSQL order by vu.user;";
+		$stmt="SELECT vu.user,vca.campaign_rank,vca.calls_today,full_name,vca.campaign_grade from vicidial_campaign_agents vca, vicidial_users vu where campaign_id='$campaign_id' and active='Y' and vu.user=vca.user $LOGadmin_viewable_groupsSQL order by vu.user;";
 		$rsltx=mysql_query($stmt, $link);
 		$users_to_print = mysql_num_rows($rsltx);
 
@@ -23090,7 +23136,7 @@ if ($ADD==34)
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}
 
-			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3&user=$rowx[0]\">$rowx[0]</a> - $rowx[3]</td><td><font size=1>$rowx[1]</td><td><font size=1>$rowx[2]</td></tr>\n";
+			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3&user=$rowx[0]\">$rowx[0]</a> - $rowx[3]</td><td><font size=1>$rowx[1]</td><td><font size=1>$rowx[4]</td><td><font size=1>$rowx[2]</td></tr>\n";
 			}
 
 		echo "</table></center><br>\n";
@@ -24809,7 +24855,7 @@ if ($ADD==3111)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>Web Form Two: </td><td align=left><input type=text name=web_form_address_two size=70 maxlength=9999 value=\"$web_form_address_two\">$NWB#vicidial_inbound_groups-web_form_address$NWE</td></tr>\n";
 			}
-		echo "<tr bgcolor=#B6D3FC><td align=right>Next Agent Call: </td><td align=left><select size=1 name=next_agent_call><option >random</option><option>oldest_call_start</option><option>oldest_call_finish</option><option>oldest_inbound_call_start</option><option>oldest_inbound_call_finish</option><option>overall_user_level</option><option>inbound_group_rank</option><option>campaign_rank</option><option>fewest_calls</option><option>fewest_calls_campaign</option><option>longest_wait_time</option><option>ring_all</option><option SELECTED>$next_agent_call</option></select>$NWB#vicidial_inbound_groups-next_agent_call$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Next Agent Call: </td><td align=left><select size=1 name=next_agent_call><option >random</option><option>oldest_call_start</option><option>oldest_call_finish</option><option>oldest_inbound_call_start</option><option>oldest_inbound_call_finish</option><option>overall_user_level</option><option>inbound_group_rank</option><option>campaign_rank</option><option>ingroup_grade_random</option><option>campaign_grade_random</option><option>fewest_calls</option><option>fewest_calls_campaign</option><option>longest_wait_time</option><option>ring_all</option><option SELECTED>$next_agent_call</option></select>$NWB#vicidial_inbound_groups-next_agent_call$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#BDFFBD><td align=right>Queue Priority: </td><td align=left><select size=1 name=queue_priority>\n";
 		$n=99;
@@ -25249,7 +25295,7 @@ if ($ADD==3111)
 		echo "<center>\n";
 		echo "<br><b>AGENT RANKS FOR THIS INBOUND GROUP:</b><br>\n";
 		echo "<TABLE width=600 cellspacing=3>\n";
-		echo "<tr><td>USER</td><td>SELECTED</td><td> &nbsp; &nbsp; RANK</td><td> &nbsp; &nbsp; CALLS TODAY</td></tr>\n";
+		echo "<tr><td>USER</td><td>SELECTED</td><td> &nbsp; &nbsp; RANK</td><td> &nbsp; &nbsp; GRADE</td><td> &nbsp; &nbsp; CALLS TODAY</td></tr>\n";
 
 		$stmt="SELECT user,full_name,closer_campaigns from vicidial_users where active='Y' $LOGadmin_viewable_groupsSQL order by user;";
 		$rsltx=mysql_query($stmt, $link);
@@ -25275,7 +25321,7 @@ if ($ADD==3111)
 		while ($users_to_print > $o) 
 			{
 			$o++;
-			$stmt="SELECT group_rank,calls_today from vicidial_inbound_group_agents where group_id='$group_id' and user='$ARIG_user[$o]';";
+			$stmt="SELECT group_rank,calls_today,group_grade from vicidial_inbound_group_agents where group_id='$group_id' and user='$ARIG_user[$o]';";
 			$rsltx=mysql_query($stmt, $link);
 			$viga_to_print = mysql_num_rows($rsltx);
 			if ($viga_to_print > 0) 
@@ -25283,16 +25329,18 @@ if ($ADD==3111)
 				$rowx=mysql_fetch_row($rsltx);
 				$ARIG_rank[$o] =	$rowx[0];
 				$ARIG_calls[$o] =	$rowx[1];
+				$ARIG_grade[$o] =	$rowx[2];
 				}
 			else
 				{
-				$stmtD="INSERT INTO vicidial_inbound_group_agents set calls_today='0',group_rank='0',group_weight='0',user='$ARIG_user[$o]',group_id='$group_id';";
+				$stmtD="INSERT INTO vicidial_inbound_group_agents set calls_today='0',group_rank='0',group_weight='0',user='$ARIG_user[$o]',group_id='$group_id',group_grade='1';";
 				$rslt=mysql_query($stmtD, $link);
 				if ($DB > 0) {echo "|$stmtD|";}
 				$stmtDlog .= "$stmtD|";
 				$ARIG_changenotes .= "added missing user to viga table $ARIG_user[$o]|";
 				$ARIG_rank[$o] =	'0';
 				$ARIG_calls[$o] =	'0';
+				$ARIG_grade[$o] =	'1';
 				}
 			}
 		if (strlen($ARIG_changenotes) > 10)
@@ -25316,16 +25364,21 @@ if ($ADD==3111)
 
 				$ARIG_checked='';
 				$ARIG_ranked='';
+				$ARIG_graded='';
 
 				$checkbox_field="CHECK_$ARIG_user[$o]$US$group_id";
 				$rank_field="RANK_$ARIG_user[$o]$US$group_id";
+				$grade_field="GRADE_$ARIG_user[$o]$US$group_id";
 
 				if (isset($_GET["$checkbox_field"]))			{$ARIG_checked=$_GET["$checkbox_field"];}
 					elseif (isset($_POST["$checkbox_field"]))	{$ARIG_checked=$_POST["$checkbox_field"];}
 				if (isset($_GET["$rank_field"]))			{$ARIG_ranked=$_GET["$rank_field"];}
 					elseif (isset($_POST["$rank_field"]))	{$ARIG_ranked=$_POST["$rank_field"];}
+				if (isset($_GET["$grade_field"]))			{$ARIG_graded=$_GET["$grade_field"];}
+					elseif (isset($_POST["$grade_field"]))	{$ARIG_graded=$_POST["$grade_field"];}
 				$ARIG_checked = ereg_replace("[^A-Z]","",$ARIG_checked);
 				$ARIG_ranked = ereg_replace("[^-0-9]","",$ARIG_ranked);
+				$ARIG_graded = ereg_replace("[^-0-9]","",$ARIG_graded);
 
 				$stmtA='';
 				$stmtB='';
@@ -25358,6 +25411,14 @@ if ($ADD==3111)
 					$ARIG_updated++;
 					$ARIG_changenotes .= "changed rank from $ARIG_rank[$o] to $ARIG_ranked|";
 					}
+				if ( ($ARIG_graded < $ARIG_grade[$o]) or ($ARIG_graded > $ARIG_grade[$o]) )
+					{
+					$stmtC="UPDATE vicidial_inbound_group_agents set group_grade='$ARIG_graded' where user='$ARIG_user[$o]' and group_id='$group_id';";
+					$rslt=mysql_query($stmtC, $link);
+					if ($DB > 0) {echo "|$stmtC|";}
+					$ARIG_updated++;
+					$ARIG_changenotes .= "changed grade from $ARIG_grade[$o] to $ARIG_graded|";
+					}
 				if ($ARIG_updated > 0)
 					{
 					### LOG INSERTION Admin Log Table ###
@@ -25370,7 +25431,7 @@ if ($ADD==3111)
 					}
 				}
 
-			$stmt="SELECT vu.user,viga.group_rank,calls_today,full_name,closer_campaigns from vicidial_inbound_group_agents viga, vicidial_users vu where group_id='$group_id' and active='Y' and vu.user=viga.user $LOGadmin_viewable_groupsSQL order by vu.user;";
+			$stmt="SELECT vu.user,viga.group_rank,calls_today,full_name,closer_campaigns,viga.group_grade from vicidial_inbound_group_agents viga, vicidial_users vu where group_id='$group_id' and active='Y' and vu.user=viga.user $LOGadmin_viewable_groupsSQL order by vu.user;";
 			$rsltx=mysql_query($stmt, $link);
 			$users_to_print = mysql_num_rows($rsltx);
 
@@ -25385,6 +25446,7 @@ if ($ADD==3111)
 				$ARIG_calls[$o] =	$rowx[2];
 				$ARIG_name[$o] =	$rowx[3];
 				$ARIG_close[$o] =	$rowx[4];
+				$ARIG_grade[$o] =	$rowx[5];
 				$ARIG_check[$o] =	'';
 				if (preg_match("/ $group_id /",$ARIG_close[$o]))
 					{$ARIG_check[$o] = ' CHECKED';}
@@ -25404,6 +25466,7 @@ if ($ADD==3111)
 
 			$checkbox_field="CHECK_$ARIG_user[$o]$US$group_id";
 			$rank_field="RANK_$ARIG_user[$o]$US$group_id";
+			$grade_field="GRADE_$ARIG_user[$o]$US$group_id";
 			$checkbox_list .= "|$checkbox_field";
 			$checkbox_count++;
 
@@ -25415,6 +25478,17 @@ if ($ADD==3111)
 				{
 				$users_output .= "<option value=\"$h\"";
 				if ($h==$ARIG_rank[$o])
+					{$users_output .= " SELECTED";}
+				$users_output .= ">$h</option>";
+				$h--;
+				}
+			$users_output .= "</select></td>\n";
+			$users_output .= "<td><select size=1 name=$grade_field>\n";
+			$h="10";
+			while ($h>=1)
+				{
+				$users_output .= "<option value=\"$h\"";
+				if ($h==$ARIG_grade[$o])
 					{$users_output .= " SELECTED";}
 				$users_output .= ">$h</option>";
 				$h--;
