@@ -13,9 +13,11 @@
 # CHANGES
 # 110425-0853 - First Build
 # 110506-1516 - Added DIDs, IVRs, in-groups(queues), campaigns(queues) and all-alias to the sync options
+# 111203-0737 - Added queue key options for in-group ID and ALLQ
 #
 
 # constants
+$version = '111203-0737';
 $US='__';
 $MT[0]='';
 
@@ -28,8 +30,12 @@ if (length($ARGV[0])>1)
 		$args = "$args $ARGV[$i]";
 		$i++;
 		}
-
-	if ($args =~ /--help/i)
+	if ($args =~ /--version/i)
+		{
+		print "version: $version\n";
+		exit;
+		}
+	elsif ($args =~ /--help/i)
 		{
 		print "allowed run time options:\n";
 		print "  [--user] = will synchronize users\n";
@@ -40,8 +46,11 @@ if (length($ARGV[0])>1)
 		print "  [--campaigns] = will sync campaign entries to queue entries in QM\n";
 		print "  [--all-sync] = will sync all of the above in QM\n";
 		print "  [--all-alias-sync] = will sync all queues in QM into the default \"00 All Queues\" alias\n";
+		print "  [--key-id-ig] = will ensure that the queue has the in-group id set as a key\n";
+		print "  [--key-id-allq] = will ensure that the queue has \"ALLQ\" id set as a key\n";
 		print "  [-q] = quiet, no output\n";
 		print "  [--test] = test\n";
+		print "  [--version] = display version of this script\n";
 		print "  [--debug] = verbose debug messages\n";
 		print "  [--debugX] = Extra-verbose debug messages\n\n";
 		exit;
@@ -112,6 +121,16 @@ if (length($ARGV[0])>1)
 			{
 			$SYNC_campaigns=1;
 			if ($Q < 1) {print "\n----- CAMPAIGN SYNC -----\n\n";}
+			}
+		if ($args =~ /-key-id-ig/i)
+			{
+			$KEY_ingroup=1;
+			if ($Q < 1) {print "\n----- QUEUE KEY INGROUP -----\n\n";}
+			}
+		if ($args =~ /-key-id-allq/i)
+			{
+			$KEY_allq=1;
+			if ($Q < 1) {print "\n----- QUEUE KEY ALLQ -----\n\n";}
 			}
 		}
 	}
@@ -653,8 +672,14 @@ if ($SYNC_ingroups > 0)
 	$i=0;
 	while ($sthArowsD > $i)
 		{
+		$visibility_keySEARCH='';
+		if ($KEY_ingroup > 0)
+			{$visibility_keySEARCH = " and visibility_key LIKE \"%$Vid[$i]%\"";}
+		if ($KEY_allq > 0)
+			{$visibility_keySEARCH .= " and visibility_key LIKE \"%ALLQ%\"";}
+
 		### Find if queue exists with id and description identical
-		$stmtB = "SELECT count(*) FROM code_possibili where composizione_coda='$Vid[$i]' and nome_coda='$Vdescription[$i]' and q_direction='inbound';";
+		$stmtB = "SELECT count(*) FROM code_possibili where composizione_coda='$Vid[$i]' and nome_coda='$Vdescription[$i]' and q_direction='inbound' $visibility_keySEARCH;";
 		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 		$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 		$AN_records=$sthB->rows;
@@ -681,8 +706,20 @@ if ($SYNC_ingroups > 0)
 
 			if ($ANX_count < 1)
 				{
+				if ($KEY_ingroup > 0)
+					{
+					$PREvisibility_key=',visibility_key';
+					$POSTvisibility_key=",'$Vid[$i]'";
+					if ($KEY_allq > 0)
+						{$POSTvisibility_key=",'$Vid[$i] ALLQ'";}
+					}
+				else
+					{
+					if ($KEY_allq > 0)
+						{$PREvisibility_key=',visibility_key';   $POSTvisibility_key=",'ALLQ'";}
+					}
 				### add a new queue record in code_possibili
-				$stmtB = "INSERT INTO code_possibili (composizione_coda,nome_coda,q_direction,sys_dt_creazione,sys_user_creazione,sys_dt_modifica,sys_user_modifica) values('$Vid[$i]','$Vdescription[$i]','inbound',NOW(),'32',NOW(),'32');";
+				$stmtB = "INSERT INTO code_possibili (composizione_coda,nome_coda,q_direction,sys_dt_creazione,sys_user_creazione,sys_dt_modifica,sys_user_modifica $PREvisibility_key) values('$Vid[$i]','$Vdescription[$i]','inbound',NOW(),'32',NOW(),'32'$POSTvisibility_key);";
 				if ($TEST < 1)
 					{$Baffected_rows = $dbhB->do($stmtB);}
 				if ($DB) {print "     code_possibili in-group record inserted: $Baffected_rows|$stmtB|\n";}
@@ -694,8 +731,55 @@ if ($SYNC_ingroups > 0)
 				}
 			else
 				{
+				if ( ($KEY_ingroup > 0) || ($KEY_allq > 0) )
+					{
+					$visibility_key='';
+					### gather the current visibility_key value for this queue
+					$stmtB = "SELECT visibility_key FROM code_possibili where composizione_coda='$Vid[$i]';";
+					$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+					$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+					$ANX_records=$sthB->rows;
+					if ($ANX_records > 0)
+						{
+						@aryB = $sthB->fetchrow_array;
+						$visibility_key =	$aryB[0];
+						}
+					$sthB->finish();
+
+					if (length($visibility_key) < 2)
+						{
+						if ($KEY_ingroup > 0)
+							{
+							$visibility_keySQL=",visibility_key='$Vid[$i]'";
+							if ($KEY_allq > 0)
+								{$visibility_keySQL=",visibility_key='$Vid[$i] ALLQ'";}
+							}
+						else
+							{
+							if ($KEY_allq > 0)
+								{$visibility_keySQL=",visibility_key='ALLQ'";}
+							}
+						}
+					else
+						{
+						$VKupdate=0;
+						if ($KEY_ingroup > 0)
+							{
+							$igcheck = $Vid[$i];
+							if ($visibility_key !~ /$igcheck/i)
+								{$visibility_key .= " $igcheck";   $VKupdate++;}
+							}
+						if ($KEY_allq > 0)
+							{
+							if ($visibility_key !~ /ALLQ/i)
+								{$visibility_key .= " ALLQ";   $VKupdate++;}
+							}
+						if ($VKupdate > 0)
+							{$visibility_keySQL=",visibility_key='$visibility_key'";}
+						}
+					}
 				### update queue record with proper description
-				$stmtB = "UPDATE code_possibili SET nome_coda='$Vdescription[$i]',q_direction='inbound' where composizione_coda='$Vid[$i]' LIMIT 1;";
+				$stmtB = "UPDATE code_possibili SET nome_coda='$Vdescription[$i]',q_direction='inbound' $visibility_keySQL where composizione_coda='$Vid[$i]' LIMIT 1;";
 				if ($TEST < 1)
 					{$Baffected_rows = $dbhB->do($stmtB);}
 				if ($DB) {print "     code_possibili in-group record updated: $Baffected_rows|$stmtB|\n";}
