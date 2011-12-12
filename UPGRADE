@@ -775,6 +775,9 @@ OTHER CHANGES:
 	have a higher or lower probability of receiving the next call depending
 	on their grade for a specific in-group or campaign.
 
+178. Added ability to update phone number on a lead when call is looked up
+	through the cm_lookup.agi script from a Call Menu
+
 
 
 

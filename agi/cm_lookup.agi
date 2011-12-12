@@ -13,17 +13,21 @@
 # ;     LIST will search only within the specified List ID
 # ; 3. If CAMPAIGN or LIST is used above, this is the campaign_id or list_id to be used
 # ; 4. TTS confirmation of name (1 for yes, 2 for no) put in TTS prompt ID
+# ; 5. Update the vicidial_list record phone number with the callerID of the caller:
+# ;     Y - update the record with the phone number
+# ;     N - Do nothing (default)
 # 
 # Found entries will send the call to the 'A' option in the source call menu
 # Not-Found entries will send the call to the 'B' option in the source call menu
 #
 #; example with 8-digit vendor lead codes
-# exten => _XXXXXXXX,1,AGI(cm_lookup.agi,vendor_lead_code---CAMPLISTSALL---TESTCAMP---lastname_oneyestwono)
+# exten => _XXXXXXXX,1,AGI(cm_lookup.agi,vendor_lead_code---CAMPLISTSALL---TESTCAMP---lastname_oneyestwono---N)
 #
 # Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 111004-1450 - First Build
+# 111212-1507 - Added update of vicidial_list phone_number with caller callerid number option
 #
 
 $script = 'cm_lookup.agi';
@@ -137,6 +141,7 @@ if (length($ARGV[0])>1)
 	$search_method = 	$ARGV_vars[1];
 	$search_id =		$ARGV_vars[2];
 	$tts_prompt =		$ARGV_vars[3];
+	$phone_update =		$ARGV_vars[4];
 	}
 if ( (length($field) < 2) || ($vicidial_list_fields !~ /\|$field\|/) )
 	{$field = 'vendor_lead_code';}
@@ -230,7 +235,7 @@ if ($sthArows > 0)
 
 	$found_extension='A';
 	$found_priority='1';
-
+	$confirmation=1;
 
 	### BEGIN if TTS prompt is defined, generate it and wait for "1 for yes or 2 for no" response
 	### if no response or no match then continue on as if nothing played
@@ -433,6 +438,20 @@ if ($sthArows > 0)
 	if ($AGILOG) {$agi_string = "account found: $lead_id|$phone_number|$first_name|$last_name|$Ynewcallerid";   &agi_output;}
 
 	$AGI->set_callerid($Ynewcallerid);
+
+	if ( ($phone_update =~ /Y/i) && ($confirmation > 0) ) 
+		{
+		if ( (length($callerid) > 6) && ($callerid !~ /unknown|private/i) ) 
+			{
+			$stmtA = "UPDATE vicidial_list SET phone_number='$callerid' where lead_id='$lead_id';";
+			$affected_rows = $dbhA->do($stmtA);
+			if ($AGILOG) {$agi_string = "--  CMLOOKUP vl record updated: |$affected_rows| $lead_id|$callerid|$phone_number|$first_name|$last_name";   &agi_output;}
+			}
+		else
+			{
+			if ($AGILOG) {$agi_string = "--  CMLOOKUP vl record failed: Invalid CIDnumber - $callerid|$phone_number";   &agi_output;}
+			}
+		}
 	}
 else
 	{

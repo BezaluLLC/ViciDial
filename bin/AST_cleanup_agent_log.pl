@@ -34,6 +34,7 @@
 # 110415-1442 - Added one minute run option
 # 110425-1345 - Added check-complete-pauses option
 # 110504-0737 - Small bug fix in agent log corrections
+# 111208-0627 - Added concurrency check option
 #
 
 # constants
@@ -66,6 +67,7 @@ if (length($ARGV[0])>1)
 		print "  [-only-check-agent-login-lags] = will only fix queue_log missing PAUSEREASON records\n";
 		print "  [-only-qm-live-call-check] = will only check the queue_log calls that report as live, in ViciDial\n";
 		print "  [-only-fix-old-lagged] = will go through old lagged entries and add a new entry after\n";
+		print "  [-run-check] = concurrency check, die if another instance is running\n";
 		print "  [-q] = quiet, no output\n";
 		print "  [-test] = test\n";
 		print "  [-debug] = verbose debug messages\n";
@@ -159,6 +161,11 @@ if (length($ARGV[0])>1)
 			{
 			$fix_old_lagged_entries=1;
 			if ($Q < 1) {print "\n----- FIX OLD LAGGED ENTRIES ONLY -----\n\n";}
+			}
+		if ($args =~ /-run-check/i)
+			{
+			$run_check=1;
+			if ($DB) {print "\n----- CONCURRENCY CHECK -----\n\n";}
 			}
 		}
 	}
@@ -352,6 +359,19 @@ foreach(@conf)
 	if ( ($line =~ /^VARDB_port/) && ($CLIDB_port < 1) )
 		{$VARDB_port = $line;   $VARDB_port =~ s/.*=//gi;}
 	$i++;
+	}
+
+### concurrency check
+if ($run_check > 0)
+	{
+	my $grepout = `/bin/ps ax | grep $0 | grep -v grep`;
+	my $grepnum=0;
+	$grepnum++ while ($grepout =~ m/\n/g);
+	if ($grepnum > 1) 
+		{
+		if ($DB) {print "I am not alone! Another $0 is running! Exiting...\n";}
+		exit;
+		}
 	}
 
 # Customized Variables
