@@ -7,7 +7,7 @@
 #
 # NOTE: you need to alter the URL to change the report that is run by this script
 #
-# /usr/share/astguiclient/AST_email_web_report --email-list=test@gmail.com --email-sender=test@test.com
+# /usr/share/astguiclient/AST_email_web_report.pl --email-list=test@gmail.com --email-sender=test@test.com
 #
 # Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -15,6 +15,7 @@
 # 90225-1247 - First version
 # 111004-1057 - Added ftp options
 # 111012-2220 - Added optional begin date flag
+# 111214-0922 - Added remove images and links options as well as email subject option
 #
 
 $txt = '.txt';
@@ -108,6 +109,9 @@ if (length($ARGV[0])>1)
 		print "  [--test] = test\n";
 		print "  [--debug] = debugging messages\n";
 		print "  [--debugX] = Super debugging messages\n";
+		print "  [--remove-images] = Will parse through the output file and remove any images in the HTML\n";
+		print "  [--remove-links] = Will parse through the output file and remove any links in the HTML\n";
+		print "  [--email-subject=XYZ] = Email message subject, which will be followed by the date of the report\n";
 		print "  [--email-list=test@test.com:test2@test.com] = send email results to these addresses\n";
 		print "  [--email-sender=vicidial@localhost] = sender for the email results\n";
 		print "  [--date=YYYY-MM-DD] = date override, can also use 'today' and 'yesterday'\n";
@@ -139,7 +143,17 @@ if (length($ARGV[0])>1)
 		if ($args =~ /--test/i)
 			{
 			$T=1;   $TEST=1;
-			print "\n----- TESTING -----\n\n";
+			if ($DB > 0) {print "\n----- TESTING -----\n\n";}
+			}
+		if ($args =~ /--remove-images/i)
+			{
+			$remove_images=1;
+			if ($DB > 0) {print "\n----- REMOVE IMAGES -----\n\n";}
+			}
+		if ($args =~ /--remove-links/i)
+			{
+			$remove_links=1;
+			if ($DB > 0) {print "\n----- REMOVE LINKS -----\n\n";}
 			}
 		if ($args =~ /--ftp-server=/i)
 			{
@@ -147,7 +161,7 @@ if (length($ARGV[0])>1)
 			$VARREPORT_host = $data_in[1];
 			$VARREPORT_host =~ s/ .*//gi;
 			$VARREPORT_host =~ s/:/,/gi;
-			print "\n----- FTP SERVER: $VARREPORT_host -----\n\n";
+			if ($DB > 0) {print "\n----- FTP SERVER: $VARREPORT_host -----\n\n";}
 			}
 		else
 			{$VARREPORT_host = '';}
@@ -157,7 +171,7 @@ if (length($ARGV[0])>1)
 			$VARREPORT_user = $data_in[1];
 			$VARREPORT_user =~ s/ .*//gi;
 			$VARREPORT_user =~ s/:/,/gi;
-			print "\n----- FTP LOGIN: $VARREPORT_user -----\n\n";
+			if ($DB > 0) {print "\n----- FTP LOGIN: $VARREPORT_user -----\n\n";}
 			}
 		else
 			{$VARREPORT_user = '';}
@@ -167,7 +181,7 @@ if (length($ARGV[0])>1)
 			$VARREPORT_pass = $data_in[1];
 			$VARREPORT_pass =~ s/ .*//gi;
 			$VARREPORT_pass =~ s/:/,/gi;
-			print "\n----- FTP PASS: <SET> -----\n\n";
+			if ($DB > 0) {print "\n----- FTP PASS: <SET> -----\n\n";}
 			}
 		else
 			{$VARREPORT_pass = '';}
@@ -177,18 +191,28 @@ if (length($ARGV[0])>1)
 			$VARREPORT_dir = $data_in[1];
 			$VARREPORT_dir =~ s/ .*//gi;
 			$VARREPORT_dir =~ s/:/,/gi;
-			print "\n----- FTP DIR: $VARREPORT_dir -----\n\n";
+			if ($DB > 0) {print "\n----- FTP DIR: $VARREPORT_dir -----\n\n";}
 			}
 		else
 			{$VARREPORT_dir = '';}
 
+		if ($args =~ /--email-subject=/i)
+			{
+			@data_in = split(/--email-subject=/,$args);
+			$email_subject = $data_in[1];
+			$email_subject =~ s/ .*//gi;
+			$email_subject =~ s/\+/ /gi;
+			if ($DB > 0) {print "\n----- EMAIL SUBJECT: $email_subject -----\n\n";}
+			}
+		else
+			{$email_subject = 'VICIDIAL REPORT';}
 		if ($args =~ /--email-list=/i)
 			{
 			@data_in = split(/--email-list=/,$args);
 			$email_list = $data_in[1];
 			$email_list =~ s/ .*//gi;
 			$email_list =~ s/:/,/gi;
-			print "\n----- EMAIL NOTIFICATION: $email_list -----\n\n";
+			if ($DB > 0) {print "\n----- EMAIL NOTIFICATION: $email_list -----\n\n";}
 			}
 		else
 			{$email_list = '';}
@@ -198,7 +222,7 @@ if (length($ARGV[0])>1)
 			$email_sender = $data_in[1];
 			$email_sender =~ s/ .*//gi;
 			$email_sender =~ s/:/,/gi;
-			print "\n----- EMAIL NOTIFICATION SENDER: $email_sender -----\n\n";
+			if ($DB > 0) {print "\n----- EMAIL NOTIFICATION SENDER: $email_sender -----\n\n";}
 			}
 		else
 			{$email_sender = 'vicidial@localhost';}
@@ -293,6 +317,7 @@ if (length($ARGV[0])>1)
 else
 	{
 	print "no command line options set, using defaults.\n";
+	$email_subject = 'VICIDIAL REPORT';
 	}
 ### end parsing run-time options ###
 
@@ -369,6 +394,8 @@ $HTMLfile = "DISCH_SURVEY_$start_date$txt";
 #$location = "http://6666:1234\@127.0.0.1/vicidial/fcstats.php?db_log=1\\&query_date=$shipdate\\&group=$group\\&shift=$shift\\&archive=1";
 #$location = "http://6666:1234\@192.168.1.101/vicidial/AST_VDADstats.php?query_date=$shipdate\\&end_date=$shipdate\\&group[]=--ALL--\\&shift=ALL";
 #$location = "http://8888:8888\@127.0.0.1/vicidial/AST_VDADstats.php?query_date=$shipdate\\&end_date=$shipdate\\&group[]=--ALL--\\&shift=ALL";
+#$location = "http://6666:1234\@127.0.0.1/vicidial/AST_inbound_daily_report.php?query_date=$shipdate\\&end_date=$shipdate\\&group=5001\\&shift=ALL\\&SUBMIT=SUBMIT\\&hourly_breakdown=checked";
+#$location = "http://6666:1234\@127.0.0.1/vicidial/AST_agent_performance_detail.php?DB=\\&query_date=$shipdate\\&end_date=$shipdate\\&group[]=2001\\&user_group[]=--ALL--\\&shift=ALL\\&SUBMIT=SUBMIT";
 
 # Outbound IVR Export Report:
 $location = "http://127.0.0.1/vicidial/call_report_export.php?query_date=$begindate\\&end_date=$shipdate\\&list_id[]=--ALL--\\&status[]=--ALL--\\&campaign[]=RSIDESVY\\&run_export=1\\&ivr_export=YES\\&export_fields=EXTENDED\\&header_row=NO\\&rec_fields=NONE\\&custom_fields=NO\\&call_notes=NO";
@@ -380,8 +407,31 @@ $location = "http://127.0.0.1/vicidial/call_report_export.php?query_date=$begind
 ### GRAB THE REPORT
 if (!$Q) {print "Running Report $ship_date\n$location\n";}
 
-`/usr/bin/wget --auth-no-challenge --http-user=6666 --http-password=1234 --output-document=/tmp/$HTMLfile $location `;
+`/usr/bin/wget --auth-no-challenge --http-user=6666 --http-password=1234 --output-document=/tmp/X$HTMLfile $location `;
 
+if ( ($remove_images > 0) || ($remove_links > 0) )
+	{
+	open(input, "/tmp/X$HTMLfile") || die "can't open /tmp/X$HTMLfile: $!\n";
+	@input = <input>;
+	close(input);
+	$i=0;
+	$newfile='';
+	foreach(@input)
+		{
+		$Xline = $input[$i];
+		if ($remove_images > 0)
+			{$Xline =~ s/<img .*>//gi;}
+		if ($remove_links > 0)
+			{$Xline =~ s/\<a [^>]*\>//gi;}
+		$newfile .= "$Xline";
+		$i++;
+		}
+	open(output, ">/tmp/$HTMLfile") || die "can't open /tmp/$HTMLfile: $!\n";
+	print output "$newfile";
+	close(output);
+	}
+else
+	{`mv /tmp/X$HTMLfile > /tmp/$HTMLfile `;}
 
 ###### BEGIN EMAIL SECTION #####
 if (length($email_list) > 3)
@@ -392,7 +442,7 @@ if (length($email_list) > 3)
 	use MIME::Base64;
 	use Mail::Sendmail;
 
-	$mailsubject = "VICIDIAL Outbound Report $shipdate";
+	$mailsubject = "$email_subject $shipdate";
 
 	%mail = ( To      => "$email_list",
 					From    => "$email_sender",
@@ -401,7 +451,7 @@ if (length($email_list) > 3)
 	$boundary = "====" . time() . "====";
 	$mail{'content-type'} = "multipart/mixed; boundary=\"$boundary\"";
 
-	$message = encode_qp( "VICIDIAL Outbound Report for $shipdate:\n\n Attachment: $HTMLfile" );
+	$message = encode_qp( "$email_subject $shipdate:\n\n Attachment: $HTMLfile" );
 
 	$Zfile = "/tmp/$HTMLfile";
 
