@@ -1019,6 +1019,27 @@ if ( ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111
 	<?php
 	}
 echo "</script>\n";
+
+##### BEGIN - bar chart CSS style #####
+?>
+
+<style type="text/css">
+<!--
+.auraltext
+	{
+	position: absolute;
+	font-size: 0;
+	left: -1000px;
+	}
+.chart_td
+	{background-image: url(images/gridline58.gif); background-repeat: repeat-x; background-position: left top; border-left: 1px solid #e5e5e5; border-right: 1px solid #e5e5e5; padding:0; border-bottom: 1px solid #e5e5e5; background-color:transparent;}
+
+-->
+</style>
+
+<?
+##### END - bar chart CSS style #####
+
 echo "</head>\n";
 if ( ($SSadmin_modify_refresh > 1) and (preg_match("/^3|^4/",$ADD)) )
 	{

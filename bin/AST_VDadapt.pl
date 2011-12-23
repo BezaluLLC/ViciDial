@@ -36,6 +36,7 @@
 # 100206-1453 - Fixed calculation of hold_sec stats (service level) for in-groups
 # 110513-0721 - Added debug DB table, dial level and available only tally threshold options
 # 111103-0626 - Added MAXCAL as a drop status
+# 111219-1420 - Added daily stats updates to new table for total, in-group and campaign
 #
 
 # constants
@@ -51,6 +52,7 @@ $MT[0]='';
 
 
 $i=0;
+$daily_stats=1;
 $drop_count_updater=0;
 $stat_it=15;
 $diff_ratio_updater=0;
@@ -105,7 +107,17 @@ if (length($ARGV[0])>1)
 
 	if ($args =~ /--help/i)
 		{
-		print "allowed run time options(must stay in this order):\n  [--debug] = debug\n  [--debugX] = super debug\n  [-t] = test\n  [--loops=XXX] = force a number of loops of XXX\n  [--delay=XXX] = force a loop delay of XXX seconds\n  [--campaign=XXX] = run for campaign XXX only\n  [-force] = force calculation of suggested predictive dial_level\n  [-test] = test only, do not alter dial_level\n\n";
+		print "allowed run time options(must stay in this order):\n";
+		print "  [--loops=XXX] = force a number of loops of XXX\n";
+		print "  [--delay=XXX] = force a loop delay of XXX seconds\n";
+		print "  [--campaign=XXX] = run for campaign XXX only\n";
+		print "  [--no-daily-stats] = will not daily stats for total, ingroup, campaign\n";
+		print "  [--force] = force calculation of suggested predictive dial_level\n";
+		print "  [--test] = test only, do not alter dial_level\n";
+		print "  [--debug] = debug\n";
+		print "  [--debugX] = super debug\n";
+		print "\n";
+		exit;
 		}
 	else
 		{
@@ -189,15 +201,20 @@ if (length($ARGV[0])>1)
 			print "CLIdelay-    $CLIdelay\n";
 			print "\n";
 			}
-		if ($args =~ /-force/i)
+		if ($args =~ /--force/i)
 			{
 			$force_test=1;
 			print "\n----- FORCE TESTING -----\n\n";
 			}
-		if ($args =~ /-t/i)
+		if ($args =~ /--test/i)
 			{
 			$T=1;   $TEST=1;
-			print "\n-----TESTING -----\n\n";
+			print "\n----- TESTING -----\n\n";
+			}
+		if ($args =~ /--no-daily-stats/i)
+			{
+			$daily_stats=0;
+			print "\n----- NO DAILY STATS -----\n\n";
 			}
 		}
 	}
@@ -304,7 +321,6 @@ $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 #	}
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
 ###########################################
-
 
 $master_loop=0;
 
@@ -424,7 +440,7 @@ while ($master_loop<$CLIloops)
 	$five_min_ago = time();
 	$five_min_ago = ($five_min_ago - 300);
 
-	##### LOOP THROUGH EACH CAMPAIGN AND PROCESS THE HOPPER #####
+	##### LOOP THROUGH EACH CAMPAIGN AND PROCESS THE DATA #####
 	$i=0;
 	foreach(@campaign_id)
 		{
@@ -553,6 +569,11 @@ while ($master_loop<$CLIloops)
 	if ( ($stat_count =~ /00$|50$/) || ($stat_count==1) )
 		{
 		&launch_inbound_gather;
+		}
+
+	if ( ($daily_stats > 0) && (($stat_count =~ /0$|5$/) || ($stat_count==1)) )
+		{
+		&launch_max_calls_gather;
 		}
 
 	if ($RESETdiff_ratio_updater>0) {$RESETdiff_ratio_updater=0;   $diff_ratio_updater=0;}
@@ -707,6 +728,7 @@ sub count_agents_lines
 	### Calculate campaign-wide agent waiting and calls waiting differential
 	$stat_it=15;
 	$total_agents[$i]=0;
+	$total_remote_agents[$i]=0;
 	$ready_agents[$i]=0;
 	$waiting_calls[$i]=0;
 	$ready_diff_total[$i]=0;
@@ -769,6 +791,21 @@ sub count_agents_lines
 	#		if ($DB) {print "     $event_string\n";}
 	#		&event_logger;
 		$it++;
+		}
+
+	# LIVE CAMPAIGN CALLS RIGHT NOW
+	if ($daily_stats > 0)
+		{
+		$stmtA = "SELECT count(*) from vicidial_live_agents where campaign_id='$campaign_id[$i]' and last_update_time > '$VDL_one' and extension LIKE \"R/%\";";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$total_remote_agents[$i] = $aryA[0];
+			}
+		$sthA->finish();
 		}
 
 	if ($ready_diff_total[$i] > 0) 
@@ -856,6 +893,7 @@ sub calculate_drops
 	$VCSagent_custtalk_today[$i]=0;
 	$VCSagent_acw_today[$i]=0;
 	$VCSagent_calls_today[$i]=0;
+	$VCSlive_calls[$i]=0;
 
 	# LAST ONE MINUTE CALL AND DROP STATS
 	$stmtA = "SELECT count(*) from $vicidial_log where campaign_id='$campaign_id[$i]' and call_date > '$VDL_one';";
@@ -1162,6 +1200,22 @@ sub calculate_drops
 		}
 	$sthA->finish();
 
+	# LIVE CAMPAIGN CALLS RIGHT NOW
+	if ($daily_stats > 0)
+		{
+		$stmtA = "SELECT count(*) from vicidial_auto_calls where campaign_id='$campaign_id[$i]';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$VCSlive_calls[$i] = $aryA[0];
+			$debug_camp_output .= "     LIVE CALLS: $aryA[0]|$stmtA\n";
+			}
+		$sthA->finish();
+		}
+
 	# If campaign is using a drop rate group, gather its stats
 	if ($drop_rate_group[$i] !~ /DISABLED/)
 		{
@@ -1220,7 +1274,55 @@ sub calculate_drops
 	$stmtA = "UPDATE vicidial_campaign_stats_debug SET entry_time='$now_date',debug_output='$debug_camp_output' where campaign_id='$campaign_id[$i]' and server_ip='ADAPT';";
 	$affected_rows = $dbhA->do($stmtA);
 	$debug_camp_output='';
+
+	##### BEGIN - DAILY STATS UPDATE CAMPAIGN
+	if ($daily_stats > 0)
+		{
+		$STATSmax_outbound=0;
+		$STATSmax_agents=0;
+		$STATSmax_remote_agents=0;
+		$STATStotal_calls=0;
+		$stmtA = "SELECT max_outbound,max_agents,max_remote_agents,total_calls from vicidial_daily_max_stats where campaign_id='$campaign_id[$i]' and stats_type='CAMPAIGN' and stats_flag='OPEN' order by update_time desc limit 1;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$STATSmax_outbound =		$aryA[0];
+			$STATSmax_agents =			$aryA[1];
+			$STATSmax_remote_agents =	$aryA[2];
+			$STATStotal_calls =			$aryA[3];
+			$sthA->finish();
+
+			$update_SQL='';
+			if ($STATSmax_outbound < $VCSlive_calls[$i])
+				{$update_SQL .= ",max_outbound='$VCSlive_calls[$i]'";}
+			if ($STATSmax_agents < $total_agents[$i]) 
+				{$update_SQL .= ",max_agents='$total_agents[$i]'";}
+			if ($STATSmax_remote_agents < $total_remote_agents[$i])
+				{$update_SQL .= ",max_remote_agents='$total_remote_agents[$i]'";}
+			if ($STATStotal_calls < $VCScalls_today[$i]) 
+				{$update_SQL .= ",total_calls='$VCScalls_today[$i]'";}
+			if (length($update_SQL) > 5) 
+				{
+				$stmtA = "UPDATE vicidial_daily_max_stats SET update_time=NOW()$update_SQL where campaign_id='$campaign_id[$i]' and stats_type='CAMPAIGN' and stats_flag='OPEN';";
+				$affected_rows = $dbhA->do($stmtA);
+				if ($DBX) {print "DAILY STATS UPDATE $campaign_id[$i]|$affected_rows|$stmtA|\n";}
+				}
+			}
+		else
+			{
+			$sthA->finish();
+
+			$stmtA = "INSERT INTO vicidial_daily_max_stats SET stats_date='$file_date',update_time=NOW(),max_outbound='$VCSlive_calls[$i]',max_agents='$total_agents[$i]',max_remote_agents='$total_remote_agents[$i]',total_calls='$VCScalls_today[$i]',campaign_id='$campaign_id[$i]',stats_type='CAMPAIGN',stats_flag='OPEN';";
+			$affected_rows = $dbhA->do($stmtA);
+			if ($DBX) {print "DAILY STATS INSERT $campaign_id[$i]|$affected_rows|$stmtA|\n";}
+			}
+		}
+	##### END - DAILY STATS UPDATE CAMPAIGN
 	}
+
 
 
 sub drop_rate_group_gather
@@ -1292,6 +1394,170 @@ sub drop_rate_group_gather
 	################################################################################
 	}
 
+
+sub launch_max_calls_gather
+	{
+	################################################################################
+	#### BEGIN gather stats for max channels and max calls
+	################################################################################
+	$serversSQL='';
+	# Get list of active asterisk servers
+	$stmtA = "SELECT server_ip from servers where active_asterisk_server='Y';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	$rec_count=0;
+	while ($sthArows > $rec_count)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$serversSQL .=	 "'$aryA[0]',";
+		$rec_count++;
+		}
+	$sthA->finish();
+	chop($serversSQL);
+
+	if (length($serversSQL) > 5)
+		{
+		$stmtA = "SELECT count(*) from live_sip_channels where server_ip IN($serversSQL);";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$lsc_count=0;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$lsc_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		$stmtA = "SELECT count(*) from live_channels where server_ip IN($serversSQL);";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$lc_count=0;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$lc_count =		$aryA[0];
+			}
+		$sthA->finish();
+		$tc_count = ($lsc_count + $lc_count);
+
+		$stmtA = "SELECT count(*) from live_channels where channel NOT LIKE \"%pseudo%\" and server_ip IN($serversSQL);";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$tcalls_count=0;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$tcalls_count =		$aryA[0];
+			}
+
+		$sthA->finish();
+
+		$stmtA = "SELECT count(*) from vicidial_auto_calls where call_type='IN' and server_ip IN($serversSQL);";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$incalls_count=0;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$incalls_count =		$aryA[0];
+			}
+		$sthA->finish();
+
+		$stmtA = "SELECT count(*) from vicidial_auto_calls where call_type IN('OUT','OUTBALANCE') and server_ip IN($serversSQL);";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$outcalls_count=0;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$outcalls_count =		$aryA[0];
+			}
+		$sthA->finish();
+
+		$stmtA = "SELECT count(*) from vicidial_live_agents where last_update_time > '$VDL_one' and server_ip IN($serversSQL);";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$live_agents=0;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$live_agents =	$aryA[0];
+			$sthA->finish();
+			}
+
+		$stmtA = "SELECT count(*) from vicidial_live_agents where last_update_time > '$VDL_one' and extension LIKE \"R/%\" and server_ip IN($serversSQL);";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$live_remote_agents=0;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$live_remote_agents =	$aryA[0];
+			$sthA->finish();
+			}
+
+		if ($DB) {print "$now_date MAX CHANNELS TOTALS:  $tc_count($lsc_count+$lc_count)|$tcalls_count|$incalls_count|$outcalls_count|$live_agents|$live_remote_agents\n";}
+
+
+		$STATSmax_channels=0;
+		$STATSmax_calls=0;
+		$stmtA = "SELECT max_channels,max_calls,max_inbound,max_outbound,max_agents,max_remote_agents from vicidial_daily_max_stats where campaign_id='' and stats_type='TOTAL' and stats_flag='OPEN' order by update_time desc limit 1;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$STATSmax_channels =		$aryA[0];
+			$STATSmax_calls =			$aryA[1];
+			$STATSmax_inbound =			$aryA[2];
+			$STATSmax_outbound =		$aryA[3];
+			$STATSmax_agents =			$aryA[4];
+			$STATSmax_remote_agents =	$aryA[5];
+			$sthA->finish();
+
+			$update_SQL='';
+			if ($STATSmax_channels < $tc_count) 
+				{$update_SQL .= ",max_channels='$tc_count'";}
+			if ($STATSmax_calls < $tcalls_count) 
+				{$update_SQL .= ",max_calls='$tcalls_count'";}
+			if ($STATSmax_inbound < $incalls_count) 
+				{$update_SQL .= ",max_inbound='$incalls_count'";}
+			if ($STATSmax_outbound < $outcalls_count) 
+				{$update_SQL .= ",max_outbound='$outcalls_count'";}
+			if ($STATSmax_agents < $live_agents) 
+				{$update_SQL .= ",max_agents='$live_agents'";}
+			if ($STATSmax_remote_agents < $live_remote_agents) 
+				{$update_SQL .= ",max_remote_agents='$live_remote_agents'";}
+
+			if (length($update_SQL) > 5) 
+				{
+				$stmtA = "UPDATE vicidial_daily_max_stats SET update_time=NOW()$update_SQL where campaign_id='' and stats_type='TOTAL' and stats_flag='OPEN';";
+				$affected_rows = $dbhA->do($stmtA);
+				if ($DBX) {print "DAILY STATS UPDATE $campaign_id[$i]|$affected_rows|$stmtA|\n";}
+				}
+			}
+		else
+			{
+			$sthA->finish();
+
+			$stmtA = "INSERT INTO vicidial_daily_max_stats SET stats_date='$file_date',update_time=NOW(),max_channels='$tc_count',max_calls='$tcalls_count',max_inbound='$incalls_count',max_outbound='$outcalls_count',max_agents='$live_agents',max_remote_agents='$live_remote_agents',campaign_id='',stats_type='TOTAL',stats_flag='OPEN';";
+			$affected_rows = $dbhA->do($stmtA);
+			if ($DBX) {print "DAILY STATS INSERT    TOTAL|$affected_rows|$stmtA|\n";}
+			}
+		}
+	################################################################################
+	#### END gather stats for max channels and max calls
+	################################################################################
+	}
 
 sub launch_inbound_gather
 	{
@@ -1390,6 +1656,47 @@ sub calculate_drops_inbound
 	$hold_sec_answer_calls[$p]=0;
 	$hold_sec_drop_calls[$p]=0;
 	$hold_sec_queue_calls[$p]=0;
+	$iVCSlive_calls[$p]=0;
+	$itotal_agents[$p]=0;
+	$itotal_remote_agents[$p]=0;
+
+	# DAILY STATS UPDATE
+	if ($daily_stats > 0)
+		{
+		$stmtA = "SELECT count(*) from vicidial_auto_calls where campaign_id='$group_id[$p]';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$iVCSlive_calls[$p] =	$aryA[0];
+			$sthA->finish();
+			}
+
+		$stmtA = "SELECT count(*) from vicidial_live_agents where closer_campaigns LIKE \"% $group_id[$p] %\" and last_update_time > '$VDL_one';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$itotal_agents[$p] =	$aryA[0];
+			$sthA->finish();
+			}
+
+		$stmtA = "SELECT count(*) from vicidial_live_agents where closer_campaigns LIKE \"% $group_id[$p] %\" and last_update_time > '$VDL_one' and extension LIKE \"R/%\";";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$itotal_remote_agents[$p] =	$aryA[0];
+			$sthA->finish();
+			}
+		$debug_ingroup_output .= "     DAILY STATS|$iVCSlive_calls[$p]|$itotal_agents[$p]|$itotal_remote_agents[$p]|";
+		}
 
 	# TODAY CALL AND DROP STATS
 	$stmtA = "SELECT count(*) from $vicidial_closer_log where campaign_id='$group_id[$p]' and call_date > '$VDL_date';";
@@ -1598,6 +1905,53 @@ sub calculate_drops_inbound
 	$debug_ingroup_output =~ s/;|\\\\|\/|\'//gi;
 	$stmtA="INSERT IGNORE INTO vicidial_campaign_stats_debug SET server_ip='INBOUND',campaign_id='$group_id[$p]',entry_time='$now_date',debug_output='$debug_ingroup_output' ON DUPLICATE KEY UPDATE entry_time='$now_date',debug_output='$debug_ingroup_output';";
 	$affected_rows = $dbhA->do($stmtA);
+
+	##### BEGIN - DAILY STATS UPDATE INGROUP
+	if ($daily_stats > 0)
+		{
+		$STATSmax_inbound=0;
+		$STATSmax_agents=0;
+		$STATSmax_remote_agents=0;
+		$STATStotal_calls=0;
+		$stmtA = "SELECT max_inbound,max_agents,max_remote_agents,total_calls from vicidial_daily_max_stats where campaign_id='$group_id[$p]' and stats_type='INGROUP' and stats_flag='OPEN' order by update_time desc limit 1;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$STATSmax_inbound =			$aryA[0];
+			$STATSmax_agents =			$aryA[1];
+			$STATSmax_remote_agents =	$aryA[2];
+			$STATStotal_calls =			$aryA[3];
+			$sthA->finish();
+
+			$update_SQL='';
+			if ($STATSmax_inbound < $iVCSlive_calls[$p]) 
+				{$update_SQL .= ",max_inbound='$iVCSlive_calls[$p]'";}
+			if ($STATSmax_agents < $itotal_agents[$p]) 
+				{$update_SQL .= ",max_agents='$itotal_agents[$p]'";}
+			if ($STATSmax_remote_agents < $itotal_remote_agents[$p])
+				{$update_SQL .= ",max_remote_agents='$itotal_remote_agents[$p]'";}
+			if ($STATStotal_calls < $iVCScalls_today[$p]) 
+				{$update_SQL .= ",total_calls='$iVCScalls_today[$p]'";}
+			if (length($update_SQL) > 5) 
+				{
+				$stmtA = "UPDATE vicidial_daily_max_stats SET update_time=NOW()$update_SQL where campaign_id='$group_id[$p]' and stats_type='INGROUP' and stats_flag='OPEN';";
+				$affected_rows = $dbhA->do($stmtA);
+				if ($DBX) {print "DAILY STATS UPDATE $campaign_id[$p]|$affected_rows|$stmtA|\n";}
+				}
+			}
+		else
+			{
+			$sthA->finish();
+
+			$stmtA = "INSERT INTO vicidial_daily_max_stats SET stats_date='$file_date',update_time=NOW(),max_inbound='$iVCSlive_calls[$p]',max_agents='$itotal_agents[$p]',max_remote_agents='$itotal_remote_agents[$p]',total_calls='$iVCScalls_today[$p]',campaign_id='$group_id[$p]',stats_type='INGROUP',stats_flag='OPEN';";
+			$affected_rows = $dbhA->do($stmtA);
+			if ($DBX) {print "DAILY STATS INSERT $group_id[$p]|$affected_rows|$stmtA|\n";}
+			}
+		}
+	##### END - DAILY STATS UPDATE INGROUP
 	}
 ##### END calculate_drops_inbound
 

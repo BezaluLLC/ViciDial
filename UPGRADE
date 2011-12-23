@@ -778,6 +778,14 @@ OTHER CHANGES:
 178. Added ability to update phone number on a lead when call is looked up
 	through the cm_lookup.agi script from a Call Menu
 
+179. Added Daily Max Stats used for measuring the total calls for the day for
+	in-groups and campaigns as well as the maximum number of concurrent
+	calls handled by each at any time during the day. Small graphs added to
+	the in-group and campaign screens as well as larger graphs with more 
+	details on a new report screen. These stats are summary stats that are
+	generated from the logs in real-time on the back end, they are not
+	recalculated every time the screen loads as with most other reports.
+
 
 
 

@@ -171,6 +171,7 @@
 # 111102-2014 - Added in-group max_calls_ feature
 # 111116-0157 - Added ALT and ADDR3 methods for CIDLOOKUP
 # 111201-1457 - Added grade-random next-agent-call option for inbound
+# 111219-2124 - Added max stats updating
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -182,7 +183,7 @@ $wait_prompt_runs=0;
 $at='@';
 $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=191;
+$mysql_log_count=195;
 $one_mysql_log=0;
 
 
@@ -202,6 +203,7 @@ $now_date_epoch = time();
 $start_epoch = $now_date_epoch;
 $now_date = "$year-$mon-$mday $hour:$min:$sec";
 $CLInow_date = "$year-$mon-$mday\\ $hour:$min:$sec";
+$YMD = "$year-$mon-$mday";
 $start_time=$now_date;
 $CIDdate = "$mon$mday$hour$min$sec";
 $tsSQLdate = "$year$mon$mday$hour$min$sec";
@@ -1130,10 +1132,9 @@ $MCcomments='';
 if ( ($max_calls_method !~ /DISABLED/) && ($max_calls_count > 0) )
 	{
 	$concurrent_calls=0;
+	$incalls_count=0;
 	### Get count of concurrent calls for this in-group
-	$stmtA = "SELECT count(*) FROM vicidial_auto_calls where campaign_id='$channel_group';";
-	if (($max_calls_method =~ /IN_QUEUE/)) 
-		{$stmtA = "SELECT count(*) FROM vicidial_auto_calls where campaign_id='$channel_group' and status IN('LIVE','IVR');";}
+	$stmtA = "SELECT count(*) FROM vicidial_auto_calls where campaign_id='$channel_group' and callerid!='$callerid';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -1142,8 +1143,57 @@ if ( ($max_calls_method !~ /DISABLED/) && ($max_calls_count > 0) )
 		{
 		@aryA = $sthA->fetchrow_array;
 		$concurrent_calls = 	$aryA[0];
+		$incalls_count =		$aryA[0];
+		$incalls_count++;
 		}
 	$sthA->finish();
+
+	$STATSmax_inbound=0;
+	$stmtA = "SELECT max_inbound from vicidial_daily_max_stats where campaign_id='$channel_group' and stats_type='INGROUP' and stats_flag='OPEN' order by update_time desc limit 1;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+		$dbhP=$dbhA;   $mysql_count='02192';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$STATSmax_inbound =			$aryA[0];
+		$sthA->finish();
+
+		$update_SQL='';
+		if ($STATSmax_inbound < $incalls_count)
+			{$update_SQL .= ",max_inbound='$incalls_count'";}
+
+		if (length($update_SQL) > 5) 
+			{
+			$stmtA = "UPDATE vicidial_daily_max_stats SET update_time=NOW()$update_SQL where campaign_id='$channel_group' and stats_type='INGROUP' and stats_flag='OPEN';";
+			$affected_rows = $dbhA->do($stmtA);
+				$dbhP=$dbhA;   $mysql_count='02193';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			if ($AGILOG) {$agi_string = "DAILY STATS UPDATE $channel_group|$affected_rows|$stmtA|\n";   &agi_output;}
+			}
+		}
+	else
+		{
+		$stmtA = "INSERT INTO vicidial_daily_max_stats SET stats_date='$YMD',update_time=NOW(),max_inbound='$incalls_count',campaign_id='$channel_group',stats_type='INGROUP',stats_flag='OPEN';";
+		$affected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='02195';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "DAILY STATS INSERT $channel_group|$affected_rows|$stmtA|\n";   &agi_output;}
+		}
+
+	if (($max_calls_method =~ /IN_QUEUE/)) 
+		{
+		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where campaign_id='$channel_group' and status IN('LIVE','IVR') and callerid!='$callerid';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+			$dbhP=$dbhA;   $mysql_count='02194';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$concurrent_calls = 	$aryA[0];
+			}
+		$sthA->finish();
+		}
 
 	if ($concurrent_calls >= $max_calls_count)
 		{
@@ -1166,10 +1216,6 @@ if ( ($max_calls_method !~ /DISABLED/) && ($max_calls_count > 0) )
 	if ($AGILOG) {$agi_string = "--  MAX CALLS: |$concurrent_calls|$max_calls_count|$max_calls_method|$max_calls_action|$MCafterhours_override|$MCnanque_override|$MCdrop_override|$MCstatus|$MCterm|$MCcomments|";   &agi_output;}
 	}
 ##### END MAX CONCURRENT CALLS CHECK #####
-
-
-
-
 
 
 

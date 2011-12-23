@@ -5,6 +5,7 @@
 # 
 
 require("dbconnect.php");
+require("functions.php");
 
 ######################################################################################################
 ######################################################################################################
@@ -2442,7 +2443,7 @@ if ($non_latin < 1)
 	### ALPHA-NUMERIC and spaces
 	$lead_order = ereg_replace("[^ 0-9a-zA-Z]","",$lead_order);
 	### ALPHA-NUMERIC and spaces and dashes and underscores
-	$preset_name = ereg_replace("[^ -\_0-9a-zA-Z]","",$preset_name);
+	$preset_name = ereg_replace("[^- \_0-9a-zA-Z]","",$preset_name);
 
 	### ALPHA-NUMERIC and hash
 	$group_color = ereg_replace("[^\#0-9a-zA-Z]","",$group_color);
@@ -2460,88 +2461,88 @@ if ($non_latin < 1)
 
 
 	### ALPHA-NUMERIC and spaces dots, commas, dashes, underscores
-	$adaptive_dl_diff_target = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$adaptive_dl_diff_target);
-	$adaptive_intensity = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$adaptive_intensity);
-	$asterisk_version = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$asterisk_version);
-	$call_time_comments = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$call_time_comments);
-	$call_time_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$call_time_name);
-	$campaign_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$campaign_name);
+	$adaptive_dl_diff_target = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$adaptive_dl_diff_target);
+	$adaptive_intensity = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$adaptive_intensity);
+	$asterisk_version = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$asterisk_version);
+	$call_time_comments = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$call_time_comments);
+	$call_time_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$call_time_name);
+	$campaign_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$campaign_name);
 	$campaign_rec_filename = ereg_replace("[^\.-\_0-9a-zA-Z]","",$campaign_rec_filename);
 	$ingroup_rec_filename = ereg_replace("[^\.-\_0-9a-zA-Z]","",$ingroup_rec_filename);
-	$company = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$company);
-	$full_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$full_name);
-	$fullname = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$fullname);
-	$group_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$group_name);
-	$HKstatus = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$HKstatus);
-	$lead_filter_comments = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$lead_filter_comments);
-	$lead_filter_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$lead_filter_name);
-	$list_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$list_name);
-	$local_gmt = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$local_gmt);
-	$phone_type = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$phone_type);
-	$picture = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$picture);
-	$script_comments = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$script_comments);
-	$script_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$script_name);
-	$server_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$server_description);
-	$status = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$status);
-	$status_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$status_name);
-	$wrapup_message = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$wrapup_message);
-	$pause_code_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$pause_code_name);
-	$campaign_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$campaign_description);
-	$list_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$list_description);
-	$vcl_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$vcl_name);
-	$vsc_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$vsc_name);
-	$vsc_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$vsc_description);
-	$code_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$code_name);
-	$alias_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$alias_name);
-	$shift_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$shift_name);
-	$did_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$did_description);
-	$alt_server_ip = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$alt_server_ip);
-	$template_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$template_name);
-	$carrier_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$carrier_name);
-	$group_alias_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$group_alias_name);
-	$caller_id_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$caller_id_name);
-	$user_code = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$user_code);
-	$territory = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$territory);
-	$tts_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$tts_name);
-	$moh_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$moh_name);
-	$timer_action_message = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$timer_action_message);
-	$external_server_ip = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$external_server_ip);
-	$default_codecs = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$default_codecs);
-	$codecs_list = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$codecs_list);
-	$label_title = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_title);
-	$label_first_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_first_name);
-	$label_middle_initial = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_middle_initial);
-	$label_last_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_last_name);
-	$label_address1 = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_address1);
-	$label_address2 = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_address2);
-	$label_address3 = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_address3);
-	$label_city = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_city);
-	$label_state = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_state);
-	$label_province = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_province);
-	$label_postal_code = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_postal_code);
-	$label_vendor_lead_code = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_vendor_lead_code);
-	$label_gender = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_gender);
-	$label_phone_number = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_phone_number);
-	$label_phone_code = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_phone_code);
-	$label_alt_phone = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_alt_phone);
-	$label_security_phrase = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_security_phrase);
-	$label_email = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_email);
-	$label_comments = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_comments);
-	$slave_db_server = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$slave_db_server);
-	$filter_phone_group_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$filter_phone_group_name);
-	$filter_phone_group_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$filter_phone_group_description);
-	$filter_clean_cid_number = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$filter_clean_cid_number);
-	$label_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$label_name);
-	$default_local_gmt = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$default_local_gmt);
-	$cid_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$cid_description);
-	$description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$description);
-	$first_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$first_name);
-	$last_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$last_name);
-	$bu_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$bu_name);
-	$department = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$department);
-	$group = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$group);
-	$job_title = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$job_title);
-	$location = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$location);
+	$company = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$company);
+	$full_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$full_name);
+	$fullname = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$fullname);
+	$group_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$group_name);
+	$HKstatus = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$HKstatus);
+	$lead_filter_comments = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$lead_filter_comments);
+	$lead_filter_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$lead_filter_name);
+	$list_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$list_name);
+	$local_gmt = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$local_gmt);
+	$phone_type = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$phone_type);
+	$picture = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$picture);
+	$script_comments = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$script_comments);
+	$script_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$script_name);
+	$server_description = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$server_description);
+	$status = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$status);
+	$status_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$status_name);
+	$wrapup_message = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$wrapup_message);
+	$pause_code_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$pause_code_name);
+	$campaign_description = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$campaign_description);
+	$list_description = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$list_description);
+	$vcl_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$vcl_name);
+	$vsc_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$vsc_name);
+	$vsc_description = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$vsc_description);
+	$code_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$code_name);
+	$alias_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$alias_name);
+	$shift_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$shift_name);
+	$did_description = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$did_description);
+	$alt_server_ip = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$alt_server_ip);
+	$template_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$template_name);
+	$carrier_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$carrier_name);
+	$group_alias_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$group_alias_name);
+	$caller_id_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$caller_id_name);
+	$user_code = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$user_code);
+	$territory = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$territory);
+	$tts_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$tts_name);
+	$moh_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$moh_name);
+	$timer_action_message = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$timer_action_message);
+	$external_server_ip = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$external_server_ip);
+	$default_codecs = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$default_codecs);
+	$codecs_list = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$codecs_list);
+	$label_title = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_title);
+	$label_first_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_first_name);
+	$label_middle_initial = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_middle_initial);
+	$label_last_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_last_name);
+	$label_address1 = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_address1);
+	$label_address2 = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_address2);
+	$label_address3 = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_address3);
+	$label_city = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_city);
+	$label_state = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_state);
+	$label_province = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_province);
+	$label_postal_code = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_postal_code);
+	$label_vendor_lead_code = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_vendor_lead_code);
+	$label_gender = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_gender);
+	$label_phone_number = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_phone_number);
+	$label_phone_code = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_phone_code);
+	$label_alt_phone = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_alt_phone);
+	$label_security_phrase = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_security_phrase);
+	$label_email = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_email);
+	$label_comments = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_comments);
+	$slave_db_server = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$slave_db_server);
+	$filter_phone_group_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$filter_phone_group_name);
+	$filter_phone_group_description = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$filter_phone_group_description);
+	$filter_clean_cid_number = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$filter_clean_cid_number);
+	$label_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$label_name);
+	$default_local_gmt = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$default_local_gmt);
+	$cid_description = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$cid_description);
+	$description = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$description);
+	$first_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$first_name);
+	$last_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$last_name);
+	$bu_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$bu_name);
+	$department = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$department);
+	$group = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$group);
+	$job_title = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$job_title);
+	$location = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$location);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
 	$call_out_number_group = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$call_out_number_group);
@@ -2571,10 +2572,10 @@ if ($non_latin < 1)
 	$filter_extension = ereg_replace("[^-\*\#\.\:\/\@\_0-9a-zA-Z]","",$filter_extension);
 
 	### ALPHA-NUMERIC and space and underscore and dash and slash and at and dot and pound and star and pipe and comma
-	$ivr_park_call_agi = ereg_replace("[^ -\*\#\.\,\:\/\|\@\_0-9a-zA-Z]","",$ivr_park_call_agi);
+	$ivr_park_call_agi = ereg_replace("[^- \*\#\.\,\:\/\|\@\_0-9a-zA-Z]","",$ivr_park_call_agi);
 
 	### ALPHA-NUMERIC and space and underscore and dash and slash and at and dot and pound and star and pipe and comma and equal
-	$voicemail_options = ereg_replace("[^ -\=\*\#\.\,\:\/\|\@\_0-9a-zA-Z]","",$voicemail_options);
+	$voicemail_options = ereg_replace("[^- \=\*\#\.\,\:\/\|\@\_0-9a-zA-Z]","",$voicemail_options);
 
 	### NUMERIC and comma and pipe
 	$waitforsilence_options = ereg_replace("[^\|\,0-9a-zA-Z]","",$waitforsilence_options);
@@ -3019,12 +3020,13 @@ else
 # 111116-0207 - Added ALT and ADDR3 in-group handle methods
 # 111122-1333 - Added Inbound Daily Report
 # 111201-0939 - Added graded-random next-agent-call option
+# 111223-0043 - Added max stats displays for in-groups and , fixed several ereg issues
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-350a';
-$build = '111201-0939';
+$admin_version = '2.4-351a';
+$build = '111223-0043';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3639,6 +3641,7 @@ if ($ADD==999997)		{$hh='reports';		echo "CHANGE PASSWORD";}
 if ($ADD==999996)		{$hh='reports';		echo "INITIAL INSTALL WELCOME";}
 if ($ADD==999995)		{$hh='reports';		echo "COPYRIGHT TRADEMARK LICENSE";}
 if ($ADD==999994)		{$hh='reports';		echo "ADMIN UTILITIES";}
+if ($ADD==999993)		{$hh='reports';		echo "SUMMARY STATS";}
 
 
 if ( ($ADD>9) and ($ADD < 99998) )
@@ -4631,6 +4634,11 @@ if ($ADD==99999)
 	<A NAME="vicidial_campaigns-campaign_calldate">
 	<BR>
 	<B>Last Campaign Call Date -</B> This is the last time that a call was handled by an agent logged into this campaign.
+
+	<BR>
+	<A NAME="vicidial_campaigns-max_stats">
+	<BR>
+	<B>Daily Maximum Stats -</B> These are statistics that are generated by the system each day throughout the day until the timeclock end-of-day as it is set in the System Settings. These numbers are generated from the logs within the system to allow for much faster display. The stats are included are - Total Calls, Maximum Agents, Maximum inbound calls, Maximum outbound calls.
 
 	<BR>
 	<A NAME="vicidial_campaigns-campaign_stats_refresh">
@@ -11936,7 +11944,7 @@ if ($ADD==202)
 				elseif (isset($_POST[$Factive]))			{$Factive_value=$_POST[$Factive];}
 			if (isset($_GET[$Fcid_description]))			{$Fcid_description_value=$_GET[$Fcid_description];}
 				elseif (isset($_POST[$Fcid_description]))	{$Fcid_description_value=$_POST[$Fcid_description];}
-			$Fcid_description_value = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$Fcid_description_value);
+			$Fcid_description_value = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$Fcid_description_value);
 			$Factive_value = ereg_replace("[^A-Z]","",$Factive_value);
 
 		#	echo "$campaign_id - $Xareacode[$o] - $Xoutbound_cid[$o] - $Factive($Factive_value|$Xactive[$o]) - $Fcid_description($Fcid_description_value|$Xcid_description[$o])<BR>";
@@ -15790,7 +15798,7 @@ if ($ADD==4511)
 					$option_description = ereg_replace("[^- \:\/\_0-9a-zA-Z]","",$option_description);
 					$option_route = ereg_replace("[^-\_0-9a-zA-Z]","",$option_route);
 					$option_route_value = ereg_replace("[^-\/\|\_\#\*\,\.\_0-9a-zA-Z]","",$option_route_value);
-					$option_route_value_context = ereg_replace("[^,-_0-9a-zA-Z]","",$option_route_value_context);
+					$option_route_value_context = ereg_replace("[^-\,\_0-9a-zA-Z]","",$option_route_value_context);
 					}
 
 				if (strlen($option_route) > 0)
@@ -16039,7 +16047,7 @@ if ($ADD==411111)
 				$group_shifts_ct = count($group_shifts);
 				while ($p <= $group_shifts_ct)
 					{
-					$group_shifts[$p] = ereg_replace("[^ -_0-9a-zA-Z]","",$group_shifts[$p]);
+					$group_shifts[$p] = ereg_replace("[^- \_0-9a-zA-Z]","",$group_shifts[$p]);
 					$GROUP_shifts .= "$group_shifts[$p] ";
 					$p++;
 					}
@@ -16048,7 +16056,7 @@ if ($ADD==411111)
 				$vgroup_vgroups_ct = count($agent_status_viewable_groups);
 				while ($p <= $vgroup_vgroups_ct)
 					{
-					$agent_status_viewable_groups[$p] = ereg_replace("[^ -_0-9a-zA-Z]","",$agent_status_viewable_groups[$p]);
+					$agent_status_viewable_groups[$p] = ereg_replace("[^- \_0-9a-zA-Z]","",$agent_status_viewable_groups[$p]);
 					$VGROUP_vgroups .= "$agent_status_viewable_groups[$p] ";
 					$p++;
 					}
@@ -16057,7 +16065,7 @@ if ($ADD==411111)
 				$admin_viewable_groups_ct = count($admin_viewable_groups);
 				while ($p <= $admin_viewable_groups_ct)
 					{
-					$admin_viewable_groups[$p] = ereg_replace("[^ -_0-9a-zA-Z]","",$admin_viewable_groups[$p]);
+					$admin_viewable_groups[$p] = ereg_replace("[^- \_0-9a-zA-Z]","",$admin_viewable_groups[$p]);
 					$Vadmin_viewable_groups .= "$admin_viewable_groups[$p] ";
 					$p++;
 					}
@@ -16066,7 +16074,7 @@ if ($ADD==411111)
 				$admin_viewable_call_times_ct = count($admin_viewable_call_times);
 				while ($p <= $admin_viewable_call_times_ct)
 					{
-					$admin_viewable_call_times[$p] = ereg_replace("[^ -_0-9a-zA-Z]","",$admin_viewable_call_times[$p]);
+					$admin_viewable_call_times[$p] = ereg_replace("[^- \_0-9a-zA-Z]","",$admin_viewable_call_times[$p]);
 					$Vadmin_viewable_call_times .= "$admin_viewable_call_times[$p] ";
 					$p++;
 					}
@@ -20661,6 +20669,11 @@ if ($ADD==31)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Change Date: </td><td align=left>$campaign_changedate &nbsp; $NWB#vicidial_campaigns-campaign_changedate$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Login Date: </td><td align=left>$campaign_logindate &nbsp; $NWB#vicidial_campaigns-campaign_logindate$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Call Date: </td><td align=left>$campaign_calldate &nbsp; $NWB#vicidial_campaigns-campaign_calldate$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+			horizontal_bar_chart($campaign_id,'8','campaign',$link,'total_calls','call count',1);
+		echo "</td></tr>\n";
+
 		echo "<tr bgcolor=#8EBCFD><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option SELECTED>$campaign_active</option></select>$NWB#vicidial_campaigns-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#8EBCFD><td align=right>Admin User Group: </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
@@ -24846,6 +24859,11 @@ if ($ADD==3111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Group Color: </td><td align=left bgcolor=\"$row[2]\" id=\"group_color_td\"><input type=text name=group_color size=7 maxlength=7 value=\"$row[2]\">$NWB#vicidial_inbound_groups-group_color$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option SELECTED>$active</option></select>$NWB#vicidial_inbound_groups-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Calldate: </td><td align=left>$group_calldate$NWB#vicidial_inbound_groups-group_calldate$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+			horizontal_bar_chart($group_id,'8','in-group',$link,'total_calls','call count',1);
+		echo "</td></tr>\n";
+
 		echo "<tr bgcolor=#B6D3FC><td align=right>Admin User Group: </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
@@ -26043,7 +26061,7 @@ if ($ADD==3321)
 					elseif (isset($_POST[$Factive]))			{$Factive_value=$_POST[$Factive];}
 				if (isset($_GET[$Fdescription]))				{$Fdescription_value=$_GET[$Fdescription];}
 					elseif (isset($_POST[$Fdescription]))		{$Fdescription_value=$_POST[$Fdescription];}
-				$Fdescription_value = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$Fdescription_value);
+				$Fdescription_value = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$Fdescription_value);
 				$Factive_value = ereg_replace("[^A-Z]","",$Factive_value);
 
 			#	echo "$did_id - $Xuser_start[$o] - $Xextension[$o] - $Factive($Factive_value|$Xactive[$o]) - $Fdescription($Fdescription_value|$Xdescription[$o])<BR>";
@@ -29251,6 +29269,44 @@ if ($ADD==311111111111111)
 		$row=mysql_fetch_row($rslt);
 		$vicidial_nanpa_prefix_codes_count =	$row[0];
 
+		$stmt="SELECT sum(total_calls) from vicidial_daily_max_stats where stats_flag='OPEN' and stats_type!='TOTAL';";
+		$rslt=mysql_query($stmt, $link);
+		$stats_to_print = mysql_num_rows($rslt);
+		if ($stats_to_print > 0) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$ALLtotal_calls = $rowx[0];
+			}
+
+		$stmt="SELECT max(max_inbound) from vicidial_daily_max_stats where stats_flag='OPEN' and stats_type='INGROUP';";
+		$rslt=mysql_query($stmt, $link);
+		$stats_to_print = mysql_num_rows($rslt);
+		if ($stats_to_print > 0) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$ALLmax_inbound = $rowx[0];
+			}
+
+		$stmt="SELECT max(max_outbound) from vicidial_daily_max_stats where stats_flag='OPEN' and stats_type='CAMPAIGN';";
+		$rslt=mysql_query($stmt, $link);
+		$stats_to_print = mysql_num_rows($rslt);
+		if ($stats_to_print > 0) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$ALLmax_outbound = $rowx[0];
+			}
+
+		$stmt="SELECT max_channels,max_calls,max_agents from vicidial_daily_max_stats where stats_flag='OPEN' and stats_type='TOTAL';";
+		$rslt=mysql_query($stmt, $link);
+		$stats_to_print = mysql_num_rows($rslt);
+		if ($stats_to_print > 0) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$ALLchannels_count =	$rowx[0];
+			$ALLcalls_count =		$rowx[1];
+			$ALLagent_count =		$rowx[2];
+			}
+
 		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled from system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
@@ -29372,6 +29428,7 @@ if ($ADD==311111111111111)
 		$pcblinkB=''; $pcblinkE='';
 		if ($vicidial_phone_codes_count < 1000) {$pcblinkB='<b><font color=red><blink>'; $pcblinkE='</blink></font></b>';}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Phone Codes: </td><td align=left> $pcblinkB$vicidial_phone_codes_count - $vicidial_postal_codes_count - $vicidial_nanpa_prefix_codes_count$pcblinkE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Today System Stats: </td><td align=left> $ALLtotal_calls - $ALLmax_inbound - $ALLmax_outbound - $ALLchannels_count - $ALLcalls_count - $ALLagent_count</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Use Non-Latin: </td><td align=left><select size=1 name=use_non_latin><option>1</option><option>0</option><option selected>$use_non_latin</option></select>$NWB#settings-use_non_latin$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Webroot Writable: </td><td align=left><select size=1 name=webroot_writable><option>1</option><option>0</option><option selected>$webroot_writable</option></select>$NWB#settings-webroot_writable$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>VICIDIAL Agent Disable Display: </td><td align=left><select size=1 name=vicidial_agent_disable>\n";
@@ -32619,6 +32676,71 @@ if ($ADD==999994)
 	echo "</td></tr></TABLE></center>\n";
 	}
 ##### END admin hidden utilities page #####
+
+
+######################
+# ADD=999993 - max stats detail report
+######################
+if ($ADD==999993)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ($stage == 'in-group')
+		{
+		$in_out = 'in-group';
+		$max_type = 'max_inbound';
+		$modify_link = "<a href=\"$PHP_SELF?ADD=3111&group_id=$campaign_id\">";
+		$stmt="SELECT group_name from vicidial_inbound_groups where group_id='$campaign_id' $LOGadmin_viewable_groupsSQL;";
+		$rslt=mysql_query($stmt, $link);
+		$rows_to_print = mysql_num_rows($rslt);
+		if ($rows_to_print > 0) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$campaign_name = $rowx[0];
+			}
+		else
+			{echo "Not found";   exit;}
+		}
+	else
+		{
+		$in_out = 'campaign';
+		$max_type = 'max_outbound';
+		$modify_link = "<a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id\">";
+		$stmt="SELECT campaign_name from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+		$rslt=mysql_query($stmt, $link);
+		$rows_to_print = mysql_num_rows($rslt);
+		if ($rows_to_print > 0) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$campaign_name = $rowx[0];
+			}
+		else
+			{echo "Not found";   exit;}
+		}
+
+	echo "<br><B> Administration: Max Stats Detail for $stage $modify_link$campaign_id</a> - $campaign_name</B><BR><BR>\n";
+	echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+		horizontal_bar_chart($campaign_id,'30',$in_out,$link,'total_calls','call count',0);
+	echo "</td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+		horizontal_bar_chart($campaign_id,'30',$in_out,$link,$max_type,'most concurrent calls',0);
+	echo "</td></tr>\n";
+
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+		horizontal_bar_chart($campaign_id,'30',$in_out,$link,'max_agents','most concurrent agents',0);
+	echo "</td></tr>\n";
+
+	echo "</TABLE></center>\n";
+	}
+##### END max stats detail report #####
+
+
+
+
 
 
 echo "</TD></TR></TABLE></center>\n";

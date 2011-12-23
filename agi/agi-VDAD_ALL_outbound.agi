@@ -92,12 +92,13 @@
 # 110829-2324 - Added survey_recording option
 # 110926-1929 - Small fixes
 # 111201-1751 - Added grade-random next-agent-call option
+# 111219-2256 - Added max stats updating
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
 $AGILOG = '0';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=92;
+$mysql_log_count=96;
 $one_mysql_log=0;
 
 
@@ -122,6 +123,7 @@ $now_date = "$year-$mon-$mday $hour:$min:$sec";
 $CLInow_date = "$year-$mon-$mday\\ $hour:$min:$sec";
 $start_time_epoch = $now_date_epoch;
 $start_time=$now_date;
+$YMD = "$year-$mon-$mday";
 $CIDdate = "$mon$mday$hour$min$sec";
 $tsSQLdate = "$year$mon$mday$hour$min$sec";
 $filedate = "$US$year-$mon-$mday$US$hour$min$sec";
@@ -420,14 +422,60 @@ if ($VDACaffected_rows < 1)
 		$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,uniqueid,callerid,channel,phone_code,phone_number,call_time,call_type,stage,queue_priority)  values('$VARserver_ip','$VDADcampaign','LIVE','$VDADlead_id','$uniqueid','$callerid','$channel','$VDADphone_code','$VDADphone','$VDADcall_time','$VDADorigin','LIVE-0','$VDADqueue_priority')";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='01071';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-			if ($AGILOG) {$agi_string = "$affected_rows|VDAC-reinsert|$stmtA|";   &agi_output;}
-
+		if ($AGILOG) {$agi_string = "$affected_rows|VDAC-reinsert|$stmtA|";   &agi_output;}
 		}
 	else
 		{
 		if ($AGILOG) {$agi_string = "--    NO VDM FOUND!!!!!!!!!!: $callerid";   &agi_output;}
 		}
 
+	##### BEGIN - Max call stats
+	$outcalls_count=0;
+	### Get count of concurrent calls for this campaign
+	$stmtA = "SELECT count(*) FROM vicidial_auto_calls where campaign_id='$VDADcampaign';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+		$dbhP=$dbhA;   $mysql_count='02093';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$outcalls_count = 	$aryA[0];
+		}
+	$sthA->finish();
+
+	$STATSmax_outbound=0;
+	$stmtA = "SELECT max_outbound from vicidial_daily_max_stats where campaign_id='$VDADcampaign' and stats_type='CAMPAIGN' and stats_flag='OPEN' order by update_time desc limit 1;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+		$dbhP=$dbhA;   $mysql_count='02094';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$STATSmax_outbound =			$aryA[0];
+		$sthA->finish();
+
+		$update_SQL='';
+		if ($STATSmax_outbound < $outcalls_count)
+			{$update_SQL .= ",max_outbound='$outcalls_count'";}
+
+		if (length($update_SQL) > 5) 
+			{
+			$stmtA = "UPDATE vicidial_daily_max_stats SET update_time=NOW()$update_SQL where campaign_id='$VDADcampaign' and stats_type='CAMPAIGN' and stats_flag='OPEN';";
+			$affected_rows = $dbhA->do($stmtA);
+				$dbhP=$dbhA;   $mysql_count='02095';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			if ($AGILOG) {$agi_string = "DAILY STATS UPDATE $VDADcampaign|$affected_rows|$stmtA|\n";   &agi_output;}
+			}
+		}
+	else
+		{
+		$stmtA = "INSERT INTO vicidial_daily_max_stats SET stats_date='$YMD',update_time=NOW(),max_outbound='$outcalls_count',campaign_id='$VDADcampaign',stats_type='CAMPAIGN',stats_flag='OPEN';";
+		$affected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='02096';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "DAILY STATS INSERT $VDADcampaign|$affected_rows|$stmtA|\n";   &agi_output;}
+		}
+	##### END - Max call stats
 	}
 if ($VDACaffected_rows > 0)
 	{

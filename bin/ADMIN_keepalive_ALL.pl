@@ -67,6 +67,7 @@
 # 110911-1452 - Added resets for extension groups and areacode cid tables
 # 110922-2148 - Added reset for vicidial_did_ra_extensions
 # 111004-2333 - Added Call Menu option for update of fields
+# 111221-1454 - Added resetting of max stats records at timeclock end of day
 #
 
 $DB=0; # Debug flag
@@ -573,7 +574,7 @@ if ($timeclock_auto_logout > 0)
 
 ################################################################################
 #####  START clear out non-used vicidial_conferences sessions and reset daily
-#####        tally tables
+#####        tally tables at Timeclock end-of-day
 ################################################################################
 
 # default path to astguiclient configuration file:
@@ -623,17 +624,17 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 $timeclock_end_of_day_NOW=0;
 ### Grab system_settings values from the database
-	$stmtA = "SELECT count(*) from system_settings where timeclock_end_of_day LIKE \"%$reset_test%\";";
-	if ($DB) {print "|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$timeclock_end_of_day_NOW =	"$aryA[0]";
-		}
-	$sthA->finish();
+$stmtA = "SELECT count(*) from system_settings where timeclock_end_of_day LIKE \"%$reset_test%\";";
+if ($DB) {print "|$stmtA|\n";}
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$timeclock_end_of_day_NOW =	"$aryA[0]";
+	}
+$sthA->finish();
 
 if ($timeclock_end_of_day_NOW > 0)
 	{
@@ -831,7 +832,6 @@ if ($timeclock_end_of_day_NOW > 0)
 	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
 	$sthA->finish();
 
-
 	$stmtA = "update vicidial_campaign_agents SET calls_today=0;";
 	if($DBX){print STDERR "\n|$stmtA|\n";}
 	$affected_rows = $dbhA->do($stmtA);
@@ -895,6 +895,147 @@ if ($timeclock_end_of_day_NOW > 0)
 	@aryA = $sthA->fetchrow_array;
 	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
 	$sthA->finish();
+
+
+
+
+
+
+	##### BEGIN max stats end of day process #####
+	$secX = time();
+	$RMtarget = ($secX - 86400);	# 24 hours ago
+	($RMsec,$RMmin,$RMhour,$RMmday,$RMmon,$RMyear,$RMwday,$RMyday,$RMisdst) = localtime($RMtarget);
+	$RMyear = ($RMyear + 1900);
+	$RMmon++;
+	if ($RMmon < 10) {$RMmon = "0$RMmon";}
+	if ($RMmday < 10) {$RMmday = "0$RMmday";}
+	if ($RMhour < 10) {$RMhour = "0$RMhour";}
+	if ($RMmin < 10) {$RMmin = "0$RMmin";}
+	if ($RMsec < 10) {$RMsec = "0$RMsec";}
+	$RMSQLdate = "$RMyear-$RMmon-$RMmday $RMhour:$RMmin:$RMsec";
+
+	# set OPEN max stats records to CLOSING for processing
+	$stmtA = "UPDATE vicidial_daily_max_stats SET stats_flag='CLOSING' where stats_flag='OPEN';";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows Daily Max Stats Closing Process Started|\n";}
+
+	# gather data from CLOSING max stats records
+	$stmtA = "SELECT stats_date,stats_flag,stats_type,campaign_id,update_time,closed_time,max_channels,max_calls,max_inbound,max_outbound,max_agents,max_remote_agents,total_calls from vicidial_daily_max_stats where stats_flag='CLOSING';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArowsDMS=$sthA->rows;
+	$i=0;
+	while ($sthArowsDMS > $i)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$Astats_date[$i]	= 		$aryA[0];
+		$Astats_flag[$i]	= 		$aryA[1];
+		$Astats_type[$i]	= 		$aryA[2];
+		$Acampaign_id[$i]	= 		$aryA[3];
+		$Aupdate_time[$i]	= 		$aryA[4];
+		$Aclosed_time[$i]	= 		$aryA[5];
+		$Amax_channels[$i]	= 		$aryA[6];
+		$Amax_calls[$i]	= 			$aryA[7];
+		$Amax_inbound[$i]	= 		$aryA[8];
+		$Amax_outbound[$i]	= 		$aryA[9];
+		$Amax_agents[$i]	= 		$aryA[10];
+		$Amax_remote_agents[$i]	= 	$aryA[11];
+		$Atotal_calls[$i]	= 		$aryA[12];
+
+		if($DBXXX){print STDERR "\nMAX STATS: |$i|$Astats_date[$i]|$Astats_flag[$i]|$Astats_type[$i]|$Acampaign_id[$i]|$Aupdate_time[$i]|$Aclosed_time[$i]|$Amax_channels[$i]|$Amax_calls[$i]|$Amax_inbound[$i]|$Amax_outbound[$i]|$Amax_agents[$i]|$Amax_remote_agents[$i]|$Atotal_calls[$i]|\n";}
+		$i++;
+		}
+	$sthA->finish();
+
+	### loop through CLOSING max stats records and calculate end of day numbers, updating if necessary
+	$i=0;
+	while ($sthArowsDMS > $i)
+		{
+		$NEWtotal_calls=0;
+		$inbound_count=0;
+		$outbound_count=0;
+		### calculate total calls for system, did inbound and vicidial outbound
+		if ($Astats_type[$i] =~ /TOTAL/)
+			{
+			$stmtA = "SELECT count(*) from vicidial_did_log where call_date > \"$RMSQLdate\";";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$inbound_count =	$aryA[0];
+				}
+			$sthA->finish();
+
+			$stmtA = "SELECT count(*) from vicidial_log where call_date > \"$RMSQLdate\";";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$outbound_count =	$aryA[0];
+				}
+			$sthA->finish();
+			$NEWtotal_calls = ($inbound_count + $outbound_count);
+
+			$stmtA = "UPDATE vicidial_daily_max_stats SET total_calls='$NEWtotal_calls',stats_flag='CLOSED' where stats_flag='CLOSING' and campaign_id='' and stats_type='TOTAL';";
+			if($DBX){print STDERR "\n|$stmtA|\n";}
+			$affected_rows = $dbhA->do($stmtA);
+			if($DB){print STDERR "\n|$affected_rows Daily Max Stats Closed for TOTAL: $NEWtotal_calls|$Atotal_calls[$i]\n";}
+			}
+		### calculate total calls for ingroups
+		if ($Astats_type[$i] =~ /INGROUP/)
+			{
+			$stmtA = "SELECT count(*) from vicidial_closer_log where call_date > \"$RMSQLdate\" and campaign_id='$Acampaign_id[$i]';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$inbound_count =	$aryA[0];
+				}
+			$sthA->finish();
+			$NEWtotal_calls = ($inbound_count + $outbound_count);
+
+			$stmtA = "UPDATE vicidial_daily_max_stats SET total_calls='$NEWtotal_calls',stats_flag='CLOSED' where stats_flag='CLOSING' and campaign_id='$Acampaign_id[$i]' and stats_type='INGROUP';";
+			if($DBX){print STDERR "\n|$stmtA|\n";}
+			$affected_rows = $dbhA->do($stmtA);
+			if($DB){print STDERR "\n|$affected_rows Daily Max Stats Closed for INGROUP $Acampaign_id[$i]: $NEWtotal_calls|$Atotal_calls[$i]|\n";}
+			}
+		### calculate total calls for campaigns
+		if ($Astats_type[$i] =~ /CAMPAIGN/)
+			{
+			$stmtA = "SELECT count(*) from vicidial_log where call_date > \"$RMSQLdate\" and campaign_id='$Acampaign_id[$i]';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$outbound_count =	$aryA[0];
+				}
+			$sthA->finish();
+			$NEWtotal_calls = ($inbound_count + $outbound_count);
+
+			$stmtA = "UPDATE vicidial_daily_max_stats SET total_calls='$NEWtotal_calls',stats_flag='CLOSED' where stats_flag='CLOSING' and campaign_id='$Acampaign_id[$i]' and stats_type='CAMPAIGN';";
+			if($DBX){print STDERR "\n|$stmtA|\n";}
+			$affected_rows = $dbhA->do($stmtA);
+			if($DB){print STDERR "\n|$affected_rows Daily Max Stats Closed for CAMPAIGN $Acampaign_id[$i]: $NEWtotal_calls|$Atotal_calls[$i]|\n";}
+			}
+
+		if($DBXXX){print STDERR "\nMAX STATS: |$i|$Astats_date[$i]|$Astats_flag[$i]|$Astats_type[$i]|$Acampaign_id[$i]|$Aupdate_time[$i]|$Aclosed_time[$i]|$Amax_channels[$i]|$Amax_calls[$i]|$Amax_inbound[$i]|$Amax_outbound[$i]|$Amax_agents[$i]|$Amax_remote_agents[$i]|$Atotal_calls[$i]|     |$NEWtotal_calls = ($inbound_count + $outbound_count)|\n";}
+		$i++;
+		}
+
+	$stmtA = "UPDATE vicidial_daily_max_stats SET stats_flag='CLOSED' where stats_flag='CLOSING';";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows Daily Max Stats Closed Cleanup|\n";}
+	##### END max stats end of day process #####
 
 
 	$dbhC = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_custom_user", "$VARDB_custom_pass")

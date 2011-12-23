@@ -1217,3 +1217,25 @@ ALTER TABLE vicidial_campaign_agents ADD campaign_grade TINYINT(2) UNSIGNED defa
 ALTER TABLE vicidial_campaigns MODIFY next_agent_call ENUM('random','oldest_call_start','oldest_call_finish','campaign_rank','overall_user_level','fewest_calls','longest_wait_time','campaign_grade_random') default 'longest_wait_time';
 
 UPDATE system_settings SET db_schema_version='1310',db_schema_update_date=NOW() where db_schema_version < 1310;
+
+CREATE TABLE vicidial_daily_max_stats (
+stats_date DATE NOT NULL,
+stats_flag ENUM('OPEN','CLOSED','CLOSING') default 'CLOSED',
+stats_type ENUM('TOTAL','INGROUP','CAMPAIGN','') default '',
+campaign_id VARCHAR(20) default '',
+update_time TIMESTAMP,
+closed_time DATETIME,
+max_channels MEDIUMINT(8) UNSIGNED default '0',
+max_calls MEDIUMINT(8) UNSIGNED default '0',
+max_inbound MEDIUMINT(8) UNSIGNED default '0',
+max_outbound MEDIUMINT(8) UNSIGNED default '0',
+max_agents MEDIUMINT(8) UNSIGNED default '0',
+max_remote_agents MEDIUMINT(8) UNSIGNED default '0',
+total_calls INT(9) UNSIGNED default '0',
+index (stats_date),
+index (stats_flag),
+index (campaign_id)
+);
+
+UPDATE system_settings SET db_schema_version='1311',db_schema_update_date=NOW() where db_schema_version < 1311;
+

@@ -2606,6 +2606,25 @@ UNIQUE KEY snapshot_date_list_key
 KEY snapshot_date_key (snapshot_time)
 );
 
+CREATE TABLE vicidial_daily_max_stats (
+stats_date DATE NOT NULL,
+stats_flag ENUM('OPEN','CLOSED','CLOSING') default 'CLOSED',
+stats_type ENUM('TOTAL','INGROUP','CAMPAIGN','') default '',
+campaign_id VARCHAR(20) default '',
+update_time TIMESTAMP,
+closed_time DATETIME,
+max_channels MEDIUMINT(8) UNSIGNED default '0',
+max_calls MEDIUMINT(8) UNSIGNED default '0',
+max_inbound MEDIUMINT(8) UNSIGNED default '0',
+max_outbound MEDIUMINT(8) UNSIGNED default '0',
+max_agents MEDIUMINT(8) UNSIGNED default '0',
+max_remote_agents MEDIUMINT(8) UNSIGNED default '0',
+total_calls INT(9) UNSIGNED default '0',
+index (stats_date),
+index (stats_flag),
+index (campaign_id)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
@@ -2758,7 +2777,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1310',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1311',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

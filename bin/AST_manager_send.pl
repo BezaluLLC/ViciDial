@@ -122,7 +122,7 @@ while ($one_day_interval > 0)
 
 		if ($NEW_actions) 
 			{
-			my $stmtA = "UPDATE vicidial_manager set status='QUEUE' where server_ip = '" . $conf{VARserver_ip} . "' and status = 'NEW' order by entry_date limit 1";
+			my $stmtA = "UPDATE vicidial_manager set status='QUEUE' where server_ip = '" . $conf{VARserver_ip} . "' and status = 'NEW' order by man_id limit 1";
 			$affected_rows = $dbhA->do($stmtA);
 			print STDERR "rows updated to QUEUE: |$affected_rows|\n" if ($DB);
 			}
@@ -133,7 +133,7 @@ while ($one_day_interval > 0)
 
 		if ($affected_rows) 
 			{
-			my $stmtA = "SELECT man_id,uniqueid,entry_date,status,response,server_ip,channel,action,callerid,cmd_line_b,cmd_line_c,cmd_line_d,cmd_line_e,cmd_line_f,cmd_line_g,cmd_line_h,cmd_line_i,cmd_line_j,cmd_line_k FROM vicidial_manager where server_ip = '" . $conf{VARserver_ip} . "' and status = 'QUEUE' order by entry_date desc limit 1";
+			my $stmtA = "SELECT man_id,uniqueid,entry_date,status,response,server_ip,channel,action,callerid,cmd_line_b,cmd_line_c,cmd_line_d,cmd_line_e,cmd_line_f,cmd_line_g,cmd_line_h,cmd_line_i,cmd_line_j,cmd_line_k FROM vicidial_manager where server_ip = '" . $conf{VARserver_ip} . "' and status = 'QUEUE' order by man_id limit 1";
 			eventLogger($conf{'PATHlogs'}, 'process', "SQL_QUERY|" . $stmtA . "|");
 
 			my $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
