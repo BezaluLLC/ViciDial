@@ -37,6 +37,7 @@
 # 110513-0721 - Added debug DB table, dial level and available only tally threshold options
 # 111103-0626 - Added MAXCAL as a drop status
 # 111219-1420 - Added daily stats updates to new table for total, in-group and campaign
+# 111223-0924 - Added check for logged-in agents
 #
 
 # constants
@@ -44,7 +45,7 @@ $DB=0;  # Debug flag, set to 0 for no debug messages, On an active system this w
 $US='__';
 $MT[0]='';
 
-##### table definitions:
+##### table definitions(used to force index usage for better performance):
 	$vicidial_log = 'vicidial_log FORCE INDEX (call_date) ';
 #	$vicidial_log = 'vicidial_log';
 	$vicidial_closer_log = 'vicidial_closer_log FORCE INDEX (call_date) ';
@@ -111,11 +112,12 @@ if (length($ARGV[0])>1)
 		print "  [--loops=XXX] = force a number of loops of XXX\n";
 		print "  [--delay=XXX] = force a loop delay of XXX seconds\n";
 		print "  [--campaign=XXX] = run for campaign XXX only\n";
-		print "  [--no-daily-stats] = will not daily stats for total, ingroup, campaign\n";
+		print "  [--no-daily-stats] = will not calculate daily stats for total, ingroup, campaign\n";
 		print "  [--force] = force calculation of suggested predictive dial_level\n";
 		print "  [--test] = test only, do not alter dial_level\n";
 		print "  [--debug] = debug\n";
 		print "  [--debugX] = super debug\n";
+		print "  [--debugXXX] = extra super debug\n";
 		print "\n";
 		exit;
 		}
@@ -200,6 +202,11 @@ if (length($ARGV[0])>1)
 			print "CLIloops-    $CLIloops\n";
 			print "CLIdelay-    $CLIdelay\n";
 			print "\n";
+			}
+		if ($args =~ /--debugXXX/i)
+			{
+			$DBXXX=1;
+			print "\n----- EXTRA SUPER DEBUG -----\n\n";
 			}
 		if ($args =~ /--force/i)
 			{
@@ -325,12 +332,12 @@ $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $master_loop=0;
 
 ### Start master loop ###
-while ($master_loop<$CLIloops) 
+while ($master_loop < $CLIloops) 
 	{
 	&get_time_now;
 
 	### Grab Server values from the database
-	$stmtA = "SELECT vd_server_logs,local_gmt FROM servers where server_ip = '$VARserver_ip';";
+	$stmtA = "SELECT vd_server_logs,local_gmt FROM servers where server_ip='$VARserver_ip';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -338,15 +345,14 @@ while ($master_loop<$CLIloops)
 	while ($sthArows > $rec_count)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$DBvd_server_logs =			"$aryA[0]";
-		$DBSERVER_GMT		=		"$aryA[1]";
+		$DBvd_server_logs =		$aryA[0];
+		$DBSERVER_GMT =			$aryA[1];
 		if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
 		else {$SYSLOG = '0';}
 		if (length($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
 		$rec_count++;
 		}
 	$sthA->finish();
-
 
 	$secX = time();
 	($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($secX);
@@ -364,7 +370,7 @@ while ($master_loop<$CLIloops)
 	if ($min < 10) {$min = "0$min";}
 	if ($sec < 10) {$sec = "0$sec";}
 
-	#	if ($DB) {print "TIME DEBUG: $master_loop   $LOCAL_GMT_OFF_STD|$LOCAL_GMT_OFF|$isdst|   GMT: $hour:$min\n";}
+	if ($DBXXX) {print "TIME DEBUG: $master_loop   $LOCAL_GMT_OFF_STD|$LOCAL_GMT_OFF|$isdst|   GMT: $hour:$min\n";}
 
 	@campaign_id=@MT; 
 	@lead_order=@MT;
@@ -445,8 +451,9 @@ while ($master_loop<$CLIloops)
 	foreach(@campaign_id)
 		{
 		$debug_camp_output='';
-		### Find out how many leads are in the hopper from a specific campaign
 		$hopper_ready_count=0;
+		$agents_loggedin_count=0;
+		### Find out how many leads are in the hopper from a specific campaign
 		$stmtA = "SELECT count(*) from vicidial_hopper where campaign_id='$campaign_id[$i]' and status='READY';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -457,7 +464,21 @@ while ($master_loop<$CLIloops)
 			$hopper_ready_count = $aryA[0];
 			if ($DB) {print "     $campaign_id[$i] hopper READY count:   $hopper_ready_count";}
 			$debug_camp_output .= "     $campaign_id[$i] hopper READY count:   $hopper_ready_count\n";
-	#		if ($DBX) {print "     |$stmtA|\n";}
+			if ($DBXXX) {print "     |$stmtA|\n";}
+			}
+		$sthA->finish();
+		### Find out how many agents are logged in to a specific campaign
+		$stmtA = "SELECT count(*) from vicidial_live_agents where campaign_id='$campaign_id[$i]' and last_update_time > '$VDL_one';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$agents_loggedin_count = $aryA[0];
+			if ($DB) {print "     $campaign_id[$i] agents LOGGED-IN count:   $agents_loggedin_count";}
+			$debug_camp_output .= "     $campaign_id[$i] agents LOGGED-IN count:   $agents_loggedin_count\n";
+			if ($DBXXX) {print "     |$stmtA|\n";}
 			}
 		$sthA->finish();
 		$event_string = "|$campaign_id[$i]|$hopper_level[$i]|$hopper_ready_count|$local_call_time[$i]|$diff_ratio_updater|$drop_count_updater|";
@@ -468,8 +489,8 @@ while ($master_loop<$CLIloops)
 		if ($DBX) {print "     TIME CALL CHECK: $five_min_ago/$campaign_calldate_epoch[$i]\n";}
 		$debug_camp_output .= "     TIME CALL CHECK: $five_min_ago/$campaign_calldate_epoch[$i]\n";
 
-		##### IF THERE ARE NO LEADS IN THE HOPPER FOR THE CAMPAIGN WE DO NOT WANT TO ADJUST THE DIAL_LEVEL
-		if ($hopper_ready_count>0)
+		##### IF THERE ARE NO LEADS IN THE HOPPER OR AGENTS LOGGED-IN FOR THE CAMPAIGN WE DO NOT WANT TO ADJUST THE DIAL_LEVEL
+		if ( ($hopper_ready_count > 0) || ($agents_loggedin_count > 0) )
 			{
 			### BEGIN - GATHER STATS FOR THE vicidial_campaign_stats TABLE ###
 			$differential_onemin[$i]=0;
@@ -480,13 +501,13 @@ while ($master_loop<$CLIloops)
 			if ($total_agents_avg[$i] > 0)
 				{
 				### Update Drop counter every 60 seconds
-				if ($drop_count_updater>=60)
+				if ($drop_count_updater >= 60)
 					{
 					&calculate_drops;
 					}
 
 				### Calculate and update Dial level every 15 seconds
-				if ($diff_ratio_updater>=15)
+				if ($diff_ratio_updater >= 15)
 					{
 					&calculate_dial_level;
 					}
@@ -495,7 +516,7 @@ while ($master_loop<$CLIloops)
 				{
 				if ( ($campaign_stats_refresh[$i] =~ /Y/) || ($five_min_ago < $campaign_calldate_epoch[$i]) )
 					{
-					if ($drop_count_updater>=60)
+					if ($drop_count_updater >= 60)
 						{
 						if ($DB) {print "     REFRESH OVERRIDE: $campaign_id[$i]\n";}
 						$debug_camp_output .= "     REFRESH OVERRIDE: $campaign_id[$i]\n";
@@ -512,7 +533,7 @@ while ($master_loop<$CLIloops)
 					{
 					if ($campaign_changedate[$i] >= $VDL_ninty)
 						{
-						if ($drop_count_updater>=60)
+						if ($drop_count_updater >= 60)
 							{
 							if ($DB) {print "     CHANGEDATE OVERRIDE: $campaign_id[$i]\n";}
 							$debug_camp_output .= "     CHANGEDATE OVERRIDE: $campaign_id[$i]\n";
@@ -529,7 +550,7 @@ while ($master_loop<$CLIloops)
 			{
 			if ( ($campaign_stats_refresh[$i] =~ /Y/) || ($five_min_ago < $campaign_calldate_epoch[$i]) )
 				{
-				if ($drop_count_updater>=60)
+				if ($drop_count_updater >= 60)
 					{
 					if ($DB) {print "     REFRESH OVERRIDE: $campaign_id[$i]\n";}
 					$debug_camp_output .= "     REFRESH OVERRIDE: $campaign_id[$i]\n";
@@ -546,7 +567,7 @@ while ($master_loop<$CLIloops)
 				{
 				if ($campaign_changedate[$i] >= $VDL_ninty)
 					{
-					if ($drop_count_updater>=60)
+					if ($drop_count_updater >= 60)
 						{
 						if ($DB) {print "     CHANGEDATE OVERRIDE: $campaign_id[$i]\n";}
 						$debug_camp_output .= "     CHANGEDATE OVERRIDE: $campaign_id[$i]\n";
@@ -576,8 +597,8 @@ while ($master_loop<$CLIloops)
 		&launch_max_calls_gather;
 		}
 
-	if ($RESETdiff_ratio_updater>0) {$RESETdiff_ratio_updater=0;   $diff_ratio_updater=0;}
-	if ($RESETdrop_count_updater>0) {$RESETdrop_count_updater=0;   $drop_count_updater=0;}
+	if ($RESETdiff_ratio_updater > 0) {$RESETdiff_ratio_updater=0;   $diff_ratio_updater=0;}
+	if ($RESETdrop_count_updater > 0) {$RESETdrop_count_updater=0;   $drop_count_updater=0;}
 	$diff_ratio_updater = ($diff_ratio_updater + $CLIdelay);
 	$drop_count_updater = ($drop_count_updater + $CLIdelay);
 
@@ -1161,7 +1182,7 @@ sub calculate_drops
 			$rec_count++;
 			}
 		chop($CATstatusesSQL);
-		if (length($CATstatusesSQL)>2)
+		if (length($CATstatusesSQL) > 2)
 			{
 			# FIND STATUSES IN STATUS CATEGORY
 			$stmtA = "SELECT count(*) from $vicidial_log where campaign_id='$campaign_id[$i]' and call_date > '$VDL_date' and status IN($CATstatusesSQL);";
