@@ -1122,64 +1122,66 @@ if (length($action_xfer_cid) > 4)
 
 
 
-##### BEGIN MAX CONCURRENT CALLS CHECK #####
+##### BEGIN MAX CONCURRENT CALLS LOOKUP AND CHECK #####
 $MCafterhours_override=0;
 $MCnanque_override=0;
 $MCdrop_override=0;
 $MCstatus='';
 $MCterm='';
 $MCcomments='';
-if ( ($max_calls_method !~ /DISABLED/) && ($max_calls_count > 0) )
+$concurrent_calls=0;
+$incalls_count=0;
+
+### Get count of concurrent calls for this in-group
+$stmtA = "SELECT count(*) FROM vicidial_auto_calls where campaign_id='$channel_group' and callerid!='$callerid';";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+	$dbhP=$dbhA;   $mysql_count='02187';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+if ($sthArows > 0)
 	{
-	$concurrent_calls=0;
-	$incalls_count=0;
-	### Get count of concurrent calls for this in-group
-	$stmtA = "SELECT count(*) FROM vicidial_auto_calls where campaign_id='$channel_group' and callerid!='$callerid';";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-		$dbhP=$dbhA;   $mysql_count='02187';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$concurrent_calls = 	$aryA[0];
-		$incalls_count =		$aryA[0];
-		$incalls_count++;
-		}
+	@aryA = $sthA->fetchrow_array;
+	$concurrent_calls = 	$aryA[0];
+	$incalls_count =		$aryA[0];
+	$incalls_count++;
+	}
+$sthA->finish();
+
+$STATSmax_inbound=0;
+$stmtA = "SELECT max_inbound from vicidial_daily_max_stats where campaign_id='$channel_group' and stats_type='INGROUP' and stats_flag='OPEN' order by update_time desc limit 1;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+	$dbhP=$dbhA;   $mysql_count='02192';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$STATSmax_inbound =			$aryA[0];
 	$sthA->finish();
 
-	$STATSmax_inbound=0;
-	$stmtA = "SELECT max_inbound from vicidial_daily_max_stats where campaign_id='$channel_group' and stats_type='INGROUP' and stats_flag='OPEN' order by update_time desc limit 1;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-		$dbhP=$dbhA;   $mysql_count='02192';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$STATSmax_inbound =			$aryA[0];
-		$sthA->finish();
+	$update_SQL='';
+	if ($STATSmax_inbound < $incalls_count)
+		{$update_SQL .= ",max_inbound='$incalls_count'";}
 
-		$update_SQL='';
-		if ($STATSmax_inbound < $incalls_count)
-			{$update_SQL .= ",max_inbound='$incalls_count'";}
-
-		if (length($update_SQL) > 5) 
-			{
-			$stmtA = "UPDATE vicidial_daily_max_stats SET update_time=NOW()$update_SQL where campaign_id='$channel_group' and stats_type='INGROUP' and stats_flag='OPEN';";
-			$affected_rows = $dbhA->do($stmtA);
-				$dbhP=$dbhA;   $mysql_count='02193';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-			if ($AGILOG) {$agi_string = "DAILY STATS UPDATE $channel_group|$affected_rows|$stmtA|\n";   &agi_output;}
-			}
-		}
-	else
+	if (length($update_SQL) > 5) 
 		{
-		$stmtA = "INSERT INTO vicidial_daily_max_stats SET stats_date='$YMD',update_time=NOW(),max_inbound='$incalls_count',campaign_id='$channel_group',stats_type='INGROUP',stats_flag='OPEN';";
+		$stmtA = "UPDATE vicidial_daily_max_stats SET update_time=NOW()$update_SQL where campaign_id='$channel_group' and stats_type='INGROUP' and stats_flag='OPEN';";
 		$affected_rows = $dbhA->do($stmtA);
-			$dbhP=$dbhA;   $mysql_count='02195';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-		if ($AGILOG) {$agi_string = "DAILY STATS INSERT $channel_group|$affected_rows|$stmtA|\n";   &agi_output;}
+			$dbhP=$dbhA;   $mysql_count='02193';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "DAILY STATS UPDATE $channel_group|$affected_rows|$stmtA|\n";   &agi_output;}
 		}
+	}
+else
+	{
+	$stmtA = "INSERT INTO vicidial_daily_max_stats SET stats_date='$YMD',update_time=NOW(),max_inbound='$incalls_count',campaign_id='$channel_group',stats_type='INGROUP',stats_flag='OPEN';";
+	$affected_rows = $dbhA->do($stmtA);
+		$dbhP=$dbhA;   $mysql_count='02195';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+	if ($AGILOG) {$agi_string = "DAILY STATS INSERT $channel_group|$affected_rows|$stmtA|\n";   &agi_output;}
+	}
 
+
+if ( ($max_calls_method !~ /DISABLED/) && ($max_calls_count > 0) )
+	{
 	if (($max_calls_method =~ /IN_QUEUE/)) 
 		{
 		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where campaign_id='$channel_group' and status IN('LIVE','IVR') and callerid!='$callerid';";
