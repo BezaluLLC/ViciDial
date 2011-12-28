@@ -777,7 +777,7 @@ agent_select_territories ENUM('Y','N') default 'N',
 campaign_calldate DATETIME,
 crm_popup_login ENUM('Y','N') default 'N',
 crm_login_address TEXT,
-timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','D3_DIAL','D4_DIAL','D5_DIAL','MESSAGE_ONLY','HANGUP','CALLMENU','EXTENSION','IN_GROUP') default 'NONE',
+timer_action VARCHAR(20) default 'NONE',
 timer_action_message VARCHAR(255) default '',
 timer_action_seconds MEDIUMINT(7) default '-1',
 start_call_url TEXT,
@@ -997,7 +997,7 @@ no_agent_no_queue ENUM('N','Y','NO_PAUSED') default 'N',
 no_agent_action ENUM('CALLMENU','INGROUP','DID','MESSAGE','EXTENSION','VOICEMAIL') default 'MESSAGE',
 no_agent_action_value VARCHAR(255) default 'nbdy-avail-to-take-call|vm-goodbye',
 web_form_address_two TEXT,
-timer_action ENUM('NONE','WEBFORM','WEBFORM2','D1_DIAL','D2_DIAL','D3_DIAL','D4_DIAL','D5_DIAL','MESSAGE_ONLY','HANGUP','CALLMENU','EXTENSION','IN_GROUP') default 'NONE',
+timer_action VARCHAR(20) default 'NONE',
 timer_action_message VARCHAR(255) default '',
 timer_action_seconds MEDIUMINT(7) default '-1',
 start_call_url TEXT,
@@ -2777,7 +2777,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1311',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1312',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

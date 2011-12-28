@@ -1239,3 +1239,7 @@ index (campaign_id)
 
 UPDATE system_settings SET db_schema_version='1311',db_schema_update_date=NOW() where db_schema_version < 1311;
 
+ALTER TABLE vicidial_campaigns MODIFY timer_action VARCHAR(20) default 'NONE';
+ALTER TABLE vicidial_inbound_groups MODIFY timer_action VARCHAR(20) default 'NONE';
+
+UPDATE system_settings SET db_schema_version='1312',db_schema_update_date=NOW() where db_schema_version < 1312;

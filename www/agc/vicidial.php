@@ -372,10 +372,11 @@
 # 111024-1237 - Added callback_list_calltime option
 # 111114-0039 - Added scheduled callback and qm-dispo-code fields to API
 # 111202-1444 - Added grade-random next-agent-call options
+# 111227-1940 - Added Timer Action for Dx_DIAL_QUIET options
 #
 
-$version = '2.4-339c';
-$build = '111202-1444';
+$version = '2.4-340c';
+$build = '111227-1940';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=75;
 $one_mysql_log=0;
@@ -9248,32 +9249,47 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		document.vicidial_form.xfername.value = 'D5';
 		}
 
-	function DtMf_PreSet_a_DiaL()
+	function DtMf_PreSet_a_DiaL(taskquiet)
 		{
 		document.vicidial_form.conf_dtmf.value = CalL_XC_a_Dtmf;
 		document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;
-		basic_originate_call(CalL_XC_a_NuMber,'NO','YES',session_id,'YES','','1','0');
+		var session_id_dial = session_id;
+		if (taskquiet == 'YES')
+			{session_id_dial = '7' + session_id};
+		basic_originate_call(CalL_XC_a_NuMber,'NO','YES',session_id_dial,'YES','','1','0');
 		}
-	function DtMf_PreSet_b_DiaL()
+	function DtMf_PreSet_b_DiaL(taskquiet)
 		{
 		document.vicidial_form.conf_dtmf.value = CalL_XC_b_Dtmf;
 		document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;
-		basic_originate_call(CalL_XC_b_NuMber,'NO','YES',session_id,'YES','','1','0');
+		var session_id_dial = session_id;
+		if (taskquiet == 'YES')
+			{session_id_dial = '7' + session_id};
+		basic_originate_call(CalL_XC_b_NuMber,'NO','YES',session_id_dial,'YES','','1','0');
 		}
-	function DtMf_PreSet_c_DiaL()
+	function DtMf_PreSet_c_DiaL(taskquiet)
 		{
 		document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;
-		basic_originate_call(CalL_XC_c_NuMber,'NO','YES',session_id,'YES','','1','0');
+		var session_id_dial = session_id;
+		if (taskquiet == 'YES')
+			{session_id_dial = '7' + session_id};
+		basic_originate_call(CalL_XC_c_NuMber,'NO','YES',session_id_dial,'YES','','1','0');
 		}
-	function DtMf_PreSet_d_DiaL()
+	function DtMf_PreSet_d_DiaL(taskquiet)
 		{
 		document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;
-		basic_originate_call(CalL_XC_d_NuMber,'NO','YES',session_id,'YES','','1','0');
+		var session_id_dial = session_id;
+		if (taskquiet == 'YES')
+			{session_id_dial = '7' + session_id};
+		basic_originate_call(CalL_XC_d_NuMber,'NO','YES',session_id_dial,'YES','','1','0');
 		}
-	function DtMf_PreSet_e_DiaL()
+	function DtMf_PreSet_e_DiaL(taskquiet)
 		{
 		document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;
-		basic_originate_call(CalL_XC_e_NuMber,'NO','YES',session_id,'YES','','1','0');
+		var session_id_dial = session_id;
+		if (taskquiet == 'YES')
+			{session_id_dial = '7' + session_id};
+		basic_originate_call(CalL_XC_e_NuMber,'NO','YES',session_id_dial,'YES','','1','0');
 		}
 	function hangup_timer_xfer()
 		{
@@ -11594,6 +11610,26 @@ function phone_number_format(formatphone) {
 			if (timer_action == 'D5_DIAL')
 				{
 				DtMf_PreSet_e_DiaL();
+				}
+			if (timer_action == 'D1_DIAL_QUIET')
+				{
+				DtMf_PreSet_a_DiaL('YES');
+				}
+			if (timer_action == 'D2_DIAL_QUIET')
+				{
+				DtMf_PreSet_b_DiaL('YES');
+				}
+			if (timer_action == 'D3_DIAL_QUIET')
+				{
+				DtMf_PreSet_c_DiaL('YES');
+				}
+			if (timer_action == 'D4_DIAL_QUIET')
+				{
+				DtMf_PreSet_d_DiaL('YES');
+				}
+			if (timer_action == 'D5_DIAL_QUIET')
+				{
+				DtMf_PreSet_e_DiaL('YES');
 				}
 			if ( (timer_action == 'HANGUP') && (VD_live_customer_call==1) )
 				{

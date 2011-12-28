@@ -2298,7 +2298,6 @@ while ($drop_timer <= $DROP_TIME)
 		$AGENTDIRECT_user_ids='';
 		### find number of outbound calls waiting in line in front of this call
 		$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and lead_id != '$CIDlead_id' and campaign_id = '$VDADcampaign' and call_time < \"$VDADcall_time\";";
-			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -2309,12 +2308,12 @@ while ($drop_timer <= $DROP_TIME)
 			$rec_countWAITremOUT	= $aryA[0];
 			}
 		$sthA->finish();
+		if ($AGILOG) {$agi_string = "$rec_countWAITremOUT|$stmtA|";   &agi_output;}
 
 		if (length($closer_campaigns) > 3)
 			{
 			### find number of inbound calls waiting in line in front of this call
-			$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and ( (queue_priority > '$VDADqueue_priority') and (call_type='IN') and (campaign_id IN($closer_campaigns)) );";
-				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+			$stmtA = "SELECT count(*) FROM vicidial_auto_calls where ( (status = 'LIVE') and ( (queue_priority > $VDADqueue_priority) and (call_type='IN') and (campaign_id IN($closer_campaigns)) ) );";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -2326,6 +2325,7 @@ while ($drop_timer <= $DROP_TIME)
 				$rec_countWAITremINallowed	=	$aryA[0];
 				}
 			$sthA->finish();
+			if ($AGILOG) {$agi_string = "$rec_countWAITremIN|$stmtA|";   &agi_output;}
 			}
 
 		### if there are inbound calls waiting, see if any READY agents are able to take them
@@ -2384,8 +2384,7 @@ while ($drop_timer <= $DROP_TIME)
 					}
 
 				### find number of inbound calls from in-groups that READY agents are able to take calls from are waiting in line in front of this call
-				$stmtA = "SELECT count(*) FROM vicidial_auto_calls where status = 'LIVE' and ( ( (queue_priority > '$VDADqueue_priority') and (call_type='IN') and (campaign_id IN($READY_agent_closer_camps)) ) $AGENTDIRECT_user_ids );";
-					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				$stmtA = "SELECT count(*) FROM vicidial_auto_calls where ( (status = 'LIVE') and ( ( (queue_priority > $VDADqueue_priority) and (call_type='IN') and (campaign_id IN($READY_agent_closer_camps)) ) ) $AGENTDIRECT_user_ids );";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -2396,6 +2395,7 @@ while ($drop_timer <= $DROP_TIME)
 					$rec_countWAITremIN	= $aryA[0];
 					}
 				$sthA->finish();
+				if ($AGILOG) {$agi_string = "$rec_countWAITremIN|$stmtA|";   &agi_output;}
 				}
 			}
 

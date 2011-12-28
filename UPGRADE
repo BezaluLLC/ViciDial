@@ -786,6 +786,10 @@ OTHER CHANGES:
 	generated from the logs in real-time on the back end, they are not
 	recalculated every time the screen loads as with most other reports.
 
+180. Added Timer Action for Dx_DIAL_QUIET options and timer_rebeep.agi script to
+	allow for periodic beep in agent session required by some organizations
+	to make customers aware of a recorded line.
+
 
 
 

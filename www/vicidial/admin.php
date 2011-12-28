@@ -3021,12 +3021,13 @@ else
 # 111122-1333 - Added Inbound Daily Report
 # 111201-0939 - Added graded-random next-agent-call option
 # 111223-0043 - Added max stats displays for in-groups and , fixed several ereg issues
+# 111227-1938 - Added Timer Action for Dx_DIAL_QUIET options
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-351a';
-$build = '111223-0043';
+$admin_version = '2.4-352a';
+$build = '111227-1938';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -21190,7 +21191,7 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Park Call IVR AGI: </td><td align=left><input type=text name=ivr_park_call_agi size=80 maxlength=1000 value=\"$ivr_park_call_agi\">$NWB#vicidial_campaigns-ivr_park_call_agi$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#8EBCFD><td align=right>Timer Action: </td><td align=left><select size=1 name=timer_action><option selected>NONE</option><option>D1_DIAL</option><option>D2_DIAL</option><option>D3_DIAL</option><option>D4_DIAL</option><option>D5_DIAL</option><option>MESSAGE_ONLY</option><option>WEBFORM</option>$eswHTML<option>HANGUP</option><option>CALLMENU</option><option>EXTENSION</option><option>IN_GROUP</option><option selected>$timer_action</option></select>$NWB#vicidial_campaigns-timer_action$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Timer Action: </td><td align=left><select size=1 name=timer_action><option selected>NONE</option><option>D1_DIAL</option><option>D2_DIAL</option><option>D3_DIAL</option><option>D4_DIAL</option><option>D5_DIAL</option><option>D1_DIAL_QUIET</option><option>D2_DIAL_QUIET</option><option>D3_DIAL_QUIET</option><option>D4_DIAL_QUIET</option><option>D5_DIAL_QUIET</option><option>MESSAGE_ONLY</option><option>WEBFORM</option>$eswHTML<option>HANGUP</option><option>CALLMENU</option><option>EXTENSION</option><option>IN_GROUP</option><option selected>$timer_action</option></select>$NWB#vicidial_campaigns-timer_action$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>Timer Action Message: </td><td align=left><input type=text name=timer_action_message size=50 maxlength=255 value=\"$timer_action_message\">$NWB#vicidial_campaigns-timer_action_message$NWE</td></tr>\n";
 
@@ -24924,7 +24925,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Transfer-Conf Number 5: </td><td align=left><input type=text name=xferconf_e_number size=20 maxlength=50 value=\"$xferconf_e_number\">$NWB#vicidial_inbound_groups-xferconf_a_dtmf$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Timer Action: </td><td align=left><select size=1 name=timer_action><option selected>NONE</option><option>D1_DIAL</option><option>D2_DIAL</option><option>D3_DIAL</option><option>D4_DIAL</option><option>D5_DIAL</option><option>MESSAGE_ONLY</option><option>WEBFORM</option>$eswHTML<option>HANGUP</option><option>CALLMENU</option><option>EXTENSION</option><option>IN_GROUP</option><option selected>$timer_action</option></select>$NWB#vicidial_inbound_groups-timer_action$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Timer Action: </td><td align=left><select size=1 name=timer_action><option selected>NONE</option><option>D1_DIAL</option><option>D2_DIAL</option><option>D3_DIAL</option><option>D4_DIAL</option><option>D5_DIAL</option><option>D1_DIAL_QUIET</option><option>D2_DIAL_QUIET</option><option>D3_DIAL_QUIET</option><option>D4_DIAL_QUIET</option><option>D5_DIAL_QUIET</option><option>MESSAGE_ONLY</option><option>WEBFORM</option>$eswHTML<option>HANGUP</option><option>CALLMENU</option><option>EXTENSION</option><option>IN_GROUP</option><option selected>$timer_action</option></select>$NWB#vicidial_inbound_groups-timer_action$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Timer Action Message: </td><td align=left><input type=text name=timer_action_message size=50 maxlength=255 value=\"$timer_action_message\">$NWB#vicidial_inbound_groups-timer_action_message$NWE</td></tr>\n";
 

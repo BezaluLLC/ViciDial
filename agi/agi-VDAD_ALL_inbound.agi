@@ -1176,7 +1176,7 @@ else
 	$stmtA = "INSERT INTO vicidial_daily_max_stats SET stats_date='$YMD',update_time=NOW(),max_inbound='$incalls_count',campaign_id='$channel_group',stats_type='INGROUP',stats_flag='OPEN';";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02195';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-	if ($AGILOG) {$agi_string = "DAILY STATS INSERT $channel_group|$affected_rows|$stmtA|\n";   &agi_output;}
+	if ($AGILOG) {$agi_string = "DAILY STATS INSERT $channel_group|$affected_rows|$stmtA|";   &agi_output;}
 	}
 
 
