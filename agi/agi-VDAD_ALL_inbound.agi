@@ -172,6 +172,7 @@
 # 111116-0157 - Added ALT and ADDR3 methods for CIDLOOKUP
 # 111201-1457 - Added grade-random next-agent-call option for inbound
 # 111219-2124 - Added max stats updating
+# 111229-1726 - Changed call time overflow to look at previous day stop time
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -755,16 +756,44 @@ if ($sthArows > 0)
 	}
 $sthA->finish();
 
-if ($wday==0) {$daySQL=',ct_sunday_start,ct_sunday_stop,sunday_afterhours_filename_override';}
-if ($wday==1) {$daySQL=',ct_monday_start,ct_monday_stop,monday_afterhours_filename_override';}
-if ($wday==2) {$daySQL=',ct_tuesday_start,ct_tuesday_stop,tuesday_afterhours_filename_override';}
-if ($wday==3) {$daySQL=',ct_wednesday_start,ct_wednesday_stop,wednesday_afterhours_filename_override';}
-if ($wday==4) {$daySQL=',ct_thursday_start,ct_thursday_stop,thursday_afterhours_filename_override';}
-if ($wday==5) {$daySQL=',ct_friday_start,ct_friday_stop,friday_afterhours_filename_override';}
-if ($wday==6) {$daySQL=',ct_saturday_start,ct_saturday_stop,saturday_afterhours_filename_override';}
+if ($wday==0) 
+	{
+	$daySQL=',ct_sunday_start,ct_sunday_stop,sunday_afterhours_filename_override';
+	$yestSQL=',ct_saturday_start,ct_saturday_stop';
+	}
+if ($wday==1) 
+	{
+	$daySQL=',ct_monday_start,ct_monday_stop,monday_afterhours_filename_override';
+	$yestSQL=',ct_sunday_start,ct_sunday_stop';
+	}
+if ($wday==2) 
+	{
+	$daySQL=',ct_tuesday_start,ct_tuesday_stop,tuesday_afterhours_filename_override';
+	$yestSQL=',ct_monday_start,ct_monday_stop';
+	}
+if ($wday==3) 
+	{
+	$daySQL=',ct_wednesday_start,ct_wednesday_stop,wednesday_afterhours_filename_override';
+	$yestSQL=',ct_tuesday_start,ct_tuesday_stop';
+	}
+if ($wday==4) 
+	{
+	$daySQL=',ct_thursday_start,ct_thursday_stop,thursday_afterhours_filename_override';
+	$yestSQL=',ct_wednesday_start,ct_wednesday_stop';
+	}
+if ($wday==5) 
+	{
+	$daySQL=',ct_friday_start,ct_friday_stop,friday_afterhours_filename_override';
+	$yestSQL=',ct_thursday_start,ct_thursday_stop';
+	}
+if ($wday==6) 
+	{
+	$daySQL=',ct_saturday_start,ct_saturday_stop,saturday_afterhours_filename_override';
+	$yestSQL=',ct_friday_start,ct_friday_stop';
+	}
 
 ### Grab call_times values from the database
-$stmtA = "SELECT ct_default_start,ct_default_stop,default_afterhours_filename_override $daySQL FROM vicidial_call_times where call_time_id = '$call_time_id';";
+$stmtA = "SELECT ct_default_start,ct_default_stop,default_afterhours_filename_override $daySQL $yestSQL FROM vicidial_call_times where call_time_id = '$call_time_id';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -776,8 +805,15 @@ $deafult_afterhours_filename_override =	$aryA[2];
 $ct_day_start = 						$aryA[3];
 $ct_day_stop =							$aryA[4];
 $day_afterhours_filename_override =		$aryA[5];
+$ct_yest_start =						$aryA[6];
+$ct_yest_stop =							$aryA[7];
 $sthA->finish();
 
+if ( ($ct_yest_start < 1) && ($ct_yest_stop < 1) )  
+	{
+	$ct_yest_start =		$ct_default_start;
+	$ct_yest_stop =			$ct_default_stop;
+	}
 if ( ($ct_day_start > 0) || ($ct_day_stop > 0) )  
 	{
 	$ct_default_start	=	$ct_day_start;
@@ -1223,8 +1259,8 @@ if ( ($max_calls_method !~ /DISABLED/) && ($max_calls_count > 0) )
 
 ##### BEGIN AFTER HOURS CHECK #####
 $ct_stop_overflow=0;   # allow for overflow time, past midnight
-if ($ct_default_stop > 2400)
-	{$ct_stop_overflow = ($ct_default_stop - 2400);}
+if ($ct_yest_stop > 2400)
+	{$ct_stop_overflow = ($ct_yest_stop - 2400);}
 if ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_stop_overflow) ) || ($MCafterhours_override > 0) )
 	{
 	$VHqueryCID = "VA$CIDdate$hour$min$sec$sec";
