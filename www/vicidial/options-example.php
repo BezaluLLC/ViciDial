@@ -9,6 +9,7 @@
 # 101216-1043 - First Build 
 # 110307-1039 - Added upper-case/lower-case user setting
 # 110708-1730 - Added precision time setting
+# 120102-2112 - Added inventory_allow_realtime option
 #
 
 # used by the realtime_report.php script
@@ -54,6 +55,9 @@ $user_case =			0;		# 1=upper-case, 2-lower-case, 0-no-case-change
 
 # force time precision for reports
 $TIME_agenttimedetail = 'H';	# H=hour, M=minute, S=second, HF=force hour
+
+# used by inventory report
+$inventory_allow_realtime = 0;	# allow real-time report generation for inventory report
 
 
 ?>

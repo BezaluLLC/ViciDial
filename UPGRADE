@@ -790,6 +790,10 @@ OTHER CHANGES:
 	allow for periodic beep in agent session required by some organizations
 	to make customers aware of a recorded line.
 
+181. Added Dialer Inventory Report, requires a process to be added to the 
+	crontab after-hours to gather the statistics (this example is 7:01am):
+	1 7 * * * /usr/share/astguiclient/AST_dialer_inventory_snapshot.pl -q --override-24hours
+
 
 
 
