@@ -1,17 +1,18 @@
 <?php
 # admin_phones_bulk_insert.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen will insert phones into your multi-server system with aliases
 #
 # changes:
 # 101230-0501 - First Build
 # 110712-0932 - Added extension suffix exception for non-SIP/IAX phones, added HELP
+# 120104-2023 - Added webphone options
 #
 
-$admin_version = '2.4-2';
-$build = '110712-0932';
+$admin_version = '2.4-3';
+$build = '120104-2023';
 
 
 require("dbconnect.php");
@@ -41,6 +42,14 @@ if (isset($_GET["alias_suffix"]))				{$alias_suffix=$_GET["alias_suffix"];}
 	elseif (isset($_POST["alias_suffix"]))		{$alias_suffix=$_POST["alias_suffix"];}
 if (isset($_GET["SUBMIT"]))						{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))			{$SUBMIT=$_POST["SUBMIT"];}
+if (isset($_GET["is_webphone"]))				{$is_webphone=$_GET["is_webphone"];}
+	elseif (isset($_POST["is_webphone"]))		{$is_webphone=$_POST["is_webphone"];}
+if (isset($_GET["webphone_dialpad"]))			{$webphone_dialpad=$_GET["webphone_dialpad"];}
+	elseif (isset($_POST["webphone_dialpad"]))	{$webphone_dialpad=$_POST["webphone_dialpad"];}
+if (isset($_GET["webphone_auto_answer"]))			{$webphone_auto_answer=$_GET["webphone_auto_answer"];}
+	elseif (isset($_POST["webphone_auto_answer"]))	{$webphone_auto_answer=$_POST["webphone_auto_answer"];}
+if (isset($_GET["use_external_server_ip"]))			{$use_external_server_ip=$_GET["use_external_server_ip"];}
+	elseif (isset($_POST["use_external_server_ip"])){$use_external_server_ip=$_POST["use_external_server_ip"];}
 
 
 if (strlen($action) < 2)
@@ -63,6 +72,10 @@ if ($non_latin < 1)
 	$alias_suffix = ereg_replace("[^0-9a-zA-Z]","",$alias_suffix);
 	$protocol = ereg_replace("[^-_0-9a-zA-Z]","",$protocol);
 	$local_gmt = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$local_gmt);
+	$is_webphone = ereg_replace("[^NY]","",$is_webphone);
+	$webphone_dialpad = ereg_replace("[^-_0-9a-zA-Z]","",$webphone_dialpad);
+	$webphone_auto_answer = ereg_replace("[^NY]","",$webphone_auto_answer);
+	$use_external_server_ip = ereg_replace("[^NY]","",$use_external_server_ip);
 	}	# end of non_latin
 else
 	{
@@ -202,6 +215,27 @@ if ($action == "HELP")
 	 <B>Local GMT -</B> This is the time zone that all of the phones will be created with.
 	<BR><BR>
 
+	<BR>
+	<A NAME="is_webphone">
+	<BR>
+	<B>Set As Webphone -</B>  Setting this option to Y will attempt to load a web-based phone when the agent logs into their agent screen. Default is N.
+
+	<BR>
+	<A NAME="webphone_dialpad">
+	<BR>
+	<B>Webphone Dialpad -</B>  This setting allows you to activate or deactivate the dialpad for this webphone. Default is Y for enabled. TOGGLE will allow the user to view and hide the dialpad by clicking a link. This feature is not available on all webphone versions. TOGGLE_OFF will default to not show the dialpad on first load, but will allow the user to show the dialpad by clicking on the dialpad link.
+
+	<BR>
+	<A NAME="webphone_auto_answer">
+	<BR>
+	<B>Webphone Auto-Answer -</B>  This setting allows the web phone to be set to automatically answer calls that come in by setting it to Y, or to have calls ring by setting it to N. Default is Y.
+
+	<BR>
+	<A NAME="use_external_server_ip">
+	<BR>
+	<B>Use External Server IP -</B>  If using as a web phone, you can set this to Y to use the servers External IP to register to instead of the Server IP. Default is empty.
+
+
 	</TD></TR></TABLE>
 	</BODY>
 	</HTML>
@@ -272,6 +306,10 @@ if ($action == "BLANK")
 	echo "<tr bgcolor=#B6D3FC><td align=right>Alias Suffix: </td><td align=left><input type=text name=alias_suffix size=2 maxlength=4> $NWB#alias_suffix$NWE </td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Client Protocol: </td><td align=left><select size=1 name=protocol><option>SIP</option><option>Zap</option><option>IAX2</option><option>EXTERNAL</option></select> $NWB#protocol$NWE </td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Local GMT: </td><td align=left><select size=1 name=local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option selected>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option></select> (Do NOT Adjust for DST) $NWB#gmt$NWE </td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Set As Webphone: </td><td align=left><select size=1 name=is_webphone><option>Y</option><option selected>N</option></select>$NWB#is_webphone$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Webphone Dialpad: </td><td align=left><select size=1 name=webphone_dialpad><option selected>Y</option><option>N</option><option>TOGGLE</option><option>TOGGLE_OFF</option></select>$NWB#webphone_dialpad$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Webphone Auto-Answer: </td><td align=left><select size=1 name=webphone_auto_answer><option selected>Y</option><option>N</option></select>$NWB#webphone_auto_answer$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Use External Server IP: </td><td align=left><select size=1 name=use_external_server_ip><option>Y</option><option selected>N</option></select>$NWB#use_external_server_ip$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 	echo "</TABLE></center>\n";
 	echo "</TD></TR></TABLE>\n";
@@ -393,7 +431,7 @@ if ($action == "ADD_PHONES_SUBMIT")
 							$phone_type =		"CCagent";
 							$fullname =			"ext $PN[$p]";
 
-							$stmt = "INSERT INTO phones (extension,dialplan_number,voicemail_id,server_ip,login,pass,status,active,phone_type,fullname,protocol,local_gmt,outbound_cid,conf_secret) values('$extension','$dialplan_number','$voicemail_id','$phone_server_ip','$login','$pass','ACTIVE','Y','$phone_type','$fullname','$protocol','$local_gmt','0000000000','$conf_secret');";
+							$stmt = "INSERT INTO phones (extension,dialplan_number,voicemail_id,server_ip,login,pass,status,active,phone_type,fullname,protocol,local_gmt,outbound_cid,conf_secret,is_webphone,webphone_dialpad,webphone_auto_answer,use_external_server_ip) values('$extension','$dialplan_number','$voicemail_id','$phone_server_ip','$login','$pass','ACTIVE','Y','$phone_type','$fullname','$protocol','$local_gmt','0000000000','$conf_secret','$is_webphone','$webphone_dialpad','$webphone_auto_answer','$use_external_server_ip');";
 							$rslt=mysql_query($stmt, $link);
 							$affected_rows = mysql_affected_rows($link);
 							if ($DB > 0) {echo "$s|$p|$SN[$s]|$PN[$p]|$affected_rows|$stmt\n<BR>";}

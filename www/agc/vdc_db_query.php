@@ -1,7 +1,7 @@
 <?php
 # vdc_db_query.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to exchange information between vicidial.php and the database server for various actions
 # 
@@ -301,10 +301,11 @@
 # 111024-1238 - Added callback_list_calltime option
 # 111114-0035 - Added qm-dispo-code field to updatedispo function
 # 111201-1443 - Added group_grade option
+# 120104-2031 - Fixed missing fullname variable before dispo and start URLs
 #
 
-$version = '2.4-201';
-$build = '111201-1443';
+$version = '2.4-202';
+$build = '120104-2031';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=438;
 $one_mysql_log=0;
@@ -4796,7 +4797,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 
 			### update the log status to INCALL
 			$user_group='';
-			$stmt="SELECT user_group FROM vicidial_users where user='$user' LIMIT 1;";
+			$stmt="SELECT user_group,full_name FROM vicidial_users where user='$user' LIMIT 1;";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00111',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -4805,6 +4806,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				{
 				$row=mysql_fetch_row($rslt);
 				$user_group =		trim("$row[0]");
+				$fullname =			$row[1];
 				}
 
 			$stmt = "SELECT campaign_id,phone_number,alt_dial,call_type from vicidial_auto_calls where callerid = '$callerid' order by call_time desc limit 1;";
@@ -7061,9 +7063,9 @@ if ($ACTION == 'updateDISPO')
 		$talk_time=0;
 		$talk_time_ms=0;
 		$talk_time_min=0;
-		if (eregi('--A--user_custom_',$dispo_call_url))
+		if ( (eregi('--A--user_custom_',$dispo_call_url)) or (eregi('--A--fullname',$dispo_call_url)) )
 			{
-			$stmt = "select custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_users where user='$user';";
+			$stmt = "select custom_one,custom_two,custom_three,custom_four,custom_five,full_name from vicidial_users where user='$user';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00288',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -7071,11 +7073,12 @@ if ($ACTION == 'updateDISPO')
 			if ($VUC_ct > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$user_custom_one	=		urlencode(trim($row[0]));
-				$user_custom_two	=		urlencode(trim($row[1]));
-				$user_custom_three	=		urlencode(trim($row[2]));
-				$user_custom_four	=		urlencode(trim($row[3]));
-				$user_custom_five	=		urlencode(trim($row[4]));
+				$user_custom_one =		urlencode(trim($row[0]));
+				$user_custom_two =		urlencode(trim($row[1]));
+				$user_custom_three =	urlencode(trim($row[2]));
+				$user_custom_four =		urlencode(trim($row[3]));
+				$user_custom_five =		urlencode(trim($row[4]));
+				$fullname =				$row[5];
 				}
 			}
 
