@@ -7078,7 +7078,7 @@ if ($ACTION == 'updateDISPO')
 				$user_custom_three =	urlencode(trim($row[2]));
 				$user_custom_four =		urlencode(trim($row[3]));
 				$user_custom_five =		urlencode(trim($row[4]));
-				$fullname =				$row[5];
+				$fullname =				urlencode(trim($row[5]));
 				}
 			}
 
@@ -7119,7 +7119,7 @@ if ($ACTION == 'updateDISPO')
 			if ($vs_name_ct > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$status_name =		$row[0];
+				$status_name =		urlencode(trim($row[0]));
 				}
 			else
 				{
@@ -7131,7 +7131,7 @@ if ($ACTION == 'updateDISPO')
 				if ($vcs_name_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
-					$status_name =		$row[0];
+					$status_name =		urlencode(trim($row[0]));
 					}
 				}
 			if (strlen($status_name) < 1) {$status_name = $dispo_choice;}
@@ -7187,8 +7187,8 @@ if ($ACTION == 'updateDISPO')
 				if ($VDIDL_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
-					$DID_pattern =		$row[0];
-					$DID_description =	$row[1];
+					$DID_pattern =		urlencode(trim($row[0]));
+					$DID_description =	urlencode(trim($row[1]));
 					}
 				}
 			}
