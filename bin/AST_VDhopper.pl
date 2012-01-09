@@ -68,6 +68,7 @@
 # 110212-2255 - Added scheduled callback custom statuses capability
 # 110214-2319 - Added lead_order_secondary option
 # 111006-1416 - Added call_count_limit option
+# 120109-1510 - Fixed list mix bug
 #
 
 # constants
@@ -2066,8 +2067,10 @@ foreach(@campaign_id)
 							@list_mix_stepARY = split(/\|/,$list_mixARY[$x]);
 							if ($list_mix_stepARY[2] > 0)
 								{
-								$LM_step_goal[$x] = ( ($list_mix_stepARY[2] / 100) * $hopper_level[$i]);
-								$LM_step_even[$x] = ( (100 / $list_mix_stepARY[2]) * 100000);
+								$LM_step_goal[$x] = int( ($list_mix_stepARY[2] / 100) * $hopper_level[$i]);
+								$LM_step_even[$x] = int( (100 / $list_mix_stepARY[2]) * 100000);
+								if ($LM_step_goal[$x] < 1)	{$LM_step_goal[$x] = 1;}
+								if ($LM_step_even[$x] < 1)	{$LM_step_even[$x] = 1;}
 								}
 							else
 								{

@@ -204,10 +204,10 @@ make install
 
 
 cd /usr/local
-wget http://us2.php.net/distributions/php-5.2.10.tar.gz
-gunzip php-5.2.10.tar.gz
-tar xvf php-5.2.10.tar
-wget http://mirror.nyi.net/apache/httpd/httpd-2.2.13.tar.gz
+wget http://museum.php.net/php5/php-5.2.11.tar.gz
+gunzip php-5.2.11.tar.gz
+tar xvf php-5.2.11.tar
+wget http://archive.apache.org/dist/httpd/httpd-2.2.13.tar.gz
 gunzip httpd-2.2.13.tar.gz
 tar xvf httpd-2.2.13.tar
 cd httpd-2.2.13
@@ -224,7 +224,7 @@ openssl req -new -x509 -days 1200 -keyout /usr/local/apache2/conf/ssl.key/server
 openssl rsa -in /usr/local/apache2/conf/ssl.key/server.key.cpy -out /usr/local/apache2/conf/ssl.key/server.key
 
 
-cd ../php-5.2.10
+cd ../php-5.2.11
 make clean
 ./configure --with-mysql=/usr/local/mysql --enable-inline-optimization --enable-memory-limit --enable-track-vars --enable-libgcc --enable-sysvsem --with-openssl=/usr/local/ssl --with-apxs2=/usr/local/apache2/bin/apxs --with-zlib --enable-mbstring
 make
@@ -280,7 +280,7 @@ vi /usr/local/lib/php.ini
 
 
 cd /usr/local
-wget http://bart.eaccelerator.net/source/0.9.5.3/eaccelerator-0.9.5.3.zip
+wget ftp://sanek508.net.ru/Soft/Http%20Server/eaccelerator-0.9.5.3.zip
 unzip eaccelerator-0.9.5.3.zip
 cd eaccelerator-0.9.5.3
 export PHP_PREFIX="/usr/local"

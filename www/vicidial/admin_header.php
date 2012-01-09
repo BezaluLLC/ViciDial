@@ -1037,7 +1037,7 @@ echo "</script>\n";
 -->
 </style>
 
-<?
+<?php
 ##### END - bar chart CSS style #####
 
 echo "</head>\n";
