@@ -1,7 +1,7 @@
 <?php
 # callcard_admin.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This callcard script is to administer the callcard accounts in ViciDial
 # it is separate from the standard admin.php script. callcard_enabled in
@@ -12,10 +12,11 @@
 # 100525-1824 - Added generate option
 # 100616-0847 - Fixed batch issue
 # 100823-1342 - Added Search option and display for level 7 users, added pin number search
+# 120117-1457 - Security fix, issue #544
 #
 
-$version = '2.4-4';
-$build = '100823-1342';
+$version = '2.4-5';
+$build = '120117-1457';
 
 $MT[0]='';
 
@@ -116,6 +117,7 @@ if ($non_latin < 1)
 	$old_territory = ereg_replace("[^-\_0-9a-zA-Z]","",$old_territory);
 	$old_user = ereg_replace("[^-\_0-9a-zA-Z]","",$old_user);
 	$accountid = ereg_replace("[^-\_0-9a-zA-Z]","",$accountid);
+	$pin = ereg_replace("[^0-9a-zA-Z]","",$pin);
 	}
 
 if (eregi("YES",$batch))
