@@ -1,11 +1,12 @@
 <?php 
 # AST_inbound_daily_report.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
 # 111119-1234 - First build
+# 120118-2116 - Changed headers on CSV download
 #
 
 require("dbconnect.php");
@@ -620,7 +621,9 @@ else
 	$MAIN.="| SHIFT                                     | CALLS   | CALLS    | CALLS     | ABANDON | ABANDON | ANSWER | TALK   | TALK       | WRAP       | CALL       |\n";
 	$MAIN.="| DATE-TIME RANGE                           | OFFERED | ANSWERED | ABANDONED | PERCENT | TIME    | SPEED  | TIME   | TIME       | TIME       | TIME       |\n";
 	$MAIN.="+-------------------------------------------+---------+----------+-----------+---------+---------+--------+--------+------------+------------+------------+\n";
-	$CSV_text.="\"SHIFT DATE-TIME RANGE\",\"CALLS\",\"ANSWERED\",\"ABANDONED\",\"ABN %\",\"AVG ABANDON TIME\",\"AVG ANSWER SPEED\",\"AVG TALK TIME\",\"TOTAL TALK TIME\",\"WRAP TIME MIN:SEC\",\"TOTAL MINS\"\n";
+	$CSV_text.="\"\",\"TOTAL\",\"TOTAL\",\"TOTAL\",\"TOTAL\",\"AVG\",\"AVG\",\"AVG\",\"TOTAL\",\"TOTAL\",\"TOTAL\"\n";
+	$CSV_text.="\"\",\"CALLS\",\"CALLS\",\"CALLS\",\"ABANDON\",\"ABANDON\",\"ANSWER\",\"TALK\",\"TALK\",\"WRAP\",\"CALL\"\n";
+	$CSV_text.="\"SHIFT DATE-TIME RANGE\",\"OFFERED\",\"ANSWERED\",\"ABANDONED\",\"PERCENT\",\"TIME\",\"SPEED\",\"TIME\",\"TIME\",\"TIME\",\"TIME\"\n";
 
 
 	$totCALLSwtd=0;

@@ -3024,12 +3024,13 @@ else
 # 111227-1938 - Added Timer Action for Dx_DIAL_QUIET options
 # 120102-2125 - Added Dialer Inventory Report
 # 120104-2024 - Changed copyright dates, other small fixes
+# 120118-2113 - Fixed bugs in phone alias and conf template updates
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-354a';
-$build = '120104-2024';
+$admin_version = '2.4-355a';
+$build = '120118-2113';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -16510,7 +16511,7 @@ if ($ADD==42111111111)
 			{
 			echo "<br>PHONE ALIAS MODIFIED: $alias_id\n";
 
-			$stmt="UPDATE phones_alias set alias_name='$alias_name', logins_list='$logins_list' where alias_id='$alias_id',user_group='$user_group';";
+			$stmt="UPDATE phones_alias set alias_name='$alias_name', logins_list='$logins_list' where alias_id='$alias_id' and user_group='$user_group';";
 			$rslt=mysql_query($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -16702,7 +16703,7 @@ if ($ADD==431111111111)
 			$stmt="UPDATE vicidial_conf_templates set template_name='$template_name',template_contents='$template_contents' where template_id='$template_id';";
 			$rslt=mysql_query($stmt, $link);
 
-			$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y',user_group='$user_group';";
+			$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and user_group='$user_group';";
 			$rslt=mysql_query($stmtA, $link);
 
 			echo "<br>CONF TEMPLATE MODIFIED: $template_id\n";
