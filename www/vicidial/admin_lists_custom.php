@@ -1,7 +1,7 @@
 <?php
 # admin_lists_custom.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen manages the custom lists fields in ViciDial
 #
@@ -20,10 +20,11 @@
 # 110719-0910 - Added HIDEBLOB field type
 # 110730-1106 - Added mysql reserved words check for add-field action
 # 111025-1432 - Fixed case sensitivity on list fields
+# 120122-1349 - Force vicidial_list custom field labels to be all lower case
 #
 
-$admin_version = '2.4-14';
-$build = '111025-1432';
+$admin_version = '2.4-15';
+$build = '120122-1349';
 
 
 require("dbconnect.php");
@@ -560,6 +561,10 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 						}
 					if ($new_field_exists < 1)
 						{
+						$temp_field_label = $A_field_label[$o];
+						if (preg_match("/\|$temp_field_label\|/i",$vicidial_list_fields))
+							{$A_field_label[$o] = strtolower($A_field_label[$o]);}
+
 						### add field function
 						add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$A_field_id[$o],$list_id,$A_field_label[$o],$A_field_name[$o],$A_field_description[$o],$A_field_rank[$o],$A_field_help[$o],$A_field_type[$o],$A_field_options[$o],$A_field_size[$o],$A_field_max[$o],$A_field_default[$o],$A_field_required[$o],$A_field_cost[$o],$A_multi_position[$o],$A_name_position[$o],$A_field_order[$o],$vicidial_list_fields,$mysql_reserved_words);
 
@@ -786,6 +791,9 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 						{$table_exists =	1;}
 					if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
 				
+					if (preg_match("/\|$field_label\|/i",$vicidial_list_fields))
+						{$field_label = strtolower($field_label);}
+
 					### add field function
 					add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields,$mysql_reserved_words);
 
