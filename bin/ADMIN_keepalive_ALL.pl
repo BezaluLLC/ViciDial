@@ -14,7 +14,7 @@
 #  - Runs trigger processes at defined times
 #  - Auto reset lists at defined times
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61011-1348 - First build
@@ -68,6 +68,7 @@
 # 110922-2148 - Added reset for vicidial_did_ra_extensions
 # 111004-2333 - Added Call Menu option for update of fields
 # 111221-1454 - Added resetting of max stats records at timeclock end of day
+# 120124-1032 - Added Answer to all call menus at the top
 #
 
 $DB=0; # Debug flag
@@ -2052,13 +2053,13 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 						{
 						$menu_invalid_prompt_ext .= "exten => i,$PRI,Set(INVCOUNT=\$[\$\{INVCOUNT\} + 1]) \n";   $PRI++;
 						$menu_invalid_prompt_ext .= "exten => i,$PRI,NoOp(\$\{INVCOUNT\}) \n";   $PRI++;
-						$menu_invalid_prompt_ext .= "exten => i,$PRI,Gotoif(\$[0\$\{INVCOUNT\} < 2]?" . $menu_id[$i] . ",s,3) \n";   $PRI++;
+						$menu_invalid_prompt_ext .= "exten => i,$PRI,Gotoif(\$[0\$\{INVCOUNT\} < 2]?" . $menu_id[$i] . ",s,4) \n";   $PRI++;
 						}
 					if ( ($option_value[$j] =~ /INVALID_3RD/) && ($cm_invalid_set < 1) )
 						{
 						$menu_invalid_prompt_ext .= "exten => i,$PRI,Set(INVCOUNT=\$[\$\{INVCOUNT\} + 1]) \n";   $PRI++;
 						$menu_invalid_prompt_ext .= "exten => i,$PRI,NoOp(\${INVCOUNT}) \n";   $PRI++;
-						$menu_invalid_prompt_ext .= "exten => i,$PRI,Gotoif(\$[0\$\{INVCOUNT\} < 3]?" . $menu_id[$i] . ",s,3) \n";   $PRI++;
+						$menu_invalid_prompt_ext .= "exten => i,$PRI,Gotoif(\$[0\$\{INVCOUNT\} < 3]?" . $menu_id[$i] . ",s,4) \n";   $PRI++;
 						}
 
 					$call_menu_line .= "$menu_invalid_prompt_ext";
@@ -2237,7 +2238,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$call_menu_ext .= "\n";
 		$call_menu_ext .= "; $menu_name[$i]\n";
 		$call_menu_ext .= "[$menu_id[$i]]\n";
-		$call_menu_ext .= "exten => s,1,AGI(agi-VDAD_inbound_calltime_check.agi,$tracking_group[$i]-----$track_in_vdac[$i]-----$menu_id[$i]-----$time_check_scheme-----$time_check_route-----$time_check_route_value-----$time_check_route_context)\n";
+		$call_menu_ext .= "exten => s,1,Answer\n";
+		$call_menu_ext .= "exten => s,n,AGI(agi-VDAD_inbound_calltime_check.agi,$tracking_group[$i]-----$track_in_vdac[$i]-----$menu_id[$i]-----$time_check_scheme-----$time_check_route-----$time_check_route_value-----$time_check_route_context)\n";
 		$call_menu_ext .= "exten => s,n,Set(INVCOUNT=0) \n";
 		$call_menu_ext .= "$menu_prompt_ext";
 		if ($menu_timeout[$i] > 0)
@@ -2260,11 +2262,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			if ( (length($menu_timeout_prompt[$i])>0)  && ($menu_timeout_prompt[$i] !~ /NONE/) )
 				{
 				$call_menu_ext .= "exten => t,1,Playback($menu_timeout_prompt[$i])\n";
-				$call_menu_ext .= "exten => t,n,Goto(s,3)\n";
+				$call_menu_ext .= "exten => t,n,Goto(s,4)\n";
 				}
 			else
 				{
-				$call_menu_ext .= "exten => t,1,Goto(s,3)\n";
+				$call_menu_ext .= "exten => t,1,Goto(s,4)\n";
 				}
 			}
 		else
@@ -2276,11 +2278,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			if ( (length($menu_invalid_prompt[$i])>0) && ($menu_invalid_prompt[$i] !~ /NONE/) )
 				{
 				$call_menu_ext .= "exten => i,1,Playback($menu_invalid_prompt[$i])\n";
-				$call_menu_ext .= "exten => i,n,Goto(s,3)\n";
+				$call_menu_ext .= "exten => i,n,Goto(s,4)\n";
 				}
 			else
 				{
-				$call_menu_ext .= "exten => i,1,Goto(s,3)\n";
+				$call_menu_ext .= "exten => i,1,Goto(s,4)\n";
 				}
 			}
 		else
