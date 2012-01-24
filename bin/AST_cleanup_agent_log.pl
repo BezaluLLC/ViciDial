@@ -10,7 +10,7 @@
 #
 # This program only needs to be run by one server
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60711-0945 - Changed to DBI by Marin Blu
@@ -35,6 +35,7 @@
 # 110425-1345 - Added check-complete-pauses option
 # 110504-0737 - Small bug fix in agent log corrections
 # 111208-0627 - Added concurrency check option
+# 120123-0925 - Added vicidial_log duplicate check
 #
 
 # constants
@@ -67,6 +68,7 @@ if (length($ARGV[0])>1)
 		print "  [-only-check-agent-login-lags] = will only fix queue_log missing PAUSEREASON records\n";
 		print "  [-only-qm-live-call-check] = will only check the queue_log calls that report as live, in ViciDial\n";
 		print "  [-only-fix-old-lagged] = will go through old lagged entries and add a new entry after\n";
+		print "  [-only-dedupe-vicidial-log] = will look for duplicate vicidial_log and extended entries\n";
 		print "  [-run-check] = concurrency check, die if another instance is running\n";
 		print "  [-q] = quiet, no output\n";
 		print "  [-test] = test\n";
@@ -111,6 +113,11 @@ if (length($ARGV[0])>1)
 			{
 			$qm_live_call_check=1;
 			if ($Q < 1) {print "\n----- QM LIVE CALL CHECK -----\n\n";}
+			}
+		if ($args =~ /-only-dedupe-vicidial-log/i)
+			{
+			$vl_dup_check=1;
+			if ($Q < 1) {print "\n----- VICIDIAL LOG DUPLICATE CHECK -----\n\n";}
 			}
 		if ($args =~ /-last-24hours/i)
 			{
@@ -212,6 +219,7 @@ if ($Tsec < 10) {$Tsec = "0$Tsec";}
 
 $VDAD_SQL_time = "and event_time > \"$TDSQLdate\" and event_time < \"$FDSQLdate\"";
 $VDCL_SQL_time = "and call_date > \"$TDSQLdate\" and call_date < \"$FDSQLdate\"";
+$VDCL_SQL_time_where = "where call_date > \"$TDSQLdate\" and call_date < \"$FDSQLdate\"";
 $QM_SQL_time = "and time_id > $TDtarget and time_id < $FDtarget";
 $QM_SQL_time_H = "and time_id > $TDtarget and time_id < $HDtarget";
 
@@ -219,6 +227,7 @@ if ($ALL_TIME > 0)
 	{
 	$VDAD_SQL_time = "";
 	$VDCL_SQL_time = "";
+	$VDCL_SQL_time_where = "where call_date > \"2000-01-01 00:00:00\"";
 	$QM_SQL_time = "";
 	}
 if ($ONE_MINUTE > 0)
@@ -236,6 +245,7 @@ if ($ONE_MINUTE > 0)
 
 	$VDAD_SQL_time = "and event_time < \"$MDSQLdate\" and event_time > \"$TDSQLdate\"";
 	$VDCL_SQL_time = "and call_date < \"$MDSQLdate\" and call_date > \"$TDSQLdate\"";
+	$VDCL_SQL_time_where = "where call_date < \"$MDSQLdate\" and call_date > \"$TDSQLdate\"";
 	$QM_SQL_time = "and time_id < $MDtarget and time_id > $TDtarget";
 	$QM_SQL_time_H = "and time_id < $MDtarget and time_id > $TDtarget";
 	}
@@ -254,6 +264,7 @@ if ($TWENTYFOUR_HOURS > 0)
 
 	$VDAD_SQL_time = "and event_time > \"$TDSQLdate\" and event_time < \"$FDSQLdate\"";
 	$VDCL_SQL_time = "and call_date > \"$TDSQLdate\" and call_date < \"$FDSQLdate\"";
+	$VDCL_SQL_time_where = "where call_date > \"$TDSQLdate\" and call_date < \"$FDSQLdate\"";
 	$QM_SQL_time = "and time_id > $TDtarget and time_id < $FDtarget";
 	$QM_SQL_time_H = "and time_id > $TDtarget and time_id < $HDtarget";
 	}
@@ -283,6 +294,7 @@ if ($ONEDAYAGO > 0)
 
 	$VDAD_SQL_time = "and event_time > \"$KDSQLdate\" and event_time < \"$TDSQLdate\"";
 	$VDCL_SQL_time = "and call_date > \"$KDSQLdate\" and call_date < \"$TDSQLdate\"";
+	$VDCL_SQL_time_where = "where call_date > \"$KDSQLdate\" and call_date < \"$TDSQLdate\"";
 	$QM_SQL_time = "and time_id > $KDtarget and time_id < $TDtarget";
 	$QM_SQL_time_H = "and time_id > $KDtarget and time_id < $TDtarget";
 	}
@@ -301,6 +313,7 @@ if ($TWENTYFOUR_OLDER > 0)
 
 	$VDAD_SQL_time = "and event_time < \"$TDSQLdate\"";
 	$VDCL_SQL_time = "and call_date < \"$TDSQLdate\"";
+	$VDCL_SQL_time_where = "where call_date < \"$TDSQLdate\"";
 	$QM_SQL_time = "and time_id < $TDtarget";
 	$QM_SQL_time_H = "and time_id < $TDtarget";
 	}
@@ -319,6 +332,7 @@ if ($THIRTY_DAYS > 0)
 
 	$VDAD_SQL_time = "and event_time > \"$TDSQLdate\" and event_time < \"$FDSQLdate\"";
 	$VDCL_SQL_time = "and call_date > \"$TDSQLdate\" and call_date < \"$FDSQLdate\"";
+	$VDCL_SQL_time_where = "where call_date > \"$TDSQLdate\" and call_date < \"$FDSQLdate\"";
 	$QM_SQL_time = "and time_id > $TDtarget and time_id < $FDtarget";
 	$QM_SQL_time_H = "and time_id > $TDtarget and time_id < $HDtarget";
 	}
@@ -890,6 +904,89 @@ if ( ($enable_queuemetrics_logging > 0) && ($login_lagged_check > 0) )
 ### END FIX LOGIN/LAGGED PAUSEREASON ENTRIES
 
 
+
+
+
+### BEGIN check for duplicate vicidial_log entries
+if ($DB) {print " - vicidial_log duplication check\n";}
+$stmtA = "SELECT count(*) as tally,lead_id,end_epoch from vicidial_log $VDCL_SQL_time_where group by lead_id,end_epoch order by tally desc;";
+if($DBX){print STDERR "\n|$stmtA|\n";}
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+$i=0;
+$j=0;
+$nonDUP=0;
+while ( ($sthArows > $i) && ($nonDUP < 1) )
+	{
+	@aryA = $sthA->fetchrow_array;
+	if ($aryA[0] > 1)
+		{
+		$dup_count[$i] =	$aryA[0];
+		$dup_lead[$i] =		$aryA[1];
+		$dup_end[$i] =		$aryA[2];
+		$j++;
+		}
+	else
+		{
+		$nonDUP++;
+		}
+	$i++;
+	}
+$sthA->finish();
+
+$h=0;
+while ($h < $j)
+	{
+	$stmtA = "SELECT uniqueid,start_epoch,user,status,length_in_sec from vicidial_log $VDCL_SQL_time_where and lead_id='$dup_lead[$h]' and end_epoch='$dup_end[$h]' order by start_epoch;";
+		if ($DBX) {print "$stmtA\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	$i=0;
+	$first_uniqueid='';
+	$del_uniqueid='';
+	$del_start_epoch='';
+	while ( $sthArows > $i)
+		{
+		@aryA = $sthA->fetchrow_array;		
+		if ($i < 1)
+			{
+			$first_uniqueid = $aryA[0];
+			$first_uniqueid =~ s/\..*//gi;
+			}
+		else
+			{
+			if ( (length($first_uniqueid)>7) && ($aryA[0] =~ /^$first_uniqueid/) ) 
+				{
+				$del_uniqueid =		$aryA[0];
+				$del_start_epoch =	$aryA[1];
+				}
+			}
+
+		if ($DBX) {print "$h - $i - $dup_lead[$h]|$dup_end[$h]     |$aryA[0]|$aryA[1]|$aryA[2]|$aryA[3]|$aryA[4]|$first_uniqueid\n";}
+		$i++;
+		}
+	$sthA->finish();
+
+	if ( (length($del_uniqueid)>7) && (length($del_start_epoch)>6) ) 
+		{
+		$stmtA = "DELETE FROM vicidial_log where lead_id='$dup_lead[$h]' and end_epoch='$dup_end[$h]' and uniqueid='$del_uniqueid' and start_epoch='$del_start_epoch';";
+			if($DBX){print STDERR "\n|$stmtA|\n";}
+		if ($TEST < 1)	{$affected_rows = $dbhA->do($stmtA); }
+		$event_string = "VL DELETE: $h|$i|$dup_lead[$h]|$dup_end[$h]|$affected_rows|$stmtA|";
+		&event_logger;
+		}
+
+	$h++;
+	}
+if ($DB) {print STDERR "     vicidial_log duplicates scanned: $h\n";}
+
+if ($vl_dup_check > 0)
+	{
+	exit;
+	}
+### END check for duplicate vicidial_log entries
 
 
 

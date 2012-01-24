@@ -5619,7 +5619,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 						$o=0;
 						while ($custom_field_names_ct > $o) 
 							{
-							$form_field_value =		trim("$row[$o]");
+							$form_field_value =		urlencode(trim("$row[$o]"));
 							$field_name_id =		$custom_field_names_ARY[$o];
 							$field_name_tag =		"--A--" . $field_name_id . "--B--";
 							$VDCL_start_call_url = eregi_replace("$field_name_tag","$form_field_value",$VDCL_start_call_url);
@@ -7348,7 +7348,7 @@ if ($ACTION == 'updateDISPO')
 				$o=0;
 				while ($custom_field_names_ct > $o) 
 					{
-					$form_field_value =		trim("$row[$o]");
+					$form_field_value =		urlencode(trim("$row[$o]"));
 					$field_name_id =		$custom_field_names_ARY[$o];
 					$field_name_tag =		"--A--" . $field_name_id . "--B--";
 					$dispo_call_url = eregi_replace("$field_name_tag","$form_field_value",$dispo_call_url);
