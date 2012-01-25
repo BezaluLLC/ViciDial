@@ -4,13 +4,14 @@
 #
 # functions for administrative scripts and reports
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES:
 # 90524-1503 - First Build
 # 110708-1723 - Added HF precision option
 # 111222-2124 - Added max stats bar chart function
+# 120125-1235 - Small changes to max stats function to allow for total system stats
 #
 
 ##### reformat seconds into HH:MM:SS or MM:SS #####
@@ -111,8 +112,13 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 	$NWB = " &nbsp; <a href=\"javascript:openNewWindow('$PHP_SELF?ADD=99999";
 	$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
+
 	### get stats for last X days
 	$stmt="SELECT stats_date,$metric from vicidial_daily_max_stats where campaign_id='$campaign_id' and stats_flag='OPEN';";
+	if ($metric=='total_calls_inbound_all')
+		{$stmt="SELECT stats_date,sum(total_calls) from vicidial_daily_max_stats where stats_type='INGROUP' and stats_flag='OPEN' group by stats_date;";}
+	if ($metric=='total_calls_outbound_all')
+		{$stmt="SELECT stats_date,sum(total_calls) from vicidial_daily_max_stats where stats_type='CAMPAIGN' and stats_flag='OPEN' group by stats_date;";}
 	$rslt=mysql_query($stmt, $link);
 	$Xstats_to_print = mysql_num_rows($rslt);
 	if ($Xstats_to_print > 0) 
@@ -131,6 +137,10 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 		$Bstats_date[$i] =  date("Y-m-d", $stats_start_time);
 		$Btotal_calls[$i]=0;
 		$stmt="SELECT stats_date,$metric from vicidial_daily_max_stats where campaign_id='$campaign_id' and stats_date='$Bstats_date[$i]';";
+		if ($metric=='total_calls_inbound_all')
+			{$stmt="SELECT stats_date,sum(total_calls) from vicidial_daily_max_stats where stats_date='$Bstats_date[$i]' and stats_type='INGROUP' group by stats_date;";}
+		if ($metric=='total_calls_outbound_all')
+			{$stmt="SELECT stats_date,sum(total_calls) from vicidial_daily_max_stats where stats_date='$Bstats_date[$i]' and stats_type='CAMPAIGN' group by stats_date;";}
 		$rslt=mysql_query($stmt, $link);
 		$Ystats_to_print = mysql_num_rows($rslt);
 		if ($Ystats_to_print > 0) 
@@ -144,9 +154,11 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 		{echo "<!-- no max stats cache summary information available -->";}
 	else
 		{
+		if ($title=='campaign') {$out_in_type=' outbound';}
+		if ($title=='in-group') {$out_in_type=' inbound';}
 		if ($more_link > 0) {$link_text = "<a href=\"$PHP_SELF?ADD=999993&campaign_id=$campaign_id&stage=$title\"><font size=1>more summary stats...</font></a>";}
 		echo "<table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"Multiple day $metric_name.\" style=\"background-image:url(images/bg_fade.png); background-repeat:repeat-x; background-position:left top; width: 33em;\">\n";
-		echo "<caption align=\"top\">$days_graph Day $metric_name for this $title &nbsp; $link_text  &nbsp; $NWB#vicidial_campaigns-max_stats$NWE<br /></caption>\n";
+		echo "<caption align=\"top\">$days_graph Day $out_in_type $metric_name for this $title &nbsp; $link_text  &nbsp; $NWB#vicidial_campaigns-max_stats$NWE<br /></caption>\n";
 		echo "<tr>\n";
 		echo "<th scope=\"col\" style=\"text-align: left; vertical-align:top;\"><span class=\"auraltext\">date</span> </th>\n";
 		echo "<th scope=\"col\" style=\"text-align: left; vertical-align:top;\"><span class=\"auraltext\">$metric_name</span> </th>\n";

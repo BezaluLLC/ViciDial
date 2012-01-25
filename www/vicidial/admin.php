@@ -105,9 +105,9 @@ $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
 $QUERY_STRING = getenv("QUERY_STRING");
 
-$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report';
+$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Maximum System Stats, Maximum Stats Detail';
 
-$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report , Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Custom Reports Links, CallCard Search';
+$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report , Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily , User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Custom Reports Links, CallCard Search, Maximum System Stats, Maximum Stats Detail';
 
 $Vtables = 'NONE,log_noanswer,did_agent_log,contact_information';
 
@@ -3025,12 +3025,13 @@ else
 # 120102-2125 - Added Dialer Inventory Report
 # 120104-2024 - Changed copyright dates, other small fixes
 # 120118-2113 - Fixed bugs in phone alias and conf template updates
+# 120125-1234 - Added Maximum System Stats report and permissions for it and Max Stats Detail report
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-355a';
-$build = '120118-2113';
+$admin_version = '2.4-356a';
+$build = '120125-1234';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3646,6 +3647,7 @@ if ($ADD==999996)		{$hh='reports';		echo "INITIAL INSTALL WELCOME";}
 if ($ADD==999995)		{$hh='reports';		echo "COPYRIGHT TRADEMARK LICENSE";}
 if ($ADD==999994)		{$hh='reports';		echo "ADMIN UTILITIES";}
 if ($ADD==999993)		{$hh='reports';		echo "SUMMARY STATS";}
+if ($ADD==999992)		{$hh='reports';		echo "SYSTEM SUMMARY STATS";}
 
 
 if ( ($ADD>9) and ($ADD < 99998) )
@@ -32262,6 +32264,9 @@ if ($ADD==999999)
 		if ( (preg_match("/Server Performance Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 			{echo "<LI><a href=\"AST_server_performance.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Server Performance Report</a></FONT>\n";}
 
+		if ( (preg_match("/Maximum System Stats/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"admin.php?ADD=999992&stage=TOTAL\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Maximum System Stats</a></FONT>\n";}
+
 		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<LI><a href=\"$PHP_SELF?ADD=700000000000000\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Administration Change Log</a></FONT>\n";
@@ -32699,58 +32704,122 @@ if ($ADD==999993)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	if ($stage == 'in-group')
+	if ( (preg_match("/Maximum Stats Detail/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 		{
-		$in_out = 'in-group';
-		$max_type = 'max_inbound';
-		$modify_link = "<a href=\"$PHP_SELF?ADD=3111&group_id=$campaign_id\">";
-		$stmt="SELECT group_name from vicidial_inbound_groups where group_id='$campaign_id' $LOGadmin_viewable_groupsSQL;";
-		$rslt=mysql_query($stmt, $link);
-		$rows_to_print = mysql_num_rows($rslt);
-		if ($rows_to_print > 0) 
+		if ($stage == 'in-group')
 			{
-			$rowx=mysql_fetch_row($rslt);
-			$campaign_name = $rowx[0];
+			$in_out = 'in-group';
+			$max_type = 'max_inbound';
+			$modify_link = "<a href=\"$PHP_SELF?ADD=3111&group_id=$campaign_id\">";
+			$stmt="SELECT group_name from vicidial_inbound_groups where group_id='$campaign_id' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_query($stmt, $link);
+			$rows_to_print = mysql_num_rows($rslt);
+			if ($rows_to_print > 0) 
+				{
+				$rowx=mysql_fetch_row($rslt);
+				$campaign_name = $rowx[0];
+				}
+			else
+				{echo "Not found";   exit;}
 			}
 		else
-			{echo "Not found";   exit;}
+			{
+			$in_out = 'campaign';
+			$max_type = 'max_outbound';
+			$modify_link = "<a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id\">";
+			$stmt="SELECT campaign_name from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_query($stmt, $link);
+			$rows_to_print = mysql_num_rows($rslt);
+			if ($rows_to_print > 0) 
+				{
+				$rowx=mysql_fetch_row($rslt);
+				$campaign_name = $rowx[0];
+				}
+			else
+				{echo "Not found";   exit;}
+			}
+
+		echo "<br><B> Administration: Maximum Stats Detail for $stage $modify_link$campaign_id</a> - $campaign_name</B><BR><BR>\n";
+		echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+			horizontal_bar_chart($campaign_id,'30',$in_out,$link,'total_calls','call count',0);
+		echo "</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+			horizontal_bar_chart($campaign_id,'30',$in_out,$link,$max_type,'most concurrent calls',0);
+		echo "</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+			horizontal_bar_chart($campaign_id,'30',$in_out,$link,'max_agents','most concurrent agents',0);
+		echo "</td></tr>\n";
 		}
 	else
-		{
-		$in_out = 'campaign';
-		$max_type = 'max_outbound';
-		$modify_link = "<a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id\">";
-		$stmt="SELECT campaign_name from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_query($stmt, $link);
-		$rows_to_print = mysql_num_rows($rslt);
-		if ($rows_to_print > 0) 
-			{
-			$rowx=mysql_fetch_row($rslt);
-			$campaign_name = $rowx[0];
-			}
-		else
-			{echo "Not found";   exit;}
-		}
-
-	echo "<br><B> Administration: Max Stats Detail for $stage $modify_link$campaign_id</a> - $campaign_name</B><BR><BR>\n";
-	echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
-
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-		horizontal_bar_chart($campaign_id,'30',$in_out,$link,'total_calls','call count',0);
-	echo "</td></tr>\n";
-
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-		horizontal_bar_chart($campaign_id,'30',$in_out,$link,$max_type,'most concurrent calls',0);
-	echo "</td></tr>\n";
-
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-		horizontal_bar_chart($campaign_id,'30',$in_out,$link,'max_agents','most concurrent agents',0);
-	echo "</td></tr>\n";
+		{echo "You do not have permission to view this page";}
 
 	echo "</TABLE></center>\n";
 	}
 ##### END max stats detail report #####
 
+
+######################
+# ADD=999992 - max system stats report
+######################
+if ($ADD==999992)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	echo "<br><B> Administration: Maximum System Stats</B><BR><BR>\n";
+	echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
+
+	if ( (preg_match("/Maximum System Stats/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+		{
+		$stmt="SELECT sum(total_calls) from vicidial_daily_max_stats where campaign_id!='' and stats_flag='OPEN';";
+		$rslt=mysql_query($stmt, $link);
+		$rows_to_print = mysql_num_rows($rslt);
+		if ($rows_to_print > 0) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$ALLtotal_calls = $rowx[0];
+
+			$stmt="UPDATE vicidial_daily_max_stats SET total_calls='$ALLtotal_calls' where campaign_id='' and stats_flag='OPEN' and stats_type='TOTAL';";
+			$rslt=mysql_query($stmt, $link);
+			}
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+			horizontal_bar_chart($campaign_id,'30','system',$link,'total_calls','total call count in and out',0);
+		echo "</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+			horizontal_bar_chart($campaign_id,'30','system',$link,'total_calls_inbound_all','total inbound call count',0);
+		echo "</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+			horizontal_bar_chart($campaign_id,'30','system',$link,'total_calls_outbound_all','total outbound call count',0);
+		echo "</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+			horizontal_bar_chart($campaign_id,'30','system',$link,'(max_inbound + max_outbound)','most concurrent calls in and out',0);
+		echo "</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+			horizontal_bar_chart($campaign_id,'30','system',$link,'max_inbound','most concurrent calls inbound total',0);
+		echo "</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+			horizontal_bar_chart($campaign_id,'30','system',$link,'max_outbound','most concurrent calls outbound total',0);
+		echo "</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+			horizontal_bar_chart($campaign_id,'30','system',$link,'max_agents','most concurrent agents',0);
+		echo "</td></tr>\n";
+		}
+	else
+		{echo "You do not have permission to view this page";}
+	echo "</TABLE></center>\n";
+	}
+##### END max system stats report #####
 
 
 
