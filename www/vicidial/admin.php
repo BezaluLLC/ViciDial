@@ -3026,12 +3026,13 @@ else
 # 120104-2024 - Changed copyright dates, other small fixes
 # 120118-2113 - Fixed bugs in phone alias and conf template updates
 # 120125-1234 - Added Maximum System Stats report and permissions for it and Max Stats Detail report
+# 120125-2107 - Added User Group Active User In-Group Select function to User Group page
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-356a';
-$build = '120125-1234';
+$admin_version = '2.4-357a';
+$build = '120125-2107';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -15579,117 +15580,184 @@ if ($ADD==411)
 
 if ($ADD==4111)
 	{
-	if ($LOGmodify_ingroups==1)
+	if ($SUB=='agents_select')
 		{
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		if ($LOGmodify_users==1)
+			{
+			echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		if ( (strlen($group_name) < 2) or (strlen($group_color) < 2) )
-			{
-			echo "<br>GROUP NOT MODIFIED - Please go back and look at the data you entered\n";
-			echo "<br>group name and group color must be at least 2 characters in length\n";
-			}
-		else
-			{
-			if ($form_end != 'END')
+			if ( (strlen($OLDuser_group) < 2) or (strlen($group_id) < 2) )
 				{
-				echo "<br>GROUP NOT MODIFIED - Please wait for the whole page to load before submitting the form\n";
+				echo "<br>USERS NOT MODIFIED - Please go back and look at the data you entered\n";
+				echo "<br>group id and user group must be at least 2 characters in length\n";
 				}
 			else
 				{
-				$p=0;
-				$qc_statuses_ct = count($qc_statuses);
-				while ($p < $qc_statuses_ct)
+				$stmt="SELECT user,closer_campaigns from vicidial_users where active='Y' and user_group='$OLDuser_group' $LOGadmin_viewable_groupsSQL order by user;";
+				$rsltx=mysql_query($stmt, $link);
+				$users_to_print = mysql_num_rows($rsltx);
+				$ARIUG_changenotes='';
+				$o=0;
+				while ($users_to_print > $o) 
 					{
-					$QC_statuses .= " $qc_statuses[$p]";
-					$p++;
+					$rowx=mysql_fetch_row($rsltx);
+					$ARIUG_user[$o] =	$rowx[0];
+					$ARIUG_close[$o] =	$rowx[1];
+					$ARIUG_check[$o] =	'';
+					if (preg_match("/ $group_id /",$ARIUG_close[$o]))
+						{$ARIUG_check[$o] = 'CHECKED';}
+					if ( ($ARIUG_check[$o]=='') and ($stage=='add') )
+						{
+						if (strlen($ARIUG_close[$o]) < 4) {$ARIUG_close[$o]=' - ';}
+						$stmtA="UPDATE vicidial_users set closer_campaigns=' $group_id$ARIUG_close[$o]' where user='$ARIUG_user[$o]';";
+						$rslt=mysql_query($stmtA, $link);
+						if ($DB > 0) {echo "|$stmtA|";}
+						$ARIUG_changenotes .= "added $group_id to selected in-groups|";
+						$ARIUG_code = "USER INGROUP VIGA ADD";
+						}
+					if ( ($ARIUG_check[$o]=='CHECKED') and ($stage=='remove') )
+						{
+						$ARIUG_close[$o] = preg_replace("/ $group_id /",' ',$ARIUG_close[$o]);
+						$stmtB="UPDATE vicidial_users set closer_campaigns='$ARIUG_close[$o]' where user='$ARIUG_user[$o]';";
+						$rslt=mysql_query($stmtB, $link);
+						if ($DB > 0) {echo "|$stmtB|";}
+						$ARIUG_changenotes .= "removed $group_id from selected in-groups|";
+						$ARIUG_code = "USER INGROUP VIGA REMOVE";
+						}
+					if (strlen($ARIUG_changenotes) > 10)
+						{
+						### LOG INSERTION Admin Log Table ###
+						$SQL_log = "$stmtDlog|";
+						$SQL_log = ereg_replace(';','',$SQL_log);
+						$SQL_log = addslashes($SQL_log);
+						$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$ARIUG_user[$o]', event_code='$ARIUG_code', event_sql=\"$SQL_log\", event_notes='$ARIUG_changenotes';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_query($stmt, $link);
+						}
+					$o++;
 					}
-				$p=0;
-				$qc_lists_ct = count($qc_lists);
-				while ($p < $qc_lists_ct)
-					{
-					$QC_lists .= " $qc_lists[$p]";
-					$p++;
-					}
-				
-				if (strlen($QC_statuses)>0) {$QC_statuses .= " -";}
-				if (strlen($QC_lists)>0) {$QC_lists .= " -";}
-
-
-				if ($no_agent_action == "INGROUP")
-					{
-					if (isset($_GET["IGgroup_id_no_agent_action"]))					{$IGgroup_id=$_GET["IGgroup_id_no_agent_action"];}
-						elseif (isset($_POST["IGgroup_id_no_agent_action"]))		{$IGgroup_id=$_POST["IGgroup_id_no_agent_action"];}
-					if (isset($_GET["IGhandle_method_no_agent_action"]))			{$IGhandle_method=$_GET["IGhandle_method_no_agent_action"];}
-						elseif (isset($_POST["IGhandle_method_no_agent_action"]))	{$IGhandle_method=$_POST["IGhandle_method_no_agent_action"];}
-					if (isset($_GET["IGsearch_method_no_agent_action"]))			{$IGsearch_method=$_GET["IGsearch_method_no_agent_action"];}
-						elseif (isset($_POST["IGsearch_method_no_agent_action"]))	{$IGsearch_method=$_POST["IGsearch_method_no_agent_action"];}
-					if (isset($_GET["IGlist_id_no_agent_action"]))					{$IGlist_id=$_GET["IGlist_id_no_agent_action"];}
-						elseif (isset($_POST["IGlist_id_no_agent_action"]))			{$IGlist_id=$_POST["IGlist_id_no_agent_action"];}
-					if (isset($_GET["IGcampaign_id_no_agent_action"]))				{$IGcampaign_id=$_GET["IGcampaign_id_no_agent_action"];}
-						elseif (isset($_POST["IGcampaign_id_no_agent_action"]))		{$IGcampaign_id=$_POST["IGcampaign_id_no_agent_action"];}
-					if (isset($_GET["IGphone_code_no_agent_action"]))				{$IGphone_code=$_GET["IGphone_code_no_agent_action"];}
-						elseif (isset($_POST["IGphone_code_no_agent_action"]))		{$IGphone_code=$_POST["IGphone_code_no_agent_action"];}
-					if (strlen($IGhandle_method)<1)
-						{
-						if (isset($_GET["IGhandle_method_"]))			{$IGhandle_method=$_GET["IGhandle_method_"];}
-							elseif (isset($_POST["IGhandle_method_"]))	{$IGhandle_method=$_POST["IGhandle_method_"];}
-						}
-					if (strlen($IGsearch_method)<1)
-						{
-						if (isset($_GET["IGsearch_method_"]))			{$IGsearch_method=$_GET["IGsearch_method_"];}
-							elseif (isset($_POST["IGsearch_method_"]))	{$IGsearch_method=$_POST["IGsearch_method_"];}
-						}
-					if (strlen($IGlist_id)<1)
-						{
-						if (isset($_GET["IGlist_id_"]))				{$IGlist_id=$_GET["IGlist_id_"];}
-							elseif (isset($_POST["IGlist_id_"]))	{$IGlist_id=$_POST["IGlist_id_"];}
-						}
-					if (strlen($IGcampaign_id)<1)
-						{
-						if (isset($_GET["IGcampaign_id_"]))				{$IGcampaign_id=$_GET["IGcampaign_id_"];}
-							elseif (isset($_POST["IGcampaign_id_"]))	{$IGcampaign_id=$_POST["IGcampaign_id_"];}
-						}
-					if (strlen($IGphone_code)<1)
-						{
-						if (isset($_GET["IGphone_code_"]))			{$IGphone_code=$_GET["IGphone_code_"];}
-							elseif (isset($_POST["IGphone_code_"]))	{$IGphone_code=$_POST["IGphone_code_"];}
-						}
-
-					$no_agent_action_value = "$IGgroup_id,$IGhandle_method,$IGsearch_method,$IGlist_id,$IGcampaign_id,$IGphone_code";
-					if ($DB) {echo "\nNANQUE:     |$no_agent_action_value|$no_agent_action|\n";}
-					}
-
-				if ($no_agent_action == "EXTENSION")
-					{
-					if (isset($_GET["EXextension_no_agent_action"]))			{$EXextension=$_GET["EXextension_no_agent_action"];}
-						elseif (isset($_POST["EXextension_no_agent_action"]))	{$EXextension=$_POST["EXextension_no_agent_action"];}
-					if (isset($_GET["EXcontext_no_agent_action"]))				{$EXcontext=$_GET["EXcontext_no_agent_action"];}
-						elseif (isset($_POST["EXcontext_no_agent_action"]))		{$EXcontext=$_POST["EXcontext_no_agent_action"];}
-
-					$no_agent_action_value = "$EXextension,$EXcontext";
-					}
-
-				$no_agent_action_value = ereg_replace("[^-\/\|\_\#\*\,\.\_0-9a-zA-Z]","",$no_agent_action_value);
-
-				echo "<br><B>GROUP MODIFIED: $group_id</B>\n";
-
-				$stmt="UPDATE vicidial_inbound_groups set group_name='$group_name', group_color='$group_color', active='$active', web_form_address='" . mysql_real_escape_string($web_form_address) . "', voicemail_ext='$voicemail_ext', next_agent_call='$next_agent_call', fronter_display='$fronter_display', ingroup_script='$script_id', get_call_launch='$get_call_launch', xferconf_a_dtmf='$xferconf_a_dtmf',xferconf_a_number='$xferconf_a_number', xferconf_b_dtmf='$xferconf_b_dtmf',xferconf_b_number='$xferconf_b_number',drop_action='$drop_action',drop_call_seconds='$drop_call_seconds',drop_exten='$drop_exten',call_time_id='$call_time_id',after_hours_action='$after_hours_action',after_hours_message_filename='$after_hours_message_filename',after_hours_exten='$after_hours_exten',after_hours_voicemail='$after_hours_voicemail',welcome_message_filename='$welcome_message_filename',moh_context='$moh_context',onhold_prompt_filename='$onhold_prompt_filename',prompt_interval='$prompt_interval',agent_alert_exten='$agent_alert_exten',agent_alert_delay='$agent_alert_delay',default_xfer_group='$default_xfer_group',queue_priority='$queue_priority',drop_inbound_group='$drop_inbound_group',ingroup_recording_override='$ingroup_recording_override',ingroup_rec_filename='$ingroup_rec_filename',afterhours_xfer_group='$afterhours_xfer_group',qc_enabled='$qc_enabled',qc_statuses='$QC_statuses',qc_shift_id='$qc_shift_id',qc_get_record_launch='$qc_get_record_launch',qc_show_recording='$qc_show_recording',qc_web_form_address='$qc_web_form_address',qc_script='$qc_script',play_place_in_line='$play_place_in_line',play_estimate_hold_time='$play_estimate_hold_time',hold_time_option='$hold_time_option',hold_time_option_seconds='$hold_time_option_seconds',hold_time_option_exten='$hold_time_option_exten',hold_time_option_voicemail='$hold_time_option_voicemail',hold_time_option_xfer_group='$hold_time_option_xfer_group',hold_time_option_callback_filename='$hold_time_option_callback_filename',hold_time_option_callback_list_id='$hold_time_option_callback_list_id',hold_recall_xfer_group='$hold_recall_xfer_group',no_delay_call_route='$no_delay_call_route',play_welcome_message='$play_welcome_message',answer_sec_pct_rt_stat_one='$answer_sec_pct_rt_stat_one',answer_sec_pct_rt_stat_two='$answer_sec_pct_rt_stat_two',default_group_alias='$default_group_alias',no_agent_no_queue='$no_agent_no_queue',no_agent_action='$no_agent_action',no_agent_action_value='$no_agent_action_value',web_form_address_two='" . mysql_real_escape_string($web_form_address_two) . "',timer_action='$timer_action',timer_action_message='$timer_action_message',timer_action_seconds='$timer_action_seconds',start_call_url='" . mysql_real_escape_string($start_call_url) . "',dispo_call_url='" . mysql_real_escape_string($dispo_call_url) . "',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',ignore_list_script_override='$ignore_list_script_override',extension_appended_cidname='$extension_appended_cidname',uniqueid_status_display='$uniqueid_status_display',uniqueid_status_prefix='$uniqueid_status_prefix',hold_time_option_minimum='$hold_time_option_minimum',hold_time_option_press_filename='$hold_time_option_press_filename',hold_time_option_callmenu='$hold_time_option_callmenu',onhold_prompt_no_block='$onhold_prompt_no_block',onhold_prompt_seconds='$onhold_prompt_seconds',hold_time_option_no_block='$hold_time_option_no_block',hold_time_option_prompt_seconds='$hold_time_option_prompt_seconds',hold_time_second_option='$hold_time_second_option',hold_time_third_option='$hold_time_third_option',wait_hold_option_priority='$wait_hold_option_priority',wait_time_option='$wait_time_option',wait_time_second_option='$wait_time_second_option',wait_time_third_option='$wait_time_third_option',wait_time_option_seconds='$wait_time_option_seconds',wait_time_option_exten='$wait_time_option_exten',wait_time_option_voicemail='$wait_time_option_voicemail',wait_time_option_xfer_group='$wait_time_option_xfer_group',wait_time_option_callmenu='$wait_time_option_callmenu',wait_time_option_callback_filename='$wait_time_option_callback_filename',wait_time_option_callback_list_id='$wait_time_option_callback_list_id',wait_time_option_press_filename='$wait_time_option_press_filename',wait_time_option_no_block='$wait_time_option_no_block',wait_time_option_prompt_seconds='$wait_time_option_prompt_seconds',timer_action_destination='$timer_action_destination',calculate_estimated_hold_seconds='$calculate_estimated_hold_seconds',add_lead_url='" . mysql_real_escape_string($add_lead_url) . "',eht_minimum_prompt_filename='$eht_minimum_prompt_filename',eht_minimum_prompt_no_block='$eht_minimum_prompt_no_block',eht_minimum_prompt_seconds='$eht_minimum_prompt_seconds',on_hook_ring_time='$on_hook_ring_time',na_call_url='" . mysql_real_escape_string($na_call_url) . "',on_hook_cid='$on_hook_cid',action_xfer_cid='$action_xfer_cid',drop_callmenu='$drop_callmenu',after_hours_callmenu='$after_hours_callmenu',user_group='$user_group',max_calls_method='$max_calls_method',max_calls_count='$max_calls_count',max_calls_action='$max_calls_action' where group_id='$group_id';";
-				$rslt=mysql_query($stmt, $link);
-
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='INGROUPS', event_type='MODIFY', record_id='$group_id', event_code='ADMIN MODIFY INGROUP', event_sql=\"$SQL_log\", event_notes='';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
 				}
+			}
+		else
+			{
+			echo "You do not have permission to view this page\n";
+			exit;
 			}
 		}
 	else
 		{
-		echo "You do not have permission to view this page\n";
-		exit;
+		if ($LOGmodify_ingroups==1)
+			{
+			echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+			if ( (strlen($group_name) < 2) or (strlen($group_color) < 2) )
+				{
+				echo "<br>GROUP NOT MODIFIED - Please go back and look at the data you entered\n";
+				echo "<br>group name and group color must be at least 2 characters in length\n";
+				}
+			else
+				{
+				if ($form_end != 'END')
+					{
+					echo "<br>GROUP NOT MODIFIED - Please wait for the whole page to load before submitting the form\n";
+					}
+				else
+					{
+					$p=0;
+					$qc_statuses_ct = count($qc_statuses);
+					while ($p < $qc_statuses_ct)
+						{
+						$QC_statuses .= " $qc_statuses[$p]";
+						$p++;
+						}
+					$p=0;
+					$qc_lists_ct = count($qc_lists);
+					while ($p < $qc_lists_ct)
+						{
+						$QC_lists .= " $qc_lists[$p]";
+						$p++;
+						}
+					
+					if (strlen($QC_statuses)>0) {$QC_statuses .= " -";}
+					if (strlen($QC_lists)>0) {$QC_lists .= " -";}
+
+
+					if ($no_agent_action == "INGROUP")
+						{
+						if (isset($_GET["IGgroup_id_no_agent_action"]))					{$IGgroup_id=$_GET["IGgroup_id_no_agent_action"];}
+							elseif (isset($_POST["IGgroup_id_no_agent_action"]))		{$IGgroup_id=$_POST["IGgroup_id_no_agent_action"];}
+						if (isset($_GET["IGhandle_method_no_agent_action"]))			{$IGhandle_method=$_GET["IGhandle_method_no_agent_action"];}
+							elseif (isset($_POST["IGhandle_method_no_agent_action"]))	{$IGhandle_method=$_POST["IGhandle_method_no_agent_action"];}
+						if (isset($_GET["IGsearch_method_no_agent_action"]))			{$IGsearch_method=$_GET["IGsearch_method_no_agent_action"];}
+							elseif (isset($_POST["IGsearch_method_no_agent_action"]))	{$IGsearch_method=$_POST["IGsearch_method_no_agent_action"];}
+						if (isset($_GET["IGlist_id_no_agent_action"]))					{$IGlist_id=$_GET["IGlist_id_no_agent_action"];}
+							elseif (isset($_POST["IGlist_id_no_agent_action"]))			{$IGlist_id=$_POST["IGlist_id_no_agent_action"];}
+						if (isset($_GET["IGcampaign_id_no_agent_action"]))				{$IGcampaign_id=$_GET["IGcampaign_id_no_agent_action"];}
+							elseif (isset($_POST["IGcampaign_id_no_agent_action"]))		{$IGcampaign_id=$_POST["IGcampaign_id_no_agent_action"];}
+						if (isset($_GET["IGphone_code_no_agent_action"]))				{$IGphone_code=$_GET["IGphone_code_no_agent_action"];}
+							elseif (isset($_POST["IGphone_code_no_agent_action"]))		{$IGphone_code=$_POST["IGphone_code_no_agent_action"];}
+						if (strlen($IGhandle_method)<1)
+							{
+							if (isset($_GET["IGhandle_method_"]))			{$IGhandle_method=$_GET["IGhandle_method_"];}
+								elseif (isset($_POST["IGhandle_method_"]))	{$IGhandle_method=$_POST["IGhandle_method_"];}
+							}
+						if (strlen($IGsearch_method)<1)
+							{
+							if (isset($_GET["IGsearch_method_"]))			{$IGsearch_method=$_GET["IGsearch_method_"];}
+								elseif (isset($_POST["IGsearch_method_"]))	{$IGsearch_method=$_POST["IGsearch_method_"];}
+							}
+						if (strlen($IGlist_id)<1)
+							{
+							if (isset($_GET["IGlist_id_"]))				{$IGlist_id=$_GET["IGlist_id_"];}
+								elseif (isset($_POST["IGlist_id_"]))	{$IGlist_id=$_POST["IGlist_id_"];}
+							}
+						if (strlen($IGcampaign_id)<1)
+							{
+							if (isset($_GET["IGcampaign_id_"]))				{$IGcampaign_id=$_GET["IGcampaign_id_"];}
+								elseif (isset($_POST["IGcampaign_id_"]))	{$IGcampaign_id=$_POST["IGcampaign_id_"];}
+							}
+						if (strlen($IGphone_code)<1)
+							{
+							if (isset($_GET["IGphone_code_"]))			{$IGphone_code=$_GET["IGphone_code_"];}
+								elseif (isset($_POST["IGphone_code_"]))	{$IGphone_code=$_POST["IGphone_code_"];}
+							}
+
+						$no_agent_action_value = "$IGgroup_id,$IGhandle_method,$IGsearch_method,$IGlist_id,$IGcampaign_id,$IGphone_code";
+						if ($DB) {echo "\nNANQUE:     |$no_agent_action_value|$no_agent_action|\n";}
+						}
+
+					if ($no_agent_action == "EXTENSION")
+						{
+						if (isset($_GET["EXextension_no_agent_action"]))			{$EXextension=$_GET["EXextension_no_agent_action"];}
+							elseif (isset($_POST["EXextension_no_agent_action"]))	{$EXextension=$_POST["EXextension_no_agent_action"];}
+						if (isset($_GET["EXcontext_no_agent_action"]))				{$EXcontext=$_GET["EXcontext_no_agent_action"];}
+							elseif (isset($_POST["EXcontext_no_agent_action"]))		{$EXcontext=$_POST["EXcontext_no_agent_action"];}
+
+						$no_agent_action_value = "$EXextension,$EXcontext";
+						}
+
+					$no_agent_action_value = ereg_replace("[^-\/\|\_\#\*\,\.\_0-9a-zA-Z]","",$no_agent_action_value);
+
+					echo "<br><B>GROUP MODIFIED: $group_id</B>\n";
+
+					$stmt="UPDATE vicidial_inbound_groups set group_name='$group_name', group_color='$group_color', active='$active', web_form_address='" . mysql_real_escape_string($web_form_address) . "', voicemail_ext='$voicemail_ext', next_agent_call='$next_agent_call', fronter_display='$fronter_display', ingroup_script='$script_id', get_call_launch='$get_call_launch', xferconf_a_dtmf='$xferconf_a_dtmf',xferconf_a_number='$xferconf_a_number', xferconf_b_dtmf='$xferconf_b_dtmf',xferconf_b_number='$xferconf_b_number',drop_action='$drop_action',drop_call_seconds='$drop_call_seconds',drop_exten='$drop_exten',call_time_id='$call_time_id',after_hours_action='$after_hours_action',after_hours_message_filename='$after_hours_message_filename',after_hours_exten='$after_hours_exten',after_hours_voicemail='$after_hours_voicemail',welcome_message_filename='$welcome_message_filename',moh_context='$moh_context',onhold_prompt_filename='$onhold_prompt_filename',prompt_interval='$prompt_interval',agent_alert_exten='$agent_alert_exten',agent_alert_delay='$agent_alert_delay',default_xfer_group='$default_xfer_group',queue_priority='$queue_priority',drop_inbound_group='$drop_inbound_group',ingroup_recording_override='$ingroup_recording_override',ingroup_rec_filename='$ingroup_rec_filename',afterhours_xfer_group='$afterhours_xfer_group',qc_enabled='$qc_enabled',qc_statuses='$QC_statuses',qc_shift_id='$qc_shift_id',qc_get_record_launch='$qc_get_record_launch',qc_show_recording='$qc_show_recording',qc_web_form_address='$qc_web_form_address',qc_script='$qc_script',play_place_in_line='$play_place_in_line',play_estimate_hold_time='$play_estimate_hold_time',hold_time_option='$hold_time_option',hold_time_option_seconds='$hold_time_option_seconds',hold_time_option_exten='$hold_time_option_exten',hold_time_option_voicemail='$hold_time_option_voicemail',hold_time_option_xfer_group='$hold_time_option_xfer_group',hold_time_option_callback_filename='$hold_time_option_callback_filename',hold_time_option_callback_list_id='$hold_time_option_callback_list_id',hold_recall_xfer_group='$hold_recall_xfer_group',no_delay_call_route='$no_delay_call_route',play_welcome_message='$play_welcome_message',answer_sec_pct_rt_stat_one='$answer_sec_pct_rt_stat_one',answer_sec_pct_rt_stat_two='$answer_sec_pct_rt_stat_two',default_group_alias='$default_group_alias',no_agent_no_queue='$no_agent_no_queue',no_agent_action='$no_agent_action',no_agent_action_value='$no_agent_action_value',web_form_address_two='" . mysql_real_escape_string($web_form_address_two) . "',timer_action='$timer_action',timer_action_message='$timer_action_message',timer_action_seconds='$timer_action_seconds',start_call_url='" . mysql_real_escape_string($start_call_url) . "',dispo_call_url='" . mysql_real_escape_string($dispo_call_url) . "',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',ignore_list_script_override='$ignore_list_script_override',extension_appended_cidname='$extension_appended_cidname',uniqueid_status_display='$uniqueid_status_display',uniqueid_status_prefix='$uniqueid_status_prefix',hold_time_option_minimum='$hold_time_option_minimum',hold_time_option_press_filename='$hold_time_option_press_filename',hold_time_option_callmenu='$hold_time_option_callmenu',onhold_prompt_no_block='$onhold_prompt_no_block',onhold_prompt_seconds='$onhold_prompt_seconds',hold_time_option_no_block='$hold_time_option_no_block',hold_time_option_prompt_seconds='$hold_time_option_prompt_seconds',hold_time_second_option='$hold_time_second_option',hold_time_third_option='$hold_time_third_option',wait_hold_option_priority='$wait_hold_option_priority',wait_time_option='$wait_time_option',wait_time_second_option='$wait_time_second_option',wait_time_third_option='$wait_time_third_option',wait_time_option_seconds='$wait_time_option_seconds',wait_time_option_exten='$wait_time_option_exten',wait_time_option_voicemail='$wait_time_option_voicemail',wait_time_option_xfer_group='$wait_time_option_xfer_group',wait_time_option_callmenu='$wait_time_option_callmenu',wait_time_option_callback_filename='$wait_time_option_callback_filename',wait_time_option_callback_list_id='$wait_time_option_callback_list_id',wait_time_option_press_filename='$wait_time_option_press_filename',wait_time_option_no_block='$wait_time_option_no_block',wait_time_option_prompt_seconds='$wait_time_option_prompt_seconds',timer_action_destination='$timer_action_destination',calculate_estimated_hold_seconds='$calculate_estimated_hold_seconds',add_lead_url='" . mysql_real_escape_string($add_lead_url) . "',eht_minimum_prompt_filename='$eht_minimum_prompt_filename',eht_minimum_prompt_no_block='$eht_minimum_prompt_no_block',eht_minimum_prompt_seconds='$eht_minimum_prompt_seconds',on_hook_ring_time='$on_hook_ring_time',na_call_url='" . mysql_real_escape_string($na_call_url) . "',on_hook_cid='$on_hook_cid',action_xfer_cid='$action_xfer_cid',drop_callmenu='$drop_callmenu',after_hours_callmenu='$after_hours_callmenu',user_group='$user_group',max_calls_method='$max_calls_method',max_calls_count='$max_calls_count',max_calls_action='$max_calls_action' where group_id='$group_id';";
+					$rslt=mysql_query($stmt, $link);
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='INGROUPS', event_type='MODIFY', record_id='$group_id', event_code='ADMIN MODIFY INGROUP', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
+				}
+			}
+		else
+			{
+			echo "You do not have permission to view this page\n";
+			exit;
+			}
 		}
 	$ADD=3111;	# go to in-group modification form below
 	}
@@ -25316,12 +25384,12 @@ if ($ADD==3111)
 
 
 		### list of agent rank or skill-level for this inbound group
-		echo "<center>\n";
+		echo "<center><a name=\"agent_ranks\">\n";
 		echo "<br><b>AGENT RANKS FOR THIS INBOUND GROUP:</b><br>\n";
-		echo "<TABLE width=600 cellspacing=3>\n";
-		echo "<tr><td>USER</td><td>SELECTED</td><td> &nbsp; &nbsp; RANK</td><td> &nbsp; &nbsp; GRADE</td><td> &nbsp; &nbsp; CALLS TODAY</td></tr>\n";
+		echo "<TABLE width=700 cellspacing=3>\n";
+		echo "<tr><td>USER</td><td>GROUP</td><td>SELECTED</td><td> &nbsp; &nbsp; RANK</td><td> &nbsp; &nbsp; GRADE</td><td> &nbsp; &nbsp; CALLS TODAY</td></tr>\n";
 
-		$stmt="SELECT user,full_name,closer_campaigns from vicidial_users where active='Y' $LOGadmin_viewable_groupsSQL order by user;";
+		$stmt="SELECT user,full_name,closer_campaigns,user_group from vicidial_users where active='Y' $LOGadmin_viewable_groupsSQL order by user;";
 		$rsltx=mysql_query($stmt, $link);
 		$users_to_print = mysql_num_rows($rsltx);
 
@@ -25334,6 +25402,7 @@ if ($ADD==3111)
 			$ARIG_user[$o] =	$rowx[0];
 			$ARIG_name[$o] =	$rowx[1];
 			$ARIG_close[$o] =	$rowx[2];
+			$ARIG_group[$o] =	$rowx[3];
 			$ARIG_check[$o] =	'';
 			if (preg_match("/ $group_id /",$ARIG_close[$o]))
 				{$ARIG_check[$o] = ' CHECKED';}
@@ -25495,6 +25564,7 @@ if ($ADD==3111)
 			$checkbox_count++;
 
 			$users_output .= "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3&user=$ARIG_user[$o]\">$ARIG_user[$o]</a> - $ARIG_name[$o]</td>\n";
+			$users_output .= "<td><font size=1>$ARIG_group[$o]</td>\n";
 			$users_output .= "<td><input type=checkbox name=\"$checkbox_field\" id=\"$checkbox_field\" value=\"YES\"$ARIG_check[$o]></td>\n";
 			$users_output .= "<td><select size=1 name=$rank_field>\n";
 			$h="9";
@@ -25520,15 +25590,13 @@ if ($ADD==3111)
 			$users_output .= "</select></td>\n";
 			$users_output .= "<td><font size=1>$ARIG_calls[$o]</td></tr>\n";
 			}
-		echo "<tr><td><font size=1> &nbsp; </font></td><td align=left><a href=\"#\" onclick=\"IGU_selectall('$checkbox_count','$checkbox_list');return false;\"><font size=1>select all</font></a></td><td colspan=2><font size=1> &nbsp; </font></td></tr>\n";
+		echo "<tr><td><font size=1> &nbsp; </font></td><td><font size=1> &nbsp; </font></td><td align=left><a href=\"#\" onclick=\"IGU_selectall('$checkbox_count','$checkbox_list');return false;\"><font size=1>select all</font></a></td><td colspan=2><font size=1> &nbsp; </font></td></tr>\n";
 
 		echo "$users_output";
 
 		echo "<tr><td align=center colspan=4><input type=submit name=submit value=SUBMIT></td></tr>\n";
 
 		echo "</table></center><br></FORM>\n";
-
-#		echo "</table></center><br>\n";
 
 		echo "<a href=\"./AST_CLOSERstats.php?group[]=$group_id\">Click here to see a report for this inbound group</a><BR><BR>\n";
 
@@ -27091,8 +27159,31 @@ if ($ADD==311111)
 				echo "</tr>\n";
 				}
 
-			echo "</table></center><br>\n";
+			echo "</table></center><br></form>\n";
 
+
+			##### BEGIN add/remove in-group as selected for all active users in this group #####
+			echo "<center>\n";
+			echo "<br><b>Add or Remove In-Group Selected For Active Users in This User Group</b><form action=$PHP_SELF#agent_ranks method=POST>\n";
+			echo "<input type=hidden name=ADD value=4111>\n";
+			echo "<input type=hidden name=SUB value=agents_select>\n";
+			echo "<input type=hidden name=OLDuser_group value=\"$user_group\">\n";
+			### get in-groups listings for dynamic pulldown
+			$stmt="SELECT group_id,group_name from vicidial_inbound_groups $whereLOGadmin_viewable_groupsSQL order by group_id;";
+			$rslt=mysql_query($stmt, $link);
+			$Xgroups_to_print = mysql_num_rows($rslt);
+			$Xgroups_menu='';
+			$o=0;
+			while ($Xgroups_to_print > $o) 
+				{
+				$rowx=mysql_fetch_row($rslt);
+				$Xgroups_menu .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+				$o++;
+				}
+			echo "<select size=1 name=stage><option value=\"add\" SELECTED>add</option><option value=\"remove\">remove</option></select> &nbsp; \n";
+			echo "In-Group: <select size=1 name=group_id>$Xgroups_menu</select><br>\n";
+			echo "<input type=submit name=SUBMIT value=SUBMIT></form>\n";
+			##### END add/remove in-group as selected for all active users in this group #####
 
 			echo "<br><br><a href=\"$PHP_SELF?ADD=8111&user_group=$user_group\">Click here to see all CallBack Holds in this user group</a><BR><BR>\n";
 			echo "<br><br><a href=\"./timeclock_status.php?user_group=$user_group\">Click here to see the Timeclock Status for this user group</a><BR><BR>\n";
