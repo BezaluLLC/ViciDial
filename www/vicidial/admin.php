@@ -8402,6 +8402,15 @@ if ($ADD==99999)
 	<B>Through the use of system status categories, you can group together statuses to allow for statistical analysis on a group of statuses. The Category ID must be 2-20 characters in length with no spaces, the name must be 2-50 characters in length, the description is optional and TimeonVDAD Display defines whether that status will be one of the upto 4 statuses that can be calculated and displayed on the Time On VDAD Real-Time report.</B> The Sale Category and Dead Lead Category are both used by the List Suggestion system when analyzing list statistics.
 
 
+
+	<BR><BR><BR><BR>
+
+	<B><FONT SIZE=3>Maximum System Stats Reports</FONT></B><BR><BR>
+	<A NAME="vicidial_max_stats">
+	<BR>
+	<B>These statistics are cached totals that are stored throughout each day in real-time through back-end processes. For inbound calls, the total calls per in-group are calculated for each call that enters the process that calculates. For the whole system counts, the totals are generated from log entries as well as other in-group and campaign totals. These totals may not add up due to the settings that you have in your system as well as when the call is hung up.
+
+
 	<?php
 	if ($SSqc_features_active > 0)
 		{
@@ -32830,7 +32839,7 @@ if ($ADD==999993)
 				{echo "Not found";   exit;}
 			}
 
-		echo "<br><B> Administration: Maximum Stats Detail for $stage $modify_link$campaign_id</a> - $campaign_name</B><BR><BR>\n";
+		echo "<br><B> Administration: Maximum Stats Detail for $stage $modify_link$campaign_id</a> - $campaign_name</B> &nbsp; $NWB#vicidial_max_stats$NWE<BR><BR>\n";
 		echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
@@ -32861,7 +32870,7 @@ if ($ADD==999992)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	echo "<br><B> Administration: Maximum System Stats</B><BR><BR>\n";
+	echo "<br><B> Administration: Maximum System Stats &nbsp; $NWB#vicidial_max_stats$NWE</B><BR><BR>\n";
 	echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
 
 	if ( (preg_match("/Maximum System Stats/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )

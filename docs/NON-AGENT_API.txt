@@ -66,6 +66,7 @@ Changes:
 110821-2318 - Added update_phone, add_phone_alias, update_phone_alias functions
 110928-2110 - Added callback options to add_lead and update_lead
 111106-0959 - Added user_group restrictions to some functions
+120127-1331 - Small fix for plus replacement in custom fields strings for add/update_lead functions
 
 
 

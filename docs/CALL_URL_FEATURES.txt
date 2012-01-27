@@ -11,7 +11,8 @@ opened when the user clicks on the WEB FORM button. To customize the
 query string after the web form, simply begin the web form with VAR
 and then the URL that you want to use, replacing the variables with
 the variable names that you want to use --A--phone_number--B-- just
-like in the SCRIPTS tab section.
+like in the SCRIPTS tab section. If you want to use custom fields in a web form 
+address, you need to add &CF_uses_custom_fields=Y as part of your URL.
 
 Start Call URL -  This web URL address is not seen by the agent, but
 it is called every time a call is sent to an agent if it is populated.

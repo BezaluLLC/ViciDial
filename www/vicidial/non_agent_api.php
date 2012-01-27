@@ -60,10 +60,11 @@
 # 110821-2318 - Added update_phone, add_phone_alias, update_phone_alias functions
 # 110928-2110 - Added callback options to add_lead and update_lead
 # 111106-0959 - Added user_group restrictions to some functions
+# 120127-1331 - Small fix for plus replacement in custom fields strings for add/update_lead functions
 #
 
-$version = '2.4-39';
-$build = '111106-0959';
+$version = '2.4-40';
+$build = '120127-1331';
 
 $startMS = microtime();
 
@@ -345,7 +346,7 @@ if ($non_latin < 1)
 	$date_of_birth = ereg_replace("[^-0-9]","",$date_of_birth);
 	$alt_phone = ereg_replace("[^- \+\_\.0-9a-zA-Z]","",$alt_phone);
 		$alt_phone = ereg_replace("\+"," ",$alt_phone);
-	$email = ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$email);
+	$email = ereg_replace("[^- \+\.\:\/\@\%\_0-9a-zA-Z]","",$email);
 		$email = ereg_replace("\+"," ",$email);
 	$security_phrase = ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$security_phrase);
 		$security_phrase = ereg_replace("\+"," ",$security_phrase);
@@ -3874,6 +3875,7 @@ if ($function == 'add_lead')
 									if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
 										elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
 
+									$form_field_value = preg_replace("/\+/"," ",$form_field_value);
 									$A_field_value[$o] = $form_field_value;
 
 									if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
@@ -4539,6 +4541,7 @@ if ($function == 'update_lead')
 											if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
 												elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
 
+											$form_field_value = preg_replace("/\+/"," ",$form_field_value);
 											$A_field_value[$o] = $form_field_value;
 
 											if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
@@ -4732,6 +4735,7 @@ if ($function == 'update_lead')
 													if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
 														elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
 
+													$form_field_value = preg_replace("/\+/"," ",$form_field_value);
 													$A_field_value[$o] = $form_field_value;
 
 													if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )

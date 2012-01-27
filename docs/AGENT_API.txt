@@ -119,6 +119,7 @@ qm_dispo_code -
 
 EXAMPLE URL:
 http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_status&value=A
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_status&value=CALLBK&callback_datetime=2012-01-25+12:00:00&callback_type=USERONLY&callback_comments=callback+comments+go+here&qm_dispo_code=1234
 
 RESPONSES:
 ERROR: external_status not valid - A|6666
