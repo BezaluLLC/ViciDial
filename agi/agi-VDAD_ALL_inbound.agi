@@ -82,7 +82,7 @@
 #exten => _99909*.,2,AGI(agi-VDAD_ALL_inbound.agi)
 #exten => _99909*.,3,Hangup
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 70828-0924 - First Build
@@ -173,6 +173,7 @@
 # 111201-1457 - Added grade-random next-agent-call option for inbound
 # 111219-2124 - Added max stats updating
 # 111229-1726 - Changed call time overflow to look at previous day stop time
+# 120130-1708 - Fix for ring agent EXTERNAL protocol phone issue
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -2611,8 +2612,17 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 							$phone_protocol = $ARextension[$ragp];
 							$phone_extension =~ s/.*\///gi;
 							$phone_protocol =~ s/\/.*//gi;
+							if ($phone_protocol =~ /Local/)
+								{$phone_protocol = 'EXTERNAL';}
+							if ($phone_extension =~ /\@default/)
+								{
+								$phone_extension =~ s/\@default//gi;
+								$extensionSQL = "dialplan_number='$phone_extension'";
+								}
+							else
+								{$extensionSQL = "extension='$phone_extension'";}
 							$dialplan_number='';
-							$stmtA = "SELECT dialplan_number FROM phones where extension='$phone_extension' and protocol='$phone_protocol' and server_ip='$ARserver_ip[$ragp]';";
+							$stmtA = "SELECT dialplan_number FROM phones where $extensionSQL and protocol='$phone_protocol' and server_ip='$ARserver_ip[$ragp]';";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
