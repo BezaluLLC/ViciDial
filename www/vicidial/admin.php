@@ -1720,6 +1720,8 @@ if (isset($_GET["max_calls_count"]))			{$max_calls_count=$_GET["max_calls_count"
 	elseif (isset($_POST["max_calls_count"]))	{$max_calls_count=$_POST["max_calls_count"];}
 if (isset($_GET["max_calls_action"]))			{$max_calls_action=$_GET["max_calls_action"];}
 	elseif (isset($_POST["max_calls_action"]))	{$max_calls_action=$_POST["max_calls_action"];}
+if (isset($_GET["territory_reset"]))			{$territory_reset=$_GET["territory_reset"];}
+	elseif (isset($_POST["territory_reset"]))	{$territory_reset=$_POST["territory_reset"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -3027,12 +3029,13 @@ else
 # 120118-2113 - Fixed bugs in phone alias and conf template updates
 # 120125-1234 - Added Maximum System Stats report and permissions for it and Max Stats Detail report
 # 120125-2107 - Added User Group Active User In-Group Select function to User Group page
+# 120207-1955 - Added List territory reset function
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-357a';
-$build = '120125-2107';
+$admin_version = '2.4-358a';
+$build = '120207-1955';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -15526,51 +15529,81 @@ if ($ADD==401)
 
 if ($ADD==411)
 	{
-	if ($LOGmodify_lists==1)
+	if ( ($LOGmodify_lists==1) and (strlen($list_id) > 1) )
 		{
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		if ( (strlen($list_name) < 2) or (strlen($campaign_id) < 2) )
+		if ($stage == 'territory_reset')
 			{
-			echo "<br>LIST NOT MODIFIED - Please go back and look at the data you entered\n";
-			echo "<br>list name must be at least 2 characters in length\n";
-			}
-		else
-			{
-			if (strlen($reset_time) < 4) {$reset_time='';}
-
-			echo "<br><B>LIST MODIFIED: $list_id</B>\n";
-
-			$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate',reset_time='$reset_time',agent_script_override='$agent_script_override',campaign_cid_override='$campaign_cid_override',am_message_exten_override='$am_message_exten_override',drop_inbound_group_override='$drop_inbound_group_override',xferconf_a_number='$xferconf_a_number',xferconf_b_number='$xferconf_b_number',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',web_form_address='" . mysql_real_escape_string($web_form_address) . "',web_form_address_two='" . mysql_real_escape_string($web_form_address_two) . "',time_zone_setting='$time_zone_setting' where list_id='$list_id';";
-			$rslt=mysql_query($stmt, $link);
-
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='MODIFY', record_id='$list_id', event_code='ADMIN MODIFY LIST', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
-
-			if ($reset_list == 'Y')
+			$p=0;
+			echo "<BR>TERRITORIES RESET";
+			$territory_reset_ct = count($territory_reset);
+			while ($p < $territory_reset_ct)
 				{
-				echo "<br>RESETTING LIST-CALLED-STATUS\n";
-				$stmtB="UPDATE vicidial_list set called_since_last_reset='N' where list_id='$list_id';";
-				$rslt=mysql_query($stmtB, $link);
+				$TERR_RESET .= "'$territory_reset[$p]',";
+				$p++;
+				}
+			$TERR_RESET = preg_replace("/,$/",'',$TERR_RESET);
+			if (strlen($TERR_RESET) > 1)
+				{
+				$stmt = "UPDATE vicidial_list SET called_since_last_reset='N' where list_id='$list_id' and owner IN($TERR_RESET);";
+				$rslt=mysql_query($stmt, $link);
 
 				### LOG INSERTION Admin Log Table ###
 				$SQL_log = "$stmt|";
 				$SQL_log = ereg_replace(';','',$SQL_log);
 				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='RESET', record_id='$list_id', event_code='ADMIN RESET LIST', event_sql=\"$SQL_log\", event_notes='';";
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='MODIFY', record_id='$list_id', event_code='ADMIN MODIFY LIST TERRITORY RESET', event_sql=\"$SQL_log\", event_notes='';";
 				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
+
+				if ($DB > 0) {echo "|$stmt|\n";}
 				}
-			if ($campaign_id != "$old_campaign_id")
+			}
+		else
+			{
+			if ( (strlen($list_name) < 2) or (strlen($campaign_id) < 2) )
 				{
-				echo "<br>REMOVING LIST HOPPER LEADS FROM OLD CAMPAIGN HOPPER ($old_campaign_id)\n";
-				$stmtC="DELETE from vicidial_hopper where list_id='$list_id' and campaign_id='$old_campaign_id';";
-				$rslt=mysql_query($stmtC, $link);
+				echo "<br>LIST NOT MODIFIED - Please go back and look at the data you entered\n";
+				echo "<br>list name must be at least 2 characters in length\n";
+				}
+			else
+				{
+				if (strlen($reset_time) < 4) {$reset_time='';}
+
+				echo "<br><B>LIST MODIFIED: $list_id</B>\n";
+
+				$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate',reset_time='$reset_time',agent_script_override='$agent_script_override',campaign_cid_override='$campaign_cid_override',am_message_exten_override='$am_message_exten_override',drop_inbound_group_override='$drop_inbound_group_override',xferconf_a_number='$xferconf_a_number',xferconf_b_number='$xferconf_b_number',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',web_form_address='" . mysql_real_escape_string($web_form_address) . "',web_form_address_two='" . mysql_real_escape_string($web_form_address_two) . "',time_zone_setting='$time_zone_setting' where list_id='$list_id';";
+				$rslt=mysql_query($stmt, $link);
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='MODIFY', record_id='$list_id', event_code='ADMIN MODIFY LIST', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+
+				if ($reset_list == 'Y')
+					{
+					echo "<br>RESETTING LIST-CALLED-STATUS\n";
+					$stmtB="UPDATE vicidial_list set called_since_last_reset='N' where list_id='$list_id';";
+					$rslt=mysql_query($stmtB, $link);
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='RESET', record_id='$list_id', event_code='ADMIN RESET LIST', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
+				if ($campaign_id != "$old_campaign_id")
+					{
+					echo "<br>REMOVING LIST HOPPER LEADS FROM OLD CAMPAIGN HOPPER ($old_campaign_id)\n";
+					$stmtC="DELETE from vicidial_hopper where list_id='$list_id' and campaign_id='$old_campaign_id';";
+					$rslt=mysql_query($stmtC, $link);
+					}
 				}
 			}
 		}
@@ -24392,67 +24425,141 @@ if ($ADD==311)
 
 		echo "<center>\n";
 		echo "<br><b>OWNERS WITHIN THIS LIST:</b><br>\n";
-		echo "<TABLE width=500 cellspacing=3>\n";
-		echo "<tr><td>OWNER</td><td>CALLED</td><td>NOT CALLED</td></tr>\n";
-
-		$leads_in_list = 0;
-		$leads_in_list_N = 0;
-		$leads_in_list_Y = 0;
-		$stmt="SELECT owner,called_since_last_reset,count(*) from vicidial_list where list_id='$list_id' group by owner,called_since_last_reset order by owner,called_since_last_reset;";
-		if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
-		$owners_to_print = mysql_num_rows($rslt);
-
-		$o=0;
-		$lead_list['count'] = 0;
-		$lead_list['Y_count'] = 0;
-		$lead_list['N_count'] = 0;
-		while ($owners_to_print > $o) 
+		if ($SSuser_territories_active > 0)
 			{
-			$rowx=mysql_fetch_row($rslt);
-			
-			$lead_list['count'] = ($lead_list['count'] + $rowx[2]);
-			if ($rowx[1] == 'N') 
-				{
-				$since_reset = 'N';
-				$since_resetX = 'Y';
-				}
-			else 
-				{
-				$since_reset = 'Y';
-				$since_resetX = 'N';
-				} 
-			$lead_list[$since_reset][$rowx[0]] = ($lead_list[$since_reset][$rowx[0]] + $rowx[2]);
-			$lead_list[$since_reset.'_count'] = ($lead_list[$since_reset.'_count'] + $rowx[2]);
-			#If opposite side is not set, it may not in the future so give it a value of zero
-			if (!isset($lead_list[$since_resetX][$rowx[0]])) 
-				{
-				$lead_list[$since_resetX][$rowx[0]]=0;
-				}
-			$o++;
-			}
-	 
-		$o=0;
-		if ($lead_list['count'] > 0)
-			{
-			while (list($owner,) = each($lead_list[$since_reset]))
-				{
-				if (eregi("1$|3$|5$|7$|9$", $o))
-					{$bgcolor='bgcolor="#B9CBFD"';} 
-				else
-					{$bgcolor='bgcolor="#9BB9FB"';}
+			### if territories are active in the system then allow for selected-territory called-since-last-reset resetting
+			echo "<form action=$PHP_SELF method=POST>\n";
+			echo "<input type=hidden name=ADD value=411>\n";
+			echo "<input type=hidden name=DB value=$DB>\n";
+			echo "<input type=hidden name=stage value=territory_reset>\n";
+			echo "<input type=hidden name=list_id value=\"$list_id\">\n";
+			echo "<TABLE width=600 cellspacing=3>\n";
+			echo "<tr><td>OWNER</td><td>CALLED</td><td>NOT CALLED</td><td align=center>RESET</td></tr>\n";
 
-				$CLB='';
-				$CLE='';
+			$leads_in_list = 0;
+			$leads_in_list_N = 0;
+			$leads_in_list_Y = 0;
+			$stmt="SELECT owner,called_since_last_reset,count(*) from vicidial_list where list_id='$list_id' group by owner,called_since_last_reset order by owner,called_since_last_reset;";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$owners_to_print = mysql_num_rows($rslt);
 
-				echo "<tr $bgcolor><td><font size=1>$CLB$owner$CLE</td><td><font size=1>".$lead_list['Y'][$owner]."</td><td><font size=1>".$lead_list['N'][$owner]." </td></tr>\n";
+			$o=0;
+			$lead_list['count'] = 0;
+			$lead_list['Y_count'] = 0;
+			$lead_list['N_count'] = 0;
+			while ($owners_to_print > $o) 
+				{
+				$rowx=mysql_fetch_row($rslt);
+				
+				$lead_list['count'] = ($lead_list['count'] + $rowx[2]);
+				if ($rowx[1] == 'N') 
+					{
+					$since_reset = 'N';
+					$since_resetX = 'Y';
+					}
+				else 
+					{
+					$since_reset = 'Y';
+					$since_resetX = 'N';
+					} 
+				$lead_list[$since_reset][$rowx[0]] = ($lead_list[$since_reset][$rowx[0]] + $rowx[2]);
+				$lead_list[$since_reset.'_count'] = ($lead_list[$since_reset.'_count'] + $rowx[2]);
+				#If opposite side is not set, it may not in the future so give it a value of zero
+				if (!isset($lead_list[$since_resetX][$rowx[0]])) 
+					{
+					$lead_list[$since_resetX][$rowx[0]]=0;
+					}
 				$o++;
 				}
+		 
+			$o=0;
+			if ($lead_list['count'] > 0)
+				{
+				while (list($owner,) = each($lead_list[$since_reset]))
+					{
+					if (eregi("1$|3$|5$|7$|9$", $o))
+						{$bgcolor='bgcolor="#B9CBFD"';} 
+					else
+						{$bgcolor='bgcolor="#9BB9FB"';}
+
+					$CLB='';
+					$CLE='';
+
+					echo "<tr $bgcolor><td><font size=1><a href=\"./user_territories.php?action=MODIFY_TERRITORY&territory=$owner\">$CLB$owner$CLE</a></td><td><font size=1>".$lead_list['Y'][$owner]."</td><td><font size=1>".$lead_list['N'][$owner]." </td><td align=center><input type=\"checkbox\" name=\"territory_reset[]\" value=\"$owner\"></td></tr>\n";
+					$o++;
+					}
+				}
+
+			echo "<tr><td><font size=1>SUBTOTALS</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td>\n";
+			echo "<td rowspan=2 align=center><input type=submit value=\"SUBMIT\"></td></tr>\n";
+			echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>TOTAL</td><td colspan=3 align=center><font size=1>$lead_list[count]</td></tr>\n";
+			echo "</form>\n";
+
 			}
+		else
+			{
+			echo "<TABLE width=500 cellspacing=3>\n";
+			echo "<tr><td>OWNER</td><td>CALLED</td><td>NOT CALLED</td></tr>\n";
 
-		echo "<tr><td><font size=1>SUBTOTALS</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td></tr>\n";
-		echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>TOTAL</td><td colspan=3 align=center><font size=1>$lead_list[count]</td></tr>\n";
+			$leads_in_list = 0;
+			$leads_in_list_N = 0;
+			$leads_in_list_Y = 0;
+			$stmt="SELECT owner,called_since_last_reset,count(*) from vicidial_list where list_id='$list_id' group by owner,called_since_last_reset order by owner,called_since_last_reset;";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$owners_to_print = mysql_num_rows($rslt);
 
+			$o=0;
+			$lead_list['count'] = 0;
+			$lead_list['Y_count'] = 0;
+			$lead_list['N_count'] = 0;
+			while ($owners_to_print > $o) 
+				{
+				$rowx=mysql_fetch_row($rslt);
+				
+				$lead_list['count'] = ($lead_list['count'] + $rowx[2]);
+				if ($rowx[1] == 'N') 
+					{
+					$since_reset = 'N';
+					$since_resetX = 'Y';
+					}
+				else 
+					{
+					$since_reset = 'Y';
+					$since_resetX = 'N';
+					} 
+				$lead_list[$since_reset][$rowx[0]] = ($lead_list[$since_reset][$rowx[0]] + $rowx[2]);
+				$lead_list[$since_reset.'_count'] = ($lead_list[$since_reset.'_count'] + $rowx[2]);
+				#If opposite side is not set, it may not in the future so give it a value of zero
+				if (!isset($lead_list[$since_resetX][$rowx[0]])) 
+					{
+					$lead_list[$since_resetX][$rowx[0]]=0;
+					}
+				$o++;
+				}
+		 
+			$o=0;
+			if ($lead_list['count'] > 0)
+				{
+				while (list($owner,) = each($lead_list[$since_reset]))
+					{
+					if (eregi("1$|3$|5$|7$|9$", $o))
+						{$bgcolor='bgcolor="#B9CBFD"';} 
+					else
+						{$bgcolor='bgcolor="#9BB9FB"';}
+
+					$CLB='';
+					$CLE='';
+
+					echo "<tr $bgcolor><td><font size=1>$CLB$owner$CLE</td><td><font size=1>".$lead_list['Y'][$owner]."</td><td><font size=1>".$lead_list['N'][$owner]." </td></tr>\n";
+					$o++;
+					}
+				}
+
+			echo "<tr><td><font size=1>SUBTOTALS</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td></tr>\n";
+			echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>TOTAL</td><td colspan=3 align=center><font size=1>$lead_list[count]</td></tr>\n";
+			}
 		echo "</table></center><br>\n";
 		unset($lead_list);
 
