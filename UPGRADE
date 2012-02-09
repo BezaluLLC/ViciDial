@@ -794,6 +794,16 @@ OTHER CHANGES:
 	crontab after-hours to gather the statistics (this example is 7:01am):
 	1 7 * * * /usr/share/astguiclient/AST_dialer_inventory_snapshot.pl -q --override-24hours
 
+182. Separated the auto-generated dialplan into different contexts to allow for
+	easier segmentation of dialing permissions using the Phone Context and
+	custom Call Menus. Here is a list of the new contexts that are now below
+	the vicidial-auto context:
+		vicidial-auto-system-setting-custom
+		vicidial-auto-server-custom
+		vicidial-auto-external
+		vicidial-auto-internal
+		vicidial-auto-phones
+
 
 
 

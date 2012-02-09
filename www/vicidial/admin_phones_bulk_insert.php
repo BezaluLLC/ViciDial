@@ -9,10 +9,11 @@
 # 101230-0501 - First Build
 # 110712-0932 - Added extension suffix exception for non-SIP/IAX phones, added HELP
 # 120104-2023 - Added webphone options
+# 120209-1545 - Added phone context option
 #
 
-$admin_version = '2.4-3';
-$build = '120104-2023';
+$admin_version = '2.4-4';
+$build = '120209-1545';
 
 
 require("dbconnect.php");
@@ -50,6 +51,8 @@ if (isset($_GET["webphone_auto_answer"]))			{$webphone_auto_answer=$_GET["webpho
 	elseif (isset($_POST["webphone_auto_answer"]))	{$webphone_auto_answer=$_POST["webphone_auto_answer"];}
 if (isset($_GET["use_external_server_ip"]))			{$use_external_server_ip=$_GET["use_external_server_ip"];}
 	elseif (isset($_POST["use_external_server_ip"])){$use_external_server_ip=$_POST["use_external_server_ip"];}
+if (isset($_GET["phone_context"]))				{$phone_context=$_GET["phone_context"];}
+	elseif (isset($_POST["phone_context"]))		{$phone_context=$_POST["phone_context"];}
 
 
 if (strlen($action) < 2)
@@ -71,11 +74,12 @@ if ($non_latin < 1)
 	$alias_option = ereg_replace("[^-_0-9a-zA-Z]","",$alias_option);
 	$alias_suffix = ereg_replace("[^0-9a-zA-Z]","",$alias_suffix);
 	$protocol = ereg_replace("[^-_0-9a-zA-Z]","",$protocol);
-	$local_gmt = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$local_gmt);
+	$local_gmt = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$local_gmt);
 	$is_webphone = ereg_replace("[^NY]","",$is_webphone);
 	$webphone_dialpad = ereg_replace("[^-_0-9a-zA-Z]","",$webphone_dialpad);
 	$webphone_auto_answer = ereg_replace("[^NY]","",$webphone_auto_answer);
 	$use_external_server_ip = ereg_replace("[^NY]","",$use_external_server_ip);
+	$phone_context = ereg_replace("[^-\_0-9a-zA-Z]","",$phone_context);
 	}	# end of non_latin
 else
 	{
@@ -215,6 +219,11 @@ if ($action == "HELP")
 	 <B>Local GMT -</B> This is the time zone that all of the phones will be created with.
 	<BR><BR>
 
+	<A NAME="phone_context">
+	<BR>
+	<B>Phone Context -</B> This is the dial plan context that this phone will use to dial out. If you are running a call center and you do not want your agents to be able to dial out outside of the ViciDial applicaiton for example, then you would set this field to a dialplan context that does not exist, something like agent-nodial. default is default.
+	<BR><BR>
+
 	<BR>
 	<A NAME="is_webphone">
 	<BR>
@@ -306,6 +315,7 @@ if ($action == "BLANK")
 	echo "<tr bgcolor=#B6D3FC><td align=right>Alias Suffix: </td><td align=left><input type=text name=alias_suffix size=2 maxlength=4> $NWB#alias_suffix$NWE </td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Client Protocol: </td><td align=left><select size=1 name=protocol><option>SIP</option><option>Zap</option><option>IAX2</option><option>EXTERNAL</option></select> $NWB#protocol$NWE </td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Local GMT: </td><td align=left><select size=1 name=local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option selected>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option></select> (Do NOT Adjust for DST) $NWB#gmt$NWE </td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Phone Context: </td><td align=left><input type=text name=phone_context size=20 maxlength=20> $NWB#phone_context$NWE </td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Set As Webphone: </td><td align=left><select size=1 name=is_webphone><option>Y</option><option selected>N</option></select>$NWB#is_webphone$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Webphone Dialpad: </td><td align=left><select size=1 name=webphone_dialpad><option selected>Y</option><option>N</option><option>TOGGLE</option><option>TOGGLE_OFF</option></select>$NWB#webphone_dialpad$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Webphone Auto-Answer: </td><td align=left><select size=1 name=webphone_auto_answer><option selected>Y</option><option>N</option></select>$NWB#webphone_auto_answer$NWE</td></tr>\n";
@@ -424,6 +434,8 @@ if ($action == "ADD_PHONES_SUBMIT")
 								{$dialplan_number =	"$dialplan_prefix$PN[$p]";}
 							else
 								{$dialplan_number =	"$PN[$p]";}
+							if (strlen($phone_context) < 1)
+								{$phone_context = 'default';}
 							$dialplan_number = preg_replace('/\D/', '', $dialplan_number);
 							$voicemail_id =		$PN[$p];	$voicemail_id = preg_replace('/\D/', '', $voicemail_id);
 							$phone_server_ip =	$SN[$s];
@@ -431,7 +443,7 @@ if ($action == "ADD_PHONES_SUBMIT")
 							$phone_type =		"CCagent";
 							$fullname =			"ext $PN[$p]";
 
-							$stmt = "INSERT INTO phones (extension,dialplan_number,voicemail_id,server_ip,login,pass,status,active,phone_type,fullname,protocol,local_gmt,outbound_cid,conf_secret,is_webphone,webphone_dialpad,webphone_auto_answer,use_external_server_ip) values('$extension','$dialplan_number','$voicemail_id','$phone_server_ip','$login','$pass','ACTIVE','Y','$phone_type','$fullname','$protocol','$local_gmt','0000000000','$conf_secret','$is_webphone','$webphone_dialpad','$webphone_auto_answer','$use_external_server_ip');";
+							$stmt = "INSERT INTO phones (extension,dialplan_number,voicemail_id,server_ip,login,pass,status,active,phone_type,fullname,protocol,local_gmt,outbound_cid,conf_secret,is_webphone,webphone_dialpad,webphone_auto_answer,use_external_server_ip,phone_context) values('$extension','$dialplan_number','$voicemail_id','$phone_server_ip','$login','$pass','ACTIVE','Y','$phone_type','$fullname','$protocol','$local_gmt','0000000000','$conf_secret','$is_webphone','$webphone_dialpad','$webphone_auto_answer','$use_external_server_ip','$phone_context');";
 							$rslt=mysql_query($stmt, $link);
 							$affected_rows = mysql_affected_rows($link);
 							if ($DB > 0) {echo "$s|$p|$SN[$s]|$PN[$p]|$affected_rows|$stmt\n<BR>";}

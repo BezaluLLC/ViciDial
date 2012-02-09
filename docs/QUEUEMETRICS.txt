@@ -23,6 +23,9 @@ As of 2009-11-23, DID and IVR logging through QueueMetrics queue_log is now part
 
 As of 2010-03-09, queuemetrics_loginout system settings option was added to allow for slightly different logging of logins and logouts. STANDARD will use standard AGENTLOGIN AGENTLOGOFF, CALLBACK will use AGENTCALLBACKLOGIN and AGENTCALLBACKLOGOFF that QM will parse differently.
 
+NOTE: having a large number of calls in queue can lead to significant load issues on the QM database server
+
+
 
 Entries you should have in your crontab on one server:
 ### fix the vicidial_agent_log once every hour and the full day run at night
