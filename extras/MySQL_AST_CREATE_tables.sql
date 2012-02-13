@@ -343,6 +343,7 @@ state VARCHAR(2) default '',
 alt_dial VARCHAR(6) default 'NONE',
 priority TINYINT(2) default '0',
 source VARCHAR(1) default '',
+vendor_lead_code VARCHAR(20) default '',
 index (lead_id)
 );
 
@@ -847,7 +848,8 @@ call_count_limit SMALLINT(5) UNSIGNED default '0',
 call_count_target SMALLINT(5) UNSIGNED default '3',
 callback_hours_block TINYINT(2) default '0',
 callback_list_calltime ENUM('ENABLED','DISABLED') default 'DISABLED',
-user_group VARCHAR(20) default '---ALL---'
+user_group VARCHAR(20) default '---ALL---',
+hopper_vlc_dup_check ENUM('Y','N') default 'N'
 );
 
 CREATE TABLE vicidial_lists (
@@ -2625,6 +2627,19 @@ index (stats_flag),
 index (campaign_id)
 );
 
+CREATE TABLE vicidial_daily_ra_stats (
+stats_date DATE NOT NULL,
+stats_flag ENUM('OPEN','CLOSED','CLOSING') default 'CLOSED',
+user VARCHAR(20) default '',
+update_time TIMESTAMP,
+closed_time DATETIME,
+max_calls MEDIUMINT(8) UNSIGNED default '0',
+total_calls INT(9) UNSIGNED default '0',
+index (stats_date),
+index (stats_flag),
+index (user)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
@@ -2779,7 +2794,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1312',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1313',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

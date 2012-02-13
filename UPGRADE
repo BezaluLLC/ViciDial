@@ -804,6 +804,17 @@ OTHER CHANGES:
 		vicidial-auto-internal
 		vicidial-auto-phones
 
+183. Added Remote-Agent daily stats to the remote agent modification screen that
+	shows total calls and maximum number of concurrent calls per day.
+
+184. Added 'Hopper VLC Dup Check' campaign option that will check for duplicates
+	by vendor_lead_code before inserting leads into the hopper to be dialed.
+	This option is only recommended for some campaigns that are using the
+	MULTI_LEAD option of Auto-Alt-Dial.
+	  *It is recommended that if you want to enable this feature you should
+	   index the vendor_lead_code field in the vicidial_list table:
+	      CREATE INDEX vendor_lead_code on vicidial_list (vendor_lead_code);
+
 
 
 

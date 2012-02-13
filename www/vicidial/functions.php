@@ -12,6 +12,7 @@
 # 110708-1723 - Added HF precision option
 # 111222-2124 - Added max stats bar chart function
 # 120125-1235 - Small changes to max stats function to allow for total system stats
+# 120213-1417 - Changes to allow for ra stats
 #
 
 ##### reformat seconds into HH:MM:SS or MM:SS #####
@@ -119,6 +120,10 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 		{$stmt="SELECT stats_date,sum(total_calls) from vicidial_daily_max_stats where stats_type='INGROUP' and stats_flag='OPEN' group by stats_date;";}
 	if ($metric=='total_calls_outbound_all')
 		{$stmt="SELECT stats_date,sum(total_calls) from vicidial_daily_max_stats where stats_type='CAMPAIGN' and stats_flag='OPEN' group by stats_date;";}
+	if ($metric=='ra_total_calls')
+		{$stmt="SELECT stats_date,total_calls from vicidial_daily_ra_stats where stats_flag='OPEN' and user='$campaign_id';";}
+	if ($metric=='ra_concurrent_calls')
+		{$stmt="SELECT stats_date,max_calls from vicidial_daily_ra_stats where stats_flag='OPEN' and user='$campaign_id';";}
 	$rslt=mysql_query($stmt, $link);
 	$Xstats_to_print = mysql_num_rows($rslt);
 	if ($Xstats_to_print > 0) 
@@ -141,6 +146,10 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 			{$stmt="SELECT stats_date,sum(total_calls) from vicidial_daily_max_stats where stats_date='$Bstats_date[$i]' and stats_type='INGROUP' group by stats_date;";}
 		if ($metric=='total_calls_outbound_all')
 			{$stmt="SELECT stats_date,sum(total_calls) from vicidial_daily_max_stats where stats_date='$Bstats_date[$i]' and stats_type='CAMPAIGN' group by stats_date;";}
+		if ($metric=='ra_total_calls')
+			{$stmt="SELECT stats_date,total_calls from vicidial_daily_ra_stats where stats_date='$Bstats_date[$i]' and user='$campaign_id';";}
+		if ($metric=='ra_concurrent_calls')
+			{$stmt="SELECT stats_date,max_calls from vicidial_daily_ra_stats where stats_date='$Bstats_date[$i]' and user='$campaign_id';";}
 		$rslt=mysql_query($stmt, $link);
 		$Ystats_to_print = mysql_num_rows($rslt);
 		if ($Ystats_to_print > 0) 

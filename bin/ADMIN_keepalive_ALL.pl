@@ -70,6 +70,7 @@
 # 111221-1454 - Added resetting of max stats records at timeclock end of day
 # 120124-1032 - Added Answer to all call menus at the top
 # 120209-1525 - Separated all vicidial-auto dialplan contexts into their own contexts to allow for more control of dialing access through phones
+# 120213-1405 - Added vicidial_daily_ra_stats rolling
 #
 
 $DB=0; # Debug flag
@@ -898,8 +899,23 @@ if ($timeclock_end_of_day_NOW > 0)
 	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
 	$sthA->finish();
 
+	$stmtA = "optimize table vicidial_daily_max_stats;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
 
-
+	$stmtA = "optimize table vicidial_daily_ra_stats;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
 
 
 
@@ -1038,6 +1054,44 @@ if ($timeclock_end_of_day_NOW > 0)
 	$affected_rows = $dbhA->do($stmtA);
 	if($DB){print STDERR "\n|$affected_rows Daily Max Stats Closed Cleanup|\n";}
 	##### END max stats end of day process #####
+
+
+
+	##### BEGIN ra stats end of day process #####
+	# set OPEN ra stats records to CLOSING for processing
+	$stmtA = "UPDATE vicidial_daily_ra_stats SET stats_flag='CLOSING' where stats_flag='OPEN';";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows Daily RA Stats Closing Process Started|\n";}
+
+	# gather data from CLOSING ra stats records
+	$stmtA = "SELECT stats_date,stats_flag,user,update_time,closed_time,max_calls,total_calls from vicidial_daily_ra_stats where stats_flag='CLOSING';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArowsDMS=$sthA->rows;
+	$i=0;
+	while ($sthArowsDMS > $i)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$Astats_date[$i]	= 		$aryA[0];
+		$Astats_flag[$i]	= 		$aryA[1];
+		$Auser[$i]	= 				$aryA[2];
+		$Aupdate_time[$i]	= 		$aryA[3];
+		$Aclosed_time[$i]	= 		$aryA[4];
+		$Amax_calls[$i]	= 			$aryA[5];
+		$Atotal_calls[$i]	= 		$aryA[6];
+
+		if($DBXXX){print STDERR "\nMAX STATS: |$i|$Astats_date[$i]|$Astats_flag[$i]|$Auser[$i]|$Aupdate_time[$i]|$Aclosed_time[$i]|$Amax_calls[$i]|$Atotal_calls[$i]|\n";}
+		$i++;
+		}
+	$sthA->finish();
+
+	$stmtA = "UPDATE vicidial_daily_ra_stats SET stats_flag='CLOSED' where stats_flag='CLOSING';";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows Daily RA Stats Closed Cleanup|\n";}
+	##### END ra stats end of day process #####
+
 
 
 	$dbhC = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_custom_user", "$VARDB_custom_pass")

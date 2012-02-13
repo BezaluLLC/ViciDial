@@ -1,7 +1,7 @@
 <?php
 # options.php - manually defined options for vicidial admin scripts
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # rename this file to options.php for the settings here to go into effect
 #
@@ -10,6 +10,7 @@
 # 110307-1039 - Added upper-case/lower-case user setting
 # 110708-1730 - Added precision time setting
 # 120102-2112 - Added inventory_allow_realtime option
+# 120213-1500 - Added option to log non-agent-API calls
 #
 
 # used by the realtime_report.php script
@@ -58,6 +59,9 @@ $TIME_agenttimedetail = 'H';	# H=hour, M=minute, S=second, HF=force hour
 
 # used by inventory report
 $inventory_allow_realtime = 0;	# allow real-time report generation for inventory report
+
+# used by non-agent-API for non-admin functions
+$api_url_log = 0;				# log non-agent-api calls to the vicidial_url_log
 
 
 ?>

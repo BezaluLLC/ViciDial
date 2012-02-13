@@ -11,7 +11,7 @@
 # agents that should appear to be logged in so that the calls can be transferred 
 # out to them properly.
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50215-0954 - First version of script
@@ -43,6 +43,7 @@
 # 110626-0030 - Added queuemetrics_pe_phone_append
 # 110707-1342 - Added last_inbound_call_time to next agent call options for inbound
 # 111201-1428 - Added grade-random next-agent-call option for inbound
+# 120213-1701 - Added remote-agent daily stats
 #
 
 ### begin parsing run-time options ###
@@ -284,8 +285,9 @@ while($one_day_interval > 0)
 			@QHcampaign_id=@MT;
 			@QHphone_number=@MT;
 			@QHalt_dial=@MT;
+			@QHra_user=@MT;
 			##### grab number of QUEUE calls right now and update
-			$stmtA = "SELECT vla.live_agent_id,vla.lead_id,vla.uniqueid,vla.user,vac.call_type,vac.campaign_id,vac.phone_number,vac.alt_dial,vac.callerid FROM vicidial_live_agents vla,vicidial_auto_calls vac where vla.server_ip='$server_ip' and vla.status IN('QUEUE') and vla.extension LIKE \"R/%\" and vla.uniqueid=vac.uniqueid and vla.channel=vac.channel;";
+			$stmtA = "SELECT vla.live_agent_id,vla.lead_id,vla.uniqueid,vla.user,vac.call_type,vac.campaign_id,vac.phone_number,vac.alt_dial,vac.callerid,vla.ra_user FROM vicidial_live_agents vla,vicidial_auto_calls vac where vla.server_ip='$server_ip' and vla.status IN('QUEUE') and vla.extension LIKE \"R/%\" and vla.uniqueid=vac.uniqueid and vla.channel=vac.channel;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$vla_qh_ct=$sthA->rows;
@@ -302,6 +304,7 @@ while($one_day_interval > 0)
 				$QHphone_number[$w] =	$aryA[6];
 				$QHalt_dial[$w] =		$aryA[7];
 				$QHcall_id[$w] =		$aryA[8];
+				$QHra_user[$w] =		$aryA[9];
 				if (length($QHalt_dial[$w]) < 1) {$QHalt_dial[$w] = 'MAIN';}
 				$w++;
 				}
@@ -354,6 +357,53 @@ while($one_day_interval > 0)
 					$start_call_url =	$aryA[0];
 					}
 				$sthA->finish();
+
+
+				##### BEGIN remote agent concurrent call calculation and updating
+				$concurrent_calls=0;
+				$incalls_count=0;
+
+				### Get count of concurrent calls for this in-group
+				$stmtA = "SELECT count(*) FROM vicidial_live_agents where ra_user='$QHra_user[$w]' and extension LIKE \"R/%\" and status IN('QUEUE','INCALL','DONE');";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$concurrent_calls = 	$aryA[0];
+					$incalls_count =		$aryA[0];
+				#	$incalls_count++;
+					}
+				$sthA->finish();
+
+				$STATSmax_ra=0;
+				$stmtA = "SELECT max_calls from vicidial_daily_ra_stats where user='$QHra_user[$w]' and stats_flag='OPEN' order by update_time desc limit 1;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$STATSmax_ra =			$aryA[0];
+					$sthA->finish();
+
+					$update_SQL='';
+					if ($STATSmax_ra < $incalls_count)
+						{$update_SQL .= ",max_calls='$incalls_count'";}
+
+					$stmtA = "UPDATE vicidial_daily_ra_stats SET update_time=NOW(),total_calls=(total_calls + 1)$update_SQL where user='$QHra_user[$w]' and stats_flag='OPEN';";
+					$affected_rows = $dbhA->do($stmtA);
+					if ($AGILOG) {$agi_string = "DAILY STATS UPDATE $channel_group|$affected_rows|$stmtA|\n";   &agi_output;}
+					}
+				else
+					{
+					$stmtA = "INSERT INTO vicidial_daily_ra_stats SET stats_date='$YMD',update_time=NOW(),max_calls='$incalls_count',user='$QHra_user[$w]',stats_flag='OPEN',total_calls=1;";
+					$affected_rows = $dbhA->do($stmtA);
+					if ($AGILOG) {$agi_string = "DAILY STATS INSERT $channel_group|$affected_rows|$stmtA|";   &agi_output;}
+					}				
+				##### END remote agent concurrent call calculation and updating
+
 
 				### This is where the call to the start_call_url launch goes
 
@@ -1067,6 +1117,7 @@ sub get_time_now	#get the current date and time and epoch for logging call lengt
 	$tsSQLdate = "$year$mon$mday$hour$min$sec";
 	$SQLdate = "$year-$mon-$mday $hour:$min:$sec";
 	$filedate = "$year-$mon-$mday";
+	$YMD = "$year-$mon-$mday";
 
 	$FDtarget = ($secX + 10);
 	($Fsec,$Fmin,$Fhour,$Fmday,$Fmon,$Fyear,$Fwday,$Fyday,$Fisdst) = localtime($FDtarget);

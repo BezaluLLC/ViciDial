@@ -1243,3 +1243,21 @@ ALTER TABLE vicidial_campaigns MODIFY timer_action VARCHAR(20) default 'NONE';
 ALTER TABLE vicidial_inbound_groups MODIFY timer_action VARCHAR(20) default 'NONE';
 
 UPDATE system_settings SET db_schema_version='1312',db_schema_update_date=NOW() where db_schema_version < 1312;
+
+ALTER TABLE vicidial_campaigns ADD hopper_vlc_dup_check ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_hopper ADD vendor_lead_code VARCHAR(20) default '';
+
+CREATE TABLE vicidial_daily_ra_stats (
+stats_date DATE NOT NULL,
+stats_flag ENUM('OPEN','CLOSED','CLOSING') default 'CLOSED',
+user VARCHAR(20) default '',
+update_time TIMESTAMP,
+closed_time DATETIME,
+max_calls MEDIUMINT(8) UNSIGNED default '0',
+total_calls INT(9) UNSIGNED default '0',
+index (stats_date),
+index (stats_flag),
+index (user)
+);
+
+UPDATE system_settings SET db_schema_version='1313',db_schema_update_date=NOW() where db_schema_version < 1313;

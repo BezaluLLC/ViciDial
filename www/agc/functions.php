@@ -4,7 +4,7 @@
 #
 # functions for agent scripts
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES:
@@ -13,6 +13,7 @@
 # 110630-0026 - Added HIDDEN and READONLY field types
 # 110719-0858 - Added HIDEBLOB field type
 # 110730-2336 - Added call_id variable
+# 120213-1709 - Commented out default of READONLY fields since they cannot change
 #
 
 
@@ -243,8 +244,8 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 					}
 				if ($A_field_type[$o]=='READONLY')
 					{
-					if (strlen($A_field_value[$o]) < 1) {$A_field_value[$o] = $A_field_default[$o];}
 					if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
+				#	if (strlen($A_field_value[$o]) < 1) {$A_field_value[$o] = $A_field_default[$o];}
 					$field_HTML .= "<input type=hidden name=$A_field_label[$o] id=$A_field_label[$o] value=\"$A_field_value[$o]\"> $A_field_value[$o]\n";
 					}
 				if ( ($A_field_type[$o]=='HIDDEN') or ($A_field_type[$o]=='HIDEBLOB') )

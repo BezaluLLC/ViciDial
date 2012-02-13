@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2012-01-30
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2012-02-13
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -67,6 +67,8 @@ Changes:
 110928-2110 - Added callback options to add_lead and update_lead
 111106-0959 - Added user_group restrictions to some functions
 120127-1331 - Small fix for plus replacement in custom fields strings for add/update_lead functions
+120210-1215 - Small change for hopper adding vendor_lead_code
+120213-1613 - Added optional logging of all non-admin.php requests, enabled in options.php
 
 
 
