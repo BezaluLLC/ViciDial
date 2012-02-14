@@ -2603,13 +2603,13 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	print ext 'exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
 	print ext "\n";
 	print ext "\n";
-	if (length($SScustom_dialplan_entry)>5)
-		{print ext "include => vicidial-auto-system-setting-custom\n";}
-	if (length($SERVERcustom_dialplan_entry)>5)
-		{print ext "include => vicidial-auto-server-custom\n";}
-	print ext "include => vicidial-auto-external\n";
 	print ext "include => vicidial-auto-internal\n";
 	print ext "include => vicidial-auto-phones\n";
+	print ext "include => vicidial-auto-external\n";
+	if (length($SERVERcustom_dialplan_entry)>5)
+		{print ext "include => vicidial-auto-server-custom\n";}
+	if (length($SScustom_dialplan_entry)>5)
+		{print ext "include => vicidial-auto-system-setting-custom\n";}
 	print ext "\n";
 	print ext "\n; END OF FILE\n";
 
