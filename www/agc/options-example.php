@@ -1,12 +1,13 @@
 <?php
 # options.php - manually defined options for vicidial.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # rename this file to options.php for the settings here to go into effect
 #
 # CHANGELOG
-# 100306-0805 - First Build 
+# 100306-0805 - First Build
+# 120214-1636 - Added consult_custom_delay optioin
 #
 
 $conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
@@ -39,6 +40,7 @@ $disable_blended_checkbox='0';	# set to 1 to disable the BLENDED checkbox from t
 $hide_timeclock_link	= '0';	# set to 1 to hide the timeclock link on the agent login screen
 $conf_check_attempts	= '3';	# number of attempts to try before loosing webserver connection, for bad network setups
 $focus_blur_enabled		= '0';	# set to 1 to enable the focus/blur enter key blocking(some IE instances have issues)
+$consult_custom_delay	= '2';	# number of seconds to delay consultative transfers when custom fields are active
 
 $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
 

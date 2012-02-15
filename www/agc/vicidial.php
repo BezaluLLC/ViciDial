@@ -1,7 +1,7 @@
 <?php
 # vicidial.php - the web-based version of the astVICIDIAL client application
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Other scripts that this application depends on:
 # - vdc_db_query.php: Updates information in the database
@@ -373,10 +373,11 @@
 # 111114-0039 - Added scheduled callback and qm-dispo-code fields to API
 # 111202-1444 - Added grade-random next-agent-call options
 # 111227-1940 - Added Timer Action for Dx_DIAL_QUIET options
+# 120213-2029 - Changed consultative transfer with custom fields behavior for better data updating
 #
 
-$version = '2.4-340c';
-$build = '111227-1940';
+$version = '2.4-341c';
+$build = '120213-2029';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=75;
 $one_mysql_log=0;
@@ -522,7 +523,9 @@ $disable_blended_checkbox='0';	# set to 1 to disable the BLENDED checkbox from t
 $hide_timeclock_link	= '0';	# set to 1 to hide the timeclock link on the agent login screen
 $conf_check_attempts	= '3';	# number of attempts to try before loosing webserver connection, for bad network setups
 $focus_blur_enabled		= '0';	# set to 1 to enable the focus/blur enter key blocking(some IE instances have issues)
-$TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
+$consult_custom_delay	= '2';	# number of seconds to delay consultative transfers when customfields are active
+
+$TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen, FOR DEBUG ONLY
 
 $stretch_dimensions		= '1';	# sets the vicidial screen to the size of the browser window
 $BROWSER_HEIGHT			= 500;	# set to the minimum browser height, default=500
@@ -3530,6 +3533,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var qm_extension='<?php echo $qm_extension ?>';
 	var hide_dispo_list='<?php echo $hide_dispo_list ?>';
 	var external_transferconf_count=0;
+	var consult_custom_delay='<?php echo $consult_custom_delay ?>';
+	var consult_custom_wait=0;
+	var consult_custom_go=0;
     var DiaLControl_auto_HTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/vdc_LB_resume.gif\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/vdc_LB_pause.gif\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
@@ -3924,7 +3930,33 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		var sending_preset_name = document.vicidial_form.xfername.value;
 		if (taskFromConf == 'YES')
-			{basic_originate_call(manual_string,'NO','YES',dial_conf_exten,'NO',taskFromConf,threeway_cid,sending_group_alias,'',sending_preset_name,call_variables);}
+			{
+			// give extra time for custom fields to commit before consultative transfers
+			if ( (document.vicidial_form.consultativexfer.checked==true) && (custom_fields_enabled > 0) && (consult_custom_delay > 0) )
+				{
+				if (consult_custom_wait >= consult_custom_delay)
+					{
+					consult_custom_go = 1;
+					consult_custom_wait = 0;
+					}
+				else
+					{
+					consult_custom_wait++;
+					CustomerData_update();
+					vcFormIFrame.document.form_custom_fields.submit();
+					}
+				}
+			else
+				{
+				consult_custom_go = 1;
+				consult_custom_wait = 0;
+				}
+
+			if (consult_custom_go > 0)
+				{
+				basic_originate_call(manual_string,'NO','YES',dial_conf_exten,'NO',taskFromConf,threeway_cid,sending_group_alias,'',sending_preset_name,call_variables);
+				}
+			}
 		else
 			{basic_originate_call(manual_string,'NO','NO','','','',threeway_cid,sending_group_alias,sending_preset_name,call_variables);}
 
@@ -8387,6 +8419,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			XDnextCID = '';
 			XDcheck = '';
 			xferchannellive=0;
+			consult_custom_wait=0;
+			consult_custom_go=0;
+
 
 		//  DEACTIVATE CHANNEL-DEPENDANT BUTTONS AND VARIABLES
 			document.vicidial_form.xferchannel.value = "";
@@ -8457,7 +8492,6 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 // Update vicidial_list lead record with all altered values from form
 	function CustomerData_update()
 		{
-
 		var REGcommentsAMP = new RegExp('&',"g");
 		var REGcommentsQUES = new RegExp("\\?","g");
 		var REGcommentsPOUND = new RegExp("\\#","g");
@@ -9027,6 +9061,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				custom_field_types='';
 				customerparked=0;
 				customerparkedcounter=0;
+				consult_custom_wait=0;
+				consult_custom_go=0;
 				document.getElementById("ParkCounterSpan").innerHTML = '';
 				document.vicidial_form.xfername.value='';
 				document.vicidial_form.xfernumhidden.value='';
@@ -12144,6 +12180,13 @@ function phone_number_format(formatphone) {
 							}
 						}
 					}
+				}
+			if (consult_custom_wait > 0)
+				{
+				if (consult_custom_wait >= consult_custom_delay)
+					{SendManualDial('YES');}
+				else
+					{consult_custom_wait++;}
 				}
 			}
 		setTimeout("all_refresh()", refresh_interval);
