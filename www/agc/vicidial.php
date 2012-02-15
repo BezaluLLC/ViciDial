@@ -3536,6 +3536,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var consult_custom_delay='<?php echo $consult_custom_delay ?>';
 	var consult_custom_wait=0;
 	var consult_custom_go=0;
+	var consult_custom_sent=0;
     var DiaLControl_auto_HTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/vdc_LB_resume.gif\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/vdc_LB_pause.gif\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
@@ -3941,9 +3942,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					}
 				else
 					{
-					consult_custom_wait++;
 					CustomerData_update();
-					vcFormIFrame.document.form_custom_fields.submit();
+					consult_custom_wait++;
+					consult_custom_sent++;
 					}
 				}
 			else
@@ -4002,7 +4003,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				{var XfeR_GrouP = API_selected_xfergroup;}
 			tasknum = Ctasknum + "*" + XfeR_GrouP + '*CXFER*' + document.vicidial_form.lead_id.value + '**' + dialed_number + '*' + user + '*' + agentdirect + '*' + VD_live_call_secondS + '*';
 
-			CustomerData_update();
+			if (consult_custom_sent < 1)
+				{CustomerData_update();}
 			}
 		var regAXFvars = new RegExp("AXFER","g");
 		if (tasknum_string.match(regAXFvars))
@@ -4015,8 +4017,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				{closerxfercamptail = 'IVR';}
 			tasknum = Ctasknum + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value + '*' + campaign + '*' + closerxfercamptail + '*' + user + '**' + VD_live_call_secondS + '*';
 
-			CustomerData_update();
-
+			if (consult_custom_sent < 1)
+				{CustomerData_update();}
 			}
 
 
@@ -5073,7 +5075,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				}
 			if (taskvar == 'XfeRLOCAL')
 				{
-				CustomerData_update();
+				if (consult_custom_sent < 1)
+					{CustomerData_update();}
 
 				document.vicidial_form.xfername.value='';
 				var XfeRSelecT = document.getElementById("XfeRGrouP");
@@ -8421,6 +8424,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			xferchannellive=0;
 			consult_custom_wait=0;
 			consult_custom_go=0;
+			consult_custom_sent=0;
 
 
 		//  DEACTIVATE CHANNEL-DEPENDANT BUTTONS AND VARIABLES
@@ -9063,6 +9067,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				customerparkedcounter=0;
 				consult_custom_wait=0;
 				consult_custom_go=0;
+				consult_custom_sent=0;
 				document.getElementById("ParkCounterSpan").innerHTML = '';
 				document.vicidial_form.xfername.value='';
 				document.vicidial_form.xfernumhidden.value='';
@@ -12183,6 +12188,8 @@ function phone_number_format(formatphone) {
 				}
 			if (consult_custom_wait > 0)
 				{
+				if (consult_custom_wait == '1')
+					{vcFormIFrame.document.form_custom_fields.submit();}
 				if (consult_custom_wait >= consult_custom_delay)
 					{SendManualDial('YES');}
 				else
