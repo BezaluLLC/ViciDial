@@ -2,7 +2,7 @@
 # admin_listloader_third_gen.php - version 2.4
 #  (based upon - new_listloader_superL.php script)
 # 
-# Copyright (C) 2011  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # ViciDial web-based lead loader from formatted file
 # 
@@ -42,10 +42,11 @@
 # 100728-0900 - Filtered uploaded filenames for unsupported characters
 # 110424-0926 - Added option for time zone code in the owner field
 # 110705-1947 - Added USACAN check for prefix and areacode
+# 120221-0140 - Added User Group restrictions
 #
 
-$version = '2.4-41';
-$build = '110705-1947';
+$version = '2.4-42';
+$build = '120221-0140';
 
 
 require("dbconnect.php");
@@ -213,10 +214,11 @@ else
 		{
 		$office_no=strtoupper($PHP_AUTH_USER);
 		$password=strtoupper($PHP_AUTH_PW);
-			$stmt="SELECT load_leads from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGload_leads				=$row[0];
+		$stmt="SELECT load_leads,user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$LOGload_leads =	$row[0];
+		$LOGuser_group =	$row[1];
 
 		if ($LOGload_leads < 1)
 			{
@@ -236,9 +238,30 @@ else
 			fwrite ($fp, "LIST_LOAD|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
 			fclose($fp);
 			}
+		exit;
 		}
 	}
 
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns =			$row[0];
+$LOGallowed_reports =			$row[1];
+$LOGadmin_viewable_groups =		$row[2];
+$LOGadmin_viewable_call_times =	$row[3];
+
+$camp_lists='';
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+if (!eregi("-ALL",$LOGallowed_campaigns))
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
+$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 
 $script_name = getenv("SCRIPT_NAME");
 $server_name = getenv("SERVER_NAME");
@@ -391,7 +414,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard") ) )
 			<select name='list_id_override'>
 			<option value='in_file' selected='yes'>Load from Lead File</option>
 			<?php
-			$stmt="SELECT list_id, list_name from vicidial_lists order by list_id;";
+			$stmt="SELECT list_id, list_name from vicidial_lists $whereLOGallowed_campaignsSQL order by list_id;";
 			$rslt=mysql_query($stmt, $link);
 			$num_rows = mysql_num_rows($rslt);
 

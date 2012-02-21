@@ -15,6 +15,7 @@
 # 101111-1253 - Added source field
 # 111103-1207 - Added admin_hide_phone_data and admin_hide_lead_data options
 # 120210-1218 - Added vendor_lead_code to output
+# 120221-0059 - Added User Group restriction settings
 #
 
 require("dbconnect.php");
@@ -63,7 +64,28 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($server_ip)) {$server_ip = '10.10.10.15';}
 
-$stmt="select campaign_id,campaign_name from vicidial_campaigns order by campaign_id;";
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {$HTML_text.="|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns =			$row[0];
+$LOGallowed_reports =			$row[1];
+$LOGadmin_viewable_groups =		$row[2];
+$LOGadmin_viewable_call_times =	$row[3];
+
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
+$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
+
+
+$stmt="select campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $campaigns_to_print = mysql_num_rows($rslt);
@@ -127,7 +149,7 @@ else
 	echo "\n";
 	echo "---------- TOTALS\n";
 
-	$stmt="select count(*) from vicidial_hopper where campaign_id='" . mysql_real_escape_string($group) . "';";
+	$stmt="select count(*) from vicidial_hopper where campaign_id='" . mysql_real_escape_string($group) . "' $LOGallowed_campaignsSQL;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$row=mysql_fetch_row($rslt);
@@ -146,7 +168,7 @@ else
 	echo "|ORDER |PRIORITY| LEAD ID   | LIST ID    | PHONE NUM  | STATE | STATUS | COUNT | GMT    | ALT   | SOURCE| VENDOR LEAD CODE     |\n";
 	echo "+------+--------+-----------+------------+------------+-------+--------+-------+--------+-------+-------+----------------------+\n";
 
-	$stmt="select vicidial_hopper.lead_id,phone_number,vicidial_hopper.state,vicidial_list.status,called_count,vicidial_hopper.gmt_offset_now,hopper_id,alt_dial,vicidial_hopper.list_id,vicidial_hopper.priority,vicidial_hopper.source,vicidial_hopper.vendor_lead_code from vicidial_hopper,vicidial_list where vicidial_hopper.campaign_id='" . mysql_real_escape_string($group) . "' and vicidial_hopper.status='READY' and vicidial_hopper.lead_id=vicidial_list.lead_id order by priority desc,hopper_id limit 5000;";
+	$stmt="select vicidial_hopper.lead_id,phone_number,vicidial_hopper.state,vicidial_list.status,called_count,vicidial_hopper.gmt_offset_now,hopper_id,alt_dial,vicidial_hopper.list_id,vicidial_hopper.priority,vicidial_hopper.source,vicidial_hopper.vendor_lead_code from vicidial_hopper,vicidial_list where vicidial_hopper.campaign_id='" . mysql_real_escape_string($group) . "' and vicidial_hopper.status='READY' and vicidial_hopper.lead_id=vicidial_list.lead_id $LOGallowed_campaignsSQL order by priority desc,hopper_id limit 5000;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$users_to_print = mysql_num_rows($rslt);
@@ -176,6 +198,8 @@ else
 			if ($DB > 0) {echo "HIDELEADDATA|$row[2]|$LOGadmin_hide_lead_data|\n";}
 			if (strlen($row[2]) > 0)
 				{$state_temp = $row[2];   $row[2] = preg_replace("/./",'X',$state_temp);}
+			if (strlen($row[11]) > 0)
+				{$vlc_temp = $row[11];   $row[11] = preg_replace("/./",'X',$vlc_temp);}
 			}
 
 		$FMT_i =		sprintf("%-4s", $i);

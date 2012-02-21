@@ -1,7 +1,7 @@
 <?php
 # admin_search_lead.php   version 2.4
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # AST GUI database administration search for lead info
 # admin_modify_lead.php
@@ -26,6 +26,7 @@
 # 100622-0928 - Added field labels
 # 110218-1237 - Added vicidial_lead_search_log logging
 # 111103-1239 - Added admin_hide_phone_data and admin_hide_lead_data options
+# 120221-0118 - Added User Group campaign list restrictions to search queries
 #
 
 require("dbconnect.php");
@@ -99,13 +100,14 @@ else
 		{
 		$office_no=strtoupper($PHP_AUTH_USER);
 		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT full_name,modify_leads,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+		$stmt="SELECT full_name,modify_leads,admin_hide_lead_data,admin_hide_phone_data,user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$LOGfullname =				$row[0];
 		$LOGmodify_leads =			$row[1];
 		$LOGadmin_hide_lead_data =	$row[2];
 		$LOGadmin_hide_phone_data =	$row[3];
+		$LOGuser_group =			$row[4];
 
 		if ($WeBRooTWritablE > 0)
 			{
@@ -120,8 +122,49 @@ else
 			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
 			fclose($fp);
 			}
+		exit;
 		}
 	}
+
+
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns =			$row[0];
+$LOGallowed_reports =			$row[1];
+$LOGadmin_viewable_groups =		$row[2];
+$LOGadmin_viewable_call_times =	$row[3];
+
+$camp_lists='';
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+$LOGallowed_listsSQL='';
+$whereLOGallowed_listsSQL='';
+if (!eregi("-ALL",$LOGallowed_campaigns))
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+
+	$stmt="SELECT list_id from vicidial_lists $whereLOGallowed_campaignsSQL;";
+	$rslt=mysql_query($stmt, $link);
+	$lists_to_print = mysql_num_rows($rslt);
+	$o=0;
+	while ($lists_to_print > $o) 
+		{
+		$rowx=mysql_fetch_row($rslt);
+		$camp_lists .= "'$rowx[0]',";
+		$o++;
+		}
+	$camp_lists = eregi_replace(".$","",$camp_lists);
+	if (strlen($camp_lists)<2) {$camp_lists="''";}
+	$LOGallowed_listsSQL = "and list_id IN($camp_lists)";
+	$whereLOGallowed_listsSQL = "where list_id IN($camp_lists)";
+	}
+$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
+
 
 ?>
 <html>
@@ -281,13 +324,13 @@ else
 		{
 		if (strlen($log_lead_id)>0)
 			{
-			$stmtA="SELECT lead_id,phone_number,campaign_id,call_date,status,user,list_id,length_in_sec,alt_dial from vicidial_log where lead_id='" . mysql_real_escape_string($log_lead_id) . "'";
-			$stmtB="SELECT lead_id,phone_number,campaign_id,call_date,status,user,list_id,length_in_sec from vicidial_closer_log where lead_id='" . mysql_real_escape_string($log_lead_id) . "'";
+			$stmtA="SELECT lead_id,phone_number,campaign_id,call_date,status,user,list_id,length_in_sec,alt_dial from vicidial_log where lead_id='" . mysql_real_escape_string($log_lead_id) . "' $LOGallowed_listsSQL";
+			$stmtB="SELECT lead_id,phone_number,campaign_id,call_date,status,user,list_id,length_in_sec from vicidial_closer_log where lead_id='" . mysql_real_escape_string($log_lead_id) . "' $LOGallowed_listsSQL";
 			}
 		if (strlen($log_phone)>0)
 			{
-			$stmtA="SELECT lead_id,phone_number,campaign_id,call_date,status,user,list_id,length_in_sec,alt_dial from vicidial_log where phone_number='" . mysql_real_escape_string($log_phone) . "'";
-			$stmtB="SELECT lead_id,phone_number,campaign_id,call_date,status,user,list_id,length_in_sec from vicidial_closer_log where phone_number='" . mysql_real_escape_string($log_phone) . "'";
+			$stmtA="SELECT lead_id,phone_number,campaign_id,call_date,status,user,list_id,length_in_sec,alt_dial from vicidial_log where phone_number='" . mysql_real_escape_string($log_phone) . "' $LOGallowed_listsSQL";
+			$stmtB="SELECT lead_id,phone_number,campaign_id,call_date,status,user,list_id,length_in_sec from vicidial_closer_log where phone_number='" . mysql_real_escape_string($log_phone) . "' $LOGallowed_listsSQL";
 			$stmtC="SELECT extension,caller_id_number,did_id,call_date from vicidial_did_log where caller_id_number='" . mysql_real_escape_string($log_phone) . "'";
 			}
 		
@@ -509,7 +552,7 @@ else
 	##### BEGIN Lead search #####
 	if ($vendor_id)
 		{
-		$stmt="SELECT $vicidial_list_fields from vicidial_list where vendor_lead_code='" . mysql_real_escape_string($vendor_id) . "'";
+		$stmt="SELECT $vicidial_list_fields from vicidial_list where vendor_lead_code='" . mysql_real_escape_string($vendor_id) . "' $LOGallowed_listsSQL";
 		}
 	else
 		{
@@ -517,18 +560,18 @@ else
 			{
 			if ($alt_phone_search=="Yes")
 				{
-				$stmt="SELECT $vicidial_list_fields from vicidial_list where phone_number='" . mysql_real_escape_string($phone) . "' or alt_phone='" . mysql_real_escape_string($phone) . "' or address3='" . mysql_real_escape_string($phone) . "'";
+				$stmt="SELECT $vicidial_list_fields from vicidial_list where phone_number='" . mysql_real_escape_string($phone) . "' or alt_phone='" . mysql_real_escape_string($phone) . "' or address3='" . mysql_real_escape_string($phone) . "' $LOGallowed_listsSQL";
 				}
 			else
 				{
-				$stmt="SELECT $vicidial_list_fields from vicidial_list where phone_number='" . mysql_real_escape_string($phone) . "'";
+				$stmt="SELECT $vicidial_list_fields from vicidial_list where phone_number='" . mysql_real_escape_string($phone) . "' $LOGallowed_listsSQL";
 				}
 			}
 		else
 			{
 			if ($lead_id)
 				{
-				$stmt="SELECT $vicidial_list_fields from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
+				$stmt="SELECT $vicidial_list_fields from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "' $LOGallowed_listsSQL";
 				}
 			else
 				{
@@ -551,7 +594,7 @@ else
 						if ( ($SQLctA > 0) or ($SQLctB > 0) ) {$andB = 'and';}
 						$userSQL = "$andB user='" . mysql_real_escape_string($user) . "'";
 						}
-					$stmt="SELECT $vicidial_list_fields from vicidial_list where $statusSQL $list_idSQL $userSQL";
+					$stmt="SELECT $vicidial_list_fields from vicidial_list where $statusSQL $list_idSQL $userSQL $LOGallowed_listsSQL";
 					}
 				else
 					{
@@ -568,7 +611,7 @@ else
 							if ($SQLctA > 0) {$andA = 'and';}
 							$last_nameSQL = "$andA last_name='" . mysql_real_escape_string($last_name) . "'";
 							}
-						$stmt="SELECT $vicidial_list_fields from vicidial_list where $first_nameSQL $last_nameSQL";
+						$stmt="SELECT $vicidial_list_fields from vicidial_list where $first_nameSQL $last_nameSQL $LOGallowed_listsSQL";
 						}
 					else
 						{
@@ -584,7 +627,7 @@ else
 	$results_to_printX=0;
 	if ( ($alt_phone_search=="Yes") and (strlen($phone) > 4) )
 		{
-		$stmtX="SELECT lead_id from vicidial_list_alt_phones where phone_number='" . mysql_real_escape_string($phone) . "' limit 1000;";
+		$stmtX="SELECT lead_id from vicidial_list_alt_phones where phone_number='" . mysql_real_escape_string($phone) . "' $LOGallowed_listsSQL limit 1000;";
 		$rsltX=mysql_query($stmtX, $link);
 		$results_to_printX = mysql_num_rows($rsltX);
 		if ($DB)

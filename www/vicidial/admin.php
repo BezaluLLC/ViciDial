@@ -3034,12 +3034,13 @@ else
 # 120125-2107 - Added User Group Active User In-Group Select function to User Group page
 # 120207-1955 - Added List territory reset function
 # 120213-1512 - Added remote agent max stats display and campaign VLC hopper dup check option
+# 120221-0054 - Fixed Call Time and User Group restrictions on several pages
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-359a';
-$build = '120213-1512';
+$admin_version = '2.4-360a';
+$build = '120221-0054';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -21356,7 +21357,7 @@ if ($ADD==31)
 
 			echo "<tr bgcolor=#8EBCFD><td align=right>Safe Harbor Call Menu: </td><td align=left><select size=1 name=safe_harbor_menu_id id=safe_harbor_menu_id>$call_menu_list<option SELECTED>$safe_harbor_menu_id</option></select>$NWB#vicidial_campaigns-safe_harbor_menu_id$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#8EBCFD><td align=right>Voicemail: </td><td align=left><input type=text name=voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',2200);\">voicemail chooser</a>$NWB#vicidial_campaigns-voicemail_ext$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Voicemail: </td><td align=left><input type=text name=voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',3200);\">voicemail chooser</a>$NWB#vicidial_campaigns-voicemail_ext$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#8EBCFD><td align=right>Drop Transfer Group: </td><td align=left><select size=1 name=drop_inbound_group>";
 			echo "$Dgroups_menu";
@@ -31275,7 +31276,10 @@ if ($ADD==100000000)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT call_time_id,call_time_name,ct_default_start,ct_default_stop,user_group from vicidial_call_times $whereLOGadmin_viewable_groupsSQL order by call_time_id;";
+	if (strlen($whereLOGadmin_viewable_groupsSQL) > 0) {$tempLOGadmin_viewable_call_timesSQL = $LOGadmin_viewable_call_timesSQL;}
+	else {$tempLOGadmin_viewable_call_timesSQL = $whereLOGadmin_viewable_call_timesSQL;}
+
+	$stmt="SELECT call_time_id,call_time_name,ct_default_start,ct_default_stop,user_group from vicidial_call_times $whereLOGadmin_viewable_groupsSQL $tempLOGadmin_viewable_call_timesSQL order by call_time_id;";
 	$rslt=mysql_query($stmt, $link);
 	$calltimes_to_print = mysql_num_rows($rslt);
 
